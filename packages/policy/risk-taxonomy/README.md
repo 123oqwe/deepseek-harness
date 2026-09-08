@@ -1,5 +1,5 @@
 ---
-description: "The eight-class risk vocabulary and pure classifier for Epic P2-04: organisation-policy-decided mapping of plugin-declared domain tags, classification confidence and grounds, and the unknown-classifies-higher default."
+description: "The eight-class risk vocabulary and pure classifier for Epic P2-04: organisation-policy-decided mapping of plugin-declared domain tags, classification confidence and grounds, and the unknown-classifies-higher default that stops short of the kernel hard-deny band."
 kind: "package-library"
 ---
 
@@ -14,7 +14,9 @@ with the pure `classify` function that decides which class an action lands in.
 
 `src/types.ts` carries the types; `src/classify.ts` carries the classifier,
 the ascending risk order every comparison uses, and the kernel hard-deny list.
-`tests/classify.spec.ts` covers them in 14 cases.
+`tests/classify.spec.ts` covers them in 16 cases. `src/index.ts` re-exports the
+types and the classifier; it declares no runtime value of its own, so importing
+this package executes nothing.
 
 A plugin declares `domainTags` and nothing else: `ActionRiskSubject` has no
 field through which a plugin could assert its own risk band, and the mapping
@@ -22,9 +24,19 @@ from tag to class comes entirely from the organisation policy passed in
 (must[1]). Classification reports both `confidence` and `ground`, so a class
 reached by a policy rule is distinguishable from the same class reached
 because nothing matched (must[2]). An action no rule matches classifies at the
-highest class rather than the lowest (must[3]), while a single unrecognised
-tag beside a matched one does not escalate the whole action — otherwise the
-default would fire on every real action, since no policy enumerates every tag.
+highest POLICY-ADJUSTABLE class rather than the lowest (must[3]), while a single
+unrecognised tag beside a matched one does not escalate the whole action —
+otherwise the default would fire on every real action, since no policy
+enumerates every tag.
+
+The unknown default deliberately stops short of the kernel hard-deny band.
+must[3] says an unknown action defaults higher and P2-03's acceptance[2] says
+an unclassifiable one defaults to high risk **and requires approval**: both
+name approval, not refusal. Defaulting into the hard-deny band would equate
+"we do not know what this is" with "we know this is catastrophic", so
+`safety-critical` is reached by a policy that DECLARES it. An organisation
+that wants unknowns refused as well adds the default class to its own
+hard-deny list, which is raising its bar rather than lowering the kernel's.
 
 `classify` is pure and total: no I/O, no clock, no ambient policy. The same
 action under two policies gives two answers, and neither is a property of this
@@ -80,7 +92,11 @@ Nothing here enters a request, so provider cache reuse is unaffected. What a mod
   ignores `hardDenied` is not stopped by anything here.
 - **`confidence` is 1 or 0, not a measurement.** It distinguishes "a rule
   decided this" from "nothing matched". Any finer grading would need a source
-  of evidence this Contract stage does not have.
+  of evidence this package does not have.
+- **No action declares domain tags yet.** Nothing in the harness supplies a
+  `domainTags` value, so every real action classifies by the unknown default.
+  Until tools declare their tags, a deployment's `riskRules` decide nothing
+  and the classification carries no information beyond "undeclared".
 
 ### Dev Note
 

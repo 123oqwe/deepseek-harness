@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-risk-taxonomy",
-  "description": "Contract-stage risk vocabulary and pure classifier for Epic P2-04: the eight-class risk taxonomy (read, local-reversible, internal-write, external-communication, destructive, financial, security-sensitive, safety-critical), organisation-policy-decided mapping of plugin-declared domain tags, classification confidence and grounds, and the unknown-classifies-higher default",
+  "description": "Risk vocabulary and pure classifier for Epic P2-04: the eight-class risk taxonomy (read, local-reversible, internal-write, external-communication, destructive, financial, security-sensitive, safety-critical), organisation-policy-decided mapping of plugin-declared domain tags, classification confidence and grounds, and an unknown default that classifies higher without entering the kernel hard-deny band",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
     "access": "public"

@@ -52,7 +52,8 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 ## Known Limitations and Deferred Work
 
 - **The signer is recorded, never verified.** `SignerIdentity` is provenance a registration claims. Whether it is genuine is `@deepseek-ai/dsh-plugin-provenance`'s question, and today that cannot be answered — `verifyPackageSignature` trusts a first-seen issuer (P1-02's acceptance lock). Nothing here may be read as evidence a definition's signature is real.
-- **Recursion detection is textual and single-hop.** `isSelfRecursive` finds a definition that nests its own name. A cycle through two definitions (A nests B, B nests A) is not detected at registration; `admitNestedRun`'s ancestor check catches it at run time.
+- **Recursion detection is textual and single-hop.** `isSelfRecursive` finds a definition that nests its own name, in either call shape — `workflow('name')` or `workflow({ name, digest })`. A cycle through two definitions (A nests B, B nests A) is not detected at registration; `admitNestedRun`'s ancestor check catches it at run time.
+- **Nothing registers a definition in a shipped composition.** `DefinitionRegistry` is what the worker-thread engine now holds, so a registration recomputes its digest and refuses a mismatch or a self-recursive body — but no shipped path calls `registerDefinition`, so nesting is reachable only from a test. Until a producer exists, must[0]'s version pinning guards registrations that never happen.
 - **No store.** Registration and resolution are decisions over data the caller supplies; nothing persists a registry.
 
 ### Dev Note

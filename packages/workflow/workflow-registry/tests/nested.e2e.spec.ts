@@ -209,6 +209,19 @@ describe('P4-09 acceptance[3] and validation[2]: nesting is bounded and recursio
     expect(isSelfRecursive(recursive)).toBe(true)
     expect(isSelfRecursive(definition('await workflow("something-else")'))).toBe(false)
   })
+
+  it('validation[2]: the REFERENCE-OBJECT call shape is detected too, which is the one a nested run actually carries', () => {
+    // The check matched only a quoted first argument, so it could not fire on
+    // `workflow({ name, digest })` — the shape the hook is called with when a
+    // script nests a registered definition. A self-recursive definition
+    // written the ordinary way was admitted, and the depth limit caught it at
+    // run time after it had been registered and started.
+    expect(isSelfRecursive(definition("await workflow({ name: 'review-changes', digest: d })"))).toBe(true)
+    expect(isSelfRecursive(definition(`await workflow(${JSON.stringify({ name: 'review-changes', digest: 'd' })})`))).toBe(true)
+    // Still only ITS OWN name: a reference object naming another definition is
+    // ordinary composition, not recursion.
+    expect(isSelfRecursive(definition("await workflow({ name: 'other', digest: d })"))).toBe(false)
+  })
 })
 
 /**

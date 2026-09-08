@@ -21,6 +21,8 @@ import { SANDBOX_MODES, setSandboxMode } from '@deepseek-ai/dsh-sandbox-policy'
 import type {} from '@deepseek-ai/dsh-shell'
 import type { ApprovalPolicy } from '@deepseek-ai/dsh-user-approval'
 import { APPROVAL_POLICIES, setApprovalPolicy } from '@deepseek-ai/dsh-user-approval'
+import { classify, riskRank, RISK_CLASSES_BY_ASCENDING_RISK } from '@deepseek-ai/dsh-risk-taxonomy'
+import type { ActionRiskSubject, RiskClass, RiskClassification, RiskPolicy, RiskPolicyRule } from '@deepseek-ai/dsh-risk-taxonomy'
 import type {} from '@deepseek-ai/dsh-settings'
 // Type-only: resolves the optional projection and command children.
 import type {} from '@deepseek-ai/dsh-session-projection'
@@ -152,6 +154,47 @@ export interface Config {
    * sandbox and approval defaults is used.
    */
   defaultPreset?: string
+  /**
+   * The organisation's risk-classification rules (P2-04 must[1]).
+   *
+   * A plugin declares domain TAGS; which risk class a tag lands in is the
+   * organisation's decision, so the mapping is deployment configuration and
+   * lives here rather than with any plugin that would be deciding its own
+   * risk band. An empty table is a real choice, not a missing one: every
+   * action then classifies by the unknown default.
+   */
+  riskRules?: RiskPolicyRule[]
+  /**
+   * Risk classes this deployment refuses outright, on top of the kernel's
+   * (P2-04 acceptance[2]).
+   *
+   * Additions only. An organisation may raise its own bar; the kernel's band
+   * is a floor, and a policy naming one of its classes for removal is
+   * refused at classification time rather than silently re-added.
+   */
+  addedHardDenyClasses?: RiskClass[]
+  /**
+   * Risk classes this deployment states it does NOT refuse (P2-04 acceptance[2]).
+   *
+   * The field exists so a deployment can SAY it, and be refused where it says
+   * it. Naming a class the kernel pins is rejected at mount with the class in
+   * the message; naming any other class removes nothing, because the kernel
+   * list is the only floor. Silently ignoring the setting instead would let a
+   * deployment believe it had switched off a hard deny and discover otherwise
+   * at enforcement time.
+   */
+  removedHardDenyClasses?: RiskClass[]
+  /**
+   * The risk class at or above which an action requires approval before it
+   * executes (P2-04 must[1], P2-03 acceptance[2]).
+   *
+   * Deployment-varying and deliberately not a constant: which band is worth
+   * interrupting a user for differs between an interactive session and an
+   * unattended one, and only the profile knows which it is running. Defaults
+   * to `destructive`, which is the first class in the ascending order whose
+   * effects the actor cannot undo alone.
+   */
+  approvalThreshold?: RiskClass
 }
 
 /**
@@ -178,17 +221,39 @@ export class PermissionPresetService extends Service {
       },
     }),
     defaultPreset: z.string(),
+    riskRules: z.array(z.object({
+      domainTag: z.string().required(),
+      riskClass: z.union(RISK_CLASSES_BY_ASCENDING_RISK as RiskClass[]).required(),
+    })).default([]),
+    addedHardDenyClasses: z.array(z.union(RISK_CLASSES_BY_ASCENDING_RISK as RiskClass[])).default([]),
+    removedHardDenyClasses: z.array(z.union(RISK_CLASSES_BY_ASCENDING_RISK as RiskClass[])).default([]),
+    approvalThreshold: z.union(RISK_CLASSES_BY_ASCENDING_RISK as RiskClass[]).default('destructive'),
   })
 
   static inject = ['shell', 'approval', 'sessions', 'sessionProjections']
 
   private readonly presets: Record<string, PresetSpec>
   private defaultSettings: () => PermissionSettings
+  /** The organisation policy this deployment classifies actions under (P2-04 must[1]). */
+  private readonly risk: RiskPolicy
+  /** The class at or above which an action needs approval before it executes. */
+  private readonly approvalThreshold: RiskClass
 
   constructor(ctx: Context, config: Config) {
     super(ctx, 'permissionPresets')
     // The schema defaulted the table — the cast records that runtime fact.
     this.presets = config.presets as Record<string, PresetSpec>
+    this.risk = {
+      rules: config.riskRules as RiskPolicyRule[],
+      addedHardDenyClasses: config.addedHardDenyClasses as RiskClass[],
+      removedHardDenyClasses: config.removedHardDenyClasses as RiskClass[],
+    }
+    this.approvalThreshold = config.approvalThreshold as RiskClass
+    // Validate the policy at MOUNT, not at the first classification: a
+    // deployment that believes it switched off a kernel hard-deny must fail
+    // where it said so, and `classify` refuses such a policy every time it is
+    // called, which would otherwise surface as a runtime error per action.
+    this.classifyAction({ actionId: 'permission-presets:policy-check', domainTags: [] })
     if (CUSTOM_PRESET in this.presets) {
       throw new Error(`permission: "${CUSTOM_PRESET}" is reserved for the derived not-a-preset state and cannot name a table entry`)
     }
@@ -310,6 +375,36 @@ export class PermissionPresetService extends Service {
   }
 
   /** Resolve the preset for one folded knob state (the shared mathematics of `current` and the projection unit). */
+  /**
+   * Classify one action under this deployment's organisation policy
+   * (P2-04 must[1], must[2], must[3]).
+   *
+   * The policy is held here rather than passed by each caller so that two
+   * surfaces cannot classify the same action differently: the classifier is
+   * pure and takes the policy as a parameter, and this is the one place that
+   * parameter is bound.
+   * @param subject - the action and the domain tags it declares.
+   * @returns the class, how it was reached, and whether it is refused outright.
+   */
+  classifyAction(subject: ActionRiskSubject): RiskClassification {
+    return classify(subject, this.risk)
+  }
+
+  /**
+   * Whether a classified action needs approval before it may execute
+   * (P2-04 must[1], P2-03 acceptance[2]).
+   *
+   * A hard-denied action is NOT reported as needing approval: approval is a
+   * question, and the kernel band is one this deployment does not ask. A
+   * caller distinguishes the two by reading `hardDenied` itself, which is why
+   * this answers only the threshold question.
+   * @param classification - the classifier's verdict for the action.
+   * @returns whether the action's class reaches this deployment's threshold.
+   */
+  requiresApproval(classification: RiskClassification): boolean {
+    return riskRank(classification.riskClass) >= riskRank(this.approvalThreshold)
+  }
+
   private derive(state: KnobState): string {
     const sandbox = state.sandbox ?? this.ctx.shell.sandboxMode
     const approval = state.approval ?? this.ctx.approval.config.policy ?? 'ask'

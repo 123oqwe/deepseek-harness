@@ -48,6 +48,10 @@ kind: "package-reference"
 |---|---|---|
 | `presets` | `workspace-write`、`danger-full-access` | 预设名称 → 沙箱／审批捆绑的表 |
 | `defaultPreset` | 推断 | 固定到新会话的预设；组合默认值不匹配任何预设时必填 |
+| `riskRules` | `[]` | 组织把插件声明的 domain tag 映射到风险等级的规则（P2-04 must[1]）|
+| `addedHardDenyClasses` | `[]` | 本部署在 kernel 之外额外直接拒绝的风险等级 |
+| `removedHardDenyClasses` | `[]` | 本部署声明不拒绝的等级；其中若含 kernel 钉住的等级，挂载时报错拒绝 |
+| `approvalThreshold` | `destructive` | 达到或超过该等级的动作在执行前需要审批 |
 
 生成的[配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-permission-presets)是每个受支持字段及其 JSDoc 的穷尽式真源。`custom` 这个名称保留给推导出的非预设状态，不能作为表条目。挂载需要具有约束能力的 bash 执行器（会报告 `sandboxMode` 的执行器）与审批服务。
 

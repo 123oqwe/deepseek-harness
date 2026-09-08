@@ -117,6 +117,27 @@ interface Agent {
    * means this agent holds no Run and may make no authorized state write.
    */
   runLease?: RunLease
+  /**
+   * That a Run Service was mounted and this agent's lease was REFUSED
+   * (first100 registry P4-07 must[0], acceptance[1]).
+   *
+   * Writer contract: `RunPlugin` (`@deepseek-ai/dsh-run`) is the sole writer,
+   * setting it in the same branch that declines to open a Run.
+   *
+   * **It exists because absence had two meanings and they need different
+   * answers.** An agent with no {@link Agent.lifecycle} is either running in a
+   * composition that mounts no Run Service — capability absence, which must
+   * dispatch normally — or one whose lease a live store refused, which must
+   * not dispatch at all. Measured before this field existed: the two were
+   * indistinguishable, so a second host that lost the race for a work item
+   * kept executing tools against it, which is the two-master state P4-07
+   * exists to prevent.
+   *
+   * Never set on a successful acquisition, and never cleared: a refusal is
+   * about this agent's one attempt to open its Run, and the agent does not get
+   * a second.
+   */
+  leaseRefused?: true
   /** The provider route and model this agent's requests use. */
   readonly options: AgentOptions
   /** The live session this agent drives; its log is the durable source of truth. */

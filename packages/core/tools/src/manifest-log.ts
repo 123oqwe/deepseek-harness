@@ -102,8 +102,9 @@ export function createSessionManifestAppender(
       const entries: AppendedManifest[] = []
       for (const event of session.snapshotEvents()) {
         if (event.type !== 'action/manifest-appended') continue
-        const data = event.data as ActionManifestAppendedEventData
-        entries.push({ manifest: manifestOf(data, actorOf), sequence: data.sequence })
+        // No cast: the `type` guard above narrows `event` to its own member of
+        // `SessionEventMap`, so `data` is already this event's payload.
+        entries.push({ manifest: manifestOf(event.data, actorOf), sequence: event.data.sequence })
       }
       return entries
     },

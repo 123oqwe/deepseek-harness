@@ -75,10 +75,12 @@ describe('P2-04 C — classification reports confidence and grounds (must[2])', 
   })
 
   it('must[2]: the grounds distinguish a class reached BY A RULE from the same class reached by the unknown default', () => {
-    // Both land on safety-critical. Without `ground` an operator could not
-    // tell a deliberate classification from a failure to classify, which is
-    // the whole information content of must[2]'s 依据.
-    const byRule = classify({ actionId: 'act-4', domainTags: ['fire-suppression'] }, policy([{ domainTag: 'fire-suppression', riskClass: 'safety-critical' }]))
+    // Both land on the SAME class by different routes. Without `ground` an
+    // operator could not tell a deliberate classification from a failure to
+    // classify, which is the whole information content of must[2]'s 依据.
+    // The class here is the unknown default's, since that is the collision
+    // that actually arises: a rule may assign it deliberately too.
+    const byRule = classify({ actionId: 'act-4', domainTags: ['key-material'] }, policy([{ domainTag: 'key-material', riskClass: 'security-sensitive' }]))
     const byDefault = classify({ actionId: 'act-5', domainTags: [] }, policy([]))
     expect(byRule.riskClass).toBe(byDefault.riskClass)
     expect(byRule.ground).not.toBe(byDefault.ground)
@@ -88,10 +90,28 @@ describe('P2-04 C — classification reports confidence and grounds (must[2])', 
 })
 
 describe('P2-04 C — the unknown default escalates (must[3])', () => {
-  it('must[3]: an action no rule matches classifies at the HIGHEST class, not the lowest', () => {
+  it('must[3]: an action no rule matches classifies at the highest POLICY-ADJUSTABLE class, never in the kernel hard-deny band', () => {
+    // §12.47. must[3] says an unknown action defaults higher and P2-03's
+    // acceptance[2] says it defaults to high risk AND REQUIRES APPROVAL: both
+    // name approval, not refusal. Defaulting into the hard-deny band would
+    // equate "unknown" with "known catastrophic" and refuse every action
+    // outright, since nothing declares domain tags yet.
     const result = classify({ actionId: 'act-6', domainTags: ['unheard-of'] }, policy([]))
-    expect(result.riskClass).toBe(RISK_CLASSES_BY_ASCENDING_RISK.at(-1))
+    const adjustable = RISK_CLASSES_BY_ASCENDING_RISK
+      .filter(riskClass => !KERNEL_HARD_DENY_CLASSES.includes(riskClass))
+    expect(result.riskClass).toBe(adjustable.at(-1))
     expect(result.ground).toBe('unknown-default')
+    expect(result.hardDenied).toBe(false)
+  })
+
+  it('must[3]: an organisation that wants unknowns REFUSED can add that class to its own hard-deny list', () => {
+    // The escape hatch that makes the default a threshold rather than a
+    // ceiling: raising your own bar is permitted, lowering the kernel's is not.
+    const strict = classify(
+      { actionId: 'act-6b', domainTags: ['unheard-of'] },
+      { ...policy([]), addedHardDenyClasses: ['security-sensitive'] },
+    )
+    expect(strict.hardDenied).toBe(true)
   })
 
   it('must[3]: a composite action takes the MAXIMUM risk of its matched tags', () => {
@@ -157,28 +177,37 @@ describe('P2-04 C — an organisation may raise its bar but not switch off a ker
 
   it('acceptance[2]: a policy adding nothing and removing nothing still hard-denies the kernel class', () => {
     // Without this, the refusal above could hold while the kernel floor
-    // itself was never applied to an ordinary classification.
-    const result = classify({ actionId: 'act-13', domainTags: [] }, policy([]))
+    // itself was never applied to an ordinary classification. The action
+    // DECLARES the catastrophic tag: since §12.47 the kernel band is reached
+    // by declaration, never by failing to classify.
+    const result = classify(
+      { actionId: 'act-13', domainTags: ['fire-suppression'] },
+      policy([{ domainTag: 'fire-suppression', riskClass: 'safety-critical' }]),
+    )
     expect(result.riskClass).toBe('safety-critical')
     expect(result.hardDenied).toBe(true)
   })
 })
 
-describe('P2-04 C — the package barrel is scaffold, not implementation (BLOCKED-131, B4(f))', () => {
-  it('src/index.ts is exactly one statement and it re-exports types only', () => {
-    // The barrel exists because the root tsdown config builds every workspace
-    // package against a fixed entry glob, so a package without an `index.ts`
-    // fails the build the moment its directory exists. That makes it scaffold
-    // the repository forces, not Contract-stage work — and the way to keep
-    // that true is to pin it, because the cheapest way to "fix" a later
-    // missing export is to add a runtime one here and quietly turn the
-    // Contract stage into an implementation.
+describe('P2-04 P — the barrel publishes the classifier and nothing that executes on import', () => {
+  it('src/index.ts re-exports the type surface and the classifier, and declares no runtime value of its own', () => {
+    // The Contract stage pinned this barrel to a single type-only statement,
+    // because the cheapest way to "fix" a missing export is to add a runtime
+    // one here and quietly turn a contract into an implementation. The
+    // Provider stage is where that constraint retires BY DESIGN, so the
+    // property worth pinning changes rather than disappears: the barrel may
+    // now name runtime exports, and it still must not DECLARE any — a `const`
+    // or a call here would run at import time, in a package whose whole claim
+    // is that classification is pure and policy is a parameter.
     const source = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../src/index.ts'), 'utf8')
     const statements = source
       .replace(/\/\*\*[\s\S]*?\*\//gu, '')
       .split('\n')
       .map(line => line.trim())
       .filter(line => line.length > 0)
-    expect(statements).toEqual(["export type * from './types.ts'"])
+    expect(statements.every(line => line.startsWith('export') || /^[}A-Za-z_,'./ ]+$/u.test(line))).toBe(true)
+    expect(statements.some(line => /\b(?:const|let|var|function|class)\b/u.test(line))).toBe(false)
+    expect(source).toContain("export type * from './types.ts'")
+    expect(source).toContain('classify,')
   })
 })

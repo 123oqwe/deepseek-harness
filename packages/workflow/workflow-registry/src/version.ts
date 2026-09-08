@@ -108,12 +108,23 @@ export function canResumeAgainst(runDigest: DefinitionDigest, current: Registere
  * must not become one. Over-reporting is the safe direction — a false positive
  * refuses a registration that a human then inspects, while a false negative
  * admits a definition that recurses forever at run time.
+ *
+ * BOTH call shapes are matched, because the hook accepts both: a bare name,
+ * `workflow('report')`, and the reference object a nested run actually
+ * carries, `workflow({ name: 'report', digest })`. Matching only the first
+ * made this check unable to fire on the shape the DSL really uses, which is a
+ * false negative in exactly the case it exists for.
  * @param body - the definition source.
  * @param name - the definition name to look for.
  * @returns whether the body appears to nest `name`.
  */
 export function declaresNestedCall(body: string, name: DefinitionName): boolean {
-  return new RegExp(`workflow\\s*\\(\\s*['"\`]${name}['"\`]`, 'u').test(body)
+  const quoted = `['"\`]${name}['"\`]`
+  const firstArgument = new RegExp(`workflow\\s*\\(\\s*${quoted}`, 'u')
+  // The `name` key may be bare or quoted: a hand-written body writes
+  // `{ name: 'x' }` and a serialized reference writes `{"name":"x"}`.
+  const referenceObject = new RegExp(`workflow\\s*\\(\\s*\\{[^}]*['"\`]?name['"\`]?\\s*:\\s*${quoted}`, 'u')
+  return firstArgument.test(body) || referenceObject.test(body)
 }
 
 /**

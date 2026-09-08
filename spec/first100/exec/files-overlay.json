@@ -807,7 +807,8 @@
       "path": "packages/action/action-manifest/src/identity.ts",
       "kind": "source",
       "stages": [
-        "U.2"
+        "U.2",
+        "U.3"
       ],
       "reason": "Created by this epic under §12.11: the actor resolution and the idempotency-key derivation both execution paths need. Not a hot zone — a new file in the package that already owns the manifest — but recorded because the plan named neither. It exists rather than living in each caller for the reason BLOCKED-136 measures: two paths deriving the same key is one rule with two implementations, and the derivation IS the contract (a replayed attempt keys the same, a new one does not)."
     },
@@ -817,7 +818,9 @@
       "kind": "test",
       "stages": [
         "U",
-        "U.2"
+        "U.2",
+        "U.3",
+        "U.4"
       ]
     },
     {
@@ -832,11 +835,57 @@
     },
     {
       "epic": "P2-03",
+      "path": "packages/core/tools/src/manifest-log.ts",
+      "kind": "source",
+      "stages": [
+        "U.4"
+      ],
+      "reason": "The session log as a real `ManifestAppender`. `appendManifestThenGate` is the one implementation of must[1]'s construct-append-gate order and the whole of must[2]'s no-bypass argument, and it needs a sink; the only one shipped was in-memory, so both dispatch paths wrote the order out for themselves and the shared implementation had no caller (§12.33). It lives in `dsh-tools` rather than in `dsh-action-manifest` because a capability definition reaching for a session is the edge BLOCKED-136 records, and `dsh-tools` is already the runtime side both paths import."
+    },
+    {
+      "epic": "P2-03",
       "path": "packages/core/tools/tests/ptc.spec.ts",
       "kind": "test",
       "stages": [
-        "U.1"
+        "U.1",
+        "U.3"
       ]
+    },
+    {
+      "epic": "P2-04",
+      "path": "packages/interaction/permission-presets/package.json",
+      "kind": "manifest",
+      "stages": [
+        "P"
+      ],
+      "reason": "The dependency edge the Provider role adds: permission-presets on risk-taxonomy."
+    },
+    {
+      "epic": "P2-04",
+      "path": "packages/interaction/permission-presets/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "P"
+      ],
+      "reason": "§12.47(i). The registry's P-stage list named only `risk-taxonomy/src/index.ts`, which makes the Provider stage a barrel edit and leaves the capability seam without a Provider: `classify` takes the organisation policy as a PARAMETER, so nothing classifies anything until a mount binds it. The binding belongs where the deployment's other permission knobs live — `permission-presets` already owns `approval/policy` — giving Definition (risk-taxonomy vocabulary + `classify`) / Provider (this file, holding and validating the `RiskPolicy`) / Consumer (the dispatch gate, U stage). The plan listed one file because it had not applied the capability-seam rule, not because the Provider role was meant to be absent."
+    },
+    {
+      "epic": "P2-04",
+      "path": "packages/interaction/permission-presets/tests/risk-policy.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P"
+      ],
+      "reason": "The Provider stage's own cases. They test the BINDING — that the mounted policy is what classifies, that the threshold is the deployment's, and that a policy switching off a kernel hard-deny is refused at mount — rather than re-testing `classify`'s rules, which are the Contract stage's."
+    },
+    {
+      "epic": "P2-04",
+      "path": "packages/interaction/permission-presets/tsconfig.json",
+      "kind": "manifest",
+      "stages": [
+        "P"
+      ],
+      "reason": "The project reference for the same edge."
     },
     {
       "epic": "P4-01",
@@ -912,6 +961,14 @@
     },
     {
       "epic": "P4-06",
+      "path": "packages/bundle/base/cordis.patch.yml",
+      "kind": "manifest",
+      "stages": [
+        "P.6"
+      ]
+    },
+    {
+      "epic": "P4-06",
       "path": "packages/collaboration/intake-dedup/src/dedup.ts",
       "kind": "source",
       "stages": [
@@ -942,11 +999,29 @@
     },
     {
       "epic": "P4-06",
+      "path": "packages/core/agent/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.3"
+      ],
+      "reason": "The barrel that publishes `DuplicateArrivalError`, the refusal a caller must be able to catch. NOT labelled HOT ZONE: it gains two export lines and no behaviour."
+    },
+    {
+      "epic": "P4-06",
+      "path": "packages/core/agent/tests/arrival-dedup.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P4-06",
       "path": "packages/run/message-bus/src/bus-store.ts",
       "kind": "source",
       "stages": [
         "P.3",
-        "P.4"
+        "P.4",
+        "P.6"
       ],
       "reason": "The durable store must[0] names: one BEGIN IMMEDIATE over the domain event, its outbox rows and the inbox claim. Created by this epic after the clause was reworded (C13) to exclude the KV seam."
     },
@@ -968,6 +1043,25 @@
         "U.2"
       ],
       "reason": "must[2]'s production call site: a real mailbox arrival decided against the durable consumed set. It lives in this package rather than in dsh-mailbox because the store is orchestration-runtime and the mailbox is a capability definition (ruling §12.5 B)."
+    },
+    {
+      "epic": "P4-06",
+      "path": "packages/run/message-bus/src/memory-store.ts",
+      "kind": "source",
+      "stages": [
+        "P.6"
+      ],
+      "reason": "The in-memory bus, added when §12.40 made the bus a hard dependency of every subagent composition: requiring a SQLite file for that would have put a temporary directory into thirty-eight unit suites whose subject is not durability. The same split `dsh-lease` makes against `dsh-lease-sqlite`."
+    },
+    {
+      "epic": "P4-06",
+      "path": "packages/run/message-bus/src/plugin.ts",
+      "kind": "source",
+      "stages": [
+        "P.6",
+        "U.4"
+      ],
+      "reason": "The bus as a mounted service. `openBusStore` had no production caller and no plugin, so every consumer would have decided for its callers where the bus lives — and that directory is the whole of whether a bus connects two hosts at all. The plan named the decisions and the store, not the mount."
     },
     {
       "epic": "P4-06",
@@ -1003,6 +1097,75 @@
       ]
     },
     {
+      "epic": "P4-06",
+      "path": "packages/run/message-bus/tests/plugin.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P.6"
+      ]
+    },
+    {
+      "epic": "P4-06",
+      "path": "packages/session/session-persistence/tests/write-behind.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P.5"
+      ]
+    },
+    {
+      "epic": "P4-06",
+      "path": "packages/subagent/subagent/src/continuation.ts",
+      "kind": "source",
+      "stages": [
+        "U.3",
+        "U.4"
+      ],
+      "reason": "HOT ZONE. From `git show fee9034530 -- packages/subagent/subagent/src/continuation.ts`: `SubagentSettledMessageSource` gains an optional `senderEpoch`, and the settlement notice reads it from the child's `Agent.lifecycle` before the handle is disposed. The sender has to state its generation or must[2]'s triple has only two thirds of an identity; this epic's consumer is the parent's inbox, and the epoch is the one thing the inbox cannot derive."
+    },
+    {
+      "epic": "P4-06",
+      "path": "packages/subagent/subagent/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.4"
+      ],
+      "reason": "Declares `messageBus` as an injected dependency, which is what puts the manager's drain inside the bus's lifetime and, through the service value that inject delivers, lets a settlement be committed during teardown (§12.40, §12.42)."
+    },
+    {
+      "epic": "P4-06",
+      "path": "packages/subagent/subagent/src/settlement-outbox.ts",
+      "kind": "source",
+      "stages": [
+        "U.4"
+      ],
+      "reason": "The send side's producer. The outbox decisions ran over records nothing created — `dispatchOnce`'s only caller shipped in no bundle — while the one real handoff between agents was delivered by hand and dropped whenever the parent could not receive it. This commits the settlement before anyone tries to deliver it."
+    },
+    {
+      "epic": "P4-06",
+      "path": "packages/subagent/subagent/tests/continuation.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P4-06",
+      "path": "packages/subagent/subagent/tests/settlement-outbox.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.4"
+      ]
+    },
+    {
+      "epic": "P4-07",
+      "path": "packages/core/agent-loop/src/tool-calls.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "Where the authority is actually presented: the dispatcher refuses a fenced or lease-refused run before a single tool runs, and writes the model-visible result that says which. A rule with no dispatch site refuses nothing, and the plan named no dispatch site."
+    },
+    {
       "epic": "P4-07",
       "path": "packages/core/agent/src/index.ts",
       "kind": "source",
@@ -1010,6 +1173,15 @@
         "U"
       ],
       "reason": "HOT ZONE. Written from `git show c79a24f78c -- packages/core/agent/src/index.ts`: the barrel had ZERO occurrences of `advanceAgentLifecycle` before this commit, and P4-07 added BOTH `advanceAgentLifecycle` and `advanceAgentLifecycleFenced` to it. So the unfenced public export is this epic's own widening, not a pre-existing condition it inherited — P4-07's standing open finding is one it created. Measured on the same question: `src/dispatch.ts` already exported the function and `package.json` already carried `\"./src/*\"`, so `@deepseek-ai/dsh-agent/src/dispatch` was importable beforehand; what this commit added is reachability from the package root, which is the surface the finding is about. An earlier version said the unfenced export was \"still\" exported, which read the epic's intent instead of its diff."
+    },
+    {
+      "epic": "P4-07",
+      "path": "packages/core/agent/src/types.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "Declares `Agent.leaseRefused`, the marker that made a refused lease distinguishable from a composition with no Run Service. The plan named the lease store and the fencing rule; the agent field is where the refusal has to be visible, because the dispatcher reads the agent rather than calling back into the Run Service (that would be a cycle)."
     },
     {
       "epic": "P4-07",
@@ -1025,6 +1197,25 @@
       "kind": "test",
       "stages": [
         "C"
+      ]
+    },
+    {
+      "epic": "P4-07",
+      "path": "packages/run/run/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.2",
+        "U.3"
+      ],
+      "reason": "The Run Service is the holder (§12.19-3): it takes the lease before registering the Run, renews it, releases it, and — since §12.31-A — marks the agent when the store refuses. The plan named the lease library and not the service that holds a lease."
+    },
+    {
+      "epic": "P4-07",
+      "path": "packages/run/run/tests/fenced-dispatch.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.2",
+        "U.3"
       ]
     },
     {
@@ -1064,6 +1255,44 @@
     },
     {
       "epic": "P4-08",
+      "path": "packages/collaboration/workflow-journal/src/recorder.ts",
+      "kind": "source",
+      "stages": [
+        "P.1",
+        "U.3"
+      ],
+      "reason": "The recorder the P-stage freeze cites, at its path after §12.22-1 moved the package. Carried into the overlay by the superseding entry rather than by new work: the file's content is unchanged, only its directory is."
+    },
+    {
+      "epic": "P4-08",
+      "path": "packages/collaboration/workflow-journal/src/store.ts",
+      "kind": "source",
+      "stages": [
+        "U.1"
+      ],
+      "reason": "The journal's persistence, which must[1] requires and which the package did not have: every decision in it is about a run that already died, so `planResume` had no possible input while the journal lived only in memory."
+    },
+    {
+      "epic": "P4-08",
+      "path": "packages/collaboration/workflow-journal/tests/resume.e2e.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C.1",
+        "F.2",
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P4-08",
+      "path": "packages/workflow/workflow-journal/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "The package moved to `packages/collaboration/workflow-journal` under §12.22-1 (BLOCKED-149) and the registry's declared paths moved with it. This entry's observation is EARLIER than the move and cites the path as it existed when the cell was greened; rewriting it would restate what a past CI run saw, which is provenance rather than a file list. The path is therefore outside the current declaration by history, not by scope."
+    },
+    {
+      "epic": "P4-08",
       "path": "packages/workflow/workflow-journal/src/observer.ts",
       "kind": "source",
       "stages": [
@@ -1073,21 +1302,42 @@
     },
     {
       "epic": "P4-08",
-      "path": "packages/workflow/workflow-journal/src/recorder.ts",
-      "kind": "source",
+      "path": "packages/workflow/workflow-worker-thread/package.json",
+      "kind": "manifest",
       "stages": [
-        "P"
-      ],
-      "reason": "The recorder that writes journal entries. The registry named the journal package without naming where a record is produced."
+        "U.2"
+      ]
     },
     {
       "epic": "P4-08",
-      "path": "packages/workflow/workflow-journal/tests/resume.e2e.spec.ts",
-      "kind": "test",
+      "path": "packages/workflow/workflow-worker-thread/src/index.ts",
+      "kind": "source",
       "stages": [
-        "C",
-        "F"
-      ]
+        "U.1",
+        "U.2",
+        "U.3"
+      ],
+      "reason": "HOT ZONE. From `git show 07acd35c6e -- packages/workflow/workflow-worker-thread/src/index.ts`: `start` and the new async `resume` both delegate to one private `launch`, the journal directory is derived from the storage root, and `childFinished` reads the child's DURABLE session. Shared with P4-07, whose lease acquisition is in the same `launch` body and is unchanged by this."
+    },
+    {
+      "epic": "P4-08",
+      "path": "packages/workflow/workflow-worker-thread/src/resume.ts",
+      "kind": "source",
+      "stages": [
+        "U.1",
+        "U.2",
+        "U.3"
+      ],
+      "reason": "The reconciliation itself: which recorded steps a resumed run may reuse, and the script digest `admitResume` compares. New file; the plan named the journal package but not the engine-side half that reads it back."
+    },
+    {
+      "epic": "P4-08",
+      "path": "packages/workflow/workflow-worker-thread/src/types.ts",
+      "kind": "source",
+      "stages": [
+        "U.1"
+      ],
+      "reason": "`WorkerInit` gains `reusable`, the only channel by which a reconciled decision reaches the worker: `workerData` is structured-cloned at spawn, so anything the script's `agent()` consults has to be there before the thread exists."
     },
     {
       "epic": "P4-08",
@@ -1096,6 +1346,77 @@
       "stages": [
         "U"
       ]
+    },
+    {
+      "epic": "P4-08",
+      "path": "packages/workflow/workflow-worker-thread/tests/journal-live-run.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.1",
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P4-08",
+      "path": "packages/workflow/workflow-worker-thread/tests/journal-resume.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.1",
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P4-08",
+      "path": "packages/workflow/workflow/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.1"
+      ],
+      "reason": "HOT ZONE. From `git show 07acd35c6e -- packages/workflow/workflow/src/index.ts`: `WorkflowEngine` gains the abstract `resume(runId, request): Promise<WorkflowRun>`. A Service Definition change, so every implementation must answer it — three test stubs did. §12.23 chose this over making `start()` async for callers that have no run to resume."
+    },
+    {
+      "epic": "P4-09",
+      "path": "packages/workflow/workflow-filesystem/package.json",
+      "kind": "manifest",
+      "stages": [
+        "U.4"
+      ],
+      "reason": "The new package's manifest."
+    },
+    {
+      "epic": "P4-09",
+      "path": "packages/workflow/workflow-filesystem/README.md",
+      "kind": "doc",
+      "stages": [
+        "U.4"
+      ]
+    },
+    {
+      "epic": "P4-09",
+      "path": "packages/workflow/workflow-filesystem/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.4"
+      ],
+      "reason": "§12.48-A(2). The producer P4-09 never had: a saved workflow is a file under the harness home, read at boot and registered through the engine's own admission. `registerDefinition` had 0 production callers before this, so nesting was reachable only from a test. New package, so it is outside the registry's file lists by construction."
+    },
+    {
+      "epic": "P4-09",
+      "path": "packages/workflow/workflow-filesystem/tests/saved-workflows.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.4"
+      ],
+      "reason": "The loader's cases, including the real-composition one that mounts the actual worker-thread engine rather than a stub sink."
+    },
+    {
+      "epic": "P4-09",
+      "path": "packages/workflow/workflow-filesystem/tsconfig.json",
+      "kind": "manifest",
+      "stages": [
+        "U.4"
+      ],
+      "reason": "The new package's compiler face and project references."
     },
     {
       "epic": "P4-09",
@@ -1121,8 +1442,46 @@
       "kind": "test",
       "stages": [
         "C",
-        "F"
+        "F",
+        "U.3"
       ]
+    },
+    {
+      "epic": "P4-09",
+      "path": "packages/workflow/workflow-worker-thread/src/host.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "HOT ZONE. From `git show d3a23a5e2c -- packages/workflow/workflow-worker-thread/src/host.ts`: `WorkerRun` gains `onNestedStart`/`nest`, a `nestedRuns` set, and a `NestingPort` constructor argument; `cancel()` gains the `cancelPropagationForNested` block. Shared with P4-07 (the lease) and P4-08 (the journal), whose code in this file is untouched by the diff — the nesting additions sit beside them and change neither."
+    },
+    {
+      "epic": "P4-09",
+      "path": "packages/workflow/workflow-worker-thread/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.2",
+        "U.3"
+      ],
+      "reason": "§12.48-A. The engine held its registered definitions in a bare `Map`, so `admitRegistration`, `isSelfRecursive` and the whole `DefinitionRegistry` had zero production callers and the digest a caller supplied was stored without ever being recomputed. The registry now holds them, which is where must[0]'s version pinning and acceptance[0]'s real meaning acquire their consumer. The registry's U-stage list named `runtime.ts`/`session.ts`, not this file."
+    },
+    {
+      "epic": "P4-09",
+      "path": "packages/workflow/workflow-worker-thread/src/protocol.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "The NestedStart / NestedSettled / NestedRefused messages. A nested run has to be started by the HOST, so the worker's request and the host's single reply need wire shapes; the file's existing tags are untouched."
+    },
+    {
+      "epic": "P4-09",
+      "path": "packages/workflow/workflow-worker-thread/src/types.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "`ChildPort` gains `startNested` and `NestedStartRequest` is declared. The port is how a script's hook reaches the host, and the plan named the runtime and session files without naming the seam between them."
     },
     {
       "epic": "P4-09",
@@ -1130,7 +1489,16 @@
       "kind": "test",
       "stages": [
         "U",
-        "U.1"
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P4-09",
+      "path": "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.2",
+        "U.3"
       ]
     },
     {
@@ -1159,6 +1527,66 @@
       ]
     },
     {
+      "epic": "P4-12",
+      "path": "packages/core/tools/src/external-effect.ts",
+      "kind": "source",
+      "stages": [
+        "U.1"
+      ],
+      "reason": "The reserve/confirm pair and the refusal text, moved out of the agent loop so BOTH dispatch paths reach one implementation. The plan named the ledger and the native loop; it named no home for a rule the code-mode path also has to obey, and writing it twice is the shape BLOCKED-136 records."
+    },
+    {
+      "epic": "P4-12",
+      "path": "packages/core/tools/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.1"
+      ],
+      "reason": "Passes the registry's own context to the code-mode transport, which is what the reservation reads the ledger from. A sub-dispatch's agent handle need not carry a context, and reading one there threw inside `commit` — surfacing as hung cases rather than an error."
+    },
+    {
+      "epic": "P4-12",
+      "path": "packages/core/tools/src/ptc.ts",
+      "kind": "source",
+      "stages": [
+        "U.1"
+      ],
+      "reason": "The code-mode dispatch site: where a sub-call reserves before running and settles after. Without it acceptance[0]'s at-most-once held for a tool called natively and not for the same tool called from a code-mode program."
+    },
+    {
+      "epic": "P4-12",
+      "path": "packages/core/tools/tests/ptc.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P5-10",
+      "path": "packages/collaboration/control-priority/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.1"
+      ],
+      "reason": "The promotion rule itself. §12.25-1 declared the table shared between the router and the inbox; §12.37 corrected what it contains, and the file is where 'only a cancel is promoted' is stated once for both consumers."
+    },
+    {
+      "epic": "P5-10",
+      "path": "packages/core/agent-loop/tests/interception.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P5-10",
+      "path": "packages/core/agent/tests/arrival-dedup.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
       "epic": "P5-10",
       "path": "packages/subagent/subagent/src/control-convergence.ts",
       "kind": "source",
@@ -1184,16 +1612,6 @@
         "U"
       ],
       "reason": "The types both halves share; separated because src/types.ts contains only types by repository rule."
-    },
-    {
-      "epic": "P5-10",
-      "path": "packages/subagent/subagent/src/index.ts",
-      "kind": "source",
-      "stages": [
-        "U",
-        "F"
-      ],
-      "reason": "The package barrel, which must re-export the control surface for any consumer to reach it."
     },
     {
       "epic": "P5-10",
@@ -1230,11 +1648,55 @@
     },
     {
       "epic": "P5-11",
+      "path": "packages/collaboration/mailbox/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "Cited by the superseded P5-11.U.1 and by two live P4-06 entries, and the file no longer exists: `@deepseek-ai/dsh-mailbox` was retired into `@deepseek-ai/dsh-message-bus` under §12.27-2. A freeze entry is append-only, so the citation stands as the record of what those entries observed; `FILES_REPLACED['P5-11']` carries the path forward for the registry."
+    },
+    {
+      "epic": "P5-11",
       "path": "packages/collaboration/taskboard/tests/claims.e2e.spec.ts",
       "kind": "test",
       "stages": [
         "C",
         "F"
+      ]
+    },
+    {
+      "epic": "P5-11",
+      "path": "packages/run/taskboard-sqlite/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "The board's Cordis plugin. The durable store existed as `openTaskStore(directory)` only, so every consumer would have decided for its callers where tasks live -- and the directory IS the setting acceptance[0] turns on, since two hosts contend only when a profile pointed them at one board. Mirrors `@deepseek-ai/dsh-lease-sqlite` exactly, including opening the database in `Service.init`."
+    },
+    {
+      "epic": "P5-11",
+      "path": "packages/run/taskboard-sqlite/src/store.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "The durable board's implementation. It was `src/index.ts` until §12.27-1 made that file the Cordis plugin, so the store moved down one file and the same code is now cited under the new name."
+    },
+    {
+      "epic": "P5-11",
+      "path": "packages/subagent/subagent-taskboard/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "The producer the epic lacked. P5-11's plan named the primitives and the consumers but nothing that CREATES a task, which is why every clause subject had zero production callers (BLOCKED-154). Delegation is the moment the ruling names, and this plugin is the seam's Consumer role: it turns `subagent/start` and `subagent/end` into a claim and a receipt. It is a new package rather than an edit to `dsh-subagent` because the claim lease is a deployment-varying setting and `SubagentRuntime` has no Config to carry one."
+    },
+    {
+      "epic": "P5-11",
+      "path": "packages/subagent/subagent-taskboard/tests/delegated-tasks.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
       ]
     },
     {
@@ -1301,16 +1763,6 @@
       "stages": [
         "F"
       ]
-    },
-    {
-      "epic": "P6-02",
-      "path": "packages/memory/memory/src/index.ts",
-      "kind": "source",
-      "stages": [
-        "C",
-        "U"
-      ],
-      "reason": "The memory service the clause is about; the registry declared the package and not its entry point."
     },
     {
       "epic": "P6-02",

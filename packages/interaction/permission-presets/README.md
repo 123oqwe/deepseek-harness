@@ -48,6 +48,10 @@ The plugin config defines the preset table and the default for fresh sessions. E
 |---|---|---|
 | `presets` | `workspace-write`, `danger-full-access` | Table of preset name → sandbox/approval bundle |
 | `defaultPreset` | inferred | Preset pinned into fresh sessions; required when composition defaults match no preset |
+| `riskRules` | `[]` | Organisation mapping from a plugin-declared domain tag to a risk class (P2-04 must[1]) |
+| `addedHardDenyClasses` | `[]` | Risk classes this deployment refuses outright, on top of the kernel's |
+| `removedHardDenyClasses` | `[]` | Classes the deployment states it does not refuse; naming one the kernel pins is refused at mount |
+| `approvalThreshold` | `destructive` | The class at or above which an action requires approval before it executes |
 
 The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-permission-presets) is the exhaustive source for every accepted field and its JSDoc. The name `custom` is reserved for the derived not-a-preset state and cannot name a table entry. Mounting requires a confining bash executor (one that reports a `sandboxMode`) and the approval service.
 

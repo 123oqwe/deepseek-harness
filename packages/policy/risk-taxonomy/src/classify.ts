@@ -35,8 +35,24 @@ export const RISK_CLASSES_BY_ASCENDING_RISK: readonly RiskClass[] = Object.freez
  */
 export const KERNEL_HARD_DENY_CLASSES: readonly RiskClass[] = Object.freeze(['safety-critical'])
 
-/** The class an action lands in when no rule matches it (must[3]). */
-const UNKNOWN_DEFAULT_CLASS: RiskClass = 'safety-critical'
+/**
+ * The class an action lands in when no rule matches it (must[3], §12.47).
+ *
+ * The HIGHEST POLICY-ADJUSTABLE class, deliberately not the highest class.
+ * must[3] says an unknown action defaults higher, and P2-03's acceptance[2]
+ * says an unclassifiable one defaults to high risk AND REQUIRES APPROVAL —
+ * both name approval, not refusal. Defaulting into the kernel hard-deny band
+ * would equate "we do not know what this is" with "we know this is
+ * catastrophic", and since nothing declares domain tags yet, it would refuse
+ * every action outright rather than ask about any of them.
+ *
+ * `safety-critical` stays reserved for an action a policy DECLARES
+ * catastrophic, and an organisation may not switch that band off. An
+ * organisation that wants unknowns refused as well can add this class to its
+ * own hard-deny list, which is raising its bar rather than lowering the
+ * kernel's.
+ */
+const UNKNOWN_DEFAULT_CLASS: RiskClass = 'security-sensitive'
 
 /**
  * Rank of a class in the ascending risk order.

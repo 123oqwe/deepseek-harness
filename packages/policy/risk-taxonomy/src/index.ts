@@ -1,16 +1,23 @@
 /**
- * Type-only barrel for the risk taxonomy (P2-04 C stage).
+ * The risk taxonomy's public surface (P2-04 Provider stage).
  *
- * Exactly one statement, and it re-exports types only. The repository's root
- * `tsdown.config.ts` builds every workspace package against a fixed entry
- * glob with no per-package exclusion, so a package directory without an
- * `index.ts` fails the build the moment it exists — this file is the scaffold
- * that requirement forces (BLOCKED-131, B4(f)).
+ * The Contract stage kept this barrel type-only so nothing re-exported here
+ * could execute. The Provider stage is where the classifier becomes reachable
+ * by name: a consumer decides an action's risk band by calling `classify` with
+ * the organisation policy in force, and `@deepseek-ai/dsh-permission-presets`
+ * is what holds and validates that policy.
  *
- * The runtime exports belong to the Provider stage. Keeping this barrel
- * type-only is what makes the Contract stage a contract rather than an
- * implementation: nothing re-exported here can execute.
+ * The runtime exports are the classifier and the two ordered tables its
+ * results are read against. Nothing here reads a store, a clock or an ambient
+ * policy — the policy is a parameter, so the same action under two policies
+ * gives two answers and neither is a property of this package.
  *
  * @module @deepseek-ai/dsh-risk-taxonomy
  */
 export type * from './types.ts'
+export {
+  classify,
+  riskRank,
+  KERNEL_HARD_DENY_CLASSES,
+  RISK_CLASSES_BY_ASCENDING_RISK,
+} from './classify.ts'

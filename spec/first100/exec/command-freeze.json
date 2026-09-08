@@ -7707,7 +7707,9 @@
       "sensitivityProof": {
         "mutationDescription": "Six mutations, applied locally one at a time to packages/policy/risk-taxonomy/src/ and reverted from a saved copy after each, re-running the whole package suite between them. On classify.ts: (1) UNKNOWN_DEFAULT_CLASS lowered from 'safety-critical' to 'read'; (2) the composite maximum comparison `riskRank(rule) > riskRank(decided)` flipped to `<`; (3) the assertPolicyKeepsKernelHardDenies call deleted; (4) confidence pinned to a constant 1. On index.ts: (5) a runtime export appended to the barrel; (6) `export type *` widened to `export *`.",
         "failureSummary": "Each mutation failed cases, and the counts discriminate rather than breaking the file: (1) 3 failed / 11 passed; (2) 2 failed / 12 passed; (3) 1 failed / 13 passed; (4) 1 failed / 13 passed; (5) 1 failed / 14 passed; (6) 1 failed / 14 passed. Restored: 15 passed (15). Mutations 5 and 6 are what make the scaffold pin load-bearing -- without them the barrel case would pass against any index.ts that merely compiled."
-      }
+      },
+      "supersededBy": "2026-09-08T16:10:00.000Z",
+      "supersessionReason": "§12.47(ii). The C stage over-read must[3]: the clause says an unknown action defaults to a HIGHER class, and P2-03's acceptance[2] says an unclassifiable one defaults to high risk AND REQUIRES APPROVAL — both name approval, not refusal. Freezing `UNKNOWN_DEFAULT_CLASS` at `safety-critical`, which is the kernel hard-deny band, equated \"we do not know what this is\" with \"we know this is catastrophic\", and since nothing declares domain tags yet, wiring the gate on top of it would have refused every action outright rather than asked about any. This is a property change, not a wording change, so it supersedes rather than renames: the unknown default is now the highest POLICY-ADJUSTABLE class and `safety-critical` is reached by declaration. The C cell was NOT_RUN, so no observation binds to the superseded entry."
     },
     {
       "epic": "P1-03",
@@ -9114,6 +9116,181 @@
         "failureSummary": "M28 reddens both cases — without the seed the resumed run's first persist replaces the file and step-1 is gone. M29 reddens the `verified` case only, so the two cases are not restatements. M30 reddens NOTHING, and that null result is recorded rather than hidden: compaction's only saving is dropping a completed+verified step's `inputs`, and `inputs` has no production producer (`createJournalRecorder`'s `stepStarted` always writes `[]`), so the compacted and raw journals are equal on every journal a real run can produce. What §12.46-A did fix is that the compaction is no longer STRUCTURALLY dead — its gate now reads a flag with a live producer — but its observable effect waits on an `inputs` producer, which is stated in BLOCKED-158 rather than papered over."
       },
       "note": "§12.46-A. `stepVerified` had 0 production callers and `compactJournal`'s `pure` gate could never fire, because every step this DSL journals is an `agent()` call classed `side-effecting`. The gate is now `completed && verified`, and reconciliation is what sets `verified`: a step whose effects the ledger confirmed and whose every child was accounted for has been checked against the world. Registering the two renamed C-stage titles and one renamed F-stage boundary in `frozen-title-renames.json` is part of this change. Seeding the resumed run's recorder from the reconciled journal fixes a defect found while implementing it: a resumed run previously built an empty recorder whose first persist overwrote the file, so a second crash would re-run the steps the first resume had just reconciled."
+    },
+    {
+      "epic": "P2-04",
+      "stage": "C",
+      "supersedes": "2026-09-06T21:30:00.000Z",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/policy/risk-taxonomy",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "must[0]: the taxonomy is exactly the eight named classes, in ascending risk order",
+        "must[0]: the order is total and strict, so \"highest risk\" has exactly one meaning",
+        "must[1]: the SAME declared tag classifies differently under two organisation policies",
+        "must[1]: a declared tag no policy rule mentions does not carry the plugin's own suggestion into the result",
+        "must[2]: a rule-decided classification names the tag that decided it and reports full confidence",
+        "must[2]: the grounds distinguish a class reached BY A RULE from the same class reached by the unknown default",
+        "must[3]: an action no rule matches classifies at the highest POLICY-ADJUSTABLE class, never in the kernel hard-deny band",
+        "must[3]: an organisation that wants unknowns REFUSED can add that class to its own hard-deny list",
+        "must[3]: a composite action takes the MAXIMUM risk of its matched tags",
+        "must[3]: one unrecognised tag beside a matched one does NOT escalate the whole action",
+        "acceptance[1]: adding a low-risk tag beside a high-risk one cannot lower the result",
+        "acceptance[1]: the classifier CAN return the low class when the policy alone says so, so the case above is not a constant",
+        "acceptance[2]: an organisation can add a hard-deny class of its own",
+        "acceptance[2]: a policy that switches off a kernel hard-deny class is REFUSED, naming the class",
+        "acceptance[2]: a policy adding nothing and removing nothing still hard-denies the kernel class",
+        "src/index.ts re-exports the type surface and the classifier, and declares no runtime value of its own"
+      ],
+      "files": [
+        "packages/policy/risk-taxonomy/src/types.ts",
+        "packages/policy/risk-taxonomy/src/classify.ts",
+        "packages/policy/risk-taxonomy/src/index.ts",
+        "packages/policy/risk-taxonomy/tests/classify.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-08T16:10:00.000Z",
+      "dryRunProof": {
+        "treeSha": "0f994e95ac1e566a73b8f171f7f44b1d3ba8be64",
+        "testsDiscovered": 16
+      },
+      "note": "§12.47(ii) re-freeze of P2-04.C. Only must[3]'s default class changes; every other case keeps its title and its assertion. Two case bodies that had relied on the unknown default BEING `safety-critical` now reach that class by a declared tag instead, which is what the ruling reserves it for: the kernel band is entered by declaration, never by failing to classify. The escape hatch is asserted rather than described — an organisation that wants unknowns refused adds `security-sensitive` to `addedHardDenyClasses`, which is raising its own bar, the thing acceptance[2] permits, as against lowering the kernel's, which it refuses. The scaffold case is superseded in the same entry: the Contract stage pinned the barrel to one type-only statement so a missing export could not be 'fixed' by quietly adding a runtime one, and the Provider stage is where that constraint retires by design. The property worth pinning changes rather than disappears — the barrel may now NAME runtime exports and still must not DECLARE any, because a `const` or a call there would run at import time in a package whose claim is that classification is pure and the policy is a parameter.",
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations of `classify.ts`, each restored byte-identical: (MC1) the unknown default goes back into the kernel hard-deny band; (MC2) the FIRST matching rule wins instead of the maximum; (MC3) the kernel-hard-deny removal check is deleted; (MC4) confidence is always full.",
+        "failureSummary": "MC1 reddens 2 — the re-frozen must[3] case and its organisation-raises-the-bar companion — which is what makes the §12.47 correction asserted rather than merely described. MC2 reddens only the composite-maximum case, MC3 only the removal-refusal case, and MC4 only the confidence case, so the three remaining clause families are separately load-bearing. acceptance[1]'s pair carries its own positive control: the classifier CAN return the low class when the policy alone says so, so the no-downgrade case is not a constant."
+      }
+    },
+    {
+      "epic": "P2-04",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/policy/risk-taxonomy",
+        "packages/interaction/permission-presets",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter must[1]: the SAME action classifies by the mounted rules, not by anything the action says about itself",
+        "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter acceptance[0]: two callers of the SAME mount get the same answer, because the policy is bound once",
+        "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter must[3]: an action whose tags no rule mentions reaches the approval threshold rather than passing quietly",
+        "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter must[1]: the threshold is the deployment's, so the same class can pass under one profile and stop under another",
+        "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter acceptance[2]: a deployment that switches off a kernel hard-deny class is refused AT MOUNT, naming the class",
+        "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter acceptance[2]: a deployment may RAISE its own bar, and the raise reaches classification"
+      ],
+      "files": [
+        "packages/policy/risk-taxonomy/src/index.ts",
+        "packages/policy/risk-taxonomy/src/classify.ts",
+        "packages/policy/risk-taxonomy/tests/classify.spec.ts",
+        "packages/interaction/permission-presets/src/index.ts",
+        "packages/interaction/permission-presets/package.json",
+        "packages/interaction/permission-presets/tsconfig.json",
+        "packages/interaction/permission-presets/tests/risk-policy.spec.ts"
+      ],
+      "filesOverlayReason": "§12.47(i). The registry's P file list names only `risk-taxonomy/src/index.ts`, which would make the Provider stage a barrel edit and leave the seam without a Provider: `classify` takes the organisation policy as a PARAMETER, so nothing classifies anything until a mount binds it. The binding belongs where the deployment's other permission knobs already live — `permission-presets`, which owns `approval/policy` — so the seam is Definition (risk-taxonomy vocabulary + `classify`) / Provider (permission-presets holds and validates the `RiskPolicy`) / Consumer (the dispatch gate, U stage). The plan listed one file because it had not applied the capability-seam rule, not because the Provider role was meant to be absent.",
+      "frozenAtUtc": "2026-09-08T16:40:00.000Z",
+      "dryRunProof": {
+        "treeSha": "0f994e95ac1e566a73b8f171f7f44b1d3ba8be64",
+        "testsDiscovered": 56,
+        "note": "Count across both frozen packages. 16 are the superseded C entry's, 34 the presets' pre-existing suite, 6 the Provider cases this entry freezes."
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations of `permission-presets/src/index.ts`, each restored byte-identical: (M31) `classifyAction` classifies under an EMPTY policy instead of the mounted one; (M32) the mount-time policy validation is removed; (M33) the approval threshold is hardcoded to `destructive` instead of read from config.",
+        "failureSummary": "M31 reddens 4 of 6 — the binding is what the stage is about, so most cases depend on it. M32 reddens only the mount-refusal case and M33 only the threshold case, which is what makes those two load-bearing rather than restatements. The mount-refusal case also carries a positive control: removing a class the kernel does NOT pin resolves, so the refusal is about the kernel floor rather than about the field being set at all."
+      },
+      "note": "§12.47(i). `Config` gains `riskRules`, `addedHardDenyClasses`, `removedHardDenyClasses` and `approvalThreshold`, all schematised, and the service gains `classifyAction` and `requiresApproval`. `removedHardDenyClasses` exists so a deployment can SAY it and be refused where it says it: `classify` refuses such a policy on every call, so without the mount-time check the misconfiguration would surface as a runtime error per action in a profile already serving. The threshold is a validated config field rather than a constant because which band is worth interrupting a user for differs between an interactive session and an unattended one."
+    },
+    {
+      "epic": "P4-09",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-09",
+        "stage": "U"
+      },
+      "supplementSeq": 3,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-registry",
+        "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-09 must[3]: a script nests another definition REFUSES a definition that nests ITSELF, structurally rather than by waiting for the depth limit",
+        "validation[2]: the REFERENCE-OBJECT call shape is detected too, which is the one a nested run actually carries"
+      ],
+      "files": [
+        "packages/workflow/workflow-worker-thread/src/index.ts",
+        "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts",
+        "packages/workflow/workflow-registry/src/version.ts",
+        "packages/workflow/workflow-registry/tests/nested.e2e.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-08T18:05:00.000Z",
+      "dryRunProof": {
+        "treeSha": "0f994e95ac1e566a73b8f171f7f44b1d3ba8be64",
+        "testsDiscovered": 53
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations, each restored byte-identical: (M34) `registerDefinition` skips the registry's admission and stores whatever it is given, which is the bare-`Map` behaviour this change replaces; (M35) `declaresNestedCall` goes back to matching only a quoted first argument.",
+        "failureSummary": "M34 reddens 4 of 53 — the digest-mismatch refusal and the self-recursion refusal both stop happening. M35 reddens 2, and only the reference-object cases, which is what shows the widened detector is asserted rather than incidental. The self-recursion case also carries a positive control: the SAME registration path admits a definition that does not name itself, so the refusal is about recursion rather than about the path refusing everything."
+      },
+      "note": "§12.48-A(1). The engine held registered definitions in a bare `Map`, so `admitRegistration`, `isSelfRecursive` and `DefinitionRegistry` had 0 production callers and a caller's digest was stored without ever being recomputed — a registration could claim one identity and carry another, and a run pinned to that digest would execute a body nobody attested. The engine now holds a `DefinitionRegistry`, so registration recomputes the digest, refuses a mismatch, and refuses a self-recursive definition BEFORE it can be shipped or started. Two fixture consequences are themselves the point: the nested-run fixtures had been registering made-up digests (`digest-inner`), which the registry now refuses, and the self-recursion case had relied on re-registering one digest with a different body — a trick only possible while nothing checked. Measured while fixing it: `declaresNestedCall` matched only `workflow('name')` and so could never fire on `workflow({ name, digest })`, the shape a nested run actually carries, making the self-recursion refusal a false negative in exactly its own case."
+    },
+    {
+      "epic": "P4-09",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-09",
+        "stage": "U"
+      },
+      "supplementSeq": 4,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-filesystem",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-09 must[0]: a saved definition is a file, registered at boot registers every definition file under the harness home, naming it by FILE name",
+        "P4-09 must[0]: a saved definition is a file, registered at boot computes each digest from the bytes it read, so a definition cannot claim one it does not hash to",
+        "P4-09 must[0]: a saved definition is a file, registered at boot starts with NO saved workflows when the directory does not exist, rather than failing the boot",
+        "P4-09 acceptance[0]: loading does not execute, and a refused definition does not stop the boot reads a body that would throw if it were ever evaluated, and registers it unharmed",
+        "P4-09 acceptance[0]: loading does not execute, and a refused definition does not stop the boot RECORDS a refused definition and keeps loading the rest",
+        "P4-09 acceptance[0]: loading does not execute, and a refused definition does not stop the boot REFUSES to mount over an engine that cannot register definitions, rather than loading into nothing",
+        "P4-09 must[0]: the REAL engine registers what the loader read loads a file into the mounted worker-thread engine, which then resolves it for a nested run"
+      ],
+      "files": [
+        "packages/workflow/workflow-filesystem/src/index.ts",
+        "packages/workflow/workflow-filesystem/tests/saved-workflows.spec.ts",
+        "packages/workflow/workflow-filesystem/package.json",
+        "packages/workflow/workflow-filesystem/tsconfig.json",
+        "packages/workflow/workflow-filesystem/README.md"
+      ],
+      "filesOverlayReason": "§12.48-A(2). P4-09's registry file lists name no producer of definitions, because the plan had none: `registerDefinition` had 0 production callers and nesting was reachable only from a test. A saved workflow is a FILE under the harness home, loaded at boot and registered through the engine's own admission — the same shape `dsh-skill-filesystem` uses for skills. The package is new, so every path here is outside the registry's lists by construction.",
+      "frozenAtUtc": "2026-09-08T19:20:00.000Z",
+      "dryRunProof": {
+        "treeSha": "0f994e95ac1e566a73b8f171f7f44b1d3ba8be64",
+        "testsDiscovered": 7
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations of the loader, each restored byte-identical: (M36) the digest is a claimed constant instead of computed from the bytes read; (M37) a refusal aborts the whole load instead of being recorded; (M38) mounting over an engine with no registration surface is tolerated rather than refused.",
+        "failureSummary": "M36 reddens 5 of 7 — the digest is what ties a definition to its bytes, so most cases depend on it. M37 and M38 redden exactly one case each, which is what makes the keep-loading and refuse-to-mount behaviours separately load-bearing. acceptance[0] is tested by construction rather than by assertion: the hostile-body case registers `process.exit(1)`, so if any part of this path evaluated a definition the case could not pass at all."
+      },
+      "note": "§12.48-A(2). The engine's registration is not on the `WorkflowEngine` seam — `RegisteredDefinition` lives in `dsh-workflow-registry`, which already depends on `dsh-workflow`, so declaring the method upstream is a project-reference cycle, measured rather than assumed. The loader therefore names the one operation it needs structurally and refuses to mount over an engine that lacks it, rather than importing a concrete engine and tying saved workflows to one implementation. The real-composition case mounts the actual worker-thread engine, because the recording engine can only show that the loader calls a method; and that recording engine wraps the real `DefinitionRegistry` rather than re-implementing its checks, which would pass while the real ones changed underneath it."
     }
   ]
 }

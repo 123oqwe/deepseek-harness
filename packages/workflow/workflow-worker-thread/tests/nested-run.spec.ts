@@ -23,7 +23,8 @@ import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SubagentRuntime from '@deepseek-ai/dsh-subagent'
 import * as spawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
-import type { DefinitionDigest, DefinitionName, SignerIdentity } from '@deepseek-ai/dsh-workflow-registry'
+import { computeDefinitionDigest } from '@deepseek-ai/dsh-workflow-registry'
+import type { DefinitionName, SignerIdentity } from '@deepseek-ai/dsh-workflow-registry'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import WorkerThreadWorkflowEngine from '../src/index.ts'
 import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
@@ -47,7 +48,11 @@ async function setup(options: { maxNestingDepth?: number } = {}) {
 
 /** Register one definition and return the `{ name, digest }` a script passes to `workflow()`. */
 function register(ctx: Context, name: string, body: string): { name: string; digest: string } {
-  const digest = brandString<DefinitionDigest>(`digest-${name}`)
+  // The REAL digest, computed from the body: since §12.48-A the engine holds a
+  // `DefinitionRegistry`, which recomputes it and refuses a mismatch. A made-up
+  // digest here would be a registration claiming one identity and carrying
+  // another, which is precisely what the registry exists to reject.
+  const digest = computeDefinitionDigest(body)
   const engine = ctx.workflowEngine as WorkerThreadWorkflowEngine
   engine.registerDefinition({
     digest,
@@ -114,31 +119,30 @@ describe('P4-09 must[3]: a script nests another definition', () => {
     // an operator would see "too deep" for a workflow that is merely large and
     // for one that calls itself forever.
     const { ctx, parent } = await setup()
-    const ref = register(ctx, 'self', 'return 1')
-    // Re-register the same digest with a body that nests itself.
     const engine = ctx.workflowEngine as WorkerThreadWorkflowEngine
-    engine.registerDefinition({
-      digest: brandString<DefinitionDigest>(ref.digest),
-      name: brandString<DefinitionName>('self'),
-      version: 2,
-      body: `return await workflow(${JSON.stringify(ref)})`,
-      signer: brandString<SignerIdentity>('test-signer'),
-    })
-    const run = ctx.workflowEngine.start({
-      script: `try { return await workflow(${JSON.stringify(ref)}) } catch (error) { return 'OUTER: ' + error.message }`,
-      meta: META,
-      parent,
-    })
 
-    // The outer nesting is admitted; the inner one names a digest already on
-    // its own ancestor chain and is refused as recursive, which surfaces to
-    // the outer script as that nested run failing.
-    // The REASON, not merely that something threw. Asserting `OUTER:` alone
-    // passed against an engine that ignored the admission decision entirely —
-    // measured — because the outer script catches any error the nested run
-    // produces, whatever caused it.
-    expect((await run.result).value).toContain('recursive-definition')
-    await run.dispose()
+    // A definition whose own body nests itself, registered under its own real
+    // digest. Since §12.48-A the refusal happens at REGISTRATION: a definition
+    // that cannot terminate never enters the registry, so it is never shipped,
+    // resolved or started. Before that, the engine's bare `Map` stored it and
+    // the recursion was caught at run time — after the thing had already been
+    // registered and begun.
+    const selfBody = "return await workflow({ name: 'self', digest: SELF })"
+    expect(() => {
+      engine.registerDefinition({
+        digest: computeDefinitionDigest(selfBody),
+        name: brandString<DefinitionName>('self'),
+        version: 1,
+        body: selfBody,
+        signer: brandString<SignerIdentity>('test-signer'),
+      })
+    }).toThrow(/self-recursive-definition/u)
+
+    // The positive control: the SAME registration path admits a definition that
+    // does not name itself, so the refusal above is about recursion rather than
+    // about this path refusing everything.
+    expect(() => { register(ctx, 'not-self', 'return 1') }).not.toThrow()
+    void parent
   })
 
   it('REFUSES nesting past the configured depth (acceptance[3])', async () => {

@@ -16,7 +16,7 @@ import { brandString } from '@deepseek-ai/dsh-brand'
 import type { LeaseStoreContract, WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease-contract'
 import { dshHomePath } from '@deepseek-ai/dsh-home-paths'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import { planNestedRun, resolveDefinition } from '@deepseek-ai/dsh-workflow-registry'
+import { DefinitionRegistry, planNestedRun } from '@deepseek-ai/dsh-workflow-registry'
 import type {
   ChildFailurePolicy,
   InheritedWorkerLimits,
@@ -188,8 +188,17 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
   private readonly leases: LeaseStoreContract
   /** Directory holding one journal file per run (P4-08 must[1]). */
   private readonly journalDirectory: string
-  /** Registered definitions a nested run may name, by digest (P4-09 must[0]). */
-  private readonly definitions = new Map<DefinitionDigest, RegisteredDefinition>()
+  /**
+   * Registered definitions a nested run may name (P4-09 must[0], §12.48-A).
+   *
+   * The registry, not a bare `Map`. A map stores whatever digest the caller
+   * hands over, so a registration could claim one identity and carry another
+   * and a run pinned to that digest would execute a body nobody attested. The
+   * registry recomputes the digest from the body, refuses a mismatch, refuses
+   * a self-recursive definition before it can ever be started, and keeps the
+   * per-name version history `current()` answers from.
+   */
+  private readonly definitions = new DefinitionRegistry()
   /**
    * Each live run's remaining budget and ancestor chain (P4-09 must[3]).
    *
@@ -320,7 +329,13 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
    * @param definition - the definition to register, keyed by its digest.
    */
   registerDefinition(definition: RegisteredDefinition): void {
-    this.definitions.set(definition.digest, definition)
+    const outcome = this.definitions.register(definition)
+    if (!outcome.registered) {
+      throw new WorkflowError(
+        `workflow definition "${definition.name}" was not registered: ${outcome.reason} (${outcome.detail})`,
+        'INVALID_ARGUMENT',
+      )
+    }
   }
 
   /**
@@ -337,9 +352,8 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     | { readonly started: true; readonly run: WorkflowRun; readonly failurePolicy: ChildFailurePolicy }
     | { readonly started: false; readonly rendered: string }> {
     const digest = brandString<DefinitionDigest>(request.digest)
-    const resolved = resolveDefinition(
+    const resolved = this.definitions.resolve(
       { runId: parent.id, digest, name: brandString<DefinitionName>(request.name), version: 0 },
-      this.definitions,
     )
     if (!resolved.resolved) {
       return Promise.resolve({ started: false, rendered: `nested workflow "${request.name}" was not started: ${resolved.reason}` })
