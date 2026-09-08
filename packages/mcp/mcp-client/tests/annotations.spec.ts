@@ -61,9 +61,13 @@ describe('P2-04 must[1]: a hostile server cannot lower the risk its own tools ca
 describe('P2-04 must[1]: a malformed annotation refuses ITS TOOL, not the server', () => {
   it('names the offending field so an operator can fix the server', () => {
     const verdict = validateAnnotations({ destructiveHint: 'yes' })
-    expect(verdict.ok).toBe(false)
-    expect(verdict.ok === false && verdict.reason).toContain('annotations.destructiveHint')
-    expect(verdict.ok === false && verdict.reason).toContain('boolean')
+    // Narrowed by a thrown assertion rather than by `ok === false &&`, which
+    // oxlint rejects as comparing a boolean to a boolean. The throw also makes
+    // a refusal that unexpectedly succeeded fail HERE, naming the verdict,
+    // instead of further down on an undefined `reason`.
+    if (verdict.ok) throw new Error('expected the malformed annotation to be refused')
+    expect(verdict.reason).toContain('annotations.destructiveHint')
+    expect(verdict.reason).toContain('boolean')
   })
 
   it('refuses a non-object annotations field, including an array', () => {

@@ -305,6 +305,9 @@ flowchart TD
     pkg_agent_presets["agent-presets"]
     pkg_persona["persona"]
   end
+  subgraph group_reliability["packages/reliability"]
+    pkg_retry["retry"]
+  end
   subgraph group_run["packages/run"]
     pkg_lease["lease"]
     pkg_lease_sqlite["lease-sqlite"]
@@ -560,6 +563,7 @@ flowchart TD
   pkg_message_feedback --> pkg_typert_protocol
   pkg_plugin_compat --> pkg_brand
   pkg_plugin_compat --> pkg_schema_registry
+  pkg_retry --> pkg_action_ledger
   pkg_sandbox_local --> pkg_llm
   pkg_sandbox_local --> pkg_sandbox
   pkg_sandbox_local --> pkg_session
@@ -1466,6 +1470,7 @@ flowchart TD
 | [`spill-local`](../packages/spill/spill-local) | `spill` | [`spill`](../packages/spill/spill) |
 | [`message-feedback`](../packages/feedback/message-feedback) | `feedback` | [`brand`](../packages/util/brand), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence), [`storage-domain`](../packages/storage/storage-domain), [`typert-protocol`](../packages/typert/protocol) |
 | [`plugin-compat`](../packages/plugin/plugin-compat) | `plugin` | [`brand`](../packages/util/brand), [`schema-registry`](../packages/schema/schema-registry) |
+| [`retry`](../packages/reliability/retry) | `reliability` | [`action-ledger`](../packages/action/action-ledger) |
 | [`sandbox-local`](../packages/sandbox/sandbox-local) | `sandbox` | [`llm`](../packages/llm/llm), [`sandbox`](../packages/sandbox/sandbox), [`session`](../packages/core/session) |
 | [`session-persistence-jsonl`](../packages/session/session-persistence-jsonl) | `session` | [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence) |
 | [`session-projection-cache`](../packages/session/session-projection-cache) | `session` | [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection), [`storage-domain`](../packages/storage/storage-domain) |

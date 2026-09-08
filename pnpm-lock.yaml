@@ -7059,6 +7059,15 @@ importers:
         specifier: workspace:^
         version: link:../../core/system-prompt
 
+  packages/reliability/retry:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-action-ledger':
+        specifier: workspace:^
+        version: link:../../action/action-ledger
+
   packages/run/lease:
     devDependencies:
       '@deepseek-ai/cordis':

@@ -9,6 +9,16 @@ responds; append-only.
 
 ## Open
 
+### BLOCKED-167 — P4-05's `paused` has no producer, and its producer is P2-12's pause control (`landsIn: P2-12.U`)
+
+Recorded in the BLOCKED-159 form, per §12.67. This is not a blocker on P2-12's own clauses; it is a requirement P2-12 inherits, written down now so it is met by design rather than discovered afterwards.
+
+**The correction that produced this entry.** `evidence-P4-05.md` originally deferred `paused` on the ground that "the harness exposes no suspend control, and nothing in the product offers that". That is false. Registry **P2-12** must[0] names `pause new actions`, `cancel run`, `kill execution world`, `ask question`, `resume`. I asserted a product-level absence without checking the registry that defines the product — the same shape as claiming the tree had no `Retry-After` parser and no adopt row for P1-10, and the third time this session that "I did not find it" was written as "it does not exist".
+
+**Why it matters rather than being a wording fix.** §12.57 admits a directed deferral, and a deferral needs a direction. Without a named bearer, `paused` is a declared state nobody owns: a future reader finds a legal state with no producer, no owner and no closing condition, and the honest reading of that is a dead member of the vocabulary rather than a deferred one.
+
+**Closing condition.** P2-12's pause control moves the agent INTO `paused` and its resume control moves it back to `running`, with a frozen case for each direction. `LEGAL_TRANSITIONS` already admits both edges (`running → paused`, `paused → running`), so P2-12 needs no change to P4-05's state machine — only a producer that uses it.
+
 ### BLOCKED-166 — P5-04 readiness: a hedged attempt must be TAGGED, or P4-11's hedge-exclusion rule can never fire
 
 Recorded before P5-04 starts, in the BLOCKED-159 form, per §12.64 and the §12.46-B split. This is not a blocker on P5-04's own clauses; it is a requirement P5-04 inherits from an epic that will land first, written down now so P5-04 discovers it at its preFlight rather than at its Usage stage.

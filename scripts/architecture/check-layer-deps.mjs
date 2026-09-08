@@ -146,6 +146,13 @@ const GROUP_LAYERS = {
   // beside its bus because a definition may not depend on a runtime, which is
   // what a mailbox importing `dsh-message-bus` would have been (BLOCKED-136).
   collaboration: 'capability-definitions',
+  // P4-11's retry decisions: the failure taxonomy read against the action
+  // ledger's state, the run-wide budget's accounting, and the hedge rule. Pure
+  // functions over caller-supplied facts that define what "retryable" and
+  // "spent" ARE, with the circuit breaker adopted from `cockatiel` in the
+  // Provider stage and backoff left to `llm-retry`. A definition may not
+  // depend on a runtime, which is why the delay arrives already computed.
+  reliability: 'capability-definitions',
   e2b: 'providers',
   core: 'orchestration-runtime',
   run: 'orchestration-runtime',

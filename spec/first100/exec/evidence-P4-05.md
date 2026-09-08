@@ -147,6 +147,10 @@ Frozen as §12.60 specified, over two real hosts sharing one SQLite lease store:
 
 The case caught a real defect in the first implementation: the transition proposed `epoch: lifecycle.epoch`, the LAPSED host's epoch, and `decideTransition` adopts whatever the proposal names — so the orphaning would have been recorded under the authority of the host that no longer had any. It now proposes the reclaimer's token epoch.
 
-### `paused` — DIRECTED DEFERRAL
+### `paused` — DIRECTED DEFERRAL, and the direction is P2-12
 
-Recorded per §12.57's "`paused` 若无 producer 记定向延期并写明". No production path produces it, and this is a genuine absence rather than an omission: the harness exposes no suspend control, and every wait it does have is already named by a more specific state — `waiting_tool` while a tool runs, `waiting_human` while an operator is asked. `paused` would mean "suspended by an operator who has not asked for anything", and nothing in the product offers that. It stays declared, legal, and unreached until a suspend control exists to produce it.
+Recorded per §12.57's "`paused` 若无 producer 记定向延期并写明". No production path produces it today, and every wait the harness currently has is already named by a more specific state — `waiting_tool` while a tool runs, `waiting_human` while an operator is asked.
+
+**An earlier revision of this section said the product offers no suspend control at all. That was wrong, and §12.67 caught it.** Registry **P2-12** ("全局 Emergency Stop 与通用 Human Interaction Channel") names exactly that control in its must[0]: `pause new actions`, `cancel run`, `kill execution world`, `ask question`, `resume`. So `paused` has a designated producer; it is not built yet. A deferral without a bearer is not a deferral — it is signing a dead state and hoping nobody asks.
+
+The direction is therefore recorded rather than implied: BLOCKED-167 carries `landsIn: P2-12.U`, and P2-12's readiness gate carries the requirement that its pause control move the agent INTO `paused` and its resume control move it back. Until that lands, `paused` stays declared, legal and unreached — with a named owner.

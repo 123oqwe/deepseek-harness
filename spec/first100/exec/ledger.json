@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-08T16:58:21.364Z",
-  "inputDigest": "4f2425b8bc5b5a4c731a6e4fb44cbc5c8f378a5d841e81fd94725c84ec8183c4",
+  "lastUpdatedUtc": "2026-09-08T17:29:23.626Z",
+  "inputDigest": "bbdb4a82198fcadea9e8b5904a5093bc88092c11bec069e8fc897e1eae015a47",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4125,10 +4125,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "684d0aad2a50cf2e8bc0cb9f611172cd971114f7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33946026079",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-684d/first100-evidence-684d0aad2a50cf2e8bc0cb9f611172cd971114f7/vitest-report.json",
-          "observationSha256": "72517b555b749ccd1f875d20af065dd777589df248a279db81d31ed0eff4d753",
+          "candidateSha": "224d2ac8672c4d90f66ca7801ae30d44869332bd",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34253568004",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-224d2ac867/vitest-report.json",
+          "observationSha256": "b93148d91a03db21eccbc90a9aebf647e8f4d5afb3404e18abcc497d247658af",
           "expectCasesMatched": [
             "contract: the state map declares exactly the ten states must[0] names, with no extras",
             "contract: every declared target is itself a declared state, so the map cannot name a state that does not exist",
@@ -4151,17 +4151,37 @@
             "contract: an orphaned run may NOT resume directly as running, so a reclaim always issues a new lease",
             "contract: every non-terminal state can reach orphaned, so any interrupted run is representable after a restart"
           ],
-          "capturedAtUtc": "2026-09-05T05:16:54.645Z"
+          "capturedAtUtc": "2026-09-08T17:29:08.251Z",
+          "admittedUnderRedRun": {
+            "runId": "34253568004",
+            "redSteps": [
+              {
+                "step": "Lint the files this program changed since the frozen baseline",
+                "failingCases": [
+                  "packages/mcp/mcp-client/tests/annotations.spec.ts:65:12 error typescript(no-unnecessary-boolean-literal-compare): This expression unnecessarily compares a boolean value to a boolean instead of using it directly.",
+                  "packages/mcp/mcp-client/tests/annotations.spec.ts:66:12 error typescript(no-unnecessary-boolean-literal-compare): This expression unnecessarily compares a boolean value to a boolean instead of using it directly."
+                ],
+                "evidence": "run 34253568004 @ 224d2ac867. The vitest report uploaded BEFORE the lint step reports 20510 tests, 0 failed, and P4-05's own frozen titles all pass: C.1 (3), U.2 (1), F.3 (4). The red step is oxlint over changed files, and both diagnostics are in ONE file that belongs to a different epic's slice (P2-04.P.3's MCP annotations cases). No P4-05 file appears in the failure set.",
+                "subjectPaths": [
+                  "packages/mcp/mcp-client/tests/annotations.spec.ts"
+                ]
+              }
+            ],
+            "diagnosedCause": "A single-file lint failure in another epic's slice: two no-unnecessary-boolean-literal-compare diagnostics in packages/mcp/mcp-client/tests/annotations.spec.ts, which is P2-04.P.3's file. The reality set is P2-04.P.3, not P4-05 — no P4-05 file is in the failure set, and the vitest report uploaded before the lint step shows 0 failures with all 8 of P4-05's newly frozen titles passing. Fixed separately by narrowing the assertion with a thrown check; the case titles and therefore the frozen expectCases are unchanged. Admitted per §12.6-B and §12.67 item 1 with the delegate's acknowledgement.",
+            "unrelatedBecause": "the epic's reality set (13 path(s): declaration plus live freeze entries, per BLOCKED-134) is disjoint from the failing subject [\"packages/mcp/mcp-client/tests/annotations.spec.ts\"]",
+            "admittedBy": "guanjieqiao-92 (delegate), §12.67 item 1",
+            "diagnosedAtUtc": "2026-09-08T17:29:23.360Z"
+          }
         },
         "P": {
           "status": "N/A"
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "8d8dec5ad1c06bc711a033891c4fe33cab601faa",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33946484946",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-8d8d/first100-evidence-8d8dec5ad1c06bc711a033891c4fe33cab601faa/vitest-report.json",
-          "observationSha256": "b030719b376bb7e70a0d0ebcac9a5b22e3795ebb3a2c03ecb8026e9086dc52d3",
+          "candidateSha": "224d2ac8672c4d90f66ca7801ae30d44869332bd",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34253568004",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-224d2ac867/vitest-report.json",
+          "observationSha256": "b93148d91a03db21eccbc90a9aebf647e8f4d5afb3404e18abcc497d247658af",
           "expectCasesMatched": [
             "contract: an admitted transition returns the next lifecycle carrying the proposal epoch",
             "contract: a refusal is RETURNED, not thrown, so a supervisor can record a turned-away worker as an ordinary outcome",
@@ -4173,14 +4193,34 @@
             "contract: a cancelling run still holds its slot, because a draining run has not released it",
             "contract: moving into a waiting state releases the slot in the SAME step that changes the state"
           ],
-          "capturedAtUtc": "2026-09-05T05:28:41.102Z"
+          "capturedAtUtc": "2026-09-08T17:29:08.495Z",
+          "admittedUnderRedRun": {
+            "runId": "34253568004",
+            "redSteps": [
+              {
+                "step": "Lint the files this program changed since the frozen baseline",
+                "failingCases": [
+                  "packages/mcp/mcp-client/tests/annotations.spec.ts:65:12 error typescript(no-unnecessary-boolean-literal-compare): This expression unnecessarily compares a boolean value to a boolean instead of using it directly.",
+                  "packages/mcp/mcp-client/tests/annotations.spec.ts:66:12 error typescript(no-unnecessary-boolean-literal-compare): This expression unnecessarily compares a boolean value to a boolean instead of using it directly."
+                ],
+                "evidence": "run 34253568004 @ 224d2ac867. The vitest report uploaded BEFORE the lint step reports 20510 tests, 0 failed, and P4-05's own frozen titles all pass: C.1 (3), U.2 (1), F.3 (4). The red step is oxlint over changed files, and both diagnostics are in ONE file that belongs to a different epic's slice (P2-04.P.3's MCP annotations cases). No P4-05 file appears in the failure set.",
+                "subjectPaths": [
+                  "packages/mcp/mcp-client/tests/annotations.spec.ts"
+                ]
+              }
+            ],
+            "diagnosedCause": "A single-file lint failure in another epic's slice: two no-unnecessary-boolean-literal-compare diagnostics in packages/mcp/mcp-client/tests/annotations.spec.ts, which is P2-04.P.3's file. The reality set is P2-04.P.3, not P4-05 — no P4-05 file is in the failure set, and the vitest report uploaded before the lint step shows 0 failures with all 8 of P4-05's newly frozen titles passing. Fixed separately by narrowing the assertion with a thrown check; the case titles and therefore the frozen expectCases are unchanged. Admitted per §12.6-B and §12.67 item 1 with the delegate's acknowledgement.",
+            "unrelatedBecause": "the epic's reality set (13 path(s): declaration plus live freeze entries, per BLOCKED-134) is disjoint from the failing subject [\"packages/mcp/mcp-client/tests/annotations.spec.ts\"]",
+            "admittedBy": "guanjieqiao-92 (delegate), §12.67 item 1",
+            "diagnosedAtUtc": "2026-09-08T17:29:23.490Z"
+          }
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "d004aee95a86329d9eb4a9bed848e177214a9aaf",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33946729009",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-d004/first100-evidence-d004aee95a86329d9eb4a9bed848e177214a9aaf/vitest-report.json",
-          "observationSha256": "3c5694dcdf192dd19ee96c979d479d9048d7b3d0bff13472d93ae878f61896cf",
+          "candidateSha": "224d2ac8672c4d90f66ca7801ae30d44869332bd",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34253568004",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-224d2ac867/vitest-report.json",
+          "observationSha256": "b93148d91a03db21eccbc90a9aebf647e8f4d5afb3404e18abcc497d247658af",
           "expectCasesMatched": [
             "contract: the state map declares exactly the ten states must[0] names, with no extras",
             "contract: every declared target is itself a declared state, so the map cannot name a state that does not exist",
@@ -4211,11 +4251,70 @@
             "enforcement: a run that goes orphaned -> starting -> running carries a strictly greater epoch than before it was orphaned",
             "enforcement: the dead worker cannot act after the reclaim, because its epoch is now strictly older"
           ],
-          "capturedAtUtc": "2026-09-05T05:32:53.058Z"
+          "capturedAtUtc": "2026-09-08T17:29:08.735Z",
+          "admittedUnderRedRun": {
+            "runId": "34253568004",
+            "redSteps": [
+              {
+                "step": "Lint the files this program changed since the frozen baseline",
+                "failingCases": [
+                  "packages/mcp/mcp-client/tests/annotations.spec.ts:65:12 error typescript(no-unnecessary-boolean-literal-compare): This expression unnecessarily compares a boolean value to a boolean instead of using it directly.",
+                  "packages/mcp/mcp-client/tests/annotations.spec.ts:66:12 error typescript(no-unnecessary-boolean-literal-compare): This expression unnecessarily compares a boolean value to a boolean instead of using it directly."
+                ],
+                "evidence": "run 34253568004 @ 224d2ac867. The vitest report uploaded BEFORE the lint step reports 20510 tests, 0 failed, and P4-05's own frozen titles all pass: C.1 (3), U.2 (1), F.3 (4). The red step is oxlint over changed files, and both diagnostics are in ONE file that belongs to a different epic's slice (P2-04.P.3's MCP annotations cases). No P4-05 file appears in the failure set.",
+                "subjectPaths": [
+                  "packages/mcp/mcp-client/tests/annotations.spec.ts"
+                ]
+              }
+            ],
+            "diagnosedCause": "A single-file lint failure in another epic's slice: two no-unnecessary-boolean-literal-compare diagnostics in packages/mcp/mcp-client/tests/annotations.spec.ts, which is P2-04.P.3's file. The reality set is P2-04.P.3, not P4-05 — no P4-05 file is in the failure set, and the vitest report uploaded before the lint step shows 0 failures with all 8 of P4-05's newly frozen titles passing. Fixed separately by narrowing the assertion with a thrown check; the case titles and therefore the frozen expectCases are unchanged. Admitted per §12.6-B and §12.67 item 1 with the delegate's acknowledgement.",
+            "unrelatedBecause": "the epic's reality set (13 path(s): declaration plus live freeze entries, per BLOCKED-134) is disjoint from the failing subject [\"packages/mcp/mcp-client/tests/annotations.spec.ts\"]",
+            "admittedBy": "guanjieqiao-92 (delegate), §12.67 item 1",
+            "diagnosedAtUtc": "2026-09-08T17:29:23.623Z"
+          }
         }
       },
-      "supplements": {},
-      "candidateSha": "d004aee95a86329d9eb4a9bed848e177214a9aaf",
+      "supplements": {
+        "C.1": {
+          "status": "GREEN",
+          "candidateSha": "224d2ac8672c4d90f66ca7801ae30d44869332bd",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34253568004",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-224d2ac867/vitest-report.json",
+          "observationSha256": "b93148d91a03db21eccbc90a9aebf647e8f4d5afb3404e18abcc497d247658af",
+          "expectCasesMatched": [
+            "P4-05 must[0]: `failed` is a state a run can actually reach ends a run whose last activity was an unrecovered error in `failed`, not `completed`",
+            "P4-05 must[0]: `failed` is a state a run can actually reach still ends a run that did its work in `completed`, so the failure path is not simply the new default",
+            "P4-05 must[0]: `waiting_human` is a state a run can actually reach holds the run in `waiting_human` WHILE an operator is being asked, and returns it to `running`"
+          ],
+          "capturedAtUtc": "2026-09-08T17:28:59.494Z"
+        },
+        "U.2": {
+          "status": "GREEN",
+          "candidateSha": "224d2ac8672c4d90f66ca7801ae30d44869332bd",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34253568004",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-224d2ac867/vitest-report.json",
+          "observationSha256": "b93148d91a03db21eccbc90a9aebf647e8f4d5afb3404e18abcc497d247658af",
+          "expectCasesMatched": [
+            "P4-05 acceptance[1] (§12.59): a waiting run holds no concurrency slot lets B start while A waits, and gives A its slot back BEFORE a new start C"
+          ],
+          "capturedAtUtc": "2026-09-08T17:28:59.722Z"
+        },
+        "F.3": {
+          "status": "GREEN",
+          "candidateSha": "224d2ac8672c4d90f66ca7801ae30d44869332bd",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34253568004",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-224d2ac867/vitest-report.json",
+          "observationSha256": "b93148d91a03db21eccbc90a9aebf647e8f4d5afb3404e18abcc497d247658af",
+          "expectCasesMatched": [
+            "P4-05 acceptance[2]: the orphaned host is not the one that records it REFUSES the orphaning write from the host that LOST the lease, because it no longer speaks for the run",
+            "P4-05 acceptance[2]: an orphaned run is reclaimed, or safely failed, by the host that took it lets a second host take a LAPSED item, record `orphaned` under its own epoch, and fences the first host afterwards",
+            "P4-05 acceptance[2]: an orphaned run is reclaimed, or safely failed, by the host that took it REFUSES to reclaim an item whose holder is still current, so a live run is never taken from it",
+            "P4-05 acceptance[1] (§12.60): a run holding no dispatch slot does not begin a model step REFUSES the step for a reclaimed run, so no LLM call is spent on work this host lost"
+          ],
+          "capturedAtUtc": "2026-09-08T17:28:59.959Z"
+        }
+      },
+      "candidateSha": "224d2ac8672c4d90f66ca7801ae30d44869332bd",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
