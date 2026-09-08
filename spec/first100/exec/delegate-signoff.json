@@ -273,6 +273,14 @@
       "delegateSession": "guanjieqiao-92",
       "signedAtUtc": "2026-09-08T15:42:53.916Z",
       "note": "Observation run 34238203263 @ 434408a47c (signed bundle, 20490/0). 4.4b: C/P/U/F and live supplements U.2/P.3/P.4/U.3/U.4/P.6 GREEN @ 434408a47c; P.1 SUPERSEDED by P.3 (liveness derived from the freeze at 16f69636e0, its 11 other titles live and passing at this run); 0 open findings. 4.4a: outbox/inbox settlement via commitIntake before first await, drainSettlementOutbox on commit signal/session-start/pre-step, MessageBusPlugin enabled in bundle/base (sqlite dshHomePath('bus')), reconciliation in resume.ts reusableSteps reached by the host resume path."
+    },
+    {
+      "epic": "P4-05",
+      "rowDigestSha256": "cf26fae7f09e2307638347b244371b5b350c804d5a84120983971c28b412f839",
+      "conclusion": "PASS",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-08T18:38:05.053Z",
+      "note": "Observation run 34253568004 @ 224d2ac867 (signed bundle, vitest 20510/0; job red only at the lint step on P2-04's annotations.spec.ts — admitted for P4-05 per §12.67, reality set disjoint). 4.4b: C/U/F and supplements C.1/U.2/F.3 GREEN @ 224d2ac867, P=N/A, 0 open findings. 4.4a: failed produced by RunPlugin.finish; waiting_human by the approval request in core/tools external-effect; slot release/resume priority/step admission in workflow-worker-thread runtime.ts (A-class consumer per §12.59) and agent/pre-step; orphaned written by the reclaimer under its own epoch (RunPlugin.reclaim) with the fenced host refused; RunPlugin mounted in bundle/base. paused: directed deferral BLOCKED-167 landsIn P2-12.U (LEGAL_TRANSITIONS already admits both edges)."
     }
   ]
 }
