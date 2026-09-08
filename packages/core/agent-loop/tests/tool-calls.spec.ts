@@ -14,6 +14,7 @@ import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
 import AgentLoop, { DEFAULT_MAX_PARALLEL_TOOL_CALLS } from '@deepseek-ai/dsh-agent-loop'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import { MockAdapter, textResponse } from './mock-adapter.ts'
+import { ReactLoopAgent } from '../src/agent.ts'
 import { createChain, createUserPrincipal, PrincipalId, RunId, TenantId } from '@deepseek-ai/dsh-principal'
 import type { IdentityContext } from '@deepseek-ai/dsh-principal/types'
 import { CodeRuntime } from '@deepseek-ai/dsh-code-runtime'
@@ -1084,5 +1085,65 @@ describe('P2-03 must[0]: the manifest is CONSTRUCTED on the production path, not
       .map(event => event.data.idempotencyKey)
     expect(keys).toHaveLength(2)
     expect(new Set(keys).size).toBe(2)
+  })
+})
+
+describe('P2-04: the risk gate classifies the definition the CALL resolves, not the global one (BLOCKED-162)', () => {
+  /**
+   * A policy stub that records what it was asked to classify. The assertion is
+   * on the tags the gate PASSED, because that is the value the defect
+   * corrupted: everything downstream of it — class, threshold, refusal text —
+   * was behaving correctly on the input it was handed.
+   */
+  function recordingPresets(seen: { domainTags: readonly string[] }[]) {
+    return {
+      classifyAction(subject: { actionId: string; domainTags: readonly string[] }) {
+        seen.push({ domainTags: subject.domainTags })
+        return { riskClass: subject.domainTags.length === 0 ? 'security-sensitive' : 'internal-write', hardDenied: false }
+      },
+      // Mirrors the shipped table: `internal-write` sits below every preset's
+      // threshold, the unknown default sits above it.
+      requiresApproval(classification: { riskClass: string }) {
+        return classification.riskClass === 'security-sensitive'
+      },
+      current() { return 'workspace-write' },
+    }
+  }
+
+  it('reads the tags a tool registered on the AGENT scope declares, so a scoped tool is not treated as undeclared', async () => {
+    // The defect: `ctx.tools.get(name)` takes the GLOBAL view, and a tool
+    // registered on the agent's own runtime is not in it. The lookup returned
+    // undefined, `?? []` made that "declares nothing", and the unknown default
+    // sent a tool that had honestly declared `agent-spawn` to approval. On a
+    // profile with no approver that made the tool unrunnable — which is how
+    // `subagent` came to be refused on the sdk profile despite declaring tags
+    // since the day the field existed.
+    const adapter = new MockAdapter([
+      multiCall([{ id: 'c1', name: 'scoped-spawn', args: {} }]),
+      textResponse('done'),
+    ])
+    const ctx = await harness(adapter, 1)
+    const seen: { domainTags: readonly string[] }[] = []
+    ctx.provide('permissionPresets', recordingPresets(seen) as never)
+    const agent = ctx.agentLoop.create(SessionId('scoped-risk'), { provider: 'mock', model: 'mock' })
+    // `create` is declared to return the narrow `Agent`, which carries no
+    // scope; the concrete agent is what owns one.
+    const scoped = agent as ReactLoopAgent
+    scoped.scope.ctx.tools.register(defineContentToolFixture({
+      name: 'scoped-spawn',
+      description: 'registered on the agent scope, exactly as the subagent tool is',
+      parameters: {},
+      riskDomainTags: ['agent-spawn'],
+      async execute() { return [{ type: 'text', text: 'ok' }] },
+    }))
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+
+    expect(seen.map(subject => subject.domainTags)).toContainEqual(['agent-spawn'])
+    // And the consequence, so a future unscoped lookup fails here too rather
+    // than only in the recording above: the call RAN.
+    const results = events(agent).filter(event => event.type === 'tool/result')
+    expect(results).toHaveLength(1)
+    expect(JSON.stringify(results[0]?.data)).not.toContain('needs approval')
   })
 })

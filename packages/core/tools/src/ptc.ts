@@ -637,7 +637,7 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
               // construction rather than by two implementations agreeing.
               const riskRefusal = exec.agent === undefined
                 ? undefined
-                : await gateActionRisk(options.ledgerContext(), exec.agent, name, registry.get(name)?.riskDomainTags ?? [])
+                : await gateActionRisk(options.ledgerContext(), exec.agent, name, registry.get(name, exec.agent)?.riskDomainTags ?? [])
               if (riskRefusal !== undefined) {
                 reservation = undefined
                 this.settled = true

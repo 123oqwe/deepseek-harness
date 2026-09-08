@@ -218,7 +218,11 @@ async function runGroup(
     // The RISK gate runs before the reservation: a reservation is a claim on
     // an effect, and claiming one for an action the deployment will not permit
     // would leave a `sent` row for something that never happened.
-    const riskRefusal = await gateActionRisk(ctx, agent, call.block.name, ctx.tools.get(call.block.name)?.riskDomainTags ?? [])
+    // Viewed through the calling agent, as dispatch resolves it: a tool
+    // registered on an agent's own runtime is invisible to the global view, so
+    // an unscoped lookup reads every scoped tool as declaring nothing and
+    // classifies it by the unknown default.
+    const riskRefusal = await gateActionRisk(ctx, agent, call.block.name, ctx.tools.get(call.block.name, agent)?.riskDomainTags ?? [])
     if (riskRefusal !== undefined) {
       slots[index] = {
         exec: call.exec as unknown as ToolRunContext,

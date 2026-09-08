@@ -33,6 +33,20 @@ The blast radius is the question, and it is not `subagent`-shaped: **every tool 
 1. Tag the untagged tools honestly and keep the fail-closed default. Correct in spirit, but it is a sweep across every registered tool, and each tag is a security classification I would be assigning without a ruling.
 2. Lower `UNKNOWN_DEFAULT_CLASS` below the approval threshold. One line, but it retires the fail-closed stance that the §12.50 gate exists to enforce.
 
+**RESOLVED by §12.58 + measurement, and the root cause is neither candidate.** The ruling directed (1) keep the fail-closed default, (2) tag `subagent` with `agent-spawn`/`agent-control`, (3) fix the structural gate, whose bundle derivation was thought to miss runtime-contributed tools. Measuring each before acting:
+
+- `agent-spawn` and `agent-control` are ALREADY `internal-write` in the base table (`packages/bundle/base/cordis.patch.yml:259-260`), so the classification existed. Confirmed.
+- **`subagent` already declared `riskDomainTags: ['agent-spawn']`** (`packages/subagent/tool-subagent/src/index.ts:374`). Nothing needed tagging.
+- **The structural gate was never wrong.** `tests/architecture/risk-domain-tags.spec.ts` derives the shipped set from the bundle patches, `tool-subagent` IS in that set, and running the gate's own logic over it reports `hasTags: true`. Its denominator was right, so §12.58's item 3 fixes a defect that does not exist, and the "分母错了" self-attribution is not warranted.
+
+**The actual defect is reachability, the third question again.** `gateActionRisk` was handed `ctx.tools.get(name)?.riskDomainTags ?? []` — an UNSCOPED lookup, which `get`'s own JSDoc defines as "the global view". The subagent tool is registered on the agent's own runtime scope, so the global view does not contain it; the lookup returned `undefined`, `?? []` turned that into "declares nothing", and the unknown default sent a correctly-tagged tool to approval. The dispatch path one file over already did this right (`index.ts:1863`: `this.get(name, agent)`), so the gate and the dispatcher disagreed about which definition the call resolves.
+
+This generalizes past `subagent`: **every scope-registered tool classified as undeclared, no matter what it declared.** A file-reading gate cannot see it — the tags are present in the source it reads. Fixed at both gate call sites (`tool-calls.ts`, `ptc.ts`) by viewing through the calling agent. Covered by a mutation-sensitive case in `tool-calls.spec.ts` that asserts the classifier RECEIVED `['agent-spawn']`; reverting to the unscoped lookup makes it report `[[]]`.
+
+**Item 5 also does not apply.** The sdk scenario passes with its committed expected outputs unchanged, so they were not recorded pre-gate and there is nothing to re-record; they were correct throughout and the defect was breaking them.
+
+**Original framing, kept for the record.**
+
 **Not guessed, per the standing rule.** Option 1 changes the meaning of many tools' security posture and option 2 changes the meaning of the gate; both are rulings, not implementation. Also open: whether the committed expected outputs for this scenario were recorded before the gate existed, in which case they encode the pre-gate behaviour and the scenario's own expectations need re-deciding alongside the remedy.
 
 ### BLOCKED-161 — three ledger-shape defects, each of which made a real check silently unenforceable
