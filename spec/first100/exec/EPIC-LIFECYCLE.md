@@ -33,6 +33,7 @@
 | 1.9 | 若 epic 是 REUSE_UPSTREAM:先核上游有没有该原语;有 → 只接缺口;经核实没有 → 写,并把核实记进 preFlight | 整改令 §4.1(14:15 修订行);先例 P5-11 §7.10 |
 | 1.10 | 写 `preFlight.makeVsUse`(**唯一字段规范在 `make-vs-use-plan.md` §0**),`recordedBeforeFirstLine: true` | 卡 §0 |
 | 1.11 | 把 preFlight 发 delegate,**确认后才动文件**;A 类 registry 改动(移/拆/重述子句)是 delegate 裁决,执行者执行 | C11(decisions-approved);用户规则「这些你来给我选」 |
+| 1.12 | **等待 delegate 期间不写代码**:空闲用于写下一个 `check-ready` READY epic 的 preFlight 并发来;READY 是必要条件,波次顺序由 delegate 给;账本 `oss[role=adapt]` 的包在 preFlight 里定下落之前,不得手写同功能实现(2026-09-08 P4-11:cockatiel 判 adapt,`circuit.ts` 手写断路器,停) | 整改令 §12.62 |
 
 ## 2. 建设中
 
