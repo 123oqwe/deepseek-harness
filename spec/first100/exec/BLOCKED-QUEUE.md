@@ -274,7 +274,13 @@ Reading (2) is smaller and removes the duplication; reading (1) is what §12.24-
 
 So mounting the router means first deciding what it does with no live agent: hold the epoch ledger anyway and dispatch nothing, or split the ledger out of it. Either is a change to the router's own contract, which is P5-10's Contract-stage surface. Not done, and not guessed at the end of a long session on a live control path.
 
-**Still owed for (2):** the epoch ledger's lifetime, then the mount.
+**Resolved by §12.26, with one correction to its premise.** The ledger moves out of the in-memory map and is rebuilt from a durable log. §12.26 assumed control dispatch already lands in the PARENT's session log; measured on this tree, it does not — `SubagentRuntime` emits Cordis events for lifecycle and appends nothing to the parent for a prompt or an interrupt, and the epoch was recorded only into `control.appliedEpochs` after delivery.
+
+What IS durable is the delivered message: it lands in the CHILD's inbox carrying `source.rpcId`, the request id the epoch derives from, and a child's SESSION outlives its Agent. So the reconstruction has a real source and still needs no new event, which is what the ruling asked for. `decideControl` now takes an `AppliedEpochs` (`has` only) so a `ReadonlySet` and a log-backed ledger both satisfy it, rather than forcing the durable version to materialise every epoch to be passed.
+
+Five cases pin it, including the restart itself — a ledger built fresh with no memory, reading the log a dead process wrote — and its control, a ledger that must NOT answer true to everything. Making the log read unreachable reddens exactly the two that depend on it.
+
+**Still owed for (2):** mounting `ChildControlRouter` itself, now that the ledger it needs is no longer tied to a live Agent's lifetime.
 
 ### BLOCKED-152 — the workflow engine imports `dsh-agent`, a `providers -> orchestration-runtime` edge older than this program
 

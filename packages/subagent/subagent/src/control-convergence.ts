@@ -56,6 +56,18 @@ export type ControlDenial =
   /** A `human-answer` naming a waiting point the child is not at. */
   | { readonly reason: 'wrong-waiting-point'; readonly expected: string | undefined; readonly received: string | undefined }
 
+/**
+ * What answers "was this control epoch already applied".
+ *
+ * Narrowed to `has` so a `ReadonlySet` and a log-backed ledger both satisfy it:
+ * must[2] wants the answer DURABLE, and a signature demanding a set would have
+ * forced the durable version to materialise every applied epoch just to be
+ * passed here.
+ */
+export interface AppliedEpochs {
+  has(controlEpoch: number): boolean
+}
+
 /** Whether a control message may be applied. */
 export type ControlDecision =
   | { readonly applied: true; readonly kind: ControlKind }
@@ -114,14 +126,16 @@ export function orderByPriority(messages: readonly ControlMessage[]): readonly C
  * caller looking for a race that did not happen (acceptance[2]).
  * @param message - the arriving message.
  * @param phase - what the child is doing now.
- * @param appliedEpochs - control epochs already applied to this child.
+ * @param appliedEpochs - what already had this child's control epochs applied;
+ *   a `ReadonlySet` in a unit case, and a durable ledger in production
+ *   (must[2]), which is why this reads `has` rather than taking a set.
  * @param waitingPointId - the waiting point the child is at, when it is at one.
  * @returns whether to apply it, and why not when not.
  */
 export function decideControl(
   message: ControlMessage,
   phase: ChildPhase,
-  appliedEpochs: ReadonlySet<number>,
+  appliedEpochs: AppliedEpochs,
   waitingPointId?: string,
 ): ControlDecision {
   if (appliedEpochs.has(message.controlEpoch)) {

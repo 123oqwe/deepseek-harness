@@ -40,6 +40,8 @@ import type { SessionId } from '@deepseek-ai/dsh-session'
 import { canonicalClientTimeZone } from '@deepseek-ai/dsh-util-time'
 import { Remote, RemoteError, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
 import { decideControl } from './control-convergence.ts'
+import { openControlLedger } from './control-ledger.ts'
+import type { ControlLedger } from './control-ledger.ts'
 import type { ChildPhase } from './control-convergence.ts'
 import {
   catalogView, rejectCatalogRead, rejectPrompt, validateControlRequest,
@@ -221,7 +223,7 @@ export class SubagentRuntime extends TypertRemoteService {
    * that was interrupted looks exactly like an idle one to the next prompt
    * unless something remembers the interrupt happened.
    */
-  private readonly controlState = new Map<SessionId, { phase: ChildPhase; appliedEpochs: Set<number> }>()
+  private readonly controlState = new Map<SessionId, { phase: ChildPhase; appliedEpochs: ControlLedger }>()
   private continuations: SubagentContinuationManager | undefined
   /**
    * The contained lifecycle-edge publisher. Built here because scoped dispatch
@@ -627,10 +629,18 @@ export class SubagentRuntime extends TypertRemoteService {
    * @param childSessionId - the child to read.
    * @returns its mutable control state.
    */
-  private controlFor(childSessionId: SessionId): { phase: ChildPhase; appliedEpochs: Set<number> } {
+  private controlFor(childSessionId: SessionId): { phase: ChildPhase; appliedEpochs: ControlLedger } {
     let state = this.controlState.get(childSessionId)
     if (state === undefined) {
-      state = { phase: 'running', appliedEpochs: new Set() }
+      // The ledger reads the CHILD's durable session, so a redelivery is
+      // refused across a restart and not only within one process (must[2]).
+      // `phase` stays in memory: it describes what the child is doing NOW, and
+      // a phase reconstructed from a log would describe what it was doing when
+      // the log was written.
+      state = {
+        phase: 'running',
+        appliedEpochs: openControlLedger(() => this.ctx.get('sessions')?.get(childSessionId), promptEpoch),
+      }
       this.controlState.set(childSessionId, state)
     }
     return state
