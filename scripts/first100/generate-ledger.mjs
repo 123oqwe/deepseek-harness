@@ -1146,6 +1146,54 @@ export function checkDelegateSignoff(epicId, row, signoffRegistry, userConfirmat
  * The closure reason is required and is kept on the row. A finding that
  * vanishes with no record is indistinguishable from one nobody looked at.
  */
+/**
+ * Reopen a finding that was closed on an incomplete measurement (4.4c).
+ *
+ * The inverse of {@link cmdCloseFinding}, and needed for the same reason it
+ * was: without it, a closure made on a partial reading can only be undone by
+ * hand-editing the ledger, which the ledger's own rules forbid. P4-09's
+ * must[3] is the worked example — the finding named THREE nouns (budget,
+ * capability token, trace) and the closure answered only "it has a production
+ * caller now", which is a fourth thing none of them asked about.
+ *
+ * The reopening reason is required and both records are kept: the original
+ * closure stays on `closedFindings` with a `reopenedAtUtc` stamp, so the row
+ * shows that a judgement was made and corrected rather than silently reversed.
+ * @returns nothing; writes the ledger and prints what reopened.
+ */
+function cmdReopenFinding() {
+  const epic = opt('epic')
+  const match = opt('finding')
+  const reason = opt('reason')
+  if (!epic || !match || !reason) {
+    console.error('usage: generate-ledger.mjs --reopen-finding --epic <id> --finding <substring> --reason <why the closure was wrong>')
+    process.exit(1)
+  }
+  const ledger = loadJson(LEDGER_PATH)
+  const row = ledger.rows[epic]
+  if (!row) {
+    console.error(`BLOCKED: no ledger row for ${epic}`)
+    process.exit(1)
+  }
+  const closed = Array.isArray(row.closedFindings) ? row.closedFindings : []
+  const hit = closed.filter((entry) => String(entry.finding).includes(match) && entry.reopenedAtUtc === undefined)
+  if (hit.length === 0) {
+    console.error(`BLOCKED: ${epic} has no CLOSED, not-yet-reopened finding containing ${JSON.stringify(match)}`)
+    process.exit(1)
+  }
+  if (hit.length > 1) {
+    console.error(`BLOCKED: ${JSON.stringify(match)} matches ${String(hit.length)} closed findings on ${epic}; name one exactly`)
+    process.exit(1)
+  }
+  const entry = hit[0]
+  entry.reopenedAtUtc = nowIso()
+  entry.reopenedReason = reason
+  row.openFindings = [...row.openFindings ?? [], entry.finding]
+  const written = writeLedgerHeader(ledger.rows, { epic, reopenedFinding: entry.finding, reason })
+  renderMarkdown(written)
+  console.log(`reopened 1 finding on ${epic}: ${entry.finding}`)
+}
+
 function cmdCloseFinding() {
   const epic = opt('epic')
   const match = opt('finding')
@@ -1358,6 +1406,22 @@ function cmdRecordSignoff() {
  * GREEN. Then all three hardening predicates must pass; any failure prints
  * the specific missing item and leaves the row untouched.
  */
+/**
+ * Whether an epic is free of open findings (§12.63, predicate (vi)).
+ *
+ * Greening a cell already refused an epic carrying one, on the ground that the
+ * green would overstate what is proven. Acceptance did not, so an epic could
+ * reach "only the sign-off remains" while a recorded finding said one of its
+ * clauses had no implementation — P4-09 with BLOCKED-100's `detached` is the
+ * worked example. The two paths judge the same fact, so they judge it alike.
+ * @param row - the ledger row to check.
+ * @returns validity and the open findings, empty when there are none.
+ */
+export function checkNoOpenFindings(row) {
+  const open = Array.isArray(row.openFindings) ? row.openFindings : []
+  return { valid: open.length === 0, open }
+}
+
 function cmdAccept() {
   const epic = opt('epic')
   if (!epic) {
@@ -1424,6 +1488,20 @@ function cmdAccept() {
     }[signoff.reason]
     failures.push(
       `predicate (iv) delegate sign-off (BLOCKED-036): ${reasonText} — run: node scripts/first100/generate-ledger.mjs --record-signoff --epic ${epic} --conclusion PASS (row digest ${signoff.currentRowDigest})`,
+    )
+  }
+  // §12.63: the two paths judge the same fact and must judge it the same way.
+  // Greening a cell already REFUSED an epic carrying an open finding, on the
+  // ground that the green would overstate what is proven; accepting the epic
+  // outright did not, so P4-09 reached "only (iv) remains" while carrying
+  // BLOCKED-100's "must[2] (detached) has no implementation". Signing that
+  // would have signed a clause with no subject. Unified on the strict side:
+  // an open finding blocks acceptance exactly as it blocks a green cell.
+  const findings = checkNoOpenFindings(row)
+  if (!findings.valid) {
+    failures.push(
+      `predicate (vi) no open findings: ${epic} carries ${String(findings.open.length)} — an epic accepted over one asserts more than its cells prove:\n    ${findings.open.join('\n    ')}\n`
+      + `  Close each with --close-finding (4.4c: give a measurement per noun the finding names), or withdraw it.`,
     )
   }
   if (failures.length > 0) {
@@ -1506,6 +1584,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   else if (flag('sync-exec-state')) cmdSyncExecState()
   else if (flag('accept')) cmdAccept()
   else if (flag('close-finding')) cmdCloseFinding()
+  else if (flag('reopen-finding')) cmdReopenFinding()
   else if (flag('admit-red-run')) cmdAdmitRedRun()
   else if (flag('revoke-cell')) cmdRevokeCell()
   else if (flag('record-signoff')) cmdRecordSignoff()

@@ -36,6 +36,7 @@ import {
   p9ItemsSettled,
   reattestationOf,
   redStepComplaints,
+  checkNoOpenFindings,
   checkObservationDistinctness,
   deriveSupplementLiveness,
   rowDigest,
@@ -624,5 +625,28 @@ describe('deriveSupplementLiveness (§12.61: the freeze is the authority on whic
     // The retirement is still recorded, but the observation's own verdict stands.
     expect(rows['P4-06']?.supplements['P.1']?.status).toBe('RED')
     expect(rows['P4-06']?.supplements['P.1']?.supersededBy).toContain('P4-06.P.3')
+  })
+})
+
+describe('checkNoOpenFindings (§12.63: accept and green-cell judge open findings alike)', () => {
+  it('REFUSES an epic carrying an open finding, and returns the findings so the caller can name them', () => {
+    // The defect: greening a cell refused an epic with an open finding while
+    // accepting the epic outright did not, so P4-09 reached "only (iv)
+    // remains" while carrying BLOCKED-100's "must[2] (detached) has no
+    // implementation". Signing that would have signed a clause with no subject.
+    const row = { openFindings: ['BLOCKED-100: must[2] (detached) has no implementation'] }
+    const result = checkNoOpenFindings(row)
+    expect(result.valid).toBe(false)
+    expect(result.open).toEqual(['BLOCKED-100: must[2] (detached) has no implementation'])
+  })
+
+  it('ADMITS an epic with no findings, whether the field is absent, null or empty', () => {
+    // The positive control, and the three spellings the ledger actually holds:
+    // `--close-finding` sets the field to null once the last one closes, and a
+    // row that never had one omits it entirely. A predicate that only
+    // understood `[]` would refuse both of those.
+    expect(checkNoOpenFindings({}).valid).toBe(true)
+    expect(checkNoOpenFindings({ openFindings: null }).valid).toBe(true)
+    expect(checkNoOpenFindings({ openFindings: [] }).valid).toBe(true)
   })
 })

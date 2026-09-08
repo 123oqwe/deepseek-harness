@@ -3,7 +3,7 @@
     "name": "first100-exec-state",
     "version": "1.0"
   },
-  "lastUpdatedUtc": "2026-09-08T15:43:29.268Z",
+  "lastUpdatedUtc": "2026-09-08T16:58:21.370Z",
   "activeWorktree": "/Users/guanjieqiao/dsh-first100-clean",
   "activeBranch": "first100-exec",
   "currentWave": 4,
@@ -11,10 +11,10 @@
     "epic": "P2-04",
     "stage": "P",
     "step": "AWAITING_PUSH",
-    "detail": "The MCP annotations slice (\u00a712.61) is committed at 224d2ac867 with its 11 cases frozen as P2-04.P.3, and verify-adapt-dispositions is green again, which was the gate blocking the push. Ten commits are queued locally and unpushed, ending at 1011643fa7; per C14 the delegate performs gate 3 and the push, so no CI observation exists for any of them yet. P4-05's new behaviour (failed, waiting_human, slot release, reclaim, step admission) is frozen as C.1/U.2/F.3 but NOT yet observed, so P4-05 stays unsigned. Awaiting four rulings: P4-11's outbox question and P1-10's three (no adopt-role OSS row exists for it, its relationship to SCHEMA_VERSION's reject-old-formats stance, and its boundary against P3-11's workspace checkpointing). Both READY epics have preFlights on record and neither C stage has begun."
+    "detail": "The MCP annotations slice (§12.61) is committed at 224d2ac867 with its 11 cases frozen as P2-04.P.3, and verify-adapt-dispositions is green again, which was the gate blocking the push. Ten commits are queued locally and unpushed, ending at 1011643fa7; per C14 the delegate performs gate 3 and the push, so no CI observation exists for any of them yet. P4-05's new behaviour (failed, waiting_human, slot release, reclaim, step admission) is frozen as C.1/U.2/F.3 but NOT yet observed, so P4-05 stays unsigned. Awaiting four rulings: P4-11's outbox question and P1-10's three (no adopt-role OSS row exists for it, its relationship to SCHEMA_VERSION's reject-old-formats stance, and its boundary against P3-11's workspace checkpointing). Both READY epics have preFlights on record and neither C stage has begun."
   },
   "registryDigest": "5c75260e96c9db1ca045c1bf4a013a5a1f356651c23baef924066bec627ef4f7",
-  "ledgerDigest": "99c6c743cd68ec3439e972871af3215fdfa7453bb0661ee4cbc6cb855b7f7a1f",
+  "ledgerDigest": "bb10461792771cd1b73b00775a2bc74ff128696e77f85947294a06737596f310",
   "blockedQueueRef": "spec/first100/exec/BLOCKED-QUEUE.md",
   "totals": {
     "acceptedEpics": 25,

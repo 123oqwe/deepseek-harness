@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-08T15:43:29.263Z",
-  "inputDigest": "4e5ec86080bcaeae2248028f837f448a9fd49ddb22a7929c3d914f8f1715316a",
+  "lastUpdatedUtc": "2026-09-08T16:58:21.364Z",
+  "inputDigest": "4f2425b8bc5b5a4c731a6e4fb44cbc5c8f378a5d841e81fd94725c84ec8183c4",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -5024,7 +5024,8 @@
       "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba",
       "independentVerdict": "WITHHELD_INCOMPLETE_EPIC",
       "openFindings": [
-        "BLOCKED-100: must[2] (detached) has no implementation — across packages/workflow/*/src and packages/run/*/src every `detach` occurrence is `detachInputSignal` (removing an event listener); the word \"detached\" appears once in the whole family, in a nesting.ts comment stating a detached run is NOT nested. Verified 2026-09-06 with a positive control: the same pattern does find `detachInputSignal`."
+        "BLOCKED-100: must[2] (detached) has no implementation — across packages/workflow/*/src and packages/run/*/src every `detach` occurrence is `detachInputSignal` (removing an event listener); the word \"detached\" appears once in the whole family, in a nesting.ts comment stating a detached run is NOT nested. Verified 2026-09-06 with a positive control: the same pattern does find `detachInputSignal`.",
+        "BLOCKED-100: must[3] (nested) has decision functions covering ONE of the clause's three nouns, and no production caller. planNestedRun/inheritWorkerLimits/applyChildFailure/cancelPropagationForNested are real and tested, but every reference outside workflow-registry/ is in nested-budget.spec.ts; runtime.ts installs globals agent/parallel/pipeline/phase/log/args and no `workflow`, with a TRIPWIRE case pinning typeof workflow === 'undefined'. The clause names budget, capability token and trace; nesting.ts and types.ts contain zero occurrences of capability/capabilityToken/trace/traceId (the five `token` hits are tokensRemaining / token-budget-exhausted — a token BUDGET, not a capability token)."
       ],
       "status": "BLOCKED_ON_ACCEPTANCE",
       "acceptedEvidence": null,
@@ -5032,7 +5033,9 @@
         {
           "finding": "BLOCKED-100: must[3] (nested) has decision functions covering ONE of the clause's three nouns, and no production caller. planNestedRun/inheritWorkerLimits/applyChildFailure/cancelPropagationForNested are real and tested, but every reference outside workflow-registry/ is in nested-budget.spec.ts; runtime.ts installs globals agent/parallel/pipeline/phase/log/args and no `workflow`, with a TRIPWIRE case pinning typeof workflow === 'undefined'. The clause names budget, capability token and trace; nesting.ts and types.ts contain zero occurrences of capability/capabilityToken/trace/traceId (the five `token` hits are tokensRemaining / token-budget-exhausted — a token BUDGET, not a capability token).",
           "reason": "Measured at 434408a47c: planNestedRun now HAS a production caller — packages/workflow/workflow-worker-thread/src/index.ts:365 calls it (imported at :19), reached by the runtime's workflow(nameOrRef, args) hook, and the tripwire case that recorded the vacuum ('a script has no workflow global, so nesting cannot be started') was deliberately superseded by 'REFUSES a nested run the host did not admit' in nested-budget.spec.ts, which asserts the host is asked and its refusal reaches the script. The zero-caller condition this finding recorded no longer holds. must[2] (detached) is NOT covered by this closure and stays open.",
-          "closedAtUtc": "2026-09-08T15:12:28.634Z"
+          "closedAtUtc": "2026-09-08T15:12:28.634Z",
+          "reopenedAtUtc": "2026-09-08T16:58:21.358Z",
+          "reopenedReason": "4.4c: the closure answered only that planNestedRun has a production caller, which is not one of the three nouns the finding named. Re-measured at 7e21e654e9 — budget: PRESENT (workflow-registry/src/nesting.ts derives a nested run's worker limits from its parent's budget). capability token: ZERO occurrences of capabilityToken/CapabilityToken across packages/workflow/*/src. trace: ZERO — the only trace <subcommand> [options] - record system behavior\n\ntrace record: record a trace file\n    $ trace record myworkload\n        [... Ctrl-C to stop ...]\n    $ trace record myworkload --Logging:enable-logs --end-after-duration 5s\n    $ trace record myworkload --plan profile --omit Symbolication\n    $ trace record myworkload --end-on-notification stop-myworkload-trace\n        [... elsewhere `notifyutil -p stop-myworkload-trace` ...]\n    $ trace record /tmp/trace-path.atrc --compress\n\ntrace amend: add data to a file\n    $ trace amend myworkload-003.atrc --add Symbolication\n\ntrace trim: trim a file based on kdebug event times\n    $ trace trim myworkload-002.atrc --from +1s --to +2s\n\ntrace providers: print information about Logging, Symbolication, etc.\n\ntrace plans: print detailed information about tracing approaches\n\nSee `man trace` for more information. hits are a local Map holding invariant state in tool-workflow/src/invariant.ts:56, not a trace context. One of three is not a closure."
         }
       ]
     },

@@ -140,3 +140,9 @@ export function deriveSupplementLiveness(
   rows: Record<string, { id: string; supplements?: Record<string, LedgerSupplementRow> }>,
   freezeEntries: readonly FreezeLivenessEntry[],
 ): void
+
+/** Predicate (vi): an epic with an open finding may not be accepted (§12.63). */
+export function checkNoOpenFindings(row: { openFindings?: readonly string[] | null }): {
+  valid: boolean
+  open: readonly string[]
+}
