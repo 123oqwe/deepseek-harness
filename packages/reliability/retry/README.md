@@ -1,6 +1,6 @@
 ---
 description: "The retry decision vocabulary for Epic P4-11: the failure taxonomy and its retryability read against the action ledger's reconciliation state, one run-wide budget every in-scope layer accounts against, and the hedge-exclusion rule — with backoff and Retry-After parsing left to the implementations the tree already has."
-kind: "package-library"
+kind: "package-reference"
 ---
 
 # @deepseek-ai/dsh-retry
@@ -10,6 +10,16 @@ kind: "package-library"
 `dsh-retry` ships the decisions Epic P4-11 unifies: whether a failure may be retried at all, and whether an attempt spends from the run's budget. `src/classify.ts` carries the taxonomy and the hedge rule; `src/budget.ts` carries the run-wide accounting; `tests/retry.spec.ts` covers them in 13 cases. `src/index.ts` re-exports both and declares no runtime value, so importing this package executes nothing.
 
 The registry's problem statement is that several layers each decided retryability for themselves and their limits multiplied. The fix is that there is **one** of each decision — not that this package does more.
+
+## Table of Contents
+
+- [What this package deliberately does NOT do](#what-this-package-deliberately-does-not-do)
+- [must[3]: the ledger decides whether an effect may be sent again](#must3-the-ledger-decides-whether-an-effect-may-be-sent-again)
+- [Model Experience](#model-experience)
+- [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
+- [Dev Note](#dev-note)
+
+-----
 
 ## What this package deliberately does NOT do
 
@@ -46,3 +56,16 @@ No model-visible surface. This package registers no tool, contributes no prompt 
 - **The message-bus outbox is out of scope by ruling, not by omission.** Its `decideDelivery` is a per-message dead-letter policy inside the accepted P4-06 and answers when to stop delivering a message, not how much a run may spend redoing failed work (§12.64).
 
 No invariant companion is published: this package owns no relationship two observers could see differently — every export is a pure function over its arguments.
+
+### Dev Note
+
+<details>
+<summary>Working context for maintainers — click to expand</summary>
+
+This Dev Note is working context for maintainers: open questions and undecided directions. It is explicitly non-authoritative — shipped behavior and limits live in the sections above and in the package code.
+
+Whether `RunRetryBudget` should carry a wall-clock deadline as well as a delay ceiling is undecided. `maxDelayBudgetMs` bounds time spent WAITING, which is not the same as bounding how long a run may keep trying; a run that retries quickly forever stays inside both limits. The Usage stage will show whether the layers want the second bound, and inventing it here without a caller would be the zero-consumer shape this epic's own clause map argues against.
+
+The classifier takes `hedged` as a fact rather than deriving it, because the tree has no hedging producer to derive it from. If P5-04 ends up tagging hedges with something richer than a boolean — a group id for the racing attempts, say — this field should follow that shape rather than keep a boolean the producer has to flatten into.
+
+</details>

@@ -136,7 +136,16 @@ function main() {
   const renames = loadJson(RENAMES_PATH)
 
   const renameIndex = new Map()
+  let totalRetiredRenames = 0
   for (const r of renames.entries) {
+    // A RETIRED rename covers nothing (§12.68). It is kept in the register so
+    // a wrong call stays visible, but indexing it would go on telling this
+    // verifier that a dead title had merely moved — which is exactly how three
+    // P4-08 titles read as resolvable for a day while having no live subject.
+    if (r.retired !== undefined) {
+      totalRetiredRenames += 1
+      continue
+    }
     renameIndex.set(`${r.epic}|${r.stage}|${r.oldTitle}`, r)
   }
 
@@ -228,6 +237,7 @@ function main() {
     summary: {
       totalEntries: freeze.entries.length,
       uniqueCommandsRun: runCache.size,
+      retiredRenames: totalRetiredRenames,
       entriesWithProblems,
       totalTitles,
       totalUnresolved,

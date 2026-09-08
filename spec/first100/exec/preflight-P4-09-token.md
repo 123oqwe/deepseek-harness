@@ -40,14 +40,20 @@ The workflow runtime holds no token today. It must:
 | --- | --- | --- |
 | must[3]'s capability-token noun | **U** for P4-09 | The decision already exists and is proven in P2-02's Contract stage. What is missing is a CONSUMER in the workflow runtime, which is a Usage-stage fact. Adding a second decision module would be the defect, not the fix. |
 
-## Cases to freeze
+## Cases to freeze — split by dependency (§12.69)
 
-1. A nested run's token is derived from its parent's and is narrower — the accepted arm.
-2. **A request that widens is REFUSED**, with the denial reason surfaced: the negative control, and the one that distinguishes deriving from minting.
-3. A detached run carries its derived token after the launching turn ends — the point of the ordering constraint.
-4. **§12.66's negative control for the sibling slice**: handing a LIVE run to `resume` is refused because its lease holder is current. Measured at `workflow-worker-thread/src/index.ts:298`, `resume` reconciles then `launch(...)`, so without this the re-attach path would spawn a second worker under one run id — two masters, from inside the epic meant to prevent them. The boundary gets a test rather than a design note.
+**This slice (U supplement) freezes only what it can observe on its own.** An earlier draft listed four cases, two of which need `detached` to exist; freezing those here would make this slice's observation red for a reason belonging to the next one.
 
-Mutation expectations, to be RUN and pasted rather than predicted (§12.68): removing the widening check must redden case 2; removing the lease check must redden case 4.
+| # | case | slice |
+| --- | --- | --- |
+| 1 | a nested run's token is derived from its parent's and is NARROWER — the accepted arm | **token** |
+| 2 | a request that WIDENS is refused, surfacing `TokenAttenuationDenialReason` — the negative control that separates deriving from minting | **token** |
+| 3 | a detached run still carries its derived token after the launching turn ends | detached |
+| 4 | handing a LIVE run to `resume` is refused because its lease holder is current | detached |
+
+Case 4 stays §12.66's requested boundary test and remains necessary: measured at `workflow-worker-thread/src/index.ts:298`, `resume` reconciles then `launch(...)`, so without it the re-attach path spawns a second worker under one run id — two masters, from inside the epic meant to prevent them. It belongs to the slice that introduces re-attachment, not to this one.
+
+Mutation expectations for THIS slice, to be RUN and pasted rather than predicted (§12.68): removing the widening check must redden case 2.
 
 ## Status
 
