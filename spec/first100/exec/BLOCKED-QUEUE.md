@@ -9,6 +9,32 @@ responds; append-only.
 
 ## Open
 
+### BLOCKED-162 — the §12.50 risk gate makes every untagged tool need approval, which kills `subagent` on any profile without an approver
+
+Found while diagnosing CI run `34225817745`'s `sdk/subagent-dsh-sdk-dynamic-route` failure. The reported symptom was `ENOENT: no such file or directory, scandir '.child-dsh/sessions'`, and the working assumption (§1.11) was that it did not reproduce locally and needed the child's stderr captured. **Both halves of that assumption were wrong.** It reproduces locally on this tree, and the cause is in the parent's own session log, not in any stderr.
+
+The parent log shows the whole chain:
+
+```
+approval/asked    {toolName: 'subagent', reason: 'this tool declares no risk domain tags, so it classifies at "security-sensitive" by the unknown default'}
+approval/decided  {outcome: 'unavailable'}
+tool/result       Error: The action "subagent" needs approval before it runs...
+turn/end          {reason: {kind: 'error', error: {message: 'action ledger: a12f...e37a has no reservation to move to ambiguous'}}}
+```
+
+Two distinct defects, both introduced by this program's own §12.50 work.
+
+**Defect 2 (fixed here).** On a risk refusal the native path returned before reserving, but `records[index]` had already been published above the gate, so settlement called `confirmExternalEffect` with a record whose key was never reserved and `markAmbiguous` threw. `ptc.ts` never had this bug — it clears `reservation = undefined` on the risk-refusal branch — so the two dispatch paths disagreed, which is exactly what P2-04 acceptance[0] claims cannot happen. Fixed by publishing `records[index]` only after the risk gate passes; the reservation-refusal path is byte-identical. Verified: `turn/end` is now `{kind: 'completed'}` instead of the ledger error, and `packages/core/agent-loop packages/core/tools packages/action/action-ledger` pass 861/861.
+
+**Defect 1 (NOT touched — the delegate's call).** `subagent` declares no `riskDomainTags`, so `UNKNOWN_DEFAULT_CLASS = 'security-sensitive'` classifies it above the approval threshold. The `sdk` profile has no approver, so `approval/decided` is `unavailable` and the tool is refused. The child dsh is therefore never spawned and `.child-dsh/` stays empty — the ENOENT is a *consequence*, not the fault.
+
+The blast radius is the question, and it is not `subagent`-shaped: **every tool that declares no risk domain tags now requires approval, and on any non-interactive profile that means it cannot run at all.** The two candidate remedies differ in scope and in what they concede:
+
+1. Tag the untagged tools honestly and keep the fail-closed default. Correct in spirit, but it is a sweep across every registered tool, and each tag is a security classification I would be assigning without a ruling.
+2. Lower `UNKNOWN_DEFAULT_CLASS` below the approval threshold. One line, but it retires the fail-closed stance that the §12.50 gate exists to enforce.
+
+**Not guessed, per the standing rule.** Option 1 changes the meaning of many tools' security posture and option 2 changes the meaning of the gate; both are rulings, not implementation. Also open: whether the committed expected outputs for this scenario were recorded before the gate existed, in which case they encode the pre-gate behaviour and the scenario's own expectations need re-deciding alongside the remedy.
+
 ### BLOCKED-161 — three ledger-shape defects, each of which made a real check silently unenforceable
 
 **State: FIXED, recorded because each was invisible in a different way and the same shapes will recur.**

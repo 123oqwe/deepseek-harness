@@ -139,9 +139,12 @@ describe('P4-09 acceptance[0]: loading does not execute, and a refused definitio
     const ctx = await mounted(engine)
 
     expect(ctx.savedWorkflows.loaded).toEqual(['fine'])
-    expect(ctx.savedWorkflows.refused).toEqual([
-      { name: 'self', reason: expect.stringContaining('self-recursive-definition') },
-    ])
+    // Fields checked individually rather than through `expect.stringContaining`
+    // inside a literal: that matcher is typed `any`, so the literal it sits in
+    // becomes an unsafe assignment and the assertion stops being type-checked.
+    expect(ctx.savedWorkflows.refused).toHaveLength(1)
+    expect(ctx.savedWorkflows.refused[0]?.name).toBe('self')
+    expect(ctx.savedWorkflows.refused[0]?.reason).toContain('self-recursive-definition')
   })
 
   it('REFUSES to mount over an engine that cannot register definitions, rather than loading into nothing', async () => {

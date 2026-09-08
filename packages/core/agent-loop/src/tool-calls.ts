@@ -209,7 +209,6 @@ async function runGroup(
     const call = group[index]!
     const appended = appendToolCall(agent, turn, step, call.block)
     callSeqs[index] = appended.seq
-    records[index] = appended.record
     started++
     // must[4]: the reservation is taken BEFORE the tool runs, so a crash
     // between here and the tool's own commit leaves a durable record that this
@@ -228,6 +227,10 @@ async function runGroup(
       }
       return
     }
+    // Settlement confirms against this record, so it is published only once
+    // the risk gate has passed: a risk-refused call never reserved, and
+    // markAmbiguous on an unreserved key throws instead of settling.
+    records[index] = appended.record
     const refused = reserveExternalEffect(ctx, agent, appended.record)
     if (refused !== undefined) {
       // The prepared exec is what the slot carries; a refusal happens before

@@ -183,9 +183,13 @@ describe('P4-08 must[2]: a side-effecting step is reconciled against the effect 
 
     // The failure this guards: a check that stopped at the first receipt, or
     // one that treated "not all confirmed" as "rerun", would repeat the charge.
+    // `unknown` in the rejection handler, narrowed before use: a rejection is
+    // not typed by the promise, so annotating it `Error` asserts something the
+    // signature never promised.
     const error = await reusableSteps(dir, 'run-e4', SCRIPT, () => Promise.resolve(true), receipt => (receipt === 'charge-1' ? 'confirmed' : undefined))
-      .then(() => undefined, (thrown: Error) => thrown)
-    expect(error?.message).toContain('charge-1, email-1')
+      .then(() => undefined, (thrown: unknown) => thrown)
+    expect(error).toBeInstanceOf(Error)
+    expect((error as Error).message).toContain('charge-1, email-1')
   })
 
   it('treats a step that recorded effects under no queryable scope as unreconcilable, not as reusable', async () => {

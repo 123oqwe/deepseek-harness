@@ -12,7 +12,7 @@
 import { existsSync } from 'node:fs'
 import { cp, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { basename, delimiter, join } from 'node:path'
+import { basename, delimiter, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
@@ -228,6 +228,48 @@ async function persistedLogs(sessionsRoot: string): Promise<PersistedLog[]> {
     const header = JSON.parse(content.slice(0, content.indexOf('\n'))) as Record<string, unknown>
     return { path, content, header }
   }))
+}
+
+/**
+ * Parent events that carry why an owned child never started: the risk gate's
+ * approval question and its outcome, the refusal the model was given, and the
+ * turn's terminal reason. BLOCKED-162 was diagnosed from exactly these four.
+ */
+const DIAGNOSTIC_EVENT_TYPES = ['approval/asked', 'approval/decided', 'tool/result', 'turn/end'] as const
+
+/**
+ * Read the owned child dsh's persisted logs, reporting why they are absent.
+ *
+ * A missing sessions root means the child never reached persistence. The
+ * child's own stderr is not addressable from here: it is inherited into the
+ * parent runtime process, whose exit code and stderr tail the SDK client
+ * keeps private and surfaces only on a transport failure. The parent's own
+ * session log is the reachable record of why, so this reports the events that
+ * carry the reason alongside the child home's actual contents.
+ * @param sessionsRoot - the owned child's sessions directory.
+ * @param parent - the parent runtime's already-read persisted logs.
+ * @returns the child's persisted logs.
+ */
+async function childPersistedLogs(sessionsRoot: string, parent: PersistedLog[]): Promise<PersistedLog[]> {
+  if (existsSync(sessionsRoot)) return persistedLogs(sessionsRoot)
+  const childHome = dirname(sessionsRoot)
+  const present = existsSync(childHome)
+    ? (await readdir(childHome, { recursive: true })).sort()
+    : undefined
+  const diagnostics = parent
+    .flatMap(log => log.content.split('\n'))
+    .filter(line => DIAGNOSTIC_EVENT_TYPES.some(type => line.includes(`"type":"${type}"`)))
+  throw new Error([
+    `owned child dsh persisted no session: ${sessionsRoot} is missing.`,
+    present === undefined
+      ? `${childHome} does not exist, so the child never started.`
+      : present.length === 0
+        ? `${childHome} exists but is empty.`
+        : `${childHome} contains:\n${present.map(entry => `  ${entry}`).join('\n')}`,
+    diagnostics.length === 0
+      ? 'The parent logged no classified SDK failure.'
+      : `Parent-logged SDK failure facts:\n${diagnostics.join('\n')}`,
+  ].join('\n'))
 }
 
 interface LoggedRequestHeader {
@@ -597,10 +639,10 @@ async function runScenario(scenario: CorpusScenario): Promise<{
       subscription.close()
     }
     await harness.close()
-    const logs = (await Promise.all([
-      persistedLogs(sessionsRoot),
-      ...(childSessionsRoot === undefined ? [] : [persistedLogs(childSessionsRoot)]),
-    ])).flat()
+    const parentLogs = await persistedLogs(sessionsRoot)
+    const logs = childSessionsRoot === undefined
+      ? parentLogs
+      : [...parentLogs, ...await childPersistedLogs(childSessionsRoot, parentLogs)]
     const finalWorkspace = await captureWorkspaceSnapshot(cwd, {
       ignoredRootEntries: RUNTIME_WORKSPACE_ENTRIES,
     })
