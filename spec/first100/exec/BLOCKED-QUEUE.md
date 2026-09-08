@@ -258,6 +258,39 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 2. **Mailbox** — folded into `@deepseek-ai/dsh-message-bus`. Its only part beyond `dsh-intake-dedup`'s rule was a recipient-address check, now `decideMailboxArrival` beside the store-backed `decideMailboxDelivery` that was already P4-06's production call site. `@deepseek-ai/dsh-mailbox` is retired; P5-11's mailbox clause is satisfied cross-epic by the bus.
 3. **Blackboard** — still open. It goes with the P6 memory line under §12.27-3, landing with P6-02's Usage.
 
+### BLOCKED-155 — P6-02 defined a memory record the memory capability does not store, so neither half of its Usage has anywhere to land
+
+**State: OPEN, measured. This blocks P6-02's U redo and, with it, §12.27-3's fold of the blackboard into the memory line.**
+
+Measured over `git ls-files`, excluding `packages/memory/`, every `tests/` path, this program's own JSON and the notes archive:
+
+| subject | production callers outside its package |
+| --- | --- |
+| `validateRecord` | 0 |
+| `decideConflict` | 0 |
+| `isDefaultRetrievable` | 0 |
+| `withProvenance` | 0 |
+| `admitToIndex` | 0 |
+| `isTraceable` | 0 |
+
+**And the harder half: they have no callers INSIDE their own package either.** `packages/memory/memory/src/index.ts` lines 621-639 re-export all six and call none. Every provider — `createLocalReferenceMemoryProvider`, `createFakeMemoryProvider`, `createDurableFileMemoryProvider` — implements `propose`/`query`/`get`/`revise`/`forget` without consulting one of them.
+
+**The cause is not a missing wire. It is two different records.** P6-02's `MemoryRecord` carries `kind`, `subject`, `provenance`, `validFrom`, `validUntil`, `confidence`, `purpose`, `sensitivity`, `status` and `relations`. What the capability actually stores and returns is `MemoryRecordView`: `id`, `principal`, `content`, `updatedAt`. There is no field in common beyond the id and the payload. `isDefaultRetrievable` filters on `status` and `validUntil`; `decideConflict` compares `subject` and `validFrom`; `admitToIndex` reads `sensitivity`. **None of those fields exist on the record the seam moves**, so there is no place in the current read or write path where any of the six could be called.
+
+**This is why P5-11's remedy does not transfer.** There, the missing thing was a producer, and delegation supplied one that already existed. Here the seam has a real production consumer — `packages/context/memory-context/src/index.ts:153` calls `ctx.memory.query(...)` on a mounted runtime, reached on shipped profiles — and it still cannot reach these clauses, because the record it gets back does not carry what they decide about. Wiring is not the gap; the vocabulary is.
+
+Separately and additionally, the WRITE path has no production caller at all: nothing outside `packages/memory/` and its tests calls `propose`. So even a record carrying the right fields would have nothing creating one.
+
+**Decision needed (delegate's), and it is a product question about what memory IS here:**
+
+1. **Grow the capability's record to P6-02's.** `MemoryRecordView`, `MemoryProposeRequest` and all three providers gain the lifecycle, provenance and sensitivity fields, and the six decisions move onto the real read and write paths. This is the reading under which P6-02 shipped a specification of memory rather than a library beside it — and it is a change to a mounted, product-visible seam with a durable file provider, not a Usage-stage wiring job.
+2. **Keep P6-02's record as a separate, richer layer** that a future consumer composes over the seam, and exempt its Usage with the ruling. That says plainly: the harness's memory does not use this program's memory record.
+3. **Retire P6-02's record** in favour of the one the capability has, and re-derive the clauses against it — which means the clauses about provenance chains, validity intervals and conflict adjudication have no subject and the epic shrinks to what the seam does.
+
+**Not chosen.** Each is a different answer to "what does this harness remember, and with what guarantees" — §12.11 records the executor picking one as the mistake, and this one is larger than P5-11's because a mounted seam with a durable provider is on the other side of it.
+
+**Consequence for §12.27-3.** The blackboard was to fold into the P6 memory line on the grounds that one fact store is enough and `withProvenance` is a second provenance-bearing store with zero callers. That remains true, but the destination is not currently a fact store either: it stores `{ id, principal, content, updatedAt }` and has no provenance to merge into. The fold is well-founded only under reading 1.
+
 ### BLOCKED-154 — P5-11's boards have no producer: nothing in the harness creates a task or a fact
 
 **State: OPEN, measured. The last epic gate (u) reports, and the gap is a missing producer rather than a missing wiring.**
