@@ -8948,6 +8948,87 @@
         "failureSummary": "Not applicable \u2014 the surviving cases and their subject are unchanged; what changed is that the entry no longer pins a function that was deleted."
       },
       "note": "\u00a712.35-2(a). `commitWithOutbox` and `AtomicBatchSink` are deleted, so the four cases that pinned them are dropped from this entry and the remaining thirteen \u2014 the session write-behind's own batching \u2014 are re-frozen against the file that owns them. The deleted pair offered must[0]'s 'domain event and outbox record in one transaction' over a sink interface NOTHING implemented, and could only ever promise one BATCH: its own documentation said so, and BLOCKED-089 recorded the gap. `commitIntake` does it inside one `BEGIN IMMEDIATE`, which is the clause. Two commit paths for one clause is the arrangement where the weaker one gets used by accident, and the weaker one was the one with no implementation behind it."
+    },
+    {
+      "epic": "P4-06",
+      "stage": "P",
+      "supplements": {
+        "epic": "P4-06",
+        "stage": "P"
+      },
+      "supplementSeq": 6,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/message-bus/tests/plugin.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-06 Provider: the bus is a mounted service publishes ctx.messageBus, and a commit through it is durable in the configured directory",
+        "P4-06 Provider: the bus is a mounted service gives every committed row the store-owned delivery fields, not the caller-supplied ones",
+        "P4-06 Provider: the bus is a mounted service REFUSES a bus file an older format wrote, naming the path and both versions",
+        "P4-06 Provider: the bus is a mounted service opens a directory that does not exist yet, so a first boot is not a failure"
+      ],
+      "files": [
+        "packages/run/message-bus/src/plugin.ts",
+        "packages/run/message-bus/src/memory-store.ts",
+        "packages/run/message-bus/src/bus-store.ts",
+        "packages/bundle/base/cordis.patch.yml",
+        "packages/run/message-bus/tests/plugin.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-08T12:10:00.000Z",
+      "dryRunProof": {
+        "treeSha": "495917dfde8a0712bb17ad78364e52999ab22954",
+        "testsDiscovered": 4
+      },
+      "sensitivityProof": {
+        "mutationDescription": "(M18) the store stops reading its schema version back, so a stale file opens silently; (M19) the store stops creating its directory. Each restored byte-identical.",
+        "failureSummary": "Each reddens exactly one of the four. M19 is the one that mattered before shipping: with the new bundle row, a fresh install would have failed at boot with `unable to open database file`, naming neither the directory nor the reason \u2014 the two sibling stores both create theirs."
+      },
+      "note": "\u00a712.35-2(b). `openBusStore` had no production caller and no plugin, so every consumer would have decided for its callers where the bus lives \u2014 and that directory is what makes a bus shared at all. `MessageBusPlugin` publishes `ctx.messageBus` in the shape the lease store and taskboard use, and the base bundle mounts it under the session storage root, above the `subagent` row so file order matches the dependency. The dispatcher is deliberately absent: `dispatchOnce` needs a schedule and a transport, which are separate decisions from where the bus lives. `directory` is optional and absent means an IN-MEMORY bus rather than no bus (\u00a712.40) \u2014 a composition mounting this plugin has consumers that require a bus to exist, so the choice is durable versus process-local, the same split `dsh-lease` makes against `dsh-lease-sqlite`. The schema version was written and never read until (a); extending the outbox would otherwise have made a version-1 file fail later with a SQL error naming a missing column rather than the format."
+    },
+    {
+      "epic": "P4-06",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-06",
+        "stage": "U"
+      },
+      "supplementSeq": 4,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/subagent/subagent/tests/settlement-outbox.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-06: a settlement is committed to the bus before anyone tries to deliver it WAKES an idle parent once when its child settles, through the committed row",
+        "P4-06: a settlement is committed to the bus before anyone tries to deliver it KEEPS a settlement whose parent is gone, and delivers it when that parent next starts",
+        "P4-06: a settlement is committed to the bus before anyone tries to deliver it delivers ONCE even though three triggers drain, so a redelivery is not a second effect"
+      ],
+      "files": [
+        "packages/subagent/subagent/src/settlement-outbox.ts",
+        "packages/subagent/subagent/src/continuation.ts",
+        "packages/subagent/subagent/src/index.ts",
+        "packages/run/message-bus/src/plugin.ts",
+        "packages/subagent/subagent/tests/settlement-outbox.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-08T12:10:00.000Z",
+      "dryRunProof": {
+        "treeSha": "495917dfde8a0712bb17ad78364e52999ab22954",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations, each restored byte-identical: (M21) no commit before delivery, the hand-delivery this replaces; (M22) the drain ignores the teardown check; (M23) the settlement path goes back to `ctx.get('messageBus')` during teardown; (M24) the shutdown prologue commit is removed.",
+        "failureSummary": "M21 reddens all three. M23 and M24 each redden the acceptance[1] case \u2014 so both the SOURCE of the bus reference and the POSITION of the write are asserted, not merely that a write happens. M22 reddens NOTHING of 836, which is recorded in the code beside the check it covers: the teardown branch it guards is real but unasserted, and saying so is better than deleting a correct check to make coverage look complete."
+      },
+      "note": "\u00a712.35-2(c), \u00a712.39, \u00a712.42. The send side had no producer: `dispatchOnce`'s only caller in the repository was an experimental package that does not ship, and the one real handoff between agents \u2014 a child telling its parent how it ended \u2014 was hand-delivered, so a parent that was gone, tearing down, or unreachable got a log line and nothing else. The settlement is now committed first and delivered second, through one `drainOutbox` behind three triggers (\u00a712.39): the commit signals the target's driver, a parent drains on start, and a pre-step drains as a fallback. Pre-step alone would deadlock \u2014 an idle parent waiting on its child has no step to take. Idempotence comes from the dispatch decision skipping an acked record and the inbox refusing a repeated `(source, id, epoch)`; the bus key is that same triple, so the two sides cannot disagree about what a redelivery is. acceptance[1] took four rulings, each failing for a different measured reason: `inject` orders fibers but not async disposer segments (\u00a712.40); moving the write before the first await does not help because the service registry is emptied before a disposer runs (\u00a712.41); only holding the service value `inject` delivered at activation works (\u00a712.42)."
     }
   ]
 }
