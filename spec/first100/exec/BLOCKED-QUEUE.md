@@ -32,7 +32,13 @@ The frozen title asserts an OUTCOME two principals observe; the live one asserts
 
 **P4-09.U.1 — the frozen case was deliberately superseded, and was never greened.** `TRIPWIRE: a script has no \`workflow\` global, so nesting cannot be started` recorded a vacuum, and `nested-budget.spec.ts` states in-line that it "supersedes the tripwire this case used to be" with `REFUSES a nested run the host did not admit`. The rename mechanism does not fit: it exists to preserve a PRIOR observation's meaning (BLOCKED-040, P0-05), and this supplement has no prior observation to preserve.
 
-**P4-06.P.1 — 1 of 12 titles absent**: `the seen-set classifyIntake reads is the consumed rows reports exactly the consumed keys, so the pure classifier and the durable state agree`. The supplement stays at its old SHA.
+**P4-06.P.1 — also a plain rename**, measured under its own command (`packages/run/message-bus/tests/bus-store.spec.ts`, 19/19 green). Both halves of the name changed and the property is unchanged: the classifier's seen-set is the consumed rows.
+
+| frozen | live |
+| --- | --- |
+| `the seen-set classifyIntake reads is the consumed rows` / `reports exactly the consumed keys, so the pure classifier and the durable state agree` | `the durable seen-set and the dedup rule agree (BLOCKED-138)` / `reports every consumed key as the rule computes it, with no second spelling anywhere` |
+
+The other 11 frozen titles in this supplement resolve, so this is one renamed case rather than a supplement that drifted wholesale.
 
 **Not registered by me.** The one precedent in `frozen-title-renames.json` carries `registeredBy: "Supervisor, per delegate requirement (BLOCKED-040)"`, so rename registration is not the executor's to perform — and P4-12.C.1 should not be registered as a rename at all.
 
