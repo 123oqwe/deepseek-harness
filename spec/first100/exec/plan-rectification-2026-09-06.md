@@ -866,3 +866,8 @@ P2-03 撤签后门 (e) 正确地红了五条(`@modelcontextprotocol/sdk`、`open
 
 **事实**:run 级状态 "queued" 75 分钟;delegate 按该标签取消并试图重跑。实际 job 级:主 job **已跑完**(单测 20393/0;snapshot 步唯二红 = 两个 pwsh 夹具,`.refresh-skipped.json` 先被打印——137 机制按设计工作),等 runner 的是**产签名 bundle 的第二个 job**。取消挂在它上,这次的签名副本多半没了。**读了标签没读 job 状态**——与 §12.6 禁的"按名字对表"同族,长在 delegate 自己身上。
 **处置**:不用 raw report 绿格(§12.17:只引签名副本);执行者 admit pwsh refresh 产物并提交,下一次 run 全绿 + 签名即观测。**规则(进 C14)**:判断一个 run 是否卡住,看 `actions/runs/<id>/jobs` 的 job 级状态与 runner 分配,不看 run 级标签;取消一个 run 之前列出它已经产出的 artifact。
+
+### 12.29 P5-11 taskboard 的 `release`;三条卫生门的归属(2026-09-08 02:10 EDT,`2b917a4b43`)
+
+**事实**:§12.27-1 落地——task = 被委派 child(`subagent/start`/`end` 括住,id = 子会话,owner = 父会话,attempt = 本次 activation 的认领,receipt = 子代理 stop reason),完成推到 `submitted` 不是 `verified`(没人验过);`list-children` 读侧断言板与 projection 的不一致;门 (u) 全部 epic 通过。板只记录不拦截:`TaskStoreContract` 无 `release`,结束的 epoch 无法交回认领,正当恢复自己 child 的 host 会被自己上一轮的认领挡住。
+**裁决**:(1) **加 `release`,作 P5-11 C 阶段 supplement**(P5-11 已撤签,C 不在验收锁下;BLOCKED-103 加用例 = supplement);语义与 lease 同源:认领携带子代理 run 的 `LeaseEpoch`(§12.27-1 说的 attempt/lease 就是它),run 结束 → release;**陈旧 epoch 的 release 被拒**(fencing),同一 host 新 epoch 可重新认领。冻结:结束后重认领成功;旧 epoch release 拒;变异去 epoch 检查 → 红。(2) 三条卫生门:`verify-agent-note-format` 三篇缺节、`verify-type-equiv` 中 `SubagentSettledMessageSource` / `Agent` 两处 DRIFT——**执行者本批修**(自己欠的);其余 7 处 DRIFT 早于本程序,记 139 不动;`risk-taxonomy/README` 缺 model-context 与 invariant companion 句——**归 P2-04**(它的包,L1 lane 下一批修),不挡本次推送(这些门不在 exact-sha 路径上,registry gate set 22/1 已过)。(3) 顺序:admit pwsh 产物 → 补 (2) 的两项 → 一批过门推 → §12.27-2 mailbox。
