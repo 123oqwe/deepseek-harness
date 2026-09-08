@@ -8745,6 +8745,9 @@ importers:
       '@deepseek-ai/dsh-llm':
         specifier: workspace:^
         version: link:../../llm/llm
+      '@deepseek-ai/dsh-message-bus':
+        specifier: workspace:^
+        version: link:../../run/message-bus
       '@deepseek-ai/dsh-run':
         specifier: workspace:^
         version: link:../../run/run

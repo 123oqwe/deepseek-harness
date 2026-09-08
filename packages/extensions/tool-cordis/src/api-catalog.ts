@@ -1331,6 +1331,58 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'messageBus',
+    summary: 'The mounted durable bus, published as `ctx.messageBus`.',
+    description: 'The mounted durable bus, published as `ctx.messageBus`.\n\nImplements the store contract itself and forwards, so a consumer injecting the service holds exactly what the contract describes and never learns that SQLite is behind it. The two module-level operations that take a store — committing an intake and sweeping stale claims — are methods here for the same reason: a consumer that had to import them alongside the service would be holding the storage choice again.',
+    methods: [
+      {
+        signature: 'claim(message: BusMessage, turn: number): void',
+        description: 'Take responsibility for a message on behalf of one turn.',
+        parameters: [{ name: 'message', description: 'the arriving message.' }, { name: 'turn', description: 'the turn claiming it.' }],
+      },
+      {
+        signature: 'inboxRow(source: string, messageId: string, epoch: number): InboxRow | undefined',
+        description: 'The inbox row for one `(source, id, epoch)`.',
+        parameters: [{ name: 'source', description: 'the emitter the id is scoped to.' }, { name: 'messageId', description: 'the message id.' }, { name: 'epoch', description: 'the sender generation.' }],
+        returns: 'the row, or `undefined` when this bus holds none.',
+      },
+      {
+        signature: 'domainEvents(): readonly BusMessage[]',
+        description: 'Every committed domain event, in commit order.',
+        parameters: [],
+        returns: 'the events.',
+      },
+      {
+        signature: 'outboxRows(): readonly StoredOutboxRow[]',
+        description: 'Every stored outbox row, in commit order.',
+        parameters: [],
+        returns: 'the rows, each carrying its delivery record.',
+      },
+      {
+        signature: 'persistOutbox(record: OutboxRecord): void',
+        description: 'Persist one record\'s advanced state after a dispatch pass.',
+        parameters: [{ name: 'record', description: 'the record as the dispatch decision left it.' }],
+      },
+      {
+        signature: 'consumedKeys(): ReadonlySet<string>',
+        description: 'The dedup keys of consumed messages, which is the durable seen-set.',
+        parameters: [],
+        returns: 'the keys.',
+      },
+      {
+        signature: 'commitIntake(commit: IntakeCommit): void',
+        description: 'Commit a domain event, its outbox rows and the inbox transition, in one transaction (must[0]).',
+        parameters: [{ name: 'commit', description: 'the message, the claiming turn, and the rows it owes.' }],
+      },
+      {
+        signature: 'recoverStaleClaims(window: RecoveryWindow): number',
+        description: 'Sweep claims older than the window, so a turn that never ran does not hold a message forever (must[2]).',
+        parameters: [{ name: 'window', description: 'the expiry boundary.' }],
+        returns: 'how many rows were released.',
+      },
+    ],
+  },
+  {
     key: 'messageFeedback',
     summary: 'Storage-domain sidecar service.',
     description: 'Storage-domain sidecar service. It inspects persisted Session history and never creates or resumes an Agent or Session.',
@@ -3934,6 +3986,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type BrandedNumber<B extends string> = number & {\n    readonly [BRAND]: B;\n};',
   },
   {
+    name: 'BusMessage',
+    declaration: 'export interface BusMessage {\n    readonly id: string;\n    readonly source: string;\n    readonly type: string;\n    readonly time: string;\n    readonly subject?: string;\n    readonly datacontenttype?: string;\n    readonly epoch: number;\n    readonly data: unknown;\n}',
+  },
+  {
     name: 'BusMessageId',
     declaration: 'export type BusMessageId = Branded<\'BusMessageId\'>;',
   },
@@ -4250,6 +4306,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface DelegationEntry {\n    readonly principal: Principal;\n    readonly delegatedAt: number;\n    readonly reason?: string;\n}',
   },
   {
+    name: 'DeliveryReceipt',
+    declaration: 'export interface DeliveryReceipt {\n    readonly messageId: BusMessageId;\n    readonly epoch: MessageEpoch;\n    readonly consumer: string;\n}',
+  },
+  {
     name: 'DiffCallView',
     declaration: 'export interface DiffCallView {\n    card: \'diff\';\n    title: string;\n    diffs: FileDiff[];\n    locations?: FileLocation[];\n}',
   },
@@ -4526,6 +4586,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type ImageVariantId = Branded<\'ImageVariantId\'>;',
   },
   {
+    name: 'InboxRow',
+    declaration: 'export interface InboxRow {\n    readonly source: string;\n    readonly messageId: string;\n    readonly epoch: number;\n    readonly claimedByTurn: number;\n    readonly state: InboxState;\n}',
+  },
+  {
     name: 'IncomingMessage',
     declaration: 'export interface IncomingMessage {\n    readonly source: string;\n    readonly id: BusMessageId;\n    readonly epoch: MessageEpoch;\n    readonly tenant: TenantId;\n}',
   },
@@ -4552,6 +4616,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'InspectorJsonValue',
     declaration: 'export type InspectorJsonValue = InspectorJsonPrimitive | readonly InspectorJsonValue[] | InspectorJsonObject;',
+  },
+  {
+    name: 'IntakeCommit',
+    declaration: 'export interface IntakeCommit {\n    readonly message: BusMessage;\n    readonly claimedByTurn: number;\n    readonly outbox: readonly OutboxRow[];\n    readonly failAt?: \'after-domain-event\' | \'after-outbox\';\n}',
   },
   {
     name: 'InvariantFailure',
@@ -4994,6 +5062,18 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type OptionalSessionSeq = SessionSeq | null;',
   },
   {
+    name: 'OutboxRecord',
+    declaration: 'export interface OutboxRecord {\n    readonly id: BusMessageId;\n    readonly epoch: MessageEpoch;\n    readonly tenant: TenantId;\n    readonly state: OutboxState;\n    readonly priority: number;\n    readonly deadlineMs: number;\n    readonly attempts: number;\n    readonly receipt: DeliveryReceipt | null;\n}',
+  },
+  {
+    name: 'OutboxRow',
+    declaration: 'export interface OutboxRow {\n    readonly target: string;\n    readonly payload: unknown;\n    readonly tenant: TenantId;\n    readonly priority: number;\n    readonly deadlineMs: number;\n}',
+  },
+  {
+    name: 'OutboxState',
+    declaration: 'export type OutboxState = \'pending\' | \'sent\' | \'acked\' | \'dead-letter\';',
+  },
+  {
     name: 'OwnershipToken',
     declaration: 'export type OwnershipToken = Branded<\'OwnershipToken\'>;',
   },
@@ -5144,6 +5224,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ReceiptRejectionReason',
     declaration: 'export type ReceiptRejectionReason = \'unknown-task\' | \'stale-attempt\' | \'not-owner\' | \'illegal-advance\';',
+  },
+  {
+    name: 'RecoveryWindow',
+    declaration: 'export interface RecoveryWindow {\n    readonly expiredBefore: number;\n}',
   },
   {
     name: 'RedactedSecret',
@@ -6004,6 +6088,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'StoredImageAttachment',
     declaration: 'export interface StoredImageAttachment {\n    ref: ImageAttachmentRef;\n    data: Uint8Array;\n}',
+  },
+  {
+    name: 'StoredOutboxRow',
+    declaration: 'export interface StoredOutboxRow {\n    readonly record: OutboxRecord;\n    readonly target: string;\n    readonly payload: unknown;\n}',
   },
   {
     name: 'StreamChunk',

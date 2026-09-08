@@ -31,7 +31,7 @@ import type {
   CreateAgentOptions,
 } from '@deepseek-ai/dsh-agent'
 import { ReasoningEffortId, boundContextSummary, contentHasImage, createUserMessage, errorChain } from '@deepseek-ai/dsh-llm'
-import type { ContentBlock, MessageId, MessageSource } from '@deepseek-ai/dsh-llm'
+import type { ContentBlock, MessageId, MessageSource, UserMessage } from '@deepseek-ai/dsh-llm'
 import { SessionLogOffset } from '@deepseek-ai/dsh-session'
 import type { SessionEvent, SessionId, SessionLogOffset as SessionLogOffsetType } from '@deepseek-ai/dsh-session'
 import type { SessionPersistence } from '@deepseek-ai/dsh-session-persistence'
@@ -55,6 +55,8 @@ import type { ActivationObserver, ActivationTerminal } from './lifecycle.ts'
 import { SubagentError } from './error.ts'
 import { isAdjacentAgentSendMessageTool } from './internal.ts'
 import { decideConvergence } from './control-convergence.ts'
+import { commitSettlement, drainSettlements } from './settlement-outbox.ts'
+import type { PendingSettlement } from './settlement-outbox.ts'
 
 /** Durable attribution for one model-authored message between adjacent Agents. */
 export interface AgentMessageSource {
@@ -384,6 +386,66 @@ class ChildLock {
 }
 
 /**
+ * The notice content one settlement carries.
+ *
+ * One definition, used by the committed payload and by the direct delivery
+ * below: two copies would let the message a parent reads through the bus drift
+ * from the one it reads without it, and nothing would notice until a reader
+ * compared two transcripts.
+ * @param terminal - how the epoch ended.
+ * @param summary - the one-line account of that ending.
+ * @returns the blocks the parent is shown.
+ */
+function settlementContent(terminal: ActivationTerminal, summary: string): ContentBlock[] {
+  return [
+    { type: 'text' as const, text: summary },
+    ...terminal.output === undefined
+      ? [{ type: 'text' as const, text: 'It left no closing message.' }]
+      : [{ type: 'text' as const, text: 'Its closing message:' }, ...terminal.output],
+  ]
+}
+
+/**
+ * How many times a drain may hand one settlement to a parent before
+ * dead-lettering it.
+ *
+ * Fixed rather than configurable, because it is not a network retry policy: a
+ * settlement is delivered to a LOCAL inbox, and an attempt is only ever spent
+ * when a live parent accepted the handoff. A parent that cannot receive —
+ * absent, or tearing down — declines without spending one. So the budget
+ * bounds a pathological loop rather than expressing a deployment's tolerance
+ * for a flaky transport, and a profile has nothing to say about it.
+ */
+const SETTLEMENT_MAX_ATTEMPTS = 5
+
+/**
+ * Rebuild the parent-facing notice from what the bus stored.
+ *
+ * The message is rebuilt rather than stored whole: a `UserMessage` carries an
+ * id minted per delivery, and the inbox deduplicates on the SENDER's identity
+ * — `(kind, senderSessionId, senderEpoch)` — not on that id. Storing one would
+ * persist a value that must not be reused and that nothing reads.
+ * @param settlement - the pending row, as the drain read it.
+ * @returns the message to insert, or `undefined` when the payload is not one.
+ */
+function settlementMessageOf(settlement: PendingSettlement): UserMessage | undefined {
+  const payload = settlement.payload
+  if (typeof payload !== 'object' || payload === null) return undefined
+  const { summary, content, epoch } = payload as { summary?: unknown; content?: unknown; epoch?: unknown }
+  if (typeof summary !== 'string' || !Array.isArray(content)) return undefined
+  return createUserMessage({
+    content: content as ContentBlock[],
+    source: {
+      kind: 'subagent-settled' as const,
+      form: 'notice' as const,
+      summary: boundContextSummary(summary),
+      senderSessionId: settlement.childId,
+      ...typeof epoch === 'number' ? { senderEpoch: epoch } : {},
+    },
+  })
+}
+
+/**
  * The continuable-subagent orchestration service behind `ctx.subagents`. Tool
  * schema and host adapters are consumers of this one contract; foreground
  * one-shot delegation keeps calling `ctx.subagents.start()` and never enters
@@ -420,6 +482,18 @@ export class SubagentContinuationManager {
     this.ownerCtx = scope.ctx
     ctx.on('agent/disposed', ({ agent }) => {
       this.closingScopes.delete(agent)
+    })
+    // Trigger (2): a parent that starts drains what it is owed. This is
+    // acceptance[1]'s recovery — a settlement committed while the parent was
+    // gone reaches it on the next start rather than being lost with the
+    // process that could not deliver it.
+    ctx.on('agent/session-start', ({ agent }) => { this.drainSettlementOutbox(agent) })
+    // Trigger (3): the fallback. A signal can be missed — the target had no
+    // live driver at commit time, or a drain raced a disposal — and a parent
+    // that is about to take a step is a parent that can receive.
+    ctx.on('agent/pre-step', async (proposal, next) => {
+      this.drainSettlementOutbox(proposal.agent)
+      return next()
     })
     ctx.effect(function* (this: SubagentContinuationManager) {
       yield scope.dispose
@@ -1544,6 +1618,54 @@ export class SubagentContinuationManager {
   }
 
   /**
+   * Deliver every settlement the durable bus owes one parent (§12.39).
+   *
+   * The single implementation behind all three triggers: a commit signalling
+   * the target's driver, a parent starting, and a pre-step falling back. Each
+   * can run when another already has, and the drain is idempotent — the
+   * dispatch decision skips an acked record, and the parent's inbox refuses a
+   * repeated `(source, id, epoch)`.
+   *
+   * Delivery uses the SAME insertion rules as a live settlement: an idle parent
+   * gets one ordinary turn, a busy one is steered into its next batch, and a
+   * parent whose lineage is tearing down declines — leaving the row pending for
+   * whoever starts next rather than spending a retry on a moment nobody could
+   * receive in.
+   *
+   * A composition with no bus mounted drains nothing, which is the state the
+   * harness was in before this: settlement is then the direct delivery below.
+   * @param parent - the live parent to deliver to.
+   */
+  private drainSettlementOutbox(parent: Agent): void {
+    const bus = this.ctx.get('messageBus')
+    if (bus === undefined) return
+    try {
+      drainSettlements(bus, parent.id, Date.now(), SETTLEMENT_MAX_ATTEMPTS, (settlement) => {
+        const message = settlementMessageOf(settlement)
+        if (message === undefined) return false
+        // UNCOVERED, and measured as such: removing this line reddens no case
+        // of 836 (§12.39). It is kept because delivering into a tearing-down
+        // parent would wake an Agent its host is about to dispose, and the row
+        // is better left owed. It is not covered because the same teardown that
+        // makes this branch true also disposes the bus service first, so a
+        // settlement produced then is committed nowhere — the ordering this
+        // drain cannot fix from here, reported rather than worked around.
+        if (this.closingTeardownFor(parent) !== undefined) return false
+        this.sendWaking(parent, message, () => {
+          if (parent.status === 'idle') parent.followup(message)
+          else parent.steer(message)
+        })
+        return true
+      })
+    } catch (error: unknown) {
+      // Logged, never thrown into a lifecycle edge: a bus that cannot be read
+      // must not stop an agent from starting or stepping. The rows stay
+      // pending, which is the recoverable direction.
+      this.ctx.logger.warn(`subagent settlement drain for "${parent.id}" failed: ${errorChain(error)}`)
+    }
+  }
+
+  /**
    * Tell the durable direct parent that this child produced everything it is
    * going to. Unconditional for every child the caller received an id for: it
    * does not consider whether the child reported, because the cases that most
@@ -1564,17 +1686,40 @@ export class SubagentContinuationManager {
   private notifySettlement(activation: Activation, terminal: ActivationTerminal): void {
     if (!activation.announced) return
     try {
-      const parent = this.ctx.agents.get(activation.parentSession)
-      if (parent === undefined) return
       const summary = settlementSummary(activation.childId, terminal.stopReason)
       const epoch = activation.handle.agent.lifecycle?.epoch
+      // Committed BEFORE any delivery attempt, and before the live-parent check
+      // below. The cases that most need this notice — a token ceiling, a model
+      // failure, a cancellation, a teardown — are the ones where the parent may
+      // already be gone, and until §12.35-2(c) exactly those were logged and
+      // dropped (acceptance[1]).
+      const bus = this.ctx.get('messageBus')
+      if (bus !== undefined && epoch !== undefined) {
+        const content = settlementContent(terminal, summary)
+        commitSettlement(bus, {
+          childId: activation.childId,
+          parentSessionId: activation.parentSession,
+          epoch,
+          payload: { summary, content, epoch },
+          tenant: activation.parentSession,
+          // A settlement does not expire: the parent's account of how its child
+          // ended is as true a year later. The far deadline keeps the field
+          // meaningful for the dispatcher's own decision without inventing a
+          // policy nobody asked for.
+          deadlineMs: Number.MAX_SAFE_INTEGER,
+        })
+      }
+      const parent = this.ctx.agents.get(activation.parentSession)
+      // Trigger (1): the commit signals the target's driver. A live parent
+      // takes it now, through the drain rather than beside it, so one delivery
+      // path serves all three triggers.
+      if (parent !== undefined && bus !== undefined && epoch !== undefined) {
+        this.drainSettlementOutbox(parent)
+        return
+      }
+      if (parent === undefined) return
       const message = createUserMessage({
-        content: [
-          { type: 'text' as const, text: summary },
-          ...terminal.output === undefined
-            ? [{ type: 'text' as const, text: 'It left no closing message.' }]
-            : [{ type: 'text' as const, text: 'Its closing message:' }, ...terminal.output],
-        ],
+        content: settlementContent(terminal, summary),
         source: {
           kind: 'subagent-settled' as const,
           form: 'notice' as const,

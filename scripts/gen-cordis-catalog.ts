@@ -62,6 +62,7 @@ export const SERVICE_PAGE: Record<string, string> = {
   leaseStore: 'core.md',
   actionLedger: 'core.md',
   taskStore: 'core.md',
+  messageBus: 'core.md',
   approval: 'approval.md',
   attachments: 'attachment.md',
   shell: 'shell.md',
@@ -655,6 +656,9 @@ export const FOUNDATION_TYPE_NAMES: ReadonlySet<string> = new Set([
   'Promise',
   'Record',
   'Readonly',
+  // Same standing as `Readonly` and `Map`: a TypeScript built-in with no
+  // project owner to link to.
+  'ReadonlySet',
   'Uint8Array',
 ])
 
@@ -680,6 +684,12 @@ export const TYPE_LINK_EXEMPTIONS: Readonly<Record<string, string>> = {
   ReserveDecision: 'ledger reservation outcome is owned by packages/action/action-ledger/README.md',
   TransitionDenialReason: 'agent lifecycle refusal reason is owned by packages/core/agent/README.md',
   AgentLifecycleState: 'agent lifecycle state is owned by packages/core/agent/README.md',
+  BusMessage: 'bus message envelope is owned by packages/run/message-bus/README.md',
+  InboxRow: 'bus inbox row is owned by packages/run/message-bus/README.md',
+  StoredOutboxRow: 'stored outbox row is owned by packages/run/message-bus/README.md',
+  OutboxRecord: 'outbox delivery record is owned by packages/run/message-bus/README.md',
+  IntakeCommit: 'bus intake commit is owned by packages/run/message-bus/README.md',
+  RecoveryWindow: 'stale-claim recovery window is owned by packages/run/message-bus/README.md',
   Task: 'task record is owned by packages/collaboration/taskboard/README.md',
   TaskId: 'task identity is owned by packages/collaboration/taskboard/README.md',
   TaskReceipt: 'task receipt is owned by packages/collaboration/taskboard/README.md',

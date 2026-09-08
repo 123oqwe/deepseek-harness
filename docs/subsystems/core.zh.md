@@ -957,6 +957,73 @@ reclaimable(nowMs: number): readonly WorkItemId[]
 
 Source: [`packages/collaboration/lease-contract/src/types.ts`](../../packages/collaboration/lease-contract/src/types.ts)
 
+<a id="ctxmessagebus--messagebusplugin"></a>
+
+### `ctx.messageBus` — `MessageBusPlugin`
+
+The mounted durable bus, published as `ctx.messageBus`.
+
+Implements the store contract itself and forwards, so a consumer injecting the service holds exactly what the contract describes and never learns that SQLite is behind it. The two module-level operations that take a store — committing an intake and sweeping stale claims — are methods here for the same reason: a consumer that had to import them alongside the service would be holding the storage choice again.
+
+```ts cordis-catalog
+/**
+ * Take responsibility for a message on behalf of one turn.
+ * @param message - the arriving message.
+ * @param turn - the turn claiming it.
+ */
+claim(message: BusMessage, turn: number): void
+
+/**
+ * The inbox row for one `(source, id, epoch)`.
+ * @param source - the emitter the id is scoped to.
+ * @param messageId - the message id.
+ * @param epoch - the sender generation.
+ * @returns the row, or `undefined` when this bus holds none.
+ */
+inboxRow(source: string, messageId: string, epoch: number): InboxRow | undefined
+
+/**
+ * Every committed domain event, in commit order.
+ * @returns the events.
+ */
+domainEvents(): readonly BusMessage[]
+
+/**
+ * Every stored outbox row, in commit order.
+ * @returns the rows, each carrying its delivery record.
+ */
+outboxRows(): readonly StoredOutboxRow[]
+
+/**
+ * Persist one record's advanced state after a dispatch pass.
+ * @param record - the record as the dispatch decision left it.
+ */
+persistOutbox(record: OutboxRecord): void
+
+/**
+ * The dedup keys of consumed messages, which is the durable seen-set.
+ * @returns the keys.
+ */
+consumedKeys(): ReadonlySet<string>
+
+/**
+ * Commit a domain event, its outbox rows and the inbox transition, in one
+ * transaction (must[0]).
+ * @param commit - the message, the claiming turn, and the rows it owes.
+ */
+commitIntake(commit: IntakeCommit): void
+
+/**
+ * Sweep claims older than the window, so a turn that never ran does not hold
+ * a message forever (must[2]).
+ * @param window - the expiry boundary.
+ * @returns how many rows were released.
+ */
+recoverStaleClaims(window: RecoveryWindow): number
+```
+
+Source: [`packages/run/message-bus/src/plugin.ts`](../../packages/run/message-bus/src/plugin.ts)
+
 <a id="ctxruns--runplugin"></a>
 
 ### `ctx.runs` — `RunPlugin`
