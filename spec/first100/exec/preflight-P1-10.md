@@ -24,6 +24,16 @@ Its own note draws a distinction this epic must respect: **workspace checkpointi
 
 I found **no adopt-role OSS row for P1-10 itself** in the make-vs-use ledger; the rows near it are community-duplication observations rather than package verdicts. **That is a gap I am not filling by assumption** — see the open questions.
 
+**But the house pattern already exists, in this epic's own accepted predecessor.** `packages/plugin/plugin-lock` belongs to **P1-03**, and its module doc describes it as "reproducible plugin locking: boot admission, tag-drift detection, and the **transactional install decision**". It already ships:
+
+- `planLockCommit` — plan first, commit second, which is the same shape must[1]'s six phases need;
+- `writeLockAtomically` — and it **adopts `write-file-atomic`** rather than hand-rolling the replace;
+- `gateProductionBoot` — a refusal path for a boot the lock does not admit.
+
+So the question is narrower than "does P1-10 need an OSS pass": the predecessor already chose `write-file-atomic` for the same class of problem, and P1-10 extends that transaction from the lockfile to the plugin's DATA, config and schema.
+
+**A duplication worth naming while I am here**: `packages/storage/storage-json/src/atomic.ts` hand-rolls tmp-write + `rename()` for the same guarantee `write-file-atomic` provides, and `write-file-atomic` is already a tree dependency. That is two spellings of atomic replace in one repository. It is NOT P1-10's to fix — the file belongs to another epic's declared set — but P1-10 must not become the third, and whichever spelling it uses should be the adopted one.
+
 ## Stage split (registry requires 1–5 files per subtask; it declares 8)
 
 | subtask | files | contents |
@@ -45,7 +55,7 @@ I found **no adopt-role OSS row for P1-10 itself** in the make-vs-use ledger; th
 
 ## Open questions for the delegate — not assumed
 
-1. **No adopt-role OSS row exists for P1-10.** The user directive is to reuse rather than hand-write, and a six-phase transactional upgrade with quarantine and atomic switch is a well-trodden problem. Before I write `transaction.ts`, does the ledger need an OSS pass for this epic (the way `cockatiel` was judged for P4-11)? Writing it hand-rolled without that pass is the §12.62 mistake repeated.
+1. **No adopt-role OSS row exists for P1-10**, though the measurement above narrows it: P1-03 already adopted `write-file-atomic` and established plan-then-commit for the transactional install decision. Two readings, and I am not choosing between them: either P1-10 inherits P1-03's disposition (no new OSS pass, extend the existing pattern), or the six-phase upgrade with quarantine and atomic switch is a big enough problem to deserve its own pass the way `cockatiel` got one for P4-11. Writing `transaction.ts` hand-rolled under neither reading is the §12.62 mistake repeated.
 2. **Relationship to `SCHEMA_VERSION`'s reject-old-formats stance.** My reading is that P1-10 adds conversion for KNOWN older versions and leaves the reject as the fallback for unknown ones. That is a product-boundary reading, and CLAUDE.md's pre-release stance is explicit enough that I would rather have it confirmed than assume it.
 3. **Scope against P3-11.** The ledger separates workspace checkpointing (P3-11) from execution-world snapshotting. `snapshot data/config` in must[1] sits near that line. I read P1-10 as owning only the plugin's own durable data, config and schema — not workspace files. Confirm before the C stage fixes the vocabulary, because the manifest's `backup strategy` field is where the line gets drawn.
 
