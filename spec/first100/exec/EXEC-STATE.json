@@ -3,15 +3,15 @@
     "name": "first100-exec-state",
     "version": "1.0"
   },
-  "lastUpdatedUtc": "2026-09-09T04:35:00.000Z",
+  "lastUpdatedUtc": "2026-09-09T06:05:00.000Z",
   "activeWorktree": "/Users/guanjieqiao/dsh-first100-clean",
   "activeBranch": "first100-exec",
   "currentWave": 4,
   "currentSlice": {
-    "epic": "P2-04",
-    "stage": "F",
-    "step": "FROZEN_AWAITING_OBSERVATION",
-    "detail": "All four P2-04 stages now have live freeze entries: C (superseded per §12.47(ii)), P (superseded per §12.48-B(a)), U (base plus supplements 1 and 2), and F (the boundary matrix, 15 cases). The cells green on the next CI run that contains these freezes; nothing further is buildable for P2-04 locally."
+    "epic": "P4-06",
+    "stage": "U",
+    "step": "AWAITING_OBSERVATION",
+    "detail": "Run 34225817745 at 645317b839 is the observation for the four revoked cells and P2-04 C/P/U/F; it was still in_progress with 0 artifacts when last checked. P9-08.P was built and WITHDRAWN per §12.55 — P9-08 is W21 and its predecessor P7-09 (W16) is NOT_RUN, so building it skipped a wave."
   },
   "registryDigest": "5c75260e96c9db1ca045c1bf4a013a5a1f356651c23baef924066bec627ef4f7",
   "ledgerDigest": "af26d0fe8b21b9d2e4ed9a686fbeaeee25805d2add9418ddb32acf9e997fe236",

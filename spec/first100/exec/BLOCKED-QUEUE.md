@@ -71,6 +71,23 @@ P9-08's own design anticipates exactly this: must[3] requires the suite to repor
 
 Neither is decided here. What is recorded is that the gap is two acceptance clauses' worth of real-API measurement, not two unbuilt epics.
 
+## WITHDRAWN 2026-09-09 (§12.55): the keyless half was built and then removed, because building it now skipped a wave
+
+Item 1 above was acted on: `benchmarks/judge/report.ts` and eight cases were written, frozen as P9-08.P, and mutation-proved (M54–M57). All of it has been **removed**, and the entry stands as it did before.
+
+**The error was mine and it was a wave skip.** P9-08 is W21 with predecessors `P0-08`, `P7-09`, `P9-06`. `P7-09` (W16) is entirely `NOT_RUN`. The standing instruction is 禁跳 wave, and I did not check the predecessor rows before building — BLOCKED-160 framed the keyless half as "real work with no product question in it", which was true about the product question and silent about the wave order. **Technically unblocked is not the same as admitted**, and a freeze entry for a stage whose predecessors have not run asserts a pre-commitment the program has not reached.
+
+What the attempt does establish, and what is worth keeping in this entry rather than in code:
+
+- the assembly genuinely needs no credential — a keyless suite drops its attempts and emits no `score` field, since 0% and 100% are each a claim about a model nobody asked;
+- grounds must be built from the declared CHECKS rather than from observations, or a check nobody looked at leaves the report while it still reads as complete;
+- the cost total must cover every ATTEMPTED task, because a failed attempt still spent tokens.
+
+Those three are the design the W21 slice should start from; they cost one measurement each to find and should not be rediscovered.
+
+**Unchanged:** the credential-bound clauses. `acceptance[0]`'s ≥20-task baseline with double-run variance, `acceptance[2]`'s nightly, and P9-09's `acceptance[1]` need a key and real spend, which are the user's alone. Per §12.55 the order at W21/W22 is keyless first, then ask the user for the credential.
+
+
 ### BLOCKED-159 — P2-03 acceptance[2]'s "requires approval" half has no enforcing consumer; deferred to P2-04.U
 
 **State: RULED §12.46-B. Targeted deferral — `landsIn: P2-04.U`. P2-03 signs on its declaration half; the enforcement half is P2-04's Usage subject and P2-04's readiness gate carries this entry.**

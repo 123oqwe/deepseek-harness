@@ -1193,7 +1193,7 @@
       "path": "packages/session/session-persistence/tests/write-behind.spec.ts",
       "kind": "test",
       "stages": [
-        "P.5"
+        "P"
       ]
     },
     {
@@ -1254,7 +1254,8 @@
       "path": "packages/core/agent/src/index.ts",
       "kind": "source",
       "stages": [
-        "U"
+        "U",
+        "F"
       ],
       "reason": "HOT ZONE. Written from `git show c79a24f78c -- packages/core/agent/src/index.ts`: the barrel had ZERO occurrences of `advanceAgentLifecycle` before this commit, and P4-07 added BOTH `advanceAgentLifecycle` and `advanceAgentLifecycleFenced` to it. So the unfenced public export is this epic's own widening, not a pre-existing condition it inherited — P4-07's standing open finding is one it created. Measured on the same question: `src/dispatch.ts` already exported the function and `package.json` already carried `\"./src/*\"`, so `@deepseek-ai/dsh-agent/src/dispatch` was importable beforehand; what this commit added is reachability from the package root, which is the surface the finding is about. An earlier version said the unfenced export was \"still\" exported, which read the epic's intent instead of its diff."
     },
@@ -1608,6 +1609,14 @@
       "kind": "test",
       "stages": [
         "P"
+      ]
+    },
+    {
+      "epic": "P4-12",
+      "path": "packages/core/agent-loop/tests/ledger-reservation.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
       ]
     },
     {

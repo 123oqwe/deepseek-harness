@@ -37,7 +37,8 @@
  *     [--report <path>]        write full JSON findings to this path
  */
 import { spawnSync } from 'node:child_process'
-import { readFileSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -56,23 +57,54 @@ function loadJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'))
 }
 
-/** Runs a frozen entry's own argv and collects every assertion's title/fullName, any status. */
+/**
+ * Runs a frozen entry's own argv and collects every assertion's title/fullName,
+ * any status.
+ *
+ * **The report is written to a FILE and read from disk (§12.56).** Collecting
+ * it from stdout meant buffering every run's whole JSON in this process, and
+ * with one entry's report reaching megabytes the gate stopped completing at
+ * all: measured, it died mid-gate at 216 freeze entries after passing at 209.
+ * The cost grew with the freeze file, which grows every working day, so the
+ * gate was on a path to failing for a reason that has nothing to do with what
+ * it checks.
+ *
+ * What it checks is unchanged. `--outputFile` is vitest's own flag for the
+ * same reporter, the run stays sequential (a shared host makes parallel runs
+ * a source of load-dependent reds, §12.35), and the caller's `runCache` still
+ * collapses the 216 entries onto their 133 unique commands.
+ */
 function runAndCollectTitles(argvList) {
   const [cmd, ...args] = argvList
-  const result = spawnSync(cmd, args, { cwd: REPO_ROOT, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 })
-  if (result.error) {
-    return { ok: false, error: `failed to spawn ${JSON.stringify(argvList)}: ${result.error.message}`, titles: new Set() }
-  }
-  let report
+  const scratch = mkdtempSync(join(tmpdir(), 'dsh-frozen-titles-'))
+  const reportPath = join(scratch, 'report.json')
   try {
-    report = JSON.parse(result.stdout)
-  } catch (err) {
-    return {
-      ok: false,
-      error: `${JSON.stringify(argvList)} did not produce parseable --reporter=json JSON on stdout (exit ${result.status}): ${err.message}`,
-      titles: new Set(),
+    const result = spawnSync(cmd, [...args, '--outputFile', reportPath], { cwd: REPO_ROOT, encoding: 'utf8' })
+    if (result.error) {
+      return { ok: false, error: `failed to spawn ${JSON.stringify(argvList)}: ${result.error.message}`, titles: new Set() }
     }
+    let report
+    try {
+      report = JSON.parse(readFileSync(reportPath, 'utf8'))
+    } catch (err) {
+      return {
+        ok: false,
+        error: `${JSON.stringify(argvList)} did not write a parseable --reporter=json report to ${reportPath} (exit ${result.status}): ${err.message}`,
+        titles: new Set(),
+      }
+    }
+    return collectTitles(report)
+  } finally {
+    rmSync(scratch, { recursive: true, force: true })
   }
+}
+
+/**
+ * The titles one parsed vitest report resolves, and how many cases each names.
+ * @param report - a parsed `--reporter=json` document.
+ * @returns the resolvable names and their per-name case counts.
+ */
+function collectTitles(report) {
   const titles = new Set()
   // How many cases each name can resolve to. A bare `title` shared by several
   // cases counts once per case; a `fullName` carries its describe chain and so
