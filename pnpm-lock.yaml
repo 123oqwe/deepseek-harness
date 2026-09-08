@@ -3928,6 +3928,12 @@ importers:
         specifier: workspace:^
         version: link:../taskboard
 
+  packages/collaboration/control-priority:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+
   packages/collaboration/intake-dedup:
     devDependencies:
       '@deepseek-ai/cordis':
@@ -4385,6 +4391,9 @@ importers:
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-control-priority':
+        specifier: workspace:^
+        version: link:../../collaboration/control-priority
       '@deepseek-ai/dsh-intake-dedup':
         specifier: workspace:^
         version: link:../../collaboration/intake-dedup
@@ -4465,6 +4474,9 @@ importers:
       '@deepseek-ai/dsh-agent':
         specifier: workspace:^
         version: link:../agent
+      '@deepseek-ai/dsh-control-priority':
+        specifier: workspace:^
+        version: link:../../collaboration/control-priority
       '@deepseek-ai/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
@@ -8710,6 +8722,9 @@ importers:
       '@deepseek-ai/dsh-capability-token':
         specifier: workspace:^
         version: link:../../policy/capability-token
+      '@deepseek-ai/dsh-control-priority':
+        specifier: workspace:^
+        version: link:../../collaboration/control-priority
       '@deepseek-ai/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants

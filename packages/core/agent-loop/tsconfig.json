@@ -58,6 +58,9 @@
     },
     {
       "path": "../../action/action-ledger"
+    },
+    {
+      "path": "../../collaboration/control-priority"
     }
   ]
 }

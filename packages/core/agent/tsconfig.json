@@ -43,6 +43,9 @@
     },
     {
       "path": "../../collaboration/intake-dedup"
+    },
+    {
+      "path": "../../collaboration/control-priority"
     }
   ]
 }

@@ -202,6 +202,7 @@
     { "path": "./packages/session/session-telemetry-otel" },
     { "path": "./packages/core/system-prompt" },
     { "path": "./packages/collaboration/blackboard" },
+    { "path": "./packages/collaboration/control-priority" },
     { "path": "./packages/collaboration/lease-contract" },
     { "path": "./packages/collaboration/workflow-journal" },
     { "path": "./packages/collaboration/mailbox" },

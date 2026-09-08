@@ -16,6 +16,7 @@ import type {
   PreStepDecision,
   RequestErrorAction,
 } from '@deepseek-ai/dsh-agent'
+import type { ControlKind } from '@deepseek-ai/dsh-control-priority'
 import { Inbox, agentEvents, assembleContextFor } from '@deepseek-ai/dsh-agent'
 import type { GenerateOptions, LlmCallConfig, Message, PreparedLlmCall } from '@deepseek-ai/dsh-llm'
 import {
@@ -146,25 +147,25 @@ export class ReactLoopAgent implements Agent {
     }
   }
 
-  send(message: UserMessage, target: InboxTarget, wakeup: boolean): void {
+  send(message: UserMessage, target: InboxTarget, wakeup: boolean, controlKind?: ControlKind): void {
     // Waking input cannot join an aborted activity, so it starts the next turn.
     // Captured before the insertion so a reentrant cancel from a splice observer cannot reclassify it.
     const wakingAfterAbort = wakeup && this.phase.kind !== 'idle' && this.phase.abort.signal.aborted
     const resolvedTarget = wakingAfterAbort ? 'next-turn' : target
-    this.inbox.splice(resolvedTarget, Infinity, 0, [message])
+    this.inbox.splice(resolvedTarget, Infinity, 0, [message], controlKind)
     if (wakeup) this.wakeDriver(wakingAfterAbort)
   }
 
   followup(input: UserMessage): void {
-    this.send(input, 'next-turn', true)
+    this.send(input, 'next-turn', true, 'continue')
   }
 
   steer(input: UserMessage): void {
-    this.send(input, 'next-step', true)
+    this.send(input, 'next-step', true, 'steer')
   }
 
   inject(input: UserMessage): void {
-    this.send(input, 'next-step', false)
+    this.send(input, 'next-step', false, 'inject')
   }
 
   cancel(cause: AgentCancelCause, options: CancelOptions = {}): void {

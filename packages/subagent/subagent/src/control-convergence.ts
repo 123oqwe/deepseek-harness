@@ -24,8 +24,10 @@
  * @module @deepseek-ai/dsh-subagent/control-convergence
  */
 
-/** The five kinds of control message a child can receive (must[0]). */
-export type ControlKind = 'continue' | 'steer' | 'inject' | 'cancel' | 'human-answer'
+export type { ControlKind } from '@deepseek-ai/dsh-control-priority'
+
+import { orderByControlPriority } from '@deepseek-ai/dsh-control-priority'
+import type { ControlKind } from '@deepseek-ai/dsh-control-priority'
 
 /** What a child is doing when a control message arrives. */
 export type ChildPhase = 'running' | 'awaiting-human' | 'cancelling' | 'terminal'
@@ -103,28 +105,18 @@ const PHASES_BY_KIND: Record<ControlKind, readonly ChildPhase[]> = {
 }
 
 /**
- * Relative urgency when several messages arrive together (must[1]).
- *
- * `cancel` outranks everything. The race acceptance[0] names — a `steer` or
- * `continue` arriving at the same moment as a `cancel` — is decided here rather
- * than by arrival order, because arrival order is a property of the transport
- * and would make the outcome depend on scheduling.
- */
-const PRIORITY_BY_KIND: Record<ControlKind, number> = {
-  cancel: 0,
-  'human-answer': 1,
-  steer: 2,
-  continue: 3,
-  inject: 4,
-}
-
-/**
  * Order control messages by urgency, keeping arrival order within one kind.
+ *
+ * The table itself moved to `@deepseek-ai/dsh-control-priority` (§12.25-1):
+ * the agent inbox needs the same order at its dequeue point, and it cannot
+ * import this package — `dsh-subagent` depends on `dsh-agent`, not the other
+ * way. A second table would be one rule with two implementations, and the two
+ * would decide the same race differently the first time either changed.
  * @param messages - the messages that arrived together.
  * @returns the same messages, most urgent first.
  */
 export function orderByPriority(messages: readonly ControlMessage[]): readonly ControlMessage[] {
-  return [...messages].sort((a, b) => PRIORITY_BY_KIND[a.kind] - PRIORITY_BY_KIND[b.kind])
+  return orderByControlPriority(messages, message => message.kind)
 }
 
 /**

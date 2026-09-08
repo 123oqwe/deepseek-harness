@@ -6,6 +6,8 @@
  * @module @deepseek-ai/dsh-agent/inbox
  */
 
+import { orderByControlPriority } from '@deepseek-ai/dsh-control-priority'
+import type { ControlKind } from '@deepseek-ai/dsh-control-priority'
 import { dedupKey } from '@deepseek-ai/dsh-intake-dedup'
 import type { MessageId } from '@deepseek-ai/dsh-llm'
 import type { Session, SessionEventMap, UserMessage } from '@deepseek-ai/dsh-session'
@@ -90,6 +92,17 @@ export class Inbox {
    * acceptance[0]'s exact failure.
    */
   private readonly consumed = new Set<string>()
+  /**
+   * The control kind each pending message was inserted as (Epic P5-10 must[1]).
+   *
+   * Recorded by the OPERATION, not read off the message: `followup`, `steer`
+   * and `inject` each know which they are at the call site, while the message
+   * they carry is ordinary content that could have come from anywhere. Held
+   * beside the queue rather than on the message so nothing durable changes —
+   * urgency is about the order a batch is claimed in, not about what the model
+   * later reads.
+   */
+  private readonly controlKinds = new Map<MessageId, ControlKind>()
 
   constructor(
     private readonly session: Session,
@@ -139,8 +152,17 @@ export class Inbox {
     if (target === 'next-turn') {
       claimed.push(...this.mutate('next-turn', 0, 1, [], false))
     }
-    for (const message of claimed) this.notifications.claimed(message, turn)
-    return claimed
+    // must[1]'s ordering, at the point every source converges. A router orders
+    // only what was routed through it; `steer`, `inject` and `followup` reach
+    // this queue directly from a user, a team, or a goal driver, and a batch
+    // holding a cancel beside a steer must apply the cancel first however the
+    // transport delivered them (acceptance[0]).
+    const ordered = orderByControlPriority(claimed, message => this.controlKinds.get(message.id))
+    for (const message of ordered) {
+      this.controlKinds.delete(message.id)
+      this.notifications.claimed(message, turn)
+    }
+    return [...ordered]
   }
 
   /**
@@ -149,8 +171,8 @@ export class Inbox {
    * @param message - message to append.
    * @throws if the message identity is already pending.
    */
-  append(target: InboxTarget, message: UserMessage): void {
-    this.splice(target, this.state[target].length, 0, [message])
+  append(target: InboxTarget, message: UserMessage, controlKind?: ControlKind): void {
+    this.splice(target, this.state[target].length, 0, [message], controlKind)
   }
 
   /**
@@ -159,8 +181,8 @@ export class Inbox {
    * @param message - message to prepend.
    * @throws if the message identity is already pending.
    */
-  prepend(target: InboxTarget, message: UserMessage): void {
-    this.splice(target, 0, 0, [message])
+  prepend(target: InboxTarget, message: UserMessage, controlKind?: ControlKind): void {
+    this.splice(target, 0, 0, [message], controlKind)
   }
 
   /**
@@ -207,7 +229,11 @@ export class Inbox {
     start: number,
     deleteCount: number,
     inserted: UserMessage[],
+    controlKind?: ControlKind,
   ): UserMessage[] {
+    if (controlKind !== undefined) {
+      for (const message of inserted) this.controlKinds.set(message.id, controlKind)
+    }
     return this.mutate(target, start, deleteCount, inserted, true)
   }
 

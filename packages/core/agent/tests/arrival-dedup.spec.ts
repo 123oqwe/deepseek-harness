@@ -39,6 +39,58 @@ function settlement(child: string, epoch: number | undefined, text = 'the child 
   })
 }
 
+describe('P5-10 must[1]: a claimed batch leaves the queue by control priority', () => {
+  /** One ordinary message, as `steer`/`inject`/`followup` each carry. */
+  const input = (text: string) => createUserMessage({ content: [{ type: 'text', text }], source: { kind: 'user' } })
+
+  it('orders a MIXED-SOURCE batch by kind, not by arrival', () => {
+    // The dequeue point is where every producer converges — a user steering, a
+    // team injecting, a driver continuing — and each inserted through a
+    // different call. A router only ever orders what was routed through it,
+    // which is why §12.25-1 put this here.
+    const session = Session.create(SessionId('agent'))
+    const inbox = new Inbox(session, SILENT)
+    inbox.append('next-step', input('injected'), 'inject')
+    inbox.append('next-step', input('steered'), 'steer')
+    inbox.append('next-step', input('cancelling'), 'cancel')
+
+    expect(inbox.claim('next-step', 1).map(message => message.content[0]))
+      .toEqual([
+        { type: 'text', text: 'cancelling' },
+        { type: 'text', text: 'steered' },
+        { type: 'text', text: 'injected' },
+      ])
+  })
+
+  it('keeps ARRIVAL order within one kind, so the table decides between kinds and nothing else', () => {
+    const session = Session.create(SessionId('agent'))
+    const inbox = new Inbox(session, SILENT)
+    inbox.append('next-step', input('first steer'), 'steer')
+    inbox.append('next-step', input('second steer'), 'steer')
+
+    expect(inbox.claim('next-step', 1).map(message => message.content[0]))
+      .toEqual([{ type: 'text', text: 'first steer' }, { type: 'text', text: 'second steer' }])
+  })
+
+  it('leaves a message with NO control kind after every control message, in arrival order', () => {
+    // Ordinary input is not a control message. Ranking it would mean deciding
+    // that some user text outranks a cancel, which is a decision nobody asked
+    // for and one this table must not make silently.
+    const session = Session.create(SessionId('agent'))
+    const inbox = new Inbox(session, SILENT)
+    inbox.append('next-step', input('plain one'))
+    inbox.append('next-step', input('steered'), 'steer')
+    inbox.append('next-step', input('plain two'))
+
+    expect(inbox.claim('next-step', 1).map(message => message.content[0]))
+      .toEqual([
+        { type: 'text', text: 'steered' },
+        { type: 'text', text: 'plain one' },
+        { type: 'text', text: 'plain two' },
+      ])
+  })
+})
+
 describe('P4-06 must[2]: an inbox consumes one (source, id, epoch) once', () => {
   it('REFUSES a settlement redelivered after the parent already ran it', () => {
     // acceptance[0]'s consumer half. The first notice is claimed — run — and
