@@ -909,3 +909,12 @@ P2-03 撤签后门 (e) 正确地红了五条(`@modelcontextprotocol/sdk`、`open
 **顺序**:本次观测绿 → P4-09 / P5-10 / P5-11(/P4-08)签;P2-03 U.4 + P4-06 发送侧 + P4-07 session 键 + P4-12 code-mode 预留 → 下一次观测。
 
 **12.33 补记(2026-09-08 00:20 EDT,`01c04d00ff`)**:两处落地——事件内联十二字段(常量照落:日志形状不能等内容出现才变),两条路径经 `appendManifestThenGate` + `createSessionManifestAppender`(会话日志作真正的 appender,放 `dsh-tools` 不放 manifest 包:能力定义去够 session 是 136 那条边);变异去五字段红 29、`classified` 写死红精确 2,不对称即"被读非被假定"。**Standing(执行者提出,delegate 采纳)**:凡改动进入**持久事件负载**的字段,`test:snapshot:refresh` 前必须先构建受影响包——sdk 语料回放的是构建后 `lib/`,不重建则旧代码产出旧 payload 与旧夹具匹配,"某语料没变"是**假阴性**;证据的前提条件不满足时绿无意义(与"没冻结的测试不是证据"同族)。
+
+### 12.35 `layer-deps` 的红是预算不是 flake;P4-06 的 outbox 半边取 (1),分三步(2026-09-08 00:50 EDT)
+
+**1.** `tests/architecture/layer-deps.spec.ts` 三条各跑一次全仓扫描(单跑 1.1–1.4 s),满载 20 worker 超过默认 5 s `testTimeout`,红的是谁先撞预算——**因果确定,不是 flake,不记 145**;给三条显式 timeout(30 s),这是"预算匹配工作量"(dsh-ci-test-reliability),不是放宽断言。
+**2. P4-06 outbox**。事实:`commitWithOutbox` 作用于 `AtomicBatchSink`,**全仓零生产实现**;持久 outbox 行只有 `{target, payload}`,`dispatchOnce` 要的 `state/priority/deadline/attempts/receipt` 一个都不存;`openBusStore` 无插件无 bundle 行。与 155 同形(定义的记录与持久化的记录不是一个),叠加"没挂"。registry 的 outbox 是**队列**不是记录:must[1](receipt)、must[3](priority/deadline/dead-letter/backpressure)、acc[1](未送达可查询可重放)都要完整记录——**(2) 让三条子句留在单测里,(3) 只挂空壳,都拒。取 (1),分三步**:
+ (a) 持久 outbox 扩到完整 `OutboxRecord`(P4-06 P 阶段 supplement,自己的 store);`commitWithOutbox` / `AtomicBatchSink` 零实现 → **删**,`commitIntake` 是唯一原子提交路径(一条规则一份实现);domain event 与 outbox 行同一 `BEGIN IMMEDIATE` 意味着 domain event 的真相源在 `bus.sqlite` 的 `domain_events`,会话日志里的到达事件是**消费侧的投影**,不是第二份真相。
+ (b) `MessageBusPlugin` 提供 `ctx.messageBus`(store + dispatcher),base bundle 行在 session storage root 下(lease / taskboard 同法)。
+ (c) settlement 发送侧:子代理结束 → `commitIntake`(`subagent/end` 域事件 + 指向父会话的 outbox 行,一个事务)→ dispatcher 投递进父 inbox,**复用现有插入规则**(idle → followup、busy → steer);teardown 中 → 行保持 pending,父下次启动时投递——这不是时序副作用,这就是 acc[1] 与 P4-06 存在的理由。三条 U 冻结用例在 inbox 侧,仍成立。真组合冻结:父在"子提交后、投递前"被 kill → 重启 → settlement 恰好投递一次(acc[0] 在生产组合里的形态)。
+**顺序**:P4-07 session 键、P4-12 code-mode 预留先做(不依赖此);P4-06 (a)→(b)→(c)。
