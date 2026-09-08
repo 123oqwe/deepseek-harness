@@ -440,6 +440,7 @@ function registerPersistentPwsh(ctx: Context, config: ResolvedConfig): void {
 
   ctx.tools.register(defineTool({
     name: 'pwsh',
+    riskDomainTags: ['shell-execute'],
     description: config.description,
     parameters: {
       command: {

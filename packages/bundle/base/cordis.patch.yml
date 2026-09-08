@@ -239,12 +239,22 @@
           read-only:
             sandbox: read-only
             approval: ask
+            # P2-04: the risk class at or above which an action needs approval.
+            # It rides the PRESET, not the surface: which band is worth
+            # interrupting for is the same question the preset already answers
+            # with `approval`, and a per-surface value would let one client ask
+            # about an action another performs silently.
+            approvalThreshold: destructive
           workspace-write:
             sandbox: workspace-write
             approval: ask
+            approvalThreshold: destructive
           danger-full-access:
             sandbox: danger-full-access
             approval: never
+            # The preset whose whole point is not to ask gates only what the
+            # kernel refuses outright, which no policy may switch off.
+            approvalThreshold: safety-critical
 
     - id: shell-env
       name: '@deepseek-ai/dsh-shell-env'

@@ -66,6 +66,18 @@ export interface PresetSpec {
   name?: string
   /** One user-facing sentence on what the preset means; omitted when not configured. */
   description?: string
+  /**
+   * The risk class at or above which an action needs approval under this
+   * preset (P2-04 must[1], §12.48-B).
+   *
+   * It rides the PRESET rather than the surface or the service, because which
+   * band is worth interrupting for is the same question `approval` already
+   * answers for this bundle: a preset whose point is not to ask should not
+   * acquire a threshold that asks. A per-surface value would let one client
+   * ask about an action another performs silently, which is exactly the
+   * inconsistency P2-04's acceptance[0] rules out.
+   */
+  approvalThreshold?: RiskClass
 }
 
 /**
@@ -184,17 +196,6 @@ export interface Config {
    * at enforcement time.
    */
   removedHardDenyClasses?: RiskClass[]
-  /**
-   * The risk class at or above which an action requires approval before it
-   * executes (P2-04 must[1], P2-03 acceptance[2]).
-   *
-   * Deployment-varying and deliberately not a constant: which band is worth
-   * interrupting a user for differs between an interactive session and an
-   * unattended one, and only the profile knows which it is running. Defaults
-   * to `destructive`, which is the first class in the ascending order whose
-   * effects the actor cannot undo alone.
-   */
-  approvalThreshold?: RiskClass
 }
 
 /**
@@ -210,13 +211,14 @@ export class PermissionPresetService extends Service {
       approval: z.union(APPROVAL_POLICIES as ApprovalPolicy[]).required(),
       name: z.string(),
       description: z.string(),
+      approvalThreshold: z.union(RISK_CLASSES_BY_ASCENDING_RISK as RiskClass[]).default('destructive'),
     })).default({
       'workspace-write': {
-        sandbox: 'workspace-write', approval: 'ask',
+        sandbox: 'workspace-write', approval: 'ask', approvalThreshold: 'destructive',
         name: 'workspace-write', description: 'Write inside the workspace and permitted temporary directories; wider retries require approval.',
       },
       'danger-full-access': {
-        sandbox: 'danger-full-access', approval: 'never',
+        sandbox: 'danger-full-access', approval: 'never', approvalThreshold: 'safety-critical',
         name: 'danger-full-access', description: 'Full file access without approval prompts.',
       },
     }),
@@ -227,7 +229,6 @@ export class PermissionPresetService extends Service {
     })).default([]),
     addedHardDenyClasses: z.array(z.union(RISK_CLASSES_BY_ASCENDING_RISK as RiskClass[])).default([]),
     removedHardDenyClasses: z.array(z.union(RISK_CLASSES_BY_ASCENDING_RISK as RiskClass[])).default([]),
-    approvalThreshold: z.union(RISK_CLASSES_BY_ASCENDING_RISK as RiskClass[]).default('destructive'),
   })
 
   static inject = ['shell', 'approval', 'sessions', 'sessionProjections']
@@ -236,8 +237,6 @@ export class PermissionPresetService extends Service {
   private defaultSettings: () => PermissionSettings
   /** The organisation policy this deployment classifies actions under (P2-04 must[1]). */
   private readonly risk: RiskPolicy
-  /** The class at or above which an action needs approval before it executes. */
-  private readonly approvalThreshold: RiskClass
 
   constructor(ctx: Context, config: Config) {
     super(ctx, 'permissionPresets')
@@ -248,7 +247,6 @@ export class PermissionPresetService extends Service {
       addedHardDenyClasses: config.addedHardDenyClasses as RiskClass[],
       removedHardDenyClasses: config.removedHardDenyClasses as RiskClass[],
     }
-    this.approvalThreshold = config.approvalThreshold as RiskClass
     // Validate the policy at MOUNT, not at the first classification: a
     // deployment that believes it switched off a kernel hard-deny must fail
     // where it said so, and `classify` refuses such a policy every time it is
@@ -391,18 +389,45 @@ export class PermissionPresetService extends Service {
   }
 
   /**
-   * Whether a classified action needs approval before it may execute
-   * (P2-04 must[1], P2-03 acceptance[2]).
+   * Whether a classified action needs approval before it may execute, under
+   * one preset (P2-04 must[1], P2-03 acceptance[2], §12.48-B).
+   *
+   * The threshold comes from the NAMED preset, because it is part of that
+   * permission bundle: a session running `danger-full-access` and one running
+   * `read-only` are answering different questions about the same action, and
+   * a service-level threshold would give them one answer.
+   *
+   * A preset the table does not carry — including the derived `custom` state,
+   * which is by definition no bundle — resolves to the STRICTEST threshold the
+   * table configures. That is fail-closed and invents no tunable: the strictest
+   * value is one the deployment already chose.
    *
    * A hard-denied action is NOT reported as needing approval: approval is a
-   * question, and the kernel band is one this deployment does not ask. A
-   * caller distinguishes the two by reading `hardDenied` itself, which is why
-   * this answers only the threshold question.
+   * question, and the kernel band is one no deployment asks. A caller
+   * distinguishes the two by reading `hardDenied` itself.
    * @param classification - the classifier's verdict for the action.
-   * @returns whether the action's class reaches this deployment's threshold.
+   * @param preset - the preset in force for the session performing it.
+   * @returns whether the action's class reaches that preset's threshold.
    */
-  requiresApproval(classification: RiskClassification): boolean {
-    return riskRank(classification.riskClass) >= riskRank(this.approvalThreshold)
+  requiresApproval(classification: RiskClassification, preset: string): boolean {
+    return riskRank(classification.riskClass) >= riskRank(this.thresholdOf(preset))
+  }
+
+  /**
+   * The approval threshold in force under one preset name.
+   * @param preset - a table key, or any value the table does not carry.
+   * @returns the preset's threshold, or the strictest the table configures.
+   */
+  private thresholdOf(preset: string): RiskClass {
+    const configured = this.presets[preset]?.approvalThreshold
+    if (configured !== undefined) return configured
+    const thresholds = Object.values(this.presets)
+      .map(spec => spec.approvalThreshold)
+      .filter((value): value is RiskClass => value !== undefined)
+    return thresholds.reduce(
+      (strictest, value) => (riskRank(value) < riskRank(strictest) ? value : strictest),
+      thresholds[0] ?? 'destructive',
+    )
   }
 
   private derive(state: KnobState): string {

@@ -145,6 +145,7 @@ export function apply(ctx: Context, config: Config): void {
   })
   ctx.tools.register(defineTool({
     name: 'todo_write',
+    riskDomainTags: ['session-state-write'],
     description: describe(allowParallel),
     parameters: {
       todos: {

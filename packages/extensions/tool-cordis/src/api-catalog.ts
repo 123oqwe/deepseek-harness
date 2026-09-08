@@ -1419,6 +1419,18 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'the effective preset name, or `custom` when nothing matches.',
       },
       {
+        signature: 'classifyAction(subject: ActionRiskSubject): RiskClassification',
+        description: 'Classify one action under this deployment\'s organisation policy (P2-04 must[1], must[2], must[3]).\n\nThe policy is held here rather than passed by each caller so that two surfaces cannot classify the same action differently: the classifier is pure and takes the policy as a parameter, and this is the one place that parameter is bound.',
+        parameters: [{ name: 'subject', description: 'the action and the domain tags it declares.' }],
+        returns: 'the class, how it was reached, and whether it is refused outright.',
+      },
+      {
+        signature: 'requiresApproval(classification: RiskClassification, preset: string): boolean',
+        description: 'Whether a classified action needs approval before it may execute, under one preset (P2-04 must[1], P2-03 acceptance[2], §12.48-B).\n\nThe threshold comes from the NAMED preset, because it is part of that permission bundle: a session running `danger-full-access` and one running `read-only` are answering different questions about the same action, and a service-level threshold would give them one answer.\n\nA preset the table does not carry — including the derived `custom` state, which is by definition no bundle — resolves to the STRICTEST threshold the table configures. That is fail-closed and invents no tunable: the strictest value is one the deployment already chose.\n\nA hard-denied action is NOT reported as needing approval: approval is a question, and the kernel band is one no deployment asks. A caller distinguishes the two by reading `hardDenied` itself.',
+        parameters: [{ name: 'classification', description: 'the classifier\'s verdict for the action.' }, { name: 'preset', description: 'the preset in force for the session performing it.' }],
+        returns: 'whether the action\'s class reaches that preset\'s threshold.',
+      },
+      {
         signature: 'selectFor(state: KnobState): PermissionSelect',
         description: 'Build the whole select value for one folded knob state: every table option in declaration order, `custom` appended exactly while derived.',
         parameters: [{ name: 'state', description: 'the folded knob overrides.' }],
@@ -1527,6 +1539,23 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         description: 'Read the session override without applying the deployment default.',
         parameters: [{ name: 'session', description: 'session whose log supplies the override.' }],
         returns: 'the last logged mode, or `undefined` without one.',
+      },
+    ],
+  },
+  {
+    key: 'savedWorkflows',
+    summary: 'Loads saved workflow definitions into the mounted engine at boot.',
+    description: 'Loads saved workflow definitions into the mounted engine at boot.\n\nPublished as `ctx.savedWorkflows` so a composition can see what was loaded and, in a test, what was refused. The refusals are kept rather than thrown onward: one malformed file in a directory must not stop a harness from starting, and an operator needs to know which file was rejected and why.',
+    methods: [
+      {
+        signature: 'readonly loaded: string[] = []',
+        description: 'Names registered from the definitions directory, in load order.',
+        parameters: [],
+      },
+      {
+        signature: 'readonly refused: { readonly name: string; readonly reason: string }[] = []',
+        description: 'One entry per definition the engine refused, naming the file and the reason.',
+        parameters: [],
       },
     ],
   },
@@ -3730,6 +3759,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type ActionRef = Branded<\'ActionRef\'>;',
   },
   {
+    name: 'ActionRiskSubject',
+    declaration: 'export interface ActionRiskSubject {\n    readonly actionId: string;\n    readonly domainTags: readonly string[];\n}',
+  },
+  {
     name: 'AdapterRegistrationHandle',
     declaration: 'export interface AdapterRegistrationHandle {\n    (): void;\n    replace(providers: string[]): void;\n}',
   },
@@ -5119,7 +5152,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'PresetSpec',
-    declaration: 'export interface PresetSpec {\n    sandbox: SandboxMode;\n    approval: ApprovalPolicy;\n    name?: string;\n    description?: string;\n}',
+    declaration: 'export interface PresetSpec {\n    sandbox: SandboxMode;\n    approval: ApprovalPolicy;\n    name?: string;\n    description?: string;\n    approvalThreshold?: RiskClass;\n}',
   },
   {
     name: 'PresetTrust',
@@ -5336,6 +5369,18 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'RevocationResult',
     declaration: 'export type RevocationResult = {\n    readonly revoked: true;\n    readonly revokedCapabilityIds: readonly StableCapabilityId[];\n} | {\n    readonly revoked: false;\n    readonly reason: RevocationDenialReason;\n};',
+  },
+  {
+    name: 'RiskClass',
+    declaration: 'export type RiskClass = \'read\' | \'local-reversible\' | \'internal-write\' | \'external-communication\' | \'destructive\' | \'financial\' | \'security-sensitive\' | \'safety-critical\';',
+  },
+  {
+    name: 'RiskClassification',
+    declaration: 'export interface RiskClassification {\n    readonly riskClass: RiskClass;\n    readonly ground: RiskGroundKind;\n    readonly decidedBy: string | undefined;\n    readonly confidence: number;\n    readonly hardDenied: boolean;\n}',
+  },
+  {
+    name: 'RiskGroundKind',
+    declaration: 'export type RiskGroundKind = \'policy-rule\' | \'kernel-hard-deny\' | \'unknown-default\';',
   },
   {
     name: 'Run',
@@ -6439,7 +6484,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ToolDefinition',
-    declaration: 'export interface ToolDefinition extends ToolSchema {\n    readonly output: ToolOutputDefinition;\n    execute(args: unknown, exec: ToolRunContext): Promise<unknown>;\n    finalizeContent?(exec: Readonly<ToolExecution>, result: Readonly<ToolExecutionResult>): ContentBlock[] | undefined;\n    timeoutMs?: number;\n    isConcurrencySafe?(args: unknown): boolean;\n    presentCall?(args: unknown): ToolCallView | undefined;\n    presentResult?(args: unknown, result: ToolResult): ToolResultView | undefined;\n}',
+    declaration: 'export interface ToolDefinition extends ToolSchema {\n    readonly output: ToolOutputDefinition;\n    execute(args: unknown, exec: ToolRunContext): Promise<unknown>;\n    finalizeContent?(exec: Readonly<ToolExecution>, result: Readonly<ToolExecutionResult>): ContentBlock[] | undefined;\n    timeoutMs?: number;\n    readonly riskDomainTags?: readonly string[];\n    isConcurrencySafe?(args: unknown): boolean;\n    presentCall?(args: unknown): ToolCallView | undefined;\n    presentResult?(args: unknown, result: ToolResult): ToolResultView | undefined;\n}',
   },
   {
     name: 'ToolDispatchExecution',

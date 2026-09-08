@@ -93,6 +93,7 @@ export function applyEditTool(ctx: Context, sandbox: FsSandboxController): void 
 
   ctx.tools.register(defineTool({
     name: 'edit',
+    riskDomainTags: ['filesystem-write'],
     description: 'Edit an existing UTF-8 text file by replacing literal text.',
     parameters: {
       file_path: { type: 'string', required: true, description: 'Path to edit, resolved by the filesystem backend.' },

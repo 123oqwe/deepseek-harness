@@ -322,6 +322,7 @@ export function applyWebSearchTool(
 
   ctx.tools.register(defineTool({
     name: 'web_search',
+    riskDomainTags: ['network-search'],
     description: `Search the web for current information. Provide 1–${maxQueries} queries in the required queries array. Returns an optional summary answer and a list of source URLs.`,
     parameters: {
       queries: {

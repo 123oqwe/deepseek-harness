@@ -9206,7 +9206,9 @@
         "mutationDescription": "Three mutations of `permission-presets/src/index.ts`, each restored byte-identical: (M31) `classifyAction` classifies under an EMPTY policy instead of the mounted one; (M32) the mount-time policy validation is removed; (M33) the approval threshold is hardcoded to `destructive` instead of read from config.",
         "failureSummary": "M31 reddens 4 of 6 — the binding is what the stage is about, so most cases depend on it. M32 reddens only the mount-refusal case and M33 only the threshold case, which is what makes those two load-bearing rather than restatements. The mount-refusal case also carries a positive control: removing a class the kernel does NOT pin resolves, so the refusal is about the kernel floor rather than about the field being set at all."
       },
-      "note": "§12.47(i). `Config` gains `riskRules`, `addedHardDenyClasses`, `removedHardDenyClasses` and `approvalThreshold`, all schematised, and the service gains `classifyAction` and `requiresApproval`. `removedHardDenyClasses` exists so a deployment can SAY it and be refused where it says it: `classify` refuses such a policy on every call, so without the mount-time check the misconfiguration would surface as a runtime error per action in a profile already serving. The threshold is a validated config field rather than a constant because which band is worth interrupting a user for differs between an interactive session and an unattended one."
+      "note": "§12.47(i). `Config` gains `riskRules`, `addedHardDenyClasses`, `removedHardDenyClasses` and `approvalThreshold`, all schematised, and the service gains `classifyAction` and `requiresApproval`. `removedHardDenyClasses` exists so a deployment can SAY it and be refused where it says it: `classify` refuses such a policy on every call, so without the mount-time check the misconfiguration would surface as a runtime error per action in a profile already serving. The threshold is a validated config field rather than a constant because which band is worth interrupting a user for differs between an interactive session and an unattended one.",
+      "supersededBy": "2026-09-08T21:40:00.000Z",
+      "supersessionReason": "§12.48-B(a) / §12.49(4). The Provider stage was frozen before the threshold's home was ruled, and put `approvalThreshold` on the SERVICE. The ruling puts it on each PRESET: a session running `danger-full-access` and one running `read-only` are not asking the same question about one action, and a service-level value gives them one answer. That is a property change rather than a wording change — the field moved, the resolution rule is new, and a fallback for a preset the table does not carry did not exist before — so it supersedes rather than renames. The P cell was NOT_RUN, so no observation binds to the superseded entry."
     },
     {
       "epic": "P4-09",
@@ -9291,6 +9293,95 @@
         "failureSummary": "M36 reddens 5 of 7 — the digest is what ties a definition to its bytes, so most cases depend on it. M37 and M38 redden exactly one case each, which is what makes the keep-loading and refuse-to-mount behaviours separately load-bearing. acceptance[0] is tested by construction rather than by assertion: the hostile-body case registers `process.exit(1)`, so if any part of this path evaluated a definition the case could not pass at all."
       },
       "note": "§12.48-A(2). The engine's registration is not on the `WorkflowEngine` seam — `RegisteredDefinition` lives in `dsh-workflow-registry`, which already depends on `dsh-workflow`, so declaring the method upstream is a project-reference cycle, measured rather than assumed. The loader therefore names the one operation it needs structurally and refuses to mount over an engine that lacks it, rather than importing a concrete engine and tying saved workflows to one implementation. The real-composition case mounts the actual worker-thread engine, because the recording engine can only show that the loader calls a method; and that recording engine wraps the real `DefinitionRegistry` rather than re-implementing its checks, which would pass while the real ones changed underneath it."
+    },
+    {
+      "epic": "P2-04",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-04",
+        "stage": "U"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/architecture/risk-domain-tags.spec.ts",
+        "packages/core/tools/tests/tools.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-04 must[1]: every shipped tool declares its risk domain tags finds the shipped tool packages from the bundles, so the set cannot drift from what ships",
+        "P2-04 must[1]: every shipped tool declares its risk domain tags leaves NO shipped tool undeclared, because an undeclared tool classifies by the unknown default",
+        "ToolRuntime P2-04 must[1]: carries a tool's declared risk domain tags to the runtime, and never to the model"
+      ],
+      "files": [
+        "packages/core/tools/src/index.ts",
+        "packages/core/tools/src/schema.ts",
+        "packages/core/tools/tests/tools.spec.ts",
+        "tests/architecture/risk-domain-tags.spec.ts",
+        "packages/bundle/base/cordis.patch.yml",
+        "packages/interaction/permission-presets/src/index.ts",
+        "packages/interaction/permission-presets/tests/risk-policy.spec.ts"
+      ],
+      "filesOverlayReason": "§12.48-B(b) and §12.49(4). The registry's U list names `core/tools/src/types.ts` and `permission-presets/src/types.ts`; the tool DEFINITION lives in `core/tools/src/index.ts` and `defineTool` in `schema.ts`, so declaring a tool's domain tags touches those instead. The 28 shipped tool packages are cited by the structural gate rather than edited by name here — the gate derives the set from the bundles, so a hand-kept list cannot drift from what ships.",
+      "frozenAtUtc": "2026-09-08T21:05:00.000Z",
+      "dryRunProof": {
+        "treeSha": "653acd0db012cb8108c4d0bc27fb4663dc821687",
+        "testsDiscovered": 139
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations, each restored byte-identical: (M39) `defineTool` stops propagating `riskDomainTags` onto the built definition; (M40) one shipped tool's declaration is removed (`tool-bash`); (M41) the shipped-package derivation returns an empty set.",
+        "failureSummary": "M40 and M41 redden one case each. M39 reddened NOTHING at first, and that null result is why the third case exists: the structural gate is textual, so it proves a tool DECLARES tags and cannot prove the declaration reaches the runtime. The added `tools.spec.ts` case closes that half and M39 now reddens it. M41 is the guard on the guard — an empty derivation would let the gate pass while checking nothing, so a separate case asserts the set is non-empty and contains `tool-bash` and `tool-fs`."
+      },
+      "note": "§12.48-B(b), §12.49(4) steps 1-3. Order is dependency-directed: preset thresholds first (zero behaviour change, the gate is not wired), then tags, then the structural gate; the dispatch gate is the next slice. `riskDomainTags` are TAGS, never a class — a tool that could name its own risk band would be deciding its own approval, which acceptance[1] refuses — and they are never model-visible, because `schemas()` whitelists only name, description and parameters. Omission is not harmless: an undeclared tool classifies by the unknown default, the highest policy-adjustable class, so omitting tags makes a tool MORE restricted, and the structural gate is what keeps omission from becoming normal. `approvalThreshold` moved from the service to `PresetSpec` per §12.48-B(a): a session on `danger-full-access` and one on `read-only` are not asking the same question about one action. A preset the table does not carry — `custom` is by definition no bundle — falls back to the STRICTEST configured threshold, which is fail-closed and invents no tunable."
+    },
+    {
+      "epic": "P2-04",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/policy/risk-taxonomy",
+        "packages/interaction/permission-presets",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter must[1]: the SAME action classifies by the mounted rules, not by anything the action says about itself",
+        "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter acceptance[0]: two callers of the SAME mount get the same answer, because the policy is bound once",
+        "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter must[3]: an action whose tags no rule mentions reaches the approval threshold rather than passing quietly",
+        "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter must[1]: the threshold rides the PRESET, so one action asks under one bundle and not under another",
+        "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter must[1]: a preset the table does not carry falls back to the STRICTEST configured threshold",
+        "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter acceptance[2]: a deployment that switches off a kernel hard-deny class is refused AT MOUNT, naming the class",
+        "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter acceptance[2]: a deployment may RAISE its own bar, and the raise reaches classification"
+      ],
+      "files": [
+        "packages/policy/risk-taxonomy/src/index.ts",
+        "packages/policy/risk-taxonomy/src/classify.ts",
+        "packages/policy/risk-taxonomy/tests/classify.spec.ts",
+        "packages/interaction/permission-presets/src/index.ts",
+        "packages/interaction/permission-presets/package.json",
+        "packages/interaction/permission-presets/tsconfig.json",
+        "packages/interaction/permission-presets/tests/risk-policy.spec.ts",
+        "packages/bundle/base/cordis.patch.yml"
+      ],
+      "filesOverlayReason": "§12.47(i). The registry's P file list names only `risk-taxonomy/src/index.ts`, which would make the Provider stage a barrel edit and leave the seam without a Provider: `classify` takes the organisation policy as a PARAMETER, so nothing classifies anything until a mount binds it. The binding belongs where the deployment's other permission knobs already live — `permission-presets`, which owns `approval/policy` — so the seam is Definition (risk-taxonomy vocabulary + `classify`) / Provider (permission-presets holds and validates the `RiskPolicy`) / Consumer (the dispatch gate, U stage). The plan listed one file because it had not applied the capability-seam rule, not because the Provider role was meant to be absent.",
+      "frozenAtUtc": "2026-09-08T21:40:00.000Z",
+      "dryRunProof": {
+        "treeSha": "653acd0db012cb8108c4d0bc27fb4663dc821687",
+        "testsDiscovered": 57
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations of `permission-presets/src/index.ts`, each restored byte-identical: (M31) `classifyAction` classifies under an EMPTY policy instead of the mounted one; (M32) the mount-time policy validation is removed; (M33) the threshold is read from a fixed class instead of the named preset; (M42) an unknown preset falls back to the most PERMISSIVE configured threshold instead of the strictest.",
+        "failureSummary": "M31 reddens 4 of 7 — the binding is what the stage is about. M33 reddens 2: both the per-preset case and the strictest-fallback case read the threshold, so pinning it to a constant breaks both. M32 and M42 redden exactly one each, which is what makes the mount refusal and the fail-closed DIRECTION of the fallback separately load-bearing — M42 keeps the fallback and only reverses which extreme it picks, so it isolates the direction rather than the existence. The mount-refusal case carries its own positive control: removing a class the kernel does NOT pin resolves rather than throwing, so the refusal is about the kernel floor and not about the field being set at all."
+      },
+      "note": "§12.47(i). `Config` gains `riskRules`, `addedHardDenyClasses`, `removedHardDenyClasses` and `approvalThreshold`, all schematised, and the service gains `classifyAction` and `requiresApproval`. `removedHardDenyClasses` exists so a deployment can SAY it and be refused where it says it: `classify` refuses such a policy on every call, so without the mount-time check the misconfiguration would surface as a runtime error per action in a profile already serving. The threshold is a validated config field rather than a constant because which band is worth interrupting a user for differs between an interactive session and an unattended one. Superseded at §12.48-B(a): `approvalThreshold` moved from the service to `PresetSpec` and is resolved by the NAMED preset in force, with a preset the table does not carry — `custom` is by definition no bundle — falling back to the strictest configured threshold. Fail-closed, and it invents no tunable, since the strictest value is one the deployment already chose; falling back to the most permissive would make an unrecognised knob combination the way to avoid approval.",
+      "supersedes": "2026-09-08T16:40:00.000Z"
     }
   ]
 }

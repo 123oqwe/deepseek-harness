@@ -86,6 +86,7 @@ async function listSubagentModels(
 export function registerListSubagentModels(ctx: Context, policy: ModelSelectionPolicy): void {
   ctx.tools.register(defineTool({
     name: 'list_subagent_models',
+    riskDomainTags: ['catalog-read'],
     description:
       'Discover LLM routes for subagents without changing the current Agent. Call with no arguments to list '
       + 'registered providers, with `provider` to list its advertised models, or with `provider` and `model` '

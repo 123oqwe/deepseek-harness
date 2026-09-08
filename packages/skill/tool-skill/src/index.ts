@@ -80,6 +80,7 @@ export function apply(ctx: Context, config: Config = {}): void {
 
   const skillTool = defineTool({
     name: 'skill',
+    riskDomainTags: ['catalog-read', 'context-inject'],
     description: 'Load the full instructions for an available skill. Call this with the exact skill name from the session skill catalog before acting on a task that names or clearly matches that skill.',
     parameters: {
       name: { type: 'string', required: true, description: 'The exact skill name from the available skills list.' },

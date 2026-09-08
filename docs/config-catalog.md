@@ -1649,6 +1649,36 @@ export interface Config {
    * sandbox and approval defaults is used.
    */
   defaultPreset?: string
+  /**
+   * The organisation's risk-classification rules (P2-04 must[1]).
+   *
+   * A plugin declares domain TAGS; which risk class a tag lands in is the
+   * organisation's decision, so the mapping is deployment configuration and
+   * lives here rather than with any plugin that would be deciding its own
+   * risk band. An empty table is a real choice, not a missing one: every
+   * action then classifies by the unknown default.
+   */
+  riskRules?: RiskPolicyRule[]
+  /**
+   * Risk classes this deployment refuses outright, on top of the kernel's
+   * (P2-04 acceptance[2]).
+   *
+   * Additions only. An organisation may raise its own bar; the kernel's band
+   * is a floor, and a policy naming one of its classes for removal is
+   * refused at classification time rather than silently re-added.
+   */
+  addedHardDenyClasses?: RiskClass[]
+  /**
+   * Risk classes this deployment states it does NOT refuse (P2-04 acceptance[2]).
+   *
+   * The field exists so a deployment can SAY it, and be refused where it says
+   * it. Naming a class the kernel pins is rejected at mount with the class in
+   * the message; naming any other class removes nothing, because the kernel
+   * list is the only floor. Silently ignoring the setting instead would let a
+   * deployment believe it had switched off a hard deny and discover otherwise
+   * at enforcement time.
+   */
+  removedHardDenyClasses?: RiskClass[]
 }
 
 /** One preset's sandbox/approval bundle and optional client presentation. */
@@ -1661,12 +1691,24 @@ export interface PresetSpec {
   name?: string
   /** One user-facing sentence on what the preset means; omitted when not configured. */
   description?: string
+  /**
+   * The risk class at or above which an action needs approval under this
+   * preset (P2-04 must[1], §12.48-B).
+   *
+   * It rides the PRESET rather than the surface or the service, because which
+   * band is worth interrupting for is the same question `approval` already
+   * answers for this bundle: a preset whose point is not to ask should not
+   * acquire a threshold that asks. A per-surface value would let one client
+   * ask about an action another performs silently, which is exactly the
+   * inconsistency P2-04's acceptance[0] rules out.
+   */
+  approvalThreshold?: RiskClass
 }
 ```
 
-Depends on: [`ApprovalPolicy`](subsystems/approval.md) · [`SandboxMode`](subsystems/sandbox.md)
+Depends on: [`ApprovalPolicy`](subsystems/approval.md) · [`RiskClass`](../packages/policy/risk-taxonomy/src/index.ts) · [`RiskPolicyRule`](../packages/policy/risk-taxonomy/src/index.ts) · [`SandboxMode`](subsystems/sandbox.md)
 
-Source: [`packages/interaction/permission-presets/src/index.ts:143`](../packages/interaction/permission-presets/src/index.ts)
+Source: [`packages/interaction/permission-presets/src/index.ts:157`](../packages/interaction/permission-presets/src/index.ts)
 
 <a id="deepseek-aidsh-persona"></a>
 
@@ -2651,7 +2693,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/subagent/subagent-taskboard/src/index.ts:50`](../packages/subagent/subagent-taskboard/src/index.ts)
+Source: [`packages/subagent/subagent-taskboard/src/index.ts:52`](../packages/subagent/subagent-taskboard/src/index.ts)
 
 <a id="deepseek-aidsh-subprocess-e2b"></a>
 
@@ -2715,7 +2757,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/run/taskboard-sqlite/src/index.ts:34`](../packages/run/taskboard-sqlite/src/index.ts)
+Source: [`packages/run/taskboard-sqlite/src/index.ts:35`](../packages/run/taskboard-sqlite/src/index.ts)
 
 <a id="deepseek-aidsh-terminal-bash"></a>
 
@@ -2850,7 +2892,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/shell/tool-bash-persistent/src/index.ts:432`](../packages/shell/tool-bash-persistent/src/index.ts)
+Source: [`packages/shell/tool-bash-persistent/src/index.ts:433`](../packages/shell/tool-bash-persistent/src/index.ts)
 
 <a id="deepseek-aidsh-tool-fs"></a>
 
@@ -3015,7 +3057,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/shell/tool-pwsh-persistent/src/index.ts:472`](../packages/shell/tool-pwsh-persistent/src/index.ts)
+Source: [`packages/shell/tool-pwsh-persistent/src/index.ts:473`](../packages/shell/tool-pwsh-persistent/src/index.ts)
 
 <a id="deepseek-aidsh-tool-ralph"></a>
 
@@ -3089,7 +3131,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/fs/tool-str-replace-editor/src/index.ts:505`](../packages/fs/tool-str-replace-editor/src/index.ts)
+Source: [`packages/fs/tool-str-replace-editor/src/index.ts:506`](../packages/fs/tool-str-replace-editor/src/index.ts)
 
 <a id="deepseek-aidsh-tool-subagent"></a>
 
@@ -3305,7 +3347,7 @@ export interface ToolOwnershipConfig {
 }
 ```
 
-Source: [`packages/core/tools/src/index.ts:820`](../packages/core/tools/src/index.ts)
+Source: [`packages/core/tools/src/index.ts:843`](../packages/core/tools/src/index.ts)
 
 <a id="deepseek-aidsh-typert-loader"></a>
 
@@ -3578,7 +3620,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/workflow/workflow-worker-thread/src/index.ts:48`](../packages/workflow/workflow-worker-thread/src/index.ts)
+Source: [`packages/workflow/workflow-worker-thread/src/index.ts:51`](../packages/workflow/workflow-worker-thread/src/index.ts)
 
 <a id="deepseek-aidsh-workspace-trust-local"></a>
 
@@ -3679,7 +3721,7 @@ These load from a `cordis.yml` entry with no `config:` block; they declare no co
 - `@deepseek-ai/dsh-session-turn-outline` — requires `sessionProjections` ([`packages/session/session-turn-outline/src/index.ts`](../packages/session/session-turn-outline/src/index.ts))
 - `@deepseek-ai/dsh-skill-badge` — requires `skills` ([`packages/skill/skill-badge/src/index.ts`](../packages/skill/skill-badge/src/index.ts))
 - `@deepseek-ai/dsh-storage` ([`packages/storage/storage/src/index.ts`](../packages/storage/storage/src/index.ts))
-- `@deepseek-ai/dsh-subagent` ([`packages/subagent/subagent/src/index.ts`](../packages/subagent/subagent/src/index.ts))
+- `@deepseek-ai/dsh-subagent` — requires `messageBus` ([`packages/subagent/subagent/src/index.ts`](../packages/subagent/subagent/src/index.ts))
 - `@deepseek-ai/dsh-subprocess-local` ([`packages/subprocess/subprocess-local/src/index.ts`](../packages/subprocess/subprocess-local/src/index.ts))
 - `@deepseek-ai/dsh-terminal` ([`packages/terminal/terminal/src/index.ts`](../packages/terminal/terminal/src/index.ts))
 - `@deepseek-ai/dsh-tool-ask-user` — requires `tools` · `userQuestions` ([`packages/interaction/tool-ask-user/src/index.ts`](../packages/interaction/tool-ask-user/src/index.ts))
@@ -3688,6 +3730,7 @@ These load from a `cordis.yml` entry with no `config:` block; they declare no co
 - `@deepseek-ai/dsh-tool-subagent-control` — requires `tools` · `subagents` ([`packages/subagent/tool-subagent-control/src/index.ts`](../packages/subagent/tool-subagent-control/src/index.ts))
 - `@deepseek-ai/dsh-user-questions` ([`packages/interaction/user-questions/src/index.ts`](../packages/interaction/user-questions/src/index.ts))
 - `@deepseek-ai/dsh-webhook` — requires `agents` · `agentDefaultModel` · `agentPresets` · `permissionPresets` · `sessionTitle` · `workspaceRegistry` ([`packages/webhook/webhook/src/index.ts`](../packages/webhook/webhook/src/index.ts))
+- `@deepseek-ai/dsh-workflow-filesystem` — requires `workflowEngine` ([`packages/workflow/workflow-filesystem/src/index.ts`](../packages/workflow/workflow-filesystem/src/index.ts))
 - `@deepseek-ai/dsh-workspace` — requires `storageDomain` · `sessionPersistence` ([`packages/workspace/workspace/src/index.ts`](../packages/workspace/workspace/src/index.ts))
 
 ## Seam packages (not directly loadable)

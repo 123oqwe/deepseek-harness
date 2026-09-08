@@ -27,6 +27,7 @@ export const inject = ['tools', 'subagents']
 export function apply(ctx: Context): void {
   ctx.tools.register(markAdjacentAgentSendMessageTool(defineTool({
     name: 'send_message',
+    riskDomainTags: ['agent-control'],
     description:
       'Send a message to a direct continuable child by its agent id. If you are a resident continuable child, '
       + 'you may also target your direct parent. If the target is still working, the message steers its nearest step; '
@@ -75,6 +76,7 @@ export function apply(ctx: Context): void {
 
   ctx.tools.register(defineTool({
     name: 'interrupt_agent',
+    riskDomainTags: ['agent-control'],
     description:
       'Request cancellation of a background agent\'s current turn by its agent id. The target may be your '
       + 'direct child or a deeper agent created under you. Only the current turn stops: messages already '

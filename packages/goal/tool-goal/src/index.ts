@@ -193,6 +193,7 @@ export function apply(ctx: Context, config: Config): void {
 
   ctx.tools.register(defineTool({
     name: 'get_goal',
+    riskDomainTags: ['session-state-read'],
     description: GET_DESCRIPTION,
     parameters: {},
     output: GOAL_OUTPUT,
@@ -205,6 +206,7 @@ export function apply(ctx: Context, config: Config): void {
 
   ctx.tools.register(defineTool({
     name: 'create_goal',
+    riskDomainTags: ['session-state-write'],
     description: CREATE_DESCRIPTION,
     parameters: {
       objective: {
@@ -232,6 +234,7 @@ export function apply(ctx: Context, config: Config): void {
 
   ctx.tools.register(defineTool({
     name: 'update_goal',
+    riskDomainTags: ['session-state-write'],
     description: 'Update the exact current goal revision. edit, pause, and resume require a direct '
       + 'top-level human request. During an automatic continuation of the current goal, complete '
       + 'and blocked are also allowed. blocked is rejected before the configured minimum round count; the model remains '

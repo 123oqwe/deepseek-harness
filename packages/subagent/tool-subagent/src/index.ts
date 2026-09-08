@@ -371,6 +371,7 @@ export function apply(ctx: Context, config: Config): void {
             : '')
       const disposeTool = runtimeCtx.tools.register(defineTool({
         name: toolName,
+        riskDomainTags: ['agent-spawn'],
         description: wording.description + (backgroundEnabled
           // The completion notice is the continuation service's own behavior, not
           // a separately installed capability, so this promise holds whenever the

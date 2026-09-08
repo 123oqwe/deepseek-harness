@@ -7,7 +7,7 @@ kind: "package-reference"
 
 [English](README.md) | 中文
 
-## 摘要
+## 概述
 
 `dsh-workflow-filesystem` 让「已保存的 workflow」就是一个**文件**。挂载时它读取 harness home 下 `workflows` 目录中的每个 `.js` 与 `.mjs` 文件，并把每一个登记到已挂载的引擎上——形状与 `@deepseek-ai/dsh-skill-filesystem` 把一个 Markdown 目录变成 skills 相同。
 
@@ -19,6 +19,7 @@ kind: "package-reference"
 - [真正保护运行的是什么](#what-protects-a-run)
 - [Model Experience](#model-experience)
 - [已知限制与延期工作](#known-limitations-and-deferred-work)
+- [开发备注](#dev-note)
 
 -----
 
@@ -64,7 +65,8 @@ None, as this package reads definition files and registers them and registers no
 
 不发布运行时 invariant 伴随包：本插件只持有一份「加载了什么」的列表、不观测其它任何东西，因此检查器只会拿这份列表和它自己比较，而不是校对两个独立观测。
 
-### Dev Note
+<a id="dev-note"></a>
+### 开发备注
 
 <details>
 <summary>维护者工作上下文——点击展开</summary>

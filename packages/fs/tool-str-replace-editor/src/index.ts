@@ -427,6 +427,7 @@ function registerStrReplaceEditor(ctx: Context, config: ResolvedConfig): void {
   const policy = new MutationPolicy(ctx)
   ctx.tools.register(defineTool({
     name: 'str_replace_editor',
+    riskDomainTags: ['filesystem-write'],
     description: config.description,
     parameters: {
       command: {

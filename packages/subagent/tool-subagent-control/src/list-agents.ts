@@ -91,6 +91,7 @@ function project(
 export function apply(ctx: Context): void {
   ctx.tools.register(defineTool({
     name: 'list_agents',
+    riskDomainTags: ['catalog-read'],
     description:
       'List your continuable background subagents by durable id and label. Use it to recall which ones '
       + 'you started, not to poll for completion — you are told when one finishes. Status comes from the live '

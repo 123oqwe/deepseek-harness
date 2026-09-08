@@ -19,6 +19,7 @@ Registering is not executing. A definition's body reaches the engine as a string
 - [What protects a run](#what-protects-a-run)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
+- [Dev Note](#dev-note)
 
 -----
 
@@ -61,6 +62,7 @@ Nothing here enters a model request, so provider cache reuse is unaffected. What
 
 No runtime invariant companion is published: this plugin holds one list of what it loaded and observes nothing else, so a checker would compare that list against itself rather than reconcile two independent observations.
 
+<a id="dev-note"></a>
 ### Dev Note
 
 <details>

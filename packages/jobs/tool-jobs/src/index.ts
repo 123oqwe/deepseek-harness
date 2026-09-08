@@ -300,6 +300,7 @@ export function apply(ctx: Context, config: Config): void {
 
   ctx.tools.register(defineTool({
     name: 'job_output',
+    riskDomainTags: ['process-observe'],
     description: 'Read a background job. Stream jobs return only output since the previous read; '
       + 'final-output jobs return their result after settlement. Every response ends with '
       + '`[status: ...]`. Reads are non-blocking unless `wait: true`, which waits up to the configured cap.',
@@ -340,6 +341,7 @@ export function apply(ctx: Context, config: Config): void {
 
   ctx.tools.register(defineTool({
     name: 'job_list',
+    riskDomainTags: ['process-observe'],
     description: 'List your background jobs (running and finished) with their ids, kinds, and statuses.',
     parameters: {},
     output: {
@@ -360,6 +362,7 @@ export function apply(ctx: Context, config: Config): void {
 
   ctx.tools.register(defineTool({
     name: 'job_kill',
+    riskDomainTags: ['process-control'],
     description: 'Request cancellation of a running background job by job id. Returns immediately; the job settles as killed once its work actually stops.',
     parameters: {
       job_id: { type: 'string', required: true, description: 'Job id returned by the tool that started the background work.' },

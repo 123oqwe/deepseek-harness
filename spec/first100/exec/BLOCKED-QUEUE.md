@@ -425,6 +425,12 @@ Filing any of them by resemblance to the others would have hidden a real defect 
 
 **The fix is the measurement, not the isolation (delegate, §12.45).** The runtime exposes an observable residual/peak hook and the case asserts against that. `singleFork` or `describe.sequential` would isolate a wrong measurement so it can keep being used; a case that mutates a process global and restores it is an intermittent false red in any concurrent suite, and the next such case would repeat it.
 
+**A fifth instance, measured 2026-09-08, and it is the §12.38 FIX false-reddening.** `packages/core/tools/tests/py-types.spec.ts`'s *renders a deeply nested oneOf chain in linear time* is already in the ratio form §12.38 introduced — it doubles the depth and asserts `doubled/base < QUADRATIC_SEPARATION` (3), on the reasoning that linear predicts about 2x and quadratic about 4x. Under a 7-package parallel run it failed with **`expected 3.1300862717232856 to be less than 3`**; alone, the whole file passes 53/53.
+
+So the ratio removed the dependency on vitest's shared budget and kept a dependency on the separation CONSTANT. The two measurements no longer scale together when one of them is descheduled mid-measurement: 2x drifting to 3.13x is a 56% erosion of the margin, and nothing about the code under test changed between the two runs.
+
+**Raising the constant is not the fix** — it would buy margin by moving the bound toward quadratic's 4x, which is the thing the case must still separate. What the measurement supports is removing the single-sample dependency: take the median of a few repetitions at each depth, so one descheduled run cannot decide the verdict, and keep the bound where it is. Recorded here rather than changed, because `py-types` is the tools lane's and the constant is load-bearing for a real regression signal.
+
 ### BLOCKED-155 — P6-02 defined a memory record the memory capability does not store, so neither half of its Usage has anywhere to land
 
 **State: OPEN, measured. This blocks P6-02's U redo and, with it, §12.27-3's fold of the blackboard into the memory line.**

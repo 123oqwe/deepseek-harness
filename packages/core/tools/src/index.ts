@@ -258,6 +258,26 @@ export interface ToolDefinition extends ToolSchema {
    */
   timeoutMs?: number
   /**
+   * What this tool's call TOUCHES, as domain tags the organisation policy
+   * maps to a risk class (Epic P2-04 must[1]).
+   *
+   * Tags, never a class. A tool that could name its own risk band would be
+   * deciding its own approval, which is exactly what P2-04's acceptance[1]
+   * refuses: the mapping from tag to class belongs to the deployment's
+   * `riskRules`, and adding a low-risk tag beside a high-risk one cannot lower
+   * the result because the classifier takes the maximum.
+   *
+   * NEVER model-visible: `schemas()` whitelists only name, description and
+   * parameters, so this is metadata for the dispatch gate and the operator,
+   * not something a model reads or can argue with.
+   *
+   * Omission is not "harmless". An undeclared tool classifies by the unknown
+   * default, which is the highest policy-adjustable class — so omitting this
+   * makes a tool MORE restricted, not less, and the structural gate over the
+   * shipped tool set is what keeps omission from becoming the normal case.
+   */
+  readonly riskDomainTags?: readonly string[]
+  /**
    * Pure synchronous classifier for overlap with sibling tool calls. Only
    * `true` opts in; omission, exceptions, non-`true` returns, and invalid
    * `defineTool` arguments are exclusive. This metadata is never model-visible.

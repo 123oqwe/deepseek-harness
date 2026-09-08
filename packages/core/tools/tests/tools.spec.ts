@@ -38,6 +38,37 @@ const echoTool = defineTool({
 })
 
 describe('ToolRuntime', () => {
+  it('P2-04 must[1]: carries a tool\'s declared risk domain tags to the runtime, and never to the model', async () => {
+    // The structural gate over the shipped tool set is textual — it reads
+    // sources and cannot see whether a declaration REACHES the runtime. This
+    // is the other half: `defineTool` propagates the tags onto the definition
+    // the dispatch gate will classify from, and `schemas()` still whitelists
+    // only name, description and parameters, so a model neither sees the tags
+    // nor can argue with them.
+    const ctx = await setup()
+    const tagged = defineTool({
+      name: 'tagged',
+      description: 'a tool that declares what it touches',
+      riskDomainTags: ['filesystem-write'],
+      parameters: { text: { type: 'string' } },
+      output: { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: value }] },
+      async execute() { return 'ok' },
+    })
+
+    expect(tagged.riskDomainTags).toEqual(['filesystem-write'])
+    // The negative half: omission stays undefined rather than becoming an
+    // empty list, because "declared nothing" and "declared no tags" would
+    // classify identically but mean different things to an operator.
+    expect(echoTool.riskDomainTags).toBeUndefined()
+
+    ctx.tools.register(tagged)
+    expect(ctx.tools.schemas()).toEqual([{
+      name: 'tagged',
+      description: 'a tool that declares what it touches',
+      parameters: { type: 'object', properties: { text: { type: 'string' } } },
+    }])
+  })
+
   it('registers tools, exposes schemas, and feeds the system-prompt assembly', async () => {
     const ctx = await setup()
     ctx.tools.register(echoTool)

@@ -249,6 +249,7 @@ export function apply(ctx: Context, config: Config = {}): void {
 
   ctx.tools.register(defineTool({
     name: 'pwsh',
+    riskDomainTags: ['shell-execute'],
     description: pwshDescription(backgroundEnabled, escalationModes),
     /* jscpd:ignore-start -- deliberate mirror of dsh-tool-bash's parameter surface (pwsh-tool-and-executor Agent Note). */
     parameters: {

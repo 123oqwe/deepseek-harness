@@ -60,27 +60,48 @@ describe('P2-04 P — the deployment binds the organisation policy the classifie
 
     const unknown = ctx.permissionPresets.classifyAction({ actionId: 'a-4', domainTags: ['never-declared'] })
     expect(unknown.ground).toBe('unknown-default')
-    expect(ctx.permissionPresets.requiresApproval(unknown)).toBe(true)
+    expect(ctx.permissionPresets.requiresApproval(unknown, 'workspace-write')).toBe(true)
     // And it is a question, not a refusal: §12.47 reserves the kernel band for
     // an action a policy DECLARES catastrophic.
     expect(unknown.hardDenied).toBe(false)
   })
 
-  it('must[1]: the threshold is the deployment\'s, so the same class can pass under one profile and stop under another', async () => {
-    const strict = await mounted({
+  it('must[1]: the threshold rides the PRESET, so one action asks under one bundle and not under another', async () => {
+    // §12.48-B. The threshold is part of the permission bundle, not of the
+    // service and not of the surface: a session on `danger-full-access` and one
+    // on `cautious` are answering different questions about the same action.
+    const ctx = await mounted({
       riskRules: [{ domainTag: 'send-email', riskClass: 'external-communication' }],
-      approvalThreshold: 'external-communication',
+      presets: {
+        cautious: { sandbox: 'read-only', approval: 'ask', approvalThreshold: 'external-communication' },
+        'danger-full-access': { sandbox: 'danger-full-access', approval: 'never', approvalThreshold: 'safety-critical' },
+      },
+      defaultPreset: 'cautious',
     })
-    const relaxed = await mounted({
-      riskRules: [{ domainTag: 'send-email', riskClass: 'external-communication' }],
-      approvalThreshold: 'safety-critical',
-    })
-    const subject = { actionId: 'a-5', domainTags: ['send-email'] }
+    const decided = ctx.permissionPresets.classifyAction({ actionId: 'a-5', domainTags: ['send-email'] })
 
-    expect(strict.permissionPresets.requiresApproval(strict.permissionPresets.classifyAction(subject))).toBe(true)
-    // The negative half, so the case above is not a constant: the threshold is
-    // read, rather than every action reaching it whatever the profile says.
-    expect(relaxed.permissionPresets.requiresApproval(relaxed.permissionPresets.classifyAction(subject))).toBe(false)
+    expect(ctx.permissionPresets.requiresApproval(decided, 'cautious')).toBe(true)
+    // The negative half, so the case above is not a constant: the preset's own
+    // threshold is read, rather than every action reaching whatever is set.
+    expect(ctx.permissionPresets.requiresApproval(decided, 'danger-full-access')).toBe(false)
+  })
+
+  it('must[1]: a preset the table does not carry falls back to the STRICTEST configured threshold', async () => {
+    // `custom` is by definition no bundle, so there is no threshold to read.
+    // Falling back to the strictest value the deployment already chose is
+    // fail-closed and invents no tunable; falling back to the most permissive
+    // would make an unrecognised knob combination the way to avoid approval.
+    const ctx = await mounted({
+      riskRules: [{ domainTag: 'send-email', riskClass: 'external-communication' }],
+      presets: {
+        cautious: { sandbox: 'read-only', approval: 'ask', approvalThreshold: 'external-communication' },
+        'danger-full-access': { sandbox: 'danger-full-access', approval: 'never', approvalThreshold: 'safety-critical' },
+      },
+      defaultPreset: 'cautious',
+    })
+    const decided = ctx.permissionPresets.classifyAction({ actionId: 'a-5b', domainTags: ['send-email'] })
+
+    expect(ctx.permissionPresets.requiresApproval(decided, 'custom')).toBe(true)
   })
 
   it('acceptance[2]: a deployment that switches off a kernel hard-deny class is refused AT MOUNT, naming the class', async () => {

@@ -92,6 +92,42 @@ Owns the deployment's permission presets and their write path. Requires a confin
 current(session: Session): string
 
 /**
+ * Classify one action under this deployment's organisation policy
+ * (P2-04 must[1], must[2], must[3]).
+ *
+ * The policy is held here rather than passed by each caller so that two
+ * surfaces cannot classify the same action differently: the classifier is
+ * pure and takes the policy as a parameter, and this is the one place that
+ * parameter is bound.
+ * @param subject - the action and the domain tags it declares.
+ * @returns the class, how it was reached, and whether it is refused outright.
+ */
+classifyAction(subject: ActionRiskSubject): RiskClassification
+
+/**
+ * Whether a classified action needs approval before it may execute, under
+ * one preset (P2-04 must[1], P2-03 acceptance[2], §12.48-B).
+ *
+ * The threshold comes from the NAMED preset, because it is part of that
+ * permission bundle: a session running `danger-full-access` and one running
+ * `read-only` are answering different questions about the same action, and
+ * a service-level threshold would give them one answer.
+ *
+ * A preset the table does not carry — including the derived `custom` state,
+ * which is by definition no bundle — resolves to the STRICTEST threshold the
+ * table configures. That is fail-closed and invents no tunable: the strictest
+ * value is one the deployment already chose.
+ *
+ * A hard-denied action is NOT reported as needing approval: approval is a
+ * question, and the kernel band is one no deployment asks. A caller
+ * distinguishes the two by reading `hardDenied` itself.
+ * @param classification - the classifier's verdict for the action.
+ * @param preset - the preset in force for the session performing it.
+ * @returns whether the action's class reaches that preset's threshold.
+ */
+requiresApproval(classification: RiskClassification, preset: string): boolean
+
+/**
  * Build the whole select value for one folded knob state: every table
  * option in declaration order, `custom` appended exactly while derived.
  * @param state - the folded knob overrides.

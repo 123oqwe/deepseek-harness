@@ -400,6 +400,7 @@ function registerPersistentBash(ctx: Context, config: ResolvedConfig): void {
 
   ctx.tools.register(defineTool({
     name: 'bash',
+    riskDomainTags: ['shell-execute'],
     description: config.description,
     parameters: {
       command: {

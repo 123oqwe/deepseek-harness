@@ -135,6 +135,16 @@ interface WorkflowRun {
 
 Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnpm run verify-cordis-catalog` in doc-sync; regenerate with `pnpm run gen-cordis-catalog`) — the language sides differ only in locale-specific paired document paths. Signature blocks use a `ts cordis-catalog` fence and keep the original source JSDoc; dispatch modes are defined in the [primer](../cordis-primer.zh.md#dispatch-modes), and the framework-inherited `ctx` API lives in [cordis-api/inherited.md](../cordis-api/inherited.md).
 
+<a id="ctxsavedworkflows--savedworkflowloader"></a>
+
+### `ctx.savedWorkflows` — `SavedWorkflowLoader`
+
+Loads saved workflow definitions into the mounted engine at boot.
+
+Published as `ctx.savedWorkflows` so a composition can see what was loaded and, in a test, what was refused. The refusals are kept rather than thrown onward: one malformed file in a directory must not stop a harness from starting, and an operator needs to know which file was rejected and why.
+
+Source: [`packages/workflow/workflow-filesystem/src/index.ts`](../../packages/workflow/workflow-filesystem/src/index.ts)
+
 <a id="ctxworkflowengine--workflowengine-abstract-seam"></a>
 
 ### `ctx.workflowEngine` — `WorkflowEngine` (abstract seam)

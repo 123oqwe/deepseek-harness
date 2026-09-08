@@ -94,6 +94,9 @@
     "P4-09 packages/workflow/workflow-filesystem/src/index.ts": "§12.48-A(2). The producer P4-09 never had: a saved workflow is a file under the harness home, read at boot and registered through the engine's own admission. `registerDefinition` had 0 production callers before this, so nesting was reachable only from a test. New package, so it is outside the registry's file lists by construction.",
     "P4-09 packages/workflow/workflow-filesystem/tests/saved-workflows.spec.ts": "The loader's cases, including the real-composition one that mounts the actual worker-thread engine rather than a stub sink.",
     "P4-09 packages/workflow/workflow-filesystem/package.json": "The new package's manifest.",
-    "P4-09 packages/workflow/workflow-filesystem/tsconfig.json": "The new package's compiler face and project references."
+    "P4-09 packages/workflow/workflow-filesystem/tsconfig.json": "The new package's compiler face and project references.",
+    "P2-04 packages/core/tools/src/index.ts": "§12.48-B(b). The registry's U list names `core/tools/src/types.ts`, but the tool DEFINITION lives here — `types.ts` in that package holds only PTC event payloads. `riskDomainTags` is declared on `ToolDefinition`, which is what the dispatch gate will classify from.",
+    "P2-04 packages/core/tools/src/schema.ts": "§12.48-B(b). `defineTool` is here, and a declared tag that the builder drops would satisfy the textual structural gate while reaching no runtime.",
+    "P2-04 packages/bundle/base/cordis.patch.yml": "§12.48-B(a), §12.49(4) step 1. The three preset approval thresholds. Zero behaviour change while the dispatch gate is unwired, and landing it first keeps the gate slice from carrying a profile change too."
   }
 }
