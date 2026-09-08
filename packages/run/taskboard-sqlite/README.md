@@ -13,6 +13,7 @@ kind: "package-reference"
 
 - [acceptance[0] is about processes, and a Map is not](#acceptance0-is-about-processes-and-a-map-is-not)
 - [What the transaction covers](#what-the-transaction-covers)
+- [What the plugin adds over `openTaskStore`](#what-the-plugin-adds-over-opentaskstore)
 - [The decisions are not re-implemented here](#the-decisions-are-not-re-implemented-here)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
@@ -32,6 +33,10 @@ The in-memory board is still correct for what it claims — a single-process boa
 
 `busy_timeout` is 5000ms: two workers claiming *different* tasks at the same moment is ordinary, and the loser of the write lock should proceed a millisecond later rather than fail.
 
+## What the plugin adds over `openTaskStore`
+
+The default export mounts the store as `ctx.taskStore`. Without it every consumer calls `openTaskStore` and thereby decides for its callers where tasks live, which is the one setting acceptance[0] turns on: two hosts contend for a task only when a profile pointed them at one directory. The database opens in `Service.init` rather than the constructor, because a constructor that throws during service construction unwinds into `cannot create effect on inactive context` — a message naming neither the path nor the database.
+
 ## The decisions are not re-implemented here
 
 `decideClaim` decides a claim, `isClaimCurrent` decides whether a receipt's attempt is current, `validateTaskGraph` decides a cycle, and the receipt's legality table belongs to the in-memory board — this provider borrows a single-task board to apply one, and writes only its result. A second implementation of "may this worker claim" is the shape BLOCKED-136 records, and here it would be the copy that hands one task to two workers.
@@ -49,7 +54,6 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 ## Known Limitations and Deferred Work
 
 - **One database, one machine.** SQLite serializes writers through a file lock, so workers contend correctly only where they share a filesystem. Workers on two machines need a store this package does not provide.
-- **No Cordis plugin.** The store is opened by `openTaskStore(directory)`; nothing publishes it as a service, so no consumer takes it from `ctx` yet. P5-11's Usage stage owns that, and its declared consumers have no taskboard reference at all today.
 - **No claim expiry sweep.** A lapsed claim is only noticed when someone tries to claim that task again; nothing scans for expired claims and reports them.
 - No runtime invariant companion is published: the relation this store owns — one holder per unexpired claim — is enforced inside a single `BEGIN IMMEDIATE` transaction and observable only by reading the rows it just wrote, so a checker would compare a value against itself rather than reconcile two independent observations.
 

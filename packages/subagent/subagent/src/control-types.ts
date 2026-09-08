@@ -9,6 +9,7 @@
 import type { PromptContentPart } from '@deepseek-ai/dsh-attachment/types'
 import type { Branded } from '@deepseek-ai/dsh-brand'
 import type { MessageId } from '@deepseek-ai/dsh-llm/brand'
+import type { TaskStatus } from '@deepseek-ai/dsh-taskboard'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 
 /**
@@ -46,6 +47,21 @@ export type SubagentListEntry =
     readonly activity: 'running' | 'inactive'
     /** Whether a direct descendant has durable `origin: 'subagent'`. */
     readonly hasChildren: boolean
+    /**
+     * How far this child's work has progressed on the mounted taskboard
+     * (Epic P5-11).
+     *
+     * The runtime's own record, advanced from the child's terminal stop reason
+     * rather than from anything the model said about itself, which is why it
+     * can disagree with `activity`: a child that is `inactive` because its
+     * Activation ended is `submitted` or `failed` here, and the difference
+     * between "no longer running" and "ran and failed" is exactly what a
+     * listing could not previously answer.
+     *
+     * Absent when no board is mounted, and absent for a child delegated before
+     * one was — an unrecorded child is not the same as one recorded as open.
+     */
+    readonly taskStatus?: TaskStatus
   } & (
     | {
       /** A terminal one-shot child. */

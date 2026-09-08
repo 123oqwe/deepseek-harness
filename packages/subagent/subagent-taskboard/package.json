@@ -1,6 +1,6 @@
 {
-  "name": "@deepseek-ai/dsh-taskboard-sqlite",
-  "description": "Durable taskboard for Epic P5-11: SQLite-backed claims serialized by BEGIN IMMEDIATE, so two processes contending for one task cannot both hold it",
+  "name": "@deepseek-ai/dsh-subagent-taskboard",
+  "description": "Epic P5-11's producer: records every delegated subagent child as a task on the mounted taskboard, claiming it for the delegating parent at subagent/start and advancing it from the terminal stop reason at subagent/end",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
     "access": "public"
@@ -8,7 +8,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
-    "directory": "packages/run/taskboard-sqlite"
+    "directory": "packages/subagent/subagent-taskboard"
   },
   "type": "module",
   "main": "lib/index.js",
@@ -18,16 +18,11 @@
       "types": "./lib/types/index.d.ts",
       "default": "./lib/index.js"
     },
-    "./store": {
-      "types": "./lib/types/store.d.ts",
-      "default": "./lib/types/store.js"
-    },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
   "files": [
     "lib/index.js",
-    "lib/types/**/*.js",
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
@@ -36,12 +31,20 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-agent": "workspace:^",
     "@deepseek-ai/dsh-brand": "workspace:^",
+    "@deepseek-ai/dsh-scope": "workspace:^",
+    "@deepseek-ai/dsh-subagent": "workspace:^",
     "@deepseek-ai/dsh-taskboard": "workspace:^"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-agent": "workspace:^",
     "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/dsh-taskboard": "workspace:^"
+    "@deepseek-ai/dsh-scope": "workspace:^",
+    "@deepseek-ai/dsh-session": "workspace:^",
+    "@deepseek-ai/dsh-subagent": "workspace:^",
+    "@deepseek-ai/dsh-taskboard": "workspace:^",
+    "@deepseek-ai/dsh-taskboard-sqlite": "workspace:^"
   }
 }

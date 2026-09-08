@@ -18,6 +18,7 @@
  * @module @deepseek-ai/dsh-taskboard/store
  */
 
+import type {} from '@deepseek-ai/cordis'
 import { decideClaim, isClaimCurrent, validateTaskGraph } from './types.ts'
 import type { ArtifactRef, ClaimDecision, GraphValidation, Task, TaskId, TaskStatus, WorkerId } from './types.ts'
 
@@ -49,6 +50,21 @@ export interface TaskStoreContract {
   applyReceipt(receipt: TaskReceipt): ReceiptOutcome
   /** Every task currently held. */
   list(): readonly Task[]
+}
+
+/**
+ * The mounted taskboard, published by whichever provider a profile mounts.
+ *
+ * Declared beside the CONTRACT rather than in a provider so the name means the
+ * rule and not an implementation: a consumer injecting `taskStore` gets the
+ * same type whether the deployment mounted the durable SQLite board or a
+ * single-process one, and two providers cannot disagree about what the service
+ * is.
+ */
+declare module '@deepseek-ai/cordis' {
+  interface Context {
+    taskStore: TaskStoreContract
+  }
 }
 
 /**

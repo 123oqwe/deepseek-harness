@@ -419,6 +419,23 @@
       config:
         directory: !!js dshHomePath('leases')
 
+    # P5-11's board, and the producer that puts anything on it. Under the same
+    # storage root as the lease store and for the same reason: two hosts that
+    # must not both drive one delegated child have to be pointed at one board.
+    - id: task-store
+      name: '@deepseek-ai/dsh-taskboard-sqlite'
+      config:
+        directory: !!js dshHomePath('taskboard')
+
+    # The claim lease outlives an ordinary delegated child by a wide margin: a
+    # claim that lapses while its child is still running would show a live task
+    # as reclaimable, which is the wrong error to make when nothing enforces
+    # the claim anyway.
+    - id: subagent-taskboard
+      name: '@deepseek-ai/dsh-subagent-taskboard'
+      config:
+        claimLeaseMs: 3600000
+
     - id: workflow-worker-thread
       name: '@deepseek-ai/dsh-workflow-worker-thread'
       config:

@@ -70,6 +70,9 @@
     },
     {
       "path": "../../collaboration/control-priority"
+    },
+    {
+      "path": "../../collaboration/taskboard"
     }
   ]
 }

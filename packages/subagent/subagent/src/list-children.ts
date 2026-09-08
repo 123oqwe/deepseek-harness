@@ -18,11 +18,13 @@
  */
 
 import type { Context } from '@deepseek-ai/cordis'
+import { brandString } from '@deepseek-ai/dsh-brand'
 import { SessionLogOffset } from '@deepseek-ai/dsh-session'
 import type { Session, SessionHeader, SessionId } from '@deepseek-ai/dsh-session'
 import type { SessionProjectionRegistry } from '@deepseek-ai/dsh-session-projection'
 import type { SessionProjectionCache } from '@deepseek-ai/dsh-session-projection-cache'
 import type { SessionObservation, SessionQueryEngine } from '@deepseek-ai/dsh-session-query'
+import type { TaskId } from '@deepseek-ai/dsh-taskboard'
 import type { SubagentListEntry } from './control-types.ts'
 import { SubagentError } from './error.ts'
 import type { SubagentIdentityProjection } from './projection-types.ts'
@@ -91,7 +93,32 @@ export async function listChildren(
       && record.header.origin === 'subagent')
     .sort(compareCorpusRecords)
   const rows = await resolveCandidateRows(candidates, listing, signal)
-  return rows.filter((row): row is SubagentListEntry => row !== undefined)
+  return withTaskStatus(ctx, rows.filter((row): row is SubagentListEntry => row !== undefined))
+}
+
+/**
+ * Attach each child's taskboard status to its row (Epic P5-11 Usage).
+ *
+ * The board is the runtime's own record of delegated work, advanced from a
+ * child's terminal stop reason by `@deepseek-ai/dsh-subagent-taskboard`. A
+ * listing answered from session projections alone can say a child is no longer
+ * running; only the board says whether it finished or failed.
+ *
+ * Read through `ctx.get` rather than a declared injection, and absent when no
+ * board is mounted: enumeration is a read-only capability that must keep
+ * working on a profile that coordinates nothing.
+ * @param ctx - context that may carry the mounted board.
+ * @param rows - the classified rows.
+ * @returns the same rows, each child carrying its status when the board holds one.
+ */
+function withTaskStatus<T extends SubagentListEntry>(ctx: Context, rows: T[]): T[] {
+  const board = ctx.get('taskStore')
+  if (board === undefined) return rows
+  return rows.map((row) => {
+    if (row.kind !== 'child') return row
+    const task = board.get(brandString<TaskId>(row.id))
+    return task === undefined ? row : { ...row, taskStatus: task.status }
+  })
 }
 
 /**
@@ -126,7 +153,7 @@ export async function listDescendants(
       entries.push({ ...row, parentId: position.parentId, depth: position.depth })
     }
   })
-  return entries
+  return withTaskStatus(ctx, entries)
 }
 
 /** Resolve listing services once and build one live-preferred session corpus. */

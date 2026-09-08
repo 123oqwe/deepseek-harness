@@ -446,6 +446,7 @@
       "@deepseek-ai/dsh-system-prompt/invariant": ["./packages/core/system-prompt/src/invariant.ts"],
       "@deepseek-ai/dsh-taskboard": ["./packages/collaboration/taskboard/src"],
       "@deepseek-ai/dsh-taskboard-sqlite": ["./packages/run/taskboard-sqlite/src"],
+      "@deepseek-ai/dsh-subagent-taskboard": ["./packages/subagent/subagent-taskboard/src"],
       "@deepseek-ai/dsh-terminal": ["./packages/terminal/terminal/src"],
       "@deepseek-ai/dsh-terminal-bash": ["./packages/terminal/terminal-bash/src"],
       "@deepseek-ai/dsh-time-context": ["./packages/context/time-context/src"],

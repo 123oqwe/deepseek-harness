@@ -60,6 +60,8 @@
     "@deepseek-ai/dsh-goal-round-driver": "workspace:^",
     "@deepseek-ai/dsh-jobs-local": "workspace:^",
     "@deepseek-ai/dsh-lease-sqlite": "workspace:^",
+    "@deepseek-ai/dsh-subagent-taskboard": "workspace:^",
+    "@deepseek-ai/dsh-taskboard-sqlite": "workspace:^",
     "@deepseek-ai/dsh-llm": "workspace:^",
     "@deepseek-ai/dsh-llm-deepseek": "workspace:^",
     "@deepseek-ai/dsh-llm-pi-ai": "workspace:^",

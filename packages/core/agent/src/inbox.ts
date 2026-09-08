@@ -169,6 +169,9 @@ export class Inbox {
    * Append one message to a pending list and durably record the insertion.
    * @param target - pending list to extend.
    * @param message - message to append.
+   * @param controlKind - the control kind this insertion carries, used to order
+   *   the batch it is claimed in; absent for ordinary input, which is not a
+   *   control message and sorts after every one.
    * @throws if the message identity is already pending.
    */
   append(target: InboxTarget, message: UserMessage, controlKind?: ControlKind): void {
@@ -179,6 +182,8 @@ export class Inbox {
    * Prepend one message to a pending list and durably record the insertion.
    * @param target - pending list to extend.
    * @param message - message to prepend.
+   * @param controlKind - the control kind this insertion carries, used to order
+   *   the batch it is claimed in; absent for ordinary input.
    * @throws if the message identity is already pending.
    */
   prepend(target: InboxTarget, message: UserMessage, controlKind?: ControlKind): void {
@@ -222,6 +227,9 @@ export class Inbox {
    * @param start - splice position.
    * @param deleteCount - maximum number of messages to remove.
    * @param inserted - messages to insert at the resolved position.
+   * @param controlKind - the control kind recorded for every inserted message,
+   *   which decides its rank in the batch a turn claims; absent leaves the
+   *   messages unranked.
    * @returns messages removed by the splice.
    */
   splice(

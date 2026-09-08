@@ -14,7 +14,7 @@ import { spawn } from 'node:child_process'
 import { afterEach, describe, expect, it } from 'vitest'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { Task, TaskId, WorkerId } from '@deepseek-ai/dsh-taskboard'
-import { openTaskStore } from '../src/index.ts'
+import { openTaskStore } from '../src/store.ts'
 
 const roots: string[] = []
 afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }) })

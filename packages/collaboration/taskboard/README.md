@@ -41,6 +41,7 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 - **Nothing schedules from a board yet.** These are the claim decision, the atomic store and the graph check; the worker pool that consumes them is a later epic's.
 - **Reclaim is time-based and clock-trusting.** A stale claim is reclaimed on a deadline the caller supplies; the board does not itself detect a worker that is alive but wedged.
+- No runtime invariant companion is published: this package decides, and the relation a claim maintains is owned by whichever store applies the decision — `@deepseek-ai/dsh-taskboard-sqlite` enforces it inside one transaction, where a checker would compare a value against itself.
 
 ### Dev Note
 

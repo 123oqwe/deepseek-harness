@@ -16,7 +16,7 @@
  * claim" is the shape BLOCKED-136 records and this would be the copy that
  * hands one task to two workers.
  *
- * @module @deepseek-ai/dsh-taskboard-sqlite
+ * @module @deepseek-ai/dsh-taskboard-sqlite/store
  */
 
 import { mkdirSync } from 'node:fs'
