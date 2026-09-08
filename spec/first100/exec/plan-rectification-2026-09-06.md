@@ -1012,3 +1012,8 @@ P2-03 撤签后门 (e) 正确地红了五条(`@modelcontextprotocol/sdk`、`open
 
 **P4-06**:settlement 路径为消费者(`commitIntake` 4、`applyReceipt` 3),must[0] 否定半边("不经 KV seam")是模块属性——`bus-store.ts` 直接 `node:sqlite`、无 KV import;must[2] 到达键与 `commitSettlement` 同一三元组——**可签**。**P4-07**:两条子句(must[0] work item、acc[0] `leaseRefused`)是在本程序里量错后修对的,证据包按事实写——**可签**。
 **P4-12**:七条闭。must[2]"provider 若支持原生 key 则透传"与 must[3]"目标状态查询"后半在本 build **没有主语**:唯一出货 HTTP 出口 `web-fetch-http` 只 GET,搜索 provider 的 POST 是查询不是效果——没有任何出货 provider 既产生外部效果又支持该 header。**定向延期 `landsIn: P4-13.U`**(Reconciliation Engine,W13,前置正是 P4-12;其 must[0]"Tool/provider 可声明 observeState / compareExpected / compensate"就是 provider 声明能力的地方——原生幂等 header 支持与目标状态查询在那里获得主语),写进 P4-13 的 readiness gate。这不是"填一个不会发生的 epic":P4-13 已排期且以 P4-12 为前置。签七条。
+
+### 12.52 delegate 误签 P4-07:`--accept` 只报 (iv) 不等于行是重建后的(2026-09-08 06:50 EDT)
+
+**事实**:`--accept --epic P4-07` 只报 (iv),我随即签 PASS;核 cells 才见 C/P/U 在 `82d5e81122`(run 33959624760,重建前)、F 在 `d4034a8f4c`(admitted),**无任何 supplement**——U.2 / U.3 冻结并在 CI 绿过,但从未记进 ledger;openFinding(barrel 仍导出 `advanceAgentLifecycle`)也仍为真。已 WITHDRAWN。五条候选**没有一条**在 `82df08491f` 有格子或 supplement——执行者的"绿格"是意向不是完成态,我没核就签。
+**规则(4.4b)**:签字前核每个格子与 supplement 的 `candidateSha` / run 是**重建后的观测**;`--accept` 的输出是必要条件不是签字依据。**顺序**:admit 绿格(两红步原文)→ 修谓词红(P5-10 coverage 缺、P5-11 acc[0] 引用被 supersede 标题、P4-06 C/P 共享观测文件、P4-12 U 未绿)→ P4-07 删导出关 finding → `--accept` 各只剩 (iv) → 核 SHA → 签。
