@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-08T10:50:27.522Z",
-  "inputDigest": "ab7de91dcdf09746af339f32f1bb19ff4018caed71865cf068361f6f62d641ee",
+  "lastUpdatedUtc": "2026-09-08T11:17:18.601Z",
+  "inputDigest": "183f3e989efeed7e6bc32a0f8b5b85da9acefbefb8c9e83dabd3ed6ef5dae3f9",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4155,27 +4155,13 @@
           "capturedAtUtc": "2026-09-07T11:58:22.073Z"
         },
         "P": {
-          "status": "GREEN",
-          "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-82df08491f/vitest-report.json",
-          "observationSha256": "c64640da4976528ae7995ea13fdfde8a8b4e68b5e69463a94cabf020ee7d9325",
-          "expectCasesMatched": [
-            "splits two separate enqueue calls across batches when a write starts between them",
-            "keeps an enqueueAll group in one batch under that same interleaving",
-            "owns its copy of every event in a group, and ignores an empty group",
-            "uses one fixed window from the first queued event and owns its copy",
-            "coalesces twenty events admitted ten milliseconds apart into one 200 ms batch",
-            "makes concurrent flushes one immediate barrier that drains admitted tails",
-            "starts a new window for work admitted after an already-quiescent barrier",
-            "starts an over-budget tail immediately after the active write",
-            "keeps a tail deadline that has not expired when the active write finishes",
-            "pauses automatic retries after failure and preserves order for new work",
-            "observes an overlapping background failure and retries it inside flush",
-            "surfaces a barrier failure without detached logging and retains its batch",
-            "retains a failed batch larger than the engine call-argument limit"
-          ],
-          "capturedAtUtc": "2026-09-08T10:50:27.522Z"
+          "status": "NOT_RUN",
+          "revokedFrom": {
+            "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
+            "absentCommitments": 1
+          },
+          "revokedReason": "§12.53 companion: greened on an observation that does not contain this cell's live freeze entries, so it pre-committed to nothing. Awaiting re-observation on a tree containing them."
         },
         "U": {
           "status": "GREEN",
@@ -4359,9 +4345,9 @@
         }
       },
       "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
-      "independentVerdict": "WITHHELD_LIVE_LOCK",
+      "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "BLOCKED_ON_ACCEPTANCE",
+      "status": "NOT_RUN",
       "acceptedEvidence": null,
       "closedFindings": [
         {
@@ -4434,74 +4420,22 @@
           "capturedAtUtc": "2026-09-05T18:08:05.414Z"
         },
         "U": {
-          "status": "GREEN",
-          "candidateSha": "82d5e8112233b371fe891b7489e89fc2658b109f",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33959624760",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r9/first100-evidence-82d5e8112233b371fe891b7489e89fc2658b109f/vitest-report.json",
-          "observationSha256": "e2c607d0726e91f6ff36c2e08f3d33f060fc3a8a9cb35284b6953d70c908659d",
-          "expectCasesMatched": [
-            "CHARACTERIZATION: unfenced, a self-asserted high epoch is admitted and becomes the authority",
-            "fenced, that same self-asserted epoch is refused",
-            "admits the holder's real token, so the check is not refusing everything",
-            "refuses the previous holder after the item is reclaimed",
-            "still applies the lifecycle rules once fencing admits the token",
-            "reports `fenced` for a token that is BOTH fenced and proposing an illegal edge",
-            "refuses when the item holds no lease at all"
-          ],
-          "capturedAtUtc": "2026-09-05T18:08:05.639Z"
+          "status": "NOT_RUN",
+          "revokedFrom": {
+            "candidateSha": "82d5e8112233b371fe891b7489e89fc2658b109f",
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33959624760",
+            "absentCommitments": 1
+          },
+          "revokedReason": "§12.53 companion: greened on an observation that does not contain this cell's live freeze entries, so it pre-committed to nothing. Awaiting re-observation on a tree containing them."
         },
         "F": {
-          "status": "GREEN",
-          "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d4034a8f4c/vitest-report.json",
-          "observationSha256": "bf70f39f11be11224e23840d12b26e969583753bab4a5b690c3c41f7710a0045",
-          "expectCasesMatched": [
-            "P4-07 validation[0]: systematic fault matrix enumerates at least twelve boundaries, each named once",
-            "fault boundary 01 a strictly older epoch is refused as stale",
-            "fault boundary 02 an epoch above the current one is refused, not treated as newer authority",
-            "fault boundary 03 the exact current epoch is admitted, so the check is not refusing everything",
-            "fault boundary 04 a token for another work item is refused",
-            "fault boundary 05 a token from another holder at the current epoch is refused",
-            "fault boundary 06 no lease at all refuses rather than admits",
-            "fault boundary 07 a lease is still held AT its expiry instant",
-            "fault boundary 08 a lease one millisecond past expiry is reclaimable",
-            "fault boundary 09 acquiring is refused while another holder's lease is live",
-            "fault boundary 10 renewing an expired lease is refused rather than resurrecting it",
-            "fault boundary 11 renewing on a superseded token is refused",
-            "fault boundary 12 an unavailable store refuses acquisition instead of reporting the item free",
-            "fault boundary 13 an unavailable store offers nothing reclaimable",
-            "fault boundary 14 an unavailable store refuses renewal",
-            "fault boundary 15 a delayed packet from a reclaimed holder is refused on arrival",
-            "fault boundary 16 split brain: two holders across a reclaim, only the later one writes",
-            "names who was refused, who was current, and why",
-            "records the absence of a lease rather than omitting the fields",
-            "carries no field capable of holding key or signature material",
-            "KNOWN GAP (validation[2]): producing the record is reachable, appending it is not",
-            "CHARACTERIZATION: the same forged proposal is refused when fenced and ADMITTED when not"
-          ],
-          "capturedAtUtc": "2026-09-06T23:04:05.813Z",
-          "admittedUnderRedRun": {
-            "runId": "34063737869",
-            "redSteps": [
-              {
-                "step": "install / typecheck / test @ exact SHA — the snapshot job (pnpm run test:snapshot)",
-                "failingCases": [
-                  "headless recorded-session snapshots > replays pwsh-tool-turn through dsh --profile headless",
-                  "headless recorded-session snapshots > replays persistent-pwsh-tool-turn through dsh --profile headless"
-                ],
-                "evidence": "AssertionError: pwsh-tool-turn: session 0: expected '{\"type\":\"session\",\"version\":0,\"id\":\"{…' to be '{\"type\":\"session\",\"version\":0,\"id\":\"{…' // Object.is equality  @@ -18,11 +18,11 @@  - {\"type\":\"action/manifest-appended\",...,\"sequence\":0}}  + {\"type\":\"action/manifest-appended\",...,\"sequence\":1}}",
-                "subjectPaths": [
-                  "snapshots/session/pwsh-tool-turn",
-                  "snapshots/session/persistent-pwsh-tool-turn"
-                ]
-              }
-            ],
-            "diagnosedCause": "BLOCKED-137: two recorded pwsh fixtures still carried action/manifest-appended's sequence as 0 after the 0-to-1 fix; DSH_SNAPSHOT=refresh skips pwsh scenarios on a host without pwsh, so the refresh that updated the other 124 fixtures could not reach these two. Fixed in e783b1c0e9; run 34088363628 is green on the same two cases.",
-            "unrelatedBecause": "the epic's reality set (11 path(s): declaration plus live freeze entries, per BLOCKED-134) is disjoint from the failing subject [\"snapshots/session/pwsh-tool-turn\",\"snapshots/session/persistent-pwsh-tool-turn\"]",
-            "admittedBy": "sonnet-executor, diagnosed from the run log; ruling guanjieqiao-92 §12.6",
-            "diagnosedAtUtc": "2026-09-07T07:03:26.723Z"
-          }
+          "status": "NOT_RUN",
+          "revokedFrom": {
+            "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
+            "absentCommitments": 1
+          },
+          "revokedReason": "§12.53 companion: greened on an observation that does not contain this cell's live freeze entries, so it pre-committed to nothing. Awaiting re-observation on a tree containing them."
         }
       },
       "supplements": {
@@ -4548,7 +4482,7 @@
       "openFindings": [
         "P4-07 residual: unfenced advanceAgentLifecycle is a public export (pinned by a characterization case)"
       ],
-      "status": "BLOCKED_ON_ACCEPTANCE",
+      "status": "NOT_RUN",
       "acceptedEvidence": {
         "acceptedAtUtc": "2026-09-06T06:15:40.760Z",
         "cells": {
@@ -5000,49 +4934,13 @@
           "capturedAtUtc": "2026-09-07T11:58:12.253Z"
         },
         "U": {
-          "status": "GREEN",
-          "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-82df08491f/vitest-report.json",
-          "observationSha256": "c64640da4976528ae7995ea13fdfde8a8b4e68b5e69463a94cabf020ee7d9325",
-          "expectCasesMatched": [
-            "P4-12 must[4]: the dispatch path reserves before it runs a tool RUNS the tool once and confirms the reservation, so an ordinary call is unaffected",
-            "P4-12 must[4]: the dispatch path reserves before it runs a tool REFUSES a second call whose key was already reserved, and the tool does NOT run",
-            "P4-12 must[4]: the dispatch path reserves before it runs a tool runs BOTH calls when the arguments differ, so the key identifies the action and not the tool",
-            "P4-12 must[4]: the dispatch path reserves before it runs a tool runs the tool when NO ledger is mounted, because absence is not an approval to record"
-          ],
-          "capturedAtUtc": "2026-09-08T10:44:00.907Z",
-          "admittedUnderRedRun": {
-            "runId": "34201756084",
-            "redSteps": [
-              {
-                "step": "lint (scoped)",
-                "failingCases": [
-                  "oxlint typescript/no-unnecessary-type-assertion"
-                ],
-                "evidence": "packages/core/tools/src/manifest-log.ts:105:33: error typescript(no-unnecessary-type-assertion): This assertion is unnecessary since it does not change the type of the expression.",
-                "subjectPaths": [
-                  "packages/core/tools/src/manifest-log.ts"
-                ]
-              },
-              {
-                "step": "snapshots",
-                "failingCases": [
-                  "replays pwsh-tool-turn",
-                  "replays persistent-pwsh-tool-turn"
-                ],
-                "evidence": "FAIL  snapshots/session/session-snapshots.spec.ts > replays pwsh-tool-turn\nFAIL  snapshots/session/session-snapshots.spec.ts > replays persistent-pwsh-tool-turn",
-                "subjectPaths": [
-                  "snapshots/session/pwsh-tool-turn",
-                  "snapshots/session/persistent-pwsh-tool-turn"
-                ]
-              }
-            ],
-            "diagnosedCause": "The run's conclusion is failure, and both red steps are unrelated to these cells: the lint error is in packages/core/tools/src/manifest-log.ts (P2-03's U.4 file, which is why P2-03 is NOT admitted here), and the two snapshot failures are pwsh session fixtures whose expected event shape moved when the manifest event gained its fifth field. Neither subject path is in this epic's reality set, which the admission recomputes rather than takes on assertion.",
-            "unrelatedBecause": "the epic's reality set (16 path(s): declaration plus live freeze entries, per BLOCKED-134) is disjoint from the failing subject [\"packages/core/tools/src/manifest-log.ts\",\"snapshots/session/pwsh-tool-turn\",\"snapshots/session/persistent-pwsh-tool-turn\"]",
-            "admittedBy": "delegate guanjieqiao-92, §12.6-B(c) explicit ack 2026-09-09",
-            "diagnosedAtUtc": "2026-09-08T10:44:39.870Z"
-          }
+          "status": "NOT_RUN",
+          "revokedFrom": {
+            "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
+            "absentCommitments": 1
+          },
+          "revokedReason": "§12.53 companion: greened on an observation that does not contain this cell's live freeze entries, so it pre-committed to nothing. Awaiting re-observation on a tree containing them."
         },
         "F": {
           "status": "GREEN",

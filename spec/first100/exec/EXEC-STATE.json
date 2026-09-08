@@ -3,7 +3,7 @@
     "name": "first100-exec-state",
     "version": "1.0"
   },
-  "lastUpdatedUtc": "2026-09-08T10:50:27.528Z",
+  "lastUpdatedUtc": "2026-09-08T11:17:18.607Z",
   "activeWorktree": "/Users/guanjieqiao/dsh-first100-clean",
   "activeBranch": "first100-exec",
   "currentWave": 4,
@@ -14,7 +14,7 @@
     "detail": "§12.50 step 4 landed: riskRules in base, the gate on both dispatch paths before the ledger reservation, seven cases frozen. What the gate stops is an undeclared tool, a declared high band and the kernel band; sandboxed work runs unasked because the sandbox is that boundary's enforcer. Remaining for P2-04: the F stage."
   },
   "registryDigest": "5c75260e96c9db1ca045c1bf4a013a5a1f356651c23baef924066bec627ef4f7",
-  "ledgerDigest": "fefc33cd1b64fabdebb0e05648322b335f546ecb6e17f34ee1231cb8f6be79a7",
+  "ledgerDigest": "af26d0fe8b21b9d2e4ed9a686fbeaeee25805d2add9418ddb32acf9e997fe236",
   "blockedQueueRef": "spec/first100/exec/BLOCKED-QUEUE.md",
   "totals": {
     "acceptedEpics": 19,

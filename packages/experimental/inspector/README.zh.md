@@ -140,6 +140,7 @@ CDP target 通过 `Runtime.evaluate` 提供 Host 和已连接 Client realm 中�
 - **Client 求值使用页面 JavaScript**——页面 Content Security Policy 可能阻止动态求值；synthetic context 不提供 DevTools command-line helper 或原生 REPL 声明语义。
 - **Client 身份仲裁依赖 Web Locks**——缺少该 API 的浏览器仍会通过 `sessionStorage` 保持重连与刷新身份，但无法区分从同一存储状态复制出的两个同时存活 tab。
 - **fetch 拦截范围是 `globalThis.fetch`**——直接调用 Undici API，以及激活前保存的 fetch 引用不会被观察。
+- **Client Console 转发可能在 log 被确认之后仍丢事件**——客户端的 `log()` 在 worker 确认收到 log 操作时即 resolve，这并不表示 Inspector 已把 `Runtime.consoleAPICalled` 投递给已连接的 CDP 会话。已实测：该事件是**缺失**而非迟到，会话只收到自己的 `executionContextCreated`。realm 转发的集成用例因此被 skip（BLOCKED-145）；竞态本身未修，因为本包不进入任何 bundle。
 - **body clone 有运行成本**——完整采集会 tee 请求与响应 stream，直至达到配置上限，可能增加内存与 I/O 压力。保留 body 的上限不包含 stream tee 内部的缓冲，包括来源提供的超大 chunk，或为读取较慢的应用分支排队的数据。
 - **不自动重启 Worker**——Worker 意外退出会使当前 Inspector 实例失败；生命周期恢复留待后续改动。
 

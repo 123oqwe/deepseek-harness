@@ -82,6 +82,7 @@
  */
 import { spawnSync } from 'node:child_process'
 import { frozenTitlePresent, registeredRenames } from './frozen-title-renames.mjs'
+import { commitmentKey, freezeEntriesAt } from './verify-freeze-in-candidate-tree.mjs'
 import { realitySet, realitySetOverlap } from './epic-reality-set.mjs'
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
@@ -755,6 +756,67 @@ function cmdGreen() {
  * so predicate (i) (coverage closure) can cite it as a real, CI-observed
  * passing case rather than a bare freeze-time claim.
  */
+/**
+ * Withdraw a cell's green when its observation does not contain the cell's own
+ * live freeze entries (§12.53 companion, BLOCKED-161).
+ *
+ * **Narrow on purpose: it refuses unless that check actually fails.** A cell
+ * greened on a tree lacking its freeze is not "green and awaiting a better
+ * observation" — it is green on evidence that pre-committed to nothing, and
+ * leaving it while the row advances is how a pre-commitment becomes optional.
+ * But a general un-green would also be the one command that can erase an
+ * inconvenient verdict, so this one recomputes `verify-freeze-in-candidate-tree`
+ * for the named cell and exits without writing when the cell passes it.
+ *
+ * The cell returns to `NOT_RUN` and keeps no observation, because a retained
+ * one would be the same wrong evidence with a different status beside it.
+ */
+function cmdRevokeCell() {
+  const epic = opt('epic')
+  const stage = opt('stage')
+  const reason = opt('reason')
+  if (!epic || !stage || !reason) {
+    console.error('usage: generate-ledger.mjs --revoke-cell --epic <id> --stage <C|P|U|F> --reason <text>')
+    process.exit(1)
+  }
+  const ledger = loadJson(LEDGER_PATH)
+  const cell = ledger.rows[epic]?.cells?.[stage]
+  if (!cell) {
+    console.error(`BLOCKED: ${epic}.${stage} has no cell to revoke`)
+    process.exit(1)
+  }
+  if (cell.status !== 'GREEN') {
+    console.error(`BLOCKED: ${epic}.${stage} is ${String(cell.status)}, not GREEN — there is nothing to withdraw`)
+    process.exit(1)
+  }
+  const live = loadJson(COMMAND_FREEZE_PATH).entries.filter((e) => e.supersededBy === undefined)
+  const commitments = live.filter((e) => e.epic === epic && e.stage === stage && e.supplementSeq === undefined)
+  const observed = freezeEntriesAt(cell.candidateSha)
+  if (observed === undefined) {
+    console.error(`BLOCKED: candidate ${String(cell.candidateSha)} is not readable in this clone, so the check cannot be recomputed`)
+    process.exit(1)
+  }
+  const observedKeys = new Set(observed.map(commitmentKey))
+  const absent = commitments.filter((e) => !observedKeys.has(commitmentKey(e)))
+  if (absent.length === 0) {
+    console.error(
+      `BLOCKED: ${epic}.${stage}'s observation ${String(cell.candidateSha).slice(0, 10)} DOES contain its live freeze entries, `
+      + 'so this cell is not revocable — this command exists only to withdraw a green that pre-committed to nothing.',
+    )
+    process.exit(1)
+  }
+  ledger.rows[epic].cells[stage] = {
+    status: 'NOT_RUN',
+    revokedFrom: { candidateSha: cell.candidateSha, ciRunUrl: cell.ciRunUrl ?? null, absentCommitments: absent.length },
+    revokedReason: reason,
+  }
+  ledger.rows[epic].status = 'NOT_RUN'
+  ledger.rows[epic].independentVerdict = 'PENDING'
+  const written = writeLedgerHeader(ledger.rows, { epic, stage, revokedReason: reason })
+  renderMarkdown(written)
+  console.log(`revoked ${epic}.${stage}: ${String(absent.length)} live freeze entry/entries absent from ${String(cell.candidateSha).slice(0, 10)}`)
+}
+
 function cmdGreenSupplement() {
   const epic = opt('epic')
   const stage = opt('stage')
@@ -1406,6 +1468,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   else if (flag('accept')) cmdAccept()
   else if (flag('close-finding')) cmdCloseFinding()
   else if (flag('admit-red-run')) cmdAdmitRedRun()
+  else if (flag('revoke-cell')) cmdRevokeCell()
   else if (flag('record-signoff')) cmdRecordSignoff()
   else if (flag('supplement')) cmdGreenSupplement()
   else if (opt('epic')) cmdGreen()

@@ -132,6 +132,41 @@ const MEASURABLE_FLOOR_MS = 1
 /** This case renders two chains of 50k and 100k levels; the 5s default is a unit-case budget. */
 const LINEARITY_TIMEOUT_MS = 60_000
 
+/**
+ * Samples taken at each depth; the MEDIAN of these is what the ratio uses.
+ *
+ * §12.38 replaced a wall-clock budget with a ratio, which removed the
+ * dependency on vitest's shared 5s default but kept one on the separation
+ * CONSTANT: two single measurements stop scaling together when one of them is
+ * descheduled mid-measurement. Measured twice in CI — 3.13 and 3.04 against a
+ * bound of 3, with the code under test unchanged between runs.
+ *
+ * Raising the bound is the wrong repair: it buys margin by moving toward
+ * quadratic's 4x, which is the thing this case must still separate. Taking a
+ * median instead means one descheduled sample cannot decide the verdict, and
+ * the bound stays where the arithmetic put it.
+ */
+const TIMING_SAMPLES = 5
+
+/**
+ * The median of several timings of one thunk.
+ * @param sample - the work to time, run {@link TIMING_SAMPLES} times.
+ * @returns the median elapsed milliseconds, and the last value the work returned.
+ */
+function medianElapsedMs<T>(sample: () => T): { value: T; elapsedMs: number } {
+  const timings: number[] = []
+  let value = sample()
+  for (let index = 0; index < TIMING_SAMPLES; index += 1) {
+    const started = performance.now()
+    value = sample()
+    timings.push(performance.now() - started)
+  }
+  timings.sort((left, right) => left - right)
+  // An odd sample count has a real middle element, so no averaging is needed
+  // and no pair of outliers can drag the result the way a mean would.
+  return { value, elapsedMs: timings[(timings.length - 1) / 2] as number }
+}
+
 describe('renderToolsSdkPy', () => {
   const bash: ToolSdkSchema = {
     name: 'bash',
@@ -976,15 +1011,13 @@ describe('renderToolsSdkPy', () => {
       for (let i = 0; i < depth; i++) deep = { oneOf: [deep, { type: 'null' }] }
       return deep
     }
+    // The median of several samples at each depth: `medianElapsedMs` warms on
+    // its own first call, so one descheduled measurement cannot decide this.
     const timed = (depth: number): { type: string; elapsedMs: number } => {
       const schema = chain(depth)
-      const started = performance.now()
-      const type = jsonSchemaToPy(schema)
-      return { type, elapsedMs: performance.now() - started }
+      const { value, elapsedMs } = medianElapsedMs(() => jsonSchemaToPy(schema))
+      return { type: value, elapsedMs }
     }
-    // Warm the compiler on the smaller shape so the first measurement is not
-    // paying for optimization the second one benefits from.
-    timed(BASE_DEPTH)
 
     const base = timed(BASE_DEPTH)
     const doubled = timed(BASE_DEPTH * 2)
@@ -1024,11 +1057,9 @@ describe('renderToolsSdkPy', () => {
     }
     const timed = (depth: number): { text: string; elapsedMs: number } => {
       const tool = chain(depth)
-      const started = performance.now()
-      const text = renderToolsSdkPy([tool])
-      return { text, elapsedMs: performance.now() - started }
+      const { value, elapsedMs } = medianElapsedMs(() => renderToolsSdkPy([tool]))
+      return { text: value, elapsedMs }
     }
-    timed(NAMING_BASE_DEPTH)
 
     const base = timed(NAMING_BASE_DEPTH)
     const doubled = timed(NAMING_BASE_DEPTH * 2)

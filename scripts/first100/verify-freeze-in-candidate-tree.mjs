@@ -39,7 +39,7 @@
  * @module scripts/first100/verify-freeze-in-candidate-tree
  */
 import { execFileSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
+import { readFileSync, realpathSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -52,7 +52,7 @@ const LEDGER_PATH = join(REPO_ROOT, 'spec/first100/exec/ledger.json')
  * @param sha - the candidate commit to read.
  * @returns its freeze entries, or `undefined` when the tree cannot be read.
  */
-function freezeEntriesAt(sha) {
+export function freezeEntriesAt(sha) {
   try {
     const raw = execFileSync('git', ['show', `${sha}:${FREEZE_PATH}`], {
       cwd: REPO_ROOT,
@@ -70,7 +70,7 @@ function freezeEntriesAt(sha) {
 }
 
 /** The identity of a freeze commitment: its stage, and the exact set of titles it pins. */
-const commitmentKey = entry =>
+export const commitmentKey = entry =>
   JSON.stringify([entry.epic, entry.stage, entry.supplementSeq ?? null, [...entry.expectCases ?? []].sort()])
 
 function main() {
@@ -143,4 +143,25 @@ function main() {
   process.exit(1)
 }
 
-main()
+// Guarded so this module can be IMPORTED for its two helpers without running
+// the whole check as a side effect: `generate-ledger.mjs --revoke-cell`
+// recomputes exactly this gate for one cell, and it must reuse the real
+// implementation rather than a second copy that can drift from it.
+// Real paths on both sides: this module is copied into a temp checkout by its
+// own spec, and macOS resolves the tmpdir through a symlink (`/var` ->
+// `/private/var`), so comparing the raw strings reports "imported" for a file
+// that was in fact executed — and the check then silently does nothing.
+const executedDirectly = (() => {
+  const entry = process.argv[1]
+  if (entry === undefined) return false
+  try {
+    return realpathSync(entry) === realpathSync(fileURLToPath(import.meta.url))
+  } catch {
+    // An entry path that cannot be resolved is not this module: treat it as an
+    // import rather than guessing, since running the whole check unasked is the
+    // more damaging of the two mistakes.
+    return false
+  }
+})()
+
+if (executedDirectly) main()

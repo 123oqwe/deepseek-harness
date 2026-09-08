@@ -151,6 +151,18 @@ interface ApprovalPort {
   request(request: { agent: Agent; toolName: string; reason: string }): Promise<string>
 }
 
+/**
+ * Why the risk gate refused an action before it ran (P2-04 must[1], §12.50).
+ *
+ * `hard-deny` is the kernel band, which no organisation policy may switch
+ * off; `approval-refused` is a question that was asked and not answered yes.
+ * They are distinct because they demand different responses — a hard deny is
+ * never worth re-asking, and a refused approval may be granted next turn.
+ *
+ * `undeclared` rides both arms because it changes what an operator should DO:
+ * an action refused for declaring nothing is fixed by declaring its tags, and
+ * one refused on a declared class is fixed by policy or not at all.
+ */
 export type RiskRefusal =
   | { readonly kind: 'hard-deny'; readonly riskClass: string; readonly undeclared: boolean }
   | { readonly kind: 'approval-refused'; readonly riskClass: string; readonly outcome: string; readonly undeclared: boolean }

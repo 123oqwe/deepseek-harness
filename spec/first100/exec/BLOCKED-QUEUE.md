@@ -795,6 +795,29 @@ AssertionError: expected undefined to be defined
 
 **Not a reason to change the rule yet.** The candidate revision — admit a single-point failure in an experimental package when its text is diagnosed and its reality set is disjoint from the epic's — is written here so it is not invented under pressure later. It waits for a second occurrence: **a rule relaxed the first time it costs something is a rule that was never load-bearing.**
 
+## DIAGNOSED 2026-09-09: it is not a polling defect, and the obvious fix makes it worse
+
+The entry above reads the symptom as "a polling assertion that ran out of time", and §12.54 ruled the repair accordingly: replace the `vi.waitFor` sampling with an awaited event. That was implemented across all five sampling sites in the file, and **measured**:
+
+| version | failures in 6 runs of `integration.host.spec.ts` |
+| --- | --- |
+| original (`vi.waitFor` sampling) | **1 / 6** |
+| awaited-event conversion (5 sites) | **4 / 6** |
+| after reverting the conversion | **0 / 6** |
+
+The conversion was reverted. A ruling's premise — that awaiting an event beats sampling for it — is not evidence, and here the measurement contradicts it. Why the awaited version is worse is not yet explained; `vi.waitFor` retries the whole assertion and the awaited version checks already-arrived events before waiting for the next, which should be equivalent for an event that never comes. **Being unable to explain the difference is a reason not to ship the change, not a reason to ship it anyway.**
+
+**What the round did establish is the real cause.** With the awaited version's timeout lowered below the case's own 5s budget, the failure stopped being an opaque assertion and became:
+
+```
+CDP event never arrived; saw 3 event(s):
+Runtime.executionContextCreated, Runtime.executionContextCreated, Runtime.executionContextCreated
+```
+
+Three context-created events and **zero `Runtime.consoleAPICalled`**. The event is not late — it is absent. So this is a forwarding race, not a waiting defect: `client.log()` awaits the fixture's own request/response, which is the worker acknowledging the log op, and nothing in that await guarantees the inspector has delivered `consoleAPICalled` to the test's CDP socket.
+
+**Consequence for whoever takes this next.** Do not re-derive it as a timing problem from `expected undefined to be defined`; that reading has now cost two attempts. The subject is the forwarding path between the client realm's console emission and the CDP session's delivery, or a `log()` that resolves only once delivery is observable.
+
 ### BLOCKED-144 — `hmr-config` fails intermittently with a wandering case name, and it is NOT the recorded isolation set
 
 **State: OPEN, out of scope, not blocking any cell. Recorded because it was nearly dismissed by name.**
