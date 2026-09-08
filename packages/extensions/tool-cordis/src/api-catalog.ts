@@ -2535,6 +2535,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'the claimed task, or why the claim was refused.',
       },
       {
+        signature: 'release(id: TaskId, worker: WorkerId, attempt: number): ReleaseDecision',
+        description: 'Give a claim back before it lapses, so the same worker can claim the task again without waiting out its own dead claim.\n\nFenced by the attempt, exactly as a receipt is: a holder whose claim was reclaimed by someone else must not be able to strip the new holder\'s claim by releasing the one it lost.',
+        parameters: [{ name: 'id', description: 'the task to release.' }, { name: 'worker', description: 'the worker giving the claim back.' }, { name: 'attempt', description: 'the attempt number that worker holds.' }],
+        returns: 'the released task, or why the release was refused.',
+      },
+      {
         signature: 'applyReceipt(receipt: TaskReceipt): ReceiptOutcome',
         description: 'Advance a task from a receipt, without the model touching it.\n\nThe receipt must come from the task\'s current owner at its current attempt, and must name a legal transition; a lapsed holder that finished its work and reported is refused rather than allowed to overwrite the new holder\'s task.',
         parameters: [{ name: 'receipt', description: 'the evidence being applied.' }],
@@ -5142,6 +5148,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'RedactedSecret',
     declaration: 'export interface RedactedSecret {\n    path: string[];\n    set: boolean;\n}',
+  },
+  {
+    name: 'ReleaseDecision',
+    declaration: 'export type ReleaseDecision = {\n    readonly released: true;\n    readonly task: Task;\n} | {\n    readonly released: false;\n    readonly reason: ReleaseDenialReason;\n};',
+  },
+  {
+    name: 'ReleaseDenialReason',
+    declaration: 'export type ReleaseDenialReason = \'not-held\' | \'not-owner\' | \'stale-attempt\';',
   },
   {
     name: 'RemoteError',

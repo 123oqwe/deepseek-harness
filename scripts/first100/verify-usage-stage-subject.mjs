@@ -47,7 +47,8 @@ const EXEMPTIONS_PATH = join(REPO_ROOT, 'spec/first100/exec/usage-subject-exempt
 const loadJson = path => JSON.parse(readFileSync(path, 'utf8'))
 
 /**
- * The `[B]` baseline files an epic's registry row assigns to its Usage stage.
+ * The consumer files an epic's registry row assigns to its Usage stage: its
+ * `[B]` baseline files, plus any consumer a ruling added.
  *
  * The intersection is the point: `files[]` says which paths are baseline, and
  * `stages.U` says which the Usage stage is about. A stage-U file that is `[N]`
@@ -58,7 +59,15 @@ const loadJson = path => JSON.parse(readFileSync(path, 'utf8'))
  */
 export function usageBaselineFiles(epic) {
   const baseline = new Set((epic.files ?? []).filter(file => file.kind === 'B').map(file => file.path))
-  return (epic.stages?.U?.files ?? []).filter(path => baseline.has(path))
+  // `usageConsumers` counts regardless of kind. A consumer added by a ruling is
+  // named BECAUSE the plan reached nothing, and demanding it also be `[B]`
+  // asks a second question: `B` means present in the frozen baseline, which a
+  // consumer written by an earlier epic of this program is not. Reading kind
+  // there once made two such files carry `B` to satisfy this gate, and
+  // `verify-baseline-file-references` refused them fail-closed and was right
+  // to (§12.19-1 kind correction).
+  const declared = new Set(epic.usageConsumers ?? [])
+  return (epic.stages?.U?.files ?? []).filter(path => baseline.has(path) || declared.has(path))
 }
 
 /**

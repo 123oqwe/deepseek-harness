@@ -36,7 +36,9 @@ The receipt is the child's own terminal stop reason: `completed` submits the wor
 
 A refused claim is logged, not enforced: a child still starts when another worker holds its task.
 
-That is a gap with a cause, not a caution. Gating activation on the claim needs a claim that a finishing epoch can give back, and `TaskStoreContract` has no `release` — so a host resuming its own child would be refused by its own unexpired, unreleased claim from the previous epoch. `@deepseek-ai/dsh-lease-contract` has `release` for exactly this reason. Adding it to the taskboard is a change to P5-11's accepted Contract stage rather than a Usage-stage decision, so this plugin observes the condition and reports it.
+The mechanical obstacle is gone. Until §12.29-1 the contract had no `release`, so a host resuming its own child would have been refused by its own finished, unexpired claim; the contract now has one and this plugin gives the claim back at settlement.
+
+What is left is a decision about behaviour rather than a missing mechanism. Refusing to start a child is a real failure a caller sees, and nobody has ruled that a contended board should stop a delegation — so the condition is reported and the delegation proceeds.
 
 ## Model Experience
 
@@ -48,9 +50,9 @@ None: no content this plugin writes enters a request, so no prefix changes.
 
 ## Known Limitations and Deferred Work
 
-- **A claim is never released, only advanced or expired.** See above; until the contract gains a release, `claimLeaseMs` is the only thing that frees a task whose host died.
+- **A claim is released at settlement, not renewed while the child runs.** A child that outlives `claimLeaseMs` has a task that looks reclaimable while it is still being driven; nothing extends the claim. Setting the lease well above the longest child a profile expects is the whole of the current answer.
 - **Nothing verifies.** Every task stops at `submitted` or `failed`; `verified` is unreachable through this producer because the harness has no verifier for delegated work.
-- **A receipt is lost when the host dies mid-child.** The claimed attempt is held in memory by design — a restarted host reporting work it never observed finish would be worse — so the task stays claimed until it lapses.
+- **A receipt and its release are both lost when the host dies mid-child.** The claimed attempt is held in memory by design — a restarted host reporting work it never observed finish would be worse — so the task stays claimed until it lapses.
 - No runtime invariant companion is published: this plugin owns no state beyond the in-flight attempt map, and the relation it maintains is between a lifecycle edge and a row it just wrote, which a checker would compare against itself.
 
 ### Dev Note

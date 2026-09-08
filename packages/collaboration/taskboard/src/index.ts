@@ -4,7 +4,7 @@
  * @module @deepseek-ai/dsh-taskboard
  */
 
-export { decideClaim, isClaimCurrent, validateTaskGraph } from './types.ts'
+export { decideClaim, decideRelease, isClaimCurrent, validateTaskGraph } from './types.ts'
 export type {
   ArtifactRef,
   Attempt,
@@ -12,6 +12,8 @@ export type {
   ClaimDenialReason,
   GraphDefectReason,
   GraphValidation,
+  ReleaseDecision,
+  ReleaseDenialReason,
   Task,
   TaskId,
   TaskStatus,

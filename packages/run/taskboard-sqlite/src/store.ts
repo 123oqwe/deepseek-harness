@@ -22,10 +22,11 @@
 import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
-import { decideClaim, isClaimCurrent, TaskStore, validateTaskGraph } from '@deepseek-ai/dsh-taskboard'
+import { decideClaim, decideRelease, isClaimCurrent, TaskStore, validateTaskGraph } from '@deepseek-ai/dsh-taskboard'
 import type {
   ClaimDecision,
   ReceiptOutcome,
+  ReleaseDecision,
   SubmitOutcome,
   Task,
   TaskId,
@@ -124,6 +125,27 @@ export function openTaskStore(directory: string): TaskStoreContract {
           .filter((dependency): dependency is Task => dependency !== undefined)
         const decision = decideClaim(task, worker, nowMs, leaseMs, dependencies)
         if (decision.claimed) write(decision.task)
+        db.exec('COMMIT')
+        return decision
+      } catch (error) {
+        db.exec('ROLLBACK')
+        throw error
+      }
+    },
+
+    release(id: TaskId, worker: WorkerId, attempt: number): ReleaseDecision {
+      // Same transaction discipline as `claim`, and for the same reason: a
+      // release read outside the lock could strip a claim that was reclaimed
+      // between the read and the write.
+      db.exec('BEGIN IMMEDIATE')
+      try {
+        const task = readOne(id)
+        if (task === undefined) {
+          db.exec('COMMIT')
+          return { released: false, reason: 'not-held' }
+        }
+        const decision = decideRelease(task, worker, attempt)
+        if (decision.released) write(decision.task)
         db.exec('COMMIT')
         return decision
       } catch (error) {

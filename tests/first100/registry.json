@@ -388,10 +388,24 @@
     "filesReplaced": {
       "epicIds": [
         "P1-03",
-        "P4-08"
+        "P4-08",
+        "P5-11"
       ],
       "note": "Files whose DECLARED path cannot hold what the clause needs, replaced with the path that can. Each entry states the mechanical reason, because only \"the declared place could not hold it\" justifies editing a pinned list.",
       "entries": {
+        "P5-11": {
+          "replacements": [
+            {
+              "from": "packages/collaboration/mailbox/src/index.ts",
+              "to": "packages/run/message-bus/src/mailbox-delivery.ts",
+              "kind": "N",
+              "stage": "U"
+            }
+          ],
+          "reason": "`@deepseek-ai/dsh-mailbox` was retired into `@deepseek-ai/dsh-message-bus`, and the declared path named the package that no longer exists. What the mailbox held beyond `dsh-intake-dedup`'s rule was a recipient-address check and a set of type names -- a package for a seam that does not exist, and the split had already produced one rule with two implementations, the copy P4-06's clause was about being the one nothing called (BLOCKED-136). The address check is now `decideMailboxArrival` in the bus, beside the store-backed `decideMailboxDelivery` that was already P4-06's production call site, and P5-11's mailbox clause is satisfied there rather than in a package of its own.",
+          "consequence": "The published `@deepseek-ai/dsh-mailbox` package is gone; an installed consumer importing it breaks, and nothing in this repository does. Pre-release stance: no shim.",
+          "authorization": "delegate ruling, 2026-09-08, §12.27-2 (BLOCKED-154)."
+        },
         "P4-08": {
           "replacements": [
             {
@@ -596,6 +610,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "实现 `pnpm baseline:capture` 与 `pnpm baseline:verify`，记录 Git SHA、Node/pnpm 版本、workspace package 列表、默认 bundle 行 ID、关键协议/事件 schema 哈希。",
         "将审计 SHA 写入文档和机器文件",
@@ -733,6 +748,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "在 Cordis Context 创建前初始化 TrustKernel",
         "它只拥有 root identity、signature roots、policy enforcement entrypoint、audit append、secret broker handle、sandbox attestation verifier。",
@@ -865,6 +881,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "为每个 capability family 声明 definition、providers、consumers、allowed dependency edges。",
         "扫描 workspace package.json 和 TypeScript imports，禁止 consumer deep-import provider `src/*`，禁止 provider 反向依赖 app/UI。",
@@ -981,6 +998,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "定义层序：kernel → protocol/types → capability definitions → providers → orchestration/runtime → surfaces/apps。",
         "允许事件类型作为窄共享依赖，但禁止通过全局 singleton 绕过层级。",
@@ -1103,6 +1121,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "统一状态 `off | shadow | enforce`",
         "shadow 模式执行决策但不改变结果，只写入可比较事件。",
@@ -1231,6 +1250,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "为每个持久/线协议对象声明 schemaId、major/minor、兼容规则和迁移函数。",
         "新增字段默认 backward-compatible",
@@ -1356,6 +1376,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "每个 gate 输出带哈希的 JSON 结果：命令、开始结束时间、退出码、环境、日志/工件 digest、测试数、跳过原因。",
         "最终 evidence package 绑定 baseline fingerprint、Git diff、构建产物 digest。",
@@ -1484,6 +1505,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "分 deterministic lane、fault lane、security lane、real-model lane、scale lane。",
         "标准指标包含 task success、duplicate side effect、policy bypass、recovery success、verification precision、router regret、token/cost、latency。",
@@ -1621,6 +1643,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "定义 `dsh.manifestVersion=2`，字段包含 services、tools、skills、MCP servers/resources/prompts、events、filesystem、network、process、secrets、UI surfaces、data stores、migrations、executionMode、compatibility",
         "每个 Tool/MCP capability 声明 side-effect class、auth audience、allowed destinations 与 data classification。",
@@ -1749,6 +1772,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "支持 Sigstore 风格 identity/provenance 或组织离线签名",
         "验证 package digest、source commit、builder identity 和依赖 SBOM。",
@@ -1877,6 +1901,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "锁定 package/version/integrity/source commit/manifest digest/signature identity/dependency graph/load order/granted capabilities。",
         "`plugin add/update/remove` 采用事务：先生成候选 lock，验证后原子替换。",
@@ -1996,6 +2021,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "下载 tarball 到只读 quarantine",
         "以 `--ignore-scripts` 解包并验证 manifest、签名、SBOM、路径穿越。",
@@ -2118,6 +2144,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "静态扫描 imports、child_process、fs、net、eval/vm、native bindings、postinstall、dynamic require。",
         "动态扫描在 instrumented plugin host 记录实际 syscall/network/fs/service registration，并与 manifest 比较。",
@@ -2247,6 +2274,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "默认第三方插件在独立进程或 microVM 中运行",
         "只通过 capability-scoped RPC 注册工具、事件和 UI 描述。",
@@ -2392,6 +2420,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "workspace 状态 `untrusted | trusted-read | trusted-execute`，绑定 canonical realpath 与 inode/volume identity。",
         "untrusted 时只允许安全读取，不加载项目插件、hooks、MCP server、可执行 skill、home/profile patch 覆盖。",
@@ -2511,6 +2540,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "manifest 声明 runtime API range、schema ranges、required/optional capabilities、provider constraints。",
         "boot 前求解整个插件图",
@@ -2631,6 +2661,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "所有注册带 PluginIdentity、namespace、stable capability id 和 ownership token。",
         "官方保留 namespace 不可被第三方声明",
@@ -2755,6 +2786,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "manifest 声明 migration DAG、preconditions、backup strategy、rollback support。",
         "升级过程：freeze plugin → snapshot data/config → migrate in quarantine → validate → atomic switch → health check。",
@@ -2894,6 +2926,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "`cordis_define/run` 在 production 改为生成 proposal artifact，不直接 mount。",
         "流水线执行静态扫描、manifest 推断、隔离测试、权限 diff、签名、人工/策略批准、canary、promote。",
@@ -3027,6 +3060,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "定义等级：discovered、metadata-checked、signed、sandbox-verified、official-reviewed。",
         "发布 `dsh plugin verify`，输出 manifest、signature、SBOM、compat、scanner、isolation、tests 的独立报告。",
@@ -3155,6 +3189,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "定义 UserPrincipal、ServicePrincipal、AgentPrincipal、TenantId、RunId、DelegationChain。",
         "所有 SessionEvent envelope、ToolExecutionContext、SubagentRequest、SDK request 加 identity references。",
@@ -3285,6 +3320,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "token 包含 subject、tenant、capability、verbs、resources、constraints、expiry、nonce、delegationDepth、parent digest。",
         "TrustKernel 签发/验证",
@@ -3418,6 +3454,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "字段包含 actionId/runId/actor/capability/target/argumentsHash/sideEffectClass/idempotencyKey/preconditions/expectedDiff/compensation/evidence requirements。",
         "所有执行路径先生成并 durable append manifest，再做 policy/approval。",
@@ -3562,6 +3599,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "定义 read、local-reversible、internal-write、external-communication、destructive、financial、security-sensitive、safety-critical。",
         "允许插件声明 domain tags，但最终映射必须由组织 policy 决定。",
@@ -3696,6 +3734,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "Policy 输入为 identity、capability token、ActionManifest、ExecutionWorld、context facts",
         "输出闭合 decision。",
@@ -3823,6 +3862,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "ApprovalRequest 引用 ActionManifest digest，并展示经脱敏的完整参数、资源、风险、预期 diff、有效期。",
         "执行前重新验证 digest、preconditions、capability token 和 policy version。",
@@ -3950,6 +3990,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "Approval 状态 requested/approved/denied/expired/revoked/consumed",
         "持久化 request digest、policy version、actor、deadline。",
@@ -4075,6 +4116,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "Grant 支持 actor/capability/resource predicates、金额/次数/时间窗口、environment、expiry、revocation。",
         "Grant 由 policy 匹配，不由模型自由解释。",
@@ -4193,6 +4235,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "Policy 可返回 quorum spec：所需角色、人数、互斥关系、顺序、超时。",
         "发起者不能同时满足独立审批角色。",
@@ -4311,6 +4354,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "定义有限、无任意代码执行的声明式 policy language。",
         "支持 unit tests、shadow evaluation、version pin、diff explain。",
@@ -4431,6 +4475,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "Profile 包含 execution world、fs/network/process/secrets、risk thresholds、approval rules、plugin trust、budget、retention。",
         "预置 `observe-only`, `workspace-safe`, `team-standard`, `production-controlled`，但不写垂直逻辑。",
@@ -4561,6 +4606,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "提供 `pause new actions`, `cancel run`, `kill execution world`, `ask question`, `resume`。",
         "Emergency stop 由 kernel 广播并持久化",
@@ -4696,6 +4742,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "定义 WorldSpec、WorldHandle、WorldAttestation、WorldSnapshot、execute/terminate/snapshot/restore 接口。",
         "WorldSpec 覆盖 filesystem、network、process、IPC、devices、secrets、resources、lifetime、tenant。",
@@ -4828,6 +4875,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "引入 FileSystemPolicy、NetworkPolicy、ProcessPolicy、IpcPolicy、DevicePolicy、SecretPolicy、ResourcePolicy。",
         "策略为闭合、显式 allowlist",
@@ -4956,6 +5004,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "定义 typed outcome：policy_denied、resource_exhausted、timeout、cancelled、tool_failed、world_lost。",
         "provider 通过控制通道返回状态，不解析模型可控 stdout/stderr 决定安全语义。",
@@ -5084,6 +5133,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "所有受控 world 出网经 proxy",
         "策略支持 scheme/host/port/path/method、DNS pinning、TLS identity、带宽和响应大小。",
@@ -5198,6 +5248,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "Linux 组合 user/mount/pid/net namespaces、seccomp/Landlock/bwrap",
         "macOS 使用 Seatbelt profile",
@@ -5329,6 +5380,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "CredentialRef 解析为短期 SecretLease，绑定 principal、ActionManifest、world、purpose、expiry。",
         "优先通过 brokered request/FD/socket 注入，避免全局 env",
@@ -5438,6 +5490,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "启动时生成 attestation",
         "开发降级需显式 flag。"
@@ -5555,6 +5608,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "支持 OCI image digest、rootless、read-only rootfs、ephemeral overlay、egress proxy、secret leases、resource quotas。",
         "禁止隐式挂载 Docker socket/host home。",
@@ -5678,6 +5732,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "定义远程 create/attach/heartbeat/snapshot/terminate 协议，支持 microVM provider。",
         "Attestation 证明镜像、policy、tenant、network proxy 和 secret injection。",
@@ -5804,6 +5859,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "BudgetSpec 支持 per action/run/tenant 的 wall time、CPU、memory、disk、processes、network bytes、tool calls、agents。",
         "scheduler 预留资源，world provider enforce，telemetry 对账。",
@@ -5928,6 +5984,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "Snapshot 包含 world filesystem/content digests、provider metadata、running action boundary、secret references（不含 secret 值）。",
         "只允许在安全 quiescent boundary 创建一致快照",
@@ -6063,6 +6120,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "所有路径操作使用 openat/handle 风格或执行前重新验证 inode，禁止 symlink escape。",
         "附件进行 MIME sniff、大小/像素/解压比/嵌套深度/恶意宏与可执行检测。",
@@ -6208,6 +6266,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "`run_code` 的 world 执行必须经过与 shell/sandbox 相同的 ExecutionWorld policy 求解，不得绕开、不得使用独立的并行策略机制。",
         "code-runtime 的每个 provider 必须向 solver 声明自己的 `supportedPolicyFeatures`，solver 必须拒绝任何声明支持某维度、实际不能强制执行的 provider（同 P3-02 已定机制）——\"没有绕开\"由此是结构性事实（未声明的 provider 即不可用），不依赖穷举绕道验证。",
@@ -6352,6 +6411,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "Run 状态 accepted/planning/waiting/running/paused/verifying/reconciling/succeeded/failed/cancelled。",
         "Run event log append-only，引用 Session、Workflow、Action、Artifact、Approval、Verification。",
@@ -6476,6 +6536,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "TaskProfile 只表达通用字段，不含销售/金融等垂直流程。",
         "保留原始用户目标引用和所有推断的来源/置信度。",
@@ -6597,6 +6658,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "RunPlan 包含 objectives、constraints、modelRoutes、contextTopology、agentGraph、worlds、budgets、approvalGates、verification、recovery。",
         "编译阶段做 capability/policy/budget satisfiability。",
@@ -6716,6 +6778,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "执行前 canonicalize+kernel sign",
         "runtime 只接受已签 plan。",
@@ -6836,6 +6899,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "状态 queued/starting/running/waiting_tool/waiting_human/paused/cancelling/failed/completed/orphaned。",
         "每个转换带 reason、runId、lease epoch。"
@@ -6960,6 +7024,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "domain event 与 outbox 行在同一 SQLite 事务（BEGIN IMMEDIATE）内写入，不经 storage KV seam",
         "dispatcher 发送后用 idempotent receipt 标记。",
@@ -7114,6 +7179,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "每个 work item 由 epoch lease 所有",
         "所有状态写和 action execution 携带 fencing token。",
@@ -7250,6 +7316,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "记录 script digest、program counter/step id、input/output artifact refs、child agent receipts、side-effect receipts、phase。",
         "恢复时跳过已完成且验证过的纯步骤",
@@ -7381,6 +7448,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "Workflow 定义作为签名 artifact 注册，版本固定",
         "Run 引用 digest。",
@@ -7513,6 +7581,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "BudgetSpec 覆盖 tokens/cost/time/agents/tool calls/world resources",
         "父子层级累计。",
@@ -7649,6 +7718,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "统一错误 taxonomy 与 retryability",
         "所有层消费同一 RunRetryBudget。",
@@ -7778,6 +7848,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "ActionManifest 强制 idempotencyKey",
         "ledger 状态 prepared/sent/confirmed/ambiguous/compensated。",
@@ -7918,6 +7989,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "Tool/provider 可声明 observeState、compareExpected、compensate",
         "Harness 编排而非垂直硬编码。",
@@ -8047,6 +8119,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "在模型请求、tool call、tool result、assistant commit 后写 checkpoint boundary。",
         "恢复时根据 ActionLedger/WorkflowJournal 判定继续、重放纯步骤或 reconciliation。",
@@ -8181,6 +8254,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "输入 TaskProfile、available capabilities、policy、budget、historical outcomes",
         "输出 StrategyDecision 和可解释依据。",
@@ -8314,6 +8388,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "ProviderModelCapability 描述 context、tool calling、structured output、vision、streaming、data residency、price、latency。",
         "Router 输出 primary/fallback/hedge 与置信度，受 policy/budget 硬约束。",
@@ -8440,6 +8515,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "定义 provider-neutral PromptIR，包含 instructions、context slices、tool surface、output contract、policy notices。",
         "Adapter compiler 只做语义保持转换",
@@ -8569,6 +8645,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "只在 pre-action reasoning 阶段允许安全 hedge",
         "产生 tool call 后使用单一 winner/fencing。",
@@ -8676,6 +8753,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "Request 包含 objective、deliverables、context refs、artifact refs、capability token、WorldSpec、budget、output schema、verification obligations、parent trace。",
         "传引用而非复制全部父上下文",
@@ -8787,6 +8865,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "Result 包含 status、summary、structured output、artifacts、state diffs、action receipts、tool trace refs、usage/cost、verification hints、continuation token。",
         "大结果存 Artifact Store，只在 Result 放内容寻址引用。",
@@ -8906,6 +8985,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "tool/approval 请求回到父 Policy。",
         "支持 resume/fork，并保存 provider continuation identity。",
@@ -9027,6 +9107,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "解析结构化输出/事件而非屏幕文本",
         "映射 tools、subagents、diff、tests、usage。",
@@ -9153,6 +9234,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "ACP handshake 协商 identity、capabilities、protocol version、resume token、event cursor。",
         "远程 child 事件映射到可枚举 trace，artifact 使用内容寻址。",
@@ -9279,6 +9361,9 @@
           "kind": "B"
         }
       ],
+      "usageConsumers": [
+        "packages/subagent/subagent/src/index.ts"
+      ],
       "must": [
         "区分 continue、steer、inject、cancel、human-answer",
         "每类定义优先级和状态前置条件。",
@@ -9404,7 +9489,7 @@
           "kind": "N"
         },
         {
-          "path": "packages/collaboration/mailbox/src/index.ts",
+          "path": "packages/run/message-bus/src/mailbox-delivery.ts",
           "kind": "N"
         },
         {
@@ -9416,6 +9501,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "Task 支持 atomic claim、attempt、lease、owner、artifact outputs、verification status。",
         "Blackboard 只存结构化 facts/artifact refs，带 provenance。",
@@ -9470,7 +9556,7 @@
         "U": {
           "nOf": null,
           "files": [
-            "packages/collaboration/mailbox/src/index.ts",
+            "packages/run/message-bus/src/mailbox-delivery.ts",
             "packages/collaboration/blackboard/src/index.ts",
             "packages/core/agent/src/inbox.ts",
             "packages/subagent/subagent/src/list-children.ts",
@@ -9548,6 +9634,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "每个写代码/文件的 child 获得隔离 workspace/worktree",
         "merge 由显式 queue 与 verifier 控制。",
@@ -9680,6 +9767,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "定义 propose/query/get/revise/forget/export 接口和事件，不指定向量库/图数据库。",
         "Memory provider 可替换",
@@ -9802,12 +9890,16 @@
         },
         {
           "path": "packages/memory/memory/src/index.ts",
-          "kind": "B"
+          "kind": "N"
         },
         {
           "path": "packages/context/memory-context/src/index.ts",
-          "kind": "B"
+          "kind": "N"
         }
+      ],
+      "usageConsumers": [
+        "packages/memory/memory/src/index.ts",
+        "packages/context/memory-context/src/index.ts"
       ],
       "must": [
         "MemoryRecord 含 content artifact/ref、kind、subject、source events、created/valid time、confidence、scope、purpose、TTL、sensitivity、status。",
@@ -9932,6 +10024,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "Agent 只能提交 MemoryProposal，包含证据、预期用途、TTL、敏感等级。",
         "Policy 决定 auto-accept/review/reject",
@@ -10065,6 +10158,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "ContextNode/Edge 引用原始 source，不复制真值",
         "provider 可贡献 code/artifact/domain graph。",
@@ -10196,6 +10290,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "RunPlan 为每个 Agent 声明 shared/private/retrievable context zones。",
         "Telemetry 只发布 source ids、token counts、selection reasons、redacted previews。"
@@ -10321,6 +10416,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "CompactionResult 标记覆盖 event ranges、preserved constraints、open actions、artifact/evidence refs、dropped categories。",
         "对 hard constraints 和 unresolved items 使用结构化保留区，不只自然语言摘要。",
@@ -10455,6 +10551,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "列表支持 tenant/workspace/status/time filters。",
         "soft delete、legal hold、hard erase、archive 分离",
@@ -10599,6 +10696,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "每租户 envelope key",
         "key 由 KMS/keychain provider 管理，不存同一明文文件。",
@@ -10734,6 +10832,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "ArtifactRef 包含 digest、media type、schema、size、tenant、producer run/action、parents、retention、sensitivity。",
         "不可变内容寻址",
@@ -10871,6 +10970,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "数据标记 public/internal/confidential/restricted 与 purpose",
         "传播到 events/artifacts/memory/context。",
@@ -11006,6 +11106,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "定义 VerificationContract、Claim、CheckSpec、EvidenceRequirement、AcceptanceRule、VerifierIndependence 与 confidence policy。",
         "把契约引用写入 RunPlan，并在 RunPlan freeze 后禁止执行 Agent 自行删除 required check、降低阈值或改为 self-attestation。",
@@ -11155,6 +11256,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "定义 EvidenceRef、EvidenceEnvelope、EvidenceType、producer、actionId、worldId、source URI、timestamp、contentHash、classification、freshness 和 retention。",
         "在 tool completion、subagent result、artifact commit、external observation、test run 和 human approval 边界自动采集",
@@ -11304,6 +11406,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "定义 VerifierProvider、VerificationRequest、VerificationReport、CheckResult 与 explicit abstain/unverified。",
         "默认要求 verifier principal、model route、context projection 和 world 与执行者隔离",
@@ -11443,6 +11546,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "定义 ClaimNode、EvidenceEdge、ContradictionEdge、DerivedFrom、scope、freshness、confidence、status。",
         "由执行和验证阶段提交 claim proposal",
@@ -11589,6 +11693,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "新增 run 状态 verifying、accepted、rejected、needs-human、compensating",
         "execution completed 只能进入 verifying。",
@@ -11736,6 +11841,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "根据 failed checks 生成最小 RepairPlan，明确可重试 action、不可重复 external effects、预算、最大轮数和 escalation。",
         "修复需要变更 RunPlan 时必须提交 PlanAmendment",
@@ -11881,6 +11987,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "定义 trace/span/link vocabulary，覆盖 run/turn/step/tool/action/policy/approval/subagent/world/evidence/verifier/repair。",
         "以 runId、actionId、parentSpanId 和 causationId 连接 Session ledger、Action Ledger、Evidence 和 OutcomePackage。",
@@ -12029,6 +12136,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "定义 ReplayBundle，包含 schema fingerprints、RunPlan、events、model streams、external observations、policy inputs、clock/random seeds 和 artifacts refs。",
         "回放模式禁止真实网络/写入，ExecutionWorld 由 recorded-world provider 提供确定性观察。",
@@ -12190,6 +12298,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "建立 15 类通用场景：代码变更、证据研究、外部写、日程/消息、高风险财务模拟、医疗/法律安全策略、24h 虚拟长任务、50-Agent、Provider failover、恶意插件、租户隔离、自扩展、恶意附件、崩溃恢复、SDK 重连。",
         "场景只提供目标、工具契约、世界状态、风险策略和验收条件",
@@ -12360,6 +12469,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "定义指标：verified task success、policy violation、duplicate side effect、recovery、router regret、cost、latency、human intervention、memory pollution、evidence completeness。",
         "支持 offline replay、shadow、A/B、canary、champion/challenger",
@@ -12506,6 +12616,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "在 initialize handshake 交换 protocolVersion range、schema fingerprints、methods、events、resource types、streaming/approval/replay capabilities。",
         "定义 mandatory/optional capability 与 fail-fast 规则",
@@ -12660,6 +12771,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "定义稳定资源 ID、summary/detail representations、pagination、filter、watch 和 optimistic concurrency token。",
         "提供 run.create/get/list、agent.get/list、action.get/list、approval.get/list、artifact.get/list、verification.get、world.get/list。",
@@ -12803,6 +12915,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "实现 run.pause/resume/cancel/fork/retry/reconcile/close，并要求 commandId、idempotencyKey、expectedRevision 和 reason。",
         "Pause 等待安全 checkpoint",
@@ -12950,6 +13063,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "定义 approval.request、clarification.request、takeover.request、credential-consent.request（只请求同意，不传 secret 明文）。",
         "请求有 durable requestId、runId、action hash、deadline、eligible principals、quorum、responses、resolution 和 cancellation。",
@@ -13086,6 +13200,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "每个 tenant/stream 使用单调 cursor，事件带 eventId、resourceRevision、causationId 和 classification。",
         "客户端 ACK durable cursor",
@@ -13235,6 +13350,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "定义 authenticated Principal、ServiceAccount、Tenant、Organization、Role、Attribute 和 scoped session。",
         "API/SDK handshake 验证 OIDC/JWT 或可替换 Auth Provider",
@@ -13387,6 +13503,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "从 versioned schema 生成 TS/Python resource models、method clients、events、errors 和 enum",
         "手写层仅保留 ergonomic wrapper。",
@@ -13533,6 +13650,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "展示 Run 列表、状态、Agent/Workflow DAG、当前阶段、预算、成本、阻塞、Action、Policy 决策、Evidence、Verification 与 artifacts。",
         "Pause/cancel/resume/retry/approve/reject/takeover 操作调用 Remote command，UI 不直接篡改状态。",
@@ -13683,6 +13801,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "实现 monotonic policy hierarchy：下层可收紧但不能放宽上层 deny、data residency、model/provider、plugin trust、budget 和 approval 要求。",
         "定义 tenant/workspace/run 配额：并发 Agent、CPU、memory、network、token、cost、storage、artifact、workflow。",
@@ -13853,6 +13972,7 @@
           "kind": "N"
         }
       ],
+      "usageConsumers": [],
       "must": [
         "编译最终配置时记录每个 row/field 的 profile、bundle、home patch、CLI patch 来源、schema version 和 shadowed value。",
         "提供 `dsh config plan`：typed validation、capability graph、policy impact、plugin permissions、migration plan、diff 和 dry-run",

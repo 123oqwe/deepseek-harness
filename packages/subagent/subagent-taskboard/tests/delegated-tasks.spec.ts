@@ -53,6 +53,17 @@ async function setup(script: ConstructorParameters<typeof MockAdapter>[0]) {
   return { ctx, parent, root }
 }
 
+/**
+ * Observe the board at the moment a child STARTS, which is the only window in
+ * which its claim is live: the producer gives the claim back when the child
+ * settles, so a case that reads afterwards sees a released task.
+ */
+function observeAtStart<T>(ctx: Context, read: (childId: SessionId) => T): { value: T | undefined } {
+  const seen: { value: T | undefined } = { value: undefined }
+  ctx.on('subagent/start', (info) => { seen.value = read(info.id) })
+  return seen
+}
+
 /** Run one child to completion through the public delegation entry. */
 async function delegate(ctx: Context, parent: Agent): Promise<SessionId> {
   const run = await ctx.subagents.start('spawn', {
@@ -66,22 +77,49 @@ async function delegate(ctx: Context, parent: Agent): Promise<SessionId> {
 }
 
 describe('P5-11: a delegated child IS a task on the board', () => {
-  it('records the child as CLAIMED by the delegating parent, with the attempt the claim granted', async () => {
+  it('CLAIMS the child for the delegating parent while it runs, at the attempt the claim granted', async () => {
+    const { ctx, parent, root } = await setup([textResponse('done')])
+    // Read through a SEPARATE handle on the same directory: what the assertion
+    // is about is what landed durably, not what one in-process object holds.
+    const board = openTaskStore(root)
+    const live = observeAtStart(ctx, childId => board.get(brandString<TaskId>(childId)))
+
+    await delegate(ctx, parent)
+
+    // must[0]'s facts, each carrying a real value rather than a default: the
+    // owner is the delegating parent's session, and the attempt is 1 because
+    // this claim was the first.
+    expect(live.value?.owner).toBe('parent')
+    expect(live.value?.attempt).toBe(1)
+    expect(live.value?.claimExpiresAtMs).toBeGreaterThan(0)
+  })
+
+  it('REFUSES a second worker while the child is running, and ADMITS one after it settles (acceptance[0], §12.29-1)', async () => {
+    // Both halves on the row a real delegation wrote. The refusal is the clause;
+    // the admission afterwards is what says the refusal was the live claim
+    // rather than something that refuses everything.
+    const { ctx, parent, root } = await setup([textResponse('done')])
+    const board = openTaskStore(root)
+    const other = brandString<WorkerId>('other-host')
+    const contended = observeAtStart(ctx, childId => board.claim(brandString<TaskId>(childId), other, Date.now(), 1_000))
+
+    const childId = await delegate(ctx, parent)
+
+    expect(contended.value).toEqual({ claimed: false, reason: 'already-claimed' })
+    expect(board.claim(brandString<TaskId>(childId), other, Date.now(), 1_000).claimed).toBe(true)
+  })
+
+  it('GIVES THE CLAIM BACK when the child settles, so the same host is not refused by its own finished attempt', async () => {
+    // The gap §12.29-1 closed. Before `release` existed the claim stood until
+    // `claimLeaseMs` elapsed, and a host delegating the same child again was
+    // refused by a claim it had finished with.
     const { ctx, parent, root } = await setup([textResponse('done')])
 
     const childId = await delegate(ctx, parent)
 
-    // Read through a SEPARATE handle on the same directory: what the assertion
-    // is about is what landed durably, not what one in-process object holds.
-    const board = openTaskStore(root)
-    const task = board.get(brandString<TaskId>(childId))
-    expect(task).toBeDefined()
-    // must[0]'s facts, each carrying a real value rather than a default: the
-    // owner is the delegating parent's session, and the attempt is 1 because
-    // this claim was the first.
-    expect(task?.owner).toBe('parent')
-    expect(task?.attempt).toBe(1)
-    expect(task?.claimExpiresAtMs).toBeGreaterThan(Date.now())
+    const task = openTaskStore(root).get(brandString<TaskId>(childId))
+    expect(task?.owner).toBeNull()
+    expect(task?.claimExpiresAtMs).toBeNull()
   })
 
   it('ADVANCES the task from the child settling, with nothing model-facing touching it (acceptance[1])', async () => {
@@ -92,7 +130,8 @@ describe('P5-11: a delegated child IS a task on the board', () => {
     const board = openTaskStore(root)
     // `submitted`, not `verified`: the child produced work and nobody checked
     // it. A runtime that advanced straight to verified would be asserting a
-    // check that never ran.
+    // check that never ran. The release clears the owner and leaves this
+    // status alone — a holder letting go does not un-submit its work.
     expect(board.get(brandString<TaskId>(childId))?.status).toBe('submitted')
     expect(board.get(brandString<TaskId>(childId))?.verification).toBe('unverified')
   })
@@ -105,22 +144,27 @@ describe('P5-11: a delegated child IS a task on the board', () => {
 
     const childId = await delegate(ctx, parent)
 
-    const board = openTaskStore(root)
-    const task = board.get(brandString<TaskId>(childId))
+    const task = openTaskStore(root).get(brandString<TaskId>(childId))
     expect(task?.status).toBe('failed')
     expect(task?.verification).toBe('failed')
   })
 
-  it('REFUSES a second worker claiming the child this host is driving (acceptance[0])', async () => {
-    // The contended row is the one production wrote — this is the clause
-    // reaching a real task rather than one the case built to be contended.
+  it('REFUSES a release presenting a stale attempt, so a lapsed holder cannot strip its successor (§12.29-1)', async () => {
+    // The fencing half. A worker whose claim lapsed and was reclaimed can still
+    // finish and try to give the claim back; accepting that would take the
+    // claim away from the holder that now has it.
     const { ctx, parent, root } = await setup([textResponse('done')])
     const childId = await delegate(ctx, parent)
+    const board = openTaskStore(root)
+    const taskId = brandString<TaskId>(childId)
+    const successor = brandString<WorkerId>('successor')
+    const claimed = board.claim(taskId, successor, Date.now(), 60_000)
+    expect(claimed.claimed).toBe(true)
 
-    const other = openTaskStore(root)
-    const decision = other.claim(brandString<TaskId>(childId), brandString<WorkerId>('other-host'), Date.now(), 1_000)
+    const stale = board.release(taskId, successor, 1)
 
-    expect(decision).toEqual({ claimed: false, reason: 'already-claimed' })
+    expect(stale).toEqual({ released: false, reason: 'stale-attempt' })
+    expect(board.get(taskId)?.owner).toBe('successor')
   })
 
   it('reports the task status through listChildren, which projections alone cannot answer', async () => {

@@ -19,8 +19,8 @@
  */
 
 import type {} from '@deepseek-ai/cordis'
-import { decideClaim, isClaimCurrent, validateTaskGraph } from './types.ts'
-import type { ArtifactRef, ClaimDecision, GraphValidation, Task, TaskId, TaskStatus, WorkerId } from './types.ts'
+import { decideClaim, decideRelease, isClaimCurrent, validateTaskGraph } from './types.ts'
+import type { ArtifactRef, ClaimDecision, GraphValidation, ReleaseDecision, Task, TaskId, TaskStatus, WorkerId } from './types.ts'
 
 /** Why a submission was refused. */
 export type SubmitRefusalReason = 'graph-invalid' | 'duplicate-task'
@@ -72,6 +72,19 @@ export interface TaskStoreContract {
    * @returns the claimed task, or why the claim was refused.
    */
   claim(id: TaskId, worker: WorkerId, nowMs: number, leaseMs: number): ClaimDecision
+  /**
+   * Give a claim back before it lapses, so the same worker can claim the task
+   * again without waiting out its own dead claim.
+   *
+   * Fenced by the attempt, exactly as a receipt is: a holder whose claim was
+   * reclaimed by someone else must not be able to strip the new holder's claim
+   * by releasing the one it lost.
+   * @param id - the task to release.
+   * @param worker - the worker giving the claim back.
+   * @param attempt - the attempt number that worker holds.
+   * @returns the released task, or why the release was refused.
+   */
+  release(id: TaskId, worker: WorkerId, attempt: number): ReleaseDecision
   /**
    * Advance a task from a receipt, without the model touching it.
    *
@@ -209,6 +222,25 @@ export class TaskStore implements TaskStoreContract {
     }
     this.tasks.set(receipt.taskId, advanced)
     return { advanced: true, task: advanced }
+  }
+
+  /**
+   * Give a claim back, atomically within this process (must[0]).
+   *
+   * The decision is delegated rather than reimplemented, so a release follows
+   * the same rule the pure function states — including its fencing, which is
+   * what stops a lapsed holder from stripping its successor's claim.
+   * @param id - the task to release.
+   * @param worker - the worker giving the claim back.
+   * @param attempt - the attempt number that worker holds.
+   * @returns the released task, or why the release was refused.
+   */
+  release(id: TaskId, worker: WorkerId, attempt: number): ReleaseDecision {
+    const task = this.tasks.get(id)
+    if (task === undefined) return { released: false, reason: 'not-held' }
+    const decision = decideRelease(task, worker, attempt)
+    if (decision.released) this.tasks.set(id, decision.task)
+    return decision
   }
 
   /**

@@ -686,6 +686,7 @@ export const TYPE_LINK_EXEMPTIONS: Readonly<Record<string, string>> = {
   SubmitOutcome: 'task-graph submission outcome is owned by packages/collaboration/taskboard/README.md',
   ClaimDecision: 'task claim outcome is owned by packages/collaboration/taskboard/README.md',
   ReceiptOutcome: 'task receipt outcome is owned by packages/collaboration/taskboard/README.md',
+  ReleaseDecision: 'task release outcome is owned by packages/collaboration/taskboard/README.md',
   WorkItemId: 'work-item identity is owned by packages/collaboration/lease-contract/README.md',
   WorkerId: 'worker identity is owned by packages/collaboration/lease-contract/README.md',
   FencingToken: 'fencing authority is owned by packages/collaboration/lease-contract/README.md',

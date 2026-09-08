@@ -16,13 +16,13 @@
  * and its receipt is the child's terminal stop reason.
  *
  * **The board RECORDS; it does not decide whether a child may run.** A refused
- * claim is reported, not enforced, and the reason is a real gap rather than
- * caution: making the board authoritative over activation needs a claim a
- * finishing epoch can give back, and `TaskStoreContract` has no `release` — a
- * host that legitimately resumes its own child would be refused by its own
- * expired-but-unreleased claim. `@deepseek-ai/dsh-lease-contract` has that
- * method because P4-07 needed it; adding it here is a change to P5-11's
- * accepted Contract stage, so this plugin observes the refusal and says so.
+ * claim is reported, not enforced. The obstacle that made that the only honest
+ * option is now gone — §12.29-1 opened `release` on the contract, and this
+ * plugin gives the claim back at settlement, so a host is no longer refused by
+ * its own finished attempt. What remains is a decision about behaviour rather
+ * than a missing mechanism: refusing to start a child is a real failure a
+ * caller sees, and nobody has ruled that a contended board should stop a
+ * delegation. Until someone does, the condition is observed and reported.
  *
  * @module @deepseek-ai/dsh-subagent-taskboard
  */
@@ -121,6 +121,14 @@ export function apply(ctx: Context, config: Config): void {
     const outcome = ctx.taskStore.applyReceipt(receipt)
     if (!outcome.advanced) {
       ctx.logger.warn(`subagent-taskboard: receipt for ${info.id} refused (${outcome.reason})`)
+    }
+    // Released AFTER the receipt, so the task carries what happened before it
+    // stops being owned. Releasing is what lets this same host delegate the
+    // child again: without it the claim stands until `claimLeaseMs` elapses and
+    // the host is refused by its own finished attempt (§12.29-1).
+    const released = ctx.taskStore.release(brandString<TaskId>(info.id), worker, attempt)
+    if (!released.released) {
+      ctx.logger.warn(`subagent-taskboard: release of ${info.id} refused (${released.reason})`)
     }
   })
 }

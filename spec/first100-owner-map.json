@@ -5,9 +5,9 @@
     "scope": "files each epic creates (N) or modifies (P); baseline (B) references are shared inputs, not owned",
     "uniqueOwnerPerWave": "one writer -> SOLE; writers in strictly distinct waves -> SEQUENTIAL (allowed); two writers in the same wave -> CONFLICT, PENDING_MAINTAINER_ADJUDICATION, no writer silently dropped; a same-wave double-write on a canonical-owner file with a valid maintainer-approved write sequence (Q4(a)) -> SERIALIZED, and every same-wave adjacent pair must carry an explicit predecessor edge"
   },
-  "writtenFiles": 434,
+  "writtenFiles": 435,
   "statusCounts": {
-    "sole": 407,
+    "sole": 408,
     "sequential": 23,
     "serialized": 4,
     "conflict": 0
@@ -1180,6 +1180,15 @@
       ],
       "status": "SOLE"
     },
+    "packages/context/memory-context/src/index.ts": {
+      "owners": [
+        "P6-02"
+      ],
+      "waves": [
+        5
+      ],
+      "status": "SOLE"
+    },
     "packages/context/retrieval-planner/src/budget.ts": {
       "owners": [
         "P6-04"
@@ -2144,10 +2153,12 @@
     "packages/memory/memory/src/index.ts": {
       "owners": [
         "P6-01",
+        "P6-02",
         "P6-03"
       ],
       "waves": [
         4,
+        5,
         8
       ],
       "status": "SEQUENTIAL"

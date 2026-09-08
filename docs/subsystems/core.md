@@ -1087,6 +1087,20 @@ get(id: TaskId): Task | undefined
 claim(id: TaskId, worker: WorkerId, nowMs: number, leaseMs: number): ClaimDecision
 
 /**
+ * Give a claim back before it lapses, so the same worker can claim the task
+ * again without waiting out its own dead claim.
+ *
+ * Fenced by the attempt, exactly as a receipt is: a holder whose claim was
+ * reclaimed by someone else must not be able to strip the new holder's claim
+ * by releasing the one it lost.
+ * @param id - the task to release.
+ * @param worker - the worker giving the claim back.
+ * @param attempt - the attempt number that worker holds.
+ * @returns the released task, or why the release was refused.
+ */
+release(id: TaskId, worker: WorkerId, attempt: number): ReleaseDecision
+
+/**
  * Advance a task from a receipt, without the model touching it.
  *
  * The receipt must come from the task's current owner at its current

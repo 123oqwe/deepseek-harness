@@ -335,11 +335,12 @@ const CONSUMERS_ADDED = {
   },
   'P6-02': {
     added: [
-      { path: 'packages/memory/memory/src/index.ts', kind: 'B', stage: 'U' },
-      { path: 'packages/context/memory-context/src/index.ts', kind: 'B', stage: 'U' },
+      { path: 'packages/memory/memory/src/index.ts', kind: 'N', stage: 'U' },
+      { path: 'packages/context/memory-context/src/index.ts', kind: 'N', stage: 'U' },
     ],
     reason: "P6-02's Usage stage declared two `types.ts` files and NO consumer at all, so gate (u) reported it as an epic whose row names no baseline consumer -- a planning defect stacked on the usage one (BLOCKED-146: all seven clause subjects had zero production callers). The two added files are the write path (`dsh-memory`'s runtime, already mounted in the base bundle) and the read path (`dsh-memory-context`, P6-01's recall), which are where a record is validated, conflicts recorded and retrieval filtered.",
-    authorization: 'delegate ruling, 2026-09-07, §12.19-1.',
+    authorization: 'delegate ruling, 2026-09-07, §12.19-1, kind corrected 2026-09-08.',
+    kindCorrection: "Both were first recorded `kind: B`, and `B` has a definition these files do not meet: present in the frozen baseline 4e84901e. `dsh-memory`'s runtime is P6-02's own [N] and `dsh-memory-context` is P6-01's, so `verify-baseline-file-references` refused them fail-closed and was right to. The label was carrying a meaning it does not have -- `B` was being used to say `consumer`. They are `N`, and gate (u) reads this table directly through the row's `usageConsumers` rather than inferring a consumer from a baseline kind, so the ruling's substance is unchanged.",
   },
 }
 
@@ -797,6 +798,7 @@ for (const id of ids) {
       ...(TEST_FILES_ADDED[id]?.added ?? []).map(({ path, kind }) => ({ path, kind })),
       ...(CONSUMERS_ADDED[id]?.added ?? []).map(({ path, kind }) => ({ path, kind })),
     ]),
+    usageConsumers: (CONSUMERS_ADDED[id]?.added ?? []).filter(entry => entry.stage === 'U').map(entry => entry.path),
     must,
     acceptance,
     nonGoals,

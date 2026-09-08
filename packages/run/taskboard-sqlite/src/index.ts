@@ -18,6 +18,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import type {
   ClaimDecision,
   ReceiptOutcome,
+  ReleaseDecision,
   SubmitOutcome,
   Task,
   TaskId,
@@ -121,6 +122,17 @@ export default class TaskStorePlugin extends Service implements TaskStoreContrac
    */
   claim(id: TaskId, worker: WorkerId, nowMs: number, leaseMs: number): ClaimDecision {
     return this.store.claim(id, worker, nowMs, leaseMs)
+  }
+
+  /**
+   * Give a claim back, serialized against every other writer on this board.
+   * @param id - the task to release.
+   * @param worker - the worker giving the claim back.
+   * @param attempt - the attempt number that worker holds.
+   * @returns the released task, or why the release was refused.
+   */
+  release(id: TaskId, worker: WorkerId, attempt: number): ReleaseDecision {
+    return this.store.release(id, worker, attempt)
   }
 
   /**

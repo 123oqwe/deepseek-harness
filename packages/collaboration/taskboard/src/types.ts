@@ -139,6 +139,61 @@ export function isClaimCurrent(task: Task, worker: WorkerId, attempt: Attempt): 
   return task.owner === worker && task.attempt === attempt
 }
 
+/** Why a release was refused. */
+export type ReleaseDenialReason =
+  /** The task is not claimed, so there is nothing to give back. */
+  | 'not-held'
+  /** The claim belongs to another worker. */
+  | 'not-owner'
+  /** The attempt presented is not the task's current one. */
+  | 'stale-attempt'
+
+/** The outcome of giving a claim back. */
+export type ReleaseDecision =
+  | { readonly released: true; readonly task: Task }
+  | { readonly released: false; readonly reason: ReleaseDenialReason }
+
+/**
+ * Decide one release: a holder giving its claim back before it lapses
+ * (must[0]).
+ *
+ * **Why a claim needs a way back at all.** Without one, a holder that finished
+ * an attempt keeps the task looking owned until the lease expires, so the SAME
+ * holder starting a second attempt on the same task is refused by its own dead
+ * claim. Expiry alone cannot separate "the holder is gone" from "the holder
+ * finished and is starting again", and waiting out a lease to do legitimate
+ * work is the cost of not being able to say so.
+ *
+ * **Fenced by the attempt, which is the claim's generation.** A holder whose
+ * claim lapsed and was reclaimed by someone else can still finish and try to
+ * release; accepting that would strip the NEW holder's claim on the say-so of a
+ * worker that no longer has one. The attempt must be the task's current one,
+ * exactly as it must for a receipt.
+ *
+ * The task returns to `open` only from `claimed` — nothing was submitted, so
+ * the work is there to be redone. A task whose work was already submitted or
+ * verified keeps that status and merely loses its owner: releasing a claim
+ * reports that the holder stopped holding it, never that the work went away.
+ * @param task - the task being released.
+ * @param worker - the worker giving the claim back.
+ * @param attempt - the attempt number that worker holds.
+ * @returns the released task, or why the release was refused.
+ */
+export function decideRelease(task: Task, worker: WorkerId, attempt: Attempt): ReleaseDecision {
+  if (task.owner === null) return { released: false, reason: 'not-held' }
+  if (task.owner !== worker) return { released: false, reason: 'not-owner' }
+  if (task.attempt !== attempt) return { released: false, reason: 'stale-attempt' }
+  return {
+    released: true,
+    task: {
+      ...task,
+      status: task.status === 'claimed' ? 'open' : task.status,
+      owner: null,
+      claimExpiresAtMs: null,
+    },
+  }
+}
+
 /** Why a task graph was rejected at submission. */
 export type GraphDefectReason = 'dependency-cycle' | 'unknown-dependency' | 'self-dependency'
 

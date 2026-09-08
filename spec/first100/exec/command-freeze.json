@@ -8640,7 +8640,56 @@
         "mutationDescription": "Four targeted mutations, each restored byte-identical: (M1) the producer never claims and fabricates a granted decision; (M2) every receipt is `submitted` regardless of the child's stop reason; (M3) the receipt is never applied; (M4) `list-children` reads the board and discards it.",
         "failureSummary": "Reddened 4, 1, 2 and 1 of 6 respectively. M1 takes down the ownership case, the contention case, both advance cases and the listing case -- every clause here rests on a real claim, which is what says the claim is not decoration. M2 reddens only the failing-child case, so `submitted` and `failed` are distinguished by evidence rather than written the same way twice. M4 reddens only the listing case, which separates the producer from the read side: the board is still written when the listing ignores it."
       },
-      "note": "\u00a712.27-1: P5-11's Usage rebuilt around a real producer. BLOCKED-154 recorded why the first U entry could not carry the stage -- `decideClaim`, `validateTaskGraph`, `admitFact` and `TaskStore` all had zero production callers, and the epic had no MOMENT to attach to the way P4-06 had a message arriving and P4-07 had a run starting. The delegate's ruling names delegation as that moment: the task IS a delegated subagent child, owner is the parent session, attempt is the activation epoch, receipt is the child's terminal stop reason. `subagent/start` and `subagent/end` already bracket both child shapes and carry both facts, so nothing new was invented to give the board work. The board RECORDS and does not gate: enforcing a claim over activation needs a claim a finishing epoch can give back, and `TaskStoreContract` has no `release` -- a host resuming its own child would be refused by its own unreleased claim -- and adding one is a change to the accepted Contract stage rather than a Usage decision, so the refusal is observed and reported. The declared consumer `list-children.ts` is the read side the ruling names: a listing says whether a child is resident, and only the board says what the runtime recorded about its work, which is why the listing case asserts the two DISAGREE."
+      "note": "\u00a712.27-1: P5-11's Usage rebuilt around a real producer. BLOCKED-154 recorded why the first U entry could not carry the stage -- `decideClaim`, `validateTaskGraph`, `admitFact` and `TaskStore` all had zero production callers, and the epic had no MOMENT to attach to the way P4-06 had a message arriving and P4-07 had a run starting. The delegate's ruling names delegation as that moment: the task IS a delegated subagent child, owner is the parent session, attempt is the activation epoch, receipt is the child's terminal stop reason. `subagent/start` and `subagent/end` already bracket both child shapes and carry both facts, so nothing new was invented to give the board work. The board RECORDS and does not gate: enforcing a claim over activation needs a claim a finishing epoch can give back, and `TaskStoreContract` has no `release` -- a host resuming its own child would be refused by its own unreleased claim -- and adding one is a change to the accepted Contract stage rather than a Usage decision, so the refusal is observed and reported. The declared consumer `list-children.ts` is the read side the ruling names: a listing says whether a child is resident, and only the board says what the runtime recorded about its work, which is why the listing case asserts the two DISAGREE.",
+      "supersededBy": "2026-09-08T03:15:00.000Z"
+    },
+    {
+      "epic": "P5-11",
+      "stage": "U",
+      "supplements": {
+        "epic": "P5-11",
+        "stage": "U"
+      },
+      "supplementSeq": 2,
+      "supersedes": "2026-09-08T03:15:00.000Z",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/subagent/subagent-taskboard/tests/delegated-tasks.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P5-11: a delegated child IS a task on the board CLAIMS the child for the delegating parent while it runs, at the attempt the claim granted",
+        "P5-11: a delegated child IS a task on the board REFUSES a second worker while the child is running, and ADMITS one after it settles (acceptance[0], \u00a712.29-1)",
+        "P5-11: a delegated child IS a task on the board GIVES THE CLAIM BACK when the child settles, so the same host is not refused by its own finished attempt",
+        "P5-11: a delegated child IS a task on the board ADVANCES the task from the child settling, with nothing model-facing touching it (acceptance[1])",
+        "P5-11: a delegated child IS a task on the board advances a FAILED child to failed, so a task nobody finished is not left looking claimed",
+        "P5-11: a delegated child IS a task on the board REFUSES a release presenting a stale attempt, so a lapsed holder cannot strip its successor (\u00a712.29-1)",
+        "P5-11: a delegated child IS a task on the board reports the task status through listChildren, which projections alone cannot answer",
+        "P5-11: a delegated child IS a task on the board records NOTHING when no board is mounted, because the producer never activates"
+      ],
+      "files": [
+        "packages/subagent/subagent-taskboard/src/index.ts",
+        "packages/subagent/subagent/src/list-children.ts",
+        "packages/collaboration/taskboard/src/types.ts",
+        "packages/collaboration/taskboard/src/store.ts",
+        "packages/run/taskboard-sqlite/src/store.ts",
+        "packages/run/taskboard-sqlite/src/index.ts",
+        "packages/subagent/subagent-taskboard/tests/delegated-tasks.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-08T03:15:00.000Z",
+      "dryRunProof": {
+        "treeSha": "91cd38627d5c848be27e7b34bdadad06098652a4",
+        "testsDiscovered": 8
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two further mutations on top of \u00a712.27-1's four, each restored byte-identical: (M5) `decideRelease` drops its attempt check, so any presented attempt releases; (M6) the producer never calls `release`.",
+        "failureSummary": "M5 reddens exactly the stale-attempt case out of 58 in the taskboard and producer suites -- the fencing is the only thing that case rests on, and the other 57 stay green, which says the release still works for a current holder. M6 reddens 3 of 8: the claim is not given back, the same-host case sees an owned task, and the contention case's SECOND half fails because a second worker can no longer claim after settlement. That second half is why it is in the same case as the refusal: a refusal with no admission beside it passes against a board that refuses everything."
+      },
+      "note": "\u00a712.29-1 supersedes P5-11.U.1. That entry's two claim cases read the board AFTER the child settled, which was the only moment available while a claim could not be given back; \u00a712.29-1 opened `release` on the contract as a C-stage supplement, the producer now releases at settlement, and those two observations are no longer true of the same moment. Superseded rather than edited: an entry is a pre-commitment, and an expectation changed after the fact is a different commitment. The replacement observes a live claim at `subagent/start`, which is the window a claim now occupies, and adds the two halves the ruling named -- a release fenced by the attempt, refusing a lapsed holder that would otherwise strip its successor, and a task claimable again once its holder gives it back. `decideRelease` returns a task to `open` only from `claimed`: a task whose work was submitted keeps that status and merely loses its owner, because a holder letting go does not un-submit its work."
     }
   ]
 }
