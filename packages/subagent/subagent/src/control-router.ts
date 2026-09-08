@@ -19,6 +19,7 @@
  */
 
 import type { Agent } from '@deepseek-ai/dsh-agent'
+import type { ControlLedger } from './control-ledger.ts'
 import type { UserMessage } from '@deepseek-ai/dsh-session'
 import { decideControl, decideConvergence, orderByPriority } from './control-convergence.ts'
 import type {
@@ -52,7 +53,6 @@ export interface RoutingOutcome {
  */
 export class ChildControlRouter {
   private phase: ChildPhase = 'running'
-  private readonly appliedEpochs = new Set<number>()
   private readonly participants = new Map<string, boolean>()
   private waitingPointId: string | undefined
 
@@ -62,7 +62,17 @@ export class ChildControlRouter {
    *   that asked; absent when the deployment composes no question seam.
    */
   constructor(
-    private readonly agent: Agent,
+    /**
+     * The manager's durable applied-epoch record (§12.26).
+     *
+     * Passed in rather than owned, because it must outlive this router: a
+     * router is bound to a live child and a redelivery can arrive after that
+     * child is gone. Holding it here is what made a mounted router lose
+     * must[2]'s idempotency across a restart.
+     */
+    private readonly ledger: ControlLedger,
+    /** The live child, absent once it has finished; `dispatch` needs one, deciding does not. */
+    private readonly agent?: Agent,
     private readonly answerWaitingPoint?: (waitingPointId: string, answer: UserMessage) => void,
   ) {
     // The child itself is always a participant: it is the one thing whose stop
@@ -104,6 +114,19 @@ export class ChildControlRouter {
   }
 
   /**
+   * Note that a cancel this router did not dispatch has been admitted.
+   *
+   * The manager's own interrupt path issues the cancel signal through the
+   * subagent primitive — it authorizes a durable parent address against a live
+   * Activation, which this router has no part in — and then tells the router
+   * what happened. Recorded AFTER the primitive accepts, so a refused interrupt
+   * leaves the child promptable rather than stranded in `cancelling`.
+   */
+  observeCancelled(): void {
+    this.phase = 'cancelling'
+  }
+
+  /**
    * Note that the child is waiting on a specific human question (must[0]).
    * @param waitingPointId - the question the child is blocked on.
    */
@@ -124,11 +147,51 @@ export class ChildControlRouter {
    * @returns the decision, and which operation ran.
    */
   submit(routed: RoutedControl): RoutingOutcome {
-    const { message } = routed
-    const decision = decideControl(message, this.phase, this.appliedEpochs, this.waitingPointId)
+    const decision = this.admit(routed.message)
     if (!decision.applied) return { decision }
-    this.appliedEpochs.add(message.controlEpoch)
     return { decision, dispatched: this.dispatch(routed) }
+  }
+
+  /**
+   * Decide one control message and record it, WITHOUT dispatching (§12.26).
+   *
+   * The manager uses this where it performs its own delivery — a prompt
+   * becomes attachments and an inbox insertion, which the router has no part
+   * in — so that the decision and the epoch record are the router's while the
+   * effect stays where it already was. Routing the prompt through
+   * {@link ChildControlRouter.submit} instead would have required a live child
+   * for a delivery that today works without one.
+   * @param message - the arriving control message.
+   * @returns whether it may be applied, and why not when not.
+   */
+  admit(message: ControlMessage): ControlDecision {
+    const decision = this.decide(message)
+    if (decision.applied) this.recordApplied(message.controlEpoch)
+    return decision
+  }
+
+  /**
+   * Decide one control message WITHOUT recording it (§12.26).
+   *
+   * Separate from {@link ChildControlRouter.recordApplied} because the manager
+   * records only after its delivery SUCCEEDS. Idempotency protects against a
+   * repeated effect, and a refused delivery had none — recording at decision
+   * time made a failed delivery spend its request id, so every retry after the
+   * first was refused as a duplicate of something that never happened. A
+   * frozen case caught it.
+   * @param message - the arriving control message.
+   * @returns whether it may be applied, and why not when not.
+   */
+  decide(message: ControlMessage): ControlDecision {
+    return decideControl(message, this.phase, this.ledger, this.waitingPointId)
+  }
+
+  /**
+   * Record one control epoch as applied, after its effect happened.
+   * @param controlEpoch - the epoch whose effect landed.
+   */
+  recordApplied(controlEpoch: number): void {
+    this.ledger.add(controlEpoch)
   }
 
   /**
@@ -154,6 +217,9 @@ export class ChildControlRouter {
   /** Perform the Agent operation one admitted message names. */
   private dispatch(routed: RoutedControl): RoutingOutcome['dispatched'] {
     const { message, payload } = routed
+    // No live child: the message was admissible and there is nothing to apply
+    // it to. Reported by the caller as `no-child`, never as a duplicate.
+    if (this.agent === undefined) return undefined
     switch (message.kind) {
       case 'cancel':
         this.phase = 'cancelling'

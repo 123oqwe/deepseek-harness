@@ -524,8 +524,12 @@ describe('P5-10 Fault — one child\'s control state cannot decide another\'s', 
     promptDelivery(subagents).mockResolvedValue('m1' as MessageId)
     subagents.interruptByParent(CHILD, PARENT, 'continuable')
     // Reading the private map is deliberate: the retention is not observable
-    // through any public surface, which is precisely why it needs pinning.
-    const retained = (subagents as unknown as { controlState: Map<unknown, unknown> }).controlState
+    // through any public surface, which is precisely why it needs pinning. The
+    // map is `routers` since §12.25-2 replaced the hand-rolled
+    // `{ phase, appliedEpochs }` with a `ChildControlRouter` — same retention,
+    // renamed holder, which is why this case needed the new name and not a new
+    // expectation.
+    const retained = (subagents as unknown as { routers: Map<unknown, unknown> }).routers
     expect(retained.size).toBe(1)
     subagents.interruptByParent(OTHER, PARENT, 'continuable')
     expect(retained.size).toBe(2)

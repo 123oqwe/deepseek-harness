@@ -39,10 +39,8 @@ import type { Agent } from '@deepseek-ai/dsh-agent'
 import type { SessionId } from '@deepseek-ai/dsh-session'
 import { canonicalClientTimeZone } from '@deepseek-ai/dsh-util-time'
 import { Remote, RemoteError, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
-import { decideControl } from './control-convergence.ts'
 import { openControlLedger } from './control-ledger.ts'
-import type { ControlLedger } from './control-ledger.ts'
-import type { ChildPhase } from './control-convergence.ts'
+import { ChildControlRouter } from './control-router.ts'
 import {
   catalogView, rejectCatalogRead, rejectPrompt, validateControlRequest,
 } from './control.ts'
@@ -223,7 +221,16 @@ export class SubagentRuntime extends TypertRemoteService {
    * that was interrupted looks exactly like an idle one to the next prompt
    * unless something remembers the interrupt happened.
    */
-  private readonly controlState = new Map<SessionId, { phase: ChildPhase; appliedEpochs: ControlLedger }>()
+  /**
+   * One control router per child (§12.25-2, BLOCKED-153).
+   *
+   * Replaces a hand-rolled `{ phase, appliedEpochs }` that duplicated what
+   * `ChildControlRouter` already owned — one rule with two implementations,
+   * and the copy carrying must[1]'s priority ordering was the one nothing
+   * reached. The router holds the phase; the ledger it decides against is the
+   * manager's and outlives the child.
+   */
+  private readonly routers = new Map<SessionId, ChildControlRouter>()
   private continuations: SubagentContinuationManager | undefined
   /**
    * The contained lifecycle-edge publisher. Built here because scoped dispatch
@@ -468,17 +475,17 @@ export class SubagentRuntime extends TypertRemoteService {
     // child's own control sequence before any content is admitted, so a refusal
     // costs no attachment work.
     const control = this.controlFor(childSessionId)
-    const decision = decideControl(
-      { kind: 'continue', controlEpoch: promptEpoch(request.requestId) },
-      control.phase,
-      control.appliedEpochs,
-    )
+    // `admit`, not `submit`: the delivery below is the manager's own — content
+    // admission, attachments, then the child's inbox — and routing it through
+    // the router's dispatch would demand a live child for a delivery that
+    // today works without one (it may cold-resume).
+    const decision = control.decide({ kind: 'continue', controlEpoch: promptEpoch(request.requestId) })
     if (!decision.applied) {
       throw new RemoteError(
         decision.denial.reason === 'already-applied' ? 'subagent/duplicate-request' : 'subagent/not-resumable',
         decision.denial.reason === 'already-applied'
           ? 'this prompt request was already delivered'
-          : `subagent "${childSessionId}" is ${control.phase} and cannot take a prompt`,
+          : `subagent "${childSessionId}" cannot take a prompt: ${decision.denial.reason}`,
         { childSessionId, reason: decision.denial.reason },
       )
     }
@@ -499,13 +506,13 @@ export class SubagentRuntime extends TypertRemoteService {
         content = await admitPromptContent(attachments, request.content)
       }
       const messageId = await this[queueSubagentPrompt](parent, childSessionId, content, source, signal)
+      control.recordApplied(promptEpoch(request.requestId))
       // Recorded only after DELIVERY succeeds. Recording it at admission would
       // spend the id on an attempt that never reached the child: an existing
       // case drives five different delivery failures through one request id,
       // and every retry after the first would have been refused as a duplicate
       // of something that never happened. Idempotency protects against a
       // repeated EFFECT, and a refused delivery had none.
-      control.appliedEpochs.add(promptEpoch(request.requestId))
       return { messageId }
     } catch (error: unknown) {
       return rejectPrompt(error, childSessionId, signal)
@@ -538,7 +545,7 @@ export class SubagentRuntime extends TypertRemoteService {
       // The interrupt is what makes the NEXT prompt refusable. Recorded after
       // the primitive accepts it, so a refused interrupt leaves the child
       // promptable.
-      this.controlFor(childSessionId).phase = 'cancelling'
+      this.controlFor(childSessionId).observeCancelled()
     } catch (error: unknown) {
       if (error instanceof SubagentError && error.code === 'UNAUTHORIZED') {
         throw new RemoteError(
@@ -629,21 +636,22 @@ export class SubagentRuntime extends TypertRemoteService {
    * @param childSessionId - the child to read.
    * @returns its mutable control state.
    */
-  private controlFor(childSessionId: SessionId): { phase: ChildPhase; appliedEpochs: ControlLedger } {
-    let state = this.controlState.get(childSessionId)
-    if (state === undefined) {
+  private controlFor(childSessionId: SessionId): ChildControlRouter {
+    let router = this.routers.get(childSessionId)
+    if (router === undefined) {
       // The ledger reads the CHILD's durable session, so a redelivery is
       // refused across a restart and not only within one process (must[2]).
-      // `phase` stays in memory: it describes what the child is doing NOW, and
-      // a phase reconstructed from a log would describe what it was doing when
-      // the log was written.
-      state = {
-        phase: 'running',
-        appliedEpochs: openControlLedger(() => this.ctx.get('sessions')?.get(childSessionId), promptEpoch),
-      }
-      this.controlState.set(childSessionId, state)
+      // The live Agent is resolved ONCE here and may be absent: a router
+      // without one decides and records but dispatches nothing, which is what
+      // separates "your message already arrived" from "there is nothing to
+      // send it to".
+      router = new ChildControlRouter(
+        openControlLedger(() => this.ctx.get('sessions')?.get(childSessionId), promptEpoch),
+        this.ctx.get('agents')?.get(childSessionId),
+      )
+      this.routers.set(childSessionId, router)
     }
-    return state
+    return router
   }
 
   private async prepareContinuable(

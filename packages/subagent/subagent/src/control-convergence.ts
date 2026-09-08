@@ -55,6 +55,17 @@ export type ControlDenial =
   | { readonly reason: 'already-applied'; readonly controlEpoch: number }
   /** A `human-answer` naming a waiting point the child is not at. */
   | { readonly reason: 'wrong-waiting-point'; readonly expected: string | undefined; readonly received: string | undefined }
+  /**
+   * The message is admissible but no live child is there to receive it.
+   *
+   * Distinct from `already-applied`, and the distinction is the reason the
+   * epoch ledger had to stop living inside the router (§12.26): a redelivery
+   * to a finished child means "your message already arrived", while a NEW
+   * message to a finished child means "there is nothing to send it to". A
+   * router that answered `already-applied` for both would tell a caller its
+   * first message had landed when it never did.
+   */
+  | { readonly reason: 'no-child' }
 
 /**
  * What answers "was this control epoch already applied".

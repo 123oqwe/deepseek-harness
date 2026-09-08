@@ -13,6 +13,7 @@
 import { describe, expect, it } from 'vitest'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { Agent } from '@deepseek-ai/dsh-agent'
+import type { ControlLedger } from '../src/control-ledger.ts'
 import type { UserMessage } from '@deepseek-ai/dsh-session'
 
 import { ChildControlRouter } from '../src/control-router.ts'
@@ -24,8 +25,14 @@ interface Calls {
   readonly answers: { waitingPointId: string; answer: UserMessage }[]
 }
 
+/** An in-memory stand-in for the manager's durable ledger (§12.26). */
+function ledger(): ControlLedger {
+  const applied = new Set<number>()
+  return { has: epoch => applied.has(epoch), add: epoch => void applied.add(epoch) }
+}
+
 /** A router over an Agent that records the operations it receives. */
-function bench(): { router: ChildControlRouter; calls: Calls } {
+function bench(options: { live?: boolean } = {}): { router: ChildControlRouter; calls: Calls } {
   const calls: Calls = { log: [], answers: [] }
   const agent = {
     cancel: () => { calls.log.push('cancel') },
@@ -33,10 +40,14 @@ function bench(): { router: ChildControlRouter; calls: Calls } {
     steer: () => { calls.log.push('steer') },
     inject: () => { calls.log.push('inject') },
   } as unknown as Agent
-  const router = new ChildControlRouter(agent, (waitingPointId, answer) => {
-    calls.answers.push({ waitingPointId, answer })
-    calls.log.push('answer')
-  })
+  const router = new ChildControlRouter(
+    ledger(),
+    options.live === false ? undefined : agent,
+    (waitingPointId: string, answer: UserMessage) => {
+      calls.answers.push({ waitingPointId, answer })
+      calls.log.push('answer')
+    },
+  )
   return { router, calls }
 }
 
