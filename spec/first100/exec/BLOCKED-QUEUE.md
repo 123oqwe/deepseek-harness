@@ -9,6 +9,25 @@ responds; append-only.
 
 ## Open
 
+### BLOCKED-165 — the program goal's P9 arm cannot be satisfied until Phase 7 lands, and the shortcut is refused by the tool itself
+
+Measured because the standing goal is repeatedly evaluated against "P9 九项全部 VERIFIED 或 scheduled-BLOCKED 在案", and the honest answer is a scheduling fact rather than an omission.
+
+**Current P9 state**: seven of nine settled — P9-01/02/03/04/06/07 `VERIFIED`, P9-05 `VERIFIED_OR_BLOCKED` (its U and F stages parked on BLOCKED-107, the exact-DeepSeek-tokenizer authority limit). P9-08 and P9-09 are `PREMATURE`.
+
+**The relabel shortcut is not available, and the tool says so in its own contract.** `p9ItemsSettled` (`generate-ledger.mjs`) admits exactly `VERIFIED` and `VERIFIED_OR_BLOCKED`, and its JSDoc states that `PREMATURE`, `IN_PROGRESS` and `STALE_BLOCKER` do not count, "nothing observed is not everything settled". Recording P9-08/09 as scheduled-BLOCKED would therefore be the overstatement the gate exists to refuse: they are not blocked on a named, still-open blocker, they are simply not reached.
+
+**Why they are not reached**, traced through the ledger:
+
+```
+P9-08, P9-09  ->  P7-09 (NOT_RUN)
+                    P7-09 -> P0-08 (ACCEPTED), P7-05 (NOT_RUN), P7-08 (NOT_RUN)
+                      P7-05 -> P4-01 (ACCEPTED), P7-01, P7-03, P7-04  (all NOT_RUN)
+                      P7-08 -> P0-06 (ACCEPTED), P4-08, P4-12 (ACCEPTED), P7-07  (P4-08, P7-07 NOT_RUN)
+```
+
+Six unrun epics stand between the current front and P9-08/09. This is the §12.55 lesson in its stable form: **technically unblocked is not admitted, and neither is technically recordable.** The P9 arm of the goal becomes reachable when Phase 7 lands, and not before — no action available to the executor moves it.
+
 ### BLOCKED-164 — four frozen supplement titles do not resolve in the live tree, and they are NOT all the same kind of mismatch
 
 Found while greening the candidates from run `34238203263` @ `434408a47c`. Each was measured under its OWN frozen command rather than the shared full-suite report, so "not found" here means the title genuinely does not exist, not that I read the wrong observation.
