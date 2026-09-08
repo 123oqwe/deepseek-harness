@@ -849,3 +849,5 @@ P2-03 撤签后门 (e) 正确地红了五条(`@modelcontextprotocol/sdk`、`open
 
 **事实**:`ChildControlRouter` 持有活 Agent;`SubagentRuntime.controlState` 按 session id 键入、从不清理——这个"活得更久"承重:`appliedEpochs` 拒绝的重投递**可以在子代理消失后到达**,两条冻结用例钉着(同 request id 两次只开一轮;重投递拒为 DUPLICATE 而非"不能 resume 的子代理")。
 **裁决:账本从 router 里拆出去,归 manager(`SubagentRuntime`,与父会话同寿),router 只借用。** (a) `ChildControlRouter(ledger, agent?)`:决策读账本;dispatch 需要活 agent;**无 agent 且非重复 → `no-child`,不是 `duplicate`**——两条冻结用例区分的正是这个。(b) must[2] 说的是 **durable**:账本不是"内存里活得久",是**从父会话日志重建**(控制消息的派发本来就进父日志;子代理消失后父日志仍在)——与 P4-06 `consumed` 从日志重建同形,不加新事件、不加第二存储。(c) 由此 (2) 挂 router 不丢性质:重启后重投递仍拒。冻结:父重启 → 同 request id 重投 → DUPLICATE;子代理已结束、新 request → `no-child`。然后做 (1)。
+
+**12.26 修订(21:55 EDT)**:"从父会话日志重建"在这棵树上**不成立**——`SubagentRuntime` 对生命周期只 `ctx.emit`,对父会话零 `append`;delegate 没量就写了来源,执行者量了再动。真 durable 来源是**投递出去的消息本身**:它进子代理 inbox、带 `source.rpcId`(epoch 由它派生),而子代理的 session 比 Agent 活得久。账本在**提问时**读子会话日志(不是构造时快照),`decideControl` 第三参收窄为 `AppliedEpochs{has}`;`phase` 留内存(描述此刻,不是日志写下时)。5 条用例含真重启(全新账本读死进程日志仍拒)+ 正对照(日志没有的 epoch 放行)。性质一条不少、不加新事件——**比我裁的更对**;裁决其余不变。
