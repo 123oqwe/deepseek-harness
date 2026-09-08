@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-08T11:17:18.601Z",
-  "inputDigest": "183f3e989efeed7e6bc32a0f8b5b85da9acefbefb8c9e83dabd3ed6ef5dae3f9",
+  "lastUpdatedUtc": "2026-09-08T15:12:28.635Z",
+  "inputDigest": "bb4ca229157e82d78f6cbf1cef5559866bcbb7738ad7969061d19f4484f4e4ce",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -2853,10 +2853,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
-          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "P2-03 Contract — must clauses must[0]: a constructed manifest carries actionId/runId/actor/capability/target/argumentsHash/sideEffectClass/idempotencyKey/preconditions/expectedDiff/compensation/evidence requirements",
             "P2-03 Contract — must clauses must[1]: an execution attempt with no manifest appended for its actionId is refused before any policy/approval step could run",
@@ -2877,23 +2877,17 @@
             "P2-03 — differential conformance against the RFC 8785 reference implementation produces byte-identical output to `canonicalize` for every generated JSON value",
             "P2-03 — differential conformance against the RFC 8785 reference implementation canonicalizes at a depth every JS JCS library overflows on, which is why it is hand-written"
           ],
-          "reattested": {
-            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
-            "atUtc": "2026-09-07T06:50:46.727Z"
-          },
-          "capturedAtUtc": "2026-09-07T06:50:46.727Z"
+          "capturedAtUtc": "2026-09-08T15:11:25.812Z"
         },
         "P": {
           "status": "N/A"
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
-          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "P2-03 — every appended manifest carries its own position the first manifest is 1, and a second call in the same session is 2",
             "P2-03 — every appended manifest carries its own position a manifest precedes the tool/call it describes, which is what the position is for",
@@ -2902,51 +2896,75 @@
             "P2-03 Usage — every dispatched call is preceded by its own manifest acceptance[2]: an unclassifiable action reaches the LOG as highest-risk and approval-requiring, not merely as a return value",
             "P2-03 Usage — every dispatched call is preceded by its own manifest validation[0]: a deliberately created bypass — a tool/call with no manifest — is DETECTED by the same reading"
           ],
-          "reattested": {
-            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
-            "atUtc": "2026-09-07T06:50:46.944Z"
-          },
-          "capturedAtUtc": "2026-09-07T06:50:46.944Z"
+          "capturedAtUtc": "2026-09-08T15:11:42.749Z"
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
-          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "P2-03 Fault — validation[2]: fuzzing the canonicalizer for hash confusion key order never changes the hash, over generated values rather than one example",
             "P2-03 Fault — validation[2]: fuzzing the canonicalizer for hash confusion SECURITY: NFD and NFC never share a hash, over generated strings that have two forms",
             "P2-03 Fault — validation[2]: fuzzing the canonicalizer for hash confusion two values that differ do NOT collide, which is the half a constant hash would satisfy",
             "P2-03 Fault — validation[2]: fuzzing the canonicalizer for hash confusion a key containing the separator does not collide with a value spelled to look like one"
           ],
-          "reattested": {
-            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
-            "atUtc": "2026-09-07T06:50:47.159Z"
-          },
-          "capturedAtUtc": "2026-09-07T06:50:47.160Z"
+          "capturedAtUtc": "2026-09-08T15:11:43.011Z"
         }
       },
       "supplements": {
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d4034a8f4c/vitest-report.json",
-          "observationSha256": "bf70f39f11be11224e23840d12b26e969583753bab4a5b690c3c41f7710a0045",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "the sub-dispatch scheduler (native concurrency contract) P2-03 must[2] — every code-mode sub-dispatch is preceded by its manifest a manifest precedes each dispatch-start, and each names the sub-call that follows it",
             "the sub-dispatch scheduler (native concurrency contract) P2-03 must[2] — every code-mode sub-dispatch is preceded by its manifest the manifest records the code-mode origin and the highest-risk default, so the log says which path ran",
             "the sub-dispatch scheduler (native concurrency contract) P2-03 must[2] — every code-mode sub-dispatch is preceded by its manifest a dispatch abandoned before it starts writes NO manifest, so the log records no action that never happened"
           ],
-          "capturedAtUtc": "2026-09-06T22:57:58.559Z"
+          "capturedAtUtc": "2026-09-08T15:11:43.257Z"
+        },
+        "U.2": {
+          "status": "GREEN",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "expectCasesMatched": [
+            "P2-03 must[0]: the manifest is CONSTRUCTED on the production path, not assembled beside it (BLOCKED-143) logs a real tool call whose manifest carries a non-empty idempotencyKey, actor and runId",
+            "P2-03 must[0]: the manifest is CONSTRUCTED on the production path, not assembled beside it (BLOCKED-143) keys two calls in one session differently, so the key identifies the action and not the run"
+          ],
+          "capturedAtUtc": "2026-09-08T15:10:29.964Z"
+        },
+        "U.3": {
+          "status": "GREEN",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "expectCasesMatched": [
+            "P2-03 must[0]: the manifest is CONSTRUCTED on the production path, not assembled beside it (BLOCKED-143) logs the ATTACHED identity's run, not the session id wearing a RunId brand",
+            "the sub-dispatch scheduler (native concurrency contract) P2-03 must[2] — every code-mode sub-dispatch is preceded by its manifest records the ATTACHED identity's run, so code mode cannot bypass the run attribution either (must[2])"
+          ],
+          "capturedAtUtc": "2026-09-08T15:10:30.443Z"
+        },
+        "U.4": {
+          "status": "GREEN",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "expectCasesMatched": [
+            "P2-03 must[0]: the manifest is CONSTRUCTED on the production path, not assembled beside it (BLOCKED-143) logs EVERY must[0] field, so a reader with only the log can say what the action declared (§12.33)",
+            "P2-03 must[0]: the manifest is CONSTRUCTED on the production path, not assembled beside it (BLOCKED-143) records whether the side-effect class was DECLARED, which the class alone cannot say (acceptance[2])"
+          ],
+          "capturedAtUtc": "2026-09-08T15:10:30.911Z"
         }
       },
-      "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+      "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "BLOCKED_ON_ACCEPTANCE",
@@ -2989,20 +3007,110 @@
       "wave": 5,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "expectCasesMatched": [
+            "must[0]: the taxonomy is exactly the eight named classes, in ascending risk order",
+            "must[0]: the order is total and strict, so \"highest risk\" has exactly one meaning",
+            "must[1]: the SAME declared tag classifies differently under two organisation policies",
+            "must[1]: a declared tag no policy rule mentions does not carry the plugin's own suggestion into the result",
+            "must[2]: a rule-decided classification names the tag that decided it and reports full confidence",
+            "must[2]: the grounds distinguish a class reached BY A RULE from the same class reached by the unknown default",
+            "must[3]: an action no rule matches classifies at the highest POLICY-ADJUSTABLE class, never in the kernel hard-deny band",
+            "must[3]: an organisation that wants unknowns REFUSED can add that class to its own hard-deny list",
+            "must[3]: a composite action takes the MAXIMUM risk of its matched tags",
+            "must[3]: one unrecognised tag beside a matched one does NOT escalate the whole action",
+            "acceptance[1]: adding a low-risk tag beside a high-risk one cannot lower the result",
+            "acceptance[1]: the classifier CAN return the low class when the policy alone says so, so the case above is not a constant",
+            "acceptance[2]: an organisation can add a hard-deny class of its own",
+            "acceptance[2]: a policy that switches off a kernel hard-deny class is REFUSED, naming the class",
+            "acceptance[2]: a policy adding nothing and removing nothing still hard-denies the kernel class",
+            "src/index.ts re-exports the type surface and the classifier, and declares no runtime value of its own"
+          ],
+          "capturedAtUtc": "2026-09-08T15:08:07.363Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "expectCasesMatched": [
+            "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter must[1]: the SAME action classifies by the mounted rules, not by anything the action says about itself",
+            "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter acceptance[0]: two callers of the SAME mount get the same answer, because the policy is bound once",
+            "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter must[3]: an action whose tags no rule mentions reaches the approval threshold rather than passing quietly",
+            "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter must[1]: the threshold rides the PRESET, so one action asks under one bundle and not under another",
+            "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter must[1]: a preset the table does not carry falls back to the STRICTEST configured threshold",
+            "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter acceptance[2]: a deployment that switches off a kernel hard-deny class is refused AT MOUNT, naming the class",
+            "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter acceptance[2]: a deployment may RAISE its own bar, and the raise reaches classification"
+          ],
+          "capturedAtUtc": "2026-09-08T15:08:07.597Z"
         },
         "U": {
           "status": "NOT_RUN"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "expectCasesMatched": [
+            "P2-04 Fault — risk classification boundary matrix enumerates at least twelve boundaries, each named once",
+            "P2-04 Fault — risk classification boundary matrix fault boundary 01 an unmatched tag takes the unknown default, not the lowest class",
+            "P2-04 Fault — risk classification boundary matrix fault boundary 02 the unknown default stops BELOW the kernel band, so unknown is asked about and not refused",
+            "P2-04 Fault — risk classification boundary matrix fault boundary 03 an EMPTY tag list is the same unknown as an unmatched tag",
+            "P2-04 Fault — risk classification boundary matrix fault boundary 04 a composite action takes the maximum, so a low tag cannot dilute a high one",
+            "P2-04 Fault — risk classification boundary matrix fault boundary 05 tag ORDER does not change the maximum",
+            "P2-04 Fault — risk classification boundary matrix fault boundary 06 one unrecognised tag beside a matched one does not escalate to the unknown default",
+            "P2-04 Fault — risk classification boundary matrix fault boundary 07 a duplicate rule for one tag does not change the outcome",
+            "P2-04 Fault — risk classification boundary matrix fault boundary 08 two rules for one tag take the HIGHER, so a second rule cannot lower the first",
+            "P2-04 Fault — risk classification boundary matrix fault boundary 09 the kernel band is reached by DECLARATION and is hard-denied",
+            "P2-04 Fault — risk classification boundary matrix fault boundary 10 an organisation may ADD a hard-deny class of its own",
+            "P2-04 Fault — risk classification boundary matrix fault boundary 11 a policy that switches off a KERNEL hard-deny class is refused, naming it",
+            "P2-04 Fault — risk classification boundary matrix fault boundary 12 removing a class the kernel does NOT pin removes nothing and is not an error",
+            "P2-04 Fault — risk classification boundary matrix fault boundary 13 confidence separates a ruled class from the same class reached by default",
+            "P2-04 Fault — risk classification boundary matrix fault boundary 14 the deciding tag is NAMED when a rule decided, and absent when nothing did"
+          ],
+          "capturedAtUtc": "2026-09-08T15:08:07.971Z"
         }
       },
-      "supplements": {},
-      "candidateSha": null,
+      "supplements": {
+        "U.1": {
+          "status": "GREEN",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "expectCasesMatched": [
+            "P2-04 must[1]: every shipped tool declares its risk domain tags finds the shipped tool packages from the bundles, so the set cannot drift from what ships",
+            "P2-04 must[1]: every shipped tool declares its risk domain tags leaves NO shipped tool undeclared, because an undeclared tool classifies by the unknown default",
+            "ToolRuntime P2-04 must[1]: carries a tool's declared risk domain tags to the runtime, and never to the model"
+          ],
+          "capturedAtUtc": "2026-09-08T15:08:33.386Z"
+        },
+        "U.2": {
+          "status": "GREEN",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "expectCasesMatched": [
+            "P2-04 must[1]: the default policy does not ask about sandboxed work runs a declared filesystem write and a declared shell command without asking",
+            "P2-03 acceptance[2]: an undeclared tool is the case the gate is for ASKS about a tool that declares no domain tags, naming the undeclared tags as the cause",
+            "P2-03 acceptance[2]: an undeclared tool is the case the gate is for REFUSES an undeclared tool when nothing can answer, rather than proceeding on silence",
+            "P2-03 acceptance[2]: an undeclared tool is the case the gate is for lets an undeclared tool run under a preset whose threshold is above the unknown default",
+            "P2-04 must[1]: a declared high band asks, and the kernel band never does asks about a declared security-sensitive action, and refuses it when approval is declined",
+            "P2-04 must[1]: a declared high band asks, and the kernel band never does HARD-DENIES a declared safety-critical action under EVERY preset, without asking",
+            "P2-04: a composition with no policy service has no gate runs an undeclared tool when no permission service is composed, which is capability absence"
+          ],
+          "capturedAtUtc": "2026-09-08T15:08:33.615Z"
+        }
+      },
+      "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -4126,10 +4234,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "02938ccfc31c4ce3288f27bf60898fb862f82746",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34116551360",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-02938ccfc3/vitest-report.json",
-          "observationSha256": "1d83c94137a2a800bdb89f9e5d7c0e276d94beb0f39c70d87c596fd7650ac0ee",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "kill after-commit, then replay: the business effect is applied exactly once",
             "kill after-send, then replay: the business effect is applied exactly once",
@@ -4146,29 +4254,37 @@
             "a foreign message is refused WITHOUT its key being looked up in the seen-set",
             "a refused foreign message cannot suppress a later legitimate one sharing its key"
           ],
-          "reattested": {
-            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34101734274",
-            "fromCandidateSha": "9cb21a872a95e56db5aaa2b30edb769f5cf86c4a",
-            "reason": "Re-observed at the SHA carrying §12.9's (source, id, epoch) key change; the previous observation at 9cb21a872a predates it and cannot stand for the current code.",
-            "atUtc": "2026-09-07T11:58:22.072Z"
-          },
-          "capturedAtUtc": "2026-09-07T11:58:22.073Z"
+          "capturedAtUtc": "2026-09-08T15:11:43.509Z"
         },
         "P": {
-          "status": "NOT_RUN",
-          "revokedFrom": {
-            "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
-            "absentCommitments": 1
-          },
-          "revokedReason": "§12.53 companion: greened on an observation that does not contain this cell's live freeze entries, so it pre-committed to nothing. Awaiting re-observation on a tree containing them."
+          "status": "GREEN",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "expectCasesMatched": [
+            "splits two separate enqueue calls across batches when a write starts between them",
+            "keeps an enqueueAll group in one batch under that same interleaving",
+            "owns its copy of every event in a group, and ignores an empty group",
+            "uses one fixed window from the first queued event and owns its copy",
+            "coalesces twenty events admitted ten milliseconds apart into one 200 ms batch",
+            "makes concurrent flushes one immediate barrier that drains admitted tails",
+            "starts a new window for work admitted after an already-quiescent barrier",
+            "starts an over-budget tail immediately after the active write",
+            "keeps a tail deadline that has not expired when the active write finishes",
+            "pauses automatic retries after failure and preserves order for new work",
+            "observes an overlapping background failure and retries it inside flush",
+            "surfaces a barrier failure without detached logging and retains its batch",
+            "retains a failed batch larger than the engine call-argument limit"
+          ],
+          "capturedAtUtc": "2026-09-08T15:07:03.406Z"
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "02938ccfc31c4ce3288f27bf60898fb862f82746",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34116551360",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-02938ccfc3/vitest-report.json",
-          "observationSha256": "1d83c94137a2a800bdb89f9e5d7c0e276d94beb0f39c70d87c596fd7650ac0ee",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "spends the attempt and persists `sent` BEFORE handing the record to the transport",
             "applies the receipt, and applying the same outcome twice does not ack twice",
@@ -4177,20 +4293,14 @@
             "reads the clock ONCE, so a slow transport cannot expire a later record",
             "dispatches in priority order, so a starved low-priority record cannot jump ahead"
           ],
-          "reattested": {
-            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34101734274",
-            "fromCandidateSha": "9cb21a872a95e56db5aaa2b30edb769f5cf86c4a",
-            "reason": "Re-observed at the SHA carrying §12.9's (source, id, epoch) key change; the previous observation at 9cb21a872a predates it and cannot stand for the current code.",
-            "atUtc": "2026-09-07T11:58:22.517Z"
-          },
-          "capturedAtUtc": "2026-09-07T11:58:22.518Z"
+          "capturedAtUtc": "2026-09-08T15:11:43.759Z"
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "02938ccfc31c4ce3288f27bf60898fb862f82746",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34116551360",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-02938ccfc3/vitest-report.json",
-          "observationSha256": "1d83c94137a2a800bdb89f9e5d7c0e276d94beb0f39c70d87c596fd7650ac0ee",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "enumerates at least the twelve boundaries the clause requires",
             "fault boundary 01 deadline expired before any attempt",
@@ -4215,13 +4325,7 @@
             "alerts only AFTER the dead-letter state is persisted",
             "does not alert when a send merely fails and the record stays retryable"
           ],
-          "reattested": {
-            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34101734274",
-            "fromCandidateSha": "9cb21a872a95e56db5aaa2b30edb769f5cf86c4a",
-            "reason": "Re-observed at the SHA carrying §12.9's (source, id, epoch) key change; the previous observation at 9cb21a872a predates it and cannot stand for the current code.",
-            "atUtc": "2026-09-07T11:58:22.749Z"
-          },
-          "capturedAtUtc": "2026-09-07T11:58:22.750Z"
+          "capturedAtUtc": "2026-09-08T15:11:44.012Z"
         }
       },
       "supplements": {
@@ -4249,10 +4353,10 @@
         },
         "U.2": {
           "status": "GREEN",
-          "candidateSha": "9cb21a872a95e56db5aaa2b30edb769f5cf86c4a",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34101734274",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-9cb21a872a/vitest-report.json",
-          "observationSha256": "c4826c083cb9b7792c0b6099dcf8a2d1892094353010547bbe7d3ae60e37e8a3",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "P4-06 must[2]: a real mailbox arrival is deduplicated against the durable consumed set delivers a message this bus has never consumed",
             "P4-06 must[2]: a real mailbox arrival is deduplicated against the durable consumed set drops a REDELIVERY of a message this bus already consumed, which is the effect must[2] names",
@@ -4261,14 +4365,14 @@
             "P4-06 must[2]: a real mailbox arrival is deduplicated against the durable consumed set reads the seen-set at DECISION time, so a message consumed after the handle was taken still drops",
             "P4-06 must[2]: a real mailbox arrival is deduplicated against the durable consumed set still drops the redelivery after a RESTART, because the seen-set is the durable rows"
           ],
-          "capturedAtUtc": "2026-09-07T09:11:05.892Z"
+          "capturedAtUtc": "2026-09-08T15:11:44.481Z"
         },
         "P.3": {
           "status": "GREEN",
-          "candidateSha": "9cb21a872a95e56db5aaa2b30edb769f5cf86c4a",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34101734274",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-9cb21a872a/vitest-report.json",
-          "observationSha256": "c4826c083cb9b7792c0b6099dcf8a2d1892094353010547bbe7d3ae60e37e8a3",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox row and the inbox claim commits all three together, so a consumed message has both an outbox row and a domain event",
             "P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox row and the inbox claim writes NOTHING when the commit fails partway, rather than the domain event without its outbox row",
@@ -4286,65 +4390,65 @@
             "P4-06 must[2]: the durable seen-set and the dedup rule agree (BLOCKED-138) keeps `(a:1, 2)` and `(a, 1:2)` distinct on BOTH sides, which the store's own spelling did not",
             "P4-06 must[2]: the durable seen-set and the dedup rule agree (BLOCKED-138) reports every consumed key as the rule computes it, with no second spelling anywhere"
           ],
-          "capturedAtUtc": "2026-09-07T09:11:06.128Z"
+          "capturedAtUtc": "2026-09-08T15:11:44.722Z"
         },
         "P.4": {
           "status": "GREEN",
-          "candidateSha": "02938ccfc31c4ce3288f27bf60898fb862f82746",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34116551360",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-02938ccfc3/vitest-report.json",
-          "observationSha256": "1d83c94137a2a800bdb89f9e5d7c0e276d94beb0f39c70d87c596fd7650ac0ee",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "P4-06 owns the CloudEvents attribute names, and the key is (source, id, epoch) (BLOCKED-140) reads back a domain event whose keys are exactly the CloudEvents attributes this epic adopted",
             "P4-06 owns the CloudEvents attribute names, and the key is (source, id, epoch) (BLOCKED-140) delivers BOTH messages when two different sources emit the same id at the same epoch",
             "P4-06 owns the CloudEvents attribute names, and the key is (source, id, epoch) (BLOCKED-140) still drops a redelivery from the SAME source, so widening the key did not disable dedup",
             "P4-06 owns the CloudEvents attribute names, and the key is (source, id, epoch) (BLOCKED-140) keeps two sources apart in the inbox itself, not only in the key"
           ],
-          "capturedAtUtc": "2026-09-07T11:58:11.576Z"
+          "capturedAtUtc": "2026-09-08T15:11:44.959Z"
         },
         "U.3": {
           "status": "GREEN",
-          "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-82df08491f/vitest-report.json",
-          "observationSha256": "c64640da4976528ae7995ea13fdfde8a8b4e68b5e69463a94cabf020ee7d9325",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "P4-06 must[2]: an inbox consumes one (source, id, epoch) once REFUSES a settlement redelivered after the parent already ran it",
             "P4-06 must[2]: an inbox consumes one (source, id, epoch) once SURVIVES a restart, which is the only reason the rule means anything",
             "P4-06 must[2]: an inbox consumes one (source, id, epoch) once ADMITS a settlement from the same child in a LATER epoch, so a second activation is not suppressed",
             "continuable settlement delivery carries the child run's LEASE EPOCH, and a redelivery of that notice is refused (P4-06 must[2])"
           ],
-          "capturedAtUtc": "2026-09-08T10:42:43.184Z"
+          "capturedAtUtc": "2026-09-08T15:11:45.194Z"
         },
         "U.4": {
           "status": "GREEN",
-          "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-82df08491f/vitest-report.json",
-          "observationSha256": "c64640da4976528ae7995ea13fdfde8a8b4e68b5e69463a94cabf020ee7d9325",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "P4-06: a settlement is committed to the bus before anyone tries to deliver it WAKES an idle parent once when its child settles, through the committed row",
             "P4-06: a settlement is committed to the bus before anyone tries to deliver it KEEPS a settlement whose parent is gone, and delivers it when that parent next starts",
             "P4-06: a settlement is committed to the bus before anyone tries to deliver it delivers ONCE even though three triggers drain, so a redelivery is not a second effect"
           ],
-          "capturedAtUtc": "2026-09-08T10:42:51.770Z"
+          "capturedAtUtc": "2026-09-08T15:11:45.432Z"
         },
         "P.6": {
           "status": "GREEN",
-          "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-82df08491f/vitest-report.json",
-          "observationSha256": "c64640da4976528ae7995ea13fdfde8a8b4e68b5e69463a94cabf020ee7d9325",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "P4-06 Provider: the bus is a mounted service publishes ctx.messageBus, and a commit through it is durable in the configured directory",
             "P4-06 Provider: the bus is a mounted service gives every committed row the store-owned delivery fields, not the caller-supplied ones",
             "P4-06 Provider: the bus is a mounted service REFUSES a bus file an older format wrote, naming the path and both versions",
             "P4-06 Provider: the bus is a mounted service opens a directory that does not exist yet, so a first boot is not a failure"
           ],
-          "capturedAtUtc": "2026-09-08T10:42:52.009Z"
+          "capturedAtUtc": "2026-09-08T15:11:45.671Z"
         }
       },
-      "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
+      "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -4379,10 +4483,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "82d5e8112233b371fe891b7489e89fc2658b109f",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33959624760",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r9/first100-evidence-82d5e8112233b371fe891b7489e89fc2658b109f/vitest-report.json",
-          "observationSha256": "e2c607d0726e91f6ff36c2e08f3d33f060fc3a8a9cb35284b6953d70c908659d",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "refuses the old holder's token after the item is reclaimed at a higher epoch",
             "admits the new holder's token against the same reclaimed lease",
@@ -4395,14 +4499,14 @@
             "decides staleness without consulting any clock, so skewed workers agree",
             "leaves exactly one admitted holder after a hundred sequential acquisitions"
           ],
-          "capturedAtUtc": "2026-09-05T18:08:05.176Z"
+          "capturedAtUtc": "2026-09-08T15:11:45.912Z"
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "82d5e8112233b371fe891b7489e89fc2658b109f",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33959624760",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r9/first100-evidence-82d5e8112233b371fe891b7489e89fc2658b109f/vitest-report.json",
-          "observationSha256": "e2c607d0726e91f6ff36c2e08f3d33f060fc3a8a9cb35284b6953d70c908659d",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "issues increasing epochs across successive acquisitions of one item",
             "refuses a second worker while the incumbent lease is unexpired",
@@ -4417,34 +4521,65 @@
             "offers nothing reclaimable while unavailable, even for a lapsed lease",
             "resumes normally once the store is available again"
           ],
-          "capturedAtUtc": "2026-09-05T18:08:05.414Z"
+          "capturedAtUtc": "2026-09-08T15:11:46.154Z"
         },
         "U": {
-          "status": "NOT_RUN",
-          "revokedFrom": {
-            "candidateSha": "82d5e8112233b371fe891b7489e89fc2658b109f",
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33959624760",
-            "absentCommitments": 1
-          },
-          "revokedReason": "§12.53 companion: greened on an observation that does not contain this cell's live freeze entries, so it pre-committed to nothing. Awaiting re-observation on a tree containing them."
+          "status": "GREEN",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "expectCasesMatched": [
+            "the unfenced entry point is NOT on the package surface, so the composition is the only way in",
+            "fenced, that same self-asserted epoch is refused",
+            "admits the holder's real token, so the check is not refusing everything",
+            "refuses the previous holder after the item is reclaimed",
+            "still applies the lifecycle rules once fencing admits the token",
+            "reports `fenced` for a token that is BOTH fenced and proposing an illegal edge",
+            "refuses when the item holds no lease at all"
+          ],
+          "capturedAtUtc": "2026-09-08T15:08:00.056Z"
         },
         "F": {
-          "status": "NOT_RUN",
-          "revokedFrom": {
-            "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-            "absentCommitments": 1
-          },
-          "revokedReason": "§12.53 companion: greened on an observation that does not contain this cell's live freeze entries, so it pre-committed to nothing. Awaiting re-observation on a tree containing them."
+          "status": "GREEN",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "expectCasesMatched": [
+            "P4-07 validation[0]: systematic fault matrix enumerates at least twelve boundaries, each named once",
+            "fault boundary 01 a strictly older epoch is refused as stale",
+            "fault boundary 02 an epoch above the current one is refused, not treated as newer authority",
+            "fault boundary 03 the exact current epoch is admitted, so the check is not refusing everything",
+            "fault boundary 04 a token for another work item is refused",
+            "fault boundary 05 a token from another holder at the current epoch is refused",
+            "fault boundary 06 no lease at all refuses rather than admits",
+            "fault boundary 07 a lease is still held AT its expiry instant",
+            "fault boundary 08 a lease one millisecond past expiry is reclaimable",
+            "fault boundary 09 acquiring is refused while another holder's lease is live",
+            "fault boundary 10 renewing an expired lease is refused rather than resurrecting it",
+            "fault boundary 11 renewing on a superseded token is refused",
+            "fault boundary 12 an unavailable store refuses acquisition instead of reporting the item free",
+            "fault boundary 13 an unavailable store offers nothing reclaimable",
+            "fault boundary 14 an unavailable store refuses renewal",
+            "fault boundary 15 a delayed packet from a reclaimed holder is refused on arrival",
+            "fault boundary 16 split brain: two holders across a reclaim, only the later one writes",
+            "names who was refused, who was current, and why",
+            "records the absence of a lease rather than omitting the fields",
+            "carries no field capable of holding key or signature material",
+            "KNOWN GAP (validation[2]): producing the record is reachable, appending it is not",
+            "refuses the forged proposal when fenced, and the unfenced path is not importable to admit it"
+          ],
+          "capturedAtUtc": "2026-09-08T15:08:00.310Z"
         }
       },
       "supplements": {
         "U.2": {
           "status": "GREEN",
-          "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-82df08491f/vitest-report.json",
-          "observationSha256": "c64640da4976528ae7995ea13fdfde8a8b4e68b5e69463a94cabf020ee7d9325",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) takes a lease for every Run it opens, so the Run has an owner before it has work",
             "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) starts the lifecycle at queued, so a run that never steps is never running",
@@ -4463,25 +4598,37 @@
             "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) executes ZERO tools for an agent whose lease was REFUSED, and names the refusal apart from a fencing (§12.31-A)",
             "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) EXECUTES normally with NO Run Service mounted, so capability absence is not read as a refusal"
           ],
-          "capturedAtUtc": "2026-09-08T10:42:52.251Z"
+          "capturedAtUtc": "2026-09-08T15:11:46.543Z"
         },
         "U.3": {
           "status": "GREEN",
-          "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-82df08491f/vitest-report.json",
-          "observationSha256": "c64640da4976528ae7995ea13fdfde8a8b4e68b5e69463a94cabf020ee7d9325",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) REFUSES the SECOND host that opens the same session, and that host executes zero tools (§12.35-2, acceptance[1])"
           ],
-          "capturedAtUtc": "2026-09-08T10:42:52.482Z"
+          "capturedAtUtc": "2026-09-08T15:11:46.796Z"
+        },
+        "U.1": {
+          "status": "GREEN",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "expectCasesMatched": [
+            "P4-07 Usage: a workflow run holds an epoch lease on the real stack must[0]: a run takes a lease, and a second host cannot take the same item while it is held",
+            "P4-07 Usage: a workflow run holds an epoch lease on the real stack acceptance[2]: no new run starts while the lease store is unavailable",
+            "P4-07 Usage: a workflow run holds an epoch lease on the real stack acceptance[0]: a reclaimed run cannot write its terminal state",
+            "P4-07 Usage: a workflow run holds an epoch lease on the real stack control: an unreclaimed run DOES report its outcome, so the refusal above is selective"
+          ],
+          "capturedAtUtc": "2026-09-08T15:10:30.207Z"
         }
       },
-      "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+      "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
       "independentVerdict": "PENDING",
-      "openFindings": [
-        "P4-07 residual: unfenced advanceAgentLifecycle is a public export (pinned by a characterization case)"
-      ],
+      "openFindings": null,
       "status": "NOT_RUN",
       "acceptedEvidence": {
         "acceptedAtUtc": "2026-09-06T06:15:40.760Z",
@@ -4513,7 +4660,14 @@
           "signedAtUtc": "2026-09-06T06:08:25.438Z",
           "userConfirmationRef": null
         }
-      }
+      },
+      "closedFindings": [
+        {
+          "finding": "P4-07 residual: unfenced advanceAgentLifecycle is a public export (pinned by a characterization case)",
+          "reason": "§12.16-3 withdrew the re-export: packages/core/agent/src/index.ts states in-line that advanceAgentLifecycle is deliberately NOT re-exported and it is absent from the export list, so the residual it names no longer exists. The two characterization cases that pinned it were superseded into ABSENCE assertions in the same change — packages/run/lease/tests/fault-matrix.spec.ts:234 and fenced-dispatch.spec.ts:45 both assert 'advanceAgentLifecycle' in agentPackage === false — so the property is now enforced rather than merely recorded, and observed green in run 34238203263 @ 434408a47c.",
+          "closedAtUtc": "2026-09-08T15:07:51.969Z"
+        }
+      ]
     },
     "P4-08": {
       "id": "P4-08",
@@ -4790,10 +4944,10 @@
       "supplements": {
         "U.2": {
           "status": "GREEN",
-          "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-82df08491f/vitest-report.json",
-          "observationSha256": "c64640da4976528ae7995ea13fdfde8a8b4e68b5e69463a94cabf020ee7d9325",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "installs a `workflow` global, and it is GATED rather than merely present",
             "REFUSES a bare name, because a name alone cannot pin the version a run used",
@@ -4804,17 +4958,52 @@
             "P4-09 must[3]: a script nests another definition REFUSES nesting past the configured depth (acceptance[3])",
             "P4-09 must[3]: a script nests another definition CANCELS the nested run when the parent is cancelled (acceptance[1])"
           ],
-          "capturedAtUtc": "2026-09-08T10:42:52.709Z"
+          "capturedAtUtc": "2026-09-08T15:11:48.090Z"
+        },
+        "U.3": {
+          "status": "GREEN",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "expectCasesMatched": [
+            "P4-09 must[3]: a script nests another definition REFUSES a definition that nests ITSELF, structurally rather than by waiting for the depth limit",
+            "validation[2]: the REFERENCE-OBJECT call shape is detected too, which is the one a nested run actually carries"
+          ],
+          "capturedAtUtc": "2026-09-08T15:10:31.148Z"
+        },
+        "U.4": {
+          "status": "GREEN",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "expectCasesMatched": [
+            "P4-09 must[0]: a saved definition is a file, registered at boot registers every definition file under the harness home, naming it by FILE name",
+            "P4-09 must[0]: a saved definition is a file, registered at boot computes each digest from the bytes it read, so a definition cannot claim one it does not hash to",
+            "P4-09 must[0]: a saved definition is a file, registered at boot starts with NO saved workflows when the directory does not exist, rather than failing the boot",
+            "P4-09 acceptance[0]: loading does not execute, and a refused definition does not stop the boot reads a body that would throw if it were ever evaluated, and registers it unharmed",
+            "P4-09 acceptance[0]: loading does not execute, and a refused definition does not stop the boot RECORDS a refused definition and keeps loading the rest",
+            "P4-09 acceptance[0]: loading does not execute, and a refused definition does not stop the boot REFUSES to mount over an engine that cannot register definitions, rather than loading into nothing",
+            "P4-09 must[0]: the REAL engine registers what the loader read loads a file into the mounted worker-thread engine, which then resolves it for a nested run"
+          ],
+          "capturedAtUtc": "2026-09-08T15:10:31.393Z"
         }
       },
       "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba",
       "independentVerdict": "WITHHELD_INCOMPLETE_EPIC",
       "openFindings": [
-        "BLOCKED-100: must[2] (detached) has no implementation — across packages/workflow/*/src and packages/run/*/src every `detach` occurrence is `detachInputSignal` (removing an event listener); the word \"detached\" appears once in the whole family, in a nesting.ts comment stating a detached run is NOT nested. Verified 2026-09-06 with a positive control: the same pattern does find `detachInputSignal`.",
-        "BLOCKED-100: must[3] (nested) has decision functions covering ONE of the clause's three nouns, and no production caller. planNestedRun/inheritWorkerLimits/applyChildFailure/cancelPropagationForNested are real and tested, but every reference outside workflow-registry/ is in nested-budget.spec.ts; runtime.ts installs globals agent/parallel/pipeline/phase/log/args and no `workflow`, with a TRIPWIRE case pinning typeof workflow === 'undefined'. The clause names budget, capability token and trace; nesting.ts and types.ts contain zero occurrences of capability/capabilityToken/trace/traceId (the five `token` hits are tokensRemaining / token-budget-exhausted — a token BUDGET, not a capability token)."
+        "BLOCKED-100: must[2] (detached) has no implementation — across packages/workflow/*/src and packages/run/*/src every `detach` occurrence is `detachInputSignal` (removing an event listener); the word \"detached\" appears once in the whole family, in a nesting.ts comment stating a detached run is NOT nested. Verified 2026-09-06 with a positive control: the same pattern does find `detachInputSignal`."
       ],
       "status": "BLOCKED_ON_ACCEPTANCE",
-      "acceptedEvidence": null
+      "acceptedEvidence": null,
+      "closedFindings": [
+        {
+          "finding": "BLOCKED-100: must[3] (nested) has decision functions covering ONE of the clause's three nouns, and no production caller. planNestedRun/inheritWorkerLimits/applyChildFailure/cancelPropagationForNested are real and tested, but every reference outside workflow-registry/ is in nested-budget.spec.ts; runtime.ts installs globals agent/parallel/pipeline/phase/log/args and no `workflow`, with a TRIPWIRE case pinning typeof workflow === 'undefined'. The clause names budget, capability token and trace; nesting.ts and types.ts contain zero occurrences of capability/capabilityToken/trace/traceId (the five `token` hits are tokensRemaining / token-budget-exhausted — a token BUDGET, not a capability token).",
+          "reason": "Measured at 434408a47c: planNestedRun now HAS a production caller — packages/workflow/workflow-worker-thread/src/index.ts:365 calls it (imported at :19), reached by the runtime's workflow(nameOrRef, args) hook, and the tripwire case that recorded the vacuum ('a script has no workflow global, so nesting cannot be started') was deliberately superseded by 'REFUSES a nested run the host did not admit' in nested-budget.spec.ts, which asserts the host is asked and its refusal reaches the script. The zero-caller condition this finding recorded no longer holds. must[2] (detached) is NOT covered by this closure and stays open.",
+          "closedAtUtc": "2026-09-08T15:12:28.634Z"
+        }
+      ]
     },
     "P4-10": {
       "id": "P4-10",
@@ -4892,10 +5081,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "02938ccfc31c4ce3288f27bf60898fb862f82746",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34116551360",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-02938ccfc3/vitest-report.json",
-          "observationSha256": "1d83c94137a2a800bdb89f9e5d7c0e276d94beb0f39c70d87c596fd7650ac0ee",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reserves an unseen key, which is the only decision that authorizes sending",
             "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reserves again for a PREPARED entry, because nothing left the harness yet",
@@ -4911,14 +5100,14 @@
             "P4-12 must[1]: a provider with native support gets the Idempotency-Key header passes the key through as the Idempotency-Key request header (draft-ietf-httpapi-idempotency-key-header-07)",
             "P4-12 must[1]: a provider with native support gets the Idempotency-Key header sends no Idempotency-Key header for a local-fencing provider, whose dedup is this ledger"
           ],
-          "capturedAtUtc": "2026-09-07T11:58:11.803Z"
+          "capturedAtUtc": "2026-09-08T15:11:48.334Z"
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "02938ccfc31c4ce3288f27bf60898fb862f82746",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34116551360",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-02938ccfc3/vitest-report.json",
-          "observationSha256": "1d83c94137a2a800bdb89f9e5d7c0e276d94beb0f39c70d87c596fd7650ac0ee",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "P4-12 must[2]: the reservation is durable BEFORE the request is sent reports a SENT key as a duplicate after a restart, which is the crash this epic exists for",
             "P4-12 must[2]: the reservation is durable BEFORE the request is sent still reserves a PREPARED key after a restart, because nothing was sent",
@@ -4931,60 +5120,65 @@
             "P4-12 must[2]: the durable store keeps two principals apart (BLOCKED-142) keeps one key reserved by two principals as two rows, neither visible to the other",
             "P4-12 must[2]: the durable store keeps two principals apart (BLOCKED-142) refuses a transition presented under the WRONG principal, so a key cannot be moved from outside its scope"
           ],
-          "capturedAtUtc": "2026-09-07T11:58:12.253Z"
+          "capturedAtUtc": "2026-09-08T15:11:48.582Z"
         },
         "U": {
-          "status": "NOT_RUN",
-          "revokedFrom": {
-            "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
-            "absentCommitments": 1
-          },
-          "revokedReason": "§12.53 companion: greened on an observation that does not contain this cell's live freeze entries, so it pre-committed to nothing. Awaiting re-observation on a tree containing them."
+          "status": "GREEN",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "expectCasesMatched": [
+            "P4-12 must[4]: the dispatch path reserves before it runs a tool RUNS the tool once and confirms the reservation, so an ordinary call is unaffected",
+            "P4-12 must[4]: the dispatch path reserves before it runs a tool REFUSES a second call whose key was already reserved, and the tool does NOT run",
+            "P4-12 must[4]: the dispatch path reserves before it runs a tool runs BOTH calls when the arguments differ, so the key identifies the action and not the tool",
+            "P4-12 must[4]: the dispatch path reserves before it runs a tool runs the tool when NO ledger is mounted, because absence is not an approval to record"
+          ],
+          "capturedAtUtc": "2026-09-08T15:07:17.922Z"
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "2aa43619f3f9b3d4c0a1835a39f402200129abdd",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34136126639",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-2aa43619f3/vitest-report.json",
-          "observationSha256": "fd8c2f1377da2b5e8f4a03cbacd00698d6912628b22510f3d16dfddd9b85d9ca",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects commits each effect exactly once across 10,000 random crashes, counted at the SERVICE",
             "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects still commits the effect at least once when a crash lands before the send",
             "P4-12 validation: a provider that timed out AFTER committing leaves the effect committed once when the ledger is told the outcome is unknown",
             "P4-12 validation: a batch action is ledgered item by item reserves each item separately, so one item failing does not resend the others"
           ],
-          "capturedAtUtc": "2026-09-07T15:53:27.920Z"
+          "capturedAtUtc": "2026-09-08T15:11:48.821Z"
         }
       },
       "supplements": {
         "C.2": {
           "status": "GREEN",
-          "candidateSha": "02938ccfc31c4ce3288f27bf60898fb862f82746",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34116551360",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-02938ccfc3/vitest-report.json",
-          "observationSha256": "1d83c94137a2a800bdb89f9e5d7c0e276d94beb0f39c70d87c596fd7650ac0ee",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "P4-12 must[2]: an idempotency key is unique PER CLIENT, never globally carries the requesting principal into the reservation, which is what the store persists",
             "P4-12 must[2]: an idempotency key is unique PER CLIENT, never globally still refuses a second reservation WITHIN one principal, so scoping did not disable dedup"
           ],
-          "capturedAtUtc": "2026-09-07T11:58:12.026Z"
+          "capturedAtUtc": "2026-09-08T15:11:49.064Z"
         },
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-82df08491f/vitest-report.json",
-          "observationSha256": "c64640da4976528ae7995ea13fdfde8a8b4e68b5e69463a94cabf020ee7d9325",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "the sub-dispatch scheduler (native concurrency contract) P4-12 must[4] — a code-mode sub-dispatch reserves against the ledger like a native call (§12.35-2) RESERVES and CONFIRMS each sub-call, so the ledger records a code-mode effect as it records a native one",
             "the sub-dispatch scheduler (native concurrency contract) P4-12 must[4] — a code-mode sub-dispatch reserves against the ledger like a native call (§12.35-2) REFUSES a sub-call replayed by the SAME run_code call, so a retried program cannot repeat its effect",
             "the sub-dispatch scheduler (native concurrency contract) P4-12 must[4] — a code-mode sub-dispatch reserves against the ledger like a native call (§12.35-2) records an ERRORING sub-call as ambiguous, so a retry cannot repeat an effect that may have happened"
           ],
-          "capturedAtUtc": "2026-09-08T10:42:53.389Z"
+          "capturedAtUtc": "2026-09-08T15:11:49.304Z"
         }
       },
-      "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
+      "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -5350,10 +5544,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "6691eb10ced2a10f7a9fb46f959399cbdabe645e",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34005202535",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs5/first100-vitest-report-6691eb10ced2a10f7a9fb46f959399cbdabe645e/vitest-report.json",
-          "observationSha256": "c418721f5c2439d934d509de7343463c1f6e11f74f228a2acd7d0e87725a58f0",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "P5-10 Contract — must[0]/must[1]: each kind acts only in the phases that admit it steer and continue are admitted while running",
             "P5-10 Contract — must[0]/must[1]: each kind acts only in the phases that admit it acceptance[0]: a steer arriving while the child is CANCELLING is refused, not queued",
@@ -5374,14 +5568,14 @@
             "P5-10 Contract — must[3]: cancellation converges before terminal an EMPTY participant set does NOT converge",
             "P5-10 Contract — must[3]: cancellation converges before terminal one stopped participant beside one running one does not converge"
           ],
-          "capturedAtUtc": "2026-09-06T02:21:03.046Z"
+          "capturedAtUtc": "2026-09-08T15:11:49.546Z"
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "6691eb10ced2a10f7a9fb46f959399cbdabe645e",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34005202535",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs5/first100-vitest-report-6691eb10ced2a10f7a9fb46f959399cbdabe645e/vitest-report.json",
-          "observationSha256": "c418721f5c2439d934d509de7343463c1f6e11f74f228a2acd7d0e87725a58f0",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "P5-10 Provider — an admitted message reaches its Agent operation must[0]: each kind maps onto the operation that kind names",
             "P5-10 Provider — an admitted message reaches its Agent operation acceptance[0]: a steer arriving while cancelling reaches the Agent NOT AT ALL",
@@ -5395,14 +5589,14 @@
             "P5-10 Provider — must[3]: cancellation is not terminal until participants stop a participant stopping during an ORDINARY run does not make the child terminal",
             "P5-10 Provider — must[3]: cancellation is not terminal until participants stop nothing at all reaches the Agent once the child is terminal"
           ],
-          "capturedAtUtc": "2026-09-06T02:21:03.266Z"
+          "capturedAtUtc": "2026-09-08T15:11:49.787Z"
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34019035439",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs/first100-vitest-report-00815e8acc4d839f66ce7bec504274c855a664ba/vitest-report.json",
-          "observationSha256": "629f7e65d2627100577fbd34941a489410d1f61d3e1e42d4f86fc168502c4c60",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "P5-10 Usage — a prompt that races an interrupt acceptance[0]: after an interrupt, the next prompt is refused and never reaches the child",
             "P5-10 Usage — a prompt that races an interrupt a child that was never interrupted takes its prompt as before",
@@ -5411,45 +5605,39 @@
             "P5-10 Usage — a prompt that races an interrupt a DIFFERENT request id after a delivered one is a new prompt",
             "P5-10 Usage — a prompt that races an interrupt a FAILED delivery does not spend the request id, so the caller may retry it"
           ],
-          "absorbedFlakes": [
-            "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions"
-          ],
-          "capturedAtUtc": "2026-09-06T07:57:22.332Z"
+          "capturedAtUtc": "2026-09-08T15:11:50.029Z"
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34019035439",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs/first100-vitest-report-00815e8acc4d839f66ce7bec504274c855a664ba/vitest-report.json",
-          "observationSha256": "629f7e65d2627100577fbd34941a489410d1f61d3e1e42d4f86fc168502c4c60",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "P5-10 Fault — one child's control state cannot decide another's an interrupt on one child leaves a sibling promptable",
             "P5-10 Fault — one child's control state cannot decide another's the SAME request id delivered to two different children is two deliveries",
             "P5-10 Fault — one child's control state cannot decide another's interrupting a child that was never prompted still refuses its next prompt",
             "P5-10 Fault — one child's control state cannot decide another's KNOWN GAP: control state is retained for every child seen, and nothing releases it"
           ],
-          "absorbedFlakes": [
-            "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions"
-          ],
-          "capturedAtUtc": "2026-09-06T07:57:22.538Z"
+          "capturedAtUtc": "2026-09-08T15:11:50.269Z"
         }
       },
       "supplements": {
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-82df08491f/vitest-report.json",
-          "observationSha256": "c64640da4976528ae7995ea13fdfde8a8b4e68b5e69463a94cabf020ee7d9325",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "P5-10 must[1]: a claimed batch leaves the queue by control priority promotes a CANCEL over everything and leaves the rest in arrival order (§12.37)",
             "P5-10 must[1]: a claimed batch leaves the queue by control priority keeps a message with NO control kind in arrival order beside the control messages (§12.37)",
             "P5-10 must[1]: a claimed batch leaves the queue by control priority promotes a cancel PAST ordinary input too, so a stop is never queued behind a prompt"
           ],
-          "capturedAtUtc": "2026-09-08T10:42:52.933Z"
+          "capturedAtUtc": "2026-09-08T15:11:50.504Z"
         }
       },
-      "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba",
+      "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -5468,10 +5656,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
-          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "carries exactly the enumerated fields",
             "represents an unclaimed task with explicit nulls, not absent fields",
@@ -5494,20 +5682,14 @@
             "exposes exactly the coordination fields, so ANY added field must be justified here",
             "carries the claimant's id through UNCHANGED, deriving nothing from it"
           ],
-          "reattested": {
-            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
-            "atUtc": "2026-09-07T06:50:47.817Z"
-          },
-          "capturedAtUtc": "2026-09-07T06:50:47.818Z"
+          "capturedAtUtc": "2026-09-08T15:11:50.747Z"
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "4c9d4356d07dd6bb14c7bf8fe067d39e8a6cf125",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33971207960",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r15/first100-evidence-4c9d4356d07dd6bb14c7bf8fe067d39e8a6cf125/vitest-report.json",
-          "observationSha256": "873045726a0d6e2f9c44d72774a24a82917088f5f768d0fd34383aca654a56c2",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "admits the first claimant and refuses every later one",
             "lets the next worker win once the first claim lapses, at a higher attempt",
@@ -5520,14 +5702,14 @@
             "accepts an acyclic submission, so the refusals above are selective",
             "refuses while a stored dependency is unverified, and admits once verified"
           ],
-          "capturedAtUtc": "2026-09-05T18:08:07.214Z"
+          "capturedAtUtc": "2026-09-08T15:11:50.990Z"
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "4c9d4356d07dd6bb14c7bf8fe067d39e8a6cf125",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33971207960",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r15/first100-evidence-4c9d4356d07dd6bb14c7bf8fe067d39e8a6cf125/vitest-report.json",
-          "observationSha256": "873045726a0d6e2f9c44d72774a24a82917088f5f768d0fd34383aca654a56c2",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "admits a structured value and a stored reference",
             "refuses a bare string, an array and null, even when the type would allow them",
@@ -5544,14 +5726,14 @@
             "records the outputs a receipt carries",
             "refuses a receipt for an unknown task"
           ],
-          "capturedAtUtc": "2026-09-05T18:08:07.436Z"
+          "capturedAtUtc": "2026-09-08T15:11:51.229Z"
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
-          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "P5-11 Fault — claim and graph boundary matrix enumerates at least twelve boundaries, each named once",
             "fault boundary 01 an open task admits its first claim",
@@ -5574,22 +5756,16 @@
             "fault boundary 18 a diamond is accepted: a shared dependency is not a cycle",
             "fault boundary 19 an empty graph is valid"
           ],
-          "reattested": {
-            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
-            "atUtc": "2026-09-07T06:50:48.033Z"
-          },
-          "capturedAtUtc": "2026-09-07T06:50:48.034Z"
+          "capturedAtUtc": "2026-09-08T15:11:51.464Z"
         }
       },
       "supplements": {
         "U.2": {
           "status": "GREEN",
-          "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-82df08491f/vitest-report.json",
-          "observationSha256": "c64640da4976528ae7995ea13fdfde8a8b4e68b5e69463a94cabf020ee7d9325",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "P5-11: a delegated child IS a task on the board CLAIMS the child for the delegating parent while it runs, at the attempt the claim granted",
             "P5-11: a delegated child IS a task on the board REFUSES a second worker while the child is running, and ADMITS one after it settles (acceptance[0], §12.29-1)",
@@ -5600,10 +5776,22 @@
             "P5-11: a delegated child IS a task on the board reports the task status through listChildren, which projections alone cannot answer",
             "P5-11: a delegated child IS a task on the board records NOTHING when no board is mounted, because the producer never activates"
           ],
-          "capturedAtUtc": "2026-09-08T10:42:53.158Z"
+          "capturedAtUtc": "2026-09-08T15:11:51.709Z"
+        },
+        "C.1": {
+          "status": "GREEN",
+          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "expectCasesMatched": [
+            "exposes exactly the coordination fields, so ANY added field must be justified here",
+            "carries the claimant's id through UNCHANGED, deriving nothing from it"
+          ],
+          "capturedAtUtc": "2026-09-08T15:10:29.479Z"
         }
       },
-      "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+      "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
       "independentVerdict": "PENDING",
       "openFindings": [],
       "status": "BLOCKED_ON_ACCEPTANCE",

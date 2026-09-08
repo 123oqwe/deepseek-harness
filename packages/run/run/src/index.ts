@@ -47,7 +47,7 @@ import { brandString } from '@deepseek-ai/dsh-brand'
 import { Service } from '@deepseek-ai/cordis'
 import type { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent/types'
-import { advanceAgentLifecycleFenced, advanceLeasedAgent } from '@deepseek-ai/dsh-agent'
+import { advanceAgentLifecycleFenced, advanceLeasedAgent, holdsDispatchSlot } from '@deepseek-ai/dsh-agent'
 import type { AgentLifecycleState, AgentRunId, TransitionDenialReason } from '@deepseek-ai/dsh-agent'
 import { acquireRunLease } from '@deepseek-ai/dsh-lease-contract'
 import type { WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease-contract'
@@ -860,13 +860,37 @@ export default class RunPlugin extends Service {
       if (agent.runId !== undefined) this.failures.set(agent.runId, error)
     })
     const unstep = this.ctx.on('agent/pre-step', ({ agent }, next) => {
-      // A further step means the agent carried on past whatever it reported,
-      // so the failure is no longer how this run ends.
-      if (agent.runId !== undefined) this.failures.delete(agent.runId)
       this.ensureRunning(agent)
-      // Waterfall: delegating is mandatory. Returning without `next()` would
-      // short-circuit every listener after this one, and this listener has no
-      // opinion about the step it is observing.
+      // P4-05 acceptance[1], §12.60: a run that is not holding a dispatch slot
+      // does not begin a model step. `ensureRunning` has already returned the
+      // ordinary waits — `queued` and `waiting_tool` — to `running`, so what
+      // reaches this check is a run that is orphaned, terminal, or paused, and
+      // a model step from any of those spends an LLM call on work this host no
+      // longer owns or has already finished.
+      //
+      // This is the deliberate short-circuit the waterfall contract describes:
+      // refusing IS an opinion about the step, so `next()` is not called.
+      // `queued` is excluded deliberately. It is in `NON_CONSUMING_STATES`
+      // because a queued run has NOT STARTED, not because it released a slot,
+      // and it is also where a fenced host stays when `ensureRunning`'s
+      // `queued → starting` is refused. P4-07 owns that case and answers it
+      // downstream, by refusing each tool call so the model is told its calls
+      // did not run; rejecting the step here would replace that frozen,
+      // model-visible behavior with silence.
+      const lifecycle = agent.lifecycle
+      if (lifecycle !== undefined && lifecycle.state !== 'queued' && !holdsDispatchSlot(lifecycle)) {
+        this.ctx.logger.warn(
+          'run: refused a model step for agent %s — its lifecycle is %s, which holds no dispatch slot',
+          agent.id,
+          lifecycle.state,
+        )
+        return Promise.resolve({ kind: 'reject' as const })
+      }
+      // Cleared only once the step is actually admitted: a refused step means
+      // the agent did NOT carry on, so an unrecovered failure is still how
+      // this run ends.
+      if (agent.runId !== undefined) this.failures.delete(agent.runId)
+      // Waterfall: delegating is mandatory for a step this listener admits.
       return next()
     })
     // Agents a profile configures are created inside the agent loop's own

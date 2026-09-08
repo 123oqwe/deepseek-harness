@@ -630,3 +630,49 @@ describe('P4-05 acceptance[2]: an orphaned run is reclaimed, or safely failed, b
     }
   })
 })
+
+describe('P4-05 acceptance[1] (§12.60): a run holding no dispatch slot does not begin a model step', () => {
+  it('REFUSES the step for a reclaimed run, so no LLM call is spent on work this host lost', async () => {
+    // `holdsDispatchSlot`'s production caller. The failure it prevents is
+    // concrete: an orphaned run whose host kept stepping would spend model
+    // calls on work another host now owns, and every result it produced would
+    // be written against a lifecycle it no longer has authority over.
+    const leaseDirectory = await mkdtemp(join(tmpdir(), 'dsh-run-nostep-'))
+    roots.push(leaseDirectory)
+    const first = await harness({ leaseDirectory, leaseMs: 40 })
+    const second = await harness({ leaseDirectory, leaseMs: 1_000 })
+
+    let requests = 0
+    const adapter = new MockAdapter([textResponse('should never be asked')])
+    const counting = new Proxy(adapter, {
+      get(target, key, receiver) {
+        if (key === 'stream' || key === 'generate') requests += 1
+        return Reflect.get(target, key, receiver) as unknown
+      },
+    })
+    first.llm.registerAdapter(['mock'], counting)
+
+    const stranded = first.agentLoop.create(SessionId('nostep-session'), { provider: 'mock', model: 'mock' })
+    const firstPlugin = first.runs as unknown as { heartbeats: Map<unknown, NodeJS.Timeout> }
+    for (const timer of firstPlugin.heartbeats.values()) clearInterval(timer)
+    firstPlugin.heartbeats.clear()
+    await new Promise<void>((resolve) => { setTimeout(resolve, 80) })
+
+    expect(second.runs.reclaim(stranded, Date.now())).toBe('reclaimed')
+    expect(stranded.lifecycle?.state).toBe('orphaned')
+
+    stranded.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await stranded.whenIdle()
+
+    // The step was refused before the model was reached.
+    expect(requests).toBe(0)
+    expect(stranded.session.snapshotEvents().filter(event => event.type === 'request/header')).toEqual([])
+    // And the refusal did not move the lifecycle: the reclaimer still owns it.
+    expect(stranded.lifecycle?.state).toBe('orphaned')
+
+    for (const ctx of [first, second]) {
+      await ctx.fiber.dispose()
+      mounted.splice(mounted.indexOf(ctx), 1)
+    }
+  })
+})
