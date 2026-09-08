@@ -167,6 +167,13 @@ These limits define when the engine is a poor fit or needs special operational c
 - **The worker and vm are not a security boundary** — model-written code can escape `node:vm` and reach the worker's process authority; a hostile-code deployment needs a separate-process or container engine.
 - **One worker thread is paid per run** — there is no pool, warm runtime, or cross-run script cache.
 - **No ambient timers, filesystem, or network are injected, but escaped code can still reach Node** — the missing globals are a portability API, not containment.
+- **A run that waits gives up its concurrency slot, and gets it back first.**
+  `whileNotConsuming` releases the slot for the duration of a non-consuming
+  lifecycle state (Epic P4-05 acceptance[1]), so another `agent()` may start
+  while this one waits. The slot is re-acquired at resume priority — ahead of
+  every queued new start — because queueing a resuming run behind new starts
+  could make it finish later than if it had never released, which would turn
+  the release into a pessimisation. New starts pay that latency instead.
 - **Termination can only report host-observed starts** — `agentsStarted` excludes worker-side calls still queued behind concurrency when a forced termination makes them unknowable.
 - **Cross-realm errors fail `instanceof Error` inside scripts** — workflow authors must branch on stable fields such as `name` and `code`.
 - **A resume stops rather than decide an unresolved external effect** — when a journalled step's side-effect receipts are not all `confirmed` in `ctx.actionLedger` and not all unreserved, `resume` throws `ambiguous-reconciliation-required` naming the step and its receipts, for an operator to reconcile. A run with no ledger mounted, or whose parent agent carries no identity to scope the query by, takes that path for any recorded receipt: being unable to ask is not the same answer as "never reserved", and only the latter clears a step to run again.

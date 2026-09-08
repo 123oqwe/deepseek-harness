@@ -169,3 +169,74 @@ describe('P4-09 must[3]: the nesting vacuum is pinned, not merely noted', () => 
     expect(result.value).toContain('REFUSED: workflow() requires { name, digest }')
   })
 })
+
+describe('P4-05 acceptance[1] (§12.59): a waiting run holds no concurrency slot', () => {
+  it('lets B start while A waits, and gives A its slot back BEFORE a new start C', async () => {
+    // §12.59's frozen case at `maxConcurrentAgents: 1`. Two properties, both
+    // required: releasing the slot is what lets B run at all, and resume
+    // priority is what stops that release from costing A its place — queued
+    // behind every new start, a run that yielded to wait could finish later
+    // than one that never released, which would make releasing a pessimisation.
+    //
+    // The slot machinery is driven directly because the clause is about the
+    // slot; going through `agent()` would test the script scheduler's timing
+    // instead of the policy.
+    const execution = new WorkflowExecution(
+      { name: 'slots', description: 'exercises the slot policy' },
+      "return 'unused'",
+      undefined,
+      { maxConcurrentAgents: 1, maxTotalAgents: 5, maxItemsPerCall: 10, syncTimeoutMs: 5_000 },
+      { phase: () => {}, log: () => {}, agentStart: () => {}, agentEnd: () => {} },
+      {
+        startAgent: () => Promise.reject(new Error('no children in this case')),
+        startNested: () => Promise.reject(new Error('not used')),
+      },
+    )
+    const runtime = execution as unknown as {
+      acquireSlot(priority?: 'new-start' | 'resume'): Promise<void>
+      releaseSlot(): void
+      whileNotConsuming<T>(body: () => Promise<T>): Promise<T>
+      slotWaiters: readonly unknown[]
+    }
+
+    const order: string[] = []
+    let queueC!: Promise<void>
+    // An explicit barrier rather than a tick count: the body suspends on its
+    // own acquire, so a test that released B's slot "a microtask later" would
+    // depend on how many awaits the implementation happens to take.
+    let queued!: () => void
+    const cIsQueued = new Promise<void>((resolve) => { queued = resolve })
+
+    await runtime.acquireSlot()
+
+    const waited = runtime.whileNotConsuming(async () => {
+      // Only reachable because A released: at a limit of one, this acquire
+      // would never settle otherwise, and the case would time out rather than
+      // report a wrong order.
+      await runtime.acquireSlot()
+      order.push('B:ran-while-A-waited')
+      // C asks while A is still waiting, so A's resume has to overtake it.
+      queueC = runtime.acquireSlot('new-start').then(() => { order.push('C:started') })
+      queued()
+    })
+
+    await cIsQueued
+    // Wait for the QUEUE STATE, not for a number of ticks: C is queued by the
+    // body and A by `whileNotConsuming`'s own finally, which lands a microtask
+    // later. Releasing between the two would hand the slot to C and prove the
+    // opposite of the property under test.
+    while (runtime.slotWaiters.length < 2) await Promise.resolve()
+
+    // A is now queued for its slot back, at the head. Freeing B's slot must
+    // hand it to A rather than to C.
+    runtime.releaseSlot()
+    await waited
+    order.push('A:resumed')
+
+    // Let C through so the case leaves nothing pending.
+    runtime.releaseSlot()
+    await queueC
+
+    expect(order).toEqual(['B:ran-while-A-waited', 'A:resumed', 'C:started'])
+  })
+})

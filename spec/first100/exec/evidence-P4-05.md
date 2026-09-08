@@ -121,9 +121,15 @@ This is the first RUNTIME import of `@deepseek-ai/dsh-agent` by `core/tools` —
 
 Covered in `packages/run/run/tests/fenced-dispatch.spec.ts` against a real Run-backed leased agent, asserting the state observed FROM INSIDE the approval request: a case that only looked afterwards would pass against a gate that never moved the lifecycle. Mutation-checked: removing the advance reports `expected 'running' to be 'waiting_human'`.
 
-### `consumesNoResources` — BLOCKED-163, not closed
+### `consumesNoResources` — mechanism landed per §12.59; item 3 does not fit and is recorded
 
-Both consumers §12.57 named were measured and neither is honest: skipping lease renewal in non-consuming states would drop the lease during ordinary `waiting_tool` tool calls longer than `leaseMs`, and budget accounting is turns and USD, which a wait consumes none of — gating it would change no outcome for any input. The one real worker-slot mechanism, `maxConcurrentAgents` in the workflow runtime, belongs to P4-09 and releasing a slot mid-wait is a scheduling policy decision with a starvation failure mode. `holdsDispatchSlot` already exists as the intended consumer surface with zero production callers. Recorded rather than manufactured.
+BLOCKED-163 reported that §12.57's two named consumers both fail on measurement: skipping lease renewal would drop the lease during ordinary `waiting_tool` calls longer than `leaseMs`, and budget accounting is turns and USD, which a wait consumes none of. §12.59 accepted both objections and ruled the subject is the CONCURRENCY SLOT — the one bounded resource a waiting agent can hold in this harness.
+
+Items 1 and 2 are implemented. `WorkflowExecution.whileNotConsuming` releases the slot for the duration of a non-consuming state and re-acquires it at `resume` priority, which `acquireSlot` places at the HEAD of the waiter queue. That answers the starvation objection directly: a run that yielded cannot be overtaken by new starts, so releasing is never a pessimisation, and new-start latency is the stated cost.
+
+Frozen exactly as §12.59 specified, at `maxConcurrentAgents: 1`: A waits, B starts during the wait, C is a new start queued behind, and A resumes before C. Both required mutations are red — "resume at tail" reorders the result, and "wait does not release the slot" deadlocks the case rather than reordering it, which is the honest signal that B could not have run at all.
+
+**Item 3 does not fit, and is not forced.** `holdsDispatchSlot` cannot become the dispatch-layer check at tool dispatch: `tool-calls.ts:95` advances the run to `waiting_tool` — itself a member of `NON_CONSUMING_STATES` — immediately BEFORE dispatching, so a "no slot, no dispatch" guard there would refuse every tool call in the harness. Nor can it be the check inside the slot machinery, because that machinery holds slot counts and has no `AgentLifecycle` to pass it. `holdsDispatchSlot` therefore still has zero production callers; the predicate it wraps now has a real consumer, but the wrapper does not.
 
 ### `orphaned` + reclaim, `paused` — NOT YET DONE
 

@@ -237,19 +237,27 @@ export class WorkflowExecution {
    * (see {@link cancel}); the callers guard their own entry and post-acquire
    * windows, so no cancelled-precheck is duplicated here.
    */
-  private acquireSlot(): Promise<void> {
+  private acquireSlot(priority: 'new-start' | 'resume' = 'new-start'): Promise<void> {
     if (this.activeSlots < this.limits.maxConcurrentAgents) {
       this.activeSlots += 1
       return Promise.resolve()
     }
     return new Promise<void>((resolve, reject) => {
-      this.slotWaiters.push({
+      const waiter = {
         resolve: () => {
           this.activeSlots += 1
           resolve()
         },
         reject,
-      })
+      }
+      // A run coming back from a wait goes to the HEAD (Epic P4-05
+      // acceptance[1], §12.59). Releasing a slot to wait must not cost the run
+      // its place: queued behind every new start, a run that yielded while
+      // asking an operator could wait longer than if it had held the slot
+      // throughout, which would make releasing it a pessimisation. New starts
+      // pay that latency instead, which is the stated policy.
+      if (priority === 'resume') this.slotWaiters.unshift(waiter)
+      else this.slotWaiters.push(waiter)
     })
   }
 
@@ -257,6 +265,29 @@ export class WorkflowExecution {
     this.activeSlots -= 1
     const next = this.slotWaiters.shift()
     if (next) next.resolve()
+  }
+
+  /**
+   * Run `body` without holding a concurrency slot (Epic P4-05 acceptance[1]).
+   *
+   * The clause's mechanism: a run in a non-consuming lifecycle state holds no
+   * worker slot, so another agent may start while this one waits. The slot is
+   * re-acquired at `resume` priority before `body`'s caller continues, so the
+   * wait cannot cost this run its place in the queue.
+   *
+   * The slot is released only when this run actually holds one; a caller that
+   * waits before acquiring would otherwise return a slot it never took and let
+   * the pool exceed its limit.
+   * @param body - the wait to perform while the slot is free.
+   * @returns whatever `body` resolved to.
+   */
+  async whileNotConsuming<T>(body: () => Promise<T>): Promise<T> {
+    this.releaseSlot()
+    try {
+      return await body()
+    } finally {
+      await this.acquireSlot('resume')
+    }
   }
 
   /**
