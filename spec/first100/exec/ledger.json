@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-08T15:12:28.635Z",
-  "inputDigest": "bb4ca229157e82d78f6cbf1cef5559866bcbb7738ad7969061d19f4484f4e4ce",
+  "lastUpdatedUtc": "2026-09-08T15:25:33.893Z",
+  "inputDigest": "0d0b6c62943a92a93d20d5ce68b0ffa30c71be0ceea62bec30926bd661daad6a",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -2965,23 +2965,23 @@
         }
       },
       "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-      "independentVerdict": "PENDING",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "BLOCKED_ON_ACCEPTANCE",
+      "status": "ACCEPTED",
       "acceptedEvidence": {
-        "acceptedAtUtc": "2026-09-06T23:19:03.083Z",
+        "acceptedAtUtc": "2026-09-08T15:25:33.169Z",
         "cells": {
           "C": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-            "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980"
           },
           "U": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-            "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980"
           },
           "F": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-            "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980"
           }
         },
         "coverageClosure": {
@@ -2991,7 +2991,7 @@
         },
         "delegateSignoff": {
           "delegateSession": "guanjieqiao-92",
-          "signedAtUtc": "2026-09-06T23:17:27.948Z",
+          "signedAtUtc": "2026-09-08T15:22:51.921Z",
           "userConfirmationRef": null
         }
       }
@@ -4627,27 +4627,27 @@
         }
       },
       "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-      "independentVerdict": "PENDING",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "NOT_RUN",
+      "status": "ACCEPTED",
       "acceptedEvidence": {
-        "acceptedAtUtc": "2026-09-06T06:15:40.760Z",
+        "acceptedAtUtc": "2026-09-08T15:25:33.355Z",
         "cells": {
           "C": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33959624760",
-            "candidateSha": "82d5e8112233b371fe891b7489e89fc2658b109f"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980"
           },
           "P": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33959624760",
-            "candidateSha": "82d5e8112233b371fe891b7489e89fc2658b109f"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980"
           },
           "U": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33959624760",
-            "candidateSha": "82d5e8112233b371fe891b7489e89fc2658b109f"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980"
           },
           "F": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33959624760",
-            "candidateSha": "82d5e8112233b371fe891b7489e89fc2658b109f"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980"
           }
         },
         "coverageClosure": {
@@ -4657,7 +4657,7 @@
         },
         "delegateSignoff": {
           "delegateSession": "guanjieqiao-92",
-          "signedAtUtc": "2026-09-06T06:08:25.438Z",
+          "signedAtUtc": "2026-09-08T15:23:14.497Z",
           "userConfirmationRef": null
         }
       },
@@ -5179,10 +5179,40 @@
         }
       },
       "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-      "independentVerdict": "PENDING",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "NOT_RUN",
-      "acceptedEvidence": null
+      "status": "ACCEPTED",
+      "acceptedEvidence": {
+        "acceptedAtUtc": "2026-09-08T15:25:33.534Z",
+        "cells": {
+          "C": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980"
+          },
+          "P": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980"
+          },
+          "U": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980"
+          },
+          "F": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980"
+          }
+        },
+        "coverageClosure": {
+          "valid": true,
+          "missingIndices": [],
+          "unverifiedCitations": []
+        },
+        "delegateSignoff": {
+          "delegateSession": "guanjieqiao-92",
+          "signedAtUtc": "2026-09-08T15:23:15.300Z",
+          "userConfirmationRef": null
+        }
+      }
     },
     "P4-13": {
       "id": "P4-13",
@@ -5638,10 +5668,40 @@
         }
       },
       "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-      "independentVerdict": "PENDING",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "NOT_RUN",
-      "acceptedEvidence": null
+      "status": "ACCEPTED",
+      "acceptedEvidence": {
+        "acceptedAtUtc": "2026-09-08T15:25:33.729Z",
+        "cells": {
+          "C": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980"
+          },
+          "P": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980"
+          },
+          "U": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980"
+          },
+          "F": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980"
+          }
+        },
+        "coverageClosure": {
+          "valid": true,
+          "missingIndices": [],
+          "unverifiedCitations": []
+        },
+        "delegateSignoff": {
+          "delegateSession": "guanjieqiao-92",
+          "signedAtUtc": "2026-09-08T15:23:16.216Z",
+          "userConfirmationRef": null
+        }
+      }
     },
     "P5-11": {
       "id": "P5-11",
@@ -5792,27 +5852,27 @@
         }
       },
       "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-      "independentVerdict": "PENDING",
+      "independentVerdict": "APPROVED",
       "openFindings": [],
-      "status": "BLOCKED_ON_ACCEPTANCE",
+      "status": "ACCEPTED",
       "acceptedEvidence": {
-        "acceptedAtUtc": "2026-09-06T00:04:00.046Z",
+        "acceptedAtUtc": "2026-09-08T15:25:33.892Z",
         "cells": {
           "C": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33971207960",
-            "candidateSha": "4c9d4356d07dd6bb14c7bf8fe067d39e8a6cf125"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980"
           },
           "P": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33971207960",
-            "candidateSha": "4c9d4356d07dd6bb14c7bf8fe067d39e8a6cf125"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980"
           },
           "U": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33971207960",
-            "candidateSha": "4c9d4356d07dd6bb14c7bf8fe067d39e8a6cf125"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980"
           },
           "F": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33971207960",
-            "candidateSha": "4c9d4356d07dd6bb14c7bf8fe067d39e8a6cf125"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980"
           }
         },
         "coverageClosure": {
@@ -5822,7 +5882,7 @@
         },
         "delegateSignoff": {
           "delegateSession": "guanjieqiao-92",
-          "signedAtUtc": "2026-09-06T00:01:42.984Z",
+          "signedAtUtc": "2026-09-08T15:23:17.192Z",
           "userConfirmationRef": null
         }
       }
