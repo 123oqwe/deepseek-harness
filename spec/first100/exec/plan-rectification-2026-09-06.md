@@ -1007,3 +1007,8 @@ P2-03 撤签后门 (e) 正确地红了五条(`@modelcontextprotocol/sdk`、`open
 - **"表在默认档一个都不拦" 不是缺陷,是沙箱在工作**:默认档的风险门真正门住的三样是 (1) **未声明 tags 的工具**(unknown → `security-sensitive` ≥ 阈值:交互档审批、headless 拒——第三方插件工具"不声明就不在 headless 跑",fail-closed 是 P2-03 acc[2] 的意图,模型可见拒绝文本写明"undeclared risk",Known Limitations 记);(2) **声明 `security-sensitive`/`financial`** 的动作(今天出货集合无);(3) **声明 `safety-critical`** → 所有档 hard-deny。U 的真门用例正是这三条(测试组合里放一个未声明工具、一个声明 security-sensitive 的工具、一个声明 safety-critical 的),不需要把 bash 抬上去制造"有东西被拦"的假象。
 - (a) 表写在 base `permission` 条目 `riskRules` 下,全部 bundle 继承,对;(b) 门在 `core/tools/src/external-effect.ts`(两派发器共享),三分支 `hardDenied` 直接拒 / 达阈值走 `ctx.approval` / 其余放行,对;(c) 由上,headless 出货行为不变(shell、写文件都在阈值下),变的只是未声明工具与声明高危动作。snapshot 语料预期不变。
 **§6 报用户**:默认档下"未声明风险的插件工具在 headless 被拒"是产品默认,可用 `DSH_PERMISSION_MODE=danger-full-access` 整体退出,或在 preset 里调阈值。
+
+### 12.51 P4-06 / P4-07 全闭可签;P4-12 签七条,must[2] 与 must[3] 后半定向延期到 P4-13.U(2026-09-08 09:50 EDT)
+
+**P4-06**:settlement 路径为消费者(`commitIntake` 4、`applyReceipt` 3),must[0] 否定半边("不经 KV seam")是模块属性——`bus-store.ts` 直接 `node:sqlite`、无 KV import;must[2] 到达键与 `commitSettlement` 同一三元组——**可签**。**P4-07**:两条子句(must[0] work item、acc[0] `leaseRefused`)是在本程序里量错后修对的,证据包按事实写——**可签**。
+**P4-12**:七条闭。must[2]"provider 若支持原生 key 则透传"与 must[3]"目标状态查询"后半在本 build **没有主语**:唯一出货 HTTP 出口 `web-fetch-http` 只 GET,搜索 provider 的 POST 是查询不是效果——没有任何出货 provider 既产生外部效果又支持该 header。**定向延期 `landsIn: P4-13.U`**(Reconciliation Engine,W13,前置正是 P4-12;其 must[0]"Tool/provider 可声明 observeState / compareExpected / compensate"就是 provider 声明能力的地方——原生幂等 header 支持与目标状态查询在那里获得主语),写进 P4-13 的 readiness gate。这不是"填一个不会发生的 epic":P4-13 已排期且以 P4-12 为前置。签七条。
