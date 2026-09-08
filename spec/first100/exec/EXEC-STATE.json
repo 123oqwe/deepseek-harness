@@ -3,21 +3,21 @@
     "name": "first100-exec-state",
     "version": "1.0"
   },
-  "lastUpdatedUtc": "2026-09-08T18:38:28.375Z",
+  "lastUpdatedUtc": "2026-09-08T20:36:45.326Z",
   "activeWorktree": "/Users/guanjieqiao/dsh-first100-clean",
   "activeBranch": "first100-exec",
   "currentWave": 4,
   "currentSlice": {
-    "epic": "P2-04",
-    "stage": "P",
-    "step": "AWAITING_PUSH",
-    "detail": "The MCP annotations slice (§12.61) is committed at 224d2ac867 with its 11 cases frozen as P2-04.P.3, and verify-adapt-dispositions is green again, which was the gate blocking the push. Ten commits are queued locally and unpushed, ending at 1011643fa7; per C14 the delegate performs gate 3 and the push, so no CI observation exists for any of them yet. P4-05's new behaviour (failed, waiting_human, slot release, reclaim, step admission) is frozen as C.1/U.2/F.3 but NOT yet observed, so P4-05 stays unsigned. Awaiting four rulings: P4-11's outbox question and P1-10's three (no adopt-role OSS row exists for it, its relationship to SCHEMA_VERSION's reject-old-formats stance, and its boundary against P3-11's workspace checkpointing). Both READY epics have preFlights on record and neither C stage has begun."
+    "epic": "P4-09",
+    "stage": "U",
+    "step": "BLOCKED_ON_RULING",
+    "detail": "The capability-token slice is written up (preflight-P4-09-token.md) and NOT started, because measuring for it produced BLOCKED-168: `.attenuate(` has zero production callers across packages/, and `attenuateDelegatedToken` is defined in subagent/src/child-agent.ts:306 with every outside reference in its own test. P2-02 \u2014 titled for attenuable capability tokens AND sub-agent delegation, ACCEPTED with zero open findings \u2014 froze both a file whose subject core/tools consumes and one whose subject nothing does, so its delegation half holds in unit tests only. The delegate must rule before the slice proceeds, since \u00a712.66's instruction to reuse that derivation rested on my own false claim that child-agent.ts already called it. `detached` follows the token slice per \u00a712.66 and must not precede it. Gate 3 awaits a re-run at d19b70e6a0 after the doc-standard README fix; the batch's observation targets are P2-04.P.3's lint fix, P4-08 C.4/F.5, and P4-11.C's 13 frozen cases. P4-11's Provider stage adopts cockatiel and has not begun; P1-10 has a preFlight and three open questions."
   },
   "registryDigest": "5c75260e96c9db1ca045c1bf4a013a5a1f356651c23baef924066bec627ef4f7",
-  "ledgerDigest": "2fc9e4f804a00cd52e2f0481ed0e6e91bad490e7a5435b60402345b967761d7a",
+  "ledgerDigest": "bc05c41255671e28a28252e70d1746e6ceb353348de580c9f3b4097c7dc37a4c",
   "blockedQueueRef": "spec/first100/exec/BLOCKED-QUEUE.md",
   "totals": {
-    "acceptedEpics": 26,
+    "acceptedEpics": 25,
     "totalEpics": 110,
     "programGate": "NO-GO"
   }
