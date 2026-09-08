@@ -241,6 +241,14 @@
       "delegateSession": "guanjieqiao-92",
       "signedAtUtc": "2026-09-08T15:23:14.497Z",
       "note": "Observation run 34238203263 @ 434408a47c (signed bundle, 20490/0). 4.4b: C/P/U/F and every supplement GREEN @ 434408a47c, 0 open findings. 4.4a: advanceLeasedAgent is the sole entry with four production call sites, epochs issued by the lease store (dsh-lease-sqlite enabled in bundle/base), unfenced export removed; LeaseRefusedError vs FencedError distinct; heartbeat leaseMs/3; release on completion."
+    },
+    {
+      "epic": "P4-12",
+      "rowDigestSha256": "e16a721fa588b1a7e45cd707624e6bb1dc078f36df7f845881eeb9a130905cfd",
+      "conclusion": "PASS",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-08T15:23:15.300Z",
+      "note": "Observation run 34238203263 @ 434408a47c (signed bundle, 20490/0). 4.4b: C/P/U/F and supplements C.2/U.1 GREEN @ 434408a47c, 0 open findings. 4.4a: reserveExternalEffect/confirmExternalEffect on both native (tool-calls.ts) and code-mode (ptc) paths, dsh-action-ledger enabled in bundle/base; per-principal scoping observed at P (BLOCKED-142 cases: two principals same key → two rows; wrong-principal transition refused); C.1 superseded by C.2 (ceremony) — property lives at P, no rename."
     }
   ]
 }
