@@ -78,6 +78,7 @@ import {
 import type {
   CapabilityToken,
   CapabilityTokenDigest,
+  CapabilityTokenProviderContract,
   CapabilityTokenLogRecord,
   CapabilityTokenNonce,
   SignedCapabilityToken,
@@ -87,6 +88,13 @@ import type {
   TokenLineage,
   TokenVerificationResult,
 } from './types.ts'
+
+
+declare module '@deepseek-ai/cordis' {
+  interface Context {
+    capabilityTokens: CapabilityTokenProviderContract
+  }
+}
 
 export * from './types.ts'
 export * from './attenuate.ts'

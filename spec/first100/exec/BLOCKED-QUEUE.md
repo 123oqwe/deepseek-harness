@@ -39,6 +39,24 @@ Recorded per §12.69, and the reason it is ONE entry rather than three is itself
 
 ### BLOCKED-168 — P2-02's delegation half has no production caller, and P2-02 is ACCEPTED
 
+**State: CLOSED for the delegation half (P2-02.U). The revocation PRODUCER is the remaining open question and is tracked at the end of this entry.**
+
+Re-measured after P2-02.U: delegation now has a production caller. `applyChildComposition` derives the child's token at `packages/subagent/subagent/src/child-agent.ts:263` — at the same point, and with the same `composition.toolFilter`, that narrows the child's tool VISIBILITY, so authority and visibility are decided together rather than one being enforced while the other is claimed. The derivation itself goes through `capabilityTokens.deriveChild` → `service.attenuate`, which RECORDS the child, without which `lineageOf` cannot walk to it and acceptance[1]'s revocation check is blind.
+
+Observed on real spawns rather than constructed pairs: `subagent/tests/capability-token-spawn.spec.ts` (4 cases) plus the `ralph-loop` and `subagent-spawn-in-process` profile corpora. The premise below — "and P2-02 is ACCEPTED" — is also no longer true: the sign-off was WITHDRAWN (§12.69) for exactly the gap this entry named, and P2-02.U is the rebuild.
+
+**acceptance[1]'s revocation producer: measured, ruled, and directed to P2-12.U (§12.77).**
+
+The candidate was P5-10's cancel path, and it was MEASURED before anything was wired (`evidence-P2-02.md`): a continuable child whose parent turn is cancelled still has its next tool call admitted (`stillAdmitted=true`, returned `ok`). That looked like a leak and is not one. `Agent.cancel` is turn-scoped — `agent-loop/src/agent.ts:171-177` aborts the phase and leaves the agent usable — while a token carries what a SESSION delegated, and P5-10's semantics are that cancelling is not disconnecting. A continuable child outliving the turn is its definition.
+
+Wiring revocation there would have been actively wrong: `revokeSession(parent)` revokes the parent's own root, so a user cancelling one turn would have every later call in that session refused.
+
+**So the producer is P2-12's emergency stop** — `cancel run` / `kill execution world` revoking the run's session roots, cascading to descendants through the recorded lineage. `landsIn: P2-12.U`, carried by P2-12's readiness entry alongside BLOCKED-167's `pause new actions` / `resume`: the emergency stop IS the revocation of the run's session roots, and the two are one mechanism rather than two.
+
+Until then acceptance[1] is signed at the DECISION level under §12.46-B — the provider spec's `kills a child derived from an EARLIER root when the session is revoked`, plus the real-spawn cases proving a derived child records `parentDigest` so the lineage walk can reach it.
+
+**Original entry, kept because the measurement it records is what the closure is measured against:**
+
 Found while measuring for P4-09's capability-token slice, and recorded here rather than left in a preFlight aside, because it concerns an epic that is already signed.
 
 **The measurement.** `.attenuate(` has ZERO production callers across `packages/` (excluding `lib/`, `tests/` and `*.spec.ts`). `attenuateDelegatedToken` is DEFINED at `subagent/subagent/src/child-agent.ts:306`, and every reference to it outside its own module is in `subagent/tests/capability-token-delegation.spec.ts`. Nothing in the shipped tree derives a child token from a parent's.
@@ -726,7 +744,24 @@ Separately and additionally, the WRITE path has no production caller at all: not
 
 ### BLOCKED-154 — P5-11's boards have no producer: nothing in the harness creates a task or a fact
 
-**State: OPEN, measured. The last epic gate (u) reports, and the gap is a missing producer rather than a missing wiring.**
+**State: SPLIT (§12.75). The TASK and MAILBOX halves are CLOSED — they have producers now. The FACT half stays OPEN and lands in P6-02.U.**
+
+Re-measured on this tree, same method as the original table (`git ls-files`, excluding the owning packages, every `tests/` path, this program's JSON and the notes archive):
+
+| subject | clause | production callers | half |
+| --- | --- | --- | --- |
+| `decideClaim` | must[0] | 2 — `run/taskboard-sqlite/src/{index,store}.ts`, `subagent/subagent-taskboard/src/index.ts` | task, CLOSED |
+| `validateTaskGraph` | acceptance[2] | 2 — same | task, CLOSED |
+| `openTaskStore` | must[0], acceptance[0] | 2 — same | task, CLOSED |
+| `decideMailboxDelivery` | mailbox | 2 — `run/message-bus/src/{mailbox-delivery,index}.ts` | mailbox, CLOSED |
+| `admitFact` | must[1] | **0** | fact, OPEN |
+| `traceToObservations` | must[1] provenance | **0** | fact, OPEN |
+
+`bundle/base` mounts `@deepseek-ai/dsh-taskboard-sqlite` and `@deepseek-ai/dsh-subagent-taskboard`; it mounts **no** blackboard row, and `dsh-blackboard` has no importer outside its own package. So the product question below — "what, in this harness, IS a task?" — was answered for tasks by a delegated subagent becoming one (reading 1), and remains unanswered only for FACTS.
+
+**The fact half is not this epic's to answer.** §12.27-3 directs the blackboard to **P6-02.U**, the same shape `paused` takes to P2-12: the producer belongs to a scheduled later epic, and the decision here is testable now. `landsIn: P6-02.U`, carried by P6-02's readiness entry. P5-11's sign-off is maintained on that basis rather than withdrawn — the halves that had no subject now have one, and the half that does not is scheduled rather than claimed.
+
+**Original state, kept because the measurement it records is what the split rests on:**
 
 Measured over `git ls-files`, excluding the owning packages, every `tests/` path, this program's own JSON and the notes archive:
 

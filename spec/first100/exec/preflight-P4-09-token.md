@@ -59,6 +59,18 @@ Case 4 stays §12.66's requested boundary test and remains necessary: measured a
 
 Mutation expectations for THIS slice, to be RUN and pasted rather than predicted (§12.68): removing the widening check must redden case 2.
 
+## Reuse, not a second derivation (updated after P2-02.U landed `deriveChild`)
+
+The four steps above were written when the only way to derive was to call `attenuate` directly. P2-02.U has since put that decision behind ONE production entry point — `capabilityTokens.deriveChild(parentSession, childSession, filter)` on the service contract declared in `@deepseek-ai/dsh-capability-token` — and a workflow run calling `attenuate` itself would be the second answer to "may this child hold this authority" that the lift exists to prevent.
+
+So this slice consumes that entry point instead of steps 1–3:
+
+- The nested run's child session derives from the launching session, under the run's own restriction as the filter. The provider resolves the parent's CURRENT token, applies `delegatedChildResources`, and records the child through `service.attenuate` — which is what keeps `lineageOf` able to walk to it, without which acceptance[1]'s revocation check is blind to nested runs.
+- The refusal in step 3 stays this slice's to surface: `deriveChild` reports its failure through `issuanceError(session)`, and the run must refuse rather than start unauthorized work. A run that started anyway on a failed derivation would be the same "looks enforced, enforces nothing" shape P2-02's withdrawal was about.
+- Step 4 (a detached run keeping its authority after the launching turn ends) is unchanged and still belongs to the `detached` slice.
+
+**What this slice must NOT do:** call `attenuate`, `attenuateDelegatedToken`, or `issue` directly. Those are the definition package's, and the provider is the only production caller.
+
 ## Status
 
 **No code written.** Submitted for review. `detached` follows this slice or lands with it.

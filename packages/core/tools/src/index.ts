@@ -370,6 +370,19 @@ export interface ToolExecutionInput {
    * event, or the model-facing prompt (acceptance[2]).
    */
   readonly capabilityToken?: SignedCapabilityToken
+  /**
+   * Why this call carries no {@link capabilityToken}, when the presenter KNOWS
+   * the reason — issuance for the session failed rather than nothing having
+   * attached one.
+   *
+   * Without it the two states are one refusal string, and a deployment whose
+   * signing root is misconfigured looks exactly like a caller that forgot to
+   * present a token: measured, the web lane's real cause was `this
+   * signatureRoots handle was not minted by createTrustKernel`, invisible at
+   * the tool. Carrying it here keeps the refusal fail-closed AND says why.
+   * Never carries token material — it is a failure description.
+   */
+  readonly capabilityTokenUnavailable?: string
 }
 
 /**
@@ -603,8 +616,12 @@ export class ToolCapabilityTokenError extends HarnessError {
   /** Which check refused: no token at all, expired, wrong verb, or out of resource scope. */
   readonly reason: ToolCapabilityDenialReason
 
-  constructor(toolName: string, reason: ToolCapabilityDenialReason) {
-    super(`tool "${toolName}" refused: ${TOOL_CAPABILITY_DENIAL_MESSAGES[reason]}`, 'TOOL_TOKEN_DENIED')
+  constructor(toolName: string, reason: ToolCapabilityDenialReason, detail?: string) {
+    super(
+      `tool "${toolName}" refused: ${TOOL_CAPABILITY_DENIAL_MESSAGES[reason]}`
+      + (detail === undefined ? '' : ` (issuance failed: ${detail})`),
+      'TOOL_TOKEN_DENIED',
+    )
     this.name = 'ToolCapabilityTokenError'
     this.reason = reason
   }
@@ -1853,6 +1870,11 @@ export class ToolRuntime extends Service {
     const agent = exec.agent
     const parent = exec.parent
     const signal = exec.signal
+    // The presented token rides on the execution so a tool that dispatches
+    // NESTED calls (PTC's `run_code`) presents the same authority it was
+    // admitted under, rather than none. Copied, not re-fetched: a token
+    // revoked mid-call must not be silently refreshed for the children.
+    const capabilityToken = exec.capabilityToken
     // Distinguish a mode-collapsed call (visible in the scope, denied only by
     // the `ptc` collapse) from a genuinely unknown tool. A collapsed call is
     // deterministically denied, so it terminates BEFORE the extensible policy
@@ -1871,6 +1893,7 @@ export class ToolRuntime extends Service {
       signal,
       ...agent !== undefined ? { agent } : {},
       ...parent !== undefined ? { parent } : {},
+      ...capabilityToken !== undefined ? { capabilityToken } : {},
       deferContext(context: UserMessage): void {
         deferredContexts.push(context)
       },
@@ -1959,7 +1982,7 @@ export class ToolRuntime extends Service {
         return next({
           kind: 'final-result',
           exec,
-          result: toolErrorResult(new ToolCapabilityTokenError(exec.name, reason)),
+          result: toolErrorResult(new ToolCapabilityTokenError(exec.name, reason, input.capabilityTokenUnavailable)),
         })
       }
     }

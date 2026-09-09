@@ -13,6 +13,7 @@ import {
   assertFixtureInventory,
   captureStableAria,
   compareOrRefreshGolden,
+  capabilityTokenInput,
   launchWebScaffold,
   watchConsole,
   webSnapshotMode,
@@ -89,6 +90,7 @@ describe('minimal agent preset', () => {
       name: 'bash',
       arguments: { command: `cd ${JSON.stringify(stateDir)} && export DSH_MINIMAL_STATE=PERSISTED` },
       agent: agentHandle.agent,
+      ...await capabilityTokenInput(scaffold.ctx, agentHandle.agent),
     })
     const bash = await scaffold.ctx.tools.execute({
       signal,
@@ -96,6 +98,7 @@ describe('minimal agent preset', () => {
       name: 'bash',
       arguments: { command: 'printf \'%s:%s\n\' "$DSH_MINIMAL_STATE" "$PWD"' },
       agent: agentHandle.agent,
+      ...await capabilityTokenInput(scaffold.ctx, agentHandle.agent),
     })
     const seedPath = join(scaffold.workspaceCwd, 'preset-smoke.txt')
     await writeFile(seedPath, 'MINIMAL_EDITOR_OK\n')
@@ -105,6 +108,7 @@ describe('minimal agent preset', () => {
       name: 'str_replace_editor',
       arguments: { command: 'view', path: seedPath },
       agent: agentHandle.agent,
+      ...await capabilityTokenInput(scaffold.ctx, agentHandle.agent),
     })
 
     const text = (result: typeof bash): string => result.content

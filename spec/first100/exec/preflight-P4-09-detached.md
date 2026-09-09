@@ -66,6 +66,18 @@ Frozen cases: start detached → turn ends → the run is still alive with its l
 
 Point 6 needs the capability-token slice, which is P4-09's other reopened finding. They share one mechanism: a nested or detached run derives a narrowed token from its parent's attenuable token. Building `detached` without it would leave a run outliving its turn **with no answer to what authorizes it** — worse than the current gap, because it would look complete. **The capability-token slice lands first, or both land together.**
 
+## Point 6 after P2-02.U (updated: the mechanism exists now, and its outliving property is the open question)
+
+The shared mechanism point 6 waits on has landed: `capabilityTokens.deriveChild(parentSession, childSession, filter)` derives a child from its parent under the parent's declared filter, records it through `service.attenuate` so `lineageOf` can reach it, and re-derives when the child's visible tools grow. `subagent-spawn-in-process` and `ralph-loop` are its observation.
+
+**What that does NOT yet answer for `detached`, and must be settled before this slice freezes:** a detached run outlives the turn that authorized it, and the provider drops a session's token at `agent/disposed`. So a detached run re-attached after its launcher is gone finds its parent's token gone with it, and today's `deriveFromParent` — which resolves the parent through `whenSessionToken` — would refuse. Three readings, none picked here:
+
+1. **The derived token is durable and self-standing.** It is already recorded in the store with its `parentDigest`, so re-attachment reads it back rather than re-deriving. Revocation still reaches it through the lineage walk. This is the reading point 6's own wording implies ("carries a capability token derived at start").
+2. **A detached run re-derives from a durable parent record** rather than from the parent's live in-memory token. Needs the parent's root to survive `agent/disposed` in the store, which it does — only the in-memory map is cleared.
+3. **A detached run is refused after its launcher ends.** Consistent and safe, and it makes "detached" mean "outlives the turn but not the session", which contradicts semantics 3 and 5 above.
+
+(1) and (2) differ in where the authority is read from, not in what it permits; (3) changes the feature. **Not chosen** — the difference decides whether `revokeSession(parent)` kills a detached child, which is a security-visible property and belongs to the delegate.
+
 ## Status
 
 **No code written.** Submitted for review per §12.64's ordering, which allows P4-11's C subtask to begin once this is with the delegate.

@@ -490,6 +490,15 @@ importers:
       '@deepseek-ai/cordis-plugin-group':
         specifier: workspace:^
         version: link:../../vendor/group
+      '@deepseek-ai/dsh-agent':
+        specifier: workspace:^
+        version: link:../../packages/core/agent
+      '@deepseek-ai/dsh-capability-token':
+        specifier: workspace:^
+        version: link:../../packages/policy/capability-token
+      '@deepseek-ai/dsh-capability-token-file':
+        specifier: workspace:^
+        version: link:../../packages/policy/capability-token-file
       '@deepseek-ai/dsh-client-modules':
         specifier: workspace:^
         version: link:../../packages/client/modules
@@ -517,6 +526,9 @@ importers:
       '@deepseek-ai/dsh-pwsh-local':
         specifier: workspace:^
         version: link:../../packages/shell/pwsh-local
+      '@deepseek-ai/dsh-trust-kernel':
+        specifier: workspace:^
+        version: link:../../packages/kernel/trust-kernel
       '@types/node':
         specifier: ^22.0.0
         version: 22.20.0
@@ -1143,6 +1155,9 @@ importers:
       '@deepseek-ai/dsh-bash-sandbox':
         specifier: workspace:^
         version: link:../../shell/bash-sandbox
+      '@deepseek-ai/dsh-capability-token-file':
+        specifier: workspace:^
+        version: link:../../policy/capability-token-file
       '@deepseek-ai/dsh-command-compact':
         specifier: workspace:^
         version: link:../../compaction/command-compact
@@ -8800,6 +8815,9 @@ importers:
       '@deepseek-ai/dsh-capability-token':
         specifier: workspace:^
         version: link:../../policy/capability-token
+      '@deepseek-ai/dsh-capability-token-file':
+        specifier: workspace:^
+        version: link:../../policy/capability-token-file
       '@deepseek-ai/dsh-control-priority':
         specifier: workspace:^
         version: link:../../collaboration/control-priority

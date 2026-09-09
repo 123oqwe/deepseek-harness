@@ -214,6 +214,23 @@ jobs:
           if [ "${#changed[@]}" -eq 0 ]; then echo "nothing this program changed; lint has no subject"; exit 0; fi
           pnpm exec tsx scripts/run-oxlint.ts "${changed[@]}"
 
+      # §12.71: the other half of running snapshots in `lib` mode. That mode
+      # includes `apps/web/tests/**/*.snapshot.ts`, and those scenarios launch
+      # a real browser — without this the run fails with
+      # `browserType.launch: Executable doesn't exist at
+      # ~/.cache/ms-playwright/chromium_headless_shell-…`, which reads as a
+      # snapshot regression and is a missing dependency. Chromium only, and
+      # the cache key matches `ci.yml`'s so the two share one warm cache.
+      - uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install Playwright Chromium and hosted dependencies
+        run: pnpm --filter @deepseek-ai/dsh-web-frontend exec playwright install --with-deps chromium
+
       - name: Recorded-session snapshots
         if: always()
         # BLOCKED-109: snapshots are tests. A cell greened while 76 of them are

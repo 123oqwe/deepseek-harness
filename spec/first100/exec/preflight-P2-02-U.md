@@ -66,6 +66,14 @@ Arming `requireCapabilityToken` makes a tokenless call a refusal, and the risk i
 
 Mutation expectations are to be RUN and pasted, never predicted (§12.68).
 
+## A failed issuance must not present as a missing one (added after measurement)
+
+`agent/session-start` records the session; the token is minted on first demand and the rejection is contained (`void issue.catch`) so a session whose token could not be written stays tokenless and every call in it is refused — the fail-closed direction, and correct. What is NOT correct is that the cause then reaches only `ctx.logger`: at the tool the two states are one string, `this scope requires a capability token and none was presented`, whether nothing attached a token or issuance itself failed. Measured cost: the web lane's real cause was `trust kernel: this signatureRoots handle was not minted by createTrustKernel`, four layers below a message that named neither issuance nor the kernel.
+
+Decision, per this repository's "misconfiguration fails loud at the earliest resolvable point, never silently skip": **the refusal carries the issuance failure.** The provider retains the last issuance error per session and the presenter surfaces it, so a session that could not be granted authority says so at the first call instead of looking like a caller that forgot to attach one. Rejected alternative: throwing at session start — issuance is not always misconfiguration (a disk error is not), and taking the process down on a transient write failure is a worse failure mode than refusing that session's calls with the reason attached.
+
+Case to freeze: an issuance forced to fail produces a refusal whose text names the issuance failure, distinct from the tokenless refusal in case (3). Mutation: collapsing the two messages into one must go red.
+
 ## Status
 
 **No code written.** Submitted for confirmation. P4-09's token slice waits on (3) and must not build a second derivation in the meantime.

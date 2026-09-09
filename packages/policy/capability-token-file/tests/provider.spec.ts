@@ -27,6 +27,10 @@ import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime, { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
 import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import { digestToken } from '@deepseek-ai/dsh-capability-token'
+import type { CapabilityTokenNonce } from '@deepseek-ai/dsh-capability-token'
+import type { SignedCapabilityToken } from '@deepseek-ai/dsh-capability-token'
 import CapabilityTokenFilePlugin from '@deepseek-ai/dsh-capability-token-file/src/index.ts'
 
 const roots: string[] = []
@@ -144,6 +148,99 @@ describe('P2-02 must[3]: the tool requirement is ARMED, not merely registered', 
     })
 
     expect(result.isError).toBe(false)
+    await handle.dispose()
+  })
+})
+
+describe('P2-02 must[3]: a tool registered LATE is still callable', () => {
+  it('re-issues so a tool that appears after the first call is authorized', async () => {
+    // Not hypothetical: `dsh-tool-subagent` is mounted twice in `bundle/base`
+    // and registers its tool from a `subagent/provider-added` listener, which
+    // can fire after the session's first tool call. A single mint at session
+    // start refused that tool for the rest of the session — a permanent denial
+    // of a legitimate tool, which is the withdrawal's failure inverted.
+    const { ctx } = await mount(true)
+    const handle = await ctx.agents.create({ sessionId: SessionId('late-session') })
+    const first = await ctx.capabilityTokens.whenSessionToken(handle.agent.id)
+    expect(first?.token.resources).not.toContain('write_file')
+
+    ctx.tools.register(defineContentToolFixture({
+      name: 'write_file',
+      description: 'registered after the session already held a token',
+      parameters: {},
+      async execute() { return [{ type: 'text', text: 'ok' }] },
+    }))
+
+    const reissued = await ctx.capabilityTokens.whenSessionToken(handle.agent.id)
+    expect(reissued?.token.resources).toContain('write_file')
+    // The point is the CALL, not the resource list: a token listing the name
+    // but refused at dispatch would pass the assertion above and still break.
+    const result = await ctx.tools.execute({
+      signal: testSignal,
+      callId: 'c4' as never,
+      name: 'write_file',
+      arguments: {},
+      agent: handle.agent,
+      ...reissued === undefined ? {} : { capabilityToken: reissued },
+    })
+    expect(result.isError).toBe(false)
+    await handle.dispose()
+  })
+
+  it('does not re-sign when the visible tools have not grown', async () => {
+    // Re-issue is growth-triggered, not per-call: a signature on every dispatch
+    // would be invisible here except as cost.
+    const { ctx } = await mount(false)
+    const handle = await ctx.agents.create({ sessionId: SessionId('stable-session') })
+    const first = await ctx.capabilityTokens.whenSessionToken(handle.agent.id)
+    const again = await ctx.capabilityTokens.whenSessionToken(handle.agent.id)
+    expect(again).toBe(first)
+    await handle.dispose()
+  })
+})
+
+describe('P2-02 acceptance[1]: revocation survives a re-issue', () => {
+  it('kills a child derived from an EARLIER root when the session is revoked', async () => {
+    // Re-issue mints an unrelated root (`issueToken` fixes `parentDigest` to
+    // null), so a child derived before the growth event has no lineage to the
+    // newest root. Revoking that newest root alone would leave this child
+    // running — acceptance[1] failing silently on exactly the sessions that
+    // grew a tool. Revocation is per session for that reason.
+    const { ctx } = await mount(false)
+    const handle = await ctx.agents.create({ sessionId: SessionId('revoke-session') })
+    const firstRoot = await ctx.capabilityTokens.whenSessionToken(handle.agent.id)
+    expect(firstRoot).toBeDefined()
+
+    // Reached through the concrete plugin, not the service contract: the
+    // contract publishes only what a CONSUMER needs, and no production consumer
+    // attenuates or reads revocation state — putting `service` on it would be
+    // a public surface with no current owner.
+    const provider = ctx.get('capabilityTokens') as CapabilityTokenFilePlugin
+    const child = await provider.service.attenuate(firstRoot!, {
+      subject: firstRoot!.token.subject,
+      resources: ['read_file'],
+      verbs: ['call'],
+      expiresAt: firstRoot!.token.expiresAt,
+      constraints: {},
+      nonce: brandString<CapabilityTokenNonce>('0123456789abcdef0123456789abcdef'),
+    })
+    expect(child.accepted).toBe(true)
+
+    // Grow the visible tools so the next read mints a SECOND, unrelated root.
+    ctx.tools.register(defineContentToolFixture({
+      name: 'grow_tool',
+      description: 'forces a re-issue',
+      parameters: {},
+      async execute() { return [{ type: 'text', text: 'ok' }] },
+    }))
+    const secondRoot = await ctx.capabilityTokens.whenSessionToken(handle.agent.id)
+    expect(secondRoot).not.toBe(firstRoot)
+
+    await ctx.capabilityTokens.revokeSession(handle.agent.id)
+
+    // The child of the FIRST root must be dead, not just the newest root.
+    const childDigest = digestToken((child as { child: SignedCapabilityToken }).child.token)
+    expect(provider.service.isRevoked(childDigest)).toBe(true)
     await handle.dispose()
   })
 })

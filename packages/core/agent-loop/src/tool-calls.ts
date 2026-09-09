@@ -106,6 +106,28 @@ export async function executeToolCalls(
     return { concluded: false }
   }
 
+  // P2-02 must[3]: every tool call presents the session's Capability Token.
+  //
+  // `whenSessionToken` and never the synchronous `sessionToken`:
+  // `agent/session-start` does not await its listeners, so a first tool call
+  // can land while the token's durable record is still being written. Reading
+  // synchronously there returns undefined, the armed requirement refuses the
+  // call, and the refusal is indistinguishable from the gate working — which
+  // is what 76 snapshot scenarios showed when this presentation was missing
+  // altogether.
+  //
+  // Absent service means no token and no presentation: a composition that
+  // mounts no token provider is unchanged, because the requirement it would
+  // have to satisfy is not armed either.
+  const capabilityTokens = ctx.get('capabilityTokens')
+  const capabilityToken = await capabilityTokens?.whenSessionToken(agent.id)
+  // A session whose issuance FAILED holds no token, exactly like a path that
+  // never attached one — and at the tool both read as "none was presented".
+  // Carrying the reason keeps the refusal fail-closed and says why.
+  const capabilityTokenUnavailable = capabilityToken !== undefined
+    ? undefined
+    : capabilityTokens?.issuanceError(agent.id)
+
   // Inputs are distinct because tools/execute wrappers may replace `exec.signal`.
   const planned: PlannedCall[] = toolCalls.map(block => ({
     block,
@@ -115,6 +137,8 @@ export async function executeToolCalls(
       arguments: parseArguments(block.arguments),
       agent,
       signal,
+      ...capabilityToken === undefined ? {} : { capabilityToken },
+      ...capabilityTokenUnavailable === undefined ? {} : { capabilityTokenUnavailable },
     },
   }))
 

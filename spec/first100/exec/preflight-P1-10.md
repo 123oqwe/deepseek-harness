@@ -59,6 +59,14 @@ So the question is narrower than "does P1-10 need an OSS pass": the predecessor 
 2. **Relationship to `SCHEMA_VERSION`'s reject-old-formats stance.** My reading is that P1-10 adds conversion for KNOWN older versions and leaves the reject as the fallback for unknown ones. That is a product-boundary reading, and CLAUDE.md's pre-release stance is explicit enough that I would rather have it confirmed than assume it.
 3. **Scope against P3-11.** The ledger separates workspace checkpointing (P3-11) from execution-world snapshotting. `snapshot data/config` in must[1] sits near that line. I read P1-10 as owning only the plugin's own durable data, config and schema — not workspace files. Confirm before the C stage fixes the vocabulary, because the manifest's `backup strategy` field is where the line gets drawn.
 
+## The machine-readable record this epic will owe (learned from P4-11)
+
+`verify-adapt-dispositions` reads `spec/first100/exec/clause-subject-audit.json`, not this document. P4-11 had a complete `.md` and **no JSON record**, and the gate went red the moment its C cell turned green — the disclosure was written where no gate could read it. The rule is now explicit: **preFlight = the JSON record AND the md; without the JSON it is not approved.**
+
+P1-10's card names one `adapt` row: **`node:sqlite / VACUUM INTO`** (`npm: null`, so the gate matches it by `name`). It carries no standards. So before P1-10.C can go green, `preFlight["P1-10"].makeVsUse` must exist with that row in either `adopted[]` (with its form, and `landsIn` if the code lands in a later stage) or `deviations[]` (with a reason). Silence is not a disposition, and a read-only reason (`accepted-unadopted`, `ownership-transferred`) is not available to a row that is not ACCEPTED.
+
+**Its content is question 1's answer, not something to write ahead of the ruling.** If P1-10 inherits P1-03's `write-file-atomic` disposition, the record says so and the snapshot technique is dispositioned against that; if the six-phase upgrade earns its own pass, the record carries that pass's outcome. Writing either now would be picking the answer the question exists to get.
+
 ## Status
 
 **No code written.** Awaiting answers to the three questions above, and to P4-11's outbox question, before either C subtask begins.

@@ -38,6 +38,10 @@ import type {
 // opportunistically (the documented `ctx.get` pattern), never as a hard dep —
 // and merge the `sandbox/mode` / `approval/policy` session-event payloads.
 import type {} from '@deepseek-ai/dsh-sandbox-policy'
+// Type-only: the Capability Token service type is declared by the DEFINITION
+// package, so this consumer's `ctx.get('capabilityTokens')` is typed without
+// importing a provider — which the layer rules forbid.
+import type {} from '@deepseek-ai/dsh-capability-token'
 import type {} from '@deepseek-ai/dsh-user-approval'
 // Type-only: make `ctx.get('agentPresets')` resolve to the preset roster when
 // composed — a child inherits its parent's composition opportunistically (the
@@ -180,6 +184,16 @@ export interface ChildComposition {
   readonly persona?: string | undefined
   /** Per-child tool scoping. */
   readonly toolFilter?: ToolRestriction | undefined
+  /**
+   * The child's reserved session id, for narrowing its AUTHORITY alongside its
+   * visibility.
+   *
+   * Passed explicitly rather than read from `childCtx.agent`, which is not
+   * published yet inside the creation window: casting the `undefined` away
+   * would make the derivation depend on publication order that this function
+   * deliberately runs before.
+   */
+  readonly childSession?: SessionId | undefined
 }
 
 /**
@@ -234,6 +248,20 @@ export function applyChildComposition(
     })
   }
   if (composition.toolFilter !== undefined) childCtx.tools.restrict(composition.toolFilter)
+  // P2-02 acceptance[0]: the child's AUTHORITY is narrowed with its visibility,
+  // by the same filter, at the same moment. This is the only place that knows
+  // the filter — it is the delegating call's `toolFilter`, which the token
+  // provider cannot observe — so a child composed anywhere else would silently
+  // receive a session root of its own and `requireForTools` would enforce
+  // nothing about delegation while appearing to. Started here and awaited by
+  // the child's first tool call, so this function stays synchronous.
+  //
+  // `ctx.get` rather than a declared injection: a composition that mounts no
+  // token provider is unchanged, and the child then holds no token because
+  // nothing requires one either.
+  if (composition.childSession !== undefined) {
+    childCtx.get('capabilityTokens')?.deriveChild(parent.id, composition.childSession, composition.toolFilter)
+  }
 }
 
 /**

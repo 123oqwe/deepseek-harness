@@ -558,6 +558,14 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
           ...exec.agent ? { agent: exec.agent } : {},
           parent: exec.token,
           signal: runController.signal,
+          // P2-02 must[3]: a code-mode sub-call runs under the SAME authority
+          // as the `run_code` call that spawned it — it may neither gain nor
+          // lose one. Inherited rather than re-fetched, so a token revoked
+          // between the outer call and this one cannot be silently refreshed
+          // here. Omitting this was measured: the native path presented a
+          // token and this one did not, so an armed profile refused every
+          // code-mode tool call while ordinary calls worked.
+          ...exec.capabilityToken === undefined ? {} : { capabilityToken: exec.capabilityToken },
         }
         type DispatchOutcome = { isError: true; message: string } | { isError: false; value: JsonValue }
         const scheduler = registry[TOOL_RUNTIME_SCHEDULER]

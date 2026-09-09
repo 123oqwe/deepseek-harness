@@ -24,6 +24,10 @@
 // assertConsumed for the teardown fixture-consumption check).
 import { existsSync, readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
+import type { Agent } from '@deepseek-ai/dsh-agent'
+import type { SignedCapabilityToken } from '@deepseek-ai/dsh-capability-token'
+import type {} from '@deepseek-ai/dsh-capability-token-file'
+import { createRequire } from 'node:module'
 import { mkdir, mkdtemp, readFile, readdir, realpath, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { basename, dirname, join, resolve } from 'node:path'
@@ -612,6 +616,23 @@ export async function launchWebScaffold(options: LaunchOptions = {}): Promise<We
     ctx.baseUrl = pathToFileURL(profileDir).href + '/'
     // This direct Loader harness supplies the same root-path capability as app-boot.
     ctx.provide('dshHomePath', dshHomePath)
+    // Pinned before any entry mounts, exactly as `profile-boot` does it, and
+    // never through `ctx.plugin`: a Trust Kernel mounted as a replaceable
+    // Cordis Service is what P0-02 must[2] forbids. A real launch always
+    // supplies one, so a harness that omits it is not booting the shipped
+    // profile — `bundle/base` mounts the Capability Token provider, which
+    // cannot sign without signature roots and fails the whole tree at apply.
+    //
+    // Resolved through Node rather than imported by bare name, because this
+    // lane runs ONLY in lib mode (see `vitest.snapshot.config.ts`) while a bare
+    // specifier in a test file resolves through the tsconfig paths facade to
+    // `src`. The kernel keys its signing material in module-private state by
+    // handle, so a handle minted by the `src` copy is rejected by the `lib`
+    // copy the mounted plugins call — measured as `this signatureRoots handle
+    // was not minted by createTrustKernel`, surfacing only as every tool call
+    // in the session being refused. One plane, one instance.
+    const trustKernelModule = createRequire(import.meta.url)('@deepseek-ai/dsh-trust-kernel') as typeof import('@deepseek-ai/dsh-trust-kernel')
+    trustKernelModule.pinTrustKernel(ctx, trustKernelModule.createTrustKernel())
     // A host with no command line still provides one: the web bundle's startup
     // row releases the rows waiting on it, and with no arguments each starts on
     // the values this scaffold composed above. An exit request can only come
@@ -1309,4 +1330,25 @@ export function acknowledgeReloadConnectionLoss(
 ): void {
   const reloadWarnings = tripwire.warnings.splice(warningStart)
   tripwire.warnings.push(...reloadWarnings.filter(text => !/connection lost/i.test(text)))
+}
+
+
+/**
+ * The session's capability token, for a test that dispatches a tool DIRECTLY
+ * through `ctx.tools.execute` instead of through the agent loop.
+ *
+ * `bundle/base` arms `requireForTools`, so a direct caller is refused exactly
+ * as the loop would be — the harness is not exempt from the gate it boots.
+ * Spread the result into the execution input; a composition with no token
+ * provider mounted yields `undefined` and the call proceeds ungated.
+ * @param ctx - the scaffold context whose profile mounted the token provider.
+ * @param agent - the agent whose session token authorizes the call.
+ * @returns the `capabilityToken` field to spread, or an empty object.
+ */
+export async function capabilityTokenInput(
+  ctx: Context,
+  agent: Agent,
+): Promise<{ capabilityToken?: SignedCapabilityToken }> {
+  const token = await ctx.get('capabilityTokens')?.whenSessionToken(agent.id)
+  return token === undefined ? {} : { capabilityToken: token }
 }

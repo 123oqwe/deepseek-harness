@@ -466,6 +466,35 @@
       config:
         directory: !!js dshHomePath('leases')
 
+    # P2-02's Capability Tokens, mounted because the mechanism had none of its
+    # own reach: the definition, the attenuation and `assertTokenPresented`
+    # were all complete and tested while nothing issued a token and nothing
+    # armed the requirement, so must[1] and must[3] had no subject on any
+    # launched profile and the sign-off was withdrawn (§12.69). This row is
+    # what makes them have one. `requireForTools` is true here so a tool call
+    # must present the session's token; a composition that has not attached
+    # tokens to its own tool path can still mount the provider with it false
+    # and get issuance and audit without enforcement.
+    #
+    # Absent exactly when the trust root is absent. `DSH_TRUST_KERNEL_INSECURE`
+    # is a documented development boot that deliberately pins NO Trust Kernel
+    # (`apps/cli/src/profile-boot.ts:478`), and a capability token is a SIGNED
+    # object: with no signature roots this provider throws at apply and takes
+    # the whole profile down. Measured, and it is this row's own regression —
+    # the `apps/web` lane stayed green only because its scaffold pins a kernel,
+    # which hid the CLI dev boot behind it.
+    #
+    # Disabling here is not skipping a missing referent quietly: that boot
+    # already prints a permanent warning naming signature roots as unavailable,
+    # and a gate that cannot sign is not a weaker gate but an absent one. Any
+    # non-empty value opts in, matching `resolveTrustKernelInsecureOptIn`.
+    - id: capability-tokens
+      name: '@deepseek-ai/dsh-capability-token-file'
+      disabled: !!js (process.env.DSH_TRUST_KERNEL_INSECURE ?? '') !== ''
+      config:
+        directory: !!js dshHomePath('capability-tokens')
+        requireForTools: true
+
     # P5-11's board, and the producer that puts anything on it. Under the same
     # storage root as the lease store and for the same reason: two hosts that
     # must not both drive one delegated child have to be pointed at one board.

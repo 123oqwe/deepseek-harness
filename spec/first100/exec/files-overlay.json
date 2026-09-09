@@ -731,6 +731,14 @@
   },
   {
    "epic": "P2-02",
+   "path": "packages/bundle/base/cordis.patch.yml",
+   "kind": "manifest",
+   "stages": [
+    "U"
+   ]
+  },
+  {
+   "epic": "P2-02",
    "path": "packages/core/tools/package.json",
    "kind": "manifest",
    "stages": [
@@ -764,10 +772,34 @@
   },
   {
    "epic": "P2-02",
+   "path": "packages/policy/capability-token-file/src/index.ts",
+   "kind": "source",
+   "stages": [
+    "U"
+   ]
+  },
+  {
+   "epic": "P2-02",
+   "path": "packages/policy/capability-token-file/src/store.ts",
+   "kind": "source",
+   "stages": [
+    "U"
+   ]
+  },
+  {
+   "epic": "P2-02",
    "path": "packages/policy/capability-token/package.json",
    "kind": "manifest",
    "stages": [
     "F"
+   ]
+  },
+  {
+   "epic": "P2-02",
+   "path": "packages/policy/capability-token/src/delegate.ts",
+   "kind": "source",
+   "stages": [
+    "U"
    ]
   },
   {

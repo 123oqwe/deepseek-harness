@@ -73,3 +73,21 @@ Every question this document opened has been answered, and the answers are folde
 ## Status
 
 **No code written yet.** The C subtask is `classify.ts` + `budget.ts` + tests, with no `circuit.ts`, and may begin once the `detached` preFlight is with the delegate (§12.64 ordering).
+
+## P stage: what is written, and what is NOT (recorded before the code)
+
+**Measured落点, so the stage does not invent a home:** `packages/reliability/retry/src/` today holds `classify.ts`, `budget.ts` and `index.ts` (the C stage), exporting `classifyFailure` / `spendsRetryBudget` / `admitRetry` / `NO_RETRIES_USED` and their types. `providerRetryAfterMs` already exists at `packages/llm/llm/src/adapter-failure.ts:70` and is parsed there — the P stage LIFTS that value into the taxonomy rather than writing a second parser, which was the §12.64 ruling.
+
+**The provider module adopts `cockatiel` behind the C-stage interface.** It owns exactly three things:
+
+1. The circuit itself — `circuitBreaker` with a consecutive or sampling strategy, `halfOpen`, and the bulkhead/timeout policies `cockatiel` ships. **No `circuit.ts`.** The withdrawn one reimplemented consecutive-failure counting, cooldown and half-open probing, all four of which `cockatiel` has; two breakers in one harness is the duplication the adopt decision exists to prevent, and `clause-subject-audit.json` now records the adoption with `landsIn: P4-11.P`.
+2. Translation of real adapter failures into `FailureFacts`, so `classifyFailure` decides on facts the provider observed rather than on strings it re-parsed.
+3. Nothing about backoff. `llm-retry`'s existing exponential backoff with symmetric jitter is the one spelling; changing it is a change to `llm-retry`, never a new module beside it.
+
+**The dependency is added in this stage, not earlier.** `cockatiel` is verified absent today (`require.resolve` fails), so the P stage's diff includes the `package.json` entry and the lockfile. A C stage that had added it would have declared a dependency nothing imported.
+
+**Case to freeze for P (mutation run→pasted, never predicted):** an adapter failure the taxonomy calls retryable, repeated past the breaker's threshold, must open the circuit and stop spending the run's budget — and the mutation that removes the breaker's `halfOpen` transition must redden the case that proves a recovered provider is retried again. A case that only asserts `cockatiel` was imported would pass against a breaker wired to nothing, which is the shape this epic was withdrawn-adjacent to twice.
+
+## Status of the P stage
+
+**No code written.** The C stage is GREEN; the adopt disposition is recorded in `clause-subject-audit.json` with `landsIn: P4-11.P`, so the gate that checks pending adoptions will bite if P is accepted without the dependency actually landing.
