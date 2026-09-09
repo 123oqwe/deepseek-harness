@@ -84,7 +84,7 @@ describe('sub-agent delegation carries a strictly-narrowing capability token (P2
     const child = attenuateDelegatedToken(
       trustRoot,
       parent,
-      { toolFilter: { allow: ['read_file', 'delete_everything'] } },
+      { allow: ['read_file', 'delete_everything'] },
       childRequest(),
     )
 
@@ -134,7 +134,7 @@ describe('sub-agent delegation carries a strictly-narrowing capability token (P2
 
   it('must[0]: the child token records its own delegation hop — depth+1 and the parent\'s digest', () => {
     const parent = parentToken()
-    const child = attenuateDelegatedToken(trustRoot, parent, { toolFilter: { deny: ['run_shell'] } }, childRequest())
+    const child = attenuateDelegatedToken(trustRoot, parent, { deny: ['run_shell'] }, childRequest())
 
     expect(child.token.delegationDepth).toBe(parent.token.delegationDepth + 1)
     expect(child.token.parentDigest).toBe(digestToken(parent.token))
@@ -183,7 +183,7 @@ describe('sub-agent delegation carries a strictly-narrowing capability token (P2
     const child = attenuateDelegatedToken(
       trustRoot,
       parentToken(),
-      { toolFilter: { deny: ['run_shell'] } },
+      { deny: ['run_shell'] },
       childRequest(),
     )
     const call = async (name: string): Promise<string> => {
