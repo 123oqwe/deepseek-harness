@@ -43,10 +43,15 @@ The reason I missed it is worth recording, because it is the same shape as the w
 | --- | --- | --- |
 | LLM retry | `packages/llm/llm-retry/src/index.ts` | `retryable` + its own backoff/attempt loop |
 | MCP client | `packages/mcp/mcp-client/src/connection.ts` | `reconnect.maxAttempts`, its own backoff |
-| Message bus outbox | `packages/run/message-bus/src/outbox.ts:169` | `decideDelivery(record, nowMs, maxAttempts)` — its own dead-letter budget |
-| Subagent | `packages/subagent/subagent/src` | `maxAttempts`, `retryable` |
+| Message bus outbox | `packages/run/message-bus/src/outbox.ts:173` | `record.attempts >= maxAttempts` — its own dead-letter budget |
 
-**Four independent budgets that can multiply**, which is exactly the registry's problem statement ("多个有限 budget 可叠加"). must[1] closes only when the layers in scope account against one run total; a `RunRetryBudget` type with no consumer would satisfy the noun and not the clause, which is why must[1] is assigned to **U** and not to C.
+**Three independent budgets that can multiply**, which is the registry's problem statement ("多个有限 budget 可叠加"). must[1] closes only when the layers in scope account against one run total; a `RunRetryBudget` type with no consumer would satisfy the noun and not the clause, which is why must[1] is assigned to **U** and not to C.
+
+**A fourth row said `Subagent` and was wrong; the correction is the useful part.** `packages/subagent`'s only `maxAttempts` is `settlement-outbox.ts:153`, and it counts nothing itself — `:158` calls `decideDelivery`, the outbox policy ruled out below — while the taskboard's `attempt` is an activation epoch, not a retry counter. So there is no subagent retry budget to unify.
+
+**Ruling: a subagent is an ATTRIBUTION RULE, not a layer.** A child session's own `llm-retry` attempts are charged to the run that spawned it. Parent retries multiplied by child-session retries is precisely what must[1] exists to stop, and that multiplication happens inside `llm-retry` — at the moment each session counts its own — not in any subagent module. So the in-scope list reads: `llm-retry` for the parent AND every child session, all charged to one run budget; `mcp-client` for reconnects and calls made FOR a run action. The outbox stays out: replaying a settlement is DELIVERY, not redoing work, and it spends a message budget rather than a run's. There is no tension with the scope ruling below — the outbox is out under both readings.
+
+**U-stage frozen intent, recorded before the code:** a child session's nth LLM retry decrements the PARENT run's `RunRetryBudget`. The mutation that must redden it is "the child counts against its own session", because that is the shape the bug takes.
 
 **Scope ruling (§12.64), recorded as a clause-scope decision rather than a deviation.** The message-bus outbox is **NOT** one of the layers must[1] names. `decideDelivery` is a per-MESSAGE dead-letter policy belonging to the accepted P4-06, and it answers "when do we stop trying to deliver this message", not "how much may this run spend redoing failed work". Folding it in would let a chatty outbox exhaust a run's model retries, and would change an accepted epic's semantics from outside it. The layers in scope are: LLM retry, MCP retries taken FOR a run action, subagent attempts made on behalf of a parent run, and any tool/web retry the tree holds. A background reconnect with no run attached spends no run budget and keeps its own `cockatiel` policy.
 
