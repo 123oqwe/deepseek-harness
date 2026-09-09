@@ -299,6 +299,7 @@
       "@deepseek-ai/dsh-blackboard": ["./packages/collaboration/blackboard/src"],
       "@deepseek-ai/dsh-brand": ["./packages/util/brand/src"],
       "@deepseek-ai/dsh-capability-token": ["./packages/policy/capability-token/src"],
+      "@deepseek-ai/dsh-capability-token-file": ["./packages/policy/capability-token-file/src"],
       "@deepseek-ai/dsh-cmdline": ["./packages/boot/cmdline/src"],
       "@deepseek-ai/dsh-code-runtime": ["./packages/code-runtime/code-runtime/src"],
       "@deepseek-ai/dsh-code-runtime-worker-thread": ["./packages/code-runtime/code-runtime-worker-thread/src"],
