@@ -9,6 +9,34 @@ responds; append-only.
 
 ## Open
 
+### BLOCKED-169 — P1-06 readiness: the out-of-process plugin host must present a capability token per RPC
+
+Recorded before P1-06 starts, per §12.69's split of P2-02 must[3]'s four nouns under §12.46-B. Not a blocker on P1-06's own clauses; a requirement it inherits, written down so it is met by design.
+
+**The clause.** P2-02 must[3] requires a token of tools, **plugin RPC**, external agents and ExecutionWorld. P2-02's U supplement arms the first two (tools, and sub-agent delegation as the derivation's first consumer). Plugin RPC is P1-06's — "不可信插件 Out-of-Process Host", W8, and it already declares `P2-02` among its dependencies, so the ordering is the registry's rather than this program's invention.
+
+**Closing condition.** The out-of-process host presents a capability token on every RPC it makes on a plugin's behalf, derived from the session token through the ONE lifted derivation in `policy/capability-token` rather than a host-local second path. A frozen case shows an RPC without a token refused, which is the arming control rather than the registration control.
+
+**Why it is recorded now.** P2-02's sign-off was withdrawn because a complete, tested mechanism had no production subject on any launched profile (§12.69). Leaving this noun to be discovered during P1-06's Usage stage would repeat that at one remove: P1-06 would build a host, P2-02's must[3] would still name a noun nothing satisfies, and the gap would surface only at a signing report.
+
+### BLOCKED-170 — P3-05 readiness: an ExecutionWorld must require a capability token
+
+Recorded before P3-05 starts, per §12.69 and §12.46-B. Same shape as BLOCKED-169 and recorded for the same reason.
+
+**The clause.** P2-02 must[3]'s fourth noun is ExecutionWorld. Its owner is **P3-05** (Process、Syscall、IPC 与 Device 隔离, W9), read from the registry rather than assumed.
+
+**Closing condition.** An ExecutionWorld admits work only against a presented token, derived through the lifted derivation, and a frozen case shows an unauthorized world refused. P3-11's snapshot/restore work carries a related constraint already in its own must — "restore 生成新 world identity,旧 token 不继承" — so a restored world must obtain a fresh token rather than inherit one, and that interaction belongs in whichever of the two lands second.
+
+### BLOCKED-171 — external agents have no single owning epic; the token requirement attaches to each adapter
+
+Recorded per §12.69, and the reason it is ONE entry rather than three is itself the finding.
+
+**Measured, not assumed.** P2-02 must[3] names "外部 Agent" as a noun requiring a token. There is no epic that owns external agents as such. The registry spreads them across three adapters: **P5-07** (Codex), **P5-08** (Claude Code) and **P5-09** (ACP). Attaching the requirement to a single invented owner would leave two of the three unbound, which is how a noun ends up with no subject — the failure P2-02's withdrawal already demonstrated once.
+
+**Closing condition, per adapter.** Each of P5-07, P5-08 and P5-09 presents a capability token when it drives an external agent, derived through the one lifted derivation, with a frozen refusal case for a drive attempted without one. The requirement closes when all three do; any one of them left unbound leaves must[3]'s noun unsatisfied, because "external agents require a token" is not true of the harness if one adapter does not.
+
+**Note for whoever schedules these.** P5-07/08/09 sit behind P5-05 and P5-06 in the registry's dependency order, so this requirement will be read well before it can be met. That is the intended direction: it is recorded to be inherited, not to be actioned now.
+
 ### BLOCKED-168 — P2-02's delegation half has no production caller, and P2-02 is ACCEPTED
 
 Found while measuring for P4-09's capability-token slice, and recorded here rather than left in a preFlight aside, because it concerns an epic that is already signed.

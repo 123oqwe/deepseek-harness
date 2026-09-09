@@ -46,14 +46,23 @@ Presence is not reach, which is the whole lesson of the withdrawal, so each is a
 - **sub-agent delegation**: `tool-subagent` is mounted in `bundle/base:427`, so a spawn on any of those five profiles derives a child token.
 - The three deferred nouns are explicitly NOT reached, which is why they are readiness entries and not claims.
 
+## Key material and storage (§12.70)
+
+The root token's signing private key lives **only** in the TrustKernel's private state — the signature roots pinned by `pinTrustKernel` — and reaches no repository file, no config, no log line and no session event. Tests generate their own keypair inside the case rather than reading a fixture, so no committed artifact ever holds one. The token store path is DERIVED from `dshHome`, the way the lease store and the message bus already derive theirs; a hardcoded `.dsh` literal would be the tunable this repo's own rule forbids.
+
+## Not breaking the paths that legitimately hold no token yet (§12.70)
+
+Arming `requireCapabilityToken` makes a tokenless call a refusal, and the risk is not the intended refusal but the unintended one: a legitimate IN-session tool call on `sdk-minimal`, `acp` or a hooks path that never gets a token attached would break while looking like the feature working. The four-corpus snapshots are the instrument — a path that fails to attach shows up there — and they are read as FACTS. If a corpus moves, its count is reported as measured; the normalizer is not touched to make a difference disappear.
+
 ## Cases to freeze (freeze precedes observation)
 
 1. A session start issues a root token signed by the TrustKernel.
 2. A tool call inside a session presents it and is admitted.
 3. **A tool call with no token is refused** — the negative control, and the one that proves the check is armed rather than merely registered.
 4. A real spawn derives a child token that is NOT wider than its parent (acceptance[0]).
-5. Revoking the parent invalidates the child (acceptance[1]), through the lineage walk rather than a digest equality.
+5. **Revoking the parent makes the child's NEXT TOOL CALL refused** (acceptance[1]) — frozen on a real spawn, through the lineage walk. Verifying a constructed token against a revoked set would prove the function and not the harness, which is the distinction this whole withdrawal turned on.
 6. A widening request is refused with its `TokenAttenuationDenialReason`.
+7. **The session log and tool results carry only the token's DIGEST, never the token itself** (acceptance[2]). The moment tokens begin flowing through the agent loop is the moment to pin this, because afterwards a leak would be indistinguishable from normal traffic. Mutation: writing the token body into an event must go red.
 
 Mutation expectations are to be RUN and pasted, never predicted (§12.68).
 
