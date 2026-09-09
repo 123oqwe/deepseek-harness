@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-09T01:56:58.209Z",
-  "inputDigest": "36ac37cb509c5315ccd0660bd19640883a889b52abad910f3037e0cdf8933982",
+  "lastUpdatedUtc": "2026-09-09T16:51:52.501Z",
+  "inputDigest": "51c2516f4614dff293d2537eaad5d96a5c4a6eb67604f6dd6caa5f67bf5896dd",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -2732,32 +2732,13 @@
           "capturedAtUtc": "2026-09-07T06:28:43.760Z"
         },
         "U": {
-          "status": "GREEN",
-          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
-          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
-          "expectCasesMatched": [
-            "must[3]: a scope requiring a capability token refuses a call that presents none, before the tool body runs",
-            "control: the same call succeeds and reaches the tool body when an authorizing token is presented",
-            "must[3]: a token that does not name the called tool among its resources is refused",
-            "must[3]: a token lacking the tool-invocation verb is refused even for a tool it names",
-            "validation (过期): an expired token is refused for a tool it otherwise authorizes",
-            "must[3]: a transport sub-dispatch (a `parent` token set) is gated too, so PTC is not a bypass",
-            "must[3]: no `tools/pre-execute` listener observes an unauthorized call, so none can approve it",
-            "control: an agent whose scope registered no requirement is unaffected",
-            "must[3]: the requirement lifts only when its own disposer runs, and a global registration gates every scope",
-            "acceptance[2]: a refusal reaching the model quotes no token material",
-            "acceptance[0]: a child `allow` filter naming a tool the parent never held gains nothing",
-            "acceptance[0]: `delegatedChildResources` never returns a name outside the parent set, for allow, deny, and none",
-            "acceptance[0]: a delegation requesting an expiry past the parent's is refused, not clamped",
-            "acceptance[0]: a delegation requesting a budget above the parent's is refused",
-            "acceptance[0]: dropping a budget-constrained parent's ceiling entirely is refused as a widening",
-            "must[0]: the child token records its own delegation hop — depth+1 and the parent's digest",
-            "acceptance[2]: the durable descriptor records the delegation digest and no other token material",
-            "control: a legitimately delegated child token still executes the tools it kept, and only those"
-          ],
-          "capturedAtUtc": "2026-09-07T06:28:43.963Z"
+          "status": "NOT_RUN",
+          "revokedFrom": {
+            "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+            "absentCommitments": 1
+          },
+          "revokedReason": "The GREEN cell was observed at b3186e6db9, whose tree predates this stage's live freeze #222 (frozen 2026-09-09T05:00:00Z, superseding the withdrawn #69). A green cell whose commitment did not exist when it was observed is not a pre-commitment, which is the mechanical form of the lesson in §12.52. C/P/F are untouched: their freezes (#44/#50/#116) are in that tree. Re-observe U on a tree containing #222."
         },
         "F": {
           "status": "GREEN",
@@ -2807,7 +2788,7 @@
       "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "BLOCKED_ON_ACCEPTANCE",
+      "status": "NOT_RUN",
       "acceptedEvidence": {
         "acceptedAtUtc": "2026-09-07T06:40:56.638Z",
         "cells": {
@@ -3080,7 +3061,7 @@
       },
       "supplements": {
         "U.1": {
-          "status": "GREEN",
+          "status": "SUPERSEDED",
           "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
           "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
           "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
@@ -3090,10 +3071,11 @@
             "P2-04 must[1]: every shipped tool declares its risk domain tags leaves NO shipped tool undeclared, because an undeclared tool classifies by the unknown default",
             "ToolRuntime P2-04 must[1]: carries a tool's declared risk domain tags to the runtime, and never to the model"
           ],
-          "capturedAtUtc": "2026-09-08T15:08:33.386Z"
+          "capturedAtUtc": "2026-09-08T15:08:33.386Z",
+          "supersededBy": "2026-09-09T06:30:00Z"
         },
         "U.2": {
-          "status": "GREEN",
+          "status": "SUPERSEDED",
           "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
           "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
           "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
@@ -3107,7 +3089,8 @@
             "P2-04 must[1]: a declared high band asks, and the kernel band never does HARD-DENIES a declared safety-critical action under EVERY preset, without asking",
             "P2-04: a composition with no policy service has no gate runs an undeclared tool when no permission service is composed, which is capability absence"
           ],
-          "capturedAtUtc": "2026-09-08T15:08:33.615Z"
+          "capturedAtUtc": "2026-09-08T15:08:33.615Z",
+          "supersededBy": "2026-09-09T06:30:00Z"
         },
         "P.3": {
           "status": "GREEN",

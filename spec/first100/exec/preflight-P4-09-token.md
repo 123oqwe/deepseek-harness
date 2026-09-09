@@ -71,6 +71,41 @@ So this slice consumes that entry point instead of steps 1–3:
 
 **What this slice must NOT do:** call `attenuate`, `attenuateDelegatedToken`, or `issue` directly. Those are the definition package's, and the provider is the only production caller.
 
+## Measured before writing: a nested run has NO session, so there is nothing to derive TO
+
+The four steps above, and the rewrite under them, both assume a nested run is a session that can be a `deriveChild` child. Measured, it is not.
+
+- `startNested` (`workflow-worker-thread/src/index.ts:365`) admits the run, then `launch(...)` with `parent: parent.parentAgent` (`:381`) — the SAME `Agent` as the parent run. No session is created for a run anywhere in the package: `withInitiator`, `createSession` and `SessionId` do not appear in `host.ts`.
+- Model work happens one level down. `startChild` (`host.ts:459`) calls `this.subagents.start(this.provider, { prompt, parent: this.parentAgent, … })`, and it is THAT child which gets a session — the path P2-02.U already wired, where `applyChildComposition` calls `deriveChild(parent.id, composition.childSession, composition.toolFilter)` (`child-agent.ts:263`).
+
+So the derivation this slice was going to add already runs, once per child session. What does NOT happen is the DECAY must[3] names: `startChild` passes no `toolFilter`, so a child of a nested run holds exactly the authority a child of the root run holds. Budget and worker limits decay through `planNestedRun`/`inheritWorkerLimits`; the capability token does not decay at all. That, not a missing derivation, is the gap.
+
+**`ChildStartRequest` has no `toolFilter` field, and must not gain one.** Its fields are `prompt`, `schema`, `provider`, `model` (`types.ts:52`). The request crosses the port FROM the worker, and a worker script naming its own filter would be choosing its own authority. The bound is the HOST's to apply, from the run's own nesting state, exactly as the host already decides admission because it is the side that holds the budget.
+
+The seam needs no new mechanism: `SubagentStartRequest.toolFilter` already exists (`subagent/src/types.ts:148`) and already flows to `deriveChild`. This slice makes the host pass it.
+
+## Ruling received: the definition declares the bound (reading 2) — and one measurement it depends on
+
+Ruled: the registered definition declares the tools its run may use; `planNestedRun` computes `bound = parent bound ∩ declaration`, an absent declaration inherits the parent's unchanged, recursion intersects at every level, and the bound travels with `budget`/`ancestors` in the run's state. The host's `startChild` passes it as `toolFilter`, reaching the existing `deriveChild`. `ChildStartRequest` gains nothing. A caller-side narrowing at the `workflow()` hook is a later addition, not must[3]'s.
+
+The ruling's strength is that a re-registration cannot widen, which holds only if the declaration is covered by the digest. **Measured, there is no place in the digest for it today.**
+
+- `computeDigest` hashes the BODY and nothing else: `sha256(body)` at `workflow-registry/src/version.ts:28`. `RegisteredDefinition`'s other fields — `name`, `version`, `signer` — sit outside it. A sibling `tools` field would too, so the same body could be re-registered under another name with a wider declaration and produce the same digest.
+- The declaration cannot ride `meta` either. `meta` is a closed field set (`name`/`description`/`whenToUse`/`phases`, `meta.ts:19`) that arrives on the REQUEST, and the body is explicitly forbidden from carrying it: `assertBodyParses` throws "workflow meta rides the `meta` request field, not the script" when `META_STATEMENT` matches (`workflow-worker-thread/src/index.ts:110`). For a nested run the host builds `meta` itself (`:379`), so nothing in it is signed by the digest.
+
+So making the ruling true requires the digest to cover the declaration: `computeDigest` hashes a canonical `(body, tools)` pair rather than the body alone. That is a format change — every registered digest changes — which the pre-release stance permits and prefers over a shim, but it is not a detail to slip in under a `tools` field: the identity of a definition would now include what it may do, which is the property the ruling is buying.
+
+## The one choice I am not making alone
+
+Where a nested run's bound COMES FROM. Two readings, and they differ in observable behavior:
+
+1. **Inherit-and-intersect.** The nested run's restriction is the parent run's, intersected with anything the nesting declares. Symmetric with budget decay, and a nested run can never widen. But no field carries a declaration today — `NestedStartRequest` is `name`/`digest`/`args` (`types.ts:122`) — so under this reading the first version decays nothing measurable at depth 1, and the case that proves it needs depth ≥ 2 with a declared narrowing.
+2. **Definition-declared.** The registered definition declares the tools its run may use, and the host intersects that with the parent's. The digest already fixes the body, so the declaration is signed with it and a run cannot widen by re-registering. This adds a field to the definition and touches `workflow-registry`, which is in P4-09's `files` list.
+
+Reading 2 gives must[3]'s "衰减" something to decay at every depth and puts the declaration inside the signed artifact must[0] already requires. Reading 1 is smaller but risks freezing a case that observes an intersection of two identical sets, which is the "the mechanism exists but is never reached" shape 4.4a exists to catch.
+
+**Not choosing between them here.** §12.62's lesson is that writing the code first is how a hand-rolled answer gets ahead of the ruling.
+
 ## Status
 
-**No code written.** Submitted for review. `detached` follows this slice or lands with it.
+**No code written.** The measurement above supersedes steps 1–4 and the `deriveChild` rewrite; both were written against a session that does not exist. Awaiting the ruling on the bound's source.
