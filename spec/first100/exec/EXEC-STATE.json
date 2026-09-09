@@ -3,7 +3,7 @@
     "name": "first100-exec-state",
     "version": "1.0"
   },
-  "lastUpdatedUtc": "2026-09-08T20:36:45.326Z",
+  "lastUpdatedUtc": "2026-09-09T06:01:48.114Z",
   "activeWorktree": "/Users/guanjieqiao/dsh-first100-clean",
   "activeBranch": "first100-exec",
   "currentWave": 4,
@@ -11,13 +11,13 @@
     "epic": "P4-09",
     "stage": "U",
     "step": "BLOCKED_ON_RULING",
-    "detail": "The capability-token slice is written up (preflight-P4-09-token.md) and NOT started, because measuring for it produced BLOCKED-168: `.attenuate(` has zero production callers across packages/, and `attenuateDelegatedToken` is defined in subagent/src/child-agent.ts:306 with every outside reference in its own test. P2-02 \u2014 titled for attenuable capability tokens AND sub-agent delegation, ACCEPTED with zero open findings \u2014 froze both a file whose subject core/tools consumes and one whose subject nothing does, so its delegation half holds in unit tests only. The delegate must rule before the slice proceeds, since \u00a712.66's instruction to reuse that derivation rested on my own false claim that child-agent.ts already called it. `detached` follows the token slice per \u00a712.66 and must not precede it. Gate 3 awaits a re-run at d19b70e6a0 after the doc-standard README fix; the batch's observation targets are P2-04.P.3's lint fix, P4-08 C.4/F.5, and P4-11.C's 13 frozen cases. P4-11's Provider stage adopts cockatiel and has not begun; P1-10 has a preFlight and three open questions."
+    "detail": "The capability-token slice is written up (preflight-P4-09-token.md) and NOT started, because measuring for it produced BLOCKED-168: `.attenuate(` has zero production callers across packages/, and `attenuateDelegatedToken` is defined in subagent/src/child-agent.ts:306 with every outside reference in its own test. P2-02 — titled for attenuable capability tokens AND sub-agent delegation, ACCEPTED with zero open findings — froze both a file whose subject core/tools consumes and one whose subject nothing does, so its delegation half holds in unit tests only. The delegate must rule before the slice proceeds, since §12.66's instruction to reuse that derivation rested on my own false claim that child-agent.ts already called it. `detached` follows the token slice per §12.66 and must not precede it. Gate 3 awaits a re-run at d19b70e6a0 after the doc-standard README fix; the batch's observation targets are P2-04.P.3's lint fix, P4-08 C.4/F.5, and P4-11.C's 13 frozen cases. P4-11's Provider stage adopts cockatiel and has not begun; P1-10 has a preFlight and three open questions."
   },
   "registryDigest": "5c75260e96c9db1ca045c1bf4a013a5a1f356651c23baef924066bec627ef4f7",
-  "ledgerDigest": "bc05c41255671e28a28252e70d1746e6ceb353348de580c9f3b4097c7dc37a4c",
+  "ledgerDigest": "afe472ac3a5ac440d4cfebee50b18cbb216a26a61fc379c60066bd8a09865563",
   "blockedQueueRef": "spec/first100/exec/BLOCKED-QUEUE.md",
   "totals": {
-    "acceptedEpics": 25,
+    "acceptedEpics": 24,
     "totalEpics": 110,
     "programGate": "NO-GO"
   }
