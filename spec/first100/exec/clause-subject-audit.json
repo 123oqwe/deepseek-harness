@@ -2011,7 +2011,7 @@
         "ledgerRow": "P4-11",
         "card": {
           "heading": "#### P4-11",
-          "sheetCommit": null
+          "sheetCommit": "bd408a403a"
         },
         "verdict": "PROVIDER_WRITE",
         "verdictSecondary": "PROVIDER_ADAPT",
@@ -2042,7 +2042,51 @@
             "reason": "Not adopted, for the same reason as `p-retry`: `llm-retry`'s existing backoff is the one spelling, and its symmetric jitter is legitimate jitter. Changing it is a change to `llm-retry`, never a new module beside it.",
             "ruling": "card role `reject`"
           }
-        ]
+        ],
+        "rejectedAbsent": [
+          "p-retry",
+          "exponential-backoff"
+        ],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "Narrowed from the card by the §12.64 rulings, and the narrowing is the point. The card listed `Retry-After` parsing (~20 LOC) as residual; it is NOT, because `providerRetryAfterMs` already parses both wire forms (probe 2), so the P stage lifts that function and writes no parser. What remains: the cross-layer error taxonomy extending `retry-policy`'s codes; `RunRetryBudget` as a shared CAS counter in the run store; hedge exclusion's RULE half only (§12.46-B splits the producer to P5-04); and the idempotency-gated retry that reads P4-12's accepted ledger verdict rather than re-deciding it. `llm-retry` stays the durable-before-wait executor and is not replaced.",
+        "probes": [
+          {
+            "claim": "cockatiel is a real dependency addition, not already present",
+            "how": "node -e \"try{console.log('RESOLVED',require.resolve('cockatiel'))}catch(e){console.log('NOT_INSTALLED',e.code)}\"",
+            "result": "ok",
+            "evidence": "NOT_INSTALLED MODULE_NOT_FOUND. So adopting it adds a dependency; the withdrawn `circuit.ts` was hand-rolling what the ledger had judged `adapt`."
+          },
+          {
+            "claim": "Retry-After already has a parser, so the P stage must lift rather than write one",
+            "how": "grep -rn providerRetryAfterMs packages/llm/*/src/*.ts",
+            "result": "hard-constraint",
+            "evidence": "Defined at `packages/llm/llm-deepseek/src/adapter.ts:311`, used at `:685`, carried onto the error at `:690`, and consumed at `packages/llm/llm/src/adapter-failure.ts:70,75`. Writing a second parser would be the same defect as the withdrawn circuit breaker, one layer up."
+          },
+          {
+            "claim": "the layers must[1] names each count retries independently today",
+            "how": "grep -rn 'maxRetries|maxAttempts' over packages/*/*/src, then read each site",
+            "result": "ok",
+            "evidence": "Three independent counters confirmed by file:line — `packages/llm/llm-retry/src/index.ts:223` (`previousRetry >= policy.maxRetries`), `packages/mcp/mcp-client/src/connection.ts:208` (`failedAttempts > policy.maxAttempts`), `packages/run/message-bus/src/outbox.ts:173` (`record.attempts >= maxAttempts`). §12.64 rules the outbox OUT of must[1]'s scope: it is a per-message dead-letter policy owned by the accepted P4-06, not a run's redo budget."
+          },
+          {
+            "claim": "the preFlight document's fourth layer row — subagent holding its own `maxAttempts` — is accurate",
+            "how": "grep -rn maxAttempts packages/subagent/*/src/*.ts, then read the site",
+            "result": "differs",
+            "evidence": "The only `maxAttempts` in `packages/subagent` is `settlement-outbox.ts:153`, and it does not count anything itself: `:158` calls `decideDelivery(settlement.record, nowMs, maxAttempts)` — the message-bus outbox policy §12.64 ruled out of scope. The taskboard's `attempt` is an activation epoch, not a retry counter. So the tree holds THREE independent retry counters, not four, and the subagent row of the preFlight table names a reuse of the outbox rather than a fourth budget. Recorded rather than silently corrected: must[1]'s in-scope layer list (LLM retry, MCP retries taken for a run action, subagent attempts on behalf of a parent run, tool/web retries) is a statement about what must ACCOUNT to one budget, and a subagent site that spends the outbox's budget still needs a ruling on whether the run pays for it."
+          }
+        ],
+        "gapCheck": [
+          {
+            "community": "dsh-llm-fallbacks",
+            "gap": "Fallback chains ≈ hedge; too small, different scope",
+            "clause": "outOfScope: P5-04"
+          }
+        ],
+        "expectedDeletedPct": "30-35",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "`recordedBeforeFirstLine` is FALSE, and the honest account is the reason this record exists. A first C attempt was written for this epic BEFORE any preFlight and hand-rolled `circuit.ts`, a circuit breaker the ledger had already judged `adapt` — §12.62 stopped it and it was withdrawn. The preFlight document then landed at `b9bc2d1bbd`, the §12.64 rulings at `901efbd711`, and only afterwards did the current C land at `6f6580cecc` and freeze at `c2972046a3`; `git merge-base --is-ancestor b9bc2d1bbd 6f6580cecc` confirms that order. So the CURRENT C follows its preFlight, but the epic's first line of code did not, and writing `true` here would describe the second attempt as if the first had not happened."
       }
     }
   },
