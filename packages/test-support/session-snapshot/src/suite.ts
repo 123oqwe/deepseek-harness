@@ -805,7 +805,91 @@ export function refreshFixtureReplacements(logs: HarvestedLog[], fixtures: strin
   return replacements
 }
 
-function preserveFixtureVolatiles(record: Record<string, unknown>, existing: Record<string, unknown> | undefined): void {
+/**
+ * The identity a manifest record keeps across a refresh: the action it names
+ * and its place in that session's append order. Position IN THE LOG is not
+ * identity — an event inserted earlier moves every later record without
+ * changing what any of them is — while `sequence` is the manifest's own counter
+ * and survives.
+ *
+ * `argumentsHash` is deliberately absent: a committed fixture may carry it
+ * normalized to `{{argumentsHash}}` while the fresh record holds the real
+ * digest, so keying on it matches nothing and silently falls back to the fresh
+ * value, which is the failure this pairing exists to remove. Measured across
+ * the corpora: 153 manifest records, zero `(actionId, sequence)` collisions.
+ * @param data - one `action/manifest-appended` payload.
+ * @returns the key pairing a fresh record with its committed counterpart.
+ */
+function manifestIdentity(data: Record<string, unknown>): string {
+  return `${String(data.actionId)} ${String(data.sequence)}`
+}
+
+/**
+ * Index the committed fixture's manifest digests by identity, so a refresh
+ * preserves each one wherever the fresh log places it.
+ * @param existingRecords - the committed fixture's records.
+ * @returns identity to the digest that fixture already carries.
+ */
+function committedManifestKeys(existingRecords: readonly Record<string, unknown>[]): Map<string, unknown> {
+  const keys = new Map<string, unknown>()
+  for (const record of existingRecords) {
+    if (record.type !== 'action/manifest-appended') continue
+    const data = record.data
+    if (data === null || typeof data !== 'object' || !('idempotencyKey' in data)) continue
+    const payload = data as Record<string, unknown>
+    keys.set(manifestIdentity(payload), payload.idempotencyKey)
+  }
+  return keys
+}
+
+/**
+ * The committed digest for one fresh manifest record, or `undefined` when the
+ * fixture has none under that identity.
+ *
+ * Read from the FRESH record before any positional preservation runs: that step
+ * replaces `data` wholesale with the record it lined up against, so afterwards
+ * `actionId` names the wrong action and the identity resolves to another
+ * record's digest.
+ * @param record - the fresh record, before positional preservation.
+ * @param manifestKeys - digests indexed by {@link manifestIdentity}.
+ * @returns the digest to restore, or `undefined`.
+ */
+function preservedManifestKey(
+  record: Record<string, unknown>,
+  manifestKeys: ReadonlyMap<string, unknown>,
+): unknown {
+  if (record.type !== 'action/manifest-appended') return undefined
+  const data = record.data
+  if (data === null || typeof data !== 'object' || !('idempotencyKey' in data)) return undefined
+  return manifestKeys.get(manifestIdentity(data as Record<string, unknown>))
+}
+
+/**
+ * Write a preserved manifest digest back onto a fresh record.
+ *
+ * Applied AFTER positional volatile preservation, which copies the fields of
+ * whichever committed record it lined this one up against — under an inserted
+ * event that is a different action's record, so an earlier write is overwritten
+ * with the wrong digest.
+ * @param record - the fresh record to correct.
+ * @param manifestKey - the digest from {@link preservedManifestKey}, if any.
+ */
+function applyPreservedManifestKey(record: Record<string, unknown>, manifestKey: unknown): void {
+  if (manifestKey === undefined) return
+  const data = record.data
+  if (data !== null && typeof data === 'object') (data as Record<string, unknown>).idempotencyKey = manifestKey
+}
+
+function preserveFixtureVolatiles(
+  record: Record<string, unknown>,
+  existing: Record<string, unknown> | undefined,
+): void {
+  // Looked up by identity BEFORE the positional guard below, because the guard
+  // is exactly what breaks this preservation: when the fresh log gains an event
+  // anywhere earlier, every later manifest pairs with a record of another type,
+  // the guard returns, and the fixture keeps a freshly computed digest. Nothing
+  // fails, because `normalize.ts` masks the field when comparing — which is why
+  // this went unnoticed twice.
   if (existing === undefined || existing.type !== record.type) return
   if (record.type === 'session') {
     for (const field of ['id', 'createdAt', 'cwd', 'parentSession'] as const) {
@@ -1100,12 +1184,14 @@ export function stabilizeRefreshLog(
     freshContext,
     existingContext,
   )
+  const manifestKeys = committedManifestKeys(existingRecords as Record<string, unknown>[])
   let existingIndex = 0
   let previousEventTime: unknown
   for (let i = 0; i < records.length; i++) {
     let record = records[i] as Record<string, unknown>
     const existingRecord = existingRecords[existingIndex]
     const memberCount = packedTimes(record)?.length ?? 1
+    const manifestKey = preservedManifestKey(record, manifestKeys)
     const insertedTitle = record.type === 'session/title' && existingRecord?.type !== 'session/title'
     if (insertedTitle) {
       /* v8 ignore next -- a title is turn-enclosed, so a preceding event time exists in every valid fixture. */
@@ -1129,6 +1215,7 @@ export function stabilizeRefreshLog(
       }
       preservePackedMemberTimes(record, existingRecords.slice(existingIndex, existingIndex + memberCount))
       preserveFixtureVolatiles(record, existingRecord)
+      applyPreservedManifestKey(record, manifestKey)
       existingIndex += memberCount
     }
     if (typeof record.time === 'number') previousEventTime = record.time

@@ -26,6 +26,7 @@ import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import { gateActionRisk, refusedRiskResult } from '@deepseek-ai/dsh-tools/external-effect'
 import type { Agent } from '@deepseek-ai/dsh-agent'
+import { classifySideEffect } from '@deepseek-ai/dsh-action-manifest'
 import PermissionPresetService from '@deepseek-ai/dsh-permission-presets'
 import type { Config } from '@deepseek-ai/dsh-permission-presets'
 
@@ -165,5 +166,40 @@ describe('P2-04: a composition with no policy service has no gate', () => {
     const agent = { id: session.id, session } as unknown as Agent
 
     expect(await gateActionRisk(ctx, agent, 'mystery_tool', [])).toBeUndefined()
+  })
+})
+
+describe('BLOCKED-159: the audit record and the executed decision must agree', () => {
+  it('records an allow-by-preset decision, with its preset, where the manifest says approval was intrinsic', async () => {
+    // The two answers are different questions and both are legitimate: the
+    // manifest records the action's INTRINSIC classification when it is
+    // appended (`action-manifest/src/canonicalize.ts:153-155`, preset-blind,
+    // before execution), while the gate decides under the preset in force. What
+    // is NOT legitimate is the gate's answer leaving no trace: a log showing
+    // `requiresApproval: true` beside an action nobody was asked about, with
+    // nothing recording that a preset permitted it, describes a different run
+    // than the one that happened.
+    //
+    // The allow branch is the one that matters, because a refusal or an ask
+    // leaves other evidence and an allow leaves none.
+    const approval = approver('allowed-once')
+    const { ctx, agent } = await mounted({ preset: 'danger-full-access', approval })
+
+    const gated = await gateActionRisk(ctx, agent, 'read_private_key', ['key-material'])
+    expect(gated, 'danger-full-access permits this class without asking').toBeUndefined()
+    expect(approval.asked, 'and it does not ask').toEqual([])
+
+    // The manifest's intrinsic answer for the same action says approval.
+    expect(classifySideEffect('destructive').requiresApproval).toBe(true)
+
+    // So the gate's decision must be in the log, naming the preset that allowed
+    // it — otherwise the record and the execution disagree in silence.
+    const gateEvents = agent.session.snapshotEvents()
+      .filter(event => event.type === 'action/risk-gated')
+      .map(event => event.data as { actionId: string; decision: string; preset: string })
+    expect(gateEvents).toHaveLength(1)
+    expect(gateEvents[0]?.decision).toBe('allowed-by-preset')
+    expect(gateEvents[0]?.preset).toBe('danger-full-access')
+    expect(gateEvents[0]?.actionId).toBe('read_private_key')
   })
 })

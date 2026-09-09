@@ -476,21 +476,25 @@
     # tokens to its own tool path can still mount the provider with it false
     # and get issuance and audit without enforcement.
     #
-    # Absent exactly when the trust root is absent. `DSH_TRUST_KERNEL_INSECURE`
-    # is a documented development boot that deliberately pins NO Trust Kernel
-    # (`apps/cli/src/profile-boot.ts:478`), and a capability token is a SIGNED
-    # object: with no signature roots this provider throws at apply and takes
-    # the whole profile down. Measured, and it is this row's own regression —
-    # the `apps/web` lane stayed green only because its scaffold pins a kernel,
-    # which hid the CLI dev boot behind it.
+    # Mounted exactly when a trust root exists, because a capability token is a
+    # SIGNED object: with no signature roots this provider cannot issue one and
+    # throws at apply, taking the whole profile down.
     #
-    # Disabling here is not skipping a missing referent quietly: that boot
-    # already prints a permanent warning naming signature roots as unavailable,
-    # and a gate that cannot sign is not a weaker gate but an absent one. Any
-    # non-empty value opts in, matching `resolveTrustKernelInsecureOptIn`.
+    # Bound to the KERNEL rather than to an env var. Keying it on
+    # `DSH_TRUST_KERNEL_INSECURE` was measured wrong: six compositions in this
+    # tree inherit `base`, pin no kernel and set no opt-in — the P0-01/P0-07/
+    # P1-07/P8-01 composition fixtures and the two release specs — so the env
+    # condition covered none of them and P1-07's frozen fixture failed to boot
+    # at all. The condition that matters is whether a signature root is present,
+    # which is exactly what this asks.
+    #
+    # This is not skipping a missing referent quietly: a boot with no kernel
+    # already announces itself (`enforceTrustKernelPosture` refuses a production
+    # boot outright and prints a permanent warning for a development one), and a
+    # gate that cannot sign is not a weaker gate but an absent one.
     - id: capability-tokens
       name: '@deepseek-ai/dsh-capability-token-file'
-      disabled: !!js (process.env.DSH_TRUST_KERNEL_INSECURE ?? '') !== ''
+      disabled: !!js ctx.get('trustKernel') === undefined
       config:
         directory: !!js dshHomePath('capability-tokens')
         requireForTools: true

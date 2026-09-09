@@ -2541,6 +2541,37 @@ export interface ActionManifestAppendedEventData {
 declare module '@deepseek-ai/dsh-session/types' {
   interface SessionEventMap {
     /**
+     * What the risk gate DECIDED for one action, under the preset in force.
+     *
+     * The manifest's `requiresApproval` is the action's INTRINSIC classification
+     * — whether its declared side-effect class demands approval under the
+     * strictest policy — and is preset-blind by construction
+     * (`action-manifest/src/canonicalize.ts:153`). The gate's answer depends on
+     * the preset, so the two legitimately differ, and without this event a log
+     * showing `requiresApproval: true` beside an action that was never asked
+     * about describes a different run than the one that happened (BLOCKED-159).
+     *
+     * Recorded here rather than back-filled into the manifest: the manifest is
+     * appended BEFORE execution (`appendManifestThenGate`), and re-ordering it
+     * to wait for a decision would put P4-12's reserve-before-effect ordering
+     * behind a possibly-human approval.
+     *
+     * `ignorable: true` — a build that does not know this type must still read
+     * the log; the decision is auditable history, not a state the runtime needs
+     * to reconstruct.
+     * @mode both
+     */
+    'action/risk-gated': {
+      /** The tool whose action was gated. */
+      actionId: string
+      /** The class the action was classified into. */
+      riskClass: string
+      /** The preset in force when the gate decided; a decision is only readable against it. */
+      preset: string
+      /** What the gate did: asked an operator, refused, hard-denied, or allowed because the preset permits this class. */
+      decision: 'asked' | 'refused' | 'hard-denied' | 'allowed-by-preset'
+    }
+    /**
      * One ActionManifest durably appended BEFORE its action executes
      * (P2-03 must[1]). Appended by every execution path — native tool call,
      * code-mode embedded call, and plugin RPC — so acceptance[0]'s "every

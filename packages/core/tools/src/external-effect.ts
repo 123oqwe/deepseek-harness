@@ -203,10 +203,29 @@ export async function gateActionRisk(
   if (presets === undefined) return undefined
   const undeclared = riskDomainTags.length === 0
   const classification = presets.classifyAction({ actionId: toolName, domainTags: riskDomainTags })
+  const preset = presets.current(agent.session)
+  // The gate's decision is recorded for EVERY branch, including the one that
+  // lets the action through. A manifest records the action's intrinsic
+  // classification before execution and is preset-blind; without this event a
+  // log showing `requiresApproval: true` beside an action nobody was asked
+  // about describes a different run than the one that happened (BLOCKED-159).
+  // The silent branch is the one that matters: an allow leaves no other trace.
+  const recordDecision = (decision: 'asked' | 'refused' | 'hard-denied' | 'allowed-by-preset'): void => {
+    agent.session.append('action/risk-gated', {
+      actionId: toolName,
+      riskClass: classification.riskClass,
+      preset,
+      decision,
+    })
+  }
   if (classification.hardDenied) {
+    recordDecision('hard-denied')
     return { kind: 'hard-deny', riskClass: classification.riskClass, undeclared }
   }
-  if (!presets.requiresApproval(classification, presets.current(agent.session))) return undefined
+  if (!presets.requiresApproval(classification, preset)) {
+    recordDecision('allowed-by-preset')
+    return undefined
+  }
   const approval = ctx.get('approval') as ApprovalPort | undefined
   // Unreachable in a real composition: `permission-presets` declares
   // `static inject = ['shell', 'approval', ...]`, so reaching this line at all
@@ -230,6 +249,7 @@ export async function gateActionRisk(
   // Back to `running` whatever the operator said: the wait is over, and the
   // caller decides whether the action proceeds.
   advanceLeasedAgent(agent, 'running', `approval for "${toolName}" ended "${outcome}"`)
+  recordDecision(outcome === 'allowed-once' ? 'asked' : 'refused')
   if (outcome === 'allowed-once') return undefined
   return { kind: 'approval-refused', riskClass: classification.riskClass, outcome, undeclared }
 }

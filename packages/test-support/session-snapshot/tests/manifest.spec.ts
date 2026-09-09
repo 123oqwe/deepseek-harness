@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { parseSnapshotManifest } from '../src/manifest.ts'
+import { fixtureContext, stabilizeRefreshLog } from '../src/suite.ts'
 
 describe('snapshot manifest', () => {
   it('parses an owning scenario', () => {
@@ -146,5 +147,89 @@ describe('snapshot manifest', () => {
     ['version: 1\nprofile: !!js acp\n', 'invalid YAML'],
   ])('rejects invalid metadata', (source, message) => {
     expect(() => parseSnapshotManifest(source, 'case/snapshot.yml')).toThrow(message)
+  })
+})
+
+describe('refresh preserves manifest idempotency digests across an inserted event', () => {
+  const sessionLine = (id: string) => JSON.stringify({ type: 'session', version: 0, id, createdAt: 0 })
+  const manifest = (actionId: string, key: string, sequence: number) => JSON.stringify({
+    type: 'action/manifest-appended',
+    seq: 0,
+    time: 0,
+    data: { actionId, argumentsHash: `hash-${actionId}`, sequence, idempotencyKey: key },
+  })
+  const other = (type: string) => JSON.stringify({ type, seq: 0, time: 0, data: {} })
+
+  it('keeps every committed digest when the fresh log gained an event before them', () => {
+    // The digest is taken over the session id, so a refresh that fails to copy
+    // it writes a NEW digest into the fixture. Pairing fresh to committed by
+    // position breaks the moment the fresh log gains an event anywhere earlier:
+    // every later manifest then lines up against a record of another type, the
+    // copy is skipped, and nothing notices because the comparison masks the
+    // field. That is what this case exists to catch.
+    const existing = [
+      sessionLine('committed-session'),
+      manifest('act-a', 'committed-key-a', 1),
+      manifest('act-b', 'committed-key-b', 2),
+      '',
+    ].join('\n')
+    const fresh = [
+      sessionLine('fresh-session'),
+      // The insertion. Everything after it shifts by one.
+      other('action/risk-gated'),
+      manifest('act-a', 'fresh-key-a', 1),
+      manifest('act-b', 'fresh-key-b', 2),
+      '',
+    ].join('\n')
+
+    const stabilized = stabilizeRefreshLog(fresh, existing, [], fixtureContext(fresh))
+
+    expect(stabilized).toContain('committed-key-a')
+    expect(stabilized).toContain('committed-key-b')
+    expect(stabilized).not.toContain('fresh-key-a')
+    expect(stabilized).not.toContain('fresh-key-b')
+    // And the new event survives the refresh — preservation must not drop it.
+    expect(stabilized).toContain('action/risk-gated')
+  })
+
+  it('preserves the digest even when the committed fixture normalized its arguments hash', () => {
+    // A committed fixture may hold `{{argumentsHash}}` where the fresh record
+    // holds the real digest, so an identity built from the hash matches nothing
+    // and the refresh silently keeps the fresh key. Measured on the corpora
+    // before this case existed: 130 digests rewritten with the hash in the key,
+    // 0 with it out.
+    const existing = [
+      sessionLine('committed-session'),
+      JSON.stringify({
+        type: 'action/manifest-appended',
+        seq: 0,
+        time: 0,
+        data: { actionId: 'act-a', argumentsHash: '{{argumentsHash}}', sequence: 1, idempotencyKey: 'committed-key-a' },
+      }),
+      '',
+    ].join('\n')
+    const fresh = [sessionLine('fresh-session'), manifest('act-a', 'fresh-key-a', 1), ''].join('\n')
+
+    const stabilized = stabilizeRefreshLog(fresh, existing, [], fixtureContext(fresh))
+
+    expect(stabilized).toContain('committed-key-a')
+    expect(stabilized).not.toContain('fresh-key-a')
+  })
+
+  it('keeps a genuinely new action’s freshly computed digest', () => {
+    // The negative control: an action with no committed counterpart has no
+    // digest to preserve, and inventing one would be worse than recomputing.
+    const existing = [sessionLine('committed-session'), manifest('act-a', 'committed-key-a', 1), ''].join('\n')
+    const fresh = [
+      sessionLine('fresh-session'),
+      manifest('act-a', 'fresh-key-a', 1),
+      manifest('act-new', 'fresh-key-new', 2),
+      '',
+    ].join('\n')
+
+    const stabilized = stabilizeRefreshLog(fresh, existing, [], fixtureContext(fresh))
+
+    expect(stabilized).toContain('committed-key-a')
+    expect(stabilized).toContain('fresh-key-new')
   })
 })

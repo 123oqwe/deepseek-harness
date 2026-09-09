@@ -584,6 +584,42 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'capabilityTokens',
+    summary: 'The mounted Capability Token provider, published by whichever provider a profile mounts (`@deepseek-ai/dsh-capability-token-file` is the first).',
+    description: 'The mounted Capability Token provider, published by whichever provider a profile mounts (`@deepseek-ai/dsh-capability-token-file` is the first).\n\nDeclared in the DEFINITION package rather than in a provider so the name means the contract and not one implementation: a consumer reading `ctx.get(\'capabilityTokens\')` gets this type without importing a provider — which the layer rules forbid it from doing anyway. Declaring it provider-side left every consumer\'s read typed `any`, and `any` is what the tool-dispatch lint rules reject; two providers could also have disagreed about what the service is.',
+    methods: [
+      {
+        signature: 'whenSessionToken(session: SessionIdLike): Promise<SignedCapabilityToken | undefined>',
+        description: 'The session\'s root token, waiting for an in-flight issuance and minting one on first demand. This is what a consumer presenting a token calls.',
+        parameters: [{ name: 'session', description: 'the session whose root token is wanted.' }],
+        returns: 'the token, or `undefined` when none could be issued.',
+      },
+      {
+        signature: 'sessionToken(session: SessionIdLike): SignedCapabilityToken | undefined',
+        description: 'The session\'s root token if issuance already settled, without waiting.',
+        parameters: [{ name: 'session', description: 'the session whose root token is wanted.' }],
+        returns: 'the token, or `undefined` before issuance settled.',
+      },
+      {
+        signature: 'issuanceError(session: SessionIdLike): string | undefined',
+        description: 'Why this session holds no token, when issuance ran and failed — so a refusal can say that instead of reading as "nobody attached one".',
+        parameters: [{ name: 'session', description: 'the session whose issuance failure is wanted.' }],
+        returns: 'the failure message, or `undefined` when issuance did not fail.',
+      },
+      {
+        signature: 'revokeSession(session: SessionIdLike): Promise<void>',
+        description: 'Withdraw a session\'s authority: every root issued for it, and so every token delegated from any of them.',
+        parameters: [{ name: 'session', description: 'the session whose authority is withdrawn.' }],
+        returns: 'when the revocations are durably recorded.',
+      },
+      {
+        signature: 'deriveChild(parentSession: SessionIdLike, childSession: SessionIdLike, filter?: ChildResourceFilter): void',
+        description: 'Derive a child session\'s token from its parent\'s, under the parent\'s own delegation filter (P2-02 acceptance[0]: never wider than its parent).\n\nCalled from the child-composition path, which is the only place that KNOWS the filter — it is the delegating call\'s `toolFilter`, not anything the provider can observe. Starts the derivation and returns; the token settles before the child\'s first tool call because that call awaits whenSessionToken. A child with a derived token is never granted a root of its own.',
+        parameters: [{ name: 'parentSession', description: 'the delegating parent\'s session.' }, { name: 'childSession', description: 'the child session receiving the derived token.' }, { name: 'filter', description: 'the parent\'s declared restriction on the child, or `undefined` for none.' }],
+      },
+    ],
+  },
+  {
     key: 'clientModules',
     summary: 'The web plugin table service: incremental `dsh.client` scan + wire composition + bundle route + index injection rows.',
     description: 'The web plugin table service: incremental `dsh.client` scan + wire composition + bundle route + index injection rows. Construction runs the activation scan synchronously — a malformed declaration or missing bundle among the already-loaded entries aggregates into one loud throw (FAILED fiber; the boot activation audit reports it).',
@@ -4065,6 +4101,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type CapabilityTokenNonce = Branded<\'CapabilityTokenNonce\'>;',
   },
   {
+    name: 'ChildResourceFilter',
+    declaration: 'export interface ChildResourceFilter {\n    readonly allow?: readonly string[];\n    readonly deny?: readonly string[];\n}',
+  },
+  {
     name: 'ChunkRow',
     declaration: 'export type ChunkRow = {\n    type: \'text-chunks\';\n    seq0: SessionSeqType;\n    time0: number;\n    data: TextRunData;\n} | {\n    type: \'reasoning-chunks\';\n    seq0: SessionSeqType;\n    time0: number;\n    data: TextRunData;\n} | {\n    type: \'tool-call-chunks\';\n    seq0: SessionSeqType;\n    time0: number;\n    data: ToolCallRunData;\n};',
   },
@@ -5661,6 +5701,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type SessionId = Branded<\'SessionId\'>;',
   },
   {
+    name: 'SessionIdLike',
+    declaration: 'export type SessionIdLike = string;',
+  },
+  {
     name: 'SessionInspection',
     declaration: 'export interface SessionInspection extends SessionStorageMetadata {\n    readonly events: readonly SessionEvent[];\n}',
   },
@@ -6510,7 +6554,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ToolExecutionInput',
-    declaration: 'export interface ToolExecutionInput {\n    readonly callId: ToolCallId;\n    readonly rootCallId?: ToolCallId;\n    readonly name: string;\n    readonly arguments: unknown;\n    readonly agent?: Agent;\n    readonly parent?: ToolExecutionToken;\n    readonly signal: AbortSignal;\n    readonly capabilityToken?: SignedCapabilityToken;\n}',
+    declaration: 'export interface ToolExecutionInput {\n    readonly callId: ToolCallId;\n    readonly rootCallId?: ToolCallId;\n    readonly name: string;\n    readonly arguments: unknown;\n    readonly agent?: Agent;\n    readonly parent?: ToolExecutionToken;\n    readonly signal: AbortSignal;\n    readonly capabilityToken?: SignedCapabilityToken;\n    readonly capabilityTokenUnavailable?: string;\n}',
   },
   {
     name: 'ToolExecutionMode',

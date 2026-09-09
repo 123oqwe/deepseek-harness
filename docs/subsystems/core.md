@@ -939,6 +939,65 @@ roots(): Agent[]
 
 Source: [`packages/core/agent/src/index.ts`](../../packages/core/agent/src/index.ts)
 
+<a id="ctxcapabilitytokens--capabilitytokenprovidercontract"></a>
+
+### `ctx.capabilityTokens` — `CapabilityTokenProviderContract`
+
+The mounted Capability Token provider, published by whichever provider a profile mounts (`@deepseek-ai/dsh-capability-token-file` is the first).
+
+Declared in the DEFINITION package rather than in a provider so the name means the contract and not one implementation: a consumer reading `ctx.get('capabilityTokens')` gets this type without importing a provider — which the layer rules forbid it from doing anyway. Declaring it provider-side left every consumer's read typed `any`, and `any` is what the tool-dispatch lint rules reject; two providers could also have disagreed about what the service is.
+
+```ts cordis-catalog
+/**
+ * The session's root token, waiting for an in-flight issuance and minting one
+ * on first demand. This is what a consumer presenting a token calls.
+ * @param session - the session whose root token is wanted.
+ * @returns the token, or `undefined` when none could be issued.
+ */
+whenSessionToken(session: SessionIdLike): Promise<SignedCapabilityToken | undefined>
+
+/**
+ * The session's root token if issuance already settled, without waiting.
+ * @param session - the session whose root token is wanted.
+ * @returns the token, or `undefined` before issuance settled.
+ */
+sessionToken(session: SessionIdLike): SignedCapabilityToken | undefined
+
+/**
+ * Why this session holds no token, when issuance ran and failed — so a
+ * refusal can say that instead of reading as "nobody attached one".
+ * @param session - the session whose issuance failure is wanted.
+ * @returns the failure message, or `undefined` when issuance did not fail.
+ */
+issuanceError(session: SessionIdLike): string | undefined
+
+/**
+ * Withdraw a session's authority: every root issued for it, and so every
+ * token delegated from any of them.
+ * @param session - the session whose authority is withdrawn.
+ * @returns when the revocations are durably recorded.
+ */
+revokeSession(session: SessionIdLike): Promise<void>
+
+/**
+ * Derive a child session's token from its parent's, under the parent's own
+ * delegation filter (P2-02 acceptance[0]: never wider than its parent).
+ *
+ * Called from the child-composition path, which is the only place that KNOWS
+ * the filter — it is the delegating call's `toolFilter`, not anything the
+ * provider can observe. Starts the derivation and returns; the token settles
+ * before the child's first tool call because that call awaits
+ * {@link whenSessionToken}. A child with a derived token is never granted a
+ * root of its own.
+ * @param parentSession - the delegating parent's session.
+ * @param childSession - the child session receiving the derived token.
+ * @param filter - the parent's declared restriction on the child, or `undefined` for none.
+ */
+deriveChild(parentSession: SessionIdLike, childSession: SessionIdLike, filter?: ChildResourceFilter): void
+```
+
+Source: [`packages/policy/capability-token/src/types.ts`](../../packages/policy/capability-token/src/types.ts)
+
 <a id="ctxleasestore--leasestorecontract"></a>
 
 ### `ctx.leaseStore` — `LeaseStoreContract`

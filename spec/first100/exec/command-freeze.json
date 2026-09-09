@@ -3272,7 +3272,7 @@
         "mutationDescription": "Deleted the expiry check from capabilityDenialReason, so an expired capability token authorizes any tool it otherwise names. Restored byte-identical.",
         "failureSummary": "Exactly 1 of 18 red, and only that one: the expired-token refusal. The narrowness is the result -- the presence, verb-scope and resource-scope checks each have their own cases, so removing one does not redden the others, and a single mutation therefore names exactly which guard it removed."
       },
-      "supersededBy": "#222"
+      "supersededBy": "2026-09-09T05:00:00Z"
     },
     {
       "epic": "P0-04",
@@ -9359,7 +9359,8 @@
         "mutationDescription": "Three mutations, each restored byte-identical: (M39) `defineTool` stops propagating `riskDomainTags` onto the built definition; (M40) one shipped tool's declaration is removed (`tool-bash`); (M41) the shipped-package derivation returns an empty set.",
         "failureSummary": "M40 and M41 redden one case each. M39 reddened NOTHING at first, and that null result is why the third case exists: the structural gate is textual, so it proves a tool DECLARES tags and cannot prove the declaration reaches the runtime. The added `tools.spec.ts` case closes that half and M39 now reddens it. M41 is the guard on the guard — an empty derivation would let the gate pass while checking nothing, so a separate case asserts the set is non-empty and contains `tool-bash` and `tool-fs`."
       },
-      "note": "§12.48-B(b), §12.49(4) steps 1-3. Order is dependency-directed: preset thresholds first (zero behaviour change, the gate is not wired), then tags, then the structural gate; the dispatch gate is the next slice. `riskDomainTags` are TAGS, never a class — a tool that could name its own risk band would be deciding its own approval, which acceptance[1] refuses — and they are never model-visible, because `schemas()` whitelists only name, description and parameters. Omission is not harmless: an undeclared tool classifies by the unknown default, the highest policy-adjustable class, so omitting tags makes a tool MORE restricted, and the structural gate is what keeps omission from becoming normal. `approvalThreshold` moved from the service to `PresetSpec` per §12.48-B(a): a session on `danger-full-access` and one on `read-only` are not asking the same question about one action. A preset the table does not carry — `custom` is by definition no bundle — falls back to the STRICTEST configured threshold, which is fail-closed and invents no tunable."
+      "note": "§12.48-B(b), §12.49(4) steps 1-3. Order is dependency-directed: preset thresholds first (zero behaviour change, the gate is not wired), then tags, then the structural gate; the dispatch gate is the next slice. `riskDomainTags` are TAGS, never a class — a tool that could name its own risk band would be deciding its own approval, which acceptance[1] refuses — and they are never model-visible, because `schemas()` whitelists only name, description and parameters. Omission is not harmless: an undeclared tool classifies by the unknown default, the highest policy-adjustable class, so omitting tags makes a tool MORE restricted, and the structural gate is what keeps omission from becoming normal. `approvalThreshold` moved from the service to `PresetSpec` per §12.48-B(a): a session on `danger-full-access` and one on `read-only` are not asking the same question about one action. A preset the table does not carry — `custom` is by definition no bundle — falls back to the STRICTEST configured threshold, which is fail-closed and invents no tunable.",
+      "supersededBy": "2026-09-09T06:30:00Z"
     },
     {
       "epic": "P2-04",
@@ -9451,7 +9452,8 @@
         "mutationDescription": "Four mutations of `gateActionRisk`, each restored byte-identical: (M43) a hard-denied action is asked about instead of refused; (M44) a missing approval service is read as `allowed-once`; (M45) the preset threshold is ignored and only `read` passes; (M46) an undeclared tool is reported as declared.",
         "failureSummary": "M43 reddens the kernel-band case, M45 reddens 2 (both sandboxed-work cases start asking), M46 reddens 2 (the refusal text and the refusal record both carry the cause). M44 reddens NOTHING, and the reason is recorded in the code rather than presented as coverage: `permission-presets` declares `static inject = ['shell', 'approval', ...]`, so reaching that line means a policy service is mounted and therefore an approval service is too. The branch is unreachable in any real composition, not untested; it is kept because the type admits absence and the fail-closed direction belongs where a reader looks for it."
       },
-      "note": "§12.50, step 4. The gate runs BEFORE the ledger reservation on both paths: a reservation claims an effect, and claiming one for an action the deployment refuses would leave a `sent` row for something that never happened. Three outcomes in order — hard-deny never runs and is never asked about (offering a choice that does not exist is worse than refusing, because granting it would imply the choice was real); at or above the preset's threshold needs approval; otherwise run. Under the shipped rules a sandboxed read, write or command runs WITHOUT asking, because the sandbox is that boundary's enforcer; what the gate stops is an undeclared tool (unknown default), a declared high band, and the kernel band. The refusal text names whether the tool declared nothing, because 'it scored high' and 'it never said what it touches' call for different fixes."
+      "note": "§12.50, step 4. The gate runs BEFORE the ledger reservation on both paths: a reservation claims an effect, and claiming one for an action the deployment refuses would leave a `sent` row for something that never happened. Three outcomes in order — hard-deny never runs and is never asked about (offering a choice that does not exist is worse than refusing, because granting it would imply the choice was real); at or above the preset's threshold needs approval; otherwise run. Under the shipped rules a sandboxed read, write or command runs WITHOUT asking, because the sandbox is that boundary's enforcer; what the gate stops is an undeclared tool (unknown default), a declared high band, and the kernel band. The refusal text names whether the tool declared nothing, because 'it scored high' and 'it never said what it touches' call for different fixes.",
+      "supersededBy": "2026-09-09T06:30:00Z"
     },
     {
       "epic": "P4-07",
@@ -10002,12 +10004,64 @@
       ],
       "frozenAtUtc": "2026-09-09T05:00:00Z",
       "note": "P2-02 base U, SUPERSEDING the pre-withdrawal base U (#69). §12.53: two live base U entries would leave 4.4b and predicate (iii) reading two different truths about one stage. #69's 18 titles are ABSORBED rather than dropped — they remain true and they remain necessary, but they are DECISION-level: every one of them passed in the world the withdrawal was about, because they verify `delegatedChildResources`, the widening refusals, the depth and digest on tokens the case itself constructs, while nothing in the harness derived a token at all. The 9 provider cases add REACH (a mount issues, arms, re-issues on growth, revokes per session, and writes no key), and the 4 spawn cases add the delegation the epic's title names, read off a child the spawn provider actually started rather than a pair built in the test. The spawn cases are CONTINUABLE deliberately: a one-shot child has already completed and disposed by the time `start` resolves and `agent/disposed` drops its token, so a one-shot harness observes `undefined` and reads as 'delegation does not happen' when what it measured was a dead session. The fifth spawn case pins that a cancelled TURN does not revoke delegated authority: `Agent.cancel` is turn-scoped and P5-10's semantics are that cancelling is not disconnecting, so a continuable child outliving one cancelled turn is the delegated lifetime working. It was MEASURED before anything was wired (§12.77, `evidence-P2-02.md`), because the alternative — wiring `revokeSession(parent)` at the cancel path — would have revoked the parent's own root and refused its next turn.",
-      "supersedes": [
-        "#69 (P2-02 base U, frozen before the withdrawal)"
-      ],
+      "supersedes": "2026-09-05T00:40:00.000Z",
       "sensitivityProof": {
         "mutationDescription": "Two mutations, run separately, each reverted before the next. (A) the arming is removed — `if (false && this.config.requireForTools) disposers.push(this.ctx.tools.requireCapabilityToken())` in `capability-token-file/src/index.ts`, so the provider still issues and records but never arms the tool requirement. (B) the delegation ignores the parent's filter — `delegatedChildResources(parent.token.resources, undefined)` in `deriveFromParent`, so a child inherits the parent's resources verbatim instead of through the declared `toolFilter`.",
         "failureSummary": "(A) `npx vitest run packages/policy/capability-token-file/tests/provider.spec.ts` →\n     × REFUSES a tool call presenting no token once the provider armed it 16ms\n      Tests  1 failed | 8 passed (9)\n\n(B) `npx vitest run packages/subagent/subagent/tests/capability-token-spawn.spec.ts` →\n     × narrows the child to the parent filter, and the filter is what decides 75ms\n     × refuses a filtered-out tool at the CALL, not merely in the token list 76ms\n      Tests  2 failed | 2 passed (4)\n\nEach mutation reddens exactly the cases that assert the property it removed, and no others: (A) takes down the negative control that separates an armed requirement from a registered one while the eight issuance/growth/revocation cases stay green, and (B) takes down both halves of the narrowing — the token's resource list AND the refusal at dispatch — while the derivation and digest-only cases stay green. The second half of (B) is the one that matters: a token list assertion alone would pass against a gate that admitted the call anyway."
+      }
+    },
+    {
+      "epic": "P2-04",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/architecture/risk-domain-tags.spec.ts",
+        "packages/core/tools/tests/tools.spec.ts",
+        "packages/interaction/permission-presets",
+        "packages/policy/risk-taxonomy",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-04 must[1]: every shipped tool declares its risk domain tags finds the shipped tool packages from the bundles, so the set cannot drift from what ships",
+        "P2-04 must[1]: every shipped tool declares its risk domain tags leaves NO shipped tool undeclared, because an undeclared tool classifies by the unknown default",
+        "ToolRuntime P2-04 must[1]: carries a tool's declared risk domain tags to the runtime, and never to the model",
+        "P2-04 must[1]: the default policy does not ask about sandboxed work runs a declared filesystem write and a declared shell command without asking",
+        "P2-03 acceptance[2]: an undeclared tool is the case the gate is for ASKS about a tool that declares no domain tags, naming the undeclared tags as the cause",
+        "P2-03 acceptance[2]: an undeclared tool is the case the gate is for REFUSES an undeclared tool when nothing can answer, rather than proceeding on silence",
+        "P2-03 acceptance[2]: an undeclared tool is the case the gate is for lets an undeclared tool run under a preset whose threshold is above the unknown default",
+        "P2-04 must[1]: a declared high band asks, and the kernel band never does asks about a declared security-sensitive action, and refuses it when approval is declined",
+        "P2-04 must[1]: a declared high band asks, and the kernel band never does HARD-DENIES a declared safety-critical action under EVERY preset, without asking",
+        "P2-04: a composition with no policy service has no gate runs an undeclared tool when no permission service is composed, which is capability absence",
+        "records an allow-by-preset decision, with its preset, where the manifest says approval was intrinsic"
+      ],
+      "files": [
+        "packages/action/action-manifest/src/canonicalize.ts",
+        "packages/bundle/base/cordis.patch.yml",
+        "packages/core/agent-loop/src/tool-calls.ts",
+        "packages/core/tools/src/external-effect.ts",
+        "packages/core/tools/src/index.ts",
+        "packages/core/tools/src/ptc.ts",
+        "packages/core/tools/src/schema.ts",
+        "packages/core/tools/tests/tools.spec.ts",
+        "packages/interaction/permission-presets/package.json",
+        "packages/interaction/permission-presets/src/index.ts",
+        "packages/interaction/permission-presets/tests/risk-gate.spec.ts",
+        "packages/interaction/permission-presets/tests/risk-policy.spec.ts",
+        "tests/architecture/risk-domain-tags.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-09T06:30:00Z",
+      "supersedes": [
+        "2026-09-08T21:05:00.000Z",
+        "2026-09-08T23:55:00.000Z"
+      ],
+      "note": "P2-04 base U (§12.72), superseding the two supplements that were this stage's only entries. Neither #208 nor #210 was a base, so predicate (iii) saw two partial observations of one stage and 4.4b had no single command to read — the same two-live-entries shape §12.53 closes for P2-02. The ten titles are the union, unchanged: three for must[1]'s declaration reaching the runtime and never the model, seven for the gate's own decisions — the sandboxed default that does not ask, the undeclared tool that does, the high band that asks and the kernel band that never does, and the composition with no policy service where absence of a capability is not absence of a gate. The eleventh case closes BLOCKED-159 under §12.78: `manifest.requiresApproval` is the action's INTRINSIC classification, recorded before execution and preset-blind, while the gate decides under the preset in force — two different questions, both legitimate. What was not legitimate was the gate's answer leaving no trace, so `action/risk-gated` records every branch. The allow branch is the one the case asserts, because a refusal or an ask leaves other evidence and an allow leaves none: that is the only branch where the audit log and the execution can diverge in silence.",
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations, run separately, each restored byte-identical. (A) `gateActionRisk` stops recording the allow-by-preset outcome -- the `recordDecision('allowed-by-preset')` line is deleted from `packages/core/tools/src/external-effect.ts`, so the branch still runs the action but leaves no `action/risk-gated` event. (B) `defineTool` stops carrying declared tags onto the built definition -- the `riskDomainTags` spread in `packages/core/tools/src/schema.ts` is replaced by an empty spread, so a tool declares tags that never reach the runtime.",
+        "failureSummary": "(A) `npx vitest run tests/architecture/risk-domain-tags.spec.ts packages/core/tools/tests/tools.spec.ts packages/interaction/permission-presets packages/policy/risk-taxonomy` ->\n     x records an allow-by-preset decision, with its preset, where the manifest says approval was intrinsic 10ms\n      Tests  1 failed | 218 passed (219)\n\n(B) same command ->\n     x P2-04 must[1]: carries a tool's declared risk domain tags to the runtime, and never to the model 22ms\n      Tests  1 failed | 218 passed (219)\n\nEach mutation reddens exactly one case, and they are different cases: (A) takes down the decision RECORD while every gate-outcome case stays green, because the outcomes themselves are unchanged -- the action still runs, only the log loses it, which is the model-visible-implies-logged half this base adds over #210. (B) takes down the declaration REACH while the structural gate stays green, because that gate is textual and can only prove a tool declares tags, never that the declaration arrives at the runtime."
       }
     }
   ]
