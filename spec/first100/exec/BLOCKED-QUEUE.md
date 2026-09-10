@@ -4371,7 +4371,7 @@ Attributions are given only where this session read them from a record (each pac
 
 ### BLOCKED-177 — `docs/config-catalog.zh.md` is nine generated sections behind its English pair, and that blocks the pre-commit pairing hook
 
-**Status:** DEBT RECORDED with the measurement; NOT repaired here. `docs/tool-catalog.zh.md` was in the same state and IS repaired, because its whole divergence came from this session's own regeneration.
+**Status:** CLOSED 2026-09-11 by the generator change the ruling asked for. The measurement below is kept because it is the reason the change was made. `docs/tool-catalog.zh.md` was in the same state and IS repaired, because its whole divergence came from this session's own regeneration.
 
 Both catalogs are generated on the English side and hand-carried on the Chinese side. Regenerating the English one therefore moves half a bilingual pair, and `verify-translation-pairing` reports it — correctly. The tool catalog's gap was exactly this session's change (the workflow tool's two new parameters, its detached paragraph, and the `required` block the schema no longer carries); it was carried across and the pair is clean.
 
@@ -4387,7 +4387,7 @@ Nine sections accumulated over earlier epics, each of which regenerated the Engl
 
 **Consequence, and why this is not cosmetic:** the pre-commit hook checks STAGED pairs, so any change that stages `config-catalog.zh.md` is blocked until the whole pair is consistent. The English side is committed and correct; the Chinese side is one section behind this session (`retry-cockatiel`) on top of the nine.
 
-**RULED 2026-09-11 (delegate).** The Chinese config catalog becomes GENERATED from the English one with only its `Source:` labels localized — the code blocks are TypeScript on both sides, so a hand copy carries no information. The generator change is owned by **P2-05**, as the next epic that touches the config catalog (its provider's `Config` lands in P2-05.P), and goes in as its own commit BEFORE the first commit that regenerates the catalog. Until then the pair stays red and any change staging `config-catalog.zh.md` stays blocked.
+**DONE 2026-09-11.** `scripts/gen-config-catalog.ts` now renders both languages from one `CatalogLocale` table and writes both files; `--check` fails when EITHER is stale, so a regeneration can no longer move one side of the pair. The Chinese catalog gained the nine missing package sections as a consequence rather than as a port. **The original ruling:** The Chinese config catalog becomes GENERATED from the English one with only its `Source:` labels localized — the code blocks are TypeScript on both sides, so a hand copy carries no information. The generator change is owned by **P2-05**, as the next epic that touches the config catalog (its provider's `Config` lands in P2-05.P), and goes in as its own commit BEFORE the first commit that regenerates the catalog. Until then the pair stays red and any change staging `config-catalog.zh.md` stays blocked.
 
 **Original question, kept for the record:** whether the Chinese config catalog should be regenerated from the English one with only its `Source:` labels localized (which is what its structure already is — code blocks are TypeScript in both languages), or kept as a hand-translated document and brought current by a person. The first is a generator change and would end this debt permanently; the second keeps the current shape and needs an owner each time.
 

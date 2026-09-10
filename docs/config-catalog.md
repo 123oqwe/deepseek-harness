@@ -3,6 +3,8 @@
 
 # Plugin Config Catalog
 
+English | [中文](config-catalog.zh.md)
+
 Every `config:` block a `cordis.yml` entry can set: for each loadable harness package, the verbatim config declaration (JSDoc included) its `apply` function or service constructor receives, with every referenced type pasted alongside (package-local types) or linked (everything else). The paste is the plugin's full declared config type — a field the runtime schema deliberately excludes is a runtime-only seam (its own JSDoc says so) and is not settable from `cordis.yml`. This is the **deployment**-axis reference — the wiring a plugin author works against is the generated Cordis API region on each [subsystem page](subsystems/core.md), the model-facing tool schemas are the [tool catalog](tool-catalog.md), and [subsystems/](subsystems/core.md) documents the types these declarations reference.
 
 This file is GENERATED from source (`scripts/gen-config-catalog.ts`) and verified fresh by `pnpm run verify-config-catalog` (part of `doc-sync`) — do not edit it by hand. Declaration blocks use a `ts config-catalog` fence (skipped by doc-typecheck, since a lone declaration referencing imports is not standalone-compilable). The generator also cross-checks the runtime schemastery schema against the pasted declaration — every schema-validated key, nested keys included, must be locatable on the declared config type — so the paste cannot hide a loader-accepted field.
@@ -3892,6 +3894,7 @@ Imported as libraries by other packages; a `cordis.yml` cannot load them.
 - `@deepseek-ai/dsh-plugin-migrations` ([`packages/plugin/plugin-migrations/src/index.ts`](../packages/plugin/plugin-migrations/src/index.ts))
 - `@deepseek-ai/dsh-plugin-ownership` ([`packages/plugin/plugin-ownership/src/index.ts`](../packages/plugin/plugin-ownership/src/index.ts))
 - `@deepseek-ai/dsh-plugin-provenance` ([`packages/plugin/plugin-provenance/src/index.ts`](../packages/plugin/plugin-provenance/src/index.ts))
+- `@deepseek-ai/dsh-policy-engine` ([`packages/policy/policy-engine/src/index.ts`](../packages/policy/policy-engine/src/index.ts))
 - `@deepseek-ai/dsh-principal` ([`packages/identity/principal/src/index.ts`](../packages/identity/principal/src/index.ts))
 - `@deepseek-ai/dsh-retry` ([`packages/reliability/retry/src/index.ts`](../packages/reliability/retry/src/index.ts))
 - `@deepseek-ai/dsh-risk-taxonomy` ([`packages/policy/risk-taxonomy/src/index.ts`](../packages/policy/risk-taxonomy/src/index.ts))
