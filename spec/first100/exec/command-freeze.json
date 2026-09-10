@@ -10437,6 +10437,44 @@
         "failureSummary": "M48 reddens 2 of 18 -- the any-step-irreversible case and the case that pins the distinction directly -- because a snapshot makes the DATA restorable while reversibility is about whether the effects stay inside that data. M49 reddens exactly the sibling case: `<root>-backup` reads as being inside `<root>` without the separator, which would let a plugin declare its neighbour's storage as its own backup target. M50 reddens exactly the precondition-reporting case. M51 reddens the no-confirmation refusal and M52 the export-first case, each exactly one. M53 reddens the collision case — but only after that case was REBUILT: its first version compared two step lists that do not actually collide (\"123234\" against \"12334\"), so the mutation stayed green and the case asserted nothing. The pair is now constructed to collide, \"1\"+\"2\"+\"34\"+\"5\" against \"12\"+\"3\"+\"4\"+\"5\", and M53 reddens it."
       },
       "note": "P1-10 Contract stage. The package did not exist; the subject is new, and it starts as vocabulary plus pure judgements with no I/O and no service, because must[1]'s six phases (freeze, snapshot, migrate in quarantine, validate, atomic switch, health check) are an ordering over real EFFECTS -- a module that could perform one of them would be a second place the upgrade happens.\n\nMUST[2] IS SPLIT, AND THE SPLIT IS MEASURED RATHER THAN STAGED. `requiresApprovalAndExport` decides that an approval and an export are OWED; nothing asks. The epic preFlight had read that the subject already existed in `approval`, and that is half true: `ApprovalRequest` carries a `toolName` (user-approval/src/types.ts:63) and `request()` THROWS outside an open turn (index.ts:207-213), while a plugin upgrade is a CLI command with neither. The refusal is not an oversight to route around -- it protects the `approval/asked` + `approval/decided` audit pair that a reload would otherwise find as crash-tail garbage. Which seam asks is an open ruling and it decides whether must[2] closes in this epic; the code, the tests and both READMEs say so, so green cells here cannot be read as an approval that happens.\n\nREVERSIBILITY IS DECLARED, NOT DERIVED. A snapshot makes the DATA restorable; reversibility asks whether the migration's effects are confined to that data. A migration that also rewrote an external system is irreversible however good its snapshot is, and must[2] exists for exactly that case. M48 is that distinction as a mutation.\n\nA WORKSPACE PATH IS REFUSED, not unsupported (P3-11's boundary), and the comparison carries the separator: without it `<root>-backup` passes as being inside `<root>`, which would let a plugin declare its neighbour's storage as its own backup target.\n\nMUST[2] CLOSES IN THIS EPIC, by the delegate's fourth ruling, and the earlier note above records the measurement that forced the question. For a CLI-driven upgrade, human approval is an operator's explicit confirmation: a TTY prompt, or `--confirm-irreversible <path digest>` without one. A non-interactive run with no flag is refused with NOTHING changed. The confirmation names a digest of the ORDERED steps so it admits one specific conversion; a manifest edited between the operator reading it and the upgrade running produces a different digest and the confirmation stops matching. The export is required BEFORE the confirmation is accepted, because an operator confirming an irreversible conversion is confirming they can still get their data out. Prompting, exporting and recording the confirmation in an append-only transaction log are the Provider stage's; a migration triggered from INSIDE a session belongs to `user-approval` and is P1-11's."
+    },
+    {
+      "epic": "P1-10",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/plugin/plugin-migrations/tests/transaction.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-10 must[1]: the upgrade transaction has the phases the registry names enumerates the six phases, in order, each named once",
+        "P1-10 must[1]: what each phase leaves behind migrates against a COPY, leaving production byte-unchanged until the switch",
+        "P1-10 must[1]: what each phase leaves behind keeps the previous directory as a ROLLBACK TARGET after the switch",
+        "P1-10 must[1]: what each phase leaves behind leaves production byte-identical to the pre-switch state when the HEALTH CHECK fails",
+        "P1-10 must[1]: what each phase leaves behind does not switch at all when VALIDATE refuses",
+        "P1-10 must[1]: what each phase leaves behind THAWS the plugin however the upgrade ends",
+        "P1-10 must[1]: what each phase leaves behind refuses before freezing when the plan itself is refused",
+        "P1-10 must[1]: what each phase leaves behind records the upgrade with its path digest, written atomically",
+        "P1-10: the snapshot is an atomically consistent copy copies a live database through VACUUM INTO rather than a file copy",
+        "P1-10: the snapshot is an atomically consistent copy binds the destination as a PARAMETER, so a quoted path cannot inject SQL"
+      ],
+      "files": [
+        "packages/plugin/plugin-migrations/src/transaction.ts"
+      ],
+      "frozenAtUtc": "2026-09-10T14:40:00.000Z",
+      "dryRunProof": {
+        "treeSha": "777b851bc7ed97350048cad9ded5fe92ca6327d6",
+        "testsDiscovered": 10
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations, run against this argv and each restored byte-identical. (M54) `runUpgrade` migrates production in place instead of the quarantined copy. (M55) the switch deletes the live directory instead of renaming it aside, so no rollback target survives. (M56) a failed health check reports the failure without renaming production back.",
+        "failureSummary": "M54 reddens 4 of 10, M55 reddens 2 and M56 reddens 1 — but ONLY after the suite was made to measure source at all. On the first run all three passed with the mutated text confirmed in the file, and a probe at the top of `runUpgrade` printed nothing: the tests imported `@deepseek-ai/dsh-plugin-migrations/transaction`, a published subpath with no tsconfig alias, so the source plane could not resolve it and vitest ran the package's BUILT lib/ from an earlier `tsc -b`. The suite was measuring a build artifact while the source was edited. `gen-tsconfig-paths` now derives an alias for every published subpath and refuses when one is unmapped; the mutations bite with it in place."
+      },
+      "note": "P1-10 Provider stage: the six phases as an ordering over real effects.\n\nTHE CASES ASSERT INTERMEDIATE STATES, not an outcome. A transaction whose only evidence is that it returned true is indistinguishable from a function that returns true, so each case reads the disk between phases: production is byte-unchanged while the migration runs against a copy (read DURING the migrate callback, not after), the previous directory survives the switch as a readable rollback target, and a failed health check leaves production byte-identical to the pre-switch rows rather than merely returning an error.\n\nTHE SWITCH IS TWO RENAMES on one filesystem, live moved ASIDE first: a rename over a directory does not preserve what it replaced, and the aside IS the rollback target until the health check passes. A failed check renames back and keeps the migrated data in quarantine, because an operator diagnosing the failure needs to see what the migration produced.\n\nTWO PREMISES WERE CORRECTED BEFORE ANY CODE. `write-file-atomic` is an npm package this tree does not have; the house pattern P1-03 established is the repo's own `@deepseek-ai/dsh-atomic-write`, already used by four packages, and adding the npm package would have been a second spelling of a mechanism the tree has. `node:sqlite`'s `VACUUM INTO` was probed on the live runtime rather than assumed — an 8192-byte copy from an in-memory database — so the ledger's `adapt` is executable here.\n\nTHE DESTINATION IS BOUND AS A PARAMETER, never interpolated: a storage root can carry a quote, and a path spliced into SQL is an injection even when this file is the only author. A case covers a quoted path.\n\nacceptance[0]'s crash campaign belongs to U, against the real upgrade path."
     }
   ]
 }
