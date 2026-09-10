@@ -351,6 +351,12 @@ const SCAFFOLD_FILES = {
     reason: 'The registry declares src/index.ts at epic level but assigns it to P while the rest of the package is C, which cannot be built in that order (BLOCKED-131). This adds STAGE membership only -- the path was always declared. Admitted to C as a type-only barrel -- exactly one statement, `export type * from ./types.ts` -- so the Contract stage stays a contract: nothing re-exported can execute, and the runtime exports remain the Provider stage deliverable. Pinned by the frozen case "src/index.ts is exactly one statement and it re-exports types only", because the cheapest way to fix a later missing export is to add a runtime one here.',
     authorization: 'delegate ruling, 2026-09-06 (BLOCKED-131), citing B4(f)',
   },
+  'P4-02': {
+    added: [{ path: 'packages/run/task-profile/src/index.ts', stage: 'C' }],
+    convention: "The same tsdown entry glob P2-04 measured, measured again here: with src/index.ts absent, `pnpm run typecheck` fails at `[@deepseek-ai/dsh-task-profile] Cannot find entry: [\"lib/types/{index,invariant,startup}.js\"]` -- tsdown resolves that fixed glob for every workspace package with no per-package exclusion, so a package directory without an index.ts cannot be built the moment it exists.",
+    reason: "The registry declares src/index.ts at epic level but assigns it to P while types.ts, validate.ts and the tests are C, which cannot be built in that order. This adds STAGE membership only -- the path was always declared. Admitted to C as a type-only barrel, exactly one statement, so the Contract stage stays a contract: the deterministic compiler must arrive as a runtime export in P rather than slip in as a convenience re-export now.",
+    authorization: "delegate ruling gq-92, 2026-09-10, B4(f), same shape as P2-04/BLOCKED-131: the C-stage index.ts carries only `export type * from './types.ts'` because tsdown's fixed entry glob requires the file to exist; runtime exports land in P",
+  },
 }
 
 const HOT_ZONE_RELOCATED = {
