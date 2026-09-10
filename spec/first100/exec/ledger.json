@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-10T04:10:23.621Z",
-  "inputDigest": "bf847b99b1747baad034c1d773bd34b98905fc3a36c7e651ed48b1fa1695d6e1",
+  "lastUpdatedUtc": "2026-09-10T05:34:18.193Z",
+  "inputDigest": "3a358d08ebcef1abae38abe08acfff57536e2acc326635836b9539bb578444b9",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -2732,13 +2732,77 @@
           "capturedAtUtc": "2026-09-07T06:28:43.760Z"
         },
         "U": {
-          "status": "NOT_RUN",
-          "revokedFrom": {
-            "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
-            "absentCommitments": 1
-          },
-          "revokedReason": "The GREEN cell was observed at b3186e6db9, whose tree predates this stage's live freeze #222 (frozen 2026-09-09T05:00:00Z, superseding the withdrawn #69). A green cell whose commitment did not exist when it was observed is not a pre-commitment, which is the mechanical form of the lesson in §12.52. C/P/F are untouched: their freezes (#44/#50/#116) are in that tree. Re-observe U on a tree containing #222."
+          "status": "GREEN",
+          "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34439518421",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-2d2e8f89ac/first100-evidence-2d2e8f89ac9cccff7d92f165b5436105986e6c11/vitest-report.json",
+          "observationSha256": "80d9eb727295cb43bedea8ee032942968f75a5653f9ffe25981cef8520d11f6f",
+          "expectCasesMatched": [
+            "must[3]: a scope requiring a capability token refuses a call that presents none, before the tool body runs",
+            "control: the same call succeeds and reaches the tool body when an authorizing token is presented",
+            "must[3]: a token that does not name the called tool among its resources is refused",
+            "must[3]: a token lacking the tool-invocation verb is refused even for a tool it names",
+            "validation (过期): an expired token is refused for a tool it otherwise authorizes",
+            "must[3]: a transport sub-dispatch (a `parent` token set) is gated too, so PTC is not a bypass",
+            "must[3]: no `tools/pre-execute` listener observes an unauthorized call, so none can approve it",
+            "control: an agent whose scope registered no requirement is unaffected",
+            "must[3]: the requirement lifts only when its own disposer runs, and a global registration gates every scope",
+            "acceptance[2]: a refusal reaching the model quotes no token material",
+            "acceptance[0]: a child `allow` filter naming a tool the parent never held gains nothing",
+            "acceptance[0]: `delegatedChildResources` never returns a name outside the parent set, for allow, deny, and none",
+            "acceptance[0]: a delegation requesting an expiry past the parent's is refused, not clamped",
+            "acceptance[0]: a delegation requesting a budget above the parent's is refused",
+            "acceptance[0]: dropping a budget-constrained parent's ceiling entirely is refused as a widening",
+            "must[0]: the child token records its own delegation hop — depth+1 and the parent's digest",
+            "acceptance[2]: the durable descriptor records the delegation digest and no other token material",
+            "control: a legitimately delegated child token still executes the tools it kept, and only those",
+            "issues one per session, signed by the mounted Trust Kernel",
+            "drops the session token when the session ends, so it cannot be replayed after",
+            "REFUSES a tool call presenting no token once the provider armed it",
+            "ADMITS the same call when the session token is presented",
+            "does NOT arm the requirement when the profile did not ask for it",
+            "re-issues so a tool that appears after the first call is authorized",
+            "does not re-sign when the visible tools have not grown",
+            "kills a child derived from an EARLIER root when the session is revoked",
+            "writes tokens to disk without ever writing a signing key",
+            "derives the child token from the parent, not a root of its own",
+            "narrows the child to the parent filter, and the filter is what decides",
+            "refuses a filtered-out tool at the CALL, not merely in the token list",
+            "keeps the token out of the child session log and out of tool results",
+            "keeps a continuable child able to act after its parent turn is cancelled"
+          ],
+          "capturedAtUtc": "2026-09-10T05:32:56.399Z",
+          "admittedUnderRedRun": {
+            "runId": "34439518421",
+            "redSteps": [
+              {
+                "step": "Lint the files this program changed since the frozen baseline",
+                "failingCases": [
+                  "typescript(no-unnecessary-type-conversion) at packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38"
+                ],
+                "evidence": "× typescript(no-unnecessary-type-conversion): This type conversion does not change the type or value of the expression.\n     ╭─[packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38]",
+                "subjectPaths": [
+                  "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts"
+                ]
+              },
+              {
+                "step": "Recorded-session snapshots",
+                "failingCases": [
+                  "headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless"
+                ],
+                "evidence": "× replays cordis-inspect-jsdoc through dsh --profile headless 2954ms\n FAIL  snapshots/session/headless.snapshot.ts > headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless\nAssertionError: cordis-inspect-jsdoc: session 0: expected '{\"type\":\"session\",\"version\":0,\"id\":\"{…' to be '{\"type\":\"session\",\"version\":0,\"id\":\"{…' // Object.is equality",
+                "subjectPaths": [
+                  "snapshots/session/cordis-inspect-jsdoc",
+                  "packages/collaboration/lease-contract/src/types.ts",
+                  "packages/collaboration/lease-contract/src/run-lease.ts"
+                ]
+              }
+            ],
+            "diagnosedCause": "Both red steps are P4-09's, and neither reaches an admitted epic's reality set. (1) An oxlint no-unnecessary-type-conversion at nested-run.spec.ts:395 is a lint defect in a P4-09 test file. (2) The cordis-inspect-jsdoc snapshot is stale because RunLeaseDenial gained holder: WorkerId | undefined when the resume guard extended the lease contract; that declaration text is model-visible and its refresh postdates the change. Both are fixed and refreshed in the next batch; P4-09 is NOT admitted on this run.",
+            "unrelatedBecause": "the epic's reality set (25 path(s): declaration plus live freeze entries, per BLOCKED-134) is disjoint from the failing subject [\"packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts\",\"snapshots/session/cordis-inspect-jsdoc\",\"packages/collaboration/lease-contract/src/types.ts\",\"packages/collaboration/lease-contract/src/run-lease.ts\"]",
+            "admittedBy": "delegate guanjieqiao-92",
+            "diagnosedAtUtc": "2026-09-10T05:34:17.561Z"
+          }
         },
         "F": {
           "status": "GREEN",
@@ -2785,7 +2849,7 @@
           "capturedAtUtc": "2026-09-07T06:26:11.614Z"
         }
       },
-      "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+      "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -3031,7 +3095,56 @@
           "capturedAtUtc": "2026-09-08T15:08:07.597Z"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34439518421",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-2d2e8f89ac/first100-evidence-2d2e8f89ac9cccff7d92f165b5436105986e6c11/vitest-report.json",
+          "observationSha256": "80d9eb727295cb43bedea8ee032942968f75a5653f9ffe25981cef8520d11f6f",
+          "expectCasesMatched": [
+            "P2-04 must[1]: every shipped tool declares its risk domain tags finds the shipped tool packages from the bundles, so the set cannot drift from what ships",
+            "P2-04 must[1]: every shipped tool declares its risk domain tags leaves NO shipped tool undeclared, because an undeclared tool classifies by the unknown default",
+            "ToolRuntime P2-04 must[1]: carries a tool's declared risk domain tags to the runtime, and never to the model",
+            "P2-04 must[1]: the default policy does not ask about sandboxed work runs a declared filesystem write and a declared shell command without asking",
+            "P2-03 acceptance[2]: an undeclared tool is the case the gate is for ASKS about a tool that declares no domain tags, naming the undeclared tags as the cause",
+            "P2-03 acceptance[2]: an undeclared tool is the case the gate is for REFUSES an undeclared tool when nothing can answer, rather than proceeding on silence",
+            "P2-03 acceptance[2]: an undeclared tool is the case the gate is for lets an undeclared tool run under a preset whose threshold is above the unknown default",
+            "P2-04 must[1]: a declared high band asks, and the kernel band never does asks about a declared security-sensitive action, and refuses it when approval is declined",
+            "P2-04 must[1]: a declared high band asks, and the kernel band never does HARD-DENIES a declared safety-critical action under EVERY preset, without asking",
+            "P2-04: a composition with no policy service has no gate runs an undeclared tool when no permission service is composed, which is capability absence",
+            "records an allow-by-preset decision, with its preset, where the manifest says approval was intrinsic"
+          ],
+          "capturedAtUtc": "2026-09-10T05:33:12.632Z",
+          "admittedUnderRedRun": {
+            "runId": "34439518421",
+            "redSteps": [
+              {
+                "step": "Lint the files this program changed since the frozen baseline",
+                "failingCases": [
+                  "typescript(no-unnecessary-type-conversion) at packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38"
+                ],
+                "evidence": "× typescript(no-unnecessary-type-conversion): This type conversion does not change the type or value of the expression.\n     ╭─[packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38]",
+                "subjectPaths": [
+                  "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts"
+                ]
+              },
+              {
+                "step": "Recorded-session snapshots",
+                "failingCases": [
+                  "headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless"
+                ],
+                "evidence": "× replays cordis-inspect-jsdoc through dsh --profile headless 2954ms\n FAIL  snapshots/session/headless.snapshot.ts > headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless\nAssertionError: cordis-inspect-jsdoc: session 0: expected '{\"type\":\"session\",\"version\":0,\"id\":\"{…' to be '{\"type\":\"session\",\"version\":0,\"id\":\"{…' // Object.is equality",
+                "subjectPaths": [
+                  "snapshots/session/cordis-inspect-jsdoc",
+                  "packages/collaboration/lease-contract/src/types.ts",
+                  "packages/collaboration/lease-contract/src/run-lease.ts"
+                ]
+              }
+            ],
+            "diagnosedCause": "Both red steps are P4-09's, and neither reaches an admitted epic's reality set. (1) An oxlint no-unnecessary-type-conversion at nested-run.spec.ts:395 is a lint defect in a P4-09 test file. (2) The cordis-inspect-jsdoc snapshot is stale because RunLeaseDenial gained holder: WorkerId | undefined when the resume guard extended the lease contract; that declaration text is model-visible and its refresh postdates the change. Both are fixed and refreshed in the next batch; P4-09 is NOT admitted on this run.",
+            "unrelatedBecause": "the epic's reality set (26 path(s): declaration plus live freeze entries, per BLOCKED-134) is disjoint from the failing subject [\"packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts\",\"snapshots/session/cordis-inspect-jsdoc\",\"packages/collaboration/lease-contract/src/types.ts\",\"packages/collaboration/lease-contract/src/run-lease.ts\"]",
+            "admittedBy": "delegate guanjieqiao-92",
+            "diagnosedAtUtc": "2026-09-10T05:34:17.707Z"
+          }
         },
         "F": {
           "status": "GREEN",
@@ -3114,7 +3227,7 @@
           "capturedAtUtc": "2026-09-09T01:55:41.684Z"
         }
       },
-      "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+      "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -4842,22 +4955,118 @@
       "wave": 7,
       "cells": {
         "C": {
-          "status": "NOT_RUN",
-          "revokedFrom": {
-            "candidateSha": "f8d3bce3d14534500b098e4d7373d2eba409b836",
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34432095748",
-            "absentCommitments": 1
-          },
-          "revokedReason": "The base entry for this stage was written at 2026-09-10T04:10:00Z, after run 34432095748 observed f8d3bce3d1. Greening on that report would rest on a commitment the observation could not have seen — the same shape §12.52 closes and P2-02.U was revoked for. Re-observe on a tree containing the new bases."
+          "status": "GREEN",
+          "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34439518421",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-2d2e8f89ac/first100-evidence-2d2e8f89ac9cccff7d92f165b5436105986e6c11/vitest-report.json",
+          "observationSha256": "80d9eb727295cb43bedea8ee032942968f75a5653f9ffe25981cef8520d11f6f",
+          "expectCasesMatched": [
+            "P4-08 must[0]: a journal entry records every fact the clause names carries step id, phase, effect class, outcome, inputs, output, both receipt kinds and verification",
+            "P4-08 must[0]: a journal entry records every fact the clause names keeps `verified` separate from `outcome`",
+            "P4-08 must[0]: a journal entry records every fact the clause names records artifact REFS, never inline content",
+            "P4-08 must[1]: a resume skips a completed, verified, pure step skips it and reuses its recorded output",
+            "P4-08 must[1]: a resume skips a completed, verified, pure step re-runs a step that never completed",
+            "P4-08 must[1]: a resume skips a completed, verified, pure step re-runs a completed step that recorded no output",
+            "P4-08 must[2]: a side-effecting step is reconciled, never skipped reconciles it even when completed AND verified",
+            "P4-08 must[2]: a side-effecting step is reconciled, never skipped reconciles a side-effecting step that recorded no receipts at all",
+            "P4-08 must[2]: a side-effecting step is reconciled, never skipped collects every side-effect receipt in the journal, not only those before the restart point",
+            "P4-08 acceptance[0]: killing around a step does not repeat completed child work resumes at the first step that is not skippable, not past it",
+            "P4-08 acceptance[0]: killing around a step does not repeat completed child work resumes at the end when every step completed and was verified",
+            "P4-08 acceptance[0]: killing around a step does not repeat completed child work resumes at zero when the first step is unskippable, whatever follows it",
+            "P4-08 acceptance[0]: killing around a step does not repeat completed child work does not repeat a completed child agent call: its receipt is retained and its step skipped",
+            "P4-08 acceptance[1]: a changed script digest refuses the resume refuses the WHOLE resume rather than degrading to a partial one",
+            "P4-08 acceptance[1]: a changed script digest refuses the resume admits an unchanged digest, so the refusal is not unconditional",
+            "P4-08 acceptance[2]: a journal compacts without losing its evidence drops recomputable inputs from a completed, verified step, whatever its effect class",
+            "P4-08 acceptance[2]: a journal compacts without losing its evidence leaves an UNVERIFIED step untouched, whether or not it completed",
+            "P4-08 acceptance[2]: a journal compacts without losing its evidence retains EVERY receipt, which is the evidence nothing can regenerate",
+            "P4-08 acceptance[2]: a journal compacts without losing its evidence reports a compaction that dropped a receipt as NOT retaining evidence"
+          ],
+          "capturedAtUtc": "2026-09-10T05:33:12.967Z",
+          "admittedUnderRedRun": {
+            "runId": "34439518421",
+            "redSteps": [
+              {
+                "step": "Lint the files this program changed since the frozen baseline",
+                "failingCases": [
+                  "typescript(no-unnecessary-type-conversion) at packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38"
+                ],
+                "evidence": "× typescript(no-unnecessary-type-conversion): This type conversion does not change the type or value of the expression.\n     ╭─[packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38]",
+                "subjectPaths": [
+                  "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts"
+                ]
+              },
+              {
+                "step": "Recorded-session snapshots",
+                "failingCases": [
+                  "headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless"
+                ],
+                "evidence": "× replays cordis-inspect-jsdoc through dsh --profile headless 2954ms\n FAIL  snapshots/session/headless.snapshot.ts > headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless\nAssertionError: cordis-inspect-jsdoc: session 0: expected '{\"type\":\"session\",\"version\":0,\"id\":\"{…' to be '{\"type\":\"session\",\"version\":0,\"id\":\"{…' // Object.is equality",
+                "subjectPaths": [
+                  "snapshots/session/cordis-inspect-jsdoc",
+                  "packages/collaboration/lease-contract/src/types.ts",
+                  "packages/collaboration/lease-contract/src/run-lease.ts"
+                ]
+              }
+            ],
+            "diagnosedCause": "Both red steps are P4-09's, and neither reaches an admitted epic's reality set. (1) An oxlint no-unnecessary-type-conversion at nested-run.spec.ts:395 is a lint defect in a P4-09 test file. (2) The cordis-inspect-jsdoc snapshot is stale because RunLeaseDenial gained holder: WorkerId | undefined when the resume guard extended the lease contract; that declaration text is model-visible and its refresh postdates the change. Both are fixed and refreshed in the next batch; P4-09 is NOT admitted on this run.",
+            "unrelatedBecause": "the epic's reality set (26 path(s): declaration plus live freeze entries, per BLOCKED-134) is disjoint from the failing subject [\"packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts\",\"snapshots/session/cordis-inspect-jsdoc\",\"packages/collaboration/lease-contract/src/types.ts\",\"packages/collaboration/lease-contract/src/run-lease.ts\"]",
+            "admittedBy": "delegate guanjieqiao-92",
+            "diagnosedAtUtc": "2026-09-10T05:34:17.852Z"
+          }
         },
         "P": {
-          "status": "NOT_RUN",
-          "revokedFrom": {
-            "candidateSha": "f8d3bce3d14534500b098e4d7373d2eba409b836",
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34432095748",
-            "absentCommitments": 1
-          },
-          "revokedReason": "The base entry for this stage was written at 2026-09-10T04:10:00Z, after run 34432095748 observed f8d3bce3d1. Greening on that report would rest on a commitment the observation could not have seen — the same shape §12.52 closes and P2-02.U was revoked for. Re-observe on a tree containing the new bases."
+          "status": "GREEN",
+          "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34439518421",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-2d2e8f89ac/first100-evidence-2d2e8f89ac9cccff7d92f165b5436105986e6c11/vitest-report.json",
+          "observationSha256": "80d9eb727295cb43bedea8ee032942968f75a5653f9ffe25981cef8520d11f6f",
+          "expectCasesMatched": [
+            "P4-08 must[4]: a running execution is journalable writes an in-flight entry when a step STARTS, before it settles",
+            "P4-08 must[4]: a running execution is journalable replaces the in-flight entry in place when the step settles",
+            "P4-08 must[4]: a running execution is journalable orders entries by sequence even when they settle out of order",
+            "P4-08 must[4]: a running execution is journalable carries the declared phase, and names an unphased step rather than omitting it",
+            "P4-08 must[4]: a running execution is journalable orders by sequence even when steps START out of order",
+            "P4-08: the recorder does not invent what the execution did not report drops a settlement for a step that never started",
+            "P4-08: the recorder does not invent what the execution did not report refuses to mark an in-flight step verified",
+            "P4-08: the recorder does not invent what the execution did not report refuses to mark a FAILED step verified",
+            "P4-08: the recorder does not invent what the execution did not report marks a completed step verified when asked",
+            "P4-08: the recorder does not invent what the execution did not report records the effect class the caller declared, never one it inferred",
+            "P4-08 acceptance[0]: a journal recorded up to a kill drives the right resume kill BEFORE the agent call settles: the step is re-run",
+            "P4-08 acceptance[0]: a journal recorded up to a kill drives the right resume kill AFTER the agent call settles but before verification: still re-run",
+            "P4-08 acceptance[0]: a journal recorded up to a kill drives the right resume kill after verification: the completed child work is NOT repeated"
+          ],
+          "capturedAtUtc": "2026-09-10T05:33:13.254Z",
+          "admittedUnderRedRun": {
+            "runId": "34439518421",
+            "redSteps": [
+              {
+                "step": "Lint the files this program changed since the frozen baseline",
+                "failingCases": [
+                  "typescript(no-unnecessary-type-conversion) at packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38"
+                ],
+                "evidence": "× typescript(no-unnecessary-type-conversion): This type conversion does not change the type or value of the expression.\n     ╭─[packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38]",
+                "subjectPaths": [
+                  "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts"
+                ]
+              },
+              {
+                "step": "Recorded-session snapshots",
+                "failingCases": [
+                  "headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless"
+                ],
+                "evidence": "× replays cordis-inspect-jsdoc through dsh --profile headless 2954ms\n FAIL  snapshots/session/headless.snapshot.ts > headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless\nAssertionError: cordis-inspect-jsdoc: session 0: expected '{\"type\":\"session\",\"version\":0,\"id\":\"{…' to be '{\"type\":\"session\",\"version\":0,\"id\":\"{…' // Object.is equality",
+                "subjectPaths": [
+                  "snapshots/session/cordis-inspect-jsdoc",
+                  "packages/collaboration/lease-contract/src/types.ts",
+                  "packages/collaboration/lease-contract/src/run-lease.ts"
+                ]
+              }
+            ],
+            "diagnosedCause": "Both red steps are P4-09's, and neither reaches an admitted epic's reality set. (1) An oxlint no-unnecessary-type-conversion at nested-run.spec.ts:395 is a lint defect in a P4-09 test file. (2) The cordis-inspect-jsdoc snapshot is stale because RunLeaseDenial gained holder: WorkerId | undefined when the resume guard extended the lease contract; that declaration text is model-visible and its refresh postdates the change. Both are fixed and refreshed in the next batch; P4-09 is NOT admitted on this run.",
+            "unrelatedBecause": "the epic's reality set (26 path(s): declaration plus live freeze entries, per BLOCKED-134) is disjoint from the failing subject [\"packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts\",\"snapshots/session/cordis-inspect-jsdoc\",\"packages/collaboration/lease-contract/src/types.ts\",\"packages/collaboration/lease-contract/src/run-lease.ts\"]",
+            "admittedBy": "delegate guanjieqiao-92",
+            "diagnosedAtUtc": "2026-09-10T05:34:18.001Z"
+          }
         },
         "U": {
           "status": "GREEN",
@@ -4878,13 +5087,64 @@
           "capturedAtUtc": "2026-09-10T03:47:59.961Z"
         },
         "F": {
-          "status": "NOT_RUN",
-          "revokedFrom": {
-            "candidateSha": "f8d3bce3d14534500b098e4d7373d2eba409b836",
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34432095748",
-            "absentCommitments": 1
-          },
-          "revokedReason": "The base entry for this stage was written at 2026-09-10T04:10:00Z, after run 34432095748 observed f8d3bce3d1. Greening on that report would rest on a commitment the observation could not have seen — the same shape §12.52 closes and P2-02.U was revoked for. Re-observe on a tree containing the new bases."
+          "status": "GREEN",
+          "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34439518421",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-2d2e8f89ac/first100-evidence-2d2e8f89ac9cccff7d92f165b5436105986e6c11/vitest-report.json",
+          "observationSha256": "80d9eb727295cb43bedea8ee032942968f75a5653f9ffe25981cef8520d11f6f",
+          "expectCasesMatched": [
+            "P4-08 Fault — resume boundary matrix enumerates at least twelve boundaries, each named once",
+            "P4-08 Fault — resume boundary matrix fault boundary 01 an in-flight step is re-run",
+            "P4-08 Fault — resume boundary matrix fault boundary 02 a failed step is re-run",
+            "P4-08 Fault — resume boundary matrix fault boundary 03 a completed but unverified step is re-run",
+            "P4-08 Fault — resume boundary matrix fault boundary 04 a completed, verified step with no output is re-run",
+            "P4-08 Fault — resume boundary matrix fault boundary 05 a completed, verified, pure step is skipped",
+            "P4-08 Fault — resume boundary matrix fault boundary 06 a side-effecting step is reconciled even when completed and verified",
+            "P4-08 Fault — resume boundary matrix fault boundary 07 a side-effecting step that never completed is re-run, not reconciled",
+            "P4-08 Fault — resume boundary matrix fault boundary 08 a side-effecting step with NO receipts is still reconciled",
+            "P4-08 Fault — resume boundary matrix fault boundary 09 a changed script digest refuses the whole resume",
+            "P4-08 Fault — resume boundary matrix fault boundary 10 an empty journal is resumable and resumes at zero",
+            "P4-08 Fault — resume boundary matrix fault boundary 11 a fully completed journal resumes past its last step",
+            "P4-08 Fault — resume boundary matrix fault boundary 12 resume stops at the first non-skippable step, not past it",
+            "P4-08 Fault — resume boundary matrix fault boundary 13 receipts are collected from AFTER the restart point too",
+            "P4-08 Fault — resume boundary matrix fault boundary 14 a refused plan yields no receipts to reconcile",
+            "P4-08 Fault — resume boundary matrix fault boundary 15 compaction leaves an UNVERIFIED entry untouched, whatever its effect class",
+            "P4-08 Fault — resume boundary matrix fault boundary 16 compaction retains every receipt",
+            "P4-08 Fault — resume boundary matrix fault boundary 17 compacting an already-compacted journal changes nothing further",
+            "P4-08 Fault — resume boundary matrix fault boundary 18 validation[2]: a resumed run reaches the same outputs as an uninterrupted one"
+          ],
+          "capturedAtUtc": "2026-09-10T05:33:13.545Z",
+          "admittedUnderRedRun": {
+            "runId": "34439518421",
+            "redSteps": [
+              {
+                "step": "Lint the files this program changed since the frozen baseline",
+                "failingCases": [
+                  "typescript(no-unnecessary-type-conversion) at packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38"
+                ],
+                "evidence": "× typescript(no-unnecessary-type-conversion): This type conversion does not change the type or value of the expression.\n     ╭─[packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38]",
+                "subjectPaths": [
+                  "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts"
+                ]
+              },
+              {
+                "step": "Recorded-session snapshots",
+                "failingCases": [
+                  "headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless"
+                ],
+                "evidence": "× replays cordis-inspect-jsdoc through dsh --profile headless 2954ms\n FAIL  snapshots/session/headless.snapshot.ts > headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless\nAssertionError: cordis-inspect-jsdoc: session 0: expected '{\"type\":\"session\",\"version\":0,\"id\":\"{…' to be '{\"type\":\"session\",\"version\":0,\"id\":\"{…' // Object.is equality",
+                "subjectPaths": [
+                  "snapshots/session/cordis-inspect-jsdoc",
+                  "packages/collaboration/lease-contract/src/types.ts",
+                  "packages/collaboration/lease-contract/src/run-lease.ts"
+                ]
+              }
+            ],
+            "diagnosedCause": "Both red steps are P4-09's, and neither reaches an admitted epic's reality set. (1) An oxlint no-unnecessary-type-conversion at nested-run.spec.ts:395 is a lint defect in a P4-09 test file. (2) The cordis-inspect-jsdoc snapshot is stale because RunLeaseDenial gained holder: WorkerId | undefined when the resume guard extended the lease contract; that declaration text is model-visible and its refresh postdates the change. Both are fixed and refreshed in the next batch; P4-09 is NOT admitted on this run.",
+            "unrelatedBecause": "the epic's reality set (26 path(s): declaration plus live freeze entries, per BLOCKED-134) is disjoint from the failing subject [\"packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts\",\"snapshots/session/cordis-inspect-jsdoc\",\"packages/collaboration/lease-contract/src/types.ts\",\"packages/collaboration/lease-contract/src/run-lease.ts\"]",
+            "admittedBy": "delegate guanjieqiao-92",
+            "diagnosedAtUtc": "2026-09-10T05:34:18.187Z"
+          }
         }
       },
       "supplements": {
@@ -5015,7 +5275,7 @@
           "supersededBy": "2026-09-10T04:10:00Z"
         }
       },
-      "candidateSha": "f8d3bce3d14534500b098e4d7373d2eba409b836",
+      "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
       "independentVerdict": "PENDING",
       "openFindings": [],
       "status": "NOT_RUN",

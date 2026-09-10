@@ -58,9 +58,17 @@ A case that imports `cockatiel`, drives its policy directly and asserts the poli
 
 **A second mutation, for the translation:** make `normalizeLlmFailure` drop `providerRetryAfterMs`. A case that does not redden is not observing the lift.
 
-## Open question for the delegate — one, and it blocks nothing yet
+## Ruled: breaker state is keyed per DESTINATION
 
-Does the breaker's state belong per DESTINATION (provider base URL + model) or per PROVIDER? `cockatiel` gives one policy object per breaker either way, so this is a keying decision, not a library one. Measured argument for destination: `llm-deepseek` resolves a base URL per call config, so one provider name can front two endpoints, and an endpoint outage would open the breaker for a healthy one. I will implement **per destination** and record it in the freeze note unless corrected; it can be narrowed later without changing the contract, while the reverse cannot.
+Asked because `cockatiel` gives one policy object per breaker either way, so this is a keying decision rather than a library one. Ruled per destination (base URL + model): must[2]'s "provider circuit breaker" names a grain that is in fact the endpoint, one provider name can front two endpoints, and a healthy endpoint must not be opened by a sick one's failures. Narrowing destination→provider later does not change the contract; widening does.
+
+**Frozen with a negative control:** two destinations under ONE provider, one driven past the threshold and one not — the open destination refuses, and the healthy one still executes with its stub count increasing. Without it, a breaker keyed per provider would satisfy every other case here.
+
+## Registration, following the precedents rather than inventing one
+
+Measured: `architecture.layers.json` holds 30 families, and `capabilityToken` reads `definition: @deepseek-ai/dsh-capability-token`, `providers: [@deepseek-ai/dsh-capability-token-file]`. This epic adds `definition: @deepseek-ai/dsh-retry`, `providers: [@deepseek-ai/dsh-retry-cockatiel]`, consumers empty at P — U adds them, and an invented consumer here would be a name with nothing behind it.
+
+The service is declared in the DEFINITION package, per `lease-contract/src/index.ts:25`, whose own reason applies unchanged: declaring it there makes the name mean the contract rather than an implementation, so two providers cannot disagree about what the service is.
 
 ## Status
 
