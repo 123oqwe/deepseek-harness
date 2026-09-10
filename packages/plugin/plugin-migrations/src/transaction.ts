@@ -184,6 +184,19 @@ export async function runUpgrade(request: UpgradeRequest): Promise<UpgradeOutcom
       await rename(paths.rollback, paths.live)
       return { upgraded: false, failedAt: 'health-check' }
     }
+    // acceptance[1]: the reconciliation facts are written only NOW, after the
+    // health check passed. Written at the snapshot phase they would survive a
+    // crash mid-upgrade as a record claiming an upgrade that did not finish,
+    // and a later reconcile would compare the disk against a version it never
+    // reached.
+    await writeFileAtomic(paths.record, JSON.stringify({
+      plugin: request.plugin,
+      from: request.installed,
+      to: request.manifest.current,
+      pathDigest: computeMigrationPathDigest(request.plugin, plan.steps),
+      upgradedTo: request.manifest.current,
+      dataDigest: validated.digest,
+    }, undefined, 2), { mode: 0o600, dirMode: 0o700 })
     request.onPhase?.('health-check')
     return { upgraded: true, digest: validated.digest, rollbackDir: paths.rollback }
   } finally {
@@ -192,7 +205,13 @@ export async function runUpgrade(request: UpgradeRequest): Promise<UpgradeOutcom
 }
 
 /**
- * The upgrade record written at the snapshot phase, read back.
+ * The upgrade record, read back.
+ *
+ * Written twice: once at the snapshot phase with what the upgrade INTENDS
+ * (plugin, from, to, path digest), and again after the health check with what
+ * it ACHIEVED (`upgradedTo`, `dataDigest`). A record carrying only the first
+ * set is an upgrade that started and did not finish, which is exactly what a
+ * reconcile after a crash needs to be able to tell.
  * @param storageRoot - the plugin's storage root.
  * @returns the parsed record, or `undefined` when no upgrade has written one.
  */
@@ -200,4 +219,38 @@ export async function readUpgradeRecord(storageRoot: string): Promise<unknown> {
   const path = layout(storageRoot).record
   if (!existsSync(path)) return undefined
   return JSON.parse(await readFile(path, 'utf8')) as unknown
+}
+
+/** What a completed upgrade recorded about the data it left behind. */
+export interface UpgradeReconciliation {
+  /** The schema version the plugin's own manifest declared as current. */
+  readonly upgradedTo: string
+  /** The digest the validate phase computed over the migrated data. */
+  readonly dataDigest: string
+}
+
+/**
+ * Reconcile a plugin's recorded upgrade against what is on disk
+ * (acceptance[1]).
+ *
+ * Reconciling is against the plugin's OWN declared schema version, not the
+ * `{major, minor}` of `@deepseek-ai/dsh-schema-registry`: that vocabulary is
+ * for protocol and interface compatibility, while a plugin's durable data
+ * carries whatever version its manifest declares.
+ *
+ * A record with no achieved half — an upgrade that started and never finished
+ * — reconciles as `false` rather than throwing. It is a legitimate on-disk
+ * state after a crash, and the caller's next move is to resume or roll back,
+ * not to handle an exception.
+ * @param storageRoot - the plugin's storage root.
+ * @param observed - the version and digest recomputed from the live data.
+ * @returns whether the record and the disk agree.
+ */
+export async function reconcileUpgrade(
+  storageRoot: string,
+  observed: UpgradeReconciliation,
+): Promise<boolean> {
+  const record = await readUpgradeRecord(storageRoot) as Partial<UpgradeReconciliation> | undefined
+  if (record?.upgradedTo === undefined || record.dataDigest === undefined) return false
+  return record.upgradedTo === observed.upgradedTo && record.dataDigest === observed.dataDigest
 }

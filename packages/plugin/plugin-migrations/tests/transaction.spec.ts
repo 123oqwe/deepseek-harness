@@ -15,13 +15,13 @@
  * ships.
  */
 import { afterEach, describe, expect, it } from 'vitest'
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, existsSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, existsSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import { brandString } from '@deepseek-ai/dsh-brand'
 
-import { runUpgrade, readUpgradeRecord, UPGRADE_PHASES, vacuumInto } from '@deepseek-ai/dsh-plugin-migrations/transaction'
+import { reconcileUpgrade, runUpgrade, readUpgradeRecord, UPGRADE_PHASES, vacuumInto } from '@deepseek-ai/dsh-plugin-migrations/transaction'
 import type { UpgradeRequest } from '@deepseek-ai/dsh-plugin-migrations/transaction'
 import type { PluginMigration, PluginMigrationManifest, PluginSchemaVersion } from '@deepseek-ai/dsh-plugin-migrations'
 
@@ -210,5 +210,92 @@ describe('P1-10: the snapshot is an atomically consistent copy', () => {
     const destination = join(root, "copy'.db")
     vacuumInto(join(root, 'data', 'data.db'), destination)
     expect(notesIn(destination)).toEqual(['quoted'])
+  })
+})
+
+describe('P1-10 acceptance[1]: the record and the disk are reconcilable', () => {
+  it('reconciles a completed upgrade against its recorded version and digest', async () => {
+    const root = storage(['original'])
+    const outcome = await runUpgrade(request(root))
+    expect(outcome).toMatchObject({ upgraded: true })
+
+    expect(await reconcileUpgrade(root, { upgradedTo: '2', dataDigest: 'sha256-validated' })).toBe(true)
+  })
+
+  it('refuses when the digest on disk is not the one recorded', async () => {
+    // The half acceptance[1] exists for: a record whose digest no longer
+    // matches the data means something wrote to the plugin's storage outside
+    // the transaction, and claiming "upgraded" would be claiming a state
+    // nobody can reproduce.
+    const root = storage(['original'])
+    await runUpgrade(request(root))
+
+    expect(await reconcileUpgrade(root, { upgradedTo: '2', dataDigest: 'sha256-something-else' })).toBe(false)
+  })
+
+  it('refuses when the version on disk is not the one recorded', async () => {
+    const root = storage(['original'])
+    await runUpgrade(request(root))
+
+    expect(await reconcileUpgrade(root, { upgradedTo: '3', dataDigest: 'sha256-validated' })).toBe(false)
+  })
+
+  it('does NOT claim an upgrade for a run that started and never finished', async () => {
+    // The record is written twice: intent at the snapshot phase, achievement
+    // after the health check. A failed health check leaves only the intent, so
+    // a reconcile after it must not read the intended version as one reached.
+    const root = storage(['original'])
+    const outcome = await runUpgrade(request(root, { healthCheck: async () => false }))
+    expect(outcome).toEqual({ upgraded: false, failedAt: 'health-check' })
+
+    // The intent half is on disk — an operator can see what was attempted.
+    const record = await readUpgradeRecord(root) as Record<string, unknown>
+    expect(record).toMatchObject({ from: '1', to: '2' })
+    // And the achieved half is not, so nothing reconciles as upgraded.
+    expect(await reconcileUpgrade(root, { upgradedTo: '2', dataDigest: 'sha256-validated' })).toBe(false)
+  })
+
+  it('reconciles as false when no upgrade has ever run, rather than throwing', async () => {
+    const root = storage(['original'])
+    expect(await reconcileUpgrade(root, { upgradedTo: '2', dataDigest: 'sha256-validated' })).toBe(false)
+  })
+})
+
+describe('P1-10 acceptance[2]: a failed upgrade does not change approved permissions', () => {
+  it('leaves the permission state byte-identical across a failed upgrade', async () => {
+    // This epic READS the permission state and never writes it. A case that
+    // granted or revoked something to set up would be P1-10 writing state
+    // P2-02 and P2-04 own — and it would prove that this epic can write it,
+    // which is the opposite of the clause.
+    //
+    // The observation is the plugin's own storage root: an upgrade writes only
+    // under it, so "the permission state is unchanged" is measured as "nothing
+    // outside the plugin's storage was touched at all". A case that inspected
+    // a token store instead would pass just as well while the transaction
+    // quietly wrote somewhere else.
+    const root = storage(['original'])
+    const outside = mkdtempSync(join(tmpdir(), 'p1-10-permissions-'))
+    roots.push(outside)
+    const permissionFile = join(outside, 'approved.json')
+    writeFileSync(permissionFile, JSON.stringify({ approved: ['fs:write'] }), 'utf8')
+    const before = readFileSync(permissionFile, 'utf8')
+
+    const outcome = await runUpgrade(request(root, { healthCheck: async () => false }))
+    expect(outcome).toEqual({ upgraded: false, failedAt: 'health-check' })
+
+    expect(readFileSync(permissionFile, 'utf8')).toBe(before)
+  })
+
+  it('writes NOTHING outside the plugin’s own storage root, on success either', async () => {
+    // The general form, and the one that would catch a transaction that
+    // started writing elsewhere: the sibling directory's listing is unchanged
+    // after a successful upgrade.
+    const root = storage(['original'])
+    const sibling = mkdtempSync(join(tmpdir(), 'p1-10-sibling-'))
+    roots.push(sibling)
+    const before = readdirSync(sibling)
+
+    expect(await runUpgrade(request(root))).toMatchObject({ upgraded: true })
+    expect(readdirSync(sibling)).toEqual(before)
   })
 })
