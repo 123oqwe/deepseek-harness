@@ -15,7 +15,7 @@
  * @module
  */
 
-import { mkdtempSync } from 'node:fs'
+import { mkdtempSync, readdirSync, statSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -272,5 +272,32 @@ describe('must[1]: the durable provider is one interchangeable backend among oth
 
     const reader = await mountDurable(directory)
     await expect(reader.get({ accessContext: accessContextFor('tenant-a'), id })).resolves.toMatchObject({ content: { note: 'routed to the durable backend' } })
+  })
+})
+
+describe('durable memory is written for its owner only', () => {
+  it('creates the directory 0700, so nothing else on the host can traverse into it', async () => {
+    // A user's durable memory is their content. The directory mode is what
+    // stops a traversal reaching the document at all.
+    const directory = join(freshDirectory(), 'memory')
+    const memory = await mountDurable(directory)
+
+    await memory.propose({ principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'private' } })
+
+    expect(statSync(directory).mode & 0o777).toBe(0o700)
+  })
+
+  it('writes the document 0600, which the directory mode does not do for it', async () => {
+    // Asserted separately from the directory, because the two stop different
+    // things: this is what a backup pass, a synced folder or a bind mount that
+    // already holds a path to the file runs into.
+    const directory = join(freshDirectory(), 'memory')
+    const memory = await mountDurable(directory)
+
+    await memory.propose({ principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'private' } })
+
+    const document = readdirSync(directory).find(entry => !entry.endsWith('.tmp'))
+    expect(document, 'the durable document').toBeDefined()
+    expect(statSync(join(directory, document ?? '')).mode & 0o777).toBe(0o600)
   })
 })

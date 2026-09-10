@@ -496,11 +496,19 @@ export function createDurableFileMemoryProvider(options: DurableFileMemoryProvid
 
   const write = async (records: readonly DurableMemoryRecord[]): Promise<void> => {
     const document: DurableMemoryDocument = { version: DURABLE_FILE_MEMORY_FORMAT_VERSION, records }
-    await mkdir(options.directory, { recursive: true })
+    // `0o700` on the directory and `0o600` on the document, because the two
+    // stop different things: the directory mode stops a traversal, and the
+    // file mode stops anyone who already holds a path to it — a backup pass, a
+    // synced folder, a container bind mount. A user's durable memory is their
+    // content, and a default-mode file inside a private directory still says
+    // world-readable to everything that reaches it another way.
+    await mkdir(options.directory, { recursive: true, mode: 0o700 })
     // Write-then-rename: a crash mid-write leaves the previous complete
-    // document in place at `path` rather than a truncated one.
+    // document in place at `path` rather than a truncated one. The mode goes
+    // on the TEMPORARY file: applied after the rename there would be a window
+    // in which the real path is readable by anyone.
     const temporaryPath = `${path}.${process.pid}.${randomUUID()}.tmp`
-    await writeFile(temporaryPath, `${JSON.stringify(document)}\n`, 'utf8')
+    await writeFile(temporaryPath, `${JSON.stringify(document)}\n`, { encoding: 'utf8', mode: 0o600 })
     await rename(temporaryPath, path)
   }
 
