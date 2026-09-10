@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-10T20:17:37.358Z",
-  "inputDigest": "dcd962484b99490d9184e634856addf40554c2e5d653c6886ec2f987250d0676",
+  "lastUpdatedUtc": "2026-09-10T20:47:48.233Z",
+  "inputDigest": "13a4202110f8189b017ed175c27b698ff2930139cdd0598c89f3a37fe46132b6",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -5990,28 +5990,13 @@
           "capturedAtUtc": "2026-09-10T16:56:33.519Z"
         },
         "U": {
-          "status": "GREEN",
-          "candidateSha": "874db203f09ddc5be6e2ce6f6700e89a2c563f41",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34463140893",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-874db203f0/first100-vitest-report-874db203f09ddc5be6e2ce6f6700e89a2c563f41/vitest-report.json",
-          "observationSha256": "2a45e4805904f00a0b87c109e2031efdb3ccc8be3aa76b28d449ecc1fdeaf5ef",
-          "expectCasesMatched": [
-            "P4-11 must[1]: the LLM layer charges the run, not the session stops retrying when the RUN budget is spent, below the policy’s own cap",
-            "P4-11 must[1]: the LLM layer charges the run, not the session charges a CHILD session’s retries to the PARENT’s run, so allowances do not stack",
-            "P4-11 must[1]: the LLM layer charges the run, not the session does not charge a substitute key when no run can be resolved",
-            "P4-11 must[1]: the LLM layer charges the run, not the session lets the policy decide when the run budget is the looser of the two",
-            "P4-11 must[2]: a failing endpoint stops being called refuses the next call without reaching the adapter once the destination opens",
-            "P4-11 must[2]: a failing endpoint stops being called keeps calling a destination below the threshold",
-            "P4-11 must[2]: a failing endpoint stops being called does not open on a failure the classifier calls permanent",
-            "P4-11 must[2]: a failing endpoint stops being called opens one model without opening another on the same provider",
-            "P4-11 must[2]: a failing endpoint stops being called dispatches normally when no breaker is mounted",
-            "P4-11 must[1]: a retry is charged to the delegation ROOT run walks to the root and returns ITS run, not the retrying session’s",
-            "P4-11 must[1]: a retry is charged to the delegation ROOT run stops at the furthest ancestor this process can see",
-            "P4-11 must[1]: a retry is charged to the delegation ROOT run terminates on a circular chain instead of hanging a retry",
-            "P4-11 must[1]: one store, so two layers share a total by construction charges two different layers against ONE run total",
-            "P4-11 must[1]: one store, so two layers share a total by construction records nothing for a refusal, so a refused retry costs no budget"
-          ],
-          "capturedAtUtc": "2026-09-10T11:01:04.423Z"
+          "status": "NOT_RUN",
+          "revokedFrom": {
+            "candidateSha": "874db203f09ddc5be6e2ce6f6700e89a2c563f41",
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34463140893",
+            "absentCommitments": 1
+          },
+          "revokedReason": "supplement freeze 60ae16f046 postdates observation 874db203f0; re-observe on a tree that contains it"
         },
         "F": {
           "status": "GREEN",
