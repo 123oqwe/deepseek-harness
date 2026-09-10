@@ -10386,6 +10386,51 @@
         "failureSummary": "M46 reddens 2 of 36 -- the classifier's status-less row and the breaker's TIMEOUT row -- and it took a probe to make that true. On the first run M46 reddened ONLY the classifier row, which is impossible if the breaker row observes the classifier; a probe at the verdict printed `facts={\"status\":503}` for the timeout case, because the test adapter's constructor carried `status = 503` as a default and passing `undefined` silently meant 503. The row was testing a 503 twice. With the default removed and every construction stating its status, both rows redden together. M47 reddens 3 -- the permanent-failure case plus the malformed and AUTH rows -- and nothing else, so the breaker's classifier consultation is asserted rather than incidental."
       },
       "note": "P4-11 Fault stage. Twenty-four boundaries as data with both counts guarded, split where their subjects live: pure decisions in the retry package, endpoint-health rows beside the breaker's shipped consumer, and the vanished-parent row beside the budget it protects.\n\nTWO PROPOSED BOUNDARIES DO NOT EXIST, and the matrix says so rather than simulating them. The budget store has no `readFile`, no `writeFile` and no path -- it is a `Map`, deliberately, because a budget bounds one run's LIVE attempts. And `admit` is a synchronous method exposing no read/write pair a caller could await between, so no interleaving is possible inside one call; a concurrency case would assert what the language guarantees. The concern is kept as boundary 20, which asserts the CONTRACT that makes the race impossible, because a refactor to `usageOf` + `record` is what would reintroduce it.\n\nTHE STAGE FOUND A REAL DEFECT IN WHAT THE USAGE STAGE LANDED. `chargedRun` re-walked the delegation chain on every retry, reading LIVE registry state: once a parent agent was disposed the walk stopped at the child, which charged its own run and got a fresh allowance -- the stacking must[1] exists to stop, arriving through the back door, and a continuable child outliving its parent's turn is ordinary (P2-02 measured it). `chargedRunFor` resolves once and remembers; a session's delegation root is fixed at creation, so the first resolution is the only one there is.\n\nTWO CASES IN THIS EPIC WERE VACUOUS UNTIL A MUTATION FAILED TO REDDEN THEM, and both are recorded because the pattern is the lesson: a case whose two readings produce the same number asserts nothing. The parent/child budget case gave 3 requests under either reading until it was rebuilt so they differ (5 against 8); the timeout row tested a 503 twice because of a constructor default."
+    },
+    {
+      "epic": "P1-10",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/plugin/plugin-migrations",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-10 must[0]: the declared DAG must be runnable at all names the CYCLE rather than reporting a depth limit",
+        "P1-10 must[0]: the declared DAG must be runnable at all admits a long chain, so the refusal is about looping and not about length",
+        "P1-10 must[0]: the declared DAG must be runnable at all refuses TWO migrations leaving one version instead of picking between them",
+        "P1-10 must[0]: which steps an upgrade would take walks the chain from the installed version to the manifest’s current one",
+        "P1-10 must[0]: which steps an upgrade would take admits an already-current plugin with NO steps, rather than refusing it",
+        "P1-10 must[0]: which steps an upgrade would take refuses an unreachable target naming BOTH ends, not just the missing edge",
+        "P1-10 must[0]: which steps an upgrade would take reports preconditions rather than deciding them",
+        "P1-10 must[0]: which steps an upgrade would take refuses a cyclic manifest BEFORE walking it, so the walk cannot loop",
+        "P1-10 must[2]: an irreversible upgrade owes approval and an export is owed when ANY step on the path is irreversible",
+        "P1-10 must[2]: an irreversible upgrade owes approval and an export is NOT owed when every step is reversible, so the rule is not a constant",
+        "P1-10 must[2]: an irreversible upgrade owes approval and an export is not owed for a REFUSED plan, which is not going to run",
+        "P1-10 must[2]: an irreversible upgrade owes approval and an export reads the DECLARED reversibility, not the backup strategy",
+        "P1-10 acceptance[1]: a snapshot reconciles with what it claims to cover refuses another PLUGIN’s snapshot, which is a wiring mistake",
+        "P1-10 acceptance[1]: a snapshot reconciles with what it claims to cover refuses another VERSION’s snapshot, which would restore an unreadable shape",
+        "P1-10: a workspace path is refused, not unsupported (P3-11’s boundary) refuses a workspace path, which P3-11 checkpoints and this epic must not",
+        "P1-10: a workspace path is refused, not unsupported (P3-11’s boundary) refuses a SIBLING whose name merely starts with the root’s"
+      ],
+      "files": [
+        "packages/plugin/plugin-migrations/src/types.ts",
+        "packages/plugin/plugin-migrations/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-10T13:20:00.000Z",
+      "dryRunProof": {
+        "treeSha": "d8fa65c6b1a0b51368937bb2e9aa526b0200925e",
+        "testsDiscovered": 18
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations, run against this argv and each restored byte-identical. (M48) `planUpgrade` derives reversibility from the backup strategy instead of reading each migration's declaration. (M49) `refuseOutsidePluginStorage` compares against the root WITHOUT its trailing separator. (M50) `planUpgrade` treats declared preconditions as satisfied and admits the path.",
+        "failureSummary": "M48 reddens 2 of 18 -- the any-step-irreversible case and the case that pins the distinction directly -- because a snapshot makes the DATA restorable while reversibility is about whether the effects stay inside that data. M49 reddens exactly the sibling case: `<root>-backup` reads as being inside `<root>` without the separator, which would let a plugin declare its neighbour's storage as its own backup target. M50 reddens exactly the precondition-reporting case."
+      },
+      "note": "P1-10 Contract stage. The package did not exist; the subject is new, and it starts as vocabulary plus pure judgements with no I/O and no service, because must[1]'s six phases (freeze, snapshot, migrate in quarantine, validate, atomic switch, health check) are an ordering over real EFFECTS -- a module that could perform one of them would be a second place the upgrade happens.\n\nMUST[2] IS SPLIT, AND THE SPLIT IS MEASURED RATHER THAN STAGED. `requiresApprovalAndExport` decides that an approval and an export are OWED; nothing asks. The epic preFlight had read that the subject already existed in `approval`, and that is half true: `ApprovalRequest` carries a `toolName` (user-approval/src/types.ts:63) and `request()` THROWS outside an open turn (index.ts:207-213), while a plugin upgrade is a CLI command with neither. The refusal is not an oversight to route around -- it protects the `approval/asked` + `approval/decided` audit pair that a reload would otherwise find as crash-tail garbage. Which seam asks is an open ruling and it decides whether must[2] closes in this epic; the code, the tests and both READMEs say so, so green cells here cannot be read as an approval that happens.\n\nREVERSIBILITY IS DECLARED, NOT DERIVED. A snapshot makes the DATA restorable; reversibility asks whether the migration's effects are confined to that data. A migration that also rewrote an external system is irreversible however good its snapshot is, and must[2] exists for exactly that case. M48 is that distinction as a mutation.\n\nA WORKSPACE PATH IS REFUSED, not unsupported (P3-11's boundary), and the comparison carries the separator: without it `<root>-backup` passes as being inside `<root>`, which would let a plugin declare its neighbour's storage as its own backup target."
     }
   ]
 }
