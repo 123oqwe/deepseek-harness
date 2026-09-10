@@ -1306,9 +1306,9 @@ remainingPending:
   pendingLayerAdjudication: 0
   unapprovedThresholds: 0
 fileOwnership:
-  writtenFiles: 436
+  writtenFiles: 435
   statusCounts:
-    sole: 409
+    sole: 408
     sequential: 23
     serialized: 4
     conflict: 0
@@ -3736,8 +3736,6 @@ epics:
     - path: "packages/run/task-profile/src/validate.ts"
       kind: "N"
     - path: "packages/run/task-profile/tests/profile.spec.ts"
-      kind: "N"
-    - path: "spec/task-profile.schema.json"
       kind: "N"
     stages:
     C:

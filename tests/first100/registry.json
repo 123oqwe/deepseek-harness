@@ -6534,10 +6534,6 @@
         {
           "path": "packages/run/task-profile/tests/profile.spec.ts",
           "kind": "N"
-        },
-        {
-          "path": "spec/task-profile.schema.json",
-          "kind": "N"
         }
       ],
       "usageConsumers": [],

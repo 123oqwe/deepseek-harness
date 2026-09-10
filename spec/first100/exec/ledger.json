@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-10T20:47:48.233Z",
-  "inputDigest": "13a4202110f8189b017ed175c27b698ff2930139cdd0598c89f3a37fe46132b6",
+  "lastUpdatedUtc": "2026-09-10T20:49:10.463Z",
+  "inputDigest": "e2537118e55ac7502af5f61a4f41e6525760fe29a93bb817104c9784f9a8003c",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",

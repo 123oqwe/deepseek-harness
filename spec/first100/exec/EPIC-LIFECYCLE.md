@@ -93,6 +93,7 @@
 | 5.1.7 | **会话健康**:执行会话对话记录 > 150 MB 或出现 `Prompt is too long` 即在下一个干净断点换新会话;状态全在文件(每 lane 自己的 `.claude/goal.md` NOW 段、EXEC-STATE、BLOCKED、evidence、preFlight),交接由 delegate 发。 | 09-10 前任 193 MB 死亡 |
 | 5.1.8 | **报告格式**(两 lane 同):SHA、`pnpm install --frozen-lockfile` / typecheck / 触及包 vitest / `slice-gate(-cordis)` 的 exit(pairing 按 BLOCKED-179/124 held)、变异各红各自那条 + 控制项、"下一步等什么"、**已 rebase 到 fork head 的证明**(`git merge-base --is-ancestor fork/first100-exec HEAD`)。 | 2.10–2.12 |
 | 5.1.9 | **到完成的路线**:每次 `--accept` 后 delegate 重跑 `check-ready`,把新 READY 的 epic 按 5.1.1/5.1.2 分给先空出来的 lane;等观测期间 lane 按 1.12 写下一项 preFlight。以 09-10 的节奏(每 lane 约 4–6 小时一个 epic 的 C→F,观测批处理),82 项未验收 ≈ 350–500 lane 小时,两条 lane 24×7 约 2–3 周,加返工与机器损耗按 3–4 周计;第三 lane 视机器与审查余量再定。 | 估算,非承诺 |
+| 5.1.10 | **delegate 不进 lane 的工作树**:规划文档、签字、registry/adjudication 更正一律在推送时于 `gate-wt2` 叠到被推的 SHA 之上再推,lane rebase 即得;registry 对 vendored sources 逐字节钉住,A 类路径更正只走 `adjudication.json` 的 `deliverablePathPatches`,且 `declaredPaths` = files[] ∪ stages,先查再改。 | §12.81 |
 
 ## 6. 谁决定什么
 
