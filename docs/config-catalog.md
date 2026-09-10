@@ -1845,6 +1845,28 @@ export interface Config {
 
 Source: [`packages/llm/plugin-package-inventory-deepseek/src/index.ts:31`](../packages/llm/plugin-package-inventory-deepseek/src/index.ts)
 
+<a id="deepseek-aidsh-policy-engine-cedar"></a>
+
+## `@deepseek-ai/dsh-policy-engine-cedar`
+
+```ts config-catalog
+/** Deployment configuration: the policies this deployment enforces. */
+export interface Config {
+  /**
+   * The policy set, as a map from policy id to Cedar source.
+   *
+   * A MAP rather than one source string, and the difference is not stylistic:
+   * submitted as a string, Cedar assigns generated ids (`policy0`, `policy1`)
+   * and an `@id(...)` annotation in the source does NOT become the id the
+   * explain reports — so an audit trail built on the string form would name
+   * policies nobody wrote. must[3]'s audit is only as good as these ids.
+   */
+  readonly policies: Readonly<Record<string, string>>
+}
+```
+
+Source: [`packages/policy/policy-engine-cedar/src/index.ts:33`](../packages/policy/policy-engine-cedar/src/index.ts)
+
 <a id="deepseek-aidsh-pwsh-local"></a>
 
 ## `@deepseek-ai/dsh-pwsh-local`

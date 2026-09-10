@@ -111,6 +111,16 @@ export type PolicyReasonCode =
   | 'approval-required'
   /** The policy provider is not mounted, or was unmounted mid-session. */
   | 'policy-unavailable'
+  /**
+   * The configured policy set could not be read.
+   *
+   * Distinct from `policy-unavailable` (no engine at all) and from a policy
+   * refusal (an engine that answered): a deployment whose policies do not
+   * parse is broken, and collapsing it into a deny would make a broken
+   * deployment indistinguishable from a strict one — including to the replay
+   * acceptance[1] performs.
+   */
+  | 'policy-set-invalid'
   /** The request did not carry an authority the policy set requires. */
   | 'missing-capability-token'
 
@@ -173,3 +183,28 @@ export interface PolicyEvaluation {
  * @returns a reason to deny, or `undefined` to leave the decision unchanged.
  */
 export type PolicyConstraint = (request: PolicyRequest) => string | undefined
+
+/**
+ * What a mounted policy provider answers, whichever engine a profile mounts.
+ *
+ * Declared in the DEFINITION so the name means the contract rather than one
+ * implementation, and two providers cannot disagree about what `ctx.policy`
+ * is. The Cedar provider is `@deepseek-ai/dsh-policy-engine-cedar`.
+ */
+export interface PolicyEngineContract {
+  /** The digest of the policy set this engine loaded; every decision carries it. */
+  readonly digest: PolicySetDigest
+  /**
+   * Answer one policy question.
+   * @param request - the five declared inputs.
+   * @returns the closed decision the enforcement point acts on, plus the
+   *   audit-only explain it appends.
+   */
+  evaluate(request: PolicyRequest): PolicyEvaluation
+}
+
+declare module '@deepseek-ai/cordis' {
+  interface Context {
+    policy: PolicyEngineContract
+  }
+}

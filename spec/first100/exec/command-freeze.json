@@ -10833,6 +10833,49 @@
         "failureSummary": "M54b reddens exactly the ask-becomes-deny case. M55 reddens two: order-independence, and the case that requires every constraint reason to be recorded for the audit even after a deny. M56 reddens the acceptance[2] refusal case. M57 reddens the closed-set case that pins `ask` as NOT allowed. Controls sit beside each: a permit with silent constraints stays permitted, and a reversible-path analogue — the deny-stays-denied case — passes under all four, so a composer that denied everything could not satisfy the suite."
       },
       "note": "P2-05 Contract stage: the decision vocabulary and the monotonic composition rule, with NO engine imported by this package's source.\n\nTHE CLAUSE THIS STAGE OWNS is must[2]'s 'plugins may only add constraints, never widen'. It is structural rather than tested-into: `PolicyConstraint` is `(request) => string | undefined`, so there is no value a plugin can return that carries a permit. Order-independence follows from that, and the case asserting it names the counter-example — `dsh-permission-rules` resolves ordered allow/deny rules by FIRST MATCH, so under that shape the outcome depends on which of two independently installed plugins loaded first.\n\nTHE FIVE INPUTS are all required, including `world` in its `absent` form. `ExecutionWorld` is P3-01's and does not exist; the slot is declared so a request carries the shape must[0] names and so P3-01 landing is a type change rather than a vocabulary change (BLOCKED-178, §12.46-B: rule half here, producer half there). Context facts are a closed enumeration mirroring `workspace-trust`'s own `TrustState` plus the permission posture, rather than a fact bag that would make adding a fact a silent policy change.\n\nTHE CEDAR CASES ARE IN THIS STAGE ON PURPOSE. The make-vs-use record's argument for adopting an engine is that forbid-overrides-permit, default-deny and a matched-policy explain are Cedar's semantics; the preFlight recorded them `differs` (unprobed) rather than carrying them from the sheet. `tests/cedar-conformance.spec.ts` runs them against @cedar-policy/cedar-wasm 4.12.0, which moves that row to `ok`. The package's SOURCE still imports no engine — Cedar is a devDependency of the tests, which is what a dependency probe is.\n\nOne fact those cases pinned that a provider must not get wrong: submitted as a source STRING, Cedar assigns generated ids (`policy0`, `policy1`) and an `@id(...)` annotation does NOT become the id the explain reports. A provider must submit the id-to-source map, or must[3]'s audit trail names policies nobody wrote. Also measured: Cedar reports `deny`/`allow` in lower case, and a malformed policy set comes back as `type: 'failure'` rather than as a deny — which is the distinction acceptance[2] rests on."
+    },
+    {
+      "epic": "P2-05",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/policy/policy-engine-cedar",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-05 must[0]: the request translation routes a decision by the CAPABILITY the manifest names, not by a tool name",
+        "P2-05 must[0]: the request translation keeps the target KIND in the resource id, so a path and a command are different resources",
+        "P2-05 must[0]: the request translation exposes the declared context facts, including the absent execution world",
+        "P2-05 must[0]: the request translation distinguishes a declared side-effect class from a defaulted one",
+        "P2-05 must[3]: what the audit sees and what the model sees names the matched policy by ITS OWN id, from the id-to-source map",
+        "P2-05 must[3]: what the audit sees and what the model sees tells a forbid apart from nothing-permitted",
+        "P2-05 acceptance[1]: every decision carries the policy-set digest records the digest on a permit and on a deny alike",
+        "P2-05 acceptance[1]: every decision carries the policy-set digest changes the digest when a policy CHANGES, and not when the set is merely reordered",
+        "P2-05 acceptance[1]: every decision carries the policy-set digest does not confuse a set whose id and source were split differently",
+        "P2-05 acceptance[2]: a broken policy set is not a strict one maps a Cedar FAILURE to its own named deny, not to an ordinary refusal",
+        "P2-05 acceptance[2]: a broken policy set is not a strict one still tells an ordinary deny apart from that failure",
+        "P2-05 acceptance[2]: a broken policy set is not a strict one refuses to LOAD when the policy set does not parse",
+        "P2-05 acceptance[2]: a broken policy set is not a strict one unloads with its fiber, and a remount starts from the configured set again"
+      ],
+      "files": [
+        "packages/policy/policy-engine-cedar/src/index.ts",
+        "packages/policy/policy-engine-cedar/tests/provider.spec.ts",
+        "packages/policy/policy-engine/src/types.ts"
+      ],
+      "frozenAtUtc": "2026-09-11T13:10:00.000Z",
+      "dryRunProof": {
+        "treeSha": "f8929e194ab9125b4d34ee24d40ee6fc45e05faf",
+        "testsDiscovered": 13
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations of `policy-engine-cedar/src/index.ts`, each run against this argv and restored byte-identical. (M58) a Cedar `failure` maps to `no-matching-permit` instead of the named `policy-set-invalid`. (M59) the policy set is submitted as one joined source STRING instead of the id-to-source map. (M60) a permit carries a fresh digest instead of the loaded set's. (M61) the digest concatenates ids and sources without length prefixes.",
+        "failureSummary": "Each reddens exactly one case of 13. M58 reddens the failure-mapping case, with the ordinary-deny case beside it as the control that a mapping returning `policy-set-invalid` for everything could not satisfy. M59 reddens the audit-id case: Cedar names `policy0` instead of the policy the operator wrote. M60 reddens the digest-on-every-decision case. M61 reddens the `{ab:'c'}` vs `{a:'bc'}` case. The translation cases (capability routing, target kind, declared facts, classified) pass under all four, so a provider that denied or permitted everything would still fail the suite."
+      },
+      "note": "P2-05 Provider stage: the Cedar authorizer behind `ctx.policy`.\n\nWHAT THIS STAGE OWNS is the TRANSLATION and the failure taxonomy, not the authorization semantics. Cedar's forbid-overrides-permit, default-deny and matched-policy explain are proven in the C stage's conformance cases against the same 4.12.0; asserting them again here would test the library twice and the translation not at all.\n\nTHE ID-TO-SOURCE MAP IS LOAD-BEARING. `Config.policies` is a map because Cedar assigns generated ids (`policy0`, `policy1`) to a source STRING and an `@id(...)` annotation does not become the id the explain reports — must[3]'s audit is only as good as these ids, and M59 is the mutation that proves the suite notices.\n\nTHREE FAILURES STAY DISTINGUISHABLE: `forbidden-by-policy` / `no-matching-permit` (an engine answered), `policy-set-invalid` (the set could not be read), and `policy-unavailable` (no engine at all, answered by the enforcement point because this service is gone). `policy-set-invalid` is a new member of the C stage's `PolicyReasonCode`; no frozen C case enumerates that union, so the C freeze stands and its cases are re-run unchanged in this observation.\n\nTHE SET IS VALIDATED AT LOAD, by a probe authorization whose decision is discarded — Cedar has no separate validate call reporting the same errors. A deployment whose policies do not parse refuses to boot instead of surfacing as a denied action.\n\n`decisionFromAnswer` is exported and pure BECAUSE its failure branch is unreachable through a loaded engine: the set is validated at load and the entity types are constants this module writes rather than request data. Measured, not assumed — a malformed entity TYPE is the only way to make Cedar return `failure` at evaluate time, and a quote inside an id does not. It is therefore proven as a mapping rather than staged as a runtime state that cannot occur.\n\nHOST ONLY: 13 MB of wasm through a CommonJS entry; a Client face never mounts it (the epic's open question 3, answered)."
     }
   ]
 }
