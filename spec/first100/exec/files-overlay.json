@@ -701,7 +701,8 @@
    "path": "apps/cli/src/plugin-migration.ts",
    "kind": "source",
    "stages": [
-    "U"
+    "U",
+    "F"
    ],
    "reason": "The production caller the transaction exists for, plus the bridge from P1-01's manifest to this epic's vocabulary. `dsh plugin add`/`update` is the only place that knows (plugin, from, to), and it is where the upgrade lease has to span both halves of the move -- the package manager and the data. The registry named the decision package, which by construction has no caller."
   },
@@ -711,6 +712,14 @@
    "kind": "test",
    "stages": [
     "U"
+   ]
+  },
+  {
+   "epic": "P1-10",
+   "path": "apps/cli/tests/plugin-migration-fault-matrix.spec.ts",
+   "kind": "test",
+   "stages": [
+    "F"
    ]
   },
   {
@@ -730,6 +739,14 @@
     "U"
    ],
    "reason": "Where the new requirement is enforced: a step that ships a `module` must declare `reversible` and `backup`, and a `backup` outside the declared vocabulary is refused. Misconfiguration fails loud at the manifest read rather than at the upgrade that trusted it. The JSON Schema carries the same rule as `dependentRequired`, so the two validators still agree (P1-01 acceptance[2])."
+  },
+  {
+   "epic": "P1-10",
+   "path": "packages/plugin/plugin-migrations/tests/rollback.e2e.spec.ts",
+   "kind": "test",
+   "stages": [
+    "F"
+   ]
   },
   {
    "epic": "P1-10",

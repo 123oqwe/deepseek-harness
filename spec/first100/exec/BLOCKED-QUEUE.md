@@ -4527,3 +4527,20 @@ acceptance[0] names five originators that must reach one PEP. Measured at the U 
 The manifest is the policy question, so a path with no manifest cannot be decided without inventing one at the enforcement point — which would be a second construction of the thing P2-03 made single. `ActionOriginator` declares `plugin-rpc` so the vocabulary is complete and the gap is nameable.
 
 **Closing condition:** the epic that owns plugin RPC constructs the manifest through `appendManifestThenGate`, exactly as the two shipped paths do. The enforcement point then decides it with no change here — which is what putting the call where the manifest exists buys.
+
+
+### BLOCKED-181 — `first100:slice-gate` is an `&&` chain whose fourth link is permanently red, so its last six gates never run
+
+**Status:** FIX ASSIGNED to lane A (delegate, 2026-09-10), scheduled after P1-10.F.
+
+`first100:slice-gate` is seven `npm run` invocations joined by `&&`, and `first100:slice-gate-cordis` appends three more. The fourth link is `verify-translation-pairing`, which is **held back corpus-wide** under BLOCKED-179/124 and therefore always exits non-zero. Everything after it — `constraints`, `first100:verify-typecheck-host`, `first100:verify-registry-extraction`, `verify-cordis-catalog`, `verify-cordis-api`, `verify-cordis-inspect-catalog` — **is never executed at all.**
+
+Measured 2026-09-10 on `60ae16f046`: the chain exited 1 at gate 4, and running the remaining six individually found `first100:verify-registry-extraction` RED — a real failure that had been invisible for as long as the pairing gate has been held.
+
+**This is what made "5/6 green" reports wrong.** A lane reporting that figure off one chain run was reporting six unexecuted gates as green, which is the §12.76 shape exactly: a verdict about a subject the mechanism never examined. Every lane self-check report from before this entry is suspect on those six gates.
+
+**Why the CI observation was not affected:** gate ③ runs `run-registry-gates.mjs`, which skips held-back gates by name and runs the rest, so the pushed SHAs were measured against the real set. The damage is confined to lane-side self-checks — which is precisely where a red gets caught before a push.
+
+**The fix:** give the slice sets the same treatment, and go one better. `run-registry-gates.mjs` skips held-back gates but still `process.exit(1)`s on the first failure, so one red still hides its successors. The replacement runs **every** non-held gate, prints each gate's exit, and exits non-zero if any of them failed — a report that says which gates ran and how each ended, rather than one that stops at the first bad news. `--set slice` / `--set slice-cordis` select the sets; `HELD_BACK` stays one map so the two lists cannot diverge.
+
+**Closing condition:** `first100:slice-gate` and `first100:slice-gate-cordis` resolve to the non-short-circuiting runner, and a lane report cites per-gate exits rather than a chain's single status.
