@@ -10332,6 +10332,60 @@
         "failureSummary": "M41 reddens the budget-bound case (6 requests against 3). M42 reddens the parent/child case with 8 against 5 -- and that case had to be REBUILT to produce those numbers: the first version put a child alone against a budget of 2, which yields 3 requests under both readings, so the mutation reddened nothing and the case asserted nothing. M43 reddens the capability-absence case, 1 against 6. M44 reddens the refusal case; M45 reddens the per-destination control. A below-threshold control, a no-breaker-mounted control and a looser-budget control sit beside them, so a breaker or budget that refused everything could not satisfy the suite."
       },
       "note": "P4-11 Usage stage: must[1] and must[2] acquire callers.\n\nMUST[1] IS ONE LAYER PLUS AN ATTRIBUTION RULE, and the second layer was measured away rather than assumed. §12.64 had ruled that the MCP client would charge retries and reconnects made FOR a run action; measured, every `retry`/`attempt` in `packages/mcp/mcp-client/src` is the connection supervisor's and `connection.ts` references no agent, execution or run at all. A reconnect restores a shared server process -- one supervisor serves every run using it -- so charging the momentarily-active run makes it pay for another's outage. The MCP tool-call path is the opposite: it resolves a run through `exec.agent` and performs no retry. So the layers are `llm-retry` for the parent AND every child session, charged to one run; the subagent is not a second layer but the multiplier of the first, which is what `chargedRun` stops. §12.64's original wording is kept in the preFlight, marked overturned.\n\nTHE CARRIER PREMISE WAS ALSO CORRECTED. My first measurement searched for `ctx.runs` consumers OUTSIDE `run/run`, found zero, and read it as 'nothing creates a Run'. `RunPlugin` is its own consumer: it opens a Run from `agent/session-start`, adopts live agents at startup, and is mounted in `bundle/base`. Searching for external consumers of a service that drives itself from events finds nothing and means nothing. What IS zero is narrower and still true: `attachSession` has no production caller, so a Run is 1:1 with a session -- which is exactly why the budget cannot be 'this agent's run'.\n\nMUST[2] GUARDS THE FIRST CHUNK, deliberately. A stream that produced a chunk is evidence the endpoint answered, so the first pull is where endpoint health is observable; a mid-stream failure is the transport's or the model's. Wrapping the whole stream would mean deciding inside the breaker which mid-stream failures are the endpoint's fault, which is the classifier's job and is not observable at a chunk boundary. Stated in both READMEs.\n\nWIRING IT REDDENED THREE EXISTING CASES, each a real defect in the wiring: reading the first `IteratorResult`'s getters outside the `try` let a hostile getter escape instead of becoming a terminal chunk, and yielding the first chunk outside the `try/finally` let a consumer that breaks after one chunk skip adapter cleanup. Both fixed by doing what the loop below already did."
+    },
+    {
+      "epic": "P4-11",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/reliability/retry/tests/fault-matrix.spec.ts",
+        "packages/llm/llm/tests/circuit-breaker.spec.ts",
+        "packages/llm/llm-retry/tests/run-budget.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-11 Fault — retry decision boundary matrix enumerates at least twelve classification boundaries, each named once",
+        "P4-11 Fault — retry decision boundary matrix fault boundary 01 a 4xx that is not 408 or 429 is permanent, and names client-error",
+        "P4-11 Fault — retry decision boundary matrix fault boundary 02 408 is retryable, so \"4xx\" is not read as \"never\"",
+        "P4-11 Fault — retry decision boundary matrix fault boundary 04 a malformed request is invalid-input, not client-error",
+        "P4-11 Fault — retry decision boundary matrix fault boundary 05 a policy denial is policy-denied, distinct again",
+        "P4-11 Fault — retry decision boundary matrix fault boundary 06 a side-effecting attempt with NO ledger verdict is refused",
+        "P4-11 Fault — retry decision boundary matrix fault boundary 07 sent is refused: the request left and no receipt came back",
+        "P4-11 Fault — retry decision boundary matrix fault boundary 08 prepared is admitted: the request never left",
+        "P4-11 Fault — retry decision boundary matrix fault boundary 11 a failure carrying NO status at all is retryable — a timeout reaches here",
+        "P4-11 Fault — retry decision boundary matrix fault boundary 12 malformed outranks the ledger, because the request is wrong either way",
+        "P4-11 Fault — retry decision boundary matrix fault boundary 13 a hedged attempt spends no budget, and a retry does",
+        "P4-11 Fault — retry decision boundary matrix fault boundary 14 maxRetries 0 forbids retrying, rather than meaning unlimited",
+        "P4-11 Fault — retry decision boundary matrix fault boundary 15 the delay budget refuses AT the boundary, and the refusal costs nothing",
+        "P4-11 Fault — retry decision boundary matrix fault boundary 17 a circular chain terminates instead of hanging the retry",
+        "P4-11 Fault — retry decision boundary matrix fault boundary 18 a resolved charge is remembered, so a vanished parent cannot reset it",
+        "P4-11 Fault — retry decision boundary matrix fault boundary 19 an unresolvable charge is remembered too, so a broken chain is not re-walked",
+        "P4-11 Fault — retry decision boundary matrix fault boundary 20 the store exposes no read/write pair, which is why no update can be lost",
+        "P4-11 Fault — endpoint-health boundary matrix enumerates the endpoint-health boundaries, each named once",
+        "P4-11 Fault — endpoint-health boundary matrix fault boundary 21 an endpoint REFUSAL counts: a 503 is the endpoint saying it is unwell",
+        "P4-11 Fault — endpoint-health boundary matrix fault boundary 22 a TIMEOUT counts too: an endpoint that stopped answering is unwell",
+        "P4-11 Fault — endpoint-health boundary matrix fault boundary 23 a MALFORMED request does not: the request is wrong, not the endpoint",
+        "P4-11 Fault — endpoint-health boundary matrix fault boundary 24 an AUTH failure does not: a rejected credential says the caller is wrong",
+        "P4-11 must[1]: the LLM layer charges the run, not the session keeps charging the parent’s run after the parent agent is GONE"
+      ],
+      "files": [
+        "packages/reliability/retry/src/usage.ts",
+        "packages/llm/llm/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-10T12:30:00.000Z",
+      "dryRunProof": {
+        "treeSha": "638a3a7ce81aba42cd65c504658fcd4223eac87a",
+        "testsDiscovered": 36
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations, run against this argv and restored byte-identical. (M46) `classifyFailure` treats a failure carrying NO status as permanent, which is what a timeout looks like. (M47) the breaker counts every failure without asking the classifier.",
+        "failureSummary": "M46 reddens 2 of 36 -- the classifier's status-less row and the breaker's TIMEOUT row -- and it took a probe to make that true. On the first run M46 reddened ONLY the classifier row, which is impossible if the breaker row observes the classifier; a probe at the verdict printed `facts={\"status\":503}` for the timeout case, because the test adapter's constructor carried `status = 503` as a default and passing `undefined` silently meant 503. The row was testing a 503 twice. With the default removed and every construction stating its status, both rows redden together. M47 reddens 3 -- the permanent-failure case plus the malformed and AUTH rows -- and nothing else, so the breaker's classifier consultation is asserted rather than incidental."
+      },
+      "note": "P4-11 Fault stage. Twenty-four boundaries as data with both counts guarded, split where their subjects live: pure decisions in the retry package, endpoint-health rows beside the breaker's shipped consumer, and the vanished-parent row beside the budget it protects.\n\nTWO PROPOSED BOUNDARIES DO NOT EXIST, and the matrix says so rather than simulating them. The budget store has no `readFile`, no `writeFile` and no path -- it is a `Map`, deliberately, because a budget bounds one run's LIVE attempts. And `admit` is a synchronous method exposing no read/write pair a caller could await between, so no interleaving is possible inside one call; a concurrency case would assert what the language guarantees. The concern is kept as boundary 20, which asserts the CONTRACT that makes the race impossible, because a refactor to `usageOf` + `record` is what would reintroduce it.\n\nTHE STAGE FOUND A REAL DEFECT IN WHAT THE USAGE STAGE LANDED. `chargedRun` re-walked the delegation chain on every retry, reading LIVE registry state: once a parent agent was disposed the walk stopped at the child, which charged its own run and got a fresh allowance -- the stacking must[1] exists to stop, arriving through the back door, and a continuable child outliving its parent's turn is ordinary (P2-02 measured it). `chargedRunFor` resolves once and remembers; a session's delegation root is fixed at creation, so the first resolution is the only one there is.\n\nTWO CASES IN THIS EPIC WERE VACUOUS UNTIL A MUTATION FAILED TO REDDEN THEM, and both are recorded because the pattern is the lesson: a case whose two readings produce the same number asserts nothing. The parent/child budget case gave 3 requests under either reading until it was rebuilt so they differ (5 against 8); the timeout row tested a 503 twice because of a constructor default."
     }
   ]
 }
