@@ -33,12 +33,32 @@ export type DefinitionName = Branded<'DefinitionName'>
 export type SignerIdentity = Branded<'SignerIdentity'>
 
 /**
+ * What a definition declares its runs may use (must[3]).
+ *
+ * `allow` names global tools, in the vocabulary of `ToolRestriction.allow`,
+ * because the bound derived from it is applied as one. A declaration only ever
+ * NARROWS: naming a tool the parent run does not hold grants nothing.
+ *
+ * Absent and empty are different, and both are meaningful: a definition with no
+ * declaration inherits its parent's bound unchanged, while one declaring `[]`
+ * runs with no tools at all. They produce different digests.
+ */
+export interface DefinitionToolDeclaration {
+  /** Global tool names this definition's runs may use. */
+  readonly allow: readonly string[]
+}
+
+/**
  * A registered workflow definition.
  *
  * `body` is `string` rather than a parsed form because this package must never
  * be the thing that turns a definition into code. A parsed field would invite
  * a loader to evaluate it, and acceptance[0] is precisely that loading must
  * not.
+ *
+ * `tools` is part of the definition's IDENTITY, not bookkeeping beside it: the
+ * digest covers it, so a definition is what it is and what it may do, and the
+ * same body re-registered with a wider declaration is a different definition.
  */
 export interface RegisteredDefinition {
   readonly digest: DefinitionDigest
@@ -49,6 +69,8 @@ export interface RegisteredDefinition {
   readonly body: string
   /** The signer this registration claims; recorded for provenance, unverified. */
   readonly signer: SignerIdentity
+  /** What this definition's runs may use; absent inherits the parent's bound. */
+  readonly tools?: DefinitionToolDeclaration
 }
 
 /**

@@ -133,3 +133,43 @@ describe('P4-09 acceptance[0]: registering executes nothing', () => {
     expect(registry.resolve(refFor(hostile))).toMatchObject({ resolved: true })
   })
 })
+
+describe('P4-09 must[3]: a definition\'s identity covers what it may do', () => {
+  const BODY = 'phase("Scan")\nawait agent("look")'
+
+  it('gives the same body a DIFFERENT digest when the declaration widens', () => {
+    // The property the bound rests on. If a wider declaration could keep the
+    // digest, the same source could be re-registered with more authority and
+    // every run pinned to that digest would silently gain it.
+    const narrow = computeDefinitionDigest(BODY, { allow: ['read_file'] })
+    const wide = computeDefinitionDigest(BODY, { allow: ['read_file', 'bash'] })
+
+    expect(narrow).not.toBe(wide)
+  })
+
+  it('gives the SAME digest when a declaration is reordered or repeats itself', () => {
+    // Order and repetition are not content: a definition that lists the same
+    // two tools twice, in the other order, is the same definition, and a digest
+    // that disagreed would fork one artifact's identity on formatting.
+    const canonical = computeDefinitionDigest(BODY, { allow: ['bash', 'read_file'] })
+
+    expect(computeDefinitionDigest(BODY, { allow: ['read_file', 'bash'] })).toBe(canonical)
+    expect(computeDefinitionDigest(BODY, { allow: ['read_file', 'bash', 'read_file'] })).toBe(canonical)
+  })
+
+  it('distinguishes NO declaration from an EMPTY one, because they mean opposite things', () => {
+    // Absent inherits the parent's bound; `[]` is a run with no tools at all.
+    // Encoding them alike would make the most restrictive declaration
+    // unrepresentable — it would read as "inherit everything".
+    expect(computeDefinitionDigest(BODY)).not.toBe(computeDefinitionDigest(BODY, { allow: [] }))
+  })
+
+  it('refuses a registration whose digest was computed without its declaration', () => {
+    // The registry recomputes rather than trusting, so a caller cannot register
+    // a declaration under the body-only digest an older client would send.
+    const registry = new DefinitionRegistry()
+    const stale = definition(BODY, { tools: { allow: ['read_file'] } })
+
+    expect(registry.register(stale)).toMatchObject({ registered: false, reason: 'digest-mismatch' })
+  })
+})

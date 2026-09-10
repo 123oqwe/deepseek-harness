@@ -12,20 +12,53 @@
 
 import { createHash } from 'node:crypto'
 import { brandString } from '@deepseek-ai/dsh-brand'
-import type { DefinitionDigest, DefinitionName, RegisteredDefinition } from './types.ts'
+import type { DefinitionDigest, DefinitionName, DefinitionToolDeclaration, RegisteredDefinition } from './types.ts'
 
 /**
- * Compute a definition's digest from its body.
+ * Encode one string as its UTF-8 byte length, a colon, then the string.
  *
- * Over the body alone, deliberately: the name and version are registry
- * bookkeeping, not content. Including them would give the same source two
- * digests under two names, and a run recorded against one could not be
- * recognized as the same work as a run recorded against the other.
+ * Length-prefixing is what makes the concatenation below unambiguous: without
+ * it, a body ending in a tool name and a body followed by that name as a
+ * declaration would encode identically, and two definitions with different
+ * authority would share a digest.
+ * @param value - the string to encode.
+ * @returns the length-prefixed encoding.
+ */
+function lengthPrefixed(value: string): string {
+  return `${String(Buffer.byteLength(value, 'utf8'))}:${value}`
+}
+
+/**
+ * Compute a definition's digest from its body AND its tool declaration.
+ *
+ * A definition's identity is what it is and what it may do. Over the body alone
+ * — as this was — the same source could be re-registered under another name
+ * with a wider declaration and produce the same digest, so a bound derived from
+ * the declaration would be widenable by re-registration and would secure
+ * nothing. The name and version stay out: they are registry bookkeeping, and
+ * including them would give one source two digests under two names, so a run
+ * recorded against either could not be recognized as the same work.
+ *
+ * Canonical form, so that a declaration's ORDER and REPETITION cannot change an
+ * identity while its CONTENT can: `allow` is de-duplicated and sorted by
+ * JavaScript's default string ordering (UTF-16 code units), then each entry, the
+ * body, and the declaration as a whole are length-prefixed. No canonical-JSON
+ * dependency is taken; P4-04 owns that and has not landed.
+ *
+ * An ABSENT declaration and an EMPTY one are deliberately different digests,
+ * because they mean different things: absent inherits the parent run's bound,
+ * while `[]` is a run that may use no tools. Encoding them alike would make the
+ * more restrictive of the two unrepresentable.
  * @param body - the definition source, treated as opaque bytes.
+ * @param tools - the definition's declaration, or `undefined` when it declares none.
  * @returns the content digest.
  */
-export function computeDefinitionDigest(body: string): DefinitionDigest {
-  return brandString<DefinitionDigest>(`sha256-${createHash('sha256').update(body, 'utf8').digest('hex')}`)
+export function computeDefinitionDigest(body: string, tools?: DefinitionToolDeclaration): DefinitionDigest {
+  const declaration = tools === undefined
+    ? ''
+    : `T${lengthPrefixed([...new Set(tools.allow)].sort().map(lengthPrefixed).join(''))}`
+  const encoded = `${lengthPrefixed(body)}${declaration}`
+  return brandString<DefinitionDigest>(`sha256-${createHash('sha256').update(encoded, 'utf8').digest('hex')}`)
 }
 
 /** Why a registration was refused. */
@@ -65,7 +98,7 @@ export function admitRegistration(
   proposed: RegisteredDefinition,
   existing: readonly RegisteredDefinition[],
 ): RegistrationOutcome {
-  const actual = computeDefinitionDigest(proposed.body)
+  const actual = computeDefinitionDigest(proposed.body, proposed.tools)
   if (actual !== proposed.digest) {
     return { registered: false, reason: 'digest-mismatch', detail: `${proposed.digest} vs ${actual}` }
   }

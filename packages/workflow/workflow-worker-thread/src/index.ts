@@ -25,6 +25,7 @@ import type {
   RegisteredDefinition,
   RunBudget,
 } from '@deepseek-ai/dsh-workflow-registry'
+import type { RunNesting } from '@deepseek-ai/dsh-workflow-journal'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import { currentPrincipal } from '@deepseek-ai/dsh-principal'
 import type { NestedStartRequest } from './types.ts'
@@ -206,7 +207,11 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
    * child against its parent's allowance and the ancestor chain above it —
    * neither of which a single run can see.
    */
-  private readonly budgets = new Map<WorkflowRunId, { budget: RunBudget; ancestors: readonly DefinitionDigest[] }>()
+  private readonly budgets = new Map<WorkflowRunId, {
+    budget: RunBudget
+    ancestors: readonly DefinitionDigest[]
+    toolBound: readonly string[] | undefined
+  }>()
 
   constructor(ctx: Context, config: Config) {
     super(ctx)
@@ -274,6 +279,25 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
    * @param parent - the agent the resumed run executes on behalf of.
    * @returns the lookup, or undefined when no ledger can be queried for it.
    */
+  /**
+   * The concurrency a worker is actually started with.
+   *
+   * `maxConcurrentAgents: 0` is a SENTINEL meaning "derive it from the host",
+   * never a limit of zero. It is resolved here, once, because a caller that
+   * passes the raw configuration on is passing a sentinel where a number is
+   * expected: `inheritWorkerLimits` copied the parent's concurrency unchanged,
+   * `??` does not rescue `0` because zero is not nullish, and the nested worker
+   * started with a concurrency of zero -- so it announced ready and then waited
+   * forever for a slot that could not exist. Nothing failed; the run simply
+   * never produced a child.
+   * @returns the resolved per-worker concurrency, always at least 1.
+   */
+  private resolvedConcurrency(): number {
+    return this.config.maxConcurrentAgents === 0
+      ? Math.min(16, Math.max(1, availableParallelism() - 2))
+      : this.config.maxConcurrentAgents
+  }
+
   private effectStateLookup(parent: Agent): EffectStateLookup | undefined {
     const ledger = this.ctx.get('actionLedger')
     const chain = parent.identity?.chain
@@ -367,7 +391,12 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       digest,
       budget.ancestors,
       { maxDepth: this.config.maxNestingDepth, maxTotalAgents: this.config.maxTotalAgents, maxTotalTokens: this.config.maxNestedTokens },
-      { maxConcurrentAgents: this.config.maxConcurrentAgents, maxTotalAgents: this.config.maxTotalAgents },
+      { maxConcurrentAgents: this.resolvedConcurrency(), maxTotalAgents: this.config.maxTotalAgents },
+      budget.toolBound,
+      // The DEFINITION's declaration, resolved from the digest -- never the
+      // worker's request. A script naming its own bound would be choosing its
+      // own authority, which is why `NestedStartRequest` carries no such field.
+      resolved.definition.tools,
     )
     if (!planned.admitted) {
       return Promise.resolve({ started: false, rendered: `nested workflow "${request.name}" was refused: ${planned.reason}` })
@@ -384,6 +413,7 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       budget: planned.budget,
       ancestors: [...budget.ancestors, digest],
       limits: planned.workerLimits,
+      toolBound: planned.toolBound,
     })
     return Promise.resolve({ started: true, run, failurePolicy: 'fail-parent' as const })
   }
@@ -403,7 +433,12 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     request: WorkflowStartRequest,
     resumeRunId: WorkflowRunId | undefined,
     reconciled: Reconciled,
-    nested?: { budget: RunBudget; ancestors: readonly DefinitionDigest[]; limits: InheritedWorkerLimits },
+    nested?: {
+      budget: RunBudget
+      ancestors: readonly DefinitionDigest[]
+      limits: InheritedWorkerLimits
+      toolBound: readonly string[] | undefined
+    },
   ): WorkflowRun {
     const meta = validateMeta(request.meta)
     assertBodyParses(request.script, meta.name)
@@ -415,9 +450,7 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       // A nested run's limits are its DECAYED ones (P4-09 must[3]): starting it
       // with the deployment ceiling would let every run in a tree claim the
       // full allowance, and the total would be bounded by nothing.
-      maxConcurrentAgents: nested?.limits.maxConcurrentAgents ?? (this.config.maxConcurrentAgents === 0
-        ? Math.min(16, Math.max(1, availableParallelism() - 2))
-        : this.config.maxConcurrentAgents),
+      maxConcurrentAgents: nested?.limits.maxConcurrentAgents ?? this.resolvedConcurrency(),
       maxTotalAgents: nested?.limits.maxTotalAgents ?? maxTotalAgents,
       maxItemsPerCall: this.config.maxItemsPerCall,
       syncTimeoutMs: this.config.syncTimeoutMs,
@@ -425,9 +458,34 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     // A root run's budget is the deployment's; a nested one carries what its
     // admission decayed to, and its ancestor chain is what makes a recursive
     // definition detectable at all.
-    this.budgets.set(id, nested === undefined
-      ? { budget: { depth: 0, agentsRemaining: limits.maxTotalAgents, tokensRemaining: this.config.maxNestedTokens }, ancestors: [] }
-      : { budget: nested.budget, ancestors: nested.ancestors })
+    // What this run inherited: given by the admission for a fresh nested run,
+    // and READ BACK from its own journal for a resume. A resume that started
+    // from `undefined` restarted an interrupted nested run as a ROOT — with the
+    // deployment's full budget, an empty ancestor chain, and no bound at all.
+    // For budget and ancestors that was a long-standing looseness; for the
+    // bound it is a widening, because the run comes back able to use tools its
+    // definition excluded. One record fixes all three, because all three were
+    // missing for the same reason: nothing persisted them.
+    const nesting: RunNesting | undefined = nested === undefined
+      ? reconciled.journal?.nesting
+      : {
+        ancestors: [...nested.ancestors],
+        budget: nested.budget,
+        ...nested.toolBound === undefined ? {} : { toolBound: [...nested.toolBound] },
+      }
+    this.budgets.set(id, nesting === undefined
+      ? {
+        budget: { depth: 0, agentsRemaining: limits.maxTotalAgents, tokensRemaining: this.config.maxNestedTokens },
+        ancestors: [],
+        // A root run is UNBOUNDED: its authority is its session's, and the
+        // first declaration on a nesting chain is what first bounds it.
+        toolBound: undefined,
+      }
+      : {
+        budget: nesting.budget,
+        ancestors: nesting.ancestors.map(digest => brandString<DefinitionDigest>(digest)),
+        toolBound: nesting.toolBound,
+      })
     const init: WorkerInit = {
       meta,
       body: request.script,
@@ -482,6 +540,8 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       lease,
       this.journalDirectory,
       this,
+      nesting?.toolBound,
+      nested === undefined ? undefined : nesting,
       reconciled,
     )
     // must[2]/acceptance[0] live with the RUN, not with the engine: the lease's

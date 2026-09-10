@@ -17,6 +17,7 @@ import {
   admitRegistration,
   canResumeAgainst,
   computeDefinitionDigest,
+  inheritToolBound,
   isSelfRecursive,
   resolveDefinition,
 } from '../src/index.ts'
@@ -367,4 +368,39 @@ describe('P4-09 Fault — registration and nesting boundary matrix', () => {
   for (const fault of FAULTS) {
     it(`fault boundary ${fault.boundary}`, () => { fault.run() })
   }
+})
+
+describe('P4-09 must[3]: a nested run inherits a DECAYED tool bound', () => {
+  it('bounds an unbounded parent by the child definition\'s declaration', () => {
+    // The first declaration on a chain is what first bounds it. A root run is
+    // unbounded because its authority is its session's, so `undefined` is not
+    // "no tools" — it is "whatever the session holds".
+    expect(inheritToolBound(undefined, { allow: ['read_file'] })).toEqual(['read_file'])
+  })
+
+  it('passes the parent\'s bound through unchanged when the child declares nothing', () => {
+    // Absent inherits. A definition that says nothing about tools does not
+    // thereby escape the bound its ancestors accepted.
+    expect(inheritToolBound(['read_file'], undefined)).toEqual(['read_file'])
+  })
+
+  it('grants nothing a declaration names that the parent does not hold', () => {
+    // A declaration only NARROWS. If naming a tool could add it, a nested
+    // definition would re-authorize itself and the decay would be a formality.
+    expect(inheritToolBound(['read_file'], { allow: ['read_file', 'bash'] })).toEqual(['read_file'])
+  })
+
+  it('intersects at EVERY level, so depth 2 holds what both declarations allow', () => {
+    // The case depth 1 cannot show: with one declaration, an intersection is
+    // indistinguishable from an assignment.
+    const depthOne = inheritToolBound(undefined, { allow: ['read_file', 'bash', 'web_search'] })
+    const depthTwo = inheritToolBound(depthOne, { allow: ['bash', 'web_search', 'write_file'] })
+
+    expect(depthTwo).toEqual(['bash', 'web_search'])
+  })
+
+  it('yields NO tools for a declaration of `[]`, which is not the same as declaring nothing', () => {
+    expect(inheritToolBound(['read_file'], { allow: [] })).toEqual([])
+    expect(inheritToolBound(['read_file'], undefined)).toEqual(['read_file'])
+  })
 })

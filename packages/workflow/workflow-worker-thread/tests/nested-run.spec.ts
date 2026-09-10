@@ -13,7 +13,13 @@
  * assert is what the PARENT SCRIPT observed, because that is what a refusal or
  * a decayed budget actually costs a caller.
  */
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
+import CapabilityTokenFilePlugin from '@deepseek-ai/dsh-capability-token-file'
+import { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
 import { Context } from '@deepseek-ai/cordis'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { SessionId } from '@deepseek-ai/dsh-session'
@@ -31,6 +37,13 @@ import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 const META = { name: 'parent', description: 'nests another definition', phases: [] }
 
+const tokenRoots: string[] = []
+const tokenContexts: Context[] = []
+afterEach(async () => {
+  for (const ctx of tokenContexts.splice(0).reverse()) await ctx.fiber.dispose()
+  for (const root of tokenRoots.splice(0)) rmSync(root, { recursive: true, force: true })
+})
+
 async function setup(options: { maxNestingDepth?: number } = {}) {
   const ctx = new Context()
   await mountAgentLoopTestDependencies(ctx)
@@ -47,12 +60,17 @@ async function setup(options: { maxNestingDepth?: number } = {}) {
 }
 
 /** Register one definition and return the `{ name, digest }` a script passes to `workflow()`. */
-function register(ctx: Context, name: string, body: string): { name: string; digest: string } {
+function register(
+  ctx: Context,
+  name: string,
+  body: string,
+  tools?: { allow: readonly string[] },
+): { name: string; digest: string } {
   // The REAL digest, computed from the body: since §12.48-A the engine holds a
   // `DefinitionRegistry`, which recomputes it and refuses a mismatch. A made-up
   // digest here would be a registration claiming one identity and carrying
   // another, which is precisely what the registry exists to reject.
-  const digest = computeDefinitionDigest(body)
+  const digest = computeDefinitionDigest(body, tools)
   const engine = ctx.workflowEngine as WorkerThreadWorkflowEngine
   engine.registerDefinition({
     digest,
@@ -60,6 +78,7 @@ function register(ctx: Context, name: string, body: string): { name: string; dig
     version: 1,
     body,
     signer: brandString<SignerIdentity>('test-signer'),
+    ...tools === undefined ? {} : { tools },
   })
   return { name, digest }
 }
@@ -182,4 +201,160 @@ describe('P4-09 must[3]: a script nests another definition', () => {
     expect(result.stopReason).toBe('cancelled')
     await run.dispose()
   })
+})
+
+describe('P4-09 must[3]: a nested run can spawn an agent at all', () => {
+  it('runs an agent INSIDE a nested run and settles, which no case asked before', async () => {
+    // The property every other nesting clause rests on, and it was false. A
+    // nested worker was started with `maxConcurrentAgents: 0` -- the sentinel
+    // meaning "derive it from the host", passed on unresolved by `startNested`
+    // and copied through `inheritWorkerLimits`, where `??` could not rescue it
+    // because zero is not nullish. The worker announced ready and then waited
+    // forever for a slot that could not exist: no error, no child, no result.
+    //
+    // Six nesting cases passed throughout, because not one of them spawned an
+    // agent inside a nested run.
+    const { ctx, parent } = await setup()
+    const ref = register(ctx, 'inner', "return await agent('x')")
+    const run = ctx.workflowEngine.start({
+      script: `return await workflow(${JSON.stringify(ref)})`,
+      meta: META,
+      parent,
+    })
+
+    const result = await run.result
+    expect(result.stopReason).toBe('completed')
+    expect(result.value).toBe('child said so')
+    await run.dispose()
+  })
+})
+
+describe('P4-09 must[3]: a nested run\'s children inherit its DECAYED capability token', () => {
+  // The bound reaches a child's token through the host's `toolFilter`, which
+  // the subagent provider both applies as a tool restriction and passes to
+  // `deriveChild`. These cases start a REAL nested run whose script spawns a
+  // REAL child, then ask what that child may do -- a bound that narrowed the
+  // token list while dispatch admitted the call would be a recorded decision
+  // rather than an enforced one.
+  const CHILD_SCRIPT = "return await agent('do the work')"
+
+  /** The nesting setup plus the token provider and the tools a bound names. */
+  async function tokenSetup() {
+    const ctx = new Context()
+    pinTrustKernel(ctx, createTrustKernel())
+    await mountAgentLoopTestDependencies(ctx)
+    await ctx.plugin(SessionProjectionRegistry)
+    const root = mkdtempSync(join(tmpdir(), 'dsh-nested-token-'))
+    tokenRoots.push(root)
+    await ctx.plugin(AgentLoop, { agents: [] })
+    await ctx.plugin(MessageBusPlugin)
+    await ctx.plugin(SubagentRuntime)
+    await ctx.plugin(spawn, { providerName: 'spawn' })
+    await ctx.plugin(InMemoryLeaseStorePlugin)
+    await ctx.plugin(WorkerThreadWorkflowEngine, {})
+    for (const name of ['read_file', 'write_file']) {
+      ctx.tools.register(defineContentToolFixture({
+        name,
+        description: `${name} fixture`,
+        parameters: {},
+        async execute() { return [{ type: 'text', text: 'ok' }] },
+      }))
+    }
+    await ctx.plugin(CapabilityTokenFilePlugin, {
+      directory: join(root, 'tokens'),
+      requireForTools: true,
+      sessionTokenTtlMs: 60_000,
+    })
+    // One response per agent() the scripts below reach: the parent run's child,
+    // and the nested run's. A starved adapter hangs rather than failing, which
+    // reads as a bound that never applied.
+    ctx.llm.registerAdapter(['mock'], new MockAdapter([
+      textResponse('child said so'),
+      textResponse('child said so'),
+      textResponse('child said so'),
+    ]))
+    const parent = ctx.agentLoop.create(SessionId('nesting-token-parent'), { provider: 'mock', model: 'mock' })
+    tokenContexts.push(ctx)
+    return { ctx, parent }
+  }
+
+  /**
+   * Every child session started under `ctx`, captured as it starts.
+   *
+   * A child spawned inside a worker is DISPOSED before the run settles -- the
+   * message trace is `child-start, agent-start, agent-end, child-dispose,
+   * result` -- so reading the agent registry afterwards finds only the parent.
+   * The token has to be taken while the child is alive, which is also the only
+   * moment its authority means anything.
+   */
+  function captureChildTokens(ctx: Context, parentId: string) {
+    const pending: Promise<readonly string[] | undefined>[] = []
+    ctx.on('agent/session-start', ({ agent }) => {
+      if (agent.id === parentId) return
+      // Awaited, not read synchronously: issuance is asynchronous, which is why
+      // `whenSessionToken` exists at all -- the synchronous read at session
+      // start returns undefined and would report "no authority" for a child
+      // that is about to hold one. The promise is created here, while the child
+      // lives, because the provider drops the token on `agent/disposed`.
+      pending.push(ctx.capabilityTokens.whenSessionToken(agent.id).then(token => token?.token.resources))
+    })
+    return pending
+  }
+
+  it('narrows a child of a nested run to the definition\'s declaration', async () => {
+    const { ctx, parent } = await tokenSetup()
+    await ctx.capabilityTokens.whenSessionToken(parent.id)
+    const children = captureChildTokens(ctx, parent.id)
+    const ref = register(ctx, 'inner', CHILD_SCRIPT, { allow: ['read_file'] })
+    const run = ctx.workflowEngine.start({
+      script: `return await workflow(${JSON.stringify(ref)})`,
+      meta: META,
+      parent,
+    })
+    await run.result
+
+    const resources = await Promise.all(children)
+    expect(resources).toHaveLength(1)
+    expect(resources[0]).toContain('read_file')
+    // The negative half: `write_file` is a tool the PARENT holds, so its
+    // absence is the declaration narrowing rather than the parent being narrow.
+    expect(resources[0]).not.toContain('write_file')
+
+    await run.dispose()
+    // Three worker threads start in this file's token cases (root, nested, and
+    // at depth 2 a second nested), so the default 5s is not a safety margin but
+    // a coin flip under load: this case passes alone and timed out at 5830ms in
+    // a full-file run. The limit is raised rather than the work reduced,
+    // because the depth is the point.
+  }, 30_000)
+
+  it('grants nothing a nested declaration names beyond the run above it', async () => {
+    // A declaration only narrows. If naming a tool could add it, a nested
+    // definition would re-authorize itself and the decay would be decoration.
+    // Depth 2 is what shows it: at depth 1 an intersection and an assignment
+    // are indistinguishable.
+    const { ctx, parent } = await tokenSetup()
+    await ctx.capabilityTokens.whenSessionToken(parent.id)
+    const children = captureChildTokens(ctx, parent.id)
+    const inner = register(ctx, 'inner', CHILD_SCRIPT, { allow: ['read_file', 'write_file'] })
+    const outer = register(
+      ctx,
+      'outer',
+      `return await workflow(${JSON.stringify(inner)})`,
+      { allow: ['read_file'] },
+    )
+    const run = ctx.workflowEngine.start({
+      script: `return await workflow(${JSON.stringify(outer)})`,
+      meta: META,
+      parent,
+    })
+    await run.result
+
+    const resources = await Promise.all(children)
+    expect(resources).toHaveLength(1)
+    expect(resources[0]).toContain('read_file')
+    expect(resources[0]).not.toContain('write_file')
+
+    await run.dispose()
+  }, 30_000)
 })

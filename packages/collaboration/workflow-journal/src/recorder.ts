@@ -24,6 +24,7 @@ import type {
   ScriptDigest,
   StepEffectClass,
   StepId,
+  RunNesting,
   WorkflowJournal,
 } from './types.ts'
 
@@ -77,9 +78,16 @@ export interface JournalRecorder {
  * replaces its own prior entry rather than appending a duplicate.
  * @param scriptDigest - the digest of the script being run.
  * @param seed - a prior journal to continue, for a resumed run; absent for a fresh one.
+ * @param nesting - what a FRESH nested run inherited, recorded so a later resume
+ *   can recover it; absent for a root run AND for a resume, which reads the
+ *   seed's copy instead of being told.
  * @returns a recorder over the seeded or fresh journal.
  */
-export function createJournalRecorder(scriptDigest: ScriptDigest, seed?: WorkflowJournal): JournalRecorder {
+export function createJournalRecorder(
+  scriptDigest: ScriptDigest,
+  seed?: WorkflowJournal,
+  nesting?: RunNesting,
+): JournalRecorder {
   const entries = new Map<number, JournalEntry>(
     (seed?.entries ?? []).map(entry => [Number(entry.stepId.replace(/^step-/u, '')), entry]),
   )
@@ -122,9 +130,14 @@ export function createJournalRecorder(scriptDigest: ScriptDigest, seed?: Workflo
       entries.set(seq, { ...existing, verified: true })
     },
     journal() {
+      // The seed's nesting outlives a resume that was not told any: a resumed
+      // run reads its own record, and dropping the field here would erase on
+      // the first persist exactly the state the resume recovered.
+      const inherited = nesting ?? seed?.nesting
       return {
         scriptDigest,
         entries: [...entries.keys()].sort((left, right) => left - right).map(seq => entries.get(seq) as JournalEntry),
+        ...inherited === undefined ? {} : { nesting: inherited },
       }
     },
   }

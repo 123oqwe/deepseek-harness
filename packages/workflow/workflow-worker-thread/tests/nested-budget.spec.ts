@@ -38,7 +38,7 @@ describe('P4-09 must[3]: a nested run inherits decayed limits', () => {
   it('caps the child at its decayed agent budget, not at the deployment ceiling', () => {
     // Spawning with the ceiling would let a tree of nested runs each start a
     // full allowance, and the total would exceed every limit meant to bound it.
-    const plan = planNestedRun(budget(), CHILD, [], LIMITS, parentWorkerLimits())
+    const plan = planNestedRun(budget(), CHILD, [], LIMITS, parentWorkerLimits(), undefined, undefined)
 
     expect(plan).toMatchObject({ admitted: true })
     if (!plan.admitted) throw new Error('unreachable')
@@ -48,7 +48,7 @@ describe('P4-09 must[3]: a nested run inherits decayed limits', () => {
 
   it('never raises the child above the parent worker\'s own total', () => {
     const generous = budget({ agentsRemaining: 999 })
-    const plan = planNestedRun(generous, CHILD, [], LIMITS, parentWorkerLimits({ maxTotalAgents: 6 }))
+    const plan = planNestedRun(generous, CHILD, [], LIMITS, parentWorkerLimits({ maxTotalAgents: 6 }), undefined, undefined)
 
     if (!plan.admitted) throw new Error('unreachable')
     expect(plan.workerLimits.maxTotalAgents).toBe(6)
@@ -58,7 +58,7 @@ describe('P4-09 must[3]: a nested run inherits decayed limits', () => {
     // Concurrency bounds how much runs AT ONCE, not how much runs in total. A
     // child allowed fewer agents overall is not thereby entitled to less
     // parallelism among them.
-    const plan = planNestedRun(budget(), CHILD, [], LIMITS, parentWorkerLimits({ maxConcurrentAgents: 4 }))
+    const plan = planNestedRun(budget(), CHILD, [], LIMITS, parentWorkerLimits({ maxConcurrentAgents: 4 }), undefined, undefined)
 
     if (!plan.admitted) throw new Error('unreachable')
     expect(plan.workerLimits.maxConcurrentAgents).toBe(4)
@@ -67,9 +67,9 @@ describe('P4-09 must[3]: a nested run inherits decayed limits', () => {
   it('refuses to plan a run it would not admit, so limits cannot be derived without admission', () => {
     // The only way to obtain child limits is to have been admitted, so a
     // caller cannot spawn a refused run with plausible-looking limits.
-    expect(planNestedRun(budget(), CHILD, [CHILD], LIMITS, parentWorkerLimits()))
+    expect(planNestedRun(budget(), CHILD, [CHILD], LIMITS, parentWorkerLimits(), undefined, undefined))
       .toEqual({ admitted: false, reason: 'recursive-definition' })
-    expect(planNestedRun(budget({ depth: 3 }), CHILD, [], LIMITS, parentWorkerLimits()))
+    expect(planNestedRun(budget({ depth: 3 }), CHILD, [], LIMITS, parentWorkerLimits(), undefined, undefined))
       .toEqual({ admitted: false, reason: 'max-depth-exceeded' })
   })
 })

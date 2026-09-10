@@ -75,11 +75,45 @@ export interface JournalEntry {
   readonly verified: boolean
 }
 
+/**
+ * What a nested run inherited when it started, persisted so a resume recovers
+ * it rather than restarting the run as a root (P4-09 must[3]).
+ *
+ * Declared in this package's own vocabulary — plain numbers and strings — so
+ * the durable record does not depend on the registry's types. It is a file
+ * format: what is written here is what a later process reads, and a field it
+ * omits is a fact the resumed run cannot recover.
+ *
+ * Absent for a ROOT run, which inherited nothing.
+ */
+export interface RunNesting {
+  /** Definition digests on the chain above this run, root first. */
+  readonly ancestors: readonly string[]
+  /** The decayed budget this run was admitted with. */
+  readonly budget: {
+    readonly depth: number
+    readonly agentsRemaining: number
+    readonly tokensRemaining: number
+  }
+  /**
+   * Global tool names this run's children may use.
+   *
+   * Absent means UNBOUNDED, exactly as at launch. The distinction is why this
+   * is an optional field rather than an array defaulting to empty: writing `[]`
+   * for an unbounded run would silently strip every tool on resume, and
+   * omitting the field for a bounded one would restore authority the run's
+   * definition gave up.
+   */
+  readonly toolBound?: readonly string[]
+}
+
 /** A complete journal for one run. */
 export interface WorkflowJournal {
   readonly scriptDigest: ScriptDigest
   /** Entries in execution order; the program counter is this array's length. */
   readonly entries: readonly JournalEntry[]
+  /** What this run inherited as a nested run; absent for a root run. */
+  readonly nesting?: RunNesting
 }
 
 /** What a resumed run should do with one recorded step. */

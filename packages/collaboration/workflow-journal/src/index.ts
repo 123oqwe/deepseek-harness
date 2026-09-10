@@ -19,6 +19,7 @@ export type {
   StepEffectClass,
   StepId,
   StepOutcome,
+  RunNesting,
   WorkflowJournal,
 } from './types.ts'
 export { readJournal, writeJournal } from './store.ts'

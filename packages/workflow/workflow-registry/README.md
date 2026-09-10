@@ -23,7 +23,9 @@ kind: "package-reference"
 
 A name can be repointed at different code; a digest cannot. A run recorded against a name could not be reproduced, so `RunDefinitionRef` carries the digest — and the name too, because a report identified only by a hash forces every operator to resolve it.
 
-The digest is computed over the **body alone**. Including the name or version would give one source two identities, and a run recorded under either could not be recognized as the same work.
+The digest is computed over the **body and the tool declaration**, because a definition's identity is what it is and what it may do. The name and version stay out: including them would give one source two identities, and a run recorded under either could not be recognized as the same work. Leaving the declaration out would be worse — the same body could be re-registered under another name with a wider declaration and produce the same digest, so a nested run's bound would be widenable by re-registration.
+
+`allow` is de-duplicated and sorted before hashing, and every part is length-prefixed, so reordering or repeating a name cannot change an identity while changing its content always does. A definition with **no** declaration and one declaring **`[]`** have different digests on purpose: absent inherits the parent run's bound, `[]` is a run that may use no tools.
 
 `canResumeAgainst` answers by digest and never by version: a newer version under the same name does not make an old run resumable, because that is different code the run never referenced. Upgrading is a deliberate migration.
 
@@ -40,6 +42,10 @@ A definition's `body` is `string`, and every function here either hashes it or p
 ## A nested budget decays
 
 A child receives what remains, minus the call that started it, clamped to the deployment ceiling. Passing the parent's budget through unchanged would let every run in a tree believe it holds the full allowance, and the total would be bounded by nothing.
+
+`planNestedRun` decays the TOOL BOUND on the same terms, and only through admission: being admitted is the only way to obtain a child's bound, exactly as it is the only way to obtain its limits. `inheritToolBound` intersects the parent's bound with the child definition's declaration and never widens — naming a tool an ancestor gave up grants nothing — so the bound at depth *n* is the intersection of every declaration above it. `undefined` means UNBOUNDED rather than empty: a root run holds whatever its session holds, and the first declaration on a chain is what first bounds it.
+
+A caller passing the raw deployment configuration here is passing a SENTINEL where a number is expected. `maxConcurrentAgents: 0` means "derive it from the host" and must be resolved before it becomes a child's limit; `??` does not rescue it, because zero is not nullish. A nested worker started with a concurrency of zero announces ready and then waits forever for a slot that cannot exist — no error, no child, no result.
 
 ## Model Experience
 

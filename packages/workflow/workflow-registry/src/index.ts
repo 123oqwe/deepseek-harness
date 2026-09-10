@@ -9,6 +9,7 @@ export { admitNestedRun, resolveDefinition } from './types.ts'
 export type {
   DefinitionDigest,
   DefinitionName,
+  DefinitionToolDeclaration,
   NestingDecision,
   NestingDenialReason,
   NestingLimits,
@@ -29,5 +30,5 @@ export {
 export type { RegistrationOutcome, RegistrationRefusalReason } from './version.ts'
 export { DefinitionRegistry } from './store.ts'
 export type { StoreOutcome, StoreRefusalReason } from './store.ts'
-export { applyChildFailure, cancelPropagationForNested, inheritWorkerLimits, planNestedRun } from './nesting.ts'
+export { applyChildFailure, cancelPropagationForNested, inheritToolBound, inheritWorkerLimits, planNestedRun } from './nesting.ts'
 export type { CancelPropagation, ChildFailureOutcome, ChildFailurePolicy, InheritedWorkerLimits } from './nesting.ts'

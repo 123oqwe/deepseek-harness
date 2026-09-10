@@ -10,7 +10,33 @@
  */
 
 import { admitNestedRun } from './types.ts'
-import type { DefinitionDigest, NestingDecision, NestingLimits, RunBudget } from './types.ts'
+import type { DefinitionDigest, DefinitionToolDeclaration, NestingDecision, NestingLimits, RunBudget } from './types.ts'
+
+/**
+ * Derive a nested run's tool bound from its parent's and the child definition's
+ * declaration (must[3]'s capability-token decay).
+ *
+ * A declaration only NARROWS. Naming a tool the parent run does not hold grants
+ * nothing, which is what makes this decay rather than re-authorization: the
+ * bound at depth n is the intersection of every declaration above it, so no
+ * definition can recover authority an ancestor gave up.
+ *
+ * `undefined` means UNBOUNDED, not empty — a root run holds whatever its
+ * session holds, and the first declaration on a chain is what first bounds it.
+ * A declaration of `[]` therefore differs from no declaration: it yields a run
+ * with no tools, while absence passes the parent's bound through unchanged.
+ * @param parent - the parent run's bound, or `undefined` when unbounded.
+ * @param declaration - the child definition's declaration, if it has one.
+ * @returns the child's bound, or `undefined` when it stays unbounded.
+ */
+export function inheritToolBound(
+  parent: readonly string[] | undefined,
+  declaration: DefinitionToolDeclaration | undefined,
+): readonly string[] | undefined {
+  if (declaration === undefined) return parent
+  const declared = [...new Set(declaration.allow)]
+  return parent === undefined ? declared : declared.filter(name => parent.includes(name))
+}
 
 /** The subset of a worker's limits a nested run inherits. */
 export interface InheritedWorkerLimits {
@@ -99,7 +125,9 @@ export function applyChildFailure(policy: ChildFailurePolicy): ChildFailureOutco
  * @param ancestors - digests on the chain, root first.
  * @param limits - the deployment's ceilings.
  * @param parentLimits - the parent worker's limits.
- * @returns the child's limits and budget, or the refusal.
+ * @param parentBound - the parent run's tool bound, or `undefined` when unbounded.
+ * @param declaration - the child definition's tool declaration, if it has one.
+ * @returns the child's limits, budget and tool bound, or the refusal.
  */
 export function planNestedRun(
   parent: RunBudget,
@@ -107,7 +135,14 @@ export function planNestedRun(
   ancestors: readonly DefinitionDigest[],
   limits: NestingLimits,
   parentLimits: InheritedWorkerLimits,
-): { readonly admitted: true; readonly budget: RunBudget; readonly workerLimits: InheritedWorkerLimits }
+  parentBound: readonly string[] | undefined,
+  declaration: DefinitionToolDeclaration | undefined,
+): {
+  readonly admitted: true
+  readonly budget: RunBudget
+  readonly workerLimits: InheritedWorkerLimits
+  readonly toolBound: readonly string[] | undefined
+}
   | Extract<NestingDecision, { admitted: false }> {
   const decision = admitNestedRun(parent, childDigest, ancestors, limits)
   if (!decision.admitted) return decision
@@ -115,5 +150,6 @@ export function planNestedRun(
     admitted: true,
     budget: decision.childBudget,
     workerLimits: inheritWorkerLimits(decision, parentLimits),
+    toolBound: inheritToolBound(parentBound, declaration),
   }
 }

@@ -21,7 +21,7 @@ import type { ExecutionObserver } from './runtime.ts'
 import { createHash } from 'node:crypto'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { compactJournal, createJournalRecorder, journalingObserver, retainsAllReceipts, writeJournal } from '@deepseek-ai/dsh-workflow-journal'
-import type { JournalRecorder, ScriptDigest, WorkflowJournal } from '@deepseek-ai/dsh-workflow-journal'
+import type { JournalRecorder, RunNesting, ScriptDigest, WorkflowJournal } from '@deepseek-ai/dsh-workflow-journal'
 import type { Reconciled } from './resume.ts'
 import { applyChildFailure, cancelPropagationForNested } from '@deepseek-ai/dsh-workflow-registry'
 import type { ChildFailurePolicy } from '@deepseek-ai/dsh-workflow-registry'
@@ -196,6 +196,26 @@ export class WorkerRun implements WorkflowRun {
     private readonly journalDirectory: string,
     /** Starts nested runs for this run's `workflow()` calls (P4-09 must[3]). */
     private readonly nesting: NestingPort,
+    /**
+     * The tools this run's children may use, or `undefined` when unbounded
+     * (P4-09 must[3]'s capability-token decay).
+     *
+     * Held by the RUN and applied by the HOST, never taken from a child's
+     * request: the bound is the intersection of the declarations of every
+     * definition above this run, and a worker that could name it would be
+     * choosing its own authority.
+     */
+    private readonly toolBound: readonly string[] | undefined,
+    /**
+     * What this run inherited as a nested run, recorded in its journal so a
+     * resume recovers it (P4-09 must[3]).
+     *
+     * `undefined` for a root run AND for a resume, which reads the record
+     * rather than being told: a resume that accepted an inherited state from
+     * its caller would let the caller choose the bound, which is the authority
+     * the definition's declaration exists to fix.
+     */
+    inheritedNesting: RunNesting | undefined,
     /** What a resume reconciled: the journal to continue and the steps it settled. */
     reconciled: Reconciled = { reusable: {}, journal: undefined },
   ) {
@@ -205,7 +225,7 @@ export class WorkerRun implements WorkflowRun {
     // further crash would re-run the steps this resume just settled.
     this.journal = createJournalRecorder(brandString<ScriptDigest>(
       createHash('sha256').update(init.body).digest('hex'),
-    ), reconciled.journal)
+    ), reconciled.journal, inheritedNesting)
     // Reconciliation IS the verification must[1] names: a step whose effects
     // the ledger confirmed and whose every child was accounted for has been
     // checked against the world, which is more than re-reading its own record.
@@ -460,6 +480,13 @@ export class WorkerRun implements WorkflowRun {
         prompt: [{ type: 'text', text: request.prompt }],
         parent: this.parentAgent,
         signal: this.controller.signal,
+        // The run's bound reaches the child's capability token through this
+        // one field: the subagent provider applies it as the child's tool
+        // restriction AND passes it to `deriveChild`, so the child's token is
+        // narrowed by the same set the prompt is. Omitting it for an unbounded
+        // run is not a weaker case -- a root run's children inherit its
+        // session's authority, which is what `undefined` means here.
+        ...this.toolBound === undefined ? {} : { toolFilter: { allow: this.toolBound } },
         ...request.schema !== undefined ? { outputSchema: request.schema } : {},
         ...request.provider !== undefined || request.model !== undefined
           ? {
