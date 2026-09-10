@@ -307,6 +307,14 @@
       "delegateSession": "guanjieqiao-92",
       "signedAtUtc": "2026-09-10T05:40:04.859Z",
       "note": "Rebuilt sign-off (prior PASS withdrawn §12.69). Observation run 34439518421 @ 2d2e8f89ac (signed bundle, vitest 20573/0; job red only at lint nested-run.spec.ts:395 and snapshot cordis-inspect-jsdoc — both P4-09's reality set, admitted). 4.4b: C/P/U/F and every live supplement GREEN @ 2d2e8f89ac (single SHA), 0 open findings. 4.4d (delegate's own grep at 2d2e8f89ac, packages/*/src excl. tests/lib/definition pkg): service.issue called at capability-token-file/src/index.ts:528 on agent/session-start; attenuate via deriveChild (4 production callers, spawn path child-agent.ts:271 with the same toolFilter as tools.restrict); tools.requireCapabilityToken() armed (6 callers) with requireForTools: true in bundle/base (row disabled only when no trust kernel is mounted — the documented insecure dev boot); revokeSession (2 callers) -> service.revoke (index.ts:394) and the dispatch gate refuses 'revoked' (core/tools/src/index.ts:645); whenSessionToken presented on native and PTC paths. acc[0] on real spawns (parentDigest present, filter narrows, filtered tool refused at the call); acc[1] revocation persists via issuedFor and cascades; acc[2] digest-only logging pinned; must[3] plugin RPC / ExecutionWorld / external agents split per §12.46-B (BLOCKED-169/170/171)."
+    },
+    {
+      "epic": "P2-04",
+      "rowDigestSha256": "55e5fc1a7217e37a36d591dcb1ab8d0e26159736cabbbc5f10c85eb0a6fa9fde",
+      "conclusion": "PASS",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-10T05:40:05.343Z",
+      "note": "Observation run 34439518421 @ 2d2e8f89ac (signed bundle, 20573/0; reds are P4-09's, admitted). 4.4b: C/P/U/F, P.3 (MCP ToolAnnotations raise-only mapping) and base U (11 cases incl. BLOCKED-159 record/enforcement consistency) all GREEN @ 2d2e8f89ac, 0 open findings. 4.4a: gateActionRisk in core/tools/src/external-effect.ts on both dispatch paths before ledger reserve; presets thresholds; action/risk-gated event logged with preset on every allow-by-preset (audit cannot diverge silently from execution); MCP annotations validated at the wire boundary and never lower risk without trustAnnotations; riskDomainTags on shipped tools; pwsh fixtures refreshed on a real pwsh. BLOCKED-159 closed on this observation."
     }
   ]
 }
