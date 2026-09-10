@@ -4387,4 +4387,17 @@ Nine sections accumulated over earlier epics, each of which regenerated the Engl
 
 **Consequence, and why this is not cosmetic:** the pre-commit hook checks STAGED pairs, so any change that stages `config-catalog.zh.md` is blocked until the whole pair is consistent. The English side is committed and correct; the Chinese side is one section behind this session (`retry-cockatiel`) on top of the nine.
 
-**What is being asked:** whether the Chinese config catalog should be regenerated from the English one with only its `Source:` labels localized (which is what its structure already is — code blocks are TypeScript in both languages), or kept as a hand-translated document and brought current by a person. The first is a generator change and would end this debt permanently; the second keeps the current shape and needs an owner each time.
+**RULED 2026-09-11 (delegate).** The Chinese config catalog becomes GENERATED from the English one with only its `Source:` labels localized — the code blocks are TypeScript on both sides, so a hand copy carries no information. The generator change is owned by **P2-05**, as the next epic that touches the config catalog (its provider's `Config` lands in P2-05.P), and goes in as its own commit BEFORE the first commit that regenerates the catalog. Until then the pair stays red and any change staging `config-catalog.zh.md` stays blocked.
+
+**Original question, kept for the record:** whether the Chinese config catalog should be regenerated from the English one with only its `Source:` labels localized (which is what its structure already is — code blocks are TypeScript in both languages), or kept as a hand-translated document and brought current by a person. The first is a generator change and would end this debt permanently; the second keeps the current shape and needs an owner each time.
+
+
+### BLOCKED-178 — `ExecutionWorld` has no producer, so P2-05's fifth policy input is a declared slot
+
+**Status:** SPLIT under §12.46-B. P2-05 owns the rule half and has landed it; P3-01 owns the producer half and has not started.
+
+must[0] names five policy inputs. Four exist on this tree — identity (P2-01's `Principal`), the capability token (P2-02), the `ActionManifest` (P2-03), and the context facts P2-05 declares itself. The fifth, `ExecutionWorld`, is P3-01's to design: `grep` finds the name only in three comments and one test title, never as a type.
+
+`PolicyRequest.world` is therefore declared as `{ kind: 'absent' }` — a value a policy can match on, not a missing field. The distinction is the point: a policy that must know where an action would run can refuse when the world is unknown, which is different from a policy that never asked. An optional field would have made the two indistinguishable, and inventing a world model here would have produced a second one for P3-01 to reconcile with.
+
+**Closing condition:** P3-01 lands `ExecutionWorld`. The change here is then a type change — `ExecutionWorldFact` gains its real variants — and not a vocabulary change, which is what the declared slot buys.

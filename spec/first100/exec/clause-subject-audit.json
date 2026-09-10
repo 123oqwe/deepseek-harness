@@ -2172,7 +2172,7 @@
             "version": "4.12.0",
             "form": "runtime",
             "landsIn": "P2-05.P",
-            "reason": "The authorization engine, behind this epic's own provider-neutral `ctx.policy`. Adopted rather than written because the three properties must[1] and acceptance[1] turn on -- forbid overrides permit, default deny, and a matched-policy explain -- are Cedar's documented semantics with a Lean proof of the authorizer (cedar-spec), and a hand-written evaluator would be a second set of semantics with no proof and the same surface. Re-verified on this tree rather than carried from the sheet: `require.resolve('@cedar-policy/cedar-wasm')` FAILS, so this is a real dependency addition and not a re-declaration; the §3.1 slice's own preFlight (SLICE-3.1-cedar) records `realized: null`, and no `packages/policy/policy-engine*` directory exists. `landsIn` is P2-05.P because the provider is the P stage's deliverable; the C stage is the decision vocabulary and the monotonic composition rule, which must not import an engine."
+            "reason": "The authorization engine, behind this epic's own provider-neutral `ctx.policy`. Adopted rather than written because the three properties must[1] and acceptance[1] turn on -- forbid overrides permit, default deny, and a matched-policy explain -- are Cedar's documented semantics with a Lean proof of the authorizer (cedar-spec), and a hand-written evaluator would be a second set of semantics with no proof and the same surface. Re-verified on this tree rather than carried from the sheet: `require.resolve('@cedar-policy/cedar-wasm')` FAILS, so this is a real dependency addition and not a re-declaration; the §3.1 slice's own preFlight (SLICE-3.1-cedar) records `realized: null`, and no `packages/policy/policy-engine*` directory exists. `landsIn` is P2-05.P because the provider is the P stage's deliverable; the C stage is the decision vocabulary and the monotonic composition rule, which must not import an engine. AMENDED 2026-09-11, before the P stage: the RUNTIME adoption (a production import) still lands at P, and the C stage additionally installs cedar-wasm as a devDependency OF ITS TESTS to prove the three semantics rather than cite them. That is a refinement of where the dependency appears, not a change of decision: `policy-engine`'s own source imports no engine, which is what keeps the composition rule a claim about the harness."
           }
         ],
         "deviations": [
@@ -2239,9 +2239,9 @@
           },
           {
             "claim": "forbid overrides permit, default deny, matched-policy explain, partial eval",
-            "how": "NOT YET PROBED against the package on this tree -- the slice is unwritten",
-            "result": "differs",
-            "evidence": "Carried unverified from the sheet and from SLICE-3.1-cedar, which recorded the same row as unprobed. It becomes checkable when the provider lands; the C stage's conformance cases are where it is proven, and this row exists so the claim is not later mistaken for a checked one."
+            "how": "pnpm exec vitest run packages/policy/policy-engine/tests/cedar-conformance.spec.ts",
+            "result": "ok",
+            "evidence": "PROBED 2026-09-11 against @cedar-policy/cedar-wasm 4.12.0, installed as a devDependency of the C-stage package. Default deny: an empty policy set returns `deny`, with a permitting control returning `allow` so the engine is not simply refusing everything. Forbid overrides permit: both source orders return `deny`. Explain: the matched policy id comes back in `diagnostics.reason`. Two facts the row did not anticipate and a provider must not get wrong: decisions are lower case (`deny`/`allow`), and a policy id comes from the id-to-source MAP key -- submitted as a source string, Cedar assigns `policy0`/`policy1` and an `@id(...)` annotation does not become the reported id, so an audit built on the string form would name policies nobody wrote. Partial evaluation is still unprobed and is not claimed."
           }
         ],
         "gapCheck": [

@@ -382,6 +382,8 @@
       "@deepseek-ai/dsh-plugin-provenance": ["./packages/plugin/plugin-provenance/src"],
       "@deepseek-ai/dsh-plugin-provenance/sbom": ["./packages/plugin/plugin-provenance/src/sbom.ts"],
       "@deepseek-ai/dsh-plugin-provenance/signature": ["./packages/plugin/plugin-provenance/src/signature.ts"],
+      "@deepseek-ai/dsh-policy-engine": ["./packages/policy/policy-engine/src"],
+      "@deepseek-ai/dsh-policy-engine/evaluate": ["./packages/policy/policy-engine/src/evaluate.ts"],
       "@deepseek-ai/dsh-principal": ["./packages/identity/principal/src"],
       "@deepseek-ai/dsh-principal/invariant": ["./packages/identity/principal/src/invariant.ts"],
       "@deepseek-ai/dsh-principal/chain": ["./packages/identity/principal/src/chain.ts"],

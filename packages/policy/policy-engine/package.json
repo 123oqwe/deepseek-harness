@@ -1,0 +1,49 @@
+{
+  "name": "@deepseek-ai/dsh-policy-engine",
+  "description": "Policy decision vocabulary and monotonic composition for Epic P2-05: what a policy request carries (identity, capability token, ActionManifest, ExecutionWorld, context facts), the closed permit/deny/ask decision, and the rule that a plugin may only narrow a decision and never widen one",
+  "version": "0.1.2-alpha.4",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "packages/policy/policy-engine"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./evaluate": {
+      "types": "./lib/types/evaluate.d.ts",
+      "default": "./lib/types/evaluate.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-action-manifest": "workspace:^",
+    "@deepseek-ai/dsh-brand": "workspace:^",
+    "@deepseek-ai/dsh-capability-token": "workspace:^",
+    "@deepseek-ai/dsh-principal": "workspace:^"
+  },
+  "devDependencies": {
+    "@cedar-policy/cedar-wasm": "4.12.0",
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-action-manifest": "workspace:^",
+    "@deepseek-ai/dsh-brand": "workspace:^",
+    "@deepseek-ai/dsh-capability-token": "workspace:^",
+    "@deepseek-ai/dsh-principal": "workspace:^"
+  }
+}

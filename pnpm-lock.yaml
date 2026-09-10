@@ -7079,6 +7079,27 @@ importers:
         specifier: workspace:^
         version: link:../../kernel/trust-kernel
 
+  packages/policy/policy-engine:
+    devDependencies:
+      '@cedar-policy/cedar-wasm':
+        specifier: 4.12.0
+        version: 4.12.0
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-action-manifest':
+        specifier: workspace:^
+        version: link:../../action/action-manifest
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
+      '@deepseek-ai/dsh-capability-token':
+        specifier: workspace:^
+        version: link:../capability-token
+      '@deepseek-ai/dsh-principal':
+        specifier: workspace:^
+        version: link:../../identity/principal
+
   packages/policy/risk-taxonomy:
     devDependencies:
       '@deepseek-ai/cordis':
@@ -11582,6 +11603,9 @@ packages:
 
   '@bufbuild/protobuf@2.13.0':
     resolution: {integrity: sha512-acq7c49vxfm1ggJ95P70TX7ABDM0vxr1SYD3BB0o0jnBLB4OAqeHyKuN+cD3w80gXEDQ2zxHpR6CUeA+O/aU9g==}
+
+  '@cedar-policy/cedar-wasm@4.12.0':
+    resolution: {integrity: sha512-tCSj92hh4fnmas4ojO4tjx8wAAW3mKVgQ7M388NsSpXp64FVeYY6xwhKtJRaaYGK0qLiN2jnq8/SNIU2r5fdPw==}
 
   '@chevrotain/types@11.1.2':
     resolution: {integrity: sha512-U+HFai5+zmJCkK86QsaJtoITlboZHBqrVketcO2ROv865xfCMSFpELQoz1GkX5GzME8pTa+3kbKrZHQtI0gdbw==}
@@ -17754,6 +17778,8 @@ snapshots:
       css-tree: 3.2.1
 
   '@bufbuild/protobuf@2.13.0': {}
+
+  '@cedar-policy/cedar-wasm@4.12.0': {}
 
   '@chevrotain/types@11.1.2': {}
 

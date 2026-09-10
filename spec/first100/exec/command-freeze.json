@@ -10785,6 +10785,54 @@
         "failureSummary": "M52 reddens exactly 1 of 126 -- 'carries each step's DECLARED reversibility, so must[2] can be reached', which is the case that exists because a defaulted `true` makes the operator confirmation unreachable in the one situation it is for. M53 reddens exactly 1 -- the multiple-data-stores refusal. M54 reddens 3 across both backends: the migrated-copy stamp case, the re-open-with-the-new-descriptor case, and the switch case, because a copy carrying the old stamp is one `KvFacet.open` refuses. Controls sit beside them: 'gives no manifest to a plugin that declares no migrations' and 'does not ask for a confirmation a reversible path never needed' both pass under all three, so a bridge that refused everything could not satisfy the suite."
       },
       "note": "P1-10 Usage stage: `dsh plugin add`/`update` runs the transaction, and every phase can refuse.\n\nWHAT REACHES THE PRODUCT: `runPlugin` holds ONE cross-process fencing lease across crash recovery, pnpm, the data migration and layer reconciliation. A lease released between the package manager and the migration reopens exactly the window this epic closes -- new code installed, data not yet converted, another process free to start.\n\nWHAT EACH PHASE NOW DECIDES: `validate` reads the migrated copy back through the facet (it materialized, it carries the version it was migrated TO, the plugin's own optional `validate` export accepts its content); the recorded digest is `digestUnit`'s digest of the CONTENT, so acceptance[1]'s reconciliation compares data with data rather than a version number with another spelling of itself; `healthCheck` opens the unit through the storage hub with the new build's descriptor and reads it, which is the strongest form of 'does the new version work' available to a command that mounts no plugin.\n\nWHAT THE MANIFEST NOW REQUIRES: a step that ships a `module` must declare `reversible` and `backup`, in both the TypeScript validator and the JSON Schema (`dependentRequired`). Nothing is defaulted at the bridge, because a defaulted `reversible: true` made must[2] unreachable in the exact case it exists for.\n\nEVERY REFUSAL IS NAMED, and a refusal is a FAILED upgrade: the code goes back to the version its data is at rather than leaving new code to meet old data at the next boot.\n\nMEDIUM CORRECTION, recorded because the shape looked complete and had no subject: the first facet read and wrote `{ version, records }`, a format this backend never writes -- the real document is `{ unit: { name, version }, global, tables }`. Nine cases passed because each seeded the invented shape. The facet now converts a `UnitContent` (the value `loadAll` returns) and writes through `format.ts`'s own `serialize`; the cases seed through `kv.open`/`putRecord`, and one re-opens the switched-in unit with the new descriptor, so a document in any other format fails there."
+    },
+    {
+      "epic": "P2-05",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/policy/policy-engine",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-05: the Cedar semantics this epic adopts an engine for (4.12.0, run not cited) DEFAULT DENY: an empty policy set denies, so nothing is permitted by omission",
+        "P2-05: the Cedar semantics this epic adopts an engine for (4.12.0, run not cited) permits when a policy permits, so default-deny is not \"always deny\"",
+        "P2-05: the Cedar semantics this epic adopts an engine for (4.12.0, run not cited) FORBID OVERRIDES PERMIT, whatever order the two policies are written in",
+        "P2-05: the Cedar semantics this epic adopts an engine for (4.12.0, run not cited) EXPLAINS with the matched policy ids, which is what must[3] redacts",
+        "P2-05: the Cedar semantics this epic adopts an engine for (4.12.0, run not cited) reports a malformed policy set as a FAILURE rather than as a deny",
+        "P2-05 must[1]: the decision set is closed treats ask as NOT allowed, so a pending human answer cannot be acted on",
+        "P2-05 must[1]: the decision set is closed carries the policy-set digest on every decision, including a refusal",
+        "P2-05 must[2]: a plugin may narrow a decision and never widen one turns a permit into a deny when ONE constraint objects",
+        "P2-05 must[2]: a plugin may narrow a decision and never widen one turns an ask into a deny, because a constraint is a condition and not a prompt",
+        "P2-05 must[2]: a plugin may narrow a decision and never widen one leaves a deny denied, whatever the constraints say",
+        "P2-05 must[2]: a plugin may narrow a decision and never widen one is ORDER-INDEPENDENT: the same constraints in any order give the same decision",
+        "P2-05 must[2]: a plugin may narrow a decision and never widen one cannot be handed a permitting constraint at all: the type carries no such shape",
+        "P2-05 must[2]: a plugin may narrow a decision and never widen one records every constraint reason even when the decision was already deny",
+        "P2-05 must[2]: a plugin may narrow a decision and never widen one leaves a permit permitted when no constraint objects, so the rule is not a constant",
+        "P2-05 acceptance[2]: losing the provider denies by name denies with policy-unavailable rather than falling open",
+        "P2-05 acceptance[2]: losing the provider denies by name names WHICH policy set it could not reach, so a replay can tell the two failures apart"
+      ],
+      "files": [
+        "packages/policy/policy-engine/src/types.ts",
+        "packages/policy/policy-engine/src/evaluate.ts",
+        "packages/policy/policy-engine/src/index.ts",
+        "packages/policy/policy-engine/tests/monotonic.spec.ts",
+        "packages/policy/policy-engine/tests/cedar-conformance.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-11T12:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "e3004c927628128c91d5ad61b9ebf28930bee721",
+        "testsDiscovered": 16
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations of `src/evaluate.ts`, each run against this argv and restored byte-identical. (M54b) the short-circuit reads `effect !== 'permit'` instead of `=== 'deny'`, so an `ask` survives an objecting constraint. (M55) the constraint loop `break`s at the first objection. (M56) `decisionWhenUnavailable` returns `ask` instead of `deny`. (M57) `isImmediatelyAllowed` returns `effect !== 'deny'`, the plausible wrong reading.",
+        "failureSummary": "M54b reddens exactly the ask-becomes-deny case. M55 reddens two: order-independence, and the case that requires every constraint reason to be recorded for the audit even after a deny. M56 reddens the acceptance[2] refusal case. M57 reddens the closed-set case that pins `ask` as NOT allowed. Controls sit beside each: a permit with silent constraints stays permitted, and a reversible-path analogue — the deny-stays-denied case — passes under all four, so a composer that denied everything could not satisfy the suite."
+      },
+      "note": "P2-05 Contract stage: the decision vocabulary and the monotonic composition rule, with NO engine imported by this package's source.\n\nTHE CLAUSE THIS STAGE OWNS is must[2]'s 'plugins may only add constraints, never widen'. It is structural rather than tested-into: `PolicyConstraint` is `(request) => string | undefined`, so there is no value a plugin can return that carries a permit. Order-independence follows from that, and the case asserting it names the counter-example — `dsh-permission-rules` resolves ordered allow/deny rules by FIRST MATCH, so under that shape the outcome depends on which of two independently installed plugins loaded first.\n\nTHE FIVE INPUTS are all required, including `world` in its `absent` form. `ExecutionWorld` is P3-01's and does not exist; the slot is declared so a request carries the shape must[0] names and so P3-01 landing is a type change rather than a vocabulary change (BLOCKED-178, §12.46-B: rule half here, producer half there). Context facts are a closed enumeration mirroring `workspace-trust`'s own `TrustState` plus the permission posture, rather than a fact bag that would make adding a fact a silent policy change.\n\nTHE CEDAR CASES ARE IN THIS STAGE ON PURPOSE. The make-vs-use record's argument for adopting an engine is that forbid-overrides-permit, default-deny and a matched-policy explain are Cedar's semantics; the preFlight recorded them `differs` (unprobed) rather than carrying them from the sheet. `tests/cedar-conformance.spec.ts` runs them against @cedar-policy/cedar-wasm 4.12.0, which moves that row to `ok`. The package's SOURCE still imports no engine — Cedar is a devDependency of the tests, which is what a dependency probe is.\n\nOne fact those cases pinned that a provider must not get wrong: submitted as a source STRING, Cedar assigns generated ids (`policy0`, `policy1`) and an `@id(...)` annotation does NOT become the id the explain reports. A provider must submit the id-to-source map, or must[3]'s audit trail names policies nobody wrote. Also measured: Cedar reports `deny`/`allow` in lower case, and a malformed policy set comes back as `type: 'failure'` rather than as a deny — which is the distinction acceptance[2] rests on."
     }
   ]
 }
