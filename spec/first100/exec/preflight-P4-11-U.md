@@ -36,6 +36,8 @@ Retries are counted **per session**, and `policy.maxRetries` is compared against
 | MCP client (`mcp-client/src/connection.ts`) | `reconnect.maxAttempts` per OUTAGE | **no run-attached retry exists** — see below |
 | message-bus outbox | its own dead-letter budget | out of scope by ruling (§12.64) |
 
+**§12.64's original wording is kept and marked, not replaced.** It read that the MCP client would charge "retries and reconnects made FOR a run action". That is **overturned by measurement**, and the original stays on record so a reader can see what was ruled and why it did not survive contact with the code.
+
 **The MCP client has nothing to charge, measured rather than assumed.** Every `retry`/`attempt` in `packages/mcp/mcp-client/src` is the connection supervisor's, and `connection.ts` contains **zero** references to an agent, an execution or a run. A reconnect is not work redone for a run: it restores a server process, one supervisor per plugin instance, and the same reconnect serves every run using that server. Charging it to whichever run happened to be active would make one run pay for another's outage.
 
 The call path is the opposite: `tools.ts` HAS `exec.agent`, so a run is resolvable there — and it performs **no retry at all**. A failed MCP tool call returns once.
