@@ -7,7 +7,7 @@ kind: "package-reference"
 
 [English](README.md) | 中文
 
-## 摘要
+## 概述
 
 `dsh-retry-cockatiel` 挂载 `ctx.circuitBreaker`,即 [`@deepseek-ai/dsh-retry`](../retry/README.zh.md) 声明的服务。`cockatiel` 拥有全部机制——连续失败计数、熔断时长、半开探测——依据 make-vs-use 账本对它记下的 `adapt` 裁定。本包只拥有两个属于本 harness 的决策:**哪些目的地是彼此独立的**,以及**哪些失败该算在端点头上**。
 
@@ -18,7 +18,7 @@ kind: "package-reference"
 - [由分类器决定什么算数](#the-classifier-decides-what-counts)
 - [Model Experience](#model-experience)
 - [已知局限与后续工作](#known-limitations-and-deferred-work)
-- [Dev Note](#dev-note)
+- [开发备注](#dev-note)
 
 -----
 
@@ -54,6 +54,6 @@ kind: "package-reference"
 - **`openMs` 是固定时长,不是退避曲线。** `cockatiel` 支持逐次增长的熔断时长;本 Provider 只传一个时长,因为没有部署要求调一条曲线,而一个数字才是操作者能推理的东西。
 
 <a id="dev-note"></a>
-## Dev Note
+## 开发备注
 
 本 Provider 把 policy 存在 `private readonly` 映射里,而不是 `#private` 字段。Cordis 交给调用方的是 Service 代理,方法里的 `this` 并非实例,`#private` 访问会抛 `Receiver must be an instance of class …`。`@deepseek-ai/dsh-lease` 的 store 出于同样原因写法相同。

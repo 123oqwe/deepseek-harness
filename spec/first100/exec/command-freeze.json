@@ -10198,6 +10198,53 @@
         "mutationDescription": "The same mutation as C's, run against the Fault matrix: `decideResume` drops its `!entry.verified` arm, restored byte-identical.",
         "failureSummary": "`npx vitest run packages/collaboration/workflow-journal/tests/resume-fault-matrix.e2e.spec.ts` ->\n     x fault boundary 03 a completed but unverified step is re-run 6ms\n      Tests  1 failed | 18 passed (19)\n\nBoundary 03 is where the matrix enumerates this failure; C's file names the same rule as a decision. One mutation, two different cases in two different files -- the evidence that splitting the spec gave C and F distinct subjects rather than two names for one command."
       }
+    },
+    {
+      "epic": "P4-09",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-09",
+        "stage": "U"
+      },
+      "supplementSeq": 5,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts",
+        "packages/subagent/subagent/tests/service.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-09 must[3]: a nested run can spawn an agent at all runs an agent INSIDE a nested run and settles, which no case asked before",
+        "P4-09 must[3]: a nested run's children inherit its DECAYED capability token narrows a child of a nested run to the definition's declaration",
+        "P4-09 must[3]: a nested run's children inherit its DECAYED capability token grants nothing a nested declaration names beyond the run above it",
+        "P4-09 must[3]: a nested run's children inherit its DECAYED capability token spawns a child that still gets a derived token after the launcher session ended",
+        "P4-09 must[3]: a nested run's children inherit its DECAYED capability token is NOT cancelled when the launching run is, while a nested sibling IS",
+        "P4-09 must[3]: a nested run's children inherit its DECAYED capability token IS terminated by an explicit cancel of its own id",
+        "P4-09 must[3]: a nested run's children inherit its DECAYED capability token DISPOSES its own agent once it reaches a terminal state, leaking no session",
+        "P4-09 must[3]: a nested run's children inherit its DECAYED capability token REFUSES to start when the launcher cannot delegate, rather than starting without authority",
+        "subagent descriptors reads back every field its own schema permits, in both modes"
+      ],
+      "files": [
+        "packages/workflow/workflow-worker-thread/src/index.ts",
+        "packages/workflow/workflow-worker-thread/src/host.ts",
+        "packages/subagent/subagent/src/descriptor.ts",
+        "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts",
+        "packages/subagent/subagent/tests/service.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-10T08:20:00.000Z",
+      "dryRunProof": {
+        "treeSha": "bd4f9395f964b25ae2a8d9cff13d38b74716c6d1",
+        "testsDiscovered": 58
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations, run against this exact argv and each restored byte-identical (git diff empty after). (M36) `startDetached` launches with `request.parent` instead of the handle it created, i.e. the detached run borrows the LAUNCHER's agent while still minting its own session and token. (M37) `parseSubagentDescriptor` stops rebuilding `delegatingSession`, leaving it on the whitelist so the field is still legal to persist and simply does not survive a read.",
+        "failureSummary": "M36 reddens 1 of 58 -- `spawns a child that still gets a derived token after the launcher session ended` -- and only that one, which is the point: every other detached case still passes on the launcher's agent, so the suite locates the defect at the composition scope rather than reporting a general breakage. M37 reddens 1 of 58 -- `reads back every field its own schema permits, in both modes` -- and nothing else, because the whitelist and the rebuild are two lists and only the round-trip case compares them."
+      },
+      "note": "P4-09 U supplement: the token slice, the detached slice and the persistent-descriptor slice, none of which any earlier supplement's argv reached -- U.2 and U.3 freeze the nesting cases that predate them.\n\nTHE ENGINE STOPPED REGISTERING AT ALL, and the failures said nothing about why. Declaring `agents` in `static inject` makes Cordis refuse to register the service in every composition that mounts no agent registry, including the seam's own suites: 53 failures reporting `unknown tool \"workflow\"` and `reading 'start' of undefined`, not one of them naming `inject`. `ctx.get('agents')` with an explicit refusal replaces it, so a composition without an agent registry says so at the call rather than by silently lacking the engine.\n\nA DETACHED RUN NEEDS ITS OWN AGENT, not just its own session id. `deriveChild` takes session IDs, so the token half is satisfiable without one -- I claimed exactly that from reading the code, and it is false of the COMPOSITION: an Agent is the scope its children are created in, so a child composed on the launcher's context dies with it (`cannot create effect on inactive context`) whatever token it holds. M36 is that claim as a mutation.\n\nTHE ROUND-TRIP CASE GUARDS TWO LISTS, not one field. `CONTINUABLE_DESCRIPTOR_KEYS` decides which fields are LEGAL to persist; `parseSubagentDescriptor` rebuilds field by field and thereby decides which SURVIVE a read. A field on the first and absent from the second is written, accepted, and read back as `undefined` with no error at either end -- which is what happened to `delegatingSession` on every cold resume while four other links were correctly wired. Reading the code did not find it; a probe above the derivation did. The case drives its payload from the exported field list so a later field cannot be covered by omission, and asserts every declared field has a sample before comparing."
     }
   ]
 }

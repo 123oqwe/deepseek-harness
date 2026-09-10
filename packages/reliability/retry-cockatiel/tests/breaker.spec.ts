@@ -103,6 +103,34 @@ describe('P4-11 circuit breaker provider', () => {
     expect(stub.calls).toBe(4)
   })
 
+  it('unloads and rolls back: the service goes with its fiber, and a remount starts closed', async () => {
+    const ctx = new Context()
+    const fiber = await ctx.plugin(CockatielCircuitBreaker, { consecutiveFailures: 3, openMs: 30_000 })
+    expect(ctx.get('circuitBreaker')).toBeDefined()
+
+    const stub = countingStub(async () => { throw serverFailure() })
+    const service = ctx.circuitBreaker
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      await expect(service.execute(DEEPSEEK, stub.run, classify)).rejects.toBeInstanceOf(LlmError)
+    }
+    await expect(service.execute(DEEPSEEK, stub.run, classify)).rejects.toBeInstanceOf(BreakerOpenError)
+
+    // Disposing the fiber must take the registration with it -- a capability
+    // whose provider cannot be unloaded cannot be replaced by another.
+    await fiber.dispose()
+    expect(ctx.get('circuitBreaker')).toBeUndefined()
+
+    // A remount is a NEW breaker, not the old one's state resurfacing: the
+    // policies live on the instance, so the destination that was open above is
+    // closed here and the operation runs again. Asserting the count is what
+    // distinguishes a real rollback from a service that merely re-registered
+    // over its own retained map.
+    await ctx.plugin(CockatielCircuitBreaker, { consecutiveFailures: 3, openMs: 30_000 })
+    const alive = countingStub(async () => 'ok')
+    await expect(ctx.circuitBreaker.execute(DEEPSEEK, alive.run, classify)).resolves.toBe('ok')
+    expect(alive.calls).toBe(1)
+  })
+
   it('returns the caller its own error, not a breaker-internal one', async () => {
     const service = await breaker()
     const original = serverFailure()

@@ -7,7 +7,7 @@ kind: "package-reference"
 
 [English](README.md) | 中文
 
-## 摘要
+## 概述
 
 `dsh-retry` 交付 Epic P4-11 所统一的决策:一次失败是否根本允许重试,以及一次尝试是否花费 run 的预算。`src/classify.ts` 承载分类法与 hedge 规则;`src/budget.ts` 承载 run 全局的记账;`tests/retry.spec.ts` 以 13 条用例覆盖二者。`src/index.ts` 重新导出它们且不声明自己的运行时值,因此导入本包不执行任何代码。
 
@@ -19,7 +19,7 @@ registry 的问题陈述是:多个层各自决定可重试性,它们的上限于
 - [must[3]:由 ledger 决定一个副作用是否可以再次发出](#must3-the-ledger-decides-whether-an-effect-may-be-sent-again)
 - [Model Experience](#model-experience)
 - [已知局限与后续工作](#known-limitations-and-deferred-work)
-- [Dev Note](#dev-note)
+- [开发备注](#dev-note)
 
 -----
 
@@ -64,7 +64,7 @@ registry 的问题陈述是:多个层各自决定可重试性,它们的上限于
 不发布 invariant 伴随包:本包不拥有任何两个观察者可能看法不同的关系——每个导出都是对其参数的纯函数。
 
 <a id="dev-note"></a>
-### Dev Note
+### 开发备注
 
 <details>
 <summary>维护者工作上下文——点击展开</summary>
