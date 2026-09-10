@@ -155,6 +155,16 @@ export type MigrationRefusal =
    * upgrade like any other.
    */
   | { readonly kind: 'backend-cannot-migrate'; readonly plugin: string }
+  /**
+   * This holder was superseded while the migration ran, so it did not swap.
+   *
+   * The holder is read back from the lease itself rather than derived: the
+   * lease is the one thing that knows who owns the work item now, and a second
+   * answer computed here could disagree with it. Absent when the lease has
+   * simply expired and nobody holds the item — reported as the absence it is
+   * rather than as a holder nobody can name.
+   */
+  | { readonly kind: 'superseded'; readonly holder?: string }
 
 /** An admitted upgrade path, or the reason it was refused. */
 export type UpgradePlan =

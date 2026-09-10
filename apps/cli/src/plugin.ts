@@ -335,7 +335,19 @@ async function runUnderLease(
     environment.migration,
     async (plugin) => { await rm(upgradeRecordPath(dshHomePath(), plugin), { force: true }) },
   )
-  for (const plugin of recovered) {
+  if (recovered.kind === 'unrecoverable') {
+    // Stop here, with nothing installed. Which plugins pnpm would move is not
+    // known until after it runs, so proceeding risks putting new code on top
+    // of the half-swapped data this pass could not undo — acceptance[0]'s
+    // mixed state, manufactured by the recovery step meant to prevent it.
+    process.stderr.write(
+      `${NAME}: ${recovered.plugin} was left mid-upgrade and could not be recovered: ${recovered.detail}\n`
+      + `${NAME}: nothing was installed. Restore that plugin's rollback target, or reinstall it from its `
+      + 'pre-upgrade export, then re-run this command\n',
+    )
+    return 1
+  }
+  for (const plugin of recovered.plugins) {
     process.stderr.write(`${NAME}: recovered an interrupted upgrade of ${plugin} before installing\n`)
   }
 

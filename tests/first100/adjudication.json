@@ -1163,7 +1163,7 @@
   },
   "deliverablePathPatches": {
     "status": "ADJUDICATED",
-    "count": 47,
+    "count": 48,
     "note": "Maintainer-approved amendments to an epic's declared deliverable path where the byte-locked registry.epics[].files[]/stages[].files path (extracted verbatim from the pinned planning sources, itself frozen to the baseline SHA current when the source was authored) collides with an unrelated existing artifact discovered during implementation, or is otherwise provably unbuildable as declared (BLOCKED-012's class: a forced same-stage deviation, e.g. a real dependency cycle). The registry path stays byte-locked and unedited; this overlay records the approved substitute path a Writer must target instead. A patch never re-scopes the epic's must/acceptance/nonGoals clauses -- only the on-disk path of the named deliverable. An entry's object key is unique per patch (never reused); `epic` names the real epic id when it differs from the key (BLOCKED-012 entries use a descriptive key since one epic/stage can carry more than one patch).",
     "entries": {
       "P2-01-U-agent-identity-attachment": {
@@ -1586,6 +1586,16 @@
         "approvedPath": "packages/collaboration/taskboard/tests/claims.e2e.spec.ts",
         "reason": "SUBSTITUTION, BLOCKED-070's PREVENTION subclass -- fifth application (P4-06, P4-07, P4-08, P4-09). The declared file does not exist because this epic creates it, so writing it under the declared name would manufacture the archival error in the same commit that first writes it: `.e2e.ts` routes into vitest.e2e.config.ts, whose suites self-skip without an API key, while first100-exact-sha.yml runs the default config and would never observe the cases. Recorded BEFORE the first line. Local-behaviour classification: P5-11's clauses are task claim/lease/owner/verification fields, structured blackboard facts with provenance, keeping roles out of the primitives, single-winner concurrent claim, receipt-driven status advance, and cycle refusal at submission -- none requires a model or external API.",
         "approvedAt": "2026-09-06",
+        "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070"
+      },
+      "P1-10-F-rollback-e2e-not-yet-created": {
+        "epic": "P1-10",
+        "stage": "F",
+        "declaredPath": "packages/plugin/plugin-migrations/tests/rollback.e2e.ts",
+        "approvedPath": "packages/plugin/plugin-migrations/tests/rollback.e2e.spec.ts",
+        "reason": "SUBSTITUTION, BLOCKED-070's PREVENTION subclass -- sixth application of the precedent set by P4-06 and continued by P4-07, P4-08, P4-09 and P5-11. The declared file does not exist because this epic creates it, so writing it under the declared name would manufacture the archival error in the same commit that first writes it: `.e2e.ts` routes into vitest.e2e.config.ts (include: 'packages/*/*/tests/**/*.e2e.ts'), whose suites self-skip without an API key, while first100-exact-sha.yml runs the default config, whose testIncludes is `*.spec.{ts,tsx}` only, and would never observe the cases. Recorded BEFORE the first line is written. Local-behaviour classification: P1-10's Fault clauses are a superseded holder refusing to swap and naming the holder the lease reports, recovery when the medium no longer holds what the record names, and a medium primitive failing mid-transaction. Every one is decided from a fake facet and a fake lease -- none requires a model, a network or an external API, because what they assert is which primitive was called and what the live unit holds afterwards. `.e2e.spec.ts` keeps the e2e naming while entering the default channel and cannot double-run, since vitest.e2e.config.ts's include requires a filename ending `.e2e.ts`. The consumer-half boundaries live in apps/cli/tests/plugin-migration-fault-matrix.spec.ts, which needs no patch: their subject is apps/cli/src/plugin-migration.ts and a package test cannot import an app, so they are recorded through files-overlay as ordinary test citations.",
+        "approvedAt": "2026-09-10",
+        "approvedBy": "gq-92",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070"
       }
     }

@@ -120,6 +120,10 @@ function heldLease(overrides: Partial<RunLease> = {}): RunLease {
     renew: () => undefined,
     mayWrite: () => true,
     release: () => {},
+    // Present because `RunLease` has it: the fencing refusal reads the holder
+    // back through it. A stub missing a method the interface declares compiles
+    // only because of the cast below, and then fails at the call.
+    currentLease: () => undefined,
     ...overrides,
   } as unknown as RunLease
 }
@@ -242,7 +246,14 @@ describe('P1-10 must[1]: the lease is what makes the switch safe', () => {
     const backend = new RecordingBackend()
     const { request: upgrade } = request(backend, { lease: heldLease({ mayWrite: () => false }) })
 
-    expect(await runUpgrade(upgrade)).toEqual({ upgraded: false, failedAt: 'switch' })
+    // The refusal is NAMED as of the Fault stage: this fake's lease reports no
+    // current holder, so `superseded` carries none — which is the absence
+    // reported honestly rather than a holder invented for the message.
+    expect(await runUpgrade(upgrade)).toEqual({
+      upgraded: false,
+      failedAt: 'switch',
+      refusal: { kind: 'superseded' },
+    })
     // The live unit is untouched, and the migrated copy is discarded rather
     // than left for the new holder to trip over.
     expect(rows(backend.live)).toEqual(['original'])

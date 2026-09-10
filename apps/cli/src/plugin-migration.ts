@@ -384,6 +384,14 @@ function describeRefusal(refusal: MigrationRefusal): string {
   if (refusal.kind === 'confirmation-mismatch') {
     return `${refusal.kind}: --confirm named ${refusal.supplied}, but this path is ${refusal.expected}`
   }
+  if (refusal.kind === 'superseded') {
+    // The holder is the fact that says what to do about it: wait for that
+    // process, or find out why it is still running. Falling through to the
+    // bare kind would drop the one thing this refusal carries.
+    return refusal.holder === undefined
+      ? `${refusal.kind}: this upgrade's lease lapsed before it could swap`
+      : `${refusal.kind}: ${refusal.holder} holds the upgrade lease now`
+  }
   return refusal.kind
 }
 
@@ -481,15 +489,16 @@ export function changedVersions(
  * @param plugins - the plugins to check.
  * @param facet - the backend's migration facet, absent when it cannot migrate.
  * @param clearRecord - removes one plugin's upgrade record once it is undone.
- * @returns the plugins that needed recovery, for the caller to report.
+ * @returns the plugins that needed recovery, or the one that could not be
+ *   recovered — which stops the command before anything is installed.
  */
 export async function recoverInterruptedUpgrades(
   harnessHome: string,
   plugins: readonly string[],
   facet: MigrationFacet | undefined,
   clearRecord: (plugin: string) => Promise<void>,
-): Promise<string[]> {
-  if (facet === undefined) return []
+): Promise<RecoveryOutcome> {
+  if (facet === undefined) return { kind: 'recovered', plugins: [] }
   const recovered: string[] = []
   for (const plugin of plugins) {
     const record = await readUpgradeRecord(harnessHome, plugin)
@@ -497,12 +506,40 @@ export async function recoverInterruptedUpgrades(
     // The transaction owns what a half-done upgrade means and what undoing it
     // requires; this only decides which plugins to ask about and clears the
     // record afterwards.
-    if (!await recoverUpgrade(facet, record)) continue
+    try {
+      if (!await recoverUpgrade(facet, record)) continue
+    } catch (failure: unknown) {
+      // Stop the whole command, before the package manager runs. Which
+      // plugins pnpm would move is not known yet — `changedVersions` reads
+      // that afterwards — so continuing past a plugin left mid-swap risks
+      // installing new code over exactly the half-swapped data acceptance[0]
+      // forbids. Nothing has moved yet, so refusing here costs nothing and is
+      // wholly reversible; per-plugin isolation belongs after pnpm, where the
+      // change set is known.
+      return {
+        kind: 'unrecoverable',
+        plugin,
+        detail: failure instanceof Error ? failure.message : String(failure),
+      }
+    }
     await clearRecord(plugin)
     recovered.push(plugin)
   }
-  return recovered
+  return { kind: 'recovered', plugins: recovered }
 }
+
+/**
+ * How the pre-install recovery pass ended.
+ *
+ * A plugin that cannot be recovered is not one failure among several: the
+ * command has not installed anything yet, and it must not, so the outcome is a
+ * refusal for the caller to report rather than a list with a gap in it.
+ */
+export type RecoveryOutcome =
+  /** Every interrupted upgrade found was undone; these are the ones that were. */
+  | { readonly kind: 'recovered'; readonly plugins: readonly string[] }
+  /** One plugin was left in a state this pass could not undo, and why. */
+  | { readonly kind: 'unrecoverable'; readonly plugin: string; readonly detail: string }
 
 /** What a caller must supply to undo the CODE half of a failed upgrade. */
 export interface CodeRollback {

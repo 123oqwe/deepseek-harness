@@ -205,7 +205,16 @@ export async function runUpgrade(request: UpgradeRequest): Promise<UpgradeOutcom
     // another process owns this work item now and may already have acted.
     if (!request.lease.mayWrite(request.now())) {
       await facet.discard(migrated)
-      return { upgraded: false, failedAt: 'switch' }
+      // Named, and carrying whoever holds the item NOW, read back through the
+      // lease. An anonymous refusal tells an operator the upgrade stopped at
+      // `switch` and not that another process owns the work item, which is the
+      // one fact that says what to do about it.
+      const holder = request.lease.currentLease()?.holder
+      return {
+        upgraded: false,
+        failedAt: 'switch',
+        refusal: { kind: 'superseded', ...holder === undefined ? {} : { holder } },
+      }
     }
 
     const previous = await facet.switchIn(migrated)

@@ -18,7 +18,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-import { resolvePluginUpgrade } from '../src/plugin-migration.ts'
+import { recoverInterruptedUpgrades, resolvePluginUpgrade, upgradeRecordPath } from '../src/plugin-migration.ts'
+import type { MigrationFacet } from '@deepseek-ai/dsh-storage'
 
 /** Materialize a profile holding one installed package with the given `dsh` field. */
 async function installPackage(dshField: unknown, files: Record<string, string> = {}): Promise<string> {
@@ -62,7 +63,7 @@ describe('P1-10 Fault — the module a plugin ships', () => {
       'step-2.js': 'throw new Error("this module explodes on import")\n',
     })
 
-    const resolution = await resolvePluginUpgrade('notes-plugin', profileDir, MANIFEST.migrations)
+    const resolution = await resolvePluginUpgrade('notes-plugin', profileDir)
 
     expect(resolution).toMatchObject({ kind: 'refused', reason: 'unloadable-migration-module' })
   })
@@ -74,7 +75,7 @@ describe('P1-10 Fault — the module a plugin ships', () => {
     // to refuse it, with the plugin's data already snapshotted.
     const profileDir = await installPackage(MANIFEST, { 'step-2.js': DESCRIPTOR })
 
-    const resolution = await resolvePluginUpgrade('notes-plugin', profileDir, MANIFEST.migrations)
+    const resolution = await resolvePluginUpgrade('notes-plugin', profileDir)
 
     expect(resolution).toMatchObject({ kind: 'refused', reason: 'missing-migrate-export' })
   })
@@ -85,7 +86,7 @@ describe('P1-10 Fault — the module a plugin ships', () => {
     // one", which is the whole distinction 02 exists to make.
     const profileDir = await installPackage(MANIFEST, { 'step-2.js': 'export const unrelated = 1\n' })
 
-    const resolution = await resolvePluginUpgrade('notes-plugin', profileDir, MANIFEST.migrations)
+    const resolution = await resolvePluginUpgrade('notes-plugin', profileDir)
 
     expect(resolution).toMatchObject({ kind: 'refused', reason: 'missing-descriptor-export' })
   })
@@ -96,8 +97,85 @@ describe('P1-10 Fault — the module a plugin ships', () => {
     // mutation that a negative-only suite cannot tell from a correct guard.
     const profileDir = await installPackage(MANIFEST, { 'step-2.js': DESCRIPTOR + MIGRATE })
 
-    const resolution = await resolvePluginUpgrade('notes-plugin', profileDir, MANIFEST.migrations)
+    const resolution = await resolvePluginUpgrade('notes-plugin', profileDir)
 
     expect(resolution).toMatchObject({ kind: 'ready' })
+  })
+})
+
+/** A home holding one plugin's interrupted-upgrade record. */
+async function homeWithRecord(plugin: string, record: unknown): Promise<string> {
+  const home = await mkdtemp(join(tmpdir(), 'dsh-migration-recover-'))
+  const path = upgradeRecordPath(home, plugin)
+  await mkdir(join(path, '..'), { recursive: true })
+  await writeFile(path, JSON.stringify(record), 'utf8')
+  return home
+}
+
+const INTERRUPTED = {
+  plugin: 'notes-plugin',
+  from: '1',
+  to: '2',
+  pathDigest: 'digest',
+  snapshotHandle: 'snap-1',
+  previousHandle: 'previous-1',
+}
+
+/** A facet whose rollback either works or reports the target is gone. */
+function recoveringFacet(gone: boolean): MigrationFacet {
+  return {
+    stampedVersion: async () => 1,
+    digestUnit: async () => 'sha256-x',
+    readSnapshot: async () => ({ version: 1, content: { global: null, tables: {} } }),
+    exportUnit: async () => {},
+    snapshotUnit: async () => ({ unit: 'notes', handle: 'snap-1' }),
+    materializeMigrated: async () => ({ unit: 'notes', handle: 'migrated-1' }),
+    switchIn: async () => ({ unit: 'notes', handle: 'previous-1' }),
+    rollbackTo: async (previous: { readonly handle: string }) => {
+      if (gone) throw new Error(`rollback target ${previous.handle} is gone`)
+    },
+    discard: async () => {},
+  } as unknown as MigrationFacet
+}
+
+describe('P1-10 Fault — recovery runs BEFORE anything is installed', () => {
+  it('fault boundary 13 a plugin that cannot be recovered stops the command by NAME, with nothing cleared', async () => {
+    // Ruled deliberately: before pnpm runs, which plugins would move is not
+    // known, so continuing past a half-swapped plugin risks installing new
+    // code onto exactly the data acceptance[0] forbids being mismatched.
+    // Refusing here costs nothing, because nothing has moved yet.
+    const home = await homeWithRecord('notes-plugin', INTERRUPTED)
+    const cleared: string[] = []
+
+    const outcome = await recoverInterruptedUpgrades(
+      home,
+      ['notes-plugin'],
+      recoveringFacet(true),
+      async (plugin) => { cleared.push(plugin) },
+    )
+
+    expect(outcome).toMatchObject({ kind: 'unrecoverable', plugin: 'notes-plugin' })
+    expect((outcome as { detail: string }).detail).toMatch(/rollback target previous-1 is gone/u)
+    // The record is NOT cleared: it is the only thing that still says what was
+    // half-done, and an operator repairing this needs it.
+    expect(cleared).toEqual([])
+  })
+
+  it('fault boundary 14 a recovery that succeeds reports the plugin and lets the command continue', async () => {
+    // Control for 13. Without it, a `recoverInterruptedUpgrades` mutated to
+    // refuse everything would satisfy 13 and stop every install in the
+    // product — the over-broad mutation a negative-only pair cannot catch.
+    const home = await homeWithRecord('notes-plugin', INTERRUPTED)
+    const cleared: string[] = []
+
+    const outcome = await recoverInterruptedUpgrades(
+      home,
+      ['notes-plugin'],
+      recoveringFacet(false),
+      async (plugin) => { cleared.push(plugin) },
+    )
+
+    expect(outcome).toEqual({ kind: 'recovered', plugins: ['notes-plugin'] })
+    expect(cleared).toEqual(['notes-plugin'])
   })
 })
