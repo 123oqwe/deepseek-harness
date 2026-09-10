@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-10T05:40:26.488Z",
-  "inputDigest": "bbc8a19cb2af36afe0cc49322c885be7b31b069f0d9271ccef0b4f6fc5197e36",
+  "lastUpdatedUtc": "2026-09-10T11:01:04.703Z",
+  "inputDigest": "617b14a1f4a5ede22af3d5a2d4dcb706ac2c738cabd79f179ca98fab9da4521c",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -5624,10 +5624,10 @@
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34019035439",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs/first100-vitest-report-00815e8acc4d839f66ce7bec504274c855a664ba/vitest-report.json",
-          "observationSha256": "629f7e65d2627100577fbd34941a489410d1f61d3e1e42d4f86fc168502c4c60",
+          "candidateSha": "874db203f09ddc5be6e2ce6f6700e89a2c563f41",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34463140893",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-874db203f0/first100-vitest-report-874db203f09ddc5be6e2ce6f6700e89a2c563f41/vitest-report.json",
+          "observationSha256": "2a45e4805904f00a0b87c109e2031efdb3ccc8be3aa76b28d449ecc1fdeaf5ef",
           "expectCasesMatched": [
             "caps the child at its decayed agent budget, not at the deployment ceiling",
             "never raises the child above the parent worker's own total",
@@ -5637,10 +5637,7 @@
             "fails the parent when the policy says so",
             "continues the parent but still RECORDS the failure"
           ],
-          "absorbedFlakes": [
-            "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions"
-          ],
-          "capturedAtUtc": "2026-09-06T07:57:23.168Z"
+          "capturedAtUtc": "2026-09-10T11:00:57.031Z"
         },
         "F": {
           "status": "GREEN",
@@ -5724,12 +5721,9 @@
           "capturedAtUtc": "2026-09-08T15:10:31.393Z"
         }
       },
-      "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba",
+      "candidateSha": "874db203f09ddc5be6e2ce6f6700e89a2c563f41",
       "independentVerdict": "WITHHELD_INCOMPLETE_EPIC",
-      "openFindings": [
-        "BLOCKED-100: must[2] (detached) has no implementation — across packages/workflow/*/src and packages/run/*/src every `detach` occurrence is `detachInputSignal` (removing an event listener); the word \"detached\" appears once in the whole family, in a nesting.ts comment stating a detached run is NOT nested. Verified 2026-09-06 with a positive control: the same pattern does find `detachInputSignal`.",
-        "BLOCKED-100: must[3] (nested) has decision functions covering ONE of the clause's three nouns, and no production caller. planNestedRun/inheritWorkerLimits/applyChildFailure/cancelPropagationForNested are real and tested, but every reference outside workflow-registry/ is in nested-budget.spec.ts; runtime.ts installs globals agent/parallel/pipeline/phase/log/args and no `workflow`, with a TRIPWIRE case pinning typeof workflow === 'undefined'. The clause names budget, capability token and trace; nesting.ts and types.ts contain zero occurrences of capability/capabilityToken/trace/traceId (the five `token` hits are tokensRemaining / token-budget-exhausted — a token BUDGET, not a capability token)."
-      ],
+      "openFindings": null,
       "status": "BLOCKED_ON_ACCEPTANCE",
       "acceptedEvidence": null,
       "closedFindings": [
@@ -5739,6 +5733,16 @@
           "closedAtUtc": "2026-09-08T15:12:28.634Z",
           "reopenedAtUtc": "2026-09-08T16:58:21.358Z",
           "reopenedReason": "4.4c: the closure answered only that planNestedRun has a production caller, which is not one of the three nouns the finding named. Re-measured at 7e21e654e9 — budget: PRESENT (workflow-registry/src/nesting.ts derives a nested run's worker limits from its parent's budget). capability token: ZERO occurrences of capabilityToken/CapabilityToken across packages/workflow/*/src. trace: ZERO — the only trace <subcommand> [options] - record system behavior\n\ntrace record: record a trace file\n    $ trace record myworkload\n        [... Ctrl-C to stop ...]\n    $ trace record myworkload --Logging:enable-logs --end-after-duration 5s\n    $ trace record myworkload --plan profile --omit Symbolication\n    $ trace record myworkload --end-on-notification stop-myworkload-trace\n        [... elsewhere `notifyutil -p stop-myworkload-trace` ...]\n    $ trace record /tmp/trace-path.atrc --compress\n\ntrace amend: add data to a file\n    $ trace amend myworkload-003.atrc --add Symbolication\n\ntrace trim: trim a file based on kdebug event times\n    $ trace trim myworkload-002.atrc --from +1s --to +2s\n\ntrace providers: print information about Logging, Symbolication, etc.\n\ntrace plans: print detailed information about tracing approaches\n\nSee `man trace` for more information. hits are a local Map holding invariant state in tool-workflow/src/invariant.ts:56, not a trace context. One of three is not a closure."
+        },
+        {
+          "finding": "BLOCKED-100: must[2] (detached) has no implementation — across packages/workflow/*/src and packages/run/*/src every `detach` occurrence is `detachInputSignal` (removing an event listener); the word \"detached\" appears once in the whole family, in a nesting.ts comment stating a detached run is NOT nested. Verified 2026-09-06 with a positive control: the same pattern does find `detachInputSignal`.",
+          "reason": "Re-measured at 874db203f0 noun by noun (4.4c). The finding's own claim is now false: 'detached' is implemented, not just absent as a word. Own agent handle: packages/workflow/workflow-worker-thread/src/index.ts:375 startDetached mints the run's OWN SessionId and calls ctx.get('agents').create({sessionId, meta:{parentSession}}) at :404, and a composition with no agent registry is REFUSED by name at :398 rather than silently degrading; authority is derived while the launcher still holds a token (tokens.deriveChild + whenSessionToken at :413-:421) and a run that cannot derive it is torn down and refused at :425-:430, so a detached run either holds its authority or does not exist. Reach-by-id: attach(runId) is declared on the seam at packages/workflow/workflow/src/index.ts:236 and implemented at workflow-worker-thread/src/index.ts:482; the run is registered in liveRuns at :756 BEFORE workflow/start fires at :758, which is the defect this stage found and fixed - a listener on that event is the first caller with a reason to ask, and registering afterwards returned undefined to exactly that caller. Settled detached runs are kept and delivered once (settledDetached at :773-:776); ownership teardown is the run's, at :766. Descriptor round-trip: packages/subagent/subagent/src/descriptor.ts SUBAGENT_DESCRIPTOR_FIELDS drives the round-trip from the schema rather than from a hand-copied list. Resume takes the lease before starting a worker (one launch() body for both entry points, index.ts:594 onward), so a resumed run cannot put two masters on one id. RESIDUAL, stated rather than folded in: the shipped tool Consumer (packages/workflow/tool-workflow/src/index.ts:284) still calls start(), never startDetached or attach - the seam is real and the model-visible surface does not yet reach it.",
+          "closedAtUtc": "2026-09-10T11:00:35.089Z"
+        },
+        {
+          "finding": "BLOCKED-100: must[3] (nested) has decision functions covering ONE of the clause's three nouns, and no production caller. planNestedRun/inheritWorkerLimits/applyChildFailure/cancelPropagationForNested are real and tested, but every reference outside workflow-registry/ is in nested-budget.spec.ts; runtime.ts installs globals agent/parallel/pipeline/phase/log/args and no `workflow`, with a TRIPWIRE case pinning typeof workflow === 'undefined'. The clause names budget, capability token and trace; nesting.ts and types.ts contain zero occurrences of capability/capabilityToken/trace/traceId (the five `token` hits are tokensRemaining / token-budget-exhausted — a token BUDGET, not a capability token).",
+          "reason": "Re-measured at 874db203f0 noun by noun (4.4c). Production caller: planNestedRun is called from the host's nested-start path at packages/workflow/workflow-worker-thread/src/index.ts:556 - not only from nested-budget.spec.ts - and its refusal is rendered back to the worker at :573. Budget: the parent's budget and ancestor chain come from this.budgets.get(parent.id) (:552, refused by name at :554 when absent), and planned.budget/planned.workerLimits are handed to launch() at :585-:587. Capability bound: planned.toolBound is passed into launch (:588), carried on the run (:740) and becomes the worker's real tool filter at packages/workflow/workflow-worker-thread/src/host.ts:511 (toolFilter: { allow: this.toolBound }) - and the bound comes from the DEFINITION resolved by digest (resolved.definition.tools at :571), never from the worker's request, so a nested script cannot choose its own authority. The child executes the registered body for the resolved digest (:575-:577), so what runs is what the digest names. Trace: the nested run inherits the parent's trace context and manufactures none when absent (:583-:584); the producer half is BLOCKED-173 (P7-07) under the SS12.46-B split, so the trace noun is scheduled elsewhere rather than unmet here.",
+          "closedAtUtc": "2026-09-10T11:00:48.390Z"
         }
       ]
     },
@@ -5832,14 +5836,65 @@
           "status": "NOT_RUN"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "874db203f09ddc5be6e2ce6f6700e89a2c563f41",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34463140893",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-874db203f0/first100-vitest-report-874db203f09ddc5be6e2ce6f6700e89a2c563f41/vitest-report.json",
+          "observationSha256": "2a45e4805904f00a0b87c109e2031efdb3ccc8be3aa76b28d449ecc1fdeaf5ef",
+          "expectCasesMatched": [
+            "P4-11 must[1]: the LLM layer charges the run, not the session stops retrying when the RUN budget is spent, below the policy’s own cap",
+            "P4-11 must[1]: the LLM layer charges the run, not the session charges a CHILD session’s retries to the PARENT’s run, so allowances do not stack",
+            "P4-11 must[1]: the LLM layer charges the run, not the session does not charge a substitute key when no run can be resolved",
+            "P4-11 must[1]: the LLM layer charges the run, not the session lets the policy decide when the run budget is the looser of the two",
+            "P4-11 must[2]: a failing endpoint stops being called refuses the next call without reaching the adapter once the destination opens",
+            "P4-11 must[2]: a failing endpoint stops being called keeps calling a destination below the threshold",
+            "P4-11 must[2]: a failing endpoint stops being called does not open on a failure the classifier calls permanent",
+            "P4-11 must[2]: a failing endpoint stops being called opens one model without opening another on the same provider",
+            "P4-11 must[2]: a failing endpoint stops being called dispatches normally when no breaker is mounted",
+            "P4-11 must[1]: a retry is charged to the delegation ROOT run walks to the root and returns ITS run, not the retrying session’s",
+            "P4-11 must[1]: a retry is charged to the delegation ROOT run stops at the furthest ancestor this process can see",
+            "P4-11 must[1]: a retry is charged to the delegation ROOT run terminates on a circular chain instead of hanging a retry",
+            "P4-11 must[1]: one store, so two layers share a total by construction charges two different layers against ONE run total",
+            "P4-11 must[1]: one store, so two layers share a total by construction records nothing for a refusal, so a refused retry costs no budget"
+          ],
+          "capturedAtUtc": "2026-09-10T11:01:04.423Z"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "874db203f09ddc5be6e2ce6f6700e89a2c563f41",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34463140893",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-874db203f0/first100-vitest-report-874db203f09ddc5be6e2ce6f6700e89a2c563f41/vitest-report.json",
+          "observationSha256": "2a45e4805904f00a0b87c109e2031efdb3ccc8be3aa76b28d449ecc1fdeaf5ef",
+          "expectCasesMatched": [
+            "P4-11 Fault — retry decision boundary matrix enumerates at least twelve classification boundaries, each named once",
+            "P4-11 Fault — retry decision boundary matrix fault boundary 01 a 4xx that is not 408 or 429 is permanent, and names client-error",
+            "P4-11 Fault — retry decision boundary matrix fault boundary 02 408 is retryable, so \"4xx\" is not read as \"never\"",
+            "P4-11 Fault — retry decision boundary matrix fault boundary 04 a malformed request is invalid-input, not client-error",
+            "P4-11 Fault — retry decision boundary matrix fault boundary 05 a policy denial is policy-denied, distinct again",
+            "P4-11 Fault — retry decision boundary matrix fault boundary 06 a side-effecting attempt with NO ledger verdict is refused",
+            "P4-11 Fault — retry decision boundary matrix fault boundary 07 sent is refused: the request left and no receipt came back",
+            "P4-11 Fault — retry decision boundary matrix fault boundary 08 prepared is admitted: the request never left",
+            "P4-11 Fault — retry decision boundary matrix fault boundary 11 a failure carrying NO status at all is retryable — a timeout reaches here",
+            "P4-11 Fault — retry decision boundary matrix fault boundary 12 malformed outranks the ledger, because the request is wrong either way",
+            "P4-11 Fault — retry decision boundary matrix fault boundary 13 a hedged attempt spends no budget, and a retry does",
+            "P4-11 Fault — retry decision boundary matrix fault boundary 14 maxRetries 0 forbids retrying, rather than meaning unlimited",
+            "P4-11 Fault — retry decision boundary matrix fault boundary 15 the delay budget refuses AT the boundary, and the refusal costs nothing",
+            "P4-11 Fault — retry decision boundary matrix fault boundary 17 a circular chain terminates instead of hanging the retry",
+            "P4-11 Fault — retry decision boundary matrix fault boundary 18 a resolved charge is remembered, so a vanished parent cannot reset it",
+            "P4-11 Fault — retry decision boundary matrix fault boundary 19 an unresolvable charge is remembered too, so a broken chain is not re-walked",
+            "P4-11 Fault — retry decision boundary matrix fault boundary 20 the store exposes no read/write pair, which is why no update can be lost",
+            "P4-11 Fault — endpoint-health boundary matrix enumerates the endpoint-health boundaries, each named once",
+            "P4-11 Fault — endpoint-health boundary matrix fault boundary 21 an endpoint REFUSAL counts: a 503 is the endpoint saying it is unwell",
+            "P4-11 Fault — endpoint-health boundary matrix fault boundary 22 a TIMEOUT counts too: an endpoint that stopped answering is unwell",
+            "P4-11 Fault — endpoint-health boundary matrix fault boundary 23 a MALFORMED request does not: the request is wrong, not the endpoint",
+            "P4-11 Fault — endpoint-health boundary matrix fault boundary 24 an AUTH failure does not: a rejected credential says the caller is wrong",
+            "P4-11 must[1]: the LLM layer charges the run, not the session keeps charging the parent’s run after the parent agent is GONE"
+          ],
+          "capturedAtUtc": "2026-09-10T11:01:04.695Z"
         }
       },
       "supplements": {},
-      "candidateSha": "d19b70e6a0c6ad1a1a0619cdcaaf86067fe3172b",
+      "candidateSha": "874db203f09ddc5be6e2ce6f6700e89a2c563f41",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
