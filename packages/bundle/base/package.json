@@ -73,6 +73,8 @@
     "@deepseek-ai/dsh-plugin-package-inventory-deepseek": "workspace:^",
     "@deepseek-ai/dsh-pwsh-sandbox": "workspace:^",
     "@deepseek-ai/dsh-repeat-tool-reminder": "workspace:^",
+    "@deepseek-ai/dsh-retry": "workspace:^",
+    "@deepseek-ai/dsh-retry-cockatiel": "workspace:^",
     "@deepseek-ai/dsh-run": "workspace:^",
     "@deepseek-ai/dsh-sandbox-local": "workspace:^",
     "@deepseek-ai/dsh-sandbox-policy": "workspace:^",

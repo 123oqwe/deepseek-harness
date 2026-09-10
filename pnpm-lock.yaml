@@ -1257,6 +1257,12 @@ importers:
       '@deepseek-ai/dsh-repeat-tool-reminder':
         specifier: workspace:^
         version: link:../../guard/repeat-tool-reminder
+      '@deepseek-ai/dsh-retry':
+        specifier: workspace:^
+        version: link:../../reliability/retry
+      '@deepseek-ai/dsh-retry-cockatiel':
+        specifier: workspace:^
+        version: link:../../reliability/retry-cockatiel
       '@deepseek-ai/dsh-run':
         specifier: workspace:^
         version: link:../../run/run

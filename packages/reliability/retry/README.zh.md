@@ -17,6 +17,7 @@ registry 的问题陈述是:多个层各自决定可重试性,它们的上限于
 
 - [本包刻意不做的事](#what-this-package-deliberately-does-not-do)
 - [must[3]:由 ledger 决定一个副作用是否可以再次发出](#must3-the-ledger-decides-whether-an-effect-may-be-sent-again)
+- [组合](#composition)
 - [Model Experience](#model-experience)
 - [已知局限与后续工作](#known-limitations-and-deferred-work)
 - [开发备注](#dev-note)
@@ -48,6 +49,18 @@ registry 的问题陈述是:多个层各自决定可重试性,它们的上限于
 | *缺席* | **否** | 没有咨询过 ledger,这与"安全"不是一回事。 |
 
 最后一行值得明说:把"缺席"读作"安全",会让 must[3] 只在挂载了 ledger 的地方成立,而在其他任何地方悄悄不成立。
+
+<a id="composition"></a>
+## 组合
+
+`dsh-base` 以 `run-retry-usage` 行(`@deepseek-ai/dsh-retry/usage`)挂载这套记账,因此任何以 base 为底的 profile 上,一个 run 都只有一份预算,所有会重试的层都记在它上面。`llm-retry` 用 `ctx.get` 解析它,所以去掉该行的 profile 只是退回自己那套按会话计数的限额——即 P4-11 之前的行为——而不是启动失败。把它挂在共享 base 上,正是让 must[1] 在用户实际启动的 `dsh` 上**发生**,而不只是对愿意自行挂载的组合**可用**。
+
+两个出厂值都是 `Config` 字段,可按 profile 修改:
+
+| 字段 | 出厂值 | 依据 |
+|---|---|---|
+| `maxRetries` | 10 | 一个 run 跨所有层可以重做十次:到这个量级,run 已经明显是在打转,而不是在熬过一段短暂的不稳定。`llm-retry` 自己的单请求策略把一次请求的尝试次数压得远低于此,所以这条 run 级预算只在多次请求各自都重试时才会绑定。 |
+| `maxDelayBudgetMs` | 300000 | 一个 run 最多**等待**五分钟。只限次数的预算,会让一个 run 在退避里耗掉一小时却仍显得节制;这一条才是运维真正感受得到的界限。 |
 
 <a id="model-experience"></a>
 ## Model Experience

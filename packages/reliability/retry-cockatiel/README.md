@@ -16,6 +16,7 @@ English | [中文](README.zh.md)
 - [What a refusal is](#what-a-refusal-is)
 - [Keyed per destination](#keyed-per-destination)
 - [The classifier decides what counts](#the-classifier-decides-what-counts)
+- [Composition](#composition)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 - [Dev Note](#dev-note)
@@ -37,6 +38,17 @@ Narrowing this later to a provider key would leave the contract unchanged; widen
 ## The classifier decides what counts
 
 `execute` takes a `classify` callback and this package never inspects a raw error. Whether a failure means the ENDPOINT is unhealthy is [`classifyFailure`](../retry/README.md)'s decision applied to facts only the caller can read: a policy denial and a malformed request are permanent, and counting them would open a breaker on a working destination. A permanent failure passes straight through `cockatiel`'s predicate, which records neither a success nor a failure, so the breaker does not move.
+
+## Composition
+
+`dsh-base` mounts this package as the `circuit-breaker` row, so every base-backed profile — including the `dsh` a user starts — has a breaker. The consumer resolves it with `ctx.get`, so a profile that drops the row keeps the pre-P4-11 behaviour rather than failing; mounting it in the shared base is what makes the epic reach the product.
+
+Both shipped values are `Config` fields, changeable per profile:
+
+| field | shipped value | why that value |
+|---|---|---|
+| `consecutiveFailures` | 5 | `cockatiel`'s own `ConsecutiveBreaker` default, and nothing in this deployment argues for another: below it a transient blip opens a destination that is fine, above it a dead one keeps being called. Measured against `llm-retry`'s per-request cap, five consecutive COUNTED failures means at least two failed requests. |
+| `openMs` | 30000 | `cockatiel`'s own default open period: long enough that a restarting endpoint is not hammered, short enough that a recovered one is not written off for a turn. |
 
 ## Dev Note
 

@@ -16,6 +16,7 @@ kind: "package-reference"
 - [拒绝是什么](#what-a-refusal-is)
 - [按目的地记键](#keyed-per-destination)
 - [由分类器决定什么算数](#the-classifier-decides-what-counts)
+- [组合](#composition)
 - [Model Experience](#model-experience)
 - [已知局限与后续工作](#known-limitations-and-deferred-work)
 - [开发备注](#dev-note)
@@ -40,6 +41,18 @@ kind: "package-reference"
 ## 由分类器决定什么算数
 
 `execute` 接受一个 `classify` 回调,本包从不检查原始错误。一次失败是否意味着**端点**不健康,是 [`classifyFailure`](../retry/README.zh.md) 作用在只有调用方能读到的事实上的决策:策略拒绝与格式非法的请求都是永久性的,把它们计入会在一个健康的目的地上熔断。永久性失败直接穿过 `cockatiel` 的谓词,既不记成功也不记失败,断路器因而不动。
+
+<a id="composition"></a>
+## 组合
+
+`dsh-base` 以 `circuit-breaker` 行挂载本包,因此每一个以 base 为底的 profile——包括用户实际启动的 `dsh`——都带有断路器。消费方用 `ctx.get` 解析它,所以去掉该行的 profile 只是退回 P4-11 之前的行为,而不是启动失败;把它挂在共享 base 上,正是这个 epic 抵达产品的那一步。
+
+两个出厂值都是 `Config` 字段,可按 profile 修改:
+
+| 字段 | 出厂值 | 依据 |
+|---|---|---|
+| `consecutiveFailures` | 5 | `cockatiel` 自身 `ConsecutiveBreaker` 的默认值,本部署没有任何理由取别的:低于它,一次瞬时抖动就会熔断一个本来正常的目的地;高于它,一个已死的端点还会继续被调用。以 `llm-retry` 的单请求上限度量,连续五次**被计数**的失败意味着至少两次请求失败。 |
+| `openMs` | 30000 | `cockatiel` 自身默认的熔断时长:长到不会持续冲击一个正在重启的端点,短到不会让一个已恢复的端点被搁置整整一轮。 |
 
 <a id="model-experience"></a>
 ## 开发备注

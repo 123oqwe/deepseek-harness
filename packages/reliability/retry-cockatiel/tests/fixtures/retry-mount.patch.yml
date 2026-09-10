@@ -1,0 +1,33 @@
+# Test-only overlay over the SHIPPED headless profile for Epic P4-11's mount
+# slice. The production bundle layers own the retry budget, the breaker and
+# `llm-retry`; this overlay supplies only a keyless flaky model and a session
+# log to observe, so what is under test is the row `dsh-base` ships rather
+# than a copy this fixture mounted for itself.
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: agent-loop
+  config:
+    agents:
+      - id: main
+        provider: p4-11-flaky
+        model: p4-11-flaky
+        cwd: !!js process.cwd()
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
+
+- insert:
+    - id: p4-11-flaky-llm
+      name: './flaky-llm.ts'

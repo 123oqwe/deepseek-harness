@@ -395,6 +395,7 @@
       "@deepseek-ai/dsh-retry": ["./packages/reliability/retry/src"],
       "@deepseek-ai/dsh-retry/budget": ["./packages/reliability/retry/src/budget.ts"],
       "@deepseek-ai/dsh-retry/classify": ["./packages/reliability/retry/src/classify.ts"],
+      "@deepseek-ai/dsh-retry/usage": ["./packages/reliability/retry/src/usage.ts"],
       "@deepseek-ai/dsh-retry-cockatiel": ["./packages/reliability/retry-cockatiel/src"],
       "@deepseek-ai/dsh-risk-taxonomy": ["./packages/policy/risk-taxonomy/src"],
       "@deepseek-ai/dsh-risk-taxonomy/classify": ["./packages/policy/risk-taxonomy/src/classify.ts"],

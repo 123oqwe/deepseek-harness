@@ -81,6 +81,39 @@
     - id: jobs
       name: '@deepseek-ai/dsh-jobs-local'
 
+    # P4-11: one retry budget per RUN, shared by every layer that retries, and
+    # one circuit breaker per model endpoint. Both are `ctx.get` consumers, so
+    # a profile that omits them keeps the pre-P4-11 behaviour — which is why
+    # mounting them HERE is the difference between the epic existing and the
+    # epic happening on a `dsh` a user starts.
+    - id: run-retry-usage
+      name: '@deepseek-ai/dsh-retry/usage'
+      config:
+        # Ten redone attempts across every layer, for one run. Chosen as the
+        # point where a run is clearly looping rather than meeting a rough
+        # patch: llm-retry's own per-request policy already caps a single
+        # request's attempts far below this, so the run budget binds only when
+        # several requests each retry.
+        maxRetries: 10
+        # Five minutes of WAITING per run. A budget on attempts alone lets a
+        # run spend an hour in backoff and still look thrifty; this is the
+        # bound an operator actually feels.
+        maxDelayBudgetMs: 300000
+
+    - id: circuit-breaker
+      name: '@deepseek-ai/dsh-retry-cockatiel'
+      config:
+        # cockatiel's own ConsecutiveBreaker default is 5, and nothing in this
+        # deployment argues for a different one: below it a transient blip
+        # opens an endpoint that is fine, above it a dead endpoint keeps being
+        # called. Measured against llm-retry's per-request cap, five
+        # consecutive COUNTED failures means at least two failed requests.
+        consecutiveFailures: 5
+        # Thirty seconds before a half-open probe, matching cockatiel's own
+        # default: long enough that a restarting endpoint is not hammered,
+        # short enough that a recovered one is not written off for a turn.
+        openMs: 30000
+
     - id: llm-retry
       name: '@deepseek-ai/dsh-llm-retry'
 

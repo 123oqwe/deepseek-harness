@@ -17,6 +17,7 @@ The registry's problem statement is that several layers each decided retryabilit
 
 - [What this package deliberately does NOT do](#what-this-package-deliberately-does-not-do)
 - [must[3]: the ledger decides whether an effect may be sent again](#must3-the-ledger-decides-whether-an-effect-may-be-sent-again)
+- [Composition](#composition)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 - [Dev Note](#dev-note)
@@ -46,6 +47,17 @@ A side-effecting attempt is retryable only under an idempotency guarantee, and [
 | *absent* | **no** | No ledger was consulted, which is not the same as safe. |
 
 The last row is the one worth stating: reading absence as safety would make must[3] hold where the ledger is mounted and silently not hold everywhere else.
+
+## Composition
+
+`dsh-base` mounts the accounting as the `run-retry-usage` row (`@deepseek-ai/dsh-retry/usage`), so a run on any base-backed profile has one budget every retrying layer charges against. `llm-retry` resolves it with `ctx.get`, so a profile that drops the row keeps its own per-session limits — the pre-P4-11 behaviour — rather than failing to boot. Mounting it in the shared base is what makes must[1] happen on a `dsh` a user starts rather than merely be available to a composition that asks.
+
+Both shipped values are `Config` fields, changeable per profile:
+
+| field | shipped value | why that value |
+|---|---|---|
+| `maxRetries` | 10 | Ten redone attempts across every layer, for one run: the point where a run is clearly looping rather than riding out a rough patch. `llm-retry`'s own per-request policy already caps a single request's attempts well below this, so the run budget binds only when several requests each retry. |
+| `maxDelayBudgetMs` | 300000 | Five minutes of WAITING per run. A budget on attempts alone lets a run spend an hour in backoff and still look thrifty; this is the bound an operator actually feels. |
 
 ## Model Experience
 
