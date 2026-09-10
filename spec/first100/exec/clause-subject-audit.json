@@ -2088,6 +2088,74 @@
         "realized": null,
         "note": "`recordedBeforeFirstLine` is FALSE, and the honest account is the reason this record exists. A first C attempt was written for this epic BEFORE any preFlight and hand-rolled `circuit.ts`, a circuit breaker the ledger had already judged `adapt` — §12.62 stopped it and it was withdrawn. The preFlight document then landed at `b9bc2d1bbd`, the §12.64 rulings at `901efbd711`, and only afterwards did the current C land at `6f6580cecc` and freeze at `c2972046a3`; `git merge-base --is-ancestor b9bc2d1bbd 6f6580cecc` confirms that order. So the CURRENT C follows its preFlight, but the epic's first line of code did not, and writing `true` here would describe the second attempt as if the first had not happened. The layer count is corrected in `preflight-P4-11.md` under the same ruling, together with the U-stage frozen intent it produces: a child session's nth LLM retry decrements the PARENT run's `RunRetryBudget`, and the mutation that must redden it is the child counting against its own session."
       }
+    },
+    "P1-10": {
+      "makeVsUse": {
+        "ledgerRow": "P1-10",
+        "card": {
+          "heading": "#### P1-10",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": "PROVIDER_ADAPT",
+        "adopted": [
+          {
+            "name": "node:sqlite / VACUUM INTO",
+            "npm": null,
+            "landsIn": "P1-10.P",
+            "reason": "Adopted for the SQLITE BACKEND's implementation of the migration facet -- an atomically consistent copy of a live database without stopping its writers, which a file copy of a database being written to is not (the ledger row's `npm` is null because this is a Node built-in, not a package). Probed on this runtime rather than assumed: an in-memory database produced an 8192-byte copy. Its placement is the medium correction's whole point: it is one backend's snapshot primitive, not the transaction's medium. The transaction calls the facet; `storage-json` implements the same facet by copying a file or a directory tree, and no bundle mounts `storage-sqlite` today (base mounts `storage-json` at dshHomePath('storages')), so a sqlite-only design would have had no subject at all."
+          }
+        ],
+        "deviations": [
+          {
+            "name": "sequelize/umzug",
+            "npm": "umzug",
+            "reason": "Not adopted: umzug runs an ORDERED LIST of migration scripts against a storage it owns, and records which ran. P1-10 needs neither half. The order comes from the manifest's declared DAG, which this epic validates for cycles and ambiguous edges before anything runs, and the record is the transaction's own two-phase intent/achievement file, whose split IS acceptance[1]'s property. Adopting it would put a second migration-state store beside the one the clause requires.",
+            "ruling": "card role `optional`"
+          },
+          {
+            "name": "moxystudio/proper-lockfile",
+            "npm": "proper-lockfile",
+            "reason": "Not adopted, and this was a real evaluation rather than a preference. The cross-process freeze this epic needs already ships: `@deepseek-ai/dsh-lease-sqlite` is mounted in bundle/base at dshHomePath('leases'), stores holder, epoch and expiry in a SQLite file, and issues FENCING tokens so a stale holder cannot write after being superseded -- which a mtime-and-pid lockfile cannot express. Adding proper-lockfile would put a second cross-process mutual-exclusion mechanism in a harness that already has one with strictly more semantics, and P4-07 already owns the refusal path (`held-by-another`, carrying the holder). The upgrade takes a run lease on a well-known work item before pnpm runs, and refuses the whole command when another process holds it.",
+            "ruling": "§7.10"
+          }
+        ],
+        "rejectedAbsent": [
+          "kysely",
+          "dbos"
+        ],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "The transaction itself: six phases over a storage facet, the manifest DAG decisions, and the reconciliation record. None of it is a library's -- what a library would bring is a migration RUNNER, and the runner is not the hard part. The hard part is that a crash at any phase must leave one whole version behind, which is a property of the ordering over this tree's own storage backends.",
+        "probes": [
+          {
+            "claim": "node:sqlite's VACUUM INTO works on this runtime",
+            "how": "node -e \"const{DatabaseSync}=require('node:sqlite');const d=new DatabaseSync(':memory:');d.exec('create table t(a)');d.exec(\\\"insert into t values(1)\\\");d.exec(\\\"VACUUM INTO '/tmp/vac-probe.db'\\\")\"",
+            "result": "VACUUM INTO ok; 8192-byte copy produced"
+          },
+          {
+            "claim": "a cross-process lease store is already mounted, so no lockfile library is needed",
+            "how": "grep -rn 'lease-sqlite' packages/bundle/*/cordis*.yml",
+            "result": "bundle/base/cordis.patch.yml:465 mounts @deepseek-ai/dsh-lease-sqlite at dshHomePath('leases')"
+          },
+          {
+            "claim": "the plugin data medium this epic must migrate is the storage hub's units, not a path of its own",
+            "how": "grep -rn \"dshHomePath('plugins'\" packages apps --include='*.ts'; sed -n '145,155p' packages/bundle/base/cordis.patch.yml",
+            "result": "zero hits for a plugins root; base mounts storage-json with root dshHomePath('storages')"
+          }
+        ],
+        "gapCheck": [
+          {
+            "community": "dsh-schema-registry (in-repo)",
+            "gap": "Negotiates and migrates a VALUE in memory as it is read; P1-10 converts durable data on disk under a transaction. Routing plugin data through it would make every read pay a conversion the transaction exists to do once.",
+            "clause": "outOfScope: P0-06 / P1-08 own protocol and interface compatibility"
+          }
+        ],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Recorded LATE, and the lateness is the disclosure: the epic had C, P and U built before this entry existed, because §12.65's approval read the markdown preFlight and nobody checked that `clause-subject-audit.json` still listed P1-10 as not started. Same gap as P4-11.F. The adapt disposition is recorded against the CORRECTED medium -- the first P stage put VACUUM INTO on a hand-made path under dshHomePath('plugins'), which nothing else in the tree writes, so the ledger row would have described a mechanism with no subject."
+      }
     }
   },
   "methodCorrections": [

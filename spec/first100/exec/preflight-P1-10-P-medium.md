@@ -48,13 +48,27 @@ Kept: C's decisions entire (they are medium-independent), the pnpm-first recover
 
 Superseded rather than edited: P's 10 frozen cases, because their subject moves from a hand-made SQLite path to the storage facet. A new freeze entry supersedes them per BLOCKED-103; the old entry stays.
 
-## Questions I am not answering alone
+## The freeze must cross processes, and the lock already exists
 
-1. **Does the migration facet belong on `StorageBackend`, or beside it as a second facet a backend may not implement?** A backend that cannot snapshot would then refuse migrations rather than fail to compile, which matters if a future backend is remote.
-2. **`per-record` units make "snapshot the unit" a directory copy that is not atomic.** Is a per-record unit in scope for P1-10, or does an unmigratable layout refuse with a named reason?
+The delegate found the hole in "the registry refuses to open a frozen unit": `dsh plugin update` is a CLI process, and a running session is a DIFFERENT one. A unit that session already opened keeps being written, and an in-process registry freeze cannot reach it — which is exactly when a `per-record` unit's directory copy tears.
 
-Both change the facet's contract, so I am not choosing.
+**Measured, and it changes the recommendation the delegate offered as a choice.** `@deepseek-ai/dsh-lease-sqlite` is already mounted in `bundle/base` (`cordis.patch.yml:465`) at `dshHomePath('leases')`. It keeps `work_item`, `holder`, `epoch` and `expires_at_ms` in a SQLite file, and it issues FENCING tokens — a superseded holder's later write is refused by epoch, which a pid-and-mtime lockfile cannot express. P4-07 already owns the refusal path, including `held-by-another` carrying the holder.
+
+So: **`proper-lockfile` is not adopted**, and the reason is not preference. Adding it would put a second cross-process mutual-exclusion mechanism into a harness that already has one with strictly more semantics.
+
+**The shape**: `dsh plugin update` acquires a run lease on a well-known work item BEFORE pnpm runs, and refuses the whole command when another process holds it — naming the holder, because P4-07's denial already carries it. Refusing before pnpm is what makes this stronger than a freeze: no code/data mixture is ever produced, because the code never moves. Profile boot holds the same lease, so a session starting mid-upgrade is refused rather than opening a unit that is about to be swapped. A stale holder is handled by the lease's own expiry rather than by inspecting a pid.
+
+With a cross-process freeze in place, a `per-record` unit's directory copy is consistent, which is why per-record stays in scope — the atomicity comes from the freeze, not from the copy.
+
+## The version-type negative case
+
+The unit version is a `number`; `PluginSchemaVersion` is a branded string. The boundary stringifies, and a case pins that `version: 3` matches the declaration `"3"` and REFUSES `"3.0"` — the mutation being a loose comparison, since this is precisely where a mismatch becomes a silent no-op rather than an error.
+
+## Both questions answered by the delegate
+
+1. **An optional second facet**, following the house pattern (`backend.ts:17-26`: facets are optional members and resolution fails loud). A backend without it is refused at PLAN time by name — `MigrationRefusal` gains `backend-cannot-migrate` — not at compile time. Because pnpm has already moved the code by then, that refusal IS a failed upgrade and takes the same path as any other: data untouched, `rollbackCode`, reported.
+2. **`per-record` is in scope**, with the atomicity coming from the cross-process freeze above rather than from the copy.
 
 ## Status
 
-**No code written.** Awaiting approval of the shape and answers to the two questions.
+**Shape approved. The lock evaluation agrees with the delegate's recommendation** (a home-level exclusive lock before pnpm) and settles its open half: the lock is `dsh-lease-sqlite`, already mounted, not `proper-lockfile`.
