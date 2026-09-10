@@ -4544,3 +4544,29 @@ Measured 2026-09-10 on `60ae16f046`: the chain exited 1 at gate 4, and running t
 **The fix:** give the slice sets the same treatment, and go one better. `run-registry-gates.mjs` skips held-back gates but still `process.exit(1)`s on the first failure, so one red still hides its successors. The replacement runs **every** non-held gate, prints each gate's exit, and exits non-zero if any of them failed — a report that says which gates ran and how each ended, rather than one that stops at the first bad news. `--set slice` / `--set slice-cordis` select the sets; `HELD_BACK` stays one map so the two lists cannot diverge.
 
 **Closing condition:** `first100:slice-gate` and `first100:slice-gate-cordis` resolve to the non-short-circuiting runner, and a lane report cites per-gate exits rather than a chain's single status.
+
+
+### BLOCKED-185 — P1-07's trust boundary is not mounted on any shipped profile, so its acceptance[0] does not hold on the product
+
+**Status:** MEASURED, awaiting the delegate's 4.4d recheck and a revocation decision. P1-07 is ACCEPTED (2026-09-04). Found while measuring §12.79's untrusted-workspace invariant for the memory slice, not by auditing P1-07.
+
+`workspace-trust-local` ships **`disabled: true`** in `packages/bundle/base/cordis.patch.yml:351-353`, and the row's own comment states the reason plainly: with no grants an enabled provider makes **every** workspace untrusted at once, which stops project skills and the project's `AGENTS.md` loading for every existing user — "a boundary that ships on and breaks everyone does not get adopted".
+
+So on every profile a user starts, `ctx.get('workspaceTrust')` is `undefined`.
+
+**Both consumers fail OPEN, deliberately and in documented terms.** This is the measurement the recheck turns on, and it was taken per consumer rather than inferred:
+
+| consumer | behaviour with no provider | site |
+|---|---|---|
+| `agent-instructions` | `trustState === undefined \|\| authorizeProjectLoad(...)` → **project instructions load ungated**; the identity string records `'ungated'` | `context/agent-instructions/src/index.ts:132-138` |
+| `skill-filesystem` | `if (trust === undefined) return true` → **project skill roots are scanned and executable skills load ungated** | `skill/skill-filesystem/src/index.ts:253-255` |
+
+Both say the same thing in their JSDoc: with no provider mounted, content loads "exactly as it did before this boundary existed". The code is honest about it; what is not true is the acceptance clause counted against the product.
+
+**Why that makes acceptance[0] false as shipped.** The clause is that cloning a repository carrying malicious configuration and opening it spawns no subprocess. The gate that would refuse the executable half is `authorizeProjectLoad(..., 'executable-skill')`, and on the shipped composition it is never consulted — the provider that would answer it is not mounted. The mechanism is complete and correct; nothing on the shipped path asks it anything. This is the same shape as BLOCKED-156 (P6-01 green on a capability no profile mounted) and P4-11's mount gap, and it is the **third** accepted epic found this way.
+
+**A second, narrower gap, recorded so it is not read as covered:** four `ProjectContentKind` members — `'project-plugin'`, `'project-hook'`, `'mcp-server'`, `'home-profile-patch-override'` — have **no project-sourced load site at all** (`workspace-trust/src/types.ts:154-159`), so nothing calls the gate with them even when a provider IS mounted. The type's own doc states this and states the obligation: building such a load site must route it through the gate. Naming a kind is not enforcing it.
+
+**What is NOT claimed here.** The fail-open direction may well be the right product choice — a boundary that breaks every existing user on upgrade is the reason the row is disabled. The defect is not the direction; it is that an acceptance clause about what the product does was signed while the product does not do it.
+
+**Closing condition:** either the shipped profile mounts a trust provider whose default is usable (P1-07 must[2] already requires an interactive grant, so first-open authorization is the obvious shape), or P1-07's acceptance[0] is re-scoped to what a composition that mounts the provider guarantees, with the shipped default recorded as a Known Limitation. The delegate rechecks under 4.4d and decides whether the signature stands; the memory slice does not decide P1-07's product question on its behalf.
