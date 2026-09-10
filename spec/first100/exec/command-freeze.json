@@ -10475,6 +10475,51 @@
         "failureSummary": "M54 reddens 4 of 10, M55 reddens 2 and M56 reddens 1 — but ONLY after the suite was made to measure source at all. On the first run all three passed with the mutated text confirmed in the file, and a probe at the top of `runUpgrade` printed nothing: the tests imported `@deepseek-ai/dsh-plugin-migrations/transaction`, a published subpath with no tsconfig alias, so the source plane could not resolve it and vitest ran the package's BUILT lib/ from an earlier `tsc -b`. The suite was measuring a build artifact while the source was edited. `gen-tsconfig-paths` now derives an alias for every published subpath and refuses when one is unmapped; the mutations bite with it in place."
       },
       "note": "P1-10 Provider stage: the six phases as an ordering over real effects.\n\nTHE CASES ASSERT INTERMEDIATE STATES, not an outcome. A transaction whose only evidence is that it returned true is indistinguishable from a function that returns true, so each case reads the disk between phases: production is byte-unchanged while the migration runs against a copy (read DURING the migrate callback, not after), the previous directory survives the switch as a readable rollback target, and a failed health check leaves production byte-identical to the pre-switch rows rather than merely returning an error.\n\nTHE SWITCH IS TWO RENAMES on one filesystem, live moved ASIDE first: a rename over a directory does not preserve what it replaced, and the aside IS the rollback target until the health check passes. A failed check renames back and keeps the migrated data in quarantine, because an operator diagnosing the failure needs to see what the migration produced.\n\nTWO PREMISES WERE CORRECTED BEFORE ANY CODE. `write-file-atomic` is an npm package this tree does not have; the house pattern P1-03 established is the repo's own `@deepseek-ai/dsh-atomic-write`, already used by four packages, and adding the npm package would have been a second spelling of a mechanism the tree has. `node:sqlite`'s `VACUUM INTO` was probed on the live runtime rather than assumed — an 8192-byte copy from an in-memory database — so the ledger's `adapt` is executable here.\n\nTHE DESTINATION IS BOUND AS A PARAMETER, never interpolated: a storage root can carry a quote, and a path spliced into SQL is an injection even when this file is the only author. A case covers a quoted path.\n\nacceptance[0]'s crash campaign belongs to U, against the real upgrade path."
+    },
+    {
+      "epic": "P1-10",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/plugin/plugin-migrations/tests/crash-campaign.spec.ts",
+        "packages/plugin/plugin-migrations/tests/transaction.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-10 acceptance[0]: a crash at any phase leaves one WHOLE version covers every phase the transaction declares, so no phase is skipped silently",
+        "P1-10 acceptance[0]: a crash at any phase leaves one WHOLE version crash at freeze leaves the live data wholly old or wholly new",
+        "P1-10 acceptance[0]: a crash at any phase leaves one WHOLE version crash at snapshot leaves the live data wholly old or wholly new",
+        "P1-10 acceptance[0]: a crash at any phase leaves one WHOLE version crash at quarantine leaves the live data wholly old or wholly new",
+        "P1-10 acceptance[0]: a crash at any phase leaves one WHOLE version crash at validate leaves the live data wholly old or wholly new",
+        "P1-10 acceptance[0]: a crash at any phase leaves one WHOLE version crash at switch leaves the live data wholly old or wholly new",
+        "P1-10 acceptance[0]: a crash at any phase leaves one WHOLE version crash at health-check leaves the live data wholly old or wholly new",
+        "P1-10 acceptance[0]: a crash at any phase leaves one WHOLE version leaves the OLD version whole for every crash before the switch",
+        "P1-10 acceptance[0]: a crash at any phase leaves one WHOLE version leaves the NEW version whole when the crash lands after the switch",
+        "P1-10 acceptance[1]: the record and the disk are reconcilable reconciles a completed upgrade against its recorded version and digest",
+        "P1-10 acceptance[1]: the record and the disk are reconcilable refuses when the digest on disk is not the one recorded",
+        "P1-10 acceptance[1]: the record and the disk are reconcilable refuses when the version on disk is not the one recorded",
+        "P1-10 acceptance[1]: the record and the disk are reconcilable does NOT claim an upgrade for a run that started and never finished",
+        "P1-10 acceptance[1]: the record and the disk are reconcilable reconciles as false when no upgrade has ever run, rather than throwing",
+        "P1-10 acceptance[2]: a failed upgrade does not change approved permissions leaves the permission state byte-identical across a failed upgrade",
+        "P1-10 acceptance[2]: a failed upgrade does not change approved permissions writes NOTHING outside the plugin’s own storage root, on success either"
+      ],
+      "files": [
+        "packages/plugin/plugin-migrations/src/transaction.ts"
+      ],
+      "frozenAtUtc": "2026-09-10T16:10:00.000Z",
+      "dryRunProof": {
+        "treeSha": "ba308554339b67c0a7935a023f814c2d19daa61e",
+        "testsDiscovered": 26
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations, run against this argv and each restored byte-identical. (M57) the reconciliation facts (`upgradedTo`, `dataDigest`) are written at the SNAPSHOT phase instead of after the health check. (M58) `reconcileUpgrade` compares only the version and not the digest.",
+        "failureSummary": "M57 reddens exactly the case that pins a started-and-never-finished upgrade: with the achieved half written early, a failed health check leaves a record claiming an upgrade that did not happen, and a reconcile after a crash would compare the disk against a version it never reached. M58 reddens exactly the digest case — a digest that no longer matches means something wrote to the plugin's storage outside the transaction, and comparing only the version would call that state upgraded."
+      },
+      "note": "P1-10 Usage stage: acceptance[0], [1] and [2].\n\nTHE CRASH IS A REAL PROCESS DEATH. A thrown error unwinds `runUpgrade`'s `finally`, thaws the plugin and runs the rollback — that is the ERROR path, and a campaign against it proves nothing about the one acceptance[0] names. A child process SIGKILLs itself at a named phase and leaves the disk exactly as that phase left it. The file is registered in `vitest.config.ts`'s `processBoundTests`, because a killed worker thread takes its pool's siblings with it.\n\n'WHOLE' IS MEASURED BY OPENING THE DATABASE AND COMPARING ROWS, not by a file existing: a half-migrated database still exists and still opens. Two cases go past 'one of the two' — every crash before the switch leaves the OLD rows, because the migration wrote to a copy, and a crash at the switch leaves the NEW rows with the rollback directory still present.\n\nACCEPTANCE[1] REVEALED A GAP: `validate`'s digest existed only in the return value and was never written to disk, so after a restart there was nothing to reconcile against. The record is written TWICE — intent at the snapshot phase, achievement after the health check — and the split is the point: written early, a crash leaves a record claiming an upgrade that never finished. Reconciliation is against the plugin's OWN declared version per the delegate's ruling; schema-registry's `{major, minor}` is protocol-compatibility vocabulary and belongs to P0-06/P1-08.\n\nACCEPTANCE[2] READS AND NEVER WRITES. A case that granted or revoked something to set up would be this epic writing state P2-02 and P2-04 own, and would demonstrate that it CAN. The observation is that nothing outside the plugin's storage root changes across a failed upgrade — and in the general form, across a successful one either. A case inspecting a token store would pass while the transaction quietly wrote somewhere else."
     }
   ]
 }
