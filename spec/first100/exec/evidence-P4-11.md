@@ -33,3 +33,15 @@ No migration subtask: nothing durable changes format. No separate assurance subt
 ## Status
 
 **Split recorded; no code written.** The C subtask is the next unit of work: three pure modules plus their test file, then a sensitivity proof, then the SPEC-FREEZE entry — in that order, since `command-freeze.json` requires `dryRunProof.testsDiscovered` and a `sensitivityProof`, both of which need the tests to exist. Nothing is frozen and nothing is claimed.
+
+## 4.4a — where the epic's decisions are actually consumed
+
+Measured at `e5488e86c6` (the same tree as the CI observation at `874db203f0`, on which P4-11's C/U/F cells are green). Each row names a PRODUCTION call site, not a test.
+
+| clause | production call site | what it consumes |
+| --- | --- | --- |
+| must[1] 所有层消费同一 RunRetryBudget | `packages/llm/llm-retry/src/index.ts:249` resolves `ctx.get('runRetryUsage')`; `:251` maps this session to its charged run via `chargedRunFor` + `chargedRun`; `:265` calls `budgets.admit(charged, delayMs)` and returns `next()` — declining to retry — when the run's budget refuses. | `RunRetryUsageContract.admit`, `packages/reliability/retry/src/usage.ts:190`. One call decides AND records, so no caller can consult without charging. |
+| must[1] 归属:child 记到父 run | `packages/reliability/retry/src/root.ts:46` walks `parentSession` to the root and returns THAT session's `RunId`; the walk is cycle-guarded (`seen`). `llm-retry` supplies the lookup from the live agent registry (`index.ts:252-260`), so a child's retry is charged to the run its parent holds rather than to an allowance of its own. | `chargedRun`, memoized per session by `chargedRunFor` (`usage.ts:200`). |
+| must[2] provider circuit breaker | `packages/llm/llm/src/index.ts:1071` calls `guardedFirstChunk` inside the same `try` that converts an adapter throw into a terminal chunk; `:1013` wraps the FIRST chunk pull in `breaker.execute({ provider, baseUrl, model }, ...)` with `llmFailureFacts` as the classifier. The destination key is per (provider, baseUrl, model), so one model's outage does not open another's. | `CircuitBreakerContract.execute`, `packages/reliability/retry/src/provider.ts`; the shipped implementation is `packages/reliability/retry-cockatiel`. |
+
+**Absence is capability absence, not permission.** Both consumers resolve their service with `ctx.get` and fall through to their pre-epic behaviour when it is not mounted (`llm-retry` keeps its per-session policy; `llm/llm` pulls the first chunk directly). A composition that mounts neither behaves exactly as it did before this epic, which is why `inject` would be wrong here: a hard dependency would stop both plugins registering in every composition that does not mount the retry family.

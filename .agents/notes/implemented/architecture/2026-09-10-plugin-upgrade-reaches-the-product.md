@@ -28,12 +28,23 @@ The manifest vocabulary is bridged rather than duplicated: `apps/cli/src/plugin-
 
 ## Consequences
 
-What this bought is one product path where a plugin's data follows its code, under a single lease, over any medium whose backend implements the facet. What it cost is four stated gaps, carried openly rather than hidden behind green tests:
+What this bought is one product path where a plugin's data follows its code, under a single lease, over any medium whose backend implements the facet — and where every phase of the transaction can actually refuse. `validate` reads the migrated copy back through the facet and checks that it materialized, that it carries the version it was migrated TO, and that the plugin's own optional `validate` export accepts it; the recorded digest is the medium's digest of the CONTENT, so a reconciliation compares data with data rather than a version number with itself. The health check opens the unit through the storage hub with the new build's descriptor and reads it — a unit still stamped at the old version fails `version-mismatch` there, which is the product's definition of "the new version is not usable". `storage-sqlite` implements the facet too: one database holds every unit, so a snapshot is a sidecar database carrying that unit's rows, and a file-level copy would have made rolling back one unit a rollback of all of them.
 
-- **`validate` and `healthCheck` accept unconditionally.** Both mean asking the plugin, and a package-manager command mounts no plugin. They stay real phases so a booted-plugin probe replaces two closures and nothing else.
-- **`backup` and `reversible` are defaulted at the bridge**, because P1-01's declaration carries neither. Defaulted there rather than in the decision package, so the gap is visible where the two vocabularies meet: today every declared migration reads as snapshot-backed and reversible, and an irreversible one cannot be expressed.
-- **A plugin declaring more than one data store gets no unit.** Picking one would migrate an arbitrary half of its data.
-- **`storage-sqlite` has no migration facet yet**, so a deployment on that backend is refused by name (`backend-cannot-migrate`) rather than silently skipped.
+`MigrationDeclaration` now requires `reversible` and `backup` whenever a step ships a `module`, and the manifest refuses one that omits either. Nothing is defaulted at the bridge: a defaulted `reversible: true` made must[2] unreachable in exactly the case it exists for, so `dsh plugin update --confirm <digest>` now has a path that can demand it. An irreversible upgrade exports the unit to a path the operator keeps BEFORE any confirmation is weighed, then refuses with the digest to pass back; the confirmation is checked inside `runUpgrade`, the operation that makes the change, so no caller can skip it.
+
+Every refusal is named. A plugin that declares more than one data store, ships a step without a module, exports no `descriptor`, or exports one whose version disagrees with its declarations is refused by name and counted as a FAILED upgrade — which puts its code back to the version its data is at, rather than leaving new code to meet old data at the next boot.
+
+What it cost, carried openly rather than hidden behind green tests:
+
+- **The health check is an open-and-read, not the plugin's own opinion.** A package-manager command mounts no plugin, so "does it work" is answered by the strongest question available without one: the new build's descriptor against the switched-in data. A plugin whose data opens but whose logic rejects it is not caught here.
+- **A plugin declaring more than one data store is refused, not partially migrated.** Migrating one of several stores would move an arbitrary part of its data.
+- **A `per-record` JSON unit and a `:memory:` SQLite database have no migration.** The first stamps each record and reads an off-version record as absent, so it self-heals; the second has no directory for a sidecar. Both are refused by name.
+
+### The medium the first facet wrote to did not exist
+
+The first `migration` facet read and wrote `{ version, records }`. The JSON backend's real document is `{ unit: { name, version }, global, tables }` — `format.ts` has always said so — so `stampedVersion` would have found no stamp on any real unit and a migration would have rewritten a document nothing opens. Nine facet cases passed, because each one seeded the invented shape and read it back.
+
+That is the same failure as the invented `plugins/<name>/data/db` path, one layer down and harder to see: not a path nothing writes, but a FORMAT nothing writes, inside the right file. The fix is structural rather than a corrected literal — the facet now converts a `UnitContent`, the same value `KvUnit.loadAll` returns, and writes through `format.ts`'s own `serialize`. The cases seed through `kv.open`/`putRecord`, so the medium they assert over is the medium the backend produces, and one case re-opens the switched-in unit with the new descriptor: a migrated document in any other format fails there.
 
 ### Why it is recorded
 

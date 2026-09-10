@@ -129,6 +129,8 @@ kind: "package-reference"
 - **同步驱动阻塞事件循环**——每次写入都是一次同步 `DatabaseSync` 调用；阻塞只持续一条语句，在领域数据规模下可以接受。
 - **没有忙等待或重试策略**——持有写锁的竞争连接会立即拒绝操作，而不是等待；领域层的写入链在单进程内串行化写入，跨进程协调属于范围外。
 - **只打开当前的物理布局版本**——任何其他已标记的 `user_version` 都会被拒绝而不是迁移（预发布立场）。
+- **`:memory:` 数据库不暴露 `migration` 分面**——快照是活库文件旁边的一个 sidecar 数据库,而进程内数据库没有目录来放它;该介质上的升级会被具名拒绝,而不是跑到一半才失败。
+- **单元迁移复制的是行,不是文件**——一个数据库承载全部单元,因此 `snapshotUnit` 只把该单元的行复制进 sidecar;文件级复制会让回滚一个单元变成回滚全部单元。
 - **打开顺序与 query provider 重复**——`openDatabase` 与 `session-query-sqlite` 都强制执行 SQLite 文件 ownership，但两个 package 分别拥有不同的 application identity 与 schema；没有共享 medium helper 将其耦合。
 
 <a id="dev-note"></a>

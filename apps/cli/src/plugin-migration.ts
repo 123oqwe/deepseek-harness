@@ -39,10 +39,16 @@ import StorageHub from '@deepseek-ai/dsh-storage'
 import * as storageJson from '@deepseek-ai/dsh-storage-json'
 
 import { brandString } from '@deepseek-ai/dsh-brand'
+import { planUpgrade, requiresApprovalAndExport } from '@deepseek-ai/dsh-plugin-migrations'
 import { recoverUpgrade, runUpgrade } from '@deepseek-ai/dsh-plugin-migrations/transaction'
 import type { UpgradeRecord } from '@deepseek-ai/dsh-plugin-migrations/transaction'
-import type { PluginMigrationManifest, PluginSchemaVersion } from '@deepseek-ai/dsh-plugin-migrations'
-import type { KvUnitDescriptor, MigrationFacet } from '@deepseek-ai/dsh-storage'
+import type {
+  MigrationPathDigest,
+  MigrationRefusal,
+  PluginMigrationManifest,
+  PluginSchemaVersion,
+} from '@deepseek-ai/dsh-plugin-migrations'
+import type { KvUnitDescriptor, MigrationFacet, UnitContent } from '@deepseek-ai/dsh-storage'
 import type { RunLease } from '@deepseek-ai/dsh-lease-contract'
 
 /** The bin name every profile diagnostic and resolution is reported under. */
@@ -82,15 +88,66 @@ export interface UpgradeEnvironment {
   readonly lease: RunLease
   /** Reads the clock. */
   readonly now: () => number
-  /** The unit each plugin's durable data lives in. */
-  readonly unitFor: (plugin: string) => KvUnitDescriptor | undefined
-  /** The migration steps for one plugin, loaded from its installed new version. */
-  readonly stepsFor: (plugin: string) => Promise<
-    ((records: readonly unknown[]) => Promise<readonly unknown[]>) | undefined
-  >
+  /** What one plugin's installed new version declares and ships, or why it cannot be upgraded. */
+  readonly resolve: (plugin: string) => Promise<PluginUpgradeResolution>
+  /**
+   * Open one unit as the plugin's own code would, and read it.
+   *
+   * This is the health check must[1]'s last phase names, in the only terms a
+   * package-manager command has: the new build's descriptor against the
+   * switched-in data. A unit still stamped at the old version fails
+   * `version-mismatch` here, which is exactly "the new version is not usable".
+   */
+  readonly openUnit: (unit: KvUnitDescriptor) => Promise<boolean>
+  /**
+   * Where one plugin's pre-upgrade export is written (must[2]).
+   *
+   * A path the operator keeps, outside the medium: the transaction's own
+   * snapshot is discarded when the upgrade finishes, and an export an operator
+   * cannot find after the fact is not one they can rely on.
+   */
+  readonly exportPathFor: (plugin: string, fromVersion: number) => string
   /** Writes one plugin's upgrade record. */
   readonly writeRecord: (plugin: string, record: UpgradeRecord) => Promise<void>
 }
+
+/**
+ * What one plugin's installed new version offers an upgrade, or why it offers
+ * none.
+ *
+ * Every refusal is NAMED. An upgrade that skipped a plugin by returning
+ * nothing would leave the new code to meet the old data at the next boot and
+ * fail there, with nothing pointing back at the install that caused it.
+ */
+export type PluginUpgradeResolution =
+  /** The plugin declares no migrations: it has said its data needs none. */
+  | { readonly kind: 'none' }
+  /** Everything an upgrade needs, read from the installed new version. */
+  | {
+    readonly kind: 'ready'
+    readonly unit: KvUnitDescriptor
+    readonly migrate: (content: UnitContent) => Promise<UnitContent>
+    readonly validate?: (content: UnitContent) => Promise<boolean>
+  }
+  /** The plugin declares migrations but cannot be upgraded, and why. */
+  | { readonly kind: 'refused'; readonly reason: UpgradeResolutionRefusal; readonly detail: string }
+
+/** Why an installed plugin's declarations cannot produce an upgrade. */
+export type UpgradeResolutionRefusal =
+  /** The installed package could not be resolved or declares no Manifest v2. */
+  | 'unreadable-manifest'
+  /** More than one declared data store: no single unit holds the plugin's data. */
+  | 'multiple-data-stores'
+  /** No declared data store at all, so the declared migrations name no data. */
+  | 'no-data-store'
+  /** A declared step ships no `module`, so the chain has a gap. */
+  | 'missing-migration-module'
+  /** A migration module does not export the unit `descriptor` its plugin opens. */
+  | 'missing-descriptor-export'
+  /** The exported descriptor's version disagrees with the declared migrations. */
+  | 'descriptor-version-mismatch'
+  /** The package's declaration would be denied at mount, so its code must not run here. */
+  | 'denied-at-mount'
 
 /**
  * Hold the upgrade's cross-process lease and a mounted storage backend for the
@@ -115,7 +172,7 @@ export interface UpgradeEnvironment {
  */
 export async function withUpgradeEnvironment<T>(
   harnessHome: string,
-  lookups: Pick<UpgradeEnvironment, 'unitFor' | 'stepsFor'>,
+  lookups: Pick<UpgradeEnvironment, 'resolve'>,
   body: (environment: UpgradeEnvironment) => Promise<T>,
 ): Promise<{ readonly held: true; readonly value: T } | { readonly held: false; readonly refusal: string }> {
   const store = openLeaseStore(join(harnessHome, 'leases'))
@@ -147,8 +204,28 @@ export async function withUpgradeEnvironment<T>(
         migration: backend.migration,
         lease: taken.lease,
         now: () => Date.now(),
-        unitFor: lookups.unitFor,
-        stepsFor: lookups.stepsFor,
+        resolve: lookups.resolve,
+        exportPathFor: (plugin, fromVersion) =>
+          join(harnessHome, 'plugin-upgrades', `${plugin}.v${String(fromVersion)}.export.json`),
+        openUnit: async (unit) => {
+          // Opened through the hub exactly as a booting plugin would, so the
+          // check fails on everything a boot would fail on — a stale version
+          // stamp, a malformed document, a missing declared table.
+          try {
+            // `kv` is optional on the backend contract because a backend may
+            // serve another shape; this one is the JSON backend, mounted here.
+            const kv = backend.kv
+            if (kv === undefined) return false
+            const opened = await kv.open(unit)
+            await opened.loadAll()
+            await opened.close()
+            return true
+          } catch {
+            // Any failure to open and read IS the negative answer; the caller
+            // rolls the switch back and reports the phase.
+            return false
+          }
+        },
         writeRecord: async (plugin, record) => {
           await mkdir(join(harnessHome, 'plugin-upgrades'), { recursive: true, mode: 0o700 })
           await writeFileAtomic(
@@ -185,67 +262,125 @@ export async function migrateChangedPlugins(
   manifests: ReadonlyMap<string, PluginMigrationManifest>,
   environment: UpgradeEnvironment,
   report: (line: string) => void,
-): Promise<string[]> {
+  confirmation?: MigrationPathDigest,
+): Promise<UpgradeOutcomes> {
   const migrated: string[] = []
+  const failed: string[] = []
   for (const change of changes) {
     const manifest = manifests.get(change.plugin)
     // A plugin that declares no migrations is not skipped silently for lack of
     // a record: it has said its data needs none, which is different from
     // saying nothing.
     if (manifest === undefined) continue
-    const unit = environment.unitFor(change.plugin)
-    if (unit === undefined) {
-      report(`${change.plugin}: declares migrations but owns no storage unit — nothing to migrate`)
+    const resolution = await environment.resolve(change.plugin)
+    if (resolution.kind === 'none') continue
+    if (resolution.kind === 'refused') {
+      // Named, and counted as a failure: the code is already at the new
+      // version, so a plugin left here would meet its old data at the next
+      // boot. The caller puts the code back.
+      report(`${change.plugin}: cannot upgrade its data (${resolution.reason}) — ${resolution.detail}`)
+      failed.push(change.plugin)
       continue
     }
-    const steps = await environment.stepsFor(change.plugin)
-    if (steps === undefined) {
-      report(`${change.plugin}: declares migrations but ships no migration module — refusing to upgrade its data`)
+    const facet = environment.migration
+    if (facet === undefined) {
+      report(`${change.plugin}: this storage backend cannot migrate (backend-cannot-migrate) — its data is unchanged`)
+      failed.push(change.plugin)
       continue
     }
+    const unit = resolution.unit
     // The version the DATA is at, read from the medium — not `change.from`,
     // which is the PACKAGE version. A package version stepping 1.2.0 → 2.0.0
     // says nothing about which schema version the stored records are at, and
     // passing it as one would plan a path between versions no manifest
     // declares.
-    const stamped = await environment.migration?.stampedVersion(unit)
+    const stamped = await facet.stampedVersion(unit)
     if (stamped === undefined) {
       report(`${change.plugin}: its unit '${unit.name}' holds no data yet — nothing to migrate`)
       continue
     }
     if (stamped === unit.version) continue // already at the version this build wants
 
+    // must[2]: an irreversible path is exported BEFORE any confirmation is
+    // weighed, because what an operator confirms is that they can still get
+    // their data out. The export is a file that outlives the upgrade, not the
+    // transaction's own snapshot handle.
+    const plan = planUpgrade(manifest, brandString<PluginSchemaVersion>(String(stamped)))
+    let exportPath: string | undefined
+    if (requiresApprovalAndExport(plan)) {
+      exportPath = environment.exportPathFor(change.plugin, stamped)
+      await facet.exportUnit(unit, exportPath)
+    }
+
     const outcome = await runUpgrade({
       plugin: change.plugin,
       manifest,
       installed: brandString<PluginSchemaVersion>(String(stamped)),
       unit,
-      migration: environment.migration,
+      migration: facet,
       lease: environment.lease,
       now: environment.now,
-      migrate: steps,
-      // Both phases accept unconditionally, and that is a stated gap rather
-      // than a check: validating the migrated records means opening them as
-      // the plugin would, and a health check means asking the plugin whether
-      // it works — neither is available from a package-manager command, which
-      // mounts no plugin. The transaction still runs them as phases, so the
-      // day a booted-plugin probe exists it replaces these two closures and
-      // nothing else. Recorded in this epic's Known Limitations.
-      validate: () => Promise.resolve({ ok: true, digest: `sha256-${String(unit.version)}` }),
-      healthCheck: () => Promise.resolve(true),
+      migrate: resolution.migrate,
+      ...(confirmation === undefined || exportPath === undefined
+        ? {}
+        : { confirmation: { digest: confirmation, exportPath } }),
+      validate: async (copy) => {
+        const digest = await facet.digestUnit(copy)
+        const read = await facet.readSnapshot(copy)
+        // Three things, each of which has failed for a different reason in a
+        // real medium: the copy materialized at all, it carries the version it
+        // was migrated TO (a copy still stamped at the old version is one the
+        // new build refuses to open), and the plugin's own validator accepts
+        // its content.
+        if (read.version !== unit.version) return { ok: false, digest }
+        if (resolution.validate !== undefined && !await resolution.validate(read.content)) {
+          return { ok: false, digest }
+        }
+        return { ok: true, digest }
+      },
+      healthCheck: () => environment.openUnit(unit),
       writeRecord: async (record) => { await environment.writeRecord(change.plugin, record) },
     })
     if (outcome.upgraded) {
       migrated.push(change.plugin)
       continue
     }
+    failed.push(change.plugin)
     report(
       `${change.plugin}: upgrade failed at ${outcome.failedAt}`
-      + (outcome.refusal === undefined ? '' : ` (${outcome.refusal.kind})`)
-      + ' — its data is unchanged, and its code is being rolled back',
+      + (outcome.refusal === undefined ? '' : ` (${describeRefusal(outcome.refusal)})`)
+      + ' — its data is unchanged, and its code is being rolled back'
+      + (exportPath === undefined ? '' : `; its data was exported to ${exportPath}`),
     )
   }
-  return migrated
+  return { migrated, failed }
+}
+
+/** How one install's data migrations ended, per plugin. */
+export interface UpgradeOutcomes {
+  /** Plugins whose data reached the version their new code expects. */
+  readonly migrated: readonly string[]
+  /** Plugins whose data did NOT move, so their code must go back. */
+  readonly failed: readonly string[]
+}
+
+/**
+ * One refusal in terms an operator can act on.
+ *
+ * `confirmation-required` is the one an operator MUST be able to act on
+ * without reading source: it names the exact digest to pass back, so the
+ * approval names one specific conversion rather than "whatever runs next".
+ * @param refusal - the refusal the transaction returned.
+ * @returns a one-line description.
+ */
+function describeRefusal(refusal: MigrationRefusal): string {
+  if (refusal.kind === 'confirmation-required') {
+    return `${refusal.kind}: this upgrade cannot be undone — re-run with --confirm ${refusal.digest}`
+  }
+  if (refusal.kind === 'confirmation-mismatch') {
+    return `${refusal.kind}: --confirm named ${refusal.supplied}, but this path is ${refusal.expected}`
+  }
+  return refusal.kind
 }
 
 /**
@@ -495,13 +630,13 @@ export function declaredMigrationManifests(
       migrations: declared.map(step => ({
         from: brandString<PluginSchemaVersion>(String(step.fromVersion)),
         to: brandString<PluginSchemaVersion>(String(step.toVersion)),
-        // P1-01's declaration carries neither field. Defaulted HERE rather than
-        // in the decision package, so the gap stays visible at the bridge:
-        // until the declaration is extended, every declared migration reads as
-        // snapshot-backed and reversible, and an irreversible one cannot be
-        // expressed at all. Recorded in this epic's Known Limitations.
-        backup: { kind: 'snapshot' },
-        reversible: true,
+        // Carried from the declaration, never defaulted: a defaulted
+        // `reversible: true` would make the operator's confirmation unreachable
+        // in exactly the case it exists for. A step that ships a module and
+        // declares neither is rejected by `validatePluginManifestV2`, so what
+        // reaches here has said which it is.
+        backup: { kind: step.backup ?? 'snapshot' },
+        reversible: step.reversible ?? true,
       })),
     })
   }
@@ -509,69 +644,125 @@ export function declaredMigrationManifests(
 }
 
 /**
- * Where a plugin's unit and its migration steps come from: its own installed
- * manifest.
+ * What one plugin's installed new version offers an upgrade, read from its own
+ * declarations and its own shipped code (must[0]).
  *
- * The unit is derived from P1-01's `dataStores` declaration, so the data an
- * upgrade touches is the data the plugin declared it owns. A plugin declaring
- * more than one store has no single unit and gets none — an upgrade that picked
- * one would migrate an arbitrary half of its data.
+ * Everything comes from the INSTALLED NEW version: it is the build that knows
+ * how to convert into its own shape, and the build whose descriptor the data
+ * must end up matching. Nothing is inferred — the unit is the module's own
+ * exported `descriptor` (the same value the plugin opens its unit with), not a
+ * shape assembled here from a domain name.
  *
- * The steps are loaded from the INSTALLED NEW version by `import()`, gated by
- * the same pre-mount admission a boot applies: this runs the plugin's own code
- * in the CLI process, so a declaration that would be denied at mount must not
- * be executed here either.
+ * Loading that module runs the plugin's code in the CLI process, so the same
+ * pre-mount admission a production boot applies gates it: a declaration denied
+ * at mount is denied here.
+ * @param plugin - the package name.
  * @param profileDir - the profile directory the packages are installed under.
- * @returns the lookups `withUpgradeEnvironment` needs.
+ * @returns what the upgrade needs, that it needs nothing, or why it cannot.
  */
-export function upgradeLookups(profileDir: string): Pick<UpgradeEnvironment, 'unitFor' | 'stepsFor'> {
-  return {
-    unitFor: (plugin) => {
-      const manifest = installedManifestV2(plugin, profileDir)
-      const stores = manifest?.dataStores ?? []
-      if (manifest === undefined || stores.length !== 1 || stores[0] === undefined) return undefined
-      const declared = manifest.migrations ?? []
-      if (declared.length === 0) return undefined
-      return {
-        name: stores[0].domainName,
-        version: Math.max(...declared.map(step => step.toVersion)),
-        tables: [stores[0].domainName],
-        hasGlobal: false,
-      }
-    },
-    stepsFor: async (plugin) => {
-      const manifest = installedManifestV2(plugin, profileDir)
-      if (manifest === undefined) return undefined
-      const declaration = classifyPluginDeclaration({ ...manifest })
-      if (!evaluatePreMountAdmission(declaration, true).admitted) return undefined
-      // Ordered by the version each step converts FROM, because the modules run
-      // as a chain and a manifest lists its steps in no particular order.
-      const modules = [...manifest.migrations ?? []]
-        .sort((left, right) => left.fromVersion - right.fromVersion)
-        .map(step => step.module)
-      // Every declared step must ship its module or none run: a partial chain
-      // would leave the records between two versions with no declaration
-      // describing where they are.
-      if (modules.length === 0 || modules.some(specifier => specifier === undefined)) return undefined
-      let dir: string
-      try {
-        dir = resolveBundleDir(NAME, plugin, INSTALL_ANCHOR, profileDir)
-      } catch {
-        return undefined
-      }
-      const steps: ((records: readonly unknown[]) => Promise<readonly unknown[]>)[] = []
-      for (const specifier of modules) {
-        const loaded = await import(pathToFileURL(join(dir, specifier as string)).href) as {
-          default?: (records: readonly unknown[]) => Promise<readonly unknown[]>
-        }
-        if (loaded.default === undefined) return undefined
-        steps.push(loaded.default)
-      }
-      return async (records) => {
-        let current = records
-        for (const step of steps) current = await step(current)
-        return current
-      }
-    },
+export async function resolvePluginUpgrade(
+  plugin: string,
+  profileDir: string,
+): Promise<PluginUpgradeResolution> {
+  const manifest = installedManifestV2(plugin, profileDir)
+  if (manifest === undefined) {
+    return {
+      kind: 'refused',
+      reason: 'unreadable-manifest',
+      detail: `${plugin} is unresolvable or declares no Plugin Manifest v2`,
+    }
   }
+  const declared = [...manifest.migrations ?? []].sort((left, right) => left.fromVersion - right.fromVersion)
+  if (declared.length === 0) return { kind: 'none' }
+
+  if (!evaluatePreMountAdmission(classifyPluginDeclaration({ ...manifest }), true).admitted) {
+    return {
+      kind: 'refused',
+      reason: 'denied-at-mount',
+      detail: `${plugin}'s declaration is denied at mount, so its migration code must not run either`,
+    }
+  }
+  const stores = manifest.dataStores ?? []
+  if (stores.length === 0) {
+    return {
+      kind: 'refused',
+      reason: 'no-data-store',
+      detail: `${plugin} declares migrations but no data store, so the migrations name no data`,
+    }
+  }
+  if (stores.length > 1) {
+    return {
+      kind: 'refused',
+      reason: 'multiple-data-stores',
+      detail: `${plugin} declares ${String(stores.length)} data stores; an upgrade would move an arbitrary part of its data`,
+    }
+  }
+  const missing = declared.find(step => step.module === undefined)
+  if (missing !== undefined) {
+    return {
+      kind: 'refused',
+      reason: 'missing-migration-module',
+      detail: `${plugin} declares ${String(missing.fromVersion)} -> ${String(missing.toVersion)} but ships no module for it`,
+    }
+  }
+  let dir: string
+  try {
+    dir = resolveBundleDir(NAME, plugin, INSTALL_ANCHOR, profileDir)
+  } catch {
+    return { kind: 'refused', reason: 'unreadable-manifest', detail: `${plugin} is installed but unresolvable` }
+  }
+
+  const steps: PluginMigrationModule[] = []
+  for (const step of declared) {
+    steps.push(await import(pathToFileURL(join(dir, step.module as string)).href) as PluginMigrationModule)
+  }
+  // The LAST step's module is the one that ends at the version this build
+  // wants, so its descriptor is the one the data must match.
+  const last = steps.at(-1)
+  if (last === undefined || (last.descriptor as KvUnitDescriptor | undefined) === undefined) {
+    return {
+      kind: 'refused',
+      reason: 'missing-descriptor-export',
+      detail: `${plugin}'s migration module must export \`descriptor\` and \`migrate\``,
+    }
+  }
+  const target = Math.max(...declared.map(step => step.toVersion))
+  if (last.descriptor.version !== target) {
+    return {
+      kind: 'refused',
+      reason: 'descriptor-version-mismatch',
+      detail: `${plugin}'s module descriptor is version ${String(last.descriptor.version)} `
+        + `but its declarations reach ${String(target)}`,
+    }
+  }
+  const validate = last.validate
+  const migrate = async (content: UnitContent): Promise<UnitContent> => {
+    let current = content
+    for (const step of steps) current = await step.migrate(current)
+    return current
+  }
+  return {
+    kind: 'ready',
+    unit: last.descriptor,
+    migrate,
+    ...(validate === undefined ? {} : { validate }),
+  }
+}
+
+/**
+ * What a plugin's migration module exports.
+ *
+ * `descriptor` is the plugin's own unit descriptor — the same value it passes
+ * to `kv.open` at boot — so an upgrade targets the unit the plugin actually
+ * opens rather than one assembled from its manifest. `validate` is optional
+ * because not every conversion has a check worth writing; when it exists it
+ * runs against the migrated copy, before anything is switched in.
+ */
+export interface PluginMigrationModule {
+  /** The unit this plugin opens once the migration has run. */
+  readonly descriptor: KvUnitDescriptor
+  /** Converts one unit's content to this step's target version. */
+  readonly migrate: (content: UnitContent) => Promise<UnitContent>
+  /** Answers whether the migrated content is acceptable. */
+  readonly validate?: (content: UnitContent) => Promise<boolean>
 }

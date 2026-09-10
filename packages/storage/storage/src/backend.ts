@@ -68,6 +68,21 @@ export interface UnitSnapshot {
 }
 
 /**
+ * One unit's whole content, in the same shape {@link KvUnit.loadAll} returns.
+ *
+ * A migration converts THIS, so what it sees is exactly what the plugin sees
+ * when it reads its own unit, not a per-medium encoding. An earlier version of
+ * this facet passed an opaque record array matching no backend's real
+ * document, so a migration would have rewritten a shape nothing reads.
+ */
+export interface UnitContent {
+  /** The global singleton slot; `null` when never written or not declared. */
+  readonly global: unknown
+  /** Every table's records, keyed by table name then record key. */
+  readonly tables: Readonly<Record<string, Readonly<Record<string, unknown>>>>
+}
+
+/**
  * Snapshot, migrate and swap one unit, in whatever the medium's own terms are
  * (P1-10 must[1]).
  *
@@ -93,6 +108,44 @@ export interface MigrationFacet {
    */
   stampedVersion(descriptor: KvUnitDescriptor): Promise<number | undefined>
   /**
+   * Digest of what a snapshot or migrated copy HOLDS.
+   *
+   * Computed by the medium over the records themselves, so the value survives
+   * a re-encoding that changes bytes without changing data, and so a
+   * reconciliation compares data against data. A digest derived from a version
+   * number would compare a number with itself.
+   * @param snapshot - the snapshot, migrated copy, or replaced state to digest.
+   * @returns the digest, prefixed with its algorithm.
+   */
+  digestUnit(snapshot: UnitSnapshot): Promise<string>
+  /**
+   * The version stamp and records a snapshot or migrated copy holds.
+   *
+   * Exists so a caller can VALIDATE a migrated copy before it is switched in —
+   * that it materialized, that it carries the version it was migrated to, and
+   * that its records load — without knowing the medium. `version` is undefined
+   * when the copy carries no stamp, which is itself a validation failure for a
+   * migrated copy.
+   * @param snapshot - the snapshot or migrated copy to read.
+   * @returns its stamped version and records.
+   */
+  readSnapshot(snapshot: UnitSnapshot): Promise<{
+    readonly version: number | undefined
+    readonly content: UnitContent
+  }>
+  /**
+   * Write a unit's current state OUT of the medium, to a path the operator
+   * keeps.
+   *
+   * Distinct from `snapshotUnit`, whose handle is backend-private and lives
+   * and dies with the transaction. An operator confirming an irreversible
+   * conversion is confirming that they can still get their data out, so the
+   * export must be a file that outlives the upgrade.
+   * @param descriptor - the unit to export.
+   * @param destination - absolute path to write.
+   */
+  exportUnit(descriptor: KvUnitDescriptor, destination: string): Promise<void>
+  /**
    * Copy a unit's current state aside, consistently.
    *
    * Consistency here is the backend's to provide: a copy taken while writers
@@ -108,13 +161,13 @@ export interface MigrationFacet {
    * touching the live unit.
    * @param snapshot - the snapshot to migrate from.
    * @param version - the version the migrated copy is stamped with.
-   * @param migrate - converts the records; the backend supplies and stores them.
+   * @param migrate - converts the content; the backend supplies and stores it.
    * @returns a handle to the migrated copy.
    */
   materializeMigrated(
     snapshot: UnitSnapshot,
     version: number,
-    migrate: (records: readonly unknown[]) => Promise<readonly unknown[]>,
+    migrate: (content: UnitContent) => Promise<UnitContent>,
   ): Promise<UnitSnapshot>
   /**
    * Put a migrated copy in place of the live unit, keeping the previous state

@@ -15,11 +15,16 @@
  * shape it produced looked complete and had no subject.
  */
 
-import type { KvUnitDescriptor, MigrationFacet, UnitSnapshot } from '@deepseek-ai/dsh-storage'
+import type { KvUnitDescriptor, MigrationFacet, UnitContent, UnitSnapshot } from '@deepseek-ai/dsh-storage'
 import type { RunLease } from '@deepseek-ai/dsh-lease-contract'
 
-import { computeMigrationPathDigest, planUpgrade } from './index.ts'
-import type { MigrationRefusal, PluginMigrationManifest, PluginSchemaVersion } from './types.ts'
+import { admitIrreversibleUpgrade, computeMigrationPathDigest, planUpgrade } from './index.ts'
+import type {
+  MigrationPathDigest,
+  MigrationRefusal,
+  PluginMigrationManifest,
+  PluginSchemaVersion,
+} from './types.ts'
 
 /** The phases must[1] names, in the order it names them. */
 export const UPGRADE_PHASES = [
@@ -91,8 +96,17 @@ export interface UpgradeRequest {
   readonly lease: RunLease
   /** Reads the clock; injected so a case can drive expiry deterministically. */
   readonly now: () => number
-  /** Converts the records to the new version, inside the quarantine. */
-  readonly migrate: (records: readonly unknown[]) => Promise<readonly unknown[]>
+  /**
+   * What the operator supplied for an irreversible path (must[2]), absent when
+   * they supplied nothing.
+   *
+   * Weighed HERE rather than by the caller, because this is the operation that
+   * makes the change: a caller that checked and then called would leave every
+   * other caller — and a later one — free to skip the check.
+   */
+  readonly confirmation?: { readonly digest: MigrationPathDigest; readonly exportPath?: string }
+  /** Converts the unit's content to the new version, inside the quarantine. */
+  readonly migrate: (content: UnitContent) => Promise<UnitContent>
   /** Answers whether the migrated copy validates; the digest it returns is recorded. */
   readonly validate: (migrated: UnitSnapshot) => Promise<{ readonly ok: boolean; readonly digest: string }>
   /** Answers whether the plugin works on the switched-in data (must[1]'s last phase). */
@@ -144,6 +158,12 @@ export async function runUpgrade(request: UpgradeRequest): Promise<UpgradeOutcom
       refusal: { kind: 'backend-cannot-migrate', plugin: request.plugin },
     }
   }
+
+  // must[2]: an irreversible path needs the operator's confirmation of THIS
+  // path, and the export that makes the confirmation meaningful. Refused at
+  // freeze, before anything is copied or written.
+  const unconfirmed = admitIrreversibleUpgrade(request.plugin, plan, request.confirmation)
+  if (unconfirmed !== undefined) return { upgraded: false, failedAt: 'freeze', refusal: unconfirmed }
 
   // freeze: the lease is already held — taken before the package manager ran,
   // so at this point the code has not moved either.

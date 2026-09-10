@@ -270,3 +270,159 @@ describe('sqlite backend specifics', () => {
     await reopened.close()
   })
 })
+
+describe('P1-10 must[1]: the migration facet in this medium', () => {
+  const UNIT: KvUnitDescriptor = { name: 'notes', version: 1, tables: ['notes'], hasGlobal: true }
+
+  /** Seed one unit through the backend itself, so the rows are the ones it really writes. */
+  async function seed(path: string, version: number, body: string): Promise<void> {
+    const backend = backendAt(path)
+    const unit = await backend.kv.open({ ...UNIT, version })
+    await unit.putRecord('notes', 'a', { body })
+    await unit.setGlobal({ seeded: true })
+    await unit.close()
+    await backend.close()
+  }
+
+  it('exposes no facet for a :memory: database, because it has nowhere to keep a snapshot', async () => {
+    // Told by NAME rather than discovered as a failure partway through: an
+    // upgrade on this medium is refused before anything moves.
+    const backend = backendAt(':memory:')
+    expect(backend.migration).toBeUndefined()
+    await backend.close()
+  })
+
+  it('reports the version stamped on the medium, and none for a unit that has none', async () => {
+    const path = await freshDbPath()
+    await seed(path, 1, 'original')
+    const backend = backendAt(path)
+
+    expect(await backend.migration!.stampedVersion({ ...UNIT, version: 7 })).toBe(1)
+    expect(await backend.migration!.stampedVersion({ ...UNIT, name: 'absent' })).toBeUndefined()
+    await backend.close()
+  })
+
+  it('snapshots ONE unit, not the whole database', async () => {
+    // The database holds every unit, so a file copy would make a rollback of
+    // one unit a rollback of all of them.
+    const path = await freshDbPath()
+    await seed(path, 1, 'original')
+    const backend = backendAt(path)
+    const other = await backend.kv.open({ name: 'other', version: 1, tables: ['other'], hasGlobal: false })
+    await other.putRecord('other', 'x', { body: 'untouched' })
+    await other.close()
+
+    const snapshot = await backend.migration!.snapshotUnit(UNIT)
+    const read = await backend.migration!.readSnapshot(snapshot)
+
+    expect(read).toEqual({
+      version: 1,
+      content: { global: { seeded: true }, tables: { notes: { a: { body: 'original' } } } },
+    })
+    await backend.close()
+  })
+
+  it('materializes a migrated copy at the new version, leaving the live rows alone', async () => {
+    const path = await freshDbPath()
+    await seed(path, 1, 'original')
+    const backend = backendAt(path)
+
+    const snapshot = await backend.migration!.snapshotUnit(UNIT)
+    const migrated = await backend.migration!.materializeMigrated(snapshot, 2, async content => ({
+      global: content.global,
+      tables: { notes: { ...content.tables['notes'], b: { body: 'migrated' } } },
+    }))
+
+    expect(await backend.migration!.readSnapshot(migrated)).toEqual({
+      version: 2,
+      content: { global: { seeded: true }, tables: { notes: { a: { body: 'original' }, b: { body: 'migrated' } } } },
+    })
+    expect(await backend.migration!.stampedVersion(UNIT)).toBe(1)
+    await backend.close()
+  })
+
+  it('switches in so the new build can open the unit, and keeps the rollback target', async () => {
+    const path = await freshDbPath()
+    await seed(path, 1, 'original')
+    const backend = backendAt(path)
+
+    const snapshot = await backend.migration!.snapshotUnit(UNIT)
+    const migrated = await backend.migration!.materializeMigrated(snapshot, 2, async content => ({
+      global: content.global,
+      tables: { notes: { a: { body: 'migrated' } } },
+    }))
+    const previous = await backend.migration!.switchIn(migrated)
+    await backend.close()
+
+    // The proof that the switch worked is that the NEW descriptor opens: a
+    // unit still stamped at 1 rejects with version-mismatch.
+    const reopened = backendAt(path)
+    const unit = await reopened.kv.open({ ...UNIT, version: 2 })
+    expect(await unit.loadAll()).toEqual({ tables: { notes: { a: { body: 'migrated' } } }, global: { seeded: true } })
+    await unit.close()
+    expect(await reopened.migration!.readSnapshot(previous)).toMatchObject({
+      version: 1,
+      content: { tables: { notes: { a: { body: 'original' } } } },
+    })
+    await reopened.close()
+  })
+
+  it('rolls back the rows AND the stamp', async () => {
+    const path = await freshDbPath()
+    await seed(path, 1, 'original')
+    const backend = backendAt(path)
+
+    const snapshot = await backend.migration!.snapshotUnit(UNIT)
+    const migrated = await backend.migration!.materializeMigrated(snapshot, 2, async content => ({
+      global: content.global,
+      tables: { notes: { a: { body: 'migrated' } } },
+    }))
+    const previous = await backend.migration!.switchIn(migrated)
+    await backend.migration!.rollbackTo(previous)
+    await backend.close()
+
+    // Restoring the rows under the new stamp would leave a unit the old build
+    // refuses to open, so the stamp is part of the rollback.
+    const reopened = backendAt(path)
+    const unit = await reopened.kv.open(UNIT)
+    expect(await unit.loadAll()).toEqual({ tables: { notes: { a: { body: 'original' } } }, global: { seeded: true } })
+    await unit.close()
+    await reopened.close()
+  })
+
+  it('digests content, not file bytes', async () => {
+    const path = await freshDbPath()
+    await seed(path, 1, 'original')
+    const backend = backendAt(path)
+
+    const first = await backend.migration!.snapshotUnit(UNIT)
+    const second = await backend.migration!.snapshotUnit(UNIT)
+    const changed = await backend.migration!.materializeMigrated(second, 2, async content => ({
+      global: content.global,
+      tables: { notes: { a: { body: 'changed' } } },
+    }))
+
+    // Two snapshots of the same rows are two different SQLite files; the
+    // digest is over what they hold.
+    expect(await backend.migration!.digestUnit(second)).toBe(await backend.migration!.digestUnit(first))
+    expect(await backend.migration!.digestUnit(changed)).not.toBe(await backend.migration!.digestUnit(first))
+    await backend.close()
+  })
+
+  it('exports one unit to a path the operator keeps, and discards its own snapshots', async () => {
+    const path = await freshDbPath()
+    await seed(path, 1, 'original')
+    const backend = backendAt(path)
+    const destination = `${path}.export.db`
+
+    await backend.migration!.exportUnit(UNIT, destination)
+    const snapshot = await backend.migration!.snapshotUnit(UNIT)
+    await backend.migration!.discard(snapshot)
+
+    const exported = new DatabaseSync(destination)
+    expect(exported.prepare('SELECT version FROM units WHERE name = ?').get('notes')).toEqual({ version: 1 })
+    exported.close()
+    await expect(backend.migration!.readSnapshot(snapshot)).rejects.toThrow()
+    await backend.close()
+  })
+})

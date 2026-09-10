@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-09-10-plugin-upgrade-reaches-the-product.md
-2026-09-10-plugin-upgrade-reaches-the-product.md: 8ff526c72b42fe55f13262e3b6e3b4d291313390
-2026-09-10-plugin-upgrade-reaches-the-product.zh.md: 8405c4bb9f87661d692d3d66347be7bdd09b2ab9
+2026-09-10-plugin-upgrade-reaches-the-product.md: 82929a573afa01117be16800e9d6cb570cb97619
+2026-09-10-plugin-upgrade-reaches-the-product.zh.md: 8293019a7db944e29b36e0b664466042deb9ad6a

@@ -18,9 +18,10 @@ import { createHash } from 'node:crypto'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { brandString } from '@deepseek-ai/dsh-brand'
-import type { KvUnitDescriptor, MigrationFacet } from '@deepseek-ai/dsh-storage'
+import type { KvUnitDescriptor, MigrationFacet, UnitContent } from '@deepseek-ai/dsh-storage'
 import type { RunLease } from '@deepseek-ai/dsh-lease-contract'
 
+import { computeMigrationPathDigest } from '@deepseek-ai/dsh-plugin-migrations'
 import { runUpgrade, UPGRADE_PHASES } from '@deepseek-ai/dsh-plugin-migrations/transaction'
 import type { UpgradeRecord, UpgradeRequest } from '@deepseek-ai/dsh-plugin-migrations/transaction'
 import type { PluginMigration, PluginMigrationManifest, PluginSchemaVersion } from '@deepseek-ai/dsh-plugin-migrations'
@@ -44,6 +45,19 @@ const MANIFEST: PluginMigrationManifest = {
 
 const UNIT: KvUnitDescriptor = { name: 'notes', version: 1, tables: ['notes'], hasGlobal: false }
 
+/** The fake medium's content, carrying its rows as one table's keys. */
+function content(values: readonly string[]): UnitContent {
+  return { global: null, tables: { notes: Object.fromEntries(values.map(value => [value, true])) } }
+}
+
+/** The rows one content holds, in insertion order. */
+function rows(value: UnitContent): string[] {
+  return Object.keys(value.tables['notes'] ?? {})
+}
+
+/** The content of a unit that holds nothing. */
+const EMPTY: UnitContent = { global: null, tables: {} }
+
 /**
  * A backend whose medium is a map, recording every facet call.
  *
@@ -54,8 +68,8 @@ const UNIT: KvUnitDescriptor = { name: 'notes', version: 1, tables: ['notes'], h
  */
 class RecordingBackend {
   readonly calls: string[] = []
-  live: readonly unknown[] = ['original']
-  readonly copies = new Map<string, readonly unknown[]>()
+  live: UnitContent = content(['original'])
+  readonly copies = new Map<string, UnitContent>()
   private next = 0
 
   /** The version this fake's medium is stamped with; the caller reads it, not the transaction. */
@@ -63,28 +77,34 @@ class RecordingBackend {
 
   readonly facet: MigrationFacet = {
     stampedVersion: async () => this.stamped,
+    digestUnit: async snapshot => `sha256-${rows(this.copies.get(snapshot.handle) ?? EMPTY).join('|')}`,
+    readSnapshot: async snapshot => ({
+      version: this.stamped,
+      content: this.copies.get(snapshot.handle) ?? EMPTY,
+    }),
+    exportUnit: async (descriptor) => { this.calls.push(`export:${descriptor.name}`) },
     snapshotUnit: async (descriptor) => {
       this.calls.push(`snapshot:${descriptor.name}`)
       const handle = `snap-${String(this.next += 1)}`
-      this.copies.set(handle, [...this.live])
+      this.copies.set(handle, this.live)
       return { unit: descriptor.name, handle }
     },
     materializeMigrated: async (snapshot, version, migrate) => {
       this.calls.push(`materialize:${String(version)}`)
       const handle = `migrated-${String(this.next += 1)}`
-      this.copies.set(handle, await migrate(this.copies.get(snapshot.handle) ?? []))
+      this.copies.set(handle, await migrate(this.copies.get(snapshot.handle) ?? EMPTY))
       return { unit: snapshot.unit, handle }
     },
     switchIn: async (migrated) => {
       this.calls.push(`switchIn:${migrated.handle}`)
       const previousHandle = `previous-${String(this.next += 1)}`
-      this.copies.set(previousHandle, [...this.live])
-      this.live = this.copies.get(migrated.handle) ?? []
+      this.copies.set(previousHandle, this.live)
+      this.live = this.copies.get(migrated.handle) ?? EMPTY
       return { unit: migrated.unit, handle: previousHandle }
     },
     rollbackTo: async (previous) => {
       this.calls.push(`rollbackTo:${previous.handle}`)
-      this.live = this.copies.get(previous.handle) ?? []
+      this.live = this.copies.get(previous.handle) ?? EMPTY
     },
     discard: async (snapshot) => {
       this.calls.push(`discard:${snapshot.handle}`)
@@ -119,7 +139,7 @@ function request(
       migration: backend.facet,
       lease: heldLease(),
       now: () => 1_000,
-      migrate: async rows => [...rows, 'migrated'],
+      migrate: async current => content([...rows(current), 'migrated']),
       validate: async () => ({ ok: true, digest: 'sha256-validated' }),
       healthCheck: async () => true,
       writeRecord: async (record) => { records.push(record) },
@@ -140,16 +160,16 @@ describe('P1-10 must[1]: what each phase leaves behind', () => {
     const backend = new RecordingBackend()
     const seen: unknown[][] = []
     const { request: upgrade } = request(backend, {
-      migrate: async (rows) => {
+      migrate: async (current) => {
         // Observed DURING the migration: the live unit still reads as it did.
-        seen.push([...backend.live])
-        return [...rows, 'migrated']
+        seen.push(rows(backend.live))
+        return content([...rows(current), 'migrated'])
       },
     })
 
     expect(await runUpgrade(upgrade)).toMatchObject({ upgraded: true })
     expect(seen).toEqual([['original']])
-    expect(backend.live).toEqual(['original', 'migrated'])
+    expect(rows(backend.live)).toEqual(['original', 'migrated'])
   })
 
   it('calls the facet in the order the phases declare, and never a path', async () => {
@@ -172,7 +192,7 @@ describe('P1-10 must[1]: what each phase leaves behind', () => {
 
     expect(await runUpgrade(upgrade)).toEqual({ upgraded: false, failedAt: 'health-check' })
     // Not "an error was returned": the records are read back.
-    expect(backend.live).toEqual(['original'])
+    expect(rows(backend.live)).toEqual(['original'])
     expect(backend.calls.some(call => call.startsWith('rollbackTo:'))).toBe(true)
   })
 
@@ -183,7 +203,7 @@ describe('P1-10 must[1]: what each phase leaves behind', () => {
     })
 
     expect(await runUpgrade(upgrade)).toEqual({ upgraded: false, failedAt: 'validate' })
-    expect(backend.live).toEqual(['original'])
+    expect(rows(backend.live)).toEqual(['original'])
     expect(backend.calls.some(call => call.startsWith('switchIn:'))).toBe(false)
     expect(backend.calls.some(call => call.startsWith('discard:migrated'))).toBe(true)
   })
@@ -225,7 +245,7 @@ describe('P1-10 must[1]: the lease is what makes the switch safe', () => {
     expect(await runUpgrade(upgrade)).toEqual({ upgraded: false, failedAt: 'switch' })
     // The live unit is untouched, and the migrated copy is discarded rather
     // than left for the new holder to trip over.
-    expect(backend.live).toEqual(['original'])
+    expect(rows(backend.live)).toEqual(['original'])
     expect(backend.calls.some(call => call.startsWith('switchIn:'))).toBe(false)
     expect(backend.calls.some(call => call.startsWith('discard:migrated'))).toBe(true)
   })
@@ -247,13 +267,13 @@ describe('P1-10 must[1]: the lease is what makes the switch safe', () => {
 
     expect(await runUpgrade(upgrade)).toEqual({ upgraded: false, failedAt: 'quarantine' })
     expect(renewals).toEqual([1_000])
-    expect(backend.live).toEqual(['original'])
+    expect(rows(backend.live)).toEqual(['original'])
   })
 
   it('renews and proceeds when the lease still holds, so the check is not a constant', async () => {
     const backend = new RecordingBackend()
     expect(await runUpgrade(request(backend).request)).toMatchObject({ upgraded: true })
-    expect(backend.live).toEqual(['original', 'migrated'])
+    expect(rows(backend.live)).toEqual(['original', 'migrated'])
   })
 })
 
@@ -346,5 +366,67 @@ describe('P1-10 acceptance[2]: a failed upgrade does not change approved permiss
     const harness = harnessHome()
     expect(readdirSync(harness).length).toBeGreaterThan(1)
     expect(treeDigest(harness)).not.toBe(treeDigest(mkdtempSync(join(tmpdir(), 'p1-10-empty-'))))
+  })
+})
+
+describe('P1-10 must[2]: an irreversible path is refused without the operator\'s confirmation', () => {
+  const IRREVERSIBLE: PluginMigrationManifest = {
+    plugin: 'dsh-notes',
+    current: v('2'),
+    migrations: [step('1', '2', { reversible: false, backup: { kind: 'none' } })],
+  }
+
+  it('refuses at freeze, naming the digest the operator must pass back', async () => {
+    const backend = new RecordingBackend()
+    const { request: upgrade } = request(backend, { manifest: IRREVERSIBLE })
+
+    const outcome = await runUpgrade(upgrade)
+
+    // Refused BEFORE anything is copied: the whole point is that a run without
+    // approval changes nothing at all.
+    expect(outcome).toEqual({
+      upgraded: false,
+      failedAt: 'freeze',
+      refusal: { kind: 'confirmation-required', digest: computeMigrationPathDigest('dsh-notes', IRREVERSIBLE.migrations) },
+    })
+    expect(backend.calls).toEqual([])
+    expect(rows(backend.live)).toEqual(['original'])
+  })
+
+  it('refuses a confirmation that names another path', async () => {
+    const backend = new RecordingBackend()
+    const { request: upgrade } = request(backend, {
+      manifest: IRREVERSIBLE,
+      confirmation: { digest: computeMigrationPathDigest('other-plugin', IRREVERSIBLE.migrations), exportPath: '/tmp/e' },
+    })
+
+    // A confirmation obtained for one conversion must not admit another: that
+    // is what makes the approval about this specific path.
+    expect(await runUpgrade(upgrade)).toMatchObject({ failedAt: 'freeze', refusal: { kind: 'confirmation-mismatch' } })
+    expect(rows(backend.live)).toEqual(['original'])
+  })
+
+  it('refuses a confirmation with no export, then proceeds when both are present', async () => {
+    const backend = new RecordingBackend()
+    const digest = computeMigrationPathDigest('dsh-notes', IRREVERSIBLE.migrations)
+
+    const { request: withoutExport } = request(backend, { manifest: IRREVERSIBLE, confirmation: { digest } })
+    expect(await runUpgrade(withoutExport)).toMatchObject({ failedAt: 'freeze', refusal: { kind: 'export-missing' } })
+
+    const { request: complete } = request(backend, {
+      manifest: IRREVERSIBLE,
+      confirmation: { digest, exportPath: '/tmp/notes.export.json' },
+    })
+    expect(await runUpgrade(complete)).toEqual({ upgraded: true, digest: 'sha256-validated' })
+    expect(rows(backend.live)).toEqual(['original', 'migrated'])
+  })
+
+  it('does not ask for a confirmation a reversible path never needed', async () => {
+    const backend = new RecordingBackend()
+    const { request: upgrade } = request(backend)
+
+    // The approval exists for irreversibility; demanding it everywhere would
+    // make every upgrade interactive and the flag meaningless.
+    expect(await runUpgrade(upgrade)).toEqual({ upgraded: true, digest: 'sha256-validated' })
   })
 })

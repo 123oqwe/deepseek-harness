@@ -12,7 +12,7 @@
 
 import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
-import { rm } from 'node:fs/promises'
+import { rm, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import {
   DEFAULT_PROFILE_BUNDLES,
@@ -32,11 +32,13 @@ import {
   declaredMigrationManifests,
   migrateChangedPlugins,
   recoverInterruptedUpgrades,
-  upgradeLookups,
+  resolvePluginUpgrade,
+  rollbackCode,
   upgradeRecordPath,
   withUpgradeEnvironment,
   type UpgradeEnvironment,
 } from './plugin-migration.ts'
+import type { MigrationPathDigest } from '@deepseek-ai/dsh-plugin-migrations'
 import {
   buildCandidateLock,
   planLockCommit,
@@ -261,6 +263,10 @@ export async function runPlugin(profile: string, args: readonly string[]): Promi
     process.stderr.write(`${NAME}: initialized profile ${profile} at ${dir}\n`)
   }
   const before = readProfileManifest(NAME, dir)
+  // must[2]'s operator half. Stripped from what pnpm sees, because it is this
+  // command's own flag: forwarding it would fail the install on an unknown
+  // option and never reach the migration it authorizes.
+  const { confirmation, pnpmArgs } = splitConfirmation(args)
   // P1-10: the upgrade holds a cross-process lease for its whole span, taken
   // BEFORE the package manager runs. Refusing here is stronger than freezing
   // the plugin later — a refused upgrade never moves the code, so no
@@ -269,12 +275,34 @@ export async function runPlugin(profile: string, args: readonly string[]): Promi
   // after a restart" is not true of a plugin whose data was left mid-swap.
   const held = await withUpgradeEnvironment(
     dshHomePath(),
-    upgradeLookups(dir),
-    async environment => runUnderLease(args, dir, before, environment),
+    { resolve: async plugin => resolvePluginUpgrade(plugin, dir) },
+    async environment => runUnderLease(pnpmArgs, dir, before, environment, confirmation),
   )
   if (held.held) return held.value
   process.stderr.write(`${NAME}: ${held.refusal}\n`)
   return 1
+}
+
+/**
+ * Separate this command's own `--confirm <digest>` from pnpm's arguments.
+ *
+ * A digest names ONE conversion path, so an approval obtained for one upgrade
+ * cannot admit another: a manifest edited between the operator reading the
+ * digest and the upgrade running produces a different digest and the
+ * confirmation stops matching.
+ * @param args - the arguments as invoked.
+ * @returns the confirmed digest when supplied, and the arguments pnpm sees.
+ */
+function splitConfirmation(
+  args: readonly string[],
+): { confirmation?: MigrationPathDigest; pnpmArgs: readonly string[] } {
+  const index = args.indexOf('--confirm')
+  const digest = index === -1 ? undefined : args[index + 1]
+  if (index === -1 || digest === undefined) return { pnpmArgs: args }
+  return {
+    confirmation: brandString<MigrationPathDigest>(digest),
+    pnpmArgs: [...args.slice(0, index), ...args.slice(index + 2)],
+  }
 }
 
 /**
@@ -288,6 +316,7 @@ export async function runPlugin(profile: string, args: readonly string[]): Promi
  * @param dir - the profile directory.
  * @param before - the manifest read before pnpm ran.
  * @param environment - the migration facet, lease and per-plugin lookups.
+ * @param confirmation - the operator's `--confirm` digest, when supplied.
  * @returns the pnpm exit code.
  */
 async function runUnderLease(
@@ -295,6 +324,7 @@ async function runUnderLease(
   dir: string,
   before: ProfileManifest,
   environment: UpgradeEnvironment,
+  confirmation?: MigrationPathDigest,
 ): Promise<number> {
   // Anything a crash left half-done is undone first, inside this same lease:
   // "the old version is wholly usable after a restart" is not true of a plugin
@@ -308,6 +338,13 @@ async function runUnderLease(
   for (const plugin of recovered) {
     process.stderr.write(`${NAME}: recovered an interrupted upgrade of ${plugin} before installing\n`)
   }
+
+  // Kept from BEFORE pnpm runs: a failed data migration has to put the code
+  // back, and pnpm's store is content addressed, so the previous version is
+  // still installable from these two files.
+  const manifestBefore = readFileSync(join(dir, 'package.json'), 'utf8')
+  const lockPath = join(dir, 'pnpm-lock.yaml')
+  const lockBefore = existsSync(lockPath) ? readFileSync(lockPath, 'utf8') : undefined
 
   // Windows resolves pnpm through its .cmd shim, which spawn() refuses
   // without a shell since the CVE-2024-27980 hardening.
@@ -332,12 +369,31 @@ async function runUnderLease(
       before.dependencies ?? {},
       readProfileManifest(NAME, dir).dependencies ?? {},
     )
-    await migrateChangedPlugins(
+    const outcomes = await migrateChangedPlugins(
       changes,
       declaredMigrationManifests(changes, dir),
       environment,
       line => process.stderr.write(`${NAME}: ${line}\n`),
+      confirmation,
     )
+    if (outcomes.failed.length > 0) {
+      // acceptance[0] is about the PAIR. The data did not move, so the code
+      // goes back to the version the data is at; leaving it forward is exactly
+      // the mixed state the clause forbids.
+      if (lockBefore === undefined) {
+        process.stderr.write(
+          `${NAME}: ${outcomes.failed.join(', ')}: data migration failed and the profile had no lockfile to `
+          + 'restore from — reinstall the previous version before using these plugins\n',
+        )
+        return 1
+      }
+      const failure = await rollbackCode(
+        { profileDir: dir, manifestBefore, lockBefore },
+        async (path, content) => { await writeFile(path, content, 'utf8') },
+      )
+      if (failure !== undefined) process.stderr.write(`${NAME}: ${failure}\n`)
+      return 1
+    }
     reconcilePlugins(before, dir)
     await commitProfileLock(dir)
   } else {

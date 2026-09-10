@@ -9,8 +9,10 @@ import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import type { DatabaseSync } from 'node:sqlite'
 import { StorageError, UNIT_NAME_RE, storageBackendServiceKey } from '@deepseek-ai/dsh-storage'
-import type { KvFacet, KvUnit, KvUnitDescriptor, StorageBackend } from '@deepseek-ai/dsh-storage'
+import type { KvFacet, KvUnit, KvUnitDescriptor, MigrationFacet, StorageBackend } from '@deepseek-ai/dsh-storage'
+import { resolve } from 'node:path'
 import { openDatabase, recordTableName, type JournalMode } from './schema.ts'
+import { SqliteMigrationFacet } from './migration.ts'
 import { SqliteKvUnit } from './unit.ts'
 
 export { STORAGE_SQLITE_SCHEMA_VERSION, type JournalMode } from './schema.ts'
@@ -56,6 +58,16 @@ export class SqliteStorageBackend implements StorageBackend {
   /** The key-value facet; the only shape this backend serves. */
   readonly kv: KvFacet = { open: descriptor => this.openUnit(descriptor) }
 
+  /**
+   * Unit migration, present only for a file-backed database.
+   *
+   * A `:memory:` database has no directory to hold the sidecars a snapshot
+   * needs, so it exposes no facet at all: an upgrade is told by name that this
+   * medium cannot migrate, rather than discovering it as a failure partway
+   * through.
+   */
+  readonly migration?: MigrationFacet
+
   private readonly ready: Promise<DatabaseSync>
   /** Open (or still-opening) units by name; presence is the double-open guard. */
   private readonly units = new Map<string, Promise<SqliteKvUnit>>()
@@ -66,6 +78,9 @@ export class SqliteStorageBackend implements StorageBackend {
    */
   constructor(config: Config) {
     this.ready = openDatabase(config.path, (config as Required<Config>).journalMode)
+    if (config.path !== ':memory:') {
+      this.migration = new SqliteMigrationFacet(this.ready, resolve(config.path))
+    }
     // Mark the rejection handled: every primitive re-awaits `ready`, so an
     // open failure still surfaces to each caller; this guard only prevents an
     // unhandled-rejection crash when the failure precedes the first use.

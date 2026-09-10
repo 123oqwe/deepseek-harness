@@ -410,21 +410,38 @@ describe('per-record layout', () => {
 })
 
 describe('P1-10 must[1]: the migration facet in this medium', () => {
-  const UNIT = { name: 'notes', version: 1, tables: ['notes'], hasGlobal: false }
+  const UNIT = { name: 'notes', version: 1, tables: ['notes'], hasGlobal: true }
 
-  /** Write one single-layout unit's medium directly, as a prior version left it. */
-  async function seedUnit(root: string, version: number, records: readonly unknown[]): Promise<void> {
-    await writeFile(join(root, 'notes.json'), JSON.stringify({ version, records }), 'utf8')
+  /**
+   * Seed one unit through the backend itself, at the given version.
+   *
+   * Written by `kv.open`/`putRecord` rather than by hand, so the medium the
+   * facet reads is the medium this backend actually produces. An earlier
+   * version of these cases wrote `{ version, records }` — a shape no part of
+   * this backend reads — and every assertion over it passed.
+   */
+  async function seedUnit(root: string, version: number, body: string): Promise<void> {
+    const backend = new JsonStorageBackend(root)
+    const unit = await backend.kv.open({ ...UNIT, version })
+    await unit.putRecord('notes', 'a', { body })
+    await unit.setGlobal({ seeded: true })
+    await unit.close()
+    await backend.close()
   }
 
-  async function liveUnit(root: string): Promise<{ version: number; records: unknown[] }> {
-    return JSON.parse(await readFile(join(root, 'notes.json'), 'utf8')) as { version: number; records: unknown[] }
+  /** The live document, as the backend wrote it. */
+  async function liveUnit(root: string): Promise<{
+    unit: { name: string; version: number }
+    global: unknown
+    tables: Record<string, Record<string, unknown>>
+  }> {
+    return JSON.parse(await readFile(join(root, 'notes.json'), 'utf8')) as never
   }
 
   it('reports the version stamped on the medium, which is neither the package nor the wanted version', async () => {
     const root = await freshRoot()
+    await seedUnit(root, 1, 'original')
     const backend = new JsonStorageBackend(root)
-    await seedUnit(root, 1, ['original'])
 
     // UNIT.version is what THIS build wants; the stamp is where the data is.
     expect(await backend.migration.stampedVersion({ ...UNIT, version: 7 })).toBe(1)
@@ -456,84 +473,169 @@ describe('P1-10 must[1]: the migration facet in this medium', () => {
     await backend.close()
   })
 
-  it('snapshots without touching the live medium, and the copy holds the same records', async () => {
+  it('snapshots without touching the live medium, and the copy holds the same content', async () => {
     const root = await freshRoot()
+    await seedUnit(root, 1, 'original')
     const backend = new JsonStorageBackend(root)
-    await seedUnit(root, 1, ['original'])
 
     const snapshot = await backend.migration.snapshotUnit(UNIT)
-    // The live medium is byte-identical: a snapshot that moved it would be a
+    // The live medium is untouched: a snapshot that moved it would be a
     // switch, and the phases exist to keep those apart.
-    expect(await liveUnit(root)).toEqual({ version: 1, records: ['original'] })
-    expect(JSON.parse(await readFile(join(root, snapshot.handle), 'utf8')))
-      .toEqual({ version: 1, records: ['original'] })
+    expect((await liveUnit(root)).tables).toEqual({ notes: { a: { body: 'original' } } })
+    const read = await backend.migration.readSnapshot(snapshot)
+    expect(read).toEqual({ version: 1, content: { global: { seeded: true }, tables: { notes: { a: { body: 'original' } } } } })
     await backend.close()
   })
 
   it('materializes the migrated copy at the NEW version, leaving live at the old one', async () => {
     // The stamp is what KvFacet.open compares against descriptor.version, so a
-    // migration that wrote records without it would leave a unit the new build
+    // migration that wrote content without it would leave a unit the new build
     // still refuses to open -- the failure this epic exists to remove.
     const root = await freshRoot()
+    await seedUnit(root, 1, 'original')
     const backend = new JsonStorageBackend(root)
-    await seedUnit(root, 1, ['original'])
 
     const snapshot = await backend.migration.snapshotUnit(UNIT)
-    const migrated = await backend.migration.materializeMigrated(
-      snapshot,
-      2,
-      async rows => [...rows, 'migrated'],
-    )
+    const migrated = await backend.migration.materializeMigrated(snapshot, 2, async content => ({
+      global: content.global,
+      tables: { notes: { ...content.tables['notes'], b: { body: 'migrated' } } },
+    }))
 
-    expect(JSON.parse(await readFile(join(root, migrated.handle), 'utf8')))
-      .toEqual({ version: 2, records: ['original', 'migrated'] })
-    expect(await liveUnit(root)).toEqual({ version: 1, records: ['original'] })
+    expect(await backend.migration.readSnapshot(migrated)).toEqual({
+      version: 2,
+      content: { global: { seeded: true }, tables: { notes: { a: { body: 'original' }, b: { body: 'migrated' } } } },
+    })
+    expect((await liveUnit(root)).unit.version).toBe(1)
+    await backend.close()
+  })
+
+  it('writes the migrated copy in the format this backend opens, not one of its own', async () => {
+    // The migrated document is opened by the plugin's next boot, so it has to
+    // be the same document `kv.open` parses -- header, global slot and all.
+    const root = await freshRoot()
+    await seedUnit(root, 1, 'original')
+    const backend = new JsonStorageBackend(root)
+
+    const snapshot = await backend.migration.snapshotUnit(UNIT)
+    const migrated = await backend.migration.materializeMigrated(snapshot, 2, async content => content)
+    await backend.migration.switchIn(migrated)
+    await backend.close()
+
+    const reopened = new JsonStorageBackend(root)
+    const unit = await reopened.kv.open({ ...UNIT, version: 2 })
+    expect(await unit.loadAll()).toEqual({
+      tables: { notes: { a: { body: 'original' } } },
+      global: { seeded: true },
+    })
+    await unit.close()
+    await reopened.close()
+  })
+
+  it('digests the CONTENT, so a re-encoding that changes bytes does not change the digest', async () => {
+    const root = await freshRoot()
+    await seedUnit(root, 1, 'original')
+    const backend = new JsonStorageBackend(root)
+
+    const snapshot = await backend.migration.snapshotUnit(UNIT)
+    const before = await backend.migration.digestUnit(snapshot)
+    // Same content, different bytes: key order and indentation are encoding,
+    // not data, and a digest that moved would report a change nothing made.
+    const path = join(root, snapshot.handle)
+    const document = JSON.parse(await readFile(path, 'utf8')) as Record<string, unknown>
+    await writeFile(path, JSON.stringify({ tables: document['tables'], global: document['global'], unit: document['unit'] }), 'utf8')
+
+    expect(await backend.migration.digestUnit(snapshot)).toBe(before)
+    await backend.close()
+  })
+
+  it('digests different content differently', async () => {
+    const root = await freshRoot()
+    await seedUnit(root, 1, 'original')
+    const backend = new JsonStorageBackend(root)
+
+    const snapshot = await backend.migration.snapshotUnit(UNIT)
+    const migrated = await backend.migration.materializeMigrated(snapshot, 2, async content => ({
+      global: content.global,
+      tables: { notes: { a: { body: 'changed' } } },
+    }))
+
+    expect(await backend.migration.digestUnit(migrated)).not.toBe(await backend.migration.digestUnit(snapshot))
+    await backend.close()
+  })
+
+  it('exports the live unit to a path outside the medium', async () => {
+    // An operator confirming an irreversible upgrade is confirming they can
+    // still get their data out, so the export must outlive the transaction's
+    // own snapshots.
+    const root = await freshRoot()
+    await seedUnit(root, 1, 'original')
+    const backend = new JsonStorageBackend(root)
+    const destination = join(root, '..', `export-${String(process.pid)}.json`)
+
+    await backend.migration.exportUnit(UNIT, destination)
+
+    expect(JSON.parse(await readFile(destination, 'utf8'))).toMatchObject({
+      tables: { notes: { a: { body: 'original' } } },
+    })
+    await rm(destination, { force: true })
     await backend.close()
   })
 
   it('switches in and keeps the replaced medium as the rollback target', async () => {
     const root = await freshRoot()
+    await seedUnit(root, 1, 'original')
     const backend = new JsonStorageBackend(root)
-    await seedUnit(root, 1, ['original'])
 
     const snapshot = await backend.migration.snapshotUnit(UNIT)
-    const migrated = await backend.migration.materializeMigrated(snapshot, 2, async rows => [...rows, 'migrated'])
+    const migrated = await backend.migration.materializeMigrated(snapshot, 2, async content => ({
+      global: content.global,
+      tables: { notes: { a: { body: 'migrated' } } },
+    }))
     const previous = await backend.migration.switchIn(migrated)
 
-    expect(await liveUnit(root)).toEqual({ version: 2, records: ['original', 'migrated'] })
+    const live = await liveUnit(root)
+    expect(live.unit.version).toBe(2)
+    expect(live.tables).toEqual({ notes: { a: { body: 'migrated' } } })
     // The replaced medium survives the switch -- that is what makes the switch
     // undoable until the health check passes.
-    expect(JSON.parse(await readFile(join(root, `${previous.handle}.json`), 'utf8')))
-      .toEqual({ version: 1, records: ['original'] })
+    expect(await backend.migration.readSnapshot(previous)).toMatchObject({
+      version: 1,
+      content: { tables: { notes: { a: { body: 'original' } } } },
+    })
     await backend.close()
   })
 
   it('rolls back to exactly what the switch replaced', async () => {
     const root = await freshRoot()
+    await seedUnit(root, 1, 'original')
     const backend = new JsonStorageBackend(root)
-    await seedUnit(root, 1, ['original'])
 
     const snapshot = await backend.migration.snapshotUnit(UNIT)
-    const migrated = await backend.migration.materializeMigrated(snapshot, 2, async rows => [...rows, 'migrated'])
+    const migrated = await backend.migration.materializeMigrated(snapshot, 2, async content => ({
+      global: content.global,
+      tables: { notes: { a: { body: 'migrated' } } },
+    }))
     const previous = await backend.migration.switchIn(migrated)
     await backend.migration.rollbackTo(previous)
 
-    // Rows AND version, because a rollback that restored the records under the
-    // new stamp would leave a unit the old build refuses to open.
-    expect(await liveUnit(root)).toEqual({ version: 1, records: ['original'] })
+    // Content AND version, because a rollback that restored the records under
+    // the new stamp would leave a unit the old build refuses to open.
+    const live = await liveUnit(root)
+    expect(live.unit.version).toBe(1)
+    expect(live.tables).toEqual({ notes: { a: { body: 'original' } } })
     await backend.close()
   })
 
   it('discards a snapshot without disturbing the live medium', async () => {
     const root = await freshRoot()
+    await seedUnit(root, 1, 'original')
     const backend = new JsonStorageBackend(root)
-    await seedUnit(root, 1, ['original'])
 
     const snapshot = await backend.migration.snapshotUnit(UNIT)
     await backend.migration.discard(snapshot)
 
     expect((await readdir(root)).some(entry => entry.includes('snapshot'))).toBe(false)
-    expect(await liveUnit(root)).toEqual({ version: 1, records: ['original'] })
+    expect((await liveUnit(root)).tables).toEqual({ notes: { a: { body: 'original' } } })
     await backend.close()
   })
 
@@ -545,19 +647,10 @@ describe('P1-10 must[1]: the migration facet in this medium', () => {
 
     const snapshot = await backend.migration.snapshotUnit(UNIT)
     expect(snapshot.unit).toBe('notes')
-    await backend.close()
-  })
-
-  it('snapshots a PER-RECORD unit as a directory, not a file', async () => {
-    // The two layouts differ in medium shape, and the facet must not assume
-    // the one it was written against first.
-    const root = await freshRoot()
-    const backend = new JsonStorageBackend(root)
-    await mkdir(join(root, 'notes', 'notes'), { recursive: true })
-    await writeFile(join(root, 'notes', 'notes', 'a.json'), '{"body":"original"}', 'utf8')
-
-    const snapshot = await backend.migration.snapshotUnit({ ...UNIT, layout: 'per-record' })
-    expect(await readFile(join(root, snapshot.handle, 'notes', 'a.json'), 'utf8')).toContain('original')
+    expect(await backend.migration.readSnapshot(snapshot)).toEqual({
+      version: undefined,
+      content: { global: null, tables: {} },
+    })
     await backend.close()
   })
 })

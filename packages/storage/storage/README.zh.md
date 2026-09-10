@@ -78,7 +78,7 @@ kind: "package-reference"
 
 [`src/backend.ts`](src/backend.ts) 是后端实现者的规范性约定，由 `tests/contract.ts` 中的共享一致性套件逐条款检查。一个后端只拥有一种介质，并暴露可选的数据形状分面；`kv` 是唯一的数据形状，打开单元即可获得一个带版本、全局单例的 schema 句柄，其每次单独调用都是原子的，且 resolve 后即已持久。单元名与表名必须匹配 `UNIT_NAME_RE`；记录键是任意字符串，绝不进入文件路径。单元不对并发写入做串行化——顺序由调用方负责——介质上记录的版本与描述符不同时拒绝 `version-mismatch`（不做迁移）。
 
-后端还可以额外暴露可选的 `migration` 分面:`stampedVersion`、`snapshotUnit`、`materializeMigrated`、`switchIn`、`rollbackTo`、`discard`。它用介质自己的术语,把一个单元从介质上打戳的版本转换到新构建想要的版本——消费方只命名句柄,绝不命名路径,因此同一套升级事务既跑在文件上也跑在数据库上。快照的一致性由后端负责;排除其他进程的写入者由调用方负责,通过跨进程租约完成。没有该分面的后端无法被迁移,并以"缺席"本身说明这一点。
+后端还可以额外暴露可选的 `migration` 分面:`stampedVersion`、`digestUnit`、`readSnapshot`、`exportUnit`、`snapshotUnit`、`materializeMigrated`、`switchIn`、`rollbackTo`、`discard`。迁移转换的是 `UnitContent`——与 `loadAll` 返回的 `{ global, tables }` 同一形状——因此它看到的就是插件看到的;`stampedVersion` 回答数据当前所在的版本,它既不是包版本也不是新构建想要的版本;`digestUnit` 摘要的是内容而非文件字节,因此重新编码不会读作变更;`exportUnit` 把副本写到操作者自己保管的路径,其寿命长于事务自身的快照。它们合起来用介质自己的术语,把一个单元从介质上打戳的版本带到新构建想要的版本——消费方只命名句柄,绝不命名路径,因此同一套升级事务既跑在文件上也跑在数据库上。快照的一致性由后端负责;排除其他进程的写入者由调用方负责,通过跨进程租约完成。没有该分面的后端无法被迁移,并以"缺席"本身说明这一点。
 
 ### 源码地图
 

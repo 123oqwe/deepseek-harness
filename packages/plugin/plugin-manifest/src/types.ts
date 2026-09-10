@@ -283,6 +283,27 @@ export interface MigrationDeclaration {
   readonly toVersion: number
   readonly description: string
   /**
+   * Whether this step can be undone once it has run.
+   *
+   * Declared by the plugin author rather than derived from `backup`, because
+   * the two answer different questions: a snapshot makes the DATA restorable,
+   * while reversibility is about whether the step's effects are confined to
+   * that data. A step that also rewrote an external system is irreversible
+   * however good its backup is, and that is the case an operator's
+   * confirmation exists for. Required whenever `module` is present: a step that
+   * actually runs must say which it is, and a defaulted `true` would make the
+   * confirmation unreachable in exactly the case it is owed.
+   */
+  readonly reversible?: boolean
+  /**
+   * How this step's starting state is preserved.
+   *
+   * `'none'` is a declaration, not an omission: a step that preserves nothing
+   * says so. Required whenever `module` is present, for the same reason as
+   * `reversible`.
+   */
+  readonly backup?: 'snapshot' | 'additive' | 'none'
+  /**
    * Package-relative specifier of the module that performs this step,
    * default-exporting `(records: readonly unknown[]) => Promise<readonly unknown[]>`.
    *
@@ -290,7 +311,8 @@ export interface MigrationDeclaration {
    * shipping code to convert it — a store rebuilt from scratch on the new
    * version needs the record, not the conversion. An upgrade that finds a
    * declaration without one refuses to touch that plugin's data rather than
-   * guessing a convention, so absence is a decision, never a default.
+   * guessing a convention, so absence is a decision, never a default. Presence
+   * makes `reversible` and `backup` required.
    */
   readonly module?: string
 }

@@ -4309,3 +4309,40 @@ The second implementation asks vitest. `vitest list --json` collects without exe
 |---|---|
 
 **Nothing in the tree produces that title.** The nearest real one belongs to P0-07: `is exactly one statement: ...` — a different epic and a different verb. P0-05 is ACCEPTED, so this is a frozen reference in an accepted row that no test satisfies, and it predates everything done today. **Not touched here**: how an accepted epic's freeze is corrected is the delegate's call, and the two candidate readings — a renamed case that was never superseded, or a title recorded from a run that no longer exists — have different remedies.
+
+### BLOCKED-174 — `test:docs` is red on the baseline, and none of it belongs to P1-10
+
+**Status:** DEBT RECORDED, awaiting the delegate's assignment to the owning epics. Not touched by P1-10.
+
+`pnpm run test:docs` fails on the tree at `e5488e86c6` with five red leaf gates. Every failing entry names a file from an earlier epic, and no file the P1-10 slice touches appears in any of them (checked by name against the slice's own changed-file list). Recorded here rather than fixed, because a documentation debt spread across other epics' files is not this epic's to spend a slice on, and silently carrying a red aggregate is how it becomes permanent.
+
+| Gate | What it reports | Owning epic, by the files named |
+|---|---|---|
+| `verify-md-links` | broken `#profiles-and-bundles` and `#boot-time-baseline-preflight` anchors in `docs/plugins/manifest-v2.zh.md`, `packages/plugin/README.zh.md`, `packages/assurance/README.zh.md` | P1-01 (manifest docs), P0-06 (assurance) |
+| `verify-type-equiv` | `AgentHandle`, `Agent`, `AgentStatus` blocks in `docs/subsystems/core.zh.md` have no `scripts/type-equiv.manifest.json` entry | the core-subsystem page's owner |
+| `verify-translation-pairing` | three 2026-09-07 Agent Notes merged English-only (`effective-once-arrival-into-an-agent-inbox`, `lease-capability-definition-and-durable-store`, `manifest-run-attribution-and-session-keyed-idempotency`) | P4-12 / P4-07 (the notes' own epics) |
+| `verify-md-wrap` | hard-wrapped paragraphs in `.agents/notes/implemented/testing/2026-08-25-first100-r0-gate-real-dag-typed-evidence.md` | first100 R0 |
+| `verify-package-readme-model-experience` | (reported after the four above) | to be read when one of the above clears |
+
+**What is being asked:** which epic's next slice takes each row. The registry gate set (`run-registry-gates.mjs`, 22/22) is green and does not include these leaves, so this debt gates nothing today — it will gate the first epic that needs a green `doc-sync`.
+
+### BLOCKED-175 — P4-11's cockatiel adoption landed in a file no freeze names, and two gates now disagree about it
+
+**Status:** BLOCKED ON A DELEGATE RULING. Both readings are recorded; neither was chosen here.
+
+Greening P4-11.F (ordered 2026-09-10, observation `874db203f0`) put the epic past its Fault stage, and that made two registry gates contradict each other about one record — `preFlight.P4-11.makeVsUse.adopted[0]`, cockatiel.
+
+| gate | with `landsIn: "P4-11.P"` | without it |
+|---|---|---|
+| `verify-adapt-dispositions` | **RED** — "still adopted-pending while the epic is past its Fault stage; a pending adoption is not a disposition at this point" | green |
+| `verify-make-vs-use` | green (PENDING_ADOPTION) | **RED** — "adopts cockatiel as runtime, but no declared file imports it and no landsIn stage is named" |
+
+Both gates are right about what they check. The adoption HAS landed — `packages/reliability/retry-cockatiel/src/index.ts` imports cockatiel 4.0.0 and its production consumer is `packages/llm/llm/src/index.ts:1013` — so `landsIn` is now a false statement, and it is removed on this tree. But `verify-make-vs-use` computes the epic's files from `realitySet`, which is `registry.files[] ∪ stage files ∪ live freeze citations`, and **no live P4-11 freeze entry cites that path**: C cites the four decision files, U cites `llm-retry`, `llm/llm`, `root.ts`, `usage.ts`, and F cites `usage.ts` and `llm/llm`. The provider package was written during P4-11.P and never named in a freeze.
+
+**The three ways out, and why none is this session's to take:**
+
+1. **Supplement freeze entry for P4-11 citing the provider file.** A supplement is a pre-commitment, and this observation has already run — recording one now would freeze a command after seeing its result, which is the shape B4b exists to prevent.
+2. **Edit a frozen entry's `files`.** §12.53 forbids editing a frozen entry; the remedy it names is supersession, which would invalidate the cells just greened.
+3. **Extend the epic's declared `files[]`.** `tests/first100/registry.json` is byte-pinned against the vendored source and gated as such.
+
+**What is being asked:** which of the three, or a fourth. On this tree the record states the truth (`landsIn` removed, reason carries the landing SHA and the production consumer) and `verify-make-vs-use` is consequently RED — reported rather than papered over, because the alternative is a record that says an adoption has not happened when it has.

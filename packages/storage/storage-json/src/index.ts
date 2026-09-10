@@ -8,6 +8,7 @@
 
 import { cp, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { join } from 'node:path'
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
@@ -18,8 +19,10 @@ import type {
   KvUnitDescriptor,
   MigrationFacet,
   StorageBackend,
+  UnitContent,
   UnitSnapshot,
 } from '@deepseek-ai/dsh-storage'
+import { serialize } from './format.ts'
 import { openSingleUnit } from './single-unit.ts'
 import { openPerRecordUnit } from './per-record-unit.ts'
 
@@ -89,11 +92,24 @@ export class JsonStorageBackend implements StorageBackend {
       // it self-heals instead. Reported as "no stamp" rather than as a version,
       // so an upgrade leaves it alone.
       if (descriptor.layout === 'per-record') return undefined
-      const path = this.mediumPath(descriptor)
-      if (!existsSync(path)) return undefined
-      const parsed: unknown = JSON.parse(await readFile(path, 'utf8'))
-      const version = (parsed as { version?: unknown }).version
-      return typeof version === 'number' ? version : undefined
+      return (await readDocument(this.mediumPath(descriptor)))?.version
+    },
+    digestUnit: async (snapshot): Promise<string> => {
+      const document = await readDocument(join(this.root, snapshot.handle))
+      // Over the content, not the file: a rewrite that reorders keys or
+      // changes indentation is the same data, and a digest that moved would
+      // report a change nothing made.
+      return `sha256-${createHash('sha256')
+        .update(canonicalJson(document?.content ?? EMPTY_CONTENT), 'utf8')
+        .digest('hex')}`
+    },
+    readSnapshot: async (snapshot) => {
+      const document = await readDocument(join(this.root, snapshot.handle))
+      return document ?? { version: undefined, content: EMPTY_CONTENT }
+    },
+    exportUnit: async (descriptor: KvUnitDescriptor, destination: string): Promise<void> => {
+      validateDescriptor(descriptor)
+      await cpPath(this.mediumPath(descriptor), destination)
     },
     snapshotUnit: async (descriptor: KvUnitDescriptor): Promise<UnitSnapshot> => {
       validateDescriptor(descriptor)
@@ -105,11 +121,12 @@ export class JsonStorageBackend implements StorageBackend {
       const source = join(this.root, snapshot.handle)
       const handle = `${snapshot.unit}.migrated-${String(version)}-${String(Date.now())}`
       await cpPath(source, join(this.root, handle))
-      // The records are read and written through the same documents `open`
-      // would use, so a migration sees what the plugin sees rather than a
-      // shape this backend invented for the occasion.
-      const migrated = await migrate(await readUnitRecords(join(this.root, handle)))
-      await writeUnitRecords(join(this.root, handle), version, migrated)
+      // Read and written as the SAME document `open` would use — this
+      // backend's real `{ unit, global, tables }` format — so a migration sees
+      // what the plugin sees rather than a shape invented for the occasion.
+      const document = await readDocument(join(this.root, handle))
+      const migrated = await migrate(document?.content ?? EMPTY_CONTENT)
+      await writeDocument(join(this.root, handle), snapshot.unit, version, migrated)
       return { unit: snapshot.unit, handle }
     },
     switchIn: async (migrated): Promise<UnitSnapshot> => {
@@ -189,33 +206,88 @@ async function cpPath(source: string, destination: string): Promise<void> {
 }
 
 /**
- * Every record in one unit's medium, as the migration sees them.
+ * The document a handle names, whichever of the two spellings exists.
  *
- * Read through the same documents `open` would use, so a migration sees what
- * the plugin sees rather than a shape invented for the occasion.
+ * A handle is stored without an extension while the live unit carries `.json`,
+ * and a copy of either keeps the shape it was copied from, so both spellings
+ * are legitimate for the same handle.
+ * @param medium - the extension-less path.
+ * @returns the existing path, or undefined when neither spelling exists.
  */
-async function readUnitRecords(medium: string): Promise<readonly unknown[]> {
-  const path = existsSync(medium) ? medium : `${medium}.json`
-  if (!existsSync(path)) return []
-  const parsed: unknown = JSON.parse(await readFile(path, 'utf8'))
-  const records: unknown = (parsed as { records?: unknown }).records
-  return Array.isArray(records) ? records as readonly unknown[] : []
+function mediumOf(medium: string): string | undefined {
+  if (existsSync(medium)) return medium
+  return existsSync(`${medium}.json`) ? `${medium}.json` : undefined
 }
 
 /**
- * Write migrated records back, stamping the medium with the new version.
+ * One JSON encoding of a value that does not depend on key insertion order.
+ *
+ * A digest exists to answer "is this the same data", so two encodings of the
+ * same records must produce one string. Array order is preserved: in records it
+ * is data, not formatting.
+ * @param value - the value to encode.
+ * @returns the canonical encoding.
+ */
+function canonicalJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(item => canonicalJson(item)).join(',')}]`
+  // `undefined` has no JSON encoding; in a record it reads as absent.
+  if (value === null || typeof value !== 'object') return value === undefined ? 'null' : JSON.stringify(value)
+  const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : 1))
+  return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${canonicalJson(item)}`).join(',')}}`
+}
+
+/** The content of a unit whose medium does not exist yet. */
+const EMPTY_CONTENT: UnitContent = { global: null, tables: {} }
+
+/**
+ * One unit document as a migration sees it: its stamp and its content.
+ *
+ * Deliberately NOT `format.ts`'s `parse`, which rejects a version other than
+ * the descriptor's. Reading a document stamped with the version the DATA is at
+ * is the whole point here: that is the version an upgrade converts from.
+ * @param medium - the extension-less path of the document.
+ * @returns the stamp and content, or undefined when no document exists.
+ */
+async function readDocument(
+  medium: string,
+): Promise<{ version: number; content: UnitContent } | undefined> {
+  const path = mediumOf(medium)
+  if (path === undefined) return undefined
+  const parsed: unknown = JSON.parse(await readFile(path, 'utf8'))
+  const document = parsed as { unit?: { version?: unknown }; global?: unknown; tables?: unknown }
+  const version = document.unit?.version
+  if (typeof version !== 'number') {
+    throw new StorageError('malformed-medium', `unit document at ${path} carries no version stamp`)
+  }
+  const tables = typeof document.tables === 'object' && document.tables !== null
+    ? document.tables as UnitContent['tables']
+    : {}
+  return { version, content: { global: document.global ?? null, tables } }
+}
+
+/**
+ * Write migrated content back, stamping the document with the new version.
  *
  * The stamp is what `KvFacet.open` compares against `descriptor.version`, so
- * writing the records without it would leave a migrated unit that the new
- * build still refuses to open — the failure this epic exists to remove.
+ * writing the content without it would leave a migrated unit the new build
+ * still refuses to open — the failure this epic exists to remove. Written
+ * through `format.ts`'s `serialize`, so a migrated document is shaped exactly
+ * like one this backend wrote itself.
  */
-async function writeUnitRecords(
+async function writeDocument(
   medium: string,
+  name: string,
   version: number,
-  records: readonly unknown[],
+  content: UnitContent,
 ): Promise<void> {
-  const path = existsSync(medium) ? medium : `${medium}.json`
-  await writeFile(path, JSON.stringify({ version, records }, undefined, 2), 'utf8')
+  const path = mediumOf(medium) ?? `${medium}.json`
+  const tables = new Map<string, Map<string, unknown>>(
+    Object.entries(content.tables).map(([table, records]) => [
+      table,
+      new Map<string, unknown>(Object.entries(records)),
+    ]),
+  )
+  await writeFile(path, serialize(name, { version, global: content.global, tables }), 'utf8')
 }
 
 function validateDescriptor(descriptor: KvUnitDescriptor): void {

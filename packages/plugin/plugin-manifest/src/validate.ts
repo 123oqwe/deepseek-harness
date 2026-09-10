@@ -318,7 +318,22 @@ function validateMigration(value: unknown, path: string, errors: ManifestValidat
   if (value.module !== undefined && typeof value.module !== 'string') {
     pushError(errors, `${path}.module`, 'must be a string when present')
   }
+  // A step that ships code actually runs, so it must say whether it can be
+  // undone and what it preserves. Defaulting either would decide an operator's
+  // approval for them; a missing one is a misconfiguration and fails loud here,
+  // where the manifest is read, rather than at the upgrade that trusted it.
+  if (value.module !== undefined) {
+    if (typeof value.reversible !== 'boolean') {
+      pushError(errors, `${path}.reversible`, 'must be a boolean when the step declares a module')
+    }
+    if (!BACKUP_STRATEGIES.includes(value.backup as typeof BACKUP_STRATEGIES[number])) {
+      pushError(errors, `${path}.backup`, `must be one of ${BACKUP_STRATEGIES.join(', ')} when the step declares a module`)
+    }
+  }
 }
+
+/** The backup strategies a migration step may declare. */
+const BACKUP_STRATEGIES = ['snapshot', 'additive', 'none'] as const
 
 /**
  * Validate an `unknown` value against the {@link PluginManifestV2} schema.

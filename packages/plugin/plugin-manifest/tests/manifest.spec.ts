@@ -684,3 +684,55 @@ describe('Epic P1-01.F: fault injection against the real, already-shipped valida
     expect(evaluatePreMountAdmission(declaration, true)).toEqual({ admitted: false, reason: 'missing-manifest', wildcardFindings: [] })
   })
 })
+
+describe('P1-10 must[0]: a migration step that ships code must declare its risk', () => {
+  const base = {
+    manifestVersion: 2,
+    executionMode: 'in-process',
+    compatibility: { dshVersionRange: '*' },
+  }
+  const step = {
+    fromVersion: 1,
+    toVersion: 2,
+    description: 'convert',
+    module: './migrate-2.js',
+    reversible: false,
+    backup: 'none' as const,
+  }
+
+  it('accepts a step declaring module, reversibility and backup', () => {
+    const result = validatePluginManifestV2({ ...base, migrations: [step] })
+    expect(result.valid).toBe(true)
+    expect(validateAgainstSchema({ ...base, migrations: [step] })).toBe(true)
+  })
+
+  it('rejects a step that ships a module without saying whether it can be undone', () => {
+    // Defaulting this would decide the operator's approval for them: an
+    // irreversible conversion would run with no confirmation ever asked.
+    const { reversible: _dropped, ...withoutReversible } = step
+    const result = validatePluginManifestV2({ ...base, migrations: [withoutReversible] })
+    expect(result.valid).toBe(false)
+    expect(validateAgainstSchema({ ...base, migrations: [withoutReversible] })).toBe(false)
+  })
+
+  it('rejects a step that ships a module without saying what it preserves', () => {
+    const { backup: _dropped, ...withoutBackup } = step
+    expect(validatePluginManifestV2({ ...base, migrations: [withoutBackup] }).valid).toBe(false)
+    expect(validateAgainstSchema({ ...base, migrations: [withoutBackup] })).toBe(false)
+  })
+
+  it('rejects a backup strategy outside the declared vocabulary', () => {
+    const invalid = { ...step, backup: 'maybe' }
+    expect(validatePluginManifestV2({ ...base, migrations: [invalid] }).valid).toBe(false)
+    expect(validateAgainstSchema({ ...base, migrations: [invalid] })).toBe(false)
+  })
+
+  it('still accepts a step that ships NO module and declares neither', () => {
+    // A plugin may record that its data changed shape without shipping code to
+    // convert it; the upgrade refuses that plugin by name rather than the
+    // manifest refusing to parse.
+    const declarationOnly = { fromVersion: 1, toVersion: 2, description: 'rebuilt from scratch' }
+    expect(validatePluginManifestV2({ ...base, migrations: [declarationOnly] }).valid).toBe(true)
+    expect(validateAgainstSchema({ ...base, migrations: [declarationOnly] })).toBe(true)
+  })
+})

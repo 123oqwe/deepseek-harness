@@ -129,6 +129,8 @@ These limits define when this backend is a poor fit or needs special operational
 - **Synchronous driver blocks the event loop** — each write is a synchronous `DatabaseSync` call; the block lasts a single statement, which is acceptable at domain-data scale.
 - **No busy-wait or retry policy** — a competing connection holding a write lock rejects the operation immediately instead of waiting; the domain layer's write chain serializes writes within one process, and cross-process coordination is out of scope.
 - **Only the current physical layout version opens** — any other stamped `user_version` is rejected rather than migrated (pre-release stance).
+- **A `:memory:` database exposes no `migration` facet** — a snapshot is a sidecar database beside the live file, and an in-process database has no directory to hold one; an upgrade on that medium is refused by name rather than failing partway through.
+- **Unit migration copies rows, not the file** — one database holds every unit, so `snapshotUnit` copies just that unit's rows into a sidecar; a file-level copy would make rolling back one unit a rollback of all of them.
 - **Open sequence duplicated with the query provider** — `openDatabase` and `session-query-sqlite` both enforce SQLite file ownership, but each package owns a distinct application identity and schema; no shared medium helper couples them.
 
 <a id="dev-note"></a>

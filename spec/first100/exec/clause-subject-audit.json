@@ -2019,8 +2019,7 @@
           {
             "name": "connor4312/cockatiel",
             "npm": "cockatiel",
-            "landsIn": "P4-11.P",
-            "reason": "Adopted as the runtime circuit breaker, landing in the P stage behind the C-stage decision interface. The card's own row is the reason: `circuitBreaker` with consecutive and sampling strategies plus halfOpen, bulkhead, timeout, fallback and `wrap()`. Verified NOT currently installed (`require.resolve('cockatiel')` fails), so this is a real dependency addition rather than a re-declaration of something already present. The withdrawn `circuit.ts` reimplemented consecutive-failure counting, cooldown and half-open probing — all four ship here, and two breakers in one harness is exactly what the make-vs-use rule forbids."
+            "reason": "Adopted as the runtime circuit breaker, landing in the P stage behind the C-stage decision interface. The card's own row is the reason: `circuitBreaker` with consecutive and sampling strategies plus halfOpen, bulkhead, timeout, fallback and `wrap()`. Verified NOT currently installed (`require.resolve('cockatiel')` fails), so this is a real dependency addition rather than a re-declaration of something already present. The withdrawn `circuit.ts` reimplemented consecutive-failure counting, cooldown and half-open probing — all four ship here, and two breakers in one harness is exactly what the make-vs-use rule forbids. LANDED 2026-09-10 in packages/reliability/retry-cockatiel/src/index.ts (cockatiel 4.0.0, one policy per BreakerDestination behind CircuitBreakerContract; the production consumer is packages/llm/llm/src/index.ts:1013's guardedFirstChunk); the `landsIn` marker is removed because the adoption is now code rather than a commitment."
           }
         ],
         "deviations": [
