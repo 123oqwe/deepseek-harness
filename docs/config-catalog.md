@@ -330,6 +330,41 @@ Depends on: [`LocalConfig`](#deepseek-aidsh-bash-local)
 
 Source: [`packages/shell/bash-sandbox/src/index.ts:35`](../packages/shell/bash-sandbox/src/index.ts)
 
+<a id="deepseek-aidsh-capability-token-file"></a>
+
+## `@deepseek-ai/dsh-capability-token-file`
+
+Requires: `tools`
+
+```ts config-catalog
+/** Where this mount keeps its tokens, and whether it arms the tool requirement. */
+export interface Config {
+  /**
+   * Directory holding `capability-tokens.json`.
+   *
+   * Deployment-varying, and derived by the profile from its home rather than
+   * written literally: a hardcoded `.dsh` would be the tunable this repository
+   * forbids, and two hosts sharing a home share a revocation set.
+   */
+  directory: string
+  /**
+   * Whether every tool call in this composition must present a token
+   * (must[3]).
+   *
+   * A validated field rather than a constant because a deployment that mounts
+   * the store to ISSUE and record tokens without yet enforcing them is a real
+   * arrangement — enforcement is the step that can refuse work. `bundle/base`
+   * sets it true; a composition that has not attached tokens to its tool path
+   * yet can mount with it false and still get issuance and audit.
+   */
+  requireForTools: boolean
+  /** How long an issued session-root token stays valid, in milliseconds. */
+  sessionTokenTtlMs: number
+}
+```
+
+Source: [`packages/policy/capability-token-file/src/index.ts:51`](../packages/policy/capability-token-file/src/index.ts)
+
 <a id="deepseek-aidsh-client-connection"></a>
 
 ## `@deepseek-ai/dsh-client-connection`
@@ -3389,7 +3424,7 @@ export interface ToolOwnershipConfig {
 }
 ```
 
-Source: [`packages/core/tools/src/index.ts:843`](../packages/core/tools/src/index.ts)
+Source: [`packages/core/tools/src/index.ts:878`](../packages/core/tools/src/index.ts)
 
 <a id="deepseek-aidsh-typert-loader"></a>
 
@@ -3662,7 +3697,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/workflow/workflow-worker-thread/src/index.ts:51`](../packages/workflow/workflow-worker-thread/src/index.ts)
+Source: [`packages/workflow/workflow-worker-thread/src/index.ts:52`](../packages/workflow/workflow-worker-thread/src/index.ts)
 
 <a id="deepseek-aidsh-workspace-trust-local"></a>
 
@@ -3841,6 +3876,7 @@ Imported as libraries by other packages; a `cordis.yml` cannot load them.
 - `@deepseek-ai/dsh-plugin-ownership` ([`packages/plugin/plugin-ownership/src/index.ts`](../packages/plugin/plugin-ownership/src/index.ts))
 - `@deepseek-ai/dsh-plugin-provenance` ([`packages/plugin/plugin-provenance/src/index.ts`](../packages/plugin/plugin-provenance/src/index.ts))
 - `@deepseek-ai/dsh-principal` ([`packages/identity/principal/src/index.ts`](../packages/identity/principal/src/index.ts))
+- `@deepseek-ai/dsh-retry` ([`packages/reliability/retry/src/index.ts`](../packages/reliability/retry/src/index.ts))
 - `@deepseek-ai/dsh-risk-taxonomy` ([`packages/policy/risk-taxonomy/src/index.ts`](../packages/policy/risk-taxonomy/src/index.ts))
 - `@deepseek-ai/dsh-sandbox-windows-acl` ([`packages/sandbox/sandbox-windows-acl/src/index.ts`](../packages/sandbox/sandbox-windows-acl/src/index.ts))
 - `@deepseek-ai/dsh-schema-registry` ([`packages/schema/schema-registry/src/index.ts`](../packages/schema/schema-registry/src/index.ts))

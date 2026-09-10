@@ -468,6 +468,67 @@ describe('SubagentRuntime.startContinuable', () => {
     await drainManager(ctx)
   })
 
+  it('persists the DELEGATING session and re-derives from it on cold resume', async () => {
+    // A continuable child of a detached workflow run delegates from the RUN, not
+    // from the agent that happens to be its parent -- the run outlives the turn
+    // that launched it. Without the descriptor carrying that session, a resume
+    // falls back to `parent.id` and re-derives from a session that may have
+    // ended, which is the normal case for exactly the runs this matters for.
+    //
+    // COLD: a second Context over the same persistence root, because the same
+    // context reactivates from memory and never reads the descriptor at all --
+    // the path this case exists to check.
+    const { ctx, root } = await setup([textResponse('first')])
+    // The parent session id is REBUILT by name in the fresh context below: a
+    // continuable child refuses to reactivate under a different parent session,
+    // which is the ownership check, not something this case is testing.
+    const owner = ctx.agentLoop.create(SessionId('cold-delegating-parent'), {})
+    const delegating = SessionId('detached-run-session')
+    const started = await ctx.subagents.startContinuable({
+      ...startSpec(owner),
+      request: { prompt: message('delegated work'), parent: owner, delegatingSession: delegating },
+    })
+    await waitNoActivation(ctx, started.childId)
+
+    const loaded = await ctx.sessionPersistence.load(started.childId)
+    expect(loaded.events.find(event => event.type === 'subagent/descriptor')?.data)
+      .toMatchObject({ delegatingSession: 'detached-run-session' })
+
+    const fresh = new Context()
+    await mountAgentLoopTestDependencies(fresh)
+    await fresh.plugin(SessionProjectionRegistry)
+    const freshPersistence = await fresh.plugin(JsonlSessionPersistence, { root: root! })
+    cleanups.push(async () => { await freshPersistence.dispose() })
+    await fresh.plugin(AgentLoop, { agents: [] })
+    await fresh.plugin(TestSessionQuery)
+    await fresh.plugin(MessageBusPlugin)
+    await fresh.plugin(SubagentRuntime)
+    await fresh.plugin(SubagentSpawn, { providerName: 'spawn' })
+
+    // A stub in the token provider's place: recording WHICH session each
+    // derivation names is the only way to tell a descriptor that was written
+    // from one that is also read.
+    const derivedFrom: string[] = []
+    fresh.provide('capabilityTokens', {
+      deriveChild(parentSession: string) { derivedFrom.push(parentSession) },
+      whenSessionToken: () => Promise.resolve(undefined),
+      sessionToken: () => undefined,
+      issuanceError: () => undefined,
+      isRevoked: () => false,
+      revokeSession: () => Promise.resolve('nothing-to-revoke' as const),
+    } as never)
+
+    const freshParent = fresh.agentLoop.create(SessionId('cold-delegating-parent'), {})
+    await queuePrompt(fresh, freshParent, started.childId, message('resume delegated work'))
+    await vi.waitFor(() => { expect(fresh.agents.get(started.childId)).toBeDefined() })
+
+    expect(derivedFrom).toContain('detached-run-session')
+    // The negative half: NOT the parent agent's session, which is what the
+    // fallback would have produced.
+    expect(derivedFrom).not.toContain('cold-delegating-parent')
+    await drainManager(fresh)
+  })
+
   it('cold-resumes without inventing a model route the descriptor never declared', async () => {
     const { ctx, root } = await setup([textResponse('first')])
     const routeless = ctx.agentLoop.create(SessionId('routeless-resume'), {})

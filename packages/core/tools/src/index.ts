@@ -2583,7 +2583,6 @@ declare module '@deepseek-ai/dsh-session/types' {
      * `ignorable: true` — a build that does not know this type must still read
      * the log; the decision is auditable history, not a state the runtime needs
      * to reconstruct.
-     * @mode both
      */
     'action/risk-gated': {
       /** The tool whose action was gated. */

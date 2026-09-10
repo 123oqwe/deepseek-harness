@@ -565,6 +565,7 @@ export class SubagentContinuationManager {
       ...agentReasoningEffort !== undefined ? { agentReasoningEffort } : {},
       ...request.persona !== undefined ? { persona: request.persona } : {},
       ...request.toolFilter !== undefined ? { toolFilter: request.toolFilter } : {},
+      ...request.delegatingSession !== undefined ? { delegatingSession: request.delegatingSession } : {},
     })
     // Capture before the first await: a later parent switch belongs to the
     // parent's future, not to this child.
@@ -1160,7 +1161,14 @@ export class SubagentContinuationManager {
             ? { reasoningEffort: ReasoningEffortId(descriptor.agentReasoningEffort) }
             : {},
         },
-        composition: { persona: descriptor.persona, toolFilter: descriptor.toolFilter },
+        composition: {
+          persona: descriptor.persona,
+          toolFilter: descriptor.toolFilter,
+          // Re-derives from the SAME session the original delegation used. A
+          // fall-back to the parent agent would derive from a session that may
+          // have ended -- for a detached run's child, that is the normal case.
+          delegatingSession: descriptor.delegatingSession,
+        },
         signal: options.signal,
       })
     } catch (error: unknown) {

@@ -607,10 +607,16 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'the failure message, or `undefined` when issuance did not fail.',
       },
       {
-        signature: 'revokeSession(session: SessionIdLike): Promise<void>',
-        description: 'Withdraw a session\'s authority: every root issued for it, and so every token delegated from any of them.',
+        signature: 'isRevoked(token: SignedCapabilityToken): boolean',
+        description: 'Whether this token, or any ancestor it was delegated from, has been revoked (P2-02 acceptance[1]).\n\nThe question a tool dispatch asks before honouring a presented token. Without it, revocation is a record rather than a withdrawal: a revoked token keeps authorizing every call until it expires, and acceptance[1]\'s "revoking a parent invalidates every descendant" is true of the ledger and false of the running system.\n\nAnswered from the loaded revocation set, never by reading the store, so the dispatch stays free of I/O.',
+        parameters: [{ name: 'token', description: 'the token presented to the dispatch.' }],
+        returns: '`true` when the token or an ancestor is revoked.',
+      },
+      {
+        signature: 'revokeSession(session: SessionIdLike): Promise<\'revoked\' | \'nothing-to-revoke\'>',
+        description: 'Withdraw a session\'s authority: every root issued for it, and so every token delegated from any of them.\n\nAnswered from durable records, so a session that has already ended is still revocable — the case a detached run makes ordinary, since it outlives the session that launched it.',
         parameters: [{ name: 'session', description: 'the session whose authority is withdrawn.' }],
-        returns: 'when the revocations are durably recorded.',
+        returns: '`\'revoked\'` when at least one root was withdrawn, `\'nothing-to-revoke\'` when the durable record holds none for this session. The two are distinct answers on purpose: reporting plain success for a session nothing was recorded against tells an operator their revocation took effect when it had nothing to act on.',
       },
       {
         signature: 'deriveChild(parentSession: SessionIdLike, childSession: SessionIdLike, filter?: ChildResourceFilter): void',
@@ -3133,6 +3139,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         parameters: [{ name: 'runId', description: 'the interrupted run to continue; its journal is read by this id.' }, { name: 'request', description: 'the same fields `start` takes; the script must be the one the journal was written under, or the resume degrades to a fresh run.' }],
         returns: 'the live run; its `result` resolves when the script settles.',
       },
+      {
+        signature: 'abstract startDetached(request: WorkflowStartRequest): Promise<WorkflowRun>',
+        description: 'Start a run the Run service holds, which the launching turn does not own (P4-09 must[2]).\n\nThe turn that starts it gets the run back immediately and may end without ending the run: disconnect is not cancellation, and an explicit `cancel(id)` remains the only thing that stops it.\n\nA detached run has its OWN session, minted here, and its authority is derived from the launcher\'s at start — while the launcher still holds a token to derive from. Deriving later would be deriving from something that may already be gone, which is the difference between outliving a turn and outliving the authority that permitted it.',
+        parameters: [{ name: 'request', description: 'the same fields `start` takes; `parent` names the launcher.' }],
+        returns: 'the live run, held by the service rather than by the caller.',
+      },
     ],
   },
   {
@@ -3794,7 +3806,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'AcquireResult',
-    declaration: 'export type AcquireResult = {\n    readonly acquired: true;\n    readonly lease: Lease;\n    readonly token: FencingToken;\n} | {\n    readonly acquired: false;\n    readonly reason: AcquireDenialReason;\n};',
+    declaration: 'export type AcquireResult = {\n    readonly acquired: true;\n    readonly lease: Lease;\n    readonly token: FencingToken;\n} | {\n    readonly acquired: false;\n    readonly reason: AcquireDenialReason;\n    readonly holder?: WorkerId;\n};',
   },
   {
     name: 'ActionRef',
@@ -4246,7 +4258,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ContinuableSubagentDescriptorData',
-    declaration: 'export interface ContinuableSubagentDescriptorData extends SubagentDescriptorBase {\n    readonly mode: \'continuable\';\n    readonly label: string;\n    readonly agentProvider?: string;\n    readonly agentModel?: string;\n    readonly agentReasoningEffort?: ReasoningEffortId;\n    readonly persona?: string;\n    readonly toolFilter?: ToolRestriction;\n}',
+    declaration: 'export interface ContinuableSubagentDescriptorData extends SubagentDescriptorBase {\n    readonly mode: \'continuable\';\n    readonly label: string;\n    readonly agentProvider?: string;\n    readonly agentModel?: string;\n    readonly agentReasoningEffort?: ReasoningEffortId;\n    readonly persona?: string;\n    readonly toolFilter?: ToolRestriction;\n    readonly delegatingSession?: SessionId;\n}',
   },
   {
     name: 'CordisDynamicPackageId',
@@ -5454,7 +5466,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'RunLeaseDenial',
-    declaration: 'export type RunLeaseDenial = {\n    readonly reason: \'store-unavailable\';\n} | {\n    readonly reason: \'held-by-another\';\n} | {\n    readonly reason: \'fenced-out\';\n    readonly currentEpoch: number;\n};',
+    declaration: 'export type RunLeaseDenial = {\n    readonly reason: \'store-unavailable\';\n} | {\n    readonly reason: \'held-by-another\';\n    readonly holder: WorkerId | undefined;\n} | {\n    readonly reason: \'fenced-out\';\n    readonly currentEpoch: number;\n};',
   },
   {
     name: 'RunnerFailureRule',
@@ -6266,7 +6278,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'SubagentStartRequest',
-    declaration: 'export interface SubagentStartRequest {\n    readonly label?: string;\n    readonly prompt: ContentBlock[];\n    readonly parent: Agent;\n    readonly signal: AbortSignal;\n    readonly agentOptions?: AgentOptions;\n    readonly outputSchema?: ObjectJsonSchema;\n    readonly maxDepth?: number;\n    readonly toolFilter?: ToolRestriction;\n    readonly persona?: string;\n}',
+    declaration: 'export interface SubagentStartRequest {\n    readonly label?: string;\n    readonly prompt: ContentBlock[];\n    readonly parent: Agent;\n    readonly signal: AbortSignal;\n    readonly agentOptions?: AgentOptions;\n    readonly outputSchema?: ObjectJsonSchema;\n    readonly maxDepth?: number;\n    readonly toolFilter?: ToolRestriction;\n    readonly delegatingSession?: SessionId;\n    readonly persona?: string;\n}',
   },
   {
     name: 'SubagentStopReason',
@@ -6506,7 +6518,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'TokenConstraints',
-    declaration: 'export interface TokenConstraints {\n    readonly budget?: TokenBudget;\n}',
+    declaration: 'export interface TokenConstraints {\n    readonly budget?: TokenBudget;\n    readonly issuedFor?: SessionIdLike;\n}',
   },
   {
     name: 'TokenMeasurement',

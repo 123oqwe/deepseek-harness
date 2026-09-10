@@ -22,7 +22,7 @@
  */
 
 import { snapshotJsonValue } from '@deepseek-ai/dsh-util-values'
-import type { SessionEvent } from '@deepseek-ai/dsh-session'
+import type { SessionEvent, SessionId } from '@deepseek-ai/dsh-session'
 import type { ReasoningEffortId } from '@deepseek-ai/dsh-llm'
 import type { ToolRestriction } from '@deepseek-ai/dsh-tools'
 import { CapabilityTokenDigest } from '@deepseek-ai/dsh-capability-token'
@@ -102,6 +102,19 @@ export interface ContinuableSubagentDescriptorData extends SubagentDescriptorBas
   readonly persona?: string
   /** Child tool scoping reapplied on resume. */
   readonly toolFilter?: ToolRestriction
+  /**
+   * The session this child's authority was derived FROM, when it was not the
+   * parent agent's own.
+   *
+   * Durable because a resume re-derives: a continuable child reactivated after
+   * a restart must delegate from the same session it originally did. A detached
+   * workflow run delegates from ITSELF, and that run outlives the turn that
+   * launched it — so a resume that fell back to the parent agent would derive
+   * from a session that has ended, refusing the child at exactly the moment the
+   * detached run is still working. Absent means the parent agent's own session,
+   * which is the top-level case.
+   */
+  readonly delegatingSession?: SessionId
 }
 
 /** The supported durable subagent identity and optional continuation composition. */
@@ -141,6 +154,8 @@ export interface ContinuableSubagentDescriptorInput extends SubagentDescriptorIn
   readonly persona?: string
   /** Requested child tool scoping. */
   readonly toolFilter?: ToolRestriction
+  /** The session to derive the child's authority from; absent means the parent agent's own. */
+  readonly delegatingSession?: SessionId
 }
 
 /** Inputs {@link snapshotSubagentDescriptor} validates and detaches. */
@@ -163,6 +178,7 @@ const CONTINUABLE_DESCRIPTOR_KEYS = new Set([
   'agentReasoningEffort',
   'persona',
   'toolFilter',
+  'delegatingSession',
 ])
 const TOOL_FILTER_KEYS = new Set(['allow', 'deny'])
 
@@ -267,6 +283,7 @@ function parseSubagentDescriptor(value: unknown): SubagentDescriptorData | undef
   const toolFilter = Object.hasOwn(value, 'toolFilter')
     ? parseToolFilter(value['toolFilter'])
     : undefined
+  const delegatingSession = optionalString(value, 'delegatingSession') as SessionId | undefined
   return {
     version: SUBAGENT_DESCRIPTOR_VERSION,
     mode,
@@ -277,6 +294,7 @@ function parseSubagentDescriptor(value: unknown): SubagentDescriptorData | undef
     ...agentReasoningEffort !== undefined ? { agentReasoningEffort } : {},
     ...persona !== undefined ? { persona } : {},
     ...toolFilter !== undefined ? { toolFilter } : {},
+    ...delegatingSession !== undefined ? { delegatingSession } : {},
     ...parentTokenDigest !== undefined ? { parentTokenDigest } : {},
   }
 }
@@ -321,6 +339,7 @@ export function snapshotSubagentDescriptor(input: SubagentDescriptorInput): Suba
       ...input.agentReasoningEffort !== undefined ? { agentReasoningEffort: input.agentReasoningEffort } : {},
       ...input.persona !== undefined ? { persona: input.persona } : {},
       ...input.toolFilter !== undefined ? { toolFilter: input.toolFilter } : {},
+      ...input.delegatingSession !== undefined ? { delegatingSession: input.delegatingSession } : {},
       ...input.parentTokenDigest !== undefined ? { parentTokenDigest: input.parentTokenDigest } : {},
     }
   const snapshot = snapshotJsonValue(candidate)
