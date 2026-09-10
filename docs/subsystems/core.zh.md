@@ -1161,6 +1161,21 @@ The mounted run-retry accounting, published by whichever provider a profile moun
 admit(run: RunId, delayMs: number): BudgetDecision
 
 /**
+ * The run a session's retries are charged to, resolved once and remembered.
+ *
+ * Remembering is not a cache of something that might change: a session's
+ * delegation root is fixed when the session is created, so the first
+ * resolution is the only one there is. What it survives is the PARENT going
+ * away — a continuable child outliving its parent's turn is ordinary, and
+ * re-walking a chain whose parent is gone would hand that child a fresh
+ * allowance, which is the stacking must[1] exists to stop.
+ * @param session - the session retrying.
+ * @param resolve - computes the charged run, called only on the first ask.
+ * @returns the charged run, or `undefined` when none could be resolved.
+ */
+chargedRunFor(session: string, resolve: () => RunId | undefined): RunId | undefined
+
+/**
  * What `run` has spent so far, for reporting.
  * @param run - the run to report on.
  * @returns its usage, or {@link NO_RETRIES_USED} when it has spent nothing.

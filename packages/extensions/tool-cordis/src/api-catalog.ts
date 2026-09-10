@@ -1544,6 +1544,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'the admission, or the refusal and why.',
       },
       {
+        signature: 'chargedRunFor(session: string, resolve: () => RunId | undefined): RunId | undefined',
+        description: 'The run a session\'s retries are charged to, resolved once and remembered.\n\nRemembering is not a cache of something that might change: a session\'s delegation root is fixed when the session is created, so the first resolution is the only one there is. What it survives is the PARENT going away — a continuable child outliving its parent\'s turn is ordinary, and re-walking a chain whose parent is gone would hand that child a fresh allowance, which is the stacking must[1] exists to stop.',
+        parameters: [{ name: 'session', description: 'the session retrying.' }, { name: 'resolve', description: 'computes the charged run, called only on the first ask.' }],
+        returns: 'the charged run, or `undefined` when none could be resolved.',
+      },
+      {
         signature: 'usageOf(run: RunId): RetryUsage',
         description: 'What `run` has spent so far, for reporting.',
         parameters: [{ name: 'run', description: 'the run to report on.' }],

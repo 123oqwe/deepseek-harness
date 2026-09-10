@@ -131,6 +131,53 @@ describe('P4-11 must[1]: the LLM layer charges the run, not the session', () => 
     await child.dispose()
   })
 
+  it('keeps charging the parent’s run after the parent agent is GONE', async () => {
+    // The fault boundary the F stage found. A continuable child outliving its
+    // parent's turn is ordinary -- P2-02 measured that cancelling a parent
+    // leaves its child working -- and re-walking the chain then finds no
+    // parent, stops at the child, and hands it a FRESH allowance. That is the
+    // stacking must[1] exists to stop, arriving through the back door.
+    const { ctx, adapter } = await harness({ maxRetries: 3 })
+    // The parent is created through the registry so the test holds its HANDLE:
+    // `Agent` carries no dispose, and `agent.dispose?.()` would be a no-op that
+    // leaves the parent alive while the case claims it is gone.
+    const parent = await ctx.agents.create({
+      sessionId: SessionId('short-lived-parent'),
+      agentOptions: { provider: 'mock', model: 'mock' },
+    })
+    const child = await ctx.agents.create({
+      sessionId: SessionId('outliving-child'),
+      agentOptions: { provider: 'mock', model: 'mock' },
+      meta: { parentSession: parent.agent.session.id },
+    })
+
+    // The child retries once while the parent is alive, which is when its
+    // charged run is resolved.
+    child.agent.followup(createUserMessage({
+      content: [{ type: 'text', text: 'first' }],
+      source: { kind: 'user' },
+    }))
+    await child.agent.whenIdle()
+    expect(adapter.requests).toBe(4)
+
+    // The parent goes away entirely, and the case proves it rather than
+    // assuming it.
+    await parent.dispose()
+    expect(ctx.agents.get(SessionId('short-lived-parent'))).toBeUndefined()
+
+    child.agent.followup(createUserMessage({
+      content: [{ type: 'text', text: 'second' }],
+      source: { kind: 'user' },
+    }))
+    await child.agent.whenIdle()
+
+    // One attempt and no retry: the PARENT's run was already spent, and the
+    // child does not get a new allowance because its parent is gone. Re-walking
+    // the chain would give it 3 more retries, for 8.
+    expect(adapter.requests).toBe(5)
+    await child.dispose()
+  })
+
   it('does not charge a substitute key when no run can be resolved', async () => {
     // Capability absence: with no Run producer mounted, the layer keeps its own
     // per-session policy, which is what it did before this epic. The wrong

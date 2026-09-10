@@ -248,7 +248,7 @@ export function apply(ctx: Context, config: Config = {}, internals: RetryInterna
     // backoff because a run must not begin a wait it cannot finish.
     const budgets = ctx.get('runRetryUsage')
     if (budgets !== undefined) {
-      const charged = chargedRun(agent.session.id, (id: string) => {
+      const charged = budgets.chargedRunFor(agent.session.id, () => chargedRun(agent.session.id, (id: string) => {
         const found = ctx.agents.get(brandString<SessionId>(id))
         if (found === undefined) return undefined
         return {
@@ -257,7 +257,7 @@ export function apply(ctx: Context, config: Config = {}, internals: RetryInterna
             : { parentSession: found.session.header.parentSession },
           ...found.runId === undefined ? {} : { runId: found.runId },
         }
-      })
+      }))
       // No resolvable run is capability absence, not permission: the layer
       // keeps its own per-session policy, which is what it did before this
       // epic. Treating it as an unlimited budget would be worse than the

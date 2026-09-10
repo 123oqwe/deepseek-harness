@@ -39,6 +39,20 @@ export interface RunRetryUsageContract {
    */
   admit(run: RunId, delayMs: number): BudgetDecision
   /**
+   * The run a session's retries are charged to, resolved once and remembered.
+   *
+   * Remembering is not a cache of something that might change: a session's
+   * delegation root is fixed when the session is created, so the first
+   * resolution is the only one there is. What it survives is the PARENT going
+   * away — a continuable child outliving its parent's turn is ordinary, and
+   * re-walking a chain whose parent is gone would hand that child a fresh
+   * allowance, which is the stacking must[1] exists to stop.
+   * @param session - the session retrying.
+   * @param resolve - computes the charged run, called only on the first ask.
+   * @returns the charged run, or `undefined` when none could be resolved.
+   */
+  chargedRunFor(session: string, resolve: () => RunId | undefined): RunId | undefined
+  /**
    * What `run` has spent so far, for reporting.
    * @param run - the run to report on.
    * @returns its usage, or {@link NO_RETRIES_USED} when it has spent nothing.
@@ -55,6 +69,7 @@ export interface RunRetryUsageContract {
  */
 export class RunRetryUsageStore implements RunRetryUsageContract {
   readonly #usage = new Map<RunId, RetryUsage>()
+  readonly #charged = new Map<string, RunId | undefined>()
 
   /**
    * @param budget - what any one run may spend across every in-scope layer.
@@ -76,6 +91,22 @@ export class RunRetryUsageStore implements RunRetryUsageContract {
   }
 
   /**
+   * The run a session's retries are charged to, resolved once (must[1]).
+   * @param session - the session retrying.
+   * @param resolve - computes the charged run, called only on the first ask.
+   * @returns the charged run, or `undefined` when none could be resolved.
+   */
+  chargedRunFor(session: string, resolve: () => RunId | undefined): RunId | undefined {
+    // An unresolvable answer is remembered too: without that, a child whose
+    // chain never resolves re-walks it on every retry, and the walk reads live
+    // registry state that a disposal can change underneath it.
+    if (this.#charged.has(session)) return this.#charged.get(session)
+    const charged = resolve()
+    this.#charged.set(session, charged)
+    return charged
+  }
+
+  /**
    * What `run` has spent so far.
    * @param run - the run to report on.
    * @returns its usage, or {@link NO_RETRIES_USED}.
@@ -94,6 +125,19 @@ export class RunRetryUsageStore implements RunRetryUsageContract {
    */
   forget(run: RunId): void {
     this.#usage.delete(run)
+  }
+
+  /**
+   * Forget a session's charged run.
+   *
+   * Separate from {@link RunRetryUsageStore.forget} because the two maps are
+   * keyed differently and end at different times: a run's spending is done
+   * when the run ends, while a session's charged run is meaningful for as long
+   * as that session can retry.
+   * @param session - the session that ended.
+   */
+  forgetSession(session: string): void {
+    this.#charged.delete(session)
   }
 }
 
@@ -145,6 +189,16 @@ export default class RunRetryUsagePlugin extends Service implements RunRetryUsag
    */
   admit(run: RunId, delayMs: number): BudgetDecision {
     return this.store.admit(run, delayMs)
+  }
+
+  /**
+   * The run a session's retries are charged to, resolved once (must[1]).
+   * @param session - the session retrying.
+   * @param resolve - computes the charged run, called only on the first ask.
+   * @returns the charged run, or `undefined` when none could be resolved.
+   */
+  chargedRunFor(session: string, resolve: () => RunId | undefined): RunId | undefined {
+    return this.store.chargedRunFor(session, resolve)
   }
 
   /**
