@@ -3159,6 +3159,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         parameters: [{ name: 'request', description: 'the same fields `start` takes; `parent` names the launcher.' }],
         returns: 'the live run, held by the service rather than by the caller.',
       },
+      {
+        signature: 'abstract attach(runId: WorkflowRunId): WorkflowRun | undefined',
+        description: 'Reach a run by its id, for a caller that does not hold its handle (P4-09 must[2]).\n\nDeclared on the seam rather than on one engine because it is what makes WorkflowEngine.startDetached usable: a detached run outlives the turn that launched it, so the handle that turn received is precisely what a later observer does not have. An engine-local method would be reachable only by a caller that already had the engine\'s concrete type.\n\nA live run comes back as the SAME handle, so observing, awaiting and cancelling all reach one worker; a settled detached run comes back with its outcome. This is not WorkflowEngine.resume, which starts a worker: resuming a live run would put two masters on one run id, the state its lease exists to refuse.',
+        parameters: [{ name: 'runId', description: 'the run to reach.' }],
+        returns: 'the run, or `undefined` when the id names no live run and no outcome an engine still holds.',
+      },
     ],
   },
   {

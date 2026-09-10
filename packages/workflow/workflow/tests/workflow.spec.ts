@@ -17,6 +17,11 @@ class StubEngine extends WorkflowEngine {
     throw new Error('not under test')
   }
 
+  attach(runId: WorkflowRunId): WorkflowRun | undefined {
+    void runId
+    throw new Error('not under test')
+  }
+
   resume(_runId: WorkflowRunId, request: WorkflowStartRequest): Promise<WorkflowRun> {
     return Promise.resolve(this.start(request))
   }

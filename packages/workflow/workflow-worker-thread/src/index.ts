@@ -32,7 +32,7 @@ import type { NestedStartRequest } from './types.ts'
 import { reusableSteps } from './resume.ts'
 import type { EffectStateLookup, Reconciled } from './resume.ts'
 import { acquireRunLease } from '@deepseek-ai/dsh-lease-contract'
-import type { WorkflowRun, WorkflowRunInfo, WorkflowStartRequest } from '@deepseek-ai/dsh-workflow'
+import type { WorkflowResult, WorkflowRun, WorkflowRunInfo, WorkflowStartRequest } from '@deepseek-ai/dsh-workflow'
 import { WorkerRun } from './host.ts'
 import { validateMeta } from './meta.ts'
 import type { WorkerInit, WorkerLimits } from './types.ts'
@@ -212,6 +212,35 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     ancestors: readonly DefinitionDigest[]
     toolBound: readonly string[] | undefined
   }>()
+
+  /**
+   * Runs still executing, so {@link attach} can hand back the one handle a run
+   * has (must[2]).
+   *
+   * A run is here from launch until its result settles. Handing back the SAME
+   * handle is the point: a second `WorkflowRun` over one run id would mean two
+   * cancel paths and two awaited settlements for one worker, and `resume` --
+   * the other way to name a run by id -- is refused for a live run by the
+   * lease guard for the same reason.
+   */
+  private readonly liveRuns = new Map<WorkflowRunId, WorkflowRun>()
+
+  /**
+   * Settlements of DETACHED runs whose launching turn has ended, held until
+   * someone attaches for them (must[2]).
+   *
+   * A detached run outlives the turn that started it, so by the time it
+   * settles there is usually nobody holding its handle. Without this, its
+   * outcome would be observable only by a caller that never went away — which
+   * is the one case a detached run is not for.
+   *
+   * Only detached runs are kept, and each is DELIVERED ONCE: a caller that has
+   * collected a settlement has it, and holding a second copy would make this
+   * map grow with every detached run for the life of the process. A run whose
+   * outcome nobody collects is dropped when the engine unloads, like every
+   * other thing this engine holds in memory.
+   */
+  private readonly settledDetached = new Map<WorkflowRunId, { info: WorkflowRunInfo; result: WorkflowResult }>()
 
   constructor(ctx: Context, config: Config) {
     super(ctx)
@@ -426,6 +455,48 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
    * against, which is stated rather than implied by the field's presence.
    * @param definition - the definition to register, keyed by its digest.
    */
+  /**
+   * Reach a run by its id after the turn that started it is gone (must[2]).
+   *
+   * This is what makes a detached run usable: it outlives the turn that
+   * launched it, so the handle that turn was given is exactly the thing its
+   * observer no longer has. Two routes, because a live run and a settled one
+   * are different questions:
+   *
+   * - the run is still executing — the SAME handle comes back, so observing,
+   *   awaiting and cancelling all reach the one worker. A second handle would
+   *   mean two cancel paths for one run.
+   * - the run was detached and has settled — its outcome comes back as an
+   *   already-settled run, collected ONCE from the settlement map.
+   *
+   * `resume` is not this. Resuming a live run would start a second worker
+   * under one run id, which its lease refuses: two masters for one run is the
+   * state P4-07's fencing exists to prevent.
+   * @param runId - the run to reach.
+   * @returns the run, or `undefined` when no live run and no uncollected
+   *   settlement carries that id.
+   */
+  attach(runId: WorkflowRunId): WorkflowRun | undefined {
+    const live = this.liveRuns.get(runId)
+    if (live !== undefined) return live
+    const settled = this.settledDetached.get(runId)
+    if (settled === undefined) return undefined
+    // Delivered once: a caller holding the settlement has it, and keeping a
+    // copy would grow this map with every detached run for the process's life.
+    this.settledDetached.delete(runId)
+    return {
+      id: runId,
+      meta: settled.info.meta,
+      result: Promise.resolve(settled.result),
+      // A settled run has nothing left to cancel and nothing left to tear
+      // down: its worker is gone and, when it was detached, its own agent was
+      // disposed at the terminal state. These are no-ops so a caller can treat
+      // an attached run the same whether it arrived live or settled.
+      cancel: () => {},
+      dispose: async () => {},
+    }
+  }
+
   registerDefinition(definition: RegisteredDefinition): void {
     const outcome = this.definitions.register(definition)
     if (!outcome.registered) {
@@ -660,6 +731,18 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     if (detached !== undefined) {
       void workerRun.result.then(() => detached.dispose(), () => detached.dispose())
     }
+    // Reachable by id while it runs, and — when it was detached — collectable
+    // by id after it settles (must[2]). Registered before the settlement
+    // handler below so a run that settles immediately still leaves its outcome
+    // behind rather than racing the registration.
+    this.liveRuns.set(id, workerRun)
+    void workerRun.result.then((settled) => {
+      this.liveRuns.delete(id)
+      // Only a detached run's outcome is kept. Every other run was handed to a
+      // caller that is still there to await it, and keeping those would make
+      // this map a leak with no reader.
+      if (detached !== undefined) this.settledDetached.set(id, { info, result: settled })
+    })
     void workerRun.result.then((settled) => {
       // must[1]: the terminal state write carries the fencing token. A run
       // reclaimed mid-flight must not report a result under an authority it no

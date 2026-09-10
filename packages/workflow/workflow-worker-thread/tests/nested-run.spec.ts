@@ -29,6 +29,7 @@ import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SubagentRuntime from '@deepseek-ai/dsh-subagent'
 import * as spawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
+import { WorkflowRunId } from '@deepseek-ai/dsh-workflow'
 import { computeDefinitionDigest } from '@deepseek-ai/dsh-workflow-registry'
 import type { DefinitionName, SignerIdentity } from '@deepseek-ai/dsh-workflow-registry'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
@@ -44,7 +45,7 @@ afterEach(async () => {
   for (const root of tokenRoots.splice(0)) rmSync(root, { recursive: true, force: true })
 })
 
-async function setup(options: { maxNestingDepth?: number } = {}) {
+async function setup(options: { maxNestingDepth?: number; disposeGraceMs?: number } = {}) {
   const ctx = new Context()
   await mountAgentLoopTestDependencies(ctx)
   await ctx.plugin(SessionProjectionRegistry)
@@ -185,7 +186,13 @@ describe('P4-09 must[3]: a script nests another definition', () => {
     // A nested run holds budget drawn from its parent's allowance, so a child
     // that outlived a cancelled parent would keep spending an allowance nobody
     // is watching.
-    const { ctx, parent } = await setup()
+    // `disposeGraceMs` is explicit and SMALL because this case waits for the
+    // force-settle at the end of the grace: the nested body never resolves, so
+    // cancellation always takes that path. At the 5000 ms default the wait is
+    // the engine's whole grace and the case races vitest's own 5000 ms budget
+    // -- it failed roughly one run in three for exactly that reason. Shrinking
+    // the grace makes the same path deterministic rather than buying time.
+    const { ctx, parent } = await setup({ disposeGraceMs: 250 })
     const ref = register(ctx, 'slow', 'await new Promise(() => {}); return 1')
     const run = ctx.workflowEngine.start({
       script: `return await workflow(${JSON.stringify(ref)})`,
@@ -450,6 +457,99 @@ describe('P4-09 must[3]: a nested run\'s children inherit its DECAYED capability
     expect((await detached.result).stopReason).toBe('cancelled')
     await detached.dispose()
   }, 30_000)
+
+  it('is REACHABLE by run id while it runs, and the same handle comes back', async () => {
+    // What makes a detached run usable at all: it outlives the turn that
+    // launched it, so the handle that turn was given is exactly what a later
+    // observer does not have. The SAME handle is the assertion — a second one
+    // over one run id would be two cancel paths for one worker.
+    const { ctx, parent } = await tokenSetup()
+    await ctx.capabilityTokens.whenSessionToken(parent.id)
+
+    const run = await ctx.workflowEngine.startDetached({
+      script: "await agent('one'); return await agent('two')",
+      meta: META,
+      parent,
+    })
+    expect(ctx.workflowEngine.attach(run.id)).toBe(run)
+
+    // and cancelling THROUGH the attached handle reaches the one worker
+    const attached = ctx.workflowEngine.attach(run.id)
+    attached?.cancel('cancelled through the attached handle')
+    expect((await run.result).stopReason).toBe('cancelled')
+    await run.dispose()
+  }, 30_000)
+
+  it('is COLLECTABLE by run id after it settles with its launcher gone, exactly once', async () => {
+    // The case the settlement half exists for: by the time a detached run
+    // settles there is usually nobody holding its handle, so an outcome kept
+    // nowhere would be observable only by a caller that never went away.
+    const { ctx, parent, disposeLauncher } = await tokenSetup()
+    await ctx.capabilityTokens.whenSessionToken(parent.id)
+
+    const run = await ctx.workflowEngine.startDetached({ script: "return 'collected'", meta: META, parent })
+    const id = run.id
+    await run.result
+    await disposeLauncher()
+    // Ordered after the settlement handler that records the outcome, the same
+    // way the disposal case orders its read.
+    await new Promise(resolve => setImmediate(resolve))
+
+    const collected = ctx.workflowEngine.attach(id)
+    expect(collected).toBeDefined()
+    expect((await collected?.result)?.value).toBe('collected')
+    // Delivered ONCE: a caller holding the settlement has it, and a second copy
+    // would make the map grow with every detached run for the process's life.
+    expect(ctx.workflowEngine.attach(id)).toBeUndefined()
+  }, 30_000)
+
+  it('REFUSES a resume of a live detached run, which is why attach exists rather than resume', async () => {
+    // The negative control for the whole re-attach half. `resume` is the other
+    // way to name a run by id, and using it here would start a SECOND worker
+    // under one run id -- two masters for one run, which P4-07's lease exists
+    // to refuse. The refusal names the holder, so an operator is not sent
+    // looking for a host that does not exist.
+    const { ctx, parent } = await tokenSetup()
+    await ctx.capabilityTokens.whenSessionToken(parent.id)
+
+    const run = await ctx.workflowEngine.startDetached({
+      script: "await agent('one'); return await agent('two')",
+      meta: META,
+      parent,
+    })
+    await expect(ctx.workflowEngine.resume(run.id, {
+      script: "return 'second master'",
+      meta: META,
+      parent,
+    })).rejects.toMatchObject({ code: 'RUN_HELD_BY_ANOTHER_HOST' })
+
+    run.cancel('done with the control')
+    await run.result
+    await run.dispose()
+  }, 30_000)
+
+  it('keeps NO settlement for an ordinary run, whose caller held the handle all along', async () => {
+    // The bound on the settlement map, and it is a bound rather than a
+    // preference: an ordinary run was handed to a caller that is still there
+    // to await it, so keeping its outcome would grow this map with every run
+    // the engine ever executed and nothing would ever collect it. Without this
+    // case, widening the map to every run reddens nothing.
+    const { ctx, parent } = await setup()
+    const run = ctx.workflowEngine.start({ script: "return 'ordinary'", meta: META, parent })
+    const id = run.id
+    expect((await run.result).value).toBe('ordinary')
+    await new Promise(resolve => setImmediate(resolve))
+
+    expect(ctx.workflowEngine.attach(id)).toBeUndefined()
+    await run.dispose()
+  })
+
+  it('does not answer for a run id nothing started', async () => {
+    // Without this, an `attach` that returned a fabricated handle for any id
+    // would satisfy both cases above.
+    const { ctx } = await tokenSetup()
+    expect(ctx.workflowEngine.attach(WorkflowRunId('00000000-0000-4000-8000-000000000000'))).toBeUndefined()
+  })
 
   it('DISPOSES its own agent once it reaches a terminal state, leaking no session', async () => {
     // A detached run owns its agent, so nothing else can tear it down: the
