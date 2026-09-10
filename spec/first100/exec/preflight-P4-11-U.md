@@ -28,15 +28,19 @@ Retries are counted **per session**, and `policy.maxRetries` is compared against
 
 **The frozen case the delegate asked for:** a child session's nth LLM retry decrements the PARENT's budget. **The mutation that must redden it:** the child counts against its own session — which is not a hypothetical mutation but a byte-for-byte restoration of line 220, so the case is a regression test for the defect that exists now.
 
-## Layers in scope, counted before signing
+## Layers in scope — corrected by measurement, at `2bfc36b0e1`
 
-| layer | file | what it counts today | U's change |
-| --- | --- | --- | --- |
-| LLM retry | `llm-retry/src/index.ts:220` | its own per-session count | consult `classifyFailure` and charge `admitRetry` against the root's usage |
-| MCP client | `mcp-client/src/connection.ts` | `reconnect.maxAttempts`, its own backoff, one budget per outage | charge only reconnects made FOR a run action; a background reconnect with no run attached keeps its own policy |
-| message-bus outbox | `run/message-bus/src/outbox.ts` | its own dead-letter budget | **out of scope by ruling (§12.64)**, not by omission |
+| layer | what it counts | verdict |
+| --- | --- | --- |
+| LLM retry (`llm-retry/src/index.ts:220`) | its own per-session count | **wired**: charges the delegation root's run |
+| MCP client (`mcp-client/src/connection.ts`) | `reconnect.maxAttempts` per OUTAGE | **no run-attached retry exists** — see below |
+| message-bus outbox | its own dead-letter budget | out of scope by ruling (§12.64) |
 
-The outbox stays out under both readings: replaying a settlement is DELIVERY, not redoing work.
+**The MCP client has nothing to charge, measured rather than assumed.** Every `retry`/`attempt` in `packages/mcp/mcp-client/src` is the connection supervisor's, and `connection.ts` contains **zero** references to an agent, an execution or a run. A reconnect is not work redone for a run: it restores a server process, one supervisor per plugin instance, and the same reconnect serves every run using that server. Charging it to whichever run happened to be active would make one run pay for another's outage.
+
+The call path is the opposite: `tools.ts` HAS `exec.agent`, so a run is resolvable there — and it performs **no retry at all**. A failed MCP tool call returns once.
+
+So must[1]'s "all layers" resolves to one layer plus the attribution rule the epic preFlight already ruled: `llm-retry` for the parent AND every child session, charged to one run. The subagent is not a second layer — it multiplies the FIRST one, which is exactly what `chargedRun` stops.
 
 ## must[3]'s Usage half: the ledger decides, and the decision must reach a caller
 
