@@ -142,8 +142,12 @@ export type UpgradeResolutionRefusal =
   | 'no-data-store'
   /** A declared step ships no `module`, so the chain has a gap. */
   | 'missing-migration-module'
+  /** A migration module could not be imported: the plugin's own code threw. */
+  | 'unloadable-migration-module'
   /** A migration module does not export the unit `descriptor` its plugin opens. */
   | 'missing-descriptor-export'
+  /** A migration module exports a `descriptor` but no `migrate` to apply. */
+  | 'missing-migrate-export'
   /** The exported descriptor's version disagrees with the declared migrations. */
   | 'descriptor-version-mismatch'
   /** The package's declaration would be denied at mount, so its code must not run here. */
@@ -714,7 +718,22 @@ export async function resolvePluginUpgrade(
 
   const steps: PluginMigrationModule[] = []
   for (const step of declared) {
-    steps.push(await import(pathToFileURL(join(dir, step.module as string)).href) as PluginMigrationModule)
+    // The plugin's own code runs here, and it can fail for reasons that have
+    // nothing to do with migrating: a missing transitive dependency, syntax
+    // this Node rejects. Uncaught, it leaves `migrateChangedPlugins` as a
+    // rejected promise that names no plugin and stops every plugin after this
+    // one — so it becomes this plugin's named refusal, like every other way
+    // its declarations can be unusable.
+    try {
+      steps.push(await import(pathToFileURL(join(dir, step.module as string)).href) as PluginMigrationModule)
+    } catch (failure: unknown) {
+      return {
+        kind: 'refused',
+        reason: 'unloadable-migration-module',
+        detail: `${plugin}'s migration module ${String(step.module)} failed to load: `
+          + (failure instanceof Error ? failure.message : String(failure)),
+      }
+    }
   }
   // The LAST step's module is the one that ends at the version this build
   // wants, so its descriptor is the one the data must match.
@@ -723,7 +742,19 @@ export async function resolvePluginUpgrade(
     return {
       kind: 'refused',
       reason: 'missing-descriptor-export',
-      detail: `${plugin}'s migration module must export \`descriptor\` and \`migrate\``,
+      detail: `${plugin}'s migration module must export \`descriptor\``,
+    }
+  }
+  // Checked on EVERY step, not just the one carrying the descriptor: `migrate`
+  // below chains all of them, so a middle step missing it fails the same way
+  // and just as late — inside the transaction, with the data already
+  // snapshotted.
+  const unapplied = declared.find((_step, index) => typeof steps[index]?.migrate !== 'function')
+  if (unapplied !== undefined) {
+    return {
+      kind: 'refused',
+      reason: 'missing-migrate-export',
+      detail: `${plugin}'s migration module ${String(unapplied.module)} exports no \`migrate\` to apply`,
     }
   }
   const target = Math.max(...declared.map(step => step.toVersion))
