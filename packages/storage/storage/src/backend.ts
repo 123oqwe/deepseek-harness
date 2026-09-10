@@ -19,6 +19,17 @@ export interface StorageBackend {
   readonly kv?: KvFacet
 
   /**
+   * Unit migration; absent when this medium cannot snapshot and swap a unit
+   * (first100 registry P1-10 must[1]).
+   *
+   * Optional like every facet, and its absence is answered at PLAN time rather
+   * than at compile time: a deployment whose backend cannot migrate is told so
+   * by name before anything is installed, which a missing method would express
+   * as a type error nobody sees at runtime.
+   */
+  readonly migration?: MigrationFacet
+
+  /**
    * Drain in-flight writes across all open units and release the medium.
    * Idempotent; concurrent and repeated calls resolve once teardown finishes.
    * @returns resolution after the medium is released.
@@ -40,6 +51,76 @@ export interface KvFacet {
    * @returns the opened unit.
    */
   open(descriptor: KvUnitDescriptor): Promise<KvUnit>
+}
+
+/**
+ * One unit's snapshot, held between the phases of an upgrade.
+ *
+ * Opaque to the transaction: what it names is the backend's business — a file,
+ * a directory, a second database — and a transaction that could read it would
+ * be knowing a medium's layout.
+ */
+export interface UnitSnapshot {
+  /** The unit this snapshot was taken of. */
+  readonly unit: string
+  /** Backend-private handle; meaningful only to the backend that made it. */
+  readonly handle: string
+}
+
+/**
+ * Snapshot, migrate and swap one unit, in whatever the medium's own terms are
+ * (P1-10 must[1]).
+ *
+ * The transaction orders these; it never names a path. `storage-json` copies a
+ * file or a directory tree and renames; `storage-sqlite` uses `VACUUM INTO`
+ * and renames. Both are the same four operations over different media, which
+ * is what makes the six-phase ordering medium-independent.
+ */
+export interface MigrationFacet {
+  /**
+   * Copy a unit's current state aside, consistently.
+   *
+   * Consistency here is the backend's to provide: a copy taken while writers
+   * are active must not tear. Callers additionally hold a cross-process lease
+   * over the upgrade, because a backend cannot exclude a writer in another
+   * process.
+   * @param descriptor - the unit to snapshot.
+   * @returns the snapshot handle.
+   */
+  snapshotUnit(descriptor: KvUnitDescriptor): Promise<UnitSnapshot>
+  /**
+   * Produce the migrated form of a snapshot, at the new version, without
+   * touching the live unit.
+   * @param snapshot - the snapshot to migrate from.
+   * @param version - the version the migrated copy is stamped with.
+   * @param migrate - converts the records; the backend supplies and stores them.
+   * @returns a handle to the migrated copy.
+   */
+  materializeMigrated(
+    snapshot: UnitSnapshot,
+    version: number,
+    migrate: (records: readonly unknown[]) => Promise<readonly unknown[]>,
+  ): Promise<UnitSnapshot>
+  /**
+   * Put a migrated copy in place of the live unit, keeping the previous state
+   * as the rollback target.
+   *
+   * The previous state survives, because the point of the swap is that it can
+   * be undone until the health check passes.
+   * @param migrated - the migrated copy to swap in.
+   * @returns the handle of the state that was replaced.
+   */
+  switchIn(migrated: UnitSnapshot): Promise<UnitSnapshot>
+  /**
+   * Put a previously replaced state back.
+   * @param previous - the handle `switchIn` returned.
+   */
+  rollbackTo(previous: UnitSnapshot): Promise<void>
+  /**
+   * Delete a snapshot or migrated copy that is no longer needed.
+   * @param snapshot - the handle to discard.
+   */
+  discard(snapshot: UnitSnapshot): Promise<void>
 }
 
 /** Static identity and shape of one KV unit, projected from its owner's spec. */

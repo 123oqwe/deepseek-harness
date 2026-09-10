@@ -14,11 +14,13 @@
  */
 
 import { existsSync } from 'node:fs'
-import { readFile, rename, rm } from 'node:fs/promises'
+import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
 
-import { reconcileUpgrade, readUpgradeRecord } from '@deepseek-ai/dsh-plugin-migrations/transaction'
+import { recoverUpgrade } from '@deepseek-ai/dsh-plugin-migrations/transaction'
+import type { UpgradeRecord } from '@deepseek-ai/dsh-plugin-migrations/transaction'
+import type { MigrationFacet } from '@deepseek-ai/dsh-storage'
 
 /** One plugin's version before and after pnpm ran. */
 export interface VersionChange {
@@ -27,9 +29,60 @@ export interface VersionChange {
   readonly to: string
 }
 
-/** Where one plugin's durable data and upgrade state live. */
-export function pluginStorageRoot(harnessHome: string, plugin: string): string {
-  return join(harnessHome, 'plugins', plugin)
+/**
+ * Where one plugin's upgrade RECORD lives.
+ *
+ * The record only — a plugin's durable data lives in the storage hub's units,
+ * and the transaction reaches it through the backend's migration facet. An
+ * earlier version of this epic invented a `plugins/<name>/data/data.db` for
+ * the data itself, a path nothing else in the tree writes.
+ */
+export function upgradeRecordPath(harnessHome: string, plugin: string): string {
+  return join(harnessHome, 'plugin-upgrades', `${plugin}.json`)
+}
+
+/**
+ * Read one plugin's upgrade record.
+ * @param harnessHome - the resolved harness home.
+ * @param plugin - the plugin to read for.
+ * @returns the record, or `undefined` when no upgrade has written one.
+ */
+export async function readUpgradeRecord(
+  harnessHome: string,
+  plugin: string,
+): Promise<UpgradeRecord | undefined> {
+  const path = upgradeRecordPath(harnessHome, plugin)
+  if (!existsSync(path)) return undefined
+  return JSON.parse(await readFile(path, 'utf8')) as UpgradeRecord
+}
+
+/**
+ * Whether a plugin's recorded upgrade agrees with what the medium reports
+ * (acceptance[1]).
+ *
+ * Reconciling is against the plugin's OWN declared schema version, not the
+ * `{major, minor}` of `@deepseek-ai/dsh-schema-registry`: that vocabulary is
+ * for protocol and interface compatibility, while a plugin's durable data
+ * carries the version its manifest declares and the storage hub stamps on the
+ * medium.
+ *
+ * A record with no achieved half — an upgrade that started and never finished
+ * — reconciles as `false` rather than throwing. It is a legitimate on-disk
+ * state after a crash, and the caller's next move is to recover, not to handle
+ * an exception.
+ * @param harnessHome - the resolved harness home.
+ * @param plugin - the plugin to reconcile.
+ * @param observed - the version and digest read back from the medium.
+ * @returns whether the record and the medium agree.
+ */
+export async function reconcileUpgrade(
+  harnessHome: string,
+  plugin: string,
+  observed: { readonly upgradedTo: string; readonly dataDigest: string },
+): Promise<boolean> {
+  const record = await readUpgradeRecord(harnessHome, plugin)
+  if (record?.upgradedTo === undefined || record.dataDigest === undefined) return false
+  return record.upgradedTo === observed.upgradedTo && record.dataDigest === observed.dataDigest
 }
 
 /**
@@ -56,44 +109,38 @@ export function changedVersions(
  * Finish or undo every upgrade a crash left half-done, before anything else
  * runs (acceptance[0]).
  *
- * A `SIGKILL` skips `runUpgrade`'s `finally`, so the plugin stays frozen and
- * its quarantine and rollback directories stay on disk. "The old version is
- * wholly usable after a restart" is not true of a plugin nothing will ever
- * thaw, which is why this runs first and unconditionally rather than only when
- * an upgrade is about to happen.
+ * A `SIGKILL` skips the transaction's own cleanup, so the snapshot the upgrade
+ * took stays on the medium and — if the switch had happened — the live unit
+ * holds data whose health was never confirmed. Nothing else would ever undo
+ * that, and acceptance[0]'s "the old version is wholly usable after a restart"
+ * is not true of a plugin left in that state, which is why this runs first and
+ * unconditionally rather than only when an upgrade is about to happen.
  *
- * The rule is the one the record's two halves already encode: intent with no
- * achievement means the upgrade did not finish, so the rollback directory —
- * if the switch got that far — goes back, and the quarantine is cleared.
+ * A backend with no migration facet has nothing to recover, and says so by
+ * returning nothing rather than by refusing: it could never have started an
+ * upgrade in the first place.
  * @param harnessHome - the resolved harness home.
  * @param plugins - the plugins to check.
+ * @param facet - the backend's migration facet, absent when it cannot migrate.
+ * @param clearRecord - removes one plugin's upgrade record once it is undone.
  * @returns the plugins that needed recovery, for the caller to report.
  */
 export async function recoverInterruptedUpgrades(
   harnessHome: string,
   plugins: readonly string[],
+  facet: MigrationFacet | undefined,
+  clearRecord: (plugin: string) => Promise<void>,
 ): Promise<string[]> {
+  if (facet === undefined) return []
   const recovered: string[] = []
   for (const plugin of plugins) {
-    const root = pluginStorageRoot(harnessHome, plugin)
-    const record = await readUpgradeRecord(root) as { upgradedTo?: string } | undefined
-    if (record === undefined || record.upgradedTo !== undefined) continue
-    // Intent with no achievement: the upgrade started and did not finish.
-    const rollback = join(root, 'rollback')
-    const live = join(root, 'data')
-    if (existsSync(rollback)) {
-      // The switch had happened, so the live directory holds migrated data
-      // whose health was never confirmed. Put the previous version back and
-      // keep the migrated copy for diagnosis.
-      await rm(join(root, 'quarantine'), { recursive: true, force: true })
-      if (existsSync(live)) await rename(live, join(root, 'quarantine'))
-      await rename(rollback, live)
-    } else {
-      // The switch had not happened, so production was never touched; only the
-      // quarantine needs clearing.
-      await rm(join(root, 'quarantine'), { recursive: true, force: true })
-    }
-    await rm(join(root, 'upgrade.json'), { force: true })
+    const record = await readUpgradeRecord(harnessHome, plugin)
+    if (record === undefined) continue
+    // The transaction owns what a half-done upgrade means and what undoing it
+    // requires; this only decides which plugins to ask about and clears the
+    // record afterwards.
+    if (!await recoverUpgrade(facet, record)) continue
+    await clearRecord(plugin)
     recovered.push(plugin)
   }
   return recovered
@@ -159,18 +206,18 @@ export async function rollbackCode(
 export async function reportUnreconciled(
   harnessHome: string,
   change: VersionChange,
+  observedDigest: string,
 ): Promise<string | undefined> {
-  const root = pluginStorageRoot(harnessHome, change.plugin)
-  const record = await readUpgradeRecord(root) as
-    { upgradedTo?: string; dataDigest?: string } | undefined
+  const record = await readUpgradeRecord(harnessHome, change.plugin)
   if (record === undefined) return undefined
-  const digestPath = join(root, 'data', 'digest')
-  const observedDigest = existsSync(digestPath) ? (await readFile(digestPath, 'utf8')).trim() : ''
-  if (await reconcileUpgrade(root, { upgradedTo: change.to, dataDigest: observedDigest })) return undefined
+  if (await reconcileUpgrade(harnessHome, change.plugin, {
+    upgradedTo: change.to,
+    dataDigest: observedDigest,
+  })) return undefined
   const missing = record.upgradedTo === undefined
     ? 'the record has no completed-upgrade half (the upgrade did not finish)'
     : record.dataDigest === undefined
       ? 'the record has no data digest'
-      : `the recorded digest ${record.dataDigest} does not match the data on disk`
+      : `the recorded digest ${record.dataDigest} does not match what the medium reports`
   return `${change.plugin}: recorded upgrade to ${change.to} does not reconcile — ${missing}`
 }

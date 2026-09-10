@@ -3,27 +3,26 @@
  * INTERMEDIATE states.
  *
  * A transaction whose only evidence is "it returned true" is indistinguishable
- * from a function that returns true. So every case here observes the disk
- * between phases: production is byte-unchanged while the migration runs
- * against a copy, the previous directory survives the switch as a rollback
- * target, and a failed health check leaves production byte-identical to what
- * it was before the switch.
+ * from a function that returns true. So every case observes what the medium
+ * holds between phases — through a fake backend that records the facet calls
+ * and keeps the unit's records, because the transaction's contract is with the
+ * FACET and not with a filesystem. A case that reached for a path would be
+ * asserting the medium this stage deliberately stopped inventing.
  *
- * acceptance[0]'s crash campaign — a crash at every step leaving either the
- * old or the new version whole — is the Usage stage's, against the real
- * upgrade path. A campaign against anything less proves nothing about what
- * ships.
+ * acceptance[0]'s crash campaign is `crash-campaign.spec.ts`, and each real
+ * backend's own snapshot and switch primitives are its own package's.
  */
 import { afterEach, describe, expect, it } from 'vitest'
-import { mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, existsSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { DatabaseSync } from 'node:sqlite'
-import { createHash } from 'node:crypto'
 import { brandString } from '@deepseek-ai/dsh-brand'
+import type { KvUnitDescriptor, MigrationFacet } from '@deepseek-ai/dsh-storage'
+import type { RunLease } from '@deepseek-ai/dsh-lease-contract'
 
-import { reconcileUpgrade, runUpgrade, readUpgradeRecord, UPGRADE_PHASES, vacuumInto } from '@deepseek-ai/dsh-plugin-migrations/transaction'
-import type { UpgradeRequest } from '@deepseek-ai/dsh-plugin-migrations/transaction'
+import { runUpgrade, UPGRADE_PHASES } from '@deepseek-ai/dsh-plugin-migrations/transaction'
+import type { UpgradeRecord, UpgradeRequest } from '@deepseek-ai/dsh-plugin-migrations/transaction'
 import type { PluginMigration, PluginMigrationManifest, PluginSchemaVersion } from '@deepseek-ai/dsh-plugin-migrations'
 
 const v = (name: string): PluginSchemaVersion => brandString<PluginSchemaVersion>(name)
@@ -37,53 +36,95 @@ function step(from: string, to: string, overrides: Partial<PluginMigration> = {}
   return { from: v(from), to: v(to), backup: { kind: 'snapshot' }, reversible: true, ...overrides }
 }
 
-/** A plugin storage root with a real SQLite database holding one row. */
-function storage(rows: readonly string[]): string {
-  const root = mkdtempSync(join(tmpdir(), 'p1-10-'))
-  roots.push(root)
-  mkdirSync(join(root, 'data'), { recursive: true })
-  const db = new DatabaseSync(join(root, 'data', 'data.db'))
-  db.exec('CREATE TABLE notes (body TEXT)')
-  for (const row of rows) db.prepare('INSERT INTO notes VALUES (?)').run(row)
-  db.close()
-  return root
-}
-
-/** Every row in one database, so a case can compare production against itself. */
-function notesIn(path: string): string[] {
-  const db = new DatabaseSync(path, { readOnly: true })
-  try {
-    return db.prepare('SELECT body FROM notes ORDER BY body').all().map(row => String(row.body))
-  } finally {
-    db.close()
-  }
-}
-
 const MANIFEST: PluginMigrationManifest = {
   plugin: 'dsh-notes',
   current: v('2'),
   migrations: [step('1', '2')],
 }
 
-function request(root: string, overrides: Partial<UpgradeRequest> = {}): UpgradeRequest {
-  return {
-    plugin: 'dsh-notes',
-    manifest: MANIFEST,
-    installed: v('1'),
-    storageRoot: root,
-    freeze: async () => async () => {},
-    migrate: async (quarantineDir) => {
-      const db = new DatabaseSync(join(quarantineDir, 'data.db'))
-      db.prepare('INSERT INTO notes VALUES (?)').run('migrated')
-      db.close()
+const UNIT: KvUnitDescriptor = { name: 'notes', version: 1, tables: ['notes'], hasGlobal: false }
+
+/**
+ * A backend whose medium is a map, recording every facet call.
+ *
+ * Fake because the transaction's contract is with the FACET: what a real
+ * medium does with a snapshot is `storage-json`'s and `storage-sqlite`'s to
+ * prove, and asserting a path here would reintroduce the coupling this stage
+ * removed.
+ */
+class RecordingBackend {
+  readonly calls: string[] = []
+  live: readonly unknown[] = ['original']
+  readonly copies = new Map<string, readonly unknown[]>()
+  private next = 0
+
+  readonly facet: MigrationFacet = {
+    snapshotUnit: async (descriptor) => {
+      this.calls.push(`snapshot:${descriptor.name}`)
+      const handle = `snap-${String(this.next += 1)}`
+      this.copies.set(handle, [...this.live])
+      return { unit: descriptor.name, handle }
     },
-    validate: async () => ({ ok: true, digest: 'sha256-validated' }),
-    healthCheck: async () => true,
-    ...overrides,
+    materializeMigrated: async (snapshot, version, migrate) => {
+      this.calls.push(`materialize:${String(version)}`)
+      const handle = `migrated-${String(this.next += 1)}`
+      this.copies.set(handle, await migrate(this.copies.get(snapshot.handle) ?? []))
+      return { unit: snapshot.unit, handle }
+    },
+    switchIn: async (migrated) => {
+      this.calls.push(`switchIn:${migrated.handle}`)
+      const previousHandle = `previous-${String(this.next += 1)}`
+      this.copies.set(previousHandle, [...this.live])
+      this.live = this.copies.get(migrated.handle) ?? []
+      return { unit: migrated.unit, handle: previousHandle }
+    },
+    rollbackTo: async (previous) => {
+      this.calls.push(`rollbackTo:${previous.handle}`)
+      this.live = this.copies.get(previous.handle) ?? []
+    },
+    discard: async (snapshot) => {
+      this.calls.push(`discard:${snapshot.handle}`)
+      this.copies.delete(snapshot.handle)
+    },
   }
 }
 
-describe('P1-10 must[1]: the upgrade transaction has the phases the registry names', () => {
+/** A lease that holds, unless a case says it was superseded. */
+function heldLease(overrides: Partial<RunLease> = {}): RunLease {
+  return {
+    token: { workItem: brandString('upgrade'), holder: brandString('cli'), epoch: 1 },
+    renew: () => undefined,
+    mayWrite: () => true,
+    release: () => {},
+    ...overrides,
+  } as unknown as RunLease
+}
+
+function request(
+  backend: RecordingBackend,
+  overrides: Partial<UpgradeRequest> = {},
+): { request: UpgradeRequest; records: UpgradeRecord[] } {
+  const records: UpgradeRecord[] = []
+  return {
+    records,
+    request: {
+      plugin: 'dsh-notes',
+      manifest: MANIFEST,
+      installed: v('1'),
+      unit: UNIT,
+      migration: backend.facet,
+      lease: heldLease(),
+      now: () => 1_000,
+      migrate: async rows => [...rows, 'migrated'],
+      validate: async () => ({ ok: true, digest: 'sha256-validated' }),
+      healthCheck: async () => true,
+      writeRecord: async (record) => { records.push(record) },
+      ...overrides,
+    },
+  }
+}
+
+describe('P1-10 must[1]: the transaction has the phases the registry names', () => {
   it('enumerates the six phases, in order, each named once', () => {
     expect([...UPGRADE_PHASES]).toEqual(['freeze', 'snapshot', 'quarantine', 'validate', 'switch', 'health-check'])
     expect(new Set(UPGRADE_PHASES).size).toBe(UPGRADE_PHASES.length)
@@ -91,200 +132,184 @@ describe('P1-10 must[1]: the upgrade transaction has the phases the registry nam
 })
 
 describe('P1-10 must[1]: what each phase leaves behind', () => {
-  it('migrates against a COPY, leaving production byte-unchanged until the switch', async () => {
-    // The property that makes a crash during migration recoverable by deleting
-    // one directory. An implementation that migrated production in place would
-    // satisfy an end-to-end assertion just as well as this one.
-    const root = storage(['original'])
-    const seen: string[][] = []
-    const outcome = await runUpgrade(request(root, {
-      migrate: async (quarantineDir) => {
-        const db = new DatabaseSync(join(quarantineDir, 'data.db'))
-        db.prepare('INSERT INTO notes VALUES (?)').run('migrated')
-        db.close()
-        // Observed DURING the migration: production still reads as it did.
-        seen.push(notesIn(join(root, 'data', 'data.db')))
+  it('migrates a COPY, leaving the live unit unchanged until the switch', async () => {
+    const backend = new RecordingBackend()
+    const seen: unknown[][] = []
+    const { request: upgrade } = request(backend, {
+      migrate: async (rows) => {
+        // Observed DURING the migration: the live unit still reads as it did.
+        seen.push([...backend.live])
+        return [...rows, 'migrated']
       },
-    }))
+    })
 
+    expect(await runUpgrade(upgrade)).toMatchObject({ upgraded: true })
     expect(seen).toEqual([['original']])
-    expect(outcome).toMatchObject({ upgraded: true })
-    expect(notesIn(join(root, 'data', 'data.db'))).toEqual(['migrated', 'original'])
+    expect(backend.live).toEqual(['original', 'migrated'])
   })
 
-  it('keeps the previous directory as a ROLLBACK TARGET after the switch', async () => {
-    // The point of an atomic switch is that the old state survives it. A
-    // rename over the live directory would not preserve what it replaced.
-    const root = storage(['original'])
-    const outcome = await runUpgrade(request(root))
+  it('calls the facet in the order the phases declare, and never a path', async () => {
+    const backend = new RecordingBackend()
+    expect(await runUpgrade(request(backend).request)).toMatchObject({ upgraded: true })
 
-    expect(outcome).toMatchObject({ upgraded: true })
-    expect(outcome.upgraded && existsSync(join(outcome.rollbackDir, 'data.db'))).toBe(true)
-    expect(outcome.upgraded && notesIn(join(outcome.rollbackDir, 'data.db'))).toEqual(['original'])
+    expect(backend.calls.map(call => call.split(':')[0]))
+      .toEqual(['snapshot', 'materialize', 'switchIn', 'discard'])
   })
 
-  it('leaves production byte-identical to the pre-switch state when the HEALTH CHECK fails', async () => {
-    // Not "an error was returned": the case reads the rows back. A rollback
-    // that reported failure while leaving migrated data in place would be the
-    // mixed state acceptance[0] exists to forbid.
-    const root = storage(['original'])
-    const outcome = await runUpgrade(request(root, { healthCheck: async () => false }))
-
-    expect(outcome).toEqual({ upgraded: false, failedAt: 'health-check' })
-    expect(notesIn(join(root, 'data', 'data.db'))).toEqual(['original'])
-    // The migrated data is kept aside rather than deleted, so an operator can
-    // see what the migration produced.
-    expect(existsSync(join(root, 'quarantine', 'data.db'))).toBe(true)
-    expect(notesIn(join(root, 'quarantine', 'data.db'))).toEqual(['migrated', 'original'])
+  it('stamps the migrated copy with the NEW version', async () => {
+    const backend = new RecordingBackend()
+    await runUpgrade(request(backend).request)
+    expect(backend.calls).toContain('materialize:2')
   })
 
-  it('does not switch at all when VALIDATE refuses', async () => {
-    const root = storage(['original'])
-    const outcome = await runUpgrade(request(root, {
+  it('rolls back to the replaced state when the HEALTH CHECK fails', async () => {
+    const backend = new RecordingBackend()
+    const { request: upgrade } = request(backend, { healthCheck: async () => false })
+
+    expect(await runUpgrade(upgrade)).toEqual({ upgraded: false, failedAt: 'health-check' })
+    // Not "an error was returned": the records are read back.
+    expect(backend.live).toEqual(['original'])
+    expect(backend.calls.some(call => call.startsWith('rollbackTo:'))).toBe(true)
+  })
+
+  it('does not switch at all when VALIDATE refuses, and discards the copy', async () => {
+    const backend = new RecordingBackend()
+    const { request: upgrade } = request(backend, {
       validate: async () => ({ ok: false, digest: 'sha256-rejected' }),
-    }))
+    })
 
-    expect(outcome).toEqual({ upgraded: false, failedAt: 'validate' })
-    expect(notesIn(join(root, 'data', 'data.db'))).toEqual(['original'])
-    expect(existsSync(join(root, 'rollback'))).toBe(false)
+    expect(await runUpgrade(upgrade)).toEqual({ upgraded: false, failedAt: 'validate' })
+    expect(backend.live).toEqual(['original'])
+    expect(backend.calls.some(call => call.startsWith('switchIn:'))).toBe(false)
+    expect(backend.calls.some(call => call.startsWith('discard:migrated'))).toBe(true)
   })
 
-  it('THAWS the plugin however the upgrade ends', async () => {
-    // A transaction that left a plugin frozen after a failure would turn one
-    // failed upgrade into an outage.
-    const root = storage(['original'])
-    let thawed = 0
-    await runUpgrade(request(root, {
-      freeze: async () => async () => { thawed += 1 },
-      validate: async () => ({ ok: false, digest: 'x' }),
-    }))
-    expect(thawed).toBe(1)
+  it('refuses BY NAME when the backend has no migration facet', async () => {
+    // A deployment learns before anything else happens. By then the package
+    // manager has already moved the code, so this refusal is a failed upgrade
+    // like any other and takes the same path.
+    const backend = new RecordingBackend()
+    const { request: upgrade } = request(backend, { migration: undefined })
 
-    const second = storage(['original'])
-    await runUpgrade(request(second, { freeze: async () => async () => { thawed += 1 } }))
-    expect(thawed).toBe(2)
+    expect(await runUpgrade(upgrade)).toEqual({
+      upgraded: false,
+      failedAt: 'freeze',
+      refusal: { kind: 'backend-cannot-migrate', plugin: 'dsh-notes' },
+    })
+    expect(backend.calls).toEqual([])
   })
 
-  it('refuses before freezing when the plan itself is refused', async () => {
-    const root = storage(['original'])
-    let froze = 0
-    const outcome = await runUpgrade(request(root, {
-      installed: v('9'),
-      freeze: async () => { froze += 1; return async () => {} },
-    }))
+  it('refuses before touching anything when the plan itself is refused', async () => {
+    const backend = new RecordingBackend()
+    const { request: upgrade } = request(backend, { installed: v('9') })
 
-    expect(outcome).toMatchObject({ upgraded: false, refusal: { kind: 'unreachable' } })
-    expect(froze).toBe(0)
-  })
-
-  it('records the upgrade with its path digest, written atomically', async () => {
-    const root = storage(['original'])
-    await runUpgrade(request(root))
-
-    const record = await readUpgradeRecord(root) as Record<string, unknown>
-    expect(record).toMatchObject({ plugin: 'dsh-notes', from: '1', to: '2' })
-    expect(String(record.pathDigest)).toMatch(/^sha256-[0-9a-f]{64}$/u)
-    // No temp file left beside it: the house atomic write renames into place.
-    expect(readFileSync(join(root, 'upgrade.json'), 'utf8')).toContain('pathDigest')
+    expect(await runUpgrade(upgrade)).toMatchObject({ upgraded: false, refusal: { kind: 'unreachable' } })
+    expect(backend.calls).toEqual([])
   })
 })
 
-describe('P1-10: the snapshot is an atomically consistent copy', () => {
-  it('copies a live database through VACUUM INTO rather than a file copy', async () => {
-    const root = storage(['a', 'b'])
-    const destination = join(root, 'copy.db')
-    vacuumInto(join(root, 'data', 'data.db'), destination)
-    expect(notesIn(destination)).toEqual(['a', 'b'])
+describe('P1-10 must[1]: the lease is what makes the switch safe', () => {
+  it('REFUSES to switch when this holder was superseded during the migration', async () => {
+    // The whole reason this uses a fencing lease rather than a lockfile. A
+    // lockfile can say "someone holds it"; only a fencing lease can say "you
+    // no longer do", which is the question that matters after a long
+    // migration. A superseded holder that swapped anyway would overwrite
+    // whatever the new holder has already done.
+    const backend = new RecordingBackend()
+    const { request: upgrade } = request(backend, { lease: heldLease({ mayWrite: () => false }) })
+
+    expect(await runUpgrade(upgrade)).toEqual({ upgraded: false, failedAt: 'switch' })
+    // The live unit is untouched, and the migrated copy is discarded rather
+    // than left for the new holder to trip over.
+    expect(backend.live).toEqual(['original'])
+    expect(backend.calls.some(call => call.startsWith('switchIn:'))).toBe(false)
+    expect(backend.calls.some(call => call.startsWith('discard:migrated'))).toBe(true)
   })
 
-  it('binds the destination as a PARAMETER, so a quoted path cannot inject SQL', async () => {
-    // A storage root can carry a quote. Interpolating it into the statement
-    // would be an injection even though the only author is this package.
-    const root = mkdtempSync(join(tmpdir(), "p1-10-quote'-"))
-    roots.push(root)
-    mkdirSync(join(root, 'data'), { recursive: true })
-    const db = new DatabaseSync(join(root, 'data', 'data.db'))
-    db.exec('CREATE TABLE notes (body TEXT)')
-    db.prepare('INSERT INTO notes VALUES (?)').run('quoted')
-    db.close()
+  it('RENEWS across the long phase, and stops when the renewal is denied', async () => {
+    // A migration can outlast a lease TTL, and a lapsed holder is a superseded
+    // one. Without the renewal, the fencing check before the switch would be
+    // the first time anyone noticed — after the whole migration was paid for.
+    const backend = new RecordingBackend()
+    const renewals: number[] = []
+    const { request: upgrade } = request(backend, {
+      lease: heldLease({
+        renew: (at: number) => {
+          renewals.push(at)
+          return { reason: 'held-by-another', holder: brandString('another-host') } as never
+        },
+      }),
+    })
 
-    const destination = join(root, "copy'.db")
-    vacuumInto(join(root, 'data', 'data.db'), destination)
-    expect(notesIn(destination)).toEqual(['quoted'])
+    expect(await runUpgrade(upgrade)).toEqual({ upgraded: false, failedAt: 'quarantine' })
+    expect(renewals).toEqual([1_000])
+    expect(backend.live).toEqual(['original'])
+  })
+
+  it('renews and proceeds when the lease still holds, so the check is not a constant', async () => {
+    const backend = new RecordingBackend()
+    expect(await runUpgrade(request(backend).request)).toMatchObject({ upgraded: true })
+    expect(backend.live).toEqual(['original', 'migrated'])
   })
 })
 
-describe('P1-10 acceptance[1]: the record and the disk are reconcilable', () => {
-  it('reconciles a completed upgrade against its recorded version and digest', async () => {
-    const root = storage(['original'])
-    const outcome = await runUpgrade(request(root))
-    expect(outcome).toMatchObject({ upgraded: true })
+describe('P1-10 acceptance[1]: the record is written in two halves', () => {
+  it('writes intent first and achievement only after the health check', async () => {
+    const backend = new RecordingBackend()
+    const { request: upgrade, records } = request(backend)
 
-    expect(await reconcileUpgrade(root, { upgradedTo: '2', dataDigest: 'sha256-validated' })).toBe(true)
+    expect(await runUpgrade(upgrade)).toMatchObject({ upgraded: true })
+    // Asserted by MEANING rather than by count: the record is rewritten as the
+    // upgrade learns things (the snapshot handle, then the replaced state's
+    // handle), and a count would break every time a phase gained something to
+    // remember while saying nothing about the property.
+    expect(records[0]).toMatchObject({ plugin: 'dsh-notes', from: '1', to: '2' })
+    expect(records.filter(record => record.upgradedTo !== undefined)).toHaveLength(1)
+    expect(records.at(-1)).toMatchObject({ upgradedTo: '2', dataDigest: 'sha256-validated' })
+    // Every write before the last one is intent only.
+    expect(records.slice(0, -1).every(record => record.upgradedTo === undefined)).toBe(true)
   })
 
-  it('refuses when the digest on disk is not the one recorded', async () => {
-    // The half acceptance[1] exists for: a record whose digest no longer
-    // matches the data means something wrote to the plugin's storage outside
-    // the transaction, and claiming "upgraded" would be claiming a state
-    // nobody can reproduce.
-    const root = storage(['original'])
-    await runUpgrade(request(root))
+  it('writes NO achievement half when the health check fails', async () => {
+    // The split is the property: a crash or a failure leaves intent alone, so
+    // a later reconcile cannot read an upgrade that did not finish as one that
+    // did.
+    const backend = new RecordingBackend()
+    const { request: upgrade, records } = request(backend, { healthCheck: async () => false })
 
-    expect(await reconcileUpgrade(root, { upgradedTo: '2', dataDigest: 'sha256-something-else' })).toBe(false)
+    expect(await runUpgrade(upgrade)).toEqual({ upgraded: false, failedAt: 'health-check' })
+    expect(records.filter(record => record.upgradedTo !== undefined)).toEqual([])
   })
 
-  it('refuses when the version on disk is not the one recorded', async () => {
-    const root = storage(['original'])
-    await runUpgrade(request(root))
-
-    expect(await reconcileUpgrade(root, { upgradedTo: '3', dataDigest: 'sha256-validated' })).toBe(false)
-  })
-
-  it('does NOT claim an upgrade for a run that started and never finished', async () => {
-    // The record is written twice: intent at the snapshot phase, achievement
-    // after the health check. A failed health check leaves only the intent, so
-    // a reconcile after it must not read the intended version as one reached.
-    const root = storage(['original'])
-    const outcome = await runUpgrade(request(root, { healthCheck: async () => false }))
-    expect(outcome).toEqual({ upgraded: false, failedAt: 'health-check' })
-
-    // The intent half is on disk — an operator can see what was attempted.
-    const record = await readUpgradeRecord(root) as Record<string, unknown>
-    expect(record).toMatchObject({ from: '1', to: '2' })
-    // And the achieved half is not, so nothing reconciles as upgraded.
-    expect(await reconcileUpgrade(root, { upgradedTo: '2', dataDigest: 'sha256-validated' })).toBe(false)
-  })
-
-  it('reconciles as false when no upgrade has ever run, rather than throwing', async () => {
-    const root = storage(['original'])
-    expect(await reconcileUpgrade(root, { upgradedTo: '2', dataDigest: 'sha256-validated' })).toBe(false)
+  it('carries the path digest, so a confirmation names this exact conversion', async () => {
+    const backend = new RecordingBackend()
+    const { request: upgrade, records } = request(backend)
+    await runUpgrade(upgrade)
+    expect(records[0]?.pathDigest).toMatch(/^sha256-[0-9a-f]{64}$/u)
   })
 })
 
 describe('P1-10 acceptance[2]: a failed upgrade does not change approved permissions', () => {
   /**
-   * A harness home with the files an upgrade could plausibly disturb, seeded
-   * with CONTENT.
+   * A harness home holding the files an upgrade could plausibly disturb,
+   * seeded with CONTENT.
    *
    * An empty directory proves nothing: "nothing changed" is trivially true of
    * a tree with nothing in it. The permission state this clause is about lives
-   * in P2-02's `capability-tokens.json` and P2-04's decisions, not in settings
-   * — `settings/src/index.ts` carries no permission, approval or allow
-   * vocabulary at all — so the token store is what gets seeded here, beside a
-   * settings file to catch a transaction that wandered into the wrong tree.
+   * in P2-02's token store, not in settings — `settings/src/index.ts` carries
+   * no permission, approval or allow vocabulary at all.
    */
   function harnessHome(): string {
-    const home = mkdtempSync(join(tmpdir(), 'p1-10-home-'))
-    roots.push(home)
-    mkdirSync(join(home, 'capability-tokens'), { recursive: true })
+    const harness = mkdtempSync(join(tmpdir(), 'p1-10-home-'))
+    roots.push(harness)
+    mkdirSync(join(harness, 'capability-tokens'), { recursive: true })
     writeFileSync(
-      join(home, 'capability-tokens', 'capability-tokens.json'),
-      JSON.stringify({ tokens: [{ digest: 'sha256-granted', constraints: { issuedFor: 'session-1' } }], revoked: [] }),
+      join(harness, 'capability-tokens', 'capability-tokens.json'),
+      JSON.stringify({ tokens: [{ digest: 'sha256-granted' }], revoked: [] }),
       'utf8',
     )
-    writeFileSync(join(home, 'settings.json'), JSON.stringify({ ui: { theme: 'dark' } }), 'utf8')
-    return home
+    writeFileSync(join(harness, 'settings.json'), JSON.stringify({ ui: { theme: 'dark' } }), 'utf8')
+    return harness
   }
 
   /** A digest over every file in a tree, so a change anywhere is one comparison. */
@@ -303,36 +328,19 @@ describe('P1-10 acceptance[2]: a failed upgrade does not change approved permiss
   }
 
   it('leaves the permission state byte-identical across a FAILED upgrade', async () => {
-    // This epic READS permission state and never writes it. A case that
-    // granted or revoked something to set up would be P1-10 writing state
-    // P2-02 and P2-04 own — and would demonstrate that it CAN, which is the
-    // opposite of the clause.
-    const root = storage(['original'])
-    const home = harnessHome()
-    const before = treeDigest(home)
+    const backend = new RecordingBackend()
+    const harness = harnessHome()
+    const before = treeDigest(harness)
 
-    const outcome = await runUpgrade(request(root, { healthCheck: async () => false }))
-    expect(outcome).toEqual({ upgraded: false, failedAt: 'health-check' })
+    const { request: upgrade } = request(backend, { healthCheck: async () => false })
+    expect(await runUpgrade(upgrade)).toEqual({ upgraded: false, failedAt: 'health-check' })
 
-    expect(treeDigest(home)).toBe(before)
-  })
-
-  it('leaves it byte-identical across a SUCCESSFUL upgrade too', async () => {
-    // The general form. Without it the case above would also pass for a
-    // transaction that writes outside its root only when it succeeds.
-    const root = storage(['original'])
-    const home = harnessHome()
-    const before = treeDigest(home)
-
-    expect(await runUpgrade(request(root))).toMatchObject({ upgraded: true })
-    expect(treeDigest(home)).toBe(before)
+    expect(treeDigest(harness)).toBe(before)
   })
 
   it('the seeded home is NOT empty, so "nothing changed" is not vacuous', () => {
-    // The control for the two cases above: a digest over an empty tree would
-    // be equal to itself no matter what the transaction did.
-    const home = harnessHome()
-    expect(readdirSync(home).length).toBeGreaterThan(1)
-    expect(treeDigest(home)).not.toBe(treeDigest(mkdtempSync(join(tmpdir(), 'p1-10-empty-'))))
+    const harness = harnessHome()
+    expect(readdirSync(harness).length).toBeGreaterThan(1)
+    expect(treeDigest(harness)).not.toBe(treeDigest(mkdtempSync(join(tmpdir(), 'p1-10-empty-'))))
   })
 })

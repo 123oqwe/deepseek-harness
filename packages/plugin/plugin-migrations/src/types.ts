@@ -145,6 +145,16 @@ export type MigrationRefusal =
   | { readonly kind: 'confirmation-mismatch'; readonly expected: MigrationPathDigest; readonly supplied: MigrationPathDigest }
   /** The upgrade is irreversible and no export was produced to confirm against. */
   | { readonly kind: 'export-missing'; readonly digest: MigrationPathDigest }
+  /**
+   * The mounted storage backend has no migration facet, so this medium cannot
+   * be snapshotted and swapped.
+   *
+   * Refused by NAME at plan time rather than expressed as a missing method: a
+   * deployment learns before anything is installed, and by then the package
+   * manager has already moved the code, which makes this refusal a failed
+   * upgrade like any other.
+   */
+  | { readonly kind: 'backend-cannot-migrate'; readonly plugin: string }
 
 /** An admitted upgrade path, or the reason it was refused. */
 export type UpgradePlan =

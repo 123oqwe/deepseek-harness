@@ -6968,6 +6968,12 @@ importers:
       '@deepseek-ai/dsh-brand':
         specifier: workspace:^
         version: link:../../util/brand
+      '@deepseek-ai/dsh-lease-contract':
+        specifier: workspace:^
+        version: link:../../collaboration/lease-contract
+      '@deepseek-ai/dsh-storage':
+        specifier: workspace:^
+        version: link:../../storage/storage
 
   packages/plugin/plugin-ownership:
     devDependencies:

@@ -16,6 +16,12 @@
     },
     {
       "path": "../../util/atomic-write"
+    },
+    {
+      "path": "../../storage/storage"
+    },
+    {
+      "path": "../../collaboration/lease-contract"
     }
   ]
 }
