@@ -10285,6 +10285,53 @@
         "failureSummary": "M38 reddens 1 of 19, the reachability case, on handle identity. M39 reddens 1 of 19, the exactly-once case. M40 reddened NOTHING on the first attempt, and the suite was at fault rather than the mutation: the bound existed in the code and in no assertion, so widening the map to every run -- an unbounded leak with no reader -- was invisible. A case asserting an ordinary run keeps no settlement was added, and M40 now reddens exactly it. Recorded because a surviving mutation has three causes and only one of them is a weak suite; here it was."
       },
       "note": "P4-09 must[2] semantic 5 (§12.61), built rather than recorded. The delegate's ruling: §12.46-B applies when the producer belongs to a SCHEDULED later epic -- hedge to P5-04, trace to P7-07, inputs to P6-09 -- and re-attachment has no other owner, so it is this epic's own half. Measured before that: the engine's surface was start/startDetached/resume/registerDefinition/startNested, with no attach anywhere in packages/workflow/*/src.\n\nWHY IT MATTERS MORE THAN THE OTHER FIVE SEMANTICS: a detached run's whole point is outliving the turn that launched it, and the handle that turn received is exactly what a later observer does not have. Without attach the mechanism was reachable in the case where it does not matter and unreachable in the case where it does.\n\nDECLARED ON THE SEAM, not on the concrete engine. A method a caller can only reach by having the implementation type is present and unreachable; three stub engines in other packages had to implement it, which is the compiler stating that this is part of what an engine IS.\n\nTWO ROUTES, NOT ONE ENTRY POINT. A live run returns the same handle, so observe, await and cancel reach one worker. `resume` would start a SECOND worker under one run id -- two masters, which P4-07's lease refuses -- and the negative control asserts that refusal rather than assuming it.\n\nTHE FLAKE IN THIS FILE WAS DIAGNOSED, NOT REGISTERED. `CANCELS the nested run when the parent is cancelled` failed about one run in three: its nested body never resolves, so cancellation always takes the force-settle at the end of `disposeGraceMs`, whose 5000 ms default is exactly vitest's own timeout. The case was racing the mechanism it tests. The fixture now mounts a 250 ms grace -- the same path, deterministic -- and 5 of 5 full runs are green. Attribution was measured first: the failure reproduces with the src change and no new cases, and predates this slice."
+    },
+    {
+      "epic": "P4-11",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/llm/llm-retry/tests/run-budget.spec.ts",
+        "packages/llm/llm/tests/circuit-breaker.spec.ts",
+        "packages/reliability/retry/tests/attribution.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-11 must[1]: the LLM layer charges the run, not the session stops retrying when the RUN budget is spent, below the policy’s own cap",
+        "P4-11 must[1]: the LLM layer charges the run, not the session charges a CHILD session’s retries to the PARENT’s run, so allowances do not stack",
+        "P4-11 must[1]: the LLM layer charges the run, not the session does not charge a substitute key when no run can be resolved",
+        "P4-11 must[1]: the LLM layer charges the run, not the session lets the policy decide when the run budget is the looser of the two",
+        "P4-11 must[2]: a failing endpoint stops being called refuses the next call without reaching the adapter once the destination opens",
+        "P4-11 must[2]: a failing endpoint stops being called keeps calling a destination below the threshold",
+        "P4-11 must[2]: a failing endpoint stops being called does not open on a failure the classifier calls permanent",
+        "P4-11 must[2]: a failing endpoint stops being called opens one model without opening another on the same provider",
+        "P4-11 must[2]: a failing endpoint stops being called dispatches normally when no breaker is mounted",
+        "P4-11 must[1]: a retry is charged to the delegation ROOT run walks to the root and returns ITS run, not the retrying session’s",
+        "P4-11 must[1]: a retry is charged to the delegation ROOT run stops at the furthest ancestor this process can see",
+        "P4-11 must[1]: a retry is charged to the delegation ROOT run terminates on a circular chain instead of hanging a retry",
+        "P4-11 must[1]: one store, so two layers share a total by construction charges two different layers against ONE run total",
+        "P4-11 must[1]: one store, so two layers share a total by construction records nothing for a refusal, so a refused retry costs no budget"
+      ],
+      "files": [
+        "packages/llm/llm-retry/src/index.ts",
+        "packages/llm/llm/src/index.ts",
+        "packages/reliability/retry/src/root.ts",
+        "packages/reliability/retry/src/usage.ts"
+      ],
+      "frozenAtUtc": "2026-09-10T11:05:00.000Z",
+      "dryRunProof": {
+        "treeSha": "90af61e31eed2fd686b5829c4252d6b8eb76f5cb",
+        "testsDiscovered": 18
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Five mutations, each run against this argv and restored byte-identical. (M41) `llm-retry` records the admission but does not act on it. (M42) it charges `agent.runId` instead of walking to the delegation root. (M43) it keys by `agent.runId ?? agent.session.id`, the plausible substitute. (M44) `llm/llm` pulls the first chunk without consulting the breaker. (M45) the breaker destination drops `model` and `baseUrl`, keying per provider.",
+        "failureSummary": "M41 reddens the budget-bound case (6 requests against 3). M42 reddens the parent/child case with 8 against 5 -- and that case had to be REBUILT to produce those numbers: the first version put a child alone against a budget of 2, which yields 3 requests under both readings, so the mutation reddened nothing and the case asserted nothing. M43 reddens the capability-absence case, 1 against 6. M44 reddens the refusal case; M45 reddens the per-destination control. A below-threshold control, a no-breaker-mounted control and a looser-budget control sit beside them, so a breaker or budget that refused everything could not satisfy the suite."
+      },
+      "note": "P4-11 Usage stage: must[1] and must[2] acquire callers.\n\nMUST[1] IS ONE LAYER PLUS AN ATTRIBUTION RULE, and the second layer was measured away rather than assumed. §12.64 had ruled that the MCP client would charge retries and reconnects made FOR a run action; measured, every `retry`/`attempt` in `packages/mcp/mcp-client/src` is the connection supervisor's and `connection.ts` references no agent, execution or run at all. A reconnect restores a shared server process -- one supervisor serves every run using it -- so charging the momentarily-active run makes it pay for another's outage. The MCP tool-call path is the opposite: it resolves a run through `exec.agent` and performs no retry. So the layers are `llm-retry` for the parent AND every child session, charged to one run; the subagent is not a second layer but the multiplier of the first, which is what `chargedRun` stops. §12.64's original wording is kept in the preFlight, marked overturned.\n\nTHE CARRIER PREMISE WAS ALSO CORRECTED. My first measurement searched for `ctx.runs` consumers OUTSIDE `run/run`, found zero, and read it as 'nothing creates a Run'. `RunPlugin` is its own consumer: it opens a Run from `agent/session-start`, adopts live agents at startup, and is mounted in `bundle/base`. Searching for external consumers of a service that drives itself from events finds nothing and means nothing. What IS zero is narrower and still true: `attachSession` has no production caller, so a Run is 1:1 with a session -- which is exactly why the budget cannot be 'this agent's run'.\n\nMUST[2] GUARDS THE FIRST CHUNK, deliberately. A stream that produced a chunk is evidence the endpoint answered, so the first pull is where endpoint health is observable; a mid-stream failure is the transport's or the model's. Wrapping the whole stream would mean deciding inside the breaker which mid-stream failures are the endpoint's fault, which is the classifier's job and is not observable at a chunk boundary. Stated in both READMEs.\n\nWIRING IT REDDENED THREE EXISTING CASES, each a real defect in the wiring: reading the first `IteratorResult`'s getters outside the `try` let a hostile getter escape instead of becoming a terminal chunk, and yielding the first chunk outside the `try/finally` let a consumer that breaks after one chunk skip adapter cleanup. Both fixed by doing what the loop below already did."
     }
   ]
 }
