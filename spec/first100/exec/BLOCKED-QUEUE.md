@@ -4403,3 +4403,20 @@ must[0] names five policy inputs. Four exist on this tree — identity (P2-01's 
 `PolicyRequest.world` is therefore declared as `{ kind: 'absent' }` — a value a policy can match on, not a missing field. The distinction is the point: a policy that must know where an action would run can refuse when the world is unknown, which is different from a policy that never asked. An optional field would have made the two indistinguishable, and inventing a world model here would have produced a second one for P3-01 to reconcile with.
 
 **Closing condition:** P3-01 lands `ExecutionWorld`. The change here is then a type change — `ExecutionWorldFact` gains its real variants — and not a vocabulary change, which is what the declared slot buys.
+
+
+### BLOCKED-179 — `verify-translation-pairing` is red corpus-wide, which keeps `first100:slice-gate` red for everyone
+
+**Status:** HELD under BLOCKED-124, ruled 2026-09-11. The 28 missing counterparts and 14 stale records are cleared by one `/dsh-translate-docs` run the user performs; they are NOT patched per epic, and the in-scope rule is NOT narrowed — either would hide the debt rather than pay it. A slice reporting `first100:slice-gate` writes "5/6 green, pairing held, 0 added by this batch".
+
+`first100:slice-gate` includes `verify-translation-pairing`, so the light gate the delegate asks for before every SHA report cannot pass on this tree regardless of what a slice changed. Measured at `4b27568dbd`:
+
+| kind | count | what it means |
+|---|---|---|
+| `must merge bilingual` | 28 files | an in-scope document with NO Chinese counterpart at all — `packages/policy/capability-token`, `capability-token-file`, `risk-taxonomy`, `run/taskboard-sqlite`, `subagent/subagent-taskboard` and 23 more |
+| `out of sync` | 14 files | a pair whose recorded hash is stale, mostly from `017f82195a`, which edited English Model-Experience sections without carrying the Chinese side |
+| structural `diverges` | 0 pairs | `action-ledger` and `collaboration/taskboard` each had an English Known Limitations list the Chinese side never received (5 vs 3, 4 vs 2); both were translated and re-recorded here, since a missing bullet is a missing FACT rather than a stale hash |
+
+Fixed here: the three `README.zh.md` files that carried an untranslated English `None, as …` sentence pasted in by `017f82195a` (`action-ledger`, `intake-dedup`, `taskboard`), the missing Known-Limitations bullets on two of those three, and `docs/subsystems/README`'s pair after two rows were added to it. Five files, because each was a fact the Chinese reader did not have — not because they were in scope for this epic.
+
+**Why the five fixed here were not translation work:** three `README.zh.md` files carried an untranslated English sentence pasted into them, and two were missing Known-Limitations bullets their English side had gained. A Chinese reader was missing a FACT, not a rendering — that is a defect, and it is repaired where it is found rather than queued behind a translation pass.

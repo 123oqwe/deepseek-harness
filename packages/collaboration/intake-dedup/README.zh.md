@@ -42,7 +42,7 @@ source 与 id **都**带长度前缀——`${source.length}:${source}:${id.lengt
 
 ## Model Experience
 
-None, as this package exports a duplicate decision and types only and registers nothing model-facing.
+无,因为本包只导出一个重复判定与类型,不注册任何 model 可见的东西。
 
 #### KV Cache effect
 

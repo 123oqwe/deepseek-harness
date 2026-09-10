@@ -1,5 +1,5 @@
 ---
-description: "Epic P2-05 的 Cedar 策略 provider，供配置策略集的部署方与阅读"harness 请求如何变成 Cedar 请求"的维护者阅读。"
+description: "Epic P2-05 的 Cedar 策略 provider，供配置策略集的部署方，以及想了解 harness 请求如何变成 Cedar 请求的维护者阅读。"
 kind: "package-reference"
 ---
 

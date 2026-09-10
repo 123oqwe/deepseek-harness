@@ -37,7 +37,7 @@ tool result 记录的是 harness 观察到的东西，它记录不了外部世�
 
 ## Model Experience
 
-None, as this package exports a reservation decision and types only and registers nothing model-facing.
+无,因为本包只导出一个预留决策与类型,不注册任何 model 可见的东西。
 
 #### KV Cache effect
 
@@ -45,9 +45,11 @@ None, as this package exports a reservation decision and types only and register
 
 ## 已知限制与延后事项
 
-- **没有传输，也还没有生产调用者。** 存储是持久的，判断也已对着一个 fake 外部服务证明过，但 harness 里还没有任何东西调用本包：把 `Idempotency-Key` 传给真实 provider、在真实工具调用前预留，属于 Usage 阶段，卡在 BLOCKED-143——生产路径上没有任何地方构造 ActionManifest，而 manifest 事件既不带 `idempotencyKey` 也不带 `actor`，恰恰是本账本用来做键的那两个字段。
-- **`ambiguous` 没有生产者。** 没有任何东西去判定一个结果是「不可知」而不仅仅是「尚未观测」；这个判断属于查询目标状态的那一方，在它出现之前，这个状态只能由调用方直接写入才可达。
-- 不发布 runtime invariant companion（No runtime invariant companion is published）：本包不持有状态、也不观测任何东西，因此不存在两个观测者可能产生分歧的自有关系。
+- **没有传输。**把 `Idempotency-Key` 传给真实 provider 这件事仍未建成:`idempotencyHeader` 命名了那个头,但没有任何 adapter 发送它,因此 must[2] 的原生透传是一个没有调用者的决策。must[3] 的另一半——查询目标状态以消解歧义——同样缺席,这也是 `ambiguous` 选择拒绝而不是对账的原因。
+- **生产调用者会预留,但还不会消解。**`packages/core/agent-loop/src/tool-calls.ts` 在每次原生工具调用前预留,在工具运行前标记 `sent`,并从结果记录回执摘要或 `ambiguous`。抛错的工具会留下一条 `ambiguous` 记录,它会拒绝该键后续的每一次尝试,而且没有任何东西会清除它——这是刻意的,因为清除它会让重试执行一个可能已经提交过的副作用;但这也意味着,在对账器出现之前,一个失败过的动作会被永久挡住。
+- **回执摘要算的是工具自己的内容**,也就是 harness 观察到的东西,而不是 provider 返回的东西。在传输携带真实回执之前,这个摘要证明的是"同一个结果被记录了两次",而不是"外部世界只提交了一次"。
+- **`ambiguous` 分不清"不可知"与"仅仅是失败了"。**派发路径对每一个出错的工具结果都写它,这是 fail-closed 的读法:抛错的工具可能提交了,也可能没有。要区分"请求根本没发出去"与"结果确实不可知",需要本包没有的目标状态查询。
+- 不发布 runtime invariant companion:本包不持有状态、也不观测任何东西,因此不存在两个观测者可能产生分歧的自有关系。
 
 ### 开发备注
 

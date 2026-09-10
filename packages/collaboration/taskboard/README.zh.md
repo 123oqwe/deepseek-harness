@@ -31,16 +31,18 @@ kind: "package-reference"
 
 ## Model Experience
 
-None, as this package exports claim and graph decisions, an atomic store, and types only and registers nothing model-facing.
+无,因为本包只导出认领与图判定、一个原子存储与类型,不注册任何 model 可见的东西。
 
 #### KV Cache effect
 
-Nothing here enters a model request, so provider cache reuse is unaffected.
+这里没有任何东西进入模型请求,因此不影响 provider 的缓存复用。
 
 ## 已知限制与延后事项
 
 - **目前还没有任何东西从板上排程。** 这里只有认领决策、原子 store 和图校验;消费它们的 worker 池属于后面的 epic。
-- **回收基于时间且信任时钟。** 过期的认领按调用方提供的截止时间回收;板本身不检测一个活着但卡死的 worker。
+- **没有任何东西清扫失效的认领。**用 `release` 主动交回认领的持有者会立刻释放该任务;凭空消失的持有者则会一直占着它,直到其租约到期,而且只有下一次认领尝试才会注意到。
+- **回收基于时间且信任时钟。**过期的认领按调用方提供的截止时间回收;板本身不检测一个活着但卡死的 worker。
+- 不发布 runtime invariant companion:本包只做决策,而一次认领所维持的关系归应用该决策的那个 store 所有——`@deepseek-ai/dsh-taskboard-sqlite` 在单个事务内强制它,在那里检查器只会把一个值和它自己相比。
 
 ### 开发备注
 
