@@ -39,6 +39,16 @@ interface PackageAlias {
   readonly source: string
   /** Whether the package carries `src/invariant.ts`, which earns a second alias. */
   readonly hasInvariant: boolean
+  /**
+   * Subpaths the package's own `exports` publishes, each earning an alias.
+   *
+   * Derived rather than hand-listed because hand-listing them failed five
+   * times: a published subpath with no alias cannot be resolved on the source
+   * plane, so a test importing it silently runs the package's BUILT `lib/`
+   * instead. That is invisible until a mutation to the source changes nothing
+   * the tests can see (first100 P1-10.P).
+   */
+  readonly subpaths: readonly string[]
 }
 
 /**
@@ -113,12 +123,42 @@ export function collectPackageAliases(): PackageAlias[] {
       specifier: name,
       source: `./packages/${group}/${directory}/src`,
       hasInvariant: existsSync(join(packageDir, 'src', 'invariant.ts')),
+      subpaths: publishedSubpaths(join(packageDir, 'package.json'), packageDir),
       directory: `${group}/${directory}`,
     })
   }
   return [...bySpecifier.values()]
-    .map(({ specifier, source, hasInvariant }) => ({ specifier, source, hasInvariant }))
+    .map(({ specifier, source, hasInvariant, subpaths }) => ({ specifier, source, hasInvariant, subpaths }))
     .sort((left, right) => left.specifier.localeCompare(right.specifier))
+}
+
+/**
+ * The subpaths one package's `exports` publishes that a source-plane alias
+ * must cover.
+ *
+ * `./src/*` and `./package.json` are excluded: the first already resolves to
+ * source by construction and the second is not a module. A subpath whose
+ * matching `src/<name>.ts` does not exist is excluded too — it publishes
+ * something built rather than a source module, and aliasing it would point at
+ * a file that is not there.
+ * @param manifest - absolute path to the package's `package.json`.
+ * @param packageDir - the package directory, for checking the source file.
+ * @returns the subpath names, without their leading `./`.
+ */
+export function publishedSubpaths(manifest: string, packageDir: string): string[] {
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(readFileSync(manifest, 'utf8'))
+  } catch {
+    return []
+  }
+  const exported = (parsed as { exports?: unknown }).exports
+  if (typeof exported !== 'object' || exported === null) return []
+  return Object.keys(exported)
+    .filter(key => key.startsWith('./') && key !== './package.json' && !key.includes('*'))
+    .map(key => key.slice(2))
+    .filter(name => existsSync(join(packageDir, 'src', `${name}.ts`)))
+    .sort()
 }
 
 /**
@@ -171,6 +211,32 @@ export function uncoveredPackages(
 }
 
 /**
+ * Published subpaths that no alias maps.
+ *
+ * A published subpath with no alias cannot be resolved on the source plane, so
+ * an importer silently gets the package's BUILT `lib/` instead. That is
+ * invisible until a mutation to the source changes nothing the tests can see,
+ * which is how it was found (first100 P1-10.P) and why it is a gate rather
+ * than a convention.
+ * Parsed with its own pattern rather than {@link mappedSpecifiers}, whose
+ * regex excludes any key containing a slash — it answers "which PACKAGES are
+ * mapped", and reusing it here would report every subpath as missing.
+ * @param aliases - packages and the subpaths their `exports` publish.
+ * @param text - the `tsconfig.base.json` content to read the mapped keys from.
+ * @returns the unmapped `<package>/<subpath>` specifiers.
+ */
+export function uncoveredSubpaths(aliases: readonly PackageAlias[], text: string): string[] {
+  const mapped = new Set<string>()
+  for (const match of text.matchAll(/^\s*"(@deepseek-ai\/dsh-[^"]+)":/gm)) {
+    const key = match[1]
+    if (key !== undefined) mapped.add(key)
+  }
+  return aliases.flatMap(alias => alias.subpaths
+    .map(subpath => `${alias.specifier}/${subpath}`)
+    .filter(specifier => !mapped.has(specifier)))
+}
+
+/**
  * Render the generated region's alias lines.
  * @param aliases - packages to map, in emission order.
  * @param handWritten - specifiers already mapped outside the region; a duplicate key would shadow one silently.
@@ -185,6 +251,11 @@ export function renderAliases(aliases: readonly PackageAlias[], handWritten: Rea
     const invariant = `${alias.specifier}/invariant`
     if (alias.hasInvariant && !handWritten.has(invariant)) {
       lines.push(`      ${JSON.stringify(invariant)}: [${JSON.stringify(`${alias.source}/invariant.ts`)}]`)
+    }
+    for (const subpath of alias.subpaths) {
+      const specifier = `${alias.specifier}/${subpath}`
+      if (specifier === invariant || handWritten.has(specifier)) continue
+      lines.push(`      ${JSON.stringify(specifier)}: [${JSON.stringify(`${alias.source}/${subpath}.ts`)}]`)
     }
   }
   // The region closes `paths`, so the last member carries no trailing comma.
@@ -228,8 +299,17 @@ if (process.argv[1] && import.meta.filename === resolve(process.argv[1])) {
   const check = process.argv.includes('--check')
   const current = readFileSync(CONFIG, 'utf8')
   const next = writeRegion(current, renderAliases(collectPackageAliases(), handWrittenSpecifiers(current)))
-  const uncovered = uncoveredPackages(collectPackageNames(), mappedSpecifiers(next))
-  if (uncovered.length > 0) {
+  const mapped = mappedSpecifiers(next)
+  const uncoveredSubpath = uncoveredSubpaths(collectPackageAliases(), next)
+  const uncovered = uncoveredPackages(collectPackageNames(), mapped)
+  if (uncoveredSubpath.length > 0) {
+    console.error(
+      'gen-tsconfig-paths: no alias maps '
+      + `${uncoveredSubpath.join(', ')}; a published subpath with no alias resolves to the package's `
+      + 'built lib/ on the source plane, so tests silently measure an artifact instead of source.',
+    )
+    process.exitCode = 1
+  } else if (uncovered.length > 0) {
     console.error(
       'gen-tsconfig-paths: no alias maps '
       + `${uncovered.join(', ')}; add a hand-written entry, because a package named after `

@@ -21,6 +21,9 @@ describe('generated tsconfig package aliases', () => {
       specifier: '@deepseek-ai/dsh-session',
       source: './packages/core/session/src',
       hasInvariant: true,
+      // Read from the package's own `exports`, so a new published subpath
+      // earns an alias without anyone remembering to hand-write one.
+      subpaths: ['chunk-rows', 'invariant', 'surface', 'types'],
     })
     // Sorted, so a package added anywhere lands in a stable spot in the diff.
     expect([...aliases].sort((a, b) => a.specifier.localeCompare(b.specifier))).toEqual(aliases)
@@ -31,15 +34,18 @@ describe('generated tsconfig package aliases', () => {
 
   it('yields to a hand-written alias and closes without a trailing comma', () => {
     const aliases = [
-      { specifier: '@deepseek-ai/dsh-a', source: './packages/g/a/src', hasInvariant: true },
-      { specifier: '@deepseek-ai/dsh-b', source: './packages/g/b/src', hasInvariant: false },
+      { specifier: '@deepseek-ai/dsh-a', source: './packages/g/a/src', hasInvariant: true, subpaths: [] },
+      { specifier: '@deepseek-ai/dsh-b', source: './packages/g/b/src', hasInvariant: false, subpaths: ['types'] },
     ]
     const body = renderAliases(aliases, new Set(['@deepseek-ai/dsh-a']))
 
-    // The hand-written bare alias is skipped; its /invariant sibling is not.
+    // The hand-written bare alias is skipped; its /invariant sibling is not,
+    // and a published subpath earns its own alias — without one it resolves to
+    // the package's built lib/ on the source plane.
     expect(body).toBe([
       '      "@deepseek-ai/dsh-a/invariant": ["./packages/g/a/src/invariant.ts"]',
       '      "@deepseek-ai/dsh-b": ["./packages/g/b/src"]',
+      '      "@deepseek-ai/dsh-b/types": ["./packages/g/b/src/types.ts"]',
     ].join(',\n'))
     expect(body.endsWith(',')).toBe(false)
   })
