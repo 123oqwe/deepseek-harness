@@ -12,7 +12,7 @@
 import type { Branded } from '@deepseek-ai/dsh-brand'
 import type { Principal } from '@deepseek-ai/dsh-principal'
 import type { ActionManifest } from '@deepseek-ai/dsh-action-manifest'
-import type { SignedCapabilityToken } from '@deepseek-ai/dsh-capability-token'
+import type { CapabilityTokenLogRecord } from '@deepseek-ai/dsh-capability-token'
 
 /**
  * Digest of the policy SET a decision was made against.
@@ -72,6 +72,18 @@ export interface PolicyContextFacts {
 export type ExecutionWorldFact = { readonly kind: 'absent' }
 
 /**
+ * What a policy may read about the capability token presented with an action
+ * (must[0]'s second input).
+ *
+ * The token's CLAIMS and its digest, never the token itself — this is
+ * `redactTokenForLog`'s projection, which P2-02 already audited as the form
+ * safe to carry outside the token layer. A policy engine holding the signed
+ * token would hold an authority it could pass on, and a second redaction
+ * shaped for policy would be a second thing to keep in step with P2-02.
+ */
+export type PolicyTokenFacts = CapabilityTokenLogRecord
+
+/**
  * One policy question (must[0]).
  *
  * All five inputs are REQUIRED, including `world` in its absent form. An
@@ -83,7 +95,7 @@ export interface PolicyRequest {
   /** Who is acting (P2-01). */
   readonly identity: Principal
   /** The authority presented for the action (P2-02), absent when the deployment mounts none. */
-  readonly token: SignedCapabilityToken | undefined
+  readonly token: PolicyTokenFacts | undefined
   /** What is being attempted (P2-03). */
   readonly manifest: ActionManifest
   /** Where it would run (P3-01; `absent` on this tree). */

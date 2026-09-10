@@ -17,6 +17,8 @@ import type { Session, SessionSeq, UserMessage } from '@deepseek-ai/dsh-session'
 import { TOOL_ABORTED_BEFORE_DISPATCH, TOOL_RUNTIME_SCHEDULER, type ToolExecutionInput, type ToolExecutionMode, type ToolExecutionResult, type ToolRunContext } from '@deepseek-ai/dsh-tools'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
 import { appendManifestThenGate, computeArgumentsHash, manifestAttribution, manifestIdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
+import { redactTokenForLog } from '@deepseek-ai/dsh-capability-token'
+import type { SignedCapabilityToken } from '@deepseek-ai/dsh-capability-token'
 import type { ActionManifest } from '@deepseek-ai/dsh-action-manifest'
 import { enforceManifestedAction } from '@deepseek-ai/dsh-policy-enforcement'
 import type { ActionId, ArgumentsHash, CapabilityRef, IdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
@@ -233,7 +235,10 @@ async function runGroup(
   const startCall = async (index: number): Promise<void> => {
     // oxlint-disable-next-line typescript/no-non-null-assertion -- bounded index
     const call = group[index]!
-    const appended = appendToolCall(ctx, agent, turn, step, call.block)
+    // The token this call PRESENTS, read from the planned input rather than
+    // re-resolved: `exec.capabilityToken` is what the capability gate checks,
+    // so the policy decides on the same authority that gate did.
+    const appended = appendToolCall(ctx, agent, turn, step, call.block, call.exec.capabilityToken)
     callSeqs[index] = appended.seq
     started++
     // must[4]: the reservation is taken BEFORE the tool runs, so a crash
@@ -434,9 +439,10 @@ function appendToolCall(
   turn: number,
   step: number,
   block: ToolCallBlock,
+  presentedToken?: SignedCapabilityToken,
 ): { seq: SessionSeq; record: ManifestRecord } {
   const { session } = agent
-  const record = appendActionManifest(ctx, agent, block, 'native-tool-call')
+  const record = appendActionManifest(ctx, agent, block, 'native-tool-call', presentedToken)
   const event = session.append('tool/call', { turn, step, callId: block.id, name: block.name, arguments: block.arguments })
   return { seq: event.seq, record }
 }
@@ -464,7 +470,13 @@ function appendToolCall(
  * @param origin - which of must[2]'s execution paths is dispatching it.
  */
 
-function appendActionManifest(ctx: Context, agent: Agent, block: ToolCallBlock, origin: 'native-tool-call'): ManifestRecord {
+function appendActionManifest(
+  ctx: Context,
+  agent: Agent,
+  block: ToolCallBlock,
+  origin: 'native-tool-call',
+  presentedToken?: SignedCapabilityToken,
+): ManifestRecord {
   const { session } = agent
   const argumentsHash = computeArgumentsHash(block.arguments)
   // The run and the actor come from the attached identity TOGETHER. An earlier
@@ -505,7 +517,7 @@ function appendActionManifest(ctx: Context, agent: Agent, block: ToolCallBlock, 
   // the one enforcement point through this call, and a third path that skipped
   // it would also have skipped the manifest — which
   // `assertManifestPrecedesExecution` already refuses.
-  const decision = decideManifestedAction(ctx, agent, appended.manifest, origin)
+  const decision = decideManifestedAction(ctx, agent, appended.manifest, origin, presentedToken)
   return {
     key: appended.manifest.idempotencyKey,
     argumentsHash,
@@ -532,12 +544,20 @@ function decideManifestedAction(
   agent: Agent,
   manifest: ActionManifest,
   origin: 'native-tool-call',
+  presentedToken?: SignedCapabilityToken,
 ): PolicyDecisionSummary | undefined {
   void agent
   // The loop's own context, not `agent.ctx`: an Agent constructed by a test
   // harness may carry none, and the kernel is pinned on the root anyway.
   if (ctx.get('trustKernel') === undefined) return undefined
-  const decision = enforceManifestedAction(ctx, { manifest, token: undefined, origin })
+  // must[0]'s second input, in the form P2-02 already audited as safe outside
+  // the token layer: the token's CLAIMS and its digest, never the signed token
+  // — an engine holding that would hold an authority it could pass on.
+  const decision = enforceManifestedAction(ctx, {
+    manifest,
+    ...presentedToken === undefined ? { token: undefined } : { token: redactTokenForLog(presentedToken) },
+    origin,
+  })
   return { effect: decision.effect, ...decision.reason === undefined ? {} : { reason: decision.reason } }
 }
 

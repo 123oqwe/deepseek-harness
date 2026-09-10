@@ -7,7 +7,7 @@
  * agent loop's own dispatch, and the manifests it appends.
  */
 
-import { describe, expect, it } from 'vitest'
+import { afterAll, describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import { createUserMessage, ToolCallId, type StreamChunk } from '@deepseek-ai/dsh-llm'
 import SessionStore, { SessionId, type SessionEvent } from '@deepseek-ai/dsh-session'
@@ -20,9 +20,16 @@ import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
 import type { TrustKernelAuditEntry, TrustKernelPolicyQuery, TrustKernelPolicyVerdict } from '@deepseek-ai/dsh-trust-kernel'
 import CedarPolicyEngine from '@deepseek-ai/dsh-policy-engine-cedar'
+import CapabilityTokenFilePlugin from '@deepseek-ai/dsh-capability-token-file'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import * as PolicyEnforcement from '../src/index.ts'
 import type { ClosedDecision, PolicyAuditRecord } from '../src/index.ts'
+
+const tokenDirs: string[] = []
+afterAll(() => { for (const directory of tokenDirs.splice(0)) rmSync(directory, { recursive: true, force: true }) })
 
 /** A policy set that permits everything, so a refusal refuses for its own reason. */
 const PERMIT_ALL = { 'baseline-permit': 'permit(principal, action, resource);' }
@@ -47,7 +54,11 @@ function callWriter(id: string): StreamChunk[] {
  * The whole in-process stack with a pinned kernel whose decider and audit sink
  * are the deployment's — which is how a real boot wires them.
  */
-async function stack(options: { policies?: Record<string, string>; verdict?: TrustKernelPolicyVerdict } = {}) {
+async function stack(options: {
+  policies?: Record<string, string>
+  verdict?: TrustKernelPolicyVerdict
+  tokens?: boolean
+} = {}) {
   const audit: PolicyAuditRecord[] = []
   const ctx = new Context()
   pinTrustKernel(ctx, createTrustKernel({
@@ -62,6 +73,14 @@ async function stack(options: { policies?: Record<string, string>; verdict?: Tru
   await ctx.plugin(ToolRuntime)
   await ctx.plugin(AgentRegistry)
   await ctx.plugin(AgentLoop, { agents: [] })
+  if (options.tokens === true) {
+    // The real token provider: a session token is issued and presented with
+    // every call, which is what makes must[0]'s second input a value rather
+    // than a permanently absent field.
+    const directory = mkdtempSync(join(tmpdir(), 'p2-05-tokens-'))
+    tokenDirs.push(directory)
+    await ctx.plugin(CapabilityTokenFilePlugin, { directory, requireForTools: false, sessionTokenTtlMs: 60_000 })
+  }
   await ctx.plugin(PolicyEnforcement)
   const engine = options.policies === undefined
     ? undefined
@@ -234,6 +253,72 @@ describe('P2-05 acceptance[2]: a policy set that does not parse refuses to load'
       .rejects.toThrow(/policy set does not parse/)
 
     expect(ctx.get('policy')).toBeUndefined()
+    await ctx.fiber.dispose()
+  })
+})
+
+describe('P2-05 must[0]: the capability token is a policy input, not a placeholder', () => {
+  it('decides by the CAPABILITY the presented token carries', async () => {
+    // The token's claims reach the policy in `redactTokenForLog`'s projection
+    // — P2-02 already audited that form as safe outside the token layer. A
+    // policy can therefore refuse an action whose authority does not name the
+    // capability it needs, which is the whole reason must[0] lists the token.
+    const { ctx, audit } = await stack({
+      tokens: true,
+      policies: {
+        ...PERMIT_ALL,
+        'require-writer-authority':
+          'forbid(principal, action, resource) unless { context.tokenCapability == "writer" };',
+      },
+    })
+    const adapter = new MockAdapter([callWriter('call-1'), textResponse('done')])
+    ctx.llm.registerAdapter(['mock'], adapter)
+
+    const events = await runTurn(ctx, 'p2-05-token-1')
+
+    // The session token names the session's capability, not `writer`, so the
+    // policy refuses — and the audit records the rule that did it.
+    expect(resultText(events)).toContain('refused by policy')
+    expect(audit.at(-1)?.matched).toEqual(['require-writer-authority'])
+    await ctx.fiber.dispose()
+  })
+
+  it('permits the same action when the policy accepts the token that was presented', async () => {
+    // The control: without it, a context field that was always empty would
+    // satisfy the case above just as well as one carrying real claims.
+    const { ctx, audit } = await stack({
+      tokens: true,
+      policies: {
+        ...PERMIT_ALL,
+        'require-any-authority':
+          'forbid(principal, action, resource) unless { context.tokenPresented };',
+      },
+    })
+    const adapter = new MockAdapter([callWriter('call-1'), textResponse('done')])
+    ctx.llm.registerAdapter(['mock'], adapter)
+
+    const events = await runTurn(ctx, 'p2-05-token-2')
+
+    expect(resultText(events)).toContain('wrote')
+    expect(audit.at(-1)?.decision.effect).toBe('permit')
+    await ctx.fiber.dispose()
+  })
+
+  it('refuses when NO token was presented and the policy requires one', async () => {
+    // With no token provider mounted, `tokenPresented` is false — the same
+    // policy now refuses, which is what makes the field a real input rather
+    // than a constant.
+    const { ctx } = await stack({
+      policies: {
+        ...PERMIT_ALL,
+        'require-any-authority':
+          'forbid(principal, action, resource) unless { context.tokenPresented };',
+      },
+    })
+    const adapter = new MockAdapter([callWriter('call-1'), textResponse('done')])
+    ctx.llm.registerAdapter(['mock'], adapter)
+
+    expect(resultText(await runTurn(ctx, 'p2-05-token-3'))).toContain('refused by policy')
     await ctx.fiber.dispose()
   })
 })

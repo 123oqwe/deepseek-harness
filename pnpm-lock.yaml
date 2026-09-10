@@ -7099,6 +7099,9 @@ importers:
       '@deepseek-ai/dsh-brand':
         specifier: workspace:^
         version: link:../../util/brand
+      '@deepseek-ai/dsh-capability-token-file':
+        specifier: workspace:^
+        version: link:../capability-token-file
       '@deepseek-ai/dsh-policy-engine':
         specifier: workspace:^
         version: link:../policy-engine

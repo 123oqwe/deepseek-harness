@@ -13,6 +13,7 @@ import type { CodeBindingFunction, CodeRunResult, CodeRuntime } from '@deepseek-
 import { snapshotJsonValue, type JsonValue } from '@deepseek-ai/dsh-util-values'
 import { appendManifestThenGate, computeArgumentsHash, manifestAttribution, manifestIdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
 import { enforceManifestedAction } from '@deepseek-ai/dsh-policy-enforcement'
+import { redactTokenForLog } from '@deepseek-ai/dsh-capability-token'
 import type { ClosedDecision } from '@deepseek-ai/dsh-policy-engine'
 import type { ActionId, CapabilityRef } from '@deepseek-ai/dsh-action-manifest'
 import type { Context } from '@deepseek-ai/cordis'
@@ -249,7 +250,16 @@ function appendCodeModeManifest(
   // by a test harness may carry none, and the kernel is pinned on the root.
   const decision = ledgerContext.get('trustKernel') === undefined
     ? undefined
-    : enforceManifestedAction(ledgerContext, { manifest: appended.manifest, token: undefined, origin: 'code-mode-embedded' })
+    : enforceManifestedAction(ledgerContext, {
+      manifest: appended.manifest,
+      // must[0]'s second input, in P2-02's audited projection: the ENCLOSING
+      // call's token, which is the authority this sub-dispatch runs under —
+      // a code-mode program presents no token of its own.
+      ...exec.capabilityToken === undefined
+        ? { token: undefined }
+        : { token: redactTokenForLog(exec.capabilityToken) },
+      origin: 'code-mode-embedded',
+    })
   return {
     reservation: {
       scope: attribution.actor.id,

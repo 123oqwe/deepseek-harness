@@ -61,7 +61,7 @@ function toCedarRequest(request: PolicyRequest): {
   principal: { type: string; id: string }
   action: { type: string; id: string }
   resource: { type: string; id: string }
-  context: Record<string, string | boolean>
+  context: Record<string, string | boolean | number>
 } {
   return {
     principal: { type: 'Dsh::Principal', id: request.identity.id },
@@ -80,6 +80,12 @@ function toCedarRequest(request: PolicyRequest): {
       // match on it and refuse, which is the point of a declared absence.
       world: request.world.kind,
       tokenPresented: request.token !== undefined,
+      // The token's CLAIMS, so a policy can decide by the authority actually
+      // presented rather than only by whether one was. Never the token: an
+      // engine holding it would hold an authority it could pass on.
+      tokenCapability: request.token?.capability ?? '',
+      tokenDelegationDepth: request.token?.delegationDepth ?? -1,
+      tokenTenant: request.token?.tenant ?? '',
     },
   }
 }

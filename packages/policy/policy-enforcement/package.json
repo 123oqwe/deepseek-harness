@@ -35,6 +35,7 @@
     "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/dsh-action-manifest": "workspace:^",
     "@deepseek-ai/dsh-brand": "workspace:^",
+    "@deepseek-ai/dsh-capability-token-file": "workspace:^",
     "@deepseek-ai/dsh-policy-engine": "workspace:^",
     "@deepseek-ai/dsh-policy-engine-cedar": "workspace:^",
     "@deepseek-ai/dsh-principal": "workspace:^",

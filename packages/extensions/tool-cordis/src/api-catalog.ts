@@ -4219,6 +4219,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type CapabilityTokenDigest = Branded<\'CapabilityTokenDigest\'>;',
   },
   {
+    name: 'CapabilityTokenLogRecord',
+    declaration: 'export interface CapabilityTokenLogRecord {\n    readonly digest: CapabilityTokenDigest;\n    readonly subject: PrincipalId;\n    readonly tenant: TenantId;\n    readonly capability: CapabilityName;\n    readonly delegationDepth: number;\n    readonly expiresAt: number;\n}',
+  },
+  {
     name: 'CapabilityTokenNonce',
     declaration: 'export type CapabilityTokenNonce = Branded<\'CapabilityTokenNonce\'>;',
   },
@@ -5348,11 +5352,15 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'PolicyRequest',
-    declaration: 'export interface PolicyRequest {\n    readonly identity: Principal;\n    readonly token: SignedCapabilityToken | undefined;\n    readonly manifest: ActionManifest;\n    readonly world: ExecutionWorldFact;\n    readonly facts: PolicyContextFacts;\n}',
+    declaration: 'export interface PolicyRequest {\n    readonly identity: Principal;\n    readonly token: PolicyTokenFacts | undefined;\n    readonly manifest: ActionManifest;\n    readonly world: ExecutionWorldFact;\n    readonly facts: PolicyContextFacts;\n}',
   },
   {
     name: 'PolicySetDigest',
     declaration: 'export type PolicySetDigest = Branded<\'PolicySetDigest\'>;',
+  },
+  {
+    name: 'PolicyTokenFacts',
+    declaration: 'export type PolicyTokenFacts = CapabilityTokenLogRecord;',
   },
   {
     name: 'PostToolDecision',
