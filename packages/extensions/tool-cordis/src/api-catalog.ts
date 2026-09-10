@@ -1533,6 +1533,25 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'runRetryUsage',
+    summary: 'The mounted run-retry accounting, published by whichever provider a profile mounts.',
+    description: 'The mounted run-retry accounting, published by whichever provider a profile mounts.\n\n`admit` decides AND stores in one call rather than exposing a read and a write: two layers retrying concurrently would each read the same usage, decide against it and store their own successor, and one retry would vanish. The decision is the only thing a caller needs, and the arithmetic behind it is not a caller\'s to redo.',
+    methods: [
+      {
+        signature: 'admit(run: RunId, delayMs: number): BudgetDecision',
+        description: 'Charge one retry to `run` if the budget allows it.\n\nThe budget is the STORE\'s, not a parameter: two layers passing their own allowances would share a total and disagree about the ceiling, which is half of the stacking this epic ends. One store, one total, one allowance.',
+        parameters: [{ name: 'run', description: 'the run the retry is charged to — the DELEGATION ROOT\'s run, not the session that happens to be retrying.' }, { name: 'delayMs', description: 'the wait this retry would take, already computed.' }],
+        returns: 'the admission, or the refusal and why.',
+      },
+      {
+        signature: 'usageOf(run: RunId): RetryUsage',
+        description: 'What `run` has spent so far, for reporting.',
+        parameters: [{ name: 'run', description: 'the run to report on.' }],
+        returns: 'its usage, or {@link NO_RETRIES_USED} when it has spent nothing.',
+      },
+    ],
+  },
+  {
     key: 'runs',
     summary: 'Epic P4-01\'s Run Service as a mounted Cordis plugin: the one place a real harness run becomes a Run.',
     description: 'Epic P4-01\'s Run Service as a mounted Cordis plugin: the one place a real harness run becomes a Run.\n\nOn mount it restores the durable registry from Config.storePath (acceptance[0]\'s restart path, executed on every boot including the first), then subscribes to the agent registry\'s own extension points. Every agent session the harness starts opens a Run owned by `RUN_SERVICE_OWNER_ID` (must[2]) whose `sessionIds` begins with that session (acceptance[2]), and every workflow execution that session runs is referenced in that Run\'s append-only log (must[1]).\n\n`inject` names the agent registry, so the plugin activates only where the events it subscribes to are actually emitted rather than sitting inert.',
@@ -5447,6 +5466,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ResumeAgentOptions',
     declaration: 'export interface ResumeAgentOptions {\n    readonly resumeSessionId: SessionId;\n    readonly agentOptions?: AgentOptions;\n    readonly signal?: AbortSignal;\n    readonly setup?: AgentSetup;\n}',
+  },
+  {
+    name: 'RetryUsage',
+    declaration: 'export interface RetryUsage {\n    readonly retriesUsed: number;\n    readonly delayMsUsed: number;\n}',
   },
   {
     name: 'RevocationDenialReason',

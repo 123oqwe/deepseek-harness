@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-`dsh-retry` ships the decisions Epic P4-11 unifies: whether a failure may be retried at all, and whether an attempt spends from the run's budget. `src/classify.ts` carries the taxonomy and the hedge rule; `src/budget.ts` carries the run-wide accounting; `tests/retry.spec.ts` covers them in 13 cases. `src/index.ts` re-exports both and declares no runtime value, so importing this package executes nothing.
+`dsh-retry` ships the decisions Epic P4-11 unifies: whether a failure may be retried at all, and whether an attempt spends from the run's budget. `src/classify.ts` carries the taxonomy and the hedge rule; `src/budget.ts` carries the run-wide accounting; `tests/retry.spec.ts` covers them in 13 cases. `src/index.ts` re-exports both, plus two things this package gained at the Usage stage: `chargedRun`, which answers WHICH run a retry is charged to, and `RunRetryUsagePlugin`, the one place a run's spending is counted. The accounting is self-provided — the documented pattern for a family whose implementation is a map and an arithmetic rule — and what varies by deployment is the allowance, which is its `Config`.
 
 The registry's problem statement is that several layers each decided retryability for themselves and their limits multiplied. The fix is that there is **one** of each decision — not that this package does more.
 
@@ -54,7 +54,7 @@ No model-visible surface. This package registers no tool, contributes no prompt 
 ## Known Limitations and Deferred Work
 
 - **`spendsRetryBudget` has no producer for its `hedged` input yet.** The tree has no hedging producer — hedging belongs to P5-04 — so this is the RULE half of the §12.46-B split. BLOCKED-166 records the closing condition: P5-04 must tag a hedged attempt so the rule can fire, and until then the rule is proven only against constructed input. A live caller with no reachable input is a subtler form of the zero-caller shape, and it is recorded rather than presented as coverage.
-- **The budget has no consumer at this stage.** must[1]'s "all layers consume the same budget" is a statement about callers and closes at the Usage stage, where `llm-retry`, the MCP client's run-attached retries and subagent attempts thread one usage value. A budget type nothing consumes satisfies the noun and not the clause.
+- **The MCP client does not yet charge the run.** must[1]'s "all layers consume the same budget" closes across layers, and `llm-retry` is the first: it charges the delegation ROOT's run, so a parent and its children draw one allowance. The MCP client's run-attached reconnects are the remaining in-scope layer; until they charge too, a run can still spend more than its budget through that path.
 - **The message-bus outbox is out of scope by ruling, not by omission.** Its `decideDelivery` is a per-message dead-letter policy inside the accepted P4-06 and answers when to stop delivering a message, not how much a run may spend redoing failed work (§12.64).
 
 No invariant companion is published: this package owns no relationship two observers could see differently — every export is a pure function over its arguments.

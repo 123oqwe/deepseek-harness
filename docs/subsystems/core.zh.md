@@ -1138,6 +1138,38 @@ recoverStaleClaims(window: RecoveryWindow): number
 
 Source: [`packages/run/message-bus/src/plugin.ts`](../../packages/run/message-bus/src/plugin.ts)
 
+<a id="ctxrunretryusage--runretryusagecontract"></a>
+
+### `ctx.runRetryUsage` — `RunRetryUsageContract`
+
+The mounted run-retry accounting, published by whichever provider a profile mounts.
+
+`admit` decides AND stores in one call rather than exposing a read and a write: two layers retrying concurrently would each read the same usage, decide against it and store their own successor, and one retry would vanish. The decision is the only thing a caller needs, and the arithmetic behind it is not a caller's to redo.
+
+```ts cordis-catalog
+/**
+ * Charge one retry to `run` if the budget allows it.
+ *
+ * The budget is the STORE's, not a parameter: two layers passing their own
+ * allowances would share a total and disagree about the ceiling, which is
+ * half of the stacking this epic ends. One store, one total, one allowance.
+ * @param run - the run the retry is charged to — the DELEGATION ROOT's run,
+ *   not the session that happens to be retrying.
+ * @param delayMs - the wait this retry would take, already computed.
+ * @returns the admission, or the refusal and why.
+ */
+admit(run: RunId, delayMs: number): BudgetDecision
+
+/**
+ * What `run` has spent so far, for reporting.
+ * @param run - the run to report on.
+ * @returns its usage, or {@link NO_RETRIES_USED} when it has spent nothing.
+ */
+usageOf(run: RunId): RetryUsage
+```
+
+Source: [`packages/reliability/retry/src/usage.ts`](../../packages/reliability/retry/src/usage.ts)
+
 <a id="ctxruns--runplugin"></a>
 
 ### `ctx.runs` — `RunPlugin`

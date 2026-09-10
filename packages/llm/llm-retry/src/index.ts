@@ -12,6 +12,9 @@ import { z as zod } from 'zod'
 import type { Agent, RequestErrorAction } from '@deepseek-ai/dsh-agent'
 import type { LlmFailure, ResolvedRetryPolicy } from '@deepseek-ai/dsh-llm'
 import type {} from '@deepseek-ai/dsh-session-projection'
+import { chargedRun } from '@deepseek-ai/dsh-retry'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { RetryId } from './brand.ts'
 import type { LlmRetryEventData } from './types.ts'
 
@@ -235,6 +238,31 @@ export function apply(ctx: Context, config: Config = {}, internals: RetryInterna
       }
     } else {
       delayMs = localDelay(policy, retry, random)
+    }
+
+    // P4-11 must[1]: the RUN's budget, not this session's count. A Run is 1:1
+    // with a session, so charging the retrying agent's own run would give a
+    // parent and each of its children an independent allowance — the stacking
+    // this epic exists to end. The charge happens after the delay is computed
+    // because the budget bounds waiting as well as attempts, and before the
+    // backoff because a run must not begin a wait it cannot finish.
+    const budgets = ctx.get('runRetryUsage')
+    if (budgets !== undefined) {
+      const charged = chargedRun(agent.session.id, (id: string) => {
+        const found = ctx.agents.get(brandString<SessionId>(id))
+        if (found === undefined) return undefined
+        return {
+          ...found.session.header.parentSession === undefined
+            ? {}
+            : { parentSession: found.session.header.parentSession },
+          ...found.runId === undefined ? {} : { runId: found.runId },
+        }
+      })
+      // No resolvable run is capability absence, not permission: the layer
+      // keeps its own per-session policy, which is what it did before this
+      // epic. Treating it as an unlimited budget would be worse than the
+      // stacking being fixed.
+      if (charged !== undefined && !budgets.admit(charged, delayMs).admitted) return next()
     }
 
     return backoff(agent, turn, step, failure, provider, policy, policyKey, retry, retryId, delayMs, signal)

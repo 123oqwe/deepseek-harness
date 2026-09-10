@@ -9,6 +9,8 @@
  * this epic exists to end.
  */
 
+import { Service, type Context } from '@deepseek-ai/cordis'
+import z from '@deepseek-ai/schemastery'
 import type { RunId } from '@deepseek-ai/dsh-principal/types'
 
 import { admitRetry, NO_RETRIES_USED, type BudgetDecision, type RetryUsage, type RunRetryBudget } from './budget.ts'
@@ -25,14 +27,17 @@ import { admitRetry, NO_RETRIES_USED, type BudgetDecision, type RetryUsage, type
  */
 export interface RunRetryUsageContract {
   /**
-   * Charge one retry to `run` if its budget allows it.
+   * Charge one retry to `run` if the budget allows it.
+   *
+   * The budget is the STORE's, not a parameter: two layers passing their own
+   * allowances would share a total and disagree about the ceiling, which is
+   * half of the stacking this epic ends. One store, one total, one allowance.
    * @param run - the run the retry is charged to — the DELEGATION ROOT's run,
    *   not the session that happens to be retrying.
-   * @param budget - what that run is allowed to spend.
    * @param delayMs - the wait this retry would take, already computed.
    * @returns the admission, or the refusal and why.
    */
-  admit(run: RunId, budget: RunRetryBudget, delayMs: number): BudgetDecision
+  admit(run: RunId, delayMs: number): BudgetDecision
   /**
    * What `run` has spent so far, for reporting.
    * @param run - the run to report on.
@@ -52,14 +57,18 @@ export class RunRetryUsageStore implements RunRetryUsageContract {
   readonly #usage = new Map<RunId, RetryUsage>()
 
   /**
-   * Charge one retry to `run` if its budget allows it (must[1]).
+   * @param budget - what any one run may spend across every in-scope layer.
+   */
+  constructor(private readonly budget: RunRetryBudget) {}
+
+  /**
+   * Charge one retry to `run` if the budget allows it (must[1]).
    * @param run - the delegation root's run.
-   * @param budget - what that run may spend.
    * @param delayMs - the wait this retry would take.
    * @returns the admission with the usage now stored, or the refusal.
    */
-  admit(run: RunId, budget: RunRetryBudget, delayMs: number): BudgetDecision {
-    const decision = admitRetry(this.#usage.get(run) ?? NO_RETRIES_USED, budget, delayMs)
+  admit(run: RunId, delayMs: number): BudgetDecision {
+    const decision = admitRetry(this.#usage.get(run) ?? NO_RETRIES_USED, this.budget, delayMs)
     // Stored on admission only: a refusal spent nothing, and recording it
     // would charge a run for a retry it was not allowed to make.
     if (decision.admitted) this.#usage.set(run, decision.next)
@@ -85,5 +94,79 @@ export class RunRetryUsageStore implements RunRetryUsageContract {
    */
   forget(run: RunId): void {
     this.#usage.delete(run)
+  }
+}
+
+/** Deployment-varying run-retry allowance. */
+export interface Config {
+  /** Retries one run may make across every in-scope layer. */
+  readonly maxRetries: number
+  /** Milliseconds one run may spend WAITING between attempts; absent caps attempts only. */
+  readonly maxDelayBudgetMs?: number
+}
+
+/**
+ * Both fields vary by deployment: an interactive session and a long unattended
+ * workflow tolerate very different amounts of redone work, and only the profile
+ * knows which it is running.
+ */
+export const Config: z<Config> = z.object({
+  maxRetries: z.natural().default(10),
+  maxDelayBudgetMs: z.natural(),
+})
+
+/**
+ * Mounts `ctx.runRetryUsage`, the one place a run's retry spending is counted.
+ *
+ * The definition provides its own implementation — the documented
+ * self-providing pattern — because the accounting is a `Map` and an
+ * arithmetic rule, with no deployment choice a second provider could make
+ * differently. What varies is the ALLOWANCE, and that is `Config`.
+ */
+export default class RunRetryUsagePlugin extends Service implements RunRetryUsageContract {
+  static readonly Config = Config
+
+  private readonly store: RunRetryUsageStore
+
+  /**
+   * @param ctx - the mounting context; registers itself as `ctx.runRetryUsage`.
+   * @param config - the allowance one run may spend.
+   */
+  constructor(ctx: Context, config: Config) {
+    super(ctx, 'runRetryUsage')
+    this.store = new RunRetryUsageStore(config)
+  }
+
+  /**
+   * Charge one retry to `run` if the budget allows it (must[1]).
+   * @param run - the delegation root's run.
+   * @param delayMs - the wait this retry would take.
+   * @returns the admission with the usage now stored, or the refusal.
+   */
+  admit(run: RunId, delayMs: number): BudgetDecision {
+    return this.store.admit(run, delayMs)
+  }
+
+  /**
+   * What `run` has spent so far.
+   * @param run - the run to report on.
+   * @returns its usage, or {@link NO_RETRIES_USED}.
+   */
+  usageOf(run: RunId): RetryUsage {
+    return this.store.usageOf(run)
+  }
+
+  /**
+   * Forget a finished run's spending.
+   * @param run - the run that ended.
+   */
+  forget(run: RunId): void {
+    this.store.forget(run)
+  }
+}
+
+declare module '@deepseek-ai/cordis' {
+  interface Context {
+    runRetryUsage: RunRetryUsageContract
   }
 }

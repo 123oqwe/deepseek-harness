@@ -69,42 +69,39 @@ describe('P4-11 must[1]: one store, so two layers share a total by construction'
     // The clause itself: an LLM retry and an MCP reconnect for the same run
     // draw from one allowance, so three retries exhaust a budget of three
     // however they are divided between the layers.
-    const store = new RunRetryUsageStore()
-    const budget = { maxRetries: 3 }
-    expect(store.admit(run('r'), budget, 100).admitted).toBe(true)
-    expect(store.admit(run('r'), budget, 100).admitted).toBe(true)
-    expect(store.admit(run('r'), budget, 100).admitted).toBe(true)
-    const refused = store.admit(run('r'), budget, 100)
+    const store = new RunRetryUsageStore({ maxRetries: 3 })
+    expect(store.admit(run('r'), 100).admitted).toBe(true)
+    expect(store.admit(run('r'), 100).admitted).toBe(true)
+    expect(store.admit(run('r'), 100).admitted).toBe(true)
+    const refused = store.admit(run('r'), 100)
     expect(refused).toEqual({ admitted: false, reason: 'retry-cap-reached' })
     expect(store.usageOf(run('r'))).toEqual({ retriesUsed: 3, delayMsUsed: 300 })
   })
 
   it('keeps another run’s total separate, so one run cannot exhaust another', () => {
-    const store = new RunRetryUsageStore()
-    const budget = { maxRetries: 1 }
-    expect(store.admit(run('one'), budget, 10).admitted).toBe(true)
-    expect(store.admit(run('two'), budget, 10).admitted).toBe(true)
-    expect(store.admit(run('one'), budget, 10).admitted).toBe(false)
+    const store = new RunRetryUsageStore({ maxRetries: 1 })
+    expect(store.admit(run('one'), 10).admitted).toBe(true)
+    expect(store.admit(run('two'), 10).admitted).toBe(true)
+    expect(store.admit(run('one'), 10).admitted).toBe(false)
   })
 
   it('records nothing for a refusal, so a refused retry costs no budget', () => {
-    const store = new RunRetryUsageStore()
-    expect(store.admit(run('r'), { maxRetries: 0 }, 10).admitted).toBe(false)
+    const store = new RunRetryUsageStore({ maxRetries: 0 })
+    expect(store.admit(run('r'), 10).admitted).toBe(false)
     expect(store.usageOf(run('r'))).toEqual({ retriesUsed: 0, delayMsUsed: 0 })
   })
 
   it('charges the DELAY too, so a run cannot wait past its time budget', () => {
-    const store = new RunRetryUsageStore()
-    const budget = { maxRetries: 10, maxDelayBudgetMs: 250 }
-    expect(store.admit(run('r'), budget, 200).admitted).toBe(true)
-    expect(store.admit(run('r'), budget, 100)).toEqual({ admitted: false, reason: 'delay-budget-exhausted' })
+    const store = new RunRetryUsageStore({ maxRetries: 10, maxDelayBudgetMs: 250 })
+    expect(store.admit(run('r'), 200).admitted).toBe(true)
+    expect(store.admit(run('r'), 100)).toEqual({ admitted: false, reason: 'delay-budget-exhausted' })
     // The refused delay was not charged either.
     expect(store.usageOf(run('r')).delayMsUsed).toBe(200)
   })
 
   it('forgets a finished run, so the map does not hold one entry per run forever', () => {
-    const store = new RunRetryUsageStore()
-    store.admit(run('r'), { maxRetries: 5 }, 10)
+    const store = new RunRetryUsageStore({ maxRetries: 5 })
+    store.admit(run('r'), 10)
     store.forget(run('r'))
     expect(store.usageOf(run('r'))).toEqual({ retriesUsed: 0, delayMsUsed: 0 })
   })

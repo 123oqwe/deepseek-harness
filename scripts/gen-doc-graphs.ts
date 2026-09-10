@@ -99,6 +99,15 @@ const GROUP_ORDER = [
 
 const SERVICE_ROLES: ServiceRole[] = [
   {
+    key: 'runRetryUsage',
+    pkg: 'retry',
+    title: 'One run retry budget across every layer',
+    mode: 'seam',
+    implementations: ['retry'],
+    consumers: ['llm-retry'],
+    note: 'Self-providing: the accounting is a map and an arithmetic rule, and what varies by deployment is the allowance, which is Config. `llm-retry` charges the DELEGATION ROOT\'s run rather than the retrying session\'s, because a Run is 1:1 with a session and per-session counting is the stacking Epic P4-11 ends.',
+  },
+  {
     key: 'circuitBreaker',
     pkg: 'retry',
     title: 'Per-destination circuit breaker',
