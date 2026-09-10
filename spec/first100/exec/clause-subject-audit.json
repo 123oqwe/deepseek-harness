@@ -2260,6 +2260,97 @@
         "realized": null,
         "note": "Recorded before the first line of P2-05 code. The tree has no `packages/policy/policy-engine` directory, no `ctx.policy`, and no installed Cedar; every claim above that is checkable today was checked today, and the two that are not are marked `differs` with their reason rather than carried as verified.\n\nRELATIONSHIP TO THE SS3.1 SLICE: SLICE-3.1-cedar recorded the same adoption as an infrastructure slice with `ledgerRow: null` and `realized: null`. Nothing has landed since, so this entry does not supersede it -- it is P2-05's own record of the same decision at the point where the epic actually consumes it, and the slice's deliverables (the seam, the provider, the conformance cases, the fail-closed loader) are P2-05's C and P stages under the registry's own file list.\n\nBLOCKED-011 (the vendored Cordis Fiber fix) is named on the sheet as a hard prerequisite for wiring a real enforcement point. It is already applied on this tree (vendor/README.md modification 20, the Fiber store pin behind `pinTrustKernel`), so the prerequisite is met rather than pending -- but acceptance[2] asks for more than that pin gives, because a service can be lost by unmount as well as forged by mutation."
       }
+    },
+    "P4-02": {
+      "makeVsUse": {
+        "ledgerRow": "P4-02",
+        "card": {
+          "heading": "#### P4-02",
+          "sheetCommit": "bd408a403a"
+        },
+        "verdict": "CONTRACT_WRITE",
+        "verdictSecondary": null,
+        "adopted": [],
+        "deviations": [],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [
+          {
+            "standard": "JSON Schema for the profile via zod (none exists for the concept)",
+            "from": "P0-06"
+          },
+          {
+            "standard": "Side-effect / risk class vocabulary (RiskClass, RiskGroundKind, RiskClassification)",
+            "from": "P2-04"
+          }
+        ],
+        "residual": "All of it: this row buys nothing. Pure dsh vocabulary -- a goal REFERENCE into the session log rather than a copy of the goal text, hard and soft constraints each carrying source + confidence, a side-effect class imported from P2-04 rather than minted, and a question contract for must[2]'s ambiguous or high-risk missing fields; plus the deterministic compiler behind it and vitest golden fixtures for validation[0]'s four generic task kinds. Not narrowed from the ledger's residual, and one thing added to it that the sheet does not say: the ledger writes 'open questions routed to packages/interaction/user-questions', and that seam is real (`ctx.userQuestions`, two production consumers) but its `ask` blocks on an answerer, which a deterministic compile step cannot await -- whether the profile CARRIES questions as data or EMITS them through that seam is recorded as an open question, not resolved here.",
+        "probes": [
+          {
+            "claim": "the whole vocabulary is new: no TaskProfile exists on this tree, so nothing is being re-declared",
+            "how": "grep -rn 'TaskProfile' --include='*.ts' packages",
+            "result": "ok",
+            "evidence": "Zero hits under packages/. Every occurrence in the repo is prose in spec/ (registry, ledger, requirements matrix, wave map). `packages/run/` holds lease, lease-sqlite, message-bus, run, taskboard-sqlite -- no task-profile, so four of the seven declared files are a package that does not exist."
+          },
+          {
+            "claim": "zod is the house schema library and already in the repo, so the standards line costs no new dependency",
+            "how": "grep -rn '\"zod\"' --include=package.json packages/ ; node -e \"require.resolve('zod')\"",
+            "result": "ok",
+            "evidence": "zod ^4.4.3 declared in 39 package manifests (llm, agent-loop, schedule, context/*, host/plugin-inventory, ...); ajv appears twice and is not the house choice. `require.resolve('zod')` from the repo root throws MODULE_NOT_FOUND because pnpm does not hoist it -- so this is a manifest line in a new package, not a repo-level dependency addition."
+          },
+          {
+            "claim": "acceptance[2] ('unknown side effect is not marked none') is true by construction if P2-04's vocabulary is imported, and reopened if a second one is minted",
+            "how": "read packages/policy/risk-taxonomy/src/types.ts",
+            "result": "ok",
+            "evidence": "`RiskClass` (:30) has eight members and NO `none`. `RiskGroundKind` (:52) already separates `unknown-default` from `policy-rule`, and `RiskClassification.confidence` (:103) is documented as 0 under the unknown default precisely because 'must[3]'s escalation is a safety decision rather than a measurement'. A parallel SideEffectClass carrying a `none` member would recreate the hole acceptance[2] names."
+          },
+          {
+            "claim": "there is an established shape for hanging a compiled artifact off the agent, and it reaches every intake origin from one site",
+            "how": "read packages/core/agent/src/types.ts and packages/run/run/src/index.ts:853; grep -rn 'agents\\.create(' packages/*/*/src",
+            "result": "ok",
+            "evidence": "`Agent.runId`, `Agent.lifecycle` and `Agent.runLease` are each declared in the U file with a writer contract naming RunPlugin as sole writer, all three written from its `agent/session-start` listener (run/run/src/index.ts:853); `@deepseek-ai/dsh-run` is mounted in the shipped base bundle (bundle/base/cordis.patch.yml:563). Six production origins call `ctx.agents.create()` -- acp/acp/src/session.ts:128, api/session-controller/src/agent.ts:477 and commands.ts:247, bundle/headless/src/index.ts:279, sdk/server/src/server.ts:401, webhook/webhook/src/session.ts:136 -- and one session-start listener covers all six."
+          },
+          {
+            "claim": "the registry's U pair is not what the wave map calls it, and half of it has no intake in it",
+            "how": "read packages/core/agent/src/dispatch.ts and packages/core/agent/src/types.ts",
+            "result": "differs",
+            "evidence": "The wave map calls the U pair 'intake/persistence consumers'. `types.ts` (144 lines) is the durable agent-handle and session-event vocabulary -- correct. `dispatch.ts` (310 lines) is the FUSED EVENT DISPATCHER: `AgentSubjectEvent`, `PayloadOf`, `agentEvents`, scope-carrier plumbing. It contains no intake and enumerates no event names, so a new agent-subject event would flow through it without editing it. What edit §2.9a's U freeze requires of this specific file is unresolved -- recorded as open question 1, not guessed."
+          },
+          {
+            "claim": "the registry's own two file lists for this epic disagree",
+            "how": "compare registry P4-02 files[] (7 entries) with stages.C.files (5 entries)",
+            "result": "differs",
+            "evidence": "`spec/task-profile.schema.json` is in stages.C and absent from files[]. `spec/` already holds four sibling schemas (action-manifest, capability-manifest, control-protocol, first100-evidence) so the path is house-shaped, but a C freeze naming it would reference a file outside files[] -- §2.10 filesOverlay, or an A-class registry correction. Not reconciled by picking the longer list."
+          },
+          {
+            "claim": "a deterministic canonicalizer already exists if acceptance[0] turns out to need a digest",
+            "how": "grep -rn 'canonicalizeArguments' packages/*/*/src",
+            "result": "ok",
+            "evidence": "P2-03's JCS canonicalizer is exported at action/action-manifest/src/canonicalize.ts:70 and already hashes tool arguments (:134). Recorded as AVAILABLE, not adopted: acceptance[0] asks for stable output under a deterministic parser fixture, not for a stable id, and P4-02 does not own JCS (owner P2-03, per the card's §1 table)."
+          }
+        ],
+        "gapCheck": [
+          {
+            "community": "dsh-trajectory-governor",
+            "gap": "No per-inference source/confidence -- only a scalar complexity score.",
+            "clause": "must[1]"
+          },
+          {
+            "community": "dsh-trajectory-governor",
+            "gap": "No question emission for ambiguous or high-risk fields; it guesses.",
+            "clause": "must[2]"
+          },
+          {
+            "community": "dsh-trajectory-governor",
+            "gap": "No side-effect field at all, so 'unknown side effect [SENTENCE TRUNCATED IN LEDGER]. Recorded as truncated rather than completed from context: the ledger's community note for this row ends mid-word. The legible half maps to acceptance[2]; if the missing half names a different clause the mapping needs redoing when the note is repaired.",
+            "clause": "acceptance[2]"
+          }
+        ],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": true,
+        "realized": null,
+        "note": "CONTRACT_WRITE with an EMPTY adopted/deviations/rejectedAbsent triple, and that is the row rather than an omission: the ledger lists exactly two OSS entries for P4-02, `a2aproject/A2A Task/Message` as role=reference (naming only) and `W3C PROV (per-field provenance)` as role=reject ('Overkill'), and neither carries an npm name -- so there is nothing for gate (b) to scan for and nothing for its positive control to find. The make-vs-use question for this epic is therefore not 'which library' but 'which vocabulary this repository already owns must be imported instead of minted a second time', which is what standardsImported records. Three open questions block the first line of code and are stated in evidence-P4-02.md rather than assumed away: (1) the production call site -- `core/agent` constructs no agents, `packages/run/task-profile` is mounted in no bundle, and the only shape that reaches all six intake origins puts the writer in `run/run/src/index.ts`, which is NOT in files[] (only its types.ts is); this is the P2-02 / P6-07 / P1-10 zero-arrival pattern (§12.69, §12.75, §12.78) and I will not write a compiler with no caller and report it built. (2) the files[] vs stages.C disagreement above. (3) validation[2]'s persistence medium -- §12.78's rule asked before code: session log (which 'model-visible <=> logged' would force if the profile ever reaches a model request), P4-01's RunEvent log, or a storage-hub domain unit whose KvUnitDescriptor.version carries the version-revision semantics; the three differ in exactly the way that reversed P1-10, so none is chosen here. Two pointers in the lane assignment do not resolve at e3004c9276 and are reported as lifecycle bugs per EPIC-LIFECYCLE's own instruction: there is no §5.1 (section 5 has no subsections) and plan-rectification ends at §12.78, so §12.79-§12.80 do not exist on this base."
+      }
     }
   },
   "methodCorrections": [
