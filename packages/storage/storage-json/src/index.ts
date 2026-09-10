@@ -6,11 +6,20 @@
  * @module @deepseek-ai/dsh-storage-json
  */
 
-import { mkdir } from 'node:fs/promises'
+import { cp, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { StorageError, UNIT_NAME_RE, storageBackendServiceKey } from '@deepseek-ai/dsh-storage'
-import type { KvFacet, KvUnit, KvUnitDescriptor, StorageBackend } from '@deepseek-ai/dsh-storage'
+import type {
+  KvFacet,
+  KvUnit,
+  KvUnitDescriptor,
+  MigrationFacet,
+  StorageBackend,
+  UnitSnapshot,
+} from '@deepseek-ai/dsh-storage'
 import { openSingleUnit } from './single-unit.ts'
 import { openPerRecordUnit } from './per-record-unit.ts'
 
@@ -61,6 +70,68 @@ export class JsonStorageBackend implements StorageBackend {
     },
   }
 
+  /**
+   * Unit migration in this medium's own terms (first100 registry P1-10
+   * must[1]).
+   *
+   * A unit here is one file (`single`) or one directory (`per-record`), so a
+   * snapshot is a copy beside it and a switch is a rename. The copy is
+   * consistent only while nothing writes, which is why the transaction holds a
+   * cross-process lease over the whole upgrade: a backend cannot exclude a
+   * writer in another process, and a `per-record` directory copied under one
+   * would tear between records.
+   */
+  readonly migration: MigrationFacet = {
+    snapshotUnit: async (descriptor: KvUnitDescriptor): Promise<UnitSnapshot> => {
+      validateDescriptor(descriptor)
+      const handle = `${descriptor.name}.snapshot-${String(Date.now())}`
+      await cpPath(this.mediumPath(descriptor), join(this.root, handle))
+      return { unit: descriptor.name, handle }
+    },
+    materializeMigrated: async (snapshot, version, migrate): Promise<UnitSnapshot> => {
+      const source = join(this.root, snapshot.handle)
+      const handle = `${snapshot.unit}.migrated-${String(version)}-${String(Date.now())}`
+      await cpPath(source, join(this.root, handle))
+      // The records are read and written through the same documents `open`
+      // would use, so a migration sees what the plugin sees rather than a
+      // shape this backend invented for the occasion.
+      const migrated = await migrate(await readUnitRecords(join(this.root, handle)))
+      await writeUnitRecords(join(this.root, handle), version, migrated)
+      return { unit: snapshot.unit, handle }
+    },
+    switchIn: async (migrated): Promise<UnitSnapshot> => {
+      const previous = `${migrated.unit}.previous-${String(Date.now())}`
+      const live = join(this.root, migrated.unit)
+      const livePath = existsSync(live) ? live : `${live}.json`
+      const previousPath = existsSync(live) ? join(this.root, previous) : join(this.root, `${previous}.json`)
+      // The live path moves ASIDE first: a rename over it would not preserve
+      // what it replaced, and the aside IS the rollback target until the
+      // health check passes.
+      if (existsSync(livePath)) await rename(livePath, previousPath)
+      await rename(join(this.root, migrated.handle), livePath)
+      return { unit: migrated.unit, handle: previous }
+    },
+    rollbackTo: async (previous): Promise<void> => {
+      const live = join(this.root, previous.unit)
+      const previousPath = existsSync(join(this.root, previous.handle))
+        ? join(this.root, previous.handle)
+        : join(this.root, `${previous.handle}.json`)
+      const livePath = existsSync(live) ? live : `${live}.json`
+      await rm(livePath, { recursive: true, force: true })
+      await rename(previousPath, livePath)
+    },
+    discard: async (snapshot): Promise<void> => {
+      await rm(join(this.root, snapshot.handle), { recursive: true, force: true })
+      await rm(join(this.root, `${snapshot.handle}.json`), { force: true })
+    },
+  }
+
+  /** Where one unit's medium lives, whichever layout it uses. */
+  private mediumPath(descriptor: KvUnitDescriptor): string {
+    const directory = join(this.root, descriptor.name)
+    return descriptor.layout === 'per-record' ? directory : `${directory}.json`
+  }
+
   private async openUnit(descriptor: KvUnitDescriptor): Promise<KvUnit> {
     await mkdir(this.root, { recursive: true, mode: 0o700 })
     // The two layouts differ in medium shape only; each opener owns its own
@@ -88,6 +159,50 @@ export class JsonStorageBackend implements StorageBackend {
       await unit.close()
     }
   }
+}
+
+/**
+ * Copy one unit's medium, whichever shape it has.
+ *
+ * A `single` unit is a file and a `per-record` unit is a directory, and the
+ * caller does not know which — it holds a descriptor, not a layout decision.
+ * A medium that does not exist yet copies to nothing rather than failing: a
+ * unit whose first write has not landed is a legitimate state, and an upgrade
+ * of it is a no-op rather than an error.
+ */
+async function cpPath(source: string, destination: string): Promise<void> {
+  if (!existsSync(source)) return
+  await cp(source, destination, { recursive: true })
+}
+
+/**
+ * Every record in one unit's medium, as the migration sees them.
+ *
+ * Read through the same documents `open` would use, so a migration sees what
+ * the plugin sees rather than a shape invented for the occasion.
+ */
+async function readUnitRecords(medium: string): Promise<readonly unknown[]> {
+  const path = existsSync(medium) ? medium : `${medium}.json`
+  if (!existsSync(path)) return []
+  const parsed: unknown = JSON.parse(await readFile(path, 'utf8'))
+  const records = (parsed as { records?: unknown }).records
+  return Array.isArray(records) ? records : []
+}
+
+/**
+ * Write migrated records back, stamping the medium with the new version.
+ *
+ * The stamp is what `KvFacet.open` compares against `descriptor.version`, so
+ * writing the records without it would leave a migrated unit that the new
+ * build still refuses to open — the failure this epic exists to remove.
+ */
+async function writeUnitRecords(
+  medium: string,
+  version: number,
+  records: readonly unknown[],
+): Promise<void> {
+  const path = existsSync(medium) ? medium : `${medium}.json`
+  await writeFile(path, JSON.stringify({ version, records }, undefined, 2), 'utf8')
 }
 
 function validateDescriptor(descriptor: KvUnitDescriptor): void {
