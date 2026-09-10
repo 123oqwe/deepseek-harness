@@ -45,7 +45,8 @@
     "@deepseek-ai/dsh-session-projection": "workspace:^",
     "@deepseek-ai/dsh-settings": "workspace:^",
     "@deepseek-ai/dsh-system-prompt": "workspace:^",
-    "@deepseek-ai/dsh-tools": "workspace:^"
+    "@deepseek-ai/dsh-tools": "workspace:^",
+    "@deepseek-ai/dsh-policy-enforcement": "workspace:^"
   },
   "dependencies": {
     "@deepseek-ai/dsh-brand": "workspace:^",
@@ -69,6 +70,7 @@
     "@deepseek-ai/dsh-session-projection": "workspace:^",
     "@deepseek-ai/dsh-settings": "workspace:^",
     "@deepseek-ai/dsh-system-prompt": "workspace:^",
-    "@deepseek-ai/dsh-tools": "workspace:^"
+    "@deepseek-ai/dsh-tools": "workspace:^",
+    "@deepseek-ai/dsh-policy-enforcement": "workspace:^"
   }
 }

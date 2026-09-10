@@ -1533,6 +1533,43 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'policy',
+    summary: 'What a mounted policy provider answers, whichever engine a profile mounts.',
+    description: 'What a mounted policy provider answers, whichever engine a profile mounts.\n\nDeclared in the DEFINITION so the name means the contract rather than one implementation, and two providers cannot disagree about what `ctx.policy` is. The Cedar provider is `@deepseek-ai/dsh-policy-engine-cedar`.',
+    methods: [
+      {
+        signature: 'readonly digest: PolicySetDigest',
+        description: 'The digest of the policy set this engine loaded; every decision carries it.',
+        parameters: [],
+      },
+      {
+        signature: 'evaluate(request: PolicyRequest): PolicyEvaluation',
+        description: 'Answer one policy question.',
+        parameters: [{ name: 'request', description: 'the five declared inputs.' }],
+        returns: 'the closed decision the enforcement point acts on, plus the audit-only explain it appends.',
+      },
+    ],
+  },
+  {
+    key: 'policyConstraints',
+    summary: 'The registry a plugin adds a constraint to (must[2]).',
+    description: 'The registry a plugin adds a constraint to (must[2]).\n\nA service rather than a bare array so a constraint disposes with its plugin\'s fiber: a plugin that unmounts must stop constraining, and a constraint that outlived its owner would be a policy nobody can find.',
+    methods: [
+      {
+        signature: 'register(constraint: PolicyConstraint): () => void',
+        description: 'Register one deny-only constraint.',
+        parameters: [{ name: 'constraint', description: 'returns a reason to deny, or undefined to abstain.' }],
+        returns: 'the disposer that unregisters it.',
+      },
+      {
+        signature: 'all(): readonly PolicyConstraint[]',
+        description: 'Every live constraint, for the enforcement point.',
+        parameters: [],
+        returns: 'the registered constraints, in registration order.',
+      },
+    ],
+  },
+  {
     key: 'runRetryUsage',
     summary: 'The mounted run-retry accounting, published by whichever provider a profile mounts.',
     description: 'The mounted run-retry accounting, published by whichever provider a profile mounts.\n\n`admit` decides AND stores in one call rather than exposing a read and a write: two layers retrying concurrently would each read the same usage, decide against it and store their own successor, and one retry would vanish. The decision is the only thing a caller needs, and the arithmetic behind it is not a caller\'s to redo.',
@@ -3854,12 +3891,32 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type AcquireResult = {\n    readonly acquired: true;\n    readonly lease: Lease;\n    readonly token: FencingToken;\n} | {\n    readonly acquired: false;\n    readonly reason: AcquireDenialReason;\n    readonly holder?: WorkerId;\n};',
   },
   {
+    name: 'ActionId',
+    declaration: 'export type ActionId = Branded<\'ActionId\'>;',
+  },
+  {
+    name: 'ActionManifest',
+    declaration: 'export interface ActionManifest {\n    readonly actionId: ActionId;\n    readonly runId: RunId;\n    readonly actor: Principal;\n    readonly capability: CapabilityRef;\n    readonly origin: ActionOrigin;\n    readonly target: ActionTarget;\n    readonly argumentsHash: ArgumentsHash;\n    readonly sideEffectClass: ActionSideEffectClass;\n    readonly classified: boolean;\n    readonly requiresApproval: boolean;\n    readonly idempotencyKey: IdempotencyKey;\n    readonly preconditions: readonly Precondition[];\n    readonly expectedDiff: ExpectedDiff;\n    readonly compensation: Compensation;\n    readonly evidenceRequirements: readonly EvidenceRequirement[];\n}',
+  },
+  {
+    name: 'ActionOrigin',
+    declaration: 'export type ActionOrigin = \'native-tool-call\' | \'code-mode-embedded\' | \'plugin-rpc\';',
+  },
+  {
     name: 'ActionRef',
     declaration: 'export type ActionRef = Branded<\'ActionRef\'>;',
   },
   {
     name: 'ActionRiskSubject',
     declaration: 'export interface ActionRiskSubject {\n    readonly actionId: string;\n    readonly domainTags: readonly string[];\n}',
+  },
+  {
+    name: 'ActionSideEffectClass',
+    declaration: 'export type ActionSideEffectClass = \'read\' | \'write\' | \'network\' | \'process\' | \'destructive\';',
+  },
+  {
+    name: 'ActionTarget',
+    declaration: 'export type ActionTarget = {\n    readonly kind: \'filesystem\';\n    readonly path: string;\n} | {\n    readonly kind: \'network\';\n    readonly host: string;\n} | {\n    readonly kind: \'process\';\n    readonly command: string;\n} | {\n    readonly kind: \'other\';\n    readonly ref: string;\n};',
   },
   {
     name: 'AdapterRegistrationHandle',
@@ -4146,6 +4203,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type CapabilityOrigin = \'static\' | \'dynamic\';',
   },
   {
+    name: 'CapabilityRef',
+    declaration: 'export type CapabilityRef = Branded<\'CapabilityRef\'>;',
+  },
+  {
     name: 'CapabilityRegistration',
     declaration: 'export interface CapabilityRegistration {\n    readonly pluginIdentity: PluginIdentity;\n    readonly namespace: Namespace;\n    readonly capabilityId: StableCapabilityId;\n    readonly kind: CapabilityKind;\n    readonly origin: CapabilityOrigin;\n    readonly ownershipToken: OwnershipToken;\n}',
   },
@@ -4184,6 +4245,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ClientArtifactBaseline',
     declaration: 'export interface ClientArtifactBaseline {\n    readonly path: string;\n    readonly mtimeMs: number;\n    readonly size: number;\n}',
+  },
+  {
+    name: 'ClosedDecision',
+    declaration: 'export interface ClosedDecision {\n    readonly effect: PolicyEffect;\n    readonly reason?: PolicyReasonCode;\n    readonly policySet: PolicySetDigest;\n}',
   },
   {
     name: 'CodeBindingErrorClass',
@@ -4260,6 +4325,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'CompactionTrigger',
     declaration: 'export type CompactionTrigger = \'pressure\' | \'context-overflow\';',
+  },
+  {
+    name: 'Compensation',
+    declaration: 'export type Compensation = {\n    readonly reversible: true;\n    readonly capability: CapabilityRef;\n    readonly argumentsHash: ArgumentsHash;\n    readonly description: string;\n} | {\n    readonly reversible: false;\n    readonly reason: string;\n};',
   },
   {
     name: 'CompositionRowEnablement',
@@ -4564,6 +4633,18 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'EpochHeader',
     declaration: 'export interface EpochHeader {\n    config: LlmCallConfig;\n    adapterDefaults?: LlmCallConfigAdapterDefaults;\n    system?: string;\n    tools?: ToolSchema[];\n}',
+  },
+  {
+    name: 'EvidenceRequirement',
+    declaration: 'export interface EvidenceRequirement {\n    readonly kind: \'before-state\' | \'after-state\' | \'external-receipt\';\n    readonly description: string;\n}',
+  },
+  {
+    name: 'ExecutionWorldFact',
+    declaration: 'export type ExecutionWorldFact = {\n    readonly kind: \'absent\';\n};',
+  },
+  {
+    name: 'ExpectedDiff',
+    declaration: 'export interface ExpectedDiff {\n    readonly description: string;\n    readonly before?: JsonValue;\n    readonly after?: JsonValue;\n}',
   },
   {
     name: 'FailureFacts',
@@ -5226,6 +5307,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type OwnershipToken = Branded<\'OwnershipToken\'>;',
   },
   {
+    name: 'PermissionPostureFact',
+    declaration: 'export type PermissionPostureFact = \'default\' | \'plan\' | \'accept-edits\' | \'bypass\';',
+  },
+  {
     name: 'PermissionSelect',
     declaration: 'export interface PermissionSelect {\n    options: PresetOption[];\n    currentValue: string;\n}',
   },
@@ -5234,8 +5319,48 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type PluginIdentity = Branded<\'PluginIdentity\'>;',
   },
   {
+    name: 'PolicyConstraint',
+    declaration: 'export type PolicyConstraint = (request: PolicyRequest) => string | undefined;',
+  },
+  {
+    name: 'PolicyContextFacts',
+    declaration: 'export interface PolicyContextFacts {\n    readonly workspaceTrust: WorkspaceTrustFact;\n    readonly permissionPosture: PermissionPostureFact;\n}',
+  },
+  {
+    name: 'PolicyEffect',
+    declaration: 'export type PolicyEffect = \'permit\' | \'deny\' | \'ask\';',
+  },
+  {
+    name: 'PolicyEvaluation',
+    declaration: 'export interface PolicyEvaluation {\n    readonly decision: ClosedDecision;\n    readonly explain: PolicyExplain;\n}',
+  },
+  {
+    name: 'PolicyExplain',
+    declaration: 'export interface PolicyExplain {\n    readonly matched: readonly PolicyId[];\n    readonly diagnostics: readonly string[];\n}',
+  },
+  {
+    name: 'PolicyId',
+    declaration: 'export type PolicyId = Branded<\'PolicyId\'>;',
+  },
+  {
+    name: 'PolicyReasonCode',
+    declaration: 'export type PolicyReasonCode = \'no-matching-permit\' | \'forbidden-by-policy\' | \'constrained-by-plugin\' | \'approval-required\' | \'policy-unavailable\' | \'policy-set-invalid\' | \'missing-capability-token\';',
+  },
+  {
+    name: 'PolicyRequest',
+    declaration: 'export interface PolicyRequest {\n    readonly identity: Principal;\n    readonly token: SignedCapabilityToken | undefined;\n    readonly manifest: ActionManifest;\n    readonly world: ExecutionWorldFact;\n    readonly facts: PolicyContextFacts;\n}',
+  },
+  {
+    name: 'PolicySetDigest',
+    declaration: 'export type PolicySetDigest = Branded<\'PolicySetDigest\'>;',
+  },
+  {
     name: 'PostToolDecision',
     declaration: 'export type PostToolDecision = {\n    kind: \'accept\';\n    content?: ContentBlock[];\n    value?: never;\n    additionalContexts?: UserMessage[];\n} | {\n    kind: \'accept\';\n    value: JsonValue;\n    content?: never;\n    additionalContexts?: UserMessage[];\n} | {\n    kind: \'block\';\n    feedback: ContentBlock[];\n    additionalContexts?: UserMessage[];\n};',
+  },
+  {
+    name: 'Precondition',
+    declaration: 'export interface Precondition {\n    readonly description: string;\n}',
   },
   {
     name: 'PreparedAdapterCall',
@@ -7092,6 +7217,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'WorkspaceRenameRequest',
     declaration: 'export interface WorkspaceRenameRequest {\n    readonly workspaceId: WorkspaceId;\n    readonly title: string;\n}',
+  },
+  {
+    name: 'WorkspaceTrustFact',
+    declaration: 'export type WorkspaceTrustFact = \'untrusted\' | \'trusted-read\' | \'trusted-execute\';',
   },
   {
     name: 'WorkspaceValue',

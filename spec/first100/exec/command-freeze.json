@@ -10880,6 +10880,48 @@
         "failureSummary": "Each reddens exactly one case of 13. M58 reddens the failure-mapping case, with the ordinary-deny case beside it as the control that a mapping returning `policy-set-invalid` for everything could not satisfy. M59 reddens the audit-id case: Cedar names `policy0` instead of the policy the operator wrote. M60 reddens the digest-on-every-decision case. M61 reddens the `{ab:'c'}` vs `{a:'bc'}` case. The translation cases (capability routing, target kind, declared facts, classified) pass under all four, so a provider that denied or permitted everything would still fail the suite."
       },
       "note": "P2-05 Provider stage: the Cedar authorizer behind `ctx.policy`.\n\nWHAT THIS STAGE OWNS is the TRANSLATION and the failure taxonomy, not the authorization semantics. Cedar's forbid-overrides-permit, default-deny and matched-policy explain are proven in the C stage's conformance cases against the same 4.12.0; asserting them again here would test the library twice and the translation not at all.\n\nTHE ID-TO-SOURCE MAP IS LOAD-BEARING. `Config.policies` is a map because Cedar assigns generated ids (`policy0`, `policy1`) to a source STRING and an `@id(...)` annotation does not become the id the explain reports — must[3]'s audit is only as good as these ids, and M59 is the mutation that proves the suite notices.\n\nTHREE FAILURES STAY DISTINGUISHABLE: `forbidden-by-policy` / `no-matching-permit` (an engine answered), `policy-set-invalid` (the set could not be read), and `policy-unavailable` (no engine at all, answered by the enforcement point because this service is gone). `policy-set-invalid` is a new member of the C stage's `PolicyReasonCode`; no frozen C case enumerates that union, so the C freeze stands and its cases are re-run unchanged in this observation.\n\nTHE SET IS VALIDATED AT LOAD, by a probe authorization whose decision is discarded — Cedar has no separate validate call reporting the same errors. A deployment whose policies do not parse refuses to boot instead of surfacing as a denied action.\n\n`decisionFromAnswer` is exported and pure BECAUSE its failure branch is unreachable through a loaded engine: the set is validated at load and the entity types are constants this module writes rather than request data. Measured, not assumed — a malformed entity TYPE is the only way to make Cedar return `failure` at evaluate time, and a quote inside an id does not. It is therefore proven as a mapping rather than staged as a runtime state that cannot occur.\n\nHOST ONLY: 13 MB of wasm through a CommonJS entry; a Client face never mounts it (the epic's open question 3, answered)."
+    },
+    {
+      "epic": "P2-05",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/policy/policy-enforcement",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-05 acceptance[2]: losing the provider mid-session denies by name permits while the provider is mounted, and denies `policy-unavailable` after it unmounts",
+        "P2-05 acceptance[2]: losing the provider mid-session denies by name records WHICH policy set it could not reach, so a replay can tell the two failures apart",
+        "P2-05 acceptance[0]: one PEP, whichever originator dispatches refuses a forbidden tool on the NATIVE path, with the audit naming the matched policy",
+        "P2-05 acceptance[0]: one PEP, whichever originator dispatches decides every dispatch against the same manifest the log records",
+        "P2-05 acceptance[0]: one PEP, whichever originator dispatches lets the KERNEL bind: a kernel deny refuses a call the policy permitted",
+        "P2-05 acceptance[0]: one PEP, whichever originator dispatches runs with no policy service at all exactly as it did before this epic",
+        "P2-05 must[2]: a plugin constraint narrows and never widens turns a permitted call into a deny, and records the constraint reason for the audit",
+        "P2-05 must[2]: a plugin constraint narrows and never widens stops constraining when its plugin unmounts",
+        "P2-05 acceptance[2]: a policy set that does not parse refuses to load fails the mount loudly rather than deciding with a broken set"
+      ],
+      "files": [
+        "packages/policy/policy-enforcement/src/index.ts",
+        "packages/policy/policy-enforcement/tests/enforcement.spec.ts",
+        "packages/kernel/trust-kernel/src/index.ts",
+        "packages/core/agent-loop/src/tool-calls.ts",
+        "packages/core/tools/src/ptc.ts",
+        "packages/core/tools/src/external-effect.ts"
+      ],
+      "frozenAtUtc": "2026-09-11T16:20:00.000Z",
+      "dryRunProof": {
+        "treeSha": "f7ba7a654a0610b183dea20b4bbb6eb37c6bdf11",
+        "testsDiscovered": 9
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations, each run against this argv and restored byte-identical. (M62) a composition with no policy service falls OPEN — the decision becomes a permit instead of `decisionWhenUnavailable`. (M63) the enforcement point does not consult the constraint registry. (M64) the kernel's verdict is ignored, so a kernel `deny` no longer overrides a permitted decision. (M65) the native dispatch path stops acting on a refusal (`effect === 'never'`).",
+        "failureSummary": "M62 reddens 3 of 9: the mounted/unmounted pair, the digest-continuity case, and the no-service control. M63 reddens the two constraint cases and nothing else, so the composition rule is reached from the real dispatch rather than only from `composeDecision`'s own suite. M64 reddens exactly the kernel-binds case. M65 reddens 4 — every case whose evidence is a refused tool result — while leaving the audit-only cases green, which is the difference between deciding and enforcing. The permit path is the control throughout: under M63, M64 and M65 the mounted-and-permitted case still runs the tool."
+      },
+      "note": "P2-05 Usage stage: the enforcement point, on the real in-process stack with the model as the only mocked boundary.\n\nWHERE IT RUNS. `enforceManifestedAction` is called where a dispatch path has just appended its `ActionManifest` — the manifest IS the policy question. Both production paths reach it: `agent-loop/src/tool-calls.ts` for native calls and `tools/src/ptc.ts` for code-mode sub-dispatch. A path that skipped the decision would also have skipped the manifest, which P2-03's `assertManifestPrecedesExecution` already refuses, so acceptance[0]'s 'cannot bypass' rests on a structure rather than on two call sites agreeing.\n\nTHE KERNEL BINDS. `TrustKernelConfig` gains `policyDecider` and `auditSink`, supplied at construction — the kernel is frozen and pinned before any entry mounts, so a plugin cannot replace either. A kernel `deny` overrides a permitted decision; a kernel `allow` never widens a refusal the engine or a constraint already made. A kernel configured with neither still denies and still discards nothing, which is the pre-P2-05 behaviour.\n\nTWO DEFECTS THIS STAGE FOUND IN ITS OWN FIRST DRAFT, both recorded because the reasoning that produced them looked sound: (1) the decision read `agent.ctx`, and an Agent handed to a dispatch path by a test harness carries NONE — three ptc concurrency cases timed out rather than failing, with the TypeError swallowed as an unhandled rejection; the context is the composition's. (2) the code-mode decision was handed between two statements through a MODULE-LEVEL variable, with a comment arguing that one synchronous sequence cannot interleave — concurrent sub-dispatches overwrite it. It travels on the return value now.\n\nWHAT IS NOT HERE: `sdk-rpc` and `plugin-rpc` are declared originators with no manifest producer, so they are not decided at this point today. The plugin-RPC producer is P1-06's under the §12.46-B split (BLOCKED-180). An SDK client's tool calls DO reach this point, because they are dispatched by the same agent loop."
     }
   ]
 }

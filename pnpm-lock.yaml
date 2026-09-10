@@ -4513,6 +4513,9 @@ importers:
       '@deepseek-ai/dsh-llm':
         specifier: workspace:^
         version: link:../../llm/llm
+      '@deepseek-ai/dsh-policy-enforcement':
+        specifier: workspace:^
+        version: link:../../policy/policy-enforcement
       '@deepseek-ai/dsh-principal':
         specifier: workspace:^
         version: link:../../identity/principal
@@ -4667,6 +4670,12 @@ importers:
       '@deepseek-ai/dsh-plugin-ownership':
         specifier: workspace:^
         version: link:../../plugin/plugin-ownership
+      '@deepseek-ai/dsh-policy-enforcement':
+        specifier: workspace:^
+        version: link:../../policy/policy-enforcement
+      '@deepseek-ai/dsh-policy-engine':
+        specifier: workspace:^
+        version: link:../../policy/policy-engine
       '@deepseek-ai/dsh-scope':
         specifier: workspace:^
         version: link:../scope
@@ -7075,6 +7084,30 @@ importers:
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
+      '@deepseek-ai/dsh-trust-kernel':
+        specifier: workspace:^
+        version: link:../../kernel/trust-kernel
+
+  packages/policy/policy-enforcement:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-action-manifest':
+        specifier: workspace:^
+        version: link:../../action/action-manifest
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
+      '@deepseek-ai/dsh-policy-engine':
+        specifier: workspace:^
+        version: link:../policy-engine
+      '@deepseek-ai/dsh-policy-engine-cedar':
+        specifier: workspace:^
+        version: link:../policy-engine-cedar
+      '@deepseek-ai/dsh-principal':
+        specifier: workspace:^
+        version: link:../../identity/principal
       '@deepseek-ai/dsh-trust-kernel':
         specifier: workspace:^
         version: link:../../kernel/trust-kernel

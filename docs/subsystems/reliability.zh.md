@@ -39,3 +39,89 @@ Source: [`packages/reliability/retry/src`](../../packages/reliability/retry/src)
 ## 模型看到什么
 
 直接看到的:没有。本子系统不注册工具、不贡献提示词文本、不发出会话事件。模型能观察到的是它的请求究竟有没有发出:`@deepseek-ai/dsh-llm` 在拉取**第一个 chunk** 的位置咨询断路器,因为端点的健康正是在那里显形——已经产出过一个 chunk 的流说明端点应答了——而拒绝以该服务自身的失败形式浮现。既不挂载预算也不挂载断路器的组合,其行为与这两者出现之前完全一致;两个消费者都用 `ctx.get` 解析服务,因此"缺席"是能力缺失,而不是权限拒绝。
+
+<!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
+
+<a id="cordis-surface"></a>
+
+## Cordis API
+
+Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnpm run verify-cordis-catalog` in doc-sync; regenerate with `pnpm run gen-cordis-catalog`) — the language sides differ only in locale-specific paired document paths. Signature blocks use a `ts cordis-catalog` fence and keep the original source JSDoc; dispatch modes are defined in the [primer](../cordis-primer.zh.md#dispatch-modes), and the framework-inherited `ctx` API lives in [cordis-api/inherited.md](../cordis-api/inherited.md).
+
+<a id="ctxcircuitbreaker--circuitbreakercontract"></a>
+
+### `ctx.circuitBreaker` — `CircuitBreakerContract`
+
+The mounted circuit breaker, published by whichever provider a profile mounts.
+
+One operation, not a consult-then-record pair: a contract that reported state separately would leave the consultation to every caller, and a caller that forgot would still compile and still pass its own tests.
+
+```ts cordis-catalog
+/**
+ * Run `operation` unless its destination's breaker is open, counting the
+ * outcome toward that destination's health.
+ *
+ * `classify` is required rather than inferred because what counts as
+ * endpoint ill-health is {@link classifyFailure}'s decision applied to facts
+ * only the caller can read: a policy denial is permanent but says nothing
+ * about the endpoint, and counting it would open a breaker on a working
+ * destination. The breaker never inspects a raw error itself.
+ * @param destination - the endpoint the operation addresses.
+ * @param operation - the work to attempt.
+ * @param classify - reads the thrown value into facts this package decides on.
+ * @returns the operation's own result.
+ * @throws {BreakerOpenError} when the destination is open, WITHOUT running
+ *   `operation`.
+ */
+execute<T>( destination: BreakerDestination, operation: () => Promise<T>, classify: (error: unknown) => FailureFacts, ): Promise<T>
+```
+
+Source: [`packages/reliability/retry/src/provider.ts`](../../packages/reliability/retry/src/provider.ts)
+
+<a id="ctxrunretryusage--runretryusagecontract"></a>
+
+### `ctx.runRetryUsage` — `RunRetryUsageContract`
+
+The mounted run-retry accounting, published by whichever provider a profile mounts.
+
+`admit` decides AND stores in one call rather than exposing a read and a write: two layers retrying concurrently would each read the same usage, decide against it and store their own successor, and one retry would vanish. The decision is the only thing a caller needs, and the arithmetic behind it is not a caller's to redo.
+
+```ts cordis-catalog
+/**
+ * Charge one retry to `run` if the budget allows it.
+ *
+ * The budget is the STORE's, not a parameter: two layers passing their own
+ * allowances would share a total and disagree about the ceiling, which is
+ * half of the stacking this epic ends. One store, one total, one allowance.
+ * @param run - the run the retry is charged to — the DELEGATION ROOT's run,
+ *   not the session that happens to be retrying.
+ * @param delayMs - the wait this retry would take, already computed.
+ * @returns the admission, or the refusal and why.
+ */
+admit(run: RunId, delayMs: number): BudgetDecision
+
+/**
+ * The run a session's retries are charged to, resolved once and remembered.
+ *
+ * Remembering is not a cache of something that might change: a session's
+ * delegation root is fixed when the session is created, so the first
+ * resolution is the only one there is. What it survives is the PARENT going
+ * away — a continuable child outliving its parent's turn is ordinary, and
+ * re-walking a chain whose parent is gone would hand that child a fresh
+ * allowance, which is the stacking must[1] exists to stop.
+ * @param session - the session retrying.
+ * @param resolve - computes the charged run, called only on the first ask.
+ * @returns the charged run, or `undefined` when none could be resolved.
+ */
+chargedRunFor(session: string, resolve: () => RunId | undefined): RunId | undefined
+
+/**
+ * What `run` has spent so far, for reporting.
+ * @param run - the run to report on.
+ * @returns its usage, or {@link NO_RETRIES_USED} when it has spent nothing.
+ */
+usageOf(run: RunId): RetryUsage
+```
+
+Source: [`packages/reliability/retry/src/usage.ts`](../../packages/reliability/retry/src/usage.ts)
+<!-- END GENERATED cordis-surface -->

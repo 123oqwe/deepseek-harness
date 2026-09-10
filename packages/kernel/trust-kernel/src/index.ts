@@ -53,7 +53,9 @@ import { generateKeyPairSync, sign, verify, type KeyObject } from 'node:crypto'
 import { Context } from '@deepseek-ai/cordis'
 import type {
   TrustKernel,
+  TrustKernelAuditAppend,
   TrustKernelAuditEntry,
+  TrustKernelPolicyEnforcement,
   TrustKernelPolicyQuery,
   TrustKernelPolicyVerdict,
   TrustKernelRootIdentity,
@@ -76,6 +78,28 @@ export type * from './types.ts'
 export interface TrustKernelConfig {
   /** Trust anchors this deployment admits; empty when none is configured. */
   readonly trustAnchors?: readonly TrustKernelTrustAnchor[]
+  /**
+   * The deployment's policy decider, wired behind the kernel's own
+   * `policyEnforcement` entrypoint (Epic P2-05 must[2]).
+   *
+   * Supplied at construction rather than registered afterwards, and that is
+   * the whole mechanism: the kernel is frozen and pinned before any entry
+   * mounts, so a plugin cannot replace the decider — it can only be what the
+   * deployment's boot passed in. The payload stays opaque here, so the
+   * kernel's type surface keeps the domain-agnosticism P0-02 must[4] fixed.
+   *
+   * A kernel constructed WITHOUT one denies every query, which is the
+   * pre-P2-05 behaviour and the correct default: an enforcement point with no
+   * decider must not become an enforcement point that permits.
+   */
+  readonly policyDecider?: TrustKernelPolicyEnforcement
+  /**
+   * The deployment's audit sink, wired behind the kernel's own `auditAppend`.
+   *
+   * Same construction and the same reason: what a decision RECORDED is not
+   * something a plugin may redirect after boot.
+   */
+  readonly auditSink?: TrustKernelAuditAppend
 }
 
 /**
@@ -139,8 +163,14 @@ export function createTrustKernel(config: TrustKernelConfig = {}): TrustKernel {
   // holding its own array cannot add an anchor after the kernel is pinned.
   CONFIGURED_ANCHORS.set(signatureRoots, Object.freeze([...config.trustAnchors ?? []]))
   const secretBroker = Object.freeze({}) as TrustKernelSecretBrokerHandle
-  const policyEnforcement = (_query: TrustKernelPolicyQuery): TrustKernelPolicyVerdict => 'deny'
-  const auditAppend = (_entry: TrustKernelAuditEntry): void => {}
+  // Deny and no-op remain the defaults for a kernel a deployment configured
+  // with neither: an entrypoint with no provider behind it must refuse, not
+  // permit, and must not silently discard what it was asked to record.
+  const configuredDecider = config.policyDecider
+  const policyEnforcement = (query: TrustKernelPolicyQuery): TrustKernelPolicyVerdict =>
+    (configuredDecider === undefined ? 'deny' : configuredDecider(query))
+  const configuredSink = config.auditSink
+  const auditAppend = (entry: TrustKernelAuditEntry): void => { configuredSink?.(entry) }
   const sandboxAttestationVerifier = (_attestation: TrustKernelSandboxAttestation): boolean => false
   return Object.freeze({
     rootIdentity,

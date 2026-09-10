@@ -4420,3 +4420,23 @@ must[0] names five policy inputs. Four exist on this tree — identity (P2-01's 
 Fixed here: the three `README.zh.md` files that carried an untranslated English `None, as …` sentence pasted in by `017f82195a` (`action-ledger`, `intake-dedup`, `taskboard`), the missing Known-Limitations bullets on two of those three, and `docs/subsystems/README`'s pair after two rows were added to it. Five files, because each was a fact the Chinese reader did not have — not because they were in scope for this epic.
 
 **Why the five fixed here were not translation work:** three `README.zh.md` files carried an untranslated English sentence pasted into them, and two were missing Known-Limitations bullets their English side had gained. A Chinese reader was missing a FACT, not a rendering — that is a defect, and it is repaired where it is found rather than queued behind a translation pass.
+
+
+### BLOCKED-180 — two of P2-05's declared originators have no manifest producer, so the PEP cannot decide them
+
+**Status:** SPLIT under §12.46-B. P2-05 owns the enforcement point and has landed it; the missing producers belong elsewhere.
+
+acceptance[0] names five originators that must reach one PEP. Measured at the U stage:
+
+| originator | reaches the enforcement point? |
+|---|---|
+| native tool call | yes — `agent-loop/src/tool-calls.ts` |
+| code-mode embedded | yes — `tools/src/ptc.ts` |
+| subagent | yes — a child agent's own tool calls are dispatched by the same loop |
+| workflow (detached and nested alike) | yes — a workflow child's tool calls are dispatched by the same loop |
+| SDK-RPC | yes — an out-of-process client drives a session whose calls the same loop dispatches |
+| **plugin RPC** | **no** — nothing constructs an `ActionManifest` for a plugin's own RPC dispatch |
+
+The manifest is the policy question, so a path with no manifest cannot be decided without inventing one at the enforcement point — which would be a second construction of the thing P2-03 made single. `ActionOriginator` declares `plugin-rpc` so the vocabulary is complete and the gap is nameable.
+
+**Closing condition:** the epic that owns plugin RPC constructs the manifest through `appendManifestThenGate`, exactly as the two shipped paths do. The enforcement point then decides it with no change here — which is what putting the call where the manifest exists buys.

@@ -17,6 +17,8 @@ import type { Session, SessionSeq, UserMessage } from '@deepseek-ai/dsh-session'
 import { TOOL_ABORTED_BEFORE_DISPATCH, TOOL_RUNTIME_SCHEDULER, type ToolExecutionInput, type ToolExecutionMode, type ToolExecutionResult, type ToolRunContext } from '@deepseek-ai/dsh-tools'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
 import { appendManifestThenGate, computeArgumentsHash, manifestAttribution, manifestIdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
+import type { ActionManifest } from '@deepseek-ai/dsh-action-manifest'
+import { enforceManifestedAction } from '@deepseek-ai/dsh-policy-enforcement'
 import type { ActionId, ArgumentsHash, CapabilityRef, IdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
 import type { LedgerScope } from '@deepseek-ai/dsh-action-ledger'
 // The `actionLedger` service augmentation lives in the ledger package's runtime
@@ -29,7 +31,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent/types'
 import { createSessionManifestAppender } from '@deepseek-ai/dsh-tools/manifest-log'
 // The reserve/confirm pair lives in `dsh-tools` so the code-mode dispatch can
 // reach it too: a second copy here is what left code-mode unreserved (§12.35-2).
-import { confirmExternalEffect, gateActionRisk, refusedReservationResult, refusedRiskResult, reserveExternalEffect } from '@deepseek-ai/dsh-tools/external-effect'
+import { confirmExternalEffect, gateActionRisk, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect } from '@deepseek-ai/dsh-tools/external-effect'
 import type { Principal } from '@deepseek-ai/dsh-principal'
 import { brandString } from '@deepseek-ai/dsh-brand'
 
@@ -102,7 +104,7 @@ export async function executeToolCalls(
     // differs: a fenced run HELD its work item and lost it, so another host is
     // already doing the work; a lease-refused run never held it, so this host
     // simply lost the race and its own start is the thing to look at.
-    for (const block of toolCalls) appendUnauthorizedToolCall(agent, turn, step, block, fencing)
+    for (const block of toolCalls) appendUnauthorizedToolCall(ctx, agent, turn, step, block, fencing)
     return { concluded: false }
   }
 
@@ -156,7 +158,7 @@ export async function executeToolCalls(
     next += outcome.consumed
     concluded ||= outcome.concluded
     if (outcome.aborted) {
-      for (const call of planned.slice(next)) appendSkippedToolCall(agent, turn, step, call.block)
+      for (const call of planned.slice(next)) appendSkippedToolCall(ctx, agent, turn, step, call.block)
       return { concluded }
     }
   }
@@ -231,7 +233,7 @@ async function runGroup(
   const startCall = async (index: number): Promise<void> => {
     // oxlint-disable-next-line typescript/no-non-null-assertion -- bounded index
     const call = group[index]!
-    const appended = appendToolCall(agent, turn, step, call.block)
+    const appended = appendToolCall(ctx, agent, turn, step, call.block)
     callSeqs[index] = appended.seq
     started++
     // must[4]: the reservation is taken BEFORE the tool runs, so a crash
@@ -246,6 +248,20 @@ async function runGroup(
     // registered on an agent's own runtime is invisible to the global view, so
     // an unscoped lookup reads every scoped tool as declaring nothing and
     // classifies it by the unknown default.
+    // P2-05 acceptance[0]: the decision taken when this call's manifest was
+    // appended. It runs BEFORE the risk gate and before the reservation, for
+    // the same reason the risk gate runs before the reservation — a claim on an
+    // effect the deployment will not permit would leave a `sent` row for
+    // something that never happened.
+    const policy = appended.record.decision
+    if (policy !== undefined && policy.effect !== 'permit') {
+      slots[index] = {
+        exec: call.exec as unknown as ToolRunContext,
+        result: refusedPolicyResult(policy.effect, policy.reason, call.block.name),
+        needsPost: false,
+      }
+      return
+    }
     const riskRefusal = await gateActionRisk(ctx, agent, call.block.name, ctx.tools.get(call.block.name, agent)?.riskDomainTags ?? [])
     if (riskRefusal !== undefined) {
       slots[index] = {
@@ -338,7 +354,7 @@ async function runGroup(
   if (aborted) {
     // Started calls and accepted context settle first; every remaining model
     // call then receives an ordered synthetic result before the turn aborts.
-    for (const call of group.slice(started)) appendSkippedToolCall(agent, turn, step, call.block)
+    for (const call of group.slice(started)) appendSkippedToolCall(ctx, agent, turn, step, call.block)
     return { consumed: group.length, aborted: true, concluded }
   }
   /* v8 ignore next -- unreachable: a non-aborted group commits every started call */
@@ -360,6 +376,7 @@ async function runGroup(
  * lease-refused run never held it, so this host lost the race at its own start.
  * An operator sent to look for a takeover that never happened is looking in the
  * wrong place.
+ * @param ctx - the loop's context, which carries the pinned Trust Kernel.
  * @param agent - the agent the call belonged to; its session is appended to.
  * @param turn - the turn the call belonged to.
  * @param step - the step the call belonged to.
@@ -367,6 +384,7 @@ async function runGroup(
  * @param reason - whether this run lost the item or was never granted it.
  */
 function appendUnauthorizedToolCall(
+  ctx: Context,
   agent: Agent,
   turn: number,
   step: number,
@@ -374,7 +392,7 @@ function appendUnauthorizedToolCall(
   reason: 'fenced' | 'lease-refused',
 ): void {
   const { session } = agent
-  const { seq: callSeq } = appendToolCall(agent, turn, step, block)
+  const { seq: callSeq } = appendToolCall(ctx, agent, turn, step, block)
   const message = reason === 'fenced'
     ? 'this run is no longer the owner of its work item'
     : 'this run was refused ownership of its work item'
@@ -389,9 +407,9 @@ function appendUnauthorizedToolCall(
 }
 
 /** Append the durable call/result pair for a model call skipped after cancellation. */
-function appendSkippedToolCall(agent: Agent, turn: number, step: number, block: ToolCallBlock): void {
+function appendSkippedToolCall(ctx: Context, agent: Agent, turn: number, step: number, block: ToolCallBlock): void {
   const { session } = agent
-  const { seq: callSeq } = appendToolCall(agent, turn, step, block)
+  const { seq: callSeq } = appendToolCall(ctx, agent, turn, step, block)
   appendToolResult(session, turn, step, block, {
     content: [{ type: 'text', text: 'Error: tool call aborted before dispatch' }],
     isError: true,
@@ -410,9 +428,15 @@ function appendSkippedToolCall(agent: Agent, turn: number, step: number, block: 
  * @param block - the model's call.
  * @returns the event seq its result must cite, and the manifest's reservation inputs.
  */
-function appendToolCall(agent: Agent, turn: number, step: number, block: ToolCallBlock): { seq: SessionSeq; record: ManifestRecord } {
+function appendToolCall(
+  ctx: Context,
+  agent: Agent,
+  turn: number,
+  step: number,
+  block: ToolCallBlock,
+): { seq: SessionSeq; record: ManifestRecord } {
   const { session } = agent
-  const record = appendActionManifest(agent, block, 'native-tool-call')
+  const record = appendActionManifest(ctx, agent, block, 'native-tool-call')
   const event = session.append('tool/call', { turn, step, callId: block.id, name: block.name, arguments: block.arguments })
   return { seq: event.seq, record }
 }
@@ -440,7 +464,7 @@ function appendToolCall(agent: Agent, turn: number, step: number, block: ToolCal
  * @param origin - which of must[2]'s execution paths is dispatching it.
  */
 
-function appendActionManifest(agent: Agent, block: ToolCallBlock, origin: 'native-tool-call'): ManifestRecord {
+function appendActionManifest(ctx: Context, agent: Agent, block: ToolCallBlock, origin: 'native-tool-call'): ManifestRecord {
   const { session } = agent
   const argumentsHash = computeArgumentsHash(block.arguments)
   // The run and the actor come from the attached identity TOGETHER. An earlier
@@ -476,11 +500,67 @@ function appendActionManifest(agent: Agent, block: ToolCallBlock, origin: 'nativ
       evidenceRequirements: [{ kind: 'external-receipt', description: `the tool/result event for call ${block.id}` }],
     },
   )
-  return { key: appended.manifest.idempotencyKey, argumentsHash, scope: attribution.actor.id }
+  // P2-05 acceptance[0]: the manifest IS the policy question, so the decision
+  // is taken where the manifest exists. Both native and code-mode paths reach
+  // the one enforcement point through this call, and a third path that skipped
+  // it would also have skipped the manifest — which
+  // `assertManifestPrecedesExecution` already refuses.
+  const decision = decideManifestedAction(ctx, agent, appended.manifest, origin)
+  return {
+    key: appended.manifest.idempotencyKey,
+    argumentsHash,
+    scope: attribution.actor.id,
+    ...decision === undefined ? {} : { decision },
+  }
+}
+
+/**
+ * Ask the enforcement point about one manifested action.
+ *
+ * Resolved through `ctx.get` rather than injected: a composition that mounts no
+ * Trust Kernel — the tests' own compositions among them — must still dispatch
+ * tools, and a hard dependency would stop the agent loop registering at all.
+ * Absence is capability absence, and the harness behaves as it did before this
+ * epic; presence means every dispatch is decided.
+ * @param agent - the dispatching agent, whose context carries the kernel.
+ * @param manifest - the manifest just appended.
+ * @param origin - which originator is dispatching.
+ * @returns the decision, or undefined when no enforcement point is mounted.
+ */
+function decideManifestedAction(
+  ctx: Context,
+  agent: Agent,
+  manifest: ActionManifest,
+  origin: 'native-tool-call',
+): PolicyDecisionSummary | undefined {
+  void agent
+  // The loop's own context, not `agent.ctx`: an Agent constructed by a test
+  // harness may carry none, and the kernel is pinned on the root anyway.
+  if (ctx.get('trustKernel') === undefined) return undefined
+  const decision = enforceManifestedAction(ctx, { manifest, token: undefined, origin })
+  return { effect: decision.effect, ...decision.reason === undefined ? {} : { reason: decision.reason } }
+}
+
+/** What a dispatch path carries forward from one policy decision. */
+interface PolicyDecisionSummary {
+  /** Permit, deny or ask. */
+  readonly effect: 'permit' | 'deny' | 'ask'
+  /** The closed reason code, absent for a plain permit. */
+  readonly reason?: string
 }
 
 /** The reservation inputs one appended manifest supplies to the ledger (P4-12 must[4]). */
 interface ManifestRecord {
+  /**
+   * P2-05's decision for this action, absent when the composition pins no
+   * Trust Kernel.
+   *
+   * Carried on the record rather than acted on inside the manifest helper: the
+   * helper's contract is that a manifest exists BEFORE the call is logged, and
+   * a refusal that skipped the `tool/call` event would leave a manifest with
+   * nothing citing it.
+   */
+  readonly decision?: PolicyDecisionSummary
   readonly key: IdempotencyKey
   readonly argumentsHash: ArgumentsHash
   readonly scope: LedgerScope

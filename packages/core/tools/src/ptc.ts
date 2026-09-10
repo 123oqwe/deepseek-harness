@@ -12,11 +12,13 @@ import type { ContentBlock, ToolCallId } from '@deepseek-ai/dsh-llm'
 import type { CodeBindingFunction, CodeRunResult, CodeRuntime } from '@deepseek-ai/dsh-code-runtime'
 import { snapshotJsonValue, type JsonValue } from '@deepseek-ai/dsh-util-values'
 import { appendManifestThenGate, computeArgumentsHash, manifestAttribution, manifestIdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
+import { enforceManifestedAction } from '@deepseek-ai/dsh-policy-enforcement'
+import type { ClosedDecision } from '@deepseek-ai/dsh-policy-engine'
 import type { ActionId, CapabilityRef } from '@deepseek-ai/dsh-action-manifest'
 import type { Context } from '@deepseek-ai/cordis'
 import type { Principal } from '@deepseek-ai/dsh-principal'
 import { createSessionManifestAppender } from './manifest-log.ts'
-import { confirmExternalEffect, gateActionRisk, refusedReservationResult, refusedRiskResult, reserveExternalEffect } from './external-effect.ts'
+import { confirmExternalEffect, gateActionRisk, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect } from './external-effect.ts'
 import type { ExternalEffectRecord } from './external-effect.ts'
 import { attachedIdentity } from '@deepseek-ai/dsh-session'
 import { defineTool, parameterSchemaSpecToJsonSchema } from './schema.ts'
@@ -190,14 +192,23 @@ function jsonNormalizeArgs(value: unknown): { dispatched: unknown; logged: unkno
  * @param name - the tool being dispatched.
  * @param loggedArguments - the detached sibling copy of the dispatched arguments.
  */
+/** What one sub-dispatch's manifest produced: the ledger's record and P2-05's decision. */
+interface ManifestedSubDispatch {
+  /** The reservation inputs, or undefined when this run has no agent. */
+  readonly reservation: ExternalEffectRecord | undefined
+  /** The policy decision, or undefined when the composition pins no Trust Kernel. */
+  readonly decision: ClosedDecision | undefined
+}
+
 function appendCodeModeManifest(
+  ledgerContext: Context,
   exec: ToolRunContext,
   subCallId: ToolCallId,
   name: string,
   loggedArguments: unknown,
-): ExternalEffectRecord | undefined {
+): ManifestedSubDispatch {
   const agent = exec.agent
-  if (agent === undefined) return undefined
+  if (agent === undefined) return { reservation: undefined, decision: undefined }
   const argumentsHash = computeArgumentsHash(loggedArguments as JsonValue)
   // The run and the actor come from the attached identity TOGETHER. An earlier
   // draft branded the SESSION id as a `RunId`: the field must[0] mandates was
@@ -209,7 +220,7 @@ function appendCodeModeManifest(
   // order, not a similar event written beside it: while each path wrote
   // construct-append-gate out for itself, "cannot bypass" rested on two copies
   // staying identical, and the shared implementation had no caller (§12.33).
-  appendManifestThenGate(
+  const { appended } = appendManifestThenGate(
     createSessionManifestAppender(
       agent.session,
       (actorId: string): Principal => ({ ...attribution.actor, id: actorId as Principal['id'] }),
@@ -230,10 +241,22 @@ function appendCodeModeManifest(
       evidenceRequirements: [{ kind: 'external-receipt', description: `the tool/code-dispatch-end event for sub-call ${subCallId}` }],
     },
   )
+  // P2-05 acceptance[0]: the SAME enforcement point the native path reaches,
+  // taken where this path's manifest exists. must[2]'s "code mode cannot
+  // bypass" is about this path asking the same question, not a similar check
+  // written beside it.
+  // The composition's context, not `agent.ctx`: an Agent handed to this path
+  // by a test harness may carry none, and the kernel is pinned on the root.
+  const decision = ledgerContext.get('trustKernel') === undefined
+    ? undefined
+    : enforceManifestedAction(ledgerContext, { manifest: appended.manifest, token: undefined, origin: 'code-mode-embedded' })
   return {
-    scope: attribution.actor.id,
-    key: manifestIdempotencyKey(agent.session.id, brandString<ActionId>(subCallId), argumentsHash),
-    argumentsHash,
+    reservation: {
+      scope: attribution.actor.id,
+      key: manifestIdempotencyKey(agent.session.id, brandString<ActionId>(subCallId), argumentsHash),
+      argumentsHash,
+    },
+    decision,
   }
 }
 
@@ -630,7 +653,8 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
               // because this is where the call actually begins — a queued entry
               // abandoned by run settlement never executes, and a manifest for
               // it would record an action that never happened.
-              reservation = appendCodeModeManifest(exec, subCallId, name, normalized.logged)
+              const manifested = appendCodeModeManifest(options.ledgerContext(), exec, subCallId, name, normalized.logged)
+              reservation = manifested.reservation
               // The reservation is taken before the sub-call runs, exactly as
               // the native path takes one (P4-12 must[4]). Until §12.35-2 this
               // path took none, so acceptance[0]'s "an external write happens
@@ -643,6 +667,17 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
               // row for something that never happened. Both paths reach the
               // SAME gate, which is what makes P2-04's acceptance[0] hold by
               // construction rather than by two implementations agreeing.
+              // Policy first, for the reason the risk gate precedes the
+              // reservation: a claim on an effect the deployment will not
+              // permit would leave a `sent` row for something that never
+              // happened.
+              if (manifested.decision !== undefined && manifested.decision.effect !== 'permit') {
+                const refusedDecision = manifested.decision
+                reservation = undefined
+                this.settled = true
+                settle(refusedPolicyResult(refusedDecision.effect, refusedDecision.reason, name))
+                return
+              }
               const riskRefusal = exec.agent === undefined
                 ? undefined
                 : await gateActionRisk(options.ledgerContext(), exec.agent, name, registry.get(name, exec.agent)?.riskDomainTags ?? [])

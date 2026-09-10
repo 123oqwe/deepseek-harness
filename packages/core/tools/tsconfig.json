@@ -49,6 +49,12 @@
     },
     {
       "path": "../../action/action-ledger"
+    },
+    {
+      "path": "../../policy/policy-enforcement"
+    },
+    {
+      "path": "../../policy/policy-engine"
     }
   ]
 }

@@ -327,6 +327,34 @@ export function refusedReservationResult(decision: Exclude<ReserveDecision, { ac
 }
 
 /**
+ * Render a policy refusal as a settled tool result (Epic P2-05 acceptance[0]).
+ *
+ * A settled outcome rather than a thrown error, the same shape a risk refusal
+ * uses: the action did not happen, and the model is told in the decision's own
+ * CLOSED reason code. No policy text crosses — must[3] keeps the matched rules
+ * and the engine's diagnostics in the audit trail, where naming a rule, a
+ * tenant or a path is safe.
+ * @param effect - the decision's effect; `ask` means a human answer is owed and none was given.
+ * @param reason - the closed reason code, when the decision carried one.
+ * @param toolName - the action refused, named so a multi-call turn is readable.
+ * @returns the tool result to record in place of an execution.
+ */
+export function refusedPolicyResult(
+  effect: string,
+  reason: string | undefined,
+  toolName: string,
+): ToolExecutionResult {
+  const text = effect === 'ask'
+    ? `The action "${toolName}" needs a human decision before it runs (${reason ?? 'approval-required'}), and none was given.`
+    : `The action "${toolName}" was refused by policy (${reason ?? 'no-matching-permit'}).`
+  return {
+    content: [{ type: 'text', text: `Error: ${text}` }],
+    isError: true,
+    error: { message: text, info: { name: 'PolicyRefusedError', code: ABORTED_BEFORE_DISPATCH } },
+  }
+}
+
+/**
  * Render a risk refusal as a settled tool result (P2-04 must[1]).
  *
  * A refusal is an outcome, not a thrown error, for the same reason a ledger

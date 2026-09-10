@@ -60,7 +60,9 @@
     "@deepseek-ai/dsh-scope": "workspace:^",
     "@deepseek-ai/dsh-session": "workspace:^",
     "@deepseek-ai/dsh-system-prompt": "workspace:^",
-    "@deepseek-ai/dsh-user-approval": "workspace:^"
+    "@deepseek-ai/dsh-user-approval": "workspace:^",
+    "@deepseek-ai/dsh-policy-enforcement": "workspace:^",
+    "@deepseek-ai/dsh-policy-engine": "workspace:^"
   },
   "dependencies": {
     "@deepseek-ai/dsh-brand": "workspace:^",
@@ -81,6 +83,8 @@
     "@deepseek-ai/dsh-session": "workspace:^",
     "@deepseek-ai/dsh-session-projection": "workspace:^",
     "@deepseek-ai/dsh-system-prompt": "workspace:^",
-    "@deepseek-ai/dsh-user-approval": "workspace:^"
+    "@deepseek-ai/dsh-user-approval": "workspace:^",
+    "@deepseek-ai/dsh-policy-enforcement": "workspace:^",
+    "@deepseek-ai/dsh-policy-engine": "workspace:^"
   }
 }

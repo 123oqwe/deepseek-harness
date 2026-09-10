@@ -51,6 +51,7 @@ One page per subsystem of the DeepSeek Harness: what it is, the data structures 
 | [webhook.md](webhook.md) | authenticated provider deliveries, arbitrary programmatic rules, and fire-and-forget Workspace Session creation |
 | [storage.md](storage.md) | the storage subsystem: the backend contract (`StorageBackend`), `StorageForms`, `DomainSpec`/`Domain`, `domain/changed` |
 | [reliability.md](reliability.md) | retry classification from failure facts, the run-wide retry budget and its attribution to the delegation root, and per-destination circuit breaking |
+| [policy.md](policy.md) | the five declared policy inputs, the closed permit/deny/ask decision and its reason codes, the deny-only plugin constraint, and where a decision becomes enforcement |
 | [workspace.md](workspace.md) | the workspace registry: `Workspace`/`WorkspaceId`, registration and resolution, the session `cwd` relationship |
 | [web-client.md](web-client.md) | the browser architecture: boot, Remote communication, paired Client models, UI adapters, Conversation assembly, Slots, and reconnect semantics |
 | [client-modules.md](client-modules.md) | the web plugin table: `dsh.client` declarations, `WebBootGraph` wire composition, the bundle route and index tap |
