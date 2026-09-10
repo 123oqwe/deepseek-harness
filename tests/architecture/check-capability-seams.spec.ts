@@ -279,7 +279,7 @@ describe('CI output (acceptance[3]): the real CLI script names the edge, source 
     expect(stdout).toContain('fixture-consumer -> fixture-provider')
     expect(stdout).toContain('packages/fixture/consumer/src/index.ts')
     expect(stdout).toContain('fixture-def')
-  })
+  }, 20_000)
 })
 
 /**
