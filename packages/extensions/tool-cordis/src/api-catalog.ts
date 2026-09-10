@@ -5640,7 +5640,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'RunEntityReference',
-    declaration: 'export type RunEntityReference = {\n    readonly kind: \'session\';\n    readonly id: SessionId;\n} | {\n    readonly kind: \'workflow\';\n    readonly id: WorkflowRef;\n} | {\n    readonly kind: \'action\';\n    readonly id: ActionRef;\n} | {\n    readonly kind: \'artifact\';\n    readonly id: ArtifactRef;\n} | {\n    readonly kind: \'approval\';\n    readonly id: ApprovalRef;\n} | {\n    readonly kind: \'verification\';\n    readonly id: VerificationRef;\n};',
+    declaration: 'export type RunEntityReference = {\n    readonly kind: \'session\';\n    readonly id: SessionId;\n} | {\n    readonly kind: \'workflow\';\n    readonly id: WorkflowRef;\n} | {\n    readonly kind: \'action\';\n    readonly id: ActionRef;\n} | {\n    readonly kind: \'artifact\';\n    readonly id: ArtifactRef;\n} | {\n    readonly kind: \'approval\';\n    readonly id: ApprovalRef;\n} | {\n    readonly kind: \'verification\';\n    readonly id: VerificationRef;\n} | {\n    readonly kind: \'task-profile\';\n    readonly id: TaskProfileRef;\n};',
   },
   {
     name: 'RunEvent',
@@ -6573,6 +6573,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'TaskId',
     declaration: 'export type TaskId = Branded<\'TaskId\'>;',
+  },
+  {
+    name: 'TaskProfileRef',
+    declaration: 'export type TaskProfileRef = Branded<\'TaskProfileRef\'>;',
   },
   {
     name: 'TaskReceipt',

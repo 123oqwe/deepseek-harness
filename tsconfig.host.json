@@ -203,6 +203,7 @@
     { "path": "./packages/run/taskboard-sqlite" },
     { "path": "./packages/subagent/subagent-taskboard" },
     { "path": "./packages/run/message-bus" },
+    { "path": "./packages/run/task-profile" },
     { "path": "./packages/run/run" },
     { "path": "./packages/session/session-telemetry-otel" },
     { "path": "./packages/core/system-prompt" },

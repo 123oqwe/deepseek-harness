@@ -39,12 +39,20 @@
  * greppable rename rather than a same-named type silently swapped for a
  * different one.
  *
+ * {@link RunEntityReference}'s seventh member is the counter-example that
+ * shows what those five are standing in for: `TaskProfileRef` is imported
+ * from `@deepseek-ai/dsh-task-profile/types`, the package that owns the
+ * entity, because unlike Workflow/Action/Artifact/Approval/Verification its
+ * owner now exists. The edge runs one way — this module reads that type and
+ * that package reads nothing here.
+ *
  * @module @deepseek-ai/dsh-run/types
  */
 
 import { brandNumber, type Branded, type BrandedNumber } from '@deepseek-ai/dsh-brand'
 import type { RunId } from '@deepseek-ai/dsh-principal/types'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import type { TaskProfileRef } from '@deepseek-ai/dsh-task-profile/types'
 
 export type { RunId, SessionId }
 
@@ -135,8 +143,24 @@ export type ApprovalRef = Branded<'ApprovalRef'>
  */
 export type VerificationRef = Branded<'VerificationRef'>
 
-/** The six entity kinds must[1] requires a Run event log entry to be able to reference. */
-export type RunEntityKind = 'session' | 'workflow' | 'action' | 'artifact' | 'approval' | 'verification'
+/**
+ * The entity kinds a Run event log entry can reference: the six P4-01's
+ * must[1] requires, plus `'task-profile'`.
+ *
+ * **The seventh is a reference extension, not a restatement of must[1].**
+ * P4-01's clause names six entities a Run event must be able to reference, and
+ * all six are still here and still exactly those. P4-02's compiled TaskProfile
+ * is a seventh entity a Run comes to name at its `accepted → planning`
+ * transition, and reusing `'artifact'` for it would put two different entities
+ * behind one {@link RunEntityKind}, so `referencesByKind(events, 'artifact')`
+ * could no longer answer what it says it answers. Added as an A-class registry
+ * ruling (delegate, 2026-09-10) rather than by an executor's own choice; the
+ * frozen P4-01 case "a single event carries references to all six must[1]
+ * entity kinds at once, in exact order" was checked before the change and
+ * asserts a round-trip over an explicit six-member list rather than
+ * exhaustiveness over this union, so it stays true and is not superseded.
+ */
+export type RunEntityKind = 'session' | 'workflow' | 'action' | 'artifact' | 'approval' | 'verification' | 'task-profile'
 
 /**
  * One reference a {@link RunEvent} carries to an external entity (must[1]).
@@ -151,6 +175,7 @@ export type RunEntityReference =
   | { readonly kind: 'artifact'; readonly id: ArtifactRef }
   | { readonly kind: 'approval'; readonly id: ApprovalRef }
   | { readonly kind: 'verification'; readonly id: VerificationRef }
+  | { readonly kind: 'task-profile'; readonly id: TaskProfileRef }
 
 /**
  * One append-only entry in a Run's event log (must[1]). Every entry records

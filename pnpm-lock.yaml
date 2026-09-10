@@ -7379,12 +7379,43 @@ importers:
       '@deepseek-ai/dsh-system-prompt':
         specifier: workspace:^
         version: link:../../core/system-prompt
+      '@deepseek-ai/dsh-task-profile':
+        specifier: workspace:^
+        version: link:../task-profile
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
       '@deepseek-ai/dsh-workflow':
         specifier: workspace:^
         version: link:../../workflow/workflow
+
+  packages/run/task-profile:
+    dependencies:
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-action-manifest':
+        specifier: workspace:^
+        version: link:../../action/action-manifest
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
+      '@deepseek-ai/dsh-llm':
+        specifier: workspace:^
+        version: link:../../llm/llm
+      '@deepseek-ai/dsh-risk-taxonomy':
+        specifier: workspace:^
+        version: link:../../policy/risk-taxonomy
+      '@deepseek-ai/dsh-session':
+        specifier: workspace:^
+        version: link:../../core/session
+      '@deepseek-ai/dsh-util-values':
+        specifier: workspace:^
+        version: link:../../util/values
 
   packages/run/taskboard-sqlite:
     dependencies:

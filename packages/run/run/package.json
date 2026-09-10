@@ -49,6 +49,7 @@
     "@deepseek-ai/dsh-lease-contract": "workspace:^",
     "@deepseek-ai/dsh-principal": "workspace:^",
     "@deepseek-ai/dsh-session": "workspace:^",
+    "@deepseek-ai/dsh-task-profile": "workspace:^",
     "@deepseek-ai/dsh-workflow": "workspace:^"
   },
   "devDependencies": {
@@ -64,6 +65,7 @@
     "@deepseek-ai/dsh-session": "workspace:^",
     "@deepseek-ai/dsh-session-projection": "workspace:^",
     "@deepseek-ai/dsh-system-prompt": "workspace:^",
+    "@deepseek-ai/dsh-task-profile": "workspace:^",
     "@deepseek-ai/dsh-tools": "workspace:^",
     "@deepseek-ai/dsh-workflow": "workspace:^"
   }

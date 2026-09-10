@@ -1,0 +1,30 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types"
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../util/brand"
+    },
+    {
+      "path": "../../util/values"
+    },
+    {
+      "path": "../../action/action-manifest"
+    },
+    {
+      "path": "../../llm/llm"
+    },
+    {
+      "path": "../../policy/risk-taxonomy"
+    },
+    {
+      "path": "../../core/session"
+    }
+  ]
+}
