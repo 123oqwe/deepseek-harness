@@ -18,6 +18,8 @@ import { describe, expect, it } from 'vitest'
 import { brandString } from '@deepseek-ai/dsh-brand'
 
 import {
+  admitIrreversibleUpgrade,
+  computeMigrationPathDigest,
   findAmbiguousEdge,
   findMigrationCycle,
   planUpgrade,
@@ -177,5 +179,67 @@ describe('P1-10: a workspace path is refused, not unsupported (P3-11’s boundar
     // storage as its own backup target.
     expect(refuseOutsidePluginStorage(`${root}-backup/snapshots/2`, root))
       .toEqual({ kind: 'outside-plugin-storage', path: `${root}-backup/snapshots/2` })
+  })
+})
+
+describe('P1-10 must[2]: an irreversible upgrade proceeds only on an operator confirmation', () => {
+  const oneWay = manifest('2', [step('1', '2', { reversible: false })])
+  const plan = planUpgrade(oneWay, v('1'))
+  const digestOf = (): ReturnType<typeof computeMigrationPathDigest> =>
+    computeMigrationPathDigest('dsh-notes', plan.admitted ? plan.steps : [])
+
+  it('REFUSES with no confirmation, naming the digest the operator must confirm', () => {
+    // Absence is a refusal, never a default: an upgrade that proceeded on
+    // silence would make the approval a formality in the one case it exists
+    // for. The digest is named so a non-interactive operator can supply it.
+    expect(admitIrreversibleUpgrade('dsh-notes', plan))
+      .toEqual({ kind: 'confirmation-required', digest: digestOf() })
+  })
+
+  it('REFUSES a confirmation obtained for a DIFFERENT path', () => {
+    // The reason the confirmation names a digest at all. A manifest edited
+    // between the operator reading it and the upgrade running produces a
+    // different digest, and the confirmation stops matching rather than
+    // silently covering the new conversion.
+    const other = computeMigrationPathDigest('dsh-notes', [step('1', '9', { reversible: false })])
+    expect(admitIrreversibleUpgrade('dsh-notes', plan, { digest: other, exportPath: '/tmp/export.json' }))
+      .toEqual({ kind: 'confirmation-mismatch', expected: digestOf(), supplied: other })
+  })
+
+  it('REFUSES a matching confirmation with NO export, because the export comes first', () => {
+    // An operator confirming an irreversible conversion is confirming they can
+    // still get their data out. Accepting the confirmation first would let the
+    // export fail after the point of no return.
+    expect(admitIrreversibleUpgrade('dsh-notes', plan, { digest: digestOf() }))
+      .toEqual({ kind: 'export-missing', digest: digestOf() })
+  })
+
+  it('ADMITS a matching confirmation that carries an export', () => {
+    expect(admitIrreversibleUpgrade('dsh-notes', plan, { digest: digestOf(), exportPath: '/tmp/export.json' }))
+      .toBeUndefined()
+  })
+
+  it('asks nothing of a REVERSIBLE upgrade, so the gate is scoped to must[2]', () => {
+    // Without this, an implementation that demanded confirmation for every
+    // upgrade would satisfy every case above.
+    expect(admitIrreversibleUpgrade('dsh-notes', planUpgrade(manifest('2', [step('1', '2')]), v('1'))))
+      .toBeUndefined()
+  })
+
+  it('gives two DIFFERENT step lists different digests, so one confirmation cannot cover both', () => {
+    // Length-prefixed for the reason computeDefinitionDigest is. These two
+    // step lists CONCATENATE to the same bytes -- "1"+"2"+"34"+"5" and
+    // "12"+"3"+"4"+"5" are both "12345" -- so without the prefix a
+    // confirmation obtained for one path would admit the other. The pair is
+    // constructed to collide rather than merely to differ: a pair that did not
+    // collide would leave the mutation green, which is what happened to the
+    // first version of this case.
+    const a = computeMigrationPathDigest('p', [step('1', '2'), step('34', '5')])
+    const b = computeMigrationPathDigest('p', [step('12', '3'), step('4', '5')])
+    expect(a).not.toBe(b)
+    // And the same path digests the same, so the check is not merely
+    // returning something new each call.
+    expect(computeMigrationPathDigest('p', [step('1', '2')]))
+      .toBe(computeMigrationPathDigest('p', [step('1', '2')]))
   })
 })

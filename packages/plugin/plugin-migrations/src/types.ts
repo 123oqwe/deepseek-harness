@@ -25,6 +25,18 @@ export type PluginSchemaVersion = Branded<'PluginSchemaVersion'>
 export type PluginDataDigest = Branded<'PluginDataDigest'>
 
 /**
+ * Digest of one upgrade PATH — the ordered steps an upgrade would take.
+ *
+ * An operator confirming an irreversible upgrade confirms a specific
+ * conversion, not "whatever this command decides to run". The digest is what a
+ * `--confirm-irreversible` flag names, so a confirmation obtained for one path
+ * cannot admit another: a manifest edited between the operator reading it and
+ * the upgrade running produces a different digest and the confirmation stops
+ * matching.
+ */
+export type MigrationPathDigest = Branded<'MigrationPathDigest'>
+
+/**
  * What must already be true before one migration may run.
  *
  * Declared rather than probed: a precondition the migration checked for itself
@@ -127,6 +139,12 @@ export type MigrationRefusal =
   | { readonly kind: 'snapshot-mismatch'; readonly expected: string; readonly actual: string }
   /** The path is not under the plugin's own storage root (P3-11's boundary). */
   | { readonly kind: 'outside-plugin-storage'; readonly path: string }
+  /** The upgrade is irreversible and no operator confirmation was supplied (must[2]). */
+  | { readonly kind: 'confirmation-required'; readonly digest: MigrationPathDigest }
+  /** A confirmation was supplied for a DIFFERENT path than the one about to run. */
+  | { readonly kind: 'confirmation-mismatch'; readonly expected: MigrationPathDigest; readonly supplied: MigrationPathDigest }
+  /** The upgrade is irreversible and no export was produced to confirm against. */
+  | { readonly kind: 'export-missing'; readonly digest: MigrationPathDigest }
 
 /** An admitted upgrade path, or the reason it was refused. */
 export type UpgradePlan =

@@ -16,7 +16,7 @@ Every export is a pure function. There is no I/O here and no service.
 ## Table of Contents
 
 - [What this package deliberately does NOT do](#what-this-package-deliberately-does-not-do)
-- [must[2] decides that approval is owed, and nothing asks yet](#must2-decides-that-approval-is-owed-and-nothing-asks-yet)
+- [must[2]: an operator confirms at the CLI, and the export comes first](#must2-an-operator-confirms-at-the-cli-and-the-export-comes-first)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 - [Dev Note](#dev-note)
@@ -31,11 +31,17 @@ Every export is a pure function. There is no I/O here and no service.
 
 **It does not touch workspace files.** `PluginDataSnapshot` covers a plugin's own durable data, config and schema. A workspace path is a REFUSED input rather than an unsupported one: P3-11 owns workspace checkpointing, and the manifest's backup strategy is exactly where the two would blur.
 
-## must[2] decides that approval is owed, and nothing asks yet
+## must[2]: an operator confirms at the CLI, and the export comes first
 
-`requiresApprovalAndExport` answers whether an irreversible upgrade owes a human decision and an export. It does not ask for one, and that is a measured limit rather than a staging convenience: [`@deepseek-ai/dsh-user-approval`](../../interaction/user-approval/README.md)'s request carries a `toolName` and it **throws outside an open turn**, while a plugin upgrade is a CLI command with neither. The refusal is not an oversight to route around — it protects the `approval/asked` + `approval/decided` audit pair that a reload would otherwise find as crash-tail garbage.
+An irreversible upgrade proceeds only on an operator's explicit confirmation — a TTY prompt, or `--confirm-irreversible <path digest>` when there is no TTY. A non-interactive run with no flag is refused with nothing changed: an upgrade that proceeded on silence would make the approval a formality in the one case it exists for.
 
-Reversibility is read from the migration's own declaration rather than derived from its backup strategy, because the two answer different questions. A snapshot makes the DATA restorable; reversibility is about whether the migration's effects are confined to that data. A migration that also rewrote an external system is irreversible however good its snapshot is, and must[2] exists for that case.
+The confirmation names a DIGEST of the ordered steps, so it admits one specific conversion rather than "whatever this command decides to run". A manifest edited between the operator reading it and the upgrade running produces a different digest, and the confirmation stops matching instead of silently covering the new path.
+
+The export is required BEFORE the confirmation is accepted. An operator confirming an irreversible conversion is confirming they can still get their data out, and accepting the confirmation first would let the export fail after the point of no return.
+
+This deliberately does NOT use `@deepseek-ai/dsh-user-approval`. That seam's request carries a `toolName` and it throws outside an open turn, because its `approval/asked` + `approval/decided` pair must be turn-enclosed or a reload finds crash-tail garbage. A CLI upgrade is not in a turn, so borrowing it would be a misuse rather than a shortcut. A migration triggered from INSIDE a session — the self-modification flow — does belong to that seam, and is P1-11's.
+
+Recording the confirmation in the transaction log, with the operator identity, the time and the export path, is the Provider stage's.
 
 ## Model Experience
 
@@ -44,7 +50,7 @@ No model-visible surface. This package registers no tool, contributes no prompt 
 ## Known Limitations and Deferred Work
 
 - **Nothing consults these decisions yet.** This is the Contract stage: the vocabulary and the judgements exist, and the transaction that would run them is the Provider stage's. A reader must not take these tests as evidence that any upgrade is transactional.
-- **must[2]'s approval has no asker.** Recorded above: the existing approval seam cannot serve a turn-less CLI upgrade. Which seam asks is an open ruling — a turn-less audit path, an upgrade that runs inside a session, or directing the approval half elsewhere — and it decides whether must[2] closes in this epic.
+- **must[2]'s confirmation is decided here and prompted at the Provider stage.** This package decides whether a confirmation admits a path; the TTY prompt, the `--confirm-irreversible` flag, the export and the append-only transaction record are the Provider stage's. A migration triggered from inside a session belongs to `@deepseek-ai/dsh-user-approval` instead, and is P1-11's.
 - **`refuseOutsidePluginStorage` compares already-resolved paths.** It resolves nothing itself, because resolution reads a filesystem. A caller passing an unresolved `../` path would be comparing strings that do not mean what they look like; resolving before the call is the caller's obligation and the Provider stage's to honour.
 
 ## Dev Note

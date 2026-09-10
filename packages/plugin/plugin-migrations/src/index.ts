@@ -13,7 +13,11 @@
  * @module @deepseek-ai/dsh-plugin-migrations
  */
 
+import { createHash } from 'node:crypto'
+import { brandString } from '@deepseek-ai/dsh-brand'
+
 import type {
+  MigrationPathDigest,
   MigrationRefusal,
   PluginDataSnapshot,
   PluginMigration,
@@ -189,4 +193,82 @@ export function refuseOutsidePluginStorage(
   // `startsWith` on the root WITH its separator, so a sibling directory whose
   // name merely begins with the root's does not pass as being inside it.
   return path.startsWith(root) ? undefined : { kind: 'outside-plugin-storage', path }
+}
+
+/**
+ * Length-prefix one field so two different step lists cannot encode alike.
+ *
+ * The same reason `computeDefinitionDigest` does it: without it, versions
+ * `["1","23"]` and `["12","3"]` produce identical bytes, and a confirmation
+ * obtained for one path would admit the other.
+ */
+function lengthPrefixed(value: string): string {
+  return `${String(Buffer.byteLength(value, 'utf8'))}:${value}`
+}
+
+/**
+ * The digest of one upgrade path, which an operator's confirmation names
+ * (must[2]).
+ *
+ * Over the ORDERED steps and the plugin, so a confirmation is tied to the
+ * conversion the operator was shown. A manifest edited between the operator
+ * reading it and the upgrade running produces a different digest, and the
+ * confirmation stops matching rather than silently covering the new path.
+ *
+ * `reversible` is not encoded: a path whose steps are identical is the same
+ * path, and folding a derived field into the identity would make a digest
+ * change that no declaration explains.
+ * @param plugin - the plugin being upgraded.
+ * @param steps - the ordered conversions the upgrade would run.
+ * @returns the path digest.
+ */
+export function computeMigrationPathDigest(
+  plugin: string,
+  steps: readonly PluginMigration[],
+): MigrationPathDigest {
+  const encoded = steps
+    .map(step => `${lengthPrefixed(step.from)}${lengthPrefixed(step.to)}`)
+    .join('')
+  return brandString<MigrationPathDigest>(
+    `sha256-${createHash('sha256').update(`${lengthPrefixed(plugin)}${encoded}`, 'utf8').digest('hex')}`,
+  )
+}
+
+/**
+ * Whether an irreversible upgrade may proceed on the confirmation supplied
+ * (must[2]).
+ *
+ * The delegate's ruling: for a CLI-driven upgrade, "human approval" is an
+ * operator's explicit confirmation at the CLI — a TTY prompt, or
+ * `--confirm-irreversible <digest>` when there is no TTY. This decides whether
+ * what was supplied admits THIS path; recording it in the transaction log and
+ * producing the export are the Provider stage's.
+ *
+ * The export is required BEFORE the confirmation is accepted, not after: an
+ * operator confirming an irreversible conversion is confirming that they can
+ * still get their data out, and accepting the confirmation first would let the
+ * export fail after the point of no return.
+ *
+ * Absence is a refusal, never a default. A non-interactive run with no flag is
+ * refused with nothing changed, because an upgrade that proceeded on silence
+ * would make the approval a formality in exactly the case it exists for.
+ * @param plugin - the plugin being upgraded.
+ * @param plan - the planned upgrade.
+ * @param confirmation - what the operator supplied, absent when they supplied
+ *   nothing.
+ * @returns the refusal, or `undefined` when the upgrade may proceed.
+ */
+export function admitIrreversibleUpgrade(
+  plugin: string,
+  plan: UpgradePlan,
+  confirmation?: { readonly digest: MigrationPathDigest; readonly exportPath?: string },
+): MigrationRefusal | undefined {
+  if (!plan.admitted || plan.reversible) return undefined
+  const expected = computeMigrationPathDigest(plugin, plan.steps)
+  if (confirmation === undefined) return { kind: 'confirmation-required', digest: expected }
+  if (confirmation.digest !== expected) {
+    return { kind: 'confirmation-mismatch', expected, supplied: confirmation.digest }
+  }
+  if (confirmation.exportPath === undefined) return { kind: 'export-missing', digest: expected }
+  return undefined
 }
