@@ -78,6 +78,22 @@
 
 **提速令(整改令 §10,2026-09-06 15:25 EDT)**:三条 Writer lane 同时开——**L1** P2-03 签 → P2-04 → P2-05;**L2** §3.5 SLICE-fiber-A + 内核密钥材料 → P2-02 验收(同时解锁 P2-05 内核执行点);**L3** P4-06 → P4-05 → P4-09;Cedar slice 在 L1 等观测时插入;P1-03 在 BLOCKED-094 裁决(§10.3)后任一空档。之后:W5–W7 → §3.2 sandbox-srt(W7 前)→ §3.4 envelope(P4-04 W9 前)→ §3.3 OTel(W11 前)。标准形状所有者以执行卡 §1 为准。CI 按 push 批处理;delegate SLA 30 分钟。
 
+### 5.1 双执行会话并行协议(用户批准,2026-09-10 15:30 EDT;整改令 §12.80)
+
+**为什么**:单条线是"一个执行者 → delegate 门③ → 推 → CI ≈25 分钟 → 签",所有 epic 串着排队;09-10 实测一个 epic 的 C→U 约 3 小时,其中模型生成不到半小时,其余是机器争用、返工、等观测。两条执行会话各自一个 git worktree、做文件集不相交的 epic,delegate 同时监两条、批量推一次观测两条,吞吐接近 2 倍;门③、签字、4.4d 仍是 delegate 一人一条标准,质量不变。
+
+| # | 规则 | 依据 |
+| --- | --- | --- |
+| 5.1.1 | **两条 lane**:**A(收口线)** 在 `dsh-first100-clean`(分支 `land-base-align-v2`),负责账本已有绿格 / 已建未到达的收口(P4-11 挂载、P1-10.F、记忆 slice P6-01/02、P2-05.F、P6-07.U)以及此后 reliability / data 线的 READY epic;**B(前沿线)** 在 `dsh-first100-lane-b`(分支 `lane-b`),从 `check-ready` 的 READY 集取 wave 最小者(首个 P4-02 → 之后按 READY),以及 policy / run-plan 线。**分配由 delegate 指定**,每次只指定下一项;执行者不自选。 | 09-10 实测;§10 三 Writer lane 先例 |
+| 5.1.2 | **不相交**:分配前 delegate 跑 `checkParallelLaneDisjointness`(`scripts/first100/generate-specs.ts:975`)——两 lane 在建 epic 的 [N]/[P] 文件两两不相交;共享 [B] 配置文件(`tsconfig.host.json`、`bundle/base/cordis.patch.yml`、根 `package.json`、`pnpm-lock.yaml`)允许双方各自追加,合并时"两行都留"(BLOCKED-014 addendum 1)。 | F6 |
+| 5.1.3 | **单一事实源 = `fork/first100-exec`**。两条 lane 报 SHA 前必须 `git fetch fork && git rebase fork/first100-exec`(只重写本地未推提交;不 force、不动远端),报的 SHA 必须以 fork head 为祖先、其上线性。谁先绿谁先推;后者再 rebase 一次(append-only 冲突:`command-freeze.json` entries / overlay / BLOCKED-QUEUE 段 / tsconfig 行,一律"两边都留",然后 `generate-ledger.mjs --check` 与 `verify-freeze-in-candidate-tree` 必过)。**不产生 merge commit。** | C14;B4b |
+| 5.1.4 | **程序状态文件**(`ledger.json` / `ledger.md` / `EXEC-STATE.json` / `command-freeze.json` / `clause-subject-audit.json` / `files-overlay*.json` / `BLOCKED-QUEUE.md`)两 lane 都可追加,但**只经工具**(`generate-ledger.mjs`、`--write` 生成器),不手改;绿格只对被观测的 SHA 做,rebase 后的 SHA 若未被观测则不绿。`delegate-signoff.json` / `registry.json` / `frozen-title-renames.json` 仍只归 delegate。 | 3.2;BLOCKED-036 |
+| 5.1.5 | **门③与推送**:delegate 在 `gate-wt2` 逐 SHA 跑门集 + 固定集(2 worker、`nice`),一次只跑一个;两 lane 都 rebase 好且各自绿时,delegate 推**较新**的那个(它包含另一个),一次 CI 观测两条 lane 的冻结。观测红按 §12.6-B 逐条诊断,红在谁的文件谁返工,另一 lane 的格照绿。 | §12.6-B |
+| 5.1.6 | **机器**:每 lane 测试 `--maxWorkers=2`;delegate 门③固定集运行中,lane 可写代码、不跑 vitest 套件(单文件可以);load > 20 时 lane 暂停测试只写码;不用 `sleep;tail` 轮询。第三条 lane 仅当机器有余量且 delegate 能逐行审时开。 | 09-10 三次卡死 |
+| 5.1.7 | **会话健康**:执行会话对话记录 > 150 MB 或出现 `Prompt is too long` 即在下一个干净断点换新会话;状态全在文件(每 lane 自己的 `.claude/goal.md` NOW 段、EXEC-STATE、BLOCKED、evidence、preFlight),交接由 delegate 发。 | 09-10 前任 193 MB 死亡 |
+| 5.1.8 | **报告格式**(两 lane 同):SHA、`pnpm install --frozen-lockfile` / typecheck / 触及包 vitest / `slice-gate(-cordis)` 的 exit(pairing 按 BLOCKED-179/124 held)、变异各红各自那条 + 控制项、"下一步等什么"、**已 rebase 到 fork head 的证明**(`git merge-base --is-ancestor fork/first100-exec HEAD`)。 | 2.10–2.12 |
+| 5.1.9 | **到完成的路线**:每次 `--accept` 后 delegate 重跑 `check-ready`,把新 READY 的 epic 按 5.1.1/5.1.2 分给先空出来的 lane;等观测期间 lane 按 1.12 写下一项 preFlight。以 09-10 的节奏(每 lane 约 4–6 小时一个 epic 的 C→F,观测批处理),82 项未验收 ≈ 350–500 lane 小时,两条 lane 24×7 约 2–3 周,加返工与机器损耗按 3–4 周计;第三 lane 视机器与审查余量再定。 | 估算,非承诺 |
+
 ## 6. 谁决定什么
 
 | 事项 | 谁 |
