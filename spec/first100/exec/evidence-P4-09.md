@@ -54,23 +54,33 @@ A run does reference a digest and a mismatch refuses the start. What it does not
 
 ## must[2] — a detached workflow is held by the Run service, and a disconnected UI or turn does not terminate it
 
-| question | answer |
-| --- | --- |
-| exists | `WorkerRun` owns the worker, the lease and settlement; the engine captures the SubagentRuntime handle before returning the run so an engine HMR unload cannot stop a live run's children |
-| production callers | the engine itself, on every start |
-| reached | yes, unconditionally |
+The clause is one sentence but the detached preFlight (§12.61) froze SIX semantics under it. Each is answered with where it is reached in production, not with whether the mechanism exists. Measured at `cfc4aa4eef`.
+
+| # | semantic | reached in production at | verdict |
+| --- | --- | --- | --- |
+| 1 | holds its own lease, renewed independently of the launching turn | `workflow-worker-thread/src/index.ts` — `takeRunLease` is called by `resume` and by the detached launch path; 5 call sites across the engine | closes |
+| 2 | the starting turn returns the run id immediately | `startDetached` returns a `WorkflowRun` after deriving authority and before the script settles | closes |
+| 3 | session end or UI disconnect does NOT cancel it | the run is composed on its OWN `AgentHandle`, not the launcher's, so the launcher's teardown reaches nothing it owns; frozen as `is NOT cancelled when the launching run is, while a nested sibling IS` | closes |
+| 4 | an explicit cancel still propagates | frozen as `IS terminated by an explicit cancel of its own id` | closes |
+| 5 | **it can be re-attached by run id to observe, await, or cancel** | **nowhere.** The engine's public surface is `start`, `startDetached`, `resume`, `registerDefinition`, `startNested`; there is no `attach`, and grepping `packages/workflow/*/src` for a re-attach path returns 0 | **OPEN** |
+| 6 | it carries a capability token derived at start, attenuated from the parent's | `startDetached` calls `deriveChild(request.parent.id, session)` and awaits `whenSessionToken`, refusing to start at all when it cannot; frozen as `REFUSES to start when the launcher cannot delegate` and `spawns a child that still gets a derived token after the launcher session ended` | closes |
+
+**Semantic 5 has no production subject, and this is the one thing must[2] still needs.** A detached run that cannot be re-attached is observable only by whoever holds the handle the launching turn returned — and that turn is exactly what a detached run is defined to outlive. So the mechanism the clause exists for is reachable in the case it does not matter and unreachable in the case it does.
+
+The preFlight already worked out the shape and it is two mechanisms, not one entry point: a LIVE launcher observes through the registry's observation surface, and a GONE launcher collects through the settlement outbox that `continuation.ts:503-517` already drains on `agent/session-start` and `agent/pre-step`. Calling `resume` on a live detached run would spawn a second worker under one run id — two masters for one run, the hazard P4-07's lease exists to prevent.
 
 ## must[3] — a nested run inherits and decays budget, capability token and trace, and recursion is detected
 
-| subject | production callers | verdict |
+Four nouns, counted separately, because a clause that names four things is not satisfied by three. Measured at `cfc4aa4eef` across `packages/*/*/src`, excluding tests and `lib/`.
+
+| noun | production subject | verdict |
 | --- | --- | --- |
-| `planNestedRun` (budget/limit decay) | **1** cross-package — the engine's `startNested` | closes |
-| ancestor chain carried into the child's budget record | same call site | closes |
-| `isSelfRecursive` | measured **0**; **now 1** via the registry | closes |
+| **budget** | `planNestedRun` decays the parent's remaining budget into the child's cap; the engine's `startNested` is its caller. Concurrency is inherited UNCHANGED rather than divided — it bounds what runs at once, not in total | closes |
+| **capability token** | `inheritToolBound` narrows the child's tool set from the definition's declaration, and the child's own children derive from the nested run's decayed token, not the deployment ceiling | closes |
+| **trace** | **none.** 47 hits for `trace`/`span`/`otel` in `packages/workflow/*/src`, and every one is in `workflow/src/invariant.ts`'s local `WorkflowTrace` — an in-memory map used to check invariants over a run's own events, not a context propagated into a child. Nothing in the tree produces a trace to inherit | **directed to P7-07** |
+| **recursion** | `isSelfRecursive` runs on the registration path (§12.48-A(1)), and `declaresNestedCall` now matches the reference-object call shape a nested run actually carries; the depth ceiling bounds what the structural check cannot see | closes |
 
-The engine's run-time recursion protection is the depth ceiling (`maxNestingDepth`, default 3) plus the ancestor chain it threads into each child's budget. The *structural* refusal — a definition that names itself never enters the registry — is `isSelfRecursive`'s, and it now runs on the registration path.
-
-A second defect surfaced while wiring it: `declaresNestedCall` matched only a quoted first argument, `workflow('name')`, so it could not fire on `workflow({ name, digest })` — the shape a nested run actually carries. The check was a false negative in exactly its own case. Both call shapes are matched now.
+**`trace` is directed, not deferred.** P7-07 owns tracing; a trace field threaded through nested runs now would carry nothing, and the §12.46-B split applies exactly as it does to P4-08's `inputs` and P4-11's `hedged`: this epic owns the rule that a nested run inherits its parent's trace context, and the epic that produces traces owns the producer. Inventing a producer here would be a second answer to a question P7-07 exists to answer once.
 
 ## acceptance[0] — saving and loading do not execute unverified code
 
