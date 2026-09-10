@@ -19,6 +19,7 @@
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { RunId } from '@deepseek-ai/dsh-principal/types'
 import { SessionId } from '@deepseek-ai/dsh-session/types'
+import { TaskProfileRef } from '@deepseek-ai/dsh-task-profile/types'
 import { describe, expect, it } from 'vitest'
 import { appendRunEvent, genesisRunEvent, referencesByKind } from '../src/events.ts'
 import {
@@ -157,6 +158,18 @@ describe('P4-01 Contract — must[1]: the Run event log is append-only and refer
     ]
     const events = appendRunEvent(run, 'succeeded', references, FIXED_TIME)
     expect(events[events.length - 1]?.references).toStrictEqual(references)
+  })
+
+  it('carries a task-profile reference through the same transition the profile is compiled at (P4-02)', () => {
+    const run = fixtureRun('accepted', { id: RunId('run-profile') })
+    const profileRef = TaskProfileRef('a'.repeat(64))
+    const references: readonly RunEntityReference[] = [{ kind: 'task-profile', id: profileRef }]
+    const events = appendRunEvent(run, 'planning', references, FIXED_TIME)
+    const appended = events[events.length - 1]
+    expect(appended?.toState).toBe('planning')
+    expect(appended?.references).toStrictEqual(references)
+    expect(referencesByKind(events, 'task-profile')).toStrictEqual(references)
+    expect(referencesByKind(events, 'artifact')).toStrictEqual([])
   })
 
   it('referencesByKind extracts only the references of the requested kind, across the whole log, in log order', () => {

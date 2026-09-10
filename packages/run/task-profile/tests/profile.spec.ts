@@ -157,6 +157,11 @@ describe('P4-02 C — every hard constraint traces to its source (acceptance[1],
     const { provenance: _dropped, ...withoutSource } = constraint('c1')
     const result = validateTaskProfile(profile({ constraints: [withoutSource as TaskConstraint] }))
     expect(result.valid).toBe(false)
+    if (result.valid) return
+    // The path, not just the refusal: acceptance[1] is about WHICH constraint
+    // lost its source, and a refusal that cannot say where is a refusal a
+    // caller cannot act on.
+    expect(result.errors.map(error => error.path)).toContain('constraints.0.provenance')
   })
 
   it('refuses a confidence outside [0, 1], so a traceable source cannot carry an unreadable certainty', () => {
