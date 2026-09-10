@@ -264,12 +264,28 @@ describe('P1-10 Fault — a medium primitive that fails mid-transaction', () => 
     expect(rows(backend.live)).toEqual(['original'])
   })
 
-  it('fault boundary 12 a materialize that fails DISCARDS its copy and leaves the live unit alone', async () => {
-    // The copy is the transaction's own; a failure that left it behind would
-    // accumulate one dead copy per failed upgrade in the medium.
+  it('fault boundary 12 a materialize that fails leaves the live unit alone, having made no copy to strand', async () => {
+    // Materialize is the primitive that CREATES the copy, so a failure inside
+    // it leaves none behind by construction. Stated as what it is rather than
+    // as a discard: an earlier draft of this case claimed the discard in its
+    // title and asserted only the throw, and the mutation that stops
+    // discarding survived it.
     const backend = new FaultyBackend('materializeMigrated')
 
     await expect(runUpgrade(request(backend))).rejects.toThrow(/materializeMigrated failed/u)
+    expect(rows(backend.live)).toEqual(['original'])
+    expect(backend.calls.some(call => call.startsWith('discard:'))).toBe(false)
+  })
+
+  it('fault boundary 15 a copy that EXISTS when a later primitive fails is discarded, not stranded', async () => {
+    // This is the case the transaction's catch is actually for: materialize
+    // succeeded, so a copy exists, and `switchIn` then fails. A copy never
+    // switched in is the transaction's to clean up — left behind, it would
+    // accumulate one dead copy per failed upgrade in the medium.
+    const backend = new FaultyBackend('switchIn')
+
+    await expect(runUpgrade(request(backend))).rejects.toThrow(/switchIn failed/u)
+    expect(backend.calls.some(call => call.startsWith('discard:migrated'))).toBe(true)
     expect(rows(backend.live)).toEqual(['original'])
   })
 })
