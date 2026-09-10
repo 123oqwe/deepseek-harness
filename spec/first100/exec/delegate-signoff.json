@@ -299,6 +299,14 @@
       "signedAtUtc": "2026-09-09T06:01:48.095Z",
       "reason": "The 2026-09-04 PASS verified (i)(ii)(iii) and the lock lift; it did not ask 4.4a's third question. Measured 2026-09-09 on the working tree at d19b70e6a0+ (packages/*/src and apps/*/src, excluding tests and lib): @deepseek-ai/dsh-session-lifecycle is mounted in no bundle (base, acp-app, headless, sdk-app, sdk-minimal, web-app) and has 0 external importers; listSessions, projectLifecycleRecords, applyRetention, softDelete, hardErase, legalHold and archiveSession each have 0 production callers outside the package. must[0] list filters, must[1] soft delete / legal hold / hard erase / archive, must[2] deletion propagation, acceptance[0] pagination, acceptance[1] legal hold blocks erase and acceptance[2] authorized erase propagates therefore have no production subject on any launched profile; only the corruption-repair half (acceptance[3], core/session/src/repair.ts) is reached. The sign-off asserted a lifecycle the shipped product does not perform.",
       "note": "Rebuild as P6-07 U supplement(s): a mounted consumer on launched profiles (session list/delete/retention through the api session controller and/or a CLI command) calling these operations, frozen on the real path; repair half stands."
+    },
+    {
+      "epic": "P2-02",
+      "rowDigestSha256": "fdc333ebde60aac8e2dbc71fd75401dbb1402376a9f21b156cd5f0f240c0fcbc",
+      "conclusion": "PASS",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-10T05:40:04.859Z",
+      "note": "Rebuilt sign-off (prior PASS withdrawn §12.69). Observation run 34439518421 @ 2d2e8f89ac (signed bundle, vitest 20573/0; job red only at lint nested-run.spec.ts:395 and snapshot cordis-inspect-jsdoc — both P4-09's reality set, admitted). 4.4b: C/P/U/F and every live supplement GREEN @ 2d2e8f89ac (single SHA), 0 open findings. 4.4d (delegate's own grep at 2d2e8f89ac, packages/*/src excl. tests/lib/definition pkg): service.issue called at capability-token-file/src/index.ts:528 on agent/session-start; attenuate via deriveChild (4 production callers, spawn path child-agent.ts:271 with the same toolFilter as tools.restrict); tools.requireCapabilityToken() armed (6 callers) with requireForTools: true in bundle/base (row disabled only when no trust kernel is mounted — the documented insecure dev boot); revokeSession (2 callers) -> service.revoke (index.ts:394) and the dispatch gate refuses 'revoked' (core/tools/src/index.ts:645); whenSessionToken presented on native and PTC paths. acc[0] on real spawns (parentDigest present, filter narrows, filtered tool refused at the call); acc[1] revocation persists via issuedFor and cascades; acc[2] digest-only logging pinned; must[3] plugin RPC / ExecutionWorld / external agents split per §12.46-B (BLOCKED-169/170/171)."
     }
   ]
 }
