@@ -4367,3 +4367,24 @@ Both gates are right about what they check. The adoption HAS landed — `package
 Attributions are given only where this session read them from a record (each package's Model-Experience allowlist entry names its epic); the rest are left open rather than guessed, because assigning a documentation debt to the wrong epic is worse than leaving it unassigned.
 
 **What is being asked:** which epic's next slice writes each. Two shapes are available and the gate accepts either — a real `docs/subsystems/<group>.md` page with the group README linking it (what `reliability` did), or an entry in `GROUPS_WITHOUT_SUBSYSTEM_PAGE` carrying a reviewable reason (what `plugin`, `kernel` and `util` did). The choice is per group and is a documentation-ownership decision, not a mechanical one.
+
+
+### BLOCKED-177 — `docs/config-catalog.zh.md` is nine generated sections behind its English pair, and that blocks the pre-commit pairing hook
+
+**Status:** DEBT RECORDED with the measurement; NOT repaired here. `docs/tool-catalog.zh.md` was in the same state and IS repaired, because its whole divergence came from this session's own regeneration.
+
+Both catalogs are generated on the English side and hand-carried on the Chinese side. Regenerating the English one therefore moves half a bilingual pair, and `verify-translation-pairing` reports it — correctly. The tool catalog's gap was exactly this session's change (the workflow tool's two new parameters, its detached paragraph, and the `required` block the schema no longer carries); it was carried across and the pair is clean.
+
+The config catalog is a different case, measured rather than assumed:
+
+| fact | measurement |
+|---|---|
+| package sections | English 124, Chinese 115 |
+| missing from the Chinese side | `baseline-preflight`, `capability-token-file`, `lease-sqlite`, `memory`, `memory-context`, `run`, `subagent-taskboard`, `taskboard-sqlite`, `workspace-trust-local` |
+| other divergences | code block #31 and several link targets differ between the pair, independently of the missing sections |
+
+Nine sections accumulated over earlier epics, each of which regenerated the English catalog without carrying the Chinese one. Porting them mechanically was ATTEMPTED here and reverted: the sections copy cleanly, but the pair still fails on the code-block and link-target divergences, so a mechanical port produces a file that is larger, still red, and now also partly machine-written. Repairing it properly is a translation pass over one large generated document.
+
+**Consequence, and why this is not cosmetic:** the pre-commit hook checks STAGED pairs, so any change that stages `config-catalog.zh.md` is blocked until the whole pair is consistent. The English side is committed and correct; the Chinese side is one section behind this session (`retry-cockatiel`) on top of the nine.
+
+**What is being asked:** whether the Chinese config catalog should be regenerated from the English one with only its `Source:` labels localized (which is what its structure already is — code blocks are TypeScript in both languages), or kept as a hand-translated document and brought current by a person. The first is a generator change and would end this debt permanently; the second keeps the current shape and needs an owner each time.

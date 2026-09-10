@@ -2132,17 +2132,27 @@ todo_write 是会话所有的状态；UI 将最新的 todo/write 事件渲染为
 
 约束：并发上限和 agent 总数上限均会生效；不提供文件系统、网络、定时器或 Node.js API。具体工作由 agent 完成，脚本只负责编排。该运行在前台执行：整个脚本完成后，调用才会返回。
 
+分离式运行：传入 `detached: true` 可启动脚本并立即返回其 `runId`，该运行在本轮次结束后继续执行。之后（本轮次或后续任一轮次）用 `attach: "<runId>"` 且不带 `script` 收取它，在它完成后返回该运行的值。当工作会长于你所处的这次交流时使用它；否则前台运行更简单，因为它不会被遗忘。
+
 ```json
 {
   "type": "object",
   "properties": {
     "script": {
       "type": "string",
-      "description": "The plain-JS workflow script body (top-level await allowed; NO `export const meta` statement; end with `return <json-value>`)."
+      "description": "The plain-JS workflow script body (top-level await allowed; NO `export const meta` statement; end with `return <json-value>`). Required unless `attach` is given."
+    },
+    "detached": {
+      "type": "boolean",
+      "description": "Start the run and return its runId immediately, leaving it running after this turn ends. Collect it later with `attach`."
+    },
+    "attach": {
+      "type": "string",
+      "description": "Collect a detached run by its runId, instead of starting one. Give no `script` or `meta` with it."
     },
     "meta": {
       "type": "object",
-      "description": "The workflow identity block (plain JSON — never code).",
+      "description": "The workflow identity block (plain JSON — never code). Required unless `attach` is given.",
       "additionalProperties": true,
       "properties": {
         "name": {
@@ -2197,11 +2207,7 @@ todo_write 是会话所有的状态；UI 将最新的 todo/write 事件渲染为
       "description": "Optional JSON input exposed to the script as the `args` global (wrap a bare list as a field, e.g. {\"files\": [...]}).",
       "additionalProperties": true
     }
-  },
-  "required": [
-    "script",
-    "meta"
-  ]
+  }
 }
 ```
 
