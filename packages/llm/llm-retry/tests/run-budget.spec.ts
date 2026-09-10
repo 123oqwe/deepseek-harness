@@ -131,6 +131,41 @@ describe('P4-11 must[1]: the LLM layer charges the run, not the session', () => 
     await child.dispose()
   })
 
+  it('does not charge a substitute key when no run can be resolved', async () => {
+    // Capability absence: with no Run producer mounted, the layer keeps its own
+    // per-session policy, which is what it did before this epic. The wrong
+    // implementation this pins is the plausible one -- keying by
+    // `agent.runId ?? agent.session.id`, which applies a budget to something no
+    // producer manages and, at a budget of zero, refuses the first retry of a
+    // composition that never opted into run accounting at all.
+    const ctx = new Context()
+    contexts.push(ctx)
+    await ctx.plugin(LlmRuntime)
+    await ctx.plugin(SessionStore)
+    await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(SystemPrompt)
+    await ctx.plugin(ToolRuntime)
+    await ctx.plugin(AgentRegistry)
+    // A budget of ZERO, and NO RunPlugin: nothing can resolve a run, so the
+    // budget cannot be consulted even though it would refuse everything.
+    await ctx.plugin(RunRetryUsagePlugin, { maxRetries: 0 })
+    await ctx.plugin(Object.assign((inner: Context) => { retry.apply(inner, {}) }, { inject: retry.inject }))
+    await ctx.plugin(AgentLoop, { agents: [] })
+    const adapter = new AlwaysFailingAdapter()
+    ctx.llm.registerAdapter(['mock'], adapter)
+
+    const agent = ctx.agentLoop.create(SessionId('no-run-producer'), { provider: 'mock', model: 'mock' })
+    agent.followup(createUserMessage({
+      content: [{ type: 'text', text: 'go' }],
+      source: { kind: 'user' },
+    }))
+    await agent.whenIdle()
+
+    // The POLICY's own cap still holds: 1 attempt + 5 retries, not the 1 a
+    // substitute key would produce against this zero budget.
+    expect(adapter.requests).toBe(6)
+  })
+
   it('lets the policy decide when the run budget is the looser of the two', async () => {
     // The positive control. Without it, a budget that refused everything would
     // satisfy the case above: the observation there is "fewer requests", and
