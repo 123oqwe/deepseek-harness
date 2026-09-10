@@ -76,7 +76,9 @@ The hub is a pure registration table with two faces, designed so backends and da
 
 ### The backend contract
 
-[`src/backend.ts`](src/backend.ts) is the normative contract for backend implementers, checked clause by clause by the shared conformance suite in `tests/contract.ts`. A backend owns exactly one medium and exposes optional data-shape facets; `kv` is the only facet, and opening a unit yields a versioned, globally-singleton schema handle whose single calls are atomic and durable once resolved. Unit and table names must match `UNIT_NAME_RE`; record keys are arbitrary strings that never reach file paths. The unit does not serialize concurrent writes — ordering belongs to the caller — and a stored version differing from the descriptor rejects `version-mismatch` (no migration).
+[`src/backend.ts`](src/backend.ts) is the normative contract for backend implementers, checked clause by clause by the shared conformance suite in `tests/contract.ts`. A backend owns exactly one medium and exposes optional data-shape facets; `kv` is the only data shape, and opening a unit yields a versioned, globally-singleton schema handle whose single calls are atomic and durable once resolved. Unit and table names must match `UNIT_NAME_RE`; record keys are arbitrary strings that never reach file paths. The unit does not serialize concurrent writes — ordering belongs to the caller — and a stored version differing from the descriptor rejects `version-mismatch` (no migration).
+
+A backend may additionally expose the optional `migration` facet: `stampedVersion`, `snapshotUnit`, `materializeMigrated`, `switchIn`, `rollbackTo`, `discard`. It converts a unit from the version stamped on the medium to the version a new build wants, in the medium's own terms — a consumer names handles, never paths, so the same upgrade transaction runs over files and over databases. Snapshot consistency is the backend's; excluding writers in other processes is the caller's, through a cross-process lease. A backend without the facet cannot be migrated and says so by its absence.
 
 ### Source map
 

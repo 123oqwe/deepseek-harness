@@ -82,6 +82,19 @@ export class JsonStorageBackend implements StorageBackend {
    * would tear between records.
    */
   readonly migration: MigrationFacet = {
+    stampedVersion: async (descriptor: KvUnitDescriptor): Promise<number | undefined> => {
+      validateDescriptor(descriptor)
+      // A `per-record` unit stamps each record and treats a record at another
+      // version as absent, so it has no unit-level version to migrate FROM —
+      // it self-heals instead. Reported as "no stamp" rather than as a version,
+      // so an upgrade leaves it alone.
+      if (descriptor.layout === 'per-record') return undefined
+      const path = this.mediumPath(descriptor)
+      if (!existsSync(path)) return undefined
+      const parsed: unknown = JSON.parse(await readFile(path, 'utf8'))
+      const version = (parsed as { version?: unknown }).version
+      return typeof version === 'number' ? version : undefined
+    },
     snapshotUnit: async (descriptor: KvUnitDescriptor): Promise<UnitSnapshot> => {
       validateDescriptor(descriptor)
       const handle = `${descriptor.name}.snapshot-${String(Date.now())}`
@@ -185,8 +198,8 @@ async function readUnitRecords(medium: string): Promise<readonly unknown[]> {
   const path = existsSync(medium) ? medium : `${medium}.json`
   if (!existsSync(path)) return []
   const parsed: unknown = JSON.parse(await readFile(path, 'utf8'))
-  const records = (parsed as { records?: unknown }).records
-  return Array.isArray(records) ? records : []
+  const records: unknown = (parsed as { records?: unknown }).records
+  return Array.isArray(records) ? records as readonly unknown[] : []
 }
 
 /**

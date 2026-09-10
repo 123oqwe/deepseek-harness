@@ -421,6 +421,41 @@ describe('P1-10 must[1]: the migration facet in this medium', () => {
     return JSON.parse(await readFile(join(root, 'notes.json'), 'utf8')) as { version: number; records: unknown[] }
   }
 
+  it('reports the version stamped on the medium, which is neither the package nor the wanted version', async () => {
+    const root = await freshRoot()
+    const backend = new JsonStorageBackend(root)
+    await seedUnit(root, 1, ['original'])
+
+    // UNIT.version is what THIS build wants; the stamp is where the data is.
+    expect(await backend.migration.stampedVersion({ ...UNIT, version: 7 })).toBe(1)
+    await backend.close()
+  })
+
+  it('reports no stamp for a unit whose first write has not landed', async () => {
+    const root = await freshRoot()
+    const backend = new JsonStorageBackend(root)
+
+    // Distinct from a unit stamped at 0: there is nothing to migrate, and an
+    // upgrade that read this as version 0 would plan a path from a version the
+    // data was never at.
+    expect(await backend.migration.stampedVersion(UNIT)).toBeUndefined()
+    await backend.close()
+  })
+
+  it('reports no stamp for a per-record unit, which has no unit-level version', async () => {
+    const root = await freshRoot()
+    const backend = new JsonStorageBackend(root)
+    const perRecord = { ...UNIT, name: 'perrec', layout: 'per-record' as const }
+    const unit = await backend.kv.open(perRecord)
+    await unit.putRecord('notes', 'a', { body: 'x' })
+    await unit.close()
+
+    // Each record carries its own stamp and a record at another version reads
+    // as absent, so the layout self-heals instead of migrating.
+    expect(await backend.migration.stampedVersion(perRecord)).toBeUndefined()
+    await backend.close()
+  })
+
   it('snapshots without touching the live medium, and the copy holds the same records', async () => {
     const root = await freshRoot()
     const backend = new JsonStorageBackend(root)

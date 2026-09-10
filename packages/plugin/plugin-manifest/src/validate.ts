@@ -315,6 +315,9 @@ function validateMigration(value: unknown, path: string, errors: ManifestValidat
   if (typeof value.fromVersion !== 'number') pushError(errors, `${path}.fromVersion`, 'must be a number')
   if (typeof value.toVersion !== 'number') pushError(errors, `${path}.toVersion`, 'must be a number')
   if (typeof value.description !== 'string') pushError(errors, `${path}.description`, 'must be a string')
+  if (value.module !== undefined && typeof value.module !== 'string') {
+    pushError(errors, `${path}.module`, 'must be a string when present')
+  }
 }
 
 /**

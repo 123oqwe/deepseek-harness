@@ -91,6 +91,21 @@
     },
     {
       "path": "../../packages/plugin/plugin-migrations"
+    },
+    {
+      "path": "../../packages/storage/storage"
+    },
+    {
+      "path": "../../packages/collaboration/lease-contract"
+    },
+    {
+      "path": "../../packages/storage/storage-json"
+    },
+    {
+      "path": "../../packages/run/lease-sqlite"
+    },
+    {
+      "path": "../../packages/util/atomic-write"
     }
   ]
 }

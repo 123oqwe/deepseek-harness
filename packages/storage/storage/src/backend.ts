@@ -78,6 +78,21 @@ export interface UnitSnapshot {
  */
 export interface MigrationFacet {
   /**
+   * The version currently stamped on a unit's medium.
+   *
+   * An upgrade needs the version the DATA is at, which is not the version the
+   * new build wants and not the package version either — the three move
+   * independently. Only the medium knows it, which is why this is a facet
+   * operation rather than something a consumer derives.
+   *
+   * A unit whose first write has not landed has no stamp, and `undefined` says
+   * so: there is nothing to migrate, which a caller must tell apart from a unit
+   * stamped at version 0.
+   * @param descriptor - the unit to read.
+   * @returns the stamped version, or undefined when the medium does not exist yet.
+   */
+  stampedVersion(descriptor: KvUnitDescriptor): Promise<number | undefined>
+  /**
    * Copy a unit's current state aside, consistently.
    *
    * Consistency here is the backend's to provide: a copy taken while writers

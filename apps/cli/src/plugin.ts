@@ -12,6 +12,7 @@
 
 import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
+import { rm } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import {
   DEFAULT_PROFILE_BUNDLES,
@@ -24,7 +25,18 @@ import {
   type ProfileManifest,
 } from '@deepseek-ai/dsh-app-boot'
 import { brandString } from '@deepseek-ai/dsh-brand'
+import { dshHomePath } from '@deepseek-ai/dsh-home-paths'
 import { classifyPluginDeclaration, evaluatePreMountAdmission } from '@deepseek-ai/dsh-plugin-manifest'
+import {
+  changedVersions,
+  declaredMigrationManifests,
+  migrateChangedPlugins,
+  recoverInterruptedUpgrades,
+  upgradeLookups,
+  upgradeRecordPath,
+  withUpgradeEnvironment,
+  type UpgradeEnvironment,
+} from './plugin-migration.ts'
 import {
   buildCandidateLock,
   planLockCommit,
@@ -249,6 +261,54 @@ export async function runPlugin(profile: string, args: readonly string[]): Promi
     process.stderr.write(`${NAME}: initialized profile ${profile} at ${dir}\n`)
   }
   const before = readProfileManifest(NAME, dir)
+  // P1-10: the upgrade holds a cross-process lease for its whole span, taken
+  // BEFORE the package manager runs. Refusing here is stronger than freezing
+  // the plugin later — a refused upgrade never moves the code, so no
+  // code/data mixture is produced at all. Anything a crash left half-done is
+  // undone inside the same lease, because "the old version is wholly usable
+  // after a restart" is not true of a plugin whose data was left mid-swap.
+  const held = await withUpgradeEnvironment(
+    dshHomePath(),
+    upgradeLookups(dir),
+    async environment => runUnderLease(args, dir, before, environment),
+  )
+  if (held.held) return held.value
+  process.stderr.write(`${NAME}: ${held.refusal}\n`)
+  return 1
+}
+
+/**
+ * The install and its data migrations, with the upgrade lease already held.
+ *
+ * Split out so the lease spans BOTH: the package manager moving the code and
+ * the transaction moving the data. A lease released between them would leave
+ * the window this epic exists to close — new code installed, data not yet
+ * migrated, another process free to start.
+ * @param args - the pnpm arguments.
+ * @param dir - the profile directory.
+ * @param before - the manifest read before pnpm ran.
+ * @param environment - the migration facet, lease and per-plugin lookups.
+ * @returns the pnpm exit code.
+ */
+async function runUnderLease(
+  args: readonly string[],
+  dir: string,
+  before: ProfileManifest,
+  environment: UpgradeEnvironment,
+): Promise<number> {
+  // Anything a crash left half-done is undone first, inside this same lease:
+  // "the old version is wholly usable after a restart" is not true of a plugin
+  // whose data was left mid-swap.
+  const recovered = await recoverInterruptedUpgrades(
+    dshHomePath(),
+    Object.keys(before.dependencies ?? {}),
+    environment.migration,
+    async (plugin) => { await rm(upgradeRecordPath(dshHomePath(), plugin), { force: true }) },
+  )
+  for (const plugin of recovered) {
+    process.stderr.write(`${NAME}: recovered an interrupted upgrade of ${plugin} before installing\n`)
+  }
+
   // Windows resolves pnpm through its .cmd shim, which spawn() refuses
   // without a shell since the CVE-2024-27980 hardening.
   const result = spawnSync('pnpm', args.map(argument => anchorPathSpec(argument, process.cwd())), {
@@ -266,6 +326,18 @@ export async function runPlugin(profile: string, args: readonly string[]): Promi
   }
   const exitCode = result.status ?? 1
   if (exitCode === 0) {
+    // must[1]: the one place that knows (plugin, from, to). `before` is the
+    // manifest from before pnpm ran; the installed state is read now.
+    const changes = changedVersions(
+      before.dependencies ?? {},
+      readProfileManifest(NAME, dir).dependencies ?? {},
+    )
+    await migrateChangedPlugins(
+      changes,
+      declaredMigrationManifests(changes, dir),
+      environment,
+      line => process.stderr.write(`${NAME}: ${line}\n`),
+    )
     reconcilePlugins(before, dir)
     await commitProfileLock(dir)
   } else {

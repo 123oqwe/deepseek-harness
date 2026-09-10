@@ -282,6 +282,17 @@ export interface MigrationDeclaration {
   readonly fromVersion: number
   readonly toVersion: number
   readonly description: string
+  /**
+   * Package-relative specifier of the module that performs this step,
+   * default-exporting `(records: readonly unknown[]) => Promise<readonly unknown[]>`.
+   *
+   * Optional because a plugin may declare that its data changed shape without
+   * shipping code to convert it — a store rebuilt from scratch on the new
+   * version needs the record, not the conversion. An upgrade that finds a
+   * declaration without one refuses to touch that plugin's data rather than
+   * guessing a convention, so absence is a decision, never a default.
+   */
+  readonly module?: string
 }
 
 /**

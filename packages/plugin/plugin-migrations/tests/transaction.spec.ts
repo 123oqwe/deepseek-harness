@@ -58,7 +58,11 @@ class RecordingBackend {
   readonly copies = new Map<string, readonly unknown[]>()
   private next = 0
 
+  /** The version this fake's medium is stamped with; the caller reads it, not the transaction. */
+  stamped: number | undefined = 1
+
   readonly facet: MigrationFacet = {
+    stampedVersion: async () => this.stamped,
     snapshotUnit: async (descriptor) => {
       this.calls.push(`snapshot:${descriptor.name}`)
       const handle = `snap-${String(this.next += 1)}`
