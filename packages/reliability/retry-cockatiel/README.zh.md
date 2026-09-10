@@ -42,9 +42,17 @@ kind: "package-reference"
 `execute` 接受一个 `classify` 回调,本包从不检查原始错误。一次失败是否意味着**端点**不健康,是 [`classifyFailure`](../retry/README.zh.md) 作用在只有调用方能读到的事实上的决策:策略拒绝与格式非法的请求都是永久性的,把它们计入会在一个健康的目的地上熔断。永久性失败直接穿过 `cockatiel` 的谓词,既不记成功也不记失败,断路器因而不动。
 
 <a id="model-experience"></a>
+## 开发备注
+
+本 Provider 把 policy 存在 `private readonly` 映射里,而不是 `#private` 字段。Cordis 交给调用方的是 Service 代理,方法里的 `this` 并非实例,`#private` 访问会抛 `Receiver must be an instance of class …`。`@deepseek-ai/dsh-lease` 的 store 出于同样原因写法相同。
+
 ## Model Experience
 
-**无 model 可见面、无 token、无 KV-cache 影响。** 本包不新增工具、提示词文本或会话事件。拒绝只以"调用方拿这个抛出的错误做了什么"的形式抵达模型;断路器本身对一次请求不可见。
+无,因为本包在请求抵达 adapter 之前就拒绝或放行一次尝试,不注册工具、提示词文本或会话事件。
+
+#### KV Cache effect
+
+这里没有任何东西进入模型请求。拒绝只以"调用方拿这个抛出的错误做了什么"的形式抵达模型。
 
 <a id="known-limitations-and-deferred-work"></a>
 ## 已知局限与后续工作
@@ -54,6 +62,3 @@ kind: "package-reference"
 - **`openMs` 是固定时长,不是退避曲线。** `cockatiel` 支持逐次增长的熔断时长;本 Provider 只传一个时长,因为没有部署要求调一条曲线,而一个数字才是操作者能推理的东西。
 
 <a id="dev-note"></a>
-## 开发备注
-
-本 Provider 把 policy 存在 `private readonly` 映射里,而不是 `#private` 字段。Cordis 交给调用方的是 Service 代理,方法里的 `this` 并非实例,`#private` 访问会抛 `Receiver must be an instance of class …`。`@deepseek-ai/dsh-lease` 的 store 出于同样原因写法相同。

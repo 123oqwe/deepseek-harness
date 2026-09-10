@@ -5154,6 +5154,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface MessageSourceMap {\n    user: {\n        kind: \'user\';\n    };\n    plugin: {\n        kind: \'plugin\';\n        plugin: string;\n    } & ContextFormed;\n    model: ModelMessageSource;\n    tool: ToolMessageSource;\n}',
   },
   {
+    name: 'MigrationFacet',
+    declaration: 'export interface MigrationFacet {\n    stampedVersion(descriptor: KvUnitDescriptor): Promise<number | undefined>;\n    digestUnit(snapshot: UnitSnapshot): Promise<string>;\n    readSnapshot(snapshot: UnitSnapshot): Promise<{\n        readonly version: number | undefined;\n        readonly content: UnitContent;\n    }>;\n    exportUnit(descriptor: KvUnitDescriptor, destination: string): Promise<void>;\n    snapshotUnit(descriptor: KvUnitDescriptor): Promise<UnitSnapshot>;\n    materializeMigrated(snapshot: UnitSnapshot, version: number, migrate: (content: UnitContent) => Promise<UnitContent>): Promise<UnitSnapshot>;\n    switchIn(migrated: UnitSnapshot): Promise<UnitSnapshot>;\n    rollbackTo(previous: UnitSnapshot): Promise<void>;\n    discard(snapshot: UnitSnapshot): Promise<void>;\n}',
+  },
+  {
     name: 'ModelCatalog',
     declaration: 'export interface ModelCatalog {\n    readonly default: ModelSelection;\n    readonly routableProviders: readonly string[];\n    readonly groups: readonly ModelProviderGroup[];\n    readonly failures: readonly ModelCatalogFailure[];\n}',
   },
@@ -6243,7 +6247,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'StorageBackend',
-    declaration: 'export interface StorageBackend {\n    readonly kv?: KvFacet;\n    close(): Promise<void>;\n}',
+    declaration: 'export interface StorageBackend {\n    readonly kv?: KvFacet;\n    readonly migration?: MigrationFacet;\n    close(): Promise<void>;\n}',
   },
   {
     name: 'StorageForms',
@@ -6832,6 +6836,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'TypertTypeModel',
     declaration: 'export interface TypertTypeModel {\n    readonly name: string;\n    readonly declaration: string;\n}',
+  },
+  {
+    name: 'UnitContent',
+    declaration: 'export interface UnitContent {\n    readonly global: unknown;\n    readonly tables: Readonly<Record<string, Readonly<Record<string, unknown>>>>;\n}',
+  },
+  {
+    name: 'UnitSnapshot',
+    declaration: 'export interface UnitSnapshot {\n    readonly unit: string;\n    readonly handle: string;\n}',
   },
   {
     name: 'UpdateTeamTaskRequest',

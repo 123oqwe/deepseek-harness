@@ -49,7 +49,11 @@ The last row is the one worth stating: reading absence as safety would make must
 
 ## Model Experience
 
-No model-visible surface. This package registers no tool, contributes no prompt text, and emits no session event; it is consumed by the retry layers, and what a model sees is their behaviour. Token and KV-cache effects: none.
+None, as this package exports the failure taxonomy, the run budget and the breaker Service Definition as pure decisions over caller-supplied values and registers nothing model-facing.
+
+#### KV Cache effect
+
+Nothing here enters a model request; what a model observes is whether its caller made a request at all, which the retry layers own.
 
 ## Known Limitations and Deferred Work
 

@@ -43,16 +43,20 @@ This deliberately does NOT use `@deepseek-ai/dsh-user-approval`. That seam's req
 
 Recording the confirmation in the transaction log, with the operator identity, the time and the export path, is the Provider stage's.
 
+## Dev Note
+
+A cycle is refused structurally and named as one rather than being discovered by a depth limit. The reason is the same one P4-09 recorded for self-recursive workflow definitions: an operator reading "these versions form a cycle" knows which declarations to fix, while one reading "too many steps" cannot tell a loop from a long history.
+
 ## Model Experience
 
-No model-visible surface. This package registers no tool, contributes no prompt text and emits no session event. Token and KV-cache effects: none.
+None, as this package decides and orders a plugin upgrade that runs in `dsh plugin`, before any agent starts, and registers no tool, prompt text or session event.
+
+#### KV Cache effect
+
+Nothing here enters a model request; an upgrade happens between sessions, not inside one.
 
 ## Known Limitations and Deferred Work
 
 - **Nothing consults these decisions yet.** This is the Contract stage: the vocabulary and the judgements exist, and the transaction that would run them is the Provider stage's. A reader must not take these tests as evidence that any upgrade is transactional.
 - **must[2]'s confirmation is decided here and prompted at the Provider stage.** This package decides whether a confirmation admits a path; the TTY prompt, the `--confirm-irreversible` flag, the export and the append-only transaction record are the Provider stage's. A migration triggered from inside a session belongs to `@deepseek-ai/dsh-user-approval` instead, and is P1-11's.
 - **`refuseOutsidePluginStorage` compares already-resolved paths.** It resolves nothing itself, because resolution reads a filesystem. A caller passing an unresolved `../` path would be comparing strings that do not mean what they look like; resolving before the call is the caller's obligation and the Provider stage's to honour.
-
-## Dev Note
-
-A cycle is refused structurally and named as one rather than being discovered by a depth limit. The reason is the same one P4-09 recorded for self-recursive workflow definitions: an operator reading "these versions form a cycle" knows which declarations to fix, while one reading "too many steps" cannot tell a loop from a long history.

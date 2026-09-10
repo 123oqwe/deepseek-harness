@@ -12,6 +12,7 @@
 
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
+import { brandString } from '@deepseek-ai/dsh-brand'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import type { ToolCallView, ToolResultView } from '@deepseek-ai/dsh-tools'
 import type { ContentBlock } from '@deepseek-ai/dsh-llm'
@@ -146,11 +147,15 @@ Script-body hooks:
 
 Misused hooks (bad arguments, unknown options, unsupported schemas, tripped caps) throw errors that ALWAYS kill the script — they never dissolve into a per-item \`null\`.
 
-Constraints: concurrency and total-agent caps apply; no filesystem, network, timers, or Node.js APIs are provided — the agents do the work, the script only coordinates them. The run executes in the foreground: this call returns when the whole script finishes.`
+Constraints: concurrency and total-agent caps apply; no filesystem, network, timers, or Node.js APIs are provided — the agents do the work, the script only coordinates them. The run executes in the foreground: this call returns when the whole script finishes.
+
+Detached runs: pass \`detached: true\` to start the script and return immediately with its \`runId\`, leaving it running after this turn ends. Collect it later — in this turn or a following one — with \`attach: "<runId>"\` and no \`script\`, which returns that run's value once it finishes. Use it when the work outlasts the exchange you are in; a foreground run is otherwise simpler, because it cannot be forgotten.`
 
 type WorkflowCallArgs = {
-  script: string
-  meta: {
+  script?: string
+  detached?: boolean
+  attach?: string
+  meta?: {
     name: string
     description: string
     whenToUse?: string
@@ -161,10 +166,15 @@ type WorkflowCallArgs = {
 
 /** The pending-state card: a generic card titled by the workflow's meta name. */
 function presentWorkflowCall(args: WorkflowCallArgs): ToolCallView {
+  // An attach call carries no script and no meta: it is titled by the run it
+  // collects, which is the only thing the operator can recognize it by.
+  const title = args.attach !== undefined
+    ? `workflow: attach ${args.attach}`
+    : `workflow: ${args.meta?.name ?? 'unnamed'}`
   return {
     card: 'generic',
-    title: `workflow: ${args.meta.name}`,
-    rawInput: args.script,
+    title,
+    ...args.script === undefined ? {} : { rawInput: args.script },
   }
 }
 
@@ -220,14 +230,20 @@ export function apply(ctx: Context, config: Config): void {
     parameters: {
       script: {
         type: 'string',
-        required: true,
-        description: 'The plain-JS workflow script body (top-level await allowed; NO `export const meta` statement; end with `return <json-value>`).',
+        description: 'The plain-JS workflow script body (top-level await allowed; NO `export const meta` statement; end with `return <json-value>`). Required unless `attach` is given.',
+      },
+      detached: {
+        type: 'boolean',
+        description: 'Start the run and return its runId immediately, leaving it running after this turn ends. Collect it later with `attach`.',
+      },
+      attach: {
+        type: 'string',
+        description: 'Collect a detached run by its runId, instead of starting one. Give no `script` or `meta` with it.',
       },
       meta: {
         type: 'object',
         additionalProperties: true,
-        required: true,
-        description: 'The workflow identity block (plain JSON — never code).',
+        description: 'The workflow identity block (plain JSON — never code). Required unless `attach` is given.',
         properties: {
           name: { type: 'string', required: true, description: 'Short kebab-case workflow name.' },
           description: { type: 'string', required: true, description: 'One-line description of what the workflow does.' },
@@ -266,7 +282,10 @@ export function apply(ctx: Context, config: Config): void {
       },
       render: (args, value) => [{
         type: 'text',
-        text: renderResult(args.meta.name, value.agentsStarted, value.result, maxResultChars),
+        text: args.detached === true && args.attach === undefined
+          ? `workflow "${args.meta?.name ?? 'unnamed'}" started detached as ${value.runId}. `
+            + `It keeps running after this turn; collect it with attach: "${value.runId}".`
+          : renderResult(args.meta?.name ?? args.attach ?? 'unnamed', value.agentsStarted, value.result, maxResultChars),
       }],
     },
     async execute(args, exec) {
@@ -276,6 +295,46 @@ export function apply(ctx: Context, config: Config): void {
         // means a non-agent caller invoked the tool directly, which has no
         // parent to attribute the children to. Fail loud rather than guess.
         throw new Error('workflow tool requires a calling agent (exec.agent was undefined)')
+      }
+
+      // P4-09 must[2], the collect half: a detached run outlives the turn that
+      // started it, so the turn that collects it does not hold its handle. The
+      // engine reaches it by id — live or already settled.
+      if (args.attach !== undefined) {
+        if (args.script !== undefined) {
+          throw new Error('workflow tool: give `attach` OR `script`, not both — attaching collects a run that already exists')
+        }
+        const attached = ctx.workflowEngine.attach(brandString<WorkflowRunId>(args.attach))
+        if (attached === undefined) {
+          throw new Error(`workflow tool: no run ${args.attach} — it was never started here, or its outcome was already collected`)
+        }
+        const settled = await attached.result
+        const attachError = stopReasonError(settled)
+        if (attachError !== undefined) throw new Error(attachError)
+        return {
+          runId: attached.id,
+          agentsStarted: settled.agentsStarted,
+          result: settled.value as JsonValue,
+        }
+      }
+      if (args.script === undefined || args.meta === undefined) {
+        throw new Error('workflow tool: `script` and `meta` are required unless `attach` is given')
+      }
+
+      // P4-09 must[2], the start half: a detached run holds its OWN agent and
+      // session, so nothing about it depends on this turn's scopes. The runId
+      // comes back at once and the script keeps running.
+      if (args.detached === true) {
+        const detached = await ctx.workflowEngine.startDetached({
+          script: args.script,
+          meta: args.meta,
+          ...args.args !== undefined ? { args: args.args } : {},
+          parent,
+          // Deliberately NOT `exec.signal`: that signal is aborted when this
+          // turn's step ends, and a detached run cancelled by the end of the
+          // turn that started it is exactly what "detached" is not.
+        })
+        return { runId: detached.id, agentsStarted: 0, result: null }
       }
 
       // Meta/body validation failures (META_INVALID/SCRIPT_PARSE) throw

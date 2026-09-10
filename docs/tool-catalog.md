@@ -2124,17 +2124,27 @@ Misused hooks (bad arguments, unknown options, unsupported schemas, tripped caps
 
 Constraints: concurrency and total-agent caps apply; no filesystem, network, timers, or Node.js APIs are provided — the agents do the work, the script only coordinates them. The run executes in the foreground: this call returns when the whole script finishes.
 
+Detached runs: pass `detached: true` to start the script and return immediately with its `runId`, leaving it running after this turn ends. Collect it later — in this turn or a following one — with `attach: "<runId>"` and no `script`, which returns that run's value once it finishes. Use it when the work outlasts the exchange you are in; a foreground run is otherwise simpler, because it cannot be forgotten.
+
 ```json
 {
   "type": "object",
   "properties": {
     "script": {
       "type": "string",
-      "description": "The plain-JS workflow script body (top-level await allowed; NO `export const meta` statement; end with `return <json-value>`)."
+      "description": "The plain-JS workflow script body (top-level await allowed; NO `export const meta` statement; end with `return <json-value>`). Required unless `attach` is given."
+    },
+    "detached": {
+      "type": "boolean",
+      "description": "Start the run and return its runId immediately, leaving it running after this turn ends. Collect it later with `attach`."
+    },
+    "attach": {
+      "type": "string",
+      "description": "Collect a detached run by its runId, instead of starting one. Give no `script` or `meta` with it."
     },
     "meta": {
       "type": "object",
-      "description": "The workflow identity block (plain JSON — never code).",
+      "description": "The workflow identity block (plain JSON — never code). Required unless `attach` is given.",
       "additionalProperties": true,
       "properties": {
         "name": {
@@ -2189,11 +2199,7 @@ Constraints: concurrency and total-agent caps apply; no filesystem, network, tim
       "description": "Optional JSON input exposed to the script as the `args` global (wrap a bare list as a field, e.g. {\"files\": [...]}).",
       "additionalProperties": true
     }
-  },
-  "required": [
-    "script",
-    "meta"
-  ]
+  }
 }
 ```
 

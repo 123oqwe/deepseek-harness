@@ -29,13 +29,17 @@ The `workflow` tool runs a model-authored orchestration script that fans work ou
 
 ### Calling the tool
 
-The model submits three parameters: `meta` (required identity data: `name`, `description`, and optional `whenToUse` and `phases`), `script` (required plain JavaScript body — no `export const meta` statement; the tool description carries the complete authoring contract), and `args` (optional JSON object exposed to the script as the `args` global; wrap a bare list in a field so the wire schema stays honest).
+The model submits `meta` (identity data: `name`, `description`, and optional `whenToUse` and `phases`), `script` (the plain JavaScript body — no `export const meta` statement; the tool description carries the complete authoring contract), and `args` (optional JSON object exposed to the script as the `args` global; wrap a bare list in a field so the wire schema stays honest). `script` and `meta` are required together unless the call is an attach.
 
 Success returns the canonical envelope `{ runId, agentsStarted, result }`, rendered to the model as `workflow "<name>" completed (<count> agent<optional-s>).` followed by `Return value:` and the pretty-printed JSON. A workflow that cannot start — a script parse or meta validation failure — returns an error the model can correct from. Cancellation and execution failures return `Error: workflow run was cancelled` or `Error: workflow run failed: <error>`; partial output is never reported as success.
 
+### Detached runs
+
+`detached: true` starts the run and returns its `runId` at once, leaving it running after the turn ends; `attach: "<runId>"` — with no `script` or `meta` — collects that run's value, in the same turn or a later one. A detached run holds its OWN agent and session, inheriting the launcher's LLM route, so nothing about it depends on the turn that started it, and it is deliberately NOT bound to the turn's abort signal. An id that reaches no run is refused by name: it was never started here, or its outcome was already collected. The foreground path is unchanged and remains the default, because a run whose value arrives in the same call cannot be forgotten.
+
 ### What to expect during a run
 
-While the script runs, the parent turn waits: the tool starts the run, awaits its result, and always disposes it, so the script and its children reach quiescence on every path — including cancellation, which is bridged from the parent step's abort signal. The model sees one final outcome, never intermediate child messages; the children's own work stays out of the parent conversation.
+While a foreground script runs, the parent turn waits: the tool starts the run, awaits its result, and always disposes it, so the script and its children reach quiescence on every path — including cancellation, which is bridged from the parent step's abort signal. The model sees one final outcome, never intermediate child messages; the children's own work stays out of the parent conversation.
 
 ### Config
 

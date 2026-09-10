@@ -52,7 +52,11 @@ registry 的问题陈述是:多个层各自决定可重试性,它们的上限于
 <a id="model-experience"></a>
 ## Model Experience
 
-无 model 可见面。本包不注册工具、不贡献提示词文本、不发出会话事件;消费它的是各重试层,模型看到的是那些层的行为。token 与 KV-cache 影响:无。
+无,因为本包只把失败分类法、run 预算与断路器 Service Definition 作为对调用方所给值的纯决策导出,不注册任何 model 可见的东西。
+
+#### KV Cache effect
+
+这里没有任何东西进入模型请求;模型能观察到的只是它的调用方到底有没有发出请求,而那由各重试层拥有。
 
 <a id="known-limitations-and-deferred-work"></a>
 ## 已知局限与后续工作

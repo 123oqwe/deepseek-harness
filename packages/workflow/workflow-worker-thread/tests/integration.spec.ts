@@ -20,6 +20,13 @@ import WorkerThreadWorkflowEngine from '../src/index.ts'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { LeaseStoreContract, WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease-contract'
 import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
+import * as ToolWorkflow from '@deepseek-ai/dsh-tool-workflow'
+import { ToolCallId } from '@deepseek-ai/dsh-llm'
+import type { ToolExecutionResult } from '@deepseek-ai/dsh-tools'
+import type { Agent } from '@deepseek-ai/dsh-agent'
+
+/** Distinct call ids across the detached cases; the registry keys by them. */
+let callCounter = 0
 
 type Script = ConstructorParameters<typeof MockAdapter>[0]
 
@@ -191,5 +198,89 @@ describe('P4-07 Usage: a workflow run holds an epoch lease on the real stack', (
     await run.result
     await new Promise(resolve => setTimeout(resolve, 10))
     expect(ends).toHaveLength(1)
+  })
+})
+
+describe('P4-09 must[2]: a detached run outlives the turn that started it, on the real stack', () => {
+  /**
+   * The model-facing path, not the engine's own method: must[2] is about a run
+   * a TURN starts and a later turn collects, and the only thing a turn can
+   * call is the tool. The tool is mounted on the same real stack as the cases
+   * above — a real worker thread, the real spawn backend, one scripted model.
+   */
+  async function withTool(script: Script) {
+    const stack = await setup(script)
+    await stack.ctx.plugin(ToolWorkflow, {})
+    return stack
+  }
+
+  /** One tool call, with its own turn-scoped signal. */
+  function callTool(ctx: Context, agent: Agent, args: unknown, signal: AbortSignal): Promise<ToolExecutionResult> {
+    return ctx.tools.execute({
+      signal,
+      callId: ToolCallId(`call-${String(callCounter += 1)}`),
+      name: 'workflow',
+      arguments: args,
+      agent,
+    })
+  }
+
+  it('keeps running after its turn ends, and a later turn collects it by id', async () => {
+    const { ctx, parent } = await withTool([textResponse('the detached child answered')])
+
+    // Turn one: start detached. The call returns a runId, not a value.
+    const firstTurn = new AbortController()
+    const started = await callTool(ctx, parent, {
+      detached: true,
+      meta: { name: 'outlives-turn', description: 'a run that survives its starter' },
+      script: 'const answer = await agent(\'do the long thing\')\nreturn { answer }',
+    }, firstTurn.signal)
+    expect(started.isError).toBe(false)
+    const runId = (started.value as { runId: string }).runId
+    expect(runId).toBeTruthy()
+
+    // The turn ENDS: its step signal aborts, which is what cancels an ordinary
+    // foreground run. A detached run must not be listening to it.
+    firstTurn.abort()
+
+    // Turn two: a different signal, and nothing carried over but the id.
+    const secondTurn = new AbortController()
+    const collected = await callTool(ctx, parent, { attach: runId }, secondTurn.signal)
+
+    expect(collected.isError).toBe(false)
+    expect(collected.value).toMatchObject({
+      runId,
+      result: { answer: 'the detached child answered' },
+    })
+  })
+
+  it('refuses to collect a run id nothing started', async () => {
+    const { ctx, parent } = await withTool([])
+    const turn = new AbortController()
+
+    const result = await callTool(ctx, parent, { attach: 'run-that-never-existed' }, turn.signal)
+
+    // Named, not empty: an id that reaches nothing is either a typo or an
+    // outcome already collected, and both need saying.
+    expect(result.isError).toBe(true)
+    expect((result.content[0] as { text: string }).text).toContain('no run run-that-never-existed')
+  })
+
+  it('leaves the foreground path exactly as it was: no detached flag, no runId-only return', async () => {
+    const { ctx, parent } = await withTool([textResponse('foreground answer')])
+    const turn = new AbortController()
+
+    const result = await callTool(ctx, parent, {
+      meta: { name: 'foreground', description: 'the ordinary path' },
+      script: 'const answer = await agent(\'do it now\')\nreturn { answer }',
+    }, turn.signal)
+
+    // The value comes back from THIS call, which is the difference the flag
+    // makes and the reason a foreground run stays the default.
+    expect(result.isError).toBe(false)
+    expect(result.value).toMatchObject({
+      agentsStarted: 1,
+      result: { answer: 'foreground answer' },
+    })
   })
 })

@@ -16,6 +16,7 @@ import { brandString } from '@deepseek-ai/dsh-brand'
 import type { LeaseStoreContract, RunLease, WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease-contract'
 import { dshHomePath } from '@deepseek-ai/dsh-home-paths'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import { parentAgentOptionsForDelegation } from '@deepseek-ai/dsh-subagent'
 import { DefinitionRegistry, planNestedRun } from '@deepseek-ai/dsh-workflow-registry'
 import type {
   ChildFailurePolicy,
@@ -404,6 +405,12 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     const handle = await agents.create({
       sessionId: session,
       meta: { parentSession: request.parent.id },
+      // The launcher's LLM route, inherited the same way a delegated child
+      // inherits it. Without this the run holds an agent with no route and
+      // every `agent()` in its script fails: "outliving the launcher" is about
+      // SCOPES, and a detached run that also loses the model it was started
+      // with cannot do the work it was detached for.
+      agentOptions: parentAgentOptionsForDelegation(request.parent),
     }).catch((error: unknown) => {
       throw new WorkflowError(
         `detached workflow was not started: ${error instanceof Error ? error.message : String(error)}`,

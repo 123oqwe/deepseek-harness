@@ -29,13 +29,17 @@ kind: "package-reference"
 
 ### 调用工具
 
-模型提交三个参数：`meta`（必需的身份数据：`name`、`description`，以及可选的 `whenToUse` 与 `phases`）、`script`（必需的纯 JavaScript 脚本体——不含 `export const meta` 语句；工具描述携带完整的编写约定）与 `args`（可选 JSON 对象，作为全局变量 `args` 向脚本公开；裸列表应包装到字段中，使协议 schema 如实表达形态）。
+模型提交 `meta`（身份数据：`name`、`description`，以及可选的 `whenToUse` 与 `phases`）、`script`（纯 JavaScript 脚本体——不含 `export const meta` 语句；工具描述携带完整的编写约定）与 `args`（可选 JSON 对象，作为全局变量 `args` 向脚本公开；裸列表应包装到字段中，使协议 schema 如实表达形态）。除非该调用是一次 attach，否则 `script` 与 `meta` 必须成对给出。
 
 成功返回规范包络 `{ runId, agentsStarted, result }`，向模型渲染为 `workflow "<name>" completed (<count> agent<optional-s>).`，后接 `Return value:` 与美化打印的 JSON。无法启动的工作流——脚本解析或 meta 校验失败——返回模型可以修正的错误。取消与执行失败返回 `Error: workflow run was cancelled` 或 `Error: workflow run failed: <error>`；部分输出绝不会被报告为成功。
 
+### 分离式运行（detached）
+
+`detached: true` 启动运行并立即返回 `runId`，该运行在本轮次结束后继续执行；`attach: "<runId>"`（不带 `script` 或 `meta`）在本轮次或之后任一轮次收取该运行的值。分离式运行持有**自己的** agent 与 session,并继承启动方的 LLM 路由,因此它不依赖启动它的那个轮次的任何作用域,也刻意**不**绑定该轮次的中止信号。指向不存在运行的 id 会被具名拒绝:它从未在此启动,或其结果已被收取。前台路径未变,且仍是默认——值在同一次调用中返回的运行不会被遗忘。
+
 ### 运行期间的预期
 
-脚本运行期间，父级轮次会等待：工具启动运行、等待其结果，并始终 dispose（资源释放）它，因此脚本及其子 agent 在每条路径上完全停稳——包括从父级步骤中止信号桥接而来的取消。模型只看到最终结果，永远不会看到中间子 agent 消息；子 agent 自己的工作不会进入父级对话。
+前台脚本运行期间,父级轮次会等待:工具启动运行、等待其结果，并始终 dispose（资源释放）它，因此脚本及其子 agent 在每条路径上完全停稳——包括从父级步骤中止信号桥接而来的取消。模型只看到最终结果，永远不会看到中间子 agent 消息；子 agent 自己的工作不会进入父级对话。
 
 ### 配置
 

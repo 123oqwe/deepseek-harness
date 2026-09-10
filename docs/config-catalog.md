@@ -1475,7 +1475,7 @@ Requires: `agents` · `sessionProjections`
 export type Config = Readonly<Record<string, never>>
 ```
 
-Source: [`packages/llm/llm-retry/src/index.ts:25`](../packages/llm/llm-retry/src/index.ts)
+Source: [`packages/llm/llm-retry/src/index.ts:28`](../packages/llm/llm-retry/src/index.ts)
 
 <a id="deepseek-aidsh-lsp-stdio"></a>
 
@@ -1931,6 +1931,22 @@ export interface Config {
 ```
 
 Source: [`packages/guard/repeat-tool-reminder/src/index.ts:28`](../packages/guard/repeat-tool-reminder/src/index.ts)
+
+<a id="deepseek-aidsh-retry-cockatiel"></a>
+
+## `@deepseek-ai/dsh-retry-cockatiel`
+
+```ts config-catalog
+/** Deployment-varying breaker settings. */
+export interface Config {
+  /** Consecutive counted failures that open a destination. */
+  readonly consecutiveFailures: number
+  /** Milliseconds a destination stays open before a half-open probe. */
+  readonly openMs: number
+}
+```
+
+Source: [`packages/reliability/retry-cockatiel/src/index.ts:30`](../packages/reliability/retry-cockatiel/src/index.ts)
 
 <a id="deepseek-aidsh-run"></a>
 
@@ -2497,7 +2513,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/storage/storage-json/src/index.ts:28`](../packages/storage/storage-json/src/index.ts)
+Source: [`packages/storage/storage-json/src/index.ts:40`](../packages/storage/storage-json/src/index.ts)
 
 <a id="deepseek-aidsh-storage-sqlite"></a>
 
@@ -2537,7 +2553,7 @@ export interface Config {
 export type JournalMode = 'wal' | 'delete' | 'truncate' | 'persist'
 ```
 
-Source: [`packages/storage/storage-sqlite/src/index.ts:24`](../packages/storage/storage-sqlite/src/index.ts)
+Source: [`packages/storage/storage-sqlite/src/index.ts:26`](../packages/storage/storage-sqlite/src/index.ts)
 
 <a id="deepseek-aidsh-subagent-acp"></a>
 
@@ -3364,7 +3380,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/workflow/tool-workflow/src/index.ts:32`](../packages/workflow/tool-workflow/src/index.ts)
+Source: [`packages/workflow/tool-workflow/src/index.ts:33`](../packages/workflow/tool-workflow/src/index.ts)
 
 <a id="deepseek-aidsh-tools"></a>
 
@@ -3697,7 +3713,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/workflow/workflow-worker-thread/src/index.ts:52`](../packages/workflow/workflow-worker-thread/src/index.ts)
+Source: [`packages/workflow/workflow-worker-thread/src/index.ts:53`](../packages/workflow/workflow-worker-thread/src/index.ts)
 
 <a id="deepseek-aidsh-workspace-trust-local"></a>
 
@@ -3873,6 +3889,7 @@ Imported as libraries by other packages; a `cordis.yml` cannot load them.
 - `@deepseek-ai/dsh-plugin-compat` ([`packages/plugin/plugin-compat/src/index.ts`](../packages/plugin/plugin-compat/src/index.ts))
 - `@deepseek-ai/dsh-plugin-lock` ([`packages/plugin/plugin-lock/src/index.ts`](../packages/plugin/plugin-lock/src/index.ts))
 - `@deepseek-ai/dsh-plugin-manifest` ([`packages/plugin/plugin-manifest/src/index.ts`](../packages/plugin/plugin-manifest/src/index.ts))
+- `@deepseek-ai/dsh-plugin-migrations` ([`packages/plugin/plugin-migrations/src/index.ts`](../packages/plugin/plugin-migrations/src/index.ts))
 - `@deepseek-ai/dsh-plugin-ownership` ([`packages/plugin/plugin-ownership/src/index.ts`](../packages/plugin/plugin-ownership/src/index.ts))
 - `@deepseek-ai/dsh-plugin-provenance` ([`packages/plugin/plugin-provenance/src/index.ts`](../packages/plugin/plugin-provenance/src/index.ts))
 - `@deepseek-ai/dsh-principal` ([`packages/identity/principal/src/index.ts`](../packages/identity/principal/src/index.ts))

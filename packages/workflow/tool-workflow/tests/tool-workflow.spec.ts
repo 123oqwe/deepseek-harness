@@ -350,11 +350,17 @@ describe('dsh-tool-workflow', () => {
     expect(engine.requests.length).toBe(0)
   })
 
-  it('validates its own arguments via the schema DSL (missing script)', async () => {
+  it('refuses a call that neither starts nor attaches', async () => {
+    // `script` and `meta` stopped being schema-required when `attach` arrived:
+    // an attach call carries neither. The requirement is now a relation
+    // between arguments, which a per-field schema cannot state, so the tool
+    // states it — and an empty call is still refused, just with a message that
+    // names both ways to make the call valid.
     const { ctx, parent } = await setup()
     const result = await execute(ctx, {}, { agent: parent })
     expect(result.isError).toBe(true)
-    expect(result.error?.info?.code).toBe('INVALID_ARGS')
+    expect((result.content[0] as { text: string }).text)
+      .toContain('`script` and `meta` are required unless `attach` is given')
   })
 
   it('skips workflow startup when exec.signal is already aborted', async () => {
@@ -420,11 +426,17 @@ describe('dsh-tool-workflow', () => {
     const { ctx } = await setup()
     const tool = ctx.tools.get('workflow')!
     expect(tool.presentResult!({ script: SCRIPT, meta: META }, { content: [], isError: false })).toEqual({ card: 'generic' })
-    // defineTool soft-validates presentation args: a malformed logged shape
-    // (wrong fields entirely, or a call missing its meta) falls back to
-    // undefined instead of throwing mid-replay.
-    expect(tool.presentCall!({ not: 'the schema' })).toBeUndefined()
-    expect(tool.presentCall!({ script: SCRIPT })).toBeUndefined()
+    // defineTool soft-validates presentation args, and the shapes it can
+    // reject narrowed when `script`/`meta` stopped being schema-required: a
+    // logged call carrying neither is now a legal shape and renders with a
+    // fallback title instead of refusing. What matters for replay is unchanged
+    // — presentation never throws on a logged shape it does not recognize.
+    expect(tool.presentCall!({ not: 'the schema' })).toMatchObject({ title: 'workflow: unnamed' })
+    // A script with no meta is a legal SHAPE now (the pair is required by the
+    // tool, not by the schema), so presentation renders it rather than
+    // refusing: replay must not depend on a validity rule that moved.
+    expect(tool.presentCall!({ script: SCRIPT })).toMatchObject({ card: 'generic' })
+    expect(tool.presentCall!({ attach: 'run-7' })).toMatchObject({ title: 'workflow: attach run-7' })
   })
 
   it('has the namespace-plugin export shape (no stray default)', () => {

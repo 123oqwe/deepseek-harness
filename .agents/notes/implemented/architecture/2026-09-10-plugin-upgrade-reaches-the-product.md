@@ -12,9 +12,9 @@ Epic P1-10 built a six-phase upgrade transaction with a green library and zero p
 
 `dsh plugin add` / `update` now runs the transaction. `runPlugin` holds one cross-process fencing lease across the WHOLE span — crash recovery, pnpm, data migration, layer reconciliation — because a lease released between the package manager and the migration reopens exactly the window the epic exists to close: new code installed, data not yet converted, another process free to start.
 
-The transaction reaches the medium through `StorageBackend`'s optional `migration` facet, never a path. A new facet operation, `stampedVersion`, answers the question the upgrade actually has: which version is the DATA at. That is neither the package version (which moves independently) nor the version the new build wants, and only the medium knows it. `storage-json`'s `per-record` layout reports no stamp, because it stamps each record and reads a record at another version as absent — it self-heals rather than migrating.
+The transaction reaches the medium through `StorageBackend`'s optional `migration` facet, never a path. `stampedVersion` answers the question the upgrade actually has: which version is the DATA at. That is neither the package version (which moves independently) nor the version the new build wants, and only the medium knows it. `storage-json`'s `per-record` layout reports no stamp, because it stamps each record and reads a record at another version as absent — it self-heals rather than migrating.
 
-The manifest vocabulary is bridged rather than duplicated: `apps/cli/src/plugin-migration.ts` reads P1-01's `dsh.migrations` and `dsh.dataStores` from the INSTALLED new version, derives the unit from the declared data store, and loads each step's module by `import()` — gated by the same `evaluatePreMountAdmission` a production boot applies, because running a migration module executes the plugin's own code in the CLI process. `MigrationDeclaration` gained one optional field, `module`; a declared step without one refuses the whole chain rather than guessing a convention.
+The manifest vocabulary is bridged rather than duplicated: `apps/cli/src/plugin-migration.ts` reads P1-01's `dsh.migrations` and `dsh.dataStores` from the INSTALLED new version, derives the unit from the declared data store, and loads each step's module by `import()` — gated by the same `evaluatePreMountAdmission` a production boot applies, because running a migration module executes the plugin's own code in the CLI process. `MigrationDeclaration` gained `module`, `reversible` and `backup`; the last two are required whenever a step ships a module, and a declared step with no module refuses the whole chain rather than guessing a convention. The unit an upgrade targets is the migration module's own exported `descriptor` — the value the plugin passes to `kv.open` — not a shape assembled from a domain name.
 
 ## Alternatives considered
 
@@ -45,6 +45,12 @@ What it cost, carried openly rather than hidden behind green tests:
 The first `migration` facet read and wrote `{ version, records }`. The JSON backend's real document is `{ unit: { name, version }, global, tables }` — `format.ts` has always said so — so `stampedVersion` would have found no stamp on any real unit and a migration would have rewritten a document nothing opens. Nine facet cases passed, because each one seeded the invented shape and read it back.
 
 That is the same failure as the invented `plugins/<name>/data/db` path, one layer down and harder to see: not a path nothing writes, but a FORMAT nothing writes, inside the right file. The fix is structural rather than a corrected literal — the facet now converts a `UnitContent`, the same value `KvUnit.loadAll` returns, and writes through `format.ts`'s own `serialize`. The cases seed through `kv.open`/`putRecord`, so the medium they assert over is the medium the backend produces, and one case re-opens the switched-in unit with the new descriptor: a migrated document in any other format fails there.
+
+### The same third cause, one layer down
+
+The recurring finding this program keeps re-deriving is that a mutation which fails to redden has three causes: a weak suite, an equivalent mutant, or the tests not running the code being mutated. The invented `{ version, records }` format is the third cause wearing a disguise — the tests DID run the code, and the code did what they asked; what neither touched was the format the product reads. A suite can be self-consistent with a fiction, and every case in it passes.
+
+The probe that distinguishes it is not a print statement but a round trip: seed through the real writer, assert through the real reader. Both of this epic's medium defects — the invented path and the invented format — die to the same question, asked about data instead of about callers: name the production writer whose output this test reads.
 
 ### Why it is recorded
 

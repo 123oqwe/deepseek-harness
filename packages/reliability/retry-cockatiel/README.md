@@ -38,16 +38,20 @@ Narrowing this later to a provider key would leave the contract unchanged; widen
 
 `execute` takes a `classify` callback and this package never inspects a raw error. Whether a failure means the ENDPOINT is unhealthy is [`classifyFailure`](../retry/README.md)'s decision applied to facts only the caller can read: a policy denial and a malformed request are permanent, and counting them would open a breaker on a working destination. A permanent failure passes straight through `cockatiel`'s predicate, which records neither a success nor a failure, so the breaker does not move.
 
+## Dev Note
+
+The provider stores its policies in a `private readonly` map rather than a `#private` field. Cordis hands callers a Service proxy, so `this` inside a method is not the instance and a `#private` access throws `Receiver must be an instance of class …`. `@deepseek-ai/dsh-lease`'s store is written the same way for the same reason.
+
 ## Model Experience
 
-**No model-visible surface, no tokens, no KV-cache effect.** This package adds no tool, no prompt text and no session event. A refusal reaches the model only as whatever its caller does with the thrown error; the breaker itself is invisible to a request.
+None, as this package refuses or admits an attempt before the adapter is reached and registers no tool, prompt text or session event.
+
+#### KV Cache effect
+
+Nothing here enters a model request. A refusal reaches the model only as whatever its caller does with the thrown error.
 
 ## Known Limitations and Deferred Work
 
 - **The breaker guards the FIRST chunk, not the whole stream.** `@deepseek-ai/dsh-llm` consults it where the first chunk is pulled, because that is where an endpoint's health shows: a stream that produced a chunk answered. A failure arriving mid-stream is the transport's or the model's, and does not move the breaker — so a destination that reliably starts and then fails will not open. Widening this would mean deciding, inside the breaker, which mid-stream failures are the endpoint's fault, which is the classifier's job and is not observable at a chunk boundary.
 - **Breaker state is per process and not persisted.** A restart re-closes every destination, so a run that restarts against a dead endpoint pays the threshold again. Persisting it would make an endpoint's health durable state with an owner and an eviction policy, which nothing has asked for; `cockatiel` exposes `toJSON`/`state` if it is ever wanted.
 - **`openMs` is a fixed period, not a backoff.** `cockatiel` supports a growing open period; this provider passes a single duration because no deployment has asked to tune a curve, and one number is the thing an operator can reason about.
-
-## Dev Note
-
-The provider stores its policies in a `private readonly` map rather than a `#private` field. Cordis hands callers a Service proxy, so `this` inside a method is not the instance and a `#private` access throws `Receiver must be an instance of class …`. `@deepseek-ai/dsh-lease`'s store is written the same way for the same reason.

@@ -12,9 +12,9 @@ Epic P1-10 造出了一套六阶段升级事务:库全绿,产品零调用者。`
 
 `dsh plugin add` / `update` 现在真的跑这套事务。`runPlugin` 在**整段**跨进程 fencing 租约内执行——崩溃恢复、pnpm、数据迁移、层列表 reconcile——因为在包管理器与迁移之间释放租约,恰好重开这个 epic 要关掉的那个窗口:新代码已装、数据未转、另一个进程可以开始。
 
-事务只通过 `StorageBackend` 的可选 `migration` facet 触达介质,永不命名路径。新增的 facet 操作 `stampedVersion` 回答升级真正要问的问题:**数据**在哪个版本。它既不是包版本(两者独立移动),也不是新构建想要的版本,而且只有介质知道。`storage-json` 的 `per-record` 布局报告"无版本戳":它按记录打戳,把异版本记录读作缺失——自愈,而非迁移。
+事务只通过 `StorageBackend` 的可选 `migration` facet 触达介质,永不命名路径。facet 操作 `stampedVersion` 回答升级真正要问的问题:**数据**在哪个版本。它既不是包版本(两者独立移动),也不是新构建想要的版本,而且只有介质知道。`storage-json` 的 `per-record` 布局报告"无版本戳":它按记录打戳,把异版本记录读作缺失——自愈,而非迁移。
 
-清单词汇是**桥接**而非复制:`apps/cli/src/plugin-migration.ts` 从**已安装的新版本**读 P1-01 的 `dsh.migrations` 与 `dsh.dataStores`,由声明的 data store 推出 unit,并用 `import()` 加载每一步的模块——受与生产启动同一套 `evaluatePreMountAdmission` 把关,因为执行迁移模块就是在 CLI 进程里跑插件自己的代码。`MigrationDeclaration` 只增加一个可选字段 `module`;声明了步骤却不给模块,整条链拒绝执行,而不是去猜某种约定。
+清单词汇是**桥接**而非复制:`apps/cli/src/plugin-migration.ts` 从**已安装的新版本**读 P1-01 的 `dsh.migrations` 与 `dsh.dataStores`,由声明的 data store 推出 unit,并用 `import()` 加载每一步的模块——受与生产启动同一套 `evaluatePreMountAdmission` 把关,因为执行迁移模块就是在 CLI 进程里跑插件自己的代码。`MigrationDeclaration` 增加了 `module`、`reversible` 与 `backup`,后两者在步骤带模块时必填;声明了步骤却不给模块,整条链拒绝执行,而不是去猜某种约定。升级作用的 unit 取自迁移模块自己导出的 `descriptor`——插件传给 `kv.open` 的同一个值——而不是由域名拼出来的形状。
 
 ## Alternatives considered
 
@@ -45,6 +45,12 @@ Epic P1-10 造出了一套六阶段升级事务:库全绿,产品零调用者。`
 第一版 `migration` facet 读写的是 `{ version, records }`。而 JSON 后端真实的文档是 `{ unit: { name, version }, global, tables }`——`format.ts` 一直这么写着——于是 `stampedVersion` 在任何真实单元上都找不到版本戳,而一次迁移会重写一份没有任何人打开的文档。九条 facet 用例全绿,因为每一条都自己播种那个被发明出来的形状,再把它读回来。
 
 这与被发明的 `plugins/<name>/data/db` 路径是同一种失败,只是低一层、更难看见:不是"没人写的路径",而是正确文件里"没人写的格式"。修复是结构性的而非改一个字面量——facet 现在转换 `UnitContent`(即 `KvUnit.loadAll` 返回的同一个值),并通过 `format.ts` 自己的 `serialize` 写出。用例改为经 `kv.open`/`putRecord` 播种,于是它们断言的介质就是后端真正产出的介质;其中一条用新 descriptor 重新打开换入后的单元:任何其他格式的迁移文档都会在那里失败。
+
+### 同一个"第三因",低一层
+
+本程序反复重新推导出的那条发现是:一次变异没能变红,只有三种原因——套件弱、变异等价,或者**测试根本没有在跑被变异的代码**。被发明的 `{ version, records }` 格式,是第三因换了副面孔:测试**确实**跑了那段代码,代码也确实做了它们要求的事;两边都没碰到的,是产品真正读取的那个格式。一个套件可以与一则虚构自洽,而其中每条用例都通过。
+
+区分它的探针不是打印语句,而是一次往返:用真实的写入方播种,用真实的读取方断言。本 epic 的两处介质缺陷——被发明的路径与被发明的格式——都死于同一个问题,只是这次问的是数据而不是调用者:说出那个"其输出正是这条测试所读"的生产写入方。
 
 ### 为什么记录
 
