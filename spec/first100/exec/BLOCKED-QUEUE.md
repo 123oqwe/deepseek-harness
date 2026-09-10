@@ -4346,3 +4346,24 @@ Both gates are right about what they check. The adoption HAS landed — `package
 3. **Extend the epic's declared `files[]`.** `tests/first100/registry.json` is byte-pinned against the vendored source and gated as such.
 
 **What is being asked:** which of the three, or a fourth. On this tree the record states the truth (`landsIn` removed, reason carries the landing SHA and the production consumer) and `verify-make-vs-use` is consequently RED — reported rather than papered over, because the alternative is a record that says an adoption has not happened when it has.
+
+
+### BLOCKED-176 — seven package groups still have no group README declaring subsystem ownership
+
+**Status:** DEBT RECORDED, awaiting the delegate's assignment. `packages/reliability` is NOT among them: it is P4-11's own group and its README, subsystem page and pair record landed with that epic.
+
+`verify-subsystem-pages` (a doc-sync leaf, not a registry gate) reports one violation per group with no group README linking an owning `docs/subsystems/*.md` page — or a justified entry in the gate's own `GROUPS_WITHOUT_SUBSYSTEM_PAGE` table. Seven remain, all predating this slice:
+
+| group | packages in it | owning epic |
+|---|---|---|
+| `action` | `action-manifest`, `action-ledger` | P2-03 and P4-12 (from their own Model-Experience allowlist entries) |
+| `collaboration` | `blackboard`, `control-priority`, `intake-dedup`, `lease-contract`, `taskboard`, `workflow-journal` | P4-06, P4-07 and P4-09 for three of the six; the rest are unattributed here |
+| `memory` | `memory` | not attributed here — read the epic that created them |
+| `migration` | `feature-gates` | P0-05 (from its allowlist entry) |
+| `policy` | `capability-token`, `capability-token-file`, `risk-taxonomy` | P2-01 for the first two; `risk-taxonomy` is unattributed here |
+| `run` | `lease`, `lease-sqlite`, `message-bus`, `run`, `taskboard-sqlite` | P4-07 and P5-11 for two; the rest are unattributed here |
+| `schema` | `schema-registry` | not attributed here |
+
+Attributions are given only where this session read them from a record (each package's Model-Experience allowlist entry names its epic); the rest are left open rather than guessed, because assigning a documentation debt to the wrong epic is worse than leaving it unassigned.
+
+**What is being asked:** which epic's next slice writes each. Two shapes are available and the gate accepts either — a real `docs/subsystems/<group>.md` page with the group README linking it (what `reliability` did), or an entry in `GROUPS_WITHOUT_SUBSYSTEM_PAGE` carrying a reviewable reason (what `plugin`, `kernel` and `util` did). The choice is per group and is a documentation-ownership decision, not a mechanical one.
