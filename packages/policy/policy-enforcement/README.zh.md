@@ -17,6 +17,7 @@ kind: "package-reference"
 - [理解实现](#understand-the-implementation)
 - [Model Experience](#model-experience)
 - [已知局限与后续工作](#known-limitations-and-deferred-work)
+- [开发备注](#dev-note)
 
 -----
 
@@ -72,3 +73,12 @@ kernel 在每次调用时经 `ctx.get('trustKernel')` 解析,从不缓存:它在
 - **策略看不到 token 的 verbs 与 resources。**跨过边界的是 `redactTokenForLog` 的投影——digest、subject、tenant、capability、委派深度、过期时间——P2-02 已审定这一形态在 token 层之外是安全的。因此策略可以拒绝"授权所指 capability 不对"的动作,却无法拒绝"授权缺少某个具体资源上的某个动词"的动作。扩展那个投影是 P2-02 的决定,不该由本包另起一份。
 - **上下文事实默认取最严值,尚未从已挂载的服务读取。**在派发路径传入真实值之前,`workspaceTrust` 默认 `untrusted`、`permissionPosture` 默认 `default`;针对一个"悄悄兜底成放行"的事实所写的策略,执行的将不是它所声明的东西——这就是默认方向取严而非取便的原因。
 - **审计记录送往 kernel 的 `auditAppend`,而在部署未配置 sink 时它是空操作。**没有接 sink 的组合会决策、会执行,但不会记录。
+
+### 开发备注
+
+<details>
+<summary>维护者工作上下文——点击展开</summary>
+
+无。
+
+</details>

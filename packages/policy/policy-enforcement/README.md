@@ -17,6 +17,7 @@ English | [中文](README.zh.md)
 - [Understand the implementation](#understand-the-implementation)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
+- [Dev Note](#dev-note)
 
 -----
 
@@ -72,3 +73,12 @@ Nothing here enters a model request; a refusal reaches the model as its dispatch
 - **A policy cannot see the token's verbs or resources.** What crosses is `redactTokenForLog`'s projection — digest, subject, tenant, capability, delegation depth, expiry — which P2-02 audited as safe outside the token layer. A policy can therefore refuse an action whose authority names the wrong capability, but not one whose authority omits a specific verb on a specific resource. Extending that projection is P2-02's decision, not this package's to fork.
 - **The context facts default closed and are not yet read from mounted services.** `workspaceTrust` defaults to `untrusted` and `permissionPosture` to `default` until a dispatch path passes real ones; a policy written against a fact that silently defaulted open would enforce something other than what it says, which is why the direction is closed rather than convenient.
 - **The audit record goes to the kernel's `auditAppend`, which is inert unless a deployment configured a sink.** A composition that wires none decides and enforces but records nothing.
+
+### Dev Note
+
+<details>
+<summary>Working context for maintainers — click to expand</summary>
+
+None.
+
+</details>
