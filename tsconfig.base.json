@@ -280,6 +280,13 @@
       // FailureFacts through this subpath instead of the root (first100 P4-11.P).
       // The subpath is real and published in dsh-retry's package.json exports.
       "@deepseek-ai/dsh-retry/classify": ["./packages/reliability/retry/src/classify.ts"],
+      // Same class as the entries above, and caught the same way it always is
+      // -- by a mutation that failed to redden. dsh-plugin-migrations publishes
+      // a ./transaction subpath; without this alias the source plane cannot
+      // resolve it, so `pnpm vitest` silently ran the BUILT lib/ instead and
+      // three mutations to src/transaction.ts changed nothing the tests could
+      // see (first100 P1-10.P).
+      "@deepseek-ai/dsh-plugin-migrations/transaction": ["./packages/plugin/plugin-migrations/src/transaction.ts"],
       // BEGIN generated package aliases — pnpm run gen-tsconfig-paths
       "@deepseek-ai/dsh-acp": ["./packages/acp/acp/src"],
       "@deepseek-ai/dsh-acp-app": ["./packages/bundle/acp-app/src"],

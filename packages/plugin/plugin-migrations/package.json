@@ -23,7 +23,11 @@
       "default": "./lib/types/types.js"
     },
     "./src/*": "./src/*",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./transaction": {
+      "types": "./lib/types/transaction.d.ts",
+      "default": "./lib/types/transaction.js"
+    }
   },
   "files": [
     "lib/index.js",
@@ -33,10 +37,12 @@
   "license": "MIT",
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-brand": "workspace:^"
+    "@deepseek-ai/dsh-brand": "workspace:^",
+    "@deepseek-ai/dsh-atomic-write": "workspace:^"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-brand": "workspace:^"
+    "@deepseek-ai/dsh-brand": "workspace:^",
+    "@deepseek-ai/dsh-atomic-write": "workspace:^"
   }
 }
