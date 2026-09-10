@@ -35,6 +35,10 @@ declare module '@deepseek-ai/cordis' {
 
 export { BreakerOpenError } from './provider.ts'
 export type { BreakerDestination, CircuitBreakerContract } from './provider.ts'
+export { chargedRun } from './root.ts'
+export type { DelegationNode } from './root.ts'
+export { RunRetryUsageStore } from './usage.ts'
+export type { RunRetryUsageContract } from './usage.ts'
 export { classifyFailure, spendsRetryBudget } from './classify.ts'
 export type { FailureFacts, PermanentReason, RetryVerdict } from './classify.ts'
 export { admitRetry, NO_RETRIES_USED } from './budget.ts'

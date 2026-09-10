@@ -7128,6 +7128,9 @@ importers:
       '@deepseek-ai/dsh-action-ledger':
         specifier: workspace:^
         version: link:../../action/action-ledger
+      '@deepseek-ai/dsh-principal':
+        specifier: workspace:^
+        version: link:../../identity/principal
 
   packages/reliability/retry-cockatiel:
     dependencies:

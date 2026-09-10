@@ -497,6 +497,24 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     }
   }
 
+  /**
+   * Register a workflow definition so a nested run can name it (P4-09 must[0]).
+   *
+   * On the CONCRETE engine, not on `WorkflowEngine`. The abstract seam cannot
+   * carry it: `RegisteredDefinition` lives in `@deepseek-ai/dsh-workflow-registry`,
+   * which already depends on `@deepseek-ai/dsh-workflow` for `WorkflowRunId`,
+   * so declaring it upstream is a project-reference cycle — measured, not
+   * assumed. A second engine that wants nesting implements this method under
+   * the same name; nothing in the seam forces it to, and that gap is stated
+   * in this package's Known Limitations rather than left for a reader to find.
+   *
+   * The digest is the caller's, not computed here: must[0] calls a definition a
+   * signed artifact, and a registry that derived the digest itself would be
+   * attesting the bytes rather than recording an attestation. `signer` is
+   * recorded and NOT verified — this build has no signature root to verify it
+   * against, which is stated rather than implied by the field's presence.
+   * @param definition - the definition to register, keyed by its digest.
+   */
   registerDefinition(definition: RegisteredDefinition): void {
     const outcome = this.definitions.register(definition)
     if (!outcome.registered) {

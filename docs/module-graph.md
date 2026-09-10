@@ -510,6 +510,7 @@ flowchart TD
   pkg_plugin_compat --> pkg_brand
   pkg_plugin_compat --> pkg_schema_registry
   pkg_retry --> pkg_action_ledger
+  pkg_retry --> pkg_principal
   pkg_session_persistence_jsonl --> pkg_session
   pkg_session_persistence_jsonl --> pkg_session_persistence
   pkg_session_projection_cache --> pkg_session
@@ -1460,7 +1461,7 @@ flowchart TD
 | [`settings`](../packages/settings/settings) | `settings` | [`brand`](../packages/util/brand), [`invariants`](../packages/runtime-diagnostics/invariants), [`session`](../packages/core/session) |
 | [`session-snapshot`](../packages/test-support/session-snapshot) | `test-support` | [`session`](../packages/core/session) |
 | [`plugin-compat`](../packages/plugin/plugin-compat) | `plugin` | [`brand`](../packages/util/brand), [`schema-registry`](../packages/schema/schema-registry) |
-| [`retry`](../packages/reliability/retry) | `reliability` | [`action-ledger`](../packages/action/action-ledger) |
+| [`retry`](../packages/reliability/retry) | `reliability` | [`action-ledger`](../packages/action/action-ledger), [`principal`](../packages/identity/principal) |
 | [`session-persistence-jsonl`](../packages/session/session-persistence-jsonl) | `session` | [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence) |
 | [`session-projection-cache`](../packages/session/session-projection-cache) | `session` | [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection), [`storage-domain`](../packages/storage/storage-domain) |
 | [`settings-file`](../packages/settings/settings-file) | `settings` | [`atomic-write`](../packages/util/atomic-write), [`home-paths`](../packages/util/home-paths), [`settings`](../packages/settings/settings) |
