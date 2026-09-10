@@ -2,19 +2,19 @@
 
 Per lifecycle §1: written before any code. Everything below is measured at `2c6940be62`, not recalled. must[1] and acceptance[1] close here, and the epic preFlight assigned them to U precisely because "all layers consume the same budget" is a statement about callers.
 
-## The measurement that decides the whole stage: there is no run to charge
+## The carrier, corrected — my first measurement was wrong in half
 
-The delegate's framing — "a parent and each child session account against the SAME run budget" — assumes a run identity the tree can name. Measured, it cannot:
+**Recorded because the error is the useful part.** I grepped for `ctx.runs` consumers OUTSIDE `run/run` and read the zero as "nothing creates a Run". The plugin is its own consumer: `RunPlugin` opens a Run from agent events — `run/run/src/index.ts:853` on `agent/session-start`, `:901` adopting every already-live agent at startup, with `:856`/`:859`/`:862` on `agent/disposed` / `agent/error` / `agent/pre-step` — and it is mounted in `bundle/base` (`cordis.patch.yml:563`), so it reaches every shipping profile. **Runs are created in production, one per agent session.** Searching for external consumers of a service that drives itself from events finds nothing and means nothing.
 
-| carrier | state at `2c6940be62` |
+What IS zero is narrower and still true: `RunService.attachSession` — the multi-session edge, one Run spanning several sessions — has no production caller. So a Run today is 1:1 with a session, which is exactly why the budget cannot simply be "this agent's run".
+
+| fact | state at `2c6940be62` |
 | --- | --- |
-| `ctx.runs` (the Run service) | **zero production consumers outside its own package.** `ctx.runs`, `runs.create` and `runs.advance` appear nowhere in `packages/*/*/src` beyond `run/run`. Nothing in the harness creates a Run. |
-| `RunService.attachSession` | **zero production callers.** The session→run edge exists and is never written, so `runsForSession` returns `[]` for every session in a shipped profile. |
-| `session.header.parentSession` | **real and read in production** — `experimental/agent-team/src/roster.ts:94` and `:223` walk it today. |
+| a Run per agent session | **created in production** by `RunPlugin` from `agent/session-start`, mounted in `bundle/base` |
+| `Agent.runId` | already on the agent; `RunPlugin` is its sole writer, set when it opens the Run |
+| `RunService.attachSession` (one Run, many sessions) | **zero production callers** |
 
-So charging "the run" would require P4-11.U to also make something CREATE runs and attach sessions to them — a product decision about what a Run is for, which belongs to whoever owns the Run service, not to the retry epic. Building it here would be this program's recurring shape: an epic inventing a producer so that its own clause has a subject.
-
-**Proposed carrier, for the delegate to confirm before code:** the budget is keyed by the ROOT of the delegation chain — the session reached by following `parentSession` until it is absent. That is the run in everything but name, it exists today, and every layer in scope can compute it from what it already holds. When Runs acquire a real producer, the key becomes the `RunId` and nothing else about this stage changes; the note will say so, so a later reader does not mistake the root session for the permanent answer.
+**Carrier, ruled:** the budget is keyed by the run of the DELEGATION ROOT — follow `parentSession` to the session with none, and take that session's `RunId`. Parent and child each have their own Run (the plugin opens one per session), and the retry budget is charged to the root's. That is a real `RunId` from the first line of code rather than a stand-in, and the stacking must[1] names is blocked without inventing any producer. When `attachSession` acquires a real consumer and one Run spans a delegation tree, the key's MEANING does not change — it is still the root's run id.
 
 ## What `llm-retry` counts today, and the exact line the mutation must break
 
@@ -49,10 +49,6 @@ P4-11.P deferred the `circuitBreaker` family registration because P0-03 must[2] 
 ## 4.4a, before signing
 
 Counted at `2c6940be62`: `classifyFailure`, `admitRetry` and `spendsRetryBudget` have **0** production callers, and `ctx.circuitBreaker` has none either. Every one of those numbers must be non-zero when U is signed, and the report must name the call sites rather than assert the count.
-
-## Open question for the delegate — one, and it blocks the code
-
-The carrier above. If the answer is "wait for a real Run producer", U cannot close must[1] and the honest move is a readiness entry against whoever owns it; if it is "key by the delegation root", the stage proceeds as written. I am not choosing this one alone: it decides whether must[1] closes in this epic or is directed out of it, which is a scope ruling rather than an implementation detail.
 
 ## Status
 
