@@ -315,6 +315,14 @@
       "delegateSession": "guanjieqiao-92",
       "signedAtUtc": "2026-09-10T05:40:05.343Z",
       "note": "Observation run 34439518421 @ 2d2e8f89ac (signed bundle, 20573/0; reds are P4-09's, admitted). 4.4b: C/P/U/F, P.3 (MCP ToolAnnotations raise-only mapping) and base U (11 cases incl. BLOCKED-159 record/enforcement consistency) all GREEN @ 2d2e8f89ac, 0 open findings. 4.4a: gateActionRisk in core/tools/src/external-effect.ts on both dispatch paths before ledger reserve; presets thresholds; action/risk-gated event logged with preset on every allow-by-preset (audit cannot diverge silently from execution); MCP annotations validated at the wire boundary and never lower risk without trustAnnotations; riskDomainTags on shipped tools; pwsh fixtures refreshed on a real pwsh. BLOCKED-159 closed on this observation."
+    },
+    {
+      "epic": "P4-08",
+      "rowDigestSha256": "20679e3dd043277cf187dc927fe42d91623ecf5ad7ffa4db87df3bdf6e774bf6",
+      "conclusion": "PASS",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-10T05:40:05.753Z",
+      "note": "Rebuilt sign-off (prior PASS withdrawn §12.13). Observation run 34439518421 @ 2d2e8f89ac (signed bundle, 20573/0; reds are P4-09's, admitted). 4.4b: base C/P/F rebuilt (fault matrix in its own spec, titles unchanged) and U with U.1/U.2/U.3 all GREEN @ 2d2e8f89ac, 0 open findings. 4.4a: journal persisted under dshHomePath('journals'); reconciliation via the action ledger in workflow-worker-thread resume.ts reached by the host resume path; compaction at run completion; must[2] (§12.44) and acceptance[2] verified-gated compaction (§12.46-A) implemented and mutation-proved. acceptance[2] signed on the decision half per §12.46-B/§12.74: inputs are constructed ArtifactRefs, the real producer is P6-09's artifact store — the saving itself is not yet observable in production; BLOCKED-172 carries that requirement on P6-09's readiness."
     }
   ]
 }
