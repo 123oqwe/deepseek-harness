@@ -8,7 +8,9 @@
     "src"
   ],
   "references": [
-    { "path": "../../packages/plugin/plugin-lock" },
+    {
+      "path": "../../packages/plugin/plugin-lock"
+    },
     {
       "path": "../../vendor/cordis"
     },
@@ -86,6 +88,9 @@
     },
     {
       "path": "../../packages/plugin/plugin-compat"
+    },
+    {
+      "path": "../../packages/plugin/plugin-migrations"
     }
   ]
 }

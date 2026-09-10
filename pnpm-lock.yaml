@@ -231,6 +231,9 @@ importers:
       '@deepseek-ai/dsh-plugin-manifest':
         specifier: workspace:^
         version: link:../../packages/plugin/plugin-manifest
+      '@deepseek-ai/dsh-plugin-migrations':
+        specifier: workspace:^
+        version: link:../../packages/plugin/plugin-migrations
       '@deepseek-ai/dsh-pwsh-local':
         specifier: workspace:^
         version: link:../../packages/shell/pwsh-local

@@ -19,6 +19,7 @@ import { mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, existsSync, 
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
+import { createHash } from 'node:crypto'
 import { brandString } from '@deepseek-ai/dsh-brand'
 
 import { reconcileUpgrade, runUpgrade, readUpgradeRecord, UPGRADE_PHASES, vacuumInto } from '@deepseek-ai/dsh-plugin-migrations/transaction'
@@ -262,40 +263,76 @@ describe('P1-10 acceptance[1]: the record and the disk are reconcilable', () => 
 })
 
 describe('P1-10 acceptance[2]: a failed upgrade does not change approved permissions', () => {
-  it('leaves the permission state byte-identical across a failed upgrade', async () => {
-    // This epic READS the permission state and never writes it. A case that
+  /**
+   * A harness home with the files an upgrade could plausibly disturb, seeded
+   * with CONTENT.
+   *
+   * An empty directory proves nothing: "nothing changed" is trivially true of
+   * a tree with nothing in it. The permission state this clause is about lives
+   * in P2-02's `capability-tokens.json` and P2-04's decisions, not in settings
+   * — `settings/src/index.ts` carries no permission, approval or allow
+   * vocabulary at all — so the token store is what gets seeded here, beside a
+   * settings file to catch a transaction that wandered into the wrong tree.
+   */
+  function harnessHome(): string {
+    const home = mkdtempSync(join(tmpdir(), 'p1-10-home-'))
+    roots.push(home)
+    mkdirSync(join(home, 'capability-tokens'), { recursive: true })
+    writeFileSync(
+      join(home, 'capability-tokens', 'capability-tokens.json'),
+      JSON.stringify({ tokens: [{ digest: 'sha256-granted', constraints: { issuedFor: 'session-1' } }], revoked: [] }),
+      'utf8',
+    )
+    writeFileSync(join(home, 'settings.json'), JSON.stringify({ ui: { theme: 'dark' } }), 'utf8')
+    return home
+  }
+
+  /** A digest over every file in a tree, so a change anywhere is one comparison. */
+  function treeDigest(root: string): string {
+    const hash = createHash('sha256')
+    const walk = (dir: string): void => {
+      for (const entry of readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+        const path = join(dir, entry.name)
+        hash.update(path.slice(root.length))
+        if (entry.isDirectory()) walk(path)
+        else hash.update(readFileSync(path))
+      }
+    }
+    walk(root)
+    return hash.digest('hex')
+  }
+
+  it('leaves the permission state byte-identical across a FAILED upgrade', async () => {
+    // This epic READS permission state and never writes it. A case that
     // granted or revoked something to set up would be P1-10 writing state
-    // P2-02 and P2-04 own — and it would prove that this epic can write it,
-    // which is the opposite of the clause.
-    //
-    // The observation is the plugin's own storage root: an upgrade writes only
-    // under it, so "the permission state is unchanged" is measured as "nothing
-    // outside the plugin's storage was touched at all". A case that inspected
-    // a token store instead would pass just as well while the transaction
-    // quietly wrote somewhere else.
+    // P2-02 and P2-04 own — and would demonstrate that it CAN, which is the
+    // opposite of the clause.
     const root = storage(['original'])
-    const outside = mkdtempSync(join(tmpdir(), 'p1-10-permissions-'))
-    roots.push(outside)
-    const permissionFile = join(outside, 'approved.json')
-    writeFileSync(permissionFile, JSON.stringify({ approved: ['fs:write'] }), 'utf8')
-    const before = readFileSync(permissionFile, 'utf8')
+    const home = harnessHome()
+    const before = treeDigest(home)
 
     const outcome = await runUpgrade(request(root, { healthCheck: async () => false }))
     expect(outcome).toEqual({ upgraded: false, failedAt: 'health-check' })
 
-    expect(readFileSync(permissionFile, 'utf8')).toBe(before)
+    expect(treeDigest(home)).toBe(before)
   })
 
-  it('writes NOTHING outside the plugin’s own storage root, on success either', async () => {
-    // The general form, and the one that would catch a transaction that
-    // started writing elsewhere: the sibling directory's listing is unchanged
-    // after a successful upgrade.
+  it('leaves it byte-identical across a SUCCESSFUL upgrade too', async () => {
+    // The general form. Without it the case above would also pass for a
+    // transaction that writes outside its root only when it succeeds.
     const root = storage(['original'])
-    const sibling = mkdtempSync(join(tmpdir(), 'p1-10-sibling-'))
-    roots.push(sibling)
-    const before = readdirSync(sibling)
+    const home = harnessHome()
+    const before = treeDigest(home)
 
     expect(await runUpgrade(request(root))).toMatchObject({ upgraded: true })
-    expect(readdirSync(sibling)).toEqual(before)
+    expect(treeDigest(home)).toBe(before)
+  })
+
+  it('the seeded home is NOT empty, so "nothing changed" is not vacuous', () => {
+    // The control for the two cases above: a digest over an empty tree would
+    // be equal to itself no matter what the transaction did.
+    const home = harnessHome()
+    expect(readdirSync(home).length).toBeGreaterThan(1)
+    expect(treeDigest(home)).not.toBe(treeDigest(mkdtempSync(join(tmpdir(), 'p1-10-empty-'))))
   })
 })

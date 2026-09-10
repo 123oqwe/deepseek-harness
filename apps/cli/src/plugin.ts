@@ -36,6 +36,8 @@ import {
   readLockfileIntegrity,
   type PluginPackageName,
 } from '@deepseek-ai/dsh-plugin-lock'
+import { dshHomePath } from '@deepseek-ai/dsh-home-paths'
+import { changedVersions, recoverInterruptedUpgrades, reportUnreconciled } from './plugin-migration.ts'
 import { INSTALL_ANCHOR } from './profile-boot.ts'
 
 const NAME = 'dsh'
@@ -69,6 +71,16 @@ function exportsPatch(packageName: string, profileDir: string): boolean {
  * per newly-added bundle-less dependency (a plain library is fine; the
  * warning is orientation).
  */
+/**
+ * Dependency versions from one manifest, for the version-change comparison
+ * P1-10's transaction is driven by.
+ * @param manifest - a profile manifest.
+ * @returns plugin name to declared version.
+ */
+function versionsOf(manifest: ProfileManifest): Record<string, string> {
+  return Object.fromEntries(Object.entries(manifest.dependencies ?? {}))
+}
+
 function reconcilePlugins(before: ProfileManifest, profileDir: string): void {
   const after = readProfileManifest(NAME, profileDir)
   const beforeDeps = new Set(Object.keys(before.dependencies ?? {}))
@@ -249,6 +261,18 @@ export async function runPlugin(profile: string, args: readonly string[]): Promi
     process.stderr.write(`${NAME}: initialized profile ${profile} at ${dir}\n`)
   }
   const before = readProfileManifest(NAME, dir)
+  // P1-10 acceptance[0]: finish or undo anything a crash left half-done BEFORE
+  // touching packages. A SIGKILL skips the transaction's `finally`, so the
+  // plugin stays frozen with a quarantine and a rollback directory on disk,
+  // and nothing else would ever clear them — "the old version is wholly usable
+  // after a restart" is not true of a plugin nothing will thaw.
+  const recovered = await recoverInterruptedUpgrades(
+    dshHomePath(),
+    Object.keys(before.dependencies ?? {}),
+  )
+  for (const plugin of recovered) {
+    process.stderr.write(`${NAME}: recovered an interrupted upgrade of ${plugin} before installing\n`)
+  }
   // Windows resolves pnpm through its .cmd shim, which spawn() refuses
   // without a shell since the CVE-2024-27980 hardening.
   const result = spawnSync('pnpm', args.map(argument => anchorPathSpec(argument, process.cwd())), {
@@ -266,6 +290,19 @@ export async function runPlugin(profile: string, args: readonly string[]): Promi
   }
   const exitCode = result.status ?? 1
   if (exitCode === 0) {
+    // P1-10 must[1]: the one place that knows (plugin, from, to). `before` is
+    // the manifest from before pnpm ran; the installed state is read after.
+    const changes = changedVersions(
+      versionsOf(before),
+      versionsOf(readProfileManifest(NAME, dir)),
+    )
+    for (const change of changes) {
+      const unreconciled = await reportUnreconciled(dshHomePath(), change)
+      // acceptance[1]: a record that does not reconcile is reported, never
+      // swallowed — otherwise the harness quietly believes a plugin is
+      // upgraded and the operator learns of it at the first failing read.
+      if (unreconciled !== undefined) process.stderr.write(`${NAME}: ${unreconciled}\n`)
+    }
     reconcilePlugins(before, dir)
     await commitProfileLock(dir)
   } else {
