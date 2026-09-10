@@ -52,6 +52,7 @@ import type {
   TokenAttenuationDecision,
   TokenAttenuationRequest,
   TokenBudget,
+  TokenConstraints,
   TokenIssuanceRequest,
   TokenLineage,
   TokenPresenceDecision,
@@ -242,6 +243,30 @@ export function attenuateToken(
 }
 
 /**
+ * Project `constraints` into the digest as a WHOLE, by sorted key with absent
+ * members dropped.
+ *
+ * The object rather than a list of its members, because the digest's promise is
+ * that any single-field difference changes it, and a per-member projection
+ * keeps that promise only until the next member is added. `constraints` carried
+ * exactly one member for as long as the projection existed, so the promise was
+ * true and the gap invisible; the member added for a session-scoped root is
+ * what would have falsified it. Enumerating the new member beside the old one
+ * would close this instance and leave the next one open.
+ *
+ * Absent members are dropped rather than encoded as `null`, so declaring a
+ * member and leaving it `undefined` is the same token as never declaring it —
+ * which is what the type says, since every member is optional.
+ * @param constraints - the token's constraints.
+ * @returns the canonical form hashed into the digest.
+ */
+function canonicalConstraints(constraints: TokenConstraints): readonly (readonly [string, unknown])[] {
+  return Object.entries(constraints)
+    .filter(([, value]) => value !== undefined)
+    .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+}
+
+/**
  * Compute the content digest of a {@link CapabilityToken} — must[0]'s
  * "parent digest" field's sole real producer, and the digest every
  * {@link CapabilityTokenLogRecord.digest} (acceptance[2]) and every
@@ -259,7 +284,7 @@ export function digestToken(token: CapabilityToken): CapabilityTokenDigest {
     token.capability,
     token.verbs,
     token.resources,
-    token.constraints.budget ?? null,
+    canonicalConstraints(token.constraints),
     token.expiresAt,
     token.nonce,
     token.delegationDepth,

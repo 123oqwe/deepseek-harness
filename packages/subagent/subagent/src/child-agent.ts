@@ -184,6 +184,8 @@ export interface ChildComposition {
   readonly persona?: string | undefined
   /** Per-child tool scoping. */
   readonly toolFilter?: ToolRestriction | undefined
+  /** The session to derive the child's authority from; defaults to `parent.id`. */
+  readonly delegatingSession?: SessionId | undefined
   /**
    * The child's reserved session id, for narrowing its AUTHORITY alongside its
    * visibility.
@@ -260,7 +262,13 @@ export function applyChildComposition(
   // token provider is unchanged, and the child then holds no token because
   // nothing requires one either.
   if (composition.childSession !== undefined) {
-    childCtx.get('capabilityTokens')?.deriveChild(parent.id, composition.childSession, composition.toolFilter)
+    // The DELEGATING session, which is whoever holds the token being narrowed.
+    // `parent.id` is only the form that takes at the top level: a detached
+    // workflow run holds its own derived token and outlives the turn that
+    // launched it, so it delegates from itself. Deriving from the launcher
+    // there would fail exactly when the run is still working.
+    const delegating = composition.delegatingSession ?? parent.id
+    childCtx.get('capabilityTokens')?.deriveChild(delegating, composition.childSession, composition.toolFilter)
   }
 }
 

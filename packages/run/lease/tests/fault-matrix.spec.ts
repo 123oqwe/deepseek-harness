@@ -77,7 +77,8 @@ const MATRIX: readonly LeaseFault[] = [
     run: () => {
       const store = new LeaseStore()
       store.acquire(ITEM, WORKER_A, 0, 1_000)
-      expect(store.acquire(ITEM, WORKER_B, 500, 1_000)).toEqual({ acquired: false, reason: 'held-by-another' })
+      expect(store.acquire(ITEM, WORKER_B, 500, 1_000))
+        .toEqual({ acquired: false, reason: 'held-by-another', holder: WORKER_A })
     },
   },
   {

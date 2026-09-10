@@ -368,6 +368,28 @@ export class CapabilityTokenService {
   }
 
   /**
+   * Every recorded token issued FOR one session, by digest (P4-09 must[2]).
+   *
+   * Answers from the recorded token set, which `restore` reloads from the
+   * store, so it survives a process restart. That is the whole reason the
+   * session is a signed constraint rather than an in-memory index: a detached
+   * run outlives the session that launched it, and "revoke everything this
+   * session authorized" is asked precisely when that session's live record is
+   * gone. An index rebuilt only in memory answers the question correctly right
+   * up until the moment it matters.
+   *
+   * `subject` cannot serve here — it is the PRINCIPAL, and one principal holds
+   * many sessions, so matching on it would revoke a user's other sessions.
+   * @param session - the session whose issued tokens are wanted.
+   * @returns the digests of tokens carrying this session in `constraints.issuedFor`, in record order.
+   */
+  digestsIssuedFor(session: string): readonly CapabilityTokenDigest[] {
+    return this.#tokens
+      .filter(signed => signed.token.constraints.issuedFor === session)
+      .map(signed => digestToken(signed.token))
+  }
+
+  /**
    * Durably record `digest` as revoked. Revoking an ancestor's digest is
    * what invalidates every descendant (acceptance[1]) — no per-descendant
    * record is written, and none is needed.

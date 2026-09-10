@@ -190,7 +190,7 @@ describe('P2-02 acceptance[1]: a cancelled turn does not revoke delegated author
       ...childToken === undefined ? {} : { capabilityToken: childToken },
     })
 
-    const stillActs = afterCancel.isError === false
+    const stillActs = !afterCancel.isError
     // Cancel is NOT revocation, and this pins that on purpose. A token carries
     // the authority a SESSION delegated; `Agent.cancel` is turn-scoped
     // (`agent-loop/src/agent.ts:171` aborts the phase and returns the agent to

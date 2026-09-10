@@ -634,13 +634,15 @@ export class ToolCapabilityTokenError extends HarnessError {
  * `'tool'` surface). `'expired'` — the presented token's `expiresAt` has
  * passed. `'verb-not-authorized'` — its `verbs` omit
  * {@link TOOL_CAPABILITY_VERB}. `'tool-not-in-scope'` — its `resources` do not
- * name this tool.
+ * name this tool. `'revoked'` — it, or an ancestor it was delegated from, has
+ * been withdrawn.
  */
 export type ToolCapabilityDenialReason =
   | 'token-required'
   | 'expired'
   | 'verb-not-authorized'
   | 'tool-not-in-scope'
+  | 'revoked'
 
 /** Model-facing wording per denial reason, carrying no token-derived value. */
 const TOOL_CAPABILITY_DENIAL_MESSAGES: Record<ToolCapabilityDenialReason, string> = {
@@ -648,13 +650,24 @@ const TOOL_CAPABILITY_DENIAL_MESSAGES: Record<ToolCapabilityDenialReason, string
   'expired': 'the presented capability token has expired',
   'verb-not-authorized': `the presented capability token does not carry the "${TOOL_CAPABILITY_VERB}" verb`,
   'tool-not-in-scope': 'the presented capability token does not authorize this tool',
+  // Distinct from `expired` on purpose: expiry is the grant running out, and
+  // revocation is it being taken away. An operator who withdrew authority and
+  // an agent whose token simply aged out need different next steps.
+  'revoked': 'the presented capability token has been revoked',
 }
 
 /**
  * The complete gate one required-token scope applies to one call, in refusal
- * order: presence, expiry, verb, then resource scope. Pure and total — every
- * input it needs is a parameter, so the decision cannot differ between the
- * `execute` path and the scheduler path that share it.
+ * order: presence, expiry, revocation, verb, then resource scope. Pure and
+ * total — every input it needs is a parameter, so the decision cannot differ
+ * between the `execute` path and the scheduler path that share it.
+ *
+ * Revocation arrives as a decided boolean rather than as a service this
+ * function calls, which is what keeps it pure: the caller asks the provider
+ * (a loaded in-memory set, never the store) and hands the answer in. Asking
+ * here at all is what makes acceptance[1] true of the running system instead
+ * of only of the ledger — a revoked token kept authorizing every call until it
+ * expired, because nothing on this path ever asked.
  *
  * Signature verification is deliberately NOT part of this gate. The Trust
  * Kernel ships structural non-replaceability and no key material (all six
@@ -667,18 +680,23 @@ const TOOL_CAPABILITY_DENIAL_MESSAGES: Record<ToolCapabilityDenialReason, string
  * @param name - the tool being called.
  * @param presented - the token the call presented, or `undefined`.
  * @param now - Unix epoch milliseconds to check the token's expiry against.
+ * @param revoked - whether the presented token or an ancestor has been
+ *   withdrawn; `false` when no token provider is mounted, matching the arming
+ *   rule that an absent provider gates nothing.
  * @returns the refusal reason, or `undefined` when the token authorizes this call.
  */
 function capabilityDenialReason(
   name: string,
   presented: SignedCapabilityToken | undefined,
   now: number,
+  revoked: boolean,
 ): ToolCapabilityDenialReason | undefined {
   const presence = assertTokenPresented('tool', presented)
   if (!presence.presented) return presence.reason
   // `assertTokenPresented` narrowed presence, not the local binding.
   const token = (presented as SignedCapabilityToken).token
   if (now >= token.expiresAt) return 'expired'
+  if (revoked) return 'revoked'
   if (!token.verbs.includes(TOOL_CAPABILITY_VERB)) return 'verb-not-authorized'
   if (!token.resources.includes(name)) return 'tool-not-in-scope'
   return undefined
@@ -1977,7 +1995,13 @@ export class ToolRuntime extends Service {
       return next({ kind: 'final-result', exec, result: toolAbortedBeforeDispatchResult() })
     }
     if (this.requiresCapabilityToken(exec.agent)) {
-      const reason = capabilityDenialReason(exec.name, input.capabilityToken, Date.now())
+      // Asked of the provider, not of this class: the revocation set lives with
+      // the token provider, and a composition that mounts none arms no
+      // requirement either, so `false` here is the same "nothing to enforce"
+      // the arming rule already expresses.
+      const revoked = input.capabilityToken !== undefined
+        && (this.ctx.get('capabilityTokens')?.isRevoked(input.capabilityToken) ?? false)
+      const reason = capabilityDenialReason(exec.name, input.capabilityToken, Date.now(), revoked)
       if (reason !== undefined) {
         return next({
           kind: 'final-result',

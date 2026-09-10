@@ -380,9 +380,24 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
    * reached on a launched profile on the strength of this method existing.
    * @param session - the session whose authority is withdrawn.
    */
-  async revokeSession(session: SessionId): Promise<void> {
-    for (const digest of this.sessionRoots.get(session) ?? []) await this.service.revoke(digest)
+  isRevoked(token: SignedCapabilityToken): boolean {
+    return this.service.isRevoked(digestToken(token.token))
+  }
+
+  async revokeSession(session: SessionId): Promise<'revoked' | 'nothing-to-revoke'> {
+    // Asked of the DURABLE record, not of `sessionRoots`. That map is dropped
+    // for a session at `agent/disposed` and cleared wholesale when the plugin
+    // unloads, so revoking a session that has already ended — which for a
+    // detached run is the normal case, not an edge — used to iterate an empty
+    // list and report success having revoked nothing.
+    const digests = this.service.digestsIssuedFor(session)
+    for (const digest of digests) await this.service.revoke(digest)
     this.sessionTokens.delete(session)
+    this.sessionRoots.delete(session)
+    // Reported rather than swallowed: "nothing was recorded for this session"
+    // and "this session's authority is now withdrawn" are different answers,
+    // and an operator acting on a revocation needs to know which one they got.
+    return digests.length === 0 ? 'nothing-to-revoke' : 'revoked'
   }
 
   /**
@@ -435,7 +450,10 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
       subject: brandString<PrincipalId>(childSession),
       verbs: [...parent.token.verbs],
       resources: delegatedChildResources(parent.token.resources, filter),
-      constraints: {},
+      // The CHILD's own session, never the parent's: revocation reaches a
+      // child through `parentDigest` lineage, so this member answers "whose
+      // session is this token" rather than carrying a shared value down.
+      constraints: { issuedFor: childSession },
       expiresAt: parent.token.expiresAt,
       nonce: brandString<CapabilityTokenNonce>(randomBytes(16).toString('hex')),
     })
@@ -517,7 +535,12 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
         ...this.sessionTokens.get(session)?.token.resources ?? [],
         ...extraResources,
       ])],
-      constraints: {},
+      // The session this root belongs to, recorded because `subject` cannot
+      // answer it: `subject` is the PRINCIPAL, and one principal holds many
+      // sessions. Revoking everything a session authorized has to find its
+      // roots in durable data, since a detached run outlives its launcher and
+      // the in-memory index is gone exactly when the question is asked.
+      constraints: { issuedFor: session },
       expiresAt: Date.now() + this.config.sessionTokenTtlMs,
     }, nonce)
     this.sessionTokens.set(session, token)

@@ -196,6 +196,24 @@ export abstract class WorkflowEngine extends Service {
    */
   abstract resume(runId: WorkflowRunId, request: WorkflowStartRequest): Promise<WorkflowRun>
 
+  /**
+   * Start a run the Run service holds, which the launching turn does not own
+   * (P4-09 must[2]).
+   *
+   * The turn that starts it gets the run back immediately and may end without
+   * ending the run: disconnect is not cancellation, and an explicit
+   * `cancel(id)` remains the only thing that stops it.
+   *
+   * A detached run has its OWN session, minted here, and its authority is
+   * derived from the launcher's at start — while the launcher still holds a
+   * token to derive from. Deriving later would be deriving from something that
+   * may already be gone, which is the difference between outliving a turn and
+   * outliving the authority that permitted it.
+   * @param request - the same fields `start` takes; `parent` names the launcher.
+   * @returns the live run, held by the service rather than by the caller.
+   */
+  abstract startDetached(request: WorkflowStartRequest): Promise<WorkflowRun>
+
 
   /**
    * Emit a lifecycle event while containing and logging each listener failure.

@@ -125,6 +125,7 @@ export async function startInProcessRun(
       persona: request.persona,
       toolFilter: request.toolFilter,
       childSession: childId,
+      ...request.delegatingSession === undefined ? {} : { delegatingSession: request.delegatingSession },
     })
     if (request.outputSchema !== undefined) {
       structured = attachStructuredRuntime(childCtx, request.outputSchema)

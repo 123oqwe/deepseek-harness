@@ -30,7 +30,7 @@ import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SubagentRuntime from '@deepseek-ai/dsh-subagent'
 import * as spawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
@@ -190,5 +190,53 @@ describe('P4-08 acceptance[2]: a settled run persists a journal that keeps its e
     // Every receipt survives the compaction the settlement performed, which is
     // the half of acceptance[2] that is a safety property rather than a saving.
     expect(persisted?.entries.flatMap(entry => entry.childReceipts)).toHaveLength(2)
+  })
+})
+
+describe('P4-09 §12.66: a LIVE run may not be resumed, and the guard runs before the work', () => {
+  it('refuses a resume while the run still holds its lease, naming the holder', async () => {
+    // Without this, `resume` re-enters a run another holder is executing and
+    // the re-attach path spawns a second worker under one run id — two masters
+    // inside the epic meant to prevent them.
+    const { ctx, parent } = await setup(2, { persistence: true })
+    const live = ctx.workflowEngine.start({
+      script: "await new Promise(resolve => setTimeout(resolve, 300)); return 'done'",
+      meta: META,
+      parent,
+    }) as WorkerRun
+
+    await expect(ctx.workflowEngine.resume(live.id, { script: "return 'x'", meta: META, parent }))
+      .rejects.toThrow(/is held by .+ and is still live; resume refused/u)
+
+    await live.result
+    await live.dispose()
+  })
+
+  it('refuses BEFORE reconciling, so a live run\'s journal is never read', async () => {
+    // The ORDER is the property, not the refusal. Reconciliation reads a
+    // journal its holder is actively writing and then discards the answer; a
+    // guard placed after the work it guards is not a guard.
+    //
+    // Observed without mocking, by making the two orders fail differently:
+    // `readJournal` THROWS on a file that exists and does not parse, and
+    // returns `undefined` only for one that is absent. So a resume that
+    // reconciles first surfaces the parse error, and one that takes the lease
+    // first never opens the file and surfaces the refusal. The assertion is on
+    // WHICH error arrives, which no ordering can satisfy vacuously.
+    const { ctx, parent } = await setup(2, { persistence: true })
+    const live = ctx.workflowEngine.start({
+      script: "await new Promise(resolve => setTimeout(resolve, 300)); return 'done'",
+      meta: META,
+      parent,
+    }) as WorkerRun
+
+    const engine = ctx.workflowEngine as unknown as { journalDirectory: string }
+    writeFileSync(join(engine.journalDirectory, `${live.id}.json`), '{ not json', 'utf8')
+
+    await expect(ctx.workflowEngine.resume(live.id, { script: "return 'x'", meta: META, parent }))
+      .rejects.toThrow(/resume refused/u)
+
+    await live.result
+    await live.dispose()
   })
 })

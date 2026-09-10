@@ -8528,7 +8528,8 @@
       "supplements": {
         "epic": "P4-08",
         "stage": "P"
-      }
+      },
+      "supersededBy": "2026-09-10T04:10:00Z"
     },
     {
       "epic": "P4-08",
@@ -9835,7 +9836,8 @@
         "failureSummary": "Mutation (1) reddens exactly ONE case — `drops recomputable inputs from a completed, verified step, whatever its effect class`, with `AssertionError: expected [ 's1-in' ] to deeply equal []`: the side-effecting step's recomputable input survived compaction because the restored `pure` conjunct excluded it. Mutation (2) reddens the other TWO — `leaves an UNVERIFIED step untouched, whether or not it completed` and `fault boundary 15 compaction leaves an UNVERIFIED entry untouched, whatever its effect class` — because dropping the verification guard compacts an unverified entry. Recorded as measured rather than as predicted: my first draft of this proof claimed all three cases redden under mutation (1), and running it showed one. The two mutations are both needed because the three cases guard two different halves of the same rule."
       },
       "note": "§12.67 item 4. SUPERSEDED, not renamed — the property changed. §12.46-A removed the `pure` gate from compaction because it could never fire: `replay.ts` gated on `completed && verified && pure`, and a step is classed side-effecting whenever it may have left the harness, so the pure conjunct excluded every step the gate was written for. The guard is now VERIFICATION, and the ledger reconciles the effect. So a completed, verified step is compacted WHATEVER its effect class, and what stays untouched is an UNVERIFIED step rather than a side-effecting one. The old titles assert the opposite guard and cannot be satisfied by the current code, which is why registering them as renames would record a continuity that does not hold (the §12.61 reading applied to P4-12.C.1). Boundary 15 still exists and still guards, on a different predicate; boundary 16 (compaction retains every receipt) is new, so the matrix grew rather than shrank and its 'at least twelve boundaries' assertion is unaffected.",
-      "supersedes": "2026-09-08T00:20:00.000Z"
+      "supersedes": "2026-09-08T00:20:00.000Z",
+      "supersededBy": "2026-09-10T04:10:00Z"
     },
     {
       "epic": "P4-08",
@@ -9889,7 +9891,8 @@
         "failureSummary": "Mutation (1) reddens exactly ONE case — `drops recomputable inputs from a completed, verified step, whatever its effect class`, with `AssertionError: expected [ 's1-in' ] to deeply equal []`: the side-effecting step's recomputable input survived compaction because the restored `pure` conjunct excluded it. Mutation (2) reddens the other TWO — `leaves an UNVERIFIED step untouched, whether or not it completed` and `fault boundary 15 compaction leaves an UNVERIFIED entry untouched, whatever its effect class` — because dropping the verification guard compacts an unverified entry. Recorded as measured rather than as predicted: my first draft of this proof claimed all three cases redden under mutation (1), and running it showed one. The two mutations are both needed because the three cases guard two different halves of the same rule."
       },
       "note": "§12.67 item 4. SUPERSEDED, not renamed — the property changed. §12.46-A removed the `pure` gate from compaction because it could never fire: `replay.ts` gated on `completed && verified && pure`, and a step is classed side-effecting whenever it may have left the harness, so the pure conjunct excluded every step the gate was written for. The guard is now VERIFICATION, and the ledger reconciles the effect. So a completed, verified step is compacted WHATEVER its effect class, and what stays untouched is an UNVERIFIED step rather than a side-effecting one. The old titles assert the opposite guard and cannot be satisfied by the current code, which is why registering them as renames would record a continuity that does not hold (the §12.61 reading applied to P4-12.C.1). Boundary 15 still exists and still guards, on a different predicate; boundary 16 (compaction retains every receipt) is new, so the matrix grew rather than shrank and its 'at least twelve boundaries' assertion is unaffected.",
-      "supersedes": "2026-09-08T00:20:00.000Z"
+      "supersedes": "2026-09-08T00:20:00.000Z",
+      "supersededBy": "2026-09-10T04:10:00Z"
     },
     {
       "epic": "P4-11",
@@ -10062,6 +10065,138 @@
       "sensitivityProof": {
         "mutationDescription": "Two mutations, run separately, each restored byte-identical. (A) `gateActionRisk` stops recording the allow-by-preset outcome -- the `recordDecision('allowed-by-preset')` line is deleted from `packages/core/tools/src/external-effect.ts`, so the branch still runs the action but leaves no `action/risk-gated` event. (B) `defineTool` stops carrying declared tags onto the built definition -- the `riskDomainTags` spread in `packages/core/tools/src/schema.ts` is replaced by an empty spread, so a tool declares tags that never reach the runtime.",
         "failureSummary": "(A) `npx vitest run tests/architecture/risk-domain-tags.spec.ts packages/core/tools/tests/tools.spec.ts packages/interaction/permission-presets packages/policy/risk-taxonomy` ->\n     x records an allow-by-preset decision, with its preset, where the manifest says approval was intrinsic 10ms\n      Tests  1 failed | 218 passed (219)\n\n(B) same command ->\n     x P2-04 must[1]: carries a tool's declared risk domain tags to the runtime, and never to the model 22ms\n      Tests  1 failed | 218 passed (219)\n\nEach mutation reddens exactly one case, and they are different cases: (A) takes down the decision RECORD while every gate-outcome case stays green, because the outcomes themselves are unchanged -- the action still runs, only the log loses it, which is the model-visible-implies-logged half this base adds over #210. (B) takes down the declaration REACH while the structural gate stays green, because that gate is textual and can only prove a tool declares tags, never that the declaration arrives at the runtime."
+      }
+    },
+    {
+      "epic": "P4-08",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/collaboration/workflow-journal/tests/session-journal.spec.ts",
+        "--reporter=json"
+      ],
+      "expectCases": [
+        "P4-08 must[4]: a running execution is journalable writes an in-flight entry when a step STARTS, before it settles",
+        "P4-08 must[4]: a running execution is journalable replaces the in-flight entry in place when the step settles",
+        "P4-08 must[4]: a running execution is journalable orders entries by sequence even when they settle out of order",
+        "P4-08 must[4]: a running execution is journalable carries the declared phase, and names an unphased step rather than omitting it",
+        "P4-08 must[4]: a running execution is journalable orders by sequence even when steps START out of order",
+        "P4-08: the recorder does not invent what the execution did not report drops a settlement for a step that never started",
+        "P4-08: the recorder does not invent what the execution did not report refuses to mark an in-flight step verified",
+        "P4-08: the recorder does not invent what the execution did not report refuses to mark a FAILED step verified",
+        "P4-08: the recorder does not invent what the execution did not report marks a completed step verified when asked",
+        "P4-08: the recorder does not invent what the execution did not report records the effect class the caller declared, never one it inferred",
+        "P4-08 acceptance[0]: a journal recorded up to a kill drives the right resume kill BEFORE the agent call settles: the step is re-run",
+        "P4-08 acceptance[0]: a journal recorded up to a kill drives the right resume kill AFTER the agent call settles but before verification: still re-run",
+        "P4-08 acceptance[0]: a journal recorded up to a kill drives the right resume kill after verification: the completed child work is NOT repeated"
+      ],
+      "expectExit": 0,
+      "files": [
+        "packages/collaboration/workflow-journal/tests/session-journal.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-10T04:10:00Z",
+      "note": "P4-08 base P (§12.53), superseding the supplement that was this stage's only live entry. A stage whose chain ends in a supplement has no base for 4.4b or predicate (iii) to read — the same shape closed for P2-02.U and P2-04.U. The 13 titles are the live supplement's, unchanged: this is a re-rooting, not a re-scoping.",
+      "supersedes": [
+        "2026-09-08T00:20:00.000Z"
+      ],
+      "sensitivityProof": {
+        "mutationDescription": "One mutation, restored byte-identical: `createJournalRecorder`'s `stepStarted` records `outcome: 'completed'` instead of `'in-flight'` (`workflow-journal/src/recorder.ts`), so a step that has begun is indistinguishable from one that finished.",
+        "failureSummary": "`npx vitest run packages/collaboration/workflow-journal/tests/session-journal.spec.ts` ->\n     x writes an in-flight entry when a step STARTS, before it settles 14ms\n     x refuses to mark an in-flight step verified 1ms\n      Tests  2 failed | 11 passed (13)\n\nTwo cases, and the second is the point: recording a start as `completed` also lets `stepVerified` mark it, so a step that never produced a result becomes skippable on resume. The other 11 stay green -- settlement, output capture and compaction do not depend on the starting outcome."
+      }
+    },
+    {
+      "epic": "P4-08",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/collaboration/workflow-journal/tests/resume.e2e.spec.ts",
+        "--reporter=json"
+      ],
+      "expectCases": [
+        "P4-08 must[0]: a journal entry records every fact the clause names carries step id, phase, effect class, outcome, inputs, output, both receipt kinds and verification",
+        "P4-08 must[0]: a journal entry records every fact the clause names keeps `verified` separate from `outcome`",
+        "P4-08 must[0]: a journal entry records every fact the clause names records artifact REFS, never inline content",
+        "P4-08 must[1]: a resume skips a completed, verified, pure step skips it and reuses its recorded output",
+        "P4-08 must[1]: a resume skips a completed, verified, pure step re-runs a step that never completed",
+        "P4-08 must[1]: a resume skips a completed, verified, pure step re-runs a completed step that recorded no output",
+        "P4-08 must[2]: a side-effecting step is reconciled, never skipped reconciles it even when completed AND verified",
+        "P4-08 must[2]: a side-effecting step is reconciled, never skipped reconciles a side-effecting step that recorded no receipts at all",
+        "P4-08 must[2]: a side-effecting step is reconciled, never skipped collects every side-effect receipt in the journal, not only those before the restart point",
+        "P4-08 acceptance[0]: killing around a step does not repeat completed child work resumes at the first step that is not skippable, not past it",
+        "P4-08 acceptance[0]: killing around a step does not repeat completed child work resumes at the end when every step completed and was verified",
+        "P4-08 acceptance[0]: killing around a step does not repeat completed child work resumes at zero when the first step is unskippable, whatever follows it",
+        "P4-08 acceptance[0]: killing around a step does not repeat completed child work does not repeat a completed child agent call: its receipt is retained and its step skipped",
+        "P4-08 acceptance[1]: a changed script digest refuses the resume refuses the WHOLE resume rather than degrading to a partial one",
+        "P4-08 acceptance[1]: a changed script digest refuses the resume admits an unchanged digest, so the refusal is not unconditional",
+        "P4-08 acceptance[2]: a journal compacts without losing its evidence drops recomputable inputs from a completed, verified step, whatever its effect class",
+        "P4-08 acceptance[2]: a journal compacts without losing its evidence leaves an UNVERIFIED step untouched, whether or not it completed",
+        "P4-08 acceptance[2]: a journal compacts without losing its evidence retains EVERY receipt, which is the evidence nothing can regenerate",
+        "P4-08 acceptance[2]: a journal compacts without losing its evidence reports a compaction that dropped a receipt as NOT retaining evidence"
+      ],
+      "expectExit": 0,
+      "files": [
+        "packages/collaboration/workflow-journal/tests/resume.e2e.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-10T04:10:00Z",
+      "note": "P4-08 base C (§12.53, §12.73(1)), superseding every prior C entry. C and F both named `resume.e2e.spec.ts` with the same case list, so their two bases would have been indistinguishable — one command, one set of titles, two stages claiming it. The boundary matrix moved to its own spec (titles carried over unchanged, since a frozen case is identified by its title), leaving C the DECISION-level clauses: must[0]'s recorded facts, must[1]'s reuse rule, must[2]'s reconciliation, acceptance[0]-[2].",
+      "supersedes": [
+        "2026-09-08T14:30:00.000Z"
+      ],
+      "sensitivityProof": {
+        "mutationDescription": "One mutation, restored byte-identical: `decideResume` drops its `!entry.verified` arm (`workflow-journal/src/types.ts`), so a completed-but-unverified pure step is skipped instead of re-run.",
+        "failureSummary": "`npx vitest run packages/collaboration/workflow-journal/tests/resume.e2e.spec.ts` ->\n     x keeps `verified` separate from `outcome` 7ms\n      Tests  1 failed | 18 passed (19)\n\nExactly the DECISION-level case: must[1] skips a step that is both completed and verified, and the mutation collapses those two facts into one. The same mutation reddens a different case in the F matrix (boundary 03), which is what shows the two stages observe this from different angles rather than duplicating one command."
+      }
+    },
+    {
+      "epic": "P4-08",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/collaboration/workflow-journal/tests/resume-fault-matrix.e2e.spec.ts",
+        "--reporter=json"
+      ],
+      "expectCases": [
+        "P4-08 Fault — resume boundary matrix enumerates at least twelve boundaries, each named once",
+        "P4-08 Fault — resume boundary matrix fault boundary 01 an in-flight step is re-run",
+        "P4-08 Fault — resume boundary matrix fault boundary 02 a failed step is re-run",
+        "P4-08 Fault — resume boundary matrix fault boundary 03 a completed but unverified step is re-run",
+        "P4-08 Fault — resume boundary matrix fault boundary 04 a completed, verified step with no output is re-run",
+        "P4-08 Fault — resume boundary matrix fault boundary 05 a completed, verified, pure step is skipped",
+        "P4-08 Fault — resume boundary matrix fault boundary 06 a side-effecting step is reconciled even when completed and verified",
+        "P4-08 Fault — resume boundary matrix fault boundary 07 a side-effecting step that never completed is re-run, not reconciled",
+        "P4-08 Fault — resume boundary matrix fault boundary 08 a side-effecting step with NO receipts is still reconciled",
+        "P4-08 Fault — resume boundary matrix fault boundary 09 a changed script digest refuses the whole resume",
+        "P4-08 Fault — resume boundary matrix fault boundary 10 an empty journal is resumable and resumes at zero",
+        "P4-08 Fault — resume boundary matrix fault boundary 11 a fully completed journal resumes past its last step",
+        "P4-08 Fault — resume boundary matrix fault boundary 12 resume stops at the first non-skippable step, not past it",
+        "P4-08 Fault — resume boundary matrix fault boundary 13 receipts are collected from AFTER the restart point too",
+        "P4-08 Fault — resume boundary matrix fault boundary 14 a refused plan yields no receipts to reconcile",
+        "P4-08 Fault — resume boundary matrix fault boundary 15 compaction leaves an UNVERIFIED entry untouched, whatever its effect class",
+        "P4-08 Fault — resume boundary matrix fault boundary 16 compaction retains every receipt",
+        "P4-08 Fault — resume boundary matrix fault boundary 17 compacting an already-compacted journal changes nothing further",
+        "P4-08 Fault — resume boundary matrix fault boundary 18 validation[2]: a resumed run reaches the same outputs as an uninterrupted one"
+      ],
+      "expectExit": 0,
+      "files": [
+        "packages/collaboration/workflow-journal/tests/resume-fault-matrix.e2e.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-10T04:10:00Z",
+      "note": "P4-08 base F (§12.53, §12.73(1)), superseding every prior F entry. The boundary matrix now lives in its own spec so F's frozen command names it alone; every describe/it title is the one C's file carried, moved rather than renamed. 19 boundaries plus the floor assertion that stops one being deleted while the rest still pass.",
+      "supersedes": [
+        "2026-09-08T14:30:00.000Z"
+      ],
+      "sensitivityProof": {
+        "mutationDescription": "The same mutation as C's, run against the Fault matrix: `decideResume` drops its `!entry.verified` arm, restored byte-identical.",
+        "failureSummary": "`npx vitest run packages/collaboration/workflow-journal/tests/resume-fault-matrix.e2e.spec.ts` ->\n     x fault boundary 03 a completed but unverified step is re-run 6ms\n      Tests  1 failed | 18 passed (19)\n\nBoundary 03 is where the matrix enumerates this failure; C's file names the same rule as a decision. One mutation, two different cases in two different files -- the evidence that splitting the spec gave C and F distinct subjects rather than two names for one command."
       }
     }
   ]

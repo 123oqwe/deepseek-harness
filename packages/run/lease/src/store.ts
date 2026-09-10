@@ -88,7 +88,7 @@ export class LeaseStore implements LeaseStoreContract {
     if (!this.available) return { acquired: false, reason: 'store-unavailable' }
     const incumbent = this.leases.get(workItem)
     if (incumbent !== undefined && !isReclaimable(incumbent, nowMs)) {
-      return { acquired: false, reason: 'held-by-another' }
+      return { acquired: false, reason: 'held-by-another', holder: incumbent.holder }
     }
     const epoch = brandNumber<LeaseEpoch>(this.nextEpoch.get(workItem) ?? 0)
     this.nextEpoch.set(workItem, epoch + 1)

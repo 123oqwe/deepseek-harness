@@ -221,7 +221,15 @@ jobs:
       # ~/.cache/ms-playwright/chromium_headless_shell-…`, which reads as a
       # snapshot regression and is a missing dependency. Chromium only, and
       # the cache key matches `ci.yml`'s so the two share one warm cache.
+      #
+      # `if: always()` on BOTH, because the step that needs them has it. Without
+      # it an earlier red — a lint failure, say — skips these two while the
+      # snapshot step still runs, and the browser it needs is simply absent. The
+      # run then reports a snapshot regression that is really a skipped install,
+      # which is the most expensive kind of wrong answer an observation can give:
+      # it looks like evidence about the code.
       - uses: actions/cache/restore@v4
+        if: always()
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
@@ -229,6 +237,7 @@ jobs:
             ${{ runner.os }}-playwright-
 
       - name: Install Playwright Chromium and hosted dependencies
+        if: always()
         run: pnpm --filter @deepseek-ai/dsh-web-frontend exec playwright install --with-deps chromium
 
       - name: Recorded-session snapshots

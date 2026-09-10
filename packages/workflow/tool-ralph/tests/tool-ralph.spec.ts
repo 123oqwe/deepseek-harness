@@ -26,6 +26,12 @@ class StubEngine extends WorkflowEngine {
   onStart: (() => void) | undefined
 
   /** This stub does not journal, so a resume is a fresh start with the same id. */
+  /** Not under test: this stub has no Run service to hold a detached run. */
+  startDetached(request: WorkflowStartRequest): Promise<WorkflowRun> {
+    void request
+    throw new Error('not under test')
+  }
+
   resume(_runId: WorkflowRunId, request: WorkflowStartRequest): Promise<WorkflowRun> {
     return Promise.resolve(this.start(request))
   }

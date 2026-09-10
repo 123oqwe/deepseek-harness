@@ -273,9 +273,13 @@ describe('P4-09 must[3]: a nested run\'s children inherit its DECAYED capability
       textResponse('child said so'),
       textResponse('child said so'),
     ]))
-    const parent = ctx.agentLoop.create(SessionId('nesting-token-parent'), { provider: 'mock', model: 'mock' })
+    // Created through the REGISTRY, not `agentLoop.create`, because the handle
+    // is what carries `dispose()` — the capability its creator holds. The
+    // detached cases need the launching session to actually END, and only the
+    // handle can end it.
+    const handle = await ctx.agents.create({ sessionId: SessionId('nesting-token-parent') })
     tokenContexts.push(ctx)
-    return { ctx, parent }
+    return { ctx, parent: handle.agent, disposeLauncher: () => handle.dispose() }
   }
 
   /**
@@ -356,5 +360,125 @@ describe('P4-09 must[3]: a nested run\'s children inherit its DECAYED capability
     expect(resources[0]).not.toContain('write_file')
 
     await run.dispose()
+  }, 30_000)
+
+  // The detached cases share this block's `tokenSetup` and `captureChildTokens`
+  // rather than duplicating a composition: what they add is the launcher ENDING
+  // while the run continues, not a different harness.
+  it('spawns a child that still gets a derived token after the launcher session ended', async () => {
+    // The property that makes "detached" more than "still in memory". A child
+    // derived from the LAUNCHER would fail here — `deriveFromParent` refuses a
+    // parent holding no token, and `agent/disposed` drops it — so a detached
+    // run would stay alive and be unable to do the work it stayed alive for.
+    const { ctx, parent, disposeLauncher } = await tokenSetup()
+    await ctx.capabilityTokens.whenSessionToken(parent.id)
+    const children = captureChildTokens(ctx, parent.id)
+
+    // The launcher ENDS BEFORE the run's only child starts. Sequenced through
+    // the run's own `workflow/agent-start` rather than a timer, because the vm
+    // context has none and a sleep would be racing the thread either way.
+    const launcherGone = new Promise<void>((resolve) => {
+      ctx.on('workflow/agent-start', () => { void disposeLauncher().then(resolve) })
+    })
+    // The launcher's SESSION ends: `agent/disposed` is what drops its token,
+    // and that is the event this case is about.
+
+
+    const run = await ctx.workflowEngine.startDetached({
+      script: "await agent('while the turn lives'); return await agent('after the turn')",
+      meta: META,
+      parent,
+    })
+    await launcherGone
+
+    const settled = await run.result
+    expect(`${settled.stopReason}: ${String(settled.error ?? '')}`).toBe('completed: ')
+
+    const resources = await Promise.all(children)
+    // The detached run's own session is one of the captured children (derived
+    // from the launcher at start); its agent is the other, derived from the RUN.
+    expect(resources.length).toBeGreaterThanOrEqual(2)
+    expect(resources.every(list => list !== undefined)).toBe(true)
+
+    await run.dispose()
+  }, 30_000)
+
+  it('is NOT cancelled when the launching run is, while a nested sibling IS', async () => {
+    // The negative control that makes "detached" more than a word. Cancellation
+    // reaches `nestedRuns`, and a detached run is deliberately not a member:
+    // the launcher is who started it, and the Run service is who owns it.
+    const { ctx, parent } = await tokenSetup()
+    await ctx.capabilityTokens.whenSessionToken(parent.id)
+
+    const detached = await ctx.workflowEngine.startDetached({
+      script: "return await agent('detached work')",
+      meta: META,
+      parent,
+    })
+    const launcher = ctx.workflowEngine.start({
+      script: "return await agent('launcher work')",
+      meta: META,
+      parent,
+    })
+
+    launcher.cancel('operator cancelled the launching run')
+    const launcherSettled = await launcher.result
+    expect(launcherSettled.stopReason).toBe('cancelled')
+
+    // The detached run neither settles as cancelled nor is disturbed by it.
+    const detachedSettled = await detached.result
+    expect(detachedSettled.stopReason).toBe('completed')
+
+    await launcher.dispose()
+    await detached.dispose()
+  }, 30_000)
+
+  it('IS terminated by an explicit cancel of its own id', async () => {
+    // Disconnect is not cancellation; an explicit cancel still is. Without this
+    // the first case would be indistinguishable from "detached runs cannot be
+    // cancelled at all".
+    const { ctx, parent } = await tokenSetup()
+    await ctx.capabilityTokens.whenSessionToken(parent.id)
+
+    const detached = await ctx.workflowEngine.startDetached({
+      script: "await agent('one'); return await agent('two')",
+      meta: META,
+      parent,
+    })
+    detached.cancel('operator cancelled the detached run')
+
+    expect((await detached.result).stopReason).toBe('cancelled')
+    await detached.dispose()
+  }, 30_000)
+
+  it('DISPOSES its own agent once it reaches a terminal state, leaking no session', async () => {
+    // A detached run owns its agent, so nothing else can tear it down: the
+    // launching turn never held the handle. Without this the process leaks one
+    // live session per detached run for as long as it runs.
+    const { ctx, parent } = await tokenSetup()
+    await ctx.capabilityTokens.whenSessionToken(parent.id)
+
+    const before = ctx.agents.list().length
+    const run = await ctx.workflowEngine.startDetached({ script: "return 'done'", meta: META, parent })
+    expect(ctx.agents.list().length).toBe(before + 1)
+
+    await run.result
+    // Settled through the same promise the disposal is chained to, so a poll
+    // is not racing it: awaiting the result orders this read after the tear-down.
+    await Promise.resolve()
+    await new Promise(resolve => setImmediate(resolve))
+
+    expect(ctx.agents.list().length).toBe(before)
+    await run.dispose()
+  }, 30_000)
+
+  it('REFUSES to start when the launcher cannot delegate, rather than starting without authority', async () => {
+    // A run that started anyway would be a detached run with no answer to what
+    // authorizes it — worse than not starting, because it looks complete.
+    const { ctx, parent } = await tokenSetup()
+    const orphan = { ...parent, id: SessionId('never-issued-a-token') } as typeof parent
+
+    await expect(ctx.workflowEngine.startDetached({ script: "return 'x'", meta: META, parent: orphan }))
+      .rejects.toThrow(/detached workflow was not started/u)
   }, 30_000)
 })

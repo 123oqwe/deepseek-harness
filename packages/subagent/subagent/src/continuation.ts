@@ -266,7 +266,12 @@ interface MaterializeInputs {
     delegatedPolicies: DelegatedPolicyOverrides
   }
   agentOptions: AgentOptions
-  composition: { persona?: string | undefined; toolFilter?: ToolRestriction | undefined; childSession?: SessionId | undefined }
+  composition: {
+    persona?: string | undefined
+    toolFilter?: ToolRestriction | undefined
+    childSession?: SessionId | undefined
+    delegatingSession?: SessionId | undefined
+  }
   signal: AbortSignal
 }
 
@@ -599,7 +604,11 @@ export class SubagentContinuationManager {
           delegatedPolicies,
         },
         agentOptions,
-        composition: { persona: request.persona, toolFilter: request.toolFilter },
+        composition: {
+          persona: request.persona,
+          toolFilter: request.toolFilter,
+          delegatingSession: request.delegatingSession,
+        },
         signal: spec.signal,
       })
       return this.submitMaterialized(

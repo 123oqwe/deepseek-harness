@@ -105,7 +105,7 @@ export function openLeaseStore(directory: string): LeaseStoreContract {
         const incumbent = read(workItem)
         if (incumbent !== undefined && !isReclaimable(incumbent, nowMs)) {
           db.exec('COMMIT')
-          return { acquired: false, reason: 'held-by-another' }
+          return { acquired: false, reason: 'held-by-another', holder: incumbent.holder }
         }
         const nextRow = db.prepare('SELECT next_epoch FROM lease_epochs WHERE work_item = ?')
           .get(workItem) as { next_epoch: number } | undefined

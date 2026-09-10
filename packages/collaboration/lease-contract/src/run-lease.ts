@@ -29,7 +29,7 @@ export type RunLeaseDenial =
   /** The store could not be reached, so no new work may start (acceptance[2]). */
   | { readonly reason: 'store-unavailable' }
   /** Another holder owns this item and its lease has not expired. */
-  | { readonly reason: 'held-by-another' }
+  | { readonly reason: 'held-by-another'; readonly holder: WorkerId | undefined }
   /** This holder's epoch is behind the store's: it was reclaimed and must stop. */
   | { readonly reason: 'fenced-out'; readonly currentEpoch: number }
 
@@ -91,7 +91,11 @@ export function acquireRunLease(
 ): { readonly lease: RunLease } | { readonly denied: RunLeaseDenial } {
   const acquired = store.acquire(workItem, holder, nowMs, leaseMs)
   if (!acquired.acquired) {
-    return { denied: acquired.reason === 'store-unavailable' ? { reason: 'store-unavailable' } : { reason: 'held-by-another' } }
+    return {
+      denied: acquired.reason === 'store-unavailable'
+        ? { reason: 'store-unavailable' }
+        : { reason: 'held-by-another', holder: acquired.holder },
+    }
   }
   const token = acquired.token
   return {

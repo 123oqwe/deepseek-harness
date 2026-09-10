@@ -66,7 +66,7 @@ Frozen cases: start detached → turn ends → the run is still alive with its l
 
 Point 6 needs the capability-token slice, which is P4-09's other reopened finding. They share one mechanism: a nested or detached run derives a narrowed token from its parent's attenuable token. Building `detached` without it would leave a run outliving its turn **with no answer to what authorizes it** — worse than the current gap, because it would look complete. **The capability-token slice lands first, or both land together.**
 
-## Point 6 after P2-02.U (updated: the mechanism exists now, and its outliving property is the open question)
+## Point 6 after P2-02.U (SETTLED below by measurement; the three readings are kept for the record)
 
 The shared mechanism point 6 waits on has landed: `capabilityTokens.deriveChild(parentSession, childSession, filter)` derives a child from its parent under the parent's declared filter, records it through `service.attenuate` so `lineageOf` can reach it, and re-derives when the child's visible tools grow. `subagent-spawn-in-process` and `ralph-loop` are its observation.
 
@@ -78,6 +78,74 @@ The shared mechanism point 6 waits on has landed: `capabilityTokens.deriveChild(
 
 (1) and (2) differ in where the authority is read from, not in what it permits; (3) changes the feature. **Not chosen** — the difference decides whether `revokeSession(parent)` kills a detached child, which is a security-visible property and belongs to the delegate.
 
+## Measured after the token slice landed: (1) is right, and the hole is on the revocation side
+
+The three readings above are now settled by measurement rather than by choice, and the measurement also finds a gap none of them named.
+
+**Disposal forgets; it does not revoke.** The `agent/disposed` listener deletes this session's entries from `sessionTokens`, `issuing`, `sessions`, `sessionRoots`, `issuanceErrors` and `delegations`. It calls nothing on the service. So a token derived at launch is untouched when its launcher goes away: reading (1) holds, and semantics 3 — disconnect is not cancellation — extends to authority without any new mechanism.
+
+**Explicit revocation is what cascades.** `revokeSession` calls `service.revoke(digest)` for every root recorded for the session, and `lineageOf` walks recorded `parentDigest` hops, so a revoked parent reaches its derived children. That is the boundary must[2] wants and P2-02 already established in another form: cancel is not revoke, and now disconnect is not revoke either.
+
+**The gap: after the launcher is disposed, revoking it reaches nothing.** `sessionRoots` is an in-memory `Map` (`capability-token-file/src/index.ts:160`), deleted per session at `agent/disposed` (`:224`) and cleared wholesale at plugin dispose (`:233`). `revokeSession` iterates `this.sessionRoots.get(session) ?? []` (`:384`). So once the launching session has ended — which for a detached run is the NORMAL case, not an edge — an operator asking to revoke everything that session authorized revokes nothing, silently and successfully. The same is true for every session after a process restart.
+
+This is not a reason to delay the slice, but building on it silently would ship a detached run that cannot be revoked once its launcher is gone, which is the exact combination "outlives its turn" makes dangerous. **The question for the delegate: does a detached run have to remain revocable through its launcher after that launcher has ended, and if so, what durable record carries the root list?** The store already holds the tokens and their `parentDigest` hops; what is memory-only is the session→roots index. Recovering it is a lookup over durable data, not a new authority.
+
+## The ruling's carrier holds for children and NOT for session roots
+
+Ruled: a detached run stays revocable after its launcher ends and after a restart, carried by deriving the session→roots index from the store by `subject` rather than by adding a record. Measured, that carrier is sound for half the cases and unsound for the half the ruling is about.
+
+- **A child token's subject IS its session.** `deriveFromParent` sets `subject: brandString<PrincipalId>(childSession)` (`capability-token-file/src/index.ts:435`). So a detached run's own token is findable in durable data by its session id, across a restart, with no new record. The operational path the ruling names — run id → the detached session id in the run's persistent state → `revokeSession` — works today on durable data alone.
+- **A session ROOT's subject is the PRINCIPAL, not the session.** `issueSessionToken` sets `subject: principal ?? brandString<PrincipalId>(session)` (`:511`), and the live caller passes one: `agent.identity?.principal.id` (`:265`). So in any composition where the agent has an identity — which is the shipped case — the session id is nowhere in the token. `CapabilityTokenStoreState` is `{ tokens, revokedDigests, spentNonces, auditRecords }`, and `CapabilityTokenLogRecord` carries `subject` too (`capability-token/src/types.ts:378-384`), so neither array recovers it.
+
+Every session of one principal therefore shares a subject. A subject-derived index cannot say which roots belong to session S; it can only say which belong to S's principal.
+
+### Ruling (c) — the session id goes in `constraints` — needs one more change to be sound
+
+Measured against the three things it rests on:
+
+- **`constraints` is a must[0] field, so the shape holds.** `TokenConstraints` today carries only `budget?` (`capability-token/src/types.ts:165`); a session key is a new member of that interface, not a new top-level field.
+- **`attenuateToken` does not constrain a new key.** It compares `constraints.budget` alone (`attenuate.ts:226`) and takes the child's constraints from the request verbatim (`:235`). So a child carrying its OWN session constraint is compatible with the existing rule and needs no change to attenuation. The cost is that nothing narrows the new key either: a caller could request a child constrained to some other session, and only the provider — the single production caller — would stop it. An independent key (`issuedFor`) is therefore better than a growable `sessions: [...]` list, because a list invites superset semantics that attenuation does not actually enforce.
+- **But the digest does NOT cover it, and that is disqualifying as written.** `digestToken` enumerates fields explicitly and hashes `token.constraints.budget ?? null` — not the constraints object (`attenuate.ts:255-267`). A session constraint added today would sit OUTSIDE the digest and therefore outside the signature: an unsigned field, alterable without breaking verification. The gate the ruling wants for depth — "presenter session equals constrained session" — would then be enforcing a forgeable value, which is worse than not having it.
+
+**So (c) is sound only with `digestToken` extended to cover the session constraint.** That is a format change — every token digest moves — which the pre-release stance permits, and the blast radius is small because session tokens are short-lived (`sessionTokenTtlMs`).
+
+**Counted field by field, and the fix is not "add one more entry".** `CapabilityToken` has ten top-level fields and `digestToken` enumerates ten entries, so every field is covered; the single projection is `constraints`, represented by its one member `budget`. The contract's promise — "any single-field difference produces a different one" — is therefore TRUE today, and it is this addition that would falsify it. That makes the durable fix to hash the constraints OBJECT canonically rather than to append `issuedFor` beside `budget`: appending keeps the projection, so the third constraint member added later escapes the digest exactly as the second would have, and the next person inherits this same finding. Canonicalizing the object closes the class instead of the instance.
+
+**The tradeoff, not chosen here.** Either (a) revoke by subject and accept that revoking one session revokes every session of that principal — over-revocation, which is the safe direction but must be stated in the API rather than discovered, or (b) carry the session id on an issued root so the index is exact, which changes must[0]'s "complete, closed token shape". What must NOT survive either way is the present behaviour: a silent successful no-op. Over-revoking is defensible; reporting success while revoking nothing is not.
+
+## The `resume` boundary case is already enforced — and its guard is in the wrong place
+
+§12.66 asks that handing a LIVE run to `resume` be refused. Measured, it is: `LeaseStore.acquire` refuses whenever an unexpired incumbent exists (`run/lease/src/store.ts:90`), and it does NOT special-case a matching holder, so even the same process re-resuming its own live run is denied `held-by-another` and surfaces as `RUN_HELD_BY_ANOTHER_HOST`.
+
+Two things are still worth freezing, because the case is real rather than vacuous:
+
+- The refusal arrives AFTER the work. `resume` runs `reusableSteps` first (`workflow-worker-thread/src/index.ts:323`) and the lease is only taken inside `launch` (`:513`). Reconciliation reads a journal that another holder is actively writing, and the answer it computes is discarded. The guard belongs before the reconciliation, not after it.
+- The message says "held by another host" when the holder may be this one. An operator re-attaching to their own run is told to look for a second host that does not exist.
+
+## Cases to freeze
+
+**C — the digest covers the class, not one member** (`capability-token`):
+
+1. Changing `issuedFor` changes the digest, and a signature over the old digest no longer verifies.
+2. Adding a NEW constraint member and changing only it changes the digest. This is the class negative control: an implementation that appended `issuedFor` beside `budget` in the enumeration passes case 1 and FAILS this one, which is the whole difference between fixing the instance and fixing the class.
+3. Changing `budget` still changes the digest — the coverage that already existed is not lost by canonicalizing the object.
+
+**U — revocation reaches a detached run after its launcher is gone** (`capability-token-file`, real provider):
+
+4. Launcher session disposed → `revokeSession(launcher)` → the detached child's next tool call is refused.
+5. The same, on a NEW provider instance over the same store directory: a process restart does not restore authority that was revoked, and does not lose the ability to revoke.
+6. Another session of the SAME principal is unaffected. This is the precision control, and it is the case ruling (a) could not have passed — subject-derived revocation cannot tell two sessions of one principal apart.
+7. `revokeSession` for a session with no recorded roots reports `nothing-to-revoke` rather than succeeding silently.
+
+**U — the detached run itself** (`workflow-worker-thread`, real engine):
+
+8. A detached run outlives the turn that started it: the turn ends, the run is still alive with its lease renewed, and re-attaching by id retrieves its result.
+9. `cancel(parent run)` cancels a NESTED sibling and leaves the detached run running. This is the case that makes "detached" more than a word.
+10. `cancel(detached id)` terminates it.
+11. Handing a LIVE run to `resume` is refused, and the refusal happens BEFORE reconciliation — observable as the journal not being read and no reconciliation having run. The mutation "take the lease after `reusableSteps`" must redden this.
+
+Mutations to RUN and paste (§12.68), not predict: removing the canonical constraints hashing must redden C2; revoking from the in-memory map alone must redden U4 and U5; matching by `subject` instead of by the session constraint must redden U6; taking the lease inside `launch` rather than before reconciliation must redden case 11.
+
 ## Status
 
-**No code written.** Submitted for review per §12.64's ordering, which allows P4-11's C subtask to begin once this is with the delegate.
+**Measurements recorded; no code written for this slice.** The token slice it depended on has landed (`f8d3bce3d1`), so the ordering condition is met. Awaiting the ruling on post-disposal revocability before the semantics above are frozen, since that answer changes what a frozen case must observe.

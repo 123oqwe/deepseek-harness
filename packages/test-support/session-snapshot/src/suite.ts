@@ -861,7 +861,7 @@ function preservedManifestKey(
   if (record.type !== 'action/manifest-appended') return undefined
   const data = record.data
   if (data === null || typeof data !== 'object' || !('idempotencyKey' in data)) return undefined
-  return manifestKeys.get(manifestIdentity(data as Record<string, unknown>))
+  return manifestKeys.get(manifestIdentity(data))
 }
 
 /**
@@ -1184,7 +1184,7 @@ export function stabilizeRefreshLog(
     freshContext,
     existingContext,
   )
-  const manifestKeys = committedManifestKeys(existingRecords as Record<string, unknown>[])
+  const manifestKeys = committedManifestKeys(existingRecords)
   let existingIndex = 0
   let previousEventTime: unknown
   for (let i = 0; i < records.length; i++) {

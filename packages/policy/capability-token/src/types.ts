@@ -164,6 +164,28 @@ export function TokenBudget(value: number): TokenBudget {
  */
 export interface TokenConstraints {
   readonly budget?: TokenBudget
+  /**
+   * The session this token was issued FOR (P4-09 must[2]).
+   *
+   * A session root's `subject` is the PRINCIPAL, and one principal may hold
+   * many sessions, so the subject cannot say which session a root belongs to.
+   * Revoking "everything this session authorized" needs that answer from
+   * durable data, because a detached run outlives the session that launched it
+   * — the launcher's in-memory record is gone exactly when the question is
+   * asked. Recorded as a constraint because it IS one: the grant is bounded to
+   * a session, and writing that down makes an existing fact part of the token.
+   *
+   * A derived child carries its OWN session here, never its parent's:
+   * revocation reaches the child through `parentDigest` lineage, not through a
+   * shared constraint value.
+   *
+   * `attenuateToken` does not compare this member — it narrows `budget` alone —
+   * so the provider that derives children is what keeps it truthful. A gate
+   * checking "presenter's session equals this" is the enforcement that would
+   * make it self-defending, and it is only worth building because the digest
+   * covers this field: an unsigned constraint would be a forgeable one.
+   */
+  readonly issuedFor?: SessionIdLike
 }
 
 /**
@@ -418,12 +440,36 @@ export interface CapabilityTokenProviderContract {
    */
   issuanceError(session: SessionIdLike): string | undefined
   /**
+   * Whether this token, or any ancestor it was delegated from, has been
+   * revoked (P2-02 acceptance[1]).
+   *
+   * The question a tool dispatch asks before honouring a presented token.
+   * Without it, revocation is a record rather than a withdrawal: a revoked
+   * token keeps authorizing every call until it expires, and acceptance[1]'s
+   * "revoking a parent invalidates every descendant" is true of the ledger and
+   * false of the running system.
+   *
+   * Answered from the loaded revocation set, never by reading the store, so
+   * the dispatch stays free of I/O.
+   * @param token - the token presented to the dispatch.
+   * @returns `true` when the token or an ancestor is revoked.
+   */
+  isRevoked(token: SignedCapabilityToken): boolean
+  /**
    * Withdraw a session's authority: every root issued for it, and so every
    * token delegated from any of them.
+   *
+   * Answered from durable records, so a session that has already ended is
+   * still revocable — the case a detached run makes ordinary, since it outlives
+   * the session that launched it.
    * @param session - the session whose authority is withdrawn.
-   * @returns when the revocations are durably recorded.
+   * @returns `'revoked'` when at least one root was withdrawn, `'nothing-to-revoke'`
+   *   when the durable record holds none for this session. The two are distinct
+   *   answers on purpose: reporting plain success for a session nothing was
+   *   recorded against tells an operator their revocation took effect when it
+   *   had nothing to act on.
    */
-  revokeSession(session: SessionIdLike): Promise<void>
+  revokeSession(session: SessionIdLike): Promise<'revoked' | 'nothing-to-revoke'>
   /**
    * Derive a child session's token from its parent's, under the parent's own
    * delegation filter (P2-02 acceptance[0]: never wider than its parent).

@@ -489,3 +489,65 @@ describe('P2-02 Fault — attenuation boundary matrix', () => {
     it(`fault boundary ${fault.boundary}`, () => { fault.run() })
   }
 })
+
+describe('P4-09 must[2]: the digest covers the constraints OBJECT, not one member of it', () => {
+  it('changes when `issuedFor` changes, and the old signature stops verifying', () => {
+    // The property the session-scoped revocation index rests on. A constraint
+    // outside the digest is outside the signature — `signedTokenBytes` is the
+    // digest — so it could be altered while verification still passed, and a
+    // gate checking it would be enforcing a forgeable value.
+    const token = fixtureRootToken({
+      constraints: { budget: PARENT_BUDGET, issuedFor: 'session-a' },
+      nonce: CapabilityTokenNonce('nonce-issued-for'),
+    })
+    const signature = signTokenForTest(trustRoot, token)
+    const moved = { ...token, constraints: { budget: PARENT_BUDGET, issuedFor: 'session-b' } }
+
+    expect(digestToken(moved)).not.toBe(digestToken(token))
+    const result = verifyToken(trustRoot, { token: moved, signature }, { now: FIXED_TIME, seenNonces: new Set() })
+    expect(result).toStrictEqual({ verified: false, reason: 'signature-invalid' })
+  })
+
+  it('changes when a NEWLY ADDED constraint member changes, which is the class this fixes', () => {
+    // The negative control that separates fixing the class from fixing the
+    // instance. An implementation that appended `issuedFor` beside `budget` in
+    // the enumeration passes the case above and FAILS this one: the next member
+    // added would escape the digest exactly as `issuedFor` would have.
+    //
+    // The member is applied through a cast because the point is precisely a
+    // member the type does not yet declare — the future one.
+    const token = fixtureRootToken()
+    const extended = {
+      ...token,
+      constraints: { ...token.constraints, futureMember: 'x' } as CapabilityToken['constraints'],
+    }
+
+    expect(digestToken(extended)).not.toBe(digestToken(token))
+  })
+
+  it('still changes when `budget` changes, so canonicalizing lost no coverage', () => {
+    const token = fixtureRootToken()
+    const cheaper = { ...token, constraints: { budget: TokenBudget(1) } }
+
+    expect(digestToken(cheaper)).not.toBe(digestToken(token))
+  })
+
+  it('is the same digest whether an optional member is absent or explicitly undefined', () => {
+    // Absent members are dropped rather than encoded, so declaring a member and
+    // leaving it undefined is the same token as never declaring it — which is
+    // what the type says, since every member is optional. Without this, two
+    // spellings of one grant would carry different identities.
+    const token = fixtureRootToken({ constraints: { budget: PARENT_BUDGET } })
+    // The member is assigned onto a copy rather than written in a literal:
+    // `exactOptionalPropertyTypes` makes `{ issuedFor: undefined }` a different
+    // TYPE from an absent key, and the distinction under test is a VALUE one --
+    // an own property whose value is `undefined` must digest as if it were not
+    // there. Fighting the type here would only hide which of the two is being
+    // built.
+    const constraints: Record<string, unknown> = { ...token.constraints }
+    constraints['issuedFor'] = undefined
+    const spelled = { ...token, constraints: constraints as CapabilityToken['constraints'] }
+
+    expect(digestToken(spelled)).toBe(digestToken(token))
+  })
+})

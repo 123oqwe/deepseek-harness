@@ -28,6 +28,7 @@ import type { ChildFailurePolicy } from '@deepseek-ai/dsh-workflow-registry'
 import type { RunLease } from '@deepseek-ai/dsh-lease-contract'
 import { HostToWorkerType, WorkerToHostType } from './protocol.ts'
 import type { HostToWorkerPayloads, WorkerToHostMessage } from './protocol.ts'
+import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { ChildResult, ChildStartRequest, NestedStartRequest, WorkerInit } from './types.ts'
 
 /**
@@ -216,6 +217,17 @@ export class WorkerRun implements WorkflowRun {
      * the definition's declaration exists to fix.
      */
     inheritedNesting: RunNesting | undefined,
+    /**
+     * This run's OWN session, for a detached run; `undefined` for one the
+     * launching turn owns (P4-09 must[2]).
+     *
+     * A detached run's children derive their authority from THIS session, not
+     * from the launcher's: the launcher may be gone, and a derivation from an
+     * ended session is a derivation from nothing. It is also what makes the
+     * run revocable by id after its launcher has ended, since the derived
+     * tokens carry it in `constraints.issuedFor`.
+     */
+    private readonly detachedSession: SessionId | undefined,
     /** What a resume reconciled: the journal to continue and the steps it settled. */
     reconciled: Reconciled = { reusable: {}, journal: undefined },
   ) {
@@ -487,6 +499,12 @@ export class WorkerRun implements WorkflowRun {
         // run is not a weaker case -- a root run's children inherit its
         // session's authority, which is what `undefined` means here.
         ...this.toolBound === undefined ? {} : { toolFilter: { allow: this.toolBound } },
+        // A DETACHED run delegates from itself, not from the turn that launched
+        // it: that session may have ended, and `deriveFromParent` refuses a
+        // parent holding no token — which would make a detached run unable to
+        // do the very work it stayed alive for. An attached run has no such
+        // session and keeps deriving from its parent agent.
+        ...this.detachedSession === undefined ? {} : { delegatingSession: this.detachedSession },
         ...request.schema !== undefined ? { outputSchema: request.schema } : {},
         ...request.provider !== undefined || request.model !== undefined
           ? {

@@ -86,7 +86,18 @@ export type AcquireDenialReason =
 /** The outcome of an acquisition attempt. */
 export type AcquireResult =
   | { readonly acquired: true; readonly lease: Lease; readonly token: FencingToken }
-  | { readonly acquired: false; readonly reason: AcquireDenialReason }
+  | {
+    readonly acquired: false
+    readonly reason: AcquireDenialReason
+    /**
+     * The worker that holds the item, present only for `'held-by-another'`.
+     *
+     * Reported because a refusal that cannot name the holder sends an operator
+     * looking for a second host that may not exist: the commonest case is a
+     * process asking for an item it already holds itself.
+     */
+    readonly holder?: WorkerId
+  }
 
 /** Why a renewal was refused. */
 export type RenewDenialReason =

@@ -13,7 +13,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import WorkflowEngine, { WorkflowError, WorkflowRunId } from '@deepseek-ai/dsh-workflow'
 import { brandString } from '@deepseek-ai/dsh-brand'
-import type { LeaseStoreContract, WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease-contract'
+import type { LeaseStoreContract, RunLease, WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease-contract'
 import { dshHomePath } from '@deepseek-ai/dsh-home-paths'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { DefinitionRegistry, planNestedRun } from '@deepseek-ai/dsh-workflow-registry'
@@ -320,6 +320,12 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
    * @returns the live run.
    */
   async resume(runId: WorkflowRunId, request: WorkflowStartRequest): Promise<WorkflowRun> {
+    // The lease FIRST, before any reconciliation (§12.66). Reconciling a run
+    // another holder is actively writing reads a journal mid-write and then
+    // discards the answer when the lease is refused — work done against live
+    // state, on the strength of a claim this process does not hold. A guard
+    // placed after the work it guards is not a guard.
+    const preAcquired = this.takeRunLease(runId)
     const reconciled = await reusableSteps(
       this.journalDirectory,
       runId,
@@ -327,11 +333,79 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       childId => this.childFinished(childId),
       this.effectStateLookup(request.parent),
     )
-    return this.launch(request, runId, reconciled)
+    return this.launch(request, runId, reconciled, undefined, preAcquired)
   }
 
   start(request: WorkflowStartRequest): WorkflowRun {
     return this.launch(request, undefined, { reusable: {}, journal: undefined })
+  }
+
+  async startDetached(request: WorkflowStartRequest): Promise<WorkflowRun> {
+    // The run's OWN session, minted here rather than borrowed from the
+    // launcher: a detached run outlives the turn that started it, and a token
+    // held under the launcher's session would be answerable to a session that
+    // has ended. `deriveChild` takes session IDS, not live agents, so the run
+    // needs an identity to be derived TO and nothing more.
+    const session = brandString<SessionId>(randomUUID())
+    // The run's OWN agent, not just its own session id. "Outliving the
+    // launcher" means depending on none of its scopes, and an Agent IS the
+    // scope its children are composed in: a child created on the launcher's
+    // context dies with it (`cannot create effect on inactive context`), no
+    // matter whose token it holds. The authority chain and the composition
+    // chain have to come from the same place, and that place is this handle.
+    //
+    // The launcher is recorded as `parentSession` — lineage, not ownership.
+    // Who started a detached run stays answerable in the record; who owns it is
+    // the Run service.
+    // `ctx.get` rather than a declared injection: `agents` is needed only by
+    // THIS entry point, and adding it to `inject` would stop the engine
+    // registering at all in every composition that mounts no agent registry --
+    // the seam's own tests among them. A composition without one cannot start a
+    // detached run, and says so here rather than by failing to exist.
+    const agents = this.ctx.get('agents')
+    if (agents === undefined) {
+      throw new WorkflowError(
+        'detached workflow was not started: this composition mounts no agent registry, so a run cannot hold its own session',
+        'AGENT_START',
+      )
+    }
+    const handle = await agents.create({
+      sessionId: session,
+      meta: { parentSession: request.parent.id },
+    }).catch((error: unknown) => {
+      throw new WorkflowError(
+        `detached workflow was not started: ${error instanceof Error ? error.message : String(error)}`,
+        'AGENT_START',
+        { cause: error },
+      )
+    })
+    const tokens = this.ctx.get('capabilityTokens')
+    if (tokens !== undefined) {
+      // Derived NOW, while the launcher still holds a token to derive from.
+      // Deriving on first use would derive from whatever remains after the
+      // launching turn ended, which is the difference between outliving a turn
+      // and outliving the authority that permitted it.
+      tokens.deriveChild(request.parent.id, session)
+      const derived = await tokens.whenSessionToken(session)
+      if (derived === undefined) {
+        // No half-started run: the agent this call created is torn down before
+        // the refusal, so a detached run either holds its authority or does not
+        // exist.
+        await handle.dispose()
+        throw new WorkflowError(
+          `detached workflow was not started: ${tokens.issuanceError(session) ?? 'its authority could not be derived'}`,
+          'AGENT_START',
+        )
+      }
+    }
+    return this.launch(
+      { ...request, parent: handle.agent },
+      undefined,
+      { reusable: {}, journal: undefined },
+      undefined,
+      undefined,
+      { session, dispose: () => handle.dispose() },
+    )
   }
 
   /**
@@ -429,6 +503,39 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
    * @param reconciled - what a resume concluded: reusable outputs and the journal to continue; empty for a fresh run.
    * @returns the live run.
    */
+  /**
+   * Take the run's lease, or refuse with a message that names who holds it.
+   *
+   * Named rather than described: "held by another host" sends an operator
+   * looking for a second machine, and the commonest holder is this process
+   * asking for a run it is already running.
+   * @param id - the run whose work item is being claimed.
+   * @returns the held lease.
+   * @throws WorkflowError when the store cannot answer or another worker holds it.
+   */
+  private takeRunLease(id: WorkflowRunId): { lease: RunLease } {
+    const holder = brandString<WorkerId>(`workflow-engine:${process.pid}`)
+    const taken = acquireRunLease(this.leases, brandString<WorkItemId>(id), holder, Date.now(), this.config.leaseMs)
+    if ('denied' in taken) {
+      const denial = taken.denied
+      if (denial.reason === 'store-unavailable') {
+        throw new WorkflowError(
+          'the lease store could not be reached, so no new workflow run may start',
+          'LEASE_STORE_UNAVAILABLE',
+        )
+      }
+      // `fenced-out` cannot arrive from an acquisition — it is a renewal's
+      // answer — but the union carries it, so the holder is read only where the
+      // type says there is one.
+      const holder = denial.reason === 'held-by-another' ? denial.holder : undefined
+      throw new WorkflowError(
+        `workflow run ${id} is held by ${holder ?? 'an unnamed worker'} and is still live; resume refused`,
+        'RUN_HELD_BY_ANOTHER_HOST',
+      )
+    }
+    return { lease: taken.lease }
+  }
+
   private launch(
     request: WorkflowStartRequest,
     resumeRunId: WorkflowRunId | undefined,
@@ -439,6 +546,8 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       limits: InheritedWorkerLimits
       toolBound: readonly string[] | undefined
     },
+    preAcquired?: { lease: RunLease },
+    detached?: { session: SessionId; dispose: () => Promise<void> },
   ): WorkflowRun {
     const meta = validateMeta(request.meta)
     assertBodyParses(request.script, meta.name)
@@ -509,17 +618,7 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     // acceptance[2]: a store that cannot answer stops new work. The denial is
     // reported as a WorkflowError rather than by settling the run, because the
     // run never began: there is nothing to settle.
-    const holder = brandString<WorkerId>(`workflow-engine:${process.pid}`)
-    const taken = acquireRunLease(this.leases, brandString<WorkItemId>(id), holder, Date.now(), this.config.leaseMs)
-    if ('denied' in taken) {
-      throw new WorkflowError(
-        taken.denied.reason === 'store-unavailable'
-          ? 'the lease store could not be reached, so no new workflow run may start'
-          : `workflow run ${id} is held by another host`,
-        taken.denied.reason === 'store-unavailable' ? 'LEASE_STORE_UNAVAILABLE' : 'RUN_HELD_BY_ANOTHER_HOST',
-      )
-    }
-    const { lease } = taken
+    const { lease } = preAcquired ?? this.takeRunLease(id)
 
     const workerRun = new WorkerRun(
       runCtx,
@@ -542,6 +641,7 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       this,
       nesting?.toolBound,
       nested === undefined ? undefined : nesting,
+      detached?.session,
       reconciled,
     )
     // must[2]/acceptance[0] live with the RUN, not with the engine: the lease's
@@ -553,6 +653,13 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
 
     // `workflow/end` fires as the (never-rejecting) result settles, with the
     // outcome DATA only — the value stays with the run's holder.
+    // A detached run OWNS its agent, so it tears it down when it reaches a
+    // terminal state -- completed, failed or cancelled alike. Nothing else can:
+    // the launching turn does not hold the handle, and leaving it alive would
+    // leak one session per detached run for the process's lifetime.
+    if (detached !== undefined) {
+      void workerRun.result.then(() => detached.dispose(), () => detached.dispose())
+    }
     void workerRun.result.then((settled) => {
       // must[1]: the terminal state write carries the fencing token. A run
       // reclaimed mid-flight must not report a result under an authority it no

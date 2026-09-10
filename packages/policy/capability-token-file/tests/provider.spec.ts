@@ -44,9 +44,12 @@ afterEach(async () => {
 const testSignal = new AbortController().signal
 
 /** Mount the provider over a real Trust Kernel and tool runtime. */
-async function mount(requireForTools: boolean): Promise<{ ctx: Context; directory: string }> {
-  const directory = await mkdtemp(join(tmpdir(), 'dsh-cap-token-'))
-  roots.push(directory)
+async function mount(requireForTools: boolean, reuseDirectory?: string): Promise<{ ctx: Context; directory: string }> {
+  // `reuseDirectory` mounts a SECOND provider over an existing store, which is
+  // how a process restart is observed: same durable state, nothing carried
+  // over in memory.
+  const directory = reuseDirectory ?? await mkdtemp(join(tmpdir(), 'dsh-cap-token-'))
+  if (reuseDirectory === undefined) roots.push(directory)
   const ctx = new Context()
   pinTrustKernel(ctx, createTrustKernel())
   await ctx.plugin(SessionStore)
@@ -262,5 +265,75 @@ describe('P2-02 acceptance[2]: the durable store holds no raw secret', () => {
     expect(text).not.toContain('PRIVATE KEY')
     expect(text).not.toContain('privateKey')
     await handle.dispose()
+  })
+})
+
+describe('P4-09 must[2]: a session stays revocable after it ends, and revocation stays precise', () => {
+  it('revokes a DISPOSED session\'s authority, and the revoked token is refused AT THE CALL', async () => {
+    // The case a detached run makes ordinary rather than exceptional: the
+    // launcher is gone by the time anyone asks. `sessionRoots` is dropped at
+    // `agent/disposed`, so the previous implementation iterated an empty list
+    // and reported success having revoked nothing.
+    //
+    // Observed at the dispatch rather than by asking the provider whether it
+    // thinks the token is revoked: a recorded revocation that the tool call
+    // still honours is the gap between a decision and its enforcement.
+    const { ctx } = await mount(true)
+    const handle = await ctx.agents.create({ sessionId: SessionId('revoke-after-end') })
+    const token = await ctx.capabilityTokens.whenSessionToken(handle.agent.id)
+    expect(token).toBeDefined()
+    await handle.dispose()
+
+    expect(await ctx.capabilityTokens.revokeSession(SessionId('revoke-after-end'))).toBe('revoked')
+
+    const refused = await ctx.tools.execute({
+      signal: testSignal,
+      callId: 'revoked-call' as never,
+      name: 'read_file',
+      arguments: {},
+      agent: handle.agent,
+      ...token === undefined ? {} : { capabilityToken: token },
+    })
+    expect(refused.isError).toBe(true)
+  })
+
+  it('revokes it from a NEW provider instance over the same store, so a restart does not lose the ability', async () => {
+    // Durable or not is the whole question: an index rebuilt only in memory
+    // answers correctly until the process that built it goes away, which is
+    // exactly when a detached run is still running.
+    const { ctx, directory } = await mount(true)
+    const handle = await ctx.agents.create({ sessionId: SessionId('revoke-after-restart') })
+    await ctx.capabilityTokens.whenSessionToken(handle.agent.id)
+    await handle.dispose()
+    await ctx.fiber.dispose()
+
+    const { ctx: restarted } = await mount(true, directory)
+
+    expect(await restarted.capabilityTokens.revokeSession(SessionId('revoke-after-restart'))).toBe('revoked')
+  })
+
+  it('leaves ANOTHER session of the same principal untouched', async () => {
+    // The precision control, and the case a subject-derived index could not
+    // pass: `subject` is the principal, so matching on it would revoke every
+    // session that principal holds.
+    const { ctx } = await mount(true)
+    const kept = await ctx.agents.create({ sessionId: SessionId('sibling-kept') })
+    const revoked = await ctx.agents.create({ sessionId: SessionId('sibling-revoked') })
+    const keptToken = await ctx.capabilityTokens.whenSessionToken(kept.agent.id)
+    await ctx.capabilityTokens.whenSessionToken(revoked.agent.id)
+
+    await ctx.capabilityTokens.revokeSession(SessionId('sibling-revoked'))
+
+    expect(await ctx.capabilityTokens.whenSessionToken(kept.agent.id)).toStrictEqual(keptToken)
+    await kept.dispose()
+    await revoked.dispose()
+  })
+
+  it('reports `nothing-to-revoke` for a session no root was ever issued for', async () => {
+    // Distinct from success on purpose. Reporting plain success here tells an
+    // operator their revocation took effect when it had nothing to act on.
+    const { ctx } = await mount(true)
+
+    expect(await ctx.capabilityTokens.revokeSession(SessionId('never-existed'))).toBe('nothing-to-revoke')
   })
 })

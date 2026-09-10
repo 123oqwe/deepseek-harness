@@ -34,8 +34,11 @@ describe('P4-07 must[0]: each acquisition owns the item at a strictly greater ep
     const store = new LeaseStore()
     store.acquire(ITEM, WORKER_A, 0, 1_000)
 
+    // The refusal NAMES the incumbent (P4-09 §12.66). A denial that only says
+    // "held by another" sends an operator looking for a second host, and the
+    // commonest holder is the asking process itself.
     expect(store.acquire(ITEM, WORKER_B, 500, 1_000))
-      .toEqual({ acquired: false, reason: 'held-by-another' })
+      .toEqual({ acquired: false, reason: 'held-by-another', holder: WORKER_A })
   })
 
   it('keeps epochs per work item, so acquiring one does not advance another', () => {

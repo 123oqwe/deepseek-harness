@@ -147,6 +147,18 @@ export interface SubagentStartRequest {
    */
   readonly toolFilter?: ToolRestriction
   /**
+   * The session whose token this child's authority is derived FROM; defaults to
+   * the parent agent's own session.
+   *
+   * The delegating party is whoever HOLDS the token being narrowed, and
+   * `parent.id` is only the form that takes at the top level. A detached
+   * workflow run holds its own derived token and outlives the turn that
+   * launched it, so its children must derive from IT: deriving from the
+   * launcher would fail the moment that session ended, which is precisely when
+   * a detached run is still working.
+   */
+  readonly delegatingSession?: SessionId
+  /**
    * Optional per-child persona. Requires {@link SubagentCapabilities.persona};
    * rejected at start otherwise. In-process backends register it as a scoped
    * `deployment:persona` section on the child, SHADOWING the deployment's

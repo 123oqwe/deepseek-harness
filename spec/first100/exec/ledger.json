@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-09T16:51:52.501Z",
-  "inputDigest": "51c2516f4614dff293d2537eaad5d96a5c4a6eb67604f6dd6caa5f67bf5896dd",
+  "lastUpdatedUtc": "2026-09-10T04:10:23.621Z",
+  "inputDigest": "bf847b99b1747baad034c1d773bd34b98905fc3a36c7e651ed48b1fa1695d6e1",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4842,63 +4842,29 @@
       "wave": 7,
       "cells": {
         "C": {
-          "status": "GREEN",
-          "candidateSha": "8486e52a6a0627eaba36a616e01ed043f5acf200",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33965511238",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r13/first100-evidence-8486e52a6a0627eaba36a616e01ed043f5acf200/vitest-report.json",
-          "observationSha256": "c6dcc9189a0c9b17a8062298af443ce7f5c7a36f83df0080541cc54da95c846d",
-          "expectCasesMatched": [
-            "carries step id, phase, effect class, outcome, inputs, output, both receipt kinds and verification",
-            "keeps `verified` separate from `outcome`",
-            "records artifact REFS, never inline content",
-            "skips it and reuses its recorded output",
-            "re-runs a step that never completed",
-            "re-runs a completed step that recorded no output",
-            "reconciles it even when completed AND verified",
-            "reconciles a side-effecting step that recorded no receipts at all",
-            "collects every side-effect receipt in the journal, not only those before the restart point",
-            "resumes at the first step that is not skippable, not past it",
-            "resumes at the end when every step completed and was verified",
-            "resumes at zero when the first step is unskippable, whatever follows it",
-            "does not repeat a completed child agent call: its receipt is retained and its step skipped",
-            "refuses the WHOLE resume rather than degrading to a partial one",
-            "admits an unchanged digest, so the refusal is not unconditional",
-            "drops recomputable inputs from a completed, verified, pure step",
-            "leaves an unverified or side-effecting step untouched",
-            "retains EVERY receipt, which is the evidence nothing can regenerate",
-            "reports a compaction that dropped a receipt as NOT retaining evidence"
-          ],
-          "capturedAtUtc": "2026-09-05T18:08:06.084Z"
+          "status": "NOT_RUN",
+          "revokedFrom": {
+            "candidateSha": "f8d3bce3d14534500b098e4d7373d2eba409b836",
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34432095748",
+            "absentCommitments": 1
+          },
+          "revokedReason": "The base entry for this stage was written at 2026-09-10T04:10:00Z, after run 34432095748 observed f8d3bce3d1. Greening on that report would rest on a commitment the observation could not have seen — the same shape §12.52 closes and P2-02.U was revoked for. Re-observe on a tree containing the new bases."
         },
         "P": {
-          "status": "GREEN",
-          "candidateSha": "8486e52a6a0627eaba36a616e01ed043f5acf200",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33965511238",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r13/first100-evidence-8486e52a6a0627eaba36a616e01ed043f5acf200/vitest-report.json",
-          "observationSha256": "c6dcc9189a0c9b17a8062298af443ce7f5c7a36f83df0080541cc54da95c846d",
-          "expectCasesMatched": [
-            "writes an in-flight entry when a step STARTS, before it settles",
-            "replaces the in-flight entry in place when the step settles",
-            "orders entries by sequence even when they settle out of order",
-            "carries the declared phase, and names an unphased step rather than omitting it",
-            "orders by sequence even when steps START out of order",
-            "drops a settlement for a step that never started",
-            "refuses to mark an in-flight step verified",
-            "refuses to mark a FAILED step verified",
-            "marks a completed step verified when asked",
-            "records the effect class the caller declared, never one it inferred",
-            "kill BEFORE the agent call settles: the step is re-run",
-            "kill AFTER the agent call settles but before verification: still re-run",
-            "kill after verification: the completed child work is NOT repeated"
-          ],
-          "capturedAtUtc": "2026-09-05T18:08:06.305Z"
+          "status": "NOT_RUN",
+          "revokedFrom": {
+            "candidateSha": "f8d3bce3d14534500b098e4d7373d2eba409b836",
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34432095748",
+            "absentCommitments": 1
+          },
+          "revokedReason": "The base entry for this stage was written at 2026-09-10T04:10:00Z, after run 34432095748 observed f8d3bce3d1. Greening on that report would rest on a commitment the observation could not have seen — the same shape §12.52 closes and P2-02.U was revoked for. Re-observe on a tree containing the new bases."
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "d19b70e6a0c6ad1a1a0619cdcaaf86067fe3172b",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34298753030",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d19b70e6a0/vitest-report.json",
-          "observationSha256": "697cf160c7099c64664736036aed54785123b0eca85f2d634608fe12851a8829",
+          "candidateSha": "f8d3bce3d14534500b098e4d7373d2eba409b836",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34432095748",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/run-34432095748/first100-vitest-report-f8d3bce3d14534500b098e4d7373d2eba409b836/vitest-report.json",
+          "observationSha256": "016686ea720f676c8cd7d91c2989e1d3832f80ad05ec48177a4f076da9932441",
           "expectCasesMatched": [
             "records a started agent call as in-flight, carrying the child session id as its receipt",
             "settles a completed call with an output the resume can reuse",
@@ -4909,63 +4875,16 @@
             "kill between two agent calls: the finished one is skipped, the next re-run",
             "kill during concurrent calls started out of order: the journal still reads in script order"
           ],
-          "capturedAtUtc": "2026-09-09T01:55:51.111Z",
-          "admittedUnderRedRun": {
-            "runId": "34298753030",
-            "redSteps": [
-              {
-                "step": "Recorded-session snapshots",
-                "failingCases": [
-                  "apps/web/tests/minimal-preset.snapshot.ts:143:30 — Error: browserType.launch: Executable doesn't exist at ~/.cache/ms-playwright/chromium_headless_shell-1228/chrome-linux/headless_shell",
-                  "Tests  1 failed | 118 passed | 1 skipped (120)"
-                ],
-                "evidence": "run 34298753030 @ d19b70e6a0. The vitest artifact from the second job reports success with 20526 tests and 0 failures. The red step is the snapshot suite in `lib` mode, whose only failure is a web scenario that could not launch a browser because this workflow never installed Playwright's Chromium — `ci.yml` has a cache-restore and an install step that `first100-exact-sha.yml` did not. That is a missing workflow dependency, not a product regression, and the missing binary is named in the failure text. No file of P2-04, P4-08 or P4-11 appears in the failure set.",
-                "subjectPaths": [
-                  "apps/web/tests/minimal-preset.snapshot.ts",
-                  ".github/workflows/first100-exact-sha.yml"
-                ]
-              }
-            ],
-            "diagnosedCause": "The workflow never installed Playwright's Chromium. Running snapshots in lib mode (my own change) pulled apps/web/tests/**/*.snapshot.ts into the run, and those scenarios launch a real browser; ci.yml installs Chromium before its snapshot gate and first100-exact-sha.yml did not, so the run failed with browserType.launch: Executable doesn't exist at ~/.cache/ms-playwright/chromium_headless_shell-1228/chrome-linux/headless_shell. 118 passed, 1 failed, 1 skipped. The reality sets of P2-04, P4-08 and P4-11 contain no web scenario and no workflow file, and the vitest artifact for this SHA is 20526/0. Fixed by adding the cache-restore and install steps to the workflow; admitted per §12.6-B and §12.71 with the delegate's acknowledgement.",
-            "unrelatedBecause": "the epic's reality set (24 path(s): declaration plus live freeze entries, per BLOCKED-134) is disjoint from the failing subject [\"apps/web/tests/minimal-preset.snapshot.ts\",\".github/workflows/first100-exact-sha.yml\"]",
-            "admittedBy": "guanjieqiao-92 (delegate), §12.71",
-            "diagnosedAtUtc": "2026-09-09T01:56:44.186Z"
-          }
+          "capturedAtUtc": "2026-09-10T03:47:59.961Z"
         },
         "F": {
-          "status": "GREEN",
-          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
-          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
-          "expectCasesMatched": [
-            "P4-08 Fault — resume boundary matrix enumerates at least twelve boundaries, each named once",
-            "fault boundary 01 an in-flight step is re-run",
-            "fault boundary 02 a failed step is re-run",
-            "fault boundary 03 a completed but unverified step is re-run",
-            "fault boundary 04 a completed, verified step with no output is re-run",
-            "fault boundary 05 a completed, verified, pure step is skipped",
-            "fault boundary 06 a side-effecting step is reconciled even when completed and verified",
-            "fault boundary 07 a side-effecting step that never completed is re-run, not reconciled",
-            "fault boundary 08 a side-effecting step with NO receipts is still reconciled",
-            "fault boundary 09 a changed script digest refuses the whole resume",
-            "fault boundary 10 an empty journal is resumable and resumes at zero",
-            "fault boundary 11 a fully completed journal resumes past its last step",
-            "fault boundary 12 resume stops at the first non-skippable step, not past it",
-            "fault boundary 13 receipts are collected from AFTER the restart point too",
-            "fault boundary 14 a refused plan yields no receipts to reconcile",
-            "fault boundary 15 compaction leaves a side-effecting entry untouched",
-            "fault boundary 16 compaction retains every receipt",
-            "fault boundary 17 compacting an already-compacted journal changes nothing further",
-            "fault boundary 18 validation[2]: a resumed run reaches the same outputs as an uninterrupted one"
-          ],
-          "reattested": {
-            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
-            "atUtc": "2026-09-07T06:50:47.603Z"
+          "status": "NOT_RUN",
+          "revokedFrom": {
+            "candidateSha": "f8d3bce3d14534500b098e4d7373d2eba409b836",
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34432095748",
+            "absentCommitments": 1
           },
-          "capturedAtUtc": "2026-09-07T06:50:47.604Z"
+          "revokedReason": "The base entry for this stage was written at 2026-09-10T04:10:00Z, after run 34432095748 observed f8d3bce3d1. Greening on that report would rest on a commitment the observation could not have seen — the same shape §12.52 closes and P2-02.U was revoked for. Re-observe on a tree containing the new bases."
         }
       },
       "supplements": {
@@ -4984,7 +4903,7 @@
           "capturedAtUtc": "2026-09-09T01:56:20.141Z"
         },
         "P.1": {
-          "status": "GREEN",
+          "status": "SUPERSEDED",
           "candidateSha": "d19b70e6a0c6ad1a1a0619cdcaaf86067fe3172b",
           "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34298753030",
           "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d19b70e6a0/vitest-report.json",
@@ -5004,7 +4923,8 @@
             "kill AFTER the agent call settles but before verification: still re-run",
             "kill after verification: the completed child work is NOT repeated"
           ],
-          "capturedAtUtc": "2026-09-09T01:56:20.450Z"
+          "capturedAtUtc": "2026-09-09T01:56:20.450Z",
+          "supersededBy": "2026-09-10T04:10:00Z"
         },
         "U.2": {
           "status": "GREEN",
@@ -5035,7 +4955,7 @@
           "capturedAtUtc": "2026-09-09T01:56:21.028Z"
         },
         "C.4": {
-          "status": "GREEN",
+          "status": "SUPERSEDED",
           "candidateSha": "d19b70e6a0c6ad1a1a0619cdcaaf86067fe3172b",
           "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34298753030",
           "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d19b70e6a0/vitest-report.json",
@@ -5061,10 +4981,11 @@
             "retains EVERY receipt, which is the evidence nothing can regenerate",
             "reports a compaction that dropped a receipt as NOT retaining evidence"
           ],
-          "capturedAtUtc": "2026-09-09T01:56:21.324Z"
+          "capturedAtUtc": "2026-09-09T01:56:21.324Z",
+          "supersededBy": "2026-09-10T04:10:00Z"
         },
         "F.5": {
-          "status": "GREEN",
+          "status": "SUPERSEDED",
           "candidateSha": "d19b70e6a0c6ad1a1a0619cdcaaf86067fe3172b",
           "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34298753030",
           "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d19b70e6a0/vitest-report.json",
@@ -5090,13 +5011,14 @@
             "fault boundary 17 compacting an already-compacted journal changes nothing further",
             "fault boundary 18 validation[2]: a resumed run reaches the same outputs as an uninterrupted one"
           ],
-          "capturedAtUtc": "2026-09-09T01:56:21.580Z"
+          "capturedAtUtc": "2026-09-09T01:56:21.580Z",
+          "supersededBy": "2026-09-10T04:10:00Z"
         }
       },
-      "candidateSha": "d19b70e6a0c6ad1a1a0619cdcaaf86067fe3172b",
+      "candidateSha": "f8d3bce3d14534500b098e4d7373d2eba409b836",
       "independentVerdict": "PENDING",
       "openFindings": [],
-      "status": "BLOCKED_ON_ACCEPTANCE",
+      "status": "NOT_RUN",
       "acceptedEvidence": {
         "acceptedAtUtc": "2026-09-05T12:37:07.353Z",
         "cells": {
