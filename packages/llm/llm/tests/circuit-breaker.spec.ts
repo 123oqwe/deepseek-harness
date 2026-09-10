@@ -67,10 +67,13 @@ describe('P4-11 must[2]: a failing endpoint stops being called', () => {
     // protocol's terminal chunk rather than as an escaping throw.
     const chunks = await drain(ctx)
     expect(adapter.calls).toBe(2)
-    expect(chunks.at(-1)).toMatchObject({
-      type: 'finish',
-      reason: { kind: 'error', failure: { message: expect.stringContaining('circuit breaker open') } },
-    })
+    const last = chunks.at(-1)
+    expect(last).toMatchObject({ type: 'finish', reason: { kind: 'error' } })
+    // Read out and asserted directly rather than through
+    // `expect.stringContaining`, whose return is `any` and would make the
+    // whole matcher object an unsafe assignment.
+    const failure = last?.type === 'finish' && last.reason.kind === 'error' ? last.reason.failure : undefined
+    expect(failure?.message).toContain('circuit breaker open')
     await ctx.fiber.dispose()
   })
 

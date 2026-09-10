@@ -37,6 +37,20 @@ Recorded per §12.69, and the reason it is ONE entry rather than three is itself
 
 **Note for whoever schedules these.** P5-07/08/09 sit behind P5-05 and P5-06 in the registry's dependency order, so this requirement will be read well before it can be met. That is the intended direction: it is recorded to be inherited, not to be actioned now.
 
+### BLOCKED-173 — P7-07 readiness: the trace P4-09 propagates has no producer
+
+Recorded per §12.46-B, before P7-07 starts. Same shape as BLOCKED-169/170/171/172: a requirement written down to be inherited.
+
+**The clause.** P4-09 must[3] names four nouns a nested run inherits: budget, capability token, trace, recursion detection. Three have production subjects. `trace` does not.
+
+**Measured, not assumed.** At `4a58798bfd`, `packages/workflow/*/src` carried 47 hits for `trace`/`span`/`otel` and every one was in `workflow/src/invariant.ts`'s local `WorkflowTrace` — an in-memory map used to check invariants over one run's own events, not a context propagated into a child. Nothing in the tree produced a trace to inherit.
+
+**What P4-09 built, and what it deliberately did not.** The RULE half: `WorkflowStartRequest.traceContext` is an OPAQUE string a run carries and a nested run inherits, with a detached run carrying it too. Frozen with a case that reads the context off both runs at start and a mutation — the nested run not inheriting — that reddens it. `undefined` stays `undefined`: a run under no trace must not manufacture one, or every untraced run becomes its own root the day a producer lands.
+
+Its opacity is the split. P7-07 owns tracing and will decide what a trace context CONTAINS; giving it a shape here would be inventing a producer so that this clause has a subject, which is what §12.46-B exists to prevent — the same reasoning already applied to P4-11's `hedged` (P5-04) and P4-08's `inputs` (P6-09).
+
+**Closing condition.** P7-07 produces a real trace context, and a frozen case shows a nested run's spans appearing under its parent's trace rather than as a second root. That case closes this entry. Until then `traceContext` is threaded and never populated by anything the harness ships, which is recorded rather than presented as coverage.
+
 ### BLOCKED-172 — P6-09 readiness: P4-08's compaction has no real `inputs` to drop until the Artifact Store exists
 
 Recorded per §12.74(b), before P6-09 starts. Same shape as BLOCKED-169/170/171: a requirement written down to be inherited, not actioned now.

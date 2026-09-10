@@ -582,3 +582,64 @@ describe('P4-09 must[3]: a nested run\'s children inherit its DECAYED capability
       .rejects.toThrow(/detached workflow was not started/u)
   }, 30_000)
 })
+
+describe('P4-09 must[3]: a nested run inherits its parent’s trace context', () => {
+  /**
+   * The trace context of every run the engine starts, read AT START.
+   *
+   * Read in the listener rather than after the script settles: a settled run
+   * leaves `liveRuns`, so attaching afterwards returns `undefined` for both
+   * and the case would compare two absences and pass.
+   */
+  function tracesAtStart(ctx: Context): (string | undefined)[] {
+    const traces: (string | undefined)[] = []
+    ctx.on('workflow/start', (info) => {
+      traces.push((ctx.workflowEngine as WorkerThreadWorkflowEngine).attach(info.id)?.traceContext)
+    })
+    return traces
+  }
+
+  it('propagates the context DOWN to the nested run', async () => {
+    // The RULE half of §12.46-B, the same split as P4-11's `hedged` and
+    // P4-08's `inputs`: P7-07 owns tracing and decides what a context
+    // CONTAINS, while this epic owns only that a nested run inherits its
+    // parent's rather than starting fresh. Opaque here on purpose.
+    const { ctx, parent } = await setup()
+    const inner = register(ctx, 'traced-inner', "return 'inner done'")
+    const traces = tracesAtStart(ctx)
+
+    const run = ctx.workflowEngine.start({
+      script: `return await workflow(${JSON.stringify(inner)})`,
+      meta: META,
+      parent,
+      traceContext: 'trace-abc',
+    })
+    expect((await run.result).stopReason).toBe('completed')
+
+    // Two runs started: the parent and the one it nested. Both carry the same
+    // context, read off the RUN rather than from the request the caller
+    // passed — the nested run builds its own request, so reading the caller's
+    // would prove nothing about propagation.
+    expect(traces).toEqual(['trace-abc', 'trace-abc'])
+    await run.dispose()
+  })
+
+  it('does not INVENT a context for a run that carries none', async () => {
+    // A run under no trace must stay under none: manufacturing one would make
+    // every untraced run its own root the day P7-07's producer lands, and the
+    // trees would be wrong in a way nothing would flag.
+    const { ctx, parent } = await setup()
+    const inner = register(ctx, 'untraced-inner', "return 'inner done'")
+    const traces = tracesAtStart(ctx)
+
+    const run = ctx.workflowEngine.start({
+      script: `return await workflow(${JSON.stringify(inner)})`,
+      meta: META,
+      parent,
+    })
+    expect((await run.result).stopReason).toBe('completed')
+
+    expect(traces).toEqual([undefined, undefined])
+    await run.dispose()
+  })
+})

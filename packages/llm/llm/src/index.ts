@@ -30,6 +30,13 @@ import type { ProviderRequestId } from './brand.ts'
 import { callConfigEquals } from './call-config.ts'
 import type { LlmCallConfig, LlmCallConfigAdapterDefaults } from './call-config.ts'
 import { HarnessError, INVALID_CREDENTIAL_CODE } from './error.ts'
+// The breaker contract's `declare module` lives in dsh-retry's root index.
+// `adapter-failure.ts` imports FailureFacts through the ./classify subpath,
+// which does NOT carry that augmentation, so without this line
+// `ctx.get('circuitBreaker')` is `any` here and every use of it is an unsafe
+// call the linter is right to refuse (same shape as P2-02's consumer-side
+// `any`). Type-only, so it adds no runtime edge.
+import type {} from '@deepseek-ai/dsh-retry'
 import { llmFailureFacts, normalizeLlmFailure } from './adapter-failure.ts'
 import { normalizeApiKey } from './api-key.ts'
 import { contentHasImage, projectImagesForTextModel } from './content.ts'

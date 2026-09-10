@@ -208,6 +208,16 @@ export class WorkerRun implements WorkflowRun {
      */
     private readonly toolBound: readonly string[] | undefined,
     /**
+     * The opaque trace context this run carries, inherited by everything it
+     * nests (P4-09 must[3]).
+     *
+     * Held here rather than re-read from the request because a nested run's
+     * launch builds its own request: the value has to travel with the RUN, or
+     * a child would start a fresh trace and the propagation the clause names
+     * would be unobservable.
+     */
+    readonly traceContext: string | undefined,
+    /**
      * What this run inherited as a nested run, recorded in its journal so a
      * resume recovers it (P4-09 must[3]).
      *

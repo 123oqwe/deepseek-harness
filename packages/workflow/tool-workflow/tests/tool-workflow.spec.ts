@@ -58,6 +58,7 @@ class StubEngine extends WorkflowEngine {
     }, { once: true })
     return {
       id,
+      traceContext: request.traceContext,
       meta: request.meta,
       result,
       cancel: (reason?: string) => {

@@ -47,6 +47,7 @@ class StubEngine extends WorkflowEngine {
     const result = new Promise<WorkflowResult>((resolve) => { this.settle = resolve })
     this.onStart?.()
     return {
+      traceContext: undefined,
       id: WorkflowRunId(`ralph-${this.requests.length}`),
       meta: request.meta,
       result,

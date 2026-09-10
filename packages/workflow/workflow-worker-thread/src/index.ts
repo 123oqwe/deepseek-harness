@@ -240,7 +240,10 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
    * outcome nobody collects is dropped when the engine unloads, like every
    * other thing this engine holds in memory.
    */
-  private readonly settledDetached = new Map<WorkflowRunId, { info: WorkflowRunInfo; result: WorkflowResult }>()
+  private readonly settledDetached = new Map<
+    WorkflowRunId,
+    { info: WorkflowRunInfo; result: WorkflowResult; traceContext: string | undefined }
+  >()
 
   constructor(ctx: Context, config: Config) {
     super(ctx)
@@ -487,6 +490,7 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     return {
       id: runId,
       meta: settled.info.meta,
+      traceContext: settled.traceContext,
       result: Promise.resolve(settled.result),
       // A settled run has nothing left to cancel and nothing left to tear
       // down: its worker is gone and, when it was detached, its own agent was
@@ -571,6 +575,11 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       script: resolved.definition.body,
       meta: { name: resolved.definition.name, description: `nested run of ${resolved.definition.name}`, phases: [] },
       parent: parent.parentAgent,
+      // P4-09 must[3]: the nested run inherits its parent's trace context
+      // rather than starting a new one. Absent stays absent — a run under no
+      // trace must not manufacture one, or every untraced run becomes its own
+      // root when P7-07's producer lands.
+      ...parent.traceContext === undefined ? {} : { traceContext: parent.traceContext },
       ...request.args === undefined ? {} : { args: request.args },
     }, undefined, { reusable: {}, journal: undefined }, {
       budget: planned.budget,
@@ -729,6 +738,7 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       this.journalDirectory,
       this,
       nesting?.toolBound,
+      request.traceContext,
       nested === undefined ? undefined : nesting,
       detached?.session,
       reconciled,
@@ -737,6 +747,13 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     // lifetime is the run's, and an engine-side timer would outlive the thing
     // it describes.
     workerRun.startHeartbeat(this.config.heartbeatMs)
+
+    // Reachable by id BEFORE `workflow/start` fires, and — when it was
+    // detached — collectable by id after it settles (must[2]). A listener on
+    // that event is the first thing that can ask for the run by id, so
+    // registering afterwards would make `attach` return undefined to the one
+    // caller that had a reason to ask.
+    this.liveRuns.set(id, workerRun)
 
     this.emitWorkflowEvent('workflow/start', info)
 
@@ -749,17 +766,12 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     if (detached !== undefined) {
       void workerRun.result.then(() => detached.dispose(), () => detached.dispose())
     }
-    // Reachable by id while it runs, and — when it was detached — collectable
-    // by id after it settles (must[2]). Registered before the settlement
-    // handler below so a run that settles immediately still leaves its outcome
-    // behind rather than racing the registration.
-    this.liveRuns.set(id, workerRun)
     void workerRun.result.then((settled) => {
       this.liveRuns.delete(id)
       // Only a detached run's outcome is kept. Every other run was handed to a
       // caller that is still there to await it, and keeping those would make
       // this map a leak with no reader.
-      if (detached !== undefined) this.settledDetached.set(id, { info, result: settled })
+      if (detached !== undefined) this.settledDetached.set(id, { info, result: settled, traceContext: request.traceContext })
     })
     void workerRun.result.then((settled) => {
       // must[1]: the terminal state write carries the fencing token. A run
