@@ -10970,6 +10970,40 @@
         "failureSummary": "M62 reddens 3 of 12, M63 exactly the 2 constraint cases, M64 exactly the kernel case, M65 the 4 cases whose evidence is a refused tool result while the audit-only cases stay green. M66 reddens exactly one — the case where a policy requires a token and one WAS presented — because the two refusal cases still refuse for their own reasons under it, which is precisely why a suite without that permit case would have called the first draft green."
       },
       "note": "P2-05 Usage stage, with must[0]'s second input actually supplied.\n\nWHAT CHANGED FROM THE SUPERSEDED ENTRY: both dispatch paths passed `token: undefined`, so the capability token — one of the five declared inputs — was permanently absent in the product and no policy could decide by authority. Gate ③ measured it. The native path now reads the token from `call.exec.capabilityToken`, which is the same value the P2-02 capability gate checks, so the policy decides on the authority that gate saw; the code-mode path passes the ENCLOSING call's token, because a code-mode program presents none of its own.\n\nWHAT CROSSES: `redactTokenForLog`'s projection — claims and digest, never the signed token. P2-02 already audited that form as safe outside the token layer, and a second redaction shaped for policy would be a second thing to keep in step. `PolicyTokenFacts` is that record, and the Cedar provider exposes `tokenCapability`, `tokenDelegationDepth` and `tokenTenant` beside the existing `tokenPresented`.\n\nWHAT IS DELIBERATELY NOT CARRIED: the token's `verbs` and `resources`. They are not in the audited projection, so a policy cannot yet say 'this token grants write on that path' — only which capability, tenant and delegation depth it names. Extending the projection is P2-02's to decide, not this epic's to fork.\n\nTHE KERNEL-LESS BRANCH is not a fail-open: `decideManifestedAction` returns undefined when no Trust Kernel is pinned, and a production profile without one refuses to boot (P0-02's own `DSH_TRUST_KERNEL_INSECURE` opt-in is the only way past, and it is explicit). What that branch keeps working is the non-production composition P0-02 already documents."
+    },
+    {
+      "epic": "P4-11",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P4-11.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-11 mount: the factory profile has a retry budget and a breaker mounts both services in the shipped headless profile, with no row this fixture added",
+        "P4-11 mount: the factory profile has a retry budget and a breaker charges a real retry to the run, so must[1] happens rather than merely being available"
+      ],
+      "files": [
+        "packages/bundle/base/cordis.patch.yml",
+        "packages/reliability/retry-cockatiel/tests/fixtures/driver.ts",
+        "packages/reliability/retry-cockatiel/tests/fixtures/flaky-llm.ts",
+        "packages/reliability/retry-cockatiel/tests/fixtures/retry-mount.patch.yml",
+        "tests/first100/fixtures/P4-11.composition.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-10T19:55:00.000Z",
+      "dryRunProof": {
+        "treeSha": "09228f174fed8e52d56a8eb494c918ee1708e628",
+        "testsDiscovered": 2
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations, each run against this argv and restored byte-identical. (M67) the `run-retry-usage` row is removed from `dsh-base`. (M68) the `circuit-breaker` row is removed from `dsh-base`. (M69) `llm-retry` stops calling `budgets.admit` on the path that decides a retry — the exact state the 4.4d pass found in the product.",
+        "failureSummary": "M67 reddens both cases, and the driver reports `{\"runRetryUsage\":false,\"circuitBreaker\":true}` — the breaker row staying mounted is the control that scopes the mutation, and a fixture mounting the budget for itself would have stayed GREEN here, which is the empty-evidence shape BLOCKED-156 names. M68 reddens ONLY the mount case, reporting `{\"runRetryUsage\":true,\"circuitBreaker\":false}`, while the charge case stays GREEN at `retriesUsed:1` — the control proving the two rows are observed independently and that charging does not depend on the breaker. M69 reddens ONLY the charge case, at `retriesUsed:0` with both services still reported mounted — the control proving the charge case measures the ACCOUNTING rather than the mounting, and reproducing exactly the pre-slice symptom: mounted, retried, charged to nothing."
+      },
+      "note": "P4-11's mount slice: the epic's two services on the profile a user actually starts.\n\nWHY A SUPPLEMENT EXISTS AT ALL. C, P, U and F proved the decisions, the provider and the consumers, and all four cells are green. A 4.4d pass then measured what no test had: NO shipped bundle mounted `@deepseek-ai/dsh-retry` or `@deepseek-ai/dsh-retry-cockatiel`. Both consumers resolve their service with `ctx.get` and fall through to pre-epic behaviour when it is absent -- deliberately, because `inject` would stop both plugins registering in every composition that omits the retry family -- so on every `dsh` a user starts, must[1], acceptance[1] and acceptance[2] were true of the packages and false of the product. `dsh-base` now carries both rows and this entry freezes the observation on the shipped composition.\n\nTHE FIXTURE MOUNTS NOTHING UNDER TEST. `retry-mount.patch.yml` supplies only a keyless flaky model, a session log and the three rows a source tree cannot boot (`typert-loader`, `typert-gateway`, and the headless startup/runner pair). The two rows under test are `dsh-base`'s. M67 is what makes that claim checkable rather than asserted: removing the base row reddens the case, which a self-mounting fixture would not do.\n\nTHREE DEFECTS IN THE DRAFT FIXTURE, EACH OF WHICH DECIDED NOTHING. (1) The assertion read `usage.retries`; the field is `retriesUsed`, so `?? 0` made the case unable to pass against ANY implementation -- a case that can only fail is as empty as one that can only pass. (2) With no `cwd` on the agent row, the turn issued no model request at all: the session log ran `turn/start ... step/start ... step/end ... turn/end` with NO `request/header` and NO `assistant/*`, the flaky adapter was never entered, and both cases were verdicts about a turn that never happened -- the §12.76 shape, with the subject silently replaced. Adding `cwd` produced `llm/retry` -> `llm/retry-started` -> `assistant/message` and `retriesUsed:1`. (3) `args` is not a field of `LoaderSmokeOptions` (`binArgs` is, and `configPath` is already passed as the sole bin argument); vitest ran both cases green while repo-wide `pnpm run typecheck` reported TS2353 -- a green suite does not typecheck its own spec.\n\nTHE PROBE THAT PROVED NOTHING. Diagnosing (2), a `ctx.on('agent/request-error')` listener was added to the driver and printed nothing. That silence was not evidence: the session log showed `llm/retry` once `cwd` was supplied, so the event HAD been dispatched all along and the probe itself was broken -- that waterfall dispatches on the agent's own scope, not the root context the driver holds. The finding came from the event stream, which the system under test produces, not from the instrument added to look for it. A probe's silence counts only after the probe has been shown to fire."
     }
   ]
 }
