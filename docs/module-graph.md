@@ -455,6 +455,7 @@ flowchart TD
   pkg_plugin_lock --> pkg_brand
   pkg_plugin_manifest --> pkg_invariants
   pkg_plugin_manifest --> pkg_util_values
+  pkg_plugin_migrations --> pkg_atomic_write
   pkg_plugin_migrations --> pkg_brand
   pkg_plugin_ownership --> pkg_brand
   pkg_message_bus --> pkg_brand
@@ -1437,7 +1438,7 @@ flowchart TD
 | [`feature-gates`](../packages/migration/feature-gates) | `migration` | [`brand`](../packages/util/brand), [`invariants`](../packages/runtime-diagnostics/invariants) |
 | [`plugin-lock`](../packages/plugin/plugin-lock) | `plugin` | [`brand`](../packages/util/brand) |
 | [`plugin-manifest`](../packages/plugin/plugin-manifest) | `plugin` | [`invariants`](../packages/runtime-diagnostics/invariants), [`util-values`](../packages/util/values) |
-| [`plugin-migrations`](../packages/plugin/plugin-migrations) | `plugin` | [`brand`](../packages/util/brand) |
+| [`plugin-migrations`](../packages/plugin/plugin-migrations) | `plugin` | [`atomic-write`](../packages/util/atomic-write), [`brand`](../packages/util/brand) |
 | [`plugin-ownership`](../packages/plugin/plugin-ownership) | `plugin` | [`brand`](../packages/util/brand) |
 | [`message-bus`](../packages/run/message-bus) | `run` | [`brand`](../packages/util/brand), [`intake-dedup`](../packages/collaboration/intake-dedup) |
 | [`storage-domain`](../packages/storage/storage-domain) | `storage` | [`invariants`](../packages/runtime-diagnostics/invariants), [`storage`](../packages/storage/storage) |
