@@ -4330,7 +4330,7 @@ The second implementation asks vitest. `vitest list --json` collects without exe
 
 ### BLOCKED-175 — P4-11's cockatiel adoption landed in a file no freeze names, and two gates now disagree about it
 
-**Status:** BLOCKED ON A DELEGATE RULING. Both readings are recorded; neither was chosen here.
+**Status:** ANSWERED-BY-DELEGATE(gq-92). A P4-11.P supplement freeze at `0b70339760` now lists `packages/reliability/retry-cockatiel/src/index.ts` and `packages/reliability/retry/src/provider.ts` in `files`; the P cell is GREEN@`e3004c9276` and `verify-adapt-dispositions`/`verify-make-vs-use` no longer disagree.
 
 Greening P4-11.F (ordered 2026-09-10, observation `874db203f0`) put the epic past its Fault stage, and that made two registry gates contradict each other about one record — `preFlight.P4-11.makeVsUse.adopted[0]`, cockatiel.
 
