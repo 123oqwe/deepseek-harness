@@ -37,6 +37,22 @@ Recorded per §12.69, and the reason it is ONE entry rather than three is itself
 
 **Note for whoever schedules these.** P5-07/08/09 sit behind P5-05 and P5-06 in the registry's dependency order, so this requirement will be read well before it can be met. That is the intended direction: it is recorded to be inherited, not to be actioned now.
 
+### BLOCKED-172 — P6-09 readiness: P4-08's compaction has no real `inputs` to drop until the Artifact Store exists
+
+Recorded per §12.74(b), before P6-09 starts. Same shape as BLOCKED-169/170/171: a requirement written down to be inherited, not actioned now.
+
+**The clause.** P4-08 acceptance[2] says a compacted journal drops the inputs of steps that completed and were verified, and retains every receipt. The decision is built and tested; what it decides over is empty. `recorder.ts:97` and `replay.ts:104` both write `inputs: []`, and they are honest — there is no producer that could fill them.
+
+**Measured, not assumed.** The tree has no content-addressed artifact family. `attachment` handles images only (png/jpeg/webp/gif plus width/height). `spill` describes itself as "deliberately minimal: saveText and nothing else", and its one sha256 names a directory from the sessionId rather than addressing content. My §12.73(3) premise that P4-08 could "reuse an existing content-addressed family" was written without checking and is false.
+
+**The owner is P6-09** — 一等公民 Artifact Store、版本、内容寻址与 Lineage, W10 — whose must already requires an ArtifactRef carrying digest, media type, schema, size, tenant, producer run, action, parents, retention and sensitivity, over immutable content-addressed storage. Seven epics depend on it (P3-11, P5-06, P6-04, P6-10, P7-02, P7-04, P8-02).
+
+**Why P4-08 does not build it.** A private CAS in P4-08 would be a second artifact store, and extending `spill` would change a contract that declares itself minimal. P6-09 also sits behind P6-08 (静态加密与租户密钥, W9), so a store built ahead of the encryption layer would need re-keying afterwards — the same reason §12.55 ruled a P9 item PREMATURE.
+
+**Closing condition.** The host stores each step's request as a P6-09 ArtifactRef in `inputs` at step start. A frozen case then shows a REAL host run whose journal carries at least one input before compaction and `[]` after, with every receipt still present. That case closes this entry and completes P4-08 acceptance[2]'s usage half.
+
+**What P4-08 signs on now,** under §12.46-B: the decision half only, with acceptance[2]'s frozen cases using a CONSTRUCTED ArtifactRef, and the freeze note stating plainly that the real producer is P6-09 and the saving is not observable here. Same split already applied to hedge/P5-04, requiresApproval/P2-04 and paused/P2-12; unlike P2-02's spawn case, the producer is not inside this epic and cannot be built here.
+
 ### BLOCKED-168 — P2-02's delegation half has no production caller, and P2-02 is ACCEPTED
 
 **State: CLOSED for the delegation half (P2-02.U). The revocation PRODUCER is the remaining open question and is tracked at the end of this entry.**
