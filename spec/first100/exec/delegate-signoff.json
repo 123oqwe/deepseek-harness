@@ -323,6 +323,15 @@
       "delegateSession": "guanjieqiao-92",
       "signedAtUtc": "2026-09-10T05:40:05.753Z",
       "note": "Rebuilt sign-off (prior PASS withdrawn §12.13). Observation run 34439518421 @ 2d2e8f89ac (signed bundle, 20573/0; reds are P4-09's, admitted). 4.4b: base C/P/F rebuilt (fault matrix in its own spec, titles unchanged) and U with U.1/U.2/U.3 all GREEN @ 2d2e8f89ac, 0 open findings. 4.4a: journal persisted under dshHomePath('journals'); reconciliation via the action ledger in workflow-worker-thread resume.ts reached by the host resume path; compaction at run completion; must[2] (§12.44) and acceptance[2] verified-gated compaction (§12.46-A) implemented and mutation-proved. acceptance[2] signed on the decision half per §12.46-B/§12.74: inputs are constructed ArtifactRefs, the real producer is P6-09's artifact store — the saving itself is not yet observable in production; BLOCKED-172 carries that requirement on P6-09's readiness."
+    },
+    {
+      "epic": "P4-09",
+      "rowDigestSha256": "b9fcff271721e006ee57a78de99fd166f3d9f82bfd25f3544eb40845c7f072e3",
+      "conclusion": "PASS",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-10T16:58:37.139Z",
+      "reason": "Three-predicate deep-verify at e3004c9276 (CI 34500999293, 1196 files/0 red). Per-noun: must[0] definitions registered as digest-pinned artifacts, digest covers canonical (body, tools) so a re-registration cannot widen a definition's capability; must[1] runs reference the digest and a bare name is refused (U.2); must[2] detached run is owned by the Run service — provider startDetached mints its own SessionId + ctx.agents.create (worker-thread/src/index.ts:375,:404), attach(runId) on the WorkflowEngine abstract (workflow/src/index.ts:215), liveRuns.set precedes workflow/start (a real ordering defect this stage found and fixed), and the model-visible consumer is wired (tool-workflow/src/index.ts:307 attach, :328 startDetached; both packages mounted in base cordis.patch.yml:519/:524) — production call sites grepped by me, not taken on report; the executor-driven spawn case exposed and fixed a second real defect (detached agent had no LLM routing, M51); must[3] nested budget (nested-budget), capability attenuation (planNestedRun bound = parent ∩ declared tools.allow, carried as the host toolFilter, host.ts:511), recursion named structurally; the trace half is a §12.46-B split — producer P7-07 — recorded as BLOCKED-173, traceContext propagates without inventing a root. Two BLOCKED-100 findings closed per 4.4c on provider evidence, the precise consumer finding opened and closed on U.7. Zero open findings.",
+      "note": "Reach verified on the shipped profile (base bundle mounts workflow-worker-thread and tool-workflow). Trace inheritance's producer half is deferred to P7-07 under BLOCKED-173 and is not a gap in this epic's own nouns."
     }
   ]
 }

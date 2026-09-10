@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-10T16:56:34.668Z",
-  "inputDigest": "e11d302c0694177b290cc49480f86ea1e0f68795f6264bff5a30a36918327e0f",
+  "lastUpdatedUtc": "2026-09-10T16:58:43.822Z",
+  "inputDigest": "90c80fdaf924ea9c7508b2c32824220734175d8769e873712e84589ba40911cf",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -5868,10 +5868,40 @@
         }
       },
       "candidateSha": "874db203f09ddc5be6e2ce6f6700e89a2c563f41",
-      "independentVerdict": "WITHHELD_INCOMPLETE_EPIC",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "BLOCKED_ON_ACCEPTANCE",
-      "acceptedEvidence": null,
+      "status": "ACCEPTED",
+      "acceptedEvidence": {
+        "acceptedAtUtc": "2026-09-10T16:58:43.806Z",
+        "cells": {
+          "C": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34019035439",
+            "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba"
+          },
+          "P": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34019035439",
+            "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba"
+          },
+          "U": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34463140893",
+            "candidateSha": "874db203f09ddc5be6e2ce6f6700e89a2c563f41"
+          },
+          "F": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34019035439",
+            "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba"
+          }
+        },
+        "coverageClosure": {
+          "valid": true,
+          "missingIndices": [],
+          "unverifiedCitations": []
+        },
+        "delegateSignoff": {
+          "delegateSession": "guanjieqiao-92",
+          "signedAtUtc": "2026-09-10T16:58:37.139Z",
+          "userConfirmationRef": null
+        }
+      },
       "closedFindings": [
         {
           "finding": "BLOCKED-100: must[3] (nested) has decision functions covering ONE of the clause's three nouns, and no production caller. planNestedRun/inheritWorkerLimits/applyChildFailure/cancelPropagationForNested are real and tested, but every reference outside workflow-registry/ is in nested-budget.spec.ts; runtime.ts installs globals agent/parallel/pipeline/phase/log/args and no `workflow`, with a TRIPWIRE case pinning typeof workflow === 'undefined'. The clause names budget, capability token and trace; nesting.ts and types.ts contain zero occurrences of capability/capabilityToken/trace/traceId (the five `token` hits are tokensRemaining / token-budget-exhausted — a token BUDGET, not a capability token).",
