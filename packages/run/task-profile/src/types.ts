@@ -41,6 +41,7 @@
 
 import { type Branded, brandString } from '@deepseek-ai/dsh-brand'
 import type { MessageId } from '@deepseek-ai/dsh-llm/brand'
+import type { MessageSource } from '@deepseek-ai/dsh-llm/message'
 import type { RiskClass, RiskGroundKind } from '@deepseek-ai/dsh-risk-taxonomy/types'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 
@@ -235,6 +236,42 @@ export function TaskProfileRef(digest: string): TaskProfileRef {
     throw new TypeError(`TaskProfileRef must be 64 lowercase hex characters, got ${JSON.stringify(digest)}`)
   }
   return brandString<TaskProfileRef>(digest)
+}
+
+/**
+ * Whether a message is a task to compile a profile from.
+ *
+ * **Closed on purpose, over a vocabulary that is not.** `MessageSourceMap`
+ * (`@deepseek-ai/dsh-llm/message`) is merge-extensible — plugins add their own
+ * `kind`s — so this cannot be an exhaustive restatement of it and must not
+ * pretend to be. It is instead the closed set of answers the compiler needs,
+ * and the mapping to it is fail-closed: a source kind this build does not know
+ * reaches `unknown-source`, which is not a task. A plugin that adds a message
+ * kind therefore never silently acquires a compiled TaskProfile.
+ *
+ * `injected-context` is separate from `unknown-source` because they are known
+ * for different reasons: a `plugin` source is recognised and deliberately not
+ * a task — file-change notices, skill content, cron notifications are context
+ * the agent was given, not work it was asked for — while an unknown kind is
+ * simply not understood. Collapsing them would lose which of the two happened,
+ * the same distinction P2-04 keeps between `policy-rule` and `unknown-default`.
+ */
+export type TaskOrigin = 'user-goal' | 'injected-context' | 'unknown-source'
+
+/**
+ * Classify one message source as a task origin.
+ * @param source - the `MessageSource` a `user/message` event carries.
+ * @returns `user-goal` only for a direct human prompt; every other known kind
+ * is `injected-context` and every unrecognised kind is `unknown-source`.
+ */
+export function taskOriginOf(source: MessageSource): TaskOrigin {
+  switch (source.kind) {
+    case 'user': return 'user-goal'
+    case 'plugin': return 'injected-context'
+    // No `assertNever`: the union is merge-extensible, so the default is the
+    // documented fall-through rather than a closed-union exhaustiveness error.
+    default: return 'unknown-source'
+  }
 }
 
 declare module '@deepseek-ai/dsh-session/types' {

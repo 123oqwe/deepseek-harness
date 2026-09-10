@@ -19,7 +19,10 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import { brandString } from '@deepseek-ai/dsh-brand'
 import { MessageId } from '@deepseek-ai/dsh-llm/brand'
+import type { ToolCallId } from '@deepseek-ai/dsh-llm/brand'
+import type { MessageSource } from '@deepseek-ai/dsh-llm/message'
 import { SessionId } from '@deepseek-ai/dsh-session/types'
 import type {
   InferenceProvenance,
@@ -29,7 +32,7 @@ import type {
   TaskQuestion,
   TaskSideEffect,
 } from '../src/types.ts'
-import { TaskProfileRef } from '../src/types.ts'
+import { TaskProfileRef, taskOriginOf } from '../src/types.ts'
 import { SIDE_EFFECT_FIELD, taskProfileRef, validateTaskProfile } from '../src/validate.ts'
 
 const goalRef: TaskGoalRef = { sessionId: SessionId('session-p4-02'), messageId: MessageId('message-goal') }
@@ -122,13 +125,13 @@ describe('P4-02 C — the four generic fixtures (validation[0])', () => {
 describe('P4-02 C — the reference a profile is named by (acceptance[0])', () => {
   it('the same profile canonicalizes to the same reference, whatever order its keys were built in', () => {
     const built = profile()
-    const reordered = {
+    const reordered: TaskProfile = {
       questions: built.questions,
       sideEffect: built.sideEffect,
       constraints: built.constraints,
       objective: built.objective,
       goalRef: built.goalRef,
-    } as TaskProfile
+    }
     expect(taskProfileRef(reordered)).toBe(taskProfileRef(built))
   })
 
@@ -155,7 +158,7 @@ describe('P4-02 C — every hard constraint traces to its source (acceptance[1],
 
   it('refuses a hard constraint with no provenance at all', () => {
     const { provenance: _dropped, ...withoutSource } = constraint('c1')
-    const result = validateTaskProfile(profile({ constraints: [withoutSource as TaskConstraint] }))
+    const result = validateTaskProfile({ ...profile(), constraints: [withoutSource] })
     expect(result.valid).toBe(false)
     if (result.valid) return
     // The path, not just the refusal: acceptance[1] is about WHICH constraint
@@ -193,7 +196,11 @@ describe('P4-02 C — every hard constraint traces to its source (acceptance[1],
 
 describe('P4-02 C — an unknown side effect is never "none" (acceptance[2])', () => {
   it('has no "none" class to be marked with: the vocabulary refuses one', () => {
-    const result = validateTaskProfile(profile({ sideEffect: { ...sideEffect(), riskClass: 'none' } as unknown as TaskSideEffect }))
+    // No cast: `validateTaskProfile` takes `unknown`, which is what a profile
+    // read back out of an older build's session log actually is. Reaching for
+    // `as unknown as TaskSideEffect` here would be constructing a lie about
+    // the type instead of exercising the boundary that has to refuse it.
+    const result = validateTaskProfile({ ...profile(), sideEffect: { ...sideEffect(), riskClass: 'none' } })
     expect(result.valid).toBe(false)
   })
 
@@ -252,6 +259,28 @@ describe('P4-02 C — missing information asks rather than guesses (must[2], val
     expect(result.valid).toBe(false)
     if (result.valid) return
     expect(new Set(result.errors.map(error => error.code))).toStrictEqual(new Set(['duplicate-id', 'unknown-side-effect-claims-confidence']))
+  })
+})
+
+describe('P4-02 C — only a human goal is a task (must[2], delegate ruling 2026-09-10)', () => {
+  it('a direct user prompt is the one origin that compiles', () => {
+    expect(taskOriginOf({ kind: 'user' })).toBe('user-goal')
+  })
+
+  it('injected plugin context is recognised and is not a task', () => {
+    const injected: MessageSource = { kind: 'plugin', plugin: 'memory-context' }
+    expect(taskOriginOf(injected)).toBe('injected-context')
+  })
+
+  it('a source the classifier has no case for falls through to not-a-task rather than to a goal', () => {
+    // `tool` is a real member of the union that `taskOriginOf` deliberately
+    // does not name, so it exercises the same fall-through a plugin-added kind
+    // would. Constructed legally rather than cast: `MessageSourceMap` is
+    // merge-extensible, and a test that augmented it to invent a kind would
+    // change the union for every file in the repository -- measured, and it
+    // broke eight unrelated apps/cli fixtures.
+    const notAGoal: MessageSource = { kind: 'tool', callId: brandString<ToolCallId>('call-1') }
+    expect(taskOriginOf(notAGoal)).toBe('unknown-source')
   })
 })
 
