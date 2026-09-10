@@ -611,14 +611,6 @@
         "@deepseek-ai/dsh-tool-ralph",
         "@deepseek-ai/dsh-client-ui-workflow-run"
       ]
-    },
-    {
-      "id": "circuitBreaker",
-      "definition": "@deepseek-ai/dsh-retry",
-      "providers": [
-        "@deepseek-ai/dsh-retry-cockatiel"
-      ],
-      "consumers": []
     }
   ],
   "allowlist": [

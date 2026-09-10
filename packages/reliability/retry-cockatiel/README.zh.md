@@ -49,7 +49,7 @@ kind: "package-reference"
 <a id="known-limitations-and-deferred-work"></a>
 ## 已知局限与后续工作
 
-- **尚无生产调用者。** 这是 Epic P4-11 的 Provider 阶段:断路器已挂载,并已对真实翻译过的 adapter 失败验证过,但没有任何出货路径把 LLM 调用经 `execute` 路由。重试循环在 `@deepseek-ai/dsh-llm-retry`,归 Usage 阶段重接——在那之前,读者不得把这些测试当作"出货 harness 会停止调用故障端点"的证据。
+- **尚无生产调用者,因此能力 family 也尚未登记。** 这是 Epic P4-11 的 Provider 阶段:断路器已挂载,并已对真实翻译过的 adapter 失败验证过,但没有任何出货路径把 LLM 调用经 `execute` 路由。重试循环在 `@deepseek-ai/dsh-llm-retry`,归 Usage 阶段重接——在那之前,读者不得把这些测试当作"出货 harness 会停止调用故障端点"的证据。`architecture.layers.json` 里目前没有 `circuitBreaker` family:P0-03 must[2] 要求一个能力**以可替换能力的身份发布**之前必须有消费方组合测试,而无人消费的能力尚未以这个身份发布。Usage 阶段会把消费者、组合测试与 family 三者一起登记。
 - **断路器状态按进程保存,不持久化。** 重启会把每个目的地重新闭合,因此对着一个已死端点重启的运行要再付一次阈值。持久化会让端点健康成为需要归属与淘汰策略的持久状态,而目前没有任何需求提出;若日后需要,`cockatiel` 提供 `toJSON`/`state`。
 - **`openMs` 是固定时长,不是退避曲线。** `cockatiel` 支持逐次增长的熔断时长;本 Provider 只传一个时长,因为没有部署要求调一条曲线,而一个数字才是操作者能推理的东西。
 
