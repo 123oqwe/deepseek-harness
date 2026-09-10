@@ -17,7 +17,15 @@
  * run the set, skip the named gate, and say so on every run — a held-back gate
  * that announces itself is a different thing from one quietly absent.
  *
- * Usage: `node scripts/first100/run-registry-gates.mjs`
+ * **Why it does not stop at the first failure.** Every non-held gate runs and
+ * the report names each one's exit. An `&&` chain stops at the first red, so a
+ * permanently-held gate early in the list hides everything after it: six of
+ * `first100:slice-gate`'s ten gates went unexecuted for as long as the pairing
+ * gate has been held, and a real `verify-registry-extraction` failure sat
+ * behind them (BLOCKED-181). "Which gates ran, and how each ended" is the
+ * question a lane report has to answer; one exit code cannot.
+ *
+ * Usage: `node scripts/first100/run-registry-gates.mjs [--set registry|slice|slice-cordis]`
  *
  * @module scripts/first100/run-registry-gates
  */
@@ -35,7 +43,7 @@ const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
  * comes first because a tree that does not compile makes every later gate's
  * verdict uninformative.
  */
-const GATES = [
+const REGISTRY_GATES = [
   'first100:verify-typecheck-host',
   'first100:verify-registry-extraction',
   'first100:verify-specs',
@@ -75,6 +83,38 @@ const GATES = [
   'constraints',
   'architecture:layers',
 ]
+
+/**
+ * The per-slice gate set a lane runs before reporting a SHA.
+ *
+ * Ordered so the cheap structural checks fail before the multi-minute
+ * typecheck, and `verify-registry-extraction` sits with them because a
+ * hand-edited registry is a fast, common and total failure.
+ */
+const SLICE_GATES = [
+  'verify-module-graph',
+  'verify-export-jsdoc',
+  'verify-doc-budgets',
+  'verify-translation-pairing',
+  'constraints',
+  'first100:verify-typecheck-host',
+  'first100:verify-registry-extraction',
+]
+
+/** The slice set plus the three Cordis-surface catalogs. */
+const SLICE_CORDIS_GATES = [
+  ...SLICE_GATES,
+  'verify-cordis-catalog',
+  'verify-cordis-api',
+  'verify-cordis-inspect-catalog',
+]
+
+/** The named sets `--set` selects. */
+const SETS = new Map([
+  ['registry', REGISTRY_GATES],
+  ['slice', SLICE_GATES],
+  ['slice-cordis', SLICE_CORDIS_GATES],
+])
 
 /**
  * Gates held back, each with the reason and the condition that reinstates it.
@@ -117,8 +157,26 @@ const HELD_BACK = new Map([
   }],
 ])
 
+/**
+ * The set named on the command line, defaulting to the registry set.
+ * @param argv - the process arguments after the script path.
+ * @returns the set's name and its gates.
+ */
+function selectSet(argv) {
+  const index = argv.indexOf('--set')
+  if (index === -1) return { name: 'registry', gates: REGISTRY_GATES }
+  const name = argv[index + 1]
+  const gates = SETS.get(name)
+  if (gates === undefined) {
+    console.error(`run-registry-gates: unknown set "${String(name)}"; known: ${[...SETS.keys()].join(', ')}`)
+    process.exit(2)
+  }
+  return { name, gates }
+}
+
 function main() {
-  const held = GATES.filter(gate => HELD_BACK.has(gate))
+  const { name: setName, gates } = selectSet(process.argv.slice(2))
+  const held = gates.filter(gate => HELD_BACK.has(gate))
   for (const gate of held) {
     const { reason, until } = HELD_BACK.get(gate)
     console.log(`HELD BACK  ${gate}`)
@@ -126,17 +184,37 @@ function main() {
     console.log(`           Reinstated when: ${until}`)
   }
 
-  const running = GATES.filter(gate => !HELD_BACK.has(gate))
+  // EVERY non-held gate runs, whatever an earlier one did. Stopping at the
+  // first failure is what an `&&` chain does, and it is why six of
+  // `first100:slice-gate`'s ten gates went unexecuted for as long as the
+  // pairing gate has been held -- long enough to hide a real
+  // `verify-registry-extraction` red (BLOCKED-181). A report that says which
+  // gates ran and how each ended is the point; the exit code alone is not.
+  const running = gates.filter(gate => !HELD_BACK.has(gate))
+  const failed = []
   for (const gate of running) {
     console.log(`\n=== ${gate}`)
     const result = spawnSync('pnpm', ['run', gate], { cwd: REPO_ROOT, stdio: 'inherit' })
-    if (result.status !== 0) {
-      console.error(`\nregistry gate set: ${gate} failed (exit ${String(result.status)}).`)
-      process.exit(1)
-    }
+    const status = result.status ?? 1
+    if (status !== 0) failed.push({ gate, status })
+  }
+
+  console.log(`\n${setName} gate set — per-gate result:`)
+  for (const gate of running) {
+    const failure = failed.find(entry => entry.gate === gate)
+    console.log(`  ${failure === undefined ? 'PASS' : `FAIL (exit ${String(failure.status)})`}  ${gate}`)
+  }
+  for (const gate of held) console.log(`  HELD        ${gate}`)
+
+  if (failed.length > 0) {
+    console.error(
+      `\n${setName} gate set: ${String(failed.length)} of ${String(running.length)} gate(s) failed `
+      + `(${failed.map(entry => entry.gate).join(', ')}).`,
+    )
+    process.exit(1)
   }
   console.log(
-    `\nregistry gate set: ${String(running.length)} gate(s) passed`
+    `\n${setName} gate set: ${String(running.length)} gate(s) passed`
     + `${held.length > 0 ? `, ${String(held.length)} held back with a stated reason above` : ''}.`,
   )
 }
