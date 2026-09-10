@@ -392,7 +392,7 @@ describe('P4-09 must[3]: a nested run\'s children inherit its DECAYED capability
     await launcherGone
 
     const settled = await run.result
-    expect(`${settled.stopReason}: ${String(settled.error ?? '')}`).toBe('completed: ')
+    expect(`${settled.stopReason}: ${settled.error ?? ''}`).toBe('completed: ')
 
     const resources = await Promise.all(children)
     // The detached run's own session is one of the captured children (derived
