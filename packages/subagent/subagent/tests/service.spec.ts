@@ -7,6 +7,7 @@ import { carrierKeyOf } from '@deepseek-ai/dsh-scope'
 import SubagentRuntime, {
   foldSubagentDescriptor,
   snapshotSubagentDescriptor,
+  SUBAGENT_DESCRIPTOR_FIELDS,
   SUBAGENT_DESCRIPTOR_VERSION,
   SubagentError,
   assertSubagentMaxDepth,
@@ -333,6 +334,32 @@ describe('subagent descriptors', () => {
     type: 'subagent/descriptor',
     data,
   } as unknown as SessionEvent<'subagent/descriptor'>)
+
+  it('reads back every field its own schema permits, in both modes', () => {
+    const samples: Record<string, unknown> = {
+      version: SUBAGENT_DESCRIPTOR_VERSION,
+      provider: 'spawn',
+      label: 'round-trip child',
+      parentTokenDigest: 'digest-of-parent-token',
+      agentProvider: 'deepseek',
+      agentModel: 'chat',
+      agentReasoningEffort: 'high',
+      persona: 'reviewer',
+      toolFilter: { allow: ['read'], deny: ['bash'] },
+      delegatingSession: 'detached-run-session',
+    }
+    for (const mode of ['one-shot', 'continuable'] as const) {
+      const fields = [...SUBAGENT_DESCRIPTOR_FIELDS[mode]]
+      // A field added to the schema without a sample here would otherwise be
+      // absent from the payload below, and the round-trip would prove nothing
+      // about it.
+      expect(fields.filter(field => field !== 'mode' && !Object.hasOwn(samples, field))).toEqual([])
+      const payload = Object.fromEntries(
+        fields.map(field => [field, field === 'mode' ? mode : samples[field]]),
+      )
+      expect(foldSubagentDescriptor([event(payload)])).toEqual(payload)
+    }
+  })
 
   it('omits absent fields, recovers a complete payload, and rejects unsupported versions', () => {
     expect(foldSubagentDescriptor([])).toBeUndefined()

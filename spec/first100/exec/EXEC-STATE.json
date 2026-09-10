@@ -3,15 +3,15 @@
     "name": "first100-exec-state",
     "version": "1.0"
   },
-  "lastUpdatedUtc": "2026-09-10T04:10:23.630Z",
+  "lastUpdatedUtc": "2026-09-10T05:40:00.000Z",
   "activeWorktree": "/Users/guanjieqiao/dsh-first100-clean",
   "activeBranch": "first100-exec",
   "currentWave": 4,
   "currentSlice": {
     "epic": "P4-09",
     "stage": "U",
-    "step": "BLOCKED_ON_RULING",
-    "detail": "The capability-token slice is written up (preflight-P4-09-token.md) and NOT started, because measuring for it produced BLOCKED-168: `.attenuate(` has zero production callers across packages/, and `attenuateDelegatedToken` is defined in subagent/src/child-agent.ts:306 with every outside reference in its own test. P2-02 — titled for attenuable capability tokens AND sub-agent delegation, ACCEPTED with zero open findings — froze both a file whose subject core/tools consumes and one whose subject nothing does, so its delegation half holds in unit tests only. The delegate must rule before the slice proceeds, since §12.66's instruction to reuse that derivation rested on my own false claim that child-agent.ts already called it. `detached` follows the token slice per §12.66 and must not precede it. Gate 3 awaits a re-run at d19b70e6a0 after the doc-standard README fix; the batch's observation targets are P2-04.P.3's lint fix, P4-08 C.4/F.5, and P4-11.C's 13 frozen cases. P4-11's Provider stage adopts cockatiel and has not begun; P1-10 has a preFlight and three open questions."
+    "step": "AWAITING_OBSERVATION",
+    "detail": "The token slice, the detached slice and the persistent-descriptor slice are all written and committed (f8d3bce3d1, 7e470f94bb, 2d2e8f89ac); gate 3 is re-running at 2d2e8f89ac and no cell may be greened until it reports. Observation targets for the batch: P2-02 (#222 plus the spawn cases), P2-04 (base U's 11 cases and the pwsh fixtures), P4-08 (bases C/P/F -- the three greens self-revoked because their freezes postdate run 34432095748, which verify-freeze-in-candidate-tree independently reported as the same 3 MISSING), and P4-09 in full. Still open on P4-08: acceptance[2]'s freeze note must carry §12.74(a)'s wording that the real producer is P6-09 and the saving is not observable here -- it lands when the C/P/F bases are rewritten, not in the entries being superseded. BLOCKED-172 records P6-09's side of that. Remaining detached work from the preFlight: re-attachment along both paths (a live launcher observes through the registry; a gone launcher settles through the outbox)."
   },
   "registryDigest": "5c75260e96c9db1ca045c1bf4a013a5a1f356651c23baef924066bec627ef4f7",
   "ledgerDigest": "66b9b68300b166ca2476974942c3cf19eac622de9b62db495723df139498c676",

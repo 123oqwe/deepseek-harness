@@ -180,6 +180,22 @@ const CONTINUABLE_DESCRIPTOR_KEYS = new Set([
   'toolFilter',
   'delegatingSession',
 ])
+/**
+ * The durable field list each mode's persisted payload may carry.
+ *
+ * Two lists decide a field's fate and they are not the same list: this one
+ * decides which fields are LEGAL to persist, while {@link foldSubagentDescriptor}
+ * rebuilds the payload field by field and thereby decides which ones SURVIVE a
+ * read. A field present here and absent from that rebuild is written, accepted,
+ * and then read back as `undefined` — no error at either end. Exported so the
+ * round-trip is driven from this list rather than from a hand-written sample
+ * that a later field can be added without.
+ */
+export const SUBAGENT_DESCRIPTOR_FIELDS: {
+  readonly 'one-shot': ReadonlySet<string>
+  readonly continuable: ReadonlySet<string>
+} = { 'one-shot': ONE_SHOT_DESCRIPTOR_KEYS, continuable: CONTINUABLE_DESCRIPTOR_KEYS }
+
 const TOOL_FILTER_KEYS = new Set(['allow', 'deny'])
 
 /** Whether a persisted JSON value is an object record. */

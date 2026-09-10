@@ -97,6 +97,7 @@ export type {
 export {
   foldSubagentDescriptor,
   snapshotSubagentDescriptor,
+  SUBAGENT_DESCRIPTOR_FIELDS,
   SUBAGENT_DESCRIPTOR_VERSION,
 } from './descriptor.ts'
 export type {
