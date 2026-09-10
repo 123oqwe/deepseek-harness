@@ -4,8 +4,41 @@
  * @module @deepseek-ai/dsh-llm/adapter-failure
  */
 
+import type { FailureFacts } from '@deepseek-ai/dsh-retry/classify'
+
 import { HarnessError } from './error.ts'
 import type { LlmFailure } from './types.ts'
+
+/**
+ * Codes that name a request the provider could not accept as written.
+ *
+ * Mapped to `malformed` rather than left to the status because the two say
+ * different things to an operator: a `400` is "this endpoint rejected it" and
+ * `invalid-input` is "the arguments are wrong", which is the one an operator
+ * can act on. `AUTH` is deliberately absent — a credential failure is already
+ * permanent by its `401`/`403`, and calling it malformed would send someone to
+ * fix a request that is correct.
+ */
+const MALFORMED_CODES: ReadonlySet<string> = new Set(['INVALID_REQUEST', 'INVALID_ARGS'])
+
+/**
+ * Read an adapter failure into the facts the retry classifier decides on
+ * (Epic P4-11).
+ *
+ * Carries only what an LLM call can actually observe. `sideEffecting` is
+ * absent because generating a completion commits no external effect, and
+ * asserting `false` would claim a guarantee this layer cannot make; `denied`
+ * is absent because a policy refusal is raised by the permission gate before
+ * an adapter is reached, so it never arrives as an adapter failure.
+ * @param failure - the normalized adapter failure.
+ * @returns the facts, with fields absent when the failure did not carry them.
+ */
+export function llmFailureFacts(failure: LlmFailure): FailureFacts {
+  return Object.freeze({
+    ...failure.status === undefined ? {} : { status: failure.status },
+    ...MALFORMED_CODES.has(failure.code) ? { malformed: true } : {},
+  })
+}
 
 /**
  * Detach serializable provider facts from a value thrown by an adapter.

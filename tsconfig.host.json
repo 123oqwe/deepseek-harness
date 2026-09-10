@@ -367,6 +367,7 @@
     { "path": "./packages/lsp/tool-lsp" },
     { "path": "./packages/action/action-ledger" },
     { "path": "./packages/reliability/retry" },
+    { "path": "./packages/reliability/retry-cockatiel" },
     { "path": "./packages/action/action-manifest" },
     { "path": "./apps/cli" }
   ]

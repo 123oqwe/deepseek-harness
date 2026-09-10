@@ -18,7 +18,7 @@
  *
  * @module @deepseek-ai/dsh-retry/classify
  */
-import type { LedgerState } from '@deepseek-ai/dsh-action-ledger/src/types.ts'
+import type { LedgerState } from '@deepseek-ai/dsh-action-ledger'
 
 /**
  * Why a failure may not be retried.

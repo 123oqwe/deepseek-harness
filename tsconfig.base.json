@@ -271,6 +271,15 @@
       // dropped them once already (first100 P1-01(C)/P2-01(C) merge, 2026-09-02).
       "@deepseek-ai/dsh-plugin-manifest/types": ["./packages/plugin/plugin-manifest/src/types.ts"],
       "@deepseek-ai/dsh-plugin-manifest/validate": ["./packages/plugin/plugin-manifest/src/validate.ts"],
+      // Same reason as the entries above, and one MORE reason of its own:
+      // dsh-retry's root index augments `Context` with `circuitBreaker`, and
+      // pulling that augmentation into a program that reaches Cordis by a
+      // different resolution replaces the module rather than extending it --
+      // `packages/llm/llm/src/invariant.ts` lost every Context member
+      // ("Property 'on' does not exist on type 'Context'") until llm imported
+      // FailureFacts through this subpath instead of the root (first100 P4-11.P).
+      // The subpath is real and published in dsh-retry's package.json exports.
+      "@deepseek-ai/dsh-retry/classify": ["./packages/reliability/retry/src/classify.ts"],
       // BEGIN generated package aliases — pnpm run gen-tsconfig-paths
       "@deepseek-ai/dsh-acp": ["./packages/acp/acp/src"],
       "@deepseek-ai/dsh-acp-app": ["./packages/bundle/acp-app/src"],
@@ -382,6 +391,7 @@
       "@deepseek-ai/dsh-pwsh-sandbox": ["./packages/shell/pwsh-sandbox/src"],
       "@deepseek-ai/dsh-repeat-tool-reminder": ["./packages/guard/repeat-tool-reminder/src"],
       "@deepseek-ai/dsh-retry": ["./packages/reliability/retry/src"],
+      "@deepseek-ai/dsh-retry-cockatiel": ["./packages/reliability/retry-cockatiel/src"],
       "@deepseek-ai/dsh-risk-taxonomy": ["./packages/policy/risk-taxonomy/src"],
       "@deepseek-ai/dsh-run": ["./packages/run/run/src"],
       "@deepseek-ai/dsh-sandbox": ["./packages/sandbox/sandbox/src"],

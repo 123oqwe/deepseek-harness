@@ -99,6 +99,15 @@ const GROUP_ORDER = [
 
 const SERVICE_ROLES: ServiceRole[] = [
   {
+    key: 'circuitBreaker',
+    pkg: 'retry',
+    title: 'Per-destination circuit breaker',
+    mode: 'seam',
+    implementations: ['retry-cockatiel'],
+    consumers: [],
+    note: 'The definition declares only the contract; cockatiel owns the counting, the open period and the half-open probe. No shipped path routes an LLM call through it yet -- the retry loop in llm-retry is the Usage stage\'s to rewire (Epic P4-11).',
+  },
+  {
     key: 'attachments',
     pkg: 'attachment',
     title: 'Durable binary attachment storage',

@@ -12,7 +12,10 @@
       "path": "../../../vendor/cordis"
     },
     {
-      "path": "../../action/action-ledger"
+      "path": "../../../vendor/schemastery"
+    },
+    {
+      "path": "../retry"
     }
   ]
 }

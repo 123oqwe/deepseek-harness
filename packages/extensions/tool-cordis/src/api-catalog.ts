@@ -626,6 +626,20 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'circuitBreaker',
+    summary: 'The mounted circuit breaker, published by whichever provider a profile mounts.',
+    description: 'The mounted circuit breaker, published by whichever provider a profile mounts.\n\nOne operation, not a consult-then-record pair: a contract that reported state separately would leave the consultation to every caller, and a caller that forgot would still compile and still pass its own tests.',
+    methods: [
+      {
+        signature: 'execute<T>( destination: BreakerDestination, operation: () => Promise<T>, classify: (error: unknown) => FailureFacts, ): Promise<T>',
+        description: 'Run `operation` unless its destination\'s breaker is open, counting the outcome toward that destination\'s health.\n\n`classify` is required rather than inferred because what counts as endpoint ill-health is classifyFailure\'s decision applied to facts only the caller can read: a policy denial is permanent but says nothing about the endpoint, and counting it would open a breaker on a working destination. The breaker never inspects a raw error itself.',
+        parameters: [{ name: 'destination', description: 'the endpoint the operation addresses.' }, { name: 'operation', description: 'the work to attempt.' }, { name: 'classify', description: 'reads the thrown value into facts this package decides on.' }],
+        returns: 'the operation\'s own result.',
+        throws: ['{BreakerOpenError} when the destination is open, WITHOUT running `operation`.'],
+      },
+    ],
+  },
+  {
     key: 'clientModules',
     summary: 'The web plugin table service: incremental `dsh.client` scan + wire composition + bundle route + index injection rows.',
     description: 'The web plugin table service: incremental `dsh.client` scan + wire composition + bundle route + index injection rows. Construction runs the activation scan synchronously — a malformed declaration or missing bundle among the already-loaded entries aggregates into one loud throw (FAILED fiber; the boot activation audit reports it).',
@@ -4073,6 +4087,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type BrandedNumber<B extends string> = number & {\n    readonly [BRAND]: B;\n};',
   },
   {
+    name: 'BreakerDestination',
+    declaration: 'export interface BreakerDestination {\n    readonly provider: string;\n    readonly baseUrl: string;\n    readonly model: string;\n}',
+  },
+  {
     name: 'BusMessage',
     declaration: 'export interface BusMessage {\n    readonly id: string;\n    readonly source: string;\n    readonly type: string;\n    readonly time: string;\n    readonly subject?: string;\n    readonly datacontenttype?: string;\n    readonly epoch: number;\n    readonly data: unknown;\n}',
   },
@@ -4515,6 +4533,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'EpochHeader',
     declaration: 'export interface EpochHeader {\n    config: LlmCallConfig;\n    adapterDefaults?: LlmCallConfigAdapterDefaults;\n    system?: string;\n    tools?: ToolSchema[];\n}',
+  },
+  {
+    name: 'FailureFacts',
+    declaration: 'export interface FailureFacts {\n    readonly status?: number;\n    readonly sideEffecting?: boolean;\n    readonly ledger?: LedgerState;\n    readonly denied?: boolean;\n    readonly malformed?: boolean;\n    readonly hedged?: boolean;\n}',
   },
   {
     name: 'FencingToken',

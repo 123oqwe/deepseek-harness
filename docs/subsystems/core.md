@@ -1023,6 +1023,36 @@ deriveChild(parentSession: SessionIdLike, childSession: SessionIdLike, filter?: 
 
 Source: [`packages/policy/capability-token/src/types.ts`](../../packages/policy/capability-token/src/types.ts)
 
+<a id="ctxcircuitbreaker--circuitbreakercontract"></a>
+
+### `ctx.circuitBreaker` — `CircuitBreakerContract`
+
+The mounted circuit breaker, published by whichever provider a profile mounts.
+
+One operation, not a consult-then-record pair: a contract that reported state separately would leave the consultation to every caller, and a caller that forgot would still compile and still pass its own tests.
+
+```ts cordis-catalog
+/**
+ * Run `operation` unless its destination's breaker is open, counting the
+ * outcome toward that destination's health.
+ *
+ * `classify` is required rather than inferred because what counts as
+ * endpoint ill-health is {@link classifyFailure}'s decision applied to facts
+ * only the caller can read: a policy denial is permanent but says nothing
+ * about the endpoint, and counting it would open a breaker on a working
+ * destination. The breaker never inspects a raw error itself.
+ * @param destination - the endpoint the operation addresses.
+ * @param operation - the work to attempt.
+ * @param classify - reads the thrown value into facts this package decides on.
+ * @returns the operation's own result.
+ * @throws {BreakerOpenError} when the destination is open, WITHOUT running
+ *   `operation`.
+ */
+execute<T>( destination: BreakerDestination, operation: () => Promise<T>, classify: (error: unknown) => FailureFacts, ): Promise<T>
+```
+
+Source: [`packages/reliability/retry/src/provider.ts`](../../packages/reliability/retry/src/provider.ts)
+
 <a id="ctxleasestore--leasestorecontract"></a>
 
 ### `ctx.leaseStore` — `LeaseStoreContract`

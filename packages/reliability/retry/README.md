@@ -5,6 +5,8 @@ kind: "package-reference"
 
 # @deepseek-ai/dsh-retry
 
+English | [中文](README.zh.md)
+
 ## Summary
 
 `dsh-retry` ships the decisions Epic P4-11 unifies: whether a failure may be retried at all, and whether an attempt spends from the run's budget. `src/classify.ts` carries the taxonomy and the hedge rule; `src/budget.ts` carries the run-wide accounting; `tests/retry.spec.ts` covers them in 13 cases. `src/index.ts` re-exports both and declares no runtime value, so importing this package executes nothing.
@@ -28,7 +30,7 @@ Two mechanics live elsewhere in the tree already, and a second spelling of eithe
 - **Backoff and jitter** belong to [`@deepseek-ai/dsh-llm-retry`](../../llm/llm-retry/README.md), whose jitter is *symmetric* — it may raise a delay as well as lower it before clamping. Symmetric jitter is legitimate jitter, so P4-11 makes that implementation consume this package's classifier and budget rather than replacing it. `admitRetry` takes an already-computed `delayMs`.
 - **`Retry-After` parsing** is done at the provider boundary by `providerRetryAfterMs`, and its result rides on `LlmError.providerRetryAfterMs`, a field the LLM service already validates. Nothing here sees a header.
 
-There is also **no circuit breaker here**. The make-vs-use ledger judges `cockatiel` an `adapt` for that, and the Provider stage adopts it behind this package's decision interface. A hand-written breaker beside an adopted one would leave the harness with two.
+There is also **no breaker implementation here**, and no breaker library in this package's dependencies. What `src/provider.ts` declares is the `circuitBreaker` Service Definition — `BreakerDestination`, `BreakerOpenError` and `CircuitBreakerContract` — for the same reason `@deepseek-ai/dsh-lease-contract` declares `leaseStore`: the service name must mean the contract, so two providers cannot disagree about what it is. The consecutive-failure counting, the open period and the half-open probe are `cockatiel`'s, adopted in [`@deepseek-ai/dsh-retry-cockatiel`](../retry-cockatiel/README.md) per the make-vs-use ledger's `adapt`. A hand-written breaker beside an adopted one would leave the harness with two.
 
 ## must[3]: the ledger decides whether an effect may be sent again
 
