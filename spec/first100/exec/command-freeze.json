@@ -10245,6 +10245,46 @@
         "failureSummary": "M36 reddens 1 of 58 -- `spawns a child that still gets a derived token after the launcher session ended` -- and only that one, which is the point: every other detached case still passes on the launcher's agent, so the suite locates the defect at the composition scope rather than reporting a general breakage. M37 reddens 1 of 58 -- `reads back every field its own schema permits, in both modes` -- and nothing else, because the whitelist and the rebuild are two lists and only the round-trip case compares them."
       },
       "note": "P4-09 U supplement: the token slice, the detached slice and the persistent-descriptor slice, none of which any earlier supplement's argv reached -- U.2 and U.3 freeze the nesting cases that predate them.\n\nTHE ENGINE STOPPED REGISTERING AT ALL, and the failures said nothing about why. Declaring `agents` in `static inject` makes Cordis refuse to register the service in every composition that mounts no agent registry, including the seam's own suites: 53 failures reporting `unknown tool \"workflow\"` and `reading 'start' of undefined`, not one of them naming `inject`. `ctx.get('agents')` with an explicit refusal replaces it, so a composition without an agent registry says so at the call rather than by silently lacking the engine.\n\nA DETACHED RUN NEEDS ITS OWN AGENT, not just its own session id. `deriveChild` takes session IDs, so the token half is satisfiable without one -- I claimed exactly that from reading the code, and it is false of the COMPOSITION: an Agent is the scope its children are created in, so a child composed on the launcher's context dies with it (`cannot create effect on inactive context`) whatever token it holds. M36 is that claim as a mutation.\n\nTHE ROUND-TRIP CASE GUARDS TWO LISTS, not one field. `CONTINUABLE_DESCRIPTOR_KEYS` decides which fields are LEGAL to persist; `parseSubagentDescriptor` rebuilds field by field and thereby decides which SURVIVE a read. A field on the first and absent from the second is written, accepted, and read back as `undefined` with no error at either end -- which is what happened to `delegatingSession` on every cold resume while four other links were correctly wired. Reading the code did not find it; a probe above the derivation did. The case drives its payload from the exported field list so a later field cannot be covered by omission, and asserts every declared field has a sample before comparing."
+    },
+    {
+      "epic": "P4-09",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-09",
+        "stage": "U"
+      },
+      "supplementSeq": 6,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-09 must[3]: a nested run's children inherit its DECAYED capability token is REACHABLE by run id while it runs, and the same handle comes back",
+        "P4-09 must[3]: a nested run's children inherit its DECAYED capability token is COLLECTABLE by run id after it settles with its launcher gone, exactly once",
+        "P4-09 must[3]: a nested run's children inherit its DECAYED capability token REFUSES a resume of a live detached run, which is why attach exists rather than resume",
+        "P4-09 must[3]: a nested run's children inherit its DECAYED capability token keeps NO settlement for an ordinary run, whose caller held the handle all along",
+        "P4-09 must[3]: a nested run's children inherit its DECAYED capability token does not answer for a run id nothing started"
+      ],
+      "files": [
+        "packages/workflow/workflow/src/index.ts",
+        "packages/workflow/workflow-worker-thread/src/index.ts",
+        "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-10T09:40:00.000Z",
+      "dryRunProof": {
+        "treeSha": "097c4d1dad2a2e5e96dcc7b8b1147422d190abb9",
+        "testsDiscovered": 19
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations, run against this argv and each restored byte-identical. (M38) `attach` builds a fresh WorkflowRun over the live run's promise instead of returning the live handle. (M39) the settlement is not deleted after collection, so it can be collected repeatedly. (M40) every run's settlement is kept, not only a detached one's.",
+        "failureSummary": "M38 reddens 1 of 19, the reachability case, on handle identity. M39 reddens 1 of 19, the exactly-once case. M40 reddened NOTHING on the first attempt, and the suite was at fault rather than the mutation: the bound existed in the code and in no assertion, so widening the map to every run -- an unbounded leak with no reader -- was invisible. A case asserting an ordinary run keeps no settlement was added, and M40 now reddens exactly it. Recorded because a surviving mutation has three causes and only one of them is a weak suite; here it was."
+      },
+      "note": "P4-09 must[2] semantic 5 (§12.61), built rather than recorded. The delegate's ruling: §12.46-B applies when the producer belongs to a SCHEDULED later epic -- hedge to P5-04, trace to P7-07, inputs to P6-09 -- and re-attachment has no other owner, so it is this epic's own half. Measured before that: the engine's surface was start/startDetached/resume/registerDefinition/startNested, with no attach anywhere in packages/workflow/*/src.\n\nWHY IT MATTERS MORE THAN THE OTHER FIVE SEMANTICS: a detached run's whole point is outliving the turn that launched it, and the handle that turn received is exactly what a later observer does not have. Without attach the mechanism was reachable in the case where it does not matter and unreachable in the case where it does.\n\nDECLARED ON THE SEAM, not on the concrete engine. A method a caller can only reach by having the implementation type is present and unreachable; three stub engines in other packages had to implement it, which is the compiler stating that this is part of what an engine IS.\n\nTWO ROUTES, NOT ONE ENTRY POINT. A live run returns the same handle, so observe, await and cancel reach one worker. `resume` would start a SECOND worker under one run id -- two masters, which P4-07's lease refuses -- and the negative control asserts that refusal rather than assuming it.\n\nTHE FLAKE IN THIS FILE WAS DIAGNOSED, NOT REGISTERED. `CANCELS the nested run when the parent is cancelled` failed about one run in three: its nested body never resolves, so cancellation always takes the force-settle at the end of `disposeGraceMs`, whose 5000 ms default is exactly vitest's own timeout. The case was racing the mechanism it tests. The fixture now mounts a 250 ms grace -- the same path, deterministic -- and 5 of 5 full runs are green. Attribution was measured first: the failure reproduces with the src change and no new cases, and predates this slice."
     }
   ]
 }
