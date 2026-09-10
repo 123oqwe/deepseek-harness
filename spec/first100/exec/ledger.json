@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-10T05:34:18.193Z",
-  "inputDigest": "3a358d08ebcef1abae38abe08acfff57536e2acc326635836b9539bb578444b9",
+  "lastUpdatedUtc": "2026-09-10T05:38:50.577Z",
+  "inputDigest": "f25d2e3d7fe9b9f6702881898c76456166196f641b1ccac9234f87e535b2f8db",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -2654,10 +2654,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
-          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
+          "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34439518421",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-2d2e8f89ac/first100-evidence-2d2e8f89ac9cccff7d92f165b5436105986e6c11/vitest-report.json",
+          "observationSha256": "80d9eb727295cb43bedea8ee032942968f75a5653f9ffe25981cef8520d11f6f",
           "expectCasesMatched": [
             "issueToken mints a root token with exactly these ten fields, no more and no fewer",
             "verifyToken accepts a token issued by the real TrustKernel under the same trust root",
@@ -2696,14 +2696,45 @@
             "revoking an unrelated digest does not invalidate an unconnected lineage",
             "redactTokenForLog produces exactly digest/subject/tenant/capability/delegationDepth/expiresAt — never verbs, resources, constraints, nonce, or the raw signature"
           ],
-          "capturedAtUtc": "2026-09-07T06:28:43.550Z"
+          "capturedAtUtc": "2026-09-10T05:38:28.963Z",
+          "admittedUnderRedRun": {
+            "runId": "34439518421",
+            "redSteps": [
+              {
+                "step": "Lint the files this program changed since the frozen baseline",
+                "failingCases": [
+                  "typescript(no-unnecessary-type-conversion) at packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38"
+                ],
+                "evidence": "× typescript(no-unnecessary-type-conversion): This type conversion does not change the type or value of the expression.\n     ╭─[packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38]",
+                "subjectPaths": [
+                  "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts"
+                ]
+              },
+              {
+                "step": "Recorded-session snapshots",
+                "failingCases": [
+                  "headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless"
+                ],
+                "evidence": "× replays cordis-inspect-jsdoc through dsh --profile headless 2954ms\n FAIL  snapshots/session/headless.snapshot.ts > headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless\nAssertionError: cordis-inspect-jsdoc: session 0: expected '{\"type\":\"session\",\"version\":0,\"id\":\"{…' to be '{\"type\":\"session\",\"version\":0,\"id\":\"{…' // Object.is equality",
+                "subjectPaths": [
+                  "snapshots/session/cordis-inspect-jsdoc",
+                  "packages/collaboration/lease-contract/src/types.ts",
+                  "packages/collaboration/lease-contract/src/run-lease.ts"
+                ]
+              }
+            ],
+            "diagnosedCause": "Both red steps are P4-09's, and neither reaches an admitted epic's reality set. (1) An oxlint no-unnecessary-type-conversion at nested-run.spec.ts:395 is a lint defect in a P4-09 test file. (2) The cordis-inspect-jsdoc snapshot is stale because RunLeaseDenial gained holder: WorkerId | undefined when the resume guard extended the lease contract; that declaration text is model-visible and its refresh postdates the change. Both are fixed and refreshed in the next batch; P4-09 is NOT admitted on this run.",
+            "unrelatedBecause": "the epic's reality set (25 path(s): declaration plus live freeze entries, per BLOCKED-134) is disjoint from the failing subject [\"packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts\",\"snapshots/session/cordis-inspect-jsdoc\",\"packages/collaboration/lease-contract/src/types.ts\",\"packages/collaboration/lease-contract/src/run-lease.ts\"]",
+            "admittedBy": "delegate guanjieqiao-92",
+            "diagnosedAtUtc": "2026-09-10T05:38:49.687Z"
+          }
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
-          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
+          "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34439518421",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-2d2e8f89ac/first100-evidence-2d2e8f89ac9cccff7d92f165b5436105986e6c11/vitest-report.json",
+          "observationSha256": "80d9eb727295cb43bedea8ee032942968f75a5653f9ffe25981cef8520d11f6f",
           "expectCasesMatched": [
             "reports an empty state for a path that has never been written to, rather than failing",
             "reads back through a separate store instance exactly what the first instance wrote, signature bytes included",
@@ -2729,7 +2760,38 @@
             "keeps every audit record's digest equal to the digest of a token the store really holds",
             "leaves the audit trail on disk carrying no nonce, even though the token registry beside it must"
           ],
-          "capturedAtUtc": "2026-09-07T06:28:43.760Z"
+          "capturedAtUtc": "2026-09-10T05:38:29.246Z",
+          "admittedUnderRedRun": {
+            "runId": "34439518421",
+            "redSteps": [
+              {
+                "step": "Lint the files this program changed since the frozen baseline",
+                "failingCases": [
+                  "typescript(no-unnecessary-type-conversion) at packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38"
+                ],
+                "evidence": "× typescript(no-unnecessary-type-conversion): This type conversion does not change the type or value of the expression.\n     ╭─[packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38]",
+                "subjectPaths": [
+                  "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts"
+                ]
+              },
+              {
+                "step": "Recorded-session snapshots",
+                "failingCases": [
+                  "headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless"
+                ],
+                "evidence": "× replays cordis-inspect-jsdoc through dsh --profile headless 2954ms\n FAIL  snapshots/session/headless.snapshot.ts > headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless\nAssertionError: cordis-inspect-jsdoc: session 0: expected '{\"type\":\"session\",\"version\":0,\"id\":\"{…' to be '{\"type\":\"session\",\"version\":0,\"id\":\"{…' // Object.is equality",
+                "subjectPaths": [
+                  "snapshots/session/cordis-inspect-jsdoc",
+                  "packages/collaboration/lease-contract/src/types.ts",
+                  "packages/collaboration/lease-contract/src/run-lease.ts"
+                ]
+              }
+            ],
+            "diagnosedCause": "Both red steps are P4-09's, and neither reaches an admitted epic's reality set. (1) An oxlint no-unnecessary-type-conversion at nested-run.spec.ts:395 is a lint defect in a P4-09 test file. (2) The cordis-inspect-jsdoc snapshot is stale because RunLeaseDenial gained holder: WorkerId | undefined when the resume guard extended the lease contract; that declaration text is model-visible and its refresh postdates the change. Both are fixed and refreshed in the next batch; P4-09 is NOT admitted on this run.",
+            "unrelatedBecause": "the epic's reality set (25 path(s): declaration plus live freeze entries, per BLOCKED-134) is disjoint from the failing subject [\"packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts\",\"snapshots/session/cordis-inspect-jsdoc\",\"packages/collaboration/lease-contract/src/types.ts\",\"packages/collaboration/lease-contract/src/run-lease.ts\"]",
+            "admittedBy": "delegate guanjieqiao-92",
+            "diagnosedAtUtc": "2026-09-10T05:38:49.842Z"
+          }
         },
         "U": {
           "status": "GREEN",
@@ -2806,10 +2868,10 @@
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
-          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
+          "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34439518421",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-2d2e8f89ac/first100-evidence-2d2e8f89ac9cccff7d92f165b5436105986e6c11/vitest-report.json",
+          "observationSha256": "80d9eb727295cb43bedea8ee032942968f75a5653f9ffe25981cef8520d11f6f",
           "expectCasesMatched": [
             "P2-02 Fault — attenuation boundary matrix enumerates at least twelve boundaries, each named once",
             "P2-02 Fault — attenuation boundary matrix fault boundary 01 an equal-to-parent request is admitted, so refusals below are selective",
@@ -2831,22 +2893,53 @@
             "P2-02 Fault — attenuation boundary matrix fault boundary 17 a child records its parent's digest, so a chain can be walked back",
             "P2-02 Fault — attenuation boundary matrix fault boundary 18 a child inherits tenant and capability verbatim, which the request cannot express"
           ],
-          "capturedAtUtc": "2026-09-07T06:28:44.167Z"
+          "capturedAtUtc": "2026-09-10T05:38:29.513Z",
+          "admittedUnderRedRun": {
+            "runId": "34439518421",
+            "redSteps": [
+              {
+                "step": "Lint the files this program changed since the frozen baseline",
+                "failingCases": [
+                  "typescript(no-unnecessary-type-conversion) at packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38"
+                ],
+                "evidence": "× typescript(no-unnecessary-type-conversion): This type conversion does not change the type or value of the expression.\n     ╭─[packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38]",
+                "subjectPaths": [
+                  "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts"
+                ]
+              },
+              {
+                "step": "Recorded-session snapshots",
+                "failingCases": [
+                  "headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless"
+                ],
+                "evidence": "× replays cordis-inspect-jsdoc through dsh --profile headless 2954ms\n FAIL  snapshots/session/headless.snapshot.ts > headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless\nAssertionError: cordis-inspect-jsdoc: session 0: expected '{\"type\":\"session\",\"version\":0,\"id\":\"{…' to be '{\"type\":\"session\",\"version\":0,\"id\":\"{…' // Object.is equality",
+                "subjectPaths": [
+                  "snapshots/session/cordis-inspect-jsdoc",
+                  "packages/collaboration/lease-contract/src/types.ts",
+                  "packages/collaboration/lease-contract/src/run-lease.ts"
+                ]
+              }
+            ],
+            "diagnosedCause": "Both red steps are P4-09's, and neither reaches an admitted epic's reality set. (1) An oxlint no-unnecessary-type-conversion at nested-run.spec.ts:395 is a lint defect in a P4-09 test file. (2) The cordis-inspect-jsdoc snapshot is stale because RunLeaseDenial gained holder: WorkerId | undefined when the resume guard extended the lease contract; that declaration text is model-visible and its refresh postdates the change. Both are fixed and refreshed in the next batch; P4-09 is NOT admitted on this run.",
+            "unrelatedBecause": "the epic's reality set (25 path(s): declaration plus live freeze entries, per BLOCKED-134) is disjoint from the failing subject [\"packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts\",\"snapshots/session/cordis-inspect-jsdoc\",\"packages/collaboration/lease-contract/src/types.ts\",\"packages/collaboration/lease-contract/src/run-lease.ts\"]",
+            "admittedBy": "delegate guanjieqiao-92",
+            "diagnosedAtUtc": "2026-09-10T05:38:49.999Z"
+          }
         }
       },
       "supplements": {
         "P.1": {
           "status": "GREEN",
-          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
-          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
+          "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34439518421",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-2d2e8f89ac/first100-evidence-2d2e8f89ac9cccff7d92f165b5436105986e6c11/vitest-report.json",
+          "observationSha256": "80d9eb727295cb43bedea8ee032942968f75a5653f9ffe25981cef8520d11f6f",
           "expectCasesMatched": [
             "P2-02 must[1]: the kernel signs with real key material verifies a signature it produced, and refuses the same bytes with one byte changed",
             "P2-02 must[1]: the kernel signs with real key material refuses a signature made by a DIFFERENT kernel, which the marker cannot distinguish",
             "P2-02 must[1]: the kernel signs with real key material keeps the PRIVATE key off the signatureRoots handle, which crosses the plugin boundary"
           ],
-          "capturedAtUtc": "2026-09-07T06:26:11.614Z"
+          "capturedAtUtc": "2026-09-10T05:38:38.335Z"
         }
       },
       "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
@@ -3053,10 +3146,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
-          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34439518421",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-2d2e8f89ac/first100-evidence-2d2e8f89ac9cccff7d92f165b5436105986e6c11/vitest-report.json",
+          "observationSha256": "80d9eb727295cb43bedea8ee032942968f75a5653f9ffe25981cef8520d11f6f",
           "expectCasesMatched": [
             "must[0]: the taxonomy is exactly the eight named classes, in ascending risk order",
             "must[0]: the order is total and strict, so \"highest risk\" has exactly one meaning",
@@ -3075,14 +3168,45 @@
             "acceptance[2]: a policy adding nothing and removing nothing still hard-denies the kernel class",
             "src/index.ts re-exports the type surface and the classifier, and declares no runtime value of its own"
           ],
-          "capturedAtUtc": "2026-09-08T15:08:07.363Z"
+          "capturedAtUtc": "2026-09-10T05:38:29.773Z",
+          "admittedUnderRedRun": {
+            "runId": "34439518421",
+            "redSteps": [
+              {
+                "step": "Lint the files this program changed since the frozen baseline",
+                "failingCases": [
+                  "typescript(no-unnecessary-type-conversion) at packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38"
+                ],
+                "evidence": "× typescript(no-unnecessary-type-conversion): This type conversion does not change the type or value of the expression.\n     ╭─[packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38]",
+                "subjectPaths": [
+                  "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts"
+                ]
+              },
+              {
+                "step": "Recorded-session snapshots",
+                "failingCases": [
+                  "headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless"
+                ],
+                "evidence": "× replays cordis-inspect-jsdoc through dsh --profile headless 2954ms\n FAIL  snapshots/session/headless.snapshot.ts > headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless\nAssertionError: cordis-inspect-jsdoc: session 0: expected '{\"type\":\"session\",\"version\":0,\"id\":\"{…' to be '{\"type\":\"session\",\"version\":0,\"id\":\"{…' // Object.is equality",
+                "subjectPaths": [
+                  "snapshots/session/cordis-inspect-jsdoc",
+                  "packages/collaboration/lease-contract/src/types.ts",
+                  "packages/collaboration/lease-contract/src/run-lease.ts"
+                ]
+              }
+            ],
+            "diagnosedCause": "Both red steps are P4-09's, and neither reaches an admitted epic's reality set. (1) An oxlint no-unnecessary-type-conversion at nested-run.spec.ts:395 is a lint defect in a P4-09 test file. (2) The cordis-inspect-jsdoc snapshot is stale because RunLeaseDenial gained holder: WorkerId | undefined when the resume guard extended the lease contract; that declaration text is model-visible and its refresh postdates the change. Both are fixed and refreshed in the next batch; P4-09 is NOT admitted on this run.",
+            "unrelatedBecause": "the epic's reality set (26 path(s): declaration plus live freeze entries, per BLOCKED-134) is disjoint from the failing subject [\"packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts\",\"snapshots/session/cordis-inspect-jsdoc\",\"packages/collaboration/lease-contract/src/types.ts\",\"packages/collaboration/lease-contract/src/run-lease.ts\"]",
+            "admittedBy": "delegate guanjieqiao-92",
+            "diagnosedAtUtc": "2026-09-10T05:38:50.141Z"
+          }
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
-          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34439518421",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-2d2e8f89ac/first100-evidence-2d2e8f89ac9cccff7d92f165b5436105986e6c11/vitest-report.json",
+          "observationSha256": "80d9eb727295cb43bedea8ee032942968f75a5653f9ffe25981cef8520d11f6f",
           "expectCasesMatched": [
             "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter must[1]: the SAME action classifies by the mounted rules, not by anything the action says about itself",
             "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter acceptance[0]: two callers of the SAME mount get the same answer, because the policy is bound once",
@@ -3092,7 +3216,38 @@
             "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter acceptance[2]: a deployment that switches off a kernel hard-deny class is refused AT MOUNT, naming the class",
             "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter acceptance[2]: a deployment may RAISE its own bar, and the raise reaches classification"
           ],
-          "capturedAtUtc": "2026-09-08T15:08:07.597Z"
+          "capturedAtUtc": "2026-09-10T05:38:30.041Z",
+          "admittedUnderRedRun": {
+            "runId": "34439518421",
+            "redSteps": [
+              {
+                "step": "Lint the files this program changed since the frozen baseline",
+                "failingCases": [
+                  "typescript(no-unnecessary-type-conversion) at packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38"
+                ],
+                "evidence": "× typescript(no-unnecessary-type-conversion): This type conversion does not change the type or value of the expression.\n     ╭─[packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38]",
+                "subjectPaths": [
+                  "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts"
+                ]
+              },
+              {
+                "step": "Recorded-session snapshots",
+                "failingCases": [
+                  "headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless"
+                ],
+                "evidence": "× replays cordis-inspect-jsdoc through dsh --profile headless 2954ms\n FAIL  snapshots/session/headless.snapshot.ts > headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless\nAssertionError: cordis-inspect-jsdoc: session 0: expected '{\"type\":\"session\",\"version\":0,\"id\":\"{…' to be '{\"type\":\"session\",\"version\":0,\"id\":\"{…' // Object.is equality",
+                "subjectPaths": [
+                  "snapshots/session/cordis-inspect-jsdoc",
+                  "packages/collaboration/lease-contract/src/types.ts",
+                  "packages/collaboration/lease-contract/src/run-lease.ts"
+                ]
+              }
+            ],
+            "diagnosedCause": "Both red steps are P4-09's, and neither reaches an admitted epic's reality set. (1) An oxlint no-unnecessary-type-conversion at nested-run.spec.ts:395 is a lint defect in a P4-09 test file. (2) The cordis-inspect-jsdoc snapshot is stale because RunLeaseDenial gained holder: WorkerId | undefined when the resume guard extended the lease contract; that declaration text is model-visible and its refresh postdates the change. Both are fixed and refreshed in the next batch; P4-09 is NOT admitted on this run.",
+            "unrelatedBecause": "the epic's reality set (26 path(s): declaration plus live freeze entries, per BLOCKED-134) is disjoint from the failing subject [\"packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts\",\"snapshots/session/cordis-inspect-jsdoc\",\"packages/collaboration/lease-contract/src/types.ts\",\"packages/collaboration/lease-contract/src/run-lease.ts\"]",
+            "admittedBy": "delegate guanjieqiao-92",
+            "diagnosedAtUtc": "2026-09-10T05:38:50.291Z"
+          }
         },
         "U": {
           "status": "GREEN",
@@ -3148,10 +3303,10 @@
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
-          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34439518421",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-2d2e8f89ac/first100-evidence-2d2e8f89ac9cccff7d92f165b5436105986e6c11/vitest-report.json",
+          "observationSha256": "80d9eb727295cb43bedea8ee032942968f75a5653f9ffe25981cef8520d11f6f",
           "expectCasesMatched": [
             "P2-04 Fault — risk classification boundary matrix enumerates at least twelve boundaries, each named once",
             "P2-04 Fault — risk classification boundary matrix fault boundary 01 an unmatched tag takes the unknown default, not the lowest class",
@@ -3169,7 +3324,38 @@
             "P2-04 Fault — risk classification boundary matrix fault boundary 13 confidence separates a ruled class from the same class reached by default",
             "P2-04 Fault — risk classification boundary matrix fault boundary 14 the deciding tag is NAMED when a rule decided, and absent when nothing did"
           ],
-          "capturedAtUtc": "2026-09-08T15:08:07.971Z"
+          "capturedAtUtc": "2026-09-10T05:38:30.304Z",
+          "admittedUnderRedRun": {
+            "runId": "34439518421",
+            "redSteps": [
+              {
+                "step": "Lint the files this program changed since the frozen baseline",
+                "failingCases": [
+                  "typescript(no-unnecessary-type-conversion) at packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38"
+                ],
+                "evidence": "× typescript(no-unnecessary-type-conversion): This type conversion does not change the type or value of the expression.\n     ╭─[packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38]",
+                "subjectPaths": [
+                  "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts"
+                ]
+              },
+              {
+                "step": "Recorded-session snapshots",
+                "failingCases": [
+                  "headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless"
+                ],
+                "evidence": "× replays cordis-inspect-jsdoc through dsh --profile headless 2954ms\n FAIL  snapshots/session/headless.snapshot.ts > headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless\nAssertionError: cordis-inspect-jsdoc: session 0: expected '{\"type\":\"session\",\"version\":0,\"id\":\"{…' to be '{\"type\":\"session\",\"version\":0,\"id\":\"{…' // Object.is equality",
+                "subjectPaths": [
+                  "snapshots/session/cordis-inspect-jsdoc",
+                  "packages/collaboration/lease-contract/src/types.ts",
+                  "packages/collaboration/lease-contract/src/run-lease.ts"
+                ]
+              }
+            ],
+            "diagnosedCause": "Both red steps are P4-09's, and neither reaches an admitted epic's reality set. (1) An oxlint no-unnecessary-type-conversion at nested-run.spec.ts:395 is a lint defect in a P4-09 test file. (2) The cordis-inspect-jsdoc snapshot is stale because RunLeaseDenial gained holder: WorkerId | undefined when the resume guard extended the lease contract; that declaration text is model-visible and its refresh postdates the change. Both are fixed and refreshed in the next batch; P4-09 is NOT admitted on this run.",
+            "unrelatedBecause": "the epic's reality set (26 path(s): declaration plus live freeze entries, per BLOCKED-134) is disjoint from the failing subject [\"packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts\",\"snapshots/session/cordis-inspect-jsdoc\",\"packages/collaboration/lease-contract/src/types.ts\",\"packages/collaboration/lease-contract/src/run-lease.ts\"]",
+            "admittedBy": "delegate guanjieqiao-92",
+            "diagnosedAtUtc": "2026-09-10T05:38:50.433Z"
+          }
         }
       },
       "supplements": {
@@ -3207,10 +3393,10 @@
         },
         "P.3": {
           "status": "GREEN",
-          "candidateSha": "d19b70e6a0c6ad1a1a0619cdcaaf86067fe3172b",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34298753030",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d19b70e6a0/vitest-report.json",
-          "observationSha256": "697cf160c7099c64664736036aed54785123b0eca85f2d634608fe12851a8829",
+          "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34439518421",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-2d2e8f89ac/first100-evidence-2d2e8f89ac9cccff7d92f165b5436105986e6c11/vitest-report.json",
+          "observationSha256": "80d9eb727295cb43bedea8ee032942968f75a5653f9ffe25981cef8520d11f6f",
           "expectCasesMatched": [
             "P2-04 must[1]: a hostile server cannot lower the risk its own tools carry KEEPS the operator's `destructive` when the server claims the tool is read-only",
             "P2-04 must[1]: a hostile server cannot lower the risk its own tools carry gives an UNANNOTATED tool no tags, so it falls to the unknown default",
@@ -3224,7 +3410,7 @@
             "P2-04 must[1]: the tags reach the risk gate as a CLASSIFICATION, not as decoration leaves an unannotated tool at the unknown default, which is ABOVE that threshold too",
             "P2-04 must[1]: the tags reach the risk gate as a CLASSIFICATION, not as decoration lets a TRUSTED read-only tool classify as `read`, the only way an MCP tool gets cheaper"
           ],
-          "capturedAtUtc": "2026-09-09T01:55:41.684Z"
+          "capturedAtUtc": "2026-09-10T05:38:38.611Z"
         }
       },
       "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
@@ -5070,10 +5256,10 @@
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "f8d3bce3d14534500b098e4d7373d2eba409b836",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34432095748",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/run-34432095748/first100-vitest-report-f8d3bce3d14534500b098e4d7373d2eba409b836/vitest-report.json",
-          "observationSha256": "016686ea720f676c8cd7d91c2989e1d3832f80ad05ec48177a4f076da9932441",
+          "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34439518421",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-2d2e8f89ac/first100-evidence-2d2e8f89ac9cccff7d92f165b5436105986e6c11/vitest-report.json",
+          "observationSha256": "80d9eb727295cb43bedea8ee032942968f75a5653f9ffe25981cef8520d11f6f",
           "expectCasesMatched": [
             "records a started agent call as in-flight, carrying the child session id as its receipt",
             "settles a completed call with an output the resume can reuse",
@@ -5084,7 +5270,38 @@
             "kill between two agent calls: the finished one is skipped, the next re-run",
             "kill during concurrent calls started out of order: the journal still reads in script order"
           ],
-          "capturedAtUtc": "2026-09-10T03:47:59.961Z"
+          "capturedAtUtc": "2026-09-10T05:38:30.567Z",
+          "admittedUnderRedRun": {
+            "runId": "34439518421",
+            "redSteps": [
+              {
+                "step": "Lint the files this program changed since the frozen baseline",
+                "failingCases": [
+                  "typescript(no-unnecessary-type-conversion) at packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38"
+                ],
+                "evidence": "× typescript(no-unnecessary-type-conversion): This type conversion does not change the type or value of the expression.\n     ╭─[packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38]",
+                "subjectPaths": [
+                  "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts"
+                ]
+              },
+              {
+                "step": "Recorded-session snapshots",
+                "failingCases": [
+                  "headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless"
+                ],
+                "evidence": "× replays cordis-inspect-jsdoc through dsh --profile headless 2954ms\n FAIL  snapshots/session/headless.snapshot.ts > headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless\nAssertionError: cordis-inspect-jsdoc: session 0: expected '{\"type\":\"session\",\"version\":0,\"id\":\"{…' to be '{\"type\":\"session\",\"version\":0,\"id\":\"{…' // Object.is equality",
+                "subjectPaths": [
+                  "snapshots/session/cordis-inspect-jsdoc",
+                  "packages/collaboration/lease-contract/src/types.ts",
+                  "packages/collaboration/lease-contract/src/run-lease.ts"
+                ]
+              }
+            ],
+            "diagnosedCause": "Both red steps are P4-09's, and neither reaches an admitted epic's reality set. (1) An oxlint no-unnecessary-type-conversion at nested-run.spec.ts:395 is a lint defect in a P4-09 test file. (2) The cordis-inspect-jsdoc snapshot is stale because RunLeaseDenial gained holder: WorkerId | undefined when the resume guard extended the lease contract; that declaration text is model-visible and its refresh postdates the change. Both are fixed and refreshed in the next batch; P4-09 is NOT admitted on this run.",
+            "unrelatedBecause": "the epic's reality set (26 path(s): declaration plus live freeze entries, per BLOCKED-134) is disjoint from the failing subject [\"packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts\",\"snapshots/session/cordis-inspect-jsdoc\",\"packages/collaboration/lease-contract/src/types.ts\",\"packages/collaboration/lease-contract/src/run-lease.ts\"]",
+            "admittedBy": "delegate guanjieqiao-92",
+            "diagnosedAtUtc": "2026-09-10T05:38:50.571Z"
+          }
         },
         "F": {
           "status": "GREEN",
@@ -5150,17 +5367,17 @@
       "supplements": {
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "d19b70e6a0c6ad1a1a0619cdcaaf86067fe3172b",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34298753030",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d19b70e6a0/vitest-report.json",
-          "observationSha256": "697cf160c7099c64664736036aed54785123b0eca85f2d634608fe12851a8829",
+          "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34439518421",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-2d2e8f89ac/first100-evidence-2d2e8f89ac9cccff7d92f165b5436105986e6c11/vitest-report.json",
+          "observationSha256": "80d9eb727295cb43bedea8ee032942968f75a5653f9ffe25981cef8520d11f6f",
           "expectCasesMatched": [
             "P4-08 must[0]: a real run keeps a journal records one entry per agent() call, keyed to the script digest",
             "P4-08 must[0]: a real run keeps a journal RESUMES without starting the completed children again (acceptance[0])",
             "P4-08 must[0]: a real run keeps a journal classes every agent() step SIDE-EFFECTING, so a resume reconciles rather than skips",
             "P4-08 acceptance[0]: a resume does not repeat completed child work RERUNS a completed step whose child session cannot be confirmed"
           ],
-          "capturedAtUtc": "2026-09-09T01:56:20.141Z"
+          "capturedAtUtc": "2026-09-10T05:38:38.880Z"
         },
         "P.1": {
           "status": "SUPERSEDED",
@@ -5188,10 +5405,10 @@
         },
         "U.2": {
           "status": "GREEN",
-          "candidateSha": "d19b70e6a0c6ad1a1a0619cdcaaf86067fe3172b",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34298753030",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d19b70e6a0/vitest-report.json",
-          "observationSha256": "697cf160c7099c64664736036aed54785123b0eca85f2d634608fe12851a8829",
+          "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34439518421",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-2d2e8f89ac/first100-evidence-2d2e8f89ac9cccff7d92f165b5436105986e6c11/vitest-report.json",
+          "observationSha256": "80d9eb727295cb43bedea8ee032942968f75a5653f9ffe25981cef8520d11f6f",
           "expectCasesMatched": [
             "P4-08 must[2]: a side-effecting step is reconciled against the effect ledger reuses a step whose every side-effect receipt the ledger CONFIRMS, without re-running it",
             "P4-08 must[2]: a side-effecting step is reconciled against the effect ledger RERUNS a step whose side-effect receipts the ledger never reserved, because nothing left the harness",
@@ -5200,19 +5417,19 @@
             "P4-08 must[2]: a side-effecting step is reconciled against the effect ledger treats a step that recorded effects under no queryable scope as unreconcilable, not as reusable",
             "P4-08 must[2]: a side-effecting step is reconciled against the effect ledger refuses a step whose effects committed but whose children cannot be confirmed"
           ],
-          "capturedAtUtc": "2026-09-09T01:56:20.717Z"
+          "capturedAtUtc": "2026-09-10T05:38:39.156Z"
         },
         "U.3": {
           "status": "GREEN",
-          "candidateSha": "d19b70e6a0c6ad1a1a0619cdcaaf86067fe3172b",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34298753030",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d19b70e6a0/vitest-report.json",
-          "observationSha256": "697cf160c7099c64664736036aed54785123b0eca85f2d634608fe12851a8829",
+          "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34439518421",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-2d2e8f89ac/first100-evidence-2d2e8f89ac9cccff7d92f165b5436105986e6c11/vitest-report.json",
+          "observationSha256": "80d9eb727295cb43bedea8ee032942968f75a5653f9ffe25981cef8520d11f6f",
           "expectCasesMatched": [
             "P4-08 acceptance[2]: a settled run persists a journal that keeps its evidence CONTINUES the journal it resumed from instead of overwriting it",
             "P4-08 acceptance[2]: a settled run persists a journal that keeps its evidence marks a RECONCILED step verified, which is what compaction acts on"
           ],
-          "capturedAtUtc": "2026-09-09T01:56:21.028Z"
+          "capturedAtUtc": "2026-09-10T05:38:39.428Z"
         },
         "C.4": {
           "status": "SUPERSEDED",
