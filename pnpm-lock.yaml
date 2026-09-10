@@ -6422,6 +6422,9 @@ importers:
       '@deepseek-ai/dsh-retry':
         specifier: workspace:^
         version: link:../../reliability/retry
+      '@deepseek-ai/dsh-retry-cockatiel':
+        specifier: workspace:^
+        version: link:../../reliability/retry-cockatiel
 
   packages/llm/llm-deepseek:
     dependencies:

@@ -73,6 +73,7 @@
     "@deepseek-ai/dsh-attachment": "workspace:^",
     "@deepseek-ai/dsh-invariants": "workspace:^",
     "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-retry": "workspace:^"
+    "@deepseek-ai/dsh-retry": "workspace:^",
+    "@deepseek-ai/dsh-retry-cockatiel": "workspace:^"
   }
 }

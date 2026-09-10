@@ -30,7 +30,7 @@ import type { ProviderRequestId } from './brand.ts'
 import { callConfigEquals } from './call-config.ts'
 import type { LlmCallConfig, LlmCallConfigAdapterDefaults } from './call-config.ts'
 import { HarnessError, INVALID_CREDENTIAL_CODE } from './error.ts'
-import { normalizeLlmFailure } from './adapter-failure.ts'
+import { llmFailureFacts, normalizeLlmFailure } from './adapter-failure.ts'
 import { normalizeApiKey } from './api-key.ts'
 import { contentHasImage, projectImagesForTextModel } from './content.ts'
 
@@ -207,6 +207,24 @@ export abstract class LlmAdapter {
    * @returns a resolved policy, or `undefined` to use the normal defaults.
    */
   providerRetryPolicy(_provider: string): ResolvedRetryPolicy | undefined {
+    return undefined
+  }
+
+  /**
+   * The endpoint this route's requests are sent to, for circuit-breaker
+   * keying (first100 registry P4-11 must[2]).
+   *
+   * Only the adapter knows it: a provider route resolves a base URL from its
+   * own connection settings, and one route can front more than one endpoint.
+   * The default declares none, so a breaker keys such a route by provider and
+   * model alone — narrower than the truth but never wider, since two endpoints
+   * would then share one breaker rather than a sick one opening a healthy
+   * one's.
+   * @param _provider - a route passed to `registerAdapter()` for this instance.
+   * @param _model - the model addressed on that route.
+   * @returns the endpoint URL, or `undefined` when the adapter has no single one.
+   */
+  endpointUrl(_provider: string, _model: string): string | undefined {
     return undefined
   }
 
@@ -962,11 +980,46 @@ export class LlmRuntime extends TypertRemoteService {
    * and iteration failures become one terminal failure chunk. Middleware and
    * downstream consumer failures remain thrown plugin or consumer errors.
    */
+  /**
+   * Pull the first chunk through the mounted circuit breaker, when one is
+   * mounted (P4-11 must[2]).
+   *
+   * The breaker wraps the FIRST chunk rather than the whole stream because
+   * that is where an endpoint's health shows: a stream that produced a chunk
+   * answered, and a failure after that is the model's or the transport's
+   * mid-flight, not evidence the destination is down. A refusal therefore
+   * happens before any chunk exists, which is what "without reaching the
+   * adapter" means for a streaming call.
+   * @param iterator - the adapter stream's iterator, already created.
+   * @param options - the call being dispatched, for its provider and model.
+   * @param adapter - the adapter, which alone knows the endpoint URL.
+   * @returns the first iterator result.
+   * @throws {BreakerOpenError} when the destination is open, without pulling.
+   */
+  private async guardedFirstChunk(
+    iterator: AsyncIterator<StreamChunk>,
+    options: GenerateOptions,
+    adapter: LlmAdapter,
+  ): Promise<IteratorResult<StreamChunk>> {
+    const breaker = this.ctx.get('circuitBreaker')
+    if (breaker === undefined) return iterator.next()
+    return breaker.execute(
+      {
+        provider: options.provider,
+        baseUrl: adapter.endpointUrl(options.provider, options.model) ?? '',
+        model: options.model,
+      },
+      () => iterator.next(),
+      (error: unknown) => llmFailureFacts(normalizeLlmFailure(error)),
+    )
+  }
+
   private async * adapterStream(
     options: GenerateOptions,
     prepared?: PreparedDispatch,
   ): AsyncGenerator<StreamChunk> {
     let iterator: AsyncIterator<StreamChunk>
+    let firstItem: { done: true } | { done: false; value: StreamChunk }
     try {
       const registration = prepared?.registration ?? this.registration(options.provider)
       const adapter = registration.adapter
@@ -1003,13 +1056,29 @@ export class LlmRuntime extends TypertRemoteService {
         : resolvedOptions
       const stream = dispatch(this.forAdapter(projectedOptions, adapter))
       iterator = stream[Symbol.asyncIterator]()
+      // P4-11 must[2]: the breaker guards the FIRST chunk, which is where an
+      // endpoint's health is actually observable — a stream that has begun is
+      // evidence the endpoint answered. It is pulled here, inside the same
+      // try, so a refusal and a first-chunk failure reach the one place that
+      // converts an adapter throw into a terminal chunk.
+      const first = await this.guardedFirstChunk(iterator, options, adapter)
+      // The `done`/`value` getters are read HERE, inside the try, for the same
+      // reason the loop below reads them inside its own: a hostile or broken
+      // adapter can throw from either, and that throw must become a terminal
+      // chunk rather than escape the generator.
+      firstItem = first.done ? { done: true } : { done: false, value: first.value }
     } catch (error: unknown) {
       yield adapterFailureChunk(error, options.signal)
       return
     }
+    if (firstItem.done) return
 
     let completed = false
     try {
+      // Yielded INSIDE this try, so a consumer that breaks after the first
+      // chunk still reaches the `finally` that closes the adapter iterator.
+      // Yielded before it, the break would skip cleanup entirely.
+      yield firstItem.value
       while (true) {
         let item: { done: true } | { done: false; value: StreamChunk }
         try {
