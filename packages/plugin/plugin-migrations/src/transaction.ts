@@ -62,6 +62,15 @@ export interface UpgradeRequest {
   readonly validate: (quarantineDir: string) => Promise<{ readonly ok: boolean; readonly digest: string }>
   /** Answers whether the plugin works on the switched-in data (must[1]'s last phase). */
   readonly healthCheck: () => Promise<boolean>
+  /**
+   * Called as each phase completes, before the next begins.
+   *
+   * Exists so acceptance[0]'s campaign can kill the process at a NAMED phase.
+   * A test that threw instead would unwind to the `finally` below and thaw the
+   * plugin, which is the error path — the crash path is the one where nothing
+   * runs afterwards, and only a real process death produces it.
+   */
+  readonly onPhase?: (phase: UpgradePhase) => void
 }
 
 /** How one upgrade ended, and how far it got. */
@@ -129,6 +138,7 @@ export async function runUpgrade(request: UpgradeRequest): Promise<UpgradeOutcom
   if (!plan.admitted) return { upgraded: false, failedAt: 'freeze', refusal: plan.refusal }
 
   const thaw = await request.freeze()
+  request.onPhase?.('freeze')
   try {
     // snapshot: an atomically consistent copy, plus its manifest written
     // through the house atomic-write so a torn manifest cannot describe a
@@ -143,6 +153,7 @@ export async function runUpgrade(request: UpgradeRequest): Promise<UpgradeOutcom
       to: request.manifest.current,
       pathDigest: computeMigrationPathDigest(request.plugin, plan.steps),
     }, undefined, 2), { mode: 0o600, dirMode: 0o700 })
+    request.onPhase?.('snapshot')
 
     // quarantine: the migration runs against a COPY. Production is untouched
     // and still readable throughout, which is what makes a crash here
@@ -151,9 +162,11 @@ export async function runUpgrade(request: UpgradeRequest): Promise<UpgradeOutcom
     await mkdir(paths.quarantine, { recursive: true })
     vacuumInto(snapshotDb, join(paths.quarantine, 'data.db'))
     await request.migrate(paths.quarantine, plan)
+    request.onPhase?.('quarantine')
 
     const validated = await request.validate(paths.quarantine)
     if (!validated.ok) return { upgraded: false, failedAt: 'validate' }
+    request.onPhase?.('validate')
 
     // switch: two renames on one filesystem. The current directory moves ASIDE
     // first, because a rename over a directory does not preserve what it
@@ -161,6 +174,7 @@ export async function runUpgrade(request: UpgradeRequest): Promise<UpgradeOutcom
     await rm(paths.rollback, { recursive: true, force: true })
     await rename(paths.live, paths.rollback)
     await rename(paths.quarantine, paths.live)
+    request.onPhase?.('switch')
 
     if (!await request.healthCheck()) {
       // Back to exactly what was there before the switch. The migrated data is
@@ -170,6 +184,7 @@ export async function runUpgrade(request: UpgradeRequest): Promise<UpgradeOutcom
       await rename(paths.rollback, paths.live)
       return { upgraded: false, failedAt: 'health-check' }
     }
+    request.onPhase?.('health-check')
     return { upgraded: true, digest: validated.digest, rollbackDir: paths.rollback }
   } finally {
     await thaw()

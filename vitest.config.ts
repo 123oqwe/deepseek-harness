@@ -146,6 +146,9 @@ const processBoundTests = [
   'packages/llm/llm-pi-ai/tests/adapter.spec.ts',
   'packages/boot/app-boot/tests/app-boot.spec.ts',
   'packages/workflow/workflow-worker-thread/tests/session.spec.ts',
+  // Spawns a child that SIGKILLs itself mid-upgrade (P1-10 acceptance[0]);
+  // a killed worker thread would take its pool's siblings with it.
+  'packages/plugin/plugin-migrations/tests/crash-campaign.spec.ts',
 ]
 
 export default defineConfig({
