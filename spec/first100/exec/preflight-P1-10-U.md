@@ -2,7 +2,17 @@
 
 Measured at `4a58798bfd`, before any code.
 
-## The two declared Usage files, measured
+## CORRECTION — "there is no upgrade path" is wrong, and the original stays on record
+
+Measured after the delegate refused the scope question. The upgrade path **exists**: `apps/cli/src/plugin.ts`'s `runPlugin` forwards `dsh plugin update <name>` and `add <name>@<version>` to pnpm in the profile directory, and its own module header says so — "`update` activates a package that gained its `dsh.bundle` declaration in a newer version" (`:5-9`). That is the one channel through which a plugin changes version in the product, and the registry declaring this file `kind: B` rather than `N` says the same thing.
+
+What I did was read the file for the word "upgrade", not find it, and write down an absence. **The entry point was there under the name the product uses for it.** The same error as searching for `retryAfter` in P4-11 and concluding the tree had no parser: before claiming the tree lacks something, search by the problem domain and not only by the name I would have given it.
+
+The table below is left exactly as it was written. It is wrong in its first row, and replacing it would hide that the stage started from a false premise.
+
+**The mount point is `reconcilePlugins(before, dir)` (`:269`)**: `before` is the manifest read before pnpm ran, and the reconcile reads the installed state after — the one place in the product that knows `(plugin, from, to)`.
+
+## The two declared Usage files, measured (WRONG in its first row — see the correction above)
 
 | declared file | what is there |
 | --- | --- |
