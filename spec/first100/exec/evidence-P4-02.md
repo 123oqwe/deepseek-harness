@@ -55,3 +55,73 @@ Reported as lifecycle bugs per the file's own instruction, not worked around:
 - **`plan-rectification-2026-09-06.md` §12.79–§12.80** — the file ends at §12.78. §12.77 and §12.78 exist and are read (P1-10's storage-model reversal and the "建了 = 有生产调用点" restatement are the two rules I have applied hardest above).
 
 If either exists in a commit this worktree does not have, `lane-b` is at `fork/first100-exec` `e3004c9276` and needs the newer base before I can honour it.
+
+---
+
+# P4-02.P — Provider stage preFlight
+
+Recorded at `39102d4530`, before the first line of Provider-stage code, per §1.12. The C stage is written and awaiting its freeze; nothing here has been implemented.
+
+The delegate's three answers to the questions the C preFlight left open are taken as given and are not re-argued: the deterministic parser extracts only what is *already structured* and records `unknown-default` plus a question for everything else; the compiler does not take a `RiskPolicy` and leaves classification to a consumer that holds one; constraint ids derive from a digest of the normalized statement and source rather than from a counter.
+
+## Two measurements that contradict the mount point, found before writing code
+
+Both were measured on this tree, not inferred from the sheet.
+
+### 1. `accepted → planning` is a transition nothing performs
+
+The ruling puts the compile at the Run's `accepted → planning` transition. That transition has no production caller.
+
+| measurement | result |
+|---|---|
+| Production callers of `ctx.runs.advance(...)` | **Zero.** `grep -rn "\.advance(\|ctx\.runs" packages apps --include='*.ts'`, excluding tests, `.spec.ts` and `lib/`, returns one hit and it is `packages/extensions/tool-cordis/src/api-catalog.ts:1561` — a generated documentation artifact, not a call. |
+| What writes a `RunEvent` in production | `createRun` only (`run/run/src/index.ts:332` and `:359`), which mints the genesis event at `accepted`. Nothing appends a second entry. |
+| What actually moves in production | `Agent.lifecycle`, which is P4-05's **`AgentLifecycle`** vocabulary — `queued`, `starting`, `running`, `waiting_tool`, `cancelling`, `completed`, `failed` — advanced from `ensureRunning` on `agent/pre-step` (`index.ts:795-814`). `RunState`'s `accepted / planning / waiting / verifying / reconciling` are a **second, parallel vocabulary that no production path advances**. |
+
+So mounting the compiler on `accepted → planning` as specified would put it behind a transition nothing performs. That is the P2-02 / P6-07 / P1-10 zero-arrival shape (§12.69, §12.75, §12.78) — the fourth instance, and the first one caught before the code was written rather than at sign-off.
+
+### 2. `agent/session-start` does not carry the goal
+
+`SessionStartSource` is `'startup' | 'resume' | 'clear' | 'compact'` (`core/agent/src/runtime-types.ts:91`) and the payload is `{ agent, source }`. There is no task text in it, and there cannot be: the event fires when the session opens, before the first user message exists. A compiler that runs there has nothing to compile.
+
+The event that does hold the goal is **`agent/pre-step`**, whose payload carries `messages: UserMessage[]` — "messages removed from the inbox for this step" (`runtime-types.ts:260`). `RunPlugin` already subscribes to it (`index.ts:862`), which is also where it advances the lifecycle. The first `agent/pre-step` of a run is the first moment at which the goal, the identity and the budget are all in hand at once.
+
+## What the deterministic parser can actually read
+
+The inventory the delegate asked for, measured rather than assumed. Everything below reaches `RunPlugin` at the first `agent/pre-step` through `agent.options`, `agent.identity` or a service it can inject.
+
+| source | structured fields available | what it can become in the profile |
+|---|---|---|
+| `AgentOptions.budget` (`runtime-types.ts:43`) | `maxTurns`, `maxSpendUsd` | **hard** constraints, `origin: 'user-stated'`, `confidence: 1` — these are ceilings the loop enforces for itself, not guesses. Absent, and `0`, both mean unbounded; that distinction has to survive into the profile or a stated "no cap" becomes an inferred one. |
+| `AgentOptions` route fields | `provider`, `model`, `reasoningEffort`, `maxTokens` | **soft** constraints at most. They describe how the work is done, not what the task requires, and promoting a default route to a hard constraint would invent a requirement the user never stated. |
+| `Agent.identity` (`IdentityContext`, P2-01) | acting principal and the full delegation chain | not a constraint. It is the answer to "whose authorization would be assumed", which is exactly what must[2] forbids assuming — so an absent identity is a reason to emit a question, never a reason to default. |
+| `@deepseek-ai/dsh-workspace-trust` | `TrustState`: `untrusted` \| `trusted-read` \| `trusted-execute` (`workspace-trust/src/types.ts:61`) | bounds the side-effect class the profile may claim. An `untrusted` workspace cannot yield a decided `external-communication`. |
+| `user/message` event | `id` (`MessageId`), `source` (`user` \| `plugin` \| …) | the `TaskGoalRef`, and the `source.kind` decides whether this is a human goal at all — a synthetic `agent.inject()` context is not a task to profile. |
+| the goal text | free-form | **nothing.** Per the ruling, natural-language inference is not this stage's work. Text yields a profile whose side effect is `unknown-default` and whose `questions[]` is non-empty. |
+| headless / ACP / SDK / webhook request metadata | measured: `bundle/headless/src/index.ts:279` passes only `{ sessionId, meta: { cwd }, agentOptions: { provider, model } }` | `cwd` is the only per-origin field beyond `AgentOptions`, and it is not a task constraint. **The six origins do not differ in what a profile can read from them**, which is a useful negative result: one mount point suffices and no per-origin branch is needed. |
+
+The honest consequence, stated so it is not discovered later as a disappointment: **the first version's profiles will be mostly questions.** A goal with no budget set and no explicit trust posture compiles to one objective, zero or one constraints, an `unknown-default` side effect and two or three questions. That is correct under must[2] and acceptance[2], and it is what makes the epic's value — provenance, confidence, and asking instead of guessing — real rather than decorative.
+
+## Where the output goes
+
+Unchanged from the delegate's ruling, and the C stage already carries both halves:
+
+1. The profile body is appended to the session log as `run/task-profile` (`{ ref, profile, previousRef? }`), which is the durable home validation[2] asks for and the record P4-03 will need for "model-visible ⟺ logged".
+2. A `RunEvent` naming it by `TaskProfileRef` — **once the Run event log has a production writer at all**. Today it has exactly one entry per Run and no appender, so this half depends on finding 1's resolution.
+
+## Fixtures and mutation plan for P
+
+The four generic kinds become compiler inputs rather than literal profiles: each fixture is a `TaskProfileInput` (goal ref, text, plus the structured fields above) with an expected profile. Determinism (acceptance[0]) is observed by compiling each fixture twice and comparing `taskProfileRef`, not by comparing objects — the digest is what the Run log and the revision chain actually key on.
+
+Planned mutations, all in the non-loosening forms this epic has been using (constant, value and dependency replacement rather than removing a check):
+
+- Compile the budget as a `soft` constraint instead of `hard` — reds the budget fixture only.
+- Report `confidence: 1` on a field that came from no structured source — reds the "unstated field is not certain" case.
+- Emit no question when the side effect is undetermined — reds the must[2] fixtures while the four positive fixtures stay green as controls.
+- Derive a constraint id from a counter instead of the statement digest — reds the "recompiling an unchanged goal yields the same ref" case, which is the revision chain's load-bearing property.
+
+## Open questions this preFlight does NOT settle
+
+1. **Where does the compiler actually mount, given finding 1?** Three shapes, and the choice is the delegate's: (a) the first `agent/pre-step` in `RunPlugin`, with the Run event deferred until the Run log has a writer; (b) the same, plus P4-02 giving the Run log its first real appender — which is arguably P4-01 work arriving late rather than this epic's; (c) somewhere else entirely. I have not chosen, and I will not write a compiler mounted on `accepted → planning`.
+2. **Is `RunState` reachable at all, and whose problem is that?** P4-01 is ACCEPTED with a state machine that no production caller advances. That is a finding about P4-01, not about P4-02, and it belongs in the queue as its own item rather than being quietly absorbed by whichever epic notices it first.
+3. **Does a synthetic `user/message` get profiled?** `source.kind === 'plugin'` covers injected context — file-change notices, skill content, cron notifications. Profiling those would produce a TaskProfile per injected notice. The filter is one line, but which sources count as a task is a product decision.
