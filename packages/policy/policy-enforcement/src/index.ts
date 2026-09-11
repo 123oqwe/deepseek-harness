@@ -86,25 +86,6 @@ export class PolicyConstraints extends Service {
 }
 
 /**
- * Decide one action, bind the decision in the kernel, and record it.
- *
- * The order is the contract. The engine answers, the plugins may narrow, the
- * KERNEL binds, and the audit is appended before the caller acts — a record
- * written afterwards would be missing exactly when the process dies between
- * deciding and doing.
- *
- * When no policy service is mounted the decision is `policy-unavailable`, by
- * name. The provider is an ordinary plugin and may be unmounted mid-session;
- * what may not be lost is the enforcement, so the enforcement point answers
- * for itself rather than falling open (acceptance[2]).
- * @param ctx - the context the action is being executed in.
- * @param request - the five declared policy inputs.
- * @param origin - which originator started the action, for the audit.
- * @returns the closed decision the caller must act on.
- * @throws when no Trust Kernel is pinned: a harness that cannot enforce must
- *   not proceed as though it had.
- */
-/**
  * The deployment's kernel policy decider: endorse a composed decision, add no
  * refusal of its own.
  *
@@ -142,6 +123,25 @@ export function endorseComposedDecision(query: TrustKernelPolicyQuery): TrustKer
   return effect === 'permit' || effect === 'ask' ? 'allow' : 'deny'
 }
 
+/**
+ * Decide one action, bind the decision in the kernel, and record it.
+ *
+ * The order is the contract. The engine answers, the plugins may narrow, the
+ * KERNEL binds, and the audit is appended before the caller acts — a record
+ * written afterwards would be missing exactly when the process dies between
+ * deciding and doing.
+ *
+ * When no policy service is mounted the decision is `policy-unavailable`, by
+ * name. The provider is an ordinary plugin and may be unmounted mid-session;
+ * what may not be lost is the enforcement, so the enforcement point answers
+ * for itself rather than falling open (acceptance[2]).
+ * @param ctx - the context the action is being executed in.
+ * @param request - the five declared policy inputs.
+ * @param origin - which originator started the action, for the audit.
+ * @returns the closed decision the caller must act on.
+ * @throws when no Trust Kernel is pinned: a harness that cannot enforce must
+ *   not proceed as though it had.
+ */
 export function enforceAction(ctx: Context, request: PolicyRequest, origin: string): ClosedDecision {
   const kernel: TrustKernel | undefined = ctx.get('trustKernel')
   if (kernel === undefined) {
