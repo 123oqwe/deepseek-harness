@@ -16,6 +16,15 @@ const UUID_FRAGMENT_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-
 const WHOLE_UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 /** A run id minted per created agent: `run-` and a whole uuid, nothing else. */
 const MINTED_RUN_ID_RE = /^run-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+/**
+ * A value that is a PREFIX and a whole id, joined by a colon: `agent:<uuid>`,
+ * `anonymous:<uuid>`. The tail is an id this log already tokenizes at the site
+ * that owns it — a session header, an agent principal — so claiming the
+ * composite whole would give one value two tokens depending on which site the
+ * walk reached first. Tokenize the tail, keep the prefix, and the two
+ * normalization paths agree.
+ */
+const PREFIXED_ID_RE = /^[a-z][a-z0-9-]*:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const LEGACY_TOKEN_RE = /^\{\{(?:sessionId|messageId)\}\}$/
 const CANONICAL_TOKEN_RE = /^\{\{(session|message|approval|run|command|rpc|retry|id):([1-9]\d*)\}\}$/
 const ID_KEY_RE = /(?:^id$|Id$|Ids$)/
@@ -125,7 +134,14 @@ export function redactSessionSnapshotIds(logs: readonly string[]): string[] {
         // the case WHOLE_UUID_RE exists to refuse.
         if (typeof item === 'string' && (WHOLE_UUID_RE.test(item) || MINTED_RUN_ID_RE.test(item))) claim(item, 'run')
       } else if (ID_KEY_RE.test(childKey)) {
-        claim(item, 'id')
+        // A composite is NOT claimed whole. `agent:<sessionId>` names a
+        // delegated child's principal, and the session id in its tail is
+        // claimed by the session header on its own; claiming the composite
+        // too produced `{{id:N}}` on a raw log and `agent:{{session:N}}` on
+        // one whose tail was already tokenized, so a refresh and a replay of
+        // the SAME run disagreed and every multi-session scenario went red.
+        // The `runId` branch above states the same rule for the same reason.
+        if (typeof item !== 'string' || !PREFIXED_ID_RE.test(item)) claim(item, 'id')
       }
       collect(item, recordType)
     }
