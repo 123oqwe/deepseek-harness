@@ -12,6 +12,13 @@ import { mkdtemp, mkdir, realpath, rename, rm, symlink } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context } from '@deepseek-ai/cordis'
+import Storage from '@deepseek-ai/dsh-storage'
+import {
+  apply as storageJsonApply, Config as storageJsonConfig, inject as storageJsonInject, name as storageJsonName,
+} from '@deepseek-ai/dsh-storage-json'
+import {
+  apply as storageDomainApply, Config as storageDomainConfig, inject as storageDomainInject, name as storageDomainName,
+} from '@deepseek-ai/dsh-storage-domain'
 import type { TrustGrant } from '../src/index.ts'
 import { afterEach, describe, expect, it } from 'vitest'
 import * as WorkspaceTrustLocal from '../src/index.ts'
@@ -28,8 +35,20 @@ async function makeRoot(): Promise<string> {
   return root
 }
 
-async function mount(grants: TrustGrant[]): Promise<Context> {
+/**
+ * Mount the provider over a real storage stack.
+ *
+ * `storageRoot` is what makes a "restart" meaningful here: two mounts over the
+ * SAME root are two processes over one host's durable state, which is the
+ * condition BLOCKED-199 is about. Two mounts over different roots are two
+ * different hosts and would prove nothing.
+ */
+async function mount(grants: TrustGrant[], storageRoot?: string): Promise<Context> {
+  const root = storageRoot ?? await makeRoot()
   const ctx = new Context()
+  await ctx.plugin(Storage)
+  await ctx.plugin({ name: storageJsonName, inject: storageJsonInject, apply: storageJsonApply, Config: storageJsonConfig }, { root })
+  await ctx.plugin({ name: storageDomainName, inject: storageDomainInject, apply: storageDomainApply, Config: storageDomainConfig }, { backend: 'json' })
   await ctx.plugin(WorkspaceTrustLocal, { grants })
   return ctx
 }
@@ -92,19 +111,19 @@ describe('P1-07 Usage — the workspace trust seam over a real filesystem', () =
     }
   })
 
-  it('CHARACTERIZATION: a restart re-reads the grant, so a directory replaced while the process was down is trusted again', async () => {
-    // The in-process defence above is a record held in memory: once a binding
-    // exists the grant is never re-consulted, so a swap cannot be un-done by
-    // configuration. A restart has no such record. This case measures what a
-    // second process does with the SAME configuration over a directory that was
-    // replaced while nothing was running — which is the shape an attacker gets
-    // for free, because a workstation restarts and a clone is cheap.
+  it('does not re-grant a directory replaced while the process was down, because the binding is durable', async () => {
+    // BLOCKED-199. The in-process defence is a record; before that record was
+    // persisted it died with the process, so a second process re-read the
+    // grants against whatever then stood at the granted path. A workstation
+    // restarts and a clone is cheap, so "while nothing was running" is not an
+    // exotic precondition — it was the whole attack.
     const root = await makeRoot()
+    const storageRoot = await makeRoot()
     const project = join(root, 'project')
     await mkdir(project)
     const grants: TrustGrant[] = [{ path: project, state: 'trusted-execute' }]
 
-    const first = await mount(grants)
+    const first = await mount(grants, storageRoot)
     try {
       expect(await first.workspaceTrust.stateFor(project)).toBe('trusted-execute')
     } finally {
@@ -116,26 +135,46 @@ describe('P1-07 Usage — the workspace trust seam over a real filesystem', () =
     await rm(project, { recursive: true })
     await mkdir(project)
 
-    const restarted = await mount(grants)
+    // The same host, restarted: same storage root, same configuration.
+    const restarted = await mount(grants, storageRoot)
     try {
-      // Measured, NOT endorsed. This is what the code does today and the case
-      // exists so the behaviour is visible rather than assumed; whether a
-      // path-keyed grant is meant to survive the directory it named is
-      // BLOCKED-199's ruling. The interaction it stands in for would not:
-      // `bindWorkspaceTrust` binds to an IDENTITY, and acceptance[1] says trust
-      // is not inherited through replacement.
+      expect(await restarted.workspaceTrust.stateFor(project)).toBe('untrusted')
+    } finally {
+      await restarted.fiber.dispose()
+    }
+  })
+
+  it('control: the same directory across a restart keeps its trust, so the refusal above is about identity and not about restarting', async () => {
+    const root = await makeRoot()
+    const storageRoot = await makeRoot()
+    const project = join(root, 'project')
+    await mkdir(project)
+    const grants: TrustGrant[] = [{ path: project, state: 'trusted-execute' }]
+
+    const first = await mount(grants, storageRoot)
+    try {
+      expect(await first.workspaceTrust.stateFor(project)).toBe('trusted-execute')
+    } finally {
+      await first.fiber.dispose()
+    }
+
+    const restarted = await mount(grants, storageRoot)
+    try {
       expect(await restarted.workspaceTrust.stateFor(project)).toBe('trusted-execute')
     } finally {
       await restarted.fiber.dispose()
     }
   })
 
-  it('CHARACTERIZATION: a restart re-canonicalizes a granted symlink, so retargeting it while the process was down trusts the new target', async () => {
+  it('does not trust a retargeted symlink\'s new target across a restart', async () => {
     // The same gap reached without touching the granted path at all. Within one
     // process `canonicalGrants` is resolved once precisely so a retargeted
-    // symlink cannot canonicalize onto the attacker's directory — the package's
-    // own comment says so. A restart resolves it again, against the new target.
+    // symlink cannot canonicalize onto the attacker's directory. A restart used
+    // to resolve it again, against the new target; the stored record is what
+    // stops that, because the attacker's directory has no record of its own and
+    // the granted path's record names a different identity.
     const root = await makeRoot()
+    const storageRoot = await makeRoot()
     const granted = join(root, 'granted')
     const original = join(root, 'original')
     const attacker = join(root, 'attacker')
@@ -144,7 +183,7 @@ describe('P1-07 Usage — the workspace trust seam over a real filesystem', () =
     await symlink(original, granted)
     const grants: TrustGrant[] = [{ path: granted, state: 'trusted-execute' }]
 
-    const first = await mount(grants)
+    const first = await mount(grants, storageRoot)
     try {
       expect(await first.workspaceTrust.stateFor(granted)).toBe('trusted-execute')
     } finally {
@@ -154,11 +193,12 @@ describe('P1-07 Usage — the workspace trust seam over a real filesystem', () =
     await rm(granted)
     await symlink(attacker, granted)
 
-    const restarted = await mount(grants)
+    const restarted = await mount(grants, storageRoot)
     try {
-      // Measured, not endorsed — see the case above. The attacker's directory
-      // is now trusted-execute without ever having been granted.
-      expect(await restarted.workspaceTrust.stateFor(attacker)).toBe('trusted-execute')
+      // The attacker's directory was never granted, and a restart does not
+      // hand it the grant by re-resolving the symlink.
+      expect(await restarted.workspaceTrust.stateFor(attacker)).toBe('untrusted')
+      expect(await restarted.workspaceTrust.stateFor(granted)).toBe('untrusted')
     } finally {
       await restarted.fiber.dispose()
     }

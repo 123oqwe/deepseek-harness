@@ -46,7 +46,7 @@ Measured while writing `verify-import-integrity` (2026-09-10, lane B). **Measure
 
 ### BLOCKED-199 — P1-07: a configured trust grant survives a restart, so a replaced directory is trusted again
 
-**Status: MEASURED, awaiting ruling (OQ23).** Two characterization cases were added to `workspace-trust-local/tests/provider.spec.ts` and **both pass**, which is the finding: they record what the code does today so it is visible rather than assumed.
+**Status: FIXED (the half that is not blocked). The audit half is held — see below.** The two characterization cases that recorded the defect now assert the fix, and a control was added beside them.
 
 **What holds within one process.** `LocalWorkspaceTrust.stateFor` consults a grant only at FIRST binding; after that the record is reconciled against a fresh observation and configuration is never re-read. The package says so in its own comment, and two frozen cases pin it. `canonicalGrants` is likewise resolved exactly once per process, with a comment naming the attack it prevents: re-resolving per call would let a retargeted symlink canonicalize the grant onto the attacker's directory.
 
@@ -61,9 +61,20 @@ A workstation restarts and a clone is cheap, so "while the process was down" is 
 
 **A frozen title overstates what its case measures.** P1-07's live U entry names *"drops a granted workspace to untrusted once the directory at that path is replaced, **and does not re-grant it from configuration**"*. The second clause is true within a process and false across one. The case is sound; the title claims more than it observes. Recorded rather than renamed — a frozen title is not an executor's to change.
 
-**Closing condition.** A ruling on whether a path-keyed grant may outlive the directory it named, and then either: grants bind an identity at first resolution and persist it, so a restart reconciles rather than re-grants; or grants stay path-keyed and the register says so where the overstated title is. Either way, per the delegate's OQ23 note, **the grant path must go through `requestTrustUpgrade` so that granting produces an audit record** — today it does not, which is a second gap this measurement surfaced.
+**The fix, and why it needed TWO durable facts.** Ruled: a grant is the stand-in for the host-user interaction and must carry the same semantics, so trust binds an identity, not a path.
 
-**Does not un-green P1-07's cells.** Adding cases to a file leaves every frozen title still passing, and `expectCases` is a subset test; what un-greens a cell is a new live entry absent from its observed tree, and none was written here.
+- The **record** — one per canonical path, holding the identity it bound — is what a later boot reconciles against, so a directory replaced at the same path fails the check instead of inheriting its state.
+- The **consumed-grant marker** — one per CONFIGURED path spelling — is what makes a grant one-shot. The record alone does not: a retargeted symlink resolves to a canonical path with **no record of its own**, so the grant would be re-resolved and bind the attacker's directory as a first binding. Marking per configured spelling rather than per canonical path is the point, because the attack moves the canonical path.
+
+Both live in a `workspace_trust` storage domain the provider opens for itself. That placement was measured rather than assumed: `dsh-workspace` is mounted in the **web-app** bundle only, and the case this boundary exists for — an agent opening a strange repository — is **headless**, where the registry is absent. `storage`, `storage-json` and `storage-domain` are all mounted and enabled in base, so the provider needs no new mount.
+
+**What is still owed, and what is blocking it.** must[2]'s audit half is NOT done: the grant path still does not go through `requestTrustUpgrade`, so granting produces no audit record. That is held deliberately rather than skipped. `workspace-trust/src/types.ts:34-46` records the constraint — must[2]'s audit write is a Trust Kernel enforcement point, and both `AGENTS.md` and `docs/architecture/trust-kernel-boundary.md` require the vendored Cordis `Fiber` structural fix (Option A) to land **before** any epic wires one. Doing the durable half now closes the security consequence without pretending the audit exists.
+
+**A second in-memory copy remains.** `WorkspaceEntity.trustRecord` is a private field and `WorkspaceRecord` carries no trust column, so the entity was never a home for this state; it is left untouched in this slice and closes with the host-user interaction, rather than adding a `dsh-workspace` → trust-seam edge while the provider already imports `observeWorkspaceIdentity` in the other direction.
+
+**The frozen title needed no rename after all.** P1-07's superseded U entry named a case *"…and does not re-grant it from configuration"* — true within a process and false across one. It is now true in both, so the register's wording became accurate instead of needing a correction.
+
+**P1-07.U's green is revoked in the same batch as the fix**, because the re-freeze creates a live entry absent from the tree the old green was observed on. C, P and F are untouched: no new entry was written for them.
 
 ### BLOCKED-198 — readiness: whichever epic builds a memory index must ask `admitToIndex` before it indexes
 

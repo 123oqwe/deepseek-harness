@@ -10,17 +10,25 @@
  * no second decision table.
  *
  * A grant names a path, but trust binds to the identity that path resolved to
- * the first time it was read. Every later read re-observes and reconciles, so a
- * directory replaced in place, a symlink retargeted, or a directory moved out
- * from under its path all drop to `'untrusted'` and are never re-granted from
- * configuration: a grant is permission to trust one directory, not standing
- * permission to trust whatever later occupies its path (acceptance[1]).
+ * the first time it was read, and that binding is DURABLE. Every later read —
+ * in this process or a later one — re-observes and reconciles against the
+ * stored identity, so a directory replaced in place, a symlink retargeted, or
+ * a directory moved out from under its path all drop to `'untrusted'` and are
+ * never re-granted from configuration: a grant is permission to trust one
+ * directory, not standing permission to trust whatever later occupies its path
+ * (acceptance[1]).
+ *
+ * The durability is the load-bearing half and it was missing. While the
+ * binding lived only in memory this paragraph was true within one process and
+ * false across a restart, which is the whole of BLOCKED-199: a second process
+ * re-read the grants and re-trusted whatever then stood at the granted path.
  *
  * @module @deepseek-ai/dsh-workspace-trust-local
  */
 
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
+import type { KvTable } from '@deepseek-ai/dsh-storage-domain'
 import { observeWorkspaceIdentity, realpathNormalize } from '@deepseek-ai/dsh-workspace'
 import {
   bindWorkspaceTrust,
@@ -28,9 +36,22 @@ import {
   type WorkspaceTrustService,
 } from '@deepseek-ai/dsh-workspace-trust'
 import type { TrustRecord, TrustState, WorkspaceIdentity } from '@deepseek-ai/dsh-workspace-trust/types'
+import { workspaceTrustDomainSpec } from './spec.ts'
+import type { StoredConsumedGrant } from './spec.ts'
+
+/** The two durable tables this provider reads, opened together. */
+interface TrustTables {
+  /** One record per canonical workspace path. */
+  readonly records: KvTable<string, TrustRecord>
+  /** One marker per grant already spent, keyed by its configured spelling. */
+  readonly consumedGrants: KvTable<string, StoredConsumedGrant>
+}
 
 /** Plugin name under which this provider mounts. */
 export const name = 'workspace-trust-local'
+
+/** The durable record table lives in a storage domain, so the trust binding outlives the process. */
+export const inject = ['storageDomain']
 
 /** One operator-configured trust grant for a workspace path. */
 export interface TrustGrant {
@@ -69,16 +90,42 @@ export const Config: z<Config> = z.object({
 class LocalWorkspaceTrust implements WorkspaceTrustService {
   /** Configured path spelling to the state the operator granted it. */
   private readonly grants: ReadonlyMap<string, TrustState>
-  /** Canonical path to the record currently bound for it. */
-  private readonly records = new Map<string, TrustRecord>()
   /** Resolved once and reused: see {@link canonicalGrants}. */
-  private canonicalGrantsOnce?: Promise<Map<string, TrustState>>
+  private canonicalGrantsOnce?: Promise<Map<string, { canonicalPath: string; state: TrustState }>>
+  /** Opened once and reused; see {@link tables}. */
+  private tablesOnce?: Promise<TrustTables>
 
   /**
+   * @param ctx - the mounting context, whose `storageDomain` holds the records.
    * @param grants - the operator's configured trust grants.
    */
-  constructor(grants: readonly TrustGrant[]) {
+  constructor(private readonly ctx: Context, grants: readonly TrustGrant[]) {
     this.grants = new Map(grants.map(grant => [grant.path, grant.state]))
+  }
+
+  /**
+   * The durable record table, opened on first use.
+   *
+   * Opened lazily rather than in `apply`, which is synchronous: a composition
+   * that mounts this provider and never resolves a workspace should not pay
+   * for a domain it does not read.
+   * @returns the table of records keyed by canonical path.
+   */
+  private async tables(): Promise<TrustTables> {
+    // The one conversion between the stored row and the vocabulary's record.
+    // They are the same shape; what the schema cannot express is `grantedBy`'s
+    // brand and the difference `exactOptionalPropertyTypes` draws between an
+    // absent optional and one set to `undefined`. Converting at the handle
+    // rather than declaring the schema as `TrustRecord` keeps the schema
+    // honest about what it actually validates.
+    this.tablesOnce ??= (async () => {
+      const domain = await this.ctx.storageDomain.open(workspaceTrustDomainSpec)
+      return {
+        records: domain.table('records') as unknown as KvTable<string, TrustRecord>,
+        consumedGrants: domain.table('consumed_grants'),
+      }
+    })()
+    return await this.tablesOnce
   }
 
   /**
@@ -95,11 +142,11 @@ class LocalWorkspaceTrust implements WorkspaceTrustService {
    * package's own symlink-retarget case caught.
    * @returns the granted states keyed by the canonical path each named when first resolved.
    */
-  private async canonicalGrants(): Promise<Map<string, TrustState>> {
+  private async canonicalGrants(): Promise<Map<string, { canonicalPath: string; state: TrustState }>> {
     this.canonicalGrantsOnce ??= (async () => {
-      const canonical = new Map<string, TrustState>()
+      const canonical = new Map<string, { canonicalPath: string; state: TrustState }>()
       for (const [path, state] of this.grants) {
-        canonical.set(await realpathNormalize(path).catch(() => path), state)
+        canonical.set(path, { canonicalPath: await realpathNormalize(path).catch(() => path), state })
       }
       return canonical
     })()
@@ -121,21 +168,52 @@ class LocalWorkspaceTrust implements WorkspaceTrustService {
       return 'untrusted'
     }
     const at = new Date().toISOString()
-    const existing = this.records.get(observed.canonicalPath)
+    const { records, consumedGrants } = await this.tables()
+    const existing = records.get(observed.canonicalPath)
     if (existing !== undefined) {
       const reconciled = reconcileWorkspaceTrust(existing, observed, at)
-      this.records.set(observed.canonicalPath, reconciled)
+      await records.put(observed.canonicalPath, reconciled)
       return reconciled.state
     }
-    const granted = (await this.canonicalGrants()).get(observed.canonicalPath)
-    // A grant is consulted only at first binding. Once a record exists it is
-    // reconciled above and never re-reads configuration, so a directory that
-    // lost trust to a swap cannot regain it by still matching a granted path.
-    const record: TrustRecord = granted === undefined || granted === 'untrusted'
+    // A grant is consumed ONCE. Two durable facts are what make that true
+    // across a restart, and each covers a case the other does not
+    // (BLOCKED-199): the RECORD stops a directory that lost trust to a swap
+    // from regaining it at the same canonical path, and the CONSUMED MARKER
+    // stops a grant from being resolved a second time at all -- which is the
+    // only thing that stops a retargeted symlink, because the attacker's
+    // directory is a canonical path with no record of its own and would
+    // otherwise bind as a first binding.
+    const grant = await this.unspentGrantFor(observed.canonicalPath, consumedGrants)
+    const record: TrustRecord = grant === undefined || grant.state === 'untrusted'
       ? bindWorkspaceTrust(observed, at)
-      : { identity: observed, state: granted, at }
-    this.records.set(observed.canonicalPath, record)
+      : { identity: observed, state: grant.state, at }
+    await records.put(observed.canonicalPath, record)
+    if (grant !== undefined) await consumedGrants.put(grant.configuredPath, { canonicalPath: observed.canonicalPath, at })
     return record.state
+  }
+
+  /**
+   * The grant that applies to `canonicalPath` and has not been spent yet.
+   *
+   * A grant is matched by the canonical path it resolves to now, and refused
+   * if its configured spelling was already spent — on any directory. Spending
+   * is per CONFIGURED path rather than per canonical one precisely because the
+   * attack this closes moves the canonical path: a symlink retargeted between
+   * runs resolves the same configured spelling onto a new directory.
+   * @param canonicalPath - the canonical path observed for this read.
+   * @param consumedGrants - the marker table.
+   * @returns the applicable unspent grant, or undefined.
+   */
+  private async unspentGrantFor(
+    canonicalPath: string,
+    consumedGrants: KvTable<string, StoredConsumedGrant>,
+  ): Promise<{ configuredPath: string; state: TrustState } | undefined> {
+    for (const [configuredPath, resolved] of await this.canonicalGrants()) {
+      if (resolved.canonicalPath !== canonicalPath) continue
+      if (consumedGrants.get(configuredPath) !== undefined) continue
+      return { configuredPath, state: resolved.state }
+    }
+    return undefined
   }
 }
 
@@ -145,5 +223,5 @@ class LocalWorkspaceTrust implements WorkspaceTrustService {
  * @param config - the operator's trust grants.
  */
 export function apply(ctx: Context, config: Config): void {
-  ctx.provide('workspaceTrust', new LocalWorkspaceTrust(config.grants ?? []))
+  ctx.provide('workspaceTrust', new LocalWorkspaceTrust(ctx, config.grants ?? []))
 }
