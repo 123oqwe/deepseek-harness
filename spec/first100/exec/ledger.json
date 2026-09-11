@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-11T17:36:32.993Z",
-  "inputDigest": "0793074e9a76f6edb5b187c1d6c8fed9230583edddc0ec9519e77edc0be2f478",
+  "lastUpdatedUtc": "2026-09-11T23:11:42.917Z",
+  "inputDigest": "a26d6bf2491087b8bd422a64718ad45c9358de6cb2ed3242ee4dc813ca997d10",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4513,7 +4513,47 @@
           "capturedAtUtc": "2026-09-04T15:57:13.860Z"
         }
       },
-      "supplements": {},
+      "supplements": {
+        "U.1": {
+          "status": "GREEN",
+          "candidateSha": "93d52207338066bd65494f6044f1ec5920d63cb8",
+          "ciRunUrl": "https://github.com/deepseek-ai/deepseek-harness/actions/runs/34652643903",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34652643903/first100-evidence-93d52207338066bd65494f6044f1ec5920d63cb8/vitest-report.json",
+          "observationSha256": "3c15dc184ed1d2854dd1c87ad45663960fbf87da8553d79ead6000250dd3da09",
+          "expectCasesMatched": [
+            "reports the non-terminal Runs the store held, at mount, before any agent exists",
+            "reports nothing for a store that holds only terminal Runs, so the enumeration is not just \"everything\"",
+            "gives a session exactly ONE Run across a restart, adopting the non-terminal one it restored",
+            "MINTS a fresh Run when the restored one is terminal, rather than resuming something already finished",
+            "adopts a Run that was mid-`running` when the process CRASHED, rather than dropping it",
+            "PARKS a running Run at `paused` when the mount unloads cleanly, rather than ending or abandoning it",
+            "RELEASES its work item on a clean unload, so the next mount continues at once and waits out no lease",
+            "takes a parked Run back to `running` at the next model step, so `paused` is a pause and not a stop",
+            "continues under a lease THIS mount was issued, once the dead process's lease has lapsed",
+            "opens NO Run for a restart inside the lease window, because the work item is still held",
+            "refuses a transition the table does not allow, naming the pair it refused",
+            "writes nothing when it refuses: the Run keeps the event log it had",
+            "opens an independent Run per session, so a second session never joins the first's Run",
+            "walks a successful session accepted → planning → running → verifying → succeeded, one log entry each",
+            "ends a session whose last reported activity was an unrecovered error at verifying → failed",
+            "leaves no non-terminal Run behind after a session that ran and ended",
+            "cancels a Run whose session was disposed before any model step, rather than leaving it accepted"
+          ],
+          "capturedAtUtc": "2026-09-11T23:11:40.075Z"
+        },
+        "U.2": {
+          "status": "GREEN",
+          "candidateSha": "93d52207338066bd65494f6044f1ec5920d63cb8",
+          "ciRunUrl": "https://github.com/deepseek-ai/deepseek-harness/actions/runs/34652643903",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34652643903/first100-evidence-93d52207338066bd65494f6044f1ec5920d63cb8/vitest-report.json",
+          "observationSha256": "3c15dc184ed1d2854dd1c87ad45663960fbf87da8553d79ead6000250dd3da09",
+          "expectCasesMatched": [
+            "CONTINUES one durable session's Run across a restart, rather than opening a second (U2)",
+            "enumerates what it restored at mount, which the durable document cannot show (U2)"
+          ],
+          "capturedAtUtc": "2026-09-11T23:11:42.886Z"
+        }
+      },
       "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
       "independentVerdict": "PENDING",
       "openFindings": null,
@@ -4608,14 +4648,90 @@
           "capturedAtUtc": "2026-09-11T08:00:51.160Z"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "93d52207338066bd65494f6044f1ec5920d63cb8",
+          "ciRunUrl": "https://github.com/deepseek-ai/deepseek-harness/actions/runs/34652643903",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34652643903/first100-evidence-93d52207338066bd65494f6044f1ec5920d63cb8/vitest-report.json",
+          "observationSha256": "3c15dc184ed1d2854dd1c87ad45663960fbf87da8553d79ead6000250dd3da09",
+          "expectCasesMatched": [
+            "appends exactly one run/task-profile event and names it on the Agent handle",
+            "compiles the objective from the goal the human actually sent, and keeps the reference beside it",
+            "moves the Run accepted → planning carrying the profile as a task-profile reference",
+            "references a digest whose body is in the session log, so the reference is resolvable",
+            "appends no second profile for a second goal in the same session",
+            "compiles NOTHING for a first message that is injected plugin context, and leaves the Run accepted",
+            "compiles a profile for an image-led first message and asks what the image asks for",
+            "appends no second profile when a resumed session re-claims the SAME pending message",
+            "DOES append a second profile when the resumed session carries a different goal",
+            "compiles a profile for a goal continuation round and carries the round into the reference",
+            "carries no round for a direct human prompt, so absence stays the ordinary case"
+          ],
+          "capturedAtUtc": "2026-09-11T23:11:06.457Z"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "93d52207338066bd65494f6044f1ec5920d63cb8",
+          "ciRunUrl": "https://github.com/deepseek-ai/deepseek-harness/actions/runs/34652643903",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34652643903/first100-evidence-93d52207338066bd65494f6044f1ec5920d63cb8/vitest-report.json",
+          "observationSha256": "3c15dc184ed1d2854dd1c87ad45663960fbf87da8553d79ead6000250dd3da09",
+          "expectCasesMatched": [
+            "compiles code from a goal that states no budget, no trust and no identity, and asks about every one of them",
+            "compiles research from a goal that states no budget, no trust and no identity, and asks about every one of them",
+            "compiles external-action from a goal that states no budget, no trust and no identity, and asks about every one of them",
+            "compiles personal-plan from a goal that states no budget, no trust and no identity, and asks about every one of them",
+            "refuses a blank injected-context message as not-a-task, not as empty-goal",
+            "refuses a goal that is only whitespace, rather than asking about the fields around it",
+            "changing the goal text alone changes the reference, so that revision is visible in the chain",
+            "changing the goal message it refers to alone changes the reference, so that revision is visible in the chain",
+            "changing the turn ceiling alone changes the reference, so that revision is visible in the chain",
+            "changing the spend ceiling alone changes the reference, so that revision is visible in the chain",
+            "changing the workspace trust state alone changes the reference, so that revision is visible in the chain",
+            "changing whether an identity is attached alone changes the reference, so that revision is visible in the chain",
+            "changing the tally of content the objective does not include alone changes the reference, so that revision is visible in the chain",
+            "leaves the reference alone when nothing structured changed, so an unchanged goal is not a revision"
+          ],
+          "capturedAtUtc": "2026-09-11T23:11:27.708Z"
         }
       },
-      "supplements": {},
-      "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15",
+      "supplements": {
+        "C.1": {
+          "status": "GREEN",
+          "candidateSha": "93d52207338066bd65494f6044f1ec5920d63cb8",
+          "ciRunUrl": "https://github.com/deepseek-ai/deepseek-harness/actions/runs/34652643903",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34652643903/first100-evidence-93d52207338066bd65494f6044f1ec5920d63cb8/vitest-report.json",
+          "observationSha256": "3c15dc184ed1d2854dd1c87ad45663960fbf87da8553d79ead6000250dd3da09",
+          "expectCasesMatched": [
+            "classifies a goal continuation round as a user goal, not as an unknown source",
+            "still falls a kind it has no case for through to unknown-source, so the new case widened nothing else",
+            "reads the goal, the revision and the round off a continuation round",
+            "reads nothing off a direct human prompt, which continues no entered goal",
+            "accepts a profile whose goal reference names the round it came from",
+            "refuses round 0, because the goal domain admits positive rounds only",
+            "refuses an unrecognised key inside the round, the same way the profile refuses one",
+            "gives a different reference to two profiles that differ only in which round they came from",
+            "gives a different reference to a profile with no round at all, so absence is not round 1"
+          ],
+          "capturedAtUtc": "2026-09-11T23:11:32.175Z"
+        },
+        "P.1": {
+          "status": "GREEN",
+          "candidateSha": "93d52207338066bd65494f6044f1ec5920d63cb8",
+          "ciRunUrl": "https://github.com/deepseek-ai/deepseek-harness/actions/runs/34652643903",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34652643903/first100-evidence-93d52207338066bd65494f6044f1ec5920d63cb8/vitest-report.json",
+          "observationSha256": "3c15dc184ed1d2854dd1c87ad45663960fbf87da8553d79ead6000250dd3da09",
+          "expectCasesMatched": [
+            "still compiles a goal whose message also held blocks the text does not include",
+            "asks what the unread blocks ask for, naming their kind and their count",
+            "asks nothing when every block reached the objective, so the question is about content and not about compiling",
+            "treats a counted zero as nothing unread, so an empty tally is not a question",
+            "yields the same reference whatever order the caller counted the kinds in (acceptance[0])",
+            "yields a DIFFERENT reference when the tally itself changed, so a revision is visible",
+            "stays valid under the durable boundary check, so the extra question breaks no must[2] rule"
+          ],
+          "capturedAtUtc": "2026-09-11T23:11:34.360Z"
+        }
+      },
+      "candidateSha": "93d52207338066bd65494f6044f1ec5920d63cb8",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",

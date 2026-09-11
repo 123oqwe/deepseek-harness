@@ -51,7 +51,7 @@ writeFileSync(observationPath, JSON.stringify({
   // no digest on the production path too (BLOCKED-211).
   payloadKeys: profileEvents.map(event => Object.keys(event.data as object).sort()),
   // The digest DERIVED from each logged body, never read out of the event.
-  derivedRefs: profileEvents.map(event => taskProfileRef((event.data as { profile: Parameters<typeof taskProfileRef>[0] }).profile)),
+  derivedRefs: profileEvents.map(event => taskProfileRef(event.data.profile)),
   // What the Run's own log names, which must be the same value.
   runTaskProfileRefs: (run?.events ?? [])
     .flatMap(event => event.references)
