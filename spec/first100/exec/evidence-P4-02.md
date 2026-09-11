@@ -142,3 +142,23 @@ Planned mutations, all in the non-loosening forms this epic has been using (cons
 4. **Is this package a `package-library`? Deferred to the P freeze by delegate ruling (gq-04, 2026-09-10).** The README's `kind` is `package-reference`, which is what `doc-standard.spec.ts`'s `expectedKind` grants any directory not listed in the audited `PACKAGE_LIBRARIES`. The package would plausibly qualify — `src/index.ts` has no default export and no `apply` — but today that file is the B4(f) type-only scaffold, and the runtime export the claim would rest on (`compileTaskProfile`) is the Provider stage's deliverable. Declaring a scaffold to be a library signs for a shape that does not exist yet. **Revisited at the P freeze, judged against whatever `index.ts` is then**; `package-reference` is correct until that point.
 
 5. **Does a synthetic `user/message` get profiled?** `source.kind === 'plugin'` covers injected context — file-change notices, skill content, cron notifications. Profiling those would produce a TaskProfile per injected notice. The filter is one line, but which sources count as a task is a product decision.
+
+---
+
+## acceptance-coverage pre-check, before predicate (i) needs it
+
+`acceptance-coverage.json` has **no P4-02 entry yet**, which is correct for a row whose cells are `NOT_RUN`. This is the pre-check of what those entries will say, done now because a gap found at sign-off costs a round trip and a gap found here costs a sentence.
+
+**One thing the schema says that this pre-check must not blur.** A citation has to resolve to a real frozen case *and*, for the closure predicate, to a real **observed-passing** one. The C cell is `NOT_RUN`, so **nothing in P4-02 is citable today**: the twelve C titles are frozen, not observed. Everything below is "what will be citable when the C cell greens", and the P column is "what will be citable after the P freeze *and* its observation". Frozen is not observed, and a coverage table that treats them alike is the kind of record that reads as evidence and is not.
+
+| acceptance | covered by C (frozen, citable once C greens) | covered by P (drafted, citable after P freezes and observes) |
+|---|---|---|
+| **[0]** same input, stable output under a deterministic parser fixture | 2 — the key-order-independent reference, and a changed confidence yielding a different reference | 3 — compiling the same input twice, a changed budget changing the reference, ids from the statement rather than from position |
+| **[1]** every hard constraint traceable to its source | 3 — no provenance refused, two contradictory constraints both kept with their own sources, confidence outside `[0, 1]` refused | 1 — a stated budget becoming a hard constraint whose provenance names the field |
+| **[2]** an unknown side effect is never marked `none` | 2 — an undetermined effect accepted, the same effect refused when it claims certainty | 3 — undetermined at confidence 0, trust recorded without deciding the class, "not supplied" distinguished from "untrusted" |
+
+**Zero acceptance indices have no coverage at all.** Five of the twelve C titles and seven of the fourteen P drafts serve `must[]` clauses or the module surface rather than an acceptance index, which is expected: `must[0]`'s generic-fields-only, `must[2]`'s question rules, the origin classifier's fail-closed default, the seventh `RunEntityKind`, and `index.ts`'s runtime surface are not acceptance clauses and should not be cited as if they were.
+
+**The gap that the table hides, and it is about acceptance[0].** Read strictly, acceptance[0]'s subject is *"the same **input** produces stable output under a deterministic parser fixture"* — a statement about the **compiler**. The two C cases are about a profile's canonical digest, which is the property the compiler's determinism is *observed through*, not the determinism itself: C has no compiler to feed an input to. So the honest reading is that **acceptance[0] is closed by P and by P alone**, and C's two cases are supporting rather than covering. This matters in one specific way: if the coverage entry cites C for acceptance[0], predicate (i) could close on cases that never compiled anything. The entry should cite P for acceptance[0] and list the C pair in its `note` as the digest property P depends on.
+
+That is a proposal for the entry's content, not a decision: `acceptance-coverage.json` is Supervisor-curated, and what a citation may claim is exactly the thing this artifact exists to keep honest.

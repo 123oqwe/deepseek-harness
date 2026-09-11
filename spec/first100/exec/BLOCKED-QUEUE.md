@@ -546,6 +546,22 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **A gap this exposed in the registry gate set, for the delegate rather than for an executor.** Instance 2 was red while the delegate's registry gate set reported **22/22 green at that same SHA**: `run-registry-gates.mjs`'s `GATES` list does not contain `verify-persistence-catalog`. So the gate set is not a sufficient condition for "no stale generated file". Whether to add it there — rather than leaving it to `doc-sync` and to this rule — is a delegate decision and is deliberately not taken here.
 
+**The twelve violations as a dispatchable worklist**, grouped by who can fix each. Compiled 2026-09-10 by the lane that wrote the gate; it changed none of them, because editing eight other epics' packages to land a gate is the scope creep this program forbids. Each line is one manifest edit: add the named package to that manifest's `dependencies` (or `peerDependencies`, matching how the package already declares its workspace edges).
+
+| owner | manifest to edit | add | imported at |
+|---|---|---|---|
+| **P4-11** (by package; the path is not in its declared files) | `packages/reliability/retry/package.json` | `@deepseek-ai/schemastery` | `src/usage.ts:13` — **closes BLOCKED-186** |
+| **P7-06** (unambiguous) | `packages/guard/repeat-tool-reminder/package.json` | `@deepseek-ai/dsh-llm` | `src/index.ts:12` |
+| **P8-08** (unambiguous) | `apps/web/package.json` | `@deepseek-ai/dsh-client-web` | `src/main.ts:2` |
+| **P2-02** (by subject: the import is its capability-token line) | `packages/core/agent-loop/package.json` | `@deepseek-ai/dsh-capability-token` | `src/tool-calls.ts:20` — the FILE is named by six epics, so only the import's subject identifies an owner |
+| **whoever edits `apps/cli` next** | `apps/cli/package.json` | `@deepseek-ai/dsh-brand` | `src/plugin-migration.ts:41`, `src/plugin.ts:27`, `src/profile-boot.ts:37` — one edit closes all three; `plugin.ts` is named by seven epics and `profile-boot.ts` by six, so the registry attributes it to none |
+| **unowned** | `packages/context/tmux-context/package.json` | `@deepseek-ai/dsh-llm` | `src/index.ts:27` |
+| **unowned** | `packages/skill/tool-skill/package.json` | `@deepseek-ai/dsh-session` | `src/index.ts:13` |
+| **unowned** | `packages/experimental/webworker-runtime/package.json` | `@deepseek-ai/dsh-app-boot`, `@deepseek-ai/dsh-cmdline` | `src/worker-host.ts:221`, `:229` — experimental, excluded from official releases |
+| **unowned** | `apps/web/package.json` | `@deepseek-ai/dsh-experimental-webworker-runtime` | `src/preview.ts:9` — same manifest as the P8-08 line above, so the two can land together |
+
+**Eight manifests, ten dependency lines** — computed from the gate's own output, not counted by hand: the twelve violations collapse to eight distinct manifests and ten distinct (manifest, package) pairs, because `apps/cli`'s three `dsh-brand` imports are one line while `apps/web` and the webworker runtime each need two. The gate comes off `HELD_BACK` when the last line lands.
+
 **Why a rule rather than another gate.** Each chain already HAS a gate; none of them was run. The failure is not a missing check, it is a change that stopped halfway and a report that listed the checks it did run. That is the same shape as reading a warning without acting on it: `run-registry-gates.mjs`'s own `GATES` comment records that a stale `EXEC-STATE.registryDigest` had reddened the set twice before, "once after SCAFFOLD_FILES changed registry.json", and it was read while editing that very list one commit before instance 1.
 
 ### BLOCKED-189 — STANDING RULE: an instrument that measures "does X hold without Y" must not itself depend on Y; a number too small to believe means checking which layer the instrument ran in, before checking the finding
