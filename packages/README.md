@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-The harness is assembled from npm packages under `packages/`, grouped by capability family: sessions and the agent loop, model-facing tools, shell and filesystem execution, web access, subagents, and the rest. Use this page as the top-level map: find the owning group, then open its README for the package list. Every package is scoped `@deepseek-ai/dsh-*` and lives in exactly one group; each group README is the authoritative package map for its family.
+The harness is assembled from npm packages under `packages/`, grouped by capability family. Use this page to find the owning group, then open its README — the authoritative package map for that family. Every package is scoped `@deepseek-ai/dsh-*` and lives in exactly one group.
 
 ## Table of Contents
 
@@ -104,9 +104,9 @@ Most groups are product — stable API. The exceptions: `e2b/` is a POC, `experi
 
 The dependency graph is generated: [docs/module-graph.md](../docs/module-graph.md) (`pnpm run gen-module-graph`, freshness-gated in CI).
 
-**Extension plugins depend on Service Definitions, never concrete providers.** `dsh-agent-loop` is swappable; UI, hook, and tool plugins use `dsh-agent`. Composition bundles may depend on spine plugins. Capabilities separate Service Definition / Service Provider / Consumer roles when they evolve independently; see [capability seams](../.agents/notes/implemented/architecture/2026-06-13-capability-seams.md).
+**Extension plugins depend on Service Definitions, never concrete providers.** `dsh-agent-loop` is swappable; UI, hook, and tool plugins use `dsh-agent`, and composition bundles may depend on spine plugins. Capabilities separate Service Definition / Service Provider / Consumer roles when they evolve independently ([capability seams](../.agents/notes/implemented/architecture/2026-06-13-capability-seams.md)).
 
-[`architecture.layers.json`](../architecture.layers.json) declares each capability family's Service Definition, providers, consumers, and dated/owned allowlist exceptions; its contract lives in [`scripts/architecture/capability-seams.ts`](../scripts/architecture/capability-seams.ts) and is checked by [`tests/architecture/capability-seams.spec.ts`](../tests/architecture/capability-seams.spec.ts). The CI-wired repo-wide scanner is a later slice.
+[`architecture.layers.json`](../architecture.layers.json) declares each capability family's Service Definition, providers, consumers, and dated/owned allowlist exceptions; its contract is [`scripts/architecture/capability-seams.ts`](../scripts/architecture/capability-seams.ts), checked by [`tests/architecture/capability-seams.spec.ts`](../tests/architecture/capability-seams.spec.ts). The repo-wide scanner is a later slice.
 
 [`docs/architecture/layering.md`](../docs/architecture/layering.md) declares the six-layer package sequence and its cycle/exemption rules; the contract is [`scripts/architecture/layer-order.ts`](../scripts/architecture/layer-order.ts), and `pnpm run architecture:layers` scans every package against it.
 
@@ -115,7 +115,7 @@ The dependency graph is generated: [docs/module-graph.md](../docs/module-graph.m
 <a id="package-readme-contracts"></a>
 ## Package README contracts
 
-Every package README covers purpose, configuration, extension points, and [Model Experience](../docs/cookbook/adding-a-package.md#4-write-the-package-readme) unless the model-agnostic [omission allowlist](../scripts/verify-package-readme-model-experience.ts) exempts it. It also carries `## Known Limitations and Deferred Work` or uses its [allowlist](../scripts/verify-package-readme-limitations.ts). Package conventions — exports, service access, invariants, tests — live in [packages/AGENTS.md](AGENTS.md).
+Every package README covers purpose, configuration, extension points, and [Model Experience](../docs/cookbook/adding-a-package.md#4-write-the-package-readme) unless the [omission allowlist](../scripts/verify-package-readme-model-experience.ts) exempts it, and carries `## Known Limitations and Deferred Work` or its own [allowlist](../scripts/verify-package-readme-limitations.ts) entry. Package conventions — exports, service access, invariants, tests — live in [packages/AGENTS.md](AGENTS.md).
 
 -----
 
