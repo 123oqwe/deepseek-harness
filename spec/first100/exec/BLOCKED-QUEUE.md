@@ -4582,7 +4582,11 @@ Both gates are right about what they check. The adoption HAS landed — `package
 
 ### BLOCKED-176 — seven package groups still have no group README declaring subsystem ownership
 
-**Status:** DEBT RECORDED, awaiting the delegate's assignment. `packages/reliability` is NOT among them: it is P4-11's own group and its README, subsystem page and pair record landed with that epic.
+**Status:** DEBT RECORDED for SIX; `run` closed 2026-09-11. `packages/reliability` is NOT among them: it is P4-11's own group and its README, subsystem page and pair record landed with that epic.
+
+**`run` closed in `08dcbd6b7e`**, by the second shape rather than the first: `packages/run/README.md` (+ `zh`, + recorded pair) links `docs/subsystems/core.md`, which already owns `ctx.runs` and the five `Agent` fields the Run Service is the sole writer of. **No new subsystem page** — writing "the authoritative contract" for the run seam while P4-01's sign-off is withdrawn would decide its open questions in prose, which the delegate ruled an A-class call for after re-signing. An entry in `GROUPS_WITHOUT_SUBSYSTEM_PAGE` was NOT available: every reason in that table turns on the group having no constructed runtime value or Cordis registration, and this group has `ctx.runs`, `ctx.leaseStore` and `ctx.taskStore`.
+
+The table below also undercounted that group: it is SIX packages, not five — `task-profile` (P4-02) was missing from it.
 
 `verify-subsystem-pages` (a doc-sync leaf, not a registry gate) reports one violation per group with no group README linking an owning `docs/subsystems/*.md` page — or a justified entry in the gate's own `GROUPS_WITHOUT_SUBSYSTEM_PAGE` table. Seven remain, all predating this slice:
 
@@ -4593,7 +4597,7 @@ Both gates are right about what they check. The adoption HAS landed — `package
 | `memory` | `memory` | not attributed here — read the epic that created them |
 | `migration` | `feature-gates` | P0-05 (from its allowlist entry) |
 | `policy` | `capability-token`, `capability-token-file`, `risk-taxonomy` | P2-01 for the first two; `risk-taxonomy` is unattributed here |
-| `run` | `lease`, `lease-sqlite`, `message-bus`, `run`, `taskboard-sqlite` | P4-07 and P5-11 for two; the rest are unattributed here |
+| ~~`run`~~ | `lease`, `lease-sqlite`, `message-bus`, `run`, `task-profile`, `taskboard-sqlite` | **CLOSED** — P4-01's U2 slice, per the delegate's assignment |
 | `schema` | `schema-registry` | not attributed here |
 
 Attributions are given only where this session read them from a record (each package's Model-Experience allowlist entry names its epic); the rest are left open rather than guessed, because assigning a documentation debt to the wrong epic is worse than leaving it unassigned.
@@ -4830,3 +4834,21 @@ Two nouns, one root cause — a policy can neither read the class that would mak
 **What this slice's `ask` fix does and does not do.** The deployment decider endorses `ask` rather than refusing it, so a future `ask` rule will not be silently rewritten into `policy-unavailable`. **It does not repair approval on a shipped profile, because nothing there can produce an `ask` in the first place** — today's approval is triggered by `gateActionRisk` at the classification layer and never passes through policy. Anyone closing this entry must not read it as "approval now belongs to the policy layer".
 
 **Closing condition:** both vocabularies connected — `riskClass` carried into `PolicyContextFacts` and `toCedarRequest`, and some policy path able to produce `ask` — each with a case observable on a shipped profile rather than on a constructed input. **`landsIn`: P2-05.U** as a supplement for both, since P2-05 owns what a policy question carries and what its answer may say; P2-04 owns the classification that produces the value, not its delivery.
+
+### BLOCKED-196 — a Run that spans sessions needs a Run-level work item, which reopens §12.35-2
+
+**Status:** OPEN, `landsIn` a later P4-07 slice. Opened 2026-09-11 by the delegate's ruling (note 12) on lane B's U2 measurement. **P4-01's U2 does NOT wire `attachSession`**; it freezes the negative half instead (see the closing note).
+
+`RunService.attachSession` exists, is tested, is durable, and has no production caller. Wiring it is the obvious way to satisfy acceptance[2]'s second half — "one Run across Sessions/Agents" — and it would reintroduce the two-master state P4-07 exists to prevent, one level above where P4-07 prevents it. Three measurements, at `08dcbd6b7e`:
+
+1. **The lease's work item is the SESSION, and that was a correction, not an oversight.** `RunPlugin.open` acquires on `brandString<WorkItemId>(agent.id)`, and the comment records §12.35-2's reason: a `run-<uuid>` is minted fresh per open, so two hosts driving one session asked for two *different* items and neither `acquire` could refuse the other. Measured at the time: two processes over one SQLite lease store, both creating an agent for one session id, produced two run ids and two granted leases at epoch 0 — acceptance[1]'s "does not produce two masters" held **vacuously**.
+2. **A Run's own writes present no lease at all.** `leaseStore` appears four times in `packages/run/run/src/index.ts`: `static inject`, `open`, `reclaim`, and the release in `finish`. **`RunService.advance` and `RunService.attachSession` take no token and consult no store.** What the lease guards is the AGENT lifecycle, through `advanceLeasedAgent` / `advanceAgentLifecycleFenced`.
+3. **Run-level serialization is in-process only.** `RunService` chains mutations per Run id within one process; `packages/run/run/README.md` states the limit.
+
+So a Run carrying sessions A and B is writable under two independent authorities: two hosts each validly holding one session's lease, **neither fenced — their leases are on different work items** — both appending to one append-only log, serialized by nothing that spans them.
+
+**Why this is not a bug to fix in place.** The fix is a work item for the Run itself, so that a cross-session Run has one authority. That reverses §12.35-2's decision, which was itself made to close a vacuous-contention defect, and it has to answer what happens when a Run's work item and its sessions' work items disagree. That is a design question for the epic that owns leases.
+
+**Closing condition:** a P4-07 slice whose preFlight measures (a) the two-master risk on a multi-session Run, against a real multi-process store rather than by construction, and (b) the shape of a Run-level work item — whether the Run's item replaces the per-session items or composes with them, and which one a write presents. Only then does `attachSession` acquire a caller.
+
+**What P4-01's U2 freezes instead**, so the clause is not left silent: the NEGATIVE half — a second session does not join an existing Run today, and a restart ADOPTS rather than mints (the intentional version of what `runs-for-session after=2` was doing by accident). At re-sign, acceptance[2] reads: the first half holds, the negative half is frozen, and the positive second half is held by this entry. Same shape as BLOCKED-172.

@@ -179,3 +179,35 @@ P4-02 landed, so the measurement is no longer hypothetical:
 Both answers the ledger's `planError` named are now in use, one each, and the test that makes that coherent is **ownership**: a profile is compiled from a message in one session's log and means nothing outside it, while a Run spans sessions (in the type surface) and outlives any one of them. A Run's log in the session log would have to pick a session to live in.
 
 The answer to the question as asked is therefore **yes — the Run event log stays out of the session log**, and the reason is not storage convenience. What is missing is that this sentence exists only in a preFlight and in `packages/run/README.md`'s Dev Note; the ledger's `planError` still reads as an open choice. Recording it where decisions are recorded is a delegate call.
+
+---
+
+## The TDD plan, re-anchored after the measurements (delegate note 12)
+
+The eight cases above were written before questions 2 and 3 were measured. Three of them moved, one was dropped, and two were added. Reported before any code, per the ruling.
+
+**argv** — unchanged in shape: `pnpm exec vitest run packages/run/run --reporter=json`, plus the shipped-profile observation the withdrawal's ground requires, which `tests/first100/fixtures/P4-01.composition.spec.ts` already provides a Loader fixture for (a real `dsh-app-boot` boot, not a hand-built `ctx.plugin`).
+
+| case | clause | anchored at |
+|---|---|---|
+| the agent loop advances a queued Run from `planning` to `running` at its first model step | must[0] | `agent/pre-step` |
+| a Run that reaches a terminal state through the loop records one log entry per transition, in order | must[1] | the Run store, NOT the session log — question 3 |
+| an illegal transition attempted through the production path is refused, naming the pair | acceptance[1] | `advance` |
+| the refusal writes nothing: the Run keeps the event log it had | acceptance[1] | the Run store |
+| **a fresh process enumerates the non-terminal Runs the store restored** | acceptance[0], enumerate half | **`Service.init`**, one statement after `RunService.restore` — question 2 |
+| **a session whose restored Run is non-terminal ADOPTS it, so that session has exactly one Run after a restart** | acceptance[0] resume half, and acceptance[2] first half made intentional | **`open()`** — question 2 |
+| **a session whose restored Run is terminal gets a fresh one, and the refusal names `resume()`'s reason** | acceptance[0] | `open()` |
+| a Run that was mid-`running` when the process died is listed and resumed, not silently dropped | validation[1] | both halves together |
+| **a SECOND session does not join an existing Run: no production path calls `attachSession`** | acceptance[2] negative half — BLOCKED-196 | the absence itself |
+| the shipped base profile drives all of the above with no test-only plugin mounted | the withdrawal's ground | the Loader fixture |
+
+**What changed and why:**
+
+- The old single "a fresh process lists the non-terminal Runs" became **three** cases, because question 2 showed the clause is two verbs at two seams and the terminal case is the branch that tells adoption from minting.
+- "a non-terminal Run resumes and a terminal one is refused, each naming its reason" was **dropped as written**: it tested `resume()` the pure function, which P-stage cases already cover. What U2 owes is the CALLER, which is the two `open()` cases.
+- The negative-half case is **new**, and it is the one case here whose subject is an absence. It is frozen deliberately: BLOCKED-196 is open, and a clause held by an entry needs a case that fails the day someone wires it without the ruling.
+- "one log entry per transition" now names the Run store as its subject, because question 3 settled that the Run's log is not in the session log — and P4-02 put a profile BODY in the session log, so a case that looked in the wrong place could pass for the wrong reason.
+
+**Mutations, one per case, in the constant/value/dependency forms this epic uses** — never a deleted guard: advance to `running` without passing `planning`; append the transition without its log entry; accept the illegal pair instead of refusing it; let the refusal write the Run back; return every Run from the enumeration instead of the non-terminal ones; **adopt a terminal Run instead of minting**; **mint instead of adopting a non-terminal one** (these two are each other's control — together they prove adoption is a decision and not a default); skip the enumeration when the store is non-empty; **call `attachSession` from `open()` for a second session** (the negative half's mutation, and the one that would redden it the day BLOCKED-196 is closed without re-reading this case); mount the driver from the fixture instead of the base profile.
+
+**Still not in scope:** `attachSession` (BLOCKED-196), and no event-vocabulary change, which is what keeps the three adapt dispositions read-only.
