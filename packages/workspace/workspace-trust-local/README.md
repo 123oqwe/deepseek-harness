@@ -53,6 +53,10 @@ Granted paths are canonicalized **once** and reused. Re-canonicalizing per call 
 
 A path that cannot be observed at all resolves to `'untrusted'`: an unobservable path cannot be confirmed as the directory a grant was bound to, so it gets what a stranger gets.
 
+Both the binding and the fact that a grant has been spent are **durable**, in a `workspace_trust` storage domain this provider opens for itself. Memoizing them for the process lifetime was not enough: a second process re-read the grants against whatever directory then stood at the granted path, so a directory replaced while nothing was running came back trusted. The two records answer different halves — the binding is what a later boot reconciles against, and the spent-grant marker, keyed by the path spelling the operator configured rather than by the canonical path it resolved to, is what stops a retargeted symlink handing its new target a grant that was already used.
+
+No runtime invariant companion is published: this provider owns one relation — a stored record and the directory it was bound to — and the only observation of that directory is the one `stateFor` takes to reconcile it, so a checker would be comparing a value against the observation it was just derived from rather than against an independent second source.
+
 -----
 
 <a id="model-experience"></a>
