@@ -1,6 +1,6 @@
 ---
 description: "The generic compiled task profile for Epic P4-02: a reference back to the user goal rather than a copy of it, constraints that each carry their own source and confidence, a side-effect classification borrowed from P2-04 that has no way to call an unknown effect harmless, and questions carried as data instead of guesses."
-kind: "package-library"
+kind: "package-reference"
 ---
 
 # @deepseek-ai/dsh-task-profile
@@ -10,6 +10,13 @@ kind: "package-library"
 `dsh-task-profile` holds the vocabulary Epic P4-02's must[0] fixes — a goal reference, an objective, hard and soft constraints, one side-effect classification, and the questions a compile produced instead of guessing — together with the validation that vocabulary needs at a durable boundary and the content-addressed reference the Run event log names a profile by.
 
 `src/types.ts` carries the types and the `run/task-profile` session event the profile itself lives in; `src/validate.ts` carries the schema, the two clause rules a shape cannot express, and `taskProfileRef`. `tests/profile.spec.ts` covers them. `spec/task-profile.schema.json` is the same requirements in P0-06's JSON Schema 2020-12 family, for readers outside TypeScript.
+
+## Table of Contents
+
+- [What this package imports rather than declares](#what-this-package-imports-rather-than-declares)
+- [What is deliberately absent](#what-is-deliberately-absent)
+- [Where a profile lives](#where-a-profile-lives)
+- [Known limitations](#known-limitations)
 
 ## What this package imports rather than declares
 
@@ -41,3 +48,16 @@ Persistence and revision (validation[2]) are then the same mechanism. The sessio
 
 - **Nothing writes these events yet.** The Provider stage adds the compiler and the Usage stage mounts it on `RunPlugin`'s `accepted → planning` transition; until then this package is a contract with tests and no production caller, which is the state its Contract stage is supposed to be in and not a claim that the epic is built.
 - **`validateTaskProfile` checks the profile, not the goal it refers to.** A `TaskGoalRef` naming a session event that does not exist is structurally valid here; resolving it is a reader's business, and this package deliberately takes no session dependency at runtime to do it.
+
+### Dev Note
+
+<details>
+<summary>Working context for maintainers — click to expand</summary>
+
+This Dev Note is working context for maintainers: open questions and undecided directions. It is explicitly non-authoritative — shipped behavior and limits live in the sections above and in the package code.
+
+The open question is what a deterministic parser may honestly extract. Today the answer is "only what arrives already structured" — a budget stated in `AgentOptions`, the workspace trust state, the goal message's own id — and everything else becomes a question. That keeps the compiler pure and `acceptance[0]` checkable, and it means the first profiles are mostly questions. Whether model-assisted inference ever reaches this package, or stays behind a provider in a later epic, is undecided; if it arrives here the purity this contract depends on goes with it.
+
+The second open question is `TaskProfileRef`'s digest input. It covers the whole profile today, so a rationale reworded by a later compiler produces a new ref and a new revision for an unchanged decision. Narrowing the digest to the decision-bearing fields would make revisions mean more and would also make two profiles with different explanations indistinguishable. Neither is obviously right.
+
+</details>
