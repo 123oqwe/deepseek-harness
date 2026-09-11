@@ -85,16 +85,27 @@ const HELD_BACK = new Map([
   }],
   ['verify-import-integrity', {
     reason:
-      'The gate is new and the tree it lands on already violates it 12 times, in 8 packages, none of them owned by the lane that wrote the gate — '
-      + '`@deepseek-ai/dsh` reaching dsh-brand from three apps/cli files, agent-loop reaching dsh-capability-token from tool-calls.ts, '
-      + 'repeat-tool-reminder and tmux-context reaching dsh-llm, tool-skill reaching dsh-session, apps/web reaching dsh-client-web and the '
-      + 'webworker runtime, that runtime reaching dsh-app-boot and dsh-cmdline, and — the defect this gate was asked for — '
-      + 'dsh-retry reaching @deepseek-ai/schemastery at src/usage.ts:13, still undeclared on this base. Running it red would fail every '
-      + 'push for other lanes\' manifests, and fixing eight other epics\' packages to land a gate is the scope creep the program forbids.',
+      'The gate is new and the tree it lands on already violates it 12 times in 8 packages, none of them owned by the lane that wrote it. '
+      + 'Running it red would fail every push over other lanes\' manifests, and editing eight other epics\' packages to land a gate is the '
+      + 'scope creep the program forbids. Each violation with the owner the registry actually gives, because "declared by their owning '
+      + 'packages" needs a subject or nobody reads it:\n'
+      + '             dsh-retry -> @deepseek-ai/schemastery (reliability/retry/src/usage.ts:13) — THE defect this gate was asked for, still '
+      + 'undeclared on this base. Package is P4-11\'s, but `usage.ts` is NOT among P4-11\'s declared files (it declares index/classify/budget/'
+      + 'circuit.ts), so the path arrived through an overlay: attributed to P4-11 by package, not by registry path. Closes BLOCKED-186.\n'
+      + '             @deepseek-ai/dsh -> dsh-brand, three files. apps/cli/src/plugin.ts is named by seven epics (P1-01/02/03/04/05/10/12) '
+      + 'and profile-boot.ts by six (P0-02, P0-05, P1-01, P1-03, P1-07, P8-10) — a shared file the registry cannot attribute to one owner; '
+      + 'plugin-migration.ts is named by NO epic at all. Owner is the apps/cli manifest, whoever touches it next.\n'
+      + '             dsh-agent-loop -> dsh-capability-token (core/agent-loop/src/tool-calls.ts:20). Named by six epics '
+      + '(P2-03, P2-05, P2-06, P3-03, P4-12, P7-02); the import itself is P2-02\'s capability-token line, so P2-02 by subject.\n'
+      + '             dsh-repeat-tool-reminder -> dsh-llm (guard/repeat-tool-reminder/src/index.ts:12) — P7-06, unambiguous.\n'
+      + '             dsh-web-frontend -> dsh-client-web (apps/web/src/main.ts:2) — P8-08, unambiguous; '
+      + '-> dsh-experimental-webworker-runtime (apps/web/src/preview.ts:9) — unowned.\n'
+      + '             dsh-tmux-context -> dsh-llm, dsh-tool-skill -> dsh-session, and dsh-experimental-webworker-runtime -> dsh-app-boot '
+      + 'and dsh-cmdline — all four unowned: no registry epic names those files.',
     until:
-      'the 12 are declared by their owning packages (the dsh-retry one closes BLOCKED-186, the rest belong to whichever epic touches each '
-      + 'manifest next). The gate is exercised meanwhile by scripts/verify-import-integrity.spec.ts, whose cases include the positive control '
-      + 'this hold would otherwise hide: the same import is reported undeclared and silent once declared.',
+      'all 12 are declared by the manifests above. Unowned paths have no epic to wait for, so they go to whoever edits that manifest next '
+      + 'rather than to a queue. The gate is exercised meanwhile by scripts/verify-import-integrity.spec.ts, whose 14 cases include the '
+      + 'positive control this hold would otherwise hide: the same import is reported when undeclared and silent once declared.',
   }],
 ])
 

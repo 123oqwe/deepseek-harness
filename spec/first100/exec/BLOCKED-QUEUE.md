@@ -9,6 +9,18 @@ responds; append-only.
 
 ## Open
 
+### BLOCKED-188 — the Client face declares its inter-package imports through `dsh.client.*`, not through npm manifest sections; 320 edges depend on that being the whole story
+
+Measured while writing `verify-import-integrity` (2026-09-10, lane B). **Measurement, question, and no action** — the gate takes no position on this and its exit code does not depend on it.
+
+**The measurement.** Under the static rule "a runtime import must appear in the importing package's `dependencies` / `peerDependencies` / `optionalDependencies`", this tree has **332** violations. **320 are Client face** — `packages/client/*`, plus the `src/client/` subtrees inside the api controllers — and they concentrate on three suppliers: `dsh-client-store`, `dsh-client-ui-primitives`, `dsh-client-ui-slots`. The remaining **12 are Host face** and are enumerated in `run-registry-gates.mjs`'s held-back entry for the gate.
+
+**Why that is not 320 defects, measured rather than assumed.** The Client face has its own resolution contract and it is enforced: `scripts/verify-client-packages.ts` validates "client package modes and the synchronous browser module-request graph" against `dsh.client.external` and a baseline module set, rejects a stale `external` declaration with no runtime import, rejects one naming its own row or a supplier that does not exist, detects module cycles, and refuses outright a *feature* package that requests a runtime external ("import shared types only or call an injected Cordis service"). So the intra-Client edges are declared — in `dsh.client.*` and resolved by the bundler through the tsconfig path aliases — rather than undeclared. A manifest-completeness gate reporting them would be reporting a mechanism it does not know about.
+
+**The question this does NOT settle.** That contract holds for exactly one consumption path: the Vite build that resolves the aliases. Whether any other path exists or is planned — publishing a `packages/client/*` package standalone, an SDK or embedder importing one through npm, an independent build outside this repo's tsconfig — decides whether those 320 edges are sound or break all at once the day such a path appears. **No registry epic claims it.** Checked rather than guessed: P8-07 is schema-generated TS/Python SDK parity over the wire protocol, P0-07 is release evidence, and P8-10's must[4] is ABI compatibility for plugins / protocol / Service Definitions — the nearest clause in the registry, and still about the compatibility of definitions rather than the module resolution of Client packages. So `landsIn` is **proposed as unowned**, with P8-10 the nearest candidate if the delegate prefers to attach it rather than leave it open.
+
+**Closes when** either the Client face's resolution contract is explicitly taken over by some epic's clause — naming the consumption paths it guarantees — or those 320 edges are put into the manifests. Not decided in this slice.
+
 ### BLOCKED-169 — P1-06 readiness: the out-of-process plugin host must present a capability token per RPC
 
 Recorded before P1-06 starts, per §12.69's split of P2-02 must[3]'s four nouns under §12.46-B. Not a blocker on P1-06's own clauses; a requirement it inherits, written down so it is met by design.
@@ -513,6 +525,16 @@ P8-01 was signed off and accepted under this ruling: the shared titles are a rep
 ## Standing — directives, parked terms and durable pointers
 
 These are NOT open questions. They live here because `## Open` means "waiting on a decision", and an entry that is settled but still binding was being read as unresolved — by people and by a monitor. A directive to follow, terms a future epic must honour, and a resolved defect kept for its lesson are three different things, and none of them is a question.
+
+### BLOCKED-189 — STANDING RULE: an instrument that measures "does X hold without Y" must not itself depend on Y; a number too small to believe means checking which layer the instrument ran in, before checking the finding
+
+**2026-09-10, `verify-import-integrity`.** The question was whether an undeclared import is resolvable from the importing package — the artifact-plane condition that broke P4-11. Asked under `tsx`, the answer was **0 unresolvable out of 332**. Asked with the same input under plain `node`, it was **144**. `tsx` installs a resolution hook that goes through the tsconfig path aliases, which is precisely the source plane that hides this defect class: the instrument was standing inside the thing it was measuring, and it reported the tree as healthy in exactly the way the bug depends on.
+
+**The rule.** An instrument for "X holds in the absence of Y" may not itself rely on Y. Name Y before running it — here Y was path-alias resolution, and the loader supplying it was one flag the harness added — and run the measurement in a process that lacks it.
+
+**The tell.** A number that is too clean to believe. `0 of 332` was the signal; nothing about the run looked wrong. The program has this failure in two other forms already: [BLOCKED-184](#blocked-184)'s companion rule (a method-name count said 22 callers where the service had none, because same-named methods collide), and the gate run from `/private/tmp` whose `exit=1` meant "no package.json here" and was read as "the base is red". All three are [BLOCKED-072](#blocked-072)'s verdict-divorced-from-subject: break the instrument's subject and confirm the verdict changes, before trusting the verdict.
+
+**What was done about this one:** the gate was made purely static — it compares imports against declarations and never resolves anything — so no installed layout or loader can change its answer.
 
 ### BLOCKED-183 — P4-01's Run state machine has no production caller: the `runs` service has no consumer outside its own package
 
