@@ -26,7 +26,7 @@ English | [中文](README.zh.md)
 
 ### Deciding one action
 
-`enforceManifestedAction(ctx, { manifest, token, origin })` returns a `ClosedDecision`. Call it where the manifest exists — the manifest IS the policy question, so a path that skipped the decision also skipped the manifest, which P2-03's `assertManifestPrecedesExecution` already refuses.
+`enforceManifestedAction(ctx, { manifest, token, origin, facts })` returns a `ClosedDecision`. `facts` is required and comes from `readPolicyContextFacts`, which the dispatch path calls first. Call it where the manifest exists — the manifest IS the policy question, so a path that skipped the decision also skipped the manifest, which P2-03's `assertManifestPrecedesExecution` already refuses.
 
 The order inside is the contract: the engine answers, plugins may narrow, the kernel binds, and the audit record is appended BEFORE the caller acts. A record written afterwards would be missing exactly when the process dies between deciding and doing.
 
@@ -71,7 +71,7 @@ Nothing here enters a model request; a refusal reaches the model as its dispatch
 
 - **Two dispatch paths call it, not five.** The native tool path and the code-mode sub-dispatch both reach it, and a subagent's or a workflow child's own tool calls arrive through the native path. An out-of-process SDK dispatch and a plugin's own RPC do not have manifest producers yet, so they are not decided here — the plugin-RPC producer is a separate epic's.
 - **A policy cannot see the token's verbs or resources.** What crosses is `redactTokenForLog`'s projection — digest, subject, tenant, capability, delegation depth, expiry — which P2-02 audited as safe outside the token layer. A policy can therefore refuse an action whose authority names the wrong capability, but not one whose authority omits a specific verb on a specific resource. Extending that projection is P2-02's decision, not this package's to fork.
-- **The context facts default closed and are not yet read from mounted services.** `workspaceTrust` defaults to `untrusted` and `permissionPosture` to `default` until a dispatch path passes real ones; a policy written against a fact that silently defaulted open would enforce something other than what it says, which is why the direction is closed rather than convenient.
+- **The permission posture is still a constant, and there is nothing to read it from.** `workspaceTrust` and `riskClass` are read from the composition by `@deepseek-ai/dsh-tools/external-effect`'s `readPolicyContextFacts`, which both dispatch paths call before this enforcement point. `permissionPosture` is the literal `default`: `PermissionPostureFact`'s four values name no preset any composition configures, so no real posture can be spelled in that vocabulary (BLOCKED-202). An unmounted fact service reads as its most restrictive value rather than its most permissive, because a policy written against a fact that silently defaulted open would enforce something other than what it says.
 - **The audit record goes to the kernel's `auditAppend`, which is inert unless a deployment configured a sink.** A composition that wires none decides and enforces but records nothing.
 
 ### Dev Note

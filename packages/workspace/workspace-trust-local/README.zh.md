@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## 概述
 
-`dsh-workspace-trust-local` 提供 `ctx.workspaceTrust`——harness 在加载任何来自项目目录的内容之前读取的接缝。所有决策归 `@deepseek-ai/dsh-workspace-trust` 所有，所有文件系统观测归 `@deepseek-ai/dsh-workspace` 的 `observeWorkspaceIdentity` 所有；本包只为会话 `cwd` 把二者绑定起来，并在进程生命周期内保存所得记录。它不引入第二张决策表。
+`dsh-workspace-trust-local` 提供 `ctx.workspaceTrust`——harness 在加载任何来自项目目录的内容之前读取的接缝。所有决策归 `@deepseek-ai/dsh-workspace-trust` 所有，所有文件系统观测归 `@deepseek-ai/dsh-workspace` 的 `observeWorkspaceIdentity` 所有；本包只为会话 `cwd` 把二者绑定起来，并把所得记录持久保存。它不引入第二张决策表。
 
 授权（grant）写的是路径，但信任绑定到该路径首次被读取时所解析到的身份。之后每次读取都会重新观测并核对，因此原地替换目录、改指 symlink、或把目录从其路径下移走，都会降级为 `'untrusted'`，且都不会从配置中重新授权：一次授权是信任某一个目录的许可，而不是信任此后占据该路径的任何东西的长期许可。
 
@@ -82,7 +82,7 @@ kind: "package-reference"
 
 - **grants 暂代宿主用户交互。** 本 epic 要求信任升级由宿主用户交互完成。这里没有接入审批/交互接缝，因此目前由配置的 grant 承担该权威。`@deepseek-ai/dsh-workspace-trust` 的 `requestTrustUpgrade` 已经拒绝任何非 `'user'` principal，未来的交互式升级路径会调用它。
 - **不写审计记录。** 本 epic 同时要求升级时追加审计记录。接入真实的 Trust Kernel `auditAppend` 受阻于 vendored Cordis `Fiber` 结构性修复（[trust-kernel 边界](../../../docs/architecture/trust-kernel-boundary.zh.md)）；在此之前不伪造审计 sink。
-- **记录只存活于进程生命周期。** 信任不跨重启持久化，因此被授权的工作区会在下次启动时重新绑定。
+- **记录只会被核对，不会被移除。** 没有过期，也没有淘汰：很久以前绑定的工作区会在下一次读取时与一次新鲜观测核对——决定答案的是那次核对——但它那一行会一直留着。工作区很多的宿主，行数也会一直涨。
 
 -----
 
@@ -93,9 +93,6 @@ kind: "package-reference"
 <details>
 <summary>面向维护者的工作上下文 —— 点击展开</summary>
 
-已授予的路径只解析一次并被记忆。若每次调用都重新规范化,改指一个已授予的
-符号链接会把授权移到它当前指向的目录上,而后者会被当作首次绑定并被信任 ——
-这正是 `acceptance[1]` 要防止的信任继承。这里的记忆化是正确性要求,不是性能
-取舍。
+已授予的路径只解析一次并被记忆。若每次调用都重新规范化,改指一个已授予的符号链接会把授权移到它当前指向的目录上,而后者会被当作首次绑定并被信任 —— 这正是 `acceptance[1]` 要防止的信任继承。这里的记忆化是正确性要求,不是性能取舍。
 
 </details>

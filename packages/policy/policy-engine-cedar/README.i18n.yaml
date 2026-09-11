@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/policy/policy-engine-cedar/README.md
-README.md: 30cd55d2d26b07976a31960c0a37d06a4f5f5058
-README.zh.md: 5b29ee224a76ee091b454d52af9e445b8f904523
+README.md: c0f751ce8757feda638ce9bd4d1fcd67153aa5e9
+README.zh.md: fb3d2465a945ba3ffe9f1a3b2bf9082040c10f1f

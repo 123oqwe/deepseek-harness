@@ -236,12 +236,16 @@ export type ActionOriginator =
  * that skipped this call is a path that also skipped the manifest, and P2-03's
  * `assertManifestPrecedesExecution` already refuses that.
  *
- * The facts are read from what the composition actually mounts. A missing
- * workspace-trust or permission-preset service reads as the most restrictive
- * value rather than the most permissive: a policy written against a fact that
- * silently defaulted open would be enforcing something other than what it says.
+ * **The caller supplies the facts, and the type makes it say so.** They were
+ * optional here and defaulted in place until BLOCKED-201, and the measurement
+ * that closed it was that NO dispatch path passed any: every policy question a
+ * shipped composition ever asked carried the fail-closed values, so a rule
+ * about workspace trust or action risk could not match however it was written.
+ * A field a path may omit is a field every path eventually omits, so the
+ * defaulting moved out to `readPolicyContextFacts`, where an absent service is
+ * a decision with one home rather than a `??` at the point of use.
  * @param ctx - the context the action executes in.
- * @param input - the manifest, the identity's token, and the originator.
+ * @param input - the manifest, the identity's token, the originator and the facts.
  * @returns the closed decision the caller must act on.
  */
 export function enforceManifestedAction(ctx: Context, input: EnforcementInput): ClosedDecision {
@@ -250,10 +254,7 @@ export function enforceManifestedAction(ctx: Context, input: EnforcementInput): 
     token: input.token,
     manifest: input.manifest,
     world: { kind: 'absent' },
-    facts: {
-      workspaceTrust: input.facts?.workspaceTrust ?? 'untrusted',
-      permissionPosture: input.facts?.permissionPosture ?? 'default',
-    },
+    facts: input.facts,
   }, input.origin)
 }
 
@@ -265,8 +266,14 @@ export interface EnforcementInput {
   readonly token: PolicyRequest['token']
   /** Which originator is dispatching. */
   readonly origin: ActionOriginator
-  /** The context facts, when the composition mounts the services that carry them. */
-  readonly facts?: Partial<PolicyRequest['facts']>
+  /**
+   * The context facts, as the dispatch path read them from the composition.
+   *
+   * Required, not optional: see {@link enforceManifestedAction}.
+   * `@deepseek-ai/dsh-tools/external-effect`'s `readPolicyContextFacts` is the
+   * one reader both shipped paths use.
+   */
+  readonly facts: PolicyRequest['facts']
 }
 
 /**

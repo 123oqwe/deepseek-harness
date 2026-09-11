@@ -3926,6 +3926,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type ActionRef = Branded<\'ActionRef\'>;',
   },
   {
+    name: 'ActionRiskClassFact',
+    declaration: 'export type ActionRiskClassFact = \'read\' | \'local-reversible\' | \'internal-write\' | \'external-communication\' | \'destructive\' | \'financial\' | \'security-sensitive\' | \'safety-critical\';',
+  },
+  {
     name: 'ActionRiskSubject',
     declaration: 'export interface ActionRiskSubject {\n    readonly actionId: string;\n    readonly domainTags: readonly string[];\n}',
   },
@@ -5375,7 +5379,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'PolicyContextFacts',
-    declaration: 'export interface PolicyContextFacts {\n    readonly workspaceTrust: WorkspaceTrustFact;\n    readonly permissionPosture: PermissionPostureFact;\n}',
+    declaration: 'export interface PolicyContextFacts {\n    readonly workspaceTrust: WorkspaceTrustFact;\n    readonly permissionPosture: PermissionPostureFact;\n    readonly riskClass: ActionRiskClassFact;\n}',
   },
   {
     name: 'PolicyEffect',

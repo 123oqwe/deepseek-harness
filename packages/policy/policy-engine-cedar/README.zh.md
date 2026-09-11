@@ -45,7 +45,7 @@ kind: "package-reference"
 | `resource` | `Dsh::Resource::"<kind>:<path\|host\|command\|ref>"`——目标的 kind 会保留,因此文本相同的路径与命令是不同资源 |
 | `context.sideEffectClass` | manifest 的副作用类别 |
 | `context.classified` | 该类别是被声明的还是被兜底的 |
-| `context.workspaceTrust`、`context.permissionPosture` | 声明式的上下文事实 |
+| `context.workspaceTrust`、`context.permissionPosture`、`context.riskClass` | 声明式的上下文事实 |
 | `context.world` | 在 P3-01 落地 `ExecutionWorld` 之前恒为 `"absent"`;策略可以据此拒绝 |
 | `context.tokenPresented` | 该动作是否携带了 capability token |
 

@@ -21,6 +21,7 @@ import { redactTokenForLog } from '@deepseek-ai/dsh-capability-token'
 import type { SignedCapabilityToken } from '@deepseek-ai/dsh-capability-token'
 import type { ActionManifest } from '@deepseek-ai/dsh-action-manifest'
 import { enforceManifestedAction } from '@deepseek-ai/dsh-policy-enforcement'
+import type { PolicyContextFacts } from '@deepseek-ai/dsh-policy-engine'
 import type { ActionId, ArgumentsHash, CapabilityRef, IdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
 import type { LedgerScope } from '@deepseek-ai/dsh-action-ledger'
 // The `actionLedger` service augmentation lives in the ledger package's runtime
@@ -33,7 +34,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent/types'
 import { createSessionManifestAppender } from '@deepseek-ai/dsh-tools/manifest-log'
 // The reserve/confirm pair lives in `dsh-tools` so the code-mode dispatch can
 // reach it too: a second copy here is what left code-mode unreserved (§12.35-2).
-import { confirmExternalEffect, gateActionRisk, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect } from '@deepseek-ai/dsh-tools/external-effect'
+import { classifyActionRisk, confirmExternalEffect, gateActionRisk, readPolicyContextFacts, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect } from '@deepseek-ai/dsh-tools/external-effect'
 import type { Principal } from '@deepseek-ai/dsh-principal'
 import { brandString } from '@deepseek-ai/dsh-brand'
 
@@ -106,7 +107,7 @@ export async function executeToolCalls(
     // differs: a fenced run HELD its work item and lost it, so another host is
     // already doing the work; a lease-refused run never held it, so this host
     // simply lost the race and its own start is the thing to look at.
-    for (const block of toolCalls) appendUnauthorizedToolCall(ctx, agent, turn, step, block, fencing)
+    for (const block of toolCalls) appendUnauthorizedToolCall(ctx, agent, turn, step, block, await factsForCall(ctx, agent, block), fencing)
     return { concluded: false }
   }
 
@@ -160,7 +161,9 @@ export async function executeToolCalls(
     next += outcome.consumed
     concluded ||= outcome.concluded
     if (outcome.aborted) {
-      for (const call of planned.slice(next)) appendSkippedToolCall(ctx, agent, turn, step, call.block)
+      for (const call of planned.slice(next)) {
+        appendSkippedToolCall(ctx, agent, turn, step, call.block, await factsForCall(ctx, agent, call.block))
+      }
       return { concluded }
     }
   }
@@ -238,7 +241,15 @@ async function runGroup(
     // The token this call PRESENTS, read from the planned input rather than
     // re-resolved: `exec.capabilityToken` is what the capability gate checks,
     // so the policy decides on the same authority that gate did.
-    const appended = appendToolCall(ctx, agent, turn, step, call.block, call.exec.capabilityToken)
+    // Classified BEFORE the manifest is appended, because the policy question
+    // asked with that manifest carries the class as a fact: a policy that
+    // cannot see how risky an action is cannot forbid it for being risky
+    // (BLOCKED-201). The same verdict is handed to the risk gate below, so the
+    // two layers decide about one classification rather than each computing
+    // its own.
+    const classified = classifyActionRisk(ctx, call.block.name, ctx.tools.get(call.block.name, agent)?.riskDomainTags ?? [])
+    const facts = await readPolicyContextFacts(ctx, agent, classified)
+    const appended = appendToolCall(ctx, agent, turn, step, call.block, facts, call.exec.capabilityToken)
     callSeqs[index] = appended.seq
     started++
     // must[4]: the reservation is taken BEFORE the tool runs, so a crash
@@ -267,7 +278,9 @@ async function runGroup(
       }
       return
     }
-    const riskRefusal = await gateActionRisk(ctx, agent, call.block.name, ctx.tools.get(call.block.name, agent)?.riskDomainTags ?? [])
+    const riskRefusal = await gateActionRisk(
+      ctx, agent, call.block.name, ctx.tools.get(call.block.name, agent)?.riskDomainTags ?? [], classified,
+    )
     if (riskRefusal !== undefined) {
       slots[index] = {
         exec: call.exec as unknown as ToolRunContext,
@@ -359,7 +372,9 @@ async function runGroup(
   if (aborted) {
     // Started calls and accepted context settle first; every remaining model
     // call then receives an ordered synthetic result before the turn aborts.
-    for (const call of group.slice(started)) appendSkippedToolCall(ctx, agent, turn, step, call.block)
+    for (const call of group.slice(started)) {
+      appendSkippedToolCall(ctx, agent, turn, step, call.block, await factsForCall(ctx, agent, call.block))
+    }
     return { consumed: group.length, aborted: true, concluded }
   }
   /* v8 ignore next -- unreachable: a non-aborted group commits every started call */
@@ -394,10 +409,11 @@ function appendUnauthorizedToolCall(
   turn: number,
   step: number,
   block: ToolCallBlock,
+  facts: PolicyContextFacts,
   reason: 'fenced' | 'lease-refused',
 ): void {
   const { session } = agent
-  const { seq: callSeq } = appendToolCall(ctx, agent, turn, step, block)
+  const { seq: callSeq } = appendToolCall(ctx, agent, turn, step, block, facts)
   const message = reason === 'fenced'
     ? 'this run is no longer the owner of its work item'
     : 'this run was refused ownership of its work item'
@@ -412,9 +428,16 @@ function appendUnauthorizedToolCall(
 }
 
 /** Append the durable call/result pair for a model call skipped after cancellation. */
-function appendSkippedToolCall(ctx: Context, agent: Agent, turn: number, step: number, block: ToolCallBlock): void {
+function appendSkippedToolCall(
+  ctx: Context,
+  agent: Agent,
+  turn: number,
+  step: number,
+  block: ToolCallBlock,
+  facts: PolicyContextFacts,
+): void {
   const { session } = agent
-  const { seq: callSeq } = appendToolCall(ctx, agent, turn, step, block)
+  const { seq: callSeq } = appendToolCall(ctx, agent, turn, step, block, facts)
   appendToolResult(session, turn, step, block, {
     content: [{ type: 'text', text: 'Error: tool call aborted before dispatch' }],
     isError: true,
@@ -423,6 +446,21 @@ function appendSkippedToolCall(ctx: Context, agent: Agent, turn: number, step: n
       info: { name: 'AbortError', code: TOOL_ABORTED_BEFORE_DISPATCH },
     },
   }, callSeq)
+}
+
+/**
+ * The facts for one call that will not run.
+ *
+ * A synthetic result still appends a manifest, and a manifest is a policy
+ * question, so the question is asked with the same facts a dispatched call
+ * would carry rather than with defaults (BLOCKED-201).
+ * @param ctx - the mounting context, consulted for the fact services.
+ * @param agent - the agent the call belonged to.
+ * @param block - the model call that will not run.
+ * @returns the context facts for that call.
+ */
+function factsForCall(ctx: Context, agent: Agent, block: ToolCallBlock): Promise<PolicyContextFacts> {
+  return readPolicyContextFacts(ctx, agent, classifyActionRisk(ctx, block.name, ctx.tools.get(block.name, agent)?.riskDomainTags ?? []))
 }
 
 /**
@@ -439,10 +477,11 @@ function appendToolCall(
   turn: number,
   step: number,
   block: ToolCallBlock,
+  facts: PolicyContextFacts,
   presentedToken?: SignedCapabilityToken,
 ): { seq: SessionSeq; record: ManifestRecord } {
   const { session } = agent
-  const record = appendActionManifest(ctx, agent, block, 'native-tool-call', presentedToken)
+  const record = appendActionManifest(ctx, agent, block, 'native-tool-call', facts, presentedToken)
   const event = session.append('tool/call', { turn, step, callId: block.id, name: block.name, arguments: block.arguments })
   return { seq: event.seq, record }
 }
@@ -475,6 +514,7 @@ function appendActionManifest(
   agent: Agent,
   block: ToolCallBlock,
   origin: 'native-tool-call',
+  facts: PolicyContextFacts,
   presentedToken?: SignedCapabilityToken,
 ): ManifestRecord {
   const { session } = agent
@@ -517,7 +557,7 @@ function appendActionManifest(
   // the one enforcement point through this call, and a third path that skipped
   // it would also have skipped the manifest — which
   // `assertManifestPrecedesExecution` already refuses.
-  const decision = decideManifestedAction(ctx, agent, appended.manifest, origin, presentedToken)
+  const decision = decideManifestedAction(ctx, agent, appended.manifest, origin, facts, presentedToken)
   return {
     key: appended.manifest.idempotencyKey,
     argumentsHash,
@@ -544,6 +584,7 @@ function decideManifestedAction(
   agent: Agent,
   manifest: ActionManifest,
   origin: 'native-tool-call',
+  facts: PolicyContextFacts,
   presentedToken?: SignedCapabilityToken,
 ): PolicyDecisionSummary | undefined {
   void agent
@@ -557,6 +598,7 @@ function decideManifestedAction(
     manifest,
     ...presentedToken === undefined ? { token: undefined } : { token: redactTokenForLog(presentedToken) },
     origin,
+    facts,
   })
   return { effect: decision.effect, ...decision.reason === undefined ? {} : { reason: decision.reason } }
 }

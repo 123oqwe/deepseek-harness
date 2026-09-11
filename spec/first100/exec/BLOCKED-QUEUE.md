@@ -9,6 +9,41 @@ responds; append-only.
 
 ## Open
 
+### BLOCKED-201 — P2-05: the policy facts were always their fail-closed defaults on every shipped path
+
+**Status: CLOSED in this batch (delegate ruling §12.85 note 35, `14163a6158`). Recorded in full because the defect's shape recurs and the closing measurement is the interesting part.**
+
+**The defect.** `enforceManifestedAction` took `facts?: Partial<PolicyRequest['facts']>` and filled the gaps in place:
+
+```
+workspaceTrust: input.facts?.workspaceTrust ?? 'untrusted',
+permissionPosture: input.facts?.permissionPosture ?? 'default',
+```
+
+A whole-tree census of its two call sites — `agent-loop/src/tool-calls.ts` and `core/tools/src/ptc.ts` — found **neither passed `facts` at all**. So every policy question any composition has ever asked carried `untrusted` and `default`, whatever the session's workspace or preset actually was, and a Cedar rule written against either fact would match or not match for reasons unrelated to the deployment it ran in. The prose one layer up said the opposite: *"The facts are read from what the composition actually mounts."* That sentence was true of the function and false of the system, which is this program's [fourth recorded instance](#blocked-194) of prose asserting a guarantee the path it sits on does not provide.
+
+**Why an optional field is the cause and not the symptom.** Nothing failed. A `Partial` with defaults produces a valid request from an empty input, so the fail-closed direction hid the omission perfectly: a policy simply never matched, which looks the same as a policy that correctly did not apply. The type is now **required** (`facts: PolicyRequest['facts']`), and the defaulting moved out to one reader, `readPolicyContextFacts` in `@deepseek-ai/dsh-tools/external-effect`, where an unmounted service is a decision with one home.
+
+**Cross-reference — [BLOCKED-187](#blocked-187)'s residual, input half, closed with it.** That residual read: *"`riskClass` never reaches a policy … the kernel hard-deny band `['safety-critical']` is not in the value domain of anything Cedar receives."* It could not be closed separately, because a third fact delivered through a field nobody passed would have changed nothing. Both dispatch paths now classify **before** appending the manifest — the order was measured as deliberate and documented, so the classification moved earlier rather than the gate moving later — pass `riskClass` as a fact, and hand the same `ActionRiskClassification` to `gateActionRisk` so the two layers decide about one classification rather than each computing its own. The base bundle's Cedar row, which held a paragraph explaining why the rule could not be written, now holds the rule: `forbid(principal, action, resource) when { context.riskClass == "safety-critical" };`.
+
+**187's OUTPUT half stays open.** `ask` still has no producer on any profile. Nothing here changes that, and it should not be read as closed.
+
+**What is NOT closed: the posture.** Two of the three facts are real. The third cannot be supplied truthfully at all, for a reason measured while doing it — see [BLOCKED-202](#blocked-202).
+
+### BLOCKED-202 — P2-05: `PermissionPostureFact`'s four values name no preset any composition configures, so the posture fact cannot be supplied truthfully
+
+**Status: MEASURED. Blocks the third of the three facts BLOCKED-201 was closed for; the other two are real and shipped.** Found while wiring the dispatch paths to pass real context facts.
+
+**The measurement.** `PermissionPostureFact` (`policy-engine/src/types.ts:49`) is `'default' | 'plan' | 'accept-edits' | 'bypass'`. A whole-tree grep for any of those four as a preset name returns **two hits, both the declaration itself** — `policy-engine/src/types.ts:49` and the generated `tool-cordis/src/api-catalog.ts:5356` echo of it. No cordis.yml configures a preset by any of those names; no doc mentions them; no producer exists.
+
+**What a composition actually has.** `packages/bundle/base/cordis.patch.yml:330` configures the preset table `read-only`, `workspace-write`, `danger-full-access`, and `PermissionPresetService.current(session)` returns a **table key or the derived `custom`** — deliberately a `string`, because the table is `Config`, so preset names are a deployment's own choice. A closed union declared in this package cannot name them, and the four it does name are not a renaming of the three that exist: they are a different vocabulary, evidently borrowed rather than measured.
+
+**Why this is not fixable by widening the union here.** The type's own doc gives the reason it is closed — *"a policy that could match an arbitrary preset name would make adding a preset a silent policy change"* — and that reasoning is sound. But a deployment-configured table and a closed union cannot both be right about the same value. Either the fact is the preset name and is open (accepting the silent-policy-change cost, or paying for it with a declared-postures config), or the fact is a small closed set of postures that presets MAP onto, and something must own that mapping. Both are Contract-stage decisions on a surface P2-11 and P2-04 also consume, which is the same "decision here, surface there" split as [BLOCKED-198](#blocked-198) and OQ22.
+
+**What ships meanwhile, and it is stated rather than disguised.** `readPolicyContextFacts` (`core/tools/src/external-effect.ts`) returns the literal `'default'` with a comment naming this entry. That is exactly the value the field had before — the difference is that it now has one producer that says why, instead of a `??` inside the enforcement point that read as if a caller had supplied something. Two CHARACTERIZATION cases in `policy-enforcement/tests/facts.spec.ts` pin it from both sides: a rule matching `"read-only"` does not fire under the `read-only` preset, and a rule matching `"default"` does. They are frozen as characterization, and whichever ruling closes this entry should redden them.
+
+**Closes when** the posture vocabulary is ruled — the fact opened to the preset name, or a mapping owned somewhere — and `readPolicyContextFacts` reads it. **`landsIn`: P2-05.U**, with P2-11 to be consulted, since it owns the permission preset as a policy profile.
+
 ### BLOCKED-188 — the Client face declares its inter-package imports through `dsh.client.*`, not through npm manifest sections; 320 edges depend on that being the whole story
 
 Measured while writing `verify-import-integrity` (2026-09-10, lane B). **Measurement, question, and no action** — the gate takes no position on this and its exit code does not depend on it.

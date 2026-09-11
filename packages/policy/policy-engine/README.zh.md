@@ -30,7 +30,7 @@ kind: "package-reference"
 
 `world` 在本树上以 `absent` 形态存在,因为 `ExecutionWorld` 归 P3-01 设计、尚不存在。`absent` 是策略**可以匹配**的值,而不是缺失字段:必须知道世界的策略可以在世界未知时拒绝。
 
-上下文事实是闭合枚举——镜像 `@deepseek-ai/dsh-workspace-trust` 的工作区信任状态,以及会话的权限姿态。自由形态的事实包会让"新增一个事实"变成一次无声的策略变更。
+上下文事实是闭合枚举——镜像 `@deepseek-ai/dsh-workspace-trust` 的工作区信任状态、镜像 `@deepseek-ai/dsh-risk-taxonomy` 的动作风险类别,以及会话的权限姿态。自由形态的事实包会让"新增一个事实"变成一次无声的策略变更。
 
 ### 决策是闭合的,而 `ask` 不是"软拒绝"
 

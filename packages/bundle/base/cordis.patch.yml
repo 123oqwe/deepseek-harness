@@ -280,22 +280,23 @@
           # everything. A deployment that wants a boundary narrows from here
           # by adding `forbid`, which overrides any permit.
           baseline-permit: 'permit(principal, action, resource);'
-          # The `forbid` half is deliberately absent, not forgotten. The
-          # kernel hard-deny band is `['safety-critical']`
-          # (`risk-taxonomy/src/classify.ts:36`), and NO policy can match on
-          # it here: the policy request carries the manifest's
+          # The kernel hard-deny band, stated as a policy now that it can be.
+          # `riskClass` was outside the domain of every field Cedar received
+          # until BLOCKED-201: the request carried the manifest's
           # `sideEffectClass` (`read | write | network | process |
-          # destructive`), never a `RiskClass`, so `safety-critical` is not in
-          # the domain of any field Cedar receives. Forbidding the one class
-          # that IS reachable — `destructive` — would deny everything, since
-          # every manifest this profile produces carries it.
+          # destructive`) and no `RiskClass` at all, so `safety-critical` was
+          # unmatchable here and this row held a paragraph explaining why
+          # instead of a rule. Both dispatch paths now classify before asking,
+          # so the fact arrives and the rule is writable (BLOCKED-187's
+          # residual, closed).
           #
-          # That band is enforced anyway, one layer earlier:
-          # `gateActionRisk` refuses on `classification.hardDenied` from both
-          # dispatch paths. Restating it here would be a second declaration of
-          # a live rule, free to disagree with the first. It is reinstated as
-          # a policy when `riskClass` reaches the policy request (BLOCKED-187's
-          # residual).
+          # It is a SECOND refusal of the same band, deliberately: `gateActionRisk`
+          # refuses `classification.hardDenied` one layer earlier and still
+          # does. They cannot drift, because both read the one classification
+          # this dispatch computed — and the policy layer having its own say is
+          # what makes the audit record name the band as a policy decision
+          # rather than only as a gate that happened first.
+          kernel-hard-deny: 'forbid(principal, action, resource) when { context.riskClass == "safety-critical" };'
 
     - id: permission
       name: '@deepseek-ai/dsh-permission-presets'

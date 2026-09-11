@@ -98,3 +98,42 @@ An earlier draft defined the default set as an allow-list measured from the snap
 That is the expected outcome, and the reason is the load-bearing part: **this slice does not fill BLOCKED-050's empty slot.** There is still no kernel-level policy provider, `policyEnforcement` still defaults to deny, and all six capabilities remain exactly as hollow as 050 describes. What changed is only that a factory assembly no longer lets the placeholder override a real engine's answer. P0-02's frozen cases pin the kernel's member count and `pinTrustKernel` behaviour, and a config parameter adds no member — so they were never going to move. Measured rather than assumed.
 
 The one skipped entry is `built CLI lazy-search startup` (`apps/cli/tests/lazy-search-startup.compat.spec.ts:102`), a `describe.skipIf(!requireBuiltArtifacts)` behind the explicit `DSH_REQUIRE_BUILT_CLI_SMOKE=1` opt-in, unrelated to this change. Named for the same reason as the snapshot skip above: a skip and a pass are indistinguishable in a summary line.
+
+-----
+
+## Supplement: the facts the policy actually received, and the `forbid` that is no longer empty
+
+**This section supersedes "The default policy set, and why its `forbid` is empty" above.** That measurement was correct when it was made and is false of the tree now; it stays because the reason the rule could not be written is the reason it can be.
+
+### The measurement that made the earlier one obsolete
+
+`enforceManifestedAction` declared `facts?: Partial<PolicyRequest['facts']>` and filled the gaps in place with `'untrusted'` and `'default'`. A census of its two call sites found **neither passed `facts`**. So the workspace trust and the permission posture every policy has ever seen were constants, and `riskClass` was not in the request at all. The earlier section explained why the kernel band could not be forbidden by policy; the deeper reason was that none of the three facts were being delivered, and a third one added to a field nobody passed would have changed nothing.
+
+Recorded as [BLOCKED-201](BLOCKED-QUEUE.md#blocked-201), closed here, together with [BLOCKED-187](BLOCKED-QUEUE.md#blocked-187)'s residual **input** half. 187's output half — `ask` has no producer on any profile — is untouched and stays open.
+
+### What ships now
+
+- Both dispatch paths classify **before** appending the manifest, and hand the same `ActionRiskClassification` to `gateActionRisk`. The order was measured as deliberate and documented (policy at `tool-calls.ts`, then the risk gate, then the reservation), so the classification moved earlier rather than the gate moving later.
+- `readPolicyContextFacts` (`core/tools/src/external-effect.ts`) is the one reader both paths use. An unmounted service reads as its fail-closed value there, in one place, instead of at each point of use.
+- `EnforcementInput.facts` is **required**. An optional field defaulted in place is what let every path omit it silently for the life of the epic.
+- The base bundle's Cedar row holds a rule where it held a paragraph: `forbid(principal, action, resource) when { context.riskClass == "safety-critical" };`. It is a second refusal of the band that `gateActionRisk` also refuses, and they cannot drift, because both read the one classification the dispatch computed.
+
+### Cases and their mutations
+
+`packages/policy/policy-enforcement/tests/facts.spec.ts`, six cases, each driving a real turn through the in-process stack with a real Cedar engine and a real classifier, each stating its expectation through a rule that matches only on the fact under test — so a fact that failed to arrive shows as a permit, not as a differently-worded deny.
+
+Three mutations against `readPolicyContextFacts`, one literal substitution each, the spec re-run, the source restored and confirmed byte-identical with `cmp`:
+
+| mutation | red |
+| --- | --- |
+| `riskClass` ignores the computed classification | *forbids the kernel hard-deny band by POLICY…* — alone |
+| `workspaceTrust` never reads the seam | *permits under the SAME rule when the seam answers trusted-execute…* — alone |
+| `permissionPosture` spells a real preset name | both BLOCKED-202 characterization cases |
+
+Each fact carries a different case. The two risk cases are a pair: the deny case declares a tag classifying `safety-critical`, the control declares one classifying `internal-write` under the same rule, so the rule is shown not to be a constant. The trust pair is the same shape across `untrusted` and `trusted-execute`.
+
+### NOT proven, stated rather than omitted
+
+The **posture** fact is still the literal `'default'`. It is not that it was not wired — there is nothing to wire: `PermissionPostureFact`'s four members name no preset any composition configures, and preset names are deployment config, so no real posture can be spelled in that vocabulary. Measured and recorded as [BLOCKED-202](BLOCKED-QUEUE.md#blocked-202). The two cases above pin the gap as CHARACTERIZATION from both sides, and whichever ruling closes 202 should redden them.
+
+Also not proven: that the shipped `kernel-hard-deny` rule ever fires on a real profile. No shipped tool declares a tag classifying `safety-critical` — the corpus census found the class is never produced — so the rule is stated and unexercised outside the fixture, exactly as `gateActionRisk`'s `hardDenied` branch has always been.

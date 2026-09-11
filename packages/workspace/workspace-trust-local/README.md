@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-`dsh-workspace-trust-local` provides `ctx.workspaceTrust`, the seam the harness reads before it loads anything a project directory supplied. `@deepseek-ai/dsh-workspace-trust` owns every decision and `@deepseek-ai/dsh-workspace`'s `observeWorkspaceIdentity` owns every filesystem observation; this package binds the two together for a session `cwd` and holds the resulting record for the process lifetime. It adds no second decision table.
+`dsh-workspace-trust-local` provides `ctx.workspaceTrust`, the seam the harness reads before it loads anything a project directory supplied. `@deepseek-ai/dsh-workspace-trust` owns every decision and `@deepseek-ai/dsh-workspace`'s `observeWorkspaceIdentity` owns every filesystem observation; this package binds the two together for a session `cwd` and holds the resulting record durably. It adds no second decision table.
 
 A grant names a path, but trust binds to the identity that path resolved to the first time it was read. Every later read re-observes and reconciles, so a directory replaced in place, a symlink retargeted, or a directory moved out from under its path all drop to `'untrusted'`, and none of them is re-granted from configuration: a grant is permission to trust one directory, not standing permission to trust whatever later occupies its path.
 
@@ -82,7 +82,7 @@ None from this package directly. A change in trust state changes the instruction
 
 - **Grants stand in for host-user interaction.** The epic requires a trust upgrade to be completed by the host user interactively. No approval/interaction seam is wired here, so configured grants carry that authority for now. `requestTrustUpgrade` in `@deepseek-ai/dsh-workspace-trust` already refuses any non-`'user'` principal, and an interactive upgrade path will call it.
 - **No audit record is written.** The epic also requires an upgrade to append an audit record. Wiring a real Trust Kernel `auditAppend` is gated on the vendored Cordis `Fiber` structural fix ([trust-kernel boundary](../../../docs/architecture/trust-kernel-boundary.md)); no audit sink is faked in the meantime.
-- **Records live for the process lifetime.** Trust is not persisted across restarts, so a granted workspace re-binds on the next boot.
+- **A record is never removed, only reconciled.** There is no expiry and no eviction: a workspace bound years ago is reconciled against a fresh observation on the next read, which is what decides the answer, but its row stays. A host that accumulates many workspaces accumulates rows.
 
 -----
 
@@ -93,10 +93,6 @@ None from this package directly. A change in trust state changes the instruction
 <details>
 <summary>Working context for maintainers — click to expand</summary>
 
-A granted path is resolved once and memoized. Re-canonicalizing it per call
-made retargeting a granted symlink move the grant onto whatever the link now
-points at, which then matched as a first binding and was trusted — the trust
-inheritance `acceptance[1]` exists to prevent. The memoization is a correctness
-requirement, not a performance choice.
+A granted path is resolved once and memoized. Re-canonicalizing it per call made retargeting a granted symlink move the grant onto whatever the link now points at, which then matched as a first binding and was trusted — the trust inheritance `acceptance[1]` exists to prevent. The memoization is a correctness requirement, not a performance choice.
 
 </details>

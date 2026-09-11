@@ -76,6 +76,12 @@ function toCedarRequest(request: PolicyRequest): {
       classified: request.manifest.classified,
       workspaceTrust: request.facts.workspaceTrust,
       permissionPosture: request.facts.permissionPosture,
+      // The action's own risk class, which the dispatch path computed before
+      // asking. Without it the kernel hard-deny band was outside the domain of
+      // every field Cedar received, so the base bundle could not state the one
+      // rule it most wanted to (BLOCKED-187's residual, closed with
+      // BLOCKED-201).
+      riskClass: request.facts.riskClass,
       // `absent` until P3-01 lands ExecutionWorld (BLOCKED-178). A policy can
       // match on it and refuse, which is the point of a declared absence.
       world: request.world.kind,

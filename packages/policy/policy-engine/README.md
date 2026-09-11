@@ -30,7 +30,7 @@ English | [中文](README.zh.md)
 
 `world` is present in its `absent` form on this tree, because `ExecutionWorld` is P3-01's to design and does not exist yet. `absent` is a value a policy can match on, not a missing field: a policy that must know the world can refuse when the world is unknown.
 
-Context facts are a closed enumeration — a workspace trust state mirroring `@deepseek-ai/dsh-workspace-trust`, and the session's permission posture. A free-form fact bag would make adding a fact a silent policy change.
+Context facts are a closed enumeration — a workspace trust state mirroring `@deepseek-ai/dsh-workspace-trust`, the action's risk class mirroring `@deepseek-ai/dsh-risk-taxonomy`, and the session's permission posture. A free-form fact bag would make adding a fact a silent policy change.
 
 ### A decision is closed, and `ask` is not a soft deny
 

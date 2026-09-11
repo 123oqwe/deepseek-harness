@@ -48,12 +48,37 @@ export type WorkspaceTrustFact = 'untrusted' | 'trusted-read' | 'trusted-execute
  */
 export type PermissionPostureFact = 'default' | 'plan' | 'accept-edits' | 'bypass'
 
+/**
+ * How risky the action itself is, as the deployment's risk policy classified
+ * it (must[0]'s "context facts", third half).
+ *
+ * A closed enumeration mirroring `@deepseek-ai/dsh-risk-taxonomy`'s own
+ * `RiskClass`, declared here for the same reason {@link WorkspaceTrustFact} is:
+ * P2-04 decides what an action's class IS, and this vocabulary only states
+ * which of those values a policy may read.
+ *
+ * The dispatch paths classify BEFORE asking policy so this carries the real
+ * verdict. Until BLOCKED-201 no caller passed facts at all, so every policy
+ * saw a fail-closed default and no rule about risk could ever match.
+ */
+export type ActionRiskClassFact =
+  | 'read'
+  | 'local-reversible'
+  | 'internal-write'
+  | 'external-communication'
+  | 'destructive'
+  | 'financial'
+  | 'security-sensitive'
+  | 'safety-critical'
+
 /** The context facts a policy may read, all of them declared. */
 export interface PolicyContextFacts {
   /** The workspace's trust state. */
   readonly workspaceTrust: WorkspaceTrustFact
   /** The session's permission posture. */
   readonly permissionPosture: PermissionPostureFact
+  /** The class the deployment's risk policy put this action in. */
+  readonly riskClass: ActionRiskClassFact
 }
 
 /**

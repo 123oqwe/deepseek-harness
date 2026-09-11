@@ -11959,7 +11959,7 @@
       ],
       "frozenAtUtc": "2026-09-11T07:56:55.374Z",
       "supersedes": "2026-09-11T06:53:05.994Z",
-      "supersessionReason": "Re-frozen for must[2]'s host-user interaction: the clause's producer exists now, and its cases were in two files this command did not run. A freeze that does not run the cases proving a clause is a freeze that does not pin it.",
+      "supersessionReason": "Re-frozen for BLOCKED-200: the trust question is no longer spent where nobody can answer it, and the composition fixture now carries the CHARACTERIZATION that /trust-skills cannot grant on a shipped profile. Two cases the superseded entry could not name, one of them the one that says this epic's execute half does not reach a user.",
       "dryRunProof": {
         "treeSha": "5e3ec46584c4a7bebc9a1c6bb681e7b4decc8287",
         "testsDiscovered": 29
@@ -11968,7 +11968,135 @@
         "mutationDescription": "Eight mutations, each one literal substitution, the spec re-run, the source restored byte-identical after each. On workspace-trust-local/src/index.ts: (T-M1) the consumed-grant marker is ignored when matching a grant; (T-M2) the trust record is never written; (T-M3) the consumed marker is never written; (T-M4) a stored record is returned without reconciling it; (T-M5) NEITHER durable fact is written, the state before BLOCKED-199. On agent-instructions/src/index.ts: (A-M1) the read question never fires; (A-M2) the already-asked record is dropped so the question is re-put every step; (A-M3) any outcome counts as acceptance; (A-M4) it asks for trusted-execute instead of trusted-read. On workspace-trust/src/index.ts: (A-M5) the non-host-principal refusal is removed; (S-M1) `authorizeProjectLoad` admits an executable skill at any state above untrusted. On command-workspace-trust/src/index.ts: (C-M1) the command grants without confirming; (C-M2) it grants trusted-read instead of trusted-execute.",
         "failureSummary": "Each durable fact and each decision carries a different case. T-M1 and T-M3 each red the retargeted-symlink case alone; T-M2 reds the same-directory-across-restart control alone; T-M4 reds both replacement cases; T-M5 reds all three. A-M1 reds the accept case and the ask-once case; A-M2 and A-M3 each red the ask-once case alone; A-M4 reds the accept case alone. A-M5 reds the non-host-principal case alone. S-M1 reds \"still offers no skill from the repository at trusted-read\" alone — the case the ruling names, and the reason project skills stay out of the catalog at read: their names and descriptions are text the project supplied. C-M1 reds the refused case and the no-answerer case; C-M2 reds the accept case and the already-trusted case. NOT PROVEN, and stated rather than omitted: the cross-restart REPLACEMENT case survives T-M2 alone, because with no record the consumed marker also denies it — two independent facts refuse it, which is why no single mutation isolates that case, and T-M5 removing both confirms it. Also NOT PROVEN: an end-to-end case running the COMMAND and then observing the catalog on one real boot. The chain is covered in two halves — command to state in command.spec.ts over the real registry, state to catalog in the composition fixture over a real profile — and nothing pins that the halves compose on one boot."
       },
-      "note": "P1-07 U-stage, re-frozen for must[2]'s host-user interaction. The clause required a trust upgrade to be completed by a host-user INTERACTION and audited; until this batch there was no interaction at all, and the only way to trust a directory was to edit YAML and restart, which produced no record of anyone deciding anything. Two producers now exist and each has its cases in this command: the read question, asked automatically the first time a session would load an untrusted workspace's own instruction files; and `/trust-skills`, the host user's own route to trusted-execute, which is a COMMAND rather than a prompt at the point of use because project skills are not listed at trusted-read, so the agent never reaches for one and there is no moment at which it could be asked about. Both confirm through approval even when the user initiated the action, because the approval pair is what records that they were shown what it means and agreed. Every failure direction — no provider, no approval service, no answerer, a refusal, a non-host principal, an abort — leaves the workspace untrusted, which is the direction the gate already had."
+      "note": "P1-07 U-stage, re-frozen for must[2]'s host-user interaction. The clause required a trust upgrade to be completed by a host-user INTERACTION and audited; until this batch there was no interaction at all, and the only way to trust a directory was to edit YAML and restart, which produced no record of anyone deciding anything. Two producers now exist and each has its cases in this command: the read question, asked automatically the first time a session would load an untrusted workspace's own instruction files; and `/trust-skills`, the host user's own route to trusted-execute, which is a COMMAND rather than a prompt at the point of use because project skills are not listed at trusted-read, so the agent never reaches for one and there is no moment at which it could be asked about. Both confirm through approval even when the user initiated the action, because the approval pair is what records that they were shown what it means and agreed. Every failure direction — no provider, no approval service, no answerer, a refusal, a non-host principal, an abort — leaves the workspace untrusted, which is the direction the gate already had.",
+      "supersededBy": "2026-09-11T08:52:52.792Z"
+    },
+    {
+      "epic": "P1-07",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workspace/workspace-trust-local/tests/provider.spec.ts",
+        "packages/context/agent-instructions/tests/trust-gate.spec.ts",
+        "packages/context/agent-instructions/tests/trust-ask.spec.ts",
+        "packages/skill/skill-filesystem/tests/trust-gate.spec.ts",
+        "packages/workspace/command-workspace-trust/tests/command.spec.ts",
+        "tests/first100/fixtures/P1-07.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "offers the model neither the clone's executable skills nor its instructions while the workspace is untrusted",
+        "offers the model both the clone's executable skills and its instructions once that same clone is granted trusted-execute",
+        "CHARACTERIZATION: /trust-skills cannot grant on a shipped profile, because no host user is attached to the session",
+        "raises the workspace to trusted-read when the host user accepts, driven by a real pre-step",
+        "asks once per session: a refusal is not re-put on the next step",
+        "does not spend the session's one question on a step that has no identity to ask for",
+        "does not ask at all once the workspace is already trusted",
+        "leaves the workspace untrusted when the host user refuses",
+        "leaves the workspace untrusted on a non-interactive profile, where there is nobody to ask",
+        "refuses a grant authorized by a principal that is not the host user",
+        "records the question and its outcome as an auditable pair naming the subject",
+        "discovers only the host-owned user-global instructions while the workspace is untrusted",
+        "discovers the project instructions once the workspace reaches trusted-read, alongside the host-owned ones",
+        "discovers the project instructions at trusted-execute as well, since a higher state never loads less",
+        "offers no skill from a cloned repository while the workspace is untrusted, and still offers the host-owned skill",
+        "still offers no skill from the repository at trusted-read, because reading a project is not executing it",
+        "offers both project skills once the workspace reaches trusted-execute, proving the fixture is real and the difference is the trust decision",
+        "grants trusted-execute once the host user confirms",
+        "leaves the workspace untrusted when the confirmation is refused, and says so",
+        "leaves the workspace untrusted where there is nobody to confirm with",
+        "records the confirmation as an auditable pair naming the workspace and the state",
+        "reports an already-trusted workspace without asking again",
+        "resolves an ungranted workspace to untrusted, so a freshly cloned repository is never trusted by default",
+        "resolves a granted workspace to its granted state",
+        "resolves a granted path spelled through a symlink to the same state, since the grant is canonicalized before it is bound",
+        "drops a granted workspace to untrusted once the directory at that path is replaced, and does not re-grant it from configuration",
+        "does not re-grant a directory replaced while the process was down, because the binding is durable",
+        "control: the same directory across a restart keeps its trust, so the refusal above is about identity and not about restarting",
+        "does not trust a retargeted symlink's new target across a restart",
+        "drops a granted workspace to untrusted once the symlink it was opened through is retargeted to another directory",
+        "drops a granted workspace to untrusted once the directory is moved out from under the path it was granted at"
+      ],
+      "files": [
+        "packages/workspace/workspace-trust/src/index.ts",
+        "packages/workspace/workspace-trust-local/src/index.ts",
+        "packages/workspace/workspace-trust-local/src/spec.ts",
+        "packages/workspace/workspace-trust-local/tests/provider.spec.ts",
+        "packages/workspace/command-workspace-trust/src/index.ts",
+        "packages/workspace/command-workspace-trust/tests/command.spec.ts",
+        "packages/context/agent-instructions/src/index.ts",
+        "packages/context/agent-instructions/src/files.ts",
+        "packages/context/agent-instructions/tests/trust-gate.spec.ts",
+        "packages/context/agent-instructions/tests/trust-ask.spec.ts",
+        "packages/skill/skill-filesystem/src/index.ts",
+        "packages/skill/skill-filesystem/tests/trust-gate.spec.ts",
+        "packages/interaction/user-approval/src/types.ts",
+        "packages/bundle/base/cordis.patch.yml",
+        "tests/first100/fixtures/P1-07.composition.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-11T08:52:52.792Z",
+      "supersedes": "2026-09-11T07:56:55.374Z",
+      "supersessionReason": "Re-frozen for BLOCKED-200: the trust question is no longer spent where nobody can answer it, and the composition fixture now carries the CHARACTERIZATION that /trust-skills cannot grant on a shipped profile. Two cases the superseded entry could not name, one of them the one that says this epic's execute half does not reach a user.",
+      "dryRunProof": {
+        "treeSha": "adcaef4b1ff23466c0f47904d2aaa6e3bd2ed4e3",
+        "testsDiscovered": 31
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations for the two ADDED cases, each one literal substitution, the spec re-run, the source restored byte-identical after each. The eight mutations the superseded entry recorded still stand and were not re-run; nothing in this batch touched the sources they act on. (A-M6) `askForReadTrustOnce` marks the session asked BEFORE checking that an identity is attached, which is the ordering this batch fixed. (C-M3) the command treats an absent attached identity as a host user and grants anyway.",
+        "failureSummary": "A-M6 reds 'does not spend the session\\'s one question on a step that has no identity to ask for' alone: the question is consumed on a step with nobody to ask for, so the later step that HAS an identity never asks. It required two pre-steps with `identity/attached` appended between them — a single-pre-step version of this case survived the mutation, which is why it is written the long way. C-M3 reds the shipped-profile CHARACTERIZATION alone, by making the grant succeed where the product refuses it. That case asserts a DEFECT, so its mutation has to remove the refusal rather than the grant. NOT PROVEN and stated: the characterization case pins that /trust-skills cannot grant on a shipped profile. It does not pin WHY at the identity layer — that is P2-01's consumption point, recorded as BLOCKED-200, and a case here would be asserting another epic's gap from inside this one."
+      },
+      "note": "P1-07 U-stage, fourth freeze. Two cases added, none removed or renamed. The first pins an ordering the previous batch got wrong: the read-trust question was marked asked on the first pre-step whatever happened, so on a profile where the identity attaches later the one question was spent on a step with no principal to ask on behalf of, and the session never asked again. The second is a CHARACTERIZATION rather than an assertion: on a real shipped headless boot, `/trust-skills` answers that no host user is attached, so must[2]'s execute half has a producer that cannot reach a user. That is P2-01's gap (BLOCKED-200), not a defect in this command, and it is frozen here because this is the command whose case found it — a gap recorded only in prose is one the next tree can close or widen without anything noticing."
+    },
+    {
+      "epic": "P2-05",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-05",
+        "stage": "U"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/policy/policy-enforcement/tests/facts.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "forbids the kernel hard-deny band by POLICY, because the action's risk class now reaches Cedar",
+        "permits the same action when its declared tag classifies below that band, so the rule is not a constant",
+        "forbids on the workspace's REAL trust state, read from the mounted seam",
+        "permits under the SAME rule when the seam answers trusted-execute, so the fact is read rather than assumed",
+        "CHARACTERIZATION (BLOCKED-202): the posture Cedar sees is the constant `default`, whatever preset is mounted",
+        "CHARACTERIZATION (BLOCKED-202): a rule naming `default` matches under the read-only preset, which is the defect stated positively"
+      ],
+      "files": [
+        "packages/core/tools/src/external-effect.ts",
+        "packages/core/tools/src/ptc.ts",
+        "packages/core/agent-loop/src/tool-calls.ts",
+        "packages/policy/policy-engine/src/types.ts",
+        "packages/policy/policy-engine-cedar/src/index.ts",
+        "packages/policy/policy-enforcement/src/index.ts",
+        "packages/policy/policy-enforcement/tests/facts.spec.ts",
+        "packages/policy/policy-enforcement/tests/fixtures/stack.ts",
+        "packages/bundle/base/cordis.patch.yml"
+      ],
+      "frozenAtUtc": "2026-09-11T08:52:52.792Z",
+      "dryRunProof": {
+        "treeSha": "adcaef4b1ff23466c0f47904d2aaa6e3bd2ed4e3",
+        "testsDiscovered": 6
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations against `readPolicyContextFacts` in packages/core/tools/src/external-effect.ts, each one literal substitution, the spec re-run, the file restored and confirmed byte-identical with `cmp` after each. (F-M1) `riskClass` ignores the computed classification and is always the unknown default; (F-M2) `workspaceTrust` never reads the mounted seam and is always `untrusted`; (F-M3) `permissionPosture` spells a real preset name instead of the constant.",
+        "failureSummary": "F-M1 reds 'forbids the kernel hard-deny band by POLICY…' ALONE — its control declares a tag classifying `internal-write` under the same rule, so the rule is shown not to be a constant, and the control permits under the mutation too. F-M2 reds 'permits under the SAME rule when the seam answers trusted-execute…' ALONE. The deny half cannot isolate the fact, because `untrusted` is what the mutation forces and what that case expects; the control is what proves the seam is read rather than assumed, and it is written for that reason. F-M3 reds both BLOCKED-202 characterization cases, which is the intended result: they assert that the posture is a constant, so any real value reddens them. NOT PROVEN, stated rather than omitted: that the shipped `kernel-hard-deny` rule ever fires on a real profile. No shipped tool declares a tag classifying `safety-critical` — the corpus census found the class is never produced — so the rule is exercised in this fixture and nowhere else, exactly as `gateActionRisk`'s `hardDenied` branch has always been. Also NOT PROVEN: that a real workspace resolves to a trust state here. The seam is provided with a fixed answer, because what is under test is that the dispatch path READS the seam and carries the answer into the policy question; how a host resolves a directory to a state is P1-07's and has its own cases."
+      },
+      "note": "P2-05 U supplement for BLOCKED-201, closing BLOCKED-187's input residual with it. `enforceManifestedAction` took the context facts as an optional `Partial` and filled them in place; NEITHER dispatch path passed them, so every policy question a shipped composition ever asked carried `untrusted` and `default` and no `riskClass` at all — a rule about any of them could not match however it was written. The type is required now, the defaulting moved to one reader both paths call, and both paths classify BEFORE appending the manifest so the class is a fact rather than an absence. The same `ActionRiskClassification` goes to `gateActionRisk`, so the policy layer and the risk gate decide about one classification instead of each computing its own. The base bundle's Cedar row holds the kernel hard-deny rule where it held a paragraph explaining why the rule could not be written. Two of the three facts are real; the posture is not, and cannot be — see BLOCKED-202, whose gap these cases pin as CHARACTERIZATION rather than leave looking supplied."
     }
   ]
 }

@@ -28,6 +28,7 @@ import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel
 import type { TrustKernelAuditEntry, TrustKernelPolicyQuery, TrustKernelPolicyVerdict } from '@deepseek-ai/dsh-trust-kernel'
 import CedarPolicyEngine from '@deepseek-ai/dsh-policy-engine-cedar'
 import CapabilityTokenFilePlugin from '@deepseek-ai/dsh-capability-token-file'
+import PermissionPresetService from '@deepseek-ai/dsh-permission-presets'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -84,6 +85,12 @@ export async function stack(options: {
   verdict?: TrustKernelPolicyVerdict
   tokens?: boolean
   kernel?: KernelChoice
+  /** Mount the real risk classifier under this preset, so `riskClass` is a classified value. */
+  preset?: string
+  /** The trust state the `workspaceTrust` seam answers with; unmounted when absent. */
+  trust?: 'untrusted' | 'trusted-read' | 'trusted-execute'
+  /** Risk domain tags the `writer` tool declares. */
+  tags?: readonly string[]
 } = {}) {
   const audit: PolicyAuditRecord[] = []
   const ctx = new Context()
@@ -116,6 +123,39 @@ export async function stack(options: {
     tokenDirs.push(directory)
     await ctx.plugin(CapabilityTokenFilePlugin, { directory, requireForTools: false, sessionTokenTtlMs: 60_000 })
   }
+  if (options.trust !== undefined) {
+    // The Service Definition itself, answered with a fixed state. What is
+    // under test here is that the dispatch path READS this seam and carries
+    // the answer into the policy question; how a host resolves a directory to
+    // a state is P1-07's, and `workspace-trust-local` has its own cases for it.
+    const state = options.trust
+    ctx.provide('workspaceTrust', {
+      stateFor: () => Promise.resolve(state),
+      grantTrust: () => { throw new Error('policy facts cases never upgrade trust') },
+    })
+  }
+  if (options.preset !== undefined) {
+    // The real classifier, because `riskClass` reaching Cedar as a CLASSIFIED
+    // value is the claim. A stand-in would prove only that a field is copied.
+    ctx.provide('shell', {
+      sandboxMode: 'workspace-write',
+      resolve() { throw new Error('policy facts cases do not execute bash') },
+      run() { throw new Error('policy facts cases do not execute bash') },
+      start() { throw new Error('policy facts cases do not execute bash') },
+    })
+    ctx.provide('approval', { config: { policy: 'ask' }, request: () => Promise.resolve('unavailable') })
+    await ctx.plugin(PermissionPresetService, {
+      riskRules: [
+        { domainTag: 'filesystem-write', riskClass: 'internal-write' },
+        { domainTag: 'fire-suppression', riskClass: 'safety-critical' },
+      ],
+      presets: {
+        'read-only': { sandbox: 'read-only', approval: 'ask', approvalThreshold: 'destructive' },
+        'workspace-write': { sandbox: 'workspace-write', approval: 'ask', approvalThreshold: 'destructive' },
+      },
+      defaultPreset: options.preset,
+    })
+  }
   await ctx.plugin(PolicyEnforcement)
   const engine = options.policies === undefined
     ? undefined
@@ -124,6 +164,7 @@ export async function stack(options: {
     name: 'writer',
     description: 'writes',
     parameters: {},
+    ...options.tags === undefined ? {} : { riskDomainTags: options.tags },
     execute: () => Promise.resolve([{ type: 'text', text: 'wrote' }]),
   }))
   return { ctx, audit, engine }
@@ -133,10 +174,11 @@ export async function stack(options: {
  * Drive one turn to quiescence and return the session's events.
  * @param ctx - a context from {@link stack}.
  * @param session - the session id to create the agent under.
+ * @param cwd - the absolute session working directory, when a case's facts depend on one.
  * @returns every event the turn appended.
  */
-export async function runTurn(ctx: Context, session: string): Promise<readonly SessionEvent[]> {
-  const agent = ctx.agentLoop.create(SessionId(session), { provider: 'mock', model: 'mock' })
+export async function runTurn(ctx: Context, session: string, cwd?: string): Promise<readonly SessionEvent[]> {
+  const agent = ctx.agentLoop.create(SessionId(session), { provider: 'mock', model: 'mock' }, cwd === undefined ? {} : { cwd })
   const idle = new Promise<void>((resolve) => {
     const dispose = ctx.on('agent/status', ({ agent: subject, status }) => {
       if (subject === agent && status === 'idle') { dispose(); resolve() }

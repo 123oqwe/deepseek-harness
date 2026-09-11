@@ -13,13 +13,14 @@ import type { CodeBindingFunction, CodeRunResult, CodeRuntime } from '@deepseek-
 import { snapshotJsonValue, type JsonValue } from '@deepseek-ai/dsh-util-values'
 import { appendManifestThenGate, computeArgumentsHash, manifestAttribution, manifestIdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
 import { enforceManifestedAction } from '@deepseek-ai/dsh-policy-enforcement'
+import type { PolicyContextFacts } from '@deepseek-ai/dsh-policy-engine'
 import { redactTokenForLog } from '@deepseek-ai/dsh-capability-token'
 import type { ClosedDecision } from '@deepseek-ai/dsh-policy-engine'
 import type { ActionId, CapabilityRef } from '@deepseek-ai/dsh-action-manifest'
 import type { Context } from '@deepseek-ai/cordis'
 import type { Principal } from '@deepseek-ai/dsh-principal'
 import { createSessionManifestAppender } from './manifest-log.ts'
-import { confirmExternalEffect, gateActionRisk, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect } from './external-effect.ts'
+import { classifyActionRisk, confirmExternalEffect, gateActionRisk, readPolicyContextFacts, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect } from './external-effect.ts'
 import type { ExternalEffectRecord } from './external-effect.ts'
 import { attachedIdentity } from '@deepseek-ai/dsh-session'
 import { defineTool, parameterSchemaSpecToJsonSchema } from './schema.ts'
@@ -193,6 +194,20 @@ function jsonNormalizeArgs(value: unknown): { dispatched: unknown; logged: unkno
  * @param name - the tool being dispatched.
  * @param loggedArguments - the detached sibling copy of the dispatched arguments.
  */
+/**
+ * The facts for a sub-dispatch with no agent behind it.
+ *
+ * `appendCodeModeManifest` returns before it asks policy in that case, so
+ * nothing reads these; they exist because the facts are a required argument
+ * and a fail-closed value is the only honest thing to name when there is no
+ * session to read one from.
+ */
+const FAIL_CLOSED_FACTS: PolicyContextFacts = {
+  workspaceTrust: 'untrusted',
+  permissionPosture: 'default',
+  riskClass: 'security-sensitive',
+}
+
 /** What one sub-dispatch's manifest produced: the ledger's record and P2-05's decision. */
 interface ManifestedSubDispatch {
   /** The reservation inputs, or undefined when this run has no agent. */
@@ -207,6 +222,7 @@ function appendCodeModeManifest(
   subCallId: ToolCallId,
   name: string,
   loggedArguments: unknown,
+  facts: PolicyContextFacts,
 ): ManifestedSubDispatch {
   const agent = exec.agent
   if (agent === undefined) return { reservation: undefined, decision: undefined }
@@ -259,6 +275,7 @@ function appendCodeModeManifest(
         ? { token: undefined }
         : { token: redactTokenForLog(exec.capabilityToken) },
       origin: 'code-mode-embedded',
+      facts,
     })
   return {
     reservation: {
@@ -663,7 +680,17 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
               // because this is where the call actually begins — a queued entry
               // abandoned by run settlement never executes, and a manifest for
               // it would record an action that never happened.
-              const manifested = appendCodeModeManifest(options.ledgerContext(), exec, subCallId, name, normalized.logged)
+              // Classified BEFORE the manifest, so the policy question this
+              // sub-dispatch asks carries the class as a fact rather than a
+              // default (BLOCKED-201), and the risk gate below decides about
+              // the SAME verdict instead of computing a second one.
+              const classified = exec.agent === undefined
+                ? undefined
+                : classifyActionRisk(options.ledgerContext(), name, registry.get(name, exec.agent)?.riskDomainTags ?? [])
+              const facts = exec.agent === undefined
+                ? FAIL_CLOSED_FACTS
+                : await readPolicyContextFacts(options.ledgerContext(), exec.agent, classified)
+              const manifested = appendCodeModeManifest(options.ledgerContext(), exec, subCallId, name, normalized.logged, facts)
               reservation = manifested.reservation
               // The reservation is taken before the sub-call runs, exactly as
               // the native path takes one (P4-12 must[4]). Until §12.35-2 this
@@ -690,7 +717,9 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
               }
               const riskRefusal = exec.agent === undefined
                 ? undefined
-                : await gateActionRisk(options.ledgerContext(), exec.agent, name, registry.get(name, exec.agent)?.riskDomainTags ?? [])
+                : await gateActionRisk(
+                  options.ledgerContext(), exec.agent, name, registry.get(name, exec.agent)?.riskDomainTags ?? [], classified,
+                )
               if (riskRefusal !== undefined) {
                 reservation = undefined
                 this.settled = true

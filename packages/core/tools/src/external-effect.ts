@@ -25,6 +25,7 @@ import type { ArgumentsHash, IdempotencyKey } from '@deepseek-ai/dsh-action-mani
 import type { LedgerEpoch, LedgerScope, ReceiptDigest, ReserveDecision } from '@deepseek-ai/dsh-action-ledger'
 import type {} from '@deepseek-ai/dsh-action-ledger'
 import { brandNumber, brandString } from '@deepseek-ai/dsh-brand'
+import type { PolicyContextFacts } from '@deepseek-ai/dsh-policy-engine'
 import type { ToolExecutionResult } from './index.ts'
 
 /**
@@ -115,10 +116,7 @@ interface RiskPolicyPort {
    * @param subject - the action id and the domain tags it declares.
    * @returns the class, whether it is hard-denied, and how it was reached.
    */
-  classifyAction(subject: { readonly actionId: string; readonly domainTags: readonly string[] }): {
-    readonly riskClass: string
-    readonly hardDenied: boolean
-  }
+  classifyAction(subject: { readonly actionId: string; readonly domainTags: readonly string[] }): ActionRiskClassification
   /**
    * Whether a classification reaches the named preset's approval threshold.
    * @param classification - the classifier's verdict.
@@ -132,6 +130,105 @@ interface RiskPolicyPort {
    * @returns a preset table key, or the derived custom state.
    */
   current(session: Agent['session']): string
+}
+
+/**
+ * One action's intrinsic risk verdict under the deployment's organisation policy.
+ *
+ * Named because it crosses two layers: the dispatch paths compute it before
+ * asking policy, so the Cedar request and {@link gateActionRisk} decide about
+ * the same action rather than each classifying it for themselves.
+ */
+export interface ActionRiskClassification {
+  /** The class the action was classified into. */
+  readonly riskClass: string
+  /** Whether the class is in the kernel band no organisation policy may switch off. */
+  readonly hardDenied: boolean
+}
+
+/**
+ * Classify one action ahead of both the policy decision and the risk gate.
+ *
+ * The dispatch paths call this BEFORE `enforceManifestedAction`, because a
+ * policy that cannot see how risky an action is cannot forbid it for being
+ * risky — the fact reached Cedar as a default until BLOCKED-201. The verdict
+ * is then handed to {@link gateActionRisk} rather than recomputed there.
+ * @param ctx - the mounting context, consulted for an optional policy service.
+ * @param toolName - the action's capability, used as its identity to the classifier.
+ * @param riskDomainTags - what the tool declares it touches, empty when it declares nothing.
+ * @returns the verdict, or `undefined` when no policy service is mounted.
+ */
+export function classifyActionRisk(
+  ctx: Context,
+  toolName: string,
+  riskDomainTags: readonly string[],
+): ActionRiskClassification | undefined {
+  const presets = ctx.get('permissionPresets') as RiskPolicyPort | undefined
+  return presets?.classifyAction({ actionId: toolName, domainTags: riskDomainTags })
+}
+
+/**
+ * The workspace-trust operation the facts reader needs, named structurally for
+ * the same reason as {@link RiskPolicyPort}: `@deepseek-ai/dsh-workspace-trust`
+ * sits above this package.
+ */
+interface WorkspaceTrustPort {
+  /**
+   * Resolve the trust state bound to a working directory.
+   * @param cwd - the session working directory.
+   * @returns the workspace's current trust state.
+   */
+  stateFor(cwd: string): Promise<PolicyContextFacts['workspaceTrust']>
+}
+
+/**
+ * Read the context facts a policy may see, from what the composition mounts
+ * (P2-05 must[0]; BLOCKED-201).
+ *
+ * Called by both dispatch paths immediately before `enforceManifestedAction`,
+ * which is why it lives here: until this existed no caller passed facts at
+ * all, so every shipped policy question carried the fail-closed defaults and
+ * no rule about trust or risk could ever match. One reader means the two paths
+ * cannot answer the same question differently.
+ *
+ * An unmounted service reads as the most restrictive value rather than the
+ * most permissive: a policy written against a fact that silently defaulted
+ * open would be enforcing something other than what it says.
+ *
+ * The session's own `cwd` is the workspace asked about, which is the key
+ * `stateFor` is defined on. `@deepseek-ai/dsh-agent-instructions` asks about a
+ * discovered project root instead, because the thing it gates is loading that
+ * root's files; what runs here is an action of this session, in this directory.
+ * @param ctx - the mounting context, consulted for the optional fact services.
+ * @param agent - the dispatching agent, whose session carries the cwd and the preset.
+ * @param classified - the action's risk verdict, already computed by {@link classifyActionRisk}.
+ * @returns every declared fact, each either observed or at its fail-closed value.
+ */
+export async function readPolicyContextFacts(
+  ctx: Context,
+  agent: Agent,
+  classified: ActionRiskClassification | undefined,
+): Promise<PolicyContextFacts> {
+  const trust = ctx.get('workspaceTrust') as WorkspaceTrustPort | undefined
+  const cwd = agent.session.header.cwd
+  const workspaceTrust = trust === undefined || cwd === undefined ? 'untrusted' : await trust.stateFor(cwd)
+  return {
+    workspaceTrust,
+    // STILL the fail-closed default, and now recorded at its one producer
+    // rather than defaulted invisibly inside the enforcement point. There is
+    // nothing to read: `PermissionPostureFact`'s four members name no preset
+    // any composition configures — the shipped table is `read-only`,
+    // `workspace-write`, `danger-full-access`, and preset names are a
+    // deployment's own — so no real posture can be spelled in that vocabulary
+    // (BLOCKED-202). The other two facts are real; this one waits on a ruling
+    // about the vocabulary, and says so here rather than looking supplied.
+    permissionPosture: 'default',
+    // The class the deployment's risk policy put this action in, computed
+    // before policy is asked. `security-sensitive` when nothing classified it
+    // is the classifier's own unknown default, restated here for the case
+    // where no policy service is mounted at all.
+    riskClass: (classified?.riskClass ?? 'security-sensitive') as PolicyContextFacts['riskClass'],
+  }
 }
 
 /**
@@ -198,11 +295,17 @@ export async function gateActionRisk(
   agent: Agent,
   toolName: string,
   riskDomainTags: readonly string[],
+  classified?: ActionRiskClassification,
 ): Promise<RiskRefusal | undefined> {
   const presets = ctx.get('permissionPresets') as RiskPolicyPort | undefined
   if (presets === undefined) return undefined
   const undeclared = riskDomainTags.length === 0
-  const classification = presets.classifyAction({ actionId: toolName, domainTags: riskDomainTags })
+  // The caller classifies first so the POLICY layer can see the class, and
+  // hands the result here rather than letting this classify again: one action
+  // classified twice is two answers that can disagree, and the policy decision
+  // and the risk gate disagreeing about what an action IS would be the worst
+  // possible pair to have drift.
+  const classification = classified ?? presets.classifyAction({ actionId: toolName, domainTags: riskDomainTags })
   const preset = presets.current(agent.session)
   // The gate's decision is recorded for EVERY branch, including the one that
   // lets the action through. A manifest records the action's intrinsic

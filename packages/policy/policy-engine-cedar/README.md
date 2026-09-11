@@ -45,7 +45,7 @@ The key is the policy's identity, and it is what the audit trail records. Submit
 | `resource` | `Dsh::Resource::"<kind>:<path\|host\|command\|ref>"` — the target kind survives, so a path and a command with the same text are different resources |
 | `context.sideEffectClass` | the manifest's class |
 | `context.classified` | whether that class was declared or defaulted |
-| `context.workspaceTrust`, `context.permissionPosture` | the declared context facts |
+| `context.workspaceTrust`, `context.permissionPosture`, `context.riskClass` | the declared context facts |
 | `context.world` | `"absent"` until P3-01 lands `ExecutionWorld`; a policy may refuse on it |
 | `context.tokenPresented` | whether a capability token accompanied the action |
 
