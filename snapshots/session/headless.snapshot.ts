@@ -1,7 +1,7 @@
 /** Recorded-session replay through the shipped headless `dsh` profile. */
 
 import { cp, copyFile, mkdir, readFile, readdir, rm, utimes, writeFile } from 'node:fs/promises'
-import { existsSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { homedir } from 'node:os'
 import { basename, delimiter, dirname, join } from 'node:path'
@@ -310,6 +310,51 @@ function turnReasonFromSession(log: string): JsonObject | undefined {
   return endings.at(-1)
 }
 
+/** One scripted provider failure from a scenario's `replay.override.json`. */
+interface DeclaredThrow {
+  readonly message?: string
+  readonly code?: string
+}
+
+/**
+ * The provider errors a scenario's replay override SCRIPTS, if any.
+ *
+ * Read from the file the override already points at, so a scenario declares its
+ * expected failure once, where it declares the failure itself. An absent or
+ * unreadable override declares nothing, which keeps BLOCKED-127's refusal.
+ * @param dir - the scenario directory.
+ * @returns every declared throw, empty when the scenario scripts none.
+ */
+function declaredReplayThrows(dir: string): DeclaredThrow[] {
+  let raw: string
+  try {
+    raw = readFileSync(join(dir, 'replay.override.json'), 'utf8')
+  } catch {
+    // No override file: the scenario declares no failure, so none is excused.
+    return []
+  }
+  const parsed = JSON.parse(raw) as unknown
+  if (!Array.isArray(parsed)) return []
+  return parsed.filter((entry): entry is DeclaredThrow & { kind: string } =>
+    typeof entry === 'object' && entry !== null && (entry as { kind?: unknown }).kind === 'throw')
+}
+
+/**
+ * Whether an observed error turn is the failure the scenario scripted.
+ *
+ * Compared on `message` AND `code`, both of which the override states and the
+ * turn records. A declared throw excuses the run it describes and no other
+ * (BLOCKED-127).
+ * @param reason - the observed `turn/end` reason.
+ * @param declared - the scenario's scripted throws.
+ * @returns true when one declared throw matches what actually arrived.
+ */
+function matchesDeclaredThrow(reason: JsonObject, declared: readonly DeclaredThrow[]): boolean {
+  const error = reason.error as { message?: unknown; code?: unknown } | undefined
+  if (error === undefined) return false
+  return declared.some(entry => entry.message === error.message && entry.code === error.code)
+}
+
 function stderrFromSession(log: string): string {
   let output = ''
   let started = false
@@ -605,6 +650,30 @@ describe('headless recorded-session snapshots', () => {
     }
   })
 
+  // BLOCKED-127's refusal, and the one run it excuses. The guard reads the
+  // OUTCOME, so a scenario whose subject IS a provider error could never be
+  // refreshed — `error-finish` scripts `{"kind":"throw"}` and its recording went
+  // permanently stale the first time anything changed the pre-turn events.
+  // The exemption is the match, never the declaration.
+  it('lets a scenario refresh past the error turn it SCRIPTED, matched on message and code', () => {
+    const reason = { kind: 'error', error: { message: 'simulated provider error (HTTP 401)', code: 'AUTH' } }
+    const declared = [{ message: 'simulated provider error (HTTP 401)', code: 'AUTH' }]
+
+    expect(matchesDeclaredThrow(reason, declared)).toBe(true)
+  })
+
+  it('still refuses when the scenario declared a throw and died of something else', () => {
+    // A declaration excuses the run it describes and no other; otherwise one
+    // scripted failure would launder every crash in its scenario, which is the
+    // write-back BLOCKED-127 exists to stop.
+    const declared = [{ message: 'simulated provider error (HTTP 401)', code: 'AUTH' }]
+
+    expect(matchesDeclaredThrow({ kind: 'error', error: { message: 'socket hang up', code: 'ECONNRESET' } }, declared)).toBe(false)
+    expect(matchesDeclaredThrow({ kind: 'error', error: { message: 'simulated provider error (HTTP 401)', code: 'RATE_LIMIT' } }, declared)).toBe(false)
+    // No declaration at all keeps the refusal exactly as it was.
+    expect(matchesDeclaredThrow({ kind: 'error', error: { message: 'simulated provider error (HTTP 401)', code: 'AUTH' } }, [])).toBe(false)
+  })
+
   it('keeps packed chunk rows logically equal to their unpacked recording', async () => {
     const source = await readFile(join(snapshotsRoot, 'hook-cc-pretool-deny', 'session.jsonl'), 'utf8')
     const packed = await readFile(join(snapshotsRoot, 'packed-chunks', 'session.jsonl'), 'utf8')
@@ -804,8 +873,23 @@ describe('headless recorded-session snapshots', () => {
         // scenario produced a usable turn. A provider dying halfway writes a
         // partially correct expectation, which is harder to spot than an empty
         // one.
+        const declaredThrows = scenario.manifest.replay?.override === true
+          ? declaredReplayThrows(scenario.dir)
+          : []
         for (const [index, log] of actualLogs.entries()) {
-          if (turnReasonFromSession(log.content)?.kind === 'error') {
+          const reason = turnReasonFromSession(log.content)
+          // A scenario whose whole subject is a provider error SCRIPTS one, and
+          // its recording cannot be refreshed while every error turn is read as
+          // a failed run. `error-finish` is that scenario, and the first change
+          // to the pre-turn event sequence — a host identity — made its fixture
+          // permanently stale.
+          //
+          // The exemption is the MATCH, never the declaration: a scripted throw
+          // whose message and code are the ones that actually arrived is the run
+          // the scenario asked for. A scenario that declares a throw and then
+          // dies of something else is still the failure 127 exists to refuse,
+          // and a declaration must not launder every crash in its scenario.
+          if (reason?.kind === 'error' && !matchesDeclaredThrow(reason, declaredThrows)) {
             throw new Error(
               `${scenario.name}: session ${String(index)} ended with an error turn, so this run recorded a FAILURE rather than a session. `
               + 'Refusing to write it over the committed expectation (BLOCKED-127). `record` needs a reachable provider; '
