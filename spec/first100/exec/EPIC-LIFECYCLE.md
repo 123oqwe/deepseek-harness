@@ -95,6 +95,18 @@
 | 5.1.9 | **到完成的路线**:每次 `--accept` 后 delegate 重跑 `check-ready`,把新 READY 的 epic 按 5.1.1/5.1.2 分给先空出来的 lane;等观测期间 lane 按 1.12 写下一项 preFlight。以 09-10 的节奏(每 lane 约 4–6 小时一个 epic 的 C→F,观测批处理),82 项未验收 ≈ 350–500 lane 小时,两条 lane 24×7 约 2–3 周,加返工与机器损耗按 3–4 周计;第三 lane 视机器与审查余量再定。 | 估算,非承诺 |
 | 5.1.10 | **delegate 不进 lane 的工作树**:规划文档、签字、registry/adjudication 更正一律在推送时于 `gate-wt2` 叠到被推的 SHA 之上再推,lane rebase 即得;registry 对 vendored sources 逐字节钉住,A 类路径更正只走 `adjudication.json` 的 `deliverablePathPatches`,且 `declaredPaths` = files[] ∪ stages,先查再改。 | §12.81 |
 
+### 5.2 delegate 换班协议(用户批准,2026-09-10 21:10 EDT;整改令 §12.82)
+
+**为什么**:delegate 会话同样会因对话记录过大而 `Prompt is too long`(执行者 09-10 18:49Z 已死过一次);把"CTO"做成可换班的岗位,而不是一个人。
+
+| # | 规则 | 依据 |
+| --- | --- | --- |
+| 5.2.1 | **裁决先进文件再发消息**:任何裁决必须先写进 `BLOCKED-QUEUE.md`(Answered / Standing)或 `plan-rectification` 日志,消息只是通知;没进文件的裁决不算数(09-10 "九行"事故:写在消息里、换人后找不到)。 | §12.81 |
+| 5.2.2 | **交班单** `spec/first100/exec/DELEGATE-CHECKPOINT.md`:每次推送、签字、撤签由 delegate 在 gate-wt2 叠加更新(5.1.10),内容 = 远端头、在飞 SHA 与门③/CI 状态、ACCEPTED 与待撤/待复核、每条 lane 的地址/worktree/队列、BLOCKED 号水位、待用户决定、工具位置、机器约束。 | 本节 |
+| 5.2.3 | **主动换班**:delegate 会话对话记录 > 100 MB 或 > 7 天,在下一个干净断点(推送之后)换——写交班单 → 告两条 lane「delegate 换班,新会话会自报」→ 用户起新会话发「继续监督 first100」→ 新会话读记忆指针 + 交班单 → 向 lane 发核对句 → 核完接管 → 旧会话退出。换班是常规动作。 | 5.1.7 同型 |
+| 5.2.4 | **意外死亡**:lane 向 delegate 发消息失败时不停工——按已批准的计划做完手头 stage,不自选下一项,每 30 分钟向新出现的 delegate 会话重发「报到:当前 SHA / 工作树 / 下一步等什么」;新 delegate 核完交班单与门③状态前不签字、不推。 | 24×7 令 |
+| 5.2.5 | 新 delegate 的第一件事:对最近 24h 签的字重做 4.4d(服务可达性 + 出厂 profile 是否挂载),而不是信任交班单里的"已签"。 | 09-10 三例零到达 |
+
 ## 6. 谁决定什么
 
 | 事项 | 谁 |

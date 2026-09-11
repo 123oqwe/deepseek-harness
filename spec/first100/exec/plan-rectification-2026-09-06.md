@@ -1201,3 +1201,8 @@ P2-03 撤签后门 (e) 正确地红了五条(`@modelcontextprotocol/sdk`、`open
 **§12.78 addendum(2026-09-10 16:50 EDT)**:§12.78 的指令已由执行者当日全部完成——P 换到 storage facet(`4a8be4a65f`)、json facet + 死冻结 supersede(`ce13004c16`)、五处修正 + sqlite facet(`666c9067bf`)、U 真调 `runUpgrade` 并冻 73 条(`e5488e86c6` / `0b70339760`);C/P/U 三格 GREEN@`e3004c9276`。F 故障矩阵最小行集九行(租约被顶替 switch 拒 / backend 无 facet 具名拒 / 迁移模块 import 抛错 / 返回非数组 / sqlite sidecar 失败 / exportUnit 目标不可写 / recover 时 rollback 目录缺失 / `--confirm` digest 不匹配 / pnpm 代码回滚失败)由 lane A 做 F。
 
 ### 12.81 我的两处错,由 lane A 抓出并更正:① `1444312855` 手改 `tests/first100/registry.json`——registry 对 `spec/first100/sources` 逐字节钉住(`extract-registry.mjs --check`),A 类路径更正走 `tests/first100/adjudication.json` 的 `deliverablePathPatches`,不改 registry;且 `spec/task-profile.schema.json` 本就在 stages.C 里,`declaredPaths` = files[] ∪ stages,根本不需要更正——已在推送前还原(本笔);② `slice-gate(-cordis)` 是 `&&` 链,pairing 红后第 5–10 环从未执行,前任今日所有"5/6 绿"皆为未执行报绿——门③用 `run-registry-gates.mjs`(held-back,不短路)故已推 SHA 未受影响;改成不短路 runner 记 BLOCKED-181,归 lane A;③ 5.1.10:delegate 不再往 lane 的工作树提交,规划文档/签字/更正一律在推送时于 gate-wt2 叠到被推 SHA 之上(2026-09-10 16:50 EDT)
+
+### 12.82 delegate 换班协议(EPIC-LIFECYCLE §5.2)+ 交班单 DELEGATE-CHECKPOINT.md;本会话(62bc2b9b,55 MB / 10 天)本次推送后主动换班(2026-09-10 21:15 EDT)
+
+用户问「你这个 session 早晚有 compact 不动的一天,怎么办」。答:不靠不死,靠死了也不算事——裁决先进文件(5.2.1)、仓库内交班单(5.2.2)、主动换班阈值(5.2.3)、意外死亡时 lane 不停工并向新会话报到(5.2.4)、新 delegate 先对近 24h 签字重做 4.4d(5.2.5)。用户只需记一句:新会话发「继续监督 first100」。
+**今日账**:ACCEPTED 28;CI 34540140360 @ b811725fc2 红(P4-11 挂载未声明 schemastery → 出厂 profile 产物面起不来;P1-10.F 两处 type-aware lint),P2-05 C/P/U 按 §12.6-B 准入;三例已验收零到达:P4-11(未签)、P4-01(BLOCKED-183,待撤)、P1-07(BLOCKED-185,待复核 + 用户产品决定);BLOCKED-186 门未纳入集合且本身已红。
