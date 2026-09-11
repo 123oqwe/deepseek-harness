@@ -1082,18 +1082,27 @@ export default class RunPlugin extends Service {
    * @param agent - a live agent this mount still holds a Run for.
    */
   private async pauseRun(agent: Agent): Promise<void> {
+    // **The hand-back comes FIRST, before this function awaits anything, and
+    // the order is the whole mechanism.** A fiber unload starts every
+    // disposer concurrently and each one begins with `await Promise.resolve()`
+    // (`vendor/cordis/src/fiber.ts`), so work done synchronously at the top of
+    // this body runs a full microtask before the lease provider's teardown
+    // clears its handle. Moved after the `advance` below, `release` finds no
+    // open database and a cleanly unloaded host keeps its session's work item
+    // until the lease lapses — indistinguishable, to the next host, from a
+    // crash.
+    //
+    // **Cordis promises no such ordering**, and the guarantee is carried by
+    // this epic's own cases rather than by the runtime: `PARKS a running Run`
+    // and `continues a parked Run IMMEDIATELY after a clean unload` fail the
+    // day a re-vendor changes that prefix, which is what the mutation for this
+    // behaviour models (BLOCKED-197).
+    const lease = agent.runLease
+    if (lease !== undefined) this.ctx.leaseStore.release(lease.token)
     const runId = agent.runId
     if (runId !== undefined && this.service.get(runId)?.state === 'running') {
       await this.service.advance(runId, 'paused', [], Date.now())
     }
-    // **The lease is NOT handed back here, and it cannot be.** Measured:
-    // `release` finds no open database — the provider cleared its handle
-    // synchronously while this disposer was awaiting the transition above, and
-    // fiber unload gives the two no order to rely on. A released lease on clean
-    // shutdown therefore needs a hand-back at a point where the store is still
-    // open, which this disposer is not. Recorded in BLOCKED-197; until then a
-    // cleanly unloaded host's work item stays held until it lapses, exactly as
-    // a crashed one's does.
   }
 
   /**

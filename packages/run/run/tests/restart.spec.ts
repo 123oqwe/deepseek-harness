@@ -201,20 +201,23 @@ describe('P4-01 acceptance[0] and acceptance[2]: a restart adopts its Run instea
       .toStrictEqual(['accepted', 'planning', 'running', 'paused'])
   })
 
-  it('holds its work item past a clean unload too, so a restart waits out the lease either way', async () => {
-    // **Not the behaviour this case was written to assert, and the change is
-    // the finding.** It was `continues a parked Run IMMEDIATELY after a clean
-    // unload, waiting out no lease` — until the release turned out to be
-    // impossible from the plugin's disposer: the provider clears its handle
-    // synchronously while this disposer awaits the transition before the
-    // release, and a fiber unload runs every disposer concurrently, so there is
-    // no order to rely on either. A clean shutdown therefore parks the Run but
-    // keeps the work item, and the next boot is refused exactly as it is after
-    // a crash.
+  it('RELEASES its work item on a clean unload, so the next mount continues at once and waits out no lease', async () => {
+    // **This case was the opposite of itself until BLOCKED-197 closed.** It
+    // read `holds its work item past a clean unload too, so a restart waits out
+    // the lease either way`, and it was true: the hand-back sat after an
+    // `await`, so the lease provider's teardown had already cleared its handle
+    // and `release` found no open database. Moving it above that await — before
+    // `pauseRun` awaits anything — makes it succeed, measured 10 times out of
+    // 10 before the change was adopted.
     //
-    // Frozen as it is rather than deleted, because the difference between
-    // "cleanly unloaded" and "crashed" is invisible to the next host today, and
-    // a case that says so is what reddens when BLOCKED-197 closes that gap.
+    // **The guarantee is this case, not the runtime.** Cordis promises no
+    // unload ordering; what makes the hand-back win is that every disposer
+    // begins with `await Promise.resolve()`, so synchronous work at the top of
+    // ours runs a microtask earlier. A re-vendor that changes that prefix
+    // reddens this case, which is the point of freezing it.
+    //
+    // The default lease length, deliberately: "at once" is a claim about the
+    // RELEASE, and a short lease would let an expiry pass for it.
     const path = await storePath()
     const leases = await mkdtemp(join(tmpdir(), 'dsh-run-restart-clean-'))
     roots.push(leases)
@@ -228,11 +231,12 @@ describe('P4-01 acceptance[0] and acceptance[2]: a restart adopts its Run instea
     const second = await mount(path, leases)
     const after = second.agentLoop.create(SessionId('session-clean-restart'))
 
-    expect(after.runId).toBeUndefined()
-    expect(after.leaseRefused).toBe(true)
-    // The Run was still parked, which is the half that DOES work: the state
-    // says resumable, only the authority to resume it is not free yet.
+    expect(after.leaseRefused).toBeUndefined()
+    expect(after.runId).toBe(before.runId)
+    // Parked by the unload, and continued by this mount under a lease it was
+    // issued rather than one it inherited.
     expect(second.runs.restoredNonTerminal().map(run => run.state)).toStrictEqual(['paused'])
+    expect(after.lifecycle?.epoch).toBeGreaterThan(before.lifecycle!.epoch)
   })
 
   it('takes a parked Run back to `running` at the next model step, so `paused` is a pause and not a stop', async () => {

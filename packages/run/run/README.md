@@ -258,17 +258,15 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   members, so declaring a member is what registers a type; a Run-lifecycle
   event needs a decision about what belongs in two stores, not a registration
   step.
-- **A clean unload parks its Run but cannot hand back its work item.** The Run
-  goes `running → paused` from this plugin's own disposer, because
-  `agent/disposed` cannot reach it by then — the listener is torn down with the
-  mount.
-  The lease is a different matter — the provider clears its handle
-  synchronously while this disposer awaits the transition before the release,
-  and a fiber unload runs every disposer concurrently, so `release` finds no
-  open database. A cleanly unloaded host therefore keeps its session's work item
-  until the lease lapses, exactly as a crashed one does, and the next host
-  cannot tell the two apart. `BLOCKED-197` holds it; a case freezes the measured behaviour so
-  that closing it reddens something.
+- **A clean unload parks its Run and hands its work item back, and that
+  depends on an unload prefix Cordis does not promise.** The Run goes
+  `running → paused` and the lease is released from this plugin's own disposer,
+  the release placed BEFORE anything that disposer awaits: a fiber unload runs
+  every disposer concurrently and each begins with `await Promise.resolve()`,
+  so synchronous work at the top of ours runs a microtask before the lease
+  provider clears its handle. Nothing in `vendor/cordis` guarantees that. What
+  holds it is this package's own frozen cases, which fail the day a re-vendor
+  changes it (BLOCKED-197).
 - **Continuing a Run across a restart needs a stable session id.** Adoption is
   keyed on the session, so a configured agent with no `sessionId` gets a new
   session per boot and each one correctly gets its own Run. A deployment whose

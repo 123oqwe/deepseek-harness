@@ -4871,7 +4871,7 @@ So a Run carrying sessions A and B is writable under two independent authorities
 
 ### BLOCKED-197 — a cleanly unloaded host cannot hand its work item back, so a restart is indistinguishable from a crash
 
-**Status:** OPEN, owner `dsh-run`. Opened 2026-09-11 by the delegate's ruling (note 18) on lane B's U2 measurement. Half the behaviour it names IS implemented in U2; this entry holds the half that is not.
+**Status:** CLOSED 2026-09-11 by candidate (a), after it was probed 10 times out of 10 and adopted (delegate note 28). The entry is kept because what makes the fix work is a property of the vendored runtime that nothing promises — see the closing note.
 
 **What works.** A clean unload now PARKS the Run it was doing: `running → paused`, written from `RunPlugin`'s own disposer, because `agent/disposed` cannot reach the plugin by then — Cordis unloads in reverse mount order, so this plugin goes before the agent registry that disposes its agents, and the listener is already gone when those disposals are announced. `paused` rather than a terminal state is the whole decision: a run half-way through when the operator closed the app did not succeed and was not cancelled, and reporting either would be a claim about work that is merely unfinished. Until U2 it was the one legal Run state nothing ever reached.
 
@@ -4902,7 +4902,13 @@ So a cleanly unloaded host keeps its session's work item until the lease lapses,
 
 **What U2 freezes instead**, so the gap is not silent: `holds its work item past a clean unload too, so a restart waits out the lease either way` asserts the measured behaviour — the next mount opens no Run, sets `leaseRefused`, and finds the restored Run `paused`. It reddens the day this entry closes, which is what a case about a known gap is for.
 
-**Closing condition:** a hand-back at a point where the lease store is still open. Three candidates are now nameable, and NONE is measured as working — each would have to be, before it is chosen:
+**HOW IT CLOSED, and what now holds it up.** The hand-back moved to the TOP of `RunPlugin.pauseRun`, before that function awaits anything. A fiber unload starts every disposer concurrently and each begins with `await Promise.resolve()`, so synchronous work at the top of ours runs a full microtask before the lease provider's teardown clears its handle. Probed before adoption: **10 releases, 10 successes, 0 throws**, with the case that asserted the item was still held failing every time — which is what proved the release took effect rather than being skipped.
+
+**The mechanism depends on a vendored prefix that Cordis does not promise.** There is no unload-ordering guarantee at `vendor/cordis/src/fiber.ts`; what wins is one microtask of head start. That dependency is carried by this epic's own frozen cases and not by the runtime: `RELEASES its work item on a clean unload…` and `PARKS a running Run at 'paused'…` are what fail the day a re-vendor changes the prefix, and the mutation for this behaviour — moving the hand-back back below the first `await` — reddens exactly that case, 1 of 195. **A case whose subject is a runtime property nobody guarantees is the only thing standing between this and a silent regression.**
+
+**The case that closed it was previously its own opposite**, and that is recorded rather than tidied: it read `holds its work item past a clean unload too, so a restart waits out the lease either way` and was true of the pre-fix behaviour. It was frozen deliberately as a statement of a known gap, and inverted when the gap closed.
+
+**The original closing condition, kept for the record:** a hand-back at a point where the lease store is still open. Three candidates were nameable and none was measured as working — each would have to be, before it is chosen:
 
 - **Release before the disposer's first `await`. PROBED 2026-09-11, and it WORKS — 10 releases out of 10, none threw.** The probe moved the hand-back to the top of `RunPlugin`'s disposer, synchronous, ahead of the `advance` it currently awaits, and ran the two cases that exercise a lease-holding mount five times each. Every release succeeded, and the case that asserts the item is still held afterwards failed every time — which is the confirmation that the release took effect rather than being skipped. The probe was reverted; `git diff` on the source is empty and the package is back at 194/194.
 
