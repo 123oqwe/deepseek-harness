@@ -2807,6 +2807,107 @@
         }
       ],
       "note": "acceptance[1]: 'any one hard deny is the final deny.' The first three cases state monotonicity directly; the last three are validation[1]'s 1000-permutation evidence, cited here because order-independence is the property that makes \"any one deny\" well defined — a first-match rule would make the answer depend on which plugin loaded first, which is exactly what `dsh-permission-rules` does and what this clause forbids. The permutations use eight constraints (40320 orderings) drawn by a seeded mulberry32 so a failing order reproduces; `Math.random` would make an order-dependent rule indistinguishable from flake. The silent-only case is the control that stops the invariance being satisfied by a rule that always denies. NOTE: `acceptance-coverage.schema.json` indexes acceptance clauses only (`additionalProperties: false`), so validation-clause evidence has no index row of its own and is cited from the acceptance clause it supports, with the mapping stated in `evidence-P2-05.md`."
+    },
+    {
+      "epic": "P4-11",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "P4-11 acceptance[0]: a permanent failure is not retried refuses a 4xx, a policy denial and a malformed request, naming a DIFFERENT reason for each"
+        },
+        {
+          "stage": "C",
+          "title": "P4-11 acceptance[0]: a permanent failure is not retried RETRIES 408 and 429, so \"4xx\" is not read as \"never\""
+        },
+        {
+          "stage": "F",
+          "title": "P4-11 Fault — retry decision boundary matrix fault boundary 01 a 4xx that is not 408 or 429 is permanent, and names client-error"
+        },
+        {
+          "stage": "F",
+          "title": "P4-11 Fault — retry decision boundary matrix fault boundary 02 408 is retryable, so \"4xx\" is not read as \"never\""
+        },
+        {
+          "stage": "F",
+          "title": "P4-11 Fault — retry decision boundary matrix fault boundary 04 a malformed request is invalid-input, not client-error"
+        },
+        {
+          "stage": "F",
+          "title": "P4-11 Fault — retry decision boundary matrix fault boundary 05 a policy denial is policy-denied, distinct again"
+        }
+      ],
+      "note": "acceptance[0]: '永久 4xx、policy deny、invalid input 不重试.' The clause names three kinds, and the citations keep them three: the C case refuses all three while naming a DIFFERENT reason for each, and fault boundaries 04 and 05 pin invalid-input and policy-denied as distinct classifications rather than one refusal wearing three labels. A classifier collapsing them would still refuse all three and would be wrong, because the reason is what a caller acts on.\n\nBoth controls are cited as necessary, not as decoration. '4xx is permanent' is false of 408 and 429, so a classifier reading the clause literally would refuse two retryable statuses; the C control and boundary 02 are what forbid that, and without them 'refuses every 4xx' satisfies the positive half perfectly.\n\nSERVICE / PRODUCTION (§12.46-B): all six are what the LIBRARY does — C constructs failures by hand and F drives the classifier directly. No citation observes a real provider failure reaching this classifier on a running harness; U is NOT_RUN."
+    },
+    {
+      "epic": "P4-11",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "P4-11 acceptance[1]: one run budget, however many layers spend it counts retries from DIFFERENT layers against the same total"
+        },
+        {
+          "stage": "C",
+          "title": "P4-11 acceptance[1]: one run budget, however many layers spend it returns NO usage on refusal, so a refused attempt cannot be recorded as a spent one"
+        },
+        {
+          "stage": "C",
+          "title": "P4-11 acceptance[1]: one run budget, however many layers spend it charges the delay ON ADMISSION, so a run cannot begin a wait it cannot finish"
+        },
+        {
+          "stage": "C",
+          "title": "P4-11 acceptance[1]: one run budget, however many layers spend it forbids retrying at all at maxRetries 0, rather than treating 0 as unlimited"
+        },
+        {
+          "stage": "F",
+          "title": "P4-11 Fault — retry decision boundary matrix fault boundary 18 a resolved charge is remembered, so a vanished parent cannot reset it"
+        },
+        {
+          "stage": "F",
+          "title": "P4-11 Fault — retry decision boundary matrix fault boundary 20 the store exposes no read/write pair, which is why no update can be lost"
+        }
+      ],
+      "note": "acceptance[1]: '多个插件不能使总重试超过 Run budget.' The clause is about a total that several independent spenders share, so it fails in more ways than 'the counter went too high'. The first C case is the positive: retries from DIFFERENT layers count against one total. The other three close the ways a total can be evaded without ever exceeding it — a refused attempt recorded as spent would exhaust the budget early, a delay charged after the wait would let a run begin a wait it cannot finish, and reading 0 as unlimited would remove the budget entirely at its most restrictive setting.\n\nThe two fault citations are the ones that make 'cannot exceed' hold across a lifetime rather than within a call. Boundary 18: a resolved charge is remembered, so a layer whose parent is GONE cannot reset the total by re-walking a broken chain. Boundary 20: the store exposes no read/write pair, so there is no interleaving in which two spenders both read the same remaining budget and both spend it — the lost-update shape that a naive counter has and this one cannot.\n\nSERVICE / PRODUCTION (§12.46-B): all six are what the LIBRARY does. That several PLUGINS really do share one run budget in production is not observed by any citation here; U is NOT_RUN."
+    },
+    {
+      "epic": "P4-11",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "P",
+          "title": "P4-11 circuit breaker provider refuses an attempt at the threshold without reaching the operation"
+        },
+        {
+          "stage": "P",
+          "title": "P4-11 circuit breaker provider still executes below the threshold"
+        },
+        {
+          "stage": "P",
+          "title": "P4-11 circuit breaker provider opens one destination without opening another under the same provider"
+        },
+        {
+          "stage": "P",
+          "title": "P4-11 circuit breaker provider does not count a failure the classifier calls permanent"
+        },
+        {
+          "stage": "F",
+          "title": "P4-11 Fault — endpoint-health boundary matrix fault boundary 21 an endpoint REFUSAL counts: a 503 is the endpoint saying it is unwell"
+        },
+        {
+          "stage": "F",
+          "title": "P4-11 Fault — endpoint-health boundary matrix fault boundary 22 a TIMEOUT counts too: an endpoint that stopped answering is unwell"
+        },
+        {
+          "stage": "F",
+          "title": "P4-11 Fault — endpoint-health boundary matrix fault boundary 23 a MALFORMED request does not: the request is wrong, not the endpoint"
+        },
+        {
+          "stage": "F",
+          "title": "P4-11 Fault — endpoint-health boundary matrix fault boundary 24 an AUTH failure does not: a rejected credential says the caller is wrong"
+        }
+      ],
+      "note": "acceptance[2]: 'provider 故障时 circuit 打开且可恢复.' The citations cover the OPENING half completely and the RECOVERABLE half not at all, which is stated here rather than left for a reader to discover.\n\nOpening: the breaker refuses AT the threshold without reaching the operation, still executes below it (so the refusal is not a constant), and opens one destination without opening another under the same provider — the isolation that makes 'provider 故障' mean this endpoint rather than every endpoint. The four endpoint-health boundaries then fix WHICH failures count: a 503 and a timeout are the endpoint saying it is unwell, while a malformed request and a rejected credential say the CALLER is wrong and must not open anything. Without that negative half, a breaker opening on any error at all would satisfy the positive citations.\n\n**'可恢复' is NOT observed by any frozen case.** It is implemented by delegation — `retry-cockatiel/src/index.ts:103` passes `halfOpenAfter: this.config.openMs`, and cockatiel owns the open period and the half-open probe — but no case in this epic drives a breaker through open → half-open → closed. The nearest is 'unloads and rolls back: the service goes with its fiber, and a remount starts closed', which is disposal rather than the breaker's own recovery, and it is deliberately NOT cited here: it would make the recovery half look covered by a case about something else.\n\nSERVICE / PRODUCTION (§12.46-B): the P citations mount the real provider on a Context and drive it, so they are stronger than a pure-library observation, but the failures are injected rather than produced by a real provider outage. U is NOT_RUN."
     }
   ]
 }
