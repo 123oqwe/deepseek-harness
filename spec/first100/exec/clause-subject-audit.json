@@ -1304,15 +1304,15 @@
           {
             "name": "cloudevents/spec",
             "npm": "cloudevents/spec",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. A specification repository, not a package; measured absent. The run seam's events use this program's own SessionEventMap names."
+            "reason": "U2 scope (R6/§7.9): this remediation slice changes no event vocabulary, so the disposition is unchanged in substance and restated live because the row is no longer ACCEPTED. Previously recorded with the read-only `accepted-unadopted` wording, which stated the row's status rather than the ruling; `verify-adapt-dispositions.mjs:165-167` correctly refuses that wording on a reopened row. The sunk-cost judgement still holds for the hand-written event log -- the implementation runs and nothing propagates from it -- and R6/§7.9's measurement is carried forward rather than re-asserted. A specification repository, not a package; measured absent. The run seam's events use this program's own SessionEventMap names. Re-evaluated at U2's F stage."
           },
           {
             "standard": "CloudEvents attribute names (id/source/type/time/subject/datacontenttype)",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. No frozen case of this epic names a CloudEvents attribute. Related to P4-06's card, where the delegate has ruled the inbox table SHOULD adopt these names — that is future work under P4-06, not a claim this epic can make."
+            "reason": "U2 scope (R6/§7.9): U2 changes no event vocabulary; restated live because the row is no longer ACCEPTED (the prior `accepted-unadopted` wording is read-only and the gate refuses it on a reopened row). No frozen case of this epic names a CloudEvents attribute. P4-06's card is where the delegate ruled the inbox table SHOULD adopt these names; that is P4-06's work and this slice makes no claim on it. Re-evaluated at U2's F stage."
           },
           {
             "standard": "A2A TaskState / MCP TaskStatus names at surfaces",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. The run seam exposes its own lifecycle states; no surface maps them to A2A or MCP names."
+            "reason": "U2 scope (R6/§7.9): U2 changes no event vocabulary; restated live because the row is no longer ACCEPTED (the prior `accepted-unadopted` wording is read-only and the gate refuses it on a reopened row). The run seam exposes its own lifecycle states and no surface maps them to A2A or MCP names. Both standards are owned by P4-05 per the card's §1 table, which records P4-01 as accepted-without-adopting and ownership moved on, so adopting them here would take a shape back from its current owner. Re-evaluated at U2's F stage, when the surfaces those names would appear on are the thing under test."
           }
         ],
         "rejectedAbsent": [],
@@ -2350,6 +2350,79 @@
         "recordedBeforeFirstLine": true,
         "realized": null,
         "note": "CONTRACT_WRITE with an EMPTY adopted/deviations/rejectedAbsent triple, and that is the row rather than an omission: the ledger lists exactly two OSS entries for P4-02, `a2aproject/A2A Task/Message` as role=reference (naming only) and `W3C PROV (per-field provenance)` as role=reject ('Overkill'), and neither carries an npm name -- so there is nothing for gate (b) to scan for and nothing for its positive control to find. The make-vs-use question for this epic is therefore not 'which library' but 'which vocabulary this repository already owns must be imported instead of minted a second time', which is what standardsImported records. Three open questions block the first line of code and are stated in evidence-P4-02.md rather than assumed away: (1) the production call site -- `core/agent` constructs no agents, `packages/run/task-profile` is mounted in no bundle, and the only shape that reaches all six intake origins puts the writer in `run/run/src/index.ts`, which is NOT in files[] (only its types.ts is); this is the P2-02 / P6-07 / P1-10 zero-arrival pattern (§12.69, §12.75, §12.78) and I will not write a compiler with no caller and report it built. (2) the files[] vs stages.C disagreement above. (3) validation[2]'s persistence medium -- §12.78's rule asked before code: session log (which 'model-visible <=> logged' would force if the profile ever reaches a model request), P4-01's RunEvent log, or a storage-hub domain unit whose KvUnitDescriptor.version carries the version-revision semantics; the three differ in exactly the way that reversed P1-10, so none is chosen here. Two pointers in the lane assignment do not resolve at e3004c9276 and are reported as lifecycle bugs per EPIC-LIFECYCLE's own instruction: there is no §5.1 (section 5 has no subsections) and plan-rectification ends at §12.78, so §12.79-§12.80 do not exist on this base."
+      }
+    },
+    "P4-01.U2": {
+      "makeVsUse": {
+        "ledgerRow": "P4-01",
+        "card": {
+          "heading": "#### P4-01",
+          "sheetCommit": "bd408a403a"
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": "CONTRACT_WRITE",
+        "adopted": [],
+        "deviations": [
+          {
+            "name": "cloudevents/spec",
+            "npm": "cloudevents/spec",
+            "reason": "U2 scope (R6/§7.9): this remediation slice changes no event vocabulary, so the disposition is unchanged in substance and restated live because the row is no longer ACCEPTED. Previously recorded with the read-only `accepted-unadopted` wording, which stated the row's status rather than the ruling; `verify-adapt-dispositions.mjs:165-167` correctly refuses that wording on a reopened row. The sunk-cost judgement still holds for the hand-written event log -- the implementation runs and nothing propagates from it -- and R6/§7.9's measurement is carried forward rather than re-asserted. A specification repository, not a package; measured absent. The run seam's events use this program's own SessionEventMap names. Re-evaluated at U2's F stage."
+          },
+          {
+            "standard": "CloudEvents attribute names (id/source/type/time/subject/datacontenttype)",
+            "reason": "U2 scope (R6/§7.9): U2 changes no event vocabulary; restated live because the row is no longer ACCEPTED (the prior `accepted-unadopted` wording is read-only and the gate refuses it on a reopened row). No frozen case of this epic names a CloudEvents attribute. P4-06's card is where the delegate ruled the inbox table SHOULD adopt these names; that is P4-06's work and this slice makes no claim on it. Re-evaluated at U2's F stage."
+          },
+          {
+            "standard": "A2A TaskState / MCP TaskStatus names at surfaces",
+            "reason": "U2 scope (R6/§7.9): U2 changes no event vocabulary; restated live because the row is no longer ACCEPTED (the prior `accepted-unadopted` wording is read-only and the gate refuses it on a reopened row). The run seam exposes its own lifecycle states and no surface maps them to A2A or MCP names. Both standards are owned by P4-05 per the card's §1 table, which records P4-01 as accepted-without-adopting and ownership moved on, so adopting them here would take a shape back from its current owner. Re-evaluated at U2's F stage, when the surfaces those names would appear on are the thing under test."
+          }
+        ],
+        "rejectedAbsent": [
+          "@temporalio/sdk",
+          "@restatedev/restate-server",
+          "@dbos-inc/dbos-sdk",
+          "xstate",
+          "@event-driven-io/emmett"
+        ],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "Arrival only, and narrowed from the row's residual because the data half already landed: the 10-state table, the durable store and the restart READ all exist and run in production (`RunService.restore` at index.ts:849 over createFileRunStore). What U2 still writes is the drivers -- the agent loop advancing `planning -> running -> succeeded|failed|cancelled` through `advance`, and a startup path that enumerates `listNonTerminal()` and takes `resume()`'s decision -- plus the frozen cases and the shipped-profile observation for both. No new store, no event-name change, and not P4-02's `accepted -> planning`, which stays with P4-02 as its first production caller.",
+        "probes": [
+          {
+            "claim": "the durable half of acceptance[0] already arrives in production; only the enumerate-and-decide half is missing",
+            "how": "read packages/run/run/src/index.ts:849 and grep production callers of listNonTerminal/resume",
+            "result": "differs",
+            "evidence": "`Service.init` calls `RunService.restore(createFileRunStore(this.config.storePath))` at :849, and `restore` reads `store.loadAll()` into the registry (:314-318), so a new process does start from the persisted Runs. `listNonTerminal` (:429) and `resume` (:440) have no caller anywhere outside this package and none inside it either -- nothing enumerates what was restored."
+          },
+          {
+            "claim": "BLOCKED-183 lists openForSession as unreachable, and that one line is wrong",
+            "how": "read the `agent/session-start` listener path in packages/run/run/src/index.ts",
+            "result": "differs",
+            "evidence": "`open(agent)` calls `this.service.openForSession(runId, agent.id, Date.now())` at :669, and `open` is the `agent/session-start` listener registered at :853. So openForSession IS a production caller, inside the package. BLOCKED-183's load-bearing claim -- no consumer outside the package, and advance/listNonTerminal/resume with no caller at all -- is unaffected. Reported to the delegate rather than corrected here, because that entry is the basis of P4-01's withdrawal."
+          },
+          {
+            "claim": "acceptance[2] is not merely unwired: the current shape prevents a Run from spanning sessions",
+            "how": "read `open()` and grep callers of attachSession",
+            "result": "differs",
+            "evidence": "`open()` returns early when `agent.runId !== undefined` and otherwise mints `run-<uuid>` fresh per session, so every session gets its own Run; `attachSession` (:415) has no caller. A Run therefore never spans sessions in production, which makes acceptance[2] a scope question for this slice rather than a wiring gap."
+          }
+        ],
+        "gapCheck": [
+          {
+            "community": "dsh_workflow",
+            "gap": "run.json + events.jsonl store -- prior art only, per the ledger; it stores a run log but owns no lifecycle driver, which is exactly what this slice is missing.",
+            "clause": "outOfScope: prior art, not adoptable"
+          },
+          {
+            "community": "loopx",
+            "gap": "A Python control plane above the harness; not adoptable for an in-process lifecycle driver.",
+            "clause": "outOfScope: wrong process"
+          }
+        ],
+        "expectedDeletedPct": "3",
+        "recordedBeforeFirstLine": true,
+        "realized": null,
+        "note": "P4-01.U2 remediation slice, lane B, recorded at b2ecf8a52c after P4-01's sign-off was withdrawn under BLOCKED-183. Scope is ARRIVAL, not vocabulary: the agent loop drives `planning -> running -> terminal` and startup enumerates non-terminal Runs and takes resume()'s decision, both frozen and observed on a shipped profile. That scope is what settles the three adapt dispositions: they are restated with live reasons because the row is no longer ACCEPTED and `verify-adapt-dispositions.mjs:165-167` refuses the read-only `accepted-unadopted` wording on a reopened row, but their SUBSTANCE is unchanged because U2 touches no event name. `rejectedAbsent` lists the five ledger rejects that carry npm names (temporal, restate, dbos, xstate, emmett); `cloudevents/spec` has none and is a deviation instead. Three open questions are in preflight-P4-01-U2.md and the first is a scope question the delegate owns: whether acceptance[2] belongs to U2 at all, given that its second half needs the subagent seam rather than the run seam. This record was written in lane B's tree, where P4-01 is still ACCEPTED, so `verify-adapt-dispositions.mjs` here can only prove the shape is well-formed -- the real verification is on the delegate's tree, which carries the withdrawal."
       }
     }
   },
