@@ -21,6 +21,22 @@ Measured while writing `verify-import-integrity` (2026-09-10, lane B). **Measure
 
 **Closes when** either the Client face's resolution contract is explicitly taken over by some epic's clause — naming the consumption paths it guarantees — or those 320 edges are put into the manifests. Not decided in this slice.
 
+### BLOCKED-194 — P2-05 must[3]: the audit recorded the decision the kernel then overrode, so a veto was never logged
+
+**Status: FIXED in this slice.** Found while writing P2-05's Fault-stage case for a kernel with no `policyDecider`: the case asserted the audit record showed the refusal, and went red showing `permit`.
+
+**The defect.** `enforceAction` built the `PolicyAuditRecord` from `composed.decision` and called `kernel.auditAppend` **before** `kernel.policyEnforcement` bound the decision. When the kernel's verdict overrode a permit, the returned decision became `policy-unavailable` while the record already written said `permit`. So must[3]'s explain trace recorded a decision that was not the one enforced, and the action a reader most needs explained — a kernel veto over an engine's permit — was the single case the log could not show.
+
+**Why it went unnoticed.** The one Usage case that exercised a kernel deny asserted the old behaviour as though it were the contract: *"the audit records what the engine said, and the dispatch records what the kernel bound."* That sentence is a description of the bug, written as a rule. It is not enough for a case to be green; it has to be green about the right thing.
+
+**It also explains [BLOCKED-187](#blocked-187)'s diagnosis cost.** Every tool call on a factory profile was refused `policy-unavailable` because the placeholder kernel overrode a real engine's permit. Even with an audit sink configured — which [BLOCKED-191](#blocked-191) records that no shipped profile has — the record would have said `permit`, so the log could not have identified the producer. The differential experiment that was run instead was not merely convenient; with this defect in place it was the only route.
+
+**The fix.** The binding moves ahead of the append, the record carries the decision that was **enforced**, and a new optional `overrode` field carries the composed decision when — and only when — the kernel displaced it. Both halves are recorded because neither alone explains the outcome: `decision` says what happened, `overrode` says what the policy layer had decided before the veto. Its absence on an ordinary decision is the signal that no veto occurred.
+
+**Sensitivity.** Recording `composed.decision` again — which is exactly what appending before the binding produced — reddens the Fault case alone; so does dropping the `overrode` field. One Usage case changed its assertion (`lets the KERNEL bind: a kernel deny refuses a call the policy permitted`); its **title is unchanged**, so P2-05's U freeze entry does not move.
+
+**What this does not close.** The record still reaches no reader on a shipped profile — that is [BLOCKED-191](#blocked-191), and it is why both cases above observe through a test sink.
+
 ### BLOCKED-193 — P6-07 readiness: every clause production needed, production already built somewhere else
 
 **Status: MEASURED, awaiting ruling.** Recorded per §5.1.13 against the re-measurement in [`preflight-P6-07-U.md`](preflight-P6-07-U.md), which supersedes its own earlier revision. This entry records what was measured and takes no disposition; the five rulings below are open. Context: P6-07's sign-off was withdrawn under §12.75 because `@deepseek-ai/dsh-session-lifecycle` is mounted in none of the six bundles and nothing outside its own package calls it. The measurement below says more than the withdrawal knew.

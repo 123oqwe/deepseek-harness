@@ -34,8 +34,27 @@ export interface PolicyAuditRecord {
   readonly actionId: string
   /** The originator that started it (acceptance[0]'s five). */
   readonly origin: string
-  /** The decision the enforcement point acted on. */
+  /**
+   * The decision the enforcement point acted on — the FINAL one, after the
+   * kernel bound it.
+   *
+   * Written after the binding rather than before, because a record of a
+   * decision that was then overridden describes an action that did not happen
+   * (BLOCKED-194). A kernel override is exactly the case an operator most
+   * needs the log for, and the earlier order made it the one case the log
+   * could not show.
+   */
   readonly decision: ClosedDecision
+  /**
+   * What the composition produced, present ONLY when the kernel overrode it.
+   *
+   * Absent on every ordinary decision, so its presence is the signal: this
+   * refusal did not come from the engine or a constraint, it came from the
+   * kernel vetoing what they allowed. Both halves are recorded because neither
+   * alone explains the outcome — `decision` says what happened, this says what
+   * the policy layer had decided before the veto.
+   */
+  readonly overrode?: ClosedDecision
   /** The matched policy ids — audit only, never model-visible (must[3]). */
   readonly matched: readonly string[]
   /** The engine's own diagnostics — audit only. */
@@ -157,25 +176,34 @@ export function enforceAction(ctx: Context, request: PolicyRequest, origin: stri
   if (engine !== undefined) rememberDigest(ctx, engine.digest)
 
   const composed = composeDecision(evaluation, ctx.get('policyConstraints')?.all() ?? [], request)
-  const record: PolicyAuditRecord = {
-    actionId: String(request.manifest.actionId),
-    origin,
-    decision: composed.decision,
-    matched: evaluation.explain.matched.map(id => String(id)),
-    diagnostics: evaluation.explain.diagnostics,
-    constraintReasons: composed.constraintReasons,
-  }
-  kernel.auditAppend({ payload: record })
 
   // The kernel binds. A `deny` verdict overrides a decision that reached here
   // as a permit, because the kernel is the one participant a plugin cannot
   // replace; the reverse is not true, and a kernel `allow` never widens a
   // refusal the engine or a constraint already made.
   const verdict: TrustKernelPolicyVerdict = kernel.policyEnforcement({ payload: composed.decision })
-  if (verdict === 'deny' && composed.decision.effect !== 'deny') {
-    return { effect: 'deny', reason: 'policy-unavailable', policySet: composed.decision.policySet }
+  const overridden = verdict === 'deny' && composed.decision.effect !== 'deny'
+  const decision: ClosedDecision = overridden
+    ? { effect: 'deny', reason: 'policy-unavailable', policySet: composed.decision.policySet }
+    : composed.decision
+
+  // Appended AFTER the binding, and carrying the decision that was ENFORCED
+  // (BLOCKED-194). The earlier order recorded what the policy layer decided
+  // and then let the kernel change it unlogged, so the one refusal an operator
+  // cannot otherwise explain — the kernel vetoing a permit — was written down
+  // as a permit.
+  const record: PolicyAuditRecord = {
+    actionId: String(request.manifest.actionId),
+    origin,
+    decision,
+    ...overridden ? { overrode: composed.decision } : {},
+    matched: evaluation.explain.matched.map(id => String(id)),
+    diagnostics: evaluation.explain.diagnostics,
+    constraintReasons: composed.constraintReasons,
   }
-  return composed.decision
+  kernel.auditAppend({ payload: record })
+
+  return decision
 }
 
 /**

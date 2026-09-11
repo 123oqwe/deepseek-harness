@@ -40,18 +40,19 @@ describe('P2-05 fault: a kernel with no decider refuses what the engine permitte
     const refused = await runTurn(ctx, 'p2-05-f-1')
 
     expect(resultText(refused)).toContain('policy-unavailable')
+    const record = audit.at(-1)
+    // The record is of the ENFORCED decision, not of what the policy layer
+    // decided before the kernel vetoed it (BLOCKED-194).
+    expect(record?.decision).toMatchObject({ effect: 'deny', reason: 'policy-unavailable' })
+    // And it says what was overridden, because "the kernel vetoed a permit" and
+    // "the engine denied" are different events that would otherwise read alike.
+    expect(record?.overrode).toMatchObject({ effect: 'permit' })
     // The engine DID answer, and the audit proves it: a matched policy and a
     // real digest. That is what tells this refusal apart from the one C and U
     // already freeze — the engine-absent path carries no matched policy and the
     // EMPTY digest. Without this the case would pass for the wrong reason.
-    const record = audit.at(-1)
     expect(record?.matched.length).toBeGreaterThan(0)
     expect(record?.decision.policySet).not.toBe('')
-    // NOT asserted here, deliberately: that the audit record shows the
-    // refusal. It does not — `enforceAction` appends the record BEFORE the
-    // kernel binds, so an override is never recorded and this record says
-    // `permit` about an action that was refused. Pinning that would freeze the
-    // defect; it is reported separately.
     await ctx.fiber.dispose()
   })
 

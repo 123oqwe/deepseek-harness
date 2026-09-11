@@ -95,9 +95,13 @@ describe('P2-05 acceptance[0]: one PEP, whichever originator dispatches', () => 
     const events = await runTurn(ctx, 'p2-05-7')
 
     expect(resultText(events)).toContain('refused by policy')
-    // The engine permitted; the audit records what the engine said, and the
-    // dispatch records what the kernel bound.
-    expect(audit.at(-1)?.decision.effect).toBe('permit')
+    // The engine permitted and the kernel vetoed. The audit records the
+    // decision that was ENFORCED, and names the one it displaced, so a reader
+    // can tell a kernel veto from an engine denial (BLOCKED-194). It used to
+    // record only the engine's permit, which described an action that never
+    // happened.
+    expect(audit.at(-1)?.decision).toMatchObject({ effect: 'deny', reason: 'policy-unavailable' })
+    expect(audit.at(-1)?.overrode?.effect).toBe('permit')
     await ctx.fiber.dispose()
   })
 
