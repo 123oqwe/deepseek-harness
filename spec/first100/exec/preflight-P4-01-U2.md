@@ -77,3 +77,54 @@ Not a freeze. The argv, the case titles and the mutations are what U2 will freez
 **Mutations, one per case, in the non-check-removing forms this epic has used** — a constant, a value or a dependency replaced, never a guard deleted: advance to `running` without passing `planning`; append the transition without its log entry; accept the illegal pair instead of refusing it; let the refusal write the Run back; return every Run from the enumeration instead of the non-terminal ones; invert `resume()`'s terminal test; skip the enumeration when the store is non-empty; mount the driver from the fixture instead of the base profile.
 
 **Three things this plan cannot decide yet**, and each is a question already open above: whether acceptance[2] is in scope at all (question 1) — if it is, two more cases and two more mutations; where the restart decision runs (question 2), which decides whether the enumeration case observes `Service.init` or a session re-attachment; and whether the Run event log stays out of the session log (question 3), which decides whether the per-transition entry is observed in the Run store or in a session event.
+
+---
+
+## acceptance-coverage pre-check: what re-signing U2 must change
+
+P4-01's coverage entries exist and cite 7 + 6 + 5 cases across the three acceptance indices. The withdrawal did not touch them, so the question for U2 is narrow: which citations still say something true once production drives the lifecycle, and which were only ever true of the library. Read case by case, not by title.
+
+### acceptance[0] — "after a restart, list every non-terminal Run and resume"
+
+**The one U citation asserts the absence of the behaviour the clause requires.** `tests/first100/fixtures/P4-01.composition.spec.ts:124`, titled "lists the Run a previous boot left behind as non-terminal, so a restart can resume it", boots the fixture twice over one store and then reads the store file directly:
+
+```ts
+const runs = readRuns(storePath)
+for (const run of runs) expect(run.state).toBe('accepted')
+```
+
+It never calls `listNonTerminal` and never calls `resume`. What it proves is that a real boot persists Runs and a second boot leaves them at `accepted` — and `accepted` for every Run is exactly the symptom BLOCKED-183 names. The title claims "so a restart can resume it"; the body observes nothing resuming.
+
+**So this case must change at U2, and it will go red on its own if it does not.** Once the agent loop advances `planning → running → terminal`, a booted Run is no longer `accepted`, and `expect(run.state).toBe('accepted')` fails. That is the acceptance-locks rule's "unlocks as a test starting to fail" signal arriving on schedule — the correct response is to replace the case, never to patch the assertion back to green.
+
+| | |
+|---|---|
+| **REPLACE** | the U citation above, with U2's "a fresh process lists the non-terminal Runs the store holds" and "a non-terminal Run resumes and a terminal one is refused, each naming its reason" |
+| **KEEP** | the four P citations (they prove the service-level happy path over a real file store, which stays true) and the two F citations (a damaged store must not satisfy the clause) |
+| **NOTE** | must say that the P cases establish the service behaviour and the U2 cases establish that production reaches it — the distinction the withdrawal turned on |
+
+### acceptance[1] — "an illegal transition is refused"
+
+All six citations are C, P and F; **there is no U citation at all**, which is itself the finding. The refusal is proven exhaustively (a 10×10 sweep over the real transition table) and is unreachable in production, because its only entry point is `advance` and nothing calls it.
+
+| | |
+|---|---|
+| **KEEP** | all six; none of them becomes false, and the C sweep is the strongest part of this epic |
+| **ADD** | U2's "an illegal transition attempted through the production path is refused, naming the pair" and "the refusal writes nothing: the Run keeps the event log it had" |
+| **NOTE** | must stop implying the clause is closed by the sweep alone. A refusal nothing can trigger refused nothing — that sentence belongs in the note, because the sweep will still be there and still be green |
+
+### acceptance[2] — "one Session ↔ many Runs; one Run across Sessions/Agents"
+
+Five citations, and they split cleanly along the direction of the relation. `packages/run/run/tests/plugin.spec.ts:115` — "opens an independent Run per agent session, so one Session never joins another Session's Run" — is real production behaviour and stays true: `open()` returns early when `agent.runId` is set and otherwise mints a fresh `run-<uuid>`. But that is the **negative** half. The positive halves — one Session seeding two Runs, `attachSessionToRun` spanning Sessions — are C and P only, and `attachSession` has no production caller.
+
+| | |
+|---|---|
+| **KEEP** | all five; the U one is genuinely production, the C/P ones are true of the library |
+| **ADD** | nothing, **if** the delegate rules acceptance[2] out of U2's scope (open question 1 above). If it is in scope, two citations are needed: a second Run opened for an existing Session, and a subagent session joining its parent's Run through `attachSession` |
+| **NOTE** | must say which direction production reaches. Today the note says "both directions are covered" and "both are proven to survive a restart"; after the withdrawal that reads as stronger than it is, because only the negative direction has a production caller |
+
+### The shape of all three
+
+Nothing in the existing coverage is false about the library, and nothing in it distinguishes "the service does this" from "production reaches it". That distinction is the whole content of the withdrawal, so each of the three notes needs it added — which is cheaper than it sounds, because the citations themselves mostly stay.
+
+**One citation to re-examine rather than keep or replace**, and it is not in this table because it belongs to no acceptance index: `P4-01.composition.spec.ts`'s other cases assert the genesis entry, the owner id and the initiating session from a real boot. Those are `must[]` coverage and they are real production arrivals — worth naming at re-sign as the part of P4-01 that was never in doubt.
