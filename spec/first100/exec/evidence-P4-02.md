@@ -175,17 +175,17 @@ The Contract and Provider stages above recorded a vocabulary and a compiler. Wha
 
 | named thing | production call site | reached from |
 |---|---|---|
-| **`compileTaskProfile`** | `packages/run/run/src/index.ts:964` | `RunPlugin.recordTaskProfile` — the epic's only production caller |
-| the first-step marker | `packages/run/run/src/index.ts:1174` | `const firstStep = agent.lifecycle?.state === 'queued'`, captured BEFORE `ensureRunning`, which is what consumes that state |
-| the call itself | `packages/run/run/src/index.ts:1211` | inside the `agent/pre-step` waterfall, guarded by `firstStep` |
-| `goalOf` (text blocks joined, other kinds tallied) | `packages/run/run/src/index.ts:111`, called at `:963` | OQ2 — the caller reads the text that is there and counts what it could not |
-| `taskOriginOf` | `packages/run/task-profile/src/types.ts:312`, called at `packages/run/run/src/index.ts:968` | only `user` and `goal` compile |
-| `goalRoundOf` | `packages/run/task-profile/src/types.ts:334`, called at `packages/run/run/src/index.ts:963` | OQ4(b) — the entered goal's identity rides `TaskGoalRef.goalRound` |
-| `taskProfileRef` | `packages/run/task-profile/src/validate.ts:236`, called at `packages/run/run/src/index.ts:977` | the digest the Run log names |
-| `lastTaskProfileRef` (the skip's input) | `packages/run/run/src/index.ts:131`, called at `:993` | OQ3 — read from the LOG, because a resumed session's handle carries nothing |
-| the skip | `packages/run/run/src/index.ts:994` | `if (previousRef !== ref)` — an unchanged profile is not appended twice |
-| the session append | `packages/run/run/src/index.ts:995` | `run/task-profile`, the profile's durable home |
-| `Agent.taskProfile` | `packages/run/run/src/index.ts:1001` | the handle carries the digest, never the body |
+| **`compileTaskProfile`** | `packages/run/run/src/index.ts:978` | `RunPlugin.recordTaskProfile` — the epic's only production caller |
+| the first-step marker | `packages/run/run/src/index.ts:1192` | `const firstStep = agent.lifecycle?.state === 'queued'`, captured BEFORE `ensureRunning`, which is what consumes that state |
+| the call itself | `packages/run/run/src/index.ts:1229` | inside the `agent/pre-step` waterfall, guarded by `firstStep` |
+| `goalOf` (text blocks joined, other kinds tallied) | `packages/run/run/src/index.ts:111`, called at `:976` | OQ2 — the caller reads the text that is there and counts what it could not |
+| `taskOriginOf` | `packages/run/task-profile/src/types.ts:312`, called at `packages/run/run/src/index.ts:985` | only `user` and `goal` compile |
+| `goalRoundOf` | `packages/run/task-profile/src/types.ts:334`, called at `packages/run/run/src/index.ts:977` | OQ4(b) — the entered goal's identity rides `TaskGoalRef.goalRound` |
+| `taskProfileRef` | `packages/run/task-profile/src/validate.ts:236`, called at `packages/run/run/src/index.ts:991` | the digest the Run log names |
+| `lastTaskProfileRef` (the skip's input) | `packages/run/run/src/index.ts:131`, called at `:992` | OQ3 — read from the LOG, because a resumed session's handle carries nothing |
+| the skip | `packages/run/run/src/index.ts:1008` | `if (previousRef !== ref)` — an unchanged profile is not appended twice |
+| the session append | `packages/run/run/src/index.ts:1009` | `run/task-profile`, the profile's durable home |
+| `Agent.taskProfile` | `packages/run/run/src/index.ts:1011` | the handle carries the digest, never the body |
 | **`validateTaskProfile`** | **no production caller** | deliberate: it is the durable-boundary check for a READER, and the reader is P4-03. Recorded as a limitation in the package README rather than left to look like an oversight |
 | `unreadContentQuestion` / `undeterminedSideEffect` | `packages/run/task-profile/src/index.ts:230`, `:194` | module-private; reached only through `compileTaskProfile` |
 
@@ -193,7 +193,7 @@ The Contract and Provider stages above recorded a vocabulary and a compiler. Wha
 
 | what | where |
 |---|---|
-| the plugin that calls the compiler | `packages/bundle/base/cordis.patch.yml:595` — `@deepseek-ai/dsh-run`, enabled, on every shipped profile |
+| the plugin that calls the compiler | `packages/bundle/base/cordis.patch.yml:628` — `@deepseek-ai/dsh-run`, enabled, on every shipped profile |
 | the event type's registration | `packages/core/session/src/known-event-types.ts:52` — GENERATED from the in-repo `SessionEventMap`, so declaring the member is what registers it |
 | the durable documentation | `docs/persistence-catalog.md:741` — `run/task-profile`, log-only |
 
@@ -218,6 +218,47 @@ The Contract and Provider stages above recorded a vocabulary and a compiler. Wha
 | validation[2] — the revision arithmetic | the F stage's seven single-field moves plus the unchanged-recompile control | `packages/run/task-profile/tests/profile.spec.ts`, the `P4-02 F — the revision arithmetic` block |
 
 **One ordering claim is deliberately NOT observed**, and its absence is recorded so it does not read as a gap: that the profile is recorded "before the step it plans". A case asserting it passed with the call moved after `next()`, because the loop appends `step/start` and the step's own `user/message` only once the whole pre-step waterfall resolves. No log observation distinguishes the two placements, so the claim was withdrawn rather than frozen.
+
+## 4.4 per frozen behaviour — the U and F stages, one row each
+
+Written for the signature pass. Every line number was re-read at `1deda037ba`; the ones §4.4a carried were stale, because BLOCKED-211 removed the digest fields from the event and moved everything below the append.
+
+**One fact governs every row below, so it is stated once rather than repeated eleven times.** The frozen argv for U is `pnpm exec vitest run packages/run/run`, and the harness those cases run in is `packages/run/run/tests/task-profile.spec.ts:71` — a hand-built `ctx.plugin(...)` composition of nine plugins, **not** a Loader boot of a shipped profile. `packages/AGENTS.md` is explicit that this is insufficient on its own for a product-visible plugin: "Hand-built `ctx.plugin(...)` suites are insufficient. Boot test-only `cordis.yml` through the Loader and app/process." **P4-02 has no composition fixture** — `tests/first100/fixtures/` holds `P4-01.composition.spec.ts` and `P4-01.fault.spec.ts` and nothing for this epic. So every U row's (d) is the same split, and it is not a defect in any individual case.
+
+### U — eleven frozen behaviours
+
+| # | frozen behaviour | (a) production call site | (c) measured reach | (d) §12.46-B |
+|---|---|---|---|---|
+| 1 | appends exactly one `run/task-profile` event and names it on the Agent handle | `index.ts:1009` append, `:1011` handle | 1 production call site for `compileTaskProfile` (`:978`); 0 others in the repo | service does it; production arrival unobserved |
+| 2 | compiles the objective from the goal the human actually sent | `goalOf` `:111`, called `:976` | same single path | service does it |
+| 3 | moves the Run `accepted → planning` carrying the reference | `:1012` `service.advance(runId, 'planning', …)` | the only `'planning'` advance in the package | service does it |
+| 4 | references a digest whose body is in the session log | `taskProfileRef` `:991`; body appended `:1009` | digest now DERIVED, never stored (BLOCKED-211) | service does it |
+| 5 | appends no second profile for a second goal in the same session | first-step guard `:1192`, consumed `:1229` | one guard, one caller | service does it |
+| 6 | compiles NOTHING for injected plugin context, leaving the Run `accepted` | `taskOriginOf` `:985` | refusal path has the same single caller | service does it |
+| 7 | compiles an image-led first message and asks what the image asks for | `goalOf`'s non-text tally `:111` | same | service does it |
+| 8 | appends no second profile when a resumed session re-claims the SAME message | `lastTaskProfileRef` `:131`, called `:992`; skip `:1008` | reads the LOG, so a resumed handle carrying nothing still decides | service does it |
+| 9 | DOES append a second profile when the resumed session carries a different goal | same skip, negative branch `:1008` | same | service does it |
+| 10 | compiles a goal continuation round and carries the round into the reference | `goalRoundOf` `:977` | `source.kind === 'goal'` is the only branch that yields a round | service does it |
+| 11 | carries no round for a direct human prompt | same, `undefined` branch | same | service does it |
+
+**(b) mount path, common to all eleven.** `@deepseek-ai/dsh-run` appears in exactly ONE shipped patch layer: `packages/bundle/base/cordis.patch.yml:628`, `id: run`, enabled, configured with `storePath: dshHomePath('runs', 'runs.json')`. The plugin registers on `agent/pre-step` and reaches `recordTaskProfile` at `index.ts:1229`.
+
+**The chain from app-boot to that row is NOT fully measured, and is recorded as such rather than inferred.** `packages/boot/app-boot/src/profile.ts:11` states a profile is composed by applying each bundle's patch list in `dsh.profile.bundles` order, and `apps/cli/src/profile-boot.ts:399` refers to "`dsh-base` and every profile built on it". But no `package.json` under `packages/` or `apps/` declares a `dsh.profile.bundles` list — the shipped profiles are assembled elsewhere (`$DSH_HOME/profiles` per `profile.ts:19`), which this pass did not read. **Unmeasured: which shipped profiles actually include `dsh-base`, and therefore on which profiles this epic's code runs at all.**
+
+### F — fourteen frozen behaviours, three families
+
+The frozen argv for F is `pnpm exec vitest run packages/run/task-profile` — the pure library, with no `Context`, no mount, and no Agent. **(a) production call site: none of the fourteen has one, and that is what the F stage is.** They exercise `compileTaskProfile`/`taskProfileRef` directly over caller-supplied input. **(b) mount path: not applicable** — `@deepseek-ai/dsh-task-profile` mounts nothing and is an audited `PACKAGE_LIBRARIES` entry. **(d) every one is "the service can do this"; none is "production reaches it".**
+
+| family | cases | (c) measured reach |
+|---|---|---|
+| four task archetypes each asking about every unstated field | 1–4 (`code`, `research`, `external-action`, `personal-plan`) | the archetype is chosen inside `compileTaskProfile`; production supplies only the message, so which archetype a real goal takes is unobserved |
+| two refusals | 5 (blank injected context → not-a-task), 6 (whitespace-only goal → empty-goal) | the refusal branch has one production caller (`:985` origin, `:978` compile), but no frozen case observes a refusal arriving there |
+| the revision arithmetic — eight single-field moves plus a control | 7–14 (goal text, goal message, turn ceiling, spend ceiling, workspace trust, identity, unread tally, and "unchanged is not a revision") | case 8 ("changing the goal message it refers to alone changes the reference") is the one that decided BLOCKED-211's route: it binds the digest to message identity, which is why the event could not digest a projection that dropped those ids |
+
+### What the split leaves owed
+
+- **`validateTaskProfile` has no production caller** — 0 measured, deliberate, its reader is P4-03 and the package README records it.
+- **No frozen P4-02 case observes a shipped-profile boot.** The production path is real and its call sites are above; what is missing is an observation that a Loader boot of a profile carrying `bundle/base` reaches them. P4-01's U2 slice owns a composition fixture that boots `dsh-app-boot`; the cheapest honest close for P4-02 is a case in that fixture asserting one `run/task-profile` event after a real boot, not a twelfth case in the hand-built harness.
 
 ## What the signature pass must record as still open
 
