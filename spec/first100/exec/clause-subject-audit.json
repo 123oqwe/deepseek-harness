@@ -1014,23 +1014,20 @@
           {
             "standard": "semver ranges",
             "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Follows from semver being unadopted: there are no ranges to interpret."
+          },
+          {
+            "name": "VS Code contributes/capabilities.untrustedWorkspaces vocabulary",
+            "reason": "NOT ADOPTED. `untrustedWorkspaces` returns zero hits; the five `untrusted` hits are a DIFFERENT concept pointing the other way — `PluginDeclaration.trust` takes `'legacy-untrusted'` (plugin-manifest/src/types.ts:373), a verdict about THIS DECLARATION having no trustworthy permission surface. VS Code's vocabulary is an extension declaring what IT supports when the WORKSPACE is untrusted. One grades the declaration, the other grades the environment.",
+            "ruling": "standards-ownership assignment withdrawn 2026-09-11 (delegate note 42): measured not adopted, recorded rather than pinned by an invented case"
+          },
+          {
+            "name": "Chrome MV3 permissions/host_permissions vocabulary",
+            "reason": "NOT ADOPTED, and the alias sweep is the evidence rather than the absence of a case: `permissions`, `host_permissions` and `manifest_version` return ZERO hits across `packages/plugin/*/src`. This tree declares a capability's EFFECT, not a named permission string — `CapabilityEffectDeclaration`, `SideEffectClass` ('none'|'read'|'write'|'network'|'process'|'destructive'), `CapabilityDestination`/`allowedDestinations`, `AuthMechanism`, `DataClassification` (plugin-manifest/src/types.ts:72-171). MV3 asks which named permissions you want; this manifest asks what side effect you cause and toward which destinations. Not the same vocabulary under another name, so a case naming MV3's would be a case about something this tree does not have.",
+            "ruling": "standards-ownership assignment withdrawn 2026-09-11 (delegate note 42): measured not adopted, recorded rather than pinned by an invented case"
           }
         ],
         "rejectedAbsent": [],
-        "standardsOwned": [
-          {
-            "standard": "VS Code contributes/capabilities.untrustedWorkspaces vocabulary",
-            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
-            "basis": "assignment",
-            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
-          },
-          {
-            "standard": "Chrome MV3 permissions/host_permissions vocabulary",
-            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
-            "basis": "assignment",
-            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
-          }
-        ],
+        "standardsOwned": [],
         "standardsImported": [],
         "residual": "The manifest schema, its classification, and pre-mount admission.",
         "probes": [
@@ -1162,23 +1159,20 @@
             "name": "fast-check",
             "npm": "fast-check",
             "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED and nothing propagates from it. Measured with the epic's REALITY SET — files[] plus its live frozen entries' files — rather than a repository-wide scan: the package IS present in the repository, but not in anything this epic wrote. The earlier record read the wide scan as adoption, which made 'the repository has it' pass as 'this epic took it on'. `fast-check` remains the right tool if this epic later wants property coverage; recording the deviation states that its current cases do not."
+          },
+          {
+            "name": "npm scope = publisher identity (reserve dsh.*/@deepseek-ai/*)",
+            "reason": "NOT ADOPTED. `publisher`, `scope` and `ownerId` return zero hits across `packages/plugin/plugin-ownership/src`. Identity here is the `PluginIdentity` brand and the `Namespace` brand, with `RESERVED_NAMESPACE_ROOT`/`isReservedNamespace` grounded verbatim in the registry's own validation text (`dsh.*` 保留 namespace) — deliberately independent of any publishing channel, so an npm scope grants no standing this set does not already grant.",
+            "ruling": "standards-ownership assignment withdrawn 2026-09-11 (delegate note 42): measured not adopted, recorded rather than pinned by an invented case"
+          },
+          {
+            "name": "VS Code publisher.name id convention",
+            "reason": "NOT ADOPTED, same measurement. This tree composes identity from two brands (`PluginIdentity`, `Namespace`) rather than from a publisher-prefixed id string, so there is no `publisher.name` shape to pin.",
+            "ruling": "standards-ownership assignment withdrawn 2026-09-11 (delegate note 42): measured not adopted, recorded rather than pinned by an invented case"
           }
         ],
         "rejectedAbsent": [],
-        "standardsOwned": [
-          {
-            "standard": "npm scope = publisher identity (reserve dsh.*/@deepseek-ai/*)",
-            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
-            "basis": "assignment",
-            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
-          },
-          {
-            "standard": "VS Code publisher.name id convention",
-            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
-            "basis": "assignment",
-            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
-          }
-        ],
+        "standardsOwned": [],
         "standardsImported": [],
         "residual": "Tool-name ownership, collision adjudication, and the reserved namespace.",
         "probes": [
