@@ -70,3 +70,13 @@ Nothing here argues for one. What the re-sign cannot do is leave it unstated: a 
 ### The three deviation reasons were restated, and one was wrong
 
 Recorded here because the correction is about this epic's own card. `accepted-unadopted` is reserved for an ACCEPTED row, so the revocation made all three illegal; they now state their measurements. Re-measuring found the OTel row had been **understated**: `service.name` IS set in the tree (`session-telemetry-otel/src/index.ts:199`) carrying `APP_IDENTITY.product`, so the earlier "no telemetry attribute mapping exists in this epic" was false — a mapping exists and deliberately carries no principal. `enduser.id` has zero occurrences repo-wide and the exporter never reads `identity/attached`, so no principal this epic mints reaches telemetry at all.
+
+### A frozen C-stage title conflicts with a repository rule, and the record is being corrected
+
+Recorded here because it changes what this epic's C stage is signed against, and because the correction is the delegate's rather than a re-judgement of the epic.
+
+P2-01.C's frozen set carries `registers the package ownership with an empty installer`. An empty installer is not valid under this repository's package rules — `verify-package-invariants` rejects it — and after [BLOCKED-209](BLOCKED-QUEUE.md#blocked-209) retired the principal companion package, the frozen case and that gate became mutually exclusive: satisfying either one reddens the other.
+
+The delegate ruled the C entry be superseded to drop that title, with the C cell's green withdrawn in the same commit, and re-observed on the next candidate's cloud run. Lane B carries it.
+
+What a re-sign has to take from this: the C stage's evidence is being restated, not re-argued. No claim this epic makes about identity, delegation or the attached host user rests on that title — it is a packaging assertion that outlived the package it described. The re-sign should read the C stage against the superseding entry, not against the set recorded when the cell was first greened.
