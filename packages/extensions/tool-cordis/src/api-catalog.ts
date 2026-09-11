@@ -1618,6 +1618,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'the {@link Run} that agent\'s session is doing work inside, or `undefined` when no Run was opened for it — a subagent session started outside the agent registry this plugin observes, for instance.',
       },
       {
+        signature: 'restoredNonTerminal(): readonly Run[]',
+        description: 'The non-terminal Runs this mount found in the store when it started (acceptance[0]: "after a restart, list every non-terminal Run").\n\nThe enumeration happens at mount, before any agent exists, because that is the only moment that can answer it: `Service.init` has just restored the registry, and nothing has adopted or opened anything yet. The list is fixed from then on — a caller asking what is non-terminal NOW asks RunService.listNonTerminal.\n\nA restart\'s other half, deciding what to do with these, is taken per session in RunPlugin.open rather than here: at mount there is no agent to drive a Run and `RunService.resume` appoints nobody.',
+        parameters: [],
+        returns: 'every Run that was non-terminal at mount; empty for a fresh store or one holding only finished Runs.',
+      },
+      {
         signature: 'reclaim(agent: Agent, nowMs: number = Date.now()): \'reclaimed\' | \'held\' | \'no-run\'',
         description: 'Reclaim a run whose lease lapsed, recording it as `orphaned` (Epic P4-05 acceptance[2], §12.60).\n\n**The reclaimer writes this, never the orphaned host.** A host that lost its lease must not write at all — from its own side a reclaim and a pause are indistinguishable, so it cannot establish its own orphaning, and `advanceLeasedAgent` refuses it as `fenced`. The party that OBSERVED the loss is the one that acquired the item, and it records the state under the epoch the store just issued it. No fencing bypass exists or is needed.\n\n`orphaned` leads to `starting` or `failed`, so a caller resumes the work under its new epoch or fails it safely — acceptance[2]\'s two arms.',
         parameters: [{ name: 'agent', description: 'the agent whose work item is being reclaimed.' }, { name: 'nowMs', description: 'the caller\'s clock reading, against which the lapse is judged.' }],

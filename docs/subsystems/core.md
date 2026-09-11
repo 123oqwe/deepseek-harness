@@ -1198,6 +1198,24 @@ On mount it restores the durable registry from Config.storePath (acceptance[0]'s
 runFor(agent: Agent): Run | undefined
 
 /**
+ * The non-terminal Runs this mount found in the store when it started
+ * (acceptance[0]: "after a restart, list every non-terminal Run").
+ *
+ * The enumeration happens at mount, before any agent exists, because that is
+ * the only moment that can answer it: `Service.init` has just restored the
+ * registry, and nothing has adopted or opened anything yet. The list is fixed
+ * from then on — a caller asking what is non-terminal NOW asks
+ * {@link RunService.listNonTerminal}.
+ *
+ * A restart's other half, deciding what to do with these, is taken per
+ * session in {@link RunPlugin.open} rather than here: at mount there is no
+ * agent to drive a Run and `RunService.resume` appoints nobody.
+ * @returns every Run that was non-terminal at mount; empty for a fresh store
+ * or one holding only finished Runs.
+ */
+restoredNonTerminal(): readonly Run[]
+
+/**
  * Reclaim a run whose lease lapsed, recording it as `orphaned` (Epic P4-05
  * acceptance[2], §12.60).
  *

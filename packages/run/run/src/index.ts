@@ -75,6 +75,7 @@ import {
   listNonTerminalRuns,
   resumeRun,
   RUN_SERVICE_OWNER_ID,
+  TERMINAL_RUN_STATES,
   transition,
 } from './state-machine.ts'
 import type {
@@ -659,6 +660,16 @@ export default class RunPlugin extends Service {
   private readonly failures = new Map<RunId, unknown>()
 
   /**
+   * The non-terminal Runs this mount restored, as they were at mount
+   * (acceptance[0]'s enumerate half).
+   *
+   * Captured once in `Service.init` and never recomputed, so it answers "what
+   * did this process come back to" rather than "what is non-terminal now" —
+   * adoption removes Runs from the second set and must not change the first.
+   */
+  private restoredAtMount: readonly Run[] = []
+
+  /**
    * The durable registry this plugin restored at mount, for a caller that
    * needs the Run Service's full surface rather than this plugin's
    * agent-shaped lookups.
@@ -684,12 +695,69 @@ export default class RunPlugin extends Service {
   }
 
   /**
-   * Open the Run for one agent session, unless that session already has one.
+   * The non-terminal Runs this mount found in the store when it started
+   * (acceptance[0]: "after a restart, list every non-terminal Run").
+   *
+   * The enumeration happens at mount, before any agent exists, because that is
+   * the only moment that can answer it: `Service.init` has just restored the
+   * registry, and nothing has adopted or opened anything yet. The list is fixed
+   * from then on — a caller asking what is non-terminal NOW asks
+   * {@link RunService.listNonTerminal}.
+   *
+   * A restart's other half, deciding what to do with these, is taken per
+   * session in {@link RunPlugin.open} rather than here: at mount there is no
+   * agent to drive a Run and `RunService.resume` appoints nobody.
+   * @returns every Run that was non-terminal at mount; empty for a fresh store
+   * or one holding only finished Runs.
+   */
+  restoredNonTerminal(): readonly Run[] {
+    return this.restoredAtMount
+  }
+
+  /**
+   * The Run this session should continue, if the store holds one it may
+   * (acceptance[0]'s resume half).
+   *
+   * **The decision is taken here and not at mount**, because `RunService.resume`
+   * answers only whether a Run MAY resume — it appoints no driver — and at mount
+   * no agent exists to be one. Asking it per session, at the moment a session
+   * appears, is what turns a restored registry into a continued run.
+   *
+   * Every Run the store holds for this session is offered, not only the ones
+   * this build would have left behind: a store written before adoption existed
+   * can hold several Runs for one session, at most one of them non-terminal.
+   * @param agent - the live agent whose session is starting.
+   * @returns the Run to continue, or `undefined` when every Run this session
+   * has is already finished — or it has none at all.
+   */
+  private adoptable(agent: Agent): RunId | undefined {
+    for (const run of this.service.runsForSession(agent.id)) {
+      const decision = this.service.resume(run.id)
+      if (decision.resumed) return run.id
+      this.ctx.logger.debug(
+        'run: not continuing %s for agent %s — %s',
+        run.id,
+        agent.id,
+        decision.reason,
+      )
+    }
+    return undefined
+  }
+
+  /**
+   * Open the Run for one agent session: continue the one the store holds for
+   * it, or accept a new one.
+   *
+   * **Continuing is the same operation as opening, minus the registration.**
+   * The lease is taken either way and from the same work item, so a restarted
+   * host writes under an epoch this store issued it rather than inheriting the
+   * authority of the process that died.
    * @param agent - the live agent whose session is doing the work.
    */
   private open(agent: Agent): void {
     if (agent.runId !== undefined) return
-    const runId = brandString<RunId>(`run-${randomUUID()}`)
+    const continuing = this.adoptable(agent)
+    const runId = continuing ?? brandString<RunId>(`run-${randomUUID()}`)
     // The lease is taken BEFORE the Run is registered. A Run that exists
     // without an owner is a Run a second host can also open work against, and
     // the window between registering and acquiring is exactly the window
@@ -728,12 +796,17 @@ export default class RunPlugin extends Service {
       agent.leaseRefused = true
       return
     }
-    const opened = this.service.openForSession(runId, agent.id, Date.now())
-    agent.runId = opened.run.id
+    // A continued Run is already registered and already durable, with the event
+    // log it had: nothing is written for a restart, which is what makes the
+    // restart continue a history rather than start one.
+    if (continuing === undefined) {
+      const opened = this.service.openForSession(runId, agent.id, Date.now())
+      this.writes.push(opened.durable)
+    }
+    agent.runId = runId
     agent.lifecycle = { runId: brandString<AgentRunId>(runId), state: 'queued', epoch: taken.lease.token.epoch }
     agent.runLease = taken.lease
     this.heartbeats.set(runId, setInterval(() => { this.beat(agent) }, this.config.leaseMs / LEASE_RENEWAL_DIVISOR))
-    this.writes.push(opened.durable)
   }
 
   /**
@@ -848,6 +921,12 @@ export default class RunPlugin extends Service {
     } else {
       advanceLeasedAgent(agent, 'completed', 'the agent session ended')
     }
+    // The RUN's own terminal state, from the same fact. Tracked on `writes` and
+    // not awaited here, because `agent/disposed` is emitted synchronously and
+    // does not await its listeners — the disposer below awaits what this
+    // started, which is how every other durable write this plugin makes is
+    // ordered against teardown.
+    this.writes.push(this.endRun(agent, failure !== undefined))
     if (agent.runId !== undefined) this.failures.delete(agent.runId)
     const lease = agent.runLease
     if (lease !== undefined) this.ctx.leaseStore.release(lease.token)
@@ -924,6 +1003,61 @@ export default class RunPlugin extends Service {
   }
 
   /**
+   * Move the Run itself to `running` once its first model step is planned
+   * (must[0]: the states are occupied, not merely declared).
+   *
+   * Only from `planning`, which is the state P4-02's profile transition leaves
+   * it in. Later steps find it already `running` and ask for nothing, so the
+   * log gains one entry for the Run starting work rather than one per step.
+   * @param agent - the agent whose Run is starting work.
+   */
+  private async startRun(agent: Agent): Promise<void> {
+    const runId = agent.runId
+    if (runId === undefined) return
+    if (this.service.get(runId)?.state !== 'planning') return
+    await this.service.advance(runId, 'running', [], Date.now())
+  }
+
+  /**
+   * Take the Run to a terminal state when its agent session ends
+   * (must[0], must[1], acceptance[0]).
+   *
+   * **`verifying` here is the END DECISION over this plugin's failure ledger,
+   * and it is NOT output verification.** What the step actually does is read
+   * whether an unrecovered `agent/error` was recorded for this Run and has not
+   * been cleared by a later admitted step — the same fact {@link RunPlugin.finish}
+   * uses to choose the agent's own terminal lifecycle state. It inspects no
+   * artifact, consults no contract, and proves nothing about what the run
+   * produced. Epic P7-05 owns that meaning: its must[0] adds `accepted`,
+   * `rejected`, `needs-human` and `compensating` beside this state and its
+   * AcceptanceGate decides between them from a frozen VerificationContract and
+   * a VerificationReport. The transition shape survives that; the decision
+   * inside it is replaced. Recorded in this epic's evidence as a readiness note
+   * against P7-05 rather than left for a reader to infer from the state name.
+   *
+   * The path is `running → verifying → succeeded | failed`, one log entry per
+   * step, because the table admits no shortcut: `succeeded` is reachable only
+   * from `verifying` or `reconciling`. A Run that never reached `running` —
+   * a session that started and was disposed without a model step — is
+   * `cancelled` instead, which is what `accepted` and `planning` both admit.
+   * @param agent - the agent whose session has ended.
+   * @param failed - whether an unrecovered error is this run's last reported activity.
+   */
+  private async endRun(agent: Agent, failed: boolean): Promise<void> {
+    const runId = agent.runId
+    if (runId === undefined) return
+    const state = this.service.get(runId)?.state
+    if (state === undefined || TERMINAL_RUN_STATES.has(state)) return
+    if (state === 'accepted' || state === 'planning') {
+      await this.service.advance(runId, 'cancelled', [], Date.now())
+      return
+    }
+    if (state !== 'running') return
+    await this.service.advance(runId, 'verifying', [], Date.now())
+    await this.service.advance(runId, failed ? 'failed' : 'succeeded', [], Date.now())
+  }
+
+  /**
    * Bring an agent that is about to take a model step to `running`.
    *
    * The lifecycle needs a driver or it stays `queued` forever and the fenced
@@ -980,6 +1114,17 @@ export default class RunPlugin extends Service {
    */
   async* [Service.init](): AsyncGenerator<() => Promise<void> | void, void, void> {
     this.restored = await RunService.restore(createFileRunStore(this.config.storePath))
+    // acceptance[0]'s enumerate half, and the only place it can be taken: the
+    // registry has just come back and nothing has opened or continued anything
+    // yet. What to DO with each is decided per session in `open`.
+    this.restoredAtMount = this.restored.listNonTerminal()
+    if (this.restoredAtMount.length > 0) {
+      this.ctx.logger.info(
+        'run: restored %d non-terminal Run(s) from %s',
+        this.restoredAtMount.length,
+        this.config.storePath,
+      )
+    }
     // `agent/session-start` is emitted synchronously and does not await its
     // listeners, so each Run is registered in memory on the spot and its
     // durable write tracked on `writes` for the disposer below to await.
@@ -1033,7 +1178,14 @@ export default class RunPlugin extends Service {
       // and one Run transition, which is the point — a profile recorded after
       // the request it was supposed to plan would describe a decision already
       // taken.
-      if (firstStep) await this.recordTaskProfile(agent, messages)
+      if (firstStep) {
+        await this.recordTaskProfile(agent, messages)
+        // After the profile's `accepted -> planning`, so the Run is in the one
+        // state `running` is legal from. A session whose first message is not a
+        // task has no profile and stays in `accepted`, and `startRun` asks for
+        // nothing — which is why this is not an unconditional advance.
+        await this.startRun(agent)
+      }
       // Waterfall: delegating is mandatory for a step this listener admits.
       return next()
     })
