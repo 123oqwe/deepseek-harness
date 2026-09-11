@@ -52,3 +52,28 @@ The live reason is the same for all three, and it follows from the slice's scope
 ## What this slice is NOT
 
 No new registry clauses, no event-name changes, no second Run store, and no widening of P4-02's `accepted → planning` transition — that one stays with P4-02, which is its first production caller.
+
+---
+
+## TDD plan, written while P4-02's C cell waits on observation
+
+Not a freeze. The argv, the case titles and the mutations are what U2 will freeze once its code exists; writing them now is what §1.12 asks of a waiting lane, and it is also the cheapest moment to notice that a case cannot be written.
+
+**argv** — `pnpm exec vitest run packages/run/run --reporter=json`, plus the shipped-profile observation U2 owes: the lifecycle and the restart path are only true in a composition, so a Loader fixture under `packages/run/run/tests/` that boots the base profile is the subject, not a hand-built `ctx.plugin(...)`. Whether that fixture belongs to `stages.U`'s declared files or arrives as a `filesOverlay` entry is settled when the files are written; `stages.U` today is `core/agent/src/types.ts`, `workflow/workflow/src/types.ts`, `run/run/src/index.ts` and `stages.F` adds `run/run/tests/state-machine.spec.ts`.
+
+**The cases, each with the clause whose truth it observes** — the delegate's criterion, applied before the code exists so a case with no nameable clause is dropped now rather than frozen later:
+
+| case | clause |
+|---|---|
+| the agent loop advances a queued Run from `planning` to `running` at its first model step | must[0] — the states are occupied, not merely declared |
+| a Run that reaches a terminal state through the loop records one log entry per transition, in order | must[1] — the log is appended after genesis, which it never was |
+| an illegal transition attempted through the production path is refused, naming the pair | acceptance[1] — reachable for the first time; refusal with no caller refused nothing |
+| the refusal writes nothing: the Run keeps the event log it had | acceptance[1] — the half that distinguishes a refusal from a silent failure |
+| a fresh process lists the non-terminal Runs the store holds | acceptance[0] — the enumerate half; the restore half already arrives |
+| a non-terminal Run resumes and a terminal one is refused, each naming its reason | acceptance[0] — `resume()`'s decision reaching a caller |
+| a Run that was mid-`running` when the process died is listed and resumed, not silently dropped | validation[1] — kill/restart after a transition |
+| the shipped base profile drives all of the above with no test-only plugin mounted | the withdrawal's own ground: production arrival, not library behaviour |
+
+**Mutations, one per case, in the non-check-removing forms this epic has used** — a constant, a value or a dependency replaced, never a guard deleted: advance to `running` without passing `planning`; append the transition without its log entry; accept the illegal pair instead of refusing it; let the refusal write the Run back; return every Run from the enumeration instead of the non-terminal ones; invert `resume()`'s terminal test; skip the enumeration when the store is non-empty; mount the driver from the fixture instead of the base profile.
+
+**Three things this plan cannot decide yet**, and each is a question already open above: whether acceptance[2] is in scope at all (question 1) — if it is, two more cases and two more mutations; where the restart decision runs (question 2), which decides whether the enumeration case observes `Service.init` or a session re-attachment; and whether the Run event log stays out of the session log (question 3), which decides whether the per-transition entry is observed in the Run store or in a session event.
