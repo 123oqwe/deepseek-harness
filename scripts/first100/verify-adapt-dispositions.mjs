@@ -256,4 +256,18 @@ function main() {
   process.exit(1)
 }
 
-main()
+// Run ONLY when this file is the process entry point.
+//
+// `main()` at module scope made importing this module exit the process, and
+// `verify-adapt-dispositions.spec.ts` imports it for `standardDispositionGaps`.
+// `vitest list --json` loads every test file to collect names, so one epic's
+// undisclosed deviation took the whole collection down — which is how a data
+// problem in `clause-subject-audit.json` turned two unrelated gate steps red:
+// `verify-frozen-titles-in-tree` asks `vitest list` for every producible title
+// (`verify-frozen-titles-in-tree.mjs`), and it discarded the child's stderr, so
+// the failure surfaced as a bare `Command failed` naming neither this file nor
+// the epic. The guard is `process.argv[1]`, matching `scripts/clean.ts`;
+// `import.meta.main` is not used because it is unavailable across this
+// repository's whole engines range.
+const scriptPath = fileURLToPath(import.meta.url)
+if (process.argv[1] !== undefined && resolve(process.argv[1]) === scriptPath) main()

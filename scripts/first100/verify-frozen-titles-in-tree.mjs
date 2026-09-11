@@ -54,12 +54,32 @@ const COMMAND_FREEZE_PATH = join(REPO_ROOT, 'spec/first100/exec/command-freeze.j
  * @returns the producible names, in both spellings.
  */
 export function collectProducibleTitles() {
-  const raw = execFileSync('pnpm', ['exec', 'vitest', 'list', '--json'], {
-    cwd: REPO_ROOT,
-    encoding: 'utf8',
-    maxBuffer: 256 * 1024 * 1024,
-    stdio: ['ignore', 'pipe', 'ignore'],
-  })
+  let raw
+  try {
+    raw = execFileSync('pnpm', ['exec', 'vitest', 'list', '--json'], {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+      maxBuffer: 256 * 1024 * 1024,
+      // stderr is CAPTURED, not discarded. Discarding it made every failure of
+      // this step read as a bare `Command failed` with no cause: a CI run that
+      // lost the collection after four minutes reported the `execFileSync`
+      // line and nothing about why, and the same command succeeds locally
+      // (exit 0, ~4m40s wall, 5.5 MB of JSON), so the log was the only place
+      // the difference could have been visible.
+      stdio: ['ignore', 'pipe', 'pipe'],
+    })
+  } catch (error) {
+    const stderr = String(/** @type {{ stderr?: unknown }} */ (error).stderr ?? '').trim()
+    const signal = /** @type {{ signal?: unknown }} */ (error).signal
+    throw new Error(
+      `vitest list --json did not complete, so no frozen title could be checked against the tree.\n`
+      + `This step loads every test file without running it; it takes minutes and is memory-hungry, `
+      + `so a host that kills it reports the same "Command failed" as a genuine load error.\n`
+      + `signal: ${String(signal ?? 'none')}\n`
+      + `stderr:\n${stderr === '' ? '(the child wrote nothing to stderr — consistent with being killed rather than failing)' : stderr}`,
+      { cause: error },
+    )
+  }
   const entries = JSON.parse(raw.slice(raw.indexOf('[')))
   const names = new Set()
   for (const entry of entries) {

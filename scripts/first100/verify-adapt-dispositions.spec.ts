@@ -11,8 +11,13 @@
  * whole gate exists to prevent.
  */
 
+import { spawnSync } from 'node:child_process'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { standardDispositionGaps } from './verify-adapt-dispositions.mjs'
+
+/** This spec's subject, as a path a child process can import. */
+const VERIFIER = fileURLToPath(new URL('./verify-adapt-dispositions.mjs', import.meta.url))
 
 const ATLAS = 'MITRE ATLAS technique ids'
 const assignedAtlas = [{ standard: ATLAS, thisEpicOwns: true }]
@@ -66,5 +71,32 @@ describe('standardDispositionGaps — an assigned standard is claimed two ways',
 
   it('ignores a row the table does not mark as owned by this epic', () => {
     expect(standardDispositionGaps([], { standardsOwned: [] }, [{ standard: ATLAS, thisEpicOwns: false }])).toEqual([])
+  })
+})
+
+describe('BLOCKED-218: importing this verifier must not end the process', () => {
+  it('runs its check ONLY as the process entry point, so a spec may import it', () => {
+    // Not a style preference. `main()` sat at module scope and called
+    // `process.exit(1)` on an undisclosed epic, and this spec imports the
+    // module for `standardDispositionGaps`. `vitest list --json` loads every
+    // test file to collect names, so one epic's data problem in
+    // `clause-subject-audit.json` took the entire collection down — and
+    // `verify-frozen-titles-in-tree` asks `vitest list` for every producible
+    // title, so an unrelated gate went red naming neither this file nor the
+    // epic. Observed by spawning a child that only imports, because the
+    // property is about what module evaluation does to the PROCESS and this
+    // file's own successful import cannot show it: a module that exited would
+    // have taken this suite with it before any assertion ran.
+    const imported = spawnSync(process.execPath, [
+      '-e',
+      `import(${JSON.stringify(pathToFileURL(VERIFIER).href)}).then(m => {`
+      + ' process.stdout.write(typeof m.standardDispositionGaps) })',
+    ], { encoding: 'utf8' })
+
+    expect(imported.status).toBe(0)
+    expect(imported.stdout).toBe('function')
+    // Silence is the assertion: `main()` prints a summary on every run, so any
+    // output here would mean it ran during import.
+    expect(imported.stderr).toBe('')
   })
 })
