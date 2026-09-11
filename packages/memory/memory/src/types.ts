@@ -225,6 +225,35 @@ export interface MemoryProvider {
   revise(request: MemoryReviseRequest): Promise<void>
   forget(request: MemoryForgetRequest): Promise<void>
   export(request: MemoryExportRequest): Promise<MemoryExportResult>
+  /**
+   * How many records this workspace PATH holds under a different filesystem
+   * identity — a directory rebuilt in place, most often a re-cloned repository.
+   *
+   * The only read in this seam that deliberately crosses the workspace
+   * boundary, and it is a REPORTING channel rather than a retrieval one: it
+   * returns a count and nothing else, so a caller can say "this workspace looks
+   * rebuilt; its earlier memory is still on disk" without being handed a single
+   * record's content or id. Records belonging to the displaced directory stay
+   * unreadable, which is the boundary {@link MemoryScope.workspace} exists to
+   * draw — adopting them is a decision for a person, and importing them is
+   * P6-03's.
+   *
+   * A caller that could read them would make this a way around the scope
+   * check, which is why the return type is a number and not a record list.
+   * @param request - the path to look under, the identity to exclude, and the
+   *   access context the read happens within.
+   * @returns the number of records at that path under any other identity.
+   */
+  countRebuiltAt(request: MemoryRebuiltCountRequest): Promise<number>
+}
+
+/** A count of records left by a previous occupant of one workspace path. */
+export interface MemoryRebuiltCountRequest {
+  readonly accessContext: MemoryAccessContext
+  /** The resolved directory path to look under. */
+  readonly canonicalPath: string
+  /** The identity in use NOW; records carrying it are the caller's own and are not counted. */
+  readonly currentIdentity: string
 }
 
 /**

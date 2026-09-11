@@ -452,3 +452,99 @@ describe('a stored record carries the origin its writer stated', () => {
     expect(stored?.provenance).toMatchObject({ kind: 'derived', sourceEvents: ['evt-1'] })
   })
 })
+
+describe('a rebuilt workspace can be recognized without being read', () => {
+  const before = { canonicalPath: '/projects/alpha', identity: 'dev-1:ino-10:1700000000000' }
+  const after = { canonicalPath: '/projects/alpha', identity: 'dev-1:ino-99:1800000000000' }
+
+  it('counts what the displaced directory left, so a consumer can say so', async () => {
+    const directory = freshDirectory()
+    const memory = await mountDurable(directory)
+    await memory.propose({
+      origin: { kind: 'user-asserted', assertedBy: 'test' },
+      principal: principalFor('tenant-a'),
+      scope: { tenantId: TenantId('tenant-a'), workspace: before },
+      content: { note: 'written before the rebuild' },
+    })
+
+    const count = await memory.countRebuiltAt({
+      accessContext: { ...accessContextFor('tenant-a'), scope: { tenantId: TenantId('tenant-a'), workspace: after } },
+      canonicalPath: after.canonicalPath,
+      currentIdentity: after.identity,
+    })
+
+    expect(count).toBe(1)
+  })
+
+  it('returns a NUMBER and nothing else, so it is not a way around the scope check', async () => {
+    // The negative half, and the reason this method returns a count: a reader
+    // in the rebuilt directory must not receive the displaced directory's
+    // content or ids. `query` for the same path still sees nothing.
+    const directory = freshDirectory()
+    const memory = await mountDurable(directory)
+    await memory.propose({
+      origin: { kind: 'user-asserted', assertedBy: 'test' },
+      principal: principalFor('tenant-a'),
+      scope: { tenantId: TenantId('tenant-a'), workspace: before },
+      content: { note: 'secret from the previous clone' },
+    })
+    const rebuiltContext = {
+      ...accessContextFor('tenant-a'),
+      scope: { tenantId: TenantId('tenant-a'), workspace: after },
+    }
+
+    const count = await memory.countRebuiltAt({
+      accessContext: rebuiltContext,
+      canonicalPath: after.canonicalPath,
+      currentIdentity: after.identity,
+    })
+    const seen = await memory.query({ accessContext: rebuiltContext, query: 'secret' })
+
+    expect(typeof count).toBe('number')
+    expect(seen.records).toEqual([])
+    expect(JSON.stringify(seen)).not.toContain('secret from the previous clone')
+  })
+
+  it('does not count another TENANT\'s records at the same path', async () => {
+    // Found by a surviving mutation: dropping the tenant check from the counter
+    // changed nothing, because no case exercised it. Two tenants can hold the
+    // same canonical path — a shared checkout, or simply the same directory
+    // name — and a count that crossed them would report one tenant's history to
+    // another, through the one method that deliberately crosses workspaces.
+    const directory = freshDirectory()
+    const memory = await mountDurable(directory)
+    await memory.propose({
+      origin: { kind: 'user-asserted', assertedBy: 'test' },
+      principal: principalFor('tenant-b'),
+      scope: { tenantId: TenantId('tenant-b'), workspace: before },
+      content: { note: 'belongs to another tenant' },
+    })
+
+    const count = await memory.countRebuiltAt({
+      accessContext: { ...accessContextFor('tenant-a'), scope: { tenantId: TenantId('tenant-a'), workspace: after } },
+      canonicalPath: after.canonicalPath,
+      currentIdentity: after.identity,
+    })
+
+    expect(count).toBe(0)
+  })
+
+  it('counts nothing when the path is untouched, so the count is not constant', async () => {
+    const directory = freshDirectory()
+    const memory = await mountDurable(directory)
+    await memory.propose({
+      origin: { kind: 'user-asserted', assertedBy: 'test' },
+      principal: principalFor('tenant-a'),
+      scope: { tenantId: TenantId('tenant-a'), workspace: before },
+      content: { note: 'still the same directory' },
+    })
+
+    const count = await memory.countRebuiltAt({
+      accessContext: { ...accessContextFor('tenant-a'), scope: { tenantId: TenantId('tenant-a'), workspace: before } },
+      canonicalPath: before.canonicalPath,
+      currentIdentity: before.identity,
+    })
+
+    expect(count).toBe(0)
+  })
+})

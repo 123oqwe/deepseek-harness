@@ -24,7 +24,7 @@ import { join } from 'node:path'
 import { Context, Service } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import type { MemoryProvenance } from './record.ts'
-import type { MemoryClaimOrigin } from './types.ts'
+import type { MemoryClaimOrigin, MemoryRebuiltCountRequest } from './types.ts'
 import type {
   MemoryAccessContext,
   MemoryExportRequest,
@@ -170,6 +170,21 @@ export class MemoryRuntime extends Service {
     requireCompleteAccessContext(request.accessContext)
     const result = await this.resolve().query(request)
     return capRecords(result, request.accessContext.contextBudget.maxRecords)
+  }
+
+  /**
+   * How many records this workspace PATH holds under a different identity.
+   *
+   * A reporting channel, not a retrieval one: a consumer can tell a user "this
+   * workspace looks rebuilt and its earlier memory is still on disk" without
+   * being handed any of it. The displaced directory's records stay unreadable —
+   * adopting them is a person's decision and importing them is P6-03's.
+   * @param request - the path, the identity in use now, and the read's context.
+   * @returns the number of records at that path under any other identity.
+   */
+  async countRebuiltAt(request: MemoryRebuiltCountRequest): Promise<number> {
+    requireCompleteAccessContext(request.accessContext)
+    return this.resolve().countRebuiltAt(request)
   }
 
   /**
@@ -337,6 +352,9 @@ export function createLocalReferenceMemoryProvider(): MemoryProvider {
       if (visible(request.id, request.scope) !== undefined) records.delete(request.id)
       return Promise.resolve()
     },
+    countRebuiltAt(request) {
+      return Promise.resolve(countRebuiltRecords([...records.values()], request))
+    },
     export(request) {
       const matches = [...records.values()].filter(record => inScope(record, request.accessContext.scope))
       return Promise.resolve({ records: matches.map(toRecordView), truncated: false })
@@ -407,6 +425,9 @@ export function createFakeMemoryProvider(): MemoryProvider {
       const index = visibleIndex(request.id, request.scope)
       if (index !== -1) records.splice(index, 1)
       return Promise.resolve()
+    },
+    countRebuiltAt(request) {
+      return Promise.resolve(countRebuiltRecords(records, request))
     },
     export(request) {
       const matches = records.filter(record => inScope(record, request.accessContext.scope))
@@ -589,6 +610,9 @@ export function createDurableFileMemoryProvider(options: DurableFileMemoryProvid
         await write(records)
       })
     },
+    countRebuiltAt(request: MemoryRebuiltCountRequest): Promise<number> {
+      return enqueue(async () => countRebuiltRecords(await read(), request))
+    },
     export(request: MemoryExportRequest): Promise<MemoryExportResult> {
       return enqueue(async () => ({
         records: visible(await read(), request.accessContext.scope).map(toRecordView),
@@ -608,6 +632,27 @@ const DURABLE_FILE_MEMORY_FILENAME = 'memory.json'
 // simply absent — the pre-release stance is that a backend rejects an old
 // on-disk format (AGENTS.md), not that it guesses at one.
 const DURABLE_FILE_MEMORY_FORMAT_VERSION = 2
+
+/**
+ * How many of `records` sit at one workspace path under some OTHER identity.
+ *
+ * Counted, never returned: the records belong to the directory this one
+ * displaced, and handing any of them back would make this a way around the
+ * scope check. Tenant scoping still applies, so this cannot count across
+ * tenants either.
+ * @param records - every record the provider holds.
+ * @param request - the path, the current identity, and the reader's context.
+ * @returns the number of matching records.
+ */
+function countRebuiltRecords(
+  records: readonly ScopedMemoryRecord[],
+  request: MemoryRebuiltCountRequest,
+): number {
+  return records.filter(record =>
+    record.scope.tenantId === request.accessContext.scope.tenantId
+    && record.scope.workspace?.canonicalPath === request.canonicalPath
+    && record.scope.workspace.identity !== request.currentIdentity).length
+}
 
 /**
  * The origin fields one proposal stores, with the confidence rule applied once.
