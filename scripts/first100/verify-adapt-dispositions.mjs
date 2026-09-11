@@ -92,6 +92,13 @@ export function standardDispositionGaps(standards, declared, assigned) {
   const ownedNames = (declared.standardsOwned ?? []).map(
     entry => typeof entry === 'string' ? entry : entry?.standard,
   ).filter(Boolean)
+  // A deviation names a STANDARD in `standard` and an adapt package in
+  // `name` + `npm`. The two keys mark two kinds of subject, not two spellings
+  // of one: across the records, 57 adapt rows carry `name` + `npm` and 22
+  // standard rows carry `standard`. So this reads `standard` only, and a
+  // standard recorded under `name` is a malformed record rather than a shape
+  // this gate should absorb — tolerating it would let an adapt row silently
+  // discharge a standard's disposition.
   const deviatedNames = (declared.deviations ?? []).map(entry => entry.standard).filter(Boolean)
   const accounted = new Set([...ownedNames, ...importedNames, ...deviatedNames])
   for (const standard of standards) {

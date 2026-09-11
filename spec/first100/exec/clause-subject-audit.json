@@ -481,7 +481,6 @@
             "reason": "The epic has not been accepted, so this is not a read-only disposition: it records that the package was measured absent from the tree at the time the record was written, and adopting it remains open until the stage that would use it is built. Same: a data set, not a dependency, and no technique id reaches the taxonomy."
           },
           {
-            "name": "OWASP LLM Top-10 2025 (LLM06 Excessive Agency)",
             "npm": null,
             "reason": "Not adopted. Whole-tree census at 2026-09-11: `grep -rni \"owasp|llm06|excessive agency\"` returns ZERO hits. The concept LLM06 names — an agent doing more than it was authorized to — is what this epic's approval threshold and kernel hard-deny band address, but the epic addresses it in its OWN vocabulary and never cites the catalogue. Citing it now would be a label added after the fact, not a vocabulary the implementation was written against.",
             "ruling": "§12.85 note 46",
@@ -493,7 +492,6 @@
             "standard": "OWASP LLM Top-10 2025 (LLM06 Excessive Agency)"
           },
           {
-            "name": "MITRE ATLAS technique ids",
             "npm": null,
             "reason": "Not adopted. Whole-tree census at 2026-09-11: `grep -rni atlas` across packages, docs and scripts, excluding lib and node_modules, returns ZERO hits for the vocabulary — the only matches are substring noise (`activeAtLastHeader`). No ATLAS technique id is recorded, mapped, or referenced anywhere the epic built. The assignment came from the plan's shape-ownership marking; the implementation took a different route, classifying by the eight `RiskClass` values and the organisation's `riskRules` table instead. A frozen case naming this vocabulary could only assert a mapping written to satisfy the gate, which is inventing functionality rather than pinning a vocabulary.",
             "ruling": "§12.85 note 46",
@@ -1036,14 +1034,14 @@
             "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Follows from semver being unadopted: there are no ranges to interpret."
           },
           {
-            "name": "VS Code contributes/capabilities.untrustedWorkspaces vocabulary",
             "reason": "NOT ADOPTED. `untrustedWorkspaces` returns zero hits; the five `untrusted` hits are a DIFFERENT concept pointing the other way — `PluginDeclaration.trust` takes `'legacy-untrusted'` (plugin-manifest/src/types.ts:373), a verdict about THIS DECLARATION having no trustworthy permission surface. VS Code's vocabulary is an extension declaring what IT supports when the WORKSPACE is untrusted. One grades the declaration, the other grades the environment.",
-            "ruling": "standards-ownership assignment withdrawn 2026-09-11 (delegate note 42): measured not adopted, recorded rather than pinned by an invented case"
+            "ruling": "standards-ownership assignment withdrawn 2026-09-11 (delegate note 42): measured not adopted, recorded rather than pinned by an invented case",
+            "standard": "VS Code contributes/capabilities.untrustedWorkspaces vocabulary"
           },
           {
-            "name": "Chrome MV3 permissions/host_permissions vocabulary",
             "reason": "NOT ADOPTED, and the alias sweep is the evidence rather than the absence of a case: `permissions`, `host_permissions` and `manifest_version` return ZERO hits across `packages/plugin/*/src`. This tree declares a capability's EFFECT, not a named permission string — `CapabilityEffectDeclaration`, `SideEffectClass` ('none'|'read'|'write'|'network'|'process'|'destructive'), `CapabilityDestination`/`allowedDestinations`, `AuthMechanism`, `DataClassification` (plugin-manifest/src/types.ts:72-171). MV3 asks which named permissions you want; this manifest asks what side effect you cause and toward which destinations. Not the same vocabulary under another name, so a case naming MV3's would be a case about something this tree does not have.",
-            "ruling": "standards-ownership assignment withdrawn 2026-09-11 (delegate note 42): measured not adopted, recorded rather than pinned by an invented case"
+            "ruling": "standards-ownership assignment withdrawn 2026-09-11 (delegate note 42): measured not adopted, recorded rather than pinned by an invented case",
+            "standard": "Chrome MV3 permissions/host_permissions vocabulary"
           }
         ],
         "rejectedAbsent": [],
@@ -1181,14 +1179,14 @@
             "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED and nothing propagates from it. Measured with the epic's REALITY SET — files[] plus its live frozen entries' files — rather than a repository-wide scan: the package IS present in the repository, but not in anything this epic wrote. The earlier record read the wide scan as adoption, which made 'the repository has it' pass as 'this epic took it on'. `fast-check` remains the right tool if this epic later wants property coverage; recording the deviation states that its current cases do not."
           },
           {
-            "name": "npm scope = publisher identity (reserve dsh.*/@deepseek-ai/*)",
             "reason": "NOT ADOPTED. `publisher`, `scope` and `ownerId` return zero hits across `packages/plugin/plugin-ownership/src`. Identity here is the `PluginIdentity` brand and the `Namespace` brand, with `RESERVED_NAMESPACE_ROOT`/`isReservedNamespace` grounded verbatim in the registry's own validation text (`dsh.*` 保留 namespace) — deliberately independent of any publishing channel, so an npm scope grants no standing this set does not already grant.",
-            "ruling": "standards-ownership assignment withdrawn 2026-09-11 (delegate note 42): measured not adopted, recorded rather than pinned by an invented case"
+            "ruling": "standards-ownership assignment withdrawn 2026-09-11 (delegate note 42): measured not adopted, recorded rather than pinned by an invented case",
+            "standard": "npm scope = publisher identity (reserve dsh.*/@deepseek-ai/*)"
           },
           {
-            "name": "VS Code publisher.name id convention",
             "reason": "NOT ADOPTED, same measurement. This tree composes identity from two brands (`PluginIdentity`, `Namespace`) rather than from a publisher-prefixed id string, so there is no `publisher.name` shape to pin.",
-            "ruling": "standards-ownership assignment withdrawn 2026-09-11 (delegate note 42): measured not adopted, recorded rather than pinned by an invented case"
+            "ruling": "standards-ownership assignment withdrawn 2026-09-11 (delegate note 42): measured not adopted, recorded rather than pinned by an invented case",
+            "standard": "VS Code publisher.name id convention"
           }
         ],
         "rejectedAbsent": [],
@@ -1278,7 +1276,6 @@
             "reason": "not-yet-adopted: this epic is NOT accepted, so no read-only disposition applies. The package is present in the repository but absent from this epic's reality set (files[] plus its live frozen entries' files), so it has not been taken on here. Adoption stays open until a stage that uses it is built. `fast-check` remains the right tool if this epic later wants property coverage; recording the deviation states that its current cases do not."
           },
           {
-            "name": "A2A TaskState / MCP TaskStatus mapping at surfaces (waiting_human ↔ input_required)",
             "npm": null,
             "reason": "Not adopted, and the two halves differ. `waiting_human` is REAL: it is declared in `core/agent/src/state-machine.ts` (`:39`, `:77`, `:94`) and produced by `gateActionRisk` at `core/tools/src/external-effect.ts:349`, which is this epic's must[0]. The MAPPING is absent: `grep -rn input_required` returns ZERO hits, and the only `TaskStatus` in the tree is `collaboration/taskboard`'s unrelated `open|claimed|submitted|verified|failed`. No surface projects the lifecycle state outward in A2A or MCP terms. If such a mapping is ever built it belongs to the epic that owns the surface — P8-01 owns MCP `initialize` protocolVersion and capabilities — and not to P4-05, which owns the state itself.",
             "ruling": "§12.85 note 46",

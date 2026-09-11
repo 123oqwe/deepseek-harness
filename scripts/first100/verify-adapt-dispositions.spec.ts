@@ -51,6 +51,19 @@ describe('standardDispositionGaps — an assigned standard is claimed two ways',
     expect(gaps[0]).toContain('neither standardsOwned nor deviations claims it')
   })
 
+  it('does NOT accept a standard recorded under `name`, the adapt-shaped key', () => {
+    // `name` + `npm` marks an adapt package; `standard` marks a standard. The
+    // two keys are two kinds of subject, not two spellings of one — 57 adapt
+    // rows and 22 standard rows across the records, and no row mixes them. A
+    // standard written under `name` is a malformed record, and absorbing it
+    // here would let an adapt row silently discharge a standard's disposition.
+    const declared = { standardsOwned: [], deviations: [{ name: ATLAS, reason: 'census returns zero hits' }] }
+    const gaps = standardDispositionGaps([ATLAS], declared, assignedAtlas)
+    expect(gaps).toHaveLength(2)
+    expect(gaps[0]).toContain('is neither owned, imported, nor deviated')
+    expect(gaps[1]).toContain('neither standardsOwned nor deviations claims it')
+  })
+
   it('ignores a row the table does not mark as owned by this epic', () => {
     expect(standardDispositionGaps([], { standardsOwned: [] }, [{ standard: ATLAS, thisEpicOwns: false }])).toEqual([])
   })
