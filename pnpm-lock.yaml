@@ -10930,6 +10930,9 @@ importers:
       '@deepseek-ai/dsh-acp':
         specifier: workspace:^
         version: link:../../packages/acp/acp
+      '@deepseek-ai/dsh-action-ledger':
+        specifier: workspace:^
+        version: link:../../packages/action/action-ledger
       '@deepseek-ai/dsh-action-manifest':
         specifier: workspace:^
         version: link:../../packages/action/action-manifest
@@ -10966,6 +10969,9 @@ importers:
       '@deepseek-ai/dsh-brand':
         specifier: workspace:^
         version: link:../../packages/util/brand
+      '@deepseek-ai/dsh-capability-token':
+        specifier: workspace:^
+        version: link:../../packages/policy/capability-token
       '@deepseek-ai/dsh-code-runtime':
         specifier: workspace:^
         version: link:../../packages/code-runtime/code-runtime
@@ -10990,6 +10996,9 @@ importers:
       '@deepseek-ai/dsh-compaction-tool-result-pruner':
         specifier: workspace:^
         version: link:../../packages/compaction/compaction-tool-result-pruner
+      '@deepseek-ai/dsh-control-priority':
+        specifier: workspace:^
+        version: link:../../packages/collaboration/control-priority
       '@deepseek-ai/dsh-cordis-host-runner':
         specifier: workspace:^
         version: link:../../packages/extensions/cordis-host-runner
@@ -11029,6 +11038,9 @@ importers:
       '@deepseek-ai/dsh-hooks-codex':
         specifier: workspace:^
         version: link:../../packages/hooks/hooks-codex
+      '@deepseek-ai/dsh-intake-dedup':
+        specifier: workspace:^
+        version: link:../../packages/collaboration/intake-dedup
       '@deepseek-ai/dsh-invariants':
         specifier: workspace:^
         version: link:../../packages/runtime-diagnostics/invariants
@@ -11041,6 +11053,9 @@ importers:
       '@deepseek-ai/dsh-launch-environment':
         specifier: workspace:^
         version: link:../../packages/util/launch-environment
+      '@deepseek-ai/dsh-lease-contract':
+        specifier: workspace:^
+        version: link:../../packages/collaboration/lease-contract
       '@deepseek-ai/dsh-llm':
         specifier: workspace:^
         version: link:../../packages/llm/llm
@@ -11056,6 +11071,9 @@ importers:
       '@deepseek-ai/dsh-mcp-client':
         specifier: workspace:^
         version: link:../../packages/mcp/mcp-client
+      '@deepseek-ai/dsh-message-bus':
+        specifier: workspace:^
+        version: link:../../packages/run/message-bus
       '@deepseek-ai/dsh-output-retention':
         specifier: workspace:^
         version: link:../../packages/util/output-retention
@@ -11071,15 +11089,33 @@ importers:
       '@deepseek-ai/dsh-plugin-manifest':
         specifier: workspace:^
         version: link:../../packages/plugin/plugin-manifest
+      '@deepseek-ai/dsh-plugin-ownership':
+        specifier: workspace:^
+        version: link:../../packages/plugin/plugin-ownership
       '@deepseek-ai/dsh-plugin-package-inventory-deepseek':
         specifier: workspace:^
         version: link:../../packages/llm/plugin-package-inventory-deepseek
+      '@deepseek-ai/dsh-policy-enforcement':
+        specifier: workspace:^
+        version: link:../../packages/policy/policy-enforcement
+      '@deepseek-ai/dsh-policy-engine':
+        specifier: workspace:^
+        version: link:../../packages/policy/policy-engine
+      '@deepseek-ai/dsh-principal':
+        specifier: workspace:^
+        version: link:../../packages/identity/principal
       '@deepseek-ai/dsh-pwsh-local':
         specifier: workspace:^
         version: link:../../packages/shell/pwsh-local
       '@deepseek-ai/dsh-repeat-tool-reminder':
         specifier: workspace:^
         version: link:../../packages/guard/repeat-tool-reminder
+      '@deepseek-ai/dsh-retry':
+        specifier: workspace:^
+        version: link:../../packages/reliability/retry
+      '@deepseek-ai/dsh-risk-taxonomy':
+        specifier: workspace:^
+        version: link:../../packages/policy/risk-taxonomy
       '@deepseek-ai/dsh-sandbox':
         specifier: workspace:^
         version: link:../../packages/sandbox/sandbox
@@ -11089,6 +11125,9 @@ importers:
       '@deepseek-ai/dsh-sandbox-policy':
         specifier: workspace:^
         version: link:../../packages/sandbox/sandbox-policy
+      '@deepseek-ai/dsh-schema-registry':
+        specifier: workspace:^
+        version: link:../../packages/schema/schema-registry
       '@deepseek-ai/dsh-scope':
         specifier: workspace:^
         version: link:../../packages/core/scope
@@ -11173,6 +11212,9 @@ importers:
       '@deepseek-ai/dsh-system-prompt':
         specifier: workspace:^
         version: link:../../packages/core/system-prompt
+      '@deepseek-ai/dsh-taskboard':
+        specifier: workspace:^
+        version: link:../../packages/collaboration/taskboard
       '@deepseek-ai/dsh-terminal':
         specifier: workspace:^
         version: link:../../packages/terminal/terminal
@@ -11245,6 +11287,9 @@ importers:
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../packages/core/tools
+      '@deepseek-ai/dsh-trust-kernel':
+        specifier: workspace:^
+        version: link:../../packages/kernel/trust-kernel
       '@deepseek-ai/dsh-typert-protocol':
         specifier: workspace:^
         version: link:../../packages/typert/protocol
@@ -11278,9 +11323,18 @@ importers:
       '@deepseek-ai/dsh-workflow':
         specifier: workspace:^
         version: link:../../packages/workflow/workflow
+      '@deepseek-ai/dsh-workflow-journal':
+        specifier: workspace:^
+        version: link:../../packages/collaboration/workflow-journal
+      '@deepseek-ai/dsh-workflow-registry':
+        specifier: workspace:^
+        version: link:../../packages/workflow/workflow-registry
       '@deepseek-ai/dsh-workflow-worker-thread':
         specifier: workspace:^
         version: link:../../packages/workflow/workflow-worker-thread
+      '@deepseek-ai/dsh-workspace-trust':
+        specifier: workspace:^
+        version: link:../../packages/workspace/workspace-trust
       '@deepseek-ai/schemastery':
         specifier: link:../../vendor/schemastery
         version: link:../../vendor/schemastery
