@@ -44,6 +44,27 @@ Measured while writing `verify-import-integrity` (2026-09-10, lane B). **Measure
 
 **Closes when** the source matrix's stage-U list for P2-04 names the files the epic's vocabulary is actually in, at which point the exemption can go. Until then the exemption carries the measurement so the mismatch is documented rather than merely quiet.
 
+### BLOCKED-199 — P1-07: a configured trust grant survives a restart, so a replaced directory is trusted again
+
+**Status: MEASURED, awaiting ruling (OQ23).** Two characterization cases were added to `workspace-trust-local/tests/provider.spec.ts` and **both pass**, which is the finding: they record what the code does today so it is visible rather than assumed.
+
+**What holds within one process.** `LocalWorkspaceTrust.stateFor` consults a grant only at FIRST binding; after that the record is reconciled against a fresh observation and configuration is never re-read. The package says so in its own comment, and two frozen cases pin it. `canonicalGrants` is likewise resolved exactly once per process, with a comment naming the attack it prevents: re-resolving per call would let a retargeted symlink canonicalize the grant onto the attacker's directory.
+
+**What does not survive a restart.** Both defences are **process-local memory**. A second process has no record and re-resolves every grant, so:
+
+- **replaced in place** — grant `/…/project` as `trusted-execute`, stop, delete and recreate the directory (new inode), start again: it resolves to **`trusted-execute`**. Within one process the same swap correctly drops to `untrusted`.
+- **symlink retargeted** — grant a symlink path, stop, re-point it at an attacker-controlled directory, start again: **the attacker's directory is `trusted-execute`**, without the granted path ever being written to. This is the exact attack the `canonicalGrants` comment describes, reached by waiting for a restart.
+
+A workstation restarts and a clone is cheap, so "while the process was down" is not an exotic precondition.
+
+**Why this is a question and not simply a defect.** A grant names a PATH, and an operator writing a path in their own config may well mean the path — that is how most host configuration reads. But `grants` exists as a **stand-in for must[2]'s host-user interaction** (`workspace-trust-local`'s `Config.grants` says so in those words), and the interaction it stands in for binds an **identity**: `bindWorkspaceTrust` binds the observed device/inode, and acceptance[1] says trust is not inherited through replacement, symlink or move. So the stand-in and the thing it stands in for disagree across a restart, and only one of them can be what P1-07 means.
+
+**A frozen title overstates what its case measures.** P1-07's live U entry names *"drops a granted workspace to untrusted once the directory at that path is replaced, **and does not re-grant it from configuration**"*. The second clause is true within a process and false across one. The case is sound; the title claims more than it observes. Recorded rather than renamed — a frozen title is not an executor's to change.
+
+**Closing condition.** A ruling on whether a path-keyed grant may outlive the directory it named, and then either: grants bind an identity at first resolution and persist it, so a restart reconciles rather than re-grants; or grants stay path-keyed and the register says so where the overstated title is. Either way, per the delegate's OQ23 note, **the grant path must go through `requestTrustUpgrade` so that granting produces an audit record** — today it does not, which is a second gap this measurement surfaced.
+
+**Does not un-green P1-07's cells.** Adding cases to a file leaves every frozen title still passing, and `expectCases` is a subset test; what un-greens a cell is a new live entry absent from its observed tree, and none was written here.
+
 ### BLOCKED-198 — readiness: whichever epic builds a memory index must ask `admitToIndex` before it indexes
 
 Recorded before that epic starts, per §12.46-B's split of P6-02 must[2]. Not a blocker on P6-02's own clauses; a requirement the index-building epic inherits, written down so it is met by design rather than discovered afterwards — and an embedding is the worst possible place to discover it, because a sensitive record wrongly indexed cannot be un-indexed once something derived from it has been written.
