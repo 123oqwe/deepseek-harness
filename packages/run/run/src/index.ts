@@ -41,8 +41,8 @@
  */
 
 import { randomUUID } from 'node:crypto'
-import { readFile, rename, writeFile } from 'node:fs/promises'
-import { resolve as resolvePath } from 'node:path'
+import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
+import { dirname, resolve as resolvePath } from 'node:path'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { Service } from '@deepseek-ai/cordis'
 import type { Context } from '@deepseek-ai/cordis'
@@ -222,6 +222,17 @@ export function createFileRunStore(path: string): RunStore {
 
   const write = async (runs: readonly Run[]): Promise<void> => {
     const document: RunStoreDocument = { version: RUN_STORE_FORMAT_VERSION, runs }
+    // **The directory is created first, and it is not defensive.** `dshHomePath`
+    // builds a path and never creates it, so a machine that has never run `dsh`
+    // has no `runs/` under its home — and `@deepseek-ai/dsh-lease-sqlite`, the
+    // sibling store in this group, has always done this (`store.ts`'s
+    // `mkdirSync(directory, { recursive: true })`). Without it every `put`
+    // failed ENOENT, and nothing said so: the only caller's promise was awaited
+    // in the plugin's disposer, where a rejection is swallowed by
+    // `fiber.dispose()`. It surfaced only when P4-02 began awaiting a Run
+    // transition inside a turn, which turned a discarded write failure into a
+    // failed turn (BLOCKED-198, and BLOCKED-197 for the swallowing path).
+    await mkdir(dirname(path), { recursive: true })
     // Write-then-rename: a crash mid-write leaves the previous complete
     // document in place at `path` rather than a truncated one.
     const temporaryPath = `${path}.${process.pid}.tmp`

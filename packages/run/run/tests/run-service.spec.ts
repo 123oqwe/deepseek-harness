@@ -259,4 +259,27 @@ describe('createFileRunStore: the durability seam itself', () => {
     await service.accept(RUN_A, SESSION_1, 1_000)
     expect(await readFile(storePath, 'utf8')).toContain(RUN_A)
   })
+
+  it('creates the store directory on the first put, so a home that never ran dsh is not a failure', async () => {
+    // **The defect this closes was invisible for as long as it existed.**
+    // `dshHomePath` builds a path and never creates it, so `~/.dsh/runs/` does
+    // not exist on a machine that has never run `dsh` — and every `put` failed
+    // ENOENT there. Nothing reported it: the only caller's promise was awaited
+    // in the plugin's disposer, where a rejection is swallowed by
+    // `fiber.dispose()`. It surfaced as 77 red snapshot fixtures the moment
+    // P4-02 began awaiting a Run transition inside a turn, which is what turned
+    // a discarded write failure into a failed turn (BLOCKED-198).
+    //
+    // The path here is TWO levels below a directory that exists, because one
+    // level would also pass against a `mkdir` without `recursive`.
+    // `dir` is the per-case temp root `beforeEach` made and `afterEach` removes;
+    // the store path is two levels below it, because one level would also pass
+    // against a `mkdir` without `recursive`.
+    const nested = join(dir, 'never-created', 'runs', 'runs.json')
+    const service = await RunService.restore(createFileRunStore(nested))
+
+    await service.accept(RUN_A, SESSION_1, 1_000)
+
+    expect(await readFile(nested, 'utf8')).toContain(RUN_A)
+  })
 })

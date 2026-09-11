@@ -4891,6 +4891,8 @@ So a cleanly unloaded host keeps its session's work item until the lease lapses,
 2. `RunPlugin`'s disposer is async and `await`s `advance()` before it would release — `packages/run/run/src/index.ts:1255` — so it yields the microtask queue and loses to any disposer that does not.
 3. The accessor that throws is `packages/run/lease-sqlite/src/index.ts:90`, guarding `this.opened`.
 
+**Cross-reference: BLOCKED-198 is the same swallowing seen from the other side.** There the discarded rejection was an `ENOENT` from a Run store that never created its directory, raised and thrown away on every affected boot for as long as the code existed. This entry is about the disposer that discards; that one is about what it discarded. Closing this one would have surfaced that one years earlier.
+
 **A second finding, worth its own line: that error message is wrong for the case that reaches it.** It reads "used BEFORE its mount opened the database", and its JSDoc adds "which no consumer can do — `inject` holds them until the service is available" (`lease-sqlite/src/index.ts:87-88`). The case that actually occurs is the opposite: used AFTER the mount CLOSED it, during teardown. Whoever hits this in a deployment is told to look at startup ordering, and the fault is at shutdown.
 
 **Two observations worth keeping, both incidental to finding it.**
@@ -4911,3 +4913,25 @@ So a cleanly unloaded host keeps its session's work item until the lease lapses,
 - **Give Cordis an unload order.** `vendor/cordis/src/fiber.ts:773` is a vendored file, so this is the heaviest and would change every plugin's teardown, not just this seam.
 
 `RunLease.release()` (`packages/collaboration/lease-contract/src/run-lease.ts:58`, implemented at `:118` as `store.release(token)`) does NOT sidestep it: the `store` it closes over is the plugin instance, so the call lands on the same cleared accessor.
+
+
+### BLOCKED-198 — the Run store never created its directory, and the failure was swallowed for as long as it existed
+
+**Status:** FIXED 2026-09-11 in the same slice that surfaced it, owner `dsh-run`. Recorded rather than closed silently, because two of its three layers outlive the one-line fix.
+
+**Layer 1 — the defect.** `createFileRunStore`'s `write` went straight to `writeFile(\`${path}.${pid}.tmp\`)` with no `mkdir`. `dshHomePath` builds a path and never creates it (there is no `mkdir` anywhere in `packages/util/home-paths`), and the shipped bundle's `run` row uses `dshHomePath('runs', 'runs.json')` — so on a machine that has never run `dsh` the directory does not exist and every `put` failed `ENOENT`. **The sibling store in the same group has always done it right**: `packages/run/lease-sqlite/src/store.ts:79` is `mkdirSync(directory, { recursive: true })`. One durable store in `packages/run` created its directory and the other did not.
+
+**Layer 2 — why nobody saw it, and this is the part that outlives the fix.** Until P4-01's U2 slice, `put`'s only caller was `openForSession`, whose promise was pushed onto `this.writes` and awaited **only in the plugin's disposer** — where a rejection is swallowed by `fiber.dispose()`, measured under BLOCKED-197. So the ENOENT was raised and discarded on every affected boot, for as long as the code existed, and no gate, test or log ever said so.
+
+**Measured, per the delegate's request: `dsh-run` has exactly TWO fire-and-forget durable writes**, both awaited only in that disposer and therefore both under the same swallowing:
+
+| site | what it writes | since |
+|---|---|---|
+| `packages/run/run/src/index.ts:804` — `this.writes.push(opened.durable)` | the Run a session opened | P4-01's U stage |
+| `packages/run/run/src/index.ts:929` — `this.writes.push(this.endRun(…))` | the terminal transition at `agent/disposed` | P4-01's U2 slice |
+
+Both are deliberate — `agent/session-start` and `agent/disposed` are emitted synchronously and do not await their listeners, so there is nowhere to await them at the call site — and both are invisible on failure. **The fix below removes the CAUSE of the failure, not the swallowing**, which is BLOCKED-197's to answer.
+
+**Layer 3 — the shipped consequence.** Before P4-02 began awaiting a Run transition inside a turn, the effect was that Runs silently never persisted on such a machine. After it, the same failure fails the user's **first turn**. That change of blast radius is what made 77 snapshot fixtures go red at once, and it is why this is a product defect rather than a test one: a fresh install would have hit it.
+
+**The fix:** `await mkdir(dirname(path), { recursive: true })` before the write, the same shape `lease-sqlite` uses. Frozen by `creates the store directory on the first put, so a home that never ran dsh is not a failure` (`packages/run/run/tests/run-service.spec.ts`), whose store path is **two levels** below an existing directory so that a `mkdir` without `recursive` would not pass it. Mutation: remove the `mkdir` — reddens that case and only that case, 1 of 195.
