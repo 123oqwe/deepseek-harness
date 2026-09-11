@@ -53,6 +53,8 @@ None, as this package exports resume decisions, journal compaction, and types on
 
 Nothing here enters a model request, so provider cache reuse is unaffected.
 
+**Runtime invariant:** No runtime invariant companion is published: a journal is a file under a directory the caller names, reached through the free `writeJournal`/`readJournal` functions, so this package retains no second copy of it. There is one observation, and a companion could only re-read it.
+
 ## Known Limitations and Deferred Work
 
 - **Compaction has a caller but no observable saving.** `WorkerRun` compacts at settlement and refuses to persist a compaction that failed `retainsAllReceipts`, but the only thing compaction drops is a verified entry's `inputs`, and nothing populates `inputs`: `stepStarted` always writes `[]`. So the rule is live and its effect is nil until a producer records input refs.

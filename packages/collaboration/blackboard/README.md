@@ -37,6 +37,8 @@ None, as this package exports fact admission, observation tracing, and types onl
 
 Nothing here enters a model request, so provider cache reuse is unaffected.
 
+**Runtime invariant:** No runtime invariant companion is published: this package constructs no registry, log or `Context` value. It decides over facts a caller supplies and hands them back, so a checker would compare a value against itself rather than reconcile two observations that can independently diverge.
+
 ## Known Limitations and Deferred Work
 
 - **No retention policy.** Facts accumulate; nothing here expires, compacts, or bounds a board.

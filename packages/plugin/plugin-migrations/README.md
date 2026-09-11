@@ -55,6 +55,8 @@ None, as this package decides and orders a plugin upgrade that runs in `dsh plug
 
 Nothing here enters a model request; an upgrade happens between sessions, not inside one.
 
+**Runtime invariant:** No runtime invariant companion is published: this package holds the migration vocabulary and pure judgements over a manifest's DAG the caller owns, so it constructs nothing whose state a checker could compare against a second reading.
+
 ## Known Limitations and Deferred Work
 
 - **Nothing consults these decisions yet.** This is the Contract stage: the vocabulary and the judgements exist, and the transaction that would run them is the Provider stage's. A reader must not take these tests as evidence that any upgrade is transactional.

@@ -55,6 +55,8 @@ None, as this package exports definition resolution, nesting decisions, and type
 
 Nothing here enters a model request, so provider cache reuse is unaffected.
 
+**Runtime invariant:** No runtime invariant companion is published: `DefinitionRegistry` is instantiated and owned by its consumer — `workflow-worker-thread` holds the one instance — so the relation between a registered definition and a run pinning its digest is observable where that instance lives, never from here.
+
 ## Known Limitations and Deferred Work
 
 - **The signer is recorded, never verified.** `SignerIdentity` is provenance a registration claims. Whether it is genuine is `@deepseek-ai/dsh-plugin-provenance`'s question, and today that cannot be answered — `verifyPackageSignature` trusts a first-seen issuer (P1-02's acceptance lock). Nothing here may be read as evidence a definition's signature is real.

@@ -37,6 +37,8 @@ None, as this package exports fact admission, observation tracing, and types onl
 
 Nothing here enters a model request, so provider cache reuse is unaffected.
 
+**运行时不变式：** 不发布运行时不变式伴随包：本包不构造任何注册表、日志或 `Context` 值。它对调用方提供的事实做判断并把结果交回，因此检查器只会拿一个值与它自己比较，而不是校对两次可以各自偏离的独立观测。
+
 ## 已知限制与延后事项
 
 - **没有保留策略。** 事实会累积;这里没有任何东西会让一块板过期、压缩或设限。

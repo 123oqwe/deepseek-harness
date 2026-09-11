@@ -65,6 +65,8 @@ None, as this package exports decision functions, an atomic lock commit, and typ
 
 Nothing here enters a model request, so provider cache reuse is unaffected.
 
+**Runtime invariant:** No runtime invariant companion is published: candidate resolution, commit, the load-order gate and the integrity check are all pure functions over a lock document the caller supplies, and this package retains no resolved state a later observation could contradict.
+
 ## Known Limitations and Deferred Work
 
 - **Most locked facts are markers, not observations, for packages as they exist today.** `buildCandidateLock` records what an installed directory actually carries — name, exact version, and a digest over the manifest — and marks the rest `unavailable:<reason>`. Archive integrity, source commit and signing identity are properties of how a package was *published*, and no package in this repository declares them yet, so a lock generated today pins the manifest and nothing else. `summarizeLockCoverage` exists so a caller can say so rather than reporting "locked".

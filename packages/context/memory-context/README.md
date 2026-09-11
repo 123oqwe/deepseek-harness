@@ -116,6 +116,8 @@ Each recall adds one message that accumulates until compaction shadows it, bound
 
 Append-only within a step, so a recall follows the reusable request prefix. Because the recalled set is re-read every step, a turn whose recall differs from the previous turn's invalidates the request suffix from the point the recall text changed.
 
+**Runtime invariant:** No runtime invariant companion is published: this is a Consumer of `ctx.memory`, and every record it renders belongs to that seam rather than to this package. A companion here would re-read the source it just read, which is not two independent observations.
+
 ## Known Limitations and Deferred Work
 
 <a id="known-limitations-and-deferred-work"></a>

@@ -62,6 +62,8 @@ None, as this package refuses or admits an attempt before the adapter is reached
 
 Nothing here enters a model request. A refusal reaches the model only as whatever its caller does with the thrown error.
 
+**Runtime invariant:** No runtime invariant companion is published: breaker state lives inside the cockatiel policy this package configures, and this package keeps no mirror of it. One authority, and no second observation to reconcile against it.
+
 ## Known Limitations and Deferred Work
 
 - **The breaker guards the FIRST chunk, not the whole stream.** `@deepseek-ai/dsh-llm` consults it where the first chunk is pulled, because that is where an endpoint's health shows: a stream that produced a chunk answered. A failure arriving mid-stream is the transport's or the model's, and does not move the breaker — so a destination that reliably starts and then fails will not open. Widening this would mean deciding, inside the breaker, which mid-stream failures are the endpoint's fault, which is the classifier's job and is not observable at a chunk boundary.

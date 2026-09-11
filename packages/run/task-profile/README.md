@@ -59,6 +59,8 @@ Persistence and revision (validation[2]) are then the same mechanism. The sessio
 
 The session event carries the body and no digest. A `TaskProfileRef` is the sha256 of a profile's canonical form, and a profile's `goalRef` names the session and message it was compiled from — ids minted fresh on every run — so a stored digest was a run-varying value in a durable log and the same recorded scenario could never replay to the same bytes. The ids themselves normalize; a digest taken over them before normalization cannot. `taskProfileRef` derives the digest from the body wherever one is needed, including the Run event log entry that references it.
 
+**Runtime invariant:** No runtime invariant companion is published: the only runtime export is `compileTaskProfile`, a pure function over an input the caller assembles, so there is no owned registry, log or `Context` value whose relation a checker could observe.
+
 ## Known Limitations and Deferred Work
 
 - **One caller, and it is the only one.** `@deepseek-ai/dsh-run`'s `RunPlugin` calls the compiler at an agent's first `agent/pre-step`, appends the profile as a `run/task-profile` session event, and names its digest in the Run's `accepted → planning` transition. Nothing reads those events back yet: putting a profile into a model request is P4-03's, and `validateTaskProfile` exists for that reader before it exists.
