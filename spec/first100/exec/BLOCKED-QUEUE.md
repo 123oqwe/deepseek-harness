@@ -4849,7 +4849,20 @@ So a Run carrying sessions A and B is writable under two independent authorities
 
 **Why this is not a bug to fix in place.** The fix is a work item for the Run itself, so that a cross-session Run has one authority. That reverses §12.35-2's decision, which was itself made to close a vacuous-contention defect, and it has to answer what happens when a Run's work item and its sessions' work items disagree. That is a design question for the epic that owns leases.
 
-**Closing condition:** a P4-07 slice whose preFlight measures (a) the two-master risk on a multi-session Run, against a real multi-process store rather than by construction, and (b) the shape of a Run-level work item — whether the Run's item replaces the per-session items or composes with them, and which one a write presents. Only then does `attachSession` acquire a caller.
+**Closing condition:** a P4-07 slice whose preFlight measures (a) the two-master risk on a multi-session Run, against a real multi-process store rather than by construction, and (b) the shape of a Run-level work item. Only then does `attachSession` acquire a caller.
+
+**What (b) has to decide, measured 2026-09-11 — read-only, nothing changed.** Three facts bound the shape:
+
+1. **There are three acquire sites and they name three different things.** `packages/run/run/src/index.ts:775` (`open`) and `:858` (`reclaim`) both acquire on the SESSION — `brandString<WorkItemId>(agent.id)`. `packages/workflow/workflow-worker-thread/src/index.ts:623` acquires on a WORKFLOW RUN — `brandString<WorkItemId>(id)` where `id` is a `WorkflowRunId`. So `WorkItemId` (`lease-contract/src/types.ts:24`) is already a brand over several kinds of subject, and a Run-level item would be a fourth rather than a new idea. What it would NOT be is free: two items naming overlapping work is exactly the arrangement §12.35-2 removed when it stopped minting a `run-<uuid>` per open.
+2. **Exactly one place presents a token, and it is about the AGENT, not the Run.** `packages/core/agent/src/dispatch.ts:259` — `advanceAgentLifecycleFenced` calls `checkFencing(token, lease)`, and its own doc says the token and the lease both come from `Agent.runLease`. `RunService.advance` and `attachSession` present nothing. So "which one a write presents" has no current answer for a Run-level write, because no Run-level write presents anything at all today: the question is not which of two items to present, it is whether Run writes join the fencing discipline in the first place.
+3. **`RunLease.mayWrite` already reads through per call** — `lease-contract/src/run-lease.ts:116`, `checkFencing(token, store.get(workItem))` — so a second item would need a second `RunLease`, or a `RunLease` over a composite item. Neither exists; `acquireRunLease` (`:85`) takes exactly one `workItem`.
+
+**So the two candidate shapes, neither measured as working:**
+
+- **Replace.** A Run spanning sessions takes a Run-level item and its sessions take none. Simplest to fence, and it reopens §12.35-2 head-on: two hosts driving ONE session would again ask for different items whenever their Runs differ, which is the vacuous contention that decision was made to remove.
+- **Compose.** The Run's item is held alongside each session's, and a write presents the one matching its subject — session-scoped writes the session's, Run-log writes the Run's. Keeps §12.35-2 intact and needs something that does not exist: a holder of two leases at once, and a rule for what happens when one is lost and the other is not.
+
+**A third option worth stating so it is not rediscovered as new:** leave `attachSession` uncalled permanently and let a subagent's Run reference its parent by an entity reference rather than by shared identity. That costs acceptance[2]'s second half as written, which is why it is a registry question and not an implementation one.
 
 **What P4-01's U2 freezes instead**, so the clause is not left silent: the NEGATIVE half — a second session does not join an existing Run today, and a restart ADOPTS rather than mints (the intentional version of what `runs-for-session after=2` was doing by accident). At re-sign, acceptance[2] reads: the first half holds, the negative half is frozen, and the positive second half is held by this entry. Same shape as BLOCKED-172.
 
