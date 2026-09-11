@@ -1,0 +1,35 @@
+# The control for §12.79's first invariant: identical to
+# `memory-context.patch.yml` except that the `memory` and `memory-context`
+# rows are left at the base bundle's shipped `disabled: true`.
+#
+# Every other row is byte-identical to that file on purpose. A difference
+# anywhere else would make the request comparison a comparison of two
+# different compositions rather than of the memory switch.
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: agent-loop
+  config:
+    agents:
+      - id: main
+        provider: memory-context-mock
+        model: memory-context-mock
+        cwd: !!js process.cwd()
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
+
+- insert:
+    - id: memory-context-mock-llm
+      name: './mock-llm.ts'

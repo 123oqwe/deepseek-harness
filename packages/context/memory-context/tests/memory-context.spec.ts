@@ -8,6 +8,7 @@
  * of that log can reconstruct.
  */
 
+import { realpathSync } from 'node:fs'
 import { readFile, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -17,6 +18,7 @@ import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import { LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
 
 const driver = fileURLToPath(new URL('./fixtures/driver.ts', import.meta.url))
+const emptyDriver = fileURLToPath(new URL('./fixtures/empty-recall-driver.ts', import.meta.url))
 const configPath = fileURLToPath(new URL('./fixtures/memory-context.patch.yml', import.meta.url))
 const repoTsconfig = fileURLToPath(new URL('../../../../tsconfig.json', import.meta.url))
 
@@ -133,5 +135,73 @@ describe('memory-context through the production headless profile', () => {
     // request only through the attributed user message above.
     const headers = events.filter(event => event.type === 'request/header')
     expect(JSON.stringify(headers)).not.toContain(SEEDED)
+  })
+})
+
+/**
+ * §12.79's first invariant, which the switch to memory-on-by-default rests on:
+ * with nothing to recall, the model reads exactly what it reads with the
+ * feature off.
+ *
+ * The two assertions below are one invariant and neither half states it alone.
+ * A byte comparison on its own would still pass a build that stopped recording
+ * reads; an event assertion on its own says nothing about what the model saw.
+ * `memory-context` appends the `memory/access` event whether or not anything
+ * was recalled — deliberately, because a read that returned nothing is still a
+ * read — so "nothing happened" is the wrong thing to assert and "no
+ * memory/access event" asserts the opposite of the design.
+ */
+describe('an empty recall costs the model nothing', () => {
+  let withMemory = ''
+  let withoutMemory = ''
+  let emptyRunEvents: SessionEvent[] = []
+
+  beforeAll(async () => {
+    const run = async (config: string) => {
+      let request = ''
+      let logged: SessionEvent[] = []
+      await runLoaderSmoke({
+        label: `memory-context empty recall (${config})`,
+        tempDirPrefix: 'memory-context-empty-',
+        binScript: emptyDriver,
+        libBinScript: emptyDriver,
+        configPath: fileURLToPath(new URL(`./fixtures/${config}`, import.meta.url)),
+        tsconfigPath: repoTsconfig,
+        inspect: async (cwd) => {
+          // Each smoke run gets its own temporary directory, and the system
+          // prompt states the agent's working directory. That path is what
+          // the harness chose, not what the memory switch decided, so both
+          // spellings of it are folded to one token before the comparison.
+          const raw = await readFile(join(cwd, 'request.json'), 'utf8')
+          request = raw.replaceAll(realpathSync(cwd), '<cwd>').replaceAll(cwd, '<cwd>')
+          const logs = await jsonlFiles(join(cwd, '.sessions'))
+          expect(logs).toHaveLength(1)
+          const lines = (await readFile(logs[0] as string, 'utf8')).trimEnd().split('\n')
+          logged = lines.slice(1).map(line => JSON.parse(line) as SessionEvent)
+        },
+      })
+      return { request, logged }
+    }
+    const on = await run('memory-context.patch.yml')
+    const off = await run('no-memory.patch.yml')
+    withMemory = on.request
+    withoutMemory = off.request
+    emptyRunEvents = on.logged
+  }, LOADER_SMOKE_TEST_TIMEOUT_MS * 2)
+
+  it('hands the model bytes identical to a boot with the memory rows disabled', () => {
+    // Not "no snapshot was injected" — that is a property of the renderer.
+    // This is the request itself, captured by the adapter in both runs.
+    expect(withMemory).toBe(withoutMemory)
+  })
+
+  it('still records the read that returned nothing, so silence is not an unlogged read', () => {
+    const reads = emptyRunEvents.filter(
+      (event): event is SessionEvent<'memory/access'> => event.type === 'memory/access'
+        && event.data.operation === 'query')
+    expect(reads).toHaveLength(1)
+    const data = reads[0]!.data
+    if (data.operation !== 'query') throw new Error('unreachable: filtered to query above')
+    expect(data.resultCount).toBe(0)
   })
 })
