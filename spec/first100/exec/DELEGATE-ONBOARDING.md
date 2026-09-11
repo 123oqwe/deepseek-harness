@@ -79,6 +79,8 @@ preFlight(JSON 记录 `clause-subject-audit.json` + `evidence-<id>.md`,`recorded
 
 - **描述性文字不是现状**(补记 85):引用注释/README/preflight 表/BLOCKED 条目作为"现在是这样"的证据前,核对它描述的代码或读数;核不了就写"未核对"。lane B 把一段 09-07 前的模块头当现状,差点开出一个不存在的缺陷号;P4-09/P6-02 的过期理由是同一件事的另一面。
 
+- **叠 overlay 后再跑三个轻门**(补记 89):撤签/accept 改了 ledger 行状态,`verify-adapt-dispositions` 会按新状态重判 deviation 理由;`--check` 只核摘要。叠好 tip 后跑 `verify-adapt-dispositions`、`verify-make-vs-use`、`verify-ledger-digests`(秒级)再派发。
+
 ## 9. 每小时自查五问(2026-09-11,gq-92 退班前给;由 watch-v12 心跳每小时打印,不靠记)
 
 ① 我派出去的非代码指令(锚 / 文件 / 配置)核过落地了吗——`ls` / `grep` 一次,不信"已建"。② 云上有没有排队或已被取代的 run,取消了没(一次只派最新候选)。③ 本笔是不是一次云跑——docs overlay 先叠到候选再派发,门③ SHA == 推送 SHA,dispatch run 既是门③也是观测。④ 今天有没有我没量就写的断言(补记 4 的"无环"是反例)。⑤ `~/first100-delegate/.events/watchdog.log` 最近一条是什么(机器睡眠 / 电池 / 会话死亡先于"lane 怠工"怀疑)。
