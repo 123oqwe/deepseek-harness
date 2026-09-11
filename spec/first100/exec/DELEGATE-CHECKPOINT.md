@@ -26,6 +26,6 @@
 | 待用户决定 | 非阻塞两件(默认不动):① 文档预算 5/8 文件余量 ≤6 词,任何增写即触发门——要不要留余量带(补记 74);② `packages/README.md` 清单表随 group 数长,要不要按文件豁免清单表(不改全局规则)。FYI:210 已给 `first100-exact-sha.yml` 加 `pnpm run hygiene` 一步(Build 后,fail-fast,本机 25s–137s),随候选 2 上云 |
 | 换班当晚规则 | 前任"只在消息里"的批复一律按未落盘处理,78 重核后落盘于 §12.85;裁决先进 `delegate-overlay-78` 再发消息(§5.2.1) |
 | 叠加后验证 | **门③ = GitHub**(5.1.5):任何候选派发前 lane 须在按该 SHA checkout 的 detached 树(完整 `pnpm install --frozen-lockfile`,不 symlink node_modules)跑 `run-registry-gates.mjs` 全套 + `verify-cordis-api` 报各 exit;78 叠 overlay 后在 gate 树 detached 跑 `generate-ledger.mjs --check`;不再本地跑门③/固定集;签字前必跑 `verify-make-vs-use` + `verify-adapt-dispositions`;supersede 已绿格 = 同笔撤绿 |
-| 监视工具 | `~/first100-delegate/`:`watch-v12.sh`(15 分钟心跳 + 每小时五问自查,状态目录 `.v12`)、`exec-watch2.py` × 2(USER/IDLE/COMMIT/REPORT/FLAG)、hook feed `.events/lanes.log`、OS watchdog、`artifacts/`(rescue 的 vitest 报告)、`ONBOARDING.md`(+§8 终局与长前置、§9 五问) |
+| 监视工具 | `~/first100-delegate/`:`watch-v13.sh`(15 分钟一行心跳,含两 lane 实况与每小时五问;状态目录 `.v12`)、`exec-watch.py` × 2(v1:USER/FLAG + 每小时 DIGEST——补记 97:v2 的 IDLE/COMMIT/REPORT 太吵已弃)、云跑用 10 分钟轮询的 Monitor 只报红步/结论、hook feed `.events/lanes.log`、OS watchdog、`artifacts/`(rescue 的 vitest 报告)、`dispatch-candidate.sh`(推 overlay tip 到 gate/ 并派发)、`ONBOARDING.md`(+§8 终局与长前置、§9 五问) |
 | 产物 | First-100 账本 artifact(110 条可筛表)https://claude.ai/code/artifact/0e7b1173-b99c-4059-a647-d6c9f732d96f |
 | 机器 | 与用户 ChatGPT/Codex 共用;今日 OOM 杀 lane A 后台任务 4 次(load 峰 14.6);规则:`uptime`>20 不起套件,重套件两 lane 不同时跑;05:30–10:25 EDT 断网 5h(补记 40) |
