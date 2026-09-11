@@ -6,4 +6,5 @@
   - option "goal set or view the goal for a long-running task"
   - option "permission Switch the permission preset (sandbox mode + approval policy)"
   - option "plan Enter or leave plan mode"
+  - option "trust-skills allow this project's own skills to run, after confirming"
   - option "model Select the model for this conversation"
