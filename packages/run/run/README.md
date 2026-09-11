@@ -268,17 +268,45 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   members, so declaring a member is what registers a type; a Run-lifecycle
   event needs a decision about what belongs in two stores, not a registration
   step.
-- **`RunPlugin` advances a Run exactly once, `accepted → planning`.** That
-  transition is driven from the first `agent/pre-step` and names the compiled
-  TaskProfile as a `task-profile` reference (P4-02 must[1], validation[2]); an
-  agent whose first message is not a task — injected plugin context, most of
-  them — compiles nothing and leaves its Run in `accepted`. The transitions
-  onward through `running`/`verifying` to a terminal state, and the
-  `workflow/*`-driven references that would accompany them, are still
-  deferred: `workflowRefOf` reconciles the brands those references need, but
-  no mounted listener calls it. A consequence: every Run a boot opens is still
-  non-terminal at the next boot, so `listNonTerminal` grows with each run
-  against one store path until the remaining transitions land.
+- **A Run does NOT reach a terminal state when the PROCESS ends.** Its terminal
+  transitions are driven from `agent/disposed`, and at whole-process teardown
+  Cordis unloads this plugin's listeners before the agent registry disposes its
+  agents — so `finish` never runs, the Run keeps whatever state it was in, and
+  the lease is not released either. Measured through the Loader fixture: a boot
+  whose root agent never took a model step leaves its Run in `accepted`, and the
+  next boot reports `restored 1 non-terminal Run(s)`. A session disposed WHILE
+  the harness runs does reach a terminal state. The consequence is that
+  `listNonTerminal` still grows per boot for any session a later boot does not
+  continue.
+- **Continuing a Run across a restart needs a stable session id.** Adoption is
+  keyed on the session, so a configured agent with no `sessionId` gets a new
+  session per boot and each one correctly gets its own Run. A deployment whose
+  root agent is meant to outlive a restart declares the id —
+  `tests/first100/fixtures/loader/p4-01-run-resumed/cordis.yml` is that shape,
+  and the fixture beside it without the id is the other.
+- **A Run's log records that a transition happened, never the input that decided
+  it.** `RunEvent` carries `fromState`, `toState` and entity `references`, so
+  the end decision's input — whether an unrecovered error was recorded — is not
+  in the entry that acts on it. Putting it there would need a new event field,
+  and the right home is Epic P7-05's `OutcomePackage.failures`, which is
+  content-addressed and signed. Recorded rather than approximated with a
+  reference to something that is not an entity.
+- **`verifying` is the end decision over this plugin's failure ledger, NOT
+  output verification.** A session that ran walks
+  `accepted → planning → running → verifying → succeeded | failed`, one log
+  entry per step, because the transition table admits no shortcut from
+  `running` to `succeeded`. What the `verifying` step does is read whether an
+  unrecovered `agent/error` is this Run's last reported activity — the same
+  fact the agent's own terminal state comes from. It inspects no artifact and
+  proves nothing about what the run produced. Epic P7-05 owns that meaning: it
+  adds `accepted`, `rejected`, `needs-human` and `compensating` beside this
+  state and decides between them from a frozen VerificationContract and a
+  VerificationReport. The transition shape survives; the decision inside it is
+  replaced. A session disposed before any model step is `cancelled` instead,
+  which is what `accepted` and `planning` both admit.
+- **The `workflow/*`-driven references are still deferred.** `workflowRefOf`
+  reconciles the brands such a reference needs and no mounted listener calls
+  it, so no Run's log names a workflow execution.
 - **A refused `accepted → planning` is not compensated.** The profile body is
   appended to the session log before the Run is advanced, because the append
   is synchronous and validated while `advance` is asynchronous and can refuse.
