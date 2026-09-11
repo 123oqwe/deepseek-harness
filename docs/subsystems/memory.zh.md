@@ -137,8 +137,16 @@ registerProvider(provider: MemoryProvider): () => void
 /**
  * Submit a candidate write. The only mutation entry point this seam
  * exposes (`acceptance[1]`).
- * @param request - the candidate content, its principal, and its scope.
+ *
+ * Refuses an untraceable claim before any provider is reached (P6-02
+ * `acceptance[0]`), for the same reason `query`/`get`/`export` check the
+ * access context here: a provider registered outside this seam would not
+ * inherit the rule, and a record that traces to nothing is not a record this
+ * store can answer for.
+ * @param request - the candidate content, its origin, its principal, and its scope.
  * @returns the newly minted record's identity.
+ * @throws MemoryError `MEMORY_CLAIM_UNTRACEABLE` when the origin names
+ *   neither a source event nor a responsible party.
  */
 async propose(request: MemoryProposeRequest): Promise<MemoryProposeResult>
 

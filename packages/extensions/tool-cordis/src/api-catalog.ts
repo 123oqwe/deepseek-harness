@@ -1350,9 +1350,10 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
       },
       {
         signature: 'async propose(request: MemoryProposeRequest): Promise<MemoryProposeResult>',
-        description: 'Submit a candidate write. The only mutation entry point this seam exposes (`acceptance[1]`).',
-        parameters: [{ name: 'request', description: 'the candidate content, its principal, and its scope.' }],
+        description: 'Submit a candidate write. The only mutation entry point this seam exposes (`acceptance[1]`).\n\nRefuses an untraceable claim before any provider is reached (P6-02 `acceptance[0]`), for the same reason `query`/`get`/`export` check the access context here: a provider registered outside this seam would not inherit the rule, and a record that traces to nothing is not a record this store can answer for.',
+        parameters: [{ name: 'request', description: 'the candidate content, its origin, its principal, and its scope.' }],
         returns: 'the newly minted record\'s identity.',
+        throws: ['MemoryError `MEMORY_CLAIM_UNTRACEABLE` when the origin names neither a source event nor a responsible party.'],
       },
       {
         signature: 'async query(request: MemoryQueryRequest): Promise<MemoryQueryResult>',
@@ -5117,12 +5118,16 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface MemoryGetRequest {\n    readonly accessContext: MemoryAccessContext;\n    readonly id: MemoryRecordId;\n}',
   },
   {
+    name: 'MemoryKind',
+    declaration: 'export type MemoryKind = Branded<\'MemoryKind\'>;',
+  },
+  {
     name: 'MemoryProposeRequest',
     declaration: 'export interface MemoryProposeRequest extends MemoryProposeRequestBase {\n    readonly origin: MemoryClaimOrigin;\n}',
   },
   {
     name: 'MemoryProposeRequestBase',
-    declaration: 'export interface MemoryProposeRequestBase {\n    readonly principal: Principal;\n    readonly scope: MemoryScope;\n    readonly content: unknown;\n}',
+    declaration: 'export interface MemoryProposeRequestBase {\n    readonly principal: Principal;\n    readonly scope: MemoryScope;\n    readonly content: unknown;\n    readonly validUntil?: string;\n    readonly kind?: MemoryKind;\n    readonly subject?: MemorySubject;\n    readonly purpose?: string;\n    readonly sensitivity?: MemorySensitivity;\n}',
   },
   {
     name: 'MemoryProposeResult',
@@ -5163,6 +5168,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'MemoryScope',
     declaration: 'export interface MemoryScope {\n    readonly tenantId: TenantId;\n    readonly sessionId?: string;\n    readonly workspace?: WorkspaceMemoryScope;\n}',
+  },
+  {
+    name: 'MemorySensitivity',
+    declaration: 'export type MemorySensitivity = \'normal\' | \'sensitive\';',
+  },
+  {
+    name: 'MemorySubject',
+    declaration: 'export type MemorySubject = Branded<\'MemorySubject\'>;',
   },
   {
     name: 'Message',
