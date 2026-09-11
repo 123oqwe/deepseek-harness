@@ -11569,7 +11569,7 @@
       ],
       "frozenAtUtc": "2026-09-11T06:53:05.994Z",
       "supersedes": "2026-09-04T05:05:30Z",
-      "supersessionReason": "Re-frozen for BLOCKED-199: the trust binding became durable, so three cases changed meaning and two were added. The superseded entry's cases were sound and its expectations were about a process; these are about a host.",
+      "supersessionReason": "Re-frozen for must[2]'s host-user interaction: the clause's producer exists now, and its cases were in two files this command did not run. A freeze that does not run the cases proving a clause is a freeze that does not pin it.",
       "dryRunProof": {
         "treeSha": "5f79be8678278b460c01ebc9b69d3593393acc78",
         "testsDiscovered": 17
@@ -11578,7 +11578,8 @@
         "mutationDescription": "Five mutations against packages/workspace/workspace-trust-local/src/index.ts, each one literal substitution, the spec re-run, the file restored byte-identical after each. (T-M1) the consumed-grant marker is ignored when matching a grant; (T-M2) the trust record is never written; (T-M3) the consumed marker is never written; (T-M4) a stored record is returned without reconciling it against a fresh observation; (T-M5) NEITHER durable fact is written, which is the state before this fix.",
         "failureSummary": "Each durable fact carries a different case, and the mutations say which: T-M1 and T-M3 each red the retargeted-symlink case ALONE — the marker is the only thing that closes it, because the attacker's directory is a canonical path with no record of its own and would otherwise bind as a first binding. T-M2 reds the control ALONE, so persistence is what lets legitimate trust survive a restart rather than what denies. T-M4 reds both replacement cases, in-process and cross-restart, so reconciling against identity is what closes replacement. Stated rather than papered over: the cross-restart REPLACEMENT case survives T-M2 on its own, because with no record the consumed marker also denies it. Two independent facts refuse it, which is why no single mutation isolates that case. T-M5 removes both and reds all three, confirming it rather than leaving the reader to assume."
       },
-      "note": "P1-07 U-stage, re-frozen for BLOCKED-199. The binding is now durable, so two cases that used to record the defect as CHARACTERIZATION now assert the fix — a directory replaced while nothing was running is untrusted, and a symlink retargeted while nothing was running does not hand its new target the grant — and a control was added so the first is about identity rather than about restarting. A grant is consumed once, marked per CONFIGURED spelling rather than per canonical path, because the attack this closes moves the canonical path. The superseded entry named a case \"...and does not re-grant it from configuration\"; that clause was true within a process and false across one, and it is true in both now, so the title needed no rename."
+      "note": "P1-07 U-stage, re-frozen for BLOCKED-199. The binding is now durable, so two cases that used to record the defect as CHARACTERIZATION now assert the fix — a directory replaced while nothing was running is untrusted, and a symlink retargeted while nothing was running does not hand its new target the grant — and a control was added so the first is about identity rather than about restarting. A grant is consumed once, marked per CONFIGURED spelling rather than per canonical path, because the attack this closes moves the canonical path. The superseded entry named a case \"...and does not re-grant it from configuration\"; that clause was true within a process and false across one, and it is true in both now, so the title needed no rename.",
+      "supersededBy": "2026-09-11T07:56:55.374Z"
     },
     {
       "epic": "P4-02",
@@ -11890,6 +11891,84 @@
         "mutationDescription": "These cases pin a VOCABULARY, not behaviour, so the mutation that matters is the vocabulary changing: each assertion names a literal the tree carries (the two `SbomFormat` members, the `$schema` dialect URI, the major-only compatibility rule, the negotiation result keys, the mandatory/optional split). Renaming or removing any of those literals in the source reddens exactly the case that names it, because the case reads the value rather than a type.",
         "failureSummary": "Verified by construction rather than by a separate mutation run, and stated as such: every assertion above is on a runtime VALUE the source produces (a document `format`, a `$schema` string read from disk, an error `code`, a result object's keys), so there is no path by which the case passes while the literal it names is absent. Where a claim could NOT be pinned to a value it is recorded as delegation rather than asserted -- the Sigstore bundle version is the library's, and the case says so instead of inventing a constant."
       }
+    },
+    {
+      "epic": "P1-07",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workspace/workspace-trust-local/tests/provider.spec.ts",
+        "packages/context/agent-instructions/tests/trust-gate.spec.ts",
+        "packages/context/agent-instructions/tests/trust-ask.spec.ts",
+        "packages/skill/skill-filesystem/tests/trust-gate.spec.ts",
+        "packages/workspace/command-workspace-trust/tests/command.spec.ts",
+        "tests/first100/fixtures/P1-07.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "offers the model neither the clone's executable skills nor its instructions while the workspace is untrusted",
+        "offers the model both the clone's executable skills and its instructions once that same clone is granted trusted-execute",
+        "raises the workspace to trusted-read when the host user accepts, driven by a real pre-step",
+        "asks once per session: a refusal is not re-put on the next step",
+        "does not ask at all once the workspace is already trusted",
+        "leaves the workspace untrusted when the host user refuses",
+        "leaves the workspace untrusted on a non-interactive profile, where there is nobody to ask",
+        "refuses a grant authorized by a principal that is not the host user",
+        "records the question and its outcome as an auditable pair naming the subject",
+        "discovers only the host-owned user-global instructions while the workspace is untrusted",
+        "discovers the project instructions once the workspace reaches trusted-read, alongside the host-owned ones",
+        "discovers the project instructions at trusted-execute as well, since a higher state never loads less",
+        "offers no skill from a cloned repository while the workspace is untrusted, and still offers the host-owned skill",
+        "still offers no skill from the repository at trusted-read, because reading a project is not executing it",
+        "offers both project skills once the workspace reaches trusted-execute, proving the fixture is real and the difference is the trust decision",
+        "grants trusted-execute once the host user confirms",
+        "leaves the workspace untrusted when the confirmation is refused, and says so",
+        "leaves the workspace untrusted where there is nobody to confirm with",
+        "records the confirmation as an auditable pair naming the workspace and the state",
+        "reports an already-trusted workspace without asking again",
+        "resolves an ungranted workspace to untrusted, so a freshly cloned repository is never trusted by default",
+        "resolves a granted workspace to its granted state",
+        "resolves a granted path spelled through a symlink to the same state, since the grant is canonicalized before it is bound",
+        "drops a granted workspace to untrusted once the directory at that path is replaced, and does not re-grant it from configuration",
+        "does not re-grant a directory replaced while the process was down, because the binding is durable",
+        "control: the same directory across a restart keeps its trust, so the refusal above is about identity and not about restarting",
+        "does not trust a retargeted symlink's new target across a restart",
+        "drops a granted workspace to untrusted once the symlink it was opened through is retargeted to another directory",
+        "drops a granted workspace to untrusted once the directory is moved out from under the path it was granted at"
+      ],
+      "files": [
+        "packages/workspace/workspace-trust/src/index.ts",
+        "packages/workspace/workspace-trust-local/src/index.ts",
+        "packages/workspace/workspace-trust-local/src/spec.ts",
+        "packages/workspace/workspace-trust-local/tests/provider.spec.ts",
+        "packages/workspace/command-workspace-trust/src/index.ts",
+        "packages/workspace/command-workspace-trust/tests/command.spec.ts",
+        "packages/context/agent-instructions/src/index.ts",
+        "packages/context/agent-instructions/src/files.ts",
+        "packages/context/agent-instructions/tests/trust-gate.spec.ts",
+        "packages/context/agent-instructions/tests/trust-ask.spec.ts",
+        "packages/skill/skill-filesystem/src/index.ts",
+        "packages/skill/skill-filesystem/tests/trust-gate.spec.ts",
+        "packages/interaction/user-approval/src/types.ts",
+        "packages/bundle/base/cordis.patch.yml",
+        "tests/first100/fixtures/P1-07.composition.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-11T07:56:55.374Z",
+      "supersedes": "2026-09-11T06:53:05.994Z",
+      "supersessionReason": "Re-frozen for must[2]'s host-user interaction: the clause's producer exists now, and its cases were in two files this command did not run. A freeze that does not run the cases proving a clause is a freeze that does not pin it.",
+      "dryRunProof": {
+        "treeSha": "5e3ec46584c4a7bebc9a1c6bb681e7b4decc8287",
+        "testsDiscovered": 29
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Eight mutations, each one literal substitution, the spec re-run, the source restored byte-identical after each. On workspace-trust-local/src/index.ts: (T-M1) the consumed-grant marker is ignored when matching a grant; (T-M2) the trust record is never written; (T-M3) the consumed marker is never written; (T-M4) a stored record is returned without reconciling it; (T-M5) NEITHER durable fact is written, the state before BLOCKED-199. On agent-instructions/src/index.ts: (A-M1) the read question never fires; (A-M2) the already-asked record is dropped so the question is re-put every step; (A-M3) any outcome counts as acceptance; (A-M4) it asks for trusted-execute instead of trusted-read. On workspace-trust/src/index.ts: (A-M5) the non-host-principal refusal is removed; (S-M1) `authorizeProjectLoad` admits an executable skill at any state above untrusted. On command-workspace-trust/src/index.ts: (C-M1) the command grants without confirming; (C-M2) it grants trusted-read instead of trusted-execute.",
+        "failureSummary": "Each durable fact and each decision carries a different case. T-M1 and T-M3 each red the retargeted-symlink case alone; T-M2 reds the same-directory-across-restart control alone; T-M4 reds both replacement cases; T-M5 reds all three. A-M1 reds the accept case and the ask-once case; A-M2 and A-M3 each red the ask-once case alone; A-M4 reds the accept case alone. A-M5 reds the non-host-principal case alone. S-M1 reds \"still offers no skill from the repository at trusted-read\" alone — the case the ruling names, and the reason project skills stay out of the catalog at read: their names and descriptions are text the project supplied. C-M1 reds the refused case and the no-answerer case; C-M2 reds the accept case and the already-trusted case. NOT PROVEN, and stated rather than omitted: the cross-restart REPLACEMENT case survives T-M2 alone, because with no record the consumed marker also denies it — two independent facts refuse it, which is why no single mutation isolates that case, and T-M5 removing both confirms it. Also NOT PROVEN: an end-to-end case running the COMMAND and then observing the catalog on one real boot. The chain is covered in two halves — command to state in command.spec.ts over the real registry, state to catalog in the composition fixture over a real profile — and nothing pins that the halves compose on one boot."
+      },
+      "note": "P1-07 U-stage, re-frozen for must[2]'s host-user interaction. The clause required a trust upgrade to be completed by a host-user INTERACTION and audited; until this batch there was no interaction at all, and the only way to trust a directory was to edit YAML and restart, which produced no record of anyone deciding anything. Two producers now exist and each has its cases in this command: the read question, asked automatically the first time a session would load an untrusted workspace's own instruction files; and `/trust-skills`, the host user's own route to trusted-execute, which is a COMMAND rather than a prompt at the point of use because project skills are not listed at trusted-read, so the agent never reaches for one and there is no moment at which it could be asked about. Both confirm through approval even when the user initiated the action, because the approval pair is what records that they were shown what it means and agreed. Every failure direction — no provider, no approval service, no answerer, a refusal, a non-host principal, an abort — leaves the workspace untrusted, which is the direction the gate already had."
     }
   ]
 }
