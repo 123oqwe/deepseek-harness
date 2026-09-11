@@ -30,33 +30,34 @@
  *   exactly when a replayed token would be presented again. This module
  *   records every spent nonce durably.
  *
- * **must[1] ("TrustKernel 签发/验证") is BLOCKED, not satisfied here, and this
- * module makes no claim to satisfy it.** Two independent, unmet
- * prerequisites, both outside this epic's Provider-stage file scope:
+ * **must[1] ("TrustKernel 签发/验证") is SATISFIED since `1ac2dfe4d1`
+ * (2026-09-07).** This block described the opposite state until 2026-09-11,
+ * and the correction is recorded rather than silently swapped, because the
+ * stale text was persuasive: it told a reader that a token's signature
+ * proves nothing, which stopped being true four days before the text was
+ * read.
  *
- * 1. `@deepseek-ai/dsh-trust-kernel`'s `createTrustKernel()` mints
- *    `signatureRoots` as `Object.freeze({})` — a frozen empty object holding
- *    no key material. There is nothing to sign or verify *with*.
- *    `./attenuate.ts`'s "signature" is the fixed byte sequence
- *    `[0x01, 0x02, 0x03, 0x04]`, which any code can construct without the
- *    kernel's involvement — `tests/token.spec.ts`'s own `fixtureSigned`
- *    helper does exactly that, and `verifyToken` accepts the result. A
- *    token's signature therefore proves nothing about its origin today.
- *    Making it real means adding key material to
- *    `packages/kernel/trust-kernel/`.
- * 2. Making the kernel the *authority* rather than a handle a caller passes
- *    in means an enforcement point that reads the kernel from a Cordis
- *    `Context`. `docs/architecture/trust-kernel-boundary.md` gates exactly
- *    that behind the vendored Cordis `Fiber` structural fix (Option A),
- *    which has not landed: `vendor/cordis/src/fiber.ts`'s `store` is still a
- *    plain public writable field, and `vendor/README.md`'s local-modification
- *    log records no such change.
+ * `createTrustKernel()` now mints a real Ed25519 keypair per kernel
+ * (`generateKeyPairSync('ed25519')`, `trust-kernel/src/index.ts:158`) and
+ * keeps it in a module-private `WeakMap` keyed by the handle (`:125`), so
+ * the private key is never a property of `signatureRoots` itself — the
+ * object that crosses the plugin boundary. `./attenuate.ts` signs and
+ * verifies THROUGH that handle (`signWithSignatureRoots` /
+ * `verifyWithSignatureRoots`), so a signature now binds a token's canonical
+ * bytes to the kernel that issued it. Three frozen cases (P2-02.P.1) hold
+ * this down: a signature verifies while the same bytes with one byte
+ * changed do not; a signature made by a DIFFERENT kernel is refused, which
+ * a shared constant could never distinguish; and the private key stays off
+ * the handle.
  *
- * This module therefore takes `TrustKernelSignatureRoots` as an explicit
- * parameter and passes it through to `./attenuate.ts` unchanged, exactly as
- * the Contract stage does — it never reads the kernel from a `Context`, so
- * it adds no new exposure to that residual. **P2-02 cannot be ACCEPTED while
- * must[1] is open, however many stage cells are green.**
+ * The second prerequisite landed too: the enforcement path's Cordis `Fiber`
+ * fix is `vendor/README.md`'s local modification 20, so `store` is an
+ * accessor whose setter re-seals pinned names rather than a plain writable
+ * field.
+ *
+ * This module still takes `TrustKernelSignatureRoots` as an explicit
+ * parameter and passes it to `./attenuate.ts` unchanged — it never reads the
+ * kernel from a `Context`, so it adds no new exposure to that residual.
  *
  * Every attenuation, verification, and redaction decision is delegated to
  * `./attenuate.ts`. This module holds no second rule table: it decides only

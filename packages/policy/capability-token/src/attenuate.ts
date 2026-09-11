@@ -12,15 +12,19 @@
  * handle as their first parameter, and `@deepseek-ai/dsh-trust-kernel`'s
  * `createTrustKernel()` is the only exported value in this repository that
  * produces one — never by a runtime check this module performs against the
- * handle's contents. That handle currently carries no key material of its
- * own (`packages/kernel/trust-kernel/src/index.ts`'s `createTrustKernel`
- * mints it as a frozen empty object; real signing/verification providers
- * behind it are a later epic's dependency, per
- * `docs/architecture/trust-kernel-boundary.md`), so `issueToken` and
- * `attenuateToken` sign with a fixed marker byte sequence and `verifyToken`
- * checks a candidate signature against that same marker — content-binding
- * cryptographic signing is a later stage's replacement for this marker, not
- * a change to which functions gate on holding the handle.
+ * handle's contents. That handle carries real key material since
+ * `1ac2dfe4d1` (2026-09-07): `createTrustKernel` mints an Ed25519 keypair
+ * per kernel and holds it in a module-private `WeakMap` keyed by the handle,
+ * so the private key is never a property of the object that crosses the
+ * plugin boundary. `issueToken` and `attenuateToken` therefore sign through
+ * `signWithSignatureRoots`, and `verifyToken` checks through
+ * `verifyWithSignatureRoots` — a signature binds a token's canonical bytes
+ * to the issuing kernel, and one made by a different kernel is refused.
+ *
+ * This paragraph described a fixed four-byte marker until 2026-09-11. The
+ * replacement is dated rather than silent because the old text was
+ * convincing and outlived what it described: a reader trusting it would
+ * conclude that a property which now holds does not.
  *
  * The registry names this file `attenuate.ts` and does not add a sibling
  * `issue.ts`/`verify.ts`/`revoke.ts` to this epic's Contract-stage file
