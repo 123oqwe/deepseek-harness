@@ -9,13 +9,13 @@
 3. 核对下表的"在飞 SHA / 门③ / CI"与真实状态(`gh run list -R 123oqwe/deepseek-harness -b first100-exec -L 3`;`git -C <gate-wt2> log -3`)。
 4. **核完之前不签任何字、不推任何 SHA。** 之后按 §5.1 继续:分配 → 门③ → 推 → 观测 → 4.4d grep → 签。
 
-## 当前状态(2026-09-11 02:25 EDT,delegate first100-delegate-78,会话 d3a94c8b,接任于 2026-09-10 23:55 EDT(04 终端确认)/ 2026-09-11 00:09 EDT(用户在两 lane 终端各打「委托转移至 first100-delegate-78」))
+## 当前状态(2026-09-11 03:20 EDT,delegate first100-delegate-78,会话 d3a94c8b,接任于 2026-09-10 23:55 EDT(04 终端确认)/ 2026-09-11 00:09 EDT(用户在两 lane 终端各打「委托转移至 first100-delegate-78」))
 
 | 项 | 值 |
 | --- | --- |
 | delegate 地址 | `first100-delegate-78`,`uds:/tmp/cc-socks/25776.sock`,cwd `/Users/guanjieqiao/first100-delegate`,transcript `~/.claude/projects/-Users-guanjieqiao-first100-delegate/d3a94c8b-056a-44b5-9397-315997b4088a.jsonl`;规划文档/签字 overlay 在本地分支 `delegate-overlay-78`(gate 工作树 `~/dsh-first100-gate`) |
-| 远端单一事实源 | `fork/first100-exec` = `2572637225 + 本笔 docs overlay`(= lane B `c1b872722f` + lane A 本批 42 笔 + 78 的 docs overlay 23 笔) |
-| 最近观测 | CI 34557063530 @ `d69d6e5b3e` **红**,§12.6-B 逐条(§12.85):与 34550613755 逐字同形 = P1-10.F 两 lint 文件 + BLOCKED-186 schemastery,无新红;Full suite 20756/20756 绿,P4-02.C **准入并绿格 12/12**(`55866cb225`)。本笔 `2572637225 + 本笔 docs overlay`:门③ GitHub dispatch(一次云跑:overlay 先叠再派发,门③ SHA == 推送 SHA;前两次 34563699840 @17bdee8fdf 红=两新红已修、34566318353 @f7dd87b5dc 红=P6-01 P/U 陈旧绿未撤,见 §12.85 补记 11/17);CI = 同一 dispatch run(推 first100-exec 后的 on-push run 取消或作重复确认) → 观测 P2-05 C/P/U、P4-02.P、P6-01 P/U(supersede)、P1-10.F、记忆 slice、BLOCKED-186 修 |
+| 远端单一事实源 | `fork/first100-exec` = `06c2c62e0c + 本笔 docs overlay`(= lane B `c1b872722f` + lane A 本批 43 笔含 BLOCKED-199 修 + 78 的 docs overlay) |
+| 最近观测 | CI 34557063530 @ `d69d6e5b3e` **红**,§12.6-B 逐条(§12.85):与 34550613755 逐字同形 = P1-10.F 两 lint 文件 + BLOCKED-186 schemastery,无新红;Full suite 20756/20756 绿,P4-02.C **准入并绿格 12/12**(`55866cb225`)。本笔 `06c2c62e0c + 本笔 docs overlay`:门③ GitHub dispatch(一次云跑:overlay 先叠再派发,门③ SHA == 推送 SHA;前两次 34563699840 @17bdee8fdf 红=两新红已修、34566318353 @f7dd87b5dc 红=P6-01 P/U 陈旧绿未撤,见 §12.85 补记 11/17);CI = 同一 dispatch run(推 first100-exec 后的 on-push run 取消或作重复确认) → 观测 P2-05 C/P/U、P4-02.P、P6-01 P/U(supersede)、P1-10.F、记忆 slice、BLOCKED-186 修 |
 | ACCEPTED | **26**(P4-01 / P1-07 WITHDRAWN 2026-09-10) |
 | 5.2.5 回扫 | 78 亲量于 `d69d6e5b3e`:P2-02 / P2-04 / P4-08 / P4-09 四条成立(§12.85 有 file:line) |
 | Lane A | `dsh-first100-clean-93`,`uds:/tmp/cc-socks/12312.sock`,transcript `~/.claude/projects/-Users-guanjieqiao-dsh-first100-clean/3503e65b-c998-420f-8f07-74738632401b.jsonl`,worktree `/Users/guanjieqiao/dsh-first100-clean`(`land-base-align-v2`),**Sonnet**(2026-09-11 03:27Z 压缩过一次);本批 = 187 修(挂 Cedar + 内核 decider `endorseComposedDecision`)、import 声明、BLOCKED-186 schemastery、P1-10.F 冻结 + BLOCKED-181、记忆 slice ⑤ 四笔 + 不变量 1 两条 + 22 条变异矩阵、BLOCKED-185/187/190/191/193、P2-05.F / P6-07.U / P6-02.U preFlight;队列(§12.85):P2-05.F(①冻结 + ②按 OQ7)→ 记忆 slice 冻结(supersede P6-01 P/U)+ 不变量 2 的 U 用例 → P6-02.U(九字段来源表 → 实做,OQ16/18/19)→ P1-07 整改 (A)(BLOCKED-185,用户已答)→ P6-07.U(OQ9–13 待 78 量后裁) |
