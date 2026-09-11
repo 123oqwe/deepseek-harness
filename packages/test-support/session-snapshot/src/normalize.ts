@@ -26,9 +26,6 @@ const EVENT_TIME = '{{eventTime}}'
 const EVENT_OMITTED_BYTES = '{{eventOmittedBytes}}'
 const ARGUMENTS_HASH = '{{argumentsHash}}'
 const IDEMPOTENCY_KEY = '{{idempotencyKey}}'
-const RUN_ID = '{{runId}}'
-/** A run id minted per created agent: `run-<uuid v4>`. */
-const MINTED_RUN_ID = /^run-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu
 const SANDBOX_MODE = '{{sandboxMode}}'
 const PACKED_CHUNK_ROW_TYPES = new Set(['text-chunks', 'reasoning-chunks', 'tool-call-chunks'])
 
@@ -390,17 +387,6 @@ function scrubVolatileArgumentsHash(record: Record<string, unknown>): void {
   // unit-tested in `dsh-action-manifest`, where the inputs are fixed rather
   // than environmental.
   if (typeof data.idempotencyKey === 'string') data.idempotencyKey = IDEMPOTENCY_KEY
-  // A run id is minted per created agent and is a fresh uuid every launch.
-  // Before a host user was attached it read `anonymous-run:{{session:1}}` and
-  // was carried by the session token; a real identity mints its own, so the
-  // token has to be its own (BLOCKED-201's sibling in P2-01.U2).
-  //
-  // Deriving it from the session id instead was rejected where it is minted:
-  // two runs of one session would share a run id, and P4-12 keys a ledger
-  // scope on it. Only the VALUE is dropped — that the field is present, and
-  // that it is a minted run id rather than the synthesized `anonymous-run:`
-  // form, is still pinned by the pattern this match requires.
-  if (typeof data.runId === 'string' && MINTED_RUN_ID.test(data.runId)) data.runId = RUN_ID
 }
 
 /**
@@ -580,6 +566,30 @@ export function scrubRequestHeaders(rawLog: string): string {
  * @param rawLog - persisted or already-projected session JSONL.
  * @returns committed snapshot JSONL with request headers tokenized.
  */
+/**
+ * Zero the wall-clock stamp on every delegation-chain entry.
+ *
+ * `DelegationEntry.delegatedAt` is a real fact of the chain — when this hop was
+ * added — and it is `Date.now()`, so it differs on every run. A recorded
+ * session that pins it can never replay, which is the same reason this corpus
+ * already zeroes `time`, `createdAt` and `durationMs`.
+ *
+ * The entry, the order of entries and every principal in them stay pinned. What
+ * is dropped is only WHEN, and no case reads it: the chain's claims are about
+ * who delegated to whom, which the principals carry.
+ * @param record - one parsed session-log record, mutated in place.
+ */
+function zeroDelegationClock(record: Record<string, unknown>): void {
+  const data = record.data as Record<string, unknown> | null | undefined
+  if (data === null || data === undefined) return
+  const identity = data.identity as { chain?: { entries?: unknown } } | null | undefined
+  const entries = identity?.chain?.entries
+  if (!Array.isArray(entries)) return
+  for (const entry of entries as Record<string, unknown>[]) {
+    if (typeof entry?.delegatedAt === 'number') entry.delegatedAt = 0
+  }
+}
+
 export function scrubSessionSnapshot(rawLog: string): string {
   const scrubbed = scrubRequestHeaders(rawLog)
   let recordIndex = 0
@@ -591,6 +601,7 @@ export function scrubSessionSnapshot(rawLog: string): string {
       return line
     }
     omitFixtureEnvelope(record)
+    zeroDelegationClock(record)
     return JSON.stringify(record)
   }).join('\n')
 }

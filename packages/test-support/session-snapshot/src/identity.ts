@@ -14,6 +14,8 @@ const UUID_FRAGMENT_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-
  * for the value-wise replacement below, which rewrites the id inside them.
  */
 const WHOLE_UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+/** A run id minted per created agent: `run-` and a whole uuid, nothing else. */
+const MINTED_RUN_ID_RE = /^run-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const LEGACY_TOKEN_RE = /^\{\{(?:sessionId|messageId)\}\}$/
 const CANONICAL_TOKEN_RE = /^\{\{(session|message|approval|run|command|rpc|retry|id):([1-9]\d*)\}\}$/
 const ID_KEY_RE = /(?:^id$|Id$|Ids$)/
@@ -113,7 +115,15 @@ export function redactSessionSnapshotIds(logs: readonly string[]): string[] {
         // in a log was a workflow run's; a manifest's `runId` is the identity's
         // execution run, and a token reading `{{workflow:1}}` there tells the
         // next reader of the fixture that a workflow ran when none did.
-        if (typeof item === 'string' && WHOLE_UUID_RE.test(item)) claim(item, 'run')
+        //
+        // A run a local launcher mints is `run-<uuid>`, not a bare uuid, so
+        // the whole-id test alone left it raw in every log that attaches a host
+        // identity — which is every log a local launcher writes (P2-01's U2
+        // stage). It is claimed with the SAME `run` kind: one execution run,
+        // one spelling, whoever minted it. The prefix is required rather than
+        // stripped, because a composite whose tail merely looks like a uuid is
+        // the case WHOLE_UUID_RE exists to refuse.
+        if (typeof item === 'string' && (WHOLE_UUID_RE.test(item) || MINTED_RUN_ID_RE.test(item))) claim(item, 'run')
       } else if (ID_KEY_RE.test(childKey)) {
         claim(item, 'id')
       }

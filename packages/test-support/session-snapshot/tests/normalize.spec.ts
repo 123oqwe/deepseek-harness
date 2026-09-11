@@ -742,6 +742,43 @@ describe('scrubSessionSnapshot', () => {
     ].join('\n'))
   })
 
+  it('zeroes every delegation-chain clock while pinning the entries and their principals', () => {
+    // `delegatedAt` is `Date.now()` at the moment a hop is added, so a
+    // recording that pins it can never replay — the defect that made 84 of 116
+    // scenarios red once a host identity was attached. Everything the chain's
+    // claims rest on stays: two entries, in order, with both principals whole.
+    const header = '{"type":"session","version":0,"id":"s","createdAt":7}'
+    const attached = JSON.stringify({
+      type: 'identity/attached', seq: 1, time: 3,
+      data: {
+        identity: {
+          principal: { kind: 'agent', id: 'agent:child', tenantId: 'local', delegatedBy: 'u' },
+          runId: 'run-1',
+          chain: {
+            entries: [
+              { principal: { kind: 'user', id: 'u', tenantId: 'local' }, delegatedAt: 1789142840744 },
+              {
+                principal: { kind: 'agent', id: 'agent:child', tenantId: 'local', delegatedBy: 'u' },
+                delegatedAt: 1789142840999,
+                reason: 'subagent delegation',
+              },
+            ],
+          },
+        },
+      },
+    })
+
+    const [, line] = scrubSessionSnapshot(`${header}\n${attached}\n`).split('\n')
+    type Entry = { principal: { id: string }; delegatedAt: number; reason?: string }
+    const parsed = JSON.parse(line as string) as { data: { identity: { chain: { entries: Entry[] } } } }
+    const chain = parsed.data.identity.chain
+
+    expect(chain.entries.map(entry => entry.delegatedAt)).toEqual([0, 0])
+    expect(chain.entries.map(entry => entry.principal.id)).toEqual(['u', 'agent:child'])
+    expect(chain.entries[1]?.reason).toBe('subagent delegation')
+  })
+
+
   it('rejects headerless input', () => {
     expect(() => scrubSessionSnapshot('{"type":"turn/start"}\n'))
       .toThrow('session snapshot must start with a session header')
