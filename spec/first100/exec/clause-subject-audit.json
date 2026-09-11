@@ -1222,15 +1222,15 @@
           {
             "name": "spiffe/spiffe",
             "npm": "spiffe/spiffe",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. Measured absent. Principal ids are branded opaque strings, not SPIFFE URIs."
+            "reason": "Not adopted, measured rather than asserted: `require.resolve('spiffe')` throws MODULE_NOT_FOUND, `spiffe` appears 0 times in `pnpm-lock.yaml`, and no workspace package depends on it. What this epic mints instead is visible in the recorded corpus — `snapshots/session/subagent-depth-two-rejection` carries principal ids spelled `agent:<sessionId>`, a prefixed opaque string branded `PrincipalId`, not a `spiffe://<trust-domain>/<path>` URI. PREVIOUSLY RECORDED as `accepted-unadopted` (R6/§7.9); that reason is reserved for an ACCEPTED row and P2-01 returned to BLOCKED_ON_ACCEPTANCE when the delegate's overlay revoked its sign-off, so the disposition is restated as the measurement it always rested on."
           },
           {
             "standard": "SPIFFE ID URI for principal ids",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. No frozen case of this epic's 98 names SPIFFE; the id shape was defined here."
+            "reason": "Not adopted, and the id shape was defined here rather than borrowed: no frozen case of this epic names SPIFFE, and `grep -rc spiffe packages/identity --include='*.ts'` returns no matching file. The corpus shows the shape actually minted — `agent:<sessionId>` for a delegated child, a bare prefixed string rather than a URI carrying a trust domain. Adopting the URI form would be a change to `PrincipalId`'s spelling across every log already recorded, which is a migration and not a disposition. PREVIOUSLY RECORDED as `accepted-unadopted` (R6/§7.9), restated for the same reason as the row above."
           },
           {
             "standard": "OTel semconv enduser.id/service.name",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. No telemetry attribute mapping exists in this epic."
+            "reason": "Half adopted, half absent, and the earlier wording was imprecise about which. `service.name` IS used in the tree — `packages/session/session-telemetry-otel/src/index.ts:199` sets it in the OTel Resource — but it carries the APP identity (`APP_IDENTITY.product`), not a principal, and that package is not this epic's subject. `enduser.id` has zero occurrences repo-wide, and the exporter never reads `identity/attached` (0 occurrences in its source), so no principal this epic mints reaches telemetry at all. The earlier reason said 'no telemetry attribute mapping exists in this epic', which understated it: a mapping exists and deliberately carries no subject. PREVIOUSLY RECORDED as `accepted-unadopted` (R6/§7.9), restated as measurement after the overlay revoked P2-01's sign-off."
           }
         ],
         "rejectedAbsent": [],
