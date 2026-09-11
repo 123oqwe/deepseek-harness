@@ -50,9 +50,11 @@ provider 注册表、选择逻辑与 `must[3]` access-context 强制执行都是
 
 ### 操作
 
+`origin` 说明一条候选主张从哪来,规则由类型强制:`{ kind: 'user-asserted', assertedBy }` 按词汇定义即 confidence 1,`{ kind: 'derived', sourceEvents, confidence }` 必须写明只有写入方知道的置信度。没有任何一方会替它兜底——一个谁都没声明过的 confidence,就是写进持久数据里的假事实。
+
 ```text
 // Propose a candidate write — the only mutation entry point:
-const { id } = await ctx.memory.propose({ principal, scope, content })
+const { id } = await ctx.memory.propose({ origin, principal, scope, content })
 
 // Read, scoped by principal/purpose/scope/contextBudget:
 const { records, truncated } = await ctx.memory.query({ accessContext, query: 'text' })

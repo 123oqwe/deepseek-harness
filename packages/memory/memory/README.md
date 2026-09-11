@@ -50,9 +50,11 @@ The service registers no provider on its own, so a composition that mounts it wi
 
 ### Operations
 
+`origin` states where a proposed claim came from, and the type enforces the rule: `{ kind: 'user-asserted', assertedBy }` is confidence 1 by the vocabulary's definition, while `{ kind: 'derived', sourceEvents, confidence }` must state the confidence only its writer knows. Nothing defaults it — a confidence nobody stated would be a fabricated fact in durable data.
+
 ```text
 // Propose a candidate write — the only mutation entry point:
-const { id } = await ctx.memory.propose({ principal, scope, content })
+const { id } = await ctx.memory.propose({ origin, principal, scope, content })
 
 // Read, scoped by principal/purpose/scope/contextBudget:
 const { records, truncated } = await ctx.memory.query({ accessContext, query: 'text' })

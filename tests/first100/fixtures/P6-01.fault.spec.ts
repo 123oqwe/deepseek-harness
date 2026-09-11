@@ -103,21 +103,21 @@ for (const [label, createProvider] of inMemoryProviders) {
     it(`${label}: export() under tenant-b returns no record proposed under tenant-a`, async () => {
       const memory = await mountMemory()
       memory.registerProvider(createProvider())
-      await memory.propose({ principal: principalOf(TENANT_A), scope: scopeOf(TENANT_A), content: { secret: 'tenant-a-only' } })
+      await memory.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalOf(TENANT_A), scope: scopeOf(TENANT_A), content: { secret: 'tenant-a-only' } })
       await expect(memory.export({ accessContext: accessContextOf(TENANT_B) })).resolves.toMatchObject({ records: [] })
     })
 
     it(`${label}: query() under tenant-b matches no record proposed under tenant-a, even on an exact content term`, async () => {
       const memory = await mountMemory()
       memory.registerProvider(createProvider())
-      await memory.propose({ principal: principalOf(TENANT_A), scope: scopeOf(TENANT_A), content: { secret: 'tenant-a-only' } })
+      await memory.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalOf(TENANT_A), scope: scopeOf(TENANT_A), content: { secret: 'tenant-a-only' } })
       await expect(memory.query({ accessContext: accessContextOf(TENANT_B), query: 'tenant-a-only' })).resolves.toMatchObject({ records: [] })
     })
 
     it(`${label}: get() under tenant-b resolves undefined for an id proposed under tenant-a`, async () => {
       const memory = await mountMemory()
       memory.registerProvider(createProvider())
-      const proposed = await memory.propose({ principal: principalOf(TENANT_A), scope: scopeOf(TENANT_A), content: { secret: 'tenant-a-only' } })
+      const proposed = await memory.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalOf(TENANT_A), scope: scopeOf(TENANT_A), content: { secret: 'tenant-a-only' } })
       await expect(memory.get({ accessContext: accessContextOf(TENANT_B), id: proposed.id })).resolves.toBeUndefined()
     })
 
@@ -127,7 +127,7 @@ for (const [label, createProvider] of inMemoryProviders) {
     it(`${label}: forget() under tenant-b leaves the tenant-a record it names intact`, async () => {
       const memory = await mountMemory()
       memory.registerProvider(createProvider())
-      const proposed = await memory.propose({ principal: principalOf(TENANT_A), scope: scopeOf(TENANT_A), content: { secret: 'tenant-a-only' } })
+      const proposed = await memory.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalOf(TENANT_A), scope: scopeOf(TENANT_A), content: { secret: 'tenant-a-only' } })
       await memory.forget({ principal: principalOf(TENANT_B), scope: scopeOf(TENANT_B), id: proposed.id })
       await expect(memory.get({ accessContext: accessContextOf(TENANT_A), id: proposed.id })).resolves.toMatchObject({ content: { secret: 'tenant-a-only' } })
     })
@@ -135,7 +135,7 @@ for (const [label, createProvider] of inMemoryProviders) {
     it(`${label}: revise() under tenant-b rejects a tenant-a id and leaves its content unchanged`, async () => {
       const memory = await mountMemory()
       memory.registerProvider(createProvider())
-      const proposed = await memory.propose({ principal: principalOf(TENANT_A), scope: scopeOf(TENANT_A), content: { secret: 'tenant-a-only' } })
+      const proposed = await memory.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalOf(TENANT_A), scope: scopeOf(TENANT_A), content: { secret: 'tenant-a-only' } })
       await expect(memory.revise({
         principal: principalOf(TENANT_B),
         scope: scopeOf(TENANT_B),
@@ -153,7 +153,7 @@ for (const [label, createProvider] of inMemoryProviders) {
     it(`control: ${label}: a same-tenant read still sees the record, so the scope filter bounds rather than blocks`, async () => {
       const memory = await mountMemory()
       memory.registerProvider(createProvider())
-      const proposed = await memory.propose({ principal: principalOf(TENANT_A), scope: scopeOf(TENANT_A), content: { secret: 'tenant-a-only' } })
+      const proposed = await memory.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalOf(TENANT_A), scope: scopeOf(TENANT_A), content: { secret: 'tenant-a-only' } })
       await expect(memory.get({ accessContext: accessContextOf(TENANT_A), id: proposed.id })).resolves.toMatchObject({ id: proposed.id })
       await expect(memory.export({ accessContext: accessContextOf(TENANT_A) })).resolves.toMatchObject({ records: [expect.objectContaining({ id: proposed.id })] })
     })
@@ -163,7 +163,7 @@ for (const [label, createProvider] of inMemoryProviders) {
     it(`${label}: a read scoped to one sessionId does not see a sibling session's record in the same tenant`, async () => {
       const memory = await mountMemory()
       memory.registerProvider(createProvider())
-      await memory.propose({ principal: principalOf(TENANT_A), scope: { tenantId: TENANT_A, sessionId: 'session-1' }, content: { note: 'session-1' } })
+      await memory.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalOf(TENANT_A), scope: { tenantId: TENANT_A, sessionId: 'session-1' }, content: { note: 'session-1' } })
       const scopedRead: MemoryAccessContext = { ...accessContextOf(TENANT_A), scope: { tenantId: TENANT_A, sessionId: 'session-2' } }
       await expect(memory.export({ accessContext: scopedRead })).resolves.toMatchObject({ records: [] })
     })
@@ -185,7 +185,7 @@ describe('must[3]: a context budget that is not a sane positive count bounds the
     const memory = await mountMemory()
     memory.registerProvider(createLocalReferenceMemoryProvider())
     for (let index = 0; index < count; index += 1) {
-      await memory.propose({ principal: principalOf(TENANT_A), scope: scopeOf(TENANT_A), content: { index } })
+      await memory.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalOf(TENANT_A), scope: scopeOf(TENANT_A), content: { index } })
     }
     const result = await memory.export({ accessContext: accessContextOf(TENANT_A, contextBudget) })
     return { length: result.records.length, truncated: result.truncated }
@@ -218,7 +218,7 @@ describe('must[3]: a context budget that is not a sane positive count bounds the
     const memory = await mountMemory()
     memory.registerProvider(createLocalReferenceMemoryProvider())
     for (let index = 0; index < 3; index += 1) {
-      await memory.propose({ principal: principalOf(TENANT_A), scope: scopeOf(TENANT_A), content: { index, filler: 'x'.repeat(5000) } })
+      await memory.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalOf(TENANT_A), scope: scopeOf(TENANT_A), content: { index, filler: 'x'.repeat(5000) } })
     }
     await expect(memory.export({ accessContext: accessContextOf(TENANT_A, { maxTokens: 1 }) })).resolves.toMatchObject({ records: expect.any(Array) as unknown, truncated: false })
     const result = await memory.export({ accessContext: accessContextOf(TENANT_A, { maxTokens: 1 }) })
@@ -275,7 +275,7 @@ describe('provider faults reach the caller as they are raised, without a catch-a
     const memory = await mountMemory()
     memory.registerProvider(createLocalReferenceMemoryProvider())
     expect(() => memory.registerProvider(createLocalReferenceMemoryProvider())).toThrow()
-    await expect(memory.propose({ principal: principalOf(TENANT_A), scope: scopeOf(TENANT_A), content: { note: 'still routed' } })).resolves.toMatchObject({ id: expect.any(String) as unknown })
+    await expect(memory.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalOf(TENANT_A), scope: scopeOf(TENANT_A), content: { note: 'still routed' } })).resolves.toMatchObject({ id: expect.any(String) as unknown })
   })
 
   /**
