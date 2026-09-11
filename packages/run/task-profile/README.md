@@ -55,7 +55,9 @@ Content the objective could not carry is asked about rather than dropped. A goal
 
 A profile's body is a `run/task-profile` session event; the Run event log carries only a `TaskProfileRef` to it. That split follows every other entity P4-01's Run events reference — an event names an approval or an artifact, and their bodies live with their owners — and a TaskProfile's owner is the session, because it is compiled from a message in that session's log and means nothing outside it.
 
-Persistence and revision (validation[2]) are then the same mechanism. The session log is append-only, so a revised profile is a new event with a new `ref` and a `previousRef` naming what it revises, and a new Run event log entry referencing it. Nothing is edited in place, so the revision chain is recoverable by reading events in order, and the three records cannot disagree about which profile is current.
+Persistence and revision (validation[2]) are then the same mechanism. The session log is append-only, so a revised profile is a new event carrying the revised body, and a new Run event log entry referencing it. Nothing is edited in place, so the revision chain is recoverable by reading events in order, and the records cannot disagree about which profile is current.
+
+The session event carries the body and no digest. A `TaskProfileRef` is the sha256 of a profile's canonical form, and a profile's `goalRef` names the session and message it was compiled from — ids minted fresh on every run — so a stored digest was a run-varying value in a durable log and the same recorded scenario could never replay to the same bytes. The ids themselves normalize; a digest taken over them before normalization cannot. `taskProfileRef` derives the digest from the body wherever one is needed, including the Run event log entry that references it.
 
 ## Known Limitations and Deferred Work
 

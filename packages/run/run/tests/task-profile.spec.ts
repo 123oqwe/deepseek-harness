@@ -35,6 +35,8 @@ import type { AttachmentId } from '@deepseek-ai/dsh-attachment/types'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { GoalId } from '@deepseek-ai/dsh-goal/types'
 import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
+import type { TaskProfile } from '@deepseek-ai/dsh-task-profile/types'
+import { taskProfileRef } from '@deepseek-ai/dsh-task-profile/validate'
 import LlmRuntime, { createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { Agent } from '@deepseek-ai/dsh-agent/types'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
@@ -124,7 +126,9 @@ describe('P4-02 must[1]: a profile is compiled for the first model step, from th
     expect(events).toHaveLength(1)
     // The handle carries the digest, not the body (P4-02 acceptance[1]): one
     // durable home, and a field whose movement is itself the revision signal.
-    expect(agent.taskProfile).toBe((events[0]?.data as { ref: string }).ref)
+    // The digest is DERIVED from the logged body rather than read out of the
+    // event, which carries none (BLOCKED-211).
+    expect(agent.taskProfile).toBe(taskProfileRef((events[0]?.data as { profile: TaskProfile }).profile))
   })
 
   it('compiles the objective from the goal the human actually sent, and keeps the reference beside it', async () => {
@@ -160,6 +164,27 @@ describe('P4-02 validation[2]: the Run log names the profile, and the digest res
     expect(planning?.references).toStrictEqual([{ kind: 'task-profile', id: agent.taskProfile }])
   })
 
+  it('logs the profile body and nothing else, so one recorded scenario replays to one event (BLOCKED-211)', async () => {
+    // The regression this exists for, measured before the fix: the same
+    // `text-turn` scenario produced three different `ref` values across three
+    // runs (e64e64e237152efb…, 479467b46540616f…, 2d0482a9477558d2…) while
+    // every other field was byte-identical. A TaskProfileRef digests the
+    // profile's canonical form, and `goalRef` names a session and message
+    // whose ids are minted per run, so the digest varied even though the
+    // profile did not. Those ids normalize in a snapshot; a digest taken over
+    // them before normalization cannot, which made the scenario permanently
+    // unreplayable.
+    //
+    // Pinning the KEY SET rather than a value is deliberate: any digest field
+    // reintroduced here — under any name — reddens this, whereas asserting one
+    // field's absence would not.
+    const ctx = await harness()
+    const agent = await turn(ctx, 'session-replayable', goal('ship the patch'))
+
+    const [event] = profileEvents(agent)
+    expect(Object.keys(event?.data as object).sort()).toStrictEqual(['profile'])
+  })
+
   it('references a digest whose body is in the session log, so the reference is resolvable', async () => {
     // The half that a dangling digest would break. A Run event naming a profile
     // no log carries looks complete and fails at the resolver.
@@ -168,7 +193,10 @@ describe('P4-02 validation[2]: the Run log names the profile, and the digest res
 
     const [run] = ctx.runs.service.runsForSession(agent.id)
     const [reference] = referencesByKind(run?.events ?? [], 'task-profile')
-    const bodies = profileEvents(agent).map(event => (event.data as { ref: string }).ref)
+    // Resolving is now literal: take each logged body, digest it, and the
+    // Run's reference must be among them. That is a stronger reading of the
+    // same title than comparing two stored copies of one digest.
+    const bodies = profileEvents(agent).map(event => taskProfileRef((event.data as { profile: TaskProfile }).profile))
     expect(bodies).toContain(reference?.id)
   })
 })
@@ -293,9 +321,11 @@ describe('P4-02 validation[2]: a recompile that revises nothing writes nothing (
 
     const events = profileEvents(agent)
     expect(events).toHaveLength(2)
-    // The second names the first as the profile it revises, which is what makes
-    // the chain readable by reading the log in order.
-    expect((events[1]?.data as { previousRef?: string }).previousRef).toBe(before.taskProfile)
+    // The chain is readable by reading the log in order: the profile the
+    // second revises is the one the PREVIOUS event of this type carries, which
+    // is why no `previousRef` field is stored (BLOCKED-211).
+    expect(taskProfileRef((events[0]?.data as { profile: TaskProfile }).profile)).toBe(before.taskProfile)
+    expect(taskProfileRef((events[1]?.data as { profile: TaskProfile }).profile)).not.toBe(before.taskProfile)
   })
 })
 
