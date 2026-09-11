@@ -128,3 +128,54 @@ Five citations, and they split cleanly along the direction of the relation. `pac
 Nothing in the existing coverage is false about the library, and nothing in it distinguishes "the service does this" from "production reaches it". That distinction is the whole content of the withdrawal, so each of the three notes needs it added — which is cheaper than it sounds, because the citations themselves mostly stay.
 
 **One citation to re-examine rather than keep or replace**, and it is not in this table because it belongs to no acceptance index: `P4-01.composition.spec.ts`'s other cases assert the genesis entry, the owner id and the initiating session from a real boot. Those are `must[]` coverage and they are real production arrivals — worth naming at re-sign as the part of P4-01 that was never in doubt.
+
+---
+
+## The three open questions, measured at `08dcbd6b7e`
+
+Facts only. Question 1 is a scope decision the delegate reserved; 2 and 3 are answerable from the tree and are answered here.
+
+### Question 1 — acceptance[2]: the two halves are not equally costly, and the second collides with P4-07
+
+**"One Session, many Runs" already happens, and not by design.** Probed on this tree (a throwaway spec, run once, removed; `git status` clean afterwards): two mounts over one store path, one session id, an agent created in each.
+
+```
+runs-for-session  before=1  after=2
+listNonTerminal   before=1  restored=1  after=2
+```
+
+`open()` checks only `agent.runId !== undefined` (`index.ts:691`) — it never asks `runsForSession(agent.id)` — so a restart mints a SECOND Run for the same session and the first stays non-terminal forever. acceptance[2]'s first half is therefore satisfied by an **accident of the restart path**, and the same accident is acceptance[0]'s missing half seen from the other side: the README's "`listNonTerminal` grows with each run against one store path" is this measurement.
+
+**"One Run across Sessions/Agents" is the half with a structural cost, and it is P4-07's.** Three facts:
+
+1. **The lease's work item is the SESSION, deliberately.** `open()` acquires on `brandString<WorkItemId>(agent.id)`, and the comment records why (§12.35-2): a `run-<uuid>` is minted per open, so two hosts driving one session asked for two different items and neither `acquire` could refuse the other — measured at the time as two granted leases at epoch 0.
+2. **A Run's own writes present no lease at all.** `leaseStore` appears four times in `index.ts` — `inject`, `open`, `reclaim`, and the release in `finish`. `RunService.advance` and `RunService.attachSession` take no token and consult no store; what the lease guards is the AGENT lifecycle, through `advanceLeasedAgent`/`advanceAgentLifecycleFenced`.
+3. **Run-level serialization is in-process only.** `RunService` chains mutations per Run id inside one process; the package README states the limit plainly.
+
+Put together: **wiring `attachSession` makes one Run's append-only log writable under two independent authorities.** If a Run carried sessions A and B, two hosts could each validly hold one session's lease — neither fenced, because the leases are on different work items — and both append to that Run's log, serialized by nothing that spans them. That is the two-master state P4-07 exists to prevent, one level up from where P4-07 prevents it.
+
+So the question is not "does U2 have room for two more cases". It is whether a Run spanning sessions needs its own work item, which would reverse §12.35-2's decision. **Not proposed here; reported.**
+
+### Question 2 — where the restart decision runs: `Service.init` can enumerate, and nothing can drive
+
+`Service.init` restores the registry on line 982 and subscribes on the lines after it, so `listNonTerminal()` is callable one statement later. The enumeration is available. What is not is a driver:
+
+- `resume(id)` returns `resumeRun(run)` — a pure decision about whether a Run MAY resume. It appoints nobody.
+- At the moment `init` runs, **no agent exists**. An agent arrives at `agent/session-start`, which is where `open()` runs — and `open()` mints rather than adopts, as measured above.
+
+So the enumeration belongs in `init` (it is the only place that knows what was restored, and it needs no agent), and the ADOPTION belongs in `open()`: for a session with a restored non-terminal Run, ask `resume()` and either adopt that Run or record why a fresh one was minted. Splitting it that way makes acceptance[0] observable in two places, which is what it describes — "after a restart, list every non-terminal Run and resume" is two verbs.
+
+This also fixes the accident in question 1's first half without touching acceptance[2]'s second: adopting is how `runs-for-session after=2` becomes `after=1`.
+
+### Question 3 — the Run event log stays out of the session log, and the group now holds both answers on purpose
+
+P4-02 landed, so the measurement is no longer hypothetical:
+
+| record | where it lives | named from |
+|---|---|---|
+| a Run and its event log | `createFileRunStore`'s own document | nothing in the session log |
+| a compiled TaskProfile's BODY | the session log, as `run/task-profile` | the Run's event log, by digest |
+
+Both answers the ledger's `planError` named are now in use, one each, and the test that makes that coherent is **ownership**: a profile is compiled from a message in one session's log and means nothing outside it, while a Run spans sessions (in the type surface) and outlives any one of them. A Run's log in the session log would have to pick a session to live in.
+
+The answer to the question as asked is therefore **yes — the Run event log stays out of the session log**, and the reason is not storage convenience. What is missing is that this sentence exists only in a preFlight and in `packages/run/README.md`'s Dev Note; the ledger's `planError` still reads as an open choice. Recording it where decisions are recorded is a delegate call.
