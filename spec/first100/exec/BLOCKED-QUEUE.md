@@ -4582,7 +4582,7 @@ Both gates are right about what they check. The adoption HAS landed — `package
 
 ### BLOCKED-176 — seven package groups still have no group README declaring subsystem ownership
 
-**Status:** DEBT RECORDED for SIX; `run` closed 2026-09-11. `packages/reliability` is NOT among them: it is P4-11's own group and its README, subsystem page and pair record landed with that epic.
+**Status:** DEBT RECORDED for TWO; `run`, `action`, `collaboration`, `schema` and `migration` closed 2026-09-11. The two that remain — `memory` and `policy` — are lane A's domains and were left alone deliberately. `packages/reliability` is NOT among them: it is P4-11's own group and its README, subsystem page and pair record landed with that epic.
 
 **`run` closed in `08dcbd6b7e`**, by the second shape rather than the first: `packages/run/README.md` (+ `zh`, + recorded pair) links `docs/subsystems/core.md`, which already owns `ctx.runs` and the five `Agent` fields the Run Service is the sole writer of. **No new subsystem page** — writing "the authoritative contract" for the run seam while P4-01's sign-off is withdrawn would decide its open questions in prose, which the delegate ruled an A-class call for after re-signing. An entry in `GROUPS_WITHOUT_SUBSYSTEM_PAGE` was NOT available: every reason in that table turns on the group having no constructed runtime value or Cordis registration, and this group has `ctx.runs`, `ctx.leaseStore` and `ctx.taskStore`.
 
@@ -4592,15 +4592,17 @@ The table below also undercounted that group: it is SIX packages, not five — `
 
 | group | packages in it | owning epic |
 |---|---|---|
-| `action` | `action-manifest`, `action-ledger` | P2-03 and P4-12 (from their own Model-Experience allowlist entries) |
-| `collaboration` | `blackboard`, `control-priority`, `intake-dedup`, `lease-contract`, `taskboard`, `workflow-journal` | P4-06, P4-07 and P4-09 for three of the six; the rest are unattributed here |
+| ~~`action`~~ | `action-manifest`, `action-ledger` | **CLOSED** — links `policy.md` (which owns what a manifest is FOR) and `core.md` (`ctx.actionLedger`) |
+| ~~`collaboration`~~ | `blackboard`, `control-priority`, `intake-dedup`, `lease-contract`, `taskboard`, `workflow-journal` | **CLOSED** — links `core.md` (`ctx.leaseStore`, `ctx.taskStore`), `workflow.md` (the journal's reader) and `subagent.md` (the shared priority table) |
 | `memory` | `memory` | not attributed here — read the epic that created them |
-| `migration` | `feature-gates` | P0-05 (from its allowlist entry) |
+| ~~`migration`~~ | `feature-gates` | **CLOSED by the second shape** — an exemption, because the resolved gates reach a profile through a bare `ctx.provide` and there is no mounted surface to document. The README says so in its own section |
 | `policy` | `capability-token`, `capability-token-file`, `risk-taxonomy` | P2-01 for the first two; `risk-taxonomy` is unattributed here |
 | ~~`run`~~ | `lease`, `lease-sqlite`, `message-bus`, `run`, `task-profile`, `taskboard-sqlite` | **CLOSED** — P4-01's U2 slice, per the delegate's assignment |
-| `schema` | `schema-registry` | not attributed here |
+| ~~`schema`~~ | `schema-registry` | **CLOSED** — links `control-protocol.md` (per-message negotiation resolved through the registry) and `settings.md` (a live consumer of the identity) |
 
 Attributions are given only where this session read them from a record (each package's Model-Experience allowlist entry names its epic); the rest are left open rather than guessed, because assigning a documentation debt to the wrong epic is worse than leaving it unassigned.
+
+**Four more closed 2026-09-11, none of them needing a new subsystem page.** Three had a page that already carried their contracts and simply never linked back; the fourth had no mounted surface at all, so it took the exemption with a reason that is checkable — and `packages/plugin` is the precedent for an `./invariant` companion not disqualifying a group, since `plugin-manifest` publishes one and carries the same kind of entry. **No exemption was written for a group that has a service**, which is what made `action` and `collaboration` READMEs rather than table rows.
 
 **What is being asked:** which epic's next slice writes each. Two shapes are available and the gate accepts either — a real `docs/subsystems/<group>.md` page with the group README linking it (what `reliability` did), or an entry in `GROUPS_WITHOUT_SUBSYSTEM_PAGE` carrying a reviewable reason (what `plugin`, `kernel` and `util` did). The choice is per group and is a documentation-ownership decision, not a mechanical one.
 
