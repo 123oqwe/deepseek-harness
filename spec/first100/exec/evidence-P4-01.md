@@ -4,35 +4,41 @@ Written for the delegate's signature pass, which re-greps every row below. P4-01
 
 Every path is at `61f6bb761e` unless stated.
 
+## How to re-verify this page
+
+Every row below carries a command that reproduces it. They are the check, not an illustration: a row whose command stops matching is a row that has gone stale, which is what happened twice to this epic's own README. Run them from the repository root.
+
+**One trap, named because a re-verifier will hit it.** A bare `grep attachSession` finds `Workspace.attachSession` — a different method on a different service, with real callers in `session-controller`, `webhook` and `workspace`. The command in that row is scoped to the Run service's own receiver for exactly that reason.
+
 ## 4.4a — the noun, and the production call site that reaches it
 
-| named thing | production call site | reached from |
+| named thing | reached from | command |
 |---|---|---|
-| `RunService.restore` | `packages/run/run/src/index.ts:1147` | `Service.init`, on every mount |
-| **`RunService.listNonTerminal`** | `packages/run/run/src/index.ts:1148` | `Service.init`, one statement after the restore — acceptance[0]'s enumerate half |
-| `RunPlugin.restoredNonTerminal` | `packages/run/run/src/index.ts:713` | the plugin's public answer to "what did this process come back to"; read by the Loader driver at `tests/first100/fixtures/loader/p4-01-run-resumed/driver.ts` |
-| **`RunService.resume`** | `packages/run/run/src/index.ts:735`, inside `RunPlugin.adoptable` | called per session from `open`, `:759` — acceptance[0]'s resume half |
-| `RunService.runsForSession` | `packages/run/run/src/index.ts:734` | the adoption lookup |
-| `RunService.openForSession` | `packages/run/run/src/index.ts:801` | only when nothing was continued |
-| **`RunService.advance`** | four production callers, below | acceptance[1] becomes reachable |
-| `RunService.attachSession` | **none, deliberately** | BLOCKED-196 — a Run spanning sessions is writable under two independent authorities |
+| `RunService.restore` + **`listNonTerminal`** | `Service.init`, the restore and then acceptance[0]'s enumerate half one statement later | `grep -n "RunService.restore(createFileRunStore\|restoredAtMount = this.restored.listNonTerminal()" packages/run/run/src/index.ts` → 2 lines |
+| `RunPlugin.restoredNonTerminal` | the plugin's public answer to "what did this process come back to" | `grep -n "restoredNonTerminal()" packages/run/run/src/index.ts tests/first100/fixtures/loader/p4-01-run-resumed/driver.ts` → the declaration and the Loader driver's read |
+| **`RunService.resume`** + `runsForSession` | `RunPlugin.adoptable`, called per session from `open` — acceptance[0]'s resume half | `grep -n "this.service.resume(run.id)\|this.service.runsForSession(agent.id)\|const continuing = this.adoptable(agent)" packages/run/run/src/index.ts` → 3 lines |
+| `RunService.openForSession` | only when nothing was continued | `grep -n "this.service.openForSession(" packages/run/run/src/index.ts` → 1 line, inside `if (continuing === undefined)` |
+| **`RunService.advance`** | six calls, five transitions — the whole of must[0]'s state occupancy | `grep -n "this.service.advance(" packages/run/run/src/index.ts` → 6 lines |
+| `RunService.attachSession` | **no caller, deliberately** — BLOCKED-196 | `grep -rn "runs\.attachSession(\|service\.attachSession(" --include='*.ts' packages/ apps/ tests/` → **no output, exit 1**. Scoped to the receiver on purpose: a bare `attachSession` grep hits `Workspace.attachSession` |
 
 **The four `advance` callers**, which are the whole of must[0]'s state occupancy:
 
-| transition | call site | when |
-|---|---|---|
-| `accepted → planning` | `packages/run/run/src/index.ts:918` | `RunPlugin.recordTaskProfile`, at the first `agent/pre-step`; names P4-02's TaskProfile as a `task-profile` reference |
-| `planning \| paused → running` | `packages/run/run/src/index.ts:1020`, in `startRun` | the same first step, after the profile — and a parked Run's next step |
-| `running → verifying → succeeded \| failed` | `packages/run/run/src/index.ts:1060`, `:1061`, in `endRun` | `agent/disposed`, via `finish` at `:929` |
-| `accepted \| planning → cancelled` | `packages/run/run/src/index.ts:1056`, in `endRun` | a session disposed before any model step |
-| `running → paused` | `packages/run/run/src/index.ts:1076`, in `pauseRun` | the plugin's own disposer, `:1255` — a clean unload |
+The single command above prints all six; each is identified by the state it names, so the rows below say what each is FOR rather than repeating a line number that moves.
+
+| transition | when |
+|---|---|
+| `accepted → planning` | `RunPlugin.recordTaskProfile`, at the first `agent/pre-step`; names P4-02's TaskProfile as a `task-profile` reference |
+| `planning \| paused → running` | `startRun` — the same first step after the profile, and a parked Run's next step |
+| `running → verifying → succeeded \| failed` | `endRun`, from `agent/disposed` via `finish` |
+| `accepted \| planning → cancelled` | `endRun`, for a session disposed before any model step |
+| `running → paused` | `pauseRun`, from the plugin's own disposer — a clean unload |
 
 ## 4.4b — the mount row a shipped profile actually carries
 
-| what | where |
+| what | command |
 |---|---|
-| the Run Service row | `packages/bundle/base/cordis.patch.yml:595` — `- id: run`, `name: '@deepseek-ai/dsh-run'`, `storePath: !!js dshHomePath('runs', 'runs.json')` |
-| its lease provider | `packages/bundle/base/cordis.patch.yml:498` — `@deepseek-ai/dsh-lease-sqlite`, mounted before the row that injects it |
+| the Run Service row, and that it carries **no** `disabled: true` | `node -e "const y=require('node:fs').readFileSync('packages/bundle/base/cordis.patch.yml','utf8').split('\n');const i=y.findIndex(l=>/^\s*- id: run$/.test(l));console.log(i+1, y.slice(i,i+4).join('\n'), /disabled:\s*true/.test(y.slice(i,i+5).join('\n')))"` → the row, and `false` |
+| its lease provider, mounted before the row that injects it | `grep -n "dsh-lease-sqlite\|- id: run$" packages/bundle/base/cordis.patch.yml` → the provider's line number is the smaller one |
 
 **The row is ENABLED and carries no `disabled: true`.** It was enabled in `2f263fa7e2` ("enable the Run Service on shipped profiles"). `packages/run/run/README.md` claimed the opposite in two places until this slice — including a whole Known-Limitation bullet asserting that "a default `dsh` boot still creates no Run" — which is how a stale document can make an epic's own arrival look weaker than it is. Both corrected.
 
@@ -57,6 +63,23 @@ Nothing. The Run's own records are host-side: the `RunStore` document and the Ru
 | acceptance[2] — negative half | `opens an independent Run per session, so a second session never joins the first's Run` | `:364` |
 | acceptance[2] — positive second half | **not implemented; held by BLOCKED-196** | — |
 | validation[1] — kill/restart | `adopts a Run that was mid-running when the process CRASHED…` (the first mount is deliberately not disposed) | `:158` |
+
+**The two argvs that run every case in this table**, and the only two numbers a signature pass needs from them:
+
+```sh
+pnpm exec vitest run packages/run/run --maxWorkers=2                              # 194 passed
+pnpm exec vitest run tests/first100/fixtures/P4-01.composition.spec.ts --maxWorkers=2   # 9 passed
+```
+
+The second boots a real composition through `dsh-app-boot` twice over one store, which is the shipped-profile observation the withdrawal's ground asks for. It is slow — two real boots per case — and that is the cost of observing arrival rather than asserting it.
+
+To check one row rather than all of them, add `-t` and the case title verbatim, for instance:
+
+```sh
+pnpm exec vitest run packages/run/run --maxWorkers=2 -t "PARKS a running Run"
+```
+
+**One caveat about reading those runs**, learned from a probe on this epic: vitest's default reporter shows a test's captured stderr only when the test FAILS. A passing case that prints diagnostics prints nothing you will see, so "no output" from a green run means **unobserved**, never zero.
 
 ## What re-signing must record as still open
 
