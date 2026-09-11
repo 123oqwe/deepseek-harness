@@ -21,6 +21,36 @@ Measured while writing `verify-import-integrity` (2026-09-10, lane B). **Measure
 
 **Closes when** either the Client face's resolution contract is explicitly taken over by some epic's clause — naming the consumption paths it guarantees — or those 320 edges are put into the manifests. Not decided in this slice.
 
+### BLOCKED-193 — P6-07 readiness: every clause production needed, production already built somewhere else
+
+**Status: MEASURED, awaiting ruling.** Recorded per §5.1.13 against the re-measurement in [`preflight-P6-07-U.md`](preflight-P6-07-U.md), which supersedes its own earlier revision. This entry records what was measured and takes no disposition; the five rulings below are open. Context: P6-07's sign-off was withdrawn under §12.75 because `@deepseek-ai/dsh-session-lifecycle` is mounted in none of the six bundles and nothing outside its own package calls it. The measurement below says more than the withdrawal knew.
+
+**Census method.** `git ls-files` over the entire post-rebase tree, symbol by symbol, excluding the package's own directory — not a `packages/*/src` glob, per the rule recorded after `P6-01.fault.spec.ts` survived exactly that glob. Zero callers outside the package for `projectLifecycleRecords`, `readSessionLogWithRepair`, `propagateDeletion`, `hardErase`, `softDeleteSession`, `placeLegalHold`, `assertNoLegalHold`, `createFileSessionLifecycleStore`. The single tree-wide mention of `@deepseek-ai/dsh-session-lifecycle` outside the package is a prose comment at `packages/session/session-persistence-jsonl/src/format.ts:360`, which states that it deliberately does not import.
+
+**Three parallel implementations, and the reached one is never this epic's.**
+
+| verb | this epic | what production reaches | relation |
+| --- | --- | --- | --- |
+| `listSessions` | page a loaded candidate set, keyset cursor — `session-lifecycle/src/index.ts:145` | `SessionQuery.listSessions(signal)` reads the whole corpus (`session-query/src/index.ts:161`); `api/session-controller/src/list.ts:139` then walks its own cursor with a halving retry (`list.ts:246-289`) | one rule, two implementations |
+| `archiveSession` | pure: record → record with a disposition — `retention.ts:134` | `WorkspaceRegistry.archiveSession(sessionId)` — `workspace/src/index.ts:290` — durable, serialized on the registry write chain, exposed as `@Remote('archiveSession')` (`api/workspace-controller/src/index.ts:107`), driven by the Web UI | one verb, two mechanisms, two storage locations |
+| `CorruptedLogEvidence` | `session-lifecycle/src/index.ts:246`, no bound on `raw` | `session-persistence-jsonl/src/format.ts:369`, bounded by `CORRUPTION_RAW_LIMIT` | structural mirror, independence deliberate, divergence invisible to the compiler ([BLOCKED-075](#blocked-075)) |
+
+**The pattern.** This is one finding, not three coincidences: **every clause of P6-07 that production actually needed, production built somewhere else; the clauses with no second implementation — soft delete, legal hold, hard erase, propagation — are exactly the ones production has never needed.**
+
+**A correction the census forces.** The earlier revision of the preFlight stated that nothing in the harness expires, erases, holds or archives a session today. Erase, hold and expiry still hold. **Archive does not** — `dsh-workspace` archives sessions durably, over the Remote API, from the Web UI. That sentence was written from this package's own call census without looking for the verb elsewhere, the same omission that let the two `listSessions` sit side by side unnoticed.
+
+**What the existing U freeze does and does not prove.** The frozen U entry runs `session-query/tests/lifecycle-projection.spec.ts` + `session-lifecycle/tests/projection.spec.ts`, 23 cases, all about `projectLifecycleRecords` and the tenant/workspace filter branches — several genuinely end to end against the real corpus. But `projectLifecycleRecords` has zero callers outside its package, so those cases construct the projection themselves. They prove the projection is correct; they do not prove anything on a launched profile reaches it. Re-running the freeze green does not close what §12.75 withdrew the sign-off for.
+
+**Open rulings (OQ9–OQ13, per the delegate's numbering).** None is taken here.
+
+1. must[0]'s rebuild shape — a `SessionRecord` → `SessionLifecycleRecord` projection at the controller (keeps the change inside P6-07's files, changes what the cursor means, weakens acceptance[0]'s million-session claim) versus moving the lifecycle's decision behind `session-query`'s incremental surface (the honest shape, and a change to another epic's contract).
+2. the `archiveSession` collision — which of the two is P6-07's subject, given the reached one is durable and this epic's is pure, so "replace the duplicate" means a pure function absorbing a registry write.
+3. whether the retention / erasure / legal-hold half gets a consumer in P6-07.U or splits under §12.46-B with producers scheduled elsewhere. It has no candidate consumer today.
+4. `expectedDeletedPct: "0"` on the execution card — inconsistent with any honest duplicate-removal, since the rebuild deletes the controller's hand-rolled cursor walk. Wants re-stating with the chosen shape rather than inheriting.
+5. validation[0] reads "运行 pagination property tests" while the frozen cases are example-based; the card already names `fast-check` as that clause's candidate and records it as not adopted. Whether it becomes an adopt at U.
+
+**Closes when** each of the five is ruled and P6-07.U's rebuild lands against whichever implementation the rulings name as the subject.
+
 ### BLOCKED-191 — P6-08 readiness: P2-05 must[3]'s audit sink has no producer on any shipped profile
 
 Recorded before P6-08 starts, per §12.46-B's split of P2-05 must[3]. Not a blocker on P6-08's own clauses; a requirement it inherits, written down so it is met by design rather than discovered at a signing report.
