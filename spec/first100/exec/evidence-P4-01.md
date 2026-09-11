@@ -42,6 +42,18 @@ The single command above prints all six; each is identified by the state it name
 
 **The row is ENABLED and carries no `disabled: true`.** It was enabled in `2f263fa7e2` ("enable the Run Service on shipped profiles"). `packages/run/run/README.md` claimed the opposite in two places until this slice — including a whole Known-Limitation bullet asserting that "a default `dsh` boot still creates no Run" — which is how a stale document can make an epic's own arrival look weaker than it is. Both corrected.
 
+**Which shipped profiles that row actually reaches — four of five, measured 2026-09-11.** "Enabled on shipped profiles" is true of the row but does not say on which. A profile is a directory under `$DSH_HOME/profiles/<name>`, so no manifest in this repository declares a `dsh.profile.bundles` list; the lists are nonetheless in-repo, as `PROFILE_TEMPLATES` in `packages/boot/app-boot/src/profile.ts:154`, written into each profile directory by `initializeProfile` at `profile.ts:226`.
+
+| shipped profile | `bundles` | reaches this row |
+|---|---|---|
+| `acp` (`profile.ts:156`) | `dsh-base`, `dsh-acp-app` | yes |
+| `web` (`profile.ts:160`) | `dsh-base`, `dsh-web-app` | yes |
+| `headless` (`profile.ts:164`) | `dsh-base`, `dsh-headless` | yes |
+| `sdk` (`profile.ts:168`) | `dsh-base`, `dsh-sdk-app` | yes |
+| **`sdk-minimal`** (`profile.ts:172`) | `dsh-sdk-minimal` **only** | **no** |
+
+`bundle/base/cordis.patch.yml:628` is the only `@deepseek-ai/dsh-run` row in the repository: `sdk-minimal`'s own patch layer declares 33 plugin rows and none is that one, and the four app bundles layering over `base` carry none of their own. So `--profile sdk-minimal` opens no Run at all — a design boundary rather than a gap, since that bundle's README states it "deliberately excludes `dsh-base`" and claims no run lifecycle. **This epic's cells are evidence for four shipped profiles, not five**, and P4-02's `evidence-P4-02.md` §4.4b cites the same measurement for the same reason.
+
 ## 4.4c — what a model or a user can observe
 
 Nothing. The Run's own records are host-side: the `RunStore` document and the Run event log reach no model request and no transcript. The one session event this epic's work produces is `run/task-profile`, and that is P4-02's, declared by `@deepseek-ai/dsh-task-profile` and appended by `RunPlugin`. Recorded here because "no model-visible surface" is a claim the signature pass should be able to check rather than assume.
