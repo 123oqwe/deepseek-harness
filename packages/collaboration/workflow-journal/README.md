@@ -53,7 +53,7 @@ None, as this package exports resume decisions, journal compaction, and types on
 
 Nothing here enters a model request, so provider cache reuse is unaffected.
 
-**Runtime invariant:** No runtime invariant companion is published: a journal is a file under a directory the caller names, reached through the free `writeJournal`/`readJournal` functions, so this package retains no second copy of it. There is one observation, and a companion could only re-read it.
+**Runtime invariant:** No runtime invariant companion is published: this package registers no Cordis service and owns no value of its own. `writeJournal`/`readJournal` are free functions over a directory the caller names, and `createJournalRecorder` (`src/recorder.ts:86`) does hold entries in a Map — but it RETURNS that recorder, so the caller owns it for one run. A companion checks a relation under the manifest name over values this package owns, and there are none.
 
 ## Known Limitations and Deferred Work
 

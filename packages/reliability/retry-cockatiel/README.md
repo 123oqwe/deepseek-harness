@@ -62,7 +62,7 @@ None, as this package refuses or admits an attempt before the adapter is reached
 
 Nothing here enters a model request. A refusal reaches the model only as whatever its caller does with the thrown error.
 
-**Runtime invariant:** No runtime invariant companion is published: breaker state lives inside the cockatiel policy this package configures, and this package keeps no mirror of it. One authority, and no second observation to reconcile against it.
+**Runtime invariant:** No runtime invariant companion is published: this package holds one cockatiel policy per destination (`src/index.ts:85`) and no copy of what those policies decided — the open/closed state and the failure counts live inside each policy. So there is one authority and no second observation of it to reconcile against, which is the test a companion has to meet.
 
 ## Known Limitations and Deferred Work
 
