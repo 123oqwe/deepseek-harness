@@ -9,6 +9,7 @@ import type { IdentityContext, RunId } from '@deepseek-ai/dsh-principal/types'
 import type { RunLease } from '@deepseek-ai/dsh-lease-contract'
 import type { AgentLifecycle } from './state-machine.ts'
 import type { OptionalSessionSeq, SessionId, SessionSeq } from '@deepseek-ai/dsh-session/types'
+import type { TaskProfileRef } from '@deepseek-ai/dsh-task-profile/types'
 import type { TypertContext, TypertLookup } from '@deepseek-ai/dsh-typert-protocol'
 
 /** Public live-agent handle; the runtime face augments its live capabilities. */
@@ -90,6 +91,27 @@ export interface Agent {
    * a second.
    */
   leaseRefused?: true
+  /**
+   * The compiled TaskProfile this agent's first model step was planned from
+   * (first100 registry P4-02 must[1], validation[2]), named by the digest of
+   * its canonical form rather than carried inline.
+   *
+   * Writer contract: `RunPlugin` (`@deepseek-ai/dsh-run`) is the sole writer,
+   * setting it from its `agent/pre-step` listener at the first step — the
+   * moment the goal, the identity and the budget are all in hand — after
+   * appending the profile body to the session log as `run/task-profile` and
+   * naming it in the Run's `accepted → planning` transition. Readers treat an
+   * absent value as "no profile was compiled for this agent", which is the
+   * ordinary case for a session whose first message is injected context rather
+   * than a human goal, and never as a compile that failed.
+   *
+   * A reference and not the profile, for the same reason the Run event log
+   * carries references: the body belongs to the session log that owns it, and
+   * two copies of a durable fact have no way to detect divergence. Recompiling
+   * an unchanged goal yields the same digest, so this field moving is itself
+   * the signal that the profile was revised.
+   */
+  taskProfile?: TaskProfileRef
 }
 
 declare module '@deepseek-ai/dsh-typert-protocol' {
