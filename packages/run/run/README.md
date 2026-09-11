@@ -258,21 +258,33 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   yet. `tests/first100/fixtures/P4-01.composition.spec.ts` is the proof that
   enabling it does open a Run for a real agent session; it enables the row in
   its own fixture `cordis.yml`.
-- **A Run's lifecycle is not yet recorded in the session log.** `RunPlugin`
-  keeps its Runs only in its own `RunStore` document; it registers no
-  `SessionEventMap` member, so a session log carries no trace of the Run its
-  agent ran inside. Adding one requires registering the event type in
-  `packages/core/session/src/known-event-types.ts` first — an unregistered
-  type makes replay refuse the log — and is deferred with the state
-  transitions that would populate it.
-- **`RunPlugin` opens a Run and advances nothing.** A Run is accepted when its
-  agent session starts and stays in `accepted`; the transitions through
-  `planning`/`running`/`verifying` to a terminal state, and the
-  `workflow/*`-driven references that would accompany them, are deferred.
-  `workflowRefOf` reconciles the brands those references need, but no mounted
-  listener calls it yet. A consequence: every Run a boot opens is still
+- **A Run's own lifecycle is still not recorded in the session log.**
+  `RunPlugin` keeps its Runs in its own `RunStore` document and registers no
+  `SessionEventMap` member of its own, so a session log names no Run id and
+  carries no state transition. The one session event a Run's work now produces
+  is `run/task-profile`, declared by `@deepseek-ai/dsh-task-profile` and
+  appended here (P4-02): the profile compiled for an agent's first model step.
+  `KNOWN_SESSION_EVENT_TYPES` is generated from the in-repo `SessionEventMap`
+  members, so declaring a member is what registers a type; a Run-lifecycle
+  event needs a decision about what belongs in two stores, not a registration
+  step.
+- **`RunPlugin` advances a Run exactly once, `accepted → planning`.** That
+  transition is driven from the first `agent/pre-step` and names the compiled
+  TaskProfile as a `task-profile` reference (P4-02 must[1], validation[2]); an
+  agent whose first message is not a task — injected plugin context, most of
+  them — compiles nothing and leaves its Run in `accepted`. The transitions
+  onward through `running`/`verifying` to a terminal state, and the
+  `workflow/*`-driven references that would accompany them, are still
+  deferred: `workflowRefOf` reconciles the brands those references need, but
+  no mounted listener calls it. A consequence: every Run a boot opens is still
   non-terminal at the next boot, so `listNonTerminal` grows with each run
-  against one store path until the transitions land.
+  against one store path until the remaining transitions land.
+- **A refused `accepted → planning` is not compensated.** The profile body is
+  appended to the session log before the Run is advanced, because the append
+  is synchronous and validated while `advance` is asynchronous and can refuse.
+  A refusal therefore leaves a `run/task-profile` event no Run event names —
+  inert and self-describing — rather than a Run event naming a digest whose
+  body never landed. No compensating event is written.
 - **One Run per agent session, opened from the agent registry only.**
   `RunPlugin` opens a Run for each agent it observes — those started while it
   is mounted, and those a profile configured before it mounted, which it

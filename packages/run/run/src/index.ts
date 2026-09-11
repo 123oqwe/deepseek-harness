@@ -59,6 +59,13 @@ import type { WorkflowRunId } from '@deepseek-ai/dsh-workflow/types'
 import z from '@deepseek-ai/schemastery'
 import type { RunId } from '@deepseek-ai/dsh-principal/types'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import type { UserMessage } from '@deepseek-ai/dsh-llm/message'
+import { compileTaskProfile } from '@deepseek-ai/dsh-task-profile'
+// `taskOriginOf` is not on the package root: P4-02's Provider stage freezes
+// `index.ts` at exactly one runtime export, so the classifier is reached through
+// the module that declares it.
+import { taskOriginOf } from '@deepseek-ai/dsh-task-profile/types'
+import { taskProfileRef } from '@deepseek-ai/dsh-task-profile/validate'
 import {
   attachSessionToRun,
   createRun,
@@ -80,6 +87,24 @@ import type {
 export * from './types.ts'
 export * from './events.ts'
 export * from './state-machine.ts'
+
+/**
+ * The text of a message that carries exactly one text block.
+ *
+ * The same rule `@deepseek-ai/dsh-agent-loop`'s runtime context applies
+ * (`runtime-context.ts`'s `textOf`), repeated rather than imported because that
+ * one is module-private and this package has no reason to reach into the loop
+ * for it. Anything other than a single text block yields `undefined`, and P4-02's
+ * compiler turns that into an `empty-goal` refusal — which is the behaviour six
+ * snapshot fixtures sit on and which `open-questions-lane-b.md` records as
+ * undecided.
+ * @param message - the message this step was given.
+ * @returns its text, or `undefined` when it is not a single text block.
+ */
+function singleTextBlock(message: UserMessage): string | undefined {
+  const [block] = message.content
+  return message.content.length === 1 && block?.type === 'text' ? block.text : undefined
+}
 
 /**
  * The durability seam a {@link RunService} writes its Runs through
@@ -791,6 +816,51 @@ export default class RunPlugin extends Service {
   }
 
   /**
+   * Compile the TaskProfile for one agent's first model step, append it to the
+   * session log, and name it in the Run's `accepted → planning` transition
+   * (first100 registry P4-02 must[1], must[2], validation[2]).
+   *
+   * **Silent in three cases, each for its own reason.** No Run means no
+   * transition to name the profile in — a composition with no Run Service, or a
+   * refused lease. No first message means there is no goal yet. And a compile
+   * that REFUSES is the ordinary outcome, not a failure: `not-a-task` is what
+   * every injected-context message produces, and nothing should be recorded for
+   * it.
+   *
+   * **Ordering: the body first, the reference second.** The append is
+   * synchronous and validates at the append site, while `advance` is
+   * asynchronous and can be refused. Appending first can leave a profile no
+   * Run event names — inert, and self-describing to anyone reading the log.
+   * Advancing first could leave a Run event naming a digest whose body never
+   * landed, which makes a later resolver fail on a record that looks complete.
+   * Recorded rather than assumed: the trade is in
+   * `open-questions-lane-b.md` and the delegate has not ruled it.
+   * @param agent - the agent taking its first model step.
+   * @param messages - the messages this step was given, whose first entry is the goal.
+   */
+  private async recordTaskProfile(agent: Agent, messages: readonly UserMessage[]): Promise<void> {
+    const runId = agent.runId
+    const first = messages[0]
+    if (runId === undefined || first === undefined) return
+    const compiled = compileTaskProfile({
+      goalRef: { sessionId: agent.session.id, messageId: first.id },
+      goalText: singleTextBlock(first) ?? '',
+      origin: taskOriginOf(first.source),
+      identityKnown: agent.identity !== undefined,
+      ...agent.options.budget === undefined ? {} : { budget: agent.options.budget },
+    })
+    if (!compiled.compiled) return
+    const ref = taskProfileRef(compiled.profile)
+    agent.session.append('run/task-profile', {
+      ref,
+      profile: compiled.profile,
+      ...agent.taskProfile === undefined ? {} : { previousRef: agent.taskProfile },
+    })
+    agent.taskProfile = ref
+    await this.service.advance(runId, 'planning', [{ kind: 'task-profile', id: ref }], Date.now())
+  }
+
+  /**
    * Bring an agent that is about to take a model step to `running`.
    *
    * The lifecycle needs a driver or it stays `queued` forever and the fenced
@@ -859,7 +929,12 @@ export default class RunPlugin extends Service {
     const unfail = this.ctx.on('agent/error', ({ agent, error }) => {
       if (agent.runId !== undefined) this.failures.set(agent.runId, error)
     })
-    const unstep = this.ctx.on('agent/pre-step', ({ agent }, next) => {
+    const unstep = this.ctx.on('agent/pre-step', async ({ agent, messages }, next) => {
+      // Captured BEFORE `ensureRunning`, which is what turns `queued` into
+      // `starting`: after that call the marker for "this is the first model
+      // step" is gone. P4-02's compile happens exactly once per agent and this
+      // is the only place that can tell.
+      const firstStep = agent.lifecycle?.state === 'queued'
       this.ensureRunning(agent)
       // P4-05 acceptance[1], §12.60: a run that is not holding a dispatch slot
       // does not begin a model step. `ensureRunning` has already returned the
@@ -890,6 +965,12 @@ export default class RunPlugin extends Service {
       // the agent did NOT carry on, so an unrecovered failure is still how
       // this run ends.
       if (agent.runId !== undefined) this.failures.delete(agent.runId)
+      // P4-02: compile the profile before the step it plans, not after. An
+      // awaited call here delays the first model request by one durable append
+      // and one Run transition, which is the point — a profile recorded after
+      // the request it was supposed to plan would describe a decision already
+      // taken.
+      if (firstStep) await this.recordTaskProfile(agent, messages)
       // Waterfall: delegating is mandatory for a step this listener admits.
       return next()
     })

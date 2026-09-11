@@ -190,7 +190,7 @@ Source: [`packages/core/tools/src/index.ts:2587`](../packages/core/tools/src/ind
 }
 ```
 
-Source: [`packages/core/agent/src/types.ts:136`](../packages/core/agent/src/types.ts)
+Source: [`packages/core/agent/src/types.ts:158`](../packages/core/agent/src/types.ts)
 
 ### `agent-preset/*`
 
