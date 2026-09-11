@@ -63,7 +63,7 @@ Items 1, 3, 4a and the two mode fixes in 2 are self-contained and can land toget
 
 ## Freeze draft for P6-01.U — measured, not entered
 
-Drafted per §5.1.13 assignment; both `dryRunProof` re-run at `040ab46cb9` (tree `ab9d2181532a48317395004fffbe2cfb1e587c1d`). **Nothing here is written to `command-freeze.json`.** Attribution follows §12.79, which already settles it — *"P6-01.U 改在出厂 profile 上观测；两条不变量随开关走"* — so this is P6-01.U and no OQ is opened for the epic. The supplement number, and whether these supersede the existing U entry or append beside it, are the in-post delegate's at entry time; placeholders below. Stage attribution matters concretely: `verify-freeze-in-candidate-tree` checks a frozen entry against the cell its stage names, so a wrong stage is checked against the wrong cell.
+Drafted per §5.1.13 assignment; `dryRunProof` and `sensitivityProof` re-run at `e84a0c0892` (tree `affeeb33ca82da00e3cbf5f4d2d87ee56c02f62c`). **Nothing here is written to `command-freeze.json`.** Attribution follows §12.79, which already settles it — *"P6-01.U 改在出厂 profile 上观测；两条不变量随开关走"* — so this is P6-01.U and no OQ is opened for the epic. The supplement number, and whether these supersede the existing U entry or append beside it, are the in-post delegate's at entry time; placeholders below. Stage attribution matters concretely: `verify-freeze-in-candidate-tree` checks a frozen entry against the cell its stage names, so a wrong stage is checked against the wrong cell.
 
 **Local green is not observation.** Everything below is self-check: `pnpm exec vitest` on this worktree. Observation is CI on the exact SHA with the result landing in a cell, and the freeze precedes it. What local green establishes is only that the draft has something real to pin.
 
@@ -93,10 +93,10 @@ expectExit:  0
 files:       packages/memory/memory/tests/durable-provider.spec.ts
              packages/memory/memory/src/index.ts
              packages/memory/memory/src/types.ts
-dryRunProof: { treeSha: ab9d2181532a48317395004fffbe2cfb1e587c1d, testsDiscovered: 30 }
+dryRunProof: { treeSha: affeeb33ca82da00e3cbf5f4d2d87ee56c02f62c, testsDiscovered: 31 }
 ```
 
-Frozen at 17; the slice brings it to 30. The 13 added, grouped as the file groups them:
+Frozen at 17; the slice brings it to 31. The 14 added, grouped as the file groups them:
 
 - *durable memory is written for its owner only* — `creates the directory 0700, so nothing else on the host can traverse into it`; `writes the document 0600, which the directory mode does not do for it`
 - *memory is scoped to the workspace that wrote it* — the four listed under invariant 2 above
@@ -123,7 +123,7 @@ files:       packages/context/memory-context/src/index.ts
              packages/context/memory-context/tests/fixtures/empty-recall-driver.ts
              packages/context/memory-context/tests/fixtures/no-memory.patch.yml
              packages/context/README.md
-dryRunProof: { treeSha: ab9d2181532a48317395004fffbe2cfb1e587c1d, testsDiscovered: 20 }
+dryRunProof: { treeSha: affeeb33ca82da00e3cbf5f4d2d87ee56c02f62c, testsDiscovered: 20 }
 ```
 
 Frozen at 13; the slice brings it to 20. The 7 added:
@@ -140,5 +140,52 @@ Frozen at 13; the slice brings it to 20. The 7 added:
 ### What is still owed before either entry is written
 
 1. ~~The invariant-1 case does not exist.~~ **Done at `040ab46cb9`.** Entry B's count moved 18 → 20 with it, Both entries' `dryRunProof` were then re-run at that same tree, so the two do not name different trees.
-2. **`sensitivityProof` is absent from both entries and is not drafted here.** The two invariant-1 cases have their mutations run and recorded above; the other 18 added cases each still owe a mutation that reddens only itself with its controls green and the source restored byte-identical. That is a run, not a paste, and it has not been done. Listing a proof I have not executed would be the failure mode this program has already retracted once.
+2. ~~`sensitivityProof` is absent from both entries.~~ **Run at `e84a0c0892`; the matrix is below.** One mutation survived and produced a new case.
 3. **Invariant 2's stage** — the four workspace cases sit in the P file. If §12.79's invariant is to be observed at U, either they move or U grows its own, and that is item 4b's ruling.
+
+### `sensitivityProof` — every mutation run, and what each one reddened
+
+Run at `e84a0c0892` (tree `affeeb33ca82da00e3cbf5f4d2d87ee56c02f62c`). Each mutation is one literal source substitution applied to the shipped source, the spec run, then the file restored; `git status` after the run shows the source unmodified, so nothing below was proven against an edited tree. Every mutation leaves the module compiling and the spec importable — none deletes a function or its only call site, which is the retracted failure mode from `evidence-P2-05.md`, where a non-zero build left the observation running on a stale artifact.
+
+**Entry A — `packages/memory/memory/src/index.ts` against `durable-provider.spec.ts`, 31 cases.**
+
+| # | mutation | reddened |
+| --- | --- | --- |
+| M1 | `mkdir(..., { recursive: true, mode: 0o700 })` → drop `mode` | `creates the directory 0700…` — alone |
+| M2 | `writeFile(..., { encoding: 'utf8', mode: 0o600 })` → drop `mode` | `writes the document 0600…` — alone |
+| M3 | `inScope`: delete the workspace clause entirely | 4 cases — the coarse control, kept for the record |
+| M4 | `inScope`: match the workspace on `canonicalPath` instead of `identity` | `does not inherit the memories of a directory it replaced…` + `returns a NUMBER and nothing else…` |
+| M5 | `inScope`: skip the clause when the READER names no workspace | `a reader naming NO workspace sees only records written without one` — alone |
+| M6 | `originOf`: a `user-asserted` claim is stored at 0.9 | `fixes an asserted claim at confidence 1…` — alone |
+| M7 | `originOf`: a `derived` claim is stored at 0.5 rather than its writer's number | `stores an inferred claim at the confidence its writer stated…` — alone |
+| M8 | `countRebuiltRecords`: drop the tenant clause | `does not count another TENANT's records at the same path` — alone |
+| M9 | `countRebuiltRecords`: drop the "not the current identity" clause | `counts nothing when the path is untouched…` — alone |
+| M10 | `countRebuiltRecords`: path clause → "the record has any workspace at all" | **SURVIVED.** Nothing reddened. See below. |
+| M11 | the on-disk format version check accepts any version | `refuses a version-1 document by name…` — alone |
+| M12 | `countRebuiltRecords` always returns 0 | `counts what the displaced directory left…` — alone |
+| M13 | `inScope`: no record is ever in a reader's own workspace | `recalls its own workspace…` + `a reader naming NO workspace…` |
+| M14 | `inScope`: two defined workspaces never match | same two as M13 |
+| M15 | `inScope`: a differing workspace is admitted whenever the PATHS differ | `does not recall another workspace of the same tenant` + `a reader naming NO workspace…` |
+| M23 | `countRebuiltRecords` hands back the records instead of their count | all 5 counter cases |
+
+**M10 survived, and that is the proof's only real finding.** Every existing case held its records at the one path being asked about, so a counter that ignored the path was indistinguishable from one that honoured it. A count that ignored it would tell a session its directory holds an earlier occupant's memory on the strength of an unrelated directory's records — through the one method that deliberately reads across the workspace boundary. `does not count a record written at a DIFFERENT path` was added at `e84a0c0892`; M10 now reddens it alone. This is the third case in this slice found by a surviving mutation rather than by reading, the others being the tenant clause beside it and M83's cross-tenant counting.
+
+**Three cases have no mutation that reddens them alone, and forcing one would weaken them.**
+
+- `recalls its own workspace, so the refusal above is not a blanket one` (M13/M14) and `does not recall another workspace of the same tenant` (M15) are separated from **each other** — M14 reddens the first and not the second, M15 the reverse — but neither is separable from `a reader naming NO workspace…`, because that case carries its own positive control in its body: it asserts both that a workspace-less reader sees the workspace-less record and that it does not see a workspaced one. Any mutation to `inScope`'s workspace clause touches one half or the other. Removing the control would buy separation by making the case weaker, which is the wrong trade.
+- `does not inherit the memories of a directory it replaced: same path, new identity` and `returns a NUMBER and nothing else…` (M4) exercise the **same input** — one record, same path, a different identity — and differ only in what they assert about it. A mutation that breaks the scope check at that input necessarily breaks both. That is a property of the pair, not a gap in either.
+
+**Entry B — `packages/context/memory-context/src/index.ts` against `render.spec.ts`, 11 cases.**
+
+| # | mutation | reddened |
+| --- | --- | --- |
+| M16 | announce even when the count is 0 | `stays silent when nothing was displaced…` — alone |
+| M17 | drop the already-announced guard | `does not repeat itself on a later recall in the same session` — alone |
+| M18 | drop the no-workspace guard, keeping the announced guard | `says nothing at all when the session has no workspace to compare` — alone |
+| M19 | the notice reports a count of 0 rather than the real one | `tells the session once that its workspace path holds an earlier occupant's memory` — alone |
+| M20 | never announce at all | 3 cases — the coarse control |
+| M22 | the notice carries a sample of the content it reports | `carries a count and a path and no record content…` + `tells the session once…` |
+
+`carries a count and a path and no record content…` has no mutation that reddens it alone: adding a content field to the payload necessarily also changes the payload the `tells the session once…` case matches. The two are separated in the other direction — M19 reddens `tells the session once…` alone — so the pair is distinguished even though one member is not isolable.
+
+The two invariant-1 cases in `memory-context.spec.ts` have their own mutations, recorded under invariant 1 above: injecting an empty snapshot reddens the byte case alone, and skipping the `memory/access` append on an empty recall reddens the event case alone.
