@@ -57,6 +57,14 @@ const GATES = [
   'first100:verify-ledger-digests',
   'first100:verify-boot-path-offline',
   'first100:verify-adapt-dispositions',
+  // The generated session-event vocabulary. A `SessionEventMap` `declare
+  // module` merge whose generator was never run leaves
+  // `KNOWN_SESSION_EVENT_TYPES` without the event the same build writes, and
+  // the persistence read path then refuses a log carrying it unless the
+  // envelope marks it `ignorable` -- a build declining to read its own output.
+  // It reddened on P4-02's C stage while this set reported 22/22 green,
+  // because the set did not contain it (BLOCKED-192).
+  'verify-persistence-catalog',
   'verify-import-integrity',
   'verify-no-artifacts-in-src',
   'verify-control-protocol-schema',
