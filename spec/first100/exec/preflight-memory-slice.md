@@ -58,3 +58,80 @@ Items 1, 3, 4a and the two mode fixes in 2 are self-contained and can land toget
 ## Status
 
 **No code written.** Two rulings requested (4b's scope decision, 5's format-and-defaults decision). The rest is measured and buildable; the freeze follows the code, run-and-pasted per §12.68.
+
+-----
+
+## Freeze draft for P6-01.U — measured, not entered
+
+Drafted per §5.1.13 assignment at `4e46cde958` (tree `c2a0c163bcc8907e026cf154204e1e298a988be4`). **Nothing here is written to `command-freeze.json`.** Attribution follows §12.79, which already settles it — *"P6-01.U 改在出厂 profile 上观测；两条不变量随开关走"* — so this is P6-01.U and no OQ is opened for the epic. The supplement number, and whether these supersede the existing U entry or append beside it, are the in-post delegate's at entry time; placeholders below. Stage attribution matters concretely: `verify-freeze-in-candidate-tree` checks a frozen entry against the cell its stage names, so a wrong stage is checked against the wrong cell.
+
+**Local green is not observation.** Everything below is self-check: `pnpm exec vitest` on this worktree. Observation is CI on the exact SHA with the result landing in a cell, and the freeze precedes it. What local green establishes is only that the draft has something real to pin.
+
+### The two invariants §12.79 ties to the switch, and which case observes each
+
+**Neither is observed today. This is the draft's main finding, not a formality.**
+
+**Invariant 1 — empty memory ⇒ the model's input bytes are identical.** The nearest case is `renderMemoryContext returns undefined for an empty recall so no empty snapshot is ever injected`, a unit assertion on the renderer's return value. It is not the invariant. Per item 4a above, the case has to compare the **model-visible request bytes** against a boot with memory disabled, and separately assert that the read **was** still recorded — `agent.session.append('memory/access', …)` fires whether or not anything was recalled (`memory-context/src/index.ts:155-160`, deliberately). Either half alone misstates the design: bytes-only would pass a build that stopped logging reads, and event-only says nothing about what the model saw. **No such case exists**; it belongs in `memory-context.spec.ts`, which is the file that boots the shipped profile, and it is owed before this entry is frozen.
+
+**Invariant 2 — an untrusted workspace does not recall across workspaces.** Half of it now has a subject and half still does not.
+
+- The **dimension** exists: `MemoryScope.workspace` is populated and enforced, observed by four cases — `does not recall another workspace of the same tenant`, `recalls its own workspace, so the refusal above is not a blanket one`, `does not inherit the memories of a directory it replaced: same path, new identity`, `a reader naming NO workspace sees only records written without one`.
+- **Trust is still never consulted.** `grep` for `workspaceTrust` across `memory-context/src` and `memory/src` returns one hit, and it is a comment (`memory-context/src/index.ts:111`). Nothing reads a workspace's trust state to decide a recall, so no case can assert the word "untrusted" without asserting something nothing decides.
+- Those four cases also live in `durable-provider.spec.ts`, which the **P** entry freezes, not the U one. As drafted they would be pinned at the wrong stage for a §12.79 invariant.
+
+So invariant 2's honest status is: **scope-by-workspace is real and observed at P; trust-gated recall has no subject.** Whether U owes a case that names trust, or the invariant narrows to the workspace dimension it now has, is a ruling this draft does not take — it is item 4b above, still open.
+
+### Entry A — supersedes/extends the existing P6-01 **P** entry (durable provider)
+
+```
+epic:        P6-01
+stage:       P
+argv:        ["pnpm","exec","vitest","run","packages/memory/memory/tests/durable-provider.spec.ts","--reporter=json"]
+expectExit:  0
+files:       packages/memory/memory/tests/durable-provider.spec.ts
+             packages/memory/memory/src/index.ts
+             packages/memory/memory/src/types.ts
+dryRunProof: { treeSha: c2a0c163bcc8907e026cf154204e1e298a988be4, testsDiscovered: 30 }
+```
+
+Frozen at 17; the slice brings it to 30. The 13 added, grouped as the file groups them:
+
+- *durable memory is written for its owner only* — `creates the directory 0700, so nothing else on the host can traverse into it`; `writes the document 0600, which the directory mode does not do for it`
+- *memory is scoped to the workspace that wrote it* — the four listed under invariant 2 above
+- *a stored record carries the origin its writer stated* — `refuses a version-1 document by name rather than reading it as origin-less`; `fixes an asserted claim at confidence 1 without the caller stating one`; `stores an inferred claim at the confidence its writer stated, not a house number`
+- *a rebuilt workspace can be recognized without being read* — `counts what the displaced directory left, so a consumer can say so`; `returns a NUMBER and nothing else, so it is not a way around the scope check`; `does not count another TENANT's records at the same path`; `counts nothing when the path is untouched, so the count is not constant`
+
+### Entry B — supersedes/extends the existing P6-01 **U** entry (consumer)
+
+```
+epic:        P6-01
+stage:       U
+argv:        ["pnpm","exec","vitest","run","packages/context/memory-context/tests/render.spec.ts","packages/context/memory-context/tests/memory-context.spec.ts","--reporter=json"]
+expectExit:  0
+files:       packages/context/memory-context/src/index.ts
+             packages/context/memory-context/tests/render.spec.ts
+             packages/context/memory-context/tests/memory-context.spec.ts
+             packages/context/memory-context/tests/fixtures/driver.ts
+             packages/context/memory-context/tests/fixtures/mock-llm.ts
+             packages/context/memory-context/tests/fixtures/memory-context.patch.yml
+             packages/memory/memory/src/index.ts
+             packages/memory/memory/src/types.ts
+             packages/core/session/src/known-event-types.ts
+             packages/bundle/base/cordis.patch.yml
+             packages/context/README.md
+dryRunProof: { treeSha: c2a0c163bcc8907e026cf154204e1e298a988be4, testsDiscovered: 18 }
+```
+
+Frozen at 13; the slice brings it to 18. The 5 added are the `announceRebuiltWorkspace` group: `tells the session once that its workspace path holds an earlier occupant's memory`; `does not repeat itself on a later recall in the same session`; `stays silent when nothing was displaced, so a session does not claim a rebuild it never had`; `carries a count and a path and no record content, so it is not a read of what it reports`; `says nothing at all when the session has no workspace to compare`.
+
+`known-event-types.ts` is in `files` because `memory/workspace-rebuilt` is a new `SessionEventMap` member and an entry whose reality set omits it would not be re-checked when the event's registration changes.
+
+### Entry C — the **C** entry is unchanged and is NOT re-frozen
+
+`conformance.spec.ts` was edited by the slice (the `propose()` call sites grew `origin`) but its case list is the same 19 that are already frozen. A superseding entry with an identical `expectCases` would add a row that pins nothing new.
+
+### What is still owed before either entry is written
+
+1. **The invariant-1 case does not exist.** Entry B cannot honestly claim §12.79's first invariant until `memory-context.spec.ts` carries the bytes-plus-event case described above.
+2. **`sensitivityProof` is absent from both entries and is not drafted here.** Every one of the 18 added cases owes a mutation that reddens only itself with its controls green and the source restored byte-identical. That is a run, not a paste, and it has not been done. Listing a proof I have not executed would be the failure mode this program has already retracted once.
+3. **Invariant 2's stage** — the four workspace cases sit in the P file. If §12.79's invariant is to be observed at U, either they move or U grows its own, and that is item 4b's ruling.
