@@ -4962,3 +4962,22 @@ That directory belonged to one recording run. On any later machine — and on th
 **Closing condition:** the authored command stops depending on an absolute path — for instance by resolving the spill directory from the session's own workspace, which every other fixture already does — and the fixture is refreshed once to prove a replay reproduces `SPILL_CANONICAL_OK` on a machine that never recorded it.
 
 **A second observation, recorded rather than numbered: `argumentsHash` is run-nondeterministic in this corpus.** `action/manifest-appended`'s digest changed in 8 places during this refresh while the `tool/call` lines it summarises were byte-identical — and the same field churned 14 lines each in two unrelated historical commits (`063b574e15`, a lease-directory fix, and `2f263fa7e2`, the Run Service enablement). So the corpus cannot distinguish "the arguments changed" from "a refresh happened" at that field. Not numbered because nothing is currently decided by it; worth knowing before anyone treats it as evidence.
+
+### BLOCKED-204 — eight `apps/web/tests/*.e2e.ts` fixtures are red on the base, and no CI workflow runs them
+
+**Status:** OPEN, owner UNATTRIBUTED. Found 2026-09-11 by lane B while establishing a candidate base for P4-02.
+
+Two files are red, and they are red **before** lane B's commits. Measured twice, at the base `e74593c50a` in a detached worktree with a current build:
+
+| file | red | cases |
+| --- | --- | --- |
+| `apps/web/tests/cordis-tool-round.e2e.ts` | 4 of 5 | drives the recorded Cordis lifecycle to a settled turn (all modes); the durable log carries one complete Cordis lifecycle; renders localized Cordis lifecycle cards; matches the conversation aria golden |
+| `apps/web/tests/steering.e2e.ts` | 4 of 6 | strictly steers one queued row…; uses Cmd+Enter without creating a Queue row; queues Cmd+Enter when plain Enter is configured to Steer; queues two messages, then flushes both with an empty-draft Cmd+Enter |
+
+The same eight, by the same names, fail in the lane-B tree. Base and tip agree case-for-case, so **nothing in lane B's slice reaches them**. Three of the four `steering` cases and two of the `cordis-tool-round` cases spend their whole 30–90 s budget before failing, which points at a wait that never settles rather than an assertion that disagrees.
+
+**Why nothing caught this.** No workflow runs them. `test:web` (and `test:web:ci`, `test:web:built`) appears in `package.json` and in no file under `.github/`. `first100-exact-sha.yml`'s "Recorded-session snapshots" step runs `pnpm run test:snapshot` under `DSH_EXAMPLE_MODE: lib`, which includes `apps/web/tests/**/*.snapshot.ts` — the `.snapshot.ts` corpus, not the `.e2e.ts` one. The distinction is exactly one filename suffix, and BLOCKED-109's argument ("snapshots are tests") applies unchanged to the half that is still unobserved.
+
+**Owner: not attributable from the records, and deliberately not guessed** — the rule BLOCKED-176 already applies. `tests/first100/registry.json` names no epic for either file, and both predate this program's slices.
+
+**Closing condition, in two steps.** First decide whether the red is this machine or every machine: the measurement above is one macOS host, and a timing-out Playwright wait is the failure mode most likely to be host-local. Run the two files on a second machine, or in the container the exact-SHA workflow uses, before touching either fixture. Second, whatever the answer, give the `.e2e.ts` corpus a signal that runs — otherwise the next person measures this again from scratch, which is the cost BLOCKED-109 was opened to stop paying.
