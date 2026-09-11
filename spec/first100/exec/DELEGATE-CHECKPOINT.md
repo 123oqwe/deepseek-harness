@@ -9,21 +9,22 @@
 3. 核对下表的"在飞 SHA / 门③ / CI"与真实状态(`gh run list -R 123oqwe/deepseek-harness -b first100-exec -L 3`;`git -C <gate-wt2> log -3`)。
 4. **核完之前不签任何字、不推任何 SHA。** 之后按 §5.1 继续:分配 → 门③ → 推 → 观测 → 4.4d grep → 签。
 
-## 当前状态(2026-09-10 22:52 EDT,delegate guanjieqiao-04,会话 452b8147,接任于 21:14 EDT)
+## 当前状态(2026-09-11 02:25 EDT,delegate first100-delegate-78,会话 d3a94c8b,接任于 2026-09-10 23:55 EDT(04 终端确认)/ 2026-09-11 00:09 EDT(用户在两 lane 终端各打「委托转移至 first100-delegate-78」))
 
 | 项 | 值 |
 | --- | --- |
-| 远端单一事实源 | `fork/first100-exec` = `0d29b20645 + 本笔 overlay` |
-| 最近观测 | CI 34550613755 @ `0db7525001`(docs-only)**红**,§12.6-B 逐条:Lint 步 = P1-10.F type-aware lint(lane A 已修未推)、Recorded-session snapshots = 插件树加载失败于 `@deepseek-ai/schemastery`(BLOCKED-186,lane A `f6cb077d7d` 已修未推),无新红,未准入任何格;`a4f7ad21a1`(lane B,P4-02.C + 188/189 + digest 修复 + task-profile README doc-standard 修)门③ 门集 22/22+2 held @a4f7ad21a1;固定集 6501 过/1 负载超时;0d29b20645 补 session+schema-registry 套件 → 本笔推送,观测 P4-02.C 格 |
-| ACCEPTED | 28 → **26**(本笔撤签 P4-01 BLOCKED-183、P1-07 BLOCKED-185,4.4d 由本会话亲量,见 §12.83) |
-| 5.2.5 回扫 | 近 24h 签字 P2-02 / P2-04 / P4-08 / P4-09 重做 4.4d 全部成立(§12.83) |
-| Lane A | `dsh-first100-clean-93`,`uds:/tmp/cc-socks/12312.sock`,transcript `~/.claude/projects/-Users-guanjieqiao-dsh-first100-clean/3503e65b-c998-420f-8f07-74738632401b.jsonl`,worktree `/Users/guanjieqiao/dsh-first100-clean`(`land-base-align-v2`),**Sonnet**;**BLOCKED-187 修完未推**(`655d13bb80` 挂 Cedar + 默认集 permit/空 forbid;工作区待提交:`profile-boot.ts` 配 `policyDecider = endorseComposedDecision`(提到 `dsh-policy-enforcement` 导出,permit|ask→allow 其余 deny)、policy-enforcement src+spec(四断言,M79 红一条)、`apps/cli/package.json`、187 三节 + 050 addendum + 191、evidence-P2-05):快照 78→0 无 `--record`、两半载荷各红 1 且 build exit 0、trust-kernel+apps/cli 173/173;**已提交 `5c005aaa1d`** = 4 条 import 声明(dsh-brand ×3、capability-token);在做记忆 slice ⑤(provenance/confidence/格式版本、`countRebuiltAt`、消费者侧填 workspace);推后 rebase 分笔报 SHA;队列 记忆 slice → P2-05.F → P6-07.U(P4-11 重观测、P1-10.F 为随推送观测后 delegate 签)|
-| Lane B | `dsh-first100-lane-b-39`,`uds:/tmp/cc-socks/27505.sock`,transcript `~/.claude/projects/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7.jsonl`,worktree `/Users/guanjieqiao/dsh-first100-lane-b`(`lane-b`),**Opus**;P4-02.C 冻结 `4dfed7de71` 本会话重核 10/10 批;`a4f7ad21a1`(= `7ebffdad99` + `5f2378d6e1` 188/189/HELD_BACK 属主 + `368bdbf2ab` 自修 registryDigest + README doc-standard 修)本笔推;`PACKAGE_LIBRARIES` 是否收 task-profile:P 冻结时定(index.ts 今为 type-only 脚手架);新门 `verify-import-integrity` HELD_BACK 落(12 条,retry 那条即 BLOCKED-186);队列 P4-02 P → U → F → P4-01.U2 |
-| BLOCKED 号分配 | 已用到 **191**(187/190/191 lane A;188/189 lane B);下一个 **192**;只由 delegate 分配 |
-| 已决(gq-92 转述用户,2026-09-10 晚) | **现阶段保持 2 条执行线,不开第 3/4 条**;重议条件须同时满足:① P2-05 或 P4-02 验收后 `check-ready` READY 集变大且存在与 A/B 文件集不相交项;② 机器空闲内存 > 2 GB。届时 delegate 提议、用户点头才开。设计建议(非决定):第 3 条=使能线(Opus,按解锁后继数取项:P3-01/P7-01/P5-05/06/P8-02 类);第 4 条=验证线(Sonnet,只做机械核验:重跑冻结 argv、重放变异、4.4d grep、第二 gate 工作树门③,产 PASS/FAIL 表;裁决签字仍归 delegate 一人);若有第二台机器/云 runner,先挪门③与验证线 |
-| 待用户决定 | ① C7 委托字面更名「委托转移至 guanjieqiao-04」(两 lane 会话各一句);② BLOCKED-185 P1-07 出厂默认开 + 首次授信交互;③ BLOCKED-187 出厂默认策略姿态(与 BLOCKED-162 交互)。工程不等 ②③ |
-| 换班当晚规则 | 前任"只在消息里"的批复一律按未落盘处理,重核再批(gq-92 亲证:P4-02.C 冻结批复、P1-10.F 九行、记忆 slice 五条、P2-05.U token 输入、P4-01 撤签均无字节);`--accept` 谓词 (iv) 不校验会话名,签字以 `--delegate-session guanjieqiao-04` 记 |
-| 叠加后验证 | 账本/签字写入不算 docs-only:门集 + `pnpm exec vitest run tests/first100 scripts/first100 --maxWorkers=2` 绿后才推(gq-92 C2) |
-| 门③ / 监视工具 | `~/first100-delegate/`(`gate3-<sha>.sh` 现为单脚本 prep→门集→固定集;固定集含 `packages/run/task-profile`);门③ worktree `~/dsh-first100-gate`(真目录,gitdir 在 `~/deepseek-harness/.git/worktrees/`) |
+| delegate 地址 | `first100-delegate-78`,`uds:/tmp/cc-socks/25776.sock`,cwd `/Users/guanjieqiao/first100-delegate`,transcript `~/.claude/projects/-Users-guanjieqiao-first100-delegate/d3a94c8b-056a-44b5-9397-315997b4088a.jsonl`;规划文档/签字 overlay 在本地分支 `delegate-overlay-78`(gate 工作树 `~/dsh-first100-gate`) |
+| 远端单一事实源 | `fork/first100-exec` = `2572637225 + 本笔 docs overlay`(= lane B `c1b872722f` + lane A 本批 42 笔 + 78 的 docs overlay 23 笔) |
+| 最近观测 | CI 34557063530 @ `d69d6e5b3e` **红**,§12.6-B 逐条(§12.85):与 34550613755 逐字同形 = P1-10.F 两 lint 文件 + BLOCKED-186 schemastery,无新红;Full suite 20756/20756 绿,P4-02.C **准入并绿格 12/12**(`55866cb225`)。本笔 `2572637225 + 本笔 docs overlay`:门③ GitHub dispatch(一次云跑:overlay 先叠再派发,门③ SHA == 推送 SHA;前两次 34563699840 @17bdee8fdf 红=两新红已修、34566318353 @f7dd87b5dc 红=P6-01 P/U 陈旧绿未撤,见 §12.85 补记 11/17);CI = 同一 dispatch run(推 first100-exec 后的 on-push run 取消或作重复确认) → 观测 P2-05 C/P/U、P4-02.P、P6-01 P/U(supersede)、P1-10.F、记忆 slice、BLOCKED-186 修 |
+| ACCEPTED | **26**(P4-01 / P1-07 WITHDRAWN 2026-09-10) |
+| 5.2.5 回扫 | 78 亲量于 `d69d6e5b3e`:P2-02 / P2-04 / P4-08 / P4-09 四条成立(§12.85 有 file:line) |
+| Lane A | `dsh-first100-clean-93`,`uds:/tmp/cc-socks/12312.sock`,transcript `~/.claude/projects/-Users-guanjieqiao-dsh-first100-clean/3503e65b-c998-420f-8f07-74738632401b.jsonl`,worktree `/Users/guanjieqiao/dsh-first100-clean`(`land-base-align-v2`),**Sonnet**(2026-09-11 03:27Z 压缩过一次);本批 = 187 修(挂 Cedar + 内核 decider `endorseComposedDecision`)、import 声明、BLOCKED-186 schemastery、P1-10.F 冻结 + BLOCKED-181、记忆 slice ⑤ 四笔 + 不变量 1 两条 + 22 条变异矩阵、BLOCKED-185/187/190/191/193、P2-05.F / P6-07.U / P6-02.U preFlight;队列(§12.85):P2-05.F(①冻结 + ②按 OQ7)→ 记忆 slice 冻结(supersede P6-01 P/U)+ 不变量 2 的 U 用例 → P6-02.U(九字段来源表 → 实做,OQ16/18/19)→ P1-07 整改 (A)(BLOCKED-185,用户已答)→ P6-07.U(OQ9–13 待 78 量后裁) |
+| Lane B | `dsh-first100-lane-b-39`,`uds:/tmp/cc-socks/27505.sock`,transcript `~/.claude/projects/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7.jsonl`,worktree `/Users/guanjieqiao/dsh-first100-lane-b`(`lane-b`),**Opus**;P4-02.C GREEN、P 冻 14 条(`9a820c4016`)、module-graph 修 `c1b872722f`(钉死);在做 U(OQ1/2/3 要求 + OQ4(b) 进 provenance → C supplement 重观测)+ refresh 独立一笔(判据 +141);队列:PACKAGE_LIBRARIES 一笔 → OQ6① 候选清单 → F 冻结(stage 归属拆)→ P4-01.U2 实做 |
+| BLOCKED 号分配 | 已用到 **193**(lane A);**194 未分配**;只由 delegate 分配 |
+| 已决(用户) | OQ4 = (b) goal 续轮映 user-goal、身份进 provenance;BLOCKED-185 = (A) 出厂默认开 + 首次授信;BLOCKED-187 保持现姿态(§12.85 补记 1–2,经 gq-92 会话答复,与默认一致);第 3/4 条线仍不开(5.1.12) |
+| 待用户决定 | 无(C7 更名已由用户在两 lane 终端完成) |
+| 换班当晚规则 | 前任"只在消息里"的批复一律按未落盘处理,78 重核后落盘于 §12.85(含 04 的 §12.84 补记原样入档);裁决先进 `delegate-overlay-78` 再发消息 |
+| 叠加后验证 | 账本/签字写入不算 docs-only:门集 + `pnpm exec vitest run tests/first100 scripts/first100 --maxWorkers=2` 绿后才推(gq-92 C2);lane 自检在被报 SHA 的 detached 树上跑(§12.85 补记 3 standing) |
+| 门③ / 监视工具 | `~/first100-delegate/`:`gate3-78.sh <sha>`(prep→门集→固定集,固定集含 apps/cli、memory、memory-context、core/session、trust-kernel、schema-registry)、`watch-v12.sh`(状态目录 `.v12`)、`exec-watch.py` × 2、`alive.sh`、`ONBOARDING.md`;门③ worktree `~/dsh-first100-gate` |
 | 产物 | First-100 账本 artifact(110 条可筛表)https://claude.ai/code/artifact/0e7b1173-b99c-4059-a647-d6c9f732d96f |
-| 机器 | 与用户 ChatGPT/Codex 共用;load 9–13;docs-only 推送只跑门集 |
+| 机器 | 与用户 ChatGPT/Codex 共用;load 5–8(本晚);docs-only 推送只跑门集 |
