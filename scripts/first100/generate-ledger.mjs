@@ -457,8 +457,14 @@ export function deriveSupplementLiveness(rows, freezeEntries) {
   for (const row of Object.values(rows)) {
     for (const [key, supplement] of Object.entries(row.supplements ?? {})) {
       const [stage, seq] = key.split('.')
-      const frozen = freeze.entries.find((e) =>
+      // A LIVE entry for this (stage, seq) means the supplement was re-frozen,
+      // not retired: supersession keeps the seq, so both entries share the key
+      // and finding the retired one first would mark a freshly greened cell
+      // SUPERSEDED. Liveness is a property of the newest entry for the key.
+      const matches = freeze.entries.filter((e) =>
         e.epic === row.id && e.stage === stage && e.supplementSeq === Number(seq))
+      if (matches.some((e) => e.supersededBy === undefined)) continue
+      const frozen = matches[matches.length - 1]
       if (frozen?.supersededBy === undefined) continue
       supplement.supersededBy = frozen.supersededBy
       if (supplement.status === 'GREEN') supplement.status = 'SUPERSEDED'
@@ -903,8 +909,15 @@ function cmdGreenSupplement() {
   assertCommitExists(candidateSha)
 
   const freeze = loadJson(COMMAND_FREEZE_PATH)
+  // `!e.supersededBy` matters as much as the seq: a supplement that is
+  // superseded KEEPS its seq, so a re-frozen supplement leaves two entries
+  // sharing one (epic, stage, seq). Without this filter the first match wins,
+  // which is the retired entry — greening a cell against evidence that was
+  // explicitly withdrawn. Every other freeze lookup in this file already
+  // excludes superseded entries; this one did not.
   const frozen = freeze.entries.find(
-    (e) => e.epic === epic && e.stage === stage && e.supplementSeq === supplementSeq && e.supplements?.epic === epic && e.supplements?.stage === stage,
+    (e) => e.epic === epic && e.stage === stage && e.supplementSeq === supplementSeq
+      && e.supplements?.epic === epic && e.supplements?.stage === stage && !e.supersededBy,
   )
   if (!frozen) {
     console.error(`BLOCKED: no frozen command-freeze.json supplement entry for (${epic}, ${stage}, seq ${supplementSeq})`)
