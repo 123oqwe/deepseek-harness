@@ -1,0 +1,48 @@
+# Minimal composition proving `@deepseek-ai/dsh-run` compiles a TaskProfile on
+# a real agent's first model step: the agent registry, the agent loop with one
+# configured root agent, and the Run Service plugin. Driven by
+# P4-02.composition.spec.ts.
+#
+# This differs from `../p4-01-run/cordis.yml` in what it has to reach. P4-01's
+# composition stops at `agent/session-start`, which needs no model; P4-02's
+# subject is `agent/pre-step`, which only fires when a turn actually runs. The
+# driver therefore registers a mock LLM adapter on the booted context before
+# sending its message — mocking the external service and nothing else, which is
+# what the testing policy permits. The composition itself is real: a Loader
+# tree booted by `@deepseek-ai/dsh-app-boot`, not a hand-built `ctx.plugin`
+# chain, which is exactly the gap this fixture exists to close.
+- id: llm
+  name: '@deepseek-ai/dsh-llm'
+
+- id: session
+  name: '@deepseek-ai/dsh-session'
+
+- id: session-projections
+  name: '@deepseek-ai/dsh-session-projection'
+
+- id: system-prompt
+  name: '@deepseek-ai/dsh-system-prompt'
+  config:
+    persona: ''
+
+- id: tools
+  name: '@deepseek-ai/dsh-tools'
+
+- id: agents
+  name: '@deepseek-ai/dsh-agent'
+
+- id: agent-loop
+  name: '@deepseek-ai/dsh-agent-loop'
+  config:
+    agents: []
+
+# The Run Service injects `leaseStore` (§12.16-2): a Run is a leased work item,
+# and without a provider the plugin stays PENDING and opens nothing. Mounted
+# BEFORE the row that needs it, as the shipped base does.
+- id: lease-store
+  name: '@deepseek-ai/dsh-lease'
+
+- id: run
+  name: '@deepseek-ai/dsh-run'
+  config:
+    storePath: !!js process.env.P4_02_RUN_STORE
