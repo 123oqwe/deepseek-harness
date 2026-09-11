@@ -4,6 +4,13 @@ PreFlight, recorded before the first line of code. The machine-readable half is 
 
 Lane B. Predecessors P2-04 and P4-01 are both ACCEPTED (`2d2e8f89ac`, `b3186e6db982e79a7c933b3326ee3a908bdf7385`); `check-ready P4-02` reports READY.
 
+**Update, 2026-09-10 — that sentence was true when recorded and one half of it no longer is.** P4-01's sign-off is WITHDRAWN (BLOCKED-183: the `runs` service has no consumer outside its own package). This epic keeps going, on two grounds the delegate ruled explicitly (gq-04):
+
+- **Mechanically READY.** `check-ready.mjs:220` admits a predecessor on `row.status !== 'ACCEPTED' && !everyApplicableCellGreen(...)` — ACCEPTED **or** every applicable cell green. P4-01's withdrawal removes the signature, not the four green cells: its library-level implementation is real and tested, and what it lacks is a production caller. Verified against that line in this tree; the withdrawal itself is not in this worktree yet, so the post-withdrawal `check-ready` run belongs to the SHA that carries it.
+- **By design.** P4-02's Provider stage becomes P4-01's first production caller of `accepted → planning`, and P4-01.U2 follows immediately in the same lane and package. Order: P4-02.P → U → F → P4-01.U2.
+
+**But sign-off does not follow readiness.** New rule (§12.83): with a withdrawn predecessor a successor may start and may green its cells, and may **not** reach ACCEPTED. P4-02's own sign-off waits until P4-01 is re-signed through U2. `check-ready` governs starting, not signing; this gap is closed by sign-off discipline rather than by the gate.
+
 ## What the tree looks like at the moment of recording
 
 Measured at `e3004c9276`, not assumed:
