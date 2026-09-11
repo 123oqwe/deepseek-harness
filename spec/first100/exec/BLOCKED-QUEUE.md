@@ -4593,3 +4593,38 @@ So adding this gate to a set would not have caught the accident and will not cat
 **What actually caught it:** the artifact-plane boot in the recorded-session snapshots. That is the only mechanism in the repository that exercises strict package resolution against built output, and it is downstream of every gate.
 
 **Closing condition:** a completeness check — every external import in a package's `src/` appears in some dependency section of that package's manifest — added and wired into the sets. Its own admission requirement is the one this entry demonstrates the existing gate fails: on a tree with the schemastery declaration removed, it must be RED before it is trusted. Assigned to lane B (delegate, 2026-09-10).
+
+
+### BLOCKED-187 — P2-05's enforcement point is wired, its engine provider is mounted nowhere, and every tool call on a shipped profile is refused
+
+**Status:** MOUNT SLICE ASSIGNED to lane A (delegate, 2026-09-10), ahead of the memory slice. Found by attributing the snapshot failures that remained after BLOCKED-186's boot fix stopped masking them.
+
+`pnpm run test:snapshot` at `f6cb077d7d`: **78 failed / 37 passed / 1 skipped of 116**, with `policy-unavailable` appearing 91 times. Every tool call on the factory headless profile comes back refused:
+
+```
+- {"...","status":"completed","content":[{"type":"text","text":"escalated\n"}]}
++ {"...","status":"failed","content":[{"type":"text",
++   "text":"Error: The action \"bash\" was refused by policy (policy-unavailable)."}]}
+```
+
+**The mechanism is deliberate and correct.** `decisionWhenUnavailable` (`policy-engine/src/evaluate.ts:85-91`) returns `deny` / `policy-unavailable` when no engine answers, and the package README states that as design: the enforcement point answers for itself rather than proceeding unjudged. Failing closed is the point of a policy gate.
+
+**What is missing is the provider, and the measurement is sharper than "no bundle mounts it".** The capability seam's three roles landed unevenly:
+
+| role | package | state |
+|---|---|---|
+| Service Definition | `@deepseek-ai/dsh-policy-engine` | consumed — `core/tools/src/ptc.ts`, `policy-enforcement` |
+| Consumer | `@deepseek-ai/dsh-policy-enforcement` | wired into BOTH dispatch paths (`agent-loop/src/tool-calls.ts`, `core/tools/src/ptc.ts`) |
+| **Service Provider** | `@deepseek-ai/dsh-policy-engine-cedar` | **its only reference outside its own package and generated catalogs is `policy-enforcement/tests/enforcement.spec.ts`, and it is a `devDependencies` entry** |
+
+So the provider's sole consumer in the whole tree is **the test suite that proves the enforcement point works**. That is why P2-05's cells look green: the tests mount the provider themselves, and nothing else ever does. `packages/AGENTS.md` states the rule this violates — a capability seam is complete or it is not one.
+
+**Instrument correction, recorded because the same reason code has two producers.** An earlier report of this defect cited `policy-enforcement/src/index.ts:138`. That line is the **kernel-override** path — a kernel `deny` overriding a permit — and it reuses the `policy-unavailable` reason code. The 91 snapshot occurrences come from `evaluate.ts:85-91`. Same string, two origins: a `grep` for the reason code identifies neither, and only reading the call sites tells them apart.
+
+**Why the alternatives were refused.** Permitting when no engine is mounted inverts the documented design and deletes the mechanism rather than connecting it. Re-scoping P2-05's acceptance to "a composition that mounts an engine" is the exact shape this program has already revoked signatures over — P2-02 (§12.69), P6-07, and P4-01 (BLOCKED-183) were all "mechanism built, no subject on the shipped product"; exempting P2-05 would make those three revocations selective.
+
+**The slice, and its bounds.** Base mounts the Cedar provider, and the default policy set is **defined by measurement, not written by hand**: what it permits is what the factory profile could do before the enforcement point was wired, with the snapshot corpus as the boundary. A hand-written `permit(*)` and a restored-behaviour set read identically in a report, which is the substitution this program keeps catching. Care is owed to BLOCKED-162's interaction: the §12.50 risk gate makes untagged tools require approval, and the default set must not freeze that hole into the factory default — either avoided here explicitly or left to 162 by name.
+
+**Closing condition — a payload proof, not a green suite.** Removing the engine's mount row from the base bundle must turn the snapshots red again with `policy-unavailable`. A mount that can be deleted without anything failing is decoration.
+
+**Recorded and deliberately NOT resolved here:** acceptance[2] requires the policy service to resist Cordis `replace`/`unmount`, while `policy-engine`'s README describes the provider as an ordinary plugin unmountable like any other. One of those two statements has to change. That belongs to P2-05.U's acceptance surface, not to this mount slice.
