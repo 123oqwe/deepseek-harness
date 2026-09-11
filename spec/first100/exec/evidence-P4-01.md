@@ -86,3 +86,31 @@ pnpm exec vitest run packages/run/run --maxWorkers=2 -t "PARKS a running Run"
 - **BLOCKED-196** — acceptance[2]'s positive second half. A Run spanning sessions needs a Run-level work item, which reopens §12.35-2.
 - **BLOCKED-197** — a cleanly unloaded host cannot hand its work item back, so the next host cannot tell a clean shutdown from a crash. The parking half is implemented; the release is not.
 - **A readiness note against P7-05**, not a defect: `verifying` here is the end decision over this plugin's failure ledger, and P7-05 owns output verification.
+
+-----
+
+## The U citations prepared for re-sign, held until U.1/U.2 are observed passing
+
+Written here rather than into `acceptance-coverage.json` because that file's coverage-closure predicate treats every citation as NECESSARY evidence (AND, not OR): a cited title that is frozen but not yet present in the ledger row's `expectCasesMatched` fails the whole acceptance index. So a row added before observation would not record a plan — it would turn a GREEN index red. These go in verbatim once U.1/U.2 green, in one edit, with no re-derivation needed.
+
+The titles below are the LIVE frozen ones, re-read from `command-freeze.json` rather than copied from the replace/keep/add table in `fe7bbb645d`. They differ, and the difference is deliberate: question 2 split the single enumerate case into three, and "a non-terminal Run resumes and a terminal one is refused" was dropped as written because it tested `resume()` the pure function, which the P stage already covers. What U2 owes is the CALLER.
+
+| acceptance | stage | title to cite |
+|---|---|---|
+| [0] | U.1 | reports the non-terminal Runs the store held, at mount, before any agent exists |
+| [0] | U.1 | reports nothing for a store that holds only terminal Runs, so the enumeration is not just "everything" |
+| [0] | U.1 | gives a session exactly ONE Run across a restart, adopting the non-terminal one it restored |
+| [0] | U.1 | MINTS a fresh Run when the restored one is terminal, rather than resuming something already finished |
+| [0] | U.1 | adopts a Run that was mid-`running` when the process CRASHED, rather than dropping it |
+| [0] | U.2 | CONTINUES one durable session's Run across a restart, rather than opening a second (U2) |
+| [0] | U.2 | enumerates what it restored at mount, which the durable document cannot show (U2) |
+| [1] | U.1 | refuses a transition the table does not allow, naming the pair it refused |
+| [1] | U.1 | writes nothing when it refuses: the Run keeps the event log it had |
+| [2] | U.1 | opens an independent Run per session, so a second session never joins the first's Run |
+
+Two things a later reader should not have to re-derive:
+
+- **acceptance[0] gets an enumerate/adopt/mint triple rather than one case**, because the clause is two verbs at two seams and the terminal branch is what distinguishes adoption from minting. The mint case and the adopt case are each other's control: together they prove adoption is a decision, not a default.
+- **acceptance[2] gets only its negative half.** The positive half — one Run spanning sessions — has no production caller, which is BLOCKED-196, and the cited case's subject is that absence. It is frozen so that wiring `attachSession` without the ruling fails a test rather than passing silently.
+
+**One citation this page does not resolve.** acceptance[0]'s existing U citation asserts the opposite of what the clause requires (measured at `fe7bbb645d`; its body never calls `listNonTerminal` or `resume`, and asserts every Run is still `accepted`). The replace/keep/add table calls for REPLACE, but its second half cannot be written until U.1/U.2 are observed. Striking the stale citation before its replacement exists would leave the index with no U evidence, and is a deletion from a curated evidence artifact — so it is recorded as a delegate call rather than taken here. The note on the entry itself now says plainly that the citation does not evidence the clause.
