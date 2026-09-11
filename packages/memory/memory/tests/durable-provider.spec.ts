@@ -529,6 +529,32 @@ describe('a rebuilt workspace can be recognized without being read', () => {
     expect(count).toBe(0)
   })
 
+  it('does not count a record written at a DIFFERENT path', async () => {
+    // Found by a surviving mutation: replacing the path clause with "the record
+    // has any workspace at all" changed nothing, because every case held its
+    // records at the one path being asked about. A count that ignored the path
+    // would tell a session its directory holds an earlier occupant's memory on
+    // the strength of an unrelated directory's records — through the one
+    // method that deliberately reads across the workspace boundary.
+    const elsewhere = { canonicalPath: '/projects/beta', identity: 'dev-1:ino-55:1700000000000' }
+    const directory = freshDirectory()
+    const memory = await mountDurable(directory)
+    await memory.propose({
+      origin: { kind: 'user-asserted', assertedBy: 'test' },
+      principal: principalFor('tenant-a'),
+      scope: { tenantId: TenantId('tenant-a'), workspace: elsewhere },
+      content: { note: 'written in a different directory entirely' },
+    })
+
+    const count = await memory.countRebuiltAt({
+      accessContext: { ...accessContextFor('tenant-a'), scope: { tenantId: TenantId('tenant-a'), workspace: after } },
+      canonicalPath: after.canonicalPath,
+      currentIdentity: after.identity,
+    })
+
+    expect(count).toBe(0)
+  })
+
   it('counts nothing when the path is untouched, so the count is not constant', async () => {
     const directory = freshDirectory()
     const memory = await mountDurable(directory)
