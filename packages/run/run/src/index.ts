@@ -1006,15 +1006,18 @@ export default class RunPlugin extends Service {
    * Move the Run itself to `running` once its first model step is planned
    * (must[0]: the states are occupied, not merely declared).
    *
-   * Only from `planning`, which is the state P4-02's profile transition leaves
-   * it in. Later steps find it already `running` and ask for nothing, so the
-   * log gains one entry for the Run starting work rather than one per step.
+   * From `planning`, which is the state P4-02's profile transition leaves it
+   * in, and from `paused`, which is where a clean unload parked it — a
+   * continued Run takes its next step out of the state that said it was
+   * resumable. Later steps find it already `running` and ask for nothing, so
+   * the log gains one entry for the Run starting work rather than one per step.
    * @param agent - the agent whose Run is starting work.
    */
   private async startRun(agent: Agent): Promise<void> {
     const runId = agent.runId
     if (runId === undefined) return
-    if (this.service.get(runId)?.state !== 'planning') return
+    const state = this.service.get(runId)?.state
+    if (state !== 'planning' && state !== 'paused') return
     await this.service.advance(runId, 'running', [], Date.now())
   }
 
@@ -1055,6 +1058,31 @@ export default class RunPlugin extends Service {
     if (state !== 'running') return
     await this.service.advance(runId, 'verifying', [], Date.now())
     await this.service.advance(runId, failed ? 'failed' : 'succeeded', [], Date.now())
+  }
+
+  /**
+   * Park one agent's Run when this mount unloads cleanly, and give its lease
+   * back (acceptance[0]).
+   *
+   * Only from `running`, because only a Run that had started work has work to
+   * park. The lease is released whatever state the Run is in: an unloaded host
+   * asserts ownership of nothing, and holding it would make the next boot wait
+   * out the expiry for a work item nobody is doing.
+   * @param agent - a live agent this mount still holds a Run for.
+   */
+  private async pauseRun(agent: Agent): Promise<void> {
+    const runId = agent.runId
+    if (runId !== undefined && this.service.get(runId)?.state === 'running') {
+      await this.service.advance(runId, 'paused', [], Date.now())
+    }
+    // **The lease is NOT handed back here, and it cannot be.** Measured: the
+    // lease store unloads BEFORE this plugin's disposer runs, so `release`
+    // throws `LeaseStorePlugin used before its mount opened the database` — the
+    // provider's connection is already closed. A released lease on clean
+    // shutdown therefore needs a hand-back at a point where the store is still
+    // open, which this disposer is not. Recorded in BLOCKED-197; until then a
+    // cleanly unloaded host's work item stays held until it lapses, exactly as
+    // a crashed one's does.
   }
 
   /**
@@ -1200,9 +1228,31 @@ export default class RunPlugin extends Service {
       unstep()
       undispose()
       unfail()
-      // Every renewal timer stops with the mount. A Run whose host is unloading
-      // is not a Run whose lease should keep being asserted.
+      // Renewal stops FIRST, then the work is parked and the lease handed back.
+      // The other order leaves a timer that can renew the very lease the next
+      // line released, which would hand the item back and immediately take it
+      // again — measured: the next mount was refused its own session's work
+      // item and opened no Run at all.
       for (const runId of [...this.heartbeats.keys()]) this.stopHeartbeat(runId)
+      // **A clean unload PAUSES the work it was doing and hands the lease back.**
+      // `agent/disposed` cannot reach this plugin any more — Cordis unloads in
+      // reverse mount order, so this plugin goes before the agent registry that
+      // disposes its agents, and the listener above is already gone when those
+      // disposals are announced. Left alone, every boot leaked a non-terminal
+      // Run and a held lease: the next boot enumerated a Run it could not
+      // acquire, and `listNonTerminal` grew once per boot forever.
+      //
+      // `paused` and not a terminal state, which is the whole decision. A run
+      // that was half-way through when the operator closed the app did not
+      // succeed and was not cancelled; reporting either would be a claim about
+      // work that is simply unfinished. `paused` is the state that says "not
+      // crashed, not finished, resumable", and until now it was the one legal
+      // Run state nothing reached. A Run still in `accepted` or `planning` is
+      // left alone: it never started, so there is nothing to pause.
+      //
+      // The registry is still mounted here (it unloads after), so `list()` is
+      // the same accessor the mount-time adoption above uses.
+      for (const agent of this.ctx.agents.list()) await this.pauseRun(agent)
       // Every Run this mount opened is durable before the fiber finishes
       // unloading, so a boot that ends immediately after starting an agent
       // still leaves that agent's Run in the store.

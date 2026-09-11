@@ -155,27 +155,118 @@ describe('P4-01 acceptance[0] and acceptance[2]: a restart adopts its Run instea
     expect(second.runs.service.runsForSession(after.id)).toHaveLength(2)
   })
 
-  it('adopts a Run that was mid-`running` when the process died, rather than dropping it', async () => {
-    // validation[1]'s kill/restart, at the state a real crash leaves behind:
-    // a Run that had started work. `running` is non-terminal, so the decision
-    // is the same one — what this case adds is that the adopted Run keeps the
-    // event log it had, so the restart continues a history rather than
-    // starting one.
+  it('adopts a Run that was mid-`running` when the process CRASHED, rather than dropping it', async () => {
+    // validation[1]'s kill/restart, at the state a real crash leaves behind: a
+    // Run that had started work and was never parked. The first mount is
+    // deliberately NOT disposed — a crash runs no disposer, which is the whole
+    // difference between this case and the clean-unload pair below.
     const path = await storePath()
     const first = await mount(path)
     const before = first.agentLoop.create(SessionId('session-crashed'))
     await first.runs.service.advance(before.runId!, 'planning', [], Date.now())
     await first.runs.service.advance(before.runId!, 'running', [], Date.now())
     const logLength = first.runs.service.get(before.runId!)?.events.length
-    await first.fiber.dispose()
-    mounted.length = 0
 
     const second = await mount(path)
     const after = second.agentLoop.create(SessionId('session-crashed'))
 
     expect(after.runId).toBe(before.runId)
     expect(second.runs.service.get(after.runId!)?.state).toBe('running')
+    // The adopted Run keeps the event log it had, so the restart continues a
+    // history rather than starting one.
     expect(second.runs.service.get(after.runId!)?.events).toHaveLength(logLength!)
+  })
+
+  it('PARKS a running Run at `paused` when the mount unloads cleanly, rather than ending or abandoning it', async () => {
+    // The third shape, and the one that was missing: an operator closing the
+    // app is neither a crash nor a completion. Terminating the Run would claim
+    // work that is merely unfinished — `succeeded` and `cancelled` are both
+    // lies about a run half-way through — and leaving it `running` leaked a
+    // non-terminal Run and a held lease once per boot. `paused` says "not
+    // crashed, not finished, resumable", and until now it was the one legal Run
+    // state nothing ever reached.
+    const path = await storePath()
+    const leases = await mkdtemp(join(tmpdir(), 'dsh-run-restart-park-'))
+    roots.push(leases)
+    const ctx = await mount(path, leases)
+    const agent = ctx.agentLoop.create(SessionId('session-parked'))
+    await ctx.runs.service.advance(agent.runId!, 'planning', [], Date.now())
+    await ctx.runs.service.advance(agent.runId!, 'running', [], Date.now())
+    await ctx.fiber.dispose()
+    mounted.length = 0
+
+    const restored = await RunService.restore(createFileRunStore(path))
+    expect(restored.get(agent.runId!)?.state).toBe('paused')
+    expect(restored.get(agent.runId!)?.events.map(event => event.toState))
+      .toStrictEqual(['accepted', 'planning', 'running', 'paused'])
+  })
+
+  it('holds its work item past a clean unload too, so a restart waits out the lease either way', async () => {
+    // **Not the behaviour this case was written to assert, and the change is
+    // the finding.** It was `continues a parked Run IMMEDIATELY after a clean
+    // unload, waiting out no lease` — until the release turned out to be
+    // impossible from the plugin's disposer: the lease store unloads FIRST, so
+    // `release` throws `LeaseStorePlugin used before its mount opened the
+    // database`. A clean shutdown therefore parks the Run but keeps the work
+    // item, and the next boot is refused exactly as it is after a crash.
+    //
+    // Frozen as it is rather than deleted, because the difference between
+    // "cleanly unloaded" and "crashed" is invisible to the next host today, and
+    // a case that says so is what reddens when BLOCKED-197 closes that gap.
+    const path = await storePath()
+    const leases = await mkdtemp(join(tmpdir(), 'dsh-run-restart-clean-'))
+    roots.push(leases)
+    const first = await mount(path, leases)
+    const before = first.agentLoop.create(SessionId('session-clean-restart'))
+    await first.runs.service.advance(before.runId!, 'planning', [], Date.now())
+    await first.runs.service.advance(before.runId!, 'running', [], Date.now())
+    await first.fiber.dispose()
+    mounted.length = 0
+
+    const second = await mount(path, leases)
+    const after = second.agentLoop.create(SessionId('session-clean-restart'))
+
+    expect(after.runId).toBeUndefined()
+    expect(after.leaseRefused).toBe(true)
+    // The Run was still parked, which is the half that DOES work: the state
+    // says resumable, only the authority to resume it is not free yet.
+    expect(second.runs.restoredNonTerminal().map(run => run.state)).toStrictEqual(['paused'])
+  })
+
+  it('takes a parked Run back to `running` at the next model step, so `paused` is a pause and not a stop', async () => {
+    // The other end of parking, and it needs its own case: a mutation that
+    // removed `paused` from the states a first step resumes from reddened
+    // NOTHING until this existed — the Run would have been adopted, then sat in
+    // `paused` forever while its agent worked.
+    //
+    // The in-memory lease store, deliberately: each mount owns its own, so the
+    // second one is not refused the work item the first still holds. That is
+    // the arrangement BLOCKED-197 describes from the other side.
+    const path = await storePath()
+    const first = await mount(path)
+    const before = first.agentLoop.create(SessionId('session-resumes-work'))
+    await first.runs.service.advance(before.runId!, 'planning', [], Date.now())
+    await first.runs.service.advance(before.runId!, 'running', [], Date.now())
+    await first.fiber.dispose()
+    mounted.length = 0
+
+    const second = await mount(path)
+    second.llm.registerAdapter(['mock'], new MockAdapter([textResponse('done')]))
+    const handle = await second.agents.create({
+      sessionId: SessionId('session-resumes-work'),
+      agentOptions: { provider: 'mock', model: 'mock' },
+    })
+    expect(handle.agent.runId).toBe(before.runId)
+    expect(second.runs.service.get(handle.agent.runId!)?.state).toBe('paused')
+
+    handle.agent.followup(createUserMessage({ content: [{ type: 'text', text: 'carry on' }], source: { kind: 'user' } }))
+    await handle.agent.whenIdle()
+
+    const run = second.runs.service.get(before.runId!)
+    // `paused -> running` is in the log, so the parked run resumed rather than
+    // being resumed only on the agent's side.
+    expect(run?.events.map(event => event.toState))
+      .toStrictEqual(['accepted', 'planning', 'running', 'paused', 'running'])
   })
 
   it('continues under a lease THIS mount was issued, once the dead process\'s lease has lapsed', async () => {
