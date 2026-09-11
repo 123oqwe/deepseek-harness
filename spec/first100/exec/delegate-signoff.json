@@ -350,6 +350,15 @@
       "signedAtUtc": "2026-09-11T02:52:04.398Z",
       "reason": "4.4d (2026-09-10, delegate guanjieqiao-04, measured at 0db7525001): workspace-trust-local ships disabled: true in packages/bundle/base/cordis.patch.yml:351-353 and no shipped bundle enables it, so ctx.get('workspaceTrust') is undefined on every profile a user starts; both consumers fail open (agent-instructions/src/index.ts:132-138 loads project instructions ungated; skill-filesystem/src/index.ts:253-255 returns true). acceptance[0] does not hold on any shipped profile. BLOCKED-185. Remediation is a product decision pending the user, with two concrete landing points: (A) ship the boundary ON by default plus a first-open trust interaction (must[2]); or (B) keep it opt-in and narrow acceptance[0] to the opt-in composition, recorded as such. No slice assigned until the user picks.",
       "note": "Withdrawal is the delegate's; the restore path is the user's product decision recorded in BLOCKED-185."
+    },
+    {
+      "epic": "P1-10",
+      "rowDigestSha256": "1e859d5ea4b018e4d6cd103428fdff7e7cd749c315eb12034d0f86d87fcb489b",
+      "conclusion": "PASS",
+      "delegateSession": "first100-delegate-78",
+      "signedAtUtc": "2026-09-11T08:04:08.997Z",
+      "reason": "4.4a-d (2026-09-11, delegate first100-delegate-78, measured at 2face52539 = e74593c50a + lane A greens): four cells GREEN from run 34573807027 (F 15/15 matched at e74593c50a; C/P/U from earlier observations, recomputed 0 MISMATCHED with FIRST100_ARTIFACT_DIR). Production reach: apps/cli/src/plugin-migration.ts:312 planUpgrade, :319 runUpgrade, :42 requiresApprovalAndExport (must[2] approval+export on the operator path), apps/cli/src/plugin.ts:402 rollbackCode -- the shipped CLI entry consumes the library; storage medium is the storage hub facet per section 12.78 (medium invented earlier was withdrawn and rebuilt). U freeze 73 cases incl. six operator-confirmation cases for must[2]; F 15 rollback/crash cases for acceptance[0]. Open findings: none on P1-10 (BLOCKED-174 test:docs debt is other epics' files, not P1-10's).",
+      "note": "First sign-off by first100-delegate-78; verify-cells-recomputable run with the rescued artifact directory: 124 of 125 GREEN cells recomputed, 0 mismatched."
     }
   ]
 }
