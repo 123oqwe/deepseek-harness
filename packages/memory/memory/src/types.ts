@@ -44,6 +44,42 @@ export function MemoryRecordId(id: string): MemoryRecordId {
 export interface MemoryScope {
   readonly tenantId: TenantId
   readonly sessionId?: string
+  /**
+   * The workspace a record belongs to; absent means the record predates
+   * workspace scoping or was written by a caller that has no workspace.
+   *
+   * Present on every read a workspace-bound consumer makes, so one tenant's
+   * workspaces do not share a pool: memory recalled in one project is content
+   * that project's own sessions wrote.
+   */
+  readonly workspace?: WorkspaceMemoryScope
+}
+
+/**
+ * Which workspace directory a record belongs to, as two values that answer
+ * different questions.
+ *
+ * `identity` is what a record is MATCHED on, and it is the directory's
+ * filesystem identity rather than its name: a directory replaced in place is a
+ * different directory, and inheriting the memories of the one it displaced
+ * would hand a new project's contents to whoever now owns that path.
+ *
+ * `canonicalPath` is kept beside it so a rebuilt workspace can be RECOGNIZED
+ * rather than silently forgotten — same path, different identity is the shape
+ * of a re-cloned repository, and a consumer that can see it can say so instead
+ * of presenting an empty memory as though nothing was ever written.
+ *
+ * Held as opaque strings rather than as `@deepseek-ai/dsh-workspace`'s
+ * `WorkspaceIdentity` so this package stays free of the workspace package:
+ * the caller observes the identity and supplies it, exactly as
+ * `@deepseek-ai/dsh-retry`'s `chargedRun` takes a caller-supplied lookup
+ * rather than importing the agent registry.
+ */
+export interface WorkspaceMemoryScope {
+  /** The directory's resolved path, for recognizing a rebuild — never for matching. */
+  readonly canonicalPath: string
+  /** The directory's filesystem identity; two records match only when these are equal. */
+  readonly identity: string
 }
 
 /**

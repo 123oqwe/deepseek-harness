@@ -614,6 +614,12 @@ interface DurableMemoryDocument {
 /** Whether a read or write confined to `scope` may see `record` (`must[3]`). */
 function inScope(record: ScopedMemoryRecord, scope: MemoryScope): boolean {
   if (record.scope.tenantId !== scope.tenantId) return false
+  // Matched on IDENTITY, never on path: a directory replaced in place is a
+  // different directory, and a reader in it must not inherit what the one it
+  // displaced wrote. A reader naming no workspace is not thereby given every
+  // workspace's records — it sees only records written without one, because
+  // the alternative makes "omit the field" a way to read across the boundary.
+  if (record.scope.workspace?.identity !== scope.workspace?.identity) return false
   // A scope naming no sessionId sees every session within the tenant.
   return scope.sessionId === undefined || record.scope.sessionId === scope.sessionId
 }

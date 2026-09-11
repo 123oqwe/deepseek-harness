@@ -301,3 +301,90 @@ describe('durable memory is written for its owner only', () => {
     expect(statSync(join(directory, document ?? '')).mode & 0o777).toBe(0o600)
   })
 })
+
+describe('memory is scoped to the workspace that wrote it', () => {
+  const workspaceA = { canonicalPath: '/projects/alpha', identity: 'dev-1:ino-10:1700000000000' }
+  const workspaceB = { canonicalPath: '/projects/beta', identity: 'dev-1:ino-20:1700000000000' }
+
+  it('does not recall another workspace of the same tenant', async () => {
+    // The whole point of the dimension: one tenant, two projects, one durable
+    // file — and what alpha wrote is not what beta reads.
+    const directory = freshDirectory()
+    const memory = await mountDurable(directory)
+    await memory.propose({
+      principal: principalFor('tenant-a'),
+      scope: { tenantId: TenantId('tenant-a'), workspace: workspaceA },
+      content: { note: 'alpha only' },
+    })
+
+    const seen = await memory.query({
+      accessContext: { ...accessContextFor('tenant-a'), scope: { tenantId: TenantId('tenant-a'), workspace: workspaceB } },
+      query: 'alpha',
+    })
+
+    expect(seen.records).toEqual([])
+  })
+
+  it('recalls its own workspace, so the refusal above is not a blanket one', async () => {
+    // Control. A scope check mutated to refuse everything satisfies the case
+    // above and is caught only here.
+    const directory = freshDirectory()
+    const memory = await mountDurable(directory)
+    await memory.propose({
+      principal: principalFor('tenant-a'),
+      scope: { tenantId: TenantId('tenant-a'), workspace: workspaceA },
+      content: { note: 'alpha only' },
+    })
+
+    const seen = await memory.query({
+      accessContext: { ...accessContextFor('tenant-a'), scope: { tenantId: TenantId('tenant-a'), workspace: workspaceA } },
+      query: 'alpha',
+    })
+
+    expect(seen.records).toHaveLength(1)
+  })
+
+  it('does not inherit the memories of a directory it replaced: same path, new identity', async () => {
+    // A re-cloned repository resolves to the same path with a new inode. The
+    // records belong to the directory that was there before, and handing them
+    // to whoever owns that path now is the leak this matches on identity to
+    // prevent.
+    const directory = freshDirectory()
+    const memory = await mountDurable(directory)
+    await memory.propose({
+      principal: principalFor('tenant-a'),
+      scope: { tenantId: TenantId('tenant-a'), workspace: workspaceA },
+      content: { note: 'written before the rebuild' },
+    })
+
+    const rebuilt = { canonicalPath: workspaceA.canonicalPath, identity: 'dev-1:ino-99:1800000000000' }
+    const seen = await memory.query({
+      accessContext: { ...accessContextFor('tenant-a'), scope: { tenantId: TenantId('tenant-a'), workspace: rebuilt } },
+      query: 'written',
+    })
+
+    expect(seen.records).toEqual([])
+  })
+
+  it('a reader naming NO workspace sees only records written without one', async () => {
+    // Omitting the field must not be a way around the boundary. A reader with
+    // no workspace is not a reader of every workspace.
+    const directory = freshDirectory()
+    const memory = await mountDurable(directory)
+    await memory.propose({
+      principal: principalFor('tenant-a'),
+      scope: { tenantId: TenantId('tenant-a'), workspace: workspaceA },
+      content: { note: 'belongs to alpha' },
+    })
+    await memory.propose({
+      principal: principalFor('tenant-a'),
+      scope: { tenantId: TenantId('tenant-a') },
+      content: { note: 'belongs to no workspace' },
+    })
+
+    const seen = await memory.query({ accessContext: accessContextFor('tenant-a'), query: 'belongs' })
+
+    expect(seen.records).toHaveLength(1)
+    expect(seen.records[0]?.content).toEqual({ note: 'belongs to no workspace' })
+  })
+})
