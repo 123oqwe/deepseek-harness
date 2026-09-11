@@ -27,8 +27,7 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "lib/index.js",
-    "lib/startup.js",
+    "lib/*.js",
     "cordis.patch.yml",
     "lib/stream-json-*.js",
     "lib/types/**/*.d.ts"
