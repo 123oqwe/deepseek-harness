@@ -1114,7 +1114,9 @@ Source: [`packages/run/message-bus/src/plugin.ts`](../../packages/run/message-bu
 
 Epic P4-01's Run Service as a mounted Cordis plugin: the one place a real harness run becomes a Run.
 
-On mount it restores the durable registry from Config.storePath (acceptance[0]'s restart path, executed on every boot including the first), then subscribes to the agent registry's own extension points. Every agent session the harness starts opens a Run owned by `RUN_SERVICE_OWNER_ID` (must[2]) whose `sessionIds` begins with that session (acceptance[2]), and every workflow execution that session runs is referenced in that Run's append-only log (must[1]).
+On mount it restores the durable registry from Config.storePath (acceptance[0]'s restart path, executed on every boot including the first), then subscribes to the agent registry's own extension points. Every agent session the harness starts opens a Run owned by `RUN_SERVICE_OWNER_ID` (must[2]) whose `sessionIds` begins with that session (acceptance[2]).
+
+**What it appends to a Run's log, and what it does not.** Each Run carries its genesis entry, and the one transition this plugin drives is `accepted → planning`, naming the TaskProfile compiled for the agent's first model step (P4-02). Workflow executions are NOT referenced: `workflowRefOf` reconciles the brands such a reference would need and no mounted listener calls it, so must[1]'s log is append-only and, for workflows, empty. This paragraph said the opposite until 2026-09-11; the sentence reached `docs/subsystems/core.md` through the generated catalog, which is how a claim nothing implements became architecture documentation.
 
 `inject` names the agent registry, so the plugin activates only where the events it subscribes to are actually emitted rather than sitting inert.
 
