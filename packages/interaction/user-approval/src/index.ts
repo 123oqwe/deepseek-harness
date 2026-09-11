@@ -107,7 +107,15 @@ export interface ApprovalRequest extends ApprovalRequestEvent {
    * events on its session log.
    */
   readonly agent: Agent
-  /** The tool the question is about (presentation and audit). */
+  /**
+   * What the question is about, for presentation and audit.
+   *
+   * A tool for every asker that dispatches one, and the name of a capability
+   * for one that does not: `workspace-trust` decides whether a host user
+   * trusts a directory, which is a real capability and not a callable tool.
+   * Pair it with {@link ApprovalRequest.subject} when the name alone does not
+   * identify the question.
+   */
   readonly toolName: string
   /**
    * The exact tool call being decided, when the asker has one — lets a UI
@@ -218,6 +226,7 @@ export class ApprovalService extends Service {
       id,
       toolName: req.toolName,
       ...req.callId !== undefined ? { callId: req.callId } : {},
+      ...req.subject !== undefined ? { subject: req.subject } : {},
       ...req.reason !== undefined ? { reason: req.reason } : {},
     })
     const outcome = await this.decide(req, session)

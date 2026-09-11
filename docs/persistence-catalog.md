@@ -220,22 +220,25 @@ Source: [`packages/preset/agent-presets/src/session.ts:28`](../packages/preset/a
 /**
  * An approval question was put to the answerer chain — log-only audit
  * (like `hook/*`; NOT a surface event, carries no `surfaceOp`). `id` pairs
- * it with the `approval/decided` that always follows; `toolName` is the
- * tool the question is about, `callId` the exact tool call when the asker
- * had one, `reason` the asker's human-readable explanation (e.g. a hook's
+ * it with the `approval/decided` that always follows; `toolName` names what
+ * the question is about — usually a tool, and not necessarily a callable
+ * one, `callId` the exact tool call when the asker had one, `subject` the
+ * particulars when the name alone does not say which question this was,
+ * and `reason` the asker's human-readable explanation (e.g. a hook's
  * permission-decision reason).
  */
 'approval/asked': {
   id: ApprovalRequestId
   toolName: string
   callId?: ToolCallId
+  subject?: string
   reason?: string
 }
 ```
 
 Types: [ToolCallId](subsystems/core.md)
 
-Source: [`packages/interaction/user-approval/src/types.ts:44`](../packages/interaction/user-approval/src/types.ts)
+Source: [`packages/interaction/user-approval/src/types.ts:46`](../packages/interaction/user-approval/src/types.ts)
 
 <a id="approvaldecided--log-only"></a>
 
@@ -253,7 +256,7 @@ Source: [`packages/interaction/user-approval/src/types.ts:44`](../packages/inter
 }
 ```
 
-Source: [`packages/interaction/user-approval/src/types.ts:55`](../packages/interaction/user-approval/src/types.ts)
+Source: [`packages/interaction/user-approval/src/types.ts:58`](../packages/interaction/user-approval/src/types.ts)
 
 <a id="approvalpolicy--log-only"></a>
 

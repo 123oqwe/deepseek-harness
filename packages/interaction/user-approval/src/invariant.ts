@@ -31,6 +31,10 @@ function validateApprovalEvent(
 ): ApprovalTransition | undefined {
   if (event.type === 'approval/asked') {
     if (trace.openTurn === null) fail('approval/asked appended outside any open turn')
+    // Non-empty, not "is a registered tool": `toolName` names the subject of
+    // the decision, and a decision about a capability that is not callable —
+    // `workspace-trust` — is still a decision an operator has to be able to
+    // read back. What this refuses is an audit entry naming nothing.
     if (event.data.toolName.length === 0) fail('approval/asked toolName must be non-empty')
     if (trace.pending.has(event.data.id)) fail(`approval/asked repeated open id ${JSON.stringify(event.data.id)}`)
     return { kind: 'asked', id: event.data.id }
