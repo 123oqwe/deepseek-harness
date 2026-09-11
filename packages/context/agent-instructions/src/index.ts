@@ -15,9 +15,15 @@ import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { Session, UserMessage } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-session-projection'
+// Type-only: the `approval` Context augmentation this file reads through
+// `ctx.get('approval')` lives in that package, and an augmentation not imported
+// is an augmentation the compiler resolves by luck.
+import type {} from '@deepseek-ai/dsh-user-approval'
 import type { ToolExecution, ToolExecutionResult, ToolExecutionToken } from '@deepseek-ai/dsh-tools'
 import { Config, resolveConfig, workspaceBaselineIdentity, type ResolvedConfig } from './config.ts'
 import { authorizeProjectLoad } from '@deepseek-ai/dsh-workspace-trust'
+import type { TrustState } from '@deepseek-ai/dsh-workspace-trust/types'
+import { attachedIdentity } from '@deepseek-ai/dsh-session'
 import { findProjectRoot, loadBaselineInstructionSet } from './files.ts'
 import {
   applyInstructionVersionUpdates,
@@ -31,6 +37,65 @@ import {
 import type { AgentInstructionChange } from './render.ts'
 
 export { Config, name }
+
+/**
+ * Resolve the workspace's trust, putting must[2]'s question to the host user
+ * the first time this session would load an untrusted workspace's own
+ * instruction files.
+ *
+ * Asked HERE rather than at boot because launching `dsh` in a directory is not
+ * the user's act of trusting it — the directory an attacker hands you is
+ * exactly the one you were launched in — and because `approval.request()` is
+ * turn-bound: a question asked between turns cannot produce the
+ * `approval/asked` + `approval/decided` pair that makes it auditable.
+ *
+ * Only `'trusted-read'` is asked for. Executing what a project supplied is a
+ * separate answer with a different consequence, and granting it on the same
+ * yes would be the kind of default this epic exists to refuse.
+ *
+ * Every failure direction leaves the workspace untrusted: no provider, no
+ * approval service, no answerer (`'unavailable'`), a refusal, a non-host
+ * principal, or an abort. That is the same direction the gate already had, so
+ * a composition that cannot ask behaves exactly as it did before this
+ * question existed.
+ * @param ctx - the plugin context, for the optional trust and approval services.
+ * @param agent - the agent whose session asks and whose principal authorizes.
+ * @param projectRoot - the resolved project root whose trust is in question.
+ * @param asked - sessions already asked, so a decline is not re-put every step.
+ * @param signal - the step's cancellation lifetime.
+ * @returns the trust state to gate on, or undefined when no provider is mounted.
+ */
+async function askForReadTrustOnce(
+  ctx: Context,
+  agent: Agent,
+  projectRoot: string,
+  asked: WeakSet<Session>,
+  signal: AbortSignal,
+): Promise<TrustState | undefined> {
+  const trust = ctx.get('workspaceTrust')
+  if (trust === undefined) return undefined
+  const state = await trust.stateFor(projectRoot)
+  if (state !== 'untrusted' || asked.has(agent.session)) return state
+  const approval = ctx.get('approval')
+  if (approval === undefined) return state
+  asked.add(agent.session)
+  const principal = attachedIdentity(agent.session)?.principal
+  if (principal === undefined) return state
+  const outcome = await approval.request({
+    agent,
+    // The name of what is being decided. Not a callable tool, and the field
+    // does not require one: what it must not be is empty.
+    toolName: 'workspace-trust',
+    subject: `${projectRoot}: trusted-read`,
+    reason: 'Load this project\'s own instruction files? They are supplied by the directory you opened, '
+      + 'and have not been trusted before.',
+    signal,
+  })
+  if (outcome !== 'allowed-once') return state
+  const result = await trust.grantTrust(projectRoot, 'trusted-read', principal)
+  return result.upgraded ? result.record.state : state
+}
+
 /** Services required by workspace instruction projection. */
 export const inject = ['sessionProjections']
 export {
@@ -101,6 +166,12 @@ export function apply(ctx: Context, config: Config): void {
   // Emit listeners are not awaited, so each projection must compose against the
   // inbox produced by earlier file results for the same agent.
   const projectionTails = new WeakMap<Agent, Promise<void>>()
+  // Sessions this plugin has already put the trust question to. A host user
+  // who declined is not asked again on the next step: a prompt that returns
+  // every step is one a user learns to dismiss, which is worse than not
+  // asking. A user who accepted is not asked again either, because the grant
+  // is durable and `stateFor` no longer answers `'untrusted'`.
+  const trustAsked = new WeakSet<Session>()
   // Execution ancestry and the enclosing durable step are the two commit
   // boundaries before an asynchronous projection may mutate the agent inbox.
   const stepTouches = new WeakMap<Session, ProjectionTouch[]>()
@@ -129,7 +200,7 @@ export function apply(ctx: Context, config: Config): void {
     // Epic P1-07 must[1]: the workspace's own instruction files are content the
     // project supplied. With no `workspaceTrust` provider mounted nothing is
     // gated and every candidate loads as it did before this boundary existed.
-    const trustState = await ctx.get('workspaceTrust')?.stateFor(projectRoot)
+    const trustState = await askForReadTrustOnce(ctx, agent, projectRoot, trustAsked, signal)
     const projectInstructionsPermitted = trustState === undefined
       || authorizeProjectLoad(trustState, 'project-instructions').permitted
     // The trust state participates in the baseline identity, so a downgrade

@@ -60,6 +60,26 @@ export interface WorkspaceTrustService {
    * @returns the workspace's current {@link TrustState}.
    */
   stateFor(cwd: string): Promise<TrustState>
+
+  /**
+   * Raise a workspace's trust on the host user's authority (must[2]).
+   *
+   * The Consumer that ASKED the host user calls this; the decision of whether
+   * the answer authorizes anything stays in `requestTrustUpgrade`, which
+   * refuses a non-host principal and refuses a transition that is not an
+   * upgrade. A provider persists the new binding and nothing else: it does not
+   * ask, and it does not decide.
+   *
+   * On the seam rather than only on `@deepseek-ai/dsh-workspace`'s registry,
+   * because a Consumer holds a session `cwd` and the registry is keyed by
+   * `WorkspaceId` — and because that registry is mounted in the web-app bundle
+   * only, while the profile this boundary matters most on is headless.
+   * @param cwd - the session working directory whose workspace is being raised.
+   * @param target - the state to raise it to.
+   * @param hostPrincipal - the principal authorizing it; a non-host one is refused.
+   * @returns the upgrade result, carrying the new record and its audit on success.
+   */
+  grantTrust(cwd: string, target: TrustState, hostPrincipal: Principal): Promise<TrustUpgradeResult>
 }
 
 declare module '@deepseek-ai/cordis' {

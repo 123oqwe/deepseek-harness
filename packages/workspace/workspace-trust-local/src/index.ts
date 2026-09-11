@@ -27,15 +27,17 @@
  */
 
 import type { Context } from '@deepseek-ai/cordis'
+import type { Principal } from '@deepseek-ai/dsh-principal/types'
 import z from '@deepseek-ai/schemastery'
 import type { KvTable } from '@deepseek-ai/dsh-storage-domain'
 import { observeWorkspaceIdentity, realpathNormalize } from '@deepseek-ai/dsh-workspace'
 import {
   bindWorkspaceTrust,
   reconcileWorkspaceTrust,
+  requestTrustUpgrade,
   type WorkspaceTrustService,
 } from '@deepseek-ai/dsh-workspace-trust'
-import type { TrustRecord, TrustState, WorkspaceIdentity } from '@deepseek-ai/dsh-workspace-trust/types'
+import type { TrustRecord, TrustState, TrustUpgradeResult, WorkspaceIdentity } from '@deepseek-ai/dsh-workspace-trust/types'
 import { workspaceTrustDomainSpec } from './spec.ts'
 import type { StoredConsumedGrant } from './spec.ts'
 
@@ -190,6 +192,35 @@ class LocalWorkspaceTrust implements WorkspaceTrustService {
     await records.put(observed.canonicalPath, record)
     if (grant !== undefined) await consumedGrants.put(grant.configuredPath, { canonicalPath: observed.canonicalPath, at })
     return record.state
+  }
+
+  /**
+   * Raise this workspace's trust on the host user's authority.
+   *
+   * The decision is `requestTrustUpgrade`'s — this method observes, reads the
+   * record the decision needs as its starting point, and persists the result.
+   * It does not ask: the Consumer that put the question to the host user is
+   * the one that knows an answer was given, and a provider that asked would be
+   * a second place where trust can be granted.
+   *
+   * Reconciled first, so a directory that lost its binding to a swap cannot be
+   * raised from the state it no longer has.
+   * @param cwd - the session working directory whose workspace is being raised.
+   * @param target - the state to raise it to.
+   * @param hostPrincipal - the principal authorizing it.
+   * @returns the upgrade result; the new binding is persisted only on success.
+   */
+  async grantTrust(cwd: string, target: TrustState, hostPrincipal: Principal): Promise<TrustUpgradeResult> {
+    const observed = await observeWorkspaceIdentity(cwd)
+    const at = new Date().toISOString()
+    const { records } = await this.tables()
+    const stored = records.get(observed.canonicalPath)
+    const current = stored === undefined
+      ? bindWorkspaceTrust(observed, at)
+      : reconcileWorkspaceTrust(stored, observed, at)
+    const result = requestTrustUpgrade(current, target, hostPrincipal, at)
+    await records.put(observed.canonicalPath, result.upgraded ? result.record : current)
+    return result
   }
 
   /**
