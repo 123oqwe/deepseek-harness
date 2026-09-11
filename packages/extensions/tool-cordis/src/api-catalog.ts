@@ -3928,7 +3928,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'Agent',
-    declaration: 'export interface Agent {\n    readonly id: SessionId;\n    readonly identity?: IdentityContext;\n    runId?: RunId;\n    lifecycle?: AgentLifecycle;\n    runLease?: RunLease;\n    leaseRefused?: true;\n    taskProfile?: TaskProfileRef;\n}',
+    declaration: 'export interface Agent {\n    readonly id: SessionId;\n    readonly identity?: IdentityContext;\n    runId?: RunId;\n    lifecycle?: AgentLifecycle;\n    runLease?: RunLease;\n    leaseRefused?: true;\n    taskProfile?: Branded<\'TaskProfileRef\'>;\n}',
   },
   {
     name: 'AgentCancelCause',

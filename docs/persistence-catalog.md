@@ -190,7 +190,7 @@ Source: [`packages/core/tools/src/index.ts:2587`](../packages/core/tools/src/ind
 }
 ```
 
-Source: [`packages/core/agent/src/types.ts:158`](../packages/core/agent/src/types.ts)
+Source: [`packages/core/agent/src/types.ts:170`](../packages/core/agent/src/types.ts)
 
 ### `agent-preset/*`
 
@@ -773,7 +773,7 @@ Source: [`packages/core/session/src/types.ts:345`](../packages/core/session/src/
 }
 ```
 
-Source: [`packages/run/task-profile/src/types.ts:301`](../packages/run/task-profile/src/types.ts)
+Source: [`packages/run/task-profile/src/types.ts:363`](../packages/run/task-profile/src/types.ts)
 
 ### `sandbox/*`
 

@@ -13,16 +13,27 @@
     "questions"
   ],
   "properties": {
-    "goalRef": { "$ref": "#/$defs/goalRef" },
-    "objective": { "type": "string", "minLength": 1 },
+    "goalRef": {
+      "$ref": "#/$defs/goalRef"
+    },
+    "objective": {
+      "type": "string",
+      "minLength": 1
+    },
     "constraints": {
       "type": "array",
-      "items": { "$ref": "#/$defs/constraint" }
+      "items": {
+        "$ref": "#/$defs/constraint"
+      }
     },
-    "sideEffect": { "$ref": "#/$defs/sideEffect" },
+    "sideEffect": {
+      "$ref": "#/$defs/sideEffect"
+    },
     "questions": {
       "type": "array",
-      "items": { "$ref": "#/$defs/question" }
+      "items": {
+        "$ref": "#/$defs/question"
+      }
     }
   },
   "$defs": {
@@ -30,41 +41,115 @@
       "description": "must[1]'s reference to the originating user/message session event. A reference, never a copy of the goal text: the session log owns that fact.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["sessionId", "messageId"],
+      "required": [
+        "sessionId",
+        "messageId"
+      ],
       "properties": {
-        "sessionId": { "type": "string", "minLength": 1 },
-        "messageId": { "type": "string", "minLength": 1 }
+        "sessionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "messageId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "goalRound": {
+          "description": "The entered goal this message continues, present only for a goal continuation round. Carried on the reference rather than on each provenance so that it reaches every inference while existing once.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "goalId",
+            "revision",
+            "round"
+          ],
+          "properties": {
+            "goalId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "round": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
       }
     },
     "provenance": {
       "description": "must[1]'s source and confidence for one inferred field. confidence is a closed [0, 1] real; a user-stated origin is not automatically 1, since a user can state something ambiguously.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["origin", "goalRef", "confidence", "rationale"],
+      "required": [
+        "origin",
+        "goalRef",
+        "confidence",
+        "rationale"
+      ],
       "properties": {
-        "origin": { "enum": ["user-stated", "derived", "default"] },
-        "goalRef": { "$ref": "#/$defs/goalRef" },
-        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
-        "rationale": { "type": "string" }
+        "origin": {
+          "enum": [
+            "user-stated",
+            "derived",
+            "default"
+          ]
+        },
+        "goalRef": {
+          "$ref": "#/$defs/goalRef"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "rationale": {
+          "type": "string"
+        }
       }
     },
     "constraint": {
       "description": "One constraint the profile carries. provenance is required on soft constraints as well as hard ones: acceptance[1] names hard constraints, but a soft constraint with no source would be a preference this system invented.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "strength", "statement", "provenance"],
+      "required": [
+        "id",
+        "strength",
+        "statement",
+        "provenance"
+      ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "strength": { "enum": ["hard", "soft"] },
-        "statement": { "type": "string", "minLength": 1 },
-        "provenance": { "$ref": "#/$defs/provenance" }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "strength": {
+          "enum": [
+            "hard",
+            "soft"
+          ]
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        }
       }
     },
     "sideEffect": {
       "description": "acceptance[2]'s side-effect classification. riskClass and ground are P2-04's own vocabulary (@deepseek-ai/dsh-risk-taxonomy), reproduced here rather than re-invented; there is no 'none' member for an unknown effect to be marked with, and 'unknown-default' distinguishes a class nothing decided from one a rule did.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["riskClass", "ground", "provenance"],
+      "required": [
+        "riskClass",
+        "ground",
+        "provenance"
+      ],
       "properties": {
         "riskClass": {
           "enum": [
@@ -78,21 +163,51 @@
             "safety-critical"
           ]
         },
-        "ground": { "enum": ["policy-rule", "kernel-hard-deny", "unknown-default"] },
-        "provenance": { "$ref": "#/$defs/provenance" }
+        "ground": {
+          "enum": [
+            "policy-rule",
+            "kernel-hard-deny",
+            "unknown-default"
+          ]
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        }
       }
     },
     "question": {
       "description": "must[2]'s question: data the profile carries, not a prompt the compiler delivers. The compile step is deterministic (acceptance[0]) and so cannot await a human; asking is left to a consumer that may wait.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "field", "reason", "prompt", "goalRef"],
+      "required": [
+        "id",
+        "field",
+        "reason",
+        "prompt",
+        "goalRef"
+      ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "field": { "type": "string", "minLength": 1 },
-        "reason": { "enum": ["ambiguous", "high-risk-missing"] },
-        "prompt": { "type": "string", "minLength": 1 },
-        "goalRef": { "$ref": "#/$defs/goalRef" }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "field": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "enum": [
+            "ambiguous",
+            "high-risk-missing"
+          ]
+        },
+        "prompt": {
+          "type": "string",
+          "minLength": 1
+        },
+        "goalRef": {
+          "$ref": "#/$defs/goalRef"
+        }
       }
     }
   }
