@@ -479,6 +479,30 @@
             "name": "mitre-atlas/atlas-data",
             "npm": "mitre-atlas/atlas-data",
             "reason": "The epic has not been accepted, so this is not a read-only disposition: it records that the package was measured absent from the tree at the time the record was written, and adopting it remains open until the stage that would use it is built. Same: a data set, not a dependency, and no technique id reaches the taxonomy."
+          },
+          {
+            "name": "OWASP LLM Top-10 2025 (LLM06 Excessive Agency)",
+            "npm": null,
+            "reason": "Not adopted. Whole-tree census at 2026-09-11: `grep -rni \"owasp|llm06|excessive agency\"` returns ZERO hits. The concept LLM06 names — an agent doing more than it was authorized to — is what this epic's approval threshold and kernel hard-deny band address, but the epic addresses it in its OWN vocabulary and never cites the catalogue. Citing it now would be a label added after the fact, not a vocabulary the implementation was written against.",
+            "ruling": "§12.85 note 46",
+            "supersedesAssignment": {
+              "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
+              "basis": "assignment",
+              "recordedReason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is not accepted, so the claim is PENDING until a case pins it; --accept refuses a pending ownership."
+            },
+            "standard": "OWASP LLM Top-10 2025 (LLM06 Excessive Agency)"
+          },
+          {
+            "name": "MITRE ATLAS technique ids",
+            "npm": null,
+            "reason": "Not adopted. Whole-tree census at 2026-09-11: `grep -rni atlas` across packages, docs and scripts, excluding lib and node_modules, returns ZERO hits for the vocabulary — the only matches are substring noise (`activeAtLastHeader`). No ATLAS technique id is recorded, mapped, or referenced anywhere the epic built. The assignment came from the plan's shape-ownership marking; the implementation took a different route, classifying by the eight `RiskClass` values and the organisation's `riskRules` table instead. A frozen case naming this vocabulary could only assert a mapping written to satisfy the gate, which is inventing functionality rather than pinning a vocabulary.",
+            "ruling": "§12.85 note 46",
+            "supersedesAssignment": {
+              "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
+              "basis": "assignment",
+              "recordedReason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is not accepted, so the claim is PENDING until a case pins it; --accept refuses a pending ownership."
+            },
+            "standard": "MITRE ATLAS technique ids"
           }
         ],
         "rejectedAbsent": [],
@@ -486,26 +510,16 @@
           {
             "standard": "MCP ToolAnnotations",
             "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
-            "basis": "assignment",
-            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is not accepted, so the claim is PENDING until a case pins it; --accept refuses a pending ownership."
+            "basis": "assignment + evidence",
+            "reason": "Owned by ASSIGNMENT and now pinned by EVIDENCE. The backfill is a P2-04.C supplement (§12.85 note 46): `evidenceTitleSubstring` names the exact substring in a live frozen case title that proves the vocabulary, so the claim is auditable rather than inferred. Neither case adds behaviour.",
+            "evidenceTitleSubstring": "MCP ToolAnnotations hint names"
           },
           {
             "standard": "P1-01 SideEffectClass",
             "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
-            "basis": "assignment",
-            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is not accepted, so the claim is PENDING until a case pins it; --accept refuses a pending ownership."
-          },
-          {
-            "standard": "OWASP LLM Top-10 2025 (LLM06 Excessive Agency)",
-            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
-            "basis": "assignment",
-            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is not accepted, so the claim is PENDING until a case pins it; --accept refuses a pending ownership."
-          },
-          {
-            "standard": "MITRE ATLAS technique ids",
-            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
-            "basis": "assignment",
-            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is not accepted, so the claim is PENDING until a case pins it; --accept refuses a pending ownership."
+            "basis": "assignment + evidence",
+            "reason": "Owned by ASSIGNMENT and now pinned by EVIDENCE. The backfill is a P2-04.C supplement (§12.85 note 46): `evidenceTitleSubstring` names the exact substring in a live frozen case title that proves the vocabulary, so the claim is auditable rather than inferred. Neither case adds behaviour.",
+            "evidenceTitleSubstring": "mechanism word they share with SideEffectClass"
           }
         ],
         "standardsImported": [],
@@ -1262,17 +1276,22 @@
             "name": "fast-check",
             "npm": "fast-check",
             "reason": "not-yet-adopted: this epic is NOT accepted, so no read-only disposition applies. The package is present in the repository but absent from this epic's reality set (files[] plus its live frozen entries' files), so it has not been taken on here. Adoption stays open until a stage that uses it is built. `fast-check` remains the right tool if this epic later wants property coverage; recording the deviation states that its current cases do not."
+          },
+          {
+            "name": "A2A TaskState / MCP TaskStatus mapping at surfaces (waiting_human ↔ input_required)",
+            "npm": null,
+            "reason": "Not adopted, and the two halves differ. `waiting_human` is REAL: it is declared in `core/agent/src/state-machine.ts` (`:39`, `:77`, `:94`) and produced by `gateActionRisk` at `core/tools/src/external-effect.ts:349`, which is this epic's must[0]. The MAPPING is absent: `grep -rn input_required` returns ZERO hits, and the only `TaskStatus` in the tree is `collaboration/taskboard`'s unrelated `open|claimed|submitted|verified|failed`. No surface projects the lifecycle state outward in A2A or MCP terms. If such a mapping is ever built it belongs to the epic that owns the surface — P8-01 owns MCP `initialize` protocolVersion and capabilities — and not to P4-05, which owns the state itself.",
+            "ruling": "§12.85 note 46",
+            "supersedesAssignment": {
+              "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
+              "basis": "assignment",
+              "recordedReason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is not accepted, so the claim is PENDING until a case pins it; --accept refuses a pending ownership."
+            },
+            "standard": "A2A TaskState / MCP TaskStatus mapping at surfaces (waiting_human ↔ input_required)"
           }
         ],
         "rejectedAbsent": [],
-        "standardsOwned": [
-          {
-            "standard": "A2A TaskState / MCP TaskStatus mapping at surfaces (waiting_human ↔ input_required)",
-            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
-            "basis": "assignment",
-            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is not accepted, so the claim is PENDING until a case pins it; --accept refuses a pending ownership."
-          }
-        ],
+        "standardsOwned": [],
         "standardsImported": [],
         "residual": "The agent lifecycle, its dispatch fencing, and the state machine.",
         "probes": [

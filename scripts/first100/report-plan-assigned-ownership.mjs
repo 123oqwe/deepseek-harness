@@ -6,19 +6,26 @@
  * marking and is the single source for who owns which vocabulary. Ownership is
  * a decision, made once, independent of any test.
  *
- * **This is a report, not a gate, and the reason is a live rule conflict.**
- * `verify-make-vs-use` requires an owned standard to be named by a live frozen
- * case, and that check has caught real over-claiming — P0-05 has 105 frozen
- * cases and not one mentions OpenFeature. But the plan assigns P0-05 exactly
- * that standard. So:
+ * **The rule this report was waiting on is decided (§12.85 note 47).**
+ * Ownership means *"if this vocabulary appears in the tree, this epic is
+ * answerable for it"* — it is NOT an obligation to adopt. The conflict this
+ * header used to describe came from reading it as one: `verify-make-vs-use`
+ * requires an owned standard to be named by a live frozen case, and it has
+ * caught real over-claiming (P0-05 has 105 frozen cases and not one mentions
+ * OpenFeature, while the plan assigns P0-05 exactly that standard) — so
+ * reading the plan as authority made every assignment `owned` and the
+ * frozen-case check rejected them in bulk, while reading the check as
+ * authority made the records contradict the plan they were built from.
  *
- * - Read the plan as authority and every assigned standard becomes `owned`,
- *   which the frozen-case check then rejects in bulk.
- * - Read the check as authority and the records contradict the plan they were
- *   built from.
+ * Both readings were wrong in the same way: they admitted only one kind of
+ * claim. An epic now claims an assigned standard by ADOPTING it and freezing
+ * a case that names it, or by MEASURING that the implementation took another
+ * route and recording that census in `deviations[]`. A measured non-adoption
+ * is a disposition, and `verify-adapt-dispositions` accepts it as one.
  *
- * Neither is the executor's to settle, so this prints the comparison and
- * exits zero. It becomes a gate once the rule is decided.
+ * This stays a report rather than a gate because the disposition it would
+ * enforce is already enforced there; what it adds is the plan-side view —
+ * which assignments exist at all — and that is a reading aid, not a check.
  *
  * Usage: `node scripts/first100/report-plan-assigned-ownership.mjs`
  *
@@ -54,9 +61,15 @@ function planAssignedOwnership() {
   return assigned
 }
 
-/** The standard names an epic's record claims to own, whatever the basis. */
+/** The standard names an epic's record claims, by owning them or by measuring them into `deviations[]`. */
 function recordedOwnership(record) {
-  return new Set((record?.standardsOwned ?? []).map(entry => typeof entry === 'string' ? entry : entry?.standard).filter(Boolean))
+  // Both kinds of claim, per §12.85 note 47: adopted-and-owned, or measured
+  // as not adopted and recorded in `deviations[]`. Reading only the first is
+  // what made this report list a fully dispositioned standard as unclaimed.
+  return new Set([
+    ...(record?.standardsOwned ?? []).map(entry => typeof entry === 'string' ? entry : entry?.standard),
+    ...(record?.deviations ?? []).map(entry => entry?.standard),
+  ].filter(Boolean))
 }
 
 function main() {
@@ -82,7 +95,7 @@ function main() {
     console.log(`  ${epic} (${status})`)
     for (const standard of missing) console.log(`      assigned but not claimed: ${standard}`)
   }
-  console.log('Report only. Whether an assignment overrides the frozen-case requirement is a rule decision, not this script\'s.')
+  console.log('Report only; the disposition itself is gated by verify-adapt-dispositions. A standard counts as claimed when it is owned or measured into deviations (§12.85 note 47).')
 }
 
 main()

@@ -66,6 +66,62 @@ function hasStarted(row) {
 /** The npm name an `adapt` entry can be matched by, or undefined when it names only a project. */
 const adaptName = entry => entry.npm ?? entry.name
 
+/**
+ * The standards half of gate (e): which assigned or carded standards this
+ * epic's record leaves undisclosed.
+ *
+ * Exported so the rule can be tested on constructed inputs rather than only
+ * through the whole tree, where every epic's real record would have to be
+ * disturbed to reach a branch.
+ * @param standards - the standards this epic's make-vs-use card names.
+ * @param declared - the epic's `makeVsUse` pre-flight record.
+ * @param assigned - `standards-ownership.json`'s rows for this epic.
+ * @returns one message per undisclosed standard; empty when all are dispositioned.
+ */
+export function standardDispositionGaps(standards, declared, assigned) {
+  const missing = []
+  // `standardsImported` entries may be a bare name or `{standard, from}`;
+  // reading only the bare form reported P1-02's Sigstore bundle as
+  // undisclosed when its record names both the standard and its source.
+  const importedNames = (declared.standardsImported ?? []).map(
+    entry => typeof entry === 'string' ? entry : entry?.standard,
+  ).filter(Boolean)
+  // Both lists accept a bare name or `{standard, ...}`; the object form
+  // carries the evidence substring or the source epic. Reading only the
+  // bare form reported a fully dispositioned standard as undisclosed.
+  const ownedNames = (declared.standardsOwned ?? []).map(
+    entry => typeof entry === 'string' ? entry : entry?.standard,
+  ).filter(Boolean)
+  const deviatedNames = (declared.deviations ?? []).map(entry => entry.standard).filter(Boolean)
+  const accounted = new Set([...ownedNames, ...importedNames, ...deviatedNames])
+  for (const standard of standards) {
+    if (!accounted.has(standard)) missing.push(`standard ${JSON.stringify(standard)} is neither owned, imported, nor deviated`)
+  }
+  // Shape ownership is ASSIGNED by standards-ownership.json, generated from
+  // the plan. An epic the table names as owner must CLAIM it — the table
+  // decides who owns the vocabulary, the check grades the evidence, and an
+  // executor must not settle ownership by omission, which is what a backfill
+  // did to 22 standards across 12 epics.
+  //
+  // **Ownership is not an obligation to adopt** (§12.85 note 47). It means
+  // "if this vocabulary appears in the tree, this epic is answerable for it".
+  // So a claim comes two ways and both are claims: ADOPT it and freeze a case
+  // naming it, or MEASURE that the implementation took another route and
+  // record that in `deviations[]` with the census. A measured non-adoption is
+  // a disposition; it is the opposite of the silence this check refuses. The
+  // rule this replaced admitted only the first, which left an epic whose
+  // implementation never touched an assigned vocabulary with no honest way to
+  // say so — it could either fail this gate or invent a case to satisfy it.
+  const claimed = new Set([...ownedNames, ...deviatedNames])
+  for (const entry of assigned) {
+    if (entry.thisEpicOwns !== true) continue
+    if (!claimed.has(entry.standard)) {
+      missing.push(`standards-ownership.json assigns ${JSON.stringify(entry.standard)} to this epic, but neither standardsOwned nor deviations claims it`)
+    }
+  }
+  return missing
+}
+
 function main() {
   const cards = new Map(loadJson(LEDGER_PATH).rows.map(row => [row.id, row]))
   const preFlight = loadJson(AUDIT_PATH).preFlight ?? {}
@@ -97,42 +153,7 @@ function main() {
       for (const name of adapts) {
         if (!dispositioned.has(name)) missing.push(`adapt ${name} appears in neither adopted[] nor deviations[]`)
       }
-      // `standardsImported` entries may be a bare name or `{standard, from}`;
-      // reading only the bare form reported P1-02's Sigstore bundle as
-      // undisclosed when its record names both the standard and its source.
-      const importedNames = (declared.standardsImported ?? []).map(
-        entry => typeof entry === 'string' ? entry : entry?.standard,
-      ).filter(Boolean)
-      // Both lists accept a bare name or `{standard, ...}`; the object form
-      // carries the evidence substring or the source epic. Reading only the
-      // bare form reported a fully dispositioned standard as undisclosed.
-      const ownedNames = (declared.standardsOwned ?? []).map(
-        entry => typeof entry === 'string' ? entry : entry?.standard,
-      ).filter(Boolean)
-      const accounted = new Set([
-        ...ownedNames,
-        ...importedNames,
-        ...(declared.deviations ?? []).map(entry => entry.standard).filter(Boolean),
-      ])
-      for (const standard of standards) {
-        if (!accounted.has(standard)) missing.push(`standard ${JSON.stringify(standard)} is neither owned, imported, nor deviated`)
-      }
-      // A `landsIn` adoption is a decision recorded before the code that
-      // lands it. That is legitimate mid-epic and NOT at the end: by the time
-      // the Fault stage runs or the epic is accepted, the adoption has either
-      // landed or it was never made. Left unchecked, `landsIn` is an escape
-      // hatch that defers forever, and acceptance would rest on a promise.
-      // Shape ownership is ASSIGNED by standards-ownership.json, generated
-      // from the plan. An epic the table names as owner must claim it: the
-      // check grades evidence, the table decides who owns the vocabulary, and
-      // an executor writing records must not settle that by omission — which
-      // is what a backfill did to 22 standards across 12 epics.
-      const assignedOwned = (ownership[id] ?? []).filter(entry => entry.thisEpicOwns === true).map(entry => entry.standard)
-      for (const standard of assignedOwned) {
-        if (!ownedNames.includes(standard)) {
-          missing.push(`standards-ownership.json assigns ${JSON.stringify(standard)} to this epic, but standardsOwned does not claim it`)
-        }
-      }
+      missing.push(...standardDispositionGaps(standards, declared, ownership[id] ?? []))
 
       const pending = (declared.adopted ?? []).filter(entry => typeof entry.landsIn === 'string' && entry.landsIn.length > 0)
       if (pending.length > 0) {

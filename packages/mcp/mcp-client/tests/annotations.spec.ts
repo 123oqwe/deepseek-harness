@@ -22,6 +22,41 @@ function tagsFor(raw: unknown, declared: readonly string[] = [], trust = false):
   return riskDomainTagsFor(verdict.annotations, declared, trust)
 }
 
+describe('P2-04 owns the MCP ToolAnnotations vocabulary: the four hints, and which way each may move risk', () => {
+  // The backfill the make-vs-use ledger owes for this epic's ASSIGNED
+  // ownership of `MCP ToolAnnotations`. It pins the vocabulary the
+  // implementation was written against — the exact four hint names and the
+  // direction each is allowed to move the risk — and adds no behaviour: every
+  // rule asserted here is already the shipped one.
+  it('reads exactly the four MCP ToolAnnotations hint names, and ignores any other field', () => {
+    const verdict = validateAnnotations({
+      title: 'ignored, and not refused',
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+      someFutureHint: true,
+    })
+    expect(verdict.ok).toBe(true)
+    if (!verdict.ok) return
+    expect(Object.keys(verdict.annotations).sort())
+      .toEqual(['destructiveHint', 'idempotentHint', 'openWorldHint', 'readOnlyHint'])
+  })
+
+  it('lets only destructiveHint and openWorldHint RAISE, and only readOnlyHint lower — idempotentHint moves nothing', () => {
+    // Raising is believed from any server: lying that way only restricts the
+    // liar's own tools. `idempotentHint` is read and validated but carries no
+    // risk meaning, which is a vocabulary fact rather than an omission.
+    expect(tagsFor({ destructiveHint: true })).toEqual(['destructive'])
+    expect(tagsFor({ openWorldHint: true })).toEqual(['external-effect'])
+    expect(tagsFor({ idempotentHint: true })).toEqual([])
+    expect(tagsFor({ idempotentHint: false })).toEqual([])
+    // The one downgrade-shaped hint, and it is inert without operator trust.
+    expect(tagsFor({ readOnlyHint: true })).toEqual([])
+    expect(tagsFor({ readOnlyHint: true }, [], true)).toEqual(['catalog-read'])
+  })
+})
+
 describe('P2-04 must[1]: a hostile server cannot lower the risk its own tools carry', () => {
   it('KEEPS the operator\'s `destructive` when the server claims the tool is read-only', () => {
     // The attack this exists for. The operator declared what the tool does;

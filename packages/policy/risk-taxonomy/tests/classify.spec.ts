@@ -43,6 +43,49 @@ describe('P2-04 C — the eight-class risk taxonomy (must[0])', () => {
   })
 })
 
+describe('P2-04 owns how RiskClass relates to P1-01 SideEffectClass: a shared spelling is not a shared meaning', () => {
+  // The backfill the make-vs-use ledger owes for this epic's ASSIGNED
+  // ownership of `P1-01 SideEffectClass`. The module header of `../src/types.ts`
+  // records the fact; nothing pinned it. THREE side-effect vocabularies coexist
+  // deliberately: `@deepseek-ai/dsh-plugin-manifest`'s `SideEffectClass` (P1-01)
+  // and `@deepseek-ai/dsh-action-manifest`'s `ActionSideEffectClass` (P2-03)
+  // classify MECHANISM — what an operation touches — while these eight classify
+  // RISK: what it costs when the operation is wrong.
+  //
+  // No behaviour is added here. What is pinned is that the two spellings the
+  // vocabularies SHARE are not one concept, which is the property that stops a
+  // plugin picking a mechanism tag to buy a lower risk band (acceptance[1]).
+  it('gives `read` and `destructive` a meaning set by the POLICY, not by the mechanism word they share with SideEffectClass', () => {
+    // P1-01's SideEffectClass spells these two the same way. A deployment is
+    // free to place a tag named for a mechanism anywhere in the risk order, and
+    // the classifier obeys the policy rather than the spelling.
+    const asDestructive = classify(
+      { actionId: 'a', domainTags: ['filesystem-read'] },
+      policy([{ domainTag: 'filesystem-read', riskClass: 'destructive' }]),
+    )
+    expect(asDestructive.riskClass).toBe('destructive')
+
+    const asRead = classify(
+      { actionId: 'a', domainTags: ['process-control'] },
+      policy([{ domainTag: 'process-control', riskClass: 'read' }]),
+    )
+    expect(asRead.riskClass).toBe('read')
+  })
+
+  it('has no member that is not a RiskClass, so a SideEffectClass value can never be used as one', () => {
+    // `SideEffectClass` is `none | read | write | network | process |
+    // destructive`. Only `read` and `destructive` are also risk classes; the
+    // other four have no risk meaning at all, which is why a mapping between
+    // the vocabularies must be written and can never be an identity.
+    const mechanismOnly = ['none', 'write', 'network', 'process']
+    for (const value of mechanismOnly) {
+      expect(RISK_CLASSES_BY_ASCENDING_RISK).not.toContain(value)
+    }
+    expect(RISK_CLASSES_BY_ASCENDING_RISK).toContain('read')
+    expect(RISK_CLASSES_BY_ASCENDING_RISK).toContain('destructive')
+  })
+})
+
 describe('P2-04 C — organisation policy decides the mapping, not the plugin (must[1])', () => {
   it('must[1]: the SAME declared tag classifies differently under two organisation policies', () => {
     const subject = { actionId: 'act-1', domainTags: ['send-email'] }
