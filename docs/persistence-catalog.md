@@ -734,6 +734,47 @@ Source: [`packages/core/session/src/types.ts:355`](../packages/core/session/src/
 
 Source: [`packages/core/session/src/types.ts:345`](../packages/core/session/src/types.ts)
 
+### `run/*`
+
+<a id="runtask-profile--log-only"></a>
+
+#### `run/task-profile` — log-only
+
+```ts persistence-catalog
+/**
+ * One compiled TaskProfile, and the durable home of the profile itself
+ * (validation[2]).
+ *
+ * The Run event log carries a {@link TaskProfileRef} to this profile; it
+ * does not carry the profile. That split follows every other entity P4-01
+ * references — a Run event names an approval or an artifact and their
+ * bodies live with their owners — and a TaskProfile's owner is the
+ * session, because it is compiled from a message in that session's log
+ * and is meaningless outside it.
+ *
+ * Persistence and revision (validation[2]) are the same mechanism: the
+ * log is append-only, so a revised profile is a NEW event carrying a new
+ * `ref`, and `previousRef` names the profile it revises. A first compile
+ * has no `previousRef`. Nothing is ever edited in place, so the revision
+ * chain is recoverable by reading the events in order.
+ *
+ * The event exists here rather than only on the Run so that a later
+ * stage putting the profile into a model request (P4-03) satisfies
+ * "model-visible ⟺ logged" without adding a second record of the same
+ * fact.
+ */
+'run/task-profile': {
+  /** The digest of {@link profile}; the same value the Run event log references. */
+  ref: TaskProfileRef
+  /** The compiled profile. */
+  profile: TaskProfile
+  /** The profile this one revises, absent on a first compile. */
+  previousRef?: TaskProfileRef
+}
+```
+
+Source: [`packages/run/task-profile/src/types.ts:301`](../packages/run/task-profile/src/types.ts)
+
 ### `sandbox/*`
 
 <a id="sandboxmode--log-only"></a>
