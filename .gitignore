@@ -22,6 +22,9 @@ tmp/
 .claude/commands/
 .claude/launch.json
 .claude/settings.json
+# Per-worktree NOW note. Two lanes editing one tracked narrative conflicted on every
+# rebase and left each worktree holding the other lane's stale snapshot.
+.claude/goal.local.md
 .vscode/
 .DS_Store
 .idea
