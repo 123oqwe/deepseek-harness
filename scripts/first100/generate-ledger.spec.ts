@@ -40,8 +40,10 @@ import {
   checkObservationDistinctness,
   deriveSupplementLiveness,
   rowDigest,
+  validateAcceptanceCoverage,
 } from './generate-ledger.mjs'
 import { realitySetOverlap } from './epic-reality-set.mjs'
+import { readFileSync } from 'node:fs'
 
 // checkCandidateChainConsistency's real usage always runs locally against
 // the Supervisor's own full-history clone -- never inside a CI job's shallow
@@ -648,5 +650,54 @@ describe('checkNoOpenFindings (§12.63: accept and green-cell judge open finding
     expect(checkNoOpenFindings({}).valid).toBe(true)
     expect(checkNoOpenFindings({ openFindings: null }).valid).toBe(true)
     expect(checkNoOpenFindings({ openFindings: [] }).valid).toBe(true)
+  })
+})
+
+describe('validateAcceptanceCoverage (BLOCKED-206: the schema is executed, not just declared)', () => {
+  const schema: unknown = JSON.parse(
+    readFileSync(new URL('../../spec/first100/exec/acceptance-coverage.schema.json', import.meta.url), 'utf8'),
+  )
+
+  it('REFUSES an entry carrying a field the schema never declared', () => {
+    // The real defect, in miniature. Two P4-09 entries carried `status` for
+    // six days under `additionalProperties: false`, and one of them --
+    // `NOT COVERED` on acceptance[1] -- contradicted its own note, which had
+    // been corrected to `COVERED since U.2`. The field no reader consulted
+    // stayed behind because nothing executed the schema.
+    const drifted = {
+      schema: { name: 'first100-acceptance-coverage', version: '1.0' },
+      entries: [
+        {
+          epic: 'P4-09',
+          acceptanceIndex: 1,
+          coveredBy: [{ stage: 'U', title: 'a parent cancel reaches its nested run' }],
+          status: 'NOT COVERED',
+        },
+      ],
+    }
+    const result = validateAcceptanceCoverage(schema, drifted)
+    expect(result.valid).toBe(false)
+    expect(result.errors.some(error => error.params['additionalProperty'] === 'status')).toBe(true)
+  })
+
+  it('ADMITS the real acceptance-coverage.json, so the gate is not vacuously red', () => {
+    // The positive control the refusal above is worthless without: a predicate
+    // that rejected everything would also reject the drifted document.
+    const coverage: unknown = JSON.parse(
+      readFileSync(new URL('../../spec/first100/exec/acceptance-coverage.json', import.meta.url), 'utf8'),
+    )
+    expect(validateAcceptanceCoverage(schema, coverage)).toEqual({ valid: true, errors: [] })
+  })
+
+  it('REFUSES a citation naming a stage outside the closed C/P/U/F set', () => {
+    // The other half of what the schema promises and nothing checked: the
+    // stage enum. A citation naming 'X' would have been read by
+    // checkCoverageClosure as a stage no freeze entry can match, failing the
+    // index for a reason that names the symptom rather than the typo.
+    const badStage = {
+      schema: { name: 'first100-acceptance-coverage', version: '1.0' },
+      entries: [{ epic: 'P4-01', acceptanceIndex: 0, coveredBy: [{ stage: 'X', title: 'whatever' }] }],
+    }
+    expect(validateAcceptanceCoverage(schema, badStage).valid).toBe(false)
   })
 })

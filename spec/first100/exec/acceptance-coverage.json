@@ -1802,8 +1802,7 @@
           "title": "P4-09 must[3]: a script nests another definition CANCELS the nested run when the parent is cancelled (acceptance[1])"
         }
       ],
-      "note": "acceptance[1]: 'a parent's cancellation propagates.' COVERED since U.2. The prior note recorded this as NOT COVERED and was right when written: nothing started a nested run, so `cancelPropagationForNested` decided a propagation that never happened. U.2 starts a real nested run through the engine and cancels its parent, so the case observes the propagation rather than the decision. Re-checked at §12.48-A: `cancelPropagationForNested` has one cross-package production caller, `workflow-worker-thread/src/host.ts`, on the path a cancel takes to every nested run the parent holds.",
-      "status": "NOT COVERED"
+      "note": "acceptance[1]: 'a parent's cancellation propagates.' COVERED since U.2. The prior note recorded this as NOT COVERED and was right when written: nothing started a nested run, so `cancelPropagationForNested` decided a propagation that never happened. U.2 starts a real nested run through the engine and cancels its parent, so the case observes the propagation rather than the decision. Re-checked at §12.48-A: `cancelPropagationForNested` has one cross-package production caller, `workflow-worker-thread/src/host.ts`, on the path a cancel takes to every nested run the parent holds."
     },
     {
       "epic": "P4-09",
@@ -1818,8 +1817,7 @@
           "title": "continues the parent but still RECORDS the failure"
         }
       ],
-      "note": "acceptance[2]: 'a child failure is handled by the declared policy.' Both branches are covered, and the second carries the substance: `continue-parent` still RECORDS the failure. A policy that let a parent ignore a failed child would make that child's work indistinguishable from work that never ran, and a parent reporting success while a declared child failed silently is exactly what this clause exists to prevent. Same decision-level limit as acceptance[1].\n\n**Status qualified 2026-09-06, for the same reason as acceptance[1].** Both branches of the declared policy are pinned, but nothing applies a policy to a real child failure, because no child runs. This entry covers the DECISION; it is not evidence that a parent handled a failing nested child.",
-      "status": "DECISION LEVEL ONLY"
+      "note": "acceptance[2]: 'a child failure is handled by the declared policy.' Both branches are covered, and the second carries the substance: `continue-parent` still RECORDS the failure. A policy that let a parent ignore a failed child would make that child's work indistinguishable from work that never ran, and a parent reporting success while a declared child failed silently is exactly what this clause exists to prevent. This entry covers the DECISION, not its application to a real child failure.\n\n**Status qualified 2026-09-06.** (It read 'for the same reason as acceptance[1]' until 2026-09-11; acceptance[1] has been COVERED since U.2, so the cross-reference no longer held and the limit is stated here directly.) Both branches of the declared policy are pinned, but nothing applies a policy to a real child failure, because no child runs. This entry covers the DECISION; it is not evidence that a parent handled a failing nested child."
     },
     {
       "epic": "P4-09",

@@ -146,3 +146,16 @@ export function checkNoOpenFindings(row: { openFindings?: readonly string[] | nu
   valid: boolean
   open: readonly string[]
 }
+
+/** One Ajv validation error, narrowed to the fields the caller reports. */
+export interface AcceptanceCoverageSchemaError {
+  instancePath: string
+  message?: string | undefined
+  params: Record<string, unknown>
+}
+
+/** BLOCKED-206: validate acceptance-coverage.json against its own 2020-12 schema. */
+export function validateAcceptanceCoverage(
+  schema: unknown,
+  coverage: unknown,
+): { valid: boolean; errors: readonly AcceptanceCoverageSchemaError[] }

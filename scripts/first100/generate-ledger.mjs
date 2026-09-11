@@ -80,6 +80,7 @@
  *     consistent with its own recorded cell inputs (detects hand-editing).
  *   --ledger <path>   ledger JSON path (default spec/first100/exec/ledger.json)
  */
+import Ajv2020 from 'ajv/dist/2020.js'
 import { spawnSync } from 'node:child_process'
 import { frozenTitlePresent, registeredRenames } from './frozen-title-renames.mjs'
 import { commitmentKey, freezeEntriesAt } from './verify-freeze-in-candidate-tree.mjs'
@@ -126,6 +127,34 @@ const ACCEPTANCE_COVERAGE_PATH = join(REPO_ROOT, 'spec/first100/exec/acceptance-
 const FLAKE_REGISTRY_PATH = join(REPO_ROOT, 'spec/first100/exec/flake-registry.json')
 const EXEC_STATE_PATH = join(REPO_ROOT, 'spec/first100/exec/EXEC-STATE.json')
 const SIGNOFF_PATH = join(REPO_ROOT, 'spec/first100/exec/delegate-signoff.json')
+const ACCEPTANCE_COVERAGE_SCHEMA_PATH = join(REPO_ROOT, 'spec/first100/exec/acceptance-coverage.schema.json')
+
+/**
+ * BLOCKED-206 (2026-09-11): validate acceptance-coverage.json against its own
+ * schema. The schema declared `additionalProperties: false` and nothing ever
+ * executed it, so two P4-09 entries carried an undeclared `status` field from
+ * `2c9ddf323c` (2026-09-05) to 2026-09-11 — and one of them, `NOT COVERED` on
+ * acceptance[1], contradicted its own note from `22226a389e` (2026-09-08),
+ * which corrected the prose to `COVERED since U.2` while the field no reader
+ * consulted stayed behind. An unexecuted schema does not constrain a file; it
+ * only describes one it has stopped matching.
+ *
+ * Kept pure and exported so the unit tests can feed it a rejected document
+ * without going through the CLI. The schema declares draft 2020-12, so the
+ * validator is Ajv's 2020 build rather than the default draft-07 one.
+ * @param schema - the parsed acceptance-coverage schema.
+ * @param coverage - the parsed acceptance-coverage document.
+ * @returns whether the document conforms, and Ajv's errors when it does not.
+ */
+export function validateAcceptanceCoverage(schema, coverage) {
+  const Ajv = Ajv2020.default ?? Ajv2020
+  // `strict: false` because the schema uses `$id` with a bare authority and
+  // Ajv's strict mode rejects it; every keyword this schema relies on is
+  // standard 2020-12 and is enforced normally.
+  const validate = new Ajv({ allErrors: true, strict: false }).compile(schema)
+  const valid = validate(coverage)
+  return { valid, errors: valid ? [] : (validate.errors ?? []) }
+}
 
 /**
  * Epics whose eventual `--accept` requires explicit user confirmation before
@@ -1572,7 +1601,23 @@ function cmdCheck() {
       process.exit(1)
     }
   }
-  console.log(`verify: ${LEDGER_PATH} carries a generate-ledger.mjs header (${Object.keys(ledger.rows).length} rows); EXEC-STATE digests match both files`)
+  // BLOCKED-206: the one place the coverage schema is executed. `--check` is
+  // the drift detector, and an artifact drifting from its own declared shape is
+  // drift — the same kind the EXEC-STATE digests above catch.
+  if (existsSync(ACCEPTANCE_COVERAGE_PATH) && existsSync(ACCEPTANCE_COVERAGE_SCHEMA_PATH)) {
+    const { valid, errors } = validateAcceptanceCoverage(
+      loadJson(ACCEPTANCE_COVERAGE_SCHEMA_PATH),
+      loadJson(ACCEPTANCE_COVERAGE_PATH),
+    )
+    if (!valid) {
+      console.error(`DRIFT: ${ACCEPTANCE_COVERAGE_PATH} does not conform to acceptance-coverage.schema.json`)
+      for (const error of errors) {
+        console.error(`  ${error.instancePath || '/'} ${error.message} ${JSON.stringify(error.params)}`)
+      }
+      process.exit(1)
+    }
+  }
+  console.log(`verify: ${LEDGER_PATH} carries a generate-ledger.mjs header (${Object.keys(ledger.rows).length} rows); EXEC-STATE digests match both files; acceptance-coverage.json conforms to its schema`)
   process.exit(0)
 }
 
