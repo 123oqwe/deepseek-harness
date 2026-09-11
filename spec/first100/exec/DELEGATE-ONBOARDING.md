@@ -73,6 +73,8 @@ preFlight(JSON 记录 `clause-subject-audit.json` + `evidence-<id>.md`,`recorded
 - **用户触点只剩 B 类**:钱 / 钥匙 / 不可逆对外 / C7§② 收录范围;其余一律 delegate 定并事后通报(用户 2026-09-11「全自动不是半自动」)。交用户的题必须带建议 + 不答时的默认 + 卡什么(§12.85 补记 1)。
 - **格子来历**:`verify-cells-recomputable.mjs` 不在门集也不在 CI;每次 `--accept` 前对该 epic 跑一次,UNAVAILABLE 不签;观测产物在 `~/first100-delegate/artifacts/`(持久)与 GitHub(保留期见 `expires_at`)。
 
+- **测过的观测后面那句从句**(补记 64):最常见的未测断言不是整句编造,而是"一个测过的观测 + 一句听上去显然为真的一般化从句"(测了 headless 有 chunk,没测"因为别的都只有一个入口")。审稿专挑观测句后面的 因为/所以/故/都/永远——那半句要么有读数,要么改成未量。
+
 ## 9. 每小时自查五问(2026-09-11,gq-92 退班前给;由 watch-v12 心跳每小时打印,不靠记)
 
 ① 我派出去的非代码指令(锚 / 文件 / 配置)核过落地了吗——`ls` / `grep` 一次,不信"已建"。② 云上有没有排队或已被取代的 run,取消了没(一次只派最新候选)。③ 本笔是不是一次云跑——docs overlay 先叠到候选再派发,门③ SHA == 推送 SHA,dispatch run 既是门③也是观测。④ 今天有没有我没量就写的断言(补记 4 的"无环"是反例)。⑤ `~/first100-delegate/.events/watchdog.log` 最近一条是什么(机器睡眠 / 电池 / 会话死亡先于"lane 怠工"怀疑)。
