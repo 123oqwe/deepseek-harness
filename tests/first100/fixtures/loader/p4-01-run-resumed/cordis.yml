@@ -1,0 +1,52 @@
+# Composition proving a RESTART CONTINUES its Run instead of opening a second
+# (Epic P4-01 acceptance[0], the U2 remediation slice). Identical to
+# `../p4-01-run/cordis.yml` except for one line: the configured agent declares a
+# STABLE `sessionId`.
+#
+# That one line is the whole difference between the two fixtures, and it is the
+# difference adoption turns on. Without it `dsh-agent-loop` mints a fresh
+# session per boot — `agents[].sessionId` is documented as "optional stable
+# identity; remounts resume its materialized history" — so two boots are two
+# sessions, each correctly getting its own Run. A deployment whose root agent is
+# meant to outlive a restart declares the id, and only then is there a Run to
+# continue.
+#
+# Driven by P4-01.composition.spec.ts. Keyless: the agent needs no
+# provider/model, because `agent/session-start` is emitted before any model
+# request.
+- id: llm
+  name: '@deepseek-ai/dsh-llm'
+
+- id: session
+  name: '@deepseek-ai/dsh-session'
+
+- id: session-projections
+  name: '@deepseek-ai/dsh-session-projection'
+
+- id: system-prompt
+  name: '@deepseek-ai/dsh-system-prompt'
+
+- id: tools
+  name: '@deepseek-ai/dsh-tools'
+
+- id: agents
+  name: '@deepseek-ai/dsh-agent'
+
+- id: agent-loop
+  name: '@deepseek-ai/dsh-agent-loop'
+  config:
+    agents:
+      - id: p4-01-root
+        sessionId: p4-01-durable-session
+
+# The Run Service injects `leaseStore`: without a provider the plugin stays
+# PENDING and opens nothing. The in-memory provider is right for a one-process
+# composition — and it is also why this fixture can continue its own Run at all:
+# each boot's store is fresh, so the previous boot's lease is not still held.
+- id: lease-store
+  name: '@deepseek-ai/dsh-lease'
+
+- id: run
+  name: '@deepseek-ai/dsh-run'
+  config:
+    storePath: !!js process.env.P4_01_RUN_STORE

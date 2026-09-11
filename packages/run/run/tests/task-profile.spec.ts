@@ -149,9 +149,15 @@ describe('P4-02 validation[2]: the Run log names the profile, and the digest res
     const agent = await turn(ctx, 'session-planning', goal('draft the release notes'))
 
     const [run] = ctx.runs.service.runsForSession(agent.id)
-    expect(run?.state).toBe('planning')
-    const references = referencesByKind(run?.events ?? [], 'task-profile')
-    expect(references).toStrictEqual([{ kind: 'task-profile', id: agent.taskProfile }])
+    // The ENTRY, not the state afterwards. Reading `run.state` was an incidental
+    // assertion: it was `planning` only because nothing advanced the Run past
+    // it, and P4-01's U2 slice drives `planning -> running` at this same step.
+    // Pinning the entry is also the stronger claim — it fixes the `accepted ->
+    // planning` pair AND that the reference is on that transition, rather than
+    // anywhere in the log.
+    const planning = run?.events.find(event => event.toState === 'planning')
+    expect(planning?.fromState).toBe('accepted')
+    expect(planning?.references).toStrictEqual([{ kind: 'task-profile', id: agent.taskProfile }])
   })
 
   it('references a digest whose body is in the session log, so the reference is resolvable', async () => {

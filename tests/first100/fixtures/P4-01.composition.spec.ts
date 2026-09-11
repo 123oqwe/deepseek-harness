@@ -27,6 +27,8 @@ import { afterEach, describe, expect, it } from 'vitest'
 const repoRoot = fileURLToPath(new URL('../../../', import.meta.url))
 const binScript = fileURLToPath(new URL('./loader/p4-01-run/driver.ts', import.meta.url))
 const configPath = fileURLToPath(new URL('./loader/p4-01-run/cordis.yml', import.meta.url))
+const resumedBinScript = fileURLToPath(new URL('./loader/p4-01-run-resumed/driver.ts', import.meta.url))
+const resumedConfigPath = fileURLToPath(new URL('./loader/p4-01-run-resumed/cordis.yml', import.meta.url))
 const tsconfigPath = join(repoRoot, 'tsconfig.json')
 
 const storeRoots: string[] = []
@@ -63,6 +65,30 @@ async function boot(storePath: string, label: string): Promise<void> {
     tsconfigPath,
     env: { P4_01_RUN_STORE: storePath },
   })
+}
+
+/**
+ * Boot the STABLE-SESSION composition once (`./loader/p4-01-run-resumed/`).
+ *
+ * The only difference from {@link boot} is that its configured agent declares a
+ * `sessionId`, so two boots are a restart of one durable session rather than two
+ * sessions. That is the arrangement adoption needs: without the id the loop
+ * mints a session per boot, and each one correctly gets its own Run.
+ * @param storePath - the Run store document both boots share.
+ * @param label - the smoke run's label, for its own diagnostics.
+ * @returns the driver's stdout, which carries what the plugin enumerated at mount.
+ */
+async function bootResumed(storePath: string, label: string): Promise<string> {
+  const result = await runLoaderSmoke({
+    label,
+    tempDirPrefix: 'p4-01-run-resumed-',
+    binScript: resumedBinScript,
+    libBinScript: resumedBinScript,
+    configPath: resumedConfigPath,
+    tsconfigPath,
+    env: { P4_01_RUN_STORE: storePath },
+  })
+  return result.stdout
 }
 
 describe('P4-01 Run Service composition (U-stage)', () => {
@@ -127,5 +153,36 @@ describe('P4-01 Run Service composition (U-stage)', () => {
     await boot(storePath, 'p4-01-run resume boot 2')
     const runs = readRuns(storePath)
     for (const run of runs) expect(run.state).toBe('accepted')
+  }, LOADER_SMOKE_TEST_TIMEOUT_MS)
+
+  it('CONTINUES one durable session\'s Run across a restart, rather than opening a second (U2)', async () => {
+    // The withdrawal's own ground: production arrival, observed through a real
+    // `dsh-app-boot` boot of a real composition rather than a hand-built
+    // `ctx.plugin`. Before the U2 slice this store held TWO Runs for one session
+    // after two boots, the first non-terminal forever.
+    const storePath = makeStorePath()
+    await bootResumed(storePath, 'p4-01-run-resumed boot 1')
+    const first = readRuns(storePath)
+    expect(first).toHaveLength(1)
+
+    await bootResumed(storePath, 'p4-01-run-resumed boot 2')
+    const after = readRuns(storePath)
+
+    expect(after).toHaveLength(1)
+    expect(after[0]?.id).toBe(first[0]?.id)
+    expect(after[0]?.sessionIds).toStrictEqual(first[0]?.sessionIds)
+  }, LOADER_SMOKE_TEST_TIMEOUT_MS)
+
+  it('enumerates what it restored at mount, which the durable document cannot show (U2)', async () => {
+    // acceptance[0]'s enumerate half has no trace in the store: the document
+    // records which Runs are non-terminal, not that this process asked. The
+    // driver prints the plugin's own answer, so the claim is observed rather
+    // than inferred from the state it acted on.
+    const storePath = makeStorePath()
+    const cold = await bootResumed(storePath, 'p4-01-run-resumed cold boot')
+    expect(cold).toContain('restored 0 non-terminal Run(s)')
+
+    const warm = await bootResumed(storePath, 'p4-01-run-resumed warm boot')
+    expect(warm).toContain('restored 1 non-terminal Run(s)')
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 })
