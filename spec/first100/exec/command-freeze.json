@@ -8822,6 +8822,45 @@
       "note": "§12.29-1 supersedes P5-11.U.1. That entry's two claim cases read the board AFTER the child settled, which was the only moment available while a claim could not be given back; §12.29-1 opened `release` on the contract as a C-stage supplement, the producer now releases at settlement, and those two observations are no longer true of the same moment. Superseded rather than edited: an entry is a pre-commitment, and an expectation changed after the fact is a different commitment. The replacement observes a live claim at `subagent/start`, which is the window a claim now occupies, and adds the two halves the ruling named -- a release fenced by the attempt, refusing a lapsed holder that would otherwise strip its successor, and a task claimable again once its holder gives it back. `decideRelease` returns a task to `open` only from `claimed`: a task whose work was submitted keeps that status and merely loses its owner, because a holder letting go does not un-submit its work."
     },
     {
+      "epic": "P5-11",
+      "stage": "U",
+      "supplements": {
+        "epic": "P5-11",
+        "stage": "U"
+      },
+      "supplementSeq": 3,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/taskboard-sqlite/tests/taskboard-sqlite.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "files": [
+        "packages/run/taskboard-sqlite/tests/taskboard-sqlite.spec.ts",
+        "packages/run/taskboard-sqlite/src/store.ts"
+      ],
+      "frozenAtUtc": "2026-09-11T20:04:18Z",
+      "dryRunProof": {
+        "treeSha": "c81d51b66856836d8fb6f00c099873943594f42c",
+        "testsDiscovered": 5
+      },
+      "expectCases": [
+        "admits exactly one of two processes claiming the same task",
+        "keeps the claim after the claiming process is gone, so a lease can lapse rather than vanish",
+        "lets a new worker claim once the lease lapsed, at a GREATER attempt",
+        "REFUSES a receipt from the lapsed holder after a reclaim",
+        "refuses a cycle that closes across two separately-valid submissions"
+      ],
+      "sensitivityProof": {
+        "mutationDescription": "In `packages/run/taskboard-sqlite/src/store.ts`, the CLAIM path's `db.exec('BEGIN IMMEDIATE')` (line 116) weakened to `db.exec('BEGIN')`. The transaction still exists and the decision logic is untouched; only the write lock is no longer taken at BEGIN, so two processes reaching the claim together are no longer serialized. That is precisely the property the source comment at :112-115 says carries acceptance[0] — 'the loser reads the winner's row rather than the task as it was, which is the whole reason a Map could not carry acceptance[0]'.",
+        "failureSummary": "RED 1 of 5 — `admits exactly one of two processes claiming the same task` alone; the four single-process cases stayed green, which is what identifies it as the multi-process case rather than a general claim test. Applied and reverted locally; `store.ts` restored byte-identically (sha256 d14b509aa20e4d6ca326e244078d66b0406fdfad557d18abd5289d4147176040 before and after, `git status --porcelain` empty) and the file returned 5 of 5."
+      },
+      "note": "acceptance[0]'s MULTI-PROCESS half, which existed in the tree and was frozen by nothing. Every case cited for acceptance[0] before this entry is single-process: the strongest of them, `leaves exactly one admitted holder after a hundred contending workers`, says so in its own comment (`taskboard/tests/claims.e2e.spec.ts:69` — \"validation[0]'s 100-worker stress, SEQUENTIALLY\"), being a loop of 100 calls to the pure `decideClaim`. A hundred sequential calls are not two concurrent processes, and the clause's subject is the second thing.\n\nThis file spawns two real node child processes (`spawn(process.execPath, ['--import','tsx','-e', …])`) and races them at one task with `Promise.all`, so the property is observed where SQLite actually arbitrates it. Its header states the same reason: 'two real workers are two processes'.\n\nFROZEN RATHER THAN WRITTEN: the cases already existed and passed. What was missing was the evidence chain — no live freeze entry named this test file and no entry carried these titles, so the strongest evidence for acceptance[0] was never CI-observed, never counted by coverage closure, and invisible at sign-off. The acceptance[0] citation is added once this supplement is observed, because closure treats every citation as necessary and a frozen-but-unobserved title would turn that index red."
+    },
+    {
       "epic": "P4-07",
       "stage": "U",
       "supplements": {
