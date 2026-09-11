@@ -479,11 +479,21 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
 
   /**
    * The restored service, for a consumer that needs verification or delegation.
+   *
+   * **The reachable failure is at teardown, not at startup.** `inject` holds a
+   * consumer until the service is available, but this mount's teardown clears
+   * the handle SYNCHRONOUSLY and a fiber unload runs every disposer
+   * concurrently — so a consumer whose own disposer awaits anything before
+   * calling in finds it already gone. Measured for the identically worded
+   * accessor in `@deepseek-ai/dsh-lease-sqlite` (BLOCKED-197).
    * @returns the service this mount restored.
-   * @throws when read before the mount finished, which `inject` prevents.
+   * @throws when the handle is absent: almost always because this mount has
+   * already been unloaded, and only in principle because it has not yet restored.
    */
   get service(): CapabilityTokenService {
-    if (this.restored === undefined) throw new Error('capability-token-file used before its mount restored the store')
+    if (this.restored === undefined) {
+      throw new Error('capability-token-file has no restored store: this mount was already unloaded, or has not restored yet')
+    }
     return this.restored
   }
 

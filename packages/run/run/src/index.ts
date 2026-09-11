@@ -1076,10 +1076,9 @@ export default class RunPlugin extends Service {
       await this.service.advance(runId, 'paused', [], Date.now())
     }
     // **The lease is NOT handed back here, and it cannot be.** Measured:
-    // `release` throws `LeaseStorePlugin used before its mount opened the
-    // database` — the provider cleared its handle synchronously while this
-    // disposer was awaiting the transition above, and fiber unload gives the
-    // two no order to rely on. A released lease on clean
+    // `release` finds no open database — the provider cleared its handle
+    // synchronously while this disposer was awaiting the transition above, and
+    // fiber unload gives the two no order to rely on. A released lease on clean
     // shutdown therefore needs a hand-back at a point where the store is still
     // open, which this disposer is not. Recorded in BLOCKED-197; until then a
     // cleanly unloaded host's work item stays held until it lapses, exactly as

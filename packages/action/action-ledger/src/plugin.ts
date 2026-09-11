@@ -77,10 +77,22 @@ export default class ActionLedgerPlugin extends Service {
   /**
    * The opened store.
    * @returns the store this mount opened.
-   * @throws when read before the mount finished, which no injected consumer can do.
+   *
+   * **The reachable failure is at teardown, not at startup.** A consumer cannot
+   * read this before the mount finishes — `inject` holds it until the service is
+   * available — but the teardown yielded by `Service.init` clears the handle
+   * SYNCHRONOUSLY, and a fiber unload runs every disposer concurrently. So a
+   * consumer whose own disposer awaits anything before calling in finds the
+   * handle already gone. Measured in `@deepseek-ai/dsh-lease-sqlite`, whose
+   * identical wording sent a reader looking at startup for a shutdown fault
+   * (BLOCKED-197).
+   * @throws when the handle is absent: almost always because this mount has
+   * already been unloaded, and only in principle because it has not yet opened.
    */
   private get store(): LedgerStore {
-    if (this.opened === undefined) throw new Error('ActionLedgerPlugin used before its mount opened the database')
+    if (this.opened === undefined) {
+      throw new Error('ActionLedgerPlugin has no open database: this mount was already unloaded, or has not opened yet')
+    }
     return this.opened
   }
 

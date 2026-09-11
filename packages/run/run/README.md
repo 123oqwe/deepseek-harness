@@ -262,11 +262,12 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   goes `running → paused` from this plugin's own disposer, because
   `agent/disposed` cannot reach it by then — the listener is torn down with the
   mount.
-  The lease is a different matter — the lease store unloads FIRST, and calling
-  `release` there throws `LeaseStorePlugin used before its mount opened the
-  database`. So a cleanly unloaded host keeps its session's work item until the
-  lease lapses, exactly as a crashed one does, and the next host cannot tell the
-  two apart. `BLOCKED-197` holds it; a case freezes the measured behaviour so
+  The lease is a different matter — the provider clears its handle
+  synchronously while this disposer awaits the transition before the release,
+  and a fiber unload runs every disposer concurrently, so `release` finds no
+  open database. A cleanly unloaded host therefore keeps its session's work item
+  until the lease lapses, exactly as a crashed one does, and the next host
+  cannot tell the two apart. `BLOCKED-197` holds it; a case freezes the measured behaviour so
   that closing it reddens something.
 - **Continuing a Run across a restart needs a stable session id.** Adoption is
   keyed on the session, so a configured agent with no `sessionId` gets a new

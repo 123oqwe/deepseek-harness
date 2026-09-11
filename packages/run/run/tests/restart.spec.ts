@@ -205,10 +205,12 @@ describe('P4-01 acceptance[0] and acceptance[2]: a restart adopts its Run instea
     // **Not the behaviour this case was written to assert, and the change is
     // the finding.** It was `continues a parked Run IMMEDIATELY after a clean
     // unload, waiting out no lease` — until the release turned out to be
-    // impossible from the plugin's disposer: the lease store unloads FIRST, so
-    // `release` throws `LeaseStorePlugin used before its mount opened the
-    // database`. A clean shutdown therefore parks the Run but keeps the work
-    // item, and the next boot is refused exactly as it is after a crash.
+    // impossible from the plugin's disposer: the provider clears its handle
+    // synchronously while this disposer awaits the transition before the
+    // release, and a fiber unload runs every disposer concurrently, so there is
+    // no order to rely on either. A clean shutdown therefore parks the Run but
+    // keeps the work item, and the next boot is refused exactly as it is after
+    // a crash.
     //
     // Frozen as it is rather than deleted, because the difference between
     // "cleanly unloaded" and "crashed" is invisible to the next host today, and
