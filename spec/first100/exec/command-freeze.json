@@ -12688,6 +12688,47 @@
         "failureSummary": "Reds the acceptance[1] case alone, on the `propose` probe: the assembled tool list the adapter received now carries the stub, and its description matches the memory-adjacent verb pattern. The FIRST attempt at this mutation was discarded rather than recorded: it used `defineTool` without the fields the registry needs, the boot died with a TypeError reading 'render', and every case in the file SKIPPED because the shared `beforeAll` threw. A mutation that kills the harness proves nothing about the case — the same lesson P2-05 recorded when a TS6133 build failure reddened a case for the wrong reason. NOT PROVEN by this case: that no tool reaches durable memory by a path naming neither the seam nor its verbs. It reads the model-facing tool list, which is the surface the clause is about — a bypass the model cannot see is not a bypass the model can take — but a tool that wrote memory while describing itself as something else would pass."
       },
       "note": "P6-01 acceptance[1], measured as an ABSENT SUBJECT on a real boot. `conformance.spec.ts` proves `revise()` rejects an id no `propose()` minted and that every read carries a complete access context; both are true and both are properties of the API, while the clause asks whether anything the MODEL can call reaches durable memory. This reads the assembled tool list the adapter actually received on a booted headless profile and asserts no tool exposes propose/revise/forget, with a non-vacuity guard first — 'no memory-writing tool' is otherwise satisfied by 'no tools at all', and this profile ships several."
+    },
+    {
+      "epic": "P1-07",
+      "stage": "U",
+      "supplements": {
+        "epic": "P1-07",
+        "stage": "U"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P1-07.acp-trust.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "does NOT read the clone's own instructions while it is untrusted and nobody answers",
+        "PUTS the first-time authorization, naming the project root and asking only for trusted-read",
+        "reads the project's instructions once the host user answers allowed-once, and STILL offers no executable skill"
+      ],
+      "files": [
+        "tests/first100/fixtures/P1-07.acp-trust.spec.ts",
+        "packages/workspace/workspace-trust-local/tests/fixtures/acp-profile-driver.ts",
+        "packages/workspace/workspace-trust-local/tests/fixtures/acp-trust.patch.yml",
+        "packages/bundle/acp-app/cordis.patch.yml",
+        "packages/bundle/web-app/cordis.patch.yml",
+        "packages/bundle/base/cordis.patch.yml"
+      ],
+      "frozenAtUtc": "2026-09-11T23:48:22.776Z",
+      "dryRunProof": {
+        "treeSha": "f199336707111120a5a2bb804f944440ee59cf0b",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "`packages/bundle/acp-app/cordis.patch.yml`'s `workspace-trust-local` row is set back to `disabled: true` — the state it has in `dsh-base` and on every profile without an answerer — the suite re-run, and the bundle restored byte-identical, confirmed with `cmp`.",
+        "failureSummary": "Reds ALL THREE cases, which is correct rather than coarse: with the row disabled the profile boots without a provider, and `agent-instructions` fails OPEN, so the hostile clone's own instructions reach the model in every case — including the one whose expectation is that they DO reach it, because that case also asserts the grant was what let them. That the whole suite moves on one bundle line is the property being frozen: nothing in this fixture enables the boundary. Its sibling `P1-07.composition.spec.ts` sets `disabled: false` in its own overlay and therefore cannot detect this mutation at all. NOT PROVEN: that `web-app`'s row behaves the same. It is enabled by the same reasoning and carries a different answerer (`ui-approval`), and no case here boots it."
+      },
+      "note": "P1-07 BLOCKED-214, ruling (A'). The user's ruling is that the boundary ships ON with a first-time authorization. Measured: that is deliverable only where the question can be ANSWERED — `approval.request()` settles `'unavailable'` with no registered answerer, and the only production answerers are `@deepseek-ai/dsh-acp` and `@deepseek-ai/dsh-ui-approval`. So `acp-app` and `web-app` enable the row and `headless`/`sdk-app`/`sdk-minimal` do not, with the base comment restated to say why. This suite boots the shipped `acp` profile and turns the boundary on through nothing of its own, so the bundle row is what it measures: untrusted with nobody answering reads nothing, the ask is put once naming only `trusted-read`, and `allowed-once` grants read while still offering no executable skill."
     }
   ]
 }

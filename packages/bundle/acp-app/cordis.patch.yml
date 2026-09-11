@@ -8,6 +8,16 @@
 - id: session-title-llm
   disabled: true
 
+# P1-07's project trust boundary, ENABLED here and not in `dsh-base`
+# (BLOCKED-214). The boundary is only deliverable on a profile that can ASK:
+# `askForReadTrustOnce` puts its one question through `approval.request()`, and
+# with no registered answerer that call returns `'unavailable'`, which leaves
+# the workspace untrusted with no in-session way to grant. This profile mounts
+# `@deepseek-ai/dsh-acp`, which answers `approval/request`, so the first-time
+# authorization the ruling asks for can actually be put and granted here.
+- id: workspace-trust-local
+  disabled: false
+
 - insert:
     - id: acp-app-startup
       name: '@deepseek-ai/dsh-acp-app'

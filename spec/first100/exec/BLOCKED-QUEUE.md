@@ -5390,3 +5390,34 @@ The event order is byte-identical to the `memory-context` failure, so the mechan
 **Found through a tenant mismatch; the mechanism has nothing to do with tenants.** `resolveMemoryAccessContext` threw because P2-01 U2 began attaching a host identity in tenant `local` while a fixture named another. That is fixed. ANY pre-step listener that throws produces this, and `agent/pre-step` is a documented extension point, so it is the failure mode of every plugin mounted there.
 
 **One correction worth keeping, because it changes where the throw sits.** The listener calls `next()` FIRST (`memory-context/src/index.ts:226`), then throws at `:230` — after the empty-query early return at `:229`, not before it. An earlier lane A message had that order backwards. It matters for the frozen case: the throw is reachable only when the query is NON-empty, so a case that drives an empty prompt would not reach it.
+
+### BLOCKED-214 — P1-07's trust boundary shipped OFF on every profile, and can only ship ON where the question can be answered
+
+**Status:** FIXED 2026-09-11 under ruling (A'), owner lane A. Opened by the delegate after lane A's five-profile measurement.
+
+`workspace-trust-local` is the only provider of the `workspaceTrust` seam. It was `disabled: true` in `dsh-base` and re-enabled by **no** published bundle, so P1-07's boundary was off for every user. The user ruled the factory default should be ON with a first-time authorization prompt.
+
+**Enabling the row everywhere would have broken three of the five profiles, and the reason is measurable.** `askForReadTrustOnce` puts its one question through `approval.request()`, which returns `'unavailable'` when no answerer is registered — a state `agent-instructions` already documents as leaving the workspace untrusted. Every production answerer in the repository:
+
+```
+packages/acp/acp/src/index.ts                     ctx.on('approval/request', …)
+packages/client/ui-approval/src/client/index.ts   ctx.remote.$on('approval/request', …)
+```
+
+| profile | answerer | enabled? |
+| --- | --- | --- |
+| `acp-app` | `dsh-acp` | **yes** — the ask can be put and granted |
+| `web-app` | `ui-approval` | **yes** |
+| `headless` | none | no — the ask could only ever settle `'unavailable'` |
+| `sdk-app` | none | no |
+| `sdk-minimal` | none | no, and it does not layer over base at all |
+
+On a profile with no answerer, an enabled row refuses every project's own `AGENTS.md` and skills **permanently, with no in-session way to grant**. `/trust-skills` is not an escape — it reaches the same absent answerer. (Its other obstacle is gone: `hasOpenAuditBracket` now accepts a `command/run` bracket, closing BLOCKED-205's half. An open bracket still does not produce an answerer.)
+
+**Ruling (A'), delivered here:** the two answerer-bearing bundles override the base row to `disabled: false`; base stays disabled with its comment restated from "would break everyone" to the measured reason. The user's ruling is met where it can be met, and where it cannot the record says why.
+
+**(B) is a product decision the delegate is putting to the user, not done here:** a non-interactive answerer for `headless` — a persisted trust record, or an explicit `--trust-workspace` switch — which would complete (A) on the remaining profiles.
+
+**One dependency worth keeping.** P2-01 U2 is a precondition for this fix: `askForReadTrustOnce` returns early when the session carries no attached principal, so before a shipped boot attached a host user the question could never be put at all. That early return's own comment records it.
+
+**The frozen supplement measures the BUNDLE ROW, not the provider.** `P1-07.composition.spec.ts` sets `disabled: false` in its own overlay, so it proves the provider works once mounted and cannot detect whether any profile mounts it — which is how the boundary shipped off without a red gate. The new suite boots the shipped `acp` profile and enables nothing itself; setting the `acp-app` row back to `disabled: true` reddens all three cases.

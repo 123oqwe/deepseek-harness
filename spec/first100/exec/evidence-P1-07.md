@@ -55,3 +55,47 @@ Two readings, and choosing between them is the re-sign's:
 2. **The clause is about a shipped profile.** Then it is not satisfied by any published bundle, and the evidence a re-sign needs is a case over the composition a user actually gets.
 
 This page does not argue for either. It records that the question is not answerable from the suite as it stands, because the suite never composes the shipped configuration.
+
+## The answerer census: why enabling the provider is not one decision
+
+Recorded for [BLOCKED-214](BLOCKED-QUEUE.md#blocked-214). The user's ruling is that the factory default should be ON with a first-time authorization prompt. Whether that prompt can be PUT is a per-profile fact, and it is not the same on all five.
+
+`askForReadTrustOnce` (`agent-instructions/src/index.ts`) needs three things, and only the third varies:
+
+| precondition | state |
+|---|---|
+| a mounted `workspaceTrust` provider | supplied by enabling the row |
+| an attached principal on the session | **supplied by P2-01 U2** — without it the ask is never put, which is what that function's own comment records |
+| an `approval` service that can ANSWER | **profile-dependent** |
+
+`approval.request()` reaches `decide()`, which returns `'rejected'` under the `never` policy and otherwise dispatches to the registered answerers — **with none registered it returns `'unavailable'`**. Every production answerer in the repository, excluding tests, generated files and the API catalog:
+
+```
+packages/acp/acp/src/index.ts                        ctx.on('approval/request', …)
+packages/client/ui-approval/src/client/index.ts      ctx.remote.$on('approval/request', …)
+```
+
+Which profiles mount one:
+
+| profile | answerer | effect of enabling the provider row |
+|---|---|---|
+| `acp-app` | `dsh-acp` | the prompt is put and can be granted |
+| `web-app` | `ui-approval` | the prompt is put and can be granted |
+| `headless` | **none** | the ask returns `unavailable`; the workspace stays untrusted, permanently, with no in-session grant |
+| `sdk-app` | **none** | same |
+| `sdk-minimal` | **none** | same, and it does not layer over base at all |
+
+`agent-instructions/src/index.ts` already states the consequence — "no answerer (`'unavailable'`) … leaves the workspace untrusted" — so on the three profiles without one, an enabled provider is a boundary that refuses everything and can never be satisfied. That is the situation `base`'s comment warned about; what is new here is which profiles it is true of, and why.
+
+`/trust-skills` is not an escape: it reaches the same `approval.request()` and the same absent answerer. (Its other obstacle is gone — `hasOpenAuditBracket` now accepts a `command/run` bracket, closing BLOCKED-205's half of it — but an open bracket does not produce an answerer.)
+
+## The two absent-provider defaults, and why they do not both dissolve
+
+The delegate's instruction is to write these up as resolved once a provider is always mounted. They resolve only as far as "always" actually reaches, and they point in **opposite** directions:
+
+| site | absent-provider default | direction |
+|---|---|---|
+| `core/tools/src/external-effect.ts` | `'untrusted'` | fail CLOSED — policy sees the strictest fact |
+| `agent-instructions/src/index.ts` | `undefined` → permitted | fail OPEN — the project's files load |
+
+On a profile that mounts the provider, both branches become unreachable and the defaults stop mattering. On a profile that does not, both stay live — and the asymmetry means the same missing provider makes the policy engine stricter while leaving the trust boundary off. Any claim that these defaults are "dissolved by the provider always being present" is true per profile, not repository-wide, unless every published profile mounts it.

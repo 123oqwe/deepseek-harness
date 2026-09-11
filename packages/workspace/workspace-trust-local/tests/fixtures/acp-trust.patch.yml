@@ -1,0 +1,43 @@
+# Test-only overlay over the shipped `acp` profile for Epic P1-07's U
+# supplement (BLOCKED-214).
+#
+# What this overlay deliberately does NOT do is enable `workspace-trust-local`.
+# The sibling `workspace-trust.patch.yml` sets `disabled: false` itself, so it
+# proves the PROVIDER behaves once mounted and says nothing about whether any
+# shipped profile mounts it. Here the row's state comes from
+# `packages/bundle/acp-app/cordis.patch.yml` alone — which is the claim under
+# test, and why setting that row back to `disabled: true` must redden this
+# suite.
+#
+# The ACP server owns stdout and binds a JSON-RPC transport on boot. Both rows
+# are disabled: this fixture drives a turn in-process and reads the session log,
+# so a bound protocol server would take the stream the driver reports through
+# and wait for a client that never connects.
+- id: acp-app-startup
+  disabled: true
+
+- id: acp
+  disabled: true
+
+# Same reason as the headless fixture: the typert type graph imports each
+# contributor's built `lib/typert.host.js`, which does not exist in the unit
+# lane's unbuilt tree. Disabling it keeps this a source-mode composition.
+- id: typert-loader
+  disabled: true
+
+- id: agent-loop
+  config:
+    agents:
+      - id: main
+        provider: workspace-trust-mock
+        model: workspace-trust-mock
+        cwd: !!js process.cwd() + '/clone'
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
+
+- insert:
+    - id: workspace-trust-mock-llm
+      name: './mock-llm.ts'

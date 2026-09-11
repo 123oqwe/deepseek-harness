@@ -374,12 +374,22 @@
       config:
         sampleOverCapGlobResults: false
 
-    # Epic P1-07's project trust boundary. Mounted disabled: with no grants an
-    # enabled provider makes every workspace untrusted at once, which stops
-    # project skills and the project's own AGENTS.md loading for every existing
-    # user. A boundary that ships on and breaks everyone does not get adopted;
-    # this ships discoverable and one edit from on. Enable this row and add
-    # `grants` to turn the boundary on -- see
+    # Epic P1-07's project trust boundary. Disabled HERE and enabled by the
+    # app bundles that can ask (BLOCKED-214): `acp-app` and `web-app` override
+    # this row to `disabled: false`.
+    #
+    # The split is measured, not cautious. `askForReadTrustOnce` puts its
+    # first-time authorization through `approval.request()`, which returns
+    # `'unavailable'` when no answerer is registered -- and the only two
+    # production answerers are `@deepseek-ai/dsh-acp` and
+    # `@deepseek-ai/dsh-ui-approval`. On `headless`, `sdk-app` and
+    # `sdk-minimal` nothing answers, so an enabled provider there would refuse
+    # every project's own AGENTS.md and skills permanently, with no in-session
+    # way to grant. `/trust-skills` is not an escape: it reaches the same
+    # absent answerer.
+    #
+    # A deployment on one of those profiles can still enable this row and add
+    # `grants` to turn the boundary on without asking -- see
     # @deepseek-ai/dsh-workspace-trust-local's README.
     - id: workspace-trust-local
       name: '@deepseek-ai/dsh-workspace-trust-local'
