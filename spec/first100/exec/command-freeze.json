@@ -12262,6 +12262,53 @@
         "failureSummary": "B-M1 reds 'must[2] end to end on ONE boot…' and the new BLOCKED-205 case in `user-approval`, and nothing else. That pair is the point: the composition case is what found the defect, and the unit case is what states it, so a mutation removing the fix has to move both. Stated rather than omitted: the renamed case's own mutation is the batch that produced it. It went red on the real tree the moment the host identity stopped short-circuiting the command, which is a stronger sensitivity result than a synthetic substitution — the case distinguished two real states of the product, one commit apart. Also NOT PROVEN, carried forward from the superseded entry: there is still no case in which a host user grants trust and a subsequent SESSION observes it, because the composition runs one boot. The durable half is covered by `workspace-trust-local`s own provider cases."
       },
       "note": "P1-07 U-stage, fifth freeze. One case renamed, none added or removed. The entry's CHARACTERIZATION — that `/trust-skills` cannot grant on a shipped profile because no host user is attached — was true when it was frozen and is false now: P2-01's U2 stage attaches the host user at every local launcher root, so the command reaches approval, the host user confirms, and the clone's skills appear in the catalog. must[2]'s execute half now holds end to end on ONE real boot. Getting there also exposed BLOCKED-205: `/trust-skills` is the only shipped command that asks for approval, and the production dispatcher never opens a turn, so the question threw on every real invocation until the audit-bracket predicate learned that a command run is a bracket too. The fixture's stopgap `turn/start` was removed with that fix, so this case now runs on the idle session a user actually types into rather than a staged one."
+    },
+    {
+      "epic": "P2-01",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-01",
+        "stage": "U"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P2-01.corpus.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "attaches the HOST USER as the root, and the first action is attributed to exactly that principal",
+        "delegates ONE hop to the child, whose chain still roots at the same host user",
+        "keeps the SAME root two hops down, so depth does not dilute the chain",
+        "gives the child its own principal and its own run, so parent and child are not one actor",
+        "OQ30: the local launcher attaches a host user and the remote surfaces attach nothing"
+      ],
+      "files": [
+        "packages/identity/host-user-id/src/index.ts",
+        "packages/core/agent-loop/src/index.ts",
+        "packages/boot/app-boot/src/index.ts",
+        "packages/bundle/headless/src/index.ts",
+        "packages/api/session-controller/src/agent.ts",
+        "packages/subagent/subagent/src/child-agent.ts",
+        "tests/first100/fixtures/P2-01.corpus.spec.ts",
+        "snapshots/session/subagent-depth-two-rejection/session.jsonl",
+        "snapshots/session/subagent-depth-two-rejection/session.1.jsonl",
+        "snapshots/session/subagent-depth-two-rejection/session.2.jsonl"
+      ],
+      "frozenAtUtc": "2026-09-11T17:28:48.597Z",
+      "dryRunProof": {
+        "treeSha": "2c34120412681ea9e51da00720485e83222a87f7",
+        "testsDiscovered": 5
+      },
+      "sensitivityProof": {
+        "mutationDescription": "A corpus-reading case needs TWO kinds of mutation, and both were run; recording only the cheaper one would overstate what these cases prove. (C-M1) the CORPUS: the child log's second delegation-chain entry is dropped, the spec re-run, the fixture restored byte-identical — this proves the cases read the fields they name rather than passing vacuously. (P-M1) the PRODUCT: `resolveChildAgentOptions` takes the parent's identity unchanged instead of calling `delegateChildIdentity`, ONE scenario is re-refreshed under the mutation, the spec is re-run, then the source is restored and the scenario re-refreshed — this proves the product is what fills those fields.",
+        "failureSummary": "C-M1 reds 'delegates ONE hop to the child…' alone: it is the only case that reads that entry, and the two-hop case reads the grandchild's own chain. P-M1 reds THREE — the one-hop case, the two-hop case, and the control that parent and child are not one actor — and leaves the root case and the OQ30 count green, which is right: removing the hop changes nothing about what the ROOT attaches. STATED because it is the limit of these cases: a product mutation is invisible to them until the corpus is refreshed. They pin the recorded corpus, and the corpus is what a real `dsh --profile headless` process wrote; the chain from source to assertion runs through `test:snapshot`, not through this spec. A reader who changes the delegation hop and runs only this spec will see green until they refresh. Also NOT PROVEN: that a THIRD hop keeps the root. The corpus has two, which is what `subagent-depth-two-rejection` produces; three would need a scenario nothing in the product currently drives."
+      },
+      "note": "P2-01 U supplement for the U2 stage (BLOCKED-200, and the delegation half a preFlight census found beside it). Read from the recorded corpus rather than a purpose-built fixture: `snapshots/session/` is what a real `dsh --profile headless` process wrote, so a case there proves the PRODUCT attaches an identity, where a fixture would prove the fixture does. Each claim is a PAIR joined by the actor id, because `action/manifest-appended` records `actor: manifest.actor.id` alone — no kind, no tenant, no chain — while the chain lives on `identity/attached`; the identity half alone would show an identity was attached and nothing about whether actions ran under it. That join is also what acceptance[0]'s 'traceable' means here (§12.85 note 43): from one action you reach the root through its own session log, not through a chain copied into every manifest. `subagent-depth-two-rejection` is the scenario because it carries two hops AND every one of its three logs appends a manifest; `advanced-toolchain` has the same chain shape but its children dispatch no tool, so the actor half would have read `undefined` — which is how the first draft of these cases failed, and why the scenario was chosen by measurement rather than by name. The last case pins OQ30's boundary as counts: 93 of 93 headless logs carry a host identity, 0 of 25 SDK and 0 of 8 ACP, because a request that arrived over a socket is not the machine's host user."
     }
   ]
 }

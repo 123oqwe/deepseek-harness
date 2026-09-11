@@ -1238,8 +1238,9 @@
           {
             "standard": "RFC 8693 act nesting for delegation chain",
             "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
-            "basis": "assignment",
-            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
+            "basis": "assignment + evidence",
+            "reason": "Owned by ASSIGNMENT and now pinned by EVIDENCE. RFC 8693's `act` nesting is a chain of actors in which each entry names who it acts for, innermost-last; this tree spells that as `DelegationChain.entries` with `AgentPrincipal.delegatedBy`, and the frozen case names the hop. The vocabulary is adopted in shape rather than in wire form: nothing here emits a JWT, so an `act` claim would be a field with no reader.",
+            "evidenceTitleSubstring": "delegates ONE hop to the child"
           }
         ],
         "standardsImported": [],
