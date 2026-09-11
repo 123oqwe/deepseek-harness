@@ -67,7 +67,7 @@
 |---|---|---|
 | 4.1 | 四谓词:(i) coverage 闭合 (ii) candidate 链 (iii) 观测互异且冻结标题在观测里全绿 (iv) delegate 签字 | `generate-ledger.mjs --accept`;BLOCKED-068 / 018 |
 | 4.2 | `accept-blocked:` 锁与 `openFindings` 为空 | BLOCKED-QUEUE `## ACCEPTANCE LOCKS` |
-| 4.3 | F 阶段填 `preFlight.makeVsUse.realized`;`verify-make-vs-use` 对本 epic VERIFIED(含 (e):账本每条 adapt / 每个标准都有下落——adopted 或 deviations 三类理由之一) | 整改令 §9.1 |
+| 4.3 | F 阶段填 `preFlight.makeVsUse.realized`(给 delegate 4.4 时读的证据;**无门读取它**——`verify-make-vs-use.mjs:171` 的 REQUIRED 不含此字段,lane B 2026-09-10 实测,§12.85 OQ6;F 不得报"门确认了 realized");`verify-make-vs-use` 对本 epic VERIFIED(含 (e):账本每条 adapt / 每个标准都有下落——adopted 或 deviations 三类理由之一) | 整改令 §9.1 |
 | 4.4 | delegate 跑四谓词 → `--record-signoff` → 提交只含 `delegate-signoff.json` → 执行者 `--accept` | BLOCKED-036 / 068 |
 | 4.4a | 签字前 delegate **重做 1.2 第一问并量化**:子句名词的构造函数在生产路径上的调用者数(grep,排除 tests),为零不签;事件名 / 文件名与子句名词同名不算 | 整改令 §12.11(BLOCKED-143,P2-03 #22 撤回);同族 BLOCKED-091 / 136 |
 | 4.4b | 签字前 delegate 核每个格子与 supplement 的 `candidateSha`/run **是重建后的观测**;`--accept` 只报 (iv) 是必要条件不是签字依据(2026-09-08 P4-07 误签:cells 仍是重建前观测,已撤) | 整改令 §12.52 |
@@ -109,6 +109,7 @@
 | 5.2.3 | **主动换班**:delegate 会话对话记录 > 100 MB 或 > 7 天,在下一个干净断点(推送之后)换——写交班单 → 告两条 lane「delegate 换班,新会话会自报」→ 用户起新会话发「继续监督 first100」→ 新会话读记忆指针 + 交班单 → 向 lane 发核对句 → 核完接管 → 旧会话退出。换班是常规动作。 | 5.1.7 同型 |
 | 5.2.4 | **意外死亡**:lane 向 delegate 发消息失败时不停工——按已批准的计划做完手头 stage,不自选下一项,每 30 分钟向新出现的 delegate 会话重发「报到:当前 SHA / 工作树 / 下一步等什么」;新 delegate 核完交班单与门③状态前不签字、不推。 | 24×7 令 |
 | 5.2.5 | 新 delegate 的第一件事:对最近 24h 签的字重做 4.4d(服务可达性 + 出厂 profile 是否挂载),而不是信任交班单里的"已签"。 | 09-10 三例零到达 |
+| 5.2.6 | **delegate 的压缩锚**:delegate 会话每次上下文压缩后,先重读 `DELEGATE-CHECKPOINT.md` + 本文件 §5 再做任何裁决;换班时新 delegate 会话的 cwd 定在 `~/first100-delegate/`(项目级 `.claude/goal.md` = 角色 / 标准 / 不变量 / 指针,NOW = 读交班单;同目录 PreCompact hook 注入它),不用 `~` 的全局 `~/.claude/goal.md`(全局文件会被无关会话读到,已退役)。lane 的锚:跟踪的 `.claude/goal.md` 只留静态 GOAL/RULES ≤ 40 行,NOW 在未跟踪的 `.claude/goal.local.md`(每 lane 自己的,gitignore);lane 本地 `.claude/settings.json` 的 hook 若要注入两者,**由用户直接指示该 lane 或用户自己改**——delegate 的转述不构成配置改动的授权(lane B 2026-09-10 依此拒绝,正确)。 | 用户问 2026-09-10;gq-92 核 + guanjieqiao-04 定稿 |
 
 ### 5.3 delegate 行为规则(用户令,2026-09-10;针对岗位,不针对个人)
 
