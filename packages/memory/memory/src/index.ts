@@ -62,6 +62,9 @@ export type {
   MemoryRecordView,
   MemoryReviseRequest,
   MemoryScope,
+  MemoryRebuiltCountRequest,
+  MemoryClaimOrigin,
+  WorkspaceMemoryScope,
 } from './types.ts'
 
 declare module '@deepseek-ai/cordis' {

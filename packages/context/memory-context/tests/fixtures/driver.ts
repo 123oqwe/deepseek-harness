@@ -14,8 +14,18 @@
 import { writeFile } from 'node:fs/promises'
 import { resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
 import { runFixtureTurn } from '@deepseek-ai/dsh-loader-smoke'
+import { observeWorkspaceIdentity } from '@deepseek-ai/dsh-workspace'
 import { createAnonymousDevPrincipal, PrincipalId, TenantId } from '@deepseek-ai/dsh-principal'
 import { bootProductionProfile } from '../../../../test-support/loader-smoke/tests/fixtures/production-profile.ts'
+
+/** The workspace scope a session in this cwd reads under, observed the same way the consumer observes it. */
+async function workspaceScope(): Promise<{ canonicalPath: string; identity: string }> {
+  const observed = await observeWorkspaceIdentity(process.cwd())
+  return {
+    canonicalPath: observed.canonicalPath,
+    identity: `${String(observed.volume.device)}:${String(observed.volume.inode)}:${String(observed.volume.createdAtMs)}`,
+  }
+}
 
 const configPath = process.argv[2]
 if (configPath === undefined) throw new Error('memory-context driver requires a config path')
@@ -28,7 +38,7 @@ const ctx = await bootProductionProfile({
 try {
   await ctx.memory.propose({
     origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: createAnonymousDevPrincipal(PrincipalId('p-fixture'), TenantId('t-fixture')),
-    scope: { tenantId: TenantId('t-fixture') },
+    scope: { tenantId: TenantId('t-fixture'), workspace: await workspaceScope() },
     content: { note: 'the deploy passphrase is oxidized-kingfisher' },
   })
   const [agent] = ctx.get('agents')?.roots() ?? []

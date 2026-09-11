@@ -19,7 +19,8 @@ import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
 import { createAnonymousDevPrincipal, currentPrincipal, PrincipalId, TenantId } from '@deepseek-ai/dsh-principal'
-import type { MemoryAccessContext, MemoryRecordView } from '@deepseek-ai/dsh-memory'
+import type { MemoryAccessContext, MemoryRecordView, WorkspaceMemoryScope } from '@deepseek-ai/dsh-memory'
+import { observeWorkspaceIdentity } from '@deepseek-ai/dsh-workspace'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { UserMessage } from '@deepseek-ai/dsh-llm'
 import { SessionSeq } from '@deepseek-ai/dsh-session'
@@ -76,7 +77,7 @@ export const Config: z<Config> = z.object({
  * @throws when the agent's attached identity names a tenant other than `config.tenantId`.
  * @returns the access context every read this consumer performs is scoped by.
  */
-export function resolveMemoryAccessContext(agent: Agent, config: Config): MemoryAccessContext {
+export async function resolveMemoryAccessContext(agent: Agent, config: Config): Promise<MemoryAccessContext> {
   const tenantId = TenantId(config.tenantId)
   const attached = agent.identity === undefined ? undefined : currentPrincipal(agent.identity.chain)
   if (attached !== undefined && attached.tenantId !== tenantId) {
@@ -85,11 +86,48 @@ export function resolveMemoryAccessContext(agent: Agent, config: Config): Memory
       + `but this plugin is configured to read within tenant "${config.tenantId}"`,
     )
   }
+  const workspace = await observeWorkspaceMemoryScope(agent)
   return {
     principal: attached ?? createAnonymousDevPrincipal(PrincipalId(config.principalId), tenantId),
     purpose: config.purpose,
-    scope: { tenantId },
+    scope: { tenantId, ...workspace === undefined ? {} : { workspace } },
     contextBudget: { maxRecords: config.maxRecords },
+  }
+}
+
+/**
+ * The workspace this agent's session is working in, as memory scopes it.
+ *
+ * Records match on the directory's FILESYSTEM IDENTITY rather than its path, so
+ * a directory replaced in place does not inherit what the one it displaced
+ * wrote. The identity is flattened to a string here because
+ * `@deepseek-ai/dsh-memory` holds it opaquely and stays free of the workspace
+ * package; this consumer is the one that can observe it.
+ *
+ * Absent when the session has no `cwd`, or when the directory cannot be
+ * observed at all. A reader with no workspace sees only records written without
+ * one, so an unobservable directory reads a small, well-defined pool rather
+ * than another workspace's — the same direction `@deepseek-ai/dsh-workspace`
+ * takes when it treats an unobservable directory as untrusted rather than
+ * unchanged.
+ * @param agent - the agent whose session names the working directory.
+ * @returns the workspace scope, or `undefined` when none can be observed.
+ */
+async function observeWorkspaceMemoryScope(agent: Agent): Promise<WorkspaceMemoryScope | undefined> {
+  const cwd = agent.session.header.cwd
+  if (cwd === undefined) return undefined
+  try {
+    const observed = await observeWorkspaceIdentity(cwd)
+    return {
+      canonicalPath: observed.canonicalPath,
+      identity: `${String(observed.volume.device)}:${String(observed.volume.inode)}:${String(observed.volume.createdAtMs)}`,
+    }
+  } catch {
+    // `observeWorkspaceIdentity` rejects with the underlying realpath/stat
+    // failure when the directory does not resolve — deleted, or never created.
+    // Nothing else can reach here: the only call is the one above, and a
+    // directory that cannot be observed has no identity to scope by.
+    return undefined
   }
 }
 
@@ -149,7 +187,7 @@ export function apply(ctx: Context, config: Config): void {
     if (decision.kind === 'reject' || signal.aborted) return decision
     const query = openTurnQuery(agent, turn, decision.messages)
     if (query.trim() === '') return decision
-    const accessContext = resolveMemoryAccessContext(agent, config)
+    const accessContext = await resolveMemoryAccessContext(agent, config)
     const { records, truncated } = await ctx.memory.query({ accessContext, query })
     // Recorded whether or not anything was recalled: a read that returned
     // nothing is still a read of durable memory, and a log that omitted it
