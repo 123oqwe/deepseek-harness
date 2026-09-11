@@ -35,6 +35,8 @@ None, as this package exports identity types and a tenant-policy assertion only 
 
 Nothing here enters a model request, so provider cache reuse is unaffected.
 
+**运行时不变式：** 不发布运行时不变式伴随包：本包是纯类型契约加纯委派链函数，没有事件流、也没有可变的模块状态可供比较。`src/chain.ts` 里的 `adminGrantOwners` 注册表是一个私有的防伪造检查，不是公开关系。
+
 ## 已知限制与延后事项
 
 - **链被记录,而不被验证。** 这里没有任何东西检查某次委派是否真的被授予过;那属于 capability-token 缝(`dsh-capability-token`),本包信任它收到的链。

@@ -73,6 +73,8 @@ None, as this package exports pure gate predicates over caller-supplied flags on
 
 Nothing here enters a model request, so provider cache reuse is unaffected.
 
+**Runtime invariant:** No runtime invariant companion is published: this Contract-stage slice is type-only — no gate registry or decision event stream exists yet for an event/data relation to check. A later slice registering a live shadow/enforce decision stream should replace this with a check over it: that a `'shadow'`-state gate's applied result always matches the legacy outcome, never the shadow-only decision, even when the recorded `FeatureGateShadowDecisionRecord` shows the two disagree (must[1]/acceptance[0]).
+
 ## Known Limitations and Deferred Work
 
 - **No gate is declared for a real capability yet** -- this package computes override resolution, shadow-vs-legacy evaluation, and expiry against any `FeatureGateDeclaration` a caller supplies, but declares none itself. The policy/plugin-trust/run-journal shadow fixtures this epic's own `validation` clause calls for, and registering the `feature-gates` settings namespace (`packages/settings/settings/src/index.ts`'s `SettingsProvider.register`) for a real capability, are Composition-stage deliverables.

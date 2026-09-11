@@ -107,6 +107,8 @@ Zero-direct: the package contributes no prompt or schema text.
 
 Independent: the package registers nothing that participates in a model request.
 
+**Runtime invariant:** No runtime invariant companion is published: the guarantee worth checking — the kernel's six capability members never change reference identity for the process lifetime — holds structurally rather than through anything this package emits or mutates. `ctx.provide('trustKernel', kernel)` runs once, before any config-tree entry mounts, and Cordis's own `ReflectService.provide` throws on a second call for the same name. A runtime check could not positively verify that without inventing an event unrelated to any relation this package owns.
+
 ## Known Limitations and Deferred Work
 
 <a id="known-limitations-and-deferred-work"></a>

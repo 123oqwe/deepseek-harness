@@ -120,6 +120,8 @@ base 组合中存在这一行（`packages/bundle/base/cordis.patch.yml`），是
 
 无；启动要么完整完成，要么在任何请求组装之前就已中止。
 
+**运行时不变式：** 不发布运行时不变式伴随包：本插件只做一次启动期检查，除此之外不拥有任何包内事件历史或可变数据关系，因此没有第二次观测可供伴随包校对。
+
 ## 已知限制与延期工作
 
 <a id="known-limitations-and-deferred-work"></a>

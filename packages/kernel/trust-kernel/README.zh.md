@@ -107,6 +107,8 @@ const kernel = createTrustKernel() // called before the Cordis Context exists
 
 独立：本包不注册任何参与模型请求的内容。
 
+**运行时不变式：** 不发布运行时不变式伴随包：真正值得检查的那条保证——内核的六个能力成员在进程生命周期内引用标识永不改变——是结构性成立的，而不是靠本包发出的任何事件或它变更的任何数据。`ctx.provide('trustKernel', kernel)` 只运行一次，且在任何配置树条目挂载之前；Cordis 自己的 `ReflectService.provide` 在同名第二次调用时会抛错。运行时检查无法正面验证这一点，除非发明一个与本包所拥有的任何关系都无关的事件。
+
 ## 已知限制与延期工作
 
 <a id="known-limitations-and-deferred-work"></a>

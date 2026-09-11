@@ -120,6 +120,8 @@ None, as this plugin either lets boot proceed unchanged or aborts it before any 
 
 Nothing here enters a model request, so provider cache reuse is unaffected.
 
+**Runtime invariant:** No runtime invariant companion is published: this plugin performs one boot-time check and owns no package-local event history or mutable data relation beyond it, so there is no second observation for a companion to reconcile against.
+
 ## Known Limitations and Deferred Work
 
 <a id="known-limitations-and-deferred-work"></a>

@@ -35,6 +35,8 @@ None, as this package exports identity types and a tenant-policy assertion only 
 
 Nothing here enters a model request, so provider cache reuse is unaffected.
 
+**Runtime invariant:** No runtime invariant companion is published: this package is a pure type contract plus pure delegation-chain functions, with no event stream or mutable module state to compare. The `adminGrantOwners` registry in `src/chain.ts` is a private unforgeability check, not a public relation.
+
 ## Known Limitations and Deferred Work
 
 - **The chain is recorded, not verified.** Nothing here checks that a delegation was actually granted; that is the capability-token seam's (`dsh-capability-token`), and this package trusts the chain it is handed.

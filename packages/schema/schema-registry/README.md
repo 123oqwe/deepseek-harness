@@ -106,6 +106,8 @@ None, as this package exports versioning and negotiation functions only and regi
 
 Nothing here enters a model request, so provider cache reuse is unaffected.
 
+**Runtime invariant:** No runtime invariant companion is published: `registerSchema`/`evolveSchema` enforce duplicate-id rejection, version-bump-versus-declared-change matching, and append-only `history` synchronously inside the same call that mutates the private registry map, so there is no independent event or second data source whose drift a companion could detect. `negotiateSchema`/`getSchema`/`listSchemas` are pure reads of that map.
+
 ## Known Limitations and Deferred Work
 
 - **No real second-version schema exists yet** — every bootstrapped schema is still at its own first version with an identity migration; `src/migrate.ts`'s non-identity migrations are illustrative synthetic examples, never registered against a real schemaId, because no genuine field rename/merge/removal has happened yet on a bootstrapped schema.

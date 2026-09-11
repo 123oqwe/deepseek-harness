@@ -124,6 +124,8 @@ if (!admission.admitted) {
 
 这里的内容不会进入模型请求,因此不影响 provider 缓存复用。
 
+**运行时不变式：** 不发布运行时不变式伴随包：本 Contract 阶段切片交付 `PluginManifestV2` 类型面与纯校验函数，不注册任何 Cordis 服务，不构造属于自己的 manifest 值，也不拥有可变数据或周期性事件流。真正的检查属于后续切片——等真实读取方存在之后，例如「`plugin-inventory` 报告为 `'manifest-v2'` 的每一份声明，都确实通过了 `validatePluginManifestV2`」。
+
 ## 已知限制与延后工作
 
 <a id="known-limitations-and-deferred-work"></a>

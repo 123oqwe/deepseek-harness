@@ -82,6 +82,8 @@ const { value, shadowRecord } = evaluateFeatureGate(
 独立：本包不注册任何参与模型请求的内容。
 
 <a id="known-limitations-and-deferred-work"></a>
+**运行时不变式：** 不发布运行时不变式伴随包：本 Contract 阶段切片是纯类型的——尚不存在门注册表或决策事件流，也就没有「事件/数据」关系可供检查。后续注册真实 shadow/enforce 决策流的切片应当把这段替换为对该流的检查：处于 `'shadow'` 状态的门，其**实际生效**结果永远与 legacy 结果一致、而非与仅供影子比对的决策一致，即便所记录的 `FeatureGateShadowDecisionRecord` 显示两者分歧（must[1]/acceptance[0]）。
+
 ## 已知限制与延期工作
 
 - **尚未为任何真实能力声明门禁**——本包针对调用方传入的任意 `FeatureGateDeclaration` 计算 override 解析、shadow-vs-legacy 求值与到期检查，但自身不声明任何门禁。本 epic 自身 `validation` 条款要求的 policy、plugin trust、run journal 三个 shadow fixture，以及为某个真实能力注册 `feature-gates` settings 命名空间（`packages/settings/settings/src/index.ts` 的 `SettingsProvider.register`），都是 Composition 阶段的交付物。

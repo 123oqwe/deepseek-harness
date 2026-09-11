@@ -91,6 +91,8 @@ None, as this package exports types only and registers nothing model-facing.
 
 Nothing here enters a model request, so provider cache reuse is unaffected.
 
+**Runtime invariant:** No runtime invariant companion is published: this Contract-stage slice ships only the `EvidencePackage`/`GateEvidence` type surface, registers no Cordis service, and owns no mutable data or recurring event stream to check. The live check belongs to a later slice, once a real collector exists — for example, that every `AcceptedEvidencePackage` a run emits verifies its own `signature` before being written.
+
 ## Known Limitations and Deferred Work
 
 <a id="known-limitations-and-deferred-work"></a>

@@ -107,6 +107,8 @@ if (!result.compatible) {
 无直接影响；本包不会将任何内容放入模型请求。
 
 <a id="known-limitations-and-deferred-work"></a>
+**运行时不变式：** 不发布运行时不变式伴随包：`registerSchema`/`evolveSchema` 在变更私有注册表 map 的同一次调用内、同步地强制执行重复 id 拒绝、版本跃迁与所声明变更种类的匹配，以及仅可追加的 `history`，因此不存在可供伴随包察觉其漂移的独立事件或第二数据源。`negotiateSchema`/`getSchema`/`listSchemas` 都是对该 map 的纯读取。
+
 ## 已知限制与待办
 
 - **尚不存在真实的第二版本 schema** — 每个已启动引导的 schema 仍处于其自身的首个版本、使用恒等迁移；`src/migrate.ts` 中的非恒等迁移是说明性的合成示例，从未注册到任何真实 schemaId 上，因为任何已启动引导的 schema 都尚未经历真正的字段重命名/合并/删除。
