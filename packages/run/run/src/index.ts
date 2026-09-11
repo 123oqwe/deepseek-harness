@@ -58,13 +58,15 @@ import type {} from '@deepseek-ai/dsh-agent'
 import type { WorkflowRunId } from '@deepseek-ai/dsh-workflow/types'
 import z from '@deepseek-ai/schemastery'
 import type { RunId } from '@deepseek-ai/dsh-principal/types'
+import type { Session } from '@deepseek-ai/dsh-session'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { UserMessage } from '@deepseek-ai/dsh-llm/message'
 import { compileTaskProfile } from '@deepseek-ai/dsh-task-profile'
 // `taskOriginOf` is not on the package root: P4-02's Provider stage freezes
 // `index.ts` at exactly one runtime export, so the classifier is reached through
 // the module that declares it.
-import { taskOriginOf } from '@deepseek-ai/dsh-task-profile/types'
+import { goalRoundOf, taskOriginOf } from '@deepseek-ai/dsh-task-profile/types'
+import type { TaskProfileRef } from '@deepseek-ai/dsh-task-profile/types'
 import { taskProfileRef } from '@deepseek-ai/dsh-task-profile/validate'
 import {
   attachSessionToRun,
@@ -89,21 +91,49 @@ export * from './events.ts'
 export * from './state-machine.ts'
 
 /**
- * The text of a message that carries exactly one text block.
+ * The goal a message states, and the parts of it that statement leaves out.
  *
- * The same rule `@deepseek-ai/dsh-agent-loop`'s runtime context applies
- * (`runtime-context.ts`'s `textOf`), repeated rather than imported because that
- * one is module-private and this package has no reason to reach into the loop
- * for it. Anything other than a single text block yields `undefined`, and P4-02's
- * compiler turns that into an `empty-goal` refusal — which is the behaviour six
- * snapshot fixtures sit on and which `open-questions-lane-b.md` records as
- * undecided.
+ * **Text blocks in order, everything else counted.** The loop's own flattening
+ * idiom (`agent-loop`'s `runtime-context.ts`) yields `undefined` for anything
+ * but a single text block, which made an image-led prompt refuse as
+ * `empty-goal` and produce no profile at all — six recorded snapshot sessions
+ * sat on that. Reading the text that IS there and reporting what was not read
+ * follows must[2]'s own shape: the part nobody can express in text becomes a
+ * question rather than a silent omission or an invented description.
+ *
+ * The counts are by the block's own `type`, not by a closed list, because the
+ * content union is extensible and a kind this build does not recognise is
+ * exactly the kind worth asking about.
  * @param message - the message this step was given.
- * @returns its text, or `undefined` when it is not a single text block.
+ * @returns the joined text of its text blocks, and the count of each other block kind.
  */
-function singleTextBlock(message: UserMessage): string | undefined {
-  const [block] = message.content
-  return message.content.length === 1 && block?.type === 'text' ? block.text : undefined
+function goalOf(message: UserMessage): { text: string; unread: readonly { kind: string; count: number }[] } {
+  const text: string[] = []
+  const counts = new Map<string, number>()
+  for (const block of message.content) {
+    if (block.type === 'text') text.push(block.text)
+    else counts.set(block.type, (counts.get(block.type) ?? 0) + 1)
+  }
+  return { text: text.join('\n'), unread: [...counts].map(([kind, count]) => ({ kind, count })) }
+}
+
+/**
+ * The profile reference the most recent `run/task-profile` event in a session
+ * carries.
+ *
+ * Read from the log rather than from the Agent handle, because the case it
+ * exists for is a RESUMED session: that session's events were restored, and the
+ * handle driving them is new and carries nothing.
+ * @param session - the session whose log to read.
+ * @returns the latest reference, or `undefined` when the log holds no profile.
+ */
+function lastTaskProfileRef(session: Session): TaskProfileRef | undefined {
+  const events = session.snapshotEvents()
+  for (let seq = events.length - 1; seq >= 0; seq -= 1) {
+    const event = events[seq]
+    if (event?.type === 'run/task-profile') return (event.data as { ref: TaskProfileRef }).ref
+  }
+  return undefined
 }
 
 /**
@@ -842,20 +872,45 @@ export default class RunPlugin extends Service {
     const runId = agent.runId
     const first = messages[0]
     if (runId === undefined || first === undefined) return
+    const goal = goalOf(first)
+    const goalRound = goalRoundOf(first.source)
     const compiled = compileTaskProfile({
-      goalRef: { sessionId: agent.session.id, messageId: first.id },
-      goalText: singleTextBlock(first) ?? '',
+      goalRef: {
+        sessionId: agent.session.id,
+        messageId: first.id,
+        ...goalRound === undefined ? {} : { goalRound },
+      },
+      goalText: goal.text,
       origin: taskOriginOf(first.source),
       identityKnown: agent.identity !== undefined,
       ...agent.options.budget === undefined ? {} : { budget: agent.options.budget },
+      ...goal.unread.length === 0 ? {} : { unreadGoalContent: goal.unread },
     })
     if (!compiled.compiled) return
     const ref = taskProfileRef(compiled.profile)
-    agent.session.append('run/task-profile', {
-      ref,
-      profile: compiled.profile,
-      ...agent.taskProfile === undefined ? {} : { previousRef: agent.taskProfile },
-    })
+    const previousRef = lastTaskProfileRef(agent.session)
+    // The condition is the thing being avoided -- an unchanged PROFILE --
+    // rather than a proxy for it like the session-start reason, which would
+    // also skip a resume that carries a new goal.
+    //
+    // **What it actually catches is narrower than "a resume", and measuring
+    // that is what settled the shape.** A profile's `goalRef` names the message
+    // it was compiled from, so an ordinary resume claims a NEW message, yields
+    // a new digest, and writes -- correctly, because a new goal is a new task.
+    // The byte-identical case is a session whose step did not finish: its
+    // pending message is durable, the resumed agent re-claims the same message
+    // with the same id, and the compile returns exactly what is already in the
+    // log. That duplicate is what stays out.
+    //
+    // The Run still advances either way: this mount opened a new Run, and that
+    // Run has not named the profile yet.
+    if (previousRef !== ref) {
+      agent.session.append('run/task-profile', {
+        ref,
+        profile: compiled.profile,
+        ...previousRef === undefined ? {} : { previousRef },
+      })
+    }
     agent.taskProfile = ref
     await this.service.advance(runId, 'planning', [{ kind: 'task-profile', id: ref }], Date.now())
   }
