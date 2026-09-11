@@ -4570,3 +4570,26 @@ Both say the same thing in their JSDoc: with no provider mounted, content loads 
 **What is NOT claimed here.** The fail-open direction may well be the right product choice — a boundary that breaks every existing user on upgrade is the reason the row is disabled. The defect is not the direction; it is that an acceptance clause about what the product does was signed while the product does not do it.
 
 **Closing condition:** either the shipped profile mounts a trust provider whose default is usable (P1-07 must[2] already requires an interactive grant, so first-open authorization is the obvious shape), or P1-07's acceptance[0] is re-scoped to what a composition that mounts the provider guarantees, with the shipped default recorded as a Known Limitation. The delegate rechecks under 4.4d and decides whether the signature stands; the memory slice does not decide P1-07's product question on its behalf.
+
+
+### BLOCKED-186 — nothing checks that an imported package is declared at all, and the shipped profile stopped booting because of it
+
+**Status:** MEASURED. The immediate defect is fixed; the missing check is assigned to lane B.
+
+CI run 34540140360 at `b811725fc2` failed every recorded-session snapshot with `failed to import loader entry run-retry-usage (@deepseek-ai/dsh-retry/usage): Cannot find package '@deepseek-ai/schemastery'`. `packages/reliability/retry/src/usage.ts` imports `@deepseek-ai/schemastery`, and `retry/package.json` declared it in no section. On the source plane, tsconfig `paths` and hoisting resolve it anyway; on the artifact plane — built `lib/` under strict package resolution — it does not, and P4-11's mount slice had just put that module into `dsh-base`. So the failure was every user's `dsh` failing to start.
+
+Fixed by declaring it in `dependencies` — not peer+dev, which was the first attempt. Three things decide the section: `scripts/package-dependency-policy.ts:48` lists schemastery's `default` under `SAFE_HOST_DEPENDENCY_EXPORTS` ("runtime exports whose values remain valid when npm installs another package copy"); `packages/memory/memory` and `packages/context/memory-context` both declare it that way; and the failure was runtime resolution, which a peerDependency does not guarantee. `retry-cockatiel`'s peer+dev spelling is the outlier.
+
+**The gate that looked like the answer cannot see this.** `verify-package-dependencies` checks **placement** — which section an existing declaration sits in, at what range — and not **completeness**. Measured three ways on one tree:
+
+| tree state | gate |
+|---|---|
+| `core/session`'s pre-existing violation cleared, schemastery declared | exit 0 |
+| schemastery's declaration **deleted outright** | **exit 0 — nothing reported** |
+| `@deepseek-ai/dsh-action-ledger`'s declaration deleted too (a workspace package `retry` genuinely imports) | **exit 0 — nothing reported** |
+
+So adding this gate to a set would not have caught the accident and will not catch the next one of its kind. It is added to the registry and slice sets anyway, because placement checking is real — it caught `packages/core/session` declaring `@deepseek-ai/dsh-principal` as a runtime dependency when both of its imports are `import type`, cleared in the same commit — **but its presence in those sets must not be read as covering undeclared imports.** The note at its entry in `run-registry-gates.mjs` says so.
+
+**What actually caught it:** the artifact-plane boot in the recorded-session snapshots. That is the only mechanism in the repository that exercises strict package resolution against built output, and it is downstream of every gate.
+
+**Closing condition:** a completeness check — every external import in a package's `src/` appears in some dependency section of that package's manifest — added and wired into the sets. Its own admission requirement is the one this entry demonstrates the existing gate fails: on a tree with the schemastery declaration removed, it must be RED before it is trusted. Assigned to lane B (delegate, 2026-09-10).

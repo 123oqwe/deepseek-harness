@@ -48,5 +48,8 @@
     "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/dsh-action-ledger": "workspace:^",
     "@deepseek-ai/dsh-principal": "workspace:^"
+  },
+  "dependencies": {
+    "@deepseek-ai/schemastery": "workspace:^"
   }
 }

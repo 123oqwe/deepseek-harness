@@ -76,6 +76,15 @@ const REGISTRY_GATES = [
   'verify-import-integrity',
   'verify-no-artifacts-in-src',
   'verify-control-protocol-schema',
+  // Placement only. It checks which section an existing declaration sits in
+  // and at what range — which is real (it caught `core/session` declaring a
+  // type-only import as a runtime dependency). It does NOT check
+  // COMPLETENESS: measured 2026-09-10, deleting an imported package's
+  // declaration outright leaves this gate green, for a workspace package as
+  // well as for `@deepseek-ai/schemastery`. So running it here does not close
+  // the undeclared-import class that broke the shipped profile's boot
+  // (BLOCKED-186); that needs a check this one does not perform.
+  'verify-package-dependencies',
   'verify-module-graph',
   'verify-export-jsdoc',
   'verify-doc-budgets',
@@ -97,6 +106,8 @@ const SLICE_GATES = [
   'verify-doc-budgets',
   'verify-translation-pairing',
   'constraints',
+  // Placement only, not completeness — see the note in the registry set.
+  'verify-package-dependencies',
   'first100:verify-typecheck-host',
   'first100:verify-registry-extraction',
 ]

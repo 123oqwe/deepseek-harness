@@ -64,7 +64,7 @@ class FaultyBackend {
   /** Handles this medium has forgotten, so `rollbackTo` on them cannot resolve. */
   readonly vanished = new Set<string>()
 
-  constructor(private readonly failing: string | undefined = undefined) {}
+  constructor(private readonly failing?: string) {}
 
   private guard(primitive: string): void {
     this.calls.push(primitive)

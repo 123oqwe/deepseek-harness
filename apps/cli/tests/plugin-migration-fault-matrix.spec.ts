@@ -135,7 +135,7 @@ function recoveringFacet(gone: boolean): MigrationFacet {
       if (gone) throw new Error(`rollback target ${previous.handle} is gone`)
     },
     discard: async () => {},
-  } as unknown as MigrationFacet
+  }
 }
 
 describe('P1-10 Fault — recovery runs BEFORE anything is installed', () => {
