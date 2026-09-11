@@ -75,6 +75,8 @@ preFlight(JSON 记录 `clause-subject-audit.json` + `evidence-<id>.md`,`recorded
 
 - **测过的观测后面那句从句**(补记 64):最常见的未测断言不是整句编造,而是"一个测过的观测 + 一句听上去显然为真的一般化从句"(测了 headless 有 chunk,没测"因为别的都只有一个入口")。审稿专挑观测句后面的 因为/所以/故/都/永远——那半句要么有读数,要么改成未量。
 
+- **签字前 dry-run `--accept`**(补记 66):在 overlay 工作树对该 epic 跑 `node scripts/first100/generate-ledger.mjs --accept --epic <id>`,读四谓词结果后 `git checkout -- spec/first100/exec/` 复原;(i) 覆盖闭包为空/(ii)(iii) 红都不签。P1-10 签了才发现 (i) 为 0 条。
+
 ## 9. 每小时自查五问(2026-09-11,gq-92 退班前给;由 watch-v12 心跳每小时打印,不靠记)
 
 ① 我派出去的非代码指令(锚 / 文件 / 配置)核过落地了吗——`ls` / `grep` 一次,不信"已建"。② 云上有没有排队或已被取代的 run,取消了没(一次只派最新候选)。③ 本笔是不是一次云跑——docs overlay 先叠到候选再派发,门③ SHA == 推送 SHA,dispatch run 既是门③也是观测。④ 今天有没有我没量就写的断言(补记 4 的"无环"是反例)。⑤ `~/first100-delegate/.events/watchdog.log` 最近一条是什么(机器睡眠 / 电池 / 会话死亡先于"lane 怠工"怀疑)。
