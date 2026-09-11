@@ -181,7 +181,47 @@ export function openTurnQuery(agent: Agent, turn: number, proposed: readonly Use
  * @param config - the read scoping this consumer applies to every memory read.
  * @returns Nothing.
  */
+/**
+ * Tell a session, once, that its workspace path holds memory an earlier
+ * occupant of that path wrote.
+ *
+ * Emitted on the first recall that actually happens rather than at session
+ * start: the notice is only meaningful once this consumer has read memory and
+ * found the session's own workspace empty, and a session-start event would
+ * describe storage before anything had consulted it.
+ *
+ * Silent when the count is zero, because "your workspace was rebuilt" is false
+ * of a workspace that never was — an unconditional notice would make every
+ * session claim it.
+ * @param ctx - the plugin context holding the memory seam.
+ * @param agent - the agent whose session is told.
+ * @param accessContext - the context this consumer just read under.
+ * @param announced - sessions already told, so the notice is not repeated.
+ * @returns Nothing.
+ */
+export async function announceRebuiltWorkspace(
+  ctx: Context,
+  agent: Agent,
+  accessContext: MemoryAccessContext,
+  announced: Set<string>,
+): Promise<void> {
+  const workspace = accessContext.scope.workspace
+  if (workspace === undefined || announced.has(agent.session.id)) return
+  announced.add(agent.session.id)
+  const count = await ctx.memory.countRebuiltAt({
+    accessContext,
+    canonicalPath: workspace.canonicalPath,
+    currentIdentity: workspace.identity,
+  })
+  if (count === 0) return
+  agent.session.append('memory/workspace-rebuilt', { canonicalPath: workspace.canonicalPath, count })
+}
+
 export function apply(ctx: Context, config: Config): void {
+  // Sessions that have already been told their workspace looks rebuilt. The
+  // notice is a fact about storage, so it is worth saying once and noise on
+  // every step after that; the set is per-plugin-instance and disposes with it.
+  const announced = new Set<string>()
   ctx.on('agent/pre-step', async ({ agent, turn, signal }, next): Promise<PreStepDecision> => {
     const decision = await next()
     if (decision.kind === 'reject' || signal.aborted) return decision
@@ -198,6 +238,7 @@ export function apply(ctx: Context, config: Config): void {
       resultCount: records.length,
       truncated,
     })
+    await announceRebuiltWorkspace(ctx, agent, accessContext, announced)
     const text = renderMemoryContext(records, truncated)
     if (text === undefined) return decision
     return {

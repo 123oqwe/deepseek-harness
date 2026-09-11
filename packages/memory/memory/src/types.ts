@@ -294,7 +294,39 @@ declare module '@deepseek-ai/dsh-session/types' {
      * P6-01 validation[3]).
      */
     'memory/access': MemoryAccessEvent
+    /**
+     * Records that this session's workspace PATH holds memory written under a
+     * different filesystem identity — the shape of a re-cloned or rebuilt
+     * directory. Log-only, and **not model-visible**: it reports a fact about
+     * storage, not content the model may read.
+     *
+     * Emitted once per session, on the first recall that actually happens, and
+     * only when the count is above zero: a session whose workspace was never
+     * displaced must not announce a rebuild. The payload carries the count and
+     * the path and **never a record's content or id** — those belong to the
+     * directory this one displaced, and reading them is the boundary
+     * {@link MemoryScope.workspace} draws.
+     *
+     * This event is `MemoryProvider.countRebuiltAt`'s only consumer. Without
+     * it that method would be a reporting channel nothing reports through,
+     * which is the built-and-unread shape this program keeps finding.
+     */
+    'memory/workspace-rebuilt': MemoryWorkspaceRebuiltEvent
   }
+}
+
+/**
+ * One session's notice that its workspace path holds earlier memory under a
+ * different identity.
+ *
+ * A count and a path, deliberately: enough for a consumer to say the earlier
+ * memory is still on disk, and not enough to read any of it.
+ */
+export interface MemoryWorkspaceRebuiltEvent {
+  /** The resolved directory path both identities share. */
+  readonly canonicalPath: string
+  /** How many records the displaced directory left; always above zero when this is emitted. */
+  readonly count: number
 }
 
 /**

@@ -646,7 +646,34 @@ Source: [`packages/llm/llm-retry/src/types.ts:11`](../packages/llm/llm-retry/src
 'memory/access': MemoryAccessEvent
 ```
 
-Source: [`packages/memory/memory/src/types.ts:204`](../packages/memory/memory/src/types.ts)
+Source: [`packages/memory/memory/src/types.ts:296`](../packages/memory/memory/src/types.ts)
+
+<a id="memoryworkspace-rebuilt--log-only"></a>
+
+#### `memory/workspace-rebuilt` — log-only
+
+```ts persistence-catalog
+/**
+ * Records that this session's workspace PATH holds memory written under a
+ * different filesystem identity — the shape of a re-cloned or rebuilt
+ * directory. Log-only, and **not model-visible**: it reports a fact about
+ * storage, not content the model may read.
+ *
+ * Emitted once per session, on the first recall that actually happens, and
+ * only when the count is above zero: a session whose workspace was never
+ * displaced must not announce a rebuild. The payload carries the count and
+ * the path and **never a record's content or id** — those belong to the
+ * directory this one displaced, and reading them is the boundary
+ * {@link MemoryScope.workspace} draws.
+ *
+ * This event is `MemoryProvider.countRebuiltAt`'s only consumer. Without
+ * it that method would be a reporting channel nothing reports through,
+ * which is the built-and-unread shape this program keeps finding.
+ */
+'memory/workspace-rebuilt': MemoryWorkspaceRebuiltEvent
+```
+
+Source: [`packages/memory/memory/src/types.ts:314`](../packages/memory/memory/src/types.ts)
 
 ### `model/*`
 
