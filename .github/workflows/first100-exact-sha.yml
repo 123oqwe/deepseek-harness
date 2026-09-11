@@ -184,6 +184,37 @@ jobs:
           DSH_BUILD_CLIENT_PROFILE: official
         run: pnpm run build
 
+      - name: Publication and package hygiene
+        if: always()
+        # BLOCKED-210. Fifteen gates this program never saw. `pnpm run hygiene`
+        # runs in no workflow; `verify-runtime-closure` and
+        # `verify-package-invariants` are in no CI gate set at all; `publint` is
+        # wired into ci-primary/ci-consumers/ci-artifacts, but `ci.yml` triggers
+        # on `pull_request` only and this program works on a fork branch that
+        # never fires it. So the one signal this program consumes was blind to
+        # all fifteen -- the same shape as BLOCKED-204's `*.e2e.ts` corpus, and
+        # how BLOCKED-207 shipped a package whose two entry points both import a
+        # chunk `files[]` did not publish.
+        #
+        # AFTER Build, and this position is load-bearing rather than
+        # conventional. `publicationFiles` globs each package's `files[]`
+        # patterns against the real directory, so with no `lib/` the closure
+        # check has no JS to scan and reports nothing -- measured on a clean
+        # unbuilt worktree: 0 `does not publish` lines, the exact check that
+        # caught BLOCKED-207 sitting silent. The gate still goes red there, on
+        # publint's own `FILE_DOES_NOT_EXIST` errors (four per package across
+        # all 291: `pkg.main`, `pkg.types`, `pkg.exports["."].default`,
+        # `.types`), which is 1164 lines saying only "you forgot to build".
+        # That second instrument is what makes the first one's silence
+        # survivable, and it is a dependency on publint@0.3.21's current
+        # behaviour: if a later version stops reporting missing entry files,
+        # this reasoning must be re-measured rather than assumed.
+        env:
+          # A failing gate aborts its running siblings, as in ci.yml: the
+          # remaining readers tell a reader nothing once one of them is red.
+          DSH_GATE_FAIL_FAST: '1'
+        run: pnpm run hygiene
+
       - name: Lint the files this program changed since the frozen baseline
         if: always()
         # BLOCKED-109, as re-adjudicated once the real numbers were known. Lint
