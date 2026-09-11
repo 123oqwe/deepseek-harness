@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-10T20:49:10.463Z",
-  "inputDigest": "e2537118e55ac7502af5f61a4f41e6525760fe29a93bb817104c9784f9a8003c",
+  "lastUpdatedUtc": "2026-09-11T03:42:13.501Z",
+  "inputDigest": "cb0421483dcbe06fd38a786db323c47f40a4d03aee24f621996b38c97d9e5e48",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4480,7 +4480,26 @@
       "wave": 6,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "d69d6e5b3e43cee9b1a2d9cad7fa60e1df4f7b14",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34557063530",
+          "observationReportPath": "/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7/scratchpad/obs/vitest-report.json",
+          "observationSha256": "44b6bec3528714828146065f6ca7c45ba4c9e4d757277a8847ed20de48c2f3e2",
+          "expectCasesMatched": [
+            "the same profile canonicalizes to the same reference, whatever order its keys were built in",
+            "a profile whose confidence changed is a different reference, so a revision cannot pass for the original",
+            "refuses a hard constraint with no provenance at all",
+            "keeps two contradictory hard constraints side by side, each with its own source (validation[1])",
+            "accepts an unknown side effect that reports itself as undetermined",
+            "refuses the same unknown side effect when it claims to be certain",
+            "rejects a profile carrying a field the generic vocabulary does not have (must[0])",
+            "refuses a confidence outside [0, 1], so a traceable source cannot carry an unreadable certainty",
+            "refuses a profile that asks about the side effect while also recording it as decided",
+            "allows a question about a constraint the profile does NOT state, which is the whole point of asking",
+            "a source the classifier has no case for falls through to not-a-task rather than to a goal",
+            "carries a task-profile reference through the same transition the profile is compiled at (P4-02)"
+          ],
+          "capturedAtUtc": "2026-09-11T03:42:13.496Z"
         },
         "P": {
           "status": "NOT_RUN"
@@ -4493,7 +4512,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "d69d6e5b3e43cee9b1a2d9cad7fa60e1df4f7b14",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
