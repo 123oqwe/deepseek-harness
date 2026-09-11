@@ -180,7 +180,7 @@
         },
         {
           "stage": "C",
-          "title": "exports no Config schema and no apply(ctx, config) plugin entry -- nothing here is a Cordis plugin export"
+          "title": "TrustKernel type surface (Epic P0-02 must[2]) exports no Config schema and no apply(ctx, config) plugin entry -- nothing here is a Cordis plugin export"
         },
         {
           "stage": "U",
