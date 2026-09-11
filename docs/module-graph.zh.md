@@ -544,6 +544,7 @@ flowchart TD
   pkg_task_profile --> pkg_risk_taxonomy
   pkg_task_profile --> pkg_session
   pkg_task_profile --> pkg_util_values
+  pkg_task_profile --> pkg_workspace_trust
   pkg_sandbox --> pkg_llm
   pkg_sandbox --> pkg_session
   pkg_schema_registry --> pkg_brand
@@ -1500,7 +1501,7 @@ flowchart TD
 | [`memory`](../packages/memory/memory) | `memory` | [`brand`](../packages/util/brand), [`llm`](../packages/llm/llm), [`principal`](../packages/identity/principal), [`session`](../packages/core/session), [`util-values`](../packages/util/values) |
 | [`policy-engine`](../packages/policy/policy-engine) | `policy` | [`action-manifest`](../packages/action/action-manifest), [`brand`](../packages/util/brand), [`capability-token`](../packages/policy/capability-token), [`principal`](../packages/identity/principal) |
 | [`persona`](../packages/preset/persona) | `preset` | [`system-prompt`](../packages/core/system-prompt) |
-| [`task-profile`](../packages/run/task-profile) | `run` | [`action-manifest`](../packages/action/action-manifest), [`brand`](../packages/util/brand), [`llm`](../packages/llm/llm), [`risk-taxonomy`](../packages/policy/risk-taxonomy), [`session`](../packages/core/session), [`util-values`](../packages/util/values) |
+| [`task-profile`](../packages/run/task-profile) | `run` | [`action-manifest`](../packages/action/action-manifest), [`brand`](../packages/util/brand), [`llm`](../packages/llm/llm), [`risk-taxonomy`](../packages/policy/risk-taxonomy), [`session`](../packages/core/session), [`util-values`](../packages/util/values), [`workspace-trust`](../packages/workspace/workspace-trust) |
 | [`sandbox`](../packages/sandbox/sandbox) | `sandbox` | [`llm`](../packages/llm/llm), [`session`](../packages/core/session) |
 | [`schema-registry`](../packages/schema/schema-registry) | `schema` | [`brand`](../packages/util/brand), [`invariants`](../packages/runtime-diagnostics/invariants), [`session`](../packages/core/session) |
 | [`session-log-deepseek`](../packages/session/session-log-deepseek) | `session` | [`deepseek-llm-api-extensions`](../packages/llm/deepseek-llm-api-extensions), [`invariants`](../packages/runtime-diagnostics/invariants), [`session`](../packages/core/session) |
