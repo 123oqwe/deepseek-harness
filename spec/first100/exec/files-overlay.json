@@ -1281,6 +1281,14 @@
    ]
   },
   {
+   "epic": "P4-02",
+   "path": "packages/run/run/tests/state-machine.spec.ts",
+   "kind": "test",
+   "stages": [
+    "C"
+   ]
+  },
+  {
    "epic": "P4-05",
    "path": "packages/core/agent/tests/lifecycle-dispatch.spec.ts",
    "kind": "test",
