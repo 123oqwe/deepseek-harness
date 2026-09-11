@@ -4,12 +4,12 @@
  * @module @deepseek-ai/dsh-agent/types
  */
 
+import type { Branded } from '@deepseek-ai/dsh-brand'
 import type { UserMessage } from '@deepseek-ai/dsh-llm/types'
 import type { IdentityContext, RunId } from '@deepseek-ai/dsh-principal/types'
 import type { RunLease } from '@deepseek-ai/dsh-lease-contract'
 import type { AgentLifecycle } from './state-machine.ts'
 import type { OptionalSessionSeq, SessionId, SessionSeq } from '@deepseek-ai/dsh-session/types'
-import type { TaskProfileRef } from '@deepseek-ai/dsh-task-profile/types'
 import type { TypertContext, TypertLookup } from '@deepseek-ai/dsh-typert-protocol'
 
 /** Public live-agent handle; the runtime face augments its live capabilities. */
@@ -110,8 +110,20 @@ export interface Agent {
    * two copies of a durable fact have no way to detect divergence. Recompiling
    * an unchanged goal yields the same digest, so this field moving is itself
    * the signal that the profile was revised.
+   *
+   * **The brand is spelled here rather than imported, and the reason is the
+   * dependency direction.** The type is `TaskProfileRef`
+   * (`@deepseek-ai/dsh-task-profile/types`), which IS `Branded<'TaskProfileRef'>`
+   * — so this declaration is that type, not a parallel one. Importing the name
+   * would make the agent spine depend on a P4-02 vocabulary package, the
+   * direction {@link Agent.runId} already avoids by taking `RunId` from
+   * `identity/principal` rather than from `run/run`. It would also close a
+   * project-reference cycle, since `@deepseek-ai/dsh-goal` depends on this
+   * package and `run/task-profile` depends on that one. Divergence is caught
+   * where it would matter: `RunPlugin`'s `agent.taskProfile = ref` does not
+   * compile if the two stop being the same type.
    */
-  taskProfile?: TaskProfileRef
+  taskProfile?: Branded<'TaskProfileRef'>
 }
 
 declare module '@deepseek-ai/dsh-typert-protocol' {

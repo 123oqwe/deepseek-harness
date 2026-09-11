@@ -28,6 +28,9 @@
     },
     {
       "path": "../../workspace/workspace-trust"
+    },
+    {
+      "path": "../../goal/goal"
     }
   ]
 }

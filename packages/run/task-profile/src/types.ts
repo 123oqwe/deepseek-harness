@@ -40,6 +40,17 @@
  */
 
 import { type Branded, brandString } from '@deepseek-ai/dsh-brand'
+// The package root rather than `/types`, and deliberately: the `goal` member of
+// `MessageSourceMap` is declaration-merged in `@deepseek-ai/dsh-goal`'s
+// `domain.ts`, which the root re-exports and `/types` does not. Without that
+// file in the program `taskOriginOf`'s `case 'goal'` does not typecheck at all.
+//
+// `GoalMessageSource` and not the root's `GoalId`: that name is exported from
+// the root as BOTH a type alias and a cast function, and Typert's face analyzer
+// cannot resolve the type meaning of the merged symbol — measured, it fails
+// with "type symbol GoalId has no declaration". Indexing the source type
+// reaches the same brand through one unambiguous declaration.
+import type { GoalMessageSource } from '@deepseek-ai/dsh-goal'
 import type { MessageId } from '@deepseek-ai/dsh-llm/brand'
 import type { MessageSource } from '@deepseek-ai/dsh-llm/message'
 import type { RiskClass, RiskGroundKind } from '@deepseek-ai/dsh-risk-taxonomy/types'
@@ -61,6 +72,30 @@ export interface TaskGoalRef {
   readonly sessionId: SessionId
   /** The `user/message` event's own stable id within that session. */
   readonly messageId: MessageId
+  /**
+   * The entered goal this message continues, present only when the message is
+   * a goal continuation round rather than a direct prompt.
+   *
+   * **It lives on the reference, not on {@link InferenceProvenance} itself,
+   * and that is the point.** Every provenance in a profile already carries one
+   * of these, so putting the goal's identity here makes it reach every
+   * inference — which is what it is for — while existing exactly once. Adding
+   * the three fields to the provenance interface instead would have copied
+   * them onto every constraint and every side effect in the profile.
+   *
+   * The three fields are spelled out rather than taken as
+   * `Omit<GoalMessageSource, 'kind'>`: a field added to that source later
+   * would otherwise land in this profile, and therefore in its digest, without
+   * anyone deciding it should.
+   */
+  readonly goalRound?: {
+    /** The entered goal, named by the goal domain's own brand. */
+    readonly goalId: GoalMessageSource['goalId']
+    /** Which revision of that goal this round continues. */
+    readonly revision: number
+    /** The admitted continuation round, always positive. */
+    readonly round: number
+  }
 }
 
 /**
@@ -260,18 +295,45 @@ export type TaskOrigin = 'user-goal' | 'injected-context' | 'unknown-source'
 
 /**
  * Classify one message source as a task origin.
+ *
+ * **`goal` is a task, and it took a measurement to notice.** The fail-closed
+ * default put an entered goal's continuation rounds in `unknown-source`, which
+ * excluded them — and `user/message`'s own documentation lists "an entered goal
+ * continuation round" beside a direct human prompt as one of the three
+ * user-role messages. One recorded session sat on that. The goal's identity
+ * reaches the profile through {@link TaskGoalRef.goalRound} rather than being
+ * discarded, because a round of a revised goal and a first prompt are not the
+ * same task even when their text is.
  * @param source - the `MessageSource` a `user/message` event carries.
- * @returns `user-goal` only for a direct human prompt; every other known kind
- * is `injected-context` and every unrecognised kind is `unknown-source`.
+ * @returns `user-goal` for a direct human prompt and for a goal continuation
+ * round; every other known kind is `injected-context` and every unrecognised
+ * kind is `unknown-source`.
  */
 export function taskOriginOf(source: MessageSource): TaskOrigin {
   switch (source.kind) {
     case 'user': return 'user-goal'
+    case 'goal': return 'user-goal'
     case 'plugin': return 'injected-context'
     // No `assertNever`: the union is merge-extensible, so the default is the
     // documented fall-through rather than a closed-union exhaustiveness error.
     default: return 'unknown-source'
   }
+}
+
+/**
+ * The entered-goal identity a message source carries, when it has one.
+ *
+ * Here rather than in the caller because this is the only package that declares
+ * a dependency on the goal domain, and the only one that should: a consumer
+ * extracting these three fields itself would need the same dependency and would
+ * be a second place that knows what a goal round is.
+ * @param source - the `MessageSource` a `user/message` event carries.
+ * @returns the goal, revision and round for a continuation round; `undefined`
+ * for every other source, including a direct human prompt.
+ */
+export function goalRoundOf(source: MessageSource): TaskGoalRef['goalRound'] {
+  if (source.kind !== 'goal') return undefined
+  return { goalId: source.goalId, revision: source.revision, round: source.round }
 }
 
 declare module '@deepseek-ai/dsh-session/types' {

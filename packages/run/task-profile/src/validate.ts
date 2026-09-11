@@ -30,6 +30,8 @@
 import { createHash } from 'node:crypto'
 import { z } from 'zod'
 import { canonicalizeArguments } from '@deepseek-ai/dsh-action-manifest/canonicalize'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import type { GoalId } from '@deepseek-ai/dsh-goal/types'
 import { MessageId } from '@deepseek-ai/dsh-llm/brand'
 import { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
@@ -44,6 +46,20 @@ export const SIDE_EFFECT_FIELD = 'sideEffect'
 const goalRef = z.strictObject({
   sessionId: z.string().min(1).transform(SessionId),
   messageId: z.string().min(1).transform(MessageId),
+  // Optional because most goals are direct prompts, which continue no entered
+  // goal. `round` is bounded below at 1: the goal domain admits positive rounds
+  // only, so a stored 0 is a corrupted record rather than a first round.
+  goalRound: z.strictObject({
+    // `brandString` rather than the goal domain's own `GoalId` constructor,
+    // which is a cast with no validation and lives on the package ROOT —
+    // importing it would make this package's dependency on the goal domain a
+    // RUNTIME one, pulling the goal service into the compiler's module graph
+    // for a function that does nothing. The type comes from `/types`, the pure
+    // outlet, where the name means only the brand.
+    goalId: z.string().min(1).transform(value => brandString<GoalId>(value)),
+    revision: z.number().int().min(0),
+    round: z.number().int().min(1),
+  }).optional(),
 })
 
 const provenance = z.strictObject({
