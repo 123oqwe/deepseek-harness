@@ -577,7 +577,7 @@ function zeroDelegationClock(record: Record<string, unknown>): void {
   const entries = identity?.chain?.entries
   if (!Array.isArray(entries)) return
   for (const entry of entries as Record<string, unknown>[]) {
-    if (typeof entry?.delegatedAt === 'number') entry.delegatedAt = 0
+    if (typeof entry.delegatedAt === 'number') entry.delegatedAt = 0
   }
 }
 
