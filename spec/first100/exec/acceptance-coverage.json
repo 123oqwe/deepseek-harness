@@ -2908,6 +2908,83 @@
         }
       ],
       "note": "acceptance[2]: 'provider 故障时 circuit 打开且可恢复.' The citations cover the OPENING half completely and the RECOVERABLE half not at all, which is stated here rather than left for a reader to discover.\n\nOpening: the breaker refuses AT the threshold without reaching the operation, still executes below it (so the refusal is not a constant), and opens one destination without opening another under the same provider — the isolation that makes 'provider 故障' mean this endpoint rather than every endpoint. The four endpoint-health boundaries then fix WHICH failures count: a 503 and a timeout are the endpoint saying it is unwell, while a malformed request and a rejected credential say the CALLER is wrong and must not open anything. Without that negative half, a breaker opening on any error at all would satisfy the positive citations.\n\n**'可恢复' is NOT observed by any frozen case.** It is implemented by delegation — `retry-cockatiel/src/index.ts:103` passes `halfOpenAfter: this.config.openMs`, and cockatiel owns the open period and the half-open probe — but no case in this epic drives a breaker through open → half-open → closed. The nearest is 'unloads and rolls back: the service goes with its fiber, and a remount starts closed', which is disposal rather than the breaker's own recovery, and it is deliberately NOT cited here: it would make the recovery half look covered by a case about something else.\n\nSERVICE / PRODUCTION (§12.46-B): the P citations mount the real provider on a Context and drive it, so they are stronger than a pure-library observation, but the failures are injected rather than produced by a real provider outage. U is NOT_RUN."
+    },
+    {
+      "epic": "P1-10",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "U",
+          "title": "migrates a COPY, leaving the live unit unchanged until the switch"
+        },
+        {
+          "stage": "U",
+          "title": "rolls back to the replaced state when the HEALTH CHECK fails"
+        },
+        {
+          "stage": "U",
+          "title": "does not switch at all when VALIDATE refuses, and discards the copy"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 11 a snapshot primitive that fails leaves the live unit alone"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 12 a materialize that fails leaves the live unit alone, having made no copy to strand"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 15 a copy that EXISTS when a later primitive fails is discarded, not stranded"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 13 a plugin that cannot be recovered stops the command by NAME, with nothing cleared"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 14 a recovery that succeeds reports the plugin and lets the command continue"
+        }
+      ],
+      "note": "acceptance[0]: 'inject a crash at every migration step; after restart either the old version is fully usable or the new one is, with no mixed state.' The no-mixed-state half is evidenced structurally rather than by a crash: the transaction migrates a COPY and the live unit is untouched until `switchIn`, so a fault before the switch leaves the old version whole (boundaries 11 and 12 assert the live unit is unchanged; 15 asserts a materialized copy is discarded rather than stranded when a LATER primitive fails), and a fault after it rolls back (health-check) or refuses to switch (validate). NOT PROVEN, and stated because the clause literally asks for it: NO case kills a process mid-phase and restarts. The restart half is simulated — boundaries 13 and 14 seed an `INTERRUPTED` record by hand (`homeWithRecord('notes-plugin', INTERRUPTED)`) and drive `recoverInterruptedUpgrades` over it, which exercises the recovery path a restart would reach but not the crash that produces the record. A real crash campaign is validation[0]'s `N-step migration fault campaign` and is not discharged here."
+    },
+    {
+      "epic": "P1-10",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "U",
+          "title": "stamps the migrated copy with the NEW version"
+        },
+        {
+          "stage": "U",
+          "title": "carries the path digest, so a confirmation names this exact conversion"
+        },
+        {
+          "stage": "U",
+          "title": "refuses at freeze, naming the digest the operator must pass back"
+        },
+        {
+          "stage": "U",
+          "title": "refuses a confirmation that names another path"
+        }
+      ],
+      "note": "acceptance[1]: 'the data digest and the schema version can be reconciled.' Both halves are pinned and they are separate facts: the VERSION is stamped on the migrated copy, and the DIGEST identifies the conversion path so a confirmation names one exact migration rather than any migration of that plugin. The last two cases are what make the digest reconcilable rather than merely recorded — the freeze refusal names the digest an operator must pass back, and a confirmation naming ANOTHER path is refused, so the digest is checked on the way in and not only written on the way out."
+    },
+    {
+      "epic": "P1-10",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "U",
+          "title": "leaves the permission state byte-identical across a FAILED upgrade"
+        },
+        {
+          "stage": "U",
+          "title": "the seeded home is NOT empty, so \"nothing changed\" is not vacuous"
+        }
+      ],
+      "note": "acceptance[2]: 'a failed upgrade does not change already-approved permissions.' Asserted as a digest of the whole permission home taken before the upgrade and compared after it fails at health-check — a tree digest rather than a field check, so a permission changed anywhere under the home reddens it. The second case is the non-vacuity control and is why the first is worth anything: it asserts the seeded home has more than one entry and does not digest-equal a freshly created empty directory, so 'byte-identical' cannot be satisfied by there being nothing to change. That pairing is the shape a `toEqual([])` assertion needs whenever emptiness would also pass."
     }
   ]
 }
