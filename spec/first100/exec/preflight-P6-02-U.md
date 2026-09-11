@@ -73,12 +73,36 @@ Row `P6-02`, heading `#### P6-02`, `sheetCommit: null`, `recordedBeforeFirstLine
 - **The format-version question is shared.** `preflight-memory-slice.md` item 5 asks it for that slice; this epic's U stage cannot be done without answering it, because nine of the eleven fields have to reach disk first.
 - **BLOCKED-193's pattern does not apply here.** P6-07's clauses each had a rival implementation production reached. P6-02's have none: no other module in the tree validates a memory record, records a memory conflict, or decides a cross-scope merge. Absence, not duplication.
 
-## Open questions (OQ16–OQ19) — none taken here
+## OQ19's table: where would each absent field come from on a shipped `propose()`?
+
+Asked before any code, because the rule `originOf` already follows for confidence (`index.ts:671-675`) is the one that decides this stage: **a value nobody stated is a fabricated fact in durable data.** `MemoryProposeRequest` carries exactly `principal`, `scope`, `content`, `origin` (`types.ts:120-151`). Nine of `MemoryRecord`'s fields are absent from disk; for each, the question is not "can a default be invented" but "is there a caller who knows it".
+
+| absent field | a source on the shipped write path today? | if none, who could know it |
+| --- | --- | --- |
+| `createdAt` | **yes.** Every mutation already stamps `updatedAt` with `new Date().toISOString()` (`index.ts:328,351,397,424,572,603`). A creation instant is the same clock read at the same point | — |
+| `validFrom` | **no, but derivable without inventing anything.** The claim's validity beginning at its write is not a guess; it is the only instant the writer can be said to have asserted | — |
+| `validUntil` | **no.** `null` is the CORRECT value, not a default: `MemoryRecord` documents `null` as "open-ended", so an absent TTL is an open-ended claim, which is exactly what a caller who said nothing meant | a caller that wants expiry must say so; the request grows an optional field |
+| `relations` | **no, and correctly so.** An empty list is the truth for a newly proposed record; relations are minted by `recordConflict`, never by `propose` | — |
+| `status` | **no, but `'active'` is not invented** — it is the only status a record can be born in; `superseded` / `disputed` / `revoked` are all transitions out of it | — |
+| `content` (as `MemoryContent`) | **partial.** `propose` takes `content: unknown`; P6-02's type is a tagged union of `{kind:'inline'}` / `{kind:'ref'}`. An `unknown` is unambiguously the `inline` variant — the `ref` variant has no producer, because nothing on this path stores an artifact | a caller with an artifact must say `ref`; today none exists |
+| `kind` | **NO SOURCE.** Nothing in the request, the consumer, or the session says what KIND of memory a claim is. `memory-context` proposes nothing at all; the only shipped proposer is the test driver | the caller. The request must grow it, or the stage does not store it |
+| `subject` | **NO SOURCE.** Same: who or what the claim is *about* is not derivable from `principal` (who wrote it) or `scope` (where it lives) | the caller, same as `kind` |
+| `purpose` | **NO SOURCE on the write.** It exists on the READ — `MemoryAccessContext.purpose`, which `memory-context` fills from `config.purpose` (`memory-context/src/index.ts:92`) — but a record's write-time purpose is a different fact from a reader's, and using the reader's would record the first reader's purpose as the record's | the caller |
+| `sensitivity` | **NO SOURCE.** Nothing classifies content on this path. `'normal'` would be a *guess with a safety direction*, and the wrong one: a record wrongly marked normal is admitted to an index by `admitToIndex`, which is must[2]'s exact failure | the caller, or a classifier that does not exist (P6-10's family) |
+
+**What that makes P6-02.U, if the table is accepted.** Five fields (`createdAt`, `validFrom`, `validUntil`, `relations`, `status`, plus `content`'s inline variant) can reach disk with nothing invented. **Four cannot** — `kind`, `subject`, `purpose`, `sensitivity` have no caller who knows them, and the only honest ways to store them are to grow `MemoryProposeRequest` so a caller states them, or to leave them out. `sensitivity` is the sharpest: it is the one field whose invented default has a *direction*, and the cheap direction is the unsafe one.
+
+This is why OQ19's ruling — *"write nothing the writer did not state; the provider fills no defaults; U only wires the decisions whose inputs have a source"* — resolves to: `isDefaultRetrievable` becomes wirable (it reads `status` and `validUntil`, both sourced), while `admitToIndex` does NOT (it reads `sensitivity`, which has none). `recordConflict` needs `relations` and `status`, both sourced, so it is wirable at the seam even though nothing yet calls it.
+
+**Not decided here:** whether `MemoryProposeRequest` grows the four, and if so in this epic or P6-03's proposal surface. Recorded as OQ20.
+
+## Open questions (OQ16–OQ20) — none taken here
 
 1. **OQ16** — is wiring `validateRecord` into `propose()` P6-02.U's work or P6-01's defect? The check belongs to P6-02, the path to P6-01. Until it is answered, the comment at `index.ts:688-692` states a guarantee nothing provides, and acceptance[0] does not hold on a shipped write.
 2. **OQ17** — the card's `fast-check` closing condition names `decideCrossScopeMerge`, which has no production caller. Does the property coverage wait until the function has a consumer, or is example coverage ruled sufficient?
 3. **OQ18** — the on-disk format. Nine of must[0]'s fields are unstored; storing them bumps `DURABLE_FILE_MEMORY_FORMAT_VERSION` and refuses every document written by the current build. `AGENTS.md`'s pre-release stance points at "bump and refuse", and this is the same question as `preflight-memory-slice.md` item 5 — it wants one answer, not two.
-4. **OQ19** — where the added fields come from on `propose()`. `kind`, `subject`, `purpose` and `sensitivity` have no source in the current request, and defaulting a `confidence` or a `kind` the writer never stated would put a fabricated fact in durable data — the rule `originOf` already follows for confidence (`index.ts:671-675`).
+4. **OQ19** — answered above by measurement, not by ruling: five of the nine fields have a source, four do not. The ruling that follows from it is the delegate's.
+5. **OQ20** — whether `MemoryProposeRequest` grows `kind`, `subject`, `purpose` and `sensitivity` so a caller can state them, and whether that belongs to this epic or to P6-03's proposal surface. Until it is answered those four cannot be stored without inventing them, and `admitToIndex` (must[2]) has no wirable input.
 
 ## Status
 
