@@ -11,6 +11,7 @@
     { "path": "../../../vendor/cordis" },
     { "path": "../../action/action-manifest" },
     { "path": "../../util/brand" },
-    { "path": "../policy-engine" }
+    { "path": "../policy-engine" },
+    { "path": "../../../vendor/schemastery" }
   ]
 }
