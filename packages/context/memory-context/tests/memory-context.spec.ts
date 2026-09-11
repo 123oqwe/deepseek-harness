@@ -25,6 +25,14 @@ const repoTsconfig = fileURLToPath(new URL('../../../../tsconfig.json', import.m
 /** The content the driver seeds into memory before the turn runs. */
 const SEEDED = 'oxidized-kingfisher'
 
+/**
+ * The content the driver seeds under a DIFFERENT workspace of the same tenant.
+ *
+ * It answers the turn's query exactly as well as {@link SEEDED} does, so its
+ * absence from the recall is the workspace boundary and not the search.
+ */
+const OTHER_WORKSPACE = 'tarnished-marmoset'
+
 async function jsonlFiles(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true })
   const paths = await Promise.all(entries.map(async (entry) => {
@@ -130,11 +138,48 @@ describe('memory-context through the production headless profile', () => {
     expect(read!.seq).toBeLessThan(injected!.seq)
   })
 
+  it('recalls only the workspace this session runs in, on a launched profile', () => {
+    // §12.79's second invariant, narrowed by the delegate's ruling (OQ15) to
+    // the workspace dimension the scope actually has. The P stage proves the
+    // seam filters by workspace; this proves a real boot, through the shipped
+    // consumer, reaches that filter with the workspace it is actually running
+    // in — which no case in the P file can show, because none of them boots.
+    //
+    // Both records are the same tenant's and both match the query. The
+    // difference between them is the workspace alone.
+    const injected = events.filter(
+      (event): event is SessionEvent<'user/message'> => event.type === 'user/message'
+        && event.data.source.kind === 'plugin'
+        && event.data.source.plugin === 'memory-context')
+    const text = injected.flatMap(event => event.data.content)
+      .filter(block => block.type === 'text').map(block => block.text).join('\n')
+    expect(text).toContain(SEEDED)
+    expect(text).not.toContain(OTHER_WORKSPACE)
+
+    // The read event agrees: one record was returned, not two. Asserting only
+    // the injected text would pass a build that recalled both and rendered one.
+    const reads = events.filter(
+      (event): event is SessionEvent<'memory/access'> => event.type === 'memory/access'
+        && event.data.operation === 'query')
+    const data = reads.at(-1)?.data
+    if (data?.operation !== 'query') throw new Error('unreachable: filtered to query above')
+    expect(data.resultCount).toBe(1)
+
+    // NOT PROVEN here, and the freeze entry says so: an UNTRUSTED workspace.
+    // Nothing in `memory-context` or `dsh-memory` reads a workspace's trust
+    // state to decide a recall — the only mention is a comment — so a case
+    // naming "untrusted" would assert something nothing decides. That half of
+    // the invariant has no subject and rides with BLOCKED-185's slice.
+  })
+
   it('memory content never reaches the model outside a logged injection', () => {
     // acceptance[1]'s read-side counterpart: the seeded content appears in the
     // request only through the attributed user message above.
     const headers = events.filter(event => event.type === 'request/header')
     expect(JSON.stringify(headers)).not.toContain(SEEDED)
+    // The other workspace's record is not in the request by any route at all,
+    // attributed or otherwise.
+    expect(JSON.stringify(events)).not.toContain(OTHER_WORKSPACE)
   })
 })
 

@@ -41,6 +41,17 @@ try {
     scope: { tenantId: TenantId('t-fixture'), workspace: await workspaceScope() },
     content: { note: 'the deploy passphrase is oxidized-kingfisher' },
   })
+  // A record the SAME TENANT wrote from a different checkout. It matches the
+  // turn's query as well as the one above does, so if it stays out of the
+  // recall it is the workspace boundary keeping it out and not the search.
+  await ctx.memory.propose({
+    origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: createAnonymousDevPrincipal(PrincipalId('p-fixture'), TenantId('t-fixture')),
+    scope: {
+      tenantId: TenantId('t-fixture'),
+      workspace: { canonicalPath: '/projects/another-checkout', identity: 'dev-9:ino-9999:1600000000000' },
+    },
+    content: { note: 'the deploy passphrase is tarnished-marmoset' },
+  })
   const [agent] = ctx.get('agents')?.roots() ?? []
   if (agent === undefined) throw new Error('memory-context driver found no configured agent')
   await runFixtureTurn(ctx, { task: 'deploy passphrase' })
