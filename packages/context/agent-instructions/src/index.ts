@@ -78,9 +78,13 @@ async function askForReadTrustOnce(
   if (state !== 'untrusted' || asked.has(agent.session)) return state
   const approval = ctx.get('approval')
   if (approval === undefined) return state
-  asked.add(agent.session)
   const principal = attachedIdentity(agent.session)?.principal
+  // Marked asked only once there is someone to ask ON BEHALF OF. Marking it
+  // before this check spent the session's one question on a step that could
+  // never put it, so a session that later gained an identity would never be
+  // asked (BLOCKED-200 found the absence; this was the bug it exposed here).
   if (principal === undefined) return state
+  asked.add(agent.session)
   const outcome = await approval.request({
     agent,
     // The name of what is being decided. Not a callable tool, and the field

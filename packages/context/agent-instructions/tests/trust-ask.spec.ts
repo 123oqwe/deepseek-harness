@@ -151,6 +151,56 @@ describe('P1-07 must[2]: the host user is asked before an untrusted workspace is
     await ctx.fiber.dispose()
   })
 
+  it('does not spend the session\'s one question on a step that has no identity to ask for', async () => {
+    // BLOCKED-200: no shipped profile attaches a host-user identity, so this
+    // is the state a real boot is in. The question must not be marked asked
+    // before there is a principal to ask on behalf of — a session that later
+    // gains one would otherwise never be asked at all.
+    const project = await makeRoot()
+    await writeFile(join(project, 'AGENTS.md'), '# project instructions\n', 'utf8')
+    const asks: string[] = []
+    const ctx = await stack(undefined)
+    ctx.on('approval/request', (request: ApprovalRequest) => {
+      asks.push(request.subject ?? request.toolName)
+      return Promise.resolve<ApprovalOutcome>('allowed-once')
+    })
+    // A session with an open turn and NO identity/attached event.
+    const id = SessionId('trust-ask-no-identity')
+    const session = Session.create(id, [], { version: SESSION_FORMAT_VERSION, id, createdAt: 0, cwd: project, isSeeded: false })
+    session.append('turn/start', { turn: 1 })
+    const agent = {
+      ctx: new Context(),
+      id,
+      options: {},
+      session,
+      inbox: new Inbox(session, { inserted: () => {}, discarded: () => {}, claimed: () => {} }),
+      status: 'idle',
+      send: () => {},
+      followup: () => {},
+      steer: () => {},
+      inject: () => { throw new Error('the trust ask must not inject') },
+      cancel() {},
+      runMaintenance: (task: (signal: AbortSignal) => unknown) => task(new AbortController().signal),
+      whenIdle: () => Promise.resolve(),
+    } as unknown as Agent
+
+    await preStep(ctx, agent)
+    expect(asks).toStrictEqual([])
+    expect(await ctx.workspaceTrust.stateFor(project)).toBe('untrusted')
+
+    // The session gains an identity — which is what closing BLOCKED-200 will
+    // make happen on a real boot. The question must still be put: the earlier
+    // step had nobody to ask for, so it cannot have spent the one ask.
+    session.append('identity/attached', {
+      identity: { principal: createUserPrincipal(PrincipalId('host-1'), TenantId('t-1')) },
+    } as never)
+    await preStep(ctx, agent)
+
+    expect(asks).toStrictEqual([`${project}: trusted-read`])
+    expect(await ctx.workspaceTrust.stateFor(project)).toBe('trusted-read')
+    await ctx.fiber.dispose()
+  })
+
   it('does not ask at all once the workspace is already trusted', async () => {
     const project = await makeRoot()
     await writeFile(join(project, 'AGENTS.md'), '# project instructions\n', 'utf8')

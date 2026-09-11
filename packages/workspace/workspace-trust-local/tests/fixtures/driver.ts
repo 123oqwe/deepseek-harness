@@ -7,6 +7,12 @@
  * The instruction half of the same run is observed from the session log rather
  * than from here, because "model-visible ⟺ logged" makes the log the
  * authoritative record of what actually reached the model.
+ *
+ * `P1_07_TRUST_VIA_COMMAND` selects the third mode: instead of a configured
+ * grant, the host user runs `/trust-skills` and confirms. That mode is what
+ * proves the two halves of the execute chain compose on ONE boot — the command
+ * reaching the trust state, and the trust state reaching the catalog — which
+ * neither half's own cases can show.
  */
 
 import { join } from 'node:path'
@@ -30,7 +36,21 @@ const ctx = await bootProductionProfile({
   overlayPaths: [resolveConfigPath(configPath, undefined)],
 })
 try {
+  if (process.env.P1_07_TRUST_VIA_COMMAND !== undefined) {
+    // A host user who says yes. The command asks through the real approval
+    // seam; without an answerer the seam settles `'unavailable'` and the
+    // command changes nothing, which is the non-interactive case the unit
+    // suites already cover.
+    ctx.on('approval/request', () => Promise.resolve('allowed-once' as const))
+  }
   await runFixtureTurn(ctx, { task: 'summarize this repository' })
+  if (process.env.P1_07_TRUST_VIA_COMMAND !== undefined) {
+    const [agent] = ctx.get('agents')?.roots() ?? []
+    if (agent === undefined) throw new Error('the composition driver found no configured agent')
+    const execution = await ctx.commands.execute(agent, '/trust-skills', [], new AbortController().signal)
+    if (execution === undefined) throw new Error('/trust-skills did not resolve — the command row is not mounted')
+    process.stdout.write(`P1-07-TRUST-COMMAND ${JSON.stringify(execution.result)}\n`)
+  }
   const skills = await ctx.skills.list({ cwd: join(process.cwd(), CLONE_DIR) })
   process.stdout.write(`P1-07-SKILL-CATALOG ${JSON.stringify(skills.map(skill => skill.name).sort())}\n`)
 } finally {

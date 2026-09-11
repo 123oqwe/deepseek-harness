@@ -44,6 +44,41 @@ Measured while writing `verify-import-integrity` (2026-09-10, lane B). **Measure
 
 **Closes when** the source matrix's stage-U list for P2-04 names the files the epic's vocabulary is actually in, at which point the exemption can go. Until then the exemption carries the measurement so the mismatch is documented rather than merely quiet.
 
+### BLOCKED-200 — P2-01: no shipped profile attaches a host-user identity, so every action traces to a synthesized anonymous one
+
+**Status: MEASURED, P2-01's consumption point. Found by an end-to-end case, not by reading.** A P1-07 case written to prove must[2]'s execute half on one real boot instead found that the half cannot run: `/trust-skills` on a shipped headless profile answers *"This session has no attached identity, so no host user can authorize the change."*
+
+**The measurement.** `agent-loop/src/agent.ts:129-132` appends `identity/attached` only when `resolveSessionIdentity` produces one, which needs `options.identity`. A whole-tree census of `agentLoop.create(` finds **every call site that passes an identity is a test**; no shipping code path passes one, and `bundle/base` mounts nothing that produces a host principal.
+
+**P2-01 claims this and is ACCEPTED with four GREEN cells.** Its acceptance[0] is *"任何 action 都能追溯 root user/tenant 与完整委托链"*. On a shipped boot an action traces to a principal synthesized at the point of use.
+
+**What actually happens instead.** Both dispatch paths call `manifestAttribution(attachedIdentity(session), session.id)`, and `action-manifest/src/identity.ts:48-54` fabricates on absence:
+
+```
+runId: `anonymous-run:${sessionId}`
+actor: createAnonymousDevPrincipal(`anonymous:${sessionId}`, 'local')
+```
+
+So every action manifest a shipped profile writes is attributed to an `anonymous-dev` principal named after the session id, in tenant `'local'`. That is not wrong in itself — `anonymous-dev` is exactly the restricted shape P2-01's acceptance[2] defines for this case, and it deliberately carries no `isAdmin` — but it means the normal mode acceptance[2] contrasts it against is the one that never happens.
+
+**Five consumption points, and the split matters.**
+
+| site | on absence |
+| --- | --- |
+| `agent-loop/src/tool-calls.ts:486` | **fail OPEN** — synthesizes |
+| `core/tools/src/ptc.ts:218` | **fail OPEN** — synthesizes |
+| `context/agent-instructions/src/index.ts:82` | fail closed — does not ask, stays untrusted |
+| `command-workspace-trust/src/index.ts:50` | fail closed — refuses by name |
+| `core/session/src/index.ts:1264` | the definition |
+
+**This cannot be closed by reusing the synthesized identity.** P1-07's `isHostUserPrincipal` admits only `kind === 'user'`, and `anonymous-dev` is a different variant of a closed union. That refusal is correct: must[2] asks for a host user, not for whoever the process happens to be running as.
+
+**And the shape it needs is not defined yet.** `Principal`'s four variants carry no field meaning "this is the local OS user", and `packages/identity/principal/src` has no factory that builds one from the host — `createUserPrincipal(id, tenantId)` requires the caller to supply both. So closing this needs an answer P2-01 has not given: on a local CLI, what are `id` and `tenantId`?
+
+**Closes when** a shipped boot attaches a `kind: 'user'` principal, and a real headless run's first action manifest is attributed to it. P1-07's two fail-closed consumers do not change: refusing without a host user is the behaviour must[2] asks for, and it becomes reachable rather than correct the day this closes.
+
+**Its P1-07 case is a characterization until then.** `CHARACTERIZATION: /trust-skills cannot grant on a shipped profile…` asserts today's refusal by name and says in place that it is measured, not endorsed. **When this entry closes, that case goes red** — which is the signal to re-freeze it as the success it was written to be, rather than a regression to undo.
+
 ### BLOCKED-199 — P1-07: a configured trust grant survives a restart, so a replaced directory is trusted again
 
 **Status: FIXED (the half that is not blocked). The audit half is held — see below.** The two characterization cases that recorded the defect now assert the fix, and a control was added beside them.

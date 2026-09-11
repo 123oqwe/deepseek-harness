@@ -61,6 +61,8 @@ async function jsonlFiles(dir: string): Promise<string[]> {
 }
 
 interface Observation {
+  /** What `/trust-skills` answered, when the run used it; empty otherwise. */
+  readonly commandResult?: string
   /** Skill names the product offered the model, reported by the driver. */
   readonly catalog: string[]
   /** Every instruction text the session log records as having reached the model. */
@@ -74,8 +76,9 @@ interface Observation {
  * @param grant - the state granted to the clone, or `undefined` for a freshly cloned, ungranted repository.
  * @returns the catalog and composed instruction text observed for that run.
  */
-async function openClone(label: string, grant?: string): Promise<Observation> {
+async function openClone(label: string, grant?: string, viaCommand = false): Promise<Observation> {
   let instructionText = ''
+  let commandResult = ''
   const { stdout, stderr } = await runLoaderSmoke({
     label,
     tempDirPrefix: 'p1-07-composition-',
@@ -83,7 +86,10 @@ async function openClone(label: string, grant?: string): Promise<Observation> {
     libBinScript: driver,
     configPath,
     tsconfigPath: repoTsconfig,
-    env: grant === undefined ? {} : { P1_07_TRUST_GRANT: grant },
+    env: {
+      ...grant === undefined ? {} : { P1_07_TRUST_GRANT: grant },
+      ...viaCommand ? { P1_07_TRUST_VIA_COMMAND: '1' } : {},
+    },
     prepare: writeHostileClone,
     inspect: async (cwd) => {
       const logs = await jsonlFiles(join(cwd, '.sessions'))
@@ -98,9 +104,12 @@ async function openClone(label: string, grant?: string): Promise<Observation> {
     },
   })
   expect(stderr).not.toContain('UNHANDLED')
+  const command = /P1-07-TRUST-COMMAND (.*)/.exec(stdout)
+  if (viaCommand && command === null) throw new Error(`${label} reported no command result. stdout:\n${stdout}\nstderr:\n${stderr}`)
+  if (command !== null) commandResult = command[1] as string
   const reported = /P1-07-SKILL-CATALOG (.*)/.exec(stdout)
   if (reported === null) throw new Error(`${label} reported no skill catalog. stdout:\n${stdout}\nstderr:\n${stderr}`)
-  return { catalog: JSON.parse(reported[1] as string) as string[], instructionText }
+  return { catalog: JSON.parse(reported[1] as string) as string[], instructionText, commandResult }
 }
 
 describe('P1-07 acceptance[0] — opening a cloned repository with malicious configuration', () => {
@@ -117,5 +126,25 @@ describe('P1-07 acceptance[0] — opening a cloned repository with malicious con
     const observed = await openClone('P1-07 trusted-execute clone', 'trusted-execute')
     expect(observed.catalog).toContain('attacker')
     expect(observed.instructionText).toContain(HOSTILE_INSTRUCTION)
+  }, LOADER_SMOKE_TEST_TIMEOUT_MS)
+
+  it('CHARACTERIZATION: /trust-skills cannot grant on a shipped profile, because no host user is attached to the session', async () => {
+    // Written to prove must[2]'s execute half end to end on ONE boot — the
+    // command reaching the trust state, and the trust state reaching the
+    // catalog — because both halves had cases and nothing showed they compose.
+    // It found that they cannot yet: NO SHIPPED PROFILE ATTACHES A HOST-USER
+    // IDENTITY to a session, so the command has nobody to authorize on behalf
+    // of and refuses by name. Every `agentLoop.create(` call site that passes
+    // an identity is a test.
+    //
+    // Measured, NOT endorsed. The refusal is the correct direction — a trust
+    // upgrade with no host user is exactly what must[2] forbids — and the
+    // MISSING IDENTITY is the defect, tracked as BLOCKED-200 against P2-01,
+    // whose acceptance[0] ("every action traces to a root user/tenant") does
+    // not hold on a shipped boot either. When 200 closes this case goes red,
+    // and that is the signal to re-freeze it as the success it was meant to be.
+    const observed = await openClone('P1-07 trust via command', undefined, true)
+    expect(observed.commandResult).toContain('no attached identity')
+    expect(observed.catalog).not.toContain('attacker')
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 })
