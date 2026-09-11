@@ -5223,3 +5223,53 @@ That is the LLM layer's own request-error retry decision — the thing P4-11's c
 **The shape worth keeping.** The gate is mechanically right and substantively misreporting, and this is the second instance — P2-04's was a same-named `src/types.ts` in two packages, this one is a same-named concept (`retry`) in two layers. Both times the registry's guess was reasonable and wrong, and both times the epic's evidence was stronger than the gate could see. A gate that reads a file list cannot distinguish "the stage did not reach the consumer" from "the list names the wrong consumer", and only the second is a defect in the epic.
 
 `verify-usage-stage-subject` now exits 0: every epic's live Usage stage touches a named consumer file or is exempted with a ruling.
+
+### BLOCKED-218 — a verifier ended the process at import, taking `vitest list` and two unrelated gates with it
+
+**Status:** FIXED 2026-09-11, owner lane A.
+
+`scripts/first100/verify-adapt-dispositions.mjs` called `main()` at module scope, and `main()` ends in `process.exit(1)` when an epic leaves a disposition undisclosed. Its own spec imports the module for `standardDispositionGaps`, and `pnpm exec vitest list --json` loads every test file to collect names. So one epic's data problem ended the whole collection, and `verify-frozen-titles-in-tree` asks `vitest list` for every producible title.
+
+**Three red signals, one cause, and none of them named it.** The registry gate set failed at `first100:verify-adapt-dispositions`; `Every live frozen case title exists in the tree` failed at `verify-frozen-titles-in-tree.mjs`'s `execFileSync` line; and `verify-adapt-dispositions.spec.ts` failed inside the full suite. Root-caused by lane B from the cloud log.
+
+**The second defect is why it was undiagnosable.** `verify-frozen-titles-in-tree` passed `stdio: ['ignore', 'pipe', 'ignore']`, discarding the child's stderr, so the CI log carried a bare `Command failed` with no mention of the verifier or the epic. Both are fixed: `main()` is guarded on `process.argv[1]` (the idiom in `scripts/clean.ts`; `import.meta.main` is unavailable across the `^22.19 || >=24` engines range), and the collection step captures stderr into a message that distinguishes a killed child from a genuine load error.
+
+**The case observes a spawned child, not this process.** A module that exits on import takes its own suite with it before any assertion runs — the test would disappear rather than fail, which is the shape that let this ship. Mutating the guard back to a bare `main()` reddens it: the import prints the verifier's summary where the case expects the export's type.
+
+**The trigger was data, and it is not in lane A's tree.** The delegate's overlay revoked P2-01's sign-off, returning it to `BLOCKED_ON_ACCEPTANCE`, which made its three `accepted-unadopted` deviation reasons illegal — that reason is reserved for an ACCEPTED row. Lane A's local 27-gate run was green at `6262ab3c72` because P2-01 is still ACCEPTED there. The reasons now state the measurements they always rested on, which is legal under either status.
+
+**The general shape:** a script that is both a CLI and an importable module must not perform its effect at import. Any gate that collects test names by loading every file inherits every module's import-time behaviour, so one script's exit becomes every unrelated gate's failure.
+
+### BLOCKED-219 — a throwing pre-step listener loses the user's message, and the only record of why is a reason nobody reads
+
+**Status:** OPEN 2026-09-11, owner lane A. Assigned by the delegate.
+
+When an `agent/pre-step` listener throws, the exception propagates out of `await this.preStep(...)` (`agent-loop/src/agent.ts`) before any of the step-0 branches below it run. The turn ends through the outer error path, and the user's message is already gone: it was spliced INTO the inbox before `turn/start` and OUT after it, with `removedCount: 1` and no `outcome`.
+
+The observable result is a turn with **zero** `user/message` events, **zero** `step/start`, no assistant message and no model request at all — the prompt was consumed and nothing ran.
+
+**An error surface DOES exist, and the first framing of this entry said it did not.** Lane B's minimal reproduction — a plugin that does nothing but throw once in `agent/pre-step` — records:
+
+```
+TURN_END=[{"turn":1,"reason":{"kind":"error","error":{"message":"zz219: a pre-step listener failed","code":"UNKNOWN"}}}]
+ERROR_EVENTS=[]        no dedicated */error event
+SPLICES=[{"insertedCount":1},{"removedCount":1,"insertedCount":0}]
+REQUEST_JSON=absent
+EXIT_CODE=undefined    clean exit
+STDERR_HAS_UNHANDLED=false
+```
+
+The event order is byte-identical to the `memory-context` failure, so the mechanism is confirmed against two independent triggers. The error lives in `turn/end.reason` alone: stderr is empty, the exit code is clean, and there is no dedicated error event.
+
+**So the defect is not invisibility, it is that nothing reads the reason.** `memory-context`'s own boot case asserts exactly one `turn/end` and never inspects its reason, which is why it stayed green while six sibling cases failed without naming a cause. A reason that no gate reads is, in practice, a silent failure — but it is a different fix from adding a surface that already exists.
+
+**Two separable questions for whoever closes this:**
+
+1. **The message.** A consumed prompt that never reached a step is lost. Should a listener fault return it to the inbox, or is losing it acceptable once the turn is marked an error?
+2. **The reading.** `turn/end.reason.kind === 'error'` is recorded and unchecked. The cheapest real fix may be a gate or a snapshot assertion that reads it, not a change to the loop.
+
+**Frozen case shape** (lane B's, who measured it and declined to take the owner slot): one case asserting `turn/end.reason.kind === 'error'` with a readable message; one asserting the user's message is lost (0 `user/message`, 0 `step/start`). Mutation: remove the listener's `throw` and both must flip.
+
+**Found through a tenant mismatch; the mechanism has nothing to do with tenants.** `resolveMemoryAccessContext` threw because P2-01 U2 began attaching a host identity in tenant `local` while a fixture named another. That is fixed. ANY pre-step listener that throws produces this, and `agent/pre-step` is a documented extension point, so it is the failure mode of every plugin mounted there.
+
+**One correction worth keeping, because it changes where the throw sits.** The listener calls `next()` FIRST (`memory-context/src/index.ts:226`), then throws at `:230` — after the empty-query early return at `:229`, not before it. An earlier lane A message had that order backwards. It matters for the frozen case: the throw is reachable only when the query is NON-empty, so a case that drives an empty prompt would not reach it.

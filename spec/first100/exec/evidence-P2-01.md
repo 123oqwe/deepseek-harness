@@ -47,3 +47,26 @@ The headless lane moves and the two remote lanes do not. That is the ruling, rea
 `tests/first100/fixtures/P2-01.corpus.spec.ts` reads `snapshots/session/advanced-toolchain/` — one scenario, one real process, a root and two delegated children. It is the corpus rather than a purpose-built fixture because a fixture would prove that the fixture attaches an identity.
 
 Each claim is a PAIR joined by the actor id, for the reason recorded above: a manifest carries the id alone, and the chain lives on `identity/attached`. The third case is the control — a child that merely inherited its parent's identity would satisfy "roots at the same user" trivially — and the fourth pins OQ30's boundary as counts.
+
+## Open questions for re-signing
+
+The delegate's overlay revoked this epic's sign-off. These are the questions the re-sign has to answer, both raised by what U2 actually shipped rather than by review of the plan.
+
+### The host identity's tenant is hardcoded, and it is now load-bearing
+
+`hostUserIdentity` mints its principal in `LOCAL_TENANT` — the literal `'local'` (`packages/identity/host-user-id/src/index.ts:123`), with no way for a composition to name another. Before U2 that was inert, because a shipped headless boot attached nothing and every consumer fell back to its own configured tenant.
+
+It is no longer inert. `resolveMemoryAccessContext` THROWS when the attached principal's tenant differs from the consumer's configured one (`packages/context/memory-context/src/index.ts:83-86`), so **any composition configuring `memory-context` with a tenant other than `local` now fails on a shipped profile**. That check could not fire in production before U2; it can now, and the only tenant a shipped boot can produce is one no deployment chose.
+
+Measured, not predicted: this is exactly how `memory-context`'s six cases went red on the cloud run. The fixture named `t-fixture`, the boot attached `local`, and the throw inside the pre-step waterfall ended the turn with the user's prompt consumed and no output at all ([BLOCKED-219](BLOCKED-QUEUE.md#blocked-219) owns that second, separable defect). Reverting only the tenant alignment reproduced it (`5 failed | 3 passed | 2 skipped`); restoring it passed 10/10.
+
+Two shapes the re-sign could take, and the choice is a design decision rather than a defect fix:
+
+1. **The tenant stays fixed and `local` becomes the contract.** A deployment naming another tenant is then a misconfiguration that should fail loud, which is the repo's stated rule, and the fixture was simply wrong. This is what the fix assumed in order to stay minimal.
+2. **The host identity's tenant becomes configurable**, so a multi-tenant deployment can attach a principal its consumers can agree with. That is a change to this epic's own public surface and belongs to the re-sign, not to a test fixture.
+
+Nothing here argues for one. What the re-sign cannot do is leave it unstated: a hardcoded tenant that nothing observed is a detail, and one that every mounted consumer must now agree with is a contract.
+
+### The three deviation reasons were restated, and one was wrong
+
+Recorded here because the correction is about this epic's own card. `accepted-unadopted` is reserved for an ACCEPTED row, so the revocation made all three illegal; they now state their measurements. Re-measuring found the OTel row had been **understated**: `service.name` IS set in the tree (`session-telemetry-otel/src/index.ts:199`) carrying `APP_IDENTITY.product`, so the earlier "no telemetry attribute mapping exists in this epic" was false — a mapping exists and deliberately carries no principal. `enduser.id` has zero occurrences repo-wide and the exporter never reads `identity/attached`, so no principal this epic mints reaches telemetry at all.
