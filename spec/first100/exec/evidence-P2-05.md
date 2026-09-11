@@ -45,3 +45,56 @@ The three properties this epic turns on — forbid overrides permit, default den
 1. **Acceptance[2] asks for more than the trust-kernel pin gives.** `pinTrustKernel` freezes the reflect-store `Impl` so the value cannot be forged by mutation. A service can also be LOST by unmount, which is a different attack and needs its own answer.
 2. **Cedar's semantics are unprobed on this tree.** The row is recorded `differs`, not `ok`. It becomes checkable when the provider lands; the C stage's conformance cases are where it is proven.
 3. **13 MB unpacked, CJS-loaded.** Fine for the host; not for the browser bundle. Whether any Client-face composition may mount the provider is a placement decision the P stage owes an answer to.
+
+## Mount slice (BLOCKED-187): the enforcement point had no engine, and the kernel overrode the one it got
+
+The PEP landed wired into both dispatch paths and failing closed, and no shipped bundle mounted an engine. Every tool call on a factory profile came back `policy-unavailable`. Attributed after BLOCKED-186's boot fix stopped masking it, and fixed in two places, because it had two causes.
+
+### The three runs that located it
+
+Same command each time — `pnpm run test:snapshot`, replay mode, no `--record`:
+
+| tree | failed | `policy-unavailable` |
+| --- | --- | --- |
+| before the mount | 78 of 116 | 92 |
+| engine mounted in `dsh-base` | **78 of 116** | **92** |
+| engine mounted AND kernel decider wired | **0** | **0** |
+
+The middle row is the one that carries the argument. Mounting the engine changed the outcome by nothing at all, which puts the refusal downstream of the engine's answer rather than at the engine's absence. The kernel's `policyEnforcement` denies every query when no `policyDecider` is configured (`trust-kernel/src/index.ts:169-171`), production configured none (`profile-boot.ts`, `createTrustKernel()` bare), and the enforcement point converts a kernel deny over a non-deny decision into `policy-unavailable` (`policy-enforcement/src/index.ts:136-138`) — the same reason code the engine-absent path emits, from a different producer.
+
+### Payload proof, both halves
+
+A mount nothing depends on proves nothing, so each layer was removed in turn and had to redden. Representative case `replays bash-tool-turn` in both:
+
+| mutation | build | result |
+| --- | --- | --- |
+| the `policy-engine` row deleted from `bundle/base/cordis.patch.yml` | n/a (data) | 1 failed, `policy-unavailable` ×1 |
+| the decider constructed but not handed to the kernel | **exit 0** | 1 failed, `policy-unavailable` ×1 |
+
+Both sources restored and confirmed with `diff -q` against a pre-mutation copy.
+
+The second mutation is written `(void endorseComposedDecision, createTrustKernel())` — the function stays referenced deliberately. The first attempt deleted the argument outright, which left the function unused, failed the build with TS6133, and ran the snapshot against a **stale artifact**: the case went red, but the red belonged to the broken build rather than to the removal. `void` suppresses TS6133 and is there for that reason, not for style. **A mutation must move the product, not the instrument; a build that does not exit 0 has not produced the thing under test.**
+
+### What the greens had been resting on
+
+`policy-enforcement/tests/enforcement.spec.ts:64-68` constructs its kernel with **a `policyDecider` and an `auditSink`**, and mounts the Cedar provider itself. Three things the shipped product did not have. `grep -rn policyDecider packages apps`, excluding the kernel's own source, returns exactly two hits: that spec, and the production wiring this slice adds. The spec's decider is `effect === 'permit' ? 'allow' : 'deny'` — the same shape the product now uses. The tests were never wrong about what the kernel should do; nothing had ever told the product to do it.
+
+### The default policy set, and why its `forbid` is empty
+
+One rule: `permit(principal, action, resource);`. Cedar denies when no permit matches, so an empty set is a refusal of everything rather than an absence of policy.
+
+The `forbid` half is absent by measurement, not omission. The kernel hard-deny band is `['safety-critical']` (`risk-taxonomy/src/classify.ts:36`, with no `addedHardDenyClasses` in base), and no policy can match it: the request carries the manifest's `sideEffectClass` (`read | write | network | process | destructive`) and never a `RiskClass`, confirmed by `grep -c "riskClass\|RiskClass"` returning 0 against the Cedar provider. The one reachable class is `destructive`, which every manifest this profile produces carries — forbidding it denies everything. The band is enforced a layer earlier by `gateActionRisk` on both dispatch paths, so restating it in policy would be a second declaration of a live rule, free to disagree with the first.
+
+An earlier draft defined the default set as an allow-list measured from the snapshot corpus. Corrected before it was written: the corpus is a fixture, not the product's whole behaviour, so an allow-list built from it denies the first real action it never recorded — this defect with the sign flipped. The corpus's role here is a regression oracle instead.
+
+### Coverage note on the run that reports 0 failures
+
+`115 passed | 1 skipped (116)`. The skipped entry is **not** a scenario: it is `refuses to look complete when it skipped a scenario this host cannot run` (`headless.snapshot.ts:864`), an `it.runIf(mode === 'refresh')` guard that does not execute in replay. All three scenario skip conditions were checked rather than assumed — `pwsh` is installed on this host so both pwsh scenarios ran, the host is darwin so all nine `platform: posix` scenarios ran, and the authored-recording condition applies only in record mode. No scenario was silently omitted. That guard exists because three pwsh fixtures once sat an entire epic behind the rest — green locally, red on CI — which is the same confusion between a skip and a pass that this note exists to rule out.
+
+### The kernel's frozen cases did not move, and why that is the expected result
+
+`pnpm exec vitest run packages/kernel/trust-kernel apps/cli --maxWorkers=2` → exit 0, **173 passed | 1 skipped (174)**. Nothing red, so BLOCKED-050's "a failing kernel case is an unlock signal, not a regression" judgement never had to be made.
+
+That is the expected outcome, and the reason is the load-bearing part: **this slice does not fill BLOCKED-050's empty slot.** There is still no kernel-level policy provider, `policyEnforcement` still defaults to deny, and all six capabilities remain exactly as hollow as 050 describes. What changed is only that a factory assembly no longer lets the placeholder override a real engine's answer. P0-02's frozen cases pin the kernel's member count and `pinTrustKernel` behaviour, and a config parameter adds no member — so they were never going to move. Measured rather than assumed.
+
+The one skipped entry is `built CLI lazy-search startup` (`apps/cli/tests/lazy-search-startup.compat.spec.ts:102`), a `describe.skipIf(!requireBuiltArtifacts)` behind the explicit `DSH_REQUIRE_BUILT_CLI_SMOKE=1` opt-in, unrelated to this change. Named for the same reason as the snapshot skip above: a skip and a pass are indistinguishable in a summary line.

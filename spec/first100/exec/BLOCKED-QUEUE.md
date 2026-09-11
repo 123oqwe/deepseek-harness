@@ -21,6 +21,20 @@ Measured while writing `verify-import-integrity` (2026-09-10, lane B). **Measure
 
 **Closes when** either the Client face's resolution contract is explicitly taken over by some epic's clause — naming the consumption paths it guarantees — or those 320 edges are put into the manifests. Not decided in this slice.
 
+### BLOCKED-191 — P6-08 readiness: P2-05 must[3]'s audit sink has no producer on any shipped profile
+
+Recorded before P6-08 starts, per §12.46-B's split of P2-05 must[3]. Not a blocker on P6-08's own clauses; a requirement it inherits, written down so it is met by design rather than discovered at a signing report.
+
+**The clause.** P2-05 must[3] requires a recorded explain trace. The enforcement point builds a `PolicyAuditRecord` on every decision and hands it to the kernel's `auditAppend`, which is `configuredSink?.(entry)`. `grep -rn auditSink packages apps`, excluding `trust-kernel` itself and tests, has **no hit**: no shipped profile configures a sink, so every record this epic produces is discarded as it is made. `policy-enforcement`'s own README says it — *"decides and enforces but records nothing"*.
+
+**The split.** The DECIDING half is P2-05's and is proven inside this epic: the explain trace is produced, redacted, and the model sees only a closed reason code, observed through a test sink. The STORING half is the sink, and it belongs to P6-08 — registry `P6-08 静态加密、租户密钥、Tamper-Evident Audit 与 Data Residency`, whose acceptance[1] requires deletion, modification or reordering of an audit record to be detected 100% of the time, which presupposes the chain a sink writes into. P0-02 owns the kernel **entrypoint** (`must[1]` lists `audit append` among the six capabilities), not the store behind it.
+
+**Closing condition.** A shipped profile configures an audit sink, and one real refusal is readable in it carrying its `policySet` and `reason`.
+
+**Why it is recorded now, and what it unblocks.** Two producers emit the `policy-unavailable` reason code — the engine-absent path (`evaluate.ts:85-91`, carrying `EMPTY_POLICY_SET`) and the kernel-override path (`policy-enforcement/src/index.ts:138`, carrying the real digest) — and the `policySet` field separates them cleanly. Diagnosing [BLOCKED-187](#blocked-187) needed exactly that field and could not read it, because on a shipped profile it reaches no reader: no session event, and an audit record that dies in a no-op. The producers had to be told apart by a differential experiment instead. **Closing this entry makes that diagnosis a one-line read next time.**
+
+**P2-05 may be accepted before this closes.** Under §12.46-B the deciding half is what this epic owes; the sink is scheduled work elsewhere, not a gap in P2-05's own mechanism. That is the same treatment [BLOCKED-166](#blocked-166) gave P4-11's hedge rule and [BLOCKED-167](#blocked-167) gave P4-05's `paused`.
+
 ### BLOCKED-169 — P1-06 readiness: the out-of-process plugin host must present a capability token per RPC
 
 Recorded before P1-06 starts, per §12.69's split of P2-02 must[3]'s four nouns under §12.46-B. Not a blocker on P1-06's own clauses; a requirement it inherits, written down so it is met by design.
@@ -2982,6 +2996,14 @@ There is nothing to sign or verify *with*. Epic P2-02's Contract stage consequen
 
 **What may still proceed.** 「不确定即 BLOCKED 禁猜」 forbids guessing past an unknown; it does not require abandoning work that stays real once the unknown is recorded. P2-02's Provider stage proceeds on the clauses that need neither keys nor `ctx`: real lineage reconstruction (today `isTokenRevoked` walks a caller-supplied `TokenLineage` whose digests no token ever produced, so cascading revocation is **not actually proven**) and a durable nonce ledger.
 
+**Addendum — delegate-widened to P2-05, 2026-09-10, guanjieqiao-04, per [BLOCKED-187](#blocked-187).** The ruling table above covers only the two consumers of `signatureRoots`. Two of the other empty capabilities have a consumer as well, and it is P2-05:
+
+| Epic | Consumer | Status |
+| --- | --- | --- |
+| P2-05 统一 Policy Decision/Enforcement Point | `packages/policy/policy-enforcement/src/index.ts` — consumer of BOTH `policyEnforcement` and `auditAppend` | must[2]'s "enforcement" is the placeholder `always 'deny'`; must[3]'s record has nowhere to go, because `auditAppend` is the empty function |
+
+The same principle applies unchanged: an empty capability that cannot be swapped out is still empty. It reached the product differently, though, and the difference is worth stating — P1-02 and P2-02 are blocked from ACCEPTED because a check they perform is hollow, while P2-05's consumer was **shipped wired into both dispatch paths**, so the placeholder `deny` was not merely empty but actively refusing every tool call a user made. Configuring a deployment decider (BLOCKED-187) stops the placeholder from overriding a real engine; **it does not fill this entry's empty slot.** There is still no kernel-level policy provider, and `auditAppend` still has no sink. Closing 187 does not close this.
+
 ### BLOCKED-051 — reading a description is not evaluating the thing it describes; where a tool can evaluate the relation, reading is not an acceptable substitute (delegate generalization of a Supervisor self-correction, 2026-09-03)
 
 **The immediate case.** A Writer was asked to prove a new dependency edge created no cycle. It read both `package.json` files, found neither named the other, and reported "one-directional" — true, and useless: the cycle closed through a third package neither file mentions (`session-persistence → session-lifecycle → workspace → session-persistence`). The Supervisor accepted that reasoning. Both were wrong, and the RED commit built on it was unusable. **A manifest read cannot see a two-hop cycle. `tsc -b` can, in one command, and reports TS6202.**
@@ -4599,6 +4621,8 @@ So adding this gate to a set would not have caught the accident and will not cat
 
 **Status:** MOUNT SLICE ASSIGNED to lane A (delegate, 2026-09-10), ahead of the memory slice. Found by attributing the snapshot failures that remained after BLOCKED-186's boot fix stopped masking them.
 
+**This is [BLOCKED-050](#blocked-050)'s P2-05 instance.** must[2]'s kernel enforcement point is `policyEnforcement`, and must[3]'s record outlet is `auditAppend` — two of the six empty capabilities 050 enumerated. 050's ruling table covered only `signatureRoots`' two consumers; its addendum now carries this row. Read both: closing this entry does **not** close 050, because a deployment decider stops the placeholder from overriding an engine without giving the kernel a policy provider of its own.
+
 `pnpm run test:snapshot` at `f6cb077d7d`: **78 failed / 37 passed / 1 skipped of 116**, with `policy-unavailable` appearing 91 times. Every tool call on the factory headless profile comes back refused:
 
 ```
@@ -4619,6 +4643,19 @@ So adding this gate to a set would not have caught the accident and will not cat
 
 So the provider's sole consumer in the whole tree is **the test suite that proves the enforcement point works**. That is why P2-05's cells look green: the tests mount the provider themselves, and nothing else ever does. `packages/AGENTS.md` states the rule this violates — a capability seam is complete or it is not one.
 
+**And the provider is only the first of three.** `policy-enforcement/tests/enforcement.spec.ts:64-68` builds its kernel as:
+
+```ts
+pinTrustKernel(ctx, createTrustKernel({
+  policyDecider: query => options.verdict ?? ((query.payload as ClosedDecision | undefined)?.effect === 'permit' ? 'allow' : 'deny'),
+  auditSink: entry => { audit.push(entry.payload as PolicyAuditRecord) },
+}))
+```
+
+The suite supplies the engine provider, **the kernel's policy decider, and the audit sink** — and a shipped profile had none of the three. Every green cell on this epic rested on a composition that existed only inside its own tests. Measured: `grep -rn policyDecider packages apps` (excluding the kernel's own source) returns exactly two hits — that spec, and the production wiring added by this slice.
+
+Worth keeping for its own sake: the spec's decider is `effect === 'permit' ? 'allow' : 'deny'`, which is the shape the product now uses. The tests were never wrong about what the kernel should do; nothing ever told the product to do it.
+
 **Instrument correction, recorded because the same reason code has two producers.** An earlier report of this defect cited `policy-enforcement/src/index.ts:138`. That line is the **kernel-override** path — a kernel `deny` overriding a permit — and it reuses the `policy-unavailable` reason code. The 91 snapshot occurrences come from `evaluate.ts:85-91`. Same string, two origins: a `grep` for the reason code identifies neither, and only reading the call sites tells them apart.
 
 **Why the alternatives were refused.** Permitting when no engine is mounted inverts the documented design and deletes the mechanism rather than connecting it. Re-scoping P2-05's acceptance to "a composition that mounts an engine" is the exact shape this program has already revoked signatures over — P2-02 (§12.69), P6-07, and P4-01 (BLOCKED-183) were all "mechanism built, no subject on the shipped product"; exempting P2-05 would make those three revocations selective.
@@ -4626,6 +4663,10 @@ So the provider's sole consumer in the whole tree is **the test suite that prove
 **The slice, and its bounds.** Base mounts the Cedar provider, and the default policy set is **defined by measurement, not written by hand**: what it permits is what the factory profile could do before the enforcement point was wired, with the snapshot corpus as the boundary. A hand-written `permit(*)` and a restored-behaviour set read identically in a report, which is the substitution this program keeps catching. Care is owed to BLOCKED-162's interaction: the §12.50 risk gate makes untagged tools require approval, and the default set must not freeze that hole into the factory default — either avoided here explicitly or left to 162 by name.
 
 **Closing condition — a payload proof, not a green suite.** Removing the engine's mount row from the base bundle must turn the snapshots red again with `policy-unavailable`. A mount that can be deleted without anything failing is decoration.
+
+**Admission condition for P2-05's cells.** The next CI snapshot run is green AND P2-05's reality set is disjoint from whatever reds remain → C/P/U are admissible. Sign-off is separate and still owes 4.4a–d plus a disposition for [BLOCKED-191](#blocked-191) (must[3]'s sink) and this entry's hard-deny residual. Recorded here rather than left in a message, because an admission rule that lives only in chat is one nobody can check against later.
+
+**A defect this slice introduced and corrected before reporting, kept because the next reader needs the rule.** The kernel decider's first shape answered `deny` for anything that was not `permit`. `PolicyEffect` is closed at **three** values (`policy-engine/src/types.ts:147`: `permit | deny | ask`), and the enforcement point rewrites a kernel deny over a non-deny decision into `policy-unavailable` — so that shape turned every `ask` into "no policy service is available", removing the human-decision path and mislabelling it at the same time. Both dispatch paths treat a non-permit effect as a refusal but `refusedPolicyResult` gives `ask` its own model-visible text (*"needs a human decision before it runs"*), so the damage was visible to a model and a user, not only internally. Corrected to `permit | ask → allow`, everything else including an unrecognizable payload → `deny`: **the kernel vetoes, it does not answer approval questions on a human's behalf.**
 
 **Recorded and deliberately NOT resolved here:** acceptance[2] requires the policy service to resist Cordis `replace`/`unmount`, while `policy-engine`'s README describes the provider as an ordinary plugin unmountable like any other. One of those two statements has to change. That belongs to P2-05.U's acceptance surface, not to this mount slice.
 
@@ -4649,8 +4690,22 @@ Checked separately, because "allowed everything" is also what a broken gate look
 
 **Executor correction, recorded because it fed a ruling:** an earlier report of this measurement stated that no shipped tool declares domain tags, inferred from `manifest.classified === false` across all 153 manifests. That is the wrong field. `classified` is the ActionManifest's own side-effect declaration (P2-03); the risk pipeline reads `riskDomainTags` (P2-04), which tools **do** declare — five distinct risk classes appear above, which an undeclared corpus could not produce. The consequence matters for the deferral below: if `riskClass` were carried into the policy request it would be a meaningful input today, not a degenerate one.
 
-#### Residual: the kernel hard-deny band is unreachable from the policy layer
+#### must[3] has nowhere to write: not that nobody reads it, that there is no place to write it
 
-`riskClass` does not enter the policy request, so no policy — default or deployment-written — can decide on the band `hardDenyClassesOf` names. Today that costs nothing, because the classification layer enforces it on both dispatch paths. It starts costing when a deployment writes a policy it believes covers that band.
+The clause asks for a recorded explain trace. The enforcement point builds a `PolicyAuditRecord` on every decision and hands it to the kernel's `auditAppend`, which is `configuredSink?.(entry)` — and `grep -rn auditSink packages apps` (excluding `trust-kernel` itself and tests) has **no hit**. No shipped profile configures a sink, so every record this epic produces is discarded at the moment it is made. The package's own README says it: *"The audit record goes to the kernel's `auditAppend`, which is inert unless a deployment configured a sink. A composition that wires none decides and enforces but records nothing."*
 
-**Closing condition:** `riskClass` is carried into `PolicyContextFacts` and `toCedarRequest`, so a policy can match on it. **`landsIn`:** proposed **P2-05.U** as a supplement — the field is a policy *input*, and P2-05 owns what a policy question carries — rather than P2-04, which owns the classification that produces the value. Delegate to confirm.
+This is why the proof this entry would most like to show cannot be performed. Two producers emit `policy-unavailable` — the engine-absent path (`evaluate.ts:85-91`, carrying `EMPTY_POLICY_SET`) and the kernel-override path (`policy-enforcement/src/index.ts:138`, carrying the real digest) — and the `policySet` field separates them cleanly. On a shipped profile that field reaches no reader: the enforcement point appends no session event, and the audit record dies in a no-op. The producers were told apart by a differential experiment instead.
+
+**Closing condition:** a shipped profile configures an audit sink, and one real refusal is readable in it carrying its `policySet` and `reason`. At that point the field-read above becomes performable, and it should be the case that proves it. **`landsIn`: P6-08** — registry `P6-08 静态加密、租户密钥、Tamper-Evident Audit 与 Data Residency`, whose acceptance[1] requires that deletion, modification or reordering of an audit record be detected 100% of the time, which presupposes the chain this sink would write into. P0-02 owns the kernel *entrypoint* (`must[1]` lists `audit append` among the six), not the store behind it. **The sink is not built in this mount slice** — it is a different provider.
+
+#### Residual: the policy layer's vocabularies are connected at neither end
+
+Two nouns, one root cause — a policy can neither read the class that would make the kernel band decidable, nor emit the effect that would ask a human.
+
+**Input side — `riskClass` never reaches a policy.** `hardDenyClassesOf` names `['safety-critical']`, and no policy can match it: the request carries the manifest's `sideEffectClass` (`read | write | network | process | destructive`) and never a `RiskClass`, with `grep -c "riskClass\|RiskClass"` returning 0 against the Cedar provider. Today that costs nothing, because the classification layer enforces the band on both dispatch paths. It starts costing when a deployment writes a policy it believes covers it.
+
+**Output side — `ask` has no producer.** `PolicyEffect` is closed at `permit | deny | ask`, and `ask` appears **only in that declaration**: `grep -rn "'ask'" packages/policy/policy-engine/src` finds the type and nothing else, and the Cedar provider never emits it. So no policy on any profile can currently ask for a human decision. It joins `ExecutionWorld` ([BLOCKED-178](#blocked-178)) and four `ProjectContentKind` members ([BLOCKED-185](#blocked-185)) as a declared value nothing produces.
+
+**What this slice's `ask` fix does and does not do.** The deployment decider endorses `ask` rather than refusing it, so a future `ask` rule will not be silently rewritten into `policy-unavailable`. **It does not repair approval on a shipped profile, because nothing there can produce an `ask` in the first place** — today's approval is triggered by `gateActionRisk` at the classification layer and never passes through policy. Anyone closing this entry must not read it as "approval now belongs to the policy layer".
+
+**Closing condition:** both vocabularies connected — `riskClass` carried into `PolicyContextFacts` and `toCedarRequest`, and some policy path able to produce `ask` — each with a case observable on a shipped profile rather than on a constructed input. **`landsIn`: P2-05.U** as a supplement for both, since P2-05 owns what a policy question carries and what its answer may say; P2-04 owns the classification that produces the value, not its delivery.

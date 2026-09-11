@@ -63,6 +63,7 @@
     "@deepseek-ai/dsh-plan-mode": "workspace:^",
     "@deepseek-ai/dsh-plugin-compat": "workspace:^",
     "@deepseek-ai/dsh-plugin-manifest": "workspace:^",
+    "@deepseek-ai/dsh-policy-enforcement": "workspace:^",
     "@deepseek-ai/dsh-pwsh-local": "workspace:^",
     "@deepseek-ai/dsh-pwsh-sandbox": "workspace:^",
     "@deepseek-ai/dsh-schedule": "workspace:^",

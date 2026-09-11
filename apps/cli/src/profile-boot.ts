@@ -42,6 +42,7 @@ import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
 import { DSH_LAUNCH_ENVIRONMENT_KEY, type LaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
 import { provideCmdline, type AppReady } from '@deepseek-ai/dsh-cmdline'
 import { createTrustKernel, pinTrustKernel, type TrustKernel } from '@deepseek-ai/dsh-trust-kernel'
+import { endorseComposedDecision } from '@deepseek-ai/dsh-policy-enforcement'
 import { resolveFeatureGate } from '@deepseek-ai/dsh-feature-gates'
 import type { FeatureGateDeclaration, FeatureGateResolution, FeatureGateState } from '@deepseek-ai/dsh-feature-gates'
 import { buildPluginPermissionStates } from '@deepseek-ai/dsh-host-plugin-inventory'
@@ -475,7 +476,22 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
   // Constructed before boot() creates the Cordis Context at all (must[1]):
   // createTrustKernel is pure and synchronous, so it cannot itself fail --
   // the insecure opt-in is the only way this boot proceeds without one.
-  const kernel: TrustKernel | undefined = trustKernelInsecure ? undefined : createTrustKernel()
+  // The kernel's decider ENDORSES the composed decision and adds none of its
+  // own. Without one, `policyEnforcement` denies every query — the correct
+  // default for an entrypoint with no provider behind it, and the reason every
+  // tool call on a factory profile was refused `policy-unavailable` even after
+  // an engine was mounted: the engine answered permit and the kernel's
+  // placeholder overrode it (BLOCKED-187).
+  //
+  // It states the two contracts the enforcement point already pins: a deny
+  // survives (a kernel `allow` never widens a refusal the engine or a
+  // constraint made), and a permit is passed through unchanged because THERE
+  // IS NO KERNEL-LEVEL POLICY PROVIDER TODAY. When one exists, this is where
+  // it decides; until then, inventing a kernel refusal here would be a second
+  // policy nobody wrote.
+  const kernel: TrustKernel | undefined = trustKernelInsecure
+    ? undefined
+    : createTrustKernel({ policyDecider: endorseComposedDecision })
   const app: { current?: Context } = {}
   const appReady = createAppReady()
   const shutdown = createProcessShutdown(async () => { await app.current?.fiber.dispose() })

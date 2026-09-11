@@ -322,3 +322,42 @@ describe('P2-05 must[0]: the capability token is a policy input, not a placehold
     await ctx.fiber.dispose()
   })
 })
+
+describe('P2-05: the kernel endorses a decision, it does not answer for a human', () => {
+  // The deployment decider is IMPORTED, never re-declared: a copy that happened
+  // to look like the shipped one would put the evidence outside the product,
+  // which is exactly how this epic's cells came to be green on nothing
+  // (BLOCKED-187 — the suite supplied the engine, the decider and the sink).
+  //
+  // Asserted as direct calls rather than through a turn, because `ask` has NO
+  // PRODUCER in this tree: it appears only in `PolicyEffect`'s declaration
+  // (`policy-engine/src/types.ts:147`), and the Cedar provider never emits it.
+  // Driving it end-to-end would mean mounting a stub engine invented to return
+  // it — a fabricated subject, which is the shape this entry exists to refuse.
+  // The decider is a pure total function over that closed union, so calling it
+  // IS the product path for the mapping under test.
+  it('endorses `ask`, so a human decision is not rewritten into `policy-unavailable`', () => {
+    // The regression this pins: a decider refusing anything non-`permit` makes
+    // `enforceAction` rewrite every `ask` to `policy-unavailable`, replacing
+    // "needs a human decision before it runs" with "was refused by policy" in
+    // text the model and the user both read.
+    expect(PolicyEnforcement.endorseComposedDecision({ payload: { effect: 'ask' } })).toBe('allow')
+  })
+
+  it('endorses a plain permit, so the endorsement is not blanket refusal', () => {
+    expect(PolicyEnforcement.endorseComposedDecision({ payload: { effect: 'permit' } })).toBe('allow')
+  })
+
+  it('passes a deny through, so a kernel allow never widens an existing refusal', () => {
+    expect(PolicyEnforcement.endorseComposedDecision({ payload: { effect: 'deny' } })).toBe('deny')
+  })
+
+  it('refuses an unrecognizable payload, so widening for `ask` did not lose fail-closed', () => {
+    // `TrustKernelPolicyQuery.payload` is `unknown` by design; this is the one
+    // boundary where the deployment supplies the meaning, so an unreadable
+    // payload is refused rather than waved through.
+    expect(PolicyEnforcement.endorseComposedDecision({ payload: undefined })).toBe('deny')
+    expect(PolicyEnforcement.endorseComposedDecision({ payload: 'not-a-decision' })).toBe('deny')
+    expect(PolicyEnforcement.endorseComposedDecision({ payload: {} })).toBe('deny')
+  })
+})

@@ -26,7 +26,7 @@ import type {
   PolicyRequest,
   PolicySetDigest,
 } from '@deepseek-ai/dsh-policy-engine'
-import type { TrustKernel, TrustKernelPolicyVerdict } from '@deepseek-ai/dsh-trust-kernel'
+import type { TrustKernel, TrustKernelPolicyQuery, TrustKernelPolicyVerdict } from '@deepseek-ai/dsh-trust-kernel'
 
 /** What one enforced action records, and what an operator reads back. */
 export interface PolicyAuditRecord {
@@ -104,6 +104,44 @@ export class PolicyConstraints extends Service {
  * @throws when no Trust Kernel is pinned: a harness that cannot enforce must
  *   not proceed as though it had.
  */
+/**
+ * The deployment's kernel policy decider: endorse a composed decision, add no
+ * refusal of its own.
+ *
+ * Declared here because this is the one module that knows BOTH vocabularies —
+ * `ClosedDecision.effect`'s three values and the kernel's verdict — and the
+ * kernel package must not import policy types. A launcher wires it into
+ * `createTrustKernel`; a test asserting the enforcement point's behaviour uses
+ * the same symbol, so what is under test is the shipped decider rather than a
+ * copy that happens to look alike.
+ *
+ * Without a decider the kernel denies EVERY query — the right default for an
+ * entrypoint with no provider behind it, and why every tool call on a factory
+ * profile came back `policy-unavailable` even once an engine was mounted
+ * (BLOCKED-187).
+ *
+ * `ask` is endorsed, not refused. `PolicyEffect` is closed at three values and
+ * {@link enforceAction} rewrites a kernel deny over a non-deny decision into
+ * `policy-unavailable`, so refusing `ask` here would turn every "a human should
+ * decide this" into "no policy service is available" — removing the
+ * human-decision path and mislabelling it in text a model and a user both read.
+ * **The kernel vetoes; it does not answer approval questions on a human's
+ * behalf.**
+ *
+ * An unrecognizable payload is REFUSED: this is the one place the kernel's type
+ * says `unknown` and the deployment supplies the meaning, which makes it a
+ * boundary where a runtime check belongs.
+ * @param query - the kernel policy query; its payload is the already-composed
+ *   {@link ClosedDecision}.
+ * @returns `allow` for a composed `permit` or `ask`, `deny` for anything else.
+ */
+export function endorseComposedDecision(query: TrustKernelPolicyQuery): TrustKernelPolicyVerdict {
+  const payload: unknown = query.payload
+  if (typeof payload !== 'object' || payload === null) return 'deny'
+  const effect: unknown = (payload as { readonly effect?: unknown }).effect
+  return effect === 'permit' || effect === 'ask' ? 'allow' : 'deny'
+}
+
 export function enforceAction(ctx: Context, request: PolicyRequest, origin: string): ClosedDecision {
   const kernel: TrustKernel | undefined = ctx.get('trustKernel')
   if (kernel === undefined) {
