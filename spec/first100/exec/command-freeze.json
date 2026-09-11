@@ -10327,7 +10327,7 @@
         "packages/collaboration/workflow-journal/tests/resume-fault-matrix.e2e.spec.ts"
       ],
       "frozenAtUtc": "2026-09-10T04:10:00Z",
-      "note": "P4-08 base F (§12.53, §12.73(1)), superseding every prior F entry. The boundary matrix now lives in its own spec so F's frozen command names it alone; every describe/it title is the one C's file carried, moved rather than renamed. 19 boundaries plus the floor assertion that stops one being deleted while the rest still pass.",
+      "note": "P4-08 base F (§12.53, §12.73(1)), superseding every prior F entry. The boundary matrix now lives in its own spec so F's frozen command names it alone; every describe/it title is the one C's file carried, moved rather than renamed. 19 boundaries plus the floor assertion that stops one being deleted while the rest still pass. acceptance[2] carries the SAME limitation as the C base and it is stated there rather than here: boundaries 16 and 17 compact journals whose `inputs` are CONSTRUCTED ArtifactRefs (`resume-fault-matrix.e2e.spec.ts`'s own step builder), so what they prove is that the decision keeps every receipt and drops the right things -- NOT that any real run has inputs to drop. The real producer is P6-09's content-addressed artifact store, which does not exist yet, so THE SAVING IS NOT OBSERVABLE HERE either (§12.74(a), §12.46-B; BLOCKED-172 carries P6-09's half and its closing condition). Recorded on this entry because a reader who arrives at acceptance[2] through F never sees the C base's note.",
       "supersedes": [
         "2026-09-08T14:30:00.000Z"
       ],
