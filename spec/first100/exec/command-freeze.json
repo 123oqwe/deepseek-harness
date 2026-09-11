@@ -11104,6 +11104,40 @@
       "note": "P4-11's mount slice: the epic's two services on the profile a user actually starts.\n\nWHY A SUPPLEMENT EXISTS AT ALL. C, P, U and F proved the decisions, the provider and the consumers, and all four cells are green. A 4.4d pass then measured what no test had: NO shipped bundle mounted `@deepseek-ai/dsh-retry` or `@deepseek-ai/dsh-retry-cockatiel`. Both consumers resolve their service with `ctx.get` and fall through to pre-epic behaviour when it is absent -- deliberately, because `inject` would stop both plugins registering in every composition that omits the retry family -- so on every `dsh` a user starts, must[1], acceptance[1] and acceptance[2] were true of the packages and false of the product. `dsh-base` now carries both rows and this entry freezes the observation on the shipped composition.\n\nTHE FIXTURE MOUNTS NOTHING UNDER TEST. `retry-mount.patch.yml` supplies only a keyless flaky model, a session log and the three rows a source tree cannot boot (`typert-loader`, `typert-gateway`, and the headless startup/runner pair). The two rows under test are `dsh-base`'s. M67 is what makes that claim checkable rather than asserted: removing the base row reddens the case, which a self-mounting fixture would not do.\n\nTHREE DEFECTS IN THE DRAFT FIXTURE, EACH OF WHICH DECIDED NOTHING. (1) The assertion read `usage.retries`; the field is `retriesUsed`, so `?? 0` made the case unable to pass against ANY implementation -- a case that can only fail is as empty as one that can only pass. (2) With no `cwd` on the agent row, the turn issued no model request at all: the session log ran `turn/start ... step/start ... step/end ... turn/end` with NO `request/header` and NO `assistant/*`, the flaky adapter was never entered, and both cases were verdicts about a turn that never happened -- the §12.76 shape, with the subject silently replaced. Adding `cwd` produced `llm/retry` -> `llm/retry-started` -> `assistant/message` and `retriesUsed:1`. (3) `args` is not a field of `LoaderSmokeOptions` (`binArgs` is, and `configPath` is already passed as the sole bin argument); vitest ran both cases green while repo-wide `pnpm run typecheck` reported TS2353 -- a green suite does not typecheck its own spec.\n\nTHE PROBE THAT PROVED NOTHING. Diagnosing (2), a `ctx.on('agent/request-error')` listener was added to the driver and printed nothing. That silence was not evidence: the session log showed `llm/retry` once `cwd` was supplied, so the event HAD been dispatched all along and the probe itself was broken -- that waterfall dispatches on the agent's own scope, not the root context the driver holds. The finding came from the event stream, which the system under test produces, not from the instrument added to look for it. A probe's silence counts only after the probe has been shown to fire."
     },
     {
+      "epic": "P4-11",
+      "stage": "P",
+      "supplements": {
+        "epic": "P4-11",
+        "stage": "P"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/reliability/retry-cockatiel/tests/breaker.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "files": [
+        "packages/reliability/retry-cockatiel/tests/breaker.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-11T18:12:44Z",
+      "dryRunProof": {
+        "treeSha": "37a257ab53912b68f8cf1b2dc28b33a88e2e6ba2",
+        "testsDiscovered": 7
+      },
+      "expectCases": [
+        "reopens the destination after the open period, and a successful probe CLOSES it"
+      ],
+      "sensitivityProof": {
+        "mutationDescription": "In `packages/reliability/retry-cockatiel/src/index.ts`, `policyFor`'s `halfOpenAfter: this.config.openMs` replaced by `halfOpenAfter: Number.MAX_SAFE_INTEGER`, so an opened destination never reaches half-open and a successful probe can never close it. The breaker still opens, still counts only `CountedFailure`, and still isolates destinations — only recovery is removed, which is the half this case exists for.",
+        "failureSummary": "RED 1 of 7 — this case alone, the other six unmoved, which is what makes it the recovery case rather than a second opening case. Applied and reverted locally; `src/index.ts` restored byte-identically (sha256 d2a92cfadef6b7334873f27c6e83d5fb37b1c5c9d66bf17eac7d0359ddd01c04 before and after, `git status --porcelain` empty) and the file returned 7 of 7 passing."
+      },
+      "note": "acceptance[2]'s SECOND half. The first — 'circuit 打开' — was already covered; '可恢复' was observed by nothing, and P4-11's acceptance-coverage entry states that rather than citing the unload case, which is disposal and not recovery.\n\nWHAT THIS PROVES AND WHAT IT DOES NOT, stated because the title alone would overclaim. The open period and the half-open probe belong to cockatiel: `policyFor` passes `halfOpenAfter: this.config.openMs` (src/index.ts:103) over a `ConsecutiveBreaker`. The case proves the provider is WIRED to that behaviour under this Config and that recovery really happens through `execute`. It does NOT prove that this package implements a half-open state machine, and must not be read as proving it.\n\nTHE 29 999 ms STEP IS LOAD-BEARING. The case advances to one millisecond BEFORE the open period elapses and asserts the destination is still refusing, then advances the final millisecond. Without that step the case would also pass against a breaker that never opened for any measurable time, which is the failure it is most likely to be weakened into.\n\nFAKE TIMERS rather than a short `openMs`: the shipped period is 30 s, and a few-millisecond configuration would make the case race the event loop instead of observing a decision. `afterEach` restores real timers so the fake clock cannot leak into the six neighbouring cases."
+    },
+    {
       "epic": "P4-02",
       "stage": "C",
       "argv": [

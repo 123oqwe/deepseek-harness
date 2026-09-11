@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import { BreakerOpenError, type BreakerDestination } from '@deepseek-ai/dsh-retry'
 import { LlmError, llmFailureFacts, normalizeLlmFailure } from '@deepseek-ai/dsh-llm'
@@ -40,6 +40,10 @@ function countingStub(outcome: () => Promise<unknown>): { calls: number; run: ()
   }
   return stub
 }
+
+afterEach(() => {
+  vi.useRealTimers()
+})
 
 describe('P4-11 circuit breaker provider', () => {
   it('refuses an attempt at the threshold without reaching the operation', async () => {
@@ -101,6 +105,57 @@ describe('P4-11 circuit breaker provider', () => {
       await expect(service.execute(DEEPSEEK, stub.run, classify)).rejects.toBeInstanceOf(LlmError)
     }
     expect(stub.calls).toBe(4)
+  })
+
+  it('reopens the destination after the open period, and a successful probe CLOSES it', async () => {
+    // acceptance[2]'s second half. The first half -- "circuit 打开" -- is
+    // covered above; nothing observed "可恢复" until this case, and the epic's
+    // coverage entry said so rather than citing the unload case, which is
+    // disposal and not recovery.
+    //
+    // WHAT THIS PROVES, AND WHAT IT DOES NOT. The open period and the
+    // half-open probe belong to cockatiel: `policyFor` passes
+    // `halfOpenAfter: this.config.openMs` (src/index.ts:103) and constructs a
+    // `ConsecutiveBreaker`. So this case proves the provider is WIRED to that
+    // behaviour with this config, and that recovery really happens through
+    // `execute` -- it does not prove, and must not be read as proving, that
+    // this package implements a half-open state machine.
+    //
+    // Fake timers because the open period is 30 s of wall clock. Advancing
+    // time is the only way to reach half-open without making the suite wait,
+    // and the alternative -- an openMs of a few milliseconds -- would make the
+    // case race the event loop rather than observe a decision.
+    vi.useFakeTimers()
+    const service = await breaker()
+    let failing = true
+    const stub = countingStub(async () => {
+      if (failing) throw serverFailure()
+      return 'recovered'
+    })
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      await expect(service.execute(DEEPSEEK, stub.run, classify)).rejects.toBeInstanceOf(LlmError)
+    }
+    await expect(service.execute(DEEPSEEK, stub.run, classify)).rejects.toBeInstanceOf(BreakerOpenError)
+    expect(stub.calls).toBe(3)
+
+    // Still open one tick BEFORE the period elapses: without this the case
+    // would pass against a breaker that never opened for a measurable time.
+    await vi.advanceTimersByTimeAsync(29_999)
+    await expect(service.execute(DEEPSEEK, stub.run, classify)).rejects.toBeInstanceOf(BreakerOpenError)
+    expect(stub.calls).toBe(3)
+
+    // Half-open: the period has elapsed, so the next attempt is a PROBE and
+    // does reach the operation.
+    await vi.advanceTimersByTimeAsync(1)
+    failing = false
+    await expect(service.execute(DEEPSEEK, stub.run, classify)).resolves.toBe('recovered')
+    expect(stub.calls).toBe(4)
+
+    // Closed: the successful probe restored the destination, so a further
+    // attempt runs immediately rather than waiting out another open period.
+    await expect(service.execute(DEEPSEEK, stub.run, classify)).resolves.toBe('recovered')
+    expect(stub.calls).toBe(5)
   })
 
   it('unloads and rolls back: the service goes with its fiber, and a remount starts closed', async () => {
