@@ -1,4 +1,5 @@
 {"type":"session","version":0,"id":"{{session:2}}","createdAt":1786358409171,"cwd":"{{cwd}}","parentSession":"{{session:1}}","origin":"subagent","delegationDepth":1}
+{"type":"identity/attached","data":{"identity":{"principal":{"kind":"agent","id":"agent:{{session:2}}","tenantId":"local","delegatedBy":"{{id:1}}"},"runId":"{{run:2}}","chain":{"entries":[{"principal":{"kind":"user","id":"{{id:1}}","tenantId":"local"},"delegatedAt":0},{"principal":{"kind":"agent","id":"agent:{{session:2}}","tenantId":"local","delegatedBy":"{{id:1}}"},"delegatedAt":0,"reason":"subagent delegation"}]}}}}
 {"type":"sandbox/mode","data":{"mode":"danger-full-access","source":"delegation"}}
 {"type":"approval/policy","data":{"policy":"never","source":"delegation"}}
 {"type":"permission/preset","data":{"preset":"danger-full-access"}}
