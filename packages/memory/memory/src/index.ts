@@ -23,7 +23,7 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { Context, Service } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
-import type { MemoryProvenance } from './record.ts'
+import type { MemoryKind, MemoryProvenance, MemoryRelation, MemorySensitivity, MemoryStatus, MemorySubject } from './record.ts'
 import { isTraceable } from './provenance.ts'
 import type { MemoryClaimOrigin, MemoryRebuiltCountRequest } from './types.ts'
 import type {
@@ -358,11 +358,7 @@ export function createLocalReferenceMemoryProvider(): MemoryProvider {
       const id = MemoryRecordId(`local-reference-${++counter}`)
       records.set(id, {
         id,
-        principal: request.principal,
-        content: request.content,
-        updatedAt: new Date().toISOString(),
-        scope: request.scope,
-        ...originOf(request.origin),
+        ...recordFieldsFor(request),
       })
       return Promise.resolve({ id })
     },
@@ -427,11 +423,7 @@ export function createFakeMemoryProvider(): MemoryProvider {
       const id = MemoryRecordId(`fake-${randomUUID()}`)
       records.push({
         id,
-        principal: request.principal,
-        content: request.content,
-        updatedAt: new Date().toISOString(),
-        scope: request.scope,
-        ...originOf(request.origin),
+        ...recordFieldsFor(request),
       })
       return Promise.resolve({ id })
     },
@@ -602,11 +594,7 @@ export function createDurableFileMemoryProvider(options: DurableFileMemoryProvid
         const records = await read()
         records.push({
           id,
-          principal: request.principal,
-          content: request.content,
-          updatedAt: new Date().toISOString(),
-          scope: request.scope,
-          ...originOf(request.origin),
+          ...recordFieldsFor(request),
         })
         await write(records)
         return { id }
@@ -669,7 +657,7 @@ const DURABLE_FILE_MEMORY_FILENAME = 'memory.json'
 // the reader refuses it by name rather than reading them as if their origin were
 // simply absent — the pre-release stance is that a backend rejects an old
 // on-disk format (AGENTS.md), not that it guesses at one.
-const DURABLE_FILE_MEMORY_FORMAT_VERSION = 2
+const DURABLE_FILE_MEMORY_FORMAT_VERSION = 3
 
 /**
  * How many of `records` sit at one workspace path under some OTHER identity.
@@ -740,6 +728,67 @@ interface ScopedMemoryRecord extends MemoryRecordView {
    * the writer never stated would be a fabricated fact in durable data.
    */
   readonly confidence: number
+  /** RFC 3339 UTC instant this record was written: the same clock read `updatedAt` takes, at the same point. */
+  readonly createdAt: string
+  /**
+   * RFC 3339 UTC instant the claim became true.
+   *
+   * The write's own instant, which is not a guess: it is the only moment the
+   * writer can be said to have asserted the claim. A caller who means an
+   * earlier one states it through P6-03's proposal layer, not by having this
+   * one invented for them.
+   */
+  readonly validFrom: string
+  /** When the claim stops being true, or `null` for open-ended — which is what an unstated TTL means. */
+  readonly validUntil: string | null
+  /** The only status a record can be born in; every other value is a transition out of it. */
+  readonly status: MemoryStatus
+  /** Empty by truth for a newly proposed record: relations are minted by a conflict, never by a proposal. */
+  readonly relations: readonly MemoryRelation[]
+  /** Present only when the caller stated it; see {@link MemoryProposeRequestBase.kind}. */
+  readonly kind?: MemoryKind
+  /** Present only when the caller stated it. */
+  readonly subject?: MemorySubject
+  /** The WRITER's purpose, present only when stated; a reader's purpose is a different fact. */
+  readonly purpose?: string
+  /** Present only when the caller assessed it; absence is not `normal` (must[2]). */
+  readonly sensitivity?: MemorySensitivity
+}
+
+/**
+ * Every field a proposal determines, built once so three providers cannot
+ * drift into three different answers.
+ *
+ * The split this function encodes is P6-02 OQ19's measurement: five fields the
+ * write itself supplies and four it cannot. `createdAt`, `validFrom`,
+ * `validUntil`, `status` and `relations` are derived with nothing invented —
+ * the clock this write already reads, the instant the claim was asserted,
+ * `null` for the open-ended claim an unstated TTL means, the only status a
+ * record can be born in, and the empty relation list a proposal truthfully
+ * has. `kind`, `subject`, `purpose` and `sensitivity` are spread in ONLY when
+ * stated, so an unstated one is absent from the document rather than carrying
+ * a value nobody chose.
+ * @param request - the proposal as its caller stated it.
+ * @returns every stored field but the id.
+ */
+function recordFieldsFor(request: MemoryProposeRequest): Omit<ScopedMemoryRecord, 'id'> {
+  const now = new Date().toISOString()
+  return {
+    principal: request.principal,
+    content: request.content,
+    updatedAt: now,
+    createdAt: now,
+    validFrom: now,
+    validUntil: request.validUntil ?? null,
+    status: 'active',
+    relations: [],
+    scope: request.scope,
+    ...originOf(request.origin),
+    ...request.kind === undefined ? {} : { kind: request.kind },
+    ...request.subject === undefined ? {} : { subject: request.subject },
+    ...request.purpose === undefined ? {} : { purpose: request.purpose },
+    ...request.sensitivity === undefined ? {} : { sensitivity: request.sensitivity },
+  }
 }
 
 /** One persisted record. Identical to {@link ScopedMemoryRecord}; named apart for the on-disk document. */

@@ -22,7 +22,7 @@ import { brandString, type Branded } from '@deepseek-ai/dsh-brand'
 import { HarnessError } from '@deepseek-ai/dsh-llm'
 import type { Principal, TenantId } from '@deepseek-ai/dsh-principal'
 import type {} from '@deepseek-ai/dsh-session/types'
-import type { MemoryProvenance } from './record.ts'
+import type { MemoryKind, MemoryProvenance, MemorySensitivity, MemorySubject } from './record.ts'
 
 /** Stable identity of one durable memory record, unique within its tenant. */
 export type MemoryRecordId = Branded<'MemoryRecordId'>
@@ -122,6 +122,41 @@ export interface MemoryProposeRequestBase {
   readonly scope: MemoryScope
   /** Opaque candidate content; the canonical structured shape is P6-02's job. */
   readonly content: unknown
+  /**
+   * When the claim stops being true. Omit for an open-ended claim.
+   *
+   * RFC 3339 UTC. Its absence is not a missing value to fill in: `null` on the
+   * stored record MEANS open-ended, which is what a caller who said nothing
+   * meant.
+   */
+  readonly validUntil?: string
+  /**
+   * What kind of memory this is, when the caller knows.
+   *
+   * Optional because nothing on this path can derive it. A `kind` nobody chose
+   * would be a fabricated fact in durable data, so an unstated one is absent
+   * from the record rather than defaulted (P6-02 OQ19/OQ20).
+   */
+  readonly kind?: MemoryKind
+  /** Who or what the claim is about, when the caller knows. Absent, never guessed — see {@link MemoryProposeRequestBase.kind}. */
+  readonly subject?: MemorySubject
+  /**
+   * Why this record may be read, as its WRITER states it.
+   *
+   * A different fact from `MemoryAccessContext.purpose`, which is a reader's.
+   * Filling this from the first reader's purpose would record that reader's
+   * intent as the record's own, so an unstated write-purpose stays absent.
+   */
+  readonly purpose?: string
+  /**
+   * Whether the content is sensitive, when the caller has assessed it.
+   *
+   * The one optional field whose invented default would have a DIRECTION: a
+   * record wrongly marked `normal` is one an index admits. Absence is
+   * therefore not "normal" — a reader that must decide treats an unstated
+   * sensitivity as not indexable (must[2]).
+   */
+  readonly sensitivity?: MemorySensitivity
 }
 
 /**

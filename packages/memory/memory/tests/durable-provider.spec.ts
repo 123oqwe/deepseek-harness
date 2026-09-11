@@ -417,6 +417,119 @@ describe('a stored record carries the origin its writer stated', () => {
       .rejects.toThrow(/unsupported durable memory format version 1/u)
   })
 
+  it('refuses a version-2 document by name, which is the version this build itself wrote', async () => {
+    // The second bump in one release, and the reason both are refused BY NAME
+    // rather than migrated: a v2 document has no `createdAt`, `validFrom`,
+    // `status` or `relations`, and a reader that filled them in would be
+    // presenting this build's clock and this build's assumptions as facts the
+    // writer stated. The pre-release stance is that a backend rejects an old
+    // format. What makes the refusal usable is that it says WHICH version it
+    // found, so an operator reading the error knows their store is from an
+    // older build rather than corrupt.
+    const directory = freshDirectory()
+    writeFileSync(join(directory, 'memory.json'), `${JSON.stringify({ version: 2, records: [] })}\n`, 'utf8')
+    const memory = await mountDurable(directory)
+
+    await expect(memory.query({ accessContext: accessContextFor('tenant-a'), query: 'anything' }))
+      .rejects.toThrow(/unsupported durable memory format version 2/u)
+  })
+
+  it('stores the five record fields whose values the write itself supplies', async () => {
+    // P6-02 must[0]'s fields that need no caller to state them: `createdAt` is
+    // the clock read this write already takes, `validFrom` is the only instant
+    // a writer can be said to have asserted, `validUntil` is null because
+    // null IS "open-ended" rather than a default, `status` can only be born
+    // active, and `relations` is empty by truth for a newly proposed record —
+    // relations are minted by a conflict, never by a proposal.
+    const directory = freshDirectory()
+    const memory = await mountDurable(directory)
+    await memory.propose({
+      origin: { kind: 'user-asserted', assertedBy: 'operator' },
+      principal: principalFor('tenant-a'),
+      scope: scopeFor('tenant-a'),
+      content: { note: 'born active' },
+    })
+
+    const stored = JSON.parse(readFileSync(join(directory, 'memory.json'), 'utf8')) as {
+      version: number
+      records: readonly Record<string, unknown>[]
+    }
+    expect(stored.version).toBe(3)
+    const record = stored.records[0]!
+    expect(typeof record.createdAt).toBe('string')
+    expect(typeof record.validFrom).toBe('string')
+    expect(record.validUntil).toBeNull()
+    expect(record.status).toBe('active')
+    expect(record.relations).toStrictEqual([])
+  })
+
+  it('writes no kind, subject, purpose or sensitivity when the caller stated none', async () => {
+    // The four fields with no source on this path. Absent on disk rather than
+    // defaulted, because a `kind` nobody chose or a `sensitivity` nobody
+    // assessed would be a fabricated fact in durable data — and `sensitivity`
+    // is the one whose cheap default has a direction, since a record wrongly
+    // marked normal is the one that enters an index.
+    const directory = freshDirectory()
+    const memory = await mountDurable(directory)
+    await memory.propose({
+      origin: { kind: 'user-asserted', assertedBy: 'operator' },
+      principal: principalFor('tenant-a'),
+      scope: scopeFor('tenant-a'),
+      content: { note: 'nothing stated' },
+    })
+
+    const stored = JSON.parse(readFileSync(join(directory, 'memory.json'), 'utf8')) as {
+      records: readonly Record<string, unknown>[]
+    }
+    const record = stored.records[0]!
+    expect(record).not.toHaveProperty('kind')
+    expect(record).not.toHaveProperty('subject')
+    expect(record).not.toHaveProperty('purpose')
+    expect(record).not.toHaveProperty('sensitivity')
+  })
+
+  it('stores each of the four only when the caller stated it, and not the ones it did not', async () => {
+    // The other half: "absent unless stated" has to be about the STATEMENT and
+    // not about the fields being unstorable. One stated, three not, in one
+    // record, so a build that dropped them all would fail here and a build
+    // that defaulted them would fail above.
+    const directory = freshDirectory()
+    const memory = await mountDurable(directory)
+    await memory.propose({
+      origin: { kind: 'user-asserted', assertedBy: 'operator' },
+      principal: principalFor('tenant-a'),
+      scope: scopeFor('tenant-a'),
+      content: { note: 'one stated' },
+      sensitivity: 'sensitive',
+    })
+
+    const stored = JSON.parse(readFileSync(join(directory, 'memory.json'), 'utf8')) as {
+      records: readonly Record<string, unknown>[]
+    }
+    const record = stored.records[0]!
+    expect(record.sensitivity).toBe('sensitive')
+    expect(record).not.toHaveProperty('kind')
+    expect(record).not.toHaveProperty('subject')
+    expect(record).not.toHaveProperty('purpose')
+  })
+
+  it('stores a stated validUntil rather than the open-ended null', async () => {
+    const directory = freshDirectory()
+    const memory = await mountDurable(directory)
+    await memory.propose({
+      origin: { kind: 'user-asserted', assertedBy: 'operator' },
+      principal: principalFor('tenant-a'),
+      scope: scopeFor('tenant-a'),
+      content: { note: 'expires' },
+      validUntil: '2027-01-01T00:00:00.000Z',
+    })
+
+    const stored = JSON.parse(readFileSync(join(directory, 'memory.json'), 'utf8')) as {
+      records: readonly Record<string, unknown>[]
+    }
+    expect(stored.records[0]!.validUntil).toBe('2027-01-01T00:00:00.000Z')
+  })
+
   it('fixes an asserted claim at confidence 1 without the caller stating one', async () => {
     // Vocabulary, not a default: `user-asserted` means a named party said it.
     // The request type has no way to attach a confidence to this branch, so the
