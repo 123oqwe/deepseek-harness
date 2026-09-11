@@ -21,6 +21,7 @@ export const GROUPS_WITHOUT_SUBSYSTEM_PAGE: Readonly<Record<string, string>> = {
   bundle: 'Composition patch carriers whose mounted packages own all runtime contracts.',
   hooks: 'External hook-protocol bridges over existing interception points, not a new Harness service.',
   kernel: 'Contract-stage type surface with no constructed runtime value or Cordis registration yet; see docs/architecture/trust-kernel-boundary.md for the boundary this group fixes.',
+  migration: 'Pure resolver and decision functions with no service registration: the only Cordis entry is the ./invariant companion, and the resolved gates are provided by the app boot with a bare ctx.provide rather than a declared service. .agents/notes/implemented/architecture/2026-09-01-feature-gate-mechanism-wiring-before-any-real-gate.md owns the mechanism this group fixes.',
   plugin: 'Contract-stage type surface and pure validation logic with no constructed runtime value or Cordis registration yet; docs/plugins/manifest-v2.md owns the manifest format this group fixes.',
   sdk: 'Out-of-process protocol and client packages whose package READMEs own the SDK contracts.',
   util: 'Low-level primitives whose business semantics remain with their consuming subsystems.',
