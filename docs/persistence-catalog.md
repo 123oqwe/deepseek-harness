@@ -783,10 +783,22 @@ Source: [`packages/core/session/src/types.ts:345`](../packages/core/session/src/
  * and is meaningless outside it.
  *
  * Persistence and revision (validation[2]) are the same mechanism: the
- * log is append-only, so a revised profile is a NEW event carrying a new
- * `ref`, and `previousRef` names the profile it revises. A first compile
- * has no `previousRef`. Nothing is ever edited in place, so the revision
- * chain is recoverable by reading the events in order.
+ * log is append-only, so a revised profile is a NEW event carrying the
+ * revised body. Nothing is ever edited in place, so the revision chain is
+ * recoverable by reading the events in order.
+ *
+ * **The event carries no digest** (BLOCKED-211). A {@link TaskProfileRef}
+ * is the sha256 of the profile's canonical form, and a profile's
+ * `goalRef` names the session and message it was compiled from — ids
+ * minted fresh on every run. Storing the digest therefore wrote a
+ * run-varying value into a durable log: the same recorded scenario
+ * replayed to three different refs while every other field was
+ * byte-identical, so a snapshot of this event could never reproduce. The
+ * ids themselves normalize; a digest taken over them before
+ * normalization cannot. The body is the one authority and the digest is
+ * derived from it by `taskProfileRef`, which is also what the Run event
+ * log references — one value, computed where it is needed, rather than a
+ * second copy that a replay cannot reconstruct.
  *
  * The event exists here rather than only on the Run so that a later
  * stage putting the profile into a model request (P4-03) satisfies
@@ -794,16 +806,16 @@ Source: [`packages/core/session/src/types.ts:345`](../packages/core/session/src/
  * fact.
  */
 'run/task-profile': {
-  /** The digest of {@link profile}; the same value the Run event log references. */
-  ref: TaskProfileRef
-  /** The compiled profile. */
+  /**
+   * The compiled profile, and the only field: its digest is derived with
+   * `taskProfileRef`, never stored, and the profile it revises is the one
+   * named by the previous event of this type in the same log.
+   */
   profile: TaskProfile
-  /** The profile this one revises, absent on a first compile. */
-  previousRef?: TaskProfileRef
 }
 ```
 
-Source: [`packages/run/task-profile/src/types.ts:363`](../packages/run/task-profile/src/types.ts)
+Source: [`packages/run/task-profile/src/types.ts:375`](../packages/run/task-profile/src/types.ts)
 
 ### `sandbox/*`
 

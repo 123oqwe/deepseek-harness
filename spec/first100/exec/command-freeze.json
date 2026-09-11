@@ -12097,7 +12097,9 @@
         "mutationDescription": "Three mutations against `readPolicyContextFacts` in packages/core/tools/src/external-effect.ts, each one literal substitution, the spec re-run, the file restored and confirmed byte-identical with `cmp` after each. (F-M1) `riskClass` ignores the computed classification and is always the unknown default; (F-M2) `workspaceTrust` never reads the mounted seam and is always `untrusted`; (F-M3) `permissionPosture` spells a real preset name instead of the constant.",
         "failureSummary": "F-M1 reds 'forbids the kernel hard-deny band by POLICY…' ALONE — its control declares a tag classifying `internal-write` under the same rule, so the rule is shown not to be a constant, and the control permits under the mutation too. F-M2 reds 'permits under the SAME rule when the seam answers trusted-execute…' ALONE. The deny half cannot isolate the fact, because `untrusted` is what the mutation forces and what that case expects; the control is what proves the seam is read rather than assumed, and it is written for that reason. F-M3 reds both BLOCKED-202 characterization cases, which is the intended result: they assert that the posture is a constant, so any real value reddens them. NOT PROVEN, stated rather than omitted: that the shipped `kernel-hard-deny` rule ever fires on a real profile. No shipped tool declares a tag classifying `safety-critical` — the corpus census found the class is never produced — so the rule is exercised in this fixture and nowhere else, exactly as `gateActionRisk`'s `hardDenied` branch has always been. Also NOT PROVEN: that a real workspace resolves to a trust state here. The seam is provided with a fixed answer, because what is under test is that the dispatch path READS the seam and carries the answer into the policy question; how a host resolves a directory to a state is P1-07's and has its own cases."
       },
-      "note": "P2-05 U supplement for BLOCKED-201, closing BLOCKED-187's input residual with it. `enforceManifestedAction` took the context facts as an optional `Partial` and filled them in place; NEITHER dispatch path passed them, so every policy question a shipped composition ever asked carried `untrusted` and `default` and no `riskClass` at all — a rule about any of them could not match however it was written. The type is required now, the defaulting moved to one reader both paths call, and both paths classify BEFORE appending the manifest so the class is a fact rather than an absence. The same `ActionRiskClassification` goes to `gateActionRisk`, so the policy layer and the risk gate decide about one classification instead of each computing its own. The base bundle's Cedar row holds the kernel hard-deny rule where it held a paragraph explaining why the rule could not be written. Two of the three facts are real; the posture is not, and cannot be — see BLOCKED-202, whose gap these cases pin as CHARACTERIZATION rather than leave looking supplied."
+      "note": "P2-05 U supplement for BLOCKED-201, closing BLOCKED-187's input residual with it. `enforceManifestedAction` took the context facts as an optional `Partial` and filled them in place; NEITHER dispatch path passed them, so every policy question a shipped composition ever asked carried `untrusted` and `default` and no `riskClass` at all — a rule about any of them could not match however it was written. The type is required now, the defaulting moved to one reader both paths call, and both paths classify BEFORE appending the manifest so the class is a fact rather than an absence. The same `ActionRiskClassification` goes to `gateActionRisk`, so the policy layer and the risk gate decide about one classification instead of each computing its own. The base bundle's Cedar row holds the kernel hard-deny rule where it held a paragraph explaining why the rule could not be written. Two of the three facts are real; the posture is not, and cannot be — see BLOCKED-202, whose gap these cases pin as CHARACTERIZATION rather than leave looking supplied.",
+      "supersededBy": "2026-09-11T18:04:37.866Z",
+      "supersessionReason": "Re-frozen for a NUMBER, not a behaviour: BLOCKED-202 was assigned to another lane an hour after this entry was written, so the posture entry became 203 and two case titles carry the number. Nothing about what the cases assert changed, and the other four titles are byte-identical."
     },
     {
       "epic": "P2-04",
@@ -12309,6 +12311,55 @@
         "failureSummary": "C-M1 reds 'delegates ONE hop to the child…' alone: it is the only case that reads that entry, and the two-hop case reads the grandchild's own chain. P-M1 reds THREE — the one-hop case, the two-hop case, and the control that parent and child are not one actor — and leaves the root case and the OQ30 count green, which is right: removing the hop changes nothing about what the ROOT attaches. STATED because it is the limit of these cases: a product mutation is invisible to them until the corpus is refreshed. They pin the recorded corpus, and the corpus is what a real `dsh --profile headless` process wrote; the chain from source to assertion runs through `test:snapshot`, not through this spec. A reader who changes the delegation hop and runs only this spec will see green until they refresh. Also NOT PROVEN: that a THIRD hop keeps the root. The corpus has two, which is what `subagent-depth-two-rejection` produces; three would need a scenario nothing in the product currently drives."
       },
       "note": "P2-01 U supplement for the U2 stage (BLOCKED-200, and the delegation half a preFlight census found beside it). Read from the recorded corpus rather than a purpose-built fixture: `snapshots/session/` is what a real `dsh --profile headless` process wrote, so a case there proves the PRODUCT attaches an identity, where a fixture would prove the fixture does. Each claim is a PAIR joined by the actor id, because `action/manifest-appended` records `actor: manifest.actor.id` alone — no kind, no tenant, no chain — while the chain lives on `identity/attached`; the identity half alone would show an identity was attached and nothing about whether actions ran under it. That join is also what acceptance[0]'s 'traceable' means here (§12.85 note 43): from one action you reach the root through its own session log, not through a chain copied into every manifest. `subagent-depth-two-rejection` is the scenario because it carries two hops AND every one of its three logs appends a manifest; `advanced-toolchain` has the same chain shape but its children dispatch no tool, so the actor half would have read `undefined` — which is how the first draft of these cases failed, and why the scenario was chosen by measurement rather than by name. The last case pins OQ30's boundary as counts: 93 of 93 headless logs carry a host identity, 0 of 25 SDK and 0 of 8 ACP, because a request that arrived over a socket is not the machine's host user."
+    },
+    {
+      "epic": "P2-05",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-05",
+        "stage": "U"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/policy/policy-enforcement/tests/facts.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "forbids the kernel hard-deny band by POLICY, because the action's risk class now reaches Cedar",
+        "permits the same action when its declared tag classifies below that band, so the rule is not a constant",
+        "forbids on the workspace's REAL trust state, read from the mounted seam",
+        "permits under the SAME rule when the seam answers trusted-execute, so the fact is read rather than assumed",
+        "CHARACTERIZATION (BLOCKED-203): the posture Cedar sees is the constant `default`, whatever preset is mounted",
+        "CHARACTERIZATION (BLOCKED-203): a rule naming `default` matches under the read-only preset, which is the defect stated positively"
+      ],
+      "files": [
+        "packages/core/tools/src/external-effect.ts",
+        "packages/core/tools/src/ptc.ts",
+        "packages/core/agent-loop/src/tool-calls.ts",
+        "packages/policy/policy-engine/src/types.ts",
+        "packages/policy/policy-engine-cedar/src/index.ts",
+        "packages/policy/policy-enforcement/src/index.ts",
+        "packages/policy/policy-enforcement/tests/facts.spec.ts",
+        "packages/policy/policy-enforcement/tests/fixtures/stack.ts",
+        "packages/bundle/base/cordis.patch.yml"
+      ],
+      "frozenAtUtc": "2026-09-11T18:04:37.866Z",
+      "dryRunProof": {
+        "treeSha": "b3fe0618f0f61403dc6f178d4462c692db59ecbe",
+        "testsDiscovered": 6
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations against `readPolicyContextFacts` in packages/core/tools/src/external-effect.ts, each one literal substitution, the spec re-run, the file restored and confirmed byte-identical with `cmp` after each. (F-M1) `riskClass` ignores the computed classification and is always the unknown default; (F-M2) `workspaceTrust` never reads the mounted seam and is always `untrusted`; (F-M3) `permissionPosture` spells a real preset name instead of the constant.",
+        "failureSummary": "F-M1 reds 'forbids the kernel hard-deny band by POLICY…' ALONE — its control declares a tag classifying `internal-write` under the same rule, so the rule is shown not to be a constant, and the control permits under the mutation too. F-M2 reds 'permits under the SAME rule when the seam answers trusted-execute…' ALONE. The deny half cannot isolate the fact, because `untrusted` is what the mutation forces and what that case expects; the control is what proves the seam is read rather than assumed, and it is written for that reason. F-M3 reds both BLOCKED-202 characterization cases, which is the intended result: they assert that the posture is a constant, so any real value reddens them. NOT PROVEN, stated rather than omitted: that the shipped `kernel-hard-deny` rule ever fires on a real profile. No shipped tool declares a tag classifying `safety-critical` — the corpus census found the class is never produced — so the rule is exercised in this fixture and nowhere else, exactly as `gateActionRisk`'s `hardDenied` branch has always been. Also NOT PROVEN: that a real workspace resolves to a trust state here. The seam is provided with a fixed answer, because what is under test is that the dispatch path READS the seam and carries the answer into the policy question; how a host resolves a directory to a state is P1-07's and has its own cases."
+      },
+      "note": "P2-05 U supplement for BLOCKED-201, closing BLOCKED-187's input residual with it. `enforceManifestedAction` took the context facts as an optional `Partial` and filled them in place; NEITHER dispatch path passed them, so every policy question a shipped composition ever asked carried `untrusted` and `default` and no `riskClass` at all — a rule about any of them could not match however it was written. The type is required now, the defaulting moved to one reader both paths call, and both paths classify BEFORE appending the manifest so the class is a fact rather than an absence. The same `ActionRiskClassification` goes to `gateActionRisk`, so the policy layer and the risk gate decide about one classification instead of each computing its own. The base bundle's Cedar row holds the kernel hard-deny rule where it held a paragraph explaining why the rule could not be written. Two of the three facts are real; the posture is not, and cannot be — see BLOCKED-202, whose gap these cases pin as CHARACTERIZATION rather than leave looking supplied. RE-FROZEN: the two characterization titles name BLOCKED-203 rather than 202, after 202 was assigned to another lane. Caught by `verify-frozen-titles-resolvable`, which is the gate that exists for exactly this — a title renamed out from under a freeze — and which found it because the rename was made in the spec and not carried into the entry.",
+      "supersessionReason": "Re-frozen for a NUMBER, not a behaviour: BLOCKED-202 was assigned to another lane an hour after this entry was written, so the posture entry became 203 and two case titles carry the number. Nothing about what the cases assert changed, and the other four titles are byte-identical.",
+      "supersedes": "2026-09-11T08:52:52.792Z"
     }
   ]
 }

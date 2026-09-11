@@ -558,15 +558,6 @@ export function scrubRequestHeaders(rawLog: string): string {
 }
 
 /**
- * Project a persisted session log while tokenizing all request-header bulk.
- * Each non-empty line is parsed at most once; the session header stays
- * byte-identical. Body records omit their persistence-only envelopes, and
- * request-header payloads are tokenized.
- *
- * @param rawLog - persisted or already-projected session JSONL.
- * @returns committed snapshot JSONL with request headers tokenized.
- */
-/**
  * Zero the wall-clock stamp on every delegation-chain entry.
  *
  * `DelegationEntry.delegatedAt` is a real fact of the chain — when this hop was
@@ -590,6 +581,15 @@ function zeroDelegationClock(record: Record<string, unknown>): void {
   }
 }
 
+/**
+ * Project a persisted session log while tokenizing all request-header bulk.
+ * Each non-empty line is parsed at most once; the session header stays
+ * byte-identical. Body records omit their persistence-only envelopes, and
+ * request-header payloads are tokenized.
+ *
+ * @param rawLog - persisted or already-projected session JSONL.
+ * @returns committed snapshot JSONL with request headers tokenized.
+ */
 export function scrubSessionSnapshot(rawLog: string): string {
   const scrubbed = scrubRequestHeaders(rawLog)
   let recordIndex = 0

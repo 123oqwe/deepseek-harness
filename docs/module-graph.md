@@ -845,6 +845,13 @@ flowchart TD
   pkg_permission_presets --> pkg_settings
   pkg_permission_presets --> pkg_shell
   pkg_permission_presets --> pkg_user_approval
+  pkg_run --> pkg_agent
+  pkg_run --> pkg_brand
+  pkg_run --> pkg_lease_contract
+  pkg_run --> pkg_principal
+  pkg_run --> pkg_session
+  pkg_run --> pkg_task_profile
+  pkg_run --> pkg_workflow
   pkg_session_telemetry_otel --> pkg_anonymous_user_id
   pkg_session_telemetry_otel --> pkg_command_feedback
   pkg_session_telemetry_otel --> pkg_llm
@@ -1018,13 +1025,6 @@ flowchart TD
   pkg_agent_presets --> pkg_system_prompt
   pkg_agent_presets --> pkg_tools
   pkg_agent_presets --> pkg_typert_protocol
-  pkg_run --> pkg_agent
-  pkg_run --> pkg_brand
-  pkg_run --> pkg_lease_contract
-  pkg_run --> pkg_principal
-  pkg_run --> pkg_session
-  pkg_run --> pkg_task_profile
-  pkg_run --> pkg_workflow
   pkg_schedule --> pkg_agent
   pkg_schedule --> pkg_brand
   pkg_schedule --> pkg_invariants
@@ -1592,6 +1592,7 @@ flowchart TD
 | [`tools`](../packages/core/tools) | `core` | [`action-ledger`](../packages/action/action-ledger), [`action-manifest`](../packages/action/action-manifest), [`agent`](../packages/core/agent), [`code-runtime`](../packages/code-runtime/code-runtime), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`plugin-ownership`](../packages/plugin/plugin-ownership), [`policy-enforcement`](../packages/policy/policy-enforcement), [`policy-engine`](../packages/policy/policy-engine), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`system-prompt`](../packages/core/system-prompt), [`user-approval`](../packages/interaction/user-approval) |
 | [`command-compact`](../packages/compaction/command-compact) | `compaction` | [`commands`](../packages/interaction/commands), [`compaction`](../packages/compaction/compaction) |
 | [`permission-presets`](../packages/interaction/permission-presets) | `interaction` | [`commands`](../packages/interaction/commands), [`invariants`](../packages/runtime-diagnostics/invariants), [`risk-taxonomy`](../packages/policy/risk-taxonomy), [`sandbox`](../packages/sandbox/sandbox), [`sandbox-policy`](../packages/sandbox/sandbox-policy), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection), [`settings`](../packages/settings/settings), [`shell`](../packages/shell/shell), [`user-approval`](../packages/interaction/user-approval) |
+| [`run`](../packages/run/run) | `run` | [`agent`](../packages/core/agent), [`brand`](../packages/util/brand), [`lease-contract`](../packages/collaboration/lease-contract), [`principal`](../packages/identity/principal), [`session`](../packages/core/session), [`task-profile`](../packages/run/task-profile), [`workflow`](../packages/workflow/workflow) |
 | [`session-telemetry-otel`](../packages/session/session-telemetry-otel) | `session` | [`anonymous-user-id`](../packages/identity/anonymous-user-id), [`command-feedback`](../packages/feedback/command-feedback), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-telemetry`](../packages/session/session-telemetry) |
 | [`session-title-all-prompts-llm`](../packages/session/session-title-all-prompts-llm) | `session` | [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-title`](../packages/session/session-title), [`session-title-llm`](../packages/session/session-title-llm) |
 | [`session-title-first-prompt-llm`](../packages/session/session-title-first-prompt-llm) | `session` | [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-title`](../packages/session/session-title), [`session-title-llm`](../packages/session/session-title-llm) |
@@ -1622,7 +1623,6 @@ flowchart TD
 | [`mcp-client`](../packages/mcp/mcp-client) | `mcp` | [`attachment`](../packages/attachment/attachment), [`llm`](../packages/llm/llm), [`risk-taxonomy`](../packages/policy/risk-taxonomy), [`scope`](../packages/core/scope), [`subprocess`](../packages/subprocess/subprocess), [`timeout`](../packages/util/timeout), [`tools`](../packages/core/tools) |
 | [`capability-token-file`](../packages/policy/capability-token-file) | `policy` | [`agent`](../packages/core/agent), [`atomic-write`](../packages/util/atomic-write), [`brand`](../packages/util/brand), [`capability-token`](../packages/policy/capability-token), [`session`](../packages/core/session), [`tools`](../packages/core/tools), [`trust-kernel`](../packages/kernel/trust-kernel) |
 | [`agent-presets`](../packages/preset/agent-presets) | `preset` | [`agent`](../packages/core/agent), [`atomic-write`](../packages/util/atomic-write), [`home-paths`](../packages/util/home-paths), [`invariants`](../packages/runtime-diagnostics/invariants), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection), [`settings`](../packages/settings/settings), [`system-prompt`](../packages/core/system-prompt), [`tools`](../packages/core/tools), [`typert-protocol`](../packages/typert/protocol) |
-| [`run`](../packages/run/run) | `run` | [`agent`](../packages/core/agent), [`brand`](../packages/util/brand), [`lease-contract`](../packages/collaboration/lease-contract), [`principal`](../packages/identity/principal), [`session`](../packages/core/session), [`task-profile`](../packages/run/task-profile), [`workflow`](../packages/workflow/workflow) |
 | [`schedule`](../packages/schedule/schedule) | `schedule` | [`agent`](../packages/core/agent), [`brand`](../packages/util/brand), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence), [`session-projection`](../packages/session/session-projection), [`tools`](../packages/core/tools) |
 | [`session-checkpoint-policy`](../packages/session/session-checkpoint-policy) | `session` | [`agent`](../packages/core/agent), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence), [`tools`](../packages/core/tools) |
 | [`shell-env`](../packages/shell/shell-env) | `shell` | [`home-paths`](../packages/util/home-paths), [`session-persistence`](../packages/session/session-persistence), [`shell`](../packages/shell/shell), [`tools`](../packages/core/tools) |
