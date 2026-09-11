@@ -57,6 +57,7 @@ const GATES = [
   'first100:verify-ledger-digests',
   'first100:verify-boot-path-offline',
   'first100:verify-adapt-dispositions',
+  'verify-import-integrity',
   'verify-no-artifacts-in-src',
   'verify-control-protocol-schema',
   'verify-module-graph',
@@ -81,6 +82,19 @@ const HELD_BACK = new Map([
       + 'The fix is translation, and AGENTS.md reserves `dsh-translate-docs` to explicit user invocation; re-recording the pair state instead would tell '
       + 'the gate the two sides agree when they do not.',
     until: 'BLOCKED-124 closes — the user authorizes the translation pass, or rules which pairs diverge only cosmetically.',
+  }],
+  ['verify-import-integrity', {
+    reason:
+      'The gate is new and the tree it lands on already violates it 12 times, in 8 packages, none of them owned by the lane that wrote the gate — '
+      + '`@deepseek-ai/dsh` reaching dsh-brand from three apps/cli files, agent-loop reaching dsh-capability-token from tool-calls.ts, '
+      + 'repeat-tool-reminder and tmux-context reaching dsh-llm, tool-skill reaching dsh-session, apps/web reaching dsh-client-web and the '
+      + 'webworker runtime, that runtime reaching dsh-app-boot and dsh-cmdline, and — the defect this gate was asked for — '
+      + 'dsh-retry reaching @deepseek-ai/schemastery at src/usage.ts:13, still undeclared on this base. Running it red would fail every '
+      + 'push for other lanes\' manifests, and fixing eight other epics\' packages to land a gate is the scope creep the program forbids.',
+    until:
+      'the 12 are declared by their owning packages (the dsh-retry one closes BLOCKED-186, the rest belong to whichever epic touches each '
+      + 'manifest next). The gate is exercised meanwhile by scripts/verify-import-integrity.spec.ts, whose cases include the positive control '
+      + 'this hold would otherwise hide: the same import is reported undeclared and silent once declared.',
   }],
 ])
 
