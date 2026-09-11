@@ -80,7 +80,7 @@ preFlight(JSON 记录 `clause-subject-audit.json` + `evidence-<id>.md`,`recorded
 - **签字前 dry-run `--accept`**(补记 66):在 overlay 工作树对该 epic 跑 `node scripts/first100/generate-ledger.mjs --accept --epic <id>`,读四谓词结果后 `git checkout -- spec/first100/exec/` 复原;(i) 覆盖闭包为空/(ii)(iii) 红都不签。P1-10 签了才发现 (i) 为 0 条。
 
 
-- **叠 overlay 后再跑三个轻门**(补记 89):撤签/accept 改了 ledger 行状态,`verify-adapt-dispositions` 会按新状态重判 deviation 理由;`--check` 只核摘要。叠好 tip 后跑 `verify-adapt-dispositions`、`verify-make-vs-use`、`verify-ledger-digests`(= `generate-ledger.mjs --check`,非独立脚本)(秒级)再派发。
+- **叠 overlay 后再跑三个轻门**(补记 89):撤签/accept 改了 ledger 行状态,`verify-adapt-dispositions` 会按新状态重判 deviation 理由;`--check` 只核摘要。叠好 tip 后跑账本状态门全组(`--check`、registry-extraction、specs、files-overlay、persistence-catalog、freeze-in-candidate-tree、adapt-dispositions、make-vs-use;皆秒级)再派发(补记 96)。
 
 ## 9. 每小时自查五问(2026-09-11,gq-92 退班前给;由 watch-v12 心跳每小时打印,不靠记)
 
