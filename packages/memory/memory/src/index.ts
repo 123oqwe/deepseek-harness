@@ -24,6 +24,7 @@ import { join } from 'node:path'
 import { Context, Service } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import type { MemoryProvenance } from './record.ts'
+import { isTraceable } from './provenance.ts'
 import type { MemoryClaimOrigin, MemoryRebuiltCountRequest } from './types.ts'
 import type {
   MemoryAccessContext,
@@ -156,10 +157,19 @@ export class MemoryRuntime extends Service {
   /**
    * Submit a candidate write. The only mutation entry point this seam
    * exposes (`acceptance[1]`).
-   * @param request - the candidate content, its principal, and its scope.
+   *
+   * Refuses an untraceable claim before any provider is reached (P6-02
+   * `acceptance[0]`), for the same reason `query`/`get`/`export` check the
+   * access context here: a provider registered outside this seam would not
+   * inherit the rule, and a record that traces to nothing is not a record this
+   * store can answer for.
+   * @param request - the candidate content, its origin, its principal, and its scope.
    * @returns the newly minted record's identity.
+   * @throws MemoryError `MEMORY_CLAIM_UNTRACEABLE` when the origin names
+   *   neither a source event nor a responsible party.
    */
   async propose(request: MemoryProposeRequest): Promise<MemoryProposeResult> {
+    requireTraceableClaim(request.origin)
     return this.resolve().propose(request)
   }
 
@@ -279,6 +289,31 @@ function requireCompleteAccessContext(accessContext: MemoryAccessContext): void 
   if (!candidate.principal || !candidate.purpose || !candidate.scope || !candidate.contextBudget) {
     throw new MemoryError('memory read rejected: access context is missing principal, purpose, scope, or contextBudget', 'MEMORY_ACCESS_CONTEXT_REQUIRED')
   }
+}
+
+/**
+ * Refuse a claim that traces to nothing (P6-02 `acceptance[0]`).
+ *
+ * The decision is P6-02's `isTraceable`, called rather than restated: the rule
+ * has one home, and a second spelling here would be free to disagree with the
+ * one the record vocabulary enforces. `MemoryClaimOrigin` is `MemoryProvenance`
+ * with the derived branch's confidence attached, so the value this seam holds
+ * is exactly what that function decides on.
+ *
+ * It is stricter than `validateRecord`'s `derived-without-source` branch, and
+ * deliberately: an empty `assertedBy` is refused too, because "the user said
+ * so" with nobody named is the same blank origin wearing the other variant's
+ * label.
+ * @param origin - the claim's stated origin.
+ * @returns Nothing.
+ * @throws MemoryError `MEMORY_CLAIM_UNTRACEABLE` when it names neither.
+ */
+function requireTraceableClaim(origin: MemoryClaimOrigin): void {
+  if (isTraceable(origin)) return
+  throw new MemoryError(
+    'memory write rejected: a derived claim must name at least one source event, and a user-asserted claim must name who asserted it',
+    'MEMORY_CLAIM_UNTRACEABLE',
+  )
 }
 
 /**
@@ -687,9 +722,13 @@ interface ScopedMemoryRecord extends MemoryRecordView {
    * Where the claim came from, as the proposer stated it (P6-02's vocabulary).
    *
    * Stored rather than derived: origin is a fact about the write, and a reader
-   * that had to infer it later would be guessing. `validateRecord` already
-   * refuses a `derived` record whose source list is empty, so a stored origin
-   * is one that traces somewhere.
+   * that had to infer it later would be guessing. {@link MemoryRuntime.propose}
+   * refuses an untraceable claim before any provider is reached, so a stored
+   * origin is one that traces somewhere.
+   *
+   * This sentence used to name `validateRecord` and was false of the path it
+   * sits on: that function had no caller, `propose` reached no check at all,
+   * and an empty source list was accepted and written.
    */
   readonly provenance: MemoryProvenance
   /**
