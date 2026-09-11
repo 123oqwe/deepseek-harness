@@ -8,12 +8,16 @@
  * @module @deepseek-ai/dsh-subagent/child-agent
  */
 
+import { randomUUID } from 'node:crypto'
 import type { Context } from '@deepseek-ai/cordis'
 import type { Agent, AgentOptions, CreateAgentOptions } from '@deepseek-ai/dsh-agent'
 import type { SandboxMode } from '@deepseek-ai/dsh-sandbox'
 import type { Session, SessionId } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-system-prompt'
 import type { ToolRestriction } from '@deepseek-ai/dsh-tools'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import { createAgentPrincipal, currentPrincipal, extendChain } from '@deepseek-ai/dsh-principal'
+import type { IdentityContext, PrincipalId, RunId } from '@deepseek-ai/dsh-principal/types'
 import { digestToken } from '@deepseek-ai/dsh-capability-token'
 // Lifted to `@deepseek-ai/dsh-capability-token/delegate` so a nested or
 // detached workflow run derives its token through the SAME path a child agent
@@ -108,31 +112,79 @@ export function parentAgentOptionsForDelegation(parent: Agent): AgentOptions {
 }
 
 /**
+ * Extend the parent's delegation chain by ONE hop for the child it is about to
+ * create (first100 registry P2-01 acceptance[0], second half).
+ *
+ * Until this existed the chain had no producer at all: `resolveChildAgentOptions`
+ * did not carry `identity`, and `extendChain` had zero production callers — so a
+ * delegated agent resolved no identity, both dispatch paths synthesized an
+ * `anonymous-dev` principal for it, and a subagent's actions were untraceable
+ * to the person who started the run however well the ROOT was attached.
+ *
+ * The child acts as its own `AgentPrincipal`, named by its session id and
+ * declaring the parent as `delegatedBy`, in the parent's tenant — `extendChain`
+ * refuses a hop that crosses tenants, which is the rule this must not invent a
+ * second version of. The root entry is untouched, so however deep delegation
+ * goes the chain's first entry is still the host user who started it.
+ *
+ * The child gets its OWN run id. A run id identifies one execution, and reusing
+ * the parent's would put two agents in one run — the shape `tool-calls.ts`
+ * records as an earlier defect, where P4-12 would have keyed a ledger scope on
+ * an id two runs shared.
+ *
+ * A parent with no identity delegates none: absence propagates rather than
+ * being invented here, because a chain rooted at a principal this function made
+ * up would be traceable to nobody while looking traceable.
+ * @param parent - the delegating parent.
+ * @param childSessionId - the child's own session id, which names its principal.
+ * @returns the child's identity, or `undefined` when the parent carries none.
+ */
+export function delegateChildIdentity(parent: Agent, childSessionId: SessionId): IdentityContext | undefined {
+  const inherited = parent.identity
+  if (inherited === undefined) return undefined
+  const delegating = currentPrincipal(inherited.chain)
+  const child = createAgentPrincipal(
+    brandString<PrincipalId>(`agent:${childSessionId}`),
+    delegating.tenantId,
+    delegating.id,
+  )
+  return {
+    principal: child,
+    runId: brandString<RunId>(`run-${randomUUID()}`),
+    chain: extendChain(inherited.chain, child, Date.now(), 'subagent delegation'),
+  }
+}
+
+/**
  * Resolve the child's `AgentOptions`: the parent's provider/model,
  * reasoning-effort, and maxTokens values unless the request overrides them,
  * stamped with the child's own delegation depth. Changing the route without
  * naming an effort clears the parent's route-owned effort so the selected
  * model resolves its own default.
- * @param parent - the delegating parent whose route the child inherits.
+ * @param parent - the delegating parent whose route and identity the child inherits.
  * @param requested - per-child overrides, if any.
  * @param childDepth - the resolved delegation depth to stamp.
+ * @param childSessionId - the child's own session id, which names its principal.
  * @returns the resolved options for `ctx.agents.create()`.
  */
 export function resolveChildAgentOptions(
   parent: Agent,
   requested: AgentOptions | undefined,
   childDepth: number,
+  childSessionId: SessionId,
 ): AgentOptions {
   const parentOptions = parentAgentOptionsForDelegation(parent)
   const parentProvider = parentOptions.provider
   const parentModel = parentOptions.model
   const parentReasoningEffort = parentOptions.reasoningEffort
   const parentMaxTokens = parentOptions.maxTokens
+  const delegated = delegateChildIdentity(parent, childSessionId)
   const resolved: AgentOptions = {
     ...parentProvider !== undefined ? { provider: parentProvider } : {},
     ...parentModel !== undefined ? { model: parentModel } : {},
     ...parentReasoningEffort !== undefined ? { reasoningEffort: parentReasoningEffort } : {},
     ...parentMaxTokens !== undefined ? { maxTokens: parentMaxTokens } : {},
+    ...delegated === undefined ? {} : { identity: delegated },
     ...requested,
     subagentDepth: childDepth,
   }

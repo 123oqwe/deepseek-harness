@@ -126,8 +126,8 @@ setPolicy(agent: Agent, policy: ApprovalPolicy): void
  * audit event.
  * @param req - the pending decision (agent, tool identity, reason, signal).
  * @returns the closed outcome; `'allowed-once'` is the only grant.
- * @throws when no turn is open or either audit event fails before the session
- *   append commit point.
+ * @throws when no turn and no command run is open, or either audit event
+ *   fails before the session append commit point.
  */
 async request(req: ApprovalRequest): Promise<ApprovalOutcome>
 

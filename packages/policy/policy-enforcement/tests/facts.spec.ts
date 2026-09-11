@@ -84,7 +84,7 @@ describe('P2-05 must[0]: the policy sees the action, the workspace and the postu
     expect(audit.at(-1)?.decision.effect).toBe('permit')
   })
 
-  it('CHARACTERIZATION (BLOCKED-202): the posture Cedar sees is the constant `default`, whatever preset is mounted', async () => {
+  it('CHARACTERIZATION (BLOCKED-203): the posture Cedar sees is the constant `default`, whatever preset is mounted', async () => {
     // Not an assertion that this is right. `PermissionPostureFact` enumerates
     // `default | plan | accept-edits | bypass`, and no composition configures a
     // preset by any of those names — the shipped table is `read-only`,
@@ -106,7 +106,7 @@ describe('P2-05 must[0]: the policy sees the action, the workspace and the postu
     expect(resultText(events)).toContain('wrote')
   })
 
-  it('CHARACTERIZATION (BLOCKED-202): a rule naming `default` matches under the read-only preset, which is the defect stated positively', async () => {
+  it('CHARACTERIZATION (BLOCKED-203): a rule naming `default` matches under the read-only preset, which is the defect stated positively', async () => {
     const { ctx, audit } = await stack({
       kernel: 'deployment',
       preset: 'read-only',

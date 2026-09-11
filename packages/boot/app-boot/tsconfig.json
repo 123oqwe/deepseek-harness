@@ -46,6 +46,15 @@
     },
     {
       "path": "../../schema/schema-registry"
+    },
+    {
+      "path": "../../core/agent-loop"
+    },
+    {
+      "path": "../../identity/host-user-id"
+    },
+    {
+      "path": "../../identity/principal"
     }
   ]
 }

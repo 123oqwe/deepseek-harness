@@ -28,9 +28,25 @@ A whole-tree census of its two call sites — `agent-loop/src/tool-calls.ts` and
 
 **187's OUTPUT half stays open.** `ask` still has no producer on any profile. Nothing here changes that, and it should not be read as closed.
 
-**What is NOT closed: the posture.** Two of the three facts are real. The third cannot be supplied truthfully at all, for a reason measured while doing it — see [BLOCKED-202](#blocked-202).
+**What is NOT closed: the posture.** Two of the three facts are real. The third cannot be supplied truthfully at all, for a reason measured while doing it — see [BLOCKED-203](#blocked-203).
 
-### BLOCKED-202 — P2-05: `PermissionPostureFact`'s four values name no preset any composition configures, so the posture fact cannot be supplied truthfully
+### BLOCKED-205 — P1-07: a shipped command cannot ask for approval, because the dispatcher never opens a turn
+
+**Status: CLOSED in this batch (delegate ruling §12.85 note 43). Found by a case, not by reading** — the P1-07 composition fixture, once a host user was attached, stopped refusing on the missing identity and instead CRASHED on the next line.
+
+**The defect.** `approval.request()` refuses to ask outside an open turn, deliberately: *"a bare event between turns is crash-tail garbage on reload"*. The production dispatcher for a typed slash command is `CommandsService.execute` (`interaction/commands/src/index.ts:333`, decorated `@Remote` — the Remote IS the dispatcher). It appends `command/run` … `command/done` and **never opens a turn**, and the Web composer submits commands from an IDLE session. So `/trust-skills` threw on every real invocation.
+
+**Why nothing caught it.** `/trust-skills` is the **only** shipped command that asks for approval — `command-compact`, `command-feedback`, `command-goal`, `session-log-export`, plan-mode and permission-presets all decide without asking. It is the first command to ask, so it is the first to hit the rule. And it could not hit it until this batch: the missing host identity refused one line earlier, which made the out-of-turn call unreachable. **Closing BLOCKED-200 is what exposed it.**
+
+Census backing the claim: `grep -rn '\.commands\.execute'` across `packages` and `apps`, excluding `/lib/`, tests and specs and the Remote client, returns **zero** other production callers.
+
+**The fix, and the one that was rejected.** The precondition's real requirement is not "inside a turn" but "enclosed by a durable bracket a reload can pair", and a command run already has one. `hasOpenTurn` became `hasOpenAuditBracket`: an open `turn/start` **or** an open `command/run`, closed by `turn/end` or `command/done` respectively. One predicate and its documentation, in `user-approval`.
+
+**Rejected: let the dispatcher open a turn.** A turn is the model-round-trip unit that the agent loop and several projections count. Manufacturing an empty turn — no assistant step, no request — to carry an approval would pay for an audit problem with turn semantics, and every turn-counting reader would inherit the bill.
+
+**Cases.** In `user-approval/tests/approval.spec.ts`: a question inside an open command run on an IDLE session is asked and its `approval/asked` + `approval/decided` pair recorded; and the control, a question after `command/done`, is still refused — so the bracket is proven PAIRED rather than merely present. The mutation reverting to turn-only reddens the new case and P1-07's end-to-end composition case, and nothing else. The P1-07 fixture's stopgap `turn/start` was removed: the command now runs on the idle session a real user types into, which is what makes that case end-to-end rather than staged.
+
+### BLOCKED-203 — P2-05: `PermissionPostureFact`'s four values name no preset any composition configures, so the posture fact cannot be supplied truthfully
 
 **Status: MEASURED. Blocks the third of the three facts BLOCKED-201 was closed for; the other two are real and shipped.** Found while wiring the dispatch paths to pass real context facts.
 

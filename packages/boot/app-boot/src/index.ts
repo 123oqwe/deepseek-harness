@@ -16,6 +16,9 @@ import Loader, { type Entry, type EntryOptions } from '@deepseek-ai/cordis-plugi
 import Include, { applyEntryPatches, entryListSchema, type PatchOptions } from '@deepseek-ai/cordis-plugin-include'
 import Group from '@deepseek-ai/cordis-plugin-group'
 import { dshHomePath, resolveDshHome } from '@deepseek-ai/dsh-home-paths'
+import { HOST_USER_IDENTITY_KEY } from '@deepseek-ai/dsh-agent-loop'
+import { hostUserIdentity } from '@deepseek-ai/dsh-host-user-id'
+import type { RunId } from '@deepseek-ai/dsh-principal/types'
 import { createLaunchEnvironmentSnapshot, type LaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
 import type {} from '@deepseek-ai/cordis-plugin-hmr'
 import type {} from '@deepseek-ai/dsh-system-prompt'
@@ -796,6 +799,12 @@ export async function boot(
   try {
     ctx.baseUrl = pathToFileURL(dirname(absoluteConfigPath)).href + '/'
     ctx.provide('dshHomePath', dshHomePath)
+    // P2-01 acceptance[0]: who the host user is, for agents a profile creates
+    // from its own `agents:` rows. A FACTORY, not a value — nothing resolves
+    // the id, and so nothing touches `$DSH_HOME`, unless a configured row
+    // actually needs one. Programmatic root creation (headless, the Web app's
+    // session controller) passes its identity in `AgentOptions` instead.
+    ctx.provide(HOST_USER_IDENTITY_KEY, (runId: RunId) => hostUserIdentity(runId))
     await ctx.plugin(Loader)
     await prepare?.(ctx)
     stage = 'plugin tree failed to load'

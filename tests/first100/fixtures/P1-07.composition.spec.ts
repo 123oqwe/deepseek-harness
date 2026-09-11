@@ -128,23 +128,21 @@ describe('P1-07 acceptance[0] — opening a cloned repository with malicious con
     expect(observed.instructionText).toContain(HOSTILE_INSTRUCTION)
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 
-  it('CHARACTERIZATION: /trust-skills cannot grant on a shipped profile, because no host user is attached to the session', async () => {
-    // Written to prove must[2]'s execute half end to end on ONE boot — the
-    // command reaching the trust state, and the trust state reaching the
-    // catalog — because both halves had cases and nothing showed they compose.
-    // It found that they cannot yet: NO SHIPPED PROFILE ATTACHES A HOST-USER
-    // IDENTITY to a session, so the command has nobody to authorize on behalf
-    // of and refuses by name. Every `agentLoop.create(` call site that passes
-    // an identity is a test.
+  it('must[2] end to end on ONE boot: the host user runs /trust-skills and the clone\'s skills become available', async () => {
+    // The whole of must[2]'s execute half on one real boot — the host user
+    // confirming, the command reaching the trust state, and that state reaching
+    // the catalog — because both halves had cases and nothing showed they
+    // compose. The control two cases up is what makes the catalog assertion
+    // mean something: the same clone offers `attacker` only once trusted.
     //
-    // Measured, NOT endorsed. The refusal is the correct direction — a trust
-    // upgrade with no host user is exactly what must[2] forbids — and the
-    // MISSING IDENTITY is the defect, tracked as BLOCKED-200 against P2-01,
-    // whose acceptance[0] ("every action traces to a root user/tenant") does
-    // not hold on a shipped boot either. When 200 closes this case goes red,
-    // and that is the signal to re-freeze it as the success it was meant to be.
+    // This case was frozen as a CHARACTERIZATION of the opposite. It asserted
+    // that the command CANNOT grant on a shipped profile, because no shipped
+    // profile attached a host-user identity to a session and so the command had
+    // nobody to authorize on behalf of — measured, never endorsed, and tracked
+    // as BLOCKED-200 against P2-01. Closing 200 turned it red exactly as its
+    // own note said it would, and this is the re-freeze that note asked for.
     const observed = await openClone('P1-07 trust via command', undefined, true)
-    expect(observed.commandResult).toContain('no attached identity')
-    expect(observed.catalog).not.toContain('attacker')
+    expect(observed.commandResult).not.toContain('no attached identity')
+    expect(observed.catalog).toContain('attacker')
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 })

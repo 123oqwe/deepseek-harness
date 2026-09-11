@@ -7,6 +7,8 @@
 
 import { Context, FiberState, Service } from '@deepseek-ai/cordis'
 import { randomUUID } from 'node:crypto'
+import { RunId } from '@deepseek-ai/dsh-principal/types'
+import type { IdentityContext } from '@deepseek-ai/dsh-principal/types'
 import z from '@deepseek-ai/schemastery'
 import { z as zod } from 'zod'
 import { brandString } from '@deepseek-ai/dsh-brand'
@@ -295,6 +297,36 @@ export interface ConfiguredAgentIdentities extends Readonly<Record<string, Launc
 export const CONFIGURED_AGENT_IDENTITIES_KEY = 'configuredAgentIdentities'
 
 /**
+ * Mints the host user's identity for one run.
+ *
+ * Supplied by the launcher rather than called here, for the same reason
+ * {@link CONFIGURED_AGENT_IDENTITIES_KEY} is: this package must not decide who
+ * the host user is, and resolving one touches `$DSH_HOME`. A composition that
+ * mounts this plugin directly — every unit suite does — provides nothing and
+ * mints nothing, so no test writes an identity file into a developer's home.
+ */
+export type HostUserIdentityFactory = (runId: RunId) => IdentityContext
+
+/**
+ * Context key a launcher sets before any Loader entry mounts
+ * (`ctx.provide(HOST_USER_IDENTITY_KEY, factory)`) so agents created from
+ * `Config.agents` rows act as the host user (first100 registry P2-01
+ * acceptance[0]).
+ *
+ * A launcher-supplied factory rather than a config field, because who the host
+ * user is is not a deployment's YAML choice, and because a config key would let
+ * an overlay repointing the row drop it — the failure
+ * {@link CONFIGURED_AGENT_IDENTITIES_KEY} exists to prevent for session ids.
+ *
+ * The two programmatic root creation sites — `bundle/headless` and the Web
+ * app's session controller — pass the identity in `AgentOptions` directly and
+ * do not use this key. Per-request creation in ACP, the SDK server and webhook
+ * ingress attaches nothing: a request that arrived over a socket is not the
+ * machine's host user.
+ */
+export const HOST_USER_IDENTITY_KEY = 'hostUserIdentity'
+
+/**
  * Apply launcher-owned identities over the configured agents, replacing both
  * identity keys for every entry the launcher named so a config-supplied
  * identity can never survive alongside a launcher-supplied one.
@@ -446,8 +478,17 @@ export class AgentLoop extends Service implements AgentFactory {
     ctx.systemPrompt.variable('model', context => context.agent?.options.model)
     ctx.systemPrompt.variable('cwd', context => context.agent?.session.header.cwd)
 
-    for (const { id, sessionId, cwd, resumeSessionId, ...options } of this.config.agents) {
+    // Minted once per configured row rather than once per boot: a runId names
+    // one RUN, and two rows are two runs. Absent when no launcher provided a
+    // factory, which is every composition that mounts this plugin directly.
+    const hostUser = ctx.get(HOST_USER_IDENTITY_KEY) as HostUserIdentityFactory | undefined
+    for (const { id, sessionId, cwd, resumeSessionId, ...configured } of this.config.agents) {
       const meta = cwd === undefined ? {} : { cwd }
+      // A row that states its own identity keeps it; the launcher's host user
+      // is the default, not an override.
+      const options: AgentOptions = configured.identity !== undefined || hostUser === undefined
+        ? configured
+        : { ...configured, identity: hostUser(RunId(`run-${randomUUID()}`)) }
       if (resumeSessionId === undefined || resumeSessionId === '') {
         const configuredId = sessionId ?? brandString<SessionId>(`${id}-session-${randomUUID()}`)
         const persistence = sessionId === undefined ? undefined : ctx.get('sessionPersistence')

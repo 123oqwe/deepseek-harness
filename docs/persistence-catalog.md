@@ -278,7 +278,7 @@ Source: [`packages/interaction/user-approval/src/types.ts:58`](../packages/inter
 }
 ```
 
-Source: [`packages/interaction/user-approval/src/index.ts:33`](../packages/interaction/user-approval/src/index.ts)
+Source: [`packages/interaction/user-approval/src/index.ts:36`](../packages/interaction/user-approval/src/index.ts)
 
 ### `assistant/*`
 

@@ -1,8 +1,11 @@
 /** Agent activation, composition, and model-selection policy owned by API Session. */
 
+import { randomUUID } from 'node:crypto'
 import { mkdir } from 'node:fs/promises'
 import type { Context } from '@deepseek-ai/cordis'
 import { installModelSelection } from '@deepseek-ai/dsh-agent'
+import { hostUserIdentity } from '@deepseek-ai/dsh-host-user-id'
+import { RunId } from '@deepseek-ai/dsh-principal/types'
 import type {
   Agent, AgentOptions, AgentSetup, ModelSelection as AgentModelSelection, ModelSelectionRef,
 } from '@deepseek-ai/dsh-agent'
@@ -485,9 +488,26 @@ export class ApiSessionAgentController {
     })).agent
   }
 
+  /**
+   * The options every Agent this controller creates or resumes runs under.
+   *
+   * The identity is P2-01 acceptance[0]'s first half: the host user this
+   * harness home belongs to, so the action manifests a session writes name a
+   * real actor instead of the `anonymous-dev` principal both dispatch paths
+   * synthesize when none is attached (BLOCKED-200). This controller is the Web
+   * app's root creation site and is driven by the LOCAL host user through the
+   * `dsh` launcher; ACP, the SDK server and webhook ingress deliberately attach
+   * nothing, because a request arriving over a socket is not that person.
+   *
+   * A new `runId` per call is deliberate — this is one run, not one session —
+   * and a resume re-supplying the same principal appends no new
+   * `identity/attached` event, because `resolveSessionIdentity` logs only a
+   * real difference.
+   * @returns the Agent options, carrying the host user's identity.
+   */
   private agentOptions(): AgentOptions {
     const { provider, model } = this.ctx.agentDefaultModel.currentSelection()
-    return { provider, model }
+    return { provider, model, identity: hostUserIdentity(RunId(`run-${randomUUID()}`)) }
   }
 
   private installSelection(agentCtx: Context): void {

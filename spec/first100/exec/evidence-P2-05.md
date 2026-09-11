@@ -128,12 +128,12 @@ Three mutations against `readPolicyContextFacts`, one literal substitution each,
 | --- | --- |
 | `riskClass` ignores the computed classification | *forbids the kernel hard-deny band by POLICY…* — alone |
 | `workspaceTrust` never reads the seam | *permits under the SAME rule when the seam answers trusted-execute…* — alone |
-| `permissionPosture` spells a real preset name | both BLOCKED-202 characterization cases |
+| `permissionPosture` spells a real preset name | both BLOCKED-203 characterization cases |
 
 Each fact carries a different case. The two risk cases are a pair: the deny case declares a tag classifying `safety-critical`, the control declares one classifying `internal-write` under the same rule, so the rule is shown not to be a constant. The trust pair is the same shape across `untrusted` and `trusted-execute`.
 
 ### NOT proven, stated rather than omitted
 
-The **posture** fact is still the literal `'default'`. It is not that it was not wired — there is nothing to wire: `PermissionPostureFact`'s four members name no preset any composition configures, and preset names are deployment config, so no real posture can be spelled in that vocabulary. Measured and recorded as [BLOCKED-202](BLOCKED-QUEUE.md#blocked-202). The two cases above pin the gap as CHARACTERIZATION from both sides, and whichever ruling closes 202 should redden them.
+The **posture** fact is still the literal `'default'`. It is not that it was not wired — there is nothing to wire: `PermissionPostureFact`'s four members name no preset any composition configures, and preset names are deployment config, so no real posture can be spelled in that vocabulary. Measured and recorded as [BLOCKED-203](BLOCKED-QUEUE.md#blocked-203). The two cases above pin the gap as CHARACTERIZATION from both sides, and whichever ruling closes 203 should redden them.
 
 Also not proven: that the shipped `kernel-hard-deny` rule ever fires on a real profile. No shipped tool declares a tag classifying `safety-critical` — the corpus census found the class is never produced — so the rule is stated and unexercised outside the fixture, exactly as `gateActionRisk`'s `hardDenied` branch has always been.

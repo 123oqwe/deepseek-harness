@@ -12,6 +12,8 @@ import { randomUUID } from 'node:crypto'
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { brandString } from '@deepseek-ai/dsh-brand'
+import { hostUserIdentity } from '@deepseek-ai/dsh-host-user-id'
+import { RunId } from '@deepseek-ai/dsh-principal/types'
 import { exitStatusFor } from './scriptability.ts'
 import { resolveModelSelection } from './model-selection.ts'
 import { OUTPUT_FORMATS, renderLine } from './stream-json.ts'
@@ -270,7 +272,15 @@ async function run(
   const { agent } = resumeSessionId !== undefined
     ? await agents.resume({
       resumeSessionId: brandString<SessionId>(resumeSessionId),
-      agentOptions: { provider: selection.provider, model: selection.model },
+      // A resumed session is the same host user acting again, in a NEW run:
+      // `resolveSessionIdentity` compares what this run supplies against what
+      // the session already recorded and logs only a real difference, so
+      // re-supplying the same principal appends nothing.
+      agentOptions: {
+        provider: selection.provider,
+        model: selection.model,
+        identity: hostUserIdentity(RunId(`run-${randomUUID()}`)),
+      },
       setup: (agentCtx) => {
         const selected: ModelSelectionRef = { current: selection, assembled: undefined }
         installModelSelection(agentCtx, selected)
@@ -279,7 +289,19 @@ async function run(
     : await agents.create({
       sessionId: brandString<SessionId>(`session-${randomUUID()}`),
       meta: { cwd: process.cwd() },
-      agentOptions: { provider: selection.provider, model: selection.model },
+      // P2-01 acceptance[0]: the host user this harness home belongs to, so the
+      // action manifests this run writes name a real actor. Without it both
+      // dispatch paths synthesize an `anonymous-dev` principal named after the
+      // session, and nothing this run does traces to a person (BLOCKED-200).
+      // This launcher is one of exactly two root creation sites a LOCAL host
+      // user drives; ACP, the SDK server and webhook ingress deliberately
+      // attach nothing, because a request arriving over a socket is not the
+      // machine's host user.
+      agentOptions: {
+        provider: selection.provider,
+        model: selection.model,
+        identity: hostUserIdentity(RunId(`run-${randomUUID()}`)),
+      },
       setup: (agentCtx) => {
         const selected: ModelSelectionRef = { current: selection, assembled: undefined }
         installModelSelection(agentCtx, selected)

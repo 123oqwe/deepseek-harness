@@ -3,6 +3,8 @@
 import { randomUUID } from 'node:crypto'
 import type { Context } from '@deepseek-ai/cordis'
 import { brandString } from '@deepseek-ai/dsh-brand'
+import { hostUserIdentity } from '@deepseek-ai/dsh-host-user-id'
+import { RunId } from '@deepseek-ai/dsh-principal/types'
 import type { Agent, ModelSelection as AgentModelSelection } from '@deepseek-ai/dsh-agent'
 import { AttachmentError, admitPromptContent } from '@deepseek-ai/dsh-attachment'
 import type { ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
@@ -256,7 +258,9 @@ export class SessionCommandController {
             ? {}
             : { agentPreset: composition.agentPreset }),
         },
-        agentOptions: { provider, model },
+        // The fork is a new run by the SAME host user; see `agentOptions()`
+        // in `./agent.ts` for why the identity is attached here at all.
+        agentOptions: { provider, model, identity: hostUserIdentity(RunId(`run-${randomUUID()}`)) },
         setup: composition.setup,
       })
     } catch (error) {

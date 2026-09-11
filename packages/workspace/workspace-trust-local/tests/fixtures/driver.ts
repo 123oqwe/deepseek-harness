@@ -47,6 +47,12 @@ try {
   if (process.env.P1_07_TRUST_VIA_COMMAND !== undefined) {
     const [agent] = ctx.get('agents')?.roots() ?? []
     if (agent === undefined) throw new Error('the composition driver found no configured agent')
+    // No turn is opened here on purpose. The fixture's own turn has ENDED, so
+    // this is the idle session a host user actually types a command into, and
+    // the approval the command asks for is enclosed by the command's own
+    // `command/run` … `command/done` pair (BLOCKED-205). A stopgap `turn/start`
+    // here would have made the case pass while proving nothing about the path
+    // a real user takes.
     const execution = await ctx.commands.execute(agent, '/trust-skills', [], new AbortController().signal)
     if (execution === undefined) throw new Error('/trust-skills did not resolve — the command row is not mounted')
     process.stdout.write(`P1-07-TRUST-COMMAND ${JSON.stringify(execution.result)}\n`)

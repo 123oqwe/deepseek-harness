@@ -71,7 +71,7 @@ kernel 在每次调用时经 `ctx.get('trustKernel')` 解析,从不缓存:它在
 
 - **调用它的是两条派发路径,不是五条。**原生工具路径与 code-mode 子派发都会到达它,而子 agent 与 workflow 子级自己的工具调用也经由原生路径抵达。进程外 SDK 派发与插件自身的 RPC 目前还没有 manifest 生产者,因此不在这里被决定——插件 RPC 的生产者属于另一个 epic。
 - **策略看不到 token 的 verbs 与 resources。**跨过边界的是 `redactTokenForLog` 的投影——digest、subject、tenant、capability、委派深度、过期时间——P2-02 已审定这一形态在 token 层之外是安全的。因此策略可以拒绝"授权所指 capability 不对"的动作,却无法拒绝"授权缺少某个具体资源上的某个动词"的动作。扩展那个投影是 P2-02 的决定,不该由本包另起一份。
-- **权限姿态仍是一个常量,而且没有任何东西可供它读取。**`workspaceTrust` 与 `riskClass` 由 `@deepseek-ai/dsh-tools/external-effect` 的 `readPolicyContextFacts` 从组合中读出,两条派发路径都在到达本执行点之前调用它。`permissionPosture` 是字面量 `default`:`PermissionPostureFact` 的四个取值不对应任何组合所配置的 preset,因此没有任何真实姿态能用那套词汇拼写出来(BLOCKED-202)。未挂载的事实服务读作它最严的取值而非最宽的取值,因为针对一个"悄悄兜底成放行"的事实所写的策略,执行的将不是它所声明的东西。
+- **权限姿态仍是一个常量,而且没有任何东西可供它读取。**`workspaceTrust` 与 `riskClass` 由 `@deepseek-ai/dsh-tools/external-effect` 的 `readPolicyContextFacts` 从组合中读出,两条派发路径都在到达本执行点之前调用它。`permissionPosture` 是字面量 `default`:`PermissionPostureFact` 的四个取值不对应任何组合所配置的 preset,因此没有任何真实姿态能用那套词汇拼写出来(BLOCKED-203)。未挂载的事实服务读作它最严的取值而非最宽的取值,因为针对一个"悄悄兜底成放行"的事实所写的策略,执行的将不是它所声明的东西。
 - **审计记录送往 kernel 的 `auditAppend`,而在部署未配置 sink 时它是空操作。**没有接 sink 的组合会决策、会执行,但不会记录。
 
 ### 开发备注

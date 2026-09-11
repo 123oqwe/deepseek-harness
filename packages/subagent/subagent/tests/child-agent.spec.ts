@@ -20,7 +20,7 @@ function parentAgent(): Agent {
 
 describe('child Agent options', () => {
   it('inherits the parent effort while the exact route is unchanged', () => {
-    expect(resolveChildAgentOptions(parentAgent(), undefined, 1)).toEqual({
+    expect(resolveChildAgentOptions(parentAgent(), undefined, 1, SessionId('child'))).toEqual({
       provider: 'parent-provider',
       model: 'parent-model',
       reasoningEffort: 'high',
@@ -30,7 +30,7 @@ describe('child Agent options', () => {
   })
 
   it('clears an inherited effort when the child route changes', () => {
-    expect(resolveChildAgentOptions(parentAgent(), { model: 'child-model' }, 1)).toEqual({
+    expect(resolveChildAgentOptions(parentAgent(), { model: 'child-model' }, 1, SessionId('child'))).toEqual({
       provider: 'parent-provider',
       model: 'child-model',
       maxTokens: 512,
@@ -43,7 +43,7 @@ describe('child Agent options', () => {
       provider: 'child-provider',
       model: 'child-model',
       reasoningEffort: ReasoningEffortId('max'),
-    }, 1)).toEqual({
+    }, 1, SessionId('child'))).toEqual({
       provider: 'child-provider',
       model: 'child-model',
       reasoningEffort: 'max',
@@ -65,7 +65,7 @@ describe('child Agent options', () => {
       reason: 'initial',
     })
 
-    expect(resolveChildAgentOptions(parent, undefined, 1)).toEqual({
+    expect(resolveChildAgentOptions(parent, undefined, 1, SessionId('child'))).toEqual({
       provider: 'current-provider',
       model: 'current-model',
       reasoningEffort: 'low',

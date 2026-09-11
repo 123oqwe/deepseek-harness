@@ -34,4 +34,4 @@ Status: implemented
 
 - `gateActionRisk` 多了一个可选的第五参数。不传的调用方仍然自己分类，因此只到达 gate 的组合行为与此前完全一致。所有存活的 P2-04 冻结用例改前改后**按名**对照：60 条全部仍然通过。
 - 无密钥快照套件不变（115 passed、1 skipped）。没有任何出货工具声明会分类到 `safety-critical` 的 tag，因此这条新的 `forbid` 在 fixture 之外是"已声明但未被触发"——与 `gateActionRisk` 的 `hardDenied` 分支一直以来的处境相同。
-- **权限姿态仍是一个常量，而且没有任何东西可供它读取。** `PermissionPostureFact` 枚举 `default | plan | accept-edits | bypass`，而全树搜索只在声明本身及其生成回显里找到这四个名字。出货的 preset 表是 `read-only`、`workspace-write`、`danger-full-access`，并且 preset 名字属于部署配置，因此没有任何真实姿态能用那套词汇拼写出来。记录为 BLOCKED-202；`readPolicyContextFacts` 返回字面量并在注释里点名它，另有两条 CHARACTERIZATION 用例从正反两面把它钉住，好让关闭 202 的那次裁定必然把它们变红。
+- **权限姿态仍是一个常量，而且没有任何东西可供它读取。** `PermissionPostureFact` 枚举 `default | plan | accept-edits | bypass`，而全树搜索只在声明本身及其生成回显里找到这四个名字。出货的 preset 表是 `read-only`、`workspace-write`、`danger-full-access`，并且 preset 名字属于部署配置，因此没有任何真实姿态能用那套词汇拼写出来。记录为 BLOCKED-203；`readPolicyContextFacts` 返回字面量并在注释里点名它，另有两条 CHARACTERIZATION 用例从正反两面把它钉住，好让关闭 203 的那次裁定必然把它们变红。

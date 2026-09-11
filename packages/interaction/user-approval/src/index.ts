@@ -13,6 +13,9 @@ import { scopeTarget } from '@deepseek-ai/dsh-scope'
 import type { Session } from '@deepseek-ai/dsh-session'
 import { SessionSeq } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-system-prompt'
+// Declaration merging only: `hasOpenAuditBracket` reads `command/run` /
+// `command/done`, which `@deepseek-ai/dsh-commands` declares on the event map.
+import type {} from '@deepseek-ai/dsh-commands/types'
 
 declare module '@deepseek-ai/cordis' {
   interface Context {
@@ -70,15 +73,30 @@ const ASK_SENTENCE = 'Approval policy: ask. Operations that require approval may
 /**
  * Whether the log currently sits inside an open turn (a `turn/start` not yet
  * closed by a `turn/end`) — the {@link ApprovalService.request} precondition.
- * The audit pair must be turn-enclosed: the turn is the durable log's
- * commit/replay boundary, so a bare event appended between turns is
- * indistinguishable from a crash tail and silently dropped on reload.
+ * The audit pair must be enclosed by a durable bracket a reload can pair: a
+ * BARE event, appended with nothing open around it, is indistinguishable from
+ * a crash tail and silently dropped on reload.
+ *
+ * **Two brackets qualify, not one.** A turn is the obvious one and is what
+ * every tool approval sits inside. A COMMAND run is the other: `command/run`
+ * … `command/done` is an equally durable pair that replays coherently, and a
+ * question asked inside it is not bare. Requiring a turn specifically was
+ * measured as wrong by `/trust-skills`, the first and only shipped command that
+ * asks for approval: the production dispatcher is `CommandsService.execute`
+ * (`@deepseek-ai/dsh-commands`), which appends the command pair and never
+ * opens a turn, and the composer submits commands from an IDLE session — so
+ * the question threw on every real invocation (BLOCKED-205).
+ *
+ * The dispatcher opening a turn was the other way to close it, and was
+ * rejected: a turn is the model-round-trip unit that the agent loop and
+ * several projections count, and manufacturing an empty one to carry an
+ * approval would pay for an audit problem with turn semantics.
  */
-function hasOpenTurn(session: Session): boolean {
+function hasOpenAuditBracket(session: Session): boolean {
   for (let seq = session.seq - 1; seq >= 0; seq -= 1) {
     const type = session.eventAt(SessionSeq(seq))?.type
-    if (type === 'turn/start') return true
-    if (type === 'turn/end') return false
+    if (type === 'turn/start' || type === 'command/run') return true
+    if (type === 'turn/end' || type === 'command/done') return false
   }
   return false
 }
@@ -209,16 +227,16 @@ export class ApprovalService extends Service {
    * audit event.
    * @param req - the pending decision (agent, tool identity, reason, signal).
    * @returns the closed outcome; `'allowed-once'` is the only grant.
-   * @throws when no turn is open or either audit event fails before the session
-   *   append commit point.
+   * @throws when no turn and no command run is open, or either audit event
+   *   fails before the session append commit point.
    */
   async request(req: ApprovalRequest): Promise<ApprovalOutcome> {
     const session = req.agent.session
-    if (!hasOpenTurn(session)) {
+    if (!hasOpenAuditBracket(session)) {
       throw new Error(
-        'approval.request() outside an open turn: the approval/asked + approval/decided audit pair '
-        + 'must be turn-enclosed (a bare event between turns is crash-tail garbage on reload). '
-        + 'Ask from inside the turn that needs the decision.',
+        'approval.request() outside an open turn or command: the approval/asked + approval/decided audit pair '
+        + 'must be enclosed by a durable bracket (a bare event is crash-tail garbage on reload). '
+        + 'Ask from inside the turn or the command run that needs the decision.',
       )
     }
     const id = ApprovalRequestId(randomUUID())

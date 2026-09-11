@@ -220,7 +220,7 @@ export async function readPolicyContextFacts(
     // any composition configures — the shipped table is `read-only`,
     // `workspace-write`, `danger-full-access`, and preset names are a
     // deployment's own — so no real posture can be spelled in that vocabulary
-    // (BLOCKED-202). The other two facts are real; this one waits on a ruling
+    // (BLOCKED-203). The other two facts are real; this one waits on a ruling
     // about the vocabulary, and says so here rather than looking supplied.
     permissionPosture: 'default',
     // The class the deployment's risk policy put this action in, computed
@@ -288,6 +288,7 @@ export type RiskRefusal =
  * @param agent - the agent dispatching the action; its session carries the preset in force.
  * @param toolName - the action's capability, used as its identity to the classifier.
  * @param riskDomainTags - what the tool declares it touches, empty when it declares nothing.
+ * @param classified - the verdict {@link classifyActionRisk} already produced for this action; omitted, the gate classifies for itself.
  * @returns the refusal, or `undefined` when the action may run.
  */
 export async function gateActionRisk(

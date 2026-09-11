@@ -26,6 +26,9 @@ const EVENT_TIME = '{{eventTime}}'
 const EVENT_OMITTED_BYTES = '{{eventOmittedBytes}}'
 const ARGUMENTS_HASH = '{{argumentsHash}}'
 const IDEMPOTENCY_KEY = '{{idempotencyKey}}'
+const RUN_ID = '{{runId}}'
+/** A run id minted per created agent: `run-<uuid v4>`. */
+const MINTED_RUN_ID = /^run-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu
 const SANDBOX_MODE = '{{sandboxMode}}'
 const PACKED_CHUNK_ROW_TYPES = new Set(['text-chunks', 'reasoning-chunks', 'tool-call-chunks'])
 
@@ -387,6 +390,17 @@ function scrubVolatileArgumentsHash(record: Record<string, unknown>): void {
   // unit-tested in `dsh-action-manifest`, where the inputs are fixed rather
   // than environmental.
   if (typeof data.idempotencyKey === 'string') data.idempotencyKey = IDEMPOTENCY_KEY
+  // A run id is minted per created agent and is a fresh uuid every launch.
+  // Before a host user was attached it read `anonymous-run:{{session:1}}` and
+  // was carried by the session token; a real identity mints its own, so the
+  // token has to be its own (BLOCKED-201's sibling in P2-01.U2).
+  //
+  // Deriving it from the session id instead was rejected where it is minted:
+  // two runs of one session would share a run id, and P4-12 keys a ledger
+  // scope on it. Only the VALUE is dropped — that the field is present, and
+  // that it is a minted run id rather than the synthesized `anonymous-run:`
+  // form, is still pinned by the pattern this match requires.
+  if (typeof data.runId === 'string' && MINTED_RUN_ID.test(data.runId)) data.runId = RUN_ID
 }
 
 /**

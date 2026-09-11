@@ -48,7 +48,7 @@ describe('ApprovalService.request', () => {
     const ctx = await mounted()
     const { agent, appended } = fakeAgent([])
 
-    await expect(ctx.approval.request(requestOf(agent))).rejects.toThrow(/outside an open turn/)
+    await expect(ctx.approval.request(requestOf(agent))).rejects.toThrow(/outside an open turn or command/)
     expect(appended).toHaveLength(0)
   })
 
@@ -56,7 +56,39 @@ describe('ApprovalService.request', () => {
     const ctx = await mounted()
     const { agent, appended } = fakeAgent([{ type: 'turn/start' }, { type: 'turn/end' }])
 
-    await expect(ctx.approval.request(requestOf(agent))).rejects.toThrow(/outside an open turn/)
+    await expect(ctx.approval.request(requestOf(agent))).rejects.toThrow(/outside an open turn or command/)
+    expect(appended).toHaveLength(0)
+  })
+
+  // BLOCKED-205. `/trust-skills` is the first and only shipped command that
+  // asks for approval, and it asks from an IDLE session: the production
+  // dispatcher is `CommandsService.execute`, which appends `command/run` …
+  // `command/done` and never opens a turn, so every real invocation threw. The
+  // command pair is an equally durable bracket, so a question inside it is not
+  // the bare event the precondition exists to refuse.
+  it('BLOCKED-205: asks inside an open COMMAND run on an idle session, and records the pair', async () => {
+    const ctx = await mounted()
+    const { agent, appended } = fakeAgent([
+      { type: 'turn/start' },
+      { type: 'turn/end' },
+      { type: 'command/run' },
+    ])
+
+    const outcome = await ctx.approval.request(requestOf(agent, { toolName: 'workspace-trust' }))
+
+    // No answerer is composed, so the decision settles `'unavailable'` — the
+    // point is that it was ASKED and audited rather than thrown away.
+    expect(outcome).toBe('unavailable')
+    expect(appended.map(event => event.type)).toEqual(['approval/asked', 'approval/decided'])
+  })
+
+  // The control the widening must not cost: a command that already finished
+  // closes its bracket exactly as a turn does, and a question after it is bare.
+  it('BLOCKED-205: still throws after the command run has closed, so the bracket is paired and not merely present', async () => {
+    const ctx = await mounted()
+    const { agent, appended } = fakeAgent([{ type: 'command/run' }, { type: 'command/done' }])
+
+    await expect(ctx.approval.request(requestOf(agent))).rejects.toThrow(/outside an open turn or command/)
     expect(appended).toHaveLength(0)
   })
 

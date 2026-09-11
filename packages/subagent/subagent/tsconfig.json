@@ -76,6 +76,12 @@
     },
     {
       "path": "../../run/message-bus"
+    },
+    {
+      "path": "../../identity/principal"
+    },
+    {
+      "path": "../../util/brand"
     }
   ]
 }
