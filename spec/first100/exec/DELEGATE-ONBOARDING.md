@@ -63,3 +63,12 @@ preFlight(JSON 记录 `clause-subject-audit.json` + `evidence-<id>.md`,`recorded
 4. 装监视:`exec-watch.py` × 2 lane、`watch-v10.sh`(值守)、负载看守、当前门③/CI 的 Monitor。
 5. **核完前不签不推**;然后按 §5.2.5 对近 24h 的签字/撤签重做 4.4d。
 6. 把 lane 的队列按交班单续上,确认两条 lane 手上都有活。
+
+## 8. 终局与长前置(2026-09-11 补,gq-92 提、first100-delegate-78 核后写;引用的字节以文件原文为准)
+
+- **终态**:101 项 registry 全 ACCEPTED + **R10 通过** + P9 九项 VERIFIED 或 scheduled-BLOCKED,**再加** delegate 亲自组织的一次独立、对抗式的整体就绪评估("装起来真扛得住":全新安装、跨平台、真实 provider、回滚/DR 真凭据)——用户原话「整体验证是否可以直接投入使用」,这是交付物不是口号。
+- **R10 是长前置**:需要用户的 `DEEPSEEK_API_KEY_EXTERNAL` + 单独批的预算(B 类,只有用户能给)+ **≥3 晚的统计窗**(`plan-rectification-2026-09-06.md` 第 732 行;`decisions-approved.md:38`:W1–W7 不配真实 key,进 R10/Q3 前再配并单独批预算)。101 项全完之后还要 ≥3 天,**提前排**,在 delegate 到 W-末向用户要授权。R5A 要 rollback/DR/RPO/RTO 真实凭据(拒模拟)、R5B 全新安装跨平台含 Windows、R4A tarball 隔离安装、R5C SDK/wire 字节对等——每条以其 R-slice 原文为准,别信摘要。
+- **P9**:01–07 已批可提前并行(C3),08/09 归 W20–22;`verify-p9-cells.mjs` 读 `parallelWithR10` 判 PREMATURE。
+- **翻译债**:`/dsh-translate-docs` 只有用户能跑(BLOCKED-124),配对债累计 42,配对门 HELD_BACK 直到用户跑;delegate 不催、不代跑,只在交班单记数。
+- **用户触点只剩 B 类**:钱 / 钥匙 / 不可逆对外 / C7§② 收录范围;其余一律 delegate 定并事后通报(用户 2026-09-11「全自动不是半自动」)。交用户的题必须带建议 + 不答时的默认 + 卡什么(§12.85 补记 1)。
+- **格子来历**:`verify-cells-recomputable.mjs` 不在门集也不在 CI;每次 `--accept` 前对该 epic 跑一次,UNAVAILABLE 不签;观测产物在 `~/first100-delegate/artifacts/`(持久)与 GitHub(保留期见 `expires_at`)。
