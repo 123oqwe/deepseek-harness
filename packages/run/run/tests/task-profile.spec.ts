@@ -31,6 +31,9 @@ import { join } from 'node:path'
 import { Context } from '@deepseek-ai/cordis'
 import AgentRegistry from '@deepseek-ai/dsh-agent'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
+import type { AttachmentId } from '@deepseek-ai/dsh-attachment/types'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import type { GoalId } from '@deepseek-ai/dsh-goal/types'
 import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
 import LlmRuntime, { createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { Agent } from '@deepseek-ai/dsh-agent/types'
@@ -53,8 +56,17 @@ afterEach(async () => {
   for (const root of roots.splice(0)) await rm(root, { recursive: true, force: true })
 })
 
-/** A real Context carrying the agent loop, one lease store, and the Run plugin. */
-async function harness(): Promise<Context> {
+/**
+ * A real Context carrying the agent loop, one lease store, and the Run plugin,
+ * with one mock adapter good for `replies` model turns.
+ *
+ * The adapter is registered HERE and not per turn: `registerAdapter` refuses a
+ * provider that is already registered, and the cases that drive two agents over
+ * one session need two turns from one Context.
+ * @param replies - how many model turns this Context must serve.
+ * @returns the mounted Context, disposed in `afterEach`.
+ */
+async function harness(replies = 2): Promise<Context> {
   const root = await mkdtemp(join(tmpdir(), 'dsh-run-profile-'))
   roots.push(root)
   const ctx = new Context()
@@ -67,18 +79,23 @@ async function harness(): Promise<Context> {
   await ctx.plugin(AgentLoop, { agents: [] })
   await ctx.plugin(InMemoryLeaseStorePlugin)
   await ctx.plugin(RunPlugin, { storePath: join(root, 'runs.json') })
+  ctx.llm.registerAdapter(['mock'], new MockAdapter(Array.from({ length: replies }, () => textResponse('done'))))
   mounted.push(ctx)
   return ctx
 }
 
-/** Run one turn on a fresh session and return the agent that ran it. */
+/**
+ * Run one turn on a session and return the agent that ran it.
+ * @param ctx - the mounted Context.
+ * @param sessionId - the session to run in; reusing one drives a second agent over the same log.
+ * @param message - the message to send.
+ * @returns the agent, idle.
+ */
 async function turn(
   ctx: Context,
   sessionId: string,
   message: Parameters<Agent['followup']>[0],
-  replies = 1,
 ): Promise<Agent> {
-  ctx.llm.registerAdapter(['mock'], new MockAdapter(Array.from({ length: replies }, () => textResponse('done'))))
   const { agent } = await ctx.agents.create({
     sessionId: SessionId(sessionId),
     agentOptions: { provider: 'mock', model: 'mock' },
@@ -156,7 +173,7 @@ describe('P4-02 must[1]: the compile happens once per agent, and only for a task
     // turn in the same session never re-enters. A case that only ran one turn
     // would pass against a compile on every step.
     const ctx = await harness()
-    const agent = await turn(ctx, 'session-two-turns', goal('first goal'), 2)
+    const agent = await turn(ctx, 'session-two-turns', goal('first goal'))
     agent.followup(goal('second goal, unrelated to the first'))
     await agent.whenIdle()
 
@@ -179,5 +196,128 @@ describe('P4-02 must[1]: the compile happens once per agent, and only for a task
     const [run] = ctx.runs.service.runsForSession(agent.id)
     expect(run?.state).toBe('accepted')
     expect(referencesByKind(run?.events ?? [], 'task-profile')).toStrictEqual([])
+  })
+})
+
+describe('P4-02 must[2] over a partially read goal (delegate ruling, OQ2)', () => {
+  it('compiles a profile for an image-led first message and asks what the image asks for', async () => {
+    // Before the ruling this message produced NO profile: the loop's
+    // flattening idiom yields `undefined` for anything but a single text
+    // block, and the compiler refused `empty-goal`. Six recorded snapshot
+    // sessions sat on that, `sdk/inline-image-prompt` among them — a fixture
+    // written to exercise an image-led prompt was the one real task shape
+    // that had no profile.
+    const ctx = await harness()
+    const agent = await turn(ctx, 'session-image', createUserMessage({
+      content: [
+        { type: 'text', text: 'make the layout match this' },
+        {
+          type: 'image',
+          attachment: {
+            attachmentId: brandString<AttachmentId>('attachment-1'),
+            mediaType: 'image/png',
+            bytes: 128,
+            width: 64,
+            height: 64,
+          },
+        },
+      ],
+      source: { kind: 'user' },
+    }))
+
+    const events = profileEvents(agent)
+    expect(events).toHaveLength(1)
+    const { profile } = events[0]?.data as {
+      profile: { objective: string; questions: readonly { field: string; prompt: string }[] }
+    }
+    // The text that WAS there is the objective; the part that was not is a
+    // question rather than a silent omission or an invented description.
+    expect(profile.objective).toBe('make the layout match this')
+    const asked = profile.questions.find(entry => entry.field === 'unreadGoalContent')
+    expect(asked?.prompt).toContain('1 image block')
+  })
+})
+
+describe('P4-02 validation[2]: a recompile that revises nothing writes nothing (delegate ruling, OQ3)', () => {
+  it('appends no second profile when a resumed session re-claims the SAME pending message', async () => {
+    // **This is the one reachable shape, and finding that out changed the
+    // case.** The skip is keyed on the profile digest, and a profile's
+    // `goalRef` names the message it was compiled from — so an ordinary resume
+    // that carries a NEW message produces a new digest and SHOULD write. What
+    // produces a byte-identical profile is a session whose step did not finish:
+    // its pending message is durable, the resumed agent claims the same message
+    // with the same id, and compiling it again yields the same reference. That
+    // is the duplicate OQ3 exists to keep out of the log, and passing the same
+    // message object here is what a re-claimed inbox entry is.
+    const pending = goal('tidy the imports')
+    const ctx = await harness(1)
+    const before = await turn(ctx, 'session-interrupted', pending)
+    expect(profileEvents(before)).toHaveLength(1)
+
+    // A second Context is a second process: the first store still holds the
+    // session, and a restore into the same store is refused by design.
+    const resumed = await harness(1)
+    const { agent } = await resumed.agents.create({
+      sessionId: SessionId('session-interrupted'),
+      seed: before.session.snapshotEvents(),
+      agentOptions: { provider: 'mock', model: 'mock' },
+    })
+    agent.followup(pending)
+    await agent.whenIdle()
+
+    // The seeded log's one profile, and no second copy of it.
+    expect(profileEvents(agent)).toHaveLength(1)
+    expect(agent.taskProfile).toBe(before.taskProfile)
+  })
+
+  it('DOES append a second profile when the resumed session carries a different goal', async () => {
+    // The positive control. Without it, a skip that fired unconditionally
+    // would pass the case above.
+    const ctx = await harness(1)
+    const before = await turn(ctx, 'session-revised', goal('tidy the imports'))
+
+    const resumed = await harness(1)
+    const { agent } = await resumed.agents.create({
+      sessionId: SessionId('session-revised'),
+      seed: before.session.snapshotEvents(),
+      agentOptions: { provider: 'mock', model: 'mock' },
+    })
+    agent.followup(goal('tidy the imports and sort them'))
+    await agent.whenIdle()
+
+    const events = profileEvents(agent)
+    expect(events).toHaveLength(2)
+    // The second names the first as the profile it revises, which is what makes
+    // the chain readable by reading the log in order.
+    expect((events[1]?.data as { previousRef?: string }).previousRef).toBe(before.taskProfile)
+  })
+})
+
+describe('P4-02 must[2]: an entered goal\'s continuation round is a task (delegate ruling, OQ4(b))', () => {
+  it('compiles a profile for a goal continuation round and carries the round into the reference', async () => {
+    // The fail-closed default excluded these, and one recorded session sat on
+    // it. The round reaches the profile rather than being discarded, because a
+    // round of a revised goal and a first prompt are not the same task even
+    // when their text is identical.
+    const ctx = await harness()
+    const agent = await turn(ctx, 'session-goal-round', createUserMessage({
+      content: [{ type: 'text', text: 'keep going on the migration' }],
+      source: { kind: 'goal', goalId: brandString<GoalId>('goal-11'), revision: 2, round: 3 },
+    }))
+
+    const events = profileEvents(agent)
+    expect(events).toHaveLength(1)
+    const { profile } = events[0]?.data as {
+      profile: { goalRef: { goalRound?: { goalId: string; revision: number; round: number } } }
+    }
+    expect(profile.goalRef.goalRound).toStrictEqual({ goalId: 'goal-11', revision: 2, round: 3 })
+  })
+
+  it('carries no round for a direct human prompt, so absence stays the ordinary case', async () => {
+    const ctx = await harness()
+    const agent = await turn(ctx, 'session-direct-prompt', goal('start the migration'))
+
+    const { profile } = profileEvents(agent)[0]?.data as { profile: { goalRef: { goalRound?: unknown } } }
+    expect(profile.goalRef.goalRound).toBeUndefined()
   })
 })
