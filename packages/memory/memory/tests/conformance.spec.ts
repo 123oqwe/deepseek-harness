@@ -14,7 +14,7 @@
  * @module
  */
 
-import { existsSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import MemoryRuntime, {
@@ -236,8 +236,22 @@ describe('must[3]: every read is scoped by principal, purpose, scope, and contex
 })
 
 describe('acceptance[2]: Memory is not Session Query, and their boundary is documented', () => {
-  it('docs/subsystems/memory.md exists, and a resolved memory record is structurally distinct from a Session Query transcript entry', async () => {
-    expect(existsSync(new URL('../../../../docs/subsystems/memory.md', import.meta.url))).toBe(true)
+  it('docs/subsystems/memory.md STATES the boundary, and a resolved memory record is structurally distinct from a Session Query transcript entry', async () => {
+    // Read for CONTENT, not for existence. The clause asks that the boundary be
+    // documented; a file that exists satisfies `existsSync` while saying
+    // nothing about Session Query at all, so the assertion would survive the
+    // whole section being deleted — and this is the only case the clause has.
+    const doc = readFileSync(new URL('../../../../docs/subsystems/memory.md', import.meta.url), 'utf8')
+    expect(doc).toContain('Memory vs. Session Query')
+    // Stated in BOTH directions, because "not interchangeable" is two claims:
+    // neither seam may be implemented in terms of the other.
+    expect(doc).toContain('Memory never queries the session log')
+    expect(doc).toContain('Session Query never reads a `MemoryRecordView`')
+    // The distinguishing axes, named rather than counted: a table that listed
+    // five rows of anything would pass a length check.
+    for (const axis of ['Reads', 'Scope', 'Population', 'Mutation', 'Retrieval mechanism']) {
+      expect(doc, `the comparison table must distinguish them by ${axis}`).toContain(`| ${axis} |`)
+    }
 
     const { memory } = await mountMemory()
     memory.registerProvider(createFakeMemoryProvider())

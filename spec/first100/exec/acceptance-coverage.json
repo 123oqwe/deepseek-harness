@@ -2985,6 +2985,88 @@
         }
       ],
       "note": "acceptance[2]: 'a failed upgrade does not change already-approved permissions.' Asserted as a digest of the whole permission home taken before the upgrade and compared after it fails at health-check — a tree digest rather than a field check, so a permission changed anywhere under the home reddens it. The second case is the non-vacuity control and is why the first is worth anything: it asserts the seeded home has more than one entry and does not digest-equal a freshly created empty directory, so 'byte-identical' cannot be satisfied by there being nothing to change. That pairing is the shape a `toEqual([])` assertion needs whenever emptiness would also pass."
+    },
+    {
+      "epic": "P6-01",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "conformance: local reference provider (acceptance[0] + must[0]) propose() accepts a candidate record and resolves a new MemoryRecordId"
+        },
+        {
+          "stage": "C",
+          "title": "conformance: local reference provider (acceptance[0] + must[0]) query() resolves matching records honoring the caller-supplied context budget"
+        },
+        {
+          "stage": "C",
+          "title": "conformance: local reference provider (acceptance[0] + must[0]) get() resolves the record previously created by propose()"
+        },
+        {
+          "stage": "C",
+          "title": "conformance: local reference provider (acceptance[0] + must[0]) revise() updates an existing record, reflected by a later get()"
+        },
+        {
+          "stage": "C",
+          "title": "conformance: local reference provider (acceptance[0] + must[0]) forget() removes a record so a later get() resolves undefined"
+        },
+        {
+          "stage": "C",
+          "title": "conformance: local reference provider (acceptance[0] + must[0]) export() resolves every record visible to the access context"
+        },
+        {
+          "stage": "C",
+          "title": "conformance: fake provider (acceptance[0] + must[0]) propose() accepts a candidate record and resolves a new MemoryRecordId"
+        },
+        {
+          "stage": "C",
+          "title": "conformance: fake provider (acceptance[0] + must[0]) query() resolves matching records honoring the caller-supplied context budget"
+        },
+        {
+          "stage": "C",
+          "title": "conformance: fake provider (acceptance[0] + must[0]) get() resolves the record previously created by propose()"
+        },
+        {
+          "stage": "C",
+          "title": "conformance: fake provider (acceptance[0] + must[0]) revise() updates an existing record, reflected by a later get()"
+        },
+        {
+          "stage": "C",
+          "title": "conformance: fake provider (acceptance[0] + must[0]) forget() removes a record so a later get() resolves undefined"
+        },
+        {
+          "stage": "C",
+          "title": "conformance: fake provider (acceptance[0] + must[0]) export() resolves every record visible to the access context"
+        }
+      ],
+      "note": "acceptance[0]: 'at least the local reference provider and the fake provider pass conformance.' Both providers run the SAME six obligations — propose/query/get/revise/forget/export — rather than two suites that happen to agree, which is what makes this a comparison instead of two separate claims. Cited as FULL names because the two blocks share every bare `it` title: a bare citation would name both providers at once and could not show that either one in particular passed (BLOCKED-104's ambiguity). The fake is not a stub of convenience — a provider-neutral Service Definition is shown neutral only when a second, deliberately unlike implementation satisfies the same obligations."
+    },
+    {
+      "epic": "P6-01",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "acceptance[1]: no bypass exists for a model to directly write durable memory revise() rejects an id that was never returned by propose()"
+        },
+        {
+          "stage": "U",
+          "title": "memory-context through the production headless profile P6-01 acceptance[1]: a real boot exposes NO tool that writes durable memory",
+          "supplementSeq": 1
+        }
+      ],
+      "note": "acceptance[1]: 'no bypass exists by which the model writes durable memory directly.' Two halves answering different questions. The C case is about the API: an id no `propose()` minted cannot be revised, so a caller cannot fabricate a record by inventing one. Necessary and NOT sufficient — it says nothing about whether anything the model can CALL reaches the seam. The U supplement measures the absent subject on a real booted headless profile: it reads the assembled tool list the adapter actually received and asserts no tool exposes propose/revise/forget, with a non-vacuity guard first, because 'no memory-writing tool' is otherwise satisfied by 'no tools at all' and this profile ships several. Mutation: registering a `memory_write` tool on the real boot reddens it alone. Limit stated in the freeze: a tool that wrote memory while describing itself as something else would pass."
+    },
+    {
+      "epic": "P6-01",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "acceptance[2]: Memory is not Session Query, and their boundary is documented docs/subsystems/memory.md STATES the boundary, and a resolved memory record is structurally distinct from a Session Query transcript entry"
+        }
+      ],
+      "note": "acceptance[2]: 'Memory is not Session Query, and the boundary between them is documented explicitly.' This case previously asserted `existsSync(docs/subsystems/memory.md)` — satisfied by a file that never mentions Session Query, so the entire boundary section could be deleted and the only case for this clause would stay green. It now reads the document for CONTENT: the section heading, the claim in BOTH directions (Memory never queries the session log; Session Query never reads a `MemoryRecordView`), and each of the five axes the comparison table names. Verified by deleting the whole boundary section, which reddens the case, while `existsSync` would still have returned true."
     }
   ]
 }

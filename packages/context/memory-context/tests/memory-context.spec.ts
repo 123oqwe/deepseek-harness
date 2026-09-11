@@ -234,6 +234,35 @@ describe('an empty recall costs the model nothing', () => {
     emptyRunEvents = on.logged
   }, LOADER_SMOKE_TEST_TIMEOUT_MS * 2)
 
+  it('P6-01 acceptance[1]: a real boot exposes NO tool that writes durable memory', () => {
+    // The absent subject, measured on a booted profile rather than argued from
+    // the seam's shape. `conformance.spec.ts` proves `revise()` rejects an
+    // unminted id and that every read carries a full access context — true and
+    // insufficient: both are properties of the API, and the clause is about
+    // whether anything the MODEL can call reaches it. This reads the assembled
+    // tool list the adapter actually received.
+    const { tools } = JSON.parse(withMemory) as { tools: { name: string; description?: string; parameters?: unknown }[] }
+
+    // Non-vacuity first: "no memory-writing tool" is satisfied by "no tools",
+    // and this profile ships several. Without this the case would pass on a
+    // composition that assembled nothing at all.
+    expect(tools.length).toBeGreaterThan(0)
+
+    // Named verbs, not a substring sweep for "memory": the seam's mutation
+    // entry points are `propose`, `revise` and `forget` (`docs/subsystems/memory.md`),
+    // and a tool reaching any of them is the bypass the clause forbids. The
+    // whole schema is searched, because a tool could expose the verb as an
+    // argument value rather than in its name.
+    const serialized = JSON.stringify(tools)
+    for (const verb of ['propose', 'revise', 'forget']) {
+      expect(serialized, `no model-facing tool may expose the memory seam's ${verb}()`)
+        .not.toMatch(new RegExp(`memory[^"]*${verb}|${verb}[^"]*memory`, 'iu'))
+    }
+    // And no tool is named for the seam at all, which is the cheaper half of
+    // the same claim and catches a differently-spelled write verb.
+    expect(tools.map(tool => tool.name).filter(name => /memory/iu.test(name))).toEqual([])
+  })
+
   it('hands the model bytes identical to a boot with the memory rows disabled', () => {
     // Not "no snapshot was injected" — that is a property of the renderer.
     // This is the request itself, captured by the adapter in both runs.

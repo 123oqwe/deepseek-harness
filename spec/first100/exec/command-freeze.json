@@ -12643,6 +12643,51 @@
         "failureSummary": "M1 reds both 1000-permutation cases AND the two pre-existing order cases — correct, because they assert one property from four angles. M2 reds the silent-only permutation control and its non-permutation sibling, and leaves the two objecting-set permutation cases green, which is the point of having a control: without it those two would pass on a composition that always denied. STATED: 1000 draws from 40320 orderings is a sample, not an exhaustion. The seed makes a failure reproducible; it does not make the coverage complete. An order-dependence that only manifests on orderings this seed never draws would pass."
       },
       "note": "P2-05 validation[1]: the clause asks for 1000 order permutations and the prior evidence was ONE forward/reversed pair. Eight constraints, 1000 seeded draws via mulberry32 from a permit base and an ask base, plus a silent-only control. Seeded rather than `Math.random` because an order-dependent rule that reddens once and passes on re-run is indistinguishable from flake — the exact confusion the clause removes. The constraint MIX is load-bearing: an all-objecting set agrees in every order even under a first-match rule, so silent constraints are interleaved. Cited from acceptance[1] in `acceptance-coverage.json` because `acceptance-coverage.schema.json` indexes acceptance clauses only."
+    },
+    {
+      "epic": "P6-01",
+      "stage": "U",
+      "supplements": {
+        "epic": "P6-01",
+        "stage": "U"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/context/memory-context/tests/memory-context.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "boots the shipped profile with the base bundle memory rows enabled and no unhandled failure",
+        "memory/access is a known session event type, so a real log carrying it replays",
+        "a log written with memory/access is read back by replay, not refused",
+        "recalled memory reaches the model as a durable, source-attributed user message",
+        "the same run records a memory/access read event carrying the complete access context",
+        "model-visible memory is logged: every recalled record the model saw is reconstructable from the log alone",
+        "recalls only the workspace this session runs in, on a launched profile",
+        "memory content never reaches the model outside a logged injection",
+        "P6-01 acceptance[1]: a real boot exposes NO tool that writes durable memory",
+        "hands the model bytes identical to a boot with the memory rows disabled",
+        "still records the read that returned nothing, so silence is not an unlogged read"
+      ],
+      "files": [
+        "packages/context/memory-context/tests/memory-context.spec.ts",
+        "packages/context/memory-context/tests/fixtures/empty-recall-driver.ts"
+      ],
+      "frozenAtUtc": "2026-09-11T22:33:50.934Z",
+      "dryRunProof": {
+        "treeSha": "779819e39e821e53352a1b991efcd76cefcce7e3",
+        "testsDiscovered": 11
+      },
+      "sensitivityProof": {
+        "mutationDescription": "A tool named `memory_write`, described as \"Propose a durable memory record.\", is registered on the REAL booted profile in `empty-recall-driver.ts` before the turn runs; the case is re-run and the driver restored byte-identical, confirmed with `cmp`.",
+        "failureSummary": "Reds the acceptance[1] case alone, on the `propose` probe: the assembled tool list the adapter received now carries the stub, and its description matches the memory-adjacent verb pattern. The FIRST attempt at this mutation was discarded rather than recorded: it used `defineTool` without the fields the registry needs, the boot died with a TypeError reading 'render', and every case in the file SKIPPED because the shared `beforeAll` threw. A mutation that kills the harness proves nothing about the case — the same lesson P2-05 recorded when a TS6133 build failure reddened a case for the wrong reason. NOT PROVEN by this case: that no tool reaches durable memory by a path naming neither the seam nor its verbs. It reads the model-facing tool list, which is the surface the clause is about — a bypass the model cannot see is not a bypass the model can take — but a tool that wrote memory while describing itself as something else would pass."
+      },
+      "note": "P6-01 acceptance[1], measured as an ABSENT SUBJECT on a real boot. `conformance.spec.ts` proves `revise()` rejects an id no `propose()` minted and that every read carries a complete access context; both are true and both are properties of the API, while the clause asks whether anything the MODEL can call reaches durable memory. This reads the assembled tool list the adapter actually received on a booted headless profile and asserts no tool exposes propose/revise/forget, with a non-vacuity guard first — 'no memory-writing tool' is otherwise satisfied by 'no tools at all', and this profile ships several."
     }
   ]
 }
