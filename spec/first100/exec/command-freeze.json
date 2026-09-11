@@ -12360,6 +12360,94 @@
       "note": "P2-05 U supplement for BLOCKED-201, closing BLOCKED-187's input residual with it. `enforceManifestedAction` took the context facts as an optional `Partial` and filled them in place; NEITHER dispatch path passed them, so every policy question a shipped composition ever asked carried `untrusted` and `default` and no `riskClass` at all — a rule about any of them could not match however it was written. The type is required now, the defaulting moved to one reader both paths call, and both paths classify BEFORE appending the manifest so the class is a fact rather than an absence. The same `ActionRiskClassification` goes to `gateActionRisk`, so the policy layer and the risk gate decide about one classification instead of each computing its own. The base bundle's Cedar row holds the kernel hard-deny rule where it held a paragraph explaining why the rule could not be written. Two of the three facts are real; the posture is not, and cannot be — see BLOCKED-202, whose gap these cases pin as CHARACTERIZATION rather than leave looking supplied. RE-FROZEN: the two characterization titles name BLOCKED-203 rather than 202, after 202 was assigned to another lane. Caught by `verify-frozen-titles-resolvable`, which is the gate that exists for exactly this — a title renamed out from under a freeze — and which found it because the rename was made in the spec and not carried into the entry.",
       "supersessionReason": "Re-frozen for a NUMBER, not a behaviour: BLOCKED-202 was assigned to another lane an hour after this entry was written, so the posture entry became 203 and two case titles carry the number. Nothing about what the cases assert changed, and the other four titles are byte-identical.",
       "supersedes": "2026-09-11T08:52:52.792Z"
+    },
+    {
+      "epic": "P2-05",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-05",
+        "stage": "U"
+      },
+      "supplementSeq": 3,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/policy/policy-enforcement/tests/service-lifetime.spec.ts",
+        "packages/policy/policy-enforcement/tests/dispatch-convergence.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "decides two separately created agents against the SAME policy set, not a per-agent one",
+        "decides each action on its own, so one agent's permit is not reused for the next",
+        "refuses an agent created AFTER the policy set is in place, with no re-registration needed",
+        "REFUSES a second policy service, so no engine can be swapped in over the mounted one",
+        "keeps the FIRST engine deciding after the refused replace, not a half-installed second one",
+        "DEGRADES TO DENY when the engine is unmounted, rather than falling through to permit"
+      ],
+      "files": [
+        "packages/policy/policy-enforcement/tests/service-lifetime.spec.ts",
+        "packages/policy/policy-enforcement/tests/dispatch-convergence.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-11T21:12:56.301Z",
+      "dryRunProof": {
+        "treeSha": "a2161becb5d4212043e6e53d6ebc2d3ace227be0",
+        "testsDiscovered": 6
+      },
+      "sensitivityProof": {
+        "mutationDescription": "(M1) `enforceManifestedAction` resolves the engine ONCE into a module-global instead of per decision, so an unmount is invisible to it. (M2) Cordis's own duplicate-service guard in `vendor/cordis/src/reflect.ts` deletes the existing entry instead of throwing, so a replace succeeds; the vendored file was restored and confirmed byte-identical with `cmp`. (M3) one decision is memoized into a module-global and returned for every later action.",
+        "failureSummary": "M1 reds the unmount case ALONE — it is the only one that disposes anything. M2 reds BOTH replace cases and leaves the unmount case green, which is right: they are a pair asserting the same refusal structurally and by policy-set identity. M3 reds all three convergence cases, because each depends on the enforcement point deciding per action; STATED as a limit rather than presented as three separate sensitivities, and the mutation leaks state across cases in one file, so it shows the cases are not vacuous without isolating them from each other. NOT PROVEN by these cases: that a `plugin-rpc` origin reaches the PEP — it has no producer to drive — and that the `sdk-minimal` bundle reaches an engine at all; that bundle has zero corpus scenarios and its own patch mounts no policy row."
+      },
+      "note": "P2-05 acceptance[2] and acceptance[0]. acceptance[2] is two operations with two answers: Cordis REFUSES a replace (`provide` throws), and does NOT refuse an unmount — the disposer deletes the store entry. What the clause protects is that no Cordis operation converts a denial into permission, so the unmount case drives the SAME action either side of a real dispose and asserts permit-then-deny. This closes the preFlight's OQ1, which recorded the unmount half open because `pinTrustKernel` answers forgery and not loss. acceptance[0]'s five initiators are measured to be one convergence rather than five paths: the PEP has exactly two callers, and subagent, workflow and SDK all obtain an Agent through `ctx.agents.create` whose calls pass `appendToolCall`."
+    },
+    {
+      "epic": "P2-05",
+      "stage": "C",
+      "supplements": {
+        "epic": "P2-05",
+        "stage": "C"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/policy/policy-engine/tests/monotonic.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "treats ask as NOT allowed, so a pending human answer cannot be acted on",
+        "carries the policy-set digest on every decision, including a refusal",
+        "turns a permit into a deny when ONE constraint objects",
+        "turns an ask into a deny, because a constraint is a condition and not a prompt",
+        "leaves a deny denied, whatever the constraints say",
+        "is ORDER-INDEPENDENT: the same constraints in any order give the same decision",
+        "cannot be handed a permitting constraint at all: the type carries no such shape",
+        "records every constraint reason even when the decision was already deny",
+        "leaves a permit permitted when no constraint objects, so the rule is not a constant",
+        "gives byte-identical decisions across 1000 seeded permutations, starting from a permit",
+        "holds from an ASK base too, where a first-match rule would be most tempted to widen",
+        "permutes a SILENT-only set to the same permit, so the invariance is not just \"everything denies\"",
+        "denies with policy-unavailable rather than falling open",
+        "names WHICH policy set it could not reach, so a replay can tell the two failures apart"
+      ],
+      "files": [
+        "packages/policy/policy-engine/tests/monotonic.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-11T21:12:56.301Z",
+      "dryRunProof": {
+        "treeSha": "a2161becb5d4212043e6e53d6ebc2d3ace227be0",
+        "testsDiscovered": 14
+      },
+      "sensitivityProof": {
+        "mutationDescription": "(M1) `composeDecision` stops collecting at the first constraint that does not object — the first-match rule this clause exists to reject, and the one `dsh-permission-rules` actually has. (M2) `composeDecision` ignores `constraintReasons.length` and denies every non-deny evaluation. Source restored byte-identical after each, confirmed with `cmp`.",
+        "failureSummary": "M1 reds both 1000-permutation cases AND the two pre-existing order cases — correct, because they assert one property from four angles. M2 reds the silent-only permutation control and its non-permutation sibling, and leaves the two objecting-set permutation cases green, which is the point of having a control: without it those two would pass on a composition that always denied. STATED: 1000 draws from 40320 orderings is a sample, not an exhaustion. The seed makes a failure reproducible; it does not make the coverage complete. An order-dependence that only manifests on orderings this seed never draws would pass."
+      },
+      "note": "P2-05 validation[1]: the clause asks for 1000 order permutations and the prior evidence was ONE forward/reversed pair. Eight constraints, 1000 seeded draws via mulberry32 from a permit base and an ask base, plus a silent-only control. Seeded rather than `Math.random` because an order-dependent rule that reddens once and passes on re-run is indistinguishable from flake — the exact confusion the clause removes. The constraint MIX is load-bearing: an all-objecting set agrees in every order even under a first-match rule, so silent constraints are interleaved. Cited from acceptance[1] in `acceptance-coverage.json` because `acceptance-coverage.schema.json` indexes acceptance clauses only."
     }
   ]
 }

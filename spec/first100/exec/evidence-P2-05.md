@@ -137,3 +137,64 @@ Each fact carries a different case. The two risk cases are a pair: the deny case
 The **posture** fact is still the literal `'default'`. It is not that it was not wired — there is nothing to wire: `PermissionPostureFact`'s four members name no preset any composition configures, and preset names are deployment config, so no real posture can be spelled in that vocabulary. Measured and recorded as [BLOCKED-203](BLOCKED-QUEUE.md#blocked-203). The two cases above pin the gap as CHARACTERIZATION from both sides, and whichever ruling closes 203 should redden them.
 
 Also not proven: that the shipped `kernel-hard-deny` rule ever fires on a real profile. No shipped tool declares a tag classifying `safety-critical` — the corpus census found the class is never produced — so the rule is stated and unexercised outside the fixture, exactly as `gateActionRisk`'s `hardDenied` branch has always been.
+
+-----
+
+## Supplement 2: the clause-by-clause closure, and the one profile that is not measured
+
+Four items, each measured on this tree rather than argued from the design.
+
+### acceptance[0] — the five initiators are one convergence, not five paths
+
+`enforceManifestedAction` has exactly **two** callers: `agent-loop/src/tool-calls.ts:597` for a native call and `core/tools/src/ptc.ts:269` for a code-mode sub-dispatch. `ActionOrigin` has three members and `plugin-rpc` has **no producer anywhere in the tree**.
+
+The clause's other three initiators are not separate dispatch paths. Each obtains an Agent through `ctx.agents.create` — `subagent-in-process-driver/src/index.ts:136`, `subagent/src/continuation.ts:1301`, `workflow-worker-thread/src/index.ts:405` — and every tool that Agent calls passes `appendToolCall`, which its own doc comment names as "the single point every native call passes through: a new dispatch path added later inherits the manifest by construction". So the clause holds because four of five initiators CONVERGE, not because a check is repeated four times.
+
+`dispatch-convergence.spec.ts` pins the convergence behaviourally: two independently created Agents in one composition are decided against the same policy set, each action is decided on its own rather than reusing the previous verdict, and an Agent created *after* the engine was mounted is still decided. A mutation that memoizes one decision reddens all three.
+
+**Not proven, and not provable here:** the `plugin-rpc` initiator has nothing to drive. Stated rather than asserted through a grep, because a test that greps source is a claim about text.
+
+### acceptance[2] — replace is refused, unmount is not, and that is the right answer
+
+The two halves of the clause have different answers, and the preFlight's OQ1 recorded the unmount half as open for exactly this reason: `pinTrustKernel` answers forgery, not loss.
+
+| operation | measured behaviour |
+|---|---|
+| replace | **refused by Cordis.** `provide` throws ``service "policy" has been registered at <…>`` (`vendor/cordis/src/reflect.ts`), and the first engine keeps deciding — checked by policy-set digest, not by absence of error. |
+| unmount | **not refused.** The disposer `provide` returns deletes the store entry, so any fiber that mounted the service can dispose it. |
+
+What the clause protects is that no Cordis operation turns a denial into permission, and an unmount does not: the enforcement point reads `ctx.get('policy')` per decision and answers `policy-unavailable` without one. `service-lifetime.spec.ts` drives the same action on both sides of a real dispose — permitted before, denied after.
+
+Two mutations, each restored byte-identical and confirmed with `cmp`:
+
+| mutation | red |
+|---|---|
+| the engine is resolved once and cached, so an unmount is invisible | the unmount case, alone |
+| Cordis's duplicate-service guard deletes instead of throwing (`vendor/`, restored) | both replace cases; the unmount case stays green |
+
+### validation[1] — 1000 permutations, replacing two orders
+
+The prior evidence was one forward/reversed pair, which is two arrangements rather than a sample. Eight constraints (40320 orderings), 1000 seeded draws, from a permit base and from an ask base, plus a silent-only control.
+
+The seed is the point: a `Math.random` draw would make an order-dependent rule indistinguishable from flake, which is the confusion this clause exists to remove. The constraint MIX is equally load-bearing — silent constraints interleaved with objecting ones are what a first-match rule resolves differently, so an all-objecting set would agree in every order even under the rule the clause rejects. The silent-only case stops the invariance being satisfied by a composition that always denies.
+
+| mutation to `composeDecision` | red |
+|---|---|
+| stop at the first non-objecting constraint (first-match) | both permutation cases, plus the two pre-existing order cases |
+| ignore `constraintReasons.length` and deny every non-deny | the silent-only control, plus its non-permutation sibling |
+
+### Profile naming — four of five measured, and the fifth is not a naming gap
+
+Which shipped bundles reach a mounted engine, measured from the recorded corpus. A composition whose engine is missing answers `policy-unavailable` on every call (the BLOCKED-187 symptom), so its absence across a lane is the observation:
+
+| bundle | corpus logs carrying a manifest | `policy-unavailable` |
+|---|---|---|
+| `headless` | 69 | 0 |
+| `sdk-app` | 12 | 0 |
+| `acp-app` | 4 | 0 |
+| `web-app` | 10 | 0 |
+| `sdk-minimal` | **0 scenarios** | — |
+
+`sdk-minimal` is not merely unrecorded. Its patch states in its own opening comment that it "does not layer over dsh-base: this insert is the complete Cordis tree", and its 28 rows contain no `policy-engine`, no `policy-enforcement` and no kernel row. Meanwhile `apps/cli/src/profile-boot.ts:492-552` constructs a Trust Kernel with a real `policyDecider` and pins it for every profile, and `tool-calls.ts:272` refuses any non-permit decision.
+
+**That chain is four measured links and one unmeasured conclusion, so it is recorded as a question and not as a finding.** On the code path as read, `sdk-minimal` would deny every tool call; it has no corpus scenario to confirm or refute it, and none of the 16 SDK scenarios exercises the bundle — `snapshots/sdk/persistent-tools` carries `composition: sdk-minimal`, which is the scenario's own patch label under `profile: sdk`, not the bundle. `grep -rl "profile: sdk-minimal" snapshots/*/*/snapshot.yml` returns nothing. Needs a launched-profile measurement before it is called anything.
