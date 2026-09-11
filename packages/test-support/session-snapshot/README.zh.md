@@ -76,6 +76,8 @@ defineAcpSnapshotSuite({
 
 `pnpm run test:snapshot:record` 调用在线 LLM（大语言模型），并重写已录制的模型 fixture；`pnpm run test:snapshot:refresh` 保持无密钥，运行回放 overlay，并从已提交模型脚本重写 stdout、可比较会话日志预期输出，以及各 pin 自有的提示词与工具 schema 伴随文件。每个组合 owner 把 replay patch 放在 live patch 旁；顶层 `snapshots/` 拥有会话驱动场景，其他预期输出留在其包 owner 旁。[`dsh-llm-replay`](../llm-replay/README.zh.md) 提供通过 `DSH_SNAPSHOT_*` 环境值选择的已记录流。
 
+对着过期构建的写回类运行会被拒绝。刷新会把运行实际发出的内容记录下来，因此一个运行没有发出的事件会被删除而非保留；派生已发布 profile 的车道执行的是构建产物 `lib/`，而早于某次源码改动的 `lib/` 会让运行发出旧行为。因此当任一工作区包的 `lib/` 旧于其 `src/` 时，`assertBuiltArtifactsCurrent` 会在第一个场景之前让 sdk、acp 与 headless 车道失败。重放刻意不设防：它只比较、从不写入，因此陈旧构建在那里会表现为一个 diff。
+
 ### 固定请求 header
 
 每个 pin 默认拥有其生成的 `system-prompt.expected.md` 或 `tool-schemas.expected.json` 伴随文件；当完整的对应序列相同时，`systemPromptSource` 与 `toolSchemasSource` 指定另一个 pin 作为来源，因此每个不同版本只提交一次。该 pin 的 `session.jsonl` 存储 `"system":"{{system}}","tools":"{{tools}}"`，同时保留配置、原因与任何模型可见前缀。自身作用域组合出不同请求的子会话按 fixture 索引以 `pinsChildToolSchemas` 与 `pinsChildSystemPrompts` 单独声明。运行中改变请求 header 的场景声明 `expectedHeaderChanges`。
@@ -112,6 +114,7 @@ defineAcpSnapshotSuite({
 | [`src/harness.ts`](src/harness.ts) | 脚本化场景驱动与会话日志收集 |
 | [`src/manifest.ts`](src/manifest.ts) | 封闭 `snapshot.yml` schema、收集与归属规则 |
 | [`src/identity.ts`](src/identity.ts) | 跨父子日志的类型化首次出现身份 token 化 |
+| [`src/built-artifacts.ts`](src/built-artifacts.ts) | 当 `lib/` 旧于 `src/` 时拒绝写回类运行 |
 | [`src/normalize.ts`](src/normalize.ts) | 纯规范化器与擦除辅助 |
 | [`src/workspace.ts`](src/workspace.ts) | 场景 workspace 设置与完整预期状态比较 |
 | [`src/suite.ts`](src/suite.ts) | 场景表套件工厂、fixture 保护、录制/刷新回写 |

@@ -17,6 +17,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
   captureExpectedWorkspaceSnapshot,
+  assertBuiltArtifactsCurrent,
   captureWorkspaceSnapshot,
   normalizeSessionLog,
   normalizeSessionSnapshots,
@@ -65,6 +66,11 @@ const MINIMAL_BASH_DESCRIPTION = `Run commands in a bash shell
 * Please run long lived commands in the background, e.g. 'sleep 10 &' or start a server in the background.`
 
 const mode = process.env.DSH_SNAPSHOT ?? 'replay'
+// This lane spawns `dsh --profile sdk`, which runs built `lib/`. A write-back
+// against a stale build records the OLD behaviour as the truth; see
+// `assertBuiltArtifactsCurrent`, which exists because that deleted 34
+// `run/task-profile` events from this corpus.
+assertBuiltArtifactsCurrent(fileURLToPath(new URL('../../packages/', import.meta.url)), mode)
 const recording = mode === 'record'
 const refreshing = mode === 'refresh'
 const RUNTIME_WORKSPACE_ENTRIES = [

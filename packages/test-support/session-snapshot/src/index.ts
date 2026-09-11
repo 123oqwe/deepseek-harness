@@ -18,6 +18,11 @@
  */
 
 export {
+  assertBuiltArtifactsCurrent,
+  stalePackages,
+  type StalePackage,
+} from './built-artifacts.ts'
+export {
   redactSessionSnapshotIds,
 } from './identity.ts'
 export {

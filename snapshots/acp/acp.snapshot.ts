@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
+  assertBuiltArtifactsCurrent,
   defineAcpSnapshotSuite,
   parseSnapshotManifest,
   type Scenario,
@@ -11,6 +12,13 @@ import {
 } from '@deepseek-ai/dsh-session-snapshot'
 
 const corpusDir = fileURLToPath(new URL('./', import.meta.url))
+// This lane spawns `dsh --profile acp`, which runs built `lib/`. A write-back
+// against a stale build records the OLD behaviour as the truth; see
+// `assertBuiltArtifactsCurrent`.
+assertBuiltArtifactsCurrent(
+  fileURLToPath(new URL('../../packages/', import.meta.url)),
+  process.env.DSH_SNAPSHOT ?? 'replay',
+)
 
 function snapshotMode(value: string | undefined): SnapshotSuiteOptions['mode'] {
   switch (value) {

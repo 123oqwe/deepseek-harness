@@ -11,6 +11,7 @@ import ts from 'typescript'
 import {
   captureExpectedWorkspaceSnapshot,
   captureWorkspaceSnapshot,
+  assertBuiltArtifactsCurrent,
   fixtureContext,
   formatSystemPromptSnapshot,
   formatToolSchemasSnapshot,
@@ -73,6 +74,10 @@ function snapshotMode(value: string | undefined): SnapshotMode {
 }
 
 const mode = snapshotMode(process.env.DSH_SNAPSHOT)
+// This lane spawns the headless bin, which runs built `lib/`. A write-back
+// against a stale build records the OLD behaviour as the truth; see
+// `assertBuiltArtifactsCurrent`.
+assertBuiltArtifactsCurrent(fileURLToPath(new URL('../../packages/', import.meta.url)), mode)
 const RUNTIME_WORKSPACE_ENTRIES = ['.agents', '.dsh', '.snapshot-patches'] as const
 
 interface JsonObject {

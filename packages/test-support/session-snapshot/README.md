@@ -76,6 +76,8 @@ Each recorded-session directory carries a closed `snapshot.yml` manifest plus it
 
 `pnpm run test:snapshot:record` calls the live LLM and rewrites recorded model fixtures; `pnpm run test:snapshot:refresh` stays keyless, runs the replay overlay, and rewrites stdout, comparable session-log expected outputs, and owned prompt and tool-schema sidecars from committed model scripts. Each composition owner keeps its replay patch beside its live patch; top-level `snapshots/` owns session-driven scenarios, while other expected outputs stay beside their owning package. [`dsh-llm-replay`](../llm-replay/README.md) serves the recorded streams selected through `DSH_SNAPSHOT_*` environment values.
 
+A write-back run against an out-of-date build is refused. A refresh records whatever the run emitted, so an event the run did not emit is deleted rather than preserved; a lane that spawns a shipped profile executes built `lib/`, and a `lib/` tree predating a source change makes the run emit the old behaviour. `assertBuiltArtifactsCurrent` therefore fails the sdk, acp, and headless lanes before the first scenario when any workspace package's `lib/` is older than its `src/`. Replay is deliberately not guarded: it compares and never writes, so a stale build there surfaces as a diff.
+
 ### Pinning request headers
 
 A pin owns its generated `system-prompt.expected.md` or `tool-schemas.expected.json` sidecar by default; `systemPromptSource` and `toolSchemasSource` name another pin when the complete corresponding sequence is identical, so each distinct version is committed once. The pin's `session.jsonl` stores `"system":"{{system}}","tools":"{{tools}}"` while retaining config, reason, and any model-visible prefix. A child session whose own scope composes a different request declares it per fixture index with `pinsChildToolSchemas` and `pinsChildSystemPrompts`. A scenario that changes the request header mid-run declares `expectedHeaderChanges`.
@@ -112,6 +114,7 @@ The shared core owns manifests, workspace setup/comparison, typed identity mappi
 | [`src/harness.ts`](src/harness.ts) | Scripted scenario driver and session-log harvest |
 | [`src/manifest.ts`](src/manifest.ts) | Closed `snapshot.yml` schema, collection, and ownership rules |
 | [`src/identity.ts`](src/identity.ts) | Typed first-seen identity tokenization across parent and child logs |
+| [`src/built-artifacts.ts`](src/built-artifacts.ts) | Refusal of a write-back run whose `lib/` is older than its `src/` |
 | [`src/normalize.ts`](src/normalize.ts) | Pure normalizers and scrubbing helpers |
 | [`src/workspace.ts`](src/workspace.ts) | Scenario workspace setup and complete expected-state comparison |
 | [`src/suite.ts`](src/suite.ts) | Scenario-table suite factory, fixture guards, record/refresh write-back |
