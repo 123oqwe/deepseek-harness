@@ -1361,6 +1361,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'matching records, capped to the caller\'s budget.',
       },
       {
+        signature: 'async countRebuiltAt(request: MemoryRebuiltCountRequest): Promise<number>',
+        description: 'How many records this workspace PATH holds under a different identity.\n\nA reporting channel, not a retrieval one: a consumer can tell a user "this workspace looks rebuilt and its earlier memory is still on disk" without being handed any of it. The displaced directory\'s records stay unreadable — adopting them is a person\'s decision and importing them is P6-03\'s.',
+        parameters: [{ name: 'request', description: 'the path, the identity in use now, and the read\'s context.' }],
+        returns: 'the number of records at that path under any other identity.',
+      },
+      {
         signature: 'async get(request: MemoryGetRequest): Promise<MemoryRecordView | undefined>',
         description: 'Fetch one record by id.',
         parameters: [{ name: 'request', description: 'the record id and its complete access context.' }],
@@ -5087,6 +5093,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface MemoryAccessContext {\n    readonly principal: Principal;\n    readonly purpose: string;\n    readonly scope: MemoryScope;\n    readonly contextBudget: MemoryContextBudget;\n}',
   },
   {
+    name: 'MemoryClaimOrigin',
+    declaration: 'export type MemoryClaimOrigin = (Extract<MemoryProvenance, {\n    kind: \'derived\';\n}> & {\n    readonly confidence: number;\n}) | Extract<MemoryProvenance, {\n    kind: \'user-asserted\';\n}>;',
+  },
+  {
     name: 'MemoryContextBudget',
     declaration: 'export interface MemoryContextBudget {\n    readonly maxRecords?: number;\n    readonly maxTokens?: number;\n}',
   },
@@ -5108,15 +5118,23 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'MemoryProposeRequest',
-    declaration: 'export interface MemoryProposeRequest {\n    readonly principal: Principal;\n    readonly scope: MemoryScope;\n    readonly content: unknown;\n}',
+    declaration: 'export interface MemoryProposeRequest extends MemoryProposeRequestBase {\n    readonly origin: MemoryClaimOrigin;\n}',
+  },
+  {
+    name: 'MemoryProposeRequestBase',
+    declaration: 'export interface MemoryProposeRequestBase {\n    readonly principal: Principal;\n    readonly scope: MemoryScope;\n    readonly content: unknown;\n}',
   },
   {
     name: 'MemoryProposeResult',
     declaration: 'export interface MemoryProposeResult {\n    readonly id: MemoryRecordId;\n}',
   },
   {
+    name: 'MemoryProvenance',
+    declaration: 'export type MemoryProvenance = {\n    readonly kind: \'derived\';\n    readonly sourceEvents: readonly SourceEventId[];\n} | {\n    readonly kind: \'user-asserted\';\n    readonly assertedBy: string;\n};',
+  },
+  {
     name: 'MemoryProvider',
-    declaration: 'export interface MemoryProvider {\n    readonly id: string;\n    available(): boolean;\n    propose(request: MemoryProposeRequest): Promise<MemoryProposeResult>;\n    query(request: MemoryQueryRequest): Promise<MemoryQueryResult>;\n    get(request: MemoryGetRequest): Promise<MemoryRecordView | undefined>;\n    revise(request: MemoryReviseRequest): Promise<void>;\n    forget(request: MemoryForgetRequest): Promise<void>;\n    export(request: MemoryExportRequest): Promise<MemoryExportResult>;\n}',
+    declaration: 'export interface MemoryProvider {\n    readonly id: string;\n    available(): boolean;\n    propose(request: MemoryProposeRequest): Promise<MemoryProposeResult>;\n    query(request: MemoryQueryRequest): Promise<MemoryQueryResult>;\n    get(request: MemoryGetRequest): Promise<MemoryRecordView | undefined>;\n    revise(request: MemoryReviseRequest): Promise<void>;\n    forget(request: MemoryForgetRequest): Promise<void>;\n    export(request: MemoryExportRequest): Promise<MemoryExportResult>;\n    countRebuiltAt(request: MemoryRebuiltCountRequest): Promise<number>;\n}',
   },
   {
     name: 'MemoryQueryRequest',
@@ -5125,6 +5143,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'MemoryQueryResult',
     declaration: 'export interface MemoryQueryResult {\n    readonly records: readonly MemoryRecordView[];\n    readonly truncated: boolean;\n}',
+  },
+  {
+    name: 'MemoryRebuiltCountRequest',
+    declaration: 'export interface MemoryRebuiltCountRequest {\n    readonly accessContext: MemoryAccessContext;\n    readonly canonicalPath: string;\n    readonly currentIdentity: string;\n}',
   },
   {
     name: 'MemoryRecordId',
@@ -5140,7 +5162,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'MemoryScope',
-    declaration: 'export interface MemoryScope {\n    readonly tenantId: TenantId;\n    readonly sessionId?: string;\n}',
+    declaration: 'export interface MemoryScope {\n    readonly tenantId: TenantId;\n    readonly sessionId?: string;\n    readonly workspace?: WorkspaceMemoryScope;\n}',
   },
   {
     name: 'Message',
@@ -6351,6 +6373,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface SkillViewOptions extends SkillLookupOptions {\n    readonly scope?: ScopeKey | undefined;\n}',
   },
   {
+    name: 'SourceEventId',
+    declaration: 'export type SourceEventId = Branded<\'SourceEventId\'>;',
+  },
+  {
     name: 'SpawnTeammateRequest',
     declaration: 'export interface SpawnTeammateRequest {\n    readonly name: string;\n    readonly description: string;\n    readonly prompt: ContentBlock[];\n    readonly context: \'fresh\' | \'fork\';\n    readonly provider: string;\n    readonly signal: AbortSignal;\n}',
   },
@@ -7221,6 +7247,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'WorkspaceInsertSessionBeforeRequest',
     declaration: 'export interface WorkspaceInsertSessionBeforeRequest {\n    readonly workspaceId: WorkspaceId;\n    readonly sessionId: SessionId;\n    readonly beforeSessionId?: SessionId;\n}',
+  },
+  {
+    name: 'WorkspaceMemoryScope',
+    declaration: 'export interface WorkspaceMemoryScope {\n    readonly canonicalPath: string;\n    readonly identity: string;\n}',
   },
   {
     name: 'WorkspaceOrderValue',

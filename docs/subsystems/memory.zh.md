@@ -151,6 +151,18 @@ async propose(request: MemoryProposeRequest): Promise<MemoryProposeResult>
 async query(request: MemoryQueryRequest): Promise<MemoryQueryResult>
 
 /**
+ * How many records this workspace PATH holds under a different identity.
+ *
+ * A reporting channel, not a retrieval one: a consumer can tell a user "this
+ * workspace looks rebuilt and its earlier memory is still on disk" without
+ * being handed any of it. The displaced directory's records stay unreadable —
+ * adopting them is a person's decision and importing them is P6-03's.
+ * @param request - the path, the identity in use now, and the read's context.
+ * @returns the number of records at that path under any other identity.
+ */
+async countRebuiltAt(request: MemoryRebuiltCountRequest): Promise<number>
+
+/**
  * Fetch one record by id.
  * @param request - the record id and its complete access context.
  * @returns the record, or `undefined` when no such record is visible to the access context.

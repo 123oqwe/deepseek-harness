@@ -801,6 +801,7 @@ export const TYPE_LINK_EXEMPTIONS: Readonly<Record<string, string>> = {
   MemoryQueryRequest: 'service-local request contract is owned by packages/memory/memory/src/types.ts',
   MemoryQueryResult: 'service-local result contract is owned by packages/memory/memory/src/types.ts',
   MemoryGetRequest: 'service-local request contract is owned by packages/memory/memory/src/types.ts',
+  MemoryRebuiltCountRequest: 'service-local request contract is owned by packages/memory/memory/src/types.ts',
   MemoryRecordView: 'provisional record view is owned by packages/memory/memory/src/types.ts',
   MemoryReviseRequest: 'service-local request contract is owned by packages/memory/memory/src/types.ts',
   MemoryForgetRequest: 'service-local request contract is owned by packages/memory/memory/src/types.ts',
