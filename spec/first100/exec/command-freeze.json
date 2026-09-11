@@ -4663,7 +4663,9 @@
       "sensitivityProof": {
         "mutationDescription": "Six mutations. record.ts: (1) recordConflict mutates the loser in place instead of returning a copy; (2) disputed records stay default-retrievable; (3) the confidence range written as `< 0 || > 1`, which lets NaN through since every NaN comparison is false; (4) the expiry boundary uses `<` instead of `<=`; (6) the derived-without-source check removed. provenance.ts: (5) sensitive content admitted to the index regardless of policy. All restored byte-identical.",
         "failureSummary": "Reddens exactly 1 case each -- six mutations, six distinct cases, no overlap. (3) is the targeted mutation in BLOCKED-085's sense: `< 0 || > 1` is the form a competent author would write, and it admits NaN, which would then pass both bounds and sort unpredictably wherever confidence is ranked."
-      }
+      },
+      "supersededBy": "2026-09-11T06:18:45.054Z",
+      "supersessionReason": "Re-frozen for P6-02.U: `admitToIndex` gained the unstated-sensitivity rule and its own refusal reason, so the Contract stage owes two cases it did not have. Superseded rather than supplemented because they belong to a must[2] block this entry already covers."
     },
     {
       "epic": "P6-02",
@@ -4702,7 +4704,9 @@
       "sensitivityProof": {
         "mutationDescription": "Four mutations on src/record.ts's decideCrossScopeMerge: (1) the authorization endpoint check removed entirely; (2) only the destination checked, not the source; (3) cross-session and cross-tenant collapsed to one reason; (4) sameScope ignores sessionId. All restored byte-identical.",
         "failureSummary": "Reddens 3, 2, 1 and 2 cases respectively. (2) is the targeted mutation in BLOCKED-085's sense -- checking only where records LAND is the natural way to write this, and it is exactly the widening the clause exists to prevent."
-      }
+      },
+      "supersededBy": "2026-09-11T06:18:45.054Z",
+      "supersessionReason": "Re-frozen for §12.19-1: the withdrawn entry ran `scope.spec.ts` alone, which proves `decideCrossScopeMerge` against values it builds itself and proves nothing about anything reaching it — the gap the withdrawal names. The command now also runs `record-enforcement.spec.ts`, whose every case goes through `ctx.memory.propose()` and `ctx.memory.query()`."
     },
     {
       "epic": "P6-02",
@@ -11312,6 +11316,121 @@
         "failureSummary": "B-M1 reds `hands the model bytes identical to a boot with the memory rows disabled` alone; B-M2 reds `still records the read that returned nothing, so silence is not an unlogged read` alone. Those two cases are §12.79's FIRST invariant and are one invariant in two halves: a byte comparison alone would still pass a build that stopped recording reads, and an event assertion alone says nothing about what the model saw. U-M1 reds three cases together — `recalls only the workspace this session runs in, on a launched profile`, the `memory/access` access-context case, and the whole-log scan in `memory content never reaches the model outside a logged injection`. Not isolable, and that is the point rather than a gap: seeding the foreign-workspace record made all three sensitive to one decision, which is more coverage than the new case carries on its own. NOT PROVEN, and owed: §12.79's SECOND invariant is observed only in the workspace dimension, per the delegate's OQ15 ruling. An UNTRUSTED workspace has no subject at all — nothing in memory-context/src or memory/src reads a workspace's trust state to decide a recall, the only hit being a comment at memory-context/src/index.ts:111 — so a case naming \"untrusted\" would assert something nothing decides. That half rides with BLOCKED-185's remediation slice."
       },
       "note": "P6-01 U-stage, re-frozen for the §12.79 memory slice: 13 cases become 21. The 8 added are the announceRebuiltWorkspace group, which tells a session ONCE that its workspace path holds an earlier occupant's memory and carries a count and a path and no record content, plus the two halves of §12.79's first invariant and the consumer-side half of its second. `known-event-types.ts` joins `files` because memory/workspace-rebuilt is a new SessionEventMap member and an entry whose reality set omitted it would not be re-checked when that registration changes; the two new fixtures join for the same reason. The second invariant is observed in the workspace dimension only — its trust half has no subject and the sensitivity entry says so."
+    },
+    {
+      "epic": "P6-02",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/memory/memory/tests/record.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "carries content, kind, subject, provenance, times, confidence, scope, purpose, sensitivity, status and relations",
+        "distinguishes inline content from a stored reference",
+        "treats an open-ended validity as an explicit null, not an absent field",
+        "refuses a derived record naming no source event",
+        "accepts a user-asserted record, which names a responsible party instead",
+        "does not treat an empty asserter as traceable",
+        "validation[2]: a returned record carries its own provenance, not a caller-supplied one",
+        "supersedes: the winner gains a relation and the loser is marked, both surviving",
+        "disputes marks the loser disputed, not superseded",
+        "refuses a relation pointing at the record itself",
+        "refuses a duplicated relation but allows two kinds toward one target",
+        "retrieves an active, unexpired record",
+        "withholds a record whose validity has passed, and keeps one at the boundary out too",
+        "withholds revoked, superseded and disputed records alike",
+        "withholds sensitive content by default",
+        "admits sensitive content when the policy explicitly permits it",
+        "admits normal content whatever the policy says",
+        "withholds content whose sensitivity NOBODY stated, whatever the policy says",
+        "tells an unstated sensitivity apart from an assessed one, rather than reporting an assessment nobody made",
+        "refuses a confidence outside [0, 1], including NaN",
+        "accepts the exact bounds, so the range test is not off by one",
+        "refuses an inverted validity range but accepts an instantaneous one"
+      ],
+      "files": [
+        "packages/memory/memory/src/record.ts",
+        "packages/memory/memory/src/provenance.ts",
+        "packages/memory/memory/tests/record.spec.ts",
+        "packages/memory/memory/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-11T06:18:45.054Z",
+      "supersedes": "2026-09-06T05:40:00.000Z",
+      "supersessionReason": "Re-frozen for P6-02.U: `admitToIndex` gained the unstated-sensitivity rule and its own refusal reason, so the Contract stage owes two cases it did not have. Superseded rather than supplemented because they belong to a must[2] block this entry already covers.",
+      "dryRunProof": {
+        "treeSha": "038120f1a7f7396d52a3cc5cbdb6d0b091f97c84",
+        "testsDiscovered": 41
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations against packages/memory/memory/src/provenance.ts, each one literal substitution, the spec re-run, the file restored byte-identical after each. (C-M1) `admitToIndex` admits a record whose sensitivity is undefined, which is the behaviour before the absence rule; (C-M2) an unstated sensitivity is refused with `sensitive-not-permitted` rather than its own reason.",
+        "failureSummary": "Both mutations red BOTH added cases, and neither is separable from the other — measured, not assumed, and stated here rather than claimed otherwise. The absence case asserts the whole outcome with `toEqual`, so changing the reason reaches it; the distinguishing case asserts that the two refusals differ, so admitting the unstated one reaches it too. A mutation isolating either would have to leave the absence branch both present and unchanged, which is the only thing either case is about. The three pre-existing must[2] cases stay green under both, which is what makes them the controls: the rule was narrowed, not replaced. NOT re-proven here and unchanged from the superseded entry: the 18 other Contract cases, whose mutations that entry recorded."
+      },
+      "note": "P6-02 C-stage, re-frozen for the §12.19-1 Usage rework. Two cases added to must[2]: content whose sensitivity NOBODY stated is withheld whatever the policy says, and the two refusals carry different reasons on purpose — telling an operator a record was refused as sensitive when nobody assessed it reports an assessment that never happened, and only one of the two is something a writer can fix by stating the field. `expectCases` is this stage's cases only; the Fault matrix shares the same file and the same command and keeps its own 19, so one command carries two stages' separate commitments."
+    },
+    {
+      "epic": "P6-02",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/memory/memory/tests/scope.spec.ts",
+        "packages/memory/memory/tests/record-enforcement.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "local-reference: refuses a derived claim that names no source event",
+        "local-reference: stores nothing when it refuses, so the refusal is not merely a thrown error",
+        "local-reference: refuses a user-asserted claim that names nobody",
+        "local-reference: accepts a derived claim that names one source, so the refusal is not blanket",
+        "local-reference: accepts a user-asserted claim, which names a responsible party instead of a source",
+        "durable-file: refuses a derived claim that names no source event",
+        "durable-file: stores nothing when it refuses, so the refusal is not merely a thrown error",
+        "durable-file: refuses a user-asserted claim that names nobody",
+        "durable-file: accepts a derived claim that names one source, so the refusal is not blanket",
+        "durable-file: accepts a user-asserted claim, which names a responsible party instead of a source",
+        "local-reference: withholds a record whose validity has passed",
+        "local-reference: returns an unexpired record, so the refusal above is not blanket",
+        "durable-file: withholds a record whose validity has passed",
+        "durable-file: returns an unexpired record, so the refusal above is not blanket",
+        "local-reference: the default search still returns content whose sensitivity nobody stated",
+        "durable-file: the default search still returns content whose sensitivity nobody stated",
+        "permits it and reports that no boundary was crossed",
+        "treats the same tenant and session as one scope",
+        "refuses a cross-tenant merge with no authorization",
+        "refuses a cross-session merge with a DIFFERENT reason from a cross-tenant one",
+        "permits a cross-tenant merge that names both endpoints",
+        "refuses an authorization issued for a different destination",
+        "refuses an authorization issued for a different source",
+        "does not let a session-scoped authorization cover a tenant-wide merge"
+      ],
+      "files": [
+        "packages/memory/memory/src/index.ts",
+        "packages/memory/memory/src/record.ts",
+        "packages/memory/memory/src/provenance.ts",
+        "packages/memory/memory/src/types.ts",
+        "packages/memory/memory/tests/scope.spec.ts",
+        "packages/memory/memory/tests/record-enforcement.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-11T06:18:45.054Z",
+      "supersedes": "2026-09-06T06:20:00.000Z",
+      "supersessionReason": "Re-frozen for §12.19-1: the withdrawn entry ran `scope.spec.ts` alone, which proves `decideCrossScopeMerge` against values it builds itself and proves nothing about anything reaching it — the gap the withdrawal names. The command now also runs `record-enforcement.spec.ts`, whose every case goes through `ctx.memory.propose()` and `ctx.memory.query()`.",
+      "dryRunProof": {
+        "treeSha": "038120f1a7f7396d52a3cc5cbdb6d0b091f97c84",
+        "testsDiscovered": 24
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Six mutations, each one literal substitution, the spec re-run, the source restored byte-identical after each. On src/index.ts: (P6-M1) the seam's traceability check removed, which is the state before this stage; (P6-M2) a user-asserted claim bypasses that check; (P6-M4) the check moved AFTER the provider wrote instead of before; (P6-M10) the default search stops asking whether a record is retrievable. On src/provenance.ts: (P6-M3) `isTraceable` accepts an empty source list. On src/record.ts: (P6-M11) `<` in place of `<=` at the validity end.",
+        "failureSummary": "P6-M1 reds all six refusal cases — the coarse control, and the exact state §12.19-1 withdrew the stage for. P6-M3 reds the four derived cases; P6-M2 reds the two empty-asserter cases; P6-M10 reds both expiry cases. P6-M4 reds the two \"stores nothing when it refuses\" cases ALONE, and is the load-bearing one: it is what makes that case a claim about ordering rather than about throwing. Cases run over both providers, so a count of two is one case observed twice rather than two subjects. NOT PROVEN, and stated rather than omitted: P6-M11 SURVIVED — these cases use a long-past `validUntil`, so the boundary instant is indistinguishable to them. That boundary is already pinned by the Fault matrix (\"a record is retrievable up to, but not at, its end\"), and this stage's subject is that the path REACHES the decision, not that the decision is correct; a boundary case here would duplicate F rather than cover the path."
+      },
+      "note": "P6-02 U-stage, rebuilt after §12.19-1. The withdrawn entry ran `scope.spec.ts` alone — `decideCrossScopeMerge` against values the cases build themselves, with zero production callers, which is the shape the withdrawal names. The command now also runs `record-enforcement.spec.ts`, where every case goes through `ctx.memory.propose()` or `ctx.memory.query()`: acceptance[0] is enforced at the seam before any provider is reached, and acceptance[1] filters the default search inside the providers, because `query()` hands the seam `MemoryRecordView`s that carry neither `status` nor `sensitivity`. must[2] is deliberately NOT wired and the last case records that absence as an observation — the default search still returns content whose sensitivity nobody stated — so whoever wires it turns that case red and has to read BLOCKED-198 first. `scope.spec.ts` is kept rather than dropped: its rule is right and still owed a caller, which BLOCKED-146 tracks."
     }
   ]
 }

@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-11T06:12:02.821Z",
-  "inputDigest": "34f8788d1daed8f44c3f1d91c72a6c2c67e0eecdf4483e95aff98e120db7697e",
+  "lastUpdatedUtc": "2026-09-11T06:18:56.447Z",
+  "inputDigest": "43201bcb6f4d423abd42bf65d8b7ea30bd1477e17b7d4b25f7a20da44a7f05de",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -7032,56 +7032,26 @@
       "wave": 5,
       "cells": {
         "C": {
-          "status": "GREEN",
-          "candidateSha": "2c854a9be2a7a84ae45bb7256ac1c0a6214a22a5",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33963744479",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r12/first100-evidence-2c854a9be2a7a84ae45bb7256ac1c0a6214a22a5/vitest-report.json",
-          "observationSha256": "df52900c9fcba62d6070e322260680f52e6c3e56221de3273550fe2fa35bf1db",
-          "expectCasesMatched": [
-            "carries content, kind, subject, provenance, times, confidence, scope, purpose, sensitivity, status and relations",
-            "distinguishes inline content from a stored reference",
-            "treats an open-ended validity as an explicit null, not an absent field",
-            "refuses a derived record naming no source event",
-            "accepts a user-asserted record, which names a responsible party instead",
-            "does not treat an empty asserter as traceable",
-            "validation[2]: a returned record carries its own provenance, not a caller-supplied one",
-            "supersedes: the winner gains a relation and the loser is marked, both surviving",
-            "disputes marks the loser disputed, not superseded",
-            "refuses a relation pointing at the record itself",
-            "refuses a duplicated relation but allows two kinds toward one target",
-            "retrieves an active, unexpired record",
-            "withholds a record whose validity has passed, and keeps one at the boundary out too",
-            "withholds revoked, superseded and disputed records alike",
-            "withholds sensitive content by default",
-            "admits sensitive content when the policy explicitly permits it",
-            "admits normal content whatever the policy says",
-            "refuses a confidence outside [0, 1], including NaN",
-            "accepts the exact bounds, so the range test is not off by one",
-            "refuses an inverted validity range but accepts an instantaneous one"
-          ],
-          "capturedAtUtc": "2026-09-05T18:08:07.880Z"
+          "status": "NOT_RUN",
+          "revokedFrom": {
+            "candidateSha": "2c854a9be2a7a84ae45bb7256ac1c0a6214a22a5",
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33963744479",
+            "absentCommitments": 1
+          },
+          "revokedReason": "The Contract stage was re-frozen at this batch (20 cases to 22) when admitToIndex gained the unstated-sensitivity rule, and the green was observed on 2c854a9be2, which predates the new entry. A freeze written after its observation is not a pre-commitment."
         },
         "P": {
           "status": "N/A",
           "reason": "registry: record/codec only; P6-01 supplies providers"
         },
         "U": {
-          "status": "GREEN",
-          "candidateSha": "2c854a9be2a7a84ae45bb7256ac1c0a6214a22a5",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33963744479",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r12/first100-evidence-2c854a9be2a7a84ae45bb7256ac1c0a6214a22a5/vitest-report.json",
-          "observationSha256": "df52900c9fcba62d6070e322260680f52e6c3e56221de3273550fe2fa35bf1db",
-          "expectCasesMatched": [
-            "permits it and reports that no boundary was crossed",
-            "treats the same tenant and session as one scope",
-            "refuses a cross-tenant merge with no authorization",
-            "refuses a cross-session merge with a DIFFERENT reason from a cross-tenant one",
-            "permits a cross-tenant merge that names both endpoints",
-            "refuses an authorization issued for a different destination",
-            "refuses an authorization issued for a different source",
-            "does not let a session-scoped authorization cover a tenant-wide merge"
-          ],
-          "capturedAtUtc": "2026-09-05T18:08:08.105Z"
+          "status": "NOT_RUN",
+          "revokedFrom": {
+            "candidateSha": "2c854a9be2a7a84ae45bb7256ac1c0a6214a22a5",
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33963744479",
+            "absentCommitments": 1
+          },
+          "revokedReason": "The Usage stage was rebuilt after §12.19-1: the withdrawn entry ran scope.spec.ts alone, proving a pure function with no production caller. The new entry also runs record-enforcement.spec.ts, whose every case goes through the seam, and the old green was observed on 2c854a9be2, which predates it."
         },
         "F": {
           "status": "GREEN",
@@ -7140,7 +7110,7 @@
       "openFindings": [
         "BLOCKED-096: P6-01 residual lock rewritten as an outcome; both steps now owned by P6-03 (wave 8)"
       ],
-      "status": "BLOCKED_ON_ACCEPTANCE",
+      "status": "NOT_RUN",
       "acceptedEvidence": {
         "acceptedAtUtc": "2026-09-05T11:57:03.682Z",
         "cells": {
