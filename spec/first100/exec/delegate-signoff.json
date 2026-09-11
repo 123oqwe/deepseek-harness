@@ -332,6 +332,15 @@
       "signedAtUtc": "2026-09-10T16:58:37.139Z",
       "reason": "Three-predicate deep-verify at e3004c9276 (CI 34500999293, 1196 files/0 red). Per-noun: must[0] definitions registered as digest-pinned artifacts, digest covers canonical (body, tools) so a re-registration cannot widen a definition's capability; must[1] runs reference the digest and a bare name is refused (U.2); must[2] detached run is owned by the Run service — provider startDetached mints its own SessionId + ctx.agents.create (worker-thread/src/index.ts:375,:404), attach(runId) on the WorkflowEngine abstract (workflow/src/index.ts:215), liveRuns.set precedes workflow/start (a real ordering defect this stage found and fixed), and the model-visible consumer is wired (tool-workflow/src/index.ts:307 attach, :328 startDetached; both packages mounted in base cordis.patch.yml:519/:524) — production call sites grepped by me, not taken on report; the executor-driven spawn case exposed and fixed a second real defect (detached agent had no LLM routing, M51); must[3] nested budget (nested-budget), capability attenuation (planNestedRun bound = parent ∩ declared tools.allow, carried as the host toolFilter, host.ts:511), recursion named structurally; the trace half is a §12.46-B split — producer P7-07 — recorded as BLOCKED-173, traceContext propagates without inventing a root. Two BLOCKED-100 findings closed per 4.4c on provider evidence, the precise consumer finding opened and closed on U.7. Zero open findings.",
       "note": "Reach verified on the shipped profile (base bundle mounts workflow-worker-thread and tool-workflow). Trace inheritance's producer half is deferred to P7-07 under BLOCKED-173 and is not a gap in this epic's own nouns."
+    },
+    {
+      "epic": "P4-01",
+      "rowDigestSha256": "4ecebdcc483513e476fbb216e98f8d317acb39720af2ceeef2c347c640911c6d",
+      "conclusion": "WITHDRAWN",
+      "delegateSession": "guanjieqiao-04",
+      "signedAtUtc": "2026-09-11T02:52:03.650Z",
+      "reason": "4.4d (2026-09-10, delegate guanjieqiao-04, measured at 0db7525001): dsh-run is mounted in base, but the 'runs' service RunPlugin registers (packages/run/run/src/index.ts:567) has zero production consumers outside its package (no ctx.get('runs'), ctx.runs or inject); the Run event log only ever receives its genesis entry, and production advancement is P4-05's AgentLifecycle. acceptance[0]/[1] and must[1]'s append half are library-only. Same standard as P6-07 (§12.75). BLOCKED-183; remediation slice P4-01.U2 (lane B, after P4-02).",
+      "note": "Sign-off of 2026-09-04 rested on four green cells over clauses whose subjects have no production caller."
     }
   ]
 }
