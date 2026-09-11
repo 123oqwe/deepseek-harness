@@ -341,6 +341,15 @@
       "signedAtUtc": "2026-09-11T02:52:03.650Z",
       "reason": "4.4d (2026-09-10, delegate guanjieqiao-04, measured at 0db7525001): dsh-run is mounted in base, but the 'runs' service RunPlugin registers (packages/run/run/src/index.ts:567) has zero production consumers outside its package (no ctx.get('runs'), ctx.runs or inject); the Run event log only ever receives its genesis entry, and production advancement is P4-05's AgentLifecycle. acceptance[0]/[1] and must[1]'s append half are library-only. Same standard as P6-07 (§12.75). BLOCKED-183; remediation slice P4-01.U2 (lane B, after P4-02).",
       "note": "Sign-off of 2026-09-04 rested on four green cells over clauses whose subjects have no production caller."
+    },
+    {
+      "epic": "P1-07",
+      "rowDigestSha256": "e4f090de62fa44011d5c95ebb667f82343aaf77ade76803b0b9d8b648e1e70b0",
+      "conclusion": "WITHDRAWN",
+      "delegateSession": "guanjieqiao-04",
+      "signedAtUtc": "2026-09-11T02:52:04.398Z",
+      "reason": "4.4d (2026-09-10, delegate guanjieqiao-04, measured at 0db7525001): workspace-trust-local ships disabled: true in packages/bundle/base/cordis.patch.yml:351-353 and no shipped bundle enables it, so ctx.get('workspaceTrust') is undefined on every profile a user starts; both consumers fail open (agent-instructions/src/index.ts:132-138 loads project instructions ungated; skill-filesystem/src/index.ts:253-255 returns true). acceptance[0] does not hold on any shipped profile. BLOCKED-185. Remediation is a product decision pending the user, with two concrete landing points: (A) ship the boundary ON by default plus a first-open trust interaction (must[2]); or (B) keep it opt-in and narrow acceptance[0] to the opt-in composition, recorded as such. No slice assigned until the user picks.",
+      "note": "Withdrawal is the delegate's; the restore path is the user's product decision recorded in BLOCKED-185."
     }
   ]
 }
