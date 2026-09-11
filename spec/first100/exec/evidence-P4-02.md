@@ -162,3 +162,65 @@ Planned mutations, all in the non-loosening forms this epic has been using (cons
 **The gap that the table hides, and it is about acceptance[0].** Read strictly, acceptance[0]'s subject is *"the same **input** produces stable output under a deterministic parser fixture"* — a statement about the **compiler**. The two C cases are about a profile's canonical digest, which is the property the compiler's determinism is *observed through*, not the determinism itself: C has no compiler to feed an input to. So the honest reading is that **acceptance[0] is closed by P and by P alone**, and C's two cases are supporting rather than covering. This matters in one specific way: if the coverage entry cites C for acceptance[0], predicate (i) could close on cases that never compiled anything. The entry should cite P for acceptance[0] and list the C pair in its `note` as the digest property P depends on.
 
 That is a proposal for the entry's content, not a decision: `acceptance-coverage.json` is Supervisor-curated, and what a citation may claim is exactly the thing this artifact exists to keep honest.
+
+---
+
+# P4-02 — production-arrival evidence for the signature pass (U and F)
+
+Same shape as `evidence-P4-01.md`'s 4.4 table and written for the same purpose: the delegate re-greps every row. Paths at `b76d54b0cf`.
+
+The Contract and Provider stages above recorded a vocabulary and a compiler. What follows is what CALLS them, which is the question the Usage stage exists to answer and the one a sign-off has to be able to check.
+
+## 4.4a — the noun, and the production call site that reaches it
+
+| named thing | production call site | reached from |
+|---|---|---|
+| **`compileTaskProfile`** | `packages/run/run/src/index.ts:964` | `RunPlugin.recordTaskProfile` — the epic's only production caller |
+| the first-step marker | `packages/run/run/src/index.ts:1174` | `const firstStep = agent.lifecycle?.state === 'queued'`, captured BEFORE `ensureRunning`, which is what consumes that state |
+| the call itself | `packages/run/run/src/index.ts:1211` | inside the `agent/pre-step` waterfall, guarded by `firstStep` |
+| `goalOf` (text blocks joined, other kinds tallied) | `packages/run/run/src/index.ts:111`, called at `:963` | OQ2 — the caller reads the text that is there and counts what it could not |
+| `taskOriginOf` | `packages/run/task-profile/src/types.ts:312`, called at `packages/run/run/src/index.ts:968` | only `user` and `goal` compile |
+| `goalRoundOf` | `packages/run/task-profile/src/types.ts:334`, called at `packages/run/run/src/index.ts:963` | OQ4(b) — the entered goal's identity rides `TaskGoalRef.goalRound` |
+| `taskProfileRef` | `packages/run/task-profile/src/validate.ts:236`, called at `packages/run/run/src/index.ts:977` | the digest the Run log names |
+| `lastTaskProfileRef` (the skip's input) | `packages/run/run/src/index.ts:131`, called at `:993` | OQ3 — read from the LOG, because a resumed session's handle carries nothing |
+| the skip | `packages/run/run/src/index.ts:994` | `if (previousRef !== ref)` — an unchanged profile is not appended twice |
+| the session append | `packages/run/run/src/index.ts:995` | `run/task-profile`, the profile's durable home |
+| `Agent.taskProfile` | `packages/run/run/src/index.ts:1001` | the handle carries the digest, never the body |
+| **`validateTaskProfile`** | **no production caller** | deliberate: it is the durable-boundary check for a READER, and the reader is P4-03. Recorded as a limitation in the package README rather than left to look like an oversight |
+| `unreadContentQuestion` / `undeterminedSideEffect` | `packages/run/task-profile/src/index.ts:230`, `:194` | module-private; reached only through `compileTaskProfile` |
+
+## 4.4b — the mount row and the generated registrations
+
+| what | where |
+|---|---|
+| the plugin that calls the compiler | `packages/bundle/base/cordis.patch.yml:595` — `@deepseek-ai/dsh-run`, enabled, on every shipped profile |
+| the event type's registration | `packages/core/session/src/known-event-types.ts:52` — GENERATED from the in-repo `SessionEventMap`, so declaring the member is what registers it |
+| the durable documentation | `docs/persistence-catalog.md:741` — `run/task-profile`, log-only |
+
+`@deepseek-ai/dsh-task-profile` mounts nothing and is an audited `PACKAGE_LIBRARIES` entry: one pure function, no plugin entry, no ctx key.
+
+## 4.4c — what a model or a user can observe
+
+**Nothing yet, and that is the honest answer rather than a gap.** The profile is compiled, appended and referenced; no path puts it into a model request. "Model-visible ⟺ logged" is satisfied in the direction that exists — it is logged and not visible. P4-03 is the epic that makes it visible, and `validateTaskProfile` exists for that reader before the reader does.
+
+## 4.4d — the observation, per clause
+
+| clause | observed by | where |
+|---|---|---|
+| must[1] — every inference traces to the goal | `compiles the objective from the goal the human actually sent, and keeps the reference beside it` | `packages/run/run/tests/task-profile.spec.ts:130` |
+| must[1] — compiled once, at the first step | `appends exactly one run/task-profile event and names it on the Agent handle`, `appends no second profile for a second goal in the same session` | `:119`, `:177` |
+| must[2] — only a human goal is a task | `compiles NOTHING for a first message that is injected plugin context, and leaves the Run accepted` | `:189` |
+| must[2] — a goal round IS a task (OQ4(b)) | `compiles a profile for a goal continuation round and carries the round into the reference` + its control | `:303`, `:322` |
+| must[2] — ask, do not guess (OQ2) | `compiles a profile for an image-led first message and asks what the image asks for` | `:209` |
+| validation[2] — persisted | `references a digest whose body is in the session log, so the reference is resolvable` | `:163` |
+| validation[2] — revisable (OQ3) | `appends no second profile when a resumed session re-claims the SAME pending message` + `DOES append a second profile when the resumed session carries a different goal` | `:248`, `:279` |
+| validation[2] — named in the Run log | `moves the Run accepted → planning carrying the profile as a task-profile reference` | `:147` |
+| validation[2] — the revision arithmetic | the F stage's seven single-field moves plus the unchanged-recompile control | `packages/run/task-profile/tests/profile.spec.ts`, the `P4-02 F — the revision arithmetic` block |
+
+**One ordering claim is deliberately NOT observed**, and its absence is recorded so it does not read as a gap: that the profile is recorded "before the step it plans". A case asserting it passed with the call moved after `next()`, because the loop appends `step/start` and the step's own `user/message` only once the whole pre-step waterfall resolves. No log observation distinguishes the two placements, so the claim was withdrawn rather than frozen.
+
+## What the signature pass must record as still open
+
+- **P4-02 cannot be ACCEPTED before P4-01 is re-signed** — its Usage stage's transition is P4-01's, and P4-01's sign-off is withdrawn (BLOCKED-183).
+- **`validateTaskProfile` has no reader**, by design, until P4-03.
+- **Four cells await observation**: `C.1` and `P.1` (the OQ4(b) and OQ2 supplements), `U`, and `F`.
