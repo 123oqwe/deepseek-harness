@@ -377,6 +377,15 @@
       "signedAtUtc": "2026-09-11T17:35:10.521Z",
       "reason": "4.4d (2026-09-11, delegate first100-delegate-78, measured at 2face52539 by lane A and re-read by the delegate): no shipped code path passes an identity to agentLoop.create() and no base-bundle row produces a host-user principal, so identity/attached is never appended on any profile a user can start (packages/core/agent/src/agent.ts:129-132). Both dispatch paths (agent-loop/src/tool-calls.ts:486, core/tools/src/ptc.ts:218) then synthesize actor = createAnonymousDevPrincipal('anonymous:<sessionId>', 'local') via action-manifest/src/identity.ts:48-54. acceptance[0] ('any action traces to the root user/tenant and the full delegation chain') therefore holds on shipped profiles only in its degenerate anonymous form -- the actor is fabricated per session, not a root user -- while acceptance[2] defines anonymous-dev as a DISTINCT restricted principal, which presupposes a normal mode that no shipped profile ever enters. Consequence measured tonight: P1-07 must[2]'s host-user interaction and /trust-skills are unreachable on every shipped profile (isHostUserPrincipal requires kind 'user'). Same standard as P4-01 (section 12.83) and P1-07 (BLOCKED-185): a complete, tested mechanism whose production subject is absent on launched profiles. BLOCKED-200. Remediation slice P2-01.U2 (lane A): shipped boot attaches a kind:'user' host principal; the id/tenant shape for a local CLI is P2-01's vocabulary and is put to the user with a recommendation and a default in section 12.85 note 32.",
       "note": "Withdrawal is the delegate's; the four cells stay GREEN (library behaviour is not in question). Restore path: P2-01.U2 lands the shipped attach point and a frozen case on a real headless boot shows a kind:'user' actor on the first action manifest."
+    },
+    {
+      "epic": "P5-10",
+      "rowDigestSha256": "a975210e39748cf91ed590bdc2f7ea64c85223cb38d80efb25773768a31a0893",
+      "conclusion": "WITHDRAWN",
+      "delegateSession": "first100-delegate-78",
+      "signedAtUtc": "2026-09-11T19:25:50.075Z",
+      "reason": "4.4d (2026-09-11, delegate first100-delegate-78, measured at 161c14c858 by lane B and re-measured by 78): acceptance[1] (a human answer is delivered only to the designated waiting point) has no production path — ChildControlRouter is constructed in production with two arguments (packages/subagent/subagent/src/index.ts:664) and never receives the answerWaitingPoint callback (control-router.ts:76, supplied only by tests/control-router.spec.ts:43); awaitHuman() has zero production callers. The C/P cases prove the routing given a waiting point and a callback the tests themselves supply; the U stage has no case about human answers at all. BLOCKED-215.",
+      "note": "Withdrawal is the delegate's; the four cells stay GREEN (library behaviour is not in question). acceptance[0] and acceptance[2] are covered on both halves. Re-sign after the U supplement that wires awaitHuman + answerWaitingPoint into the production router construction is observed passing (BLOCKED-215)."
     }
   ]
 }

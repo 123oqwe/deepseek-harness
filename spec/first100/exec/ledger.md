@@ -72,7 +72,7 @@
 | 66 | P5-07 | Codex Adapter：结构化流、继续执行、审批与证据映射 | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P5-05, P5-06, P8-04 | W12 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
 | 67 | P5-08 | Claude Code Adapter：结构化流、会话恢复、工具与 Artifact 映射 | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P5-05, P5-06, P8-04 | W12 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
 | 68 | P5-09 | ACP Provider：远程可继续会话、Trace 枚举与安全身份 | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P5-05, P8-01, P8-05 | W18 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
-| 69 | P5-10 | Continuation、Steer、Human Input 与 Cancellation Convergence 修复 | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P4-06, P4-07 | W7 | GREEN | GREEN | GREEN | GREEN | 434408a47ca7635fb1076baeb43efecb33bce980 | APPROVED | ACCEPTED |
+| 69 | P5-10 | Continuation、Steer、Human Input 与 Cancellation Convergence 修复 | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P4-06, P4-07 | W7 | GREEN | GREEN | GREEN | GREEN | 434408a47ca7635fb1076baeb43efecb33bce980 | PENDING | BLOCKED_ON_ACCEPTANCE |
 | 70 | P5-11 | 通用 Taskboard、Mailbox 与 Blackboard 原语 | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P4-06, P4-07 | W7 | GREEN | GREEN | GREEN | GREEN | 434408a47ca7635fb1076baeb43efecb33bce980 | APPROVED | ACCEPTED |
 | 71 | P5-12 | 多 Agent 协调安全、Worktree 隔离与 Router Regret 评测 | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P4-10, P5-01, P5-11 | W10 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
 | 72 | P6-01 | 原生 Memory Service Definition（Provider-Neutral） | L1_CONTRACT | UNASSIGNED_UNTIL_APPROVAL | P0-03, P2-01 | W4 | GREEN | GREEN | GREEN | GREEN | e74593c50a0306801c9d294e4eb45f2be7a8ec15 | PENDING | NOT_RUN |
