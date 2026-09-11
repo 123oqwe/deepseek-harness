@@ -109,6 +109,12 @@ Unchanged from the delegate's ruling, and the C stage already carries both halve
 1. The profile body is appended to the session log as `run/task-profile` (`{ ref, profile, previousRef? }`), which is the durable home validation[2] asks for and the record P4-03 will need for "model-visible ⟺ logged".
 2. A `RunEvent` naming it by `TaskProfileRef` — **once the Run event log has a production writer at all**. Today it has exactly one entry per Run and no appender, so this half depends on finding 1's resolution.
 
+## A gap the C freeze left, closed in P rather than back-patched
+
+The C stage admitted `src/index.ts` as a B4(f) type-only barrel — exactly one statement — and **froze no case over that shape**. P2-04, the precedent the admission cites, did pin it ("src/index.ts is exactly one statement and it re-exports types only"); this freeze's 12 cases do not. So the property was true and unguarded: any commit could have added a runtime export to the barrel and nothing would have reddened.
+
+Recorded here rather than back-patched, per the delegate's ruling (gq-04, 2026-09-10): a closed freeze is not reopened. The Provider stage adds the case instead, over the surface it actually promises — `index.ts` exports exactly one runtime symbol, `compileTaskProfile` — with the mutation being a second exported symbol. `export type *` contributes no runtime key, so the module namespace's own keys are the whole runtime surface and the case can read it directly.
+
 ## Fixtures and mutation plan for P
 
 The four generic kinds become compiler inputs rather than literal profiles: each fixture is a `TaskProfileInput` (goal ref, text, plus the structured fields above) with an expected profile. Determinism (acceptance[0]) is observed by compiling each fixture twice and comparing `taskProfileRef`, not by comparing objects — the digest is what the Run log and the revision chain actually key on.
