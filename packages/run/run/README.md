@@ -268,16 +268,16 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   members, so declaring a member is what registers a type; a Run-lifecycle
   event needs a decision about what belongs in two stores, not a registration
   step.
-- **A Run does NOT reach a terminal state when the PROCESS ends.** Its terminal
-  transitions are driven from `agent/disposed`, and at whole-process teardown
-  Cordis unloads this plugin's listeners before the agent registry disposes its
-  agents — so `finish` never runs, the Run keeps whatever state it was in, and
-  the lease is not released either. Measured through the Loader fixture: a boot
-  whose root agent never took a model step leaves its Run in `accepted`, and the
-  next boot reports `restored 1 non-terminal Run(s)`. A session disposed WHILE
-  the harness runs does reach a terminal state. The consequence is that
-  `listNonTerminal` still grows per boot for any session a later boot does not
-  continue.
+- **A clean unload parks its Run but cannot hand back its work item.** The Run
+  goes `running → paused` from this plugin's own disposer, because
+  `agent/disposed` cannot reach it by then: Cordis unloads in reverse mount
+  order, so the plugin goes before the agent registry that disposes its agents.
+  The lease is a different matter — the lease store unloads FIRST, and calling
+  `release` there throws `LeaseStorePlugin used before its mount opened the
+  database`. So a cleanly unloaded host keeps its session's work item until the
+  lease lapses, exactly as a crashed one does, and the next host cannot tell the
+  two apart. `BLOCKED-197` holds it; a case freezes the measured behaviour so
+  that closing it reddens something.
 - **Continuing a Run across a restart needs a stable session id.** Adoption is
   keyed on the session, so a configured agent with no `sessionId` gets a new
   session per boot and each one correctly gets its own Run. A deployment whose

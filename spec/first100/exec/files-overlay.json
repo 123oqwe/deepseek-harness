@@ -1285,10 +1285,34 @@
     },
     {
       "epic": "P4-01",
+      "path": "packages/run/run/tests/restart.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P4-01",
       "path": "packages/run/run/tests/run-service.spec.ts",
       "kind": "test",
       "stages": [
         "P"
+      ]
+    },
+    {
+      "epic": "P4-01",
+      "path": "tests/first100/fixtures/loader/p4-01-run-resumed/cordis.yml",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P4-01",
+      "path": "tests/first100/fixtures/loader/p4-01-run-resumed/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
       ]
     },
     {
@@ -1312,7 +1336,8 @@
       "path": "tests/first100/fixtures/P4-01.composition.spec.ts",
       "kind": "test",
       "stages": [
-        "U"
+        "U",
+        "U.2"
       ]
     },
     {

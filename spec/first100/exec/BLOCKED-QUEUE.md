@@ -4852,3 +4852,27 @@ So a Run carrying sessions A and B is writable under two independent authorities
 **Closing condition:** a P4-07 slice whose preFlight measures (a) the two-master risk on a multi-session Run, against a real multi-process store rather than by construction, and (b) the shape of a Run-level work item — whether the Run's item replaces the per-session items or composes with them, and which one a write presents. Only then does `attachSession` acquire a caller.
 
 **What P4-01's U2 freezes instead**, so the clause is not left silent: the NEGATIVE half — a second session does not join an existing Run today, and a restart ADOPTS rather than mints (the intentional version of what `runs-for-session after=2` was doing by accident). At re-sign, acceptance[2] reads: the first half holds, the negative half is frozen, and the positive second half is held by this entry. Same shape as BLOCKED-172.
+
+
+### BLOCKED-197 — a cleanly unloaded host cannot hand its work item back, so a restart is indistinguishable from a crash
+
+**Status:** OPEN, owner `dsh-run`. Opened 2026-09-11 by the delegate's ruling (note 18) on lane B's U2 measurement. Half the behaviour it names IS implemented in U2; this entry holds the half that is not.
+
+**What works.** A clean unload now PARKS the Run it was doing: `running → paused`, written from `RunPlugin`'s own disposer, because `agent/disposed` cannot reach the plugin by then — Cordis unloads in reverse mount order, so this plugin goes before the agent registry that disposes its agents, and the listener is already gone when those disposals are announced. `paused` rather than a terminal state is the whole decision: a run half-way through when the operator closed the app did not succeed and was not cancelled, and reporting either would be a claim about work that is merely unfinished. Until U2 it was the one legal Run state nothing ever reached.
+
+**What does not, and it is not a matter of effort.** The same disposer cannot release the lease. Measured:
+
+```
+Error: LeaseStorePlugin used before its mount opened the database
+```
+
+The lease store unloads BEFORE this plugin's disposer runs — its connection is already closed. So a cleanly unloaded host keeps its session's work item until the lease lapses, exactly as a crashed one does, and **the next host cannot tell the two apart**.
+
+**Two observations worth keeping, both incidental to finding it.**
+
+1. **The rejection was swallowed.** `pauseRun` advances then releases; the advance succeeded and the release threw, the disposer's promise rejected, and `await ctx.fiber.dispose()` resolved anyway. The parking case stayed GREEN. Without a case that depended on the RELEASE, this exception would have gone on being thrown and discarded at every clean shutdown, in every composition using the SQLite lease provider.
+2. **The failure would have been provider-dependent.** The in-memory provider owns a plain map with no connection to close, so the same line would not have thrown there. Wrapping the release in a catch — the obvious local fix — was rejected for that reason: it converts a real ordering defect into a silent degradation whose behaviour differs by which provider a deployment mounts.
+
+**What U2 freezes instead**, so the gap is not silent: `holds its work item past a clean unload too, so a restart waits out the lease either way` asserts the measured behaviour — the next mount opens no Run, sets `leaseRefused`, and finds the restored Run `paused`. It reddens the day this entry closes, which is what a case about a known gap is for.
+
+**Closing condition:** a hand-back at a point where the lease store is still open. Where that point is has NOT been measured — it may be a Cordis unload-order guarantee, a disposal hook `dsh-run` does not currently take, or a change in which plugin owns the release. Naming one without measuring it would be the guess this entry exists to avoid.
