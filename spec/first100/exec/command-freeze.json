@@ -11752,6 +11752,45 @@
       }
     },
     {
+      "epic": "P4-02",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-02",
+        "stage": "U"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P4-02.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "files": [
+        "tests/first100/fixtures/P4-02.composition.spec.ts",
+        "tests/first100/fixtures/loader/p4-02-task-profile/cordis.yml",
+        "tests/first100/fixtures/loader/p4-02-task-profile/driver.ts"
+      ],
+      "frozenAtUtc": "2026-09-11T17:32:10Z",
+      "dryRunProof": {
+        "treeSha": "7d29e1b8d55fed60d58cdf1ccadc317d4fd301d6",
+        "testsDiscovered": 4
+      },
+      "expectCases": [
+        "compiles exactly one profile when a real shipped-path boot takes its first model step",
+        "logs the body and no digest on the production path too, so the event replays",
+        "names the same profile in the session log, the Run log and the Agent handle",
+        "carries that reference on the accepted → planning transition, not merely somewhere in the log"
+      ],
+      "sensitivityProof": {
+        "mutationDescription": "In `packages/run/run/src/index.ts`, the `agent/pre-step` waterfall no longer drives the compile: `await this.recordTaskProfile(agent, messages)` inside the `if (firstStep)` branch replaced by `void messages`, leaving the listener registered and the branch reached but the profile never compiled. This is the mutation the stage exists for -- every other P4-02 U case runs in a hand-built `ctx.plugin(...)` harness, so a mutation there proves nothing about whether a real Loader boot arrives at this code.",
+        "failureSummary": "RED 4 of 4, the whole fixture: with nothing compiled there is no `run/task-profile` event to count, no payload to inspect, no digest for the three records to agree on, and no `accepted -> planning` transition naming a profile. Applied and reverted locally; `packages/run/run/src/index.ts` restored byte-identically (sha256 2123b94c385ef43052b9b73b1cc2b0b3746574ad9b8d9091a15af8c361e9e5f4 before and after, `git status --porcelain` empty), and the fixture returned 4 of 4 passing."
+      },
+      "note": "The production-arrival half of P4-02's U stage, and the half `packages/AGENTS.md` actually asks for: a real `dsh-app-boot` boot of a real Loader composition rather than a hand-built `ctx.plugin` chain. `spec/first100/exec/evidence-P4-02.md` §4.4 records why the primary U entry could not supply it -- its frozen argv is `packages/run/run`, whose `harness()` mounts nine plugins by hand, and the policy calls that insufficient on its own for a product-visible plugin.\n\nA SEPARATE FIXTURE RATHER THAN A CASE IN THE UNIT SUITE. A twelfth case in `task-profile.spec.ts` would re-test the same non-production composition; what was missing is the Loader path, not another assertion over it.\n\nTHE MOCK IS THE MODEL PROVIDER AND NOTHING ELSE. P4-01's composition stops at `agent/session-start`, which needs no model; this epic's subject is `agent/pre-step`, which fires only when a turn runs. No plugin publishes a mock adapter, so the driver registers one on the already-booted context -- the Loader tree, `dsh-app-boot`, the agent registry, the agent loop and the Run Service's own listener are all shipped code.\n\nTHE SPEC READS A JSON OBSERVATION because the boot happens in a child process: what crosses the boundary is what the driver writes. The digest in that observation is DERIVED from each logged body by `taskProfileRef`, never read from a stored field, which pins BLOCKED-211's property on the production path as well as in the unit suite."
+    },
+    {
       "epic": "P0-05",
       "stage": "C",
       "supplements": {
