@@ -255,9 +255,9 @@ describe('P1-10 Fault — recovery when the medium lost what the record names', 
 
 describe('P1-10 Fault — a medium primitive that fails mid-transaction', () => {
   it('fault boundary 11 a snapshot primitive that fails leaves the live unit alone', async () => {
-    // The first primitive the transaction calls. `storage-sqlite`'s is
-    // `VACUUM INTO` and `storage-json`'s is a copy; either can fail on a full
-    // disk, and neither has touched the live unit when it does.
+    // The first primitive the transaction calls. `storage-sqlite`'s is an
+    // ATTACHed sidecar and `storage-json`'s is a copy; either can fail on a
+    // full disk, and neither has touched the live unit when it does.
     const backend = new FaultyBackend('snapshotUnit')
 
     await expect(runUpgrade(request(backend))).rejects.toThrow(/snapshotUnit failed/u)

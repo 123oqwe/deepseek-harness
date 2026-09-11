@@ -2099,15 +2099,18 @@
         },
         "verdict": "PROVIDER_WRITE",
         "verdictSecondary": "PROVIDER_ADAPT",
-        "adopted": [
+        "adopted": [],
+        "deviations": [
           {
             "name": "node:sqlite / VACUUM INTO",
             "npm": null,
-            "landsIn": "P1-10.P",
-            "reason": "Adopted for the SQLITE BACKEND's implementation of the migration facet -- an atomically consistent copy of a live database without stopping its writers, which a file copy of a database being written to is not (the ledger row's `npm` is null because this is a Node built-in, not a package). Probed on this runtime rather than assumed: an in-memory database produced an 8192-byte copy. Its placement is the medium correction's whole point: it is one backend's snapshot primitive, not the transaction's medium. The transaction calls the facet; `storage-json` implements the same facet by copying a file or a directory tree, and no bundle mounts `storage-sqlite` today (base mounts `storage-json` at dshHomePath('storages')), so a sqlite-only design would have had no subject at all."
-          }
-        ],
-        "deviations": [
+            "reason": "Not adopted, and this was reclassified from `adopted` after the fact rather than left to read as taken. A unit in this medium is a SET OF ROWS inside one shared database, so a snapshot cannot be a copy of the file: that would carry every OTHER unit along and make a rollback of one unit a rollback of all of them (`storage-sqlite/src/migration.ts` module header). The shipped facet snapshots into a sidecar database holding exactly this unit's rows, produced by `ATTACH`, and switches by replacing rows inside a single transaction. The epic's own frozen cases are written against that mechanism and are incompatible with a file-level copy: U pins \"snapshots ONE unit, not the whole database\", \"digests content, not file bytes\", and \"writes the migrated copy in the format this backend opens, not one of its own\". The probe recorded under `probes[0]` stands — VACUUM INTO does work on this runtime; it was the wrong primitive for what a unit is here, which the P stage established after the entry was written.",
+            "ruling": "§12.85 note 39",
+            "supersedesAdoption": {
+              "landsIn": "P1-10.P",
+              "recordedReason": "Adopted for the SQLITE BACKEND's implementation of the migration facet -- an atomically consistent copy of a live database without stopping its writers, which a file copy of a database being written to is not (the ledger row's `npm` is null because this is a Node built-in, not a package). Probed on this runtime rather than assumed: an in-memory database produced an 8192-byte copy. Its placement is the medium correction's whole point: it is one backend's snapshot primitive, not the transaction's medium. The transaction calls the facet; `storage-json` implements the same facet by copying a file or a directory tree, and no bundle mounts `storage-sqlite` today (base mounts `storage-json` at dshHomePath('storages')), so a sqlite-only design would have had no subject at all."
+            }
+          },
           {
             "name": "sequelize/umzug",
             "npm": "umzug",

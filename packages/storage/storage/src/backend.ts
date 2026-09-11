@@ -87,9 +87,12 @@ export interface UnitContent {
  * (P1-10 must[1]).
  *
  * The transaction orders these; it never names a path. `storage-json` copies a
- * file or a directory tree and renames; `storage-sqlite` uses `VACUUM INTO`
- * and renames. Both are the same four operations over different media, which
- * is what makes the six-phase ordering medium-independent.
+ * file or a directory tree and renames; `storage-sqlite` ATTACHes a sidecar
+ * database holding one unit's rows and replaces rows in a transaction, because
+ * a unit there is rows inside a SHARED database and a file-level copy would
+ * make a rollback of one unit a rollback of all of them. Both are the same four
+ * operations over different media, which is what makes the six-phase ordering
+ * medium-independent.
  */
 export interface MigrationFacet {
   /**
