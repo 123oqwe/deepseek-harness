@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-11T06:53:06.210Z",
-  "inputDigest": "765ffdb159476efec0268fb36b4f5baaaae242b4e7c23b87e053388ee00a3c59",
+  "lastUpdatedUtc": "2026-09-11T08:00:51.165Z",
+  "inputDigest": "a666b5cffc86b22713d1af5a37ca0a35a1b2e5f7a0a04b55b332cd9f16de5e20",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4487,7 +4487,28 @@
           "capturedAtUtc": "2026-09-11T03:42:13.496Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34573807027",
+          "observationReportPath": "/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7/scratchpad/obs2/vitest-report.json",
+          "observationSha256": "5abb1558ef761ae088637b9120ea9b07c00c81dc32fa600bdbb7787682cf968c",
+          "expectCasesMatched": [
+            "compiling the same input twice yields the same reference, which is what the Run log keys on",
+            "a changed budget is a different reference, so a revision cannot pass for the original",
+            "constraint ids come from the statement, not from position, so an unrelated constraint does not renumber them",
+            "a stated budget becomes a hard constraint whose provenance names the field it came from",
+            "invents no constraint from the goal text, however much the text sounds like one",
+            "records the goal text as the objective and keeps the reference beside it, never instead of it",
+            "reports the side effect as undetermined at confidence 0 rather than guessing a class",
+            "asks about the side effect it could not determine, so the profile is valid under must[2]",
+            "asks whose authorization applies when no identity is attached, and does not when one is",
+            "records the workspace trust state in the rationale without letting it decide the class",
+            "says the trust state was not supplied rather than calling it untrusted, while still failing closed",
+            "refuses injected plugin context rather than producing a profile per notice",
+            "refuses a blank goal instead of emitting a profile whose objective says nothing",
+            "exports exactly one runtime symbol, so a later convenience re-export cannot slip in"
+          ],
+          "capturedAtUtc": "2026-09-11T08:00:51.160Z"
         },
         "U": {
           "status": "NOT_RUN"
@@ -4497,7 +4518,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "d69d6e5b3e43cee9b1a2d9cad7fa60e1df4f7b14",
+      "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
