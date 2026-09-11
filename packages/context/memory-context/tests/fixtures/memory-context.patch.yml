@@ -41,7 +41,12 @@
 - id: memory-context
   disabled: false
   config:
-    tenantId: 't-fixture'
+    # 'local' because a shipped headless boot now ATTACHES a host-user
+    # identity in that tenant (P2-01 U2), and `resolveMemoryAccessContext`
+    # throws when the attached principal's tenant differs from this one. Before
+    # P2-01 U2 nothing was attached, so any spelling here was consistent with a
+    # profile that named no tenant at all; 't-fixture' was that spelling.
+    tenantId: 'local'
     principalId: 'p-fixture'
     purpose: 'recall'
     maxRecords: 5

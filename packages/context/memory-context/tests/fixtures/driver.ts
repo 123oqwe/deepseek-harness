@@ -37,17 +37,17 @@ const ctx = await bootProductionProfile({
 })
 try {
   await ctx.memory.propose({
-    origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: createAnonymousDevPrincipal(PrincipalId('p-fixture'), TenantId('t-fixture')),
-    scope: { tenantId: TenantId('t-fixture'), workspace: await workspaceScope() },
+    origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: createAnonymousDevPrincipal(PrincipalId('p-fixture'), TenantId('local')),
+    scope: { tenantId: TenantId('local'), workspace: await workspaceScope() },
     content: { note: 'the deploy passphrase is oxidized-kingfisher' },
   })
   // A record the SAME TENANT wrote from a different checkout. It matches the
   // turn's query as well as the one above does, so if it stays out of the
   // recall it is the workspace boundary keeping it out and not the search.
   await ctx.memory.propose({
-    origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: createAnonymousDevPrincipal(PrincipalId('p-fixture'), TenantId('t-fixture')),
+    origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: createAnonymousDevPrincipal(PrincipalId('p-fixture'), TenantId('local')),
     scope: {
-      tenantId: TenantId('t-fixture'),
+      tenantId: TenantId('local'),
       workspace: { canonicalPath: '/projects/another-checkout', identity: 'dev-9:ino-9999:1600000000000' },
     },
     content: { note: 'the deploy passphrase is tarnished-marmoset' },

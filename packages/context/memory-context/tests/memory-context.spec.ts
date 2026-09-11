@@ -117,9 +117,9 @@ describe('memory-context through the production headless profile', () => {
     if (data.operation !== 'query') throw new Error('unreachable: filtered to query above')
     // must[3]: all four read-scoping dimensions are on the record, not merely
     // checked in memory and then discarded.
-    expect(data.accessContext.principal).toMatchObject({ tenantId: 't-fixture' })
+    expect(data.accessContext.principal).toMatchObject({ tenantId: 'local' })
     expect(data.accessContext.purpose).toBe('recall')
-    expect(data.accessContext.scope).toMatchObject({ tenantId: 't-fixture' })
+    expect(data.accessContext.scope).toMatchObject({ tenantId: 'local' })
     expect(data.accessContext.contextBudget).toMatchObject({ maxRecords: 5 })
     expect(data.resultCount).toBe(1)
   })
