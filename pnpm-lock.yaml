@@ -1194,6 +1194,9 @@ importers:
       '@deepseek-ai/dsh-command-goal':
         specifier: workspace:^
         version: link:../../goal/command-goal
+      '@deepseek-ai/dsh-command-workspace-trust':
+        specifier: workspace:^
+        version: link:../../workspace/command-workspace-trust
       '@deepseek-ai/dsh-commands':
         specifier: workspace:^
         version: link:../../interaction/commands
@@ -10733,6 +10736,42 @@ importers:
       tsx:
         specifier: ^4.19.2
         version: 4.22.4
+
+  packages/workspace/command-workspace-trust:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-agent':
+        specifier: workspace:^
+        version: link:../../core/agent
+      '@deepseek-ai/dsh-commands':
+        specifier: workspace:^
+        version: link:../../interaction/commands
+      '@deepseek-ai/dsh-principal':
+        specifier: workspace:^
+        version: link:../../identity/principal
+      '@deepseek-ai/dsh-session':
+        specifier: workspace:^
+        version: link:../../core/session
+      '@deepseek-ai/dsh-storage':
+        specifier: workspace:^
+        version: link:../../storage/storage
+      '@deepseek-ai/dsh-storage-domain':
+        specifier: workspace:^
+        version: link:../../storage/storage-domain
+      '@deepseek-ai/dsh-storage-json':
+        specifier: workspace:^
+        version: link:../../storage/storage-json
+      '@deepseek-ai/dsh-user-approval':
+        specifier: workspace:^
+        version: link:../../interaction/user-approval
+      '@deepseek-ai/dsh-workspace-trust':
+        specifier: workspace:^
+        version: link:../workspace-trust
+      '@deepseek-ai/dsh-workspace-trust-local':
+        specifier: workspace:^
+        version: link:../workspace-trust-local
 
   packages/workspace/workspace:
     dependencies:

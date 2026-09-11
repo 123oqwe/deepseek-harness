@@ -384,6 +384,16 @@
       name: '@deepseek-ai/dsh-workspace-trust-local'
       disabled: true
 
+    # `/trust-skills`: the host user's own way to raise this workspace to
+    # `trusted-execute`. Enabled, unlike the provider above, and harmless
+    # without it — with no `workspaceTrust` mounted the command reports that
+    # there is no boundary to raise rather than doing anything. It ships on so
+    # that turning the provider on does not also require finding and adding a
+    # second row: a boundary whose only ON switch is undiscoverable is one
+    # nobody turns on (P1-07 must[2]).
+    - id: command-workspace-trust
+      name: '@deepseek-ai/dsh-command-workspace-trust'
+
     - id: agent-instructions
       name: '@deepseek-ai/dsh-agent-instructions'
       config:

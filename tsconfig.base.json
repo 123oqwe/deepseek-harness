@@ -266,6 +266,7 @@
       "@deepseek-ai/dsh-command-compact": ["./packages/compaction/command-compact/src"],
       "@deepseek-ai/dsh-command-feedback": ["./packages/feedback/command-feedback/src"],
       "@deepseek-ai/dsh-command-goal": ["./packages/goal/command-goal/src"],
+      "@deepseek-ai/dsh-command-workspace-trust": ["./packages/workspace/command-workspace-trust/src"],
       "@deepseek-ai/dsh-commands": ["./packages/interaction/commands/src"],
       "@deepseek-ai/dsh-commands/invariant": ["./packages/interaction/commands/src/invariant.ts"],
       "@deepseek-ai/dsh-commands/brand": ["./packages/interaction/commands/src/brand.ts"],
