@@ -15,7 +15,7 @@
  * @module
  */
 
-import { mkdtempSync, readdirSync, statSync } from 'node:fs'
+import { mkdtempSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -28,6 +28,18 @@ import MemoryRuntime, {
   type MemoryScope,
 } from '@deepseek-ai/dsh-memory'
 import { createUserPrincipal, PrincipalId, TenantId, type Principal } from '@deepseek-ai/dsh-principal'
+
+
+/** The document the durable provider keeps, read straight off disk. */
+function storedRecords(directory: string): { id: string; confidence?: number; provenance?: unknown }[] {
+  const document = JSON.parse(readFileSync(join(directory, 'memory.json'), 'utf8')) as {
+    records: { id: string; confidence?: number; provenance?: unknown }[]
+  }
+  return document.records
+}
+
+/** Brand a raw string as a source event id, as P6-02's vocabulary spells it. */
+const SourceEventId = (id: string): never => id as never
 
 /** A fresh, empty directory for one test's durable backing file. */
 function freshDirectory(): string {
@@ -67,7 +79,7 @@ describe('P-stage durability: a record outlives the provider instance that wrote
   it('a second provider instance over the same directory reads back a record the first instance proposed', async () => {
     const directory = freshDirectory()
     const first = await mountDurable(directory)
-    const { id } = await first.propose({ principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'survives the writer' } })
+    const { id } = await first.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'survives the writer' } })
 
     const second = await mountDurable(directory)
     await expect(second.get({ accessContext: accessContextFor('tenant-a'), id })).resolves.toMatchObject({
@@ -79,7 +91,7 @@ describe('P-stage durability: a record outlives the provider instance that wrote
   it('a provider instance over a different directory does not see the first directory\'s record — durability is per-directory, never process-global', async () => {
     const written = freshDirectory()
     const first = await mountDurable(written)
-    const { id } = await first.propose({ principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'only in the first directory' } })
+    const { id } = await first.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'only in the first directory' } })
 
     const elsewhere = await mountDurable(freshDirectory())
     await expect(elsewhere.get({ accessContext: accessContextFor('tenant-a'), id })).resolves.toBeUndefined()
@@ -89,7 +101,7 @@ describe('P-stage durability: a record outlives the provider instance that wrote
   it('a revise() by one instance is the content a later instance reads back', async () => {
     const directory = freshDirectory()
     const writer = await mountDurable(directory)
-    const { id } = await writer.propose({ principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'before' } })
+    const { id } = await writer.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'before' } })
     await writer.revise({ principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), id, content: { note: 'after' } })
 
     const reader = await mountDurable(directory)
@@ -99,8 +111,8 @@ describe('P-stage durability: a record outlives the provider instance that wrote
   it('a forget() by one instance stays forgotten for a later instance, while a sibling record it did not forget stays readable', async () => {
     const directory = freshDirectory()
     const writer = await mountDurable(directory)
-    const doomed = await writer.propose({ principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'doomed' } })
-    const kept = await writer.propose({ principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'kept' } })
+    const doomed = await writer.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'doomed' } })
+    const kept = await writer.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'kept' } })
     await writer.forget({ principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), id: doomed.id })
 
     const reader = await mountDurable(directory)
@@ -111,7 +123,7 @@ describe('P-stage durability: a record outlives the provider instance that wrote
   it('query() from a later instance finds an earlier instance\'s record by case-insensitive substring', async () => {
     const directory = freshDirectory()
     const writer = await mountDurable(directory)
-    await writer.propose({ principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'The Capital Of France' } })
+    await writer.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'The Capital Of France' } })
 
     const reader = await mountDurable(directory)
     const result = await reader.query({ accessContext: accessContextFor('tenant-a'), query: 'capital of france' })
@@ -122,7 +134,7 @@ describe('P-stage durability: a record outlives the provider instance that wrote
   it('query() from a later instance returns no records for a term absent from every stored record', async () => {
     const directory = freshDirectory()
     const writer = await mountDurable(directory)
-    await writer.propose({ principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'the capital of france' } })
+    await writer.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'the capital of france' } })
 
     const reader = await mountDurable(directory)
     await expect(reader.query({ accessContext: accessContextFor('tenant-a'), query: 'zzz-absent-term' })).resolves.toStrictEqual({ records: [], truncated: false })
@@ -131,11 +143,11 @@ describe('P-stage durability: a record outlives the provider instance that wrote
   it('a second instance mints ids distinct from every id the first instance minted, and both records remain readable', async () => {
     const directory = freshDirectory()
     const first = await mountDurable(directory)
-    const a = await first.propose({ principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'from the first instance' } })
-    const b = await first.propose({ principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'also from the first instance' } })
+    const a = await first.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'from the first instance' } })
+    const b = await first.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'also from the first instance' } })
 
     const second = await mountDurable(directory)
-    const c = await second.propose({ principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'from the second instance' } })
+    const c = await second.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'from the second instance' } })
     expect([a.id, b.id]).not.toContain(c.id)
 
     const reader = await mountDurable(directory)
@@ -152,7 +164,7 @@ describe('P-stage durability: a record outlives the provider instance that wrote
     const directory = freshDirectory()
     const writer = await mountDurable(directory)
     const content = { note: 'round-tripped through the file' }
-    const { id } = await writer.propose({ principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content })
+    const { id } = await writer.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content })
 
     const reader = await mountDurable(directory)
     await expect(reader.get({ accessContext: accessContextFor('tenant-a'), id })).resolves.toStrictEqual({
@@ -168,8 +180,8 @@ describe('must[3]: every read is scoped — the durable provider filters by the 
   it('export() scoped to one tenant returns that tenant\'s record and never the other tenant\'s, from the same backing directory', async () => {
     const directory = freshDirectory()
     const writer = await mountDurable(directory)
-    await writer.propose({ principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'belongs to tenant-a' } })
-    await writer.propose({ principal: principalFor('tenant-b'), scope: scopeFor('tenant-b'), content: { note: 'belongs to tenant-b' } })
+    await writer.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'belongs to tenant-a' } })
+    await writer.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-b'), scope: scopeFor('tenant-b'), content: { note: 'belongs to tenant-b' } })
 
     const reader = await mountDurable(directory)
     const forA = await reader.export({ accessContext: accessContextFor('tenant-a') })
@@ -181,7 +193,7 @@ describe('must[3]: every read is scoped — the durable provider filters by the 
   it('get() resolves undefined for a record id proposed under a different tenant, even though the id exists in the same backing file', async () => {
     const directory = freshDirectory()
     const writer = await mountDurable(directory)
-    const { id } = await writer.propose({ principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'tenant-a only' } })
+    const { id } = await writer.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'tenant-a only' } })
 
     const reader = await mountDurable(directory)
     await expect(reader.get({ accessContext: accessContextFor('tenant-b'), id })).resolves.toBeUndefined()
@@ -191,8 +203,8 @@ describe('must[3]: every read is scoped — the durable provider filters by the 
   it('export() scoped to one sessionId returns only that session\'s record, while a tenant-wide scope naming no sessionId returns both', async () => {
     const directory = freshDirectory()
     const writer = await mountDurable(directory)
-    await writer.propose({ principal: principalFor('tenant-a'), scope: scopeFor('tenant-a', 'session-1'), content: { note: 'from session-1' } })
-    await writer.propose({ principal: principalFor('tenant-a'), scope: scopeFor('tenant-a', 'session-2'), content: { note: 'from session-2' } })
+    await writer.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a', 'session-1'), content: { note: 'from session-1' } })
+    await writer.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a', 'session-2'), content: { note: 'from session-2' } })
 
     const reader = await mountDurable(directory)
     const scopedToOne = await reader.export({ accessContext: accessContextFor('tenant-a', { sessionId: 'session-1' }) })
@@ -205,7 +217,7 @@ describe('must[3]: every read is scoped — the durable provider filters by the 
   it('revise() rejects an id proposed under a different tenant with MEMORY_RECORD_NOT_FOUND, leaving the record\'s content untouched', async () => {
     const directory = freshDirectory()
     const writer = await mountDurable(directory)
-    const { id } = await writer.propose({ principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'original' } })
+    const { id } = await writer.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'original' } })
 
     const attacker = await mountDurable(directory)
     await expect(attacker.revise({
@@ -233,7 +245,7 @@ describe('must[3]: every read is scoped — the durable provider filters by the 
     const directory = freshDirectory()
     const writer = await mountDurable(directory)
     for (const n of [1, 2, 3]) {
-      await writer.propose({ principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: `budgeted ${n}` } })
+      await writer.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: `budgeted ${n}` } })
     }
 
     const reader = await mountDurable(directory)
@@ -246,7 +258,7 @@ describe('must[3]: every read is scoped — the durable provider filters by the 
     const directory = freshDirectory()
     const writer = await mountDurable(directory)
     for (const n of [1, 2, 3, 4]) {
-      await writer.propose({ principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: `budgeted ${n}` } })
+      await writer.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: `budgeted ${n}` } })
     }
 
     const reader = await mountDurable(directory)
@@ -265,7 +277,7 @@ describe('must[1]: the durable provider is one interchangeable backend among oth
     const fake = createFakeMemoryProvider()
     ctx.memory.registerProvider(fake)
 
-    const { id } = await ctx.memory.propose({ principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'routed to the durable backend' } })
+    const { id } = await ctx.memory.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'routed to the durable backend' } })
 
     // The in-memory fake never saw the write: it is registered but not selected.
     await expect(fake.get({ accessContext: accessContextFor('tenant-a'), id })).resolves.toBeUndefined()
@@ -282,7 +294,7 @@ describe('durable memory is written for its owner only', () => {
     const directory = join(freshDirectory(), 'memory')
     const memory = await mountDurable(directory)
 
-    await memory.propose({ principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'private' } })
+    await memory.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'private' } })
 
     expect(statSync(directory).mode & 0o777).toBe(0o700)
   })
@@ -294,7 +306,7 @@ describe('durable memory is written for its owner only', () => {
     const directory = join(freshDirectory(), 'memory')
     const memory = await mountDurable(directory)
 
-    await memory.propose({ principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'private' } })
+    await memory.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'private' } })
 
     const document = readdirSync(directory).find(entry => !entry.endsWith('.tmp'))
     expect(document, 'the durable document').toBeDefined()
@@ -312,7 +324,7 @@ describe('memory is scoped to the workspace that wrote it', () => {
     const directory = freshDirectory()
     const memory = await mountDurable(directory)
     await memory.propose({
-      principal: principalFor('tenant-a'),
+      origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'),
       scope: { tenantId: TenantId('tenant-a'), workspace: workspaceA },
       content: { note: 'alpha only' },
     })
@@ -331,7 +343,7 @@ describe('memory is scoped to the workspace that wrote it', () => {
     const directory = freshDirectory()
     const memory = await mountDurable(directory)
     await memory.propose({
-      principal: principalFor('tenant-a'),
+      origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'),
       scope: { tenantId: TenantId('tenant-a'), workspace: workspaceA },
       content: { note: 'alpha only' },
     })
@@ -352,7 +364,7 @@ describe('memory is scoped to the workspace that wrote it', () => {
     const directory = freshDirectory()
     const memory = await mountDurable(directory)
     await memory.propose({
-      principal: principalFor('tenant-a'),
+      origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'),
       scope: { tenantId: TenantId('tenant-a'), workspace: workspaceA },
       content: { note: 'written before the rebuild' },
     })
@@ -372,12 +384,12 @@ describe('memory is scoped to the workspace that wrote it', () => {
     const directory = freshDirectory()
     const memory = await mountDurable(directory)
     await memory.propose({
-      principal: principalFor('tenant-a'),
+      origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'),
       scope: { tenantId: TenantId('tenant-a'), workspace: workspaceA },
       content: { note: 'belongs to alpha' },
     })
     await memory.propose({
-      principal: principalFor('tenant-a'),
+      origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'),
       scope: { tenantId: TenantId('tenant-a') },
       content: { note: 'belongs to no workspace' },
     })
@@ -386,5 +398,57 @@ describe('memory is scoped to the workspace that wrote it', () => {
 
     expect(seen.records).toHaveLength(1)
     expect(seen.records[0]?.content).toEqual({ note: 'belongs to no workspace' })
+  })
+})
+
+describe('a stored record carries the origin its writer stated', () => {
+  it('refuses a version-1 document by name rather than reading it as origin-less', async () => {
+    // Records written before `provenance`/`confidence` existed describe claims
+    // whose origin this build cannot know. Reading them as though the origin
+    // were merely absent would present a guess as a stored fact, so the reader
+    // refuses the document and says which version it found. The pre-release
+    // stance is that a backend rejects an old on-disk format, not that it
+    // migrates or infers one.
+    const directory = freshDirectory()
+    writeFileSync(join(directory, 'memory.json'), `${JSON.stringify({ version: 1, records: [] })}\n`, 'utf8')
+    const memory = await mountDurable(directory)
+
+    await expect(memory.query({ accessContext: accessContextFor('tenant-a'), query: 'anything' }))
+      .rejects.toThrow(/unsupported durable memory format version 1/u)
+  })
+
+  it('fixes an asserted claim at confidence 1 without the caller stating one', async () => {
+    // Vocabulary, not a default: `user-asserted` means a named party said it.
+    // The request type has no way to attach a confidence to this branch, so the
+    // number cannot have come from a caller.
+    const directory = freshDirectory()
+    const memory = await mountDurable(directory)
+
+    const { id } = await memory.propose({
+      origin: { kind: 'user-asserted', assertedBy: 'ada' },
+      principal: principalFor('tenant-a'),
+      scope: scopeFor('tenant-a'),
+      content: { note: 'a person said this' },
+    })
+
+    const stored = storedRecords(directory).find(record => record.id === id)
+    expect(stored?.confidence).toBe(1)
+    expect(stored?.provenance).toEqual({ kind: 'user-asserted', assertedBy: 'ada' })
+  })
+
+  it('stores an inferred claim at the confidence its writer stated, not a house number', async () => {
+    const directory = freshDirectory()
+    const memory = await mountDurable(directory)
+
+    const { id } = await memory.propose({
+      origin: { kind: 'derived', sourceEvents: [SourceEventId('evt-1')], confidence: 0.4 },
+      principal: principalFor('tenant-a'),
+      scope: scopeFor('tenant-a'),
+      content: { note: 'inferred from one event' },
+    })
+
+    const stored = storedRecords(directory).find(record => record.id === id)
+    expect(stored?.confidence).toBe(0.4)
+    expect(stored?.provenance).toMatchObject({ kind: 'derived', sourceEvents: ['evt-1'] })
   })
 })

@@ -62,7 +62,7 @@ function runConformance(label: string, createProvider: () => MemoryProvider): vo
       const { memory } = await mountMemory()
       memory.registerProvider(createProvider())
       await expect(memory.propose({
-        principal: testPrincipal(),
+        origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: testPrincipal(),
         scope: testScope(),
         content: { note: 'first memory' },
       })).resolves.toMatchObject({ id: expect.any(String) as unknown })
@@ -80,7 +80,7 @@ function runConformance(label: string, createProvider: () => MemoryProvider): vo
     it('get() resolves the record previously created by propose()', async () => {
       const { memory } = await mountMemory()
       memory.registerProvider(createProvider())
-      const proposed = await memory.propose({ principal: testPrincipal(), scope: testScope(), content: { note: 'roundtrip' } })
+      const proposed = await memory.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: testPrincipal(), scope: testScope(), content: { note: 'roundtrip' } })
       await expect(memory.get({ accessContext: testAccessContext(), id: proposed.id })).resolves.toMatchObject({
         id: proposed.id,
         content: { note: 'roundtrip' },
@@ -90,7 +90,7 @@ function runConformance(label: string, createProvider: () => MemoryProvider): vo
     it('revise() updates an existing record, reflected by a later get()', async () => {
       const { memory } = await mountMemory()
       memory.registerProvider(createProvider())
-      const proposed = await memory.propose({ principal: testPrincipal(), scope: testScope(), content: { note: 'before' } })
+      const proposed = await memory.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: testPrincipal(), scope: testScope(), content: { note: 'before' } })
       await memory.revise({ principal: testPrincipal(), scope: testScope(), id: proposed.id, content: { note: 'after' } })
       await expect(memory.get({ accessContext: testAccessContext(), id: proposed.id })).resolves.toMatchObject({ content: { note: 'after' } })
     })
@@ -98,7 +98,7 @@ function runConformance(label: string, createProvider: () => MemoryProvider): vo
     it('forget() removes a record so a later get() resolves undefined', async () => {
       const { memory } = await mountMemory()
       memory.registerProvider(createProvider())
-      const proposed = await memory.propose({ principal: testPrincipal(), scope: testScope(), content: { note: 'temporary' } })
+      const proposed = await memory.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: testPrincipal(), scope: testScope(), content: { note: 'temporary' } })
       await memory.forget({ principal: testPrincipal(), scope: testScope(), id: proposed.id })
       await expect(memory.get({ accessContext: testAccessContext(), id: proposed.id })).resolves.toBeUndefined()
     })
@@ -106,7 +106,7 @@ function runConformance(label: string, createProvider: () => MemoryProvider): vo
     it('export() resolves every record visible to the access context', async () => {
       const { memory } = await mountMemory()
       memory.registerProvider(createProvider())
-      await memory.propose({ principal: testPrincipal(), scope: testScope(), content: { note: 'exported' } })
+      await memory.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: testPrincipal(), scope: testScope(), content: { note: 'exported' } })
       await expect(memory.export({ accessContext: testAccessContext() })).resolves.toMatchObject({
         records: expect.arrayContaining([expect.objectContaining({ content: { note: 'exported' } })]) as unknown,
       })
@@ -124,7 +124,7 @@ describe('must[1]: memory provider is replaceable', () => {
     const providerB = createLocalReferenceMemoryProvider()
     const proposeA = vi.spyOn(providerA, 'propose')
     const proposeB = vi.spyOn(providerB, 'propose')
-    const request = { principal: testPrincipal(), scope: testScope(), content: { note: 'routed' } }
+    const request = { origin: { kind: 'user-asserted' as const, assertedBy: 'test' }, principal: testPrincipal(), scope: testScope(), content: { note: 'routed' } }
 
     const disposeA = memory.registerProvider(providerA)
     await memory.propose(request).catch(() => undefined)
@@ -148,7 +148,7 @@ describe('must[2]: consumers reach memory only through the Service Definition', 
   it('a provider object alone is inert — it takes effect only once registered on ctx.memory', async () => {
     const provider = createFakeMemoryProvider()
     const { memory } = await mountMemory()
-    const request = { principal: testPrincipal(), scope: testScope(), content: { note: 'unrouted' } }
+    const request = { origin: { kind: 'user-asserted' as const, assertedBy: 'test' }, principal: testPrincipal(), scope: testScope(), content: { note: 'unrouted' } }
 
     // Before registration, ctx.memory (the sole Service Definition entry
     // point) has nothing to route to — merely constructing a provider object
@@ -242,7 +242,7 @@ describe('acceptance[2]: Memory is not Session Query, and their boundary is docu
     const { memory } = await mountMemory()
     memory.registerProvider(createFakeMemoryProvider())
     const content = { note: 'not a transcript entry' }
-    const proposed = await memory.propose({ principal: testPrincipal(), scope: testScope(), content })
+    const proposed = await memory.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: testPrincipal(), scope: testScope(), content })
     // A MemoryRecordView is EXACTLY {id, principal, content, updatedAt} — no
     // session-transcript-shaped fields (no `role`, `seq`, or surface
     // `content` blocks) and, unlike toMatchObject, no other extra property a

@@ -23,6 +23,8 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { Context, Service } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
+import type { MemoryProvenance } from './record.ts'
+import type { MemoryClaimOrigin } from './types.ts'
 import type {
   MemoryAccessContext,
   MemoryExportRequest,
@@ -302,7 +304,12 @@ export function createLocalReferenceMemoryProvider(): MemoryProvider {
     propose(request) {
       const id = MemoryRecordId(`local-reference-${++counter}`)
       records.set(id, {
-        id, principal: request.principal, content: request.content, updatedAt: new Date().toISOString(), scope: request.scope,
+        id,
+        principal: request.principal,
+        content: request.content,
+        updatedAt: new Date().toISOString(),
+        scope: request.scope,
+        ...originOf(request.origin),
       })
       return Promise.resolve({ id })
     },
@@ -363,7 +370,12 @@ export function createFakeMemoryProvider(): MemoryProvider {
     propose(request) {
       const id = MemoryRecordId(`fake-${randomUUID()}`)
       records.push({
-        id, principal: request.principal, content: request.content, updatedAt: new Date().toISOString(), scope: request.scope,
+        id,
+        principal: request.principal,
+        content: request.content,
+        updatedAt: new Date().toISOString(),
+        scope: request.scope,
+        ...originOf(request.origin),
       })
       return Promise.resolve({ id })
     },
@@ -535,6 +547,7 @@ export function createDurableFileMemoryProvider(options: DurableFileMemoryProvid
           content: request.content,
           updatedAt: new Date().toISOString(),
           scope: request.scope,
+          ...originOf(request.origin),
         })
         await write(records)
         return { id }
@@ -589,7 +602,29 @@ export function createDurableFileMemoryProvider(options: DurableFileMemoryProvid
 const DURABLE_FILE_MEMORY_FILENAME = 'memory.json'
 
 /** The on-disk format version {@link createDurableFileMemoryProvider} reads and writes. */
-const DURABLE_FILE_MEMORY_FORMAT_VERSION = 1
+// Bumped to 2 when stored records gained `provenance` and `confidence`. A
+// version-1 document describes records whose origin this build cannot know, and
+// the reader refuses it by name rather than reading them as if their origin were
+// simply absent — the pre-release stance is that a backend rejects an old
+// on-disk format (AGENTS.md), not that it guesses at one.
+const DURABLE_FILE_MEMORY_FORMAT_VERSION = 2
+
+/**
+ * The origin fields one proposal stores, with the confidence rule applied once.
+ *
+ * `user-asserted` is confidence 1 **by the vocabulary's definition** — a named
+ * party said it — and `derived` carries the number its writer stated, which the
+ * request type makes mandatory. Neither branch invents a value, and the rule
+ * lives here rather than in each provider so three providers cannot drift into
+ * three different defaults.
+ * @param request - the proposal as its caller stated it.
+ * @returns the provenance and confidence to store on the record.
+ */
+function originOf(origin: MemoryClaimOrigin): { provenance: MemoryProvenance; confidence: number } {
+  if (origin.kind === 'user-asserted') return { provenance: origin, confidence: 1 }
+  const { confidence, ...provenance } = origin
+  return { provenance, confidence }
+}
 
 /**
  * One stored record: the reader's projection plus the scope its `propose()`
@@ -600,6 +635,24 @@ const DURABLE_FILE_MEMORY_FORMAT_VERSION = 1
  */
 interface ScopedMemoryRecord extends MemoryRecordView {
   readonly scope: MemoryScope
+  /**
+   * Where the claim came from, as the proposer stated it (P6-02's vocabulary).
+   *
+   * Stored rather than derived: origin is a fact about the write, and a reader
+   * that had to infer it later would be guessing. `validateRecord` already
+   * refuses a `derived` record whose source list is empty, so a stored origin
+   * is one that traces somewhere.
+   */
+  readonly provenance: MemoryProvenance
+  /**
+   * The writer's confidence in [0, 1].
+   *
+   * Taken from the request for a `derived` claim and fixed at 1 for a
+   * `user-asserted` one, which is the vocabulary's definition rather than a
+   * default this provider chose. Nothing here invents a number: a confidence
+   * the writer never stated would be a fabricated fact in durable data.
+   */
+  readonly confidence: number
 }
 
 /** One persisted record. Identical to {@link ScopedMemoryRecord}; named apart for the on-disk document. */

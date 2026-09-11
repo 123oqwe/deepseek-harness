@@ -27,7 +27,7 @@ const ctx = await bootProductionProfile({
 })
 try {
   await ctx.memory.propose({
-    principal: createAnonymousDevPrincipal(PrincipalId('p-fixture'), TenantId('t-fixture')),
+    origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: createAnonymousDevPrincipal(PrincipalId('p-fixture'), TenantId('t-fixture')),
     scope: { tenantId: TenantId('t-fixture') },
     content: { note: 'the deploy passphrase is oxidized-kingfisher' },
   })

@@ -22,6 +22,7 @@ import { brandString, type Branded } from '@deepseek-ai/dsh-brand'
 import { HarnessError } from '@deepseek-ai/dsh-llm'
 import type { Principal, TenantId } from '@deepseek-ai/dsh-principal'
 import type {} from '@deepseek-ai/dsh-session/types'
+import type { MemoryProvenance } from './record.ts'
 
 /** Stable identity of one durable memory record, unique within its tenant. */
 export type MemoryRecordId = Branded<'MemoryRecordId'>
@@ -116,11 +117,37 @@ export interface MemoryAccessContext {
  * Evidence, TTL, and sensitivity classification are P6-03's proposal-policy
  * layer, not this request.
  */
-export interface MemoryProposeRequest {
+export interface MemoryProposeRequestBase {
   readonly principal: Principal
   readonly scope: MemoryScope
   /** Opaque candidate content; the canonical structured shape is P6-02's job. */
   readonly content: unknown
+}
+
+/**
+ * Where one proposed claim came from, and how sure its writer is.
+ *
+ * P6-02's `MemoryProvenance` vocabulary with the writer's confidence attached
+ * to the branch that needs it, rather than a second origin spelling: `derived`
+ * carries the events it was read from AND the confidence only its writer knows,
+ * while `user-asserted` names a responsible party and is confidence 1 **by the
+ * vocabulary's definition** — a person said it.
+ *
+ * Carried as one discriminated value so the type enforces the rule: there is no
+ * way to state an inferred claim without its confidence, and no way to attach a
+ * confidence to an asserted one. A provider defaulting a missing number instead
+ * would write a confidence nobody stated into durable data.
+ */
+export type MemoryClaimOrigin =
+  | (Extract<MemoryProvenance, { kind: 'derived' }> & {
+    /** The writer's confidence in [0, 1]; required, because only the writer knows it. */
+    readonly confidence: number
+  })
+  | Extract<MemoryProvenance, { kind: 'user-asserted' }>
+
+/** A candidate write, carrying where its claim came from. */
+export interface MemoryProposeRequest extends MemoryProposeRequestBase {
+  readonly origin: MemoryClaimOrigin
 }
 
 /** Result of a successful `propose()`: the newly minted record's identity. */
