@@ -63,7 +63,7 @@ Items 1, 3, 4a and the two mode fixes in 2 are self-contained and can land toget
 
 ## Freeze draft for P6-01.U — measured, not entered
 
-Drafted per §5.1.13 assignment; `dryRunProof` and `sensitivityProof` re-run at `e84a0c0892` (tree `affeeb33ca82da00e3cbf5f4d2d87ee56c02f62c`). **Nothing here is written to `command-freeze.json`.** Attribution follows §12.79, which already settles it — *"P6-01.U 改在出厂 profile 上观测；两条不变量随开关走"* — so this is P6-01.U and no OQ is opened for the epic. The supplement number, and whether these supersede the existing U entry or append beside it, are the in-post delegate's at entry time; placeholders below. Stage attribution matters concretely: `verify-freeze-in-candidate-tree` checks a frozen entry against the cell its stage names, so a wrong stage is checked against the wrong cell.
+Drafted per §5.1.13 assignment; `dryRunProof` and `sensitivityProof` re-run at `72969d6b8b` (tree `00fcfade3cacdb3b71d97b53409c13f27c2f79c2`), the tree that carries both of §12.79's invariants. **Nothing here is written to `command-freeze.json`.** Attribution follows §12.79, which already settles it — *"P6-01.U 改在出厂 profile 上观测；两条不变量随开关走"* — so this is P6-01.U and no OQ is opened for the epic. The supplement number, and whether these supersede the existing U entry or append beside it, are the in-post delegate's at entry time; placeholders below. Stage attribution matters concretely: `verify-freeze-in-candidate-tree` checks a frozen entry against the cell its stage names, so a wrong stage is checked against the wrong cell.
 
 **Local green is not observation.** Everything below is self-check: `pnpm exec vitest` on this worktree. Observation is CI on the exact SHA with the result landing in a cell, and the freeze precedes it. What local green establishes is only that the draft has something real to pin.
 
@@ -81,7 +81,13 @@ Drafted per §5.1.13 assignment; `dryRunProof` and `sensitivityProof` re-run at 
 - **Trust is still never consulted.** `grep` for `workspaceTrust` across `memory-context/src` and `memory/src` returns one hit, and it is a comment (`memory-context/src/index.ts:111`). Nothing reads a workspace's trust state to decide a recall, so no case can assert the word "untrusted" without asserting something nothing decides.
 - Those four cases also live in `durable-provider.spec.ts`, which the **P** entry freezes, not the U one. As drafted they would be pinned at the wrong stage for a §12.79 invariant.
 
-So invariant 2's honest status is: **scope-by-workspace is real and observed at P; trust-gated recall has no subject.** Whether U owes a case that names trust, or the invariant narrows to the workspace dimension it now has, is a ruling this draft does not take — it is item 4b above, still open.
+So invariant 2's honest status is: **scope-by-workspace is real and observed at P; trust-gated recall has no subject.**
+
+**Revised at `556d0523d1` (delegate ruling OQ15).** The invariant narrows to the workspace dimension the scope actually has; the four P cases stay at P; and U now carries the consumer-side half it was missing — `recalls only the workspace this session runs in, on a launched profile`. The driver seeds a SECOND record under a different workspace of the same tenant whose content answers the turn's query exactly as well as the first one's does, so the two differ in the workspace alone and the second one's absence is the boundary rather than the search. The case asserts the injected text carries one and not the other, AND that the read event agrees at one record rather than two — text alone would pass a build that recalled both and rendered one.
+
+Seeding that second record also made two existing cases sensitive to the same decision: the read event's `resultCount`, and the whole-log scan in `memory content never reaches the model outside a logged injection`.
+
+**The trust half stays NOT PROVEN and the freeze note must say so.** Nothing in `memory-context/src` or `memory/src` reads a workspace's trust state to decide a recall — the only hit is a comment at `memory-context/src/index.ts:111` — so a case naming "untrusted" would assert something nothing decides. It rides with BLOCKED-185's remediation slice.
 
 ### Entry A — supersedes/extends the existing P6-01 **P** entry (durable provider)
 
@@ -93,7 +99,7 @@ expectExit:  0
 files:       packages/memory/memory/tests/durable-provider.spec.ts
              packages/memory/memory/src/index.ts
              packages/memory/memory/src/types.ts
-dryRunProof: { treeSha: affeeb33ca82da00e3cbf5f4d2d87ee56c02f62c, testsDiscovered: 31 }
+dryRunProof: { treeSha: 00fcfade3cacdb3b71d97b53409c13f27c2f79c2, testsDiscovered: 31 }
 ```
 
 Frozen at 17; the slice brings it to 31. The 14 added, grouped as the file groups them:
@@ -123,13 +129,14 @@ files:       packages/context/memory-context/src/index.ts
              packages/context/memory-context/tests/fixtures/empty-recall-driver.ts
              packages/context/memory-context/tests/fixtures/no-memory.patch.yml
              packages/context/README.md
-dryRunProof: { treeSha: affeeb33ca82da00e3cbf5f4d2d87ee56c02f62c, testsDiscovered: 20 }
+dryRunProof: { treeSha: 00fcfade3cacdb3b71d97b53409c13f27c2f79c2, testsDiscovered: 21 }
 ```
 
-Frozen at 13; the slice brings it to 20. The 7 added:
+Frozen at 13; the slice brings it to 21. The 8 added:
 
 - the `announceRebuiltWorkspace` group — `tells the session once that its workspace path holds an earlier occupant's memory`; `does not repeat itself on a later recall in the same session`; `stays silent when nothing was displaced, so a session does not claim a rebuild it never had`; `carries a count and a path and no record content, so it is not a read of what it reports`; `says nothing at all when the session has no workspace to compare`
 - *an empty recall costs the model nothing* — `hands the model bytes identical to a boot with the memory rows disabled`; `still records the read that returned nothing, so silence is not an unlogged read`. These two are §12.79's first invariant, added at `040ab46cb9`; see the revision below.
+- *§12.79's second invariant* — `recalls only the workspace this session runs in, on a launched profile`, added at `556d0523d1`. See the revision under invariant 2.
 
 `known-event-types.ts` is in `files` because `memory/workspace-rebuilt` is a new `SessionEventMap` member and an entry whose reality set omits it would not be re-checked when the event's registration changes.
 
@@ -189,3 +196,11 @@ Run at `e84a0c0892` (tree `affeeb33ca82da00e3cbf5f4d2d87ee56c02f62c`). Each muta
 `carries a count and a path and no record content…` has no mutation that reddens it alone: adding a content field to the payload necessarily also changes the payload the `tells the session once…` case matches. The two are separated in the other direction — M19 reddens `tells the session once…` alone — so the pair is distinguished even though one member is not isolable.
 
 The two invariant-1 cases in `memory-context.spec.ts` have their own mutations, recorded under invariant 1 above: injecting an empty snapshot reddens the byte case alone, and skipping the `memory/access` append on an empty recall reddens the event case alone.
+
+**Invariant 2's U case** — `packages/memory/memory/src/index.ts` against `memory-context.spec.ts`, 10 cases:
+
+| # | mutation | reddened |
+| --- | --- | --- |
+| U-M1 | `inScope`: delete the workspace clause entirely | 3 — `recalls only the workspace this session runs in…`, the `memory/access` access-context case, and the whole-log scan |
+
+U-M1 is not isolable from those two, and that is the point rather than a gap: seeding the foreign-workspace record made all three sensitive to one decision, which is strictly more coverage than the case adds on its own. It is the same mutation as Entry A's M3, observed through the shipped consumer on a launched profile instead of through the seam.
