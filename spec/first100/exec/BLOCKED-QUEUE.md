@@ -4866,6 +4866,8 @@ So a Run carrying sessions A and B is writable under two independent authorities
 Error: LeaseStorePlugin used before its mount opened the database
 ```
 
+(That wording is the one this measurement was taken against; it has since been corrected in `@deepseek-ai/dsh-lease-sqlite` to name teardown, for the reason in the second finding below.)
+
 So a cleanly unloaded host keeps its session's work item until the lease lapses, exactly as a crashed one does, and **the next host cannot tell the two apart**.
 
 **The mechanism, measured after this entry was first written — and it is NOT the ordering claim this entry originally made.** Fiber unload runs every disposer CONCURRENTLY: `vendor/cordis/src/fiber.ts:773` is `await Promise.all(this._disposables.clear().map(async (dispose) => …))`, and each of those callbacks begins with `await Promise.resolve()`. There is no reverse-order guarantee at this level at all — the reverse-order path is a different one, `fiber.ts:527`, which orders the disposers of ONE effect. So "the lease store unloads first" was the wrong description. What actually decides it:

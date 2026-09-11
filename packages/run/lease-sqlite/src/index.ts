@@ -83,12 +83,23 @@ export default class LeaseStorePlugin extends Service implements LeaseStoreContr
 
   /**
    * The opened store.
+   *
+   * **The reachable failure is at teardown, not at startup.** A consumer cannot
+   * read this before the mount finishes — `inject` holds it until the service is
+   * available — but the teardown yielded by `Service.init` clears the handle
+   * SYNCHRONOUSLY, and a fiber unload runs every disposer concurrently. So a
+   * consumer whose own disposer awaits anything before calling in finds the
+   * handle already gone. Measured in `@deepseek-ai/dsh-run`, whose disposer
+   * awaits a durable Run transition and then cannot hand its lease back
+   * (BLOCKED-197).
    * @returns the store this mount opened.
-   * @throws when read before the mount finished, which no consumer can do —
-   * `inject` holds them until the service is available.
+   * @throws when the handle is absent: almost always because this mount has
+   * already been unloaded, and only in principle because it has not yet opened.
    */
   private get store(): LeaseStoreContract {
-    if (this.opened === undefined) throw new Error('LeaseStorePlugin used before its mount opened the database')
+    if (this.opened === undefined) {
+      throw new Error('LeaseStorePlugin has no open database: this mount was already unloaded, or has not opened yet')
+    }
     return this.opened
   }
 
