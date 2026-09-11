@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-11T03:42:13.501Z",
-  "inputDigest": "cb0421483dcbe06fd38a786db323c47f40a4d03aee24f621996b38c97d9e5e48",
+  "lastUpdatedUtc": "2026-09-11T06:12:02.821Z",
+  "inputDigest": "34f8788d1daed8f44c3f1d91c72a6c2c67e0eecdf4483e95aff98e120db7697e",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -6958,54 +6958,22 @@
           "capturedAtUtc": "2026-09-07T06:50:48.248Z"
         },
         "P": {
-          "status": "GREEN",
-          "candidateSha": "491acfd8eb9cd40330eb52bfe0c74220697a36e8",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33807228116",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-p601p/first100-evidence-491acfd8eb9cd40330eb52bfe0c74220697a36e8/vitest-report.json",
-          "observationSha256": "17829aa1f0e5ea6771abe6174ebc7fc2d4b0b96aeae5ce1462cf6e119ad15aff",
-          "expectCasesMatched": [
-            "a second provider instance over the same directory reads back a record the first instance proposed",
-            "a provider instance over a different directory does not see the first directory's record — durability is per-directory, never process-global",
-            "a revise() by one instance is the content a later instance reads back",
-            "a forget() by one instance stays forgotten for a later instance, while a sibling record it did not forget stays readable",
-            "query() from a later instance finds an earlier instance's record by case-insensitive substring",
-            "query() from a later instance returns no records for a term absent from every stored record",
-            "a second instance mints ids distinct from every id the first instance minted, and both records remain readable",
-            "export() over a directory with no backing file yet resolves zero records rather than throwing",
-            "a record read back by a later instance is exactly {id, principal, content, updatedAt}, with the principal round-tripped unchanged",
-            "export() scoped to one tenant returns that tenant's record and never the other tenant's, from the same backing directory",
-            "get() resolves undefined for a record id proposed under a different tenant, even though the id exists in the same backing file",
-            "export() scoped to one sessionId returns only that session's record, while a tenant-wide scope naming no sessionId returns both",
-            "revise() rejects an id proposed under a different tenant with MEMORY_RECORD_NOT_FOUND, leaving the record's content untouched",
-            "revise() rejects an id that was never proposed in any tenant with MEMORY_RECORD_NOT_FOUND",
-            "query() at exactly contextBudget.maxRecords returns every match untruncated",
-            "query() one record over contextBudget.maxRecords truncates to the budget and flags truncated",
-            "with providerId pinned to durable-file alongside a registered in-memory fake, the record is written durably and read back by a later instance"
-          ],
-          "capturedAtUtc": "2026-09-03T21:34:49.832Z"
+          "status": "NOT_RUN",
+          "revokedFrom": {
+            "candidateSha": "491acfd8eb9cd40330eb52bfe0c74220697a36e8",
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33807228116",
+            "absentCommitments": 1
+          },
+          "revokedReason": "The §12.79 memory slice re-froze this stage (17 cases to 31) at 3958b1474d, and the green was observed on tree 491acfd8eb, which predates those entries. A freeze written after its observation is not a pre-commitment, so the cell returns to NOT_RUN pending re-observation."
         },
         "U": {
-          "status": "GREEN",
-          "candidateSha": "8f4988bf0bf4332a359a8f251ee6e5d8c44752dd",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33842580751",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-8f49/first100-evidence-8f4988bf0bf4332a359a8f251ee6e5d8c44752dd/vitest-report.json",
-          "observationSha256": "d5cd55c5e6e6d2f96e7934b5006efbfef6ef833bb72f35b0e45071bff6448040",
-          "expectCasesMatched": [
-            "carries all four read-scoping dimensions from config when the agent has no attached identity",
-            "prefers the agent's durably attached principal over the configured fallback id",
-            "never reads across tenants: the scope tenant is the configured one, not the attached principal's",
-            "returns undefined for an empty recall so no empty snapshot is ever injected",
-            "renders each recalled record's content as text the model can read",
-            "states that the recall was cut to the caller's budget when the seam truncated it",
-            "boots the shipped profile with the base bundle memory rows enabled and no unhandled failure",
-            "memory/access is a known session event type, so a real log carrying it replays",
-            "a log written with memory/access is read back by replay, not refused",
-            "recalled memory reaches the model as a durable, source-attributed user message",
-            "the same run records a memory/access read event carrying the complete access context",
-            "model-visible memory is logged: every recalled record the model saw is reconstructable from the log alone",
-            "memory content never reaches the model outside a logged injection"
-          ],
-          "capturedAtUtc": "2026-09-04T06:31:02.922Z"
+          "status": "NOT_RUN",
+          "revokedFrom": {
+            "candidateSha": "8f4988bf0bf4332a359a8f251ee6e5d8c44752dd",
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33842580751",
+            "absentCommitments": 1
+          },
+          "revokedReason": "The §12.79 memory slice re-froze this stage (13 cases to 21) at 3958b1474d, and the green was observed on tree 8f4988bf0b, which predates those entries. A freeze written after its observation is not a pre-commitment, so the cell returns to NOT_RUN pending re-observation."
         },
         "F": {
           "status": "GREEN",
