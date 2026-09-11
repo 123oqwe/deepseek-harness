@@ -4935,3 +4935,24 @@ Both are deliberate — `agent/session-start` and `agent/disposed` are emitted s
 **Layer 3 — the shipped consequence.** Before P4-02 began awaiting a Run transition inside a turn, the effect was that Runs silently never persisted on such a machine. After it, the same failure fails the user's **first turn**. That change of blast radius is what made 77 snapshot fixtures go red at once, and it is why this is a product defect rather than a test one: a fresh install would have hit it.
 
 **The fix:** `await mkdir(dirname(path), { recursive: true })` before the write, the same shape `lease-sqlite` uses. Frozen by `creates the store directory on the first put, so a home that never ran dsh is not a failure` (`packages/run/run/tests/run-service.spec.ts`), whose store path is **two levels** below an existing directory so that a `mkdir` without `recursive` would not pass it. Mutation: remove the `mkdir` — reddens that case and only that case, 1 of 195.
+
+
+### BLOCKED-202 — a recorded fixture hardcodes an absolute temp path from the run that recorded it, so no refresh can reproduce it
+
+**Status:** OPEN, owner UNATTRIBUTED. Found 2026-09-11 by lane B's P4-02 snapshot refresh, which is **excluded from that fixture** — `snapshots/session/session-query-spill/` is restored to its committed expectation and not refreshed.
+
+`snapshots/session/session-query-spill/replay.override.json` is an AUTHORED replay script, and the tool call it drives embeds an absolute path from the machine that authored it:
+
+```
+"command":"file=$(find /tmp/dsh-acp-snap-035d1d054 -name '*-session_event_…
+```
+
+That directory belonged to one recording run. On any later machine — and on the same machine after that temp directory is reaped — `find` fails, and the fixture's tool result turns from `SPILL_CANONICAL_OK` into `[stderr]\nfind: /tmp/dsh-acp-snap-035d1d054: No such file or directory`.
+
+**Why this is a corpus defect and not a lane-B regression.** The path is in the committed override, not in anything this slice changed; a keyless replay cannot conjure a directory that no longer exists. What lane B's refresh did was make it VISIBLE, because a refresh rewrites the expectation from the run it just performed — so committing that output would have replaced a passing expectation with a failing one. The refresh was stopped and the fixture excluded instead.
+
+**Owner: not attributable from the records, and deliberately not guessed.** The registry names no epic for the spill seam (`grep` over `tests/first100/registry.json` for `spill` returns nothing), `packages/spill/*`'s READMEs name no epic, and both `snapshot.yml` and `replay.override.json` were added by `6ca682733f refactor(test): drive sessions through owning profiles` — a test refactor rather than an epic slice. Assigning it to the wrong epic is worse than leaving it open, which is the rule BLOCKED-176 already applies.
+
+**Closing condition:** the authored command stops depending on an absolute path — for instance by resolving the spill directory from the session's own workspace, which every other fixture already does — and the fixture is refreshed once to prove a replay reproduces `SPILL_CANONICAL_OK` on a machine that never recorded it.
+
+**A second observation, recorded rather than numbered: `argumentsHash` is run-nondeterministic in this corpus.** `action/manifest-appended`'s digest changed in 8 places during this refresh while the `tool/call` lines it summarises were byte-identical — and the same field churned 14 lines each in two unrelated historical commits (`063b574e15`, a lease-directory fix, and `2f263fa7e2`, the Run Service enablement). So the corpus cannot distinguish "the arguments changed" from "a refresh happened" at that field. Not numbered because nothing is currently decided by it; worth knowing before anyone treats it as evidence.

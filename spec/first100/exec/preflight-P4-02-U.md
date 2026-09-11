@@ -70,8 +70,38 @@ The U stage appends one `run/task-profile` event per agent, so every keyless sna
 - **6 logs whose first message is a user goal that is NOT a single text block.** Under the existing flattening idiom (`agent-loop/src/runtime-context.ts:23`) the text is `undefined`, so my compiler refuses with `empty-goal` and no line appears: `acp/image-compaction`, `sdk/inline-image-prompt`, and the first child log of `sdk/subagent-continuable`, `subagent-continuable-inheritance`, `subagent-list-agents`, `subagent-send-message`. **This is open question 2 with names attached** — `inline-image-prompt` exists precisely to exercise an image-led prompt, and under the current design it is the one kind of real task that produces no profile at all.
 - **1 log whose first message has `source.kind === 'goal'`.** That is the goal plugin's admitted continuation round (`GoalMessageSource`, `goal-round-driver/src/index.ts:178`), and `user/message`'s own JSDoc lists "an entered goal continuation round" alongside a direct human prompt as a user-role message. **My `taskOriginOf` maps it to `unknown-source`, so it is silently not a task.** The fail-closed default behaved exactly as designed and excluded something that looks like a human goal. Whether `goal` should map to `user-goal` is a product decision I am not taking — it is raised as question 4 below.
 
-**The `--record` acceptance criterion**, so the refresh is checkable rather than eyeballed: after `test:snapshot:refresh`, the diff must add **exactly 134 lines**, every one of them a `run/task-profile` event, in the 134 logs named by this measurement and no others; no existing line may change, move or disappear. A fixture gaining two lines means the "first pre-step only" condition leaked; a fixture in the 13 gaining one means a refusal stopped working; any non-`run/task-profile` line moving means the event was appended somewhere that shifts turn structure. I have not run the refresh — it belongs to U's own commit, where the code that writes the event exists.
+**The `--record` acceptance criterion, as ORIGINALLY written and then corrected by the run.** The first form was: the diff must add exactly 134 lines, every one a `run/task-profile` event, with no existing line changed, moved or disappearing. Re-measured on the rebased tree it became 141. **Both were wrong in the same way, and the run is what showed it: inserting an event into an append-only log RENUMBERS every later seq reference**, so "no existing line may change" cannot hold for any insertion that is not at the end. The delegate ruled the renumbering an inherent consequence rather than a defect, and the criterion is restated below in the shape the tree actually takes.
 
-## Open question 4, from the snapshot measurement
+**The criterion, restated and measured (2026-09-11, delegate note 37):**
+
+| clause | measured |
+|---|---|
+| **N** `run/task-profile` lines added | **128** — 121 in session logs, 7 in the SDK's `notifications.expected.jsonl` mirrors |
+| session logs that gained at least one | **119** |
+| **M** lines rewritten, and ONLY by seq renumbering | **1009** |
+| **F**, the fields that renumber | `seq` (461), `sourceEventSeqs` (6641), `messageSeqs` (128), `throughSeq` (10), `start`/`end` (5 each), `shadowedSeqs` (3), plus `seedLength` (2) and `dt` (5) |
+| every changed integer rose, by at most the file's insertion count | delta histogram **{+1: 7176, +2: 84}** — no value fell, none moved further |
+| anything else | **0 unexplained**; the 14 residuals are the four named classes below |
+
+**Why 119 and not 141**, itemised, because the gap is not slippage:
+
+| | count |
+|---|---|
+| session logs that would gain, by first-message classification | 141 |
+| − `snapshots/web/*`, driven by `apps/web/tests/*.e2e.ts` and **not by this suite at all** | −20 |
+| − `error-finish`, which refuses to overwrite a failure-shaped run (BLOCKED-127) | −1 |
+| − `session-query-spill`, excluded (BLOCKED-202) | −1 |
+| **= gained** | **119** |
+
+**The four residual classes, none of them a behaviour change:**
+
+1. **`argumentsHash`, 8** — a run-nondeterministic digest; see BLOCKED-202's second observation.
+2. **`data.dt[…]`, 4** — timing deltas, which may fall as well as rise.
+3. **A seq embedded INSIDE a string, 1** — the title prompt carries `"seq":7` in its text, so the renumbering shows up as a string difference.
+4. **`cordis-inspect-jsdoc`, 1** — the inspect payload gained `taskProfile?: Branded<'TaskProfileRef'>` on `Agent` and a new `TaskProfileRef` entry. **Checked leaf by leaf against this slice's own edits: those two and nothing else.** A legitimate refresh of a live type catalog.
+
+**What proved it**, and what the instrument got wrong twice before it did. A one-off comparator (not committed) pairs the old and new lines of every changed file and diffs them structurally, admitting a difference only when it is an integer that rose by at most the file's insertion count. Its first version reported **657** violations because it looked for the inserted event at the top level, missing the SDK's `params.event` wrapper and pairing every later line against the wrong predecessor. Its second reported **115**, because it kept one shift counter per file while `subagent-spawn-in-process` merges a parent and a child whose session ids the normalizer collapses to one `{{sessionId}}` placeholder — so which stream a line belongs to is **not derivable from the file**, and the honest model is the bounded one above rather than an exact per-line shift.
+
+## Open question 4, from the snapshot measurement## Open question 4, from the snapshot measurement
 
 **Is a `goal`-source continuation round a task?** `user/message`'s documentation treats it as one of the three user-role messages; `GoalMessageSource` carries `goalId`, `revision` and the admitted `round`. If it is a task, `taskOriginOf` needs a fourth case and the goal's own identity probably belongs in the profile's provenance rather than being discarded. If it is not, a human-entered goal round runs without a profile, which is defensible only if something else compiles one for the goal itself. P4-14 owns cron-triggered tasks and may own this too. One fixture in the corpus sits on this question today.
