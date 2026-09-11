@@ -243,7 +243,17 @@ Written for the signature pass. Every line number was re-read at `1deda037ba`; t
 
 **(b) mount path, common to all eleven.** `@deepseek-ai/dsh-run` appears in exactly ONE shipped patch layer: `packages/bundle/base/cordis.patch.yml:628`, `id: run`, enabled, configured with `storePath: dshHomePath('runs', 'runs.json')`. The plugin registers on `agent/pre-step` and reaches `recordTaskProfile` at `index.ts:1229`.
 
-**The chain from app-boot to that row is NOT fully measured, and is recorded as such rather than inferred.** `packages/boot/app-boot/src/profile.ts:11` states a profile is composed by applying each bundle's patch list in `dsh.profile.bundles` order, and `apps/cli/src/profile-boot.ts:399` refers to "`dsh-base` and every profile built on it". But no `package.json` under `packages/` or `apps/` declares a `dsh.profile.bundles` list — the shipped profiles are assembled elsewhere (`$DSH_HOME/profiles` per `profile.ts:19`), which this pass did not read. **Unmeasured: which shipped profiles actually include `dsh-base`, and therefore on which profiles this epic's code runs at all.**
+**The chain from app-boot to that row, measured.** A profile is a directory under `$DSH_HOME/profiles/<name>`, so no `package.json` in this repository declares a `dsh.profile.bundles` list — which is what made this look unmeasurable at first. The lists are nonetheless in-repo: `PROFILE_TEMPLATES` (`packages/boot/app-boot/src/profile.ts:154`) holds the shipped templates auto-initialized on first use, and `initializeProfile` writes each one's `dsh: { profile: { bundles } }` into the profile directory at `profile.ts:226`.
+
+| shipped profile | `bundles` | carries `dsh-base` |
+|---|---|---|
+| `acp` (`profile.ts:156`) | `dsh-base`, `dsh-acp-app` | yes |
+| `web` (`profile.ts:160`) | `dsh-base`, `dsh-web-app` | yes |
+| `headless` (`profile.ts:164`) | `dsh-base`, `dsh-headless` | yes |
+| `sdk` (`profile.ts:168`) | `dsh-base`, `dsh-sdk-app` | yes |
+| **`sdk-minimal`** (`profile.ts:172`) | `dsh-sdk-minimal` **only** | **no** |
+
+**So this epic's code runs on four of the five shipped profiles, and not on `sdk-minimal`.** That is not an inference from the absence of `dsh-base`: `packages/bundle/sdk-minimal/cordis.patch.yml` declares 33 plugin rows and none of them is `@deepseek-ai/dsh-run` (0 matches), and the four app bundles that layer over `base` each carry 0 `dsh-run` rows of their own — the single row at `bundle/base/cordis.patch.yml:628` is the only one in the repository. A session run under `--profile sdk-minimal` therefore compiles no task profile, opens no Run, and logs no `run/task-profile` event, and nothing in this epic's frozen cases would notice.
 
 ### F — fourteen frozen behaviours, three families
 
