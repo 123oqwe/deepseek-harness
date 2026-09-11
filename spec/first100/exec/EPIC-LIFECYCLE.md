@@ -94,6 +94,9 @@
 | 5.1.8 | **报告格式**(两 lane 同):SHA、`pnpm install --frozen-lockfile` / typecheck / 触及包 vitest / `slice-gate(-cordis)` 的 exit(pairing 按 BLOCKED-179/124 held)、变异各红各自那条 + 控制项、"下一步等什么"、**已 rebase 到 fork head 的证明**(`git merge-base --is-ancestor fork/first100-exec HEAD`)。 | 2.10–2.12 |
 | 5.1.9 | **到完成的路线**:每次 `--accept` 后 delegate 重跑 `check-ready`,把新 READY 的 epic 按 5.1.1/5.1.2 分给先空出来的 lane;等观测期间 lane 按 1.12 写下一项 preFlight。以 09-10 的节奏(每 lane 约 4–6 小时一个 epic 的 C→F,观测批处理),82 项未验收 ≈ 350–500 lane 小时,两条 lane 24×7 约 2–3 周,加返工与机器损耗按 3–4 周计;第三 lane 视机器与审查余量再定。 | 估算,非承诺 |
 | 5.1.10 | **delegate 不进 lane 的工作树**:规划文档、签字、registry/adjudication 更正一律在推送时于 `gate-wt2` 叠到被推的 SHA 之上再推,lane rebase 即得;registry 对 vendored sources 逐字节钉住,A 类路径更正只走 `adjudication.json` 的 `deliverablePathPatches`,且 `declaredPaths` = files[] ∪ stages,先查再改。 | §12.81 |
+| 5.1.11 | **BLOCKED 号只由 delegate 分配**:lane 开条目前先向 delegate 报一句取号,不自取;号水位记在交班单。(此条被交班单引为 §5.1.11 但此前未写入,2026-09-10 补) | 交班单;§12.83 |
+| 5.1.12 | **第 3 / 4 条线的开启条件(用户决定,2026-09-10:现阶段保持 2 条,不开;条件满足时 delegate 只提议,用户点头才开)。每条条件带测量命令,不带的不算条件。** **第 3 条 = 使能建设线(Opus)**,四条全满足才提:① 活——`node scripts/first100/check-ready.mjs` 的 READY 集减去 A/B 在建后 ≥ 2 项,且经 `checkParallelLaneDisjointness`(`generate-specs.ts:975`)与 A/B 在建 epic 的 [N]/[P] 文件集两两不相交;或未分配整改 slice ≥ 2(如 P4-01.U2、P6-07.U);② 机器——`vm_stat` 的 free+inactive 页 ×16384 ≥ 2 GiB 连续 30 分钟(每 5 分钟一采,6 采全过),`uptime` 1 分钟 load < 10,`pgrep -f "Codex"` 为空;或有第二台机器承担门③;③ CTO 容量——近 2 小时 delegate 对 lane 报告的中位响应 < 15 分钟(测量:两 lane transcript 里每条发往 delegate 的 SendMessage 时间戳 → delegate 下一条回复时间戳,取中位;**仪器待补**,~20 行脚本,验证线若开为其首件);④ 管线——门③排队 ≤ 1 个 SHA。**关停**:load > 30 连续 30 分钟,或中位响应 > 30 分钟 → 第 3 条先停套件只写码,再不降则停线。**取项**:按 registry `predecessors` 图算"验收后可解锁的后继数"(含传递)排序取最高者,当前候选 P3-01(卡 P3 整章 + P4-03)、P7-01(卡 P7)、P5-05/06、P8-02;文件集须与 A/B 不相交。**第 4 条 = 验证线(Sonnet,不写产品代码)**,机器前提同 ②,以下任一满足即提:① delegate 机械核验占比过高——4 小时内门③ ≥ 3 个 SHA,或 §5.2.5 回扫被推迟 > 6 小时;② 出现第二台机器 / 云 runner → 立刻提,门③先挪过去;③ 一天内 ≥ 2 次 CI 红属"机械核验可抓"类(未重放的变异、出厂未挂的 provider、未声明的 import)。**职责**:原样重跑冻结 argv;逐条重放 `sensitivityProof`(各红其所称,build/typecheck exit 0 才算变异生效);4.4d 到达 grep(先服务可达性后方法名;仪器不站在被测物里);在第二个 gate 工作树跑门③;§5.2.5 回扫的机械部分。**产出** PASS/FAIL + 证据行的表;**裁决与签字仍归 delegate 一人,不设第二 CTO**。 | 用户 2026-09-10;gq-92 拟稿、guanjieqiao-04 核名定稿(§12.83) |
+| 5.1.13 | **lane 永不空转(用户令,2026-09-10)**:每条 lane 永远持有 delegate 派的任务;做完即向 delegate 报告(做了什么+证据 / 提交 SHA 或未提交原因 / 打算的下一项);delegate 审查后派下一项;等门③ / CI / 推送 / 观测期间做队列里的下一项(preFlight、属它的小缺陷、WIP 的下一步;单文件可跑,套件不跑)。delegate 的每条"等"指令必须同时给这段时间的活;lane 手上没活直接向 delegate 要;lane 空转的账算 delegate 的(watch-v11 无工具调用阈值 15 分钟)。 | 用户 2026-09-10(lane A 22:16–22:39 空转);§12.84 |
 
 ### 5.2 delegate 换班协议(用户批准,2026-09-10 21:10 EDT;整改令 §12.82)
 
@@ -106,6 +109,13 @@
 | 5.2.3 | **主动换班**:delegate 会话对话记录 > 100 MB 或 > 7 天,在下一个干净断点(推送之后)换——写交班单 → 告两条 lane「delegate 换班,新会话会自报」→ 用户起新会话发「继续监督 first100」→ 新会话读记忆指针 + 交班单 → 向 lane 发核对句 → 核完接管 → 旧会话退出。换班是常规动作。 | 5.1.7 同型 |
 | 5.2.4 | **意外死亡**:lane 向 delegate 发消息失败时不停工——按已批准的计划做完手头 stage,不自选下一项,每 30 分钟向新出现的 delegate 会话重发「报到:当前 SHA / 工作树 / 下一步等什么」;新 delegate 核完交班单与门③状态前不签字、不推。 | 24×7 令 |
 | 5.2.5 | 新 delegate 的第一件事:对最近 24h 签的字重做 4.4d(服务可达性 + 出厂 profile 是否挂载),而不是信任交班单里的"已签"。 | 09-10 三例零到达 |
+
+### 5.3 delegate 行为规则(用户令,2026-09-10;针对岗位,不针对个人)
+
+| # | 规则 | 依据 |
+| --- | --- | --- |
+| 5.3.1 | **delegate 给要求与边界,不给代码形状。** 裁决写成"必须成立的性质 + 必须拒绝的输入 + 用例/变异要求",执行者按类型与现有边界钉细节;若不得不写伪码,标"形状仅示意,以类型与仓库规则为准"并要求执行者复核类型后再落。 | 09-10 两例:内核 decider 伪码对 `unknown` 负载 fail-open(执行者收紧);`ask` 折成 deny(后备指出)。§12.83 |
+| 5.3.2 | **设计题先量出厂现状,再定形状。** 任何"默认策略 / 默认挂载 / 默认值"的裁决前,先答三问并附命令与数字:① 出厂 bundle 挂了什么;② 生产路径上有多少实例(manifest / 事件计数);③ 这个输入在请求里有没有(grep)。答不出不裁。 | 09-10 例:BLOCKED-187 默认策略集三轮才收敛——未先量 riskClass 未进策略请求、153 条 manifest 全 `classified:false`。§12.83 |
 
 ## 6. 谁决定什么
 
