@@ -18,6 +18,34 @@ import type {
 } from './types.ts'
 
 /**
+ * One constraint's contribution, with a throw counted as its own refusal.
+ *
+ * A constraint is plugin-supplied and its body is arbitrary, so throwing is a
+ * thing a plugin can do. Left to propagate, the exception leaves the
+ * enforcement point entirely: the action does not run, so nothing fails open,
+ * but no DECISION is produced either — no named deny, no audit record naming
+ * the constraint, and one plugin breaks every dispatch that reaches here.
+ * Converting it keeps must[2]'s rule exactly as written: a plugin narrows, and
+ * a plugin that fails narrows.
+ *
+ * The reason names the constraint and carries the throw's message, because the
+ * alternative is an operator reading `constrained-by-plugin` with no way to
+ * tell which plugin, or that it threw rather than refused. It is never folded
+ * into `policy-unavailable`: the engine was mounted and it answered.
+ * @param constraint - the registered constraint to consult.
+ * @param request - the request it answers.
+ * @returns its reason to deny, the throw rendered as one, or undefined to abstain.
+ */
+function reasonFrom(constraint: PolicyConstraint, request: PolicyRequest): string | undefined {
+  try {
+    return constraint(request)
+  } catch (error) {
+    const name = constraint.name === '' ? '<anonymous constraint>' : constraint.name
+    return `${name} threw: ${error instanceof Error ? error.message : String(error)}`
+  }
+}
+
+/**
  * Combine an engine's evaluation with the plugin constraints registered for it
  * (must[2]).
  *
@@ -50,7 +78,7 @@ export function composeDecision(
 ): { readonly decision: ClosedDecision; readonly constraintReasons: readonly string[] } {
   const constraintReasons: string[] = []
   for (const constraint of constraints) {
-    const reason = constraint(request)
+    const reason = reasonFrom(constraint, request)
     if (reason !== undefined) constraintReasons.push(reason)
   }
   if (evaluation.decision.effect === 'deny' || constraintReasons.length === 0) {

@@ -191,6 +191,12 @@ export interface PolicyEvaluation {
  * the loop is asking to add a condition, not to relax one; letting it convert a
  * `deny` into an `ask` would turn a refusal into a prompt the user can wave
  * through.
+ *
+ * Throwing is a deny too, and is the constraint's own: the exception is caught
+ * where constraints are composed, rendered as a reason naming this function and
+ * carrying the message, and folded in like any other refusal. So a constraint
+ * cannot widen a decision by failing, and cannot escape the enforcement point
+ * either.
  * @param request - the same request the policy engine answered.
  * @returns a reason to deny, or `undefined` to leave the decision unchanged.
  */

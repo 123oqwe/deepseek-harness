@@ -7,111 +7,13 @@
  * agent loop's own dispatch, and the manifests it appends.
  */
 
-import { afterAll, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
-import { createUserMessage, ToolCallId, type StreamChunk } from '@deepseek-ai/dsh-llm'
-import SessionStore, { SessionId, type SessionEvent } from '@deepseek-ai/dsh-session'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import LlmRuntime from '@deepseek-ai/dsh-llm'
-import ToolRuntime, { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
-import AgentRegistry from '@deepseek-ai/dsh-agent'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
-import type { TrustKernelAuditEntry, TrustKernelPolicyQuery, TrustKernelPolicyVerdict } from '@deepseek-ai/dsh-trust-kernel'
-import CedarPolicyEngine from '@deepseek-ai/dsh-policy-engine-cedar'
-import CapabilityTokenFilePlugin from '@deepseek-ai/dsh-capability-token-file'
-import { mkdtempSync, rmSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
+import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
+import CedarPolicyEngine from '@deepseek-ai/dsh-policy-engine-cedar'
 import * as PolicyEnforcement from '../src/index.ts'
-import type { ClosedDecision, PolicyAuditRecord } from '../src/index.ts'
-
-const tokenDirs: string[] = []
-afterAll(() => { for (const directory of tokenDirs.splice(0)) rmSync(directory, { recursive: true, force: true }) })
-
-/** A policy set that permits everything, so a refusal refuses for its own reason. */
-const PERMIT_ALL = { 'baseline-permit': 'permit(principal, action, resource);' }
-
-/** A policy set that forbids the tool under test by capability. */
-const FORBID_WRITER = {
-  ...PERMIT_ALL,
-  'forbid-writer': 'forbid(principal, action == Dsh::Action::"writer", resource);',
-}
-
-/** One assistant turn that calls `writer` once. */
-function callWriter(id: string): StreamChunk[] {
-  return [
-    { type: 'block-start', index: 0, blockType: 'tool-call' },
-    { type: 'block-end', index: 0, block: { type: 'tool-call', id: ToolCallId(id), name: 'writer', arguments: '{}' } },
-    { type: 'usage', usage: { inputTokens: 5, outputTokens: 5 } },
-    { type: 'finish', reason: { kind: 'tool-calls' } },
-  ]
-}
-
-/**
- * The whole in-process stack with a pinned kernel whose decider and audit sink
- * are the deployment's — which is how a real boot wires them.
- */
-async function stack(options: {
-  policies?: Record<string, string>
-  verdict?: TrustKernelPolicyVerdict
-  tokens?: boolean
-} = {}) {
-  const audit: PolicyAuditRecord[] = []
-  const ctx = new Context()
-  pinTrustKernel(ctx, createTrustKernel({
-    policyDecider: (query: TrustKernelPolicyQuery): TrustKernelPolicyVerdict =>
-      options.verdict ?? ((query.payload as ClosedDecision | undefined)?.effect === 'permit' ? 'allow' : 'deny'),
-    auditSink: (entry: TrustKernelAuditEntry) => { audit.push(entry.payload as PolicyAuditRecord) },
-  }))
-  await ctx.plugin(LlmRuntime)
-  await ctx.plugin(SessionStore)
-  await ctx.plugin(SessionProjectionRegistry)
-  await ctx.plugin(SystemPrompt, { persona: '' })
-  await ctx.plugin(ToolRuntime)
-  await ctx.plugin(AgentRegistry)
-  await ctx.plugin(AgentLoop, { agents: [] })
-  if (options.tokens === true) {
-    // The real token provider: a session token is issued and presented with
-    // every call, which is what makes must[0]'s second input a value rather
-    // than a permanently absent field.
-    const directory = mkdtempSync(join(tmpdir(), 'p2-05-tokens-'))
-    tokenDirs.push(directory)
-    await ctx.plugin(CapabilityTokenFilePlugin, { directory, requireForTools: false, sessionTokenTtlMs: 60_000 })
-  }
-  await ctx.plugin(PolicyEnforcement)
-  const engine = options.policies === undefined
-    ? undefined
-    : await ctx.plugin(CedarPolicyEngine, { policies: options.policies })
-  ctx.tools.register(defineContentToolFixture({
-    name: 'writer',
-    description: 'writes',
-    parameters: {},
-    execute: () => Promise.resolve([{ type: 'text', text: 'wrote' }]),
-  }))
-  return { ctx, audit, engine }
-}
-
-/** Drive one turn to quiescence and return the session's events. */
-async function runTurn(ctx: Context, session: string): Promise<readonly SessionEvent[]> {
-  const agent = ctx.agentLoop.create(SessionId(session), { provider: 'mock', model: 'mock' })
-  const idle = new Promise<void>((resolve) => {
-    const dispose = ctx.on('agent/status', ({ agent: subject, status }) => {
-      if (subject === agent && status === 'idle') { dispose(); resolve() }
-    })
-  })
-  agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
-  await idle
-  return agent.session.snapshotEvents()
-}
-
-/** The `tool/result` text one turn produced. */
-function resultText(events: readonly SessionEvent[]): string {
-  const result = [...events].reverse().find(event => event.type === 'tool/result')
-  return JSON.stringify(result?.data ?? {})
-}
+import { callWriter, FORBID_WRITER, PERMIT_ALL, resultText, runTurn, stack } from './fixtures/stack.ts'
 
 describe('P2-05 acceptance[2]: losing the provider mid-session denies by name', () => {
   it('permits while the provider is mounted, and denies `policy-unavailable` after it unmounts', async () => {
