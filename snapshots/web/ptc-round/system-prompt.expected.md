@@ -321,6 +321,7 @@ interface ToolOutputMap {
     path: string;
     before: string;
     after: string;
+    matchTier?: string;
   };
   exit_plan_mode: {
     approved: true;
