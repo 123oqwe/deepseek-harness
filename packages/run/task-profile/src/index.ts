@@ -48,6 +48,9 @@ const SIDE_EFFECT_FIELD = 'sideEffect'
 /** The field name an authorization question carries when no identity is attached. */
 const IDENTITY_FIELD = 'actingIdentity'
 
+/** The field name a question carries when part of the goal message did not reach the objective. */
+const UNREAD_CONTENT_FIELD = 'unreadGoalContent'
+
 /**
  * Everything one compile is allowed to see.
  *
@@ -74,6 +77,22 @@ export interface TaskProfileInput {
   readonly workspaceTrust?: TrustState
   /** Whether an acting identity is attached; absence is a reason to ask, never to default. */
   readonly identityKnown: boolean
+  /**
+   * The parts of the goal message {@link goalText} does NOT contain, by block
+   * kind and how many of each.
+   *
+   * **Kinds and counts rather than a flag, because the question has to say
+   * what was missed.** "Something was dropped" is not answerable; "two image
+   * blocks were not read" is. The caller counts them because only the caller
+   * sees the message: this function is given text, and a compile cannot
+   * discover that content it never received exists.
+   *
+   * It is an INPUT field and deliberately not a profile field. must[0] keeps
+   * {@link TaskProfile} to generic fields, and how a caller flattened one
+   * message is not one of them — what reaches the profile is the question
+   * (must[2]), which is already a generic field.
+   */
+  readonly unreadGoalContent?: readonly { readonly kind: string; readonly count: number }[]
 }
 
 /** Why {@link compileTaskProfile} returned no profile. */
@@ -199,6 +218,36 @@ function undeterminedSideEffect(input: TaskProfileInput): { effect: TaskSideEffe
 }
 
 /**
+ * The question owed for goal content the objective does not include (must[2]).
+ *
+ * Deterministic over an input whose order the caller chose: the kinds are
+ * sorted, so two callers that counted the same blocks in a different order
+ * produce the same question, the same id and therefore the same
+ * {@link TaskProfile} digest (acceptance[0]).
+ * @param input - the compile's input.
+ * @returns the question, or `undefined` when the objective covers the whole message.
+ */
+function unreadContentQuestion(input: TaskProfileInput): TaskQuestion | undefined {
+  const counted = (input.unreadGoalContent ?? []).filter(entry => entry.count > 0)
+  if (counted.length === 0) return undefined
+  const summary = [...counted]
+    .sort((left, right) => left.kind.localeCompare(right.kind))
+    .map(entry => `${String(entry.count)} ${entry.kind} block${entry.count === 1 ? '' : 's'}`)
+    .join(', ')
+  return {
+    id: constraintId(`${UNREAD_CONTENT_FIELD}:${summary}`, 'default'),
+    field: UNREAD_CONTENT_FIELD,
+    // `ambiguous` rather than `high-risk-missing`: the goal is present and
+    // readable, and what is unresolved is which of several tasks the unread
+    // part asks for -- a reading to be chosen between, which is exactly the
+    // distinction TaskQuestionReason keeps.
+    reason: 'ambiguous',
+    prompt: `The goal message also carried ${summary} that this objective does not include. What do they ask for?`,
+    goalRef: input.goalRef,
+  }
+}
+
+/**
  * Compile one already-structured goal into a generic TaskProfile.
  *
  * @param input - the closed set of structured facts one compile may read.
@@ -225,6 +274,12 @@ export function compileTaskProfile(input: TaskProfileInput): TaskProfileCompilat
       goalRef: input.goalRef,
     })
   }
+  // must[2] over a partially read message: the objective is the text that
+  // arrived, and the part that did not is asked about rather than guessed at
+  // or silently dropped. Appended last so the two questions above keep the
+  // ids and the order they had before this case existed.
+  const unread = unreadContentQuestion(input)
+  if (unread !== undefined) questions.push(unread)
 
   return {
     compiled: true,
