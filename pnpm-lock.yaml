@@ -11038,6 +11038,9 @@ importers:
       '@deepseek-ai/dsh-hooks-codex':
         specifier: workspace:^
         version: link:../../packages/hooks/hooks-codex
+      '@deepseek-ai/dsh-host-user-id':
+        specifier: workspace:^
+        version: link:../../packages/identity/host-user-id
       '@deepseek-ai/dsh-intake-dedup':
         specifier: workspace:^
         version: link:../../packages/collaboration/intake-dedup
