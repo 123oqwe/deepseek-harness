@@ -66,12 +66,20 @@
  */
 import { frozenTitlePresent, registeredRenames } from './frozen-title-renames.mjs'
 import { createHash } from 'node:crypto'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
+import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const LEDGER_PATH = resolve(REPO_ROOT, 'spec/first100/exec/ledger.json')
+
+/**
+ * Where a run's rescued artifacts live, when a deployment keeps them.
+ *
+ * Unset is the normal state and not an error: the gate then searches only the
+ * path each cell recorded, which is what it did before.
+ */
+const ARTIFACT_DIR_ENV = 'FIRST100_ARTIFACT_DIR'
 const FREEZE_PATH = resolve(REPO_ROOT, 'spec/first100/exec/command-freeze.json')
 
 function opt(name) {
@@ -103,6 +111,44 @@ function sha256(buffer) {
 export function selectArtifactByDigest(candidates, expectedSha256) {
   const match = candidates.find(candidate => candidate.sha256 === expectedSha256)
   return match?.path ?? null
+}
+
+/**
+ * Where a run's uploaded artifacts may be found besides the path the cell
+ * recorded.
+ *
+ * The recorded path is an absolute one from whichever session greened the
+ * cell, and those sessions end: 60 GREEN cells today point into scratchpad
+ * directories of sessions that no longer exist, so the gate reports them
+ * `unavailable` and audits nothing. A rescued copy of the same run's artifacts
+ * under `$FIRST100_ARTIFACT_DIR/<run id>/` is the same bytes in a directory
+ * that outlives the session.
+ *
+ * Candidates are ENUMERATED rather than constructed: both upload directories
+ * are read from disk instead of composing `first100-vitest-report-<sha>` from
+ * the cell's own `candidateSha`. Composing would silently miss a rescued
+ * artifact whose directory name disagrees with the cell, and it is exactly
+ * that disagreement a reader would want the gate to notice rather than skip.
+ *
+ * Selection still happens by digest in {@link selectArtifactByDigest}, so
+ * widening where the gate LOOKS never widens what it will ACCEPT.
+ * @param ciRunUrl - the cell's recorded workflow-run URL, whose last segment is the run id.
+ * @param artifactDir - `$FIRST100_ARTIFACT_DIR`, or undefined when unset.
+ * @returns absolute paths to every `vitest-report.json` that run uploaded.
+ */
+export function rescuedArtifactPaths(ciRunUrl, artifactDir) {
+  if (artifactDir === undefined || artifactDir === '' || typeof ciRunUrl !== 'string') return []
+  const runId = ciRunUrl.split('/').filter(part => part !== '').at(-1)
+  if (runId === undefined || !/^\d+$/u.test(runId)) return []
+  const runDir = join(artifactDir, runId)
+  if (!existsSync(runDir)) return []
+  const paths = []
+  for (const entry of readdirSync(runDir, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue
+    const candidate = join(runDir, entry.name, 'vitest-report.json')
+    if (existsSync(candidate)) paths.push(candidate)
+  }
+  return paths.sort()
 }
 
 /**
@@ -225,16 +271,48 @@ function main() {
   for (const { epic, stage, cell } of cells) {
     const key = `${epic}.${stage}`
     const reportPath = cell.observationReportPath
-    if (typeof reportPath !== 'string' || !existsSync(reportPath)) {
+    // The recorded path first, then whatever the same run's rescued artifacts
+    // offer. The fallback is used ONLY when the cell recorded a digest: with
+    // no digest there is nothing to tell one run's report from another's, and
+    // a gate that guessed would be auditing a cell against bytes it cannot
+    // show belong to it.
+    const rescued = cell.observationSha256 ? rescuedArtifactPaths(cell.ciRunUrl, process.env[ARTIFACT_DIR_ENV]) : []
+    const searched = [...(typeof reportPath === 'string' ? [reportPath] : []), ...rescued].filter(path => existsSync(path))
+    if (searched.length === 0) {
       results.unavailable.push({ key, reason: `observation artifact not reachable: ${reportPath ?? '(none recorded)'}`, ciRunUrl: cell.ciRunUrl })
       continue
     }
-    const bytes = readFileSync(reportPath)
-    const digest = sha256(bytes)
-    if (cell.observationSha256 && digest !== cell.observationSha256) {
-      results.mismatched.push({ key, findings: [{ field: 'observationSha256', problem: `artifact at the recorded path hashes to ${digest}, not the recorded ${cell.observationSha256}`, detail: [] }] })
+    const candidates = searched.map(path => ({ path, sha256: sha256(readFileSync(path)) }))
+    const chosen = cell.observationSha256
+      ? selectArtifactByDigest(candidates, cell.observationSha256)
+      : candidates[0].path
+    if (chosen === null) {
+      // Two different failures, and collapsing them would send someone to
+      // repair a sound row. The RECORDED artifact hashing wrong is a claim
+      // about this cell's evidence -- MISMATCHED. A rescued copy of the same
+      // run not containing the upload the digest was taken over is just an
+      // absence: the run put two files named `vitest-report.json` in two
+      // directories and only one may have been kept.
+      const recorded = candidates.find(candidate => candidate.path === reportPath)
+      if (recorded !== undefined) {
+        results.mismatched.push({
+          key,
+          findings: [{
+            field: 'observationSha256',
+            problem: `artifact at the recorded path hashes to ${recorded.sha256}, not the recorded ${cell.observationSha256}`,
+            detail: [],
+          }],
+        })
+      } else {
+        results.unavailable.push({
+          key,
+          reason: `the recorded artifact is gone and none of the ${candidates.length} rescued file(s) for this run hashes to ${cell.observationSha256}`,
+          ciRunUrl: cell.ciRunUrl,
+        })
+      }
       continue
     }
+    const bytes = readFileSync(chosen)
     const frozen = liveFreeze.get(`${epic}|${stage}`)
     if (frozen === undefined) {
       results.unavailable.push({ key, reason: 'no live command-freeze.json entry for this epic and stage', ciRunUrl: cell.ciRunUrl })

@@ -8,7 +8,11 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { recomputeMatchedCases, selectArtifactByDigest } from './verify-cells-recomputable.mjs'
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
+import { recomputeMatchedCases, rescuedArtifactPaths, selectArtifactByDigest } from './verify-cells-recomputable.mjs'
 
 describe('selectArtifactByDigest (BLOCKED-106, 2026-09-06)', () => {
   // A real `first100-exact-sha.yml` run uploads two files with this name, and
@@ -54,5 +58,53 @@ describe('recomputeMatchedCases (BLOCKED-106, 2026-09-06)', () => {
       matched: ['alpha'],
       unmatched: [],
     })
+  })
+})
+
+describe('rescuedArtifactPaths', () => {
+  const RUN = 'https://github.com/owner/repo/actions/runs/33596937698'
+
+  /** A rescued artifact tree: one run directory holding the named upload directories. */
+  function rescued(uploads: readonly string[]): string {
+    const root = mkdtempSync(join(tmpdir(), 'first100-artifacts-'))
+    for (const upload of uploads) {
+      mkdirSync(join(root, '33596937698', upload), { recursive: true })
+      writeFileSync(join(root, '33596937698', upload, 'vitest-report.json'), '{}', 'utf8')
+    }
+    return root
+  }
+
+  it('finds both uploads a run made, so the digest has something to choose between', () => {
+    const root = rescued(['first100-vitest-report-abc', 'first100-evidence-abc'])
+    expect(rescuedArtifactPaths(RUN, root)).toStrictEqual([
+      join(root, '33596937698', 'first100-evidence-abc', 'vitest-report.json'),
+      join(root, '33596937698', 'first100-vitest-report-abc', 'vitest-report.json'),
+    ])
+  })
+
+  it('enumerates what is on disk rather than composing the directory name from the cell', () => {
+    // The point of reading the directory: a rescued upload whose name disagrees
+    // with the cell's own sha is still found, and it is the DIGEST that then
+    // decides. Composing `first100-evidence-<candidateSha>` would skip it and
+    // report the cell unprovable for a filename.
+    const root = rescued(['first100-evidence-a-sha-nobody-expected'])
+    expect(rescuedArtifactPaths(RUN, root)).toHaveLength(1)
+  })
+
+  it('returns nothing when the deployment keeps no rescued artifacts, which is the normal state', () => {
+    expect(rescuedArtifactPaths(RUN, undefined)).toStrictEqual([])
+    expect(rescuedArtifactPaths(RUN, '')).toStrictEqual([])
+  })
+
+  it('returns nothing for a run it has no directory for, rather than reaching into a sibling run', () => {
+    const root = rescued(['first100-evidence-abc'])
+    expect(rescuedArtifactPaths('https://github.com/owner/repo/actions/runs/99999999999', root)).toStrictEqual([])
+  })
+
+  it('refuses a ciRunUrl whose last segment is not a run id, so a malformed URL cannot name a directory', () => {
+    const root = rescued(['first100-evidence-abc'])
+    expect(rescuedArtifactPaths('https://github.com/owner/repo/actions', root)).toStrictEqual([])
+    expect(rescuedArtifactPaths('', root)).toStrictEqual([])
+    expect(rescuedArtifactPaths(undefined, root)).toStrictEqual([])
   })
 })

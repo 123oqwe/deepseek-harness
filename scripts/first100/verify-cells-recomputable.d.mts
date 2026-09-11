@@ -37,3 +37,21 @@ export function recomputeMatchedCases(
   expectCases: readonly string[],
   passing: ReadonlySet<string>,
 ): { matched: string[], unmatched: string[] }
+
+/**
+ * Where a run's uploaded artifacts may be found besides the path a cell
+ * recorded.
+ *
+ * Recorded paths are absolute paths inside the session that greened the cell,
+ * and those sessions end; a rescued copy under `$FIRST100_ARTIFACT_DIR/<run
+ * id>/` outlives them. Candidates are enumerated from disk rather than
+ * composed from the cell, and selection still happens by digest, so widening
+ * where the gate looks never widens what it accepts.
+ * @param ciRunUrl - the cell's workflow-run URL; its last segment is the run id.
+ * @param artifactDir - `$FIRST100_ARTIFACT_DIR`, or undefined when unset.
+ * @returns absolute paths to every `vitest-report.json` that run uploaded.
+ */
+export function rescuedArtifactPaths(
+  ciRunUrl: string | undefined,
+  artifactDir: string | undefined,
+): string[]
