@@ -63,7 +63,7 @@ Items 1, 3, 4a and the two mode fixes in 2 are self-contained and can land toget
 
 ## Freeze draft for P6-01.U — measured, not entered
 
-Drafted per §5.1.13 assignment at `4e46cde958` (tree `c2a0c163bcc8907e026cf154204e1e298a988be4`). **Nothing here is written to `command-freeze.json`.** Attribution follows §12.79, which already settles it — *"P6-01.U 改在出厂 profile 上观测；两条不变量随开关走"* — so this is P6-01.U and no OQ is opened for the epic. The supplement number, and whether these supersede the existing U entry or append beside it, are the in-post delegate's at entry time; placeholders below. Stage attribution matters concretely: `verify-freeze-in-candidate-tree` checks a frozen entry against the cell its stage names, so a wrong stage is checked against the wrong cell.
+Drafted per §5.1.13 assignment; both `dryRunProof` re-run at `040ab46cb9` (tree `ab9d2181532a48317395004fffbe2cfb1e587c1d`). **Nothing here is written to `command-freeze.json`.** Attribution follows §12.79, which already settles it — *"P6-01.U 改在出厂 profile 上观测；两条不变量随开关走"* — so this is P6-01.U and no OQ is opened for the epic. The supplement number, and whether these supersede the existing U entry or append beside it, are the in-post delegate's at entry time; placeholders below. Stage attribution matters concretely: `verify-freeze-in-candidate-tree` checks a frozen entry against the cell its stage names, so a wrong stage is checked against the wrong cell.
 
 **Local green is not observation.** Everything below is self-check: `pnpm exec vitest` on this worktree. Observation is CI on the exact SHA with the result landing in a cell, and the freeze precedes it. What local green establishes is only that the draft has something real to pin.
 
@@ -71,7 +71,9 @@ Drafted per §5.1.13 assignment at `4e46cde958` (tree `c2a0c163bcc8907e026cf1542
 
 **Neither is observed today. This is the draft's main finding, not a formality.**
 
-**Invariant 1 — empty memory ⇒ the model's input bytes are identical.** The nearest case is `renderMemoryContext returns undefined for an empty recall so no empty snapshot is ever injected`, a unit assertion on the renderer's return value. It is not the invariant. Per item 4a above, the case has to compare the **model-visible request bytes** against a boot with memory disabled, and separately assert that the read **was** still recorded — `agent.session.append('memory/access', …)` fires whether or not anything was recalled (`memory-context/src/index.ts:155-160`, deliberately). Either half alone misstates the design: bytes-only would pass a build that stopped logging reads, and event-only says nothing about what the model saw. **No such case exists**; it belongs in `memory-context.spec.ts`, which is the file that boots the shipped profile, and it is owed before this entry is frozen.
+**Invariant 1 — empty memory ⇒ the model's input bytes are identical.** *(Revised at `040ab46cb9`: the two cases described below now exist. The paragraph is kept as written because it is why they have the shape they do.)* The nearest case is `renderMemoryContext returns undefined for an empty recall so no empty snapshot is ever injected`, a unit assertion on the renderer's return value. It is not the invariant. Per item 4a above, the case has to compare the **model-visible request bytes** against a boot with memory disabled, and separately assert that the read **was** still recorded — `agent.session.append('memory/access', …)` fires whether or not anything was recalled (`memory-context/src/index.ts:155-160`, deliberately). Either half alone misstates the design: bytes-only would pass a build that stopped logging reads, and event-only says nothing about what the model saw. It belongs in `memory-context.spec.ts`, which is the file that boots the shipped profile.
+
+**Now written.** The same driver runs twice over two overlays differing only in the `memory` / `memory-context` rows, and the mock adapter records the turn's request. Three things are excluded from the comparison, each because the memory switch does not decide it: the provider route; a message's per-run `id` and envelope `source`; and the temporary directory the harness chose, which the system prompt states. The adapter records only the FIRST request — the session-title plugin issues its own, and recording the last one compared two title prompts instead of two turns. Both mutations were run: injecting an empty snapshot reddens the byte case alone, skipping the `memory/access` append on an empty recall reddens the event case alone, and the source was restored byte-identical.
 
 **Invariant 2 — an untrusted workspace does not recall across workspaces.** Half of it now has a subject and half still does not.
 
@@ -91,7 +93,7 @@ expectExit:  0
 files:       packages/memory/memory/tests/durable-provider.spec.ts
              packages/memory/memory/src/index.ts
              packages/memory/memory/src/types.ts
-dryRunProof: { treeSha: c2a0c163bcc8907e026cf154204e1e298a988be4, testsDiscovered: 30 }
+dryRunProof: { treeSha: ab9d2181532a48317395004fffbe2cfb1e587c1d, testsDiscovered: 30 }
 ```
 
 Frozen at 17; the slice brings it to 30. The 13 added, grouped as the file groups them:
@@ -118,11 +120,16 @@ files:       packages/context/memory-context/src/index.ts
              packages/memory/memory/src/types.ts
              packages/core/session/src/known-event-types.ts
              packages/bundle/base/cordis.patch.yml
+             packages/context/memory-context/tests/fixtures/empty-recall-driver.ts
+             packages/context/memory-context/tests/fixtures/no-memory.patch.yml
              packages/context/README.md
-dryRunProof: { treeSha: c2a0c163bcc8907e026cf154204e1e298a988be4, testsDiscovered: 18 }
+dryRunProof: { treeSha: ab9d2181532a48317395004fffbe2cfb1e587c1d, testsDiscovered: 20 }
 ```
 
-Frozen at 13; the slice brings it to 18. The 5 added are the `announceRebuiltWorkspace` group: `tells the session once that its workspace path holds an earlier occupant's memory`; `does not repeat itself on a later recall in the same session`; `stays silent when nothing was displaced, so a session does not claim a rebuild it never had`; `carries a count and a path and no record content, so it is not a read of what it reports`; `says nothing at all when the session has no workspace to compare`.
+Frozen at 13; the slice brings it to 20. The 7 added:
+
+- the `announceRebuiltWorkspace` group — `tells the session once that its workspace path holds an earlier occupant's memory`; `does not repeat itself on a later recall in the same session`; `stays silent when nothing was displaced, so a session does not claim a rebuild it never had`; `carries a count and a path and no record content, so it is not a read of what it reports`; `says nothing at all when the session has no workspace to compare`
+- *an empty recall costs the model nothing* — `hands the model bytes identical to a boot with the memory rows disabled`; `still records the read that returned nothing, so silence is not an unlogged read`. These two are §12.79's first invariant, added at `040ab46cb9`; see the revision below.
 
 `known-event-types.ts` is in `files` because `memory/workspace-rebuilt` is a new `SessionEventMap` member and an entry whose reality set omits it would not be re-checked when the event's registration changes.
 
@@ -132,6 +139,6 @@ Frozen at 13; the slice brings it to 18. The 5 added are the `announceRebuiltWor
 
 ### What is still owed before either entry is written
 
-1. **The invariant-1 case does not exist.** Entry B cannot honestly claim §12.79's first invariant until `memory-context.spec.ts` carries the bytes-plus-event case described above.
-2. **`sensitivityProof` is absent from both entries and is not drafted here.** Every one of the 18 added cases owes a mutation that reddens only itself with its controls green and the source restored byte-identical. That is a run, not a paste, and it has not been done. Listing a proof I have not executed would be the failure mode this program has already retracted once.
+1. ~~The invariant-1 case does not exist.~~ **Done at `040ab46cb9`.** Entry B's count moved 18 → 20 with it, Both entries' `dryRunProof` were then re-run at that same tree, so the two do not name different trees.
+2. **`sensitivityProof` is absent from both entries and is not drafted here.** The two invariant-1 cases have their mutations run and recorded above; the other 18 added cases each still owe a mutation that reddens only itself with its controls green and the source restored byte-identical. That is a run, not a paste, and it has not been done. Listing a proof I have not executed would be the failure mode this program has already retracted once.
 3. **Invariant 2's stage** — the four workspace cases sit in the P file. If §12.79's invariant is to be observed at U, either they move or U grows its own, and that is item 4b's ruling.
