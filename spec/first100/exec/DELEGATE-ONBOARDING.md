@@ -79,7 +79,6 @@ preFlight(JSON 记录 `clause-subject-audit.json` + `evidence-<id>.md`,`recorded
 
 - **签字前 dry-run `--accept`**(补记 66):在 overlay 工作树对该 epic 跑 `node scripts/first100/generate-ledger.mjs --accept --epic <id>`,读四谓词结果后 `git checkout -- spec/first100/exec/` 复原;(i) 覆盖闭包为空/(ii)(iii) 红都不签。P1-10 签了才发现 (i) 为 0 条。
 
-- **描述性文字不是现状**(补记 85):引用注释/README/preflight 表/BLOCKED 条目作为"现在是这样"的证据前,核对它描述的代码或读数;核不了就写"未核对"。lane B 把一段 09-07 前的模块头当现状,差点开出一个不存在的缺陷号;P4-09/P6-02 的过期理由是同一件事的另一面。
 
 - **叠 overlay 后再跑三个轻门**(补记 89):撤签/accept 改了 ledger 行状态,`verify-adapt-dispositions` 会按新状态重判 deviation 理由;`--check` 只核摘要。叠好 tip 后跑 `verify-adapt-dispositions`、`verify-make-vs-use`、`verify-ledger-digests`(= `generate-ledger.mjs --check`,非独立脚本)(秒级)再派发。
 

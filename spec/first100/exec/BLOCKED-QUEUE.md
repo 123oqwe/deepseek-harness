@@ -5247,6 +5247,100 @@ That is the LLM layer's own request-error retry decision — the thing P4-11's c
 
 `verify-usage-stage-subject` now exits 0: every epic's live Usage stage touches a named consumer file or is exempted with a ruling.
 
+### BLOCKED-215 — P5-10's answer routing has no production path: the delivery callback is never passed
+
+**Status:** OPEN, owner lane B, queued after the push. P5-10's sign-off is WITHDRAWN on this finding (delegate ruling, same shape as P2-01 and P4-01).
+
+acceptance[1] reads *"human answer 只送到指定等待点"* — an answer reaches only the waiting point that asked. The routing code is correct and its comment states the property well (`control-router.ts:238-241`): an answer routed by child identity alone would satisfy the wrong question when two are outstanding. What is missing is that **nothing in production ever supplies the two things the property is about.**
+
+| what | reading |
+|---|---|
+| the delivery callback `answerWaitingPoint` | the THIRD, optional constructor parameter — `packages/subagent/subagent/src/control-router.ts:76` |
+| production's only construction site | `packages/subagent/subagent/src/index.ts:664`, passing **two** arguments (the ledger and the agent) and omitting the third |
+| call sites that DO supply it | one, `packages/subagent/subagent/tests/control-router.spec.ts` |
+| `awaitHuman(waitingPointId)` — the only entry that designates a waiting point | **zero** production callers |
+| therefore `this.waitingPointId` in production | permanently `undefined`, so the guard at `:242` never passes and `:243` never fires |
+
+**So the clause's subject does not exist at runtime.** There is no designated waiting point to route to, and no callback to route with. The six C/P citations are sound about the proposition they test — *given* a waiting point and a delivery callback, an answer reaches only that point — but the test supplies both.
+
+**It is also absent from the Usage stage entirely**, which is worth separating from a citation error. P5-10's nine U cases across two live entries are about a prompt racing an interrupt and about control-priority ordering; none concerns a human answer. So this is not P1-07's shape (a citation pointing at another clause's case) — the clause has no U case to cite.
+
+**Why this is worse than a disabled feature.** P1-07's trust provider ships `disabled: true`, which is a deliberate, discoverable, one-edit-away state with a comment explaining the choice. Here the parameter is simply not passed at the single call site, which reads as complete code: the constructor accepts it, the dispatch site calls it, and only an argument-count comparison reveals that the path is dead.
+
+**Closing condition** (delegate ruling): wire `awaitHuman` and `answerWaitingPoint` into the production router construction, with the delivering party being a real question/answer surface — the Web question composer (`packages/client/ui-user-questions`, keyed by `[data-question-key]`) or the CLI question path over `@deepseek-ai/dsh-user-questions` / `dsh-tool-ask-user`. Observe it through a composition fixture frozen as a **P5-10.U supplement**, with the mutation "do not pass the callback" reddening it — which is exactly the state the tree is in today, so the mutation is the current behaviour and the case must fail against it before the fix. Re-sign after the supplement is observed.
+
+### BLOCKED-216 — the capability-seam allowlist's `removalDate` is checked as a string and never against the clock
+
+**Status:** OPEN, owner lane B, queued after BLOCKED-215. Small: one comparison and two cases. P0-03 is NOT withdrawn — its acceptance[1] is satisfied to the letter and today's allowlist is healthy.
+
+P0-03 acceptance[1] requires every allowlist entry to carry a removal date and an owner. `validateAllowlistEntry` (`scripts/architecture/capability-seams.ts:172`) checks that `removalDate` parses as an ISO calendar date and that `owner` is a non-empty string. **It never compares the date to today**, and neither does anything else in that file: `new Date`, `Date.now`, `today`, `expired` and `overdue` return **0 matches** across it.
+
+**So an exemption may sit indefinitely past its own removal date with the gate green.** The clause's letter is met; the thing it evidently wants — exemptions that expire, and pressure when they do — rests on someone remembering to look. This is a different failure from P0-06's vacuous truth: there the set was empty so the clause could not be violated, here the check's subject has degraded from *expiry* to *format*.
+
+**Today's state is healthy, measured 2026-09-11**, and that is why this is a mechanism risk rather than a present defect:
+
+| entries | removalDate | owner | overdue |
+|---|---|---|---|
+| 4, all in `architecture.layers.json` | `2026-12-01` on every one | `harryqiao59@gmail.com` on every one | **none** — today is 2026-09-11 |
+
+acceptance[0]'s "the existing repo passes under a controlled allowlist" is therefore genuinely controlled: four entries, not a suppression pile.
+
+**Closing condition:** `validateAllowlistEntry` fails an entry whose `removalDate` is strictly before the current date, with two cases — an overdue entry reddens, and a future-dated entry stays green as the positive control, without which a validator that refused every date would pass the first. The control matters more than usual here, because the natural mistake is an off-by-one that refuses today's date.
+
+**Enforcer, per the rule adopted 2026-09-11:** this entry's obligation has one — the check itself, once written, plus the two cases that keep it honest. That is the point of the entry: an obligation whose enforcer is "a person notices" is the state being closed, not a state to reproduce.
+
+**One obligation already written in this program has NO enforcer, recorded here rather than left implicit.** `acceptance-coverage.json`'s P0-06 acceptance[2] note says the first epic landing a real non-identity migration inherits that clause and owes the bidirectional-or-irreversible test. Nothing detects that transfer: no gate reads the note, and no check notices when `evolveSchema` gains its first production caller. It is prose addressed to a future reader, and is marked as such here so the marking is not mistaken for a mechanism.
+
+---
+
+### BLOCKED-217 — P0-02: five prose blocks in the kernel described a residual the same file had already closed
+
+**Status:** CLOSED-on-landing (delegate-assigned number, 2026-09-11). The fix is in the tree; the entry stands as the record of what the state was and of what it would have cost a Reviewer.
+
+`packages/kernel/trust-kernel/src/index.ts` carried, in one file, both halves of a contradiction seven lines apart. Line 267 calls `ctx.root.fiber.pinStoreName('trustKernel', impl)` under a comment saying it "Closes vectors (a), (b) and (c) below". The comment beginning at line 268 said locking the root key "does NOT close three further vectors" and that "Closing (a) and (c) needs a vendored `Fiber` change, a maintainer decision out of scope here."
+
+The vendored change is in the tree. `vendor/cordis/src/fiber.ts:241-247` makes `store` an accessor whose setter routes every assignment through `applyStoreGuard`, and `pinStoreName` (`:270`) fixes a name in every fiber of the tree as non-writable and non-configurable. `pin-hardening.spec.ts` carries three `SLICE-fiber-A` cases asserting the refusals; 56/56 pass. It landed 2026-09-06 in `f57c80a509`, which updated AGENTS.md, both boundary-doc sides, both README sides, the i18n pairing records, the freeze entry and the queue — and added to `src/index.ts` **only the call and its own six-line comment**, leaving the surrounding prose as it was.
+
+Five blocks in that file asserted the closed state as current:
+
+| block | what it claimed |
+|---|---|
+| module doc, `:44-48` | "the residual this pin cannot close -- reachable across the plugin tree" |
+| `pinTrustKernel` doc, `:212-229` | "A residual survives all four… Closing the ancestor and sweep vectors needs a vendored Cordis `Fiber` change" |
+| `pinTrustKernel` doc, `:189` | "**Four** writes run immediately after `ctx.provide`" — there are five |
+| inline comment, `:268-294` | the three vectors enumerated as open |
+| `Context.trustKernel` doc, `:336-346` | "a vendored Cordis `Fiber` fix is a hard prerequisite before any epic wires a real policy/audit/signature-verifier enforcement point (~W6)" |
+
+Two of them cited `tests/pin-hardening.spec.ts`'s "vector G"/"vector H" for the runtime proof. **Those cases do not exist**: `f57c80a509` replaced them with the `SLICE-fiber-A` cases that assert the opposite. A reader following the citation finds either nothing or a case proving the claim wrong. The call-site comment also named the method `pinFiberStoreName`; it is `pinStoreName`.
+
+**The last row is the one with teeth, and it is the reason this entry gets a number.** The other four cost a reader time. This one had a live consumer with an obligation attached.
+
+BLOCKED-011's final user decision, point 2, is a standing rule with a named discharger:
+
+> 任何 epic 接线真实 policy/audit/signature-verifier 强制点之前（P2-05 及同类，约 W6），vendored Fiber 结构修复必须先落地，带"保住 `_unload` 卸载/正常 fiber 生命周期"负例证明；**该触发 epic 的 Reviewer 必须显式核验 A 已落地，否则不得 `--accept`**。硬门，非可选加固。
+
+Three facts, each measured:
+
+| the rule's condition | state on this tree |
+|---|---|
+| an epic wires a real enforcement point | **fired** — `TrustKernelConfig.policyDecider` (`src/index.ts:95`) is wired for P2-05, and `runProfile` passes `endorseComposedDecision` (`apps/cli/src/profile-boot.ts:494`) |
+| the vendored `Fiber` fix has landed | **yes** — `f57c80a509`, 2026-09-06, `vendor/README.md` local modification 20 |
+| teardown is preserved | **yes** — the setter passes `undefined` straight through (`fiber.ts:245-247`), which is what `Fiber._unload()` assigns; `dispose.spec.ts` disposes a real Loader-mounted plugin with the pin active and the kernel survives |
+
+So the gate is open and the Reviewer's verification should succeed. **But the artifact that Reviewer would naturally read to perform it — the `Context.trustKernel` property JSDoc, which is where the rule's subject is documented — said the fix was still a pending prerequisite.** A Reviewer doing exactly what the rule instructs, and doing it carefully, would have concluded A had not landed and refused the `--accept` on a correctly-unblocked epic. The failure mode is not a missed check; it is a check that runs, reads its own documentation, and returns the wrong answer.
+
+That inverts the usual worry about stale prose. The ordinary risk is prose that under-states a danger and lets something through. Here the prose over-stated a danger that had been removed, and the cost was a false block — cheaper than a false pass, but it lands on a hard gate the program deliberately made un-skippable, so nobody downstream is positioned to question it.
+
+**Why this file and not the other five surfaces.** The doc surfaces were updated deliberately: the boundary doc has a "Closed 2026-09-06" section and keeps the old heading so the six inbound links resolve, and both READMEs open the bullet with "CLOSED 2026-09-06 … What follows is the record of what was open." They are *marked* history. The JSDoc was not marked, so it read as current state — the same distinction ONBOARDING rule 9 draws. This is the P0-02 stale-citation class found inside P0-02 itself.
+
+**Fixed:** the five blocks now describe the close, `pinStoreName` is item 5 of five writes, "Four" is "Five", the method name is right, and the vector G/H citations point at the `SLICE-fiber-A` cases. Diff is comments-only in one file, verified by filtering the hunks. `packages/kernel/trust-kernel` 56/56; `verify-export-jsdoc` and `verify-trust-kernel-property-access` both pass.
+
+**The sixth surface, and how it was handled.** `spec/first100/exec/acceptance-coverage.json`'s P0-02 acceptance[0] note also described the three vectors as open and also cited "vector G"/"vector H". Lane B flagged it rather than editing it, because it is a frozen evidence note bound to the candidate observed 2026-09-01. Delegate ruling, 2026-09-11: append a dated block, do not rewrite the original. Done — the note now carries its 2026-09-01 text intact followed by a dated paragraph recording the close. That ordering is the point: the original stated what the signer saw, and overwriting it would have destroyed the only record of the state the sign-off actually bound. `--check` is green either way, because closure reads citations, not notes.
+
+**A second finding from the same P0-02 read carries no number, by the same ruling:** acceptance[2] and [3] quantify over a 生产 profile and a 开发 profile that the tree does not model. It is written up in `spec/first100/exec/evidence-P0-02.md` and appended to the two coverage notes.
+
+**Enforcer:** none, and none is proposed. A gate that detects "a comment describes a state the code left" is not mechanically checkable here. What is checkable is the narrower thing that actually misled: a cited test title that no longer exists. `command-freeze.json`'s `expectCases` are verified against real titles; ordinary source comments naming a test case are not. Recorded as a candidate, not a recommendation — the citation forms in prose are too varied for a cheap matcher, and a matcher that fires on prose would be the kind of guard withdrawn under BLOCKED-206.
+
 ### BLOCKED-218 — a verifier ended the process at import, taking `vitest list` and two unrelated gates with it
 
 **Status:** FIXED 2026-09-11, owner lane A.
