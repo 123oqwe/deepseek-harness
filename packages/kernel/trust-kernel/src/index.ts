@@ -41,11 +41,13 @@
  * could be overwritten with a substitute accessor that intercepts that same
  * property access ahead of everything else. See `pinTrustKernel`'s own doc
  * comment for the fix and vendored-source citations for each, and
- * `tests/pin-hardening.spec.ts` for the runtime proof, including the
- * residual this pin cannot close -- reachable across the plugin tree (an
- * unrelated sibling or a plugin mounted later), not merely the attacker's
- * own subtree; see that comment's own final paragraph and
- * `docs/architecture/trust-kernel-boundary.md#known-residual-cross-plugin-property-access-poisoning`.
+ * `tests/pin-hardening.spec.ts` for the runtime proof. A fourth class --
+ * cross-plugin poisoning of `ctx.trustKernel` PROPERTY reads through a
+ * fiber `store` the root-key lock never reached -- stayed open until
+ * 2026-09-06 and is closed by the vendored `Fiber.pinStoreName` this
+ * function now calls; see that call's own comment and
+ * `docs/architecture/trust-kernel-boundary.md#known-residual-cross-plugin-property-access-poisoning`,
+ * whose heading is retained over the record of what was open.
  *
  * @module @deepseek-ai/dsh-trust-kernel
  */
@@ -186,7 +188,7 @@ export function createTrustKernel(config: TrustKernelConfig = {}): TrustKernel {
  * Pin `kernel` into `ctx` as the process's one `trustKernel`, then close
  * every live bypass found against the naive `ctx.provide` + single-freeze
  * pin (Epic P0-02 must[3]; see this module's own doc comment for the
- * originally-found bypass). Four writes run immediately after `ctx.provide`
+ * originally-found bypass). Five writes run immediately after `ctx.provide`
  * succeeds, so no window exists where the pin is observably unprotected:
  *
  * 1. `Object.defineProperty` on `ctx.reflect.store[key]` -- the original
@@ -209,24 +211,27 @@ export function createTrustKernel(config: TrustKernelConfig = {}): TrustKernel {
  *    slot to the `service` declaration `ctx.provide` wrote prevents a
  *    plugin substituting an accessor that would intercept `ctx.trustKernel`
  *    globally, ahead of fix 3 above.
+ * 5. `Fiber.pinStoreName` on the root fiber -- fixes 1 to 4 left one class
+ *    open, because fix 3 locks the `trustKernel` KEY inside the root
+ *    fiber's store object and the property walk reaches other stores
+ *    first: poisoning an ANCESTOR (non-root) fiber's `store` reached every
+ *    plugin nested under it, siblings included; replacing the root fiber's
+ *    `store` OBJECT wholesale voided fix 3 for every later lookup; and a
+ *    registry-wide sweep reached every live fiber at once. The vendored
+ *    `Fiber` change this calls closes all three at the mechanism level
+ *    (`vendor/README.md` local modification 20): `store` is an accessor
+ *    whose setter re-seals pinned names, so a wholesale replacement seals
+ *    itself, and the pin applies to every fiber in the tree rather than
+ *    only the root.
  *
- * A residual survives all four, reachable well beyond the attacker's own
- * subtree (an earlier slice of this same review under-documented this as
- * "self-subtree only"; a later adversarial review disproved that, see
- * `docs/architecture/trust-kernel-boundary.md#known-residual-cross-plugin-property-access-poisoning`):
- * poisoning an ANCESTOR (non-root) fiber's `store` reaches every plugin
- * nested under that ancestor, siblings included; wholesale REPLACEMENT of
- * the root fiber's `store` OBJECT (a plain, public, writable field this
- * function never locks as a whole -- only the `trustKernel` key inside the
- * original object) silently voids fix 3 below for every context that
- * subsequently reaches the root; and a registry-wide sweep over every
- * fiber's `store` reaches all of them at once. `ctx.get('trustKernel')`
- * stays correct in every one of these, and so does the root Context's own
- * DIRECT property read (never through another context reference) -- see fix
- * 3's own comment below. Closing the ancestor and sweep vectors needs a
- * vendored Cordis `Fiber` change, a maintainer decision out of scope here;
- * see `Context.trustKernel`'s property doc and
- * `tests/pin-hardening.spec.ts`'s "vector G"/"vector H" for the runtime proof.
+ * `ctx.get('trustKernel')` was correct throughout all of the above, and so
+ * was the root Context's own DIRECT property read (never through another
+ * context reference) -- see fix 3's own comment below. Fix 5 landed
+ * 2026-09-06 (SLICE-fiber-A); before it, this comment recorded the three
+ * vectors as an accepted residual, and
+ * `tests/pin-hardening.spec.ts`'s three `SLICE-fiber-A` cases now assert
+ * the refusals that superseded that characterization. Reverting the
+ * vendored patch fails exactly those three.
  *
  * Call this from `boot()`'s `prepare` closure, against the root `Context`,
  * before any config-tree entry mounts -- never from inside `ctx.plugin(...)`,
@@ -259,11 +264,11 @@ export function pinTrustKernel(ctx: Context, kernel: TrustKernel): void {
     enumerable: true,
   })
   // Closes vectors (a), (b) and (c) below, which locking the root key cannot
-  // reach: `pinFiberStoreName` fixes `trustKernel` in EVERY fiber's store, not
-  // just the root's, and `Fiber.store` is an accessor there so replacing the
-  // object wholesale re-seals it. Safe to call exactly here because the pin
-  // runs before any entry mounts, so no child fiber yet exists to have been
-  // created with an unguarded store.
+  // reach: `pinStoreName` fixes `trustKernel` in EVERY fiber's store, not just
+  // the root's, and `Fiber.store` is an accessor there so replacing the object
+  // wholesale re-seals it. Safe to call exactly here because the pin runs
+  // before any entry mounts, so no child fiber yet exists to have been created
+  // with an unguarded store.
   ctx.root.fiber.pinStoreName('trustKernel', impl)
   // `ctx.trustKernel` (property access, not `ctx.get`) never consults
   // `ctx.reflect.store` above -- the proxy `get` trap
@@ -273,25 +278,24 @@ export function pinTrustKernel(ctx: Context, kernel: TrustKernel): void {
   // (`vendor/cordis/src/fiber.ts:198,324`, `ctx.root.fiber.store`, a plain
   // `Object.create(null)`) is directly reachable and mutable from any
   // plugin. Locking this KEY closes a direct write to it
-  // (`ctx.root.fiber.store['trustKernel'] = forged`) -- it does NOT close
-  // three further vectors, all reaching beyond the attacker's own subtree:
-  // (a) a plugin poisoning an ANCESTOR (non-root) fiber's `store`, which the
-  // walk finds before ever reaching this locked root entry, reaching every
-  // OTHER plugin nested under that same ancestor; (b) a plugin replacing
-  // `ctx.root.fiber.store` wholesale with a different object -- `store` is a
-  // plain, writable field this `Object.defineProperty` never locks as a
-  // whole, only the key inside today's object, so a replacement silently
-  // voids this lock for every subsequent lookup reaching the root, no
-  // throw; (c) a registry-wide sweep poisoning every live fiber's `store` in
-  // one pass. `ctx.get('trustKernel')` and the root Context's own DIRECT
-  // property read stay correct in all three (root's `runtime === null`
-  // short-circuits its own property read straight to `ReflectService.get`,
-  // bypassing this walk entirely). Closing (a) and (c) needs a vendored
-  // `Fiber` change, a maintainer decision out of scope here; (b) is not
-  // trivially closable either (freezing `store` itself as a slot breaks
-  // real teardown, `Fiber._unload()`'s `this.store = undefined`). See
-  // `tests/pin-hardening.spec.ts`'s "vector G"/"vector H" for the runtime
-  // proof and the `Context.trustKernel` property doc below.
+  // (`ctx.root.fiber.store['trustKernel'] = forged`) and nothing more: on its
+  // own it left (a) a plugin poisoning an ANCESTOR (non-root) fiber's
+  // `store`, which the walk finds before ever reaching this locked root
+  // entry, reaching every OTHER plugin nested under that same ancestor;
+  // (b) a plugin replacing `ctx.root.fiber.store` wholesale with a different
+  // object, since this `Object.defineProperty` locks the key inside today's
+  // object rather than the field; and (c) a registry-wide sweep poisoning
+  // every live fiber's `store` in one pass. The `pinStoreName` call above
+  // closes all three at the mechanism level, which is why this lock is kept
+  // as the root-specific half rather than removed: it is what
+  // `pinStoreName`'s per-tree pin table is seeded against. `ctx.get`
+  // and the root Context's own DIRECT property read were correct throughout
+  // (root's `runtime === null` short-circuits its own property read straight
+  // to `ReflectService.get`, bypassing this walk entirely). Freezing `store`
+  // itself as a slot was never an option, and is why the vendored fix uses an
+  // accessor: real teardown assigns `undefined` (`Fiber._unload()`). See
+  // `tests/pin-hardening.spec.ts`'s three `SLICE-fiber-A` cases for the
+  // runtime proof and the `Context.trustKernel` property doc below.
   const rootFiberStore = ctx.root.fiber.store
   /* v8 ignore next -- the root fiber initializes `store` unconditionally in
      its own constructor branch (`runtime === null`, `vendor/cordis/src/fiber.ts:324`);
@@ -328,22 +332,23 @@ declare module '@deepseek-ai/cordis' {
     /**
      * The pinned `TrustKernel`; absent only in an explicit
      * `DSH_TRUST_KERNEL_INSECURE` development boot. `ctx.get('trustKernel')`
-     * is always correct; this PROPERTY carries a residual reachable across
+     * is always correct. This PROPERTY carried a residual reachable across
      * the plugin tree -- an unrelated sibling or a plugin mounted later, not
      * merely a poisoning plugin's own descendants -- via an ancestor
      * fiber's `store`, wholesale replacement of the root fiber's `store`
-     * object, or a registry-wide sweep
+     * object, or a registry-wide sweep. All three are CLOSED as of
+     * 2026-09-06 by the vendored `Fiber` fix `pinTrustKernel` calls
+     * (`vendor/README.md` local modification 20), which BLOCKED-011's
+     * standing rule made a hard prerequisite for wiring any real
+     * policy/audit/signature-verifier enforcement point; that prerequisite
+     * is met, not pending
      * (`docs/architecture/trust-kernel-boundary.md#known-residual-cross-plugin-property-access-poisoning`).
-     * The root Context's own DIRECT read of this property is unaffected.
-     * `verify-trust-kernel-property-access` (CI-enforced) keeps this
-     * residual unreachable in today's real source by rejecting any bare
-     * read of this property; it does not change what Cordis itself does.
-     * Prefer `ctx.get('trustKernel')` regardless: it has no residual at all.
-     * Deferred, not permanently accepted (user decision 2026-09-01,
-     * BLOCKED-011): the gate itself is defeatable by a cast-free generic
-     * (`<K extends 'trustKernel'>(c, k) => c[k]`), so a vendored Cordis
-     * `Fiber` fix is a hard prerequisite before any epic wires a real
-     * policy/audit/signature-verifier enforcement point (~W6).
+     * `verify-trust-kernel-property-access` (CI-enforced) stays in force,
+     * rejecting any bare read of this property: it was built when the
+     * residual was open, and is kept because a re-vendor that drops the
+     * patch would otherwise reopen the class. Prefer
+     * `ctx.get('trustKernel')` regardless -- it never consults `Fiber.store`
+     * at all, so it depends on no vendored patch.
      */
     trustKernel?: TrustKernel
   }
