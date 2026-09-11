@@ -277,3 +277,27 @@ The frozen argv for F is `pnpm exec vitest run packages/run/task-profile` — th
 - **P4-02 cannot be ACCEPTED before P4-01 is re-signed** — its Usage stage's transition is P4-01's, and P4-01's sign-off is withdrawn (BLOCKED-183).
 - **`validateTaskProfile` has no reader**, by design, until P4-03.
 - **Four cells await observation**: `C.1` and `P.1` (the OQ4(b) and OQ2 supplements), `U`, and `F`.
+
+-----
+
+## The coverage citations prepared for the unobserved cells
+
+`acceptance-coverage.json` now carries P4-02's three indices, citing **only** the cells a CI run has observed passing: `C` (12 matched at `d69d6e5b3e`) and `P` (14 matched at `e74593c50a`). `checkCoverageClosure('P4-02')` returns valid with no missing indices and no unverified citations.
+
+The rest are held here for the same mechanical reason as P4-01's: closure treats every citation under one index as NECESSARY evidence (AND, not OR), so a title that is frozen but absent from the ledger row's `expectCasesMatched` does not record a plan — it turns a GREEN index red. `U`, `F`, `C.1`, `P.1` and `U.1` are all `NOT_RUN`. These go in verbatim once candidate 2 observes them, in one edit.
+
+| acceptance | stage | title to cite | what it adds that the cited cells cannot |
+|---|---|---|---|
+| [0] | U | `appends exactly one run/task-profile event and names it on the Agent handle` | the stable output reaching a durable log, not just a returned value |
+| [0] | U.1 | `compiles exactly one profile when a real shipped-path boot takes its first model step` | the only production arrival in the epic |
+| [0] | U.1 | `names the same profile in the session log, the Run log and the Agent handle` | three records of one digest agreeing after a real boot |
+| [0] | F | `leaves the reference alone when nothing structured changed, so an unchanged goal is not a revision` | the fault-stage control for stability |
+| [0] | P.1 | `yields the same reference whatever order the caller counted the kinds in (acceptance[0])` | order-independence of the unread tally, which the P cases do not vary |
+| [1] | U | `compiles the objective from the goal the human actually sent, and keeps the reference beside it` | the objective traced to a real message rather than a constructed input |
+| [1] | F | `changing the goal text alone changes the reference, so that revision is visible in the chain` | the source moving is visible in the digest |
+| [1] | F | `changing the goal message it refers to alone changes the reference, so that revision is visible in the chain` | the reference binds to message identity — the case that decided BLOCKED-211's route |
+| [2] | U | `compiles a profile for an image-led first message and asks what the image asks for` | an undetermined value produced by content the objective could not read |
+| [2] | F | `refuses a blank injected-context message as not-a-task, not as empty-goal` | the refusal is classified correctly rather than collapsing two different failures |
+| [2] | C.1 | `refuses an unrecognised key inside the round, the same way the profile refuses one` | the goal-round vocabulary is closed too, so an unknown field cannot smuggle a decided side effect |
+
+**One discrepancy recorded rather than resolved.** The assignment named `C` at `55866cb225` and `P` at CI run `34573807027`; the ledger row carries `candidateSha` `d69d6e5b3e` for `C` and `e74593c50a` for `P`. The citations above and in `acceptance-coverage.json` were written against the ledger, because that is what `checkCoverageClosure` reads. Which of the two records is stale was not investigated here.

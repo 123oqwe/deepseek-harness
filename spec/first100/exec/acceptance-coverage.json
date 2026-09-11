@@ -807,6 +807,87 @@
       "note": "acceptance[2]: '一个 Session 可关联多个 Run,一个 Run 可跨多个 Session/Agent.' **Re-signed 2026-09-11: both directions hold of the LIBRARY and only one of them is reached by production.** The C and P citations cover both directions of the many-to-many relation, and both are proven to survive a restart rather than only holding in memory -- which matters because the clause is about durable association, not a transient one. The U citation adds the negative half the positive cases cannot establish: a real boot opens an INDEPENDENT Run per agent session, so the relation is genuinely many-to-many rather than one Run silently collecting every session. The half that production does NOT reach is the other direction: no production path calls attachSession, so 'one Run across multiple Sessions' is a library capability with no caller. That is BLOCKED-196, and U.1 freezes a case whose subject is that absence, so the day someone wires it without the ruling the case fails. Whether the positive half is in U2's scope was the open question the delegate settled by keeping it out; this note records the answer so a later reader does not read the gap as an oversight."
     },
     {
+      "epic": "P4-02",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "the same profile canonicalizes to the same reference, whatever order its keys were built in"
+        },
+        {
+          "stage": "C",
+          "title": "a profile whose confidence changed is a different reference, so a revision cannot pass for the original"
+        },
+        {
+          "stage": "P",
+          "title": "compiling the same input twice yields the same reference, which is what the Run log keys on"
+        },
+        {
+          "stage": "P",
+          "title": "a changed budget is a different reference, so a revision cannot pass for the original"
+        },
+        {
+          "stage": "P",
+          "title": "constraint ids come from the statement, not from position, so an unrelated constraint does not renumber them"
+        }
+      ],
+      "note": "acceptance[0]: '同一输入在确定性 parser fixture 下输出稳定.' Stability decomposes into two halves that must BOTH hold, which is why the controls are cited as necessary rather than decorative: the same input yields the same reference (C over a constructed profile, P over a real compile), and a CHANGED input yields a different one (the confidence move and the budget move) — without the second half a compiler returning one constant would satisfy the first. The id case is the third sub-fact: ids come from the statement rather than from position, so inserting an unrelated constraint does not renumber the others and thereby change the digest of an unchanged constraint.\n\nSERVICE / PRODUCTION (§12.46-B): all five are what the LIBRARY does. C constructs profiles by hand; P calls the compiler directly. Neither observes a compile reaching this code from a running harness — that is the U stage's, and U is NOT_RUN. The production-arrival citation is prepared in evidence-P4-02.md §4.4 and is written here once observed, because coverage closure treats every citation as necessary and a frozen-but-unobserved title would turn this index red."
+    },
+    {
+      "epic": "P4-02",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "refuses a hard constraint with no provenance at all"
+        },
+        {
+          "stage": "C",
+          "title": "keeps two contradictory hard constraints side by side, each with its own source (validation[1])"
+        },
+        {
+          "stage": "C",
+          "title": "refuses a confidence outside [0, 1], so a traceable source cannot carry an unreadable certainty"
+        },
+        {
+          "stage": "P",
+          "title": "a stated budget becomes a hard constraint whose provenance names the field it came from"
+        },
+        {
+          "stage": "P",
+          "title": "invents no constraint from the goal text, however much the text sounds like one"
+        }
+      ],
+      "note": "acceptance[1]: '所有 hard constraint 可从 profile 追溯原始来源.' Traceability is enforced in three independent directions, and each is a separate way the clause can fail. A constraint with no provenance is refused outright (C). Two constraints that CONTRADICT each other are kept side by side rather than reconciled, each keeping its own source — the case that matters because silently dropping one would leave a profile whose surviving constraint traces to a source that never said it alone (C, validation[1]). And a provenance that exists but carries an unreadable certainty is refused too (C): a source is not traceable if the confidence attached to it cannot be read.\n\nThe P citations add what a constructed profile cannot show: that a REAL compile derives provenance from the field it read (the budget naming its own field), and — the negative half — that the compiler invents no constraint from goal text however much the text sounds like one. An invented constraint is the exact failure this clause forbids, because it would trace to a source that never stated it.\n\nSERVICE / PRODUCTION (§12.46-B): all five are what the LIBRARY does. No citation here observes a hard constraint traced on the production path; U is NOT_RUN."
+    },
+    {
+      "epic": "P4-02",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "accepts an unknown side effect that reports itself as undetermined"
+        },
+        {
+          "stage": "C",
+          "title": "refuses the same unknown side effect when it claims to be certain"
+        },
+        {
+          "stage": "C",
+          "title": "refuses a profile that asks about the side effect while also recording it as decided"
+        },
+        {
+          "stage": "P",
+          "title": "reports the side effect as undetermined at confidence 0 rather than guessing a class"
+        },
+        {
+          "stage": "P",
+          "title": "asks about the side effect it could not determine, so the profile is valid under must[2]"
+        }
+      ],
+      "note": "acceptance[2]: '未知 side effect 不会被标为 none.' The clause forbids one specific lie — calling an undetermined side effect a decided one — and the citations close the three ways it could be told. An undetermined side effect is ACCEPTED when it says so (C): the clause must not be satisfied by refusing every unknown, which would make the vocabulary unusable. The same value is REFUSED when it claims certainty (C), which is the lie itself. And a profile that asks about the side effect while ALSO recording it as decided is refused (C) — the subtler form, where the question and the record contradict each other and a reader could believe either.\n\nP adds the compiler's own behaviour: it reports undetermined at confidence 0 rather than guessing a class, and it ASKS about what it could not determine. The question is what makes the undetermined value honest rather than merely absent, which is why must[2] requires it.\n\nSERVICE / PRODUCTION (§12.46-B): all five are what the LIBRARY does. Whether a real first message ever produces an undetermined side effect on the production path is unobserved; U is NOT_RUN."
+    },
+    {
       "epic": "P1-07",
       "acceptanceIndex": 0,
       "coveredBy": [
