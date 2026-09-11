@@ -159,6 +159,9 @@ importers:
       '@deepseek-ai/dsh-base':
         specifier: workspace:^
         version: link:../../packages/bundle/base
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:^
+        version: link:../../packages/util/brand
       '@deepseek-ai/dsh-client-ui-agent-preset':
         specifier: workspace:^
         version: link:../../packages/client/ui-agent-preset
@@ -243,6 +246,9 @@ importers:
       '@deepseek-ai/dsh-plugin-migrations':
         specifier: workspace:^
         version: link:../../packages/plugin/plugin-migrations
+      '@deepseek-ai/dsh-policy-enforcement':
+        specifier: workspace:^
+        version: link:../../packages/policy/policy-enforcement
       '@deepseek-ai/dsh-pwsh-local':
         specifier: workspace:^
         version: link:../../packages/shell/pwsh-local
@@ -4491,6 +4497,9 @@ importers:
       '@deepseek-ai/dsh-brand':
         specifier: workspace:^
         version: link:../../util/brand
+      '@deepseek-ai/dsh-capability-token':
+        specifier: workspace:^
+        version: link:../../policy/capability-token
       '@deepseek-ai/dsh-util-values':
         specifier: workspace:^
         version: link:../../util/values
