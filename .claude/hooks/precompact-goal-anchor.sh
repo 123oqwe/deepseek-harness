@@ -30,10 +30,22 @@ if [ ! -f "$goal_file" ]; then
   exit 1
 fi
 
+# The session-local half of the anchor, when this session keeps one. It is
+# deliberately untracked — each session's delegate, NOW and QUEUE differ — so
+# its absence is the normal case and never an error. It is folded into the SAME
+# additionalContext rather than emitted separately, because a hook returns one.
+goal_local_file="$repo_root/.claude/goal.local.md"
+
 node -e '
   const fs = require("fs");
-  const content = fs.readFileSync(process.argv[1], "utf8");
+  const [, goalPath, localPath] = process.argv;
+  let content = fs.readFileSync(goalPath, "utf8");
+  if (localPath !== undefined && fs.existsSync(localPath)) {
+    // The separator names the file, so a reader of the merged block can tell
+    // which half a line came from and where to edit it.
+    content += `\n\n---\n\n# Session-local anchor (.claude/goal.local.md)\n\n${fs.readFileSync(localPath, "utf8")}`;
+  }
   process.stdout.write(JSON.stringify({
     hookSpecificOutput: { hookEventName: "PreCompact", additionalContext: content },
   }));
-' "$goal_file"
+' "$goal_file" "$goal_local_file"
