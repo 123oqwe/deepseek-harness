@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { KNOWN_SESSION_EVENT_TYPES } from '@deepseek-ai/dsh-session'
@@ -212,5 +215,57 @@ describe('negotiateSchema — machine-readable compatibility result', () => {
     expect(result.error).toBeInstanceOf(SchemaCompatibilityError)
     expect(result.error.code).toBe('SCHEMA_UNKNOWN')
     expect(result.error.registeredVersion).toBeUndefined()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Standards-vocabulary backfill (delegate notes 41–42): one case per standard
+// this epic owns by assignment, naming the vocabulary and asserting the shape
+// this tree actually takes. No behaviour is added.
+// ---------------------------------------------------------------------------
+
+describe('P0-06 standards vocabulary: JSON Schema 2020-12 as the interchange dialect', () => {
+  it('publishes every spec schema in the JSON Schema 2020-12 dialect, declared rather than assumed', () => {
+    // The dialect is a property of the published artifact, so the assertion
+    // reads the artifacts. Three is the whole set today; a fourth added
+    // without `$schema` reddens here rather than being discovered by a reader
+    // outside TypeScript, which is who the dialect is FOR.
+    const published = ['action-manifest', 'capability-manifest', 'task-profile']
+    for (const name of published) {
+      const path = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..', 'spec', `${name}.schema.json`)
+      const schema = JSON.parse(readFileSync(path, 'utf8')) as { $schema?: string }
+      expect(schema.$schema, `${name}.schema.json`).toBe('https://json-schema.org/draft/2020-12/schema')
+    }
+  })
+})
+
+describe('P0-06 standards vocabulary: what this registry takes from Confluent BACKWARD/FORWARD/FULL[_TRANSITIVE]', () => {
+  it('maps Confluent BACKWARD/FORWARD/FULL onto a major-only rule: FULL within a major, incompatible across one', () => {
+    // **The vocabulary is mapped, not adopted verbatim, and the mapping is the
+    // point of this case.** Confluent grades a schema change into four named
+    // levels; this registry asks one question — does the encountered MAJOR
+    // match the registered one. Within a major, a reader accepts any minor in
+    // either direction, which is Confluent's FULL; across a major it refuses,
+    // which is none of the four. There is no `_TRANSITIVE` notion at all,
+    // because nothing here reasons over a chain of past versions.
+    const id = freshId('confluent-mapping')
+    registerSchema(id, { major: 2, minor: 3 }, identityMigration)
+
+    // A LOWER minor: an old writer's payload, read by this build.
+    expect(negotiateSchema(id, { major: 2, minor: 0 }).compatible).toBe(true)
+    // A HIGHER minor: a newer writer's payload, read by this build. Both
+    // directions pass, which is why the level within a major is FULL and not
+    // BACKWARD or FORWARD alone.
+    expect(negotiateSchema(id, { major: 2, minor: 9 }).compatible).toBe(true)
+    // A different major is refused, and the refusal names both versions rather
+    // than a level name this registry does not use.
+    const across = negotiateSchema(id, { major: 3, minor: 0 })
+    expect(across.compatible).toBe(false)
+    if (across.compatible) throw new Error('expected a refusal')
+    expect(across.error.code).toBe('SCHEMA_MAJOR_MISMATCH')
+    // The refusal carries BOTH versions, so a reader learns what it holds and
+    // what it met rather than a level name this registry does not use.
+    expect(across.error.encounteredVersion).toStrictEqual({ major: 3, minor: 0 })
+    expect(across.error.registeredVersion).toStrictEqual({ major: 2, minor: 3 })
   })
 })

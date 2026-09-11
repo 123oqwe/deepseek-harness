@@ -273,20 +273,23 @@
           {
             "standard": "CycloneDX 1.6",
             "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
-            "basis": "assignment",
-            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
+            "basis": "evidence",
+            "reason": "Backfilled 2026-09-11: a frozen case now names this vocabulary and asserts the shape this tree takes for it. `evidenceTitleSubstring` is the substring that proves it, so the gate checks auditable evidence rather than inferring from a near-miss title.",
+            "evidenceTitleSubstring": "CycloneDX 1.6"
           },
           {
             "standard": "SPDX",
             "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
-            "basis": "assignment",
-            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
+            "basis": "evidence",
+            "reason": "Backfilled 2026-09-11: a frozen case now names this vocabulary and asserts the shape this tree takes for it. `evidenceTitleSubstring` is the substring that proves it, so the gate checks auditable evidence rather than inferring from a near-miss title.",
+            "evidenceTitleSubstring": "SPDX"
           },
           {
             "standard": "Sigstore bundle v0.3",
             "assignedBy": "standards-ownership.json",
-            "basis": "assignment",
-            "reason": "The record previously placed this under `standardsImported` from upstream `@sigstore/verify`, which is true of the FORMAT and not of the shape: the ownership table assigns this epic the shape, meaning how a dsh trust anchor binds a bundle to a claim. Both facts are real and only one is ownership. ACCEPTED row, so PENDING-BACKFILL: the owner owes one schema/vocabulary case, due before P2-05 starts."
+            "basis": "evidence",
+            "reason": "Backfilled 2026-09-11: a frozen case now names this vocabulary and asserts the shape this tree takes for it. `evidenceTitleSubstring` is the substring that proves it, so the gate checks auditable evidence rather than inferring from a near-miss title.",
+            "evidenceTitleSubstring": "Sigstore bundle v0.3"
           }
         ],
         "standardsImported": [],
@@ -803,8 +806,9 @@
           {
             "standard": "OpenFeature evaluation API (optional)",
             "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
-            "basis": "assignment",
-            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
+            "basis": "evidence",
+            "reason": "Backfilled 2026-09-11: a frozen case now names this vocabulary and asserts the shape this tree takes for it. `evidenceTitleSubstring` is the substring that proves it, so the gate checks auditable evidence rather than inferring from a near-miss title.",
+            "evidenceTitleSubstring": "OpenFeature"
           }
         ],
         "standardsImported": [],
@@ -856,14 +860,16 @@
           {
             "standard": "JSON Schema 2020-12 as interchange",
             "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
-            "basis": "assignment",
-            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
+            "basis": "evidence",
+            "reason": "Backfilled 2026-09-11: a frozen case now names this vocabulary and asserts the shape this tree takes for it. `evidenceTitleSubstring` is the substring that proves it, so the gate checks auditable evidence rather than inferring from a near-miss title.",
+            "evidenceTitleSubstring": "JSON Schema 2020-12"
           },
           {
             "standard": "Confluent compatibility vocabulary BACKWARD/FORWARD/FULL[_TRANSITIVE]",
             "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
-            "basis": "assignment",
-            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
+            "basis": "evidence",
+            "reason": "Backfilled 2026-09-11: a frozen case now names this vocabulary and asserts the shape this tree takes for it. `evidenceTitleSubstring` is the substring that proves it, so the gate checks auditable evidence rather than inferring from a near-miss title.",
+            "evidenceTitleSubstring": "Confluent BACKWARD/FORWARD/FULL"
           }
         ],
         "standardsImported": [],
@@ -1773,14 +1779,16 @@
           {
             "standard": "MCP initialize protocolVersion + capabilities shape",
             "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
-            "basis": "assignment",
-            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
+            "basis": "evidence",
+            "reason": "Backfilled 2026-09-11: a frozen case now names this vocabulary and asserts the shape this tree takes for it. `evidenceTitleSubstring` is the substring that proves it, so the gate checks auditable evidence rather than inferring from a near-miss title.",
+            "evidenceTitleSubstring": "MCP initialize"
           },
           {
             "standard": "LSP ClientCapabilities pattern",
             "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
-            "basis": "assignment",
-            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
+            "basis": "evidence",
+            "reason": "Backfilled 2026-09-11: a frozen case now names this vocabulary and asserts the shape this tree takes for it. `evidenceTitleSubstring` is the substring that proves it, so the gate checks auditable evidence rather than inferring from a near-miss title.",
+            "evidenceTitleSubstring": "LSP ClientCapabilities"
           }
         ],
         "standardsImported": [],

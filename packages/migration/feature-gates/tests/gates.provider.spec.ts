@@ -102,13 +102,14 @@ describe('resolveFeatureGate (Epic P0-05 must[3]: --dump-config source + full ov
   })
 })
 
-describe('evaluateFeatureGate (Epic P0-05 must[1] + acceptance[0]: shadow never changes the applied outcome)', () => {
-  function outcomes() {
-    const legacy = vi.fn(() => ({ value: 'legacy-value', summary: { outcome: 'deny', apiKey: 'sk-legacy-secret' } }))
-    const candidate = vi.fn(() => ({ value: 'candidate-value', summary: { outcome: 'allow', apiKey: 'sk-candidate-secret' } }))
-    return { legacy, candidate }
-  }
+/** The legacy and candidate decision functions the evaluation cases share. */
+function outcomes() {
+  const legacy = vi.fn(() => ({ value: 'legacy-value', summary: { outcome: 'deny', apiKey: 'sk-legacy-secret' } }))
+  const candidate = vi.fn(() => ({ value: 'candidate-value', summary: { outcome: 'allow', apiKey: 'sk-candidate-secret' } }))
+  return { legacy, candidate }
+}
 
+describe('evaluateFeatureGate (Epic P0-05 must[1] + acceptance[0]: shadow never changes the applied outcome)', () => {
   it('off applies only legacy\'s value and never invokes candidate', () => {
     const { legacy, candidate } = outcomes()
     const evaluation = evaluateFeatureGate(GATE_ID, 'off', legacy, candidate, ['outcome'])
@@ -245,5 +246,41 @@ describe('checkFeatureGateExpiry (Epic P0-05 acceptance[2]: expired gate fails t
 
   it('rejects a malformed version string instead of silently comparing garbage', () => {
     expect(() => checkFeatureGateExpiry(declaration, 'not-a-version')).toThrow(TypeError)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Standards-vocabulary backfill (delegate notes 41–42). One case naming the
+// standard this epic owns by assignment, asserting the shape this tree takes.
+// ---------------------------------------------------------------------------
+
+describe('P0-05 standards vocabulary: what this resolver takes from the OpenFeature evaluation API', () => {
+  it('returns the applied value and its shadow record, and NOT OpenFeature\'s variant/errorCode fields', () => {
+    // **The vocabulary is mapped, not adopted, and the difference is the
+    // point.** OpenFeature's evaluation returns `{ value, reason, variant,
+    // errorCode }` — a flag system answering "which variant did you get, and
+    // why". This resolver answers a migration question instead: which value
+    // must the caller APPLY, and what did the shadow run disagree about. So
+    // `value` is shared vocabulary and the rest is not, and a case asserting
+    // `variant`/`errorCode` here would pin fields this tree does not have.
+    const { legacy, candidate } = outcomes()
+    const evaluation = evaluateFeatureGate(GATE_ID, 'shadow', legacy, candidate, ['outcome'])
+
+    expect(Object.keys(evaluation).sort()).toStrictEqual(['shadowRecord', 'value'])
+    // `value` carries OpenFeature's own meaning: the value the caller applies.
+    expect(evaluation.value).toBe('legacy-value')
+    // And the reason it is that value lives in the shadow record, not in an
+    // OpenFeature `reason` enum: this tree records a DIFF between two live
+    // decisions rather than a classification of one.
+    expect(evaluation.shadowRecord).toBeDefined()
+  })
+
+  it('carries no OpenFeature evaluation fields on the off and enforce paths either, so the shape is not mode-dependent', () => {
+    // The control: `shadowRecord` is absent outside shadow, and nothing else
+    // appears in its place. Without this, a resolver that returned an
+    // OpenFeature-shaped object in one mode would pass the case above.
+    const { legacy, candidate } = outcomes()
+    expect(Object.keys(evaluateFeatureGate(GATE_ID, 'off', legacy, candidate, ['outcome']))).toStrictEqual(['value'])
+    expect(Object.keys(evaluateFeatureGate(GATE_ID, 'enforce', legacy, candidate, ['outcome']))).toStrictEqual(['value'])
   })
 })

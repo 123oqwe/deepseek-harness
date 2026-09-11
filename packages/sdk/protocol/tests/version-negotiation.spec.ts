@@ -346,3 +346,56 @@ describe('P8-01 Fault: cross-implementation agreement on one fixture (validation
       .toEqual({ accepted: true, agreed: ['streaming'], ignored: ['replay'] })
   })
 })
+
+// ---------------------------------------------------------------------------
+// Standards-vocabulary backfill (delegate notes 41–42): one case per standard
+// this epic owns by assignment, naming the vocabulary and asserting the shape
+// this tree takes. No behaviour is added.
+// ---------------------------------------------------------------------------
+
+describe('P8-01 standards vocabulary: what this handshake takes from MCP initialize protocolVersion + capabilities', () => {
+  it('negotiates a protocol version and a capability set as SEPARATE answers, the way MCP initialize does', () => {
+    // MCP's `initialize` carries `protocolVersion` and `capabilities` in one
+    // message and they are decided independently: agreeing a version says
+    // nothing about which capabilities either side has. This tree keeps that
+    // split — `negotiateProtocolVersion` and `negotiateCapabilities` are two
+    // functions over two inputs — and the case pins the split rather than
+    // either function's own logic, which the frozen cases above already own.
+    const version = negotiateProtocolVersion({ min: 1, max: 3 }, { min: 2, max: 5 })
+    expect(version).toStrictEqual({ agreed: true, version: 3 })
+
+    const declared: CapabilityDeclaration[] = [{ id: 'tools' as CapabilityId, mandatory: true }]
+    const capabilities = negotiateCapabilities(
+      declared,
+      new Set(['tools' as CapabilityId]),
+      new Set(['tools' as CapabilityId]),
+    )
+    expect(capabilities.accepted).toBe(true)
+    // The version answer carries no capability field and the capability answer
+    // carries no version: agreeing one never implies the other.
+    expect(Object.keys(version)).not.toContain('capabilities')
+    expect(Object.keys(capabilities)).not.toContain('version')
+  })
+})
+
+describe('P8-01 standards vocabulary: what this handshake takes from the LSP ClientCapabilities pattern', () => {
+  it('follows the LSP ClientCapabilities pattern for OPTIONAL capabilities and deliberately breaks it for mandatory ones', () => {
+    // LSP's pattern is that a peer announces what it supports and an
+    // unannounced capability is simply not used — the handshake does not fail.
+    // This tree takes that for OPTIONAL declarations and deliberately does NOT
+    // take it for mandatory ones, which is the difference worth pinning: an
+    // unknown mandatory capability is fatal, because a peer that requires
+    // something this build has never heard of cannot be safely ignored.
+    const optional: CapabilityDeclaration[] = [{ id: 'telepathy' as CapabilityId, mandatory: false }]
+    const ignored = negotiateCapabilities(optional, new Set(), new Set())
+    expect(ignored.accepted).toBe(true)
+    if (!ignored.accepted) throw new Error('expected acceptance')
+    expect(ignored.ignored).toStrictEqual(['telepathy'])
+
+    const mandatory: CapabilityDeclaration[] = [{ id: 'telepathy' as CapabilityId, mandatory: true }]
+    const refused = negotiateCapabilities(mandatory, new Set(), new Set())
+    expect(refused.accepted).toBe(false)
+    if (refused.accepted) throw new Error('expected a refusal')
+    expect(refused.reason).toBe('unknown-mandatory-capability')
+  })
+})

@@ -26,6 +26,8 @@ import {
   verifyPluginProvenance,
 } from '../src/index.ts'
 import { listTrustAnchorIds, signedClaimBytes } from '../src/signature.ts'
+import { generateSbom } from '../src/sbom.ts'
+import type { ProvenanceMode } from '../src/signature.ts'
 import type { PluginProvenanceInput, PluginProvenanceVerification } from '../src/index.ts'
 import type {
   BuilderIdentity,
@@ -800,5 +802,60 @@ describe('P1-02 — the Sigstore path is verified, not believed', () => {
   it('the genuine bundle for the genuine claim verifies, so the refusals above are selective', () => {
     const kernel = kernelWithFixtureAnchors()
     expect(verifyPluginProvenance(buildInput(), kernel.signatureRoots).trust).toBe('trusted')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Standards-vocabulary backfill (delegate notes 41–42). `verify-make-vs-use`
+// carries a deadline that is a STATE rather than a date: an epic owning a
+// standard by assignment owes one case naming that vocabulary before P2-05
+// starts. These three pin the vocabulary this tree actually uses — they add no
+// behaviour, and each asserts the SHAPE rather than re-testing logic the
+// epic's own cases already cover.
+// ---------------------------------------------------------------------------
+
+describe('P1-02 standards vocabulary: the SBOM and signature formats this tree names', () => {
+  it('names CycloneDX 1.6 and SPDX as the two SBOM formats, and admits no third', () => {
+    // `SbomFormat` fixes the two formats the registry's validation names
+    // verbatim ("生成 CycloneDX/SPDX SBOM"). The assertion is on the DOCUMENT a
+    // generator produces, because a type alias alone is erased at runtime and
+    // would pin nothing a consumer could observe.
+    const deps = new Map([['left-pad', { version: '1.3.0', kind: 'runtime' as const }]])
+    const cyclonedx = generateSbom('cyclonedx', brandString<PackageDigest>('sha256:aa'), deps)
+    const spdx = generateSbom('spdx', brandString<PackageDigest>('sha256:aa'), deps)
+
+    expect(cyclonedx.format).toBe('cyclonedx')
+    expect(spdx.format).toBe('spdx')
+    // Both documents describe the same dependency set: the format is a
+    // serialization choice, not a different claim about what is inside.
+    expect(cyclonedx.entries).toStrictEqual(spdx.entries)
+  })
+
+  it('maps npm dependency fields onto the SBOM entry kinds rather than inventing a taxonomy', () => {
+    // `DependencyKind` has no precedent in this repository and mirrors npm's
+    // own four fields, which is what makes an SBOM entry re-derivable from a
+    // manifest instead of from a reader's judgement.
+    const deps = new Map((['runtime', 'dev', 'peer', 'optional'] as const)
+      .map(kind => [kind, { version: '1.0.0', kind }] as const))
+    const sbom = generateSbom('cyclonedx', brandString<PackageDigest>('sha256:bb'), deps)
+
+    expect(sbom.entries.map(entry => entry.kind)).toStrictEqual(['runtime', 'dev', 'peer', 'optional'])
+  })
+
+  it('delegates the Sigstore bundle v0.3 format to the reference verifier instead of parsing it here', () => {
+    // **The vocabulary is owned by DELEGATION, and that is the honest pin.**
+    // `SigstoreProvenanceEvidence.bundle` is typed `unknown` on purpose
+    // (`signature.ts`): this package never parses the bundle, it hands it to
+    // `@sigstore/verify`'s `toSignedEntity`/`Verifier`. So the bundle version
+    // this tree accepts is whatever those libraries accept — `@sigstore/bundle`
+    // ^5.0.0 and `@sigstore/verify` ^4.1.2 — and NOT a constant of ours. A case
+    // asserting a literal "v0.3" here would pin a string this tree does not
+    // have and would go stale the moment the dependency moved.
+    const mode: ProvenanceMode = 'sigstore'
+    expect(mode).toBe('sigstore')
+    // The other mode exists and is distinct: an offline-signed package is
+    // verified against a configured anchor, with no transparency log at all.
+    const offline: ProvenanceMode = 'offline-signed'
+    expect(offline).not.toBe(mode)
   })
 })

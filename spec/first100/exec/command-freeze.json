@@ -11749,6 +11749,147 @@
         "mutationDescription": "The revision-arithmetic block's seven cases are each other's mutation in the strictest available sense -- every one moves one field and asserts the digest moves, with `leaves the reference alone when nothing structured changed` as the positive control that a digest over a clock or a counter would fail. Two further mutations were applied locally and reverted (git diff --stat empty before continuing), then `pnpm exec vitest run packages/run/task-profile packages/run/run --maxWorkers=2 --reporter=json`: (1) in `src/index.ts`, the `unreadContentQuestion` result discarded, which is the only input the tally case reads; (2) in `src/index.ts`, `unreadContentQuestion`'s `.filter(entry => entry.count > 0)` removed.",
         "failureSummary": "(1) RED 4 of 252, one of them this entry's `changing the tally of content the objective does not include alone changes the reference, so that revision is visible in the chain`; the other three belong to the Provider supplement and the Usage entry. (2) RED 1, in the Provider supplement. The refusal-order pair is proved by each other: the compiler checks `origin` before `goalText`, so swapping those two statements makes `refuses a blank injected-context message as not-a-task, not as empty-goal` report `empty-goal` and redden while the whitespace case stays GREEN -- the two cases cannot both pass under either order. The four-kind block's control is that each asserts `constraints` EMPTY and exactly two questions by FIELD NAME, so a compiler that invented a constraint from the goal text or asked a third thing reddens all four. Mutations reverted."
       }
+    },
+    {
+      "epic": "P0-05",
+      "stage": "C",
+      "supplements": {
+        "epic": "P0-05",
+        "stage": "C"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/migration/feature-gates",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "files": [
+        "packages/migration/feature-gates/tests/gates.provider.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-11T15:00:06Z",
+      "dryRunProof": {
+        "treeSha": "1c506bc30f050f0b6bdcae927f0caec35bdc5b25",
+        "testsDiscovered": 87
+      },
+      "expectCases": [
+        "returns the applied value and its shadow record, and NOT OpenFeature's variant/errorCode fields",
+        "carries no OpenFeature evaluation fields on the off and enforce paths either, so the shape is not mode-dependent"
+      ],
+      "note": "Standards-vocabulary backfill (delegate notes 41-42). `verify-make-vs-use` carries a deadline that is a STATE rather than a date: an epic owning a standard by ASSIGNMENT owes one case naming that vocabulary before P2-05 starts, and P2-05 starting is something this repository can observe. These cases pin the vocabulary and nothing else -- no behaviour is added, and each asserts the SHAPE this tree takes rather than re-testing logic the epic's own frozen cases already own.\n\nEach entry in the epic's `standardsOwned` names the substring that proves it (`evidenceTitleSubstring`), so the gate checks auditable evidence instead of inferring ownership from a title that happens to be close.\n\nThe mapping is the finding: OpenFeature's evaluation answers 'which variant, and why'; this resolver answers a MIGRATION question -- which value must the caller apply, and what did the shadow run disagree about. `value` is shared vocabulary; `variant`/`errorCode`/`reason` are not present, and the second case is the control proving the shape is not merely mode-dependent.",
+      "sensitivityProof": {
+        "mutationDescription": "These cases pin a VOCABULARY, not behaviour, so the mutation that matters is the vocabulary changing: each assertion names a literal the tree carries (the two `SbomFormat` members, the `$schema` dialect URI, the major-only compatibility rule, the negotiation result keys, the mandatory/optional split). Renaming or removing any of those literals in the source reddens exactly the case that names it, because the case reads the value rather than a type.",
+        "failureSummary": "Verified by construction rather than by a separate mutation run, and stated as such: every assertion above is on a runtime VALUE the source produces (a document `format`, a `$schema` string read from disk, an error `code`, a result object's keys), so there is no path by which the case passes while the literal it names is absent. Where a claim could NOT be pinned to a value it is recorded as delegation rather than asserted -- the Sigstore bundle version is the library's, and the case says so instead of inventing a constant."
+      }
+    },
+    {
+      "epic": "P0-06",
+      "stage": "C",
+      "supplements": {
+        "epic": "P0-06",
+        "stage": "C"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/schema/schema-registry",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "files": [
+        "packages/schema/schema-registry/tests/compatibility.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-11T15:00:06Z",
+      "dryRunProof": {
+        "treeSha": "1c506bc30f050f0b6bdcae927f0caec35bdc5b25",
+        "testsDiscovered": 32
+      },
+      "expectCases": [
+        "publishes every spec schema in the JSON Schema 2020-12 dialect, declared rather than assumed",
+        "maps Confluent BACKWARD/FORWARD/FULL onto a major-only rule: FULL within a major, incompatible across one"
+      ],
+      "note": "Standards-vocabulary backfill (delegate notes 41-42). `verify-make-vs-use` carries a deadline that is a STATE rather than a date: an epic owning a standard by ASSIGNMENT owes one case naming that vocabulary before P2-05 starts, and P2-05 starting is something this repository can observe. These cases pin the vocabulary and nothing else -- no behaviour is added, and each asserts the SHAPE this tree takes rather than re-testing logic the epic's own frozen cases already own.\n\nEach entry in the epic's `standardsOwned` names the substring that proves it (`evidenceTitleSubstring`), so the gate checks auditable evidence instead of inferring ownership from a title that happens to be close.\n\nThe 2020-12 case reads the published ARTIFACTS (`spec/*.schema.json`'s `$schema`), because the dialect is a promise to readers outside TypeScript and a type would pin nothing they can see. The Confluent case pins a MAPPING, not an adoption: within a major this registry accepts any minor in either direction, which is Confluent's FULL; across a major it refuses, which is none of the four levels; and there is no `_TRANSITIVE` notion at all because nothing here reasons over a chain of past versions.",
+      "sensitivityProof": {
+        "mutationDescription": "These cases pin a VOCABULARY, not behaviour, so the mutation that matters is the vocabulary changing: each assertion names a literal the tree carries (the two `SbomFormat` members, the `$schema` dialect URI, the major-only compatibility rule, the negotiation result keys, the mandatory/optional split). Renaming or removing any of those literals in the source reddens exactly the case that names it, because the case reads the value rather than a type.",
+        "failureSummary": "Verified by construction rather than by a separate mutation run, and stated as such: every assertion above is on a runtime VALUE the source produces (a document `format`, a `$schema` string read from disk, an error `code`, a result object's keys), so there is no path by which the case passes while the literal it names is absent. Where a claim could NOT be pinned to a value it is recorded as delegation rather than asserted -- the Sigstore bundle version is the library's, and the case says so instead of inventing a constant."
+      }
+    },
+    {
+      "epic": "P1-02",
+      "stage": "C",
+      "supplements": {
+        "epic": "P1-02",
+        "stage": "C"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/plugin/plugin-provenance",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "files": [
+        "packages/plugin/plugin-provenance/tests/provenance.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-11T15:00:06Z",
+      "dryRunProof": {
+        "treeSha": "1c506bc30f050f0b6bdcae927f0caec35bdc5b25",
+        "testsDiscovered": 70
+      },
+      "expectCases": [
+        "names CycloneDX 1.6 and SPDX as the two SBOM formats, and admits no third",
+        "maps npm dependency fields onto the SBOM entry kinds rather than inventing a taxonomy",
+        "delegates the Sigstore bundle v0.3 format to the reference verifier instead of parsing it here"
+      ],
+      "note": "Standards-vocabulary backfill (delegate notes 41-42). `verify-make-vs-use` carries a deadline that is a STATE rather than a date: an epic owning a standard by ASSIGNMENT owes one case naming that vocabulary before P2-05 starts, and P2-05 starting is something this repository can observe. These cases pin the vocabulary and nothing else -- no behaviour is added, and each asserts the SHAPE this tree takes rather than re-testing logic the epic's own frozen cases already own.\n\nEach entry in the epic's `standardsOwned` names the substring that proves it (`evidenceTitleSubstring`), so the gate checks auditable evidence instead of inferring ownership from a title that happens to be close.\n\nThe Sigstore case pins ownership by DELEGATION and says so: `SigstoreProvenanceEvidence.bundle` is typed `unknown` on purpose and this package never parses it -- it hands the bundle to `@sigstore/verify`'s `toSignedEntity`/`Verifier`. So the bundle version this tree accepts is the library's (`@sigstore/bundle` ^5.0.0, `@sigstore/verify` ^4.1.2), not a constant of ours, and a case asserting a literal 'v0.3' would pin a string this tree does not have and go stale the moment the dependency moved.",
+      "sensitivityProof": {
+        "mutationDescription": "These cases pin a VOCABULARY, not behaviour, so the mutation that matters is the vocabulary changing: each assertion names a literal the tree carries (the two `SbomFormat` members, the `$schema` dialect URI, the major-only compatibility rule, the negotiation result keys, the mandatory/optional split). Renaming or removing any of those literals in the source reddens exactly the case that names it, because the case reads the value rather than a type.",
+        "failureSummary": "Verified by construction rather than by a separate mutation run, and stated as such: every assertion above is on a runtime VALUE the source produces (a document `format`, a `$schema` string read from disk, an error `code`, a result object's keys), so there is no path by which the case passes while the literal it names is absent. Where a claim could NOT be pinned to a value it is recorded as delegation rather than asserted -- the Sigstore bundle version is the library's, and the case says so instead of inventing a constant."
+      }
+    },
+    {
+      "epic": "P8-01",
+      "stage": "C",
+      "supplements": {
+        "epic": "P8-01",
+        "stage": "C"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/sdk/protocol",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "files": [
+        "packages/sdk/protocol/tests/version-negotiation.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-11T15:00:06Z",
+      "dryRunProof": {
+        "treeSha": "1c506bc30f050f0b6bdcae927f0caec35bdc5b25",
+        "testsDiscovered": 55
+      },
+      "expectCases": [
+        "negotiates a protocol version and a capability set as SEPARATE answers, the way MCP initialize does",
+        "follows the LSP ClientCapabilities pattern for OPTIONAL capabilities and deliberately breaks it for mandatory ones"
+      ],
+      "note": "Standards-vocabulary backfill (delegate notes 41-42). `verify-make-vs-use` carries a deadline that is a STATE rather than a date: an epic owning a standard by ASSIGNMENT owes one case naming that vocabulary before P2-05 starts, and P2-05 starting is something this repository can observe. These cases pin the vocabulary and nothing else -- no behaviour is added, and each asserts the SHAPE this tree takes rather than re-testing logic the epic's own frozen cases already own.\n\nEach entry in the epic's `standardsOwned` names the substring that proves it (`evidenceTitleSubstring`), so the gate checks auditable evidence instead of inferring ownership from a title that happens to be close.\n\nThe MCP case pins the SPLIT rather than either negotiation's logic, which the epic's own frozen cases already own: agreeing a version says nothing about capabilities, and neither answer carries the other's field. The LSP case pins where this tree STOPS following the pattern: an unknown optional capability is ignored, as LSP does, and an unknown MANDATORY one is fatal -- a peer requiring something this build never heard of cannot be safely ignored.",
+      "sensitivityProof": {
+        "mutationDescription": "These cases pin a VOCABULARY, not behaviour, so the mutation that matters is the vocabulary changing: each assertion names a literal the tree carries (the two `SbomFormat` members, the `$schema` dialect URI, the major-only compatibility rule, the negotiation result keys, the mandatory/optional split). Renaming or removing any of those literals in the source reddens exactly the case that names it, because the case reads the value rather than a type.",
+        "failureSummary": "Verified by construction rather than by a separate mutation run, and stated as such: every assertion above is on a runtime VALUE the source produces (a document `format`, a `$schema` string read from disk, an error `code`, a result object's keys), so there is no path by which the case passes while the literal it names is absent. Where a claim could NOT be pinned to a value it is recorded as delegation rather than asserted -- the Sigstore bundle version is the library's, and the case says so instead of inventing a constant."
+      }
     }
   ]
 }
