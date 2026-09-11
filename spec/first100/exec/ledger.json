@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-11T08:00:51.165Z",
-  "inputDigest": "a666b5cffc86b22713d1af5a37ca0a35a1b2e5f7a0a04b55b332cd9f16de5e20",
+  "lastUpdatedUtc": "2026-09-11T15:38:18.805Z",
+  "inputDigest": "0793074e9a76f6edb5b187c1d6c8fed9230583edddc0ec9519e77edc0be2f478",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -2462,11 +2462,33 @@
           "capturedAtUtc": "2026-09-10T16:56:34.663Z"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34573807027",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/3503e65b-c998-420f-8f07-74738632401b/scratchpad/ci-34573807027/first100-evidence-e74593c50a0306801c9d294e4eb45f2be7a8ec15/vitest-report.json",
+          "observationSha256": "a3ea0935ecbe37577256d148a42d8758593f1b8b34c05c9373f0895621814c82",
+          "expectCasesMatched": [
+            "P1-10 Fault — the module a plugin ships fault boundary 01 a migration module that THROWS on import is refused by name, not propagated",
+            "P1-10 Fault — the module a plugin ships fault boundary 02 a module exporting `descriptor` but no `migrate` is refused for the half it is missing",
+            "P1-10 Fault — the module a plugin ships fault boundary 03 a module exporting NEITHER is refused the same way, so the guard is not special-cased to one field",
+            "P1-10 Fault — the module a plugin ships fault boundary 04 a module exporting BOTH resolves, so the refusals above are not constant",
+            "P1-10 Fault — recovery runs BEFORE anything is installed fault boundary 13 a plugin that cannot be recovered stops the command by NAME, with nothing cleared",
+            "P1-10 Fault — recovery runs BEFORE anything is installed fault boundary 14 a recovery that succeeds reports the plugin and lets the command continue",
+            "P1-10 Fault — a superseded holder says who holds it now fault boundary 05 refuses to switch when superseded, NAMING the holder the lease reports",
+            "P1-10 Fault — a superseded holder says who holds it now fault boundary 06 reports the absence when the lease simply lapsed and nobody holds it",
+            "P1-10 Fault — a superseded holder says who holds it now fault boundary 07 a holder that still holds SWITCHES, so the refusal is not constant",
+            "P1-10 Fault — recovery when the medium lost what the record names fault boundary 08 a rollback target that is GONE is reported, not swallowed",
+            "P1-10 Fault — recovery when the medium lost what the record names fault boundary 09 a rollback target that is PRESENT is rolled back and the snapshot released",
+            "P1-10 Fault — recovery when the medium lost what the record names fault boundary 10 a FINISHED upgrade is not undone, whatever the medium still holds",
+            "P1-10 Fault — a medium primitive that fails mid-transaction fault boundary 11 a snapshot primitive that fails leaves the live unit alone",
+            "P1-10 Fault — a medium primitive that fails mid-transaction fault boundary 12 a materialize that fails leaves the live unit alone, having made no copy to strand",
+            "P1-10 Fault — a medium primitive that fails mid-transaction fault boundary 15 a copy that EXISTS when a later primitive fails is discarded, not stranded"
+          ],
+          "capturedAtUtc": "2026-09-11T07:59:26.104Z"
         }
       },
       "supplements": {},
-      "candidateSha": "e3004c927628128c91d5ad61b9ebf28930bee721",
+      "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -3563,20 +3585,95 @@
       "wave": 6,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34573807027",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/3503e65b-c998-420f-8f07-74738632401b/scratchpad/ci-34573807027/first100-evidence-e74593c50a0306801c9d294e4eb45f2be7a8ec15/vitest-report.json",
+          "observationSha256": "a3ea0935ecbe37577256d148a42d8758593f1b8b34c05c9373f0895621814c82",
+          "expectCasesMatched": [
+            "P2-05: the Cedar semantics this epic adopts an engine for (4.12.0, run not cited) DEFAULT DENY: an empty policy set denies, so nothing is permitted by omission",
+            "P2-05: the Cedar semantics this epic adopts an engine for (4.12.0, run not cited) permits when a policy permits, so default-deny is not \"always deny\"",
+            "P2-05: the Cedar semantics this epic adopts an engine for (4.12.0, run not cited) FORBID OVERRIDES PERMIT, whatever order the two policies are written in",
+            "P2-05: the Cedar semantics this epic adopts an engine for (4.12.0, run not cited) EXPLAINS with the matched policy ids, which is what must[3] redacts",
+            "P2-05: the Cedar semantics this epic adopts an engine for (4.12.0, run not cited) reports a malformed policy set as a FAILURE rather than as a deny",
+            "P2-05 must[1]: the decision set is closed treats ask as NOT allowed, so a pending human answer cannot be acted on",
+            "P2-05 must[1]: the decision set is closed carries the policy-set digest on every decision, including a refusal",
+            "P2-05 must[2]: a plugin may narrow a decision and never widen one turns a permit into a deny when ONE constraint objects",
+            "P2-05 must[2]: a plugin may narrow a decision and never widen one turns an ask into a deny, because a constraint is a condition and not a prompt",
+            "P2-05 must[2]: a plugin may narrow a decision and never widen one leaves a deny denied, whatever the constraints say",
+            "P2-05 must[2]: a plugin may narrow a decision and never widen one is ORDER-INDEPENDENT: the same constraints in any order give the same decision",
+            "P2-05 must[2]: a plugin may narrow a decision and never widen one cannot be handed a permitting constraint at all: the type carries no such shape",
+            "P2-05 must[2]: a plugin may narrow a decision and never widen one records every constraint reason even when the decision was already deny",
+            "P2-05 must[2]: a plugin may narrow a decision and never widen one leaves a permit permitted when no constraint objects, so the rule is not a constant",
+            "P2-05 acceptance[2]: losing the provider denies by name denies with policy-unavailable rather than falling open",
+            "P2-05 acceptance[2]: losing the provider denies by name names WHICH policy set it could not reach, so a replay can tell the two failures apart"
+          ],
+          "capturedAtUtc": "2026-09-11T07:59:24.495Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34573807027",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/3503e65b-c998-420f-8f07-74738632401b/scratchpad/ci-34573807027/first100-evidence-e74593c50a0306801c9d294e4eb45f2be7a8ec15/vitest-report.json",
+          "observationSha256": "a3ea0935ecbe37577256d148a42d8758593f1b8b34c05c9373f0895621814c82",
+          "expectCasesMatched": [
+            "P2-05 must[0]: the request translation routes a decision by the CAPABILITY the manifest names, not by a tool name",
+            "P2-05 must[0]: the request translation keeps the target KIND in the resource id, so a path and a command are different resources",
+            "P2-05 must[0]: the request translation exposes the declared context facts, including the absent execution world",
+            "P2-05 must[0]: the request translation distinguishes a declared side-effect class from a defaulted one",
+            "P2-05 must[3]: what the audit sees and what the model sees names the matched policy by ITS OWN id, from the id-to-source map",
+            "P2-05 must[3]: what the audit sees and what the model sees tells a forbid apart from nothing-permitted",
+            "P2-05 acceptance[1]: every decision carries the policy-set digest records the digest on a permit and on a deny alike",
+            "P2-05 acceptance[1]: every decision carries the policy-set digest changes the digest when a policy CHANGES, and not when the set is merely reordered",
+            "P2-05 acceptance[1]: every decision carries the policy-set digest does not confuse a set whose id and source were split differently",
+            "P2-05 acceptance[2]: a broken policy set is not a strict one maps a Cedar FAILURE to its own named deny, not to an ordinary refusal",
+            "P2-05 acceptance[2]: a broken policy set is not a strict one still tells an ordinary deny apart from that failure",
+            "P2-05 acceptance[2]: a broken policy set is not a strict one refuses to LOAD when the policy set does not parse",
+            "P2-05 acceptance[2]: a broken policy set is not a strict one unloads with its fiber, and a remount starts from the configured set again"
+          ],
+          "capturedAtUtc": "2026-09-11T07:59:24.769Z"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34573807027",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/3503e65b-c998-420f-8f07-74738632401b/scratchpad/ci-34573807027/first100-evidence-e74593c50a0306801c9d294e4eb45f2be7a8ec15/vitest-report.json",
+          "observationSha256": "a3ea0935ecbe37577256d148a42d8758593f1b8b34c05c9373f0895621814c82",
+          "expectCasesMatched": [
+            "P2-05 acceptance[2]: losing the provider mid-session denies by name permits while the provider is mounted, and denies `policy-unavailable` after it unmounts",
+            "P2-05 acceptance[2]: losing the provider mid-session denies by name records WHICH policy set it could not reach, so a replay can tell the two failures apart",
+            "P2-05 acceptance[0]: one PEP, whichever originator dispatches refuses a forbidden tool on the NATIVE path, with the audit naming the matched policy",
+            "P2-05 acceptance[0]: one PEP, whichever originator dispatches decides every dispatch against the same manifest the log records",
+            "P2-05 acceptance[0]: one PEP, whichever originator dispatches lets the KERNEL bind: a kernel deny refuses a call the policy permitted",
+            "P2-05 acceptance[0]: one PEP, whichever originator dispatches runs with no policy service at all exactly as it did before this epic",
+            "P2-05 must[2]: a plugin constraint narrows and never widens turns a permitted call into a deny, and records the constraint reason for the audit",
+            "P2-05 must[2]: a plugin constraint narrows and never widens stops constraining when its plugin unmounts",
+            "P2-05 acceptance[2]: a policy set that does not parse refuses to load fails the mount loudly rather than deciding with a broken set",
+            "P2-05 must[0]: the capability token is a policy input, not a placeholder decides by the CAPABILITY the presented token carries",
+            "P2-05 must[0]: the capability token is a policy input, not a placeholder permits the same action when the policy accepts the token that was presented",
+            "P2-05 must[0]: the capability token is a policy input, not a placeholder refuses when NO token was presented and the policy requires one"
+          ],
+          "capturedAtUtc": "2026-09-11T07:59:25.034Z"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34573807027",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/3503e65b-c998-420f-8f07-74738632401b/scratchpad/ci-34573807027/first100-evidence-e74593c50a0306801c9d294e4eb45f2be7a8ec15/vitest-report.json",
+          "observationSha256": "a3ea0935ecbe37577256d148a42d8758593f1b8b34c05c9373f0895621814c82",
+          "expectCasesMatched": [
+            "P2-05 fault: a kernel with no decider refuses what the engine permitted denies `policy-unavailable` against the real policy set, not the empty one",
+            "P2-05 fault: a kernel with no decider refuses what the engine permitted permits the same action once the deployment decider is wired, so the refusal above is the placeholder",
+            "P2-05 fault: a constraint that throws is that constraint's own deny refuses `constrained-by-plugin` rather than letting the exception escape the enforcement point",
+            "P2-05 fault: a constraint that throws is that constraint's own deny names the constraint that threw and carries its message, so an operator is not left with an anonymous refusal",
+            "P2-05 fault: a constraint that throws is that constraint's own deny leaves the other constraints' composition unchanged, in either registration order",
+            "P2-05 fault: a constraint that throws is that constraint's own deny control: a constraint that returns a reason still narrows a permit, so the cases above are not \"constraints are broken\""
+          ],
+          "capturedAtUtc": "2026-09-11T07:59:25.307Z"
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -6964,22 +7061,76 @@
           "capturedAtUtc": "2026-09-07T06:50:48.248Z"
         },
         "P": {
-          "status": "NOT_RUN",
-          "revokedFrom": {
-            "candidateSha": "491acfd8eb9cd40330eb52bfe0c74220697a36e8",
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33807228116",
-            "absentCommitments": 1
-          },
-          "revokedReason": "The §12.79 memory slice re-froze this stage (17 cases to 31) at 3958b1474d, and the green was observed on tree 491acfd8eb, which predates those entries. A freeze written after its observation is not a pre-commitment, so the cell returns to NOT_RUN pending re-observation."
+          "status": "GREEN",
+          "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34573807027",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/3503e65b-c998-420f-8f07-74738632401b/scratchpad/ci-34573807027/first100-evidence-e74593c50a0306801c9d294e4eb45f2be7a8ec15/vitest-report.json",
+          "observationSha256": "a3ea0935ecbe37577256d148a42d8758593f1b8b34c05c9373f0895621814c82",
+          "expectCasesMatched": [
+            "P-stage durability: a record outlives the provider instance that wrote it a second provider instance over the same directory reads back a record the first instance proposed",
+            "P-stage durability: a record outlives the provider instance that wrote it a provider instance over a different directory does not see the first directory's record — durability is per-directory, never process-global",
+            "P-stage durability: a record outlives the provider instance that wrote it a revise() by one instance is the content a later instance reads back",
+            "P-stage durability: a record outlives the provider instance that wrote it a forget() by one instance stays forgotten for a later instance, while a sibling record it did not forget stays readable",
+            "P-stage durability: a record outlives the provider instance that wrote it query() from a later instance finds an earlier instance's record by case-insensitive substring",
+            "P-stage durability: a record outlives the provider instance that wrote it query() from a later instance returns no records for a term absent from every stored record",
+            "P-stage durability: a record outlives the provider instance that wrote it a second instance mints ids distinct from every id the first instance minted, and both records remain readable",
+            "P-stage durability: a record outlives the provider instance that wrote it export() over a directory with no backing file yet resolves zero records rather than throwing",
+            "P-stage durability: a record outlives the provider instance that wrote it a record read back by a later instance is exactly {id, principal, content, updatedAt}, with the principal round-tripped unchanged",
+            "must[3]: every read is scoped — the durable provider filters by the read's scope export() scoped to one tenant returns that tenant's record and never the other tenant's, from the same backing directory",
+            "must[3]: every read is scoped — the durable provider filters by the read's scope get() resolves undefined for a record id proposed under a different tenant, even though the id exists in the same backing file",
+            "must[3]: every read is scoped — the durable provider filters by the read's scope export() scoped to one sessionId returns only that session's record, while a tenant-wide scope naming no sessionId returns both",
+            "must[3]: every read is scoped — the durable provider filters by the read's scope revise() rejects an id proposed under a different tenant with MEMORY_RECORD_NOT_FOUND, leaving the record's content untouched",
+            "must[3]: every read is scoped — the durable provider filters by the read's scope revise() rejects an id that was never proposed in any tenant with MEMORY_RECORD_NOT_FOUND",
+            "must[3]: every read is scoped — the durable provider filters by the read's scope query() at exactly contextBudget.maxRecords returns every match untruncated",
+            "must[3]: every read is scoped — the durable provider filters by the read's scope query() one record over contextBudget.maxRecords truncates to the budget and flags truncated",
+            "must[1]: the durable provider is one interchangeable backend among others with providerId pinned to durable-file alongside a registered in-memory fake, the record is written durably and read back by a later instance",
+            "durable memory is written for its owner only creates the directory 0700, so nothing else on the host can traverse into it",
+            "durable memory is written for its owner only writes the document 0600, which the directory mode does not do for it",
+            "memory is scoped to the workspace that wrote it does not recall another workspace of the same tenant",
+            "memory is scoped to the workspace that wrote it recalls its own workspace, so the refusal above is not a blanket one",
+            "memory is scoped to the workspace that wrote it does not inherit the memories of a directory it replaced: same path, new identity",
+            "memory is scoped to the workspace that wrote it a reader naming NO workspace sees only records written without one",
+            "a stored record carries the origin its writer stated refuses a version-1 document by name rather than reading it as origin-less",
+            "a stored record carries the origin its writer stated fixes an asserted claim at confidence 1 without the caller stating one",
+            "a stored record carries the origin its writer stated stores an inferred claim at the confidence its writer stated, not a house number",
+            "a rebuilt workspace can be recognized without being read counts what the displaced directory left, so a consumer can say so",
+            "a rebuilt workspace can be recognized without being read returns a NUMBER and nothing else, so it is not a way around the scope check",
+            "a rebuilt workspace can be recognized without being read does not count another TENANT's records at the same path",
+            "a rebuilt workspace can be recognized without being read does not count a record written at a DIFFERENT path",
+            "a rebuilt workspace can be recognized without being read counts nothing when the path is untouched, so the count is not constant"
+          ],
+          "capturedAtUtc": "2026-09-11T07:59:25.576Z"
         },
         "U": {
-          "status": "NOT_RUN",
-          "revokedFrom": {
-            "candidateSha": "8f4988bf0bf4332a359a8f251ee6e5d8c44752dd",
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33842580751",
-            "absentCommitments": 1
-          },
-          "revokedReason": "The §12.79 memory slice re-froze this stage (13 cases to 21) at 3958b1474d, and the green was observed on tree 8f4988bf0b, which predates those entries. A freeze written after its observation is not a pre-commitment, so the cell returns to NOT_RUN pending re-observation."
+          "status": "GREEN",
+          "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34573807027",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/3503e65b-c998-420f-8f07-74738632401b/scratchpad/ci-34573807027/first100-evidence-e74593c50a0306801c9d294e4eb45f2be7a8ec15/vitest-report.json",
+          "observationSha256": "a3ea0935ecbe37577256d148a42d8758593f1b8b34c05c9373f0895621814c82",
+          "expectCasesMatched": [
+            "memory-context through the production headless profile boots the shipped profile with the base bundle memory rows enabled and no unhandled failure",
+            "memory-context through the production headless profile memory/access is a known session event type, so a real log carrying it replays",
+            "memory-context through the production headless profile a log written with memory/access is read back by replay, not refused",
+            "memory-context through the production headless profile recalled memory reaches the model as a durable, source-attributed user message",
+            "memory-context through the production headless profile the same run records a memory/access read event carrying the complete access context",
+            "memory-context through the production headless profile model-visible memory is logged: every recalled record the model saw is reconstructable from the log alone",
+            "memory-context through the production headless profile recalls only the workspace this session runs in, on a launched profile",
+            "memory-context through the production headless profile memory content never reaches the model outside a logged injection",
+            "an empty recall costs the model nothing hands the model bytes identical to a boot with the memory rows disabled",
+            "an empty recall costs the model nothing still records the read that returned nothing, so silence is not an unlogged read",
+            "resolveMemoryAccessContext carries all four read-scoping dimensions from config when the agent has no attached identity",
+            "resolveMemoryAccessContext prefers the agent's durably attached principal over the configured fallback id",
+            "resolveMemoryAccessContext never reads across tenants: the scope tenant is the configured one, not the attached principal's",
+            "renderMemoryContext returns undefined for an empty recall so no empty snapshot is ever injected",
+            "renderMemoryContext renders each recalled record's content as text the model can read",
+            "renderMemoryContext states that the recall was cut to the caller's budget when the seam truncated it",
+            "announceRebuiltWorkspace tells the session once that its workspace path holds an earlier occupant's memory",
+            "announceRebuiltWorkspace does not repeat itself on a later recall in the same session",
+            "announceRebuiltWorkspace stays silent when nothing was displaced, so a session does not claim a rebuild it never had",
+            "announceRebuiltWorkspace carries a count and a path and no record content, so it is not a read of what it reports",
+            "announceRebuiltWorkspace says nothing at all when the session has no workspace to compare"
+          ],
+          "capturedAtUtc": "2026-09-11T07:59:25.843Z"
         },
         "F": {
           "status": "GREEN",
@@ -7020,7 +7171,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+      "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
