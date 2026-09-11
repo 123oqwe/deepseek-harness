@@ -21,6 +21,22 @@ Measured while writing `verify-import-integrity` (2026-09-10, lane B). **Measure
 
 **Closes when** either the Client face's resolution contract is explicitly taken over by some epic's clause — naming the consumption paths it guarantees — or those 320 edges are put into the manifests. Not decided in this slice.
 
+### BLOCKED-198 — readiness: whichever epic builds a memory index must ask `admitToIndex` before it indexes
+
+Recorded before that epic starts, per §12.46-B's split of P6-02 must[2]. Not a blocker on P6-02's own clauses; a requirement the index-building epic inherits, written down so it is met by design rather than discovered afterwards — and an embedding is the worst possible place to discover it, because a sensitive record wrongly indexed cannot be un-indexed once something derived from it has been written.
+
+**The clause.** P6-02 must[2]: *"敏感字段不进入 embedding/索引除非 policy 允许"*. Its decision is `admitToIndex` (`memory/src/provenance.ts:69`), which is correct and complete — default-deny for sensitive content, admit when the policy explicitly permits, and **refuse an unstated sensitivity with its own reason** (`sensitivity-unstated`), because an unstated sensitivity is not `normal`: nobody looked.
+
+**The split.** The DECIDING half is P6-02's and is proven at its Contract stage. The CONSUMING half needs an index, and this build has none. Measured rather than assumed: wiring the decision into `query()` withholds every record whose writer stated no sensitivity, and **no shipped writer states one** — `dsh-memory-context`, the seam's only consumer, does not — so memory-on-by-default would recall nothing at all. That experiment turned seven existing cases red, including the workspace-scope ones, and is what produced this entry.
+
+**Why `query()` is not the index.** It scans records the caller is already entitled to read (`inScope` has filtered them), and `get()` by id and `export()` hand the same record over regardless. Withholding there does not prevent a disclosure; it stops a record's owner from finding their own record by searching. The clause names an embedding or index — a DERIVED artifact that outlives the decision — and refusing to put sensitive content into one is a different act from refusing to match it in a scan.
+
+**`landsIn` is proposed as unowned.** Checked rather than guessed, over the registry rather than by recollection: `P6-01` explicitly declines to name a vector or graph store; `P6-03` *presupposes* an index in both its must (*"传播到索引"*) and its acceptance (*"forget 后主存、索引、cache、projection 在 SLA 内清除"*) without building one; `P6-04` plans retrieval over sources that already exist. **No registry epic builds a memory embedding or index.** P6-03 is the nearest candidate, and the tie is stronger than a topical one: its acceptance[1] cannot be met at all until an index exists for erasure to propagate into. If the delegate prefers to attach this rather than leave it open, P6-03 is where it goes.
+
+**Closing condition.** An epic constructs a memory embedding or index, calls `admitToIndex` before writing into it, and freezes two cases: content the policy does not admit does not enter, and **content whose sensitivity nobody stated does not enter**. The second is the one this entry exists for; the first would probably be written anyway.
+
+**What this does not change.** P6-02 acceptance[1] IS wired and consumed today — expired and revoked records leave the default search through `isDefaultRetrievable`. must[2] is the only clause of this epic with a subject and no consumption point, and P6-02.U records that absence as an observation (`the default search still returns content whose sensitivity nobody stated`) rather than as a comment, so the day someone wires the decision into the search, that case goes red and this entry has to be re-read first.
+
 ### BLOCKED-194 — P2-05 must[3]: the audit recorded the decision the kernel then overrode, so a veto was never logged
 
 **Status: FIXED in this slice.** Found while writing P2-05's Fault-stage case for a kernel with no `policyDecider`: the case asserted the audit record showed the refusal, and went red showing `permit`.

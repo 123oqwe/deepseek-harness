@@ -164,6 +164,32 @@ describe('P6-02 must[2]: sensitive content stays out of an index unless policy a
       expect(admitToIndex(record('m1'), { allowSensitive })).toEqual({ indexable: true })
     }
   })
+
+  it('withholds content whose sensitivity NOBODY stated, whatever the policy says', () => {
+    // An unstated sensitivity is not `normal`: nobody looked. Admitting it
+    // would make saying nothing the cheapest way into an index, which is the
+    // direction this rule exists to refuse. `MemoryProposeRequest` leaves the
+    // field optional because no shipped writer can derive it, so unstated is
+    // the common case rather than an edge one.
+    for (const allowSensitive of [true, false]) {
+      expect(admitToIndex({}, { allowSensitive }))
+        .toEqual({ indexable: false, reason: 'sensitivity-unstated' })
+    }
+  })
+
+  it('tells an unstated sensitivity apart from an assessed one, rather than reporting an assessment nobody made', () => {
+    // The two refusals carry different reasons on purpose. Only one of them is
+    // something a writer can fix by stating the field, and saying "refused as
+    // sensitive" about a record nobody assessed reports an assessment that
+    // never happened — the same argument `decideCrossScopeMerge` makes for
+    // keeping a tenant crossing and a session crossing apart.
+    const unstated = admitToIndex({}, { allowSensitive: false })
+    const assessed = admitToIndex(record('m1', { sensitivity: 'sensitive' }), { allowSensitive: false })
+    expect(unstated).not.toEqual(assessed)
+    expect(unstated).toMatchObject({ reason: 'sensitivity-unstated' })
+    expect(assessed).toMatchObject({ reason: 'sensitive-not-permitted' })
+  })
+
 })
 
 describe('P6-02 validation[1]: a malformed record is refused rather than stored', () => {

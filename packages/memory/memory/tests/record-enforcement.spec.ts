@@ -178,3 +178,36 @@ for (const [label, createProvider] of providers) {
     })
   })
 }
+
+/**
+ * P6-02 must[2] has a subject and no consumption point in this build.
+ *
+ * `admitToIndex` decides correctly — the Contract stage pins that, including
+ * its refusal of an unstated sensitivity — and nothing asks it. This build
+ * constructs no embedding and no index; `query()` scans records the caller is
+ * already entitled to read, which is not the derived artifact the clause
+ * names, and `get()`/`export()` hand the same record over regardless.
+ *
+ * The case below records that absence as an observation rather than a
+ * comment, so it is the thing that goes red the day someone wires the
+ * decision into the search. That is not a regression to fix by deleting this
+ * case: it is the ruling (BLOCKED-198) asking to be re-read, because applying
+ * the rule there withholds every record whose writer stated no sensitivity —
+ * and no shipped writer states one, `dsh-memory-context` included.
+ */
+for (const [label, createProvider] of providers) {
+  describe(`P6-02 must[2] through the seam: the ${label} provider has no index to admit to`, () => {
+    it(`${label}: the default search still returns content whose sensitivity nobody stated`, async () => {
+      const memory = await mount(createProvider())
+      await memory.propose({
+        origin: { kind: 'user-asserted', assertedBy: 'operator' },
+        principal,
+        scope,
+        content: { note: 'unassessed-token' },
+      })
+
+      const found = await memory.query({ accessContext, query: 'unassessed-token' })
+      expect(found.records).toHaveLength(1)
+    })
+  })
+}
