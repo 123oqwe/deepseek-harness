@@ -21,6 +21,29 @@ Measured while writing `verify-import-integrity` (2026-09-10, lane B). **Measure
 
 **Closes when** either the Client face's resolution contract is explicitly taken over by some epic's clause — naming the consumption paths it guarantees — or those 320 edges are put into the manifests. Not decided in this slice.
 
+### BLOCKED-195 — P2-04's registry stage-U names two same-named, unrelated `types.ts`, so gate (u) reports a gap the epic does not have
+
+**Status: EXEMPTED, epic stays ACCEPTED.** Ruling §12.85 note 8; the entry is in [`usage-subject-exemptions.json`](usage-subject-exemptions.json). Recorded because a registry row that misdescribes its own epic will mislead the next reader the same way, and an exemption without the measurement behind it is just a silenced gate.
+
+**What the registry declares.** P2-04's stage-U `[B]` files are `packages/interaction/permission-presets/src/types.ts` and `packages/core/tools/src/types.ts`.
+
+**What those two files hold.** Neither contains any of this epic's vocabulary. The first states its own job in its module header — *"the ONE home of the `permissions` projection-key declaration"* — and exports `PresetOption` and `PermissionSelect`, which are UI projection payloads. The second exports `PtcDispatchStartEventData` and `PtcDispatchEventData`. Grepping either for `riskDomainTags`, `RiskDomainTag`, `riskClass` or `sideEffect` returns nothing at all.
+
+**Where the vocabulary actually lives.**
+
+| thing | where |
+| --- | --- |
+| `riskDomainTags` declared on the tool type | `core/tools/src/schema.ts:502,587`, `core/tools/src/index.ts:279` |
+| the classification consumed | `core/tools/src/external-effect.ts:200-205` — `gateActionRisk` calls `presets.classifyAction` |
+| `classifyAction` implemented | `permission-presets/src/index.ts:387` |
+| the two dispatch sites | `core/agent-loop/src/tool-calls.ts:270`, `core/tools/src/ptc.ts:693` |
+
+**The consumer is real, reached, and already frozen.** Both dispatch sites sit inside this epic's live U entries' `files`, along with `external-effect.ts`, `tools/src/index.ts`, `schema.ts` and `permission-presets/src/index.ts`. So gate (u) is **technically correct and substantively misreporting**: it reads the registry's `[B]` list, and that list names two files that share a name with the right ones and share nothing else.
+
+**Why exempted rather than corrected at the source.** `tests/first100/registry.json` is extracted byte-identically from the pinned source matrix — `first100:verify-registry-extraction` checks exactly that — so fixing the stage-U list means editing the source matrix. That is outside an executor's authority, and it is not P2-04's decision to make alone.
+
+**Closes when** the source matrix's stage-U list for P2-04 names the files the epic's vocabulary is actually in, at which point the exemption can go. Until then the exemption carries the measurement so the mismatch is documented rather than merely quiet.
+
 ### BLOCKED-198 — readiness: whichever epic builds a memory index must ask `admitToIndex` before it indexes
 
 Recorded before that epic starts, per §12.46-B's split of P6-02 must[2]. Not a blocker on P6-02's own clauses; a requirement the index-building epic inherits, written down so it is met by design rather than discovered afterwards — and an embedding is the worst possible place to discover it, because a sensitive record wrongly indexed cannot be un-indexed once something derived from it has been written.
