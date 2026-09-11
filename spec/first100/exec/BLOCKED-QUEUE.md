@@ -5071,3 +5071,155 @@ The same eight, by the same names, fail in the lane-B tree. Base and tip agree c
 **Owner: not attributable from the records, and deliberately not guessed** — the rule BLOCKED-176 already applies. `tests/first100/registry.json` names no epic for either file, and both predate this program's slices.
 
 **Closing condition, in two steps.** First decide whether the red is this machine or every machine: the measurement above is one macOS host, and a timing-out Playwright wait is the failure mode most likely to be host-local. Run the two files on a second machine, or in the container the exact-SHA workflow uses, before touching either fixture. Second, whatever the answer, give the `.e2e.ts` corpus a signal that runs — otherwise the next person measures this again from scratch, which is the cost BLOCKED-109 was opened to stop paying.
+
+### BLOCKED-206 — `acceptance-coverage.schema.json` was never executed, and the file had already drifted away from it
+
+**Status:** FIXED 2026-09-11, owner lane B, lands in lane B's next candidate. Opened and closed in one slice because the fix is mechanical and the drift it found was already real.
+
+`spec/first100/exec/acceptance-coverage.schema.json` declares `additionalProperties: false` on an entry and a closed `C|P|U|F` enum on a citation's `stage`. Nothing executed it. A repository-wide search for the schema's filename returns two files: the schema itself, and `delegate-signoff.json` — which references it in prose, not in code. No script compiled it, and `generate-ledger.mjs`'s `checkCoverageClosure` reads the document's fields directly without validating its shape.
+
+**The drift was not hypothetical.** Two P4-09 entries carried an undeclared `status` field:
+
+| entry | `status` | what its own note said |
+|---|---|---|
+| P4-09 acceptance[1] | `"NOT COVERED"` | "COVERED since U.2. The prior note recorded this as NOT COVERED and was right when written… Re-checked at §12.48-A" |
+| P4-09 acceptance[2] | `"DECISION LEVEL ONLY"` | a "Status qualified 2026-09-06" paragraph saying the same thing in prose |
+
+The field arrived in `2c9ddf323c` (2026-09-05, BLOCKED-100's filing). The prose was corrected in `22226a389e` (2026-09-08), when acceptance[1] became covered by U.2 — **and the field was not**, because no reader consulted it. So for three days the artifact stated both `NOT COVERED` and `COVERED since U.2` about the same clause, and the machine-readable half was the false one.
+
+**Why this is worth a number rather than a quiet fix.** `delegate-signoff.json` carries, on three separate epics, the note "(i) coverage closure re-run against **the real acceptance-coverage schema**". That verification was performed against a schema no code had ever applied. The schema was not wrong — the file had simply stopped matching it, and nothing could say so. This is BLOCKED-189's rule in another direction: there, an instrument depended on the thing whose absence it measured; here, a declared contract had no executor at all, which is the same failure to make a claim checkable.
+
+**The fix, in three parts.**
+
+1. **Both `status` fields are deleted, and the schema does NOT gain a `status` property.** acceptance[1]'s value was false; acceptance[2]'s was a duplicate of its own note. A machine-readable field with no consumer is a second copy of the truth that nothing keeps honest, which is precisely how this defect was produced — adding it to the schema would legitimise the mechanism rather than close it.
+2. **The schema is executed in exactly one place**: `generate-ledger.mjs`'s `cmdCheck`, which is already the drift detector for the EXEC-STATE digests, now compiles the schema with Ajv's 2020-12 build (the draft the schema declares) and refuses a non-conforming document. `validateAcceptanceCoverage` is exported and pure so the predicate is testable without the CLI. Verified by sensitivity: re-adding `status` to one entry makes `--check` exit 1 naming `/entries/70` and the offending property, and removing it returns exit 0.
+3. **Three unit cases** in `generate-ledger.spec.ts`: an entry with an undeclared field is refused, a citation naming a stage outside `C|P|U|F` is refused, and the real `acceptance-coverage.json` is admitted — the positive control, without which a predicate that rejected everything would look identical.
+
+**One thing this slice also corrected, found while removing the fields.** P4-09 acceptance[2]'s note twice deferred to acceptance[1] for its "decision-level limit" — a cross-reference that stopped holding the moment acceptance[1] became covered at U.2. The limit is now stated directly on the entry that has it. Same drift as the `status` field, in prose rather than in a field, and it survived for the same reason: nothing reads a cross-reference either.
+
+**A correction to lane B's own earlier report.** This finding was first reported with the claim that `ajv` was not installed. It is — `package.json` carries `"ajv": "^8.20.0"`. The probe was `node -e "require.resolve('ajv')"` in an ESM-only repository, which fails for the module system rather than for the dependency. A failed probe was reported as a measurement; the delegate caught it. The fix above depends on `ajv` being present, so the error would have blocked the obvious repair.
+
+### BLOCKED-207 — `@deepseek-ai/dsh-headless` publishes two entry points and not the chunk they both import
+
+**Status:** FIXED 2026-09-11, owner lane B. User-visible, not merely a self-consistency debt — the measurement below was taken first, because the delegate's ruling made the severity conditional on it.
+
+**It is published.** `private` is absent, `publishConfig` is `{"access": "public"}`, and the dsh release family's own pattern — `packages/!(experimental)/*/package.json` in `scripts/release/families.ts` — selects `packages/bundle/headless`. So this package is packed by `release:pack --family dsh` and published with the family.
+
+**What shipped.** `files[]` listed its two entry points one by one:
+
+```
+"files": ["lib/index.js", "lib/startup.js", "cordis.patch.yml", "lib/types/**/*.d.ts"]
+```
+
+Both `lib/index.js` and `lib/startup.js` import `./stream-json-Cgk-kN_P.js`, the shared chunk tsdown emits for the code they have in common. It was in no pattern. `npm pack --dry-run` confirmed the tarball at 12 files carrying `lib/types/stream-json.d.ts` — the chunk's *types* — and not the chunk itself, so the published package fails on first import while looking complete to anything that only reads type declarations.
+
+**Why no gate caught it.** `release/pack.ts` calls `family.validatePayload`, which checks the tarball's own file list and does not resolve the imports inside the files it packs. publint does resolve them, and publint's 2 lines about this sat inside 281 lines whose other 279 are the repo-wide `exports["./src/*"]` warning — the noise was the cover. That is the practical argument for not silencing the `./src/*` rule where it stands.
+
+**The fix, and why it is a glob rather than a filename.** `files[]` gains `lib/stream-json-*.js`. The observed name is `stream-json-Cgk-kN_P.js` — a module name plus an eight-character suffix. **That the suffix is derived from the chunk's contents, and therefore changes when they do, is NOT measured here**: `lib/` is gitignored so the name has no history to read, and confirming it would need a rebuild. The glob is right either way, which is why the unverified claim was not worth resolving: a literal filename breaks on any rename of that file, content-derived or not, and the glob costs nothing. Measured before and after: 12 files without the chunk, 13 with it.
+
+**A second gate had to move with it, and finding that out is the useful part.** `files[]` is not free-form here: `expectedDshPackageFiles` in `scripts/check-workspace-constraints.ts` DERIVES the expected list from a package's entry points and requires an exact match, so the first attempt — replacing the enumerated entries with a plain `lib/*.js` — fixed publint and turned the `constraints` gate red instead. The derivation cannot know a chunk exists; one of its own comments ("single-entry builds; no shared chunk") records the assumption. The in-design answer is `packageFileExtras`, the table that already exists for artifacts the derivation cannot infer (CSS sheets, `.py` sources, the preset roster), so headless gets an entry there and its `files[]` matches the derivation again.
+
+**Why a precise glob rather than `lib/*.js`.** A DIFFERENT shared module would emit a differently-named chunk that `lib/stream-json-*.js` misses. That is acceptable only because the miss is caught mechanically rather than silently: `publicationClosureViolations` resolves every relative import in each packed file against the packed set, which is exactly how this defect surfaced. A broad `lib/*.js` would instead publish whatever lands in `lib/`, which is the opposite of what this policy is for.
+
+**Evidence:** `npm pack --dry-run` lists `lib/stream-json-Cgk-kN_P.js`; `pnpm run publint` reports 0 lines for this package, down from 2, and **the whole gate now exits 0** where it exited 1 before.
+
+**That last number corrects something lane B reported earlier in this program.** The `./src/*` lines were described as violations alongside these two, making publint look like a 281-line failure. They are not: `scripts/publint-all.ts` fails a package on `messages.some(message => message.type === 'error')` or a non-empty `publicationClosureViolations`, and the `./src/*` message is a publint **warning**, printed and never fatal. The only thing failing `pnpm run publint` at `a6aecdb282` was this package's two closure violations — which are not publint's own finding either, but the repository's own `publicationClosureViolations`, the check that reads each packed JS file and resolves its relative imports against the packed set. So the repo had already built the instrument that catches this class; it simply had one real hit sitting under 279 lines of warning. Nothing needs silencing for the gate's sake: the `./src/*` question is about printed noise and about whether 279 dangling exports in published tarballs are acceptable, not about a red gate.
+
+**Whether CI installed the broken tarball and said nothing is NOT yet measured.** `@deepseek-ai/dsh-headless` is a dependency of the published `@deepseek-ai/dsh` (`apps/cli/package.json`), so `first100-exact-sha.yml`'s `release:verify-packed-install` step does a real npm install that includes it. That step's probe runs one entry — `installedEntry` is `{ packageName: '@deepseek-ai/dsh', binPath: 'lib/bin.js' }` — and whether loading that bin reaches headless's entry depends on whether profiles load lazily, which this entry does not assert either way. Settling it costs one full pack plus packed install at a pre-fix SHA; deferred deliberately rather than guessed, because "CI could have caught this" and "CI installed it and the probe never touched it" are different findings with different fixes.
+
+**Only this package produces a shared chunk today, re-measured 2026-09-11.** Of its five siblings under `packages/bundle/`, four emit `lib/index.js` alone and ONE — `web-app` — emits `lib/index.js` and `lib/startup.js` with no chunk beside them. (An earlier revision of this entry said two siblings ship `startup.js`; that was wrong, counting headless itself among its own siblings.) So a second entry point does not by itself produce a chunk — `web-app` has two and hoists nothing — and what produced one here is shared code between the two entries. A sibling that later grows shared code inherits this defect, and the glob is the shape that survives it.
+
+### BLOCKED-208 — eighteen first-100 packages entered the preset closure without entering the Python SDK runtime's dependencies
+
+**Status:** FIXED 2026-09-11, owner lane B.
+
+`verify-runtime-closure` requires every plugin a shipped agent preset references, and every required workspace peer in its dependency graph, to appear in `python/sdk-runtime/package.json`'s `dependencies`. With automatic peer installation disabled, an omission surfaces only when Cordis loads the packaged plugin inside the built executable — which is to say, at a user's runtime rather than in any check.
+
+**34 missing edges across 18 packages**, every one of them a package this program created: `action-ledger`, `capability-token`, `control-priority`, `intake-dedup`, `lease-contract`, `message-bus`, `plugin-ownership`, `policy-enforcement`, `policy-engine`, `principal`, `retry`, `risk-taxonomy`, `schema-registry`, `taskboard`, `trust-kernel`, `workflow-journal`, `workflow-registry`, `workspace-trust`. Each arrived as an epic's new package, was picked up by a preset or by another package's required peers, and the runtime manifest — a hand-maintained list, then 126 entries — was never extended. This is the program's own debt and is attributable package by package.
+
+**Fixed** by adding all 18 as `workspace:^` dependencies (126 → 144) and refreshing the lockfile with `pnpm install --lockfile-only`, which is the only generated artifact involved: `python/sdk-runtime` holds no lockfile or generated manifest of its own, and the built executable's payload is assembled from `python/sdk-runtime/node_modules` at build time by `scripts/build-exe-for-python-sdk.ts`. `verify-runtime-closure` now reports 4 agent presets and 147 workspace packages forming a closed graph — 34 violations to 0.
+
+**Why no CI run said so, which is the part worth keeping.** Measured at `a6aecdb282`:
+
+- **`pnpm run hygiene` runs in no workflow at all.** A search across `.github/workflows/` returns nothing.
+- **`verify-runtime-closure` and `verify-package-invariants` run in no workflow either.** Neither appears in any CI gate set; `ci-consumers` runs `built-package-invariants`, which is a different gate over built output.
+- **`publint` IS wired** into `ci-primary`, `ci-consumers` and `ci-artifacts` — but `ci.yml` triggers only on `pull_request`, and this program works on a fork branch where it does not run. The same gap is already recorded against the web corpus in the exact-SHA workflow's own comment ("`ci.yml` does not run on the fork branch").
+
+So the answer to "three red gates and CI green" is neither "it ran and was allowed to fail" nor a single cause: two of the three run nowhere in CI, and the third runs only in a workflow this program's branch never triggers. Same shape as BLOCKED-204's `*.e2e.ts` corpus — a gate that exists, passes locally in nobody's loop, and is invisible to every signal the program consumes.
+
+### BLOCKED-210 — fifteen hygiene gates ran in no workflow this program consumes
+
+**Status:** FIXED 2026-09-11, owner lane B.
+
+`first100-exact-sha.yml` is the only signal this program consumes, and it never ran `pnpm run hygiene`. Measured at `a6aecdb282`:
+
+- **`pnpm run hygiene` appears in no workflow.** A search across `.github/workflows/` returns nothing.
+- **`verify-runtime-closure` and `verify-package-invariants` are in no CI gate set at all.** `ci-consumers` runs `built-package-invariants`, a different gate over built output.
+- **`publint` IS wired** into `ci-primary`, `ci-consumers` and `ci-artifacts` — but `ci.yml` triggers on `pull_request` only, and this program works on a fork branch that never fires it. The exact-SHA workflow's own comment already records that gap for the web corpus: "`ci.yml` does not run on the fork branch".
+
+So fifteen gates were invisible. Two defects found the moment they were run: BLOCKED-207 (a published package whose two entry points import a chunk `files[]` did not publish) and BLOCKED-208 (eighteen packages in the preset closure missing from the Python SDK runtime's dependencies).
+
+**The fix** adds one step, `pnpm run hygiene`, with `DSH_GATE_FAIL_FAST: '1'` so a red gate aborts its siblings rather than spending CI minutes on readers whose answers no longer matter.
+
+**Its position — immediately after Build — is load-bearing, not conventional.** `publicationFiles` globs each package's `files[]` patterns against the real directory, so before a build there is no `lib/` and the publication-closure check has no JS to scan. Measured on a clean unbuilt worktree at `3ea5dc60b9`: **0 `does not publish` lines** — the exact check that caught BLOCKED-207, sitting silent with nothing to report.
+
+The gate is not green there, which is the second half of the measurement: the same run **exits 1** on publint's own `FILE_DOES_NOT_EXIST` errors, four per package across all 291 (`pkg.main`, `pkg.types`, `pkg.exports["."].default`, `pkg.exports["."].types`) — 1,164 lines whose whole content is "you did not build". So the two instruments do independently refuse, and that was measured rather than assumed.
+
+**That coverage is a dependency on `publint@0.3.21`'s current behaviour, named here so a later reader can check it.** `scripts/publint-all.ts` fails a package on `messages.some(m => m.type === 'error')` or a non-empty `publicationClosureViolations`. If a later publint stops reporting missing entry files as errors, the closure check's silence before a build stops being covered and this reasoning must be re-measured — not assumed to still hold.
+
+**No guard was added for the silent-closure case, and that is a reversal worth recording.** The first plan was to fail the closure check when it had nothing to measure. Two measurements killed it. The criterion first proposed — non-empty `files[]` matching zero files — never fires: headless still matched four files on an unbuilt tree, because `cordis.patch.yml` is a committed source file and `publicationFiles` appends `README*` patterns itself. The precise criterion — declares a JS entry, packs no JS — describes a state that appears unreachable, because it is exactly what publint already errors on, and publint fires first. Adding a check whose red case could only be produced by a stub is the shape `packages/AGENTS.md` forbids for invariant companions, and lane B had just written nine README reasons resting on that rule.
+
+**Cost.** One local reading at `3ea5dc60b9` + this step: `14 passed, 1 failed in 136.57s`, the single failure being BLOCKED-209's seven empty `install` companions. Across six local runs the whole aggregate ranged 25s–137s, with nearly all variance in one gate (`optional dependency imports`, 19–84s); a CI estimate is better given as "typically half a minute to two minutes, dominated by one gate" than as a point value.
+
+### A self-audit of lane B's prose, 2026-09-11 — recorded rather than numbered
+
+Every factual assertion written by lane B today was re-read against the question "is there a command or a reading behind this, or did I infer it?" The prompt for the sweep was that three claims had already failed that test in one day: lane B's "`ajv` is not installed" (a `require.resolve` probe in an ESM-only repository, reported as a measurement), lane B's proposed silent-closure guard (a criterion that turned out not to fire), and the delegate's candidate SHA for P4-02's `C` cell (the commit that wrote the cell green, not the tree observed). Not numbered because nothing is blocked; recorded because the failure mode recurs and the corrections are worth having in one place.
+
+**Four claims did not survive. All four are corrected in the commits carrying this record.**
+
+| claim as written | what was actually true | disposition |
+|---|---|---|
+| BLOCKED-207: headless's five siblings "ship a single `lib/index.js` (**two** also ship `lib/startup.js`)" | Measured: four emit `lib/index.js` alone, **one** (`web-app`) emits `index.js` + `startup.js`. The count was wrong because headless was counted among its own siblings. The correction sharpens the finding rather than weakening it: `web-app` has two entries and hoists NO chunk, so a second entry point does not by itself produce one — shared code between entries does | corrected with the measurement |
+| BLOCKED-207: the chunk's name "carries a content hash and **changes whenever its contents change**" | Never measured. `lib/` is gitignored so the name has no history, and confirming it needs a rebuild. What was observed is only the form: a module name plus an eight-character suffix | marked **NOT measured**, with the note that the decision does not depend on it — a literal filename breaks on any rename, content-derived or not |
+| `retry-cockatiel` README: "this package **keeps no mirror** of it" | It holds `private readonly policies = new Map<...>()` (`src/index.ts:85`), one policy per destination. The reason still holds — it keeps no copy of what those policies DECIDED — but "keeps no mirror" reads as "holds nothing" | rewritten to say what it holds and what it does not |
+| `workflow-journal` README: "reached through the free `writeJournal`/`readJournal` functions, so this package **retains no second copy**" | Wrong. `createJournalRecorder` (`src/recorder.ts:86`) builds `const entries = new Map(...)`. The sentence described `store.ts` and missed `recorder.ts` entirely | rewritten: the package registers no service and RETURNS the recorder, so the caller owns it — which is the actual reason, and a different one |
+
+**Claims that were checked and held**, listed so the sweep is falsifiable rather than a claim of diligence:
+
+- `publint@0.3.21`, cited by name in BLOCKED-210 as the dependency that covers the closure check's silence — `node -e "require('./node_modules/publint/package.json').version"` → `0.3.21`.
+- BLOCKED-208's "every one of them a package this program created" — all 18 package directories have their `package.json` added after the frozen baseline `4e84901e64`, checked by `git log --diff-filter=A` per package.
+- `plugin-lock` and `task-profile`'s "retains no state" / "pure" reasons — their `new Map`/`new Set` occurrences are all `const` inside function bodies (call-local), which is what those words mean.
+- The counting claims behind BLOCKED-206, 207, 210 and 212 (279 of 291 packages, 12 without the subpath, 4 × 291 missing-entry errors, 2 entries with `status`, 358 consumer files, 138 stale fixtures, 34 edges / 18 packages) — each came from a `grep -c` or a script run whose output is quoted in its own entry.
+
+**A fifth instance, found within the hour, and a new variant.** Reviewing P1-10 in lane A's tree, lane B reported "the sign-off is not in the candidate tree, **so `--accept` cannot read it**". The first half was measured — zero P1-10 entries in that tree's `delegate-signoff.json`, `signoff` null on the ledger row, `062ba7bb84` not an ancestor of `50c0d24728`. The second half was not: which tree `--accept` runs against was never checked. The sign-off lives on the delegate overlay branch, which layers onto the candidate at push time, so the conclusion was false about a tree lane B had not read.
+
+**What makes it a new variant: the unmeasured clause crossed a tree boundary.** The first four extrapolations all stayed inside one checkout, where "I did not find it" and "it is not there" coincide. Across trees they come apart, and a repository this program works in has at least three (lane A's candidate, lane B's branch, the delegate overlay). The honest form costs one clause: "this tree has no sign-off; which tree `--accept` reads, I did not measure."
+
+**Recorded with its outcome, because the outcome is tempting and must not be read as vindication.** The wrong conclusion prompted a dry-run of `--accept` on the overlay, which found a real defect — P1-10 carries zero `acceptance-coverage.json` entries, so predicate (i) fails. The correct sentence would have prompted the same check. An overreach that happens to point at something is still an overreach, and counting it as a success is how the habit survives being audited.
+
+**The pattern worth keeping.** Every one of the four failures is the same shape: a true observation extended by one clause that sounded obviously true. "Only headless has a chunk" was measured, and "because the others have one entry point" was not. "The store is a file the caller names" was read, and "so nothing else holds a copy" was not. The unmeasured half is always the more general one, and generality is what makes it attractive to write.
+
+### BLOCKED-213 — P4-11's registry stage-U consumer names a file that never uses the seam
+
+**Status:** EXEMPTED 2026-09-11, owner lane B. The Usage stage is correct; the registry's `[B]` list is not, and the registry cannot be edited from here.
+
+`verify-usage-stage-subject` failed P4-11 (real exit 1) with: the Usage stage, taken as a whole, touches none of the consumer files its registry row names. The gate's reasoning is sound and worth restating — "a Usage stage inside the epic's own package proves the library, not the use of it."
+
+**What the registry names:** exactly one stage-U `[B]` file, `packages/core/agent-loop/src/agent.ts`.
+
+**What that file contains of this epic's vocabulary: nothing.** Measured term by term against it — `ctx.retry` 0, `ctx.circuitBreaker` 0, `RetryClassification` 0, `retryBudget` 0, `classifyFailure` 0, `@deepseek-ai/dsh-retry` 0. It holds two occurrences of the string `retry`, and neither belongs to this seam:
+
+| line | text | what it is |
+|---|---|---|
+| `:456` | `retryPolicy: preparedCall?.retryPolicy` | a field passed into the `agent/request-error` waterfall |
+| `:462` | `action?.kind !== 'retry'` | that waterfall's returned action kind |
+
+That is the LLM layer's own request-error retry decision — the thing P4-11's classifier was built to replace the ad-hoc version of — not the classifier, the budget or the breaker.
+
+**Where the seam is actually consumed, and what the stage touched.** `packages/llm/llm-retry/src/index.ts:15` imports `chargedRun` from `@deepseek-ai/dsh-retry`; `packages/llm/llm/src/index.ts:39` imports the breaker contract's `declare module` augmentation. **Both are inside the epic's live U entries' frozen files**, whose full set is `llm/llm-retry/src/index.ts`, `llm/llm/src/index.ts`, `reliability/retry/src/root.ts`, `reliability/retry/src/usage.ts`, `bundle/base/cordis.patch.yml`, three `retry-cockatiel` fixtures, and `tests/first100/fixtures/P4-11.composition.spec.ts` — a real `dsh-app-boot` composition. So the stage proves the USE of the seam at the two places production uses it, which is exactly what the gate exists to require.
+
+**Why an exemption rather than a registry fix**, following P2-04's precedent (BLOCKED-195): `tests/first100/registry.json` is extracted byte-identically from the pinned source matrix, and `first100:verify-registry-extraction` checks that. Correcting the `[B]` list means changing the matrix, which is outside an executor's authority and is not this epic's call to make alone.
+
+**The shape worth keeping.** The gate is mechanically right and substantively misreporting, and this is the second instance — P2-04's was a same-named `src/types.ts` in two packages, this one is a same-named concept (`retry`) in two layers. Both times the registry's guess was reasonable and wrong, and both times the epic's evidence was stronger than the gate could see. A gate that reads a file list cannot distinguish "the stage did not reach the consumer" from "the list names the wrong consumer", and only the second is a defect in the epic.
+
+`verify-usage-stage-subject` now exits 0: every epic's live Usage stage touches a named consumer file or is exempted with a ruling.
