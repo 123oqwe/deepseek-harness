@@ -34,6 +34,7 @@ const EXECUTABLE_SOURCE_ALLOWLIST = new Map<string, string>([
   ['apps/cli/src/bin.ts', 'supported dsh application launcher'],
   ['packages/context/time-context/tests/fixtures/driver.ts', 'test-only subprocess driver'],
   ['packages/context/memory-context/tests/fixtures/driver.ts', 'test-only subprocess driver'],
+  ['packages/context/memory-context/tests/fixtures/empty-recall-driver.ts', 'test-only subprocess driver'],
   ['packages/workspace/workspace-trust-local/tests/fixtures/driver.ts', 'test-only subprocess driver'],
   ['packages/reliability/retry-cockatiel/tests/fixtures/driver.ts', 'test-only subprocess driver'],
   ['packages/experimental/webworker-packer/bin.js', 'private build-only wrapper'],
