@@ -4866,7 +4866,15 @@ So a Run carrying sessions A and B is writable under two independent authorities
 Error: LeaseStorePlugin used before its mount opened the database
 ```
 
-The lease store unloads BEFORE this plugin's disposer runs — its connection is already closed. So a cleanly unloaded host keeps its session's work item until the lease lapses, exactly as a crashed one does, and **the next host cannot tell the two apart**.
+So a cleanly unloaded host keeps its session's work item until the lease lapses, exactly as a crashed one does, and **the next host cannot tell the two apart**.
+
+**The mechanism, measured after this entry was first written — and it is NOT the ordering claim this entry originally made.** Fiber unload runs every disposer CONCURRENTLY: `vendor/cordis/src/fiber.ts:773` is `await Promise.all(this._disposables.clear().map(async (dispose) => …))`, and each of those callbacks begins with `await Promise.resolve()`. There is no reverse-order guarantee at this level at all — the reverse-order path is a different one, `fiber.ts:527`, which orders the disposers of ONE effect. So "the lease store unloads first" was the wrong description. What actually decides it:
+
+1. `LeaseStoreSqlite`'s teardown clears the handle SYNCHRONOUSLY — `packages/run/lease-sqlite/src/index.ts:81`, `yield () => { this.opened = undefined }`.
+2. `RunPlugin`'s disposer is async and `await`s `advance()` before it would release — `packages/run/run/src/index.ts:1255` — so it yields the microtask queue and loses to any disposer that does not.
+3. The accessor that throws is `packages/run/lease-sqlite/src/index.ts:90`, guarding `this.opened`.
+
+**A second finding, worth its own line: that error message is wrong for the case that reaches it.** It reads "used BEFORE its mount opened the database", and its JSDoc adds "which no consumer can do — `inject` holds them until the service is available" (`lease-sqlite/src/index.ts:87-88`). The case that actually occurs is the opposite: used AFTER the mount CLOSED it, during teardown. Whoever hits this in a deployment is told to look at startup ordering, and the fault is at shutdown.
 
 **Two observations worth keeping, both incidental to finding it.**
 
@@ -4875,4 +4883,10 @@ The lease store unloads BEFORE this plugin's disposer runs — its connection is
 
 **What U2 freezes instead**, so the gap is not silent: `holds its work item past a clean unload too, so a restart waits out the lease either way` asserts the measured behaviour — the next mount opens no Run, sets `leaseRefused`, and finds the restored Run `paused`. It reddens the day this entry closes, which is what a case about a known gap is for.
 
-**Closing condition:** a hand-back at a point where the lease store is still open. Where that point is has NOT been measured — it may be a Cordis unload-order guarantee, a disposal hook `dsh-run` does not currently take, or a change in which plugin owns the release. Naming one without measuring it would be the guess this entry exists to avoid.
+**Closing condition:** a hand-back at a point where the lease store is still open. Three candidates are now nameable, and NONE is measured as working — each would have to be, before it is chosen:
+
+- **Release before the disposer's first `await`.** `RunPlugin`'s disposer would have to hand the item back synchronously, ahead of the `advance` it currently awaits. Whether that wins is still decided by position within the concurrent batch, so this is a candidate and not an answer.
+- **Defer the handle clear.** `packages/run/lease-sqlite/src/index.ts:79-82` could keep the store readable for release-only during teardown. It moves the problem into the provider and needs a rule for what "readable while unloading" means.
+- **Give Cordis an unload order.** `vendor/cordis/src/fiber.ts:773` is a vendored file, so this is the heaviest and would change every plugin's teardown, not just this seam.
+
+`RunLease.release()` (`packages/collaboration/lease-contract/src/run-lease.ts:58`, implemented at `:118` as `store.release(token)`) does NOT sidestep it: the `store` it closes over is the plugin instance, so the call lands on the same cleared accessor.

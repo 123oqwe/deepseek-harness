@@ -1075,10 +1075,11 @@ export default class RunPlugin extends Service {
     if (runId !== undefined && this.service.get(runId)?.state === 'running') {
       await this.service.advance(runId, 'paused', [], Date.now())
     }
-    // **The lease is NOT handed back here, and it cannot be.** Measured: the
-    // lease store unloads BEFORE this plugin's disposer runs, so `release`
-    // throws `LeaseStorePlugin used before its mount opened the database` — the
-    // provider's connection is already closed. A released lease on clean
+    // **The lease is NOT handed back here, and it cannot be.** Measured:
+    // `release` throws `LeaseStorePlugin used before its mount opened the
+    // database` — the provider cleared its handle synchronously while this
+    // disposer was awaiting the transition above, and fiber unload gives the
+    // two no order to rely on. A released lease on clean
     // shutdown therefore needs a hand-back at a point where the store is still
     // open, which this disposer is not. Recorded in BLOCKED-197; until then a
     // cleanly unloaded host's work item stays held until it lapses, exactly as
@@ -1234,13 +1235,14 @@ export default class RunPlugin extends Service {
       // again — measured: the next mount was refused its own session's work
       // item and opened no Run at all.
       for (const runId of [...this.heartbeats.keys()]) this.stopHeartbeat(runId)
-      // **A clean unload PAUSES the work it was doing and hands the lease back.**
-      // `agent/disposed` cannot reach this plugin any more — Cordis unloads in
-      // reverse mount order, so this plugin goes before the agent registry that
-      // disposes its agents, and the listener above is already gone when those
-      // disposals are announced. Left alone, every boot leaked a non-terminal
-      // Run and a held lease: the next boot enumerated a Run it could not
-      // acquire, and `listNonTerminal` grew once per boot forever.
+      // **A clean unload PAUSES the work it was doing.** `agent/disposed` cannot
+      // reach this plugin any more: the listener above is torn down with the
+      // mount, and fiber unload runs every disposer concurrently
+      // (`vendor/cordis/src/fiber.ts` awaits them as one `Promise.all`), so
+      // there is no order to rely on either. Left alone, every boot leaked a
+      // non-terminal Run and a held lease: the next boot enumerated a Run it
+      // could not acquire, and `listNonTerminal` grew once per boot forever.
+      // The lease is NOT handed back — see `pauseRun` and BLOCKED-197.
       //
       // `paused` and not a terminal state, which is the whole decision. A run
       // that was half-way through when the operator closed the app did not

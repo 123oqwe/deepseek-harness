@@ -89,14 +89,14 @@ for (const run of service.listNonTerminal()) service.resume(run.id)
 
 Mounted as a plugin, the service acquires a real caller: every agent session
 the harness starts opens a Run, and the live `Agent` handle carries its id.
-The `packages/bundle/base` row is `disabled: true`, so a profile opts in and
-supplies the store path:
+`packages/bundle/base` mounts the row for every shipped profile, with the
+store under the `dsh` home:
 
 ```yml
 - id: run
   name: '@deepseek-ai/dsh-run'
   config:
-    storePath: !!js dshHomePath('runs.json')
+    storePath: !!js dshHomePath('runs', 'runs.json')
 ```
 
 ```ts
@@ -248,16 +248,6 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   operator problem, and the epic's `rollback` (restore the journal checkpoint)
   is the intended response.
 
-- **`RunPlugin` mounts on request; it is not a shared-base default, so a
-  default `dsh` boot still creates no Run.** `packages/bundle/base`'s `run`
-  row is `disabled: true`, matching `baseline-preflight`: `storePath` names a
-  real write target with no neutral value, so a profile that wants
-  first-class Runs enables the row and supplies that path. A profile that
-  does not enable it mounts no Run Service and opens no Run — the plugin
-  exists and works, but nothing in the shipped default profiles turns it on
-  yet. `tests/first100/fixtures/P4-01.composition.spec.ts` is the proof that
-  enabling it does open a Run for a real agent session; it enables the row in
-  its own fixture `cordis.yml`.
 - **A Run's own lifecycle is still not recorded in the session log.**
   `RunPlugin` keeps its Runs in its own `RunStore` document and registers no
   `SessionEventMap` member of its own, so a session log names no Run id and
@@ -270,8 +260,8 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   step.
 - **A clean unload parks its Run but cannot hand back its work item.** The Run
   goes `running → paused` from this plugin's own disposer, because
-  `agent/disposed` cannot reach it by then: Cordis unloads in reverse mount
-  order, so the plugin goes before the agent registry that disposes its agents.
+  `agent/disposed` cannot reach it by then — the listener is torn down with the
+  mount.
   The lease is a different matter — the lease store unloads FIRST, and calling
   `release` there throws `LeaseStorePlugin used before its mount opened the
   database`. So a cleanly unloaded host keeps its session's work item until the
