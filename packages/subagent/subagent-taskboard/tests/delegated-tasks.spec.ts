@@ -187,7 +187,19 @@ describe('P5-11: a delegated child IS a task on the board', () => {
       signal: new AbortController().signal,
     })
 
-    const listed = await ctx.subagents.listChildren(parent.session.id)
+    // `listChildren` serves a PERSISTENCE-backed corpus and merges live
+    // sessions into it (`list-children.ts`), so a child whose session has not
+    // reached the store yet is absent from the listing entirely — the corpus
+    // loop iterates persisted records, and a live session with no record of
+    // its own is never added. `start()` resolves when the run is published,
+    // which is before that write lands, so reading immediately is a race this
+    // case lost only by timing: it asserts the child is STILL RUNNING, so it
+    // cannot wait on `run.result` instead.
+    const listed = await vi.waitFor(async () => {
+      const rows = await ctx.subagents.listChildren(parent.session.id)
+      expect(rows.find(entry => entry.id === run.id)).toBeDefined()
+      return rows
+    })
 
     const row = listed.find(entry => entry.id === run.id)
     // The two disagree, and that is the point: the session record still has
