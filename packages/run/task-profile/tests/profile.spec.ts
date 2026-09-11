@@ -32,7 +32,8 @@ import type {
   TaskQuestion,
   TaskSideEffect,
 } from '../src/types.ts'
-import { TaskProfileRef, taskOriginOf } from '../src/types.ts'
+import type { GoalId } from '@deepseek-ai/dsh-goal/types'
+import { TaskProfileRef, goalRoundOf, taskOriginOf } from '../src/types.ts'
 import { SIDE_EFFECT_FIELD, taskProfileRef, validateTaskProfile } from '../src/validate.ts'
 import { compileTaskProfile } from '../src/index.ts'
 import type { TaskProfileInput } from '../src/index.ts'
@@ -436,5 +437,241 @@ describe('P4-02 P — the module surface the Provider stage promises', () => {
     // namespace's own keys are the whole runtime surface.
     const namespace = await import('../src/index.ts')
     expect(Object.keys(namespace).sort()).toStrictEqual(['compileTaskProfile'])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Provider stage SUPPLEMENT (delegate ruling, OQ2). The P freeze is sealed at
+// `9a820c4016` and these titles are not in it: they are the behaviour the
+// ruling added afterwards, frozen separately so the sealed entry stays exactly
+// what was observed when it was sealed.
+// ---------------------------------------------------------------------------
+
+describe('P4-02 P — content the objective could not carry is asked about, not dropped (must[2], OQ2)', () => {
+  it('still compiles a goal whose message also held blocks the text does not include', () => {
+    // The case OQ2 exists for. Before the ruling this input refused as
+    // `empty-goal` and an image-led task had no profile at all.
+    const compiled = compileTaskProfile(input({
+      goalText: 'make this diagram match the code',
+      unreadGoalContent: [{ kind: 'image', count: 2 }],
+    }))
+    expect(compiled.compiled).toBe(true)
+  })
+
+  it('asks what the unread blocks ask for, naming their kind and their count', () => {
+    const compiled = compileTaskProfile(input({ unreadGoalContent: [{ kind: 'image', count: 2 }] }))
+    if (!compiled.compiled) throw new Error('expected a profile')
+    const asked = compiled.profile.questions.find(entry => entry.field === 'unreadGoalContent')
+    expect(asked?.reason).toBe('ambiguous')
+    // The count is in the prompt because "something was dropped" is not a
+    // question anyone can answer.
+    expect(asked?.prompt).toContain('2 image blocks')
+  })
+
+  it('asks nothing when every block reached the objective, so the question is about content and not about compiling', () => {
+    // The positive control the case above needs: without it, a compiler that
+    // asked this question unconditionally would pass.
+    const compiled = compileTaskProfile(input())
+    if (!compiled.compiled) throw new Error('expected a profile')
+    expect(compiled.profile.questions.map(entry => entry.field)).not.toContain('unreadGoalContent')
+  })
+
+  it('treats a counted zero as nothing unread, so an empty tally is not a question', () => {
+    const compiled = compileTaskProfile(input({ unreadGoalContent: [{ kind: 'image', count: 0 }] }))
+    if (!compiled.compiled) throw new Error('expected a profile')
+    expect(compiled.profile.questions.map(entry => entry.field)).not.toContain('unreadGoalContent')
+  })
+
+  it('yields the same reference whatever order the caller counted the kinds in (acceptance[0])', () => {
+    // The caller counts by iterating its own content array, so the order is
+    // its accident. Two callers that saw the same message must still produce
+    // the same digest or the revision chain sees a revision that did not
+    // happen.
+    const forward = compileTaskProfile(input({ unreadGoalContent: [{ kind: 'image', count: 1 }, { kind: 'audio', count: 3 }] }))
+    const reversed = compileTaskProfile(input({ unreadGoalContent: [{ kind: 'audio', count: 3 }, { kind: 'image', count: 1 }] }))
+    if (!forward.compiled || !reversed.compiled) throw new Error('expected two profiles')
+    expect(taskProfileRef(forward.profile)).toBe(taskProfileRef(reversed.profile))
+  })
+
+  it('yields a DIFFERENT reference when the tally itself changed, so a revision is visible', () => {
+    const one = compileTaskProfile(input({ unreadGoalContent: [{ kind: 'image', count: 1 }] }))
+    const two = compileTaskProfile(input({ unreadGoalContent: [{ kind: 'image', count: 2 }] }))
+    if (!one.compiled || !two.compiled) throw new Error('expected two profiles')
+    expect(taskProfileRef(one.profile)).not.toBe(taskProfileRef(two.profile))
+  })
+
+  it('stays valid under the durable boundary check, so the extra question breaks no must[2] rule', () => {
+    const compiled = compileTaskProfile(input({ unreadGoalContent: [{ kind: 'image', count: 2 }] }))
+    if (!compiled.compiled) throw new Error('expected a profile')
+    expect(validateTaskProfile(compiled.profile).valid).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Fault/Qualification stage (F). NOT FROZEN YET.
+//
+// **What F does NOT re-assert, measured before writing it.** The preFlight's
+// plan listed three cases the Contract stage turns out to already freeze under
+// the same argv — a reference that is not a sha256 digest, a confidence outside
+// `[0, 1]`, and both spellings of "asks about a field it also decided". Writing
+// them again would mean two cases with one title in one report, which is how a
+// freeze entry's title match becomes ambiguous. F adds only what nothing
+// observes yet: the four generic kinds driven through the COMPILER at their
+// most impoverished, the ORDER the refusals are decided in, and the revision
+// arithmetic validation[2]'s chain rests on, field by field.
+//
+// Persistence is validation[2]'s other half and is not here: the
+// `run/task-profile` event is written by `@deepseek-ai/dsh-run`, and
+// `packages/run/run/tests/task-profile.spec.ts` observes it. F freezes the
+// arithmetic, U freezes the writing (delegate ruling, OQ5, §12.46-B).
+// ---------------------------------------------------------------------------
+
+/** The four generic kinds as compiler INPUTS, each stripped of everything optional. */
+const FOUR_IMPOVERISHED_INPUTS: readonly (readonly [string, string])[] = [
+  ['code', 'add a retry to the upload path'],
+  ['research', 'compare three canonicalization libraries'],
+  ['external-action', 'send the summary to the mailing list'],
+  ['personal-plan', 'lay out a four-week reading plan'],
+]
+
+describe('P4-02 F — the four generic kinds with nothing stated (validation[0], validation[1])', () => {
+  for (const [kind, goalText] of FOUR_IMPOVERISHED_INPUTS) {
+    it(`compiles ${kind} from a goal that states no budget, no trust and no identity, and asks about every one of them`, () => {
+      // C's four fixtures were literal profiles and P compiled one input. This
+      // is the fault direction over the same four: the input is structurally
+      // valid and tells the compiler nothing, so a profile that came back with
+      // a decided side effect or no questions would have invented the lot.
+      const compiled = compileTaskProfile({ goalRef, goalText, origin: 'user-goal', identityKnown: false })
+      if (!compiled.compiled) throw new Error(`expected a profile for ${kind}`)
+      expect(compiled.profile.objective).toBe(goalText)
+      expect(compiled.profile.constraints).toStrictEqual([])
+      expect(compiled.profile.sideEffect.ground).toBe('unknown-default')
+      expect(compiled.profile.questions.map(entry => entry.field).sort()).toStrictEqual(['actingIdentity', 'sideEffect'])
+      // And it is readable back out of a durable log, which is the point of
+      // compiling it at all.
+      expect(validateTaskProfile(compiled.profile).valid).toBe(true)
+    })
+  }
+})
+
+describe('P4-02 F — which refusal wins when an input fails two ways at once (must[2], validation[1])', () => {
+  it('refuses a blank injected-context message as not-a-task, not as empty-goal', () => {
+    // Both refusals apply. Reporting `empty-goal` would say the message was a
+    // task whose goal happened to be missing, which is the opposite of what
+    // happened, and a caller routing on the reason would then go looking for
+    // the text instead of accepting that there was no task.
+    const compiled = compileTaskProfile(input({ origin: 'injected-context', goalText: '   ' }))
+    expect(compiled).toStrictEqual({ compiled: false, reason: 'not-a-task' })
+  })
+
+  it('refuses a goal that is only whitespace, rather than asking about the fields around it', () => {
+    // The refusal comes before the asking. A compile that answered with a
+    // profile carrying three questions and a blank objective would be a record
+    // of a task nobody stated.
+    const compiled = compileTaskProfile(input({ goalText: ' \t\n ', identityKnown: false, unreadGoalContent: [{ kind: 'image', count: 1 }] }))
+    expect(compiled).toStrictEqual({ compiled: false, reason: 'empty-goal' })
+  })
+})
+
+describe('P4-02 F — the revision arithmetic validation[2] rests on, field by field', () => {
+  const base = input({
+    goalText: 'add a retry to the upload path',
+    budget: { maxTurns: 4, maxSpendUsd: 2 },
+    workspaceTrust: 'trusted-read',
+    identityKnown: true,
+    unreadGoalContent: [{ kind: 'image', count: 1 }],
+  })
+  const refOf = (over: Partial<TaskProfileInput>): string => {
+    const compiled = compileTaskProfile({ ...base, ...over })
+    if (!compiled.compiled) throw new Error('expected a profile')
+    return taskProfileRef(compiled.profile)
+  }
+  const baseRef = refOf({})
+
+  const MOVES: readonly (readonly [string, Partial<TaskProfileInput>])[] = [
+    ['the goal text', { goalText: 'add a retry to the download path' }],
+    ['the goal message it refers to', { goalRef: { sessionId: goalRef.sessionId, messageId: MessageId('message-other') } }],
+    ['the turn ceiling', { budget: { maxTurns: 5, maxSpendUsd: 2 } }],
+    ['the spend ceiling', { budget: { maxTurns: 4, maxSpendUsd: 3 } }],
+    ['the workspace trust state', { workspaceTrust: 'untrusted' }],
+    ['whether an identity is attached', { identityKnown: false }],
+    ['the tally of content the objective does not include', { unreadGoalContent: [{ kind: 'image', count: 2 }] }],
+  ]
+
+  for (const [what, over] of MOVES) {
+    it(`changing ${what} alone changes the reference, so that revision is visible in the chain`, () => {
+      expect(refOf(over)).not.toBe(baseRef)
+    })
+  }
+
+  it('leaves the reference alone when nothing structured changed, so an unchanged goal is not a revision', () => {
+    // The positive control the seven above need: without it, a digest over a
+    // clock or a counter would pass every one of them.
+    expect(refOf({})).toBe(baseRef)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Contract stage SUPPLEMENT (delegate ruling, OQ4(b)). The C freeze is sealed
+// and these titles are not in it. The ruling makes a goal continuation round a
+// task, which it was not when C was frozen, and carries the goal's identity on
+// the goal reference; both are C vocabulary, so the C cell goes back through
+// observation with these cases in it.
+// ---------------------------------------------------------------------------
+
+const goalRound = { goalId: brandString<GoalId>('goal-7'), revision: 2, round: 3 } as const
+const goalSource: MessageSource = { kind: 'goal', ...goalRound }
+
+describe('P4-02 C — an entered goal\'s continuation round is a task (OQ4(b))', () => {
+  it('classifies a goal continuation round as a user goal, not as an unknown source', () => {
+    // The fail-closed default put these in `unknown-source`, which excluded
+    // them — while `user/message`'s own documentation lists an entered goal
+    // continuation round beside a direct prompt as a user-role message. One
+    // recorded session sat on that.
+    expect(taskOriginOf(goalSource)).toBe('user-goal')
+  })
+
+  it('still falls a kind it has no case for through to unknown-source, so the new case widened nothing else', () => {
+    // The control the case above needs: `goal` became a task, and nothing else did.
+    const notAGoal: MessageSource = { kind: 'tool', callId: brandString<ToolCallId>('call-2') }
+    expect(taskOriginOf(notAGoal)).toBe('unknown-source')
+  })
+
+  it('reads the goal, the revision and the round off a continuation round', () => {
+    expect(goalRoundOf(goalSource)).toStrictEqual(goalRound)
+  })
+
+  it('reads nothing off a direct human prompt, which continues no entered goal', () => {
+    expect(goalRoundOf({ kind: 'user' })).toBeUndefined()
+  })
+
+  it('accepts a profile whose goal reference names the round it came from', () => {
+    const withRound = profile({ goalRef: { ...goalRef, goalRound } })
+    expect(validateTaskProfile(withRound).valid).toBe(true)
+  })
+
+  it('refuses round 0, because the goal domain admits positive rounds only', () => {
+    // A stored 0 is a corrupted record rather than a first round, and a reader
+    // that accepted it would report a round the goal domain never admitted.
+    const impossible = profile({ goalRef: { ...goalRef, goalRound: { ...goalRound, round: 0 } } })
+    expect(validateTaskProfile(impossible).valid).toBe(false)
+  })
+
+  it('refuses an unrecognised key inside the round, the same way the profile refuses one', () => {
+    const extra = profile({ goalRef: { ...goalRef, goalRound: { ...goalRound, phase: 'later' } } } as never)
+    expect(validateTaskProfile(extra).valid).toBe(false)
+  })
+
+  it('gives a different reference to two profiles that differ only in which round they came from', () => {
+    // Which round of a revised goal a profile was compiled from is part of what
+    // the profile IS: two rounds with identical text are not the same task, and
+    // the revision chain has to be able to tell them apart.
+    const third = taskProfileRef(profile({ goalRef: { ...goalRef, goalRound } }))
+    const fourth = taskProfileRef(profile({ goalRef: { ...goalRef, goalRound: { ...goalRound, round: 4 } } }))
+    expect(third).not.toBe(fourth)
+  })
+
+  it('gives a different reference to a profile with no round at all, so absence is not round 1', () => {
+    expect(taskProfileRef(profile())).not.toBe(taskProfileRef(profile({ goalRef: { ...goalRef, goalRound } })))
   })
 })

@@ -48,3 +48,27 @@ Mutations, one per case, in the constant/value/dependency forms: keep only the f
 
 1. **Does validation[2]'s persistence half belong to F or to U?** The event that persists a profile is written by U. F can freeze the revision arithmetic today and the persistence tomorrow, or wait and freeze both after U — the first makes F's cell honest sooner and splits one clause across two stages, the second keeps the clause whole and leaves F blocked on U. §12.46-B's half-splitting precedent exists for exactly this, which is why it is a delegate call rather than mine.
 2. **Does `realized`'s unenforced status need an entry?** It is a real instance of the pattern BLOCKED-192 generalises — a record written and nothing reading it — but the remedy is either extending `verify-fields-are-read.mjs`'s `RECORD_PATHS`, or adding `realized` to `verify-make-vs-use`'s `REQUIRED` list at the F stage only, or accepting it as evidence for a human. Three different remedies with different costs, and picking one is not an executor's call.
+
+---
+
+## Correction to the TDD plan above, made before writing F and recorded rather than quietly dropped
+
+Three of the six planned cases **are already frozen in C**, under the same argv:
+
+| planned F case | already frozen as (C) |
+|---|---|
+| a profile whose `confidence` is outside `[0, 1]` is refused at the durable boundary | `refuses a confidence outside [0, 1], so a traceable source cannot carry an unreadable certainty` |
+| a question about a field it also decided is refused, for both spellings | `refuses a profile that asks about the side effect while also recording it as decided` **and** `refuses a profile that asks about a constraint it also states` |
+| a `TaskProfileRef` that is not a sha256 digest is refused | `refuses a reference that is not a sha256 digest, so a caller cannot choose one` |
+
+The plan called the third one "C's case re-observed under F's argv", which was the error: **F's argv is the same package suite C's is**, so there is nothing to re-observe — the C cases already run in every F observation. Writing a second case with the same title would put two identically named cases in one report, and a freeze entry matches its `expectCases` by title, so the match would become ambiguous for BOTH entries. Dropped.
+
+What F adds instead is what nothing observes yet:
+
+- **The four generic kinds through the compiler at their most impoverished.** C's four fixtures were literal profiles and P compiled one input; these four compile each kind from an input that states no budget, no trust and no identity, and assert the profile asks about all of it and validates. That is validation[0] and validation[1]'s missing-information half in the fault direction.
+- **Which refusal wins when an input fails two ways at once.** A blank injected-context message refuses `not-a-task`, not `empty-goal` — reporting the second would say a non-task's goal was merely missing, and a caller routing on the reason would go looking for text that was never owed. And a whitespace-only goal refuses rather than returning a profile with a blank objective and three questions.
+- **The revision arithmetic, field by field.** Seven single-field moves — goal text, goal message, each budget ceiling, trust state, identity presence, and the unread-content tally — each change the reference alone, with the unchanged recompile as the positive control. P covered one of the seven (budget).
+
+## The OQ5 ruling, and where the other half of validation[2] is observed
+
+The delegate ruled the split: **F freezes the revision arithmetic, U observes the persistence.** The `run/task-profile` event is written by `@deepseek-ai/dsh-run`, so the package suite cannot see it; `packages/run/run/tests/task-profile.spec.ts` does, and its cases are the other half of the clause. Neither stage claims the whole of validation[2] on its own, and the coverage entry for each says which half it observes.
