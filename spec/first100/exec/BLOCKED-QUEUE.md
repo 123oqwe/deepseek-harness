@@ -4558,6 +4558,8 @@ The second implementation asks vitest. `vitest list --json` collects without exe
 
 **What is being asked:** which epic's next slice takes each row. The registry gate set (`run-registry-gates.mjs`, 22/22) is green and does not include these leaves, so this debt gates nothing today — it will gate the first epic that needs a green `doc-sync`.
 
+**Re-measured 2026-09-11 at `ce54848726`** (lane B, detached tree at the exact SHA, while establishing that group READMEs for `memory`/`policy` added no new violations). The same five leaves are red, and the same debt has grown rather than moved: `verify-md-wrap` 242, `verify-translation-pairing` 42, `verify-md-links` 31, `verify-type-equiv` 16, `verify-package-readme-model-experience` 2. The original rows are still in it — the `#profiles-and-bundles` / `#boot-time-baseline-preflight` anchors still break (6 lines) and the three 2026-09-07 Agent Notes are still unpaired (5 lines) — so this is one aggregate accumulating, not a new one. Two observations for whoever takes the rows: `verify-md-wrap` now spans 24 distinct files rather than the one note originally named, and 40 of the 42 pairing violations are under `docs/`, which concentrates that row on the documentation tree rather than on any single epic's package. Lane B's own six files add zero to every count.
+
 ### BLOCKED-175 — P4-11's cockatiel adoption landed in a file no freeze names, and two gates now disagree about it
 
 **Status:** ANSWERED-BY-DELEGATE(gq-92). A P4-11.P supplement freeze at `0b70339760` now lists `packages/reliability/retry-cockatiel/src/index.ts` and `packages/reliability/retry/src/provider.ts` in `files`; the P cell is GREEN@`e3004c9276` and `verify-adapt-dispositions`/`verify-make-vs-use` no longer disagree.
@@ -4582,21 +4584,21 @@ Both gates are right about what they check. The adoption HAS landed — `package
 
 ### BLOCKED-176 — seven package groups still have no group README declaring subsystem ownership
 
-**Status:** DEBT RECORDED for TWO; `run`, `action`, `collaboration`, `schema` and `migration` closed 2026-09-11. The two that remain — `memory` and `policy` — are lane A's domains and were left alone deliberately. `packages/reliability` is NOT among them: it is P4-11's own group and its README, subsystem page and pair record landed with that epic.
+**Status:** CLOSED 2026-09-11 in `6b5b1341b6`, the last two groups included. `run`, `action`, `collaboration`, `schema` and `migration` closed earlier the same day; `memory` and `policy` — assigned to lane B by the delegate once lane A's in-flight work was confined to package-internal files — closed with group-level new files only. `verify-subsystem-pages` reports 61 groups checked, 51 linked, 10 explicitly exempt, all conform. `packages/reliability` is NOT among them: it is P4-11's own group and its README, subsystem page and pair record landed with that epic.
 
 **`run` closed in `08dcbd6b7e`**, by the second shape rather than the first: `packages/run/README.md` (+ `zh`, + recorded pair) links `docs/subsystems/core.md`, which already owns `ctx.runs` and the five `Agent` fields the Run Service is the sole writer of. **No new subsystem page** — writing "the authoritative contract" for the run seam while P4-01's sign-off is withdrawn would decide its open questions in prose, which the delegate ruled an A-class call for after re-signing. An entry in `GROUPS_WITHOUT_SUBSYSTEM_PAGE` was NOT available: every reason in that table turns on the group having no constructed runtime value or Cordis registration, and this group has `ctx.runs`, `ctx.leaseStore` and `ctx.taskStore`.
 
 The table below also undercounted that group: it is SIX packages, not five — `task-profile` (P4-02) was missing from it.
 
-`verify-subsystem-pages` (a doc-sync leaf, not a registry gate) reports one violation per group with no group README linking an owning `docs/subsystems/*.md` page — or a justified entry in the gate's own `GROUPS_WITHOUT_SUBSYSTEM_PAGE` table. Seven remain, all predating this slice:
+`verify-subsystem-pages` (a doc-sync leaf, not a registry gate) reports one violation per group with no group README linking an owning `docs/subsystems/*.md` page — or a justified entry in the gate's own `GROUPS_WITHOUT_SUBSYSTEM_PAGE` table. Seven remained when this entry opened, all predating that slice; the table below records how each closed:
 
 | group | packages in it | owning epic |
 |---|---|---|
 | ~~`action`~~ | `action-manifest`, `action-ledger` | **CLOSED** — links `policy.md` (which owns what a manifest is FOR) and `core.md` (`ctx.actionLedger`) |
 | ~~`collaboration`~~ | `blackboard`, `control-priority`, `intake-dedup`, `lease-contract`, `taskboard`, `workflow-journal` | **CLOSED** — links `core.md` (`ctx.leaseStore`, `ctx.taskStore`), `workflow.md` (the journal's reader) and `subagent.md` (the shared priority table) |
-| `memory` | `memory` | not attributed here — read the epic that created them |
+| ~~`memory`~~ | `memory` | **CLOSED** — links `memory.md` (which already owns `ctx.memory` and the provider-neutral vocabulary) and `session-query.md`, the seam it is most often confused with |
 | ~~`migration`~~ | `feature-gates` | **CLOSED by the second shape** — an exemption, because the resolved gates reach a profile through a bare `ctx.provide` and there is no mounted surface to document. The README says so in its own section |
-| `policy` | `capability-token`, `capability-token-file`, `risk-taxonomy` | P2-01 for the first two; `risk-taxonomy` is unattributed here |
+| ~~`policy`~~ | `capability-token`, `capability-token-file`, `policy-enforcement`, `policy-engine`, `policy-engine-cedar`, `risk-taxonomy` | **CLOSED** — links `policy.md` (the decision vocabulary) and the Trust Kernel boundary page (where a decision becomes enforcement) |
 | ~~`run`~~ | `lease`, `lease-sqlite`, `message-bus`, `run`, `task-profile`, `taskboard-sqlite` | **CLOSED** — P4-01's U2 slice, per the delegate's assignment |
 | ~~`schema`~~ | `schema-registry` | **CLOSED** — links `control-protocol.md` (per-message negotiation resolved through the registry) and `settings.md` (a live consumer of the identity) |
 
@@ -4604,7 +4606,9 @@ Attributions are given only where this session read them from a record (each pac
 
 **Four more closed 2026-09-11, none of them needing a new subsystem page.** Three had a page that already carried their contracts and simply never linked back; the fourth had no mounted surface at all, so it took the exemption with a reason that is checkable — and `packages/plugin` is the precedent for an `./invariant` companion not disqualifying a group, since `plugin-manifest` publishes one and carries the same kind of entry. **No exemption was written for a group that has a service**, which is what made `action` and `collaboration` READMEs rather than table rows.
 
-**What is being asked:** which epic's next slice writes each. Two shapes are available and the gate accepts either — a real `docs/subsystems/<group>.md` page with the group README linking it (what `reliability` did), or an entry in `GROUPS_WITHOUT_SUBSYSTEM_PAGE` carrying a reviewable reason (what `plugin`, `kernel` and `util` did). The choice is per group and is a documentation-ownership decision, not a mechanical one.
+**How all seven closed.** Two shapes were available and the gate accepts either — a real `docs/subsystems/<group>.md` page with the group README linking it (what `reliability` did), or an entry in `GROUPS_WITHOUT_SUBSYSTEM_PAGE` carrying a reviewable reason (what `plugin`, `kernel` and `util` did). Six took the first shape by linking a page that already owned their contracts, and only `migration` took the second; **no new subsystem page was written for any of them**, which was the point — a group README that links an existing owner documents where a contract lives, while a new page under a withdrawn sign-off would decide open questions in prose.
+
+The `policy` row above also undercounted its group, the same way this table originally undercounted `run`: it is SIX packages, not three — `policy-enforcement`, `policy-engine` and `policy-engine-cedar` were missing from it. That is worth noting beyond the bookkeeping, because the three missing ones are exactly the decision path, so the row as written described the group as authority-and-grading only.
 
 
 ### BLOCKED-177 — `docs/config-catalog.zh.md` is nine generated sections behind its English pair, and that blocks the pre-commit pairing hook

@@ -47,8 +47,12 @@ Every package lives in exactly one group; new packages join existing groups, and
 | [`skill/`](skill/README.md) | Skill capability family: provider registry, local provider, model-facing catalog/loader |
 | [`compaction/`](compaction/README.md) | Compaction capability family: Service Definition + basic provider + command Consumer |
 | [`context/`](context/README.md) | Model-visible request context: workspace instructions, time context, references |
+| [`memory/`](memory/README.md) | Provider-neutral durable Memory seam: propose/query/revise/forget over interchangeable providers |
 | [`subagent/`](subagent/README.md) | Subagent capability family: provider-registry contract and model-facing delegation tools |
 | [`jobs/`](jobs/README.md) | Generic background-job runtime and model-facing job control tools |
+| [`run/`](run/README.md) | One unit of harness work: the Run's lifecycle, the lease that owns it, the task profile it was planned from, and the durable stores behind handoff and claiming |
+| [`collaboration/`](collaboration/README.md) | The rules several workers follow: one owner per item, one effect per message, and a blackboard the others can read |
+| [`reliability/`](reliability/README.md) | Retry classification, one run-wide retry budget, and per-destination circuit breaking |
 | [`experimental/`](experimental/README.md) | Private prototypes and internal-only plugins |
 | [`workflow/`](workflow/README.md) | Workflow seam, worker-thread engine, and model-facing `workflow`/`ralph` tools |
 | [`webhook/`](webhook/README.md) | Verified external events, trusted rules, and fire-and-forget Workspace Sessions |
@@ -61,12 +65,15 @@ Every package lives in exactly one group; new packages join existing groups, and
 | [`guard/`](guard/README.md) | Loop-hygiene guards: advisory repeat-call reminders + the `tools/execute` deadline enforcer |
 | [`bundle/`](bundle/README.md) | Installable `dsh --profile` patch layers |
 | [`extensions/`](extensions/README.md) | Agent runtime self-modification: live plugin/service inspection and model-written mount/unmount |
+| [`plugin/`](plugin/README.md) | Plugin Manifest v2: capability/permission declaration, ownership, locking, provenance, compat and migrations |
+| [`mcp/`](mcp/README.md) | Attach external Model Context Protocol servers so their tools are callable as native tools |
 | [`hooks/`](hooks/README.md) | Hook bridges + the shared Claude Code / Codex wire-protocol library |
 | [`session/`](session/README.md) | Durable session data plane: persistence seam + backends, projection seam, log-backed titles, session reporting |
 | [`session-query/`](session-query/README.md) | Session retrieval family: logical corpus, bounded reads, lineage, semantic filtering, SQLite full-text search |
 | [`settings/`](settings/README.md) | User-settings seam + file-backed provider |
 | [`credentials/`](credentials/README.md) | Credential-reference and credential-record seam + env-over-`.env` provider + authorization flows that ask a human |
 | [`storage/`](storage/README.md) | Non-session storage hub + backends + domain form |
+| [`schema/`](schema/README.md) | One identity and one version per persisted or wire leaf object, and the compatibility rule that decides whether this build may read that record |
 | [`workspace/`](workspace/README.md) | Workspace entity |
 | [`sdk/`](sdk/README.md) | Out-of-process SDK: JSON-RPC protocol and TypeScript client/server |
 | [`acp/`](acp/README.md) | Automation-only Agent Client Protocol server |
@@ -78,6 +85,10 @@ Every package lives in exactly one group; new packages join existing groups, and
 | [`runtime-diagnostics/`](runtime-diagnostics/README.md) | Runtime diagnostics: package-owned invariant checks and reports |
 | [`util/`](util/README.md) | Low-level zero-dependency utilities shared across groups (`Branded<B>`, home/path helpers, timeout, retention) |
 | [`kernel/`](kernel/README.md) | Minimal, non-replaceable Trust Kernel boundary: root identity, signature roots, policy enforcement, audit append, secret broker handle, sandbox attestation verifier |
+| [`policy/`](policy/README.md) | May this action happen: the decision vocabulary, the Cedar provider, the enforcement point, the attenuable capability token, and the risk taxonomy |
+| [`action/`](action/README.md) | The manifest stating what a tool call is about to do, and the ledger keeping one external effect from happening twice |
+| [`assurance/`](assurance/README.md) | Release-time evidence and completion-gate type surfaces every release process composes around |
+| [`migration/`](migration/README.md) | The Shadow/Enforce feature gate: its state, its override chain, and the comparison that must agree before it may enforce |
 
 -----
 

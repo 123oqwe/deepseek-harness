@@ -47,8 +47,12 @@ harness 由 `packages/` 下的 npm 包组装而成，按能力系列分组：会
 | [`skill/`](skill/README.zh.md) | skill 能力系列：提供方注册表、本地提供方、面向模型的目录/loader |
 | [`compaction/`](compaction/README.zh.md) | 压缩能力系列：Service Definition + 基础提供方 + 命令 Consumer |
 | [`context/`](context/README.zh.md) | 模型可见请求上下文：workspace 指令、时间上下文、引用 |
+| [`memory/`](memory/README.zh.md) | provider 中立的持久 Memory seam：在可互换 provider 之上 propose/query/revise/forget |
 | [`subagent/`](subagent/README.zh.md) | subagent 能力系列：提供方注册表约定和面向模型的委托工具 |
 | [`jobs/`](jobs/README.zh.md) | 通用后台任务运行时和面向模型的作业控制工具 |
+| [`run/`](run/README.zh.md) | 一份 harness 工作：Run 的生命周期、声明其归属的租约、规划它所依据的任务画像，以及交接与领取背后的持久化存储 |
+| [`collaboration/`](collaboration/README.zh.md) | 多个工作者共同遵循的规则：一个工作项一个所有者、一条消息一次副作用，以及其他人可读的黑板 |
+| [`reliability/`](reliability/README.zh.md) | 重试分类、一份贯穿整次运行的重试预算，以及按目的地的熔断 |
 | [`experimental/`](experimental/README.zh.md) | 私有原型与内部专用插件 |
 | [`workflow/`](workflow/README.zh.md) | 工作流 seam、worker 线程引擎、面向模型的 `workflow`/`ralph` 工具 |
 | [`webhook/`](webhook/README.zh.md) | 已验证外部事件、受信规则与即发即弃 Workspace Session |
@@ -61,12 +65,15 @@ harness 由 `packages/` 下的 npm 包组装而成，按能力系列分组：会
 | [`guard/`](guard/README.zh.md) | 循环卫生守卫：建议性重复调用提醒 + `tools/execute` 截止时间强制执行器 |
 | [`bundle/`](bundle/README.zh.md) | 可安装的 `dsh --profile` 补丁层 |
 | [`extensions/`](extensions/README.zh.md) | agent 运行时自修改：实时插件/服务检查与模型所写挂载/卸载 |
+| [`plugin/`](plugin/README.zh.md) | Plugin Manifest v2：能力/权限声明、归属、锁定、来源证明、兼容与迁移 |
+| [`mcp/`](mcp/README.zh.md) | 挂接外部 Model Context Protocol 服务器，使其工具可作为原生工具调用 |
 | [`hooks/`](hooks/README.zh.md) | 钩子桥接 + 共享的 Claude Code / Codex 线协议库 |
 | [`session/`](session/README.zh.md) | 持久会话数据平面：持久化 seam + 后端、投影 seam、基于日志的标题、会话上报 |
 | [`session-query/`](session-query/README.zh.md) | 会话检索系列：逻辑语料库、有界读取、血缘、语义过滤、SQLite 全文搜索 |
 | [`settings/`](settings/README.zh.md) | 用户设置 seam + 基于文件的提供方 |
 | [`credentials/`](credentials/README.zh.md) | 凭据引用/记录 seam + 环境变量优先于 `.env` 的提供方 + 询问人类的授权 flow |
 | [`storage/`](storage/README.zh.md) | 非会话存储中枢 + 后端 + 领域形式 |
+| [`schema/`](schema/README.zh.md) | 每个持久化或线上叶子对象的一个身份与一个版本，以及决定本构建能否读取该记录的兼容规则 |
 | [`workspace/`](workspace/README.zh.md) | Workspace 实体 |
 | [`sdk/`](sdk/README.zh.md) | 进程外 SDK：JSON-RPC 协议与 TypeScript 客户端／服务器 |
 | [`acp/`](acp/README.zh.md) | 仅面向自动化的 Agent Client Protocol 服务器 |
@@ -78,6 +85,10 @@ harness 由 `packages/` 下的 npm 包组装而成，按能力系列分组：会
 | [`runtime-diagnostics/`](runtime-diagnostics/README.zh.md) | 运行时诊断：按包归属的运行时不变式检查与报告 |
 | [`util/`](util/README.zh.md) | 组间共享的低层零依赖工具（`Branded<B>`、home/路径辅助函数、超时、留存） |
 | [`kernel/`](kernel/README.zh.md) | 最小、不可替换的 Trust Kernel 边界：root identity、signature roots、policy enforcement、audit append、secret broker handle、sandbox attestation verifier |
+| [`policy/`](policy/README.zh.md) | 这个动作可以发生吗：决定词汇、Cedar provider、执行点、可衰减能力令牌，以及风险分类 |
+| [`action/`](action/README.zh.md) | 陈述一次工具调用即将做什么的 manifest，以及使一次外部副作用不会发生两次的 ledger |
+| [`assurance/`](assurance/README.zh.md) | 每套发布流程都围绕其组合的发布期证据与完成门类型面 |
+| [`migration/`](migration/README.zh.md) | Shadow/Enforce 特性门：其状态、其覆盖链，以及在它可以强制之前必须一致的那次比对 |
 
 -----
 
