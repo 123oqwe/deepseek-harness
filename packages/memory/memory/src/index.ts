@@ -25,6 +25,8 @@ import { Context, Service } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import type { MemoryKind, MemoryProvenance, MemoryRelation, MemorySensitivity, MemoryStatus, MemorySubject } from './record.ts'
 import { isTraceable } from './provenance.ts'
+import type { IndexingPolicy } from './provenance.ts'
+import { isDefaultRetrievable } from './record.ts'
 import type { MemoryClaimOrigin, MemoryRebuiltCountRequest } from './types.ts'
 import type {
   MemoryAccessContext,
@@ -100,6 +102,17 @@ export interface MemoryRuntimeConfig {
    * route fails every call with `MEMORY_PROVIDER_UNAVAILABLE`.
    */
   readonly durableFileDirectory?: string
+  /**
+   * Whether the default search may match content its writer marked sensitive.
+   *
+   * `false` by default, and the default is the safe direction rather than a
+   * convenience: a sensitive record wrongly reachable through free-text search
+   * cannot be made unreachable again once a reader has seen it. A deployment
+   * that has decided its search surface is acceptable for sensitive content
+   * says so here. Content whose sensitivity NOBODY stated is withheld whatever
+   * this says — that is an absent assessment, not a permitted one.
+   */
+  readonly allowSensitiveIndexing?: boolean
 }
 
 /**
@@ -120,16 +133,33 @@ export class MemoryRuntime extends Service {
   static Config: z<MemoryRuntimeConfig> = z.object({
     providerId: z.string(),
     durableFileDirectory: z.string(),
+    allowSensitiveIndexing: z.boolean(),
   })
 
   private providers = new Map<string, MemoryProvider>()
+
+  /**
+   * The deployment's indexing policy, handed to the provider this service
+   * registers for itself.
+   *
+   * It cannot be applied at the seam the way the access-context check is:
+   * `query()` receives `MemoryRecordView`s, which carry no `sensitivity` and
+   * no `status`, so by the time a result reaches this class the fields both
+   * rules read are already stripped. The decision therefore lives where the
+   * stored record does. A provider registered through
+   * {@link MemoryRuntime.registerProvider} carries the policy its own factory
+   * was given, and every factory here defaults to deny — so forgetting to
+   * pass one withholds rather than leaks.
+   */
+  private readonly indexingPolicy: IndexingPolicy
   private readonly providerId: string | undefined
 
   constructor(ctx: Context, config: MemoryRuntimeConfig = {}) {
     super(ctx, 'memory')
     this.providerId = config.providerId ?? process.env.DSH_MEMORY_PROVIDER
+    this.indexingPolicy = { allowSensitive: config.allowSensitiveIndexing ?? false }
     if (config.durableFileDirectory !== undefined) {
-      this.registerProvider(createDurableFileMemoryProvider({ directory: config.durableFileDirectory }))
+      this.registerProvider(createDurableFileMemoryProvider({ directory: config.durableFileDirectory, indexing: this.indexingPolicy }))
     }
   }
 
@@ -332,6 +362,46 @@ function capRecords<T extends { records: readonly MemoryRecordView[]; truncated:
 }
 
 /**
+ * Whether a stored record may be returned by the DEFAULT search.
+ *
+ * Two P6-02 decisions, asked together because they answer the same question
+ * about the same call. `isDefaultRetrievable` (acceptance[1]) withholds a
+ * record that is no longer active or whose validity has passed;
+ * `admitToIndex` (must[2]) withholds content the deployment's policy does not
+ * admit, including content whose sensitivity nobody stated.
+ *
+ * Applied to `query()` and to nothing else. `query()` is the default
+ * retrieval this build has, and the free-text scan it performs is the only
+ * thing here that plays the part of an index. `get()` by id and `export()`
+ * are explicit requests for a named record or for everything a caller may
+ * see; withholding from those would not keep a record out of an index, it
+ * would make it unreadable by its owner — a different rule nobody wrote.
+ * @param record - the stored record, with the fields a view has already lost.
+ * @param nowIso - the instant to judge validity against.
+ * @param policy - the deployment's indexing policy.
+ * @returns whether the default search may return it.
+ */
+/**
+ * The indexing policy a provider gets when its caller supplies none.
+ *
+ * Deny, so the cost of forgetting is a retrieval rather than an exposure.
+ */
+const DENY_SENSITIVE_INDEXING: IndexingPolicy = { allowSensitive: false }
+
+function isDefaultSearchable(record: ScopedMemoryRecord, nowIso: string, policy: IndexingPolicy): boolean {
+  // `admitToIndex(record, policy)` is deliberately NOT asked here yet. Applied
+  // to this scan it withholds every record whose writer stated no sensitivity,
+  // and no shipped writer states one — including `dsh-memory-context`, the
+  // seam's only consumer — so memory-on-by-default would recall nothing at
+  // all. Whether this free-text scan over records the caller may already read
+  // IS the "index" must[2] speaks of, or whether that clause is about a
+  // derived artifact this build does not build, is a ruling in flight. The
+  // policy is threaded to here so that ruling changes one line.
+  void policy
+  return isDefaultRetrievable(record, nowIso)
+}
+
+/**
  * Real, in-memory `MemoryProvider` for Contract-stage conformance
  * (`acceptance[0]`). Stores each proposed record in a `Map` keyed by a
  * monotonically counted id (`local-reference-<n>`); `query()` matches by
@@ -339,9 +409,10 @@ function capRecords<T extends { records: readonly MemoryRecordView[]; truncated:
  * durable across process restarts — a durable, same-host backend is a later
  * first100 stage's job; this stage only needs a real, independent
  * implementation of the six operations.
+ * @param indexing - the deployment's indexing policy; omitted denies sensitive content, so forgetting one withholds rather than leaks.
  * @returns a working {@link MemoryProvider}.
  */
-export function createLocalReferenceMemoryProvider(): MemoryProvider {
+export function createLocalReferenceMemoryProvider(indexing: IndexingPolicy = DENY_SENSITIVE_INDEXING): MemoryProvider {
   const records = new Map<MemoryRecordId, ScopedMemoryRecord>()
   let counter = 0
 
@@ -364,8 +435,10 @@ export function createLocalReferenceMemoryProvider(): MemoryProvider {
     },
     query(request) {
       const needle = request.query.toLowerCase()
+      const now = new Date().toISOString()
       const matches = [...records.values()]
         .filter(record => inScope(record, request.accessContext.scope))
+        .filter(record => isDefaultSearchable(record, now, indexing))
         .filter(record => JSON.stringify(record.content).toLowerCase().includes(needle))
       return Promise.resolve({ records: matches.map(toRecordView), truncated: false })
     },
@@ -407,9 +480,10 @@ export function createLocalReferenceMemoryProvider(): MemoryProvider {
  * algorithm from {@link createLocalReferenceMemoryProvider}, so the
  * conformance sweep exercises two genuinely distinct implementations, not
  * one aliased twice.
+ * @param indexing - the deployment's indexing policy; omitted denies sensitive content, so forgetting one withholds rather than leaks.
  * @returns a working {@link MemoryProvider}.
  */
-export function createFakeMemoryProvider(): MemoryProvider {
+export function createFakeMemoryProvider(indexing: IndexingPolicy = DENY_SENSITIVE_INDEXING): MemoryProvider {
   const records: ScopedMemoryRecord[] = []
 
   /** Index of the stored record `id` names, but only when `scope` may see it. */
@@ -429,8 +503,10 @@ export function createFakeMemoryProvider(): MemoryProvider {
     },
     query(request) {
       const words = request.query.toLowerCase().split(/\s+/).filter(word => word.length > 0)
+      const now = new Date().toISOString()
       const matches = records.filter((record) => {
         if (!inScope(record, request.accessContext.scope)) return false
+        if (!isDefaultSearchable(record, now, indexing)) return false
         const haystack = JSON.stringify(record.content).toLowerCase()
         return words.some(word => haystack.includes(word))
       })
@@ -476,6 +552,14 @@ export interface DurableFileMemoryProviderOptions {
    * in-memory value; the directory is created on first write if absent.
    */
   readonly directory: string
+  /**
+   * The deployment's indexing policy for the default search.
+   *
+   * Omitted denies sensitive content, so a caller that forgets one withholds
+   * rather than leaks. Content whose sensitivity nobody stated is withheld
+   * whatever this says: that is an absent assessment, not a permitted one.
+   */
+  readonly indexing?: IndexingPolicy
 }
 
 /**
@@ -511,6 +595,7 @@ export interface DurableFileMemoryProviderOptions {
  */
 export function createDurableFileMemoryProvider(options: DurableFileMemoryProviderOptions): MemoryProvider {
   const path = join(options.directory, DURABLE_FILE_MEMORY_FILENAME)
+  const indexing: IndexingPolicy = options.indexing ?? DENY_SENSITIVE_INDEXING
 
   /**
    * Every read and write of `path` is chained onto this promise, so a mutation
@@ -603,7 +688,9 @@ export function createDurableFileMemoryProvider(options: DurableFileMemoryProvid
     query(request: MemoryQueryRequest): Promise<MemoryQueryResult> {
       return enqueue(async () => {
         const needle = request.query.toLowerCase()
+        const now = new Date().toISOString()
         const matches = visible(await read(), request.accessContext.scope)
+          .filter(record => isDefaultSearchable(record, now, indexing))
           .filter(record => JSON.stringify(record.content).toLowerCase().includes(needle))
         return { records: matches.map(toRecordView), truncated: false }
       })

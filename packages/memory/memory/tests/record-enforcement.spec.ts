@@ -131,3 +131,50 @@ for (const [label, createProvider] of providers) {
     })
   })
 }
+
+/**
+ * P6-02 acceptance[1] and must[2] reached from the read path.
+ *
+ * Both decisions read fields that only reached disk with the v3 record, so
+ * neither could have been wired before it: `isDefaultRetrievable` reads
+ * `status` and `validUntil`, `admitToIndex` reads `sensitivity`.
+ *
+ * They are wired into `query()` and nowhere else, because `query()` IS the
+ * default retrieval this build has — free text in, matching records out —
+ * and it is also the only thing here that plays the part of an index. `get()`
+ * by id and `export()` are explicit requests for a named record or for
+ * everything a caller may see; withholding from those would not be
+ * "keeping a record out of the index", it would be making it unreadable by
+ * its owner, which is a different rule nobody wrote.
+ */
+for (const [label, createProvider] of providers) {
+  describe(`P6-02 acceptance[1] through the seam: the ${label} provider's default retrieval`, () => {
+    it(`${label}: withholds a record whose validity has passed`, async () => {
+      const memory = await mount(createProvider())
+      await memory.propose({
+        origin: { kind: 'user-asserted', assertedBy: 'operator' },
+        principal,
+        scope,
+        content: { note: 'stale-token' },
+        validUntil: '2000-01-01T00:00:00.000Z',
+      })
+
+      await expect(memory.query({ accessContext, query: 'stale-token' }))
+        .resolves.toMatchObject({ records: [] })
+    })
+
+    it(`${label}: returns an unexpired record, so the refusal above is not blanket`, async () => {
+      const memory = await mount(createProvider())
+      await memory.propose({
+        origin: { kind: 'user-asserted', assertedBy: 'operator' },
+        principal,
+        scope,
+        content: { note: 'fresh-token' },
+        validUntil: '2099-01-01T00:00:00.000Z',
+      })
+
+      const found = await memory.query({ accessContext, query: 'fresh-token' })
+      expect(found.records).toHaveLength(1)
+    })
+  })
+}

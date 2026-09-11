@@ -11,7 +11,7 @@
  * @module @deepseek-ai/dsh-memory/provenance
  */
 
-import type { MemoryProvenance, MemoryRecord } from './record.ts'
+import type { MemoryProvenance, MemoryRecord, MemorySensitivity } from './record.ts'
 import type { MemoryRecordId } from './types.ts'
 
 /**
@@ -47,7 +47,18 @@ export interface IndexingPolicy {
 }
 
 /** Why a record was withheld from an index. */
-export type IndexDenialReason = 'sensitive-not-permitted'
+export type IndexDenialReason =
+  /** The content is sensitive and the policy does not admit sensitive content. */
+  | 'sensitive-not-permitted'
+  /**
+   * Nobody assessed the content's sensitivity.
+   *
+   * Distinct from `sensitive-not-permitted`, and deliberately: telling an
+   * operator a record was refused as sensitive when nobody looked at it would
+   * report an assessment that never happened. Collapsing the two would also
+   * hide the only one of them a writer can fix by stating the field.
+   */
+  | 'sensitivity-unstated'
 
 /** The outcome of deciding whether one record may be indexed. */
 export type IndexAdmission =
@@ -62,11 +73,25 @@ export type IndexAdmission =
  * that says nothing withholds. The asymmetry is deliberate — a sensitive
  * record wrongly indexed cannot be un-indexed once an embedding derived from
  * it has been written, while one wrongly withheld costs a retrieval.
- * @param record - the record under consideration.
+ *
+ * An UNSTATED sensitivity is withheld too. It is not `normal`: nobody looked.
+ * Admitting it would make saying nothing the cheapest way into an index, which
+ * is the direction this rule exists to refuse — and `MemoryProposeRequest`
+ * leaves the field optional precisely because no shipped writer can derive it,
+ * so unstated is the common case rather than an edge one.
+ *
+ * Takes only the field it reads, so a caller holding a partial record — every
+ * writer this seam has — can ask without assembling a whole `MemoryRecord` it
+ * would have to invent the rest of.
+ * @param record - the record under consideration, or any value carrying its sensitivity.
  * @param policy - the deployment's indexing policy.
  * @returns whether the content may be indexed.
  */
-export function admitToIndex(record: MemoryRecord, policy: IndexingPolicy): IndexAdmission {
+export function admitToIndex(
+  record: { readonly sensitivity?: MemorySensitivity },
+  policy: IndexingPolicy,
+): IndexAdmission {
+  if (record.sensitivity === undefined) return { indexable: false, reason: 'sensitivity-unstated' }
   if (record.sensitivity === 'sensitive' && !policy.allowSensitive) {
     return { indexable: false, reason: 'sensitive-not-permitted' }
   }

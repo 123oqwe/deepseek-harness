@@ -190,7 +190,10 @@ export function recordConflict(
  * @param nowIso - the current RFC 3339 UTC instant.
  * @returns whether a default retrieval may return this record.
  */
-export function isDefaultRetrievable(record: MemoryRecord, nowIso: string): boolean {
+export function isDefaultRetrievable(
+  record: Pick<MemoryRecord, 'status' | 'validUntil'>,
+  nowIso: string,
+): boolean {
   if (record.status !== 'active') return false
   if (record.validUntil !== null && record.validUntil <= nowIso) return false
   return true
