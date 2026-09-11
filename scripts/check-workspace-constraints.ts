@@ -153,6 +153,15 @@ const packageFileExtras: Readonly<Record<string, readonly string[]>> = {
   '@deepseek-ai/dsh-experimental-code-runtime-python': ['py/**/*.py'],
   // The shipped preset compositions travel inside the roster package.
   '@deepseek-ai/dsh-agent-presets': ['presets'],
+  // BLOCKED-207: the only bundle package with two entry bundles that share
+  // code, so tsdown hoists the common half into a content-hashed chunk both
+  // `lib/index.js` and `lib/startup.js` import. The derivation above
+  // enumerates entry bundles and cannot know a chunk exists. The name changes
+  // whenever the chunk's contents do, hence the glob; a DIFFERENT shared
+  // module would emit a differently-named chunk that this pattern misses, and
+  // publint's publication-closure check is what refuses that -- it resolves
+  // every relative import in each packed file against the packed set.
+  '@deepseek-ai/dsh-headless': ['lib/stream-json-*.js'],
   // The Web Host mounts the default-off settings owner independently of each
   // Agent-scoped delegation-tool instance.
   '@deepseek-ai/dsh-tool-subagent': ['lib/model-selection-settings.js'],
