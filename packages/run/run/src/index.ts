@@ -66,7 +66,7 @@ import { compileTaskProfile } from '@deepseek-ai/dsh-task-profile'
 // `index.ts` at exactly one runtime export, so the classifier is reached through
 // the module that declares it.
 import { goalRoundOf, taskOriginOf } from '@deepseek-ai/dsh-task-profile/types'
-import type { TaskProfile, TaskProfileRef } from '@deepseek-ai/dsh-task-profile/types'
+import type { TaskProfileRef } from '@deepseek-ai/dsh-task-profile/types'
 import { taskProfileRef } from '@deepseek-ai/dsh-task-profile/validate'
 import {
   attachSessionToRun,
@@ -135,7 +135,7 @@ function lastTaskProfileRef(session: Session): TaskProfileRef | undefined {
     // Derived, never read back: the event carries the body alone, because a
     // digest taken over a profile's freshly-minted goal ids is run-varying and
     // a durable log holding one can never replay (BLOCKED-211).
-    if (event?.type === 'run/task-profile') return taskProfileRef((event.data as { profile: TaskProfile }).profile)
+    if (event?.type === 'run/task-profile') return taskProfileRef(event.data.profile)
   }
   return undefined
 }

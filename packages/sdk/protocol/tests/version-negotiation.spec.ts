@@ -364,7 +364,7 @@ describe('P8-01 standards vocabulary: what this handshake takes from MCP initial
     const version = negotiateProtocolVersion({ min: 1, max: 3 }, { min: 2, max: 5 })
     expect(version).toStrictEqual({ agreed: true, version: 3 })
 
-    const declared: CapabilityDeclaration[] = [{ id: 'tools' as CapabilityId, mandatory: true }]
+    const declared: CapabilityDeclaration[] = [{ id: 'tools', mandatory: true }]
     const capabilities = negotiateCapabilities(
       declared,
       new Set(['tools' as CapabilityId]),
@@ -386,13 +386,13 @@ describe('P8-01 standards vocabulary: what this handshake takes from the LSP Cli
     // take it for mandatory ones, which is the difference worth pinning: an
     // unknown mandatory capability is fatal, because a peer that requires
     // something this build has never heard of cannot be safely ignored.
-    const optional: CapabilityDeclaration[] = [{ id: 'telepathy' as CapabilityId, mandatory: false }]
+    const optional: CapabilityDeclaration[] = [{ id: 'telepathy', mandatory: false }]
     const ignored = negotiateCapabilities(optional, new Set(), new Set())
     expect(ignored.accepted).toBe(true)
     if (!ignored.accepted) throw new Error('expected acceptance')
     expect(ignored.ignored).toStrictEqual(['telepathy'])
 
-    const mandatory: CapabilityDeclaration[] = [{ id: 'telepathy' as CapabilityId, mandatory: true }]
+    const mandatory: CapabilityDeclaration[] = [{ id: 'telepathy', mandatory: true }]
     const refused = negotiateCapabilities(mandatory, new Set(), new Set())
     expect(refused.accepted).toBe(false)
     if (refused.accepted) throw new Error('expected a refusal')
