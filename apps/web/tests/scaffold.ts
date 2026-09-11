@@ -631,8 +631,20 @@ export async function launchWebScaffold(options: LaunchOptions = {}): Promise<We
     // copy the mounted plugins call — measured as `this signatureRoots handle
     // was not minted by createTrustKernel`, surfacing only as every tool call
     // in the session being refused. One plane, one instance.
-    const trustKernelModule = createRequire(import.meta.url)('@deepseek-ai/dsh-trust-kernel') as typeof import('@deepseek-ai/dsh-trust-kernel')
-    trustKernelModule.pinTrustKernel(ctx, trustKernelModule.createTrustKernel())
+    //
+    // The decider is the deployment's, and it is what `profile-boot` passes.
+    // Without one the kernel denies EVERY policy query, the enforcement point
+    // rewrites that into `policy-unavailable`, and the dispatch refuses the
+    // call before the risk gate is reached — so `action/risk-gated` is never
+    // appended and the classification layer disappears from the log behind a
+    // policy-layer refusal (BLOCKED-187, and §12.83 C4's warning made real).
+    // Resolved from the same `lib` plane as the kernel for the reason above.
+    const require_ = createRequire(import.meta.url)
+    const trustKernelModule = require_('@deepseek-ai/dsh-trust-kernel') as typeof import('@deepseek-ai/dsh-trust-kernel')
+    const enforcementModule = require_('@deepseek-ai/dsh-policy-enforcement') as typeof import('@deepseek-ai/dsh-policy-enforcement')
+    trustKernelModule.pinTrustKernel(ctx, trustKernelModule.createTrustKernel({
+      policyDecider: enforcementModule.endorseComposedDecision,
+    }))
     // A host with no command line still provides one: the web bundle's startup
     // row releases the rows waiting on it, and with no arguments each starts on
     // the values this scaffold composed above. An exit request can only come

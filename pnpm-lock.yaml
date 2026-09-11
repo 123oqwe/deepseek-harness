@@ -547,6 +547,9 @@ importers:
       '@deepseek-ai/dsh-experimental-webworker-runtime':
         specifier: workspace:^
         version: link:../../packages/experimental/webworker-runtime
+      '@deepseek-ai/dsh-policy-enforcement':
+        specifier: workspace:^
+        version: link:../../packages/policy/policy-enforcement
       '@deepseek-ai/dsh-pwsh-local':
         specifier: workspace:^
         version: link:../../packages/shell/pwsh-local
