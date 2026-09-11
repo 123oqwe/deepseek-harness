@@ -265,6 +265,38 @@
       config:
         policy: !!js "(process.env.DSH_PERMISSION_MODE ?? 'workspace-write') === 'danger-full-access' ? 'never' : 'ask'"
 
+    # P2-05: the policy engine the enforcement point queries. The enforcement
+    # point is already wired into both dispatch paths, and it FAILS CLOSED —
+    # with no engine mounted, `decisionWhenUnavailable` denies every action
+    # with `policy-unavailable`, which is what made every tool call on a
+    # factory profile fail (BLOCKED-187). Mounting a provider is what turns
+    # the decision from "nobody answered" into an answer.
+    - id: policy-engine
+      name: '@deepseek-ai/dsh-policy-engine-cedar'
+      config:
+        policies:
+          # Cedar denies when NO permit matches (`no-matching-permit`), so an
+          # empty policy set is not "no policy" — it is a refusal of
+          # everything. A deployment that wants a boundary narrows from here
+          # by adding `forbid`, which overrides any permit.
+          baseline-permit: 'permit(principal, action, resource);'
+          # The `forbid` half is deliberately absent, not forgotten. The
+          # kernel hard-deny band is `['safety-critical']`
+          # (`risk-taxonomy/src/classify.ts:36`), and NO policy can match on
+          # it here: the policy request carries the manifest's
+          # `sideEffectClass` (`read | write | network | process |
+          # destructive`), never a `RiskClass`, so `safety-critical` is not in
+          # the domain of any field Cedar receives. Forbidding the one class
+          # that IS reachable — `destructive` — would deny everything, since
+          # every manifest this profile produces carries it.
+          #
+          # That band is enforced anyway, one layer earlier:
+          # `gateActionRisk` refuses on `classification.hardDenied` from both
+          # dispatch paths. Restating it here would be a second declaration of
+          # a live rule, free to disagree with the first. It is reinstated as
+          # a policy when `riskClass` reaches the policy request (BLOCKED-187's
+          # residual).
+
     - id: permission
       name: '@deepseek-ai/dsh-permission-presets'
       config:

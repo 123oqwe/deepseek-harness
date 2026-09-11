@@ -70,6 +70,7 @@
     "@deepseek-ai/dsh-message-bus": "workspace:^",
     "@deepseek-ai/dsh-permission-presets": "workspace:^",
     "@deepseek-ai/dsh-plan-mode": "workspace:^",
+    "@deepseek-ai/dsh-policy-engine-cedar": "workspace:^",
     "@deepseek-ai/dsh-plugin-package-inventory-deepseek": "workspace:^",
     "@deepseek-ai/dsh-pwsh-sandbox": "workspace:^",
     "@deepseek-ai/dsh-repeat-tool-reminder": "workspace:^",

@@ -1251,6 +1251,9 @@ importers:
       '@deepseek-ai/dsh-plugin-package-inventory-deepseek':
         specifier: workspace:^
         version: link:../../llm/plugin-package-inventory-deepseek
+      '@deepseek-ai/dsh-policy-engine-cedar':
+        specifier: workspace:^
+        version: link:../../policy/policy-engine-cedar
       '@deepseek-ai/dsh-pwsh-sandbox':
         specifier: workspace:^
         version: link:../../shell/pwsh-sandbox
