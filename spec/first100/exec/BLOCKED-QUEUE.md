@@ -526,6 +526,28 @@ P8-01 was signed off and accepted under this ruling: the shared titles are a rep
 
 These are NOT open questions. They live here because `## Open` means "waiting on a decision", and an entry that is settled but still binding was being read as unresolved — by people and by a monitor. A directive to follow, terms a future epic must honour, and a resolved defect kept for its lesson are three different things, and none of them is a question.
 
+### BLOCKED-192 — STANDING RULE: whoever adds a declaration regenerates its projection in the same commit, and reports that projection's `--check`
+
+**Two instances on 2026-09-10, in two different generators, by the same author.** Both were silent: the declaration compiled, the suites passed, and a generated file somewhere else went stale.
+
+1. **`registry.json` → the ledger.** `SCAFFOLD_FILES['P4-02']` changed the registry, which is `extract-registry.mjs`'s output, so the registry was regenerated — but `EXEC-STATE.registryDigest` is synced only by a ledger write (`syncExecState`), and no ledger write happened. `first100:verify-ledger-digests` reddened the whole gate set. The fix is `generate-ledger.mjs --sync-exec-state`, which exists for exactly this case ("the registry can change without the ledger changing … it recomputes; it never invents a row") — not a sign-off, which would mix two unrelated facts into one write.
+2. **A `SessionEventMap` `declare module` merge → the persistence catalog.** P4-02's C stage declared `run/task-profile` and never ran `gen-persistence-catalog`, so `KNOWN_SESSION_EVENT_TYPES` and `docs/persistence-catalog.md` did not contain it. That one is not cosmetic: the persistence read path refuses a log carrying a type outside that set unless the envelope marks it `ignorable`, **so the build writing the event would have refused its own log.** `schema-registry`'s compatibility spec is the test that catches a half-done regeneration, because it asserts every closed-list type has a registered schema id.
+
+**The rule.** Adding a declaration is half the change; its generated projection is the other half, and it belongs in the same commit. Before reporting a SHA, run the `--check` for every projection the change touches and report the exit code. Known chains, to be extended as they are found:
+
+| declaration | projection | command |
+|---|---|---|
+| `tests/first100/registry.json` (via `extract-registry.mjs` inputs, incl. `SCAFFOLD_FILES`) | `EXEC-STATE` digests | `generate-ledger.mjs --sync-exec-state`, checked by `first100:verify-ledger-digests` |
+| a `SessionEventMap` member (`declare module`) | `KNOWN_SESSION_EVENT_TYPES`, `docs/persistence-catalog.md`, and the `schema-registry` id pairing | `pnpm run gen-persistence-catalog`, checked by `verify-persistence-catalog` |
+| an exported union widened | the generated Cordis catalogs | `pnpm run gen-cordis-catalog`, checked by `verify-cordis-catalog` |
+| a new workspace import edge | `docs/module-graph.*` | `pnpm run gen-module-graph`, checked by `verify-module-graph` |
+
+**The lane report's `--check` list is five, not three:** `extract-registry.mjs --check`, `generate-specs.ts --check`, `first100:verify-files-overlay`, `generate-ledger.mjs --check`, `verify-persistence-catalog`.
+
+**A gap this exposed in the registry gate set, for the delegate rather than for an executor.** Instance 2 was red while the delegate's registry gate set reported **22/22 green at that same SHA**: `run-registry-gates.mjs`'s `GATES` list does not contain `verify-persistence-catalog`. So the gate set is not a sufficient condition for "no stale generated file". Whether to add it there — rather than leaving it to `doc-sync` and to this rule — is a delegate decision and is deliberately not taken here.
+
+**Why a rule rather than another gate.** Each chain already HAS a gate; none of them was run. The failure is not a missing check, it is a change that stopped halfway and a report that listed the checks it did run. That is the same shape as reading a warning without acting on it: `run-registry-gates.mjs`'s own `GATES` comment records that a stale `EXEC-STATE.registryDigest` had reddened the set twice before, "once after SCAFFOLD_FILES changed registry.json", and it was read while editing that very list one commit before instance 1.
+
 ### BLOCKED-189 — STANDING RULE: an instrument that measures "does X hold without Y" must not itself depend on Y; a number too small to believe means checking which layer the instrument ran in, before checking the finding
 
 **2026-09-10, `verify-import-integrity`.** The question was whether an undeclared import is resolvable from the importing package — the artifact-plane condition that broke P4-11. Asked under `tsx`, the answer was **0 unresolvable out of 332**. Asked with the same input under plain `node`, it was **144**. `tsx` installs a resolution hook that goes through the tsconfig path aliases, which is precisely the source plane that hides this defect class: the instrument was standing inside the thing it was measuring, and it reported the tree as healthy in exactly the way the bug depends on.
