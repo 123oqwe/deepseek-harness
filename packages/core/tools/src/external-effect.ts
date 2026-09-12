@@ -610,18 +610,6 @@ export function refusedPolicyResult(
 }
 
 /**
- * Render a risk refusal as a settled tool result (P2-04 must[1]).
- *
- * A refusal is an outcome, not a thrown error, for the same reason a ledger
- * refusal is: the model asked for something the deployment does not permit,
- * and it needs to read that and choose differently rather than see a crash.
- * The text names WHY — an undeclared tool says so, because "this scored high"
- * and "this never said what it touches" call for different fixes.
- * @param refusal - what the gate decided.
- * @param toolName - the action refused, named so a multi-call turn is readable.
- * @returns the tool result to record in place of an execution.
- */
-/**
  * The tool result recorded when a decision no longer covers what is about to
  * run (P2-06 must[2], acceptance[0]).
  *
@@ -650,6 +638,18 @@ export function refusedApprovalResult(
   }
 }
 
+/**
+ * Render a risk refusal as a settled tool result (P2-04 must[1]).
+ *
+ * A refusal is an outcome, not a thrown error, for the same reason a ledger
+ * refusal is: the model asked for something the deployment does not permit,
+ * and it needs to read that and choose differently rather than see a crash.
+ * The text names WHY — an undeclared tool says so, because "this scored high"
+ * and "this never said what it touches" call for different fixes.
+ * @param refusal - what the gate decided.
+ * @param toolName - the action refused, named so a multi-call turn is readable.
+ * @returns the tool result to record in place of an execution.
+ */
 export function refusedRiskResult(refusal: RiskRefusal, toolName: string): ToolExecutionResult {
   const cause = refusal.undeclared
     ? `it declares no risk domain tags, so it classifies at "${refusal.riskClass}" by the unknown default`
