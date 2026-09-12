@@ -317,6 +317,7 @@
       "@deepseek-ai/dsh-hooks-claude-code": ["./packages/hooks/hooks-claude-code/src"],
       "@deepseek-ai/dsh-hooks-codex": ["./packages/hooks/hooks-codex/src"],
       "@deepseek-ai/dsh-intake-dedup": ["./packages/collaboration/intake-dedup/src"],
+      "@deepseek-ai/dsh-job-settle-signal": ["./packages/test-support/job-settle-signal/src"],
       "@deepseek-ai/dsh-jobs": ["./packages/jobs/jobs/src"],
       "@deepseek-ai/dsh-jobs/invariant": ["./packages/jobs/jobs/src/invariant.ts"],
       "@deepseek-ai/dsh-jobs/brand": ["./packages/jobs/jobs/src/brand.ts"],

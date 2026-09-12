@@ -1,3 +1,38 @@
+# Two observations of the same scripted ACP failure — one background, one
+# foreground — followed by `job_output(wait: true)` on the background job.
+#
+# BLOCKED-222. The background call comes FIRST only to make the ordering pinnable; the
+# diagnostic subject is unchanged. The completion notice a settled background
+# job produces is delivered or suppressed by a race the product decides inside
+# `settle()`: `jobs-local` counts a waiter only while the job is still running
+# (`src/index.ts:237-240`), marks the job reported when one exists (`:422`), and
+# `tool-jobs` skips delivery for a reported job (`src/index.ts:279`). So a
+# `job_output(wait: true)` that registers before settlement suppresses the
+# notice, and one that registers after it does not. Nothing in the scenario
+# decided which happened, and the fixture failed under CI load for that reason
+# alone.
+#
+# The composition mounts `@deepseek-ai/dsh-job-settle-signal`, which writes a
+# file when job `subagent-1` settles, and the mock ACP server blocks the
+# FOREGROUND prompt at handler entry until that file exists. A file written by
+# the job's own producer could not establish this: the producer finishes before
+# the registry settles the job, so only an observer of the settlement sits after
+# it. That observer emits no session event — the refreshed fixture differs from
+# its predecessor by exactly three events, and by nothing else:
+#
+#   index 35  agent/inbox/spliced  target=next-step, one message inserted
+#   index 38  agent/inbox/spliced  target=next-step, one message removed
+#   index 40  user/message         plugin source, "background job subagent-1 …
+#                                  finished [status: failed, aborted; …]"
+#
+# That placement is the only one the barrier permits. The foreground prompt
+# cannot return until the job has settled, so settlement falls strictly inside
+# step 2, which is where the splice lands. No waiter exists at that moment —
+# `job_output` is step 3 — so `reported` is false and the notice is delivered
+# rather than suppressed. The inbox is drained at the next step boundary, so the
+# removal and the delivered message open step 3. Any earlier placement would
+# require settlement before the foreground call started, and any later one would
+# require it after `job_output` had registered; the barrier excludes both.
 version: 1
 scenario: subagent-acp-diagnostic
 profile: headless

@@ -34,6 +34,15 @@
  *                        handler is in flight (it has streamed its chunk). A test
  *                        polls for this file to cancel on a CONDITION rather than
  *                        an arbitrary timeout (subprocess cold-start is variable).
+ * - `MOCK_AWAIT_FILE`  — if set together with `MOCK_AWAIT_MARKER`, a `prompt`
+ *                        whose text contains the marker blocks at handler entry
+ *                        until this path exists. The file is written by an
+ *                        observer of the event the prompt must follow, not by a
+ *                        participant in it, so the wait is a barrier rather than
+ *                        a margin.
+ * - `MOCK_AWAIT_MARKER` — the prompt substring that selects which prompt waits.
+ *                        Prompts without it are unaffected, so one mock binary
+ *                        serves both sides of an ordering.
  * - `MOCK_MISSING_SESSION_ID` — if `1`, return a malformed empty `session/new`
  *                        response to exercise startup rollback.
  * - `MOCK_FLUSH_ON_EOF` — if set, on stdin EOF the agent takes an async beat
@@ -100,12 +109,29 @@ const CRASH_AFTER_CHUNK = process.env.MOCK_CRASH_AFTER_CHUNK === '1'
 const IGNORE_CANCEL = process.env.MOCK_IGNORE_CANCEL === '1'
 const TOOL_KIND = process.env.MOCK_TOOL_KIND as ToolKind | undefined
 const READY_FILE = process.env.MOCK_READY_FILE
+// A prompt carrying MOCK_AWAIT_MARKER blocks at handler entry until
+// MOCK_AWAIT_FILE exists. Both must be set; either alone is inert.
+const AWAIT_GATE = process.env.MOCK_AWAIT_FILE !== undefined && process.env.MOCK_AWAIT_MARKER !== undefined
+  ? { file: process.env.MOCK_AWAIT_FILE, marker: process.env.MOCK_AWAIT_MARKER }
+  : undefined
 const FLUSH_ON_EOF = process.env.MOCK_FLUSH_ON_EOF
 // When MOCK_NEWSESSION_READY/GO are set, newSession touches READY then blocks
 // until GO appears — letting a test cancel mid-newSession deterministically.
 const NEWSESSION_GATE = process.env.MOCK_NEWSESSION_READY !== undefined && process.env.MOCK_NEWSESSION_GO !== undefined
   ? { ready: process.env.MOCK_NEWSESSION_READY, go: process.env.MOCK_NEWSESSION_GO }
   : undefined
+
+/**
+ * Concatenate a prompt request's text blocks so a gate can select on wording.
+ * @param params - the incoming `session/prompt` request.
+ * @returns the request's text blocks joined by newlines.
+ */
+function promptText(params: PromptRequest): string {
+  return params.prompt
+    .filter((block): block is { type: 'text'; text: string } => block.type === 'text')
+    .map(block => block.text)
+    .join('\n')
+}
 
 function makeAgent() {
   // Pending cancel resolver for the HANG path: a `session/cancel` resolves the
@@ -141,6 +167,11 @@ function makeAgent() {
     },
     async prompt(params: PromptRequest, conn: AgentContext): Promise<PromptResponse> {
       if (CRASH_ON_PROMPT) process.exit(1)
+      // Order this prompt after whatever wrote the gate file. Entry is the
+      // latest point that still precedes every observable effect of the prompt.
+      if (AWAIT_GATE !== undefined && promptText(params).includes(AWAIT_GATE.marker)) {
+        while (!existsSync(AWAIT_GATE.file)) await new Promise(r => setTimeout(r, 10))
+      }
       if (WANT_PERMISSION) {
         // Ask the client to approve before answering; honor its decision. Under
         // MOCK_NO_ALLOW the only options are reject-shaped, so an `allow`-policy

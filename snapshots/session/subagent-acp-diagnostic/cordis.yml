@@ -13,6 +13,17 @@
         env:
           MOCK_PERMISSION: '1'
           MOCK_TOOL_KIND: execute
+          # BLOCKED-222 barrier: the FOREGROUND prompt blocks at handler entry until the
+          # background job has settled, so `job_output`'s waiter is registered
+          # strictly after settlement. Without it the notice is delivered or
+          # suppressed by whichever of the two wins, and the fixture races.
+          MOCK_AWAIT_MARKER: FOREGROUND
+          MOCK_AWAIT_FILE: !!js "(process.env.TMPDIR ?? '/tmp') + '/dsh-job-settled-' + process.cwd().replaceAll('/', '_')"
+    - id: job-settle-signal
+      name: '@deepseek-ai/dsh-job-settle-signal'
+      config:
+        file: !!js "(process.env.TMPDIR ?? '/tmp') + '/dsh-job-settled-' + process.cwd().replaceAll('/', '_')"
+        jobId: subagent-1
     - id: tool-subagent-acp-diagnostic
       name: '@deepseek-ai/dsh-tool-subagent'
       config:
