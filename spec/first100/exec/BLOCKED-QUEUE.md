@@ -5601,3 +5601,79 @@ The observer package is a public release member, because `scripts/check-workspac
 **Two mutations, because there are now two assertions about the generator.** Restoring the original draw fails with `after-reserve: expected 43 to be greater than 2000`, the label naming the missing point. Keeping `Math.imul` and taking the low bits fails the OTHER assertion — `expected [ Set{ 'after-send', 'none' }, …(249) ] to deeply equal []` — with the aggregate histogram perfect. Each mutation reddens the assertion the other leaves green, which is why both are frozen.
 
 **Timing, since the 120 s timeout was ruled not to move.** The file now runs two 10,000-attempt campaigns and took 37.8 s wall on a host at load average ~36. Earlier, on a quiet host, the single campaign took 9 s; under the same load it timed out twice in ten runs at 120 s, which is the environment reading recorded in BLOCKED-221 rather than a property of the suite. The cloud step is the gate.
+
+### BLOCKED-229 — a durable Run-store write that fails with nobody to tell
+
+**Status:** FIXED 2026-09-12, owner lane A. Found by CI 34679720296, where 21000 cases passed and the step still exited 1: Vitest caught one Unhandled Rejection, `ENOENT rename '/tmp/dsh-settlement-bus-4DxJOK/runs.json.43306.tmp' -> '.../runs.json'`, from `packages/subagent/subagent/tests/settlement-outbox.spec.ts`. Neither file changed in the candidate — a latent race in the baseline that CI's timing exposed.
+
+**Four code facts, read before anything was changed.**
+
+1. `packages/run/run/src/index.ts:192-203` — `enqueue` returns the REJECTING promise to its caller and stores a separately-caught copy in `pathQueues`. The chain itself can never go unhandled; only a caller's promise that nobody observes can.
+2. `:1279` — the disposer's `await Promise.all(this.writes.splice(0))` takes a snapshot. Anything pushed after it is never awaited.
+3. `:943` — `finish`/`endRun` pushes without awaiting, deliberately, with the reason in its own comment.
+4. `settlement-outbox.spec.ts:50` writes its store into the same directory `afterEach` removes at `:33-34` — the exact path shape CI reported.
+
+**It does not reproduce locally: 3 runs, 3 green, zero unhandled.** So the mechanism was instrumented rather than guessed. Per-mount tagging of every `this.writes.push` and of the disposer, one run of the whole spec:
+
+```
+ 1 m1 REACHED-YIELD          9 m2 splice draining 2
+ 2 m1 push@818              10 m3 REACHED-YIELD
+ 3 m1 push@818                 FIBER-DISPOSE m3
+ 4 m1 push@943 endRun       11 m3 disposer ENTER
+ 5 m2 REACHED-YIELD         12 m3 splice draining 0
+ 6 m2 push@818              13 m4 REACHED-YIELD
+ 7 m2 push@818              14 m4 push@818
+   FIBER-DISPOSE m2         15 m4 push@818
+ 8 m2 disposer ENTER        16 m4 push@943 endRun
+```
+
+**m1 and m4 leave three unawaited writes each, including the `endRun` terminal write, and never enter a disposer.** Three candidate explanations, each with the reading that settled it:
+
+| candidate | reading | verdict |
+| --- | --- | --- |
+| the generator never reached `yield`, so no disposer was registered | all four mounts print `REACHED-YIELD` | excluded |
+| cordis's concurrent unload skipped the disposer | probing the fiber's own dispose effect prints `FIBER-DISPOSE` for m2 and m3 only | excluded |
+| those Contexts were never disposed | `settlement-outbox.spec.ts` makes **four** `setup()` calls and **two** `dispose()` calls, both inside one case | **confirmed** |
+
+So the disposer not running is necessary, not a defect — nothing asked it to run. That half is [BLOCKED-230](#blocked-230). What remains here is the product half: a mount that is never disposed still started durable writes, and when its directory disappears the failure reaches no caller at all.
+
+**The fix announces the failure rather than swallowing it.** `track(write)` keeps both paths: `writes` still holds the original promise, so a mount that IS disposed surfaces the rejection through its `Promise.all`; a separate catch emits `run/store-write-failed` carrying the store path and the error, for the mount nobody disposes. A bare catch was considered and rejected — it removes the CI symptom by converting a lost terminal write into a silent one, which is the failure shape this program keeps recording.
+
+Production has the same shape as the abandoned test Context whenever a host ends without unwinding: a crash, `process.exit`, an operator closing the app.
+
+**`run/*` is a new Cordis event scope.** `run/task-profile` is a SESSION event, not a Cordis one, so this is the first `run/` entry in `EVENT_SCOPE_PAGE` and `gen-cordis-catalog` refuses a scope with no documentation owner. No new page was created: `packages/run/README.md:55` already names the Core subsystem page as the authoritative contract for `ctx.runs`, and the scope maps there.
+
+**Readings.** Removing the reporting reddens the new case (1 failed, 11 passed). `run` + `subagent` 887 passed; `settlement-outbox` ×10 all green with zero unhandled; the full P4-06/P4-07 frozen scope 181 passed; gate set 23 PASS / 2 HELD / 1 OOM, with `verify-persistence-catalog` green because a Cordis event leaves the persistence catalog and both SDK projections untouched.
+
+**One thing the case does NOT assert, deliberately.** The mutation's second half — that removing the reporting brings the unhandled rejection back — is not observable on this host: the mutated run produces zero `Unhandled`/`ENOENT` lines. The case therefore asserts the event's presence, not the absence of a rejection that cannot be detected here. Pinning "no unhandled rejection" needs the cloud full-suite run that caught it in the first place.
+
+### BLOCKED-230 — a mounted plugin's fiber disposer does not run under a condition that is not root-versus-child
+
+**Status:** test-side FIXED 2026-09-12 for one spec, owner lane A; the repository-wide half is scheduled after push 4.
+
+**The condition is: a Context discarded without ever being disposed.** `settlement-outbox.spec.ts` makes four `setup()` calls and two `dispose()` calls, both inside `it[95]`; `it[80]` and `it[121]` abandon theirs. Those two are exactly the mounts that never enter a disposer in BLOCKED-229's trace.
+
+**A reading that is NOT the conclusion.** `vendor/cordis/src/fiber.ts:428` sets `this.dispose = () => this.restart()` on a ROOT fiber. Lane A first read that as "disposing a root does not unload the plugin tree" and reported it as the root cause. That was wrong, and a green frozen case refutes it: P4-01 U's `unregisters the service when the mounting fiber unloads` (`packages/run/run/tests/plugin.spec.ts:69-72`) disposes a root Context and asserts `ctx.get('runs')` is `undefined`. A root dispose DOES tear down. The line stays here as a reading; it is not the explanation.
+
+**Census of the exposure, read-only.** Every `fiber.dispose()` call site in the repository, classified by where the receiver came from (direct `new Context()` assignment, or a same-file factory that builds one, including destructured `const { ctx } = await harness()`):
+
+| receiver | sites |
+| --- | --- |
+| directly assigned `new Context()` | 656 |
+| from a same-file Context factory | 145 |
+| everything else — child fibers, or not statically resolvable | 665 |
+
+The 801 root-class calls live in **182 files**, of which **23 are directly frozen** by a `command-freeze.json` entry. The frozen cases whose TITLES claim teardown semantics, which is the set a re-check has to consider:
+
+| epic/cell | cases |
+| --- | --- |
+| P4-01 U | 4 — `unregisters the service when the mounting fiber unloads`; `PARKS a running Run at 'paused' when the mount unloads cleanly`; `RELEASES its work item on a clean unload`; `cancels a Run whose session was disposed before any model step` |
+| P8-01 P | 3 — shutdown-before-exit, dispose-on-flush-failure, `stops serving on a bare fiber dispose` |
+| P1-01 U | 2 — disposing a quarantined entry's fiber; `stops observing once the fiber disposes` |
+| P2-02 U, P4-07 U, P4-09 U | 1 each |
+
+**These tables do not show those conclusions are vacuous, and must not be read that way.** The P4-01 U case above is positive evidence that teardown really happened in its harness. The exposure is narrower and stranger: identically-shaped harnesses sometimes run the disposer and sometimes do not, and nothing today distinguishes them. **The re-check scope is "does this case depend on the disposer actually running", not "does it dispose a root".**
+
+**Fixed here, for one spec only.** `setup()` registers each Context and teardown disposes them, rather than adding three `dispose()` calls — a per-case dispose is precisely what was forgotten twice already. Order is load-bearing: dispose runs BEFORE the directories are removed, which is what stops a live mount from writing into a deleted path. The teardown asserts it actually tore down (a disposed Context no longer resolves `runs`), so the loop cannot be stubbed out silently; removing it reddens two of the three cases, exactly the two that never disposed themselves.
+
+**The other 22 frozen files are NOT audited here.** A general harness guard — every Context a spec creates is disposed before its case ends — is the right instrument for that, and it is scheduled after push 4 rather than hand-checked file by file now.
