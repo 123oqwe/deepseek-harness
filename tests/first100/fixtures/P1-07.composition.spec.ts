@@ -21,7 +21,7 @@
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
+import { erroredTurns, LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import { describe, expect, it } from 'vitest'
 
@@ -101,6 +101,11 @@ async function openClone(label: string, grant?: string, viaCommand = false): Pro
           && event.data.source.kind === 'agent-instructions')
         .map(event => JSON.stringify(event.data.content))
         .join('\n')
+      // BLOCKED-219: a turn that ended in an error produces no instructions
+      // either, so "nothing reached the model" would read as the gate working
+      // when the run had simply failed. Checked here, where the log is already
+      // parsed, so every case in this file inherits it.
+      expect(erroredTurns(events), `${label}: the boot ended in an error turn`).toEqual([])
     },
   })
   expect(stderr).not.toContain('UNHANDLED')

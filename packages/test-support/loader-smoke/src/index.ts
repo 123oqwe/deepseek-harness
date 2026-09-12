@@ -220,3 +220,41 @@ export async function runLoaderSmoke(options: LoaderSmokeOptions): Promise<Loade
     await rm(cwd, { recursive: true, force: true })
   }
 }
+
+/** One turn that ended in an error, as {@link erroredTurns} reports it. */
+export interface ErroredTurn {
+  /** The turn number the session recorded. */
+  readonly turn: number
+  /** The failure message, when the reason carried one. */
+  readonly message: string
+}
+
+/**
+ * Every `turn/end` in a session log whose reason is an error (BLOCKED-219).
+ *
+ * A boot smoke that only counts `turn/end` events cannot tell a completed turn
+ * from a failed one. That gap is not hypothetical: when a `agent/pre-step`
+ * listener throws, the exception leaves `preStep` before the step runs, the
+ * user's message is consumed out of the inbox, and the turn ends through the
+ * error path having produced no `user/message`, no `step/start` and no model
+ * request. stderr stays empty and the exit code stays clean, so the ONLY record
+ * is the reason this function reads — and `memory-context`'s boot case stayed
+ * green on exactly that shape while six sibling cases failed without naming a
+ * cause.
+ *
+ * Returned rather than asserted so the caller owns the assertion and its
+ * message; a scenario that legitimately ends in an error (the recorded corpus
+ * has four) can read this and expect what it declares.
+ * @param events - the session log's events, excluding the header line.
+ * @returns one entry per errored turn, in log order; empty when every turn completed.
+ */
+export function erroredTurns(events: readonly { type: string; data?: unknown }[]): ErroredTurn[] {
+  const errored: ErroredTurn[] = []
+  for (const event of events) {
+    if (event.type !== 'turn/end') continue
+    const data = event.data as { turn?: number; reason?: { kind?: string; error?: { message?: string } } } | undefined
+    if (data?.reason?.kind !== 'error') continue
+    errored.push({ turn: data.turn ?? -1, message: data.reason.error?.message ?? '(the reason carried no message)' })
+  }
+  return errored
+}

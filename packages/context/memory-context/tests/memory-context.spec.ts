@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { KNOWN_SESSION_EVENT_TYPES } from '@deepseek-ai/dsh-session'
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
-import { LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
+import { erroredTurns, LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
 
 const driver = fileURLToPath(new URL('./fixtures/driver.ts', import.meta.url))
 const emptyDriver = fileURLToPath(new URL('./fixtures/empty-recall-driver.ts', import.meta.url))
@@ -72,6 +72,14 @@ describe('memory-context through the production headless profile', () => {
     expect(stderr).not.toContain('UNHANDLED')
     expect(stderr).not.toContain('MEMORY_PROVIDER_UNAVAILABLE')
     expect(events.filter(event => event.type === 'turn/end')).toHaveLength(1)
+    // BLOCKED-219. Counting `turn/end` cannot tell a completed turn from a
+    // failed one, and this case once stayed GREEN on a turn that ended in an
+    // error while six sibling cases failed without naming a cause: a throwing
+    // `agent/pre-step` listener leaves `preStep` before the step runs, so the
+    // user's message is consumed, nothing reaches the model, stderr stays
+    // empty and the exit code stays clean. The reason is the only record, and
+    // nothing read it.
+    expect(erroredTurns(events)).toEqual([])
   })
 
   it('memory/access is a known session event type, so a real log carrying it replays', () => {

@@ -23,7 +23,7 @@
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
+import { erroredTurns, LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import { describe, expect, it } from 'vitest'
 
@@ -99,6 +99,11 @@ async function openClone(label: string, answer?: string): Promise<Observation> {
           && event.data.source.kind === 'agent-instructions')
         .map(event => JSON.stringify(event.data.content))
         .join('\n')
+      // BLOCKED-219: the untrusted cases assert that the clone's text did NOT
+      // reach the model, and a failed turn produces no text either. Without
+      // this, a boot that died in a pre-step listener would read as the
+      // boundary working.
+      expect(erroredTurns(events), `${label}: the boot ended in an error turn`).toEqual([])
       for (const event of events) {
         if (event.type === 'approval/asked') {
           const data = event.data as { toolName: string; subject?: string }
