@@ -5758,7 +5758,23 @@ The 801 root-class calls live in **182 files**, of which **23 are directly froze
 
 **Fixed here, for one spec only.** `setup()` registers each Context and teardown disposes them, rather than adding three `dispose()` calls — a per-case dispose is precisely what was forgotten twice already. Order is load-bearing: dispose runs BEFORE the directories are removed, which is what stops a live mount from writing into a deleted path. The teardown asserts it actually tore down (a disposed Context no longer resolves `runs`), so the loop cannot be stubbed out silently; removing it reddens two of the three cases, exactly the two that never disposed themselves.
 
-**The other 22 frozen files are NOT audited here.** A general harness guard — every Context a spec creates is disposed before its case ends — is the right instrument for that, and it is scheduled after push 4 rather than hand-checked file by file now.
+**The other 22 frozen files, audited 2026-09-12.** Three of them are genuinely exposed; the rest are not, and the difference is whether an ABANDONED Context mounted something that writes to disk.
+
+| file | created ≈ | dispose sites | what its Context factory mounts | epic.cell |
+| --- | --- | --- | --- | --- |
+| `packages/run/run/tests/plugin.spec.ts` | 21 | 11 | `InMemoryLeaseStorePlugin` + `RunPlugin{storePath}` | P4-01.U |
+| `packages/sdk/server/tests/server.spec.ts` | 23 | 22 | `MessageBusPlugin` + `JsonlSessionPersistence` | P0-06.U |
+| `packages/sdk/server/tests/plugin-apply.spec.ts` | 12 | 2 | `JsonlSessionPersistence{root}` | P8-01.P |
+
+The first is the one to read first: it holds P4-01.U's four teardown-claiming frozen cases AND mounts the `RunPlugin{storePath}` that BLOCKED-229 is about.
+
+Nine files dispose inside an `afterEach`/`afterAll` hook and are safe by construction: `host/plugin-inventory/{inventory,provenance-record}`, `llm/llm-retry/run-budget`, `policy/capability-token-file/provider`, `run/run/fenced-dispatch`, `session/session-persistence-jsonl/jsonl`, `subagent/subagent/{capability-token-spawn,settlement-outbox}`, `workflow/workflow-worker-thread/nested-run`.
+
+Ten abandon Contexts whose factory mounts **nothing durable**, so there is no write to lose and nothing to repair — recorded as a reading: `bundle/headless/headless`, `context/agent-instructions/trust-ask`, `core/agent-loop/{budget,resume,tool-calls}`, `core/tools/ptc`, `llm/llm/circuit-breaker`, `skill/skill-filesystem/trust-gate`, `workspace/command-workspace-trust/command`, `workspace/workspace-trust-local/provider`. (`core/agent-loop/resume` does mount persistence, but its 43 dispose sites against 10 constructions are per-case teardown, so it abandons nothing.)
+
+**Two measurement traps this audit hit, recorded because either one inverts the answer.** First, "created minus disposed" is meaningless wherever a teardown hook disposes: one `afterEach` loop is a single call site tearing down many Contexts, which is exactly the shape this entry's own fix added. Second, deciding "does it mount something durable" by grepping the FILE produces false positives — it put `core/tools/ptc.spec.ts` at the top of the risk list with ~87 abandoned Contexts, and reading its `setup()` shows it mounts SystemPrompt, ToolRuntime and FakeRuntime only. The counts above are approximations used for grouping; no conclusion rests on their difference.
+
+**A static lint rule was considered and rejected.** What is statically visible is whether a file disposes in teardown; what matters is whether an abandoned Context mounted a writer, which crosses files and factories — the false positive above is the evidence that the static form misfires. The instrument is a shared RUNTIME guard: register each Context at setup, assert in teardown that all are disposed, before any directory is removed. Applying it to the three files above is this entry's closing work.
 
 ### BLOCKED-214 second half — the unattended side of P1-07's ruling: a persistent trust record
 
