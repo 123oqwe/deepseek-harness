@@ -24,7 +24,6 @@ import { enforceManifestedAction } from '@deepseek-ai/dsh-policy-enforcement'
 import type { ExecutionWorldFact, PolicyContextFacts } from '@deepseek-ai/dsh-policy-engine'
 import type { ApprovalBindingRequest } from '@deepseek-ai/dsh-tools/external-effect'
 import type { ApprovalDisplay } from '@deepseek-ai/dsh-user-approval/types'
-import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 import type { ActionId, ArgumentsHash, CapabilityRef, IdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
 import type { LedgerScope } from '@deepseek-ai/dsh-action-ledger'
 // The `actionLedger` service augmentation lives in the ledger package's runtime
@@ -609,7 +608,7 @@ function approvalBindingFor(agent: Agent, block: ToolCallBlock): ApprovalBinding
   return {
     inputs: {
       action: block.name,
-      args: block.arguments as JsonValue,
+      args: block.arguments,
       principal: agent.identity?.principal.id ?? 'unattached',
       preconditions: [],
     },
