@@ -541,10 +541,6 @@ flowchart TD
   pkg_memory --> pkg_principal
   pkg_memory --> pkg_session
   pkg_memory --> pkg_util_values
-  pkg_policy_engine --> pkg_action_manifest
-  pkg_policy_engine --> pkg_brand
-  pkg_policy_engine --> pkg_capability_token
-  pkg_policy_engine --> pkg_principal
   pkg_persona --> pkg_system_prompt
   pkg_sandbox --> pkg_llm
   pkg_sandbox --> pkg_session
@@ -590,11 +586,6 @@ flowchart TD
   pkg_message_feedback --> pkg_typert_protocol
   pkg_plugin_compat --> pkg_brand
   pkg_plugin_compat --> pkg_schema_registry
-  pkg_policy_enforcement --> pkg_policy_engine
-  pkg_policy_enforcement --> pkg_trust_kernel
-  pkg_policy_engine_cedar --> pkg_action_manifest
-  pkg_policy_engine_cedar --> pkg_brand
-  pkg_policy_engine_cedar --> pkg_policy_engine
   pkg_retry --> pkg_action_ledger
   pkg_retry --> pkg_principal
   pkg_sandbox_local --> pkg_llm
@@ -723,6 +714,11 @@ flowchart TD
   pkg_lsp_stdio --> pkg_lsp
   pkg_lsp_stdio --> pkg_subprocess
   pkg_lsp_stdio --> pkg_timeout
+  pkg_policy_engine --> pkg_action_manifest
+  pkg_policy_engine --> pkg_brand
+  pkg_policy_engine --> pkg_capability_token
+  pkg_policy_engine --> pkg_execution_world
+  pkg_policy_engine --> pkg_principal
   pkg_retry_cockatiel --> pkg_retry
   pkg_sandbox_policy --> pkg_agent
   pkg_sandbox_policy --> pkg_invariants
@@ -803,6 +799,11 @@ flowchart TD
   pkg_jobs_local --> pkg_jobs
   pkg_jobs_local --> pkg_scope
   pkg_jobs_local --> pkg_timeout
+  pkg_policy_enforcement --> pkg_policy_engine
+  pkg_policy_enforcement --> pkg_trust_kernel
+  pkg_policy_engine_cedar --> pkg_action_manifest
+  pkg_policy_engine_cedar --> pkg_brand
+  pkg_policy_engine_cedar --> pkg_policy_engine
   pkg_task_profile --> pkg_action_manifest
   pkg_task_profile --> pkg_brand
   pkg_task_profile --> pkg_goal
@@ -1540,7 +1541,6 @@ flowchart TD
 | [`action-ledger`](../packages/action/action-ledger) | `action` | [`action-manifest`](../packages/action/action-manifest), [`brand`](../packages/util/brand), [`principal`](../packages/identity/principal) |
 | [`code-runtime-worker-thread`](../packages/code-runtime/code-runtime-worker-thread) | `code-runtime` | [`code-runtime`](../packages/code-runtime/code-runtime), [`session`](../packages/core/session), [`timeout`](../packages/util/timeout) |
 | [`memory`](../packages/memory/memory) | `memory` | [`brand`](../packages/util/brand), [`llm`](../packages/llm/llm), [`principal`](../packages/identity/principal), [`session`](../packages/core/session), [`util-values`](../packages/util/values) |
-| [`policy-engine`](../packages/policy/policy-engine) | `policy` | [`action-manifest`](../packages/action/action-manifest), [`brand`](../packages/util/brand), [`capability-token`](../packages/policy/capability-token), [`principal`](../packages/identity/principal) |
 | [`persona`](../packages/preset/persona) | `preset` | [`system-prompt`](../packages/core/system-prompt) |
 | [`sandbox`](../packages/sandbox/sandbox) | `sandbox` | [`llm`](../packages/llm/llm), [`session`](../packages/core/session) |
 | [`schema-registry`](../packages/schema/schema-registry) | `schema` | [`brand`](../packages/util/brand), [`invariants`](../packages/runtime-diagnostics/invariants), [`session`](../packages/core/session) |
@@ -1555,8 +1555,6 @@ flowchart TD
 | [`execution-world`](../packages/execution/execution-world) | `execution` | [`brand`](../packages/util/brand), [`principal`](../packages/identity/principal), [`sandbox`](../packages/sandbox/sandbox) |
 | [`message-feedback`](../packages/feedback/message-feedback) | `feedback` | [`brand`](../packages/util/brand), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence), [`storage-domain`](../packages/storage/storage-domain), [`typert-protocol`](../packages/typert/protocol) |
 | [`plugin-compat`](../packages/plugin/plugin-compat) | `plugin` | [`brand`](../packages/util/brand), [`schema-registry`](../packages/schema/schema-registry) |
-| [`policy-enforcement`](../packages/policy/policy-enforcement) | `policy` | [`policy-engine`](../packages/policy/policy-engine), [`trust-kernel`](../packages/kernel/trust-kernel) |
-| [`policy-engine-cedar`](../packages/policy/policy-engine-cedar) | `policy` | [`action-manifest`](../packages/action/action-manifest), [`brand`](../packages/util/brand), [`policy-engine`](../packages/policy/policy-engine) |
 | [`retry`](../packages/reliability/retry) | `reliability` | [`action-ledger`](../packages/action/action-ledger), [`principal`](../packages/identity/principal) |
 | [`sandbox-local`](../packages/sandbox/sandbox-local) | `sandbox` | [`llm`](../packages/llm/llm), [`sandbox`](../packages/sandbox/sandbox), [`session`](../packages/core/session) |
 | [`session-persistence-jsonl`](../packages/session/session-persistence-jsonl) | `session` | [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence) |
@@ -1586,6 +1584,7 @@ flowchart TD
 | [`user-questions`](../packages/interaction/user-questions) | `interaction` | [`agent`](../packages/core/agent), [`llm`](../packages/llm/llm), [`scope`](../packages/core/scope) |
 | [`jobs`](../packages/jobs/jobs) | `jobs` | [`agent`](../packages/core/agent), [`brand`](../packages/util/brand), [`invariants`](../packages/runtime-diagnostics/invariants), [`session`](../packages/core/session) |
 | [`lsp-stdio`](../packages/lsp/lsp-stdio) | `lsp` | [`brand`](../packages/util/brand), [`fs`](../packages/fs/fs), [`llm`](../packages/llm/llm), [`lsp`](../packages/lsp/lsp), [`subprocess`](../packages/subprocess/subprocess), [`timeout`](../packages/util/timeout) |
+| [`policy-engine`](../packages/policy/policy-engine) | `policy` | [`action-manifest`](../packages/action/action-manifest), [`brand`](../packages/util/brand), [`capability-token`](../packages/policy/capability-token), [`execution-world`](../packages/execution/execution-world), [`principal`](../packages/identity/principal) |
 | [`retry-cockatiel`](../packages/reliability/retry-cockatiel) | `reliability` | [`retry`](../packages/reliability/retry) |
 | [`sandbox-policy`](../packages/sandbox/sandbox-policy) | `sandbox` | [`agent`](../packages/core/agent), [`invariants`](../packages/runtime-diagnostics/invariants), [`sandbox`](../packages/sandbox/sandbox), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection), [`system-prompt`](../packages/core/system-prompt) |
 | [`session-telemetry`](../packages/session/session-telemetry) | `session` | [`agent`](../packages/core/agent), [`session`](../packages/core/session) |
@@ -1605,6 +1604,8 @@ flowchart TD
 | [`control-plane`](../packages/interaction/control-plane) | `interaction` | [`agent`](../packages/core/agent), [`brand`](../packages/util/brand), [`human-channel`](../packages/interaction/human-channel), [`principal`](../packages/identity/principal), [`user-questions`](../packages/interaction/user-questions) |
 | [`user-approval`](../packages/interaction/user-approval) | `interaction` | [`agent`](../packages/core/agent), [`brand`](../packages/util/brand), [`commands`](../packages/interaction/commands), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`system-prompt`](../packages/core/system-prompt) |
 | [`jobs-local`](../packages/jobs/jobs-local) | `jobs` | [`agent`](../packages/core/agent), [`jobs`](../packages/jobs/jobs), [`scope`](../packages/core/scope), [`timeout`](../packages/util/timeout) |
+| [`policy-enforcement`](../packages/policy/policy-enforcement) | `policy` | [`policy-engine`](../packages/policy/policy-engine), [`trust-kernel`](../packages/kernel/trust-kernel) |
+| [`policy-engine-cedar`](../packages/policy/policy-engine-cedar) | `policy` | [`action-manifest`](../packages/action/action-manifest), [`brand`](../packages/util/brand), [`policy-engine`](../packages/policy/policy-engine) |
 | [`task-profile`](../packages/run/task-profile) | `run` | [`action-manifest`](../packages/action/action-manifest), [`brand`](../packages/util/brand), [`goal`](../packages/goal/goal), [`llm`](../packages/llm/llm), [`risk-taxonomy`](../packages/policy/risk-taxonomy), [`session`](../packages/core/session), [`util-values`](../packages/util/values), [`workspace-trust`](../packages/workspace/workspace-trust) |
 | [`session-title-llm`](../packages/session/session-title-llm) | `session` | [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-title`](../packages/session/session-title), [`timeout`](../packages/util/timeout) |
 | [`bash-sandbox`](../packages/shell/bash-sandbox) | `shell` | [`bash-local`](../packages/shell/bash-local), [`sandbox`](../packages/sandbox/sandbox), [`sandbox-policy`](../packages/sandbox/sandbox-policy), [`shell`](../packages/shell/shell) |

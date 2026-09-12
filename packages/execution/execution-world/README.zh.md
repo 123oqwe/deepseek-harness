@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## 概述
 
-`dsh-execution-world` 固定了在本 harness 中"一个 ExecutionWorld **是什么**"——一次请求要决定的九个维度、指称一个存活 world 的不可伪造 handle、world 所走的生命周期状态、每次停止都归一的那一个结果形状，以及"无人能满足的请求应被拒绝而不是被削弱"这条规则。它不持有 provider、不挂载服务、不 import 任何 sandbox：适配 `dsh-sandbox` 的本地 provider 是 P3-01 的 Provider 阶段，而 handle 抵达一次真实 agent 请求是它的 Usage 阶段。当你要写一个 provider、或要判定一条策略可以就"动作将从何处运行"知道什么时，阅读它。
+`dsh-execution-world` 固定了在本 harness 中"一个 ExecutionWorld **是什么**"——一次请求要决定的九个维度、指称一个存活 world 的不可伪造 handle、world 所走的生命周期状态、每次停止都归一的那一个结果形状，以及"无人能满足的请求应被拒绝而不是被削弱"这条规则。它也持有 LOCAL provider(`./local-provider`)——让 `dsh-sandbox` 成为众多 world 之一的那个适配器——以及挂载件(`./plugin`、`./local`):派发路径向这个注册表问"这个动作会在哪里运行",它以一个 world 或以"没有"作答。当你要写一个 provider、或要判定一条策略可以就"动作将从何处运行"知道什么时，阅读它。
 
 ## 目录
 
@@ -18,6 +18,7 @@ kind: "package-reference"
 - [handle 以及它证明了什么](#the-handle-and-what-it-proves)
 - [选择朝拒绝方向失败](#selection-fails-closed)
 - [local provider 拒绝了什么,以及为什么那才是诚实的答复](#what-the-local-provider-refuses-and-why-that-is-the-honest-answer)
+- [挂载件做什么,以及不做什么](#what-the-mount-does-and-what-it-does-not)
 - [Model Experience](#model-experience)
 - [已知限制与延后事项](#known-limitations-and-deferred-work)
 
@@ -60,20 +61,34 @@ attestation 交给 kernel，而不在此处验证。`WorldAttestation` 是证据
 
 `lost-contact` 这个 provider 永远不会报,并且有一条 characterization 用例说明此事:local world 在宿主进程之外没有存在,所以除非宿主本身消失,否则联系不可能断。这个 reason 是为将来有远端一侧的 container 与 microVM provider 留的。
 
+<a id="what-the-mount-does-and-what-it-does-not"></a>
+## 挂载件做什么,以及不做什么
+
+`./plugin` 就是 `ctx.executionWorlds`:provider 注册进它(以 effect 的形式,所以卸载注册方插件即移除该 provider),`bindingFor(agent)` 回答那个 agent 的会话运行在哪个 world 里。`./local` 是单独一行,负责注册 local provider——因为一个要出货 container world 的部署该做的是移掉一行 provider,而不是重配注册表。
+
+**挂载不创建 world。**world 在第一次有派发向它要的时候才铸造,其 spec 由 `resolveWorldSpec` 依据该行的部分请求加上 `ctx.sandboxPolicy` 已经解析出的文件效应边界,在九个维度上全部陈述出来。把请求保持为"部分"正是拒绝之所以可达的原因:一个要求 `network: 'none'` 的部署会被无法交付它的 provider 拒绝,而不是被给到那个 provider 能造出来的不受限 world。
+
+两套词汇差一个名字,由 `filesystemForSandboxMode` 显式翻译:`dsh-sandbox` 最宽的模式叫 `danger-full-access`,`WorldSpec` 叫 `full-access`;未知模式在边界上直接拒绝,而不是被带进一个没有任何维度规则认识的 spec。
+
+`bindingFor` 在四种情况下回答 `undefined`——派发路径把它读作 fail-closed 的 `absent` 策略事实:没有注册任何 provider、所有 provider 都拒绝该请求、没有挂载文件效应边界,以及被选中的 provider 在 create 时拒绝。
+
+<a id="model-experience"></a>
 ## Model Experience
 
-无——本包只导出类型与纯决策，不注册任何工具、提示词文本或会话事件。
+无:本包不注册任何工具、不贡献提示词文本,而且一个 world 不会被描述给模型。动作在何处运行这件事,由 `@deepseek-ai/dsh-tools` 的 `action/world-bound` 会话事件(`ignorable: true`)为审计记录;本注册表提供它的取值,而不声明它。
 
 #### KV Cache effect
 
 这里没有任何东西进入模型请求。一个被拒绝的 world 只会以其强制执行点的拒绝形式抵达模型，而那个拒绝携带一个封闭的 reason code，从不携带 spec、路径或 provider 名字。
 
+<a id="known-limitations-and-deferred-work"></a>
 ## 已知限制与延后事项
 
-- **还没有任何地方挂载 world。**local provider 已经存在并有用例覆盖,但没有任何组合会创建 world、也没有任何工具经由 world 约束:约束命令的仍然是 `dsh-sandbox`,走的还是它一直以来的路。读者不得把这些用例当作"任何动作已在 ExecutionWorld 里运行"的证据——把它接上是 P3-01 的 Usage 阶段。
+- **一个绑定的 world 说明动作在何处运行,它还不约束动作。**`dsh-base` 挂载了注册表与 local provider,一次派发会把 world 带进策略问题与审计——但真正约束命令的仍然是 `dsh-sandbox`,走的还是它一直以来的路。读者不得把一条 `action/world-bound` 事件当作"该工具在本包造出的约束里运行"的证据。
+- **在 `danger-full-access` 的 profile 上根本不会绑定 world。**该模式映射到 `full-access` 效应,而 local provider 按维度拒绝它——因为 sandbox 在那个模式下什么都不约束。这是一次诚实的拒绝,而它在日志里与"注册表没接线"长得一模一样——所以一份零差异的录制语料并不能证明挂载件有效。
 - **九维里有八维被唯一存在的 provider 拒绝。**在 container 或 microVM provider 落地之前,一条要求网络约束、设备限制、IPC 姿态、资源上限、secret 代理、进程限制、detached 生命周期或另一个 tenant 的 spec,没有地方可跑。这是 fail-closed 而不是坏掉,而且它正是"第二个 provider 能买到什么"的那条测量。
 - 不发布 runtime invariant companion:本包不持有自己的状态,也不观测任何两个观测者可能分歧的东西——一个 world 的状态住在铸造了它 handle 的那个 provider 里。
-- **在生产方落地前 `ExecutionWorldFact` 仍只有一个取值。** `@deepseek-ai/dsh-policy-engine` 声明 `{ kind: 'absent' }`，所以策略仍无法就"动作将从何处运行"作判断。P3-01 拥有该切分的生产方那一半（BLOCKED-178）；本包提供生产方将要据以报告的词汇，接线属同一 epic 的后续阶段。
+- **策略能读到 world 的身份,读不到它的维度。**`ExecutionWorldFact` 现在带有 `bound`,携带 world id、provider id 与约束摘要(BLOCKED-178 的生产方那一半),所以一条规则可以拒绝未知 world、或按摘要比较约束——但它无法问"网络是否被约束",因为九个维度并不跨进策略请求。把它们加进去是策略词汇的决定,不属本包。
 - **`restore` 以摘要相等比较约束，因此也会拒绝更"窄"的目标。** 实现的规则是"同一约束，否则拒绝"，而不是"可收窄"；一个在 `read-only` 下取的快照会被拒绝进入 `workspace-write` 的 world，尽管那并不放宽任何东西。收紧这一点需要一个对 `WorldSpec` 的偏序，而它尚不存在；选择保守方向，是因为它阻止的那个失败——把 `full-access` 的快照恢复进一个受约束的 world——是一次静默的提权。
 - **没有 provider 回报资源用量。** `WorldResourcesSpec` 陈述上限，而 `WorldOutcome` 不携带任何已消耗量，因此部署还无法对一个 world 计费或告警。结果形状就是将来添加它的地方，等某个 provider 真有数字可填。
 

@@ -966,6 +966,25 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'executionWorlds',
+    summary: 'The registry of world providers, and the session-to-world binding.',
+    description: 'The registry of world providers, and the session-to-world binding.\n\nMounting this service creates no world. A world is created at the first dispatch that asks for one, and only when a registered provider satisfies the resolved spec: a composition that registers no provider, or whose providers all refuse, keeps answering `undefined`, which the dispatch path reads as the fail-closed `absent` policy fact.',
+    methods: [
+      {
+        signature: 'register(provider: WorldProvider): () => void',
+        description: 'Register one provider, in the deployment\'s own preference order.\n\nA registration is an effect, so unmounting the registering plugin removes the provider rather than leaving a registry that outlives it.',
+        parameters: [{ name: 'provider', description: 'the provider to offer to selection.' }],
+        returns: 'the disposer.',
+      },
+      {
+        signature: 'async bindingFor(agent: BindableAgent): Promise<ExecutionWorldBinding | undefined>',
+        description: 'The world this agent\'s session runs in, creating it on first ask.\n\nReturns `undefined` rather than a weaker world when no provider satisfies the spec: acceptance[1] forbids degradation, and the caller\'s fail-closed reading of `undefined` is what makes the refusal reach the policy question.',
+        parameters: [{ name: 'agent', description: 'the dispatching agent, whose session the world is bound to.' }],
+        returns: 'the binding, or `undefined` when this composition can offer none.',
+      },
+    ],
+  },
+  {
     key: 'fileReferences',
     summary: 'Host capability for cancellable file-reference discovery.',
     description: 'Host capability for cancellable file-reference discovery.',
@@ -4729,8 +4748,12 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface EvidenceRequirement {\n    readonly kind: \'before-state\' | \'after-state\' | \'external-receipt\';\n    readonly description: string;\n}',
   },
   {
+    name: 'ExecutionWorldBinding',
+    declaration: 'export interface ExecutionWorldBinding {\n    readonly world: WorldId;\n    readonly provider: WorldProviderId;\n    readonly spec: WorldSpecDigest;\n}',
+  },
+  {
     name: 'ExecutionWorldFact',
-    declaration: 'export type ExecutionWorldFact = {\n    readonly kind: \'absent\';\n};',
+    declaration: 'export type ExecutionWorldFact = {\n    readonly kind: \'absent\';\n} | {\n    readonly kind: \'bound\';\n    readonly world: WorldId;\n    readonly provider: WorldProviderId;\n    readonly spec: WorldSpecDigest;\n};',
   },
   {
     name: 'ExpectedDiff',
@@ -7407,6 +7430,86 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'WorkspaceVolumeIdentity',
     declaration: 'export interface WorkspaceVolumeIdentity {\n    readonly device: number;\n    readonly inode: number;\n    readonly createdAtMs: number;\n}',
+  },
+  {
+    name: 'WorldAttestation',
+    declaration: 'export interface WorldAttestation {\n    readonly world: WorldId;\n    readonly provider: WorldProviderId;\n    readonly evidence: unknown;\n}',
+  },
+  {
+    name: 'WorldDevicesSpec',
+    declaration: 'export interface WorldDevicesSpec {\n    readonly allowed: readonly string[];\n}',
+  },
+  {
+    name: 'WorldFilesystemSpec',
+    declaration: 'export interface WorldFilesystemSpec {\n    readonly effect: \'none\' | \'read-only\' | \'workspace-write\' | \'full-access\';\n    readonly workspaceRoot?: string;\n}',
+  },
+  {
+    name: 'WorldHandle',
+    declaration: 'export interface WorldHandle {\n    readonly [EXECUTION_WORLD_HANDLE]: true;\n    readonly id: WorldId;\n    readonly provider: WorldProviderId;\n    readonly spec: WorldSpecDigest;\n}',
+  },
+  {
+    name: 'WorldId',
+    declaration: 'export type WorldId = Branded<\'WorldId\'>;',
+  },
+  {
+    name: 'WorldIpcSpec',
+    declaration: 'export interface WorldIpcSpec {\n    readonly posture: \'none\' | \'parent-only\' | \'unrestricted\';\n}',
+  },
+  {
+    name: 'WorldLifetimeSpec',
+    declaration: 'export interface WorldLifetimeSpec {\n    readonly maxWallClockMs?: number;\n    readonly detached: boolean;\n}',
+  },
+  {
+    name: 'WorldNetworkSpec',
+    declaration: 'export interface WorldNetworkSpec {\n    readonly posture: \'none\' | \'allowlist\' | \'unrestricted\';\n    readonly allowedHosts?: readonly string[];\n}',
+  },
+  {
+    name: 'WorldOutcome',
+    declaration: 'export interface WorldOutcome {\n    readonly world: WorldId;\n    readonly reason: WorldStopReason;\n    readonly exitCode?: number;\n    readonly detail?: string;\n}',
+  },
+  {
+    name: 'WorldProcessSpec',
+    declaration: 'export interface WorldProcessSpec {\n    readonly spawn: boolean;\n    readonly maxProcesses?: number;\n}',
+  },
+  {
+    name: 'WorldProvider',
+    declaration: 'export interface WorldProvider {\n    readonly id: WorldProviderId;\n    unsatisfiableDimensions(spec: WorldSpec): readonly WorldSpecDimension[];\n    create(spec: WorldSpec): Promise<WorldHandle>;\n    terminate(handle: WorldHandle): Promise<WorldOutcome>;\n    snapshot(handle: WorldHandle): Promise<WorldSnapshot>;\n    restore(snapshot: WorldSnapshot): Promise<WorldHandle>;\n    attest(handle: WorldHandle): Promise<WorldAttestation>;\n}',
+  },
+  {
+    name: 'WorldProviderId',
+    declaration: 'export type WorldProviderId = Branded<\'WorldProviderId\'>;',
+  },
+  {
+    name: 'WorldResourcesSpec',
+    declaration: 'export interface WorldResourcesSpec {\n    readonly cpuMillicores?: number;\n    readonly memoryBytes?: number;\n    readonly diskBytes?: number;\n}',
+  },
+  {
+    name: 'WorldSecretsSpec',
+    declaration: 'export interface WorldSecretsSpec {\n    readonly posture: \'none\' | \'broker-only\' | \'inherited\';\n}',
+  },
+  {
+    name: 'WorldSnapshot',
+    declaration: 'export interface WorldSnapshot {\n    readonly world: WorldId;\n    readonly provider: WorldProviderId;\n    readonly spec: WorldSpecDigest;\n    readonly state: WorldState;\n    readonly takenAtMs: number;\n}',
+  },
+  {
+    name: 'WorldSpec',
+    declaration: 'export interface WorldSpec {\n    readonly filesystem: WorldFilesystemSpec;\n    readonly network: WorldNetworkSpec;\n    readonly process: WorldProcessSpec;\n    readonly ipc: WorldIpcSpec;\n    readonly devices: WorldDevicesSpec;\n    readonly secrets: WorldSecretsSpec;\n    readonly resources: WorldResourcesSpec;\n    readonly lifetime: WorldLifetimeSpec;\n    readonly tenant: TenantId;\n}',
+  },
+  {
+    name: 'WorldSpecDigest',
+    declaration: 'export type WorldSpecDigest = Branded<\'WorldSpecDigest\'>;',
+  },
+  {
+    name: 'WorldSpecDimension',
+    declaration: 'export type WorldSpecDimension = typeof WORLD_SPEC_DIMENSIONS[number];',
+  },
+  {
+    name: 'WorldState',
+    declaration: 'export type WorldState = typeof WORLD_STATES[number];',
+  },
+  {
+    name: 'WorldStopReason',
+    declaration: 'export type WorldStopReason = \'completed\' | \'terminated\' | \'timeout\' | \'lost-contact\' | \'provider-failed\';',
   },
 ]
 

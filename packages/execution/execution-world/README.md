@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-`dsh-execution-world` fixes what an ExecutionWorld IS in this harness — the nine dimensions a request decides, the unforgeable handle that names a live world, the lifecycle states a world walks, the one outcome shape every stop settles to, and the rule that a request nothing can satisfy is refused rather than weakened. It now also holds the LOCAL provider (`./local-provider`), the adapter that makes `dsh-sandbox` one world among several — it mounts no service, and a world reaching a real agent request is still P3-01's Usage stage. Read it when writing a provider, or when deciding what a policy may know about where an action would run.
+`dsh-execution-world` fixes what an ExecutionWorld IS in this harness — the nine dimensions a request decides, the unforgeable handle that names a live world, the lifecycle states a world walks, the one outcome shape every stop settles to, and the rule that a request nothing can satisfy is refused rather than weakened. It also holds the LOCAL provider (`./local-provider`), the adapter that makes `dsh-sandbox` one world among several, and the MOUNT (`./plugin`, `./local`): the registry a dispatch path asks "where would this action run", answering with a world or with nothing. Read it when writing a provider, or when deciding what a policy may know about where an action would run.
 
 ## Table of Contents
 
@@ -18,6 +18,7 @@ English | [中文](README.zh.md)
 - [The handle, and what it proves](#the-handle-and-what-it-proves)
 - [Selection fails closed](#selection-fails-closed)
 - [What the local provider refuses, and why that is the honest answer](#what-the-local-provider-refuses-and-why-that-is-the-honest-answer)
+- [What the mount does, and what it does not](#what-the-mount-does-and-what-it-does-not)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 
@@ -60,20 +61,34 @@ Two refusals are worth naming because they look like over-caution and are not. A
 
 `lost-contact` is never reported by this provider, and a characterization case says so: a local world has no existence outside the host process, so contact cannot be lost without the host being gone. The reason exists for the container and microVM providers that will have a remote side.
 
+<a id="what-the-mount-does-and-what-it-does-not"></a>
+## What the mount does, and what it does not
+
+`./plugin` is `ctx.executionWorlds`: providers register into it (as effects, so unmounting the registering plugin removes the provider), and `bindingFor(agent)` answers which world that agent's session runs in. `./local` is a separate row that registers the local provider, because a deployment shipping a container world removes a provider row rather than reconfiguring the registry.
+
+**Mounting creates no world.** A world is minted at the first dispatch that asks for one, from a spec `resolveWorldSpec` states in all nine dimensions out of the row's partial request plus the file-effect boundary `ctx.sandboxPolicy` already resolved. Keeping the request partial is what makes a refusal reachable: a deployment asking for `network: 'none'` is refused by a provider that cannot deliver it, rather than given the unrestricted world that provider could build.
+
+The two vocabularies differ by one name and `filesystemForSandboxMode` translates explicitly: `dsh-sandbox`'s widest mode is `danger-full-access`, a `WorldSpec`'s is `full-access`, and an unknown mode is refused at the boundary rather than carried into a spec no dimension rule recognises.
+
+`bindingFor` answers `undefined` — which a dispatch path reads as the fail-closed `absent` policy fact — when no provider is registered, when every provider refuses the request, when no file-effect boundary is mounted, and when the chosen provider rejects the create.
+
+<a id="model-experience"></a>
 ## Model Experience
 
-None, as this package exports types and pure decisions only and registers no tool, prompt text or session event.
+None: this package registers no tool and contributes no prompt text, and a world is not described to the model. Where an action ran is recorded for the audit by `@deepseek-ai/dsh-tools`' `action/world-bound` session event (`ignorable: true`), which this registry supplies the values for and does not declare.
 
 #### KV Cache effect
 
 Nothing here enters a model request. A refused world reaches a model only as its enforcement point's refusal, which carries a closed reason code and never a spec, a path or a provider name.
 
+<a id="known-limitations-and-deferred-work"></a>
 ## Known Limitations and Deferred Work
 
-- **Nothing mounts a world yet.** The local provider exists and is tested, but no composition creates a world and no tool confines through one: `dsh-sandbox` is still what confines commands, reached the way it always was. A reader must not take these cases as evidence that any action runs inside an ExecutionWorld — wiring that is P3-01's Usage stage.
+- **A bound world names where an action ran; it does not yet confine it.** `dsh-base` mounts the registry and the local provider, and a dispatch carries the world into the policy question and the audit — but `dsh-sandbox` is still what actually confines commands, reached the way it always was. A reader must not take a `action/world-bound` event as evidence that the tool ran inside a confinement this package built.
+- **On a `danger-full-access` profile no world binds at all.** That mode maps to the `full-access` effect, which the local provider refuses by dimension because the sandbox confines nothing there. It is an honest refusal, and it is indistinguishable in the log from the registry not being wired — so a zero-diff recorded corpus is not evidence that the mount works.
 - **Eight of nine dimensions are refused by the only provider that exists.** Until a container or microVM provider lands, a spec asking for network confinement, device limits, IPC posture, resource ceilings, secret brokering, process limits, a detached lifetime or another tenant has nowhere to run. That is fail-closed rather than broken, and it is the measurement that says what a second provider would buy.
 - No runtime invariant companion is published: this package holds no state of its own and observes nothing two observers could disagree about — a world's state lives in the provider that minted its handle.
-- **`ExecutionWorldFact` still has one variant until the producer lands.** `@deepseek-ai/dsh-policy-engine` declares `{ kind: 'absent' }`, so a policy still cannot decide from where an action would run. P3-01 owns the producer half of that split (BLOCKED-178); this package supplies the vocabulary the producer will report in, and wiring it is a later stage of the same epic.
+- **A policy can read the world's identity, not its dimensions.** `ExecutionWorldFact` now carries `bound` with the world id, the provider id and the confinement digest (BLOCKED-178's producer half), so a rule can refuse an unknown world or compare confinement by digest — but it cannot ask "is the network confined", because the nine dimensions do not cross into the policy request. Adding them is a policy-vocabulary decision, not this package's.
 - **`restore` compares confinement by digest equality, which also refuses a NARROWER target.** The rule implemented is "same confinement or refuse", not "may narrow"; a snapshot taken under `read-only` is refused into a `workspace-write` world even though that widens nothing. Tightening this needs a partial order over `WorldSpec` that does not exist yet, and the conservative direction was chosen because the failure it prevents — restoring a `full-access` snapshot into a confined world — is a silent privilege grant.
 - **No provider reports resource usage back.** `WorldResourcesSpec` states ceilings and `WorldOutcome` carries none of what was consumed, so a deployment cannot yet bill or alert on a world. The outcome shape is the place to add it, once a provider has real numbers to put there.
 

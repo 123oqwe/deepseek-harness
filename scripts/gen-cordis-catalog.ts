@@ -66,6 +66,11 @@ export const SERVICE_PAGE: Record<string, string> = {
   // (`runs`, `leaseStore`, `actionLedger`) rather than on the user-questions
   // page, which owns the ASKING surface and not the stop.
   controlPlane: 'core.md',
+  // P3-01's world registry answers "where would this action run" for the
+  // dispatch paths, so it documents beside the other orchestration services
+  // rather than on the sandbox page, which owns the file-effect boundary a
+  // local world adapts and not the seam that selects one.
+  executionWorlds: 'core.md',
   capabilityTokens: 'core.md',
   circuitBreaker: 'reliability.md',
   runRetryUsage: 'reliability.md',
@@ -696,6 +701,9 @@ export const TYPE_LINK_EXEMPTIONS: Readonly<Record<string, string>> = {
   WorkflowRunId: 'workflow run identity is owned by packages/workflow/workflow/README.md',
   LedgerEpoch: 'idempotency-ledger generation is owned by packages/action/action-ledger/README.md',
   LedgerGeneration: 'idempotency-ledger generation-or-absence is owned by packages/action/action-ledger/README.md',
+  WorldProvider: 'what a provider must implement to be an ExecutionWorld is owned by packages/execution/execution-world/README.md',
+  ExecutionWorldBinding: 'the world a session\'s dispatches run in, as a dispatch path reads it, is owned by packages/execution/execution-world/README.md',
+  BindableAgent: 'the structural agent shape the registry reads is module-private to packages/execution/execution-world/src/plugin.ts; it exists so the registry does not depend on `dsh-agent`',
   ControlState: 'emergency-stop control state is owned by packages/interaction/human-channel/README.md',
   ControlVerb: 'the five control verbs are owned by packages/interaction/human-channel/README.md',
   ControlRequest: 'who requested a control change and why is owned by packages/interaction/control-plane/README.md',

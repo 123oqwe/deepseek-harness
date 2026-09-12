@@ -4,6 +4,8 @@ Per §12.34. Three questions per clause: **(1)** does the subject exist, **(2)**
 
 Measured at `b4b57ff461`, covering the **Contract and Provider stages only**. The U and F stages are not in this slice, and this page says what that leaves unanswered rather than leaving a reader to infer it from a green cell.
 
+**The U stage has since landed and its section is at the end of this page.** Three statements in the C/P sections below were true when measured and are now superseded by it, and they are kept rather than rewritten because they record what those stages could answer: question (3) ("no launched profile reaches any of this"), the single-variant `ExecutionWorldFact`, and the provider's zero callers. Read the U section before citing any of the three.
+
 ## Summary — what C and P can and cannot answer
 
 | clause | verdict after C and P |
@@ -74,3 +76,40 @@ The remaining half is the P4-08 acceptance[2] shape — a decision provable only
 1. Whether `ExecutionWorldFact` has gained a second variant. Until it does, acceptance[1]'s policy half stays unprovable, and any later page claiming acceptance[1] is fully closed is over-reading these two stages.
 2. Whether anything constructs a `ToolWorldBinding`. The importer count is 1 and the producer count is 0; a page that reports only the former would read as production use.
 3. The preFlight's unresolved U-stage question — whether the runtime-context "contribution pattern" the ledger names is a request-context plugin, a session projection, or something `renderContextSections` assembles. It was not established then and is not established now.
+
+## U stage — observations
+
+Measured at the U branch tip. **Subject:** `policy-engine/src/types.ts` (the fact's second variant), `policy-enforcement/src/index.ts` (`world` into `EnforcementInput`), `core/tools/src/external-effect.ts` (`readExecutionWorldFact`), `core/tools/src/index.ts` (the `action/world-bound` event), `execution-world/src/plugin.ts` + `src/local.ts` (the registry and the provider row), `bundle/base/cordis.patch.yml` (the two rows). **Cases:** `execution-world/tests/registry.spec.ts` 17, `tests/world-fact.spec.ts` 6, `policy-engine-cedar/tests/provider.spec.ts` +1, `session-snapshot/tests/identity.spec.ts` +5.
+
+**`world` was the last input the enforcement point supplied to itself.** `enforceManifestedAction` hardcoded `{ kind: 'absent' }`, so every policy question a shipped composition ever asked said the world was unknown even where one was mounted — BLOCKED-201's finding for `facts`, one field later, and its own comment states the rule this stage inherited: *a field a path may omit is a field every path eventually omits*. It now comes from `EnforcementInput`, read by `readExecutionWorldFact` beside `readPolicyContextFacts`, on **both** dispatch paths — the native one at `agent-loop/src/tool-calls.ts` and the code-mode one at `core/tools/src/ptc.ts`, which has its own `FAIL_CLOSED_WORLD` for a sub-dispatch with no agent. A world read by only one path would be must[2]'s bypass in the shape §12.35-2 already closed once for the reservation.
+
+### The honest boundary of the corpus evidence, stated because "zero diff" would otherwise read as "wired"
+
+**Most recorded scenarios run `danger-full-access`** (`cordis.yml`: `process.env.DSH_SNAPSHOT === undefined ? 'workspace-write' : 'danger-full-access'`). That mode maps to the `full-access` effect, which the local provider refuses **by dimension** — the sandbox confines nothing at that mode — so no world binds, no event is appended, and those fixtures are byte-identical after this stage. **That zero is not evidence of wiring.** It is an honest refusal, and an honest refusal and dead code produce the same empty log. The wiring is evidenced by the scenarios that run `workspace-write`, where the event appears.
+
+**A second reading belongs beside it: running `workspace-write` is not sufficient either.** `snapshots/sdk/text-turn` runs that mode and is unchanged, because the world binds at the FIRST DISPATCH and that scenario makes no tool call. A reader checking "did this profile bind a world" must look for a dispatch, not for a mode.
+
+### A defect this stage produced and caught, recorded because the zero would have vouched for it
+
+The first `bindingFor` passed the sandbox's mode string straight through as the `WorldSpec` filesystem effect. **The two vocabularies differ by one name**: `dsh-sandbox` calls its widest mode `danger-full-access`, a `WorldSpec` calls the same thing `full-access`. The spec therefore carried an effect no dimension rule recognises — the local provider's per-dimension check had no case for it, answered "satisfiable", and `create` then refused. The result was a profile that bound **no world at all while looking exactly like an honest refusal**, which is BLOCKED-215's shape, and the corpus's zero diff would have been read as confirmation. `filesystemForSandboxMode` now translates the three modes explicitly and refuses an unknown one at the vocabulary boundary; two cases pin it, one mapping each mode and one requiring `undefined` for a mode the mapping does not know.
+
+### acceptance[1]'s policy half: closed, with the control that shows what changed
+
+The Cedar evidence is **one case with a byte-identical rule**: `forbid(principal, action, resource) when { context.world == "absent" }`. Before the second variant that rule forbade everything — `absent` was the only value the field could take, so "refuse when the world is unknown" and "refuse always" were the same policy and no deployment could tell them apart. Now `bound` is permitted and `absent` is still denied, by the same engine, with **the translation untouched** (`policy-engine-cedar/src/index.ts` still passes `request.world.kind`).
+
+**A second Cedar case was written and deleted**, and the reason is part of the evidence: it matched on `context.worldProvider`, which would require widening the Cedar context — outside the ruling that authorised the type edit — and a rule keyed to the provider cuts against acceptance[0]'s "a provider swap does not change policy semantics". The narrower case is the stronger one.
+
+### The fixture cost, and the two routes refused
+
+The event carries two values that differ on every run: `world` is a `randomUUID()`, and `spec` digests a spec whose `workspaceRoot` is the run's generated temporary directory. **Re-recording alone could not fix that** — a refreshed fixture reddens on the next run — so `session-snapshot/src/identity.ts` tokenizes both as numbered placeholders (`{{world:N}}`, `{{worldSpec:N}}`), field-scoped to this event, beside the `{{run:N}}` and `{{message:N}}` rules that already exist for exactly this class of value. The control that keeps this from being a weakened normalizer: **`provider` stays raw**, so a provider swap still shows as a diff, and two different worlds in one log get different numbers.
+
+Two alternatives were refused, and the reasons are recorded rather than the choice alone:
+
+- **Not logging the event in U** would leave acceptance[0]'s audit half with no evidence at all, reducing the clause to its structural precondition.
+- **Digesting the spec without the workspace root** would make two `workspace-write` worlds under different roots digest identically, which would make the cross-provider digest-equivalence case pass by weakening its own control.
+
+### What U does NOT close
+
+- **acceptance[0]'s cross-provider half stays open**, as the P stage declared. `tests/fake-provider.ts` is the shared second provider — built once here, reused by validation[1]'s conformance suite, which belongs to F — and what U proves with it is the narrow, stated claim: the same spec digests identically whichever provider builds the world, so a policy comparing confinement sees one answer across a swap.
+- **`WorldAttestation` is untouched.** The Trust Kernel's `sandboxAttestationVerifier` returns `false` unconditionally (P0-02's deliberately inert slot), and the provider's `attest` produces evidence only. acceptance[2] closed by construction in P, so U needs no answer here and does not invent one.
+- **`agent-loop/src/runtime-context.ts` is deliberately untouched** — declared in `preflight-P3-01-U.md` under RULING 1, adopted. A model-visible context section naming the world would make the provider identity part of the model's input, so the same action in two worlds would produce two different request bodies; acceptance[0] forbids exactly that, one layer out from the manifest digest the C stage refused it for.

@@ -1090,6 +1090,39 @@ pending(): readonly WaitingPointId[]
 
 Source: [`packages/interaction/control-plane/src/plugin.ts`](../../packages/interaction/control-plane/src/plugin.ts)
 
+<a id="ctxexecutionworlds--executionworldservice"></a>
+
+### `ctx.executionWorlds` — `ExecutionWorldService`
+
+The registry of world providers, and the session-to-world binding.
+
+Mounting this service creates no world. A world is created at the first dispatch that asks for one, and only when a registered provider satisfies the resolved spec: a composition that registers no provider, or whose providers all refuse, keeps answering `undefined`, which the dispatch path reads as the fail-closed `absent` policy fact.
+
+```ts cordis-catalog
+/**
+ * Register one provider, in the deployment's own preference order.
+ *
+ * A registration is an effect, so unmounting the registering plugin removes
+ * the provider rather than leaving a registry that outlives it.
+ * @param provider - the provider to offer to selection.
+ * @returns the disposer.
+ */
+register(provider: WorldProvider): () => void
+
+/**
+ * The world this agent's session runs in, creating it on first ask.
+ *
+ * Returns `undefined` rather than a weaker world when no provider satisfies
+ * the spec: acceptance[1] forbids degradation, and the caller's fail-closed
+ * reading of `undefined` is what makes the refusal reach the policy question.
+ * @param agent - the dispatching agent, whose session the world is bound to.
+ * @returns the binding, or `undefined` when this composition can offer none.
+ */
+async bindingFor(agent: BindableAgent): Promise<ExecutionWorldBinding | undefined>
+```
+
+Source: [`packages/execution/execution-world/src/plugin.ts`](../../packages/execution/execution-world/src/plugin.ts)
+
 <a id="ctxleasestore--leasestorecontract"></a>
 
 ### `ctx.leaseStore` — `LeaseStoreContract`
