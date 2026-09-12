@@ -85,6 +85,8 @@ The system-prompt contribution `approval:policy` states the complete current mea
 
 `request()` appends `approval/asked` with the request identity and tool, then `approval/decided` with the closed outcome; the exact appended fields live in [`src/index.ts`](src/index.ts). Both are log-only; the invariant validates the pair by id within one open turn and the closed outcome vocabulary.
 
+An asker that has a tuple to bind supplies `binding`, and a third log-only event lands between the two: `approval/bound`, carrying what the decision covers — the action, the acting principal, the declared preconditions, the capability-token and policy-set versions, the expiry, and the arguments **as a digest only**. The arguments never appear as values, because this record is replayed by later readers and they are what a redacted display exists to keep out of sight; every other bound field is carried whole so a re-verification can name WHICH field moved rather than only that something did. The binding is minted at the ask, so a world that moves while a human reads does not change what the decision covered. An ask with no tuple — a workspace-trust question decides about a directory, not about canonical arguments — records no binding rather than an empty one.
+
 </details>
 
 -----

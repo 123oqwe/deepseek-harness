@@ -165,6 +165,16 @@ export interface Config {
    * prompting (the deterministic CI/unattended stance).
    */
   readonly policy?: ApprovalPolicy
+  /**
+   * How long a bound approval stays usable, in milliseconds from the ask.
+   *
+   * A deployment choice rather than a constant: an unattended CI stance and an
+   * interactive desk have different tolerances for how stale a decision may be
+   * before the world it was made about has moved. One duration for every
+   * approval, not a per-risk-class table — a table with one value is a table
+   * pretending to be a policy, and no rule needs more yet.
+   */
+  readonly approvalValidityMs?: number
 }
 
 /**
@@ -175,7 +185,13 @@ export interface Config {
 export class ApprovalService extends Service {
   static Config: z<Config> = z.object({
     policy: z.union(['ask', 'never'] as const).default('ask'),
+    approvalValidityMs: z.number().default(300_000),
   })
+
+  /** How long a bound approval stays usable, from the asker's own clock reading. */
+  private get validityMs(): number {
+    return this.config.approvalValidityMs ?? 300_000
+  }
 
   constructor(ctx: Context, public config: Config) {
     super(ctx, 'approval')
@@ -254,6 +270,23 @@ export class ApprovalService extends Service {
       ...req.subject !== undefined ? { subject: req.subject } : {},
       ...req.reason !== undefined ? { reason: req.reason } : {},
     })
+    // Bound BEFORE the decision, not after it: the tuple a decider decides
+    // about is the one that stands at the ask. Minting it after the outcome
+    // would bind whatever the world looks like once a human has finished
+    // reading, which is the window acceptance[0] exists to close.
+    if (req.binding !== undefined) {
+      const binding = bindApproval(req.binding.inputs, req.binding.askedAtMs + this.validityMs)
+      session.append('approval/bound', {
+        id,
+        action: binding.inputs.action,
+        digest: binding.digest,
+        principal: binding.inputs.principal,
+        preconditions: binding.inputs.preconditions,
+        ...binding.inputs.capabilityToken === undefined ? {} : { capabilityToken: binding.inputs.capabilityToken },
+        ...binding.inputs.policyVersion === undefined ? {} : { policyVersion: binding.inputs.policyVersion },
+        expiresAtMs: binding.expiresAtMs,
+      })
+    }
     const outcome = await this.decide(req, session)
     session.append('approval/decided', { id, outcome })
     return outcome

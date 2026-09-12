@@ -61,6 +61,49 @@ declare module '@deepseek-ai/dsh-session/types' {
       id: ApprovalRequestId
       outcome: ApprovalOutcome
     }
+    /**
+     * What one approval was BOUND to, recorded between the ask and the decision
+     * (P2-06 must[1], acceptance[2]).
+     *
+     * Appended only when the asker supplied a binding, which is what keeps this
+     * from claiming a binding for an ask that has none.
+     *
+     * **The arguments are present as a digest and never as values.** The
+     * canonical arguments are what a redacted display exists to keep out of
+     * sight, and this event is durable state a later reader replays — writing
+     * them here would put the secret in the log the redaction protects. Every
+     * other bound field is an identifier or a version and is carried whole, so
+     * a re-verification can name WHICH field moved rather than only that
+     * something did.
+     *
+     * The one-to-one reference acceptance[2] asks for is this event's two ends:
+     * `id` names the approval, `action` names the action, and exactly one of
+     * these is appended per bound ask.
+     *
+     * `ignorable: true` — a build that does not know this type must still read
+     * the log; what an approval covered is auditable history, not a state the
+     * runtime reconstructs.
+     *
+     * @param id - the approval this binding belongs to.
+     * @param action - the action the decision is about.
+     * @param digest - digest over the whole bound tuple.
+     * @param principal - who was acting, or `unattached`.
+     * @param preconditions - the manifest's declared preconditions, in order.
+     * @param capabilityToken - digest of the token presented, absent when none was.
+     * @param policyVersion - the policy set version, absent when no engine was mounted.
+     * @param expiresAtMs - when the approval stops being usable.
+     * @dshScopeScan unsupported
+     */
+    'approval/bound': {
+      id: ApprovalRequestId
+      action: string
+      digest: string
+      principal: string
+      preconditions: readonly string[]
+      capabilityToken?: string
+      policyVersion?: string
+      expiresAtMs: number
+    }
   }
 }
 
@@ -95,6 +138,28 @@ export interface ApprovalRequestEvent {
   readonly reason?: string
   /** Cancellation lifetime of the pending request. */
   readonly signal?: AbortSignal
+  /**
+   * What this approval should be bound to, supplied by the asker (P2-06
+   * must[1]).
+   *
+   * Optional because not every asker has a manifest behind it — a
+   * workspace-trust question decides about a directory, not about an action
+   * with canonical arguments — and an ask with no binding is still a valid ask.
+   * What it is NOT is a default: an asker that has a tuple and omits it gets no
+   * binding, and the absence is visible in the log as a missing
+   * `approval/bound`.
+   *
+   * `askedAtMs` is the ASKER's clock reading, not the service's. The service
+   * owns no clock, for the reason `dsh-lease-contract` states one layer over:
+   * a decision function that reads the wall clock cannot be tested for expiry
+   * without waiting for it.
+   */
+  readonly binding?: {
+    /** Everything the approval is to be bound to, as the asker sees it now. */
+    readonly inputs: ApprovalBindingInputs
+    /** The asker's clock reading at the moment of the ask. */
+    readonly askedAtMs: number
+  }
 }
 
 declare module '@deepseek-ai/cordis' {
