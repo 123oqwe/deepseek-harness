@@ -1557,9 +1557,19 @@
       "path": "packages/core/tools/src/external-effect.ts",
       "kind": "source",
       "stages": [
-        "U"
+        "U",
+        "F"
       ],
       "reason": "Written from `git show 2d5af28330 -- packages/core/tools/src/external-effect.ts` (+8/-1): `gateActionRisk` takes a seventh parameter `display?: ApprovalDisplay` and spreads it onto the `approval/request` payload, the same conditional-spread shape `binding` already uses so an ask without a manifest carries no key rather than an empty one. The registry named the approval package, not the gate: this is the ONE site that holds the manifest, and building the six fields here rather than in each answerer is what makes two surfaces show one account of the same call instead of each deriving the risk class from a tool name."
+    },
+    {
+      "epic": "P2-06",
+      "path": "packages/core/tools/src/ptc.ts",
+      "kind": "source",
+      "stages": [
+        "F"
+      ],
+      "reason": "Written from `git show c0f88d6c2c -- packages/core/tools/src/ptc.ts` (+33/-2): the code-mode sub-dispatch now builds its binding through the shared `approvalBindingFor`, passes it to `gateActionRisk`, and calls `verifyRecordedApproval` before the reservation, refusing through `refusedApprovalResult`. This is where must[1] acquires its SECOND caller. The registry's P2-06 file list names `agent-loop/src/tool-calls.ts` and not this file, because in the plan there was one dispatch path; there are two, and the clause is about execution rather than about the native path. Measured before it was written: the tree had exactly two non-test callers of `gateActionRisk`, and this one supplied no binding and called the verifier on no line — so an approval asked from inside a code-mode program was bound to nothing and never compared with what ran. The contrast that makes it a defect rather than an oversight is in this same file: it already reaches `enforceManifestedAction`, with a comment saying it is \"the SAME enforcement point the native path reaches … not a similar check written beside it\". P2-05's question crossed to this path and P2-06's binding did not follow it."
     },
     {
       "epic": "P2-06",
@@ -1567,6 +1577,14 @@
       "kind": "test",
       "stages": [
         "U"
+      ]
+    },
+    {
+      "epic": "P2-06",
+      "path": "packages/core/tools/tests/approval-code-mode.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F"
       ]
     },
     {
@@ -1580,6 +1598,38 @@
     {
       "epic": "P2-06",
       "path": "packages/interaction/user-approval/tests/binding.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C"
+      ]
+    },
+    {
+      "epic": "P2-10",
+      "path": "packages/policy/policy-language/tests/compile.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C"
+      ]
+    },
+    {
+      "epic": "P2-10",
+      "path": "packages/policy/policy-language/tests/parse.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C"
+      ]
+    },
+    {
+      "epic": "P2-10",
+      "path": "packages/policy/policy-language/tests/sample-request.ts",
+      "kind": "test",
+      "stages": [
+        "C"
+      ]
+    },
+    {
+      "epic": "P2-10",
+      "path": "packages/policy/policy-language/tests/schema.spec.ts",
       "kind": "test",
       "stages": [
         "C"
@@ -3214,38 +3264,6 @@
       "kind": "test",
       "stages": [
         "C.1"
-      ]
-    },
-    {
-      "epic": "P2-10",
-      "path": "packages/policy/policy-language/tests/compile.spec.ts",
-      "kind": "test",
-      "stages": [
-        "C"
-      ]
-    },
-    {
-      "epic": "P2-10",
-      "path": "packages/policy/policy-language/tests/parse.spec.ts",
-      "kind": "test",
-      "stages": [
-        "C"
-      ]
-    },
-    {
-      "epic": "P2-10",
-      "path": "packages/policy/policy-language/tests/sample-request.ts",
-      "kind": "test",
-      "stages": [
-        "C"
-      ]
-    },
-    {
-      "epic": "P2-10",
-      "path": "packages/policy/policy-language/tests/schema.spec.ts",
-      "kind": "test",
-      "stages": [
-        "C"
       ]
     }
   ]
