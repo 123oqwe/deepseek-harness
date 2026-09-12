@@ -2,6 +2,18 @@
 
 **维护**:现任 delegate 在每次推送时于 gate-wt2 叠加更新(EPIC-LIFECYCLE §5.1.10 / §5.2)。**这份文件是状态快照,不是规则**;规则在 EPIC-LIFECYCLE.md,裁决在 plan-rectification-2026-09-06.md 与 BLOCKED-QUEUE.md。
 
+## 最新现况快照(2026-09-12 ~18:35Z,delegate 78,会话 d3a94c8b;本块为准,下方旧行历史留档)
+
+- **远端**:`fork/first100-exec` = **`50742193bf`**(**第七推** ~18:32Z;= 候选 6' + P2-01/P3-01 accepts + P2-06 C/P/U 冻 + 220甲 + P2-10 preFlight;run 34709135243 绿;on-push 重复 34711497505 已取消)。前 = `d10920efa4`(第六推)。
+- **ACCEPTED = 28**(第七推 +P2-01[用户确认 `decisions-approved.md#C11`]+P3-01[两开放项声明])。
+- **候选 6→6'**:候选 6(`b046fbb2b1`,run 34706166473)红一步 = `agent-loop/src/tool-calls.ts:612` 多余类型断言 `as JsonValue`(lane B P2-06 `approvalBindingFor`);lane B 修 `5a62d6653c`(纯类型擦除、转译 656 行逐字节相同),delegate 以 `git rebase --onto 5a62d6653c b31b4dc317` 把 overlay 重装为候选 6' `50742193bf`、绿、已推。
+- **BLOCKED 水位 = 240**(239 = `APPROVAL_DISPLAY_VALIDITY_MS` 常量 vs 服务可配 `approvalValidityMs` 静默不一致,owner B 只记;240 = `02ceda9fc8` 把 `Runtime invariant:` 插进 Model Experience 段、同破 md-links 与 model-experience 两门 6 包,owner B 修、先量后移)。
+- **Lane A**(`dsh-first100-clean-93`,`uds:/tmp/cc-socks/12312.sock`,**Opus**):P2-10 **C 已冻**(`76e202652c` 含 P 表)+ **P 码首轮**(Provider 注册 settings namespace、`parsePolicySet` 作 validate、pin 挂 namespace 已解析值、自查删一条"永不红"用例);跑本片门(含全树 typecheck-host)后报 **P tip**。
+- **Lane B**(`dsh-first100-lane-b-39`,`uds:/tmp/cc-socks/27505.sock`,**Opus**):P2-06 **C/P/U/F 全冻**(`e96764a0f6`)+ `evidence-P2-06.md`(`50e247ad5f`)+ BLOCKED-236 它那 15 条 md-links(`9be1f0cbdd`,46→31)+ 做 BLOCKED-240 中;**待 rebase** `lane-b-c7` `--onto 50742193bf b31b4dc317`、报新 c7 tip。
+- **候选 7 装配** = `50742193bf` + lane A P2-10(C+P)+ lane B rebase 后 c7(P2-06 F + 补);待两段就绪由 delegate 装配派发。
+- **裁决**全在 `plan-rectification` 补记 **246–260**;ONBOARDING 新增 lint/文档门族/第五类假绿规则;新增 `~/first100-delegate/CLAUDE.md`(每回合钉"对用户中文",防后台事件后收尾漂英文)。
+- P2-06 签核两开放项(候选 7 F 落后签):② must[0] code-mode 提问到决策者是工具名无 manifest 投影(按 P4-09 形状声明);④ must[1] 实际咬合面窄于字面(按"决定与无新提问执行间的间隙"引)。
+
 ## 接管步骤(新 delegate 会话,第一条消息「继续监督 first100」)
 
 1. 读本文件 + `EPIC-LIFECYCLE.md`(§1.10 / 1.12 / 2.10–2.12 / 4.4a–d / **§5.1 双 lane / §5.2 换班**)+ `plan-rectification-2026-09-06.md` 最近三节 + `BLOCKED-QUEUE.md` 的 `## Open` 与最近 10 条。
