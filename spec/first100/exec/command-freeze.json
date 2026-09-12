@@ -8553,7 +8553,47 @@
         "mutationDescription": "Locally (never committed) made `decideReservation` compare an absent generation AS ZERO -- `comparable` forced true with `'unfenced'` mapped to epoch 0 on both the request and the entry (packages/action/action-ledger/src/index.ts). That is exactly what the pre-BLOCKED-221 call site did: `epochOf` returned `agent.lifecycle?.epoch ?? 0`.",
         "failureSummary": "1 of 6 failed: `still commits the effect at least once when an UNFENCED retry follows a crash before the send` -- AssertionError, `[]` where the case requires `['effect-unfenced']`. With both sides read as epoch 0 the retry is refused `held-at-same-epoch`, so an effect that was never sent can never be sent and at-least-once is lost for every profile without a lease. The other five stayed green, the next-generation retry included, which is what separates the unfenced rule from the fencing rule. Mutation reverted; 6 passed (6) before continuing."
       },
-      "note": "Replaces the base P4-12.F entry (BLOCKED-221), carrying the cell's complete current case list: three unchanged, one replaced, two new. `still commits the effect at least once when a crash lands before the send` retried at the SAME generation; under the rule this entry freezes that retry is refused, and the case's evidence was indistinguishable from the two-holder defect's, because at one generation a restart and a live peer are the same request. The control is now split by what distinguishes them: the next generation retries and commits, an unfenced retry commits, and the same generation's retry does NOT commit while the next one's does. `attempt` takes the generation as a parameter for the same reason -- a restart is not anonymous, the Run Service issues the replacement a new epoch. The 10,000-crash campaign and both validation cases are unchanged; the campaign's own weakness is recorded as the adjacent finding in BLOCKED-221 for the delegate to number, NOT fixed here. Not registered in frozen-title-renames.json: the property changed."
+      "note": "Replaces the base P4-12.F entry (BLOCKED-221), carrying the cell's complete current case list: three unchanged, one replaced, two new. `still commits the effect at least once when a crash lands before the send` retried at the SAME generation; under the rule this entry freezes that retry is refused, and the case's evidence was indistinguishable from the two-holder defect's, because at one generation a restart and a live peer are the same request. The control is now split by what distinguishes them: the next generation retries and commits, an unfenced retry commits, and the same generation's retry does NOT commit while the next one's does. `attempt` takes the generation as a parameter for the same reason -- a restart is not anonymous, the Run Service issues the replacement a new epoch. The 10,000-crash campaign and both validation cases are unchanged; the campaign's own weakness is recorded as the adjacent finding in BLOCKED-221 for the delegate to number, NOT fixed here. Not registered in frozen-title-renames.json: the property changed.",
+      "supersededBy": "P4-12.F.2 (BLOCKED-225: the campaign's draw was evaluated as a double, so it almost never crashed; the case now asserts the crash distribution it depends on, 2026-09-12)"
+    },
+    {
+      "epic": "P4-12",
+      "stage": "F",
+      "supplementSeq": 2,
+      "supplements": {
+        "epic": "P4-12",
+        "stage": "F"
+      },
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/action/action-ledger/tests/fault-matrix.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects commits each effect exactly once across 10,000 random crashes, counted at the SERVICE",
+        "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects commits each effect exactly once across the same campaign run UNFENCED, which is where at-least-once stands alone",
+        "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects still commits the effect at least once when the NEXT generation retries a crash before the send",
+        "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects still commits the effect at least once when an UNFENCED retry follows a crash before the send",
+        "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects does NOT commit again when the SAME generation retries a crash before the send, because a peer may hold it",
+        "P4-12 validation: a provider that timed out AFTER committing leaves the effect committed once when the ledger is told the outcome is unknown",
+        "P4-12 validation: a batch action is ledgered item by item reserves each item separately, so one item failing does not resend the others"
+      ],
+      "files": [
+        "packages/action/action-ledger/tests/fault-matrix.spec.ts",
+        "packages/action/action-ledger/src/index.ts",
+        "packages/action/action-ledger/src/store.ts"
+      ],
+      "frozenAtUtc": "2026-09-12T08:40:00.000Z",
+      "dryRunProof": "Ran locally at the candidate tree (`lane-b-225`): 7 passed (7) in fault-matrix.spec.ts, 37.8 s wall for the file with two 10,000-attempt campaigns in it. Post-fix draw distribution over the campaign's own 10,000 iterations: none 2512, after-reserve 2403, after-send 2581, after-receipt 2504, and all 250 keys see all four crash points. Pre-fix, for comparison: none 9956, after-reserve 43, after-send 1, after-receipt 0.",
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations, because the case now carries two assertions about the generator and each must be shown load-bearing. (1) Restored the original draw -- `(state * 1_103_515_245 + 12_345) % 2_147_483_648` with the point taken from `next % 4` -- which is the double-arithmetic line BLOCKED-225 is about. (2) Kept `Math.imul` and took the LOW bits instead of the high ones, which is the plausible wrong fix: it looks like a correct 32-bit LCG.",
+        "failureSummary": "(1) 1 of 7 failed: `commits each effect exactly once across 10,000 random crashes, counted at the SERVICE` -- `AssertionError: after-reserve: expected 43 to be greater than 2000`, the label naming which crash point went missing. (2) The same case failed on the OTHER assertion: `expected [ Set{ 'after-send', 'none' }, ...(249) ] to deeply equal []` -- the aggregate histogram was a flawless 2500 per point while every one of the 250 keys saw only two of the four, because an LCG's low bits cycle every four draws (`23012301...`). That pair is the point of having both assertions: a distribution check alone cannot tell a uniform generator from a short cycle. Both mutations reverted; 7 passed (7) before continuing."
+      },
+      "note": "Supersedes P4-12.F.1 (BLOCKED-225). acceptance[0]'s campaign barely crashed: `random * 1_103_515_245` was evaluated as a double, so from the second iteration the product passed 2^53, the low bits were lost, and the crash point came back `none` for 9956 of 10,000 draws -- `after-receipt` never once. Worse, almost every key reached `confirmed` inside the first 250 attempts, so the few real crash points landed on settled entries and returned `duplicate` before crashing at all. The case was passing because it did not crash, which is the vacuous-truth shape in a suite that is supposed to be this epic's direct acceptance evidence. The draw is now `Math.imul`-based and takes the HIGH bits, and the case asserts the distribution it depends on -- a lower bound per crash point, plus per-key coverage, because the low-bit variant satisfies any aggregate count. Each attempt on a key also presents the NEXT generation, which is what a restart is (BLOCKED-221): repeating one generation would make every retry its own peer. The added UNFENCED campaign records what crash-retry dedup does NOT depend on: it commits each effect exactly once with no generations at all, because the `sent` state is what refuses a second send, and what unfenced gives up is concurrent exclusivity, which a sequential campaign cannot measure and the two-process case in store.spec.ts does."
     },
     {
       "epic": "P2-03",

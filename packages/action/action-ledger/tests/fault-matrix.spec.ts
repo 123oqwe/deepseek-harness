@@ -81,6 +81,34 @@ function attempt(dir: string, service: FakeExternalService, key: IdempotencyKey,
   if (crashAt === 'after-receipt') throw new SimulatedCrash()
 }
 
+const POINTS: readonly CrashPoint[] = ['none', 'after-reserve', 'after-send', 'after-receipt']
+
+/**
+ * The campaign's pseudo-random draw (BLOCKED-225).
+ *
+ * **`Math.imul`, and the HIGH bits.** Two separate defects lived in the one
+ * line this replaces. `random * 1_103_515_245` was evaluated as a double, so
+ * from the second iteration the product passed 2^53, the low bits were lost,
+ * and `random % 4` came back 0 for 9956 of 10,000 draws -- a crash campaign
+ * that almost never crashed. `Math.imul` keeps the multiply in 32 bits, which
+ * is the arithmetic the generator is defined over.
+ *
+ * That alone is not enough, and the measurement says why. An LCG's LOW bits
+ * have tiny periods: taking them gives the draw sequence `23012301…`, a
+ * 4-cycle. Against 250 keys visited round-robin that is worse than it looks --
+ * each key sees exactly TWO of the four crash points, forever -- while the
+ * aggregate distribution comes out at a perfect 2500 each and satisfies any
+ * count-based check. Hence the high bits, and hence the per-key coverage
+ * assertion beside the distribution one: a histogram alone cannot tell a
+ * uniform generator from a short cycle.
+ * @param state - the generator's current 32-bit state.
+ * @returns the next state and the crash point it draws.
+ */
+function draw(state: number): { state: number; point: CrashPoint } {
+  const next = (Math.imul(state, 1_103_515_245) + 12_345) | 0
+  return { state: next, point: POINTS[((next >>> 16) & 0x7fff) % POINTS.length]! }
+}
+
 describe('P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects', () => {
   it('commits each effect exactly once across 10,000 random crashes, counted at the SERVICE', () => {
     // The count comes from the fake service, not from the ledger. A ledger
@@ -89,21 +117,75 @@ describe('P4-12 acceptance[0]: a crash campaign produces zero duplicate external
     //
     // Deterministic rather than seeded from a clock: a campaign that cannot be
     // re-run identically turns a failure into a story about which run it was.
-    const points: CrashPoint[] = ['none', 'after-reserve', 'after-send', 'after-receipt']
     const service = new FakeExternalService()
     // One ledger directory per key, reused across that key's attempts, which
     // is what a restart looks like: the process is new, the durable state is
     // not. A fresh directory per attempt would give every retry an empty
     // ledger, and the campaign would measure nothing.
     const home = new Map<string, string>()
-    let random = 12_345
+    // Each attempt on a key presents the NEXT generation, because a restart
+    // takes a new lease epoch (BLOCKED-221). Repeating one generation would
+    // make every retry its own peer and be refused, so the campaign would
+    // measure a ledger that refuses rather than one that recovers.
+    const generations = new Map<string, number>()
+    const drawn = new Map<CrashPoint, number>(POINTS.map(point => [point, 0]))
+    const pointsPerKey = new Map<string, Set<CrashPoint>>()
+    let state = 12_345
     for (let index = 0; index < 10_000; index += 1) {
-      random = (random * 1_103_515_245 + 12_345) % 2_147_483_648
+      const rolled = draw(state)
+      state = rolled.state
+      const key = brandString<IdempotencyKey>(`effect-${String(index % 250)}`)
+      const dir = home.get(key) ?? directory()
+      home.set(key, dir)
+      const generation = (generations.get(key) ?? 0) + 1
+      generations.set(key, generation)
+      drawn.set(rolled.point, drawn.get(rolled.point)! + 1)
+      ;(pointsPerKey.get(key) ?? pointsPerKey.set(key, new Set()).get(key)!).add(rolled.point)
+      try {
+        attempt(dir, service, key, rolled.point, epoch(generation))
+      } catch (error) {
+        if (!(error instanceof SimulatedCrash)) throw error
+      }
+    }
+    // The campaign must CRASH to be a crash campaign, and the generator is
+    // what decides whether it does. Lower bounds rather than equality: the
+    // assertion is about a generator that reaches every point often, not about
+    // one exact histogram, and an exact count is what a 4-cycle satisfies.
+    for (const point of POINTS) expect(drawn.get(point), point).toBeGreaterThan(2_000)
+    // Per KEY, not just in aggregate. A generator whose low bits cycle every
+    // four draws produces a flawless aggregate histogram and still leaves each
+    // key permanently blind to two of the four crash points.
+    expect([...pointsPerKey.values()].filter(points => points.size < POINTS.length)).toEqual([])
+    const counts = new Map<string, number>()
+    for (const key of service.commits) counts.set(key, (counts.get(key) ?? 0) + 1)
+    expect([...counts.values()].filter(count => count > 1)).toEqual([])
+    // Without this the case passes when nothing was ever sent.
+    expect(service.commits.length).toBe(250)
+  }, 120_000)
+
+  it('commits each effect exactly once across the same campaign run UNFENCED, which is where at-least-once stands alone', () => {
+    // The control for the degraded path, and it says something the fenced
+    // campaign cannot: crash-retry dedup does NOT come from fencing. Every
+    // attempt here presents `'unfenced'`, so no generation ever proves a holder
+    // gone, and the campaign still commits each effect exactly once -- because
+    // what refuses a second send is the `sent` state, which a restart reads off
+    // the disk.
+    //
+    // What unfenced gives up is CONCURRENT exclusivity, which this campaign is
+    // the wrong instrument for: it is sequential, so there is never a live peer
+    // to confuse with a restart. The two-process case in store.spec.ts is where
+    // that loss is measured, and it shows both workers holding one reservation.
+    const service = new FakeExternalService()
+    const home = new Map<string, string>()
+    let state = 12_345
+    for (let index = 0; index < 10_000; index += 1) {
+      const rolled = draw(state)
+      state = rolled.state
       const key = brandString<IdempotencyKey>(`effect-${String(index % 250)}`)
       const dir = home.get(key) ?? directory()
       home.set(key, dir)
       try {
-        attempt(dir, service, key, points[random % points.length]!, epoch(1))
+        attempt(dir, service, key, rolled.point, 'unfenced')
       } catch (error) {
         if (!(error instanceof SimulatedCrash)) throw error
       }
@@ -111,7 +193,6 @@ describe('P4-12 acceptance[0]: a crash campaign produces zero duplicate external
     const counts = new Map<string, number>()
     for (const key of service.commits) counts.set(key, (counts.get(key) ?? 0) + 1)
     expect([...counts.values()].filter(count => count > 1)).toEqual([])
-    // Without this the case passes when nothing was ever sent.
     expect(service.commits.length).toBe(250)
   }, 120_000)
 
