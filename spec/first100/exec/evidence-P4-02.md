@@ -303,3 +303,101 @@ The rest are held here for the same mechanical reason as P4-01's: closure treats
 | [2] | C.1 | `refuses an unrecognised key inside the round, the same way the profile refuses one` | the goal-round vocabulary is closed too, so an unknown field cannot smuggle a decided side effect |
 
 **A discrepancy in the assignment, resolved.** The assignment named `C` at `55866cb225`, which is the lane-B commit that WROTE the `C` cell green rather than the candidate that was observed — the delegate corrected it against the ledger. The observed candidates are `d69d6e5b3e` for `C` (CI run 34557063530) and `e74593c50a` for `P` (CI run 34573807027), which is what the ledger row carries and what the citations above and in `acceptance-coverage.json` were written against. The distinction is worth keeping: a cell's candidate SHA is the tree an observation ran on, never the commit that recorded the result, and `checkCoverageClosure` reads the former.
+
+-----
+
+## Sign-off material (4.4a–d)
+
+Written 2026-09-12 in lane A, after every applicable cell and all three supplements went GREEN. Documentation only: nothing here changes product code, and every gap below is reported for the delegate to number rather than fixed.
+
+**Every line number in this section was re-read at `73c1c04f2e`** — the tree `U.1` was observed on, not a candidate tip. That choice matters: the same file has moved under two later lane-A candidates (BLOCKED-229's `track()` and candidate 5's guard both added lines to `packages/run/run/src/index.ts`), so numbers read from a candidate branch would not resolve against the tree the observations rest on. The `§4.4a` table earlier on this page was written at `b76d54b0cf` and one of its rows is now stale — see gap (f).
+
+**The predecessor blocker recorded above is cleared.** "P4-02 cannot be ACCEPTED before P4-01 is re-signed" was true when written; `delegate-signoff.json` now carries a P4-01 `PASS` from `first100-delegate-78`, signed 2026-09-12T00:09:27Z on row digest `156e75c8bd`, after BLOCKED-183's withdrawal was closed by the U.2 slice. P4-01 and P2-04 are both ACCEPTED / APPROVED with four green cells each.
+
+### 4.4a — the production call sites, and the mount that reaches them
+
+The epic has exactly **one** production caller, and it is not a test:
+
+| named thing | production call site | what it does there |
+| --- | --- | --- |
+| `compileTaskProfile` | `packages/run/run/src/index.ts:978` | the epic's only production call, inside `RunPlugin.recordTaskProfile` (`:972`) |
+| the first-step guard | `packages/run/run/src/index.ts:1192`, consumed `:1229` | `agent.lifecycle?.state === 'queued'`, captured BEFORE `ensureRunning` consumes that state |
+| `goalOf` | defined `:111`, called `:976` | joins the text blocks and tallies the kinds it could not read |
+| `goalRoundOf` | `:977` | the entered goal's round, for a continuation |
+| `taskOriginOf` | `:985` | only `user` and `goal` compile; everything else refuses |
+| `taskProfileRef` | `:991` | the digest the session log and the Run log both name |
+| `lastTaskProfileRef` | defined `:131`, called `:992`, reads `:138` | the previous digest, read from the LOG rather than from the handle, so a resumed session decides correctly |
+| the skip | `:1009` guarded by `previousRef !== ref` | an unchanged profile is not appended twice |
+| the session append | `:1009` | `run/task-profile` — the profile's durable home |
+| `Agent.taskProfile` | written `:1011`; declared `packages/core/agent/src/types.ts:126` | the handle carries the digest, never the body |
+| the Run transition | `:1012` | `advance(runId, 'planning', [{ kind: 'task-profile', id: ref }], …)` — the only `'planning'` advance in the repository |
+| `validateTaskProfile` | **none** | deliberate; its reader is P4-03. Declared in the package README, carried forward as gap (c) |
+
+**The mount, and how a shipped profile reaches it.** `@deepseek-ai/dsh-run` appears in exactly one patch layer in the repository — `packages/bundle/base/cordis.patch.yml:638-639`, `id: run`, enabled, `storePath: dshHomePath('runs', 'runs.json')`. The four app bundles that layer over `base` carry no row of their own, and `packages/bundle/sdk-minimal/cordis.patch.yml` contains **0** occurrences of `dsh-run`. Through `PROFILE_TEMPLATES` (`packages/boot/app-boot/src/profile.ts:154`), `acp` (`:156`), `web` (`:160`), `headless` (`:164`) and `sdk` (`:168`) each list `@deepseek-ai/dsh-base`; `sdk-minimal` (`:172`) lists only `@deepseek-ai/dsh-sdk-minimal`.
+
+**So this epic's code runs on four of the five shipped profiles.** That is a declared boundary rather than a gap: `packages/bundle/sdk-minimal/README.md` states the profile deliberately excludes `dsh-base` and claims no Run, profile or lifecycle capability. The cells below are evidence for four profiles, not five, and this section says so rather than letting "shipped" imply all of them.
+
+The event type's registration and its durable documentation are both generated from the in-repo declaration: `packages/core/session/src/known-event-types.ts:53` and `docs/persistence-catalog.md:771` (log-only).
+
+### 4.4b — cell observations
+
+Taken from `ledger.json` as it stands (`lastUpdatedUtc` 2026-09-12T01:24:09Z). **Candidate 4's cloud run was still in flight when this was written, so no reading from it is used here**; if it lands green the delegate may re-point these rows at it, and the rows below are what the ledger actually carries today.
+
+| cell | status | candidate SHA | CI run | frozen cases matched |
+| --- | --- | --- | --- | --- |
+| C | GREEN | `d69d6e5b3e` | 34557063530 | 12 |
+| P | GREEN | `e74593c50a` | 34573807027 | 14 |
+| U | GREEN | `93d5220733` | 34652643903 | 11 |
+| F | GREEN | `93d5220733` | 34652643903 | 14 |
+| C.1 | GREEN | `93d5220733` | 34652643903 | 9 |
+| P.1 | GREEN | `93d5220733` | 34652643903 | 7 |
+| U.1 | GREEN | `73c1c04f2e` | 34660413109 | 4 |
+
+`checkCoverageClosure('P4-02')` was re-run read-only against this ledger, `command-freeze.json` and `acceptance-coverage.json`: **valid, no missing indices, no unverified citations.** All three acceptance indices now cite observed cells, including the two `U.1` citations this page previously recorded as held.
+
+### 4.4c — what the service can do, and what production actually reaches
+
+The two halves come apart cleanly here, and the split is narrower than "the epic works":
+
+**Production reaches the compile, the digest, the log and the transition.** One message on the first model step of a Run, on any of four shipped profiles, compiles a profile, appends its body, names the digest on the handle and carries it on `accepted → planning`. `U.1` observes that through a real Loader tree booted by `@deepseek-ai/dsh-app-boot` in a child process, asserting only on JSON the driver wrote — not on live objects.
+
+**Production reaches no reader.** Measured across `packages` and `apps`, excluding tests and `lib/`:
+
+| the thing produced | production writers | production readers |
+| --- | --- | --- |
+| the `run/task-profile` event | 1 (`index.ts:1009`) | 1, and it is this epic's own skip (`lastTaskProfileRef`, `:138`) |
+| `Agent.taskProfile` | 1 (`:1011`) | **0** |
+| the profile's `questions[]` | 1, inside the compiler | **0** — nothing asks them |
+| `hardConstraints` / `sideEffect` | 1, inside the compiler | **0** outside `packages/run/task-profile` |
+| `validateTaskProfile` | — | **0** callers |
+
+So must[2]'s "produces a question rather than guessing an authorization" is true in the direction the clause literally states — a question is produced, and it is durable — and there is no path on which a human is asked it. The `questions` hits a repo-wide grep returns are all `ctx.userQuestions`, an unrelated vocabulary belonging to `interaction/user-questions`; none of them reads a TaskProfile. This is the same shape §4.4c recorded for model-visibility earlier on this page, now measured across every field rather than only the model path: the profile is **logged and unread**, and P4-03 is the epic that reads it.
+
+**One further narrowing of what `U.1` proves.** Its Loader config (`tests/first100/fixtures/loader/p4-02-task-profile/cordis.yml`) mounts `@deepseek-ai/dsh-run` directly, in a nine-row test-only composition. So it closes "a real `app-boot` Loader boot reaches the compile", which is the gap `§4.4` named, and it does **not** close "the row at `bundle/base/cordis.patch.yml:638` is what reaches it". The mount row is evidence by reading, not by observation. Recorded as gap (e) rather than claimed.
+
+### 4.4d — production reach, per clause
+
+Zero-reach entries are written as zero, not omitted.
+
+| clause | production reach |
+| --- | --- |
+| must[0] — generic fields only, no vertical process | **Produced, not enforced in production.** The compiler emits only the generic vocabulary (`index.ts:978` is its one caller), so nothing production-side can mint a vertical field. The refusal that would catch one — `validateTaskProfile`'s closed-vocabulary check — has **0** production callers; the clause holds by construction of the single writer, and its guard is frozen in C/F only. |
+| must[1] — original goal reference plus source/confidence for every inference | Reached: `goalOf` `:111`/`:976` supplies the text, `goalRoundOf` `:977` the round, and the compiled `goalRef` is appended at `:1009` and named at `:1011`. Observed on a real boot by `U.1`. |
+| must[2] — a question instead of a guessed authorization | **Reached one way only.** Questions are compiled and durably logged on the production path; **0** production readers ask them. See 4.4c. |
+| acceptance[0] — stable output for the same input | Reached: `taskProfileRef` `:991` is the production digest, and the skip at `:1009` is production behaviour that depends on its stability. `U.1` observes one profile per boot and the same digest in three records. |
+| acceptance[1] — every hard constraint traceable to its source | **Produced, unread.** The provenance is compiled and logged; **0** production consumers read a constraint. Its three enforcement directions are frozen in C and P. |
+| acceptance[2] — an unknown side effect is never `none` | **Produced, unread**, same shape as [1]. The `undetermined` value reaches the log through `:1009`; nothing production-side branches on it. |
+| validation[0] — four generic fixtures | Library only, by design: the F cell runs `packages/run/task-profile` with no `Context`, no mount and no Agent. **0** production call sites, and that is what an F stage is. |
+| validation[1] — conflicting constraints and missing information | Library only (C and P). Production supplies only a message, so which archetype or conflict a real goal takes is unobserved. |
+| validation[2] — persisted and revisable | Reached, and the most production-bound of the nine: the append `:1009`, the previous-digest read from the log `:992`/`:138`, the skip `:1009`, and the Run naming at `:1012`. `U.1` observes the three records agreeing after a real boot. |
+
+**No clause has zero production reach in the writing direction.** Three — must[2], acceptance[1], acceptance[2] — have zero in the reading direction, and two — validation[0] and validation[1] — are library-stage clauses with no production subject at all. That is the epic's honest shape: a compiler with one real caller, a durable record, and no consumer until P4-03.
+
+### Gaps found, reported rather than fixed
+
+- **(a) `acceptance-coverage.json`'s three P4-02 notes are stale prose.** All three still read "U is NOT_RUN" and "the production-arrival citation is prepared in evidence-P4-02.md §4.4 and is written here once observed". The citations are in fact present and `checkCoverageClosure` is valid. The data is right and the sentence describing it is a month out of date; the file is Supervisor-curated, so this is reported, not edited.
+- **(b) TaskProfile `questions[]` has no asker.** 4.4c. Whether must[2] is complete without one is a clause-reading question for the delegate, not something a sign-off decides.
+- **(c) `validateTaskProfile` has no production caller**, by design, until P4-03. Already declared in the package README; carried here so a re-grep does not read it as new.
+- **(d) `Agent.taskProfile` has one writer and zero readers.** The same shape that grounded BLOCKED-183 against P4-01's `runs` service, one field down. Recorded because the standard that revoked a sign-off once should be applied to this epic's own surface out loud.
+- **(e) No frozen case observes the shipped `bundle/base` row reaching the compile.** `U.1` boots a real Loader tree, but mounts `dsh-run` from a test-only config. Closing this needs a case over a composition that layers `bundle/base` itself.
+- **(f) This page's earlier §4.4a/§4.4b line numbers are stale in one row.** `bundle/base/cordis.patch.yml:628` is now `:638-639` at `73c1c04f2e`. The `run/run/src/index.ts` numbers in those sections still resolve at that SHA; they do not on lane-A candidates 4 and 5, which is why this section pins its tree explicitly.
