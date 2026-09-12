@@ -2655,6 +2655,89 @@
         "noSecondDeclaration": "The policy content and the PEP wiring belong to P2-05 and P2-10. Writing a second policy vocabulary here would be P8-01's hand-written schema and P2-10's homemade language again, which is what §C deleted."
       },
       "timing": "After P2-03 closes and before P2-05 (W6) opens, per the rectification order §3.1. P2-03 is not closed: its three cells await a clean CI observation."
+    },
+    "P2-10": {
+      "makeVsUse": {
+        "ledgerRow": "P2-10",
+        "card": {
+          "heading": "#### P2-10"
+        },
+        "verdict": "PROVIDER_ADAPT",
+        "verdictSecondary": null,
+        "adopted": [
+          {
+            "name": "cedar-policy/cedar",
+            "npm": "@cedar-policy/cedar-wasm",
+            "version": "4.12.0",
+            "form": "runtime",
+            "reason": "Already adopted on this tree by P2-05, whose Provider stage is `@deepseek-ai/dsh-policy-engine-cedar` and whose `package.json` declares 4.12.0. P2-10 adds no new adapt-level dependency: it consumes the engine P2-05 supply-chain-checked and landed, and under §1.8 it does not re-verify the engine's semantics. What P2-10 verified instead is that the primitives its own clauses need are present in the installed package, measured by loading it from the depending package: all 24 exports listed, including `checkParsePolicySet` (the fail-closed loader's parse), `validate` (schema), `formatPolicies` (canonical text for a digest), `policyToJson`/`policyToText` (a finite surface both ways) and `isAuthorizedPartial` (residuals). `preparsePolicySet` and `statefulIsAuthorized` are also present and the card does not name them; whether a ten-thousand-fixture replay should use the stateful entry is a P-stage measurement, not a preFlight claim. `landsIn` is P2-10.C because the registry's C stage names `policy-language/src/{parser,compiler}.ts`, and a compiler that emits a Cedar policy set must check it with Cedar's own `checkParsePolicySet` and `validate` — the first production import is therefore the compiler's. This is conditional on open question 2 in preflight-P2-10.md: if the delegate rules that dsh's 'finite declarative language' is a Cedar SCHEMA plus conventions rather than a surface syntax that compiles to Cedar, there is no compiler and the first import moves to the fail-closed loader at P. Recorded as C with the condition stated rather than left blank, on P2-05's precedent of amending `landsIn` when the shape refined.",
+            "landsIn": "P2-10.C"
+          }
+        ],
+        "deviations": [],
+        "rejectedAbsent": [
+          "@open-policy-agent/opa-wasm",
+          "casbin",
+          "json-logic-js",
+          "@casl/ability"
+        ],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "Everything this repository still writes, and under §1.8 it is the whole epic: Cedar's authorization semantics are P2-05's frozen property and are not re-verified here. What P2-10 owes is the policy-set version pin (a digest of text plus schema, of which only `PolicySetDigest` exists today), shadow evaluation, a replay harness over historical ActionManifests producing an impact report, a fail-closed loader that keeps the last valid set, the redaction half of the explain, a fixture runner, fuzz over Cedar inputs, and `docs/policy/language.md` as dsh's own schema and conventions. Measured absent at 6cf66891af: `grep -rn 'shadow|versionPin|version pin|impact report|dryRun|dry-run' packages/policy --include='*.ts'` excluding tests and lib/ returns 0 hits, and `packages/policy/policy-language/` and `docs/policy/language.md` do not exist.",
+        "probes": [
+          {
+            "claim": "the engine is already installed, so this epic adds no new adapt-level dependency",
+            "how": "read packages/policy/policy-engine-cedar/package.json; load the package from that directory",
+            "result": "ok",
+            "evidence": "`@cedar-policy/cedar-wasm` is declared at 4.12.0, and requiring `@cedar-policy/cedar-wasm/nodejs` from that package resolves. It does NOT resolve from the repo root, which is the ordinary pnpm non-hoisting and not an absence."
+          },
+          {
+            "claim": "every Cedar primitive the card's note names is present in the installed version",
+            "how": "Object.keys of the loaded module",
+            "result": "ok",
+            "evidence": "24 exports. Present and named by the card: checkParsePolicySet, validate, formatPolicies, policyToJson, policyToText, isAuthorizedPartial, isAuthorized. Present and NOT named by the card: preparsePolicySet, statefulIsAuthorized, checkParseContext, checkParseEntities, checkParseSchema, getCedarLangVersion, getCedarSDKVersion, getCedarVersion, getValidRequestEnvsPolicy, getValidRequestEnvsTemplate, policySetTextToParts, preparseSchema, schemaToJson, schemaToJsonWithResolvedTypes, schemaToText, templateToJson, templateToText."
+          },
+          {
+            "claim": "the explain exists and is on a production path, but its redaction half has no subject",
+            "how": "read packages/policy/policy-engine/src/types.ts and policy-enforcement/src/index.ts",
+            "result": "ok",
+            "evidence": "`PolicyExplain` (types.ts:212-222) is `matched: readonly PolicyId[]` plus `diagnostics: readonly string[]`, documented audit-only; the enforcement point reads the engine at policy-enforcement/src/index.ts:169. Nothing measures that `diagnostics` carries no secret, which is must[2]'s second half."
+          },
+          {
+            "claim": "P0-05's shadow mechanism has a production vocabulary but no production writer, so reusing it means becoming its first",
+            "how": "grep -rn 'ShadowDecisionRecord|shadowSummary' packages apps --include='*.ts' excluding tests, lib/ and the declaring package; grep feature-gates across bundle patch layers",
+            "result": "ok",
+            "evidence": "0 hits for the record, and `feature-gates` appears in no shipped bundle patch layer. The STATE enum is read in production at apps/cli/src/profile-boot.ts:332-358 for an env override, so the vocabulary is on a path while the mechanism is not."
+          },
+          {
+            "claim": "the two declared U consumers do not answer the same way, and the first draft of this record got it wrong",
+            "how": "grep -n 'policy' on both declared U files",
+            "result": "ok",
+            "evidence": "settings/settings/src/index.ts: 0 hits, policy-free. permission-presets/src/index.ts: NOT policy-free — `PresetSpec.approval` is an `ApprovalPolicy` (:63-64), the projection reduces `approval/policy` (:101-102, :141) and it imports `@deepseek-ai/dsh-sandbox-policy` (:18). That is P2-11's approval posture, a different decision from an authorization policy set. A first draft asserted both were policy-free; the grep falsified it."
+          }
+        ],
+        "gapCheck": [
+          {
+            "community": "(none recorded)",
+            "gap": "The P2-10 card carries no `gaps` array, so §1.6's item-by-item reconciliation has nothing to reconcile. Recorded explicitly rather than omitted, so an absent check cannot be mistaken for a skipped one.",
+            "clause": "n/a"
+          },
+          {
+            "community": "open-policy-agent/opa (Rego)",
+            "gap": "Needs a Go opa build to produce wasm; the npm package is eval-only and last published 2024-11. Rejected on the card; nothing about the rejection reopens a clause.",
+            "clause": "must[0] — it would be an alternative language, not a gap in ours"
+          },
+          {
+            "community": "casbin/node-casbin, json-logic-js, @casl/ability",
+            "gap": "Expression matchers with no schema and weak explain. must[2] turns on a matched-rule explain, which is the property all three lack and Cedar has.",
+            "clause": "must[2]"
+          }
+        ],
+        "expectedDeletedPct": 0,
+        "recordedBeforeFirstLine": true,
+        "realized": null,
+        "note": "Literally true rather than conventionally: `packages/policy/policy-language/` does not exist at 6cf66891af, so there is no code this record could have been written after. The prose half is spec/first100/exec/preflight-P2-10.md, which carries the three questions, the clause-by-clause subject table, and six open questions — three of which (the language's shape, the U-stage consumer, and what 'ten thousand historical fixtures' means with no corpus) are marked as needing a delegate ruling because they change the epic's size rather than its detail."
+      }
     }
   },
   "methodCorrections": [
