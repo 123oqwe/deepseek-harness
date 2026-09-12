@@ -137,3 +137,5 @@ preFlight(JSON 记录 `clause-subject-audit.json` + `evidence-<id>.md`,`recorded
 - **报 tip 前门集必须覆盖本阶段真正动了的东西的全套门**(补记 277,lane A 第三次 scoped≠full):改 package.json/deps/tsconfig、把包从库变插件、加带 shebang 的可执行源 → 跑**全 `pnpm run hygiene`**(含 `verify-application-entrypoints`,它要求每个可执行源在 `scripts/verify-application-entrypoints.ts` 分类表登记);加新文件 → **单独 lint 它们**。不得拿上一阶段的 hygiene 绿或 scoped 绿当本阶段的绿——scoped 门 ≠ full 门,这是 251/259/265/277 同一族。
 
 - **陈旧 `lib/` 的两条(补记 290,delegate 与 lane A 各栽一次)**:(诊断)一个测试红,**先确认它跑的是哪一份代码(src 还是构建产物 `lib/`)、被观测对象是什么,再读被测系统模型**;派 lane 挖或记阻塞项前先核实 bug 是真的、非构建/环境陈旧产物——sdk/acp 这类快照 spawn `dsh --profile X` 跑的是 `lib/` 不是 src(spec 顶注写着)。(预防)**凡改动会进 `lib/` 的包(任何 `src/`),跑"跑构建产物"的快照/组合前必须先重建那些包**(`tsc -b` + `tsdown --filter`),否则测的是上次 build 时的旧代码。`assertBuiltArtifactsCurrent` 只在 record 模式拦、replay 不拦(BLOCKED-245),所以 replay 下陈旧构建是假红的常见来源。
+
+- **照搬 `failureSummary` 只有"被变异代码 AND 该冻结命令的测试文件"两者都未变才行**(补记 291):failureSummary 断言"哪些用例会红"、取决于**测试**不只是源码;只看源码没动就照搬,会写下假的红数(P2-05 supersede 里 M62 红 2 旧证写 3、M65 红 7 旧证写 4,都因测试文件变了)。变异点所在源文件未动、但检测它的 spec 变了→必须重跑。
