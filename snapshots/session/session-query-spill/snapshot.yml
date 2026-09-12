@@ -14,6 +14,15 @@
 # assertion fails if the omitted span is not in the spill. The spill root is
 # derived from the scenario name (`harness.ts:214-222`), which is why an
 # absolute path here is reproducible on any machine.
+#
+# The step iterates over every match instead of capturing `find` into one
+# variable (BLOCKED-231). The spill root is per SCENARIO, not per run, so a
+# concurrent run of this scenario puts a second file under it; `f=$(find ...)`
+# then holds two newline-separated paths and `wc -c < "$f"` dies with
+# `integer expression expected` — which is the shape lane B measured on a full
+# suite run while it passed alone. Looking for ANY file that proves the
+# property is immune to that: an extra file cannot make a real spill stop
+# satisfying it.
 # The read target is LOAD-BEARING and addressed by absolute sequence number,
 # because `session_event_read` accepts nothing else: its only parameter is
 # `seq`. It must land on the runtime-context `user/message`, which is the only

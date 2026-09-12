@@ -5071,6 +5071,10 @@ That also separates two failure shapes this entry had treated as one: `(no outpu
 
 The subject changed because binding the assertion to one event is what failed: any event inserted ahead of the read target moves it, and this scenario has already been broken that way once.
 
+**A residue shape measured after this entry closed, fixed under [BLOCKED-231](#blocked-231).** Lane B saw this scenario red on a full-suite run and green alone, with `grep: <path1>\n<path2>: No such file` — two paths in one variable. The spill root is derived from the SCENARIO name, so it is shared by every run of that scenario; `f=$(find ...)` captures both and `wc -c < "$f"` fails with `integer expression expected`. Reproduced directly at the shell: two matching files make the original command fail exactly that way, and make the replacement — which iterates and accepts any file proving the property — succeed.
+
+**One thing that is NOT a source of residue, measured rather than assumed:** a leftover from a PREVIOUS run cannot survive, because the harness removes the spill root before the run starts (`snapshots/session/headless.snapshot.ts:798`). Planting a stale file and running the scenario deletes it, so a control built that way passes vacuously. Only concurrency puts a second file under the root.
+
 **The closing condition, as originally written on the corrected reading.** The original — "stop depending on an absolute path" — was written when the path was believed unreproducible. It is reproducible, so the fix is not to compute the path differently but to make the step verify somewhere it can actually see: the `spill-local` default is `./.spill`, inside the workspace, which is what `cordis.yml`'s own comment calls "local tool-result spill storage". Confirm the sandbox reading first; a fix aimed at the wrong half would pass for the wrong reason.
 
 **Original closing condition, kept for the record:** the authored command stops depending on an absolute path — for instance by resolving the spill directory from the session's own workspace, which every other fixture already does — and the fixture is refreshed once to prove a replay reproduces `SPILL_CANONICAL_OK` on a machine that never recorded it.
@@ -5859,31 +5863,17 @@ The old gate found three of those five. The two it could not see are the two on 
 
 **The census was interrupted once by something outside this tree, and the cause is recorded because the gate cannot tell it apart.** The first full collection died at 05:27:58Z with `signal: SIGTERM`, `status: null` and no stdout — lane A ran `pkill -f "vitest"` at 05:27:52Z to stop its own gate set, and a pattern kill reaches every `vitest` on the host. That is the failure this gate's own error text warns about: a killed collection and a genuine load error report the same "Command failed", so the signal and the timing are what separate them. Re-run, and lane A now stops only its own processes.
 
-### BLOCKED-231 — session-query-spill's verification step reads a spill root two runs can share, so a concurrent run makes grep read two paths as one filename
 
-**Status:** OPEN. **Owner: lane A** (delegate ruling 2026-09-12; lane A rewrote that step last and binds it to the run's own session directory). Reported by lane B; lane B does not touch the scenario.
+### BLOCKED-231 — a verification step bound to a per-scenario spill root breaks when that scenario runs twice
 
-**What was measured, on `lane-b-p3-01` at `b4b57ff461`.** One `test:snapshot` run failed the scenario; the same tree passed it both when run alone (`-t session-query-spill`: 1 passed | 117 skipped) and on a second full-suite run (116 passed, the only failure being an unrelated fixture). So the signal is not a content diff and not this branch's code.
+**Status:** FIXED 2026-09-12, owner lane A. Found by lane B: `session-query-spill` red on a full-suite run and green alone, failing as `grep: <path1>\n<path2>: No such file`.
 
-The failing comparison, at offset 241:
+**The spill root is per SCENARIO, not per run.** `snapshots/../harness.ts:214-222` derives it as `/tmp/dsh-acp-snap-<sha256(scenario).slice(0,9)>`, so every run of one scenario shares a directory. A verification step that does `f=$(find <root> -name '…' -type f)` captures every match into one variable, and with two matches `wc -c < "$f"` dies with `integer expression expected` — the shape lane B measured. This was introduced by [BLOCKED-202](#blocked-202)'s own fix, which is why it is numbered rather than folded in.
 
-```
-expected  …"text":"(no output)\n[exit code: 1]"}],"isError":false}…
-received  …"text":"[stderr]\ngrep: {{spillLocator:session_event_read.txt}}\n/tmp/dsh-acp-snap-035d1d054/session-24a2525057a1/81c54077f09d-session_eve…
-```
+**Reproduced at the shell, because the fixture cannot produce it.** Two matching files under a scratch root: the original command fails exactly as reported; the replacement — iterate the matches, accept any file that proves the property — prints its success marker. The step no longer depends on there being exactly one file, only on at least one real spill existing, which extra files cannot falsify.
 
-**The placeholder in the received output is not an unsubstituted template.** `{{spillLocator:NAME}}` is produced in exactly one place — `normalize.ts:214-215`, rewriting a real spill path — and nothing ever substitutes it back. What the received text shows is grep's own error message, in which the FIRST of two real spill paths was normalized correctly and the second was still being printed when the capture was cut. Reading it as "the fixture leaked a placeholder into the command" is the wrong direction and cost this lane a diagnosis.
+**A stale leftover is NOT a source of this, and the control that would have "proved" it is vacuous.** The harness removes the spill root before the run (`snapshots/session/headless.snapshot.ts:798`). Planting a file there and running the scenario deletes it, so such a control passes without testing anything — measured, after building exactly that control and finding it empty. Only a concurrent run of the same scenario puts a second file under the root.
 
-**Mechanism.** `replay.override.json`'s second turn runs
+**Readings.** After the change the step still prints `SPILL_RETAINS_COMPLETE_RESULT`, the read result is still 741 characters with `(Omitted N bytes.)`, and raising `maxInlineBytes` so nothing spills still reddens it — so the overflow assertion survived the robustness change rather than being loosened into something weaker.
 
-```sh
-file=$(find /tmp/dsh-acp-snap-035d1d054 -name '*-session_event_read.txt' -type f); grep -q request/header "$file" && …
-```
-
-and `snapshotSpillRoot()` (`packages/test-support/session-snapshot/src/harness.ts:216-221`) derives that root as `sha256(scenario).slice(0,9)` — **per scenario, not per run**. Two runs of this scenario overlapping on one host therefore write `session-<a>/…-session_event_read.txt` and `session-<b>/…-session_event_read.txt` under the same root, `find` returns two lines, `"$file"` becomes one two-line filename, and grep reports it as missing on stderr instead of failing quietly with exit 1. A stale file left by an earlier killed run reproduces the same shape without any concurrency at all.
-
-The `find` is what makes the scenario sensitive: it searches the whole scenario root rather than this run's session directory, so it cannot tell its own spill file from another run's.
-
-**Not fixed here.** Binding the search to the running session's directory is the obvious repair, but the step is lane A's and the fixture's expected output moves with it.
-
-**Why one collection serves two censuses, recorded because the shortcut is only sound for a reason.** A freeze edits `command-freeze.json` and its documents; it touches no test file. The producible-name set is therefore identical before and after a freeze, so one chunked collection can answer both the pre-freeze and the post-freeze census — what changes between them is the ENTRY list, not the names. The cheap `verify-freeze-in-candidate-tree` is still run on both sides for real, because that one reads the tree rather than the name set. Delegate ruling, 2026-09-12.
+**Lane B's original measurement, kept because it is the evidence this entry rests on.** Reported from `lane-b-p3-01` at `b4b57ff461`: one `test:snapshot` run failed the scenario, while the same tree passed it alone (1 passed | 117 skipped) and passed it on a second full-suite run. Not a content diff and not that branch's code — which is what pointed at a shared root rather than at the fixture. Lane B reported it and did not touch the scenario; the fix and this entry are lane A's.

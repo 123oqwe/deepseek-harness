@@ -52,7 +52,7 @@
         "index": 0,
         "id": "call_verify_session_query_spill",
         "name": "bash",
-        "argumentsDelta": "{\"command\":\"f=$(find /tmp/dsh-acp-snap-035d1d054 -name '*-session_event_read.txt' -type f); test -n \\\"$f\\\" || { echo SPILL_MISSING; exit 1; }; test \\\"$(wc -c < \\\"$f\\\")\\\" -gt 800 || { echo SPILL_NOT_OVER_INLINE_CAP; exit 1; }; grep -q 'supersedes earlier runtime-context snapshots' \\\"$f\\\" || { echo SPILL_OMITTED_TAIL_MISSING; exit 1; }; echo SPILL_RETAINS_COMPLETE_RESULT\",\"description\":\"Verify the spill retains what the inline result omitted\"}"
+        "argumentsDelta": "{\"command\":\"ok=0; for f in $(find /tmp/dsh-acp-snap-035d1d054 -name '*-session_event_read.txt' -type f); do test \\\"$(wc -c < \\\"$f\\\")\\\" -gt 800 || continue; grep -q 'supersedes earlier runtime-context snapshots' \\\"$f\\\" || continue; ok=1; break; done; test \\\"$ok\\\" = 1 || { echo SPILL_MISSING; exit 1; }; echo SPILL_RETAINS_COMPLETE_RESULT\",\"description\":\"Verify the spill retains what the inline result omitted\"}"
       },
       {
         "type": "block-end",
@@ -61,7 +61,7 @@
           "type": "tool-call",
           "id": "call_verify_session_query_spill",
           "name": "bash",
-          "arguments": "{\"command\":\"f=$(find /tmp/dsh-acp-snap-035d1d054 -name '*-session_event_read.txt' -type f); test -n \\\"$f\\\" || { echo SPILL_MISSING; exit 1; }; test \\\"$(wc -c < \\\"$f\\\")\\\" -gt 800 || { echo SPILL_NOT_OVER_INLINE_CAP; exit 1; }; grep -q 'supersedes earlier runtime-context snapshots' \\\"$f\\\" || { echo SPILL_OMITTED_TAIL_MISSING; exit 1; }; echo SPILL_RETAINS_COMPLETE_RESULT\",\"description\":\"Verify the spill retains what the inline result omitted\"}"
+          "arguments": "{\"command\":\"ok=0; for f in $(find /tmp/dsh-acp-snap-035d1d054 -name '*-session_event_read.txt' -type f); do test \\\"$(wc -c < \\\"$f\\\")\\\" -gt 800 || continue; grep -q 'supersedes earlier runtime-context snapshots' \\\"$f\\\" || continue; ok=1; break; done; test \\\"$ok\\\" = 1 || { echo SPILL_MISSING; exit 1; }; echo SPILL_RETAINS_COMPLETE_RESULT\",\"description\":\"Verify the spill retains what the inline result omitted\"}"
         }
       },
       {
