@@ -15,7 +15,7 @@
  */
 
 import { afterAll } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
+import { Context, Service } from '@deepseek-ai/cordis'
 import { createUserMessage, ToolCallId, type StreamChunk } from '@deepseek-ai/dsh-llm'
 import SessionStore, { SessionId, type SessionEvent } from '@deepseek-ai/dsh-session'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
@@ -26,16 +26,24 @@ import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
 import type { TrustKernelAuditEntry, TrustKernelPolicyQuery, TrustKernelPolicyVerdict } from '@deepseek-ai/dsh-trust-kernel'
-import CedarPolicyEngine, { policySetDigest, type PolicySetSource } from '@deepseek-ai/dsh-policy-engine-cedar'
+import CedarPolicyEngine, { policySetDigest } from '@deepseek-ai/dsh-policy-engine-cedar'
+import type { CurrentPolicySet } from '@deepseek-ai/dsh-policy-engine'
 
 /**
- * A source yielding one fixed set, for stacks whose policies never reload.
- * @param policies - the set to enforce for this stack's lifetime.
- * @returns the source to configure the engine with.
+ * A `policySet` provider yielding one fixed set, for cases whose policies never
+ * reload. The set and its digest are built together, because a provider that
+ * computed the digest separately could hand out a pin for a set it is no longer
+ * yielding — the mismatch the seam exists to remove.
  */
-function fixedPolicySource(policies: Readonly<Record<string, string>>): PolicySetSource {
-  const current = { policies, digest: policySetDigest(policies) }
-  return () => current
+class FixedPolicySet extends Service {
+  static readonly inject = []
+  constructor(ctx: Context, public config: { policies: Readonly<Record<string, string>> }) {
+    super(ctx, 'policySet')
+  }
+
+  current(): CurrentPolicySet {
+    return { policies: this.config.policies, digest: policySetDigest(this.config.policies) }
+  }
 }
 import CapabilityTokenFilePlugin from '@deepseek-ai/dsh-capability-token-file'
 import PermissionPresetService from '@deepseek-ai/dsh-permission-presets'
@@ -169,7 +177,10 @@ export async function stack(options: {
   await ctx.plugin(PolicyEnforcement)
   const engine = options.policies === undefined
     ? undefined
-    : await ctx.plugin(CedarPolicyEngine, { source: fixedPolicySource(options.policies) })
+    : await (async () => {
+      await ctx.plugin(FixedPolicySet, { policies: options.policies as Readonly<Record<string, string>> })
+      return ctx.plugin(CedarPolicyEngine)
+    })()
   ctx.tools.register(defineContentToolFixture({
     name: 'writer',
     description: 'writes',

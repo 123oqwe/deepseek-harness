@@ -284,8 +284,19 @@
     # with `policy-unavailable`, which is what made every tool call on a
     # factory profile fail (BLOCKED-187). Mounting a provider is what turns
     # the decision from "nobody answered" into an answer.
-    - id: policy-engine
-      name: '@deepseek-ai/dsh-policy-engine-cedar'
+    # Where a deployment STATES its policy set: the `policy-set` settings
+    # namespace, hot-reloaded with the rest of `settings.yaml`. The two policies
+    # below are the composition baseline — `SettingsRegisterOptions.base`, which
+    # resolves BELOW the user layer, so a deployment that has never edited its
+    # document still enforces them and one that names an id overrides just that
+    # policy rather than the whole set.
+    #
+    # Editing that document must REPLACE it atomically. With a baseline present
+    # an empty document is not an error: it resolves to the baseline alone, which
+    # is a valid set, so it commits and the deployment's own policies are gone
+    # until the write completes (docs/policy/language.md, BLOCKED-243).
+    - id: policy-language
+      name: '@deepseek-ai/dsh-policy-language'
       config:
         policies:
           # Cedar denies when NO permit matches (`no-matching-permit`), so an
@@ -310,6 +321,13 @@
           # what makes the audit record name the band as a policy decision
           # rather than only as a gate that happened first.
           kernel-hard-deny: 'forbid(principal, action, resource) when { context.riskClass == "safety-critical" };'
+
+    # The engine takes no configuration: it asks `ctx.policySet` for the set in
+    # force on every decision, and the pin it records comes from that same read.
+    # Holding the set here instead would make this row a second answer to "what
+    # is enforced", and the two would disagree the first time a reload failed.
+    - id: policy-engine
+      name: '@deepseek-ai/dsh-policy-engine-cedar'
 
     - id: permission
       name: '@deepseek-ai/dsh-permission-presets'

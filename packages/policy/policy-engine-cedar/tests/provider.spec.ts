@@ -9,9 +9,10 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
+import { Context, Service } from '@deepseek-ai/cordis'
 import { brandString } from '@deepseek-ai/dsh-brand'
-import CedarPolicyEngine, { decisionFromAnswer, policySetDigest, type PolicySetSource } from '../src/index.ts'
+import type { CurrentPolicySet } from '@deepseek-ai/dsh-policy-engine'
+import CedarPolicyEngine, { decisionFromAnswer, policySetDigest } from '../src/index.ts'
 import type { PolicyRequest } from '@deepseek-ai/dsh-policy-engine'
 
 /** A permit-everything set, so a case that denies denies for its own reason. */
@@ -36,23 +37,27 @@ function request(overrides: Partial<PolicyRequest> = {}): PolicyRequest {
 }
 
 /**
- * A fixed policy set as the engine's source.
- *
- * The set and its digest travel together, which is the seam's own requirement:
- * a source that computed the digest separately could hand out a pin for a set
- * it is no longer yielding.
- * @param policies - the set this source always yields.
- * @returns the source to configure the engine with.
+ * A `policySet` provider yielding one fixed set, for cases whose policies never
+ * reload. The set and its digest are built together, because a provider that
+ * computed the digest separately could hand out a pin for a set it is no longer
+ * yielding — the mismatch the seam exists to remove.
  */
-function sourceOf(policies: Readonly<Record<string, string>>): PolicySetSource {
-  const current = { policies, digest: policySetDigest(policies) }
-  return () => current
+class FixedPolicySet extends Service {
+  static readonly inject = []
+  constructor(ctx: Context, public config: { policies: Readonly<Record<string, string>> }) {
+    super(ctx, 'policySet')
+  }
+
+  current(): CurrentPolicySet {
+    return { policies: this.config.policies, digest: policySetDigest(this.config.policies) }
+  }
 }
 
 /** Mount the provider on a fresh Context, as a profile would. */
 async function mount(policies: Readonly<Record<string, string>>): Promise<{ ctx: Context; engine: CedarPolicyEngine }> {
   const ctx = new Context()
-  await ctx.plugin(CedarPolicyEngine, { source: sourceOf(policies) })
+  await ctx.plugin(FixedPolicySet, { policies })
+  await ctx.plugin(CedarPolicyEngine)
   return { ctx, engine: ctx.policy as CedarPolicyEngine }
 }
 

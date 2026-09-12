@@ -23,17 +23,7 @@
  * redden it.
  */
 import { describe, expect, it } from 'vitest'
-import CedarPolicyEngine, { policySetDigest, type PolicySetSource } from '@deepseek-ai/dsh-policy-engine-cedar'
-
-/** A source yielding one fixed set; these cases never reload their policies. */
-function fixedSource(policies: Readonly<Record<string, string>>): PolicySetSource {
-  const current = { policies, digest: policySetDigest(policies) }
-  return () => current
-}
-
-const ATTACKER_PERMIT = { 'attacker-permit': 'permit(principal, action, resource);' }
-const attackerSource = fixedSource(ATTACKER_PERMIT)
-const permitAllSource = fixedSource(PERMIT_ALL)
+import CedarPolicyEngine from '@deepseek-ai/dsh-policy-engine-cedar'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import { callWriter, PERMIT_ALL, resultText, runTurn, stack } from './fixtures/stack.ts'
 
@@ -43,9 +33,7 @@ describe('P2-05 acceptance[2]: the policy service resists replace and unmount', 
     // The attack: mount a second engine whose set permits everything the first
     // one forbids. Cordis rejects the registration itself, so the swap never
     // reaches a decision — the refusal is structural, not a policy outcome.
-    await expect(ctx.plugin(CedarPolicyEngine, {
-      source: attackerSource,
-    })).rejects.toThrow(/service "policy" has been registered/)
+    await expect(ctx.plugin(CedarPolicyEngine)).rejects.toThrow(/service "policy" has been registered/)
   })
 
   it('keeps the FIRST engine deciding after the refused replace, not a half-installed second one', async () => {
@@ -57,7 +45,7 @@ describe('P2-05 acceptance[2]: the policy service resists replace and unmount', 
       policies: { ...PERMIT_ALL, 'forbid-writer': 'forbid(principal, action, resource);' },
     })
     const mounted = ctx.get('policy') as CedarPolicyEngine
-    await expect(ctx.plugin(CedarPolicyEngine, { source: permitAllSource })).rejects.toThrow()
+    await expect(ctx.plugin(CedarPolicyEngine)).rejects.toThrow()
     ctx.llm.registerAdapter(['mock'], new MockAdapter([callWriter('call-1'), textResponse('done')]))
     await runTurn(ctx, 'p2-05-replace-refused')
     expect(audit.at(-1)?.decision.effect).toBe('deny')

@@ -30,51 +30,20 @@ import type {
 } from '@deepseek-ai/dsh-policy-engine'
 
 /**
- * The policy set in force right now, and the pin it was accepted under.
+ * Deployment configuration: none.
  *
- * A MAP from policy id to Cedar source rather than one source string, and the
- * difference is not stylistic: submitted as a string, Cedar assigns generated
- * ids (`policy0`, `policy1`) and an `@id(...)` annotation in the source does
- * NOT become the id the explain reports — so an audit trail built on the string
- * form would name policies nobody wrote. must[3]'s audit is only as good as
- * these ids.
+ * The policy set arrives through the injected `policySet` provider rather than
+ * through configuration, and the reason is that a shipped composition cannot
+ * express the alternative: `cordis.yml`'s `!!js` evaluates to a VALUE at load
+ * time with no `ctx` in scope, so a configured source would have to reach the
+ * provider's state through a module-level global — a second holder of the set,
+ * in a worse disguise than a configured map. The provider is a service because
+ * that is the shape a composition can mount.
  */
-export interface CurrentPolicySet {
-  /** Policy id to Cedar source. */
-  readonly policies: Readonly<Record<string, string>>
-  /** The digest the decision records, taken where the set was accepted. */
-  readonly digest: PolicySetDigest
-}
+export interface Config {}
 
-/**
- * Where the engine gets the set it enforces: asked again for every decision.
- *
- * Called per decision rather than once, because the set can change under a
- * running harness — `@deepseek-ai/dsh-policy-language` resolves it from a
- * settings namespace that reloads. **The digest travels with the policies
- * through this one call**, and that pairing is the point: before this seam the
- * policies were re-read per decision while the digest was computed once at
- * construction, so a reload moved the enforced rules and left every decision
- * citing the digest of a set that was no longer in force.
- * @returns the set to decide against, and the pin to record.
- */
-export type PolicySetSource = () => CurrentPolicySet
-
-/** Deployment configuration: where this deployment's policy set comes from. */
-export interface Config {
-  /**
-   * The source of the enforced set. Required and sole: a second way to supply
-   * policies would be a second answer to "what is in force", and the first
-   * reload that disagreed would leave the audit naming a set nobody can point
-   * at.
-   */
-  readonly source: PolicySetSource
-}
-
-/** Config schema. `source` has no default: a deployment states where its policy set comes from. */
-export const Config: z<Config> = z.object({
-  source: z.function().required(),
-})
+/** Config schema: this provider takes no configuration. */
+export const Config: z<Config> = z.object({})
 
 /**
  * How a `PolicyRequest` becomes the three Cedar entities.
@@ -238,7 +207,15 @@ export function decisionFromAnswer(answer: AuthorizationAnswer, digest: PolicySe
  * a refused boot.
  */
 export default class CedarPolicyEngine extends Service {
-  static readonly inject = []
+  /**
+   * Requires a policy-set provider rather than probing for one.
+   *
+   * An engine mounted without a set to enforce would answer every question
+   * against nothing, which Cedar reports as `no-matching-permit` — a deployment
+   * would see every action denied and no indication why. Misconfiguration fails
+   * at load instead.
+   */
+  static readonly inject = ['policySet']
   static readonly Config = Config
 
   /**
@@ -250,7 +227,7 @@ export default class CedarPolicyEngine extends Service {
    * staleness this seam removed.
    */
   get digest(): PolicySetDigest {
-    return this.config.source().digest
+    return this.ctx.policySet.current().digest
   }
 
   constructor(ctx: Context, public config: Config) {
@@ -281,7 +258,7 @@ export default class CedarPolicyEngine extends Service {
     // One read of the source per decision, and the set and its digest come from
     // that SAME read: asking twice could straddle a reload and decide against
     // one set while recording another.
-    const current = this.config.source()
+    const current = this.ctx.policySet.current()
     return decisionFromAnswer(
       isAuthorized({
         ...toCedarRequest(request),
