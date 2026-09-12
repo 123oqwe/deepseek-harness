@@ -24,7 +24,7 @@ import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import { decideReservation } from './index.ts'
-import type { LedgerEntry, LedgerEpoch, LedgerScope, LedgerState, ReceiptDigest, ReserveDecision, ReserveRequest } from './types.ts'
+import type { LedgerEntry, LedgerEpoch, LedgerGeneration, LedgerScope, LedgerState, ReceiptDigest, ReserveDecision, ReserveRequest } from './types.ts'
 
 /** The store's handle. */
 export interface LedgerStore {
@@ -36,14 +36,25 @@ export interface LedgerStore {
    */
   reserve: (request: ReserveRequest) => ReserveDecision
   /** Record that the request left the harness; a retry after this must not send again. */
-  markSent: (scope: LedgerScope, key: string, epoch: LedgerEpoch) => void
+  markSent: (scope: LedgerScope, key: string, epoch: LedgerGeneration) => void
   /** Record the provider's receipt, which is the evidence the effect committed. */
-  confirm: (scope: LedgerScope, key: string, epoch: LedgerEpoch, receiptDigest: ReceiptDigest) => void
+  confirm: (scope: LedgerScope, key: string, epoch: LedgerGeneration, receiptDigest: ReceiptDigest) => void
   /** Record that the outcome cannot be determined by retrying; it goes to reconciliation. */
-  markAmbiguous: (scope: LedgerScope, key: string, epoch: LedgerEpoch) => void
+  markAmbiguous: (scope: LedgerScope, key: string, epoch: LedgerGeneration) => void
   /** The entry for one scoped key, or undefined when it has never been reserved. */
   entry: (scope: LedgerScope, key: string) => LedgerEntry | undefined
 }
+
+/**
+ * The on-disk format this module writes.
+ *
+ * Version 2 made `epoch` nullable, where NULL means the holder had no lease
+ * generation (BLOCKED-221). A version 1 file spells that column NOT NULL, so an
+ * unfenced reservation against one fails on a constraint deep inside a
+ * transaction; the version check refuses the file up front instead, which is
+ * the pre-release stance — reject an old format rather than migrate it.
+ */
+const SCHEMA_VERSION = 2
 
 /** The schema this module owns; `action-ledger.sqlite` carries its own version. */
 const SCHEMA = [
@@ -52,12 +63,16 @@ const SCHEMA = [
   // should proceed a millisecond later, not error.
   'PRAGMA busy_timeout = 5000',
   'CREATE TABLE IF NOT EXISTS schema_version (singleton INTEGER PRIMARY KEY CHECK (singleton = 1), version INTEGER NOT NULL)',
-  'INSERT OR IGNORE INTO schema_version (singleton, version) VALUES (1, 1)',
+  `INSERT OR IGNORE INTO schema_version (singleton, version) VALUES (1, ${SCHEMA_VERSION})`,
   // `scope` is half the PRIMARY KEY, not a column beside it: an idempotency
   // key is unique per client, so two principals presenting one key are two
   // reservations. A single-column key would make the second a duplicate of the
   // first and tell its owner so (BLOCKED-142).
-  'CREATE TABLE IF NOT EXISTS ledger (scope TEXT NOT NULL, key TEXT NOT NULL, arguments_hash TEXT NOT NULL, state TEXT NOT NULL, epoch INTEGER NOT NULL, receipt_digest TEXT, PRIMARY KEY (scope, key))',
+  //
+  // `epoch` is NULLABLE, and NULL is not zero: it records a holder that had no
+  // lease generation at all. Every comparison against it uses `IS` rather than
+  // `=` so the absent generation matches itself and nothing else.
+  'CREATE TABLE IF NOT EXISTS ledger (scope TEXT NOT NULL, key TEXT NOT NULL, arguments_hash TEXT NOT NULL, state TEXT NOT NULL, epoch INTEGER, receipt_digest TEXT, PRIMARY KEY (scope, key))',
 ]
 
 /**
@@ -71,16 +86,25 @@ function readEntry(db: DatabaseSync, scope: LedgerScope, key: string): LedgerEnt
   const row = db
     .prepare('SELECT scope, key, arguments_hash, state, epoch, receipt_digest FROM ledger WHERE scope = ? AND key = ?')
     .get(scope, key) as
-      { scope: string; key: string; arguments_hash: string; state: string; epoch: number; receipt_digest: string | null } | undefined
+      { scope: string; key: string; arguments_hash: string; state: string; epoch: number | null; receipt_digest: string | null } | undefined
   if (row === undefined) return undefined
   return {
     scope: row.scope as LedgerScope,
     key: row.key as LedgerEntry['key'],
     argumentsHash: row.arguments_hash as LedgerEntry['argumentsHash'],
     state: row.state as LedgerState,
-    epoch: row.epoch as LedgerEpoch,
+    epoch: row.epoch === null ? 'unfenced' : row.epoch as LedgerEpoch,
     ...(row.receipt_digest === null ? {} : { receiptDigest: row.receipt_digest as ReceiptDigest }),
   }
+}
+
+/**
+ * The column value for one generation: NULL for an unfenced holder.
+ * @param epoch - the generation to store or match on.
+ * @returns the integer generation, or null when the holder has none.
+ */
+function columnEpoch(epoch: LedgerGeneration): number | null {
+  return epoch === 'unfenced' ? null : epoch
 }
 
 /**
@@ -93,7 +117,7 @@ function readEntry(db: DatabaseSync, scope: LedgerScope, key: string): LedgerEnt
  * @param db - the database.
  * @param scope - the principal the key belongs to.
  * @param key - the idempotency key.
- * @param epoch - the caller's generation.
+ * @param epoch - the caller's generation, or `'unfenced'` when it holds no lease.
  * @param state - the state to move to.
  * @param receiptDigest - the receipt, for `confirmed`.
  */
@@ -101,13 +125,16 @@ function transition(
   db: DatabaseSync,
   scope: LedgerScope,
   key: string,
-  epoch: LedgerEpoch,
+  epoch: LedgerGeneration,
   state: LedgerState,
   receiptDigest?: ReceiptDigest,
 ): void {
+  // `epoch IS ?`, not `epoch = ?`: an unfenced holder's generation is SQL NULL,
+  // and `NULL = NULL` is false, so `=` would refuse every write by the very
+  // caller that holds the reservation.
   const changed = db
-    .prepare('UPDATE ledger SET state = ?, receipt_digest = ? WHERE scope = ? AND key = ? AND epoch = ?')
-    .run(state, receiptDigest ?? null, scope, key, epoch).changes
+    .prepare('UPDATE ledger SET state = ?, receipt_digest = ? WHERE scope = ? AND key = ? AND epoch IS ?')
+    .run(state, receiptDigest ?? null, scope, key, columnEpoch(epoch)).changes
   if (changed === 0) {
     const current = readEntry(db, scope, key)
     throw new Error(current === undefined
@@ -130,6 +157,14 @@ export function openLedgerStore(directory: string): LedgerStore {
   mkdirSync(directory, { recursive: true })
   const db = new DatabaseSync(join(directory, 'action-ledger.sqlite'))
   for (const statement of SCHEMA) db.exec(statement)
+  // The seeding INSERT is `OR IGNORE`, so a file written by an older build
+  // keeps its own version and is refused here rather than failing later on a
+  // NOT NULL constraint inside a reservation's transaction.
+  const version = (db.prepare('SELECT version FROM schema_version WHERE singleton = 1').get() as { version: number }).version
+  if (version !== SCHEMA_VERSION) {
+    db.close()
+    throw new Error(`action ledger: ${join(directory, 'action-ledger.sqlite')} is schema version ${String(version)}, not ${String(SCHEMA_VERSION)}; delete it to start a new ledger`)
+  }
   // The connection is a closure variable, not a property and not a WeakMap
   // entry keyed by the handle. A first draft copied `dsh-message-bus`'s
   // WeakMap-plus-guard, and the case written to prove the guard fires showed
@@ -154,7 +189,13 @@ export function openLedgerStore(directory: string): LedgerStore {
         if (decision.action === 'reserved') {
           db.prepare('INSERT INTO ledger (scope, key, arguments_hash, state, epoch) VALUES (?, ?, ?, ?, ?)'
             + ' ON CONFLICT (scope, key) DO UPDATE SET epoch = excluded.epoch')
-            .run(decision.entry.scope, decision.entry.key, decision.entry.argumentsHash, decision.entry.state, decision.entry.epoch)
+            .run(
+              decision.entry.scope,
+              decision.entry.key,
+              decision.entry.argumentsHash,
+              decision.entry.state,
+              columnEpoch(decision.entry.epoch),
+            )
         }
         db.exec('COMMIT')
         return decision

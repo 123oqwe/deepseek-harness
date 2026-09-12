@@ -16,6 +16,7 @@ English | [中文](README.zh.md)
 - [Why a tool result is not evidence](#why-a-tool-result-is-not-evidence)
 - [The five states are permissions, not labels](#the-five-states-are-permissions-not-labels)
 - [Check order](#check-order)
+- [A reservation is exclusive only when both sides are fenced](#a-reservation-is-exclusive-only-when-both-sides-are-fenced)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 
@@ -35,6 +36,14 @@ An idempotency key is unique per client, not globally. `draft-ietf-httpapi-idemp
 
 Arguments are compared before state, and the epoch is compared before either outcome check. Both orders are load-bearing rather than stylistic. Answering `duplicate` to a request whose parameters differ would tell a caller that its new, different request had already been carried out; and reporting an outcome to a fenced-out generation would hand it information about work another generation now owns.
 
+## A reservation is exclusive only when both sides are fenced
+
+A generation comes from a run's lease, and a run without one presents `'unfenced'` — a state, not the number zero. The distinction decides which guarantee the reservation carries.
+
+With generations on both sides, a `prepared` entry may be taken over by a HIGHER generation and is refused to the SAME one as `held-at-same-epoch`: the higher generation's fence proves the previous holder is out, while a caller at the holder's own generation is a live peer, and two holders of one reservation is what must[2] forbids. That refusal is distinct from `duplicate`, which asserts the effect already happened, and from `stale-epoch`, which asserts a successor fenced this caller out — one says wait, the other says stop.
+
+With either side unfenced the ledger cannot tell a live peer from the same worker restarting, so it re-takes the `prepared` entry and keeps at-least-once instead of stranding a key nobody can prove abandoned. The decision then carries `fenced: false`, including when a well-fenced caller takes over an entry whose own holder had no generation: the old holder can still send. `sent`, `confirmed` and `ambiguous` entries are unaffected — the degraded rule re-takes what was never sent and nothing else.
+
 ## Model Experience
 
 None, as this package exports a reservation decision and types only and registers nothing model-facing.
@@ -49,6 +58,7 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 - **The production caller reserves; it does not yet resolve.** `packages/core/agent-loop/src/tool-calls.ts` reserves before every native tool call, marks it `sent` before the tool runs, and records a receipt digest or `ambiguous` from the result. A tool that throws leaves an `ambiguous` entry that refuses every later attempt at that key, and nothing clears it — deliberate, since clearing it would let a retry perform an effect that may already have committed, but it means a failed action is permanently blocked until a reconciler exists.
 - **The receipt digest is over the tool's own content**, which is what the harness observed rather than what the provider returned. Until a transport carries a real receipt, the digest proves the same outcome was recorded twice, not that the outside world committed once.
 - **`ambiguous` cannot tell unknowable from merely failed.** The dispatch path writes it for every errored tool result, which is the fail-closed reading: a tool that threw may or may not have committed. Distinguishing a request that never left from one whose outcome is genuinely unknown needs target-state queries this package does not have.
+- **Without a lease, must[2] does not hold.** Only the Run Service assigns a lease generation, so a profile that does not mount it — `sdk-minimal` ships without it — reserves unfenced, and two concurrent workers there can both hold one reservation and both send. The ledger reports that as `fenced: false` on the decision rather than silently promising exclusivity, and the session log records it as an `action/manifest-appended` event with no `leaseEpoch`; making the guarantee hold for those profiles needs a generation source they do not have.
 - No runtime invariant companion is published: this package holds no state and observes nothing, so there is no owned relation two observers could disagree about.
 
 ### Dev Note

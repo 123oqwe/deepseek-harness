@@ -15,7 +15,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { openLedgerStore } from './store.ts'
 import type { LedgerStore } from './store.ts'
-import type { LedgerEntry, LedgerEpoch, LedgerScope, ReceiptDigest, ReserveDecision, ReserveRequest } from './types.ts'
+import type { LedgerEntry, LedgerGeneration, LedgerScope, ReceiptDigest, ReserveDecision, ReserveRequest } from './types.ts'
 
 /** Where this mount keeps its ledger. */
 export interface Config {
@@ -109,9 +109,9 @@ export default class ActionLedgerPlugin extends Service {
    * Record that the request left the harness.
    * @param scope - the reservation's owning principal.
    * @param key - the idempotency key.
-   * @param epoch - the generation that holds the reservation.
+   * @param epoch - the generation that holds the reservation, or `'unfenced'` when its holder had none.
    */
-  markSent(scope: LedgerScope, key: string, epoch: LedgerEpoch): void {
+  markSent(scope: LedgerScope, key: string, epoch: LedgerGeneration): void {
     this.store.markSent(scope, key, epoch)
   }
 
@@ -119,10 +119,10 @@ export default class ActionLedgerPlugin extends Service {
    * Record the provider's receipt, the evidence the effect committed.
    * @param scope - the reservation's owning principal.
    * @param key - the idempotency key.
-   * @param epoch - the generation that holds the reservation.
+   * @param epoch - the generation that holds the reservation, or `'unfenced'` when its holder had none.
    * @param receiptDigest - the digest of what the provider returned.
    */
-  confirm(scope: LedgerScope, key: string, epoch: LedgerEpoch, receiptDigest: ReceiptDigest): void {
+  confirm(scope: LedgerScope, key: string, epoch: LedgerGeneration, receiptDigest: ReceiptDigest): void {
     this.store.confirm(scope, key, epoch, receiptDigest)
   }
 
@@ -130,9 +130,9 @@ export default class ActionLedgerPlugin extends Service {
    * Record that retrying cannot determine the outcome.
    * @param scope - the reservation's owning principal.
    * @param key - the idempotency key.
-   * @param epoch - the generation that holds the reservation.
+   * @param epoch - the generation that holds the reservation, or `'unfenced'` when its holder had none.
    */
-  markAmbiguous(scope: LedgerScope, key: string, epoch: LedgerEpoch): void {
+  markAmbiguous(scope: LedgerScope, key: string, epoch: LedgerGeneration): void {
     this.store.markAmbiguous(scope, key, epoch)
   }
 

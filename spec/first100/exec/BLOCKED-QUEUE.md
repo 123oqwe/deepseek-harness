@@ -2644,8 +2644,6 @@ RangeError: Maximum call stack size exceeded
 
 **Remaining for P2-03's code-mode half:** a `sequence` that is correct without a per-dispatch log scan. That is a question about who owns the manifest counter — plausibly the session, not each call site — and it is the next thing to decide, not to guess.
 
-
-
 **must[2] names three execution paths. Their real status differs, and only one is delivered.**
 
 | Path | Status |
@@ -5534,3 +5532,45 @@ Total 58 → 61. The three are the notice itself: the splice that inserts it, th
 The observer package is a public release member, because `scripts/check-workspace-constraints.ts` defines every `packages/<group>/<pkg>` outside `packages/experimental/` as one and rejects `private: true`; its four test-support siblings have the same shape. Its `publishConfig.exports` is `exports` without `./src/*`.
 
 **The product problem behind the race is separate and is not fixed here.** See BLOCKED-220: a headless run ends at `whenIdle()`, which does not follow an in-flight background job. This entry pins a fixture; it leaves the product's own loss window open.
+
+### BLOCKED-221 — a reservation at the holder's own generation was granted, so must[2] held only when a second, uncovered race went the right way
+
+**Status:** FIXED 2026-09-11 under the delegate's ruling (honest version of (b)), owner lane B. Branch `lane-b-221`, candidate 3''.
+
+`decideReservation` (`packages/action/action-ledger/src/index.ts`) returned `reserved` for EVERY request whose epoch was `>= existing.epoch` against a `prepared` entry. At a strictly higher epoch that is correct and required — the fence proves the previous holder is out (must[3]). At the SAME epoch the holder is a live peer, and granting it is exactly the two-holder state must[2] forbids: "two workers cannot both hold one reservation".
+
+**Three samples.**
+
+1. **The same SHA, green and red.** The two-process frozen case (`store.spec.ts`, "gives the reservation to ONE of two concurrent processes") passed in run 34666554965 and failed in run 34667961832 at one SHA. It asserted one `reserved` and one `duplicate`, and the loser can only see `duplicate` if the winner reached `markSent` first — `reserve`'s transaction spans the read and the write, and the send is a SEPARATE step after it. What the case reported was the schedule.
+2. **The in-process reproduction, with no race at all.** Two `reserve` calls at epoch 1 with no `markSent` between them: before the fix both returned `reserved`, so both callers held one reservation and both were authorized to send. This is the CI red with the timing removed.
+3. **The production reading.** `epochOf` (`packages/core/tools/src/external-effect.ts:58`) was `brandNumber<LedgerEpoch>(agent.lifecycle?.epoch ?? 0)`. Only `RunPlugin` assigns `agent.lifecycle`, so every run in a profile that mounts no Run Service reserved at epoch `0` — and every such run presented the same epoch as every other. must[2] was not merely racy there; it was unreachable.
+
+**Mechanism.** `reserve` is one `BEGIN IMMEDIATE` transaction over the read and the write, so two processes cannot both read "no entry". It does NOT cover the send: `reserveExternalEffect` calls `ledger.reserve(...)` and then `ledger.markSent(...)` as a second statement. So the loser's transaction can run in the gap between the winner's `COMMIT` and its `markSent`, read `prepared` at its own epoch, and be granted the same reservation. The state the frozen case asserted (`duplicate`) is only what the loser sees when it arrives AFTER the send.
+
+**The frozen case that admitted it.** `idempotency.e2e.spec.ts`'s "admits the SAME epoch, so fencing refuses only what is genuinely behind" was written as a control against a fence that refuses everything, and its helper defaults `state: 'prepared'` (`:26-28`). So the behavior it actually froze was "a peer at the holder's own generation may take the reservation" — the defect, pinned as the requirement. The control it was meant to be needs a generation the fence has genuinely passed, which is a HIGHER one.
+
+**Four directions, and why three of them are refused.**
+
+| request vs entry (`prepared`) | decision | why not otherwise |
+| --- | --- | --- |
+| HIGHER generation | `reserved`, `fenced: true` | Refusing would strand a crashed generation's reservation forever; this is must[3]'s recovery path. |
+| SAME generation | `refused: held-at-same-epoch` | `reserved` is the defect. `duplicate` would assert a send that may never happen, letting a caller abandon an effect nobody performed. `stale-epoch` would assert a successor that does not exist — one says wait, the other says stop. |
+| LOWER generation | `refused: stale-epoch` | Unchanged (must[3]). |
+| either side `'unfenced'` | `reserved`, `fenced: false` | Refusing would strand the key: without generations nothing can prove the holder gone, and at-least-once is the guarantee that survives. `fenced: true` would promise an exclusivity nothing enforces. |
+
+**Rules implemented.**
+
+1. `'unfenced'` is a STATE, not the number zero: `LedgerGeneration = LedgerEpoch | 'unfenced'`, and `generationOf` returns `'unfenced'` when `agent.lifecycle` is absent instead of `?? 0`. Every generation comparison requires a generation on BOTH sides; an unfenced caller is outside the ordering, not early in it. A case measures the difference: epoch `0` against a holder at epoch 5 is refused `stale-epoch`, and `'unfenced'` against the same holder is admitted.
+2. The `reserved` decision carries `fenced`, so the audit reads which rule admitted it. Taking over an entry whose own holder was unfenced is `fenced: false` however well fenced the new caller is — the old holder can still send.
+3. The store persists the absence as SQL NULL (`epoch INTEGER`, `SCHEMA_VERSION` 2, and a loud refusal of a version 1 file), and every transition matches with `epoch IS ?` rather than `=`, because `NULL = NULL` is false and `=` would refuse every write by the caller just told it holds the reservation.
+
+**Frozen cases superseded, with what reddens each.**
+
+- `store.spec.ts` "still reserves a PREPARED key after a restart" → three cases: restart at the NEXT generation (reddens if the higher-generation takeover is removed), an UNFENCED restart (reddens if unfenced re-take is refused), and an unfenced holder recording its own send (reddens if the transition matches with `=`).
+- `store.spec.ts` two-process case → the children now stop AT the reservation and never send, so the loser is refused `held-at-same-epoch` deterministically rather than seeing whichever state the schedule produced. Its honest control: two UNFENCED processes are BOTH granted the reservation, which is the exclusivity a profile without a lease does not get.
+- `fault-matrix.spec.ts` "still commits the effect at least once when a crash lands before the send" → three cases: the next generation retries and commits; an unfenced retry commits; the SAME generation's retry does NOT commit and the next generation's does. `attempt` now takes the generation as a parameter, because a restart is not anonymous — the Run Service issues the replacement a new epoch.
+- `idempotency.e2e.spec.ts` "admits the SAME epoch" → rewritten to a HIGHER epoch, plus a describe block that asserts `held-at-same-epoch`, distinguishes it from `stale-epoch` and from `duplicate`, and covers the four unfenced directions.
+
+**The fenced/unfenced production reading (measured, not inferred).** `dsh-run` is mounted and enabled in `packages/bundle/base/cordis.patch.yml:648-651`, and `base` is layered by 4 of the 5 shipped profiles (`acp`, `web`, `headless`, `sdk`). `sdk-minimal` carries only `@deepseek-ai/dsh-sdk-minimal` and does not layer over base, so it mounts no Run Service: every reservation there is unfenced, at-least-once holds and must[2] does not. The only lease-derived assignment is `run/src/index.ts:821` (`epoch: taken.lease.token.epoch`), and `dispatch.ts:300-308` returns `'lease-refused'` / `'no-run'` before advancing, so a refused lease never reaches dispatch. The audit already distinguishes the two cases: `action/manifest-appended` omits `leaseEpoch` exactly when the run holds no lease. What the log does NOT distinguish is a fenced caller taking over an entry whose holder was unfenced — the `fenced: false` on that decision reaches no event. Recorded rather than fixed: a new session event is a `SessionEventMap` change with both SDKs' expected output attached, which is a separate piece of work.
+
+**Adjacent finding, NOT self-numbered — for the delegate to allocate.** P4-12's acceptance[0] campaign ("commits each effect exactly once across 10,000 random crashes") barely crashes. Its LCG is `random = (random * 1_103_515_245 + 12_345) % 2_147_483_648` in double arithmetic: from the second iteration the product exceeds 2^53, the low bits are lost, and `random % 4` is almost always 0. Measured over the campaign's own 10,000 iterations: `none` 9956, `after-reserve` 43, `after-send` 1, `after-receipt` **0**. Nearly every key is `confirmed` within the first 250 attempts, so the few later crash points land on already-settled entries and return `duplicate` before crashing. The case passes under this fix for that reason, not because the campaign exercised it. Fixing the generator is entangled with this entry — a campaign that really crashed after a reservation would need each attempt to present a new generation, which `attempt` now accepts — so it should be ruled on rather than folded in silently.

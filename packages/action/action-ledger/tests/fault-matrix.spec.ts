@@ -16,7 +16,7 @@ import { brandString } from '@deepseek-ai/dsh-brand'
 import type { ArgumentsHash, IdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
 import type { PrincipalId } from '@deepseek-ai/dsh-principal'
 import { openLedgerStore } from '../src/store.ts'
-import type { LedgerEpoch, ReceiptDigest } from '../src/types.ts'
+import type { LedgerEpoch, LedgerGeneration, ReceiptDigest } from '../src/types.ts'
 
 const roots: string[] = []
 afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }) })
@@ -57,22 +57,27 @@ class FakeExternalService {
  * The ORDER is the arrangement under test and mirrors the store's contract:
  * reserve durably, send, then record. A crash between any two steps leaves the
  * ledger in a state the next attempt reads.
+ * The GENERATION is a parameter because a restart is not anonymous: the Run
+ * Service issues the replacement process a new lease epoch, and that epoch is
+ * what proves the crashed holder is out. An attempt that presented the
+ * previous holder's generation would be claiming to BE it (BLOCKED-221).
  * @param dir - the ledger directory, shared across attempts as a restart is.
  * @param service - the fake external service.
  * @param key - the idempotency key for this effect.
  * @param crashAt - where this attempt dies.
+ * @param generation - the lease generation this attempt acts under, or `'unfenced'` when it holds no lease.
  */
-function attempt(dir: string, service: FakeExternalService, key: IdempotencyKey, crashAt: CrashPoint): void {
+function attempt(dir: string, service: FakeExternalService, key: IdempotencyKey, crashAt: CrashPoint, generation: LedgerGeneration): void {
   const ledger = openLedgerStore(dir)
-  const decision = ledger.reserve({ scope: SCOPE, key, argumentsHash: ARGS, epoch: epoch(1) })
+  const decision = ledger.reserve({ scope: SCOPE, key, argumentsHash: ARGS, epoch: generation })
   if (decision.action !== 'reserved') return
   if (crashAt === 'after-reserve') throw new SimulatedCrash()
 
-  ledger.markSent(SCOPE, key, epoch(1))
+  ledger.markSent(SCOPE, key, generation)
   const receipt = service.send(key)
   if (crashAt === 'after-send') throw new SimulatedCrash()
 
-  ledger.confirm(SCOPE, key, epoch(1), receipt)
+  ledger.confirm(SCOPE, key, generation, receipt)
   if (crashAt === 'after-receipt') throw new SimulatedCrash()
 }
 
@@ -98,7 +103,7 @@ describe('P4-12 acceptance[0]: a crash campaign produces zero duplicate external
       const dir = home.get(key) ?? directory()
       home.set(key, dir)
       try {
-        attempt(dir, service, key, points[random % points.length]!)
+        attempt(dir, service, key, points[random % points.length]!, epoch(1))
       } catch (error) {
         if (!(error instanceof SimulatedCrash)) throw error
       }
@@ -110,15 +115,51 @@ describe('P4-12 acceptance[0]: a crash campaign produces zero duplicate external
     expect(service.commits.length).toBe(250)
   }, 120_000)
 
-  it('still commits the effect at least once when a crash lands before the send', () => {
+  it('still commits the effect at least once when the NEXT generation retries a crash before the send', () => {
     // The control the campaign needs: a ledger that refused everything would
     // report zero duplicates and zero effects. `prepared` must stay retryable.
+    //
+    // The retry comes from the next generation, because that is what a restart
+    // is. The case retried at the SAME generation until BLOCKED-221, which is
+    // how it kept passing while the ledger handed a live peer the holder's
+    // reservation: at one generation the two are the same request, so the
+    // at-least-once control and the two-holder defect had identical evidence.
     const dir = directory()
     const service = new FakeExternalService()
     const key = brandString<IdempotencyKey>('effect-retryable')
-    expect(() => { attempt(dir, service, key, 'after-reserve') }).toThrow(SimulatedCrash)
+    expect(() => { attempt(dir, service, key, 'after-reserve', epoch(1)) }).toThrow(SimulatedCrash)
     expect(service.commits).toEqual([])
-    attempt(dir, service, key, 'none')
+    attempt(dir, service, key, 'none', epoch(2))
+    expect(service.commits).toEqual([key])
+  })
+
+  it('still commits the effect at least once when an UNFENCED retry follows a crash before the send', () => {
+    // The same control for a profile that mounts no Run Service and so has no
+    // generation to advance. Nothing here can prove the crashed holder gone, so
+    // the ledger re-takes the `prepared` entry and at-least-once survives; what
+    // it gives up is exclusivity, which the `fenced: false` on the decision says
+    // and the two-process case measures.
+    const dir = directory()
+    const service = new FakeExternalService()
+    const key = brandString<IdempotencyKey>('effect-unfenced')
+    expect(() => { attempt(dir, service, key, 'after-reserve', 'unfenced') }).toThrow(SimulatedCrash)
+    expect(service.commits).toEqual([])
+    attempt(dir, service, key, 'none', 'unfenced')
+    expect(service.commits).toEqual([key])
+  })
+
+  it('does NOT commit again when the SAME generation retries a crash before the send, because a peer may hold it', () => {
+    // The other side of the control, and the behavior that changed. At one
+    // generation the ledger cannot tell a restart from a live peer, so it
+    // refuses rather than authorize a second holder; progress comes from the
+    // next generation, not from repeating this one.
+    const dir = directory()
+    const service = new FakeExternalService()
+    const key = brandString<IdempotencyKey>('effect-same-generation')
+    expect(() => { attempt(dir, service, key, 'after-reserve', epoch(1)) }).toThrow(SimulatedCrash)
+    attempt(dir, service, key, 'none', epoch(1))
+    expect(service.commits).toEqual([])
+    attempt(dir, service, key, 'none', epoch(2))
     expect(service.commits).toEqual([key])
   })
 })
@@ -152,12 +193,13 @@ describe('P4-12 validation: a batch action is ledgered item by item', () => {
     const dir = directory()
     const service = new FakeExternalService()
     const keys = ['batch-a', 'batch-b', 'batch-c'].map(id => brandString<IdempotencyKey>(id))
-    for (const key of keys.slice(0, 2)) attempt(dir, service, key, 'none')
-    expect(() => { attempt(dir, service, keys[2]!, 'after-send') }).toThrow(SimulatedCrash)
-    // The retry sends only the item that never confirmed.
+    for (const key of keys.slice(0, 2)) attempt(dir, service, key, 'none', epoch(1))
+    expect(() => { attempt(dir, service, keys[2]!, 'after-send', epoch(1)) }).toThrow(SimulatedCrash)
+    // The retry sends only the item that never confirmed, and comes from the
+    // next generation, as the process that performs it is the replacement.
     for (const key of keys) {
       try {
-        attempt(dir, service, key, 'none')
+        attempt(dir, service, key, 'none', epoch(2))
       } catch (error) {
         if (!(error instanceof SimulatedCrash)) throw error
       }

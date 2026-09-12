@@ -22,7 +22,7 @@ import { createHash } from 'node:crypto'
 import type { Context } from '@deepseek-ai/cordis'
 import { advanceLeasedAgent, type Agent } from '@deepseek-ai/dsh-agent'
 import type { ArgumentsHash, IdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
-import type { LedgerEpoch, LedgerScope, ReceiptDigest, ReserveDecision } from '@deepseek-ai/dsh-action-ledger'
+import type { LedgerEpoch, LedgerGeneration, LedgerScope, ReceiptDigest, ReserveDecision } from '@deepseek-ai/dsh-action-ledger'
 import type {} from '@deepseek-ai/dsh-action-ledger'
 import { brandNumber, brandString } from '@deepseek-ai/dsh-brand'
 import type { PolicyContextFacts } from '@deepseek-ai/dsh-policy-engine'
@@ -52,11 +52,20 @@ export interface ExternalEffectRecord {
 
 /**
  * The ledger generation this agent's run acts under.
+ *
+ * A run with no lease is `'unfenced'`, NOT generation zero. It used to be
+ * `?? 0`, which gave every lease-less run the same generation as every other,
+ * so the ledger read two concurrent runs as one and could not apply must[2] to
+ * either (BLOCKED-221). Only the Run Service assigns a lease epoch, so a
+ * profile that does not mount it — `sdk-minimal` ships without it — reserves
+ * unfenced, and the ledger then keeps at-least-once without promising
+ * exclusivity. Naming that is what keeps the promise honest.
  * @param agent - the agent whose run owns the action.
- * @returns the run's lease epoch, or `0` when it holds no lease.
+ * @returns the run's lease generation, or `'unfenced'` when it holds no lease.
  */
-function epochOf(agent: Agent): LedgerEpoch {
-  return brandNumber<LedgerEpoch>(agent.lifecycle?.epoch ?? 0)
+function generationOf(agent: Agent): LedgerGeneration {
+  const epoch = agent.lifecycle?.epoch
+  return epoch === undefined ? 'unfenced' : brandNumber<LedgerEpoch>(epoch)
 }
 
 /**
@@ -86,10 +95,10 @@ export function reserveExternalEffect(
     scope: record.scope,
     key: record.key,
     argumentsHash: record.argumentsHash,
-    epoch: epochOf(agent),
+    epoch: generationOf(agent),
   })
   if (decision.action !== 'reserved') return decision
-  ledger.markSent(record.scope, record.key, epochOf(agent))
+  ledger.markSent(record.scope, record.key, generationOf(agent))
   return undefined
 }
 
@@ -390,7 +399,7 @@ export function confirmExternalEffect(
 ): void {
   const ledger = ctx.get('actionLedger')
   if (ledger === undefined || record === undefined) return
-  const epoch = epochOf(agent)
+  const epoch = generationOf(agent)
   if (result.isError) {
     ledger.markAmbiguous(record.scope, record.key, epoch)
     return
@@ -422,7 +431,9 @@ export function refusedReservationResult(decision: Exclude<ReserveDecision, { ac
       ? 'This idempotency key was first reserved with different arguments, so the action was refused.'
       : decision.reason === 'stale-epoch'
         ? 'A newer generation owns this action; this run has been fenced out and did not perform it.'
-        : 'This action\'s outcome is unknown and cannot be settled by retrying; it awaits reconciliation.'
+        : decision.reason === 'held-at-same-epoch'
+          ? 'Another worker in this same generation holds this action and has not sent it; it was not performed twice.'
+          : 'This action\'s outcome is unknown and cannot be settled by retrying; it awaits reconciliation.'
   return {
     content: [{ type: 'text', text: `Error: ${text}` }],
     isError: true,

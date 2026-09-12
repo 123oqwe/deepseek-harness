@@ -30,13 +30,21 @@ const entry = (overrides: Partial<LedgerEntry> = {}): LedgerEntry => ({
 describe('P4-12 must[0]/must[2]: a reservation is what authorizes an external send', () => {
   it('reserves an unseen key, which is the only decision that authorizes sending', () => {
     const decision = decideReservation({ scope: SCOPE, key: KEY, argumentsHash: ARGS, epoch: epoch(1) }, undefined)
-    expect(decision).toEqual({ action: 'reserved', entry: entry() })
+    // `fenced: true` because the caller presented a lease generation. The flag
+    // is asserted here rather than only where it is false: a decision that said
+    // `fenced` for everything would carry no information.
+    expect(decision).toEqual({ action: 'reserved', fenced: true, entry: entry() })
   })
 
-  it('reserves again for a PREPARED entry, because nothing left the harness yet', () => {
+  it('reserves again for a PREPARED entry at a HIGHER generation, because nothing left the harness yet', () => {
     // The state that separates "we might have sent it" from "we did not". A
     // prepared entry is a crash before the request went out, and refusing the
     // retry there would strand an effect that never happened.
+    //
+    // The generation in the title is load-bearing: the retry is admitted
+    // because epoch 2 fenced epoch 1 out, not merely because the entry is
+    // unsent. The same request at epoch 1 is a live peer and is refused — the
+    // `held-at-same-epoch` cases below.
     expect(decideReservation({ scope: SCOPE, key: KEY, argumentsHash: ARGS, epoch: epoch(2) }, entry()).action).toBe('reserved')
   })
 
@@ -82,16 +90,96 @@ describe('P4-12 must[3]: a stale epoch is fenced out', () => {
       .toEqual({ action: 'refused', reason: 'stale-epoch', currentEpoch: epoch(5) })
   })
 
-  it('admits the SAME epoch, so fencing refuses only what is genuinely behind', () => {
+  it('admits a HIGHER epoch, so fencing refuses only what is genuinely behind', () => {
     // The control. Without it, a fence that refused everything would satisfy
     // the case above.
-    expect(decideReservation({ scope: SCOPE, key: KEY, argumentsHash: ARGS, epoch: epoch(5) }, entry({ epoch: epoch(5) })).action)
+    //
+    // This control used to present the SAME epoch and assert `reserved`
+    // (BLOCKED-221). It acted on a `prepared` entry — the helper's default
+    // state — so what it actually froze was "a peer at the holder's own
+    // generation may take the reservation", which is what must[2] forbids. The
+    // control it was written to be needs a generation the fence has genuinely
+    // passed, and that is a higher one.
+    expect(decideReservation({ scope: SCOPE, key: KEY, argumentsHash: ARGS, epoch: epoch(6) }, entry({ epoch: epoch(5) })).action)
       .toBe('reserved')
   })
 
   it('fences BEFORE reporting an outcome, so a superseded generation learns nothing about work it lost', () => {
     expect(decideReservation({ scope: SCOPE, key: KEY, argumentsHash: ARGS, epoch: epoch(1) }, entry({ state: 'sent', epoch: epoch(5) })))
       .toMatchObject({ reason: 'stale-epoch' })
+  })
+})
+
+describe('P4-12 must[2]: a peer at the holder\'s own generation may not take the reservation (BLOCKED-221)', () => {
+  it('refuses the SAME generation against a PREPARED entry, naming the generation that holds it', () => {
+    // Two callers at one generation are peers, not a succession: neither fence
+    // has passed, so admitting the second puts two holders on one reservation
+    // — the state must[2] forbids. Before BLOCKED-221 this returned `reserved`.
+    expect(decideReservation({ scope: SCOPE, key: KEY, argumentsHash: ARGS, epoch: epoch(5) }, entry({ epoch: epoch(5) })))
+      .toEqual({ action: 'refused', reason: 'held-at-same-epoch', heldEpoch: epoch(5) })
+  })
+
+  it('distinguishes held-at-same-epoch from stale-epoch, because one says wait and the other says stop', () => {
+    // A caller refused by a peer may retry once the peer settles; a caller
+    // fenced out by a successor must never send this effect at all. One reason
+    // covering both would leave a caller unable to tell those apart.
+    const peer = decideReservation({ scope: SCOPE, key: KEY, argumentsHash: ARGS, epoch: epoch(5) }, entry({ epoch: epoch(5) }))
+    const fenced = decideReservation({ scope: SCOPE, key: KEY, argumentsHash: ARGS, epoch: epoch(4) }, entry({ epoch: epoch(5) }))
+    expect([peer, fenced].map(decision => 'reason' in decision ? decision.reason : decision.action))
+      .toEqual(['held-at-same-epoch', 'stale-epoch'])
+  })
+
+  it('reports a SENT entry at the same generation as a duplicate, which is a different fact from a held reservation', () => {
+    // `duplicate` asserts the effect happened. The refusal above must not say
+    // it, because nothing was sent there: claiming a send that may never occur
+    // would let a caller abandon an effect nobody performed.
+    expect(decideReservation({ scope: SCOPE, key: KEY, argumentsHash: ARGS, epoch: epoch(5) }, entry({ state: 'sent', epoch: epoch(5) })))
+      .toEqual({ action: 'duplicate', state: 'sent' })
+  })
+})
+
+describe('P4-12 must[2]: an UNFENCED caller keeps at-least-once and is told exclusivity does not apply (BLOCKED-221)', () => {
+  it('re-takes a PREPARED entry whose holder was also unfenced, and marks the reservation unfenced', () => {
+    // Without generations nothing can prove the previous holder gone, so
+    // refusing here would strand the key forever and lose at-least-once. The
+    // reservation is granted and `fenced: false` says must[2] does not cover
+    // it — the promise is narrowed explicitly rather than quietly broken.
+    expect(decideReservation(
+      { scope: SCOPE, key: KEY, argumentsHash: ARGS, epoch: 'unfenced' },
+      entry({ epoch: 'unfenced' }),
+    )).toEqual({ action: 'reserved', fenced: false, entry: entry({ epoch: 'unfenced' }) })
+  })
+
+  it('treats an unfenced caller as outside the generation ordering, not as generation zero', () => {
+    // The defect BLOCKED-221 found: `?? 0` at the call site made every
+    // lease-less run generation zero, so the ledger compared absences as
+    // numbers. A zero would be refused as stale against the holder's epoch 5;
+    // an absent generation is not behind anything, and is admitted.
+    const unfenced = decideReservation({ scope: SCOPE, key: KEY, argumentsHash: ARGS, epoch: 'unfenced' }, entry({ epoch: epoch(5) }))
+    const zero = decideReservation({ scope: SCOPE, key: KEY, argumentsHash: ARGS, epoch: epoch(0) }, entry({ epoch: epoch(5) }))
+    expect(unfenced.action).toBe('reserved')
+    expect(zero).toMatchObject({ action: 'refused', reason: 'stale-epoch' })
+  })
+
+  it('calls a takeover of an unfenced holder UNFENCED however well fenced the new caller is', () => {
+    // Fencing is a property of the pair, not of the caller. The previous holder
+    // had no generation to be fenced out of, so it can still send; a decision
+    // claiming `fenced: true` here would promise an exclusivity nothing
+    // enforces.
+    expect(decideReservation(
+      { scope: SCOPE, key: KEY, argumentsHash: ARGS, epoch: epoch(5) },
+      entry({ epoch: 'unfenced' }),
+    )).toMatchObject({ action: 'reserved', fenced: false })
+  })
+
+  it('still reports a SENT entry as a duplicate for an unfenced caller, so at-least-once never becomes at-least-twice', () => {
+    // The limit of the degraded rule: it re-takes `prepared`, which is unsent,
+    // and nothing else. A `sent` entry is a duplicate whether or not the caller
+    // holds a lease.
+    expect(decideReservation(
+      { scope: SCOPE, key: KEY, argumentsHash: ARGS, epoch: 'unfenced' },
+      entry({ state: 'sent', epoch: 'unfenced' }),
+    )).toEqual({ action: 'duplicate', state: 'sent' })
   })
 })
 

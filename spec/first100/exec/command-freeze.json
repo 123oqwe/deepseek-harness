@@ -8279,7 +8279,8 @@
         "mutationDescription": "Locally (never committed) reordered `decideReservation` so the STATE check runs before the arguments check -- moving the `existing.state === 'ambiguous'` and duplicate branches above the `argumentsHash` comparison in packages/action/action-ledger/src/index.ts -- then re-ran the frozen command. This is the order a reader would write by following the clause order rather than the failure modes.",
         "failureSummary": "1 of 13 failed: `refuses on arguments BEFORE reporting a duplicate, so a changed request is never answered by the old one` -- AssertionError, the decision came back `{action: 'duplicate', state: 'sent'}` where the case requires `{action: 'refused', reason: 'arguments-differ'}`. That is the defect the case exists for: a caller sending a DIFFERENT request under a reused key is told its request was already carried out. The other twelve stayed green, which is what makes the failure specific to check order rather than to the comparison itself. Mutation reverted immediately; 13 passed (13) before continuing."
       },
-      "note": "P4-12 Contract stage: types plus the pure reservation decision, no store and no wiring. The five case groups name the two standards this epic OWNS -- `Idempotency-Key` from draft-ietf-httpapi-idempotency-key-header-07, and Stripe's same-key-different-parameters rule -- because the pre-flight record claims ownership by EVIDENCE rather than by assignment, and P4-06 (BLOCKED-140) is the record of what assignment alone buys: it owned the CloudEvents shape with no case naming an attribute, and the standard it owned held the answer to the question its clause got wrong. The declared test path is `tests/idempotency.e2e.ts`; the file is `.e2e.spec.ts` because the greening observation collects `*.spec.ts` only, and an `.e2e.ts` file would be frozen against a command that never reports it."
+      "note": "P4-12 Contract stage: types plus the pure reservation decision, no store and no wiring. The five case groups name the two standards this epic OWNS -- `Idempotency-Key` from draft-ietf-httpapi-idempotency-key-header-07, and Stripe's same-key-different-parameters rule -- because the pre-flight record claims ownership by EVIDENCE rather than by assignment, and P4-06 (BLOCKED-140) is the record of what assignment alone buys: it owned the CloudEvents shape with no case naming an attribute, and the standard it owned held the answer to the question its clause got wrong. The declared test path is `tests/idempotency.e2e.ts`; the file is `.e2e.spec.ts` because the greening observation collects `*.spec.ts` only, and an `.e2e.ts` file would be frozen against a command that never reports it.",
+      "supersededBy": "P4-12.C.3 (BLOCKED-221: `admits the SAME epoch` froze the two-holder defect as the requirement, and `reserves again for a PREPARED entry` did not name the asking generation, 2026-09-12)"
     },
     {
       "epic": "P4-12",
@@ -8315,7 +8316,52 @@
         "mutationDescription": "Locally (never committed) moved `decideReservation` OUTSIDE the `BEGIN IMMEDIATE` in packages/action/action-ledger/src/store.ts -- reading the entry and deciding first, then opening the transaction only to write. That is the arrangement a reader gets by treating the transaction as protecting the WRITE rather than the read-decide-write step. Re-ran the frozen command three times.",
         "failureSummary": "1 of 8 failed on all three runs: `gives the reservation to ONE of two concurrent processes, and the other a duplicate` -- both children decided `reserved`, both marked sent, and the assertion that exactly one reserved failed. Three runs because the FIRST version of this case was not deterministic: without a start barrier the two children serialised by luck and the same mutation passed 8 of 8. A concurrency case that depends on timing tests nothing it claims, so the children now spin on a file barrier and start together. Mutation reverted; 21 passed (21) before continuing."
       },
-      "note": "P4-12 Provider: the durable store, its own action-ledger.sqlite following dsh-message-bus's precedent. The reservation write is synchronous and precedes the send, because a batched write reopens the window the ledger closes. The read and the write are ONE transaction: deciding outside it lets two workers both read 'no entry', both decide `reserved`, and both send -- the duplicate the ledger exists to prevent, produced by the ledger itself. The registry also declares `packages/session/session-persistence/src/write-behind.ts` for this stage; it is NOT touched, and the reason is recorded as BLOCKED-141 rather than decided here."
+      "note": "P4-12 Provider: the durable store, its own action-ledger.sqlite following dsh-message-bus's precedent. The reservation write is synchronous and precedes the send, because a batched write reopens the window the ledger closes. The read and the write are ONE transaction: deciding outside it lets two workers both read 'no entry', both decide `reserved`, and both send -- the duplicate the ledger exists to prevent, produced by the ledger itself. The registry also declares `packages/session/session-persistence/src/write-behind.ts` for this stage; it is NOT touched, and the reason is recorded as BLOCKED-141 rather than decided here.",
+      "supersededBy": "P4-12.P.1 (BLOCKED-221: the restart control presented the holder's own generation, and the two-process case asserted a refusal reason the reservation transaction does not decide, 2026-09-12)"
+    },
+    {
+      "epic": "P4-12",
+      "stage": "P",
+      "supplementSeq": 1,
+      "supplements": {
+        "epic": "P4-12",
+        "stage": "P"
+      },
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/action/action-ledger/tests/store.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-12 must[2]: the reservation is durable BEFORE the request is sent reports a SENT key as a duplicate after a restart, which is the crash this epic exists for",
+        "P4-12 must[2]: the reservation is durable BEFORE the request is sent still reserves a PREPARED key after a restart at the NEXT generation, because nothing was sent",
+        "P4-12 must[2]: the reservation is durable BEFORE the request is sent still reserves a PREPARED key after an UNFENCED restart, where no generation can prove the holder gone",
+        "P4-12 must[2]: the reservation is durable BEFORE the request is sent lets an unfenced holder record the send it made, so the degraded path is usable end to end",
+        "P4-12 must[2]: the reservation is durable BEFORE the request is sent keeps the receipt digest across a restart, so a confirmed effect stays evidenced",
+        "P4-12 must[2]: two workers cannot both hold one reservation gives the reservation to ONE of two concurrent processes at the same generation, and refuses the other as a peer",
+        "P4-12 must[2]: two workers cannot both hold one reservation admits BOTH unfenced processes, because without generations a peer and a restart are the same observation",
+        "P4-12 must[3]: a fenced-out generation cannot write refuses a transition from an epoch the current holder has superseded",
+        "P4-12 must[3]: a fenced-out generation cannot write lets the CURRENT holder write, so fencing refuses only what is behind",
+        "P4-12 must[3]: a fenced-out generation cannot write refuses a transition for a key that was never reserved, rather than creating one",
+        "P4-12 must[3]: a fenced-out generation cannot write keeps the database off the handle, so nothing outside the store can run a statement",
+        "P4-12 must[2]: the durable store keeps two principals apart (BLOCKED-142) keeps one key reserved by two principals as two rows, neither visible to the other",
+        "P4-12 must[2]: the durable store keeps two principals apart (BLOCKED-142) refuses a transition presented under the WRONG principal, so a key cannot be moved from outside its scope"
+      ],
+      "files": [
+        "packages/action/action-ledger/src/store.ts",
+        "packages/action/action-ledger/tests/store.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-12T07:12:00.000Z",
+      "dryRunProof": "Ran locally at the candidate tree (`lane-b-221`): 13 passed (13) in store.spec.ts, 41 passed (41) across the package.",
+      "sensitivityProof": {
+        "mutationDescription": "Locally (never committed) changed the transition's generation match in packages/action/action-ledger/src/store.ts from `epoch IS ?` back to `epoch = ?`. That is the spelling every other comparison in the file uses, and it is wrong the moment a generation can be SQL NULL: `NULL = NULL` is false.",
+        "failureSummary": "1 of 13 failed: `lets an unfenced holder record the send it made, so the degraded path is usable end to end` -- the store threw `action ledger: effect-1 is held by epoch unfenced, not unfenced`, the mutation naming its own absurdity. A caller that had just been granted the reservation could not record its send, so an unfenced reservation becomes one nobody can use and at-least-once is lost at the first send. The other twelve stayed green. Mutation reverted; 13 passed (13) before continuing."
+      },
+      "note": "Replaces the base P4-12.P entry (BLOCKED-221), carrying the cell's complete current case list: eight unchanged, two replaced, three new. (1) `still reserves a PREPARED key after a restart, because nothing was sent` presented the SAME generation, so it froze the peer takeover rather than a restart -- a restart takes a NEW lease epoch, and the replacement says so in its title, with an unfenced variant for profiles that mount no Run Service. (2) `gives the reservation to ONE of two concurrent processes, and the other a duplicate` asserted a refusal reason the reservation's transaction does not decide: `reserve` spans the read and the write, the send is a separate step after it, and the loser sees `duplicate` only when the winner's `markSent` landed first -- run 34666554965 green and run 34667961832 red at one SHA. The children now stop AT the reservation, so the loser is refused `held-at-same-epoch` deterministically, and the new unfenced twin records the honest limit: there, both processes are granted one reservation. The third new case is the unfenced holder's own transition, which the `epoch IS ?` match exists for. Neither replacement is registered in frozen-title-renames.json -- both change what is asserted, not how it is spelled."
     },
     {
       "epic": "P4-12",
@@ -8388,6 +8434,60 @@
     },
     {
       "epic": "P4-12",
+      "stage": "C",
+      "supplementSeq": 3,
+      "supplements": {
+        "epic": "P4-12",
+        "stage": "C"
+      },
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/action/action-ledger/tests/idempotency.e2e.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reserves an unseen key, which is the only decision that authorizes sending",
+        "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reserves again for a PREPARED entry at a HIGHER generation, because nothing left the harness yet",
+        "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reports SENT as a duplicate, so a crash after the request does not send it twice",
+        "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reports CONFIRMED and COMPENSATED as duplicates too, so a settled key is never re-sent",
+        "P4-12 acceptance[2]: the same key, different parameters is refused (Stripe rule) refuses the same key presented with different parameters, naming the first arguments",
+        "P4-12 acceptance[2]: the same key, different parameters is refused (Stripe rule) refuses on arguments BEFORE reporting a duplicate, so a changed request is never answered by the old one",
+        "P4-12 must[3]: a stale epoch is fenced out refuses a caller whose epoch is older than the holder, and names the current one",
+        "P4-12 must[3]: a stale epoch is fenced out admits a HIGHER epoch, so fencing refuses only what is genuinely behind",
+        "P4-12 must[3]: a stale epoch is fenced out fences BEFORE reporting an outcome, so a superseded generation learns nothing about work it lost",
+        "P4-12 must[2]: a peer at the holder's own generation may not take the reservation (BLOCKED-221) refuses the SAME generation against a PREPARED entry, naming the generation that holds it",
+        "P4-12 must[2]: a peer at the holder's own generation may not take the reservation (BLOCKED-221) distinguishes held-at-same-epoch from stale-epoch, because one says wait and the other says stop",
+        "P4-12 must[2]: a peer at the holder's own generation may not take the reservation (BLOCKED-221) reports a SENT entry at the same generation as a duplicate, which is a different fact from a held reservation",
+        "P4-12 must[2]: an UNFENCED caller keeps at-least-once and is told exclusivity does not apply (BLOCKED-221) re-takes a PREPARED entry whose holder was also unfenced, and marks the reservation unfenced",
+        "P4-12 must[2]: an UNFENCED caller keeps at-least-once and is told exclusivity does not apply (BLOCKED-221) treats an unfenced caller as outside the generation ordering, not as generation zero",
+        "P4-12 must[2]: an UNFENCED caller keeps at-least-once and is told exclusivity does not apply (BLOCKED-221) calls a takeover of an unfenced holder UNFENCED however well fenced the new caller is",
+        "P4-12 must[2]: an UNFENCED caller keeps at-least-once and is told exclusivity does not apply (BLOCKED-221) still reports a SENT entry as a duplicate for an unfenced caller, so at-least-once never becomes at-least-twice",
+        "P4-12 acceptance[1]: an ambiguous outcome goes to reconciliation, not to a retry refuses a retry of an AMBIGUOUS entry rather than sending again",
+        "P4-12 acceptance[1]: an ambiguous outcome goes to reconciliation, not to a retry distinguishes ambiguous from duplicate, because they need different handling",
+        "P4-12 must[1]: a provider with native support gets the Idempotency-Key header passes the key through as the Idempotency-Key request header (draft-ietf-httpapi-idempotency-key-header-07)",
+        "P4-12 must[1]: a provider with native support gets the Idempotency-Key header sends no Idempotency-Key header for a local-fencing provider, whose dedup is this ledger",
+        "P4-12 must[2]: an idempotency key is unique PER CLIENT, never globally carries the requesting principal into the reservation, which is what the store persists",
+        "P4-12 must[2]: an idempotency key is unique PER CLIENT, never globally still refuses a second reservation WITHIN one principal, so scoping did not disable dedup"
+      ],
+      "files": [
+        "packages/action/action-ledger/src/types.ts",
+        "packages/action/action-ledger/src/index.ts",
+        "packages/action/action-ledger/tests/idempotency.e2e.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-12T07:10:00.000Z",
+      "dryRunProof": "Ran locally at the candidate tree (`lane-b-221`): 22 passed (22) in idempotency.e2e.spec.ts, 41 passed (41) across action-ledger's three suites. `tsc -b tsconfig.host.json` exit 0; oxlint clean over the package and `packages/core/tools/src/external-effect.ts`.",
+      "sensitivityProof": {
+        "mutationDescription": "Locally (never committed) deleted the `held-at-same-epoch` branch from `decideReservation` (packages/action/action-ledger/src/index.ts), restoring the pre-BLOCKED-221 behavior where any request at an epoch `>= existing.epoch` takes a `prepared` entry -- the behavior the base entry's control `admits the SAME epoch` had pinned as the requirement.",
+        "failureSummary": "2 of 22 failed: `refuses the SAME generation against a PREPARED entry, naming the generation that holds it` -- AssertionError, `{action: 'reserved', ...}` where the case requires `{action: 'refused', reason: 'held-at-same-epoch', heldEpoch: 5}`; and `distinguishes held-at-same-epoch from stale-epoch, because one says wait and the other says stop`. The other twenty stayed green, the unfenced cases included, which is what makes the failure specific to the peer rule rather than to the generation plumbing. Mutation reverted; 22 passed (22) before continuing."
+      },
+      "note": "Replaces the base P4-12.C entry (BLOCKED-221), carrying the cell's complete current case list for this command -- the base entry's eleven surviving cases, the two from the live supplement P4-12.C.2 (unchanged, and that entry stays live as the record of its own scope proof), two renamed cases, and seven new ones. Two base cases were REPLACED, not renamed: `admits the SAME epoch, so fencing refuses only what is genuinely behind` froze the defect instead of a control, because the helper at `:26-28` defaults `state: 'prepared'`, so what it pinned was `a peer at the holder's own generation may take the reservation`; and `reserves again for a PREPARED entry` did not say which generation was asking, which is the only thing that decides the answer. Both are NOT registered in frozen-title-renames.json: a replacement that asserts the opposite admission is a property change, which Sec 12.67/12.68 says a rename must never paper over. The new cases carry the ruling's second half -- `'unfenced'` is a state and not epoch 0, so a lease-less caller sits outside the generation ordering rather than early in it, and the `reserved` decision carries `fenced` so an audit can tell a guaranteed reservation from a degraded one."
+    },
+    {
+      "epic": "P4-12",
       "stage": "F",
       "argv": [
         "pnpm",
@@ -8414,7 +8514,46 @@
         "mutationDescription": "Locally (never committed) removed the ledger's authority from the attempt: `if (decision.action !== 'reserved') return` deleted from `attempt()` in the fault-matrix suite, so every attempt sends regardless of what the ledger decided. That is the product WITHOUT this epic.",
         "failureSummary": "2 of 4 failed: the 10,000-crash campaign (duplicate commits counted at the fake service) and the batch case (items resent after a partial failure). The two that stayed green are the ones that do not depend on a duplicate being prevented -- the at-least-once control and the ambiguous-timeout case, whose single commit happens before any retry. Mutation reverted; 29 passed (29) before continuing."
       },
-      "note": "P4-12 Fault: acceptance[0]'s crash campaign plus the two validation lines. The duplicate count comes from a fake external service that RECORDS every request, not from the ledger -- asking the ledger whether it prevented a duplicate is asking the defendant. The campaign is deterministic (a fixed LCG seed) rather than clock-seeded, so a failure is reproducible instead of being a story about which run it was; one ledger directory per key is reused across that key's attempts, which is what a restart is, and a fresh directory per attempt would have measured nothing. The campaign also asserts 250 commits, without which it passes when nothing was ever sent."
+      "note": "P4-12 Fault: acceptance[0]'s crash campaign plus the two validation lines. The duplicate count comes from a fake external service that RECORDS every request, not from the ledger -- asking the ledger whether it prevented a duplicate is asking the defendant. The campaign is deterministic (a fixed LCG seed) rather than clock-seeded, so a failure is reproducible instead of being a story about which run it was; one ledger directory per key is reused across that key's attempts, which is what a restart is, and a fresh directory per attempt would have measured nothing. The campaign also asserts 250 commits, without which it passes when nothing was ever sent.",
+      "supersededBy": "P4-12.F.1 (BLOCKED-221: the at-least-once control retried at the holder's own generation, which the peer rule now refuses, 2026-09-12)"
+    },
+    {
+      "epic": "P4-12",
+      "stage": "F",
+      "supplementSeq": 1,
+      "supplements": {
+        "epic": "P4-12",
+        "stage": "F"
+      },
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/action/action-ledger/tests/fault-matrix.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects commits each effect exactly once across 10,000 random crashes, counted at the SERVICE",
+        "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects still commits the effect at least once when the NEXT generation retries a crash before the send",
+        "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects still commits the effect at least once when an UNFENCED retry follows a crash before the send",
+        "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects does NOT commit again when the SAME generation retries a crash before the send, because a peer may hold it",
+        "P4-12 validation: a provider that timed out AFTER committing leaves the effect committed once when the ledger is told the outcome is unknown",
+        "P4-12 validation: a batch action is ledgered item by item reserves each item separately, so one item failing does not resend the others"
+      ],
+      "files": [
+        "packages/action/action-ledger/tests/fault-matrix.spec.ts",
+        "packages/action/action-ledger/src/store.ts",
+        "packages/action/action-ledger/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-12T07:14:00.000Z",
+      "dryRunProof": "Ran locally at the candidate tree (`lane-b-221`): 6 passed (6) in fault-matrix.spec.ts, 41 passed (41) across the package.",
+      "sensitivityProof": {
+        "mutationDescription": "Locally (never committed) made `decideReservation` compare an absent generation AS ZERO -- `comparable` forced true with `'unfenced'` mapped to epoch 0 on both the request and the entry (packages/action/action-ledger/src/index.ts). That is exactly what the pre-BLOCKED-221 call site did: `epochOf` returned `agent.lifecycle?.epoch ?? 0`.",
+        "failureSummary": "1 of 6 failed: `still commits the effect at least once when an UNFENCED retry follows a crash before the send` -- AssertionError, `[]` where the case requires `['effect-unfenced']`. With both sides read as epoch 0 the retry is refused `held-at-same-epoch`, so an effect that was never sent can never be sent and at-least-once is lost for every profile without a lease. The other five stayed green, the next-generation retry included, which is what separates the unfenced rule from the fencing rule. Mutation reverted; 6 passed (6) before continuing."
+      },
+      "note": "Replaces the base P4-12.F entry (BLOCKED-221), carrying the cell's complete current case list: three unchanged, one replaced, two new. `still commits the effect at least once when a crash lands before the send` retried at the SAME generation; under the rule this entry freezes that retry is refused, and the case's evidence was indistinguishable from the two-holder defect's, because at one generation a restart and a live peer are the same request. The control is now split by what distinguishes them: the next generation retries and commits, an unfenced retry commits, and the same generation's retry does NOT commit while the next one's does. `attempt` takes the generation as a parameter for the same reason -- a restart is not anonymous, the Run Service issues the replacement a new epoch. The 10,000-crash campaign and both validation cases are unchanged; the campaign's own weakness is recorded as the adjacent finding in BLOCKED-221 for the delegate to number, NOT fixed here. Not registered in frozen-title-renames.json: the property changed."
     },
     {
       "epic": "P2-03",

@@ -16,7 +16,7 @@ import type { ArgumentsHash, IdempotencyKey } from '@deepseek-ai/dsh-action-mani
 import type { PrincipalId } from '@deepseek-ai/dsh-principal'
 import { openLedgerStore } from '../src/store.ts'
 import type { LedgerStore } from '../src/store.ts'
-import type { LedgerEpoch, ReceiptDigest } from '../src/types.ts'
+import type { LedgerEpoch, LedgerGeneration, ReceiptDigest } from '../src/types.ts'
 
 const roots: string[] = []
 afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }) })
@@ -33,7 +33,7 @@ const OTHER_SCOPE = brandString<PrincipalId>('agent-2')
 const KEY = brandString<IdempotencyKey>('effect-1')
 const ARGS = brandString<ArgumentsHash>('sha256-aaa')
 const epoch = (n: number) => n as LedgerEpoch
-const request = (over: Partial<{ scope: PrincipalId; key: IdempotencyKey; argumentsHash: ArgumentsHash; epoch: LedgerEpoch }> = {}) =>
+const request = (over: Partial<{ scope: PrincipalId; key: IdempotencyKey; argumentsHash: ArgumentsHash; epoch: LedgerGeneration }> = {}) =>
   ({ scope: SCOPE, key: KEY, argumentsHash: ARGS, epoch: epoch(1), ...over })
 
 describe('P4-12 must[2]: the reservation is durable BEFORE the request is sent', () => {
@@ -47,12 +47,43 @@ describe('P4-12 must[2]: the reservation is durable BEFORE the request is sent',
     expect(openLedgerStore(dir).reserve(request()).action).toBe('duplicate')
   })
 
-  it('still reserves a PREPARED key after a restart, because nothing was sent', () => {
+  it('still reserves a PREPARED key after a restart at the NEXT generation, because nothing was sent', () => {
     // The control that keeps the case above from being "restart refuses
     // everything". A crash before the send must leave the work doable.
+    //
+    // The restart presents a HIGHER generation, which is what a restart
+    // actually is once a lease is involved: the Run Service issues the
+    // replacement a new epoch, and that epoch is what proves the crashed holder
+    // is out. The case presented the SAME generation until BLOCKED-221, so the
+    // behavior it froze was a peer taking a live holder's reservation rather
+    // than a successor taking a dead one's.
     const dir = directory()
     openLedgerStore(dir).reserve(request())
-    expect(openLedgerStore(dir).reserve(request()).action).toBe('reserved')
+    expect(openLedgerStore(dir).reserve(request({ epoch: epoch(2) })).action).toBe('reserved')
+  })
+
+  it('still reserves a PREPARED key after an UNFENCED restart, where no generation can prove the holder gone', () => {
+    // The second half of the same control, for a profile that mounts no Run
+    // Service and so has no lease to take a generation from. Refusing here
+    // would strand the key forever and lose at-least-once, so the entry is
+    // re-taken; the decision says `fenced: false` rather than implying the
+    // exclusivity that only generations can give.
+    const dir = directory()
+    openLedgerStore(dir).reserve(request({ epoch: 'unfenced' }))
+    expect(openLedgerStore(dir).reserve(request({ epoch: 'unfenced' })))
+      .toMatchObject({ action: 'reserved', fenced: false })
+  })
+
+  it('lets an unfenced holder record the send it made, so the degraded path is usable end to end', () => {
+    // The absent generation is SQL NULL, and `NULL = NULL` is false — a
+    // transition matching with `=` would refuse every write by the caller just
+    // told it holds the reservation, making an unfenced reservation a
+    // reservation nobody can use.
+    const dir = directory()
+    const ledger = openLedgerStore(dir)
+    ledger.reserve(request({ epoch: 'unfenced' }))
+    expect(() => { ledger.markSent(SCOPE, KEY, 'unfenced') }).not.toThrow()
+    expect(openLedgerStore(dir).reserve(request({ epoch: 'unfenced' })).action).toBe('duplicate')
   })
 
   it('keeps the receipt digest across a restart, so a confirmed effect stays evidenced', () => {
@@ -66,28 +97,34 @@ describe('P4-12 must[2]: the reservation is durable BEFORE the request is sent',
 })
 
 describe('P4-12 must[2]: two workers cannot both hold one reservation', () => {
-  it('gives the reservation to ONE of two concurrent processes, and the other a duplicate', async () => {
-    // The property a single process cannot demonstrate. Deciding outside the
-    // transaction lets both read "no entry", both decide `reserved`, and both
-    // send — the duplicate the ledger exists to prevent, produced by the
-    // ledger itself.
-    //
-    // The two children START TOGETHER on a file barrier rather than merely
-    // being spawned together. Measured why: without it, the mutation that
-    // moves the decision outside the transaction still passed every case here,
-    // because the two processes serialised by luck. A concurrency case that
-    // depends on timing tests nothing it claims.
+  /**
+   * Two processes reserving one key at the same instant, started together.
+   *
+   * The property a single process cannot demonstrate. Deciding outside the
+   * transaction lets both read "no entry", both decide `reserved`, and both
+   * send — the duplicate the ledger exists to prevent, produced by the ledger
+   * itself.
+   *
+   * The children START TOGETHER on a file barrier rather than merely being
+   * spawned together. Measured why: without it, the mutation that moves the
+   * decision outside the transaction still passed, because the two processes
+   * serialised by luck. A concurrency case that depends on timing tests nothing
+   * it claims.
+   *
+   * The barrier is a READINESS HANDSHAKE, not a sleep. The first version waited
+   * 1500 ms and hoped both children had arrived; the delegate saw it fail once
+   * on a cold-cache first run in a clean worktree and pass nine times after,
+   * which is what a timing assumption looks like from outside. Each child
+   * announces itself and the parent releases the barrier only once both have.
+   *
+   * stderr is captured into the assertion message: a case that fails once in
+   * ten and discards the child's own output leaves nothing to diagnose.
+   * @param generation - the lease generation both children present, or `'unfenced'` for neither holding one.
+   * @returns each child's decision, plus their stderr as one assertion message.
+   */
+  async function race(generation: number | 'unfenced'): Promise<{ decisions: string[]; detail: string }> {
     const dir = directory()
     const go = join(dir, 'go')
-    // A READINESS HANDSHAKE, not a sleep. The first version waited 1500 ms and
-    // hoped both children had reached the barrier; the delegate saw it fail
-    // once on a cold-cache first run in a clean worktree and pass nine times
-    // after, which is what a timing assumption looks like from outside. Each
-    // child announces itself, and the parent releases the barrier only once
-    // both have — so the case tests contention rather than scheduling luck.
-    //
-    // stderr is captured into the assertion message: a case that fails once in
-    // ten and discards the child's own output leaves nothing to diagnose.
     const child = (label: string) => new Promise<{ action: string; stderr: string }>((resolve) => {
       const proc = spawn(process.execPath, ['--import', 'tsx', '-e', [
         "const { existsSync, writeFileSync } = await import('node:fs')",
@@ -95,9 +132,19 @@ describe('P4-12 must[2]: two workers cannot both hold one reservation', () => {
         `const store = openLedgerStore(${JSON.stringify(dir)})`,
         `writeFileSync(${JSON.stringify(join(dir, 'ready-'))} + ${JSON.stringify(label)}, '')`,
         `while (!existsSync(${JSON.stringify(go)})) { /* spin to the barrier */ }`,
-        "const decision = store.reserve({ scope: 'agent-1', key: 'effect-1', argumentsHash: 'sha256-aaa', epoch: 1 })",
-        "if (decision.action === 'reserved') store.markSent('agent-1', 'effect-1', 1)",
-        `console.log(${JSON.stringify(label)} + ':' + decision.action)`,
+        `const decision = store.reserve({ scope: 'agent-1', key: 'effect-1', argumentsHash: 'sha256-aaa', epoch: ${JSON.stringify(generation)} })`,
+        // NO `markSent`. The child used to send when it won, which made the
+        // LOSER's answer a function of the schedule: `duplicate` when the
+        // winner's send landed before the loser's transaction began,
+        // `held-at-same-epoch` when it did not. must[2] is about two workers
+        // HOLDING one reservation, so the case stops at the reservation and the
+        // answer stops depending on a race the store does not cover. The
+        // send-then-`duplicate` path is measured in-process instead, where the
+        // order is stated rather than hoped for.
+        // The REASON, not just the action: which situation a refusal names is
+        // the whole point of it, and a child printing only `refused` would let
+        // `stale-epoch` or `ambiguous` pass for the peer refusal.
+        `console.log(${JSON.stringify(label)} + ':' + (decision.action === 'refused' ? decision.reason : decision.action))`,
       ].join('\n')], { stdio: ['ignore', 'pipe', 'pipe'] })
       let out = ''
       let err = ''
@@ -110,9 +157,30 @@ describe('P4-12 must[2]: two workers cannot both hold one reservation', () => {
     while (!ready('a') || !ready('b')) await new Promise(resolve => setImmediate(resolve))
     writeFileSync(go, '')
     const results = await both
-    const detail = results.map(r => r.stderr).filter(Boolean).join('\n---\n')
-    expect(results.filter(r => r.action === 'reserved'), detail).toHaveLength(1)
-    expect(results.filter(r => r.action === 'duplicate'), detail).toHaveLength(1)
+    return { decisions: results.map(r => r.action), detail: results.map(r => r.stderr).filter(Boolean).join('\n---\n') }
+  }
+
+  it('gives the reservation to ONE of two concurrent processes at the same generation, and refuses the other as a peer', async () => {
+    // The loser is refused `held-at-same-epoch`, deterministically (BLOCKED-221).
+    // The case asserted `duplicate`, which the loser can only receive if the
+    // winner's send landed before the loser's transaction began — and measured
+    // both ways at one SHA: run 34666554965 green, run 34667961832 red. What
+    // the old assertion reported was the schedule; refusing a peer inside the
+    // reservation's own transaction makes the answer a property of the ledger.
+    const { decisions, detail } = await race(1)
+    expect(decisions.filter(decision => decision === 'reserved'), detail).toHaveLength(1)
+    expect(decisions.filter(decision => decision === 'held-at-same-epoch'), detail).toHaveLength(1)
+  }, 30_000)
+
+  it('admits BOTH unfenced processes, because without generations a peer and a restart are the same observation', async () => {
+    // The honest control, and the reason `fenced` is on the decision at all.
+    // With no generations the ledger cannot tell two live workers from one
+    // worker restarting, so refusing either would strand keys that were never
+    // sent; both hold the reservation and both may send. A profile that mounts
+    // no Run Service gets at-least-once and NOT must[2], recorded here rather
+    // than left for a reader to discover from a duplicate external effect.
+    const { decisions, detail } = await race('unfenced')
+    expect(decisions.filter(decision => decision === 'reserved'), detail).toHaveLength(2)
   }, 30_000)
 })
 

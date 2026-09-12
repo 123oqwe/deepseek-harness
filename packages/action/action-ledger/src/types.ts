@@ -26,6 +26,23 @@ import type { PrincipalId } from '@deepseek-ai/dsh-principal'
  */
 export type LedgerEpoch = BrandedNumber<'LedgerEpoch'>
 
+/**
+ * A caller's generation, or the absence of one.
+ *
+ * **`'unfenced'` is a state, not the number zero** (BLOCKED-221). A lease-less
+ * caller used to arrive as epoch `0` from a `?? 0` at the call site, which made
+ * every lease-less caller indistinguishable from every other — so the ledger
+ * could not tell a concurrent peer from one worker restarting, and must[2]'s
+ * two-holder refusal silently did not apply to any of them. Naming the absence
+ * is what lets a decision say which rule admitted it and lets an audit read
+ * that back.
+ *
+ * Fencing is what makes exclusion decidable; without a generation the ledger
+ * keeps at-least-once and gives up exclusivity, and says so rather than
+ * pretending to a guarantee it cannot hold.
+ */
+export type LedgerGeneration = LedgerEpoch | 'unfenced'
+
 /** A digest of the provider's own receipt, which is the evidence an effect committed. */
 export type ReceiptDigest = Branded<'ReceiptDigest'>
 
@@ -71,8 +88,8 @@ export interface LedgerEntry {
   /** The arguments this key was first reserved with; a later mismatch is refused (acceptance[2]). */
   readonly argumentsHash: ArgumentsHash
   readonly state: LedgerState
-  /** The generation that holds the reservation. */
-  readonly epoch: LedgerEpoch
+  /** The generation that holds the reservation, or `'unfenced'` when its holder had none. */
+  readonly epoch: LedgerGeneration
   /** Present once a receipt has been seen; absent in every other state. */
   readonly receiptDigest?: ReceiptDigest
 }
@@ -82,7 +99,8 @@ export interface ReserveRequest {
   readonly scope: LedgerScope
   readonly key: IdempotencyKey
   readonly argumentsHash: ArgumentsHash
-  readonly epoch: LedgerEpoch
+  /** The caller's generation, or `'unfenced'` when no lease issued it one. */
+  readonly epoch: LedgerGeneration
 }
 
 /**
@@ -95,14 +113,42 @@ export interface ReserveRequest {
  * ambiguous entry needs a human or a reconciler rather than another attempt.
  */
 export type ReserveDecision =
-  /** The caller holds the reservation and may send. */
-  | { readonly action: 'reserved'; readonly entry: LedgerEntry }
+  /**
+   * The caller holds the reservation and may send.
+   *
+   * `fenced` records WHICH rule admitted it, because the two rules promise
+   * different things. A fenced reservation is backed by a lease generation on
+   * both sides, so must[2] — two workers cannot both hold one reservation —
+   * applies to it. An unfenced one was admitted under the degraded rule: a
+   * `prepared` entry is re-taken so at-least-once survives, and must[2] is NOT
+   * promised, because without generations the ledger cannot tell a live peer
+   * from the same worker restarting. Taking over an entry whose own holder was
+   * unfenced is equally unfenced, however well fenced the new caller is: the
+   * old holder can still send.
+   *
+   * Carried on the decision rather than re-derived by the caller so the
+   * distinction reaches the audit record, where the difference between a
+   * guaranteed and a degraded reservation is the fact worth having.
+   */
+  | { readonly action: 'reserved'; readonly entry: LedgerEntry; readonly fenced: boolean }
   /** Someone already sent or confirmed this effect; do not send again. */
   | { readonly action: 'duplicate'; readonly state: LedgerState }
   /** The same key was first reserved with different arguments (acceptance[2]). */
   | { readonly action: 'refused'; readonly reason: 'arguments-differ'; readonly firstArgumentsHash: ArgumentsHash }
   /** A newer generation holds this key; this caller has been fenced out (must[3]). */
   | { readonly action: 'refused'; readonly reason: 'stale-epoch'; readonly currentEpoch: LedgerEpoch }
+  /**
+   * A peer at this SAME lease generation holds the reservation and has not sent
+   * (must[2], BLOCKED-221).
+   *
+   * Distinct from `duplicate`, which asserts the effect already happened, and
+   * from `stale-epoch`, which asserts a NEWER generation fenced this caller
+   * out. Here neither is true: the holder is a peer, not a successor, and
+   * nothing was sent. Reported only for a fenced request — an unfenced caller
+   * cannot be told it has a peer, because without a generation the ledger
+   * cannot tell a peer from this same worker restarting.
+   */
+  | { readonly action: 'refused'; readonly reason: 'held-at-same-epoch'; readonly heldEpoch: LedgerEpoch }
   /** The outcome is unknown; retrying cannot resolve it (acceptance[1]). */
   | { readonly action: 'refused'; readonly reason: 'ambiguous-needs-reconciliation' }
 
