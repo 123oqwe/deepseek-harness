@@ -5033,7 +5033,7 @@ Both are deliberate — `agent/session-start` and `agent/disposed` are emitted s
 
 ### BLOCKED-202 — a recorded fixture hardcodes an absolute temp path from the run that recorded it, so no refresh can reproduce it
 
-**Status:** OPEN, owner UNATTRIBUTED. Found 2026-09-11 by lane B's P4-02 snapshot refresh, which is **excluded from that fixture** — `snapshots/session/session-query-spill/` is restored to its committed expectation and not refreshed.
+**Status:** OPEN, owner lane A (reassigned 2026-09-12: the commit that wrote the failing expectation is lane A's, see the history below). Found 2026-09-11 by lane B's P4-02 snapshot refresh, which is **excluded from that fixture** — `snapshots/session/session-query-spill/` is restored to its committed expectation and not refreshed. Scheduled AFTER push 4: no acceptance conclusion depends on this scenario (`command-freeze.json` and `acceptance-coverage.json` reference it zero times; the only mentions in `spec/first100/` are this entry's source note and `preflight-P4-02-U.md:93` recording the exclusion), so it sits under the freeze order.
 
 `snapshots/session/session-query-spill/replay.override.json` is an AUTHORED replay script, and the tool call it drives embeds an absolute path from the machine that authored it:
 
@@ -5043,9 +5043,23 @@ Both are deliberate — `agent/session-start` and `agent/disposed` are emitted s
 
 That directory belonged to one recording run. On any later machine — and on the same machine after that temp directory is reaped — `find` fails, and the fixture's tool result turns from `SPILL_CANONICAL_OK` into `[stderr]\nfind: /tmp/dsh-acp-snap-035d1d054: No such file or directory`.
 
-**Why this is a corpus defect and not a lane-B regression.** The path is in the committed override, not in anything this slice changed; a keyless replay cannot conjure a directory that no longer exists. What lane B's refresh did was make it VISIBLE, because a refresh rewrites the expectation from the run it just performed — so committing that output would have replaced a passing expectation with a failing one. The refresh was stopped and the fixture excluded instead.
+**Why this is a corpus defect and not a lane-B regression.** The path is in the committed override, not in anything that slice changed; a keyless replay cannot conjure a directory that no longer exists. Lane B's refresh would have rewritten the expectation from the run it had just performed, so it was stopped and the fixture excluded instead.
 
-**Owner: not attributable from the records, and deliberately not guessed.** The registry names no epic for the spill seam (`grep` over `tests/first100/registry.json` for `spill` returns nothing), `packages/spill/*`'s READMEs name no epic, and both `snapshot.yml` and `replay.override.json` were added by `6ca682733f refactor(test): drive sessions through owning profiles` — a test refactor rather than an epic slice. Assigning it to the wrong epic is worse than leaving it open, which is the rule BLOCKED-176 already applies.
+**A refresh did not make it visible — a refresh WROTE THE FAILURE INTO THE EXPECTATION, and every refresh since has re-recorded one.** The verification step's committed tool result, traced per revision:**
+
+| revision | committed expectation | note |
+| --- | --- | --- |
+| `973b95852f` … `cc2defb632` | `SPILL_CANONICAL_OK\n` | eight consecutive revisions; the step genuinely passed |
+| `f4cb4beee8` | `(no output)\n[exit code: 1]` | lane A's refresh on a STALE BUILD — the same commit that deleted 34 `run/task-profile` events from the SDK lane |
+| `3125f48443` | `(no output)\n[exit code: 1]` | carried forward |
+| `aa3fe5a61d` | `[stderr]\nfind: … No such file or directory` `[exit code: 2]` | lane A's corpus refresh; the failure's shape changed, not its nature |
+| `6b97d7d75f` | `(no output)\n[exit code: 1]` | lane A's read retarget |
+
+The hardcoded path is the root cause and would have failed eventually on any other machine. What turned a passing expectation into a failing one was a specific refresh, and that refresh is lane A's — which is why the owner moved there rather than staying unattributed.
+
+**Owner was not attributable from the records when this was written, and deliberately not guessed at the time.** The registry names no epic for the spill seam (`grep` over `tests/first100/registry.json` for `spill` returns nothing), `packages/spill/*`'s READMEs name no epic, and both `snapshot.yml` and `replay.override.json` were added by `6ca682733f refactor(test): drive sessions through owning profiles` — a test refactor rather than an epic slice. Assigning it to the wrong epic is worse than leaving it open, which is the rule BLOCKED-176 already applies.
+
+**The corpus refresh of 2026-09-12 refreshed this fixture rather than excluding it**, because lane A did not check this entry first. That conflicts with the disposition above, and the current committed expectation is again a recorded failure. Left as it stands deliberately: restoring the last passing expectation (`cc2defb632`'s `SPILL_CANONICAL_OK`) would put back a value that cannot reproduce on any machine today, which is a worse state than an honest recorded failure. It is replaced when the closing condition below lands.
 
 **Closing condition:** the authored command stops depending on an absolute path — for instance by resolving the spill directory from the session's own workspace, which every other fixture already does — and the fixture is refreshed once to prove a replay reproduces `SPILL_CANONICAL_OK` on a machine that never recorded it.
 
@@ -5734,3 +5748,15 @@ The 801 root-class calls live in **182 files**, of which **23 are directly froze
 **Cases.** Three in `packages/test-support/session-snapshot/tests/normalize.spec.ts`: the reverse alias direction; the negative control that no alias is invented outside the paired roots; and the write-back case, which asserts both that the run cwd tokenizes new text and that WITHOUT it the raw path survives — so the defect is visible rather than silent if it returns. Mutation: restoring the one-way alias reddens exactly the reverse-direction case (1 failed, 58 passed).
 
 **Readings.** `skill-load` re-refreshed on the fix: raw `/var/folders` occurrences 1 → 0, the leaked line now reads `Base directory for this skill: {{cwd}}/.dsh/skills/editing-cordis-compositions`. A tree-wide scan finds no other fixture carrying a raw temp path. Package tests 283 passed / 1 skipped; acp 15/15 and sdk 16/16 replay green; headless 82 passed with two reds that predate this work — `agent-instructions` (the WIP refresh cut its `request/header` count from 2 to 1 while the manifest still declares `changes: 1`, which the pending trust-grant fix owns) and `persistent-pwsh-tool-turn` (the load-sensitive timeout recorded under BLOCKED-214).
+
+### BLOCKED-224 — WITHDRAWN: the comparison was never sensitive to the flush boundary
+
+**Withdrawn — the premise was wrong.** Lane A read `headless.snapshot.ts:917`'s whole-string `toBe`, saw that normalization touches packed rows only to zero `time0` and `dt`, and concluded the comparison was line-by-line and therefore sensitive to where a persistence flush split a packed chunk run. That missed the last step of the very pipeline both sides run through: `repackSessionSnapshot` (`packages/test-support/session-snapshot/src/normalize.ts:488`), called from `normalizeSessionSnapshots` (`:543`) for expected and actual alike, whose first documented line is that it repacks so flush boundaries do not affect committed snapshots. Measured afterwards on the three affected files: the split and merged versions normalize to byte-identical text in all three, with a reverse control confirming a real text change (`ZZ-CONTROL`) still differs — the first attempt at that control did not match and was silently vacuous, which is why it was rerun with the tamper verified. The delegate assigned the number on lane A's reading without checking the pipeline. The number is void.
+
+**The fact, for ONBOARDING:** the comparison side is insensitive to the flush boundary. Two canonical projections exist and do not conflict — `repackSessionSnapshot` on the comparison side and `canonicalSessionFixture` on the corpus side — because both are built on `packChunkRuns`. Confirmed by construction: `canonicalSessionFixture(split) === the committed merged file`, byte for byte, and the projection is idempotent on an already-canonical file. What the moving boundary does affect is the committed bytes, which the corpus refresh handles by running the projection.
+
+**Suggested, not scheduled:** a regression case pinning the property — two splittings equal after normalization, a reverse control, and a mutation removing the repack turning it red — so a future edit cannot silently drop `repackSessionSnapshot`. Out of scope during the freeze; worth doing after it.
+
+### BLOCKED-227 — VOID: the same defect as BLOCKED-202
+
+Opened for `session-query-spill`'s verification step, which greps a hardcoded absolute temp path and has never printed `SPILL_CANONICAL_OK`. That is exactly BLOCKED-202, already open with the same path quoted and the same closing condition. The number is void; the work, the owner and the history live in 202.
