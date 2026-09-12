@@ -85,6 +85,8 @@ kind: "package-reference"
 
 本包声明一个会话事件 `job/abandoned`:一次性 run 结束时仍在运行的后台 job,每个 job 一条,携带模型被告知要跟踪的那个 id、非终态状态,以及是哪个表面放弃了它。它在 turn 结束之后追加、不带 surface 元数据,因此到不了任何模型请求——run 已经产出了答案,这是关于它的运维事实。注册表不追加它,追加的是那些决定何时拆解的表面,因为只有它们知道一次 run 正在结束。
 
+它还导出收尾 drain 阶段:`duringJobDrain` 与 `isDrainingJobs`。一次性表面把自己有界的收尾等待包在 `duringJobDrain(owner, …)` 里;`@deepseek-ai/dsh-tool-jobs` 读这个阶段,据以判定该窗口内的一次完成无论 wake 预算还剩多少都唤醒它的 owner。阶段声明在这里,是因为表面与投递插件本来就都依赖本包,也因为它以 Agent 实例为键——两个作用域化的 `tool-jobs` 挂载共享一个注册表,不能对「一次 run 是否正在结束」给出不同答案。这个阶段对一条通知**意味着什么**是 `tool-jobs` 的规则,不是本包的。
+
 本包还导出 `isTerminalJobStatus`,它是把 `JobStatus` 划分为已结算与存活的唯一一处分类。放在这里而不是各消费方,是因为注册表、不变式伴生插件,以及检查未收工作的那些表面都需要同一组三个值,而第二份列表会与它所属的联合类型漂移。
 
 </details>

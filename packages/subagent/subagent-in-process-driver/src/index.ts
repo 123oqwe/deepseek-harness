@@ -14,7 +14,7 @@
 import { randomUUID } from 'node:crypto'
 import type { Context } from '@deepseek-ai/cordis'
 import { brandString } from '@deepseek-ai/dsh-brand'
-import { isTerminalJobStatus } from '@deepseek-ai/dsh-jobs'
+import { duringJobDrain, isTerminalJobStatus } from '@deepseek-ai/dsh-jobs'
 import { foldConsumedWork } from '@deepseek-ai/dsh-agent'
 import type { Agent, AgentHandle } from '@deepseek-ai/dsh-agent'
 import { SessionLogOffset } from '@deepseek-ai/dsh-session'
@@ -71,6 +71,18 @@ function toStopReason(reason: TurnEndReason | undefined): SubagentStopReason {
 export interface InProcessRunOptions {
   /** Completed-turn seed for fork, or undefined for a fresh spawn. */
   readonly seed?: readonly SessionEvent[]
+  /**
+   * How long the child's run waits, in milliseconds, for background jobs it
+   * started that have not settled when it goes idle (default 30s; `0` does not
+   * wait).
+   *
+   * Resolved by the provider that mounts this driver, from its own validated
+   * `Config` — the driver is a library and defaults nothing a deployment
+   * should choose. Against the CHILD's own deadline rather than the parent's
+   * remaining budget: the parent has no way to attribute its time to a
+   * grandchild's work.
+   */
+  readonly waitForJobsMs?: number
 }
 
 /** Error used when cancellation wins before the child publication boundary. */
@@ -150,7 +162,41 @@ export async function startInProcessRun(
     childId,
     activationBoundary,
     structured,
+    options.waitForJobsMs ?? 30_000,
   )
+}
+
+/**
+ * Wait, at most `boundMs`, for the background jobs this child had running when
+ * its turn ended.
+ *
+ * Settlement is observed through `onJobDone` and not `jobs.wait(...)`: a
+ * registered waiter makes the registry mark the job reported, which SUPPRESSES
+ * the completion notice, so draining through `wait` would guarantee the model
+ * never sees the result the drain exists to deliver.
+ * @param child - the child agent whose owned jobs are drained.
+ * @param boundMs - the wait bound in milliseconds; `0` returns immediately.
+ */
+async function drainChildJobs(child: Agent, boundMs: number): Promise<void> {
+  const jobs = child.ctx.get('jobs')
+  if (jobs === undefined || boundMs <= 0) return
+  const pending = new Set(jobs.list(child).filter(job => !isTerminalJobStatus(job.status)).map(job => String(job.id)))
+  if (pending.size === 0) return
+  const deadline = new Promise<void>(resolve => setTimeout(resolve, boundMs).unref())
+  await duringJobDrain(child, async () => {
+    const settled = new Promise<void>((resolve) => {
+      const stop = jobs.onJobDone((snapshot) => {
+        pending.delete(String(snapshot.id))
+        if (pending.size === 0) {
+          stop()
+          resolve()
+        }
+      })
+      void deadline.then(stop)
+    })
+    await Promise.race([settled, deadline])
+    await Promise.race([child.whenIdle(), deadline])
+  })
 }
 
 /**
@@ -197,6 +243,7 @@ function drivePublishedRun(
   childId: SessionId,
   boundary: SessionLogOffsetType,
   structured: StructuredAttachment | undefined,
+  waitForJobsMs: number,
 ): SubagentRun {
   const child = handle.agent
   const flags = { cancelled: false }
@@ -216,8 +263,10 @@ function drivePublishedRun(
         child.followup(createUserMessage({ content: prompt, source: { kind: 'user' } }))
         await child.whenIdle()
       }
-      // Before the result is read: after it, the parent disposes this handle
-      // and the registry's owner cleanup has already swallowed the set.
+      // Drain, then record, both before the result is read: after it the
+      // parent disposes this handle and the registry's owner cleanup has
+      // already swallowed the set.
+      await drainChildJobs(child, waitForJobsMs)
       recordAbandonedChildJobs(child)
       return readResult(
         child,

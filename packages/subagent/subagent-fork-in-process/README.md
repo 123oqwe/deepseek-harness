@@ -50,6 +50,7 @@ Load the subagent service and this backend, then configure a delegation tool. Th
 | Field | Default | Meaning |
 |---|---|---|
 | `providerName` | `fork` | Provider name registered on `ctx.subagents` |
+| `waitForJobsMs` | `30000` | How long a child's run waits for background jobs it started that have not settled when it goes idle; `0` does not wait. The bound stops the wait, never the job. |
 
 The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-subagent-fork-in-process) is the exhaustive source for every accepted field and its JSDoc.
 

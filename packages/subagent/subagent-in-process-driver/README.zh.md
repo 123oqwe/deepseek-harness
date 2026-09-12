@@ -65,7 +65,7 @@ kind: "package-library"
 
 ### 子 agent 留下的仍在跑的后台 job
 
-一次性子 agent 的 run 在子 agent 变为 idle 时结束,父级读完结果后随即 dispose 它的 handle。此刻仍存活的后台 job 会被注册表的 owner 清理取消并标为已报告,因此没有任何人读它的输出。在读取结果之前,driver 会列出该子 agent 自己的 job,对每一个未到终态的 job 向**子 agent 自己的日志**(唯一能点名它的日志)追加一条不带 surface 元数据的 `job/abandoned` 事件,并记一条点名整个集合的 `warn`。相关内容不会进入子 agent 的结果:结果是父级面向模型的输出,而被放弃的 job 是一次已经作答的 run 的运维事实。
+一次性子 agent 的 run 在子 agent 变为 idle 时结束,父级读完结果后随即 dispose 它的 handle。此刻仍存活的后台 job 会被注册表的 owner 清理取消并标为已报告,因此没有任何人读它的输出。在读取结果之前,driver 会**等**它们,上界是其 provider 解析出的 `waitForJobsMs`(默认 30 秒;`0` 表示不等),并且打的是**子 agent 自己的** deadline——父级无法把自己的时间归到孙辈的工作上。结算通过 `onJobDone` 观察,而不是注册表等待:登记在册的 waiter 会让注册表把该 job 标为已报告,从而抑制完成通知。超时停的是等待,绝不是 job。随后把仍在运行的列出来,对每一个未到终态的 job 向**子 agent 自己的日志**(唯一能点名它的日志)追加一条不带 surface 元数据的 `job/abandoned` 事件,并记一条点名整个集合的 `warn`。相关内容不会进入子 agent 的结果:结果是父级面向模型的输出,而被放弃的 job 是一次已经作答的 run 的运维事实。
 
 ### 结构化输出
 
@@ -169,7 +169,7 @@ When you have your final answer, you MUST report it by calling the `structured_o
 
 - **运行不公开 `sendMessage`/`resume`**——进程内一次性运行不具备这些可选运行时能力。
 - **结构化捕获只接受 `defineTool` schema 子集**——不支持的 JSON Schema 构造会在子 agent 创建前失败；需要更广 schema 词汇的提供方必须采用不同的运行时。
-- **子 agent 的后台 job 只被记录,不被收取**——run 不等结束时仍存活的 job,因此它的输出既到不了子 agent 的结果,也到不了父级;记录是子 agent 自己那条 `job/abandoned` 事件,今天没有任何父级表面渲染它。
+- **超过上界仍存活的子 agent 后台 job 只被记录,不被收取**——记录是子 agent 自己那条 `job/abandoned` 事件,今天没有任何父级表面渲染它。
 
 <a id="dev-note"></a>
 ### 开发备注

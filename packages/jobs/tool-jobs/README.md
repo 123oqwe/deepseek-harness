@@ -41,6 +41,8 @@ When a job finishes, the owning agent receives `background job <id> (<kind>: <la
 
 Waking is bounded: each owner may be woken `maxConsecutiveWakes` times before further notices degrade to injection, and claiming any user-authored message restores the budget. The bound exists because the chain is self-exciting — a woken turn may start the background job whose completion wakes it again. `completionDelivery: quiet` keeps even idle owners on the injection lane, which deterministic transcripts need.
 
+The budget has one window in which it does not apply: while a run-ending surface holds a bounded drain open (`duringJobDrain` from `@deepseek-ai/dsh-jobs`), an idle owner is woken however much budget is left. The budget bounds a self-exciting chain in a CONVERSATION, and a run that is already finishing starts nothing further. The window bypasses the budget rather than refilling it, so a drained owner is no richer afterwards than before, and the exemption is per-owner: another agent's spent budget still governs it.
+
 ### Minimal configuration
 
 Loading the plugin with no config is the common path; a `waitTimeoutMs` above `maxWaitTimeoutMs` fails at load.
@@ -172,6 +174,7 @@ These limits define when the tools are a poor fit. They are current package cons
 
 - **A settlement inside the driver's retirement window still strands its notice** — between the turn loop's last inbox check and the driver committing its idle phase the owner still reads as busy, so the notice is injected and nothing wakes. Steering has the same hole; closing it belongs to `agent-loop`.
 - **A spent wake budget is not restored by time** — only user-authored input refills it, so an unattended agent whose budget ran out collects its remaining notices on the next turn something else opens.
+- **The drain window is opened by the surface, not detected here** — a surface that ends a run without calling `duringJobDrain` gets the ordinary budgeted delivery, so a new one-shot surface has to opt in.
 - **A notice pending on an idle owner does not survive that owner's disposal** — the disposal cancel clears the unclaimed inbox, and the log keeps the insert/cancel pair as the record.
 - **Stream reads are single-consumer** — independent observers need another runtime API.
 - **Unowned jobs have no session fence** — external callers must supply policy or avoid them.

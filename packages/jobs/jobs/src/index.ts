@@ -43,6 +43,50 @@ export function isTerminalJobStatus(status: JobStatus): boolean {
   return status === 'completed' || status === 'killed' || status === 'failed'
 }
 
+/**
+ * Agents inside an open drain window, counted so nested windows close
+ * correctly.
+ *
+ * Module-private and keyed by the Agent instance: an agent belongs to exactly
+ * one composition, and every mount serving it must read the same answer — two
+ * scoped `tool-jobs` mounts share one registry and would otherwise disagree
+ * about whether a run is ending.
+ */
+const drainingOwners = new WeakMap<Agent, number>()
+
+/**
+ * Whether this agent's run is inside a bounded end-of-run drain.
+ *
+ * The phase is declared here, beside the job vocabulary both the surfaces and
+ * the delivery plugin already depend on. What the phase MEANS for a completion
+ * notice is `@deepseek-ai/dsh-tool-jobs`' rule, not this package's.
+ * @param owner - the agent a completion is being delivered to.
+ * @returns `true` while at least one drain window is open for it.
+ */
+export function isDrainingJobs(owner: Agent): boolean {
+  return (drainingOwners.get(owner) ?? 0) > 0
+}
+
+/**
+ * Run one bounded end-of-run drain for `owner`.
+ *
+ * The window closes even when `drain` throws: a surface that failed to drain
+ * must not leave its agent permanently marked as ending.
+ * @param owner - the agent whose run is ending.
+ * @param drain - the bounded wait; its result is returned unchanged.
+ * @returns whatever `drain` returned.
+ */
+export async function duringJobDrain<T>(owner: Agent, drain: () => Promise<T>): Promise<T> {
+  drainingOwners.set(owner, (drainingOwners.get(owner) ?? 0) + 1)
+  try {
+    return await drain()
+  } finally {
+    const open = (drainingOwners.get(owner) ?? 1) - 1
+    if (open <= 0) drainingOwners.delete(owner)
+    else drainingOwners.set(owner, open)
+  }
+}
+
 declare module '@deepseek-ai/cordis' {
   interface Context {
     jobs: JobRegistry

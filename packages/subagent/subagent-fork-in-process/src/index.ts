@@ -31,10 +31,21 @@ export const inject = ['subagents']
 export interface Config {
   /** Provider name on `ctx.subagents` (default `fork`). */
   providerName: string
+  /**
+   * How long a child's run waits, in milliseconds, for background jobs it
+   * started that have not settled when it goes idle (default 30s; `0` does not
+   * wait).
+   *
+   * Resolved here rather than in the shared driver: the driver is a library and
+   * defaults nothing a deployment should choose, on the same
+   * request/spec split the `dsh-shell` seam uses (BLOCKED-220).
+   */
+  waitForJobsMs: number
 }
 
 export const Config: z<Config> = z.object({
   providerName: z.string().default('fork'),
+  waitForJobsMs: z.number().min(0).default(30_000),
 })
 
 /**
@@ -70,11 +81,12 @@ class ForkInProcessProvider implements SubagentProvider {
   // Context contract: a forked child IS seeded with the parent's completed-turn prefix.
   readonly inheritsParentContext = true
 
-  constructor(readonly name: string) {}
+  constructor(readonly name: string, private readonly waitForJobsMs: number) {}
 
   start(request: ResolvedSubagentStartRequest) {
     const seed = completedTurnPrefix(request.parent)
     return startInProcessRun(request, {
+      waitForJobsMs: this.waitForJobsMs,
       // Only pass a seed when there's a completed turn to inherit; an empty seed
       // is equivalent to a fresh child, so omit it to keep the session unseeded.
       ...seed.length > 0 ? { seed } : {},
@@ -91,5 +103,5 @@ class ForkInProcessProvider implements SubagentProvider {
 }
 
 export function apply(ctx: Context, config: Config): void {
-  ctx.subagents.registerProvider(new ForkInProcessProvider(config.providerName))
+  ctx.subagents.registerProvider(new ForkInProcessProvider(config.providerName, config.waitForJobsMs))
 }

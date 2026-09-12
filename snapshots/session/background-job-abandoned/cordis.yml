@@ -32,3 +32,14 @@
   name: '@deepseek-ai/dsh-jobs-local'
   config:
     maxConcurrentJobsPerOwner: 2
+
+# The scenario's subject is the RECORD of a job left running, not the wait that
+# precedes it: with the shipped 30s bound this run would hold the suite for
+# thirty seconds and end in exactly the same state, because the hanging job
+# never settles. A short bound reaches the same end faster.
+- id: headless-runner
+  config:
+    # Re-supplied because a patch entry's `config` REPLACES the bundle's rather
+    # than merging into it, and `task` is required.
+    task: !!js ctx.headlessStartup.task
+    waitForJobsMs: 100

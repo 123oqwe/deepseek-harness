@@ -65,7 +65,7 @@ The required request signal covers both startup and the live run. Before publica
 
 ### Background jobs the child left running
 
-A one-shot child's run ends when the child goes idle, and the parent disposes its handle straight after reading the result. A background job still live at that point is cancelled by the registry's owner cleanup and marked reported, so nothing reads its output. Before the result is read, the driver lists the child's own jobs and appends one `job/abandoned` event per job that has not reached a terminal status, to the child's own log — the only log that can name it — with no surface metadata, plus a `warn` naming the set. Nothing about them enters the child's result: the result is the parent's model-facing output, and an abandoned job is an operator fact about a run that already answered.
+A one-shot child's run ends when the child goes idle, and the parent disposes its handle straight after reading the result. A background job still live at that point is cancelled by the registry's owner cleanup and marked reported, so nothing reads its output. Before the result is read, the driver WAITS for them, bounded by the `waitForJobsMs` its provider resolved (30s by default; `0` does not wait) and against the CHILD's deadline, since the parent cannot attribute its own time to a grandchild's work. Settlement is observed through `onJobDone` and not a registry wait: a registered waiter makes the registry mark the job reported and suppresses the completion notice. Expiry stops the wait and never the job. Whatever is still running is then listed, and the driver appends one `job/abandoned` event per job that has not reached a terminal status, to the child's own log — the only log that can name it — with no surface metadata, plus a `warn` naming the set. Nothing about them enters the child's result: the result is the parent's model-facing output, and an abandoned job is an operator fact about a run that already answered.
 
 ### Structured output
 
@@ -169,7 +169,7 @@ These limits define what an in-process one-shot run cannot do; they are current 
 
 - **Runs expose no `sendMessage`/`resume`** — the optional runtime capabilities are absent on in-process one-shot runs.
 - **Structured capture accepts the `defineTool` schema subset only** — unsupported JSON Schema constructs fail before the child is created; a provider needing a broader schema vocabulary requires a different runtime.
-- **A child's background job is recorded, not collected** — the run does not wait for one still live at the end, so its output reaches neither the child's result nor the parent; the record is the child's own `job/abandoned` event, which no parent-side surface renders today.
+- **A child's background job still live past the bound is recorded, not collected** — the record is the child's own `job/abandoned` event, which no parent-side surface renders today.
 
 <a id="dev-note"></a>
 ### Dev Note

@@ -435,7 +435,12 @@ describe('headless runner', () => {
 
   it('validates config: the task is required', () => {
     expect(() => new Config({} as never)).toThrow()
-    expect(new Config({ task: 'x' })).toEqual({ task: 'x' })
+    // The job-drain bound carries a default, so a bare config is not empty:
+    // a run that waited for nothing unless a profile said otherwise would make
+    // delivering a started job's result the opt-in rather than the behaviour.
+    expect(new Config({ task: 'x' })).toEqual({ task: 'x', waitForJobsMs: 30_000 })
+    expect(new Config({ task: 'x', waitForJobsMs: 0 }).waitForJobsMs).toBe(0)
+    expect(() => new Config({ task: 'x', waitForJobsMs: -1 })).toThrow()
   })
 })
 
@@ -557,7 +562,32 @@ describe('P9-03 Provider — --model selects the route the run uses', () => {
      * what this file owns is whether the runner reads the set and when.
      */
     function stubJobs(ctx: Context, snapshots: readonly { id: string; status: string }[]): void {
-      ctx.provide('jobs', { list: () => snapshots } as never)
+      ctx.provide('jobs', { list: () => snapshots, onJobDone: () => () => {} } as never)
+    }
+
+    /** A mutable registry stub whose jobs settle only when a case says so. */
+    function controllableJobs(ctx: Context, ids: readonly string[]): {
+      settle(id: string): void
+      killed: string[]
+    } {
+      const live = new Map(ids.map(id => [id, 'running']))
+      const listeners = new Set<(snapshot: { id: string; status: string }) => void>()
+      const killed: string[] = []
+      ctx.provide('jobs', {
+        list: () => [...live].map(([id, status]) => ({ id, status })),
+        onJobDone: (listener: (snapshot: { id: string; status: string }) => void) => {
+          listeners.add(listener)
+          return () => listeners.delete(listener)
+        },
+        kill: (id: string) => { killed.push(id); return 'requested' },
+      } as never)
+      return {
+        settle: (id: string) => {
+          live.set(id, 'completed')
+          for (const listener of [...listeners]) listener({ id, status: 'completed' })
+        },
+        killed,
+      }
     }
 
     /** The single session the bench's agent factory created. */
@@ -568,7 +598,9 @@ describe('P9-03 Provider — --model selects the route the run uses', () => {
     }
 
     it('names every job still running, before the session is flushed', async () => {
-      const test = await bench(answer)
+      // `waitForJobsMs: 0`: this case is about the RECORD, and a live job plus
+      // a default bound would spend the whole bound before reaching it.
+      const test = await bench(answer, { config: { waitForJobsMs: 0 } })
       stubJobs(test.ctx, [{ id: 'subagent-1', status: 'running' }, { id: 'bash-2', status: 'stopping' }])
       const warnings: string[] = []
       // `warn` is level 2 and an exporter's default threshold is INFO (1), so a
@@ -599,6 +631,50 @@ describe('P9-03 Provider — --model selects the route the run uses', () => {
         { jobId: 'subagent-1', status: 'running', surface: 'headless' },
         { jobId: 'bash-2', status: 'stopping', surface: 'headless' },
       ])
+      await test.ctx.fiber.dispose()
+    })
+
+    // BLOCKED-220 甲: the run waits a bounded time for the jobs it started.
+    it('waits for a job that settles inside the bound, and records no abandonment', async () => {
+      const test = await bench(answer, { config: { waitForJobsMs: 5_000 } })
+      const jobs = controllableJobs(test.ctx, ['bash-1'])
+      // Settles a tick after the drain begins, which is the case the bound
+      // exists to admit rather than to time out.
+      queueMicrotask(() => { setTimeout(() => { jobs.settle('bash-1') }, 5) })
+      const result = await test.run()
+
+      expect(result.code).toBe(0)
+      expect(result.err).toBe('')
+      expect(sessionOf(test.ctx).snapshotEvents().filter(event => event.type === 'job/abandoned')).toStrictEqual([])
+      expect(jobs.killed).toStrictEqual([])
+      await test.ctx.fiber.dispose()
+    })
+
+    it('stops waiting at the bound without cancelling, and records what it left running', async () => {
+      const test = await bench(answer, { config: { waitForJobsMs: 20 } })
+      const jobs = controllableJobs(test.ctx, ['bash-1'])
+      const result = await test.run()
+
+      expect(result.code).toBe(0)
+      // The bound stops the WAIT, never the job: cancelling on expiry would
+      // turn a slow job into a killed one, which is what teardown does anyway.
+      expect(jobs.killed).toStrictEqual([])
+      expect(sessionOf(test.ctx).snapshotEvents()
+        .filter(event => event.type === 'job/abandoned')
+        .map(event => event.data))
+        .toStrictEqual([{ jobId: 'bash-1', status: 'running', surface: 'headless' }])
+      await test.ctx.fiber.dispose()
+    })
+
+    it('does not wait at all when the bound is 0, which stays expressible', async () => {
+      const test = await bench(answer, { config: { waitForJobsMs: 0 } })
+      const jobs = controllableJobs(test.ctx, ['bash-1'])
+      const started = Date.now()
+      await test.run()
+
+      expect(Date.now() - started).toBeLessThan(1_000)
+      expect(jobs.killed).toStrictEqual([])
+      expect(sessionOf(test.ctx).snapshotEvents().filter(event => event.type === 'job/abandoned')).toHaveLength(1)
       await test.ctx.fiber.dispose()
     })
 

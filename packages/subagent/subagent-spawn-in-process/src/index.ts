@@ -25,10 +25,21 @@ export const inject = ['subagents']
 export interface Config {
   /** Provider name on `ctx.subagents` (default `spawn`). */
   providerName: string
+  /**
+   * How long a child's run waits, in milliseconds, for background jobs it
+   * started that have not settled when it goes idle (default 30s; `0` does not
+   * wait).
+   *
+   * Resolved here rather than in the shared driver: the driver is a library and
+   * defaults nothing a deployment should choose, on the same
+   * request/spec split the `dsh-shell` seam uses (BLOCKED-220).
+   */
+  waitForJobsMs: number
 }
 
 export const Config: z<Config> = z.object({
   providerName: z.string().default('spawn'),
+  waitForJobsMs: z.number().min(0).default(30_000),
 })
 
 /**
@@ -49,13 +60,13 @@ class SpawnInProcessProvider implements SubagentProvider {
   // Context contract: a spawned child starts fresh — it never sees the parent conversation.
   readonly inheritsParentContext = false
 
-  constructor(readonly name: string) {}
+  constructor(readonly name: string, private readonly waitForJobsMs: number) {}
 
   start(request: ResolvedSubagentStartRequest) {
     // Fresh child: no seed. The shared driver mints ids, stamps cwd/lineage/
     // depth, drives the one-shot (including the structured capture when the
     // request carries an outputSchema), and maps the result.
-    return startInProcessRun(request, {})
+    return startInProcessRun(request, { waitForJobsMs: this.waitForJobsMs })
   }
 
   prepareContinuable(): Promise<ContinuableCreateSpec> {
@@ -66,5 +77,5 @@ class SpawnInProcessProvider implements SubagentProvider {
 }
 
 export function apply(ctx: Context, config: Config): void {
-  ctx.subagents.registerProvider(new SpawnInProcessProvider(config.providerName))
+  ctx.subagents.registerProvider(new SpawnInProcessProvider(config.providerName, config.waitForJobsMs))
 }

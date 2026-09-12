@@ -8,7 +8,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import { bindScopeParent, createScope, scopeOf } from '@deepseek-ai/dsh-scope'
-import { JobId } from '@deepseek-ai/dsh-jobs'
+import { JobId, duringJobDrain } from '@deepseek-ai/dsh-jobs'
 import LocalJobRegistry from '@deepseek-ai/dsh-jobs-local'
 import type { JobHooks, JobOutcome, JobSnapshot, JobStart } from '@deepseek-ai/dsh-jobs'
 import * as ToolTasks from '@deepseek-ai/dsh-tool-jobs'
@@ -593,6 +593,80 @@ describe('completion notice delivery', () => {
     // budget stops the chain, and the notice still reaches the inbox.
     expect(followup).toHaveBeenCalledTimes(2)
     expect(inject).toHaveBeenCalledTimes(1)
+  })
+
+  // BLOCKED-220 甲: the drain window. A one-shot surface ends its run by
+  // waiting a bounded time for the jobs it started, and the budget exists to
+  // stop a runaway wake chain in a CONVERSATION — a run that is already ending
+  // has no conversation to run away. Inside the window an idle owner is woken
+  // whatever the budget says; outside it the budget is unchanged.
+  it('wakes an idle owner inside a drain window even with the budget spent', async () => {
+    const { ctx } = await setup({ maxConsecutiveWakes: 1 })
+    const inject = vi.fn()
+    const followup = vi.fn()
+    const owner = fakeAgent(ctx, 'sess-1', { inject, followup, status: 'idle' })
+
+    // Spend the budget first, so the window is the only thing that can wake.
+    await settleTasks(ctx, owner, 2)
+    expect(followup).toHaveBeenCalledTimes(1)
+    expect(inject).toHaveBeenCalledTimes(1)
+
+    await duringJobDrain(owner, async () => {
+      await settleTasks(ctx, owner, 2)
+    })
+
+    expect(followup).toHaveBeenCalledTimes(3)
+    expect(inject).toHaveBeenCalledTimes(1)
+
+    // The window BYPASSED the budget rather than refilling it: the spend from
+    // before is still spent, so the next completion outside injects. Without
+    // this the case cannot tell a bypass from a reset, and a drain that reset
+    // the budget would leave a conversation able to wake itself again.
+    await settleTasks(ctx, owner, 1)
+    expect(followup).toHaveBeenCalledTimes(3)
+    expect(inject).toHaveBeenCalledTimes(2)
+  })
+
+  it('leaves the budget in force outside the window, so the drain exempts a phase and not an owner', async () => {
+    // The reverse control. Without it, a `duringDrain` that simply cleared the
+    // budget would pass the case above.
+    const { ctx } = await setup({ maxConsecutiveWakes: 1 })
+    const inject = vi.fn()
+    const followup = vi.fn()
+    const owner = fakeAgent(ctx, 'sess-1', { inject, followup, status: 'idle' })
+
+    await duringJobDrain(owner, async () => {
+      await settleTasks(ctx, owner, 2)
+    })
+    expect(followup).toHaveBeenCalledTimes(2)
+    expect(inject).toHaveBeenCalledTimes(0)
+
+    // Back outside, the budget is exactly what it was before the window: the
+    // drain neither spent it nor cleared it, so one wake remains and the next
+    // completion injects.
+    await settleTasks(ctx, owner, 2)
+    expect(followup).toHaveBeenCalledTimes(3)
+    expect(inject).toHaveBeenCalledTimes(1)
+  })
+
+  it('exempts only the owner being drained', async () => {
+    const { ctx } = await setup({ maxConsecutiveWakes: 1 })
+    const drained = { inject: vi.fn(), followup: vi.fn(), status: 'idle' as const }
+    const other = { inject: vi.fn(), followup: vi.fn(), status: 'idle' as const }
+    const ownerA = fakeAgent(ctx, 'sess-1', drained)
+    const ownerB = fakeAgent(ctx, 'sess-2', other)
+    await settleTasks(ctx, ownerB, 2)
+    expect(other.followup).toHaveBeenCalledTimes(1)
+    expect(other.inject).toHaveBeenCalledTimes(1)
+
+    await duringJobDrain(ownerA, async () => {
+      await settleTasks(ctx, ownerA, 2)
+      await settleTasks(ctx, ownerB, 1)
+    })
+
+    expect(drained.followup).toHaveBeenCalledTimes(2)
+    // B is not being drained, so its spent budget still governs.
+    expect(other.inject).toHaveBeenCalledTimes(2)
   })
 
   it('restores the wake budget when the owner claims a user message', async () => {

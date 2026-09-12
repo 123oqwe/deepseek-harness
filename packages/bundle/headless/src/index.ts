@@ -24,7 +24,7 @@ import type {} from '@deepseek-ai/dsh-agent-default-model'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { TokenUsage } from '@deepseek-ai/dsh-llm'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
-import { isTerminalJobStatus } from '@deepseek-ai/dsh-jobs'
+import { duringJobDrain, isTerminalJobStatus } from '@deepseek-ai/dsh-jobs'
 import { SessionSeq } from '@deepseek-ai/dsh-session'
 import type { Session, SessionEvent, SessionId, SessionLogOffset } from '@deepseek-ai/dsh-session'
 // Empty type imports carry the loader Context merge for the settlement await
@@ -68,6 +68,23 @@ export interface Config {
    * prose parses the wrong thing without noticing.
    */
   outputFormat?: OutputFormat
+  /**
+   * How long the run waits, in milliseconds, for background jobs it started
+   * that have not settled when the agent goes idle (default 30s; `0` does not
+   * wait at all).
+   *
+   * A one-shot run should deliver the work it started: without a wait its
+   * agent goes idle, the process leaves, and the registry's teardown marks
+   * every remaining job reported with nobody to read it (BLOCKED-220). The
+   * bound is deployment-varying — how long a caller's wall clock may be held
+   * for work it did not ask to wait for is not a property of this code — so it
+   * is a config field rather than a constant, and `0` stays expressible for a
+   * caller that wants the old behaviour.
+   *
+   * The bound stops the WAIT and never the job: expiry cancels nothing, and
+   * the jobs still running are recorded exactly as they are without one.
+   */
+  waitForJobsMs?: number
 }
 
 export const Config: z<Config> = z.object({
@@ -75,6 +92,7 @@ export const Config: z<Config> = z.object({
   resumeSessionId: z.string(),
   model: z.string(),
   outputFormat: z.union(OUTPUT_FORMATS.map(format => z.const(format))),
+  waitForJobsMs: z.number().min(0).default(30_000),
 })
 
 /** Outcome of one owned run interval. */
@@ -243,6 +261,7 @@ async function run(
   resumeSessionId?: string,
   model?: string,
   outputFormat: OutputFormat = 'text',
+  waitForJobsMs = 30_000,
 ): Promise<void> {
   // Loader siblings mount concurrently. Await the complete application before
   // creating an Agent so its scoped tools and adapters are not half-composed.
@@ -333,6 +352,7 @@ async function run(
   } finally {
     stopReasoning()
   }
+  await drainJobs(ctx, agent, waitForJobsMs)
   recordAbandonedJobs(ctx, agent, io.stderr)
   await sessions.flush(agent.session)
   const outcome = summarize(agent.session, firstSeq)
@@ -357,6 +377,51 @@ async function run(
   const status = exitStatusFor(outcome.reason)
   if (status.failure !== undefined) io.stderr.write(`dsh: run did not complete: ${status.failure}\n`)
   io.exit(status.exitCode)
+}
+
+/**
+ * Wait, at most `boundMs`, for the background jobs this agent had running when
+ * its turn ended.
+ *
+ * Settlement is observed through `onJobDone` rather than `jobs.wait(...)`, and
+ * the difference is the whole point: a registered waiter makes the registry
+ * mark the job reported, which SUPPRESSES the completion notice
+ * (`jobs-local`'s `settle` sets `reported` whenever `waiters > 0`, and `wait`
+ * marks it again on return). Draining through `wait` would therefore guarantee
+ * the model never sees the result the drain exists to deliver. An observer
+ * registers no waiter, so `tool-jobs` delivers normally.
+ *
+ * The set is the one read at this instant, not "until nothing is running": a
+ * completion that wakes a turn which starts another job must not extend the
+ * wait forever. One deadline covers both the settlements and the turn any of
+ * them opened.
+ * @param ctx - plugin context, whose `jobs` service is optional.
+ * @param agent - the agent whose owned jobs are drained.
+ * @param boundMs - the wait bound in milliseconds; `0` returns immediately.
+ */
+async function drainJobs(ctx: Context, agent: Agent, boundMs: number): Promise<void> {
+  const jobs = ctx.get('jobs')
+  if (jobs === undefined || boundMs <= 0) return
+  const pending = new Set(jobs.list(agent).filter(job => !isTerminalJobStatus(job.status)).map(job => String(job.id)))
+  if (pending.size === 0) return
+  const deadline = new Promise<void>(resolve => setTimeout(resolve, boundMs).unref())
+  await duringJobDrain(agent, async () => {
+    const settled = new Promise<void>((resolve) => {
+      const stop = jobs.onJobDone((snapshot) => {
+        pending.delete(String(snapshot.id))
+        if (pending.size === 0) {
+          stop()
+          resolve()
+        }
+      })
+      void deadline.then(stop)
+    })
+    await Promise.race([settled, deadline])
+    // A settlement may have opened a turn; the same deadline covers it, because
+    // a run that waited for its jobs and then printed before their answer
+    // arrived would have waited for nothing.
+    await Promise.race([agent.whenIdle(), deadline])
+  })
 }
 
 /**
@@ -421,5 +486,13 @@ export function apply(ctx: Context, config: Config): void {
     throw new Error('headless-runner: the launcher must provide ctx.appExit before the tree mounts')
   }
   const io: HeadlessIo = { stdout: internals.stdout, stderr: internals.stderr, exit }
-  void run(ctx, config.task, io, config.resumeSessionId, config.model, config.outputFormat).catch((error: unknown) => { fail(io, error) })
+  void run(
+    ctx,
+    config.task,
+    io,
+    config.resumeSessionId,
+    config.model,
+    config.outputFormat,
+    config.waitForJobsMs,
+  ).catch((error: unknown) => { fail(io, error) })
 }
