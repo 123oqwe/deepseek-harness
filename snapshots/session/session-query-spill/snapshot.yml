@@ -1,3 +1,13 @@
+# The read target is LOAD-BEARING and addressed by absolute sequence number,
+# because `session_event_read` accepts nothing else: its only parameter is
+# `seq`. It must land on the runtime-context `user/message`, which is the only
+# event here large enough to truncate — that truncation is the whole subject of
+# this scenario. Any event inserted earlier in the turn shifts it. BLOCKED-214
+# inserted two (the workspace-trust approval pair) and moved it from 10 to 12;
+# the refresh then re-recorded a read of `step/start`, which cannot spill, so
+# the scenario kept passing while measuring nothing. A refresh diff that
+# changes the read event's `type`, or drops the `(Omitted N bytes.)` marker
+# from the result, means this number needs moving rather than accepting.
 version: 1
 scenario: session-query-spill
 profile: headless
