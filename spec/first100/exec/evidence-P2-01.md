@@ -102,12 +102,16 @@ The factory is consumed at `packages/core/agent-loop/src/index.ts:484`, where a 
 
 | cell | status | candidate SHA | run |
 | --- | --- | --- | --- |
-| C | **NOT_RUN** | — | revoked: `P2-01.C.1` supersedes the 2026-09-02 freeze and drops `registers the package ownership with an empty installer`, a case `verify-package-invariants` rejects by name. Awaiting re-observation on the candidate carrying the supersede; lane B owns it. |
+| C | GREEN | `73c1c04f2e` | 34660413109 |
 | P | GREEN | `87585733cf` | 33596937698 |
 | U | GREEN | `bf24fa0a33` | 33637453508 |
 | F | GREEN | `b3186e6db9` | 34088363628 |
 
-**These are not candidate 3′′′ observations, and this section does not claim they are.** 3′′′ (`6ff9674a94`) was dispatched on 2026-09-12 and its exact-SHA run had not reported when this was written; the three green cells carry the SHAs and runs that actually earned them. A re-sign that wants 3′′′ readings has to wait for that run — the ledger is the authority, and it currently records the rows above.
+**Correction, 2026-09-12.** The C row above read `NOT_RUN`, with the note that `P2-01.C.1` superseded the 2026-09-02 freeze — dropping `registers the package ownership with an empty installer`, a case `verify-package-invariants` rejects by name — and that re-observation was owed. That re-observation has landed: the ledger now carries C GREEN at `73c1c04f2e` from run 34660413109, the run that also observed this epic's `U.1`. The withdrawal reason is kept in this paragraph rather than in the table, because what the table records is what a run observed, and the reason a cell once had no observation is history rather than a reading.
+
+Two more supplements are green and were not in the original table: `F.1` at `b03a9f920f` (run 33650410487) and `U.1` at `93d5220733` (run 34652643903). The row itself is still `NOT_RUN` / `PENDING`.
+
+**These are not candidate 3′′′ observations, and this section does not claim they are.** 3′′′ (`6ff9674a94`) was dispatched on 2026-09-12 and its exact-SHA run had not reported when this was written; the four green cells carry the SHAs and runs that actually earned them. A re-sign that wants 3′′′ readings has to wait for that run — the ledger is the authority, and it currently records the rows above.
 
 ### 4.4c — the hardcoded tenant, measured
 
