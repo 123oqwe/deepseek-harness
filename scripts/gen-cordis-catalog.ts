@@ -729,6 +729,8 @@ export const TYPE_LINK_EXEMPTIONS: Readonly<Record<string, string>> = {
   TrustState: 'workspace trust state is owned by packages/workspace/workspace-trust/README.md',
   TrustRecord: 'workspace trust binding is owned by packages/workspace/workspace-trust/README.md',
   TrustUpgradeResult: 'trust upgrade adjudication result is owned by packages/workspace/workspace-trust/README.md',
+  TrustDowngradeResult: 'trust revocation outcome is owned by packages/workspace/workspace-trust/README.md',
+  TrustGrantSource: 'trust grant authority is owned by packages/workspace/workspace-trust/README.md',
   AgentPreset: 'discovered preset record is owned by packages/preset/agent-presets/README.md',
   AgentPresetRoster: 'path-free preset roster is owned by packages/preset/agent-presets/README.md',
   AgentPresetDocument: 'preset composition view is owned by packages/preset/agent-presets/README.md',

@@ -3366,10 +3366,16 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'the workspace\'s current {@link TrustState}.',
       },
       {
-        signature: 'grantTrust(cwd: string, target: TrustState, hostPrincipal: Principal): Promise<TrustUpgradeResult>',
+        signature: 'grantTrust( cwd: string, target: TrustState, hostPrincipal: Principal, source?: TrustGrantSource, ): Promise<TrustUpgradeResult>',
         description: 'Raise a workspace\'s trust on the host user\'s authority (must[2]).\n\nThe Consumer that ASKED the host user calls this; the decision of whether the answer authorizes anything stays in `requestTrustUpgrade`, which refuses a non-host principal and refuses a transition that is not an upgrade. A provider persists the new binding and nothing else: it does not ask, and it does not decide.\n\nOn the seam rather than only on `@deepseek-ai/dsh-workspace`\'s registry, because a Consumer holds a session `cwd` and the registry is keyed by `WorkspaceId` — and because that registry is mounted in the web-app bundle only, while the profile this boundary matters most on is headless.',
-        parameters: [{ name: 'cwd', description: 'the session working directory whose workspace is being raised.' }, { name: 'target', description: 'the state to raise it to.' }, { name: 'hostPrincipal', description: 'the principal authorizing it; a non-host one is refused.' }],
+        parameters: [{ name: 'cwd', description: 'the session working directory whose workspace is being raised.' }, { name: 'target', description: 'the state to raise it to.' }, { name: 'hostPrincipal', description: 'the principal authorizing it; a non-host one is refused.' }, { name: 'source', description: 'which authority the grant came through, recorded on the audit entry so a later reader can tell a launch argument from a command from a configured grant; defaults to `\'command\'`.' }],
         returns: 'the upgrade result, carrying the new record and its audit on success.',
+      },
+      {
+        signature: 'revokeTrust(cwd: string, target: TrustState): Promise<TrustDowngradeResult>',
+        description: 'Lower a workspace\'s trust, naming what the lowering revokes (acceptance[2], BLOCKED-214).\n\nOn the seam because a grant that cannot be taken back is not a grant a host user controls: the persisted record outlives the session that wrote it, so without this the only way to undo a grant would be to edit storage. The decision stays in `downgradeTrust`, which computes `revokedKinds` from the same transition it applies — there is no separate revoke step to race.\n\nReconciled before lowering, exactly as `grantTrust` is: a directory that already lost its binding to a swap is lowered from the state it actually has, not from the one its record remembers.',
+        parameters: [{ name: 'cwd', description: 'the session working directory whose workspace is being lowered.' }, { name: 'target', description: 'the state to lower it to; raising throws in `downgradeTrust`.' }],
+        returns: 'the downgrade result, carrying the new record and the kinds it revoked.',
       },
     ],
   },
@@ -5486,6 +5492,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type PrincipalId = Branded<\'PrincipalId\'>;',
   },
   {
+    name: 'ProjectContentKind',
+    declaration: 'export type ProjectContentKind = \'safe-read\' | \'project-instructions\' | \'project-plugin\' | \'project-hook\' | \'mcp-server\' | \'executable-skill\' | \'home-profile-patch-override\';',
+  },
+  {
     name: 'ProjectionChangeListener',
     declaration: 'export type ProjectionChangeListener = (session: Session, key: Extract<keyof SessionProjectionMap, string>, value: unknown, seq: SessionSeq) => void;',
   },
@@ -6914,8 +6924,16 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type TransitionDenialReason = \'illegal-transition\' | \'stale-epoch\' | \'run-mismatch\' | \'missing-reason\';',
   },
   {
+    name: 'TrustDowngradeResult',
+    declaration: 'export interface TrustDowngradeResult {\n    readonly record: TrustRecord;\n    readonly revokedKinds: readonly ProjectContentKind[];\n}',
+  },
+  {
+    name: 'TrustGrantSource',
+    declaration: 'export type TrustGrantSource = \'launch-argument\' | \'command\' | \'configured-grant\';',
+  },
+  {
     name: 'TrustRecord',
-    declaration: 'export interface TrustRecord {\n    readonly identity: WorkspaceIdentity;\n    readonly state: TrustState;\n    readonly at: string;\n    readonly grantedBy?: PrincipalId;\n}',
+    declaration: 'export interface TrustRecord {\n    readonly identity: WorkspaceIdentity;\n    readonly state: TrustState;\n    readonly at: string;\n    readonly grantedBy?: PrincipalId;\n    readonly source?: TrustGrantSource;\n}',
   },
   {
     name: 'TrustState',

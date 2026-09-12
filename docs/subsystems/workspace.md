@@ -389,9 +389,31 @@ stateFor(cwd: string): Promise<TrustState>
  * @param cwd - the session working directory whose workspace is being raised.
  * @param target - the state to raise it to.
  * @param hostPrincipal - the principal authorizing it; a non-host one is refused.
+ * @param source - which authority the grant came through, recorded on the audit entry so a
+ * later reader can tell a launch argument from a command from a configured grant; defaults
+ * to `'command'`.
  * @returns the upgrade result, carrying the new record and its audit on success.
  */
-grantTrust(cwd: string, target: TrustState, hostPrincipal: Principal): Promise<TrustUpgradeResult>
+grantTrust( cwd: string, target: TrustState, hostPrincipal: Principal, source?: TrustGrantSource, ): Promise<TrustUpgradeResult>
+
+/**
+ * Lower a workspace's trust, naming what the lowering revokes (acceptance[2],
+ * BLOCKED-214).
+ *
+ * On the seam because a grant that cannot be taken back is not a grant a host
+ * user controls: the persisted record outlives the session that wrote it, so
+ * without this the only way to undo a grant would be to edit storage. The
+ * decision stays in `downgradeTrust`, which computes `revokedKinds` from the
+ * same transition it applies — there is no separate revoke step to race.
+ *
+ * Reconciled before lowering, exactly as `grantTrust` is: a directory that
+ * already lost its binding to a swap is lowered from the state it actually
+ * has, not from the one its record remembers.
+ * @param cwd - the session working directory whose workspace is being lowered.
+ * @param target - the state to lower it to; raising throws in `downgradeTrust`.
+ * @returns the downgrade result, carrying the new record and the kinds it revoked.
+ */
+revokeTrust(cwd: string, target: TrustState): Promise<TrustDowngradeResult>
 ```
 
 Source: [`packages/workspace/workspace-trust/src/index.ts`](../../packages/workspace/workspace-trust/src/index.ts)

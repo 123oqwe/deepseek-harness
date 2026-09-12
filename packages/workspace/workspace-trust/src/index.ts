@@ -78,6 +78,9 @@ export interface WorkspaceTrustService {
    * @param cwd - the session working directory whose workspace is being raised.
    * @param target - the state to raise it to.
    * @param hostPrincipal - the principal authorizing it; a non-host one is refused.
+   * @param source - which authority the grant came through, recorded on the audit entry so a
+   * later reader can tell a launch argument from a command from a configured grant; defaults
+   * to `'command'`.
    * @returns the upgrade result, carrying the new record and its audit on success.
    */
   grantTrust(
