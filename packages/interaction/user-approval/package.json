@@ -17,7 +17,11 @@
         "types": "./lib/types/types.d.ts",
         "default": "./lib/types/types.js"
       },
-      "./package.json": "./package.json"
+      "./package.json": "./package.json",
+      "./canonical": {
+        "types": "./lib/types/canonical.d.ts",
+        "default": "./lib/types/canonical.js"
+      }
     }
   },
   "repository": {
@@ -42,7 +46,11 @@
       "default": "./lib/types/types.js"
     },
     "./src/*": "./src/*",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./canonical": {
+      "types": "./lib/types/canonical.d.ts",
+      "default": "./lib/types/canonical.js"
+    }
   },
   "files": [
     "lib/index.js",

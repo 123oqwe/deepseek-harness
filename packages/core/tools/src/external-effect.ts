@@ -26,6 +26,10 @@ import type { LedgerEpoch, LedgerGeneration, LedgerScope, ReceiptDigest, Reserve
 import type {} from '@deepseek-ai/dsh-action-ledger'
 import { brandNumber, brandString } from '@deepseek-ai/dsh-brand'
 import type { ExecutionWorldFact, PolicyContextFacts } from '@deepseek-ai/dsh-policy-engine'
+import { verifyApprovalBinding } from '@deepseek-ai/dsh-user-approval'
+import type { ApprovalBinding, ApprovalBindingInputs, ApprovalVerification } from '@deepseek-ai/dsh-user-approval/types'
+import { SessionSeq } from '@deepseek-ai/dsh-session'
+import type {} from '@deepseek-ai/dsh-user-approval'
 import type { WorldId, WorldProviderId, WorldSpecDigest } from '@deepseek-ai/dsh-execution-world/types'
 import type { ToolExecutionResult } from './index.ts'
 
@@ -298,6 +302,59 @@ export async function readExecutionWorldFact(ctx: Context, agent: Agent): Promis
 const ANNOUNCED = new WeakSet<object>()
 
 /**
+ * Re-verify the approval this session recorded for `action` before it runs
+ * (P2-06 must[1]).
+ *
+ * **Reads the RECORDED tuple from the session log, never from the values about
+ * to run.** A path that rebuilt the "recorded" side from what it is about to
+ * dispatch would compare a value against itself and admit every substitution it
+ * exists to refuse, while passing any case written against it.
+ *
+ * `undefined` means the dispatch may proceed: either the session recorded no
+ * binding for this action — an ask that carried no tuple, or no ask at all —
+ * or the recorded one still covers what is about to run. A refusal names the
+ * field that moved, or the expiry.
+ * @param agent - the dispatching agent, whose session holds the record.
+ * @param present - the same tuple as it stands now, at dispatch time.
+ * @param nowMs - the caller's clock reading.
+ * @returns the refusal to report, or undefined when the dispatch may proceed.
+ */
+export function verifyRecordedApproval(
+  agent: Agent,
+  present: ApprovalBindingInputs,
+  nowMs: number,
+): Exclude<ApprovalVerification, { valid: true }> | undefined {
+  const { session } = agent
+  // The LAST binding for this action, because a re-ask after a refusal records
+  // a second one and the decision in force is the most recent.
+  for (let index = session.seq - 1; index >= 0; index -= 1) {
+    const event = session.eventAt(SessionSeq(index))
+    if (event?.type !== 'approval/bound') continue
+    const data = event.data
+    if (data.action !== present.action) continue
+    const recorded: ApprovalBinding = {
+      inputs: {
+        action: data.action,
+        // The record carries no argument values by design, so the recorded
+        // side is reconstructed with the PRESENT arguments and the comparison
+        // is made by the digest below: an argument change moves the digest and
+        // the binding's own recorded digest does not move with it.
+        args: present.args,
+        principal: data.principal as ApprovalBindingInputs['principal'],
+        preconditions: data.preconditions,
+        ...data.capabilityToken === undefined ? {} : { capabilityToken: data.capabilityToken },
+        ...data.policyVersion === undefined ? {} : { policyVersion: data.policyVersion },
+      },
+      digest: data.digest as ApprovalBinding['digest'],
+      expiresAtMs: data.expiresAtMs,
+    }
+    const verification = verifyApprovalBinding(recorded, present, nowMs)
+    return verification.valid ? undefined : verification
+  }
+  return undefined
+}
+
+/**
  * The approval operation this gate needs, named structurally for the same
  * reason as {@link RiskPolicyPort}.
  *
@@ -305,13 +362,26 @@ const ANNOUNCED = new WeakSet<object>()
  * unanswered or rogue result to `'unavailable'`, so this gate reads an
  * outcome rather than handling an absence.
  */
+/** What the caller supplies to bind an approval asked at this gate (P2-06). */
+export interface ApprovalBindingRequest {
+  /** Everything the approval is to be bound to, as the dispatch path sees it now. */
+  readonly inputs: ApprovalBindingInputs
+  /** The dispatch path's clock reading at the moment of the ask. */
+  readonly askedAtMs: number
+}
+
 interface ApprovalPort {
   /**
    * Ask composed answerers for one decision.
    * @param request - the agent, the tool and the reason to show.
    * @returns the settled outcome; `'allowed-once'` is the only one that permits the action.
    */
-  request(request: { agent: Agent; toolName: string; reason: string }): Promise<string>
+  request(request: {
+    agent: Agent
+    toolName: string
+    reason: string
+    binding?: ApprovalBindingRequest
+  }): Promise<string>
 }
 
 /**
@@ -355,6 +425,7 @@ export type RiskRefusal =
  * @param toolName - the action's capability, used as its identity to the classifier.
  * @param riskDomainTags - what the tool declares it touches, empty when it declares nothing.
  * @param classified - the verdict {@link classifyActionRisk} already produced for this action; omitted, the gate classifies for itself.
+ * @param binding - what an approval asked here is bound to, when the caller has a tuple (P2-06 must[1]).
  * @returns the refusal, or `undefined` when the action may run.
  */
 export async function gateActionRisk(
@@ -363,6 +434,7 @@ export async function gateActionRisk(
   toolName: string,
   riskDomainTags: readonly string[],
   classified?: ActionRiskClassification,
+  binding?: ApprovalBindingRequest,
 ): Promise<RiskRefusal | undefined> {
   const presets = ctx.get('permissionPresets') as RiskPolicyPort | undefined
   if (presets === undefined) return undefined
@@ -415,7 +487,18 @@ export async function gateActionRisk(
   advanceLeasedAgent(agent, 'waiting_human', `awaiting approval for "${toolName}"`)
   const outcome = approval === undefined
     ? 'unavailable'
-    : await approval.request({ agent, toolName, reason: riskRefusalReason(classification.riskClass, undeclared) })
+    : await approval.request({
+      agent,
+      toolName,
+      reason: riskRefusalReason(classification.riskClass, undeclared),
+      // Supplied only when the caller has a tuple. This gate is the one that
+      // binds, because its call site holds BOTH halves — the arguments and the
+      // manifest record — while the registry's own ask (`serviceAsk`) sits in a
+      // layer that appends no manifest. The other path is therefore unbound and
+      // says so (P2-06 U's declared limitation) rather than gaining a
+      // cross-layer reference to reach one.
+      ...binding === undefined ? {} : { binding },
+    })
   // Back to `running` whatever the operator said: the wait is over, and the
   // caller decides whether the action proceeds.
   advanceLeasedAgent(agent, 'running', `approval for "${toolName}" ended "${outcome}"`)
@@ -538,6 +621,35 @@ export function refusedPolicyResult(
  * @param toolName - the action refused, named so a multi-call turn is readable.
  * @returns the tool result to record in place of an execution.
  */
+/**
+ * The tool result recorded when a decision no longer covers what is about to
+ * run (P2-06 must[2], acceptance[0]).
+ *
+ * Names the FIELD that moved rather than reporting a failed check, because
+ * must[2]'s requirement is that a change invalidates the approval and the
+ * operator reading this has to know which change: substituted arguments and a
+ * lapsed validity period call for different actions, and so does a switched
+ * account.
+ * @param verification - the refusal the verifier produced.
+ * @param toolName - the action refused, named so a multi-call turn is readable.
+ * @returns the tool result to record in place of an execution.
+ */
+export function refusedApprovalResult(
+  verification: Exclude<ApprovalVerification, { valid: true }>,
+  toolName: string,
+): ToolExecutionResult {
+  const text = verification.reason === 'expired'
+    ? `The approval for "${toolName}" had expired before it ran, so it was not performed. `
+      + 'Ask again: a decision made about a world that has since moved is not a decision about this one.'
+    : `The approval for "${toolName}" no longer covers this call: its ${verification.field} changed after the decision was made, `
+      + 'so it was not performed. A new request is needed for the changed action.'
+  return {
+    content: [{ type: 'text', text: `Error: ${text}` }],
+    isError: true,
+    error: { message: text, info: { name: 'ApprovalNoLongerValidError', code: ABORTED_BEFORE_DISPATCH } },
+  }
+}
+
 export function refusedRiskResult(refusal: RiskRefusal, toolName: string): ToolExecutionResult {
   const cause = refusal.undeclared
     ? `it declares no risk domain tags, so it classifies at "${refusal.riskClass}" by the unknown default`

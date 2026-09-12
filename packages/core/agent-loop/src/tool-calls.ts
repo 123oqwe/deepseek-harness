@@ -22,6 +22,8 @@ import type { SignedCapabilityToken } from '@deepseek-ai/dsh-capability-token'
 import type { ActionManifest } from '@deepseek-ai/dsh-action-manifest'
 import { enforceManifestedAction } from '@deepseek-ai/dsh-policy-enforcement'
 import type { ExecutionWorldFact, PolicyContextFacts } from '@deepseek-ai/dsh-policy-engine'
+import type { ApprovalBindingRequest } from '@deepseek-ai/dsh-tools/external-effect'
+import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 import type { ActionId, ArgumentsHash, CapabilityRef, IdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
 import type { LedgerScope } from '@deepseek-ai/dsh-action-ledger'
 // The `actionLedger` service augmentation lives in the ledger package's runtime
@@ -34,7 +36,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent/types'
 import { createSessionManifestAppender } from '@deepseek-ai/dsh-tools/manifest-log'
 // The reserve/confirm pair lives in `dsh-tools` so the code-mode dispatch can
 // reach it too: a second copy here is what left code-mode unreserved (§12.35-2).
-import { classifyActionRisk, confirmExternalEffect, gateActionRisk, readExecutionWorldFact, readPolicyContextFacts, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect } from '@deepseek-ai/dsh-tools/external-effect'
+import { classifyActionRisk, confirmExternalEffect, gateActionRisk, readExecutionWorldFact, readPolicyContextFacts, refusedApprovalResult, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect, verifyRecordedApproval } from '@deepseek-ai/dsh-tools/external-effect'
 import type { Principal } from '@deepseek-ai/dsh-principal'
 import { brandString } from '@deepseek-ai/dsh-brand'
 
@@ -285,13 +287,34 @@ async function runGroup(
       }
       return
     }
+    // P2-06 must[1]: the approval this gate may ask for is bound to the tuple
+    // the decider is deciding about. Built HERE because this is the only place
+    // that holds both halves — the model's arguments and the manifest record
+    // the append just produced. The registry's own ask sits in a layer with no
+    // manifest, and is unbound by declaration rather than by oversight.
     const riskRefusal = await gateActionRisk(
       ctx, agent, call.block.name, ctx.tools.get(call.block.name, agent)?.riskDomainTags ?? [], classified,
+      approvalBindingFor(agent, call.block),
     )
     if (riskRefusal !== undefined) {
       slots[index] = {
         exec: call.exec as unknown as ToolRunContext,
         result: refusedRiskResult(riskRefusal, call.block.name),
+        needsPost: false,
+      }
+      return
+    }
+    // P2-06 must[1]: re-verify the recorded approval BEFORE the tool runs. The
+    // recorded side comes from the session log and the present side from this
+    // dispatch, so a substitution between the decision and the execution is a
+    // comparison of two different values rather than of one value with itself.
+    // A refusal REFUSES the dispatch: a verification whose result is reported
+    // and then ignored passes every case asserting it was called.
+    const staleApproval = verifyRecordedApproval(agent, approvalBindingFor(agent, call.block).inputs, Date.now())
+    if (staleApproval !== undefined) {
+      slots[index] = {
+        exec: call.exec as unknown as ToolRunContext,
+        result: refusedApprovalResult(staleApproval, call.block.name),
         needsPost: false,
       }
       return
@@ -471,6 +494,39 @@ async function policyInputsForCall(ctx: Context, agent: Agent, block: ToolCallBl
   return {
     facts: await readPolicyContextFacts(ctx, agent, classified),
     world: await readExecutionWorldFact(ctx, agent),
+  }
+}
+
+/**
+ * What an approval asked for this dispatch is bound to (P2-06 must[1]).
+ *
+ * The principal is the one attached to the agent AT THE ASK, captured as a
+ * value: `'unattached'` when the agent carries no identity, which a
+ * re-verification compares rather than treating as a wildcard.
+ *
+ * Three fields are deliberately absent rather than filled with something
+ * shaped like them. `preconditions` is empty because the native manifest path
+ * declares none (`appendActionManifest` passes `preconditions: []`), so an
+ * approval here is bound to no precondition and a later one that IS declared
+ * changes the binding. `capabilityToken` is absent because this path holds a
+ * signed token, not the digest the binding compares — binding the manifest's
+ * `argumentsHash` in its place would be a field that looks bound and compares
+ * something else. `policyVersion` is absent because the decision summary here
+ * names an effect and a reason, not the policy set's version. A field bound to
+ * a placeholder makes every value look equal, which is worse than absent.
+ * @param agent - the dispatching agent, whose identity is captured at the ask.
+ * @param block - the model's tool call, supplying the action and its arguments.
+ * @returns the binding request, timed by this path's own clock reading.
+ */
+function approvalBindingFor(agent: Agent, block: ToolCallBlock): ApprovalBindingRequest {
+  return {
+    inputs: {
+      action: block.name,
+      args: block.arguments as JsonValue,
+      principal: agent.identity?.principal.id ?? 'unattached',
+      preconditions: [],
+    },
+    askedAtMs: Date.now(),
   }
 }
 

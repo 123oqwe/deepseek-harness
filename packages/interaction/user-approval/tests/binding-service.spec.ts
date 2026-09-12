@@ -21,7 +21,8 @@ import SessionStore from '@deepseek-ai/dsh-session'
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ApprovalService, { verifyApprovalBinding } from '@deepseek-ai/dsh-user-approval'
-import type { ApprovalBindingInputs, ApprovalRequest } from '@deepseek-ai/dsh-user-approval/types'
+import type { ApprovalRequest } from '@deepseek-ai/dsh-user-approval'
+import type { ApprovalBindingInputs } from '@deepseek-ai/dsh-user-approval/types'
 
 const ALICE = brandString<PrincipalId>('user-alice')
 const BOB = brandString<PrincipalId>('user-bob')
@@ -66,6 +67,14 @@ function inputs(over: Partial<ApprovalBindingInputs> = {}): ApprovalBindingInput
     policyVersion: 'policy-v1',
     ...over,
   }
+}
+
+/** The same tuple with the two optional fields genuinely absent, not set to `undefined`. */
+function withoutOptional(full: ApprovalBindingInputs): ApprovalBindingInputs {
+  const { capabilityToken, policyVersion, ...rest } = full
+  void capabilityToken
+  void policyVersion
+  return rest
 }
 
 function requestOf(agent: Agent, over: Partial<ApprovalRequest> = {}): ApprovalRequest {
@@ -191,7 +200,7 @@ describe('P2-06 acceptance[1]: the record carries the digest, never the argument
     const ctx = await mounted()
     const { agent, appended } = fakeAgent()
     await ctx.approval.request(requestOf(agent, {
-      binding: { inputs: { ...inputs(), capabilityToken: undefined, policyVersion: undefined }, askedAtMs: ASKED_AT },
+      binding: { inputs: withoutOptional(inputs()), askedAtMs: ASKED_AT },
     }))
     const record = boundRecord(appended)
     expect(record).not.toHaveProperty('capabilityToken')

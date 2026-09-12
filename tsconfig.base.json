@@ -553,6 +553,7 @@
       "@deepseek-ai/dsh-trust-kernel/types": ["./packages/kernel/trust-kernel/src/types.ts"],
       "@deepseek-ai/dsh-user-approval": ["./packages/interaction/user-approval/src"],
       "@deepseek-ai/dsh-user-approval/invariant": ["./packages/interaction/user-approval/src/invariant.ts"],
+      "@deepseek-ai/dsh-user-approval/canonical": ["./packages/interaction/user-approval/src/canonical.ts"],
       "@deepseek-ai/dsh-user-approval/types": ["./packages/interaction/user-approval/src/types.ts"],
       "@deepseek-ai/dsh-user-questions": ["./packages/interaction/user-questions/src"],
       "@deepseek-ai/dsh-user-questions/types": ["./packages/interaction/user-questions/src/types.ts"],
