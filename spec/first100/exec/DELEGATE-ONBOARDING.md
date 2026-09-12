@@ -126,3 +126,5 @@ preFlight(JSON 记录 `clause-subject-audit.json` + `evidence-<id>.md`,`recorded
 - **R10 长前置**(补记 262):用户三样(外部 key+预算、R5B Windows 全新机 [dsh-win-ci runner 是否在线/是否用户的]、R5A rollback/DR 凭据)挂交班单"待用户"、建议 2026-09-30 前、每推提醒,别等 101 项完再问。
 
 - **`pnpm run lint` 约等于一次全树 build,不是轻量信号**(补记 263,delegate 二次误判后钉死):`lint = build:lib:host && lint:contracts-ready`,`build:lib:host = tsc -b tsconfig.host.json(全树)+ tsdown`。所以它**比全树 typecheck-host 还重**(全树 tsc + 全树 tsdown 打包)。它类型感知正因这个 build(补记 251),也因此重(补记 263)。要**轻量本机类型信号**用单包 `tsc -b <pkg>/tsconfig.json`;别拿 `pnpm run lint` 当轻量。反向好处:lint 的全树 tsc 那一步一旦过,就等于本机拿到了全树 typecheck 信号。
+
+- **rebase/合并后必须重算单一事实源产物再报 tip**(补记 265,lane B 第四次陈旧产物后立):`files-overlay.json`、`module-graph.*`、catalog 都从树生成;一次 rebase 换了树,committed 的这些产物就可能陈。报 tip 前(尤其 rebase 后)重跑生成器/`--write` 重算,别信旧产物跨 rebase 仍准。这是 BLOCKED-QUEUE:3105"合并多 lane 后重算单一事实源"对 lane 自己 rebase 的同等适用。
