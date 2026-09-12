@@ -90,6 +90,7 @@ preFlight(JSON 记录 `clause-subject-audit.json` + `evidence-<id>.md`,`recorded
 - **一个 no-op 也能满足的性质不是对该函数的测试**(补记 154):`f(out) === out`(幂等)、"不抛"、"返回同类型"这类断言被什么都不做的实现同样满足,会把故障形态编码成预期;冻结用例须至少一条"函数做了事"的断言(输入含目标 → 输出已变),并且回放/归一化若两边同处理,expected 里的坏值会在比较那一刻被刷掉——"绿"须先问"比较时两边各被做了什么"。
 - **三组只在全套里活的门,报 tip 前必跑**(补记 157):`scripts/doc-standard.spec.ts`(README 骨架:概述/目录/Dev Note,中英各一份)、`scripts/session-fixture-layout.spec.ts`(session JSONL 须 canonical packed 布局,重刷后跑 `migrate:packed-session-fixtures`)、`packages/typert/generator/tests/cordis-catalog.spec.ts`(service 方法签名引用的每个类型须在 `linkedTypePages` 并有文档页,产物逐字节重生成)。新包/新导出类型/重刷 fixture 三种改动必触其一;本机全套跑不完时它们是全套的代理。候选 3′′ 为此红过一次(4 条,全确定性)。
 - **文档/fixture 布局/产物类修补的缩减验证**(补记 157):在刚跑过全门集的 tip 之上、不动产品源码的修补,可只跑各自 spec + 相关文档门 + 受影响回放片 + 变更文件 lint,由 delegate 逐次裁定并写明条件;动了产品源码则全门集重跑。
+- **快照比较侧对持久化 flush 边界不敏感**(补记 165):`normalizeSessionSnapshots` 末尾的 `repackSessionSnapshot`(`normalize.ts:488`)对 expected/actual 两侧重打包 chunk 行;语料侧 `canonicalSessionFixture`(`migrate:packed-session-fixtures`)同基 `packChunkRuns`。别从 `expect(actual).toBe(expected)` 整串相等 + "归一化只清 time0/dt"推出"逐行比"——先读管线到最后一步(224 为此错开一号)。
 - **共享机器上只杀自己的 PID**(补记 142):两 lane 同机,`pkill -f vitest|tsc|node` 按模式杀会把另一 lane 正在跑的门集/普查一起杀掉(lane A 05:27Z 一例);lane 须记下自己启动的 PID 再杀,delegate 见到 FLAG "process kill" 带模式匹配时立即通知另一 lane 核对。
 
 ## 9. 每小时自查五问(2026-09-11,gq-92 退班前给;由 watch-v12 心跳每小时打印,不靠记)
