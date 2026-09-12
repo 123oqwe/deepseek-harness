@@ -1,15 +1,16 @@
 ---
 description: "Control-plane decisions for Epic P2-12: which control verb changes the stop state, whether a worker may take new work under a stop, and where one human answer goes — including the waiting points it must not reach."
-kind: "package"
+kind: "package-reference"
 ---
 
 # @deepseek-ai/dsh-control-plane
 
 English | [中文](README.zh.md)
 
+## Summary
 `dsh-control-plane` holds P2-12's decisions as pure functions over a caller-supplied state: what a control verb does to a stop, whether new work may start, and where one answer goes. `./channel` composes them into the host-side surface — the registry of unanswered questions, out-of-band settlement, and a stop that is persisted and announced. The lease gate and the answerer wiring are Usage. Keeping the decisions separable from the composition is what lets a stop be injected before, during and after a tool start, which is validation[1].
 
-## Contents
+## Table of Contents
 
 - [What the decisions return, and why](#what-the-decisions-return-and-why)
 - [Check order is load-bearing](#check-order-is-load-bearing)
@@ -62,3 +63,14 @@ Nothing here enters a model request. A refusal reaches a model only through its 
 - **`cancel-run` changes no control state here.** Terminating in-flight work or marking it reconciliation-required is acceptance[1]'s other half and belongs to P4-06's settlement outbox, which already exists; this module would duplicate it by deciding anything more than "the stop is unaffected".
 - **The waiting-point registry is a parameter, not a store.** `WaitingPointRegistry` is two read-only sets the caller supplies, so nothing here can tell whether the sets it was handed match what actually exists. The Provider stage owns that registry, and the disagreement between asker and router is exactly what `unknown-waiting-point` reports.
 - No runtime invariant companion is published: this package holds no state and observes nothing, so there is no owned relation two observers could disagree about.
+
+### Dev Note
+
+<details>
+<summary>Working context for maintainers — click to expand</summary>
+
+This Dev Note is working context for maintainers: open questions and undecided directions. It is explicitly non-authoritative — shipped behavior and limits live in the sections above and in the package code.
+
+Whether the waiting-point registry should outlive the process is undecided. Today it is in-memory, so a restart loses every unanswered question while the stop itself survives — defensible, since a question whose asker is gone has nobody to answer to, and unsatisfying if a long-running run should be able to resume a pending question after a restart.
+
+</details>

@@ -1,15 +1,16 @@
 ---
 description: "Human-interaction channel vocabulary for Epic P2-12: the five control verbs, the durable stop record only an explicit resume lifts, the waiting point an answer may be routed by, and the approval grant a question's answer cannot produce."
-kind: "package"
+kind: "package-reference"
 ---
 
 # @deepseek-ai/dsh-human-channel
 
 English | [中文](README.zh.md)
 
+## Summary
 `dsh-human-channel` fixes the words for two things a long-running task needs and this harness had no vocabulary for: stopping everything new, and suspending to ask a human a question that is not a permission request. It also holds the stop's durable record (`./store`), because a stop that does not outlive its process is not the thing acceptance[2] asks for. It holds no service and no answerer: the channel that composes the decisions is `@deepseek-ai/dsh-control-plane/channel`, and wiring the answerers that already exist is the Usage stage. Read it when writing a control surface, or when deciding what answering a question is allowed to authorize.
 
-## Contents
+## Table of Contents
 
 - [Why a stop is a record and not a flag](#why-a-stop-is-a-record-and-not-a-flag)
 - [An answer is input, never a grant](#an-answer-is-input-never-a-grant)
@@ -65,3 +66,14 @@ Nothing here enters a model request. A question reaches a model only through the
 - **One surface can answer a question today, and this package does not add another.** Measured on P2-12's own two hooks: approvals have two answerers (ACP and Web), questions have one (Web). Per the ruling on this epic's second open question, P2-12 wires the answerers that exist and creates no CLI or ACP question answerer, so the ACP `elicitation_create` standard stays adopted in name for questions. A surface with no answerer fails closed, which both existing services already do.
 - **`ApprovalGrant` is declared here and minted nowhere.** The brand makes it unforgeable; what mints it is the approval seam, which this package does not contain. Until that lands, the type documents the separation rather than carrying a real grant.
 - No runtime invariant companion is published: this package holds no state and observes nothing, so there is no owned relation two observers could disagree about.
+
+### Dev Note
+
+<details>
+<summary>Working context for maintainers — click to expand</summary>
+
+This Dev Note is working context for maintainers: open questions and undecided directions. It is explicitly non-authoritative — shipped behavior and limits live in the sections above and in the package code.
+
+Whether `'unfenced'` belongs in this vocabulary at all, or whether a deployment without a lease should be refused a reservation outright, is settled for now by at-least-once and could be reopened if a profile ever needs strict exclusivity without a Run Service. The stop record's `release` field anticipates an automatic release (a deadline, a policy re-evaluation) that nothing asks for yet.
+
+</details>

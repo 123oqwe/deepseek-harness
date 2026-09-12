@@ -1,12 +1,13 @@
 ---
 description: "Epic P2-12 的控制面判断:哪个控制动词会改变 stop 状态、worker 在 stop 之下能否取新工作,以及一个人类答案该去哪里——包括它**不该**到达的那些 waiting point。"
-kind: "package"
+kind: "package-reference"
 ---
 
 # @deepseek-ai/dsh-control-plane
 
 [English](README.md) | 中文
 
+## 概述
 `dsh-control-plane` 把 P2-12 的判断做成调用方提供状态的纯函数:一个控制动词对 stop 做了什么、新工作能否开始、一个答案去哪里。`./channel` 把它们组合成宿主侧的那张面:未答问题的登记表、带外结算,以及一个会被持久并宣告的 stop。lease 闸门与 answerer 接线是 Usage。让判断与组合彼此分离,正是 validation[1]「在工具启动前/中/后注入 stop」能够直接驱动它们的原因。
 
 ## 目录
@@ -62,3 +63,14 @@ acceptance[1] 是「答案只到达那个提问的 waiting point」,这是一个
 - **`cancel-run` 在这里不改变任何控制状态。**终止在途工作、或把它标记成 reconciliation-required,是 acceptance[1] 的另一半,属于已经存在的 P4-06 settlement outbox;本模块若判断得比「stop 不受影响」更多,就是在重复它。
 - **waiting point 登记表是一个参数,不是一个存储。**`WaitingPointRegistry` 是调用方提供的两个只读集合,所以这里没有任何东西能判断它拿到的集合是否与真实存在的相符。那个登记表归 Provider 阶段所有,而 asker 与 router 之间的分歧正是 `unknown-waiting-point` 要报的东西。
 - 不发布 runtime invariant companion:本包不持有状态、也不观测任何东西,因此不存在两个观测者可能产生分歧的自有关系。
+
+### 开发备注
+
+<details>
+<summary>给维护者的工作上下文 — 点击展开</summary>
+
+本开发备注是给维护者的工作上下文:未决问题与尚未定下的方向。它明确不具权威性——已交付的行为与边界写在上面各节和包代码里。
+
+待答登记表该不该跨进程存活,尚未决定。今天它在内存里,所以重启会丢掉所有未回答的问题,而 stop 本身存活——这说得过去,因为提问者已经消失的问题没有人可以答;但如果一个长跑的 run 应该能在重启后继续等那个问题,它就不够。
+
+</details>

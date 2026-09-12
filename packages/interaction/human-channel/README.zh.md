@@ -1,12 +1,13 @@
 ---
 description: "Epic P2-12 的人类交互通道词汇:五个控制动词、只有显式 resume 才能解除的持久 stop 记录、答案唯一可被路由的 waiting point,以及问题的答案无法产出的 approval grant。"
-kind: "package"
+kind: "package-reference"
 ---
 
 # @deepseek-ai/dsh-human-channel
 
 [English](README.md) | 中文
 
+## 概述
 `dsh-human-channel` 为长任务需要、而本 harness 此前没有词汇的两件事定下说法:停掉一切新动作,以及挂起去问人一个**不是**权限请求的问题。它同时持有 stop 的持久记录(`./store`),因为一个活不过自己进程的 stop 不是 acceptance[2] 要的东西。它不含 service 与 answerer:composing 这些判断的通道在 `@deepseek-ai/dsh-control-plane/channel`,把已经存在的 answerer 接上去是 Usage 阶段。写控制面时读它,或者在决定「回答一个问题可以授权什么」时读它。
 
 ## 目录
@@ -65,3 +66,14 @@ must[0] 列了五个动词,本包把五个都命名了,但 world 的引用是一
 - **今天只有一个 surface 能回答问题,本包也不新增。**在 P2-12 自己的两个 hook 上量过:approval 有两个 answerer(ACP 与 Web),question 只有一个(Web)。按本 epic 第二个开放问题的裁决,P2-12 把已经存在的 answerer 接上去,不创建 CLI 或 ACP 的 question answerer,所以 ACP 的 `elicitation_create` 标准对 question 而言仍然只是名义上被采用。没有 answerer 的 surface fail closed,这正是两个现有 service 已经在做的事。
 - **`ApprovalGrant` 在这里声明,在任何地方都不被铸造。**标记让它无法伪造;铸造它的是 approval 那条缝,而本包不包含它。在那部分落地之前,这个类型记录的是分离本身,而不是承载一个真实的授权。
 - 不发布 runtime invariant companion:本包不持有状态、也不观测任何东西,因此不存在两个观测者可能产生分歧的自有关系。
+
+### 开发备注
+
+<details>
+<summary>给维护者的工作上下文 — 点击展开</summary>
+
+本开发备注是给维护者的工作上下文:未决问题与尚未定下的方向。它明确不具权威性——已交付的行为与边界写在上面各节和包代码里。
+
+`'unfenced'` 到底该不该进这套词汇、还是没有 lease 的部署就该直接被拒绝预留,目前是由 at-least-once 定下来的;如果哪天有 profile 需要"没有 Run Service 也要严格排他",这件事可以重开。stop 记录的 `release` 字段预留了自动解除(一个截止时间、一次策略重估),但今天没有任何东西要求它。
+
+</details>
