@@ -251,3 +251,10 @@ That distinction was put to the user directly, because it changes what the regis
 5. Writer 不推送、不 `--accept`、不改权限、不持有密钥。
 6. delegate 的门不变:preFlight 先批;签字前对代码核 adopted[];偏离检测每次推送自动跑。
 7. 并行度上限 3(C5);主会话本身算一条 lane。
+
+## 追加批复 C11：P2-01（identity）**重接受**放行确认，经用户在 delegate 会话内直接确认（2026-09-12）
+
+- **背景：** P2-01 于 2026-09-11 被 delegate first100-delegate-78 撤签（BLOCKED-200）：出货 profile 不附着 host 身份，`identity/attached` 在任何用户可启动的 profile 上都不产生，acceptance[0] 只在退化的 anonymous 形态成立。C9（2026-09-02）确认的是**撤签前**的那次接受，对象已不同，故不复用。
+- **修复与复核（先于放行、独立测量）：** 补救切片 P2-01.U2（lane A）让出货 boot 附着 `kind:'user'` 的 host principal；四格 GREEN（C 于 `73c1c04f2e`/run 34660413109 经 C.1 supersede 后重观测，P/U/F 见 evidence-P2-01.md 的 4.4b 表）；`--accept --epic P2-01` 干跑仅余谓词(iv)签核未记，coverage 闭合已过。tenant 契约不对称（生产侧只铸 `LOCAL_TENANT`、消费侧必填无约束）作为**冻结时已声明的缺陷**记入签核 note（P4-09 形状），并已在候选 4 修复（BLOCKED-228，`fa827a3850`：生产侧加 tenant 选项，消费侧闸不动，变异已证）。
+- **确认机制（如实记录）：** 用户于本 delegate 会话（`first100-delegate-78`）直接输入，原文：「确认放行 P2-01 重接受」。据此解除 BLOCKED-022 对 P2-01 重接受的用户确认前置条件。
+- **裁决：** 批准 P2-01 重接受（`--accept`）。ACCEPTED 26 → 27。
