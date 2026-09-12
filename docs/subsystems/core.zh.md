@@ -65,6 +65,81 @@ interface AgentHandle {
 interface Agent {
   /** Session-backed Agent identity. */
   readonly id: SessionId
+  /**
+   * Which principal is acting as this agent, and its full delegation chain
+   * back to root (first100 registry P2-01 acceptance[0]). Optional: absent
+   * for an agent with no identity attached. `ReactLoopAgent`
+   * (`@deepseek-ai/dsh-agent-loop`) is the real producer, resolving it from
+   * `AgentOptions.identity` and the session's already-recorded identity via
+   * `resolveSessionIdentity` (`@deepseek-ai/dsh-agent-loop/runtime-context`).
+   */
+  readonly identity?: IdentityContext
+  /**
+   * Which Run this agent's session is doing work inside (first100 registry
+   * P4-01 acceptance[2]). Optional: absent when no Run Service is mounted.
+   *
+   * Writer contract: `RunPlugin` (`@deepseek-ai/dsh-run`) is the sole writer,
+   * assigning it from its `agent/session-start` listener before any turn
+   * runs. Deliberately not `readonly`: the Run Service owns the Run, not the
+   * agent (P4-01 must[2]), so the association is attached by that service
+   * rather than minted in the agent's own constructor the way `identity` is.
+   * Readers treat an absent value as capability absence, never as a Run that
+   * failed to open.
+   */
+  runId?: RunId
+  /**
+   * This agent run's position in the lifecycle, and the authority every state
+   * write it makes is checked against (first100 registry P4-05 must[1], P4-07
+   * must[1]).
+   *
+   * Writer contract: `RunPlugin` (`@deepseek-ai/dsh-run`) is the sole writer.
+   * It sets this beside {@link Agent.runId} when it opens the Run, having
+   * taken that Run's lease from `ctx.leaseStore`, and it advances it. The
+   * `epoch` here is one a lease store ISSUED, never one a caller chose — that
+   * is the whole difference between this field and a number, and why
+   * `advanceAgentLifecycleFenced` rather than `advanceAgentLifecycle` is the
+   * entry point that may move it.
+   *
+   * Absent when no Run Service is mounted, or when the Run's lease was
+   * refused. A reader treats absence as "this agent may not make authorized
+   * state writes", never as a lifecycle at its initial state.
+   */
+  lifecycle?: AgentLifecycle
+  /**
+   * The lease this agent's Run holds, and the authority every state write it
+   * makes presents (first100 registry P4-07 must[1]).
+   *
+   * Writer contract: `RunPlugin` (`@deepseek-ai/dsh-run`) is the sole writer,
+   * setting it beside {@link Agent.lifecycle} from the same acquisition.
+   *
+   * It lives on the Agent rather than behind the Run Service so that a
+   * dispatcher can present it WITHOUT depending on that service: the agent
+   * loop is where tool calls are dispatched and `@deepseek-ai/dsh-run` already
+   * depends on the agent loop, so a reverse call would be a cycle. Absent
+   * means this agent holds no Run and may make no authorized state write.
+   */
+  runLease?: RunLease
+  /**
+   * That a Run Service was mounted and this agent's lease was REFUSED
+   * (first100 registry P4-07 must[0], acceptance[1]).
+   *
+   * Writer contract: `RunPlugin` (`@deepseek-ai/dsh-run`) is the sole writer,
+   * setting it in the same branch that declines to open a Run.
+   *
+   * **It exists because absence had two meanings and they need different
+   * answers.** An agent with no {@link Agent.lifecycle} is either running in a
+   * composition that mounts no Run Service — capability absence, which must
+   * dispatch normally — or one whose lease a live store refused, which must
+   * not dispatch at all. Measured before this field existed: the two were
+   * indistinguishable, so a second host that lost the race for a work item
+   * kept executing tools against it, which is the two-master state P4-07
+   * exists to prevent.
+   *
+   * Never set on a successful acquisition, and never cleared: a refusal is
+   * about this agent's one attempt to open its Run, and the agent does not get
+   * a second.
+   */
+  leaseRefused?: true
   /** The provider route and model this agent's requests use. */
   readonly options: AgentOptions
   /** The live session this agent drives; its log is the durable source of truth. */
@@ -363,26 +438,26 @@ reserve(request: ReserveRequest): ReserveDecision
  * Record that the request left the harness.
  * @param scope - the reservation's owning principal.
  * @param key - the idempotency key.
- * @param epoch - the generation that holds the reservation.
+ * @param epoch - the generation that holds the reservation, or `'unfenced'` when its holder had none.
  */
-markSent(scope: LedgerScope, key: string, epoch: LedgerEpoch): void
+markSent(scope: LedgerScope, key: string, epoch: LedgerGeneration): void
 
 /**
  * Record the provider's receipt, the evidence the effect committed.
  * @param scope - the reservation's owning principal.
  * @param key - the idempotency key.
- * @param epoch - the generation that holds the reservation.
+ * @param epoch - the generation that holds the reservation, or `'unfenced'` when its holder had none.
  * @param receiptDigest - the digest of what the provider returned.
  */
-confirm(scope: LedgerScope, key: string, epoch: LedgerEpoch, receiptDigest: ReceiptDigest): void
+confirm(scope: LedgerScope, key: string, epoch: LedgerGeneration, receiptDigest: ReceiptDigest): void
 
 /**
  * Record that retrying cannot determine the outcome.
  * @param scope - the reservation's owning principal.
  * @param key - the idempotency key.
- * @param epoch - the generation that holds the reservation.
+ * @param epoch - the generation that holds the reservation, or `'unfenced'` when its holder had none.
  */
-markAmbiguous(scope: LedgerScope, key: string, epoch: LedgerEpoch): void
+markAmbiguous(scope: LedgerScope, key: string, epoch: LedgerGeneration): void
 
 /**
  * The entry for one scoped key.

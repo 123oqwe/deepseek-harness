@@ -430,26 +430,26 @@ reserve(request: ReserveRequest): ReserveDecision
  * Record that the request left the harness.
  * @param scope - the reservation's owning principal.
  * @param key - the idempotency key.
- * @param epoch - the generation that holds the reservation.
+ * @param epoch - the generation that holds the reservation, or `'unfenced'` when its holder had none.
  */
-markSent(scope: LedgerScope, key: string, epoch: LedgerEpoch): void
+markSent(scope: LedgerScope, key: string, epoch: LedgerGeneration): void
 
 /**
  * Record the provider's receipt, the evidence the effect committed.
  * @param scope - the reservation's owning principal.
  * @param key - the idempotency key.
- * @param epoch - the generation that holds the reservation.
+ * @param epoch - the generation that holds the reservation, or `'unfenced'` when its holder had none.
  * @param receiptDigest - the digest of what the provider returned.
  */
-confirm(scope: LedgerScope, key: string, epoch: LedgerEpoch, receiptDigest: ReceiptDigest): void
+confirm(scope: LedgerScope, key: string, epoch: LedgerGeneration, receiptDigest: ReceiptDigest): void
 
 /**
  * Record that retrying cannot determine the outcome.
  * @param scope - the reservation's owning principal.
  * @param key - the idempotency key.
- * @param epoch - the generation that holds the reservation.
+ * @param epoch - the generation that holds the reservation, or `'unfenced'` when its holder had none.
  */
-markAmbiguous(scope: LedgerScope, key: string, epoch: LedgerEpoch): void
+markAmbiguous(scope: LedgerScope, key: string, epoch: LedgerGeneration): void
 
 /**
  * The entry for one scoped key.

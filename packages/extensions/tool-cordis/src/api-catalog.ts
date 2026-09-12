@@ -94,19 +94,19 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'whether the caller may send, or why not.',
       },
       {
-        signature: 'markSent(scope: LedgerScope, key: string, epoch: LedgerEpoch): void',
+        signature: 'markSent(scope: LedgerScope, key: string, epoch: LedgerGeneration): void',
         description: 'Record that the request left the harness.',
-        parameters: [{ name: 'scope', description: 'the reservation\'s owning principal.' }, { name: 'key', description: 'the idempotency key.' }, { name: 'epoch', description: 'the generation that holds the reservation.' }],
+        parameters: [{ name: 'scope', description: 'the reservation\'s owning principal.' }, { name: 'key', description: 'the idempotency key.' }, { name: 'epoch', description: 'the generation that holds the reservation, or `\'unfenced\'` when its holder had none.' }],
       },
       {
-        signature: 'confirm(scope: LedgerScope, key: string, epoch: LedgerEpoch, receiptDigest: ReceiptDigest): void',
+        signature: 'confirm(scope: LedgerScope, key: string, epoch: LedgerGeneration, receiptDigest: ReceiptDigest): void',
         description: 'Record the provider\'s receipt, the evidence the effect committed.',
-        parameters: [{ name: 'scope', description: 'the reservation\'s owning principal.' }, { name: 'key', description: 'the idempotency key.' }, { name: 'epoch', description: 'the generation that holds the reservation.' }, { name: 'receiptDigest', description: 'the digest of what the provider returned.' }],
+        parameters: [{ name: 'scope', description: 'the reservation\'s owning principal.' }, { name: 'key', description: 'the idempotency key.' }, { name: 'epoch', description: 'the generation that holds the reservation, or `\'unfenced\'` when its holder had none.' }, { name: 'receiptDigest', description: 'the digest of what the provider returned.' }],
       },
       {
-        signature: 'markAmbiguous(scope: LedgerScope, key: string, epoch: LedgerEpoch): void',
+        signature: 'markAmbiguous(scope: LedgerScope, key: string, epoch: LedgerGeneration): void',
         description: 'Record that retrying cannot determine the outcome.',
-        parameters: [{ name: 'scope', description: 'the reservation\'s owning principal.' }, { name: 'key', description: 'the idempotency key.' }, { name: 'epoch', description: 'the generation that holds the reservation.' }],
+        parameters: [{ name: 'scope', description: 'the reservation\'s owning principal.' }, { name: 'key', description: 'the idempotency key.' }, { name: 'epoch', description: 'the generation that holds the reservation, or `\'unfenced\'` when its holder had none.' }],
       },
       {
         signature: 'entry(scope: LedgerScope, key: string): LedgerEntry | undefined',
@@ -4983,11 +4983,15 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'LedgerEntry',
-    declaration: 'export interface LedgerEntry {\n    readonly scope: LedgerScope;\n    readonly key: IdempotencyKey;\n    readonly argumentsHash: ArgumentsHash;\n    readonly state: LedgerState;\n    readonly epoch: LedgerEpoch;\n    readonly receiptDigest?: ReceiptDigest;\n}',
+    declaration: 'export interface LedgerEntry {\n    readonly scope: LedgerScope;\n    readonly key: IdempotencyKey;\n    readonly argumentsHash: ArgumentsHash;\n    readonly state: LedgerState;\n    readonly epoch: LedgerGeneration;\n    readonly receiptDigest?: ReceiptDigest;\n}',
   },
   {
     name: 'LedgerEpoch',
     declaration: 'export type LedgerEpoch = BrandedNumber<\'LedgerEpoch\'>;',
+  },
+  {
+    name: 'LedgerGeneration',
+    declaration: 'export type LedgerGeneration = LedgerEpoch | \'unfenced\';',
   },
   {
     name: 'LedgerScope',
@@ -5623,11 +5627,11 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ReserveDecision',
-    declaration: 'export type ReserveDecision = {\n    readonly action: \'reserved\';\n    readonly entry: LedgerEntry;\n} | {\n    readonly action: \'duplicate\';\n    readonly state: LedgerState;\n} | {\n    readonly action: \'refused\';\n    readonly reason: \'arguments-differ\';\n    readonly firstArgumentsHash: ArgumentsHash;\n} | {\n    readonly action: \'refused\';\n    readonly reason: \'stale-epoch\';\n    readonly currentEpoch: LedgerEpoch;\n} | {\n    readonly action: \'refused\';\n    readonly reason: \'ambiguous-needs-reconciliation\';\n};',
+    declaration: 'export type ReserveDecision = {\n    readonly action: \'reserved\';\n    readonly entry: LedgerEntry;\n    readonly fenced: boolean;\n} | {\n    readonly action: \'duplicate\';\n    readonly state: LedgerState;\n} | {\n    readonly action: \'refused\';\n    readonly reason: \'arguments-differ\';\n    readonly firstArgumentsHash: ArgumentsHash;\n} | {\n    readonly action: \'refused\';\n    readonly reason: \'stale-epoch\';\n    readonly currentEpoch: LedgerEpoch;\n} | {\n    readonly action: \'refused\';\n    readonly reason: \'held-at-same-epoch\';\n    readonly heldEpoch: LedgerEpoch;\n} | {\n    readonly action: \'refused\';\n    readonly reason: \'ambiguous-needs-reconciliation\';\n};',
   },
   {
     name: 'ReserveRequest',
-    declaration: 'export interface ReserveRequest {\n    readonly scope: LedgerScope;\n    readonly key: IdempotencyKey;\n    readonly argumentsHash: ArgumentsHash;\n    readonly epoch: LedgerEpoch;\n}',
+    declaration: 'export interface ReserveRequest {\n    readonly scope: LedgerScope;\n    readonly key: IdempotencyKey;\n    readonly argumentsHash: ArgumentsHash;\n    readonly epoch: LedgerGeneration;\n}',
   },
   {
     name: 'ResolvedAlwaysRetryPolicy',

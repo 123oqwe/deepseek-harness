@@ -687,6 +687,7 @@ export const TYPE_LINK_EXEMPTIONS: Readonly<Record<string, string>> = {
   LedgerScope: 'idempotency-ledger scope is owned by packages/action/action-ledger/README.md',
   WorkflowRunId: 'workflow run identity is owned by packages/workflow/workflow/README.md',
   LedgerEpoch: 'idempotency-ledger generation is owned by packages/action/action-ledger/README.md',
+  LedgerGeneration: 'idempotency-ledger generation-or-absence is owned by packages/action/action-ledger/README.md',
   LedgerEntry: 'idempotency-ledger entry is owned by packages/action/action-ledger/README.md',
   ReceiptDigest: 'external-receipt digest is owned by packages/action/action-ledger/README.md',
   ReserveRequest: 'ledger reservation request is owned by packages/action/action-ledger/README.md',
