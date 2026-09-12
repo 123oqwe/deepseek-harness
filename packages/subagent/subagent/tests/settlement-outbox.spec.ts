@@ -30,7 +30,24 @@ import SubagentRuntime from '../src/index.ts'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 
 const roots: string[] = []
-afterEach(() => {
+/**
+ * Every Context `setup` mounts, so teardown can dispose the ones a case
+ * abandons. Registering here rather than asking each case to remember:
+ * BLOCKED-230 measured four `setup()` calls against two `dispose()` calls in
+ * this file, and a per-case `dispose()` is exactly what gets forgotten again.
+ */
+const contexts: Context[] = []
+afterEach(async () => {
+  // ORDER IS LOAD-BEARING: dispose before the directories go. A mount that is
+  // still live when its store directory is removed finishes its in-flight
+  // durable write against a path that no longer exists, and the rejection
+  // reaches no caller — the unhandled rejection BLOCKED-229 owns.
+  const torn = contexts.splice(0)
+  for (const ctx of torn) await ctx.fiber.dispose()
+  // Assert the teardown DID tear down, not merely that the loop ran: a mounted
+  // service is gone from a disposed Context. Without this the loop could be
+  // deleted or made a no-op and every case here would still pass.
+  for (const ctx of torn) expect(ctx.get('runs')).toBeUndefined()
   for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })
 })
 
@@ -39,6 +56,7 @@ async function setup(script: ConstructorParameters<typeof MockAdapter>[0], direc
   const busDirectory = directory ?? mkdtempSync(join(tmpdir(), 'dsh-settlement-bus-'))
   if (directory === undefined) roots.push(busDirectory)
   const ctx = new Context()
+  contexts.push(ctx)
   await mountAgentLoopTestDependencies(ctx)
   await ctx.plugin(SessionProjectionRegistry)
   // Continuable children require persistence: a child that outlives its
