@@ -21,6 +21,15 @@
       "path": "../../util/brand"
     },
     {
+      "path": "../../action/action-manifest"
+    },
+    {
+      "path": "../../util/values"
+    },
+    {
+      "path": "../../identity/principal"
+    },
+    {
       "path": "../../llm/llm"
     },
     {

@@ -42,7 +42,14 @@ declare module '@deepseek-ai/dsh-session/types' {
 }
 
 import { ApprovalRequestId } from './types.ts'
-import type { ApprovalOutcome, ApprovalRequestEvent } from './types.ts'
+import type {
+  ApprovalBinding,
+  ApprovalBindingInputs,
+  ApprovalOutcome,
+  ApprovalRequestEvent,
+  ApprovalVerification,
+} from './types.ts'
+import { approvalBindingDigest } from './canonical.ts'
 
 export { ApprovalRequestId } from './types.ts'
 export type { ApprovalOutcome } from './types.ts'
@@ -326,3 +333,73 @@ export class ApprovalService extends Service {
 }
 
 export default ApprovalService
+
+/**
+ * Bind one approval to everything the decider decided about (must[1]).
+ *
+ * The binding CAPTURES: every value here is read once, at ask time, and stored.
+ * Re-verification compares against these recorded values rather than re-reading
+ * the live ones, which is the whole of acceptance[0]: a verifier that resolved
+ * the principal from the live `Agent`, or re-hashed the arguments it was handed,
+ * would move with every substitution it exists to refuse and would still pass
+ * any test written against it.
+ * @param inputs - everything the approval is bound to, as the decider saw it.
+ * @param expiresAtMs - when the approval stops being usable, absolute epoch milliseconds.
+ * @returns the binding, with its digest.
+ */
+export function bindApproval(inputs: ApprovalBindingInputs, expiresAtMs: number): ApprovalBinding {
+  return { inputs, digest: approvalBindingDigest(inputs), expiresAtMs }
+}
+
+/** Compare two precondition lists by order and content. */
+function samePreconditions(left: readonly string[], right: readonly string[]): boolean {
+  return left.length === right.length && left.every((item, index) => item === right[index])
+}
+
+/**
+ * Decide whether a bound approval still authorizes the action now in hand
+ * (must[1], must[2], acceptance[0]).
+ *
+ * Fields are compared in the order of {@link ApprovalBindingField} and the FIRST
+ * difference is reported, so a refusal names one field rather than a set: an
+ * operator acts on "the arguments changed" and on "the policy version changed"
+ * differently, and a caller that changed two things is told about the first one
+ * either way.
+ *
+ * Expiry is checked LAST, after the field comparison. A stale approval whose
+ * arguments were also substituted is reported as a substitution, because that is
+ * the fact worth acting on — reporting it as merely expired would let a
+ * substitution attempt read as a timing accident.
+ * @param binding - the approval's recorded binding.
+ * @param present - the same tuple as it stands now, at re-verification time.
+ * @param now - the caller's clock, in epoch milliseconds.
+ * @returns validity, or the single field that moved, or expiry.
+ */
+export function verifyApprovalBinding(
+  binding: ApprovalBinding,
+  present: ApprovalBindingInputs,
+  now: number,
+): ApprovalVerification {
+  const bound = binding.inputs
+  if (present.action !== bound.action) return { valid: false, reason: 'changed', field: 'action' }
+  // The arguments are compared by their canonical digest, never by re-hashing
+  // whatever the caller passed into a fresh binding: the recorded value is the
+  // one the decider saw.
+  if (approvalBindingDigest({ ...bound, args: present.args }) !== binding.digest) {
+    return { valid: false, reason: 'changed', field: 'arguments' }
+  }
+  if (present.principal !== bound.principal) return { valid: false, reason: 'changed', field: 'principal' }
+  if (!samePreconditions(present.preconditions, bound.preconditions)) {
+    return { valid: false, reason: 'changed', field: 'preconditions' }
+  }
+  if (present.capabilityToken !== bound.capabilityToken) {
+    return { valid: false, reason: 'changed', field: 'capability-token' }
+  }
+  if (present.policyVersion !== bound.policyVersion) {
+    return { valid: false, reason: 'changed', field: 'policy-version' }
+  }
+  if (now >= binding.expiresAtMs) {
+    return { valid: false, reason: 'expired', expiresAtMs: binding.expiresAtMs, now }
+  }
+  return { valid: true }
+}

@@ -9,6 +9,8 @@ import type { Branded } from '@deepseek-ai/dsh-brand'
 import type { Scoped } from '@deepseek-ai/dsh-scope'
 import type { Agent } from '@deepseek-ai/dsh-agent/types'
 import type { ToolCallId } from '@deepseek-ai/dsh-llm/brand'
+import type { PrincipalId } from '@deepseek-ai/dsh-principal/types'
+import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 
 /**
  * Pairs one `approval/asked` audit event with its `approval/decided`.
@@ -111,3 +113,71 @@ declare module '@deepseek-ai/cordis' {
     ): Promise<ApprovalOutcome>
   }
 }
+
+/**
+ * The principal an approval is bound to, or an explicit statement that none was
+ * attached (P2-06 acceptance[0]).
+ *
+ * `Agent.identity` is optional, so an agent may act with no principal attached.
+ * `'unattached'` is a VALUE a verifier compares, not a missing field: an
+ * approval given while nothing was attached must not be usable once a principal
+ * IS attached, because that is a different actor than the one the decider saw.
+ * The same argument `ExecutionWorldFact`'s `absent` won, and the reverse control
+ * is the one that matters — unattached is not a wildcard.
+ */
+export type ApprovalPrincipal = PrincipalId | 'unattached'
+
+/** Everything one approval is bound to, as the decider saw it (must[1]). */
+export interface ApprovalBindingInputs {
+  /** The action the decision is about. */
+  readonly action: string
+  /** The action's raw arguments, canonicalized by P2-03's form before digesting. */
+  readonly args: JsonValue
+  /** Who was acting when the decision was made. */
+  readonly principal: ApprovalPrincipal
+  /** The manifest's declared preconditions, in the order the manifest carries them. */
+  readonly preconditions: readonly string[]
+  /** Digest of the capability token presented, absent when the deployment issues none. */
+  readonly capabilityToken?: string
+  /** The policy set version the decision was made under, absent when no engine is mounted. */
+  readonly policyVersion?: string
+}
+
+/** One approval's binding: what it covers, its digest, and when it lapses. */
+export interface ApprovalBinding {
+  /** Everything the approval is bound to. */
+  readonly inputs: ApprovalBindingInputs
+  /** Digest over the whole bound tuple, for the audit record. */
+  readonly digest: ApprovalBindingDigest
+  /**
+   * When the approval stops being usable, as an absolute epoch millisecond.
+   *
+   * Compared against a `now` the CALLER supplies. Whose clock that is, and what
+   * happens to an execution already in flight when it lapses, are the Usage
+   * stage's: must[1] says re-verify BEFORE execution, so expiry is decided at
+   * the re-verification moment and this stage introduces no mid-execution
+   * revocation.
+   */
+  readonly expiresAtMs: number
+}
+
+/** Digest over an approval's whole bound tuple. */
+export type ApprovalBindingDigest = Branded<'ApprovalBindingDigest'>
+
+/**
+ * Which bound field moved, as a closed set (must[2]).
+ *
+ * must[2] says any field change invalidates the approval, so the refusal
+ * reasons ARE that enumeration: one per bound field. A boolean verifier would
+ * satisfy neither clause observably — an operator cannot act on `false`, and
+ * "the arguments changed" and "the policy version changed" call for different
+ * actions.
+ */
+export type ApprovalBindingField
+  = 'action' | 'arguments' | 'principal' | 'preconditions' | 'capability-token' | 'policy-version'
+
+/** Why a bound approval may not be used, or that it may. */
+export type ApprovalVerification
+  = { readonly valid: true }
+    | { readonly valid: false; readonly reason: 'changed'; readonly field: ApprovalBindingField }
+    | { readonly valid: false; readonly reason: 'expired'; readonly expiresAtMs: number; readonly now: number }
