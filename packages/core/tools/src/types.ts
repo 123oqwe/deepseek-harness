@@ -6,6 +6,31 @@
 
 import type { ToolCallId } from '@deepseek-ai/dsh-llm/brand'
 import type { ContentBlock } from '@deepseek-ai/dsh-llm/types'
+import type { WorldId, WorldProviderId } from '@deepseek-ai/dsh-execution-world/types'
+
+/**
+ * Which ExecutionWorld a tool dispatch ran inside (Epic P3-01 acceptance[0]).
+ *
+ * **Deliberately NOT part of the `ActionManifest`, and that omission is what
+ * makes acceptance[0] hold.** The clause requires one `ToolExecution` to move
+ * between a local, container or microVM provider without changing manifest or
+ * policy semantics. A manifest that named its world would produce a different
+ * canonical form — and therefore a different digest and a different approval —
+ * for the same action run in two places, so swapping providers would invalidate
+ * every binding made against it. The world is recorded BESIDE the dispatch, for
+ * the audit, where a reader can see where an action ran without the digest
+ * depending on it.
+ *
+ * Nothing attaches this yet: P3-01's Contract stage declares it, and the Usage
+ * stage is where a dispatch path supplies it. A reader must not take the type's
+ * presence as evidence that any tool call records a world today.
+ */
+export interface ToolWorldBinding {
+  /** The world the dispatch ran inside. */
+  readonly world: WorldId
+  /** The provider that minted it, so a swap is visible in the audit. */
+  readonly provider: WorldProviderId
+}
 
 /** Payload recorded when one nested PTC mode Tool dispatch starts. */
 export interface PtcDispatchStartEventData {

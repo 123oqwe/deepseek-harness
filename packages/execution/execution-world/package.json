@@ -1,0 +1,63 @@
+{
+  "name": "@deepseek-ai/dsh-execution-world",
+  "description": "ExecutionWorld capability seam vocabulary for Epic P3-01: what a world is across its nine confinement dimensions, the unforgeable handle that names one, the OCI-adapted lifecycle states, the typed outcome every stop settles to, and the fail-closed provider selection that never degrades a request it cannot satisfy",
+  "version": "0.1.2-alpha.4",
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./types": {
+        "types": "./lib/types/types.d.ts",
+        "default": "./lib/types/types.js"
+      },
+      "./lifecycle": {
+        "types": "./lib/types/lifecycle.d.ts",
+        "default": "./lib/types/lifecycle.js"
+      },
+      "./package.json": "./package.json"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "packages/execution/execution-world"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./lifecycle": {
+      "types": "./lib/types/lifecycle.d.ts",
+      "default": "./lib/types/lifecycle.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-brand": "workspace:^",
+    "@deepseek-ai/dsh-principal": "workspace:^"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-brand": "workspace:^",
+    "@deepseek-ai/dsh-principal": "workspace:^"
+  }
+}

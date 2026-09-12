@@ -195,6 +195,7 @@
     { "path": "./packages/identity/principal" },
     { "path": "./packages/policy/capability-token" },
     { "path": "./packages/policy/capability-token-file" },
+    { "path": "./packages/execution/execution-world" },
     { "path": "./packages/policy/policy-engine" },
     { "path": "./packages/policy/policy-engine-cedar" },
     { "path": "./packages/policy/policy-enforcement" },
