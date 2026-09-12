@@ -8,9 +8,23 @@
     "src"
   ],
   "references": [
-    { "path": "../../../vendor/cordis" },
-    { "path": "../../util/brand" },
-    { "path": "../../identity/principal" },
-    { "path": "../human-channel" }
+    {
+      "path": "../../../vendor/cordis"
+    },
+    {
+      "path": "../../../vendor/schemastery"
+    },
+    {
+      "path": "../../util/brand"
+    },
+    {
+      "path": "../../identity/principal"
+    },
+    {
+      "path": "../human-channel"
+    },
+    {
+      "path": "../../core/agent"
+    }
   ]
 }

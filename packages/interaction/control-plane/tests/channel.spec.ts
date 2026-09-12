@@ -21,9 +21,11 @@ import type {
   AnswerDelivery,
   ControlState,
   HumanAnswer,
+  StopRecord,
   WaitingPointId,
 } from '@deepseek-ai/dsh-human-channel/types'
 import { createHumanChannel } from '../src/channel.ts'
+import { publishControlState } from '../src/plugin.ts'
 import type { ControlRequest, HumanChannel } from '../src/channel.ts'
 
 const roots: string[] = []
@@ -39,6 +41,7 @@ const OPERATOR = brandString<PrincipalId>('operator-1')
 const POINT_A = brandString<WaitingPointId>('waiting-point-a')
 const POINT_B = brandString<WaitingPointId>('waiting-point-b')
 const request: ControlRequest = { requestedBy: OPERATOR, reason: 'human-requested', requestedAtMs: 1_700_000_000_000 }
+const record: StopRecord = { ...request, release: 'explicit-resume' }
 
 /** One channel over a real directory, recording what it broadcast and delivered. */
 function channel(dir: string): { channel: HumanChannel; broadcasts: ControlState[]; delivered: HumanAnswer[] } {
@@ -206,5 +209,23 @@ describe('P2-12 acceptance[1]: settlement is out of band and reaches one point o
     live.settle({ waitingPoint: POINT_A, text: 'yes' })
     expect(live.ask({ waitingPoint: POINT_A, prompt: 'a again?' }))
       .toEqual({ reason: 'waiting-point-vanished', waitingPoint: POINT_A })
+  })
+})
+
+describe('P2-12 must[1]/must[2]: the state reaches every agent, and an answer reaches its asker', () => {
+  it('puts the state on EVERY agent, because one that never receives it dispatches', () => {
+    // `stopGateFor` reads `agent.controlState`, so an agent the broadcast
+    // skipped answers `'no-channel'` and takes new work while a stop is in
+    // force. The loop is extracted from the service for exactly this reason: a
+    // side effect inside a mounted method is one nothing here could observe.
+    const agents = [{}, {}, {}] as unknown as Parameters<typeof publishControlState>[0]
+    publishControlState(agents, { stopped: true, record })
+    expect(agents.map(agent => agent.controlState?.stopped)).toEqual([true, true, true])
+  })
+
+  it('overwrites a stale reading rather than leaving the first one, so a release reaches an agent too', () => {
+    const agents = [{ controlState: { stopped: true, record } }] as unknown as Parameters<typeof publishControlState>[0]
+    publishControlState(agents, { stopped: false })
+    expect(agents[0]?.controlState).toEqual({ stopped: false })
   })
 })

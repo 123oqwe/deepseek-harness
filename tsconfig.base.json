@@ -278,6 +278,7 @@
       "@deepseek-ai/dsh-compaction-tool-result-pruner": ["./packages/compaction/compaction-tool-result-pruner/src"],
       "@deepseek-ai/dsh-control-plane": ["./packages/interaction/control-plane/src"],
       "@deepseek-ai/dsh-control-plane/channel": ["./packages/interaction/control-plane/src/channel.ts"],
+      "@deepseek-ai/dsh-control-plane/plugin": ["./packages/interaction/control-plane/src/plugin.ts"],
       "@deepseek-ai/dsh-control-priority": ["./packages/collaboration/control-priority/src"],
       "@deepseek-ai/dsh-cordis-host-runner/types": ["./packages/extensions/cordis-host-runner/src/types.ts"],
       "@deepseek-ai/dsh-credentials": ["./packages/credentials/credentials/src"],

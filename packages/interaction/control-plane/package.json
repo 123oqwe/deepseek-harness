@@ -13,6 +13,10 @@
       "./channel": {
         "types": "./lib/types/channel.d.ts",
         "default": "./lib/types/channel.js"
+      },
+      "./plugin": {
+        "types": "./lib/types/plugin.d.ts",
+        "default": "./lib/types/plugin.js"
       }
     }
   },
@@ -34,6 +38,10 @@
     "./channel": {
       "types": "./lib/types/channel.d.ts",
       "default": "./lib/types/channel.js"
+    },
+    "./plugin": {
+      "types": "./lib/types/plugin.d.ts",
+      "default": "./lib/types/plugin.js"
     }
   },
   "files": [
@@ -44,14 +52,18 @@
   "license": "MIT",
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-agent": "workspace:^",
     "@deepseek-ai/dsh-brand": "workspace:^",
     "@deepseek-ai/dsh-human-channel": "workspace:^",
-    "@deepseek-ai/dsh-principal": "workspace:^"
+    "@deepseek-ai/dsh-principal": "workspace:^",
+    "@deepseek-ai/schemastery": "workspace:^"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-agent": "workspace:^",
     "@deepseek-ai/dsh-brand": "workspace:^",
     "@deepseek-ai/dsh-human-channel": "workspace:^",
-    "@deepseek-ai/dsh-principal": "workspace:^"
+    "@deepseek-ai/dsh-principal": "workspace:^",
+    "@deepseek-ai/schemastery": "workspace:^"
   }
 }

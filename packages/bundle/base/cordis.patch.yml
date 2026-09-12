@@ -650,6 +650,25 @@
       config:
         storePath: !!js dshHomePath('runs', 'runs.json')
 
+    # P2-12's control plane: the emergency stop every worker consults before it
+    # takes new work, and the host-side registry of questions waiting for a
+    # human. Mounted HERE rather than only where a question can be answered,
+    # and the reason is acceptance[3]: a stop is a cross-surface invariant, so
+    # mounting it only on `web` would leave `acp`, `headless` and `sdk`
+    # permanently unable to see one, and "every surface agrees" would hold only
+    # because three of them never hear anything.
+    #
+    # The QUESTION half is narrower by nature and that asymmetry is deliberate:
+    # `web` is the only shipped profile with a question answerer
+    # (`ui-user-questions`), `acp` answers approvals only, and `sdk-minimal`
+    # does not layer this bundle at all. On a profile with no answerer `ask`
+    # fails closed through the `no-answerer` refusal `dsh-user-questions`
+    # already reports, which is a readable refusal rather than a hang.
+    - id: control-plane
+      name: '@deepseek-ai/dsh-control-plane/plugin'
+      config:
+        storePath: !!js dshHomePath('control')
+
     - id: spill-local
       name: '@deepseek-ai/dsh-spill-local'
 
