@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-12T16:16:42.748Z",
-  "inputDigest": "d3d16b3680391a489869a61f021a5a4faa954cec7a231252257aa9251cea7d3a",
+  "lastUpdatedUtc": "2026-09-12T16:30:04.521Z",
+  "inputDigest": "13312f99880c9f3285bebfd01639f8b35c0e82962147568d89e3723bc48ad8f6",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4274,10 +4274,40 @@
       },
       "supplements": {},
       "candidateSha": "d10920efa4aa1b8776cef2e3fe3bba28e84635d8",
-      "independentVerdict": "PENDING",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "NOT_RUN",
-      "acceptedEvidence": null
+      "status": "ACCEPTED",
+      "acceptedEvidence": {
+        "acceptedAtUtc": "2026-09-12T16:30:04.512Z",
+        "cells": {
+          "C": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34692381416",
+            "candidateSha": "2b54e4299144f7cb7587e924185c4d455aeaa648"
+          },
+          "P": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34692381416",
+            "candidateSha": "2b54e4299144f7cb7587e924185c4d455aeaa648"
+          },
+          "U": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34699917546",
+            "candidateSha": "d10920efa4aa1b8776cef2e3fe3bba28e84635d8"
+          },
+          "F": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34699917546",
+            "candidateSha": "d10920efa4aa1b8776cef2e3fe3bba28e84635d8"
+          }
+        },
+        "coverageClosure": {
+          "valid": true,
+          "missingIndices": [],
+          "unverifiedCitations": []
+        },
+        "delegateSignoff": {
+          "delegateSession": "first100-delegate-78",
+          "signedAtUtc": "2026-09-12T16:30:04.225Z",
+          "userConfirmationRef": null
+        }
+      }
     },
     "P3-02": {
       "id": "P3-02",
