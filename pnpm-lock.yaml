@@ -4478,6 +4478,9 @@ importers:
       '@deepseek-ai/dsh-control-priority':
         specifier: workspace:^
         version: link:../../collaboration/control-priority
+      '@deepseek-ai/dsh-human-channel':
+        specifier: workspace:^
+        version: link:../../interaction/human-channel
       '@deepseek-ai/dsh-intake-dedup':
         specifier: workspace:^
         version: link:../../collaboration/intake-dedup

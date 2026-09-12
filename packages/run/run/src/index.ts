@@ -1177,13 +1177,15 @@ export default class RunPlugin extends Service {
    * @returns the refusal, or `undefined` when the agent advanced. `lease-refused`
    *   names an agent this plugin declined to open a Run for, which is a
    *   different fact from `no-run`: a live store said no, rather than nothing
-   *   tracking ownership at all.
+   *   tracking ownership at all. `stopped` names an emergency stop in force
+   *   (P2-12 must[2]), which is about the whole harness rather than about this
+   *   agent's standing, and is therefore reported ahead of both.
    */
   advance(
     agent: Agent,
     to: AgentLifecycleState,
     reason: string,
-  ): TransitionDenialReason | 'fenced' | 'lease-refused' | 'no-run' | undefined {
+  ): TransitionDenialReason | 'fenced' | 'lease-refused' | 'no-run' | 'stopped' | undefined {
     return advanceLeasedAgent(agent, to, reason)
   }
 

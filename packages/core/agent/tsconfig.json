@@ -46,6 +46,9 @@
     },
     {
       "path": "../../collaboration/control-priority"
+    },
+    {
+      "path": "../../interaction/human-channel"
     }
   ]
 }

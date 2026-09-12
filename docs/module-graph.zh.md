@@ -565,6 +565,7 @@ flowchart TD
   pkg_settings --> pkg_session
   pkg_session_snapshot --> pkg_session
   pkg_agent --> pkg_control_priority
+  pkg_agent --> pkg_human_channel
   pkg_agent --> pkg_intake_dedup
   pkg_agent --> pkg_invariants
   pkg_agent --> pkg_lease_contract
@@ -1541,7 +1542,7 @@ flowchart TD
 | [`session-projection`](../packages/session/session-projection) | `session` | [`session`](../packages/core/session) |
 | [`settings`](../packages/settings/settings) | `settings` | [`brand`](../packages/util/brand), [`invariants`](../packages/runtime-diagnostics/invariants), [`session`](../packages/core/session) |
 | [`session-snapshot`](../packages/test-support/session-snapshot) | `test-support` | [`session`](../packages/core/session) |
-| [`agent`](../packages/core/agent) | `core` | [`control-priority`](../packages/collaboration/control-priority), [`intake-dedup`](../packages/collaboration/intake-dedup), [`invariants`](../packages/runtime-diagnostics/invariants), [`lease-contract`](../packages/collaboration/lease-contract), [`llm`](../packages/llm/llm), [`principal`](../packages/identity/principal), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection), [`system-prompt`](../packages/core/system-prompt), [`typert-protocol`](../packages/typert/protocol) |
+| [`agent`](../packages/core/agent) | `core` | [`control-priority`](../packages/collaboration/control-priority), [`human-channel`](../packages/interaction/human-channel), [`intake-dedup`](../packages/collaboration/intake-dedup), [`invariants`](../packages/runtime-diagnostics/invariants), [`lease-contract`](../packages/collaboration/lease-contract), [`llm`](../packages/llm/llm), [`principal`](../packages/identity/principal), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection), [`system-prompt`](../packages/core/system-prompt), [`typert-protocol`](../packages/typert/protocol) |
 | [`fs`](../packages/fs/fs) | `fs` | [`brand`](../packages/util/brand), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`sandbox`](../packages/sandbox/sandbox) |
 | [`spill-local`](../packages/spill/spill-local) | `spill` | [`spill`](../packages/spill/spill) |
 | [`message-feedback`](../packages/feedback/message-feedback) | `feedback` | [`brand`](../packages/util/brand), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence), [`storage-domain`](../packages/storage/storage-domain), [`typert-protocol`](../packages/typert/protocol) |

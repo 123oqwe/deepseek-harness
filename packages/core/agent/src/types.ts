@@ -8,6 +8,7 @@ import type { Branded } from '@deepseek-ai/dsh-brand'
 import type { UserMessage } from '@deepseek-ai/dsh-llm/types'
 import type { IdentityContext, RunId } from '@deepseek-ai/dsh-principal/types'
 import type { RunLease } from '@deepseek-ai/dsh-lease-contract'
+import type { ControlState } from '@deepseek-ai/dsh-human-channel/types'
 import type { AgentLifecycle } from './state-machine.ts'
 import type { OptionalSessionSeq, SessionId, SessionSeq } from '@deepseek-ai/dsh-session/types'
 import type { TypertContext, TypertLookup } from '@deepseek-ai/dsh-typert-protocol'
@@ -91,6 +92,30 @@ export interface Agent {
    * a second.
    */
   leaseRefused?: true
+  /**
+   * Whether an emergency stop forbids this agent taking new work (first100
+   * registry P2-12 must[2]).
+   *
+   * Writer contract: the human-interaction channel
+   * (`@deepseek-ai/dsh-control-plane/channel`) is the sole writer, setting it
+   * from the broadcast it makes on every control transition. The channel
+   * persists the stop BEFORE announcing it, so a value seen here is one that
+   * already survived to disk.
+   *
+   * **Absence and `{ stopped: false }` are different answers, and both admit
+   * work.** Absence means this composition mounts no channel — capability
+   * absence, which must dispatch normally. `{ stopped: false }` means a channel
+   * is mounted and says the run is live. Collapsing them would make "allowed
+   * because the run is live" and "allowed because nothing is watching"
+   * indistinguishable, which is the same mistake {@link Agent.leaseRefused}
+   * exists to undo one layer down: there, absence of a lifecycle hid a refusal.
+   *
+   * Read on every attempt rather than cached by a caller. The window must[2]
+   * closes is exactly the one where a worker decided it could proceed and then
+   * the stop arrived, so a gate consulting a value read earlier is a gate
+   * against the past.
+   */
+  controlState?: ControlState
   /**
    * The compiled TaskProfile this agent's first model step was planned from
    * (first100 registry P4-02 must[1], validation[2]), named by the digest of

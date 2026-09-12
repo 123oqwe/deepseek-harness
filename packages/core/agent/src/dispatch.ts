@@ -263,6 +263,29 @@ export function advanceAgentLifecycleFenced(
 
 
 /**
+ * Why this agent may or may not take new work, as far as the emergency stop is
+ * concerned (P2-12 must[2]).
+ *
+ * **Three answers, not two, and the third is the point.** `'stopped'` refuses.
+ * `'running'` admits because a mounted channel says the run is live.
+ * `'no-channel'` admits because this composition mounts none — capability
+ * absence, which must dispatch normally. Returning a boolean would collapse the
+ * last two, and then "allowed because the run is live" and "allowed because
+ * nothing is watching" would be one fact; {@link Agent.leaseRefused} exists
+ * because that exact collapse, one layer down, let a host keep dispatching
+ * against work another host held.
+ *
+ * Exported so the distinction is assertable. A gate whose admitting reason
+ * cannot be observed is a gate whose absence cannot be detected.
+ * @param agent - the agent proposing to take work.
+ * @returns which rule applies, and therefore why the answer is what it is.
+ */
+export function stopGateFor(agent: Agent): 'stopped' | 'running' | 'no-channel' {
+  if (agent.controlState === undefined) return 'no-channel'
+  return agent.controlState.stopped ? 'stopped' : 'running'
+}
+
+/**
  * Advance a live agent's lifecycle under the lease its Run holds (P4-07
  * must[1], §12.19-3).
  *
@@ -280,14 +303,21 @@ export function advanceAgentLifecycleFenced(
  * @param agent - the agent proposing the change; unchanged when refused.
  * @param to - the state proposed.
  * @param reason - why, recorded on the transition (must[1] rejects an empty one).
- * @returns the refusal, or `undefined` when the agent advanced.
+ * @returns the refusal — `'stopped'` when an emergency stop forbids new work — or `undefined` when the agent advanced.
  */
 export function advanceLeasedAgent(
   agent: Agent,
   to: AgentLifecycleState,
   reason: string,
-): TransitionDenialReason | 'fenced' | 'lease-refused' | 'no-run' | undefined {
+): TransitionDenialReason | 'fenced' | 'lease-refused' | 'no-run' | 'stopped' | undefined {
   const { lifecycle, runLease } = agent
+  // The stop is checked FIRST, before authority and before absence, because it
+  // is the only refusal that is about the whole harness rather than about this
+  // agent's standing: a stopped run must be told `stopped` even when its lease
+  // was also refused, or an operator reading the refusal goes looking for the
+  // host that took the work instead of for the stop they themselves requested
+  // (P2-12 must[2]).
+  if (stopGateFor(agent) === 'stopped') return 'stopped'
   // A refusal is reported BEFORE absence, because the two look identical on
   // the agent and mean opposite things: a live store said this agent may not
   // own its work item, while absence says nothing is tracking ownership at

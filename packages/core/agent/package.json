@@ -39,6 +39,7 @@
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/dsh-control-priority": "workspace:^",
+    "@deepseek-ai/dsh-human-channel": "workspace:^",
     "@deepseek-ai/dsh-intake-dedup": "workspace:^",
     "@deepseek-ai/dsh-invariants": "workspace:^",
     "@deepseek-ai/dsh-lease-contract": "workspace:^",
@@ -53,6 +54,7 @@
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/dsh-control-priority": "workspace:^",
+    "@deepseek-ai/dsh-human-channel": "workspace:^",
     "@deepseek-ai/dsh-intake-dedup": "workspace:^",
     "@deepseek-ai/dsh-invariants": "workspace:^",
     "@deepseek-ai/dsh-lease-contract": "workspace:^",
