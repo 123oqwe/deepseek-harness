@@ -13366,6 +13366,53 @@
         "failureSummary": "RED 2 of 2, and the four U.1 cases in the same file stayed GREEN -- which is the whole point: U.1 mounts `@deepseek-ai/dsh-run` from its own test-only `cordis.yml`, so disabling the SHIPPED row cannot reach it. Applied and reverted locally; `packages/bundle/base/cordis.patch.yml` restored byte-identically (sha256 81871896c8dfd4715712195e1666f5f42c454cb85359289994bfa953bc33a9f4 before and after, `git diff --stat` empty), and all 6 cases in the file returned passing."
       },
       "note": "BLOCKED-232 (e): U.1 boots a real `dsh-app-boot` Loader tree, but its `cordis.yml` mounts `@deepseek-ai/dsh-run` DIRECTLY, in a nine-row test-only composition. That closes \"a real Loader boot reaches the compile\" and leaves the shipped mount row -- `packages/bundle/base/cordis.patch.yml`'s `id: run` -- as evidence by READING rather than by observation. `spec/first100/exec/evidence-P4-02.md` §4.4c records that distinction in those words.\n\nThIS ENTRY OBSERVES THE SHIPPED ROW. The driver boots the `headless` profile through `bootProductionProfile`, whose bundle list comes from the real `PROFILE_TEMPLATES` and carries `@deepseek-ai/dsh-base`. The test overlay disables the typert rows and the headless runner (so no task runs itself), points the configured root agent at a keyless adapter, and inserts that adapter. It mounts NO Run Service: if the base row stops shipping, these cases go red.\n\nA DISTINCT ARGV RATHER THAN THE SAME SPEC FILE. U.1's argv names the whole file. Sharing it would make one run's report serve both supplements, and `checkObservationDistinctness` treats two cells observed from one report under identical frozen commands as a conflict. The `-t` filter gives this supplement its own observation.\n\nTHE MOCK IS THE MODEL PROVIDER AND NOTHING ELSE, on the same terms as U.1."
+    },
+    {
+      "epic": "P2-06",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/interaction/user-approval/tests/binding.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-06 must[1]: an approval is bound to the tuple the decider decided about admits the SAME tuple, which is the control every refusal below is measured against",
+        "P2-06 must[1]: an approval is bound to the tuple the decider decided about digests the whole tuple, so a change in ANY bound field moves the digest",
+        "P2-06 must[2]/acceptance[0]: any field change invalidates, and the refusal names WHICH refuses substituted arguments — the clause's first sentence",
+        "P2-06 must[2]/acceptance[0]: any field change invalidates, and the refusal names WHICH refuses a switched account, comparing the RECORDED principal and not the live one",
+        "P2-06 must[2]/acceptance[0]: any field change invalidates, and the refusal names WHICH refuses changed preconditions, which is how a file inode or object version reaches this check",
+        "P2-06 must[2]/acceptance[0]: any field change invalidates, and the refusal names WHICH refuses a different capability token and a different policy version separately",
+        "P2-06 must[2]/acceptance[0]: any field change invalidates, and the refusal names WHICH refuses a different action, so one approval cannot be spent on another capability",
+        "P2-06 must[2]/acceptance[0]: any field change invalidates, and the refusal names WHICH names ONE field rather than a set, because an operator acts on one cause",
+        "P2-06 acceptance[0]: `unattached` is a value, not a wildcard binds an agent with no identity attached as an explicit value",
+        "P2-06 acceptance[0]: `unattached` is a value, not a wildcard refuses an approval taken while UNATTACHED once a principal IS attached — the reverse control",
+        "P2-06 acceptance[0]: `unattached` is a value, not a wildcard refuses the other direction too, so detaching is not a way to spend an approval",
+        "P2-06 must[0]: the validity period is compared against a clock the CALLER supplies admits before the expiry and refuses at it, naming both instants",
+        "P2-06 must[0]: the validity period is compared against a clock the CALLER supplies reports a SUBSTITUTION rather than expiry when both are true, because that is the fact to act on",
+        "P2-06 acceptance[1]: display may be redacted; the digest covers the real value binds two arguments that would DISPLAY identically to two different digests",
+        "P2-06 acceptance[1]: display may be redacted; the digest covers the real value refuses the second value against the first's binding, which is the same fact through the verifier",
+        "P2-06 acceptance[1]: display may be redacted; the digest covers the real value digests a redacted PLACEHOLDER differently from the value it stands for"
+      ],
+      "files": [
+        "packages/interaction/user-approval/src/canonical.ts",
+        "packages/interaction/user-approval/src/types.ts",
+        "packages/interaction/user-approval/src/index.ts",
+        "packages/interaction/user-approval/tests/binding.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-12T15:20:00.000Z",
+      "dryRunProof": {
+        "treeSha": "fb0ec2ea33bd7fff236b2d73dfcb100a72baff37",
+        "testsDiscovered": 16
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations, one per way this contract can be built wrong, each named by the C preFlight before it was written. (M1) In `verifyApprovalBinding`, compare the PRESENT arguments against themselves (`approvalBindingDigest(present) !== approvalBindingDigest(present)`) instead of against the recorded digest -- the \"re-hash what you were handed\" shape. (M2) Compare `present.principal` against itself instead of against the bound one -- the \"resolve the principal from the live Agent\" shape. (M3) In `canonical.ts`, digest a REDACTED projection of the arguments (every string replaced by the display placeholder) instead of the real canonical value.",
+        "failureSummary": "(M1) 3 of 16 failed, all and only the arguments cases: `refuses substituted arguments`, `refuses the second value against the first's binding`, and `reports a SUBSTITUTION rather than expiry when both are true`. (M2) 3 of 16 failed, all and only the principal cases, INCLUDING both reverse controls that keep `unattached` from being a wildcard: `refuses an approval taken while UNATTACHED once a principal IS attached` and `refuses the other direction too`. (M3) 5 of 16 failed, including the two acceptance[1] cases written for exactly this inversion: `binds two arguments that would DISPLAY identically to two different digests` and `digests a redacted PLACEHOLDER differently from the value it stands for`. All three reverted; 56 passed (56) across the package."
+      },
+      "note": "The Contract stage decides what an approval is BOUND to and what invalidates it; the six display fields reaching a decider are the Usage stage's, with the two real answerers admitted by the delegate's ruling on `preflight-P2-06.md`. No canonicalizer is written or re-proved here: `canonicalizeArguments` comes from P2-03 and key ordering, number spelling and NFC/NFD are that epic's frozen cases. Two limits declared at freeze time rather than at sign-off: `unattached` is a VALUE (an approval taken while no principal was attached is refused once one is, and the reverse), and validation[1]'s batch-mutation test has NO production subject -- `approval.request` takes one request, five production callers each with a single subject, and `batch` appears nowhere in the package, so that test would have to construct the batch it tests."
     }
   ]
 }

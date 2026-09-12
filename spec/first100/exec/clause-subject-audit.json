@@ -1452,6 +1452,72 @@
         "note": "Recorded before the first line of P2-05 code. The tree has no `packages/policy/policy-engine` directory, no `ctx.policy`, and no installed Cedar; every claim above that is checkable today was checked today, and the two that are not are marked `differs` with their reason rather than carried as verified.\n\nRELATIONSHIP TO THE SS3.1 SLICE: SLICE-3.1-cedar recorded the same adoption as an infrastructure slice with `ledgerRow: null` and `realized: null`. Nothing has landed since, so this entry does not supersede it -- it is P2-05's own record of the same decision at the point where the epic actually consumes it, and the slice's deliverables (the seam, the provider, the conformance cases, the fail-closed loader) are P2-05's C and P stages under the registry's own file list.\n\nBLOCKED-011 (the vendored Cordis Fiber fix) is named on the sheet as a hard prerequisite for wiring a real enforcement point. It is already applied on this tree (vendor/README.md modification 20, the Fiber store pin behind `pinTrustKernel`), so the prerequisite is met rather than pending -- but acceptance[2] asks for more than that pin gives, because a service can be lost by unmount as well as forged by mutation."
       }
     },
+    "P2-06": {
+      "makeVsUse": {
+        "ledgerRow": "P2-06",
+        "card": {
+          "heading": "#### P2-06",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [],
+        "deviations": [
+          {
+            "name": "erdtman/canonicalize",
+            "npm": "canonicalize",
+            "reason": "Not adopted BY THIS EPIC, and the reason is that P2-03 already did — as a differential oracle in devDependencies, with a frozen case asserting its own implementation succeeds at depth 5000 where the reference throws. The card reads `Digest = JCS(manifest) from P2-03`, and the delegate's ruling on this epic's preFlight says the same thing from the other side: reuse P2-03's canonical form, write no second canonicalizer. So this epic imports `canonicalizeArguments` from `@deepseek-ai/dsh-action-manifest` and takes a digest over the bound TUPLE; adopting the package again would be a second oracle for a form that already has one."
+          },
+          {
+            "name": "@agentclientprotocol/sdk",
+            "npm": "@agentclientprotocol/sdk",
+            "reason": "Not adopted at the Contract stage, and the split is by stage rather than by rejection. The card names `RequestPermissionRequest {sessionId, toolCall, options[]}` as the WIRE projection, and this epic owns that standard — but a wire projection is what a decider sees, which the delegate's ruling placed in the Usage stage with the two real answerers (`acp/src/index.ts:155`, `ui-approval/.../ApprovalPanel.tsx:28`). The Contract stage decides what an approval is BOUND to and what invalidates it; a C-stage case asserting an ACP payload would prove the U stage's clause early and against a fake surface. Recorded as a deviation rather than PENDING_ADOPTION because nothing here is deferred: this stage genuinely does not take it."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [
+          {
+            "standard": "ACP RequestPermissionRequest.toolCall as the wire projection",
+            "evidenceTitleSubstring": "any field change invalidates",
+            "reason": "Owned, and the Contract stage fixes the half the wire projection depends on: WHAT an approval is bound to. The projection is a view of a decision, and a view of a decision nothing binds is the failure this epic exists to close — so C defines the binding and its closed per-field refusal vocabulary, and the U stage projects it onto the ACP payload the standard names. Ownership is recorded here rather than at U so the vocabulary has one home before two surfaces render it."
+          }
+        ],
+        "standardsImported": [],
+        "residual": "The binding itself: what an approval covers (action, canonical arguments, acting principal, declared preconditions, capability-token digest, policy version), the digest over that tuple, an expiry compared against a caller-supplied clock, and a verifier whose refusal names WHICH bound field moved.",
+        "probes": [
+          {
+            "claim": "an ApprovalRequest can reach the acting Principal today",
+            "how": "read `ApprovalRequestEvent`'s fields and follow `agent` into `@deepseek-ai/dsh-agent`",
+            "result": "POSITIVE, with a qualification that changed the design",
+            "evidence": "`ApprovalRequestEvent` carries `agent: Agent` (`user-approval/src/types.ts:66-95`) and `Agent.identity?: IdentityContext` (`core/agent/src/types.ts:28`) carries the principal and its delegation chain. So it reaches one — transitively, through an OPTIONAL field on another package's type. That is why the binding CAPTURES the principal at ask time instead of dereferencing at verify time: an `Agent` re-read at execution reports whoever is acting then, which is the substitution acceptance[0] forbids."
+          },
+          {
+            "claim": "a batch approval path exists for validation[1]'s batch-mutation test",
+            "how": "enumerate every production caller of `approval.request` and grep `user-approval`'s sources for `batch`",
+            "result": "NEGATIVE",
+            "evidence": "Five callers, each with a single subject: `core/tools/src/index.ts:2246`, `core/tools/src/external-effect.ts:418`, `context/agent-instructions/src/index.ts:88`, `command-workspace-trust/src/index.ts:67`, `sandbox/src/escalation.ts:173`. `batch` appears nowhere in the package. So the ACP `callId === undefined -> next()` guard cannot interact with a batch that does not exist, and the batch-mutation test is declared at freeze time as having no production subject rather than constructing the batch it would test."
+          }
+        ],
+        "gapCheck": [
+          {
+            "community": "dsh-permission-rules (102 stars)",
+            "gap": "rules decide whether to ASK; nothing binds the answer to the arguments that were shown, so a decision survives a substitution of what it decided about",
+            "clause": "acceptance[0]"
+          },
+          {
+            "community": "dsh-auto-review (129 stars)",
+            "gap": "review of a proposed change, with no re-validation at execution time — the digest, token and policy version are never compared again before the action runs",
+            "clause": "must[1]"
+          },
+          {
+            "community": "dsh-auto-mode (146 stars)",
+            "gap": "a mode that suppresses asking; it has no approval record at all, so acceptance[2]'s one-to-one reference between a decision and an action has nothing to reference",
+            "clause": "acceptance[2]"
+          }
+        ],
+        "recordedBeforeFirstLine": false
+      }
+    },
     "P2-12": {
       "makeVsUse": {
         "ledgerRow": "P2-12",

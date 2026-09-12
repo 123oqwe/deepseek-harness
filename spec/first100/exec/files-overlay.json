@@ -1501,6 +1501,14 @@
       ]
     },
     {
+      "epic": "P2-06",
+      "path": "packages/interaction/user-approval/tests/binding.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C"
+      ]
+    },
+    {
       "epic": "P2-12",
       "path": "packages/bundle/base/cordis.patch.yml",
       "kind": "manifest",

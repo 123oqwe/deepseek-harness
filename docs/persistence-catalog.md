@@ -281,7 +281,7 @@ Source: [`packages/preset/agent-presets/src/session.ts:28`](../packages/preset/a
 
 Types: [ToolCallId](subsystems/core.md)
 
-Source: [`packages/interaction/user-approval/src/types.ts:46`](../packages/interaction/user-approval/src/types.ts)
+Source: [`packages/interaction/user-approval/src/types.ts:48`](../packages/interaction/user-approval/src/types.ts)
 
 <a id="approvaldecided--log-only"></a>
 
@@ -299,7 +299,7 @@ Source: [`packages/interaction/user-approval/src/types.ts:46`](../packages/inter
 }
 ```
 
-Source: [`packages/interaction/user-approval/src/types.ts:58`](../packages/interaction/user-approval/src/types.ts)
+Source: [`packages/interaction/user-approval/src/types.ts:60`](../packages/interaction/user-approval/src/types.ts)
 
 <a id="approvalpolicy--log-only"></a>
 
