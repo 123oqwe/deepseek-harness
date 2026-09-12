@@ -9,10 +9,10 @@
 import { Context, Service } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import type {
-  JobDoneListener, JobId, JobRead, JobSnapshot, JobStart, JobsChangedListener,
+  JobDoneListener, JobId, JobRead, JobSnapshot, JobStart, JobStatus, JobsChangedListener,
 } from './types.ts'
 
-export { JobId, isTerminalJobStatus } from './types.ts'
+export { JobId } from './types.ts'
 export type {
   AbandonedJobSurface,
   JobDoneListener,
@@ -26,6 +26,22 @@ export type {
   JobStatus,
   JobsChangedListener,
 } from './types.ts'
+
+/**
+ * Whether a status is one a job never leaves.
+ *
+ * It lives here rather than beside {@link JobStatus} in `types.ts` for two
+ * repo rules at once: `src/types.ts` carries types only, and the `./invariant`
+ * companion is a separate published entry that must share no runtime with this
+ * one — a module both import becomes a third emitted chunk the package does not
+ * publish, which is exactly what `publint` and `verify-built-package-invariants`
+ * caught.
+ * @param status - the status to classify.
+ * @returns `true` for `completed`, `killed` and `failed`.
+ */
+export function isTerminalJobStatus(status: JobStatus): boolean {
+  return status === 'completed' || status === 'killed' || status === 'failed'
+}
 
 declare module '@deepseek-ai/cordis' {
   interface Context {

@@ -17,19 +17,6 @@ export { JobId } from './brand.ts'
 export type JobStatus = 'running' | 'stopping' | 'completed' | 'killed' | 'failed'
 
 /**
- * Whether a status is one a job never leaves.
- *
- * Declared beside {@link JobStatus} because every consumer that branches on
- * settlement needs the same three values, and a second list of them drifts
- * from the union it is a subset of.
- * @param status - the status to classify.
- * @returns `true` for `completed`, `killed` and `failed`.
- */
-export function isTerminalJobStatus(status: JobStatus): boolean {
-  return status === 'completed' || status === 'killed' || status === 'failed'
-}
-
-/**
  * Producer-defined job kinds. Plugins extend this map by declaration merging;
  * the registry treats every value as an opaque id namespace.
  */

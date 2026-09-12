@@ -3,10 +3,15 @@
 import type { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import type { InvariantFailure, InvariantInstaller } from '@deepseek-ai/dsh-invariants'
-import { isTerminalJobStatus } from './types.ts'
 import type { JobSnapshot } from './types.ts'
 
 const PACKAGE_NAME = '@deepseek-ai/dsh-jobs'
+// Spelled out rather than imported from the package root's
+// `isTerminalJobStatus`. This companion is a separate published entry, and a
+// runtime module both entries import is emitted as a third chunk that
+// `files[]` does not publish — measured, as a `publint` and
+// `verify-built-package-invariants` failure.
+const TERMINAL_STATUSES = new Set(['completed', 'killed', 'failed'])
 
 /** Cordis companion plugin name. */
 export const name = 'jobs-invariant'
@@ -27,7 +32,7 @@ function validateSnapshot(snapshot: JobSnapshot, owner: Agent | undefined, fail:
     fail(`job ${JSON.stringify(id)} startedAt must be a non-negative epoch integer`)
   }
 
-  const terminal = isTerminalJobStatus(snapshot.status)
+  const terminal = TERMINAL_STATUSES.has(snapshot.status)
   if (terminal !== (snapshot.finishedAt !== undefined)) {
     fail(`job ${JSON.stringify(id)} finishedAt must be present exactly for a terminal status`)
   }
