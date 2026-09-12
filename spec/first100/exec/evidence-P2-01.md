@@ -80,3 +80,57 @@ P2-01.C's frozen set carries `registers the package ownership with an empty inst
 The delegate ruled the C entry be superseded to drop that title, with the C cell's green withdrawn in the same commit, and re-observed on the next candidate's cloud run. Lane B carries it.
 
 What a re-sign has to take from this: the C stage's evidence is being restated, not re-argued. No claim this epic makes about identity, delegation or the attached host user rests on that title — it is a packaging assertion that outlived the package it described. The re-sign should read the C stage against the superseding entry, not against the set recorded when the cell was first greened.
+
+## Re-sign material (4.4a–d)
+
+Written 2026-09-12 on the corpus branch, after U2 shipped the host-user attachment that [BLOCKED-200](BLOCKED-QUEUE.md#blocked-200) revoked this epic for. Documentation only: nothing here changes product code, and the one open question below is reported rather than fixed.
+
+### 4.4a — where the production reach actually is
+
+The attachment U2 added has four call sites, and none is a test:
+
+| site | what it attaches |
+| --- | --- |
+| `packages/boot/app-boot/src/index.ts:807` | provides `HOST_USER_IDENTITY_KEY` as a FACTORY for every profile launched through `dsh`, so agents a profile creates from its own `agents:` rows get a host user |
+| `packages/bundle/headless/src/index.ts:282` and `:303` | the headless profile's two programmatic root creations pass an identity directly |
+| `packages/api/session-controller/src/commands.ts:263` | the Web app's session controller, for sessions it creates |
+| `packages/workspace/command-workspace-trust/src/launch-grant.ts:104` | `--trust-workspace`, which needs a host principal to authorize a grant |
+
+The factory is consumed at `packages/core/agent-loop/src/index.ts:484`, where a configured row that names its own identity keeps it and the launcher's host user is the default rather than an override. `bundle/base` mounts no producer of its own; the identity reaches a shipped boot through the launcher, which is why the census in BLOCKED-200 found none before U2.
+
+### 4.4b — cell observations
+
+| cell | status | candidate SHA | run |
+| --- | --- | --- | --- |
+| C | **NOT_RUN** | — | revoked: `P2-01.C.1` supersedes the 2026-09-02 freeze and drops `registers the package ownership with an empty installer`, a case `verify-package-invariants` rejects by name. Awaiting re-observation on the candidate carrying the supersede; lane B owns it. |
+| P | GREEN | `87585733cf` | 33596937698 |
+| U | GREEN | `bf24fa0a33` | 33637453508 |
+| F | GREEN | `b3186e6db9` | 34088363628 |
+
+**These are not candidate 3′′′ observations, and this section does not claim they are.** 3′′′ (`6ff9674a94`) was dispatched on 2026-09-12 and its exact-SHA run had not reported when this was written; the three green cells carry the SHAs and runs that actually earned them. A re-sign that wants 3′′′ readings has to wait for that run — the ledger is the authority, and it currently records the rows above.
+
+### 4.4c — the hardcoded tenant, measured
+
+The open question above asked whether `hostUserIdentity`'s fixed `'local'` is a defect or a single-tenant design. Measured, it is **a defect, and a latent one**. The two halves of the question and what each returns:
+
+**Is the tenant configurable anywhere a deployment can reach?** Yes, in exactly one production consumer. `memory-context`'s `tenantId` is a REQUIRED config field with no default (`packages/context/memory-context/src/index.ts:54`, `tenantId: z.string().required()`), and it throws when an attached principal names a different tenant (`:83`). A deployment enabling that row must name a tenant, and the only value that will not throw on a shipped profile is `local`.
+
+**Can the producer name any other?** No. `HostUserIdOptions` carries `env` and `randomUUID` and nothing else (`packages/identity/host-user-id/src/index.ts:45-50`); the tenant is the module-level constant `LOCAL_TENANT = 'local'` (`:123`).
+
+So the contract is asymmetric: the consumer's configuration surface admits any tenant, the producer can mint only one. That is not "single-tenant by design" — a design would not offer a required, unconstrained tenant field on the consumer.
+
+**Why latent, and what makes it fire.** `memory-context` ships **disabled** (`packages/bundle/base/cordis.patch.yml:423-425`), and no shipped bundle configures a tenant at all — a `grep` for `tenant` across every `packages/bundle/*/cordis*.yml` returns nothing. So the throw cannot fire on any profile as shipped. It fires the moment a deployment enables that row and names a tenant other than `local`, which the required field invites it to do.
+
+A census of production `tenantId` readers finds `memory-context` is the only one that gates on a mismatch against an attached principal. `agent-loop/src/runtime-context.ts:158` also throws `TenantMismatchError`, but on a different axis — a supplied principal disagreeing with what a resumed session recorded — which no deployment configures.
+
+**Not fixed here.** Whether the producer gains a tenant option or the consumer's field is constrained to the one value a shipped boot can produce is a change to this epic's public surface, so it is the delegate's to number and rule, not a fix to make inside a re-sign.
+
+### 4.4d — no clause has zero production reach
+
+| clause | production reach |
+| --- | --- |
+| [0] any action traces to root user/tenant and the full delegation chain | attachment at the four 4.4a sites; the chain is extended and logged at `packages/core/agent-loop/src/agent.ts:129-132`, and read by both dispatch paths through `manifestAttribution(attachedIdentity(session), session.id)` |
+| [1] cross-tenant id mixing is rejected at both the type layer and runtime policy | type layer: `TenantMismatchError` at `packages/identity/principal/src/types.ts:237-248`, thrown by `extendChain` (`packages/identity/principal/src/chain.ts`); runtime policy: the same error thrown from `packages/core/agent-loop/src/runtime-context.ts:158` on a resupply whose tenant disagrees with the recorded chain, and from `packages/context/memory-context/src/index.ts:83` on a consumer whose configured tenant disagrees with the attached principal |
+| [2] the anonymous dev mode has its own restricted principal, not an administrator's | `createAnonymousDevPrincipal` (`packages/identity/principal/src/chain.ts:179-181`) mints a frozen `kind: 'anonymous-dev'` principal, and `packages/action/action-manifest/src/identity.ts:51-52` is where a session with nothing attached gets one, keyed to the session rather than to a host user |
+
+Every clause reaches shipped code. Clause [0]'s reach is what U2 added and BLOCKED-200 found missing; clauses [1] and [2] were already reachable and are unaffected by the withdrawal.
