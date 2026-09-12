@@ -61,6 +61,11 @@ export const SERVICE_PAGE: Record<string, string> = {
   runs: 'core.md',
   leaseStore: 'core.md',
   actionLedger: 'core.md',
+  // P2-12's control plane gates dispatch and holds the questions a turn waits
+  // on, so it documents beside the other orchestration services first100 added
+  // (`runs`, `leaseStore`, `actionLedger`) rather than on the user-questions
+  // page, which owns the ASKING surface and not the stop.
+  controlPlane: 'core.md',
   capabilityTokens: 'core.md',
   circuitBreaker: 'reliability.md',
   runRetryUsage: 'reliability.md',
@@ -691,6 +696,14 @@ export const TYPE_LINK_EXEMPTIONS: Readonly<Record<string, string>> = {
   WorkflowRunId: 'workflow run identity is owned by packages/workflow/workflow/README.md',
   LedgerEpoch: 'idempotency-ledger generation is owned by packages/action/action-ledger/README.md',
   LedgerGeneration: 'idempotency-ledger generation-or-absence is owned by packages/action/action-ledger/README.md',
+  ControlState: 'emergency-stop control state is owned by packages/interaction/human-channel/README.md',
+  ControlVerb: 'the five control verbs are owned by packages/interaction/human-channel/README.md',
+  ControlRequest: 'who requested a control change and why is owned by packages/interaction/control-plane/README.md',
+  ControlDecision: 'control transition outcome is owned by packages/interaction/control-plane/README.md',
+  HumanQuestion: 'one question and the waiting point its answer must reach is owned by packages/interaction/human-channel/README.md',
+  HumanAnswer: 'a human answer, which carries no authority, is owned by packages/interaction/human-channel/README.md',
+  HumanChannelRefusal: 'the channel refusal reasons are owned by packages/interaction/human-channel/README.md',
+  WaitingPointId: 'the waiting point an answer may be routed by is owned by packages/interaction/human-channel/README.md',
   LedgerEntry: 'idempotency-ledger entry is owned by packages/action/action-ledger/README.md',
   ReceiptDigest: 'external-receipt digest is owned by packages/action/action-ledger/README.md',
   ReserveRequest: 'ledger reservation request is owned by packages/action/action-ledger/README.md',

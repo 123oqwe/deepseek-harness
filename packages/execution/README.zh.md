@@ -1,5 +1,5 @@
 ---
-description: "execution 分组导览：ExecutionWorld 能力 seam —— 一个动作将在何处运行、在什么约束之下 —— 与"这个动作是什么"严格分开。"
+description: "execution 分组导览：ExecutionWorld 能力 seam —— 一个动作将在何处运行、在什么约束之下 —— 与「这个动作是什么」严格分开。"
 kind: "package-group"
 ---
 

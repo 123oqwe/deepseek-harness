@@ -4908,6 +4908,9 @@ importers:
       '@deepseek-ai/dsh-principal':
         specifier: workspace:^
         version: link:../../identity/principal
+      '@deepseek-ai/dsh-sandbox':
+        specifier: workspace:^
+        version: link:../../sandbox/sandbox
 
   packages/experimental/agent-team:
     dependencies:

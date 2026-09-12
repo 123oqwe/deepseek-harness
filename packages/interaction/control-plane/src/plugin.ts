@@ -43,6 +43,7 @@ import type {} from '@deepseek-ai/dsh-agent'
 // mechanism has bitten in this epic, which is why both imports carry a comment.
 import type {} from '@deepseek-ai/dsh-user-questions'
 import type { Agent } from '@deepseek-ai/dsh-agent/types'
+import type { ControlDecision } from './index.ts'
 import { createHumanChannel } from './channel.ts'
 import type { ControlRequest, HumanChannel } from './channel.ts'
 
@@ -182,7 +183,7 @@ export class ControlPlaneService extends Service<Config> {
    * @param request - who is asking and why, recorded on the stop.
    * @returns the transition the channel decided.
    */
-  control(verb: ControlVerb, request: ControlRequest): ReturnType<HumanChannel['control']> {
+  control(verb: ControlVerb, request: ControlRequest): ControlDecision {
     return this.live.control(verb, request)
   }
 

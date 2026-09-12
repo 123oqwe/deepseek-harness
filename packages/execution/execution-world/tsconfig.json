@@ -8,8 +8,17 @@
     "src"
   ],
   "references": [
-    { "path": "../../../vendor/cordis" },
-    { "path": "../../util/brand" },
-    { "path": "../../identity/principal" }
+    {
+      "path": "../../../vendor/cordis"
+    },
+    {
+      "path": "../../util/brand"
+    },
+    {
+      "path": "../../identity/principal"
+    },
+    {
+      "path": "../../sandbox/sandbox"
+    }
   ]
 }

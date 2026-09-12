@@ -764,6 +764,43 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'controlPlane',
+    summary: '`ctx.controlPlane`: the stop every worker consults, and the registry of questions waiting for a human.',
+    description: '`ctx.controlPlane`: the stop every worker consults, and the registry of questions waiting for a human.\n\n**Mounted in `dsh-base`, which is a decision about acceptance[3].** A stop is a cross-surface invariant: mounting it only where a question can be answered would leave four of the five shipped profiles permanently unable to see a stop, and "every surface agrees" would be true only because four of them never hear anything. The question half is narrower by nature — `web` is the only profile with a question answerer — and that asymmetry is recorded as a limitation rather than hidden by mounting less.',
+    methods: [
+      {
+        signature: 'state(): ControlState',
+        description: 'The control state as it stands.',
+        parameters: [],
+        returns: 'whether a stop is in force, and the record when one is.',
+      },
+      {
+        signature: 'control(verb: ControlVerb, request: ControlRequest): ControlDecision',
+        description: 'Apply one control verb.',
+        parameters: [{ name: 'verb', description: 'the command.' }, { name: 'request', description: 'who is asking and why, recorded on the stop.' }],
+        returns: 'the transition the channel decided.',
+      },
+      {
+        signature: 'ask(question: HumanQuestion, agent: Agent): { readonly refused: HumanChannelRefusal } | { readonly answer: Promise<HumanAnswer> }',
+        description: 'Ask one question and wait for the human\'s answer at the point that asked.\n\n**The asker\'s continuation is registered here, not discovered later.** An answer arrives out of band — from a surface, on its own call stack — so the only thing that can reunite it with the caller is the waiting point, and the only moment that continuation exists is this one. A first draft of this method registered the id and returned, leaving delivery to a function that took the answer and ignored it: that is BLOCKED-215 rebuilt, and the unused parameter was the whole tell.\n\nA refusal and an answer are separate fields rather than a rejected promise, because a refusal is a decision this service made and a caller must branch on it; only the waiting is asynchronous.',
+        parameters: [{ name: 'question', description: 'the question, naming the waiting point its answer must reach.' }, { name: 'agent', description: 'the asking agent, which the user-questions seam checks is the exact live caller.' }],
+        returns: 'the refusal, or the promise the matching settlement resolves.',
+      },
+      {
+        signature: 'settle(answer: HumanAnswer): HumanChannelRefusal | undefined',
+        description: 'Deliver one answer, out of band from the asking call stack.',
+        parameters: [{ name: 'answer', description: 'the answer, carrying the waiting point it belongs to.' }],
+        returns: 'the refusal, or undefined on delivery.',
+      },
+      {
+        signature: 'pending(): readonly WaitingPointId[]',
+        description: 'The waiting points still unanswered.',
+        parameters: [],
+        returns: 'the pending waiting points, for a surface that renders them.',
+      },
+    ],
+  },
+  {
     key: 'credentials',
     summary: 'Abstract credential service over two key spaces that answer two questions.',
     description: 'Abstract credential service over two key spaces that answer two questions.\n\nA CredentialRef answers "what is behind this environment-variable name", layered over the process environment, the provider-managed store, and `.env` files. One seam-wide rule binds that half: an empty stored value is absent everywhere — `resolve` skips it, `describe` reports it unconfigured — so a blank never masquerades as a configured secret.\n\nA CredentialKey answers "what credential does this plugin hold for this id". Nothing can layer here — an authorization grant has no environment to be read from — so presence of the record is the whole fact, and modifyRecord is the only write path because a correct write depends on the current value (a token refresh is read-decide-replace under one lock).',
@@ -1630,10 +1667,10 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: '`\'reclaimed\'` when this host took the item and recorded the state, `\'held\'` when the item is still validly owned, `\'no-run\'` when the agent has no lifecycle to record against.',
       },
       {
-        signature: 'advance( agent: Agent, to: AgentLifecycleState, reason: string, ): TransitionDenialReason | \'fenced\' | \'lease-refused\' | \'no-run\' | undefined',
+        signature: 'advance( agent: Agent, to: AgentLifecycleState, reason: string, ): TransitionDenialReason | \'fenced\' | \'lease-refused\' | \'no-run\' | \'stopped\' | undefined',
         description: 'Advance one agent\'s lifecycle under the Run\'s lease (P4-05 must[1], P4-07 must[1]).\n\nThe production caller `advanceAgentLifecycleFenced` did not have. The token and the current lease both come from the lease this plugin took, so a caller cannot present authority it was not granted, and an agent whose Run was reclaimed by another host is refused here rather than allowed to write on a stale epoch.',
         parameters: [{ name: 'agent', description: 'the agent whose lifecycle is proposed to move.' }, { name: 'to', description: 'the state proposed.' }, { name: 'reason', description: 'why, recorded on the transition (must[1] requires it non-empty).' }],
-        returns: 'the refusal, or `undefined` when the agent advanced. `lease-refused` names an agent this plugin declined to open a Run for, which is a different fact from `no-run`: a live store said no, rather than nothing tracking ownership at all.',
+        returns: 'the refusal, or `undefined` when the agent advanced. `lease-refused` names an agent this plugin declined to open a Run for, which is a different fact from `no-run`: a live store said no, rather than nothing tracking ownership at all. `stopped` names an emergency stop in force (P2-12 must[2]), which is about the whole harness rather than about this agent\'s standing, and is therefore reported ahead of both.',
       },
     ],
   },
@@ -3965,7 +4002,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'Agent',
-    declaration: 'export interface Agent {\n    readonly id: SessionId;\n    readonly identity?: IdentityContext;\n    runId?: RunId;\n    lifecycle?: AgentLifecycle;\n    runLease?: RunLease;\n    leaseRefused?: true;\n    taskProfile?: Branded<\'TaskProfileRef\'>;\n}',
+    declaration: 'export interface Agent {\n    readonly id: SessionId;\n    readonly identity?: IdentityContext;\n    runId?: RunId;\n    lifecycle?: AgentLifecycle;\n    runLease?: RunLease;\n    leaseRefused?: true;\n    controlState?: ControlState;\n    taskProfile?: Branded<\'TaskProfileRef\'>;\n}',
   },
   {
     name: 'AgentCancelCause',
@@ -4420,6 +4457,18 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface ContinuableSubagentDescriptorData extends SubagentDescriptorBase {\n    readonly mode: \'continuable\';\n    readonly label: string;\n    readonly agentProvider?: string;\n    readonly agentModel?: string;\n    readonly agentReasoningEffort?: ReasoningEffortId;\n    readonly persona?: string;\n    readonly toolFilter?: ToolRestriction;\n    readonly delegatingSession?: SessionId;\n}',
   },
   {
+    name: 'ControlRequest',
+    declaration: 'export type ControlRequest = Omit<StopRecord, \'release\'>;',
+  },
+  {
+    name: 'ControlState',
+    declaration: 'export type ControlState = {\n    readonly stopped: false;\n} | {\n    readonly stopped: true;\n    readonly record: StopRecord;\n};',
+  },
+  {
+    name: 'ControlVerb',
+    declaration: 'export type ControlVerb = typeof CONTROL_VERBS[number];',
+  },
+  {
     name: 'CordisDynamicPackageId',
     declaration: 'export type CordisDynamicPackageId = Branded<\'CordisDynamicPackageId\'>;',
   },
@@ -4818,6 +4867,18 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'GrantRecord',
     declaration: 'export interface GrantRecord {\n    readonly kind: \'grant\';\n    readonly payload: unknown;\n}',
+  },
+  {
+    name: 'HumanAnswer',
+    declaration: 'export interface HumanAnswer {\n    readonly waitingPoint: WaitingPointId;\n    readonly text: string;\n}',
+  },
+  {
+    name: 'HumanChannelRefusal',
+    declaration: 'export type HumanChannelRefusal = {\n    readonly reason: \'no-answerer\';\n} | {\n    readonly reason: \'stopped\';\n    readonly record: StopRecord;\n} | {\n    readonly reason: \'unknown-waiting-point\';\n    readonly waitingPoint: WaitingPointId;\n} | {\n    readonly reason: \'waiting-point-vanished\';\n    readonly waitingPoint: WaitingPointId;\n} | {\n    readonly reason: \'verb-unimplemented\';\n    readonly verb: ControlVerb;\n};',
+  },
+  {
+    name: 'HumanQuestion',
+    declaration: 'export interface HumanQuestion {\n    readonly waitingPoint: WaitingPointId;\n    readonly prompt: string;\n    readonly options?: readonly string[];\n}',
   },
   {
     name: 'IdempotencyKey',
@@ -6456,6 +6517,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type StableCapabilityId = Branded<\'StableCapabilityId\'>;',
   },
   {
+    name: 'StopReason',
+    declaration: 'export type StopReason = \'human-requested\' | \'policy-halted\' | \'host-draining\';',
+  },
+  {
+    name: 'StopRecord',
+    declaration: 'export interface StopRecord {\n    readonly requestedBy: PrincipalId;\n    readonly reason: StopReason;\n    readonly requestedAtMs: number;\n    readonly release: \'explicit-resume\';\n}',
+  },
+  {
     name: 'StorageBackend',
     declaration: 'export interface StorageBackend {\n    readonly kv?: KvFacet;\n    readonly migration?: MigrationFacet;\n    close(): Promise<void>;\n}',
   },
@@ -7090,6 +7159,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'VerifiedWebhookDelivery',
     declaration: 'export interface VerifiedWebhookDelivery<K extends string = string> {\n    readonly kind: K;\n    readonly source: WebhookSourceId;\n    readonly deliveryId: WebhookDeliveryId;\n    readonly event: WebhookEventOf<K>;\n    readonly receivedAt: number;\n}',
+  },
+  {
+    name: 'WaitingPointId',
+    declaration: 'export type WaitingPointId = Branded<\'WaitingPointId\'>;',
   },
   {
     name: 'WebBootBatch',

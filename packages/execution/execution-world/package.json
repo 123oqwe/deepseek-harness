@@ -17,7 +17,11 @@
         "types": "./lib/types/lifecycle.d.ts",
         "default": "./lib/types/lifecycle.js"
       },
-      "./package.json": "./package.json"
+      "./package.json": "./package.json",
+      "./local-provider": {
+        "types": "./lib/types/local-provider.d.ts",
+        "default": "./lib/types/local-provider.js"
+      }
     }
   },
   "repository": {
@@ -42,7 +46,11 @@
       "default": "./lib/types/lifecycle.js"
     },
     "./src/*": "./src/*",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./local-provider": {
+      "types": "./lib/types/local-provider.d.ts",
+      "default": "./lib/types/local-provider.js"
+    }
   },
   "files": [
     "lib/index.js",
@@ -53,11 +61,13 @@
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/dsh-principal": "workspace:^"
+    "@deepseek-ai/dsh-principal": "workspace:^",
+    "@deepseek-ai/dsh-sandbox": "workspace:^"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/dsh-principal": "workspace:^"
+    "@deepseek-ai/dsh-principal": "workspace:^",
+    "@deepseek-ai/dsh-sandbox": "workspace:^"
   }
 }

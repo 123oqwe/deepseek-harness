@@ -1023,6 +1023,65 @@ deriveChild(parentSession: SessionIdLike, childSession: SessionIdLike, filter?: 
 
 Source: [`packages/policy/capability-token/src/types.ts`](../../packages/policy/capability-token/src/types.ts)
 
+<a id="ctxcontrolplane--controlplaneservice"></a>
+
+### `ctx.controlPlane` — `ControlPlaneService`
+
+`ctx.controlPlane`: the stop every worker consults, and the registry of questions waiting for a human.
+
+**Mounted in `dsh-base`, which is a decision about acceptance[3].** A stop is a cross-surface invariant: mounting it only where a question can be answered would leave four of the five shipped profiles permanently unable to see a stop, and "every surface agrees" would be true only because four of them never hear anything. The question half is narrower by nature — `web` is the only profile with a question answerer — and that asymmetry is recorded as a limitation rather than hidden by mounting less.
+
+```ts cordis-catalog
+/**
+ * The control state as it stands.
+ * @returns whether a stop is in force, and the record when one is.
+ */
+state(): ControlState
+
+/**
+ * Apply one control verb.
+ * @param verb - the command.
+ * @param request - who is asking and why, recorded on the stop.
+ * @returns the transition the channel decided.
+ */
+control(verb: ControlVerb, request: ControlRequest): ControlDecision
+
+/**
+ * Ask one question and wait for the human's answer at the point that asked.
+ *
+ * **The asker's continuation is registered here, not discovered later.** An
+ * answer arrives out of band — from a surface, on its own call stack — so the
+ * only thing that can reunite it with the caller is the waiting point, and the
+ * only moment that continuation exists is this one. A first draft of this
+ * method registered the id and returned, leaving delivery to a function that
+ * took the answer and ignored it: that is BLOCKED-215 rebuilt, and the unused
+ * parameter was the whole tell.
+ *
+ * A refusal and an answer are separate fields rather than a rejected promise,
+ * because a refusal is a decision this service made and a caller must branch
+ * on it; only the waiting is asynchronous.
+ * @param question - the question, naming the waiting point its answer must reach.
+ * @param agent - the asking agent, which the user-questions seam checks is the exact live caller.
+ * @returns the refusal, or the promise the matching settlement resolves.
+ */
+ask(question: HumanQuestion, agent: Agent): { readonly refused: HumanChannelRefusal } | { readonly answer: Promise<HumanAnswer> }
+
+/**
+ * Deliver one answer, out of band from the asking call stack.
+ * @param answer - the answer, carrying the waiting point it belongs to.
+ * @returns the refusal, or undefined on delivery.
+ */
+settle(answer: HumanAnswer): HumanChannelRefusal | undefined
+
+/**
+ * The waiting points still unanswered.
+ * @returns the pending waiting points, for a surface that renders them.
+ */
+pending(): readonly WaitingPointId[]
+```
+
+Source: [`packages/interaction/control-plane/src/plugin.ts`](../../packages/interaction/control-plane/src/plugin.ts)
+
 <a id="ctxleasestore--leasestorecontract"></a>
 
 ### `ctx.leaseStore` — `LeaseStoreContract`
@@ -1251,9 +1310,11 @@ reclaim(agent: Agent, nowMs: number = Date.now()): 'reclaimed' | 'held' | 'no-ru
  * @returns the refusal, or `undefined` when the agent advanced. `lease-refused`
  *   names an agent this plugin declined to open a Run for, which is a
  *   different fact from `no-run`: a live store said no, rather than nothing
- *   tracking ownership at all.
+ *   tracking ownership at all. `stopped` names an emergency stop in force
+ *   (P2-12 must[2]), which is about the whole harness rather than about this
+ *   agent's standing, and is therefore reported ahead of both.
  */
-advance( agent: Agent, to: AgentLifecycleState, reason: string, ): TransitionDenialReason | 'fenced' | 'lease-refused' | 'no-run' | undefined
+advance( agent: Agent, to: AgentLifecycleState, reason: string, ): TransitionDenialReason | 'fenced' | 'lease-refused' | 'no-run' | 'stopped' | undefined
 ```
 
 Source: [`packages/run/run/src/index.ts`](../../packages/run/run/src/index.ts)

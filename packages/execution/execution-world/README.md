@@ -1,20 +1,23 @@
 ---
 description: "ExecutionWorld capability seam vocabulary for Epic P3-01: the nine confinement dimensions a world is described in, the unforgeable handle that names one, the OCI-adapted lifecycle, the typed stop outcome, and the fail-closed provider selection."
-kind: "package"
+kind: "package-reference"
 ---
 
 # @deepseek-ai/dsh-execution-world
 
 English | [中文](README.zh.md)
 
-`dsh-execution-world` fixes what an ExecutionWorld IS in this harness — the nine dimensions a request decides, the unforgeable handle that names a live world, the lifecycle states a world walks, the one outcome shape every stop settles to, and the rule that a request nothing can satisfy is refused rather than weakened. It holds no provider, mounts no service, and imports no sandbox: the local provider adapting `dsh-sandbox` is P3-01's Provider stage, and a world reaching a real agent request is its Usage stage. Read it when writing a provider, or when deciding what a policy may know about where an action would run.
+## Summary
 
-## Contents
+`dsh-execution-world` fixes what an ExecutionWorld IS in this harness — the nine dimensions a request decides, the unforgeable handle that names a live world, the lifecycle states a world walks, the one outcome shape every stop settles to, and the rule that a request nothing can satisfy is refused rather than weakened. It now also holds the LOCAL provider (`./local-provider`), the adapter that makes `dsh-sandbox` one world among several — it mounts no service, and a world reaching a real agent request is still P3-01's Usage stage. Read it when writing a provider, or when deciding what a policy may know about where an action would run.
+
+## Table of Contents
 
 - [What a world is](#what-a-world-is)
 - [Why there is no `execute`](#why-there-is-no-execute)
 - [The handle, and what it proves](#the-handle-and-what-it-proves)
 - [Selection fails closed](#selection-fails-closed)
+- [What the local provider refuses, and why that is the honest answer](#what-the-local-provider-refuses-and-why-that-is-the-honest-answer)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 
@@ -46,6 +49,17 @@ Attestation is handed to the kernel rather than verified here. `WorldAttestation
 
 Candidate order is the deployment's own registration order. "Most confined wins" would need a total order over nine dimensions that nothing in this harness defines, and inventing one here would silently re-rank a deployment's preference.
 
+<a id="what-the-local-provider-refuses-and-why-that-is-the-honest-answer"></a>
+## What the local provider refuses, and why that is the honest answer
+
+`dsh-sandbox` governs FILE effects: its policy carries a mode, a workspace root and a session id, and nothing about network, devices, IPC or resource ceilings. So the local provider satisfies `filesystem` (for `read-only` and rooted `workspace-write`), `lifetime` (it enforces a wall-clock ceiling), and `tenant` (its own host's), and it names every other dimension as unsatisfiable.
+
+**The consequence is intended and is not "local is unusable".** A policy demanding `network: none` gets no provider in a composition that mounts only this one, and the request fails closed — which is correct for a harness whose local sandbox cannot deny egress. A spec the sandbox can honestly confine is satisfied and selected.
+
+Two refusals are worth naming because they look like over-caution and are not. An EMPTY device set is refused: it asks for no devices at all while the sandbox always admits the standard sinks, so honouring it would promise something narrower than the world delivers. And `full-access` is refused at creation rather than narrowed, because it maps to `danger-full-access`, which is outside the sandbox's confined modes — handing back a confined policy instead would silently tighten a request, the mirror image of the widening `restore` refuses.
+
+`lost-contact` is never reported by this provider, and a characterization case says so: a local world has no existence outside the host process, so contact cannot be lost without the host being gone. The reason exists for the container and microVM providers that will have a remote side.
+
 ## Model Experience
 
 None, as this package exports types and pure decisions only and registers no tool, prompt text or session event.
@@ -56,7 +70,20 @@ Nothing here enters a model request. A refused world reaches a model only as its
 
 ## Known Limitations and Deferred Work
 
-- **This is the Contract stage: no world can be created.** `WorldProvider` is an interface with no implementation in this repository, so every operation on it is unreachable today. A reader must not take these cases as evidence that any action runs confined — `dsh-sandbox` is what confines commands now, same-world, and it is unchanged by this package.
+- **Nothing mounts a world yet.** The local provider exists and is tested, but no composition creates a world and no tool confines through one: `dsh-sandbox` is still what confines commands, reached the way it always was. A reader must not take these cases as evidence that any action runs inside an ExecutionWorld — wiring that is P3-01's Usage stage.
+- **Eight of nine dimensions are refused by the only provider that exists.** Until a container or microVM provider lands, a spec asking for network confinement, device limits, IPC posture, resource ceilings, secret brokering, process limits, a detached lifetime or another tenant has nowhere to run. That is fail-closed rather than broken, and it is the measurement that says what a second provider would buy.
+- No runtime invariant companion is published: this package holds no state of its own and observes nothing two observers could disagree about — a world's state lives in the provider that minted its handle.
 - **`ExecutionWorldFact` still has one variant until the producer lands.** `@deepseek-ai/dsh-policy-engine` declares `{ kind: 'absent' }`, so a policy still cannot decide from where an action would run. P3-01 owns the producer half of that split (BLOCKED-178); this package supplies the vocabulary the producer will report in, and wiring it is a later stage of the same epic.
 - **`restore` compares confinement by digest equality, which also refuses a NARROWER target.** The rule implemented is "same confinement or refuse", not "may narrow"; a snapshot taken under `read-only` is refused into a `workspace-write` world even though that widens nothing. Tightening this needs a partial order over `WorldSpec` that does not exist yet, and the conservative direction was chosen because the failure it prevents — restoring a `full-access` snapshot into a confined world — is a silent privilege grant.
 - **No provider reports resource usage back.** `WorldResourcesSpec` states ceilings and `WorldOutcome` carries none of what was consumed, so a deployment cannot yet bill or alert on a world. The outcome shape is the place to add it, once a provider has real numbers to put there.
+
+### Dev Note
+
+<details>
+<summary>Working context for maintainers — click to expand</summary>
+
+This Dev Note is working context for maintainers: open questions and undecided directions. It is explicitly non-authoritative — shipped behavior and limits live in the sections above and in the package code.
+
+Whether the local provider should satisfy `devices` for a NON-empty subset of the sinks, rather than only for an exact match, is undecided: it would need a statement about which sinks the sandbox admits on every platform, which `dsh-sandbox` does not publish. Whether a wall-clock ceiling should be enforced by a timer instead of on access is the other open one — a timer would report a deadline without anyone asking, and would also make the ceiling depend on the event loop's liveness.
+
+</details>
