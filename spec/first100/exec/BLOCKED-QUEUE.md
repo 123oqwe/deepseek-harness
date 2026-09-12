@@ -5764,3 +5764,37 @@ The 801 root-class calls live in **182 files**, of which **23 are directly froze
 ### BLOCKED-227 — VOID: the same defect as BLOCKED-202
 
 Opened for `session-query-spill`'s verification step, which greps a hardcoded absolute temp path and has never printed `SPILL_CANONICAL_OK`. That is exactly BLOCKED-202, already open with the same path quoted and the same closing condition. The number is void; the work, the owner and the history live in 202.
+
+### BLOCKED-226 — the in-tree gate read one freeze entry per cell, so a supplement hid its own base entry's orphans
+
+**Status:** FIXED 2026-09-12 under the delegate's ruling, owner lane B. Branch `lane-b-225`.
+
+`verify-frozen-titles-in-tree` built its live set as `live.set(\`${entry.epic}.${entry.stage}\`, entry)`, so every later entry for a cell overwrote the earlier one and only the last survived the check. A cell carrying a base entry AND a supplement therefore had the base entry's titles read by nothing.
+
+**Measured on P4-12.C, which is how it surfaced.** Landing BLOCKED-221 replaced two cases named in the BASE C entry (`admits the SAME epoch` and `reserves again for a PREPARED entry`). The gate reported exactly three orphans — two from P4-12.P and one from P4-12.F, both cells having no supplement — and NOTHING for C, because the live supplement C.2 had taken the `P4-12.C` key. Both C orphans were real; I found them by reading the entry list, not from the gate.
+
+So BLOCKED-103's rule — a replaced case needs its freeze entry superseded, not left pointing at a title that is gone — was enforced against the newest entry per cell alone, for as long as a cell had a supplement.
+
+**The fix is the selection, not the comparison.** `findOrphans(entries, producible, renames)` is now exported and iterates EVERY entry the freeze does not mark `supersededBy`, labelling each orphan with its supplement sequence (`P4-12.F.2`, not `P4-12.F`) because that is the entry a reader has to supersede. The title comparison and the rename resolution are untouched.
+
+**Sensitivity.** Restoring the `epic.stage` Map reddens exactly the two cases that are about selection — `reports the BASE entry's vanished title when a live supplement exists for the same cell` and `reports every orphan across two live entries for one cell` — and leaves the other three green, including the superseded-entry control. That control is what keeps the fix from becoming "check everything ever frozen": superseding an entry is the recorded way to replace a case, and re-reporting it would make the correct procedure fail the gate.
+
+**The debt this uncovers, measured: none.** Across all **216 live entries** (281 total, 65 superseded) against **40,563** collected names, the fixed selection reports **0 orphans**. So the hidden debt was exactly the five titles this branch's own supersessions already cover, and no other cell was relying on a supplement to mask a base entry's vanished case.
+
+**A zero from a checker is worth nothing without a control, so there are two.** Injecting one deliberately unproducible title into a live entry is reported (`P4-12.U | a title deliberately produced by no test`), which is what rules out a census that cannot see anything. And un-superseding this branch's three base entries — P4-12.C, P and F — reports exactly five titles:
+
+```
+P4-12.C | ... reserves again for a PREPARED entry, because nothing left the harness yet
+P4-12.C | ... admits the SAME epoch, so fencing refuses only what is genuinely behind
+P4-12.P | ... still reserves a PREPARED key after a restart, because nothing was sent
+P4-12.P | ... gives the reservation to ONE of two concurrent processes, and the other a duplicate
+P4-12.F | ... still commits the effect at least once when a crash lands before the send
+```
+
+The old gate found three of those five. The two it could not see are the two on P4-12.C, which is the defect reproduced from real data rather than from a fixture.
+
+**How the census was collected, because the method is part of the reading.** The gate's own whole-repo `vitest list` was killed twice on this host (once externally, below; once by memory pressure at ~75 MB free and load ~32), so the names were collected per package — 291 chunks — and the orphans computed offline against the same `findOrphans`. The chunked set holds 40,563 names against the gate's own 40,552 on its last completed run: a small superset, since the chunk list names directories the default run reaches differently. A superset can only HIDE an orphan, never invent one, so a zero measured this way is the weaker direction of the claim and the controls above are what make it worth reporting at all.
+
+**Three ways to collect nothing while exiting 0, all met here, all now treated as chunk failures.** `vitest list --json <path>` writes zero bytes, because `--json` takes an optional output-file value and swallows the path as that value; `--outputFile` belongs to the json REPORTER and is not a `list` flag at all; and a killed write leaves a non-empty file that will not parse. The first collector checked only that each chunk file was non-empty, so nine truncated chunks crashed its merge step AFTER the success branch had been taken and were never recorded as failures — it would have reported a census built from 6 chunks of 291. A chunk now counts only when its JSON parses and yields at least one case, and the census refuses to print a count while any chunk is missing.
+
+**The census was interrupted once by something outside this tree, and the cause is recorded because the gate cannot tell it apart.** The first full collection died at 05:27:58Z with `signal: SIGTERM`, `status: null` and no stdout — lane A ran `pkill -f "vitest"` at 05:27:52Z to stop its own gate set, and a pattern kill reaches every `vitest` on the host. That is the failure this gate's own error text warns about: a killed collection and a genuine load error report the same "Command failed", so the signal and the timing are what separate them. Re-run, and lane A now stops only its own processes.

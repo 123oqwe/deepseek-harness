@@ -25,6 +25,10 @@
  * Collection takes about a minute and a half on this repository, which is why
  * this is a pre-push check rather than something wired into every commit.
  *
+ * **Every live entry is checked, not one per cell.** Selecting by `epic.stage`
+ * let a supplement hide its own base entry's orphans (BLOCKED-226); see
+ * {@link findOrphans}.
+ *
  * Usage: `node scripts/first100/verify-frozen-titles-in-tree.mjs`
  *
  * @module scripts/first100/verify-frozen-titles-in-tree
@@ -90,29 +94,56 @@ export function collectProducibleTitles() {
   return names
 }
 
-function main() {
-  const freeze = JSON.parse(readFileSync(COMMAND_FREEZE_PATH, 'utf8'))
-  // Live entries only: a superseded entry describes a past state on purpose.
-  const live = new Map()
-  for (const entry of freeze.entries) {
-    if (entry.supersededBy !== undefined) continue
-    live.set(`${entry.epic}.${entry.stage}`, entry)
-  }
-  const producible = collectProducibleTitles()
-  const renames = registeredRenames()
-
+/**
+ * Every frozen title no test produces, across EVERY live freeze entry.
+ *
+ * **One entry per (epic, stage) was the bug (BLOCKED-226).** This used to build
+ * a `Map` keyed by `epic.stage`, so each later entry for a cell overwrote the
+ * earlier one and only the last survived the check. A cell with a base entry
+ * and a supplement therefore had its base entry's titles read by nothing —
+ * measured on P4-12.C, where the base held two titles that no test produced
+ * and the gate reported zero orphans for that cell because the live supplement
+ * C.2 had taken the key. BLOCKED-103's rule ("a replaced case needs its freeze
+ * superseded") was being enforced against the newest entry per cell alone.
+ *
+ * Liveness is `supersededBy`, and that is the whole selection: an entry the
+ * freeze marks superseded describes a past state on purpose, and every other
+ * entry is a promise something in the tree must still be able to keep.
+ * @param entries - `command-freeze.json`'s entries, live and superseded alike.
+ * @param producible - every test name the suite can produce.
+ * @param renames - the registered renames, from `registeredRenames`.
+ * @returns one record per orphaned title, naming the entry that holds it.
+ */
+export function findOrphans(entries, producible, renames) {
   const orphans = []
-  for (const [key, entry] of live) {
+  for (const entry of entries) {
+    if (entry.supersededBy !== undefined) continue
+    // The supplement sequence is part of the label because it is part of the
+    // address: "P4-12.F" and "P4-12.F.2" are different promises, and a reader
+    // fixing an orphan needs to know which entry to supersede.
+    const key = entry.supplementSeq === undefined
+      ? `${entry.epic}.${entry.stage}`
+      : `${entry.epic}.${entry.stage}.${String(entry.supplementSeq)}`
     for (const title of entry.expectCases) {
       if (frozenTitlePresent(title, producible, renames, entry.epic, entry.stage)) continue
       orphans.push({ key, title })
     }
   }
+  return orphans
+}
+
+function main() {
+  const freeze = JSON.parse(readFileSync(COMMAND_FREEZE_PATH, 'utf8'))
+  const liveCount = freeze.entries.filter((entry) => entry.supersededBy === undefined).length
+  const producible = collectProducibleTitles()
+  const renames = registeredRenames()
+
+  const orphans = findOrphans(freeze.entries, producible, renames)
 
   if (orphans.length === 0) {
     console.log(
       `verify-frozen-titles-in-tree: every live frozen title is produced by a real test `
-      + `(${String(live.size)} cells against ${String(producible.size)} collected names).`,
+      + `(${String(liveCount)} live entries against ${String(producible.size)} collected names).`,
     )
     return
   }
