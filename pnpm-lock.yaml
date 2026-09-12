@@ -4313,6 +4313,9 @@ importers:
       '@deepseek-ai/dsh-app-boot':
         specifier: workspace:^
         version: link:../../boot/app-boot
+      '@deepseek-ai/dsh-host-user-id':
+        specifier: workspace:^
+        version: link:../../identity/host-user-id
       '@deepseek-ai/dsh-llm':
         specifier: workspace:^
         version: link:../../llm/llm

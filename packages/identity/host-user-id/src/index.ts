@@ -47,6 +47,13 @@ export interface HostUserIdOptions {
   env?: NodeJS.ProcessEnv
   /** UUID generator; defaults to `crypto.randomUUID` (test hook). */
   randomUUID?: () => string
+  /**
+   * Tenant the minted principal acts in; defaults to `$DSH_TENANT`, then
+   * `'local'`. Supplied the same way the id is — from the environment the
+   * launcher already consults — so a deployment that runs this launcher inside
+   * a tenant does not have to hand-build an `IdentityContext` to say so.
+   */
+  tenantId?: string
 }
 
 /** Process-lifetime memo keyed by resolved file path, so distinct test homes never share an id. */
@@ -113,14 +120,36 @@ export function getOrCreateHostUserId(options: HostUserIdOptions = {}): HostUser
 }
 
 /**
- * The tenant a local host user acts in.
+ * The tenant a local host user acts in when nothing names another.
  *
- * Fixed, not configurable. A harness home belongs to one person on one
- * machine, and there is no second tenant for that person to be in. A
- * deployment that has tenants attaches its own `IdentityContext` at its own
- * boot instead of calling this.
+ * The DEFAULT, not a fixed value (BLOCKED-228). It was fixed, on the reasoning
+ * that a harness home belongs to one person on one machine. That held while
+ * nothing read the attached tenant; it stopped holding once a consumer did.
+ * `@deepseek-ai/dsh-memory-context` takes a REQUIRED, unconstrained `tenantId`
+ * and throws when an attached principal names a different one, so a deployment
+ * that enables that row must name a tenant, while this producer could mint only
+ * one — an asymmetry no single-tenant design would produce. The consumer's
+ * check is deliberately unchanged: disagreement still fails loud.
  */
 const LOCAL_TENANT = 'local' as TenantId
+
+/** Environment variable naming the tenant a launcher's host user acts in. */
+const TENANT_ENV = 'DSH_TENANT'
+
+/**
+ * Resolve the tenant to mint in: an explicit option, else `$DSH_TENANT`, else
+ * {@link LOCAL_TENANT}. An empty or whitespace-only environment value is
+ * treated as absent rather than as a tenant named `''`.
+ * @param options - the caller's seams, whose `env` is consulted exactly as the id's is.
+ * @returns the tenant for the minted principal.
+ */
+function resolveTenantId(options: HostUserIdOptions): TenantId {
+  const explicit = options.tenantId?.trim()
+  if (explicit !== undefined && explicit.length > 0) return explicit as TenantId
+  const fromEnv = (options.env ?? process.env)[TENANT_ENV]?.trim()
+  if (fromEnv !== undefined && fromEnv.length > 0) return fromEnv as TenantId
+  return LOCAL_TENANT
+}
 
 /**
  * The identity a shipped local boot attaches for its host user
@@ -135,10 +164,10 @@ const LOCAL_TENANT = 'local' as TenantId
  * host user, and attaching this to one would make a remote caller claim to be
  * them.
  * @param runId - the run this identity acts inside; one per created agent.
- * @param options - home-location and UUID-generation seams, forwarded to {@link getOrCreateHostUserId}.
+ * @param options - home-location, UUID-generation and tenant seams; the first two are forwarded to {@link getOrCreateHostUserId}.
  * @returns the identity context to pass as `AgentOptions.identity`.
  */
 export function hostUserIdentity(runId: RunId, options: HostUserIdOptions = {}): IdentityContext {
-  const principal = createUserPrincipal(getOrCreateHostUserId(options) as string as PrincipalId, LOCAL_TENANT)
+  const principal = createUserPrincipal(getOrCreateHostUserId(options) as string as PrincipalId, resolveTenantId(options))
   return { principal, runId, chain: createChain(principal, Date.now()) }
 }

@@ -3,7 +3,9 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { getOrCreateAnonymousUserId } from '@deepseek-ai/dsh-anonymous-user-id'
-import { HOST_USER_ID_FILE_NAME, getOrCreateHostUserId } from '../src/index.ts'
+import { HOST_USER_ID_FILE_NAME, getOrCreateHostUserId, hostUserIdentity } from '../src/index.ts'
+import { RunId } from '@deepseek-ai/dsh-principal'
+import { currentPrincipal } from '@deepseek-ai/dsh-principal'
 
 const dirs: string[] = []
 
@@ -112,5 +114,34 @@ describe('getOrCreateHostUserId', () => {
     expect(host).not.toBe(anonymous)
     expect(existsSync(join(home, HOST_USER_ID_FILE_NAME))).toBe(true)
     expect(existsSync(join(home, '.anonymous-user-id'))).toBe(true)
+  })
+})
+
+describe('hostUserIdentity tenant (BLOCKED-228)', () => {
+  const runId = RunId('run-tenant-case')
+
+  it('mints in `local` when nothing names a tenant, which is the default the shipped launchers get', () => {
+    const identity = hostUserIdentity(runId, { env: { DSH_HOME: tempHome() } })
+    expect(currentPrincipal(identity.chain).tenantId).toBe('local')
+  })
+
+  it('mints in the tenant the environment names, so a deployment inside a tenant can say so', () => {
+    // The asymmetry BLOCKED-228 measured: `memory-context` takes a REQUIRED,
+    // unconstrained `tenantId` and throws when the attached principal disagrees,
+    // while this producer could mint only `local`. A deployment enabling that
+    // row therefore had exactly one tenant name that would not throw.
+    const identity = hostUserIdentity(runId, { env: { DSH_HOME: tempHome(), DSH_TENANT: 'acme' } })
+    expect(currentPrincipal(identity.chain).tenantId).toBe('acme')
+    expect(identity.principal.tenantId).toBe('acme')
+  })
+
+  it('prefers an explicit option over the environment', () => {
+    const identity = hostUserIdentity(runId, { env: { DSH_HOME: tempHome(), DSH_TENANT: 'from-env' }, tenantId: 'explicit' })
+    expect(currentPrincipal(identity.chain).tenantId).toBe('explicit')
+  })
+
+  it('treats a blank environment value as absent rather than as a tenant named empty', () => {
+    const identity = hostUserIdentity(runId, { env: { DSH_HOME: tempHome(), DSH_TENANT: '   ' } })
+    expect(currentPrincipal(identity.chain).tenantId).toBe('local')
   })
 })

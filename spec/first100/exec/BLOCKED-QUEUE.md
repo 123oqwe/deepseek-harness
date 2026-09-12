@@ -5877,3 +5877,19 @@ The old gate found three of those five. The two it could not see are the two on 
 **Readings.** After the change the step still prints `SPILL_RETAINS_COMPLETE_RESULT`, the read result is still 741 characters with `(Omitted N bytes.)`, and raising `maxInlineBytes` so nothing spills still reddens it — so the overflow assertion survived the robustness change rather than being loosened into something weaker.
 
 **Lane B's original measurement, kept because it is the evidence this entry rests on.** Reported from `lane-b-p3-01` at `b4b57ff461`: one `test:snapshot` run failed the scenario, while the same tree passed it alone (1 passed | 117 skipped) and passed it on a second full-suite run. Not a content diff and not that branch's code — which is what pointed at a shared root rather than at the fixture. Lane B reported it and did not touch the scenario; the fix and this entry are lane A's.
+
+### BLOCKED-228 — the host identity could mint only one tenant while a consumer required any
+
+**Status:** FIXED 2026-09-12, owner lane A. Raised from P2-01's re-sign material, where the open question was whether the hardcoded tenant was a defect or a single-tenant design. Measured: a defect, and a latent one.
+
+**The contract was asymmetric.** `@deepseek-ai/dsh-memory-context` takes `tenantId` as a REQUIRED, unconstrained config field (`packages/context/memory-context/src/index.ts:54`) and throws when an attached principal names a different tenant (`:83`). So a deployment enabling that row must name a tenant — while `hostUserIdentity` could mint only `'local'`: `HostUserIdOptions` carried `env` and `randomUUID` and nothing else, and the tenant was a module constant. A design that meant "single tenant" would not offer the consumer a required, unconstrained tenant field.
+
+**Latent, with the two readings that make it so.** `memory-context` ships **disabled** (`packages/bundle/base/cordis.patch.yml:423-425`), and a `grep` for `tenant` across every `packages/bundle/*/cordis*.yml` returns **nothing**. So the throw cannot fire on any profile as shipped. It fires the moment a deployment enables that row and names a tenant other than `local`, which the required field invites.
+
+**Fixed on the producer, per the ruling, and the consumer's gate is untouched.** `hostUserIdentity` takes a tenant the same way it takes the id — an explicit option, else `$DSH_TENANT`, else `'local'`. A blank environment value is treated as absent rather than as a tenant named `''`. The consumer still throws on disagreement: constraining its field to `local` instead would have frozen single-tenancy into a contract whose own required field says otherwise.
+
+**Cases and what each is for.** Producer: mints `local` by default; mints the environment's tenant; an explicit option beats the environment; a blank value is absent. End to end: a host identity minted in the consumer's tenant does NOT throw. Reverse control: a producer minting `local` against a consumer reading `t-1` STILL throws — the gate the fix must not loosen.
+
+**Mutation.** Ignoring the option and minting the constant again reddens three cases — both producer tenant cases and the end-to-end positive — and leaves the reverse control green, which is what shows the control cannot by itself detect the fix.
+
+**Readings.** 113 passed across `host-user-id`, `memory-context` and `principal`; lint 0 on both changed packages; `verify-export-jsdoc` 0; `constraints` 0; the three full-suite-only gates green.

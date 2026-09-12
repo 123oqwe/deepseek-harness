@@ -5,8 +5,12 @@
  * behavior is owned by `./memory-context.spec.ts`.
  */
 
-import { describe, expect, it } from 'vitest'
-import { createAnonymousDevPrincipal, createChain, createUserPrincipal, PrincipalId, TenantId } from '@deepseek-ai/dsh-principal'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { afterEach, describe, expect, it } from 'vitest'
+import { createAnonymousDevPrincipal, createChain, createUserPrincipal, PrincipalId, RunId, TenantId } from '@deepseek-ai/dsh-principal'
+import { hostUserIdentity } from '@deepseek-ai/dsh-host-user-id'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import type { Context } from '@deepseek-ai/cordis'
 import type { MemoryAccessContext, MemoryRecordView } from '@deepseek-ai/dsh-memory'
@@ -14,6 +18,12 @@ import { MemoryRecordId } from '@deepseek-ai/dsh-memory'
 import { announceRebuiltWorkspace, type Config, renderMemoryContext, resolveMemoryAccessContext } from '@deepseek-ai/dsh-memory-context'
 
 const config: Config = { tenantId: 't-1', principalId: 'p-1', purpose: 'recall', maxRecords: 3 }
+
+/** Temporary `$DSH_HOME` directories the BLOCKED-228 cases mint identities in. */
+const homes: string[] = []
+afterEach(() => {
+  for (const dir of homes.splice(0)) rmSync(dir, { recursive: true, force: true })
+})
 
 function recordOf(content: unknown): MemoryRecordView {
   return {
@@ -36,6 +46,35 @@ function recordOf(content: unknown): MemoryRecordView {
 function stubAgent(identity: unknown, cwd?: string): Agent {
   return { identity, session: { header: cwd === undefined ? {} : { cwd } } } as unknown as Agent
 }
+
+describe('BLOCKED-228: the producer can mint the tenant the consumer requires', () => {
+  // The defect this closes was an ASYMMETRY, not a missing check: this
+  // consumer takes a REQUIRED, unconstrained `tenantId` and throws when the
+  // attached principal disagrees, while `hostUserIdentity` could mint only
+  // `local`. A deployment enabling this row therefore had exactly one tenant
+  // name that would not throw. The consumer's check is unchanged -- these
+  // cases prove the producer can now agree with it, and still fails when it
+  // genuinely disagrees.
+  const home = () => {
+    const dir = mkdtempSync(join(tmpdir(), 'dsh-228-'))
+    homes.push(dir)
+    return dir
+  }
+
+  it('does NOT throw when the host identity is minted in the tenant this consumer is configured for', async () => {
+    const identity = hostUserIdentity(RunId('run-228-positive'), { env: { DSH_HOME: home(), DSH_TENANT: 't-1' } })
+    const context = await resolveMemoryAccessContext(stubAgent(identity), config)
+    expect(context.scope).toEqual({ tenantId: TenantId('t-1') })
+  })
+
+  it('STILL throws when the producer minted `local` and this consumer reads another tenant', async () => {
+    // The reverse control: the gate the fix must not have loosened.
+    const identity = hostUserIdentity(RunId('run-228-control'), { env: { DSH_HOME: home() } })
+    await expect(resolveMemoryAccessContext(stubAgent(identity), config)).rejects.toThrow(
+      /belongs to tenant "local", but this plugin is configured to read within tenant "t-1"/u,
+    )
+  })
+})
 
 describe('resolveMemoryAccessContext', () => {
   it('carries all four read-scoping dimensions from config when the agent has no attached identity', async () => {
