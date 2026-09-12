@@ -921,3 +921,32 @@ describe('scrubToolSchemas', () => {
     expect(scrubToolSchemas(out)).toBe(out)
   })
 })
+
+describe('P3-01: the world binding on the legacy identity path', () => {
+  const log = (world: string, spec: string): string => [
+    JSON.stringify({ type: 'session', id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', createdAt: 1 }),
+    JSON.stringify({ type: 'action/world-bound', time: 5, data: { world, provider: 'local', spec } }),
+    '',
+  ].join('\n')
+
+  it('stabilizes the confinement digest, which embeds the run\'s temporary workspace root', () => {
+    // The defect this closes: the digest is not a uuid, so the legacy path's
+    // blanket uuid rule left it raw and an sdk fixture carrying it reddened on
+    // the next run however carefully it had been re-recorded.
+    const out = normalizeSessionLog(log('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'c'.repeat(64)), ctx)
+    expect(out).toContain('"spec":"{{worldSpec}}"')
+    expect(out).not.toContain('c'.repeat(64))
+  })
+
+  it('names the world as a world rather than as a session', () => {
+    // The blanket rule already stabilized it — as `{{sessionId}}`, which tells a
+    // fixture reader that a world id is a session id.
+    const out = normalizeSessionLog(log('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'c'.repeat(64)), ctx)
+    expect(out).toContain('"world":"{{world}}"')
+  })
+
+  it('leaves the PROVIDER raw, so a provider swap still shows as a diff', () => {
+    const out = normalizeSessionLog(log('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'c'.repeat(64)), ctx)
+    expect(out).toContain('"provider":"local"')
+  })
+})

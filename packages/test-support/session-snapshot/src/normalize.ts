@@ -17,6 +17,10 @@ import {
 import { redactSessionSnapshotIds } from './identity.ts'
 
 const SESSION_ID = '{{sessionId}}'
+/** P3-01's world id on the legacy identity path, which has no ordinal bookkeeping. */
+const WORLD_ID = '{{world}}'
+/** P3-01's confinement digest, which embeds the run's temporary workspace root. */
+const WORLD_SPEC_DIGEST = '{{worldSpec}}'
 const MESSAGE_ID = '{{messageId}}'
 const USED_TOKENS = '{{usedTokens}}'
 const CWD = '{{cwd}}'
@@ -406,6 +410,34 @@ function scrubHostChosenSandboxMode(record: Record<string, unknown>): void {
   if (typeof data.preset === 'string') data.preset = SANDBOX_MODE
 }
 
+/**
+ * Stabilize an `action/world-bound` record's two per-run values on the LEGACY
+ * identity path (P3-01).
+ *
+ * The two paths normalize identity differently and both need a rule, because
+ * both write fixtures. `redactSessionSnapshotIds` numbers these fields as
+ * `{{world:N}}` / `{{worldSpec:N}}`; the legacy path has no ordinal bookkeeping
+ * and replaces every uuid with `{{sessionId}}`, which already stabilizes `world`
+ * — misleadingly, since a world id is not a session id — and leaves `spec`
+ * alone, because a 64-character digest is not a uuid.
+ *
+ * **`spec` is what made this a defect rather than a cosmetic difference.** The
+ * digest is taken over the resolved `WorldSpec`, whose `workspaceRoot` is the
+ * run's generated temporary directory, so it differs on every run: an sdk
+ * fixture carrying a raw digest reddens on the next run however carefully it was
+ * re-recorded. `world` is renamed here too, so a reader of one of these fixtures
+ * is not told that a world id is a session id.
+ * @param record - one parsed session-log record, mutated in place.
+ * @param identityMode - which identity path is normalizing; only `legacy` is handled here.
+ */
+function scrubVolatileWorldBinding(record: Record<string, unknown>, identityMode: 'legacy' | 'preserve'): void {
+  if (identityMode !== 'legacy' || record.type !== 'action/world-bound') return
+  const data = record.data as Record<string, unknown> | undefined
+  if (data === undefined) return
+  if (typeof data.world === 'string') data.world = WORLD_ID
+  if (typeof data.spec === 'string') data.spec = WORLD_SPEC_DIGEST
+}
+
 function scrubVolatileArgumentsHash(record: Record<string, unknown>): void {
   if (record.type !== 'action/manifest-appended') return
   const data = record.data as Record<string, unknown> | undefined
@@ -463,6 +495,7 @@ export function normalizeSessionLog(
     }
     scrubVolatileArgumentsHash(record)
     scrubHostChosenSandboxMode(record)
+    scrubVolatileWorldBinding(record, identityMode)
     if (record.type === 'hook/result' && record.data !== null && typeof record.data === 'object') {
       const data = record.data as Record<string, unknown>
       if ('durationMs' in data) data.durationMs = 0
