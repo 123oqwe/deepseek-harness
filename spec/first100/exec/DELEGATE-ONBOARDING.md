@@ -82,6 +82,8 @@ preFlight(JSON 记录 `clause-subject-audit.json` + `evidence-<id>.md`,`recorded
 
 - **叠 overlay 后再跑三个轻门**(补记 89):撤签/accept 改了 ledger 行状态,`verify-adapt-dispositions` 会按新状态重判 deviation 理由;`--check` 只核摘要。叠好 tip 后跑账本状态门全组(`--check`、registry-extraction、specs、files-overlay、persistence-catalog、freeze-in-candidate-tree、adapt-dispositions、make-vs-use;皆秒级)再派发(补记 96)。
 
+- **accept 后再跑两门再复原**(补记 120):`--accept` dry-run 通过后,先在 accept 后的树上跑 `verify-make-vs-use` 与 `verify-adapt-dispositions`——两门对 ACCEPTED 行与 PENDING 行判定不同(P2-05 accept 后 AuthZEN 所有权立刻要求 live 冻结用例点名),再 `git checkout -- spec/first100/exec/` 复原。
+
 ## 9. 每小时自查五问(2026-09-11,gq-92 退班前给;由 watch-v12 心跳每小时打印,不靠记)
 
 ① 我派出去的非代码指令(锚 / 文件 / 配置)核过落地了吗——`ls` / `grep` 一次,不信"已建"。② 云上有没有排队或已被取代的 run,取消了没(一次只派最新候选)。③ 本笔是不是一次云跑——docs overlay 先叠到候选再派发,门③ SHA == 推送 SHA,dispatch run 既是门③也是观测。④ 今天有没有我没量就写的断言(补记 4 的"无环"是反例)。⑤ `~/first100-delegate/.events/watchdog.log` 最近一条是什么(机器睡眠 / 电池 / 会话死亡先于"lane 怠工"怀疑)。
