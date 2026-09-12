@@ -5518,7 +5518,9 @@ A later full replay (`--maxWorkers=2`) produced four timeouts of the same shape,
 
 ### BLOCKED-220 — a headless run ends at `whenIdle()`, which does not follow an in-flight background job, so that job's result can never reach the model
 
-**Status:** RECORD ONLY 2026-09-11, assigned to lane A by the delegate. No product change made here.
+**Status:** **FIXED-PENDING-OBSERVATION** 2026-09-12, owner lane A. Both halves have landed and neither has a cloud observation yet: 丁 and the `job/abandoned` event in candidate 5, 甲 in candidate 6 (`lane-a-candidate-6`, three commits from `3884f77a56`). Opened RECORD ONLY 2026-09-11.
+
+**What the entry ended up being, in one paragraph.** A run's completion condition is its agent going idle, and a background job is not part of it, so a one-shot surface could end with a job still running — and the registry's teardown then marked that job reported with nobody to read it. The fix is in two parts that answer different questions. 丁 makes the loss VISIBLE: each abandoned job gets a `job/abandoned` session event and a stderr line derived from it. 甲 makes it mostly not happen: both run-ending surfaces now WAIT, bounded by a config field, and only what outlives the bound is recorded. The directions this entry once listed as 乙 and 戊 are folded in and refused respectively, for reasons recorded below.
 
 **Not the cause of candidate 3′'s red.** That red is the `waiter`/`settle` ordering inside `job_output(wait: true)`, recorded under (i) and fixed scenario-side. This entry is a separate defect found while diagnosing it, and is measured on its own below. An earlier lane A message wrongly offered this run-lifetime mechanism as the explanation of that red; it is not, because a `wait: true` step bounds settlement to before the run ends.
 
@@ -5606,6 +5608,8 @@ Long-lived surfaces are not affected in the same way: `acp/acp/src/session.ts:44
 1. **乙 alone fixes nothing.** The three-row outcome table above this section already says so: the budget picks between `inject` (never drained) and `followup` (drained only if the run has not ended), and the probe's row — the run simply ending first — is reached under either. So 乙 is a modifier of 甲, not an alternative to it.
 2. **戊 and 甲 are mutually exclusive in what they promise**, and choosing both would be incoherent: 甲 keeps the notification promise by making it true, 戊 keeps it honest by withdrawing it. 丁 is compatible with either.
 
+**Ruled 2026-09-12: 丁 first, then 甲 behind a 丙-shaped `Config` field; 乙 folded into 甲 as the drain-window exemption; 戊 refused.** Lane A's recommendation below was accepted as written.
+
 **Lane A's recommendation, for the delegate to accept or overrule: 丁 first, then 甲 behind a 丙-shaped `Config` field, and 戊 only if 甲 is refused.** The reasoning is that 丁 converts a silent loss into a reported one at the lowest cost and changes no event stream; 甲 is the only direction that actually delivers the result, but it is a lifetime change to two surfaces and needs a bound that only a deployment can choose; and 戊's 30-file corpus churn buys honesty that 丁 already buys for less, while giving up the capability.
 
 **What is NOT proposed.** Nothing here touches `cancelForTeardown`'s `reported = true`. That line is correct where it sits — a disposing owner must not be woken — and the fix belongs earlier, in the surfaces that decide when to dispose.
@@ -5619,6 +5623,30 @@ Ruled and implemented. Both surfaces read the live set before the run's output i
 **The new fixture, and why the corpus needed one.** `snapshots/session/background-job-abandoned` starts two real background Bash processes in one run: one that finishes and is collected with `job_output(wait: true)`, and one that never finishes. Its recorded log carries exactly ONE `job/abandoned`, naming the second — the collected job's absence is the control that makes the event about liveness rather than about having started a job. Two mutations, each red for its own reason: dropping the runner's stderr write reddens the stderr projection; dropping the append reddens the log comparison.
 
 This fixture is the reverse control the census correction said was missing. Before it, no recorded run ended with a live background job, so neither the defect nor its fix was observable anywhere in the corpus.
+
+#### 甲 landed (2026-09-12, candidate 6)
+
+Implemented on the table below, with three departures from it and from the delegate's ruling, each measured rather than chosen.
+
+**The drain observes `onJobDone`; it does NOT use `jobs.wait(...)`, and the whole change turns on that.** A registered waiter makes the registry mark the job reported — `jobs-local`'s `settle` sets `reported` whenever `waiters > 0`, and `wait` marks it again on return — and `reported` is exactly what the delivery path consults. A `wait`-based drain would therefore have produced a run that waited correctly, recorded no abandonment, and showed the model nothing: the failure this direction exists to prevent, wearing the shape of success. The table had assumed `wait`; it was wrong, and the two lines that say so are the evidence. No synthetic mutation is offered for this: `jobs-local` already freezes the waiter half (`resolves with the terminal snapshot when the job settles, marked reported`).
+
+**The wake-budget exemption is NOT a `tool-jobs` service, and the reason is a composition reading.** The delegate ruled (甲i), a minimal service on `tool-jobs`. That version reddened the whole suite with `service "jobCompletionDelivery" has been registered at <tool-jobs>`: two scoped `tool-jobs` mounts share one registry — there is a frozen case for exactly that — and `ctx.provide` refuses the second registration. The PHASE moved to `@deepseek-ai/dsh-jobs` as `duringJobDrain` / `isDrainingJobs`, keyed by the Agent instance, which both surfaces and the delivery plugin already depend on, so no dependency edge was added. The RULE stayed where the ruling put it: `tool-jobs` alone decides what the phase means for a notice, and `dsh-jobs` only declares that a run is ending.
+
+**The window BYPASSES the budget rather than resetting it.** A reset would leave a conversation able to wake itself again, which is what the budget exists to stop. The control discriminates: a mutation that clears the budget instead reddens exactly the case whose tail checks that a pre-window spend still stands.
+
+| what | where |
+| --- | --- |
+| the bound, headless | `Config.waitForJobsMs`, default 30000 ms, `0` expressible |
+| the bound, in-process subagent | the two providers' `Config`, passed through `InProcessRunOptions`; the driver is a library and defaults nothing a deployment should choose |
+| the drain points | unchanged from the table: before `sessions.flush` in headless, before `readResult` in the driver — the same two places 丁 measured |
+| on expiry | stops the wait, cancels nothing; whatever is still live goes through 丁's existing record |
+| the deadline | one, over the set live at the read point, covering both the settlements and any turn they opened |
+
+**Frozen, per surface**: a job that settles inside the bound records no abandonment; a bound that expires records what it left running WITHOUT killing it. Plus three in `tool-jobs` for the window: woken inside it with the budget spent, budget still in force outside it, and only the drained owner exempt. Mutations: not waiting reddens each positive case, cancelling on expiry reddens each negative one, ignoring the window reddens all three.
+
+**Not touched, as ruled**: `cancelForTeardown`'s `reported = true`. It is correct where it sits.
+
+**One loader detail this produced**, recorded because it cost a boot: a patch entry's `config:` REPLACES the bundle's rather than merging into it. Giving `background-job-abandoned` a short `waitForJobsMs` meant re-supplying the required `task`, and the first attempt failed with `$.task missing required value`.
 
 #### 甲 — drain points and bound semantics, per surface (2026-09-12, design only, no code written)
 
