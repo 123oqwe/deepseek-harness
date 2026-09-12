@@ -2216,16 +2216,15 @@
             "name": "openfga / spicedb / keto",
             "npm": null,
             "reason": "ReBAC SERVERS. Every one of them makes a policy decision a network call, which contradicts the harness's local-by-default posture and would put a remote hop inside the tool-execution path."
+          },
+          {
+            "standard": "AuthZEN request/response vocabulary",
+            "reason": "Not adopted, measured on the shipped shapes rather than deferred to a later stage. The REQUEST this epic defines is `PolicyRequest { identity, token, manifest, world, facts }` (`policy-engine/src/types.ts`) — not AuthZEN's `{ subject, resource, action, context }`; the field names were fixed by P2-03's must[0] (`actionId`/`actor`/`capability`/`target`), which is a registry decision this epic inherits. The RESPONSE is `ClosedDecision { effect, reason, policySet }`, where `effect` is a three-value `permit | deny | ask` — not AuthZEN's boolean `decision` with an optional `context`. The Cedar provider does build `{ principal, action, resource, context }`, but that is CEDAR's entity vocabulary reached by translation, and `principal` is not AuthZEN's `subject`. Census: `grep -rin authzen` over `packages/`, `scripts/` and `docs/` returns zero hits in any source file; every occurrence is in planning prose under `spec/first100/exec/`. This restates a ruling the plan already made — `plan-rectification-2026-09-06.md` records AuthZEN as ruled not-adopted under §7.11 with ownership at P2-04/P2-05 — which the record carried as an ownership row instead of a disposition. PREVIOUSLY RECORDED in `standardsOwned` with the note that no frozen case pinned it yet and the C stage would; that was true at preFlight and is false now that the epic is ACCEPTED, because `verify-make-vs-use` requires an assigned standard to be named by a live frozen case once the row is accepted. The shape is decided and it is not AuthZEN's.",
+            "previouslyOwnedNote": "Owned here per standards-ownership.json: this epic decides what a dsh policy REQUEST is (must[0]'s five inputs) and what a closed decision carries back (must[1]), and every later consumer -- P2-07's approval profile among them -- reads that vocabulary from here. Owned as a SHAPE, not as a wire protocol: this epic exposes no HTTP surface, so AuthZEN's transport bindings are deliberately not adopted, and the mapping to Cedar's own entity/context vocabulary is the provider's translation rather than a second standard. No frozen case pins it yet, which is correct at preFlight: the C stage's vocabulary cases are where it gets pinned, and claiming a case before one exists is the shape this gate refuses."
           }
         ],
         "rejectedAbsent": [],
-        "standardsOwned": [
-          {
-            "standard": "AuthZEN request/response vocabulary",
-            "assignedBy": "standards-ownership.json (perEpic.P2-05, thisEpicOwns: true)",
-            "reason": "Owned here per standards-ownership.json: this epic decides what a dsh policy REQUEST is (must[0]'s five inputs) and what a closed decision carries back (must[1]), and every later consumer -- P2-07's approval profile among them -- reads that vocabulary from here. Owned as a SHAPE, not as a wire protocol: this epic exposes no HTTP surface, so AuthZEN's transport bindings are deliberately not adopted, and the mapping to Cedar's own entity/context vocabulary is the provider's translation rather than a second standard. No frozen case pins it yet, which is correct at preFlight: the C stage's vocabulary cases are where it gets pinned, and claiming a case before one exists is the shape this gate refuses."
-          }
-        ],
+        "standardsOwned": [],
         "standardsImported": [
           {
             "standard": "Cedar policy language",
