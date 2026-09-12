@@ -5708,3 +5708,29 @@ The 801 root-class calls live in **182 files**, of which **23 are directly froze
 **A guard written earlier paid for itself here.** The refresh was REFUSED while `lib/` was behind `src/` — `assertBuiltArtifactsCurrent`, added after a stale-build refresh deleted 34 `run/task-profile` events from `snapshots/sdk/`. The same class of mistake was about to be repeated at a much larger scale (73 fixtures rather than 16), and the guard stopped it before a single file was written.
 
 **Frozen as P1-07.U supplement #2**, four cases on the factory `headless` profile, with two mutations: disabling the bundle row reds all four (the fixture enables nothing itself), and making `stateFor` return a stored state without reconciling identity reds EXACTLY the swap case — the delegate's requested "keyed by path rather than identity must redden".
+
+### BLOCKED-223 — the fixture write-back silently tokenizes nothing, because refresh hands it a header it has already tokenized
+
+**Status:** FIXED 2026-09-12, owner lane A. Found while auditing the session-lane corpus refresh, where `skill-load` gained one raw `/var/folders/.../dsh-log-snap-<id>/...` path (0 such paths before the refresh, 1 after).
+
+**The cause is a three-step chain, and every step succeeds.**
+
+1. `writeSessionFixtures` calls `tokenizeSessionFixtureCwd(stabilizeRefreshLog(...))`.
+2. `stabilizeRefreshLog` replaces the fresh log's header with the PRIOR fixture's, so the header it hands on reads `"cwd": "{{cwd}}"`.
+3. `tokenizeSessionFixtureCwd` derives both its cwd and its basename **from that header**, so it searches for the literal string `{{cwd}}` and for paths ending in the basename `{{cwd}}`. Neither exists. It replaces nothing and returns successfully.
+
+**This entry was opened against the wrong cause, and the record should say so.** Its original definition was that `cwdSpellings` generated `/private` aliases in one direction only. That gap is real and is fixed here as a second, independent defect (below) — but it does not leak the path. The definition came from lane A's first reading, which named the alias before the write-back chain had been traced; the delegate assigned the number on that reading without checking the chain. Neither the first reading nor the assignment was verified against a reproduction until afterwards.
+
+**Why it stayed invisible.** Everything carried over from the prior fixture is already tokenized and still looks right. Only text that is NEW in a given refresh has a raw path to lose, so the corpus looks clean until a scenario's output changes. Reproduced in isolation both ways: with the prior fixture's text identical to the fresh text the raw path does not survive; with the prior text differing it does.
+
+**Why no test caught it.** `normalize.spec.ts` asserts `tokenizeSessionFixtureCwd(out)).toBe(out)` — idempotence on already-tokenized input. That property is correct and still holds, but it is satisfied by a function that does nothing, so it encoded the failure mode as intended behavior.
+
+**Why the fixture still passed replay.** Comparison normalizes BOTH sides with `normalizeSessionLog`, whose context carries the run's real cwd, so a raw path in the expected file is scrubbed at compare time on both sides. The corpus was green while carrying a value no second machine can reproduce. A green gate was not evidence here.
+
+**The fix is to stop re-deriving what the caller already knows.** `tokenizeSessionFixtureCwd` takes an optional `runCwd`, and both refresh call sites (`snapshots/session/headless.snapshot.ts`, `snapshots/sdk/sdk.snapshot.ts`) pass the run's actual cwd, because after stabilization the header can no longer say where the run ran. Header derivation stays as the fallback for callers holding a raw log, which keeps idempotence intact.
+
+**The second, independent defect — the one this entry was originally opened for.** `cwdSpellings` added `/private<spelling>` for spellings lacking it and never the reverse, so a run whose own cwd was already the `/private` spelling never matched the plain spelling of the same directory. Both directions now generate, with the reverse restricted to `/var/`, `/tmp/` and `/etc/` — the macOS roots that genuinely exist under both spellings. Stripping `/private` from an arbitrary path would invent a shorter alias naming a different directory and could tokenize text belonging to it; a negative-control case pins that.
+
+**Cases.** Three in `packages/test-support/session-snapshot/tests/normalize.spec.ts`: the reverse alias direction; the negative control that no alias is invented outside the paired roots; and the write-back case, which asserts both that the run cwd tokenizes new text and that WITHOUT it the raw path survives — so the defect is visible rather than silent if it returns. Mutation: restoring the one-way alias reddens exactly the reverse-direction case (1 failed, 58 passed).
+
+**Readings.** `skill-load` re-refreshed on the fix: raw `/var/folders` occurrences 1 → 0, the leaked line now reads `Base directory for this skill: {{cwd}}/.dsh/skills/editing-cordis-compositions`. A tree-wide scan finds no other fixture carrying a raw temp path. Package tests 283 passed / 1 skipped; acp 15/15 and sdk 16/16 replay green; headless 82 passed with two reds that predate this work — `agent-instructions` (the WIP refresh cut its `request/header` count from 2 to 1 while the manifest still declares `changes: 1`, which the pending trust-grant fix owns) and `persistent-pwsh-tool-turn` (the load-sensitive timeout recorded under BLOCKED-214).

@@ -810,6 +810,9 @@ describe('TypeScript SDK snapshots over the jsonrpc runtime', () => {
           if (existing === undefined) throw new Error(`no fixture for persisted log ${index}`)
           return scrubSessionSnapshot(tokenizeSessionFixtureCwd(
             stabilizeRefreshLog(log.content, existing, replacements, actualContext),
+            // The stabilized header carries the prior fixture's `{{cwd}}`, so
+            // the run's own cwd has to come from here (BLOCKED-223).
+            actualContext.cwd,
           ))
         })
         expectedContents = redactSessionSnapshotIds(stabilizeFixtureMessageIds(refreshed, expectedContents))

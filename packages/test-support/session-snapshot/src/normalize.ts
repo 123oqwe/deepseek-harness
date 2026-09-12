@@ -112,14 +112,38 @@ export interface NormalizeOptions {
   identityMode?: 'legacy' | 'preserve'
 }
 
-/** Return every known spelling of the generated cwd, most specific first. */
+/**
+ * macOS roots that are real directories under `/private` and reachable by both
+ * spellings. Only these three are paired: stripping `/private` from an
+ * arbitrary path would invent a shorter alias that names a different directory
+ * and could tokenize text belonging to it.
+ */
+const MAC_PRIVATE_ROOTS = ['/var/', '/tmp/', '/etc/']
+
+/**
+ * Return every known spelling of the generated cwd, most specific first.
+ *
+ * The pairing is BIDIRECTIONAL. Both spellings of one directory occur in real
+ * recordings — a value derived through `realpath` carries `/private/var/...`
+ * while one derived from `os.tmpdir()` carries `/var/...` — and which one the
+ * run reports as its cwd is not fixed. Generating only the `/private` form
+ * (BLOCKED-223) left the plain form unmatched whenever the run's own cwd was
+ * already the `/private` spelling, and the untokenized absolute path was then
+ * written into the committed fixture, which no second machine can reproduce.
+ * @param ctx - the run's cwd and any additional spellings its host reported.
+ * @returns the spellings to match, longest first so a prefix never wins over a
+ * more specific alias.
+ */
 function cwdSpellings(ctx: NormalizeContext): string[] {
   const spellings = [...new Set([ctx.cwd, ...ctx.cwdAliases ?? []])]
     .filter(spelling => spelling.length > 0)
-  const macAliases = spellings
+  const privateAliases = spellings
     .filter(spelling => spelling.startsWith('/') && !spelling.startsWith('/private/'))
     .map(spelling => `/private${spelling}`)
-  return [...new Set([...spellings, ...macAliases])]
+  const plainAliases = spellings
+    .filter(spelling => MAC_PRIVATE_ROOTS.some(root => spelling.startsWith(`/private${root}`)))
+    .map(spelling => spelling.slice('/private'.length))
+  return [...new Set([...spellings, ...privateAliases, ...plainAliases])]
     .sort((left, right) => right.length - left.length)
 }
 
@@ -271,15 +295,27 @@ function tokenizeFixtureValue(
  * platform temporary root; explicitly relocated workspaces keep their real
  * path.
  *
+ * **Pass `runCwd` whenever the caller knows it (BLOCKED-223).** Refresh hands
+ * this function a log whose header has already been replaced by the prior
+ * fixture's, so the header's `cwd` reads `{{cwd}}` and deriving from it yields
+ * a basename that matches nothing. Text carried over from the prior fixture is
+ * already tokenized and looks correct, so the failure is invisible except in
+ * text that is NEW in this refresh — which keeps its real absolute path and is
+ * committed, in a fixture no second machine can reproduce. Measured on
+ * `skill-load`. Deriving from the header stays the fallback for callers holding
+ * only a raw log, and keeps this function idempotent on its own output.
+ *
  * @param rawLog The raw or refresh-stabilized session JSONL fixture.
+ * @param runCwd The cwd the run actually used, when the caller knows it.
  * @returns Compact JSONL whose known cwd spellings become `{{cwd}}`.
  * @throws If a non-empty line is invalid JSON or the session cwd has no basename.
  */
-export function tokenizeSessionFixtureCwd(rawLog: string): string {
+export function tokenizeSessionFixtureCwd(rawLog: string, runCwd?: string): string {
   const lines = rawLog.split('\n')
   const firstLine = lines.find(line => line.trim().length > 0)
   const header = firstLine === undefined ? undefined : JSON.parse(firstLine) as { cwd?: unknown }
-  const cwd = typeof header?.cwd === 'string' ? header.cwd : ''
+  const headerCwd = typeof header?.cwd === 'string' ? header.cwd : ''
+  const cwd = runCwd !== undefined && runCwd.length > 0 ? runCwd : headerCwd
   const basename = cwd.split(/[\\/]/).at(-1)
   if (basename === undefined || basename.length === 0) {
     throw new Error('acp-snapshot: cannot tokenize a cwd without a basename')

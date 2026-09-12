@@ -208,6 +208,9 @@ async function writeSessionFixtures(
     mode === 'refresh'
       ? stabilizeRefreshLog(log.content, prior[index] as string, replacements, ctx)
       : log.content,
+    // Refresh replaces the header with the prior fixture's, so the header can
+    // no longer say where the run ran (BLOCKED-223).
+    ctx.cwd,
   )))
   const output = redactSessionSnapshotIds(stabilizeFixtureMessageIds(fresh, prior))
   await Promise.all(output.map((content, index) => writeFile(join(scenario.dir, names[index] as string), content)))

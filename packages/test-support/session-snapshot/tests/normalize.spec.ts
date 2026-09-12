@@ -335,6 +335,39 @@ describe('normalizeSessionLog', () => {
     expect(out).not.toContain('/private{{spillLocator')
   })
 
+  it('scrubs the PLAIN /var spelling when the run\'s own cwd is the /private spelling', () => {
+    // BLOCKED-223: the reverse of the case below. A value derived through
+    // `realpath` reports `/private/var/...` as the cwd while a value derived
+    // from `os.tmpdir()` still spells the same directory `/var/...`. Generating
+    // only the `/private` alias left this one unmatched, and the raw absolute
+    // path went into the committed fixture -- which no second machine can
+    // reproduce. Measured on `skill-load`, whose refreshed fixture carried one.
+    const privateCwd = `/private${ctx.cwd}`
+    const ev = JSON.stringify({
+      type: 'tool/result', seq: 2, time: 5,
+      data: { content: [{ type: 'text', text: `Base directory for this skill: ${ctx.cwd}/.dsh/skills/attacker` }] },
+    })
+    const out = normalizeSessionLog(`${header({ cwd: privateCwd })}\n${ev}\n`, { ...ctx, cwd: privateCwd })
+    expect(out).toContain('{{cwd}}/.dsh/skills/attacker')
+    // The point of the case: the PLAIN spelling must be gone from the output.
+    // Asserting the absence of some other prefix would pass without the fix.
+    expect(out).not.toContain(ctx.cwd)
+  })
+
+  it('does NOT invent a shorter alias for a /private path outside the paired roots', () => {
+    // The reverse direction is restricted to the macOS roots that genuinely
+    // exist under both spellings. Stripping `/private` from anything else would
+    // name a different directory and tokenize text that belongs to it.
+    const privateCwd = '/private/workspaces/run-7'
+    const ev = JSON.stringify({
+      type: 'tool/result', seq: 2, time: 5,
+      data: { content: [{ type: 'text', text: 'unrelated path /workspaces/run-7/notes.txt stays put' }] },
+    })
+    const out = normalizeSessionLog(`${header({ cwd: privateCwd })}\n${ev}\n`, { ...ctx, cwd: privateCwd })
+    expect(out).toContain('/workspaces/run-7/notes.txt')
+    expect(out).not.toContain('{{cwd}}/notes.txt')
+  })
+
   it('scrubs macOS /private prefix on cwd-rooted fs tool result paths', () => {
     const ev = JSON.stringify({
       type: 'tool/result', seq: 2, time: 5,
@@ -643,6 +676,34 @@ describe('tokenizeSessionFixtureCwd', () => {
     expect(out).toContain('wrote {{cwd}}/proof.txt')
     expect(out).not.toContain('/private{{cwd}}')
     expect(tokenizeSessionFixtureCwd(out)).toBe(out)
+  })
+
+  it('tokenizes NEW text when the stabilized header already reads {{cwd}}, given the run cwd', () => {
+    // BLOCKED-223. Refresh replaces the fresh header with the prior fixture's,
+    // whose cwd is already the token, so deriving the cwd from the header
+    // yields a basename matching nothing and every RAW path in text that has
+    // no prior counterpart survives into the committed fixture. Text carried
+    // over from the prior fixture is already tokenized, which is why the
+    // failure is invisible everywhere except in what this refresh added.
+    const runCwd = '/private/var/folders/c8/x/T/dsh-log-snap-ajNFYu'
+    const plain = '/var/folders/c8/x/T/dsh-log-snap-ajNFYu'
+    const raw = [
+      JSON.stringify({ type: 'session', id: '{{session:1}}', createdAt: 0, cwd: '{{cwd}}' }),
+      JSON.stringify({
+        type: 'tool/result',
+        seq: 1,
+        time: 2,
+        data: { content: [{ type: 'text', text: `Base directory for this skill: ${plain}/.dsh/skills/new` }] },
+      }),
+      '',
+    ].join('\n')
+
+    const out = tokenizeSessionFixtureCwd(raw, runCwd)
+    expect(out).toContain('{{cwd}}/.dsh/skills/new')
+    expect(out).not.toContain('/var/folders')
+    // Without the run cwd the header is all there is, and the raw path stays —
+    // the measured defect, kept here so a regression is visible rather than silent.
+    expect(tokenizeSessionFixtureCwd(raw)).toContain(plain)
   })
 
   it('rejects a log without a session cwd', () => {
