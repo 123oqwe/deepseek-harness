@@ -37,6 +37,11 @@ import type {
 // here, where `registry.agents()` compiled cleanly and the real method is
 // `list()`.
 import type {} from '@deepseek-ai/dsh-agent'
+// And the same for `userQuestions`: the seam's declaration merge lives in
+// `dsh-user-questions`'s index, so without this `ctx.get('userQuestions')` is
+// `any` and the answer it returns type-checks as anything. Third time this
+// mechanism has bitten in this epic, which is why both imports carry a comment.
+import type {} from '@deepseek-ai/dsh-user-questions'
 import type { Agent } from '@deepseek-ai/dsh-agent/types'
 import { createHumanChannel } from './channel.ts'
 import type { ControlRequest, HumanChannel } from './channel.ts'
@@ -108,7 +113,10 @@ export class ControlPlaneService extends Service<Config> {
    * own copies disagree exactly when it matters, and one question answered
    * twice looks reasonable to both.
    */
-  private readonly askers = new Map<WaitingPointId, (answer: HumanAnswer) => void>()
+  private readonly askers = new Map<WaitingPointId, {
+    readonly resolve: (answer: HumanAnswer) => void
+    readonly reject: (refusal: HumanChannelRefusal) => void
+  }>()
 
   /** The validated configuration, naming the directory the stop record lives in. */
   private readonly config: Config
@@ -193,15 +201,68 @@ export class ControlPlaneService extends Service<Config> {
    * because a refusal is a decision this service made and a caller must branch
    * on it; only the waiting is asynchronous.
    * @param question - the question, naming the waiting point its answer must reach.
+   * @param agent - the asking agent, which the user-questions seam checks is the exact live caller.
    * @returns the refusal, or the promise the matching settlement resolves.
    */
-  ask(question: HumanQuestion): { readonly refused: HumanChannelRefusal } | { readonly answer: Promise<HumanAnswer> } {
+  ask(question: HumanQuestion, agent: Agent): { readonly refused: HumanChannelRefusal } | { readonly answer: Promise<HumanAnswer> } {
     const refused = this.live.ask(question)
     if (refused !== undefined) return { refused }
-    const answer = new Promise<HumanAnswer>((resolve) => {
-      this.askers.set(question.waitingPoint, resolve)
+    const answer = new Promise<HumanAnswer>((resolve, reject) => {
+      this.askers.set(question.waitingPoint, { resolve, reject })
     })
+    // The question goes to the user-questions SEAM, not to a surface this
+    // service knows about. Which answerer replies is the profile's business:
+    // `web` has `ui-user-questions`, an SDK host answers through
+    // `human/question`, and `headless` has none and fails closed. That is why no
+    // bundle row wires a surface to this service — the seam already is the
+    // wiring, and naming a surface here would make one profile's answerer a
+    // dependency of every profile's stop.
+    const seam = this.ctx.get('userQuestions')
+    if (seam === undefined) {
+      this.forget(question.waitingPoint)
+      return { refused: { reason: 'no-answerer' } }
+    }
+    void seam.ask({
+      agent,
+      questions: [{
+        id: String(question.waitingPoint),
+        question: question.prompt,
+        ...(question.options === undefined ? {} : { options: question.options.map(label => ({ label })) }),
+      }],
+    }).then(
+      (given) => {
+        // The seam answers per question id; this channel asks one at a time, so
+        // the first answer is this waiting point's. Free text wins over the
+        // selected labels because a human who typed chose to type.
+        const first = given.answers[0]
+        const text = first === undefined ? '' : first.custom ?? first.selected.join(', ')
+        this.settle({ waitingPoint: question.waitingPoint, text })
+      },
+      () => {
+        // Every refusal the seam can make — no answerer, a caller that is not
+        // live, an aborted question — arrives here as one fact: nobody answered.
+        // The waiting caller must learn that rather than wait forever, and the
+        // point must leave the registry so a later answer for it is refused as
+        // vanished rather than delivered to a caller that gave up.
+        this.askers.get(question.waitingPoint)?.reject({ reason: 'no-answerer' })
+        this.forget(question.waitingPoint)
+      },
+    )
     return { answer }
+  }
+
+  /**
+   * Drop one waiting point from both the registry and the waiting callers.
+   *
+   * The registry closes the point through its own settlement so a later answer
+   * for it is refused as VANISHED rather than as never registered: a surface
+   * that replies after the asker gave up needs to learn which of those two
+   * happened.
+   * @param waitingPoint - the point to forget.
+   */
+  private forget(waitingPoint: WaitingPointId): void {
+    this.askers.delete(waitingPoint)
+    this.live.settle({ waitingPoint, text: '' })
   }
 
   /**
@@ -251,10 +312,10 @@ export class ControlPlaneService extends Service<Config> {
    * @returns the refusal, or undefined once the asker has been resumed.
    */
   private resumeAsker(answer: HumanAnswer): HumanChannelRefusal | undefined {
-    const resume = this.askers.get(answer.waitingPoint)
-    if (resume === undefined) return { reason: 'unknown-waiting-point', waitingPoint: answer.waitingPoint }
+    const waiting = this.askers.get(answer.waitingPoint)
+    if (waiting === undefined) return { reason: 'unknown-waiting-point', waitingPoint: answer.waitingPoint }
     this.askers.delete(answer.waitingPoint)
-    resume(answer)
+    waiting.resolve(answer)
     return undefined
   }
 }

@@ -6295,6 +6295,9 @@ importers:
       '@deepseek-ai/dsh-principal':
         specifier: workspace:^
         version: link:../../identity/principal
+      '@deepseek-ai/dsh-user-questions':
+        specifier: workspace:^
+        version: link:../user-questions
 
   packages/interaction/human-channel:
     devDependencies:
