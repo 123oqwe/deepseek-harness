@@ -13456,6 +13456,62 @@
         "failureSummary": "(M1) 1 of 13 failed: `records the tuple as it stood at the ASK, even when the world moves while a human reads`. **The first version of that case left all twelve green under this same mutation**, because it asserted only EVENT ORDER -- and order cannot distinguish \"bound at the ask\" from \"bound after the answerer returned\", since both land between `asked` and `decided`. The case now has an answerer change the caller's tuple mid-decision and requires the record to show the original principal; a mutation is what found that the case was weaker than its own prose. (M2) 1 of 13 failed: `puts no argument value in the durable record`, while its control -- `still distinguishes two different argument values through the digest` -- stayed green, so dropping the values did not cost the record its ability to tell them apart. (M3) 2 of 13 failed, both expiry cases. All three reverted; 69 passed (69) across the package."
       },
       "note": "Reachability is the durable log rather than `request()`'s return value, accepted by the delegate on measured grounds: the return type reaches five production call sites plus two STRUCTURAL ports typing it as `Promise<string>` (`core/tools/src/external-effect.ts:314`, `sandbox/src/escalation.ts:108`), both consumed through casts, so a type change would not be caught and every risk gate would compare an object against `'allowed-once'` and silently refuse. acceptance[2] is an audit clause, so the one-to-one reference belongs in the log, and U's re-verification already holds the session. The record carries the arguments as a DIGEST only and every other bound field whole -- exactly the split the C verifier compares -- so the log holds enough to re-verify and no secret. The service owns no clock: the asker supplies `askedAtMs` and the row supplies one duration (`dsh-lease-contract`'s convention). must[1]'s re-verification before execution is U's, in `agent-loop/src/tool-calls.ts`."
+    },
+    {
+      "epic": "P2-06",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/core/tools/tests/approval-binding.spec.ts",
+        "packages/core/agent-loop/tests/approval-revalidation.spec.ts",
+        "packages/acp/acp/tests/approval.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-06 must[0]: the ACP decider is shown the action, not only its id carries all six fields into the standard's own toolCall projection",
+        "P2-06 must[0]: the ACP decider is shown the action, not only its id shows the REDACTED arguments and never the raw ones",
+        "P2-06 must[0]: the ACP decider is shown the action, not only its id sends the payload it always sent when the ask carries no manifest",
+        "P2-06 must[1]: a recorded approval is re-verified on the real dispatch path RUNS the tool when the recorded decision still covers the call — the positive control",
+        "P2-06 must[1]: a recorded approval is re-verified on the real dispatch path does NOT run the tool when the arguments changed after the decision, and says which field",
+        "P2-06 must[1]: a recorded approval is re-verified on the real dispatch path does NOT run the tool once the decision has expired, and says so distinctly",
+        "P2-06 must[1]: a recorded approval is re-verified on the real dispatch path RUNS the tool when the session recorded no approval at all, so unbound asks are unaffected",
+        "P2-06 must[1]: the dispatch re-verifies what the session recorded admits the call when the recorded binding still covers it — the control",
+        "P2-06 must[1]: the dispatch re-verifies what the session recorded admits when the session recorded NO binding, because an unbound ask is not a refused one",
+        "P2-06 must[1]: the dispatch re-verifies what the session recorded refuses substituted arguments, naming the field",
+        "P2-06 must[1]: the dispatch re-verifies what the session recorded refuses a switched account",
+        "P2-06 must[1]: the dispatch re-verifies what the session recorded refuses after the validity period, naming both instants",
+        "P2-06 must[1]: the dispatch re-verifies what the session recorded ignores a binding for a DIFFERENT action, so one call is not gated by another's decision",
+        "P2-06 must[1]: the dispatch re-verifies what the session recorded reads the LATEST binding for the action, because a re-ask supersedes the one before it",
+        "P2-06 acceptance[2]: one dispatch records exactly ONE binding records ONE binding for one gated dispatch — counted, not merely present",
+        "P2-06 acceptance[2]: one dispatch records exactly ONE binding records ONE even when BOTH gates ask about the same dispatch",
+        "P2-06 acceptance[2]: one dispatch records exactly ONE binding records NONE when the gate does not ask, so a binding never outlives its question"
+      ],
+      "files": [
+        "packages/core/agent-loop/src/tool-calls.ts",
+        "packages/core/tools/src/external-effect.ts",
+        "packages/acp/acp/src/index.ts",
+        "packages/client/ui-approval/src/client/contract/slots.ts",
+        "packages/client/ui-approval/src/client/ApprovalPanel.tsx",
+        "packages/client/ui-approval/src/client/locales.ts",
+        "packages/interaction/user-approval/src/types.ts",
+        "packages/core/tools/tests/approval-binding.spec.ts",
+        "packages/core/agent-loop/tests/approval-revalidation.spec.ts",
+        "packages/acp/acp/tests/approval.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-12T18:05:00.000Z",
+      "dryRunProof": {
+        "treeSha": "f4930c1250645398e95d311f3afe0bf2fa53c512",
+        "testsDiscovered": 22
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations, one per clause this stage closes. (M1) In `packages/core/agent-loop/src/tool-calls.ts`, compute `verifyRecordedApproval` and IGNORE its result — the \"verified and then proceeded\" shape, which passes any case that only asserts the verifier was reached. (M2) In `packages/core/tools/src/index.ts`, make the registry's own `serviceAsk` supply a binding too, so both gates bind one action. (M3) In `packages/acp/acp/src/index.ts`, replace the redacted arguments in the `toolCall` content with the session id.",
+        "failureSummary": "(M1) 2 of 4 real-dispatch cases failed — `does NOT run the tool when the arguments changed` and `does NOT run the tool once the decision has expired` — while both positive controls stayed green, so the failure is the refusal being ignored and not the verifier being wrong. The cases assert what the TOOL observed (`runs` is empty), which is why an ignored refusal reddens them. (M2) 1 of 10 failed: `records ONE even when BOTH gates ask about the same dispatch`, with `expected 2 to be 1`. That case had to be written twice: the first version drove only `gateActionRisk` and stayed GREEN under this mutation, because a case that never reaches the second gate cannot count it. (M3) 2 of 3 ACP cases failed and the third — the ask with no manifest — stayed green, so the payload change is about the six fields and not about the projection existing. All three reverted; acp 8, client+remotes 20, tools+agent-loop+user-approval 507 passed."
+      },
+      "note": "The six fields are built once at the only site holding the manifest and carried to both answerers rather than composed by each. The ACP projection uses `RequestPermissionRequest.toolCall`, the standard this epic owns, and invents no sibling field; an ask with no manifest sends the payload it always sent. Re-verification reads the RECORDED tuple from the session log, never from the values about to run, and a non-`valid` result refuses the dispatch. `expectCases` holds this epic's 17 of the 22 cases the command discovers: `packages/acp/acp/tests/approval.spec.ts` also holds five pre-existing ACP machine-policy cases, and freezing those would count another epic's evidence here. Declared limitations: the registry's own ask carries no binding because no manifest exists at that layer (filling it would need a new cross-layer reference, and BLOCKED-233's shape says the consumer is the dispatch path); and the ACP answerer delegates when `callId === undefined`, so every non-tool-call ask — workspace trust is the live one — reaches no ACP decider at all, which is recorded rather than fixed by widening the guard, since the payload is shaped as a tool call and a trust question has no `toolCallId` to put in it."
     }
   ]
 }
