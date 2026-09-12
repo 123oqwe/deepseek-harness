@@ -11,12 +11,11 @@
 import { describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import { brandString } from '@deepseek-ai/dsh-brand'
-import CedarPolicyEngine, { decisionFromAnswer, policySetDigest } from '../src/index.ts'
-import type { Config } from '../src/index.ts'
+import CedarPolicyEngine, { decisionFromAnswer, policySetDigest, type PolicySetSource } from '../src/index.ts'
 import type { PolicyRequest } from '@deepseek-ai/dsh-policy-engine'
 
 /** A permit-everything set, so a case that denies denies for its own reason. */
-const PERMIT_ALL: Config['policies'] = { 'baseline-permit': 'permit(principal, action, resource);' }
+const PERMIT_ALL: Readonly<Record<string, string>> = { 'baseline-permit': 'permit(principal, action, resource);' }
 
 /** One policy question: a destructive filesystem write by a user in a trusted workspace. */
 function request(overrides: Partial<PolicyRequest> = {}): PolicyRequest {
@@ -36,10 +35,24 @@ function request(overrides: Partial<PolicyRequest> = {}): PolicyRequest {
   } as unknown as PolicyRequest
 }
 
+/**
+ * A fixed policy set as the engine's source.
+ *
+ * The set and its digest travel together, which is the seam's own requirement:
+ * a source that computed the digest separately could hand out a pin for a set
+ * it is no longer yielding.
+ * @param policies - the set this source always yields.
+ * @returns the source to configure the engine with.
+ */
+function sourceOf(policies: Readonly<Record<string, string>>): PolicySetSource {
+  const current = { policies, digest: policySetDigest(policies) }
+  return () => current
+}
+
 /** Mount the provider on a fresh Context, as a profile would. */
-async function mount(policies: Config['policies']): Promise<{ ctx: Context; engine: CedarPolicyEngine }> {
+async function mount(policies: Readonly<Record<string, string>>): Promise<{ ctx: Context; engine: CedarPolicyEngine }> {
   const ctx = new Context()
-  await ctx.plugin(CedarPolicyEngine, { policies })
+  await ctx.plugin(CedarPolicyEngine, { source: sourceOf(policies) })
   return { ctx, engine: ctx.policy as CedarPolicyEngine }
 }
 
@@ -219,16 +232,18 @@ describe('P2-05 acceptance[2]: a broken policy set is not a strict one', () => {
     expect(denied.decision.reason).toBe('no-matching-permit')
   })
 
-  it('refuses to LOAD when the policy set does not parse', async () => {
-    // Fails loud at load rather than at the first tool call: a deployment whose
-    // policies do not parse is misconfigured, and discovering it as a denied
-    // action puts the failure in the wrong place.
-    const ctx = new Context()
-
-    await expect(ctx.plugin(CedarPolicyEngine, { policies: { broken: 'this is not a policy' } }))
-      .rejects.toThrow(/policy set does not parse/)
-    await ctx.fiber.dispose()
-  })
+  // The load-time refusal this suite used to observe moved out of the engine in
+  // P2-10's Usage stage: with the policy-set source seam, an unparsed set never
+  // reaches this service — `@deepseek-ai/dsh-policy-language` refuses it where a
+  // deployment states it, and the namespace behind it keeps the last accepted
+  // set when a reload fails. The frozen case that observed the engine's probe is
+  // superseded rather than rewritten here, and the behaviour is re-observed at
+  // its new subject. The frozen case sat under a `P2-05 acceptance[2]` describe,
+  // which never fitted: acceptance[2] is that the policy service cannot be
+  // replaced or unmounted. No P2-05 clause asks for a load-time refusal at all —
+  // it was an unowned implementation choice. P2-10 validation[2] is the clause
+  // that does ask for it, and asks for more: fail closed AND keep the last valid
+  // version, where this probe crashed the boot and kept nothing.
 
   it('unloads with its fiber, and a remount starts from the configured set again', async () => {
     // The provider is an ordinary plugin: it may be unmounted like any other,

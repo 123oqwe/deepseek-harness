@@ -62,6 +62,16 @@ Nothing else holds the set. `@deepseek-ai/dsh-settings` refuses a registration w
 
 Both are measured over the **complete** set and before it is parsed: a per-policy limit would cap one policy and admit ten thousand of them, which is the exhaustion these bounds exist for. Both bounds are configuration, not constants, because a laptop profile and a fleet control plane do not admit the same policy set.
 
+### Editing the document: replace it atomically
+
+**A policy document must be replaced atomically — written to a sibling path and renamed — not truncated and rewritten in place.**
+
+The reason is specific to the baseline. The settings provider watches the document and re-resolves when it changes; a truncate-then-write leaves a window in which the watcher can read an empty or partial file. Without a composition baseline that window was harmless: an empty document resolves to an empty policy set, `parsePolicySet` refuses it as `empty`, and the namespace keeps its last accepted value. **With a baseline it is not harmless.** An empty document resolves to the baseline alone, which is a valid policy set, so it is accepted and committed — and the deployment's own policies are gone until the write completes. Nothing failed, so the keep-last-good path never runs.
+
+Measured through a real boot: the namespace dropped from `baseline-permit, shipped-forbid` to `shipped-forbid` alone and its pin moved, which is a successful commit rather than a refusal.
+
+The window is bounded by the watcher's debounce, so a fast editor usually closes it before the watcher looks. That makes it a race, not a certainty — which is the harder kind to notice, because it is intermittent and silent. Tracked for the settings provider as BLOCKED-243; it is not specific to policy, since any namespace with a composition base has the same exposure.
+
 ## The version pin
 
 A compiled policy set carries a pin, and a replay keys on it. The pin is taken over three inputs, because the same policy text can mean different things:

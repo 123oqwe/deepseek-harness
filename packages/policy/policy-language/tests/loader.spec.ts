@@ -33,6 +33,7 @@ interface PolicyLoaderReport {
   atBootPin?: string
   afterBadEditPin?: string
   afterGoodEditPin?: string
+  afterOverrideSource?: string
   afterWritePin?: string
   documentText: string
 }
@@ -66,15 +67,45 @@ describe('P2-10 P: the policy set is a settings namespace, through a real boot',
 
     expect(stderr).not.toContain('UNHANDLED')
     expect(report?.registered).toContain('policy-set')
-    expect(report?.atBootIds).toEqual(['baseline-permit'])
+    // The composition's baseline AND the deployment's own policy, together: the
+    // baseline resolves below the user layer rather than instead of it.
+    expect(report?.atBootIds).toEqual(['baseline-permit', 'shipped-forbid'])
     // The bad edit names `context.tyop`, which no policy request carries. The
     // namespace keeps what it had rather than taking a set whose rule could
     // never match — and it is the previously ACCEPTED set that stays, not an
     // empty one, which is the difference between failing closed and failing off.
-    expect(report?.afterBadEditIds).toEqual(['baseline-permit'])
+    expect(report?.afterBadEditIds).toEqual(['baseline-permit', 'shipped-forbid'])
     // Keeping the last good value is not latching: a document that becomes
     // acceptable again is taken.
-    expect(report?.afterGoodEditIds).toEqual(['recovered'])
+    // The user layer replaced its own policy; the baseline is still underneath,
+    // which is the difference between overriding a document and replacing a set.
+    expect(report?.afterGoodEditIds).toEqual(['recovered', 'shipped-forbid'])
+  }, processTimeoutMs + 15_000)
+
+  it('lets a deployment override one baseline policy by id, leaving the rest of the baseline in force', async () => {
+    let report: PolicyLoaderReport | undefined
+    await runLoaderSmoke({
+      label: 'policy-language loader smoke (baseline override)',
+      tempDirPrefix: 'p2-10-policy-loader-base-',
+      binScript: driver,
+      libBinScript: driver,
+      configPath,
+      tsconfigPath: repoTsconfig,
+      processTimeoutMs,
+      prepare: async (cwd) => {
+        await writeFile(join(cwd, 'settings.yaml'), GOOD_DOCUMENT, 'utf8')
+      },
+      inspect: async (cwd) => {
+        report = JSON.parse(await readFile(join(cwd, 'policy-loader-report.json'), 'utf8')) as PolicyLoaderReport
+      },
+    })
+
+    // The shipped baseline forbids on `riskClass`; the deployment's override of
+    // the SAME id forbids on `world` instead. What must be observable is that
+    // the user layer's text won for that id — not that both survive under one
+    // name, and not that naming one id discarded the baseline wholesale.
+    expect(report?.afterOverrideSource).toContain('context.world')
+    expect(report?.afterOverrideSource).not.toContain('riskClass')
   }, processTimeoutMs + 15_000)
 
   it('carries the pin on the namespace value, so a reload that changed the set is visible as a changed pin', async () => {
@@ -117,6 +148,41 @@ describe('P2-10 P: the policy set is a settings namespace, through a real boot',
     // worse than no case. The measurement behind that claim is recorded at
     // `policySetSchema`.
     expect(report?.documentText).toContain('written')
+  }, processTimeoutMs + 15_000)
+
+  it('refuses to load a policy set that does not parse, which is where that refusal lives now', async () => {
+    // P2-05 acceptance[2] used to observe this at the Cedar engine, whose
+    // constructor probed its configured set and threw. P2-10's Usage stage moved
+    // the subject: the engine takes its set from a source that has already
+    // accepted it, so an unparsed set never reaches the engine to be refused
+    // there. It is refused HERE, where a deployment states it — and the engine's
+    // probe was removed rather than left as a second decider.
+    //
+    // This is P2-10 validation[2]'s own clause, not a P2-05 one deferred: no
+    // P2-05 clause asks for a load-time refusal (its acceptance[2] is that the
+    // policy service cannot be replaced or unmounted). validation[2] asks for
+    // more than the removed probe gave — fail closed AND keep the last valid
+    // version — which is why the behaviour is better here than it was there.
+    await expect(runLoaderSmoke({
+      label: 'policy-language loader smoke (unparsable at boot)',
+      tempDirPrefix: 'p2-10-policy-loader-unparsable-',
+      binScript: driver,
+      libBinScript: driver,
+      configPath,
+      tsconfigPath: repoTsconfig,
+      processTimeoutMs,
+      prepare: async (cwd) => {
+        await writeFile(join(cwd, 'settings.yaml'), [
+          'policy-set:',
+          '  policies:',
+          '    broken: \'this is not a policy\'',
+          '',
+        ].join('\n'), 'utf8')
+      },
+    // `unparsable`, not `unknown-context-key`: the taxonomy the Contract stage
+    // froze still tells a broken set from a well-formed one that can never
+    // match, and a boot refusal has to say which it met.
+    })).rejects.toThrow(/policy set refused \(unparsable\): broken:/)
   }, processTimeoutMs + 15_000)
 
   it('refuses the boot outright when the stored policy set is already unacceptable', async () => {

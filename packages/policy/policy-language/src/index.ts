@@ -116,7 +116,20 @@ export interface PolicySetBounds {
 }
 
 /** Deployment configuration: what this deployment admits as a policy set. */
-export interface Config extends PolicySetBounds {}
+export interface Config extends PolicySetBounds {
+  /**
+   * The composition baseline: policies a deployment gets without having written
+   * any, keyed by policy id.
+   *
+   * Supplied to `settings` as the namespace's `base` layer, which resolves
+   * BELOW the user layer — so a deployment that has never edited its settings
+   * document still enforces these, and one that has overrides them per policy
+   * id rather than wholesale. That is why the shipped baseline belongs here and
+   * not in the document: a document is a deployment's to own, and a baseline
+   * nobody wrote into it would be a line an upgrade could not change.
+   */
+  readonly policies: Readonly<Record<string, string>>
+}
 
 /**
  * Config schema.
@@ -130,6 +143,11 @@ export interface Config extends PolicySetBounds {}
 export const Config: z<Config> = z.object({
   maxPolicies: z.natural().default(256),
   maxSourceBytes: z.natural().default(1_048_576),
+  // Defaults to nothing: a composition that states no baseline supplies none,
+  // and the deployment's own document is then the whole policy set. An empty
+  // baseline is not an empty policy SET — `parsePolicySet` still refuses a
+  // resolved set with no policies, because Cedar denies what no permit matches.
+  policies: z.dict(z.string()).default({}),
 })
 
 /** This plugin's name, as the Loader reports it. */
@@ -200,6 +218,8 @@ export function acceptPolicySet(section: PolicySetSection, bounds: PolicySetBoun
  */
 export function apply(ctx: Context, config: Config): void {
   ctx.settings.register(POLICY_SET_NAMESPACE, policySetSchema(config), {
+    // The shipped baseline, resolved below whatever the deployment wrote.
+    base: { policies: config.policies },
     validate: (value) => {
       if (value.pin !== undefined) return
       // The schema already ran `acceptPolicySet` and produced no pin, which is

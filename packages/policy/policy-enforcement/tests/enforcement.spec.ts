@@ -8,10 +8,7 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
-import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
-import CedarPolicyEngine from '@deepseek-ai/dsh-policy-engine-cedar'
 import * as PolicyEnforcement from '../src/index.ts'
 import { callWriter, FORBID_WRITER, PERMIT_ALL, resultText, runTurn, stack } from './fixtures/stack.ts'
 
@@ -148,20 +145,14 @@ describe('P2-05 must[2]: a plugin constraint narrows and never widens', () => {
   })
 })
 
-describe('P2-05 acceptance[2]: a policy set that does not parse refuses to load', () => {
-  it('fails the mount loudly rather than deciding with a broken set', async () => {
-    // The real occurrence point for `policy-set-invalid`: a deployment whose policies do
-    // not parse must refuse to boot, not surface as a denied action later.
-    const ctx = new Context()
-    pinTrustKernel(ctx, createTrustKernel())
-
-    await expect(ctx.plugin(CedarPolicyEngine, { policies: { broken: 'this is not a policy' } }))
-      .rejects.toThrow(/policy set does not parse/)
-
-    expect(ctx.get('policy')).toBeUndefined()
-    await ctx.fiber.dispose()
-  })
-})
+// The load-time refusal this file used to observe moved subject in P2-10's Usage
+// stage: the engine no longer probes its set at construction, because under the
+// policy-set source seam it never receives an unparsed one. The refusal now
+// happens where a deployment states its policies, and is observed there. The
+// frozen case is superseded, not rewritten. It sat under a `P2-05 acceptance[2]`
+// describe that never fitted — acceptance[2] is that the policy service cannot
+// be replaced or unmounted, and no P2-05 clause asks for a load-time refusal.
+// P2-10 validation[2] is the clause that does.
 
 describe('P2-05 must[0]: the capability token is a policy input, not a placeholder', () => {
   it('decides by the CAPABILITY the presented token carries', async () => {

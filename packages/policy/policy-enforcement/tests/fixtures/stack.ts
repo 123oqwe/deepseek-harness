@@ -26,7 +26,17 @@ import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
 import type { TrustKernelAuditEntry, TrustKernelPolicyQuery, TrustKernelPolicyVerdict } from '@deepseek-ai/dsh-trust-kernel'
-import CedarPolicyEngine from '@deepseek-ai/dsh-policy-engine-cedar'
+import CedarPolicyEngine, { policySetDigest, type PolicySetSource } from '@deepseek-ai/dsh-policy-engine-cedar'
+
+/**
+ * A source yielding one fixed set, for stacks whose policies never reload.
+ * @param policies - the set to enforce for this stack's lifetime.
+ * @returns the source to configure the engine with.
+ */
+function fixedPolicySource(policies: Readonly<Record<string, string>>): PolicySetSource {
+  const current = { policies, digest: policySetDigest(policies) }
+  return () => current
+}
 import CapabilityTokenFilePlugin from '@deepseek-ai/dsh-capability-token-file'
 import PermissionPresetService from '@deepseek-ai/dsh-permission-presets'
 import { mkdtempSync, rmSync } from 'node:fs'
@@ -159,7 +169,7 @@ export async function stack(options: {
   await ctx.plugin(PolicyEnforcement)
   const engine = options.policies === undefined
     ? undefined
-    : await ctx.plugin(CedarPolicyEngine, { policies: options.policies })
+    : await ctx.plugin(CedarPolicyEngine, { source: fixedPolicySource(options.policies) })
   ctx.tools.register(defineContentToolFixture({
     name: 'writer',
     description: 'writes',
