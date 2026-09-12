@@ -324,6 +324,7 @@ Source: [`packages/interaction/user-approval/src/types.ts:48`](../packages/inter
 'approval/bound': {
   id: ApprovalRequestId
   action: string
+  actionId?: string
   digest: string
   principal: string
   preconditions: readonly string[]

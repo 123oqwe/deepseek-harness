@@ -97,6 +97,7 @@ declare module '@deepseek-ai/dsh-session/types' {
     'approval/bound': {
       id: ApprovalRequestId
       action: string
+      actionId?: string
       digest: string
       principal: string
       preconditions: readonly string[]
@@ -169,6 +170,17 @@ export interface ApprovalRequestEvent {
     readonly inputs: ApprovalBindingInputs
     /** The asker's clock reading at the moment of the ask. */
     readonly askedAtMs: number
+    /**
+     * The id of the dispatch this decision is about (acceptance[2]).
+     *
+     * Both dispatch paths supply it, because both hold their manifest's
+     * `actionId` at the ask. It is what makes the reference one-to-one: the
+     * record's `action` is a tool NAME, and two calls to one tool in a session
+     * are otherwise the same line in the log. Absent only for an ask with no
+     * dispatch behind it — `workspace-trust` decides about a directory — where
+     * filling one in would put a value in the audit log naming no action.
+     */
+    readonly actionId?: string
   }
 }
 
@@ -283,3 +295,4 @@ export type ApprovalVerification
   = { readonly valid: true }
     | { readonly valid: false; readonly reason: 'changed'; readonly field: ApprovalBindingField }
     | { readonly valid: false; readonly reason: 'expired'; readonly expiresAtMs: number; readonly now: number }
+    | { readonly valid: false; readonly reason: 'ambiguous'; readonly action: string; readonly candidates: number }

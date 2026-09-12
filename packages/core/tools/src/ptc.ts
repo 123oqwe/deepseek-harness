@@ -20,7 +20,7 @@ import type { ActionId, CapabilityRef } from '@deepseek-ai/dsh-action-manifest'
 import type { Context } from '@deepseek-ai/cordis'
 import type { Principal } from '@deepseek-ai/dsh-principal'
 import { createSessionManifestAppender } from './manifest-log.ts'
-import { classifyActionRisk, confirmExternalEffect, gateActionRisk, readExecutionWorldFact, readPolicyContextFacts, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect } from './external-effect.ts'
+import { approvalBindingFor, classifyActionRisk, confirmExternalEffect, gateActionRisk, readExecutionWorldFact, readPolicyContextFacts, refusedApprovalResult, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect, verifyRecordedApproval } from './external-effect.ts'
 import type { ExternalEffectRecord } from './external-effect.ts'
 import { attachedIdentity } from '@deepseek-ai/dsh-session'
 import { defineTool, parameterSchemaSpecToJsonSchema } from './schema.ts'
@@ -733,15 +733,46 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
                 settle(refusedPolicyResult(refusedDecision.effect, refusedDecision.reason, name))
                 return
               }
-              const riskRefusal = exec.agent === undefined
+              // P2-06 must[1] / validation[2]: this path binds what it asks
+              // about and re-verifies it, exactly as the native one does. Both
+              // reach `approvalBindingFor` rather than deriving the tuple
+              // apiece: two derivations give one action two digests depending
+              // on which layer took it. ONE tuple serves the ask and the check
+              // below, so the second site compares a value rather than a
+              // second derivation of it.
+              //
+              // The arguments bound here are `normalized.logged` — the same
+              // value this path manifests and hashes. The native path binds the
+              // raw string the model emitted, because that is the form IT
+              // holds; a dispatch is only ever compared with a record its own
+              // path wrote, so the two forms never meet.
+              const binding = exec.agent === undefined
+                ? undefined
+                : approvalBindingFor(exec.agent, subCallId, name, normalized.logged as JsonValue, Date.now())
+              const riskRefusal = exec.agent === undefined || binding === undefined
                 ? undefined
                 : await gateActionRisk(
                   options.ledgerContext(), exec.agent, name, registry.get(name, exec.agent)?.riskDomainTags ?? [], classified,
+                  binding,
                 )
               if (riskRefusal !== undefined) {
                 reservation = undefined
                 this.settled = true
                 settle(refusedRiskResult(riskRefusal, name))
+                return
+              }
+              // Before the reservation, for the same reason the risk gate is:
+              // a claim on an effect this dispatch may not make would leave a
+              // `sent` row for something that never happened. A non-`valid`
+              // result REFUSES the sub-dispatch — a verification computed and
+              // then ignored passes every case asserting the verifier ran.
+              const staleApproval = exec.agent === undefined || binding === undefined
+                ? undefined
+                : verifyRecordedApproval(exec.agent, binding.inputs, Date.now(), binding.actionId)
+              if (staleApproval !== undefined) {
+                reservation = undefined
+                this.settled = true
+                settle(refusedApprovalResult(staleApproval, name))
                 return
               }
               const refused = exec.agent === undefined || reservation === undefined

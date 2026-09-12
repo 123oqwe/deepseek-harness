@@ -279,6 +279,10 @@ export class ApprovalService extends Service {
       session.append('approval/bound', {
         id,
         action: binding.inputs.action,
+        // acceptance[2]: which dispatch this decision is about. Omitted rather
+        // than defaulted when the asker has none, so a record carrying the
+        // field always names a real action.
+        ...req.binding.actionId === undefined ? {} : { actionId: req.binding.actionId },
         digest: binding.digest,
         principal: binding.inputs.principal,
         preconditions: binding.inputs.preconditions,

@@ -28,6 +28,7 @@ import { brandNumber, brandString } from '@deepseek-ai/dsh-brand'
 import type { ExecutionWorldFact, PolicyContextFacts } from '@deepseek-ai/dsh-policy-engine'
 import { verifyApprovalBinding } from '@deepseek-ai/dsh-user-approval'
 import type { ApprovalBinding, ApprovalBindingInputs, ApprovalDisplay, ApprovalVerification } from '@deepseek-ai/dsh-user-approval/types'
+import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 import { SessionSeq } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-user-approval'
 import type { WorldId, WorldProviderId, WorldSpecDigest } from '@deepseek-ai/dsh-execution-world/types'
@@ -317,21 +318,50 @@ const ANNOUNCED = new WeakSet<object>()
  * @param agent - the dispatching agent, whose session holds the record.
  * @param present - the same tuple as it stands now, at dispatch time.
  * @param nowMs - the caller's clock reading.
+ * @param actionId - this dispatch's own id, which selects the record that decided about IT.
  * @returns the refusal to report, or undefined when the dispatch may proceed.
  */
 export function verifyRecordedApproval(
   agent: Agent,
   present: ApprovalBindingInputs,
   nowMs: number,
+  actionId?: string,
 ): Exclude<ApprovalVerification, { valid: true }> | undefined {
   const { session } = agent
-  // The LAST binding for this action, because a re-ask after a refusal records
-  // a second one and the decision in force is the most recent.
+  // Which RECORD is this dispatch's decision (acceptance[2]). `actionId` is the
+  // field that answers it: `action` is a tool NAME, so two calls to one tool in
+  // a session are otherwise the same line. Both production paths supply one.
+  //
+  // A record that names a DIFFERENT dispatch is not this dispatch's decision
+  // and is skipped rather than compared — comparing it would refuse a call for
+  // a substitution that happened in someone else's ask.
+  const named: BoundRecord[] = []
+  const unnamed: BoundRecord[] = []
   for (let index = session.seq - 1; index >= 0; index -= 1) {
     const event = session.eventAt(SessionSeq(index))
     if (event?.type !== 'approval/bound') continue
-    const data = event.data
+    const data = event.data as BoundRecord
     if (data.action !== present.action) continue
+    if (data.actionId === undefined) unnamed.push(data)
+    else if (actionId !== undefined && data.actionId === actionId) named.push(data)
+  }
+  // A record naming THIS dispatch wins outright. Otherwise fall back to the
+  // records that name no dispatch at all — and only while that fallback is
+  // unambiguous: two unnamed decisions about one tool cannot be told apart, and
+  // picking either would decide acceptance[2]'s question by position. It fails
+  // closed instead. Reachable only from actionId-less records, which no
+  // production path writes; a caller that supplies no `actionId` of its own
+  // keeps the older most-recent-wins reading, because it is not a dispatch this
+  // epic gave an identity to.
+  const chosen = named.length > 0 ? named[0]
+    : actionId !== undefined && unnamed.length > 1
+      ? 'ambiguous' as const
+      : unnamed[0]
+  if (chosen === 'ambiguous') {
+    return { valid: false, reason: 'ambiguous', action: present.action, candidates: unnamed.length }
+  }
+  if (chosen !== undefined) {
+    const data = chosen
     const recorded: ApprovalBinding = {
       inputs: {
         action: data.action,
@@ -354,6 +384,69 @@ export function verifyRecordedApproval(
   return undefined
 }
 
+/** One `approval/bound` payload, as the verifier reads it back off the log. */
+interface BoundRecord {
+  readonly action: string
+  readonly actionId?: string
+  readonly digest: string
+  readonly principal: string
+  readonly preconditions: readonly string[]
+  readonly capabilityToken?: string
+  readonly policyVersion?: string
+  readonly expiresAtMs: number
+}
+
+/**
+ * What an approval asked for one dispatch is bound to (P2-06 must[1]).
+ *
+ * **One derivation, reached by both dispatch paths.** The native path holds the
+ * model's raw argument string and the code-mode path holds the JSON-normalized
+ * value it manifests; each passes the form it has, and a dispatch is only ever
+ * compared with a record its own path wrote. A second copy of this tuple — one
+ * per path — is how one action acquires two digests depending on which layer
+ * took it, so the function lives here, beside the gate that carries it and the
+ * verifier that reads it back, rather than in either caller.
+ *
+ * The principal is the one attached to the agent AT THE ASK, captured as a
+ * value: `'unattached'` when the agent carries no identity, which
+ * re-verification compares rather than treating as a wildcard.
+ *
+ * Three fields are deliberately absent rather than filled with something shaped
+ * like them. `preconditions` is empty on both paths because neither manifests
+ * one, so an approval is bound to no precondition and a later one that IS
+ * declared changes the binding. `capabilityToken` is absent because these paths
+ * hold a signed token, not the digest the binding compares — binding the
+ * manifest's `argumentsHash` in its place would be a field that looks bound and
+ * compares something else. `policyVersion` is absent because the decision
+ * summary here names an effect and a reason, not the policy set's version. A
+ * field bound to a placeholder makes every value look equal, which is worse
+ * than absent.
+ * @param agent - the dispatching agent, whose identity is captured at the ask.
+ * @param actionId - the id of the dispatch this decision is about (acceptance[2]).
+ * @param action - the name of what is being decided, as the decider sees it.
+ * @param args - the arguments this dispatch will run, in the form this path holds.
+ * @param nowMs - the dispatch path's clock reading at the ask.
+ * @returns the binding request to hand the gate, and to re-verify against later.
+ */
+export function approvalBindingFor(
+  agent: Agent,
+  actionId: string,
+  action: string,
+  args: JsonValue,
+  nowMs: number,
+): ApprovalBindingRequest {
+  return {
+    inputs: {
+      action,
+      args,
+      principal: agent.identity?.principal.id ?? 'unattached',
+      preconditions: [],
+    },
+    askedAtMs: nowMs,
+    actionId,
+  }
+}
+
 /**
  * The approval operation this gate needs, named structurally for the same
  * reason as {@link RiskPolicyPort}.
@@ -368,6 +461,8 @@ export interface ApprovalBindingRequest {
   readonly inputs: ApprovalBindingInputs
   /** The dispatch path's clock reading at the moment of the ask. */
   readonly askedAtMs: number
+  /** The id of the dispatch this decision is about, so an audit query can reach it (acceptance[2]). */
+  readonly actionId?: string
 }
 
 interface ApprovalPort {
@@ -636,7 +731,14 @@ export function refusedApprovalResult(
   const text = verification.reason === 'expired'
     ? `The approval for "${toolName}" had expired before it ran, so it was not performed. `
       + 'Ask again: a decision made about a world that has since moved is not a decision about this one.'
-    : `The approval for "${toolName}" no longer covers this call: its ${verification.field} changed after the decision was made, `
+    // Named separately because the operator action differs from both others:
+    // nothing was substituted and nothing lapsed, the log simply cannot say
+    // which decision covered this call. Answering it by position would settle
+    // acceptance[2]'s question with a guess.
+    : verification.reason === 'ambiguous'
+      ? `The approval for "${toolName}" could not be identified: ${String(verification.candidates)} decisions about `
+      + `"${verification.action}" name no action, so none of them can be said to cover this call. It was not performed.`
+      : `The approval for "${toolName}" no longer covers this call: its ${verification.field} changed after the decision was made, `
       + 'so it was not performed. A new request is needed for the changed action.'
   return {
     content: [{ type: 'text', text: `Error: ${text}` }],

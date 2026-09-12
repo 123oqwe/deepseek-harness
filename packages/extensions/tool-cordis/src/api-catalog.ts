@@ -4149,7 +4149,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ApprovalRequestEvent',
-    declaration: 'export interface ApprovalRequestEvent {\n    readonly agent: Agent;\n    readonly toolName: string;\n    readonly callId?: ToolCallId;\n    readonly subject?: string;\n    readonly reason?: string;\n    readonly signal?: AbortSignal;\n    readonly display?: ApprovalDisplay;\n    readonly binding?: {\n        readonly inputs: ApprovalBindingInputs;\n        readonly askedAtMs: number;\n    };\n}',
+    declaration: 'export interface ApprovalRequestEvent {\n    readonly agent: Agent;\n    readonly toolName: string;\n    readonly callId?: ToolCallId;\n    readonly subject?: string;\n    readonly reason?: string;\n    readonly signal?: AbortSignal;\n    readonly display?: ApprovalDisplay;\n    readonly binding?: {\n        readonly inputs: ApprovalBindingInputs;\n        readonly askedAtMs: number;\n        readonly actionId?: string;\n    };\n}',
   },
   {
     name: 'ArgumentsHash',
