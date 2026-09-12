@@ -236,7 +236,13 @@ describe('must[3]: every read is scoped by principal, purpose, scope, and contex
 })
 
 describe('acceptance[2]: Memory is not Session Query, and their boundary is documented', () => {
-  it('docs/subsystems/memory.md STATES the boundary, and a resolved memory record is structurally distinct from a Session Query transcript entry', async () => {
+  // TITLE IS THE FROZEN ONE, verbatim (BLOCKED-103). An earlier revision of
+  // this case renamed it to "…STATES the boundary…" to match the strengthened
+  // body, which broke the freeze contract without superseding the entry: a
+  // frozen title is what an observation is matched by, so renaming one silently
+  // unmatches a green cell. The body below is the strengthened version — the
+  // wording of the claim moved, the name of the case did not.
+  it('docs/subsystems/memory.md exists, and a resolved memory record is structurally distinct from a Session Query transcript entry', async () => {
     // Read for CONTENT, not for existence. The clause asks that the boundary be
     // documented; a file that exists satisfies `existsSync` while saying
     // nothing about Session Query at all, so the assertion would survive the

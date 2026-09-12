@@ -2897,11 +2897,11 @@
       "coveredBy": [
         {
           "stage": "C",
-          "title": "acceptance[1]: no bypass exists for a model to directly write durable memory revise() rejects an id that was never returned by propose()"
+          "title": "revise() rejects an id that was never returned by propose()"
         },
         {
           "stage": "U",
-          "title": "memory-context through the production headless profile P6-01 acceptance[1]: a real boot exposes NO tool that writes durable memory",
+          "title": "P6-01 acceptance[1]: a real boot exposes NO tool that writes durable memory",
           "supplementSeq": 1
         }
       ],
@@ -2913,7 +2913,7 @@
       "coveredBy": [
         {
           "stage": "C",
-          "title": "acceptance[2]: Memory is not Session Query, and their boundary is documented docs/subsystems/memory.md STATES the boundary, and a resolved memory record is structurally distinct from a Session Query transcript entry"
+          "title": "docs/subsystems/memory.md exists, and a resolved memory record is structurally distinct from a Session Query transcript entry"
         }
       ],
       "note": "acceptance[2]: 'Memory is not Session Query, and the boundary between them is documented explicitly.' This case previously asserted `existsSync(docs/subsystems/memory.md)` — satisfied by a file that never mentions Session Query, so the entire boundary section could be deleted and the only case for this clause would stay green. It now reads the document for CONTENT: the section heading, the claim in BOTH directions (Memory never queries the session log; Session Query never reads a `MemoryRecordView`), and each of the five axes the comparison table names. Verified by deleting the whole boundary section, which reddens the case, while `existsSync` would still have returned true."
