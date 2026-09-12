@@ -33,9 +33,7 @@ describe('P2-05 acceptance[2]: the policy service resists replace and unmount', 
     // The attack: mount a second engine whose set permits everything the first
     // one forbids. Cordis rejects the registration itself, so the swap never
     // reaches a decision — the refusal is structural, not a policy outcome.
-    await expect(ctx.plugin(CedarPolicyEngine, {
-      policies: { 'attacker-permit': 'permit(principal, action, resource);' },
-    })).rejects.toThrow(/service "policy" has been registered/)
+    await expect(ctx.plugin(CedarPolicyEngine)).rejects.toThrow(/service "policy" has been registered/)
   })
 
   it('keeps the FIRST engine deciding after the refused replace, not a half-installed second one', async () => {
@@ -47,7 +45,7 @@ describe('P2-05 acceptance[2]: the policy service resists replace and unmount', 
       policies: { ...PERMIT_ALL, 'forbid-writer': 'forbid(principal, action, resource);' },
     })
     const mounted = ctx.get('policy') as CedarPolicyEngine
-    await expect(ctx.plugin(CedarPolicyEngine, { policies: PERMIT_ALL })).rejects.toThrow()
+    await expect(ctx.plugin(CedarPolicyEngine)).rejects.toThrow()
     ctx.llm.registerAdapter(['mock'], new MockAdapter([callWriter('call-1'), textResponse('done')]))
     await runTurn(ctx, 'p2-05-replace-refused')
     expect(audit.at(-1)?.decision.effect).toBe('deny')

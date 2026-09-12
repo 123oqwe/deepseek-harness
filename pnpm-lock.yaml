@@ -1293,6 +1293,9 @@ importers:
       '@deepseek-ai/dsh-policy-engine-cedar':
         specifier: workspace:^
         version: link:../../policy/policy-engine-cedar
+      '@deepseek-ai/dsh-policy-language':
+        specifier: workspace:^
+        version: link:../../policy/policy-language
       '@deepseek-ai/dsh-pwsh-sandbox':
         specifier: workspace:^
         version: link:../../shell/pwsh-sandbox
@@ -7342,6 +7345,12 @@ importers:
       '@deepseek-ai/dsh-action-manifest':
         specifier: workspace:^
         version: link:../../action/action-manifest
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
+      '@deepseek-ai/dsh-policy-engine':
+        specifier: workspace:^
+        version: link:../policy-engine
       '@deepseek-ai/dsh-settings':
         specifier: workspace:^
         version: link:../../settings/settings

@@ -19,9 +19,11 @@
  */
 
 import { getCedarVersion } from '@cedar-policy/cedar-wasm/nodejs'
-import type { Context } from '@deepseek-ai/cordis'
+import { Service, type Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
-import type {} from '@deepseek-ai/dsh-settings'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import type { CurrentPolicySet, PolicySetDigest } from '@deepseek-ai/dsh-policy-engine'
+import type { SettingsScope } from '@deepseek-ai/dsh-settings'
 import { compilePolicySet, type CompiledPolicySet } from './compiler.ts'
 import { type PolicySetParse } from './parser.ts'
 import { DSH_CONTEXT_KEYS } from './schema.ts'
@@ -116,7 +118,20 @@ export interface PolicySetBounds {
 }
 
 /** Deployment configuration: what this deployment admits as a policy set. */
-export interface Config extends PolicySetBounds {}
+export interface Config extends PolicySetBounds {
+  /**
+   * The composition baseline: policies a deployment gets without having written
+   * any, keyed by policy id.
+   *
+   * Supplied to `settings` as the namespace's `base` layer, which resolves
+   * BELOW the user layer — so a deployment that has never edited its settings
+   * document still enforces these, and one that has overrides them per policy
+   * id rather than wholesale. That is why the shipped baseline belongs here and
+   * not in the document: a document is a deployment's to own, and a baseline
+   * nobody wrote into it would be a line an upgrade could not change.
+   */
+  readonly policies: Readonly<Record<string, string>>
+}
 
 /**
  * Config schema.
@@ -130,19 +145,12 @@ export interface Config extends PolicySetBounds {}
 export const Config: z<Config> = z.object({
   maxPolicies: z.natural().default(256),
   maxSourceBytes: z.natural().default(1_048_576),
+  // Defaults to nothing: a composition that states no baseline supplies none,
+  // and the deployment's own document is then the whole policy set. An empty
+  // baseline is not an empty policy SET — `parsePolicySet` still refuses a
+  // resolved set with no policies, because Cedar denies what no permit matches.
+  policies: z.dict(z.string()).default({}),
 })
-
-/** This plugin's name, as the Loader reports it. */
-export const name = 'policy-language'
-
-/**
- * Requires a settings provider rather than deferring to one.
- *
- * A harness that mounted this plugin without `settings` would register no
- * namespace, state no policy set, and enforce nothing — silently. Misconfiguration
- * fails loud at load, so the dependency is declared rather than probed.
- */
-export const inject = ['settings']
 
 /**
  * Accept a deployment's policy set: bound it, read it, and pin it.
@@ -186,30 +194,84 @@ export function acceptPolicySet(section: PolicySetSection, bounds: PolicySetBoun
 }
 
 /**
- * Register the policy set as a settings namespace.
+ * Provides `ctx.policySet`: the policy set a deployment states, accepted and
+ * pinned, resolved from its own settings document.
  *
- * `validate` throws what `acceptPolicySet` refused, which is what makes the
- * refusal reach a deployment at the earliest point it can: a stored section
- * that is already unacceptable fails the registration itself, and one that
- * becomes unacceptable on a later reload leaves the previously accepted set in
- * force while every other namespace still commits. Neither behaviour is written
- * here — both are `@deepseek-ai/dsh-settings`', and this plugin's only
- * contribution to them is the function that says no.
- * @param ctx - the mounting context.
- * @param config - the size this deployment admits.
+ * A service rather than a function plugin because the engine has to ASK it per
+ * decision. A shipped composition cannot hand an engine a closure —
+ * `cordis.yml`'s `!!js` evaluates to a value at load time with no `ctx` in
+ * scope — so the alternative to a service is a module-level global holding the
+ * set, which is the second holder this epic exists to remove.
+ *
+ * **This service holds no policy set of its own.** It reads the settings scope
+ * on every `current()`, and `@deepseek-ai/dsh-settings` owns what happens when a
+ * reload fails: the namespace keeps its last accepted value and warns, while
+ * other namespaces still commit. Caching here would be a second holder that
+ * disagrees with the namespace the first time a reload is refused.
  */
-export function apply(ctx: Context, config: Config): void {
-  ctx.settings.register(POLICY_SET_NAMESPACE, policySetSchema(config), {
-    validate: (value) => {
-      if (value.pin !== undefined) return
-      // The schema already ran `acceptPolicySet` and produced no pin, which is
-      // the whole of "this set was refused". Re-running it here is the failure
-      // path only, and it is what turns that fact back into the reason and the
-      // offending ids a deployment has to act on.
-      const accepted = acceptPolicySet(value, config)
-      if (!accepted.ok) {
-        throw new Error(`policy set refused (${accepted.reason}): ${accepted.errors.join('; ')}`)
-      }
-    },
-  })
+export default class PolicySetProvider extends Service {
+  /**
+   * Requires a settings provider rather than deferring to one.
+   *
+   * A harness that mounted this without `settings` would register no namespace,
+   * state no policy set, and enforce nothing — silently. Misconfiguration fails
+   * loud at load, so the dependency is declared rather than probed.
+   */
+  static readonly inject = ['settings']
+  static readonly Config = Config
+
+  /**
+   * The registered namespace's scope; read per `current()`, never cached.
+   *
+   * Assigned in `[Service.init]` rather than in the constructor: registering is
+   * an effect, and a Service's fiber is not active while its constructor runs,
+   * so the effect is refused with `INACTIVE_EFFECT`. Hand-mounting through
+   * `ctx.plugin` hid this — the failure only appeared when real shipped
+   * profiles mounted the service through the Loader, in 17 snapshot replays.
+   */
+  private scope: SettingsScope<PolicySetValue> | undefined
+
+  constructor(ctx: Context, public config: Config) {
+    super(ctx, 'policySet')
+  }
+
+  /** Register the policy namespace once this service's fiber is active. */
+  [Service.init](): void {
+    this.scope = this.ctx.settings.register(POLICY_SET_NAMESPACE, policySetSchema(this.config), {
+      // The shipped baseline, resolved below whatever the deployment wrote.
+      base: { policies: this.config.policies },
+      validate: (value) => {
+        if (value.pin !== undefined) return
+        // The schema already ran `acceptPolicySet` and produced no pin, which is
+        // the whole of "this set was refused". Re-running it here is the failure
+        // path only, and it is what turns that fact back into the reason and the
+        // offending ids a deployment has to act on.
+        const accepted = acceptPolicySet(value, this.config)
+        if (!accepted.ok) {
+          throw new Error(`policy set refused (${accepted.reason}): ${accepted.errors.join('; ')}`)
+        }
+      },
+    })
+  }
+
+  /**
+   * The policy set in force, and the pin a decision against it records.
+   *
+   * The pin, not the engine's own id-and-source digest: it additionally binds
+   * the vocabulary and the engine version, so a replay can tell "the policies
+   * changed" from "the engine that reads them changed". A resolved value always
+   * carries one — a set without a pin was refused, and `validate` throws on it
+   * before it can be read here.
+   * @returns the accepted set and its pin.
+   */
+  current(): CurrentPolicySet {
+    if (this.scope === undefined) {
+      throw new Error('policy set requested before this provider initialized; the namespace is registered in [Service.init]')
+    }
+    const value = this.scope.get()
+    return {
+      policies: value.policies,
+      digest: brandString<PolicySetDigest>(value.pin ?? ''),
+    }
+  }
 }

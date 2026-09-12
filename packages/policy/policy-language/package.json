@@ -46,6 +46,8 @@
   "dependencies": {
     "@cedar-policy/cedar-wasm": "4.12.0",
     "@deepseek-ai/dsh-action-manifest": "workspace:^",
+    "@deepseek-ai/dsh-brand": "workspace:^",
+    "@deepseek-ai/dsh-policy-engine": "workspace:^",
     "@deepseek-ai/dsh-settings": "workspace:^",
     "@deepseek-ai/schemastery": "workspace:^"
   }

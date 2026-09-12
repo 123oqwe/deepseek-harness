@@ -11,7 +11,7 @@
  * A hand-mounted registry would let this fixture supply its own answer.
  */
 
-import { readFile, writeFile } from 'node:fs/promises'
+import { readFile, rename, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { boot, resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
 import { POLICY_SET_NAMESPACE, type PolicySetValue } from '@deepseek-ai/dsh-policy-language'
@@ -21,6 +21,23 @@ if (configPath === undefined) throw new Error('policy-language driver requires a
 
 /** The document path the fixture composition configures, relative to the run cwd. */
 const documentPath = join(process.cwd(), 'settings.yaml')
+
+/**
+ * Replace the settings document ATOMICALLY.
+ *
+ * A plain `writeFile` truncates before it writes, and the provider's watcher can
+ * read that truncated moment. With a composition baseline underneath, an empty
+ * document is not an error — it resolves to the baseline alone, which is a
+ * VALID set, so it commits and the previous value is gone. The last-good
+ * mechanism does not save it, because nothing failed. Writing to a sibling and
+ * renaming makes the document go from one complete state to another.
+ * @param body - the document's complete next text.
+ */
+async function replaceDocument(body: string): Promise<void> {
+  const staging = `${documentPath}.next`
+  await writeFile(staging, body, 'utf8')
+  await rename(staging, documentPath)
+}
 
 /** Wait until `read` reports a change, or give up and let the caller record what it saw. */
 async function settle<T>(read: () => T, changed: (value: T) => boolean): Promise<T> {
@@ -41,12 +58,12 @@ try {
   // An EXTERNAL edit, the way an operator editing the document by hand makes
   // one: written straight to the file, not through `settings.update`, so what
   // reacts is the provider's watcher and not a write this process validated.
-  await writeFile(documentPath, [
+  await replaceDocument([
     `${POLICY_SET_NAMESPACE}:`,
     '  policies:',
     '    typo: \'permit(principal, action, resource) when { context.tyop == 1 };\'',
     '',
-  ].join('\n'), 'utf8')
+  ].join('\n'))
 
   // The value must NOT change. Settle on the opposite condition so the wait
   // ends early if it wrongly does, and otherwise costs the full window once.
@@ -58,15 +75,29 @@ try {
   // A good edit afterwards must still land: keeping the last good value is not
   // the same as latching, and a namespace that never recovered would be worse
   // than one that took the bad set.
-  await writeFile(documentPath, [
+  await replaceDocument([
     `${POLICY_SET_NAMESPACE}:`,
     '  policies:',
     '    recovered: \'permit(principal, action, resource) when { context.riskClass == "low" };\'',
     '',
-  ].join('\n'), 'utf8')
+  ].join('\n'))
   const afterGoodEdit = await settle(
     () => ctx.settings.get(POLICY_SET_NAMESPACE) as PolicySetValue,
     value => Object.hasOwn(value.policies, 'recovered'),
+  )
+
+  // Override the BASELINE id from the user layer: the composition supplies
+  // `shipped-forbid`, and a deployment naming the same id must replace that one
+  // policy without disturbing the rest of the baseline.
+  await replaceDocument([
+    `${POLICY_SET_NAMESPACE}:`,
+    '  policies:',
+    '    shipped-forbid: \'forbid(principal, action, resource) when { context.world == "absent" };\'',
+    '',
+  ].join('\n'))
+  const afterOverride = await settle(
+    () => ctx.settings.get(POLICY_SET_NAMESPACE) as PolicySetValue,
+    value => (value.policies['shipped-forbid'] ?? '').includes('world'),
   )
 
   // A write THROUGH the service, which is the only path that persists: the
@@ -92,6 +123,7 @@ try {
     // The document itself must not have grown a `pin` key: it is derived, and
     // writing it back would put a value nobody authored into a deployment's own
     // configuration file.
+    afterOverrideSource: afterOverride.policies['shipped-forbid'],
     afterWritePin: afterWrite.pin,
     documentText: await readFile(documentPath, 'utf8'),
   }), 'utf8')

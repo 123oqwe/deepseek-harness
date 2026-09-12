@@ -19,6 +19,12 @@
     },
     {
       "path": "../../settings/settings"
+    },
+    {
+      "path": "../../util/brand"
+    },
+    {
+      "path": "../policy-engine"
     }
   ]
 }

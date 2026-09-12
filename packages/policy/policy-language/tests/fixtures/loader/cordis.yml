@@ -15,3 +15,8 @@
   config:
     maxPolicies: 3
     maxSourceBytes: 1024
+    # The shipped baseline, standing in for what `bundle/base` supplies: a
+    # deployment that never edits its document still enforces these, and one
+    # that names the same id overrides just that policy.
+    policies:
+      shipped-forbid: 'forbid(principal, action, resource) when { context.riskClass == "safety-critical" };'

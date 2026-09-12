@@ -267,8 +267,50 @@ export interface PolicyEngineContract {
   evaluate(request: PolicyRequest): PolicyEvaluation
 }
 
+/**
+ * The policy set in force right now, and the pin it was accepted under.
+ *
+ * A MAP from policy id to source rather than one concatenated string: submitted
+ * as a string, an engine assigns generated ids and an `@id(...)` annotation does
+ * not become the id the explain reports, so an audit trail built on the string
+ * form would name policies nobody wrote. must[3]'s audit is only as good as
+ * these ids.
+ */
+export interface CurrentPolicySet {
+  /** Policy id to policy source, in the engine's own language. */
+  readonly policies: Readonly<Record<string, string>>
+  /** The digest every decision against this set records. */
+  readonly digest: PolicySetDigest
+}
+
+/**
+ * Where an engine gets the set it enforces (Epic P2-10's Usage stage).
+ *
+ * Declared HERE, in the definition, rather than on either side of the seam: the
+ * provider that resolves a deployment's policy set and the engine that decides
+ * against it must agree on what "the set in force" means, and neither of them
+ * owning the word is what keeps a second provider from meaning something else
+ * by it.
+ *
+ * **`current()` is asked per decision, and returns the set and its digest
+ * together.** Both halves matter. Per decision, because the set changes under a
+ * running harness — a deployment edits it and the provider re-resolves.
+ * Together, because a digest fetched separately can describe a set the provider
+ * is no longer yielding: before this seam an engine re-read its policies per
+ * call while its digest was computed once at construction, so a reload moved the
+ * enforced rules and left every decision citing a set no longer in force.
+ */
+export interface PolicySetProviderContract {
+  /**
+   * The set to decide against, and the pin to record with the decision.
+   * @returns the policy set in force at this instant.
+   */
+  current(): CurrentPolicySet
+}
+
 declare module '@deepseek-ai/cordis' {
   interface Context {
     policy: PolicyEngineContract
+    policySet: PolicySetProviderContract
   }
 }

@@ -29,24 +29,21 @@ import type {
   PolicySetDigest,
 } from '@deepseek-ai/dsh-policy-engine'
 
-/** Deployment configuration: the policies this deployment enforces. */
-export interface Config {
-  /**
-   * The policy set, as a map from policy id to Cedar source.
-   *
-   * A MAP rather than one source string, and the difference is not stylistic:
-   * submitted as a string, Cedar assigns generated ids (`policy0`, `policy1`)
-   * and an `@id(...)` annotation in the source does NOT become the id the
-   * explain reports — so an audit trail built on the string form would name
-   * policies nobody wrote. must[3]'s audit is only as good as these ids.
-   */
-  readonly policies: Readonly<Record<string, string>>
-}
+/**
+ * Deployment configuration: none.
+ *
+ * The policy set arrives through the injected `policySet` provider rather than
+ * through configuration, and the reason is that a shipped composition cannot
+ * express the alternative: `cordis.yml`'s `!!js` evaluates to a VALUE at load
+ * time with no `ctx` in scope, so a configured source would have to reach the
+ * provider's state through a module-level global — a second holder of the set,
+ * in a worse disguise than a configured map. The provider is a service because
+ * that is the shape a composition can mount.
+ */
+export interface Config {}
 
-/** Config schema. `policies` has no default: a deployment states its policy set. */
-export const Config: z<Config> = z.object({
-  policies: z.dict(z.string()).required(),
-})
+/** Config schema: this provider takes no configuration. */
+export const Config: z<Config> = z.object({})
 
 /**
  * How a `PolicyRequest` becomes the three Cedar entities.
@@ -210,32 +207,38 @@ export function decisionFromAnswer(answer: AuthorizationAnswer, digest: PolicySe
  * a refused boot.
  */
 export default class CedarPolicyEngine extends Service {
-  static readonly inject = []
+  /**
+   * Requires a policy-set provider rather than probing for one.
+   *
+   * An engine mounted without a set to enforce would answer every question
+   * against nothing, which Cedar reports as `no-matching-permit` — a deployment
+   * would see every action denied and no indication why. Misconfiguration fails
+   * at load instead.
+   */
+  static readonly inject = ['policySet']
   static readonly Config = Config
 
-  /** The digest of the loaded set; every decision carries it. */
-  readonly digest: PolicySetDigest
+  /**
+   * The digest of the set in force, read from the source rather than held.
+   *
+   * A property so the enforcement point can record it without deciding
+   * (`policy-enforcement/src/index.ts` reads it after every evaluation), and a
+   * getter rather than a field because holding it would recreate exactly the
+   * staleness this seam removed.
+   */
+  get digest(): PolicySetDigest {
+    return this.ctx.policySet.current().digest
+  }
 
   constructor(ctx: Context, public config: Config) {
     super(ctx, 'policy')
-    this.digest = policySetDigest(config.policies)
-    // Fails loud at load: a probe request against the configured set, whose
-    // FAILURE answer means the set does not parse. Cedar has no separate
-    // "validate this set" call that reports the same errors an authorization
-    // would, so the check is an authorization whose decision is discarded.
-    const probe = isAuthorized({
-      principal: { type: 'Dsh::Principal', id: 'load-probe' },
-      action: { type: 'Dsh::Action', id: 'load-probe' },
-      resource: { type: 'Dsh::Resource', id: 'load-probe' },
-      context: {},
-      entities: [],
-      policies: { staticPolicies: config.policies },
-    })
-    if (probe.type !== 'success') {
-      throw new Error(
-        `policy set does not parse, so no policy would be enforced: ${probe.errors.map(error => error.message).join('; ')}`,
-      )
-    }
+    // No load-time probe, and its absence is the design. Validating here would
+    // mean this service decides what happens to an unreadable set — but the set
+    // arrives from a source that already refused it, and the namespace behind
+    // that source keeps its last accepted value when a reload fails. Two things
+    // deciding one question disagree the first time a reload is refused, so
+    // this one does not decide it. A set that reaches `evaluate` has been
+    // accepted; one that never reaches it never replaced anything.
   }
 
   /**
@@ -252,13 +255,19 @@ export default class CedarPolicyEngine extends Service {
    * @returns the closed decision plus the audit-only explain.
    */
   evaluate(request: PolicyRequest): PolicyEvaluation {
+    // One read of the source per decision, and the set and its digest come from
+    // that SAME read: asking twice could straddle a reload and decide against
+    // one set while recording another.
+    const current = this.ctx.policySet.current()
     return decisionFromAnswer(
       isAuthorized({
         ...toCedarRequest(request),
         entities: [],
-        policies: { staticPolicies: this.config.policies },
+        policies: { staticPolicies: current.policies },
       }),
-      this.digest,
+      // `current.digest`, never `this.digest`: the getter would read the source
+      // a second time, which is the straddle the single read above avoids.
+      current.digest,
     )
   }
 }
