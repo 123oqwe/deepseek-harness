@@ -147,6 +147,14 @@
       ]
     },
     {
+      "epic": "P0-05",
+      "path": "packages/migration/feature-gates/tests/gates.provider.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C.1"
+      ]
+    },
+    {
       "epic": "P0-06",
       "path": "packages/schema/schema-registry/tests/migration.spec.ts",
       "kind": "test",
@@ -369,11 +377,61 @@
     },
     {
       "epic": "P1-07",
+      "path": "packages/bundle/acp-app/cordis.patch.yml",
+      "kind": "manifest",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P1-07",
+      "path": "packages/bundle/base/cordis.patch.yml",
+      "kind": "manifest",
+      "stages": [
+        "U",
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P1-07",
+      "path": "packages/bundle/headless/cordis.patch.yml",
+      "kind": "manifest",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P1-07",
+      "path": "packages/bundle/web-app/cordis.patch.yml",
+      "kind": "manifest",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P1-07",
+      "path": "packages/context/agent-instructions/tests/trust-ask.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-07",
       "path": "packages/context/agent-instructions/tests/trust-gate.spec.ts",
       "kind": "test",
       "stages": [
         "U"
       ]
+    },
+    {
+      "epic": "P1-07",
+      "path": "packages/interaction/user-approval/src/types.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "The approval request gained an optional `subject` so a decision that is not about a tool call can say what it IS about — for a trust question, which workspace and which state. P1-07 is the consuming epic and made the addition; P2-11 owns this surface and is NOT_RUN, so the change is recorded in evidence-P2-11.md as purely additive: `toolName` stays required, the published runtime invariant that holds it non-empty is unchanged, the outcome vocabulary is unchanged, and 268 passing cases across every live P2-04 frozen command were compared by NAME before and after. The registry could not have named this file: in the plan, must[2] had no interaction and therefore no request to carry."
     },
     {
       "epic": "P1-07",
@@ -394,10 +452,37 @@
     },
     {
       "epic": "P1-07",
-      "path": "packages/workspace/workspace-trust-local/src/index.ts",
+      "path": "packages/workspace/command-workspace-trust/src/index.ts",
       "kind": "source",
       "stages": [
         "U"
+      ],
+      "reason": "The host user's own route to `trusted-execute`. must[2] requires the upgrade to be completed by a host-user interaction, and the measurement showed the obvious place cannot work: project skills are not listed at `trusted-read` — their names and descriptions are text the project supplied — so the agent never reaches for one and there is no point of use at which it could be asked. The request must therefore come from the user, which makes it a command. The registry named the provider and the decision package and not this, because in the plan the interaction did not exist at all."
+    },
+    {
+      "epic": "P1-07",
+      "path": "packages/workspace/command-workspace-trust/src/launch-grant.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "The `--trust-workspace` entry point (BLOCKED-214's second half). The registry named this epic's Consumers and the provider, but not an entry point that writes a trust record BEFORE any session exists — which is what the user's ruling required for the profiles that carry no approval answerer. It lives in the command package because that package already owns the host user's other entry point (`/trust-skills`), and the two are the same subject: how a host user records a decision about this workspace. It holds no trust rule of its own; its whole effect is one `grantTrust`/`revokeTrust` call, which is why it can be an entry point without being a bypass."
+    },
+    {
+      "epic": "P1-07",
+      "path": "packages/workspace/command-workspace-trust/tests/command.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-07",
+      "path": "packages/workspace/workspace-trust-local/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U",
+        "U.2"
       ],
       "reason": "The local trust store the decision reads. The registry declared the policy and not the store it consults."
     },
@@ -409,6 +494,38 @@
         "U"
       ],
       "reason": "The durable form of the trust binding. must[0] requires the state to be bound to a canonical realpath and an inode/volume identity, and a binding that dies with the process is not a binding: before this file existed, a second process re-read the operator grants against whatever directory then stood at the granted path, so a directory replaced while nothing was running came back trusted (BLOCKED-199). The registry named the decision files and the provider, and not the shape those records take on disk, because in the plan the binding was not yet durable. It is a source file rather than a test fixture because the schema is what validates a document written by an earlier build, and it carries the one conversion between the stored row and the vocabulary record — a brand and an exactOptional distinction the validator cannot express."
+    },
+    {
+      "epic": "P1-07",
+      "path": "packages/workspace/workspace-trust-local/tests/fixtures/acp-profile-driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P1-07",
+      "path": "packages/workspace/workspace-trust-local/tests/fixtures/acp-trust.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P1-07",
+      "path": "packages/workspace/workspace-trust-local/tests/fixtures/headless-trust-driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P1-07",
+      "path": "packages/workspace/workspace-trust-local/tests/fixtures/headless-trust.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
     },
     {
       "epic": "P1-07",
@@ -428,10 +545,26 @@
     },
     {
       "epic": "P1-07",
+      "path": "tests/first100/fixtures/P1-07.acp-trust.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P1-07",
       "path": "tests/first100/fixtures/P1-07.composition.spec.ts",
       "kind": "test",
       "stages": [
         "U"
+      ]
+    },
+    {
+      "epic": "P1-07",
+      "path": "tests/first100/fixtures/P1-07.headless-trust.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
       ]
     },
     {
@@ -786,20 +919,48 @@
     },
     {
       "epic": "P2-01",
-      "path": "packages/identity/principal/src/invariant.ts",
+      "path": "packages/api/session-controller/src/agent.ts",
       "kind": "source",
       "stages": [
-        "C"
+        "U.1"
       ],
-      "reason": "The published ./invariant companion for the principal package, required beside the module it observes."
+      "reason": "The Web app's root creation site, and the second of the two the local host user drives. The identity is attached in `agentOptions()` so create, resume and fork share one answer; a resume re-supplying the same principal appends no new `identity/attached`, because `resolveSessionIdentity` logs only a real difference."
     },
     {
       "epic": "P2-01",
-      "path": "packages/identity/principal/tests/invariant.spec.ts",
-      "kind": "test",
+      "path": "packages/boot/app-boot/src/index.ts",
+      "kind": "source",
       "stages": [
-        "C"
-      ]
+        "U.1"
+      ],
+      "reason": "The one place every `dsh` launcher passes through, and therefore where the host-user factory is provided — beside the `ctx.provide('dshHomePath', …)` this file already performs before any entry mounts. A factory rather than a value, so nothing resolves the id, and nothing touches `$DSH_HOME`, unless a configured row actually needs one."
+    },
+    {
+      "epic": "P2-01",
+      "path": "packages/bundle/headless/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.1"
+      ],
+      "reason": "One of the two root creation sites a LOCAL host user drives, and the one the headless profile boots. The registry named neither, because in the plan no creation site passed an identity at all. ACP, the SDK server and webhook ingress deliberately remain unattached: a request that arrived over a socket is not the machine's host user (OQ30)."
+    },
+    {
+      "epic": "P2-01",
+      "path": "packages/core/agent-loop/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.1"
+      ],
+      "reason": "Where an agent built from a profile's own `agents:` row learns who the host user is. The row is created inside the plugin's constructor, so the launcher cannot pass the identity as an argument; it provides a FACTORY under `HOST_USER_IDENTITY_KEY`, the same shape `CONFIGURED_AGENT_IDENTITIES_KEY` already uses for session ids. Minting inside the plugin instead was measured as harmful first: the unit lane does not isolate `DSH_HOME`, so every test mounting this plugin with a non-empty row would have written an identity file into a developer's real `~/.dsh`."
+    },
+    {
+      "epic": "P2-01",
+      "path": "packages/identity/host-user-id/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.1"
+      ],
+      "reason": "The host user's identifier, and the identity a local boot attaches for them. The registry named P2-01's decision and chain types and not this, because in the plan nothing produced a host principal: BLOCKED-200 measured that no shipped profile attached one, so every action traced to an `anonymous-dev` principal synthesized at the point of use. It is a new package rather than a second export of `dsh-anonymous-user-id` because that id is a TELEMETRY subject — it rides model requests, is exported as an OTel `user.id`, and `/feedback` prints it as \"Anonymous user\" — while this is an AUTHORIZATION subject, the `UserPrincipal` a trust upgrade is granted under (OQ29)."
     },
     {
       "epic": "P2-01",
@@ -815,6 +976,47 @@
       "kind": "test",
       "stages": [
         "F.1"
+      ]
+    },
+    {
+      "epic": "P2-01",
+      "path": "packages/subagent/subagent/src/child-agent.ts",
+      "kind": "source",
+      "stages": [
+        "U.1"
+      ],
+      "reason": "The delegation hop. A preFlight census found acceptance[0]'s second half in worse shape than BLOCKED-200 recorded: `resolveChildAgentOptions` did not carry `identity` and `extendChain` had ZERO production callers — seven grep hits, every one prose — so no delegation hop had ever been added in this tree and a delegated child was untraceable to the person who started the run. The registry named P2-01's chain types and not this file, because the producer did not exist."
+    },
+    {
+      "epic": "P2-01",
+      "path": "snapshots/session/subagent-depth-two-rejection/session.1.jsonl",
+      "kind": "fixture",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P2-01",
+      "path": "snapshots/session/subagent-depth-two-rejection/session.2.jsonl",
+      "kind": "fixture",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P2-01",
+      "path": "snapshots/session/subagent-depth-two-rejection/session.jsonl",
+      "kind": "fixture",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P2-01",
+      "path": "tests/first100/fixtures/P2-01.corpus.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
       ]
     },
     {
@@ -1134,7 +1336,8 @@
       "path": "packages/mcp/mcp-client/src/annotations.ts",
       "kind": "source",
       "stages": [
-        "P.3"
+        "P.3",
+        "C.1"
       ],
       "reason": "The Provider-stage wiring that turns MCP `ToolAnnotations` into this epic's risk domain tags. The registry named the classifier's own files; the adoption record for `@modelcontextprotocol/sdk` was recorded `landsIn: \"P\"`, and this is the file it landed in, so the clause's subject is here rather than in the Contract stage."
     },
@@ -1170,7 +1373,8 @@
       "path": "packages/mcp/mcp-client/tests/annotations.spec.ts",
       "kind": "test",
       "stages": [
-        "P.3"
+        "P.3",
+        "C.1"
       ]
     },
     {
@@ -1183,10 +1387,19 @@
     },
     {
       "epic": "P2-05",
+      "path": "packages/bundle/base/cordis.patch.yml",
+      "kind": "manifest",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P2-05",
       "path": "packages/core/tools/src/external-effect.ts",
       "kind": "source",
       "stages": [
-        "U"
+        "U",
+        "U.1"
       ],
       "reason": "`refusedPolicyResult`, beside the risk and ledger refusals it is shaped after: a policy refusal is a settled tool result rather than a thrown error, and putting it anywhere else would give the three refusal kinds two different shapes for the model to read."
     },
@@ -1195,7 +1408,8 @@
       "path": "packages/core/tools/src/ptc.ts",
       "kind": "source",
       "stages": [
-        "U"
+        "U",
+        "U.1"
       ],
       "reason": "The code-mode dispatch path's call site. must[2]'s 'code mode cannot bypass' is about this path asking the SAME question, and P2-03 already proved that two paths writing a sequence out separately is how one of them drifts. The registry's U files name `tools/src/index.ts`; the sub-dispatch scheduler lives here."
     },
@@ -1205,9 +1419,18 @@
       "kind": "source",
       "stages": [
         "U",
-        "F"
+        "F",
+        "U.1"
       ],
       "reason": "The enforcement point itself, split from both the definition and the provider: the DECISION comes from `ctx.policy` and the BINDING is the Trust Kernel's, and the code that sequences those two belongs with neither. The registry's stages name the kernel and the four consumer files but not this one, because the plan predates the split; without it, either the kernel would have to import the policy vocabulary (breaking P0-02's domain-agnostic type surface) or every dispatch path would sequence engine, constraints, audit and kernel for itself."
+    },
+    {
+      "epic": "P2-05",
+      "path": "packages/policy/policy-enforcement/tests/dispatch-convergence.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
+      ]
     },
     {
       "epic": "P2-05",
@@ -1215,6 +1438,14 @@
       "kind": "test",
       "stages": [
         "U"
+      ]
+    },
+    {
+      "epic": "P2-05",
+      "path": "packages/policy/policy-enforcement/tests/facts.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
       ]
     },
     {
@@ -1230,7 +1461,16 @@
       "path": "packages/policy/policy-enforcement/tests/fixtures/stack.ts",
       "kind": "test",
       "stages": [
-        "F"
+        "F",
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P2-05",
+      "path": "packages/policy/policy-enforcement/tests/service-lifetime.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
       ]
     },
     {
@@ -1239,7 +1479,8 @@
       "kind": "source",
       "stages": [
         "P",
-        "U"
+        "U",
+        "U.1"
       ],
       "reason": "The adopted engine's provider package, split from `policy-engine` on the `retry` / `retry-cockatiel` precedent: the definition and the monotonic composition rule must stay statable — and testable — without an engine mounted, or the rule becomes a claim about Cedar. The registry's `stages.P` names `policy-engine/src/index.ts` because the plan predates the split; that file is now the definition's entry, and the Cedar translation lives here. Also the reason the epic can answer its own placement question: 13 MB of wasm through a CommonJS entry is host-only, and a separate package is what lets a Client face never mount it. The U stage also adds the token claims to the Cedar context, so the file is cited by two live freezes: the translation is the P stage's deliverable and what it translates grew when must[0]'s second input started arriving."
     },
@@ -1257,6 +1498,134 @@
       "kind": "test",
       "stages": [
         "C"
+      ]
+    },
+    {
+      "epic": "P2-12",
+      "path": "packages/bundle/base/cordis.patch.yml",
+      "kind": "manifest",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P2-12",
+      "path": "packages/core/agent/src/types.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "`Agent.controlState`, the field the dispatch gate reads. The plan named `dispatch.ts` (the gate) and not the type carrying the state it gates on; a writer-contract JSDoc on that field is what keeps the publisher and the reader from drifting."
+    },
+    {
+      "epic": "P2-12",
+      "path": "packages/core/agent/tests/stop-gate.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P2-12",
+      "path": "packages/interaction/control-plane/src/channel.ts",
+      "kind": "source",
+      "stages": [
+        "P"
+      ],
+      "reason": "The channel construction, which must live here rather than in `human-channel` because `createHumanChannel` needs both packages' types and putting it in the other one makes them import each other. must[1]'s persist-then-announce order is decided in this file's `commit`, which is what the P-stage mutation reddens."
+    },
+    {
+      "epic": "P2-12",
+      "path": "packages/interaction/control-plane/src/plugin.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "The mounted service. The plan named `control-plane/src/index.ts` (the pure decisions) and no plugin file, but a stop that nothing mounts is not reached on any profile, and acceptance[1]'s delivery — the asker resumes with the human's answer — exists only in this file's waiting-point continuations. HOT ZONE: it is also where the `dsh-base` mount's composition behaviour is decided."
+    },
+    {
+      "epic": "P2-12",
+      "path": "packages/interaction/control-plane/tests/channel.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P"
+      ]
+    },
+    {
+      "epic": "P2-12",
+      "path": "packages/interaction/control-plane/tests/emergency-stop.e2e.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C"
+      ]
+    },
+    {
+      "epic": "P2-12",
+      "path": "packages/interaction/control-plane/tests/service.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P2-12",
+      "path": "packages/interaction/human-channel/src/store.ts",
+      "kind": "source",
+      "stages": [
+        "P"
+      ],
+      "reason": "The durable stop record. The plan named `human-channel/src/index.ts` and `src/types.ts` but not the store, and acceptance[2] — the stop survives a restart and needs an explicit release — is a property of the file on disk, so the frozen P-stage cases have to name where it is written."
+    },
+    {
+      "epic": "P2-12",
+      "path": "packages/run/run/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "`advanceLeasedAgent` gained a `'stopped'` refusal, so this caller's own declared return had to widen to carry it to ITS callers. A caller whose type still said the old union would have turned a refusal into a silently dropped reason. HOT ZONE: the Run plugin."
+    },
+    {
+      "epic": "P2-12",
+      "path": "packages/schema/schema-registry/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "The two new wire payloads' schema ids. Every protocol payload registers here by repository convention, so adding a request without it would ship a wire type no registry knows."
+    },
+    {
+      "epic": "P2-12",
+      "path": "packages/sdk/server/src/server.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "The host half of the protocol's first server-to-client request: the `user-questions/request` waterfall listener that sends `human/question` and `next()`s on rejection. The plan named `sdk/protocol/src/types.ts` (the wire types) and not the server that answers with them."
+    },
+    {
+      "epic": "P2-12",
+      "path": "packages/sdk/server/tests/human-question.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P3-01",
+      "path": "packages/execution/execution-world/src/local-provider.ts",
+      "kind": "source",
+      "stages": [
+        "P"
+      ],
+      "reason": "The local provider itself. The plan's P stage named `execution-world/src/index.ts` plus three `sandbox/` files, on the expectation that the compat adapter would be an edit inside the sandbox package; it is a separate module instead, because the provider refuses eight of the nine WorldSpec dimensions and those refusals are statements about the sandbox rather than changes to it — no `sandbox/` file needed to change. acceptance[2]'s unforgeable handle (module-private symbol plus a WeakMap keyed on object identity) is decided here."
+    },
+    {
+      "epic": "P3-01",
+      "path": "packages/execution/execution-world/tests/local-provider.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P"
       ]
     },
     {
@@ -1371,6 +1740,30 @@
       "kind": "test",
       "stages": [
         "U"
+      ]
+    },
+    {
+      "epic": "P4-02",
+      "path": "tests/first100/fixtures/loader/p4-02-task-profile/cordis.yml",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P4-02",
+      "path": "tests/first100/fixtures/loader/p4-02-task-profile/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P4-02",
+      "path": "tests/first100/fixtures/P4-02.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
       ]
     },
     {
@@ -2072,7 +2465,8 @@
       "path": "packages/reliability/retry-cockatiel/tests/breaker.spec.ts",
       "kind": "test",
       "stages": [
-        "P"
+        "P",
+        "P.1"
       ]
     },
     {
@@ -2140,7 +2534,7 @@
       "path": "packages/action/action-ledger/tests/fault-matrix.spec.ts",
       "kind": "test",
       "stages": [
-        "F"
+        "F.2"
       ]
     },
     {
@@ -2148,8 +2542,8 @@
       "path": "packages/action/action-ledger/tests/idempotency.e2e.spec.ts",
       "kind": "test",
       "stages": [
-        "C",
-        "C.2"
+        "C.2",
+        "C.3"
       ]
     },
     {
@@ -2157,7 +2551,7 @@
       "path": "packages/action/action-ledger/tests/store.spec.ts",
       "kind": "test",
       "stages": [
-        "P"
+        "P.1"
       ]
     },
     {
@@ -2320,9 +2714,18 @@
       "path": "packages/run/taskboard-sqlite/src/store.ts",
       "kind": "source",
       "stages": [
-        "U.2"
+        "U.2",
+        "U.3"
       ],
       "reason": "The durable board's implementation. It was `src/index.ts` until §12.27-1 made that file the Cordis plugin, so the store moved down one file and the same code is now cited under the new name."
+    },
+    {
+      "epic": "P5-11",
+      "path": "packages/run/taskboard-sqlite/tests/taskboard-sqlite.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
+      ]
     },
     {
       "epic": "P5-11",
@@ -2363,7 +2766,8 @@
       "path": "packages/context/memory-context/tests/fixtures/empty-recall-driver.ts",
       "kind": "test",
       "stages": [
-        "U"
+        "U",
+        "U.1"
       ]
     },
     {
@@ -2395,7 +2799,8 @@
       "path": "packages/context/memory-context/tests/memory-context.spec.ts",
       "kind": "test",
       "stages": [
-        "U"
+        "U",
+        "U.1"
       ]
     },
     {

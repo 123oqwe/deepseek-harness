@@ -12952,6 +12952,257 @@
         "failureSummary": "M1 reds ALL FOUR: with no provider the profile has no boundary, `agent-instructions` fails OPEN, and the clone's instructions reach the model in every mode. That the whole suite turns on one bundle line is the property being frozen — this fixture enables nothing itself. M2 reds EXACTLY ONE, the swap case, and leaves the other three green. That is the delegate's requested sensitivity: a path-keyed record answers `trusted-read` for a different directory that took the granted path, while grant, revoke and the no-record case are indifferent to how the record is keyed. NOT PROVEN here: that the kernel AUDIT reaches a reader. A shipped profile constructs its kernel with no `auditSink` (`apps/cli/src/profile-boot.ts`), so `auditAppend` is a no-op on every launched profile — BLOCKED-191. That the provider APPENDS a transition carrying scope, source and workspace identity is proved in `workspace-trust-local/tests/provider.spec.ts` against a kernel whose sink IS configured. Asserting it in this smoke would assert the absence of a reader, not the presence of a record."
       },
       "note": "P1-07 BLOCKED-214's second half, under the user's ruling that (A)'s unattended side is a persistent trust record. Measured first: four of the six shape constraints already held — the record is reconciled against `{device, inode, birthtime}` so a replaced or moved directory never inherits, `TrustState` already carries the read/execute scope, and no-record-plus-no-answerer already failed closed. Built: `TrustGrantSource` on the record (`launch-argument | command | configured-grant`), a kernel audit append on both grant and revoke, `revokeTrust` on the seam and provider over the existing `downgradeTrust`, and `--trust-workspace[=read|execute|none]` as the entry point. The flag WRITES the record and does not bypass the check — every Consumer still resolves through `stateFor` against a fresh identity observation, which is what the swap case proves. That is what lets the `headless` bundle enable the provider row: (A′) disabled it because nothing could answer, and a durable record removes the reason."
+    },
+    {
+      "epic": "P2-12",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/interaction/control-plane/tests/emergency-stop.e2e.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-12 must[0]/acceptance[2]: the stop is a durable record that only an explicit resume lifts records WHO stopped it and WHY, because a restart reads the record and not a flag",
+        "P2-12 must[0]/acceptance[2]: the stop is a durable record that only an explicit resume lifts keeps a run stopped when the state was restored from a record, with no verb in between",
+        "P2-12 must[0]/acceptance[2]: the stop is a durable record that only an explicit resume lifts lifts the stop ONLY for resume, and reports every other verb as a no-op over a stopped state",
+        "P2-12 must[0]/acceptance[2]: the stop is a durable record that only an explicit resume lifts distinguishes stopping an already-stopped run from stopping a running one, because an audit reads the transition",
+        "P2-12 must[0]/acceptance[2]: the stop is a durable record that only an explicit resume lifts refuses kill-execution-world as UNIMPLEMENTED rather than accepting it silently",
+        "P2-12 must[2]: a worker checks the stop before it takes new work refuses new work under a stop, naming the record so the refusal can be explained",
+        "P2-12 must[2]: a worker checks the stop before it takes new work allows new work when no stop is in force, so the gate refuses only what the stop covers",
+        "P2-12 must[0]: a question names its destination, and the stop is checked first refuses to ask under a stop, because a question is a new action",
+        "P2-12 must[0]: a question names its destination, and the stop is checked first reports the stop even when the waiting point is ALSO unknown, so the order is observable",
+        "P2-12 must[0]: a question names its destination, and the stop is checked first distinguishes a waiting point that never existed from one that is gone",
+        "P2-12 must[0]: a question names its destination, and the stop is checked first admits an ask for an open point with a delivery seam, so the refusals above are not the only answer",
+        "P2-12 acceptance[1]: an answer reaches only the waiting point that asked (BLOCKED-215) settles the addressed point and leaves every OTHER open point untouched",
+        "P2-12 acceptance[1]: an answer reaches only the waiting point that asked (BLOCKED-215) settles B and leaves A open, so the case above is not passing on set order",
+        "P2-12 acceptance[1]: an answer reaches only the waiting point that asked (BLOCKED-215) REFUSES a settlement for a vanished waiting point and names it, rather than doing nothing",
+        "P2-12 acceptance[1]: an answer reaches only the waiting point that asked (BLOCKED-215) refuses a settlement for a point that was never registered, separately from one that is gone",
+        "P2-12 acceptance[1]: an answer reaches only the waiting point that asked (BLOCKED-215) leaves the open set unchanged when it refuses, so a failed settlement cannot silently consume a point",
+        "P2-12 must[3]: an answer is input and never a grant carries nothing an approval path could consume: the answer has exactly its two fields",
+        "P2-12 must[3]: an answer is input and never a grant settles without producing a grant, so answering a question authorizes nothing"
+      ],
+      "files": [
+        "packages/interaction/human-channel/src/types.ts",
+        "packages/interaction/control-plane/src/index.ts",
+        "packages/interaction/control-plane/tests/emergency-stop.e2e.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-12T10:36:00.000Z",
+      "dryRunProof": {
+        "treeSha": "b4b57ff46164aef94647caa950adc2cf0bca926f",
+        "testsDiscovered": 18
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Locally (never committed) changed `decideControl`'s `cancel-run` branch in packages/interaction/control-plane/src/index.ts from `{ action: 'unchanged', because: 'already-stopped' }` to `{ action: 'released' }` over a stopped state. That is the reading a caller gets by treating 'cancel the run' as 'the run is over, so the stop no longer applies', and it is the one a stop must refuse: only an explicit resume releases.",
+        "failureSummary": "1 of 18 failed: `lifts the stop ONLY for resume, and reports every other verb as a no-op over a stopped state`. The four other verbs' cases and the refusal of `kill-execution-world` stayed green, so the failure is about WHICH verb releases and not about the verb table being broken. Mutation reverted; 18 passed (18)."
+      },
+      "note": "Contract stage: pure decisions over values, no store and no broadcast. `evidence-P2-12.md` records question (2) for this stage as zero production callers BY DESIGN, which is the state BLOCKED-215 describes as a defect one stage later — written down rather than left for sign-off."
+    },
+    {
+      "epic": "P2-12",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/interaction/control-plane/tests/channel.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-12 acceptance[2]: the stop survives a restart and needs an explicit release comes up STOPPED over a store that holds a record, with nothing re-applying the stop",
+        "P2-12 acceptance[2]: the stop survives a restart and needs an explicit release lets work start again only after a resume, and that release survives the next restart too",
+        "P2-12 acceptance[2]: the stop survives a restart and needs an explicit release keeps the stop when a RELEASE was decided but never reached the store, which is the reverse control",
+        "P2-12 acceptance[2]: the stop survives a restart and needs an explicit release refuses a store document whose version this build does not know, naming the path and both versions",
+        "P2-12 acceptance[2]: the stop survives a restart and needs an explicit release reads a missing document as \"no stop\", because a first boot is not a failure",
+        "P2-12 must[1]: the stop is persisted BEFORE it is announced has the record on disk by the time the broadcast fires",
+        "P2-12 must[1]: the stop is persisted BEFORE it is announced keeps a stop that was announced and then lost the process, so a crash between the two does not forget it",
+        "P2-12 must[1]: the stop is persisted BEFORE it is announced announces every transition and nothing else, so a no-op does not look like a stop",
+        "P2-12 must[2]/acceptance[0]: no new work starts under a stop refuses to register a question under a stop, because a question is new work",
+        "P2-12 must[2]/acceptance[0]: no new work starts under a stop registers a question when no stop is in force, so the refusal above is not the only answer",
+        "P2-12 acceptance[1]: settlement is out of band and reaches one point only delivers to the point that asked and leaves the other pending",
+        "P2-12 acceptance[1]: settlement is out of band and reaches one point only refuses a SECOND answer for the same point as vanished, not as never registered",
+        "P2-12 acceptance[1]: settlement is out of band and reaches one point only refuses an answer for a point nobody registered, and delivers nothing",
+        "P2-12 acceptance[1]: settlement is out of band and reaches one point only refuses to re-ask a settled point, so the registry does not quietly reopen it",
+        "P2-12 must[1]/must[2]: the state reaches every agent, and an answer reaches its asker puts the state on EVERY agent, because one that never receives it dispatches",
+        "P2-12 must[1]/must[2]: the state reaches every agent, and an answer reaches its asker overwrites a stale reading rather than leaving the first one, so a release reaches an agent too"
+      ],
+      "files": [
+        "packages/interaction/human-channel/src/store.ts",
+        "packages/interaction/control-plane/src/channel.ts",
+        "packages/interaction/control-plane/tests/channel.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-12T10:37:00.000Z",
+      "dryRunProof": {
+        "treeSha": "b4b57ff46164aef94647caa950adc2cf0bca926f",
+        "testsDiscovered": 16
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Locally (never committed) reordered `commit` in packages/interaction/control-plane/src/channel.ts to set the state and broadcast BEFORE `store.write`. That is the order a reader writes by treating the store as a log of what happened rather than as the record the next process reads.",
+        "failureSummary": "2 of 16 failed: `has the record on disk by the time the broadcast fires` and `keeps a stop that was announced and then lost the process, so a crash between the two does not forget it` — the second is the consequence the first exists to prevent, so both failing is the expected pair rather than one case counted twice. The restart and refusal cases stayed green. Mutation reverted; 16 passed (16)."
+      },
+      "note": "must[1]'s order is the content of this stage: persist, then set, then announce. The reverse leaves every worker told to halt and a file saying nothing happened, which no single process can detect afterwards."
+    },
+    {
+      "epic": "P2-12",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/core/agent/tests/stop-gate.spec.ts",
+        "packages/interaction/control-plane/tests/service.spec.ts",
+        "packages/sdk/server/tests/human-question.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-12 must[2]: a stop refuses the next advance on the real dispatch path refuses the advance with `stopped` while a stop is in force",
+        "P2-12 must[2]: a stop refuses the next advance on the real dispatch path leaves the lifecycle untouched when it refuses, so a refused agent did not half-advance",
+        "P2-12 must[2]: a stop refuses the next advance on the real dispatch path admits the advance once the stop is RELEASED, so the gate refuses only while stopped",
+        "P2-12 must[2]: a stop refuses the next advance on the real dispatch path admits the advance when NO channel is mounted, and says that is why",
+        "P2-12 must[2]: a stop refuses the next advance on the real dispatch path distinguishes the two admitting reasons, because they are different facts",
+        "P2-12 must[2]: a stop refuses the next advance on the real dispatch path reports the STOP even when the lease was also refused, so the operator is sent to the right cause",
+        "P2-12 must[2]: a stop refuses the next advance on the real dispatch path still reports `lease-refused` when no stop is in force, so the stop check did not swallow it",
+        "P2-12 acceptance[1]: the human answer reaches the point that asked (BLOCKED-215 closed) resumes the asker with the human text, which is the delivery P5-10 never had a path for",
+        "P2-12 acceptance[1]: the human answer reaches the point that asked (BLOCKED-215 closed) leaves a second asker waiting when the first is settled, so one answer resumes one caller",
+        "P2-12 acceptance[1]: the human answer reaches the point that asked (BLOCKED-215 closed) refuses an answer for a point nobody is waiting at, rather than dropping it",
+        "P2-12 acceptance[1]: the human answer reaches the point that asked (BLOCKED-215 closed) refuses to ask at all while a stop is in force, so a question is new work",
+        "P2-12 acceptance[1]: the human answer reaches the point that asked (BLOCKED-215 closed) comes up stopped over a store a previous mount wrote, with nothing re-applying the stop",
+        "P2-12 must[0] over the SDK: the runtime asks its embedding host sends the question as a server-to-client request and resolves the asker with the reply",
+        "P2-12 must[0] over the SDK: the runtime asks its embedding host names the session on the wire, so a host driving several can attribute the question",
+        "P2-12 must[0] over the SDK: the runtime asks its embedding host carries free text back, so a question with no options is answerable",
+        "P2-12 must[0] over the SDK: the runtime asks its embedding host FAILS CLOSED when the host registers no handler, which is the shipped default"
+      ],
+      "files": [
+        "packages/core/agent/src/dispatch.ts",
+        "packages/core/agent/src/types.ts",
+        "packages/run/run/src/index.ts",
+        "packages/interaction/control-plane/src/plugin.ts",
+        "packages/bundle/base/cordis.patch.yml",
+        "packages/sdk/protocol/src/types.ts",
+        "packages/schema/schema-registry/src/index.ts",
+        "packages/sdk/server/src/server.ts",
+        "packages/core/agent/tests/stop-gate.spec.ts",
+        "packages/interaction/control-plane/tests/service.spec.ts",
+        "packages/sdk/server/tests/human-question.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-12T10:38:00.000Z",
+      "dryRunProof": {
+        "treeSha": "b4b57ff46164aef94647caa950adc2cf0bca926f",
+        "testsDiscovered": 16
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations, because this stage has two independent claims. (M1) In packages/core/agent/src/dispatch.ts, moved the stop check BELOW the `leaseRefused` check inside `advanceLeasedAgent` — the order a reader writes by treating the stop as one more authority check. (M2) In packages/interaction/control-plane/src/plugin.ts, dropped the `this.settle(...)` call from the seam's fulfilment handler, so the question still reaches the seam and the answer still arrives but nothing resumes the asker — the delegate's named mutation, and BLOCKED-215's exact shape.",
+        "failureSummary": "(M1) 1 of 16 failed: `reports the STOP even when the lease was also refused, so the operator is sent to the right cause`. `still reports lease-refused when no stop is in force` stayed green, so the failure is about precedence and not about the lease check. (M2) 2 of 5 in service.spec.ts failed BY TIMEOUT at 5s — `resumes the asker with the human text` and `leaves a second asker waiting when the first is settled` — which is what 'the asker was never resumed' looks like from outside. A THIRD mutation attempt is recorded as worthless rather than dropped: `void seam.ask(...)` rewritten as `void Promise.resolve().then(...) ?? seam.ask(...)` left all 5 green, and the reason is that `void x` is `undefined`, so `??` evaluated the right side and the call still happened. A suite passing under a no-op mutation proves nothing, and mistaking that for insensitivity is how a real gap gets reported. Both real mutations reverted; 50 passed (50) across the five P2-12 files."
+      },
+      "note": "The stage's limitation is declared rather than implied: the waiting-point registry's intended consumer — a subagent asking a human — is deliberately refused by `ctx.userQuestions.ask`'s DELEGATED_CALLER check, so `controlPlane.ask`/`settle` reach production through no caller and the SDK's `human/question` path is 4.4b only (no handler ships). 4.4c for questions belongs to the Web surface. See evidence-P2-12.md."
+    },
+    {
+      "epic": "P3-01",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/execution/execution-world/tests/world.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P3-01 must[1]: a WorldSpec decides all nine confinement dimensions names exactly the nine dimensions the epic requires, so a tenth cannot arrive unnoticed",
+        "P3-01 must[1]: a WorldSpec decides all nine confinement dimensions reports every unanswered dimension, not just the first",
+        "P3-01 must[1]: a WorldSpec decides all nine confinement dimensions accepts a complete spec, which is the control a reject-everything check would fail",
+        "P3-01 must[1]: a WorldSpec decides all nine confinement dimensions treats a deliberate `none` as answered, so refusing a capability is not the same as forgetting it",
+        "P3-01 must[0]: the lifecycle states are the OCI ordering, and `stopped` is terminal declares the four adapted states and not OCI `paused`, which nothing here can enter",
+        "P3-01 must[0]: the lifecycle states are the OCI ordering, and `stopped` is terminal admits the forward edges a real world walks",
+        "P3-01 must[0]: the lifecycle states are the OCI ordering, and `stopped` is terminal admits stopping from every non-terminal state, because a world can fail before it runs",
+        "P3-01 must[0]: the lifecycle states are the OCI ordering, and `stopped` is terminal refuses every edge out of `stopped`, so one WorldId never names two confinements",
+        "P3-01 must[0]: the lifecycle states are the OCI ordering, and `stopped` is terminal refuses backward and skipping edges, which is what makes the table a decision",
+        "P3-01 acceptance[1]: no provider satisfying the policy fails closed, never degrades selects the first satisfying provider in the deployment’s own order",
+        "P3-01 acceptance[1]: no provider satisfying the policy fails closed, never degrades refuses when every provider misses a dimension, and names what each missed",
+        "P3-01 acceptance[1]: no provider satisfying the policy fails closed, never degrades does NOT fall back to a provider that misses fewer dimensions, which is the degradation acceptance[1] forbids",
+        "P3-01 acceptance[1]: no provider satisfying the policy fails closed, never degrades refuses with `no-provider` when none is registered, distinct from every-provider-unsatisfiable",
+        "P3-01 acceptance[1]: no provider satisfying the policy fails closed, never degrades refuses an incomplete spec before any provider is consulted, so no provider fills the gap",
+        "P3-01 must[0]: a restore may narrow and never widen admits a restore into the same confinement",
+        "P3-01 must[0]: a restore may narrow and never widen refuses a restore into a different confinement, which is how a weaker snapshot would widen one",
+        "P3-01 validation[3]: a stopped world settles to one typed outcome whatever stopped it names an expired lifetime `timeout`, distinct from `provider-failed`"
+      ],
+      "files": [
+        "packages/execution/execution-world/src/types.ts",
+        "packages/execution/execution-world/src/lifecycle.ts",
+        "packages/core/tools/src/types.ts",
+        "packages/execution/execution-world/tests/world.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-12T10:39:00.000Z",
+      "dryRunProof": {
+        "treeSha": "b4b57ff46164aef94647caa950adc2cf0bca926f",
+        "testsDiscovered": 17
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Locally (never committed) gave `selectWorldProvider` in packages/execution/execution-world/src/lifecycle.ts a fallback: track the provider with the fewest unmet dimensions and select it when none satisfies every dimension. That is the degradation acceptance[1] forbids, written the way a reader writes it when 'fail closed' is read as 'try to be helpful'.",
+        "failureSummary": "2 of 17 failed: `does NOT fall back to a provider that misses fewer dimensions, which is the degradation acceptance[1] forbids` and `refuses when every provider misses a dimension, and names what each missed`. The positive control `selects the first satisfying provider in the deployment's own order` stayed green, so the suite distinguishes selecting from degrading. Mutation reverted; 41 passed (41) across the package."
+      },
+      "note": "acceptance[1] is proved for the SELECTION half only. `ExecutionWorldFact` in policy-engine still has one variant (`{ kind: 'absent' }`), so no policy can yet refuse on where an action would run; that half stays unprovable and is declared in evidence-P3-01.md rather than counted here."
+    },
+    {
+      "epic": "P3-01",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/execution/execution-world/tests/local-provider.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P3-01 acceptance[1]: the local provider names every dimension it cannot deliver satisfies the one spec the sandbox can actually confine",
+        "P3-01 acceptance[1]: the local provider names every dimension it cannot deliver refuses a filesystem it cannot remove, because every confining mode leaves a readable root",
+        "P3-01 acceptance[1]: the local provider names every dimension it cannot deliver refuses any network posture but unrestricted, because the sandbox governs file effects only",
+        "P3-01 acceptance[1]: the local provider names every dimension it cannot deliver refuses a world forbidden to spawn, and one with a descendant ceiling",
+        "P3-01 acceptance[1]: the local provider names every dimension it cannot deliver refuses any IPC posture but unrestricted",
+        "P3-01 acceptance[1]: the local provider names every dimension it cannot deliver refuses a device set that is not exactly the sinks the sandbox always permits",
+        "P3-01 acceptance[1]: the local provider names every dimension it cannot deliver refuses every secrets posture but inherited, because a local world shares the host environment",
+        "P3-01 acceptance[1]: the local provider names every dimension it cannot deliver refuses any resource ceiling, because the sandbox expresses none",
+        "P3-01 acceptance[1]: the local provider names every dimension it cannot deliver refuses a DETACHED world while delivering a wall-clock ceiling, so lifetime is not refused wholesale",
+        "P3-01 acceptance[1]: the local provider names every dimension it cannot deliver refuses another tenant, because a local world belongs to its host",
+        "P3-01 acceptance[1]: the local provider names every dimension it cannot deliver names EVERY unsatisfiable dimension at once, so a caller learns the whole gap in one answer",
+        "P3-01 acceptance[1]: the local provider names every dimension it cannot deliver is not selected for a world it refuses, and the refusal names its unmet dimensions",
+        "P3-01 acceptance[1]: the local provider names every dimension it cannot deliver IS selected for a world it satisfies, so selection is not refusing everything",
+        "P3-01 acceptance[2]: only this provider mints its handles refuses a forged handle that carries a real world id and the right provider name",
+        "P3-01 acceptance[2]: only this provider mints its handles refuses a handle another instance of the same provider minted",
+        "P3-01 acceptance[2]: only this provider mints its handles hands the real handle its sandbox policy, so the refusals above are not the only answer",
+        "P3-01 validation[3]: one outcome shape, whatever stopped the world settles a terminated world as `terminated`",
+        "P3-01 validation[3]: one outcome shape, whatever stopped the world settles a world past its wall clock as `timeout`, even when the caller asked to terminate",
+        "P3-01 validation[3]: one outcome shape, whatever stopped the world returns the SAME outcome when asked twice, so a recovery path may ask again",
+        "P3-01 validation[3]: one outcome shape, whatever stopped the world hands out no policy once the world has stopped",
+        "P3-01 validation[3]: one outcome shape, whatever stopped the world never reports `lost-contact`, which is this provider being honest about what it is",
+        "P3-01 acceptance[0]: creating a world changes nothing about execution exposes no `execute`, so a provider swap cannot move the dispatch path",
+        "P3-01 acceptance[0]: creating a world changes nothing about execution refuses to create a world whose filesystem the sandbox cannot confine, rather than narrowing it",
+        "P3-01 acceptance[0]: creating a world changes nothing about execution refuses a rootless workspace-write world, because a root the sandbox reads as empty confines nothing"
+      ],
+      "files": [
+        "packages/execution/execution-world/src/local-provider.ts",
+        "packages/execution/execution-world/tests/local-provider.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-12T10:40:00.000Z",
+      "dryRunProof": {
+        "treeSha": "b4b57ff46164aef94647caa950adc2cf0bca926f",
+        "testsDiscovered": 24
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Locally (never committed) replaced the handle's identity lookup in packages/execution/execution-world/src/local-provider.ts with a structural one: a `Map<WorldId, LocalWorld>` populated at create, and `mine()` reading `byId.get(handle.id)` instead of the module-private `WeakMap`. That is the lookup a reader writes when the handle's id is taken for its identity.",
+        "failureSummary": "1 of 24 failed: `refuses a forged handle that carries a real world id and the right provider name`. I expected two and got one, which is the more useful reading: `refuses a handle another instance of the same provider minted` survives because each instance owns its own map, so that case is held by instance ownership while the forged-handle case is what the symbol and the WeakMap hold. A first attempt looked the world up in `live` instead and reddened five cases including the positive control — a different mutation (it broke every lookup of a STOPPED world) that proves nothing about identity, so it is not the one recorded. Mutation reverted; 41 passed (41) across the package."
+      },
+      "note": "The provider refuses eight of the nine dimensions and names each one; that honesty is the stage's content. acceptance[0]'s cross-provider half is NOT proved here — only a local provider exists, so what is proved is the structural precondition (no `execute` on the provider, and `ToolWorldBinding` deliberately outside `ActionManifest`). Declared at freeze time per the preFlight's open question 2."
     }
   ]
 }
