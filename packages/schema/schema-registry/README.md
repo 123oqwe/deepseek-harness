@@ -92,6 +92,8 @@ These two examples are this package's proof that every registry migration carrie
 
 `negotiateSchema` is a complete, real function, but no call site yet invokes it during session replay, SDK `initialize`, or plugin load — that wiring is a later, U-stage concern.
 
+**Runtime invariant:** No runtime invariant companion is published: `registerSchema`/`evolveSchema` enforce duplicate-id rejection, version-bump-versus-declared-change matching, and append-only `history` synchronously inside the same call that mutates the private registry map, so there is no independent event or second data source whose drift a companion could detect. `negotiateSchema`/`getSchema`/`listSchemas` are pure reads of that map.
+
 </details>
 
 -----
@@ -104,8 +106,6 @@ None, as this package exports versioning and negotiation functions only and regi
 #### KV Cache effect
 
 Nothing here enters a model request, so provider cache reuse is unaffected.
-
-**Runtime invariant:** No runtime invariant companion is published: `registerSchema`/`evolveSchema` enforce duplicate-id rejection, version-bump-versus-declared-change matching, and append-only `history` synchronously inside the same call that mutates the private registry map, so there is no independent event or second data source whose drift a companion could detect. `negotiateSchema`/`getSchema`/`listSchemas` are pure reads of that map.
 
 ## Known Limitations and Deferred Work
 

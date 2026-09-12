@@ -68,6 +68,8 @@ function isBlockingFailure(gate: CompletedGateEvidence): boolean {
 | [`src/types.ts`](src/types.ts) | `GateEvidence`/`EvidencePackage` 类型表面:三种 gate 结果变体、branded id/digest 类型,以及以 `accepted` 判别的聚合 package |
 | [`src/index.ts`](src/index.ts) | `./types.ts` 的纯类型重导出——零运行时导出、零 Cordis 注册(本 Contract 阶段切片强制性的 B4(f) 脚手架) |
 
+**运行时不变式：** 不发布运行时不变式伴随包：本 Contract 阶段切片只交付 `EvidencePackage`/`GateEvidence` 类型面，不注册任何 Cordis 服务，也不拥有可变数据或周期性事件流可供检查。真正的检查属于后续切片——等真实收集器存在之后，例如「每个运行实际产出的 `AcceptedEvidencePackage` 在写盘前都校验过自己的 `signature`」。
+
 </details>
 
 -----
@@ -89,8 +91,6 @@ function isBlockingFailure(gate: CompletedGateEvidence): boolean {
 #### KV Cache effect
 
 这里没有任何内容进入模型请求,因此不影响 provider 缓存复用。
-
-**运行时不变式：** 不发布运行时不变式伴随包：本 Contract 阶段切片只交付 `EvidencePackage`/`GateEvidence` 类型面，不注册任何 Cordis 服务，也不拥有可变数据或周期性事件流可供检查。真正的检查属于后续切片——等真实收集器存在之后，例如「每个运行实际产出的 `AcceptedEvidencePackage` 在写盘前都校验过自己的 `signature`」。
 
 ## 已知限制与延后工作
 

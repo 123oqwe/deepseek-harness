@@ -27,6 +27,8 @@ One identity type shared by every layer that has to answer *who is acting, for w
 
 Delegation is part of `IdentityContext` rather than beside it. A principal that arrived through three delegations is not the same actor as the same principal acting directly, and a consumer that only sees the leaf cannot tell them apart.
 
+**Runtime invariant:** No runtime invariant companion is published: this package is a pure type contract plus pure delegation-chain functions, with no event stream or mutable module state to compare. The `adminGrantOwners` registry in `src/chain.ts` is a private unforgeability check, not a public relation.
+
 ## Model Experience
 
 None, as this package exports identity types and a tenant-policy assertion only and registers nothing model-facing.
@@ -34,8 +36,6 @@ None, as this package exports identity types and a tenant-policy assertion only 
 #### KV Cache effect
 
 Nothing here enters a model request, so provider cache reuse is unaffected.
-
-**Runtime invariant:** No runtime invariant companion is published: this package is a pure type contract plus pure delegation-chain functions, with no event stream or mutable module state to compare. The `adminGrantOwners` registry in `src/chain.ts` is a private unforgeability check, not a public relation.
 
 ## Known Limitations and Deferred Work
 

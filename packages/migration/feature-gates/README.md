@@ -59,6 +59,8 @@ const { value, shadowRecord } = evaluateFeatureGate(
 | [`src/types.ts`](src/types.ts) | The full Contract-stage type surface: `FeatureGateState`, `FeatureGateDeclaration`, `FeatureGateNamespaceValue` (settings interop), `FeatureGateOverrideSource`/`FeatureGateResolution` (override chain), `RedactedJsonValue`/`FeatureGateShadowDecisionRecord` (nominally-branded diff), `FeatureGateExpiryStatus`/`FeatureGateExpiryCheck` |
 | [`src/index.ts`](src/index.ts) | Re-exports every Contract-stage type, plus the real Provider-stage runtime: `resolveFeatureGate` (must[3]), `evaluateFeatureGate`/`redactDecisionSummary` (must[1]/acceptance[0]/acceptance[1]), `checkFeatureGateExpiry` (acceptance[2]) |
 
+**Runtime invariant:** No runtime invariant companion is published: this Contract-stage slice is type-only — no gate registry or decision event stream exists yet for an event/data relation to check. A later slice registering a live shadow/enforce decision stream should replace this with a check over it: that a `'shadow'`-state gate's applied result always matches the legacy outcome, never the shadow-only decision, even when the recorded `FeatureGateShadowDecisionRecord` shows the two disagree (must[1]/acceptance[0]).
+
 </details>
 
 -----
@@ -71,8 +73,6 @@ None, as this package exports pure gate predicates over caller-supplied flags on
 #### KV Cache effect
 
 Nothing here enters a model request, so provider cache reuse is unaffected.
-
-**Runtime invariant:** No runtime invariant companion is published: this Contract-stage slice is type-only — no gate registry or decision event stream exists yet for an event/data relation to check. A later slice registering a live shadow/enforce decision stream should replace this with a check over it: that a `'shadow'`-state gate's applied result always matches the legacy outcome, never the shadow-only decision, even when the recorded `FeatureGateShadowDecisionRecord` shows the two disagree (must[1]/acceptance[0]).
 
 ## Known Limitations and Deferred Work
 

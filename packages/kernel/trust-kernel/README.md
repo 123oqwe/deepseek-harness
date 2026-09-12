@@ -76,6 +76,8 @@ This section explains the design decisions behind the package; the observable ty
 | [`src/types.ts`](src/types.ts) | The `TrustKernel` type surface: its six capability members, the three opaque handle types, and the three narrow entrypoint function types |
 | [`src/index.ts`](src/index.ts) | `createTrustKernel()`: constructs and deep-freezes the one `TrustKernel` value; `policyEnforcement` denies, `sandboxAttestationVerifier` rejects, and `auditAppend` no-ops until a later epic wires real providers. `pinTrustKernel()`: pins it into a `Context` with `ctx.provide`, then locks the service-store slot, its `Impl` record, the root fiber's store entry, and the `reflect.props` registration so no plugin can forge, delete-then-reprovide, or substitute-an-accessor-for the pin |
 
+**Runtime invariant:** No runtime invariant companion is published: the guarantee worth checking — the kernel's six capability members never change reference identity for the process lifetime — holds structurally rather than through anything this package emits or mutates. `ctx.provide('trustKernel', kernel)` runs once, before any config-tree entry mounts, and Cordis's own `ReflectService.provide` throws on a second call for the same name. A runtime check could not positively verify that without inventing an event unrelated to any relation this package owns.
+
 </details>
 
 -----
@@ -105,8 +107,6 @@ Zero-direct: the package contributes no prompt or schema text.
 #### KV Cache effect
 
 Independent: the package registers nothing that participates in a model request.
-
-**Runtime invariant:** No runtime invariant companion is published: the guarantee worth checking — the kernel's six capability members never change reference identity for the process lifetime — holds structurally rather than through anything this package emits or mutates. `ctx.provide('trustKernel', kernel)` runs once, before any config-tree entry mounts, and Cordis's own `ReflectService.provide` throws on a second call for the same name. A runtime check could not positively verify that without inventing an event unrelated to any relation this package owns.
 
 ## Known Limitations and Deferred Work
 

@@ -29,6 +29,8 @@ kind: "package-reference"
 
 `traceToObservations` 把一条事实回溯到产生它的东西。没有它的板是一组没有来历的断言,读到其中一条的 agent 无法分辨这是一次测量,还是另一个 agent 两跳之前做出的推断。
 
+**运行时不变式：** 不发布运行时不变式伴随包：本包不构造任何注册表、日志或 `Context` 值。它对调用方提供的事实做判断并把结果交回，因此检查器只会拿一个值与它自己比较，而不是校对两次可以各自偏离的独立观测。
+
 ## Model Experience
 
 None, as this package exports fact admission, observation tracing, and types only and registers nothing model-facing.
@@ -36,8 +38,6 @@ None, as this package exports fact admission, observation tracing, and types onl
 #### KV Cache effect
 
 Nothing here enters a model request, so provider cache reuse is unaffected.
-
-**运行时不变式：** 不发布运行时不变式伴随包：本包不构造任何注册表、日志或 `Context` 值。它对调用方提供的事实做判断并把结果交回，因此检查器只会拿一个值与它自己比较，而不是校对两次可以各自偏离的独立观测。
 
 ## 已知限制与延后事项
 

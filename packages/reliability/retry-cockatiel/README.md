@@ -54,6 +54,8 @@ Both shipped values are `Config` fields, changeable per profile:
 
 The provider stores its policies in a `private readonly` map rather than a `#private` field. Cordis hands callers a Service proxy, so `this` inside a method is not the instance and a `#private` access throws `Receiver must be an instance of class …`. `@deepseek-ai/dsh-lease`'s store is written the same way for the same reason.
 
+**Runtime invariant:** No runtime invariant companion is published: this package holds one cockatiel policy per destination (`src/index.ts:85`) and no copy of what those policies decided — the open/closed state and the failure counts live inside each policy. So there is one authority and no second observation of it to reconcile against, which is the test a companion has to meet.
+
 ## Model Experience
 
 None, as this package refuses or admits an attempt before the adapter is reached and registers no tool, prompt text or session event.
@@ -61,8 +63,6 @@ None, as this package refuses or admits an attempt before the adapter is reached
 #### KV Cache effect
 
 Nothing here enters a model request. A refusal reaches the model only as whatever its caller does with the thrown error.
-
-**Runtime invariant:** No runtime invariant companion is published: this package holds one cockatiel policy per destination (`src/index.ts:85`) and no copy of what those policies decided — the open/closed state and the failure counts live inside each policy. So there is one authority and no second observation of it to reconcile against, which is the test a companion has to meet.
 
 ## Known Limitations and Deferred Work
 

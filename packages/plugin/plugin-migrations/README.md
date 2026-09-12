@@ -47,6 +47,8 @@ Recording the confirmation in the transaction log, with the operator identity, t
 
 A cycle is refused structurally and named as one rather than being discovered by a depth limit. The reason is the same one P4-09 recorded for self-recursive workflow definitions: an operator reading "these versions form a cycle" knows which declarations to fix, while one reading "too many steps" cannot tell a loop from a long history.
 
+**Runtime invariant:** No runtime invariant companion is published: this package holds the migration vocabulary and pure judgements over a manifest's DAG the caller owns, so it constructs nothing whose state a checker could compare against a second reading.
+
 ## Model Experience
 
 None, as this package decides and orders a plugin upgrade that runs in `dsh plugin`, before any agent starts, and registers no tool, prompt text or session event.
@@ -54,8 +56,6 @@ None, as this package decides and orders a plugin upgrade that runs in `dsh plug
 #### KV Cache effect
 
 Nothing here enters a model request; an upgrade happens between sessions, not inside one.
-
-**Runtime invariant:** No runtime invariant companion is published: this package holds the migration vocabulary and pure judgements over a manifest's DAG the caller owns, so it constructs nothing whose state a checker could compare against a second reading.
 
 ## Known Limitations and Deferred Work
 

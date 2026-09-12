@@ -68,6 +68,8 @@ This section explains the design decisions behind the package; the observable ty
 | [`src/types.ts`](src/types.ts) | The `GateEvidence`/`EvidencePackage` type surface: the three gate-outcome variants, the branded id/digest types, and the `accepted`-discriminated aggregate package |
 | [`src/index.ts`](src/index.ts) | Pure type re-export of `./types.ts` — zero runtime exports, zero Cordis registration (this Contract-stage slice's mandatory B4(f) scaffold) |
 
+**Runtime invariant:** No runtime invariant companion is published: this Contract-stage slice ships only the `EvidencePackage`/`GateEvidence` type surface, registers no Cordis service, and owns no mutable data or recurring event stream to check. The live check belongs to a later slice, once a real collector exists — for example, that every `AcceptedEvidencePackage` a run emits verifies its own `signature` before being written.
+
 </details>
 
 -----
@@ -89,8 +91,6 @@ None, as this package exports types only and registers nothing model-facing.
 #### KV Cache effect
 
 Nothing here enters a model request, so provider cache reuse is unaffected.
-
-**Runtime invariant:** No runtime invariant companion is published: this Contract-stage slice ships only the `EvidencePackage`/`GateEvidence` type surface, registers no Cordis service, and owns no mutable data or recurring event stream to check. The live check belongs to a later slice, once a real collector exists — for example, that every `AcceptedEvidencePackage` a run emits verifies its own `signature` before being written.
 
 ## Known Limitations and Deferred Work
 

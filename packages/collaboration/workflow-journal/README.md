@@ -45,6 +45,8 @@ Purity is deliberately not the gate. Every step this DSL journals is an `agent()
 
 A journal entry names a step and carries data; it never carries code (must[3]). A resumed run re-enters the script and is steered by the journal, rather than reconstructing a suspended continuation — which could not be verified against the script it came from and would silently resurrect logic the script no longer contains.
 
+**Runtime invariant:** No runtime invariant companion is published: this package registers no Cordis service and owns no value of its own. `writeJournal`/`readJournal` are free functions over a directory the caller names, and `createJournalRecorder` (`src/recorder.ts:86`) does hold entries in a Map — but it RETURNS that recorder, so the caller owns it for one run. A companion checks a relation under the manifest name over values this package owns, and there are none.
+
 ## Model Experience
 
 None, as this package exports resume decisions, journal compaction, and types only and registers nothing model-facing.
@@ -52,8 +54,6 @@ None, as this package exports resume decisions, journal compaction, and types on
 #### KV Cache effect
 
 Nothing here enters a model request, so provider cache reuse is unaffected.
-
-**Runtime invariant:** No runtime invariant companion is published: this package registers no Cordis service and owns no value of its own. `writeJournal`/`readJournal` are free functions over a directory the caller names, and `createJournalRecorder` (`src/recorder.ts:86`) does hold entries in a Map — but it RETURNS that recorder, so the caller owns it for one run. A companion checks a relation under the manifest name over values this package owns, and there are none.
 
 ## Known Limitations and Deferred Work
 

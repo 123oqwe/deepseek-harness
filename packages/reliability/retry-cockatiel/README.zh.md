@@ -59,6 +59,8 @@ kind: "package-reference"
 
 本 Provider 把 policy 存在 `private readonly` 映射里,而不是 `#private` 字段。Cordis 交给调用方的是 Service 代理,方法里的 `this` 并非实例,`#private` 访问会抛 `Receiver must be an instance of class …`。`@deepseek-ai/dsh-lease` 的 store 出于同样原因写法相同。
 
+**运行时不变式：** 不发布运行时不变式伴随包：本包按目的地各持有一个 cockatiel policy（`src/index.ts:85`），但不持有它们判定结果的任何副本——开合状态与失败计数都在各 policy 内部。因此只有一个权威、没有对它的第二次观测可供校对，而这正是伴随包必须满足的判据。
+
 ## Model Experience
 
 无,因为本包在请求抵达 adapter 之前就拒绝或放行一次尝试,不注册工具、提示词文本或会话事件。
@@ -68,8 +70,6 @@ kind: "package-reference"
 这里没有任何东西进入模型请求。拒绝只以"调用方拿这个抛出的错误做了什么"的形式抵达模型。
 
 <a id="known-limitations-and-deferred-work"></a>
-**运行时不变式：** 不发布运行时不变式伴随包：本包按目的地各持有一个 cockatiel policy（`src/index.ts:85`），但不持有它们判定结果的任何副本——开合状态与失败计数都在各 policy 内部。因此只有一个权威、没有对它的第二次观测可供校对，而这正是伴随包必须满足的判据。
-
 ## 已知局限与后续工作
 
 - **断路器守的是第一块 chunk,不是整条流。** `@deepseek-ai/dsh-llm` 在拉取第一块处咨询它,因为端点是否健康正是在那里见分晓:一条产出了 chunk 的流,说明端点答应了。流中途才到的失败属于传输或模型,不移动断路器——因此一个总能开始、随后才失败的目的地不会被熔断。要放宽,就得在断路器内部判定哪些中途失败该算端点的错,而那是分类器的职责,在 chunk 边界上并不可观测。

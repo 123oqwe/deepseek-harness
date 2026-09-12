@@ -29,6 +29,8 @@ The check is a runtime one because the writer may be a model, and a model's outp
 
 `traceToObservations` walks a fact back to what produced it. A board without that is a set of claims with no provenance, and an agent reading one cannot tell a measurement from an inference another agent made two hops ago.
 
+**Runtime invariant:** No runtime invariant companion is published: this package constructs no registry, log or `Context` value. It decides over facts a caller supplies and hands them back, so a checker would compare a value against itself rather than reconcile two observations that can independently diverge.
+
 ## Model Experience
 
 None, as this package exports fact admission, observation tracing, and types only and registers nothing model-facing.
@@ -36,8 +38,6 @@ None, as this package exports fact admission, observation tracing, and types onl
 #### KV Cache effect
 
 Nothing here enters a model request, so provider cache reuse is unaffected.
-
-**Runtime invariant:** No runtime invariant companion is published: this package constructs no registry, log or `Context` value. It decides over facts a caller supplies and hands them back, so a checker would compare a value against itself rather than reconcile two observations that can independently diverge.
 
 ## Known Limitations and Deferred Work
 

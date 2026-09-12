@@ -57,6 +57,8 @@ An admitted boot carries `verified: true` or `false`. A caller must be able to t
 
 A generator that supplied plausible values instead would produce a lock that looks complete and verifies nothing — the failure this epic exists to prevent, committed by the tool meant to prevent it. The marker is a value a later comparison can still be exact about, while a reader can see at a glance that it pins nothing.
 
+**Runtime invariant:** No runtime invariant companion is published: candidate resolution, commit, the load-order gate and the integrity check are all pure functions over a lock document the caller supplies, and this package retains no resolved state a later observation could contradict.
+
 ## Model Experience
 
 None, as this package exports decision functions, an atomic lock commit, and types only and registers nothing model-facing.
@@ -64,8 +66,6 @@ None, as this package exports decision functions, an atomic lock commit, and typ
 #### KV Cache effect
 
 Nothing here enters a model request, so provider cache reuse is unaffected.
-
-**Runtime invariant:** No runtime invariant companion is published: candidate resolution, commit, the load-order gate and the integrity check are all pure functions over a lock document the caller supplies, and this package retains no resolved state a later observation could contradict.
 
 ## Known Limitations and Deferred Work
 

@@ -47,6 +47,8 @@ A child receives what remains, minus the call that started it, clamped to the de
 
 A caller passing the raw deployment configuration here is passing a SENTINEL where a number is expected. `maxConcurrentAgents: 0` means "derive it from the host" and must be resolved before it becomes a child's limit; `??` does not rescue it, because zero is not nullish. A nested worker started with a concurrency of zero announces ready and then waits forever for a slot that cannot exist — no error, no child, no result.
 
+**Runtime invariant:** No runtime invariant companion is published: `DefinitionRegistry` is instantiated and owned by its consumer — `workflow-worker-thread` holds the one instance — so the relation between a registered definition and a run pinning its digest is observable where that instance lives, never from here.
+
 ## Model Experience
 
 None, as this package exports definition resolution, nesting decisions, and types only and registers nothing model-facing.
@@ -54,8 +56,6 @@ None, as this package exports definition resolution, nesting decisions, and type
 #### KV Cache effect
 
 Nothing here enters a model request, so provider cache reuse is unaffected.
-
-**Runtime invariant:** No runtime invariant companion is published: `DefinitionRegistry` is instantiated and owned by its consumer — `workflow-worker-thread` holds the one instance — so the relation between a registered definition and a run pinning its digest is observable where that instance lives, never from here.
 
 ## Known Limitations and Deferred Work
 

@@ -83,6 +83,8 @@ kind: "package-reference"
 
 -----
 
+**运行时不变式：** 不发布运行时不变式伴随包：本包是 `ctx.memory` 的 Consumer，它呈现的每一条记录都属于那个 seam，而不属于本包。这里的伴随包只会把刚读过的来源再读一遍，那不是两次独立观测。
+
 <a id="model-experience"></a>
 ## 模型体验
 
@@ -115,8 +117,6 @@ This recall was truncated to the configured record budget; more records may exis
 #### KV Cache 影响
 
 在单个步骤内是追加式的，因此召回内容位于可复用的请求前缀之后。由于召回集每步都会重新读取，某一轮的召回结果与上一轮不同时，会从召回文本发生变化之处起使请求后缀失效。
-
-**运行时不变式：** 不发布运行时不变式伴随包：本包是 `ctx.memory` 的 Consumer，它呈现的每一条记录都属于那个 seam，而不属于本包。这里的伴随包只会把刚读过的来源再读一遍，那不是两次独立观测。
 
 ## 已知限制与延期工作
 

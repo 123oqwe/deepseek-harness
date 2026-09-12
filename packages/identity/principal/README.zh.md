@@ -27,6 +27,8 @@ kind: "package-reference"
 
 委派是 `IdentityContext` 的一部分,而不是它旁边的东西。一个经过三次委派抵达的 principal,与同一个 principal 直接行动并不是同一个行动者,而只看到叶子的消费者无法区分二者。
 
+**运行时不变式：** 不发布运行时不变式伴随包：本包是纯类型契约加纯委派链函数，没有事件流、也没有可变的模块状态可供比较。`src/chain.ts` 里的 `adminGrantOwners` 注册表是一个私有的防伪造检查，不是公开关系。
+
 ## Model Experience
 
 None, as this package exports identity types and a tenant-policy assertion only and registers nothing model-facing.
@@ -34,8 +36,6 @@ None, as this package exports identity types and a tenant-policy assertion only 
 #### KV Cache effect
 
 Nothing here enters a model request, so provider cache reuse is unaffected.
-
-**运行时不变式：** 不发布运行时不变式伴随包：本包是纯类型契约加纯委派链函数，没有事件流、也没有可变的模块状态可供比较。`src/chain.ts` 里的 `adminGrantOwners` 注册表是一个私有的防伪造检查，不是公开关系。
 
 ## 已知限制与延后事项
 

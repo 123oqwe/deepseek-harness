@@ -94,6 +94,8 @@ Once both a captured baseline AND the verification tooling are present, drift is
 |---|---|
 | [`src/index.ts`](src/index.ts) | Plugin entry: `name`/`Config`/`apply`, the dynamic import into `verifyBaseline`, drift-message formatting |
 
+**Runtime invariant:** No runtime invariant companion is published: this plugin performs one boot-time check and owns no package-local event history or mutable data relation beyond it, so there is no second observation for a companion to reconcile against.
+
 </details>
 
 -----
@@ -118,8 +120,6 @@ None, as this plugin either lets boot proceed unchanged or aborts it before any 
 #### KV Cache effect
 
 Nothing here enters a model request, so provider cache reuse is unaffected.
-
-**Runtime invariant:** No runtime invariant companion is published: this plugin performs one boot-time check and owns no package-local event history or mutable data relation beyond it, so there is no second observation for a companion to reconcile against.
 
 ## Known Limitations and Deferred Work
 

@@ -99,6 +99,8 @@ This section explains the design decisions behind the package; the observable ty
 | [`src/validate.ts`](src/validate.ts) | Pure schema validation (`validatePluginManifestV2`), the static-data check (`assertJsonSerializable`), wildcard-permission detection (`detectWildcardPermissions`), and the legacy `dsh.bundle` compatibility read (`parseLegacyBundleDeclaration`, `classifyPluginDeclaration`) |
 | [`src/index.ts`](src/index.ts) | The package's real runtime entry: re-exports every `./types.ts` type and `./validate.ts` function, adds `ObservedPluginCapabilities`, `compareDeclaredToObserved`, and `decidePluginTrust` (declared-vs-observed comparison and quarantine decision), and `evaluatePreMountAdmission` (Usage-stage's real pre-mount policy) |
 
+**Runtime invariant:** No runtime invariant companion is published: this Contract-stage slice ships the `PluginManifestV2` type surface and pure validation functions, registers no Cordis service, constructs no manifest value of its own, and owns no mutable data or recurring event stream. The live check belongs to a later slice once a real reader exists — for example, that every declaration `plugin-inventory` reports as `'manifest-v2'` actually passed `validatePluginManifestV2`.
+
 </details>
 
 -----
@@ -122,8 +124,6 @@ None, as this package exports types and pure validation functions only and regis
 #### KV Cache effect
 
 Nothing here enters a model request, so provider cache reuse is unaffected.
-
-**Runtime invariant:** No runtime invariant companion is published: this Contract-stage slice ships the `PluginManifestV2` type surface and pure validation functions, registers no Cordis service, constructs no manifest value of its own, and owns no mutable data or recurring event stream. The live check belongs to a later slice once a real reader exists — for example, that every declaration `plugin-inventory` reports as `'manifest-v2'` actually passed `validatePluginManifestV2`.
 
 ## Known Limitations and Deferred Work
 
