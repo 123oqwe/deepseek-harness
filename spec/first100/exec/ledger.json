@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-12T12:46:21.598Z",
-  "inputDigest": "b607ec61c1f3eaa132eb5292624c75846522dfed4fdd195876e0108d647cdcdc",
+  "lastUpdatedUtc": "2026-09-12T15:20:40.621Z",
+  "inputDigest": "167c34a34760e4c2d0708d0a46c96be3d73d8b4f6d2fb1028a8a2e1a58fe6a90",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4204,14 +4204,76 @@
           "capturedAtUtc": "2026-09-12T12:46:21.588Z"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "d10920efa4aa1b8776cef2e3fe3bba28e84635d8",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34699917546",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34699917546/vitest-report.json",
+          "observationSha256": "d0b9a4904100246ebd2b6cd0c04433d357b22aaed05500a29dd137a55289e2f9",
+          "expectCasesMatched": [
+            "P3-01 must[1]: the request becomes a complete spec, with every default stated once answers all nine dimensions from a request that states none",
+            "P3-01 must[1]: the request becomes a complete spec, with every default stated once carries a stated request through instead of the default, which is what makes a refusal reachable",
+            "P3-01 must[1]: the request becomes a complete spec, with every default stated once digests two equal specs equally and two different specs differently",
+            "P3-01 must[2]: a dispatch path gets its world from the registry, never by naming a provider binds the local provider when it satisfies the requested confinement",
+            "P3-01 must[2]: a dispatch path gets its world from the registry, never by naming a provider binds ONE world per session, so two dispatches in one session name the same world",
+            "P3-01 must[2]: a dispatch path gets its world from the registry, never by naming a provider gives a DIFFERENT session its own world, so the binding is not a process-wide singleton",
+            "P3-01 must[2]: a dispatch path gets its world from the registry, never by naming a provider prefers the provider registered FIRST, which is the deployment order and not this service's taste",
+            "P3-01 must[2]: a dispatch path gets its world from the registry, never by naming a provider removes the provider when the registering fiber is disposed, rather than outliving it",
+            "P3-01 acceptance[1]: a registry with nothing to offer refuses instead of degrading answers undefined when no provider is registered at all",
+            "P3-01 acceptance[1]: a registry with nothing to offer refuses instead of degrading answers undefined when every provider refuses the requested confinement, naming no weaker world",
+            "P3-01 acceptance[1]: a registry with nothing to offer refuses instead of degrading binds the provider that CAN deliver the stricter request, so the refusal above is about capability",
+            "P3-01 acceptance[1]: a registry with nothing to offer refuses instead of degrading refuses on the SELECTION, not on the provider's create, which is what \"never degrades\" means",
+            "P3-01 acceptance[1]: a registry with nothing to offer refuses instead of degrading answers undefined when no file-effect boundary is mounted, because the spec would be invented",
+            "P3-01 acceptance[1]: a registry with nothing to offer refuses instead of degrading answers undefined when the chosen provider REJECTS the create, rather than reporting a world it does not have",
+            "P3-01 must[1]: the sandbox vocabulary is translated, never passed through maps each of the three sandbox modes onto the filesystem dimension, renaming the widest one",
+            "P3-01 must[1]: the sandbox vocabulary is translated, never passed through refuses a mode it does not know, rather than building a spec with an unrecognised effect",
+            "P3-01 acceptance[0]: two providers, one action, the same confinement digest digests the SAME spec identically whichever provider builds the world, which is what a swap must not change",
+            "P3-01 acceptance[0]: two providers, one action, the same confinement digest mints a world id nothing else produces, so two bindings are never confused",
+            "P3-01 acceptance[1]: an unanswerable world reads as absent, which is the value a policy may refuse on reads absent when no registry is mounted, so a composition without worlds asks the same question it always did",
+            "P3-01 acceptance[1]: an unanswerable world reads as absent, which is the value a policy may refuse on reads absent when the registry has no provider, rather than inventing one",
+            "P3-01 acceptance[1]: an unanswerable world reads as absent, which is the value a policy may refuse on records NO world-bound event when it reads absent, so the log never claims a world that does not exist",
+            "P3-01 acceptance[0]: the bound world reaches the policy question and the audit reads the bound world, naming the provider that minted it",
+            "P3-01 acceptance[0]: the bound world reaches the policy question and the audit records the binding ONCE, however many dispatches ask",
+            "P3-01 acceptance[0]: the bound world reaches the policy question and the audit records the world, the provider and the confinement digest, which is what makes a swap auditable",
+            "P2-05 must[0]: the request translation lets the SAME rule admit an action whose world is bound, with no change to the translation"
+          ],
+          "capturedAtUtc": "2026-09-12T15:20:39.907Z"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "d10920efa4aa1b8776cef2e3fe3bba28e84635d8",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34699917546",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34699917546/vitest-report.json",
+          "observationSha256": "d0b9a4904100246ebd2b6cd0c04433d357b22aaed05500a29dd137a55289e2f9",
+          "expectCasesMatched": [
+            "P3-01 validation[3]: every stop reason has a producer settles `terminated` when the CALLER stops a live world",
+            "P3-01 validation[3]: every stop reason has a producer settles `timeout` when the lifetime ceiling passes, OUTRANKING the caller's own reason",
+            "P3-01 validation[3]: every stop reason has a producer settles `provider-failed` for a failure underneath, which an operator investigates rather than retries",
+            "P3-01 validation[3]: every stop reason has a producer settles `lost-contact` through a provider that CAN lose contact",
+            "P3-01 validation[3]: every stop reason has a producer settles `completed` for a world that finished on its own, the union's only non-fault member",
+            "P3-01 validation[3]: every stop reason has a producer leaves NO member of the closed union unproduced, which is what this whole block is for",
+            "P3-01 validation[3]: every stop reason has a producer keeps the local provider honest about `lost-contact`, which is the contrast the row above needs",
+            "P3-01 acceptance[2]: a refused handle settles nothing at all refuses a forged handle WITHOUT producing an outcome, because an outcome would mean it was admitted",
+            "P3-01 acceptance[2]: a refused handle settles nothing at all refuses a handle another INSTANCE of the same provider minted, and settles nothing",
+            "P3-01 acceptance[2]: attestation is a READ, and only the provider half is provable here produces evidence without stopping the world, so a verifier outage is not an outage",
+            "P3-01 acceptance[2]: attestation is a READ, and only the provider half is provable here refuses to attest a handle it did not mint, rather than producing evidence about someone else's world",
+            "P3-01 validation[3]: the state vocabulary is closed, and `stopped` is its only terminal declares exactly the four adapted OCI states",
+            "P3-01 validation[1]: the conformance table, against the LOCAL provider answers the dimension question for a spec it accepts AND one it refuses, so the answer is total",
+            "P3-01 validation[1]: the conformance table, against the LOCAL provider accepts the handle it minted and refuses one another INSTANCE minted",
+            "P3-01 validation[1]: the conformance table, against the LOCAL provider settles ONE outcome however many times it is asked to stop",
+            "P3-01 validation[1]: the conformance table, against the LOCAL provider never admits a transition out of `stopped`, which is the lifecycle table both providers share",
+            "P3-01 validation[1]: the conformance table, against the LOCAL provider reports a stopped world's snapshot AS stopped, and refuses another provider's snapshot outright",
+            "P3-01 validation[1]: the same table, against the FAKE provider answers the dimension question for a spec it accepts AND one it refuses, so the answer is total",
+            "P3-01 validation[1]: the same table, against the FAKE provider accepts the handle it minted and refuses one another INSTANCE minted",
+            "P3-01 validation[1]: the same table, against the FAKE provider settles ONE outcome however many times it is asked to stop",
+            "P3-01 validation[1]: the same table, against the FAKE provider never admits a transition out of `stopped`, which is the lifecycle table both providers share",
+            "P3-01 validation[1]: the same table, against the FAKE provider reports a stopped world's snapshot AS stopped, and refuses another provider's snapshot outright",
+            "P3-01: the two providers are distinguishable, which every row above depends on names two different providers, so a foreign handle is really foreign"
+          ],
+          "capturedAtUtc": "2026-09-12T15:20:40.348Z"
         }
       },
       "supplements": {},
-      "candidateSha": "2b54e4299144f7cb7587e924185c4d455aeaa648",
+      "candidateSha": "d10920efa4aa1b8776cef2e3fe3bba28e84635d8",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -5032,6 +5094,18 @@
             "carries that reference on the accepted → planning transition, not merely somewhere in the log"
           ],
           "capturedAtUtc": "2026-09-12T01:24:08.987Z"
+        },
+        "U.2": {
+          "status": "GREEN",
+          "candidateSha": "d10920efa4aa1b8776cef2e3fe3bba28e84635d8",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34699917546",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34699917546/vitest-report.json",
+          "observationSha256": "d0b9a4904100246ebd2b6cd0c04433d357b22aaed05500a29dd137a55289e2f9",
+          "expectCasesMatched": [
+            "mounts the Run Service from the shipped layers, with no row this fixture added",
+            "compiles exactly one profile on the shipped profile boot, and the three records agree"
+          ],
+          "capturedAtUtc": "2026-09-12T15:20:40.613Z"
         }
       },
       "candidateSha": "93d52207338066bd65494f6044f1ec5920d63cb8",
