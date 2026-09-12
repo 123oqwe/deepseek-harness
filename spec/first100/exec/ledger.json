@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-12T16:30:04.521Z",
-  "inputDigest": "13312f99880c9f3285bebfd01639f8b35c0e82962147568d89e3723bc48ad8f6",
+  "lastUpdatedUtc": "2026-09-12T20:38:56.314Z",
+  "inputDigest": "4d403abf74a840bf30815a28587d6b72f832daea4cd215145653a9ccf9e91c54",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -3854,20 +3854,110 @@
       "wave": 7,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "fe3df854883e9216841f782b8d159fd339fbe3ed",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34715710541",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7/scratchpad/run-34715710541/first100-evidence-fe3df854883e9216841f782b8d159fd339fbe3ed/vitest-report.json",
+          "observationSha256": "d0a8b9ab0eeb92b08826c962e422441783dfacbdc66453134b83970a16116e2d",
+          "expectCasesMatched": [
+            "P2-06 must[1]: an approval is bound to the tuple the decider decided about admits the SAME tuple, which is the control every refusal below is measured against",
+            "P2-06 must[1]: an approval is bound to the tuple the decider decided about digests the whole tuple, so a change in ANY bound field moves the digest",
+            "P2-06 must[2]/acceptance[0]: any field change invalidates, and the refusal names WHICH refuses substituted arguments — the clause's first sentence",
+            "P2-06 must[2]/acceptance[0]: any field change invalidates, and the refusal names WHICH refuses a switched account, comparing the RECORDED principal and not the live one",
+            "P2-06 must[2]/acceptance[0]: any field change invalidates, and the refusal names WHICH refuses changed preconditions, which is how a file inode or object version reaches this check",
+            "P2-06 must[2]/acceptance[0]: any field change invalidates, and the refusal names WHICH refuses a different capability token and a different policy version separately",
+            "P2-06 must[2]/acceptance[0]: any field change invalidates, and the refusal names WHICH refuses a different action, so one approval cannot be spent on another capability",
+            "P2-06 must[2]/acceptance[0]: any field change invalidates, and the refusal names WHICH names ONE field rather than a set, because an operator acts on one cause",
+            "P2-06 acceptance[0]: `unattached` is a value, not a wildcard binds an agent with no identity attached as an explicit value",
+            "P2-06 acceptance[0]: `unattached` is a value, not a wildcard refuses an approval taken while UNATTACHED once a principal IS attached — the reverse control",
+            "P2-06 acceptance[0]: `unattached` is a value, not a wildcard refuses the other direction too, so detaching is not a way to spend an approval",
+            "P2-06 must[0]: the validity period is compared against a clock the CALLER supplies admits before the expiry and refuses at it, naming both instants",
+            "P2-06 must[0]: the validity period is compared against a clock the CALLER supplies reports a SUBSTITUTION rather than expiry when both are true, because that is the fact to act on",
+            "P2-06 acceptance[1]: display may be redacted; the digest covers the real value binds two arguments that would DISPLAY identically to two different digests",
+            "P2-06 acceptance[1]: display may be redacted; the digest covers the real value refuses the second value against the first's binding, which is the same fact through the verifier",
+            "P2-06 acceptance[1]: display may be redacted; the digest covers the real value digests a redacted PLACEHOLDER differently from the value it stands for"
+          ],
+          "capturedAtUtc": "2026-09-12T20:38:54.580Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "fe3df854883e9216841f782b8d159fd339fbe3ed",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34715710541",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7/scratchpad/run-34715710541/first100-evidence-fe3df854883e9216841f782b8d159fd339fbe3ed/vitest-report.json",
+          "observationSha256": "d0a8b9ab0eeb92b08826c962e422441783dfacbdc66453134b83970a16116e2d",
+          "expectCasesMatched": [
+            "P2-06 must[1]: the service binds at the ASK, from the asker's clock records a binding when the asker supplies a tuple",
+            "P2-06 must[1]: the service binds at the ASK, from the asker's clock records NOTHING when the asker supplies none, rather than an empty binding",
+            "P2-06 must[1]: the service binds at the ASK, from the asker's clock appends the binding between the ask and the decision",
+            "P2-06 must[1]: the service binds at the ASK, from the asker's clock records the tuple as it stood at the ASK, even when the world moves while a human reads",
+            "P2-06 must[1]: the service binds at the ASK, from the asker's clock expires from the ASKER's clock plus the configured duration, not from the service's",
+            "P2-06 must[1]: the service binds at the ASK, from the asker's clock takes the duration from the row's configuration, so two deployments differ",
+            "P2-06 acceptance[1]: the record carries the digest, never the arguments puts no argument value in the durable record",
+            "P2-06 acceptance[1]: the record carries the digest, never the arguments still distinguishes two different argument values through the digest",
+            "P2-06 acceptance[1]: the record carries the digest, never the arguments carries every OTHER bound field whole, so a refusal can name which one moved",
+            "P2-06 acceptance[1]: the record carries the digest, never the arguments omits an absent token and an absent policy version rather than writing a placeholder",
+            "P2-06 acceptance[2]: the record is the one-to-one reference names the approval and the action in one record, exactly one per bound ask",
+            "P2-06 acceptance[2]: the record is the one-to-one reference gives two asks two ids, so one action's two approvals stay distinguishable",
+            "P2-06 acceptance[0]: what the record supports is a real re-verification refuses the substituted account when the recorded fields are read back from the log"
+          ],
+          "capturedAtUtc": "2026-09-12T20:38:55.410Z"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "fe3df854883e9216841f782b8d159fd339fbe3ed",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34715710541",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7/scratchpad/run-34715710541/first100-evidence-fe3df854883e9216841f782b8d159fd339fbe3ed/vitest-report.json",
+          "observationSha256": "d0a8b9ab0eeb92b08826c962e422441783dfacbdc66453134b83970a16116e2d",
+          "expectCasesMatched": [
+            "P2-06 must[0]: the ACP decider is shown the action, not only its id carries all six fields into the standard's own toolCall projection",
+            "P2-06 must[0]: the ACP decider is shown the action, not only its id shows the REDACTED arguments and never the raw ones",
+            "P2-06 must[0]: the ACP decider is shown the action, not only its id sends the payload it always sent when the ask carries no manifest",
+            "P2-06 must[1]: a recorded approval is re-verified on the real dispatch path RUNS the tool when the recorded decision still covers the call — the positive control",
+            "P2-06 must[1]: a recorded approval is re-verified on the real dispatch path does NOT run the tool when the arguments changed after the decision, and says which field",
+            "P2-06 must[1]: a recorded approval is re-verified on the real dispatch path does NOT run the tool once the decision has expired, and says so distinctly",
+            "P2-06 must[1]: a recorded approval is re-verified on the real dispatch path RUNS the tool when the session recorded no approval at all, so unbound asks are unaffected",
+            "P2-06 must[1]: the dispatch re-verifies what the session recorded admits the call when the recorded binding still covers it — the control",
+            "P2-06 must[1]: the dispatch re-verifies what the session recorded admits when the session recorded NO binding, because an unbound ask is not a refused one",
+            "P2-06 must[1]: the dispatch re-verifies what the session recorded refuses substituted arguments, naming the field",
+            "P2-06 must[1]: the dispatch re-verifies what the session recorded refuses a switched account",
+            "P2-06 must[1]: the dispatch re-verifies what the session recorded refuses after the validity period, naming both instants",
+            "P2-06 must[1]: the dispatch re-verifies what the session recorded ignores a binding for a DIFFERENT action, so one call is not gated by another's decision",
+            "P2-06 must[1]: the dispatch re-verifies what the session recorded reads the LATEST binding for the action, because a re-ask supersedes the one before it",
+            "P2-06 acceptance[2]: one dispatch records exactly ONE binding records ONE binding for one gated dispatch — counted, not merely present",
+            "P2-06 acceptance[2]: one dispatch records exactly ONE binding records ONE even when BOTH gates ask about the same dispatch",
+            "P2-06 acceptance[2]: one dispatch records exactly ONE binding records NONE when the gate does not ask, so a binding never outlives its question"
+          ],
+          "capturedAtUtc": "2026-09-12T20:38:55.942Z"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "fe3df854883e9216841f782b8d159fd339fbe3ed",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34715710541",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7/scratchpad/run-34715710541/first100-evidence-fe3df854883e9216841f782b8d159fd339fbe3ed/vitest-report.json",
+          "observationSha256": "d0a8b9ab0eeb92b08826c962e422441783dfacbdc66453134b83970a16116e2d",
+          "expectCasesMatched": [
+            "P2-06 validation[1]: a Unicode confusable is two values, not one refuses a DECOMPOSED spelling of the approved name, because the canonical form preserves the form it was given",
+            "P2-06 validation[1]: a Unicode confusable is two values, not one refuses a HOMOGLYPH substitution, where the rendered name is the one a human read",
+            "P2-06 validation[1]: a Unicode confusable is two values, not one ADMITS the identical spelling, so the two refusals above are about the characters and not about refusing everything",
+            "P2-06 validation[1]: batch mutation — one decision does not travel to a sibling call refuses the SECOND call of a batch when it was approved for the first",
+            "P2-06 acceptance[2]/validation[3]: an action names its approval records the dispatch's ActionId on the binding, so an audit query has a field to travel on",
+            "P2-06 acceptance[2]/validation[3]: an action names its approval gives two calls of ONE tool two distinguishable records, which is the whole point of the field",
+            "P2-06 acceptance[2]/validation[3]: an action names its approval records NO actionId when the asker supplies none, so an ask with no dispatch behind it is not given a fake identity",
+            "P2-06 must[1]/validation[2]: a code-mode sub-dispatch re-verifies its approval RUNS the sub-dispatched tool when the recorded decision still covers it — the positive control",
+            "P2-06 must[1]/validation[2]: a code-mode sub-dispatch re-verifies its approval does NOT run the sub-dispatched tool when the arguments changed after the decision",
+            "P2-06 must[1]/validation[2]: a code-mode sub-dispatch re-verifies its approval does NOT run the sub-dispatched tool once the decision has expired",
+            "P2-06 must[1]/validation[2]: a code-mode sub-dispatch re-verifies its approval RUNS when the session recorded no approval at all, so an unbound program is unaffected",
+            "P2-06 must[1]/validation[2]: a code-mode sub-dispatch re-verifies its approval records a binding for the sub-dispatch it asked about, which is what makes the re-verification have a subject",
+            "P2-06 acceptance[2]: the record names the DISPATCH, not only the tool writes an actionId from the code-mode path, so both production paths name their dispatch",
+            "P2-06 acceptance[2]: the record names the DISPATCH, not only the tool gives two sub-dispatches of ONE tool two different actionIds, and does not let the first decision cover the second",
+            "P2-06 acceptance[2]: the record names the DISPATCH, not only the tool REFUSES when two decisions about one tool name no dispatch, rather than settling the question by position",
+            "P2-06 acceptance[2]: the record names the DISPATCH, not only the tool still ADMITS a single actionId-less decision, so the refusal above is about the ambiguity and not about the fallback"
+          ],
+          "capturedAtUtc": "2026-09-12T20:38:56.307Z"
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "fe3df854883e9216841f782b8d159fd339fbe3ed",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
