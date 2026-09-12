@@ -12,6 +12,7 @@
  * object literal inside the mapper, and the schema document — so it fails when
  * either moves without the other.
  */
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { toCedarRequest } from '@deepseek-ai/dsh-policy-engine-cedar'
 import { DSH_ACTION_TYPE, DSH_CONTEXT_KEYS, DSH_PRINCIPAL_TYPE, DSH_RESOURCE_TYPE } from '../src/schema.ts'
@@ -30,6 +31,21 @@ describe('P2-10 C: the schema and the request builder state the same vocabulary'
     expect(built.principal.type).toBe(DSH_PRINCIPAL_TYPE)
     expect(built.action.type).toBe(DSH_ACTION_TYPE)
     expect(built.resource.type).toBe(DSH_RESOURCE_TYPE)
+  })
+
+  it('declares the same keys the language document does, so the prose is checkable and not decorative', () => {
+    // Under ruling (b) `docs/policy/language.md` IS the schema's authority, so
+    // it has to be machine-comparable rather than a description someone hopes
+    // is current. The table rows are read, not the whole page: a doc that
+    // drifts from the constant fails here, in either direction.
+    const page = readFileSync(new URL('../../../../docs/policy/language.md', import.meta.url), 'utf8')
+    // Scoped to the context-key table: the page carries other tables whose
+    // first column is also a backticked identifier, and a whole-page scan
+    // would compare this constant against the refusal names too.
+    const table = page.slice(page.indexOf('exactly ten keys'), page.indexOf('## What a policy set is refused for'))
+    const documented = [...table.matchAll(/^\| `([a-zA-Z]+)` \| /gmu)].map(match => match[1] as string)
+
+    expect(documented.sort()).toStrictEqual([...DSH_CONTEXT_KEYS].sort())
   })
 
   it('states ten context keys, so a silent addition to either side is visible as a count', () => {
