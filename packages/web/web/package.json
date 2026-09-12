@@ -3,7 +3,14 @@
   "description": "Abstract web access capability seam (ctx.web) for the DeepSeek Harness — search/fetch provider registry, registration-order-independent selection, request/result vocabulary, and the WebError taxonomy",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "repository": {
     "type": "git",

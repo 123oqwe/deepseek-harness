@@ -3,7 +3,14 @@
   "description": "OpenTelemetry backend for the DeepSeek Harness telemetry seam: hands captured session records to the OTel JS SDK's log pipeline",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "repository": {
     "type": "git",

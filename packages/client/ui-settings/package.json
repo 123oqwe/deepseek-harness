@@ -3,7 +3,18 @@
   "description": "Settings domain base plugin: the settings-namespace scope service and the canonical settings slot-type contract",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./client": {
+        "types": "./lib/types/client/index.d.ts",
+        "default": "./lib/client.js"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "repository": {
     "type": "git",

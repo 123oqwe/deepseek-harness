@@ -3,7 +3,22 @@
   "description": "Dev-only hot-reload driver for script-loaded client entries: SSE rebuilt frames → invalidate/prefetch → fiber swap through the vendored Loader entry",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./invariant": {
+        "types": "./lib/types/invariant.d.ts",
+        "default": "./lib/invariant.js"
+      },
+      "./client": {
+        "types": "./lib/types/client/index.d.ts",
+        "default": "./lib/client.js"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "repository": {
     "type": "git",

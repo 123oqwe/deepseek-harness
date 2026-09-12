@@ -3,7 +3,26 @@
   "description": "Contract-stage type surface and pure state-machine logic for Epic P4-01's first-class Run Service and Run event log: the closed Run state set, its legal-transition table, the append-only event log referencing Session/Workflow/Action/Artifact/Approval/Verification, service-owned Run identity, and Session/Run association",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./types": {
+        "types": "./lib/types/types.d.ts",
+        "default": "./lib/types/types.js"
+      },
+      "./events": {
+        "types": "./lib/types/events.d.ts",
+        "default": "./lib/types/events.js"
+      },
+      "./state-machine": {
+        "types": "./lib/types/state-machine.d.ts",
+        "default": "./lib/types/state-machine.js"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "repository": {
     "type": "git",

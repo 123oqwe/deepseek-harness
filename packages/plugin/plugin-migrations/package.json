@@ -3,7 +3,22 @@
   "description": "Plugin data-migration vocabulary and decisions for Epic P1-10: the manifest's migration DAG, preconditions, backup strategy and rollback support, plus the pure judgements over them — is this DAG acyclic, is this upgrade path admissible, is this migration reversible, and is a snapshot reconcilable with the data it was taken from",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./types": {
+        "types": "./lib/types/types.d.ts",
+        "default": "./lib/types/types.js"
+      },
+      "./package.json": "./package.json",
+      "./transaction": {
+        "types": "./lib/types/transaction.d.ts",
+        "default": "./lib/types/transaction.js"
+      }
+    }
   },
   "repository": {
     "type": "git",

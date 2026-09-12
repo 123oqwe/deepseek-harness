@@ -3,7 +3,26 @@
   "description": "Read-only Remote projection of current Cordis Loader plugin state",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./types": {
+        "types": "./lib/types/types.d.ts",
+        "default": "./lib/types/types.js"
+      },
+      "./typert": {
+        "types": "./lib/typert.host.d.ts",
+        "default": "./lib/typert.host.js"
+      },
+      "./remote": {
+        "types": "./lib/typert.remote-client.d.ts",
+        "default": "./lib/typert.remote-client.js"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "repository": {
     "type": "git",
@@ -53,11 +72,11 @@
     "@deepseek-ai/dsh-brand": "workspace:^",
     "@deepseek-ai/dsh-plugin-compat": "workspace:^",
     "@deepseek-ai/dsh-plugin-manifest": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/dsh-plugin-ownership": "workspace:^",
     "@deepseek-ai/dsh-plugin-provenance": "workspace:^",
     "@deepseek-ai/dsh-tools": "workspace:^",
-    "@deepseek-ai/dsh-typert-protocol": "workspace:^"  },
+    "@deepseek-ai/dsh-typert-protocol": "workspace:^"
+  },
   "peerDependenciesMeta": {
     "@deepseek-ai/dsh-agent-presets": {
       "optional": true
@@ -70,9 +89,9 @@
     "@deepseek-ai/dsh-brand": "workspace:^",
     "@deepseek-ai/dsh-plugin-compat": "workspace:^",
     "@deepseek-ai/dsh-plugin-manifest": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/dsh-plugin-ownership": "workspace:^",
     "@deepseek-ai/dsh-plugin-provenance": "workspace:^",
     "@deepseek-ai/dsh-tools": "workspace:^",
-    "@deepseek-ai/dsh-typert-protocol": "workspace:^"  }
+    "@deepseek-ai/dsh-typert-protocol": "workspace:^"
+  }
 }

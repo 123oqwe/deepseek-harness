@@ -3,7 +3,18 @@
   "description": "Permission surfaces: a new-session default in General settings and a current-session /permission popup over the permissions projection",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./client": {
+        "types": "./lib/types/client/index.d.ts",
+        "default": "./lib/client.js"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "repository": {
     "type": "git",

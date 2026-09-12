@@ -3,7 +3,30 @@
   "description": "Event-sourced session store for the DeepSeek Harness",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./invariant": {
+        "types": "./lib/types/invariant.d.ts",
+        "default": "./lib/invariant.js"
+      },
+      "./types": {
+        "types": "./lib/types/types.d.ts",
+        "default": "./lib/types/types.js"
+      },
+      "./chunk-rows": {
+        "types": "./lib/types/chunk-rows.d.ts",
+        "default": "./lib/types/chunk-rows.js"
+      },
+      "./package.json": "./package.json",
+      "./surface": {
+        "types": "./lib/types/surface.d.ts",
+        "default": "./lib/types/surface.js"
+      }
+    }
   },
   "repository": {
     "type": "git",

@@ -38,7 +38,18 @@
     "directory": "packages/client/ui-jobs"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./client": {
+        "types": "./lib/types/client/index.d.ts",
+        "default": "./lib/client.js"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:^"

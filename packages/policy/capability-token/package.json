@@ -3,7 +3,26 @@
   "description": "Contract-stage type surface and pure decision logic for Epic P2-02's attenuable Capability Token and sub-agent delegation: the closed subject/tenant/capability/verbs/resources/constraints/expiry/nonce/delegationDepth/parentDigest token shape, TrustKernel-gated issuance/verification/attenuation that can only narrow, cascading revocation, the tool/plugin-RPC/external-Agent/ExecutionWorld presence gate, and log-safe redaction",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./delegate": {
+        "types": "./lib/types/delegate.d.ts",
+        "default": "./lib/types/delegate.js"
+      },
+      "./types": {
+        "types": "./lib/types/types.d.ts",
+        "default": "./lib/types/types.js"
+      },
+      "./attenuate": {
+        "types": "./lib/types/attenuate.d.ts",
+        "default": "./lib/types/attenuate.js"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "repository": {
     "type": "git",

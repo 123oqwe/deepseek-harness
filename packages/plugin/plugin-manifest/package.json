@@ -3,7 +3,22 @@
   "description": "Contract-stage type surface and pure validation logic for Plugin Manifest v2 (Epic P1-01): the dsh.manifestVersion=2 capability declaration, must[1]'s Tool/MCP effect fields, and the legacy dsh.bundle compatibility read",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./types": {
+        "types": "./lib/types/types.d.ts",
+        "default": "./lib/types/types.js"
+      },
+      "./validate": {
+        "types": "./lib/types/validate.d.ts",
+        "default": "./lib/types/validate.js"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "repository": {
     "type": "git",

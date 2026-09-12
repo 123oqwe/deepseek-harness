@@ -3,7 +3,22 @@
   "description": "Generic compiled task profile for Epic P4-02: the goal reference every inference traces back to, hard and soft constraints each carrying their own source and confidence, a side-effect classification in P2-04's vocabulary that cannot report an unknown as certain, the questions an ambiguous or high-risk missing field produces instead of a guess, and the content-addressed reference the Run event log names a profile by",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./types": {
+        "types": "./lib/types/types.d.ts",
+        "default": "./lib/types/types.js"
+      },
+      "./validate": {
+        "types": "./lib/types/validate.d.ts",
+        "default": "./lib/types/validate.js"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "repository": {
     "type": "git",

@@ -3,7 +3,30 @@
   "description": "Reproducible plugin lock file and dependency resolution for Epic P1-03: the nine locked facts per plugin, canonical byte-stable ordering, total load-order resolution, fail-closed boot admission against what is installed, and registry tag-drift detection",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./types": {
+        "types": "./lib/types/types.d.ts",
+        "default": "./lib/types/types.js"
+      },
+      "./package.json": "./package.json",
+      "./commit": {
+        "types": "./lib/types/commit.d.ts",
+        "default": "./lib/types/commit.js"
+      },
+      "./gate": {
+        "types": "./lib/types/gate.d.ts",
+        "default": "./lib/types/gate.js"
+      },
+      "./candidate": {
+        "types": "./lib/types/candidate.d.ts",
+        "default": "./lib/types/candidate.js"
+      }
+    }
   },
   "repository": {
     "type": "git",

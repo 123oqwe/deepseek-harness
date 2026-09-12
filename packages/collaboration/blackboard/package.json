@@ -3,7 +3,14 @@
   "description": "Shared structured-fact board for Epic P5-11: facts are structured values or artifact refs, never free text, each carrying observed or derived provenance that can be traced back to its observations",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "repository": {
     "type": "git",

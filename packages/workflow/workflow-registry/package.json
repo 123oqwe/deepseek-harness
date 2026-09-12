@@ -3,7 +3,30 @@
   "description": "Registered workflow definitions and nested-run limits for Epic P4-09: content-digest identity, monotonic per-name versions, run references that pin a digest rather than a name, registration-time recursion refusal, and nested budget decay under depth/agent/token ceilings",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./types": {
+        "types": "./lib/types/types.d.ts",
+        "default": "./lib/types/types.js"
+      },
+      "./version": {
+        "types": "./lib/types/version.d.ts",
+        "default": "./lib/types/version.js"
+      },
+      "./package.json": "./package.json",
+      "./store": {
+        "types": "./lib/types/store.d.ts",
+        "default": "./lib/types/store.js"
+      },
+      "./nesting": {
+        "types": "./lib/types/nesting.d.ts",
+        "default": "./lib/types/nesting.js"
+      }
+    }
   },
   "repository": {
     "type": "git",

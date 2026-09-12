@@ -3,7 +3,15 @@
   "description": "Console logger exporter for cordis",
   "version": "1.0.2",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/shared.d.ts",
+        "node": "./lib/index.js",
+        "default": "./lib/browser.js"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "repository": {
     "type": "git",

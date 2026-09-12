@@ -3,7 +3,26 @@
   "description": "Contract-stage durable inbox/outbox logic for Epic P4-06's effective-once effect handoff: outbox record states and their legal transitions, idempotent delivery receipts, deadline and attempt-budget dead-lettering, total dispatch ordering, enqueue backpressure, and consumer-side (source, message id, epoch) deduplication with cross-tenant refusal",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./inbox": {
+        "types": "./lib/types/inbox.d.ts",
+        "default": "./lib/types/inbox.js"
+      },
+      "./outbox": {
+        "types": "./lib/types/outbox.d.ts",
+        "default": "./lib/types/outbox.js"
+      },
+      "./package.json": "./package.json",
+      "./dispatcher": {
+        "types": "./lib/types/dispatcher.d.ts",
+        "default": "./lib/types/dispatcher.js"
+      }
+    }
   },
   "repository": {
     "type": "git",

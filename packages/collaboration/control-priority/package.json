@@ -3,7 +3,14 @@
   "description": "The control-message kinds and their relative urgency for Epic P5-10: one priority table shared by the subagent control router and the agent inbox's dequeue point, so a cancel outranks a steer wherever the two arrive together",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "repository": {
     "type": "git",

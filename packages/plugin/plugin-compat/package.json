@@ -3,7 +3,18 @@
   "description": "Contract-stage type surface and pure whole-graph solver signature for Epic P1-08's plugin ABI, capability, and schema compatibility negotiation: manifest-declared runtime API range/schema ranges/required-optional capabilities/provider constraints, boot-time whole-graph solving, minimal unsat-core conflict reporting, and fail-closed security-capability handling",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./solver": {
+        "types": "./lib/types/solver.d.ts",
+        "default": "./lib/types/solver.js"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "repository": {
     "type": "git",

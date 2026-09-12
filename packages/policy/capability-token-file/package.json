@@ -3,7 +3,18 @@
   "description": "File-backed Capability Token provider for Epic P2-02: mounts the token service on a profile, issues each session's root token through the Trust Kernel's signature roots, arms the tool-call requirement, and persists tokens, revocations and redacted audit records atomically under the profile's home",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./store": {
+        "types": "./lib/types/store.d.ts",
+        "default": "./lib/types/store.js"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "repository": {
     "type": "git",

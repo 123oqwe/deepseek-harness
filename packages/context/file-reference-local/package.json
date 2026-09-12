@@ -3,7 +3,18 @@
   "description": "Local-filesystem ctx.fileReferences provider with bounded fuzzy indexes",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./search": {
+        "types": "./lib/types/search.d.ts",
+        "default": "./lib/types/search.js"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "repository": {
     "type": "git",

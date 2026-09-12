@@ -83,7 +83,19 @@ export interface PackageManifest {
     | undefined
   >
   files?: string[]
-  publishConfig?: { access?: string }
+  publishConfig?: {
+    access?: string
+    exports?: Record<
+      string,
+      | string
+      | {
+        types?: string
+        default?: string
+      }
+      | null
+      | undefined
+    >
+  }
   repository?: { type?: string; url?: string; directory?: string }
   peerDependencies?: Record<string, string>
   devDependencies?: Record<string, string>
@@ -393,6 +405,47 @@ export function checkWorkspaceManifest({ dir, manifest }: WorkspaceManifest): st
     }
     if (invariantExport && (invariantExport.types === undefined || invariantExport.default === undefined)) {
       errors.push(`${label}: package.json exports["./invariant"] must declare both types and default targets`)
+    }
+    // `exports["./src/*"]` is the workspace's own source-resolution escape
+    // hatch: tsconfig `paths` and the gates that resolve imports to `src` need
+    // it, and nothing published does. Left in the published manifest it points
+    // at files `files[]` never ships, which publint reports once per package.
+    // pnpm substitutes `publishConfig.exports` for `exports` at pack time and
+    // drops the override from the packed manifest, so the subpath can be
+    // stripped from the tarball without touching workspace resolution.
+    //
+    // Derived rather than free-form, for the reason `files[]` is: a
+    // hand-maintained second copy of the export map drifts from the first the
+    // moment a subpath is added, and the drift is invisible until something
+    // resolves the wrong entry point. The expected override is exactly
+    // `exports` minus that one key.
+    const srcStarSubpath = './src/*'
+    // Experimental packages must omit `publishConfig` entirely
+    // ({@link checkExperimentalManifest}), so they cannot carry the override and
+    // keep their `./src/*` subpath in the manifest. They are excluded from
+    // official releases, so nothing publishes the dangling subpath.
+    const mayCarryPublishConfig = !experimentalPackageDirectory.test(dir)
+    if (mayCarryPublishConfig && manifest.exports?.[srcStarSubpath] !== undefined) {
+      const expectedPublishExports = Object.fromEntries(
+        Object.entries(manifest.exports).filter(([subpath]) => subpath !== srcStarSubpath),
+      )
+      const actual = manifest.publishConfig?.exports
+      if (actual === undefined) {
+        errors.push(
+          `${label}: package.json declares exports["${srcStarSubpath}"], so it must also set `
+          + 'publishConfig.exports to the same map without that subpath (pnpm strips it at pack time)',
+        )
+      } else if (JSON.stringify(actual) !== JSON.stringify(expectedPublishExports)) {
+        errors.push(
+          `${label}: package.json publishConfig.exports must be exports without "${srcStarSubpath}" `
+          + `(expected ${JSON.stringify(expectedPublishExports)})`,
+        )
+      }
+    } else if (mayCarryPublishConfig && manifest.publishConfig?.exports !== undefined) {
+      errors.push(
+        `${label}: package.json sets publishConfig.exports but declares no exports["${srcStarSubpath}"], `
+        + 'so the override has nothing to strip and would silently replace the real export map',
+      )
     }
     const expectedFiles = expectedDshPackageFiles(manifest)
     if (!sameStringList(manifest.files, expectedFiles)) {

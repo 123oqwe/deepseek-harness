@@ -3,7 +3,14 @@
   "description": "Durable lease store for Epic P4-07: SQLite-backed acquisition serialized by BEGIN IMMEDIATE, so two processes racing for one work item cannot both hold it",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "repository": {
     "type": "git",

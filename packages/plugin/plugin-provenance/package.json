@@ -3,7 +3,22 @@
   "description": "Contract-stage type surface and pure decision logic for Epic P1-02's plugin signature, source provenance, and dependency SBOM verification: Sigstore-style identity/provenance and org offline signing, digest/source-commit/builder-identity/SBOM checks against the TrustKernel-held trust root, and explicit-profile-gated unsigned-dev mode",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./signature": {
+        "types": "./lib/types/signature.d.ts",
+        "default": "./lib/types/signature.js"
+      },
+      "./sbom": {
+        "types": "./lib/types/sbom.d.ts",
+        "default": "./lib/types/sbom.js"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "repository": {
     "type": "git",

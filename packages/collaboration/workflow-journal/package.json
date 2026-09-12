@@ -3,7 +3,30 @@
   "description": "Workflow journal and step-level resume for Epic P4-08: the per-step record of script digest, program counter, artifact refs, child and side-effect receipts and phase; the pure/side-effecting split that decides what a resume may skip; digest-change refusal; and compaction that retains every receipt",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./types": {
+        "types": "./lib/types/types.d.ts",
+        "default": "./lib/types/types.js"
+      },
+      "./replay": {
+        "types": "./lib/types/replay.d.ts",
+        "default": "./lib/types/replay.js"
+      },
+      "./package.json": "./package.json",
+      "./recorder": {
+        "types": "./lib/types/recorder.d.ts",
+        "default": "./lib/types/recorder.js"
+      },
+      "./observer": {
+        "types": "./lib/types/observer.d.ts",
+        "default": "./lib/types/observer.js"
+      }
+    }
   },
   "repository": {
     "type": "git",
