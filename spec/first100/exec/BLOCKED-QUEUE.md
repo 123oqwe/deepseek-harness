@@ -5421,3 +5421,116 @@ On a profile with no answerer, an enabled row refuses every project's own `AGENT
 **One dependency worth keeping.** P2-01 U2 is a precondition for this fix: `askForReadTrustOnce` returns early when the session carries no attached principal, so before a shipped boot attached a host user the question could never be put at all. That early return's own comment records it.
 
 **The frozen supplement measures the BUNDLE ROW, not the provider.** `P1-07.composition.spec.ts` sets `disabled: false` in its own overlay, so it proves the provider works once mounted and cannot detect whether any profile mounts it — which is how the boundary shipped off without a red gate. The new suite boots the shipped `acp` profile and enables nothing itself; setting the `acp-app` row back to `disabled: true` reddens all three cases.
+
+**Environment readings taken alongside this work, recorded so they are not later mistaken for product signal.** One local full headless-snapshot run (2026-09-11 22:42 local, `5 failed | 79 passed | 1 skipped (85)`) produced five failures, every one of them the same host-pressure shape — `<scenario> headless snapshot did not exit within 30s`, with no assertion diff:
+
+| scenario | seen in other local runs |
+| --- | --- |
+| `persistent-pwsh-tool-turn` | yes — in 7 of the 9 local logs retained from this session |
+| `pwsh-tool-turn` | yes, once |
+| `pty-tools-sandbox-backend` | no |
+| `ralph-loop` | no |
+| `read-image` | no |
+
+None is a trust-boundary scenario and none carries a comparison failure: the child process simply did not finish inside the harness's 30s budget. This host runs these suites beside an external application holding 1.2–3.1 GB, and OOM kills are frequent, which is why every heavy run in this lane is serial. **These five are environment, not evidence** — they neither support nor weaken any claim in this entry, and a cloud run is the authority for the same scenarios.
+
+A later full replay (`--maxWorkers=2`) produced four timeouts of the same shape, and re-running each alone at `--maxWorkers=1` separates two causes. `product-subagent-both`, `subagent-dsh-sdk-diagnostic` and `subagent-dsh-sdk-dynamic-route` pass alone, so those three are contention. `persistent-pwsh-tool-turn` is different and is recorded as measured, without a cause: it is local to this host, reproducible when run alone, carries zero comparison failures, appears in 7 of the 9 local logs retained from this session, and the same scenario is green in the cloud at the same SHA (run 34667961832, step 19). No cause is stated here because none was measured. It stays a reading; it gets its own number only if CI ever shows it.
+
+### BLOCKED-220 — a headless run ends at `whenIdle()`, which does not follow an in-flight background job, so that job's result can never reach the model
+
+**Status:** RECORD ONLY 2026-09-11, assigned to lane A by the delegate. No product change made here.
+
+**Not the cause of candidate 3′'s red.** That red is the `waiter`/`settle` ordering inside `job_output(wait: true)`, recorded under (i) and fixed scenario-side. This entry is a separate defect found while diagnosing it, and is measured on its own below. An earlier lane A message wrongly offered this run-lifetime mechanism as the explanation of that red; it is not, because a `wait: true` step bounds settlement to before the run ends.
+
+**The lifetimes are independent, by contract.** `agent.whenIdle()` resolves "after no active driver or maintenance task remains" (`packages/core/agent/src/runtime-types.ts:115-121`). A background job is neither: it is a `jobs` record with a producer promise, owned by the agent but not driving it. `packages/bundle/headless/src/index.ts:331` awaits exactly that `whenIdle()`, and the lines after it flush the session, write the result line, and call `io.exit(status.exitCode)` at `:356`. Nothing between those points consults `ctx.jobs`.
+
+**Measured, not inferred.** The probe below is one-shot and is deliberately **not in the tree** — it is reproduced from these steps, not maintained:
+
+1. `cp -r snapshots/session/subagent-acp-diagnostic snapshots/session/zz-220-probe`
+2. In `replay.override.json`, keep only two entries: the `subagent_acp` call carrying `run_in_background: true`, and the final text turn. The foreground call and the `job_output` step are what must go — a `wait: true` step would bound settlement and hide the effect.
+3. In both `cordis.yml` and `cordis.snapshot.yml`, add `MOCK_NEWSESSION_READY: '/tmp/zz220-ready'` and `MOCK_NEWSESSION_GO: '/tmp/zz220-go-never-created'` to the mock's `env`, and create neither file. The mock blocks inside `session/new` forever, so the job cannot settle.
+4. Rename the scenario/composition/class keys in `snapshot.yml` to `zz-220-probe`.
+5. `pnpm run test:snapshot -t zz-220-probe`, then `rm -rf snapshots/session/zz-220-probe`.
+
+The case fails its comparison against the copied fixture — that is expected and not the reading. The reading is the received side of the diff:
+
+- the run produced its final assistant message and ended normally;
+- the mock never wrote its `MOCK_NEWSESSION_READY` file, so the job had not even reached `session/new` when the run finished;
+- the produced session log carries the `started background subagent job subagent-1` tool result and nothing else about that job.
+
+So the run does not wait, and the model's last word is written while the job it started is still in flight.
+
+**What happens to the outcome depends on when it lands, and none of the three outcomes reaches the model:**
+
+| when the job settles | delivery path | reaches the model? |
+| --- | --- | --- |
+| before the last `whenIdle()` resolves, owner idle, wake budget unspent | `owner.followup(message)` opens a turn | yes — `whenIdle()`'s `do/while` follows the new driver (`agent-loop/src/agent.ts:232-236`) |
+| before the last `whenIdle()` resolves, owner busy or the wake budget spent | `owner.inject(message)` | no — the message is spliced into the inbox, recorded in the session log, and no further turn ever drains it |
+| after `whenIdle()` has resolved | either | no — the process is already inside flush/print/`io.exit` |
+
+The wake budget therefore decides only *which* silent outcome occurs, not whether one occurs. The delegate's original framing — "budget spent, therefore lost" — is one of two losing rows; the run simply ending first is the other, and the probe above is that row.
+
+**Why this is a production statement and not a testing one.** A model is instructed to start background jobs and is told it will be notified (`tool-jobs/src/index.ts:265`). The product accepts the job, returns a job id the model can cite, and then discards the result if the model happens to finish its answer first. The second row is the sharper form: the notice is *written to the durable session log* as an inbox splice and still never enters a model request, so a reader of the log sees a delivery that never happened. In a one-shot `dsh --profile headless` run — the profile whose whole purpose is to answer and exit — finishing before a background job is the normal case, not the edge case.
+
+**Candidate fix directions, none chosen here:**
+
+1. **Make the run's completion condition include its jobs.** Await quiescence of the owner's job set alongside `whenIdle()`, bounded by an explicit timeout, so a started job either reports or is reported as abandoned.
+2. **Refuse the promise instead of breaking it.** If a one-shot profile will not wait, `job_*` tools have no business telling the model it will be notified; the tool text and the profile's composition should agree.
+3. **Report abandonment.** On teardown, summarize still-running jobs into the run's result so a caller — the only party still listening — learns the work was dropped.
+
+Direction 1 preserves the documented promise; 2 is the cheapest honest fix; 3 is the smallest change that stops the loss being silent.
+
+**Coverage already present, not to be refrozen.** The suppression branch of the `waiter`/`settle` ordering is covered by `packages/jobs/jobs-local/tests/jobs.spec.ts:449` (`resolves with the terminal snapshot when the job settles, marked reported`), which asserts the listener sees `reported: true`. `packages/jobs/tool-jobs/tests/tool-jobs.spec.ts` covers both delivery branches. No existing case covers a run ending with a job in flight — that is the gap this entry records, and it is **not** filled during the freeze.
+
+**Observation kept here rather than opened as its own number:** when a job reaches a terminal status *before* `job_output(wait: true)` is called, `wait()` takes its `isTerminal` early return without counting a waiter (`jobs-local/src/index.ts:237-240`), `settle()` therefore leaves `reported` false (`:422`), and the notice is delivered even though the tool result is about to hand the model the same output. `read()` sets `reported` one tick too late to suppress it (`:211`). The model receives the same completion twice, and on an idle owner the duplicate arrives as `owner.followup`, which opens an extra turn — an extra model call for output the model already has.
+
+**Epic-acceptance impact: none.** No `command-freeze.json` entry freezes a case over the `tool-jobs` delivery path or the headless run-end condition. The only appearance of these packages in `make-vs-use-ledger.json` is P4-09's risk note that `jobs-local` is in-memory and cannot own durable records for detached runs — a different concern, untouched here. So no accepted epic rests on the behavior this entry records.
+
+### BLOCKED-222 — a background job's completion notice was delivered or suppressed by a race, and the corpus recorded one side of it
+
+**Status:** FIXED 2026-09-11 scenario-side under the delegate's ruling (乙2), owner lane A. This is candidate 3′'s single red.
+
+**Three samples of the same race, two of them at the same SHA.**
+
+| sample | result |
+| --- | --- |
+| CI 34666554965, snapshot step | red: `replays subagent-acp-diagnostic` |
+| CI 34667961832, same SHA, re-run | green |
+| local, isolated, 5 consecutive replays | 5 green |
+
+No product code differs between the first two. A case that passes and fails at one SHA is not evidence about the product; it is evidence about the fixture.
+
+**The mechanism is three lines.**
+
+- `packages/jobs/jobs-local/src/index.ts:237-240` — `wait()` increments `job.waiters` **only** under `!isTerminal(job.status)`. A job already terminal takes the early return and never counts a waiter.
+- `packages/jobs/jobs-local/src/index.ts:422` — `settle()` runs `if (job.waiters > 0) job.reported = true`, before it snapshots and before it dispatches listeners.
+- `packages/jobs/tool-jobs/src/index.ts:279` — the delivery listener's first line is `if (snapshot.reported || owner === undefined) return`.
+
+So the notice is suppressed exactly when `job_output(wait: true)` registered its waiter before settlement, and delivered exactly when it did not. The scenario ran one recorded-LLM round trip against one mock-ACP subprocess lifetime and let whichever finished first decide — which is why the committed fixture, carrying no notice events, recorded only one of the two outcomes.
+
+**Two margin-shaped fixes were considered and rejected.** Both would have shrunk the window rather than closed it, and the entry records them so the next author does not re-propose them:
+
+1. **Foreground mock blocks until the background mock writes a file.** The latest a mock can write is its own `prompt()` return, and settlement happens after that — the response still has to reach the ACP client, the subagent run has to finish, and only then does the registry settle. The file therefore orders "the background prompt returned" before the foreground resumes, not "the background job settled". What remains on each side is a handful of microtasks plus one IPC hop: the same order of magnitude, which is the class that flipped in CI.
+2. **The same, with the foreground blocking before `initialize` instead of before `prompt`.** Widens the margin to three IPC round trips against under one. Wider, still a margin.
+
+**The fix is an observer, because only an observer sits after settlement.** `packages/test-support/job-settle-signal` registers one `jobs.onJobDone` listener and writes a file when job `subagent-1` settles; the mock ACP server blocks the prompt carrying the `FOREGROUND` marker at handler entry until that file exists (`MOCK_AWAIT_FILE` / `MOCK_AWAIT_MARKER`). The scenario's two `subagent_acp` calls swapped order so the background one runs first — the diagnostic subject is unchanged, and the scenario name is not. This is a real happens-before: the foreground tool cannot return before the job has settled, and `job_output` is a later step still.
+
+**The observer produces no session events, and the corpus proves it.** Event-type counts between the committed fixture and the refreshed one differ by exactly three entries and by nothing else:
+
+| event type | before | after | delta |
+| --- | --- | --- | --- |
+| `agent/inbox/spliced` | 2 | 4 | +2 |
+| `user/message` | 2 | 3 | +1 |
+| every other type | — | — | 0 |
+
+Total 58 → 61. The three are the notice itself: the splice that inserts it, the splice that removes it once drained, and the delivered message.
+
+**The placement is the only one the barrier permits.** The notice splices into `next-step` inside step 2, because the foreground prompt cannot return until settlement has happened and step 2 is where that call lives. The removal and the delivered `user/message` open step 3. And `reported` is false at that moment for the reason the mechanism gives: `job_output` is step 3, so no waiter existed when `settle()` ran. Any earlier placement would need settlement before the foreground call started; any later one would need it after `job_output` had registered. The barrier excludes both.
+
+**The frozen case is run-level and it eats the product.** Mutating the delivery point — `packages/jobs/tool-jobs/src/index.ts:279` made to return unconditionally — turns `replays subagent-acp-diagnostic through dsh --profile headless` red; the source was restored and `cmp`-verified byte-identical. No new package-level case was frozen: `packages/jobs/tool-jobs/tests/tool-jobs.spec.ts` already covers both delivery branches, and the suppression branch is covered by `packages/jobs/jobs-local/tests/jobs.spec.ts:449` (`resolves with the terminal snapshot when the job settles, marked reported`), which asserts the listener sees `reported: true`. Those are cited, not refrozen.
+
+**One resolution fact the next author needs.** Declaring the observer as a devDependency of the launching app is not enough. `plugin-package-inventory-deepseek` resolves an active entry against two anchors only — the run's temporary profile directory and its own source path — and a newly added workspace package is not hoisted into pnpm's shared store directory the way the older test-support plugins happen to be. The package must be listed in the **root** `package.json` devDependencies. This is now part of the rule in `snapshots/AGENTS.md`, not a footnote.
+
+The observer package is a public release member, because `scripts/check-workspace-constraints.ts` defines every `packages/<group>/<pkg>` outside `packages/experimental/` as one and rejects `private: true`; its four test-support siblings have the same shape. Its `publishConfig.exports` is `exports` without `./src/*`.
+
+**The product problem behind the race is separate and is not fixed here.** See BLOCKED-220: a headless run ends at `whenIdle()`, which does not follow an in-flight background job. This entry pins a fixture; it leaves the product's own loss window open.
