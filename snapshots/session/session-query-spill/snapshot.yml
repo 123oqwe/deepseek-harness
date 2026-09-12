@@ -1,3 +1,19 @@
+# The verification step asserts the OVERFLOW, not the content of one event
+# (BLOCKED-202). It used to grep the spill for `request/header` and
+# `session_event_search` — strings belonging to a read target this scenario
+# stopped using after an earlier drift, so `find` located the file and `grep`
+# silently failed, and the fixture recorded that failure as its expectation for
+# eight revisions. Measured 2026-09-12: the file was present and 1384 bytes,
+# and both greps returned 0.
+#
+# What the step now asserts is what this scenario exists to prove: a result too
+# large to inline is retained whole. The spill must exist, exceed the 800-byte
+# inline cap this composition sets, and contain
+# `supersedes earlier runtime-context snapshots` — text the inline result
+# elides (it shows `This snapshot` then jumps to `mpts are disabled`), so the
+# assertion fails if the omitted span is not in the spill. The spill root is
+# derived from the scenario name (`harness.ts:214-222`), which is why an
+# absolute path here is reproducible on any machine.
 # The read target is LOAD-BEARING and addressed by absolute sequence number,
 # because `session_event_read` accepts nothing else: its only parameter is
 # `seq`. It must land on the runtime-context `user/message`, which is the only
