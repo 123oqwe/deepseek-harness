@@ -11799,7 +11799,8 @@
         "mutationDescription": "Two mutations against packages/memory/memory/src/provenance.ts, each one literal substitution, the spec re-run, the file restored byte-identical after each. (C-M1) `admitToIndex` admits a record whose sensitivity is undefined, which is the behaviour before the absence rule; (C-M2) an unstated sensitivity is refused with `sensitive-not-permitted` rather than its own reason.",
         "failureSummary": "Both mutations red BOTH added cases, and neither is separable from the other — measured, not assumed, and stated here rather than claimed otherwise. The absence case asserts the whole outcome with `toEqual`, so changing the reason reaches it; the distinguishing case asserts that the two refusals differ, so admitting the unstated one reaches it too. A mutation isolating either would have to leave the absence branch both present and unchanged, which is the only thing either case is about. The three pre-existing must[2] cases stay green under both, which is what makes them the controls: the rule was narrowed, not replaced. NOT re-proven here and unchanged from the superseded entry: the 18 other Contract cases, whose mutations that entry recorded."
       },
-      "note": "P6-02 C-stage, re-frozen for the §12.19-1 Usage rework. Two cases added to must[2]: content whose sensitivity NOBODY stated is withheld whatever the policy says, and the two refusals carry different reasons on purpose — telling an operator a record was refused as sensitive when nobody assessed it reports an assessment that never happened, and only one of the two is something a writer can fix by stating the field. `expectCases` is this stage's cases only; the Fault matrix shares the same file and the same command and keeps its own 19, so one command carries two stages' separate commitments."
+      "note": "P6-02 C-stage, re-frozen for the §12.19-1 Usage rework. Two cases added to must[2]: content whose sensitivity NOBODY stated is withheld whatever the policy says, and the two refusals carry different reasons on purpose — telling an operator a record was refused as sensitive when nobody assessed it reports an assessment that never happened, and only one of the two is something a writer can fix by stating the field. `expectCases` is this stage's cases only; the Fault matrix shares the same file and the same command and keeps its own 19, so one command carries two stages' separate commitments.",
+      "supersededBy": "2026-09-12T23:08:09.000Z"
     },
     {
       "epic": "P6-02",
@@ -13709,6 +13710,61 @@
         "failureSummary": "M62 reddens 2 of 11: the case that permits while the provider is mounted and denies by name once it is lost, and the case that runs with no policy service at all. M63 reddens exactly the 2 constraint cases. M64 reddens exactly the kernel-binding case. M65 reddens 7 of 11 — every case whose evidence is a refused tool result, including the three capability-token cases. M66 reddens exactly one, the permit case where a token is presented and the policy accepts it; the two refusal cases still refuse for their own reasons under it. Re-run rather than carried: the mutated source was untouched by P2-10 U, but this command's tests (`enforcement.spec.ts`, `fixtures/stack.ts`) changed, and two of the superseded entry's counts no longer hold — M62 recorded 3 and reddens 2, M65 recorded 4 and reddens 7. A carried summary would have stated both wrong."
       },
       "note": "Re-frozen by P2-10's Usage stage: identical to the superseded entry minus the one case whose behaviour moved subject. Same argv, same files[], same expectExit; the sensitivity proof carries forward because the retained cases are unchanged. NOT the full output of this argv — the argv runs a whole package whose other cases belong to other entries."
+    },
+    {
+      "epic": "P6-02",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/memory/memory/tests/record.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P6-02 must[0]: the record carries every fact the clause enumerates carries content, kind, subject, provenance, times, confidence, scope, purpose, sensitivity, status and relations",
+        "P6-02 must[0]: the record carries every fact the clause enumerates distinguishes inline content from a stored reference",
+        "P6-02 must[0]: the record carries every fact the clause enumerates treats an open-ended validity as an explicit null, not an absent field",
+        "P6-02 acceptance[0]: every record traces to a source or is user-asserted refuses a derived record naming no source event",
+        "P6-02 acceptance[0]: every record traces to a source or is user-asserted accepts a user-asserted record, which names a responsible party instead",
+        "P6-02 acceptance[0]: every record traces to a source or is user-asserted does not treat an empty asserter as traceable",
+        "P6-02 acceptance[0]: every record traces to a source or is user-asserted validation[2]: a returned record carries its own provenance, not a caller-supplied one",
+        "P6-02 must[1]: a conflict records a relation and overwrites nothing supersedes: the winner gains a relation and the loser is marked, both surviving",
+        "P6-02 must[1]: a conflict records a relation and overwrites nothing disputes marks the loser disputed, not superseded",
+        "P6-02 must[1]: a conflict records a relation and overwrites nothing refuses a relation pointing at the record itself",
+        "P6-02 must[1]: a conflict records a relation and overwrites nothing refuses a duplicated relation but allows two kinds toward one target",
+        "P6-02 acceptance[1]: expired and revoked records leave default retrieval retrieves an active, unexpired record",
+        "P6-02 acceptance[1]: expired and revoked records leave default retrieval withholds a record whose validity has passed, and keeps one at the boundary out too",
+        "P6-02 acceptance[1]: expired and revoked records leave default retrieval withholds revoked, superseded and disputed records alike",
+        "P6-02 must[2]: sensitive content stays out of an index unless policy allows withholds sensitive content by default",
+        "P6-02 must[2]: sensitive content stays out of an index unless policy allows admits sensitive content when the policy explicitly permits it",
+        "P6-02 must[2]: sensitive content stays out of an index unless policy allows admits normal content whatever the policy says",
+        "P6-02 must[2]: sensitive content stays out of an index unless policy allows withholds content whose sensitivity NOBODY stated, whatever the policy says",
+        "P6-02 must[2]: sensitive content stays out of an index unless policy allows tells an unstated sensitivity apart from an assessed one, rather than reporting an assessment nobody made",
+        "P6-02 validation[1]: a malformed record is refused rather than stored refuses a confidence outside [0, 1], including NaN",
+        "P6-02 validation[1]: a malformed record is refused rather than stored accepts the exact bounds, so the range test is not off by one",
+        "P6-02 validation[1]: a malformed record is refused rather than stored refuses an inverted validity range but accepts an instantaneous one"
+      ],
+      "files": [
+        "packages/memory/memory/src/record.ts",
+        "packages/memory/memory/src/provenance.ts",
+        "packages/memory/memory/tests/record.spec.ts",
+        "packages/memory/memory/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-12T23:08:09.000Z",
+      "supersedes": "2026-09-11T06:18:45.054Z",
+      "supersessionReason": "Re-spelled as vitest fullNames under BLOCKED-104 before the cell's first observation (BLOCKED-242 residue, delegate approval 2026-09-12). The argv, files, expected exit and the 22 cases are unchanged: each string now carries its describe chain, so a shared bare title cannot green this cell on another case's evidence.",
+      "dryRunProof": {
+        "treeSha": "593d88239044fb6d461826f2192f63d29e951876",
+        "testsDiscovered": 41
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations against packages/memory/memory/src/provenance.ts, each one literal substitution, the spec re-run, the file restored byte-identical after each. (C-M1) `admitToIndex` admits a record whose sensitivity is undefined, which is the behaviour before the absence rule; (C-M2) an unstated sensitivity is refused with `sensitive-not-permitted` rather than its own reason.",
+        "failureSummary": "Both mutations red BOTH added cases, and neither is separable from the other — measured, not assumed, and stated here rather than claimed otherwise. The absence case asserts the whole outcome with `toEqual`, so changing the reason reaches it; the distinguishing case asserts that the two refusals differ, so admitting the unstated one reaches it too. A mutation isolating either would have to leave the absence branch both present and unchanged, which is the only thing either case is about. The three pre-existing must[2] cases stay green under both, which is what makes them the controls: the rule was narrowed, not replaced. NOT re-proven here and unchanged from the superseded entry: the 18 other Contract cases, whose mutations that entry recorded. Carried verbatim from the superseded entry (2026-09-11T06:18:45.054Z): this supersession changes only the spelling of the same 22 cases, and the four files it names are byte-identical between that entry's treeSha and 593d88239044fb6d461826f2192f63d29e951876."
+      },
+      "note": "P6-02 C-stage, re-spelled only. The superseded entry's notes on the stage's design decisions and must[2] rework apply unchanged."
     }
   ]
 }
