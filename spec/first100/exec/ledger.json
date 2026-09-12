@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-12T15:20:40.621Z",
-  "inputDigest": "167c34a34760e4c2d0708d0a46c96be3d73d8b4f6d2fb1028a8a2e1a58fe6a90",
+  "lastUpdatedUtc": "2026-09-12T16:16:42.748Z",
+  "inputDigest": "d3d16b3680391a489869a61f021a5a4faa954cec7a231252257aa9251cea7d3a",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -2805,15 +2805,15 @@
         }
       },
       "candidateSha": "73c1c04f2ea03fbd09b0c0cb5d06ecf986aedbff",
-      "independentVerdict": "PENDING",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "NOT_RUN",
+      "status": "ACCEPTED",
       "acceptedEvidence": {
-        "acceptedAtUtc": "2026-09-02T16:09:57.603Z",
+        "acceptedAtUtc": "2026-09-12T16:16:42.734Z",
         "cells": {
           "C": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33587853573",
-            "candidateSha": "00169c8ec501f30adcd1439a01b6bb5da3929437"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34660413109",
+            "candidateSha": "73c1c04f2ea03fbd09b0c0cb5d06ecf986aedbff"
           },
           "P": {
             "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33596937698",
@@ -2824,8 +2824,8 @@
             "candidateSha": "bf24fa0a3346516cf2b31fb2e40427f69189183f"
           },
           "F": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33637453508",
-            "candidateSha": "bf24fa0a3346516cf2b31fb2e40427f69189183f"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+            "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385"
           }
         },
         "coverageClosure": {
@@ -2834,9 +2834,9 @@
           "unverifiedCitations": []
         },
         "delegateSignoff": {
-          "delegateSession": "guanjieqiao-92",
-          "signedAtUtc": "2026-09-02T16:09:57.338Z",
-          "userConfirmationRef": "decisions-approved.md#C9"
+          "delegateSession": "first100-delegate-78",
+          "signedAtUtc": "2026-09-12T16:16:42.023Z",
+          "userConfirmationRef": "decisions-approved.md#C11"
         }
       }
     },
