@@ -11,10 +11,13 @@ English | [中文](README.zh.md)
 
 `dsh-policy-language` declares the vocabulary a dsh policy may name: the three Cedar entity types every policy request carries (`Dsh::Principal`, `Dsh::Action` whose id is the manifest's capability, and `Dsh::Resource` whose id is a kind-qualified action target) and the ten context keys the request builder sends. It defines no syntax. Under Epic P2-10's ruling (b), dsh's "finite declarative language" IS that vocabulary plus its conventions — a second syntax compiling to Cedar would be a second trust root and would re-verify the authorization semantics `@deepseek-ai/dsh-policy-engine-cedar` already froze for P2-05.
 
+Around that declaration the package adds the two operations the vocabulary exists for: `parsePolicySet` refuses a policy set that does not parse or that reads a key outside the vocabulary, and `compilePolicySet` turns an accepted set into the pinned, digested artifact a replay keys on.
+
 ## Table of Contents
 
 - [Use this package](#use-this-package)
 - [Why a schema at all](#why-a-schema-at-all)
+- [Source map](#source-map)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 - [Dev Note](#dev-note)
@@ -24,6 +27,8 @@ English | [中文](README.zh.md)
 
 Read `DSH_CONTEXT_KEYS` to know what a policy may reference, and `DSH_PRINCIPAL_TYPE` / `DSH_ACTION_TYPE` / `DSH_RESOURCE_TYPE` for the entity types. A policy naming anything outside them is a policy that can never match.
 
+Call `parsePolicySet(policies)` where a deployment's policy set arrives. It answers `{ok: true}` or one of three named refusals — `empty`, `unparsable` (with the offending policy id), `unknown-context-key` (with every offending key, not just the first) — and it checks syntax before vocabulary, so an unparsable policy is reported as unparsable rather than as a key nobody sends. Call `compilePolicySet(policies, {contextKeys, engineVersion})` on an accepted set to get its pin: a digest over the canonical policy text, the vocabulary, and the engine version together, so a Cedar upgrade or a vocabulary change re-pins visibly instead of silently meaning something else.
+
 <a id="why-a-schema-at-all"></a>
 ## Why a schema at all
 
@@ -32,6 +37,16 @@ Measured against Cedar 4.12.0: a policy referencing a context key dsh never send
 What this declaration buys is moving that report from decision time to load time: fail once, before any action has been wrongly denied, where a deployment is configured rather than where it runs.
 
 **Every key here is justified by a line in `toCedarRequest`**, and the Contract stage's drift case compares this list against a request that mapper actually built. It fails in both directions — a key declared here that nothing sends, and a key sent that is not declared here — because a schema wider than the request builder manufactures exactly the quiet failure above.
+
+<a id="source-map"></a>
+## Source map
+
+| File | Role |
+|---|---|
+| [`src/schema.ts`](src/schema.ts) | The three entity types and the ten context keys — the vocabulary itself |
+| [`src/parser.ts`](src/parser.ts) | `parsePolicySet` and its three refusals, syntax checked before vocabulary |
+| [`src/compiler.ts`](src/compiler.ts) | `compilePolicySet` and the pin over canonical text, vocabulary and engine version |
+| — | No invariant companion is published: this package owns no relationship two observers could see differently — every export is a pure function over its arguments, and a parse or a pin is produced and returned inside one call. |
 
 ## Model Experience
 
@@ -43,7 +58,7 @@ None; nothing here assembles or contributes to a provider request, so no prefix 
 
 ## Known Limitations and Deferred Work
 
-- **The vocabulary is declared, not yet enforced at load** — refusing a policy outside it is the parsing half of the Contract stage, and pinning a version of it is the compiler's. This module is the declaration those two read.
+- **Nothing in production calls `parsePolicySet` yet** — the refusal exists and is frozen, but the load-time failure it buys arrives only when the Provider stage's fail-closed loader reads a deployment's policy set through it. Until then a misspelled context key still reaches decision time.
 - **The entity ids are not constrained here** — `Dsh::Action`'s id is whatever capability a manifest names, and `Dsh::Resource`'s is a kind-qualified target. Closing those sets would be a second vocabulary with its own drift problem, and no clause asks for it.
 
 <a id="dev-note"></a>

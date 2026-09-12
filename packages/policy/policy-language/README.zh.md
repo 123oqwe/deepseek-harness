@@ -11,10 +11,13 @@ kind: "package-reference"
 
 `dsh-policy-language` 声明一条 dsh 策略可以指名的词汇:每个策略请求携带的三个 Cedar 实体类型(`Dsh::Principal`;`Dsh::Action`,其 id 是 manifest 的 capability;`Dsh::Resource`,其 id 是带 kind 限定的动作目标),以及请求构造器发送的十个 context 键。它不定义任何语法。按 Epic P2-10 的裁定 (b),dsh 的「有限声明式语言」**就是**这份词汇加上它的约定——另造一门编译到 Cedar 的语法会是第二个信任根,并且会重验 `@deepseek-ai/dsh-policy-engine-cedar` 已为 P2-05 冻结的授权语义。
 
+围绕这份声明,本包补上词汇之所以存在的那两个操作:`parsePolicySet` 拒绝解析不过、或读了词汇之外的键的策略集合;`compilePolicySet` 把一份被接受的集合变成重放所依据的、已钉住并已摘要的产物。
+
 ## 目录
 
 - [使用本包](#use-this-package)
 - [为什么需要一份 schema](#why-a-schema-at-all)
+- [源码地图](#source-map)
 - [模型体验](#model-experience)
 - [已知限制与延期工作](#known-limitations-and-deferred-work)
 - [开发备注](#dev-note)
@@ -24,6 +27,8 @@ kind: "package-reference"
 
 读 `DSH_CONTEXT_KEYS` 得知一条策略可以引用什么,读 `DSH_PRINCIPAL_TYPE` / `DSH_ACTION_TYPE` / `DSH_RESOURCE_TYPE` 得知实体类型。指名了它们之外任何东西的策略,是一条永远匹配不到东西的策略。
 
+在部署的策略集合抵达之处调用 `parsePolicySet(policies)`。它回答 `{ok: true}`,或三种具名拒绝之一——`empty`、`unparsable`(带上出错那条策略的 id)、`unknown-context-key`(列出每一个越界的键,而不只是第一个);它先查语法再查词汇,所以一条解析不过的策略被报为解析不过,而不是被报成「没人发送的键」。对一份被接受的集合调用 `compilePolicySet(policies, {contextKeys, engineVersion})` 取得它的钉子:一道同时覆盖规范化策略文本、词汇与引擎版本的摘要——于是 Cedar 升级或词汇变动会**看得见地**重新钉住,而不是静默地改变同一段文本的含义。
+
 <a id="why-a-schema-at-all"></a>
 ## 为什么需要一份 schema
 
@@ -32,6 +37,16 @@ kind: "package-reference"
 这份声明买到的,是把那条报告从**决策期**挪到**加载期**:只失败一次、在任何动作被错误拒绝之前失败、在部署被配置的地方失败而不是在它运行的地方失败。
 
 **这里每一个键都由 `toCedarRequest` 里的一行担保**,而 Contract 阶段的漂移用例拿这份清单与那个 mapper 真正构造出来的请求相比。它**两个方向都会红**——这里声明了但没人发送的键,以及发送了却没在这里声明的键——因为一份比请求构造器更宽的 schema,制造的正是上面那种安静的失败。
+
+<a id="source-map"></a>
+## 源码地图
+
+| 文件 | 角色 |
+|---|---|
+| [`src/schema.ts`](src/schema.ts) | 三个实体类型与十个 context 键——词汇本身 |
+| [`src/parser.ts`](src/parser.ts) | `parsePolicySet` 与它的三种拒绝,先语法后词汇 |
+| [`src/compiler.ts`](src/compiler.ts) | `compilePolicySet`,以及覆盖规范化文本、词汇与引擎版本的那道钉子 |
+| — | 不发布 invariant 伴生包:本包不拥有任何「两个观察者可能看到不同结果」的关系——每个导出都是对其入参的纯函数,一次解析或一次钉住在同一次调用内产生并返回。 |
 
 ## 模型体验
 
@@ -43,7 +58,7 @@ None, as this package declares a vocabulary and registers no prompt, schema, too
 
 ## 已知限制与延期工作
 
-- **词汇只是被声明,尚未在加载期被强制** —— 拒绝词汇之外的策略是 Contract 阶段解析那一半的事,把它的版本钉住是 compiler 的事。本模块是那两者所读的那份声明。
+- **生产路径上还没有任何地方调用 `parsePolicySet`** —— 拒绝已经存在、也已经冻结,但它买到的那次加载期失败,要等 Provider 阶段的 fail-closed 加载器真的用它去读部署的策略集合时才会到来。在那之前,一个拼错的 context 键仍然会走到决策期。
 - **实体 id 不在这里被约束** —— `Dsh::Action` 的 id 是某条 manifest 指名的任意 capability,`Dsh::Resource` 的是带 kind 限定的目标。把这两个集合封闭起来会成为第二份词汇、带着它自己的漂移问题,而且没有任何子句要求它。
 
 <a id="dev-note"></a>

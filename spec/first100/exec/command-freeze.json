@@ -13563,6 +13563,56 @@
         "failureSummary": "(M1) 2 failed — `does NOT run the sub-dispatched tool when the arguments changed after the decision` and `... once the decision has expired` — while BOTH positive controls stayed green, so the failure is the refusal being ignored and not the verifier being wrong. (M2) 1 failed: `records a binding for the sub-dispatch it asked about`. (M3) 2 failed: `writes an actionId from the code-mode path` and `gives two sub-dispatches of ONE tool two different actionIds`. (M4) 1 failed: `REFUSES when two decisions about one tool name no dispatch`, and its control `still ADMITS a single actionId-less decision` stayed green, which is what shows the refusal is about the ambiguity rather than about the fallback. The four failure sets do not overlap. All reverted; tools + agent-loop + user-approval + acp + ui-approval 54 files, 1089 passed."
       },
       "note": "One entry over TWO spec files because they close one clause set and the argv runs both in a single command (2 files, 16 tests). `packages/core/tools/tests/approval-code-mode.spec.ts` is outside `stages.F`'s file list and is carried by a files-overlay reason, the way P3-01's F stage carried its shared fake provider: the code-mode proof has to run where the code-mode dispatch runs, and that is `core/tools`, not `user-approval`. FOUR of the sixteen are REGRESSION GUARDS rather than capability this stage added — the three Unicode-confusable cases and the batch-mutation case pass on the tree as it stood before F, because P2-03's canonical form deliberately does not normalize (the NFC folding was removed 2026-09-06 after it let one hash cover two filenames) and because the digest already separates two argument values. They are frozen as guards on that correction; reading them as F's new capability would overstate the stage. `stages.F` also names `packages/interaction/user-approval/tests/approval.spec.ts`, which this stage did NOT change: that file holds P2-05's ACP machine-policy cases, and F's subject is the dispatch paths and the audit reference, so adding cases there to fill the file list would be a substituted subject. Declared limitations: acceptance[0]'s third limb (file inode / remote object version) is NOT closed and is recorded open in `acceptance-coverage.json` — both production paths pass `preconditions: []`, and nothing in the tree declares which tool parameter is a filesystem path (BLOCKED-238); and the two dispatch paths bind different argument FORMS — the native one the raw string the model emitted, the code-mode one the JSON-normalized value it manifests — which is safe because a dispatch is only ever compared with a record its own path wrote, and is recorded rather than forced into one form."
+    },
+    {
+      "epic": "P2-10",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/policy/policy-language",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-10 C: the policy-set parse and its outcomes accepts a set every policy of which parses",
+        "P2-10 C: the policy-set parse and its outcomes accepts every key the request builder actually sends",
+        "P2-10 C: the policy-set parse and its outcomes keeps the unparsable and the empty reasons distinct, so a caller can tell them apart",
+        "P2-10 C: the policy-set parse and its outcomes refuses a policy that reads a context key dsh never sends, naming the key",
+        "P2-10 C: the policy-set parse and its outcomes refuses a set that does not parse, and names the policy",
+        "P2-10 C: the policy-set parse and its outcomes refuses an empty set rather than treating it as a policy set that permits nothing",
+        "P2-10 C: the policy-set parse and its outcomes refuses an unparsable set BEFORE reading its vocabulary, so the reason names the real fault",
+        "P2-10 C: the policy-set parse and its outcomes reports every unknown key in the set, not just the first",
+        "P2-10 C: the schema and the request builder state the same vocabulary declares every context key the request builder sends, and no others",
+        "P2-10 C: the schema and the request builder state the same vocabulary declares the same keys the language document does, so the prose is checkable and not decorative",
+        "P2-10 C: the schema and the request builder state the same vocabulary declares the three entity types the request builder names",
+        "P2-10 C: the schema and the request builder state the same vocabulary states ten context keys, so a silent addition to either side is visible as a count",
+        "P2-10 acceptance[1]: each of the three inputs moves the pin moves when one character of one policy changes",
+        "P2-10 acceptance[1]: each of the three inputs moves the pin moves when the engine version changes, so a cedar upgrade re-pins visibly",
+        "P2-10 acceptance[1]: each of the three inputs moves the pin moves when the vocabulary changes, because the same text means something else",
+        "P2-10 acceptance[1]: the pin is stable for one input and version gives the same set the same pin, twice",
+        "P2-10 acceptance[1]: the pin is stable for one input and version ignores formatting, because the canonical text is what is pinned",
+        "P2-10 acceptance[1]: the pin is stable for one input and version ignores the order the policy map was built in",
+        "P2-10: a set that will not compile has no pin refuses through the same taxonomy the parse uses"
+      ],
+      "files": [
+        "packages/policy/policy-language/tests/schema.spec.ts",
+        "packages/policy/policy-language/tests/parse.spec.ts",
+        "packages/policy/policy-language/tests/compile.spec.ts",
+        "packages/policy/policy-language/tests/sample-request.ts"
+      ],
+      "frozenAtUtc": "2026-09-12T11:20:00Z",
+      "dryRunProof": {
+        "treeSha": "7a1bfd95172eb7cff1414a3fdd3688d7fa577107",
+        "testsDiscovered": 19
+      },
+      "sensitivityProof": {
+        "mutationDescription": "In `packages/policy/policy-language/src/schema.ts`, `DSH_CONTEXT_KEYS` gained an eleventh key, `tenantTier`, that nothing in `toCedarRequest` sends -- the exact drift this stage exists to detect. The schema stays syntactically valid and every other key keeps its spelling, so the language still parses and still compiles; only the vocabulary stops describing the requests the engine actually builds.",
+        "failureSummary": "RED 3 of 19, all three in `tests/schema.spec.ts`: the key set no longer equals what the request builder sends, no longer equals the table in `docs/policy/language.md`, and no longer counts ten. The 8 parse cases and the 7 compile cases stayed GREEN, which is the correct split -- a key nobody sends breaks no grammar and moves no pin unless a policy reads it. Applied and reverted locally, never committed; `schema.ts` restored byte-identically (sha256 66c114bb53585032430d587ccb36716f7a517cf725ab57c41d09f1373049a856 before and after, `git status --porcelain packages/policy` empty), and all 19 returned passing."
+      },
+      "note": "make-vs-use VERIFIED against the registry's stages.C.files. Four of the five declared paths landed as declared: `src/parser.ts`, `src/compiler.ts`, `docs/policy/language.md`, and `packages/policy/policy-engine/src/index.ts` (which exports `toCedarRequest` so the schema is checkable against the code that builds requests, rather than against prose). The fifth, `tests/golden.spec.ts`, is a PLAN name no frozen entry was ever observed under; the stage landed as three files split along C's three layers -- `tests/schema.spec.ts` (vocabulary), `tests/parse.spec.ts` (grammar), `tests/compile.spec.ts` (the pin) -- plus the shared `tests/sample-request.ts`. Delegate adjudicated 2026-09-12: a note, not an A-class rename, because no observed case title changed. `src/schema.ts` is an addition the plan did not name: it holds the vocabulary the drift case compares the document against. The registry's `provenance.filesReduced` entry for P2-10 removed `parser.ts`/`compiler.ts` as 'a homemade policy language'; what landed under those names is not one -- parsing is Cedar's `policyToJson` and the canonical form is Cedar's `formatPolicies`, so dsh owns the vocabulary and the pin, never a grammar."
     }
   ]
 }

@@ -3215,6 +3215,38 @@
       "stages": [
         "C.1"
       ]
+    },
+    {
+      "epic": "P2-10",
+      "path": "packages/policy/policy-language/tests/compile.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C"
+      ]
+    },
+    {
+      "epic": "P2-10",
+      "path": "packages/policy/policy-language/tests/parse.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C"
+      ]
+    },
+    {
+      "epic": "P2-10",
+      "path": "packages/policy/policy-language/tests/sample-request.ts",
+      "kind": "test",
+      "stages": [
+        "C"
+      ]
+    },
+    {
+      "epic": "P2-10",
+      "path": "packages/policy/policy-language/tests/schema.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C"
+      ]
     }
   ]
 }

@@ -8,17 +8,20 @@
  * evaluator wearing the same policy set.
  */
 import { describe, expect, it } from 'vitest'
-import { compilePolicySet } from '../src/compiler.ts'
+import { compilePolicySet, type PolicyPinInputs } from '../src/compiler.ts'
 import { DSH_CONTEXT_KEYS } from '../src/schema.ts'
 
-const INPUTS = { contextKeys: DSH_CONTEXT_KEYS, engineVersion: '4.12.0' }
+// Typed as the public contract rather than inferred: `DSH_CONTEXT_KEYS` is a
+// ten-element `as const` tuple, so an inferred `INPUTS` would make the
+// vocabulary-changed case below unassignable for having nine keys.
+const INPUTS: PolicyPinInputs = { contextKeys: DSH_CONTEXT_KEYS, engineVersion: '4.12.0' }
 const SET = {
   'baseline-permit': 'permit(principal, action, resource);',
   gated: 'permit(principal, action, resource) when { context.sideEffectClass == "read" };',
 }
 
 /** The pin of a set that compiles, or a thrown assertion naming the refusal. */
-function pinOf(policies: Readonly<Record<string, string>>, inputs = INPUTS): string {
+function pinOf(policies: Readonly<Record<string, string>>, inputs: PolicyPinInputs = INPUTS): string {
   const result = compilePolicySet(policies, inputs)
   if (!result.ok) throw new Error(`expected a compiled set, got ${result.reason}`)
   return result.pin
