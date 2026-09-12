@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/test-support/job-settle-signal/README.md
 README.md: 3eafa14d404fdb61244fde75ab01c122028544eb
-README.zh.md: 655cc82f343cbebea62ca1f922c8c37ecca0695b
+README.zh.md: a39edec24f42d7429d09003e6bfad82dad18d9fc
