@@ -3294,6 +3294,33 @@
         }
       ],
       "note": "acceptance[1]: 'sensitive values may be displayed redacted, but the hash still covers the real canonicalized value.' Both halves are cited on purpose, because either alone is half the clause: the digest half (two values that would display identically digest differently, and a redacted placeholder digests differently from the value it stands for), the durability half (the record carries no argument value yet still separates two argument values), and the surface half (the ACP payload carries the redacted arguments and never the raw string). What no citation proves is that every sensitive value IS redacted: `redactArgumentsForDisplay` decides what to hide, and its policy is not this clause's subject."
+    },
+    {
+      "epic": "P2-06",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "U",
+          "title": "P2-06 acceptance[2]: one dispatch records exactly ONE binding records ONE binding for one gated dispatch — counted, not merely present"
+        },
+        {
+          "stage": "U",
+          "title": "P2-06 acceptance[2]: one dispatch records exactly ONE binding records NONE when the gate does not ask, so a binding never outlives its question"
+        },
+        {
+          "stage": "F",
+          "title": "P2-06 acceptance[2]/validation[3]: an action names its approval records the dispatch's ActionId on the binding, so an audit query has a field to travel on"
+        },
+        {
+          "stage": "F",
+          "title": "P2-06 acceptance[2]/validation[3]: an action names its approval gives two calls of ONE tool two distinguishable records, which is the whole point of the field"
+        },
+        {
+          "stage": "F",
+          "title": "P2-06 acceptance[2]: the record names the DISPATCH, not only the tool REFUSES when two decisions about one tool name no dispatch, rather than settling the question by position"
+        }
+      ],
+      "note": "acceptance[2]: 'the approval event and the final action form a one-to-one reference.' The two halves are cited separately because each alone is half the clause, and conflating them was a live risk on this epic. The Usage citations prove the COUNT — exactly one binding per gated dispatch, and none for an action the gate does not ask about — which makes a one-to-one reference POSSIBLE. They do not make one exist: the record carried `action`, a tool NAME, so two calls to one tool in a session were the same line in the log. The Fault citations supply the reference itself: the dispatch's `actionId` on the record, two calls of one tool distinguishable, and a fail-closed refusal when two decisions about one tool name no dispatch, so the fallback for actionId-less records cannot settle the question by position. What no citation proves is that an audit TOOL exists to run the query; the field it would travel on does, and the reverse lookup is exercised in the Fault case that filters the log by `actionId`."
     }
   ]
 }

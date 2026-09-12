@@ -13512,6 +13512,57 @@
         "failureSummary": "(M1) 2 of 4 real-dispatch cases failed — `does NOT run the tool when the arguments changed` and `does NOT run the tool once the decision has expired` — while both positive controls stayed green, so the failure is the refusal being ignored and not the verifier being wrong. The cases assert what the TOOL observed (`runs` is empty), which is why an ignored refusal reddens them. (M2) 1 of 10 failed: `records ONE even when BOTH gates ask about the same dispatch`, with `expected 2 to be 1`. That case had to be written twice: the first version drove only `gateActionRisk` and stayed GREEN under this mutation, because a case that never reaches the second gate cannot count it. (M3) 2 of 3 ACP cases failed and the third — the ask with no manifest — stayed green, so the payload change is about the six fields and not about the projection existing. All three reverted; acp 8, client+remotes 20, tools+agent-loop+user-approval 507 passed."
       },
       "note": "The six fields are built once at the only site holding the manifest and carried to both answerers rather than composed by each. The ACP projection uses `RequestPermissionRequest.toolCall`, the standard this epic owns, and invents no sibling field; an ask with no manifest sends the payload it always sent. Re-verification reads the RECORDED tuple from the session log, never from the values about to run, and a non-`valid` result refuses the dispatch. `expectCases` holds this epic's 17 of the 22 cases the command discovers: `packages/acp/acp/tests/approval.spec.ts` also holds five pre-existing ACP machine-policy cases, and freezing those would count another epic's evidence here. Declared limitations: the registry's own ask carries no binding because no manifest exists at that layer (filling it would need a new cross-layer reference, and BLOCKED-233's shape says the consumer is the dispatch path); and the ACP answerer delegates when `callId === undefined`, so every non-tool-call ask — workspace trust is the live one — reaches no ACP decider at all, which is recorded rather than fixed by widening the guard, since the payload is shaped as a tool call and a trust question has no `toolCallId` to put in it."
+    },
+    {
+      "epic": "P2-06",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/interaction/user-approval/tests/argument-binding.spec.ts",
+        "packages/core/tools/tests/approval-code-mode.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-06 validation[1]: a Unicode confusable is two values, not one refuses a DECOMPOSED spelling of the approved name, because the canonical form preserves the form it was given",
+        "P2-06 validation[1]: a Unicode confusable is two values, not one refuses a HOMOGLYPH substitution, where the rendered name is the one a human read",
+        "P2-06 validation[1]: a Unicode confusable is two values, not one ADMITS the identical spelling, so the two refusals above are about the characters and not about refusing everything",
+        "P2-06 validation[1]: batch mutation — one decision does not travel to a sibling call refuses the SECOND call of a batch when it was approved for the first",
+        "P2-06 acceptance[2]/validation[3]: an action names its approval records the dispatch's ActionId on the binding, so an audit query has a field to travel on",
+        "P2-06 acceptance[2]/validation[3]: an action names its approval gives two calls of ONE tool two distinguishable records, which is the whole point of the field",
+        "P2-06 acceptance[2]/validation[3]: an action names its approval records NO actionId when the asker supplies none, so an ask with no dispatch behind it is not given a fake identity",
+        "P2-06 must[1]/validation[2]: a code-mode sub-dispatch re-verifies its approval RUNS the sub-dispatched tool when the recorded decision still covers it — the positive control",
+        "P2-06 must[1]/validation[2]: a code-mode sub-dispatch re-verifies its approval does NOT run the sub-dispatched tool when the arguments changed after the decision",
+        "P2-06 must[1]/validation[2]: a code-mode sub-dispatch re-verifies its approval does NOT run the sub-dispatched tool once the decision has expired",
+        "P2-06 must[1]/validation[2]: a code-mode sub-dispatch re-verifies its approval RUNS when the session recorded no approval at all, so an unbound program is unaffected",
+        "P2-06 must[1]/validation[2]: a code-mode sub-dispatch re-verifies its approval records a binding for the sub-dispatch it asked about, which is what makes the re-verification have a subject",
+        "P2-06 acceptance[2]: the record names the DISPATCH, not only the tool writes an actionId from the code-mode path, so both production paths name their dispatch",
+        "P2-06 acceptance[2]: the record names the DISPATCH, not only the tool gives two sub-dispatches of ONE tool two different actionIds, and does not let the first decision cover the second",
+        "P2-06 acceptance[2]: the record names the DISPATCH, not only the tool REFUSES when two decisions about one tool name no dispatch, rather than settling the question by position",
+        "P2-06 acceptance[2]: the record names the DISPATCH, not only the tool still ADMITS a single actionId-less decision, so the refusal above is about the ambiguity and not about the fallback"
+      ],
+      "files": [
+        "packages/core/tools/src/external-effect.ts",
+        "packages/core/tools/src/ptc.ts",
+        "packages/core/agent-loop/src/tool-calls.ts",
+        "packages/interaction/user-approval/src/types.ts",
+        "packages/interaction/user-approval/src/index.ts",
+        "packages/interaction/user-approval/tests/argument-binding.spec.ts",
+        "packages/core/tools/tests/approval-code-mode.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-12T21:30:00.000Z",
+      "dryRunProof": {
+        "treeSha": "7487e0e0bfeea9f60b409a03d1a88b1ac20b6b8c",
+        "testsDiscovered": 16
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations, one per thing this stage closes. (M1) In `packages/core/tools/src/ptc.ts`, compute `verifyRecordedApproval` and IGNORE its result — the \"verified and then proceeded\" shape. (M2) In the same file, stop passing `binding` to `gateActionRisk`, so the code-mode path asks without binding. (M3) Omit the `actionId` argument at the code-mode call site. (M4) In `packages/core/tools/src/external-effect.ts`, make the actionId-less fallback take the FIRST candidate instead of requiring a unique one.",
+        "failureSummary": "(M1) 2 failed — `does NOT run the sub-dispatched tool when the arguments changed after the decision` and `... once the decision has expired` — while BOTH positive controls stayed green, so the failure is the refusal being ignored and not the verifier being wrong. (M2) 1 failed: `records a binding for the sub-dispatch it asked about`. (M3) 2 failed: `writes an actionId from the code-mode path` and `gives two sub-dispatches of ONE tool two different actionIds`. (M4) 1 failed: `REFUSES when two decisions about one tool name no dispatch`, and its control `still ADMITS a single actionId-less decision` stayed green, which is what shows the refusal is about the ambiguity rather than about the fallback. The four failure sets do not overlap. All reverted; tools + agent-loop + user-approval + acp + ui-approval 54 files, 1089 passed."
+      },
+      "note": "One entry over TWO spec files because they close one clause set and the argv runs both in a single command (2 files, 16 tests). `packages/core/tools/tests/approval-code-mode.spec.ts` is outside `stages.F`'s file list and is carried by a files-overlay reason, the way P3-01's F stage carried its shared fake provider: the code-mode proof has to run where the code-mode dispatch runs, and that is `core/tools`, not `user-approval`. FOUR of the sixteen are REGRESSION GUARDS rather than capability this stage added — the three Unicode-confusable cases and the batch-mutation case pass on the tree as it stood before F, because P2-03's canonical form deliberately does not normalize (the NFC folding was removed 2026-09-06 after it let one hash cover two filenames) and because the digest already separates two argument values. They are frozen as guards on that correction; reading them as F's new capability would overstate the stage. `stages.F` also names `packages/interaction/user-approval/tests/approval.spec.ts`, which this stage did NOT change: that file holds P2-05's ACP machine-policy cases, and F's subject is the dispatch paths and the audit reference, so adding cases there to fill the file list would be a substituted subject. Declared limitations: acceptance[0]'s third limb (file inode / remote object version) is NOT closed and is recorded open in `acceptance-coverage.json` — both production paths pass `preconditions: []`, and nothing in the tree declares which tool parameter is a filesystem path (BLOCKED-238); and the two dispatch paths bind different argument FORMS — the native one the raw string the model emitted, the code-mode one the JSON-normalized value it manifests — which is safe because a dispatch is only ever compared with a record its own path wrote, and is recorded rather than forced into one form."
     }
   ]
 }
