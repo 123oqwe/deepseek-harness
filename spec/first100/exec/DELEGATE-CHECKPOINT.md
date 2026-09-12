@@ -41,3 +41,8 @@
 | 监视工具 | `~/first100-delegate/`:`watch-v13.sh`(15 分钟一行心跳,含两 lane 实况与每小时五问;状态目录 `.v12`)、`exec-watch.py` × 2(v1:USER/FLAG + 每小时 DIGEST——补记 97:v2 的 IDLE/COMMIT/REPORT 太吵已弃)、云跑用 10 分钟轮询的 Monitor 只报红步/结论、hook feed `.events/lanes.log`、OS watchdog、`artifacts/`(rescue 的 vitest 报告)、`dispatch-candidate.sh`(推 overlay tip 到 gate/ 并派发)、`ONBOARDING.md`(+§8 终局与长前置、§9 五问) |
 | 产物 | First-100 账本 artifact(110 条可筛表)https://claude.ai/code/artifact/0e7b1173-b99c-4059-a647-d6c9f732d96f |
 | 机器 | 与用户 ChatGPT/Codex 共用;**09-12 02:30 EDT 宿主颠簸**:free ≈60 MB、compressor ≈4.5 GB、swapins 40 亿,`verify-frozen-titles-resolvable`(全仓 `vitest list`,281 条冻结)本机 OOM ×5——该格由云上步 11 补(补记 146);今日 OOM 杀 lane A 后台任务 4 次(load 峰 14.6);规则:`uptime`>20 不起套件,重套件两 lane 不同时跑;05:30–10:25 EDT 断网 5h(补记 40) |
+
+### R10 长前置(待用户,补记 262,建议 2026-09-30 前;每推提醒)
+- 外部 LLM key + 预算(基准/评测用)。
+- **R5B** Windows 全新安装机一台:上游 `dsh-win-ci` 自托管 runner 是否仍在线、是否用户名下?否则 W? 的 Windows 出厂验证无处跑。
+- **R5A** 真实 rollback / DR 凭据(演练用,不用生产密钥)。

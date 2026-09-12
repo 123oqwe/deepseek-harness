@@ -121,3 +121,6 @@ preFlight(JSON 记录 `clause-subject-audit.json` + `evidence-<id>.md`,`recorded
 - **碰包 README 报 tip 前跑全 `verify-package-readme-*` 门族**(limitations + model-experience + 同族),不挑子集(补记 259)——`02ceda9fc8` 一笔把 `Runtime invariant:` 插进 Model Experience 段,同时破 md-links 与 model-experience 两门,都因不在清单里而全绿溜过;跑了一个 readme 门不算,漏掉同族的 sibling 就是这次的缝。
 
 - **第五类假绿:永不红的用例**(补记 260)——一条断言在当前代码路径下**无法失败**(主语到不了被断言的状态,如 `settings` 持久化用户 section 而非 adapted 值,故"文档不含 pin"永远为真)。它和"两读数必然相同"不同。**对自己新加的断言也跑灵敏度**:新断言在该让它红的突变下仍绿=永不红。一条不可能失败的用例比没有用例更坏,它让读者以为某不变量被守着。
+
+- **P7 不得自证**(补记 262):P7-01~10 造的是我们手工在跑的证明工具(冻结/变异/独立验证者/声明图/验收门)。P7 全 ACCEPTED 前,验收权威仍是手工流程(冻结→观测→四谓词→4.4d→重算门);P7 产物只作第二意见、不替代任何门;P7 自身验收也走手工,门不得引 P7 自己的产物作证据(否则工具自证)。
+- **R10 长前置**(补记 262):用户三样(外部 key+预算、R5B Windows 全新机 [dsh-win-ci runner 是否在线/是否用户的]、R5A rollback/DR 凭据)挂交班单"待用户"、建议 2026-09-30 前、每推提醒,别等 101 项完再问。
