@@ -5263,9 +5263,40 @@ That is the LLM layer's own request-error retry decision — the thing P4-11's c
 
 `verify-usage-stage-subject` now exits 0: every epic's live Usage stage touches a named consumer file or is exempted with a ruling.
 
-### BLOCKED-215 — P5-10's answer routing has no production path: the delivery callback is never passed
+### BLOCKED-215 — P5-10's answer routing has no production path, and the closing condition I was given rested on a false premise
 
-**Status:** OPEN, owner lane B, queued after the push. P5-10's sign-off is WITHDRAWN on this finding (delegate ruling, same shape as P2-01 and P4-01).
+**Status:** OPEN, owner lane B. **Rewritten a second time, 2026-09-12**, because the first closing condition could not be met without overturning a decision nobody had noticed. P5-10's sign-off stays WITHDRAWN. The new closing condition depends on a product decision, (B1) below, which is on the user's list and is NOT scheduled.
+
+**The original framing was right about the callback and wrong about what it would buy.** It said: wire `awaitHuman` and `answerWaitingPoint` into the production router construction, with a real question/answer surface delivering. Implementing that was measured to be impossible in the sense that matters, because the flow acceptance[1] describes — a subagent asking a human — **is deliberately refused one layer above the routing**:
+
+`ctx.userQuestions.ask` throws `DELEGATED_CALLER` when the calling agent is owned by another live agent (`packages/interaction/user-questions/src/index.ts:101-105`, gated on `agents.roots().includes(agent)`, `packages/core/agent/src/index.ts:634`). Its message names the alternative: *"human interaction is unavailable while the calling agent is owned by another live agent; include the unresolved question or decision in the child agent's final result."* So the harness has already decided that a child does not ask a human, and said what to do instead.
+
+**The seven segments of the path, measured rather than assumed.**
+
+| segment | exists in production today | reading |
+|---|---|---|
+| ① a subagent asks (`tool-ask-user` inside the child composition) | **no** | `userQuestions` appears 0 times under `packages/subagent/`; `tool-ask-user` / `ask_user_question` appear 0 times in subagent and preset sources |
+| ② the child's ask is forwarded to the parent | **no** | no provider forwards a child question anywhere |
+| ③ the seam accepts a child's question | **no, and deliberately** | `user-questions/src/index.ts:101-105` |
+| ④ the waiting point is registered (`awaitHuman`) | code exists, **0 production callers** | `control-router.ts:133`; only `subagent/tests/control-router.spec.ts:105,116` |
+| ⑤ the delivery callback is passed | **no** — optional third parameter, the one production site passes two arguments | `control-router.ts:76`, `subagent/src/index.ts:664-666` |
+| ⑥ a `human-answer` control message is submitted | kind is declared, **0 production submitters** | `control-priority/src/index.ts:17`; only two specs |
+| ⑦ the parent surface asks a human and gets an answer | **yes, with real-browser evidence** | `apps/web/tests/question-composer.e2e.ts`, collected by `vitest.web.config.ts:27` |
+
+Only ⑤ is what the original entry described. ①②⑥ are absent and ③ is a standing decision against the whole flow.
+
+**Why the obvious narrower fix was refused (delegate ruling, 2026-09-12).** Passing the callback and having the PARENT register a waiting point — parent asks, child waits — would close ⑤ and ④ without touching ③. It was rejected because nothing in production would trigger it: a child is blocked by ③, and a parent asking its own question goes through the foreground `tool-ask-user` path, which blocks inside the turn and needs no waiting point. Building it would produce wired code with no caller — which is the exact shape this entry exists to report, rebuilt on purpose.
+
+**New closing condition: the product decision (B1), not scheduled.** Allow a child's question to be answered THROUGH the parent's surface — the child does not face a human, the parent asks on its behalf — and then ④⑤⑥ have a real trigger. What it touches, for the user's decision:
+
+- `packages/interaction/user-questions/src/index.ts` — the `DELEGATED_CALLER` refusal gains a condition (a child WITH a parent-side answering path is admitted), which is P2-06's semantic surface and reverses a decision that currently carries a stated alternative.
+- `packages/subagent/subagent/src/index.ts` — a provider that forwards a child's question to the parent's `controlPlane.ask`, plus the `answerWaitingPoint` binding at `:664`.
+- `packages/subagent/subagent/src/control-router.ts` — `awaitHuman` called from that path; the callback stops being optional.
+- a submitter for the `human-answer` control kind, and a parent-side surface rendering of "a child is asking".
+
+Three epics (P2-06's seam, P5-10's routing, P2-12's channel), and it changes a shipped refusal, so it belongs after the freeze as its own slice. Default is not to do it.
+
+**What P2-12 delivered against this entry, and what it did not.** The channel P5-10 would route through now exists: a required delivery seam, a waiting point required on both the question and the answer, and a settlement that names what stayed open (`@deepseek-ai/dsh-human-channel`, `@deepseek-ai/dsh-control-plane`). That removes the "optional callback" shape from the new code. It does not create a production caller, and P2-12's own evidence says so rather than implying otherwise.
 
 acceptance[1] reads *"human answer 只送到指定等待点"* — an answer reaches only the waiting point that asked. The routing code is correct and its comment states the property well (`control-router.ts:238-241`): an answer routed by child identity alone would satisfy the wrong question when two are outstanding. What is missing is that **nothing in production ever supplies the two things the property is about.**
 

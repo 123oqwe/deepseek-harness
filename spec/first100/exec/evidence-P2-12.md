@@ -49,6 +49,16 @@ Written as limitations, not as support: on four of the five profiles a question 
 
 **No waiting point crosses the wire.** JSON-RPC's request id correlates the question with its answer, and the waiting point is how the answer reaches the asker inside the host process. Putting it on the wire would publish an internal routing key and let a client answer a question it was not asked.
 
+## must[0]'s `ask question` verb: which path reaches production, and which does not
+
+**Two different things are true and they are not the same claim.**
+
+**The SEAM path reaches production.** `tool-ask-user` → `ctx.userQuestions.ask` → an answerer. On `web` that is 4.4c with real-browser evidence: `apps/web/tests/question-composer.e2e.ts` (collected by `vitest.web.config.ts:27`) boots the shipped composition under Playwright, renders the real composer, answers through it, and asserts the turn completes with the answer in the log. On an SDK profile the same foreground path now continues over `human/question` to the embedding host — 4.4b here, with 4.4c belonging to whoever embeds, since no handler ships.
+
+**The CONTROL-PLANE path — the waiting-point registry and its settlement — is 4.4b only.** `controlPlane.ask`, `settle` and the waiting-point registry have **zero production callers**, and the limitation is specific rather than general: the one consumer they were designed for, a subagent asking a human, is **deliberately refused** by `ctx.userQuestions.ask`'s `DELEGATED_CALLER` check (`packages/interaction/user-questions/src/index.ts:101-105`), whose message tells the child to put the question in its final result instead. So this is not "a caller has not been written yet" — it is "the intended caller is a flow this harness has decided against", and changing that is the product decision recorded as (B1) in BLOCKED-215.
+
+**BLOCKED-215's shape, one level up, named before it could be repeated.** Wiring a channel whose only production trigger does not exist is exactly what that entry reports. The narrower fix — parent registers the waiting point, child merely waits — was measured and refused for that reason: a child is blocked by the refusal above, and a parent's own question goes through the foreground path that blocks inside its turn and needs no waiting point. Building it would have produced wired code with no caller, deliberately. No 4.4c fixture was written for this path, because a fixture for it would prove a route production does not have.
+
 **P4-06's frozen suites, before and after the `core/agent` change** (`packages/run/message-bus` entire, plus `core/agent/tests/arrival-dedup.spec.ts`, `subagent/tests/settlement-outbox.spec.ts` and `session-persistence/tests/write-behind.spec.ts`, which is every one of its ten live frozen entries): **9 files / 97 cases green before, 9 files / 97 cases green after.** `inbox.ts` is not touched by this slice.
 
 ## The base mount's replay condition, and the three wrong diagnoses it cost

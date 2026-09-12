@@ -124,6 +124,14 @@ Three must-list lines follow from the table and are worth stating separately, be
 
 - **The registry is host-side and authoritative, not a cache.** A per-surface copy of what is pending is the `acceptance[3]` failure in miniature, and it is also how a question answered twice looks reasonable to both answerers.
 
+## What the U stage delivered, and the one verb whose consumer the harness refuses
+
+The stop reaches a real dispatch path: `advanceLeasedAgent` consults `Agent.controlState` and refuses with `'stopped'`, so both production callers — `dsh-run` and the agent loop at tool dispatch — are gated without either being edited. `ctx.controlPlane` mounts in `dsh-base`, measured against all six corpus files for zero differences.
+
+The question verb splits, and the split is the honest part. Its SEAM path is production: `tool-ask-user` → `ctx.userQuestions.ask` → an answerer, with real-browser evidence on `web` and an SDK continuation over `human/question` for an embedding host. Its CONTROL-PLANE path — the waiting-point registry and out-of-band settlement — has no production caller, because the consumer it was built for is a subagent asking a human, and `ctx.userQuestions.ask` refuses exactly that with `DELEGATED_CALLER` and tells the child to put the question in its result instead.
+
+That refusal is a decision, not a gap, so the U stage stopped rather than route around it. Closing it is the product decision recorded as (B1) in BLOCKED-215: it would reverse a shipped refusal and span three epics, and it is not scheduled. Building the narrower version — parent registers the waiting point, child waits — was refused for the reason BLOCKED-215 exists: nothing in production would trigger it, so it would be wired code with no caller.
+
 ## Open questions this preFlight does NOT settle
 
 1. **What "所有 surface 的状态一致" (acceptance[3]) ranges over.** Five profile templates ship, but only one answers both human verbs. Whether "all surfaces" means all profiles, all answerers, or all remote transports decides whether the clause is testable at all — and on the answerer reading it is nearly vacuous today, since there is one.
