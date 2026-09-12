@@ -1398,8 +1398,8 @@
       "path": "packages/core/tools/src/external-effect.ts",
       "kind": "source",
       "stages": [
-        "U",
-        "U.1"
+        "U.1",
+        "U"
       ],
       "reason": "`refusedPolicyResult`, beside the risk and ledger refusals it is shaped after: a policy refusal is a settled tool result rather than a thrown error, and putting it anywhere else would give the three refusal kinds two different shapes for the model to read."
     },
@@ -1408,8 +1408,8 @@
       "path": "packages/core/tools/src/ptc.ts",
       "kind": "source",
       "stages": [
-        "U",
-        "U.1"
+        "U.1",
+        "U"
       ],
       "reason": "The code-mode dispatch path's call site. must[2]'s 'code mode cannot bypass' is about this path asking the SAME question, and P2-03 already proved that two paths writing a sequence out separately is how one of them drifts. The registry's U files name `tools/src/index.ts`; the sub-dispatch scheduler lives here."
     },
@@ -1418,9 +1418,9 @@
       "path": "packages/policy/policy-enforcement/src/index.ts",
       "kind": "source",
       "stages": [
-        "U",
         "F",
-        "U.1"
+        "U.1",
+        "U"
       ],
       "reason": "The enforcement point itself, split from both the definition and the provider: the DECISION comes from `ctx.policy` and the BINDING is the Trust Kernel's, and the code that sequences those two belongs with neither. The registry's stages name the kernel and the four consumer files but not this one, because the plan predates the split; without it, either the kernel would have to import the policy vocabulary (breaking P0-02's domain-agnostic type surface) or every dispatch path would sequence engine, constraints, audit and kernel for itself."
     },
@@ -1478,9 +1478,9 @@
       "path": "packages/policy/policy-engine-cedar/src/index.ts",
       "kind": "source",
       "stages": [
+        "U.1",
         "P",
-        "U",
-        "U.1"
+        "U"
       ],
       "reason": "The adopted engine's provider package, split from `policy-engine` on the `retry` / `retry-cockatiel` precedent: the definition and the monotonic composition rule must stay statable — and testable — without an engine mounted, or the rule becomes a claim about Cedar. The registry's `stages.P` names `policy-engine/src/index.ts` because the plan predates the split; that file is now the definition's entry, and the Cedar translation lives here. Also the reason the epic can answer its own placement question: 13 MB of wasm through a CommonJS entry is host-only, and a separate package is what lets a Client face never mount it. The U stage also adds the token claims to the Cedar context, so the file is cited by two live freezes: the translation is the P stage's deliverable and what it translates grew when must[0]'s second input started arriving."
     },
