@@ -113,6 +113,7 @@ preFlight(JSON 记录 `clause-subject-audit.json` + `evidence-<id>.md`,`recorded
 
 ① 我派出去的非代码指令(锚 / 文件 / 配置)核过落地了吗——`ls` / `grep` 一次,不信"已建"。② 云上有没有排队或已被取代的 run,取消了没(一次只派最新候选)。③ 本笔是不是一次云跑——docs overlay 先叠到候选再派发,门③ SHA == 推送 SHA,dispatch run 既是门③也是观测。④ 今天有没有我没量就写的断言(补记 4 的"无环"是反例)。⑤ `~/first100-delegate/.events/watchdog.log` 最近一条是什么(机器睡眠 / 电池 / 会话死亡先于"lane 怠工"怀疑)。
 
-## 10. lint 假绿两条(2026-09-13,补记 248,候选 6 一条 no-unnecessary-type-assertion 漏检后立)
-- **changed-file oxlint 必须在被检包 TS 类型程序已构建的前提下跑**。没有类型信息时,类型感知规则(`no-unnecessary-type-assertion`、`no-unsafe-*`)静默跳过——"零发现"与"通过"不可区分,是第 4 节"四类假绿"的第五类,同族于"无 summary 行=没跑"。lane 预报"lint 我的文件 0 条"若未先建类型,不算数。这也是第 4 节点 5 的延伸:类型感知规则的沉默不是绿。
-- **type-aware lint 的本地复现必须在类型能正确解析的树里**。在一次性 worktree(node_modules 未正确安装/类型解析坏)跑同一 lint,会得一片 `no-unsafe-*`(全成 `error` 类型)的假报——候选 6 时 delegate 得 1785 条全假,CI 真结果 1 条。类型解析坏的树里的 type-aware 读数一律作废,以 CI 为准。
+## 10. lint / 文档门为什么两次溜过去(2026-09-13,补记 251 更正本节前一版的误归因)
+- **真因是覆盖缺口 + 分支,不是类型信息**。`pnpm run lint`(`package.json:30`)= `build:lib:host && lint:contracts-ready`,先建宿主类型再跑 `run-oxlint.ts .`,**本就是类型感知的**——lane B 那次 lint 正常命中了三处 `no-unnecessary-type-assertion`。候选 6 漏检不是类型没建,而是:(i) **lint 不在"报 tip 前那几项"里**,文档门也不在——BLOCKED-236 的 12 条断链同样这么溜的;(ii) CI 报红的那行只在 `lane-b-p2-06` 分支上,而 U 那笔之后**从没在该分支跑过 lint**。同一形状两次:一笔提交落在哪条分支,门就得在那条分支上跑,清单没覆盖的检查不会被想起。
+- **改法(裁定)**:报 tip 前清单**显式加两项**——`pnpm run lint`(规范脚本、自带 build、类型感知)与范围化 `verify-md-links`,**都在被报提交所在的分支上跑**;每次报读数**连分支名 + HEAD sha 一起报**,"在哪棵树上量的"不靠猜。
+- **坏树的 type-aware 读数作废(结论成立,机制订正)**:类型无法解析的树里,oxlint 的类型感知规则不是"静默跳过"而是**泛滥**(delegate 一次性 worktree 得 1785 条假 `no-unsafe`,因全成 `error` 类型);CI 真结果 1 条。所以类型不解析的树里的 type-aware lint 读数一律作废,以 CI 或正确构建过的树为准。
