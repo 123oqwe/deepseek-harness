@@ -6268,6 +6268,33 @@ importers:
         specifier: workspace:^
         version: link:../../typert/protocol
 
+  packages/interaction/control-plane:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
+      '@deepseek-ai/dsh-human-channel':
+        specifier: workspace:^
+        version: link:../human-channel
+      '@deepseek-ai/dsh-principal':
+        specifier: workspace:^
+        version: link:../../identity/principal
+
+  packages/interaction/human-channel:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
+      '@deepseek-ai/dsh-principal':
+        specifier: workspace:^
+        version: link:../../identity/principal
+
   packages/interaction/permission-presets:
     dependencies:
       '@deepseek-ai/schemastery':

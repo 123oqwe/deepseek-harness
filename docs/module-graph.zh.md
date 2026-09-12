@@ -264,6 +264,8 @@ flowchart TD
   end
   subgraph group_interaction["packages/interaction"]
     pkg_commands["commands"]
+    pkg_control_plane["control-plane"]
+    pkg_human_channel["human-channel"]
     pkg_permission_presets["permission-presets"]
     pkg_tool_ask_user["tool-ask-user"]
     pkg_user_approval["user-approval"]
@@ -505,6 +507,8 @@ flowchart TD
   pkg_host_user_id --> pkg_brand
   pkg_host_user_id --> pkg_home_paths
   pkg_host_user_id --> pkg_principal
+  pkg_human_channel --> pkg_brand
+  pkg_human_channel --> pkg_principal
   pkg_plugin_migrations --> pkg_atomic_write
   pkg_plugin_migrations --> pkg_brand
   pkg_plugin_migrations --> pkg_lease_contract
@@ -531,6 +535,9 @@ flowchart TD
   pkg_code_runtime_worker_thread --> pkg_code_runtime
   pkg_code_runtime_worker_thread --> pkg_session
   pkg_code_runtime_worker_thread --> pkg_timeout
+  pkg_control_plane --> pkg_brand
+  pkg_control_plane --> pkg_human_channel
+  pkg_control_plane --> pkg_principal
   pkg_memory --> pkg_brand
   pkg_memory --> pkg_llm
   pkg_memory --> pkg_principal
@@ -1511,6 +1518,7 @@ flowchart TD
 | [`authorization`](../packages/credentials/authorization) | `credentials` | [`credentials`](../packages/credentials/credentials), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm) |
 | [`credentials-local`](../packages/credentials/credentials-local) | `credentials` | [`atomic-write`](../packages/util/atomic-write), [`credentials`](../packages/credentials/credentials), [`home-paths`](../packages/util/home-paths), [`launch-environment`](../packages/util/launch-environment) |
 | [`host-user-id`](../packages/identity/host-user-id) | `identity` | [`brand`](../packages/util/brand), [`home-paths`](../packages/util/home-paths), [`principal`](../packages/identity/principal) |
+| [`human-channel`](../packages/interaction/human-channel) | `interaction` | [`brand`](../packages/util/brand), [`principal`](../packages/identity/principal) |
 | [`plugin-migrations`](../packages/plugin/plugin-migrations) | `plugin` | [`atomic-write`](../packages/util/atomic-write), [`brand`](../packages/util/brand), [`lease-contract`](../packages/collaboration/lease-contract), [`storage`](../packages/storage/storage) |
 | [`plugin-provenance`](../packages/plugin/plugin-provenance) | `plugin` | [`brand`](../packages/util/brand), [`trust-kernel`](../packages/kernel/trust-kernel) |
 | [`capability-token`](../packages/policy/capability-token) | `policy` | [`brand`](../packages/util/brand), [`principal`](../packages/identity/principal), [`trust-kernel`](../packages/kernel/trust-kernel) |
@@ -1522,6 +1530,7 @@ flowchart TD
 | [`spill`](../packages/spill/spill) | `spill` | [`brand`](../packages/util/brand), [`llm`](../packages/llm/llm), [`session`](../packages/core/session) |
 | [`action-ledger`](../packages/action/action-ledger) | `action` | [`action-manifest`](../packages/action/action-manifest), [`brand`](../packages/util/brand), [`principal`](../packages/identity/principal) |
 | [`code-runtime-worker-thread`](../packages/code-runtime/code-runtime-worker-thread) | `code-runtime` | [`code-runtime`](../packages/code-runtime/code-runtime), [`session`](../packages/core/session), [`timeout`](../packages/util/timeout) |
+| [`control-plane`](../packages/interaction/control-plane) | `interaction` | [`brand`](../packages/util/brand), [`human-channel`](../packages/interaction/human-channel), [`principal`](../packages/identity/principal) |
 | [`memory`](../packages/memory/memory) | `memory` | [`brand`](../packages/util/brand), [`llm`](../packages/llm/llm), [`principal`](../packages/identity/principal), [`session`](../packages/core/session), [`util-values`](../packages/util/values) |
 | [`policy-engine`](../packages/policy/policy-engine) | `policy` | [`action-manifest`](../packages/action/action-manifest), [`brand`](../packages/util/brand), [`capability-token`](../packages/policy/capability-token), [`principal`](../packages/identity/principal) |
 | [`persona`](../packages/preset/persona) | `preset` | [`system-prompt`](../packages/core/system-prompt) |

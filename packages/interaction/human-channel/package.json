@@ -1,0 +1,55 @@
+{
+  "name": "@deepseek-ai/dsh-human-channel",
+  "description": "Human-interaction channel vocabulary for Epic P2-12: the five control verbs, the durable stop record only an explicit resume lifts, the waiting point an answer may be routed by, and the unforgeable approval grant a question's answer cannot produce",
+  "version": "0.1.2-alpha.4",
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./types": {
+        "types": "./lib/types/types.d.ts",
+        "default": "./lib/types/types.js"
+      },
+      "./package.json": "./package.json"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "packages/interaction/human-channel"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-brand": "workspace:^",
+    "@deepseek-ai/dsh-principal": "workspace:^"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-brand": "workspace:^",
+    "@deepseek-ai/dsh-principal": "workspace:^"
+  }
+}

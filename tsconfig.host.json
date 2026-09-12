@@ -239,6 +239,8 @@
     { "path": "./packages/skill/skill-filesystem" },
     { "path": "./packages/skill/tool-skill" },
     { "path": "./packages/interaction/tool-ask-user" },
+    { "path": "./packages/interaction/human-channel" },
+    { "path": "./packages/interaction/control-plane" },
     { "path": "./packages/context/agent-instructions" },
     { "path": "./packages/core/agent-loop" },
     { "path": "./packages/llm/llm-retry" },
