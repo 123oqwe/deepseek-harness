@@ -3183,6 +3183,63 @@
         }
       ],
       "note": "acceptance[2]: 'the Policy service cannot be replaced or unmounted by Cordis.' The two halves have different answers, measured rather than read. REPLACE is refused by Cordis itself — `ctx.provide` throws `service \"policy\" has been registered` — and the refusal leaves the first engine deciding, checked by policy-set digest. UNMOUNT is NOT refused: the disposer `provide` returns deletes the store entry. What the clause protects is that no Cordis operation turns a denial into permission, and an unmount does not: the enforcement point reads `ctx.get('policy')` per decision and answers `policy-unavailable` without one, so an action permitted with the engine mounted is denied after it is disposed. This closes the preFlight's OQ1, which recorded the unmount half as open because the trust-kernel pin answers forgery and not loss."
+    },
+    {
+      "epic": "P3-01",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "P",
+          "title": "P3-01 acceptance[0]: creating a world changes nothing about execution exposes no `execute`, so a provider swap cannot move the dispatch path"
+        },
+        {
+          "stage": "U",
+          "title": "P3-01 acceptance[0]: two providers, one action, the same confinement digest digests the SAME spec identically whichever provider builds the world, which is what a swap must not change"
+        },
+        {
+          "stage": "U",
+          "title": "P3-01 acceptance[0]: the bound world reaches the policy question and the audit records the world, the provider and the confinement digest, which is what makes a swap auditable"
+        }
+      ],
+      "note": "acceptance[0]: 'the same ToolExecution can move between local/container/microVM providers without changing ActionManifest/Policy semantics.' Covered at the SEAM only, and the limit is declared at freeze time rather than at sign-off. What is proved: the provider interface has no `execute`, so there is no dispatch path for a swap to move; one spec digests identically whichever provider builds the world, so a policy comparing confinement sees one answer across a swap; and the world is recorded BESIDE the dispatch (`action/world-bound`) rather than inside the `ActionManifest`, whose digest would otherwise differ per provider. What is NOT proved: neither provider is a container or a microVM — the second is `tests/fake-provider.ts` — so the cross-provider half is evidenced against a constructed provider, the P4-08 acceptance[2] shape. Reading this row as 'proved across real providers' over-reads it."
+    },
+    {
+      "epic": "P3-01",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "P3-01 acceptance[1]: no provider satisfying the policy fails closed, never degrades does NOT fall back to a provider that misses fewer dimensions, which is the degradation acceptance[1] forbids"
+        },
+        {
+          "stage": "U",
+          "title": "P3-01 acceptance[1]: a registry with nothing to offer refuses instead of degrading refuses on the SELECTION, not on the provider's create, which is what \"never degrades\" means"
+        },
+        {
+          "stage": "U",
+          "title": "P2-05 must[0]: the request translation lets the SAME rule admit an action whose world is bound, with no change to the translation"
+        }
+      ],
+      "note": "acceptance[1]: 'when no provider satisfies the policy, fail closed and never silently degrade.' Two halves, and both are cited because either alone is half the clause. SELECTION (C, plus the U case that distinguishes a selection refusal from the provider's own `create` refusal — a mutation showed every other refusal case passed for the wrong reason without it). POLICY (U): `ExecutionWorldFact` gained its `bound` variant, so a byte-identical Cedar rule now admits a bound world and still denies an absent one, with the translation untouched. Before that second variant the rule forbade everything, because `absent` was the only value the field could take."
+    },
+    {
+      "epic": "P3-01",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "P",
+          "title": "P3-01 acceptance[2]: only this provider mints its handles refuses a forged handle that carries a real world id and the right provider name"
+        },
+        {
+          "stage": "P",
+          "title": "P3-01 acceptance[2]: only this provider mints its handles refuses a handle another instance of the same provider minted"
+        },
+        {
+          "stage": "F",
+          "title": "P3-01 acceptance[2]: a refused handle settles nothing at all refuses a forged handle WITHOUT producing an outcome, because an outcome would mean it was admitted"
+        }
+      ],
+      "note": "acceptance[2]: 'a WorldHandle cannot be forged by a model or a third-party plugin.' Closed by construction — a module-private `unique symbol` plus a WeakMap keyed on object identity — and evidenced from two directions, because they are held by different mechanisms: the forged-handle case is what the symbol and the WeakMap hold, while the foreign-instance case is held by each provider instance owning its own registry. Measured: the structural-lookup mutation reddens the first alone, which is how the difference was found. The F case adds the property a refusal must also have — settling NO outcome, since an outcome would mean the forged handle had been admitted."
     }
   ]
 }

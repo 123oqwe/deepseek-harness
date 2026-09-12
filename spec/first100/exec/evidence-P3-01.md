@@ -32,7 +32,9 @@ Measured at `b4b57ff461`, covering the **Contract and Provider stages only**. Th
 
 ## Question (3): no launched profile reaches any of this
 
-**No bundle row names `execution-world`.** `grep -rln execution-world packages/bundle/` matches one file and it is `packages/bundle/web-app/lib/tsconfig.tsbuildinfo`, a build artifact — there is no `cordis.patch.yml` entry in any bundle. The package ships no plugin and no service: it is types, pure decisions, and a provider factory a caller must construct. So the answer to (3) for every clause above is **not reached, on any profile**, and no 4.4c citation exists or is claimed.
+**No bundle row named `execution-world` AT THE C AND P STAGES.** `grep -rln execution-world packages/bundle/` matched one file and it was `packages/bundle/web-app/lib/tsconfig.tsbuildinfo`, a build artifact — no `cordis.patch.yml` entry in any bundle. The package shipped no plugin and no service: types, pure decisions, and a provider factory a caller had to construct. So the answer to (3) for every clause in the two sections above was **not reached, on any profile**, and no 4.4c citation existed or was claimed.
+
+**The U stage changed that, and this paragraph is updated rather than left to mislead.** `packages/bundle/base/cordis.patch.yml:260-264` now carries two rows — `execution-worlds` (`@deepseek-ai/dsh-execution-world/plugin`, the registry) and `execution-world-local` (`@deepseek-ai/dsh-execution-world/local`, the provider) — and `dsh-base` is inherited by `acp-app`, `headless`, `sdk-app`, `sdk-minimal` and `web-app`. What the rows do NOT do is create a world: mounting is inert, and a world is minted at the first dispatch that asks for one.
 
 This is a deliberate shape rather than missing wiring. `createLocalWorldProvider` takes its sandbox policy resolution as an option, so the decision about which composition owns a world is the U stage's to make; mounting a provider in `dsh-base` now would pick that answer before the clause that needs it exists.
 
@@ -123,3 +125,43 @@ What that hid is a second normalization pipeline. Session fixtures go through `r
 `scrubVolatileWorldBinding` closes the legacy half, scoped to this event's two fields, with `provider` left raw as the control. Three cases pin it. The rule this cost: a check that has not been shown to fail on a bad input is not evidence, so the restored proof script is itself controlled — a raw digest is injected first and the script must report BAD before its zero is worth reading.
 
 **The affected fixture set is now taken from the gate rather than predicted.** The earlier prediction used `"preset":"workspace-write"` in the recorded log, which is the permission PRESET and not the sandbox mode — a different service's vocabulary. The gate reports seven, two of which (`missing-sandbox-runner`, `partial-landlock-child-failure`) declare `permission: read-only`: the local provider satisfies `read-only`, so those bind a world too, and no predicate over `preset` would have found them.
+
+## Sign-off material (4.4a–d)
+
+### 4.4a — production call sites
+
+| what | where |
+|---|---|
+| the world fact reaches the policy question, native path | `packages/core/agent-loop/src/tool-calls.ts` → `readExecutionWorldFact` → `enforceManifestedAction` |
+| the same, code-mode path | `packages/core/tools/src/ptc.ts`, with its own fail-closed `absent` for a sub-dispatch with no agent |
+| the one reader both paths use | `packages/core/tools/src/external-effect.ts`, `readExecutionWorldFact` |
+| the mount | `packages/bundle/base/cordis.patch.yml:260-264`, two rows, inherited by all five shipped profiles |
+
+### 4.4b — the cells and the runs that observed them
+
+| cells | candidate SHA | run |
+|---|---|---|
+| C, P | `2b54e42991` | 34692381416 |
+| U, F | `d10920efa4` | 34699917546 |
+
+### 4.4c — what the service can do, and what production reaches
+
+**Separated deliberately, because the two answers differ by profile and the difference is not a gap.**
+
+- **The service can do it**: `bindingFor` selects a provider for the resolved spec and mints a world, proved by the registry cases.
+- **Production reaches it under `workspace-write`**: a world binds and `action/world-bound` is appended. Seven recorded fixtures show exactly that, and each was re-recorded with the event.
+- **Production does NOT bind under `danger-full-access`**: that mode maps to the `full-access` effect, which the local provider refuses BY DIMENSION because the sandbox confines nothing there. That is an honest refusal, and it is indistinguishable in the log from the registry not being wired — which is why a zero-diff corpus is not evidence of wiring, and why this row says so.
+
+### 4.4d — per clause: production reach, and the two open items
+
+| clause | production reach | status |
+|---|---|---|
+| must[0] four types + operations | n/a (vocabulary) | closed at C/P |
+| must[1] nine dimensions | `resolveWorldSpec` states all nine from a partial request | closed |
+| must[2] the local provider is the compat layer, not hardcoded in the loop | the dispatch path asks the registry; no loop file names `local` | closed at U |
+| acceptance[0] cross-provider equivalence | reached at the seam | **OPEN**: the second provider is `tests/fake-provider.ts`; no container or microVM provider exists |
+| acceptance[1] fail closed, never degrade | both dispatch paths carry the fact; a Cedar rule can refuse on it | closed at U |
+| acceptance[2] unforgeable handle | by construction | closed at P |
+| validation[3] one typed outcome | every member of the closed union has a producer | closed at F |
+
+**Two items are open by declaration, both recorded before the freeze rather than discovered at sign-off**: acceptance[0]'s cross-provider half above, and `WorldAttestation` — the Trust Kernel's `sandboxAttestationVerifier` returns `false` unconditionally (P0-02's inert slot), so F proves the PROVIDER half (evidence produced, world untouched) and the verifier half stays open. A case asserting the kernel refused an attestation would pass because the kernel refuses everything.
