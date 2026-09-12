@@ -13,7 +13,11 @@
         "types": "./lib/types/types.d.ts",
         "default": "./lib/types/types.js"
       },
-      "./package.json": "./package.json"
+      "./package.json": "./package.json",
+      "./store": {
+        "types": "./lib/types/store.d.ts",
+        "default": "./lib/types/store.js"
+      }
     }
   },
   "repository": {
@@ -34,7 +38,11 @@
       "default": "./lib/types/types.js"
     },
     "./src/*": "./src/*",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./store": {
+      "types": "./lib/types/store.d.ts",
+      "default": "./lib/types/store.js"
+    }
   },
   "files": [
     "lib/index.js",

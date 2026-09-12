@@ -7,6 +7,10 @@
  * Keeping the decisions separable is what lets the stop be driven directly —
  * injected before, during and after a tool start, which is validation[1].
  *
+ * The channel that composes these decisions over a store, a broadcast and a
+ * delivery seam is `./channel.ts`; it is not re-exported here because this
+ * module is what it imports.
+ *
  * @module @deepseek-ai/dsh-control-plane
  */
 
