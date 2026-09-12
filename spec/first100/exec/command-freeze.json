@@ -13413,6 +13413,49 @@
         "failureSummary": "(M1) 3 of 16 failed, all and only the arguments cases: `refuses substituted arguments`, `refuses the second value against the first's binding`, and `reports a SUBSTITUTION rather than expiry when both are true`. (M2) 3 of 16 failed, all and only the principal cases, INCLUDING both reverse controls that keep `unattached` from being a wildcard: `refuses an approval taken while UNATTACHED once a principal IS attached` and `refuses the other direction too`. (M3) 5 of 16 failed, including the two acceptance[1] cases written for exactly this inversion: `binds two arguments that would DISPLAY identically to two different digests` and `digests a redacted PLACEHOLDER differently from the value it stands for`. All three reverted; 56 passed (56) across the package."
       },
       "note": "The Contract stage decides what an approval is BOUND to and what invalidates it; the six display fields reaching a decider are the Usage stage's, with the two real answerers admitted by the delegate's ruling on `preflight-P2-06.md`. No canonicalizer is written or re-proved here: `canonicalizeArguments` comes from P2-03 and key ordering, number spelling and NFC/NFD are that epic's frozen cases. Two limits declared at freeze time rather than at sign-off: `unattached` is a VALUE (an approval taken while no principal was attached is refused once one is, and the reverse), and validation[1]'s batch-mutation test has NO production subject -- `approval.request` takes one request, five production callers each with a single subject, and `batch` appears nowhere in the package, so that test would have to construct the batch it tests."
+    },
+    {
+      "epic": "P2-06",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/interaction/user-approval/tests/binding-service.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-06 must[1]: the service binds at the ASK, from the asker's clock records a binding when the asker supplies a tuple",
+        "P2-06 must[1]: the service binds at the ASK, from the asker's clock records NOTHING when the asker supplies none, rather than an empty binding",
+        "P2-06 must[1]: the service binds at the ASK, from the asker's clock appends the binding between the ask and the decision",
+        "P2-06 must[1]: the service binds at the ASK, from the asker's clock records the tuple as it stood at the ASK, even when the world moves while a human reads",
+        "P2-06 must[1]: the service binds at the ASK, from the asker's clock expires from the ASKER's clock plus the configured duration, not from the service's",
+        "P2-06 must[1]: the service binds at the ASK, from the asker's clock takes the duration from the row's configuration, so two deployments differ",
+        "P2-06 acceptance[1]: the record carries the digest, never the arguments puts no argument value in the durable record",
+        "P2-06 acceptance[1]: the record carries the digest, never the arguments still distinguishes two different argument values through the digest",
+        "P2-06 acceptance[1]: the record carries the digest, never the arguments carries every OTHER bound field whole, so a refusal can name which one moved",
+        "P2-06 acceptance[1]: the record carries the digest, never the arguments omits an absent token and an absent policy version rather than writing a placeholder",
+        "P2-06 acceptance[2]: the record is the one-to-one reference names the approval and the action in one record, exactly one per bound ask",
+        "P2-06 acceptance[2]: the record is the one-to-one reference gives two asks two ids, so one action's two approvals stay distinguishable",
+        "P2-06 acceptance[0]: what the record supports is a real re-verification refuses the substituted account when the recorded fields are read back from the log"
+      ],
+      "files": [
+        "packages/interaction/user-approval/src/index.ts",
+        "packages/interaction/user-approval/src/types.ts",
+        "packages/interaction/user-approval/tests/binding-service.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-12T16:40:00.000Z",
+      "dryRunProof": {
+        "treeSha": "bae6f0e3fa9418f373f850d7d5b072aae97b0b73",
+        "testsDiscovered": 13
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations in `packages/interaction/user-approval/src/index.ts`. (M1) Move the binding block BELOW `await this.decide(...)`, so the tuple is read after an answerer has run -- the \"bound after the human finished reading\" shape. (M2) Add `args: binding.inputs.args` to the `approval/bound` payload, putting the canonical arguments into durable state. (M3) Compute the expiry from `Date.now()` instead of the asker's `askedAtMs`, giving the service its own clock.",
+        "failureSummary": "(M1) 1 of 13 failed: `records the tuple as it stood at the ASK, even when the world moves while a human reads`. **The first version of that case left all twelve green under this same mutation**, because it asserted only EVENT ORDER -- and order cannot distinguish \"bound at the ask\" from \"bound after the answerer returned\", since both land between `asked` and `decided`. The case now has an answerer change the caller's tuple mid-decision and requires the record to show the original principal; a mutation is what found that the case was weaker than its own prose. (M2) 1 of 13 failed: `puts no argument value in the durable record`, while its control -- `still distinguishes two different argument values through the digest` -- stayed green, so dropping the values did not cost the record its ability to tell them apart. (M3) 2 of 13 failed, both expiry cases. All three reverted; 69 passed (69) across the package."
+      },
+      "note": "Reachability is the durable log rather than `request()`'s return value, accepted by the delegate on measured grounds: the return type reaches five production call sites plus two STRUCTURAL ports typing it as `Promise<string>` (`core/tools/src/external-effect.ts:314`, `sandbox/src/escalation.ts:108`), both consumed through casts, so a type change would not be caught and every risk gate would compare an object against `'allowed-once'` and silently refuse. acceptance[2] is an audit clause, so the one-to-one reference belongs in the log, and U's re-verification already holds the session. The record carries the arguments as a DIGEST only and every other bound field whole -- exactly the split the C verifier compares -- so the log holds enough to re-verify and no secret. The service owns no clock: the asker supplies `askedAtMs` and the row supplies one duration (`dsh-lease-contract`'s convention). must[1]'s re-verification before execution is U's, in `agent-loop/src/tool-calls.ts`."
     }
   ]
 }

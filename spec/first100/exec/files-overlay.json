@@ -1502,6 +1502,14 @@
     },
     {
       "epic": "P2-06",
+      "path": "packages/interaction/user-approval/tests/binding-service.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P"
+      ]
+    },
+    {
+      "epic": "P2-06",
       "path": "packages/interaction/user-approval/tests/binding.spec.ts",
       "kind": "test",
       "stages": [
