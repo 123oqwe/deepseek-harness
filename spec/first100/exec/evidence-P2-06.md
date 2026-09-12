@@ -88,3 +88,61 @@ So a narrow inode precondition would have shipped a producer that can never fire
 
 1. **must[0] does not reach the code-mode decider** (question (2) table above). A code-mode ask shows a tool name where a native ask shows six fields.
 2. **The display's validity period is a constant where the service's is configurable.** `APPROVAL_DISPLAY_VALIDITY_MS = 300_000` in `agent-loop/src/tool-calls.ts` states what the decider is told; the service's `approvalValidityMs` is a `Config` field defaulting to the same number. They agree on every shipped profile today — no bundle row overrides it, checked — but a deployment that sets `approvalValidityMs` would tell a decider one expiry and bind them by another, silently. The constant's own JSDoc names the coupling without enforcing it, and the repository's rule against hardcoded tunables is on the other side of this. It is a small fix (carry the service's value to the display site) and it is not F's to make, so it is recorded here.
+
+## Sign-off material (4.4a–d)
+
+### 4.4a — production call sites
+
+Measured on branch `lane-b-c7` at `619d2fb2a1`, over `packages/` and `apps/`, excluding `tests/`, `*.spec.ts` and `lib/`.
+
+| what | where, on this tree |
+| --- | --- |
+| the tuple is derived, once, for both paths | `packages/core/tools/src/external-effect.ts:431` (`approvalBindingFor`) |
+| native dispatch builds it and hands it to the gate | `packages/core/agent-loop/src/tool-calls.ts:297` |
+| native dispatch re-verifies before the tool runs | `packages/core/agent-loop/src/tool-calls.ts:322`, refusing at `:326` |
+| code-mode sub-dispatch builds it and hands it to the gate | `packages/core/tools/src/ptc.ts:751` |
+| code-mode sub-dispatch re-verifies before the reservation | `packages/core/tools/src/ptc.ts:771`, refusing at `:775` |
+| the verifier reads the RECORDED tuple off the log | `packages/core/tools/src/external-effect.ts:324`, comparing through `verifyApprovalBinding` at `:381` |
+| the service binds at the ask and appends the record | `packages/interaction/user-approval/src/index.ts:278-279` |
+| the six display fields are built | `packages/core/agent-loop/src/tool-calls.ts:566` (`approvalDisplayFor`), with redaction at `:532` |
+
+**The one asymmetry a signer must not read past.** `approvalBindingFor`, `verifyRecordedApproval` and `refusedApprovalResult` each have **two** call sites; `approvalDisplayFor` and `redactArgumentsForDisplay` have **one**. must[0] therefore reaches the native decider and not the code-mode one.
+
+### 4.4b — the cells, and what has observed them
+
+| cell | frozen at | recorded observation |
+| --- | --- | --- |
+| `P2-06.C` | tree/commit `fb0ec2ea33` | **none** |
+| `P2-06.P` | `bae6f0e3fa` | **none** |
+| `P2-06.U` | tree `f4930c1250` | **none** |
+| `P2-06.F` | tree `7487e0e0bf` | **none** |
+
+**`ledger.md` row 26 reads `NOT_RUN` in all four stage columns**, on the candidate-6 base as well as before it. Candidate 6's run was green and carried this epic's code, but a green pipeline is not a recorded cell: the observation is a separate step, and until it lands **no P2-06 cell may be cited as GREEN**. For contrast, rows 21, 22 and 33 (P2-01, P2-02, P3-01) carry `GREEN` ×4 with an observing sha, which is what a citable cell looks like.
+
+Three of the four `treeSha` values above are unreachable from any ref (BLOCKED-241), so they are provenance notes rather than trees a signer can check out.
+
+### 4.4c — what the code can do, and what production reaches
+
+Separated deliberately, because on this epic the two come apart in three places.
+
+**Production reaches:** the binding and the re-verification on **both** dispatch paths; the `approval/bound` record with its `actionId`; the six display fields on the native path, projected into the ACP payload and the Web card. `packages/bundle/base/cordis.patch.yml:276` mounts the approval service and `:314` the preset gate, and `dsh-base` is inherited by `acp-app`, `headless`, `sdk-app`, `sdk-minimal` and `web-app`.
+
+**Production does not reach:** the six display fields from a code-mode ask; any precondition at all, on either path.
+
+**A shape that looks identical to "unwired" and is not.** Under `DSH_PERMISSION_MODE=danger-full-access` the base row sets the approval policy to `never`: nothing is asked, no binding is recorded, and nothing is re-verified. A corpus taken that way shows zero `approval/bound` events — the same reading a completely unwired binding would produce. Any zero cited here must name the permission mode that produced it.
+
+### 4.4d — per clause: reach, and the open items
+
+| clause | production reach | open |
+| --- | --- | --- |
+| must[0] | native decider only | **yes** — a code-mode ask carries a tool name and no manifest projection |
+| must[1] | both dispatch paths, for digest and principal | **partly** — `preconditions` is bound and never populated; and the verifier's real biting surface is the gap between a decision and a later execution that raises no new question, not every execution |
+| must[2] | both paths | no |
+| acceptance[0] | limbs 1 and 2 | **yes** — limb 3 (file inode / remote object version), for BLOCKED-238's reason |
+| acceptance[1] | digest, record and surface | no |
+| acceptance[2] | both paths, through `actionId` | no |
+| validation[1] | substitution, confusable, batch | **yes** — TOCTOU, same reason as acceptance[0] limb 3 |
+| validation[2] | code-mode binds and re-verifies | no |
+| validation[3] | the field the query travels on exists | **partly** — no audit tool is claimed, only the field and a reverse lookup over the log |
+
+Two further items are recorded outside the clause table because they are not clause gaps: **BLOCKED-239** (the displayed validity is a constant where the enforced one is configurable) and **BLOCKED-238** (`ActionTarget.filesystem` has no producer, which is what makes acceptance[0]'s third limb unbuildable).
