@@ -1,0 +1,34 @@
+# Test-only overlay over the SHIPPED headless profile for P4-02's mount slice
+# (BLOCKED-232 (e)). The production bundle layers own `@deepseek-ai/dsh-run`
+# and therefore the `agent/pre-step` listener that compiles the profile; this
+# overlay supplies only a keyless model and a readable session log, so what is
+# under test is the row `packages/bundle/base/cordis.patch.yml` ships rather
+# than a copy this fixture mounted for itself.
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: agent-loop
+  config:
+    agents:
+      - id: main
+        provider: p4-02-mock
+        model: p4-02-mock
+        cwd: !!js process.cwd()
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
+
+- insert:
+    - id: p4-02-mock-llm
+      name: './mock-llm.ts'

@@ -13326,6 +13326,46 @@
         "failureSummary": "(M1) 2 of 23 failed: `settles timeout when the lifetime ceiling passes, OUTRANKING the caller's own reason` AND `leaves NO member of the closed union unproduced` -- the second is the coupling this matrix is built on: a reason that stops being produced is NAMED by the closure case rather than silently vanishing. (M2) 1 of 23 failed: `reports a stopped world's snapshot AS stopped`, which is the conformance row, so the table binds the local provider and not only the fake. Both reverted; 88 passed (88) across the package."
       },
       "note": "The matrix is organised around `WorldStopReason`'s closed set, and the final case asserts the set of unproduced reasons is empty -- `completed` was missing from the first draft and that case is what caught it. `lost-contact`, `completed` and `provider-failed` are driven through the shared fake provider because they happen TO a world and the local provider is honest that they cannot happen to it. Two rows assert that NOTHING settles (a forged handle, a foreign handle) because an outcome would mean the handle was admitted. Attestation proves the provider half only: `sandboxAttestationVerifier` returns false unconditionally, so a case about the kernel refusing an attestation would pass because the kernel refuses everything (preflight-P3-01-F.md, RULING 2). validation[1]'s conformance table runs against BOTH providers with no per-provider exception (RULING 3); validation[2]'s cross-provider equivalence is proved against the seam, not against a second real world, and that limit is declared."
+    },
+    {
+      "epic": "P4-02",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-02",
+        "stage": "U"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P4-02.composition.spec.ts",
+        "-t",
+        "P4-02 mount: the shipped base layer is what compiles the profile",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "files": [
+        "tests/first100/fixtures/P4-02.composition.spec.ts",
+        "packages/run/task-profile/tests/fixtures/base-mount.patch.yml",
+        "packages/run/task-profile/tests/fixtures/driver.ts",
+        "packages/run/task-profile/tests/fixtures/mock-llm.ts"
+      ],
+      "frozenAtUtc": "2026-09-12T08:45:00Z",
+      "dryRunProof": {
+        "treeSha": "9b4025c46082471e259bdee19e875d51cb5fac80",
+        "testsDiscovered": 2
+      },
+      "expectCases": [
+        "mounts the Run Service from the shipped layers, with no row this fixture added",
+        "compiles exactly one profile on the shipped profile boot, and the three records agree"
+      ],
+      "sensitivityProof": {
+        "mutationDescription": "In `packages/bundle/base/cordis.patch.yml`, the shipped mount row `- id: run` / `name: '@deepseek-ai/dsh-run'` gained `disabled: true` -- the exact mutation this entry exists to detect, and the one BLOCKED-232 (e) names. The row stays present and correctly spelled, so nothing about the FILE is broken; only the shipped composition stops carrying the Run Service. The U.1 entry's mutation, by contrast, breaks the plugin's own listener, which its hand-mounted tree would also have caught.",
+        "failureSummary": "RED 2 of 2, and the four U.1 cases in the same file stayed GREEN -- which is the whole point: U.1 mounts `@deepseek-ai/dsh-run` from its own test-only `cordis.yml`, so disabling the SHIPPED row cannot reach it. Applied and reverted locally; `packages/bundle/base/cordis.patch.yml` restored byte-identically (sha256 81871896c8dfd4715712195e1666f5f42c454cb85359289994bfa953bc33a9f4 before and after, `git diff --stat` empty), and all 6 cases in the file returned passing."
+      },
+      "note": "BLOCKED-232 (e): U.1 boots a real `dsh-app-boot` Loader tree, but its `cordis.yml` mounts `@deepseek-ai/dsh-run` DIRECTLY, in a nine-row test-only composition. That closes \"a real Loader boot reaches the compile\" and leaves the shipped mount row -- `packages/bundle/base/cordis.patch.yml`'s `id: run` -- as evidence by READING rather than by observation. `spec/first100/exec/evidence-P4-02.md` §4.4c records that distinction in those words.\n\nThIS ENTRY OBSERVES THE SHIPPED ROW. The driver boots the `headless` profile through `bootProductionProfile`, whose bundle list comes from the real `PROFILE_TEMPLATES` and carries `@deepseek-ai/dsh-base`. The test overlay disables the typert rows and the headless runner (so no task runs itself), points the configured root agent at a keyless adapter, and inserts that adapter. It mounts NO Run Service: if the base row stops shipping, these cases go red.\n\nA DISTINCT ARGV RATHER THAN THE SAME SPEC FILE. U.1's argv names the whole file. Sharing it would make one run's report serve both supplements, and `checkObservationDistinctness` treats two cells observed from one report under identical frozen commands as a conflict. The `-t` filter gives this supplement its own observation.\n\nTHE MOCK IS THE MODEL PROVIDER AND NOTHING ELSE, on the same terms as U.1."
     }
   ]
 }

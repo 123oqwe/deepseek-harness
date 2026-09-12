@@ -101,3 +101,65 @@ describe('P4-02 TaskProfile composition (U-stage)', () => {
     expect(observation.runStates).toContain('accepted->planning')
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 })
+
+/**
+ * BLOCKED-232 (e): the block above boots a real Loader tree, but its
+ * `cordis.yml` mounts `@deepseek-ai/dsh-run` directly. That closes "a real
+ * `dsh-app-boot` boot reaches the compile" and leaves the shipped mount row
+ * — `packages/bundle/base/cordis.patch.yml`'s `id: run` — as evidence by
+ * READING rather than by observation.
+ *
+ * This block boots the SHIPPED headless profile through `PROFILE_TEMPLATES`,
+ * whose `bundles` list carries `@deepseek-ai/dsh-base`, with a test overlay
+ * supplying only a keyless model and a readable session log. Nothing in the
+ * overlay mounts the Run Service: if that row stops shipping, these cases go
+ * red.
+ */
+describe('P4-02 mount: the shipped base layer is what compiles the profile', () => {
+  const mountDriver = fileURLToPath(new URL('../../../packages/run/task-profile/tests/fixtures/driver.ts', import.meta.url))
+  const mountConfig = fileURLToPath(new URL('../../../packages/run/task-profile/tests/fixtures/base-mount.patch.yml', import.meta.url))
+
+  interface MountObservation {
+    readonly profileEventCount: number
+    readonly derivedRefs: readonly string[]
+    readonly handleTaskProfile: string | null
+    readonly runTaskProfileRefs: readonly string[]
+    readonly runStates: readonly string[]
+  }
+
+  /** Boot the shipped profile once and return what the driver reported. */
+  async function bootShipped(): Promise<{ mounted: { runs: boolean }; observed: readonly MountObservation[] }> {
+    const { stdout } = await runLoaderSmoke({
+      label: 'p4-02-base-mount',
+      tempDirPrefix: 'p4-02-base-mount-',
+      binScript: mountDriver,
+      configPath: mountConfig,
+      tsconfigPath,
+    })
+    const mounted = /P4-02-MOUNTED (?<json>.+)/u.exec(stdout)?.groups?.json
+    const observed = /P4-02-OBSERVED (?<json>.+)/u.exec(stdout)?.groups?.json
+    if (mounted === undefined || observed === undefined) throw new Error(`driver reported nothing usable:\n${stdout}`)
+    return { mounted: JSON.parse(mounted) as never, observed: JSON.parse(observed) as never }
+  }
+
+  it('mounts the Run Service from the shipped layers, with no row this fixture added', async () => {
+    // Separated from the case below so a missing service and a mounted service
+    // that compiled nothing report as different failures.
+    const { mounted } = await bootShipped()
+
+    expect(mounted).toEqual({ runs: true })
+  }, LOADER_SMOKE_TEST_TIMEOUT_MS)
+
+  it('compiles exactly one profile on the shipped profile boot, and the three records agree', async () => {
+    const { observed } = await bootShipped()
+
+    expect(observed).toHaveLength(1)
+    const agent = observed[0]!
+    expect(agent.profileEventCount).toBe(1)
+    // The same digest in the session log, the Run log and on the handle — the
+    // property U.1 observes on a hand-mounted tree, now on the shipped one.
+    expect(agent.handleTaskProfile).toBe(agent.derivedRefs[0])
+    expect(agent.runTaskProfileRefs).toStrictEqual([agent.derivedRefs[0]])
+    expect(agent.runStates).toContain('accepted->planning')
+  }, LOADER_SMOKE_TEST_TIMEOUT_MS)
+})
