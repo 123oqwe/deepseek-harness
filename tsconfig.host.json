@@ -198,6 +198,7 @@
     { "path": "./packages/execution/execution-world" },
     { "path": "./packages/policy/policy-engine" },
     { "path": "./packages/policy/policy-engine-cedar" },
+    { "path": "./packages/policy/policy-language" },
     { "path": "./packages/policy/policy-enforcement" },
     { "path": "./packages/policy/risk-taxonomy" },
     { "path": "./packages/run/lease" },

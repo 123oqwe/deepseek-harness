@@ -1,0 +1,52 @@
+{
+  "name": "@deepseek-ai/dsh-policy-language",
+  "description": "Epic P2-10's policy vocabulary: the Cedar schema dsh's own requests are shaped by — three entity types and the ten declared context keys — plus the parsing that refuses anything outside it and the pinned, digested policy-set artifact a replay keys on",
+  "version": "0.1.2-alpha.4",
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./schema": {
+        "types": "./lib/types/schema.d.ts",
+        "default": "./lib/types/schema.js"
+      },
+      "./package.json": "./package.json"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "packages/policy/policy-language"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./schema": {
+      "types": "./lib/types/schema.d.ts",
+      "default": "./lib/types/schema.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "workspace:^"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-policy-engine-cedar": "workspace:^"
+  }
+}

@@ -397,6 +397,8 @@
       "@deepseek-ai/dsh-policy-engine": ["./packages/policy/policy-engine/src"],
       "@deepseek-ai/dsh-policy-engine/evaluate": ["./packages/policy/policy-engine/src/evaluate.ts"],
       "@deepseek-ai/dsh-policy-engine-cedar": ["./packages/policy/policy-engine-cedar/src"],
+      "@deepseek-ai/dsh-policy-language": ["./packages/policy/policy-language/src"],
+      "@deepseek-ai/dsh-policy-language/schema": ["./packages/policy/policy-language/src/schema.ts"],
       "@deepseek-ai/dsh-principal": ["./packages/identity/principal/src"],
       "@deepseek-ai/dsh-principal/chain": ["./packages/identity/principal/src/chain.ts"],
       "@deepseek-ai/dsh-principal/types": ["./packages/identity/principal/src/types.ts"],

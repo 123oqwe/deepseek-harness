@@ -54,10 +54,15 @@ export const Config: z<Config> = z.object({
  * The mapping is this epic's, not Cedar's, and it is deliberately total: every
  * request produces a principal, an action and a resource, because a request
  * that could fail to map would be a policy question with no answer.
+ *
+ * Exported for P2-10's Contract stage, whose schema declares exactly the
+ * vocabulary this function sends. The drift case there compares the two, so
+ * the export is what makes the schema checkable against the code rather than
+ * against a reading of it.
  * @param request - the harness's policy question.
  * @returns the Cedar entity uids and context.
  */
-function toCedarRequest(request: PolicyRequest): {
+export function toCedarRequest(request: PolicyRequest): {
   principal: { type: string; id: string }
   action: { type: string; id: string }
   resource: { type: string; id: string }
