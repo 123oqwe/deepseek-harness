@@ -63,6 +63,10 @@ The driver follows this sequence:
 
 The required request signal covers both startup and the live run. Before publication, the creation transaction observes it, rolls back, and rejects; the driver re-checks once after publication to close the handoff race, then installs a minimal live-run listener. After fulfillment the caller owns the run: provider unload does not revoke it, and `dispose()` removes the abort listener, records cancellation, and delegates to the handle's memoized quiescence transaction, which stops the loop, removes the agent and session, and unwinds scoped registrations. Cancellation owns every non-completed in-flight outcome and reports `aborted`; an already-completed turn remains completed.
 
+### Background jobs the child left running
+
+A one-shot child's run ends when the child goes idle, and the parent disposes its handle straight after reading the result. A background job still live at that point is cancelled by the registry's owner cleanup and marked reported, so nothing reads its output. Before the result is read, the driver lists the child's own jobs and logs a `warn` naming every one that has not reached a terminal status. Nothing about them enters the child's result: the result is the parent's model-facing output, and an abandoned job is an operator fact about a run that already answered.
+
 ### Structured output
 
 `attachStructuredRuntime(childCtx, schema)` installs the whole contract in the child's scope: a `structured_output` tool validates and stages the model's value against the requested schema; a trailing first-party order-9900 system-prompt section tells the child the tool call is the terminal answer; a `tools/result` observer commits a staged value only after the authoritative final tool result succeeds, including the enclosing `run_code` result for PTC mode sub-dispatch; and a monotonic tool guard blocks later calls after capture. A clean turn that never commits the required value reports `error`; the driver does not re-prompt. All registrations ride the child fiber and disappear with it.
@@ -165,6 +169,7 @@ These limits define what an in-process one-shot run cannot do; they are current 
 
 - **Runs expose no `sendMessage`/`resume`** — the optional runtime capabilities are absent on in-process one-shot runs.
 - **Structured capture accepts the `defineTool` schema subset only** — unsupported JSON Schema constructs fail before the child is created; a provider needing a broader schema vocabulary requires a different runtime.
+- **A child's background job is recorded, not collected** — the run does not wait for one still live at the end, so its output reaches neither the child's result nor the parent; the record is a `warn` and reaches only an exporter whose threshold admits it.
 
 <a id="dev-note"></a>
 ### Dev Note

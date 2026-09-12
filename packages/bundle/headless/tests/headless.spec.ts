@@ -1,7 +1,7 @@
 /** Direct one-shot Agent driving, durable aggregation, flushing, and exit mapping. */
 
 import { afterEach, describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
+import { Context, LoggerLevel } from '@deepseek-ai/cordis'
 import AgentRegistry, { Inbox } from '@deepseek-ai/dsh-agent'
 import type { Agent, AgentHandle, AgentOptions, CreateAgentOptions } from '@deepseek-ai/dsh-agent'
 import LlmRuntime from '@deepseek-ai/dsh-llm'
@@ -545,5 +545,68 @@ describe('P9-03 Provider — --model selects the route the run uses', () => {
     expect(await test.run()).toMatchObject({ code: 0, out: 'answered\n' })
     expect(test.requested()).toMatchObject({ provider: 'test-provider', model: 'test-model' })
     await test.ctx.fiber.dispose()
+  })
+  // BLOCKED-220 丁: the run's completion condition does not include its jobs, so a
+  // one-shot run can end with one still running. The loss is not fixed here; what
+  // these cases hold is that it is RECORDED, and recorded while the run's output
+  // can still name it.
+  describe('background jobs still running when the run ends', () => {
+    /**
+     * A `jobs` service that reports exactly the snapshots a case hands it.
+     * The registry's own behaviour is `dsh-jobs-local`'s and is tested there;
+     * what this file owns is whether the runner reads the set and when.
+     */
+    function stubJobs(ctx: Context, snapshots: readonly { id: string; status: string }[]): void {
+      ctx.provide('jobs', { list: () => snapshots } as never)
+    }
+
+    it('names every job still running, before the session is flushed', async () => {
+      const test = await bench(answer)
+      stubJobs(test.ctx, [{ id: 'subagent-1', status: 'running' }, { id: 'bash-2', status: 'stopping' }])
+      const warnings: string[] = []
+      // `warn` is level 2 and an exporter's default threshold is INFO (1), so a
+      // sink that does not raise it receives nothing.
+      test.ctx.logger.exporter({
+        levels: { default: LoggerLevel.WARN },
+        export: (message) => {
+          if (message.name !== 'headless') return
+          warnings.push(String(message.args[0]))
+        },
+      })
+      // Recorded through the same `order` channel the flush and exit use, so the
+      // ordering claim is observed rather than asserted about the source.
+      test.ctx.on('session/flush', () => { warnings.push('flush') })
+      const result = await test.run()
+      expect(result.code).toBe(0)
+      expect(warnings[0]).toContain('subagent-1 (running), bash-2 (stopping)')
+      expect(warnings[0]).toContain('2 background job(s) still running')
+      expect(warnings[1]).toBe('flush')
+      await test.ctx.fiber.dispose()
+    })
+
+    it('records nothing when every job settled, so a clean run stays quiet', async () => {
+      const test = await bench(answer)
+      stubJobs(test.ctx, [{ id: 'subagent-1', status: 'completed' }, { id: 'bash-2', status: 'failed' }])
+      const warnings: string[] = []
+      test.ctx.logger.exporter({
+        levels: { default: LoggerLevel.WARN },
+        export: (message) => { if (message.name === 'headless') warnings.push(String(message.args[0])) },
+      })
+      expect(await test.run()).toMatchObject({ code: 0 })
+      expect(warnings).toStrictEqual([])
+      await test.ctx.fiber.dispose()
+    })
+
+    it('records nothing when the composition mounts no job registry at all', async () => {
+      const test = await bench(answer)
+      const warnings: string[] = []
+      test.ctx.logger.exporter({
+        levels: { default: LoggerLevel.WARN },
+        export: (message) => { if (message.name === 'headless') warnings.push(String(message.args[0])) },
+      })
+      expect(await test.run()).toMatchObject({ code: 0 })
+      expect(warnings).toStrictEqual([])
+      await test.ctx.fiber.dispose()
+    })
   })
 })

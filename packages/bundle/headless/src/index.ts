@@ -24,6 +24,7 @@ import type {} from '@deepseek-ai/dsh-agent-default-model'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { TokenUsage } from '@deepseek-ai/dsh-llm'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
+import { isTerminalJobStatus } from '@deepseek-ai/dsh-jobs'
 import { SessionSeq } from '@deepseek-ai/dsh-session'
 import type { Session, SessionEvent, SessionId, SessionLogOffset } from '@deepseek-ai/dsh-session'
 // Empty type imports carry the loader Context merge for the settlement await
@@ -332,6 +333,7 @@ async function run(
   } finally {
     stopReasoning()
   }
+  recordAbandonedJobs(ctx, agent)
   await sessions.flush(agent.session)
   const outcome = summarize(agent.session, firstSeq)
   stopStream?.()
@@ -355,6 +357,32 @@ async function run(
   const status = exitStatusFor(outcome.reason)
   if (status.failure !== undefined) io.stderr.write(`dsh: run did not complete: ${status.failure}\n`)
   io.exit(status.exitCode)
+}
+
+/**
+ * Record the background jobs this agent started and never collected.
+ *
+ * A one-shot run ends when the agent goes idle, which a live job is not part
+ * of: the process leaves and the registry's teardown marks every remaining job
+ * reported without anyone reading it (`jobs-local`'s `cancelForTeardown`). The
+ * loss is the product's to own; recording it here is what keeps it from being
+ * silent. Called before the session is flushed and summarized, because after
+ * that point the run's output is already written.
+ *
+ * Nothing here reaches the model: the abandoned set is an operator fact about
+ * a run that already produced its answer.
+ * @param ctx - plugin context, whose `jobs` service is optional.
+ * @param agent - the agent whose owned jobs are read.
+ */
+function recordAbandonedJobs(ctx: Context, agent: Agent): void {
+  const jobs = ctx.get('jobs')
+  if (jobs === undefined) return
+  const live = jobs.list(agent).filter(job => !isTerminalJobStatus(job.status))
+  if (live.length === 0) return
+  const named = live.map(job => `${String(job.id)} (${job.status})`).join(', ')
+  ctx.logger('headless').warn(
+    `run ended with ${String(live.length)} background job(s) still running; their output was never collected: ${named}`,
+  )
 }
 
 /**

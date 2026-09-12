@@ -63,6 +63,10 @@ kind: "package-library"
 
 必需的请求信号同时覆盖启动阶段与实时运行。发布前，创建事务会观察它、回滚并拒绝；驱动器在发布后再检查一次以消除交接竞态，然后安装最小化的实时运行监听器。兑现后，调用方拥有该运行：提供方插件卸载不会撤销它；`dispose()` 会移除中止监听器、记录取消，并委托给句柄经记忆化的完全停稳事务——后者停止循环、移除 agent 与会话，并撤销作用域内的注册。取消流程会接管所有尚未完成的进行中结果，并将其报告为 `aborted`；已经完成的轮次仍保持完成状态。
 
+### 子 agent 留下的仍在跑的后台 job
+
+一次性子 agent 的 run 在子 agent 变为 idle 时结束,父级读完结果后随即 dispose 它的 handle。此刻仍存活的后台 job 会被注册表的 owner 清理取消并标为已报告,因此没有任何人读它的输出。在读取结果之前,driver 会列出该子 agent 自己的 job,并对每一个未到终态的 job 记一条 `warn`。相关内容不会进入子 agent 的结果:结果是父级面向模型的输出,而被放弃的 job 是一次已经作答的 run 的运维事实。
+
 ### 结构化输出
 
 `attachStructuredRuntime(childCtx, schema)` 会在子 agent 作用域中安装完整约定：`structured_output` 工具按请求的 schema 校验并暂存模型值；位于末尾、first-party 顺序为 9900 的系统提示词段告诉子 agent 该工具调用就是终态答案；`tools/result` 观察器只在该次执行的权威最终工具结果成功后提交暂存值，包括 PTC mode 子分派外层的 `run_code` 结果；单调工具防护会在捕获后阻止后续调用。正常结束却始终未提交必需值的轮次会报告 `error`；驱动器不会重新提示。所有注册都附着于子 agent fiber，并随其一同消失。
@@ -165,6 +169,7 @@ When you have your final answer, you MUST report it by calling the `structured_o
 
 - **运行不公开 `sendMessage`/`resume`**——进程内一次性运行不具备这些可选运行时能力。
 - **结构化捕获只接受 `defineTool` schema 子集**——不支持的 JSON Schema 构造会在子 agent 创建前失败；需要更广 schema 词汇的提供方必须采用不同的运行时。
+- **子 agent 的后台 job 只被记录,不被收取**——run 不等结束时仍存活的 job,因此它的输出既到不了子 agent 的结果,也到不了父级;记录是一条 `warn`,只有阈值放行它的 exporter 才收得到。
 
 <a id="dev-note"></a>
 ### 开发备注

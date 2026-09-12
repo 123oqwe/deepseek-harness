@@ -69,6 +69,12 @@ The line format is the one already recorded at `apps/cli/tests/profiles/headless
 
 `--model` is resolved here rather than while parsing the command line, because the routes it is checked against exist only after that settlement. It names a route AND a model (`deepseek:deepseek-chat`), since a model id alone identifies no adapter; only the first colon separates the two, so a namespaced model id survives. An unparseable argument or an unregistered route writes the reason and the registered routes to stderr and exits 1 — the run never falls back to the default, because a task answered by a model the caller did not ask for looks exactly like one that was.
 
+### Background jobs still running when the run ends
+
+The run's completion condition is the Agent going idle, and a background job is not part of it: a job the model started can still be running when the answer is written. Before the Session is flushed, the runner reads the Agent's own jobs and logs a `warn` naming every one that has not reached a terminal status. It does not wait for them, does not cancel them, and puts nothing about them into a model request — the run has already produced its answer. What the record buys is that the loss stops being silent, because the registry's teardown marks each remaining job reported without anyone reading it.
+
+The record goes to the logger at `warn`, which an exporter receives only when its threshold admits level 2; a composition whose exporters stay at the default `info` threshold keeps the fact and shows nobody. Making the caller see it is [BLOCKED-220](../../../spec/first100/exec/BLOCKED-QUEUE.md)'s open half.
+
 ### Patch surface over base
 
 The patch rides over `dsh-base`: it inherits the projection cache, sets the coding persona on the base `system-prompt` row, keeps the same temporary process-wide PTC mode opt-in (`DSH_TOOLS_MODE`) as the Web surface, disables the shared HMR row, inserts PTC mode's worker as a core execution capability, and mounts the startup provider and the runner. The cache checkpoints each persisted one-shot session for later consumers; its durability barrier flushes each covered log prefix before publishing the cache row and may split otherwise coalesced JSONL runs. The startup provider ([`src/startup.ts`](src/startup.ts)) injects `ctx.cmdlineArgs` ([`dsh-cmdline`](../../boot/cmdline/README.md)), reads the positional argument, prints the app's `--help`, and provides `headlessStartup`; the runner injects that service and reads its task from lazy config.
@@ -130,6 +136,7 @@ These limits tell you when headless does not fit and what it needs from the `dsh
 - **No pre-token heartbeat** — stderr stays silent until the provider emits a non-empty reasoning delta; a delayed first token exposes no earlier progress signal.
 - **Reasoning enters stderr logs** — redirection and supervisors may retain substantially more and potentially sensitive model output; route stderr to a controlled sink when needed.
 - **Only reasoning and the final answer are printed** — a run without an assistant message prints an empty stdout line and exits 1; intermediate tool output is not printed.
+- **A background job still running at the end is recorded, not delivered** — the run does not wait for it, so its output never reaches the model; the record is a `warn` and reaches only an exporter whose threshold admits it.
 
 <a id="dev-note"></a>
 ### Dev Note

@@ -24,6 +24,9 @@
       "path": "../../core/agent-default-model"
     },
     {
+      "path": "../../jobs/jobs"
+    },
+    {
       "path": "../../llm/llm"
     },
     {

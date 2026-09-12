@@ -15,7 +15,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent'
 import { AnonymousEntries, ScopedLayers, scopeOf } from '@deepseek-ai/dsh-scope'
 import type { ScopeLayer } from '@deepseek-ai/dsh-scope'
 import { deadline, timeoutOf } from '@deepseek-ai/dsh-timeout'
-import { JobRegistry, JobId } from '@deepseek-ai/dsh-jobs'
+import { JobRegistry, JobId, isTerminalJobStatus } from '@deepseek-ai/dsh-jobs'
 import type {
   JobDoneListener, JobKind, JobOutcome, JobRead, JobSnapshot, JobStart, JobStatus,
   JobsChangedListener,
@@ -60,11 +60,6 @@ interface TrackedTask {
   waiters: number
   /** Removable resolvers for live waits; timeout/abort unregister before the job settles. */
   waitResolvers: Set<() => void>
-}
-
-/** True for the three terminal {@link JobStatus} values. */
-function isTerminal(status: JobStatus): boolean {
-  return status === 'completed' || status === 'killed' || status === 'failed'
 }
 
 /**
@@ -207,15 +202,15 @@ export class LocalJobRegistry extends JobRegistry {
     this.assertAccess(job, caller)
     const text = job.readOutput !== undefined
       ? job.readOutput()
-      : isTerminal(job.status) ? job.output ?? '' : ''
-    if (isTerminal(job.status)) job.reported = true
+      : isTerminalJobStatus(job.status) ? job.output ?? '' : ''
+    if (isTerminalJobStatus(job.status)) job.reported = true
     return { text, snapshot: this.snapshot(job) }
   }
 
   kill(id: JobId, caller?: Agent, reason?: string): 'requested' | 'already-finished' {
     const job = this.expect(id)
     this.assertAccess(job, caller)
-    if (isTerminal(job.status)) {
+    if (isTerminalJobStatus(job.status)) {
       job.reported = true
       return 'already-finished'
     }
@@ -233,7 +228,7 @@ export class LocalJobRegistry extends JobRegistry {
     if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
       throw new Error(`invalid wait timeout: expected a positive number of milliseconds, got ${JSON.stringify(timeoutMs)}`)
     }
-    if (!isTerminal(job.status)) {
+    if (!isTerminalJobStatus(job.status)) {
       if (signal?.aborted) throw new Error('wait aborted')
       // Abort removes the waiter synchronously so same-tick settlement cannot
       // suppress a notice for a wait that will reject.
@@ -274,7 +269,7 @@ export class LocalJobRegistry extends JobRegistry {
         uncount()
       }
     }
-    if (isTerminal(job.status)) job.reported = true
+    if (isTerminalJobStatus(job.status)) job.reported = true
     return this.snapshot(job)
   }
 
@@ -414,7 +409,7 @@ export class LocalJobRegistry extends JobRegistry {
    * seen the committed record.
    */
   private settle(job: TrackedTask, outcome: JobOutcome): void {
-    if (isTerminal(job.status)) return
+    if (isTerminalJobStatus(job.status)) return
     job.status = outcome.status
     job.detail = outcome.detail
     job.output = outcome.output
@@ -506,7 +501,7 @@ export class LocalJobRegistry extends JobRegistry {
    */
   private cancelForTeardown(jobs: TrackedTask[], reason: string): void {
     for (const job of jobs) {
-      if (isTerminal(job.status)) continue
+      if (isTerminalJobStatus(job.status)) continue
       // Teardown cancellation is a kill without a caller, so it claims the
       // terminal report the same way `kill()` does. Nothing will read a notice
       // for a job whose owner or service is being destroyed, and a waking

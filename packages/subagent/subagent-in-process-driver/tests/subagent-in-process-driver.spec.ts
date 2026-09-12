@@ -15,6 +15,11 @@ import { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
 import { maxTokensResponse, MockAdapter, textResponse, toolCallResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import { startInProcessRun } from '../src/index.ts'
 import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
+import { LoggerLevel } from '@deepseek-ai/cordis'
+import LocalJobRegistry from '@deepseek-ai/dsh-jobs-local'
+import type { Agent as OwnerAgent } from '@deepseek-ai/dsh-agent'
+import { JobId } from '@deepseek-ai/dsh-jobs'
+import type { JobOutcome } from '@deepseek-ai/dsh-jobs'
 
 type Script = ConstructorParameters<typeof MockAdapter>[0]
 
@@ -382,5 +387,97 @@ describe('startInProcessRun', () => {
     await run.dispose()
     expect(ctx.agents.list()).toHaveLength(beforeAgents)
     expect(ctx.sessions.list()).toHaveLength(beforeSessions)
+  })
+  // BLOCKED-220 丁: a one-shot child's run ends at its own `whenIdle()`, and the
+  // parent disposes the handle right after reading the result. A job still live
+  // there is cancelled by owner cleanup and marked reported, so nobody reads its
+  // output. These cases hold that the loss is recorded before that happens.
+  describe('background jobs still running when a child finishes', () => {
+    /**
+     * Mount a real registry and give the child one job that never settles.
+     * @param ctx - the composition the parent and child share.
+     * @returns the ids the registry issued, in start order.
+     */
+    async function neverSettlingChildJob(ctx: Context): Promise<string[]> {
+      await ctx.plugin(LocalJobRegistry)
+      ctx.jobs.attachController('driver test')
+      const started: string[] = []
+      ctx.on('agent/session-start', ({ agent }: { agent: OwnerAgent }) => {
+        if (String(agent.session.id) === 'parent') return
+        started.push(String(ctx.jobs.start({
+          kind: 'subagent',
+          label: 'work the child never collects',
+          owner: agent,
+          // Runs until something cancels it, which is the window this case is
+          // about: the child goes idle while the job is still live. `cancel`
+          // settles `done`, as JobHooks requires, so teardown does not hang.
+          run: () => {
+            const settled = Promise.withResolvers<JobOutcome>()
+            return { cancel: () => { settled.resolve({ status: 'killed' }) }, done: settled.promise }
+          },
+        })))
+      })
+      return started
+    }
+
+    function warningsOf(ctx: Context): string[] {
+      const seen: string[] = []
+      // `warn` is level 2 and an exporter's default threshold is INFO (1).
+      ctx.logger.exporter({
+        levels: { default: LoggerLevel.WARN },
+        export: (message) => { if (message.name === 'subagent') seen.push(String(message.args[0])) },
+      })
+      return seen
+    }
+
+    it('names the jobs a child left running, before the parent reads its result', async () => {
+      const { ctx, parent } = await setup([textResponse('driver answer')])
+      const started = await neverSettlingChildJob(ctx)
+      const warnings = warningsOf(ctx)
+      const run = await startInProcessRun(request(parent), {})
+      const result = await run.result
+      expect(result.stopReason).toBe('completed')
+      expect(started).toHaveLength(1)
+      expect(warnings).toHaveLength(1)
+      expect(warnings[0]).toContain(`${started[0]!} (running)`)
+      expect(warnings[0]).toContain('1 background job(s) still running')
+      await run.dispose()
+    })
+
+    it('records nothing for a child that started no job, so an ordinary run stays quiet', async () => {
+      const { ctx, parent } = await setup([textResponse('driver answer')])
+      await ctx.plugin(LocalJobRegistry)
+      const warnings = warningsOf(ctx)
+      const run = await startInProcessRun(request(parent), {})
+      expect((await run.result).stopReason).toBe('completed')
+      expect(warnings).toStrictEqual([])
+      await run.dispose()
+    })
+
+    it('records nothing for a job that already settled, so only the live set is named', async () => {
+      const { ctx, parent } = await setup([textResponse('driver answer')])
+      await ctx.plugin(LocalJobRegistry)
+      ctx.jobs.attachController('driver test')
+      const started: string[] = []
+      let owner: OwnerAgent | undefined
+      ctx.on('agent/session-start', ({ agent }: { agent: OwnerAgent }) => {
+        if (String(agent.session.id) === 'parent') return
+        owner = agent
+        started.push(String(ctx.jobs.start({
+          kind: 'subagent',
+          label: 'work the child did collect',
+          owner: agent,
+          run: () => ({ cancel: () => {}, done: Promise.resolve({ status: 'completed' as const }) }),
+        })))
+      })
+      const warnings = warningsOf(ctx)
+      const run = await startInProcessRun(request(parent), {})
+      expect((await run.result).stopReason).toBe('completed')
+      // Asserted rather than assumed: a job that had NOT settled by the time the
+      // child went idle would make the empty-warnings check vacuous.
+      expect(ctx.jobs.get(JobId(started[0]!), owner).status).toBe('completed')
+      expect(warnings).toStrictEqual([])
+      await run.dispose()
+    })
   })
 })

@@ -14,6 +14,7 @@
 import { randomUUID } from 'node:crypto'
 import type { Context } from '@deepseek-ai/cordis'
 import { brandString } from '@deepseek-ai/dsh-brand'
+import { isTerminalJobStatus } from '@deepseek-ai/dsh-jobs'
 import { foldConsumedWork } from '@deepseek-ai/dsh-agent'
 import type { Agent, AgentHandle } from '@deepseek-ai/dsh-agent'
 import { SessionLogOffset } from '@deepseek-ai/dsh-session'
@@ -153,6 +154,30 @@ export async function startInProcessRun(
 }
 
 /**
+ * Record the background jobs a child started and never collected.
+ *
+ * A one-shot child's run ends when it goes idle, and the parent disposes its
+ * handle straight after reading the result. A job still live at that point is
+ * cancelled by the registry's owner cleanup and marked reported, so its output
+ * reaches nobody. The same loss as the one-shot `dsh` profile's, one level down
+ * (BLOCKED-220), and recorded for the same reason: so it is not silent.
+ *
+ * Nothing here reaches a model. The child's result is the parent's model-facing
+ * output and is deliberately left alone.
+ * @param child - the child agent whose owned jobs are read.
+ */
+function recordAbandonedChildJobs(child: Agent): void {
+  const jobs = child.ctx.get('jobs')
+  if (jobs === undefined) return
+  const live = jobs.list(child).filter(job => !isTerminalJobStatus(job.status))
+  if (live.length === 0) return
+  const named = live.map(job => `${String(job.id)} (${job.status})`).join(', ')
+  child.ctx.logger('subagent').warn(
+    `child ${String(child.session.id)} finished with ${String(live.length)} background job(s) still running; their output was never collected: ${named}`,
+  )
+}
+
+/**
  * Wrap a published child in the single run lifecycle that owns signal handoff,
  * one turn, result settlement, and quiescent disposal.
  */
@@ -182,6 +207,9 @@ function drivePublishedRun(
         child.followup(createUserMessage({ content: prompt, source: { kind: 'user' } }))
         await child.whenIdle()
       }
+      // Before the result is read: after it, the parent disposes this handle
+      // and the registry's owner cleanup has already swallowed the set.
+      recordAbandonedChildJobs(child)
       return readResult(
         child,
         boundary,

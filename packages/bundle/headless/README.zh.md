@@ -69,6 +69,12 @@ runner 等待整个应用结算（`ctx.get('loader')?.await()`），确保已组
 
 `--model` 在这里解析，而不是在解析命令行时解析：它要比对的那些路由，要到应用结算之后才存在。它同时指定路由和模型（`deepseek:deepseek-chat`），因为单独一个模型 id 指认不了任何适配器；只有第一个冒号用于分隔，所以带命名空间的模型 id 能完整保留。无法解析的参数或未注册的路由，会把原因和已注册路由写入 stderr 并以 1 退出——绝不回退到默认路由，因为「由调用方没有要求的模型回答的任务」看起来与「由它要求的模型回答的任务」完全一样。
 
+### run 结束时仍在跑的后台 job
+
+run 的完成条件是 Agent 变为 idle,而后台 job 不在其中:模型启动的 job 可能在答案写出时仍在运行。在 Session 被 flush 之前,runner 读取该 Agent 自己的 job,并对每一个未到终态的 job 记一条 `warn`。它不等待、不取消,也不把任何相关内容放进模型请求——这次 run 已经产出了答案。这条记录换来的是丢失不再无声:注册表在拆解时会把每个剩余 job 标记为已报告,而没有任何人读过。
+
+记录走 logger 的 `warn`,只有阈值放行 level 2 的 exporter 才会收到;exporter 停留在默认 `info` 阈值的组合会保留这个事实却不展示给任何人。让调用方看见它是 [BLOCKED-220](../../../spec/first100/exec/BLOCKED-QUEUE.md) 未合的另一半。
+
 ### 叠加在 base 之上的 patch 表层
 
 patch 叠加在 `dsh-base` 之上：继承投影缓存，在基础 `system-prompt` 行上设置编码 persona，保留与 Web 表层相同的临时进程级 PTC mode 开关（`DSH_TOOLS_MODE`），禁用共享的 HMR 行，把 PTC mode 的 worker 作为核心执行能力插入，并挂载启动提供方与 runner。缓存为每个已持久化的一次性会话写入检查点，供后续消费方使用；其持久性屏障会在发布缓存行前 flush 所覆盖的日志前缀，因此可能拆分原本会合并的 JSONL 行。启动提供方（[`src/startup.ts`](src/startup.ts)）注入 `ctx.cmdlineArgs`（[`dsh-cmdline`](../../boot/cmdline/README.zh.md)），读取位置参数、打印应用自己的 `--help`，并提供 `headlessStartup`；runner 注入该服务，再从惰性配置中读取任务。
@@ -130,6 +136,7 @@ runner 不向请求前缀添加任何内容；它只是把一条用户消息驱�
 - **首个 token 前没有心跳**——提供方发出第一个非空推理增量前，stderr 保持静默；延迟首个 token 的提供方不会更早给出进度信号。
 - **推理进入 stderr 日志**——重定向与监督进程可能保留更多且可能敏感的模型输出；需要时应把 stderr 路由到受控位置。
 - **只打印推理和最终答案**——没有 assistant 消息的运行向 stdout 打印空行并以 1 退出；中间工具输出不会打印。
+- **结束时仍在跑的后台 job 只被记录,不被送达**——run 不等它,因此它的输出永远到不了模型;记录是一条 `warn`,只有阈值放行它的 exporter 才收得到。
 
 <a id="dev-note"></a>
 ### 开发备注

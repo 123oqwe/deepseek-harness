@@ -3,10 +3,10 @@
 import type { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import type { InvariantFailure, InvariantInstaller } from '@deepseek-ai/dsh-invariants'
+import { isTerminalJobStatus } from './types.ts'
 import type { JobSnapshot } from './types.ts'
 
 const PACKAGE_NAME = '@deepseek-ai/dsh-jobs'
-const TERMINAL_STATUSES = new Set(['completed', 'killed', 'failed'])
 
 /** Cordis companion plugin name. */
 export const name = 'jobs-invariant'
@@ -27,7 +27,7 @@ function validateSnapshot(snapshot: JobSnapshot, owner: Agent | undefined, fail:
     fail(`job ${JSON.stringify(id)} startedAt must be a non-negative epoch integer`)
   }
 
-  const terminal = TERMINAL_STATUSES.has(snapshot.status)
+  const terminal = isTerminalJobStatus(snapshot.status)
   if (terminal !== (snapshot.finishedAt !== undefined)) {
     fail(`job ${JSON.stringify(id)} finishedAt must be present exactly for a terminal status`)
   }
