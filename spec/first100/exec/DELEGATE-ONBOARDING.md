@@ -85,6 +85,7 @@ preFlight(JSON 记录 `clause-subject-audit.json` + `evidence-<id>.md`,`recorded
 - **accept 后再跑两门再复原**(补记 120):`--accept` dry-run 通过后,先在 accept 后的树上跑 `verify-make-vs-use` 与 `verify-adapt-dispositions`——两门对 ACCEPTED 行与 PENDING 行判定不同(P2-05 accept 后 AuthZEN 所有权立刻要求 live 冻结用例点名),再 `git checkout -- spec/first100/exec/` 复原。
 
 - **否定结果先证明工具真的问了**(补记 124):今日三次"探针失败把自己报成读数"——zsh 未加引号变量不分词(有序祖先链被报成 UNORDERED)、`$SHA:path` 的 `:t` 修饰符吃掉路径(存在的 fixture 报 ABSENT)、`grep -v "x/src"` 子串误排 `ui-x/src`(答复者计数 1 报成 0);加上 206 的 `require.resolve('ajv')`、218 的被吞 stderr。判据:拿到"否/缺席/0"时,先看报错里有没有被截断的路径片段、命令是否真的对着目标跑过,再把它当读数。第四例(补记 129):snapshot 语料不在 vitest include globs 内,`vitest run snapshots/… -t x` exit 1、2–4s、无 summary = 零次执行,须 `--config vitest.snapshot.config.ts`;`pnpm run test:snapshot -- -t` 的 `--` 让过滤失效——**exit 非 0 但无 summary 且耗时异常短 = 工具没答**。
+- **肯定结果的探针同样要证工具答了**(补记 143/144):`cmd | tail; echo $?` 取的是 tail 的退出码(78 一例);`vitest list --json <path>` exit 0 写 0 字节(`--json` 吃掉路径,须 `vitest list <path> --json`);非空但 JSON 不可解析的 chunk 在"非空即成功"的分支溜走——收集产物须可解析且非空才算过,任一缺失即拒绝报数。
 - **共享机器上只杀自己的 PID**(补记 142):两 lane 同机,`pkill -f vitest|tsc|node` 按模式杀会把另一 lane 正在跑的门集/普查一起杀掉(lane A 05:27Z 一例);lane 须记下自己启动的 PID 再杀,delegate 见到 FLAG "process kill" 带模式匹配时立即通知另一 lane 核对。
 
 ## 9. 每小时自查五问(2026-09-11,gq-92 退班前给;由 watch-v12 心跳每小时打印,不靠记)
