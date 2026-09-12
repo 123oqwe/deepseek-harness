@@ -6,6 +6,9 @@ Written 2026-09-11 by lane B during the push-wait, under the delegate's authoris
 
 **P2-06 is not READY today.** Predecessors are `P2-03` (ACCEPTED) and `P2-05` (`status: NOT_RUN`, C/P/U/F all `GREEN`, `independentVerdict: PENDING`). Same single gate as P3-01: P2-05's sign-off, which the delegate is running now. P2-06 has **3 direct dependents** (`P1-11`, `P2-07`, `P8-04`), against P3-01's 14 — P3-01 was written first for that reason, and this page does not re-argue the order.
 
+
+**PREMISE SUPERSEDED 2026-09-11, later the same day.** P2-05 is now **ACCEPTED** (`independentVerdict: APPROVED`) on lane A's tip `2d62ab0430`, which this branch is rebased onto — P1-10 was accepted in the same advance, taking the ACCEPTED count from 25 to 27. **P2-06 is therefore READY now**, with an empty blocking set: `P2-03` and `P2-05`, both ACCEPTED. The premise above is kept as written because it records what was true when the census below was taken, and every reading on this page was measured against the pre-accept tree. Nothing in the census depended on P2-05's status, but that is an assertion a re-reader should check rather than take — the first thing to re-measure is named at the end of this page.
+
 ## The subject today, measured
 
 `packages/interaction/user-approval` ships three source files and two test files. `src/types.ts` is 113 lines, `src/index.ts` 328, and `core/agent-loop/src/tool-calls.ts` — the `B` file P2-06 must touch in both C and U — is 653.

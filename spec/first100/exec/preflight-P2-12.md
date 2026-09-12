@@ -6,6 +6,9 @@ Written 2026-09-11 by lane B during the push-wait, same discipline as `preflight
 
 **P2-12 is not READY today**, and for the same single reason as the other two pages. Predecessors are `P2-05` and `P4-06`: `P4-06` is **ACCEPTED** (C/P/U/F all GREEN), `P2-05` is `status: NOT_RUN` with all four cells GREEN and `independentVerdict: PENDING`. One gate, P2-05's sign-off.
 
+
+**PREMISE SUPERSEDED 2026-09-11, later the same day.** P2-05 is now **ACCEPTED** (`independentVerdict: APPROVED`) on lane A's tip `2d62ab0430`, which this branch is rebased onto — P1-10 was accepted in the same advance, taking the ACCEPTED count from 25 to 27. **P2-12 is therefore READY now**, with an empty blocking set: `P2-05` and `P4-06`, both ACCEPTED. The premise above is kept as written because it records what was true when the census below was taken, and every reading on this page was measured against the pre-accept tree. Nothing in the census depended on P2-05's status, but that is an assertion a re-reader should check rather than take — the first thing to re-measure is named at the end of this page.
+
 ## Emergency stop does not exist today — measured, and the strongest reading on this page
 
 `grep -rniE 'emergencyStop|emergency-stop|globalPause|pauseNewActions'` over `packages apps`, excluding `node_modules`, `lib/` and the generated catalog: **zero hits.**

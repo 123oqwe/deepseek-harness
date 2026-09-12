@@ -12,6 +12,9 @@ Written 2026-09-11 by lane B during the push-wait, under the delegate's explicit
 
 A correction that belongs here because it changed the answer: the first pass at this measurement read each ledger cell's state from a `state` field. The field is `status`. With the wrong field, finished-but-unsigned rows (`P2-05`, `P1-10`, `P4-11`) read as READY and the set looked like 3. Every count on this page comes from the corrected read.
 
+
+**PREMISE SUPERSEDED 2026-09-11, later the same day.** P2-05 is now **ACCEPTED** (`independentVerdict: APPROVED`) on lane A's tip `2d62ab0430`, which this branch is rebased onto — P1-10 was accepted in the same advance, taking the ACCEPTED count from 25 to 27. **P3-01 is therefore READY now**, with an empty blocking set: `P0-03` and `P2-05`, both ACCEPTED. The premise above is kept as written because it records what was true when the census below was taken, and every reading on this page was measured against the pre-accept tree. Nothing in the census depended on P2-05's status, but that is an assertion a re-reader should check rather than take — the first thing to re-measure is named at the end of this page.
+
 ## makeVsUse census — from real references, not from the assignment
 
 `spec/first100/exec/make-vs-use-ledger.json`'s P3-01 row gives `verdict: REUSE_UPSTREAM`, `verdictSecondary: CONTRACT_WRITE`, `deletedPct: 30`, and a residual naming the types, the lifecycle, the unforgeable handle and the fake-world conformance suite. The census below checks that row against the tree.

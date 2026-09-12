@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-12T00:33:15.722Z",
-  "inputDigest": "160f676a5a1b9391685ac1972f8a6b12d61d243b368d8b86a9a39353b8bf89b6",
+  "lastUpdatedUtc": "2026-09-12T00:43:00.857Z",
+  "inputDigest": "8bf2fe17fad860b65dd51cecc4566e8bb23204dfedd0d91d955896123b26af3c",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4671,19 +4671,19 @@
         }
       },
       "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
-      "independentVerdict": "PENDING",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "BLOCKED_ON_ACCEPTANCE",
+      "status": "ACCEPTED",
       "acceptedEvidence": {
-        "acceptedAtUtc": "2026-09-04T16:14:39.806Z",
+        "acceptedAtUtc": "2026-09-12T00:43:00.843Z",
         "cells": {
           "C": {
             "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33783568096",
             "candidateSha": "abd04f2b279612deeb1145b0569b4baa2abee162"
           },
           "P": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33804242898",
-            "candidateSha": "b1803848dfa379396582e5aa5e4240f1bf80c824"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+            "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385"
           },
           "U": {
             "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33842580751",
@@ -4700,8 +4700,8 @@
           "unverifiedCitations": []
         },
         "delegateSignoff": {
-          "delegateSession": "guanjieqiao-92",
-          "signedAtUtc": "2026-09-04T16:08:28.552Z",
+          "delegateSession": "first100-delegate-78",
+          "signedAtUtc": "2026-09-12T00:09:27.566Z",
           "userConfirmationRef": null
         }
       }
