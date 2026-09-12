@@ -11097,6 +11097,9 @@ importers:
       '@deepseek-ai/dsh-deepseek-llm-api-extensions':
         specifier: workspace:^
         version: link:../../packages/llm/deepseek-llm-api-extensions
+      '@deepseek-ai/dsh-execution-world':
+        specifier: workspace:^
+        version: link:../../packages/execution/execution-world
       '@deepseek-ai/dsh-fs':
         specifier: workspace:^
         version: link:../../packages/fs/fs
@@ -11130,6 +11133,9 @@ importers:
       '@deepseek-ai/dsh-host-user-id':
         specifier: workspace:^
         version: link:../../packages/identity/host-user-id
+      '@deepseek-ai/dsh-human-channel':
+        specifier: workspace:^
+        version: link:../../packages/interaction/human-channel
       '@deepseek-ai/dsh-intake-dedup':
         specifier: workspace:^
         version: link:../../packages/collaboration/intake-dedup
