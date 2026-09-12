@@ -133,6 +133,13 @@ const GROUP_LAYERS = {
   memory: 'capability-definitions',
   policy: 'capability-definitions',
   sandbox: 'capability-definitions',
+  // P3-01's ExecutionWorld seam: the nine-dimension spec, the unforgeable
+  // handle, the OCI-adapted lifecycle and the fail-closed provider
+  // selection. Types and pure decisions over caller-supplied values,
+  // depending only on `dsh-brand` and `dsh-principal`, shipping no provider
+  // -- the capability-definition role, beside `sandbox`, which confines
+  // commands in the one world this harness has today.
+  execution: 'capability-definitions',
   subprocess: 'capability-definitions',
   context: 'capability-definitions',
   action: 'capability-definitions',
