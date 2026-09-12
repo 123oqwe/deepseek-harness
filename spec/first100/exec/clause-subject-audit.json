@@ -2674,7 +2674,14 @@
             "landsIn": "P2-10.P"
           }
         ],
-        "deviations": [],
+        "deviations": [
+          {
+            "name": "cedar-policy/cedar",
+            "npm": "@cedar-policy/cedar-wasm",
+            "kind": "narrowed",
+            "reason": "Cedar's schema `validate` is NOT adopted for the vocabulary check, and the reason is measured against the pinned 4.12.0 rather than assumed: its schema entry points accept a single UNNAMED namespace. `checkParseSchema({ json: <namespace body> })` succeeds; `{ json: { Dsh: <body> } }` and `{ json: { '': <body> } }` are both refused as `unknown field`, an entity type spelled `Dsh::Principal` is refused as `invalid id … unexpected token '::'`, and the Cedar-schema-language wrappers (`human`/`cedar`/`text`) are refused as `invalid type: string`. dsh sends `Dsh::Principal`, `Dsh::Action` and `Dsh::Resource`, and that translation is P2-05's frozen property which §1.8 forbids this epic from re-verifying and which it must not quietly change. Delegate ruling (b), 2026-09-12: the vocabulary check is dsh's own, walking a policy's `policyToJson` form for `context.<key>` accesses and testing membership against the closed `DSH_CONTEXT_KEYS`. What is hand-written is one narrow thing — a membership test over attribute names — while every authorization semantic remains Cedar's. The three alternatives were refused with their reasons: changing the translation to drop the namespace (re-verifies P2-05), bumping cedar-wasm (supply chain, and P2-05 pins 4.12.0), and delivering only half of must[0] (the load-time refusal is the half that has the value)."
+          }
+        ],
         "rejectedAbsent": [
           "@open-policy-agent/opa-wasm",
           "casbin",
