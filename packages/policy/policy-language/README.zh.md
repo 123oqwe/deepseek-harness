@@ -11,11 +11,12 @@ kind: "package-reference"
 
 `dsh-policy-language` 声明一条 dsh 策略可以指名的词汇:每个策略请求携带的三个 Cedar 实体类型(`Dsh::Principal`;`Dsh::Action`,其 id 是 manifest 的 capability;`Dsh::Resource`,其 id 是带 kind 限定的动作目标),以及请求构造器发送的十个 context 键。它不定义任何语法。按 Epic P2-10 的裁定 (b),dsh 的「有限声明式语言」**就是**这份词汇加上它的约定——另造一门编译到 Cedar 的语法会是第二个信任根,并且会重验 `@deepseek-ai/dsh-policy-engine-cedar` 已为 P2-05 冻结的授权语义。
 
-围绕这份声明,本包补上词汇之所以存在的那两个操作:`parsePolicySet` 拒绝解析不过、或读了词汇之外的键的策略集合;`compilePolicySet` 把一份被接受的集合变成重放所依据的、已钉住并已摘要的产物。
+围绕这份声明,本包补上词汇之所以存在的那些操作:`parsePolicySet` 拒绝解析不过、或读了词汇之外的键的策略集合;`compilePolicySet` 把一份被接受的集合变成重放所依据的、已钉住并已摘要的产物;而插件把这一整套注册成 `policy-set` 这个 settings namespace,好让部署有地方去写它的策略集合。
 
 ## 目录
 
 - [使用本包](#use-this-package)
+- [部署在哪里写它的策略集合](#where-a-policy-set-lives)
 - [为什么需要一份 schema](#why-a-schema-at-all)
 - [源码地图](#source-map)
 - [模型体验](#model-experience)
@@ -28,6 +29,29 @@ kind: "package-reference"
 读 `DSH_CONTEXT_KEYS` 得知一条策略可以引用什么,读 `DSH_PRINCIPAL_TYPE` / `DSH_ACTION_TYPE` / `DSH_RESOURCE_TYPE` 得知实体类型。指名了它们之外任何东西的策略,是一条永远匹配不到东西的策略。
 
 在部署的策略集合抵达之处调用 `parsePolicySet(policies)`。它回答 `{ok: true}`,或三种具名拒绝之一——`empty`、`unparsable`(带上出错那条策略的 id)、`unknown-context-key`(列出每一个越界的键,而不只是第一个);它先查语法再查词汇,所以一条解析不过的策略被报为解析不过,而不是被报成「没人发送的键」。对一份被接受的集合调用 `compilePolicySet(policies, {contextKeys, engineVersion})` 取得它的钉子:一道同时覆盖规范化策略文本、词汇与引擎版本的摘要——于是 Cedar 升级或词汇变动会**看得见地**重新钉住,而不是静默地改变同一段文本的含义。
+
+<a id="where-a-policy-set-lives"></a>
+## 部署在哪里写它的策略集合
+
+挂载本插件会注册 **`policy-set`** 这个 settings namespace,它的 section 形如 `{policies: {<id>: <cedar 源码>}}`。它**要求**有一个 `settings` provider,并通过 `inject` 明说这件事:一个挂了本插件却没有 settings 的 harness 会注册不出任何东西、写不下任何策略集合、什么也不强制——而且是静默地。
+
+```yaml
+- id: policy-language
+  name: '@deepseek-ai/dsh-policy-language'
+  config:
+    maxPolicies: 256
+    maxSourceBytes: 1048576
+```
+
+两个界限是配置而不是常量,因为笔记本 profile 和舰队控制面不接受同一份策略集合。它们施加在**完整集合**上——策略总条数与 UTF-8 总字节——并且**先于解析**:一份大到不该被接受的集合,应该在按它的大小付出工作量之前被拒,而不是之后。
+
+**本包不持有任何策略集合。** `@deepseek-ai/dsh-settings` 本来就会拒绝一次「其 owner 无法服务已存 section」的注册,也本来就会在后来的文档失败时保留该 namespace 的上一有效值、同时让别的 namespace 照常提交。本插件对这两件事的全部贡献,是那个说「不」的函数。下面三条后果来自**一次真实 boot 的观测**,不是来自那些保证的文档:
+
+| 文档的状态 | 发生什么 |
+|---|---|
+| 启动时就已不可接受 | **boot 失败**:`policy set refused (unknown-context-key): …`。启动时没有上一有效值可留,所以「让 harness 挂在一份它已经拒绝的策略集合之上」不是一个选项 |
+| 运行中变得不可接受 | namespace **保留它上一次接受的那份**——不是变空;这正是 fail closed 与 fail off 的区别 |
+| 之后又变回可接受 | 新集合**会被取用**。保留上一有效值不等于闩死 |
 
 <a id="why-a-schema-at-all"></a>
 ## 为什么需要一份 schema
@@ -46,6 +70,7 @@ kind: "package-reference"
 | [`src/schema.ts`](src/schema.ts) | 三个实体类型与十个 context 键——词汇本身 |
 | [`src/parser.ts`](src/parser.ts) | `parsePolicySet` 与它的三种拒绝,先语法后词汇 |
 | [`src/compiler.ts`](src/compiler.ts) | `compilePolicySet`,以及覆盖规范化文本、词汇与引擎版本的那道钉子 |
+| [`src/index.ts`](src/index.ts) | `acceptPolicySet`——先限界、再解析、再钉住——以及用它注册 `policy-set` namespace 的那个插件 |
 | — | 不发布 invariant 伴生包:本包不拥有任何「两个观察者可能看到不同结果」的关系——每个导出都是对其入参的纯函数,一次解析或一次钉住在同一次调用内产生并返回。 |
 
 ## 模型体验
@@ -58,7 +83,8 @@ None, as this package declares a vocabulary and registers no prompt, schema, too
 
 ## 已知限制与延期工作
 
-- **生产路径上还没有任何地方调用 `parsePolicySet`** —— 拒绝已经存在、也已经冻结,但它买到的那次加载期失败,要等 Provider 阶段的 fail-closed 加载器真的用它去读部署的策略集合时才会到来。在那之前,一个拼错的 context 键仍然会走到决策期。
+- **还没有人读这份被接受的集合** —— namespace 已注册、坏集合会被拒,但还没有任何引擎从这里取它的策略。要等 Usage 阶段把 `@deepseek-ai/dsh-policy-engine-cedar` 接到这个 namespace 上;在那之前,真正被强制的仍是那个 provider 自己 `Config.policies` 里的集合,两者可以不一致。
+- **钉子被算出来但没有被落盘** —— `acceptPolicySet` 返回它,没有任何地方记录它。记录它只有在「某个决策或某条审计行能引用它」之后才有意义,而那是同一处 Usage 阶段的接线;更早发出去就是一个没有读者的事件。
 - **实体 id 不在这里被约束** —— `Dsh::Action` 的 id 是某条 manifest 指名的任意 capability,`Dsh::Resource` 的是带 kind 限定的目标。把这两个集合封闭起来会成为第二份词汇、带着它自己的漂移问题,而且没有任何子句要求它。
 
 <a id="dev-note"></a>

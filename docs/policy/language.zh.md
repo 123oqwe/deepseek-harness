@@ -47,6 +47,21 @@ context 记录恰好有十个键:
 
 词汇检查是 dsh 自己的,而不是 Cedar 的 schema 校验器,原因是所钉引擎的一个性质:cedar-wasm 4.12.0 的 schema 入口只接受单个无名 namespace,因此一份声明 `Dsh::Principal` 的 schema 根本无法表达。手写的只有一件窄事——对 context 属性名的成员检查;所有授权语义仍然是 Cedar 的。
 
+## 部署在哪里写它的策略集合
+
+集合住在 **`policy-set`** 这个 settings namespace 里,它的 section 形如 `{policies: {<id>: <cedar 源码>}}`。策略 id 由部署自己取,而且它就是 explain 会指名的那个,所以这里是一张映射而不是一段拼接的源码:以字符串形式提交时,Cedar 会自行生成 id,源码里的 `@id(...)` 注解**不会**成为审计报出来的那个 id。
+
+没有别处持有这份集合。`@deepseek-ai/dsh-settings` 会拒绝一次「其 owner 无法服务已存 section」的注册,也会在后来的文档失败时保留该 namespace 的上一有效值——于是运行中变得不可接受的策略集合,会让先前那份继续生效;而启动时就不可接受的,会直接拒绝 boot,因为那时还没有上一有效值。任何地方多出第二个持有者,都会在第一次 reload 失败时与 namespace 分歧。
+
+### 两条按大小的拒绝,与三条按内容的分开
+
+| 拒绝 | 含义 |
+| --- | --- |
+| `too-many-policies` | 集合里的策略条数超过本部署所接受的上限(`maxPolicies`) |
+| `policy-set-too-large` | 集合的 Cedar 源码 UTF-8 总字节数超过本部署所接受的上限(`maxSourceBytes`) |
+
+两条都施加在**完整集合**上,并且在解析之前:逐条设限只会限住一条、放一万条过,而那正是这两个界限存在的理由。两个界限都是配置而非常量,因为笔记本 profile 和舰队控制面不接受同一份策略集合。
+
 ## 版本 pin
 
 编译后的策略集携带一个 pin,重放以它为键。pin 对三个输入取,因为同一份策略文本可以意味着不同的东西:

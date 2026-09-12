@@ -47,6 +47,21 @@ A policy set is read at load, before anything is enforced, and the three refusal
 
 The vocabulary check is dsh's own rather than Cedar's schema validator, and the reason is a property of the pinned engine: cedar-wasm 4.12.0's schema entry points accept a single unnamed namespace, so a schema declaring `Dsh::Principal` cannot be expressed at all. What is hand-written is one membership test over context attribute names; every authorization semantic is still Cedar's.
 
+## Where a deployment states its policy set
+
+The set lives in the **`policy-set`** settings namespace, whose section is `{policies: {<id>: <cedar source>}}`. The policy id is the deployment's to choose and is what an explain names, so it is a map rather than one concatenated source: submitted as a string, Cedar assigns generated ids and an `@id(...)` annotation does not become the id the audit reports.
+
+Nothing else holds the set. `@deepseek-ai/dsh-settings` refuses a registration whose stored section its owner cannot serve, and keeps a namespace's last good value when a later document fails, so a policy set that becomes unacceptable while the harness runs leaves the previously accepted one in force — and one that is unacceptable at start refuses the boot, there being no last good value yet. A second holder anywhere would disagree with the namespace the first time a reload failed.
+
+### Two refusals for size, kept apart from the three for content
+
+| refusal | what it means |
+| --- | --- |
+| `too-many-policies` | the set carries more policies than this deployment admits (`maxPolicies`) |
+| `policy-set-too-large` | the set carries more total UTF-8 bytes of Cedar source than this deployment admits (`maxSourceBytes`) |
+
+Both are measured over the **complete** set and before it is parsed: a per-policy limit would cap one policy and admit ten thousand of them, which is the exhaustion these bounds exist for. Both bounds are configuration, not constants, because a laptop profile and a fleet control plane do not admit the same policy set.
+
 ## The version pin
 
 A compiled policy set carries a pin, and a replay keys on it. The pin is taken over three inputs, because the same policy text can mean different things:

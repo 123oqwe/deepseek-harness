@@ -7342,13 +7342,28 @@ importers:
       '@deepseek-ai/dsh-action-manifest':
         specifier: workspace:^
         version: link:../../action/action-manifest
+      '@deepseek-ai/dsh-settings':
+        specifier: workspace:^
+        version: link:../../settings/settings
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-app-boot':
+        specifier: workspace:^
+        version: link:../../boot/app-boot
+      '@deepseek-ai/dsh-loader-smoke':
+        specifier: workspace:^
+        version: link:../../test-support/loader-smoke
       '@deepseek-ai/dsh-policy-engine-cedar':
         specifier: workspace:^
         version: link:../policy-engine-cedar
+      '@deepseek-ai/dsh-settings-file':
+        specifier: workspace:^
+        version: link:../../settings/settings-file
 
   packages/policy/risk-taxonomy:
     devDependencies:

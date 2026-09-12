@@ -38,10 +38,15 @@
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-policy-engine-cedar": "workspace:^"
+    "@deepseek-ai/dsh-app-boot": "workspace:^",
+    "@deepseek-ai/dsh-loader-smoke": "workspace:^",
+    "@deepseek-ai/dsh-policy-engine-cedar": "workspace:^",
+    "@deepseek-ai/dsh-settings-file": "workspace:^"
   },
   "dependencies": {
     "@cedar-policy/cedar-wasm": "4.12.0",
-    "@deepseek-ai/dsh-action-manifest": "workspace:^"
+    "@deepseek-ai/dsh-action-manifest": "workspace:^",
+    "@deepseek-ai/dsh-settings": "workspace:^",
+    "@deepseek-ai/schemastery": "workspace:^"
   }
 }

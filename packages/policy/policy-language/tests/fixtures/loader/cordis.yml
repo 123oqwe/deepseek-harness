@@ -1,0 +1,17 @@
+# Minimal Provider-stage composition for Epic P2-10: a real settings provider
+# reading a real document, and the policy namespace registered over it. No
+# bundle layer and no engine — the shipped mount and the enforcement point are
+# the Usage stage's, and mounting either here would prove them early against a
+# composition this fixture built for itself.
+- id: settings
+  name: '@deepseek-ai/dsh-settings-file'
+  config:
+    path: './settings.yaml'
+    watch: true
+    debounceMs: 20
+
+- id: policy-language
+  name: '@deepseek-ai/dsh-policy-language'
+  config:
+    maxPolicies: 3
+    maxSourceBytes: 1024
