@@ -131,3 +131,5 @@ preFlight(JSON 记录 `clause-subject-audit.json` + `evidence-<id>.md`,`recorded
 
 - **P7 差分验收**(补记 270):P7 各 epic U/F 须证工具在"P7 前的判定集"上复现同结论——重算全 GREEN 格、重判全 WITHDRAWN(应判不到达)、复核 signoff 4.4a–d;分歧逐条解释 + 记 finding。判定集以 P7-01 开工时 fork 头钉为 golden(SHA 进 P7 preFlight)。
 - **P7 验证器变异**(补记 270):P7 的 F 矩阵须含"验证器被弄坏仍放行空格/假到达"用例,抓它的必须是外层门(重算门/四谓词/4.4d)、不得被测验证器自证。P7 全 ACCEPTED 后角色互换(P7 主、手工转抽查),届时 delegate 提议 + 用户点头。
+
+- **分析冻结账本前先读生命周期字段**(补记 274):`command-freeze.json` 有 `supersededBy`/`supersedes`/`supersessionReason`;不过滤 `supersededBy` 的计数是**错数**(lane A 与 delegate 都在此栽过:把已作废条目当活的、得出不存在的"30 组/39 孤儿")。delegate 拿 lane 的计数下处置前**须自核该过滤**,别在别人未过滤的数上叠裁决。
