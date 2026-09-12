@@ -117,3 +117,5 @@ preFlight(JSON 记录 `clause-subject-audit.json` + `evidence-<id>.md`,`recorded
 - **真因是覆盖缺口 + 分支,不是类型信息**。`pnpm run lint`(`package.json:30`)= `build:lib:host && lint:contracts-ready`,先建宿主类型再跑 `run-oxlint.ts .`,**本就是类型感知的**——lane B 那次 lint 正常命中了三处 `no-unnecessary-type-assertion`。候选 6 漏检不是类型没建,而是:(i) **lint 不在"报 tip 前那几项"里**,文档门也不在——BLOCKED-236 的 12 条断链同样这么溜的;(ii) CI 报红的那行只在 `lane-b-p2-06` 分支上,而 U 那笔之后**从没在该分支跑过 lint**。同一形状两次:一笔提交落在哪条分支,门就得在那条分支上跑,清单没覆盖的检查不会被想起。
 - **改法(裁定)**:报 tip 前清单**显式加两项**——`pnpm run lint`(规范脚本、自带 build、类型感知)与范围化 `verify-md-links`,**都在被报提交所在的分支上跑**;每次报读数**连分支名 + HEAD sha 一起报**,"在哪棵树上量的"不靠猜。
 - **坏树的 type-aware 读数作废(结论成立,机制订正)**:类型无法解析的树里,oxlint 的类型感知规则不是"静默跳过"而是**泛滥**(delegate 一次性 worktree 得 1785 条假 `no-unsafe`,因全成 `error` 类型);CI 真结果 1 条。所以类型不解析的树里的 type-aware lint 读数一律作废,以 CI 或正确构建过的树为准。
+
+- **碰包 README 报 tip 前跑全 `verify-package-readme-*` 门族**(limitations + model-experience + 同族),不挑子集(补记 259)——`02ceda9fc8` 一笔把 `Runtime invariant:` 插进 Model Experience 段,同时破 md-links 与 model-experience 两门,都因不在清单里而全绿溜过;跑了一个 readme 门不算,漏掉同族的 sibling 就是这次的缝。
