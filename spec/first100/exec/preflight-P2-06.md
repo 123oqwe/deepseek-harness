@@ -60,13 +60,26 @@ The answerer seam is the waterfall `'approval/request'` (declared `src/types.ts:
 
 ## Open questions this preFlight does NOT settle
 
-1. **Where must[0]'s display obligation lands.** The six fields must be shown to a decider; the two real answerers (`acp`, `client/ui-approval`) are both outside the registry's file list. Widening the payload without rendering it satisfies the type and not the clause.
-2. **Whether `canonical.ts` reuses P2-03's canonicalizer.** See above. Re-implementing would create a second canonical form, and acceptance[1]'s hash coverage would then be about a form nothing else validates — the "second copy of the truth nothing keeps honest" shape BLOCKED-206 recorded.
-3. **What "切换账户" means on this tree** (acceptance[0]). Account identity would be the `Principal`, P2-01's noun; whether approval binds the principal and what re-verification compares it against is not established here. **Unverified**: I did not measure whether `ApprovalRequest` can reach a `Principal` at all.
+1. **RESOLVED — delegate ruling 2026-09-11: rendering IS in scope.** The reasoning on the ruling: if must[0]'s six fields reach the payload and not the answerers, the epic is "the service can do it, production never arrives" **from day one** — the shape this program has now recorded four times. Both real answerers are admitted through `files-overlay` with the reason *"must[0] 无渲染即不可观测，答复者是决策者唯一看到请求的地方"*: `packages/acp/acp/src/index.ts:155` and `packages/client/ui-approval/src/client/ApprovalPanel.tsx:28`. The change is the minimum that discharges the clause — present the six to the decider — and the U stage proves it on a real `acp` profile rather than on the service alone.
+
+   Two consequences this page records so the C stage does not rediscover them: the registry's `files` list does NOT name either answerer, so the overlay entry is what makes the edit legal; and `usageConsumers` is empty, so the U stage's subject has to be named when the command is registered.
+2. **RESOLVED — delegate ruling 2026-09-11: reuse P2-03's canonical form, write no second canonicalizer.** P2-03's RFC 8785 differential conformance and its NFC/NFD distinction are already frozen; a second form would be the "second copy of the truth nothing keeps honest" of BLOCKED-206. **P2-06 does binding and digest only.**
+
+   Measured, so the C stage knows this is implementable as ruled: `@deepseek-ai/dsh-action-manifest` already exports `canonicalizeArguments(args)` (`src/canonicalize.ts:70`) and `computeArgumentsHash(args)` (`:133`), both re-exported from `src/index.ts:13`. So the reuse is a direct import, not an extraction.
+
+   **This changes what `canonical.ts` IS without removing it.** The registry still declares `packages/interaction/user-approval/src/canonical.ts` as an `N` file in the C stage, and it stays — but its content is the binding and digest over P2-03's functions, not a canonicalizer. Worth stating because the filename invites exactly the re-implementation the ruling forbids, and a later reader comparing the registry's file list to the ruling would otherwise see a contradiction.
+3. **Left for the C stage to measure (delegate ruling: both remaining unverified items are C-stage measurements, not preFlight blockers).** What "切换账户" means on this tree (acceptance[0]). Account identity would be the `Principal`, P2-01's noun; whether approval binds the principal and what re-verification compares it against is not established here. **Unverified**: I did not measure whether `ApprovalRequest` can reach a `Principal` at all.
 4. **Whether the ACP answerer's `callId === undefined → next()` guard interacts with batch approval** (validation[1]'s "batch mutation"). A batch without per-call ids would be delegated past by the only protocol answerer. Measured: the guard is real (`acp/src/index.ts:157`). Not measured: whether any batch path exists today.
 5. **How acceptance[2]'s one-to-one reference is audited.** The audit pair `approval/asked` + `approval/decided` exists and is enforced — `src/index.ts:237` rejects an ask outside an open turn precisely so the pair is enclosed by the durable log's commit boundary. Whether validation[3]'s "从 action 反查唯一 approval" needs a new query surface or a projection over those two events is unsettled.
 6. **`layerStatus` is `AGENT_A_PROPOSED`** and `usageConsumers` is empty; this page adjudicates neither.
 7. **No `verifyCommand`** — as with P3-01, the registry requires a manifest-registered focused command with fixture path and expected exit code before implementation, explicitly not guessed. None is proposed here.
+
+## What the two rulings together change about the stage shape
+
+Recorded here rather than left implicit in the open-questions list:
+
+- **The U stage acquires a real subject.** Before ruling (1) the U files were `tool-calls.ts` and `src/index.ts`, both service-side; the clause's observable half (six fields in front of a decider) had nowhere to be seen. With the answerers admitted, the U case is a real `acp` profile boot where the request carries the six and the protocol surface presents them. That is the same correction P4-01 needed — its U citation asserted a property no production path reached — applied before the freeze instead of after the withdrawal.
+- **The C stage shrinks rather than grows.** Ruling (2) removes a canonicalizer from the work and leaves binding plus digest, so `canonical.ts` is thin and its cases are about what the digest COVERS (acceptance[1]: redacted display, hash over the real canonical value), not about canonicalization properties P2-03 already froze. A C case re-asserting key ordering or number spelling here would be re-proving another epic's clause, which is the "cases proving a different proposition" shape this program started by cataloguing.
 
 ## What this page deliberately does not do
 
