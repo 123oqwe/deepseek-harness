@@ -17,9 +17,14 @@ import {
   negotiateCapabilities,
   negotiateProtocolVersion,
 } from '@deepseek-ai/dsh-sdk-protocol'
-import type { CapabilityId, ProtocolSurface, ProtocolVersionRange } from '@deepseek-ai/dsh-sdk-protocol'
+import type { CapabilityId, HumanQuestionParams, HumanQuestionResult, ProtocolSurface, ProtocolVersionRange } from '@deepseek-ai/dsh-sdk-protocol'
 import type { SchemaId } from '@deepseek-ai/dsh-schema-registry'
 import { carrierKeyOf, type Scoped } from '@deepseek-ai/dsh-scope'
+// The empty type import executes `dsh-user-questions`'s declaration merge, which
+// is what puts `'user-questions/request'` on cordis's `Events`. Without it the
+// listener below does not type-check at all — the same mechanism that let an
+// untyped `ctx.get('agents')` accept a method that does not exist.
+import type {} from '@deepseek-ai/dsh-user-questions/types'
 import type { SessionId } from '@deepseek-ai/dsh-session'
 import type SubagentRuntime from '@deepseek-ai/dsh-subagent'
 import type { SubagentRunEndInfo } from '@deepseek-ai/dsh-subagent'
@@ -181,6 +186,47 @@ export class HarnessSdkJsonRpcServer {
         childSessionId: String(session.id),
       }
       this.transport.notify('subagent.started', payload)
+    }))
+    // P2-12 must[0]: the runtime asks its EMBEDDING HOST to put a question to a
+    // human, over the protocol's first server-to-client request.
+    //
+    // This is a question answerer and deliberately not a new UI: the thing that
+    // faces the human is the host program that embedded this SDK, so what the
+    // harness adds is the typed request that lets it answer. The shipped default
+    // is therefore no answerer at all — nothing in this repository registers a
+    // `human/question` handler — and a host that registers none is refused by
+    // the transport's own method-not-found, which `next()` turns back into the
+    // user-questions service's `NO_PROVIDER`. Fail closed, by absence.
+    this.disposers.push(ctx.on('user-questions/request', (request, next) => {
+      // No agent means no session to attribute the question to, and a host
+      // cannot be asked about a turn that cannot be named.
+      const agent = request.agent
+      if (agent === undefined) return next()
+      const params: HumanQuestionParams = {
+        sessionId: String(agent.session.id),
+        questions: request.questions.map(question => ({
+          id: question.id,
+          question: question.question,
+          ...(question.detail === undefined ? {} : { detail: question.detail }),
+          ...(question.options === undefined ? {} : {
+            options: question.options.map(option => ({
+              label: option.label,
+              ...(option.description === undefined ? {} : { description: option.description }),
+            })),
+          }),
+          ...(question.multiSelect === undefined ? {} : { multiSelect: question.multiSelect }),
+        })),
+      }
+      return this.transport.request('human/question', params).then(
+        result => ({ answers: (result as HumanQuestionResult).answers }),
+        // A refusal is delegation, not an answer. A host with no handler, a host
+        // that rejected, and a transport that died are all "this surface did not
+        // answer": pretending otherwise would put a fabricated answer into the
+        // asking turn, and the intent is NOT to swallow the cause — the
+        // user-questions service reports `NO_PROVIDER` when the whole chain
+        // declines, which is the readable end state.
+        () => next(),
+      )
     }))
     this.disposers.push(ctx.on('subagent/end', function (this: Scoped<SubagentRuntime>, info: SubagentRunEndInfo) {
       const parent = subagentParentOf(this)

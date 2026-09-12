@@ -228,6 +228,92 @@ export interface SubagentFinishedNotification {
   lastAssistantMessage?: ContentBlock[]
 }
 
+/** One selectable answer offered to the human, as the wire carries it. */
+export interface SdkHumanQuestionOption {
+  /** The label the embedding host displays, and the value an answer names. */
+  label: string
+  /** Optional extra context a capable host renders beside the label. */
+  description?: string
+}
+
+/** One question put to the human. */
+export interface SdkHumanQuestionItem {
+  /** Caller-provided question id, echoed in the answer so two questions cannot be confused. */
+  id: string
+  /** The question text. */
+  question: string
+  /** Optional supporting detail, kept out of the option labels. */
+  detail?: string
+  /** Optional choices the host may render as a menu; absent asks for free text. */
+  options?: SdkHumanQuestionOption[]
+  /** Whether more than one option may be selected. Defaults to single-select. */
+  multiSelect?: boolean
+}
+
+/**
+ * Ask the embedding host to put questions to its human (P2-12 must[0]).
+ *
+ * **The first server-to-client REQUEST on this protocol, and the reason it is a
+ * request rather than a notification.** A question has an answer, and the answer
+ * belongs to the asking turn: a notification would leave the host no way to
+ * reply and the server no way to wait. The registry names this gap in P2-12's
+ * own problem statement — "SDK 也没有 server→client request".
+ *
+ * **No waiting point crosses the wire.** JSON-RPC's request id already
+ * correlates this request with its response, and the waiting point is how the
+ * answer reaches the asker INSIDE the host process. Putting it on the wire would
+ * publish an internal routing key and invite a client to answer a question it
+ * was not asked.
+ *
+ * Schema registry id `sdk-protocol:HumanQuestionParams`, version 1.0 (`@deepseek-ai/dsh-schema-registry`'s bootstrap).
+ */
+export interface HumanQuestionParams {
+  /** The session whose turn is waiting, so a host with several can attribute the question. */
+  sessionId: string
+  /** The questions to put, in the order they should be presented. */
+  questions: SdkHumanQuestionItem[]
+}
+
+/** One question's answer. */
+export interface SdkHumanAnswerItem {
+  /** The answered question's id, as the request carried it. */
+  id: string
+  /** Selected option labels; empty when the host answered with free text alone. */
+  selected: string[]
+  /** Optional free-text answer, for a question with no options or an "other" choice. */
+  custom?: string
+}
+
+/**
+ * The human's answer, as the embedding host returns it.
+ *
+ * **An answer is input, never authorization** (P2-12 must[3]). There is no
+ * decision, verdict or boolean here, and no approval path consumes this type:
+ * an embedding host that answers a question has not granted a permission, and
+ * the absence of such a field is what enforces that across the wire as well as
+ * in-process.
+ *
+ * Schema registry id `sdk-protocol:HumanQuestionResult`, version 1.0 (`@deepseek-ai/dsh-schema-registry`'s bootstrap).
+ */
+export interface HumanQuestionResult {
+  /** One answer per question asked, keyed by the request's own question ids. */
+  answers: SdkHumanAnswerItem[]
+}
+
+/**
+ * Server-to-client request methods with their param and result shapes.
+ *
+ * Separate from {@link HarnessSdkRequestMap} because the direction decides who
+ * must implement a handler: these are requests the RUNTIME makes of its
+ * embedding host. A host that registers no handler for one of them refuses it
+ * by the transport's own method-not-found, which the runtime treats as "no
+ * answerer" and fails closed — the shipped default, since nothing in this
+ * repository answers them.
+ */
+export interface HarnessSdkServerRequestMap {
+  'human/question': { params: HumanQuestionParams; result: HumanQuestionResult }
+}
+
 /** Server-to-client notifications by JSON-RPC method name. */
 export interface HarnessSdkNotificationMap {
   'session.event': SessionEventNotification

@@ -259,6 +259,8 @@ const PROTOCOL_WIRE_SCHEMA_IDS = [
   'SessionStatusNotification',
   'SubagentStartedNotification',
   'SubagentFinishedNotification',
+  'HumanQuestionParams',
+  'HumanQuestionResult',
 ] as const
 
 function bootstrapProtocolSchemas(): void {

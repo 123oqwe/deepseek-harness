@@ -92,6 +92,16 @@ The registry/settlement half of the C stage must include both of these, because 
 
 Neither case is satisfied by a fixture that supplies both the waiting point and the delivery callback, which is exactly what made P5-10's six C/P citations sound about a proposition and silent about production. The U stage is where delivery is observed on a real surface, per OQ2's ruling above.
 
+### Reconciling 補記 132 with the SDK, which the registry names (delegate ruling A')
+
+"Creates no new answerer" means **no new UI answerer** — no CLI or ACP surface that faces a human. The SDK is a different thing: its "answerer" is by definition the HOST PROGRAM that embedded the SDK, not a dsh interface, so giving that host a typed way to answer is wiring rather than invention. And the registry already settled half of it: P2-12's problem statement names the gap in its own words — "SDK 也没有 server→client request" — and both `sdk/protocol/src/transport.ts` and `sdk/protocol/src/types.ts` are in its target files. Not touching them would leave the named problem open and make `files-overlay` ask why.
+
+So the U stage adds the typed server-to-client `human/question` request and a runtime that really sends it, and the shipped default stays fail closed: nothing in this repository registers a handler, so a host that registers none is refused by the transport's own method-not-found, the answerer delegates, and `dsh-user-questions` reports `NO_PROVIDER`.
+
+The census row for `sdk` therefore reads: **answerable by the embedding host through the `human/question` request; no handler ships, so out of the box, no.** That is one sentence with both halves in it, because either half alone is misleading.
+
+**Evidence is layered so nothing proves itself.** The SDK cases drive a test-side handler standing in for an embedding host: they are 4.4b — what the service can do — and they say so. Production reach (4.4c) is proven only on the Web surface, through the real `ui-user-questions` answerer. The two are cited separately in `evidence-P2-12.md` and never collapsed into "the SDK supports questions", because a surface whose answerer this epic wrote cannot be its own production evidence.
+
 ## What the P stage must build, against the four acceptance clauses (delegate ruling: table first)
 
 The P stage is the channel behind the Service Definition: the host-side registry of unanswered questions, out-of-band settlement, and the stop's broadcast and persistence. The table is written acceptance-first because three of the four clauses cannot be answered by the Contract stage at all, and it is their unmet halves that decide what P has to contain.

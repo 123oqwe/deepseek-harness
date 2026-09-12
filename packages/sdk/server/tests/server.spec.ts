@@ -1248,7 +1248,10 @@ describe('HarnessSdkJsonRpcServer', () => {
   it('continues teardown after a subscription disposer fails', async () => {
     let subscription = 0
     const listenerFailure = new Error('listener teardown failed')
-    const on = vi.fn(() => {
+    // The event name is a declared parameter so `mock.calls` carries it: an
+    // untyped `vi.fn(() => …)` records calls as empty tuples, and the assertion
+    // below needs the names rather than a count.
+    const on = vi.fn((_event: string) => {
       subscription += 1
       return subscription === 1 ? () => { throw listenerFailure } : () => undefined
     })
@@ -1260,6 +1263,18 @@ describe('HarnessSdkJsonRpcServer', () => {
     const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
 
     await expect(server.shutdown()).rejects.toBe(listenerFailure)
-    expect(on).toHaveBeenCalledTimes(4)
+    // EVERY subscription is torn down, not a fixed count of them. The assertion
+    // was `toHaveBeenCalledTimes(4)` and had to change when P2-12 added the
+    // `user-questions/request` answerer — a number that has to be edited by
+    // every change that subscribes says nothing about teardown, which is what
+    // this case is for. The names are asserted instead, so a subscription that
+    // stops being registered fails here rather than silently lowering a count.
+    expect(on.mock.calls.map(call => call[0]).sort()).toEqual([
+      'agent/status',
+      'session/created',
+      'session/event',
+      'subagent/end',
+      'user-questions/request',
+    ])
   })
 })

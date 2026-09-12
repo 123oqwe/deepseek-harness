@@ -34,10 +34,16 @@ The gate answers THREE ways and the third is load-bearing: `'stopped'` refuses, 
 | `web` | yes | **yes** (`ui-user-questions`) | **yes** (`ui-approval`) | answer and approve |
 | `acp` | yes | no | **yes** (`dsh-acp`) | approve only |
 | `headless` | yes | no | no | neither |
-| `sdk` | yes | no | no | neither |
+| `sdk` | yes | answerable by the embedding host (`human/question`); **no handler ships** | no | answer a question only if its host implements the request |
 | `sdk-minimal` | **no** | no | no question service at all | neither |
 
 Written as limitations, not as support: on four of the five profiles a question cannot be answered, so `ask` fails closed there, and the only surface on which real delivery can be observed is `web`. The control half is mounted in `dsh-base` by ruling — a stop is a cross-surface invariant, and mounting it only where questions can be answered would leave four profiles permanently unable to see a stop, which would make acceptance[0] and acceptance[2] vacuous rather than true.
+
+**The SDK's question path: 4.4b only, and labelled as such.** `HarnessSdkJsonRpcServer` answers the `user-questions/request` waterfall by sending the protocol's first server-to-client request, `human/question` (`packages/sdk/protocol/src/types.ts`, schema ids `sdk-protocol:HumanQuestionParams` / `:HumanQuestionResult`, registered in the schema registry's bootstrap like every other wire payload). Four cases in `packages/sdk/server/tests/human-question.spec.ts` drive it with a test-side handler standing in for an embedding host, which is what makes them **4.4b — the service can do it** — and not 4.4c. Two mutations: answering with an empty answer instead of delegating reddens exactly the fail-closed case; never sending reddens all four.
+
+**What the SDK path does NOT prove.** No production reach. Nothing in this repository registers a `human/question` handler, so on a shipped `sdk` profile the chain ends at `dsh-user-questions`' `NO_PROVIDER` — fail closed, by absence, and asserted by its own case. **4.4c for questions is the Web surface's to prove**, through the real `ui-user-questions` answerer, and that citation stays separate: a surface whose answerer this epic wrote could not be its own production evidence, and "the SDK supports questions" is the sentence that would hide the difference.
+
+**No waiting point crosses the wire.** JSON-RPC's request id correlates the question with its answer, and the waiting point is how the answer reaches the asker inside the host process. Putting it on the wire would publish an internal routing key and let a client answer a question it was not asked.
 
 **P4-06's frozen suites, before and after the `core/agent` change** (`packages/run/message-bus` entire, plus `core/agent/tests/arrival-dedup.spec.ts`, `subagent/tests/settlement-outbox.spec.ts` and `session-persistence/tests/write-behind.spec.ts`, which is every one of its ten live frozen entries): **9 files / 97 cases green before, 9 files / 97 cases green after.** `inbox.ts` is not touched by this slice.
 
