@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-11T23:26:03.114Z",
-  "inputDigest": "0f84b489aa5b19afa70a75f1a53515e3f0bb1777a3af5d318f4cf73d99b7f358",
+  "lastUpdatedUtc": "2026-09-12T00:13:37.362Z",
+  "inputDigest": "f60241d5ec68d47df37a97f5176d9aa3dc9adb9b35feaa7612f8839013686282",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -1973,13 +1973,45 @@
           "capturedAtUtc": "2026-09-03T23:49:54.652Z"
         },
         "U": {
-          "status": "NOT_RUN",
-          "revokedFrom": {
-            "candidateSha": "8f4988bf0bf4332a359a8f251ee6e5d8c44752dd",
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33842580751",
-            "absentCommitments": 1
-          },
-          "revokedReason": "The Usage stage was re-frozen for BLOCKED-199: the trust binding became durable, two characterization cases became assertions of the fix, and a control was added. The old green was observed on a tree predating the new entry, and a freeze written after its observation is not a pre-commitment."
+          "status": "GREEN",
+          "candidateSha": "93d52207338066bd65494f6044f1ec5920d63cb8",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34652643903",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34652643903/first100-evidence-93d52207338066bd65494f6044f1ec5920d63cb8/vitest-report.json",
+          "observationSha256": "3c15dc184ed1d2854dd1c87ad45663960fbf87da8553d79ead6000250dd3da09",
+          "expectCasesMatched": [
+            "offers the model neither the clone's executable skills nor its instructions while the workspace is untrusted",
+            "offers the model both the clone's executable skills and its instructions once that same clone is granted trusted-execute",
+            "must[2] end to end on ONE boot: the host user runs /trust-skills and the clone's skills become available",
+            "raises the workspace to trusted-read when the host user accepts, driven by a real pre-step",
+            "asks once per session: a refusal is not re-put on the next step",
+            "does not spend the session's one question on a step that has no identity to ask for",
+            "does not ask at all once the workspace is already trusted",
+            "leaves the workspace untrusted when the host user refuses",
+            "leaves the workspace untrusted on a non-interactive profile, where there is nobody to ask",
+            "refuses a grant authorized by a principal that is not the host user",
+            "records the question and its outcome as an auditable pair naming the subject",
+            "discovers only the host-owned user-global instructions while the workspace is untrusted",
+            "discovers the project instructions once the workspace reaches trusted-read, alongside the host-owned ones",
+            "discovers the project instructions at trusted-execute as well, since a higher state never loads less",
+            "offers no skill from a cloned repository while the workspace is untrusted, and still offers the host-owned skill",
+            "still offers no skill from the repository at trusted-read, because reading a project is not executing it",
+            "offers both project skills once the workspace reaches trusted-execute, proving the fixture is real and the difference is the trust decision",
+            "grants trusted-execute once the host user confirms",
+            "leaves the workspace untrusted when the confirmation is refused, and says so",
+            "leaves the workspace untrusted where there is nobody to confirm with",
+            "records the confirmation as an auditable pair naming the workspace and the state",
+            "reports an already-trusted workspace without asking again",
+            "resolves an ungranted workspace to untrusted, so a freshly cloned repository is never trusted by default",
+            "resolves a granted workspace to its granted state",
+            "resolves a granted path spelled through a symlink to the same state, since the grant is canonicalized before it is bound",
+            "drops a granted workspace to untrusted once the directory at that path is replaced, and does not re-grant it from configuration",
+            "does not re-grant a directory replaced while the process was down, because the binding is durable",
+            "control: the same directory across a restart keeps its trust, so the refusal above is about identity and not about restarting",
+            "does not trust a retargeted symlink's new target across a restart",
+            "drops a granted workspace to untrusted once the symlink it was opened through is retargeted to another directory",
+            "drops a granted workspace to untrusted once the directory is moved out from under the path it was granted at"
+          ],
+          "capturedAtUtc": "2026-09-12T00:13:05.463Z"
         },
         "F": {
           "status": "GREEN",
@@ -2001,7 +2033,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "d13ac831dba8ac883ea389f39af69ac7b916a772",
+      "candidateSha": "93d52207338066bd65494f6044f1ec5920d63cb8",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -2489,10 +2521,40 @@
       },
       "supplements": {},
       "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15",
-      "independentVerdict": "PENDING",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "NOT_RUN",
-      "acceptedEvidence": null
+      "status": "ACCEPTED",
+      "acceptedEvidence": {
+        "acceptedAtUtc": "2026-09-12T00:13:37.347Z",
+        "cells": {
+          "C": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34500999293",
+            "candidateSha": "e3004c927628128c91d5ad61b9ebf28930bee721"
+          },
+          "P": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34500999293",
+            "candidateSha": "e3004c927628128c91d5ad61b9ebf28930bee721"
+          },
+          "U": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34500999293",
+            "candidateSha": "e3004c927628128c91d5ad61b9ebf28930bee721"
+          },
+          "F": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34573807027",
+            "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15"
+          }
+        },
+        "coverageClosure": {
+          "valid": true,
+          "missingIndices": [],
+          "unverifiedCitations": []
+        },
+        "delegateSignoff": {
+          "delegateSession": "first100-delegate-78",
+          "signedAtUtc": "2026-09-11T08:04:08.997Z",
+          "userConfirmationRef": null
+        }
+      }
     },
     "P1-11": {
       "id": "P1-11",
@@ -2678,6 +2740,21 @@
             "leaves SessionPromptResult.identity, the server-sourced field, unaffected"
           ],
           "capturedAtUtc": "2026-09-02T16:05:22.186Z"
+        },
+        "U.1": {
+          "status": "GREEN",
+          "candidateSha": "93d52207338066bd65494f6044f1ec5920d63cb8",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34652643903",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34652643903/first100-evidence-93d52207338066bd65494f6044f1ec5920d63cb8/vitest-report.json",
+          "observationSha256": "3c15dc184ed1d2854dd1c87ad45663960fbf87da8553d79ead6000250dd3da09",
+          "expectCasesMatched": [
+            "attaches the HOST USER as the root, and the first action is attributed to exactly that principal",
+            "delegates ONE hop to the child, whose chain still roots at the same host user",
+            "keeps the SAME root two hops down, so depth does not dilute the chain",
+            "gives the child its own principal and its own run, so parent and child are not one actor",
+            "OQ30: the local launcher attaches a host user and the remote surfaces attach nothing"
+          ],
+          "capturedAtUtc": "2026-09-12T00:13:05.816Z"
         }
       },
       "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
@@ -3624,7 +3701,24 @@
           "capturedAtUtc": "2026-09-11T07:59:25.307Z"
         }
       },
-      "supplements": {},
+      "supplements": {
+        "U.1": {
+          "status": "GREEN",
+          "candidateSha": "93d52207338066bd65494f6044f1ec5920d63cb8",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34652643903",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34652643903/first100-evidence-93d52207338066bd65494f6044f1ec5920d63cb8/vitest-report.json",
+          "observationSha256": "3c15dc184ed1d2854dd1c87ad45663960fbf87da8553d79ead6000250dd3da09",
+          "expectCasesMatched": [
+            "forbids the kernel hard-deny band by POLICY, because the action's risk class now reaches Cedar",
+            "permits the same action when its declared tag classifies below that band, so the rule is not a constant",
+            "forbids on the workspace's REAL trust state, read from the mounted seam",
+            "permits under the SAME rule when the seam answers trusted-execute, so the fact is read rather than assumed",
+            "CHARACTERIZATION (BLOCKED-203): the posture Cedar sees is the constant `default`, whatever preset is mounted",
+            "CHARACTERIZATION (BLOCKED-203): a rule naming `default` matches under the read-only preset, which is the defect stated positively"
+          ],
+          "capturedAtUtc": "2026-09-12T00:13:06.128Z"
+        }
+      },
       "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15",
       "independentVerdict": "PENDING",
       "openFindings": null,
