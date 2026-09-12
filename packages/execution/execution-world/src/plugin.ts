@@ -208,10 +208,18 @@ export default class ExecutionWorldService extends Service<Config> {
    *
    * A registration is an effect, so unmounting the registering plugin removes
    * the provider rather than leaving a registry that outlives it.
+   *
+   * The disposer is `cordis`' own `Disposable<Promise<void>>`, returned
+   * unchanged, and the declared return type says so rather than narrowing it to
+   * `() => void`. Narrowing would be a lie the linter catches
+   * (`no-misused-promises`) and would also cost a caller the ability to await
+   * teardown; `AgentRegistry.register` keeps the narrow type and suppresses the
+   * rule because returning the disposer unchanged preserves its identity for
+   * its own callers, and nothing here depends on that.
    * @param provider - the provider to offer to selection.
-   * @returns the disposer.
+   * @returns the disposer, which settles once the provider is removed.
    */
-  register(provider: WorldProvider): () => void {
+  register(provider: WorldProvider): () => Promise<void> {
     return this.ctx.effect(() => {
       this.providers.push(provider)
       return () => {
