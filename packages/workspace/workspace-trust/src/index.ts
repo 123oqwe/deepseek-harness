@@ -34,6 +34,7 @@ import type {
   LoadDecision,
   ProjectContentKind,
   TrustDowngradeResult,
+  TrustGrantSource,
   TrustRecord,
   TrustState,
   TrustUpgradeResult,
@@ -79,7 +80,31 @@ export interface WorkspaceTrustService {
    * @param hostPrincipal - the principal authorizing it; a non-host one is refused.
    * @returns the upgrade result, carrying the new record and its audit on success.
    */
-  grantTrust(cwd: string, target: TrustState, hostPrincipal: Principal): Promise<TrustUpgradeResult>
+  grantTrust(
+    cwd: string,
+    target: TrustState,
+    hostPrincipal: Principal,
+    source?: TrustGrantSource,
+  ): Promise<TrustUpgradeResult>
+
+  /**
+   * Lower a workspace's trust, naming what the lowering revokes (acceptance[2],
+   * BLOCKED-214).
+   *
+   * On the seam because a grant that cannot be taken back is not a grant a host
+   * user controls: the persisted record outlives the session that wrote it, so
+   * without this the only way to undo a grant would be to edit storage. The
+   * decision stays in `downgradeTrust`, which computes `revokedKinds` from the
+   * same transition it applies — there is no separate revoke step to race.
+   *
+   * Reconciled before lowering, exactly as `grantTrust` is: a directory that
+   * already lost its binding to a swap is lowered from the state it actually
+   * has, not from the one its record remembers.
+   * @param cwd - the session working directory whose workspace is being lowered.
+   * @param target - the state to lower it to; raising throws in `downgradeTrust`.
+   * @returns the downgrade result, carrying the new record and the kinds it revoked.
+   */
+  revokeTrust(cwd: string, target: TrustState): Promise<TrustDowngradeResult>
 }
 
 declare module '@deepseek-ai/cordis' {
@@ -233,6 +258,7 @@ export function reconcileWorkspaceTrust(record: TrustRecord, observed: Workspace
  * @param target - the requested {@link TrustState} to upgrade to.
  * @param hostPrincipal - the principal presented as the upgrade requester.
  * @param at - ISO-8601 instant of the upgrade attempt.
+ * @param source - the entry point the grant was written through; defaults to `'command'`, the in-session path.
  * @returns `{ upgraded: true, record, audit }`, or `{ upgraded: false, reason }`.
  */
 export function requestTrustUpgrade(
@@ -240,12 +266,13 @@ export function requestTrustUpgrade(
   target: TrustState,
   hostPrincipal: Principal,
   at: string,
+  source: TrustGrantSource = 'command',
 ): TrustUpgradeResult {
   if (!isHostUserPrincipal(hostPrincipal)) return { upgraded: false, reason: 'non-host-principal' }
   if (TRUST_STATE_RANK[target] <= TRUST_STATE_RANK[current.state]) return { upgraded: false, reason: 'not-an-upgrade' }
   return {
     upgraded: true,
-    record: { identity: current.identity, state: target, at, grantedBy: hostPrincipal.id },
+    record: { identity: current.identity, state: target, at, grantedBy: hostPrincipal.id, source },
     audit: {
       identity: current.identity,
       fromState: current.state,

@@ -28,6 +28,12 @@
     },
     {
       "path": "../workspace-trust"
+    },
+    {
+      "path": "../../identity/host-user-id"
+    },
+    {
+      "path": "../../boot/cmdline"
     }
   ]
 }

@@ -99,3 +99,28 @@ The delegate's instruction is to write these up as resolved once a provider is a
 | `agent-instructions/src/index.ts` | `undefined` → permitted | fail OPEN — the project's files load |
 
 On a profile that mounts the provider, both branches become unreachable and the defaults stop mattering. On a profile that does not, both stay live — and the asymmetry means the same missing provider makes the policy engine stricter while leaving the trust boundary off. Any claim that these defaults are "dissolved by the provider always being present" is true per profile, not repository-wide, unless every published profile mounts it.
+
+## The shipped posture after BLOCKED-214, stated plainly
+
+The user ruled (A) — factory default ON with a first-time authorization — and then ruled its unattended half to be a persistent trust record. Both halves have landed, and the resulting posture is a change every operator will notice, so it is written here rather than left to be inferred from two bundle rows.
+
+**On `headless`, `sdk-app` and `sdk-minimal`: a workspace is UNTRUSTED until a record exists.** While untrusted, the project's own `AGENTS.md` does not load and the project's skills are not offered. These profiles register no `approval/request` answerer, so the one question `askForReadTrustOnce` puts settles `'unavailable'` and cannot grant anything.
+
+Two entry points write the record, and both write the SAME record the ordinary check reads:
+
+| entry point | what it writes |
+|---|---|
+| `dsh --trust-workspace[=read\|execute\|none]` | a record before any session exists; bare flag means `read` |
+| `/trust-skills` | `trusted-execute`, after the host user confirms in-session |
+
+**On `acp-app` and `web-app` the first-time prompt works as (A′) delivered it**, because those two mount an answerer.
+
+**The flag is not a bypass, and the difference is structural rather than documented.** Its entire effect is one `grantTrust` call. Every Consumer still resolves through `stateFor` against a fresh `{canonicalPath, device, inode, birthtimeMs}` observation, so a workspace trusted by the flag still loses trust when the directory is replaced, its symlink retargeted, or a different directory takes its path. The frozen supplement's swap case is that proof: the flag ran, another directory took the granted path, and the check refused.
+
+**What an operator gives up by not granting.** Nothing the model needs to work — only the project's own instructions and skills, which are content the opened directory supplied. That is the trade acceptance[0] asks for.
+
+**What the corpus now records.** Every recorded `headless` session whose cwd resolves to a project root carries an `approval/asked` + `approval/decided` pair for `workspace-trust`, resolving `unavailable`. The pair is the durable evidence that the boundary refused; the alternative — refusing silently — would leave the one refusal an operator most needs to see with no trace at all.
+
+### One residual this posture inherits
+
+A shipped profile constructs its Trust Kernel with **no `auditSink`** (`apps/cli/src/profile-boot.ts`), so the grant/revoke transitions the provider appends reach no reader — [BLOCKED-191](BLOCKED-QUEUE.md#blocked-191), which applies to these transitions exactly as it does to P2-05's decisions. The provider APPENDS, proven in `workspace-trust-local/tests/provider.spec.ts` against a kernel whose sink is configured. Until 191 closes, the `approval/asked` pair in the session log is the only trust evidence a shipped profile actually retains.

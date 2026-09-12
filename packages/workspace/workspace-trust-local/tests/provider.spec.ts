@@ -12,6 +12,9 @@ import { mkdtemp, mkdir, realpath, rename, rm, symlink } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context } from '@deepseek-ai/cordis'
+import { PrincipalId, TenantId } from '@deepseek-ai/dsh-principal/types'
+import type { Principal } from '@deepseek-ai/dsh-principal/types'
+import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
 import Storage from '@deepseek-ai/dsh-storage'
 import {
   apply as storageJsonApply, Config as storageJsonConfig, inject as storageJsonInject, name as storageJsonName,
@@ -43,9 +46,16 @@ async function makeRoot(): Promise<string> {
  * condition BLOCKED-199 is about. Two mounts over different roots are two
  * different hosts and would prove nothing.
  */
-async function mount(grants: TrustGrant[], storageRoot?: string): Promise<Context> {
+async function mount(grants: TrustGrant[], storageRoot?: string, auditSink?: (entry: { payload: unknown }) => void): Promise<Context> {
   const root = storageRoot ?? await makeRoot()
   const ctx = new Context()
+  // Pinned only when a case asks to observe the audit. A shipped profile
+  // constructs its kernel with NO `auditSink` (`apps/cli/src/profile-boot.ts`),
+  // so `auditAppend` is a no-op there — BLOCKED-191's "the decision's audit has
+  // no shipped reader", which applies to this epic's transitions exactly as it
+  // does to P2-05's decisions. These cases prove the provider APPENDS; whether
+  // a deployment reads it is that finding's, not this one's.
+  if (auditSink !== undefined) pinTrustKernel(ctx, createTrustKernel({ auditSink }))
   await ctx.plugin(Storage)
   await ctx.plugin({ name: storageJsonName, inject: storageJsonInject, apply: storageJsonApply, Config: storageJsonConfig }, { root })
   await ctx.plugin({ name: storageDomainName, inject: storageDomainInject, apply: storageDomainApply, Config: storageDomainConfig }, { backend: 'json' })
@@ -233,6 +243,77 @@ describe('P1-07 Usage — the workspace trust seam over a real filesystem', () =
       expect(await ctx.workspaceTrust.stateFor(project)).toBe('trusted-execute')
       await rename(project, moved)
       expect(await ctx.workspaceTrust.stateFor(moved)).toBe('untrusted')
+    } finally {
+      await ctx.fiber.dispose()
+    }
+  })
+})
+
+/** A host USER principal — the only kind `requestTrustUpgrade` authorizes. */
+function hostPrincipal(): Principal {
+  return { kind: 'user', id: PrincipalId('host-user-under-test'), tenantId: TenantId('local') }
+}
+
+describe('P1-07 BLOCKED-214 — a trust transition is audited with its scope and its source', () => {
+  it('appends a GRANT naming the scope, the entry point and the workspace identity', async () => {
+    const root = await makeRoot()
+    const project = join(root, 'clone')
+    await mkdir(project)
+    const audited: { payload: Record<string, unknown> }[] = []
+    const ctx = await mount([], root, entry => audited.push(entry as { payload: Record<string, unknown> }))
+    try {
+      await ctx.workspaceTrust.grantTrust(project, 'trusted-read', hostPrincipal(), 'launch-argument')
+
+      const payload = audited.at(-1)?.payload
+      expect(payload).toMatchObject({
+        kind: 'workspace-trust',
+        transition: 'granted',
+        toState: 'trusted-read',
+        fromState: 'untrusted',
+        source: 'launch-argument',
+      })
+      // The identity, not only the path: two directories can occupy one path
+      // over time, and an audit carrying only the path could not tell a
+      // re-grant from a grant to a different directory.
+      expect(payload).toHaveProperty('volume.inode')
+    } finally {
+      await ctx.fiber.dispose()
+    }
+  })
+
+  it('appends a REVOCATION, so a grant taken back leaves a record of its own', async () => {
+    const root = await makeRoot()
+    const project = join(root, 'clone')
+    await mkdir(project)
+    const audited: { payload: Record<string, unknown> }[] = []
+    const ctx = await mount([], root, entry => audited.push(entry as { payload: Record<string, unknown> }))
+    try {
+      await ctx.workspaceTrust.grantTrust(project, 'trusted-execute', hostPrincipal(), 'command')
+      await ctx.workspaceTrust.revokeTrust(project, 'untrusted')
+
+      expect(audited.at(-1)?.payload).toMatchObject({
+        transition: 'revoked',
+        fromState: 'trusted-execute',
+        toState: 'untrusted',
+      })
+      expect(await ctx.workspaceTrust.stateFor(project)).toBe('untrusted')
+    } finally {
+      await ctx.fiber.dispose()
+    }
+  })
+
+  it('records nothing and still grants when no kernel is pinned, so an unaudited composition still enforces', async () => {
+    // The audit must never be able to refuse the transition the host user
+    // asked for: the record is already persisted by the time it is appended.
+    const root = await makeRoot()
+    const project = join(root, 'clone')
+    await mkdir(project)
+    const ctx = await mount([], root)
+    try {
+      const result = await ctx.workspaceTrust.grantTrust(project, 'trusted-read', hostPrincipal(), 'launch-argument')
+
+      expect(result.upgraded).toBe(true)
+      expect(await ctx.workspaceTrust.stateFor(project)).toBe('trusted-read')
     } finally {
       await ctx.fiber.dispose()
     }

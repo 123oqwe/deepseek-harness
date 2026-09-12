@@ -1,0 +1,38 @@
+# Test-only overlay over the shipped `headless` profile for P1-07's U
+# supplement #2 (BLOCKED-214).
+#
+# It deliberately does NOT enable `workspace-trust-local`. The sibling
+# `workspace-trust.patch.yml` sets `disabled: false` itself, which proves the
+# PROVIDER behaves once mounted and says nothing about whether any shipped
+# profile mounts it. Here the row's state comes from
+# `packages/bundle/headless/cordis.patch.yml` alone — the claim under test —
+# which is why setting that row back to `disabled: true` must redden this suite.
+#
+# It also mounts no approval answerer. That is the point of this profile: with
+# none registered, `approval.request()` settles `'unavailable'`, so the durable
+# record is the only way a decision can exist.
+- id: typert-loader
+  disabled: true
+
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: agent-loop
+  config:
+    agents:
+      - id: main
+        provider: workspace-trust-mock
+        model: workspace-trust-mock
+        cwd: !!js process.cwd() + '/clone'
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
+
+- insert:
+    - id: workspace-trust-mock-llm
+      name: './mock-llm.ts'

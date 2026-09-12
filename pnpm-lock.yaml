@@ -10798,6 +10798,16 @@ importers:
         version: 4.22.4
 
   packages/workspace/command-workspace-trust:
+    dependencies:
+      '@deepseek-ai/dsh-cmdline':
+        specifier: workspace:^
+        version: link:../../boot/cmdline
+      '@deepseek-ai/dsh-host-user-id':
+        specifier: workspace:^
+        version: link:../../identity/host-user-id
+      '@deepseek-ai/dsh-workspace-trust':
+        specifier: workspace:^
+        version: link:../workspace-trust
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:^
@@ -10826,9 +10836,6 @@ importers:
       '@deepseek-ai/dsh-user-approval':
         specifier: workspace:^
         version: link:../../interaction/user-approval
-      '@deepseek-ai/dsh-workspace-trust':
-        specifier: workspace:^
-        version: link:../workspace-trust
       '@deepseek-ai/dsh-workspace-trust-local':
         specifier: workspace:^
         version: link:../workspace-trust-local

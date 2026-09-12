@@ -33,11 +33,19 @@ import type { KvTable } from '@deepseek-ai/dsh-storage-domain'
 import { observeWorkspaceIdentity, realpathNormalize } from '@deepseek-ai/dsh-workspace'
 import {
   bindWorkspaceTrust,
+  downgradeTrust,
   reconcileWorkspaceTrust,
   requestTrustUpgrade,
   type WorkspaceTrustService,
 } from '@deepseek-ai/dsh-workspace-trust'
-import type { TrustRecord, TrustState, TrustUpgradeResult, WorkspaceIdentity } from '@deepseek-ai/dsh-workspace-trust/types'
+import type {
+  TrustDowngradeResult,
+  TrustGrantSource,
+  TrustRecord,
+  TrustState,
+  TrustUpgradeResult,
+  WorkspaceIdentity,
+} from '@deepseek-ai/dsh-workspace-trust/types'
 import { workspaceTrustDomainSpec } from './spec.ts'
 import type { StoredConsumedGrant } from './spec.ts'
 
@@ -210,7 +218,12 @@ class LocalWorkspaceTrust implements WorkspaceTrustService {
    * @param hostPrincipal - the principal authorizing it.
    * @returns the upgrade result; the new binding is persisted only on success.
    */
-  async grantTrust(cwd: string, target: TrustState, hostPrincipal: Principal): Promise<TrustUpgradeResult> {
+  async grantTrust(
+    cwd: string,
+    target: TrustState,
+    hostPrincipal: Principal,
+    source: TrustGrantSource = 'command',
+  ): Promise<TrustUpgradeResult> {
     const observed = await observeWorkspaceIdentity(cwd)
     const at = new Date().toISOString()
     const { records } = await this.tables()
@@ -218,9 +231,75 @@ class LocalWorkspaceTrust implements WorkspaceTrustService {
     const current = stored === undefined
       ? bindWorkspaceTrust(observed, at)
       : reconcileWorkspaceTrust(stored, observed, at)
-    const result = requestTrustUpgrade(current, target, hostPrincipal, at)
+    const result = requestTrustUpgrade(current, target, hostPrincipal, at, source)
     await records.put(observed.canonicalPath, result.upgraded ? result.record : current)
+    if (result.upgraded) this.auditTrustChange(result.record, current.state, 'granted')
     return result
+  }
+
+  /**
+   * Lower this workspace's trust and persist the result (acceptance[2],
+   * BLOCKED-214).
+   *
+   * Reconciled first for the same reason `grantTrust` reconciles: a directory
+   * that lost its binding to a swap is lowered from the state it actually has.
+   * The revocation set comes from `downgradeTrust`, computed against the very
+   * transition being applied.
+   * @param cwd - the session working directory whose workspace is being lowered.
+   * @param target - the state to lower it to.
+   * @returns the downgrade result and the project content kinds it revoked.
+   */
+  async revokeTrust(cwd: string, target: TrustState): Promise<TrustDowngradeResult> {
+    const observed = await observeWorkspaceIdentity(cwd)
+    const at = new Date().toISOString()
+    const { records } = await this.tables()
+    const stored = records.get(observed.canonicalPath)
+    const current = stored === undefined
+      ? bindWorkspaceTrust(observed, at)
+      : reconcileWorkspaceTrust(stored, observed, at)
+    const result = downgradeTrust(current, target, at)
+    await records.put(observed.canonicalPath, result.record)
+    this.auditTrustChange(result.record, current.state, 'revoked')
+    return result
+  }
+
+  /**
+   * Append one trust transition to the Trust Kernel's audit (BLOCKED-214).
+   *
+   * A persisted grant outlives every session that could have logged it, so the
+   * session log is the wrong home: an operator asking "when did this workspace
+   * become trusted, and through what" is asking about the host, not about one
+   * conversation. The kernel's audit is the one append-only record that spans
+   * both.
+   *
+   * Never throws: a composition that pins no kernel still enforces trust, and a
+   * failure to RECORD a transition must not prevent the transition the host
+   * user asked for. The record is already persisted by the time this runs.
+   * @param record - the record as persisted after the transition.
+   * @param fromState - the state the workspace held before it.
+   * @param transition - whether trust was raised or lowered.
+   */
+  private auditTrustChange(record: TrustRecord, fromState: TrustState, transition: 'granted' | 'revoked'): void {
+    // Typed at the read: `trustKernel` is an optional service this package does
+    // not inject, so `ctx.get` hands back a value the compiler cannot narrow.
+    const kernel = this.ctx.get('trustKernel') as { auditAppend: (entry: { payload: unknown }) => void } | undefined
+    if (kernel === undefined) return
+    kernel.auditAppend({
+      payload: {
+        kind: 'workspace-trust',
+        transition,
+        canonicalPath: record.identity.canonicalPath,
+        // The identity, not only the path: two directories can occupy one path
+        // over time, and an audit that recorded only the path could not tell
+        // a re-grant from a grant to a different directory.
+        volume: record.identity.volume,
+        fromState,
+        toState: record.state,
+        at: record.at,
+        ...record.grantedBy === undefined ? {} : { grantedBy: record.grantedBy },
+        ...record.source === undefined ? {} : { source: record.source },
+      },
+    })
   }
 
   /**

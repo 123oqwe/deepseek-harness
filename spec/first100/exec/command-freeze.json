@@ -12908,6 +12908,50 @@
         "failureSummary": "Reds ALL THREE cases, which is correct rather than coarse: with the row disabled the profile boots without a provider, and `agent-instructions` fails OPEN, so the hostile clone's own instructions reach the model in every case — including the one whose expectation is that they DO reach it, because that case also asserts the grant was what let them. That the whole suite moves on one bundle line is the property being frozen: nothing in this fixture enables the boundary. Its sibling `P1-07.composition.spec.ts` sets `disabled: false` in its own overlay and therefore cannot detect this mutation at all. NOT PROVEN: that `web-app`'s row behaves the same. It is enabled by the same reasoning and carries a different answerer (`ui-approval`), and no case here boots it."
       },
       "note": "P1-07 BLOCKED-214, ruling (A'). The user's ruling is that the boundary ships ON with a first-time authorization. Measured: that is deliverable only where the question can be ANSWERED — `approval.request()` settles `'unavailable'` with no registered answerer, and the only production answerers are `@deepseek-ai/dsh-acp` and `@deepseek-ai/dsh-ui-approval`. So `acp-app` and `web-app` enable the row and `headless`/`sdk-app`/`sdk-minimal` do not, with the base comment restated to say why. This suite boots the shipped `acp` profile and turns the boundary on through nothing of its own, so the bundle row is what it measures: untrusted with nobody answering reads nothing, the ask is put once naming only `trusted-read`, and `allowed-once` grants read while still offering no executable skill."
+    },
+    {
+      "epic": "P1-07",
+      "stage": "U",
+      "supplements": {
+        "epic": "P1-07",
+        "stage": "U"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P1-07.headless-trust.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "with NO record and no answerer, the ask settles unavailable and the clone is not read",
+        "reads the project once --trust-workspace has written the record",
+        "returns to refusing once the grant is revoked",
+        "does NOT carry the grant to a different directory that takes the same path"
+      ],
+      "files": [
+        "tests/first100/fixtures/P1-07.headless-trust.spec.ts",
+        "packages/workspace/workspace-trust-local/tests/fixtures/headless-trust-driver.ts",
+        "packages/workspace/workspace-trust-local/tests/fixtures/headless-trust.patch.yml",
+        "packages/workspace/workspace-trust-local/src/index.ts",
+        "packages/workspace/workspace-trust/src/index.ts",
+        "packages/workspace/workspace-trust/src/types.ts",
+        "packages/workspace/command-workspace-trust/src/launch-grant.ts",
+        "packages/bundle/headless/cordis.patch.yml"
+      ],
+      "frozenAtUtc": "2026-09-12T02:08:01.879Z",
+      "dryRunProof": {
+        "treeSha": "a764f09112eb3d2bead612903c55f36b619f57db",
+        "testsDiscovered": 4
+      },
+      "sensitivityProof": {
+        "mutationDescription": "(M1) `packages/bundle/headless/cordis.patch.yml`'s `workspace-trust-local` row set back to `disabled: true` — the state every profile without an answerer had before this slice. (M2) `stateFor` returns a stored record's state directly instead of reconciling it against a fresh `observeWorkspaceIdentity`, which is exactly \"keyed by PATH rather than by IDENTITY\". Both files restored byte-identical afterwards, confirmed with `cmp`.",
+        "failureSummary": "M1 reds ALL FOUR: with no provider the profile has no boundary, `agent-instructions` fails OPEN, and the clone's instructions reach the model in every mode. That the whole suite turns on one bundle line is the property being frozen — this fixture enables nothing itself. M2 reds EXACTLY ONE, the swap case, and leaves the other three green. That is the delegate's requested sensitivity: a path-keyed record answers `trusted-read` for a different directory that took the granted path, while grant, revoke and the no-record case are indifferent to how the record is keyed. NOT PROVEN here: that the kernel AUDIT reaches a reader. A shipped profile constructs its kernel with no `auditSink` (`apps/cli/src/profile-boot.ts`), so `auditAppend` is a no-op on every launched profile — BLOCKED-191. That the provider APPENDS a transition carrying scope, source and workspace identity is proved in `workspace-trust-local/tests/provider.spec.ts` against a kernel whose sink IS configured. Asserting it in this smoke would assert the absence of a reader, not the presence of a record."
+      },
+      "note": "P1-07 BLOCKED-214's second half, under the user's ruling that (A)'s unattended side is a persistent trust record. Measured first: four of the six shape constraints already held — the record is reconciled against `{device, inode, birthtime}` so a replaced or moved directory never inherits, `TrustState` already carries the read/execute scope, and no-record-plus-no-answerer already failed closed. Built: `TrustGrantSource` on the record (`launch-argument | command | configured-grant`), a kernel audit append on both grant and revoke, `revokeTrust` on the seam and provider over the existing `downgradeTrust`, and `--trust-workspace[=read|execute|none]` as the entry point. The flag WRITES the record and does not bypass the check — every Consumer still resolves through `stateFor` against a fresh identity observation, which is what the swap case proves. That is what lets the `headless` bundle enable the provider row: (A′) disabled it because nothing could answer, and a durable record removes the reason."
     }
   ]
 }

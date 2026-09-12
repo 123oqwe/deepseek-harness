@@ -128,7 +128,38 @@ export interface TrustRecord {
   readonly at: string
   /** The host user principal that authorized the current `state`, when it is above `'untrusted'`. */
   readonly grantedBy?: PrincipalId
+  /**
+   * HOW the current `state` was reached, present whenever it is above
+   * `'untrusted'` (BLOCKED-214).
+   *
+   * An operator auditing a trusted workspace needs to know which entry point
+   * wrote it, because they carry different authority: a launch argument is the
+   * host user acting before any session exists, a command is the host user
+   * answering inside one, and a configured grant is a deployment's standing
+   * decision. `grantedBy` names WHO and this names THROUGH WHAT; neither
+   * substitutes for the other, and a record above `'untrusted'` without a
+   * source would be a grant nobody can attribute to an entry point.
+   */
+  readonly source?: TrustGrantSource
 }
+
+/**
+ * The entry point a trust grant was written through ({@link TrustRecord.source}).
+ *
+ * A closed set, because each member is a different authority and an audit that
+ * could not tell them apart would be reporting that trust exists without
+ * reporting how it was obtained. `'launch-argument'` is deliberately NOT a
+ * bypass: it writes this record and the ordinary check then reads it, so a
+ * workspace trusted that way is subject to identity reconciliation exactly like
+ * any other.
+ */
+export type TrustGrantSource =
+  /** `dsh --trust-workspace …`: the host user, before a session exists. */
+  | 'launch-argument'
+  /** `/trust-skills` or another in-session command the host user ran. */
+  | 'command'
+  /** A `grants` entry in the provider's own configuration. */
+  | 'configured-grant'
 
 /**
  * must[1]'s closed set of project-level content kinds: `'safe-read'` is

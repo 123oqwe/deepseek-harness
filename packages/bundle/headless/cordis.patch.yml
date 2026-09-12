@@ -30,3 +30,19 @@
         task: !!js ctx.headlessStartup.task
         model: !!js ctx.headlessStartup.model
         outputFormat: !!js ctx.headlessStartup.outputFormat
+
+# P1-07's project trust boundary, ENABLED here now that this profile has an
+# unattended way to record a decision (BLOCKED-214's second half). It could not
+# be enabled before: `askForReadTrustOnce` asks through `approval.request()`,
+# which settles `'unavailable'` where no answerer is registered, and this
+# profile registers none — so an enabled row would have refused every project
+# permanently with no in-session way to grant.
+#
+# `dsh --trust-workspace[=read|execute|none]` is that way. It WRITES the durable
+# record and nothing else: every Consumer still resolves trust through
+# `stateFor` against a fresh identity observation, so a workspace trusted this
+# way still loses trust when the directory is replaced, retargeted or moved.
+# With no record and no answerer the boundary still refuses, which is the
+# fail-closed direction it always had.
+- id: workspace-trust-local
+  disabled: false

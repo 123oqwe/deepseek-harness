@@ -20,8 +20,14 @@ import type { CommandInvocation, CommandResult } from '@deepseek-ai/dsh-commands
 import { attachedIdentity } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-user-approval'
 import type {} from '@deepseek-ai/dsh-workspace-trust'
+import { applyLaunchTrustRequest } from './launch-grant.ts'
 
 export const name = 'command-workspace-trust'
+// Only `commands` is declared. `cmdlineArgs` and `workspaceTrust` are OPTIONAL
+// and are read through `ctx.get()`: Cordis's object inject form is a
+// name-to-config map, not a required/optional split, so declaring them that way
+// asks for two services literally named "required" and "optional" and the entry
+// never activates.
 export const inject = ['commands']
 
 /**
@@ -81,10 +87,15 @@ async function executeTrustCommand(ctx: Context, invocation: CommandInvocation):
  * @param ctx - the context to register on; the registration disposes with it.
  * @returns Nothing.
  */
-export function apply(ctx: Context): void {
+export async function apply(ctx: Context): Promise<void> {
   ctx.commands.register({
     name: 'trust-skills',
     description: "allow this project's own skills to run, after confirming",
     handler: invocation => executeTrustCommand(ctx, invocation),
   })
+  // The host user's other entry point, for a profile that cannot ask
+  // (BLOCKED-214). Awaited so the record is durable before the first turn can
+  // read it; a launch argument that landed after the first `stateFor` would be
+  // a race the operator cannot see.
+  await applyLaunchTrustRequest(ctx)
 }

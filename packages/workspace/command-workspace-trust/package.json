@@ -46,5 +46,10 @@
     "@deepseek-ai/dsh-user-approval": "workspace:^",
     "@deepseek-ai/dsh-workspace-trust": "workspace:^",
     "@deepseek-ai/dsh-workspace-trust-local": "workspace:^"
+  },
+  "dependencies": {
+    "@deepseek-ai/dsh-cmdline": "workspace:^",
+    "@deepseek-ai/dsh-host-user-id": "workspace:^",
+    "@deepseek-ai/dsh-workspace-trust": "workspace:^"
   }
 }

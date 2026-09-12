@@ -5677,3 +5677,34 @@ The 801 root-class calls live in **182 files**, of which **23 are directly froze
 **Fixed here, for one spec only.** `setup()` registers each Context and teardown disposes them, rather than adding three `dispose()` calls — a per-case dispose is precisely what was forgotten twice already. Order is load-bearing: dispose runs BEFORE the directories are removed, which is what stops a live mount from writing into a deleted path. The teardown asserts it actually tore down (a disposed Context no longer resolves `runs`), so the loop cannot be stubbed out silently; removing it reddens two of the three cases, exactly the two that never disposed themselves.
 
 **The other 22 frozen files are NOT audited here.** A general harness guard — every Context a spec creates is disposed before its case ends — is the right instrument for that, and it is scheduled after push 4 rather than hand-checked file by file now.
+
+### BLOCKED-214 second half — the unattended side of P1-07's ruling: a persistent trust record
+
+**Status:** FIXED 2026-09-12, owner lane A. Ruled by the user (gq-92); (A′) delivered the answerable profiles, this delivers the rest.
+
+(A′) enabled the boundary on `acp-app` and `web-app` because those are the only profiles carrying an `approval/request` answerer. `headless`, `sdk-app` and `sdk-minimal` were left disabled with the measured reason: `approval.request()` settles `'unavailable'` where nothing answers, so an enabled row there would refuse every project permanently with no in-session way to grant. The user ruled the missing half is a **persistent trust record**.
+
+**Four of the six shape constraints already held**, measured before building rather than implemented twice:
+
+| constraint | state |
+| --- | --- |
+| keyed by workspace IDENTITY, not path | already held — records reconcile against `{device, inode, birthtimeMs}` |
+| record carries its scope (`read`/`execute`) | already held — `TrustState` |
+| no record and no answerer still fails closed | already held |
+| record carries its SOURCE | **built** — `TrustGrantSource = 'launch-argument' \| 'command' \| 'configured-grant'` |
+| audited | **built** — kernel append on grant AND revoke |
+| revocable | **built** — `revokeTrust` on the seam and provider, over the existing `downgradeTrust` |
+
+**`--trust-workspace[=read|execute|none]` writes the record; it is not a bypass.** Its whole effect is one `grantTrust` call, after which every Consumer resolves trust the ordinary way. A bare flag means `read` — `execute` must be named. The swap case proves the distinction: the flag ran, a different directory then took the granted path, and the check still refused.
+
+`headless` therefore enables the provider row. The reason it could not is gone.
+
+**What is NOT closed, and it is not this slice's.** A shipped profile constructs its kernel with **no `auditSink`** (`apps/cli/src/profile-boot.ts`), so `auditAppend` is a no-op on every launched profile — [BLOCKED-191](BLOCKED-QUEUE.md#blocked-191)'s "the decision's audit has no shipped reader", which applies to these transitions exactly as it does to P2-05's decisions. The provider APPENDS; whether a deployment reads is that finding's. The frozen supplement says so rather than asserting an audit it cannot observe, and the append itself is proved in `provider.spec.ts` against a kernel whose sink is configured.
+
+**The shipped posture this produces**, stated because it is what an operator meets: on `headless`, `sdk-app` and `sdk-minimal` a workspace is UNTRUSTED until a record exists — the project's own `AGENTS.md` does not load and its skills are not offered — and `dsh --trust-workspace[=read|execute|none]` or `/trust-skills` writes the record that lifts it. On `acp-app` and `web-app` the first-time prompt works as (A′) delivered it. `evidence-P1-07.md` carries the full statement.
+
+**The corpus records it.** Every recorded `headless` session whose cwd resolves to a project root now carries an `approval/asked` + `approval/decided` pair for `workspace-trust`, resolving `unavailable`: 73 of the session lane's 85 cases were refreshed for exactly that pair, with no event deleted. Refusing silently would leave the one refusal an operator most needs to see with no trace.
+
+**A guard written earlier paid for itself here.** The refresh was REFUSED while `lib/` was behind `src/` — `assertBuiltArtifactsCurrent`, added after a stale-build refresh deleted 34 `run/task-profile` events from `snapshots/sdk/`. The same class of mistake was about to be repeated at a much larger scale (73 fixtures rather than 16), and the guard stopped it before a single file was written.
+
+**Frozen as P1-07.U supplement #2**, four cases on the factory `headless` profile, with two mutations: disabling the bundle row reds all four (the fixture enables nothing itself), and making `stateFor` return a stored state without reconciling identity reds EXACTLY the swap case — the delegate's requested "keyed by path rather than identity must redden".
