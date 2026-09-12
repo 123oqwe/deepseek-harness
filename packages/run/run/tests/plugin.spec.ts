@@ -20,7 +20,7 @@ import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
 import { WorkflowRunId } from '@deepseek-ai/dsh-workflow'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
 import RunPlugin, { createFileRunStore, RUN_SERVICE_OWNER_ID, RunService, workflowRefOf } from '../src/index.ts'
 
@@ -76,6 +76,32 @@ describe('RunPlugin mounting', () => {
     const ctx = await harness(await storePath())
     expect(ctx.runs.service.listNonTerminal()).toStrictEqual([])
     await ctx.fiber.dispose()
+  })
+})
+
+describe('RunPlugin durable-write failure reporting', () => {
+  it('announces a failed durable write from a mount nobody disposed, instead of rejecting into no one', async () => {
+    // BLOCKED-229/230. A Context that is discarded without ever being disposed
+    // runs no disposer, so nothing awaits the writes it started. Before this
+    // event the rejection reached no caller: the Run's terminal state was lost
+    // and the only trace was an unhandled rejection somewhere else entirely.
+    const root = await mkdtemp(join(tmpdir(), 'dsh-run-abandoned-'))
+    const ctx = await harness(join(root, 'runs.json'))
+    const failures: { path: string; error: unknown }[] = []
+    ctx.on('run/store-write-failed', (payload) => { failures.push(payload) })
+
+    ctx.agentLoop.create(SessionId('session-abandoned'))
+    // The directory goes while the mount is still live and its write in flight
+    // — exactly what a teardown that removes files before disposing produces.
+    await rm(root, { recursive: true, force: true })
+    const agent = ctx.agents.list()[0]
+    if (agent !== undefined) ctx.emit('agent/disposed', { agent })
+
+    await vi.waitFor(() => {
+      expect(failures.length).toBeGreaterThan(0)
+    })
+    expect(failures[0]?.path).toBe(join(root, 'runs.json'))
+    // Deliberately NOT disposed: this case is about the mount that never is.
   })
 })
 

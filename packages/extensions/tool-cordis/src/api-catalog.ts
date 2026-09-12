@@ -3674,6 +3674,14 @@ export const EVENT_API: readonly EventApiEntry[] = [
     parameters: [{ name: 'options', description: 'the full request. A LOOP-built request carries the process-local {@link markAgentLoopRequest} identity and arrives deep-frozen (mutation throws): its content is a pure function of the session log (the reconstructability Agent Note), so listeners read it, never rewrite it. Hand-built calls do not carry that marker; their messages already obey the immutable creation contract.' }],
   },
   {
+    name: 'run/store-write-failed',
+    mode: 'emit',
+    signature: '\'run/store-write-failed\'(payload: { path: string; error: unknown }): void',
+    summary: 'A durable Run-store write failed and no caller is positioned to learn it.',
+    description: 'A durable Run-store write failed and no caller is positioned to learn it.\n\nThe disposer awaits the writes a mount started, so a mount that IS disposed surfaces the failure through that await. A mount that is discarded without ever being disposed has no such caller (BLOCKED-230 measured Contexts abandoned exactly that way), and before this event the rejection reached nobody: the Run\'s terminal state was lost silently and the only trace was an unhandled rejection in whatever happened to be running (BLOCKED-229).',
+    parameters: [{ name: 'payload', description: '.error - the write failure, as thrown.' }],
+  },
+  {
     name: 'session-telemetry/record',
     mode: 'waterfall',
     signature: '\'session-telemetry/record\'(record: SessionTelemetryRecord, next: () => SessionTelemetryRecord): SessionTelemetryRecord',

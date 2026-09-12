@@ -1682,4 +1682,36 @@ One session committed a different agent preset to its durable log. Consumers inv
 ```
 
 Source: [`packages/preset/agent-presets/src/types.ts`](../../packages/preset/agent-presets/src/types.ts)
+
+<a id="run-events"></a>
+
+### `run/*` events
+
+<a id="runstore-write-failed--emit"></a>
+
+#### `run/store-write-failed` — emit
+
+A durable Run-store write failed and no caller is positioned to learn it.
+
+The disposer awaits the writes a mount started, so a mount that IS disposed surfaces the failure through that await. A mount that is discarded without ever being disposed has no such caller (BLOCKED-230 measured Contexts abandoned exactly that way), and before this event the rejection reached nobody: the Run's terminal state was lost silently and the only trace was an unhandled rejection in whatever happened to be running (BLOCKED-229).
+
+```ts cordis-catalog
+/**
+ * A durable Run-store write failed and no caller is positioned to learn it.
+ *
+ * The disposer awaits the writes a mount started, so a mount that IS
+ * disposed surfaces the failure through that await. A mount that is
+ * discarded without ever being disposed has no such caller (BLOCKED-230
+ * measured Contexts abandoned exactly that way), and before this event the
+ * rejection reached nobody: the Run's terminal state was lost silently and
+ * the only trace was an unhandled rejection in whatever happened to be
+ * running (BLOCKED-229).
+ * @param payload.path - the store document the write was aimed at.
+ * @param payload.error - the write failure, as thrown.
+ * @mode emit
+ */
+'run/store-write-failed'(payload: { path: string; error: unknown }): void
+```
+
+Source: [`packages/run/run/src/index.ts`](../../packages/run/run/src/index.ts)
 <!-- END GENERATED cordis-surface -->

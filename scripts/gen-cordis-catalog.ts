@@ -210,6 +210,9 @@ export const EVENT_SCOPE_PAGE: Record<string, string> = {
   'fs': 'filesystem.md',
   'goal': 'goal.md',
   'llm': 'llm-streaming.md',
+  // `ctx.runs` and the Run Service's own events: packages/run/README.md names
+  // the Core subsystem page as their authoritative contract.
+  'run': 'core.md',
   'session': 'session.md',
   'settings': 'settings.md',
   'skills': 'skills.md',

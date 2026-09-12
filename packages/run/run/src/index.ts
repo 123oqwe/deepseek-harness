@@ -551,6 +551,23 @@ declare module '@deepseek-ai/cordis' {
   interface Context {
     runs: RunPlugin
   }
+  interface Events {
+    /**
+     * A durable Run-store write failed and no caller is positioned to learn it.
+     *
+     * The disposer awaits the writes a mount started, so a mount that IS
+     * disposed surfaces the failure through that await. A mount that is
+     * discarded without ever being disposed has no such caller (BLOCKED-230
+     * measured Contexts abandoned exactly that way), and before this event the
+     * rejection reached nobody: the Run's terminal state was lost silently and
+     * the only trace was an unhandled rejection in whatever happened to be
+     * running (BLOCKED-229).
+     * @param payload.path - the store document the write was aimed at.
+     * @param payload.error - the write failure, as thrown.
+     * @mode emit
+     */
+    'run/store-write-failed'(payload: { path: string; error: unknown }): void
+  }
 }
 
 /**
@@ -658,6 +675,23 @@ export default class RunPlugin extends Service {
 
   /** In-flight durable writes this mount started, awaited by its disposer. */
   private readonly writes: Promise<void>[] = []
+
+  /**
+   * Track one durable write on both paths a failure can travel.
+   *
+   * `writes` keeps the original promise, so a disposed mount still surfaces the
+   * rejection through its `Promise.all`. The separate `catch` is for the mount
+   * that is never disposed: nothing awaits `writes` then, and the rejection
+   * would otherwise reach no caller at all. Reporting is not swallowing — a
+   * failed terminal write is announced rather than turned into silence.
+   * @param write - the durable write to track.
+   */
+  private track(write: Promise<void>): void {
+    this.writes.push(write)
+    write.catch((error: unknown) => {
+      this.ctx.emit('run/store-write-failed', { path: this.config.storePath, error })
+    })
+  }
 
   /** Live renewal timers by Run; each value is its own clear. */
   private readonly heartbeats = new Map<RunId, NodeJS.Timeout>()
@@ -815,7 +849,7 @@ export default class RunPlugin extends Service {
     // restart continue a history rather than start one.
     if (continuing === undefined) {
       const opened = this.service.openForSession(runId, agent.id, Date.now())
-      this.writes.push(opened.durable)
+      this.track(opened.durable)
     }
     agent.runId = runId
     agent.lifecycle = { runId: brandString<AgentRunId>(runId), state: 'queued', epoch: taken.lease.token.epoch }
@@ -940,7 +974,7 @@ export default class RunPlugin extends Service {
     // does not await its listeners — the disposer below awaits what this
     // started, which is how every other durable write this plugin makes is
     // ordered against teardown.
-    this.writes.push(this.endRun(agent, failure !== undefined))
+    this.track(this.endRun(agent, failure !== undefined))
     if (agent.runId !== undefined) this.failures.delete(agent.runId)
     const lease = agent.runLease
     if (lease !== undefined) this.ctx.leaseStore.release(lease.token)
