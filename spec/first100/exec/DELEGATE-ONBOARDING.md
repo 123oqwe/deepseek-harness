@@ -119,3 +119,5 @@ preFlight(JSON 记录 `clause-subject-audit.json` + `evidence-<id>.md`,`recorded
 - **坏树的 type-aware 读数作废(结论成立,机制订正)**:类型无法解析的树里,oxlint 的类型感知规则不是"静默跳过"而是**泛滥**(delegate 一次性 worktree 得 1785 条假 `no-unsafe`,因全成 `error` 类型);CI 真结果 1 条。所以类型不解析的树里的 type-aware lint 读数一律作废,以 CI 或正确构建过的树为准。
 
 - **碰包 README 报 tip 前跑全 `verify-package-readme-*` 门族**(limitations + model-experience + 同族),不挑子集(补记 259)——`02ceda9fc8` 一笔把 `Runtime invariant:` 插进 Model Experience 段,同时破 md-links 与 model-experience 两门,都因不在清单里而全绿溜过;跑了一个 readme 门不算,漏掉同族的 sibling 就是这次的缝。
+
+- **第五类假绿:永不红的用例**(补记 260)——一条断言在当前代码路径下**无法失败**(主语到不了被断言的状态,如 `settings` 持久化用户 section 而非 adapted 值,故"文档不含 pin"永远为真)。它和"两读数必然相同"不同。**对自己新加的断言也跑灵敏度**:新断言在该让它红的突变下仍绿=永不红。一条不可能失败的用例比没有用例更坏,它让读者以为某不变量被守着。
