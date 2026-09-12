@@ -27,7 +27,7 @@ import type {} from '@deepseek-ai/dsh-action-ledger'
 import { brandNumber, brandString } from '@deepseek-ai/dsh-brand'
 import type { ExecutionWorldFact, PolicyContextFacts } from '@deepseek-ai/dsh-policy-engine'
 import { verifyApprovalBinding } from '@deepseek-ai/dsh-user-approval'
-import type { ApprovalBinding, ApprovalBindingInputs, ApprovalVerification } from '@deepseek-ai/dsh-user-approval/types'
+import type { ApprovalBinding, ApprovalBindingInputs, ApprovalDisplay, ApprovalVerification } from '@deepseek-ai/dsh-user-approval/types'
 import { SessionSeq } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-user-approval'
 import type { WorldId, WorldProviderId, WorldSpecDigest } from '@deepseek-ai/dsh-execution-world/types'
@@ -381,6 +381,7 @@ interface ApprovalPort {
     toolName: string
     reason: string
     binding?: ApprovalBindingRequest
+    display?: ApprovalDisplay
   }): Promise<string>
 }
 
@@ -426,6 +427,7 @@ export type RiskRefusal =
  * @param riskDomainTags - what the tool declares it touches, empty when it declares nothing.
  * @param classified - the verdict {@link classifyActionRisk} already produced for this action; omitted, the gate classifies for itself.
  * @param binding - what an approval asked here is bound to, when the caller has a tuple (P2-06 must[1]).
+ * @param display - the six fields a decider must see, when the caller has a manifest (P2-06 must[0]).
  * @returns the refusal, or `undefined` when the action may run.
  */
 export async function gateActionRisk(
@@ -435,6 +437,7 @@ export async function gateActionRisk(
   riskDomainTags: readonly string[],
   classified?: ActionRiskClassification,
   binding?: ApprovalBindingRequest,
+  display?: ApprovalDisplay,
 ): Promise<RiskRefusal | undefined> {
   const presets = ctx.get('permissionPresets') as RiskPolicyPort | undefined
   if (presets === undefined) return undefined
@@ -498,6 +501,10 @@ export async function gateActionRisk(
       // says so (P2-06 U's declared limitation) rather than gaining a
       // cross-layer reference to reach one.
       ...binding === undefined ? {} : { binding },
+      // must[0]: the decider sees the action, not only its name. Carried
+      // through the gate rather than composed by each answerer, so two surfaces
+      // show one account of the same call.
+      ...display === undefined ? {} : { display },
     })
   // Back to `running` whatever the operator said: the wait is over, and the
   // caller decides whether the action proceeds.

@@ -157,9 +157,30 @@ export function apply(ctx: Context, config: AcpConfig): void {
     if (record === undefined || request.callId === undefined) return next()
     const callId = request.callId
     return record.drainUpdates().then(() => {
+      // P2-06 must[0]: the decider sees the ACTION, not only its id. The six
+      // fields ride the standard's own `toolCall` projection — `title` carries
+      // the capability and the class it was put in, `content` carries the rest
+      // — because that is the field ACP gives an agent for saying what is being
+      // permitted, and inventing a sibling field would be this harness telling
+      // a conformant client something it has no rule for reading.
+      //
+      // `display` is absent for an ask with no manifest behind it, and then the
+      // payload is exactly what it was before: a tool call id and two options.
       const params: RequestPermissionRequest = {
         sessionId: record.agent.session.id,
-        toolCall: { toolCallId: callId },
+        toolCall: request.display === undefined
+          ? { toolCallId: callId }
+          : {
+            toolCallId: callId,
+            title: `${request.toolName} — ${request.display.riskClass}`,
+            content: [
+              { type: 'content', content: { type: 'text', text: `Resource: ${request.display.resource}` } },
+              { type: 'content', content: { type: 'text', text: `Expected: ${request.display.expectedDiff}` } },
+              { type: 'content', content: { type: 'text', text: `Arguments (redacted): ${request.display.arguments}` } },
+              { type: 'content', content: { type: 'text', text: `Manifest digest: ${request.display.manifestDigest}` } },
+              { type: 'content', content: { type: 'text', text: `Approval valid until: ${new Date(request.display.expiresAtMs).toISOString()}` } },
+            ],
+          },
         options: [
           { optionId: 'allow-once', name: 'Allow once', kind: 'allow_once' },
           { optionId: 'reject-once', name: 'Reject', kind: 'reject_once' },

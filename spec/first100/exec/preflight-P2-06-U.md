@@ -37,6 +37,18 @@ Measured: the ACP answerer returns `next()` when `request.callId === undefined` 
 
 **So acceptance[1] is proved for the tool-call path and declared open for the other.** Widening the guard is refused for a stated reason: the ACP payload is `RequestPermissionRequest { sessionId, toolCall: { toolCallId }, options }` — it is SHAPED as a tool call, and a trust question has no `toolCallId` to put in it. Making one up would tell the decider they are approving a tool call that does not exist.
 
+## What the U stage built, measured after the fact
+
+Recorded here so the freeze cites a page that matches the tree rather than the plan:
+
+| clause | where it landed | evidence |
+|---|---|---|
+| must[0] the six fields reach the decider | built from the manifest in `tool-calls.ts`, threaded through `gateActionRisk`, projected into ACP's own `toolCall` (`acp/src/index.ts`) and rendered by the Web card with locale-owned copy | 3 ACP cases, and `verify-client-ui-i18n` over 481 files |
+| must[1] re-verification before execution | `verifyRecordedApproval` in `core/tools/src/external-effect.ts`, called from `tool-calls.ts` before the reservation; a non-`valid` result refuses the dispatch | 7 unit cases + 4 real-dispatch cases asserting **what the tool observed** |
+| acceptance[2] one binding per action | the risk gate binds; the registry gate does not | 2 counting cases, one of which drives BOTH gates |
+
+**The ACP projection uses `toolCall` and invents no sibling field.** That is the standard this epic owns (`ACP RequestPermissionRequest.toolCall as the wire projection`): `title` carries the capability and its risk class, `content` carries the other five. A field of this harness's own invention would be telling a conformant client something it has no rule for reading.
+
 ## Open, and named
 
 1. **Whether the risk gate or the registry gate supplies the binding, or both.** They ask about the same action from two layers; two bindings for one action would break acceptance[2]'s one-to-one. The manifest is in hand at the risk gate (`external-effect.ts` has `classification` and the manifest's own append is next to it), which argues for one binding there and none at the registry gate — but the registry gate is the one with the arguments. **This is the first thing the U implementation must settle, and a case must pin whichever answer is chosen**, because "both ask, one binds" is invisible until someone counts `approval/bound` records per action.

@@ -24,6 +24,7 @@ import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ApprovalService from '@deepseek-ai/dsh-user-approval'
 import PermissionPresetService from '@deepseek-ai/dsh-permission-presets'
+import type { RiskClass } from '@deepseek-ai/dsh-risk-taxonomy'
 import { gateActionRisk, verifyRecordedApproval } from '../src/external-effect.ts'
 import { ToolCallId } from '@deepseek-ai/dsh-llm'
 import type { PreToolDecision } from '../src/index.ts'
@@ -142,7 +143,7 @@ describe('P2-06 must[1]: the dispatch re-verifies what the session recorded', ()
 
 describe('P2-06 acceptance[2]: one dispatch records exactly ONE binding', () => {
   /** The real gate over a real approval service, so the count is of production appends. */
-  async function composed(approvalThreshold = 'read'): Promise<{ ctx: Context; agent: Agent; bound: () => number }> {
+  async function composed(approvalThreshold: RiskClass = 'read'): Promise<{ ctx: Context; agent: Agent; bound: () => number }> {
     const ctx = new Context()
     await ctx.plugin(SessionStore)
     await ctx.plugin(SystemPrompt)

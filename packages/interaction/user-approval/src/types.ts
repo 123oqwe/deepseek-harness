@@ -154,6 +154,16 @@ export interface ApprovalRequestEvent {
    * a decision function that reads the wall clock cannot be tested for expiry
    * without waiting for it.
    */
+  /**
+   * The six fields must[0] requires a decider to see, redacted for display.
+   *
+   * Optional for the same reason as {@link ApprovalRequestEvent.binding}: an ask
+   * with no manifest behind it has none of them, and a workspace-trust question
+   * decides about a directory. What it is NOT is a summary the answerer may
+   * compose for itself — a surface that derived the risk class or the diff from
+   * the tool name would be showing its own guess where the manifest has a fact.
+   */
+  readonly display?: ApprovalDisplay
   readonly binding?: {
     /** Everything the approval is to be bound to, as the asker sees it now. */
     readonly inputs: ApprovalBindingInputs
@@ -223,6 +233,33 @@ export interface ApprovalBinding {
    * the re-verification moment and this stage introduces no mid-execution
    * revocation.
    */
+  readonly expiresAtMs: number
+}
+
+/**
+ * What a decider is shown about the action being decided (must[0]).
+ *
+ * Every field is a value the manifest or the gate already produced, carried
+ * rather than recomputed: the six exist so a human decides about the action
+ * that will run, and a surface that re-derived any of them would be showing a
+ * second opinion about the same call.
+ *
+ * `arguments` is the REDACTED rendering. The digest the approval is bound to
+ * covers the unredacted canonical value, so what is shown and what is bound are
+ * deliberately different strings — that difference is acceptance[1].
+ */
+export interface ApprovalDisplay {
+  /** Digest of the manifest the decision is about, so a log reader can find it. */
+  readonly manifestDigest: string
+  /** The arguments as the decider should see them, already redacted. */
+  readonly arguments: string
+  /** What the action touches — a path, a command, a remote object. */
+  readonly resource: string
+  /** The class the deployment's risk policy put this action in. */
+  readonly riskClass: string
+  /** What the action is expected to change, in the manifest's own words. */
+  readonly expectedDiff: string
+  /** When an approval given now stops being usable, as an absolute epoch millisecond. */
   readonly expiresAtMs: number
 }
 

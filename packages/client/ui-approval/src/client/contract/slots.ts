@@ -58,6 +58,32 @@ export interface ApprovalPresentationRequest {
   readonly reason?: string
   /** Cancellation projected from the Host waterfall. */
   readonly signal?: AbortSignal
+  /**
+   * What the decider is shown about the action (P2-06 must[0]).
+   *
+   * Absent for an ask with no manifest behind it — a workspace-trust question
+   * decides about a directory — and then the panel renders exactly what it
+   * rendered before. The panel never derives these from the tool name: a
+   * surface guessing the risk class would show its own opinion where the
+   * manifest has a fact.
+   */
+  readonly display?: ApprovalPresentationDisplay
+}
+
+/** The six fields must[0] requires a decider to see, as the Client receives them. */
+export interface ApprovalPresentationDisplay {
+  /** Digest of the manifest the decision is about. */
+  readonly manifestDigest: string
+  /** The arguments as the decider should see them, already redacted by the Host. */
+  readonly arguments: string
+  /** What the action touches, kind-prefixed so a path and a command differ. */
+  readonly resource: string
+  /** The class the deployment's risk policy put this action in. */
+  readonly riskClass: string
+  /** What the action is expected to change. */
+  readonly expectedDiff: string
+  /** When an approval given now stops being usable, as an absolute epoch millisecond. */
+  readonly expiresAtMs: number
 }
 
 /** Decisions this interactive Client presentation can return. */
@@ -77,6 +103,8 @@ export class PendingApproval {
   readonly callId: ToolCallId | undefined
   /** Human-readable reason supplied by the asker. */
   readonly reason: string | undefined
+  /** What the decider is shown about the action, absent for an unmanifested ask. */
+  readonly display: ApprovalPresentationDisplay | undefined
   /** Result returned by the Remote Event listener to the Host waterfall. */
   readonly result: Promise<ApprovalDecision>
 
@@ -97,6 +125,7 @@ export class PendingApproval {
     this.toolName = request.toolName
     this.callId = request.callId
     this.reason = request.reason
+    this.display = request.display
     const completion = Promise.withResolvers<ApprovalDecision>()
     this.result = completion.promise
     this.#resolve = completion.resolve

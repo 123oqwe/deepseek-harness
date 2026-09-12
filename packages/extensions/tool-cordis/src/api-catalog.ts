@@ -4124,6 +4124,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface ApprovalBindingInputs {\n    readonly action: string;\n    readonly args: JsonValue;\n    readonly principal: ApprovalPrincipal;\n    readonly preconditions: readonly string[];\n    readonly capabilityToken?: string;\n    readonly policyVersion?: string;\n}',
   },
   {
+    name: 'ApprovalDisplay',
+    declaration: 'export interface ApprovalDisplay {\n    readonly manifestDigest: string;\n    readonly arguments: string;\n    readonly resource: string;\n    readonly riskClass: string;\n    readonly expectedDiff: string;\n    readonly expiresAtMs: number;\n}',
+  },
+  {
     name: 'ApprovalOutcome',
     declaration: 'export type ApprovalOutcome = \'allowed-once\' | \'rejected\' | \'cancelled\' | \'unavailable\';',
   },
@@ -4145,7 +4149,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ApprovalRequestEvent',
-    declaration: 'export interface ApprovalRequestEvent {\n    readonly agent: Agent;\n    readonly toolName: string;\n    readonly callId?: ToolCallId;\n    readonly subject?: string;\n    readonly reason?: string;\n    readonly signal?: AbortSignal;\n    readonly binding?: {\n        readonly inputs: ApprovalBindingInputs;\n        readonly askedAtMs: number;\n    };\n}',
+    declaration: 'export interface ApprovalRequestEvent {\n    readonly agent: Agent;\n    readonly toolName: string;\n    readonly callId?: ToolCallId;\n    readonly subject?: string;\n    readonly reason?: string;\n    readonly signal?: AbortSignal;\n    readonly display?: ApprovalDisplay;\n    readonly binding?: {\n        readonly inputs: ApprovalBindingInputs;\n        readonly askedAtMs: number;\n    };\n}',
   },
   {
     name: 'ArgumentsHash',

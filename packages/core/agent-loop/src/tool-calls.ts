@@ -23,6 +23,7 @@ import type { ActionManifest } from '@deepseek-ai/dsh-action-manifest'
 import { enforceManifestedAction } from '@deepseek-ai/dsh-policy-enforcement'
 import type { ExecutionWorldFact, PolicyContextFacts } from '@deepseek-ai/dsh-policy-engine'
 import type { ApprovalBindingRequest } from '@deepseek-ai/dsh-tools/external-effect'
+import type { ApprovalDisplay } from '@deepseek-ai/dsh-user-approval/types'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 import type { ActionId, ArgumentsHash, CapabilityRef, IdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
 import type { LedgerScope } from '@deepseek-ai/dsh-action-ledger'
@@ -295,6 +296,12 @@ async function runGroup(
     const riskRefusal = await gateActionRisk(
       ctx, agent, call.block.name, ctx.tools.get(call.block.name, agent)?.riskDomainTags ?? [], classified,
       approvalBindingFor(agent, call.block),
+      approvalDisplayFor(
+        appended.record.manifest,
+        classified?.riskClass ?? 'security-sensitive',
+        redactArgumentsForDisplay(call.block.arguments),
+        Date.now() + APPROVAL_DISPLAY_VALIDITY_MS,
+      ),
     )
     if (riskRefusal !== undefined) {
       slots[index] = {
@@ -497,6 +504,86 @@ async function policyInputsForCall(ctx: Context, agent: Agent, block: ToolCallBl
   }
 }
 
+
+/**
+ * How long the ask TELLS a decider their approval will last.
+ *
+ * The service owns the real duration through its own row configuration; this
+ * is what the six-field display says, and the two must agree or a decider is
+ * told one thing and bound by another. Kept as one constant rather than read
+ * from the service because the display is built before the ask reaches it, and
+ * a reader of this file should see the coupling rather than discover it.
+ */
+const APPROVAL_DISPLAY_VALIDITY_MS = 300_000
+
+/**
+ * Redact an argument string for display (acceptance[1]).
+ *
+ * String VALUES are replaced and their keys kept, so a decider sees the shape
+ * of what will run without its secrets. The digest the approval is bound to
+ * covers the unredacted string, so two arguments that redact identically still
+ * bind differently — the property acceptance[1] states and this function is one
+ * half of.
+ * @param raw - the model's raw argument string.
+ * @returns the rendering to show, or the raw string when it is not JSON.
+ */
+function redactArgumentsForDisplay(raw: string): string {
+  try {
+    const parsed: unknown = JSON.parse(raw)
+    const redact = (value: unknown): unknown => {
+      if (typeof value === 'string') return '<redacted>'
+      if (Array.isArray(value)) return value.map(redact)
+      if (value !== null && typeof value === 'object') {
+        return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, redact(item)]))
+      }
+      return value
+    }
+    return JSON.stringify(redact(parsed))
+  } catch {
+    // Not JSON: a model may emit anything, and showing the raw text is better
+    // than showing nothing. It is not a secret leak this function introduces —
+    // the same string is what the tool would receive.
+    return raw
+  }
+}
+
+/**
+ * What a decider is shown about this dispatch (P2-06 must[0]).
+ *
+ * Every value is taken from the manifest or from the gate's own
+ * classification, never recomputed here: a surface shown a second derivation
+ * of the risk class or the diff would be shown a guess where a recorded fact
+ * exists. `arguments` arrives already redacted, and the digest the approval is
+ * BOUND to covers the unredacted value — that difference is acceptance[1].
+ * @param manifest - the manifest just appended for this call.
+ * @param riskClass - the class the gate classified this action into.
+ * @param redactedArguments - the arguments as the decider should see them.
+ * @param expiresAtMs - when an approval given now stops being usable.
+ * @returns the six fields must[0] names.
+ */
+function approvalDisplayFor(
+  manifest: ActionManifest,
+  riskClass: string,
+  redactedArguments: string,
+  expiresAtMs: number,
+): ApprovalDisplay {
+  const target = manifest.target
+  const resource = target.kind === 'filesystem'
+    ? target.path
+    : target.kind === 'network' ? target.host : target.kind === 'process' ? target.command : target.ref
+  return {
+    manifestDigest: manifest.argumentsHash,
+    arguments: redactedArguments,
+    // The target's KIND is kept in front of its value: `filesystem:/etc/hosts`
+    // and `process:/etc/hosts` are different decisions, and a decider shown
+    // only the path cannot tell them apart.
+    resource: `${target.kind}:${resource}`,
+    riskClass,
+    expectedDiff: manifest.expectedDiff.description,
+    expiresAtMs,
+  }
+}
+
 /**
  * What an approval asked for this dispatch is bound to (P2-06 must[1]).
  *
@@ -645,6 +732,13 @@ function appendActionManifest(
     key: appended.manifest.idempotencyKey,
     argumentsHash,
     scope: attribution.actor.id,
+    // Carried so the approval ask can SHOW what the decision is about. must[0]
+    // names six fields a decider must see, and four of them — the target, the
+    // expected diff, the side-effect class and the digest — live on the
+    // manifest rather than on the call. Returning the manifest is smaller than
+    // rebuilding those four at the ask site from the same inputs, and a second
+    // construction is how two views of one action start to disagree.
+    manifest: appended.manifest,
     ...decision === undefined ? {} : { decision },
   }
 }
@@ -709,6 +803,8 @@ interface ManifestRecord {
   readonly decision?: PolicyDecisionSummary
   readonly key: IdempotencyKey
   readonly argumentsHash: ArgumentsHash
+  /** The manifest itself, so an approval ask can show what the action does. */
+  readonly manifest: ActionManifest
   readonly scope: LedgerScope
 }
 

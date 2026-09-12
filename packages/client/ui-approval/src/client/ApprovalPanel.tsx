@@ -1,5 +1,5 @@
 /** Composer takeover for one pending approval waterfall. */
-import { useState, type ReactNode } from 'react'
+import { Fragment, useState, type ReactNode } from 'react'
 import { Button } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ApprovalComposerProps, PendingApproval } from './contract/slots.ts'
 import css from './ApprovalPanel.module.css'
@@ -40,6 +40,23 @@ function ApprovalFlow({ pending, detail, t }: {
         >
           <div className={css.headline}>{pending.reason ?? t('escalation', { toolName: pending.toolName })}</div>
           {detail !== null && <div className={css.command}>{detail}</div>}
+          {pending.display !== undefined && (
+            <dl className={css.details}>
+              {([
+                ['detail.risk', pending.display.riskClass],
+                ['detail.resource', pending.display.resource],
+                ['detail.expected', pending.display.expectedDiff],
+                ['detail.arguments', pending.display.arguments],
+                ['detail.digest', pending.display.manifestDigest],
+                ['detail.expires', new Date(pending.display.expiresAtMs).toISOString()],
+              ] as const).map(([key, value]) => (
+                <Fragment key={key}>
+                  <dt className={css.detailLabel}>{t(key)}</dt>
+                  <dd className={css.detailValue}>{value}</dd>
+                </Fragment>
+              ))}
+            </dl>
+          )}
         </div>
         <div className={css.actionRow}>
           <Button variant="outline" className={css.reject} disabled={answered} onClick={() => { answer('rejected') }}>

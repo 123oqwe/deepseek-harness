@@ -47,6 +47,10 @@ async function answerApproval(
       ? {}
       : { callId: request.callId }),
     ...(request.reason === undefined ? {} : { reason: request.reason }),
+    // must[0]'s six fields, passed through rather than re-derived: the Host
+    // built them from the manifest, and a second derivation here would be a
+    // second account of one action.
+    ...(request.display === undefined ? {} : { display: request.display }),
     ...(request.signal === undefined ? {} : { signal: request.signal }),
   })
   const completed = Promise.withResolvers<void>()

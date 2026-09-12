@@ -13,7 +13,7 @@ import { describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import AgentRegistry from '@deepseek-ai/dsh-agent'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import { brandString } from '@deepseek-ai/dsh-brand'
+import { ApprovalRequestId } from '@deepseek-ai/dsh-user-approval'
 import LlmRuntime, { createUserMessage, StreamChunk, ToolCallId } from '@deepseek-ai/dsh-llm'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
@@ -102,7 +102,7 @@ function decidedFor(contents: string): ApprovalBindingInputs {
  */
 function seedApproval(ctx: Context, id: SessionId, inputs: ApprovalBindingInputs, expiresAtMs: number): void {
   ctx.sessions.get(id)!.append('approval/bound', {
-    id: brandString('approval-1'),
+    id: ApprovalRequestId('approval-1'),
     action: inputs.action,
     digest: approvalBindingDigest(inputs),
     principal: inputs.principal,

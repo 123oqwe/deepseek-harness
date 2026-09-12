@@ -4742,6 +4742,9 @@ importers:
       '@deepseek-ai/dsh-llm':
         specifier: workspace:^
         version: link:../../llm/llm
+      '@deepseek-ai/dsh-permission-presets':
+        specifier: workspace:^
+        version: link:../../interaction/permission-presets
       '@deepseek-ai/dsh-plugin-ownership':
         specifier: workspace:^
         version: link:../../plugin/plugin-ownership
@@ -4751,6 +4754,9 @@ importers:
       '@deepseek-ai/dsh-policy-engine':
         specifier: workspace:^
         version: link:../../policy/policy-engine
+      '@deepseek-ai/dsh-risk-taxonomy':
+        specifier: workspace:^
+        version: link:../../policy/risk-taxonomy
       '@deepseek-ai/dsh-scope':
         specifier: workspace:^
         version: link:../scope
