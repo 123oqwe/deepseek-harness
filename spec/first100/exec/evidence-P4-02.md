@@ -193,7 +193,7 @@ The Contract and Provider stages above recorded a vocabulary and a compiler. Wha
 
 | what | where |
 |---|---|
-| the plugin that calls the compiler | `packages/bundle/base/cordis.patch.yml:628` — `@deepseek-ai/dsh-run`, enabled, on every shipped profile |
+| the plugin that calls the compiler | `packages/bundle/base/cordis.patch.yml:638-639` — `@deepseek-ai/dsh-run`, enabled, on every shipped profile |
 | the event type's registration | `packages/core/session/src/known-event-types.ts:52` — GENERATED from the in-repo `SessionEventMap`, so declaring the member is what registers it |
 | the durable documentation | `docs/persistence-catalog.md:741` — `run/task-profile`, log-only |
 
@@ -241,7 +241,7 @@ Written for the signature pass. Every line number was re-read at `1deda037ba`; t
 | 10 | compiles a goal continuation round and carries the round into the reference | `goalRoundOf` `:977` | `source.kind === 'goal'` is the only branch that yields a round | service does it |
 | 11 | carries no round for a direct human prompt | same, `undefined` branch | same | service does it |
 
-**(b) mount path, common to all eleven.** `@deepseek-ai/dsh-run` appears in exactly ONE shipped patch layer: `packages/bundle/base/cordis.patch.yml:628`, `id: run`, enabled, configured with `storePath: dshHomePath('runs', 'runs.json')`. The plugin registers on `agent/pre-step` and reaches `recordTaskProfile` at `index.ts:1229`.
+**(b) mount path, common to all eleven.** `@deepseek-ai/dsh-run` appears in exactly ONE shipped patch layer: `packages/bundle/base/cordis.patch.yml:638-639`, `id: run`, enabled, configured with `storePath: dshHomePath('runs', 'runs.json')`. The plugin registers on `agent/pre-step` and reaches `recordTaskProfile` at `index.ts:1229`.
 
 **The chain from app-boot to that row, measured.** A profile is a directory under `$DSH_HOME/profiles/<name>`, so no `package.json` in this repository declares a `dsh.profile.bundles` list — which is what made this look unmeasurable at first. The lists are nonetheless in-repo: `PROFILE_TEMPLATES` (`packages/boot/app-boot/src/profile.ts:154`) holds the shipped templates auto-initialized on first use, and `initializeProfile` writes each one's `dsh: { profile: { bundles } }` into the profile directory at `profile.ts:226`.
 
@@ -253,7 +253,7 @@ Written for the signature pass. Every line number was re-read at `1deda037ba`; t
 | `sdk` (`profile.ts:168`) | `dsh-base`, `dsh-sdk-app` | yes |
 | **`sdk-minimal`** (`profile.ts:172`) | `dsh-sdk-minimal` **only** | **no** |
 
-**So this epic's code runs on four of the five shipped profiles, and not on `sdk-minimal`.** That is not an inference from the absence of `dsh-base`: `packages/bundle/sdk-minimal/cordis.patch.yml` declares 33 plugin rows and none of them is `@deepseek-ai/dsh-run` (0 matches), and the four app bundles that layer over `base` each carry 0 `dsh-run` rows of their own — the single row at `bundle/base/cordis.patch.yml:628` is the only one in the repository. A session run under `--profile sdk-minimal` therefore compiles no task profile, opens no Run, and logs no `run/task-profile` event, and nothing in this epic's frozen cases would notice.
+**So this epic's code runs on four of the five shipped profiles, and not on `sdk-minimal`.** That is not an inference from the absence of `dsh-base`: `packages/bundle/sdk-minimal/cordis.patch.yml` declares 33 plugin rows and none of them is `@deepseek-ai/dsh-run` (0 matches), and the four app bundles that layer over `base` each carry 0 `dsh-run` rows of their own — the single row at `bundle/base/cordis.patch.yml:638-639` is the only one in the repository. A session run under `--profile sdk-minimal` therefore compiles no task profile, opens no Run, and logs no `run/task-profile` event, and nothing in this epic's frozen cases would notice.
 
 **That is a design boundary, not a defect, and the bundle says so itself.** `packages/bundle/sdk-minimal/README.md:13` states the profile "supplies a complete Cordis tree and **deliberately excludes `dsh-base`**", then names what goes with it — Web, settings, managed credentials, telemetry, compaction, workspace instructions, skills, jobs, subagents. Neither that README nor its Chinese counterpart claims a Run, a task profile, or a run lifecycle anywhere (grep for `run`/`task profile`/`lifecycle` returns no capability claim). So no number is owed: the profile advertises a two-tool coding agent and delivers one. What this epic owes instead is honesty about its own reach — the cells below are evidence for four shipped profiles, not five.
 
@@ -400,4 +400,4 @@ Zero-reach entries are written as zero, not omitted.
 - **(c) `validateTaskProfile` has no production caller**, by design, until P4-03. Already declared in the package README; carried here so a re-grep does not read it as new.
 - **(d) `Agent.taskProfile` has one writer and zero readers.** The same shape that grounded BLOCKED-183 against P4-01's `runs` service, one field down. Recorded because the standard that revoked a sign-off once should be applied to this epic's own surface out loud.
 - **(e) No frozen case observes the shipped `bundle/base` row reaching the compile.** `U.1` boots a real Loader tree, but mounts `dsh-run` from a test-only config. Closing this needs a case over a composition that layers `bundle/base` itself.
-- **(f) This page's earlier §4.4a/§4.4b line numbers are stale in one row.** `bundle/base/cordis.patch.yml:628` is now `:638-639` at `73c1c04f2e`. The `run/run/src/index.ts` numbers in those sections still resolve at that SHA; they do not on lane-A candidates 4 and 5, which is why this section pins its tree explicitly.
+- **(f) This page's earlier §4.4a/§4.4b line numbers were stale in one row — corrected 2026-09-12.** `bundle/base/cordis.patch.yml:628` read `:638-639` at `73c1c04f2e`, and the three occurrences on this page now say so. The `run/run/src/index.ts` numbers in those sections still resolve at that SHA; they do not on lane-A candidates 4 and 5, which is why this section pins its tree explicitly.

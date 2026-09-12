@@ -5941,3 +5941,38 @@ The old gate found three of those five. The two it could not see are the two on 
 **Mutation.** Ignoring the option and minting the constant again reddens three cases — both producer tenant cases and the end-to-end positive — and leaves the reverse control green, which is what shows the control cannot by itself detect the fix.
 
 **Readings.** 113 passed across `host-user-id`, `memory-context` and `principal`; lint 0 on both changed packages; `verify-export-jsdoc` 0; `constraints` 0; the three full-suite-only gates green.
+
+### BLOCKED-232 — P4-02's read side: three clauses whose subject nothing in production reads
+
+**Status:** OPEN, owner lane A. Opened by the delegate 2026-09-12 on the sign-off material in `evidence-P4-02.md`, which reported the readings below and was refused a signature for them. **P4-02 stays unsigned until this entry closes.** The sign-off material itself stands; it is re-signed against this entry's outcome rather than rewritten.
+
+**The shape this repeats.** P5-10 (BLOCKED-215) and P2-01 (BLOCKED-200) were both revoked for a clause whose subject has no production caller, and P4-01 (BLOCKED-183) for a service with no consumer outside its own package. Signing P4-02 as measured would sign a profile nobody reads.
+
+## The ownership table
+
+Measured across `packages` and `apps` at `73c1c04f2e`, excluding `tests/`, `*.spec.ts` and `lib/`. Each row asks one question: **by the registry, whose clause names the reader this one needs?**
+
+| P4-02 clause (verbatim) | what production produces | production readers | whose reader, by registry | disposition |
+| --- | --- | --- | --- | --- |
+| must[2] — *"高风险或歧义字段缺失时产生 question,不擅自猜授权。"* | `questions[]`, compiled and appended at `run/run/src/index.ts:1009` | **0** — the `questions` a repo-wide grep returns are all `ctx.userQuestions`, a different vocabulary owned by `interaction/user-questions` | **P2-12** — must[0] lists `ask question` as one of the channel's five verbs, and must[3] (*"Question 与 approval 分离,回答只作为输入,不自动授予权限"*) is the same non-granting property P4-02's clause states from the producing end | **DEFERRED-TO P2-12.** The clause's own verb is 产生 (*produce*) a question, and P4-02 produces one and makes it durable. Asking it is a channel P2-12 owns and that is `NOT_RUN` |
+| acceptance[1] — *"所有 hard constraint 可从 profile 追溯原始来源。"* | every hard constraint with `origin` and `confidence`, in the appended body | **0** outside `packages/run/task-profile` | **P4-03** — acceptance[1] is *"Plan 中每个 node 能追溯 TaskProfile requirement"*, which is literally this traceability consumed. Second reader **P5-01** must[0] (*"输入 TaskProfile…"*) | **DEFERRED-TO P4-03.** Both are `NOT_RUN`; P4-03 is wave 8 with P4-02 as a declared predecessor |
+| acceptance[2] — *"未知 side effect 不会被标为 none。"* | `sideEffect` as `unknown-default` at confidence 0 | **0** outside `packages/run/task-profile` | **P4-03** — must[1]'s compile-time *capability/policy/budget satisfiability* is what a wrongly-`none` class would corrupt; **P5-01** must[0] again | **DEFERRED-TO P4-03** |
+
+**Two candidate owners the delegate named do not hold up, and saying so is part of the answer.** Neither **P4-07** (lease/heartbeat/fencing) nor **P4-08** (workflow journal) names a TaskProfile in any must, acceptance or gate clause. P4-08's must[0] records *"input/output artifact refs"*, which a `TaskProfileRef` could plausibly be, but a plausible fit is not a registry-named reader and both epics are already ACCEPTED — reopening them on an inference is exactly the move §12.78 forbids.
+
+## What belongs to P4-02 itself
+
+**One reader, and it is a real gap rather than a deferral.** `validateTaskProfile` has 0 production callers, and its own JSDoc names the input it exists for: *"a value claiming to be a profile, typically read back from a `run/task-profile` session event written by an older build"* (`packages/run/task-profile/src/validate.ts:160-163`). The one production site that reads a profile back from the log — `lastTaskProfileRef` at `packages/run/run/src/index.ts:138` — feeds `event.data.profile` straight into `taskProfileRef` without validating it. That is a durable boundary, and the repo-wide rule is explicit that durable/file boundaries validate.
+
+**The honest caveat, recorded so the delegate rules on the real question.** The "older build" motivation is weak on this tree: `SESSION_FORMAT_VERSION` is `0` with no compatibility promise, and the pre-release stance says backends reject old on-disk formats outright. What survives the caveat is the boundary rule itself — a resumed session's log is a file this process did not write in this run — and the fact that P4-02 shipped a validator for exactly this read and did not wire it. Either the call belongs at `:138`, or the function should not exist until P4-03; it should not stay in the third state it is in now.
+
+**And one field with no reader at all.** `Agent.taskProfile` is written once (`:1011`) and read **0** times in production. Under the deferrals above it is a handle for P4-03 and P5-01 to find the profile without walking the log, which is a defensible reason to exist — but it is unstated today, so a re-grep reads it as the BLOCKED-183 shape one field down. It gains a stated deferred consumer or it goes.
+
+## Closing condition
+
+1. **The three DEFERRED-TO records land**, each making P4-02's clause conditional in the same form BLOCKED-215 uses: the clause is discharged on the producing side, the consuming side is named with its owning epic, and P4-02's evidence says so instead of implying a reader exists.
+2. **`validateTaskProfile` is resolved** — wired at the durable read boundary with a case that reddens when it is removed, or declared deferred with the same discipline as the three clauses. The delegate rules which.
+3. **`Agent.taskProfile` gains a stated deferred consumer** in `core/agent/src/types.ts`'s writer-contract JSDoc, beside the three fields that already carry one.
+4. **(e) A composition case observes the shipped mount reaching the compile.** Today `U.1` boots a real `dsh-app-boot` Loader tree whose `cordis.yml` mounts `@deepseek-ai/dsh-run` directly, so **the mount row at `packages/bundle/base/cordis.patch.yml:638` is read evidence, not observed evidence.** The case needed is one over a composition that layers `bundle/base` itself and asserts one `run/task-profile` event after a real boot.
+5. **(f) `evidence-P4-02.md`'s stale `bundle/base:628`** is corrected to `:638-639`. Done in this entry's first commit.
+6. **(a) `acceptance-coverage.json`'s three stale P4-02 notes** are the Supervisor's, corrected in overlay by the delegate. Not lane A's to edit, recorded here so the two halves are not both waiting on each other.
