@@ -734,16 +734,47 @@
           "title": "resumes a non-terminal Run reconstructed after a restart"
         },
         {
-          "stage": "U",
-          "title": "lists the Run a previous boot left behind as non-terminal, so a restart can resume it"
-        },
-        {
           "stage": "F",
           "title": "a store document naming a Run state outside the closed set is refused, never restored and offered for resumption"
         },
         {
           "stage": "F",
           "title": "CHARACTERIZATION: a corrupt store document is refused loudly, never read as an empty registry"
+        },
+        {
+          "stage": "U",
+          "title": "reports the non-terminal Runs the store held, at mount, before any agent exists",
+          "supplementSeq": 1
+        },
+        {
+          "stage": "U",
+          "title": "reports nothing for a store that holds only terminal Runs, so the enumeration is not just \"everything\"",
+          "supplementSeq": 1
+        },
+        {
+          "stage": "U",
+          "title": "gives a session exactly ONE Run across a restart, adopting the non-terminal one it restored",
+          "supplementSeq": 1
+        },
+        {
+          "stage": "U",
+          "title": "MINTS a fresh Run when the restored one is terminal, rather than resuming something already finished",
+          "supplementSeq": 1
+        },
+        {
+          "stage": "U",
+          "title": "adopts a Run that was mid-`running` when the process CRASHED, rather than dropping it",
+          "supplementSeq": 1
+        },
+        {
+          "stage": "U",
+          "title": "CONTINUES one durable session's Run across a restart, rather than opening a second (U2)",
+          "supplementSeq": 2
+        },
+        {
+          "stage": "U",
+          "title": "enumerates what it restored at mount, which the durable document cannot show (U2)",
+          "supplementSeq": 2
         }
       ],
       "note": "acceptance[0]: '进程重启后可列出所有非终态 Run 并恢复.' **Re-signed 2026-09-11: the C/P/F citations below are what the LIBRARY does, and the withdrawal was about what PRODUCTION reaches.** The Provider stage proves the happy path with a restart modelled as a fresh store AND a fresh service over the same path, sharing nothing but the file, so an in-memory double cannot pass. The Fault stage adds what a clean restart cannot: a DAMAGED store must not satisfy this clause by restoring a Run in a state outside must[0]'s closed set and offering it for resumption -- listNonTerminalRuns treats any non-terminal state as resumable and resumeRun re-stamps ownerId, MASKING a foreign owner, so nothing downstream would have caught it. The characterization case pins that a corrupt document is refused loudly rather than read as an empty registry, which would satisfy 'listed every non-terminal Run' vacuously by listing none. **The U citation does NOT evidence this clause and is retained only until its replacement is observed.** It was read case by case at fe7bbb645d: its body boots twice over one store and asserts every Run is still `accepted`, never calling listNonTerminal and never calling resume. Asserting that every Run sits at `accepted` is the symptom BLOCKED-183 names, not the behaviour this clause requires. Its replacement is frozen at U.1/U.2 and is cited here once observed passing; whether the stale citation is struck before then is a delegate call, recorded rather than taken by the executor."
@@ -775,6 +806,16 @@
         {
           "stage": "F",
           "title": "two concurrent transitions out of one state never both succeed, and the durable log records exactly the accepted one"
+        },
+        {
+          "stage": "U",
+          "title": "refuses a transition the table does not allow, naming the pair it refused",
+          "supplementSeq": 1
+        },
+        {
+          "stage": "U",
+          "title": "writes nothing when it refuses: the Run keeps the event log it had",
+          "supplementSeq": 1
         }
       ],
       "note": "acceptance[1]: '非法状态转换被拒绝.' **Re-signed 2026-09-11: these six citations are all LIBRARY-level, which is exactly what the withdrawal left open -- none of them shows a refusal reaching a caller through a production path.** The Contract stage settles the rule exhaustively -- a 10x10 sweep over every ordered state pair, derived from the real LEGAL_RUN_TRANSITIONS table, so every legal edge has a passing case and every illegal pair a rejected one; three representatives are cited here rather than all 100. The Provider stage proves the rejection survives the durable boundary and, critically, that a refused transition WRITES NOTHING. The Fault case closes the gap none of those reach: two CONCURRENT transitions out of one state. Before the fix both were accepted -- one to planning and one to cancelled -- and the append-only log ended holding only the second, so an accepted transition vanished and the service admitted two mutually exclusive exits from one state. A per-state-pair table cannot express that; only concurrency can. What remains owed is the production half, frozen at U.1: a refusal attempted through the real path, and the proof that it writes nothing. Until a caller can reach the refusal, a refusal refuses nothing."
@@ -801,7 +842,8 @@
         },
         {
           "stage": "U",
-          "title": "opens an independent Run per agent session, so one Session never joins another Session's Run"
+          "title": "opens an independent Run per session, so a second session never joins the first's Run",
+          "supplementSeq": 1
         }
       ],
       "note": "acceptance[2]: '一个 Session 可关联多个 Run,一个 Run 可跨多个 Session/Agent.' **Re-signed 2026-09-11: both directions hold of the LIBRARY and only one of them is reached by production.** The C and P citations cover both directions of the many-to-many relation, and both are proven to survive a restart rather than only holding in memory -- which matters because the clause is about durable association, not a transient one. The U citation adds the negative half the positive cases cannot establish: a real boot opens an INDEPENDENT Run per agent session, so the relation is genuinely many-to-many rather than one Run silently collecting every session. The half that production does NOT reach is the other direction: no production path calls attachSession, so 'one Run across multiple Sessions' is a library capability with no caller. That is BLOCKED-196, and U.1 freezes a case whose subject is that absence, so the day someone wires it without the ruling the case fails. Whether the positive half is in U2's scope was the open question the delegate settled by keeping it out; this note records the answer so a later reader does not read the gap as an oversight."
@@ -829,6 +871,19 @@
         {
           "stage": "P",
           "title": "constraint ids come from the statement, not from position, so an unrelated constraint does not renumber them"
+        },
+        {
+          "stage": "U",
+          "title": "appends exactly one run/task-profile event and names it on the Agent handle"
+        },
+        {
+          "stage": "F",
+          "title": "leaves the reference alone when nothing structured changed, so an unchanged goal is not a revision"
+        },
+        {
+          "stage": "P",
+          "title": "yields the same reference whatever order the caller counted the kinds in (acceptance[0])",
+          "supplementSeq": 1
         }
       ],
       "note": "acceptance[0]: '同一输入在确定性 parser fixture 下输出稳定.' Stability decomposes into two halves that must BOTH hold, which is why the controls are cited as necessary rather than decorative: the same input yields the same reference (C over a constructed profile, P over a real compile), and a CHANGED input yields a different one (the confidence move and the budget move) — without the second half a compiler returning one constant would satisfy the first. The id case is the third sub-fact: ids come from the statement rather than from position, so inserting an unrelated constraint does not renumber the others and thereby change the digest of an unchanged constraint.\n\nSERVICE / PRODUCTION (§12.46-B): all five are what the LIBRARY does. C constructs profiles by hand; P calls the compiler directly. Neither observes a compile reaching this code from a running harness — that is the U stage's, and U is NOT_RUN. The production-arrival citation is prepared in evidence-P4-02.md §4.4 and is written here once observed, because coverage closure treats every citation as necessary and a frozen-but-unobserved title would turn this index red."
@@ -856,6 +911,18 @@
         {
           "stage": "P",
           "title": "invents no constraint from the goal text, however much the text sounds like one"
+        },
+        {
+          "stage": "U",
+          "title": "compiles the objective from the goal the human actually sent, and keeps the reference beside it"
+        },
+        {
+          "stage": "F",
+          "title": "changing the goal text alone changes the reference, so that revision is visible in the chain"
+        },
+        {
+          "stage": "F",
+          "title": "changing the goal message it refers to alone changes the reference, so that revision is visible in the chain"
         }
       ],
       "note": "acceptance[1]: '所有 hard constraint 可从 profile 追溯原始来源.' Traceability is enforced in three independent directions, and each is a separate way the clause can fail. A constraint with no provenance is refused outright (C). Two constraints that CONTRADICT each other are kept side by side rather than reconciled, each keeping its own source — the case that matters because silently dropping one would leave a profile whose surviving constraint traces to a source that never said it alone (C, validation[1]). And a provenance that exists but carries an unreadable certainty is refused too (C): a source is not traceable if the confidence attached to it cannot be read.\n\nThe P citations add what a constructed profile cannot show: that a REAL compile derives provenance from the field it read (the budget naming its own field), and — the negative half — that the compiler invents no constraint from goal text however much the text sounds like one. An invented constraint is the exact failure this clause forbids, because it would trace to a source that never stated it.\n\nSERVICE / PRODUCTION (§12.46-B): all five are what the LIBRARY does. No citation here observes a hard constraint traced on the production path; U is NOT_RUN."
@@ -883,6 +950,19 @@
         {
           "stage": "P",
           "title": "asks about the side effect it could not determine, so the profile is valid under must[2]"
+        },
+        {
+          "stage": "U",
+          "title": "compiles a profile for an image-led first message and asks what the image asks for"
+        },
+        {
+          "stage": "F",
+          "title": "refuses a blank injected-context message as not-a-task, not as empty-goal"
+        },
+        {
+          "stage": "C",
+          "title": "refuses an unrecognised key inside the round, the same way the profile refuses one",
+          "supplementSeq": 1
         }
       ],
       "note": "acceptance[2]: '未知 side effect 不会被标为 none.' The clause forbids one specific lie — calling an undetermined side effect a decided one — and the citations close the three ways it could be told. An undetermined side effect is ACCEPTED when it says so (C): the clause must not be satisfied by refusing every unknown, which would make the vocabulary unusable. The same value is REFUSED when it claims certainty (C), which is the lie itself. And a profile that asks about the side effect while ALSO recording it as decided is refused (C) — the subtler form, where the question and the record contradict each other and a reader could believe either.\n\nP adds the compiler's own behaviour: it reports undetermined at confidence 0 rather than guessing a class, and it ASKS about what it could not determine. The question is what makes the undetermined value honest rather than merely absent, which is why must[2] requires it.\n\nSERVICE / PRODUCTION (§12.46-B): all five are what the LIBRARY does. Whether a real first message ever produces an undetermined side effect on the production path is unobserved; U is NOT_RUN."

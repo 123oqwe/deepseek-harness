@@ -282,6 +282,8 @@ The frozen argv for F is `pnpm exec vitest run packages/run/task-profile` — th
 
 ## The coverage citations prepared for the unobserved cells
 
+**NINE OF ELEVEN LANDED 2026-09-11.** `U`, `F`, `C.1` and `P.1` were observed passing in CI run 34652643903 at candidate `93d52207338066bd65494f6044f1ec5920d63cb8`, so their nine citations are now in `acceptance-coverage.json` and `checkCoverageClosure('P4-02')` returns valid. **U.1's two rows are deliberately still held**: its frozen command names `tests/first100/fixtures/P4-02.composition.spec.ts`, which does not exist in that candidate's tree, so no artifact from that run could observe it. They land when a candidate carrying the fixture is observed — which is the same AND-semantics reason the rest were held, applied to a cell whose spec the observed tree did not contain.
+
 `acceptance-coverage.json` now carries P4-02's three indices, citing **only** the cells a CI run has observed passing: `C` (12 matched at `d69d6e5b3e`) and `P` (14 matched at `e74593c50a`). `checkCoverageClosure('P4-02')` returns valid with no missing indices and no unverified citations.
 
 The rest are held here for the same mechanical reason as P4-01's: closure treats every citation under one index as NECESSARY evidence (AND, not OR), so a title that is frozen but absent from the ledger row's `expectCasesMatched` does not record a plan — it turns a GREEN index red. `U`, `F`, `C.1`, `P.1` and `U.1` are all `NOT_RUN`. These go in verbatim once candidate 2 observes them, in one edit.
