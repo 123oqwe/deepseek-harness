@@ -1104,10 +1104,18 @@ Mounting this service creates no world. A world is created at the first dispatch
  *
  * A registration is an effect, so unmounting the registering plugin removes
  * the provider rather than leaving a registry that outlives it.
+ *
+ * The disposer is `@deepseek-ai/cordis`' own `Disposable<Promise<void>>`, returned
+ * unchanged, and the declared return type says so rather than narrowing it to
+ * `() => void`. Narrowing would be a lie the linter catches
+ * (`no-misused-promises`) and would also cost a caller the ability to await
+ * teardown; `AgentRegistry.register` keeps the narrow type and suppresses the
+ * rule because returning the disposer unchanged preserves its identity for
+ * its own callers, and nothing here depends on that.
  * @param provider - the provider to offer to selection.
- * @returns the disposer.
+ * @returns the disposer, which settles once the provider is removed.
  */
-register(provider: WorldProvider): () => void
+register(provider: WorldProvider): () => Promise<void>
 
 /**
  * The world this agent's session runs in, creating it on first ask.

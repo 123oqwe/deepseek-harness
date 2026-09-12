@@ -971,10 +971,10 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     description: 'The registry of world providers, and the session-to-world binding.\n\nMounting this service creates no world. A world is created at the first dispatch that asks for one, and only when a registered provider satisfies the resolved spec: a composition that registers no provider, or whose providers all refuse, keeps answering `undefined`, which the dispatch path reads as the fail-closed `absent` policy fact.',
     methods: [
       {
-        signature: 'register(provider: WorldProvider): () => void',
-        description: 'Register one provider, in the deployment\'s own preference order.\n\nA registration is an effect, so unmounting the registering plugin removes the provider rather than leaving a registry that outlives it.',
+        signature: 'register(provider: WorldProvider): () => Promise<void>',
+        description: 'Register one provider, in the deployment\'s own preference order.\n\nA registration is an effect, so unmounting the registering plugin removes the provider rather than leaving a registry that outlives it.\n\nThe disposer is `@deepseek-ai/cordis`\' own `Disposable<Promise<void>>`, returned unchanged, and the declared return type says so rather than narrowing it to `() => void`. Narrowing would be a lie the linter catches (`no-misused-promises`) and would also cost a caller the ability to await teardown; `AgentRegistry.register` keeps the narrow type and suppresses the rule because returning the disposer unchanged preserves its identity for its own callers, and nothing here depends on that.',
         parameters: [{ name: 'provider', description: 'the provider to offer to selection.' }],
-        returns: 'the disposer.',
+        returns: 'the disposer, which settles once the provider is removed.',
       },
       {
         signature: 'async bindingFor(agent: BindableAgent): Promise<ExecutionWorldBinding | undefined>',

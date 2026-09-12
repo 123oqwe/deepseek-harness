@@ -147,7 +147,11 @@ export function resolveWorldSpec(
   }
 }
 
-/** Digest a spec by its canonical JSON, so two equal specs digest equally. */
+/**
+ * Digest a spec by its canonical JSON, so two equal specs digest equally.
+ * @param spec - the complete spec to digest.
+ * @returns the spec's digest, which a policy compares confinement by.
+ */
 export function digestWorldSpec(spec: WorldSpec): WorldSpecDigest {
   return brandString<WorldSpecDigest>(createHash('sha256').update(JSON.stringify(spec)).digest('hex'))
 }
@@ -209,7 +213,7 @@ export default class ExecutionWorldService extends Service<Config> {
    * A registration is an effect, so unmounting the registering plugin removes
    * the provider rather than leaving a registry that outlives it.
    *
-   * The disposer is `cordis`' own `Disposable<Promise<void>>`, returned
+   * The disposer is `@deepseek-ai/cordis`' own `Disposable<Promise<void>>`, returned
    * unchanged, and the declared return type says so rather than narrowing it to
    * `() => void`. Narrowing would be a lie the linter catches
    * (`no-misused-promises`) and would also cost a caller the ability to await
@@ -261,7 +265,10 @@ export default class ExecutionWorldService extends Service<Config> {
   }
 }
 
-/** Mint a world id; exported so a composition can pin it in a test. */
+/**
+ * Mint a world id; exported so a composition can pin it in a test.
+ * @returns a fresh world id, unique to this minting.
+ */
 export function nextWorldId(): WorldId {
   return brandString<WorldId>(randomUUID())
 }
