@@ -3240,6 +3240,60 @@
         }
       ],
       "note": "acceptance[2]: 'a WorldHandle cannot be forged by a model or a third-party plugin.' Closed by construction — a module-private `unique symbol` plus a WeakMap keyed on object identity — and evidenced from two directions, because they are held by different mechanisms: the forged-handle case is what the symbol and the WeakMap hold, while the foreign-instance case is held by each provider instance owning its own registry. Measured: the structural-lookup mutation reddens the first alone, which is how the difference was found. The F case adds the property a refusal must also have — settling NO outcome, since an outcome would mean the forged handle had been admitted."
+    },
+    {
+      "epic": "P2-06",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "P2-06 must[2]/acceptance[0]: any field change invalidates, and the refusal names WHICH refuses substituted arguments — the clause's first sentence"
+        },
+        {
+          "stage": "C",
+          "title": "P2-06 must[2]/acceptance[0]: any field change invalidates, and the refusal names WHICH refuses a switched account, comparing the RECORDED principal and not the live one"
+        },
+        {
+          "stage": "P",
+          "title": "P2-06 acceptance[0]: what the record supports is a real re-verification refuses the substituted account when the recorded fields are read back from the log"
+        },
+        {
+          "stage": "U",
+          "title": "P2-06 must[1]: a recorded approval is re-verified on the real dispatch path does NOT run the tool when the arguments changed after the decision, and says which field"
+        },
+        {
+          "stage": "U",
+          "title": "P2-06 must[1]: the dispatch re-verifies what the session recorded refuses a switched account"
+        }
+      ],
+      "note": "acceptance[0] names THREE limbs: 'after the approval, substituting the arguments, switching the account, or changing the file inode / remote object version does not execute.' The citations close the first two — at the decision function (C), against fields read back off the durable record (P), and at the real dispatch where the tool is observed not to run (U). **The third limb is NOT closed, and no citation here should be read as closing it.** `ApprovalBindingInputs.preconditions` is inside the digested tuple, so a change to it does move the binding; but both production paths pass `[]` (`agent-loop/src/tool-calls.ts` and `tools/src/ptc.ts` at their manifest constructions), nothing in the tree observes an inode, an mtime, or a remote object version, and nothing re-reads one before execution. A field every producer leaves empty is a field the binding does not bind. Sign-off must cite acceptance[0] by limb and never whole."
+    },
+    {
+      "epic": "P2-06",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "P2-06 acceptance[1]: display may be redacted; the digest covers the real value binds two arguments that would DISPLAY identically to two different digests"
+        },
+        {
+          "stage": "C",
+          "title": "P2-06 acceptance[1]: display may be redacted; the digest covers the real value digests a redacted PLACEHOLDER differently from the value it stands for"
+        },
+        {
+          "stage": "P",
+          "title": "P2-06 acceptance[1]: the record carries the digest, never the arguments puts no argument value in the durable record"
+        },
+        {
+          "stage": "P",
+          "title": "P2-06 acceptance[1]: the record carries the digest, never the arguments still distinguishes two different argument values through the digest"
+        },
+        {
+          "stage": "U",
+          "title": "P2-06 must[0]: the ACP decider is shown the action, not only its id shows the REDACTED arguments and never the raw ones"
+        }
+      ],
+      "note": "acceptance[1]: 'sensitive values may be displayed redacted, but the hash still covers the real canonicalized value.' Both halves are cited on purpose, because either alone is half the clause: the digest half (two values that would display identically digest differently, and a redacted placeholder digests differently from the value it stands for), the durability half (the record carries no argument value yet still separates two argument values), and the surface half (the ACP payload carries the redacted arguments and never the raw string). What no citation proves is that every sensitive value IS redacted: `redactArgumentsForDisplay` decides what to hide, and its policy is not this clause's subject."
     }
   ]
 }

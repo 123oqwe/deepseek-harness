@@ -6051,3 +6051,50 @@ Measured across `packages` and `apps` at `73c1c04f2e`, excluding `tests/`, `*.sp
 4. **(e) A composition case observes the shipped mount reaching the compile.** **DONE (candidate 5).** `U.1` boots a real `dsh-app-boot` Loader tree whose `cordis.yml` mounts `@deepseek-ai/dsh-run` directly, so the mount row at `packages/bundle/base/cordis.patch.yml:638` was read evidence rather than observed evidence. Two new cases in `tests/first100/fixtures/P4-02.composition.spec.ts` boot the SHIPPED `headless` profile through `bootProductionProfile` — bundles from the real `PROFILE_TEMPLATES`, carrying `@deepseek-ai/dsh-base` — under an overlay that disables the typert rows and the headless runner, points the configured root agent at a keyless adapter, and mounts no Run Service of its own. One case asserts the service is mounted at all; the other that exactly one profile is compiled and that the session log, the Run log and the Agent handle name the same digest. Frozen as `P4-02.U.2` with its own `-t`-filtered argv, because sharing `U.1`'s would make one report serve both supplements and `checkObservationDistinctness` treats that as a conflict. **Mutation: `disabled: true` on the shipped `id: run` row reddens both, and leaves `U.1`'s four cases green** — which is the point, since `U.1` mounts the plugin from its own config and cannot see the shipped row change.
 5. **(f) `evidence-P4-02.md`'s stale `bundle/base:628`** is corrected to `:638-639`. Done in this entry's first commit.
 6. **(a) `acceptance-coverage.json`'s three stale P4-02 notes** are the Supervisor's, corrected in overlay by the delegate. Not lane A's to edit, recorded here so the two halves are not both waiting on each other.
+
+### BLOCKED-236 — 46 broken documentation cross-links, in two causes and two owners
+
+**Status:** OPEN, owner split by `Claude-Session` (see the table). Opened by lane B 2026-09-12 while running the F-stage checklist on `lane-b-c7`. **Not gating:** `verify-md-links` is a leaf of `doc-sync` and `test:docs`, neither of which blocks a candidate tip, and push 6 carries all 46.
+
+**How each link was attributed.** Two causes, separated rather than assumed: (i) the anchor never existed in the target in ANY revision — the link was written broken, and belongs to the commit that wrote it; (ii) the link resolved when written and the target was later deleted — it belongs to the deletion. Every anchor was checked by walking the target file's full revision history and slugifying its headings at each one. **Reverse control:** `#model-injection`-style anchors the gate does NOT report must be found by the same slug function, or "never existed" would only mean the slug function was wrong; `packages/identity/principal/README.zh.md`'s working `#model-experience` is found and its four reported anchors are not.
+
+| cause | count | owner | commit |
+| --- | --- | --- | --- |
+| target deleted, README row left behind | 12 | lane B | `02ceda9fc8` |
+| written broken (Chinese link text, English anchor slug) | 3 | lane B | `feab6cac24`, `82dd4b153f` |
+| written broken | 30 | `session_01PK6ABrNTM4jEwYnsct9jBq` | `3144e0fb38` (12), `6c53f21cec` (4), `00cb4b19c5` (4), `5bbf48c72c` (3), and seven singles |
+| written broken | 1 | `session_013pH2sDsRWcieHdWZew1KaX` | `a3ead36cba` |
+
+**The 12 are one mistake made once.** `02ceda9fc8` retired seven `src/invariant.ts` companions, deleted each file, and added a `**Runtime invariant:** No runtime invariant companion is published…` sentence to each README — but left the file-table row `| [src/invariant.ts](src/invariant.ts) | Invariant companion: explained-empty … |` in place. Six READMEs now state both that the package publishes no companion and that one may be seen at a path the same commit deleted. The seventh package, `identity/principal`, is clean only because its file table never listed the row.
+
+**Three of the 46 are not translation debt.** `packages/policy/capability-token-file/README.md:17` is an ENGLISH self-link whose table of contents writes `(#what-arming-changes)` against a heading `## What arming changes, and what it must not break` — the anchor was truncated, not translated. The other two shapes are: a Chinese README whose table of contents keeps the English slug while its headings are Chinese, and a Chinese README linking `docs/architecture.zh.md#profiles-and-bundles` / `docs/testing.zh.md#boot-time-baseline-preflight`, anchors those Chinese documents have never had.
+
+**One repair pattern already exists in the tree** and should be checked before any link is rewritten: `packages/migration/feature-gates/README.zh.md:84` carries an explicit `<a id="known-limitations-and-deferred-work"></a>`, so some Chinese pages make the English slug real rather than translating the link. Which of the two is the house style is a question for whoever takes the 30.
+
+**Batching.** Lane B's 15 in candidate 7; the remaining 31 route by `Claude-Session` and are not lane B's to touch.
+
+**The process gap this exposes, and its fix.** The eight-item pre-tip checklist contains no documentation gate, so `02ceda9fc8` — a commit that deleted source files and rewrote seven READMEs — passed all eight while introducing 12 broken links that one `verify-md-links` run would have named. The delegate's scoped rule (2026-09-12): a commit touching `docs/` or a README, or deleting a referenced file, runs `verify-md-links` before the tip is reported and compares the broken-link SET before and after, confirming it added none. Scoped rather than made a hard gate, because the 46 existing links would otherwise block every tip.
+
+### BLOCKED-237 — a stage's registry-named files are never checked to exist
+
+**Status:** OPEN, owner delegate (recorded by lane B 2026-09-12; reading only, no repair this round).
+
+**The seam.** `verify-freeze-in-candidate-tree` checks that every path a freeze entry CITES is present in the observed tree. Nothing checks that the files a stage's `stages.<S>.files` names in `tests/first100/registry.json` exist at all. The two questions are different, and only the first has a gate.
+
+**Measured on P2-06.** The registry names `packages/interaction/user-approval/src/preconditions.ts` (C, kind `N`) and `packages/interaction/user-approval/tests/argument-binding.spec.ts` (C and F, kind `N`). Neither existed when C and P froze. C froze `tests/binding.spec.ts` and P froze `tests/binding-service.spec.ts` instead — real files with real cases, so no freeze is vacuous and nothing needs re-freezing — but the registry's names and the tree's names diverged at C and no gate noticed for three stages. `argument-binding.spec.ts` is created under its registry name at F, per the delegate's RULING 0; the two frozen files keep theirs, because renaming them would break the observations that cite them.
+
+**Why it is worth a guard.** A stage whose registry file is never created is indistinguishable, in every artifact this program produces, from a stage that built it — until someone greps for the filename. The guard is small: for each started epic, report the `stages.*.files` paths that are absent from the tree, and require each absence to carry a recorded reason the way `files-overlay-reasons.json` records the converse (a real file the plan never named).
+
+### BLOCKED-238 — `ActionTarget.filesystem` has no producer, so every action's policy resource is a tool name
+
+**Status:** OPEN, owner lane B (reading only, no repair this round). Measured 2026-09-12 while deciding P2-06 F-2's scope.
+
+**The shape.** `packages/action/action-manifest/src/types.ts:163` declares `ActionTarget` with four members, the first being `{ kind: 'filesystem'; path: string }`. **Nothing in production constructs it.** The two sites that build a manifest target both hardcode the fourth member: `packages/core/agent-loop/src/tool-calls.ts:686` and `packages/core/tools/src/ptc.ts:262`, each writing `{ kind: 'other', ref: <tool name> }`. Every other occurrence of `kind: 'filesystem'` in the tree is a test fixture (`action-manifest/tests/manifest.spec.ts:45`, `policy-engine-cedar/tests/provider.spec.ts:29`) or a different type that happens to share the name (`plugin-manifest/src/types.ts:105`, whose field is `pathPattern`).
+
+**What it costs downstream.** `packages/policy/policy-engine-cedar/src/index.ts:71` uses `targetId(request.manifest.target)` as the Cedar resource id. Because every target is `other`, **every action's policy resource is its tool name**, and no Cedar rule in this tree can be written about a specific file. A deployment that wants "deny writes under `/etc`" has nothing to match on.
+
+**Same shape as P3-01's stop reasons, one level down.** A closed union member no production path produces is exactly what P3-01's F stage guards against with a closure case asserting every `WorldStopReason` has a producer. `ActionTarget` has no such case, which is why this went unnoticed through P2-03, P2-05, P4-12 and P2-06.
+
+**Why no single epic can fill it, which is the reason it is recorded rather than fixed.** Populating the member needs three things at once: a DECLARATION of which tool parameter is a filesystem path (measured absent — `packages/core/tools/src/schema.ts:12-28` gives parameter schemas only `description`/`title`/`default`/`examples` plus `type`/`enum`/`const`, and the `file_path` of `tool-fs/src/write.ts:72` is an ordinary string whose only path signal is its name and its prose), a PRODUCER at both manifest constructions, and a CONSUMER that does something with the path. P2-06's F stage declined it on those grounds (delegate ruling 2026-09-12): building the producer alone would ship a code path that can never fire.
+
+**What it blocks concretely.** P2-06 acceptance[0]'s third limb — *"改变文件 inode/远端对象版本均不会执行"* — is declared open in `acceptance-coverage.json` because of this. A precondition naming a file cannot be recorded at the ask when no layer knows which file the action is about.
