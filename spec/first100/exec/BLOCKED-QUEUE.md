@@ -5844,3 +5844,32 @@ The old gate found three of those five. The two it could not see are the two on 
 **Three ways to collect nothing while exiting 0, all met here, all now treated as chunk failures.** `vitest list --json <path>` writes zero bytes, because `--json` takes an optional output-file value and swallows the path as that value; `--outputFile` belongs to the json REPORTER and is not a `list` flag at all; and a killed write leaves a non-empty file that will not parse. The first collector checked only that each chunk file was non-empty, so nine truncated chunks crashed its merge step AFTER the success branch had been taken and were never recorded as failures — it would have reported a census built from 6 chunks of 291. A chunk now counts only when its JSON parses and yields at least one case, and the census refuses to print a count while any chunk is missing.
 
 **The census was interrupted once by something outside this tree, and the cause is recorded because the gate cannot tell it apart.** The first full collection died at 05:27:58Z with `signal: SIGTERM`, `status: null` and no stdout — lane A ran `pkill -f "vitest"` at 05:27:52Z to stop its own gate set, and a pattern kill reaches every `vitest` on the host. That is the failure this gate's own error text warns about: a killed collection and a genuine load error report the same "Command failed", so the signal and the timing are what separate them. Re-run, and lane A now stops only its own processes.
+
+### BLOCKED-231 — session-query-spill's verification step reads a spill root two runs can share, so a concurrent run makes grep read two paths as one filename
+
+**Status:** OPEN. **Owner: lane A** (delegate ruling 2026-09-12; lane A rewrote that step last and binds it to the run's own session directory). Reported by lane B; lane B does not touch the scenario.
+
+**What was measured, on `lane-b-p3-01` at `b4b57ff461`.** One `test:snapshot` run failed the scenario; the same tree passed it both when run alone (`-t session-query-spill`: 1 passed | 117 skipped) and on a second full-suite run (116 passed, the only failure being an unrelated fixture). So the signal is not a content diff and not this branch's code.
+
+The failing comparison, at offset 241:
+
+```
+expected  …"text":"(no output)\n[exit code: 1]"}],"isError":false}…
+received  …"text":"[stderr]\ngrep: {{spillLocator:session_event_read.txt}}\n/tmp/dsh-acp-snap-035d1d054/session-24a2525057a1/81c54077f09d-session_eve…
+```
+
+**The placeholder in the received output is not an unsubstituted template.** `{{spillLocator:NAME}}` is produced in exactly one place — `normalize.ts:214-215`, rewriting a real spill path — and nothing ever substitutes it back. What the received text shows is grep's own error message, in which the FIRST of two real spill paths was normalized correctly and the second was still being printed when the capture was cut. Reading it as "the fixture leaked a placeholder into the command" is the wrong direction and cost this lane a diagnosis.
+
+**Mechanism.** `replay.override.json`'s second turn runs
+
+```sh
+file=$(find /tmp/dsh-acp-snap-035d1d054 -name '*-session_event_read.txt' -type f); grep -q request/header "$file" && …
+```
+
+and `snapshotSpillRoot()` (`packages/test-support/session-snapshot/src/harness.ts:216-221`) derives that root as `sha256(scenario).slice(0,9)` — **per scenario, not per run**. Two runs of this scenario overlapping on one host therefore write `session-<a>/…-session_event_read.txt` and `session-<b>/…-session_event_read.txt` under the same root, `find` returns two lines, `"$file"` becomes one two-line filename, and grep reports it as missing on stderr instead of failing quietly with exit 1. A stale file left by an earlier killed run reproduces the same shape without any concurrency at all.
+
+The `find` is what makes the scenario sensitive: it searches the whole scenario root rather than this run's session directory, so it cannot tell its own spill file from another run's.
+
+**Not fixed here.** Binding the search to the running session's directory is the obvious repair, but the step is lane A's and the fixture's expected output moves with it.
+
+**Why one collection serves two censuses, recorded because the shortcut is only sound for a reason.** A freeze edits `command-freeze.json` and its documents; it touches no test file. The producible-name set is therefore identical before and after a freeze, so one chunked collection can answer both the pre-freeze and the post-freeze census — what changes between them is the ENTRY list, not the names. The cheap `verify-freeze-in-candidate-tree` is still run on both sides for real, because that one reads the tree rather than the name set. Delegate ruling, 2026-09-12.
