@@ -40,7 +40,7 @@ export interface Config {
    * defaults nothing a deployment should choose, on the same
    * request/spec split the `dsh-shell` seam uses (BLOCKED-220).
    */
-  waitForJobsMs: number
+  waitForJobsMs?: number
 }
 
 export const Config: z<Config> = z.object({
@@ -103,5 +103,5 @@ class ForkInProcessProvider implements SubagentProvider {
 }
 
 export function apply(ctx: Context, config: Config): void {
-  ctx.subagents.registerProvider(new ForkInProcessProvider(config.providerName, config.waitForJobsMs))
+  ctx.subagents.registerProvider(new ForkInProcessProvider(config.providerName, config.waitForJobsMs ?? 30_000))
 }
