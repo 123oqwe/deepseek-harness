@@ -434,7 +434,9 @@ describe('startInProcessRun', () => {
       const { ctx, parent } = await setup([textResponse('driver answer')])
       const started = await neverSettlingChildJob(ctx)
       const warnings = warningsOf(ctx)
-      const run = await startInProcessRun(request(parent), {})
+      // `waitForJobsMs: 0`: this case is about the RECORD, and a job that never
+      // settles would otherwise spend the whole default bound before reaching it.
+      const run = await startInProcessRun(request(parent), { waitForJobsMs: 0 })
       const result = await run.result
       expect(result.stopReason).toBe('completed')
       expect(started).toHaveLength(1)
@@ -450,6 +452,53 @@ describe('startInProcessRun', () => {
         { jobId: started[0]!, status: 'running', surface: 'subagent' },
       ])
       expect(abandoned.every(event => !('surfaceOp' in event))).toBe(true)
+      await run.dispose()
+    })
+
+    // BLOCKED-220 甲: a child's run waits a bounded time for what it started.
+    it('waits for a child job that settles inside the bound, and records no abandonment', async () => {
+      const { ctx, parent } = await setup([textResponse('driver answer')])
+      await ctx.plugin(LocalJobRegistry)
+      ctx.jobs.attachController('driver test')
+      let release: ((outcome: JobOutcome) => void) | undefined
+      ctx.on('agent/session-start', ({ agent }: { agent: OwnerAgent }) => {
+        if (String(agent.session.id) === 'parent') return
+        const settled = Promise.withResolvers<JobOutcome>()
+        release = settled.resolve
+        ctx.jobs.start({
+          kind: 'subagent',
+          label: 'work that finishes just after the turn',
+          owner: agent,
+          run: () => ({ cancel: () => { settled.resolve({ status: 'killed' }) }, done: settled.promise }),
+        })
+      })
+      const warnings = warningsOf(ctx)
+      // Settles a few ms into the drain: the case the bound exists to admit.
+      setTimeout(() => { release?.({ status: 'completed' }) }, 5)
+
+      const run = await startInProcessRun(request(parent), { waitForJobsMs: 5_000 })
+      expect((await run.result).stopReason).toBe('completed')
+      const child = ctx.agents.get(run.id)!
+      expect(child.session.snapshotEvents().filter(event => event.type === 'job/abandoned')).toStrictEqual([])
+      expect(warnings).toStrictEqual([])
+      await run.dispose()
+    })
+
+    it('stops waiting at the bound without cancelling the child job', async () => {
+      const { ctx, parent } = await setup([textResponse('driver answer')])
+      const started = await neverSettlingChildJob(ctx)
+      const warnings = warningsOf(ctx)
+
+      const run = await startInProcessRun(request(parent), { waitForJobsMs: 20 })
+      expect((await run.result).stopReason).toBe('completed')
+      const child = ctx.agents.get(run.id)!
+      // Still running after the bound: expiry stops the wait, not the job.
+      expect(ctx.jobs.get(JobId(started[0]!), child).status).toBe('running')
+      expect(child.session.snapshotEvents()
+        .filter(event => event.type === 'job/abandoned')
+        .map(event => event.data))
+        .toStrictEqual([{ jobId: started[0]!, status: 'running', surface: 'subagent' }])
+      expect(warnings).toHaveLength(1)
       await run.dispose()
     })
 

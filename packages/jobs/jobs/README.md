@@ -85,6 +85,8 @@ Every operation is a thin projection over the registered jobs: `get` and `list` 
 
 The package declares one session event, `job/abandoned`: a background job that was still running when a one-shot run ended, one event per job, carrying the id the model was told to track, the non-terminal status, and which surface abandoned it. It is appended after the turn has ended and with no surface metadata, so it reaches no model request — the run has already produced its answer, and this is an operator fact about it. The registry does not append it: the surfaces that decide when to tear down do, because only they know a run is ending.
 
+It also exports the end-of-run drain phase, `duringJobDrain` and `isDrainingJobs`. A one-shot surface wraps its bounded end-of-run wait in `duringJobDrain(owner, …)`; `@deepseek-ai/dsh-tool-jobs` reads the phase to decide that a completion inside that window wakes its owner whatever the wake budget has left. The phase is declared here because both the surfaces and the delivery plugin already depend on this package, and because it is keyed by the Agent instance — two scoped `tool-jobs` mounts share one registry and must not disagree about whether a run is ending. What the phase MEANS for a notice is `tool-jobs`' rule, not this package's.
+
 The package also exports `isTerminalJobStatus`, the one classification of `JobStatus` into settled and live. It is here rather than in each consumer because the registry, the invariant companion, and the surfaces that check for uncollected work all need the same three values, and a second list of them drifts from the union it is a subset of.
 
 </details>

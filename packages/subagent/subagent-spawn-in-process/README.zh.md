@@ -46,6 +46,7 @@ kind: "package-reference"
 | 字段 | 默认值 | 含义 |
 |---|---|---|
 | `providerName` | `spawn` | 注册到 `ctx.subagents` 的提供方名称 |
+| `waitForJobsMs` | `30000` | 子 agent 的 run 为其启动、在它变 idle 时仍未结算的后台 job 等待多久;`0` 表示不等。上界停的是等待,绝不是 job。 |
 
 生成的[配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-subagent-spawn-in-process)是每个受支持字段及其 JSDoc 的穷尽式真源。
 

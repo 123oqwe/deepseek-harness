@@ -13,7 +13,7 @@ import { boundContextSummary, createUserMessage, type ContentBlock } from '@deep
 import { TextRetainer } from '@deepseek-ai/dsh-output-retention'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import type { GenericCallView, ToolDefinition, ToolExecution } from '@deepseek-ai/dsh-tools'
-import { JobId } from '@deepseek-ai/dsh-jobs'
+import { JobId, isDrainingJobs } from '@deepseek-ai/dsh-jobs'
 import type { JobSnapshot } from '@deepseek-ai/dsh-jobs'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 
@@ -290,8 +290,12 @@ export function apply(ctx: Context, config: Config): void {
       },
     })
     const spent = spentWakes.get(owner) ?? 0
-    if (delivery === 'wakeup' && owner.status === 'idle' && spent < wakeBudget) {
-      spentWakes.set(owner, spent + 1)
+    // Inside a drain window the budget does not apply, and the spend is not
+    // recorded either: a drain must not leave the owner poorer than it found
+    // it, or a surface that drained once would silence the conversation after.
+    const draining = isDrainingJobs(owner)
+    if (delivery === 'wakeup' && owner.status === 'idle' && (draining || spent < wakeBudget)) {
+      if (!draining) spentWakes.set(owner, spent + 1)
       owner.followup(message)
       return
     }
