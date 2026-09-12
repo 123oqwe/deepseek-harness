@@ -8,4 +8,6 @@
 {"type":"agent/inbox/spliced","data":{"target":"next-turn","start":0,"removedCount":1,"inserted":[]}}
 {"type":"hook/invoked","data":{"turn":1,"point":"UserPromptSubmit","dialect":"claude-code","handlerId":"claude-code:UserPromptSubmit:1"}}
 {"type":"hook/result","data":{"turn":1,"point":"UserPromptSubmit","handlerId":"claude-code:UserPromptSubmit:1","decision":"block","exitCode":2,"stderrSummary":"blocked by policy hook","durationMs":16.42591700000048}}
+{"type":"approval/asked","data":{"id":"{{approval:1}}","toolName":"workspace-trust","subject":"{{cwd}}: trusted-read","reason":"Load this project's own instruction files? They are supplied by the directory you opened, and have not been trusted before."}}
+{"type":"approval/decided","data":{"id":"{{approval:1}}","outcome":"rejected"}}
 {"type":"turn/end","data":{"turn":1,"reason":{"kind":"blocked"}}}

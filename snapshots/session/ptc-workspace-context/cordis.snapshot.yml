@@ -47,3 +47,14 @@
             models:
               - id: deepseek-v4-flash
               - id: deepseek-v4-pro
+
+# This scenario runs in an ALREADY-TRUSTED workspace. The grant exists so the
+# scenario measures PTC workspace context rather than the trust boundary: without it the
+# boundary refuses, the project's own instruction files never reach the model,
+# and the recording measures the refusal instead. The boundary itself is
+# covered by P1-07's own cases, which boot a shipped profile and grant nothing.
+- id: workspace-trust-local
+  config:
+    grants:
+      - path: !!js process.cwd()
+        state: trusted-read

@@ -8,4 +8,6 @@
 {"type":"agent/inbox/spliced","data":{"target":"next-turn","start":0,"removedCount":1,"inserted":[]}}
 {"type":"hook/invoked","data":{"turn":1,"point":"UserPromptSubmit","dialect":"codex","handlerId":"codex:UserPromptSubmit:1"}}
 {"type":"hook/result","data":{"turn":1,"point":"UserPromptSubmit","handlerId":"codex:UserPromptSubmit:1","decision":"block","exitCode":2,"stderrSummary":"blocked by codex policy hook","durationMs":292.82766699999775}}
+{"type":"approval/asked","data":{"id":"{{approval:1}}","toolName":"workspace-trust","subject":"{{cwd}}: trusted-read","reason":"Load this project's own instruction files? They are supplied by the directory you opened, and have not been trusted before."}}
+{"type":"approval/decided","data":{"id":"{{approval:1}}","outcome":"rejected"}}
 {"type":"turn/end","data":{"turn":1,"reason":{"kind":"blocked"}}}
