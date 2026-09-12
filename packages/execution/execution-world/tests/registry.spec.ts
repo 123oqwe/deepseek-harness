@@ -15,7 +15,7 @@ import type { TenantId } from '@deepseek-ai/dsh-principal/types'
 import ExecutionWorldService, { digestWorldSpec, filesystemForSandboxMode, nextWorldId, resolveWorldSpec } from '../src/plugin.ts'
 import { createLocalWorldProvider, LOCAL_WORLD_PROVIDER } from '../src/local-provider.ts'
 import { createFakeWorldProvider, FAKE_WORLD_PROVIDER } from './fake-provider.ts'
-import type { WorldId } from '../src/types.ts'
+import type { WorldId, WorldProvider } from '../src/types.ts'
 
 const HOST_TENANT = brandString<TenantId>('local-host')
 
@@ -157,6 +157,23 @@ describe('P3-01 acceptance[1]: a registry with nothing to offer refuses instead 
     const { provider: fake } = createFakeWorldProvider({ digest: digestWorldSpec, nextWorldId: ids })
     service.register(fake)
     expect((await service.bindingFor(agent('agent-1')))?.provider).toBe(FAKE_WORLD_PROVIDER)
+  })
+
+  it('refuses on the SELECTION, not on the provider\'s create, which is what "never degrades" means', async () => {
+    // Measured gap: with only the local provider registered, a mutation that
+    // made the registry fall back to "the closest provider" reddened NOTHING,
+    // because the local provider's own `create` refuses the same spec
+    // independently. Every refusal case here would have passed for the wrong
+    // reason. This provider refuses the dimension and would happily create
+    // anyway — the disagreement is the point — so only a registry that honours
+    // SELECTION answers undefined.
+    const willing: WorldProvider = {
+      ...createFakeWorldProvider({ digest: digestWorldSpec, nextWorldId: ids }).provider,
+      unsatisfiableDimensions: () => ['network'],
+    }
+    const { service } = await mounted()
+    service.register(willing)
+    expect(await service.bindingFor(agent('agent-1'))).toBeUndefined()
   })
 
   it('answers undefined when no file-effect boundary is mounted, because the spec would be invented', async () => {

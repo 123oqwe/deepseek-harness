@@ -13203,6 +13203,129 @@
         "failureSummary": "1 of 24 failed: `refuses a forged handle that carries a real world id and the right provider name`. I expected two and got one, which is the more useful reading: `refuses a handle another instance of the same provider minted` survives because each instance owns its own map, so that case is held by instance ownership while the forged-handle case is what the symbol and the WeakMap hold. A first attempt looked the world up in `live` instead and reddened five cases including the positive control — a different mutation (it broke every lookup of a STOPPED world) that proves nothing about identity, so it is not the one recorded. Mutation reverted; 41 passed (41) across the package."
       },
       "note": "The provider refuses eight of the nine dimensions and names each one; that honesty is the stage's content. acceptance[0]'s cross-provider half is NOT proved here — only a local provider exists, so what is proved is the structural precondition (no `execute` on the provider, and `ToolWorldBinding` deliberately outside `ActionManifest`). Declared at freeze time per the preFlight's open question 2."
+    },
+    {
+      "epic": "P3-01",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/execution/execution-world/tests/registry.spec.ts",
+        "packages/execution/execution-world/tests/world-fact.spec.ts",
+        "packages/policy/policy-engine-cedar/tests/provider.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P3-01 must[1]: the request becomes a complete spec, with every default stated once answers all nine dimensions from a request that states none",
+        "P3-01 must[1]: the request becomes a complete spec, with every default stated once carries a stated request through instead of the default, which is what makes a refusal reachable",
+        "P3-01 must[1]: the request becomes a complete spec, with every default stated once digests two equal specs equally and two different specs differently",
+        "P3-01 must[2]: a dispatch path gets its world from the registry, never by naming a provider binds the local provider when it satisfies the requested confinement",
+        "P3-01 must[2]: a dispatch path gets its world from the registry, never by naming a provider binds ONE world per session, so two dispatches in one session name the same world",
+        "P3-01 must[2]: a dispatch path gets its world from the registry, never by naming a provider gives a DIFFERENT session its own world, so the binding is not a process-wide singleton",
+        "P3-01 must[2]: a dispatch path gets its world from the registry, never by naming a provider prefers the provider registered FIRST, which is the deployment order and not this service's taste",
+        "P3-01 must[2]: a dispatch path gets its world from the registry, never by naming a provider removes the provider when the registering fiber is disposed, rather than outliving it",
+        "P3-01 acceptance[1]: a registry with nothing to offer refuses instead of degrading answers undefined when no provider is registered at all",
+        "P3-01 acceptance[1]: a registry with nothing to offer refuses instead of degrading answers undefined when every provider refuses the requested confinement, naming no weaker world",
+        "P3-01 acceptance[1]: a registry with nothing to offer refuses instead of degrading binds the provider that CAN deliver the stricter request, so the refusal above is about capability",
+        "P3-01 acceptance[1]: a registry with nothing to offer refuses instead of degrading refuses on the SELECTION, not on the provider's create, which is what \"never degrades\" means",
+        "P3-01 acceptance[1]: a registry with nothing to offer refuses instead of degrading answers undefined when no file-effect boundary is mounted, because the spec would be invented",
+        "P3-01 acceptance[1]: a registry with nothing to offer refuses instead of degrading answers undefined when the chosen provider REJECTS the create, rather than reporting a world it does not have",
+        "P3-01 must[1]: the sandbox vocabulary is translated, never passed through maps each of the three sandbox modes onto the filesystem dimension, renaming the widest one",
+        "P3-01 must[1]: the sandbox vocabulary is translated, never passed through refuses a mode it does not know, rather than building a spec with an unrecognised effect",
+        "P3-01 acceptance[0]: two providers, one action, the same confinement digest digests the SAME spec identically whichever provider builds the world, which is what a swap must not change",
+        "P3-01 acceptance[0]: two providers, one action, the same confinement digest mints a world id nothing else produces, so two bindings are never confused",
+        "P3-01 acceptance[1]: an unanswerable world reads as absent, which is the value a policy may refuse on reads absent when no registry is mounted, so a composition without worlds asks the same question it always did",
+        "P3-01 acceptance[1]: an unanswerable world reads as absent, which is the value a policy may refuse on reads absent when the registry has no provider, rather than inventing one",
+        "P3-01 acceptance[1]: an unanswerable world reads as absent, which is the value a policy may refuse on records NO world-bound event when it reads absent, so the log never claims a world that does not exist",
+        "P3-01 acceptance[0]: the bound world reaches the policy question and the audit reads the bound world, naming the provider that minted it",
+        "P3-01 acceptance[0]: the bound world reaches the policy question and the audit records the binding ONCE, however many dispatches ask",
+        "P3-01 acceptance[0]: the bound world reaches the policy question and the audit records the world, the provider and the confinement digest, which is what makes a swap auditable",
+        "P2-05 must[0]: the request translation lets the SAME rule admit an action whose world is bound, with no change to the translation"
+      ],
+      "files": [
+        "packages/execution/execution-world/src/plugin.ts",
+        "packages/execution/execution-world/src/local.ts",
+        "packages/policy/policy-engine/src/types.ts",
+        "packages/policy/policy-enforcement/src/index.ts",
+        "packages/policy/policy-engine-cedar/src/index.ts",
+        "packages/core/tools/src/external-effect.ts",
+        "packages/core/tools/src/index.ts",
+        "packages/core/tools/src/ptc.ts",
+        "packages/core/agent-loop/src/tool-calls.ts",
+        "packages/bundle/base/cordis.patch.yml",
+        "packages/execution/execution-world/tests/registry.spec.ts",
+        "packages/execution/execution-world/tests/world-fact.spec.ts",
+        "packages/policy/policy-engine-cedar/tests/provider.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-12T13:10:00.000Z",
+      "dryRunProof": {
+        "treeSha": "0c28929b058dc157f802afd8c9dcfd878d8cb428",
+        "testsDiscovered": 38
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations, one per claim. (M1) In packages/core/tools/src/external-effect.ts, dropped the `ANNOUNCED` guard so `readExecutionWorldFact` appends `action/world-bound` on EVERY dispatch rather than once per session binding. (M2) In packages/execution/execution-world/src/plugin.ts, made `bindingFor` fall back to the first registered provider when selection refuses -- the degradation acceptance[1] forbids, written the way a reader writes it when 'fail closed' is read as 'try to be helpful'.",
+        "failureSummary": "(M1) 1 of 6 failed: `records the binding ONCE, however many dispatches ask`; the other five stayed green, so the failure is about repetition and not about the event. (M2) reddened NOTHING on the first attempt, and that is the useful reading: with only the local provider registered, its own `create` refuses the same spec independently, so every refusal case passed for the wrong reason and could not tell 'selection refused' from 'create refused'. A case was added for exactly that -- a provider whose `unsatisfiableDimensions` refuses a dimension and whose `create` would happily proceed -- and the same mutation now reddens it alone (1 of 18). Both mutations reverted; 88 passed (88) across the package."
+      },
+      "note": "The clause this stage closes is acceptance[1]'s POLICY half: `ExecutionWorldFact` gained its `bound` variant (BLOCKED-178's producer half) and `enforceManifestedAction` stopped hardcoding `{ kind: 'absent' }`, so a Cedar rule can finally distinguish a known world from an unknown one -- proved by a byte-identical rule whose translation did not change. acceptance[0]'s cross-provider half stays OPEN and is F's. `agent-loop/src/runtime-context.ts` is declared in the registry's U file list and deliberately untouched: a model-visible context section naming the world would make the provider identity part of the model's input, which is what acceptance[0] forbids (preflight-P3-01-U.md, RULING 1)."
+    },
+    {
+      "epic": "P3-01",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/execution/execution-world/tests/fault-matrix.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P3-01 validation[3]: every stop reason has a producer settles `terminated` when the CALLER stops a live world",
+        "P3-01 validation[3]: every stop reason has a producer settles `timeout` when the lifetime ceiling passes, OUTRANKING the caller's own reason",
+        "P3-01 validation[3]: every stop reason has a producer settles `provider-failed` for a failure underneath, which an operator investigates rather than retries",
+        "P3-01 validation[3]: every stop reason has a producer settles `lost-contact` through a provider that CAN lose contact",
+        "P3-01 validation[3]: every stop reason has a producer settles `completed` for a world that finished on its own, the union's only non-fault member",
+        "P3-01 validation[3]: every stop reason has a producer leaves NO member of the closed union unproduced, which is what this whole block is for",
+        "P3-01 validation[3]: every stop reason has a producer keeps the local provider honest about `lost-contact`, which is the contrast the row above needs",
+        "P3-01 acceptance[2]: a refused handle settles nothing at all refuses a forged handle WITHOUT producing an outcome, because an outcome would mean it was admitted",
+        "P3-01 acceptance[2]: a refused handle settles nothing at all refuses a handle another INSTANCE of the same provider minted, and settles nothing",
+        "P3-01 acceptance[2]: attestation is a READ, and only the provider half is provable here produces evidence without stopping the world, so a verifier outage is not an outage",
+        "P3-01 acceptance[2]: attestation is a READ, and only the provider half is provable here refuses to attest a handle it did not mint, rather than producing evidence about someone else's world",
+        "P3-01 validation[3]: the state vocabulary is closed, and `stopped` is its only terminal declares exactly the four adapted OCI states",
+        "P3-01 validation[1]: the conformance table, against the LOCAL provider answers the dimension question for a spec it accepts AND one it refuses, so the answer is total",
+        "P3-01 validation[1]: the conformance table, against the LOCAL provider accepts the handle it minted and refuses one another INSTANCE minted",
+        "P3-01 validation[1]: the conformance table, against the LOCAL provider settles ONE outcome however many times it is asked to stop",
+        "P3-01 validation[1]: the conformance table, against the LOCAL provider never admits a transition out of `stopped`, which is the lifecycle table both providers share",
+        "P3-01 validation[1]: the conformance table, against the LOCAL provider reports a stopped world's snapshot AS stopped, and refuses another provider's snapshot outright",
+        "P3-01 validation[1]: the same table, against the FAKE provider answers the dimension question for a spec it accepts AND one it refuses, so the answer is total",
+        "P3-01 validation[1]: the same table, against the FAKE provider accepts the handle it minted and refuses one another INSTANCE minted",
+        "P3-01 validation[1]: the same table, against the FAKE provider settles ONE outcome however many times it is asked to stop",
+        "P3-01 validation[1]: the same table, against the FAKE provider never admits a transition out of `stopped`, which is the lifecycle table both providers share",
+        "P3-01 validation[1]: the same table, against the FAKE provider reports a stopped world's snapshot AS stopped, and refuses another provider's snapshot outright",
+        "P3-01: the two providers are distinguishable, which every row above depends on names two different providers, so a foreign handle is really foreign"
+      ],
+      "files": [
+        "packages/execution/execution-world/src/local-provider.ts",
+        "packages/execution/execution-world/src/lifecycle.ts",
+        "packages/execution/execution-world/src/types.ts",
+        "packages/execution/execution-world/tests/fault-matrix.spec.ts",
+        "packages/execution/execution-world/tests/conformance.ts",
+        "packages/execution/execution-world/tests/fake-provider.ts"
+      ],
+      "frozenAtUtc": "2026-09-12T13:12:00.000Z",
+      "dryRunProof": {
+        "treeSha": "0c28929b058dc157f802afd8c9dcfd878d8cb428",
+        "testsDiscovered": 23
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations inside packages/execution/execution-world/src/local-provider.ts. (M1) Removed the `expireIfOver(world)` call from `terminate`, so a world past its wall clock settles with the caller's reason instead of `timeout`. (M2) Hardcoded the snapshot's `state` to `created`, which is the defect the conformance table had already caught in the fake provider -- repeated against the real one to show the table binds both subjects.",
+        "failureSummary": "(M1) 2 of 23 failed: `settles timeout when the lifetime ceiling passes, OUTRANKING the caller's own reason` AND `leaves NO member of the closed union unproduced` -- the second is the coupling this matrix is built on: a reason that stops being produced is NAMED by the closure case rather than silently vanishing. (M2) 1 of 23 failed: `reports a stopped world's snapshot AS stopped`, which is the conformance row, so the table binds the local provider and not only the fake. Both reverted; 88 passed (88) across the package."
+      },
+      "note": "The matrix is organised around `WorldStopReason`'s closed set, and the final case asserts the set of unproduced reasons is empty -- `completed` was missing from the first draft and that case is what caught it. `lost-contact`, `completed` and `provider-failed` are driven through the shared fake provider because they happen TO a world and the local provider is honest that they cannot happen to it. Two rows assert that NOTHING settles (a forged handle, a foreign handle) because an outcome would mean the handle was admitted. Attestation proves the provider half only: `sandboxAttestationVerifier` returns false unconditionally, so a case about the kernel refusing an attestation would pass because the kernel refuses everything (preflight-P3-01-F.md, RULING 2). validation[1]'s conformance table runs against BOTH providers with no per-provider exception (RULING 3); validation[2]'s cross-provider equivalence is proved against the seam, not against a second real world, and that limit is declared."
     }
   ]
 }
