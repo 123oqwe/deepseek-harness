@@ -370,8 +370,10 @@ describe('BLOCKED-232: a stored profile this build cannot read stops the run', (
   function withUnreadableProfile(events: readonly SessionEvent[]): SessionEvent[] {
     return events.map((event) => {
       if (event.type !== 'run/task-profile') return event
-      const { objective: _dropped, ...rest } = (event.data as { profile: Record<string, unknown> }).profile
-      return { ...event, data: { profile: rest } } as SessionEvent
+      // Through `unknown`: the narrowed payload IS a `TaskProfile`, and the
+      // whole point here is to hand back a value that is not one.
+      const { objective: _dropped, ...rest } = event.data.profile as unknown as Record<string, unknown>
+      return { ...event, data: { profile: rest } } as unknown as SessionEvent
     })
   }
 
