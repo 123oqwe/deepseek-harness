@@ -46,3 +46,10 @@
 - 外部 LLM key + 预算(基准/评测用)。
 - **R5B** Windows 全新安装机一台:上游 `dsh-win-ci` 自托管 runner 是否仍在线、是否用户名下?否则 W? 的 Windows 出厂验证无处跑。
 - **R5A** 真实 rollback / DR 凭据(演练用,不用生产密钥)。
+
+### 现况刷新(2026-09-13 21:30Z,第八推后)
+- **fork/first100-exec = `fe3df85488`**(第八推;= 候选 7′ 绿 = 候选 6′ + P2-10 C+P + P2-06 F + lane A driver/lint 修 + 文档;run 34715710541 两 job 绿;dup 34717529508 取消)。前 = `50742193bf`(第七推)。
+- **ACCEPTED = 28**,P2-06 验收在途(四格待 lane B 绿 → delegate 4.4d+签核+accept → 29)。
+- **BLOCKED 水位 = 242**;候选 8 料:lane B `035a40a9f7`(P4-11.U 补充化 + 242 机制/241 对照条目)+ lane A P2-10 U 码(在写)。
+- **Stop hook 已撤为 log-only**(两执行器;补记 276),lane 合法 idle 不再被逼发消息。
+- 裁决在 plan-rectification 补记 **246–278**。
