@@ -88,6 +88,8 @@ preFlight(JSON 记录 `clause-subject-audit.json` + `evidence-<id>.md`,`recorded
 - **肯定结果的探针同样要证工具答了**(补记 143/144):`cmd | tail; echo $?` 取的是 tail 的退出码(78 一例);`vitest list --json <path>` exit 0 写 0 字节(`--json` 吃掉路径,须 `vitest list <path> --json`);非空但 JSON 不可解析的 chunk 在"非空即成功"的分支溜走——收集产物须可解析且非空才算过,任一缺失即拒绝报数。
 - **`pnpm install --lockfile-only` 装过的新包只在组合回放里红,且报成不相干的错**(补记 153):它写 lockfile 不建 workspace 符号链接;新包能过 typecheck/lint/自套件/`dsh --profile` 直接启动,`plugin-package-inventory-deepseek` 真实解析时才 `cannot resolve active package`,到 SDK 片变成 `cannot create effect on inactive context`。新增包后必须真 `pnpm install`;组合回放红而错误点着 cordis fiber 时先查 `node_modules/@deepseek-ai/<pkg>` 链接。
 - **一个 no-op 也能满足的性质不是对该函数的测试**(补记 154):`f(out) === out`(幂等)、"不抛"、"返回同类型"这类断言被什么都不做的实现同样满足,会把故障形态编码成预期;冻结用例须至少一条"函数做了事"的断言(输入含目标 → 输出已变),并且回放/归一化若两边同处理,expected 里的坏值会在比较那一刻被刷掉——"绿"须先问"比较时两边各被做了什么"。
+- **三组只在全套里活的门,报 tip 前必跑**(补记 157):`scripts/doc-standard.spec.ts`(README 骨架:概述/目录/Dev Note,中英各一份)、`scripts/session-fixture-layout.spec.ts`(session JSONL 须 canonical packed 布局,重刷后跑 `migrate:packed-session-fixtures`)、`packages/typert/generator/tests/cordis-catalog.spec.ts`(service 方法签名引用的每个类型须在 `linkedTypePages` 并有文档页,产物逐字节重生成)。新包/新导出类型/重刷 fixture 三种改动必触其一;本机全套跑不完时它们是全套的代理。候选 3′′ 为此红过一次(4 条,全确定性)。
+- **文档/fixture 布局/产物类修补的缩减验证**(补记 157):在刚跑过全门集的 tip 之上、不动产品源码的修补,可只跑各自 spec + 相关文档门 + 受影响回放片 + 变更文件 lint,由 delegate 逐次裁定并写明条件;动了产品源码则全门集重跑。
 - **共享机器上只杀自己的 PID**(补记 142):两 lane 同机,`pkill -f vitest|tsc|node` 按模式杀会把另一 lane 正在跑的门集/普查一起杀掉(lane A 05:27Z 一例);lane 须记下自己启动的 PID 再杀,delegate 见到 FLAG "process kill" 带模式匹配时立即通知另一 lane 核对。
 
 ## 9. 每小时自查五问(2026-09-11,gq-92 退班前给;由 watch-v12 心跳每小时打印,不靠记)
