@@ -157,13 +157,41 @@ export function validateCapabilityFamily(family: CapabilityFamily): string[] {
 }
 
 /**
+ * Today as `YYYY-MM-DD` in local time.
+ *
+ * Local rather than UTC because the removal date an owner wrote is the date in
+ * their own calendar; UTC would fail an exemption up to a day early for anyone
+ * west of Greenwich.
+ * @returns the current local date in ISO calendar form.
+ */
+function isoToday(): string {
+  const now = new Date()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${String(now.getFullYear())}-${month}-${day}`
+}
+
+/**
  * Validate one allowlist entry: the element itself must be a non-null object
  * (not `null`, an array, or a primitive JSON value); a real ISO calendar
- * `removalDate`; and a non-empty, string `owner` (acceptance[1]).
+ * `removalDate` that has **not already passed**; and a non-empty, string
+ * `owner` (acceptance[1]).
+ *
+ * **The expiry comparison is the point of the date.** Checking only that
+ * `removalDate` parses made the clause's letter true — every entry carries a
+ * date — while the thing it wants, exemptions that expire and pressure when
+ * they do, rested on someone remembering to look (BLOCKED-216).
+ *
+ * Strictly before, so an entry is still admitted ON its own removal date: the
+ * natural mistake here is an off-by-one that fails the allowlist on the morning
+ * of the date and leaves the owner no day to act.
  * @param entry - the allowlist entry to check.
- * @returns violation strings, empty when the entry is well-formed.
+ * @param today - the date to compare against as `YYYY-MM-DD`; defaults to the
+ *   real clock, and is injected so cases are deterministic without freezing
+ *   time for the rest of this module.
+ * @returns violation strings, empty when the entry is well-formed and not overdue.
  */
-export function validateAllowlistEntry(entry: AllowlistEntry): string[] {
+export function validateAllowlistEntry(entry: AllowlistEntry, today: string = isoToday()): string[] {
   if (!isPlainObject(entry)) {
     return [`architecture.layers.json: an allowlist entry must be an object, got ${JSON.stringify(entry)}`]
   }
@@ -171,6 +199,15 @@ export function validateAllowlistEntry(entry: AllowlistEntry): string[] {
   const label = allowlistLabel(entry)
   if (!ISO_DATE.test(entry.removalDate) || Number.isNaN(Date.parse(entry.removalDate))) {
     errors.push(`${label}: removalDate must be an ISO calendar date (YYYY-MM-DD), got ${JSON.stringify(entry.removalDate)}`)
+  } else if (entry.removalDate < today) {
+    // String comparison is correct for this format and avoids a real hazard:
+    // ISO `YYYY-MM-DD` sorts lexicographically in calendar order, while a
+    // `Date` comparison would mix a bare date (parsed as UTC midnight) with a
+    // local `new Date()` and shift the boundary by the offset.
+    errors.push(
+      `${label}: removalDate ${entry.removalDate} has passed (today is ${today}) — `
+      + 'remove the exemption or record a new date with its owner',
+    )
   }
   if (typeof entry.owner !== 'string') {
     errors.push(`${label}: owner must be a string, got ${JSON.stringify(entry.owner)}`)

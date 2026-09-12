@@ -5318,7 +5318,22 @@ acceptance[1] reads *"human answer 只送到指定等待点"* — an answer reac
 
 ### BLOCKED-216 — the capability-seam allowlist's `removalDate` is checked as a string and never against the clock
 
-**Status:** OPEN, owner lane B, queued after BLOCKED-215. Small: one comparison and two cases. P0-03 is NOT withdrawn — its acceptance[1] is satisfied to the letter and today's allowlist is healthy.
+**Status:** FIXED 2026-09-11, owner lane B. P0-03 is NOT withdrawn — its acceptance[1] was satisfied to the letter throughout, and today's allowlist is healthy.
+
+**Closed.** `validateAllowlistEntry` now takes an optional `today` (defaulting to the real local clock) and refuses an entry whose `removalDate` is **strictly before** it. Four cases, not the two this entry asked for, because two of them are controls and the boundary needed its own:
+
+| case | why it exists |
+|---|---|
+| an overdue entry reddens | the obligation itself |
+| a future date stays green | the control; without it a validator refusing every date would pass the first case |
+| an entry ON its removal date stays green | the off-by-one this entry predicted — only a boundary case separates `<` from `<=`, and the wrong one fails an owner on the morning of their own date |
+| a year-end pair, compared as strings | `YYYY-MM-DD` sorts lexicographically, so the comparison needs no timezone reasoning; a `Date` comparison would mix a bare date parsed as UTC midnight with a local `new Date()` and move the boundary by the offset |
+
+**Mutation proof:** neutralising the comparison (`false && entry.removalDate < today`) reddens exactly the two cases that assert a refusal and leaves both admission controls green — 2 failed / 40 passed. A mutation that reddened all four would have meant the controls were not controls.
+
+**No new violation on the real tree.** The four live allowlist entries are all dated `2026-12-01` against today's `2026-09-11`, and running the new check over `architecture.layers.json` returns **0** violations. `architecture:layers` does exit 1, and that is pre-existing: measured with this work stashed, the base exits 1 too, on a `session-log-export -> client-ui-*` layer violation that has nothing to do with allowlist dates.
+
+`tests/architecture/capability-seams.spec.ts`: 42 passed.
 
 P0-03 acceptance[1] requires every allowlist entry to carry a removal date and an owner. `validateAllowlistEntry` (`scripts/architecture/capability-seams.ts:172`) checks that `removalDate` parses as an ISO calendar date and that `owner` is a non-empty string. **It never compares the date to today**, and neither does anything else in that file: `new Date`, `Date.now`, `today`, `expired` and `overdue` return **0 matches** across it.
 

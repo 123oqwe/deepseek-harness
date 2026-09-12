@@ -136,6 +136,36 @@ describe('AllowlistEntry schema (acceptance[1])', () => {
     ])
   })
 
+  it('rejects an allowlist entry whose removalDate has already passed (BLOCKED-216)', () => {
+    // The clause wants exemptions that EXPIRE. Before this check the date was
+    // validated as a string and never compared to the clock, so an entry could
+    // sit indefinitely past its own removal date with the gate green.
+    expect(validateAllowlistEntry({ ...validEntry, removalDate: '2026-01-01' }, '2026-09-11')).toEqual([
+      'missing-provider @deepseek-ai/dsh-authorization -> @deepseek-ai/dsh-authorization: '
+      + 'removalDate 2026-01-01 has passed (today is 2026-09-11) — '
+      + 'remove the exemption or record a new date with its owner',
+    ])
+  })
+
+  it('admits a future removalDate, the control without which a validator refusing every date would pass', () => {
+    expect(validateAllowlistEntry({ ...validEntry, removalDate: '2026-12-01' }, '2026-09-11')).toEqual([])
+  })
+
+  it('admits an entry ON its removal date, so the owner is not failed a day early', () => {
+    // The natural mistake is an off-by-one that reddens the allowlist on the
+    // morning of the removal date. `strictly before` is what prevents it, and
+    // only a boundary case can tell the two implementations apart.
+    expect(validateAllowlistEntry({ ...validEntry, removalDate: '2026-09-11' }, '2026-09-11')).toEqual([])
+  })
+
+  it('compares ISO dates lexicographically, so the boundary does not move with the timezone', () => {
+    // A `Date`-based comparison would parse the bare date as UTC midnight and
+    // `new Date()` as local, shifting the boundary by the offset. These two
+    // assertions straddle a year end, where that bug shows up first.
+    expect(validateAllowlistEntry({ ...validEntry, removalDate: '2026-12-31' }, '2027-01-01')).toHaveLength(1)
+    expect(validateAllowlistEntry({ ...validEntry, removalDate: '2027-01-01' }, '2026-12-31')).toEqual([])
+  })
+
   it('rejects an allowlist entry whose removalDate is not a real calendar date', () => {
     expect(validateAllowlistEntry({ ...validEntry, removalDate: '2026-13-40' })).toEqual([
       'missing-provider @deepseek-ai/dsh-authorization -> @deepseek-ai/dsh-authorization: removalDate must be an ISO calendar date (YYYY-MM-DD), got "2026-13-40"',
