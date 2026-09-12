@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-12T00:13:37.362Z",
-  "inputDigest": "f60241d5ec68d47df37a97f5176d9aa3dc9adb9b35feaa7612f8839013686282",
+  "lastUpdatedUtc": "2026-09-12T00:29:34.978Z",
+  "inputDigest": "e7867d4a140a0a15b594a3a53e83866d1a1bedb882c33738b3aa0f2bf91e34af",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -3717,6 +3717,46 @@
             "CHARACTERIZATION (BLOCKED-203): a rule naming `default` matches under the read-only preset, which is the defect stated positively"
           ],
           "capturedAtUtc": "2026-09-12T00:13:06.128Z"
+        },
+        "U.3": {
+          "status": "GREEN",
+          "candidateSha": "93d52207338066bd65494f6044f1ec5920d63cb8",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34652643903",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34652643903/first100-evidence-93d52207338066bd65494f6044f1ec5920d63cb8/vitest-report.json",
+          "observationSha256": "3c15dc184ed1d2854dd1c87ad45663960fbf87da8553d79ead6000250dd3da09",
+          "expectCasesMatched": [
+            "decides two separately created agents against the SAME policy set, not a per-agent one",
+            "decides each action on its own, so one agent's permit is not reused for the next",
+            "refuses an agent created AFTER the policy set is in place, with no re-registration needed",
+            "REFUSES a second policy service, so no engine can be swapped in over the mounted one",
+            "keeps the FIRST engine deciding after the refused replace, not a half-installed second one",
+            "DEGRADES TO DENY when the engine is unmounted, rather than falling through to permit"
+          ],
+          "capturedAtUtc": "2026-09-12T00:29:34.670Z"
+        },
+        "C.1": {
+          "status": "GREEN",
+          "candidateSha": "93d52207338066bd65494f6044f1ec5920d63cb8",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34652643903",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34652643903/first100-evidence-93d52207338066bd65494f6044f1ec5920d63cb8/vitest-report.json",
+          "observationSha256": "3c15dc184ed1d2854dd1c87ad45663960fbf87da8553d79ead6000250dd3da09",
+          "expectCasesMatched": [
+            "treats ask as NOT allowed, so a pending human answer cannot be acted on",
+            "carries the policy-set digest on every decision, including a refusal",
+            "turns a permit into a deny when ONE constraint objects",
+            "turns an ask into a deny, because a constraint is a condition and not a prompt",
+            "leaves a deny denied, whatever the constraints say",
+            "is ORDER-INDEPENDENT: the same constraints in any order give the same decision",
+            "cannot be handed a permitting constraint at all: the type carries no such shape",
+            "records every constraint reason even when the decision was already deny",
+            "leaves a permit permitted when no constraint objects, so the rule is not a constant",
+            "gives byte-identical decisions across 1000 seeded permutations, starting from a permit",
+            "holds from an ASK base too, where a first-match rule would be most tempted to widen",
+            "permutes a SILENT-only set to the same permit, so the invariance is not just \"everything denies\"",
+            "denies with policy-unavailable rather than falling open",
+            "names WHICH policy set it could not reach, so a replay can tell the two failures apart"
+          ],
+          "capturedAtUtc": "2026-09-12T00:29:34.972Z"
         }
       },
       "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15",

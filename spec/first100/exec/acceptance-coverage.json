@@ -2736,79 +2736,6 @@
       "note": "The clause has two directions and both are required: an organisation CAN raise its own bar (add a hard-deny class, raise a threshold, and see the raise reach classification) and CANNOT lower the kernel one. The refusal is cited twice deliberately -- at classification and AT MOUNT -- because a deployment refused only at classification would have booted with a policy that claims to disable a kernel class, and an operator would learn of it at the first sensitive action rather than at startup. The third C case is the control for both: a policy that changes nothing still hard-denies, so the refusals are not the only thing holding the kernel band."
     },
     {
-      "epic": "P2-05",
-      "acceptanceIndex": 0,
-      "coveredBy": [
-        {
-          "stage": "U",
-          "title": "decides two separately created agents against the SAME policy set, not a per-agent one"
-        },
-        {
-          "stage": "U",
-          "title": "decides each action on its own, so one agent's permit is not reused for the next"
-        },
-        {
-          "stage": "U",
-          "title": "refuses an agent created AFTER the policy set is in place, with no re-registration needed"
-        }
-      ],
-      "note": "acceptance[0]: 'the same ActionManifest goes through the same PEP whether raised from a tool, a workflow, the SDK, a plugin or a subagent.' Measured, the five initiators are not five paths: `enforceManifestedAction` has exactly TWO callers (`agent-loop/src/tool-calls.ts` native, `core/tools/src/ptc.ts` code-mode), and subagent, workflow and SDK each obtain an Agent through `ctx.agents.create` whose tool calls pass `appendToolCall` — documented as the single point every native call passes through. So the clause holds by CONVERGENCE, and these cases pin the convergence: independently created Agents in one composition are decided by one policy set, each action on its own, including an Agent created after the engine was mounted. NOT covered: the `plugin-rpc` origin is declared in `ActionOrigin` and has zero producers in the tree, so the clause's fifth initiator has nothing to drive; and the `sdk-minimal` bundle has zero corpus scenarios and mounts no policy row — both recorded in `evidence-P2-05.md` rather than asserted."
-    },
-    {
-      "epic": "P2-05",
-      "acceptanceIndex": 2,
-      "coveredBy": [
-        {
-          "stage": "U",
-          "title": "REFUSES a second policy service, so no engine can be swapped in over the mounted one"
-        },
-        {
-          "stage": "U",
-          "title": "keeps the FIRST engine deciding after the refused replace, not a half-installed second one"
-        },
-        {
-          "stage": "U",
-          "title": "DEGRADES TO DENY when the engine is unmounted, rather than falling through to permit"
-        },
-        {
-          "stage": "C",
-          "title": "denies with policy-unavailable rather than falling open"
-        }
-      ],
-      "note": "acceptance[2]: 'the Policy service cannot be replaced or unmounted by Cordis.' The two halves have different answers, measured rather than read. REPLACE is refused by Cordis itself — `ctx.provide` throws `service \"policy\" has been registered` — and the refusal leaves the first engine deciding, checked by policy-set digest. UNMOUNT is NOT refused: the disposer `provide` returns deletes the store entry. What the clause protects is that no Cordis operation turns a denial into permission, and an unmount does not: the enforcement point reads `ctx.get('policy')` per decision and answers `policy-unavailable` without one, so an action permitted with the engine mounted is denied after it is disposed. This closes the preFlight's OQ1, which recorded the unmount half as open because the trust-kernel pin answers forgery and not loss."
-    },
-    {
-      "epic": "P2-05",
-      "acceptanceIndex": 1,
-      "coveredBy": [
-        {
-          "stage": "C",
-          "title": "turns a permit into a deny when ONE constraint objects"
-        },
-        {
-          "stage": "C",
-          "title": "leaves a deny denied, whatever the constraints say"
-        },
-        {
-          "stage": "C",
-          "title": "cannot be handed a permitting constraint at all: the type carries no such shape"
-        },
-        {
-          "stage": "C",
-          "title": "gives byte-identical decisions across 1000 seeded permutations, starting from a permit"
-        },
-        {
-          "stage": "C",
-          "title": "holds from an ASK base too, where a first-match rule would be most tempted to widen"
-        },
-        {
-          "stage": "C",
-          "title": "permutes a SILENT-only set to the same permit, so the invariance is not just \"everything denies\""
-        }
-      ],
-      "note": "acceptance[1]: 'any one hard deny is the final deny.' The first three cases state monotonicity directly; the last three are validation[1]'s 1000-permutation evidence, cited here because order-independence is the property that makes \"any one deny\" well defined — a first-match rule would make the answer depend on which plugin loaded first, which is exactly what `dsh-permission-rules` does and what this clause forbids. The permutations use eight constraints (40320 orderings) drawn by a seeded mulberry32 so a failing order reproduces; `Math.random` would make an order-dependent rule indistinguishable from flake. The silent-only case is the control that stops the invariance being satisfied by a rule that always denies. NOTE: `acceptance-coverage.schema.json` indexes acceptance clauses only (`additionalProperties: false`), so validation-clause evidence has no index row of its own and is cited from the acceptance clause it supports, with the mapping stated in `evidence-P2-05.md`."
-    },
-    {
       "epic": "P4-11",
       "acceptanceIndex": 0,
       "coveredBy": [
@@ -3067,6 +2994,88 @@
         }
       ],
       "note": "acceptance[2]: 'a failed upgrade does not change already-approved permissions.' Asserted as a digest of the whole permission home taken before the upgrade and compared after it fails at health-check — a tree digest rather than a field check, so a permission changed anywhere under the home reddens it. The second case is the non-vacuity control and is why the first is worth anything: it asserts the seeded home has more than one entry and does not digest-equal a freshly created empty directory, so 'byte-identical' cannot be satisfied by there being nothing to change. That pairing is the shape a `toEqual([])` assertion needs whenever emptiness would also pass."
+    },
+    {
+      "epic": "P2-05",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "U",
+          "title": "decides two separately created agents against the SAME policy set, not a per-agent one",
+          "supplementSeq": 3
+        },
+        {
+          "stage": "U",
+          "title": "decides each action on its own, so one agent's permit is not reused for the next",
+          "supplementSeq": 3
+        },
+        {
+          "stage": "U",
+          "title": "refuses an agent created AFTER the policy set is in place, with no re-registration needed",
+          "supplementSeq": 3
+        }
+      ],
+      "note": "acceptance[0]: 'the same ActionManifest goes through the same PEP whether raised from a tool, a workflow, the SDK, a plugin or a subagent.' Measured, the five initiators are not five paths: `enforceManifestedAction` has exactly TWO callers (`agent-loop/src/tool-calls.ts` native, `core/tools/src/ptc.ts` code-mode), and subagent, workflow and SDK each obtain an Agent through `ctx.agents.create` whose tool calls pass `appendToolCall` — documented as the single point every native call passes through. So the clause holds by CONVERGENCE, and these cases pin the convergence: independently created Agents in one composition are decided by one policy set, each action on its own, including an Agent created after the engine was mounted. NOT covered: the `plugin-rpc` origin is declared in `ActionOrigin` and has zero producers in the tree, so the clause's fifth initiator has nothing to drive; and the `sdk-minimal` bundle has zero corpus scenarios and mounts no policy row — both recorded in `evidence-P2-05.md` rather than asserted."
+    },
+    {
+      "epic": "P2-05",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "P2-05 must[2]: a plugin may narrow a decision and never widen one turns a permit into a deny when ONE constraint objects"
+        },
+        {
+          "stage": "C",
+          "title": "P2-05 must[2]: a plugin may narrow a decision and never widen one leaves a deny denied, whatever the constraints say"
+        },
+        {
+          "stage": "C",
+          "title": "P2-05 must[2]: a plugin may narrow a decision and never widen one cannot be handed a permitting constraint at all: the type carries no such shape"
+        },
+        {
+          "stage": "C",
+          "title": "gives byte-identical decisions across 1000 seeded permutations, starting from a permit",
+          "supplementSeq": 1
+        },
+        {
+          "stage": "C",
+          "title": "holds from an ASK base too, where a first-match rule would be most tempted to widen",
+          "supplementSeq": 1
+        },
+        {
+          "stage": "C",
+          "title": "permutes a SILENT-only set to the same permit, so the invariance is not just \"everything denies\"",
+          "supplementSeq": 1
+        }
+      ],
+      "note": "acceptance[1]: 'any one hard deny is the final deny.' The first three cases state monotonicity directly; the last three are validation[1]'s 1000-permutation evidence, cited here because order-independence is the property that makes \"any one deny\" well defined — a first-match rule would make the answer depend on which plugin loaded first, which is exactly what `dsh-permission-rules` does and what this clause forbids. The permutations use eight constraints (40320 orderings) drawn by a seeded mulberry32 so a failing order reproduces; `Math.random` would make an order-dependent rule indistinguishable from flake. The silent-only case is the control that stops the invariance being satisfied by a rule that always denies. NOTE: `acceptance-coverage.schema.json` indexes acceptance clauses only (`additionalProperties: false`), so validation-clause evidence has no index row of its own and is cited from the acceptance clause it supports, with the mapping stated in `evidence-P2-05.md`."
+    },
+    {
+      "epic": "P2-05",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "U",
+          "title": "REFUSES a second policy service, so no engine can be swapped in over the mounted one",
+          "supplementSeq": 3
+        },
+        {
+          "stage": "U",
+          "title": "keeps the FIRST engine deciding after the refused replace, not a half-installed second one",
+          "supplementSeq": 3
+        },
+        {
+          "stage": "U",
+          "title": "DEGRADES TO DENY when the engine is unmounted, rather than falling through to permit",
+          "supplementSeq": 3
+        },
+        {
+          "stage": "C",
+          "title": "P2-05 acceptance[2]: losing the provider denies by name denies with policy-unavailable rather than falling open"
+        }
+      ],
+      "note": "acceptance[2]: 'the Policy service cannot be replaced or unmounted by Cordis.' The two halves have different answers, measured rather than read. REPLACE is refused by Cordis itself — `ctx.provide` throws `service \"policy\" has been registered` — and the refusal leaves the first engine deciding, checked by policy-set digest. UNMOUNT is NOT refused: the disposer `provide` returns deletes the store entry. What the clause protects is that no Cordis operation turns a denial into permission, and an unmount does not: the enforcement point reads `ctx.get('policy')` per decision and answers `policy-unavailable` without one, so an action permitted with the engine mounted is denied after it is disposed. This closes the preFlight's OQ1, which recorded the unmount half as open because the trust-kernel pin answers forgery and not loss."
     }
   ]
 }
