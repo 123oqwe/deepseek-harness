@@ -6,6 +6,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { TrackedContexts } from '@deepseek-ai/dsh-agent-loop-testkit'
 import { Context } from '@deepseek-ai/cordis'
 import { SchemaCompatibilityError } from '@deepseek-ai/dsh-schema-registry'
 import AgentRegistry, { type Agent, type AgentHandle } from '@deepseek-ai/dsh-agent'
@@ -35,7 +36,16 @@ class FakeTransport implements JsonRpcTransportPeer {
 
 const servers: Server[] = []
 
+/**
+ * Every Context these cases build. This file mounts session persistence over a
+ * real directory, so a Context left undisposed is a mount whose durable write
+ * nobody awaits (BLOCKED-229/230).
+ */
+const contexts = new TrackedContexts()
+
 afterEach(async () => {
+  // Dispose before anything a mount writes to is removed.
+  expect(await contexts.disposeAll()).toEqual([])
   await Promise.all(servers.splice(0).map(server => new Promise(resolve => server.close(resolve))))
   vi.unstubAllEnvs()
 })
@@ -65,7 +75,7 @@ async function mockCompletionServer(): Promise<{ url: string; requests: unknown[
 }
 
 async function makeHarness(storageDir: string) {
-  const ctx = new Context()
+  const ctx = contexts.track(new Context())
   await mountAgentLoopTestDependencies(ctx)
   await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(AgentLoop, { agents: [] })
@@ -356,7 +366,7 @@ describe('HarnessSdkJsonRpcServer', () => {
   })
 
   it('forwards whole-agent status without attributing a turn outcome', async () => {
-    const ctx = new Context()
+    const ctx = contexts.track(new Context())
     await ctx.plugin(SessionStore)
     await ctx.plugin(AgentRegistry)
     const transport = new FakeTransport()
@@ -950,7 +960,7 @@ describe('HarnessSdkJsonRpcServer', () => {
   )
 
   it('rejects malformed initialize reasoningEffort values at the wire boundary', async () => {
-    const ctx = new Context()
+    const ctx = contexts.track(new Context())
     const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
     try {
       for (const reasoningEffort of ['', 42]) {
@@ -969,7 +979,7 @@ describe('HarnessSdkJsonRpcServer', () => {
 
   describe('schema-registry negotiation at SDK initialize (P0-06 must[4])', () => {
     it('rejects an initialize handshake whose explicit schemaVersion major differs from the registered major', async () => {
-      const ctx = new Context()
+      const ctx = contexts.track(new Context())
       const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
       try {
         let thrown: unknown
@@ -1122,7 +1132,7 @@ describe('HarnessSdkJsonRpcServer', () => {
   })
 
   it('reports no adapter when the LLM service is absent', async () => {
-    const ctx = new Context()
+    const ctx = contexts.track(new Context())
     try {
       const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport()) as unknown as {
         hasAdapterFor(model: string): boolean

@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-`dsh-agent-loop-testkit` mounts the standard prerequisite services a test needs before loading the concrete `AgentLoop` — the LLM runtime, session store, system-prompt registry, tool registry, and agent registry — in dependency order, with one call. The loop itself, adapters, optional plugins, agents, and teardown stay in the test's hands, so each scenario keeps its own load order and topology. Use it when a test's subject is loop behavior rather than service wiring; tests that probe injection failures or partial topologies mount their dependencies directly. It registers no model-facing behavior of its own.
+`dsh-agent-loop-testkit` mounts the standard prerequisite services a test needs before loading the concrete `AgentLoop` — the LLM runtime, session store, system-prompt registry, tool registry, and agent registry — in dependency order, with one call, and shares `TrackedContexts` for disposing every context a spec file built. The loop itself, adapters, optional plugins, and agents stay in the test's hands, so each scenario keeps its own load order and topology. Use it when a test's subject is loop behavior rather than service wiring; tests that probe injection failures or partial topologies mount their dependencies directly. It registers no model-facing behavior of its own.
 
 ## Table of Contents
 
@@ -43,13 +43,30 @@ await ctx.plugin(AgentLoop, { agents: [] })
 
 The helper activates the LLM, session, system-prompt, tool, and agent services in dependency order and returns before the loop is mounted. System-prompt and tool-registry configuration can be forwarded through `options`; the helper provides no test defaults beyond those the services own.
 
+### Dispose every context the file built
+
+`TrackedContexts` records each `Context` a spec file creates and tears them all down in one teardown call, before the file removes any directory a mount writes to.
+
+```ts
+const contexts = new TrackedContexts()
+
+afterEach(async () => {
+  expect(await contexts.disposeAll()).toEqual([])
+  await rm(storageDir, { recursive: true, force: true })
+})
+
+const ctx = contexts.track(new Context())
+```
+
+`disposeAll` returns the names of services still readable after their context was disposed, so an empty result is the evidence that teardown ran. Assert on it: an unchecked call proves only that a loop executed.
+
 ### When to use it
 
 Use the helper for tests whose subject is the loop: load order, retries, tool execution, or session behavior on a real prerequisite stack. Mount dependencies directly when a test probes service load order, injection failures, partial topologies, or teardown — the helper hides exactly the wiring such tests must control.
 
 ### What can go wrong
 
-A plugin-load failure rejects the helper call; services activated earlier in the sequence remain owned by your context and unwind with it. The context owns every mounted service, so dispose it after the test.
+A plugin-load failure rejects the helper call; services activated earlier in the sequence remain owned by your context and unwind with it. The context owns every mounted service, so dispose it after the test. A context dropped undisposed keeps its session store writing into a directory the next case is about to remove.
 
 -----
 
@@ -98,7 +115,8 @@ None; this package neither assembles nor sends a provider request.
 
 These limits define what the helper does not share. They are current package constraints, not a task backlog.
 
-- **Only the mandatory prerequisite spine is shared** — adapters, optional plugins, `AgentLoop`, agents, and context teardown remain caller-owned so scenario-specific ordering stays visible.
+- **Only the mandatory prerequisite spine is shared** — adapters, optional plugins, `AgentLoop`, and agents remain caller-owned so scenario-specific ordering stays visible.
+- **`TrackedContexts` disposes, it does not order teardown against other resources** — a file that also closes servers or removes directories decides where the `disposeAll` call sits in its own hook.
 
 <a id="dev-note"></a>
 ### Dev Note

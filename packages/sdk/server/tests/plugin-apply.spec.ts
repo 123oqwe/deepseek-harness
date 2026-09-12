@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { PassThrough, Writable } from 'node:stream'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { TrackedContexts } from '@deepseek-ai/dsh-agent-loop-testkit'
 import { Context } from '@deepseek-ai/cordis'
 import Loader from '@deepseek-ai/cordis-plugin-loader'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
@@ -75,7 +76,7 @@ async function mountPlugin(
     beforeServer?: (ctx: Context) => Promise<void> | void
   } = {},
 ): Promise<ApplyHarness> {
-  const ctx = new Context()
+  const ctx = contexts.track(new Context())
   await mountAgentLoopTestDependencies(ctx)
   await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(AgentLoop, { agents: [] })
@@ -144,7 +145,16 @@ async function mountPlugin(
 
 const servers: Server[] = []
 
+/**
+ * Every Context these cases build. This file mounts session persistence over a
+ * real directory, so a Context left undisposed is a mount whose durable write
+ * nobody awaits (BLOCKED-229/230).
+ */
+const contexts = new TrackedContexts()
+
 afterEach(async () => {
+  // Dispose before anything a mount writes to is removed.
+  expect(await contexts.disposeAll()).toEqual([])
   await Promise.all(servers.splice(0).map(server => new Promise(resolve => server.close(resolve))))
   vi.unstubAllEnvs()
 })

@@ -22,11 +22,23 @@ import ToolRuntime from '@deepseek-ai/dsh-tools'
 import { WorkflowRunId } from '@deepseek-ai/dsh-workflow'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
+import { TrackedContexts } from '@deepseek-ai/dsh-agent-loop-testkit'
 import RunPlugin, { createFileRunStore, RUN_SERVICE_OWNER_ID, RunService, workflowRefOf } from '../src/index.ts'
 
 const roots: string[] = []
+/**
+ * Every Context `harness` builds, so teardown disposes the ones a case leaves
+ * behind. This file mounts `RunPlugin` over a real store path, so an undisposed
+ * mount is one whose in-flight durable write nobody awaits (BLOCKED-229/230).
+ */
+const contexts = new TrackedContexts()
 
 afterEach(async () => {
+  // ORDER IS LOAD-BEARING: dispose before the store directories go, or a live
+  // mount finishes its write against a path that has already been removed.
+  // Assert the teardown DID tear down rather than that a loop ran: no service
+  // a disposed Context provided is still resolvable.
+  expect(await contexts.disposeAll()).toEqual([])
   for (const root of roots.splice(0)) await rm(root, { recursive: true, force: true })
 })
 
@@ -43,7 +55,7 @@ async function storePath(): Promise<string> {
  * sessions it wants explicitly.
  */
 async function harness(path: string): Promise<Context> {
-  const ctx = new Context()
+  const ctx = contexts.track(new Context())
   await ctx.plugin(LlmRuntime)
   await ctx.plugin(SessionStore)
   await ctx.plugin(SessionProjectionRegistry)
