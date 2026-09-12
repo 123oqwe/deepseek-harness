@@ -1882,6 +1882,30 @@
     },
     {
       "epic": "P4-02",
+      "path": "packages/run/task-profile/tests/fixtures/base-mount.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P4-02",
+      "path": "packages/run/task-profile/tests/fixtures/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P4-02",
+      "path": "packages/run/task-profile/tests/fixtures/mock-llm.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P4-02",
       "path": "tests/first100/fixtures/loader/p4-02-task-profile/cordis.yml",
       "kind": "test",
       "stages": [
@@ -1901,7 +1925,8 @@
       "path": "tests/first100/fixtures/P4-02.composition.spec.ts",
       "kind": "test",
       "stages": [
-        "U.1"
+        "U.1",
+        "U.2"
       ]
     },
     {
