@@ -11,7 +11,7 @@ English | [中文](README.zh.md)
 
 `dsh-evidence-format` fixes the type surface of Epic P0-07's Release Evidence Package: a per-gate {@link GateEvidence} record (command, timestamps, exit code, environment, log/artifact digests, test counts, skip reasons — must[0]) and an aggregate {@link EvidencePackage} that binds a baseline fingerprint, a Git diff, and build-artifact digests together (must[1]). `EvidencePackage`'s `accepted` field is the discriminant of a tagged union: `AcceptedEvidencePackage`'s `requiredGates` and `requiredBuildArtifacts` are complete `Record<K, V>` maps keyed by the release's real required-id literal unions, so a caller cannot type-check an `accepted: true` literal that omits a required gate or build artifact, or that assigns a skipped/missing gate's evidence where a completed one is required (must[2]).
 
-This package currently ships its Contract-stage slice only: the `EvidencePackage`/`GateEvidence` type surface (`src/types.ts`) and its invariant companion (`src/invariant.ts`). It has no `scripts/release/collect-evidence.mjs`/`verify-evidence.mjs` producer or verifier yet — no constructed `EvidencePackage` value exists in this slice. See [Known Limitations and Deferred Work](#known-limitations-and-deferred-work).
+This package currently ships its Contract-stage slice only: the `EvidencePackage`/`GateEvidence` type surface (`src/types.ts`). It publishes no invariant companion: no constructed `EvidencePackage` value exists yet for one to observe. It has no `scripts/release/collect-evidence.mjs`/`verify-evidence.mjs` producer or verifier yet — no constructed `EvidencePackage` value exists in this slice. See [Known Limitations and Deferred Work](#known-limitations-and-deferred-work).
 
 ## Table of Contents
 
@@ -67,7 +67,6 @@ This section explains the design decisions behind the package; the observable ty
 |---|---|
 | [`src/types.ts`](src/types.ts) | The `GateEvidence`/`EvidencePackage` type surface: the three gate-outcome variants, the branded id/digest types, and the `accepted`-discriminated aggregate package |
 | [`src/index.ts`](src/index.ts) | Pure type re-export of `./types.ts` — zero runtime exports, zero Cordis registration (this Contract-stage slice's mandatory B4(f) scaffold) |
-| [`src/invariant.ts`](src/invariant.ts) | Invariant companion: explained-empty — no constructed `EvidencePackage` value or producer exists yet in this slice |
 
 </details>
 

@@ -58,7 +58,6 @@ const { value, shadowRecord } = evaluateFeatureGate(
 |---|---|
 | [`src/types.ts`](src/types.ts) | 完整的 Contract 阶段类型表面：`FeatureGateState`、`FeatureGateDeclaration`、`FeatureGateNamespaceValue`（settings 互操作）、`FeatureGateOverrideSource`/`FeatureGateResolution`（override 链）、`RedactedJsonValue`/`FeatureGateShadowDecisionRecord`（经名义品牌标记的 diff）、`FeatureGateExpiryStatus`/`FeatureGateExpiryCheck` |
 | [`src/index.ts`](src/index.ts) | 重新导出全部 Contract 阶段类型，并新增真正的 Provider 阶段运行时：`resolveFeatureGate`（must[3]）、`evaluateFeatureGate`/`redactDecisionSummary`（must[1]/acceptance[0]/acceptance[1]）、`checkFeatureGateExpiry`（acceptance[2]） |
-| [`src/invariant.ts`](src/invariant.ts) | 不变式伴生插件：已解释的空实现——本包仍不拥有任何可变 registry 或决策事件流；这里的每个 Provider 阶段函数都是纯函数，全部输入都以参数形式传入 |
 
 </details>
 

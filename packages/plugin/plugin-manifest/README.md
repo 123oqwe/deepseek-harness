@@ -98,7 +98,6 @@ This section explains the design decisions behind the package; the observable ty
 | [`src/types.ts`](src/types.ts) | The `PluginManifestV2` type surface: every must[0] field, must[1]'s Tool/MCP effect fields, and the `PluginDeclaration`/`LegacyBundleDeclaration` classification types |
 | [`src/validate.ts`](src/validate.ts) | Pure schema validation (`validatePluginManifestV2`), the static-data check (`assertJsonSerializable`), wildcard-permission detection (`detectWildcardPermissions`), and the legacy `dsh.bundle` compatibility read (`parseLegacyBundleDeclaration`, `classifyPluginDeclaration`) |
 | [`src/index.ts`](src/index.ts) | The package's real runtime entry: re-exports every `./types.ts` type and `./validate.ts` function, adds `ObservedPluginCapabilities`, `compareDeclaredToObserved`, and `decidePluginTrust` (declared-vs-observed comparison and quarantine decision), and `evaluatePreMountAdmission` (Usage-stage's real pre-mount policy) |
-| [`src/invariant.ts`](src/invariant.ts) | Invariant companion: explained-empty — no constructed manifest value or installer exists yet in this slice |
 
 </details>
 

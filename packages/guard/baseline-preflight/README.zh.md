@@ -93,7 +93,6 @@ base 组合中存在这一行（`packages/bundle/base/cordis.patch.yml`），是
 | 文件 | 职责 |
 |---|---|
 | [`src/index.ts`](src/index.ts) | 插件入口：`name`／`Config`／`apply`、抵达 `verifyBaseline` 的动态导入、漂移消息格式化 |
-| [`src/invariant.ts`](src/invariant.ts) | 不变式伴生插件（无运行时不变式：插件只执行一次启动期检查，不拥有包级事件历史） |
 
 </details>
 

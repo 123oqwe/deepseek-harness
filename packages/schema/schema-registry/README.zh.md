@@ -74,7 +74,6 @@ if (!result.compatible) {
 | [`src/index.ts`](src/index.ts) | `registerSchema`/`evolveSchema`/`negotiateSchema`/`getSchema`/`listSchemas`，以及注册所有已知 session-event 与 SDK-protocol schema 的启动引导 |
 | [`src/types.ts`](src/types.ts) | `SchemaId`、`SchemaVersion`、`FieldChange`、`RegisteredSchema` 及错误码类型 |
 | [`src/migrate.ts`](src/migrate.ts) | 说明性、合成的非恒等迁移函数，端到端演示该机制（见下文） |
-| [`src/invariant.ts`](src/invariant.ts) | 不变式伴生插件（无运行时不变式；详见文件） |
 
 ### 启动引导注册
 

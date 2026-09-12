@@ -75,7 +75,6 @@ const kernel = createTrustKernel() // called before the Cordis Context exists
 |---|---|
 | [`src/types.ts`](src/types.ts) | `TrustKernel` 类型表面：其六个能力成员、三个不透明 handle 类型，以及三个窄 entrypoint 函数类型 |
 | [`src/index.ts`](src/index.ts) | `createTrustKernel()`：构造并深度冻结唯一的 `TrustKernel` 值；`policyEnforcement` 拒绝、`sandboxAttestationVerifier` 拒绝、`auditAppend` 空操作，直到后续 epic 接入真正的 provider。`pinTrustKernel()`：用 `ctx.provide` 把它钉入 `Context`，再锁定 service-store 条目、其 `Impl` 记录、root fiber 的 store 条目，以及 `reflect.props` 注册，使任何插件都无法伪造、先删除再重新注册，或用替代 accessor 顶替这次钉入 |
-| [`src/invariant.ts`](src/invariant.ts) | 不变式伴生插件：已解释的空实现——唯一钉入的身份保证由 Cordis 自身的 service-store 语义强制，而非本包拥有的任何事件流或可变数据 |
 
 </details>
 

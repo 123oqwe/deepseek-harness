@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/interaction/control-plane/README.md
 README.md: 3d6c687041b1462802969cc019a61f79c56f4596
-README.zh.md: f534a9078856c564c49a3ccca8cb1f8dbb29e067
+README.zh.md: 58d74c848ad977e809514a711df535558b798655

@@ -58,7 +58,6 @@ const { value, shadowRecord } = evaluateFeatureGate(
 |---|---|
 | [`src/types.ts`](src/types.ts) | The full Contract-stage type surface: `FeatureGateState`, `FeatureGateDeclaration`, `FeatureGateNamespaceValue` (settings interop), `FeatureGateOverrideSource`/`FeatureGateResolution` (override chain), `RedactedJsonValue`/`FeatureGateShadowDecisionRecord` (nominally-branded diff), `FeatureGateExpiryStatus`/`FeatureGateExpiryCheck` |
 | [`src/index.ts`](src/index.ts) | Re-exports every Contract-stage type, plus the real Provider-stage runtime: `resolveFeatureGate` (must[3]), `evaluateFeatureGate`/`redactDecisionSummary` (must[1]/acceptance[0]/acceptance[1]), `checkFeatureGateExpiry` (acceptance[2]) |
-| [`src/invariant.ts`](src/invariant.ts) | Invariant companion: explained-empty -- this package still owns no mutable registry or decision-event stream; every Provider-stage function here is pure, taking its full input as arguments |
 
 </details>
 

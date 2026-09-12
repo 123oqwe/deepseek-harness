@@ -59,6 +59,7 @@ must[0] 列了五个动词,本包把五个都命名了,但 world 的引用是一
 
 此处没有任何东西进入模型请求。问题只通过提问那个工具自己的结果到达模型,而拒绝携带的是一个封闭的原因码,不是记录或 principal。
 
+<a id="known-limitations-and-deferred-work"></a>
 ## 已知限制与延后事项
 
 - **还没有任何地方挂载它。**这里没有 Cordis service 也没有 answerer,而且全仓没有任何生产代码 import 这两个包,所以没有任何用例能证明一个 stop 到达了 worker。must[2] 的闸门落在 `packages/run/lease/src/plugin.ts`,它今天不读任何 stop 状态;把它接上去是 Usage 阶段。

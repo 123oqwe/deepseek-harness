@@ -74,7 +74,6 @@ if (!result.compatible) {
 | [`src/index.ts`](src/index.ts) | `registerSchema`/`evolveSchema`/`negotiateSchema`/`getSchema`/`listSchemas`, plus the bootstrap that registers every known session-event and SDK-protocol schema |
 | [`src/types.ts`](src/types.ts) | `SchemaId`, `SchemaVersion`, `FieldChange`, `RegisteredSchema`, and error-code types |
 | [`src/migrate.ts`](src/migrate.ts) | Illustrative, synthetic non-identity migration functions demonstrating the mechanism end-to-end (see below) |
-| [`src/invariant.ts`](src/invariant.ts) | Invariant companion (no runtime invariant; see file) |
 
 ### Bootstrap registrations
 

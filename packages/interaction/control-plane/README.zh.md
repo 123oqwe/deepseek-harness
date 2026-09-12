@@ -55,6 +55,7 @@ acceptance[1] 是「答案只到达那个提问的 waiting point」,这是一个
 
 此处没有任何东西进入模型请求。拒绝只通过它的执行点到达模型,而那里报的是一个封闭的原因码,不是 stop 记录或 principal。
 
+<a id="known-limitations-and-deferred-work"></a>
 ## 已知限制与延后事项
 
 - **生产里没有任何地方调用这些东西。**lease 路径(`packages/run/lease/src/plugin.ts`)不读任何 stop 状态,这正是 must[2] 落在哪里的那条测量,而且没有任何生产模块 import 这个通道。读者不能把这里的用例当成「stop 已经到达 worker」的证据;接线是 Usage 阶段。

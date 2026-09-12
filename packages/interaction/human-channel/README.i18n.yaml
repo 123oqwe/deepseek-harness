@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/interaction/human-channel/README.md
 README.md: ebb838b3855c0e382e986089202742b535327f07
-README.zh.md: 489d764242c3a13b8baf6da8178ca7258d02754c
+README.zh.md: 774e27e1ed9dd2f93c2feac31a475625ed8485e6

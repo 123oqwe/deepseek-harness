@@ -11,7 +11,7 @@ kind: "package-library"
 
 `dsh-evidence-format` 固定了 Epic P0-07 Release Evidence Package 的类型表面:逐 gate 的 {@link GateEvidence} 记录(命令、时间戳、退出码、环境、日志/工件 digest、测试数、跳过原因——must[0]),以及把 baseline fingerprint、Git diff、构建产物 digest 绑定在一起的聚合 {@link EvidencePackage}(must[1])。`EvidencePackage` 的 `accepted` 字段是一个 tagged union 的判别式:`AcceptedEvidencePackage` 的 `requiredGates` 与 `requiredBuildArtifacts` 是以发布真实必需 id 字面量联合类型为键的完整 `Record<K, V>` map,因此调用方无法让一个遗漏必需 gate 或构建产物、或在应完成的位置赋值跳过/缺失 gate 证据的 `accepted: true` 字面量通过类型检查(must[2])。
 
-本包目前只交付其 Contract 阶段切片:`EvidencePackage`/`GateEvidence` 类型表面(`src/types.ts`)及其 invariant 伴生模块(`src/invariant.ts`)。尚无 `scripts/release/collect-evidence.mjs`/`verify-evidence.mjs` 的产出者或校验器——本切片中不存在任何已构造的 `EvidencePackage` 值。见[已知限制与延后工作](#known-limitations-and-deferred-work)。
+本包目前只交付其 Contract 阶段切片:`EvidencePackage`/`GateEvidence` 类型表面(`src/types.ts`)。本包不发布 invariant 伴生模块:尚不存在任何已构造的 `EvidencePackage` 值可供观察。尚无 `scripts/release/collect-evidence.mjs`/`verify-evidence.mjs` 的产出者或校验器——本切片中不存在任何已构造的 `EvidencePackage` 值。见[已知限制与延后工作](#known-limitations-and-deferred-work)。
 
 ## 目录
 
@@ -67,7 +67,6 @@ function isBlockingFailure(gate: CompletedGateEvidence): boolean {
 |---|---|
 | [`src/types.ts`](src/types.ts) | `GateEvidence`/`EvidencePackage` 类型表面:三种 gate 结果变体、branded id/digest 类型,以及以 `accepted` 判别的聚合 package |
 | [`src/index.ts`](src/index.ts) | `./types.ts` 的纯类型重导出——零运行时导出、零 Cordis 注册(本 Contract 阶段切片强制性的 B4(f) 脚手架) |
-| [`src/invariant.ts`](src/invariant.ts) | Invariant 伴生模块:explained-empty——本切片中尚不存在已构造的 `EvidencePackage` 值或产出者 |
 
 </details>
 

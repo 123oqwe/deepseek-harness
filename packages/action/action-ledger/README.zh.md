@@ -36,6 +36,7 @@ tool result 记录的是 harness 观察到的东西，它记录不了外部世�
 
 参数先于状态比较，epoch 先于两个结果检查比较。两个顺序都承重，而不是风格问题。对一个参数不同的请求回答 `duplicate`，等于告诉调用方它那条**新的、不同的**请求已经被执行过；而把结果告诉一个已被围栏挡下的代，等于把另一代现在拥有的工作的信息交出去。
 
+<a id="a-reservation-is-exclusive-only-when-both-sides-are-fenced"></a>
 ## 只有两边都有围栏时,预留才是排他的
 
 代(generation)来自一次 run 的 lease;没有 lease 的 run 递交的是 `'unfenced'`——一个状态,而不是数字零。这个区分决定了这条预留到底承诺了什么。

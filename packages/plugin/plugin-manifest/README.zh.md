@@ -98,7 +98,6 @@ if (!admission.admitted) {
 | [`src/types.ts`](src/types.ts) | `PluginManifestV2` 类型表面:每个 must[0] 字段、must[1] 的 Tool/MCP 副作用字段,以及 `PluginDeclaration`/`LegacyBundleDeclaration` 分类类型 |
 | [`src/validate.ts`](src/validate.ts) | 纯 schema 校验(`validatePluginManifestV2`)、静态数据检查(`assertJsonSerializable`)、通配权限检测(`detectWildcardPermissions`),以及旧版 `dsh.bundle` 兼容读取(`parseLegacyBundleDeclaration`、`classifyPluginDeclaration`) |
 | [`src/index.ts`](src/index.ts) | 本包真正的运行时入口:re-export 每个 `./types.ts` 类型与 `./validate.ts` 函数,新增 `ObservedPluginCapabilities`、`compareDeclaredToObserved` 与 `decidePluginTrust`(声明/实际观察比对与 quarantine 决策),以及 `evaluatePreMountAdmission`(Usage 阶段的真实预挂载策略) |
-| [`src/invariant.ts`](src/invariant.ts) | 不变式伴随检查:explained-empty——本切片尚不存在已构造的 manifest 值或安装器 |
 
 </details>
 

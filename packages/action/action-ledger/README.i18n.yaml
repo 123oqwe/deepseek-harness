@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/action/action-ledger/README.md
 README.md: c62d475581a718795ce6a023b6fb66d2359a8b0d
-README.zh.md: 968b7a10577c596031bdfae4204684aab35e2bf4
+README.zh.md: e069beae795f127d937430076927b8fc1f970ecb

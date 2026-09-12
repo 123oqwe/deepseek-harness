@@ -6098,3 +6098,17 @@ Measured across `packages` and `apps` at `73c1c04f2e`, excluding `tests/`, `*.sp
 **Why no single epic can fill it, which is the reason it is recorded rather than fixed.** Populating the member needs three things at once: a DECLARATION of which tool parameter is a filesystem path (measured absent — `packages/core/tools/src/schema.ts:12-28` gives parameter schemas only `description`/`title`/`default`/`examples` plus `type`/`enum`/`const`, and the `file_path` of `tool-fs/src/write.ts:72` is an ordinary string whose only path signal is its name and its prose), a PRODUCER at both manifest constructions, and a CONSUMER that does something with the path. P2-06's F stage declined it on those grounds (delegate ruling 2026-09-12): building the producer alone would ship a code path that can never fire.
 
 **What it blocks concretely.** P2-06 acceptance[0]'s third limb — *"改变文件 inode/远端对象版本均不会执行"* — is declared open in `acceptance-coverage.json` because of this. A precondition naming a file cannot be recorded at the ask when no layer knows which file the action is about.
+
+### BLOCKED-239 — the displayed validity is a constant, the enforced one is configurable
+
+**Status:** OPEN, owner lane B (reading only, no repair this round). Measured 2026-09-12 while writing `evidence-P2-06.md`; assigned by the delegate the same day.
+
+**The two numbers.** `packages/core/agent-loop/src/tool-calls.ts:519` holds `const APPROVAL_DISPLAY_VALIDITY_MS = 300_000`, which is what the six-field display tells a decider the approval is good for (P2-06 must[0]). `packages/interaction/user-approval/src/index.ts:188` declares `approvalValidityMs: z.number().default(300_000)` as a validated `Config` field, and `:193` is what actually bounds the binding.
+
+**They agree on every shipped profile today, and that was checked rather than assumed:** no bundle row sets `approvalValidityMs` — `packages/bundle/base/cordis.patch.yml:276-279` configures only `policy`. So the defect is latent, not live.
+
+**What goes wrong when it stops being latent.** A deployment that sets `approvalValidityMs: 60000` in its own row gets a decider told *"approval valid until T+300s"* while the binding expires at T+60s. The operator's action is bounded by a number they were never shown, and nothing reports the disagreement — the display simply becomes wrong. The failure is silent in exactly the direction that matters least for safety and most for trust: the shown window is LONGER than the real one, so a decider believes an approval is still good when the dispatch will refuse it.
+
+**Why it is a defect and not a style question.** The constant's own JSDoc states the requirement — *"the service owns the real duration through its own row configuration; this is what the six-field display says, and the two must agree or a decider is told one thing and bound by another"* — and then nothing enforces it. A stated invariant with no enforcer is the shape this program keeps recording. The repository's own rule is on the same side: *"No hardcoded tunables in plugins: deployment-varying choices are validated `Config` fields changeable from cordis.yml; a `DEFAULT_*` constant or test hook is not configurability."*
+
+**The fix, which is small.** Carry the service's effective duration to the display construction site instead of restating it — the ask already reaches the service, so the value exists at the moment the display is built or can be read from the same config. Out of scope for P2-06's F stage, whose rulings scoped it to must[1] and acceptance[2], so it is recorded here.

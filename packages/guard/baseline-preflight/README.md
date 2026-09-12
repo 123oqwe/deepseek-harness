@@ -93,7 +93,6 @@ Once both a captured baseline AND the verification tooling are present, drift is
 | File | Role |
 |---|---|
 | [`src/index.ts`](src/index.ts) | Plugin entry: `name`/`Config`/`apply`, the dynamic import into `verifyBaseline`, drift-message formatting |
-| [`src/invariant.ts`](src/invariant.ts) | Invariant companion (no runtime invariant: the plugin performs one boot-time check and owns no package-local event history) |
 
 </details>
 
