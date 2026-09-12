@@ -25,7 +25,8 @@ import type { ArgumentsHash, IdempotencyKey } from '@deepseek-ai/dsh-action-mani
 import type { LedgerEpoch, LedgerGeneration, LedgerScope, ReceiptDigest, ReserveDecision } from '@deepseek-ai/dsh-action-ledger'
 import type {} from '@deepseek-ai/dsh-action-ledger'
 import { brandNumber, brandString } from '@deepseek-ai/dsh-brand'
-import type { PolicyContextFacts } from '@deepseek-ai/dsh-policy-engine'
+import type { ExecutionWorldFact, PolicyContextFacts } from '@deepseek-ai/dsh-policy-engine'
+import type { WorldId, WorldProviderId, WorldSpecDigest } from '@deepseek-ai/dsh-execution-world/types'
 import type { ToolExecutionResult } from './index.ts'
 
 /**
@@ -239,6 +240,62 @@ export async function readPolicyContextFacts(
     riskClass: (classified?.riskClass ?? 'security-sensitive') as PolicyContextFacts['riskClass'],
   }
 }
+
+/**
+ * The world registry this reader needs, named structurally for the same reason
+ * as {@link RiskPolicyPort}: `@deepseek-ai/dsh-execution-world/plugin` mounts a
+ * service, and a dispatch path importing the mount would name a provider.
+ */
+interface ExecutionWorldPort {
+  /**
+   * The world this agent's session runs in, created on first ask.
+   * @param agent - the dispatching agent.
+   * @returns the binding, or `undefined` when the composition can offer none.
+   */
+  bindingFor(agent: Agent): Promise<{ world: WorldId; provider: WorldProviderId; spec: WorldSpecDigest } | undefined>
+}
+
+/**
+ * Read where the action would run, from what the composition mounts
+ * (P3-01 acceptance[1]; BLOCKED-178's producer half).
+ *
+ * Called by both dispatch paths beside {@link readPolicyContextFacts}, and for
+ * the same reason: `world` was the LAST input to `enforceManifestedAction`
+ * still supplied by the enforcement point itself, hardcoded to
+ * `{ kind: 'absent' }`, so every policy question a shipped composition asked
+ * said the world was unknown even where one was mounted and no rule about
+ * where an action runs could match. One reader means the two paths cannot
+ * answer the same question differently.
+ *
+ * An unmounted registry, and a registry whose providers all refuse the
+ * deployment's requested confinement, both read as `absent` — the restrictive
+ * value, and the same one a policy may refuse on. A world is never invented to
+ * fill the gap: acceptance[1] forbids degrading, and reporting a weaker world
+ * as the one in force is exactly that.
+ * @param ctx - the mounting context, consulted for the optional registry.
+ * @param agent - the dispatching agent, whose session the world is bound to.
+ * @returns the bound world, or the fail-closed `absent` fact.
+ */
+export async function readExecutionWorldFact(ctx: Context, agent: Agent): Promise<ExecutionWorldFact> {
+  const worlds = ctx.get('executionWorlds') as ExecutionWorldPort | undefined
+  const binding = await worlds?.bindingFor(agent)
+  if (binding === undefined) return { kind: 'absent' }
+  // Appended at the FIRST dispatch that binds this session's world, not on
+  // every one: where the session's actions run is one fact. The set is keyed on
+  // the session object, so a second session in the same process records its own.
+  if (!ANNOUNCED.has(agent.session)) {
+    ANNOUNCED.add(agent.session)
+    agent.session.append('action/world-bound', {
+      world: binding.world,
+      provider: binding.provider,
+      spec: binding.spec,
+    })
+  }
+  return { kind: 'bound', ...binding }
+}
+
+/** Sessions whose world binding has already been recorded. */
+const ANNOUNCED = new WeakSet<object>()
 
 /**
  * The approval operation this gate needs, named structurally for the same

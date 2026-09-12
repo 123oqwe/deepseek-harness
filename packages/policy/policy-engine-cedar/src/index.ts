@@ -82,8 +82,12 @@ function toCedarRequest(request: PolicyRequest): {
       // rule it most wanted to (BLOCKED-187's residual, closed with
       // BLOCKED-201).
       riskClass: request.facts.riskClass,
-      // `absent` until P3-01 lands ExecutionWorld (BLOCKED-178). A policy can
-      // match on it and refuse, which is the point of a declared absence.
+      // The world's KIND, which is the discriminant a rule matches on:
+      // `absent` when no registry is mounted or every provider refused the
+      // requested confinement, `bound` when a world was minted for this
+      // session. P3-01's Usage stage gave the type its second variant
+      // (BLOCKED-178's producer half); this translation did not change, which
+      // is what "a declared absence a policy can refuse on" was for.
       world: request.world.kind,
       tokenPresented: request.token !== undefined,
       // The token's CLAIMS, so a policy can decide by the authority actually

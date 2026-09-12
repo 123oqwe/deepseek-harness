@@ -2619,5 +2619,39 @@ declare module '@deepseek-ai/dsh-session/types' {
      * @param leaseEpoch - the lease epoch the action was authorized under, absent when the run holds no lease.
      */
     'action/manifest-appended': ActionManifestAppendedEventData
+    /**
+     * The ExecutionWorld one session's actions run in, recorded once when the
+     * world is bound (P3-01 acceptance[0]).
+     *
+     * Recorded BESIDE the dispatch rather than inside the `ActionManifest`, and
+     * that placement is what makes acceptance[0] hold: the clause requires one
+     * `ToolExecution` to move between a local, container or microVM provider
+     * without changing manifest or policy semantics, and a manifest naming its
+     * world would canonicalize differently per provider — a different digest,
+     * and therefore a different approval, for the same action run in two
+     * places. Here a reader can see WHERE an action ran without the digest
+     * depending on it, which is what makes a provider swap auditable.
+     *
+     * Appended once per binding, not once per action: "this session's actions
+     * run in world W minted by provider P" is one fact, and repeating it on
+     * every dispatch would put the same sentence in the log N times.
+     *
+     * `ignorable: true` — a build that does not know this type must still read
+     * the log; where an action ran is auditable history, not a state the
+     * runtime reconstructs.
+     *
+     * @param world - the world the session's actions run in.
+     * @param provider - the provider that minted it, so a swap is visible.
+     * @param spec - digest of the `WorldSpec` it was created from.
+     * @dshScopeScan unsupported
+     */
+    'action/world-bound': {
+      /** The world the session's actions run in. */
+      world: string
+      /** The provider that minted it. */
+      provider: string
+      /** Digest of the spec the world was created from. */
+      spec: string
+    }
   }
 }

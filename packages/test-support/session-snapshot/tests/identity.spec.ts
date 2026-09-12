@@ -123,3 +123,60 @@ describe('session snapshot identity redaction', () => {
     expect(redacted).not.toContain('{{id:')
   })
 })
+
+describe('P3-01: the world binding carries two per-run values, numbered like every other id', () => {
+  const worldA = '88888888-8888-4888-8888-888888888888'
+  const worldB = '99999999-9999-4999-8999-999999999999'
+  const specA = 'a'.repeat(64)
+  const specB = 'b'.repeat(64)
+
+  /** One log binding `count` worlds, in order. */
+  function log(bindings: readonly { world: string; spec: string; provider: string }[]): string {
+    return [
+      JSON.stringify({ type: 'session', id: parentId, createdAt: 1, cwd: '/tmp/work' }),
+      ...bindings.map(data => JSON.stringify({ type: 'action/world-bound', data })),
+      '',
+    ].join('\n')
+  }
+
+  it('tokenizes the world id and the spec digest, which no re-recording could pin', () => {
+    // `world` is a `randomUUID()` and `spec` digests a spec carrying the run's
+    // temporary workspace root, so a refreshed fixture reddens on the next run.
+    const [redacted] = redactSessionSnapshotIds([log([{ world: worldA, spec: specA, provider: 'local' }])])
+    expect(redacted).toContain('"world":"{{world:1}}"')
+    expect(redacted).toContain('"spec":"{{worldSpec:1}}"')
+  })
+
+  it('leaves the PROVIDER raw, so a provider swap still shows as a diff', () => {
+    // The control that keeps this from being the normalizer hiding behaviour:
+    // what acceptance[0] asks a reader to see is WHICH provider minted the
+    // world, and that value is not tokenized.
+    const [redacted] = redactSessionSnapshotIds([log([{ world: worldA, spec: specA, provider: 'local' }])])
+    expect(redacted).toContain('"provider":"local"')
+  })
+
+  it('numbers two DIFFERENT worlds differently, so one log with two bindings stays readable', () => {
+    const [redacted] = redactSessionSnapshotIds([log([
+      { world: worldA, spec: specA, provider: 'local' },
+      { world: worldB, spec: specB, provider: 'fake-container' },
+    ])])
+    expect(redacted).toContain('"world":"{{world:1}}"')
+    expect(redacted).toContain('"world":"{{world:2}}"')
+    expect(redacted).toContain('"spec":"{{worldSpec:1}}"')
+    expect(redacted).toContain('"spec":"{{worldSpec:2}}"')
+  })
+
+  it('gives two bindings of the SAME world one token, because the relationship is the point', () => {
+    const [redacted] = redactSessionSnapshotIds([log([
+      { world: worldA, spec: specA, provider: 'local' },
+      { world: worldA, spec: specA, provider: 'local' },
+    ])])
+    expect(redacted?.match(/\{\{world:1\}\}/g)).toHaveLength(2)
+    expect(redacted).not.toContain('{{world:2}}')
+  })
+
+  it('is idempotent, so a refresh and a replay of one run agree', () => {
+    const redacted = redactSessionSnapshotIds([log([{ world: worldA, spec: specA, provider: 'local' }])])
+    expect(redactSessionSnapshotIds(redacted)).toEqual(redacted)
+  })
+})

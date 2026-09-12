@@ -244,8 +244,15 @@ export type ActionOriginator =
  * A field a path may omit is a field every path eventually omits, so the
  * defaulting moved out to `readPolicyContextFacts`, where an absent service is
  * a decision with one home rather than a `??` at the point of use.
+ *
+ * **`world` was the last input still in that state, and P3-01's Usage stage
+ * moved it out the same way.** It was not omitted by the paths — it was
+ * hardcoded to `{ kind: 'absent' }` right here, so every policy question a
+ * shipped composition ever asked said the world was unknown even when one was
+ * mounted, and no rule about where an action runs could match. It now comes
+ * from the caller, read by `readExecutionWorldFact` beside the facts reader.
  * @param ctx - the context the action executes in.
- * @param input - the manifest, the identity's token, the originator and the facts.
+ * @param input - the manifest, the identity's token, the originator, the world and the facts.
  * @returns the closed decision the caller must act on.
  */
 export function enforceManifestedAction(ctx: Context, input: EnforcementInput): ClosedDecision {
@@ -253,7 +260,7 @@ export function enforceManifestedAction(ctx: Context, input: EnforcementInput): 
     identity: input.manifest.actor,
     token: input.token,
     manifest: input.manifest,
-    world: { kind: 'absent' },
+    world: input.world,
     facts: input.facts,
   }, input.origin)
 }
@@ -266,6 +273,18 @@ export interface EnforcementInput {
   readonly token: PolicyRequest['token']
   /** Which originator is dispatching. */
   readonly origin: ActionOriginator
+  /**
+   * Where the action would run, as the dispatch path read it from the
+   * composition.
+   *
+   * Required for the same reason as `facts`, and with the same history one
+   * stage later: an optional world would be omitted by every path, which is
+   * indistinguishable from the hardcoded `absent` this field replaced.
+   * `@deepseek-ai/dsh-tools/external-effect`'s `readExecutionWorldFact` is the
+   * one reader both shipped paths use, and it answers `absent` when no world
+   * registry is mounted.
+   */
+  readonly world: PolicyRequest['world']
   /**
    * The context facts, as the dispatch path read them from the composition.
    *

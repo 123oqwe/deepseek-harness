@@ -13,14 +13,14 @@ import type { CodeBindingFunction, CodeRunResult, CodeRuntime } from '@deepseek-
 import { snapshotJsonValue, type JsonValue } from '@deepseek-ai/dsh-util-values'
 import { appendManifestThenGate, computeArgumentsHash, manifestAttribution, manifestIdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
 import { enforceManifestedAction } from '@deepseek-ai/dsh-policy-enforcement'
-import type { PolicyContextFacts } from '@deepseek-ai/dsh-policy-engine'
+import type { ExecutionWorldFact, PolicyContextFacts } from '@deepseek-ai/dsh-policy-engine'
 import { redactTokenForLog } from '@deepseek-ai/dsh-capability-token'
 import type { ClosedDecision } from '@deepseek-ai/dsh-policy-engine'
 import type { ActionId, CapabilityRef } from '@deepseek-ai/dsh-action-manifest'
 import type { Context } from '@deepseek-ai/cordis'
 import type { Principal } from '@deepseek-ai/dsh-principal'
 import { createSessionManifestAppender } from './manifest-log.ts'
-import { classifyActionRisk, confirmExternalEffect, gateActionRisk, readPolicyContextFacts, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect } from './external-effect.ts'
+import { classifyActionRisk, confirmExternalEffect, gateActionRisk, readExecutionWorldFact, readPolicyContextFacts, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect } from './external-effect.ts'
 import type { ExternalEffectRecord } from './external-effect.ts'
 import { attachedIdentity } from '@deepseek-ai/dsh-session'
 import { defineTool, parameterSchemaSpecToJsonSchema } from './schema.ts'
@@ -208,6 +208,15 @@ const FAIL_CLOSED_FACTS: PolicyContextFacts = {
   riskClass: 'security-sensitive',
 }
 
+/**
+ * The world fact for a sub-dispatch with no agent behind it.
+ *
+ * `absent` for the same reason as {@link FAIL_CLOSED_FACTS}: with no agent
+ * there is no session to bind a world to, and a policy must see "where this
+ * ran is unknown" rather than a world borrowed from somewhere else.
+ */
+const FAIL_CLOSED_WORLD: ExecutionWorldFact = { kind: 'absent' }
+
 /** What one sub-dispatch's manifest produced: the ledger's record and P2-05's decision. */
 interface ManifestedSubDispatch {
   /** The reservation inputs, or undefined when this run has no agent. */
@@ -223,6 +232,7 @@ function appendCodeModeManifest(
   name: string,
   loggedArguments: unknown,
   facts: PolicyContextFacts,
+  world: ExecutionWorldFact,
 ): ManifestedSubDispatch {
   const agent = exec.agent
   if (agent === undefined) return { reservation: undefined, decision: undefined }
@@ -275,6 +285,7 @@ function appendCodeModeManifest(
         ? { token: undefined }
         : { token: redactTokenForLog(exec.capabilityToken) },
       origin: 'code-mode-embedded',
+      world,
       facts,
     })
   return {
@@ -690,7 +701,14 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
               const facts = exec.agent === undefined
                 ? FAIL_CLOSED_FACTS
                 : await readPolicyContextFacts(options.ledgerContext(), exec.agent, classified)
-              const manifested = appendCodeModeManifest(options.ledgerContext(), exec, subCallId, name, normalized.logged, facts)
+              // The other composition-read input of the same question (P3-01),
+              // read on THIS path too: a world read only by the native path is
+              // must[2]'s bypass in the shape §12.35-2 already closed once for
+              // the reservation.
+              const world = exec.agent === undefined
+                ? FAIL_CLOSED_WORLD
+                : await readExecutionWorldFact(options.ledgerContext(), exec.agent)
+              const manifested = appendCodeModeManifest(options.ledgerContext(), exec, subCallId, name, normalized.logged, facts, world)
               reservation = manifested.reservation
               // The reservation is taken before the sub-call runs, exactly as
               // the native path takes one (P4-12 must[4]). Until §12.35-2 this

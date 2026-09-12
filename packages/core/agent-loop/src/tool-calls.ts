@@ -21,7 +21,7 @@ import { redactTokenForLog } from '@deepseek-ai/dsh-capability-token'
 import type { SignedCapabilityToken } from '@deepseek-ai/dsh-capability-token'
 import type { ActionManifest } from '@deepseek-ai/dsh-action-manifest'
 import { enforceManifestedAction } from '@deepseek-ai/dsh-policy-enforcement'
-import type { PolicyContextFacts } from '@deepseek-ai/dsh-policy-engine'
+import type { ExecutionWorldFact, PolicyContextFacts } from '@deepseek-ai/dsh-policy-engine'
 import type { ActionId, ArgumentsHash, CapabilityRef, IdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
 import type { LedgerScope } from '@deepseek-ai/dsh-action-ledger'
 // The `actionLedger` service augmentation lives in the ledger package's runtime
@@ -34,7 +34,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent/types'
 import { createSessionManifestAppender } from '@deepseek-ai/dsh-tools/manifest-log'
 // The reserve/confirm pair lives in `dsh-tools` so the code-mode dispatch can
 // reach it too: a second copy here is what left code-mode unreserved (§12.35-2).
-import { classifyActionRisk, confirmExternalEffect, gateActionRisk, readPolicyContextFacts, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect } from '@deepseek-ai/dsh-tools/external-effect'
+import { classifyActionRisk, confirmExternalEffect, gateActionRisk, readExecutionWorldFact, readPolicyContextFacts, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect } from '@deepseek-ai/dsh-tools/external-effect'
 import type { Principal } from '@deepseek-ai/dsh-principal'
 import { brandString } from '@deepseek-ai/dsh-brand'
 
@@ -107,7 +107,9 @@ export async function executeToolCalls(
     // differs: a fenced run HELD its work item and lost it, so another host is
     // already doing the work; a lease-refused run never held it, so this host
     // simply lost the race and its own start is the thing to look at.
-    for (const block of toolCalls) appendUnauthorizedToolCall(ctx, agent, turn, step, block, await factsForCall(ctx, agent, block), fencing)
+    for (const block of toolCalls) {
+      appendUnauthorizedToolCall(ctx, agent, turn, step, block, await policyInputsForCall(ctx, agent, block), fencing)
+    }
     return { concluded: false }
   }
 
@@ -162,7 +164,7 @@ export async function executeToolCalls(
     concluded ||= outcome.concluded
     if (outcome.aborted) {
       for (const call of planned.slice(next)) {
-        appendSkippedToolCall(ctx, agent, turn, step, call.block, await factsForCall(ctx, agent, call.block))
+        appendSkippedToolCall(ctx, agent, turn, step, call.block, await policyInputsForCall(ctx, agent, call.block))
       }
       return { concluded }
     }
@@ -248,8 +250,13 @@ async function runGroup(
     // two layers decide about one classification rather than each computing
     // its own.
     const classified = classifyActionRisk(ctx, call.block.name, ctx.tools.get(call.block.name, agent)?.riskDomainTags ?? [])
-    const facts = await readPolicyContextFacts(ctx, agent, classified)
-    const appended = appendToolCall(ctx, agent, turn, step, call.block, facts, call.exec.capabilityToken)
+    const inputs: PolicyInputs = {
+      facts: await readPolicyContextFacts(ctx, agent, classified),
+      // The other composition-read input of the same question (P3-01): which
+      // world this session's actions run in, `absent` when none is mounted.
+      world: await readExecutionWorldFact(ctx, agent),
+    }
+    const appended = appendToolCall(ctx, agent, turn, step, call.block, inputs, call.exec.capabilityToken)
     callSeqs[index] = appended.seq
     started++
     // must[4]: the reservation is taken BEFORE the tool runs, so a crash
@@ -373,7 +380,7 @@ async function runGroup(
     // Started calls and accepted context settle first; every remaining model
     // call then receives an ordered synthetic result before the turn aborts.
     for (const call of group.slice(started)) {
-      appendSkippedToolCall(ctx, agent, turn, step, call.block, await factsForCall(ctx, agent, call.block))
+      appendSkippedToolCall(ctx, agent, turn, step, call.block, await policyInputsForCall(ctx, agent, call.block))
     }
     return { consumed: group.length, aborted: true, concluded }
   }
@@ -409,11 +416,11 @@ function appendUnauthorizedToolCall(
   turn: number,
   step: number,
   block: ToolCallBlock,
-  facts: PolicyContextFacts,
+  policy: PolicyInputs,
   reason: 'fenced' | 'lease-refused',
 ): void {
   const { session } = agent
-  const { seq: callSeq } = appendToolCall(ctx, agent, turn, step, block, facts)
+  const { seq: callSeq } = appendToolCall(ctx, agent, turn, step, block, policy)
   const message = reason === 'fenced'
     ? 'this run is no longer the owner of its work item'
     : 'this run was refused ownership of its work item'
@@ -434,10 +441,10 @@ function appendSkippedToolCall(
   turn: number,
   step: number,
   block: ToolCallBlock,
-  facts: PolicyContextFacts,
+  policy: PolicyInputs,
 ): void {
   const { session } = agent
-  const { seq: callSeq } = appendToolCall(ctx, agent, turn, step, block, facts)
+  const { seq: callSeq } = appendToolCall(ctx, agent, turn, step, block, policy)
   appendToolResult(session, turn, step, block, {
     content: [{ type: 'text', text: 'Error: tool call aborted before dispatch' }],
     isError: true,
@@ -457,10 +464,30 @@ function appendSkippedToolCall(
  * @param ctx - the mounting context, consulted for the fact services.
  * @param agent - the agent the call belonged to.
  * @param block - the model call that will not run.
- * @returns the context facts for that call.
+ * @returns the context facts and the world for that call.
  */
-function factsForCall(ctx: Context, agent: Agent, block: ToolCallBlock): Promise<PolicyContextFacts> {
-  return readPolicyContextFacts(ctx, agent, classifyActionRisk(ctx, block.name, ctx.tools.get(block.name, agent)?.riskDomainTags ?? []))
+async function policyInputsForCall(ctx: Context, agent: Agent, block: ToolCallBlock): Promise<PolicyInputs> {
+  const classified = classifyActionRisk(ctx, block.name, ctx.tools.get(block.name, agent)?.riskDomainTags ?? [])
+  return {
+    facts: await readPolicyContextFacts(ctx, agent, classified),
+    world: await readExecutionWorldFact(ctx, agent),
+  }
+}
+
+/**
+ * The two composition-read inputs of one policy question, carried together.
+ *
+ * Paired rather than passed separately because they are read at the same
+ * boundary, by the two readers in `@deepseek-ai/dsh-tools/external-effect`, and
+ * threaded down the same call chain to the same enforcement point. A second
+ * parameter beside `facts` would let one of them be forgotten at one call site,
+ * which is the shape BLOCKED-201 measured for `facts` itself.
+ */
+interface PolicyInputs {
+  /** The declared context facts a policy may read (P2-05 must[0]). */
+  readonly facts: PolicyContextFacts
+  /** Where the action would run (P3-01), `absent` when no world registry is mounted. */
+  readonly world: ExecutionWorldFact
 }
 
 /**
@@ -477,11 +504,11 @@ function appendToolCall(
   turn: number,
   step: number,
   block: ToolCallBlock,
-  facts: PolicyContextFacts,
+  policy: PolicyInputs,
   presentedToken?: SignedCapabilityToken,
 ): { seq: SessionSeq; record: ManifestRecord } {
   const { session } = agent
-  const record = appendActionManifest(ctx, agent, block, 'native-tool-call', facts, presentedToken)
+  const record = appendActionManifest(ctx, agent, block, 'native-tool-call', policy, presentedToken)
   const event = session.append('tool/call', { turn, step, callId: block.id, name: block.name, arguments: block.arguments })
   return { seq: event.seq, record }
 }
@@ -514,7 +541,7 @@ function appendActionManifest(
   agent: Agent,
   block: ToolCallBlock,
   origin: 'native-tool-call',
-  facts: PolicyContextFacts,
+  policy: PolicyInputs,
   presentedToken?: SignedCapabilityToken,
 ): ManifestRecord {
   const { session } = agent
@@ -557,7 +584,7 @@ function appendActionManifest(
   // the one enforcement point through this call, and a third path that skipped
   // it would also have skipped the manifest — which
   // `assertManifestPrecedesExecution` already refuses.
-  const decision = decideManifestedAction(ctx, agent, appended.manifest, origin, facts, presentedToken)
+  const decision = decideManifestedAction(ctx, agent, appended.manifest, origin, policy, presentedToken)
   return {
     key: appended.manifest.idempotencyKey,
     argumentsHash,
@@ -584,7 +611,7 @@ function decideManifestedAction(
   agent: Agent,
   manifest: ActionManifest,
   origin: 'native-tool-call',
-  facts: PolicyContextFacts,
+  policy: PolicyInputs,
   presentedToken?: SignedCapabilityToken,
 ): PolicyDecisionSummary | undefined {
   void agent
@@ -598,7 +625,8 @@ function decideManifestedAction(
     manifest,
     ...presentedToken === undefined ? { token: undefined } : { token: redactTokenForLog(presentedToken) },
     origin,
-    facts,
+    world: policy.world,
+    facts: policy.facts,
   })
   return { effect: decision.effect, ...decision.reason === undefined ? {} : { reason: decision.reason } }
 }

@@ -73,15 +73,42 @@ describe('P2-05 must[0]: the request translation', () => {
   })
 
   it('exposes the declared context facts, including the absent execution world', async () => {
-    // BLOCKED-178: `world` is `absent` until P3-01 lands, and a policy can
-    // REFUSE on that — which is the difference between a declared absence and
-    // a missing field.
+    // BLOCKED-178: `world` is `absent` where no registry is mounted, and a
+    // policy can REFUSE on that — which is the difference between a declared
+    // absence and a missing field.
     const { ctx, engine } = await mount({
       'require-known-world': 'forbid(principal, action, resource) when { context.world == "absent" };',
       ...PERMIT_ALL,
     })
 
     expect(engine.evaluate(request()).decision).toMatchObject({ effect: 'deny', reason: 'forbidden-by-policy' })
+    await ctx.fiber.dispose()
+  })
+
+  it('lets the SAME rule admit an action whose world is bound, with no change to the translation', async () => {
+    // P3-01 Usage, acceptance[1]'s policy half. Until `ExecutionWorldFact`
+    // gained its second variant this rule forbade EVERYTHING: `absent` was the
+    // only value the field could take, so "refuse when the world is unknown"
+    // and "refuse always" were the same policy and no deployment could tell
+    // them apart. The rule below is byte-identical to the one above and the
+    // translation is untouched — what changed is that the fact can now say
+    // something else.
+    const { ctx, engine } = await mount({
+      'require-known-world': 'forbid(principal, action, resource) when { context.world == "absent" };',
+      ...PERMIT_ALL,
+    })
+
+    const bound = request({
+      world: {
+        kind: 'bound',
+        world: brandString('world-1'),
+        provider: brandString('local'),
+        spec: brandString('digest-1'),
+      } as never,
+    })
+    expect(engine.evaluate(bound).decision.effect).toBe('permit')
+    // The control: the same engine, the same rule, the absent world still denied.
+    expect(engine.evaluate(request()).decision.effect).toBe('deny')
     await ctx.fiber.dispose()
   })
 

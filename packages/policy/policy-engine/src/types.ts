@@ -13,6 +13,7 @@ import type { Branded } from '@deepseek-ai/dsh-brand'
 import type { Principal } from '@deepseek-ai/dsh-principal'
 import type { ActionManifest } from '@deepseek-ai/dsh-action-manifest'
 import type { CapabilityTokenLogRecord } from '@deepseek-ai/dsh-capability-token'
+import type { WorldId, WorldProviderId, WorldSpecDigest } from '@deepseek-ai/dsh-execution-world/types'
 
 /**
  * Digest of the policy SET a decision was made against.
@@ -84,17 +85,37 @@ export interface PolicyContextFacts {
 /**
  * The world an action executes in (must[0]'s fifth input).
  *
- * **Absent by construction on this tree.** `ExecutionWorld` is P3-01's to
- * design, and it does not exist yet; the slot is declared here so a request
- * carries the shape must[0] names and so the day P3-01 lands is a type change
- * rather than a vocabulary change. `absent` is a value a policy can match on,
- * NOT a missing field: a policy that must know the world can refuse when the
- * world is unknown, which is different from a policy that never asked.
+ * Two variants, and the pair is what makes the input decidable. `absent` is a
+ * value a policy can match on, NOT a missing field: a policy that must know the
+ * world can refuse when the world is unknown, which is different from a policy
+ * that never asked. `bound` carries the identity of the world the action will
+ * run in, so a rule can distinguish one confinement from another.
+ *
+ * Until P3-01's Usage stage this type had only `absent`, which made P3-01
+ * acceptance[1] ("fail closed when no provider satisfies policy") unprovable
+ * from the policy side: with one variant there was nothing for a rule to refuse
+ * on, so every rule about where an action runs matched everything or nothing.
+ *
+ * The world is named by its ids and its confinement digest, never by a
+ * `WorldHandle`. A handle is an unforgeable capability (P3-01 acceptance[2]);
+ * putting one in a policy request would hand the authority to operate a world
+ * to every engine that reads the request, and a Cedar context cannot carry an
+ * object identity anyway.
  *
  * Recorded as BLOCKED-178 under §12.46-B: this epic owns the rule half, P3-01
  * owns the producer.
  */
-export type ExecutionWorldFact = { readonly kind: 'absent' }
+export type ExecutionWorldFact
+  = { readonly kind: 'absent' }
+    | {
+      readonly kind: 'bound'
+      /** The world the action will run in. */
+      readonly world: WorldId
+      /** The provider that minted it, so a provider swap is visible to a rule. */
+      readonly provider: WorldProviderId
+      /** Digest of the `WorldSpec` the world was created from; what a rule compares confinement by. */
+      readonly spec: WorldSpecDigest
+    }
 
 /**
  * What a policy may read about the capability token presented with an action
@@ -123,7 +144,7 @@ export interface PolicyRequest {
   readonly token: PolicyTokenFacts | undefined
   /** What is being attempted (P2-03). */
   readonly manifest: ActionManifest
-  /** Where it would run (P3-01; `absent` on this tree). */
+  /** Where it would run (P3-01), `absent` when no world registry is mounted. */
   readonly world: ExecutionWorldFact
   /** The declared facts a policy may read. */
   readonly facts: PolicyContextFacts

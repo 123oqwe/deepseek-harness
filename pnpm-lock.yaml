@@ -1236,6 +1236,9 @@ importers:
       '@deepseek-ai/dsh-deepseek-llm-api-extensions':
         specifier: workspace:^
         version: link:../../llm/deepseek-llm-api-extensions
+      '@deepseek-ai/dsh-execution-world':
+        specifier: workspace:^
+        version: link:../../execution/execution-world
       '@deepseek-ai/dsh-fs-local':
         specifier: workspace:^
         version: link:../../fs/fs-local
@@ -4901,6 +4904,10 @@ importers:
         version: link:../../util/timeout
 
   packages/execution/execution-world:
+    dependencies:
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:^
@@ -7274,6 +7281,9 @@ importers:
       '@deepseek-ai/dsh-capability-token':
         specifier: workspace:^
         version: link:../capability-token
+      '@deepseek-ai/dsh-execution-world':
+        specifier: workspace:^
+        version: link:../../execution/execution-world
       '@deepseek-ai/dsh-principal':
         specifier: workspace:^
         version: link:../../identity/principal

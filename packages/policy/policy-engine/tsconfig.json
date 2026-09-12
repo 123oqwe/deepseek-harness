@@ -12,6 +12,7 @@
     { "path": "../../action/action-manifest" },
     { "path": "../../util/brand" },
     { "path": "../capability-token" },
+    { "path": "../../execution/execution-world" },
     { "path": "../../identity/principal" }
   ]
 }

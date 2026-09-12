@@ -26,10 +26,11 @@ const MINTED_RUN_ID_RE = /^run-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[
  */
 const PREFIXED_ID_RE = /^[a-z][a-z0-9-]*:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const LEGACY_TOKEN_RE = /^\{\{(?:sessionId|messageId)\}\}$/
-const CANONICAL_TOKEN_RE = /^\{\{(session|message|approval|run|command|rpc|retry|id):([1-9]\d*)\}\}$/
+const CANONICAL_TOKEN_RE = /^\{\{(session|message|approval|run|command|rpc|retry|id|world|worldSpec):([1-9]\d*)\}\}$/
 const ID_KEY_RE = /(?:^id$|Id$|Ids$)/
 
-type IdentityKind = 'session' | 'message' | 'approval' | 'run' | 'command' | 'rpc' | 'retry' | 'id'
+type IdentityKind
+  = 'session' | 'message' | 'approval' | 'run' | 'command' | 'rpc' | 'retry' | 'id' | 'world' | 'worldSpec'
 
 interface ParsedLog {
   readonly records: Record<string, unknown>[]
@@ -110,6 +111,23 @@ export function redactSessionSnapshotIds(logs: readonly string[]): string[] {
     for (const [childKey, item] of Object.entries(value)) {
       if (recordType === 'approval/asked' || recordType === 'approval/decided') {
         if (childKey === 'id') claim(item, 'approval')
+      } else if (recordType === 'action/world-bound' && (childKey === 'world' || childKey === 'spec')) {
+        // P3-01's world binding carries two values that are different on every
+        // run and identical in meaning: `world` is a `randomUUID()`, and `spec`
+        // is a digest OVER the resolved spec, whose `workspaceRoot` is the
+        // run's generated temporary directory. Neither can be pinned by
+        // re-recording — a refreshed fixture reddens on the next run — so they
+        // are tokenized here, where `{{run:N}}` and `{{message:N}}` already
+        // tokenize exactly this class of value.
+        //
+        // This is not the normalizer being weakened to hide a behaviour
+        // difference, which is what "fix fixtures, not normalizers" forbids:
+        // the PROVIDER stays raw in the fixture, so a provider swap still
+        // shows as a diff, and the numbering is first-seen, so two different
+        // worlds in one log stay distinguishable. `always` is set because a
+        // spec digest is 64 hex characters rather than a uuid and would fail
+        // the candidate test.
+        claim(item, childKey === 'world' ? 'world' : 'worldSpec', true)
       } else if (childKey === 'commandId') {
         claim(item, 'command', true)
       } else if (childKey === 'rpcId') {

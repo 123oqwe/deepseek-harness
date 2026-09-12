@@ -250,6 +250,19 @@
         mode: !!js process.env.DSH_PERMISSION_MODE ?? 'workspace-write'
         workspaceRoot: !!js process.cwd()
 
+    # P3-01's ExecutionWorld seam. The registry creates NO world at mount: a
+    # world is minted at the first dispatch that asks for one, and only when a
+    # registered provider satisfies the confinement this deployment requests, so
+    # a composition that registers none keeps answering the fail-closed `absent`
+    # policy fact. The provider is a SEPARATE row because it is a provider: a
+    # deployment shipping a container world removes that row rather than
+    # reconfiguring the registry.
+    - id: execution-worlds
+      name: '@deepseek-ai/dsh-execution-world/plugin'
+
+    - id: execution-world-local
+      name: '@deepseek-ai/dsh-execution-world/local'
+
     - id: bash-sandbox
       name: '@deepseek-ai/dsh-bash-sandbox'
       disabled: !!js process.platform === 'win32'
