@@ -682,7 +682,7 @@ Source: [`packages/core/session/src/types.ts:369`](../packages/core/session/src/
 }
 ```
 
-Source: [`packages/jobs/jobs/src/types.ts:204`](../packages/jobs/jobs/src/types.ts)
+Source: [`packages/jobs/jobs/src/types.ts:191`](../packages/jobs/jobs/src/types.ts)
 
 ### `llm/*`
 
