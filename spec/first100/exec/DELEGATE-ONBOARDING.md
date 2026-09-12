@@ -93,6 +93,7 @@ preFlight(JSON 记录 `clause-subject-audit.json` + `evidence-<id>.md`,`recorded
 - **快照比较侧对持久化 flush 边界不敏感**(补记 165):`normalizeSessionSnapshots` 末尾的 `repackSessionSnapshot`(`normalize.ts:488`)对 expected/actual 两侧重打包 chunk 行;语料侧 `canonicalSessionFixture`(`migrate:packed-session-fixtures`)同基 `packChunkRuns`。别从 `expect(actual).toBe(expected)` 整串相等 + "归一化只清 time0/dt"推出"逐行比"——先读管线到最后一步(224 为此错开一号)。
 - **`test:snapshot:refresh -- -t <name>` 的 `-t` 只过滤用例执行,不限制 fixture 改写**(补记 180):refresh 会对它跑到的每个 fixture 写盘(含布局投影),内存紧张的机器上还可能半途被杀留下一批改写;单个 fixture 的机械修正走手工一行 + 回放绿 + 提交信息说明,不跑 refresh;跑了先 `git status snapshots/` 看范围。
 - **读常量必读使用点**(补记 182):一组路径前缀常量可能是排除名单而非枚举名单(`session-fixture-layout.ts:134` 的 `return []` 才是语义);一个编码函数(`encodeSeqRanges`)存在不等于某条投影用了它——先找调用链再下结论。fixture layout canonical:`sourceEventSeqs` 展开列表、chunk run 打包、覆盖全仓 `*.jsonl` 减两个物理编码前缀。
+- **`git rebase --onto <new> <base>` 的 `<base>` 本身被排除**(补记 186):要重放包含某笔的区间,`<base>` 必须是那笔的父(并确认父已在目标里);重放完先跑受影响的回放片——lane A 一次把 214 第二半整笔静默丢掉,是 headless 72 红(Expected 有 approval 对、实际无)抓住的,不是 diff。
 - **共享机器上只杀自己的 PID**(补记 142):两 lane 同机,`pkill -f vitest|tsc|node` 按模式杀会把另一 lane 正在跑的门集/普查一起杀掉(lane A 05:27Z 一例);lane 须记下自己启动的 PID 再杀,delegate 见到 FLAG "process kill" 带模式匹配时立即通知另一 lane 核对。
 
 ## 9. 每小时自查五问(2026-09-11,gq-92 退班前给;由 watch-v12 心跳每小时打印,不靠记)
