@@ -132,6 +132,22 @@ The question verb splits, and the split is the honest part. Its SEAM path is pro
 
 That refusal is a decision, not a gap, so the U stage stopped rather than route around it. Closing it is the product decision recorded as (B1) in BLOCKED-215: it would reverse a shipped refusal and span three epics, and it is not scheduled. Building the narrower version — parent registers the waiting point, child waits — was refused for the reason BLOCKED-215 exists: nothing in production would trigger it, so it would be wired code with no caller.
 
+## A hard Reviewer check this epic inherits (delegate ruling 2026-09-11)
+
+**All three were built; the third is answered with a limit rather than a tick.** (1) and (2) exist — `ControlPlaneService`'s registry keyed by waiting point, and `settle` delivering out of band to the point that asked. (3) is the one that cannot be ticked: an answer entered at a REAL question surface reaches the waiting point only if something production calls `controlPlane.ask`, and nothing does, because the consumer it was built for — a subagent asking a human — is refused by `ctx.userQuestions.ask`'s `DELEGATED_CALLER` check. That is recorded in this page's U section and in BLOCKED-215's second rewrite, and the Reviewer should read the limit rather than the absence.
+
+**The host-side pending-question registry and its out-of-band settlement are P2-12 deliverables.** BLOCKED-215 was opened against P5-10 as a missing constructor argument and re-measured to four missing pieces: `awaitHuman` has zero production callers, nothing in production produces a `'human-answer'` control message (the only call into that router is `decide({ kind: 'continue' })`), and — the part that decides ownership — `UserQuestionService.ask()` returns its answer as the **waterfall's return value**, so no host-side path can settle a question blocked inside it. `registerPendingInteraction` exists only client-side.
+
+So a human answer arriving out-of-band has nowhere to land, and the thing that would give it somewhere is exactly what must[0]'s `ask question` verb requires. The ruling assigns it here rather than letting it be invented during a freeze as "wiring".
+
+**What this epic's Reviewer must verify explicitly**, and must not accept a seam whose only consumer is a test:
+
+1. A host-side registry of pending questions keyed by waiting point, that `ask()` registers into.
+2. An out-of-band settlement path that delivers an answer to the waiting point that asked — not to the agent at large, which is the distinction P5-10's acceptance[1] already states.
+3. A composition observation in which an answer entered at a **real** question surface reaches the waiting point `awaitHuman` designated, with the mutation *"the registry does not settle"* reddening it. That observation is also what releases P5-10 from WITHDRAWN, frozen as a P5-10.U supplement.
+
+Open question 2 above asks whether this epic adds the missing answerers or only the seam. This ruling answers half of it: the **settlement** half is P2-12's. Whether an ACP or CLI **answerer** is also P2-12's remains open.
+
 ## Open questions this preFlight does NOT settle
 
 1. **What "所有 surface 的状态一致" (acceptance[3]) ranges over.** Five profile templates ship, but only one answers both human verbs. Whether "all surfaces" means all profiles, all answerers, or all remote transports decides whether the clause is testable at all — and on the answerer reading it is nearly vacuous today, since there is one.
