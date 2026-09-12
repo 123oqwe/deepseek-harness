@@ -1502,6 +1502,75 @@
     },
     {
       "epic": "P2-06",
+      "path": "packages/acp/acp/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "Written from `git show 2d5af28330 -- packages/acp/acp/src/index.ts` (+23/-1): the permission request's `toolCall` gains `title` (capability — risk class) and a five-entry `content` array when `request.display` is present, and is byte-for-byte the old `{ toolCallId }` when it is absent. This is where must[0] acquires a DECIDER: the registry named the display fields and the gate that builds them, and a field nothing renders is a field no human ever sees. The projection rides `RequestPermissionRequest.toolCall`, the ACP field for saying what is being permitted, and invents no sibling — a field of this harness's own making tells a conformant client something it has no rule for reading. The `request.callId === undefined` guard above it is unchanged, and is this stage's second declared limitation: every non-tool-call ask, workspace trust being the live one, still delegates before reaching this code."
+    },
+    {
+      "epic": "P2-06",
+      "path": "packages/acp/acp/tests/approval.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P2-06",
+      "path": "packages/client/ui-approval/src/client/ApprovalPanel.tsx",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "Written from `git show 2d5af28330 -- .../ApprovalPanel.tsx` (+18/-1): the card renders the six fields through `t` when `display` is present and is unchanged when it is absent. The Web half of must[0]. The registry named no Client source for this epic, and a clause about what a DECIDER sees is not closed by a payload — one of the two deciders this harness ships is this panel, and the ACP projection alone would leave the Web operator looking at a tool name."
+    },
+    {
+      "epic": "P2-06",
+      "path": "packages/client/ui-approval/src/client/contract/slots.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "Written from `git show 2d5af28330 -- .../contract/slots.ts` (+29/-0): `ApprovalPresentationRequest` gains an optional `display` carrying the same six fields the ACP payload carries. Optional rather than required because a workspace-trust ask decides about a directory and has no manifest; making it required would have forced the trust path to invent values, which is the failure the ACP side's no-manifest case exists to prevent. The registry declared the Host-side display type and not the Client contract that receives it, and a type no Client contract admits cannot reach a panel."
+    },
+    {
+      "epic": "P2-06",
+      "path": "packages/client/ui-approval/src/client/locales.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "Written from `git show 2d5af28330 -- .../client/locales.ts` (+12/-0): six labels added to BOTH locale dictionaries. Required by the repo's locale-owned-copy rule — `verify-client-ui-i18n` rejects hardcoded product text — so the panel below cannot render these fields at all without this file. It is in scope because the six fields are this epic's, and a label naming `Arguments (redacted)` is part of acceptance[1]'s statement at the surface: the word REDACTED is what tells the decider the digest covers more than what they are reading."
+    },
+    {
+      "epic": "P2-06",
+      "path": "packages/core/agent-loop/tests/approval-revalidation.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P2-06",
+      "path": "packages/core/tools/src/external-effect.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "Written from `git show 2d5af28330 -- packages/core/tools/src/external-effect.ts` (+8/-1): `gateActionRisk` takes a seventh parameter `display?: ApprovalDisplay` and spreads it onto the `approval/request` payload, the same conditional-spread shape `binding` already uses so an ask without a manifest carries no key rather than an empty one. The registry named the approval package, not the gate: this is the ONE site that holds the manifest, and building the six fields here rather than in each answerer is what makes two surfaces show one account of the same call instead of each deriving the risk class from a tool name."
+    },
+    {
+      "epic": "P2-06",
+      "path": "packages/core/tools/tests/approval-binding.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P2-06",
       "path": "packages/interaction/user-approval/tests/binding-service.spec.ts",
       "kind": "test",
       "stages": [
