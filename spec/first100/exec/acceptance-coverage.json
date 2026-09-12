@@ -884,6 +884,16 @@
           "stage": "P",
           "title": "yields the same reference whatever order the caller counted the kinds in (acceptance[0])",
           "supplementSeq": 1
+        },
+        {
+          "stage": "U",
+          "title": "compiles exactly one profile when a real shipped-path boot takes its first model step",
+          "supplementSeq": 1
+        },
+        {
+          "stage": "U",
+          "title": "names the same profile in the session log, the Run log and the Agent handle",
+          "supplementSeq": 1
         }
       ],
       "note": "acceptance[0]: '同一输入在确定性 parser fixture 下输出稳定.' Stability decomposes into two halves that must BOTH hold, which is why the controls are cited as necessary rather than decorative: the same input yields the same reference (C over a constructed profile, P over a real compile), and a CHANGED input yields a different one (the confidence move and the budget move) — without the second half a compiler returning one constant would satisfy the first. The id case is the third sub-fact: ids come from the statement rather than from position, so inserting an unrelated constraint does not renumber the others and thereby change the digest of an unchanged constraint.\n\nSERVICE / PRODUCTION (§12.46-B): all five are what the LIBRARY does. C constructs profiles by hand; P calls the compiler directly. Neither observes a compile reaching this code from a running harness — that is the U stage's, and U is NOT_RUN. The production-arrival citation is prepared in evidence-P4-02.md §4.4 and is written here once observed, because coverage closure treats every citation as necessary and a frozen-but-unobserved title would turn this index red."
