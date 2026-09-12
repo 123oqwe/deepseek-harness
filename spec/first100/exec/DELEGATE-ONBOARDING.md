@@ -112,3 +112,7 @@ preFlight(JSON 记录 `clause-subject-audit.json` + `evidence-<id>.md`,`recorded
 ## 9. 每小时自查五问(2026-09-11,gq-92 退班前给;由 watch-v12 心跳每小时打印,不靠记)
 
 ① 我派出去的非代码指令(锚 / 文件 / 配置)核过落地了吗——`ls` / `grep` 一次,不信"已建"。② 云上有没有排队或已被取代的 run,取消了没(一次只派最新候选)。③ 本笔是不是一次云跑——docs overlay 先叠到候选再派发,门③ SHA == 推送 SHA,dispatch run 既是门③也是观测。④ 今天有没有我没量就写的断言(补记 4 的"无环"是反例)。⑤ `~/first100-delegate/.events/watchdog.log` 最近一条是什么(机器睡眠 / 电池 / 会话死亡先于"lane 怠工"怀疑)。
+
+## 10. lint 假绿两条(2026-09-13,补记 248,候选 6 一条 no-unnecessary-type-assertion 漏检后立)
+- **changed-file oxlint 必须在被检包 TS 类型程序已构建的前提下跑**。没有类型信息时,类型感知规则(`no-unnecessary-type-assertion`、`no-unsafe-*`)静默跳过——"零发现"与"通过"不可区分,是第 4 节"四类假绿"的第五类,同族于"无 summary 行=没跑"。lane 预报"lint 我的文件 0 条"若未先建类型,不算数。这也是第 4 节点 5 的延伸:类型感知规则的沉默不是绿。
+- **type-aware lint 的本地复现必须在类型能正确解析的树里**。在一次性 worktree(node_modules 未正确安装/类型解析坏)跑同一 lint,会得一片 `no-unsafe-*`(全成 `error` 类型)的假报——候选 6 时 delegate 得 1785 条全假,CI 真结果 1 条。类型解析坏的树里的 type-aware 读数一律作废,以 CI 为准。
