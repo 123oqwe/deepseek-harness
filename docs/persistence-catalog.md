@@ -190,7 +190,7 @@ Source: [`packages/core/tools/src/index.ts:2587`](../packages/core/tools/src/ind
 }
 ```
 
-Source: [`packages/core/agent/src/types.ts:170`](../packages/core/agent/src/types.ts)
+Source: [`packages/core/agent/src/types.ts:195`](../packages/core/agent/src/types.ts)
 
 ### `agent-preset/*`
 
@@ -1117,7 +1117,7 @@ Source: [`packages/core/session/src/types.ts:322`](../packages/core/session/src/
 'tool/code-dispatch': PtcDispatchEventData
 ```
 
-Source: [`packages/core/tools/src/types.ts:56`](../packages/core/tools/src/types.ts)
+Source: [`packages/core/tools/src/types.ts:81`](../packages/core/tools/src/types.ts)
 
 <a id="toolcode-dispatch-start--log-only"></a>
 
@@ -1140,7 +1140,7 @@ Source: [`packages/core/tools/src/types.ts:56`](../packages/core/tools/src/types
 'tool/code-dispatch-start': PtcDispatchStartEventData
 ```
 
-Source: [`packages/core/tools/src/types.ts:40`](../packages/core/tools/src/types.ts)
+Source: [`packages/core/tools/src/types.ts:65`](../packages/core/tools/src/types.ts)
 
 <a id="toolresult--surface"></a>
 
