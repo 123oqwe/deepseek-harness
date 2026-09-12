@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-12T00:29:34.978Z",
-  "inputDigest": "e7867d4a140a0a15b594a3a53e83866d1a1bedb882c33738b3aa0f2bf91e34af",
+  "lastUpdatedUtc": "2026-09-12T00:33:15.722Z",
+  "inputDigest": "160f676a5a1b9391685ac1972f8a6b12d61d243b368d8b86a9a39353b8bf89b6",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -3760,10 +3760,40 @@
         }
       },
       "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15",
-      "independentVerdict": "PENDING",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "NOT_RUN",
-      "acceptedEvidence": null
+      "status": "ACCEPTED",
+      "acceptedEvidence": {
+        "acceptedAtUtc": "2026-09-12T00:33:15.700Z",
+        "cells": {
+          "C": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34573807027",
+            "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15"
+          },
+          "P": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34573807027",
+            "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15"
+          },
+          "U": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34573807027",
+            "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15"
+          },
+          "F": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34573807027",
+            "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15"
+          }
+        },
+        "coverageClosure": {
+          "valid": true,
+          "missingIndices": [],
+          "unverifiedCitations": []
+        },
+        "delegateSignoff": {
+          "delegateSession": "first100-delegate-78",
+          "signedAtUtc": "2026-09-12T00:31:40.919Z",
+          "userConfirmationRef": null
+        }
+      }
     },
     "P2-06": {
       "id": "P2-06",
