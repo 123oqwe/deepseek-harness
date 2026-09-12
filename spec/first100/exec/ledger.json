@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-12T20:38:56.314Z",
-  "inputDigest": "4d403abf74a840bf30815a28587d6b72f832daea4cd215145653a9ccf9e91c54",
+  "lastUpdatedUtc": "2026-09-12T20:47:37.506Z",
+  "inputDigest": "022314595f10baea60309d7c0a039a17c83b803c8f2f9d378ea1b38649be7336",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -3958,10 +3958,40 @@
       },
       "supplements": {},
       "candidateSha": "fe3df854883e9216841f782b8d159fd339fbe3ed",
-      "independentVerdict": "PENDING",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "NOT_RUN",
-      "acceptedEvidence": null
+      "status": "ACCEPTED",
+      "acceptedEvidence": {
+        "acceptedAtUtc": "2026-09-12T20:47:37.496Z",
+        "cells": {
+          "C": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34715710541",
+            "candidateSha": "fe3df854883e9216841f782b8d159fd339fbe3ed"
+          },
+          "P": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34715710541",
+            "candidateSha": "fe3df854883e9216841f782b8d159fd339fbe3ed"
+          },
+          "U": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34715710541",
+            "candidateSha": "fe3df854883e9216841f782b8d159fd339fbe3ed"
+          },
+          "F": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34715710541",
+            "candidateSha": "fe3df854883e9216841f782b8d159fd339fbe3ed"
+          }
+        },
+        "coverageClosure": {
+          "valid": true,
+          "missingIndices": [],
+          "unverifiedCitations": []
+        },
+        "delegateSignoff": {
+          "delegateSession": "guanjieqiao-92",
+          "signedAtUtc": "2026-09-12T20:47:19.655Z",
+          "userConfirmationRef": null
+        }
+      }
     },
     "P2-07": {
       "id": "P2-07",
