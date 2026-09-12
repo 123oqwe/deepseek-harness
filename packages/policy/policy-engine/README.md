@@ -32,6 +32,14 @@ English | [中文](README.zh.md)
 
 Context facts are a closed enumeration — a workspace trust state mirroring `@deepseek-ai/dsh-workspace-trust`, the action's risk class mirroring `@deepseek-ai/dsh-risk-taxonomy`, and the session's permission posture. A free-form fact bag would make adding a fact a silent policy change.
 
+### Where the enforced set comes from, and what a decision records
+
+`PolicySetProviderContract` is the seam between whoever resolves a deployment's policy set and whichever engine decides against it (`ctx.policySet`). Its one method, `current()`, returns a `CurrentPolicySet`: the policies in force at this instant, and the digest a decision made against them must record.
+
+**It is asked once per decision, and it returns both halves together.** Both properties are load-bearing. Per decision, because the set changes under a running harness — a deployment edits it and the provider re-resolves. Together, because a digest fetched separately can describe a set the provider is no longer yielding: before this seam an engine re-read its policies on every call while computing its digest once at construction, so a reload moved the enforced rules and left every decision citing a set that was no longer in force.
+
+The contract is declared here rather than in the provider or the engine because both must agree on what "the set in force" means. Neither owning the phrase is what stops a second provider meaning something else by it.
+
 ### A decision is closed, and `ask` is not a soft deny
 
 `PolicyEffect` is `permit | deny | ask`. `ask` means a human answer is owed and comes only from a policy; nothing a plugin returns can produce it, and nothing a plugin returns can turn a `deny` into one. Use `isImmediatelyAllowed` rather than `effect !== 'deny'`: the latter reads as "allowed" and silently admits the state where nobody has answered yet.

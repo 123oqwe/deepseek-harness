@@ -96,4 +96,24 @@ all(): readonly PolicyConstraint[]
 ```
 
 Source: [`packages/policy/policy-enforcement/src/index.ts`](../../packages/policy/policy-enforcement/src/index.ts)
+
+<a id="ctxpolicyset--policysetprovidercontract"></a>
+
+### `ctx.policySet` — `PolicySetProviderContract`
+
+Where an engine gets the set it enforces (Epic P2-10's Usage stage).
+
+Declared HERE, in the definition, rather than on either side of the seam: the provider that resolves a deployment's policy set and the engine that decides against it must agree on what "the set in force" means, and neither of them owning the word is what keeps a second provider from meaning something else by it.
+
+**`current()` is asked per decision, and returns the set and its digest together.** Both halves matter. Per decision, because the set changes under a running harness — a deployment edits it and the provider re-resolves. Together, because a digest fetched separately can describe a set the provider is no longer yielding: before this seam an engine re-read its policies per call while its digest was computed once at construction, so a reload moved the enforced rules and left every decision citing a set no longer in force.
+
+```ts cordis-catalog
+/**
+ * The set to decide against, and the pin to record with the decision.
+ * @returns the policy set in force at this instant.
+ */
+current(): CurrentPolicySet
+```
+
+Source: [`packages/policy/policy-engine/src/types.ts`](../../packages/policy/policy-engine/src/types.ts)
 <!-- END GENERATED cordis-surface -->

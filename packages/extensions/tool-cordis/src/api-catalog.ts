@@ -1633,6 +1633,19 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'policySet',
+    summary: 'Where an engine gets the set it enforces (Epic P2-10\'s Usage stage).',
+    description: 'Where an engine gets the set it enforces (Epic P2-10\'s Usage stage).\n\nDeclared HERE, in the definition, rather than on either side of the seam: the provider that resolves a deployment\'s policy set and the engine that decides against it must agree on what "the set in force" means, and neither of them owning the word is what keeps a second provider from meaning something else by it.\n\n**`current()` is asked per decision, and returns the set and its digest together.** Both halves matter. Per decision, because the set changes under a running harness — a deployment edits it and the provider re-resolves. Together, because a digest fetched separately can describe a set the provider is no longer yielding: before this seam an engine re-read its policies per call while its digest was computed once at construction, so a reload moved the enforced rules and left every decision citing a set no longer in force.',
+    methods: [
+      {
+        signature: 'current(): CurrentPolicySet',
+        description: 'The set to decide against, and the pin to record with the decision.',
+        parameters: [],
+        returns: 'the policy set in force at this instant.',
+      },
+    ],
+  },
+  {
     key: 'runRetryUsage',
     summary: 'The mounted run-retry accounting, published by whichever provider a profile mounts.',
     description: 'The mounted run-retry accounting, published by whichever provider a profile mounts.\n\n`admit` decides AND stores in one call rather than exposing a read and a write: two layers retrying concurrently would each read the same usage, decide against it and store their own successor, and one retry would vanish. The decision is the only thing a caller needs, and the arithmetic behind it is not a caller\'s to redo.',
@@ -4618,6 +4631,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'CredentialRef',
     declaration: 'export type CredentialRef = Branded<\'CredentialRef\'>;',
+  },
+  {
+    name: 'CurrentPolicySet',
+    declaration: 'export interface CurrentPolicySet {\n    readonly policies: Readonly<Record<string, string>>;\n    readonly digest: PolicySetDigest;\n}',
   },
   {
     name: 'DeepSeekLlmApiExtensionMap',
