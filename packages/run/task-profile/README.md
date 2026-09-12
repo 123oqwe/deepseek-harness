@@ -5,6 +5,8 @@ kind: "package-library"
 
 # @deepseek-ai/dsh-task-profile
 
+English | [中文](README.zh.md)
+
 ## Summary
 
 `dsh-task-profile` holds the vocabulary Epic P4-02's must[0] fixes — a goal reference, an objective, hard and soft constraints, one side-effect classification, and the questions a compile produced instead of guessing — together with the validation that vocabulary needs at a durable boundary and the content-addressed reference the Run event log names a profile by.
@@ -17,6 +19,7 @@ kind: "package-library"
 - [What is deliberately absent](#what-is-deliberately-absent)
 - [What the compiler reads, and what it refuses to](#what-the-compiler-reads-and-what-it-refuses-to)
 - [Where a profile lives](#where-a-profile-lives)
+- [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 
 ## What this package imports rather than declares
@@ -60,6 +63,14 @@ Persistence and revision (validation[2]) are then the same mechanism. The sessio
 The session event carries the body and no digest. A `TaskProfileRef` is the sha256 of a profile's canonical form, and a profile's `goalRef` names the session and message it was compiled from — ids minted fresh on every run — so a stored digest was a run-varying value in a durable log and the same recorded scenario could never replay to the same bytes. The ids themselves normalize; a digest taken over them before normalization cannot. `taskProfileRef` derives the digest from the body wherever one is needed, including the Run event log entry that references it.
 
 **Runtime invariant:** No runtime invariant companion is published: the only runtime export is `compileTaskProfile`, a pure function over an input the caller assembles, so there is no owned registry, log or `Context` value whose relation a checker could observe.
+
+## Model Experience
+
+None, as this package registers no prompt, schema, or tool, and the profile it compiles reaches no model request: `@deepseek-ai/dsh-run` appends the body to the session log and names its digest in the Run, and the reader that would put one into a request is P4-03's.
+
+#### KV Cache effect
+
+None; nothing here assembles or contributes to a provider request, so no prefix moves and no cached prefix is invalidated. A `run/task-profile` event is durable-only — it carries no surface metadata, so the derived model history a request is built from does not contain it.
 
 ## Known Limitations and Deferred Work
 
