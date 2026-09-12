@@ -128,3 +128,6 @@ preFlight(JSON 记录 `clause-subject-audit.json` + `evidence-<id>.md`,`recorded
 - **`pnpm run lint` 约等于一次全树 build,不是轻量信号**(补记 263,delegate 二次误判后钉死):`lint = build:lib:host && lint:contracts-ready`,`build:lib:host = tsc -b tsconfig.host.json(全树)+ tsdown`。所以它**比全树 typecheck-host 还重**(全树 tsc + 全树 tsdown 打包)。它类型感知正因这个 build(补记 251),也因此重(补记 263)。要**轻量本机类型信号**用单包 `tsc -b <pkg>/tsconfig.json`;别拿 `pnpm run lint` 当轻量。反向好处:lint 的全树 tsc 那一步一旦过,就等于本机拿到了全树 typecheck 信号。
 
 - **rebase/合并后必须重算单一事实源产物再报 tip**(补记 265,lane B 第四次陈旧产物后立):`files-overlay.json`、`module-graph.*`、catalog 都从树生成;一次 rebase 换了树,committed 的这些产物就可能陈。报 tip 前(尤其 rebase 后)重跑生成器/`--write` 重算,别信旧产物跨 rebase 仍准。这是 BLOCKED-QUEUE:3105"合并多 lane 后重算单一事实源"对 lane 自己 rebase 的同等适用。
+
+- **P7 差分验收**(补记 270):P7 各 epic U/F 须证工具在"P7 前的判定集"上复现同结论——重算全 GREEN 格、重判全 WITHDRAWN(应判不到达)、复核 signoff 4.4a–d;分歧逐条解释 + 记 finding。判定集以 P7-01 开工时 fork 头钉为 golden(SHA 进 P7 preFlight)。
+- **P7 验证器变异**(补记 270):P7 的 F 矩阵须含"验证器被弄坏仍放行空格/假到达"用例,抓它的必须是外层门(重算门/四谓词/4.4d)、不得被测验证器自证。P7 全 ACCEPTED 后角色互换(P7 主、手工转抽查),届时 delegate 提议 + 用户点头。
