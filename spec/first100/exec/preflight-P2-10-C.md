@@ -17,7 +17,22 @@ The dsh entity vocabulary is **already fixed in code** by `toCedarRequest` (`pol
 
 **There is no schema today, and that is the gap must[0] names.** `validate` requires one and nothing calls it. What the provider does at load is a probe `isAuthorized` with an empty context (`:221-232`), whose only question is whether the set PARSES. Its own comment says "Cedar has no separate 'validate this set' call that reports the same errors an authorization would" — measured against the installed 4.12.0, `checkParsePolicySet` and `validate` are both exported, so that sentence is true only about error-message parity and must not be read as "no validation call exists".
 
-**The consequence, and it is the one to measure first at C.** A policy that references a context key or entity type dsh never sends still parses, so the load probe passes and the rule is simply dead — it never matches, and nothing says so. This is the failure a schema exists to convert into a load-time refusal. Stated as the C stage's first probe rather than as a finding: two lines, a policy naming `context.tyop` against the current provider, and the reading is whether it loads and silently never fires.
+**The consequence — measured 2026-09-12, and the measurement corrected this page.** The probe this section called for has been run against the installed Cedar 4.12.0, and the answer is better than the prediction in one specific way that changes must[0]'s value proposition.
+
+A policy naming `context.tyop` where dsh sends `sideEffectClass`:
+
+| step | reading |
+| --- | --- |
+| the provider's load probe (`isAuthorized` with an empty context) | `type: success`, `errors: []` — **it loads clean**, as predicted |
+| `checkParsePolicySet` with no schema | `{"type":"success"}` — parsing alone does not catch it either |
+| a real decision, context carrying the correct key | `deny`, `reason: []` — **it never matches**, as predicted |
+| that same decision's `response.diagnostics.errors` | **NOT empty**: `{"policyId":"typo","error":{"message":"record does not have the attribute \`tyop\`","help":"available attributes: [\"sideEffectClass\"]"}}` |
+
+**So it is not silent — it is late, and per-decision.** `policy-engine-cedar/src/index.ts:194` maps exactly those errors into `PolicyExplain.diagnostics` as `` `${policyId}: ${message}` ``, and the enforcement point appends the explain to the audit trail. An operator running a typo'd policy therefore learns about it at the FIRST decision, in the audit, once per decision, for as long as the policy stays wrong.
+
+**What the schema is worth is therefore narrower and still real**: it converts a per-decision audit line into a load-time refusal — fail once, fail before any action has been wrongly denied, and fail where a deployment is configured rather than where it is running. That is a better argument than "it converts silence into a signal", which is what this page said before the probe and which the probe falsified.
+
+**One thing the mapping already does right, worth not breaking.** Cedar's error carries a `help` field listing the available attributes — the whole context vocabulary. Line 194 maps `error.error.message` ONLY, so the help never reaches `diagnostics`. That is relevant to must[2]'s redaction question: the field is already narrower than Cedar's own output, and a C-stage change that started carrying the full error object would widen it.
 
 ## The C table
 
@@ -27,7 +42,7 @@ Three columns per clause: what C can DECIDE (and therefore freeze), what C must 
 
 | clause | C decides | C builds | how a wrong build fails |
 | --- | --- | --- | --- |
-| must[0] — a finite declarative language with no arbitrary code execution | the **vocabulary is closed**: the three entity types and the ten context keys above, declared as a Cedar schema, plus the rule that a policy outside it is refused at load. "No arbitrary code" is Cedar's property, not ours, and §1.8 forbids re-verifying it | `docs/policy/language.md` (the schema and its conventions) and `parser.ts` — `checkParsePolicySet` plus `validate` AGAINST that schema | **Silently, which is the whole danger.** Build the schema too wide (or skip `validate`) and a typo'd policy loads and never matches: the deployment believes it has a rule, the audit shows no match, and nothing distinguishes that from a rule that correctly did not apply. Build it too narrow and a legitimate policy is refused at boot — loud, recoverable, and much the better failure |
+| must[0] — a finite declarative language with no arbitrary code execution | the **vocabulary is closed**: the three entity types and the ten context keys above, declared as a Cedar schema, plus the rule that a policy outside it is refused at load. "No arbitrary code" is Cedar's property, not ours, and §1.8 forbids re-verifying it | `docs/policy/language.md` (the schema and its conventions) and `parser.ts` — `checkParsePolicySet` plus `validate` AGAINST that schema | **Late and repeatedly, rather than silently** (corrected by measurement, above). Build the schema too wide, or skip `validate`, and a typo'd policy loads and never matches; the audit does carry `record does not have the attribute …` on every decision it touches, so the fact is recoverable — but only by someone reading decision-time diagnostics, once per decision, after actions have already been denied against a rule that was never going to match. Build it too narrow and a legitimate policy is refused at boot — loud, once, and much the better failure |
 | must[1] — unit tests, shadow evaluation, version pin, diff explain | **only two of the four are C's.** C decides the FORM of a policy-set unit test (a request fixture plus the expected decision) and the FORM of the version pin (below). Shadow and diff explain are decided here only as data shapes; their mechanisms are P/U | the fixture format, and the pinned artifact's type | A shadow "decision" that is not the same decision. must[1]'s shadow must run the SAME evaluation the enforce path runs; a second code path that approximates it reports differences that are its own. The C-stage guard is that the shadow shape carries the `PolicySetDigest` it was evaluated against, so a comparison across two different sets cannot be mistaken for a behaviour change |
 | must[2] — explain reports matched rules and a safe summary, exposing no secrets | C decides **what may appear** in a redacted explain, as a type. `PolicyExplain` already exists (`policy-engine/src/types.ts:212`) with `matched: PolicyId[]` and `diagnostics: string[]` | the redacted projection's TYPE, and the rule that the model-visible side is the existing closed `PolicyReasonCode` and nothing else | A projection that is a filter over free text. `diagnostics` is Cedar's own strings; a redactor that strips patterns from them is a denylist, and a denylist over an upstream's message format fails the first time the format changes. The C decision that avoids it is structural: the redacted explain carries policy IDS and a closed code, never upstream text |
 
@@ -53,6 +68,6 @@ That is also the answer to "how would we know the schema is finite": not by coun
 
 ## Open, and to be measured at C rather than asked
 
-1. Whether an unknown context key silently never matches (the first probe above). If Cedar 4.12.0 already errors without a schema, must[0]'s load-time refusal is partly free and the C table's first row shrinks.
+1. ~~Whether an unknown context key silently never matches.~~ **MEASURED, see above.** It loads clean, never matches, and reports itself per decision through `PolicyExplain.diagnostics`. must[0]'s row is now about moving that report from decision time to load time, not about creating one.
 2. Whether `formatPolicies` is stable enough across Cedar patch versions to be a digest input, or whether the digest must be taken over `policyToJson` instead. A canonicaliser that changes its output on a dependency bump would move every pin without a policy changing.
 3. What `PolicyExplain.diagnostics` can actually contain — echoed policy text, entity uids, or both — which decides whether must[2]'s redaction is a projection or a refusal to carry the field at all.
