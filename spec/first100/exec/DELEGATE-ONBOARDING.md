@@ -133,3 +133,5 @@ preFlight(JSON 记录 `clause-subject-audit.json` + `evidence-<id>.md`,`recorded
 - **P7 验证器变异**(补记 270):P7 的 F 矩阵须含"验证器被弄坏仍放行空格/假到达"用例,抓它的必须是外层门(重算门/四谓词/4.4d)、不得被测验证器自证。P7 全 ACCEPTED 后角色互换(P7 主、手工转抽查),届时 delegate 提议 + 用户点头。
 
 - **分析冻结账本前先读生命周期字段**(补记 274):`command-freeze.json` 有 `supersededBy`/`supersedes`/`supersessionReason`;不过滤 `supersededBy` 的计数是**错数**(lane A 与 delegate 都在此栽过:把已作废条目当活的、得出不存在的"30 组/39 孤儿")。delegate 拿 lane 的计数下处置前**须自核该过滤**,别在别人未过滤的数上叠裁决。
+
+- **报 tip 前门集必须覆盖本阶段真正动了的东西的全套门**(补记 277,lane A 第三次 scoped≠full):改 package.json/deps/tsconfig、把包从库变插件、加带 shebang 的可执行源 → 跑**全 `pnpm run hygiene`**(含 `verify-application-entrypoints`,它要求每个可执行源在 `scripts/verify-application-entrypoints.ts` 分类表登记);加新文件 → **单独 lint 它们**。不得拿上一阶段的 hygiene 绿或 scoped 绿当本阶段的绿——scoped 门 ≠ full 门,这是 251/259/265/277 同一族。
