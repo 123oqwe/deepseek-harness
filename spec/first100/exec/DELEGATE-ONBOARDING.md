@@ -84,6 +84,8 @@ preFlight(JSON 记录 `clause-subject-audit.json` + `evidence-<id>.md`,`recorded
 
 - **accept 后再跑两门再复原**(补记 120):`--accept` dry-run 通过后,先在 accept 后的树上跑 `verify-make-vs-use` 与 `verify-adapt-dispositions`——两门对 ACCEPTED 行与 PENDING 行判定不同(P2-05 accept 后 AuthZEN 所有权立刻要求 live 冻结用例点名),再 `git checkout -- spec/first100/exec/` 复原。
 
+- **否定结果先证明工具真的问了**(补记 124):今日三次"探针失败把自己报成读数"——zsh 未加引号变量不分词(有序祖先链被报成 UNORDERED)、`$SHA:path` 的 `:t` 修饰符吃掉路径(存在的 fixture 报 ABSENT)、`grep -v "x/src"` 子串误排 `ui-x/src`(答复者计数 1 报成 0);加上 206 的 `require.resolve('ajv')`、218 的被吞 stderr。判据:拿到"否/缺席/0"时,先看报错里有没有被截断的路径片段、命令是否真的对着目标跑过,再把它当读数。
+
 ## 9. 每小时自查五问(2026-09-11,gq-92 退班前给;由 watch-v12 心跳每小时打印,不靠记)
 
 ① 我派出去的非代码指令(锚 / 文件 / 配置)核过落地了吗——`ls` / `grep` 一次,不信"已建"。② 云上有没有排队或已被取代的 run,取消了没(一次只派最新候选)。③ 本笔是不是一次云跑——docs overlay 先叠到候选再派发,门③ SHA == 推送 SHA,dispatch run 既是门③也是观测。④ 今天有没有我没量就写的断言(补记 4 的"无环"是反例)。⑤ `~/first100-delegate/.events/watchdog.log` 最近一条是什么(机器睡眠 / 电池 / 会话死亡先于"lane 怠工"怀疑)。
