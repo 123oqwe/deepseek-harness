@@ -1,0 +1,158 @@
+[
+ {
+  "kind": "chunks",
+  "chunks": [
+   {
+    "type": "block-start",
+    "index": 0,
+    "blockType": "tool-call"
+   },
+   {
+    "type": "tool-call-delta",
+    "index": 0,
+    "id": "abandoned-collected",
+    "name": "bash",
+    "argumentsDelta": "{\"command\": \"printf COLLECTED\", \"description\": \"Work that finishes and is collected\", \"run_in_background\": true}"
+   },
+   {
+    "type": "block-end",
+    "index": 0,
+    "block": {
+     "type": "tool-call",
+     "id": "abandoned-collected",
+     "name": "bash",
+     "arguments": "{\"command\": \"printf COLLECTED\", \"description\": \"Work that finishes and is collected\", \"run_in_background\": true}"
+    }
+   },
+   {
+    "type": "usage",
+    "usage": {
+     "inputTokens": 10,
+     "outputTokens": 5
+    }
+   },
+   {
+    "type": "finish",
+    "reason": {
+     "kind": "tool-calls"
+    }
+   }
+  ]
+ },
+ {
+  "kind": "chunks",
+  "chunks": [
+   {
+    "type": "block-start",
+    "index": 0,
+    "blockType": "tool-call"
+   },
+   {
+    "type": "tool-call-delta",
+    "index": 0,
+    "id": "abandoned-collect",
+    "name": "job_output",
+    "argumentsDelta": "{\"job_id\": \"bash-1\", \"wait\": true}"
+   },
+   {
+    "type": "block-end",
+    "index": 0,
+    "block": {
+     "type": "tool-call",
+     "id": "abandoned-collect",
+     "name": "job_output",
+     "arguments": "{\"job_id\": \"bash-1\", \"wait\": true}"
+    }
+   },
+   {
+    "type": "usage",
+    "usage": {
+     "inputTokens": 10,
+     "outputTokens": 5
+    }
+   },
+   {
+    "type": "finish",
+    "reason": {
+     "kind": "tool-calls"
+    }
+   }
+  ]
+ },
+ {
+  "kind": "chunks",
+  "chunks": [
+   {
+    "type": "block-start",
+    "index": 0,
+    "blockType": "tool-call"
+   },
+   {
+    "type": "tool-call-delta",
+    "index": 0,
+    "id": "abandoned-hanging",
+    "name": "bash",
+    "argumentsDelta": "{\"command\": \"while :; do sleep 60; done\", \"description\": \"Work the run will not wait for\", \"run_in_background\": true}"
+   },
+   {
+    "type": "block-end",
+    "index": 0,
+    "block": {
+     "type": "tool-call",
+     "id": "abandoned-hanging",
+     "name": "bash",
+     "arguments": "{\"command\": \"while :; do sleep 60; done\", \"description\": \"Work the run will not wait for\", \"run_in_background\": true}"
+    }
+   },
+   {
+    "type": "usage",
+    "usage": {
+     "inputTokens": 10,
+     "outputTokens": 5
+    }
+   },
+   {
+    "type": "finish",
+    "reason": {
+     "kind": "tool-calls"
+    }
+   }
+  ]
+ },
+ {
+  "kind": "chunks",
+  "chunks": [
+   {
+    "type": "block-start",
+    "index": 0,
+    "blockType": "text"
+   },
+   {
+    "type": "text-delta",
+    "index": 0,
+    "text": "ABANDONED_JOB_OBSERVED"
+   },
+   {
+    "type": "block-end",
+    "index": 0,
+    "block": {
+     "type": "text",
+     "text": "ABANDONED_JOB_OBSERVED"
+    }
+   },
+   {
+    "type": "usage",
+    "usage": {
+     "inputTokens": 10,
+     "outputTokens": 5
+    }
+   },
+   {
+    "type": "finish",
+    "reason": {
+     "kind": "stop"
+    }
+   }
+  ]
+ }
+]

@@ -603,6 +603,44 @@ Source: [`packages/hooks/hook-protocol/src/types.ts:31`](../packages/hooks/hook-
 
 Source: [`packages/core/session/src/types.ts:369`](../packages/core/session/src/types.ts)
 
+### `job/*`
+
+<a id="jobabandoned--log-only"></a>
+
+#### `job/abandoned` — log-only
+
+```ts persistence-catalog
+/**
+ * A background job this session started was still running when the run
+ * ended, so its output reached nobody (BLOCKED-220).
+ *
+ * A run's completion condition is its agent going idle, which a live job
+ * is not part of. The registry's teardown then cancels each remaining job
+ * and marks it reported — deliberately, because a disposing owner must not
+ * be woken — so without this event the log shows a job that was started,
+ * accepted and reported, and no record that its result went nowhere.
+ *
+ * Appended AFTER the turn has ended and with no surface metadata, so it
+ * reaches no model request: the run has already produced its answer, and
+ * this is an operator fact about it rather than an input to it. The
+ * headless surface projects one stderr line per event, which is how a
+ * caller — the only party still listening — learns the work was dropped.
+ *
+ * One event per abandoned job rather than one per run: a caller chasing a
+ * dropped result needs the id it was given, and a count cannot supply it.
+ */
+'job/abandoned': {
+  /** The registry-issued id the model was told to track (`<kind>-N`). */
+  jobId: string
+  /** The job's non-terminal status at the moment the run ended. */
+  status: 'running' | 'stopping'
+  /** The run-ending surface that abandoned it. */
+  surface: AbandonedJobSurface
+}
+```
+
+Source: [`packages/jobs/jobs/src/types.ts:204`](../packages/jobs/jobs/src/types.ts)
+
 ### `llm/*`
 
 <a id="llmretry--log-only"></a>

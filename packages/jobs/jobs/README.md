@@ -83,6 +83,8 @@ This section explains the design decisions behind the contract and points at the
 
 Every operation is a thin projection over the registered jobs: `get` and `list` return non-consuming snapshots, `read` advances the single stream cursor, `kill` invokes producer cancellation before changing status, `wait` blocks up to a timeout, and `start()` preflights access, validation, and admission before invoking the producer's `run()` once while refusing any owner no attached controller serves; listeners observe terminal records and visible-set changes at owner granularity, and `attachController` scopes controller availability to its effect lifetime. Exact signatures and behavior live in the JSDoc on [`src/index.ts`](src/index.ts) and the generated [`ctx.jobs` cordis surface](../../../docs/subsystems/jobs.md).
 
+The package declares one session event, `job/abandoned`: a background job that was still running when a one-shot run ended, one event per job, carrying the id the model was told to track, the non-terminal status, and which surface abandoned it. It is appended after the turn has ended and with no surface metadata, so it reaches no model request — the run has already produced its answer, and this is an operator fact about it. The registry does not append it: the surfaces that decide when to tear down do, because only they know a run is ending.
+
 The package also exports `isTerminalJobStatus`, the one classification of `JobStatus` into settled and live. It is here rather than in each consumer because the registry, the invariant companion, and the surfaces that check for uncollected work all need the same three values, and a second list of them drifts from the union it is a subset of.
 
 </details>

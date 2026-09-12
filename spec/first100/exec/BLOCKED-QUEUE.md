@@ -5610,6 +5610,16 @@ Long-lived surfaces are not affected in the same way: `acp/acp/src/session.ts:44
 
 **What is NOT proposed.** Nothing here touches `cancelForTeardown`'s `reported = true`. That line is correct where it sits — a disposing owner must not be woken — and the fix belongs earlier, in the surfaces that decide when to dispose.
 
+#### 丁 landed, and the event that made it caller-visible (2026-09-12, candidate 5)
+
+Ruled and implemented. Both surfaces read the live set before the run's output is written — the headless runner before `sessions.flush`, the in-process subagent driver before `readResult` — and each appends one `job/abandoned` session event per job that has not settled.
+
+**The session event is what the delegate's ruling added to 丁's first shape, and the measurement behind it is worth keeping.** A logger `warn` alone reaches nobody: `warn` is level 2 and an exporter with no `levels` falls back to `INFO`, and a one-shot run leaves before anything drains the buffer. stderr is the caller's channel, and the recorded-session harness defines stderr as a PROJECTION of the session log, so a line the log cannot explain reddens every scenario. The event is therefore the mechanism; `abandonedJobLine` is exported from the headless bundle and the harness calls it, so the sentence has one spelling.
+
+**The new fixture, and why the corpus needed one.** `snapshots/session/background-job-abandoned` starts two real background Bash processes in one run: one that finishes and is collected with `job_output(wait: true)`, and one that never finishes. Its recorded log carries exactly ONE `job/abandoned`, naming the second — the collected job's absence is the control that makes the event about liveness rather than about having started a job. Two mutations, each red for its own reason: dropping the runner's stderr write reddens the stderr projection; dropping the append reddens the log comparison.
+
+This fixture is the reverse control the census correction said was missing. Before it, no recorded run ended with a live background job, so neither the defect nor its fix was observable anywhere in the corpus.
+
 #### 甲 — drain points and bound semantics, per surface (2026-09-12, design only, no code written)
 
 Requested before any 甲 code. 丁 landed first and its read points are the same two places, so the drain has a measured insertion site rather than a proposed one.
@@ -6008,7 +6018,7 @@ Measured across `packages` and `apps` at `73c1c04f2e`, excluding `tests/`, `*.sp
 ## Closing condition
 
 1. **The three DEFERRED-TO records land**, each making P4-02's clause conditional in the same form BLOCKED-215 uses: the clause is discharged on the producing side, the consuming side is named with its owning epic, and P4-02's evidence says so instead of implying a reader exists.
-2. **`validateTaskProfile` is resolved** — wired at the durable read boundary with a case that reddens when it is removed, or declared deferred with the same discipline as the three clauses. The delegate rules which.
+2. **`validateTaskProfile` is resolved.** **DONE (candidate 5), delegate ruling 2026-09-12: wired at `run/run/src/index.ts:138`.** The log read now validates the stored body before deriving its reference, and `unreadable` is a third answer rather than a variant of `none` — a log holding a profile this build refuses is not a log holding no profile, and collapsing them compiled a second profile over one nobody could read. On a refusal the plugin emits `run/task-profile-unreadable` (session id plus EVERY validation error, not the first) and returns `{ kind: 'reject' }` from the `agent/pre-step` waterfall, so the step is not entered and the run does not silently continue. Two frozen cases: a seeded log whose profile is missing a required member is refused with its reason and appends no second profile, and its control — a log whose profile this build DOES accept still writes, so the refusal is about the body and not about resuming. Mutation: skipping the validation and deriving the reference anyway reddens exactly the first.
 3. **`Agent.taskProfile` gains a stated deferred consumer** in `core/agent/src/types.ts`'s writer-contract JSDoc, beside the three fields that already carry one.
 4. **(e) A composition case observes the shipped mount reaching the compile.** Today `U.1` boots a real `dsh-app-boot` Loader tree whose `cordis.yml` mounts `@deepseek-ai/dsh-run` directly, so **the mount row at `packages/bundle/base/cordis.patch.yml:638` is read evidence, not observed evidence.** The case needed is one over a composition that layers `bundle/base` itself and asserts one `run/task-profile` event after a real boot.
 5. **(f) `evidence-P4-02.md`'s stale `bundle/base:628`** is corrected to `:638-639`. Done in this entry's first commit.

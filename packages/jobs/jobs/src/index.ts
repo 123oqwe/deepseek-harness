@@ -14,6 +14,7 @@ import type {
 
 export { JobId, isTerminalJobStatus } from './types.ts'
 export type {
+  AbandonedJobSurface,
   JobDoneListener,
   JobHooks,
   JobKind,

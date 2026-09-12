@@ -73,7 +73,7 @@ runner 等待整个应用结算（`ctx.get('loader')?.await()`），确保已组
 
 run 的完成条件是 Agent 变为 idle,而后台 job 不在其中:模型启动的 job 可能在答案写出时仍在运行。在 Session 被 flush 之前,runner 读取该 Agent 自己的 job,并对每一个未到终态的 job 记一条 `warn`。它不等待、不取消,也不把任何相关内容放进模型请求——这次 run 已经产出了答案。这条记录换来的是丢失不再无声:注册表在拆解时会把每个剩余 job 标记为已报告,而没有任何人读过。
 
-记录走 logger 的 `warn`,只有阈值放行 level 2 的 exporter 才会收到;exporter 停留在默认 `info` 阈值的组合会保留这个事实却不展示给任何人。让调用方看见它是 [BLOCKED-220](../../../spec/first100/exec/BLOCKED-QUEUE.md) 未合的另一半。
+每个被放弃的 job 产生一条 `job/abandoned` 会话事件、一行 stderr(`dsh: background job <id> was still <status> when the run ended; its output was not collected`),外加一条点名整个集合的 `warn`。那行 stderr 由录制会话 harness 从事件投影出来,因此两者不会漂移:`abandonedJobLine` 由本包导出,harness 调用它而不是再写一遍这句话。
 
 ### 叠加在 base 之上的 patch 表层
 
@@ -136,7 +136,7 @@ runner 不向请求前缀添加任何内容；它只是把一条用户消息驱�
 - **首个 token 前没有心跳**——提供方发出第一个非空推理增量前，stderr 保持静默；延迟首个 token 的提供方不会更早给出进度信号。
 - **推理进入 stderr 日志**——重定向与监督进程可能保留更多且可能敏感的模型输出；需要时应把 stderr 路由到受控位置。
 - **只打印推理和最终答案**——没有 assistant 消息的运行向 stdout 打印空行并以 1 退出；中间工具输出不会打印。
-- **结束时仍在跑的后台 job 只被记录,不被送达**——run 不等它,因此它的输出永远到不了模型;记录是一条 `warn`,只有阈值放行它的 exporter 才收得到。
+- **结束时仍在跑的后台 job 只被记录,不被送达**——run 不等它,因此它的输出永远到不了模型。调用方从 stderr 与会话日志得知此事;等待它属于延期工作,记在 BLOCKED-220。
 
 <a id="dev-note"></a>
 ### 开发备注

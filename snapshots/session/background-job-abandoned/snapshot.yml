@@ -1,0 +1,13 @@
+version: 1
+scenario: background-job-abandoned
+profile: headless
+composition: background-job-abandoned
+recording: authored
+header:
+  class: background-job-abandoned
+  pin: true
+  systemPromptSource: text-turn
+  toolSchemasSource: text-turn
+replay:
+  override: true
+platform: posix

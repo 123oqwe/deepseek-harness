@@ -333,7 +333,7 @@ async function run(
   } finally {
     stopReasoning()
   }
-  recordAbandonedJobs(ctx, agent)
+  recordAbandonedJobs(ctx, agent, io.stderr)
   await sessions.flush(agent.session)
   const outcome = summarize(agent.session, firstSeq)
   stopStream?.()
@@ -360,6 +360,20 @@ async function run(
 }
 
 /**
+ * The stderr line one abandoned job produces.
+ *
+ * Exported because the recorded-session harness projects expected stderr from
+ * the session log alone; a second spelling of this sentence there would drift
+ * from this one without anything noticing.
+ * @param jobId - the registry-issued id the model was told to track.
+ * @param status - the job's non-terminal status when the run ended.
+ * @returns the complete line, newline included.
+ */
+export function abandonedJobLine(jobId: string, status: string): string {
+  return `dsh: background job ${jobId} was still ${status} when the run ended; its output was not collected\n`
+}
+
+/**
  * Record the background jobs this agent started and never collected.
  *
  * A one-shot run ends when the agent goes idle, which a live job is not part
@@ -374,14 +388,23 @@ async function run(
  * @param ctx - plugin context, whose `jobs` service is optional.
  * @param agent - the agent whose owned jobs are read.
  */
-function recordAbandonedJobs(ctx: Context, agent: Agent): void {
+function recordAbandonedJobs(ctx: Context, agent: Agent, stderr: HeadlessIo['stderr']): void {
   const jobs = ctx.get('jobs')
   if (jobs === undefined) return
   const live = jobs.list(agent).filter(job => !isTerminalJobStatus(job.status))
   if (live.length === 0) return
-  const named = live.map(job => `${String(job.id)} (${job.status})`).join(', ')
+  for (const job of live) {
+    // `status` is narrowed by the filter above: the two non-terminal values are
+    // the ones the event declares.
+    agent.session.append('job/abandoned', {
+      jobId: String(job.id),
+      status: job.status as 'running' | 'stopping',
+      surface: 'headless',
+    })
+    stderr.write(abandonedJobLine(String(job.id), job.status))
+  }
   ctx.logger('headless').warn(
-    `run ended with ${String(live.length)} background job(s) still running; their output was never collected: ${named}`,
+    `run ended with ${String(live.length)} background job(s) still running; their output was never collected: ${live.map(job => `${String(job.id)} (${job.status})`).join(', ')}`,
   )
 }
 

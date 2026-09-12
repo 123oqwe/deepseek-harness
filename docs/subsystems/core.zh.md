@@ -1816,4 +1816,31 @@ The disposer awaits the writes a mount started, so a mount that IS disposed surf
 ```
 
 Source: [`packages/run/run/src/index.ts`](../../packages/run/run/src/index.ts)
+
+<a id="runtask-profile-unreadable--emit"></a>
+
+#### `run/task-profile-unreadable` — emit
+
+A `run/task-profile` event already in the session log is one this build refuses to read, so the step it would have planned was not entered.
+
+The refusal is the point. Before it, an unreadable stored profile still yielded a digest, the comparison against it was meaningless, and the run carried on and appended a second profile over the top (BLOCKED-232). A caller that resumes a session whose durable profile this build cannot read needs to be told, not answered.
+
+```ts cordis-catalog
+/**
+ * A `run/task-profile` event already in the session log is one this build
+ * refuses to read, so the step it would have planned was not entered.
+ *
+ * The refusal is the point. Before it, an unreadable stored profile still
+ * yielded a digest, the comparison against it was meaningless, and the run
+ * carried on and appended a second profile over the top (BLOCKED-232). A
+ * caller that resumes a session whose durable profile this build cannot
+ * read needs to be told, not answered.
+ * @param payload.sessionId - the session whose log holds the refused profile.
+ * @param payload.errors - every reason the profile was refused, not just the first.
+ * @mode emit
+ */
+'run/task-profile-unreadable'(payload: { sessionId: SessionId; errors: readonly TaskProfileValidationError[] }): void
+```
+
+Source: [`packages/run/run/src/index.ts`](../../packages/run/run/src/index.ts)
 <!-- END GENERATED cordis-surface -->

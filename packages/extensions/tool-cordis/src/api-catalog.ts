@@ -3744,6 +3744,14 @@ export const EVENT_API: readonly EventApiEntry[] = [
     parameters: [{ name: 'payload', description: '.error - the write failure, as thrown.' }],
   },
   {
+    name: 'run/task-profile-unreadable',
+    mode: 'emit',
+    signature: '\'run/task-profile-unreadable\'(payload: { sessionId: SessionId; errors: readonly TaskProfileValidationError[] }): void',
+    summary: 'A `run/task-profile` event already in the session log is one this build refuses to read, so the step it would have planned was not entered.',
+    description: 'A `run/task-profile` event already in the session log is one this build refuses to read, so the step it would have planned was not entered.\n\nThe refusal is the point. Before it, an unreadable stored profile still yielded a digest, the comparison against it was meaningless, and the run carried on and appended a second profile over the top (BLOCKED-232). A caller that resumes a session whose durable profile this build cannot read needs to be told, not answered.',
+    parameters: [{ name: 'payload', description: '.errors - every reason the profile was refused, not just the first.' }],
+  },
+  {
     name: 'session-telemetry/record',
     mode: 'waterfall',
     signature: '\'session-telemetry/record\'(record: SessionTelemetryRecord, next: () => SessionTelemetryRecord): SessionTelemetryRecord',
@@ -6746,6 +6754,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'TaskProfileRef',
     declaration: 'export type TaskProfileRef = Branded<\'TaskProfileRef\'>;',
+  },
+  {
+    name: 'TaskProfileValidationCode',
+    declaration: 'export type TaskProfileValidationCode = \'malformed\' | \'duplicate-id\' | \'unknown-side-effect-claims-confidence\' | \'question-field-also-decided\';',
+  },
+  {
+    name: 'TaskProfileValidationError',
+    declaration: 'export interface TaskProfileValidationError {\n    readonly code: TaskProfileValidationCode;\n    readonly path: string;\n    readonly detail: string;\n}',
   },
   {
     name: 'TaskReceipt',

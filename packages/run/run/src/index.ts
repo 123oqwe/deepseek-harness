@@ -67,7 +67,8 @@ import { compileTaskProfile } from '@deepseek-ai/dsh-task-profile'
 // the module that declares it.
 import { goalRoundOf, taskOriginOf } from '@deepseek-ai/dsh-task-profile/types'
 import type { TaskProfileRef } from '@deepseek-ai/dsh-task-profile/types'
-import { taskProfileRef } from '@deepseek-ai/dsh-task-profile/validate'
+import { taskProfileRef, validateTaskProfile } from '@deepseek-ai/dsh-task-profile/validate'
+import type { TaskProfileValidationError } from '@deepseek-ai/dsh-task-profile/validate'
 import {
   attachSessionToRun,
   createRun,
@@ -119,25 +120,47 @@ function goalOf(message: UserMessage): { text: string; unread: readonly { kind: 
 }
 
 /**
- * The profile reference the most recent `run/task-profile` event in a session
- * carries.
+ * What the most recent `run/task-profile` event in a session yields.
+ *
+ * `unreadable` is a third answer and not a variant of `none`: a log that holds
+ * a profile this build refuses is not a log that holds no profile, and
+ * treating them alike would compile a second profile over the top of one
+ * nobody could read.
+ */
+type LastTaskProfile =
+  | { readonly kind: 'none' }
+  | { readonly kind: 'ref'; readonly ref: TaskProfileRef }
+  | { readonly kind: 'unreadable'; readonly errors: readonly TaskProfileValidationError[] }
+
+/**
+ * The profile the most recent `run/task-profile` event in a session carries.
  *
  * Read from the log rather than from the Agent handle, because the case it
  * exists for is a RESUMED session: that session's events were restored, and the
  * handle driving them is new and carries nothing.
+ *
+ * The body is validated before its reference is derived. A restored log is a
+ * durable boundary — this process did not write it in this run — and
+ * `validateTaskProfile` is the check that boundary's own package documents for
+ * exactly this read (BLOCKED-232). Without it a profile the vocabulary refuses
+ * still produced a digest, and the run continued against a comparison whose
+ * left-hand side was meaningless.
  * @param session - the session whose log to read.
- * @returns the latest reference, or `undefined` when the log holds no profile.
+ * @returns the latest reference, why it was refused, or that there is none.
  */
-function lastTaskProfileRef(session: Session): TaskProfileRef | undefined {
+function lastTaskProfile(session: Session): LastTaskProfile {
   const events = session.snapshotEvents()
   for (let seq = events.length - 1; seq >= 0; seq -= 1) {
     const event = events[seq]
+    if (event?.type !== 'run/task-profile') continue
+    const validation = validateTaskProfile(event.data.profile)
+    if (!validation.valid) return { kind: 'unreadable', errors: validation.errors }
     // Derived, never read back: the event carries the body alone, because a
     // digest taken over a profile's freshly-minted goal ids is run-varying and
     // a durable log holding one can never replay (BLOCKED-211).
-    if (event?.type === 'run/task-profile') return taskProfileRef(event.data.profile)
+    return { kind: 'ref', ref: taskProfileRef(validation.profile) }
   }
-  return undefined
+  return { kind: 'none' }
 }
 
 /**
@@ -567,6 +590,20 @@ declare module '@deepseek-ai/cordis' {
      * @mode emit
      */
     'run/store-write-failed'(payload: { path: string; error: unknown }): void
+    /**
+     * A `run/task-profile` event already in the session log is one this build
+     * refuses to read, so the step it would have planned was not entered.
+     *
+     * The refusal is the point. Before it, an unreadable stored profile still
+     * yielded a digest, the comparison against it was meaningless, and the run
+     * carried on and appended a second profile over the top (BLOCKED-232). A
+     * caller that resumes a session whose durable profile this build cannot
+     * read needs to be told, not answered.
+     * @param payload.sessionId - the session whose log holds the refused profile.
+     * @param payload.errors - every reason the profile was refused, not just the first.
+     * @mode emit
+     */
+    'run/task-profile-unreadable'(payload: { sessionId: SessionId; errors: readonly TaskProfileValidationError[] }): void
   }
 }
 
@@ -1003,10 +1040,18 @@ export default class RunPlugin extends Service {
    * @param agent - the agent taking its first model step.
    * @param messages - the messages this step was given, whose first entry is the goal.
    */
-  private async recordTaskProfile(agent: Agent, messages: readonly UserMessage[]): Promise<void> {
+  /**
+   * Compile and record this agent's TaskProfile at its first model step.
+   * @param agent - the agent taking the step.
+   * @param messages - the messages removed from the inbox for this step.
+   * @returns `false` when the session's stored profile is unreadable and the
+   * step must not be entered, `true` in every other case — including the
+   * ordinary ones where nothing is compiled at all.
+   */
+  private async recordTaskProfile(agent: Agent, messages: readonly UserMessage[]): Promise<boolean> {
     const runId = agent.runId
     const first = messages[0]
-    if (runId === undefined || first === undefined) return
+    if (runId === undefined || first === undefined) return true
     const goal = goalOf(first)
     const goalRound = goalRoundOf(first.source)
     const compiled = compileTaskProfile({
@@ -1021,9 +1066,19 @@ export default class RunPlugin extends Service {
       ...agent.options.budget === undefined ? {} : { budget: agent.options.budget },
       ...goal.unread.length === 0 ? {} : { unreadGoalContent: goal.unread },
     })
-    if (!compiled.compiled) return
+    if (!compiled.compiled) return true
     const ref = taskProfileRef(compiled.profile)
-    const previousRef = lastTaskProfileRef(agent.session)
+    const previous = lastTaskProfile(agent.session)
+    if (previous.kind === 'unreadable') {
+      this.ctx.emit('run/task-profile-unreadable', { sessionId: agent.session.id, errors: previous.errors })
+      this.ctx.logger.warn(
+        'run: refused a model step for agent %s — the session log holds a task profile this build cannot read: %s',
+        agent.id,
+        previous.errors.map(error => `${error.code} at ${error.path === '' ? '<profile>' : error.path}`).join('; '),
+      )
+      return false
+    }
+    const previousRef = previous.kind === 'ref' ? previous.ref : undefined
     // The condition is the thing being avoided -- an unchanged PROFILE --
     // rather than a proxy for it like the session-start reason, which would
     // also skip a resume that carries a new goal.
@@ -1044,6 +1099,7 @@ export default class RunPlugin extends Service {
     }
     agent.taskProfile = ref
     await this.service.advance(runId, 'planning', [{ kind: 'task-profile', id: ref }], Date.now())
+    return true
   }
 
   /**
@@ -1262,7 +1318,9 @@ export default class RunPlugin extends Service {
       // the request it was supposed to plan would describe a decision already
       // taken.
       if (firstStep) {
-        await this.recordTaskProfile(agent, messages)
+        // A stored profile this build cannot read stops the step rather than
+        // being written over: the run is refused, not silently continued.
+        if (!await this.recordTaskProfile(agent, messages)) return { kind: 'reject' as const }
         // After the profile's `accepted -> planning`, so the Run is in the one
         // state `running` is legal from. A session whose first message is not a
         // task has no profile and stays in `accepted`, and `startRun` asks for

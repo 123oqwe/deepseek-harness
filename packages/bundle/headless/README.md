@@ -73,7 +73,7 @@ The line format is the one already recorded at `apps/cli/tests/profiles/headless
 
 The run's completion condition is the Agent going idle, and a background job is not part of it: a job the model started can still be running when the answer is written. Before the Session is flushed, the runner reads the Agent's own jobs and logs a `warn` naming every one that has not reached a terminal status. It does not wait for them, does not cancel them, and puts nothing about them into a model request — the run has already produced its answer. What the record buys is that the loss stops being silent, because the registry's teardown marks each remaining job reported without anyone reading it.
 
-The record goes to the logger at `warn`, which an exporter receives only when its threshold admits level 2; a composition whose exporters stay at the default `info` threshold keeps the fact and shows nobody. Making the caller see it is [BLOCKED-220](../../../spec/first100/exec/BLOCKED-QUEUE.md)'s open half.
+Each abandoned job produces one `job/abandoned` session event and one `dsh: background job <id> was still <status> when the run ended; its output was not collected` line on stderr, plus a `warn` naming the whole set. The stderr line is projected from the event by the recorded-session harness, so the two cannot drift: `abandonedJobLine` is exported from this package and the harness calls it rather than spelling the sentence again.
 
 ### Patch surface over base
 
@@ -136,7 +136,7 @@ These limits tell you when headless does not fit and what it needs from the `dsh
 - **No pre-token heartbeat** — stderr stays silent until the provider emits a non-empty reasoning delta; a delayed first token exposes no earlier progress signal.
 - **Reasoning enters stderr logs** — redirection and supervisors may retain substantially more and potentially sensitive model output; route stderr to a controlled sink when needed.
 - **Only reasoning and the final answer are printed** — a run without an assistant message prints an empty stdout line and exits 1; intermediate tool output is not printed.
-- **A background job still running at the end is recorded, not delivered** — the run does not wait for it, so its output never reaches the model; the record is a `warn` and reaches only an exporter whose threshold admits it.
+- **A background job still running at the end is recorded, not delivered** — the run does not wait for it, so its output never reaches the model. The caller learns of it from stderr and the session log; waiting for it is deferred work tracked as BLOCKED-220.
 
 <a id="dev-note"></a>
 ### Dev Note

@@ -171,9 +171,18 @@ function recordAbandonedChildJobs(child: Agent): void {
   if (jobs === undefined) return
   const live = jobs.list(child).filter(job => !isTerminalJobStatus(job.status))
   if (live.length === 0) return
-  const named = live.map(job => `${String(job.id)} (${job.status})`).join(', ')
+  for (const job of live) {
+    // Appended to the CHILD's log, which is where the job was started and the
+    // only log that can name it. No surface metadata: the parent's model sees
+    // the child's result, and an abandoned job is not part of it.
+    child.session.append('job/abandoned', {
+      jobId: String(job.id),
+      status: job.status as 'running' | 'stopping',
+      surface: 'subagent',
+    })
+  }
   child.ctx.logger('subagent').warn(
-    `child ${String(child.session.id)} finished with ${String(live.length)} background job(s) still running; their output was never collected: ${named}`,
+    `child ${String(child.session.id)} finished with ${String(live.length)} background job(s) still running; their output was never collected: ${live.map(job => `${String(job.id)} (${job.status})`).join(', ')}`,
   )
 }
 

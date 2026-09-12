@@ -560,6 +560,13 @@ describe('P9-03 Provider — --model selects the route the run uses', () => {
       ctx.provide('jobs', { list: () => snapshots } as never)
     }
 
+    /** The single session the bench's agent factory created. */
+    function sessionOf(ctx: Context): Session {
+      const session = ctx.agents.list()[0]?.session
+      if (session === undefined) throw new Error('the bench created no agent')
+      return session
+    }
+
     it('names every job still running, before the session is flushed', async () => {
       const test = await bench(answer)
       stubJobs(test.ctx, [{ id: 'subagent-1', status: 'running' }, { id: 'bash-2', status: 'stopping' }])
@@ -581,6 +588,17 @@ describe('P9-03 Provider — --model selects the route the run uses', () => {
       expect(warnings[0]).toContain('subagent-1 (running), bash-2 (stopping)')
       expect(warnings[0]).toContain('2 background job(s) still running')
       expect(warnings[1]).toBe('flush')
+      // The caller-visible half: one stderr line per job, and the durable
+      // record the recorded-session harness projects those lines from.
+      expect(result.err).toBe(
+        'dsh: background job subagent-1 was still running when the run ended; its output was not collected\n'
+        + 'dsh: background job bash-2 was still stopping when the run ended; its output was not collected\n',
+      )
+      const abandoned = sessionOf(test.ctx).snapshotEvents().filter(event => event.type === 'job/abandoned')
+      expect(abandoned.map(event => event.data)).toStrictEqual([
+        { jobId: 'subagent-1', status: 'running', surface: 'headless' },
+        { jobId: 'bash-2', status: 'stopping', surface: 'headless' },
+      ])
       await test.ctx.fiber.dispose()
     })
 

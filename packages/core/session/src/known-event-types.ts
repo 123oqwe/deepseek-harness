@@ -41,6 +41,7 @@ export const KNOWN_SESSION_EVENT_TYPES: ReadonlySet<string> = new Set([
   'hook/invoked',
   'hook/result',
   'identity/attached',
+  'job/abandoned',
   'llm/retry',
   'llm/retry-started',
   'memory/access',

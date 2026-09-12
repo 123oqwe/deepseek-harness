@@ -357,3 +357,74 @@ describe('P4-02 must[2]: an entered goal\'s continuation round is a task (delega
     expect(profile.goalRef.goalRound).toBeUndefined()
   })
 })
+
+describe('BLOCKED-232: a stored profile this build cannot read stops the run', () => {
+  /**
+   * A seed whose one `run/task-profile` event carries a body the vocabulary
+   * refuses. The tamper is a MISSING required member rather than an extra one,
+   * so the refusal is the schema's and does not depend on the closed-vocabulary
+   * rule being the thing under test.
+   * @param events - the events a completed session produced.
+   * @returns the same events with the profile body broken.
+   */
+  function withUnreadableProfile(events: readonly SessionEvent[]): SessionEvent[] {
+    return events.map((event) => {
+      if (event.type !== 'run/task-profile') return event
+      const { objective: _dropped, ...rest } = (event.data as { profile: Record<string, unknown> }).profile
+      return { ...event, data: { profile: rest } } as SessionEvent
+    })
+  }
+
+  it('refuses the step and says why, instead of writing a second profile over it', async () => {
+    const ctx = await harness(1)
+    const before = await turn(ctx, 'session-unreadable', goal('tidy the imports'))
+    expect(profileEvents(before)).toHaveLength(1)
+
+    const resumed = await harness(1)
+    const refusals: { sessionId: string; codes: string[] }[] = []
+    resumed.on('run/task-profile-unreadable', ({ sessionId, errors }) => {
+      refusals.push({ sessionId: String(sessionId), codes: errors.map(error => error.code) })
+    })
+    const { agent } = await resumed.agents.create({
+      sessionId: SessionId('session-unreadable'),
+      seed: withUnreadableProfile(before.session.snapshotEvents()),
+      agentOptions: { provider: 'mock', model: 'mock' },
+    })
+    agent.followup(goal('a different goal entirely'))
+    await agent.whenIdle()
+
+    // The typed reason, naming every fault rather than the first.
+    expect(refusals).toHaveLength(1)
+    expect(refusals[0]?.sessionId).toBe('session-unreadable')
+    expect(refusals[0]?.codes).toContain('malformed')
+    // The step did not happen: no second profile, and the handle names none.
+    expect(profileEvents(agent)).toHaveLength(1)
+    expect(agent.taskProfile).toBeUndefined()
+    // And the model was never asked. A refusal that still spent the request
+    // would be a log entry, not a refusal.
+    expect(agent.session.snapshotEvents().filter(event => event.type === 'assistant/message')).toHaveLength(1)
+  })
+
+  it('reads a stored profile the build DOES accept, so the refusal is about the body and not about resuming', async () => {
+    // The control. Without it, a read that refused every stored profile would
+    // pass the case above.
+    const ctx = await harness(1)
+    const before = await turn(ctx, 'session-readable', goal('tidy the imports'))
+
+    const resumed = await harness(1)
+    const refusals: unknown[] = []
+    resumed.on('run/task-profile-unreadable', (payload) => { refusals.push(payload) })
+    const { agent } = await resumed.agents.create({
+      sessionId: SessionId('session-readable'),
+      seed: before.session.snapshotEvents(),
+      agentOptions: { provider: 'mock', model: 'mock' },
+    })
+    agent.followup(goal('a different goal entirely'))
+    await agent.whenIdle()
+
+    expect(refusals).toStrictEqual([])
+    // A different goal is a different task, so the readable path still writes.
+    expect(profileEvents(agent)).toHaveLength(2)
+    expect(agent.taskProfile).toBeDefined()
+  })
+})

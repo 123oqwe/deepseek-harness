@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-12-abandoned-background-jobs-recorded.md
-2026-09-12-abandoned-background-jobs-recorded.md: 0ccb19937848b1f778cd05f5613483f113a71d33
-2026-09-12-abandoned-background-jobs-recorded.zh.md: 944e4b273840163c78e2af7c4d9bebb9913f0cce
+2026-09-12-abandoned-background-jobs-recorded.md: e8f9985f965490216870e6fc4b174f992d71009c
+2026-09-12-abandoned-background-jobs-recorded.zh.md: 9d7a07c28daa8ce4bb5f6b8876d03e2f63b4d230

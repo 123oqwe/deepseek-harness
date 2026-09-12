@@ -441,6 +441,15 @@ describe('startInProcessRun', () => {
       expect(warnings).toHaveLength(1)
       expect(warnings[0]).toContain(`${started[0]!} (running)`)
       expect(warnings[0]).toContain('1 background job(s) still running')
+      // The durable record, on the child's own log — the only one that can
+      // name the job — and with no surface metadata, so the parent's model
+      // never sees it.
+      const child = ctx.agents.get(run.id)!
+      const abandoned = child.session.snapshotEvents().filter(event => event.type === 'job/abandoned')
+      expect(abandoned.map(event => event.data)).toStrictEqual([
+        { jobId: started[0]!, status: 'running', surface: 'subagent' },
+      ])
+      expect(abandoned.every(event => !('surfaceOp' in event))).toBe(true)
       await run.dispose()
     })
 

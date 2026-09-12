@@ -39,6 +39,7 @@ import {
   type WorkspaceSnapshotEntry,
 } from '@deepseek-ai/dsh-session-snapshot'
 import { exitStatusFor } from '../../packages/bundle/headless/src/scriptability.ts'
+import { abandonedJobLine } from '../../packages/bundle/headless/src/index.ts'
 import { LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
 import { resolvePwshPath } from '@deepseek-ai/dsh-pwsh-local'
 import { parseSessionLog } from '@deepseek-ai/dsh-llm-replay'
@@ -427,6 +428,19 @@ function stderrFromSession(log: string): string {
     }
   }
   close()
+  // BLOCKED-220: the runner names each job still running at the end, one line
+  // per `job/abandoned` event, written before the result and so before the
+  // failure lines below. Projected from the log for the same reason the failure
+  // line is — a second spelling of the sentence here would drift.
+  for (const record of records(log)) {
+    if (record.type !== 'job/abandoned') continue
+    const data = record.data as JsonObject | undefined
+    if (typeof data?.jobId !== 'string' || typeof data.status !== 'string') {
+      throw new Error('headless snapshot job/abandoned event has no jobId and status')
+    }
+    if (data.surface !== 'headless') continue
+    output += abandonedJobLine(data.jobId, data.status)
+  }
   const reason = turnReasonFromSession(log)
   // P9-06 must[3]: the runner names the typed reason on stderr for any
   // non-completion, so a script that reads stderr does not have to map exit
