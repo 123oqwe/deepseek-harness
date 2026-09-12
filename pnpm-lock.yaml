@@ -7334,6 +7334,19 @@ importers:
         specifier: workspace:^
         version: link:../../identity/principal
 
+  packages/policy/policy-language:
+    dependencies:
+      '@cedar-policy/cedar-wasm':
+        specifier: 4.12.0
+        version: 4.12.0
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-policy-engine-cedar':
+        specifier: workspace:^
+        version: link:../policy-engine-cedar
+
   packages/policy/risk-taxonomy:
     devDependencies:
       '@deepseek-ai/cordis':

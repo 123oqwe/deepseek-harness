@@ -11,3 +11,4 @@
  */
 
 export * from './schema.ts'
+export * from './parser.ts'

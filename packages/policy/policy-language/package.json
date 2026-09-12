@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-policy-language",
-  "description": "Epic P2-10's policy vocabulary: the Cedar schema dsh's own requests are shaped by — three entity types and the ten declared context keys — plus the parsing that refuses anything outside it and the pinned, digested policy-set artifact a replay keys on",
+  "description": "Epic P2-10's policy vocabulary: the Cedar schema dsh's own requests are shaped by \u2014 three entity types and the ten declared context keys \u2014 plus the parsing that refuses anything outside it and the pinned, digested policy-set artifact a replay keys on",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
     "access": "public",
@@ -48,5 +48,8 @@
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/dsh-policy-engine-cedar": "workspace:^"
+  },
+  "dependencies": {
+    "@cedar-policy/cedar-wasm": "4.12.0"
   }
 }
