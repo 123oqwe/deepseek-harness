@@ -4959,6 +4959,21 @@ importers:
         specifier: workspace:^
         version: link:../../sandbox/sandbox
 
+  packages/execution/resource-budget:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
+      '@deepseek-ai/dsh-execution-world':
+        specifier: workspace:^
+        version: link:../execution-world
+      '@opentelemetry/semantic-conventions':
+        specifier: 1.43.0
+        version: 1.43.0
+
   packages/experimental/agent-team:
     dependencies:
       '@deepseek-ai/dsh-brand':

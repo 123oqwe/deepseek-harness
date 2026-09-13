@@ -148,6 +148,7 @@ External packages **directly declared** only by repository tooling, test infrast
 | [`@lexical/headless`](https://github.com/facebook/lexical) | MIT |
 | [`@modelcontextprotocol/server-everything`](https://github.com/modelcontextprotocol/servers) | MIT / Apache-2.0 |
 | [`@modelcontextprotocol/server-filesystem`](https://github.com/modelcontextprotocol/servers) | MIT / Apache-2.0 |
+| [`@opentelemetry/semantic-conventions`](https://github.com/open-telemetry/opentelemetry-js) | Apache-2.0 |
 | [`@sigstore/mock`](https://github.com/sigstore/sigstore-js) | Apache-2.0 |
 | [`@stylistic/eslint-plugin`](https://github.com/eslint-stylistic/eslint-stylistic) | MIT |
 | [`@testing-library/dom`](https://github.com/testing-library/dom-testing-library) | MIT |

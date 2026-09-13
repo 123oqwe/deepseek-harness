@@ -1,0 +1,64 @@
+{
+  "name": "@deepseek-ai/dsh-resource-budget",
+  "description": "Resource budget vocabulary and accounting for Epic P3-10: what a budget bounds per tenant, run and action across the eight dimensions the clause names, reservation against every enclosing budget so splitting work across subagents cannot bypass it, the admission decision a caller acts on, and the declared metering error bound",
+  "version": "0.1.2-alpha.4",
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./types": {
+        "types": "./lib/types/types.d.ts",
+        "default": "./lib/types/types.js"
+      },
+      "./accounting": {
+        "types": "./lib/types/accounting.d.ts",
+        "default": "./lib/types/accounting.js"
+      },
+      "./package.json": "./package.json"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "packages/execution/resource-budget"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./accounting": {
+      "types": "./lib/types/accounting.d.ts",
+      "default": "./lib/types/accounting.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-brand": "workspace:^",
+    "@deepseek-ai/dsh-execution-world": "workspace:^"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-brand": "workspace:^",
+    "@deepseek-ai/dsh-execution-world": "workspace:^",
+    "@opentelemetry/semantic-conventions": "1.43.0"
+  }
+}
