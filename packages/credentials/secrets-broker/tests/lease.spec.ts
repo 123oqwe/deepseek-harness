@@ -20,7 +20,7 @@ import type { Principal } from '@deepseek-ai/dsh-principal'
 import {
   afterRedemption, decideRedemption, effectiveState, isExpired, isLegalLeaseTransition,
   revoke, revokeWorldLeases,
-  type SecretLease, type SecretLeasePresentation, type SecretLeaseRecord, type SecretLeaseState,
+  type SecretLease, type SecretLeaseId, type SecretLeasePresentation, type SecretLeaseRecord, type SecretLeaseState,
 } from '../src/index.ts'
 
 const EXPIRES_AT = 1_000
@@ -32,7 +32,7 @@ function principal(id: string): Principal {
 
 function lease(over: Partial<SecretLease> = {}): SecretLease {
   return {
-    id: brandString('lease-1'),
+    id: brandString<SecretLeaseId>('lease-1'),
     credential: brandString<CredentialRef>('llm/deepseek'),
     principal: principal('user-1'),
     action: brandString<ActionId>('action-1'),
@@ -135,7 +135,7 @@ describe('P3-06 C must[2]: use revokes', () => {
 describe('P3-06 C: revocation, and the cascade when a world stops', () => {
   it('revokes every lease bound to the stopped world, and only those', () => {
     const inWorld = record('issued')
-    const elsewhere = record('issued', { id: brandString('lease-2'), world: brandString<WorldId>('world-2') })
+    const elsewhere = record('issued', { id: brandString<SecretLeaseId>('lease-2'), world: brandString<WorldId>('world-2') })
 
     const after = revokeWorldLeases([inWorld, elsewhere], brandString<WorldId>('world-1'))
 
