@@ -2803,3 +2803,11 @@ run-gates: PASS optional dependency imports (230.26s)
 
 run-gates: 12 passed, 3 failed, 0 skipped in 254.94s.
 [ELIFECYCLE] Command failed with exit code 1. 组 + doc-quick model-experience(新包路径)+ constraints/architecture:layers/doc-standard/check-layer-deps + first100 门**,确认全绿非首失败(fail-fast aware)——不再只跑子集(补记 384 教训)。
+
+## 补记 386(2026-09-13,P3-C 云上连红两次根因对账 + 确认两修都在重建 tip;应 guanjieqiao-92 巡检 ②)
+巡检报 P3-C 候选云上连红两次(17:16Z / 18:23Z)。delegate 亲对(run list + commit 语义 + ancestry):
+- 红①=run 34771095901,gate/b1a57bd092,17:16Z,failure(install/typecheck/test job):b1a57bd092 = 更早装配(补记 349-371 叠 4204b92fed),不含 dcb033e7f0(secrets-broker 接仓级门那笔)→ 红在 secrets-broker 未分类:constraints / architecture:layers(packages/credentials 无 GROUP_LAYERS)/ doc-standard(README 缺双语 skeleton)。即补记 380 根因。
+- 红②=run 34774495682,gate/6e55521e08,18:23Z,failure:6e55521e08 建在 4e8c167072(已含 dcb033e7f0、过了那三道)→ 红在剩下的 hygiene 组 verify-package-invariants(secrets-broker README 缺 omitted-companion 理由句)。即补记 384 根因。
+- 结论:两次红 = 同一根问题(新包 secrets-broker 未进完整仓级门)的两步显现;分别由 dcb033e7f0(constraints/layers/doc-standard)+ bcfe131000(package-invariants + model-experience README)修。两修都是重建底座 bcfe131000 的祖先(merge-base --is-ancestor dcb033e7f0 bcfe131000 = YES;bcfe131000 自身即修②所在)。故第三次派发(bcfe131000 + P3-02.C 补冻-16 + docs)两修全在 tip。
+- 防第三次红:派前跑全 hygiene 组(run-gates.ts hygiene)+ doc-quick model-experience(新包路径)+ constraints/architecture:layers/doc-standard/check-layer-deps + first100 门,确认全绿非首失败(fail-fast aware)——不再只跑子集(补记 384 教训)。注:hygiene 组含 publint / built-package-invariants,须先 build 出 lib/ 再跑(否则这两道因无 lib 假红,与新包无关)。
+- delegate 自纠(过程):本补记首次写入时 heredoc 用了未加引号形式,正文反引号被 shell 当命令替换误执行(误触一次 hygiene、未写文件未污染);已改用加引号 heredoc 重写。记此以免复发。
