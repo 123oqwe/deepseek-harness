@@ -13884,6 +13884,44 @@
         "mutationDescription": "Three mutations, each run against this argv and restored byte-identical. (M67) the `run-retry-usage` row is removed from `dsh-base`. (M68) the `circuit-breaker` row is removed from `dsh-base`. (M69) `llm-retry` stops calling `budgets.admit` on the path that decides a retry — the exact state the 4.4d pass found in the product.",
         "failureSummary": "M67 reddens both cases, and the driver reports `{\"runRetryUsage\":false,\"circuitBreaker\":true}` — the breaker row staying mounted is the control that scopes the mutation, and a fixture mounting the budget for itself would have stayed GREEN here, which is the empty-evidence shape BLOCKED-156 names. M68 reddens ONLY the mount case, reporting `{\"runRetryUsage\":true,\"circuitBreaker\":false}`, while the charge case stays GREEN at `retriesUsed:1` — the control proving the two rows are observed independently and that charging does not depend on the breaker. M69 reddens ONLY the charge case, at `retriesUsed:0` with both services still reported mounted — the control proving the charge case measures the ACCOUNTING rather than the mounting, and reproducing exactly the pre-slice symptom: mounted, retried, charged to nothing. Carried verbatim from the mount slice frozen 2026-09-10T19:55:00.000Z: this entry re-files that freeze as a supplement, and every mutation site is byte-identical between its recorded tree and 240ff9cde607fc8c721a5a61731541c20deebad1 -- the `run-retry-usage` and `circuit-breaker` rows of `packages/bundle/base/cordis.patch.yml` (M67, M68) and `packages/llm/llm-retry/src/index.ts` (M69) -- while the fixture files are unchanged."
       }
+    },
+    {
+      "epic": "P1-03",
+      "stage": "U",
+      "supplements": {
+        "epic": "P1-03",
+        "stage": "U"
+      },
+      "supplementSeq": 3,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "apps/cli/tests/plugin-lock-boot.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-03.U2 must[2]: the lock decides a real boot, not just a unit call REFUSES the boot when a composed layer drifted from the lock, and names the package",
+        "P1-03.U2 must[2]: the lock decides a real boot, not just a unit call REFUSES when one layer declares refuse and another warn-and-proceed, so the strictest layer wins at boot",
+        "P1-03.U2 must[2]: the lock decides a real boot, not just a unit call diagnoses the missing lock and PROCEEDS when every layer declares warn-and-proceed",
+        "P1-03.U2 must[2]: the lock decides a real boot, not just a unit call does not refuse on the lock when every composed layer matches it"
+      ],
+      "files": [
+        "apps/cli/tests/plugin-lock-boot.spec.ts",
+        "apps/cli/src/profile-boot.ts"
+      ],
+      "frozenAtUtc": "2026-09-13T03:40:00.000Z",
+      "dryRunProof": {
+        "treeSha": "2393f5f83ab5d8433b0f30ceed05e8b3ced51543",
+        "testsDiscovered": 4
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations of the WIRING, not of the gate. (1) The `enforceProfileLock` call removed from `runProfile` entirely -- the state BLOCKED-247 measured, where the gate exists, decides correctly, and nothing on a boot path asks it. (2) The refusal stops naming the drifted packages, reporting only how many there were. (3) The call moved from before `boot()` to after it, so the lock is consulted about plugins that are already mounted.",
+        "failureSummary": "Removing the call reddens 2 of 4 (the two refusals); dropping the names reddens 1 (the drift case, which asserts the package is named); moving it after `boot()` reddens 2. Mutation (1) is the load-bearing one: these cases drive `runProfile` rather than the gate, so deleting the wiring reddens them, where the nine cases of P1-03.U.1 would all stay green because they call `gateProfileAgainstLock` themselves. Applied and reverted locally, never committed; `apps/cli/src/profile-boot.ts` restored byte-identically and all 4 returned passing.\n\nA FOURTH attempt is recorded because it produced a meaningless red: the first placement of mutation (3) landed inside a non-async nested function, so `tsc` reported TS1308 and the suite did not run. A mutation that does not compile is not a mutation, and its red is not evidence; the reading above comes from re-placing the call at the real call site."
+      },
+      "note": "The reachability half of must[2], and the reason BLOCKED-247 existed. P1-03.U.1 freezes nine cases over `apps/cli/tests/plugin-lock.spec.ts` and they are all correct -- but every one of them calls `gateProfileAgainstLock` directly, and the gate had zero callers on any boot path, so the clause was proved about a function rather than about the product. This supplement does not replace U.1: U.1 proves the gate decides correctly, and these four prove a real boot asks it. Each drives `runProfile` and none imports the gate, because a remedy tested the way the hole was tested would reproduce the hole."
     }
   ]
 }
