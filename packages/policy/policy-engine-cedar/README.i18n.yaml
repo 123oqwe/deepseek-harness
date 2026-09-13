@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/policy/policy-engine-cedar/README.md
 README.md: 85eface841f872425b6ed02ffe3091d6e43c711f
-README.zh.md: b276066ebf6eeca7f741955fb5e63f2d4d1cbdde
+README.zh.md: d2fee842be18915bcd3b94205a0e42a06fea6d6a

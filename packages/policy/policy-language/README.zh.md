@@ -73,6 +73,7 @@ kind: "package-reference"
 | [`src/index.ts`](src/index.ts) | `acceptPolicySet`——先限界、再解析、再钉住——以及 `PolicySetProvider`:它用 `acceptPolicySet` 注册 `policy-set` namespace,并在每次调用 `current()` 时从这个 namespace 作答 |
 | — | 不发布 invariant 伴生包:本包不拥有任何「两个观察者可能看到不同结果」的关系——每个导出都是对其入参的纯函数,一次解析或一次钉住在同一次调用内产生并返回。 |
 
+<a id="model-experience"></a>
 ## 模型体验
 
 None, as this package declares a vocabulary and registers no prompt, schema, tool, or session event.
@@ -80,6 +81,8 @@ None, as this package declares a vocabulary and registers no prompt, schema, too
 #### KV Cache 影响
 
 无;这里没有任何东西组装或贡献于一次 provider 请求,因此没有前缀移动、也没有已缓存前缀被失效。
+
+<a id="known-limitations-and-deferred-work"></a>
 
 ## 已知限制与延期工作
 

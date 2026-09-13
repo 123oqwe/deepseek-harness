@@ -96,6 +96,8 @@ Cedar 自身的语义——forbid 覆盖 permit、默认拒绝、给出匹配策
 
 这里没有任何东西进入模型请求;一个决策抵达模型只以其执行点拒绝的形式出现,而那携带闭合的 reason code,绝不携带策略文本。
 
+<a id="known-limitations-and-deferred-work"></a>
+
 ## 已知局限与后续工作
 
 - **explain 输出未脱敏。**`PolicyExplain` 逐字携带命中的策略 id 与 Cedar 的诊断。执行点让两者都不进入模型可见输出、只追加到审计记录,但没有任何东西产出 Epic P2-10 要求的安全摘要,也没有东西从审计所存内容里去除秘密。
