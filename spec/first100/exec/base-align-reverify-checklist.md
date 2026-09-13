@@ -58,6 +58,31 @@ S0c ─┘         │                ├─> S6(B) ──┤
 
 ---
 
+## Line-level conflict classification (all 30 cited files)
+
+Measured 2026-09-13 by intersecting the baseline lines each side **modifies or deletes** (pure insertions excluded — two independent insertions at one anchor compose). **12 files have at least one line both sides change; 18 are composable.**
+
+*Instrument note: two earlier forms of this measurement were wrong and are recorded so the numbers are not re-derived from them. Comparing default `git diff` hunk ranges reported all 30 as conflicting — the three lines of context make changes four lines apart look adjacent. Comparing `-U0` ranges reported 27 — a pure insertion has an empty old-range and was being charged to its anchor line. The form used here agrees with three independent manual deep-dives (`agent.ts`, `runtime-context.ts`, `continuation.ts`), which is why it is trusted.*
+
+| file | shared lines | what each side did | verdict |
+|---|---|---|---|
+| `apps/cli/src/profile-boot.ts` | 2 (14, 210) | **L14** `node:fs` import: ours adds `existsSync, readFileSync`, upstream adds `existsSync, mkdirSync, rmSync`. **L210** `composeProfile`: ours adds 3rd param `production: boolean`, upstream adds 3rd param `fromDefaultProfile?: string`. | L14 → **union** (either side alone drops symbols). L210 → **REAL SEMANTIC CONFLICT**: one positional slot, two meanings, and both sides changed the body. The merged signature must hold both (4th param or an options object). **OBSERVE.** Reinforces deferring P1-03.U2 to after the re-anchor: `pluginEnforcement` is P1-03's, and doing it first means resolving this twice. |
+| `packages/subagent/subagent/src/continuation.ts` | 13 | upstream split ~1300 lines into `continuation-activation.ts` et al.; ours extended settlement/epoch handling | already adjudicated: **2 cells re-observe, 1 case re-wires**. **OBSERVE** (see the S6 row). |
+| `packages/core/agent/src/inbox.ts` | 8 | upstream **deleted the file**; every line we changed collides with the deletion | resolved by the **S2 adjudication** → `core/agent-loop/src/inbox.ts`, `Inbox` → `ReactLoopInbox`. Not a merge decision. |
+| `docs/persistence-catalog.md` | 15 | both regenerated a generated catalog | **moot — regenerate, never hand-merge** (S4). The largest raw conflict in the set dissolves entirely. |
+| `packages/extensions/tool-cordis/src/api-catalog.ts` | 2 | same, generated | **moot — regenerate** (S4, after its generator merges). |
+| `packages/subagent/subagent/src/index.ts` | 1 (448) | upstream renames `queueSubagentPrompt` → `deliverSubagentPrompt`; our change rewrites the same `return {` block | **real but small**: our call must adopt the new name. Re-run P4-06.U.4 / P5-10.F/U after. |
+| `packages/bundle/headless/tests/headless.spec.ts` | 1 (6) | import line: ours adds `AgentOptions`; upstream drops `Inbox` and adds `AssistantStreamFrame` | **union minus `Inbox`** — taking our side alone re-imports a symbol upstream deleted. |
+| `packages/session/session-persistence-jsonl/tests/jsonl.spec.ts` | 2 (7, 8) | import block: ours adds `SchemaCompatibilityError` + `decodeStorageRecord`; upstream reworks `node:path` | **union**. Confirms §2.8's finding that the two sides' work here is unrelated. |
+| `packages/session/session-persistence/src/write-behind.ts` | 1 (47) | upstream **deleted the layer**; ours is `enqueueAll` | **not a merge decision — user decision D1/S0a.** |
+| `packages/bundle/headless/README.zh.md` | 1 (64) | both rewrote the same sentence: ours describes model-route resolution, upstream keeps the `agentDefaultModel` link | **real prose choice**, and its English pair is under the BLOCKED-124 hold. Needs an author, not a merge rule. |
+| `packages/bundle/headless/README.i18n.yaml` | 2 (5, 6) | both re-recorded the pair's blob hashes | **mechanical** — re-record after the prose above settles. |
+| `packages/core/agent-loop/README.i18n.yaml` | 2 (5, 6) | same | **mechanical** — re-record. |
+
+**Reading.** Of 12, only **three** need a decision rather than a rule: `profile-boot.ts` L210 (signature), `README.zh.md` L64 (prose), and `write-behind.ts` (already D1). Two dissolve as generated artifacts, one is already an adjudication, and the rest are unions or re-records.
+
+---
+
 ## Group A — mount / boot surface (do first)
 
 | pri | file | up | ours | cells | action after re-anchor |
