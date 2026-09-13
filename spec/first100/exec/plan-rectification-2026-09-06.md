@@ -1610,3 +1610,9 @@ P2-03 撤签后门 (e) 正确地红了五条(`@modelcontextprotocol/sdk`、`open
 - **P1-03 不刷**(BLOCKED-247:must[2] 锁门未接进 boot)。lane B 另记:P6-07(BLOCKED_ON_ACCEPTANCE)/P1-07(NOT_RUN)各有一 PASS 签字、也被 re-green 弄陈旧——到 --accept 时谓词(iv)会拒旧签,需先补签(现非阻塞)。
 
 候选 8″ 派发,期望 registry-gates 全绿(freeze 门已过 + catalog 已修)→ 推 first100-exec。补记 298 的 e2b 一次性间歇结论不变。
+
+**§12.85 补记 300(候选 9 装配 = P2-10 P/U 冻结 + P4-11.U.1 supplement;lane A 自纠假灵敏度证明进 ONBOARDING;2026-09-14 08:30 EDT)**:候选 9 tip = `bf8ec5de69` = first100-exec(3aae231223)+ 补记 checkpoint + lane A P2-10 P(13)/U(2)冻结(`656a52da78`,treeSha 240ff9cde6 新基线重取)+ lane B P4-11.U.1(`962d44749d` merged:idx 250→supersededBy P4-11.U.1、idx 237 独 live 14 例、P4-11.P.1 异阶段 supplement 未动)。**装配复验(delegate 亲跑)**:verify-specs 9 产物字节一致、files-overlay 387、freeze-in-candidate 185 GREEN/0 MISSING、ledger --check 绿;命令冻结用 node 程序化合并(两 freeze 皆 append,P4-11.U.1 与 P2-10 P/U 无键冲突,P4-11.P.1 vs P4-11.U.1 异阶段不撞)。P4-11.U.1 的 sensitivityProof carry 我亲验(cordis.patch.yml 改动不碰 retry 家族 → M67/M68 控制未失效;M69+四 fixture object 全同)。
+
+**lane A 自纠假灵敏度证明(进 ONBOARDING)**:lane A 起草的 P2-10 P sensitivityProof 变异("把限界挪到解析之后")落地前实测 **32 条一条不红**——两种顺序返回同一 `policy-set-too-large`,而用例断言的是"哪种拒绝回来"非"工作何时发生",故测不出顺序;lane A 先加 `// MUTATION:` 标记确认变异确在树上(仍全绿)= 断言不覆盖非实验失误,换成真会红的两条(char-vs-byte 红 1、`>`→`>=` 红 2),**并把失败的那条明写进 sensitivityProof("A THIRD mutation … FAILED to redden … asserting a detection it does not have")**。**规则**:sensitivityProof 落地前必须实测每条变异真会红;测不出的变异要么不写、要么明记为非保证,绝不冒充守护——一条指名自己测不出之变异的证明,本身就是它要防的"空真"病。
+
+**候选 9 是冻结-观测载体**(P2-10 P/U、P4-11.U/U.1 皆 NOT_RUN,freeze 门跳过它们 → 候选 9 应全绿):绿观测后 lane B 按 runbook 绿 P2-10 C/P/U + P4-11.U(idx 237)+ P4-11.U.1(--supplement seq 1)→ 候选 9′ 携绿 + **BLOCKED-242 处置记录**(lane B 1594 词文本,由 P4-11.U.1 关闭 (a)、re-green + P6-02.C 关闭 (b)、BLOCKED-226=0 无 live orphan)+ addenda → 推。
