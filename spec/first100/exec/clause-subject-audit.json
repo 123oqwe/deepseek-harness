@@ -2879,6 +2879,119 @@
         "recordedBeforeFirstLine": true,
         "realized": null
       }
+    },
+    "P3-06": {
+      "recordedBeforeFirstLine": true,
+      "page": "spec/first100/exec/preflight-P3-06.md",
+      "recordedAt": "2026-09-13",
+      "note": "The preFlight page was written before the first line of the package existed; this structured record was added after the C freeze, when an assembly check found the page had no counterpart here. The measurements below are the page's, unchanged.",
+      "measured": {
+        "reAnchorNeutral": "Yes. None of the nine declared files is in the BASE-ALIGN conflict set, and none is under session/ or snapshots/.",
+        "acceptance[1] has no subject on the declared files": "It requires secrets to stay out of the session log, but no session-log writer is declared; the durable log's write path has no redaction seam (`grep -rn 'redact|secret' session-persistence{,-jsonl}/src` is empty); and the only session-side seam, `session-telemetry`'s waterfall, covers records sent to a backend and states in `src/index.ts:27` that it ships NO rules. Two routes offered to the delegate (widen the declared paths via adjudication, or split under 12.46-B); not chosen by lane A.",
+        "must[1] needs a shape nobody has chosen": "`WorldSecretsSpec.posture: 'broker-only'` is refused by the local provider (`local-provider.ts:93`), whose own comment states why: it is a promise about what the world RECEIVES that only a separate address space can keep. Held out of the C stage for that reason."
+      },
+      "makeVsUse": {
+        "ledgerRow": "P3-06",
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": "PROVIDER_ADAPT",
+        "standards": [
+          "OAuth token-exchange RFC 8693 delegation semantics (borrowed)",
+          "SPIFFE SVID lifetime rules (borrowed)"
+        ],
+        "adaptCandidate": {
+          "name": "anthropics/sandbox-runtime",
+          "npm": "@anthropic-ai/sandbox-runtime",
+          "license": "Apache-2.0",
+          "role": "adapt",
+          "cardNote": "credential-sentinel.ts, credential-mask-env/files.ts, body-substitution.ts, aws-sigv4.ts — fake_value_<uuid4> sentinels substituted only on egress",
+          "landsIn": "P3-06.P",
+          "reason": "Pending adoption. The card's subject is the SENTINEL AND MASKING TRANSPORT, which is must[1]'s brokered injection — the limb held out of the Contract stage until the world-provider shape is decided. The ledger's own risk field notes the masking is HTTP-egress-centric, so it does not by itself cover the FD/socket cases the residual names."
+        },
+        "whatTheLedgerCallsResidual": "The row's `residual` field names, verbatim, 'SecretLease bound to principal/ActionManifest/world/purpose/expiry, revoke-on-kill, delegation to subagents/plugins, session-log/error/crash-dump taint …, FD/socket injection …'. The first two are exactly what the C stage built.",
+        "conclusion": "No hand-written duplicate of an adapt-judged package. What C delivers — the lease vocabulary and its state machine, including revoke-on-kill — is what the ledger itself classifies as residual write; the adapt candidate covers the transport, which C does not touch.",
+        "card": {
+          "heading": "#### P3-06",
+          "sheetCommit": "bd408a403a"
+        },
+        "adopted": [
+          {
+            "name": "anthropics/sandbox-runtime",
+            "npm": "@anthropic-ai/sandbox-runtime",
+            "version": null,
+            "form": "runtime",
+            "landsIn": "P3-06.P",
+            "reason": "Pending adoption, recorded before the stage that would import it exists. The card's subject is the credential SENTINEL and masking transport (credential-sentinel.ts, credential-mask-env/files.ts, body-substitution.ts, aws-sigv4.ts), which is must[1]'s brokered injection — the limb held out of the Contract stage until the world-provider shape is decided. The C stage imports nothing from it. The ledger's own risk field notes the masking is HTTP-egress-centric, so it does not by itself cover the FD/socket cases the residual names (git credential helper, ssh-agent proxy, DB URLs)."
+          },
+          {
+            "name": "secretlint/secretlint",
+            "npm": "secretlint",
+            "version": null,
+            "form": "runtime",
+            "landsIn": "P3-06.P",
+            "reason": "Pending adoption. Secret DETECTION in text, which is acceptance[1]'s leak surfaces (session log, stdout/stderr, crash dumps) — also held, and on this tree the durable session log has no redaction seam for it to be wired into at all. The C stage neither detects nor redacts."
+          }
+        ],
+        "deviations": [],
+        "rejectedAbsent": [
+          {
+            "name": "bitwarden sdk-napi",
+            "reason": "License NOASSERTION; the ledger's risk field records it as a blocker. Absent from the tree — `git grep` finds no dependency or import."
+          },
+          {
+            "name": "trufflesecurity/trufflehog",
+            "reason": "AGPL-3.0; recorded as a license blocker. Absent from the tree."
+          }
+        ],
+        "standardsOwned": [
+          {
+            "standard": "OAuth token-exchange RFC 8693 delegation semantics (borrowed)",
+            "evidenceTitleSubstring": "a lease binds a credential to one principal, action and world",
+            "reason": "Sole adopter per standards-ownership.json (thisEpicOwns, singleAdopter). Borrowed as SEMANTICS, not as a wire format: no RFC 8693 grant type, token endpoint or JSON payload is implemented. What the C stage takes is the delegation idea — a grant narrowed to one actor and one purpose — expressed in this repository's own subjects."
+          },
+          {
+            "standard": "SPIFFE SVID lifetime rules (borrowed)",
+            "evidenceTitleSubstring": "an expired lease cannot be replayed",
+            "reason": "Sole adopter, family owner per standards-ownership.json. Borrowed as the lifetime rule — a short expiry that the holder cannot extend, and which is checked at use rather than swept — not as the SVID document format or its X.509/JWT encodings, none of which appear."
+          }
+        ],
+        "standardsImported": [],
+        "residual": "Narrowed for the Contract stage. C writes: the `SecretLease` type binding principal/ActionManifest/world/purpose/expiry with the four world-and-identity subjects reused from P2-01, P3-01 and action-manifest rather than redeclared; the four-state machine with three terminal states; revoke-on-kill as the world-termination cascade; and the redemption decision with expiry ordered before the bindings. The ledger row's own `residual` field names the first two verbatim — 'SecretLease bound to principal/ActionManifest/world/purpose/expiry, revoke-on-kill' — so what C delivers is residual write by the ledger's own classification, and the adapt candidates cover the transport and the leak surfaces, which C does not touch.",
+        "probes": [
+          {
+            "claim": "no lease vocabulary exists in code",
+            "how": "git grep -l 'SecretLease' / 'SecretLeaseId' / 'CredentialRef.*lease' at f24573ddfe excluding node_modules and lib",
+            "result": "ok",
+            "evidence": "0 files before this stage; `CredentialRef` exists in credentials/src/types.ts:14 and resolves to a stored record, never to a time-bounded grant."
+          },
+          {
+            "claim": "the adapt candidate is not already imported",
+            "how": "git grep '@anthropic-ai/sandbox-runtime' and 'secretlint' across package.json files and src",
+            "result": "ok",
+            "evidence": "0 hits; neither is a dependency of any workspace package, so the C stage cannot be shadowing an adopted implementation."
+          },
+          {
+            "claim": "must[1]'s posture is refused by the only provider we have",
+            "how": "read execution-world/src/local-provider.ts:93 `localUnsatisfiableDimensions`",
+            "result": "ok",
+            "evidence": "`if (spec.secrets.posture !== 'inherited') unsatisfiable.push('secrets')`, with the comment stating `broker-only` is a promise only a separate address space can keep."
+          }
+        ],
+        "gapCheck": [
+          {
+            "community": "dsh-config-manager",
+            "gap": "AES-256-GCM export of config is at-rest encryption, not a time-bounded brokered grant",
+            "clause": "must[0]"
+          },
+          {
+            "community": "dsh-remote-shell",
+            "gap": "no lease lifetime or revoke-on-kill",
+            "clause": "must[2]"
+          }
+        ],
+        "expectedDeletedPct": 35,
+        "recordedBeforeFirstLine": true,
+        "realized": null
+      }
     }
   },
   "methodCorrections": [
