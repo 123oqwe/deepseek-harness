@@ -47,6 +47,25 @@
 | acceptance[0] 子 Agent/插件只得到明确委托的 secret | 委托链有现成对象(P2-02 的 capability token 有 `delegatedChildResources` 先例),可借鉴 |
 | acceptance[2] 过期 lease 无法重放 | 纯数据层可观测,**最容易先做** |
 
+
+## 世界接缝存在,但它拒绝的正是本项需要的那一维(lane B 实测,lane A 复核)
+
+`execution-world/src/local-provider.ts:93` 的 `localUnsatisfiableDimensions` 逐维列出 local provider **必须拒绝**的请求,源码原文核过:
+
+| 维度 | 拒绝条件 | 源码理由(原注释) |
+|---|---|---|
+| `network` | `posture !== 'unrestricted'` | 沙箱管文件效果、不管出网,**`allowlist` 即使为空也拒**——空 allowlist 意为「零出网」,是这里最强的主张 |
+| `secrets` | `posture !== 'inherited'` | local world 共享宿主进程环境;`broker-only` 是「世界**收到**什么」的承诺,**只有独立地址空间才守得住** |
+| `resources` | `cpuMillicores` / `memoryBytes` / `diskBytes` 任一有值 | — |
+| `process` | `!spawn` 或 `maxProcesses !== undefined` | local world 是宿主进程自身的约束,**拦不住 fork,也不计子孙数** |
+| `lifetime` | `detached` | 但**墙钟上限可交付——本 provider 会武装它**(第 119 行注释原文) |
+
+而 `plugin.ts:255` 在 `selection.outcome === 'refused'` 时 `return undefined`,于是 `readExecutionWorldFact` 得到 `absent`。**即:请求这些维度时 local world 不会「弱化后绑定」,而是干脆不绑。** 这是好的设计(不冒充),但对本项意味着:
+
+**绑定路径与 world id 可以照用,硬约束本身不能靠 local provider 兑现。** 要么有一个能满足该维度的 provider(独立地址空间/容器),要么把执行点放在 world 接缝**之外**。
+
+must[1](brokered 注入、避免全局 env)**正落在 `secrets` 这一维**:local provider 只接受 `inherited`,并在注释里写明 `broker-only` **只有独立地址空间才守得住**。所以 must[1] 不是「给 broker 加个开关」,而是**需要一个新的执行载体**。
+
 ## 未量
 
 - must[1] 现有 env 注入点的数量与可迁移性;
