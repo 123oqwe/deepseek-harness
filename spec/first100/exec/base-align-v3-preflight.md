@@ -145,3 +145,46 @@ lane A rebase 其半 = **2436b89c19**(base 124332d286:recompute 83a1955860[= 2ff
 - **lane A 整合 lane B rebased 两笔**(P9 硬化 ccab518d33+a875f628d8、记录修 d06f80c535)成合并候选 tip,交我 SHA。
 - **delegate 用 overlay 叠**:`base-align-v3-preflight.md`(已在 overlay spec/)+ 补记 295–329 + BLOCKED-QUEUE 更新;plan-rectification/BLOCKED-QUEUE 与 lane B 记录修同文件处**append-only 合并**、我叠时解。
 - 最终 tip = lane A 合并候选 + overlay 叠 → 我核门 → 派③。
+
+## §6-补(2026-09-13,lane A MEDIUM 预分析:profile-boot.ts 签名级真冲突 + 量具 v3 校正)
+**profile-boot.ts 真语义冲突(非"改同区")**:`composeProfile` baseline 两参 `(name, patchFiles)`;**我们**(:207-211,调用 :474)加第三参 `production: boolean`(P1-03 接线 pluginEnforcement),**上游**加第三参 `fromDefaultProfile?: string`——**同一位置参数、两义两型,且函数体两边都改**,3-way 合不了(合并签名须同容两者=四参或 options 对象)。同文件 import 行第二处冲突=**良性并集**(baseline `writeFileSync`;我们 +existsSync,readFileSync;上游 +existsSync,mkdirSync,rmSync;正解并集 `existsSync,mkdirSync,readFileSync,rmSync,writeFileSync`,取任一侧丢符号)。
+**量化印证补记 320(P1-03.U2 推迟到重锚之后)**:P1-03.U2 已从候选拆出、**不在 first100-exec**,故此签名冲突当前不在重锚面上;若重锚前落 P1-03.U2,重锚就要在最坏文件上解签名级语义冲突;推迟后 P1-03.U2 直接在上游已三参化的 composeProfile 上做、决定第四参 vs options 一次成型。checklist 该行原"host intact, re-observe"**仍成立(上游未删顶层声明)但不完整**——声明层存活 ≠ 调用面不冲突;两处写进该行。
+**量具 v3 校正(lane A 自纠,记为方法论)**:重叠判据 v1(git diff 默认 3 行上下文)→ 30 文件全报真合并(上下文串扰);v2(-U0)→ 纯插入误算占锚点、过报;**v3(现用)= 只交"双方删除或修改的 baseline 行号集",两侧改同一既有行才算冲突、纯插入不计**。v3 与三次手工深读吻合(agent.ts 可组合[我们改 7 行零交集]、runtime-context.ts 可组合[改 0 行纯追加]、ptc.ts 可组合[改 0 行]、continuation.ts 冲突[13 共享行])——手工与机器两独立路径同答=v3 可信。**全 30 文件:12 改同行 / 18 可组合**;两大头 persistence-catalog.md(15 共享行)、tool-cordis/api-catalog.ts(2)**皆生成物 → "重生成不手工合并"自动消解**=该顺序约束价值首次被量化。逐文件判定 lane A 连 checklist 落列发来。
+
+## §6-补(2026-09-13,lane A 完成 12 真冲突文件逐个判定 + 409fdf7dca 处置)
+**12 真冲突文件(v3 判据:交集两侧删/改的 baseline 行号)判定——只 3 个要人定,9 个有规则**:
+| 文件 | 共享行 | 判定 |
+|---|---|---|
+| profile-boot.ts | 2 | L14 fs import 并集;**L210 composeProfile 签名真冲突(已报,P1-03.U2 面)**。OBSERVE |
+| continuation.ts | 13 | 已判 2 重观测 + 1 重接线。OBSERVE |
+| core/agent/inbox.ts | 8 | 上游删文件、我们每行撞删除 → **由 S2 adjudication(inbox 改名)解,非合并决定** |
+| docs/persistence-catalog.md | **15** | **生成物→重生成,冲突归零**(全集最大一处直接消解) |
+| tool-cordis/api-catalog.ts | 2 | **生成物→重生成** |
+| subagent/src/index.ts | 1 | 上游 queueSubagentPrompt→deliverSubagentPrompt 改名、我们改同 return 块 → **小但真:调用跟改名**,后重跑 P4-06.U.4/P5-10.F/U |
+| headless.spec.ts | 1 | import **并集减 Inbox**(只取我侧会重 import 上游已删符号) |
+| jsonl.spec.ts | 2 | import **并集**(再证两侧做不相干事) |
+| write-behind.ts | 1 | 上游删整层 → **D1/S0a 用户决定,非合并** |
+| headless/README.zh.md | 1 | **L64 散文真取舍**(我们=模型路由解析、上游=agentDefaultModel 链接)→ 要作者不要合并规则;英文对在 BLOCKED-124 hold |
+| headless/README.i18n.yaml | 2 | 配对 blob 哈希 → **机械重录**(等散文定) |
+| agent-loop/README.i18n.yaml | 2 | 同上 **机械重录** |
+**3 个要人定** = profile-boot L210(签名,P1-03.U2 面/延后)、README.zh L64(散文取舍,**作者决定非用户;BLOCKED-124 hold 下**,记入重锚决定表非 S0a 用户级)、write-behind(=D1/S0a 用户决定,已在确认包)。
+**量具 v3(lane A 自纠,重申)**:v1 默认 diff 3 行上下文→30/30 全报;v2 -U0→27(纯插入误算);**v3 只交两侧删/改 baseline 行号**,与三次手工深读逐条吻合(agent.ts 可组合、runtime-context.ts 改 0 行、continuation.ts 13 共享)。**任何"文件×冲突"下游分析必须用 v3,否则从 27/30 出发误当冲突**。
+**409fdf7dca 处置(裁)**:此分类落进 checklist 新节(commit 409fdf7dca,87b248 之上),是 e0a28769be(=候选 12,已派 run 34751675619)的**兄弟分叉、不在该 run 内**。**候选 12 保持 e0a28769be 不动**(纯文档、不动代码门,不值得取消半程 run 重派);409fdf7dca 等候选 12 推后 rebase 到新 first100-exec、并入下一候选(P4-12 或 docs sync)。
+
+## §7-补(2026-09-13,lane B 定精确 4.4d 重跑集=17;merge集与4.4d集正交)
+**接受 lane B 的 17 个 4.4d 重跑集**(rebase-4.4d-rerun-set.md,每 epic 带依据,merge-tree 124332d286 vs c291e7961a 实测),三层:
+- **T1(生产文件被上游删,最高险,可能要重做非只重验)**:P4-05(inbox.ts/agent.ts/runtime-types)、P4-06(inbox.ts+write-behind.ts 皆删、continuation.ts+subagent/index.ts 冲突)、P5-11(唯一生产文件 inbox.ts 被删)。
+- **T2(dispatch/boot 生产路径内容冲突)**:ptc 组 P2-03(声明,上游 +4/−4)/P2-04(冻结U)/P2-05(冻结U/U.1)/P2-06(冻结F)/P3-01(runtime-context+冻结U 的 ptc);P4-11(agent.ts,上游 +179/−105);P2-01(runtime-context/app-boot-index);P2-02(runtime-context/continuation);boot 组 P0-02/P0-05/P1-01/P1-08(profile-boot/app-boot-profile)。
+- **T3(挂载面)**:P1-03、P4-01(bundle/base/package.json)。**base/package.json 两侧无同 key 冲突(仅文本相邻),真险=合并须保住我们加的 18 个插件依赖(cordis.patch.yml 挂载靠它们解析)**。
+**修正我 ~19 初判 → 17**:同意补入 P2-04/05/06/P3-01/P4-01;**P0-01/03/07 移出 4.4d**——P0-01 冲突只在 docs/testing+根 package.json+lockfile,不需 4.4d 但**必须重 baseline**(上游 workspaces native/landlock-run→native/system + lockfile 变=baseline 指纹输入,旧 baseline 必 verify 失败);P0-07 合并后重观测;P0-03 agent.ts 是 seam 检查器**扫描对象**非调用路径(冻结用例="resolves a real multi-family Consumer import"),重观测即可(borderline,重锚 preflight 若重观测暴露 consumer 结构变则升级)。runtime-types.ts 仅 8 类型导出 0 运行时,不独立入集。
+**关键结构洞见:merge 冲突集 ⊥ 4.4d 重验集**:lane A 的 12(v3 同行冲突)=**须人工合并解决**的文件;lane B 的 17=**生产可达性可能变**的 epic。agent.ts/runtime-context.ts/ptc.ts 对 merge"可组合"(无同行冲突),但上游大改其生产码 → **仍须 4.4d 重验**。**"可组合"≠"无需重验"**——两者正交、都要:12 → DAG S5/S6 合并解决;17 → DAG re-verify(S9 段)。
+**命中冲突但不入 4.4d(重观测/重生成/重 baseline 即可)**:P0-04/08(package.json 依赖)、P0-06(jsonl.spec 测试)、P1-09(api-catalog 生成物+gen-cordis+README 翻译对)、P4-08(workflow-worker-thread/package.json provider 依赖,合并保住我们 7 个 peerDependencies)、P0-01(重 baseline)、P0-07。
+**非 ACCEPTED 波及(记,重锚时处理)**:inbox.ts 删亦波及 P5-10(BLOCKED)/P2-12/P8-03;**write-behind.ts 删波及 P4-12 registry + P6-08 → P4-12 重锚后 re-sign 时 4.4d 读数须在重锚树重量**(与当前 pre-re-anchor 的 P4-12 候选 4.4d 分开);headless/package.json 仅 P9-06 冻结引用 → 归重锚后 P9 重录。
+
+## §6/S9-S10-补(2026-09-13,headless.snapshot.ts 三重身份=派 S9/S10 必须点名的消歧程序)
+lane A 指出 `snapshots/session/headless.snapshot.ts` 同时是:**(a)** 一个偶发红的宿主(候选 12 首跑两红之一、但那树 diff 零 packages/apps/snapshots)、**(b)** P9-06.P 的 live 冻结引用(harness 驱动非录制)、**(c)** BASE-ALIGN 冲突文件之一。三重身份 → 重锚期间它任何一次红有**三种解释、三种补救**:
+1. **偶发(intermittent)** → 补救 = 重跑取第二次读数(重锚前就偶发,非重锚造成);
+2. **重锚破坏(merge/重接线弄坏了 harness 路径)** → 补救 = 修合并/接线(真 bug);
+3. **冻结观测过期(P9-06.P 的主语随重锚搬家,STALE-by-design)** → 补救 = 按 S8b/S10 重录(不是修树)。
+**派 S9/S10 时 delegate 必须对执行 lane 显式点名此三义 + 消歧顺序**:先重跑排 (1);仍红则看快照 diff 是"harness 路径断"(→2 修)还是"主语搬家的合法新输出"(→3 重录);**别在现场才发现有三种可能**、更别按单一假设派人去修一棵没坏的树。lane A 已把 (1) 的提醒写进 checklist P9 组(tip 7f324ceaea);(2)(3) 的消歧由 delegate 派 S9/S10 时口头点名 + 此节为据。
+**两条 watch 项(承补记 335,不随候选 12 绿翻篇)**:① agent-team/persistence.spec.ts 与 headless.snapshot.ts 这次红——别的 SHA 同形红才入册;② headless.snapshot.ts 三重身份本身=重锚执行期的高误判点。
