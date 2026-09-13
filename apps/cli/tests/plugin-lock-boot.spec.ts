@@ -18,6 +18,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { DEFAULT_PROFILE_PATCH_RELOAD, initProfile, resolveProfileDir } from '@deepseek-ai/dsh-app-boot'
+import { createLaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
 import { buildCandidateLock, writeLockAtomically } from '@deepseek-ai/dsh-plugin-lock'
 import type { ObservedPackage } from '@deepseek-ai/dsh-plugin-lock'
 import { runProfile } from '../src/profile-boot.ts'
@@ -118,10 +119,22 @@ async function lockProfile(profileDir: string, layerDirs: readonly string[]): Pr
   await writeLockAtomically(join(profileDir, 'plugins.lock.json'), lock)
 }
 
-/** Run the real entry point and return whatever it threw, or `undefined`. */
+/**
+ * Run the real entry point and return whatever it threw, or `undefined`.
+ *
+ * The environment snapshot is empty rather than `loadLayeredEnv('dsh')`: the
+ * lock gate decides before anything reads it, and inheriting the invoking
+ * shell's variables and the repository `.env` would make these cases depend on
+ * the machine they run on.
+ */
 async function bootError(profile = 'demo'): Promise<Error | undefined> {
   try {
-    const { ctx } = await runProfile({ profile, patchFiles: [] })
+    const { ctx } = await runProfile({
+      environment: createLaunchEnvironmentSnapshot([{ source: 'process', values: {} }]),
+      profile,
+      patchFiles: [],
+      args: [],
+    })
     await ctx.fiber.dispose()
     return undefined
   } catch (error) {
