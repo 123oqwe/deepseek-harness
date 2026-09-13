@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-12T20:47:37.506Z",
-  "inputDigest": "022314595f10baea60309d7c0a039a17c83b803c8f2f9d378ea1b38649be7336",
+  "lastUpdatedUtc": "2026-09-13T00:29:05.537Z",
+  "inputDigest": "fa3a8d96167c55248602f4814b4275217a5f12f3ac74ddc008e5c6241a12e887",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -1930,10 +1930,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "8f4988bf0bf4332a359a8f251ee6e5d8c44752dd",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33842580751",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-8f49/first100-evidence-8f4988bf0bf4332a359a8f251ee6e5d8c44752dd/vitest-report.json",
-          "observationSha256": "d5cd55c5e6e6d2f96e7934b5006efbfef6ef833bb72f35b0e45071bff6448040",
+          "candidateSha": "f453647e6ecce84d43261b6fb59cdfc44ae7143f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34726028141",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7/scratchpad/ci-34726028141/first100-evidence-f453647e6ecce84d43261b6fb59cdfc44ae7143f/vitest-report.json",
+          "observationSha256": "094a77b88a3fcb2706e9e83539a0059a82a2e45f39d055dcbefdfe0ce2d16fb6",
           "expectCasesMatched": [
             "must[0]: a freshly bound workspace trust record starts untrusted and carries the full canonical-realpath-plus-inode/volume binding it was bound to",
             "must[1]: an untrusted workspace permits only safe reads and denies every project plugin/hook/MCP-server/executable-skill/home-profile-patch-override load",
@@ -1951,7 +1951,13 @@
             "drops trust when the path, device, and inode all match but the creation time does not",
             "refuses to confirm identity when the filesystem reports no creation time, rather than matching on the inode alone"
           ],
-          "capturedAtUtc": "2026-09-04T06:31:03.434Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33842580751",
+            "fromCandidateSha": "8f4988bf0bf4332a359a8f251ee6e5d8c44752dd",
+            "reason": "BLOCKED-242: greened on bare titles before BLOCKED-104's uniqueness check (b7896c7916, 2026-09-05); re-observed so that check applies",
+            "atUtc": "2026-09-13T00:29:05.082Z"
+          },
+          "capturedAtUtc": "2026-09-13T00:29:05.083Z"
         },
         "P": {
           "status": "GREEN",
@@ -2033,7 +2039,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "93d52207338066bd65494f6044f1ec5920d63cb8",
+      "candidateSha": "f453647e6ecce84d43261b6fb59cdfc44ae7143f",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -3688,10 +3694,10 @@
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34573807027",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/3503e65b-c998-420f-8f07-74738632401b/scratchpad/ci-34573807027/first100-evidence-e74593c50a0306801c9d294e4eb45f2be7a8ec15/vitest-report.json",
-          "observationSha256": "a3ea0935ecbe37577256d148a42d8758593f1b8b34c05c9373f0895621814c82",
+          "candidateSha": "f453647e6ecce84d43261b6fb59cdfc44ae7143f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34726028141",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7/scratchpad/ci-34726028141/first100-evidence-f453647e6ecce84d43261b6fb59cdfc44ae7143f/vitest-report.json",
+          "observationSha256": "094a77b88a3fcb2706e9e83539a0059a82a2e45f39d055dcbefdfe0ce2d16fb6",
           "expectCasesMatched": [
             "P2-05 must[0]: the request translation routes a decision by the CAPABILITY the manifest names, not by a tool name",
             "P2-05 must[0]: the request translation keeps the target KIND in the resource id, so a path and a command are different resources",
@@ -3704,17 +3710,22 @@
             "P2-05 acceptance[1]: every decision carries the policy-set digest does not confuse a set whose id and source were split differently",
             "P2-05 acceptance[2]: a broken policy set is not a strict one maps a Cedar FAILURE to its own named deny, not to an ordinary refusal",
             "P2-05 acceptance[2]: a broken policy set is not a strict one still tells an ordinary deny apart from that failure",
-            "P2-05 acceptance[2]: a broken policy set is not a strict one refuses to LOAD when the policy set does not parse",
             "P2-05 acceptance[2]: a broken policy set is not a strict one unloads with its fiber, and a remount starts from the configured set again"
           ],
-          "capturedAtUtc": "2026-09-11T07:59:24.769Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34573807027",
+            "fromCandidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15",
+            "reason": "P2-05.P freeze superseded 2026-09-12 (P2-10 U retired a load-time behaviour); re-observed on candidate 8′ as step two of the supersession",
+            "atUtc": "2026-09-13T00:29:03.734Z"
+          },
+          "capturedAtUtc": "2026-09-13T00:29:03.754Z"
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34573807027",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/3503e65b-c998-420f-8f07-74738632401b/scratchpad/ci-34573807027/first100-evidence-e74593c50a0306801c9d294e4eb45f2be7a8ec15/vitest-report.json",
-          "observationSha256": "a3ea0935ecbe37577256d148a42d8758593f1b8b34c05c9373f0895621814c82",
+          "candidateSha": "f453647e6ecce84d43261b6fb59cdfc44ae7143f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34726028141",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7/scratchpad/ci-34726028141/first100-evidence-f453647e6ecce84d43261b6fb59cdfc44ae7143f/vitest-report.json",
+          "observationSha256": "094a77b88a3fcb2706e9e83539a0059a82a2e45f39d055dcbefdfe0ce2d16fb6",
           "expectCasesMatched": [
             "P2-05 acceptance[2]: losing the provider mid-session denies by name permits while the provider is mounted, and denies `policy-unavailable` after it unmounts",
             "P2-05 acceptance[2]: losing the provider mid-session denies by name records WHICH policy set it could not reach, so a replay can tell the two failures apart",
@@ -3724,12 +3735,17 @@
             "P2-05 acceptance[0]: one PEP, whichever originator dispatches runs with no policy service at all exactly as it did before this epic",
             "P2-05 must[2]: a plugin constraint narrows and never widens turns a permitted call into a deny, and records the constraint reason for the audit",
             "P2-05 must[2]: a plugin constraint narrows and never widens stops constraining when its plugin unmounts",
-            "P2-05 acceptance[2]: a policy set that does not parse refuses to load fails the mount loudly rather than deciding with a broken set",
             "P2-05 must[0]: the capability token is a policy input, not a placeholder decides by the CAPABILITY the presented token carries",
             "P2-05 must[0]: the capability token is a policy input, not a placeholder permits the same action when the policy accepts the token that was presented",
             "P2-05 must[0]: the capability token is a policy input, not a placeholder refuses when NO token was presented and the policy requires one"
           ],
-          "capturedAtUtc": "2026-09-11T07:59:25.034Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34573807027",
+            "fromCandidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15",
+            "reason": "P2-05.U freeze superseded 2026-09-12 (P2-10 U retired a load-time behaviour); re-observed on candidate 8′ as step two of the supersession",
+            "atUtc": "2026-09-13T00:29:04.175Z"
+          },
+          "capturedAtUtc": "2026-09-13T00:29:04.177Z"
         },
         "F": {
           "status": "GREEN",
@@ -3806,7 +3822,7 @@
           "capturedAtUtc": "2026-09-12T00:29:34.972Z"
         }
       },
-      "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15",
+      "candidateSha": "f453647e6ecce84d43261b6fb59cdfc44ae7143f",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -8105,10 +8121,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "b064fb61bc5cc6895a4ffeb353ca7fd458b49b9e",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33798817909",
-          "observationReportPath": "/tmp/ci-run-33798817909/first100-vitest-report-b064fb61bc5cc6895a4ffeb353ca7fd458b49b9e/vitest-report.json",
-          "observationSha256": "7ef14642257506694f2f9f2e69e7e448849df22ab6439d620cb6927447636d0c",
+          "candidateSha": "f453647e6ecce84d43261b6fb59cdfc44ae7143f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34726028141",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7/scratchpad/ci-34726028141/first100-evidence-f453647e6ecce84d43261b6fb59cdfc44ae7143f/vitest-report.json",
+          "observationSha256": "094a77b88a3fcb2706e9e83539a0059a82a2e45f39d055dcbefdfe0ce2d16fb6",
           "expectCasesMatched": [
             "filters by tenant, admitting only matching-tenant sessions and excluding others",
             "filters by workspace, admitting only matching-workspace sessions and excluding sessions with no workspace or a different one",
@@ -8139,10 +8155,13 @@
             "a fully valid log with no corruption reads back completely, with no partial-recovery evidence",
             "a corruption at the very first line leaves no recoverable prefix at all, returning evidence with no events"
           ],
-          "absorbedFlakes": [
-            "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions"
-          ],
-          "capturedAtUtc": "2026-09-03T20:10:12.080Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33798817909",
+            "fromCandidateSha": "b064fb61bc5cc6895a4ffeb353ca7fd458b49b9e",
+            "reason": "BLOCKED-242: greened on bare titles before BLOCKED-104's uniqueness check (b7896c7916, 2026-09-05); re-observed so that check applies",
+            "atUtc": "2026-09-13T00:29:04.661Z"
+          },
+          "capturedAtUtc": "2026-09-13T00:29:04.662Z"
         },
         "P": {
           "status": "GREEN",
@@ -8239,7 +8258,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+      "candidateSha": "f453647e6ecce84d43261b6fb59cdfc44ae7143f",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "BLOCKED_ON_ACCEPTANCE",
@@ -8747,10 +8766,10 @@
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "637a2b944898b2970f7ba87cf0469418492ac3a8",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33949286482",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-637a/first100-evidence-637a2b944898b2970f7ba87cf0469418492ac3a8/vitest-report.json",
-          "observationSha256": "d48773eae8741112ee9d41694528af3d57eeed5b463d7ca2f631900e20b9f774",
+          "candidateSha": "f453647e6ecce84d43261b6fb59cdfc44ae7143f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34726028141",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7/scratchpad/ci-34726028141/first100-evidence-f453647e6ecce84d43261b6fb59cdfc44ae7143f/vitest-report.json",
+          "observationSha256": "094a77b88a3fcb2706e9e83539a0059a82a2e45f39d055dcbefdfe0ce2d16fb6",
           "expectCasesMatched": [
             "provider: the package exports every negotiation function a peer needs",
             "provider: the exported functions are the same implementations the Contract stage proved, not re-declarations",
@@ -8768,10 +8787,13 @@
             "still disposes and exits once when the flush callback fails",
             "stops serving on a bare fiber dispose (HMR-style unload) without calling exit"
           ],
-          "absorbedFlakes": [
-            "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions"
-          ],
-          "capturedAtUtc": "2026-09-05T06:31:43.094Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33949286482",
+            "fromCandidateSha": "637a2b944898b2970f7ba87cf0469418492ac3a8",
+            "reason": "BLOCKED-242: greened on bare titles before BLOCKED-104's uniqueness check (b7896c7916, 2026-09-05); re-observed so that check applies",
+            "atUtc": "2026-09-13T00:29:05.529Z"
+          },
+          "capturedAtUtc": "2026-09-13T00:29:05.530Z"
         },
         "U": {
           "status": "GREEN",
@@ -8863,7 +8885,7 @@
           "capturedAtUtc": "2026-09-06T07:57:23.583Z"
         }
       },
-      "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+      "candidateSha": "f453647e6ecce84d43261b6fb59cdfc44ae7143f",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
