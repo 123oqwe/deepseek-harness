@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-13T03:12:28.759Z",
-  "inputDigest": "267b00c0dec51eab6f10242988313dba34490eb3fa075465a1e47803358d3fcb",
+  "lastUpdatedUtc": "2026-09-13T08:42:45.616Z",
+  "inputDigest": "a0c52d9f0869bd938bd74d7fb6f46a9edf1c7f3b68f539d6ba3aa259565aa9f5",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4180,11 +4180,41 @@
           "capturedAtUtc": "2026-09-13T02:23:50.955Z"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "7cc115a4958e3a0d4d318703a8bae8beff092a6f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34746371931",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7/scratchpad/ci-34746371931/first100-evidence-7cc115a4958e3a0d4d318703a8bae8beff092a6f/vitest-report.json",
+          "observationSha256": "ade127dccfaf57352695df9027b4947f6fff8d35b08d8258cb5bf8bbcf67c418",
+          "expectCasesMatched": [
+            "P2-10 F validation[0]: the parser refuses malformed input without escaping answers 'five thousand comment lines' without escaping, whatever it decides",
+            "P2-10 F validation[0]: the parser refuses malformed input without escaping answers 'null byte inside a string literal' without escaping, whatever it decides",
+            "P2-10 F validation[0]: the parser refuses malformed input without escaping answers every malformed input within one call, so no input makes it hang",
+            "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'condition nested past the engine cliff' with a named reason, never throwing",
+            "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'control characters' with a named reason, never throwing",
+            "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'empty string' with a named reason, never throwing",
+            "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'html rather than cedar' with a named reason, never throwing",
+            "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'json rather than cedar' with a named reason, never throwing",
+            "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'missing terminator' with a named reason, never throwing",
+            "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'nested parenthesis bomb' with a named reason, never throwing",
+            "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'only a comment' with a named reason, never throwing",
+            "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'repeated semicolons' with a named reason, never throwing",
+            "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'sql injection shaped' with a named reason, never throwing",
+            "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'truncated after permit' with a named reason, never throwing",
+            "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'truncated mid-condition' with a named reason, never throwing",
+            "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'truncated mid-keyword' with a named reason, never throwing",
+            "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'unbalanced closing brace' with a named reason, never throwing",
+            "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'unicode right-to-left override' with a named reason, never throwing",
+            "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'unpaired surrogate in a string' with a named reason, never throwing",
+            "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'very long identifier' with a named reason, never throwing",
+            "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'whitespace only' with a named reason, never throwing",
+            "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses a set where one policy of many is malformed, not only a wholly malformed set",
+            "P2-10 F validation[0]: the parser refuses malformed input without escaping still ACCEPTS a well-formed set, so refusing everything is not a passing strategy"
+          ],
+          "capturedAtUtc": "2026-09-13T08:42:45.609Z"
         }
       },
       "supplements": {},
-      "candidateSha": "71580010ded3860d869dbbc559e277ee14c7474b",
+      "candidateSha": "7cc115a4958e3a0d4d318703a8bae8beff092a6f",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
