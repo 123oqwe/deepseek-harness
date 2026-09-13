@@ -103,3 +103,42 @@ P3-02 七维:FileSystem Network Process Ipc Device Secret Resource
 **做**(provider 无关):七个 `*Policy` 类型;must[1] 闭合 allowlist;must[2] 未知 capability 默认 deny;must[3] 的 `supportedPolicyFeatures` **申报契约**与「弱语义不得冒充强语义」;acceptance[2] 序列化/审计不丢字段。
 
 **不做**:**acceptance[0]/[1]** —— 两者都要真能断网、真能隔离进程的 provider,而 local provider 对任何非 `unrestricted` 的 `network` 一律拒(`local-provider.ts:93`),且 acceptance[1] 平台相关(`/proc` 在 macOS 不存在);用 mock 断网只证明 mock 会拒绝(BLOCKED-156 形状)。**srt schema 词汇**亦不做,shape-gated,随独立地址空间决定一起定。
+
+---
+
+# P 阶段 preFlight(2026-09-13,`d7c9ee876b`,只读,码未动)
+
+P 阶段碰热区 `sandbox-local`、待 shape,但**哪些维度有 provider 能真执行**这一问正是 P3 wave-8 用户决定的主语,所以先量。
+
+## 四条执行路径,逐条实测覆盖面
+
+`sandbox-local` 选四个 runner 之一(`src/index.ts:338` 的 switch):
+
+| runner | 平台 | 机制 | 文件效果 | 进程可见性 | 网络 |
+|---|---|---|---|---|---|
+| `bwrap` | Linux | bubblewrap | ✅ `--ro-bind` / `--bind` / `--tmpfs` | ✅ **`--unshare-pid` + `--proc /proc`** | ❌ |
+| `landlock` | Linux | Landlock LSM | ✅ `landlockGrantArgs({readOnly, readWrite})` | ❌ | ❌ |
+| `seatbelt` | macOS | SBPL `sandbox-exec` | ✅ `(deny file-write*)` + 白名单 | ❌ | ❌ |
+| `windows-acl` | Windows | ACL | ✅ | ❌ | ❌ |
+
+命中统计:`sandbox-local/src` 里 `landlock` 20 处、`sandbox-exec` 8 处、`SBPL` 3 处、`unshare` **1 处**;`unshare-net` / `--unshare-all` / `net-ns` **全仓 0 处**。
+
+## 两条 acceptance 的可达性**不对称**——这是本次最有用的读数
+
+**acceptance[1](`/proc`、ps、debug attach 受限):在 Linux 的 bwrap 路径上已经可达。**
+`profiles.ts:17` 的基础参数逐字含 **`--unshare-pid`** 与 **`--proc /proc`** —— PID 命名空间加重挂 proc,正是该子句要的进程隔离。且 `bwrapProfileArgs` **不是死码**:`index.ts:69` 用它探测可用性,`:319`/`:338` 用它构造真实 runner argv,另有四个 spec/e2e 消费它。
+
+**acceptance[0](禁网时 DNS/IPv4/IPv6/localhost/Unix socket/代理均不可用):无任何 provider 可达。**
+四条路径没有一条做网络限制;bwrap 没有 `--unshare-net`,SBPL profile 是 `(allow default) (deny file-write*)` —— `allow default` 意味着**除文件写外一切放行,网络在内**。与 `execution-world` 的 local provider 拒绝任何非 `unrestricted` 的 `network` posture 一致:**整棵树今天没有断网能力。**
+
+## 对 P 阶段与用户决定的意义
+
+1. **acceptance[1] 可以在 Linux 上真观测**,不必等独立地址空间——但**平台受限**:macOS 的 seatbelt 与 Windows ACL 都不做进程隔离,所以该子句的冻结须声明平台,且 CI 两平台的表现会不同(与我 C 阶段 preFlight 记的"平台相关"一致,但现在知道了**哪条路径**能做)。
+2. **acceptance[0] 确实需要新能力**,不是接线问题。这与 P3-06 must[1]、P3-10 的资源维度指向**同一个用户决定**:是否引入独立地址空间/容器 world provider。**三条子句里,只有 acceptance[0] 完全无路可走。**
+3. `supportedPolicyFeatures` 的真实取值域由此有了首个数据点:**local 路径可申报 `filesystem`,Linux+bwrap 可加 `process`,没有一条可申报 `network`。**
+
+## 未量
+
+- `windows-acl` 的实际覆盖(只读了 switch 分支,未读实现);
+- bwrap 在 CI Linux 镜像里是否可用(`index.ts:69` 的探测会告诉运行时,但我没跑);
+- `sandbox-policy` 包与这四条路径的关系。
