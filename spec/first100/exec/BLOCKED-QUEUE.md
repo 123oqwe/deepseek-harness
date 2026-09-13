@@ -3649,7 +3649,9 @@ P4-06 must[2] requires a consumer to deduplicate by message id and epoch. The ag
 
 ### BLOCKED-089 — "Same batch" is not "same transaction", and must[0] only reaches the first
 
-**Status: OPEN, recorded before the P stage's first line was written. Does not block P4-06.P from greening; it bounds what that cell may be read as proving.**
+**Status: RESOLVED 2026-09-08 by removal, not by repair.** `commitWithOutbox` and `AtomicBatchSink` were deleted in `cfb996713e` (§12.35-2(a)), and must[0] — reworded on 2026-09-06 to one SQLite `BEGIN IMMEDIATE` transaction — is delivered by `commitIntake` (freezes P.3, P.4, P.6). The measured fact below still holds for any session-log batch: a crash mid-batch can keep a prefix of the batch, so a batch is not a transaction. That is why the batch path was not kept, and why D1 of BASE-ALIGN-v3 must not record `SessionHandle.append` as a group-atomic substitute.
+
+*Originally recorded OPEN, before the P stage's first line was written, to bound what that cell could be read as proving.*
 
 P4-06 must[0] is *事务性写入 domain event 与 outbox* — commit the domain event and the outbox record in one transaction. Before building on that clause, the question asked was whether this repository has a transaction boundary that could satisfy it. **It has one, and it is narrower than the clause.**
 
@@ -4724,7 +4726,11 @@ Nine sections accumulated over earlier epics, each of which regenerated the Engl
 
 ### BLOCKED-178 — `ExecutionWorld` has no producer, so P2-05's fifth policy input is a declared slot
 
-**Status:** SPLIT under §12.46-B. P2-05 owns the rule half and has landed it; P3-01 owns the producer half and has not started.
+**Status: producer half DELIVERED (P3-01, ACCEPTED); the rule half landed with P2-05. Open item narrowed to per-dimension enforcement.** *(Was: SPLIT under §12.46-B, P3-01's producer half not started — that wording outlived the work and misled at least one reader; see the 2026-09-13 note below.)*
+
+**Recorded 2026-09-13.** The fifth policy input now has a producer. `bundle/base/cordis.patch.yml:260-264` mounts `@deepseek-ai/dsh-execution-world/plugin` and `/local`; `execution-world/src/plugin.ts:245` `bindingFor` binds each agent's session to a world; `core/tools/src/external-effect.ts:284` `readExecutionWorldFact` returns `{kind:'bound', world, provider, spec}` on both dispatch paths (`tool-calls.ts:258`/`:505`, `ptc.ts:710`) and appends `action/world-bound` **only after a binding** — that event appears in **17 recorded sessions**, so the local provider binds on real shipped boots. `{kind:'absent'}` remains the fail-closed answer when no registered provider satisfies the requested confinement.
+
+What is still open is **which dimensions a provider can enforce**: the local world refuses any `network` other than `unrestricted` (an allowlist is refused even when empty), `secrets` other than `inherited`, and any CPU, memory, disk or process limit (`local-provider.ts:93`); it delivers filesystem and a wall-clock ceiling only. That is P3 wave 8's design question, **not a missing producer**.
 
 must[0] names five policy inputs. Four exist on this tree — identity (P2-01's `Principal`), the capability token (P2-02), the `ActionManifest` (P2-03), and the context facts P2-05 declares itself. The fifth, `ExecutionWorld`, is P3-01's to design: `grep` finds the name only in three comments and one test title, never as a type.
 

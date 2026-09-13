@@ -21,31 +21,45 @@ Concretely, three outcomes are permitted when upstream has moved our ground, and
 | genuinely deleted the capability | **escalate to you** — the clause is not quietly dropped |
 | — | **never**: withdraw a clause because upstream removed its host |
 
-Exactly one item in the whole re-anchor hits the third row. It is decision **D1** below.
+By the registry clauses, **no item in the re-anchor hits the third row.** The one deleted layer without a same-named successor — `session-persistence/src/write-behind.ts` — carries no clause's capability; what it leaves behind is how P4-06's P-stage freeze is re-anchored, recorded below as **D1** and **disposed of by the delegate**, not by you.
 
 ---
 
 ## 2. What the measurement found, in one paragraph
 
-The re-anchor is **far less dangerous than it first looked**. 145 snapshot files and 114 code files conflict. Of the code conflicts, 30 are cited by live freeze entries across 24 epics. Every one of the five highest-risk files was read for survival, and **upstream deleted zero top-level exports across all five** — what looked like rewrites are relocations and in-place renames. Three declared paths do disappear: `core/agent/src/inbox.ts` has a successor, while `session-persistence/src/write-behind.ts` and its spec have none — upstream removed that layer outright. The single genuine capability loss is D1.
+The re-anchor is **far less dangerous than it first looked**. 145 snapshot files and 114 code files conflict. Of the code conflicts, 30 are cited by live freeze entries across 24 epics. Every one of the five highest-risk files was read for survival, and **upstream deleted zero top-level exports across all five** — what looked like rewrites are relocations and in-place renames. Three declared paths do disappear: `core/agent/src/inbox.ts` has a successor, while `session-persistence/src/write-behind.ts` and its spec have no same-named one — upstream moved live-write batching into its JSONL backend. **P4-06 must[0] is unaffected**: it is the SQLite `BEGIN IMMEDIATE` transaction in `message-bus`, which upstream does not have at all. What remains is the disposition of P4-06's P-stage freeze, recorded as D1.
 
 ---
 
 ## 3. Decisions that need you
 
-Each carries a recommendation and what happens if you say nothing.
+Each carries a recommendation and what happens if you say nothing. **D1 is no longer one of them** — it is kept in place, reframed, because an earlier draft put it to you and a silent removal would leave that unexplained.
 
-### D1 — P4-06 session-log atomicity *(the only real capability gap)*
+### D1 — P4-06's P-stage freeze *(delegate disposition, no longer a decision for you)*
 
-**What happened.** Our `write-behind.ts` carries `enqueueAll(events)`, which guarantees a domain event and its derived outbox row land in **one durable batch**. That is the session-log half of P4-06 must[0]'s no-orphan property. Upstream **deleted that layer entirely** — `SessionWriteBehind` has 0 hits in the whole upstream tree, and its caller `coordinator.ts` is gone too.
+**What happened — corrected 2026-09-13.** An earlier draft of this section said `enqueueAll` guarantees a domain event and its outbox row land in one durable batch, called that the session-log half of must[0], and presented it as the re-anchor's single capability loss. **All three were wrong**, and the corrections come from this repository's own records:
+
+- **A batch was never a transaction here.** [BLOCKED-089](BLOCKED-QUEUE.md#blocked-089) measured it on our own tree long before upstream entered the picture: a crash mid-batch keeps the last *complete record*, not the batch boundary, so the event can survive while its outbox row is dropped. `enqueueAll` removes a different hazard — a queue splice splitting a group — never the crash one.
+- **must[0] is not the session log.** The registry clause is SQLite only: *「domain event 与 outbox 行在同一 SQLite 事务（BEGIN IMMEDIATE）内写入，不经 storage KV seam」*. It is delivered by `commitIntake` in `packages/run/message-bus/`, frozen as P.3/P.4/P.6 — a package **upstream does not have**, so it cannot be disturbed by the re-anchor.
+- **Nothing consumes the grouping.** `commitWithOutbox`, the only caller that ever passed a group, was deleted in `cfb996713e` (2026-09-08) precisely because a batch is not a transaction. Today the sole production call is `this.enqueueAll([event])` — one element. P4-06's acceptance coverage cites C, U, P.3 and F, and never the live write-behind P primary.
+
+So upstream deleted a layer **no clause's capability depends on**. What is actually at stake is P4-06's P-stage freeze: 13 cases about the write-behind's own batching, of which 11 behave the same upstream and 2 differ (a tail keeping its own deadline; flush retrying an overlapping background failure).
 
 **Why the obvious substitute does not work.** Upstream's replacement, `SessionHandle.append(events[])`, says in its own contract: *"Persistence is best-effort… only a resolved `flush` promises it survives a crash."* Nothing states that one `append` call's events are crash-atomic with each other, and `read`'s *"a torn physical tail is never returned"* implies the log can tear with recovery truncating to a prefix — a cut between the event and its outbox row is exactly the orphan must[0] forbids.
 
-**Recommendation:** land P4-06's session-log limb on **an owned wrapper that states the guarantee**, rather than adopting `append`/`flush` as equivalent.
-**Default if you don't answer:** the limb is recorded as an **open gap** against P4-06 and the epic is not re-signed. Nothing is silently dropped, and nothing false is recorded.
+**Disposition (delegate, addendum 353): O1** — re-anchor P4-06.P onto upstream's JSONL live write-behind; the two diverging rows retire with the reason *upstream behaviour differs*. The options considered:
+
+| | option | why not chosen |
+|---|---|---|
+| **O1** | re-anchor P4-06.P onto upstream's JSONL write-behind | **chosen** |
+| O2 | keep an owned grouping wrapper | no production code consumes it, and it still cannot make a group crash-atomic |
+| O3 | ask upstream to change the `append` contract | outside our control, and unnecessary once must[0] is known to be elsewhere |
+| O4 | record an open gap and do not re-sign | the gap it would record is BLOCKED-089's, which is already resolved by removal |
+
+**This is no longer a question for you.** It is listed here because an earlier draft put it to you, and removing it silently would leave that draft's framing unexplained.
 **What must not happen either way:** recording a relocation to `append`/`flush` as equivalent. The contract says it is not.
 
-**Scope reassurance:** P4-06's must[0] *SQLite-transaction* limb is **not** at risk. It lives in `packages/run/message-bus/`, which upstream does not have at all.
+**Still correct, and retained:** upstream's `SessionHandle.append` promises acceptance, ordering and visibility but *not* crash survival — *"only a resolved `flush` promises it survives a crash"* — and **recording a relocation to `append`/`flush` as group-atomic would be false** whatever else is decided. The two diverging frozen rows are exactly what that contract difference produces.
 
 ### D2 — P1-03 per-bundle `unlockedProfilePolicy`
 
@@ -100,7 +114,7 @@ Per `BLOCKED-QUEUE.md` BLOCKED-185: `workspace-trust-local` ships `disabled: tru
 
 | priority | count | what |
 |---|---|---|
-| **HIGH** | **3** | the three failed paths only — `core/agent/src/inbox.ts` (successor exists), `session-persistence/src/write-behind.ts` + its spec (**no successor — D1**) |
+| **HIGH** | **3** | the three failed paths only — `core/agent/src/inbox.ts` (successor exists), `session-persistence/src/write-behind.ts` + its spec (batching moved into the JSONL backend; 2 of 13 frozen behaviours differ — **D1, delegate disposition O1**; P4-06 must[0] unaffected) |
 | MEDIUM | 11 | textual merges with re-observation; the two real both-sides merges are `agent-loop/src/agent.ts` and `runtime-context.ts` |
 | LOW | 8 | prose and manifests |
 
