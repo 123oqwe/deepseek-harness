@@ -311,6 +311,26 @@ function liveSupplementEntry(freeze, epicId, key) {
 }
 
 /**
+ * Refuse a freeze whose entries disagree about being a supplement.
+ *
+ * `supplementSeq` decides whether an entry is a supplement (BLOCKED-161 §3) and
+ * `supplements` restates it. BLOCKED-161 §2 repaired a null `supplements` key by
+ * deleting it, not by relaxing a predicate, so that the file keeps one shape for
+ * one fact. A predicate that reads only the seq would accept a second shape
+ * silently; this makes it an error instead.
+ * @param entries - the command-freeze entries, superseded ones included.
+ */
+export function assertSupplementKeysAgree(entries) {
+  const disagreeing = entries.filter((e) => e.supplements === null || (e.supplementSeq !== undefined) !== (e.supplements !== undefined))
+  if (disagreeing.length > 0) {
+    throw new Error(
+      `command-freeze.json: ${String(disagreeing.length)} entry/entries carry supplementSeq and supplements inconsistently (BLOCKED-161): `
+      + disagreeing.map((e) => `${e.epic}.${e.stage}@${e.frozenAtUtc ?? 'unknown'}`).join(', '),
+    )
+  }
+}
+
+/**
  * The real B7①/BLOCKED-018 collision check shared by `cmdGreen` and
  * `cmdGreenSupplement`: blocks only when an existing consumer of this same
  * observation digest has an IDENTICAL frozen command (argv + case-titles
@@ -1016,6 +1036,7 @@ function cmdGreenSupplement() {
  * passing) does not count -- this closes the "cite an untested title" gap.
  */
 export function checkCoverageClosure(epicId, registry, freeze, coverage, row) {
+  assertSupplementKeysAgree(freeze.entries)
   const epic = registry.epics.find((e) => e.id === epicId)
   const acceptanceCount = epic?.acceptance?.length ?? 0
   const entries = (coverage.entries ?? []).filter((e) => e.epic === epicId)
@@ -1049,8 +1070,8 @@ export function checkCoverageClosure(epicId, registry, freeze, coverage, row) {
         if (citation.supplementSeq !== undefined) {
           return f.supplementSeq === citation.supplementSeq && f.supplements?.epic === epicId && !f.supersededBy
         }
-        // A primary is the entry with no seq. Its `supplements` key may be
-        // absent or null (BLOCKED-161 §2), so that key does not decide it.
+        // A primary is the entry with no seq: `supplementSeq` is the
+        // discriminant and `supplements` restates it (BLOCKED-161 §3).
         return f.supplementSeq === undefined && !f.supersededBy
       })
       const observedTitles =

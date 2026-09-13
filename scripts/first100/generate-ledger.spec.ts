@@ -152,17 +152,23 @@ describe('checkCoverageClosure', () => {
     expect(result.valid).toBe(false)
   })
 
-  it('green: a primary entry is the one with no seq, even when its supplements key is null (BLOCKED-161 §2)', () => {
-    // Keying the primary on `supplements === undefined` made every citation of
-    // such an entry unverifiable however correct its title was.
+  it('refuses loudly a freeze entry whose supplements key is null, rather than reading it as a primary (BLOCKED-161 §2)', () => {
+    // §2 deleted the null keys instead of relaxing the predicate; a predicate
+    // that reads only the seq would accept the second shape silently.
     const nullKeyFreeze = { entries: [{ epic: 'E1', stage: 'C', expectCases: ['case-a'], supplements: null }, freeze.entries[1]] }
     const row = { cells: { C: { expectCasesMatched: ['case-a'] } }, supplements: { 'F.1': { expectCasesMatched: ['case-b-supp'] } } }
-    expect(checkCoverageClosure('E1', registry, nullKeyFreeze, coverage, row).valid).toBe(true)
+    expect(() => checkCoverageClosure('E1', registry, nullKeyFreeze, coverage, row)).toThrow(/E1\.C@/)
   })
 
-  it('red: a citation without a seq is never satisfied by a supplement entry, even one whose supplements key is missing', () => {
-    // The control for the case above: "primary" must not widen to "any entry".
-    const supplementOnlyFreeze = { entries: [{ epic: 'E1', stage: 'C', expectCases: ['case-a'], supplementSeq: 1 }] }
+  it('refuses loudly a freeze entry with a supplementSeq but no supplements key', () => {
+    const missingKeyFreeze = { entries: [freeze.entries[0], { epic: 'E1', stage: 'F', expectCases: ['case-b-supp'], supplementSeq: 1 }] }
+    const row = { cells: { C: { expectCasesMatched: ['case-a'] } }, supplements: { 'F.1': { expectCasesMatched: ['case-b-supp'] } } }
+    expect(() => checkCoverageClosure('E1', registry, missingKeyFreeze, coverage, row)).toThrow(/E1\.F@/)
+  })
+
+  it('red: a citation without a seq is never satisfied by a supplement entry', () => {
+    // A primary is decided by the seq (BLOCKED-161 §3), so it must not widen to "any entry".
+    const supplementOnlyFreeze = { entries: [{ epic: 'E1', stage: 'C', expectCases: ['case-a'], supplements: { epic: 'E1', stage: 'C' }, supplementSeq: 1 }] }
     const row = { cells: { C: { expectCasesMatched: ['case-a'] } }, supplements: {} }
     const result = checkCoverageClosure('E1', { epics: [{ id: 'E1', acceptance: ['a'] }] }, supplementOnlyFreeze, { entries: [coverage.entries[0]] }, row)
     expect(result.valid).toBe(false)

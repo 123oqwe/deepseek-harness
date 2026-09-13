@@ -35,6 +35,12 @@ export function checkCoverageClosure(
   row: unknown,
 ): CoverageClosureResult
 
+/**
+ * Throw when a freeze entry carries `supplementSeq` without `supplements`, the reverse, or a null `supplements` (BLOCKED-161).
+ * @param entries - the command-freeze entries.
+ */
+export function assertSupplementKeysAgree(entries: readonly unknown[]): void
+
 export function checkCandidateChainConsistency(row: unknown, applicableStages: string[], gitRoot?: string): CandidateChainResult
 
 export function checkObservationDistinctness(row: unknown, applicableStages: string[], freeze: unknown, epicId: string): ObservationDistinctnessResult
