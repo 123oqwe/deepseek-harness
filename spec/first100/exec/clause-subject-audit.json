@@ -2992,6 +2992,109 @@
         "recordedBeforeFirstLine": true,
         "realized": null
       }
+    },
+    "P3-02": {
+      "recordedBeforeFirstLine": true,
+      "page": "spec/first100/exec/preflight-P3-02.md",
+      "recordedAt": "2026-09-13",
+      "vocabularyRuling": {
+        "finding": "P3-02's seven policy dimensions are exactly the first seven of P3-01's nine WORLD_SPEC_DIMENSIONS, word for word; P3-01 already defines a World*Spec type for each (execution-world/src/types.ts:61-113). Implementing must[0] literally would put NetworkPolicy in the tree beside WorldNetworkSpec.",
+        "ruling": "Delegate, addendum 373, reading 2: *Policy is the allow/enforce layer and *Spec is the request layer - different layers, not synonyms. A *Policy REFERENCES P3-01's dimension field types and does not redeclare their structure; it adds allow/deny semantics. must[3]'s solver is exactly the check 'does this requested World*Spec satisfy that *Policy'. This satisfies must[0] literally while not duplicating the vocabulary.",
+        "fallback": "If the implementation finds the two indistinguishable, retreat to an adjudication in the shape of BLOCKED-195's for P2-04.",
+        "thirdVocabulary": "sandbox's SandboxPolicy/SandboxMode is NOT a coarse version of the seven. It is one dimension handled completely: sandbox/src/index.ts:26-27 states 'Network and process visibility are outside this vocabulary', and ipc/device/secret/resource each occur 0 times in that file. The relation is three layers of ONE dimension - SandboxMode (3 values) < WorldFilesystemSpec.effect (the same 3 plus 'none') < FileSystemPolicy's rules - plus six dimensions that exist only at the latter two layers."
+      },
+      "makeVsUse": {
+        "ledgerRow": "P3-02",
+        "card": {
+          "heading": "#### P3-02",
+          "sheetCommit": "bd408a403a"
+        },
+        "verdict": "CONTRACT_WRITE",
+        "verdictSecondary": "PROVIDER_ADAPT",
+        "adopted": [
+          {
+            "name": "opencontainers/runtime-spec",
+            "npm": null,
+            "version": null,
+            "form": "reference",
+            "landsIn": "P3-02.P",
+            "reason": "Pending adoption. The config.json linux.* sections are an ENFORCEMENT vocabulary a provider writes; the Contract stage enforces nothing. Its standard is owned by P3-01 in any case."
+          },
+          {
+            "name": "anthropics/sandbox-runtime",
+            "npm": "@anthropic-ai/sandbox-runtime",
+            "version": null,
+            "form": "runtime",
+            "landsIn": "P3-02.P",
+            "reason": "Pending adoption, and blocked on the section 3.2 slice that does not exist - see the srt-consumer deviation. The C stage imports nothing from it."
+          },
+          {
+            "name": "moby/moby default seccomp profile",
+            "npm": null,
+            "version": null,
+            "form": "reference",
+            "landsIn": "P3-02.P",
+            "reason": "Pending adoption. A seccomp profile is a provider artifact; C declares which dimensions a provider may claim, not what any provider enforces."
+          }
+        ],
+        "deviations": [
+          {
+            "kind": "srt-consumer",
+            "standard": "srt SandboxRuntimeConfig schema",
+            "sliceRef": "3.2",
+            "landsIn": "P3-02.P",
+            "importedAs": "@anthropic-ai/sandbox-runtime",
+            "reason": "Section 3.2 lists the whole P3 family as consumers of packages/sandbox/sandbox-srt, which does not exist on this tree (verified absent). The only oracle for the srt schema is that slice. C owns the standard's SHAPE and freezes what can be frozen; the srt-schema vocabulary assertion is deferred with this deviation until the slice lands. Same family as P2-03's SLICE-3.4."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [
+          {
+            "standard": "Landlock ABI rights names",
+            "evidenceTitleSubstring": "names the Landlock filesystem rights by their kernel UAPI names",
+            "reason": "Sole adopter per standards-ownership.json. The vocabulary case pins the kernel UAPI names (a stable ABI) AND records the in-tree correspondence, because the transcription at native/landlock-run/packages/entry/src/main.c:71-86 uses abbreviated LL_FS_* names - all 16 bits, with ABI-version comments, a clean prefix substitution for LANDLOCK_ACCESS_FS_*. Pinning only the UAPI spelling would leave a reader grepping it against this tree with zero hits and concluding no transcription exists, which is the BLOCKED-178 shape. That file is a RECORD of what was transcribed, not an independent oracle: it is hand-copied, and macOS carries no header to compare against."
+          },
+          {
+            "standard": "srt SandboxRuntimeConfig schema",
+            "evidenceTitleSubstring": null,
+            "reason": "Owned by P3-02 (singleAdopter) by ASSIGNMENT, not yet by evidence: the only oracle for this schema is the section 3.2 slice, whose package packages/sandbox/sandbox-srt does not exist on this tree. Recorded with assignedBy so the gate reports it as owed rather than as pinned, and paired with the srt-consumer deviation above. The vocabulary case is owed when the slice lands.",
+            "assignedBy": "standards-ownership.json"
+          }
+        ],
+        "standardsImported": [
+          {
+            "standard": "OCI runtime-spec config.json linux.{namespaces,seccomp,devices,resources,rlimits}, mounts",
+            "owner": "P3-01",
+            "thisEpicOwns": false,
+            "reason": "Owned by P3-01 per standards-ownership.json; P3-02 consumes the dimension vocabulary it established rather than re-adopting the standard."
+          }
+        ],
+        "residual": "The ledger row's own residual field reads, verbatim: 'dsh union type, closed-allowlist validator, supportedPolicyFeatures per provider + solver (weak cannot impersonate strong), serialization/audit fields; srt's seccomp-availability warning must become fail-closed.' The first four are exactly the Contract scope ruled in addendum 373; the last is provider-side and lands in P. The primary verdict CONTRACT_WRITE independently corroborates reading 2 - the ledger expects this epic to WRITE the types, which is why reading 1 (rules only, no types) would have understated it.",
+        "probes": [
+          {
+            "claim": "the seven policy types do not exist",
+            "how": "git grep -l on each of FileSystemPolicy/NetworkPolicy/ProcessPolicy/IpcPolicy/DevicePolicy/SecretPolicy/ResourcePolicy plus supportedPolicyFeatures, excluding node_modules and lib",
+            "result": "ok",
+            "evidence": "0 files for all eight names."
+          },
+          {
+            "claim": "sandbox does not already cover the other six dimensions",
+            "how": "case-insensitive count of ipc/device/secret/resource/network/process in packages/sandbox/sandbox/src/index.ts, then reading every hit",
+            "result": "ok",
+            "evidence": "ipc/device/secret/resource 0 each; network 1 and process 5, all prose or unrelated fields. The file states the exclusion itself at :26-27."
+          },
+          {
+            "claim": "no adapt candidate is already a dependency",
+            "how": "git grep '@anthropic-ai/sandbox-runtime' across package.json files",
+            "result": "ok",
+            "evidence": "0 hits; the C stage cannot be shadowing an adopted implementation."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": 40,
+        "recordedBeforeFirstLine": true,
+        "realized": null
+      }
     }
   },
   "methodCorrections": [

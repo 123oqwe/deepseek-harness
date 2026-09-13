@@ -63,3 +63,43 @@ acceptance[0](禁网)**正落在 `network` 这一维**:local provider 对任何�
 - 各沙箱后端实际支持哪些维度(须逐后端实测,决定 `supportedPolicyFeatures` 的真实取值域);
 - acceptance[0]/[1] 在 CI 可用的平台上能否观测;
 - 与 P2-05 既有 Cedar 策略词汇的重叠面——两者都叫"policy",是否同一层须先厘清。
+
+---
+
+# 开工前补测(2026-09-13,`4204b92fed`,写在第一行代码之前)
+
+## A. 热区在 P,不在 C —— C 可并行
+
+registry 自己的 stage 划分:**C** = `sandbox/src/{policy,network,process}.ts` + `sandbox/tests/policy.spec.ts`(四个全新)+ `permission-presets/src/types.ts`(既有);**P** = `sandbox-local/src/{index,profiles}.ts` ← 热区;U = `sandbox/src/{index,roots,escalation}.ts`;F = `policy.spec.ts`。
+
+**C 的五个文件全部不在 BASE-ALIGN 冲突集**,`sandbox-local` 整个属于 P。`permission-presets/src/types.ts` 今天只导出 `PresetOption` 与 `PermissionSelect`(UI 投影),上游 A..U 未动它;**除非确需,C 不动它**——声明里有它不等于必须改它(BLOCKED-195 对 P2-04 的同形)。
+
+## B. 七维 ⊂ 九维:复用而非并铸(delegate 裁定,补记 373)
+
+```
+P3-01 九维:filesystem network process ipc devices secrets resources lifetime tenant
+P3-02 七维:FileSystem Network Process Ipc Device Secret Resource
+```
+**七 ⊂ 九,一字不差**;P3-01 已为每维定义 `World*Spec`(`execution-world/src/types.ts:61-113`)。照字面实现 must[0],树上会同时有 `WorldNetworkSpec` 与 `NetworkPolicy`。
+
+**裁定采读法 2**:`*Policy` 是**允许/强制层**,`*Spec` 是**请求层**,不同层、非同义。`*Policy` **引用** P3-01 的维度字段类型、**不重铸字段结构**,只加 allow/deny 语义;must[3] 的 solver 正是检「请求的 `World*Spec` 是否满足 `*Policy`」。must[0] 的字面与 no-duplicate 由此同时满足。若实现中发现两者实在无法区分,退回 adjudication(BLOCKED-195 形)。
+
+## C. 与 SandboxPolicy / SandboxMode:同一维的三层,不是三套平行词汇
+
+| 层 | 类型 | 取值 | 覆盖 |
+|---|---|---|---|
+| 宿主强制 | `SandboxMode` | `read-only \| workspace-write \| danger-full-access` | **仅文件效果** |
+| 世界请求 | `WorldFilesystemSpec.effect` | `none \| read-only \| workspace-write \| full-access` | 九维之一 |
+| 策略规则 | `FileSystemPolicy`(待建) | — | 七维之一 |
+
+**`SandboxMode` 不是七维的粗粒度版本,而是其中一维的完整处理。** `sandbox/src/index.ts:26-27` 自陈:*"Network and process visibility are **outside this vocabulary**."*
+
+实测佐证:`sandbox/src/index.ts` 中 `ipc`/`device`/`secret`/`resource` **各 0 命中**;`network` 1 处与 `process` 5 处**全是散文或无关字段**(包描述、`RunnerFailureRule` 的退出码注释),无一为维度覆盖。
+
+**结论:不存在三套不相关词汇。** 有的是文件系统一维的三层(`WorldFilesystemSpec.effect` = `SandboxMode` 三值 **+ `none`**),加另外六维的两层——那六维在 sandbox 里没有任何对应物。**C 必须把这条写进 module JSDoc 与一条词汇用例**,否则下一个读者仍会把两者当同义词。
+
+## D. C 的范围
+
+**做**(provider 无关):七个 `*Policy` 类型;must[1] 闭合 allowlist;must[2] 未知 capability 默认 deny;must[3] 的 `supportedPolicyFeatures` **申报契约**与「弱语义不得冒充强语义」;acceptance[2] 序列化/审计不丢字段。
+
+**不做**:**acceptance[0]/[1]** —— 两者都要真能断网、真能隔离进程的 provider,而 local provider 对任何非 `unrestricted` 的 `network` 一律拒(`local-provider.ts:93`),且 acceptance[1] 平台相关(`/proc` 在 macOS 不存在);用 mock 断网只证明 mock 会拒绝(BLOCKED-156 形状)。**srt schema 词汇**亦不做,shape-gated,随独立地址空间决定一起定。
