@@ -1617,7 +1617,8 @@
       "kind": "source",
       "stages": [
         "U"
-      ]
+      ],
+      "reason": "The engine whose behaviour the Usage stage changed: it no longer holds a policy set, takes one per decision from the injected `policySet` provider, and records that read's digest. The registry names this file under P2-05 (its own Provider stage) and not under P2-10, because in the plan P2-10 added a language rather than changing where the engine gets its set. The two frozen cases here are about this file's behaviour -- one read per decision, and the pin recorded verbatim rather than recomputed -- so the entry cites it."
     },
     {
       "epic": "P2-10",
@@ -1633,7 +1634,8 @@
       "kind": "source",
       "stages": [
         "U"
-      ]
+      ],
+      "reason": "The definition package, which P2-10's Usage stage extended with the policy-set seam: `PolicySetProviderContract` and the `CurrentPolicySet` its `current()` returns, plus `ctx.policySet` on the Context. The registry's P2-10 file list names `policy-engine/src/index.ts` and not this file, because in the plan the epic added no vocabulary to the definition. It does: the provider that resolves a deployment's policy set and the engine that decides against it have to agree on what \"the set in force\" means, and declaring that on either side would let a second provider mean something else by it. A frozen case asserting the decision records the provider's pin has to name where that contract is written."
     },
     {
       "epic": "P2-10",
@@ -2800,7 +2802,7 @@
       "path": "packages/bundle/base/cordis.patch.yml",
       "kind": "manifest",
       "stages": [
-        "U"
+        "U.1"
       ]
     },
     {
@@ -2836,7 +2838,7 @@
       "path": "packages/reliability/retry-cockatiel/tests/fixtures/driver.ts",
       "kind": "test",
       "stages": [
-        "U"
+        "U.1"
       ]
     },
     {
@@ -2844,7 +2846,7 @@
       "path": "packages/reliability/retry-cockatiel/tests/fixtures/flaky-llm.ts",
       "kind": "test",
       "stages": [
-        "U"
+        "U.1"
       ]
     },
     {
@@ -2852,7 +2854,7 @@
       "path": "packages/reliability/retry-cockatiel/tests/fixtures/retry-mount.patch.yml",
       "kind": "test",
       "stages": [
-        "U"
+        "U.1"
       ]
     },
     {
@@ -2888,7 +2890,7 @@
       "path": "tests/first100/fixtures/P4-11.composition.spec.ts",
       "kind": "test",
       "stages": [
-        "U"
+        "U.1"
       ]
     },
     {
@@ -2896,7 +2898,7 @@
       "path": "packages/action/action-ledger/tests/fault-matrix.spec.ts",
       "kind": "test",
       "stages": [
-        "F.2"
+        "F"
       ]
     },
     {
@@ -2904,8 +2906,7 @@
       "path": "packages/action/action-ledger/tests/idempotency.e2e.spec.ts",
       "kind": "test",
       "stages": [
-        "C.2",
-        "C.3"
+        "C"
       ]
     },
     {
@@ -2913,7 +2914,7 @@
       "path": "packages/action/action-ledger/tests/store.spec.ts",
       "kind": "test",
       "stages": [
-        "P.1"
+        "P"
       ]
     },
     {
