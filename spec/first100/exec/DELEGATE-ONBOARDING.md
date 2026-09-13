@@ -73,7 +73,8 @@ preFlight(JSON 记录 `clause-subject-audit.json` + `evidence-<id>.md`,`recorded
 - **P9**:01–07 已批可提前并行(C3),08/09 归 W20–22;`verify-p9-cells.mjs` 读 `parallelWithR10` 判 PREMATURE。
 - **翻译债**:`/dsh-translate-docs` 只有用户能跑(BLOCKED-124),配对债累计 42,配对门 HELD_BACK 直到用户跑;delegate 不催、不代跑,只在交班单记数。
 - **用户触点只剩 B 类**:钱 / 钥匙 / 不可逆对外 / C7§② 收录范围;其余一律 delegate 定并事后通报(用户 2026-09-11「全自动不是半自动」)。交用户的题必须带建议 + 不答时的默认 + 卡什么(§12.85 补记 1)。
-- **格子来历**:`verify-cells-recomputable.mjs` 不在门集也不在 CI;每次 `--accept` 前对该 epic 跑一次,UNAVAILABLE 不签;观测产物在 `~/first100-delegate/artifacts/`(持久)与 GitHub(保留期见 `expires_at`)。
+- **格子来历**:`verify-cells-recomputable.mjs` 不在门集也不在 CI;每次 `--accept` 前对该 epic 跑一次,UNAVAILABLE 不签;观测产物在 `~/first100-delegate/artifacts/`(持久)与 GitHub(保留期见 `expires_at`)。**跑的时候必须带 `--artifact-dir ~/first100-delegate/artifacts`**(`$FIRST100_ARTIFACT_DIR` 仍作回退):不带则它只看格子记的那条会话内路径,报出的是"91 UNAVAILABLE",而那 91 格的产物一格不缺——用 flag 而非环境变量,是为了让每份读数的证据来源出现在产生它的那条命令里。
+- **DRIFT 不是 MISMATCHED**:`MISMATCHED` = 格子记了自己产物里没通过的用例(伪证,默认 exit 1);`DRIFT` = 格子本身没问题,是它绿之后 live 冻结长出了 supplement(补救是从 supplement 之后的 run 重绿,默认不 exit 1,`--require-all` 可覆盖)。**drift 默认不拦 `--accept`**;"格子观测于 pre-supplement 冻结状态如何计"与 `:1115` supersede 过滤、BLOCKED-242 退役观测同族,合并慎裁,不 piecemeal。
 
 - **测过的观测后面那句从句**(补记 64):最常见的未测断言不是整句编造,而是"一个测过的观测 + 一句听上去显然为真的一般化从句"(测了 headless 有 chunk,没测"因为别的都只有一个入口")。审稿专挑观测句后面的 因为/所以/故/都/永远——那半句要么有读数,要么改成未量。
 

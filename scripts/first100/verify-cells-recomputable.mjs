@@ -49,8 +49,18 @@
  * | state | meaning |
  * |---|---|
  * | VERIFIED | recomputed from the cell's own artifact, digest intact |
- * | MISMATCHED | the artifact does not support what the cell records |
- * | UNAVAILABLE | the artifact is unreachable, so nothing is proved either way |
+ * | MISMATCHED | the cell records a case its own artifact does not show passing |
+ * | DRIFT | the cell is sound, but the live freeze has moved since it was greened |
+ * | UNAVAILABLE | the artifact is unreachable, or the stage has no live freeze entry |
+ *
+ * **DRIFT is not MISMATCHED, and the difference is the whole point of the
+ * split.** A cell claiming a case its artifact does not show is a false record;
+ * a live freeze naming cases an older observation predates is a supersession
+ * doing what supersessions do. Both were reported under separate fields before,
+ * but in the same bucket, so a supplement read as evidence tampering and set a
+ * non-zero exit. DRIFT is counted, listed with its own remedy -- regreen from a
+ * run at or after the supplement -- and does not fail the gate on its own;
+ * `--require-all` covers it, as it covers UNAVAILABLE.
  *
  * A cell whose artifact has expired is UNAVAILABLE, and the route back is to
  * re-dispatch the workflow at the cell's `candidateSha` and recompute the
@@ -61,8 +71,10 @@
  *
  * CLI:
  *   node scripts/first100/verify-cells-recomputable.mjs
- *     [--report <path>]     write full JSON findings to this path
- *     [--require-all]       exit non-zero when any cell is UNAVAILABLE
+ *     [--report <path>]         write full JSON findings to this path
+ *     [--require-all]           exit non-zero when any cell is UNAVAILABLE or DRIFT
+ *     [--artifact-dir <path>]   where rescued run artifacts live; overrides
+ *                               $FIRST100_ARTIFACT_DIR, and unset stays normal
  */
 import { frozenTitlePresent, registeredRenames } from './frozen-title-renames.mjs'
 import { createHash } from 'node:crypto'
@@ -77,7 +89,11 @@ const LEDGER_PATH = resolve(REPO_ROOT, 'spec/first100/exec/ledger.json')
  * Where a run's rescued artifacts live, when a deployment keeps them.
  *
  * Unset is the normal state and not an error: the gate then searches only the
- * path each cell recorded, which is what it did before.
+ * path each cell recorded, which is what it did before. `--artifact-dir` wins
+ * over it, because a reading is much easier to misread when the directory it
+ * searched is visible only in an environment nobody can see afterwards -- this
+ * gate reported 91 UNAVAILABLE on a machine holding every one of those
+ * artifacts, purely because the variable was unset at the call.
  */
 const ARTIFACT_DIR_ENV = 'FIRST100_ARTIFACT_DIR'
 const FREEZE_PATH = resolve(REPO_ROOT, 'spec/first100/exec/command-freeze.json')
@@ -143,6 +159,13 @@ export function rescuedArtifactPaths(ciRunUrl, artifactDir) {
   const runDir = join(artifactDir, runId)
   if (!existsSync(runDir)) return []
   const paths = []
+  // Some rescues land the report at the top of the run directory rather than
+  // under an upload-named one: 2 of the 50 directories on the delegate machine
+  // are shaped that way, and they resolve today only because their cells happen
+  // to record that exact path. Selection is still by digest, so looking here
+  // cannot admit a report from another run.
+  const top = join(runDir, 'vitest-report.json')
+  if (existsSync(top)) paths.push(top)
   for (const entry of readdirSync(runDir, { withFileTypes: true })) {
     if (!entry.isDirectory()) continue
     const candidate = join(runDir, entry.name, 'vitest-report.json')
@@ -248,17 +271,52 @@ export function checkCellAgainstObservation(cell, frozen, report) {
   return findings
 }
 
+/**
+ * Group the live freeze entries by the stage whose evidence they are.
+ *
+ * A stage's live evidence is every entry it has that nothing superseded,
+ * primary and supplements alike. Keeping only the primary made a stage whose
+ * primary was superseded look unfrozen while its supplements were live (P4-12
+ * C/P/F), and hid supplement-introduced drift in every stage carrying one.
+ * @param entries - `command-freeze.json`'s entries, superseded ones included.
+ * @returns live entries per `<epic>|<stage>`, in the order the file lists them.
+ */
+export function liveFreezeByStage(entries) {
+  const live = new Map()
+  for (const entry of entries) {
+    if (entry.supersededBy) continue
+    const key = `${entry.epic}|${entry.stage}`
+    live.set(key, [...(live.get(key) ?? []), entry])
+  }
+  return live
+}
+
+/**
+ * Split one cell's findings by what they accuse the cell OF.
+ *
+ * `expectCasesMatched` says the cell records a case its own artifact does not
+ * show passing: a false record, and the only finding that fails this gate. The
+ * other two say the live freeze moved after the cell was greened, which is a
+ * supersession behaving normally and is repaired by regreening rather than by
+ * correcting anything in the cell. They were already separate FIELDS and shared
+ * one result bucket, so a supplement read as evidence tampering.
+ * @param findings - one cell's findings from {@link checkCellAgainstObservation}.
+ * @returns the falsifying findings and the drift findings, each possibly empty.
+ */
+export function partitionFindings(findings) {
+  return {
+    falsified: findings.filter(finding => finding.field === 'expectCasesMatched'),
+    drifted: findings.filter(finding => finding.field !== 'expectCasesMatched'),
+  }
+}
+
 function main() {
   const requireAll = process.argv.includes('--require-all')
+  const artifactDir = opt('artifact-dir') ?? process.env[ARTIFACT_DIR_ENV]
   const ledger = JSON.parse(readFileSync(LEDGER_PATH, 'utf8'))
   const freeze = JSON.parse(readFileSync(FREEZE_PATH, 'utf8'))
 
-  const liveFreeze = new Map()
-  for (const entry of freeze.entries) {
-    if (entry.supersededBy) continue
-    if (entry.supplementSeq !== undefined) continue
-    liveFreeze.set(`${entry.epic}|${entry.stage}`, entry)
-  }
+  const liveFreeze = liveFreezeByStage(freeze.entries)
 
   const cells = []
   for (const [epic, row] of Object.entries(ledger.rows)) {
@@ -267,7 +325,7 @@ function main() {
     }
   }
 
-  const results = { verified: [], mismatched: [], unavailable: [] }
+  const results = { verified: [], mismatched: [], drift: [], unavailable: [] }
   for (const { epic, stage, cell } of cells) {
     const key = `${epic}.${stage}`
     const reportPath = cell.observationReportPath
@@ -276,7 +334,7 @@ function main() {
     // no digest there is nothing to tell one run's report from another's, and
     // a gate that guessed would be auditing a cell against bytes it cannot
     // show belong to it.
-    const rescued = cell.observationSha256 ? rescuedArtifactPaths(cell.ciRunUrl, process.env[ARTIFACT_DIR_ENV]) : []
+    const rescued = cell.observationSha256 ? rescuedArtifactPaths(cell.ciRunUrl, artifactDir) : []
     const searched = [...(typeof reportPath === 'string' ? [reportPath] : []), ...rescued].filter(path => existsSync(path))
     if (searched.length === 0) {
       results.unavailable.push({ key, reason: `observation artifact not reachable: ${reportPath ?? '(none recorded)'}`, ciRunUrl: cell.ciRunUrl })
@@ -313,14 +371,22 @@ function main() {
       continue
     }
     const bytes = readFileSync(chosen)
-    const frozen = liveFreeze.get(`${epic}|${stage}`)
-    if (frozen === undefined) {
-      results.unavailable.push({ key, reason: 'no live command-freeze.json entry for this epic and stage', ciRunUrl: cell.ciRunUrl })
+    const entries = liveFreeze.get(`${epic}|${stage}`) ?? []
+    if (entries.length === 0) {
+      // Unprovable like an unreachable artifact, but for an unrelated reason
+      // and with an unrelated repair, so it carries its own cause: a cell with
+      // no live freeze to check against is not waiting on a download.
+      results.unavailable.push({ key, cause: 'no-live-freeze', reason: 'no live command-freeze.json entry for this epic and stage', ciRunUrl: cell.ciRunUrl })
       continue
     }
+    // The union across the stage's live entries, deduplicated because a
+    // supplement may restate a case the primary already names.
+    const frozen = { epic, stage, expectCases: [...new Set(entries.flatMap(entry => entry.expectCases))] }
     const findings = checkCellAgainstObservation(cell, frozen, JSON.parse(bytes.toString('utf8')))
-    if (findings.length > 0) results.mismatched.push({ key, findings })
-    else results.verified.push(key)
+    const { falsified, drifted } = partitionFindings(findings)
+    if (falsified.length > 0) results.mismatched.push({ key, findings: falsified })
+    if (drifted.length > 0) results.drift.push({ key, findings: drifted, ciRunUrl: cell.ciRunUrl })
+    if (findings.length === 0) results.verified.push(key)
   }
 
   const findings = {
@@ -328,6 +394,7 @@ function main() {
       greenCells: cells.length,
       verified: results.verified.length,
       mismatched: results.mismatched.length,
+      drift: results.drift.length,
       unavailable: results.unavailable.length,
     },
     ...results,
@@ -337,17 +404,34 @@ function main() {
 
   console.log(
     `ledger.json: ${cells.length} GREEN cell(s) -- ${results.verified.length} RECOMPUTED from their observation, ` +
-      `${results.mismatched.length} MISMATCHED, ${results.unavailable.length} UNAVAILABLE (artifact unreachable).`,
+      `${results.mismatched.length} MISMATCHED, ${results.drift.length} DRIFT, ${results.unavailable.length} UNAVAILABLE.`,
   )
   for (const m of results.mismatched) {
     for (const f of m.findings) console.error(`  ${m.key}: ${f.field} -- ${f.problem}${f.detail.length > 0 ? `\n      ${f.detail.slice(0, 5).join('\n      ')}` : ''}`)
   }
-  if (results.unavailable.length > 0) {
+  if (results.drift.length > 0) {
+    console.log('DRIFT (the cell is sound -- its live freeze moved after it was greened; regreen from a run at or after the supplement):')
+    for (const d of results.drift) {
+      for (const f of d.findings) console.log(`  ${d.key}: ${f.field} -- ${f.problem}${f.detail.length > 0 ? `\n      ${f.detail.slice(0, 5).join('\n      ')}` : ''}`)
+    }
+  }
+  // Split by cause: one bucket is waiting on bytes, the other on a freeze
+  // entry, and printing them together sent readers to re-download an artifact
+  // that was already on disk.
+  const unreachable = results.unavailable.filter(u => u.cause !== 'no-live-freeze')
+  const unfrozen = results.unavailable.filter(u => u.cause === 'no-live-freeze')
+  if (unreachable.length > 0) {
     console.log('UNAVAILABLE (not a pass -- these cells are currently unprovable, re-download from ciRunUrl while the artifact is retained):')
-    for (const u of results.unavailable) console.log(`  ${u.key}: ${u.reason}`)
+    for (const u of unreachable) console.log(`  ${u.key}: ${u.reason}`)
+  }
+  if (unfrozen.length > 0) {
+    console.log('UNAVAILABLE (not a pass -- the artifact is present but the stage has no live freeze to check it against; no download will fix this):')
+    for (const u of unfrozen) console.log(`  ${u.key}: ${u.reason}`)
   }
 
-  const failed = results.mismatched.length > 0 || (requireAll && results.unavailable.length > 0)
+  // DRIFT does not fail on its own: it reports a supersession that has outrun
+  // its cells, which is repaired by regreening rather than by blocking here.
+  const failed = results.mismatched.length > 0 || (requireAll && results.unavailable.length + results.drift.length > 0)
   process.exit(failed ? 1 : 0)
 }
 

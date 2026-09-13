@@ -55,3 +55,46 @@ export function rescuedArtifactPaths(
   ciRunUrl: string | undefined,
   artifactDir: string | undefined,
 ): string[]
+
+/** One live `command-freeze.json` entry, as the stage grouping carries it. */
+export interface FreezeEntry {
+  readonly epic: string
+  readonly stage: string
+  readonly expectCases: readonly string[]
+  readonly supplementSeq?: number
+  readonly supersededBy?: string
+}
+
+/**
+ * Group the live freeze entries by the stage whose evidence they are.
+ *
+ * A stage's live evidence is every entry nothing superseded, primary and
+ * supplements alike: keeping only the primary made a stage whose primary was
+ * superseded look unfrozen while its supplements were live.
+ * @param entries - the freeze entries, superseded ones included.
+ * @returns live entries per `<epic>|<stage>`, in file order.
+ */
+export function liveFreezeByStage(
+  entries: readonly FreezeEntry[],
+): Map<string, FreezeEntry[]>
+
+/** One finding about a cell, as the recomputation produces it. */
+export interface CellFinding {
+  readonly field: string
+  readonly problem: string
+  readonly detail: readonly string[]
+}
+
+/**
+ * Split a cell's findings into the one that falsifies it and the ones that
+ * report drift.
+ *
+ * Only `expectCasesMatched` says the cell records a case its own artifact does
+ * not show; the others say the live freeze moved after the cell was greened,
+ * which regreening repairs and which must not read as tampering.
+ * @param findings - one cell's findings.
+ * @returns the falsifying findings and the drift findings.
+ */
+export function partitionFindings(
+  findings: readonly CellFinding[],
+): { falsified: CellFinding[], drifted: CellFinding[] }

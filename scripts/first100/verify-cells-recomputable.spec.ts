@@ -12,7 +12,9 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { recomputeMatchedCases, rescuedArtifactPaths, selectArtifactByDigest } from './verify-cells-recomputable.mjs'
+import {
+  liveFreezeByStage, partitionFindings, recomputeMatchedCases, rescuedArtifactPaths, selectArtifactByDigest,
+} from './verify-cells-recomputable.mjs'
 
 describe('selectArtifactByDigest (BLOCKED-106, 2026-09-06)', () => {
   // A real `first100-exact-sha.yml` run uploads two files with this name, and
@@ -106,5 +108,63 @@ describe('rescuedArtifactPaths', () => {
     expect(rescuedArtifactPaths('https://github.com/owner/repo/actions', root)).toStrictEqual([])
     expect(rescuedArtifactPaths('', root)).toStrictEqual([])
     expect(rescuedArtifactPaths(undefined, root)).toStrictEqual([])
+  })
+
+  it('finds a report rescued to the top of the run directory, and STILL refuses it when the digest disagrees', () => {
+    // Two of the fifty rescued run directories on the delegate machine hold the
+    // report at the top rather than under an upload-named directory. Finding it
+    // is half the case: the other half is that looking in one more place must
+    // not widen what the gate ACCEPTS, so the same file is then offered to the
+    // digest with a sha256 that does not match and has to be refused.
+    const root = mkdtempSync(join(tmpdir(), 'first100-artifacts-top-'))
+    mkdirSync(join(root, '33596937698'), { recursive: true })
+    const top = join(root, '33596937698', 'vitest-report.json')
+    writeFileSync(top, '{}', 'utf8')
+
+    expect(rescuedArtifactPaths(RUN, root)).toStrictEqual([top])
+    const candidates = [{ path: top, sha256: 'the-digest-this-file-actually-has' }]
+    expect(selectArtifactByDigest(candidates, 'the-digest-the-cell-recorded')).toBeNull()
+    expect(selectArtifactByDigest(candidates, 'the-digest-this-file-actually-has')).toBe(top)
+  })
+})
+
+describe('liveFreezeByStage', () => {
+  const primary = { epic: 'P4-12', stage: 'C', expectCases: ['a'], supersededBy: 'P4-12.C.3' }
+  const supplement = { epic: 'P4-12', stage: 'C', supplementSeq: 3, expectCases: ['b'] }
+
+  it('keeps a stage whose primary was superseded but whose supplement is live', () => {
+    // The defect this replaces: supplements were skipped outright, so a stage in
+    // exactly this state looked to the gate like it had no freeze at all, and
+    // its cells were reported UNAVAILABLE with a remedy -- re-download the
+    // artifact -- that could never apply, the artifact being present already.
+    expect(liveFreezeByStage([primary, supplement]).get('P4-12|C')).toStrictEqual([supplement])
+  })
+
+  it('collects a live primary and its live supplements together, so neither alone is the stage', () => {
+    const live = { epic: 'P1-03', stage: 'U', expectCases: ['a'] }
+    const supp = { epic: 'P1-03', stage: 'U', supplementSeq: 1, expectCases: ['b'] }
+    expect(liveFreezeByStage([live, supp]).get('P1-03|U')).toStrictEqual([live, supp])
+  })
+
+  it('drops a stage whose every entry is superseded, rather than reporting a stale one as live', () => {
+    expect(liveFreezeByStage([primary]).has('P4-12|C')).toBe(false)
+  })
+})
+
+describe('partitionFindings', () => {
+  const falsifying = { field: 'expectCasesMatched', problem: 'recorded but not passing', detail: [] }
+  const drifting = { field: 'frozenCasesNotInObservation', problem: 'freeze moved', detail: [] }
+
+  it('calls only a recorded-but-not-passing case a falsification, so a supersession does not read as tampering', () => {
+    expect(partitionFindings([falsifying, drifting])).toStrictEqual({ falsified: [falsifying], drifted: [drifting] })
+  })
+
+  it('treats both drift fields alike, since each is repaired by regreening rather than by correcting the cell', () => {
+    const notRecorded = { field: 'frozenCasesNotRecorded', problem: 'freeze names more', detail: [] }
+    expect(partitionFindings([drifting, notRecorded]).falsified).toStrictEqual([])
+  })
+
+  it('reports neither for a cell that recomputes exactly', () => {
+    expect(partitionFindings([])).toStrictEqual({ falsified: [], drifted: [] })
   })
 })
