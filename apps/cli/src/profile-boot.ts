@@ -151,6 +151,18 @@ interface ComposedProfile {
    * admitted, in `profile.layers` order.
    */
   admittedLayerNames: readonly string[]
+  /**
+   * The same admitted layers as directories, from the SAME map over the same
+   * source as {@link ComposedProfile.admittedLayerNames}.
+   *
+   * Same-source is the requirement, not a convenience: P1-03 must[2]'s lock gate
+   * judges the layers THIS boot composed, and a directory list derived anywhere
+   * else — rescanning the profile, recomputing admission — could name a
+   * different set than the one about to mount. The gate would then be checking
+   * one composition while the boot loaded another, which is a check that passes
+   * while guarding nothing.
+   */
+  admittedLayerDirs: readonly string[]
   /** Every bundle layer a production boot refused to compose, and why; empty outside production. */
   deniedLayers: readonly DeniedProfileLayer[]
   /**
@@ -261,9 +273,50 @@ export async function composeProfile(
     homePatches,
     overlays: composedOverlays,
     admittedLayerNames: negotiation.admitted.map(entry => entry.layer.packageName),
+    admittedLayerDirs: negotiation.admitted.map(entry => entry.layer.packageDir),
     deniedLayers: denied,
     compatBlockedLayers: negotiation.blocked,
   }
+}
+
+/**
+ * Refuse a boot whose composed layers disagree with the profile's lock.
+ *
+ * The policy is read from the composed layers themselves and aggregated
+ * strictest-wins by {@link resolveUnlockedProfilePolicy}, so a
+ * production-controlled preset declaring `refuse` cannot be softened by a layer
+ * mounted beside it.
+ * @param profileDir - the profile directory holding the lock file.
+ * @param layerDirs - the bundle layer directories this boot composed.
+ * @throws Error when the effective policy refuses this profile's lock state.
+ */
+async function enforceProfileLock(profileDir: string, layerDirs: readonly string[]): Promise<void> {
+  const policy = resolveUnlockedProfilePolicy(layerDirs)
+  const outcome = await gateProfileAgainstLock(profileDir, layerDirs, policy)
+  if (outcome.admitted) return
+  // A lock exists and the composed layers disagree with it. Every denial is
+  // named, not just the first: an operator repairing an install needs the whole
+  // list, and a refusal that named one package would send them round the loop.
+  if ('admission' in outcome) {
+    const denials = outcome.admission.admitted ? [] : outcome.admission.denials
+    throw new Error(
+      `${NAME}: plugin lock: this profile's composed layers disagree with its lock, so the boot is refused: `
+      + denials.map(denial => `${String(denial.name)} (${denial.reason})`).join(', '),
+    )
+  }
+  // No lock at all. What that means is the deployment's decision, aggregated
+  // strictest-wins across the composed layers, so a preset declaring `refuse`
+  // is not softened by a layer mounted beside it.
+  if (policy === 'refuse') {
+    throw new Error(
+      `${NAME}: plugin lock: ${outcome.gateReason}, and this profile's layers declare `
+      + `${JSON.stringify(UNLOCKED_POLICY_KEY)} as "refuse"`,
+    )
+  }
+  process.stderr.write(
+    `${NAME}: plugin lock: ${outcome.gateReason}; proceeding because this profile's layers declare `
+    + `${JSON.stringify(UNLOCKED_POLICY_KEY)} as "warn-and-proceed"\n`,
+  )
 }
 
 /** Options for {@link runProfile}. */
@@ -472,6 +525,18 @@ function suppressShutdownError(ctx: Context, signal: AbortSignal, error: unknown
 export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Context; shutdown: ProcessShutdown }> {
   const pluginEnforcement = resolvePluginEnforcementMode(process.env[PLUGIN_ENFORCEMENT_ENV])
   const composed = await composeProfile(options.profile, options.patchFiles, pluginEnforcement)
+  // P1-03 must[2]: a production boot loads only plugins the lock approved, with
+  // matching digests. BEFORE `boot()`, because after it the plugins are already
+  // mounted and "loads only approved plugins" would be decided about code that
+  // is already running. The layer directories come from `composed`, the same map
+  // over the same source as its layer names, so the gate judges the composition
+  // this boot is about to mount rather than one derived separately.
+  //
+  // Before this call the gate was unreachable: `gateProfileAgainstLock` had nine
+  // callers, all of them tests calling it directly, and none on a boot path
+  // (BLOCKED-247). A clause enforced only where a test reaches in is not
+  // enforced.
+  await enforceProfileLock(composed.profile.dir, composed.admittedLayerDirs)
   const trustKernelInsecure = resolveTrustKernelInsecureOptIn(process.env[TRUST_KERNEL_INSECURE_ENV])
   // Constructed before boot() creates the Cordis Context at all (must[1]):
   // createTrustKernel is pure and synchronous, so it cannot itself fail --
