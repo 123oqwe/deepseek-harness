@@ -71,7 +71,7 @@ What this declaration buys is moving that report from decision time to load time
 | [`src/parser.ts`](src/parser.ts) | `parsePolicySet` and its three refusals, syntax checked before vocabulary |
 | [`src/compiler.ts`](src/compiler.ts) | `compilePolicySet` and the pin over canonical text, vocabulary and engine version |
 | [`src/index.ts`](src/index.ts) | `acceptPolicySet` — bound, then parse, then pin — and `PolicySetProvider`, which registers the `policy-set` namespace with it and answers `current()` from that namespace on every call |
-| — | No invariant companion is published: this package owns no relationship two observers could see differently — every export is a pure function over its arguments, and a parse or a pin is produced and returned inside one call. |
+| — | No invariant companion is published: this package owns no relationship two observers could see differently. `parsePolicySet`, `compilePolicySet` and `acceptPolicySet` are pure functions over their arguments, and `PolicySetProvider` holds no policy set of its own — it reads the `policy-set` settings scope on every `current()`, and what happens when a reload fails belongs to `@deepseek-ai/dsh-settings`. |
 
 ## Model Experience
 

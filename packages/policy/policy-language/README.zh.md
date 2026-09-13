@@ -71,7 +71,7 @@ kind: "package-reference"
 | [`src/parser.ts`](src/parser.ts) | `parsePolicySet` 与它的三种拒绝,先语法后词汇 |
 | [`src/compiler.ts`](src/compiler.ts) | `compilePolicySet`,以及覆盖规范化文本、词汇与引擎版本的那道钉子 |
 | [`src/index.ts`](src/index.ts) | `acceptPolicySet`——先限界、再解析、再钉住——以及 `PolicySetProvider`:它用 `acceptPolicySet` 注册 `policy-set` namespace,并在每次调用 `current()` 时从这个 namespace 作答 |
-| — | 不发布 invariant 伴生包:本包不拥有任何「两个观察者可能看到不同结果」的关系——每个导出都是对其入参的纯函数,一次解析或一次钉住在同一次调用内产生并返回。 |
+| — | 不发布 invariant 伴生包:本包不拥有任何「两个观察者可能看到不同结果」的关系。`parsePolicySet`、`compilePolicySet` 与 `acceptPolicySet` 是对其入参的纯函数;`PolicySetProvider` 自己不持有策略集合——它在每次 `current()` 时读取 `policy-set` 的 settings scope,而重载失败时发生什么归 `@deepseek-ai/dsh-settings`。 |
 
 <a id="model-experience"></a>
 ## 模型体验
