@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-13T11:46:02.964Z",
-  "inputDigest": "4d961468bb02607a91b87118974d574fc74034ea1d79eabbcbe3a83e53126105",
+  "lastUpdatedUtc": "2026-09-13T12:29:16.344Z",
+  "inputDigest": "94e3ddae6442623a381c1d4f57a4a94e2d04c6cd8797e3d4b71e93c1612a66c1",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -6989,45 +6989,96 @@
       "wave": 7,
       "cells": {
         "C": {
-          "status": "NOT_RUN",
-          "revokedFrom": {
-            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
-            "absentCommitments": 1
-          },
-          "revokedReason": "fix ① (addendum 313) refiled P4-12.C's supplement as the stage primary after this cell's observation at 434408a47c; the observed tree lacks the live freeze, so the green pre-committed to nothing (addendum 17 rule: supersede with the stale green revoked in the same change). Re-observed on the P4-12 candidate."
+          "status": "GREEN",
+          "candidateSha": "abad21fa7068ab6e378f46664bbc21dd86288525",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34755598046",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7/scratchpad/ci-34755598046/first100-evidence-abad21fa7068ab6e378f46664bbc21dd86288525/vitest-report.json",
+          "observationSha256": "57a632fdc171fa6546126d45d77132e6f079d58bb31ed01143d7ba093d380e36",
+          "expectCasesMatched": [
+            "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reserves an unseen key, which is the only decision that authorizes sending",
+            "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reserves again for a PREPARED entry at a HIGHER generation, because nothing left the harness yet",
+            "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reports SENT as a duplicate, so a crash after the request does not send it twice",
+            "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reports CONFIRMED and COMPENSATED as duplicates too, so a settled key is never re-sent",
+            "P4-12 acceptance[2]: the same key, different parameters is refused (Stripe rule) refuses the same key presented with different parameters, naming the first arguments",
+            "P4-12 acceptance[2]: the same key, different parameters is refused (Stripe rule) refuses on arguments BEFORE reporting a duplicate, so a changed request is never answered by the old one",
+            "P4-12 must[3]: a stale epoch is fenced out refuses a caller whose epoch is older than the holder, and names the current one",
+            "P4-12 must[3]: a stale epoch is fenced out admits a HIGHER epoch, so fencing refuses only what is genuinely behind",
+            "P4-12 must[3]: a stale epoch is fenced out fences BEFORE reporting an outcome, so a superseded generation learns nothing about work it lost",
+            "P4-12 must[2]: a peer at the holder's own generation may not take the reservation (BLOCKED-221) refuses the SAME generation against a PREPARED entry, naming the generation that holds it",
+            "P4-12 must[2]: a peer at the holder's own generation may not take the reservation (BLOCKED-221) distinguishes held-at-same-epoch from stale-epoch, because one says wait and the other says stop",
+            "P4-12 must[2]: a peer at the holder's own generation may not take the reservation (BLOCKED-221) reports a SENT entry at the same generation as a duplicate, which is a different fact from a held reservation",
+            "P4-12 must[2]: an UNFENCED caller keeps at-least-once and is told exclusivity does not apply (BLOCKED-221) re-takes a PREPARED entry whose holder was also unfenced, and marks the reservation unfenced",
+            "P4-12 must[2]: an UNFENCED caller keeps at-least-once and is told exclusivity does not apply (BLOCKED-221) treats an unfenced caller as outside the generation ordering, not as generation zero",
+            "P4-12 must[2]: an UNFENCED caller keeps at-least-once and is told exclusivity does not apply (BLOCKED-221) calls a takeover of an unfenced holder UNFENCED however well fenced the new caller is",
+            "P4-12 must[2]: an UNFENCED caller keeps at-least-once and is told exclusivity does not apply (BLOCKED-221) still reports a SENT entry as a duplicate for an unfenced caller, so at-least-once never becomes at-least-twice",
+            "P4-12 acceptance[1]: an ambiguous outcome goes to reconciliation, not to a retry refuses a retry of an AMBIGUOUS entry rather than sending again",
+            "P4-12 acceptance[1]: an ambiguous outcome goes to reconciliation, not to a retry distinguishes ambiguous from duplicate, because they need different handling",
+            "P4-12 must[1]: a provider with native support gets the Idempotency-Key header passes the key through as the Idempotency-Key request header (draft-ietf-httpapi-idempotency-key-header-07)",
+            "P4-12 must[1]: a provider with native support gets the Idempotency-Key header sends no Idempotency-Key header for a local-fencing provider, whose dedup is this ledger",
+            "P4-12 must[2]: an idempotency key is unique PER CLIENT, never globally carries the requesting principal into the reservation, which is what the store persists",
+            "P4-12 must[2]: an idempotency key is unique PER CLIENT, never globally still refuses a second reservation WITHIN one principal, so scoping did not disable dedup"
+          ],
+          "capturedAtUtc": "2026-09-13T12:29:15.092Z"
         },
         "P": {
-          "status": "NOT_RUN",
-          "revokedFrom": {
-            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
-            "absentCommitments": 1
-          },
-          "revokedReason": "fix ① (addendum 313) refiled P4-12.P's supplement as the stage primary after this cell's observation at 434408a47c; the observed tree lacks the live freeze, so the green pre-committed to nothing (addendum 17 rule: supersede with the stale green revoked in the same change). Re-observed on the P4-12 candidate."
+          "status": "GREEN",
+          "candidateSha": "abad21fa7068ab6e378f46664bbc21dd86288525",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34755598046",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7/scratchpad/ci-34755598046/first100-evidence-abad21fa7068ab6e378f46664bbc21dd86288525/vitest-report.json",
+          "observationSha256": "57a632fdc171fa6546126d45d77132e6f079d58bb31ed01143d7ba093d380e36",
+          "expectCasesMatched": [
+            "P4-12 must[2]: the reservation is durable BEFORE the request is sent reports a SENT key as a duplicate after a restart, which is the crash this epic exists for",
+            "P4-12 must[2]: the reservation is durable BEFORE the request is sent still reserves a PREPARED key after a restart at the NEXT generation, because nothing was sent",
+            "P4-12 must[2]: the reservation is durable BEFORE the request is sent still reserves a PREPARED key after an UNFENCED restart, where no generation can prove the holder gone",
+            "P4-12 must[2]: the reservation is durable BEFORE the request is sent lets an unfenced holder record the send it made, so the degraded path is usable end to end",
+            "P4-12 must[2]: the reservation is durable BEFORE the request is sent keeps the receipt digest across a restart, so a confirmed effect stays evidenced",
+            "P4-12 must[2]: two workers cannot both hold one reservation gives the reservation to ONE of two concurrent processes at the same generation, and refuses the other as a peer",
+            "P4-12 must[2]: two workers cannot both hold one reservation admits BOTH unfenced processes, because without generations a peer and a restart are the same observation",
+            "P4-12 must[3]: a fenced-out generation cannot write refuses a transition from an epoch the current holder has superseded",
+            "P4-12 must[3]: a fenced-out generation cannot write lets the CURRENT holder write, so fencing refuses only what is behind",
+            "P4-12 must[3]: a fenced-out generation cannot write refuses a transition for a key that was never reserved, rather than creating one",
+            "P4-12 must[3]: a fenced-out generation cannot write keeps the database off the handle, so nothing outside the store can run a statement",
+            "P4-12 must[2]: the durable store keeps two principals apart (BLOCKED-142) keeps one key reserved by two principals as two rows, neither visible to the other",
+            "P4-12 must[2]: the durable store keeps two principals apart (BLOCKED-142) refuses a transition presented under the WRONG principal, so a key cannot be moved from outside its scope"
+          ],
+          "capturedAtUtc": "2026-09-13T12:29:15.422Z"
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
-          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "candidateSha": "abad21fa7068ab6e378f46664bbc21dd86288525",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34755598046",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7/scratchpad/ci-34755598046/first100-evidence-abad21fa7068ab6e378f46664bbc21dd86288525/vitest-report.json",
+          "observationSha256": "57a632fdc171fa6546126d45d77132e6f079d58bb31ed01143d7ba093d380e36",
           "expectCasesMatched": [
             "P4-12 must[4]: the dispatch path reserves before it runs a tool RUNS the tool once and confirms the reservation, so an ordinary call is unaffected",
             "P4-12 must[4]: the dispatch path reserves before it runs a tool REFUSES a second call whose key was already reserved, and the tool does NOT run",
             "P4-12 must[4]: the dispatch path reserves before it runs a tool runs BOTH calls when the arguments differ, so the key identifies the action and not the tool",
             "P4-12 must[4]: the dispatch path reserves before it runs a tool runs the tool when NO ledger is mounted, because absence is not an approval to record"
           ],
-          "capturedAtUtc": "2026-09-08T15:07:17.922Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "fromCandidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+            "reason": "P4-12.U re-observed on the P4-12 candidate: files it names changed since 434408a47c (BLOCKED-221 production fix, dispatch path), addendum 332",
+            "atUtc": "2026-09-13T12:29:16.030Z"
+          },
+          "capturedAtUtc": "2026-09-13T12:29:16.031Z"
         },
         "F": {
-          "status": "NOT_RUN",
-          "revokedFrom": {
-            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
-            "absentCommitments": 1
-          },
-          "revokedReason": "fix ① (addendum 313) refiled P4-12.F's supplement as the stage primary after this cell's observation at 434408a47c; the observed tree lacks the live freeze, so the green pre-committed to nothing (addendum 17 rule: supersede with the stale green revoked in the same change). Re-observed on the P4-12 candidate."
+          "status": "GREEN",
+          "candidateSha": "abad21fa7068ab6e378f46664bbc21dd86288525",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34755598046",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7/scratchpad/ci-34755598046/first100-evidence-abad21fa7068ab6e378f46664bbc21dd86288525/vitest-report.json",
+          "observationSha256": "57a632fdc171fa6546126d45d77132e6f079d58bb31ed01143d7ba093d380e36",
+          "expectCasesMatched": [
+            "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects commits each effect exactly once across 10,000 random crashes, counted at the SERVICE",
+            "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects commits each effect exactly once across the same campaign run UNFENCED, which is where at-least-once stands alone",
+            "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects still commits the effect at least once when the NEXT generation retries a crash before the send",
+            "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects still commits the effect at least once when an UNFENCED retry follows a crash before the send",
+            "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects does NOT commit again when the SAME generation retries a crash before the send, because a peer may hold it",
+            "P4-12 validation: a provider that timed out AFTER committing leaves the effect committed once when the ledger is told the outcome is unknown",
+            "P4-12 validation: a batch action is ledgered item by item reserves each item separately, so one item failing does not resend the others"
+          ],
+          "capturedAtUtc": "2026-09-13T12:29:15.716Z"
         }
       },
       "supplements": {
@@ -7046,19 +7097,19 @@
         },
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
-          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "candidateSha": "abad21fa7068ab6e378f46664bbc21dd86288525",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34755598046",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7/scratchpad/ci-34755598046/first100-evidence-abad21fa7068ab6e378f46664bbc21dd86288525/vitest-report.json",
+          "observationSha256": "57a632fdc171fa6546126d45d77132e6f079d58bb31ed01143d7ba093d380e36",
           "expectCasesMatched": [
             "the sub-dispatch scheduler (native concurrency contract) P4-12 must[4] — a code-mode sub-dispatch reserves against the ledger like a native call (§12.35-2) RESERVES and CONFIRMS each sub-call, so the ledger records a code-mode effect as it records a native one",
             "the sub-dispatch scheduler (native concurrency contract) P4-12 must[4] — a code-mode sub-dispatch reserves against the ledger like a native call (§12.35-2) REFUSES a sub-call replayed by the SAME run_code call, so a retried program cannot repeat its effect",
             "the sub-dispatch scheduler (native concurrency contract) P4-12 must[4] — a code-mode sub-dispatch reserves against the ledger like a native call (§12.35-2) records an ERRORING sub-call as ambiguous, so a retry cannot repeat an effect that may have happened"
           ],
-          "capturedAtUtc": "2026-09-08T15:11:49.304Z"
+          "capturedAtUtc": "2026-09-13T12:29:16.336Z"
         }
       },
-      "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+      "candidateSha": "abad21fa7068ab6e378f46664bbc21dd86288525",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
