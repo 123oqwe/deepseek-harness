@@ -142,6 +142,8 @@ Four P9 epics hold live freeze entries citing conflicting files. Their rows carr
 
 `packages/bundle/headless/tests/headless.spec.ts` is +130/-80 upstream against our +320/-13 — the heaviest P9 row, carrying P9-03.P and both P9-06 F/P.
 
+**A pre-existing flake sits in this group, so do not read it as re-anchor damage.** `snapshots/session/headless.snapshot.ts` is the only conflicting snapshot path any live freeze entry cites (P9-06.P), and it is the harness driver rather than a recording. It **already fails intermittently before the re-anchor** — it was one of two reds on candidate 12's first run, on a tree whose diff touched no `packages/`, `apps/` or `snapshots/` path at all. If the P9 re-record at S9/S10 meets the same flake, that is this pre-existing behaviour and not something the re-anchor caused. Re-run before attributing it; a red here needs the same second reading any intermittent does.
+
 **MANDATORY STEP, added 2026-09-13 on lane B's report.** `first100:verify-p9-cells --check` fails when any file named by a P9 freeze entry (its `files` plus the argv test paths) differs between the recorded candidate and HEAD. Every file in this group's table is such a file, so the moment BASE-ALIGN lands, **all four P9 epics report STALE by design**. That is not a regression and must not be patched back to green: **P9 has to be re-recorded from an observation of the re-anchored tree**, using the tool's recording form, after the four epics' cells have been re-judged. Sequence it AFTER Groups A–C, never before — re-recording against an unsettled tree would pin the wrong observation.
 
 ## Group D — documentation only (last, no 4.4)
