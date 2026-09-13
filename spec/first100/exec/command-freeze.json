@@ -13884,6 +13884,58 @@
         "mutationDescription": "Three mutations, each run against this argv and restored byte-identical. (M67) the `run-retry-usage` row is removed from `dsh-base`. (M68) the `circuit-breaker` row is removed from `dsh-base`. (M69) `llm-retry` stops calling `budgets.admit` on the path that decides a retry — the exact state the 4.4d pass found in the product.",
         "failureSummary": "M67 reddens both cases, and the driver reports `{\"runRetryUsage\":false,\"circuitBreaker\":true}` — the breaker row staying mounted is the control that scopes the mutation, and a fixture mounting the budget for itself would have stayed GREEN here, which is the empty-evidence shape BLOCKED-156 names. M68 reddens ONLY the mount case, reporting `{\"runRetryUsage\":true,\"circuitBreaker\":false}`, while the charge case stays GREEN at `retriesUsed:1` — the control proving the two rows are observed independently and that charging does not depend on the breaker. M69 reddens ONLY the charge case, at `retriesUsed:0` with both services still reported mounted — the control proving the charge case measures the ACCOUNTING rather than the mounting, and reproducing exactly the pre-slice symptom: mounted, retried, charged to nothing. Carried verbatim from the mount slice frozen 2026-09-10T19:55:00.000Z: this entry re-files that freeze as a supplement, and every mutation site is byte-identical between its recorded tree and 240ff9cde607fc8c721a5a61731541c20deebad1 -- the `run-retry-usage` and `circuit-breaker` rows of `packages/bundle/base/cordis.patch.yml` (M67, M68) and `packages/llm/llm-retry/src/index.ts` (M69) -- while the fixture files are unchanged."
       }
+    },
+    {
+      "epic": "P2-10",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/policy/policy-language/tests/fuzz.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-10 F validation[0]: the parser refuses malformed input without escaping answers 'five thousand comment lines' without escaping, whatever it decides",
+        "P2-10 F validation[0]: the parser refuses malformed input without escaping answers 'null byte inside a string literal' without escaping, whatever it decides",
+        "P2-10 F validation[0]: the parser refuses malformed input without escaping answers every malformed input within one call, so no input makes it hang",
+        "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'condition nested past the engine cliff' with a named reason, never throwing",
+        "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'control characters' with a named reason, never throwing",
+        "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'empty string' with a named reason, never throwing",
+        "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'html rather than cedar' with a named reason, never throwing",
+        "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'json rather than cedar' with a named reason, never throwing",
+        "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'missing terminator' with a named reason, never throwing",
+        "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'nested parenthesis bomb' with a named reason, never throwing",
+        "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'only a comment' with a named reason, never throwing",
+        "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'repeated semicolons' with a named reason, never throwing",
+        "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'sql injection shaped' with a named reason, never throwing",
+        "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'truncated after permit' with a named reason, never throwing",
+        "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'truncated mid-condition' with a named reason, never throwing",
+        "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'truncated mid-keyword' with a named reason, never throwing",
+        "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'unbalanced closing brace' with a named reason, never throwing",
+        "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'unicode right-to-left override' with a named reason, never throwing",
+        "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'unpaired surrogate in a string' with a named reason, never throwing",
+        "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'very long identifier' with a named reason, never throwing",
+        "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses 'whitespace only' with a named reason, never throwing",
+        "P2-10 F validation[0]: the parser refuses malformed input without escaping refuses a set where one policy of many is malformed, not only a wholly malformed set",
+        "P2-10 F validation[0]: the parser refuses malformed input without escaping still ACCEPTS a well-formed set, so refusing everything is not a passing strategy"
+      ],
+      "files": [
+        "packages/policy/policy-language/tests/fuzz.spec.ts",
+        "packages/policy/policy-language/src/parser.ts"
+      ],
+      "frozenAtUtc": "2026-09-13T05:20:00.000Z",
+      "dryRunProof": {
+        "treeSha": "763a956caa8be6df6868a2f057235a8c03c6c2a7",
+        "testsDiscovered": 23
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations, one per defence, because they guard different failures and neither substitutes for the other. (1) The depth guard disabled, so a policy nesting past the engine's cliff reaches Cedar. (2) The `askCedar` try/catch bypassed, so a serialization failure at the wasm boundary propagates instead of becoming a refusal.",
+        "failureSummary": "Disabling the depth guard reddens 1 of 23 -- and the case it reddens is the CONTROL, `still ACCEPTS a well-formed set`. That is the finding stated as a test: the deep policy faults cedar-wasm, the instance stays dead, and the valid set parsed afterwards fails too. Poisoning is what the red means. Bypassing the wrapper reddens 2 of 23: the unpaired-surrogate case and the mixed-set case, both escaping as `unexpected end of hex escape` rather than refusing. Both applied and reverted locally, never committed; `src/parser.ts` restored byte-identically (sha256 19b312ac5d791997...) and all 23 returned passing."
+      },
+      "note": "validation[0]'s parser-fuzz limb. The corpus is ENUMERATED, never generated and not seeded: a frozen case has to run the same input every time, and a seed is one more thing that can change unnoticed.\n\nThe fuzz found two real escapes on its first run, both fixed here. Cedar 4.12.0 faults with `memory access out of bounds` between 130 and 135 levels of condition nesting, and the fault leaves its wasm instance dead for the rest of the process -- measured, including that a cache-busted re-import returns the same dead module and the package exports no reset. That one is PREVENTED by a depth guard at 64 rather than caught, because there is nothing to recover to. An unpaired UTF-16 surrogate raises `unexpected end of hex escape` at the boundary before wasm is entered, leaves the engine healthy, and is CAUGHT. Two defences, two failure modes, no overlap.\n\nCorpus labels are measured rather than assumed: a 500-bracket bomb refuses cleanly (Cedar guards bracket depth but not condition nesting), a 10,000-character id parses fine, and three unusual inputs are valid Cedar and asserted only not to escape. An earlier draft called the long id an escape; that was the nesting fault poisoning the shared instance, which is why every classification here was taken in its own process.\n\nThe registry names `tests/golden.spec.ts` for this stage, a proposal name that never existed, as it did for the Contract stage; the real file is `tests/fuzz.spec.ts`. validation[1]'s ten-thousand-fixture shadow replay is a declared limitation, deferred with the shadow slice it depends on, since `feature-gates` is in no shipped bundle. The engine's `policy-set-invalid` branch stays covered by the Provider stage as a mapping proof and is unreachable in production, more so behind the policy-set seam."
     }
   ]
 }
