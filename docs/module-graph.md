@@ -441,7 +441,6 @@ flowchart TD
   pkg_taskboard --> pkg_brand
   pkg_workflow_journal --> pkg_brand
   pkg_credentials --> pkg_invariants
-  pkg_secrets_broker --> pkg_invariants
   pkg_subprocess_e2b --> pkg_e2b
   pkg_subprocess_e2b --> pkg_subprocess
   pkg_subprocess_e2b --> pkg_timeout
@@ -695,6 +694,11 @@ flowchart TD
   pkg_tmux_context --> pkg_session
   pkg_tmux_context --> pkg_session_projection
   pkg_tmux_context --> pkg_shell
+  pkg_secrets_broker --> pkg_action_manifest
+  pkg_secrets_broker --> pkg_brand
+  pkg_secrets_broker --> pkg_credentials
+  pkg_secrets_broker --> pkg_execution_world
+  pkg_secrets_broker --> pkg_principal
   pkg_fs_e2b --> pkg_e2b
   pkg_fs_e2b --> pkg_fs
   pkg_resource_budget --> pkg_brand
@@ -1507,7 +1511,6 @@ flowchart TD
 | [`taskboard`](../packages/collaboration/taskboard) | `collaboration` | [`brand`](../packages/util/brand) |
 | [`workflow-journal`](../packages/collaboration/workflow-journal) | `collaboration` | [`brand`](../packages/util/brand) |
 | [`credentials`](../packages/credentials/credentials) | `credentials` | [`invariants`](../packages/runtime-diagnostics/invariants) |
-| [`secrets-broker`](../packages/credentials/secrets-broker) | `credentials` | [`invariants`](../packages/runtime-diagnostics/invariants) |
 | [`subprocess-e2b`](../packages/e2b/subprocess-e2b) | `e2b` | [`e2b`](../packages/e2b/e2b), [`subprocess`](../packages/subprocess/subprocess), [`timeout`](../packages/util/timeout) |
 | [`experimental-code-runtime-python`](../packages/experimental/code-runtime-python) | `experimental` | [`code-runtime`](../packages/code-runtime/code-runtime), [`timeout`](../packages/util/timeout), [`util-values`](../packages/util/values) |
 | [`experimental-inspector`](../packages/experimental/inspector) | `experimental` | [`client-modules`](../packages/client/modules), [`host-webserver`](../packages/host/webserver) |
@@ -1592,6 +1595,7 @@ flowchart TD
 | [`memory-context`](../packages/context/memory-context) | `context` | [`agent`](../packages/core/agent), [`llm`](../packages/llm/llm), [`memory`](../packages/memory/memory), [`principal`](../packages/identity/principal), [`session`](../packages/core/session) |
 | [`time-context`](../packages/context/time-context) | `context` | [`agent`](../packages/core/agent), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection) |
 | [`tmux-context`](../packages/context/tmux-context) | `context` | [`agent`](../packages/core/agent), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection), [`shell`](../packages/shell/shell) |
+| [`secrets-broker`](../packages/credentials/secrets-broker) | `credentials` | [`action-manifest`](../packages/action/action-manifest), [`brand`](../packages/util/brand), [`credentials`](../packages/credentials/credentials), [`execution-world`](../packages/execution/execution-world), [`principal`](../packages/identity/principal) |
 | [`fs-e2b`](../packages/e2b/fs-e2b) | `e2b` | [`e2b`](../packages/e2b/e2b), [`fs`](../packages/fs/fs) |
 | [`resource-budget`](../packages/execution/resource-budget) | `execution` | [`brand`](../packages/util/brand), [`execution-world`](../packages/execution/execution-world) |
 | [`commands`](../packages/interaction/commands) | `interaction` | [`agent`](../packages/core/agent), [`attachment`](../packages/attachment/attachment), [`brand`](../packages/util/brand), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`typert-protocol`](../packages/typert/protocol) |

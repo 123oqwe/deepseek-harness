@@ -66,7 +66,7 @@ describe('P3-02 C must[1]: allowlists are closed', () => {
   })
 
   it('refuses a posture the allowlist does not name, naming the dimension and the value asked for', () => {
-    const decision = satisfiesPolicySet(spec({ network: { posture: 'unrestricted' } } as Partial<WorldSpec>), policy(), CLAIMS_ALL)
+    const decision = satisfiesPolicySet(spec({ network: { posture: 'unrestricted' } }), policy(), CLAIMS_ALL)
 
     expect(decision).toStrictEqual({
       ok: false,
@@ -85,7 +85,7 @@ describe('P3-02 C must[1]: allowlists are closed', () => {
 
   it('collects every refusal rather than the first, so one round trip reports the whole gap', () => {
     const decision = satisfiesPolicySet(
-      spec({ network: { posture: 'unrestricted' }, ipc: { posture: 'unrestricted' } } as Partial<WorldSpec>),
+      spec({ network: { posture: 'unrestricted' }, ipc: { posture: 'unrestricted' } }),
       policy(),
       CLAIMS_ALL,
     )
@@ -95,7 +95,7 @@ describe('P3-02 C must[1]: allowlists are closed', () => {
   })
 
   it('refuses a device the allowlist does not name, one refusal per device', () => {
-    const decision = satisfiesPolicySet(spec({ devices: { allowed: ['/dev/kvm'] } } as Partial<WorldSpec>), policy(), CLAIMS_ALL)
+    const decision = satisfiesPolicySet(spec({ devices: { allowed: ['/dev/kvm'] } }), policy(), CLAIMS_ALL)
 
     expect(decision).toStrictEqual({
       ok: false,
@@ -122,7 +122,7 @@ describe('P3-02 C must[2]: an unknown capability is denied', () => {
     // about the dimension and an absent rule is not a permissive one.
     const { network: _omitted, ...withoutNetwork } = policy()
 
-    expect(satisfiesPolicySet(spec({ network: { posture: 'none' } } as Partial<WorldSpec>), withoutNetwork, CLAIMS_ALL).ok).toBe(false)
+    expect(satisfiesPolicySet(spec({ network: { posture: 'none' } }), withoutNetwork, CLAIMS_ALL).ok).toBe(false)
   })
 
   it('reports the governed dimensions from the record itself, so the list cannot drift from the rules', () => {
@@ -152,7 +152,7 @@ describe('P3-02 C must[3]: a provider may not claim a dimension it cannot enforc
   })
 
   it('refuses a ceiling larger than the rule permits, and reports both numbers', () => {
-    const decision = satisfiesPolicySet(spec({ resources: { cpuMillicores: 4000 } } as Partial<WorldSpec>), policy(), CLAIMS_ALL)
+    const decision = satisfiesPolicySet(spec({ resources: { cpuMillicores: 4000 } }), policy(), CLAIMS_ALL)
 
     expect(decision).toStrictEqual({
       ok: false,
@@ -162,7 +162,7 @@ describe('P3-02 C must[3]: a provider may not claim a dimension it cannot enforc
 
   it('refuses ANY ceiling when the rule sets none, since an unconstrainable dimension cannot be constrained', () => {
     const decision = satisfiesPolicySet(
-      spec({ resources: { memoryBytes: 1024 } } as Partial<WorldSpec>),
+      spec({ resources: { memoryBytes: 1024 } }),
       policy({ resources: { cpuMillicoresCeiling: 1000 } }),
       CLAIMS_ALL,
     )
@@ -201,7 +201,7 @@ describe('P3-02 C acceptance[2]: serialization keeps every field', () => {
   })
 
   it('round-trips a refusal list, so an audit reads the same reasons the solver gave', () => {
-    const decision = satisfiesPolicySet(spec({ network: { posture: 'unrestricted' } } as Partial<WorldSpec>), policy(), CLAIMS_ALL)
+    const decision = satisfiesPolicySet(spec({ network: { posture: 'unrestricted' } }), policy(), CLAIMS_ALL)
 
     expect(JSON.parse(JSON.stringify(decision))).toStrictEqual(decision)
   })
