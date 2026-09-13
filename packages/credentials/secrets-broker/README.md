@@ -38,13 +38,18 @@ A terminal state is never rewritten. The first reason a lease stopped being usab
 
 ## Model Experience
 
-No model-visible surface. This package decides; it renders nothing and adds no tool, prompt or session event. No tokens are spent on its behalf and it does not participate in the KV cache.
+None, as this package registers no tool, contributes no prompt text, appends no session event, and describes a lease to no model.
+
+#### KV Cache effect
+
+Nothing here enters a model request. A refused redemption reaches a model only through the enforcement point that asked, which is not in this package, and carries a closed reason code rather than the grant it refused.
 
 ## Known Limitations and Deferred Work
 
 - **must[1], brokered injection, is not modelled.** A secret reaching a world without the ambient environment requires `WorldSecretsSpec.posture: 'broker-only'`, which `execution-world/src/local-provider.ts` refuses: only a separate address space can keep that promise. The transport waits on that shape; this package is the grant.
 - **acceptance[1]'s leak surfaces are not covered here.** Whether a secret stays out of stdout/stderr, crash dumps and the session log is a property of the writers, not of the lease. The session-log limb in particular has no redaction seam on this tree — `session-telemetry`'s waterfall covers records sent to a backend and ships no rules.
 - **No lease store.** Records are values; nothing here persists or indexes them. Which component owns lease durability is undecided, and a store written before the transport is chosen would likely be rebuilt with it.
+- No runtime invariant companion is published: a lease record is a value passed between a caller and these pure functions, so there is no second observation of it that could diverge from the first.
 
 ### Dev Note
 
