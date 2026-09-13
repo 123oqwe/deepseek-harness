@@ -4833,7 +4833,10 @@ importers:
         version: link:../../util/launch-environment
 
   packages/credentials/secrets-broker:
-    dependencies:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
       '@deepseek-ai/dsh-action-manifest':
         specifier: workspace:^
         version: link:../../action/action-manifest
@@ -4849,13 +4852,6 @@ importers:
       '@deepseek-ai/dsh-principal':
         specifier: workspace:^
         version: link:../../identity/principal
-    devDependencies:
-      '@deepseek-ai/cordis':
-        specifier: workspace:^
-        version: link:../../../vendor/cordis
-      '@deepseek-ai/dsh-invariants':
-        specifier: workspace:^
-        version: link:../../runtime-diagnostics/invariants
 
   packages/e2b/e2b:
     dependencies:

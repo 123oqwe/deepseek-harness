@@ -133,6 +133,13 @@ const GROUP_LAYERS = {
   memory: 'capability-definitions',
   policy: 'capability-definitions',
   sandbox: 'capability-definitions',
+  // The credentials family's own Definition and Provider are named in
+  // `architecture.layers.json` and take their layer from there. What the group
+  // has left over is P3-06's `secrets-broker`: the secret-lease vocabulary and
+  // its state machine, pure decisions over caller-supplied records with
+  // type-only dependencies and no provider -- the capability-definition role,
+  // not the Consumer tier this table's default would assume.
+  credentials: 'capability-definitions',
   // P3-01's ExecutionWorld seam: the nine-dimension spec, the unforgeable
   // handle, the OCI-adapted lifecycle and the fail-closed provider
   // selection. Types and pure decisions over caller-supplied values,
