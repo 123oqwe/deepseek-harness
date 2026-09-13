@@ -452,6 +452,14 @@
       "delegateSession": "first100-delegate-78",
       "signedAtUtc": "2026-09-13T00:35:39.353Z",
       "note": "Re-observed on candidate 8' after P2-10 U retired the load-time policy-set behaviour (P/U freeze superseded, re-greened 12/11). Delegate re-verified 4.4a-d on the candidate tree: cedar engine mounted bundle/base:330; its new dependency the policySet provider (policy-language) mounted base:298, so inject=['policySet'] resolves and the engine reads current() at policy-engine-cedar/src/index.ts:230 and :261; enforceManifestedAction on both dispatch paths tool-calls.ts:744 and ptc.ts:279. Acceptance substance unchanged; refreshed to current rowDigest."
+    },
+    {
+      "epic": "P4-11",
+      "rowDigestSha256": "7b156502d4efa925439267e8ce3f3c0537f3246f2e071c1a177ee44b98c7134d",
+      "conclusion": "PASS",
+      "delegateSession": "first100-delegate-78",
+      "signedAtUtc": "2026-09-13T03:12:28.099Z",
+      "note": "P4-11 (retry classifier + circuit breaker + retry budget) C/P/U/F all GREEN on candidate 9' (1309ad7951). Delegate verified 4.4a-d on the baseline: 4.4b both services mounted in the factory bundle — run-retry-usage (bundle/base/cordis.patch.yml:89, @deepseek-ai/dsh-retry/usage) and circuit-breaker (:103, @deepseek-ai/dsh-retry-cockatiel); 4.4c budgets.admit called on the real retry path (llm-retry/src/index.ts:265). The P4-11.U.1 mount-slice supplement proves both services load-bearing and charged on the shipped headless profile (M67 removes the budget row -> both cases red; M68 removes the breaker row -> mount case red; M69 stops llm-retry calling budgets.admit -> charge case red). openFindings null; BLOCKED-242 DISPOSED."
     }
   ]
 }
