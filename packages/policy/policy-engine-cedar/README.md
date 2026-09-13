@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-`dsh-policy-engine-cedar` mounts `ctx.policy` over a Cedar authorizer: it translates a harness policy request into Cedar's entity and context shape, reads the answer back into `@deepseek-ai/dsh-policy-engine`'s closed decision, validates the configured policy set at LOAD, and records that set's digest on every decision. Cedar owns the authorization semantics; this package owns the translation and the failure taxonomy. Mount it in a host composition that enforces policy — it is host-only, because the wasm artifact is 13 MB and loads through a CommonJS entry.
+`dsh-policy-engine-cedar` mounts `ctx.policy` over a Cedar authorizer: it translates a harness policy request into Cedar's entity and context shape, reads the answer back into `@deepseek-ai/dsh-policy-engine`'s closed decision, decides against the policy set `ctx.policySet` yields at that instant, and records that set's pin on every decision. The enforcement point, `enforceManifestedAction` in `@deepseek-ai/dsh-policy-enforcement`, is what consults `ctx.policy` on both dispatch paths. Cedar owns the authorization semantics; this package owns the translation and the failure taxonomy. Mount it in a host composition that enforces policy — it is host-only, because the wasm artifact is 13 MB and loads through a CommonJS entry.
 
 ## Table of Contents
 
@@ -24,17 +24,9 @@ English | [中文](README.zh.md)
 <a id="use-this-package"></a>
 ## Use this package
 
-### Configure the policy set as a map, never as one source string
+### The policy set comes from `ctx.policySet`, as a map
 
-```yaml
-- name: '@deepseek-ai/dsh-policy-engine-cedar'
-  config:
-    policies:
-      baseline-permit: 'permit(principal, action, resource);'
-      destructive-forbid: 'forbid(principal, action, resource) when { context.sideEffectClass == "destructive" };'
-```
-
-The key is the policy's identity, and it is what the audit trail records. Submitted as one source string, Cedar assigns generated ids (`policy0`, `policy1`) and an `@id(...)` annotation in the source does **not** become the id the explain reports — an audit built that way names policies nobody wrote.
+This provider takes no configuration. It requires `ctx.policySet` and reads the set in force from it on every decision; `@deepseek-ai/dsh-policy-language` provides that service from the `policy-set` settings namespace, whose section is `{policies: {<id>: <cedar source>}}`. The set arrives as a map from policy id to source, never as one source string. The key is the policy's identity, and it is what the audit trail records. Submitted as one source string, Cedar assigns generated ids (`policy0`, `policy1`) and an `@id(...)` annotation in the source does **not** become the id the explain reports — an audit built that way names policies nobody wrote.
 
 ### What a policy can match on
 
@@ -53,7 +45,7 @@ The key is the policy's identity, and it is what the audit trail records. Submit
 
 A policy that said no is `forbidden-by-policy` (a rule matched) or `no-matching-permit` (nothing did). A policy set that cannot be read is `policy-set-invalid`. No engine mounted at all is `policy-unavailable`, which the enforcement point answers because this service is gone. Collapsing any of the three into the others would make a broken deployment look like a strict one.
 
-A set that does not parse fails at LOAD, not at the first decision: a misconfigured deployment should refuse to boot rather than surface as a denied action.
+A set that does not parse never reaches this provider: `@deepseek-ai/dsh-policy-language` refuses it when the namespace resolves, which fails the boot when the stored set is already unacceptable and keeps the last accepted set when a running deployment's document goes bad. This provider runs no load-time probe of its own, because two components deciding one question disagree the first time a reload is refused.
 
 -----
 
@@ -65,18 +57,19 @@ A set that does not parse fails at LOAD, not at the first decision: a misconfigu
 
 ### The digest
 
-`policySetDigest` hashes ids and sources in sorted order, each length-prefixed. Sorted, because a reordered set is the same set. Length-prefixed, because `{ab: 'c'}` and `{a: 'bc'}` would otherwise hash identically. Every decision carries it, so a replay can tell "the policy changed" from "the decision changed".
+`policySetDigest` hashes ids and sources in sorted order, each length-prefixed. Sorted, because a reordered set is the same set. Length-prefixed, because `{ab: 'c'}` and `{a: 'bc'}` would otherwise hash identically. A decision does not carry this digest: it carries the pin `ctx.policySet.current()` returns alongside the policies, read in the same call so a reload cannot land between deciding and recording, and `@deepseek-ai/dsh-policy-language` takes that pin over the canonical text, the vocabulary and the engine version.
 
 ### Why `decisionFromAnswer` is exported and pure
 
-Its `failure` branch is not reachable through a loaded engine: the policy set is validated at load, and the entity types are constants this module writes rather than request data. It is a fail-closed mapping for a state only a defect or a future Cedar version could produce, so it is proven as a mapping instead of being staged as a runtime situation that cannot occur.
+Its `failure` branch is not reachable through a loaded engine: the policy set was accepted by its provider before this engine sees it, and the entity types are constants this module writes rather than request data. It is a fail-closed mapping for a state only a defect or a future Cedar version could produce, so it is proven as a mapping instead of being staged as a runtime situation that cannot occur.
 
 ### Source map
 
 | File | Role |
 |---|---|
-| [`src/index.ts`](src/index.ts) | The request translation, the digest, the load-time validation, and the answer mapping |
-| [`tests/provider.spec.ts`](tests/provider.spec.ts) | Translation, audit ids, digest behaviour, load refusal, unload and remount |
+| [`src/index.ts`](src/index.ts) | The request translation, `policySetDigest`, the single-read `evaluate` against `ctx.policySet`, and the answer mapping |
+| [`tests/provider.spec.ts`](tests/provider.spec.ts) | Translation, audit ids, digest behaviour, failure mapping, unload and remount |
+| [`tests/policy-set-seam.spec.ts`](tests/policy-set-seam.spec.ts) | The decision records the provider's pin verbatim, decided and recorded from one read of the source |
 | — | No invariant companion is published: this package owns no relationship two observers could see differently — a decision is produced and returned inside one call. |
 
 </details>
@@ -105,7 +98,7 @@ Nothing here enters a model request; a decision reaches a model only as its enfo
 
 ## Known Limitations and Deferred Work
 
-- **Nothing consults `ctx.policy` yet.** The enforcement point is the Usage stage's — it belongs to the Trust Kernel, and until it exists no action in this harness is policy-checked. A reader must not take a mounted provider as evidence that anything is enforced.
-- **No Cedar schema is loaded.** `isAuthorized` is called without one, so policies are validated for parse errors but not against a declared entity/action schema — a policy naming `Dsh::Action::"typo"` parses and simply never matches. Adding the schema means declaring the harness's action vocabulary as data, which is the Usage stage's decision because that vocabulary is what the enforcement point routes.
+- **Explain output is not redacted.** `PolicyExplain` carries the matched policy ids and Cedar's diagnostics verbatim. The enforcement point keeps both out of model-visible output and appends them only to the audit record, but nothing produces the safe summary Epic P2-10 asks for or removes secrets from what the audit stores.
+- **No Cedar schema is loaded.** `isAuthorized` is called without one. `@deepseek-ai/dsh-policy-language` refuses a policy that reads a context key the request builder never sends, but entity ids are not constrained, so a policy naming `Dsh::Action::"typo"` still parses and simply never matches.
 - **Entities are empty.** No entity hierarchy is passed, so `in` relationships (groups, folders) cannot be expressed by a policy. The harness has no such hierarchy to project yet.
 - **Host only.** The wasm artifact is 13 MB and loads through the CommonJS `nodejs` entry; a Client face must never mount this package.

@@ -11,7 +11,7 @@ kind: "package-reference"
 
 `dsh-policy-language` 声明一条 dsh 策略可以指名的词汇:每个策略请求携带的三个 Cedar 实体类型(`Dsh::Principal`;`Dsh::Action`,其 id 是 manifest 的 capability;`Dsh::Resource`,其 id 是带 kind 限定的动作目标),以及请求构造器发送的十个 context 键。它不定义任何语法。按 Epic P2-10 的裁定 (b),dsh 的「有限声明式语言」**就是**这份词汇加上它的约定——另造一门编译到 Cedar 的语法会是第二个信任根,并且会重验 `@deepseek-ai/dsh-policy-engine-cedar` 已为 P2-05 冻结的授权语义。
 
-围绕这份声明,本包补上词汇之所以存在的那些操作:`parsePolicySet` 拒绝解析不过、或读了词汇之外的键的策略集合;`compilePolicySet` 把一份被接受的集合变成重放所依据的、已钉住并已摘要的产物;而插件把这一整套注册成 `policy-set` 这个 settings namespace,好让部署有地方去写它的策略集合。
+围绕这份声明,本包补上词汇之所以存在的那些操作:`parsePolicySet` 拒绝解析不过、或读了词汇之外的键的策略集合;`compilePolicySet` 把一份被接受的集合变成重放所依据的、已钉住并已摘要的产物;而插件把这一整套注册成 `policy-set` 这个 settings namespace,好让部署有地方去写它的策略集合。插件还提供 `ctx.policySet`:`@deepseek-ai/dsh-policy-engine-cedar` 在每一次决策时向它要当前生效的集合与它的钉子,所以每一个决策、以及执行点为它追加的那条审计记录,都携带这份集合被接受时的钉子。
 
 ## 目录
 
@@ -70,7 +70,7 @@ kind: "package-reference"
 | [`src/schema.ts`](src/schema.ts) | 三个实体类型与十个 context 键——词汇本身 |
 | [`src/parser.ts`](src/parser.ts) | `parsePolicySet` 与它的三种拒绝,先语法后词汇 |
 | [`src/compiler.ts`](src/compiler.ts) | `compilePolicySet`,以及覆盖规范化文本、词汇与引擎版本的那道钉子 |
-| [`src/index.ts`](src/index.ts) | `acceptPolicySet`——先限界、再解析、再钉住——以及用它注册 `policy-set` namespace 的那个插件 |
+| [`src/index.ts`](src/index.ts) | `acceptPolicySet`——先限界、再解析、再钉住——以及 `PolicySetProvider`:它用 `acceptPolicySet` 注册 `policy-set` namespace,并在每次调用 `current()` 时从这个 namespace 作答 |
 | — | 不发布 invariant 伴生包:本包不拥有任何「两个观察者可能看到不同结果」的关系——每个导出都是对其入参的纯函数,一次解析或一次钉住在同一次调用内产生并返回。 |
 
 ## 模型体验
@@ -83,8 +83,8 @@ None, as this package declares a vocabulary and registers no prompt, schema, too
 
 ## 已知限制与延期工作
 
-- **还没有人读这份被接受的集合** —— namespace 已注册、坏集合会被拒,但还没有任何引擎从这里取它的策略。要等 Usage 阶段把 `@deepseek-ai/dsh-policy-engine-cedar` 接到这个 namespace 上;在那之前,真正被强制的仍是那个 provider 自己 `Config.policies` 里的集合,两者可以不一致。
-- **钉子被算出来但没有被落盘** —— `acceptPolicySet` 返回它,没有任何地方记录它。记录它只有在「某个决策或某条审计行能引用它」之后才有意义,而那是同一处 Usage 阶段的接线;更早发出去就是一个没有读者的事件。
+- **影子评估、diff explain 与升级前的影响报告尚未建成** —— Epic P2-10 要求对策略集合做影子评估、解释两份集合的决策差在哪里,并在升级前重放历史 `ActionManifest` 生成影响报告。每个决策记录的钉子正是这样一次重放要比对的键,但树上没有任何东西执行影子评估、差异解释或重放。
+- **对策略文档的非原子编辑可能只提交基线** —— 空的或被截断的文档会解析成「只有基线」这个合法集合,所以一次先截断再重写的写入,可能短暂地用基线替换部署的策略并把它提交(BLOCKED-243)。按 `docs/policy/language.md` 所述原子地替换文档;修复归 settings-file 的 watcher。
 - **实体 id 不在这里被约束** —— `Dsh::Action` 的 id 是某条 manifest 指名的任意 capability,`Dsh::Resource` 的是带 kind 限定的目标。把这两个集合封闭起来会成为第二份词汇、带着它自己的漂移问题,而且没有任何子句要求它。
 
 <a id="dev-note"></a>
