@@ -2599,22 +2599,18 @@
       "coveredBy": [
         {
           "stage": "F",
-          "supplementSeq": 2,
           "title": "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects commits each effect exactly once across 10,000 random crashes, counted at the SERVICE"
         },
         {
           "stage": "F",
-          "supplementSeq": 2,
           "title": "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects commits each effect exactly once across the same campaign run UNFENCED, which is where at-least-once stands alone"
         },
         {
           "stage": "F",
-          "supplementSeq": 2,
           "title": "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects still commits the effect at least once when the NEXT generation retries a crash before the send"
         },
         {
           "stage": "F",
-          "supplementSeq": 2,
           "title": "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects still commits the effect at least once when an UNFENCED retry follows a crash before the send"
         },
         {
@@ -2627,7 +2623,7 @@
           "supplementSeq": 1
         }
       ],
-      "note": "acceptance[0]: 'zero duplicate external effects across a 10,000-run crash campaign.' The campaign is the direct evidence and counts at a fake external SERVICE rather than at the harness log — counting at the log would prove only that the log recorded one attempt. The at-least-once half is cited beside it because a campaign that produced zero duplicates by never committing would satisfy the headline number and none of the intent. The two dispatch citations are the same guarantee on the paths a profile actually runs: native and code-mode reach one implementation (§12.35-2), and before that supplement the code-mode path took no reservation at all. **Citations re-pointed 2026-09-12 (BLOCKED-221).** The C/P/F freeze entries for this epic were superseded, so a citation without `supplementSeq` would resolve against a superseded base entry and report unverified. The titles below name the live supplements; the cells need re-observation at the candidate that carries the fix, which is what makes them verified again rather than merely re-spelled. The at-least-once half is cited as TWO cases because the one it replaces retried at the holder's own generation, which the peer rule now refuses: a fenced restart and an unfenced retry are different paths to the same guarantee, and the fenced one alone would leave every lease-less profile uncited. **Re-pointed again 2026-09-12 (BLOCKED-225).** The campaign's draw was evaluated as a double and almost never crashed -- none 9956 of 10,000, after-receipt never -- so the headline citation was passing on a campaign that did not run its own crash points. F.1 is superseded by F.2, which asserts the crash distribution and per-key coverage the campaign depends on, and the UNFENCED campaign is cited beside it: crash-retry dedup comes from the `sent` state rather than from fencing, and saying so is what keeps the fenced citation from being read as the reason."
+      "note": "acceptance[0]: 'zero duplicate external effects across a 10,000-run crash campaign.' The campaign is the direct evidence and counts at a fake external SERVICE rather than at the harness log — counting at the log would prove only that the log recorded one attempt. The at-least-once half is cited beside it because a campaign that produced zero duplicates by never committing would satisfy the headline number and none of the intent. The two dispatch citations are the same guarantee on the paths a profile actually runs: native and code-mode reach one implementation (§12.35-2), and before that supplement the code-mode path took no reservation at all. **Citations re-pointed 2026-09-12 (BLOCKED-221).** The C/P/F freeze entries for this epic were superseded, so a citation without `supplementSeq` would resolve against a superseded base entry and report unverified. The titles below name the live supplements; the cells need re-observation at the candidate that carries the fix, which is what makes them verified again rather than merely re-spelled. The at-least-once half is cited as TWO cases because the one it replaces retried at the holder's own generation, which the peer rule now refuses: a fenced restart and an unfenced retry are different paths to the same guarantee, and the fenced one alone would leave every lease-less profile uncited. **Re-pointed again 2026-09-12 (BLOCKED-225).** The campaign's draw was evaluated as a double and almost never crashed -- none 9956 of 10,000, after-receipt never -- so the headline citation was passing on a campaign that did not run its own crash points. F.1 is superseded by F.2, which asserts the crash distribution and per-key coverage the campaign depends on, and the UNFENCED campaign is cited beside it: crash-retry dedup comes from the `sent` state rather than from fencing, and saying so is what keeps the fenced citation from being read as the reason. **Re-pointed to the stage primaries 2026-09-13 (addendum 313, fix ①).** The C.3, P.1 and F.2 supplements were refiled as the C, P and F primaries with the same argv, files, expected exit and cases, and the supplements are now superseded, so a citation naming them would resolve to no live entry. The C and F citations here name the primaries, and the titles are unchanged. The U.1 citations stay on the live U supplement. The cells need re-observation at a candidate carrying the refiled primaries."
     },
     {
       "epic": "P4-12",
@@ -2635,13 +2631,11 @@
       "coveredBy": [
         {
           "stage": "C",
-          "title": "P4-12 acceptance[1]: an ambiguous outcome goes to reconciliation, not to a retry refuses a retry of an AMBIGUOUS entry rather than sending again",
-          "supplementSeq": 3
+          "title": "P4-12 acceptance[1]: an ambiguous outcome goes to reconciliation, not to a retry refuses a retry of an AMBIGUOUS entry rather than sending again"
         },
         {
           "stage": "C",
-          "title": "P4-12 acceptance[1]: an ambiguous outcome goes to reconciliation, not to a retry distinguishes ambiguous from duplicate, because they need different handling",
-          "supplementSeq": 3
+          "title": "P4-12 acceptance[1]: an ambiguous outcome goes to reconciliation, not to a retry distinguishes ambiguous from duplicate, because they need different handling"
         },
         {
           "stage": "U",
@@ -2649,7 +2643,7 @@
           "supplementSeq": 1
         }
       ],
-      "note": "acceptance[1]: 'an ambiguous state is not blindly retried; it goes to reconciliation.' Both halves are required and they are different facts: refusing the retry is the behaviour, and distinguishing ambiguous from duplicate is what makes the refusal actionable — a caller told 'duplicate' would conclude the effect happened, which is the one thing an ambiguous entry does not establish. The U citation is the producer: without a path that WRITES `ambiguous`, the C decisions would be reasoning about a state nothing reaches. **Citations re-pointed 2026-09-12 (BLOCKED-221).** The C/P/F freeze entries for this epic were superseded, so a citation without `supplementSeq` would resolve against a superseded base entry and report unverified. The titles below name the live supplements; the cells need re-observation at the candidate that carries the fix, which is what makes them verified again rather than merely re-spelled."
+      "note": "acceptance[1]: 'an ambiguous state is not blindly retried; it goes to reconciliation.' Both halves are required and they are different facts: refusing the retry is the behaviour, and distinguishing ambiguous from duplicate is what makes the refusal actionable — a caller told 'duplicate' would conclude the effect happened, which is the one thing an ambiguous entry does not establish. The U citation is the producer: without a path that WRITES `ambiguous`, the C decisions would be reasoning about a state nothing reaches. **Citations re-pointed 2026-09-12 (BLOCKED-221).** The C/P/F freeze entries for this epic were superseded, so a citation without `supplementSeq` would resolve against a superseded base entry and report unverified. The titles below name the live supplements; the cells need re-observation at the candidate that carries the fix, which is what makes them verified again rather than merely re-spelled. **Re-pointed to the stage primaries 2026-09-13 (addendum 313, fix ①).** The C.3, P.1 and F.2 supplements were refiled as the C, P and F primaries with the same argv, files, expected exit and cases, and the supplements are now superseded, so a citation naming them would resolve to no live entry. The C and F citations here name the primaries, and the titles are unchanged. The U.1 citations stay on the live U supplement. The cells need re-observation at a candidate carrying the refiled primaries."
     },
     {
       "epic": "P4-12",
@@ -2657,21 +2651,18 @@
       "coveredBy": [
         {
           "stage": "C",
-          "title": "P4-12 acceptance[2]: the same key, different parameters is refused (Stripe rule) refuses the same key presented with different parameters, naming the first arguments",
-          "supplementSeq": 3
+          "title": "P4-12 acceptance[2]: the same key, different parameters is refused (Stripe rule) refuses the same key presented with different parameters, naming the first arguments"
         },
         {
           "stage": "C",
-          "title": "P4-12 acceptance[2]: the same key, different parameters is refused (Stripe rule) refuses on arguments BEFORE reporting a duplicate, so a changed request is never answered by the old one",
-          "supplementSeq": 3
+          "title": "P4-12 acceptance[2]: the same key, different parameters is refused (Stripe rule) refuses on arguments BEFORE reporting a duplicate, so a changed request is never answered by the old one"
         },
         {
           "stage": "C",
-          "title": "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reserves again for a PREPARED entry at a HIGHER generation, because nothing left the harness yet",
-          "supplementSeq": 3
+          "title": "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reserves again for a PREPARED entry at a HIGHER generation, because nothing left the harness yet"
         }
       ],
-      "note": "acceptance[2]: 'the same key with different arguments is refused.' The ORDER is cited as a separate sub-fact because it carries the clause's meaning: answering 'duplicate' to a second, different request would tell the caller its new request had already been carried out. The prepared-entry citation is the positive control — the same key with the SAME arguments still reserves, so the refusal is about the arguments differing and not about the key being seen. **Citations re-pointed 2026-09-12 (BLOCKED-221).** The C/P/F freeze entries for this epic were superseded, so a citation without `supplementSeq` would resolve against a superseded base entry and report unverified. The titles below name the live supplements; the cells need re-observation at the candidate that carries the fix, which is what makes them verified again rather than merely re-spelled. The third citation's title gained `at a HIGHER generation`: the case did not say which generation was asking, and that is the only thing that decides whether the re-reservation is a recovery or a second holder."
+      "note": "acceptance[2]: 'the same key with different arguments is refused.' The ORDER is cited as a separate sub-fact because it carries the clause's meaning: answering 'duplicate' to a second, different request would tell the caller its new request had already been carried out. The prepared-entry citation is the positive control — the same key with the SAME arguments still reserves, so the refusal is about the arguments differing and not about the key being seen. **Citations re-pointed 2026-09-12 (BLOCKED-221).** The C/P/F freeze entries for this epic were superseded, so a citation without `supplementSeq` would resolve against a superseded base entry and report unverified. The titles below name the live supplements; the cells need re-observation at the candidate that carries the fix, which is what makes them verified again rather than merely re-spelled. The third citation's title gained `at a HIGHER generation`: the case did not say which generation was asking, and that is the only thing that decides whether the re-reservation is a recovery or a second holder. **Re-pointed to the stage primaries 2026-09-13 (addendum 313, fix ①).** The C.3, P.1 and F.2 supplements were refiled as the C, P and F primaries with the same argv, files, expected exit and cases, and the supplements are now superseded, so a citation naming them would resolve to no live entry. The C and F citations here name the primaries, and the titles are unchanged. The U.1 citations stay on the live U supplement. The cells need re-observation at a candidate carrying the refiled primaries."
     },
     {
       "epic": "P5-10",
