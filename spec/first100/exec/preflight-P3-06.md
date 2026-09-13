@@ -32,9 +32,15 @@
 
 ## 其余子句的现状
 
+**更正(2026-09-13,lane B 指出、lane A 实测确认)**:上面这段引 BLOCKED-178 称 producer 半边「未开始」是**错的——那条 BLOCKED 的措辞已过时,而我引用了它当作现状**。
+
+树上实测:`bundle/base/cordis.patch.yml:260-264` 挂了 `execution-world/plugin` 与 `/local`;`core/tools/src/external-effect.ts:284` 的 `readExecutionWorldFact` 读 `ctx.get('executionWorlds')`、调 `bindingFor(agent)`、首次绑定时 append `action/world-bound`;两条派发路径都调它(`tool-calls.ts:258` 与 `:505`、`ptc.ts:710`)。**而且它在出厂 profile 上真的绑上了**:`action/world-bound` 出现在 **17 份录制会话**中(含 `web/minimal-preset`、`sdk/subagent-spawn-in-process`),而该事件只在 `binding !== undefined` 时才写入——这是真实 boot 的绑定证据,不是源码 grep。
+
+**所以 `ExecutionWorld` 的 provider 今天存在且可用,本项不因它受阻。** 开口项因此更窄:**各 provider 对本项所需维度的支持程度**,而不是「有没有 provider」。
+
 | 子句 | 现状 |
 |---|---|
-| must[0] CredentialRef → 短期 SecretLease,绑 principal/ActionManifest/world/purpose/expiry | 四个绑定对象里 **`world` 即 `ExecutionWorld`,BLOCKED-178 记它至今无生产者**。与 P3-02 的 must[3] 撞同一个空槽,建议两项一起裁 |
+| must[0] CredentialRef → 短期 SecretLease,绑 principal/ActionManifest/world/purpose/expiry | 四个绑定对象里 `world` 即 `ExecutionWorld`,**它今天有可用的 provider**(见本节前的更正),所以 must[0] 的绑定对象齐备 |
 | must[1] 经 brokered request/FD/socket 注入,避免全局 env | 今天凭据经 env/.env provider(`packages/credentials/*`),即 must[1] 要取代的正是现状。需先量:现有 provider 的消费点有多少、是否都能改走 broker |
 | must[2] 用后自动撤销 | 无既有 lease 概念;随 must[0] 新建 |
 | must[3] 日志/错误/artifact/模型上下文统一 taint/redaction | 见上——**四个面里至少"日志"面无接缝**;另三面未量 |

@@ -21,11 +21,13 @@ DevicePolicy 0 · SecretPolicy 0 · ResourcePolicy 0 · supportedPolicyFeatures 
 
 P3-01(一等公民 ExecutionWorld Capability Seam)**ACCEPTED,C/P/U/F 全 GREEN**。
 
-但 **BLOCKED-178** 记着:`ExecutionWorld` 是"declared value nothing produces"的一员——§12.46-B 分半,**P2-05 落了规则半边,P3-01 拥有 producer 半边且未开始**。BLOCKED-QUEUE 把它与 `ask`(无生产者)、四个 `ProjectContentKind` 成员并列。
+**更正(2026-09-13,lane B 指出、lane A 实测确认)**:上面这段引 BLOCKED-178 称 producer 半边「未开始」是**错的——那条 BLOCKED 的措辞已过时,而我引用了它当作现状**。
 
-对 P3-02 的意义:must[3] 要求 **provider 申报 `supportedPolicyFeatures`,solver 不许弱语义冒充强语义**。若 `ExecutionWorld` 至今无生产者,那么"provider"这一侧**今天没有实例**,must[3] 的 solver 将没有可申报的对象。
+树上实测:`bundle/base/cordis.patch.yml:260-264` 挂了 `execution-world/plugin` 与 `/local`;`core/tools/src/external-effect.ts:284` 的 `readExecutionWorldFact` 读 `ctx.get('executionWorlds')`、调 `bindingFor(agent)`、首次绑定时 append `action/world-bound`;两条派发路径都调它(`tool-calls.ts:258` 与 `:505`、`ptc.ts:710`)。**而且它在出厂 profile 上真的绑上了**:`action/world-bound` 出现在 **17 份录制会话**中(含 `web/minimal-preset`、`sdk/subagent-spawn-in-process`),而该事件只在 `binding !== undefined` 时才写入——这是真实 boot 的绑定证据,不是源码 grep。
 
-**要 delegate 先裁**:P3-02 的 must[3] 是否需要 P3-01 的 producer 半边先落?若需要,本项应等;若不需要(即 must[3] 只定义申报**契约**、由后续 provider 兑现),那要明写为分半,免得 U 阶段又出现"测试自己供 provider"的空证据形态(BLOCKED-156 族)。**lane A 不替你裁,这是排序决定。**
+**所以 `ExecutionWorld` 的 provider 今天存在且可用,本项不因它受阻。** 开口项因此更窄:**各 provider 对本项所需维度的支持程度**,而不是「有没有 provider」。
+
+对 P3-02 的意义:must[3] 要求 **provider 申报 `supportedPolicyFeatures`,solver 不许弱语义冒充强语义**。provider 这一侧**今天有实例**(local world provider),所以 must[3] 有可申报的对象。真正要量的是**该 provider 申报得出哪些维度**——见下节 acceptance[0]/[1]。
 
 ## 三条 acceptance 的可观测性
 

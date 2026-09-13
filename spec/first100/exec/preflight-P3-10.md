@@ -23,15 +23,17 @@ wallTime 8 文件 · toolCalls 6 文件 · quota 16 文件
 
 这是一条难得写明的分层。preFlight 建议:C 阶段就把这条边界固化成类型边界(预算原语不认识"公平性"),否则 P4-10 开工时极易把公平性逻辑倒灌回来,变成 P3-10 的 scope 无限膨胀——与 P2-10 的 settings 原子写(D6)同形。
 
-## 与 P3-02 / P3-06 共用的那个空槽
+## 与 P3-02 / P3-06 共用的那个 provider
 
 must[0] 要 per **action/run/tenant** 三个粒度。must[1] 要 **world provider enforce**。
 
-`ExecutionWorld` 的 producer 半边至今未落(**BLOCKED-178**,§12.46-B 分半,P3-01 拥有且未开始)。所以:
-- must[1] 的 "world provider enforce" **今天没有可 enforce 的 provider 实例**;
-- 与 P3-02 must[3]、P3-06 must[0] 的 `world` 绑定撞的是**同一个空槽**。
+**更正(2026-09-13,lane B 指出、lane A 实测确认)**:上面这段引 BLOCKED-178 称 producer 半边「未开始」是**错的——那条 BLOCKED 的措辞已过时,而我引用了它当作现状**。
 
-**三项共用一个未落地的前置。** 建议 delegate 把 BLOCKED-178 的 producer 半边作为 P3 族 wave-8 的**共同前置**统一排期,而不是让三项各自在 U 阶段发现没有 provider、各自开分半——那会得到三份互不相干的 limb 声明。**这是排期决定,lane A 不裁。**
+树上实测:`bundle/base/cordis.patch.yml:260-264` 挂了 `execution-world/plugin` 与 `/local`;`core/tools/src/external-effect.ts:284` 的 `readExecutionWorldFact` 读 `ctx.get('executionWorlds')`、调 `bindingFor(agent)`、首次绑定时 append `action/world-bound`;两条派发路径都调它(`tool-calls.ts:258` 与 `:505`、`ptc.ts:710`)。**而且它在出厂 profile 上真的绑上了**:`action/world-bound` 出现在 **17 份录制会话**中(含 `web/minimal-preset`、`sdk/subagent-spawn-in-process`),而该事件只在 `binding !== undefined` 时才写入——这是真实 boot 的绑定证据,不是源码 grep。
+
+**所以 `ExecutionWorld` 的 provider 今天存在且可用,本项不因它受阻。** 开口项因此更窄:**各 provider 对本项所需维度的支持程度**,而不是「有没有 provider」。
+
+所以 must[1] 的 "world provider enforce" **有可 enforce 的 provider 实例**。要量的不再是"有没有",而是 **local provider 今天能 enforce 哪些维度**(见下节 acceptance[0]),以及 `BLOCKED-178` 那条**措辞需要更新**——它现在会误导任何引用它的人,我就被它误导过。
 
 ## acceptance 的可观测性
 
