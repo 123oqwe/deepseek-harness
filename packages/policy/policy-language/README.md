@@ -11,7 +11,7 @@ English | [中文](README.zh.md)
 
 `dsh-policy-language` declares the vocabulary a dsh policy may name: the three Cedar entity types every policy request carries (`Dsh::Principal`, `Dsh::Action` whose id is the manifest's capability, and `Dsh::Resource` whose id is a kind-qualified action target) and the ten context keys the request builder sends. It defines no syntax. Under Epic P2-10's ruling (b), dsh's "finite declarative language" IS that vocabulary plus its conventions — a second syntax compiling to Cedar would be a second trust root and would re-verify the authorization semantics `@deepseek-ai/dsh-policy-engine-cedar` already froze for P2-05.
 
-Around that declaration the package adds the operations the vocabulary exists for: `parsePolicySet` refuses a policy set that does not parse or that reads a key outside the vocabulary, `compilePolicySet` turns an accepted set into the pinned, digested artifact a replay keys on, and the plugin registers the whole thing as the `policy-set` settings namespace so a deployment has somewhere to state one.
+Around that declaration the package adds the operations the vocabulary exists for: `parsePolicySet` refuses a policy set that does not parse or that reads a key outside the vocabulary, `compilePolicySet` turns an accepted set into the pinned, digested artifact a replay keys on, and the plugin registers the whole thing as the `policy-set` settings namespace so a deployment has somewhere to state one. The plugin also provides `ctx.policySet`, which `@deepseek-ai/dsh-policy-engine-cedar` asks for the set in force and its pin on every decision, so every decision, and the audit record the enforcement point appends for it, carries the pin the set was accepted under.
 
 ## Table of Contents
 
@@ -70,8 +70,8 @@ What this declaration buys is moving that report from decision time to load time
 | [`src/schema.ts`](src/schema.ts) | The three entity types and the ten context keys — the vocabulary itself |
 | [`src/parser.ts`](src/parser.ts) | `parsePolicySet` and its three refusals, syntax checked before vocabulary |
 | [`src/compiler.ts`](src/compiler.ts) | `compilePolicySet` and the pin over canonical text, vocabulary and engine version |
-| [`src/index.ts`](src/index.ts) | `acceptPolicySet` — bound, then parse, then pin — and the plugin that registers the `policy-set` namespace with it |
-| — | No invariant companion is published: this package owns no relationship two observers could see differently — every export is a pure function over its arguments, and a parse or a pin is produced and returned inside one call. |
+| [`src/index.ts`](src/index.ts) | `acceptPolicySet` — bound, then parse, then pin — and `PolicySetProvider`, which registers the `policy-set` namespace with it and answers `current()` from that namespace on every call |
+| — | No invariant companion is published: this package owns no relationship two observers could see differently. `parsePolicySet`, `compilePolicySet` and `acceptPolicySet` are pure functions over their arguments, and `PolicySetProvider` holds no policy set of its own — it reads the `policy-set` settings scope on every `current()`, and what happens when a reload fails belongs to `@deepseek-ai/dsh-settings`. |
 
 ## Model Experience
 
@@ -83,8 +83,8 @@ None; nothing here assembles or contributes to a provider request, so no prefix 
 
 ## Known Limitations and Deferred Work
 
-- **Nothing reads the accepted set yet** — the namespace is registered and a bad set is refused, but no engine takes its policies from here. Until the Usage stage connects `@deepseek-ai/dsh-policy-engine-cedar` to this namespace, the enforced policy set is still the one that provider's own `Config.policies` carries, and the two can disagree.
-- **The pin is computed and not persisted** — `acceptPolicySet` returns it, and nothing records it. Recording it is only meaningful once a decision or an audit row can cite it, which is the same Usage-stage connection; emitting it earlier would be an event with no reader.
+- **Shadow evaluation, diff explain and a pre-upgrade impact report are not built** — Epic P2-10 asks for a policy set to be evaluated in shadow, for an explanation of how two sets' decisions differ, and for historical `ActionManifest`s to be replayed before an upgrade into an impact report. The pin every decision records is the key such a replay would compare on, but nothing in the tree performs the shadow evaluation, the diff, or the replay.
+- **A non-atomic edit of the policy document can commit the baseline alone** — an empty or truncated document parses as the valid baseline-only set, so a write that truncates before rewriting can briefly replace the deployment's policies with the baseline and commit that (BLOCKED-243). Replace the document atomically, as `docs/policy/language.md` states; the fix belongs to the settings-file watcher.
 - **The entity ids are not constrained here** — `Dsh::Action`'s id is whatever capability a manifest names, and `Dsh::Resource`'s is a kind-qualified target. Closing those sets would be a second vocabulary with its own drift problem, and no clause asks for it.
 
 <a id="dev-note"></a>

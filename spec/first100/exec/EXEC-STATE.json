@@ -3,7 +3,7 @@
     "name": "first100-exec-state",
     "version": "1.0"
   },
-  "lastUpdatedUtc": "2026-09-13T03:12:28.768Z",
+  "lastUpdatedUtc": "2026-09-13T07:49:09.696Z",
   "activeWorktree": "/Users/guanjieqiao/dsh-first100-clean",
   "activeBranch": "first100-exec",
   "currentWave": 4,
@@ -14,7 +14,7 @@
     "detail": "The token slice, the detached slice and the persistent-descriptor slice are all written and committed (f8d3bce3d1, 7e470f94bb, 2d2e8f89ac); gate 3 is re-running at 2d2e8f89ac and no cell may be greened until it reports. Observation targets for the batch: P2-02 (#222 plus the spawn cases), P2-04 (base U's 11 cases and the pwsh fixtures), P4-08 (bases C/P/F -- the three greens self-revoked because their freezes postdate run 34432095748, which verify-freeze-in-candidate-tree independently reported as the same 3 MISSING), and P4-09 in full. P4-08 acceptance[2]'s §12.74(a) wording landed on the rewritten C base (frozen 2026-09-10T04:10Z) and in the sign-off; the same pointer is being copied to the F base note and the coverage note (2026-09-11, lane B). Remaining detached work from the preFlight: re-attachment along both paths (a live launcher observes through the registry; a gone launcher settles through the outbox)."
   },
   "registryDigest": "6ca669cd11efdd064d7dfbb790f98384824b06d5bcdb8735afc39988a44bc450",
-  "ledgerDigest": "8c112f482303207419bc7963d823a1387092ef1d9014611eb7b551e95abf524f",
+  "ledgerDigest": "3f1d5604087963c16f9afd7173c0c4350d20b44ef89c466cf05c55cd43e3804c",
   "blockedQueueRef": "spec/first100/exec/BLOCKED-QUEUE.md",
   "totals": {
     "acceptedEpics": 30,

@@ -1788,7 +1788,9 @@
       },
       "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
       "independentVerdict": "APPROVED",
-      "openFindings": null,
+      "openFindings": [
+        "BLOCKED-247: must[2] lock gate is not wired into production boot AND no bundle declares unlockedProfilePolicy (field never landed) — must[2] doubly unimplemented, delegate-verified (addendum 316). Remediation P1-03.U2 split out pending the per-bundle policy value (user decision, addendum 317)."
+      ],
       "status": "ACCEPTED",
       "acceptedEvidence": {
         "acceptedAtUtc": "2026-09-07T04:11:57.609Z",
