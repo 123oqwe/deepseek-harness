@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-13T00:29:05.537Z",
-  "inputDigest": "fa3a8d96167c55248602f4814b4275217a5f12f3ac74ddc008e5c6241a12e887",
+  "lastUpdatedUtc": "2026-09-13T02:23:51.706Z",
+  "inputDigest": "e38d8647e7eebddcddd8026b66b2c91a9a7cb95ff3dcf1904de8b22b99251aac",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4114,20 +4114,75 @@
       "wave": 7,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "71580010ded3860d869dbbc559e277ee14c7474b",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34731419985",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7/scratchpad/ci-34731419985/first100-evidence-71580010ded3860d869dbbc559e277ee14c7474b/vitest-report.json",
+          "observationSha256": "54cbfb96f963be7cd2357d412fa6b6d6aee1260599dcfcbb1bac5c41a3356725",
+          "expectCasesMatched": [
+            "P2-10 C: the policy-set parse and its outcomes accepts a set every policy of which parses",
+            "P2-10 C: the policy-set parse and its outcomes accepts every key the request builder actually sends",
+            "P2-10 C: the policy-set parse and its outcomes keeps the unparsable and the empty reasons distinct, so a caller can tell them apart",
+            "P2-10 C: the policy-set parse and its outcomes refuses a policy that reads a context key dsh never sends, naming the key",
+            "P2-10 C: the policy-set parse and its outcomes refuses a set that does not parse, and names the policy",
+            "P2-10 C: the policy-set parse and its outcomes refuses an empty set rather than treating it as a policy set that permits nothing",
+            "P2-10 C: the policy-set parse and its outcomes refuses an unparsable set BEFORE reading its vocabulary, so the reason names the real fault",
+            "P2-10 C: the policy-set parse and its outcomes reports every unknown key in the set, not just the first",
+            "P2-10 C: the schema and the request builder state the same vocabulary declares every context key the request builder sends, and no others",
+            "P2-10 C: the schema and the request builder state the same vocabulary declares the same keys the language document does, so the prose is checkable and not decorative",
+            "P2-10 C: the schema and the request builder state the same vocabulary declares the three entity types the request builder names",
+            "P2-10 C: the schema and the request builder state the same vocabulary states ten context keys, so a silent addition to either side is visible as a count",
+            "P2-10 acceptance[1]: each of the three inputs moves the pin moves when one character of one policy changes",
+            "P2-10 acceptance[1]: each of the three inputs moves the pin moves when the engine version changes, so a cedar upgrade re-pins visibly",
+            "P2-10 acceptance[1]: each of the three inputs moves the pin moves when the vocabulary changes, because the same text means something else",
+            "P2-10 acceptance[1]: the pin is stable for one input and version gives the same set the same pin, twice",
+            "P2-10 acceptance[1]: the pin is stable for one input and version ignores formatting, because the canonical text is what is pinned",
+            "P2-10 acceptance[1]: the pin is stable for one input and version ignores the order the policy map was built in",
+            "P2-10: a set that will not compile has no pin refuses through the same taxonomy the parse uses"
+          ],
+          "capturedAtUtc": "2026-09-13T02:23:50.078Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "71580010ded3860d869dbbc559e277ee14c7474b",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34731419985",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7/scratchpad/ci-34731419985/first100-evidence-71580010ded3860d869dbbc559e277ee14c7474b/vitest-report.json",
+          "observationSha256": "54cbfb96f963be7cd2357d412fa6b6d6aee1260599dcfcbb1bac5c41a3356725",
+          "expectCasesMatched": [
+            "P2-10 P acceptance[1]: what the accepted set is pinned against gives a different pin than the same set would take against another engine version",
+            "P2-10 P acceptance[1]: what the accepted set is pinned against pins against the engine that will evaluate, read from the engine rather than configured",
+            "P2-10 P validation[0]: the bound is over the complete set admits a set exactly at the policy limit, and refuses the one past it",
+            "P2-10 P validation[0]: the bound is over the complete set bounds BEFORE parsing, so an oversized set is refused for its size and not for its content",
+            "P2-10 P validation[0]: the bound is over the complete set counts bytes rather than characters, so a multibyte policy costs its encoding",
+            "P2-10 P validation[0]: the bound is over the complete set refuses on TOTAL bytes, not on any single policy, which is the exhaustion the clause names",
+            "P2-10 P: the frozen refusals pass through, and the bound's do not join them passes a content refusal through unchanged, with the Contract stage’s own reason",
+            "P2-10 P: the frozen refusals pass through, and the bound's do not join them refuses an empty set as empty rather than as a set within its bounds",
+            "P2-10 P: the policy set is a settings namespace, through a real boot carries the pin on the namespace value, so a reload that changed the set is visible as a changed pin",
+            "P2-10 P: the policy set is a settings namespace, through a real boot lets a deployment override one baseline policy by id, leaving the rest of the baseline in force",
+            "P2-10 P: the policy set is a settings namespace, through a real boot refuses the boot outright when the stored policy set is already unacceptable",
+            "P2-10 P: the policy set is a settings namespace, through a real boot refuses to load a policy set that does not parse, which is where that refusal lives now",
+            "P2-10 P: the policy set is a settings namespace, through a real boot registers the namespace, then keeps the last accepted set when the document goes bad and recovers when it is fixed"
+          ],
+          "capturedAtUtc": "2026-09-13T02:23:50.495Z"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "71580010ded3860d869dbbc559e277ee14c7474b",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34731419985",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7/scratchpad/ci-34731419985/first100-evidence-71580010ded3860d869dbbc559e277ee14c7474b/vitest-report.json",
+          "observationSha256": "54cbfb96f963be7cd2357d412fa6b6d6aee1260599dcfcbb1bac5c41a3356725",
+          "expectCasesMatched": [
+            "P2-10 U: the decision records the pin the provider yielded decides and records from ONE read of the source, so a reload cannot land between them",
+            "P2-10 U: the decision records the pin the provider yielded records the provider pin verbatim, not a digest recomputed from the policies"
+          ],
+          "capturedAtUtc": "2026-09-13T02:23:50.955Z"
         },
         "F": {
           "status": "NOT_RUN"
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "71580010ded3860d869dbbc559e277ee14c7474b",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -6771,13 +6826,28 @@
           "capturedAtUtc": "2026-09-10T16:56:33.519Z"
         },
         "U": {
-          "status": "NOT_RUN",
-          "revokedFrom": {
-            "candidateSha": "874db203f09ddc5be6e2ce6f6700e89a2c563f41",
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34463140893",
-            "absentCommitments": 1
-          },
-          "revokedReason": "supplement freeze 60ae16f046 postdates observation 874db203f0; re-observe on a tree that contains it"
+          "status": "GREEN",
+          "candidateSha": "71580010ded3860d869dbbc559e277ee14c7474b",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34731419985",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7/scratchpad/ci-34731419985/first100-evidence-71580010ded3860d869dbbc559e277ee14c7474b/vitest-report.json",
+          "observationSha256": "54cbfb96f963be7cd2357d412fa6b6d6aee1260599dcfcbb1bac5c41a3356725",
+          "expectCasesMatched": [
+            "P4-11 must[1]: the LLM layer charges the run, not the session stops retrying when the RUN budget is spent, below the policy’s own cap",
+            "P4-11 must[1]: the LLM layer charges the run, not the session charges a CHILD session’s retries to the PARENT’s run, so allowances do not stack",
+            "P4-11 must[1]: the LLM layer charges the run, not the session does not charge a substitute key when no run can be resolved",
+            "P4-11 must[1]: the LLM layer charges the run, not the session lets the policy decide when the run budget is the looser of the two",
+            "P4-11 must[2]: a failing endpoint stops being called refuses the next call without reaching the adapter once the destination opens",
+            "P4-11 must[2]: a failing endpoint stops being called keeps calling a destination below the threshold",
+            "P4-11 must[2]: a failing endpoint stops being called does not open on a failure the classifier calls permanent",
+            "P4-11 must[2]: a failing endpoint stops being called opens one model without opening another on the same provider",
+            "P4-11 must[2]: a failing endpoint stops being called dispatches normally when no breaker is mounted",
+            "P4-11 must[1]: a retry is charged to the delegation ROOT run walks to the root and returns ITS run, not the retrying session’s",
+            "P4-11 must[1]: a retry is charged to the delegation ROOT run stops at the furthest ancestor this process can see",
+            "P4-11 must[1]: a retry is charged to the delegation ROOT run terminates on a circular chain instead of hanging a retry",
+            "P4-11 must[1]: one store, so two layers share a total by construction charges two different layers against ONE run total",
+            "P4-11 must[1]: one store, so two layers share a total by construction records nothing for a refusal, so a refused retry costs no budget"
+          ],
+          "capturedAtUtc": "2026-09-13T02:23:51.346Z"
         },
         "F": {
           "status": "GREEN",
@@ -6824,9 +6894,21 @@
             "reopens the destination after the open period, and a successful probe CLOSES it"
           ],
           "capturedAtUtc": "2026-09-12T01:24:09.307Z"
+        },
+        "U.1": {
+          "status": "GREEN",
+          "candidateSha": "71580010ded3860d869dbbc559e277ee14c7474b",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34731419985",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7/scratchpad/ci-34731419985/first100-evidence-71580010ded3860d869dbbc559e277ee14c7474b/vitest-report.json",
+          "observationSha256": "54cbfb96f963be7cd2357d412fa6b6d6aee1260599dcfcbb1bac5c41a3356725",
+          "expectCasesMatched": [
+            "P4-11 mount: the factory profile has a retry budget and a breaker mounts both services in the shipped headless profile, with no row this fixture added",
+            "P4-11 mount: the factory profile has a retry budget and a breaker charges a real retry to the run, so must[1] happens rather than merely being available"
+          ],
+          "capturedAtUtc": "2026-09-13T02:23:51.696Z"
         }
       },
-      "candidateSha": "e3004c927628128c91d5ad61b9ebf28930bee721",
+      "candidateSha": "71580010ded3860d869dbbc559e277ee14c7474b",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
