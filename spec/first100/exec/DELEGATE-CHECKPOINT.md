@@ -53,3 +53,11 @@
 - **BLOCKED 水位 = 242**;候选 8 料:lane B `035a40a9f7`(P4-11.U 补充化 + 242 机制/241 对照条目)+ lane A P2-10 U 码(在写)。
 - **Stop hook 已撤为 log-only**(两执行器;补记 276),lane 合法 idle 不再被逼发消息。
 - 裁决在 plan-rectification 补记 **246–278**。
+
+### 现况刷新(2026-09-13 01:20Z,第九推后)
+- **fork/first100-exec = `3aae231223`**(第九推;候选 8″ 全绿 run 34728472739 两 job success;on-push dup 34730353350 取消)。前 = `fe3df85488`(第八推)。
+- **ACCEPTED = 29**(P2-06 落地)。本批落地:P2-05 supersede 完成(P/U 重观测 12/11,freeze 门 185 GREEN/0 MISSING)、P2-10 U 服务注入 + M60 守护、catalog 分类修、BLOCKED-244 解决(P2-05/P8-01 签字刷新到当前 digest,签前亲验 4.4)、三裸标题重绿(P6-07.C/P1-07.C/P8-01.P)、P6-02.C fullName、N/A 措辞。
+- **候选 8→8′→8″ 三轮**:8 红(catalog 分类漏[确定性]+e2b 间歇)→ 8′(catalog 修,e2b 未复发=一次性间歇,不立 248/不注册)→ 8″ 全绿推。补记 295–299。
+- **BLOCKED-247(新)**:P1-03 must[2] 锁门未接进 boot(原始验收漏,delegate 亲验);**不刷 P1-03 签字**;补救 P1-03.U2(lane A)。**号水位 247**。
+- **候选 9 料(两 lane 在做)**:lane A 定稿 P2-10 P(13)/U(2 M60)冻结(新基线重 dry-run 取 treeSha)→ 绿 P2-10 C/P/U;lane B 干净重做 `035`(P4-11.U supplement,新基线 freeze 区已稳)。之后 P1-03.U2。
+- **待用户(非阻塞)**:(丙)7 个无 PASS 签字 epic(P0-01/02/03/05/06/07、P1-01)retroactive vs grandfather,delegate 荐 retroactive;P1-03 补救 vs 明写限制,荐补救。
