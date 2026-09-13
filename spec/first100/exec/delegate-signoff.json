@@ -436,6 +436,22 @@
       "delegateSession": "guanjieqiao-92",
       "signedAtUtc": "2026-09-12T20:47:19.655Z",
       "note": "P2-06 approval binding — PASS on the declared-limitation shape (P4-09/P3-01 precedent). Core delivered and grepped by the delegate: capture at ask-time (approvalBindingFor), bind, re-verify before dispatch (verifyRecordedApproval), refuse on change (refusedApprovalResult) — all on BOTH production dispatch paths (agent-loop/tool-calls.ts:297/322/326 and core/tools/ptc.ts:738/771/775); the @deepseek-ai/dsh-user-approval service is mounted in the factory base bundle (bundle/base/cordis.patch.yml:276) and the binding reaches the user-approval package. Observation: run 34715710541 @ fe3df85488, vitest-report sha256 d0a8b9ab0eeb92b08826c962e422441783dfacbdc66453134b83970a16116e2d.\n\nOpen/partial per evidence-P2-06.md 4.4d, cited BY LIMB (never whole):\n- must[0] OPEN: the code-mode question reaches the decider as a tool name only, no manifest projection (approvalDisplayFor/redactArgumentsForDisplay single caller).\n- must[1] PARTIAL: (a) the actual bite-surface is narrower than the literal clause — it guards the gap between a decision and a no-new-question execution, not every execution; (b) preconditions are bound but both dispatch paths pass [], so they are never populated.\n- acceptance[0] THIRD LIMB OPEN: \"a change to a file inode or remote object version does not execute\" is NOT closed — no \"which parameter is a path\" declaration mechanism, ActionTarget.filesystem has zero producers (BLOCKED-238). First two limbs (substituted arguments, switched account) ARE closed. Cite by limb, never whole.\n- validation[1] OPEN (TOCTOU): same root as acceptance[0]'s third limb, no filesystem path mechanism (BLOCKED-238).\n- validation[3] PARTIAL: query field (actionId) and log reverse-lookup present; no audit tool is claimed to exist.\n\nThe open items are bounded, declared, and tracked (BLOCKED-238 for the filesystem-change/TOCTOU pair); none invalidates the general approval-binding contract, which is delivered. 4.4a-d grepped by delegate 2026-09-13."
+    },
+    {
+      "epic": "P8-01",
+      "rowDigestSha256": "42f6b769c46f882d0bbd98c803427f0f1d3390e9f4d33d8983de96c036c77b42",
+      "conclusion": "PASS",
+      "delegateSession": "first100-delegate-78",
+      "signedAtUtc": "2026-09-13T00:35:39.176Z",
+      "note": "Re-observed on candidate 8' (run 34726028141, report exit 0) after BLOCKED-244 flagged the prior PASS stale. Delegate re-verified 4.4a-d: server.ts:17-18 imports negotiateProtocolVersion/negotiateCapabilities; mounted in bundle/sdk-app/cordis.patch.yml:17 and sdk-minimal:11; called on the handshake path at server.ts:268 and :278. Substance unchanged; refreshed to current rowDigest."
+    },
+    {
+      "epic": "P2-05",
+      "rowDigestSha256": "b646b6edd7ddbfe1a7e8f0e91ad90e9d0233113b08054a46fa7d3f819ed206d0",
+      "conclusion": "PASS",
+      "delegateSession": "first100-delegate-78",
+      "signedAtUtc": "2026-09-13T00:35:39.353Z",
+      "note": "Re-observed on candidate 8' after P2-10 U retired the load-time policy-set behaviour (P/U freeze superseded, re-greened 12/11). Delegate re-verified 4.4a-d on the candidate tree: cedar engine mounted bundle/base:330; its new dependency the policySet provider (policy-language) mounted base:298, so inject=['policySet'] resolves and the engine reads current() at policy-engine-cedar/src/index.ts:230 and :261; enforceManifestedAction on both dispatch paths tool-calls.ts:744 and ptc.ts:279. Acceptance substance unchanged; refreshed to current rowDigest."
     }
   ]
 }
