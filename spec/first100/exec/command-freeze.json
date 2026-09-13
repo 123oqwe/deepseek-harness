@@ -14081,6 +14081,49 @@
         "failureSummary": "(1) 1 of 7 failed: `commits each effect exactly once across 10,000 random crashes, counted at the SERVICE` -- `AssertionError: after-reserve: expected 43 to be greater than 2000`, the label naming which crash point went missing. (2) The same case failed on the OTHER assertion: `expected [ Set{ 'after-send', 'none' }, ...(249) ] to deeply equal []` -- the aggregate histogram was a flawless 2500 per point while every one of the 250 keys saw only two of the four, because an LCG's low bits cycle every four draws (`23012301...`). That pair is the point of having both assertions: a distribution check alone cannot tell a uniform generator from a short cycle. Both mutations reverted; 7 passed (7) before continuing. Carried verbatim from P4-12.F.2 (2026-09-12T08:40:00.000Z): this entry refiles that supplement as the stage primary with the same 7 cases, and every file it names is byte-identical between the commit that froze it and bdd4af6d15606a89126f364934ab86a8583775f9."
       },
       "note": "P4-12.F primary, refiled from P4-12.F.2 (addendum 313). Supersedes P4-12.F.1 (BLOCKED-225). acceptance[0]'s campaign barely crashed: `random * 1_103_515_245` was evaluated as a double, so from the second iteration the product passed 2^53, the low bits were lost, and the crash point came back `none` for 9956 of 10,000 draws -- `after-receipt` never once. Worse, almost every key reached `confirmed` inside the first 250 attempts, so the few real crash points landed on settled entries and returned `duplicate` before crashing at all. The case was passing because it did not crash, which is the vacuous-truth shape in a suite that is supposed to be this epic's direct acceptance evidence. The draw is now `Math.imul`-based and takes the HIGH bits, and the case asserts the distribution it depends on -- a lower bound per crash point, plus per-key coverage, because the low-bit variant satisfies any aggregate count. Each attempt on a key also presents the NEXT generation, which is what a restart is (BLOCKED-221): repeating one generation would make every retry its own peer. The added UNFENCED campaign records what crash-retry dedup does NOT depend on: it commits each effect exactly once with no generations at all, because the `sent` state is what refuses a second send, and what unfenced gives up is concurrent exclusivity, which a sequential campaign cannot measure and the two-process case in store.spec.ts does."
+    },
+    {
+      "epic": "P3-06",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/credentials/secrets-broker/tests/lease.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P3-06 C must[0]: a lease binds a credential to one principal, action and world redeems and yields the credential when principal, action and world all match",
+        "P3-06 C must[0]: a lease binds a credential to one principal, action and world refuses a principal the lease was not issued to, so a lease is not bearer authority",
+        "P3-06 C must[0]: a lease binds a credential to one principal, action and world refuses an action the lease does not name, so one grant does not cover a whole run",
+        "P3-06 C must[0]: a lease binds a credential to one principal, action and world refuses a world the lease does not name, so a grant does not follow a secret across confinements",
+        "P3-06 C acceptance[2]: an expired lease cannot be replayed refuses at exactly expiresAt, so the recorded time is the first unusable instant and not the last usable one",
+        "P3-06 C acceptance[2]: an expired lease cannot be replayed is still usable one millisecond before, so expiry refuses by time and not by default",
+        "P3-06 C acceptance[2]: an expired lease cannot be replayed reads as expired with NO sweeper having run, so a replay against an unswept store still refuses",
+        "P3-06 C acceptance[2]: an expired lease cannot be replayed refuses an expired lease BEFORE testing its bindings, so a refusal leaks nothing about the grant",
+        "P3-06 C must[2]: use revokes moves a redeemed lease out of `issued`, so the same lease does not serve a second action",
+        "P3-06 C: revocation, and the cascade when a world stops revokes every lease bound to the stopped world, and only those",
+        "P3-06 C: revocation, and the cascade when a world stops does not rewrite a terminal state, so the first reason a lease stopped working stays the recorded one",
+        "P3-06 C: the state machine admits exactly the moves it names makes every terminal state final, so no lease returns to usable"
+      ],
+      "files": [
+        "packages/credentials/secrets-broker/src/types.ts",
+        "packages/credentials/secrets-broker/src/lease.ts",
+        "packages/credentials/secrets-broker/src/index.ts",
+        "packages/credentials/secrets-broker/tests/lease.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-13T14:10:00.000Z",
+      "dryRunProof": {
+        "treeSha": "ac6f4ad351c6b7be9c7fc5c263c60b9aa9e63a09",
+        "testsDiscovered": 15
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Five mutations to packages/credentials/secrets-broker/src/lease.ts, each applied alone and reverted from a copy taken before the run. (M1) `isExpired` compares `>` instead of `>=`, so a lease is usable AT its expiry instant. (M2) the expiry check moves below the three binding checks, so an expired lease presented with a wrong principal refuses `principal-mismatch`. (M3) `effectiveState` returns the stored state unchanged, so expiry becomes an event someone must record rather than a fact about the clock. (M4) `revokeWorldLeases` revokes every record instead of only those bound to the stopped world. (M5) `revoke` drops its terminal-state guard, so a later revocation overwrites an earlier `redeemed` or `expired`.",
+        "failureSummary": "M1 reddens 2 (the boundary case and the one-millisecond-before control, which together pin the comparison in both directions). M2 reddens 1 — the case asserting an expired lease refuses `expired` even when a binding is also wrong; this is the leak the ordering exists to prevent. M3 reddens 3, the widest, because trusting the stored state breaks the no-sweeper case and both boundary cases. M4 reddens 1: the cascade case asserts the other world's lease is STILL `issued`, which is the control that scopes it — a cascade revoking everything satisfies the first half. M5 reddens 1, the terminal-state case. All five applied and reverted one at a time; `src/lease.ts` restored byte-identically (sha256 verified equal before and after)."
+      },
+      "note": "P3-06 Contract stage: the GRANT, not the transport.\n\nWHAT IS DELIBERATELY ABSENT. must[1] (brokered request/FD/socket injection, avoiding global env) is NOT frozen here. A secret reaching a world without the ambient environment requires `WorldSecretsSpec.posture: 'broker-only'`, and `execution-world/src/local-provider.ts:93` refuses any posture but `inherited`, with its own comment stating why: `broker-only` is a promise about what the world RECEIVES that only a separate address space can keep. Whether this repository grows such a provider is P3 wave 8's design question. A grant model built around a transport nobody has chosen would be rebuilt once one is, so the contract stops at the grant. acceptance[1]'s stdout/stderr, crash-dump and session-log limbs are likewise absent: they are properties of the writers, and the session-log limb in particular has no redaction seam on this tree at all (`session-telemetry`'s waterfall covers records sent to a backend and ships no rules).\n\nTHE FIVE BINDINGS NAME EXISTING SUBJECTS. `Principal` (dsh-principal), `ActionId` (dsh-action-manifest), `WorldId` (dsh-execution-world), plus the purpose and the expiry. No new vocabulary was minted for facts the tree already names, so two parts of the system cannot disagree about which action a lease is for. The world binding is what makes the cascade meaningful: a lease names the world its action runs in, so a stopped world ends every grant inside it whatever each lease's own expiry says.\n\nTHREE RULES CARRY THE STAGE, and each is frozen against the mutation that removes it. Expiry is tested BEFORE the bindings, so a refusal cannot tell a caller that some other principal would have matched — a fact about a grant they no longer hold. Expiry is a property of the clock rather than an event someone records, so a stored `issued` lease reads expired with no sweeper having run; without this, acceptance[2] would hold only where a sweeper ran, and a replay is precisely the path where one has not. A terminal state is never rewritten, so the first reason a lease stopped working stays the answer an audit gets.\n\nWHY THE CONTROL CASE EXISTS. `redeems and yields the credential when principal, action and world all match` is the reverse control: without it, a broker that refused every redemption would satisfy every other case in this file. This program has measured that shape before — an over-broad refusal satisfied 10 of 16 security cases in P6-01.F."
     }
   ]
 }
