@@ -65,3 +65,14 @@ Nothing here enters a model request. A refused reservation reaches a model only 
 - **No typed `resource_exhausted` outcome.** That outcome belongs to P3-03's outcome union, which does not exist yet. A refusal is a `BudgetDecision` until the Provider stage maps it.
 - **Wall clock, tool calls and agents are not wired into a run.** The dimensions and their accounting are here, but no dispatch path reserves against a ledger yet.
 - No runtime invariant companion is published: the ledger is plain in-process state owned by its one caller, so no independent observation of it can diverge.
+
+### Dev Note
+
+<details>
+<summary>Working context for maintainers — click to expand</summary>
+
+This Dev Note is working context for maintainers: open questions and undecided directions. It is explicitly non-authoritative — shipped behavior and limits live in the sections above and in the package code.
+
+Whether `agents` should count agents started over a run's life, as it does now, or agents alive at once, which would make it a held dimension, is undecided; the clause says only "agents". Which provider enforces the held dimensions is the pending world-provider decision, and with it whether the Provider stage's sampling can meet the `0.1` bound on every platform or reports a dimension as partially enforced.
+
+</details>
