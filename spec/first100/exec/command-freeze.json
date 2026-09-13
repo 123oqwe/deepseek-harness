@@ -13765,6 +13765,85 @@
         "failureSummary": "Both mutations red BOTH added cases, and neither is separable from the other — measured, not assumed, and stated here rather than claimed otherwise. The absence case asserts the whole outcome with `toEqual`, so changing the reason reaches it; the distinguishing case asserts that the two refusals differ, so admitting the unstated one reaches it too. A mutation isolating either would have to leave the absence branch both present and unchanged, which is the only thing either case is about. The three pre-existing must[2] cases stay green under both, which is what makes them the controls: the rule was narrowed, not replaced. NOT re-proven here and unchanged from the superseded entry: the 18 other Contract cases, whose mutations that entry recorded. Carried verbatim from the superseded entry (2026-09-11T06:18:45.054Z): this supersession changes only the spelling of the same 22 cases, and the four files it names are byte-identical between that entry's treeSha and 593d88239044fb6d461826f2192f63d29e951876."
       },
       "note": "P6-02 C-stage, re-spelled only. The superseded entry's notes on the stage's design decisions and must[2] rework apply unchanged."
+    },
+    {
+      "epic": "P2-10",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/policy/policy-language",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-10 P acceptance[1]: what the accepted set is pinned against gives a different pin than the same set would take against another engine version",
+        "P2-10 P acceptance[1]: what the accepted set is pinned against pins against the engine that will evaluate, read from the engine rather than configured",
+        "P2-10 P validation[0]: the bound is over the complete set admits a set exactly at the policy limit, and refuses the one past it",
+        "P2-10 P validation[0]: the bound is over the complete set bounds BEFORE parsing, so an oversized set is refused for its size and not for its content",
+        "P2-10 P validation[0]: the bound is over the complete set counts bytes rather than characters, so a multibyte policy costs its encoding",
+        "P2-10 P validation[0]: the bound is over the complete set refuses on TOTAL bytes, not on any single policy, which is the exhaustion the clause names",
+        "P2-10 P: the frozen refusals pass through, and the bound's do not join them passes a content refusal through unchanged, with the Contract stage’s own reason",
+        "P2-10 P: the frozen refusals pass through, and the bound's do not join them refuses an empty set as empty rather than as a set within its bounds",
+        "P2-10 P: the policy set is a settings namespace, through a real boot carries the pin on the namespace value, so a reload that changed the set is visible as a changed pin",
+        "P2-10 P: the policy set is a settings namespace, through a real boot lets a deployment override one baseline policy by id, leaving the rest of the baseline in force",
+        "P2-10 P: the policy set is a settings namespace, through a real boot refuses the boot outright when the stored policy set is already unacceptable",
+        "P2-10 P: the policy set is a settings namespace, through a real boot refuses to load a policy set that does not parse, which is where that refusal lives now",
+        "P2-10 P: the policy set is a settings namespace, through a real boot registers the namespace, then keeps the last accepted set when the document goes bad and recovers when it is fixed"
+      ],
+      "files": [
+        "packages/policy/policy-language/src/index.ts",
+        "packages/policy/policy-language/tests/accept.spec.ts",
+        "packages/policy/policy-language/tests/loader.spec.ts",
+        "packages/policy/policy-language/tests/fixtures/loader/cordis.yml",
+        "packages/policy/policy-language/tests/fixtures/loader/driver.ts"
+      ],
+      "frozenAtUtc": "2026-09-13T02:10:00.000Z",
+      "dryRunProof": {
+        "treeSha": "240ff9cde607fc8c721a5a61731541c20deebad1",
+        "testsDiscovered": 32
+      },
+      "sensitivityProof": {
+        "mutationDescription": "In `policy-language/src/index.ts`, `acceptPolicySet` measured the set with `String.length` instead of `Buffer.byteLength(..., 'utf8')` -- characters rather than UTF-8 bytes. The bound still exists, still applies to the complete set, and still refuses oversized sets; only what it counts changes. Separately, the policy-count comparison `>` became `>=`, so a set exactly at the limit is refused rather than admitted.",
+        "failureSummary": "The byte/character swap reddens exactly 1 of 32: `validation[0] … counts bytes rather than characters, so a multibyte policy costs its encoding`, whose set is 400 CJK characters -- 1200 UTF-8 bytes, over the limit, while `String.length` reads 400-odd and admits it. The off-by-one reddens 2 of 32, the boundary case and the total-bytes case. Both applied and reverted locally, never committed; `src/index.ts` restored byte-identically (sha256 e573d1015ae0b390...) and all 32 returned passing.\n\nA THIRD mutation was measured and is recorded because it FAILED to redden: moving the bound to AFTER `compilePolicySet`, so an oversized set is parsed before being refused, leaves all 32 green. The bound's own case asserts WHICH refusal came back, and both orders return `policy-set-too-large`, so the outcome is identical and only the work done differs. Ordering is therefore stated in the source comment and unguarded by this entry -- recorded here rather than claimed, because an entry that named this mutation would be asserting a detection it does not have."
+      },
+      "note": "The Provider stage's 13 cases, taken as the complement of the Contract stage's frozen 19 under the SAME argv: this command runs the whole package, and 19 of its 32 cases belong to P2-10 C. 13 + 19 = 32 exactly, with the two sets disjoint -- checked rather than assumed, because a subset written as `everything this argv produces` would silently claim the Contract stage's cases as well. Eight cases live in `accept.spec.ts` (the bound, and the frozen refusals passing through unchanged) and five in `loader.spec.ts` (a real Loader boot over a real settings document: registration, baseline override by policy id, the pin moving with an accepted reload and not with a refused one, and the two boot refusals)."
+    },
+    {
+      "epic": "P2-10",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/policy/policy-engine-cedar/tests/policy-set-seam.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-10 U: the decision records the pin the provider yielded decides and records from ONE read of the source, so a reload cannot land between them",
+        "P2-10 U: the decision records the pin the provider yielded records the provider pin verbatim, not a digest recomputed from the policies"
+      ],
+      "files": [
+        "packages/policy/policy-engine-cedar/tests/policy-set-seam.spec.ts",
+        "packages/policy/policy-engine-cedar/src/index.ts",
+        "packages/policy/policy-engine/src/types.ts",
+        "packages/policy/policy-language/src/index.ts",
+        "packages/bundle/base/cordis.patch.yml"
+      ],
+      "frozenAtUtc": "2026-09-13T02:10:01.000Z",
+      "dryRunProof": {
+        "treeSha": "240ff9cde607fc8c721a5a61731541c20deebad1",
+        "testsDiscovered": 2
+      },
+      "sensitivityProof": {
+        "mutationDescription": "In `policy-engine-cedar/src/index.ts`, `evaluate` recorded `this.digest` instead of the `current.digest` it had just read -- a SECOND read of the source, which that line's own comment says never to take because it can straddle a reload. Separately, recording `policySetDigest(current.policies)` instead: a digest recomputed from the policies rather than the pin the provider yielded.",
+        "failureSummary": "The second read reddens 1 of 2 (`decides and records from ONE read of the source`); the recomputation reddens 2 of 2, the first case additionally failing because the provider's pin is deliberately a value no recomputation produces. Both measured on this tree AFTER these two cases existed -- before them, BOTH mutations reddened 0 of 225, because the provider double used elsewhere in the package returns `policySetDigest(policies)` as its own pin and so makes the pin, a recomputed digest and a second read three names for one value. Applied and reverted locally, never committed; `src/index.ts` restored byte-identically."
+      },
+      "note": "must[1]'s half that says a decision records the PIN -- wider than the engine's own id-and-source digest, because the pin also binds the vocabulary and the engine version, so a replay can tell `the policies changed` from `the engine that reads them changed`. The two cases exist because nothing observed that: lane B's mutation run measured zero detection for both mutations above, and the cause was a test double that equated the values the seam keeps apart. `ForeignPinProvider` yields a pin no recomputation produces and the case asserts the recomputed digest DIFFERS, so it cannot pass by coincidence; `ShiftingProvider` answers differently on its second call, so an engine reading twice decides against one answer and records the other's."
     }
   ]
 }

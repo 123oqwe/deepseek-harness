@@ -1605,10 +1605,74 @@
     },
     {
       "epic": "P2-10",
+      "path": "packages/bundle/base/cordis.patch.yml",
+      "kind": "manifest",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P2-10",
+      "path": "packages/policy/policy-engine-cedar/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P2-10",
+      "path": "packages/policy/policy-engine-cedar/tests/policy-set-seam.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P2-10",
+      "path": "packages/policy/policy-engine/src/types.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P2-10",
+      "path": "packages/policy/policy-language/tests/accept.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P"
+      ]
+    },
+    {
+      "epic": "P2-10",
       "path": "packages/policy/policy-language/tests/compile.spec.ts",
       "kind": "test",
       "stages": [
         "C"
+      ]
+    },
+    {
+      "epic": "P2-10",
+      "path": "packages/policy/policy-language/tests/fixtures/loader/cordis.yml",
+      "kind": "test",
+      "stages": [
+        "P"
+      ]
+    },
+    {
+      "epic": "P2-10",
+      "path": "packages/policy/policy-language/tests/fixtures/loader/driver.ts",
+      "kind": "test",
+      "stages": [
+        "P"
+      ]
+    },
+    {
+      "epic": "P2-10",
+      "path": "packages/policy/policy-language/tests/loader.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P"
       ]
     },
     {
