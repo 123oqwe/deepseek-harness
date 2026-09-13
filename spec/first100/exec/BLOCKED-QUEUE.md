@@ -893,7 +893,7 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 ### BLOCKED-156 — P6-01's four green cells are green on a capability no shipped profile mounts
 
-**State: OPEN, measured on request before §12.31-B (delegate: "不要在没量的绿上叠新工作"). The three questions, asked of every P6-01 clause subject.**
+**State: ANSWERED-BY-USER 2026-09-10, reading 1 — memory ON by default (§12.79; resolution recorded below) — and NOT IMPLEMENTED as of `28990a8eb4` (measured 2026-09-13). The base bundle's `memory` and `memory-context` rows are still `disabled: true`, `durableFileDirectory` has never been added to `packages/bundle/base/cordis.patch.yml` (the only commit that ever touched those rows is `30617b0a67`, 2026-09-04, which added them disabled), and the P6-01.U supplement (U.1, frozen 2026-09-11) boots the headless profile with a fixture that enables the rows itself, the shape the resolution rules out. The entry was opened as OPEN, measured on request before §12.31-B (delegate: "不要在没量的绿上叠新工作"). The three questions, asked of every P6-01 clause subject.**
 
 **Question 1 — does the subject exist?** Yes, for all of them. `MemoryRuntime` implements `propose`/`query`/`get`/`revise`/`forget`/`export`; `registerProvider` swaps providers and three exist (`local-reference`, `fake`, `durable-file`); `requireCompleteAccessContext` enforces must[3]'s four dimensions; `docs/subsystems/memory.md` exists and acceptance[2]'s boundary case reads it.
 
