@@ -1788,7 +1788,9 @@
       },
       "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
       "independentVerdict": "APPROVED",
-      "openFindings": null,
+      "openFindings": [
+        "BLOCKED-247: must[2] lock gate is not wired into production boot (gateProfileAgainstLock is test-only; runProfile does not call it) — original acceptance gap, delegate-verified. Remediation P1-03.U2 (runProfile calls the gate before boot; supplement U.3) in flight; closes when U.3 observes green and 4.4c is re-verified and P1-03 sign-off recorded (addendum 296/301)."
+      ],
       "status": "ACCEPTED",
       "acceptedEvidence": {
         "acceptedAtUtc": "2026-09-07T04:11:57.609Z",
