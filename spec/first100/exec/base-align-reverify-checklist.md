@@ -51,6 +51,13 @@ S0c ─┘         │                ├─> S6(B) ──┤
 
 **Parallelism.** S5, S6, S7 are mutually independent given S4/S2. S8 is independent of S5–S7 and can run alongside them; only S11 and the snapshot lanes wait on it. S12 can run any time after S1.
 
+**Two orthogonal sets, and a file can be in both (delegate ruling, 2026-09-13).** *Composable* is not *needs no re-verification*, and conflating them would drop half the work.
+
+- The **merge set** (12 files, line-level classification below) answers *will git need a person to resolve this?* It is discharged inside S5/S6 by resolving the merge.
+- The **re-verification set** (lane B's 4.4d reachability list) answers *did upstream change the production code this clause reaches?* It is discharged by re-running 4.4a–d.
+
+`agent.ts`, `runtime-context.ts` and `ptc.ts` sit in the second and not the first: their merges compose cleanly — measured — **and** upstream substantially rewrote the production code around them, so their epics still need re-verification. A file merging without a conflict says nothing about whether the clause it carries still reaches what it claims.
+
 **Standing invariant (delegate ruling, addendum 327).** Any tool answering *"what is this stage's live evidence?"* takes the **full live set** — primary plus un-superseded supplements — in the shape of `verify-cells-recomputable`'s `liveFreezeByStage`. Two tools already diverged on this question in opposite directions; the rule exists so a third does not invent a fourth answer.
 
 **The three places where "it merged" is not acceptance:** S6's `LEASE EPOCH` case, S9/S10's P9 STALE (a red that means *re-record*, not *fix*), and S11's P0-06.F case text.
