@@ -40,6 +40,7 @@ apps/web/dist/
 .dsh-build/
 .playwright-mcp/
 .orig
+.merge_file_*
 .worktrees/
 worktrees/
 .agents/worktrees/
