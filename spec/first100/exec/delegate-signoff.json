@@ -460,6 +460,22 @@
       "delegateSession": "first100-delegate-78",
       "signedAtUtc": "2026-09-13T03:12:28.099Z",
       "note": "P4-11 (retry classifier + circuit breaker + retry budget) C/P/U/F all GREEN on candidate 9' (1309ad7951). Delegate verified 4.4a-d on the baseline: 4.4b both services mounted in the factory bundle — run-retry-usage (bundle/base/cordis.patch.yml:89, @deepseek-ai/dsh-retry/usage) and circuit-breaker (:103, @deepseek-ai/dsh-retry-cockatiel); 4.4c budgets.admit called on the real retry path (llm-retry/src/index.ts:265). The P4-11.U.1 mount-slice supplement proves both services load-bearing and charged on the shipped headless profile (M67 removes the budget row -> both cases red; M68 removes the breaker row -> mount case red; M69 stops llm-retry calling budgets.admit -> charge case red). openFindings null; BLOCKED-242 DISPOSED."
+    },
+    {
+      "epic": "P4-11",
+      "rowDigestSha256": "b3af2a3abadd70ab1270ad32c806122b4e47caf3f264dd7f3b151689564500f0",
+      "conclusion": "PASS",
+      "delegateSession": "first100-delegate-78",
+      "signedAtUtc": "2026-09-13T04:26:04.345Z",
+      "note": "Four-gate signature checklist (ONBOARDING §2), run on candidate 11 tree: verify-make-vs-use exit 0 (40 decisions match); verify-adapt-dispositions exit 0 (38 epics); verify-cells-recomputable exit 0 (144 GREEN — 53 RECOMPUTED / 0 MISMATCHED / 91 UNAVAILABLE=artifact unreachable, a persistent-artifact-dir tooling debt, not a mismatch); verify-usage-stage-subject: this epic passes (the gate's sole failure is P2-10.U, unrelated). Appended retroactively (addendum 312) after a peer audit found the original PASS note omitted these — old record unchanged."
+    },
+    {
+      "epic": "P2-06",
+      "rowDigestSha256": "f6b5a7ef2e6da5f13cd9bcf72f2c48bb5d881c817133ea30489dd80aab10ee5b",
+      "conclusion": "PASS",
+      "delegateSession": "first100-delegate-78",
+      "signedAtUtc": "2026-09-13T04:26:04.576Z",
+      "note": "Four-gate signature checklist (ONBOARDING §2), run on candidate 11 tree: verify-make-vs-use exit 0 (40 decisions match); verify-adapt-dispositions exit 0 (38 epics); verify-cells-recomputable exit 0 (144 GREEN — 53 RECOMPUTED / 0 MISMATCHED / 91 UNAVAILABLE=artifact unreachable, a persistent-artifact-dir tooling debt, not a mismatch); verify-usage-stage-subject: this epic passes (the gate's sole failure is P2-10.U, unrelated). Appended retroactively (addendum 312) after a peer audit found the original PASS note omitted these — old record unchanged."
     }
   ]
 }
