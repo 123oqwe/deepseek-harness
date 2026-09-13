@@ -1671,6 +1671,14 @@
     },
     {
       "epic": "P2-10",
+      "path": "packages/policy/policy-language/tests/fuzz.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F"
+      ]
+    },
+    {
+      "epic": "P2-10",
       "path": "packages/policy/policy-language/tests/loader.spec.ts",
       "kind": "test",
       "stages": [
@@ -1966,6 +1974,23 @@
         "U"
       ],
       "reason": "`ExecutionWorldFact`'s second variant — BLOCKED-178's producer half, which §12.46-B splits between this epic (producer) and P2-05 (rule). With one variant the fact was undecidable: a rule refusing an unknown world and a rule refusing everything were the same policy. The C-stage preFlight recorded that it could not authorise this cross-epic edit; the U-stage preFlight asked for it and the delegate ruled it in."
+    },
+    {
+      "epic": "P3-10",
+      "path": "packages/execution/execution-world/src/types.ts",
+      "kind": "source",
+      "stages": [
+        "C"
+      ],
+      "reason": "P3-01's WorldSpec dimension types. BudgetLimits takes cpuMillicores, memoryBytes and diskBytes from WorldResourcesSpec, maxProcesses from WorldProcessSpec and maxWallClockMs from WorldLifetimeSpec, so the budget and the world that enforces it share one vocabulary (addendum 366, point 3). Imported as types only; this epic does not modify the file."
+    },
+    {
+      "epic": "P3-10",
+      "path": "packages/execution/resource-budget/tests/budget.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C"
+      ]
     },
     {
       "epic": "P4-01",

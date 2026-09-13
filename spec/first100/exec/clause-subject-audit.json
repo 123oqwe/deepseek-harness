@@ -2744,6 +2744,141 @@
         "realized": null,
         "note": "Literally true rather than conventionally: `packages/policy/policy-language/` does not exist at 6cf66891af, so there is no code this record could have been written after. The prose half is spec/first100/exec/preflight-P2-10.md, which carries the three questions, the clause-by-clause subject table, and six open questions — three of which (the language's shape, the U-stage consumer, and what 'ten thousand historical fixtures' means with no corpus) are marked as needing a delegate ruling because they change the epic's size rather than its detail. RULED 2026-09-12, all three open questions closed the same day: the U consumers are `settings` plus the Cedar provider's loading path, with `permission-presets` named by the registry and deliberately untouched because it carries P2-11's approval posture; the language is reading (b), a Cedar schema plus conventions; and 'ten thousand historical fixtures' splits into a real-corpus replay reporting its real count plus a derived F-stage campaign that asserts its own distribution, stated as two sentences and never merged. The shadow row of must[1] is narrowed to the commitment the measurement exposed: reusing P0-05's gate means becoming its first production writer."
       }
+    },
+    "P3-10": {
+      "makeVsUse": {
+        "ledgerRow": "P3-10",
+        "card": {
+          "heading": "#### P3-10",
+          "sheetCommit": "bd408a403a"
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": "PROVIDER_ADAPT",
+        "adopted": [
+          {
+            "name": "soyuka/pidusage",
+            "npm": "pidusage",
+            "version": "4.0.1",
+            "form": "runtime",
+            "landsIn": "P3-10.P",
+            "reason": "Pending adoption, recorded before the stage that imports it exists. The card's note is 'cross-platform CPU/mem sampling', which is metering, and the Contract stage writes no sampling (EPIC-LIFECYCLE 1.12; delegate ruling, addendum 366, point 4): C records reservation and aggregation only. Sampling lands with the Provider stage, which is held until the world-provider shape and the re-anchor timing are decided."
+          },
+          {
+            "name": "systemd-run",
+            "npm": null,
+            "version": null,
+            "form": "runtime",
+            "landsIn": "P3-10.P",
+            "reason": "Pending adoption. The card's note is '--scope -p MemoryMax -p CPUQuota -p TasksMax (Linux w/ systemd, no npm)', which is hard enforcement of memory, CPU and task limits. The Contract stage enforces nothing (addendum 366, point 4); enforcement is the Provider stage, held with it."
+          },
+          {
+            "name": "apocas/dockerode HostConfig",
+            "npm": "dockerode",
+            "version": "5.0.1",
+            "form": "runtime",
+            "landsIn": "P3-10.P",
+            "reason": "Pending adoption. The card's note is 'Memory/NanoCpus/PidsLimit/StorageOpt', the container-side enforcement of the same budgets. It is reachable only where a container world provider is mounted (P3-08, wave 10), so where and whether it lands is part of the held world-provider decision; recorded as pending rather than rejected so the decision stays checkable."
+          },
+          {
+            "name": "packages/subprocess/win32-process (existing)",
+            "npm": null,
+            "version": null,
+            "form": "runtime",
+            "landsIn": "P3-10.P",
+            "reason": "Pending adoption. The card's note is 'FFI base for CreateJobObject/SetInformationJobObject', Windows job-object enforcement of process, memory and CPU limits. Enforcement belongs to the held Provider stage (addendum 366, point 4)."
+          }
+        ],
+        "deviations": [],
+        "rejectedAbsent": [],
+        "standardsOwned": [
+          {
+            "standard": "OTel process.* semconv",
+            "evidenceTitleSubstring": "OTel process.* semconv names",
+            "reason": "Sole adopter per standards-ownership.json (thisEpicOwns, singleAdopter). No `@opentelemetry/semantic-conventions` dependency exists in any package.json and no `process.*` constant is used in source, so this epic fixes which semconv metric names the budget accounting maps its dimensions to. The Contract stage freezes one vocabulary case whose title carries the evidence substring; the names in it are taken from a pinned semconv release at freeze time, not written from memory."
+          }
+        ],
+        "standardsImported": [
+          {
+            "standard": "OCI linux.resources names",
+            "from": "P3-01",
+            "reason": "Owned by P3-01 (standards-ownership.json). Measured: P3-01 did not adopt OCI's field names; its world vocabulary is `WorldResourcesSpec` (`cpuMillicores`, `memoryBytes`, `diskBytes`, execution-world/src/types.ts:106), `WorldProcessSpec.maxProcesses` and `WorldLifetimeSpec.maxWallClockMs`. Importing the owner's definition therefore means importing those types; `BudgetSpec` re-declares none of them (addendum 366, point 3)."
+          }
+        ],
+        "residual": "Narrowed for the Contract stage, per addendum 366. C writes: `BudgetSpec` types, with world-resource dimensions reusing P3-01's types and run-level count dimensions (tool calls, agents, network bytes) in P9-07 `LoopBudget`'s decision shape, without folding into `LoopBudget`; reservation; hierarchical accounting aggregated by run and tenant rather than agent instance (acceptance[1], validation[1]); a numeric declared metering error bound (acceptance[2]); the must[3]/must[4] type boundary, with no fairness field or import; per-dimension negative cases; and an admission decision shaped `{admitted, reason, limit, observed}`. Not in C: the typed `resource_exhausted` outcome, owned by P3-03 in the same wave and mapped at P once P3-03 lands (point 1); wall-clock, tool-call and agent enforcement (U, point 2); sampling and hard enforcement (P, held, point 4); telemetry reconciliation (P/U).",
+        "probes": [
+          {
+            "claim": "the budget vocabulary does not exist in code",
+            "how": "git grep -l 'BudgetSpec' / 'networkBytes' / 'resource_exhausted' at f24573ddfe excluding node_modules, reading every path",
+            "result": "ok",
+            "evidence": "BudgetSpec 8 files and resource_exhausted 8 files, all spec, registry or source documents (registry.json, make-vs-use-ledger.json, make-vs-use-plan.md, first100-clause-coverage-report.json, spec/first100/sources/*); 0 under packages/. networkBytes 0 files."
+          },
+          {
+            "claim": "resource_exhausted has an owner that has not built it",
+            "how": "make-vs-use-plan.md #### P3-03 must[0] and files; execution-world/src/types.ts WorldStopReason",
+            "result": "differs",
+            "evidence": "Owned by P3-03 (wave 8, NOT_RUN), C files execution-world/src/{outcome,errors}.ts, absent. WorldStopReason has timeout, terminated, lost-contact, provider-failed and no resource reason. EPIC-LIFECYCLE 1.5 covers a later-wave owner only; ruling 366 point 1: C freezes an admission decision, and P maps it to P3-03's outcome."
+          },
+          {
+            "claim": "a loop budget with a decision shape already exists",
+            "how": "read packages/core/agent-loop/src/budget.ts",
+            "result": "ok",
+            "evidence": "P9-07 LoopBudget {maxTurns, maxSpendUsd}; BudgetDecision {admitted, reason, limit, observed}; zero and undefined mean unlimited. P3-10's run-level count dimensions follow this shape and do not fold into it (366 point 3)."
+          },
+          {
+            "claim": "existing budget and limit concepts are different subjects",
+            "how": "read policy/capability-token/src/{types,attenuate}.ts, core/session/src/types.ts:118-122, subagent/src/child-agent.ts:76",
+            "result": "ok",
+            "evidence": "TokenBudget is a monetary ceiling on a capability token with isBudgetWithinParent refusing a widening child (spend, not world resources). delegationDepth / maxDepth bound recursion depth, not agent count, so the agents dimension must not be keyed on depth."
+          },
+          {
+            "claim": "guard/timeout-policy is not a per-action wall-time budget",
+            "how": "read packages/guard/timeout-policy/README.md",
+            "result": "differs",
+            "evidence": "A cooperative per-tool-call deadline through exec.signal, mapped to a model error. It meets a per-action wall-time budget only at the Usage stage; the Contract stage does not touch it (366 point 4)."
+          },
+          {
+            "claim": "wall clock is the one dimension a world enforces today",
+            "how": "read execution-world/src/types.ts:113-115 and local-provider.ts localUnsatisfiableDimensions",
+            "result": "ok",
+            "evidence": "maxWallClockMs terminates the world with reason 'timeout' and the local provider arms it; the local provider refuses any cpuMillicores, memoryBytes, diskBytes or maxProcesses."
+          }
+        ],
+        "gapCheck": [
+          {
+            "community": "dsh-plugin-container",
+            "gap": "All limits are opt-in per call (no default budget)",
+            "clause": "must[0]"
+          },
+          {
+            "community": "dsh-plugin-container",
+            "gap": "only per-container not per action/run/tenant",
+            "clause": "must[0]"
+          },
+          {
+            "community": "dsh-plugin-container",
+            "gap": "no network-bytes / tool-call / agent-count budgets",
+            "clause": "must[0]"
+          },
+          {
+            "community": "dsh-plugin-container",
+            "gap": "no scheduler reservation or telemetry re[conciliation]",
+            "clause": "must[1]"
+          },
+          {
+            "community": "dsh-passwords",
+            "gap": "Per-subuser token/daily quotas — model-token budgets, not world resources; license blocks reuse",
+            "clause": "outOfScope: model-token budgets are not ExecutionWorld resources (must[3])"
+          },
+          {
+            "community": "dsh-cost-meter",
+            "gap": "Cost, not resources",
+            "clause": "outOfScope: spend is P9-07 LoopBudget / P2-02 TokenBudget (must[3])"
+          }
+        ],
+        "expectedDeletedPct": "35",
+        "recordedBeforeFirstLine": true,
+        "realized": null
+      }
     }
   },
   "methodCorrections": [
