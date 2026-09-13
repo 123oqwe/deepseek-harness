@@ -2825,3 +2825,11 @@ run-gates: 12 passed, 3 failed, 0 skipped in 254.94s.
 - **队列文件** `~/first100-delegate/queue/{laneA,laneB}.md`:每份永远 ≥3 项**已批准**未勾任务(preFlight/接线/只读测量/债务/重锚测量),格式 `- [ ] <任务> | <依据/补记号>`;lane 做完自己勾。**delegate 新规则**:写任何"等"字前先确认两份队列都 ≥3 项;每次派活同时补队列。已各填 4 项(laneA:P3-02.C补冻-16 / 重锚§3十一落点 / P3-02 P Linux平台声明preFlight / P3-02 F路径补丁预备;laneB:门修草稿 / DRIFT量清 / 5失效supplement救回可行性 / P3-06 must[1] preFlight)。
 - **Stop 守护脚本** `~/first100-delegate/lane-stop-guard.sh`(queue-aware):(a) stop_hook_active=true 放行防循环;(b) 按 .cwd 判 lane 读队列、有未勾项 block 并派第一项;(c) 空队列 block 催 SendMessage delegate 要 ≥3 项 + 记 QUEUE-EMPTY;(d) 始终保留 STOP <cwd> 日志行。四分支两假 JSON 自测全过。
 - **接线归用户**(点 3):settings 只用户改。给 guanjieqiao-92 的确切条目 = 把两 lane settings.local.json 的 Stop command 替换为 `/Users/guanjieqiao/first100-delegate/lane-stop-guard.sh`(脚本自身写 STOP 日志行,故替换而非叠加)。delegate 不碰 settings。
+
+## 补记 389(2026-09-13,supplement 审计门修草稿数字验证 + 暴露的真完整性缺口;缓入 P3-C 后独立候选)
+lane B 门修草稿完成(本地 lane-b-gate-supplement-audit,两笔:9e1cfcaffe 原样 cherry-pick + supplement 审计修;基底 6e55521e08;改 verify-cells-recomputable 的 .mjs/.d.mts/.spec.ts,不推)。形状:新增 `greenCellsOf(ledger)`(GREEN supplement 列为独立格 key `<epic>.<stage>.<seq>`)+ `expectedEntriesFor`(supplement 只对自己那条冻结负责;primary 对 primary + **尚无自己 GREEN 记录**的 live supplement——条件化并集、非取消,故未观测 supplement 仍报真 DRIFT);main 改用两函数,其余判定一行未改。
+**实跑(6e55521e08 ledger,--artifact-dir ~/first100-delegate/artifacts,exit 0)**:修前 145 GREEN=110 RECOMPUTED/0 MISMATCHED/35 DRIFT/0 UNAVAILABLE;**修后 193 GREEN(145+48 supplement)=179 RECOMPUTED / 0 MISMATCHED / 8 DRIFT / 6 UNAVAILABLE**。测试 24→29 全过;5 变异(S1 跳过supplement/S2 旧并集/S3 supplement担整stage/S4 丢未观测supplement藏真DRIFT/S5 key同primary)各红对应用例、还原字节一致;oxlint(type-aware,.d.mts 补 checkCellAgainstObservation 声明后)exit0。(lane B 自纠笔误:MISMATCHED=0,"5"指变异数非 MISMATCHED 数。)
+**暴露的真缺口(旧盲区所藏,非修引入;follow-up、不阻塞 P3-C)**:
+- 16 假 DRIFT 中 **14 归正 VERIFIED**;剩 **P4-09.U / P8-01.C 是真漂移**——其 live supplement(P4-09.U seq5[9例]+seq6[5例]=14,对上 frozenCasesNotRecorded 14;P8-01.C seq2[2例])**有冻结无 GREEN 观测记录**,应继续报 DRIFT。→ 需查:这些 supplement 为何 GREEN 却无观测,该补观测还是撤条目。
+- 6 UNAVAILABLE 全 supplement:5 条已失路径(P0-01.F.1/P1-03.U.1·U.2·F.1/P2-01.F.1)+ **新 P4-06.P.3**(run 34238203263 rescued 目录仅 1 文件、digest 不符,疑存错上传)。
+**裁定不变**:此门修 + 9e1cfcaffe 同文件,**缓成 P3-C 落地后独立门修候选**(草稿已备、数字齐);真漂移/UNAVAILABLE 缺口作 follow-up(已入 laneB 队列)。三 C 格无 supplement、不受影响。
