@@ -20,6 +20,7 @@ export interface P9FreezeEntry {
   readonly expectCases: readonly string[]
   readonly files?: readonly string[]
   readonly supplementSeq?: number
+  readonly supersededBy?: string
 }
 
 /** The command freeze, as far as the verifier reads it. */

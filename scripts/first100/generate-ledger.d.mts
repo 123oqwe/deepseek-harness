@@ -39,6 +39,20 @@ export function checkCandidateChainConsistency(row: unknown, applicableStages: s
 
 export function checkObservationDistinctness(row: unknown, applicableStages: string[], freeze: unknown, epicId: string): ObservationDistinctnessResult
 
+/** One consumer of an observation digest: its label and the frozen entry it is judged against (`undefined` when unresolvable). */
+export interface ObservationConsumer {
+  label: string
+  frozen: unknown
+}
+
+/**
+ * Every observation digest recorded on a cell or a non-SUPERSEDED supplement record.
+ * @param rows - the ledger rows, keyed by epic id.
+ * @param freeze - the command freeze.
+ * @returns each digest mapped to its consumers.
+ */
+export function usedObservationDigests(rows: Record<string, unknown>, freeze: unknown): Map<string, ObservationConsumer[]>
+
 export interface FlakeRegistryCheckResult {
   valid: boolean
   unregisteredFailures: string[]

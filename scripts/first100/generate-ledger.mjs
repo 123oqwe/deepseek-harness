@@ -260,8 +260,15 @@ function isIdenticalFrozenCommand(a, b) {
  * site); each consumer's own case-titles being present-and-passing in the
  * shared report is already enforced separately by the `missing` check in
  * `cmdGreen`/`cmdGreenSupplement`.
+ *
+ * A supplement record whose status is SUPERSEDED is not a consumer: its
+ * evidence moved to the replacement, so its observation proves nothing that
+ * a new greening could collide with (addendum 327).
+ * @param rows - the ledger rows, keyed by epic id.
+ * @param freeze - the command freeze.
+ * @returns every recorded digest, mapped to its consumers' labels and frozen entries.
  */
-function usedObservationDigests(rows, freeze) {
+export function usedObservationDigests(rows, freeze) {
   const used = new Map()
   const add = (sha, label, frozenEntry) => {
     if (!used.has(sha)) used.set(sha, [])
@@ -276,16 +283,31 @@ function usedObservationDigests(rows, freeze) {
       }
     }
     for (const [key, supplement] of Object.entries(row.supplements ?? {})) {
-      if (supplement?.observationSha256) {
-        const [stage, seqStr] = key.split('.')
-        const frozenEntry = freeze.entries.find(
-          (e) => e.supplements?.epic === row.id && e.supplements?.stage === stage && e.supplementSeq === Number(seqStr),
-        )
-        add(supplement.observationSha256, `${row.id}.${key} (supplement)`, frozenEntry)
+      if (supplement?.observationSha256 && supplement.status !== 'SUPERSEDED') {
+        add(supplement.observationSha256, `${row.id}.${key} (supplement)`, liveSupplementEntry(freeze, row.id, key))
       }
     }
   }
   return used
+}
+
+/**
+ * The live freeze entry a ledger supplement record is judged against.
+ *
+ * A supplement keeps its seq when it is re-frozen, so one (epic, stage, seq)
+ * can have a retired entry and a live one, and the first match in file order
+ * is the retired one (P2-05.U.1). Only the live entry describes what a GREEN
+ * record currently proves; callers skip SUPERSEDED records before asking.
+ * @param freeze - the command freeze.
+ * @param epicId - the epic that owns the record.
+ * @param key - the record's `<stage>.<seq>` key.
+ * @returns the live entry, or `undefined` when the seq has none.
+ */
+function liveSupplementEntry(freeze, epicId, key) {
+  const [stage, seqStr] = key.split('.')
+  return freeze.entries.find(
+    (e) => e.supplements?.epic === epicId && e.supplements?.stage === stage && e.supplementSeq === Number(seqStr) && !e.supersededBy,
+  )
 }
 
 /**
@@ -1027,7 +1049,9 @@ export function checkCoverageClosure(epicId, registry, freeze, coverage, row) {
         if (citation.supplementSeq !== undefined) {
           return f.supplementSeq === citation.supplementSeq && f.supplements?.epic === epicId && !f.supersededBy
         }
-        return f.supplements === undefined && !f.supersededBy
+        // A primary is the entry with no seq. Its `supplements` key may be
+        // absent or null (BLOCKED-161 §2), so that key does not decide it.
+        return f.supplementSeq === undefined && !f.supersededBy
       })
       const observedTitles =
         citation.supplementSeq !== undefined
@@ -1110,10 +1134,12 @@ export function checkObservationDistinctness(row, applicableStages, freeze, epic
   }
   for (const [key, supplement] of Object.entries(row.supplements ?? {})) {
     const sha = supplement?.observationSha256
-    if (!sha) continue
-    const [stage, seqStr] = key.split('.')
-    const frozenEntry = freeze.entries.find((e) => e.supplements?.epic === epicId && e.supplements?.stage === stage && e.supplementSeq === Number(seqStr))
-    record(sha, key, frozenEntry)
+    // A SUPERSEDED record is not evidence, so it takes no part in the check;
+    // resolving it against the live freeze would find nothing and report a
+    // fail-safe conflict on three ACCEPTED rows (BLOCKED-242). A GREEN record
+    // is judged against its live entry only.
+    if (!sha || supplement.status === 'SUPERSEDED') continue
+    record(sha, key, liveSupplementEntry(freeze, epicId, key))
   }
   return { valid: conflicts.length === 0, conflicts }
 }

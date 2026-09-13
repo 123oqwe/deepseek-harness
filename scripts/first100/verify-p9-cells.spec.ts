@@ -185,3 +185,59 @@ describe('verify-p9-cells matching: a frozen title is matched the way the ledger
     expect(contractCell([])).toMatchObject({ status: 'INCOMPLETE', missingCases: ['c'] })
   })
 })
+
+describe('verify-p9-cells: a stage is judged by all of its live freeze entries (BLOCKED-248, addendum 327)', () => {
+  const supplement = (stage: string, cases: readonly string[], source: string): P9FreezeEntry => ({
+    ...entry(stage, cases, source),
+    supplements: { epic: 'P9-01', stage },
+    supplementSeq: 1,
+  } as P9FreezeEntry)
+
+  /**
+   * P9-01's U cell for one freeze and one set of passing titles.
+   * @param entries - the freeze entries.
+   * @param passing - titles observed passing.
+   * @returns the U cell.
+   */
+  function stageU(entries: readonly P9FreezeEntry[], passing: readonly string[]): P9Cell {
+    return verifyCells({ entries }, new Set(passing), ['P9-01'], undefined, []).find(cell => cell.stage === 'U')!
+  }
+
+  it('counts a live supplement\'s cases, so a stage whose supplement case fails is not VERIFIED', () => {
+    // The supplement is last in the file; judging only the last entry would
+    // verify U without its primary case.
+    const entries = [entry('U', ['u primary']), supplement('U', ['u supplement'], 'packages/x/src/s.ts')]
+    expect(stageU(entries, ['u supplement'])).toMatchObject({ status: 'INCOMPLETE', frozenCases: 2, missingCases: ['u primary'] })
+    expect(stageU(entries, ['u primary', 'u supplement'])).toMatchObject({ status: 'VERIFIED', frozenCases: 2, matchedCases: 2 })
+  })
+
+  it('does not judge a superseded entry, even when it is the last one in the file', () => {
+    const entries = [entry('U', ['u live']), { ...entry('U', ['u retired']), supersededBy: '2026-09-12T00:00:00.000Z' }]
+    expect(stageU(entries, ['u live'])).toMatchObject({ status: 'VERIFIED', frozenCases: 1 })
+  })
+
+  it('is UNFROZEN when every entry for the stage is superseded', () => {
+    expect(stageU([{ ...entry('U', ['u retired']), supersededBy: '2026-09-12T00:00:00.000Z' }], ['u retired']).status).toBe('UNFROZEN')
+  })
+
+  it('reports a cell stale when a file named only by its live supplement changed', () => {
+    const entries = [supplement('U', ['u supplement'], 'packages/x/src/s.ts'), entry('U', ['u primary'])]
+    const record = { candidateSha: SHA, cells: [{ epic: 'P9-01', stage: 'U', status: 'VERIFIED' }] }
+    const stale = staleCells(record, { entries }, {
+      freezeAt: () => entries,
+      changedPaths: (_sha, paths) => paths.filter(path => path === 'packages/x/src/s.ts'),
+    })
+    expect(stale).toHaveLength(1)
+    expect(stale[0]!.reason).toContain('packages/x/src/s.ts')
+  })
+
+  it('reports a cell stale when a live supplement was added after the recorded observation', () => {
+    const primary = entry('U', ['u primary'])
+    const record = { candidateSha: SHA, cells: [{ epic: 'P9-01', stage: 'U', status: 'VERIFIED' }] }
+    const stale = staleCells(record, { entries: [primary, supplement('U', ['u supplement'], 'packages/x/src/s.ts')] }, {
+      freezeAt: () => [primary],
+      changedPaths: () => [],
+    })
+    expect(stale.map(cell => cell.reason)).toEqual(['a live freeze entry for it was written or changed after the recorded observation'])
+  })
+})

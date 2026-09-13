@@ -40,6 +40,7 @@ import {
   checkObservationDistinctness,
   deriveSupplementLiveness,
   rowDigest,
+  usedObservationDigests,
   validateAcceptanceCoverage,
 } from './generate-ledger.mjs'
 import { realitySetOverlap } from './epic-reality-set.mjs'
@@ -150,6 +151,22 @@ describe('checkCoverageClosure', () => {
     const result = checkCoverageClosure('E1', registry, freeze, wrongTitleCoverage, row)
     expect(result.valid).toBe(false)
   })
+
+  it('green: a primary entry is the one with no seq, even when its supplements key is null (BLOCKED-161 §2)', () => {
+    // Keying the primary on `supplements === undefined` made every citation of
+    // such an entry unverifiable however correct its title was.
+    const nullKeyFreeze = { entries: [{ epic: 'E1', stage: 'C', expectCases: ['case-a'], supplements: null }, freeze.entries[1]] }
+    const row = { cells: { C: { expectCasesMatched: ['case-a'] } }, supplements: { 'F.1': { expectCasesMatched: ['case-b-supp'] } } }
+    expect(checkCoverageClosure('E1', registry, nullKeyFreeze, coverage, row).valid).toBe(true)
+  })
+
+  it('red: a citation without a seq is never satisfied by a supplement entry, even one whose supplements key is missing', () => {
+    // The control for the case above: "primary" must not widen to "any entry".
+    const supplementOnlyFreeze = { entries: [{ epic: 'E1', stage: 'C', expectCases: ['case-a'], supplementSeq: 1 }] }
+    const row = { cells: { C: { expectCasesMatched: ['case-a'] } }, supplements: {} }
+    const result = checkCoverageClosure('E1', { epics: [{ id: 'E1', acceptance: ['a'] }] }, supplementOnlyFreeze, { entries: [coverage.entries[0]] }, row)
+    expect(result.valid).toBe(false)
+  })
 })
 
 describe('checkCandidateChainConsistency', () => {
@@ -242,6 +259,79 @@ describe('checkObservationDistinctness', () => {
     const result = checkObservationDistinctness(row, ['C', 'F'], freeze, epicId)
     expect(result.valid).toBe(false)
     expect(result.conflicts).toEqual([['C', 'F']])
+  })
+
+  // Addendum 327 / BLOCKED-242. A supplement keeps its seq when re-frozen, so
+  // the retired entry precedes the live one in file order, and a record whose
+  // evidence moved to a replacement is marked SUPERSEDED.
+  const retiredFSuppLikeC = { ...frozenFSupp, argv: frozenC.argv, expectCases: frozenC.expectCases, supersededBy: '2026-09-12T00:00:00.000Z' }
+
+  it('green: a SUPERSEDED supplement record is not evidence, so it is not compared at all', () => {
+    // Resolving it against the live freeze finds nothing (a fail-safe conflict:
+    // what turned P2-04, P4-08 and P5-11 invalid under a live-only lookup), and
+    // resolving it against its retired entry compares a withdrawn command.
+    const row = {
+      cells: { C: { observationSha256: 'shared-sha' } },
+      supplements: { 'F.1': { status: 'SUPERSEDED', observationSha256: 'shared-sha' } },
+    }
+    const freeze = { entries: [frozenC, retiredFSuppLikeC] }
+    expect(checkObservationDistinctness(row, ['C'], freeze, epicId)).toEqual({ valid: true, conflicts: [] })
+  })
+
+  it('green: a GREEN record at a re-frozen seq is judged against the live entry, not the retired one listed first', () => {
+    // The retired entry repeats C's command and the live one does not, so
+    // taking the first match in file order reports a conflict that is not there.
+    const row = {
+      cells: { C: { observationSha256: 'shared-sha' } },
+      supplements: { 'F.1': { status: 'GREEN', observationSha256: 'shared-sha' } },
+    }
+    const freeze = { entries: [frozenC, retiredFSuppLikeC, frozenFSupp] }
+    expect(checkObservationDistinctness(row, ['C'], freeze, epicId)).toEqual({ valid: true, conflicts: [] })
+  })
+
+  it('red: a GREEN record whose LIVE entry repeats a cell\'s command is still a conflict', () => {
+    // The control for the two cases above: skipping and live resolution must
+    // not mute the check itself.
+    const row = {
+      cells: { C: { observationSha256: 'shared-sha' } },
+      supplements: { 'F.1': { status: 'GREEN', observationSha256: 'shared-sha' } },
+    }
+    const freeze = { entries: [frozenC, { ...frozenFSupp, argv: frozenC.argv, expectCases: frozenC.expectCases }] }
+    expect(checkObservationDistinctness(row, ['C'], freeze, epicId)).toEqual({ valid: false, conflicts: [['C', 'F.1']] })
+  })
+
+  it('red: a GREEN record whose seq has no live entry is unresolvable, fail-safe', () => {
+    const row = {
+      cells: { C: { observationSha256: 'shared-sha' } },
+      supplements: { 'F.1': { status: 'GREEN', observationSha256: 'shared-sha' } },
+    }
+    const freeze = { entries: [frozenC, { ...frozenFSupp, supersededBy: '2026-09-12T00:00:00.000Z' }] }
+    expect(checkObservationDistinctness(row, ['C'], freeze, epicId).valid).toBe(false)
+  })
+})
+
+describe('usedObservationDigests (addendum 327)', () => {
+  const epicId = 'PX-99'
+  const frozenC = { epic: epicId, stage: 'C', argv: ['pnpm', 'run', 'c'], expectCases: ['c case 1'] }
+  const liveU1 = { epic: epicId, stage: 'U', supplements: { epic: epicId, stage: 'U' }, supplementSeq: 1, argv: ['pnpm', 'run', 'u1'], expectCases: ['u1 live'] }
+  const retiredU1 = { ...liveU1, expectCases: ['u1 retired'], supersededBy: '2026-09-12T00:00:00.000Z' }
+
+  it('records a GREEN supplement against its live entry and leaves a SUPERSEDED one out', () => {
+    const rows = {
+      [epicId]: {
+        id: epicId,
+        cells: { C: { observationSha256: 'shared-sha' } },
+        supplements: {
+          'U.1': { status: 'GREEN', observationSha256: 'shared-sha' },
+          'U.2': { status: 'SUPERSEDED', observationSha256: 'shared-sha' },
+        },
+      },
+    }
+    const used = usedObservationDigests(rows, { entries: [frozenC, retiredU1, liveU1] })
+    expect(used.get('shared-sha')).toEqual([
+      { label: `${epicId}.C`, frozen: frozenC },
+      { label: `${epicId}.U.1 (supplement)`, frozen: liveU1 },
+    ])
   })
 })
 

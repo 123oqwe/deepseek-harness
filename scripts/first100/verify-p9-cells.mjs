@@ -63,6 +63,7 @@ import { fileURLToPath } from 'node:url'
 
 import { findAmbiguousCaseMatches, parseVitestJsonReport } from './generate-ledger.mjs'
 import { frozenTitlePresent, registeredRenames } from './frozen-title-renames.mjs'
+import { liveFreezeByStage } from './verify-cells-recomputable.mjs'
 import { commitmentKey, freezeEntriesAt } from './verify-freeze-in-candidate-tree.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -118,16 +119,19 @@ function flag(argv, flag_) {
 }
 
 /**
- * The freeze entry a P9 cell is judged against: the last one written for its
- * stage. Recording and the staleness check both call this, so they always judge
- * the same entry.
+ * The freeze entries a P9 cell is judged against: every entry for its stage
+ * that nothing superseded, primary and supplements alike, which is how the
+ * ledger counts a stage's evidence (`liveFreezeByStage`, addendum 327). The
+ * last entry in the file was used before (BLOCKED-248): it can be a superseded
+ * entry or a lone supplement. Recording and the staleness check both call this,
+ * so they always judge the same entries.
  * @param freeze - the command freeze.
  * @param epic - the P9 epic.
  * @param stage - the stage.
- * @returns the entry, or `undefined` when the stage has none.
+ * @returns the live entries in file order, empty when the stage has none.
  */
-function selectFrozenEntry(freeze, epic, stage) {
-  return freeze.entries.filter(entry => entry.epic === epic && entry.stage === stage).at(-1)
+function liveStageEntries(freeze, epic, stage) {
+  return liveFreezeByStage(freeze.entries).get(`${epic}|${stage}`) ?? []
 }
 
 /**
@@ -180,27 +184,28 @@ export function verifyCells(freeze, passing, p9Ids, releasedEpics, stageBlockers
           : { epic, stage, status: 'STALE_BLOCKER', blocker: blocked.blocker, detail: `${blocked.blocker} is ${status}` })
         continue
       }
-      const frozen = selectFrozenEntry(freeze, epic, stage)
-      if (frozen === undefined) {
+      const entries = liveStageEntries(freeze, epic, stage)
+      if (entries.length === 0) {
         cells.push({ epic, stage, status: 'UNFROZEN' })
         continue
       }
-      const missing = frozen.expectCases.filter(title => !frozenTitlePresent(title, passing, renames, epic, stage))
+      const expectCases = entries.flatMap(entry => entry.expectCases)
+      const missing = expectCases.filter(title => !frozenTitlePresent(title, passing, renames, epic, stage))
       // A frozen string that names more than one passing case is satisfied by
       // any of them, so deleting this cell's own case would leave it verified
       // on another cell's evidence (BLOCKED-104). The ledger refuses to green
       // such a cell; this refuses to verify one.
       const ambiguous = matching.matchCounts === undefined
         ? []
-        : findAmbiguousCaseMatches(frozen.expectCases, matching.matchCounts)
+        : findAmbiguousCaseMatches(expectCases, matching.matchCounts)
       const status = missing.length > 0 ? 'INCOMPLETE' : (ambiguous.length > 0 ? 'AMBIGUOUS' : 'VERIFIED')
       cells.push({
         epic,
         stage,
         status,
-        frozenCases: frozen.expectCases.length,
+        frozenCases: expectCases.length,
         // Computed from the observation, never copied from the freeze.
-        matchedCases: frozen.expectCases.length - missing.length,
+        matchedCases: expectCases.length - missing.length,
         ...missing.length === 0 ? {} : { missingCases: missing },
         ...ambiguous.length === 0 ? {} : { ambiguousCases: ambiguous.map(entry => ({ title: entry.title, count: entry.count })) },
       })
@@ -241,16 +246,16 @@ export function staleCells(record, freeze, git) {
   const recordedCommitments = new Set(recordedEntries.map(commitmentKey))
   const stale = []
   for (const cell of verified) {
-    const entry = selectFrozenEntry(freeze, cell.epic, cell.stage)
-    if (entry === undefined) {
-      stale.push({ epic: cell.epic, stage: cell.stage, reason: 'the stage has no freeze entry now' })
+    const entries = liveStageEntries(freeze, cell.epic, cell.stage)
+    if (entries.length === 0) {
+      stale.push({ epic: cell.epic, stage: cell.stage, reason: 'the stage has no live freeze entry now' })
       continue
     }
-    if (!recordedCommitments.has(commitmentKey(entry))) {
-      stale.push({ epic: cell.epic, stage: cell.stage, reason: 'its freeze entry was written or changed after the recorded observation' })
+    if (entries.some(entry => !recordedCommitments.has(commitmentKey(entry)))) {
+      stale.push({ epic: cell.epic, stage: cell.stage, reason: 'a live freeze entry for it was written or changed after the recorded observation' })
       continue
     }
-    const changed = git.changedPaths(record.candidateSha, referencedPaths(entry))
+    const changed = git.changedPaths(record.candidateSha, [...new Set(entries.flatMap(referencedPaths))])
     if (changed === undefined) {
       stale.push({ epic: cell.epic, stage: cell.stage, reason: 'the files it names could not be compared with the recorded candidate' })
     } else if (changed.length > 0) {
