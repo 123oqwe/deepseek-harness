@@ -476,6 +476,14 @@
       "delegateSession": "first100-delegate-78",
       "signedAtUtc": "2026-09-13T07:49:08.594Z",
       "note": "Four-gate checklist (ONBOARDING §2), candidate 11 tree: verify-make-vs-use exit 0 (40); verify-adapt-dispositions exit 0 (38); verify-cells-recomputable exit 0 (with FIRST100_ARTIFACT_DIR set: 141 RECOMPUTED / 0 MISMATCHED / 3 UNAVAILABLE — addendum 314 corrects the earlier '91'); verify-usage-stage-subject: this epic passes (sole failure is P2-10.U). Appended after peer audit (addendum 312)."
+    },
+    {
+      "epic": "P4-12",
+      "rowDigestSha256": "edfcc996deaf77822a0c34080de117fd78e1e2a53df3b5cd178da839e092a49c",
+      "conclusion": "PASS",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-13T12:35:16.722Z",
+      "note": "4.4a-d delegate-verified on abad21fa70 (plan-rect addendum 343): reserve/confirm reachable via reserveExternalEffect/confirmExternalEffect (ptc code-mode + tool-calls native); must[4] CAS reserve = decideReservation (refuses arguments-differ/stale-epoch/ambiguous/held-at-same-epoch, :74-75 is the BLOCKED-221 dual-grant fix); must[5] stale-epoch index.ts:57-58; epoch source run:892. 4.4d: base mounts dsh-action-ledger(:576-579)+dsh-run(:680), reachable on acp-app/headless/sdk-app/web-app; sdk-minimal does-not-layer-base (declared limitation by scope, addendum 332). observation run 34755598046 sha 57a632fd."
     }
   ]
 }
