@@ -258,3 +258,21 @@ That distinction was put to the user directly, because it changes what the regis
 - **修复与复核（先于放行、独立测量）：** 补救切片 P2-01.U2（lane A）让出货 boot 附着 `kind:'user'` 的 host principal；四格 GREEN（C 于 `73c1c04f2e`/run 34660413109 经 C.1 supersede 后重观测，P/U/F 见 evidence-P2-01.md 的 4.4b 表）；`--accept --epic P2-01` 干跑仅余谓词(iv)签核未记，coverage 闭合已过。tenant 契约不对称（生产侧只铸 `LOCAL_TENANT`、消费侧必填无约束）作为**冻结时已声明的缺陷**记入签核 note（P4-09 形状），并已在候选 4 修复（BLOCKED-228，`fa827a3850`：生产侧加 tenant 选项，消费侧闸不动，变异已证）。
 - **确认机制（如实记录）：** 用户于本 delegate 会话（`first100-delegate-78`）直接输入，原文：「确认放行 P2-01 重接受」。据此解除 BLOCKED-022 对 P2-01 重接受的用户确认前置条件。
 - **裁决：** 批准 P2-01 重接受（`--accept`）。ACCEPTED 26 → 27。
+
+## C16 (2026-09-13) — BASE-ALIGN-v3 用户决定 D1–D6 批准(按推荐全批,D5=A)
+
+**背景**:delegate 就 BASE-ALIGN-v3 重锚准备了用户确认包(`base-align-v3-user-confirmation.md`,D1–D6 各带推荐 + 不答默认)。D1(P4-06 write-behind)已自纠为 delegate 处置 O1、移出用户决定集(补记 353);D2–D6 待用户。
+
+**用户原话**(对 delegate 会话 first100-delegate-78,2026-09-13):「按推荐全批,D5 已定按 A」——批准全部决定各按 delegate 推荐,D5 特定为选项 A(D5 确认包无推荐、由用户直接定)。
+
+**解析(逐 D 具体值,据确认包推荐)**:
+- **D1** — 非用户决定;delegate 处置 **O1**(P4-06.P 重锚到上游 JSONL live write-behind,2 条行为不同的冻结用例按"上游行为不同"退役;must[0]=SQLite BEGIN IMMEDIATE 不受影响)。
+- **D2**(P1-03 per-bundle `unlockedProfilePolicy`)= 推荐:**base + 面向操作员 profile `refuse`**(dsh plugin 可生成锁)、**test/minimal profile `warn-and-proceed` 并写明理由**;值声明在 **post-anchor** manifest 形(上游把类型移入新包 + 加 manifestVersion?)。→ 解除 P1-03.U2 停放,重锚后按此值接线并重签。
+- **D3**(采上游新词汇)= 推荐:**同笔采纳** `:code:`→`:ptc:`、`tool/code-dispatch`→`tool/ptc-dispatch`、`tools-code-mode`→`tools-ptc`;13 条含 `code-mode` 的冻结用例标题加 `frozen-title-renames` 条目。
+- **D4**(P1-01 `manifestVersion`)= 推荐:**按上游 DshManifest 形声明 per-bundle 值、含 `manifestVersion?` 字段**。
+- **D5**(P1-07 workspace-trust 姿态)= **用户定 A** = **开启(ship on)+ 首次授信流程**(非默认 opt-in)。含义:移除 `bundle/base/cordis.patch.yml:351-353` 的 `disabled:true`、**建首次授信流程**使开启不至于一次性把所有 workspace 判为不可信而打断现有用户的 project skills/AGENTS.md;P1-07 由撤签(BLOCKED-185)转为 GO。P1-07.P 引用的 `workspace/src/paths.ts` 是重锚热区(上游 +43/−8)→ 授信流程接线在重锚后的 paths.ts 上做一次成(姿态=A 已定、与合并独立)。
+- **D6**(P2-10 scope)= 推荐 **(a)**:P2-10 U **按 limb 声明"截断写非原子"限制并冻结当前行为**;"跨所有 settings 命名空间的原子写"归独立 owner **settings/settings** 的后续 epic。
+
+**不在本次"全批"内**:**P3 wave-8 形状决定**(六形 A–F:已裁 sandbox-srt 引擎 slice 未执行 + P3-06↔P3-08 环)——确认包 D1–D6 不含它、delegate 未给推荐,须另呈(delegate 将带推荐再请用户拍)。
+
+**生效**:D2/D3/D4/D6 按推荐、D5=A,进 BASE-ALIGN-v3 slice 规格与重锚执行 DAG;重锚时机仍 delegate 定(候选 11″/12/P4-12/327 已落、P3 wave-8 C 阶段落后、开新 P6/P7 前)。D5=A 使 P1-07 成为 GO 工作项(首次授信流程)。每项落地时按 iron rule(功能不减)+ 4.4a–d 重验。
