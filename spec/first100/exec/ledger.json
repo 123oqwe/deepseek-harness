@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-13T08:42:45.616Z",
-  "inputDigest": "a0c52d9f0869bd938bd74d7fb6f46a9edf1c7f3b68f539d6ba3aa259565aa9f5",
+  "lastUpdatedUtc": "2026-09-13T11:46:02.964Z",
+  "inputDigest": "4d961468bb02607a91b87118974d574fc74034ea1d79eabbcbe3a83e53126105",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -6989,47 +6989,22 @@
       "wave": 7,
       "cells": {
         "C": {
-          "status": "GREEN",
-          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
-          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
-          "expectCasesMatched": [
-            "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reserves an unseen key, which is the only decision that authorizes sending",
-            "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reserves again for a PREPARED entry, because nothing left the harness yet",
-            "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reports SENT as a duplicate, so a crash after the request does not send it twice",
-            "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reports CONFIRMED and COMPENSATED as duplicates too, so a settled key is never re-sent",
-            "P4-12 acceptance[2]: the same key, different parameters is refused (Stripe rule) refuses the same key presented with different parameters, naming the first arguments",
-            "P4-12 acceptance[2]: the same key, different parameters is refused (Stripe rule) refuses on arguments BEFORE reporting a duplicate, so a changed request is never answered by the old one",
-            "P4-12 must[3]: a stale epoch is fenced out refuses a caller whose epoch is older than the holder, and names the current one",
-            "P4-12 must[3]: a stale epoch is fenced out admits the SAME epoch, so fencing refuses only what is genuinely behind",
-            "P4-12 must[3]: a stale epoch is fenced out fences BEFORE reporting an outcome, so a superseded generation learns nothing about work it lost",
-            "P4-12 acceptance[1]: an ambiguous outcome goes to reconciliation, not to a retry refuses a retry of an AMBIGUOUS entry rather than sending again",
-            "P4-12 acceptance[1]: an ambiguous outcome goes to reconciliation, not to a retry distinguishes ambiguous from duplicate, because they need different handling",
-            "P4-12 must[1]: a provider with native support gets the Idempotency-Key header passes the key through as the Idempotency-Key request header (draft-ietf-httpapi-idempotency-key-header-07)",
-            "P4-12 must[1]: a provider with native support gets the Idempotency-Key header sends no Idempotency-Key header for a local-fencing provider, whose dedup is this ledger"
-          ],
-          "capturedAtUtc": "2026-09-08T15:11:48.334Z"
+          "status": "NOT_RUN",
+          "revokedFrom": {
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "absentCommitments": 1
+          },
+          "revokedReason": "fix ① (addendum 313) refiled P4-12.C's supplement as the stage primary after this cell's observation at 434408a47c; the observed tree lacks the live freeze, so the green pre-committed to nothing (addendum 17 rule: supersede with the stale green revoked in the same change). Re-observed on the P4-12 candidate."
         },
         "P": {
-          "status": "GREEN",
-          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
-          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
-          "expectCasesMatched": [
-            "P4-12 must[2]: the reservation is durable BEFORE the request is sent reports a SENT key as a duplicate after a restart, which is the crash this epic exists for",
-            "P4-12 must[2]: the reservation is durable BEFORE the request is sent still reserves a PREPARED key after a restart, because nothing was sent",
-            "P4-12 must[2]: the reservation is durable BEFORE the request is sent keeps the receipt digest across a restart, so a confirmed effect stays evidenced",
-            "P4-12 must[2]: two workers cannot both hold one reservation gives the reservation to ONE of two concurrent processes, and the other a duplicate",
-            "P4-12 must[3]: a fenced-out generation cannot write refuses a transition from an epoch the current holder has superseded",
-            "P4-12 must[3]: a fenced-out generation cannot write lets the CURRENT holder write, so fencing refuses only what is behind",
-            "P4-12 must[3]: a fenced-out generation cannot write refuses a transition for a key that was never reserved, rather than creating one",
-            "P4-12 must[3]: a fenced-out generation cannot write keeps the database off the handle, so nothing outside the store can run a statement",
-            "P4-12 must[2]: the durable store keeps two principals apart (BLOCKED-142) keeps one key reserved by two principals as two rows, neither visible to the other",
-            "P4-12 must[2]: the durable store keeps two principals apart (BLOCKED-142) refuses a transition presented under the WRONG principal, so a key cannot be moved from outside its scope"
-          ],
-          "capturedAtUtc": "2026-09-08T15:11:48.582Z"
+          "status": "NOT_RUN",
+          "revokedFrom": {
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "absentCommitments": 1
+          },
+          "revokedReason": "fix ① (addendum 313) refiled P4-12.P's supplement as the stage primary after this cell's observation at 434408a47c; the observed tree lacks the live freeze, so the green pre-committed to nothing (addendum 17 rule: supersede with the stale green revoked in the same change). Re-observed on the P4-12 candidate."
         },
         "U": {
           "status": "GREEN",
@@ -7046,23 +7021,18 @@
           "capturedAtUtc": "2026-09-08T15:07:17.922Z"
         },
         "F": {
-          "status": "GREEN",
-          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
-          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
-          "expectCasesMatched": [
-            "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects commits each effect exactly once across 10,000 random crashes, counted at the SERVICE",
-            "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects still commits the effect at least once when a crash lands before the send",
-            "P4-12 validation: a provider that timed out AFTER committing leaves the effect committed once when the ledger is told the outcome is unknown",
-            "P4-12 validation: a batch action is ledgered item by item reserves each item separately, so one item failing does not resend the others"
-          ],
-          "capturedAtUtc": "2026-09-08T15:11:48.821Z"
+          "status": "NOT_RUN",
+          "revokedFrom": {
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "absentCommitments": 1
+          },
+          "revokedReason": "fix ① (addendum 313) refiled P4-12.F's supplement as the stage primary after this cell's observation at 434408a47c; the observed tree lacks the live freeze, so the green pre-committed to nothing (addendum 17 rule: supersede with the stale green revoked in the same change). Re-observed on the P4-12 candidate."
         }
       },
       "supplements": {
         "C.2": {
-          "status": "GREEN",
+          "status": "SUPERSEDED",
           "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
           "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
           "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
@@ -7071,7 +7041,8 @@
             "P4-12 must[2]: an idempotency key is unique PER CLIENT, never globally carries the requesting principal into the reservation, which is what the store persists",
             "P4-12 must[2]: an idempotency key is unique PER CLIENT, never globally still refuses a second reservation WITHIN one principal, so scoping did not disable dedup"
           ],
-          "capturedAtUtc": "2026-09-08T15:11:49.064Z"
+          "capturedAtUtc": "2026-09-08T15:11:49.064Z",
+          "supersededBy": "2026-09-13T04:36:09.000Z"
         },
         "U.1": {
           "status": "GREEN",
@@ -7090,7 +7061,7 @@
       "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "BLOCKED_ON_ACCEPTANCE",
+      "status": "NOT_RUN",
       "acceptedEvidence": {
         "acceptedAtUtc": "2026-09-08T15:25:33.534Z",
         "cells": {
