@@ -11,12 +11,15 @@
  * BLOCKED-106 was a set of cells whose recorded case counts had been copied
  * from the freeze instead of computed from the artifact; the counts here are
  * derived by `parseVitestJsonReport`, the same function the ledger greens with,
- * so the two can never disagree about what "passing" means.
+ * so the two can never disagree about what "passing" means. Titles are matched
+ * the way the ledger matches them too: through the registered-rename table, and
+ * refusing a frozen string that names more than one passing case.
  *
- * Four outcomes per cell, and only the first is a pass:
+ * Outcomes per cell, and only the first is a pass:
  *
- * | VERIFIED | every frozen case is present and passing in this observation |
+ * | VERIFIED | every frozen case is present and passing in this observation, each exactly once |
  * | INCOMPLETE | at least one frozen case is absent or not passing here |
+ * | AMBIGUOUS | every frozen case is passing, but at least one frozen string names more than one passing case, so another cell's evidence could satisfy it (BLOCKED-104) |
  * | UNFROZEN | the stage has no freeze entry yet, so there is nothing to verify |
  * | PREMATURE | the epic is not authorized to start yet, whatever its cases show |
  * | SCHEDULED_BLOCKED | the stage's clause has no subject, and the blocker is on record and still open |
@@ -46,17 +49,21 @@
  *     --report <vitest-report.json> --ci-run-url <url> --candidate-sha <sha40>
  *   node scripts/first100/verify-p9-cells.mjs --check
  *
- * `--check` re-reads the recorded file and re-derives nothing: it reports what
- * is on record. Use the recording form to change it.
+ * `--check` re-derives no verdict: it reports what is on record, and fails when
+ * a recorded VERIFIED cell no longer describes the tree it runs in (see
+ * {@link staleCells}). Use the recording form to change the record.
  *
  * @module scripts/first100/verify-p9-cells
  */
+import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { parseVitestJsonReport } from './generate-ledger.mjs'
+import { findAmbiguousCaseMatches, parseVitestJsonReport } from './generate-ledger.mjs'
+import { frozenTitlePresent, registeredRenames } from './frozen-title-renames.mjs'
+import { commitmentKey, freezeEntriesAt } from './verify-freeze-in-candidate-tree.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = resolve(here, '..', '..')
@@ -111,17 +118,51 @@ function flag(argv, flag_) {
 }
 
 /**
+ * The freeze entry a P9 cell is judged against: the last one written for its
+ * stage. Recording and the staleness check both call this, so they always judge
+ * the same entry.
+ * @param freeze - the command freeze.
+ * @param epic - the P9 epic.
+ * @param stage - the stage.
+ * @returns the entry, or `undefined` when the stage has none.
+ */
+function selectFrozenEntry(freeze, epic, stage) {
+  return freeze.entries.filter(entry => entry.epic === epic && entry.stage === stage).at(-1)
+}
+
+/**
+ * Every repository path a freeze entry's observation depends on: the files it
+ * names and the test paths its command runs. Flags such as `--reporter=json`
+ * are not paths and are left out.
+ * @param entry - a command-freeze entry.
+ * @returns the distinct paths.
+ */
+export function referencedPaths(entry) {
+  const commandPaths = entry.argv.slice(4).filter(arg => !arg.startsWith('-'))
+  return [...new Set([...(entry.files ?? []), ...commandPaths])]
+}
+
+/**
  * Verify every frozen P9 cell against one observation.
  *
- * A cell is VERIFIED only when EVERY frozen case is found passing. A partial
- * match is INCOMPLETE and names what was missing, because "most of the cases
- * passed" is the shape of a stage that silently lost coverage.
+ * A cell is VERIFIED only when EVERY frozen case is found passing, and each
+ * frozen string names exactly one passing case. A partial match is INCOMPLETE
+ * and names what was missing, because "most of the cases passed" is the shape
+ * of a stage that silently lost coverage.
+ *
+ * `matching` carries the ledger's two matching rules. With neither given the
+ * result is what it was before they existed: a frozen title matches only when
+ * that exact string is passing, and no count is consulted.
  * @param {{ entries: readonly object[] }} freeze - the command freeze.
  * @param {Set<string>} passing - case names observed passing, from the ledger's parser.
  * @param {readonly string[]} p9Ids - every P9 epic id, from the registry extension.
+ * @param releasedEpics - the epics authorized to start; `undefined` authorizes all.
+ * @param stageBlockers - stages parked on a recorded blocker.
+ * @param matching - `matchCounts` from the ledger's parser and `renames` from the rename register.
  * @returns {object[]} one record per (epic, stage), in stage order.
  */
-export function verifyCells(freeze, passing, p9Ids, releasedEpics, stageBlockers = []) {
+export function verifyCells(freeze, passing, p9Ids, releasedEpics, stageBlockers = [], matching = {}) {
+  const renames = matching.renames ?? new Map()
   const cells = []
   for (const epic of p9Ids) {
     if (releasedEpics !== undefined && !releasedEpics.has(epic)) {
@@ -139,24 +180,99 @@ export function verifyCells(freeze, passing, p9Ids, releasedEpics, stageBlockers
           : { epic, stage, status: 'STALE_BLOCKER', blocker: blocked.blocker, detail: `${blocked.blocker} is ${status}` })
         continue
       }
-      const frozen = freeze.entries.filter(entry => entry.epic === epic && entry.stage === stage).at(-1)
+      const frozen = selectFrozenEntry(freeze, epic, stage)
       if (frozen === undefined) {
         cells.push({ epic, stage, status: 'UNFROZEN' })
         continue
       }
-      const missing = frozen.expectCases.filter(title => !passing.has(title))
+      const missing = frozen.expectCases.filter(title => !frozenTitlePresent(title, passing, renames, epic, stage))
+      // A frozen string that names more than one passing case is satisfied by
+      // any of them, so deleting this cell's own case would leave it verified
+      // on another cell's evidence (BLOCKED-104). The ledger refuses to green
+      // such a cell; this refuses to verify one.
+      const ambiguous = matching.matchCounts === undefined
+        ? []
+        : findAmbiguousCaseMatches(frozen.expectCases, matching.matchCounts)
+      const status = missing.length > 0 ? 'INCOMPLETE' : (ambiguous.length > 0 ? 'AMBIGUOUS' : 'VERIFIED')
       cells.push({
         epic,
         stage,
-        status: missing.length === 0 ? 'VERIFIED' : 'INCOMPLETE',
+        status,
         frozenCases: frozen.expectCases.length,
         // Computed from the observation, never copied from the freeze.
         matchedCases: frozen.expectCases.length - missing.length,
         ...missing.length === 0 ? {} : { missingCases: missing },
+        ...ambiguous.length === 0 ? {} : { ambiguousCases: ambiguous.map(entry => ({ title: entry.title, count: entry.count })) },
       })
     }
   }
   return cells
+}
+
+/**
+ * Which recorded VERIFIED cells no longer describe the tree this runs in.
+ *
+ * A record proves what one observation showed about one tree. `--check` used
+ * to re-read it and nothing else, so a record went on saying VERIFIED after the
+ * files it had observed changed, and no gate failed: measured 2026-09-13, 17 of
+ * 26 recorded cells had changed files before any rebase. A cell is stale when
+ * the recorded candidate cannot be read here, when the stage's freeze entry has
+ * no identical commitment in that candidate's tree, or when a path the entry
+ * names differs between that candidate and HEAD. Only VERIFIED cells can go
+ * stale; every other status claims no observation of the current files.
+ * @param record - the recorded verification.
+ * @param freeze - the command freeze as it is now.
+ * @param git - `freezeAt(sha)` gives that tree's freeze entries, or `undefined`
+ *   when it cannot be read; `changedPaths(sha, paths)` gives the paths that
+ *   differ between that commit and HEAD, or `undefined` when the comparison fails.
+ * @returns one `{ epic, stage, reason }` per stale cell.
+ */
+export function staleCells(record, freeze, git) {
+  const verified = (record.cells ?? []).filter(cell => cell.status === 'VERIFIED')
+  const recordedEntries = git.freezeAt(record.candidateSha)
+  if (recordedEntries === undefined) {
+    // An unreadable candidate is never a pass: nothing could be compared.
+    return verified.map(cell => ({
+      epic: cell.epic,
+      stage: cell.stage,
+      reason: `the recorded candidate ${record.candidateSha} cannot be read in this clone`,
+    }))
+  }
+  const recordedCommitments = new Set(recordedEntries.map(commitmentKey))
+  const stale = []
+  for (const cell of verified) {
+    const entry = selectFrozenEntry(freeze, cell.epic, cell.stage)
+    if (entry === undefined) {
+      stale.push({ epic: cell.epic, stage: cell.stage, reason: 'the stage has no freeze entry now' })
+      continue
+    }
+    if (!recordedCommitments.has(commitmentKey(entry))) {
+      stale.push({ epic: cell.epic, stage: cell.stage, reason: 'its freeze entry was written or changed after the recorded observation' })
+      continue
+    }
+    const changed = git.changedPaths(record.candidateSha, referencedPaths(entry))
+    if (changed === undefined) {
+      stale.push({ epic: cell.epic, stage: cell.stage, reason: 'the files it names could not be compared with the recorded candidate' })
+    } else if (changed.length > 0) {
+      stale.push({ epic: cell.epic, stage: cell.stage, reason: `changed since the recorded observation: ${changed.join(', ')}` })
+    }
+  }
+  return stale
+}
+
+/** The repository this script runs in, as {@link staleCells} reads it. */
+const repositoryGit = {
+  freezeAt: freezeEntriesAt,
+  changedPaths(sha, paths) {
+    try {
+      const output = execFileSync('git', ['diff', '--name-only', sha, 'HEAD', '--', ...paths], { cwd: REPO_ROOT, encoding: 'utf8' })
+      return output.split('\n').filter(line => line.length > 0)
+    } catch {
+      // Swallows git's failure to compare (an absent commit, a broken clone).
+      // The caller turns `undefined` into a stale cell, so it never passes.
+      return undefined
+    }
+  },
 }
 
 /**
@@ -236,6 +352,15 @@ function main() {
     for (const epic of record.epics) {
       console.log(`  ${epic.epic}: ${epic.terminalState} [${epic.verifiedStages.join('') || '-'}]`)
     }
+    const stale = staleCells(record, loadJson(COMMAND_FREEZE_PATH), repositoryGit)
+    if (stale.length > 0) {
+      for (const cell of stale) console.error(`  STALE ${cell.epic}.${cell.stage}: ${cell.reason}`)
+      console.error(
+        `verify-p9-cells: ${String(stale.length)} recorded cell(s) no longer describe this tree; `
+        + 're-record from an observation of it with --report',
+      )
+      process.exit(1)
+    }
     return
   }
 
@@ -269,10 +394,10 @@ function main() {
     process.exit(1)
   }
 
-  const { raw, titles } = parseVitestJsonReport(reportPath)
+  const { raw, titles, matchCounts } = parseVitestJsonReport(reportPath)
   const freeze = loadJson(COMMAND_FREEZE_PATH)
   const stageBlockers = existsSync(STAGE_BLOCKERS_PATH) ? loadJson(STAGE_BLOCKERS_PATH).entries ?? [] : []
-  const cells = verifyCells(freeze, titles, p9Ids, releasedEpics, stageBlockers)
+  const cells = verifyCells(freeze, titles, p9Ids, releasedEpics, stageBlockers, { matchCounts, renames: registeredRenames() })
   const epics = foldEpics(cells, p9Ids)
   const record = {
     schema: { name: 'first100-p9-verification', version: '1.0' },
@@ -288,6 +413,9 @@ function main() {
   for (const cell of cells) {
     if (cell.status === 'INCOMPLETE') {
       console.log(`  INCOMPLETE ${cell.epic}.${cell.stage}: ${cell.matchedCases}/${cell.frozenCases} cases passing here`)
+    }
+    if (cell.status === 'AMBIGUOUS') {
+      console.log(`  AMBIGUOUS ${cell.epic}.${cell.stage}: ${String(cell.ambiguousCases.length)} frozen case string(s) each name more than one passing case`)
     }
   }
 }
