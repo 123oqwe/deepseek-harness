@@ -60,27 +60,6 @@ function contextAttributes(node: unknown, found: Set<string>): Set<string> {
 }
 
 /**
- * Read a deployment's policy set, refusing before anything is enforced.
- *
- * Syntax first, then vocabulary, and the order is load-bearing: a policy that
- * does not parse has no vocabulary to read, and reporting it as an unknown key
- * would send a deployment hunting a typo in a key that was never the problem.
- *
- * **The vocabulary check is dsh's own rather than Cedar's `validate`, and the
- * reason is measured.** The installed `@cedar-policy/cedar-wasm` 4.12.0 cannot
- * express dsh's namespaced entity types in a schema: its schema entry points
- * take a single unnamed namespace, so `{ json: <namespace body> }` parses
- * while `{ json: { Dsh: … } }` and an entity type spelled `Dsh::Principal`
- * are both refused, and the Cedar-schema-language wrappers are refused as
- * `invalid type: string`. dsh sends `Dsh::Principal`, `Dsh::Action` and
- * `Dsh::Resource`, and that translation is P2-05's frozen property, which this
- * epic does not re-verify and must not quietly change. So what is hand-written
- * here is one narrow thing — a membership test over context attribute names —
- * while every authorization semantic remains Cedar's.
- * @param policies - the deployment's policy set, keyed by policy id.
- * @returns the set when every policy parses, or the reason it was refused.
- */
-/**
  * Ask Cedar one question, turning an escape into an answer.
  *
  * The engine reaches this repository through a wasm boundary, and two failures
@@ -150,6 +129,27 @@ function conditionDepth(source: string): number {
   return deepest
 }
 
+/**
+ * Read a deployment's policy set, refusing before anything is enforced.
+ *
+ * Syntax first, then vocabulary, and the order is load-bearing: a policy that
+ * does not parse has no vocabulary to read, and reporting it as an unknown key
+ * would send a deployment hunting a typo in a key that was never the problem.
+ *
+ * **The vocabulary check is dsh's own rather than Cedar's `validate`, and the
+ * reason is measured.** The installed `@cedar-policy/cedar-wasm` 4.12.0 cannot
+ * express dsh's namespaced entity types in a schema: its schema entry points
+ * take a single unnamed namespace, so `{ json: <namespace body> }` parses
+ * while `{ json: { Dsh: … } }` and an entity type spelled `Dsh::Principal`
+ * are both refused, and the Cedar-schema-language wrappers are refused as
+ * `invalid type: string`. dsh sends `Dsh::Principal`, `Dsh::Action` and
+ * `Dsh::Resource`, and that translation is P2-05's frozen property, which this
+ * epic does not re-verify and must not quietly change. So what is hand-written
+ * here is one narrow thing — a membership test over context attribute names —
+ * while every authorization semantic remains Cedar's.
+ * @param policies - the deployment's policy set, keyed by policy id.
+ * @returns the set when every policy parses, or the reason it was refused.
+ */
 export function parsePolicySet(policies: Readonly<Record<string, string>>): PolicySetParse {
   const ids = Object.keys(policies)
   if (ids.length === 0) {

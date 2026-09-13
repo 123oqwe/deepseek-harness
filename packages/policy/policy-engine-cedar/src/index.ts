@@ -162,11 +162,12 @@ export function policySetDigest(policies: Readonly<Record<string, string>>): Pol
  * could not tell them apart.
  *
  * Exported and pure because the `failure` branch is NOT reachable through
- * {@link CedarPolicyEngine.evaluate} on a loaded engine: the policy set is
- * validated at load, and the entity types are constants this module writes. It
- * is a fail-closed mapping for a state only a defect or a future Cedar could
- * produce, so it is proven here as a mapping rather than staged as a runtime
- * situation that cannot occur.
+ * {@link CedarPolicyEngine.evaluate}: every set this engine decides against has
+ * already been accepted by whoever provides it — `@deepseek-ai/dsh-policy-language`
+ * refuses one that does not parse where a deployment states it — and the entity
+ * types are constants this module writes. It is a fail-closed mapping for a
+ * state only a defect or a future Cedar could produce, so it is proven here as
+ * a mapping rather than staged as a runtime situation that cannot occur.
  * @param answer - what Cedar returned.
  * @param digest - the loaded policy set's digest, recorded on every decision.
  * @returns the closed decision and the audit-only explain.
@@ -199,12 +200,20 @@ export function decisionFromAnswer(answer: AuthorizationAnswer, digest: PolicySe
 }
 
 /**
- * Mounts `ctx.policy`: a Cedar authorizer over the configured policy set.
+ * Mounts `ctx.policy`: a Cedar authorizer over whatever set `ctx.policySet`
+ * currently provides.
  *
- * The set is validated AT LOAD, not at the first decision. A deployment whose
- * policies do not parse is a misconfiguration, and finding out at the first
- * tool call would mean the failure surfaces as a denied action rather than as
- * a refused boot.
+ * **This service validates nothing.** It used to probe its configured set at
+ * construction, and that probe was removed rather than softened when the set
+ * stopped being configuration: under the policy-set seam an unparsed set never
+ * reaches this engine, because the provider refuses one where a deployment
+ * states it and the settings namespace behind it keeps the last accepted set
+ * when a reload fails. Two things deciding what happens to a bad set would
+ * disagree the first time a reload was refused, so this one does not decide it.
+ *
+ * A misconfigured deployment still finds out at load rather than at its first
+ * tool call — the refusal simply happens at the provider, which is where the
+ * policies are stated.
  */
 export default class CedarPolicyEngine extends Service {
   /**
