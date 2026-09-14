@@ -26,7 +26,6 @@ import { SessionId } from '@deepseek-ai/dsh-session'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
 import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SubagentRuntime from '@deepseek-ai/dsh-subagent'
 import * as spawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
 import { WorkflowRunId } from '@deepseek-ai/dsh-workflow'
@@ -48,7 +47,6 @@ afterEach(async () => {
 async function setup(options: { maxNestingDepth?: number; disposeGraceMs?: number } = {}) {
   const ctx = new Context()
   await mountAgentLoopTestDependencies(ctx)
-  await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(AgentLoop, { agents: [] })
   await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
@@ -250,7 +248,6 @@ describe('P4-09 must[3]: a nested run\'s children inherit its DECAYED capability
     const ctx = new Context()
     pinTrustKernel(ctx, createTrustKernel())
     await mountAgentLoopTestDependencies(ctx)
-    await ctx.plugin(SessionProjectionRegistry)
     const root = mkdtempSync(join(tmpdir(), 'dsh-nested-token-'))
     tokenRoots.push(root)
     await ctx.plugin(AgentLoop, { agents: [] })

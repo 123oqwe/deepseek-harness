@@ -9,3 +9,4 @@
   - option "Permission Switch the permission preset (sandbox mode + approval policy)"
   - option "Model Select the model for this conversation"
   - option "Export Download this Session log as a ZIP archive"
+  - option "trust-skills allow this project's own skills to run, after confirming"

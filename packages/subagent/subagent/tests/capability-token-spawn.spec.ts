@@ -22,7 +22,6 @@ import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-test
 import SandboxPolicyService from '@deepseek-ai/dsh-sandbox-policy'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import * as SubagentSpawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
 import ApprovalService from '@deepseek-ai/dsh-user-approval'
 import { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
@@ -46,7 +45,6 @@ async function setup(requireForTools = true) {
   contexts.push(ctx)
   pinTrustKernel(ctx, createTrustKernel())
   await mountAgentLoopTestDependencies(ctx)
-  await ctx.plugin(SessionProjectionRegistry)
   const root = mkdtempSync(join(tmpdir(), 'dsh-cap-spawn-'))
   roots.push(root)
   await ctx.plugin(JsonlSessionPersistence, { root })

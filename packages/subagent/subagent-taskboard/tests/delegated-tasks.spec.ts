@@ -18,7 +18,6 @@ import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-test
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import * as SubagentSpawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
 import SubagentRuntime from '@deepseek-ai/dsh-subagent'
 import type { TaskId, WorkerId } from '@deepseek-ai/dsh-taskboard'
@@ -43,7 +42,6 @@ async function setup(script: ConstructorParameters<typeof MockAdapter>[0]) {
   roots.push(root)
   const ctx = new Context()
   await mountAgentLoopTestDependencies(ctx)
-  await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(JsonlSessionPersistence, { root: join(root, 'sessions') })
   await ctx.plugin(AgentLoop, { agents: [] })
   await ctx.plugin(MessageBusPlugin)
@@ -219,7 +217,6 @@ describe('P5-11: a delegated child IS a task on the board', () => {
     roots.push(root)
     const ctx = new Context()
     await mountAgentLoopTestDependencies(ctx)
-    await ctx.plugin(SessionProjectionRegistry)
     await ctx.plugin(AgentLoop, { agents: [] })
     await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
@@ -239,7 +236,6 @@ describe('P5-11: a delegated child IS a task on the board', () => {
     // delegation exactly as before rather than half-recording it.
     const ctx = new Context()
     await mountAgentLoopTestDependencies(ctx)
-    await ctx.plugin(SessionProjectionRegistry)
     await ctx.plugin(AgentLoop, { agents: [] })
     await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)

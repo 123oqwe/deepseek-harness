@@ -22,7 +22,6 @@ import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 import RunPlugin from '@deepseek-ai/dsh-run'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import * as SubagentSpawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
@@ -58,7 +57,6 @@ async function setup(script: ConstructorParameters<typeof MockAdapter>[0], direc
   const ctx = new Context()
   contexts.push(ctx)
   await mountAgentLoopTestDependencies(ctx)
-  await ctx.plugin(SessionProjectionRegistry)
   // Continuable children require persistence: a child that outlives its
   // Activation has to be reloadable, which is also what makes a settlement
   // delivered on a later start meaningful.
@@ -128,7 +126,7 @@ describe('P4-06: a settlement is committed to the bus before anyone tries to del
     // A second process over the same bus directory: the row is still owed.
     const second = await setup([textResponse('parent done')], busDirectory)
     expect(second.ctx.messageBus.outboxRows().map(row => row.record.state)).toEqual(['pending'])
-    await second.ctx.agentLoop.create(SessionId('lonely-parent'), { provider: 'mock', model: 'mock' })
+    await second.ctx.agents.resume({ resumeSessionId: SessionId('lonely-parent'), agentOptions: { provider: 'mock', model: 'mock' } })
 
     await vi.waitFor(() => {
       expect(second.ctx.messageBus.outboxRows().map(row => row.record.state)).toEqual(['acked'])

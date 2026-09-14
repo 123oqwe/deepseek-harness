@@ -61,18 +61,29 @@ function firstActor(relative: string): string | undefined {
 function lane(name: string): string[] {
   return readdirSync(join(corpus, name), { withFileTypes: true })
     .filter(entry => entry.isDirectory())
-    .flatMap(entry => readdirSync(join(corpus, name, entry.name))
-      .filter(file => /^session(\.\d+)?\.jsonl$/u.test(file))
-      .map(file => `${name}/${entry.name}/${file}`))
+    .flatMap((entry) => {
+      // One log per Session role: its highest recorded generation
+      // (`session[.N][.vG].jsonl`), the same selection the snapshot harness makes.
+      const highest = new Map<string, { file: string; generation: number }>()
+      for (const file of readdirSync(join(corpus, name, entry.name))) {
+        const match = /^session((?:\.\d+)?)(?:\.v(\d+))?\.jsonl$/u.exec(file)
+        if (match === null) continue
+        const role = match[1] ?? ''
+        const generation = Number(match[2] ?? 0)
+        const current = highest.get(role)
+        if (current === undefined || generation > current.generation) highest.set(role, { file, generation })
+      }
+      return [...highest.values()].map(({ file }) => `${name}/${entry.name}/${file}`)
+    })
 }
 
 // `subagent-depth-two-rejection` is the scenario because it carries TWO hops
 // and every one of its three logs appends a manifest, so each claim's join has
 // a subject. `advanced-toolchain` has the same chain shape but its children
 // dispatch no tool, so the actor half of the pair would read `undefined` there.
-const ROOT = 'session/subagent-depth-two-rejection/session.jsonl'
-const CHILD = 'session/subagent-depth-two-rejection/session.1.jsonl'
-const GRANDCHILD = 'session/subagent-depth-two-rejection/session.2.jsonl'
+const ROOT = 'session/subagent-depth-two-rejection/session.v3.jsonl'
+const CHILD = 'session/subagent-depth-two-rejection/session.1.v3.jsonl'
+const GRANDCHILD = 'session/subagent-depth-two-rejection/session.2.v3.jsonl'
 
 describe('P2-01 acceptance[0] — a shipped boot names who is acting', () => {
   it('attaches the HOST USER as the root, and the first action is attributed to exactly that principal', () => {

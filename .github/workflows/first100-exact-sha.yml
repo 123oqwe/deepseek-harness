@@ -111,6 +111,16 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
 
+      # Every vitest run from here on loads the flock node-api addon through
+      # session persistence, and its binary is gitignored. The root `test` and
+      # `test:coverage` scripts build it first, and upstream's `ci-coverage` gate
+      # runs the same `build:native-system` before vitest; these steps call
+      # vitest directly, so the build has to precede the first of them. It runs
+      # even after a red Typecheck because every later step does.
+      - name: Build the host native-system addon
+        if: always()
+        run: pnpm run build:native-system
+
       # The registry gate set, which until 2026-09-06 no workflow ran at all —
       # every gate in it fired only when someone typed the command, and five
       # days of that missed twelve build artifacts committed under a source

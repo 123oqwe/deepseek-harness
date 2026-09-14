@@ -32,6 +32,7 @@ import { join } from 'node:path'
 import { resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
 import { runFixtureTurn } from '@deepseek-ai/dsh-loader-smoke'
 import { bootProductionProfile } from '../../../../test-support/loader-smoke/tests/fixtures/production-profile.ts'
+import { createFixtureRootAgent } from '../../../../test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts'
 
 /** The cloned repository, below the smoke's cwd so it is not the HOST skill root. */
 const CLONE_DIR = 'clone'
@@ -61,6 +62,9 @@ try {
   const { RunId } = await import('@deepseek-ai/dsh-principal/types')
   const { randomUUID } = await import('node:crypto')
   const principal = hostUserIdentity(RunId(`run-${randomUUID()}`)).principal
+  // The root agent is created here, after the driver resolves the host user and
+  // before any trust decision, the same point the configured row used to start it.
+  await createFixtureRootAgent(ctx, { provider: 'workspace-trust-mock', model: 'workspace-trust-mock', cwd: clone, identity: hostUserIdentity(RunId(`run-${randomUUID()}`)) })
 
   if (mode === 'grant' || mode === 'revoke' || mode === 'swap') {
     await trust.grantTrust(clone, 'trusted-read', principal, 'launch-argument')

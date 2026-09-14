@@ -17,6 +17,10 @@ import { runFixtureTurn } from '@deepseek-ai/dsh-loader-smoke'
 import { observeWorkspaceIdentity } from '@deepseek-ai/dsh-workspace'
 import { createAnonymousDevPrincipal, PrincipalId, TenantId } from '@deepseek-ai/dsh-principal'
 import { bootProductionProfile } from '../../../../test-support/loader-smoke/tests/fixtures/production-profile.ts'
+import { randomUUID } from 'node:crypto'
+import { HOST_USER_IDENTITY_KEY, type HostUserIdentityFactory } from '@deepseek-ai/dsh-agent-loop'
+import { RunId } from '@deepseek-ai/dsh-principal'
+import { createFixtureRootAgent } from '../../../../test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts'
 
 /** The workspace scope a session in this cwd reads under, observed the same way the consumer observes it. */
 async function workspaceScope(): Promise<{ canonicalPath: string; identity: string }> {
@@ -36,6 +40,7 @@ const ctx = await bootProductionProfile({
   overlayPaths: [resolveConfigPath(configPath, undefined)],
 })
 try {
+  await createFixtureRootAgent(ctx, { provider: 'memory-context-mock', model: 'memory-context-mock', cwd: process.cwd(), identity: (ctx.get(HOST_USER_IDENTITY_KEY) as HostUserIdentityFactory | undefined)?.(RunId(`run-${randomUUID()}`)) })
   await ctx.memory.propose({
     origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: createAnonymousDevPrincipal(PrincipalId('p-fixture'), TenantId('local')),
     scope: { tenantId: TenantId('local'), workspace: await workspaceScope() },

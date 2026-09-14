@@ -19,6 +19,9 @@ import { join } from 'node:path'
 import { resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
 import { runFixtureTurn } from '@deepseek-ai/dsh-loader-smoke'
 import { bootProductionProfile } from '../../../../test-support/loader-smoke/tests/fixtures/production-profile.ts'
+import { randomUUID } from 'node:crypto'
+import { RunId } from '@deepseek-ai/dsh-principal'
+import { createFixtureRootAgent } from '../../../../test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts'
 
 /**
  * The cloned repository lives below the smoke's cwd: the harness points
@@ -36,6 +39,7 @@ const ctx = await bootProductionProfile({
   overlayPaths: [resolveConfigPath(configPath, undefined)],
 })
 try {
+  await createFixtureRootAgent(ctx, { provider: 'workspace-trust-mock', model: 'workspace-trust-mock', cwd: join(process.cwd(), CLONE_DIR), identity: (ctx.get('hostUserIdentity') as ((runId: ReturnType<typeof RunId>) => unknown) | undefined)?.(RunId(`run-${randomUUID()}`)) })
   if (process.env.P1_07_TRUST_VIA_COMMAND !== undefined) {
     // A host user who says yes. The command asks through the real approval
     // seam; without an answerer the seam settles `'unavailable'` and the

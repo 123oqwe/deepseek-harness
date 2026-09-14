@@ -7,6 +7,7 @@ import { WorkflowRunId } from '@deepseek-ai/dsh-workflow'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
 import SubagentRuntime from '@deepseek-ai/dsh-subagent'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 import * as spawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
 import { MockAdapter, textResponse } from '../packages/core/agent-loop/tests/mock-adapter.ts'
 import type {} from '@deepseek-ai/dsh-tool-workflow'
@@ -59,6 +60,7 @@ describe('advanced Python snapshot workflow ordering', () => {
       async apply(inner: Context) {
         await mountAgentLoopTestDependencies(inner)
         await inner.plugin(AgentLoop, { agents: [] })
+        await inner.plugin(MessageBusPlugin)
         await inner.plugin(SubagentRuntime)
         await inner.plugin(spawn, { providerName: 'spawn' })
         inner.on('agent/pre-step', ({ agent }, next) => {

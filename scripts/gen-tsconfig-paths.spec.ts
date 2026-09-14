@@ -23,7 +23,7 @@ describe('generated tsconfig package aliases', () => {
       hasInvariant: true,
       // Read from the package's own `exports`, so a new published subpath
       // earns an alias without anyone remembering to hand-write one.
-      subpaths: ['chunk-rows', 'invariant', 'surface', 'types'],
+      subpaths: ['invariant', 'surface', 'types'],
     })
     // Sorted, so a package added anywhere lands in a stable spot in the diff.
     expect([...aliases].sort((a, b) => a.specifier.localeCompare(b.specifier))).toEqual(aliases)

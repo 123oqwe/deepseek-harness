@@ -19,6 +19,9 @@ import { join } from 'node:path'
 import { resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
 import { runFixtureTurn } from '@deepseek-ai/dsh-loader-smoke'
 import { bootProductionProfile } from '../../../../test-support/loader-smoke/tests/fixtures/production-profile.ts'
+import { randomUUID } from 'node:crypto'
+import { RunId } from '@deepseek-ai/dsh-principal'
+import { createFixtureRootAgent } from '../../../../test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts'
 
 /** The cloned repository, below the smoke's cwd so it is not the HOST skill root. */
 const CLONE_DIR = 'clone'
@@ -32,6 +35,7 @@ const ctx = await bootProductionProfile({
   overlayPaths: [resolveConfigPath(configPath, undefined)],
 })
 try {
+  await createFixtureRootAgent(ctx, { provider: 'workspace-trust-mock', model: 'workspace-trust-mock', cwd: join(process.cwd(), CLONE_DIR), identity: (ctx.get('hostUserIdentity') as ((runId: ReturnType<typeof RunId>) => unknown) | undefined)?.(RunId(`run-${randomUUID()}`)) })
   const answer = process.env.P1_07_ACP_ANSWER
   if (answer !== undefined) {
     // Stands in for the ACP client, which is what answers `approval/request` on

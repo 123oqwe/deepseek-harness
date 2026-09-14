@@ -19,11 +19,7 @@
 
 - id: agent-loop
   config:
-    agents:
-      - id: main
-        provider: workspace-trust-mock
-        model: workspace-trust-mock
-        cwd: !!js process.cwd() + '/clone'
+    agents: []
 
 - id: session-persistence-jsonl
   config:

@@ -989,7 +989,7 @@
     },
     {
       "epic": "P2-01",
-      "path": "snapshots/session/subagent-depth-two-rejection/session.1.jsonl",
+      "path": "snapshots/session/subagent-depth-two-rejection/session.1.v3.jsonl",
       "kind": "fixture",
       "stages": [
         "U.1"
@@ -997,7 +997,7 @@
     },
     {
       "epic": "P2-01",
-      "path": "snapshots/session/subagent-depth-two-rejection/session.2.jsonl",
+      "path": "snapshots/session/subagent-depth-two-rejection/session.2.v3.jsonl",
       "kind": "fixture",
       "stages": [
         "U.1"
@@ -1005,7 +1005,7 @@
     },
     {
       "epic": "P2-01",
-      "path": "snapshots/session/subagent-depth-two-rejection/session.jsonl",
+      "path": "snapshots/session/subagent-depth-two-rejection/session.v3.jsonl",
       "kind": "fixture",
       "stages": [
         "U.1"
@@ -2282,20 +2282,20 @@
     },
     {
       "epic": "P4-06",
+      "path": "packages/core/agent-loop/tests/arrival-dedup.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P4-06",
       "path": "packages/core/agent/src/index.ts",
       "kind": "source",
       "stages": [
         "U.3"
       ],
       "reason": "The barrel that publishes `DuplicateArrivalError`, the refusal a caller must be able to catch. NOT labelled HOT ZONE: it gains two export lines and no behaviour."
-    },
-    {
-      "epic": "P4-06",
-      "path": "packages/core/agent/tests/arrival-dedup.spec.ts",
-      "kind": "test",
-      "stages": [
-        "U.3"
-      ]
     },
     {
       "epic": "P4-06",
@@ -2389,7 +2389,15 @@
     },
     {
       "epic": "P4-06",
-      "path": "packages/session/session-persistence/tests/write-behind.spec.ts",
+      "path": "packages/session/session-persistence-jsonl/tests/jsonl.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P"
+      ]
+    },
+    {
+      "epic": "P4-06",
+      "path": "packages/session/session-persistence/tests/live-write-contract.ts",
       "kind": "test",
       "stages": [
         "P"
@@ -2400,8 +2408,8 @@
       "path": "packages/subagent/subagent/src/continuation.ts",
       "kind": "source",
       "stages": [
-        "U.3",
-        "U.4"
+        "U.4",
+        "U.3"
       ],
       "reason": "HOT ZONE. From `git show fee9034530 -- packages/subagent/subagent/src/continuation.ts`: `SubagentSettledMessageSource` gains an optional `senderEpoch`, and the settlement notice reads it from the child's `Agent.lifecycle` before the handle is disposed. The sender has to state its generation or must[2]'s triple has only two thirds of an identity; this epic's consumer is the parent's inbox, and the epoch is the one thing the inbox cannot derive."
     },
@@ -3030,7 +3038,7 @@
     },
     {
       "epic": "P5-10",
-      "path": "packages/core/agent-loop/tests/interception.spec.ts",
+      "path": "packages/core/agent-loop/tests/arrival-dedup.spec.ts",
       "kind": "test",
       "stages": [
         "U.1"
@@ -3038,7 +3046,7 @@
     },
     {
       "epic": "P5-10",
-      "path": "packages/core/agent/tests/arrival-dedup.spec.ts",
+      "path": "packages/core/agent-loop/tests/interception.spec.ts",
       "kind": "test",
       "stages": [
         "U.1"

@@ -14,6 +14,10 @@
 import { resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
 import { runFixtureTurn } from '@deepseek-ai/dsh-loader-smoke'
 import { bootProductionProfile } from '../../../../test-support/loader-smoke/tests/fixtures/production-profile.ts'
+import { randomUUID } from 'node:crypto'
+import { HOST_USER_IDENTITY_KEY, type HostUserIdentityFactory } from '@deepseek-ai/dsh-agent-loop'
+import { RunId } from '@deepseek-ai/dsh-principal'
+import { createFixtureRootAgent } from '../../../../test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts'
 
 const configPath = process.argv[2]
 if (configPath === undefined) throw new Error('empty-recall driver requires a config path')
@@ -24,6 +28,7 @@ const ctx = await bootProductionProfile({
   overlayPaths: [resolveConfigPath(configPath, undefined)],
 })
 try {
+  await createFixtureRootAgent(ctx, { provider: 'memory-context-mock', model: 'memory-context-mock', cwd: process.cwd(), identity: (ctx.get(HOST_USER_IDENTITY_KEY) as HostUserIdentityFactory | undefined)?.(RunId(`run-${randomUUID()}`)) })
   await runFixtureTurn(ctx, { task: 'deploy passphrase' })
 } finally {
   await ctx.fiber.dispose()

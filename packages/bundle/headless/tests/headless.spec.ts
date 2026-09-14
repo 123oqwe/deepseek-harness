@@ -327,7 +327,7 @@ describe('headless runner', () => {
     expect(test.output().err).toBe('dsh: reasoning:\nunfinished reasoning\n')
 
     finish.resolve(undefined)
-    await expect(running).resolves.toMatchObject({ code: 1 })
+    await expect(running).resolves.toMatchObject({ code: 3 })
     await test.ctx.fiber.dispose()
   })
 

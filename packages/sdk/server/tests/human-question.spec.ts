@@ -23,7 +23,6 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import UserQuestionService from '@deepseek-ai/dsh-user-questions'
 import type { HumanQuestionParams, HumanQuestionResult, JsonRpcTransportPeer } from '@deepseek-ai/dsh-sdk-protocol'
@@ -59,7 +58,6 @@ async function harness(transport: JsonRpcTransportPeer) {
   roots.push(storageDir)
   const ctx = new Context()
   await mountAgentLoopTestDependencies(ctx)
-  await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(AgentLoop, { agents: [] })
   await ctx.plugin(UserQuestionService)
   const server = new HarnessSdkJsonRpcServer(ctx, transport)

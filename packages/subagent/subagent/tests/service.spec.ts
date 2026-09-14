@@ -79,6 +79,7 @@ describe('SubagentRuntime', () => {
   it('releases its catalog projection binding with the service fiber', async () => {
     const ctx = new Context()
     await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(MessageBusPlugin)
     const fiber = await ctx.plugin(SubagentRuntime)
     const parent = Session.create(SessionId('catalog-parent'))
     parent.append('subagent/catalog', {

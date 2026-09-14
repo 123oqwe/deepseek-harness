@@ -49,6 +49,9 @@ describe.skipIf(webSnapshotMode() === 'record')('historical preset restoration t
         .filter(event => event.type === 'agent-preset/selected')
         .map(event => event.data.agentPreset)).toEqual(withSelections ? ['ptc', 'standard', 'ptc'] : [])
 
+      const attachedIdentity = resolved.agent.session.snapshotEvents()
+        .find(event => event.type === 'identity/attached')?.data
+      expect(attachedIdentity).toBeDefined()
       const publishedBytes = await readFile(successor)
       const published = Buffer.concat(scanZstdFrames(publishedBytes).frames
         .map(({ start, end }) => zstdDecompressSync(publishedBytes.subarray(start, end)))).toString('utf8')
@@ -60,6 +63,10 @@ describe.skipIf(webSnapshotMode() === 'record')('historical preset restoration t
           : row),
         // Agent activation closes its restored prefix with a fresh seed marker.
         { type: 'session/end-seed', seq: rows.length, time: 0, data: {} },
+        // The Web Host then attaches its host user to the resumed run (P2-01).
+        // Its principal and run ids are minted per boot, so the payload is read
+        // from the resumed session and only its position and shape are pinned.
+        { type: 'identity/attached', seq: rows.length + 1, time: 0, data: attachedIdentity },
       ].map(row => JSON.stringify(row)).join('\n') + '\n'
       const context = { sessionIds: [id], cwd: scaffold.workspaceCwd }
       expect(normalizeSessionSnapshots([published], context)).toEqual(normalizeSessionSnapshots([expected], context))

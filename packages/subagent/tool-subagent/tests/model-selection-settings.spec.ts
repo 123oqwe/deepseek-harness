@@ -398,6 +398,7 @@ describe('SubagentModelSelectionConfig', () => {
     try {
       await ctx.plugin(SubagentModelSelectionConfig)
       await ctx.plugin(SessionProjectionRegistry)
+      await ctx.plugin(MessageBusPlugin)
       await ctx.plugin(SubagentRuntime)
       const childId = SessionId('child-without-session-registry')
       const child = Session.create(childId, undefined, {

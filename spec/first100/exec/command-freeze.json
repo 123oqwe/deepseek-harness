@@ -12689,9 +12689,9 @@
         "packages/api/session-controller/src/agent.ts",
         "packages/subagent/subagent/src/child-agent.ts",
         "tests/first100/fixtures/P2-01.corpus.spec.ts",
-        "snapshots/session/subagent-depth-two-rejection/session.jsonl",
-        "snapshots/session/subagent-depth-two-rejection/session.1.jsonl",
-        "snapshots/session/subagent-depth-two-rejection/session.2.jsonl"
+        "snapshots/session/subagent-depth-two-rejection/session.v3.jsonl",
+        "snapshots/session/subagent-depth-two-rejection/session.1.v3.jsonl",
+        "snapshots/session/subagent-depth-two-rejection/session.2.v3.jsonl"
       ],
       "frozenAtUtc": "2026-09-11T17:28:48.597Z",
       "dryRunProof": {
@@ -14330,9 +14330,9 @@
       ],
       "expectExit": 0,
       "expectCases": [
-        "replays snapshots/web/fresh-round-trip/session.v2.jsonl (a real pre-schema-registry session fixture) with no negotiation failure and no silent event loss",
-        "replays snapshots/sdk/text-turn/session.v2.jsonl (a real pre-schema-registry session fixture) with no negotiation failure and no silent event loss",
-        "replays snapshots/session/skill-load/session.v2.jsonl (a real pre-schema-registry session fixture) with no negotiation failure and no silent event loss"
+        "replays 'snapshots/web/fresh-round-trip/sessio…' (a real pre-schema-registry session fixture) with no negotiation failure and no silent event loss",
+        "replays 'snapshots/sdk/text-turn/session.v2.js…' (a real pre-schema-registry session fixture) with no negotiation failure and no silent event loss",
+        "replays 'snapshots/session/skill-load/session.…' (a real pre-schema-registry session fixture) with no negotiation failure and no silent event loss"
       ],
       "files": [
         "packages/session/session-persistence-jsonl/tests/jsonl.spec.ts"

@@ -24,7 +24,6 @@ import { brandString } from '@deepseek-ai/dsh-brand'
 import type { DefinitionName, SignerIdentity } from '@deepseek-ai/dsh-workflow-registry'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SubagentRuntime from '@deepseek-ai/dsh-subagent'
 import * as spawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
 import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
@@ -164,7 +163,6 @@ describe('P4-09 must[0]: the REAL engine registers what the loader read', () => 
     home({ 'saved.js': 'return "from a saved file"' })
     const ctx = new Context()
     await mountAgentLoopTestDependencies(ctx)
-    await ctx.plugin(SessionProjectionRegistry)
     await ctx.plugin(AgentLoop, { agents: [] })
     await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)

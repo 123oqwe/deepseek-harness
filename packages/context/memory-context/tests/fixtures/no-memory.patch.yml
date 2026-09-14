@@ -19,11 +19,7 @@
 
 - id: agent-loop
   config:
-    agents:
-      - id: main
-        provider: memory-context-mock
-        model: memory-context-mock
-        cwd: !!js process.cwd()
+    agents: []
 
 - id: session-persistence-jsonl
   config:

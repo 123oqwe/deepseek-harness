@@ -86,6 +86,7 @@ async function setup(
 async function setupWithoutProjections(): Promise<Context> {
   const ctx = new Context()
   await ctx.plugin(SessionStore)
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   return ctx
 }

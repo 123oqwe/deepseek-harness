@@ -28,6 +28,10 @@ export const expectedUnsupported: Readonly<Partial<Record<string, { sourceVersio
     sourceVersion: 2,
     reason: 'session snapshot line 3: format v2 changed request prompt outside an open step cannot retain source chronology',
   },
+  'snapshots/session/background-job-abandoned/session.jsonl': {
+    sourceVersion: 0,
+    reason: 'session snapshot line 2: format v0 contains unknown historical event type "identity/attached" at seq 0; migration refuses unknown historical events even when ignorable',
+  },
   'snapshots/web/message-feedback-protocol/session.v2.jsonl': {
     sourceVersion: 2,
     reason: 'session snapshot line 3: format v2 surface before first step cannot acquire a system head without changing chronology',

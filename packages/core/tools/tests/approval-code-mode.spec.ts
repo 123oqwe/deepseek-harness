@@ -201,7 +201,7 @@ describe('P2-06 acceptance[2]: the record names the DISPATCH, not only the tool'
     const bound = agent.session.snapshotEvents().filter(event => event.type === 'approval/bound')
     expect(bound).toHaveLength(1)
     // The sub-call id this path manifests, which is the id an audit query holds.
-    expect((bound[0]!.data as { actionId?: string }).actionId).toBe('call-1:code:1')
+    expect((bound[0]!.data as { actionId?: string }).actionId).toBe('call-1:ptc:1')
   })
 
   it('gives two sub-dispatches of ONE tool two different actionIds, and does not let the first decision cover the second', async () => {
@@ -227,7 +227,7 @@ describe('P2-06 acceptance[2]: the record names the DISPATCH, not only the tool'
     const ids = agent.session.snapshotEvents()
       .filter(event => event.type === 'approval/bound')
       .map(event => (event.data as { actionId?: string }).actionId)
-    expect(ids).toEqual(['call-1:code:1', 'call-1:code:2'])
+    expect(ids).toEqual(['call-1:ptc:1', 'call-1:ptc:2'])
     // Both ran, each under its own decision. A path that refused the second
     // would satisfy "the first decision does not cover the second" for the
     // wrong reason, so the run is the assertion rather than a refusal count.

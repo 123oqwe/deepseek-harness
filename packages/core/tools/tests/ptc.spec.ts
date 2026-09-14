@@ -975,16 +975,16 @@ describe('the sub-dispatch scheduler (native concurrency contract)', () => {
       await runCode(ctx, 'program', { agent })
 
       const ordered = events
-        .filter(event => event.type === 'action/manifest-appended' || event.type === 'tool/code-dispatch-start')
+        .filter(event => event.type === 'action/manifest-appended' || event.type === 'tool/ptc-dispatch-start')
         .map(event => ({ type: event.type, id: (event.data as { actionId?: string; subCallId?: string }).actionId
         ?? (event.data as { subCallId?: string }).subCallId }))
       // Pairs, by identity and in order — a single manifest ahead of a program's
       // whole run would leave every later dispatch unmanifested.
       expect(ordered).toStrictEqual([
-        { type: 'action/manifest-appended', id: 'call-1:code:1' },
-        { type: 'tool/code-dispatch-start', id: 'call-1:code:1' },
-        { type: 'action/manifest-appended', id: 'call-1:code:2' },
-        { type: 'tool/code-dispatch-start', id: 'call-1:code:2' },
+        { type: 'action/manifest-appended', id: 'call-1:ptc:1' },
+        { type: 'tool/ptc-dispatch-start', id: 'call-1:ptc:1' },
+        { type: 'action/manifest-appended', id: 'call-1:ptc:2' },
+        { type: 'tool/ptc-dispatch-start', id: 'call-1:ptc:2' },
       ])
     })
 
@@ -1065,7 +1065,7 @@ describe('the sub-dispatch scheduler (native concurrency contract)', () => {
       await runCode(ctx, 'program', { agent })
 
       const manifests = events.filter(event => event.type === 'action/manifest-appended')
-      const starts = events.filter(event => event.type === 'tool/code-dispatch-start')
+      const starts = events.filter(event => event.type === 'tool/ptc-dispatch-start')
       // Exactly as many manifests as dispatches that actually started.
       expect(manifests).toHaveLength(starts.length)
     })
