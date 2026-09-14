@@ -265,7 +265,7 @@ function appendCodeModeManifest(
       preconditions: [],
       expectedDiff: { description: `code-mode sub-dispatch of ${name} executes with the manifested arguments` },
       compensation: { reversible: false, reason: 'the code-mode path declares no compensation; a tool that has one states it in its own manifest contribution' },
-      evidenceRequirements: [{ kind: 'external-receipt', description: `the tool/code-dispatch-end event for sub-call ${subCallId}` }],
+      evidenceRequirements: [{ kind: 'external-receipt', description: `the tool/ptc-dispatch event for sub-call ${subCallId}` }],
     },
   )
   // P2-05 acceptance[0]: the SAME enforcement point the native path reaches,
@@ -610,7 +610,7 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
         }
         const normalized = jsonNormalizeArgs(rawArgs)
         const n = ++dispatches
-        const subCallId = brandString<ToolCallId>(`${String(exec.callId)}:code:${n}`)
+        const subCallId = brandString<ToolCallId>(`${String(exec.callId)}:ptc:${n}`)
         const input = {
           callId: subCallId,
           rootCallId: exec.rootCallId,
@@ -659,7 +659,7 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
                 // the log stays detached.
                 content: result.content,
               })
-              agent.session.append('tool/code-dispatch', {
+              agent.session.append('tool/ptc-dispatch', {
                 rootCallId: exec.rootCallId,
                 parentCallId: exec.callId,
                 subCallId,
@@ -788,7 +788,7 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
                 settle(refusedReservationResult(refused))
                 return
               }
-              exec.agent?.session.append('tool/code-dispatch-start', {
+              exec.agent?.session.append('tool/ptc-dispatch-start', {
                 rootCallId: exec.rootCallId,
                 parentCallId: exec.callId,
                 subCallId,
@@ -818,7 +818,7 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
               if (!result.isError && result.content.some(block => block.type === 'image')) {
                 exec.deferContext(createUserMessage({
                   content: result.content,
-                  source: { kind: 'plugin', plugin: 'tools-code-mode' },
+                  source: { kind: 'plugin', plugin: 'tools-ptc' },
                 }))
               }
               for (const context of result.additionalContexts ?? []) {

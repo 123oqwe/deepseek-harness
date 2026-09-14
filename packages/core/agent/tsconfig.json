@@ -24,6 +24,9 @@
       "path": "../../core/session"
     },
     {
+      "path": "../../session/session-projection"
+    },
+    {
       "path": "../../core/system-prompt"
     },
     {
@@ -31,9 +34,6 @@
     },
     {
       "path": "../../runtime-diagnostics/invariants"
-    },
-    {
-      "path": "../../session/session-projection"
     },
     {
       "path": "../../typert/protocol"

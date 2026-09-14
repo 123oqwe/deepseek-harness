@@ -1,5 +1,5 @@
 ---
-description: "Package map for the guard family: the advisory repeat-tool reminder, the per-call tool-call timeout policy, and the boot-time baseline-drift preflight, for users and maintainers choosing or composing the guards."
+description: "Package map for the guard family: the advisory repeat-tool reminder, the per-tool-call timeout policy, and the boot-time baseline-drift preflight, for users and maintainers choosing or composing the guards."
 kind: "package-group"
 ---
 

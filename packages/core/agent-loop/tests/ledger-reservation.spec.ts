@@ -41,7 +41,7 @@ async function harness(adapter: MockAdapter, options: { ledger?: boolean } = {})
   await ctx.plugin(LlmRuntime)
   await ctx.plugin(SessionStore)
   await ctx.plugin(SessionProjectionRegistry)
-  await ctx.plugin(SystemPrompt, { persona: '' })
+  await ctx.plugin(SystemPrompt)
   await ctx.plugin(ToolRuntime)
   await ctx.plugin(AgentRegistry)
   await ctx.plugin(AgentLoop, { agents: [] })
@@ -82,7 +82,7 @@ describe('P4-12 must[4]: the dispatch path reserves before it runs a tool', () =
     const runs: string[] = []
     const ctx = await harness(new MockAdapter([call('c1', 'charge', { amount: '10' }), textResponse('done')]))
     ctx.tools.register(countingTool(runs))
-    const agent = ctx.agentLoop.create(SessionId('ledger-ok'), { provider: 'mock', model: 'mock' })
+    const agent = await ctx.agentLoop.create(SessionId('ledger-ok'), { provider: 'mock', model: 'mock' })
     agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
     await agent.whenIdle()
 
@@ -116,7 +116,7 @@ describe('P4-12 must[4]: the dispatch path reserves before it runs a tool', () =
       textResponse('done'),
     ]))
     ctx.tools.register(countingTool(runs))
-    const agent = ctx.agentLoop.create(SessionId('ledger-dup'), { provider: 'mock', model: 'mock' })
+    const agent = await ctx.agentLoop.create(SessionId('ledger-dup'), { provider: 'mock', model: 'mock' })
     agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
     await agent.whenIdle()
 
@@ -138,7 +138,7 @@ describe('P4-12 must[4]: the dispatch path reserves before it runs a tool', () =
       textResponse('done'),
     ]))
     ctx.tools.register(countingTool(runs))
-    const agent = ctx.agentLoop.create(SessionId('ledger-distinct'), { provider: 'mock', model: 'mock' })
+    const agent = await ctx.agentLoop.create(SessionId('ledger-distinct'), { provider: 'mock', model: 'mock' })
     agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
     await agent.whenIdle()
 
@@ -153,7 +153,7 @@ describe('P4-12 must[4]: the dispatch path reserves before it runs a tool', () =
     const runs: string[] = []
     const ctx = await harness(new MockAdapter([call('c1', 'charge', { amount: '10' }), textResponse('done')]), { ledger: false })
     ctx.tools.register(countingTool(runs))
-    const agent = ctx.agentLoop.create(SessionId('ledger-absent'), { provider: 'mock', model: 'mock' })
+    const agent = await ctx.agentLoop.create(SessionId('ledger-absent'), { provider: 'mock', model: 'mock' })
     agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
     await agent.whenIdle()
 

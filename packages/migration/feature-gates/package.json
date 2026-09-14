@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-feature-gates",
   "description": "Epic P0-05's Shadow/Enforce feature gates: a pure override-chain resolver, a shadow-vs-legacy decision evaluator with redacted diff recording, and a real-version-aware release-gate expiry check",
-  "version": "0.1.2-alpha.4",
+  "version": "0.1.5-rc.2",
   "publishConfig": {
     "access": "public",
     "exports": {

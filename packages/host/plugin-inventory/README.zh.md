@@ -1,5 +1,5 @@
 ---
-description: "当前 Cordis Loader 插件状态的只读投影，并附带每个 Agent 预设的组合：面向 web GUI 宿主客户端的 pluginInventory 服务及其 pluginInventory/list Remote。"
+description: "当前 Cordis Loader 插件状态的只读投影，并附带每个 agent preset（智能体预设）的组合：面向 web GUI 宿主客户端的 pluginInventory 服务及其 pluginInventory/list Remote。"
 kind: "package-reference"
 ---
 
@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## 概述
 
-客户端与设置页可以展示宿主当前组合了什么：调用 `pluginInventory/list` 即按 Loader 顺序返回当前的非组条目——条目 id、模块标识、有效启用状态与根 Fiber 阶段（`pending`、`loading`、`active`、`failed` 或 `unloading`；条目没有存活根 Fiber 时为 `null`）。当部署组合了 Agent 预设 roster 时，快照还携带每个预设一组——id、trust、显示名、默认标记、健康状态与压平后的组合行——因为挂载 roster 的部署把模型侧插件运行在预设组合里，而不是 Loader 自己的条目上。该快照只表示调用当下：Loader 是唯一的生命周期权威，本包不拥有缓存、历史、来源模型、事件流或修改路径。Client 包通过显式的 [`api-remotes`](../../api/remotes/README.zh.md) 组合消费这个 Remote，而不导入 Host 实现。
+客户端可以调用 `pluginInventory/list`，按加载顺序展示宿主的当前插件，包括每个条目的标识符、模块标识、有效启用状态与存活阶段。部署组合了 agent preset roster 时，还会报告各预设的元数据、健康状态与压平后的插件组合；没有 roster 时，预设数据缺席。每次响应都是供展示和诊断使用的只读即时快照：它不能修改插件，也不提供历史、来源信息或变更订阅。
 
 Epic P1-01.U 为本包新增了第一个真实的活跃 `Context` 走查:`buildObservedPluginCapabilities` 走查一个插件条目自己的 Cordis Fiber 子树(services 用全局 `ReflectService` store,tools/skills/events 用 `Fiber.getEffects()` 标签,MCP servers 用一个活跃 MCP-client 条目已解析的 `config.serverName`),并以 `@deepseek-ai/dsh-plugin-manifest` 的声明词汇报告它实际注册了什么;`buildPluginPermissionStates` 把它与每个条目自己的 `package.json` `dsh` 字段(`classifyPluginDeclaration`)组合,并对 `'manifest-v2'` 声明给出真实的 `compareDeclaredToObserved`/`decidePluginTrust` 结果——每个存活、非组、包可解析的 Loader 条目对应一个 `PluginPermissionState`。`apps/cli/src/profile-boot.ts` 在真实 profile 启动时调用二者,用于 acceptance[0] 的强制执行与 acceptance[1] 的声明/实际观察展示;二者为何尚未作为 `pluginInventory` Remote 方法暴露,参见[已知限制与延期工作](#known-limitations-and-deferred-work)。
 
@@ -29,7 +29,7 @@ Epic P1-02.U 补上 acceptance[2] 要求 Inventory 携带的验证状态记录�
 <a id="use-this-package"></a>
 ## 使用本包
 
-当客户端或设置页需要展示宿主当前组合了什么——哪些插件已加载、已启用、是否存活，以及每个 Agent 预设会给会话什么——时调用 `pluginInventory/list`。Remote 是唯一入口：该服务仅供 Remote 使用，刻意不声明同进程 Cordis `Context` merge。
+当客户端或设置页需要展示宿主当前组合了什么——哪些插件已加载、已启用、是否存活，以及每个 agent preset 会给会话什么——时调用 `pluginInventory/list`。Remote 是唯一入口：该服务仅供 Remote 使用，刻意不声明同进程 Cordis `Context` 合并。
 
 ### 快照包含什么
 
@@ -37,7 +37,7 @@ Epic P1-02.U 补上 acceptance[2] 要求 Inventory 携带的验证状态记录�
 
 ### 每个预设的组合
 
-组合了 roster 时，`agentPresets` 按 roster 顺序携带每个预设一组：其 id、随部署内置还是用户自建（`trust`，客户端据此本地化内置预设名）、发布的显示名、未指名预设的会话是否组合它，以及压平后的插件行——条目 id（文件行未声明时为 null）、模块标识、有效启用状态、行自带的 `!!js` disabled 表达式（如有），以及组合存活时的根 Fiber 阶段。已有会话组合过的预设由其最新 standing 世代作答——即使其文件事后损坏也是如此，因为挂载才是这些会话实际运行的组合；开机以来从未被组合的预设由其组合文件作答，disabled 门用 Loader 上下文求值，且读取从不挂载预设。`conditional` 表示宿主无法求值的门；无人组合的坏预设保留在列表中，携带原因且没有行。没有 roster 时该字段缺席。
+组合了 roster 时，`agentPresets` 按 roster 顺序携带每个预设一组：其 id、随部署内置还是用户自建（`trust`，客户端据此本地化内置预设名）、发布的显示名、未指名预设的会话是否组合它，以及压平后的插件行——条目 id（文件行未声明时为 null）、模块标识、有效启用状态、行自带的 `!!js` disabled 表达式（如有），以及组合存活时的根 Fiber 阶段。已有会话组合过的预设由其最新仍存续的世代作答——即使其文件事后损坏也是如此，因为挂载才是这些会话实际运行的组合；开机以来从未被组合的预设由其组合文件作答，disabled 门用 Loader 上下文求值，且读取从不挂载预设。`conditional` 表示宿主无法求值的门；无人组合的坏预设保留在列表中，携带原因且没有行。没有 roster 时该字段缺席。
 
 ### 你能用它做什么、不能做什么
 
@@ -57,7 +57,7 @@ Epic P1-02.U 补上 acceptance[2] 要求 Inventory 携带的验证状态记录�
 
 ### 设计理念
 
-网关是一层没有第二个生命周期真源的直接投影：每次 `list()` 调用都读取 `ctx.loader.entries()`，并把每个非组条目映射为公共行。Cordis 内部的 plugin/status 事件已经维护了 `Entry.fiber` 与 `Fiber.state`，因此再加缓存只会多出一个需要同步的生命周期真源。Agent 预设 roster 是每次调用经 `ctx.get('agentPresets')` 解析的可选伙伴：所有预设读取都由它的 `compositionInventory()` 负责，本包只把根 Fiber 状态映射到公共阶段词汇。
+网关是一层没有第二个生命周期真源的直接投影：每次 `list()` 调用都读取 `ctx.loader.entries()`，并把每个非组条目映射为公共行。Cordis 内部的 `plugin/status` 事件已经维护了 `Entry.fiber` 与 `Fiber.state`，因此再加缓存只会多出一个需要同步的生命周期真源。agent preset roster 是每次调用经 `ctx.get('agentPresets')` 解析的可选伙伴：所有预设读取都由它的 `compositionInventory()` 负责，本包只把根 Fiber 状态映射到公共阶段词汇。
 
 ### 阶段映射
 
@@ -69,7 +69,7 @@ Fiber 状态映射到公共阶段词汇，其中 `disposed` 折叠为 `null`—�
 |---|---|
 | [`src/index.ts`](src/index.ts) | `PluginInventoryGateway`：`pluginInventory` Remote 服务与 Loader 投影;以及 Epic P1-01.U 的纯函数导出 `buildObservedPluginCapabilities`、`buildPluginPermissionStates`、`mcpServerNameOf`、`resolveEntryPackageDir` |
 | [`src/types.ts`](src/types.ts) | 公共 payload 类型：`PluginInventoryEntry`、`PluginInventorySnapshot`、`PluginFiberPhase`;以及 Epic P1-01 的声明/实际观察权限类型——`PluginPermissionState`、`PluginPackageIdentity`、`PluginProvenance`——与 Epic P1-02.U 的 `PluginManifestDigest` |
-| — | 不发布运行时不变式伴生入口；每个快照都投影 Loader 持有的状态。 |
+| — | 不发布运行时不变式配套项；每个快照都投影 Loader 持有的状态。 |
 
 Typert 生成由 `./typert` 与 `./remote` 导出的 Host 和 Client Remote 产物。
 
@@ -102,7 +102,7 @@ Typert 生成由 `./typert` 与 `./remote` 导出的 Host 和 Client Remote 产�
 <a id="known-limitations-and-deferred-work"></a>
 
 
-这些限制说明一个点时刻清单无法告诉客户端什么。它们是当前包约束，不是任务积压。
+这些限制说明即时清单无法向客户端提供哪些信息。它们是当前包约束，不是任务积压。
 
 - **仅表示调用当下**——结果不包含持久的失败历史或订阅；只要不存在存活的根 Fiber，就会报告 `null`，而不区分其原因。
 - **`pluginInventory/list` 仍不携带权限状态**——`buildPluginPermissionStates` 已存在且真实（Epic P1-01.U），但尚未作为 `pluginInventory` Remote 方法暴露：typert 的 Zod schema 生成器无法序列化 `PluginManifestV2` 的非空元组字段（`readonly [X, ...X[]]`，例如 `CapabilityEffectDeclaration.authAudience`）——本类携带一个返回该类型的 `@Remote('permissions')` 方法时，一次真实构建失败（`tuple rest element must retain an array type`）证实了这一点。`apps/cli/src/profile-boot.ts` 在真实 profile 启动时直接调用这个纯函数，用于启动时强制执行与声明/实测权限展示（acceptance[0]/[1]）；`apps/cli/src/plugin.ts` 没有、也无法调用它——它是一个 pnpm 转发器，不持有 Cordis `Context`；未来的 Remote 界面需要一次 typert 生成器修复或 `PluginPermissionState` 的可序列化投影，二者都不是本阶段的工作。

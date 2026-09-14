@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-control-plane",
   "description": "Control-plane decisions for Epic P2-12: which control verb changes the stop state, whether a worker may take new work under a stop, and where one human answer goes — including the points it must not reach",
-  "version": "0.1.2-alpha.4",
+  "version": "0.1.5-rc.2",
   "publishConfig": {
     "access": "public",
     "exports": {

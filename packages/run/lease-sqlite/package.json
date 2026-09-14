@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-lease-sqlite",
   "description": "Durable lease store for Epic P4-07: SQLite-backed acquisition serialized by BEGIN IMMEDIATE, so two processes racing for one work item cannot both hold it",
-  "version": "0.1.2-alpha.4",
+  "version": "0.1.5-rc.2",
   "publishConfig": {
     "access": "public",
     "exports": {

@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-task-profile",
   "description": "Generic compiled task profile for Epic P4-02: the goal reference every inference traces back to, hard and soft constraints each carrying their own source and confidence, a side-effect classification in P2-04's vocabulary that cannot report an unknown as certain, the questions an ambiguous or high-risk missing field produces instead of a guess, and the content-addressed reference the Run event log names a profile by",
-  "version": "0.1.2-alpha.4",
+  "version": "0.1.5-rc.2",
   "publishConfig": {
     "access": "public",
     "exports": {

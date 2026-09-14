@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-capability-token",
   "description": "Contract-stage type surface and pure decision logic for Epic P2-02's attenuable Capability Token and sub-agent delegation: the closed subject/tenant/capability/verbs/resources/constraints/expiry/nonce/delegationDepth/parentDigest token shape, TrustKernel-gated issuance/verification/attenuation that can only narrow, cascading revocation, the tool/plugin-RPC/external-Agent/ExecutionWorld presence gate, and log-safe redaction",
-  "version": "0.1.2-alpha.4",
+  "version": "0.1.5-rc.2",
   "publishConfig": {
     "access": "public",
     "exports": {

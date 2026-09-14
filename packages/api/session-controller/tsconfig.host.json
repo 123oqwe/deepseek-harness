@@ -10,12 +10,14 @@
     "src/types.ts",
     "src/remote-events.ts",
     "src/agent.ts",
+    "src/assistant-stream.ts",
     "src/catalog.ts",
     "src/commands.ts",
     "src/control.ts",
     "src/file-references.ts",
     "src/history.ts",
     "src/list.ts",
+    "src/media-references.ts",
     "src/model-selection-projection.ts",
     "src/skill-catalog.ts"
   ],
@@ -100,6 +102,18 @@
     },
     {
       "path": "../../identity/principal"
+    },
+    {
+      "path": "../../client/file-upload/tsconfig.host.json"
+    },
+    {
+      "path": "../../client/connection/tsconfig.host.json"
+    },
+    {
+      "path": "../../fs/fs"
+    },
+    {
+      "path": "../../util/values"
     }
   ]
 }

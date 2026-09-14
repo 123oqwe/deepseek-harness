@@ -396,7 +396,8 @@
         "treeSha": "e8240da70ea31d834c9d8d51e89e0c4e1fe8bb1c",
         "testsDiscovered": 161
       },
-      "note": "P0-06 F-stage (2026-09-01), acceptance[0] (\"至少能够读取审计基线产生的旧 session fixture\"): proves U-stage's session-replay negotiation wiring doesn't break reading real OLD session data. Three real, pre-existing, already-committed fixtures from this repo's own keyless recorded-session snapshot corpus (snapshots/*/session.jsonl), all predating schema-registry's existence (no schemaVersion tag on any event). Real subtlety found and handled: committed fixtures are envelope-scrubbed (seq/time stripped by scrubSessionSnapshot for stable re-recording diffs), so reconstructRealSessionLog() rebuilds a real on-disk envelope using the identical seq-reassignment rule the codebase's own repackSessionSnapshot already applies in the reverse direction -- every event's real type/data payload stays byte-identical to the fixture, only seq/time are deterministically re-assigned. BLOCKED-012-class deviation from the wave-map's literal F-stage files (schema-registry/tests/compatibility.spec.ts, core/session/src/repair.ts): repair.ts confirmed out of scope and untouched (2 prior independent reviews plus this slice's own re-confirmation -- pure crash-recovery, zero schema-version concept, downstream of any negotiation); compatibility.spec.ts has zero visibility into the real wired boundary (SessionLogScanner.consumeEventLine's private negotiateEventLineSchema, reachable only via session-persistence-jsonl's own exports) -- extended jsonl.spec.ts's existing U-stage describe block instead, itself already P0-06's own frozen U-stage test file. Owner-map check (spec/first100-owner-map.json byFile, 441 entries): jsonl.spec.ts absent -- zero conflict. Coverage-completion slice, not a bug fix: all 3 cases pass cleanly against current U-stage wiring with no code changes. Real sensitivity proof: temporarily mutated format.ts's absent-schemaVersion default to an incompatible major, confirmed all 3 new tests genuinely fail with SchemaCompatibilityError/SCHEMA_MAJOR_MISMATCH, reverted (git diff on format.ts empty). Full session-persistence-jsonl + schema-registry suites: 280/280 passing."
+      "note": "P0-06 F-stage (2026-09-01), acceptance[0] (\"至少能够读取审计基线产生的旧 session fixture\"): proves U-stage's session-replay negotiation wiring doesn't break reading real OLD session data. Three real, pre-existing, already-committed fixtures from this repo's own keyless recorded-session snapshot corpus (snapshots/*/session.jsonl), all predating schema-registry's existence (no schemaVersion tag on any event). Real subtlety found and handled: committed fixtures are envelope-scrubbed (seq/time stripped by scrubSessionSnapshot for stable re-recording diffs), so reconstructRealSessionLog() rebuilds a real on-disk envelope using the identical seq-reassignment rule the codebase's own repackSessionSnapshot already applies in the reverse direction -- every event's real type/data payload stays byte-identical to the fixture, only seq/time are deterministically re-assigned. BLOCKED-012-class deviation from the wave-map's literal F-stage files (schema-registry/tests/compatibility.spec.ts, core/session/src/repair.ts): repair.ts confirmed out of scope and untouched (2 prior independent reviews plus this slice's own re-confirmation -- pure crash-recovery, zero schema-version concept, downstream of any negotiation); compatibility.spec.ts has zero visibility into the real wired boundary (SessionLogScanner.consumeEventLine's private negotiateEventLineSchema, reachable only via session-persistence-jsonl's own exports) -- extended jsonl.spec.ts's existing U-stage describe block instead, itself already P0-06's own frozen U-stage test file. Owner-map check (spec/first100-owner-map.json byFile, 441 entries): jsonl.spec.ts absent -- zero conflict. Coverage-completion slice, not a bug fix: all 3 cases pass cleanly against current U-stage wiring with no code changes. Real sensitivity proof: temporarily mutated format.ts's absent-schemaVersion default to an incompatible major, confirmed all 3 new tests genuinely fail with SchemaCompatibilityError/SCHEMA_MAJOR_MISMATCH, reverted (git diff on format.ts empty). Full session-persistence-jsonl + schema-registry suites: 280/280 passing.",
+      "supersededBy": "2026-09-14T10:00:00.000Z"
     },
     {
       "epic": "P0-02",
@@ -8755,7 +8756,8 @@
       "supplements": {
         "epic": "P4-06",
         "stage": "U"
-      }
+      },
+      "supersededBy": "2026-09-14T10:00:00.000Z"
     },
     {
       "epic": "P4-08",
@@ -9336,7 +9338,8 @@
         "mutationDescription": "(M14) `steer` and `continue` rejoin the promoted set, which is the table this supersedes; (M15) nothing is promoted at all.",
         "failureSummary": "M14 reddens 5 of 622 and M15 reddens 4 of 1387 — both directions, which is what says 'only cancel is promoted' is asserted rather than incidental. M14's reds include the two `dsh-experimental-agent-team` cases the old table broke; M15's include the cancel promotion itself."
       },
-      "note": "§12.37. The inbox's dequeue ordering was never frozen: §12.25-1 put the shared table at the claim boundary and froze nothing there, which is why reversing it broke two cases in `@deepseek-ai/dsh-experimental-agent-team` — a consumer of the inbox, in the full suite and not in the packages I ran — and CI found it rather than a freeze. This entry is that missing freeze, taken at the corrected rule. must[1]'s per-kind priority governs conflicts between control DECISIONS, not the order of content inside a batch: an `inject` is context, and moving a later-arriving instruction ahead of context that preceded it changes what that instruction means. Only `cancel` is promoted; `human-answer` is positioned by the wait point it answers; everything else, including ordinary input carrying no kind, keeps arrival order, supplied by the comparator's explicit index tiebreak rather than by sort stability. The two earlier cases stated the overturned rule in their own TITLES ('orders a MIXED-SOURCE batch by kind, not by arrival'), so they were renamed rather than re-asserted: a title that names a reversed rule would freeze it again."
+      "note": "§12.37. The inbox's dequeue ordering was never frozen: §12.25-1 put the shared table at the claim boundary and froze nothing there, which is why reversing it broke two cases in `@deepseek-ai/dsh-experimental-agent-team` — a consumer of the inbox, in the full suite and not in the packages I ran — and CI found it rather than a freeze. This entry is that missing freeze, taken at the corrected rule. must[1]'s per-kind priority governs conflicts between control DECISIONS, not the order of content inside a batch: an `inject` is context, and moving a later-arriving instruction ahead of context that preceded it changes what that instruction means. Only `cancel` is promoted; `human-answer` is positioned by the wait point it answers; everything else, including ordinary input carrying no kind, keeps arrival order, supplied by the comparator's explicit index tiebreak rather than by sort stability. The two earlier cases stated the overturned rule in their own TITLES ('orders a MIXED-SOURCE batch by kind, not by arrival'), so they were renamed rather than re-asserted: a title that names a reversed rule would freeze it again.",
+      "supersededBy": "2026-09-14T10:00:00.000Z"
     },
     {
       "epic": "P4-06",
@@ -9380,7 +9383,8 @@
         "mutationDescription": "None taken: this entry removes four cases and changes no behaviour of the ones that remain. The write-behind cases carry the mutation record of the entry this supersedes.",
         "failureSummary": "Not applicable — the surviving cases and their subject are unchanged; what changed is that the entry no longer pins a function that was deleted."
       },
-      "note": "§12.35-2(a). `commitWithOutbox` and `AtomicBatchSink` are deleted, so the four cases that pinned them are dropped from this entry and the remaining thirteen — the session write-behind's own batching — are re-frozen against the file that owns them. The deleted pair offered must[0]'s 'domain event and outbox record in one transaction' over a sink interface NOTHING implemented, and could only ever promise one BATCH: its own documentation said so, and BLOCKED-089 recorded the gap. `commitIntake` does it inside one `BEGIN IMMEDIATE`, which is the clause. Two commit paths for one clause is the arrangement where the weaker one gets used by accident, and the weaker one was the one with no implementation behind it. FILED AS BASE, not as a supplement: this entry declares `supersedes` the base P entry's `frozenAtUtc`, so it is that entry's successor and carries stage P's identity. Recorded as `supplementSeq: 5` it left P with no live base entry, and `checkObservationDistinctness` reports a conflict for any stage whose frozen entry it cannot resolve — which surfaced as \"shared observation file(s) between [C,P]\" and reads as an observation problem rather than a missing entry."
+      "note": "§12.35-2(a). `commitWithOutbox` and `AtomicBatchSink` are deleted, so the four cases that pinned them are dropped from this entry and the remaining thirteen — the session write-behind's own batching — are re-frozen against the file that owns them. The deleted pair offered must[0]'s 'domain event and outbox record in one transaction' over a sink interface NOTHING implemented, and could only ever promise one BATCH: its own documentation said so, and BLOCKED-089 recorded the gap. `commitIntake` does it inside one `BEGIN IMMEDIATE`, which is the clause. Two commit paths for one clause is the arrangement where the weaker one gets used by accident, and the weaker one was the one with no implementation behind it. FILED AS BASE, not as a supplement: this entry declares `supersedes` the base P entry's `frozenAtUtc`, so it is that entry's successor and carries stage P's identity. Recorded as `supplementSeq: 5` it left P with no live base entry, and `checkObservationDistinctness` reports a conflict for any stage whose frozen entry it cannot resolve — which surfaced as \"shared observation file(s) between [C,P]\" and reads as an observation problem rather than a missing entry.",
+      "supersededBy": "2026-09-14T10:00:00.000Z"
     },
     {
       "epic": "P4-06",
@@ -14272,6 +14276,144 @@
         "failureSummary": "M1 reddens 2 - both must[2] cases, including the one asking for the STRONGEST posture, which is what makes 'silence is not permission' observable rather than a coincidence of weak requests. M2 reddens 2: the empty-allowlist case and the closed-allowlist refusal beside it. M3 reddens 1, the impersonation case; its control (the same request granted once the provider claims the dimensions) stays green, which is what scopes the mutation to the claim rather than to the rule. M4 reddens 1, the collect-every-refusal case. M5 reddens 1, the absent-ceiling case. M6 reddens exactly 1, the per-device refusal case. M7 reddens exactly 1, the governedDimensions-derives-from-the-record case. M8 reddens exactly 1, the ceiling-overflow case that reports both numbers, confirming it is not already covered by M5. M9 reddens 5 of 16 - the refusal-list round-trip case it targets, plus the four cases that compare a refusal against a literal with `toStrictEqual`; a mutation to serialization fidelity cannot miss those, and the target case is the only one of the five that fails on the round trip itself rather than on the comparison. All nine applied and reverted one at a time; `policy-solver.ts` restored byte-identically (sha256 8e0262181bf9e72ed28aefd9bcd416d0e68da4f1976b7131c56cfde9f910d64e verified equal before and after)."
       },
       "note": "P3-02 Contract stage: the ALLOW layer, not the request layer, and not the enforcement.\n\nWHY THESE TYPES LIVE IN execution-world. The registry places P3-02's C files in `packages/sandbox/sandbox/`. Measured on this tree, that is not buildable as declared: `execution-world` already imports `dsh-sandbox` (`local-provider.ts:31` takes `SandboxPolicy`), so a policy type in `sandbox` referencing `World*Spec` would close a package cycle. The delegate ruled the landing point moves through `adjudication.json`'s `deliverablePathPatches` (addendum 376; P0-06-U-session-replay precedent). Clause ownership is unchanged - these are P3-02's clauses - and this is the iron rule's 'move the landing point, never shrink the functionality'.\n\nWHY A POLICY IS NOT A SPEC. P3-02's seven dimensions are exactly the first seven of P3-01's nine, word for word, and P3-01 already declares a `World*Spec` for each. Read literally, must[0] would put `NetworkPolicy` in the tree beside `WorldNetworkSpec` saying the same thing. The delegate ruled (addendum 373) that they are different LAYERS: a spec is what a run REQUESTS, a policy is which requests a deployment PERMITS. Each policy therefore references its dimension's field type rather than restating it, so the two cannot drift apart, and `satisfiesPolicySet` is the single place they meet. The make-vs-use ledger corroborates independently: P3-02's primary verdict is CONTRACT_WRITE and its residual field names 'dsh union type, closed-allowlist validator, supportedPolicyFeatures per provider + solver, serialization/audit fields' - this stage, almost verbatim.\n\nAND NOT A THIRD VOCABULARY. `dsh-sandbox`'s `SandboxPolicy`/`SandboxMode` is not a coarse version of the seven; it is ONE dimension handled completely. `sandbox/src/index.ts:26-27` says so itself - 'Network and process visibility are outside this vocabulary' - and ipc/device/secret/resource occur zero times in that file. The relation is three layers of the filesystem dimension (`SandboxMode`'s three values < `WorldFilesystemSpec.effect`'s same three plus `none` < `FileSystemPolicy`'s rules) plus six dimensions that exist only at the latter two layers.\n\nWHAT IS DELIBERATELY ABSENT. acceptance[0] (no DNS, IPv4/IPv6, localhost, unix socket or proxy when the network is off) and acceptance[1] (`/proc`, ps and debug attach restricted) are NOT frozen. Both need a provider that can actually sever a network or hide a process, and the only provider on this tree refuses every `network` posture but `unrestricted` (`local-provider.ts:93`). Asserting them against a mock would prove the mock refuses, which is BLOCKED-156's shape; acceptance[1] is platform-dependent besides, since `/proc` does not exist on macOS. The srt `SandboxRuntimeConfig` schema vocabulary is likewise absent: its only oracle is the section 3.2 slice, whose package `packages/sandbox/sandbox-srt` does not exist here, recorded as a pending deviation with assignment ownership rather than asserted against nothing.\n\nWHY THIS ENTRY REPLACES THE 12-CASE ONE. The spec declares sixteen cases and this entry freezes sixteen. The first entry froze twelve, leaving per-device refusal, `governedDimensions` deriving from the record, the ceiling overflow that reports both numbers, and the refusal list round-tripping unpinned. None of the four is a control or a setup step, and the same dry run that recorded testsDiscovered: 16 had already discovered them, so the shorter list was an omission rather than a decision. It is corrected by appending rather than by editing, because `generate-ledger.mjs` takes the single live entry per cell (:763) and an edited list would have left the first entry's dryRunProof and sensitivityProof describing a run that produced something else. P3-02.C has no green cell yet, so no ledger row is revoked by the replacement.\n\nTHE LANDLOCK VOCABULARY PINS BOTH SPELLINGS. The kernel UAPI names are the stable ABI and what a manual uses; this repository transcribed them abbreviated, as `LL_FS_*`, at `native/landlock-run/packages/entry/src/main.c:71-86` - sixteen bits, each tagged with the ABI that introduced it. Both are recorded and the correspondence is a tested function rather than a sentence, because pinning only the UAPI spelling would leave the next reader grepping this tree for it, finding nothing, and concluding no transcription exists. That is precisely how BLOCKED-178 read as unstarted work while its producer was shipping, twice in this session."
+    },
+    {
+      "epic": "P4-06",
+      "stage": "P",
+      "supersedes": "2026-09-08T09:20:00.000Z",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/session/session-persistence-jsonl/tests/jsonl.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "live session write path: jsonl splits two appends across batches when a write starts between them",
+        "live session write path: jsonl writes appends admitted in one synchronous tick as one batch",
+        "live session write path: jsonl coalesces twenty events admitted across one window into one batch",
+        "live session write path: jsonl makes concurrent flushes one barrier that drains tails admitted during its write",
+        "live session write path: jsonl starts a new window for work admitted after an already-quiescent barrier",
+        "live session write path: jsonl starts an over-budget tail immediately after the active write",
+        "live session write path: jsonl surfaces a barrier failure without background logging and retains its batch in order",
+        "live session write path: jsonl retains a failed batch larger than the engine call-argument limit",
+        "live session write path: jsonl a failed drain retains order, quiets the timer, and recovers exactly once"
+      ],
+      "files": [
+        "packages/session/session-persistence/tests/live-write-contract.ts",
+        "packages/session/session-persistence-jsonl/tests/jsonl.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-14T10:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "4aaa0fffc5c131b9f09c1410c33158e4a8e3f363",
+        "testsDiscovered": 9
+      },
+      "sensitivityProof": {
+        "mutationDescription": "None taken here; the re-mapped cases carry their own mutation record in live-write-contract.ts. This entry re-points P4-06.P from the merge-deleted write-behind.spec.ts onto the upstream handle's runLiveWritePathContract (D1 option B).",
+        "failureSummary": "Validation is the candidate CI observation (gate 3); the 9 fullName cases are frozen by their vitest fullName (space-joined, BLOCKED-104-immune since the contract is shared)."
+      },
+      "note": "BASE-ALIGN-v3 re-anchor: write-behind.spec.ts and SessionWriteBehind were deleted by the merge; upstream provides the write-behind function via storage.ts + handle enqueueLive/drainLive. D1 option B: re-map to runLiveWritePathContract('jsonl'). 13->9: dropped = enqueueAll empty-group (ours-only, API deleted), overlapping-background-failure-retried-inside-flush (ours-only; upstream flush REJECTs not retries), fixed-window+copy (fixed-window covered by the coalesce case; copy-half ours-only), and keeps-a-tail-deadline-not-expired (REAL narrowing, NOT zero acceptance loss: the merged seam DELIBERATELY allows both write-immediately and wait-full, so there is no successor to pin and nothing to fix; documented here rather than recorded as zero-loss). The 9th case (a failed drain retains order, quiets the timer, and recovers exactly once) IS included: it pins pause-after-failure+order+recovers-once; honest limit: the contract recovers via explicit flush() so it pins the flush-recovery, NOT the old auto-window-recovery half (that half is a merged-seam behavioral difference, ours-only). clause-coverage (e63ffeb2f9) proved all 13 carry zero acceptance-clause exposure; P4-06 acceptance rests on the other 78 examples + supplements. Frozen by fullName (space-joined) per BLOCKED-104 since the cross-backend contract is shared (only jsonl calls it today)."
+    },
+    {
+      "epic": "P0-06",
+      "stage": "F",
+      "supersedes": "2026-09-01T16:15:00Z",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/session/session-persistence-jsonl/tests/jsonl.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "replays snapshots/web/fresh-round-trip/session.v2.jsonl (a real pre-schema-registry session fixture) with no negotiation failure and no silent event loss",
+        "replays snapshots/sdk/text-turn/session.v2.jsonl (a real pre-schema-registry session fixture) with no negotiation failure and no silent event loss",
+        "replays snapshots/session/skill-load/session.v2.jsonl (a real pre-schema-registry session fixture) with no negotiation failure and no silent event loss"
+      ],
+      "files": [
+        "packages/session/session-persistence-jsonl/tests/jsonl.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-14T10:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "4aaa0fffc5c131b9f09c1410c33158e4a8e3f363",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "None; only the fixture path changed session.jsonl -> session.v2.jsonl. The 3 F-stage cases replay the real committed fixture through the production migration path.",
+        "failureSummary": "Validation is the candidate CI observation."
+      },
+      "note": "BASE-ALIGN-v3: upstream renamed session.jsonl -> session.v2.jsonl (added session.v3). The P0-06.F 3 cases replay the real fixture via the production v2->v3 migration; titles change only in the fixture suffix. clause-coverage unaffected."
+    },
+    {
+      "epic": "P4-06",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-06",
+        "stage": "U"
+      },
+      "supplementSeq": 3,
+      "supersedes": "2026-09-07T23:10:00.000Z",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/core/agent-loop/tests/arrival-dedup.spec.ts",
+        "packages/subagent/subagent/tests/continuation.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-06 must[2]: an inbox consumes one (source, id, epoch) once REFUSES a settlement redelivered after the parent already ran it",
+        "P4-06 must[2]: an inbox consumes one (source, id, epoch) once SURVIVES a restart, which is the only reason the rule means anything",
+        "P4-06 must[2]: an inbox consumes one (source, id, epoch) once ADMITS a settlement from the same child in a LATER epoch, so a second activation is not suppressed",
+        "continuable settlement delivery carries the child run's LEASE EPOCH, and a redelivery of that notice is refused (P4-06 must[2])"
+      ],
+      "files": [
+        "packages/core/agent/src/inbox.ts",
+        "packages/core/agent/src/index.ts",
+        "packages/subagent/subagent/src/continuation.ts",
+        "packages/core/agent-loop/tests/arrival-dedup.spec.ts",
+        "packages/subagent/subagent/tests/continuation.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-14T10:00:00.000Z",
+      "note": "BASE-ALIGN-v3: our own inbox port moved arrival-dedup.spec.ts to packages/core/agent-loop/tests/ and inbox.ts to agent-loop/src/. argv+files re-pointed; case titles UNCHANGED so commitmentKey is unchanged and no revoke is needed (BLOCKED-104 n/a, titles unique)."
+    },
+    {
+      "epic": "P5-10",
+      "stage": "U",
+      "supplements": {
+        "epic": "P5-10",
+        "stage": "U"
+      },
+      "supplementSeq": 1,
+      "supersedes": "2026-09-08T08:30:00.000Z",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/core/agent-loop/tests/arrival-dedup.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P5-10 must[1]: a claimed batch leaves the queue by control priority promotes a CANCEL over everything and leaves the rest in arrival order (§12.37)",
+        "P5-10 must[1]: a claimed batch leaves the queue by control priority keeps a message with NO control kind in arrival order beside the control messages (§12.37)",
+        "P5-10 must[1]: a claimed batch leaves the queue by control priority promotes a cancel PAST ordinary input too, so a stop is never queued behind a prompt"
+      ],
+      "files": [
+        "packages/collaboration/control-priority/src/index.ts",
+        "packages/core/agent/src/inbox.ts",
+        "packages/core/agent-loop/tests/arrival-dedup.spec.ts",
+        "packages/core/agent-loop/tests/interception.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-14T10:00:00.000Z",
+      "note": "BASE-ALIGN-v3: arrival-dedup.spec.ts + inbox.ts moved by our port. argv+files re-pointed; titles UNCHANGED, no revoke."
     }
   ]
 }

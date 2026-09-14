@@ -46,6 +46,9 @@
     },
     {
       "path": "../../schema/schema-registry"
+    },
+    {
+      "path": "../../util/http-proxy"
     }
   ]
 }

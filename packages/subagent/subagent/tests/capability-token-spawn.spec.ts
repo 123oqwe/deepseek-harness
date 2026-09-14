@@ -67,7 +67,7 @@ async function setup(requireForTools = true) {
   }
   await ctx.plugin(CapabilityTokenFilePlugin, { directory: join(root, 'tokens'), requireForTools, sessionTokenTtlMs: 60_000 })
   ctx.llm.registerAdapter(['mock'], new MockAdapter([textResponse('done')]))
-  const parent = ctx.agentLoop.create(SessionId('spawn-parent'), { provider: 'mock', model: 'mock' })
+  const parent = await ctx.agentLoop.create(SessionId('spawn-parent'), { provider: 'mock', model: 'mock' })
   return { ctx, parent, root }
 }
 

@@ -58,7 +58,7 @@ async function setup(script: ConstructorParameters<typeof MockAdapter>[0]) {
   await ctx.plugin(TaskStorePlugin, { directory: root })
   await ctx.plugin(SubagentTaskboard, { claimLeaseMs: CLAIM_LEASE_MS })
   ctx.llm.registerAdapter(['mock'], new MockAdapter(script))
-  const parent = ctx.agentLoop.create(SessionId('parent'), { provider: 'mock', model: 'mock' })
+  const parent = await ctx.agentLoop.create(SessionId('parent'), { provider: 'mock', model: 'mock' })
   return { ctx, parent, root }
 }
 
@@ -227,7 +227,7 @@ describe('P5-11: a delegated child IS a task on the board', () => {
     await ctx.plugin(TaskStorePlugin, { directory: root })
     await ctx.plugin(SubagentTaskboard, { claimLeaseMs: CLAIM_LEASE_MS })
     ctx.llm.registerAdapter(['mock'], new MockAdapter([textResponse('done')]))
-    const parent = ctx.agentLoop.create(SessionId('parent'), { provider: 'mock', model: 'mock' })
+    const parent = await ctx.agentLoop.create(SessionId('parent'), { provider: 'mock', model: 'mock' })
 
     await delegate(ctx, parent)
 
@@ -247,7 +247,7 @@ describe('P5-11: a delegated child IS a task on the board', () => {
     const applied = vi.spyOn(SubagentTaskboard, 'apply')
     await ctx.plugin(SubagentTaskboard, { claimLeaseMs: CLAIM_LEASE_MS })
     ctx.llm.registerAdapter(['mock'], new MockAdapter([textResponse('done')]))
-    const parent = ctx.agentLoop.create(SessionId('parent'), { provider: 'mock', model: 'mock' })
+    const parent = await ctx.agentLoop.create(SessionId('parent'), { provider: 'mock', model: 'mock' })
 
     await expect(delegate(ctx, parent)).resolves.toBeDefined()
     expect(applied).not.toHaveBeenCalled()

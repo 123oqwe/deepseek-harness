@@ -54,7 +54,7 @@ async function mount(requireForTools: boolean, reuseDirectory?: string): Promise
   pinTrustKernel(ctx, createTrustKernel())
   await ctx.plugin(SessionStore)
   await ctx.plugin(SessionProjectionRegistry)
-  await ctx.plugin(SystemPrompt, { persona: '' })
+  await ctx.plugin(SystemPrompt)
   await ctx.plugin(ToolRuntime)
   await ctx.plugin(LlmRuntime)
   await ctx.plugin(AgentRegistry)

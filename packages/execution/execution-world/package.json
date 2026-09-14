@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-execution-world",
   "description": "ExecutionWorld capability seam vocabulary for Epic P3-01: what a world is across its nine confinement dimensions, the unforgeable handle that names one, the OCI-adapted lifecycle states, the typed outcome every stop settles to, and the fail-closed provider selection that never degrades a request it cannot satisfy",
-  "version": "0.1.2-alpha.4",
+  "version": "0.1.5-rc.2",
   "publishConfig": {
     "access": "public",
     "exports": {

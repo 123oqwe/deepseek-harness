@@ -129,7 +129,7 @@ export async function stack(options: {
   await ctx.plugin(LlmRuntime)
   await ctx.plugin(SessionStore)
   await ctx.plugin(SessionProjectionRegistry)
-  await ctx.plugin(SystemPrompt, { persona: '' })
+  await ctx.plugin(SystemPrompt)
   await ctx.plugin(ToolRuntime)
   await ctx.plugin(AgentRegistry)
   await ctx.plugin(AgentLoop, { agents: [] })
@@ -199,7 +199,7 @@ export async function stack(options: {
  * @returns every event the turn appended.
  */
 export async function runTurn(ctx: Context, session: string, cwd?: string): Promise<readonly SessionEvent[]> {
-  const agent = ctx.agentLoop.create(SessionId(session), { provider: 'mock', model: 'mock' }, cwd === undefined ? {} : { cwd })
+  const agent = await ctx.agentLoop.create(SessionId(session), { provider: 'mock', model: 'mock' }, cwd === undefined ? {} : { cwd })
   const idle = new Promise<void>((resolve) => {
     const dispose = ctx.on('agent/status', ({ agent: subject, status }) => {
       if (subject === agent && status === 'idle') { dispose(); resolve() }

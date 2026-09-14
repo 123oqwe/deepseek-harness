@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-workflow-registry",
   "description": "Registered workflow definitions and nested-run limits for Epic P4-09: content-digest identity, monotonic per-name versions, run references that pin a digest rather than a name, registration-time recursion refusal, and nested budget decay under depth/agent/token ceilings",
-  "version": "0.1.2-alpha.4",
+  "version": "0.1.5-rc.2",
   "publishConfig": {
     "access": "public",
     "exports": {

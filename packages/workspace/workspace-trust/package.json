@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-workspace-trust",
   "description": "Contract-stage type surface and pure decision logic for Epic P1-07's project trust boundary: canonical-realpath-plus-inode/volume-bound trust states, denial of project-level executable content (plugins/hooks/MCP servers/executable skills/home-profile-patch overrides) while untrusted, host-user-interaction-gated trust upgrades with an audit record, and immediate capability revocation on downgrade",
-  "version": "0.1.2-alpha.4",
+  "version": "0.1.5-rc.2",
   "publishConfig": {
     "access": "public",
     "exports": {

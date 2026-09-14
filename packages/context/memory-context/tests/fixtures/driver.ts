@@ -59,7 +59,9 @@ try {
   // Replay: reload the just-written log through the persistence read path,
   // which refuses any event type unknown to this build. Report what came back
   // so the spec asserts on the REPLAYED events, not the written ones.
-  const reloaded = await ctx.sessionPersistence.load(agent.session.id)
+  const reader = await ctx.sessionPersistence.open(agent.session.id, 'read')
+  const reloaded = await reader.read()
+  await reader.close()
   await writeFile(
     'replay.json',
     JSON.stringify({ types: reloaded.events.map(event => event.type) }),

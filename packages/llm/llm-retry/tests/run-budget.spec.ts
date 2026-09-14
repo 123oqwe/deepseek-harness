@@ -88,7 +88,7 @@ describe('P4-11 must[1]: the LLM layer charges the run, not the session', () => 
     // consulted, the adapter is called 6 times; with it, 3 — the first attempt
     // plus the two the run could pay for.
     const { ctx, adapter } = await harness({ maxRetries: 2 })
-    const agent = ctx.agentLoop.create(SessionId('budgeted-run'), { provider: 'mock', model: 'mock' })
+    const agent = await ctx.agentLoop.create(SessionId('budgeted-run'), { provider: 'mock', model: 'mock' })
     agent.followup(createUserMessage({
       content: [{ type: 'text', text: 'go' }],
       source: { kind: 'user' },
@@ -105,7 +105,7 @@ describe('P4-11 must[1]: the LLM layer charges the run, not the session', () => 
     // the child then finds nothing left. Charged to the child's OWN run it
     // would find a full allowance, which is the stacking the registry names.
     const { ctx, adapter } = await harness({ maxRetries: 3 })
-    const parent = ctx.agentLoop.create(SessionId('delegating-parent'), { provider: 'mock', model: 'mock' })
+    const parent = await ctx.agentLoop.create(SessionId('delegating-parent'), { provider: 'mock', model: 'mock' })
     parent.followup(createUserMessage({
       content: [{ type: 'text', text: 'parent work' }],
       source: { kind: 'user' },
@@ -201,7 +201,7 @@ describe('P4-11 must[1]: the LLM layer charges the run, not the session', () => 
     const adapter = new AlwaysFailingAdapter()
     ctx.llm.registerAdapter(['mock'], adapter)
 
-    const agent = ctx.agentLoop.create(SessionId('no-run-producer'), { provider: 'mock', model: 'mock' })
+    const agent = await ctx.agentLoop.create(SessionId('no-run-producer'), { provider: 'mock', model: 'mock' })
     agent.followup(createUserMessage({
       content: [{ type: 'text', text: 'go' }],
       source: { kind: 'user' },
@@ -218,7 +218,7 @@ describe('P4-11 must[1]: the LLM layer charges the run, not the session', () => 
     // satisfy the case above: the observation there is "fewer requests", and
     // fewer includes one.
     const { ctx, adapter } = await harness({ maxRetries: 50 })
-    const agent = ctx.agentLoop.create(SessionId('policy-bound-run'), { provider: 'mock', model: 'mock' })
+    const agent = await ctx.agentLoop.create(SessionId('policy-bound-run'), { provider: 'mock', model: 'mock' })
     agent.followup(createUserMessage({
       content: [{ type: 'text', text: 'go' }],
       source: { kind: 'user' },

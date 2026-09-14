@@ -21,7 +21,7 @@ import type { OutputFormat } from './stream-json.ts'
 import { installModelSelection } from '@deepseek-ai/dsh-agent'
 import type { Agent, ModelSelectionRef } from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-agent-default-model'
-import { createUserMessage } from '@deepseek-ai/dsh-llm'
+import { createUserMessage, lastAssistantStreamChunk } from '@deepseek-ai/dsh-llm'
 import type { TokenUsage } from '@deepseek-ai/dsh-llm'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
 import { duringJobDrain, isTerminalJobStatus } from '@deepseek-ai/dsh-jobs'
@@ -131,6 +131,7 @@ function summarize(session: Session, firstSeq: SessionLogOffset): RunOutcome {
   const usageByStep = new Map<string, TokenUsage>()
   const length = session.seq
   for (let seq = firstSeq; seq < length; seq++) {
+    // oxlint-disable-next-line typescript/no-deprecated -- Existing Session history read; migration deferred.
     const event = session.eventAt(SessionSeq(seq))
     if (event === undefined) {
       throw new Error(`headless summary cannot read seq ${String(seq)} below captured length ${String(length)}`)
@@ -147,8 +148,14 @@ function summarize(session: Session, firstSeq: SessionLogOffset): RunOutcome {
         .join('')
       if (joined !== '') text = joined
     }
-    if (event.type === 'assistant/chunk' && event.data.chunk.type === 'usage') {
-      usageByStep.set(`${String(event.data.turn)}/${String(event.data.step)}`, event.data.chunk.usage)
+    if (event.type === 'assistant/message' || event.type === 'assistant/attempt') {
+      // Usage travels with the Assistant settlement that reported it: the
+      // message's own `usage`, otherwise the last usage sample in its embedded
+      // stream. A retried attempt settles before the message that replaces it,
+      // so the later settlement of the same step wins.
+      const usage = (event.type === 'assistant/message' ? event.data.usage : undefined)
+        ?? lastAssistantStreamChunk(event.data.stream, 'usage')?.usage
+      if (usage !== undefined) usageByStep.set(`${String(event.data.turn)}/${String(event.data.step)}`, usage)
     }
     if (event.type === 'turn/end') reason = event.data.reason
   }
@@ -179,8 +186,8 @@ function totalUsage(steps: readonly TokenUsage[]): TokenUsage | undefined {
 
 /**
  * Project provider-reported reasoning from one owned run to stderr as it is
- * appended, while keeping final outcome derivation on the durable log.
- * @param ctx - plugin context carrying the Session event feed.
+ * streamed, while keeping final outcome derivation on the durable log.
+ * @param ctx - plugin context carrying the live Assistant frame feed.
  * @param agent - the exact Agent whose reasoning belongs to this invocation.
  * @param stderr - progress output sink.
  * @returns a disposer that also terminates an unterminated reasoning line.
@@ -190,7 +197,6 @@ function streamReasoning(
   agent: Agent,
   stderr: HeadlessIo['stderr'],
 ): () => void {
-  let started = false
   let open = false
   let endsWithNewline = true
   const close = (): void => {
@@ -199,15 +205,17 @@ function streamReasoning(
     open = false
     endsWithNewline = true
   }
-  const dispose = ctx.on('session/event', (session, event) => {
-    if (session !== agent.session) return
-    if (event.type === 'turn/start') {
+  const dispose = ctx.on('agent/assistant-stream', ({ agent: subject, frame }) => {
+    if (subject !== agent) return
+    if (frame.type === 'start') {
       close()
-      started = true
       return
     }
-    if (!started || event.type !== 'assistant/chunk') return
-    const chunk = event.data.chunk
+    if (frame.type === 'end') {
+      close()
+      return
+    }
+    const chunk = frame.chunk
     switch (chunk.type) {
       case 'reasoning-delta':
         if (chunk.text === '') return

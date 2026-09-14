@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-plugin-provenance",
   "description": "Contract-stage type surface and pure decision logic for Epic P1-02's plugin signature, source provenance, and dependency SBOM verification: Sigstore-style identity/provenance and org offline signing, digest/source-commit/builder-identity/SBOM checks against the TrustKernel-held trust root, and explicit-profile-gated unsigned-dev mode",
-  "version": "0.1.2-alpha.4",
+  "version": "0.1.5-rc.2",
   "publishConfig": {
     "access": "public",
     "exports": {

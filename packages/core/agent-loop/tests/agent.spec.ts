@@ -41,7 +41,7 @@ describe('Agent', () => {
   it('idle inject() durably stages context without opening a turn', async () => {
     const adapter = new MockAdapter([textResponse('ok')])
     const ctx = await harness(adapter)
-    const agent = ctx.agentLoop.create(SessionId('a1'), { provider: 'mock', model: 'mock' })
+    const agent = await ctx.agentLoop.create(SessionId('a1'), { provider: 'mock', model: 'mock' })
 
     agent.inject(createUserMessage({ content: [{ type: 'text', text: 'context' }], source: { kind: 'plugin', plugin: 'p' } }))
 
@@ -53,7 +53,7 @@ describe('Agent', () => {
 
   it('inject() preserves an explicitly empty plugin source', async () => {
     const ctx = await harness(new MockAdapter([textResponse('ok')]))
-    const agent = ctx.agentLoop.create(SessionId('a1'), { provider: 'mock', model: 'mock' })
+    const agent = await ctx.agentLoop.create(SessionId('a1'), { provider: 'mock', model: 'mock' })
 
     agent.inject(createUserMessage({ content: [{ type: 'text', text: 'empty plugin source' }], source: { kind: 'plugin', plugin: '' } }))
 
@@ -64,7 +64,7 @@ describe('Agent', () => {
 
   it('emits exact inserted, claimed, and discarded inbox messages', async () => {
     const ctx = await harness(new MockAdapter([textResponse('ok')]))
-    const agent = ctx.agentLoop.create(SessionId('inbox-events'), { provider: 'mock', model: 'mock' })
+    const agent = await ctx.agentLoop.create(SessionId('inbox-events'), { provider: 'mock', model: 'mock' })
     const inserted: unknown[] = []
     const claimed: unknown[] = []
     const discarded: unknown[] = []
@@ -102,7 +102,7 @@ describe('Agent', () => {
 
   it('idle inject() rejects invalid input before enqueue', async () => {
     const ctx = await harness(new MockAdapter([textResponse('ok')]))
-    const agent = ctx.agentLoop.create(SessionId('a1'), { provider: 'mock', model: 'mock' })
+    const agent = await ctx.agentLoop.create(SessionId('a1'), { provider: 'mock', model: 'mock' })
 
     expect(() => {
       agent.inject(createUserMessage({ content: [{ type: 'text', text: 'x', bad: 1n } as never], source: { kind: 'plugin', plugin: 'p' } }))
@@ -113,7 +113,7 @@ describe('Agent', () => {
   it('steer() while idle becomes a woken prompt turn', async () => {
     const adapter = new MockAdapter([textResponse('ok')])
     const ctx = await harness(adapter)
-    const agent = ctx.agentLoop.create(SessionId('a1'), { provider: 'mock', model: 'mock' })
+    const agent = await ctx.agentLoop.create(SessionId('a1'), { provider: 'mock', model: 'mock' })
 
     agent.steer(createUserMessage({ content: [{ type: 'text', text: 'steer idle' }], source: { kind: 'plugin', plugin: 'test' } }))
     await agent.whenIdle()
@@ -124,7 +124,7 @@ describe('Agent', () => {
 
   it('emits one running and idle transition for one completed turn', async () => {
     const ctx = await harness(new MockAdapter([textResponse('ok')]))
-    const agent = ctx.agentLoop.create(SessionId('a1'), { provider: 'mock', model: 'mock' })
+    const agent = await ctx.agentLoop.create(SessionId('a1'), { provider: 'mock', model: 'mock' })
     const statuses: string[] = []
     ctx.on('agent/status', ({ agent: subject, status }) => {
       if (subject === agent) statuses.push(status)
@@ -138,7 +138,7 @@ describe('Agent', () => {
 
   it('whenIdle() resolves immediately without active work', async () => {
     const ctx = await harness(new MockAdapter([textResponse('ok')]))
-    const agent = ctx.agentLoop.create(SessionId('a1'), { provider: 'mock', model: 'mock' })
+    const agent = await ctx.agentLoop.create(SessionId('a1'), { provider: 'mock', model: 'mock' })
 
     await agent.whenIdle()
 
@@ -147,7 +147,7 @@ describe('Agent', () => {
 
   it('whenIdle() waits for active work until explicit cancellation', async () => {
     const ctx = await harness(new MockAdapter(['hang']))
-    const agent = ctx.agentLoop.create(SessionId('a1'), { provider: 'mock', model: 'mock' })
+    const agent = await ctx.agentLoop.create(SessionId('a1'), { provider: 'mock', model: 'mock' })
 
     send(agent, 'queued')
     let settled = false
@@ -163,7 +163,7 @@ describe('Agent', () => {
   it('contains a throwing status listener on both transitions', async () => {
     const ctx = await harness(new MockAdapter([textResponse('ok')]))
     const warn = vi.spyOn(ctx.logger, 'warn').mockImplementation(() => undefined)
-    const agent = ctx.agentLoop.create(SessionId('a1'), { provider: 'mock', model: 'mock' })
+    const agent = await ctx.agentLoop.create(SessionId('a1'), { provider: 'mock', model: 'mock' })
     ctx.on('agent/status', ({ status }) => {
       throw new Error(`bad ${status} listener`)
     })
@@ -186,7 +186,7 @@ describe('Agent.identity (first100 P2-01)', () => {
   it('a fresh session with a supplied identity attaches it and durably logs it exactly once', async () => {
     const ctx = await harness(new MockAdapter([textResponse('ok')]))
     const identity = identityFor(TENANT_A)
-    const agent = ctx.agentLoop.create(SessionId('identity-fresh'), { provider: 'mock', model: 'mock', identity })
+    const agent = await ctx.agentLoop.create(SessionId('identity-fresh'), { provider: 'mock', model: 'mock', identity })
 
     expect(agent.identity).toEqual(identity)
     const attached = agent.session.snapshotEvents().filter(event => event.type === 'identity/attached')
@@ -196,7 +196,7 @@ describe('Agent.identity (first100 P2-01)', () => {
 
   it('a session with no supplied identity attaches nothing and logs nothing', async () => {
     const ctx = await harness(new MockAdapter([textResponse('ok')]))
-    const agent = ctx.agentLoop.create(SessionId('identity-none'), { provider: 'mock', model: 'mock' })
+    const agent = await ctx.agentLoop.create(SessionId('identity-none'), { provider: 'mock', model: 'mock' })
 
     expect(agent.identity).toBeUndefined()
     expect(agent.session.snapshotEvents().some(event => event.type === 'identity/attached')).toBe(false)

@@ -100,7 +100,7 @@ describe('P4-06: a settlement is committed to the bus before anyone tries to del
     // drain would deadlock here — an idle parent waiting on its child has no
     // step to take, so nothing would ever deliver what it is waiting for.
     const { ctx } = await setup([textResponse('child done'), textResponse('parent done')])
-    const parent = ctx.agentLoop.create(SessionId('parent'), { provider: 'mock', model: 'mock' })
+    const parent = await ctx.agentLoop.create(SessionId('parent'), { provider: 'mock', model: 'mock' })
     const started = await ctx.subagents.startContinuable(startSpec(parent))
     await waitGone(ctx, started.childId)
     await vi.waitFor(() => { expect(settlementNotices(ctx, SessionId('parent'))).toHaveLength(1) })
@@ -115,7 +115,7 @@ describe('P4-06: a settlement is committed to the bus before anyone tries to del
     // was logged and dropped when no live parent was found. Committed first, it
     // survives the process that could not deliver it.
     const { ctx, busDirectory } = await setup([textResponse('child done')])
-    const parent = ctx.agentLoop.create(SessionId('lonely-parent'), { provider: 'mock', model: 'mock' })
+    const parent = await ctx.agentLoop.create(SessionId('lonely-parent'), { provider: 'mock', model: 'mock' })
     await ctx.subagents.startContinuable(startSpec(parent))
     // Disposed with the child still RESIDENT. The manager commits every live
     // child's settlement in its synchronous drain prologue and delivers none,
@@ -128,7 +128,7 @@ describe('P4-06: a settlement is committed to the bus before anyone tries to del
     // A second process over the same bus directory: the row is still owed.
     const second = await setup([textResponse('parent done')], busDirectory)
     expect(second.ctx.messageBus.outboxRows().map(row => row.record.state)).toEqual(['pending'])
-    second.ctx.agentLoop.create(SessionId('lonely-parent'), { provider: 'mock', model: 'mock' })
+    await second.ctx.agentLoop.create(SessionId('lonely-parent'), { provider: 'mock', model: 'mock' })
 
     await vi.waitFor(() => {
       expect(second.ctx.messageBus.outboxRows().map(row => row.record.state)).toEqual(['acked'])
@@ -142,7 +142,7 @@ describe('P4-06: a settlement is committed to the bus before anyone tries to del
     // decision skips an acked record and the inbox refuses a repeated
     // (source, id, epoch).
     const { ctx } = await setup([textResponse('child done'), textResponse('parent done'), textResponse('more')])
-    const parent = ctx.agentLoop.create(SessionId('parent'), { provider: 'mock', model: 'mock' })
+    const parent = await ctx.agentLoop.create(SessionId('parent'), { provider: 'mock', model: 'mock' })
     const started = await ctx.subagents.startContinuable(startSpec(parent))
     await waitGone(ctx, started.childId)
     await vi.waitFor(() => { expect(settlementNotices(ctx, SessionId('parent'))).toHaveLength(1) })

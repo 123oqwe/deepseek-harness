@@ -27,7 +27,6 @@ import { SessionId } from '@deepseek-ai/dsh-session'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
 import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
-import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SubagentRuntime from '@deepseek-ai/dsh-subagent'
 import * as spawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
@@ -45,7 +44,6 @@ afterEach(() => { for (const root of persistenceRoots.splice(0)) rmSync(root, { 
 async function setup(replies: number, options: { persistence?: boolean } = {}) {
   const ctx = new Context()
   await mountAgentLoopTestDependencies(ctx)
-  await ctx.plugin(SessionProjectionRegistry)
   if (options.persistence === true) {
     // A resume reconciles against the child's DURABLE log, so the composition
     // that proves acceptance[0] needs one; without persistence the check falls
@@ -68,7 +66,7 @@ async function setup(replies: number, options: { persistence?: boolean } = {}) {
   ctx.llm.registerAdapter(['mock'], new MockAdapter(
     Array.from({ length: replies }, (_, index) => textResponse(`child ${String(index)}`)),
   ))
-  const parent = ctx.agentLoop.create(SessionId('journal-parent'), { provider: 'mock', model: 'mock' })
+  const parent = await ctx.agentLoop.create(SessionId('journal-parent'), { provider: 'mock', model: 'mock' })
   return { ctx, parent }
 }
 

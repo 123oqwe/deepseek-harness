@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-human-channel",
   "description": "Human-interaction channel vocabulary for Epic P2-12: the five control verbs, the durable stop record only an explicit resume lifts, the waiting point an answer may be routed by, and the unforgeable approval grant a question's answer cannot produce",
-  "version": "0.1.2-alpha.4",
+  "version": "0.1.5-rc.2",
   "publishConfig": {
     "access": "public",
     "exports": {

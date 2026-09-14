@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-action-ledger",
   "description": "External-effect idempotency ledger for Epic P4-12: prepared/sent/confirmed/ambiguous/compensated states, CAS reservation before execution, epoch fencing, and the same-key-different-parameters refusal",
-  "version": "0.1.2-alpha.4",
+  "version": "0.1.5-rc.2",
   "publishConfig": {
     "access": "public",
     "exports": {

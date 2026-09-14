@@ -58,6 +58,18 @@ The [Trust Kernel](docs/architecture/trust-kernel-boundary.md) is the one except
 
 For agents, follow [AGENTS.md](AGENTS.md).
 
+## Citation
+
+```bibtex
+@misc{deepseek-harness2026,
+  title={DeepSeek Harness: Everything is a Plugin},
+  author={DeepSeek-AI},
+  year={2026},
+  publisher={GitHub},
+  howpublished={\url{https://github.com/deepseek-ai/deepseek-harness}},
+}
+```
+
 ## License
 
 [MIT](LICENSE)

@@ -16,6 +16,7 @@ import { brandString } from '@deepseek-ai/dsh-brand'
 import type { LeaseStoreContract, RunLease, WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease-contract'
 import { dshHomePath } from '@deepseek-ai/dsh-home-paths'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import type {} from '@deepseek-ai/dsh-session-persistence'
 import { parentAgentOptionsForDelegation } from '@deepseek-ai/dsh-subagent'
 import { DefinitionRegistry, planNestedRun } from '@deepseek-ai/dsh-workflow-registry'
 import type {
@@ -287,8 +288,12 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     const persistence = this.ctx.get('sessionPersistence')
     if (persistence !== undefined) {
       try {
-        const loaded = await persistence.load(id)
-        return loaded.events.some((event: { type: string }) => event.type === 'turn/end')
+        const reader = await persistence.open(id, 'read')
+        try {
+          return (await reader.read()).events.some(event => event.type === 'turn/end')
+        } finally {
+          await reader.close()
+        }
       } catch {
         // A session the backend has never heard of is not an error here: it is
         // the answer. Anything else it throws is also a refusal to confirm,
@@ -296,6 +301,7 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
         return false
       }
     }
+    // oxlint-disable-next-line typescript/no-deprecated -- Existing Session history read; migration deferred.
     return this.ctx.sessions.get(id)?.snapshotEvents().some(event => event.type === 'turn/end') ?? false
   }
 

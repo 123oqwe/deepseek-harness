@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-policy-engine",
   "description": "Policy decision vocabulary and monotonic composition for Epic P2-05: what a policy request carries (identity, capability token, ActionManifest, ExecutionWorld, context facts), the closed permit/deny/ask decision, and the rule that a plugin may only narrow a decision and never widen one",
-  "version": "0.1.2-alpha.4",
+  "version": "0.1.5-rc.2",
   "publishConfig": {
     "access": "public",
     "exports": {

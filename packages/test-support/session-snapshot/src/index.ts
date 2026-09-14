@@ -4,7 +4,7 @@
  * shared subprocess/client launcher ({@link launchAcpTestAgent}), the scripted
  * scenario harness ({@link runScenario}), the pure expected-output normalizers
  * ({@link normalizeStdout} / {@link normalizeSessionLog} /
- * {@link scrubRequestHeaders} / {@link scrubSystemPrompts}), and the suite
+ * {@link scrubModelRequestBulk} / {@link scrubSystemPrompts}), and the suite
  * factory ({@link defineAcpSnapshotSuite}) that registers a scenario table as a
  * full describe/it tree. Transport-neutral normalizers and fixture invariants
  * remain reusable by other profile adapters. Ordinary ACP e2e tests can use the launcher directly;
@@ -44,11 +44,12 @@ export {
 } from './launcher.ts'
 export {
   extractSnapshotSpillPaths,
+  normalizeSessionFormatProvenance,
   normalizeSessionLog,
   normalizeSessionSnapshot,
   normalizeSessionSnapshots,
   normalizeStdout,
-  scrubRequestHeaders,
+  scrubModelRequestBulk,
   scrubSessionSnapshot,
   scrubSystemPrompts,
   scrubToolSchemas,
@@ -59,6 +60,7 @@ export {
 } from './normalize.ts'
 export {
   parseSnapshotManifest,
+  writesCurrentSessionFixtures,
   type SnapshotHeaderManifest,
   type SnapshotInputAttachment,
   type SnapshotInputManifest,
@@ -69,8 +71,26 @@ export {
   type SnapshotRecording,
   type SnapshotReplayManifest,
   type SnapshotSessionReference,
+  type SnapshotSessionFormatCoverage,
+  type SnapshotSessionFormatManifest,
+  type SnapshotSessionWriteMode,
   type SnapshotWorkspaceManifest,
 } from './manifest.ts'
+export {
+  assertPersistedSessionVersion,
+  assertSessionFixtureVersion,
+  latestPersistedSessionPaths,
+  parsePersistedSessionFilename,
+  parseSessionFixtureName,
+  persistedSessionFilename,
+  sessionFixtureFiles,
+  sessionFixtureName,
+  sessionFixtureNames,
+  sessionHeaderVersion,
+  writerSnapshotName,
+  type PersistedSessionFile,
+  type SessionFixtureFile,
+} from './session-files.ts'
 export {
   formatSystemPromptSnapshot,
   formatToolSchemasSnapshot,
@@ -80,12 +100,13 @@ export {
   normalizedHeaders,
   normalizedSystemPrompts,
   normalizedToolSchemas,
+  parseSystemPromptSnapshot,
   parseToolSchemasSnapshot,
   refreshFixtureReplacements,
   restorePinnedToolSchemas,
-  sessionFixtureNames,
   stabilizeFixtureMessageIds,
   stabilizeRefreshLog,
+  systemPromptPrecedesRequests,
   type Scenario,
   type SnapshotSuiteOptions,
 } from './suite.ts'

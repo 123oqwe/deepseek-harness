@@ -64,7 +64,7 @@ async function composed(
 ): Promise<{ ctx: Context; agent: Agent; runs: string[]; runtime: ScriptedRuntime }> {
   const ctx = new Context()
   await ctx.plugin(SessionStore)
-  await ctx.plugin(SystemPrompt, { persona: '' })
+  await ctx.plugin(SystemPrompt)
   await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(ToolRuntime, { mode: 'ptc' })
   await ctx.plugin(ScriptedRuntime)

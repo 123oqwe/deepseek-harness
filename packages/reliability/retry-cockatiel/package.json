@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-retry-cockatiel",
   "description": "Circuit-breaker provider for Epic P4-11: mounts the breaker service on a profile with one cockatiel policy per destination, opening on consecutive failures the retry classifier counts as endpoint health and refusing an attempt before it reaches the adapter",
-  "version": "0.1.2-alpha.4",
+  "version": "0.1.5-rc.2",
   "publishConfig": {
     "access": "public",
     "exports": {

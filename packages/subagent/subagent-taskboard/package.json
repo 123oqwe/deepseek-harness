@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-subagent-taskboard",
   "description": "Epic P5-11's producer: records every delegated subagent child as a task on the mounted taskboard, claiming it for the delegating parent at subagent/start and advancing it from the terminal stop reason at subagent/end",
-  "version": "0.1.2-alpha.4",
+  "version": "0.1.5-rc.2",
   "publishConfig": {
     "access": "public",
     "exports": {

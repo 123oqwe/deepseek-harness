@@ -43,6 +43,8 @@
  * - `MOCK_AWAIT_MARKER` — the prompt substring that selects which prompt waits.
  *                        Prompts without it are unaffected, so one mock binary
  *                        serves both sides of an ordering.
+ * - `MOCK_PROMPT_HOLD` — if set, prompt waits while this file exists; removing
+ *                        it releases the response without a timing assumption.
  * - `MOCK_MISSING_SESSION_ID` — if `1`, return a malformed empty `session/new`
  *                        response to exercise startup rollback.
  * - `MOCK_FLUSH_ON_EOF` — if set, on stdin EOF the agent takes an async beat
@@ -68,7 +70,8 @@
  */
 
 import { randomUUID } from 'node:crypto'
-import { existsSync, writeFileSync } from 'node:fs'
+import { existsSync, watch, writeFileSync } from 'node:fs'
+import { dirname } from 'node:path'
 import { Readable, Writable } from 'node:stream'
 import {
   agent as createAcpAgentApp,
@@ -171,6 +174,19 @@ function makeAgent() {
       // latest point that still precedes every observable effect of the prompt.
       if (AWAIT_GATE !== undefined && promptText(params).includes(AWAIT_GATE.marker)) {
         while (!existsSync(AWAIT_GATE.file)) await new Promise(r => setTimeout(r, 10))
+      }
+      const hold = process.env.MOCK_PROMPT_HOLD
+      if (hold !== undefined) {
+        const released = Promise.withResolvers<undefined>()
+        const check = (): void => { if (!existsSync(hold)) released.resolve(undefined) }
+        const watcher = watch(dirname(hold), check)
+        watcher.on('error', released.reject)
+        try {
+          check()
+          await released.promise
+        } finally {
+          watcher.close()
+        }
       }
       if (WANT_PERMISSION) {
         // Ask the client to approve before answering; honor its decision. Under

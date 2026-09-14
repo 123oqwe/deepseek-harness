@@ -30,7 +30,8 @@ import ApprovalService, { type ApprovalOutcome, type ApprovalRequest } from '@de
 import { createUserPrincipal, PrincipalId, TenantId } from '@deepseek-ai/dsh-principal'
 import SessionStore, { Session, SessionId, SESSION_FORMAT_VERSION } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import AgentRegistry, { agentEvents, Inbox, type Agent } from '@deepseek-ai/dsh-agent'
+import AgentRegistry, { agentEvents, type Agent } from '@deepseek-ai/dsh-agent'
+import { createInboxStub } from '@deepseek-ai/dsh-agent-loop-testkit'
 import { turnBoundaryProjectionDefinition } from '@deepseek-ai/dsh-agent-loop'
 import LocalFileSystem from '@deepseek-ai/dsh-fs-local'
 import * as workspaceContext from '@deepseek-ai/dsh-agent-instructions'
@@ -64,7 +65,7 @@ function hostSession(cwd: string): { agent: Agent; session: Session } {
     id,
     options: {},
     session,
-    inbox: new Inbox(session, { inserted: () => {}, discarded: () => {}, claimed: () => {} }),
+    inbox: createInboxStub(),
     status: 'idle',
     send: () => {},
     followup: () => {},
@@ -173,7 +174,7 @@ describe('P1-07 must[2]: the host user is asked before an untrusted workspace is
       id,
       options: {},
       session,
-      inbox: new Inbox(session, { inserted: () => {}, discarded: () => {}, claimed: () => {} }),
+      inbox: createInboxStub(),
       status: 'idle',
       send: () => {},
       followup: () => {},

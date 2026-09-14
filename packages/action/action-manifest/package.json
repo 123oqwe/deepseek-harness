@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-action-manifest",
   "description": "Contract-stage type surface and pure decision logic for Epic P2-03's first-class ActionManifest: the durable pre-execution record every external write operation must carry, argument canonicalization/hashing, side-effect classification with a fail-closed default, and the manifest-precedes-execution ordering gate",
-  "version": "0.1.2-alpha.4",
+  "version": "0.1.5-rc.2",
   "publishConfig": {
     "access": "public",
     "exports": {

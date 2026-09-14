@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-control-priority",
   "description": "The control-message kinds and their relative urgency for Epic P5-10: one priority table shared by the subagent control router and the agent inbox's dequeue point, so a cancel outranks a steer wherever the two arrive together",
-  "version": "0.1.2-alpha.4",
+  "version": "0.1.5-rc.2",
   "publishConfig": {
     "access": "public",
     "exports": {

@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-plugin-migrations",
   "description": "Plugin data-migration vocabulary and decisions for Epic P1-10: the manifest's migration DAG, preconditions, backup strategy and rollback support, plus the pure judgements over them — is this DAG acyclic, is this upgrade path admissible, is this migration reversible, and is a snapshot reconcilable with the data it was taken from",
-  "version": "0.1.2-alpha.4",
+  "version": "0.1.5-rc.2",
   "publishConfig": {
     "access": "public",
     "exports": {

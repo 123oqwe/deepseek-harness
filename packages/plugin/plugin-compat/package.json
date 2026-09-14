@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-plugin-compat",
   "description": "Contract-stage type surface and pure whole-graph solver signature for Epic P1-08's plugin ABI, capability, and schema compatibility negotiation: manifest-declared runtime API range/schema ranges/required-optional capabilities/provider constraints, boot-time whole-graph solving, minimal unsat-core conflict reporting, and fail-closed security-capability handling",
-  "version": "0.1.2-alpha.4",
+  "version": "0.1.5-rc.2",
   "publishConfig": {
     "access": "public",
     "exports": {

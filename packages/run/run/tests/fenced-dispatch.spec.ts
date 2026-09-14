@@ -69,7 +69,7 @@ async function harness(options: { leaseMs?: number; leaseDirectory?: string } = 
   await ctx.plugin(LlmRuntime)
   await ctx.plugin(SessionStore)
   await ctx.plugin(SessionProjectionRegistry)
-  await ctx.plugin(SystemPrompt, { persona: '' })
+  await ctx.plugin(SystemPrompt)
   await ctx.plugin(ToolRuntime)
   await ctx.plugin(AgentRegistry)
   await ctx.plugin(AgentLoop, { agents: [] })
@@ -87,7 +87,7 @@ async function harness(options: { leaseMs?: number; leaseDirectory?: string } = 
 describe('the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3)', () => {
   it('takes a lease for every Run it opens, so the Run has an owner before it has work', async () => {
     const ctx = await harness()
-    const agent = ctx.agentLoop.create(SessionId('session-alpha'))
+    const agent = await ctx.agentLoop.create(SessionId('session-alpha'))
     const runId = agent.runId
     expect(runId).toBeDefined()
     // The store, not the agent, is asked. A lifecycle carrying an epoch nobody
@@ -104,7 +104,7 @@ describe('the Run lease is an authority the harness presents (P4-07 must[1], §1
 
   it('starts the lifecycle at queued, so a run that never steps is never running', async () => {
     const ctx = await harness()
-    const agent = ctx.agentLoop.create(SessionId('session-alpha'))
+    const agent = await ctx.agentLoop.create(SessionId('session-alpha'))
     expect(agent.lifecycle?.state).toBe('queued')
   })
 
@@ -114,7 +114,7 @@ describe('the Run lease is an authority the harness presents (P4-07 must[1], §1
     // greater epoch to the new holder, and the old holder's token stops being
     // current. Nothing tells the old holder — it finds out here.
     const ctx = await harness()
-    const agent = ctx.agentLoop.create(SessionId('session-alpha'))
+    const agent = await ctx.agentLoop.create(SessionId('session-alpha'))
     const workItem = brandString<WorkItemId>(agent.id)
 
     const stolen = ctx.leaseStore.acquire(
@@ -136,7 +136,7 @@ describe('the Run lease is an authority the harness presents (P4-07 must[1], §1
     // The positive control the refusal above needs. Without it the case would
     // pass against an `advance` that refused everything.
     const ctx = await harness()
-    const agent = ctx.agentLoop.create(SessionId('session-alpha'))
+    const agent = await ctx.agentLoop.create(SessionId('session-alpha'))
     expect(ctx.runs.advance(agent, 'starting', 'the run is taking its first model step')).toBeUndefined()
     expect(agent.lifecycle?.state).toBe('starting')
   })
@@ -147,13 +147,13 @@ describe('the Run lease is an authority the harness presents (P4-07 must[1], §1
     // host asked for something the lifecycle does not allow. Reporting either
     // as the other would make a routing bug look like a failover.
     const ctx = await harness()
-    const agent = ctx.agentLoop.create(SessionId('session-alpha'))
+    const agent = await ctx.agentLoop.create(SessionId('session-alpha'))
     expect(ctx.runs.advance(agent, 'waiting_tool', 'skipping straight to a tool wait')).toBe('illegal-transition')
   })
 
   it('refuses a transition with an empty reason, so must[1]\'s reason cannot be satisfied by whitespace', async () => {
     const ctx = await harness()
-    const agent = ctx.agentLoop.create(SessionId('session-alpha'))
+    const agent = await ctx.agentLoop.create(SessionId('session-alpha'))
     expect(ctx.runs.advance(agent, 'starting', '   ')).toBe('missing-reason')
   })
 
@@ -162,7 +162,7 @@ describe('the Run lease is an authority the harness presents (P4-07 must[1], §1
     // refused, reach this path. Treating absence as `queued` would let an
     // unleased agent advance through a state machine no store backs.
     const ctx = await harness()
-    const agent = ctx.agentLoop.create(SessionId('session-alpha'))
+    const agent = await ctx.agentLoop.create(SessionId('session-alpha'))
     delete agent.lifecycle
     expect(ctx.runs.advance(agent, 'starting', 'no lifecycle here')).toBe('no-run')
   })
@@ -189,7 +189,7 @@ describe('the Run lease is an authority the harness presents (P4-07 must[1], §1
       textResponse('done'),
     ])
     ctx.llm.registerAdapter(['mock'], adapter)
-    const agent = ctx.agentLoop.create(SessionId('session-fenced'), { provider: 'mock', model: 'mock' })
+    const agent = await ctx.agentLoop.create(SessionId('session-fenced'), { provider: 'mock', model: 'mock' })
 
     // Another host takes the Run before the model's calls are dispatched.
     ctx.leaseStore.acquire(
@@ -237,7 +237,7 @@ describe('the Run lease is an authority the harness presents (P4-07 must[1], §1
       textResponse('done'),
     ])
     ctx.llm.registerAdapter(['mock'], adapter)
-    const agent = ctx.agentLoop.create(SessionId('session-owned'), { provider: 'mock', model: 'mock' })
+    const agent = await ctx.agentLoop.create(SessionId('session-owned'), { provider: 'mock', model: 'mock' })
     agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
     await agent.whenIdle()
 
@@ -251,7 +251,7 @@ describe('the Run lease is an authority the harness presents (P4-07 must[1], §1
     // the fencing rule firing on its own holder, which is worse than not
     // having it.
     const ctx = await harness({ leaseMs: 90 })
-    const agent = ctx.agentLoop.create(SessionId('session-long'))
+    const agent = await ctx.agentLoop.create(SessionId('session-long'))
     const workItem = brandString<WorkItemId>(agent.id)
     const granted = ctx.leaseStore.get(workItem)?.expiresAtMs
 
@@ -320,7 +320,7 @@ describe('the Run lease is an authority the harness presents (P4-07 must[1], §1
     // first means "start nothing".
     const ctx = await harness()
     ctx.leaseStore.setAvailable(false)
-    const agent = ctx.agentLoop.create(SessionId('session-beta'))
+    const agent = await ctx.agentLoop.create(SessionId('session-beta'))
     expect(agent.runId).toBeUndefined()
     expect(agent.lifecycle).toBeUndefined()
   })
@@ -347,7 +347,7 @@ describe('the Run lease is an authority the harness presents (P4-07 must[1], §1
       textResponse('done'),
     ]))
     ctx.leaseStore.setAvailable(false)
-    const agent = ctx.agentLoop.create(SessionId('session-refused'), { provider: 'mock', model: 'mock' })
+    const agent = await ctx.agentLoop.create(SessionId('session-refused'), { provider: 'mock', model: 'mock' })
     expect(agent.leaseRefused).toBe(true)
 
     agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
@@ -397,8 +397,8 @@ describe('the Run lease is an authority the harness presents (P4-07 must[1], §1
     }
     const shared = SessionId('contended-session')
 
-    const held = first.agentLoop.create(shared, { provider: 'mock', model: 'mock' })
-    const loser = second.agentLoop.create(shared, { provider: 'mock', model: 'mock' })
+    const held = await first.agentLoop.create(shared, { provider: 'mock', model: 'mock' })
+    const loser = await second.agentLoop.create(shared, { provider: 'mock', model: 'mock' })
 
     // The first host owns the session; the second was refused and knows it.
     expect(held.lifecycle).toBeDefined()
@@ -426,7 +426,7 @@ describe('the Run lease is an authority the harness presents (P4-07 must[1], §1
     await ctx.plugin(LlmRuntime)
     await ctx.plugin(SessionStore)
     await ctx.plugin(SessionProjectionRegistry)
-    await ctx.plugin(SystemPrompt, { persona: '' })
+    await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
     await ctx.plugin(AgentRegistry)
     await ctx.plugin(AgentLoop, { agents: [] })
@@ -445,7 +445,7 @@ describe('the Run lease is an authority the harness presents (P4-07 must[1], §1
       multiCall([{ id: 'c1', name: 'noop', args: {} }, { id: 'c2', name: 'noop', args: {} }]),
       textResponse('done'),
     ]))
-    const agent = ctx.agentLoop.create(SessionId('session-no-run-service'), { provider: 'mock', model: 'mock' })
+    const agent = await ctx.agentLoop.create(SessionId('session-no-run-service'), { provider: 'mock', model: 'mock' })
     expect(agent.lifecycle).toBeUndefined()
     expect(agent.leaseRefused).toBeUndefined()
 
@@ -545,7 +545,7 @@ describe('P4-05 acceptance[2]: the orphaned host is not the one that records it'
     // look identical. `orphaned` is recorded by the party that OBSERVED the
     // loss: the reclaimer, under its own valid epoch, in the case below.
     const ctx = await harness()
-    const agent = ctx.agentLoop.create(SessionId('session-orphaned'))
+    const agent = await ctx.agentLoop.create(SessionId('session-orphaned'))
     const workItem = brandString<WorkItemId>(agent.id)
 
     const stolen = ctx.leaseStore.acquire(
@@ -580,7 +580,7 @@ describe('P4-05 acceptance[2]: an orphaned run is reclaimed, or safely failed, b
     const second = await harness({ leaseDirectory, leaseMs: 1_000 })
     const shared = SessionId('lapsed-session')
 
-    const stranded = first.agentLoop.create(shared, { provider: 'mock', model: 'mock' })
+    const stranded = await first.agentLoop.create(shared, { provider: 'mock', model: 'mock' })
     expect(stranded.lifecycle?.state).toBe('queued')
     const firstEpoch = stranded.lifecycle?.epoch
 
@@ -620,7 +620,7 @@ describe('P4-05 acceptance[2]: an orphaned run is reclaimed, or safely failed, b
     const first = await harness({ leaseDirectory, leaseMs: 10_000 })
     const second = await harness({ leaseDirectory, leaseMs: 10_000 })
 
-    const working = first.agentLoop.create(SessionId('live-session'), { provider: 'mock', model: 'mock' })
+    const working = await first.agentLoop.create(SessionId('live-session'), { provider: 'mock', model: 'mock' })
     expect(second.runs.reclaim(working, Date.now())).toBe('held')
     expect(working.lifecycle?.state).toBe('queued')
 
@@ -652,7 +652,7 @@ describe('P4-05 acceptance[1] (§12.60): a run holding no dispatch slot does not
     })
     first.llm.registerAdapter(['mock'], counting)
 
-    const stranded = first.agentLoop.create(SessionId('nostep-session'), { provider: 'mock', model: 'mock' })
+    const stranded = await first.agentLoop.create(SessionId('nostep-session'), { provider: 'mock', model: 'mock' })
     const firstPlugin = first.runs as unknown as { heartbeats: Map<unknown, NodeJS.Timeout> }
     for (const timer of firstPlugin.heartbeats.values()) clearInterval(timer)
     firstPlugin.heartbeats.clear()

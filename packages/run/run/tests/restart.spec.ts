@@ -70,7 +70,7 @@ async function mount(path: string, leaseDirectory?: string, leaseMs?: number): P
   await ctx.plugin(LlmRuntime)
   await ctx.plugin(SessionStore)
   await ctx.plugin(SessionProjectionRegistry)
-  await ctx.plugin(SystemPrompt, { persona: '' })
+  await ctx.plugin(SystemPrompt)
   await ctx.plugin(ToolRuntime)
   await ctx.plugin(AgentRegistry)
   await ctx.plugin(AgentLoop, { agents: [] })
@@ -85,8 +85,8 @@ describe('P4-01 acceptance[0]: a fresh process enumerates what it restored', () 
   it('reports the non-terminal Runs the store held, at mount, before any agent exists', async () => {
     const path = await storePath()
     const first = await mount(path)
-    first.agentLoop.create(SessionId('session-alpha'))
-    first.agentLoop.create(SessionId('session-beta'))
+    await first.agentLoop.create(SessionId('session-alpha'))
+    await first.agentLoop.create(SessionId('session-beta'))
     await first.fiber.dispose()
     mounted.length = 0
 
@@ -103,7 +103,7 @@ describe('P4-01 acceptance[0]: a fresh process enumerates what it restored', () 
     // above and this one is what tells them apart.
     const path = await storePath()
     const first = await mount(path)
-    const agent = first.agentLoop.create(SessionId('session-ends'))
+    const agent = await first.agentLoop.create(SessionId('session-ends'))
     await first.runs.service.advance(agent.runId!, 'cancelled', [], Date.now())
     await first.fiber.dispose()
     mounted.length = 0
@@ -121,13 +121,13 @@ describe('P4-01 acceptance[0] and acceptance[2]: a restart adopts its Run instea
     // many Runs" was satisfied by an accident of the restart path.
     const path = await storePath()
     const first = await mount(path)
-    const before = first.agentLoop.create(SessionId('session-restart'))
+    const before = await first.agentLoop.create(SessionId('session-restart'))
     const firstRunId = before.runId
     await first.fiber.dispose()
     mounted.length = 0
 
     const second = await mount(path)
-    const after = second.agentLoop.create(SessionId('session-restart'))
+    const after = await second.agentLoop.create(SessionId('session-restart'))
 
     expect(after.runId).toBe(firstRunId)
     expect(second.runs.service.runsForSession(after.id)).toHaveLength(1)
@@ -140,14 +140,14 @@ describe('P4-01 acceptance[0] and acceptance[2]: a restart adopts its Run instea
     // that adopted anyway would reopen work that had ended.
     const path = await storePath()
     const first = await mount(path)
-    const before = first.agentLoop.create(SessionId('session-finished'))
+    const before = await first.agentLoop.create(SessionId('session-finished'))
     const endedRunId = before.runId
     await first.runs.service.advance(endedRunId!, 'cancelled', [], Date.now())
     await first.fiber.dispose()
     mounted.length = 0
 
     const second = await mount(path)
-    const after = second.agentLoop.create(SessionId('session-finished'))
+    const after = await second.agentLoop.create(SessionId('session-finished'))
 
     expect(after.runId).not.toBe(endedRunId)
     expect(second.runs.service.get(endedRunId!)?.state).toBe('cancelled')
@@ -162,13 +162,13 @@ describe('P4-01 acceptance[0] and acceptance[2]: a restart adopts its Run instea
     // difference between this case and the clean-unload pair below.
     const path = await storePath()
     const first = await mount(path)
-    const before = first.agentLoop.create(SessionId('session-crashed'))
+    const before = await first.agentLoop.create(SessionId('session-crashed'))
     await first.runs.service.advance(before.runId!, 'planning', [], Date.now())
     await first.runs.service.advance(before.runId!, 'running', [], Date.now())
     const logLength = first.runs.service.get(before.runId!)?.events.length
 
     const second = await mount(path)
-    const after = second.agentLoop.create(SessionId('session-crashed'))
+    const after = await second.agentLoop.create(SessionId('session-crashed'))
 
     expect(after.runId).toBe(before.runId)
     expect(second.runs.service.get(after.runId!)?.state).toBe('running')
@@ -189,7 +189,7 @@ describe('P4-01 acceptance[0] and acceptance[2]: a restart adopts its Run instea
     const leases = await mkdtemp(join(tmpdir(), 'dsh-run-restart-park-'))
     roots.push(leases)
     const ctx = await mount(path, leases)
-    const agent = ctx.agentLoop.create(SessionId('session-parked'))
+    const agent = await ctx.agentLoop.create(SessionId('session-parked'))
     await ctx.runs.service.advance(agent.runId!, 'planning', [], Date.now())
     await ctx.runs.service.advance(agent.runId!, 'running', [], Date.now())
     await ctx.fiber.dispose()
@@ -222,14 +222,14 @@ describe('P4-01 acceptance[0] and acceptance[2]: a restart adopts its Run instea
     const leases = await mkdtemp(join(tmpdir(), 'dsh-run-restart-clean-'))
     roots.push(leases)
     const first = await mount(path, leases)
-    const before = first.agentLoop.create(SessionId('session-clean-restart'))
+    const before = await first.agentLoop.create(SessionId('session-clean-restart'))
     await first.runs.service.advance(before.runId!, 'planning', [], Date.now())
     await first.runs.service.advance(before.runId!, 'running', [], Date.now())
     await first.fiber.dispose()
     mounted.length = 0
 
     const second = await mount(path, leases)
-    const after = second.agentLoop.create(SessionId('session-clean-restart'))
+    const after = await second.agentLoop.create(SessionId('session-clean-restart'))
 
     expect(after.leaseRefused).toBeUndefined()
     expect(after.runId).toBe(before.runId)
@@ -250,7 +250,7 @@ describe('P4-01 acceptance[0] and acceptance[2]: a restart adopts its Run instea
     // the arrangement BLOCKED-197 describes from the other side.
     const path = await storePath()
     const first = await mount(path)
-    const before = first.agentLoop.create(SessionId('session-resumes-work'))
+    const before = await first.agentLoop.create(SessionId('session-resumes-work'))
     await first.runs.service.advance(before.runId!, 'planning', [], Date.now())
     await first.runs.service.advance(before.runId!, 'running', [], Date.now())
     await first.fiber.dispose()
@@ -292,14 +292,14 @@ describe('P4-01 acceptance[0] and acceptance[2]: a restart adopts its Run instea
     const leases = await mkdtemp(join(tmpdir(), 'dsh-run-restart-leases-'))
     roots.push(leases)
     const first = await mount(path, leases, 1)
-    const before = first.agentLoop.create(SessionId('session-epoch'))
+    const before = await first.agentLoop.create(SessionId('session-epoch'))
     const deadEpoch = before.lifecycle?.epoch
     expect(deadEpoch).toBeDefined()
     await first.fiber.dispose()
     mounted.length = 0
 
     const second = await mount(path, leases, 1)
-    const after = second.agentLoop.create(SessionId('session-epoch'))
+    const after = await second.agentLoop.create(SessionId('session-epoch'))
 
     expect(after.runId).toBe(before.runId)
     expect(after.lifecycle?.epoch).toBeGreaterThan(deadEpoch!)
@@ -319,14 +319,14 @@ describe('P4-01 acceptance[0] and acceptance[2]: a restart adopts its Run instea
     const leases = await mkdtemp(join(tmpdir(), 'dsh-run-restart-held-'))
     roots.push(leases)
     const first = await mount(path, leases, 30_000)
-    const before = first.agentLoop.create(SessionId('session-held'))
+    const before = await first.agentLoop.create(SessionId('session-held'))
     expect(before.runId).toBeDefined()
     // Dispose only the plugin's listeners' effect by dropping the Context
     // reference: the lease is NOT released, which is what a crash looks like.
     mounted.length = 0
 
     const second = await mount(path, leases, 30_000)
-    const after = second.agentLoop.create(SessionId('session-held'))
+    const after = await second.agentLoop.create(SessionId('session-held'))
 
     expect(after.runId).toBeUndefined()
     expect(after.leaseRefused).toBe(true)
@@ -343,7 +343,7 @@ describe('P4-01 acceptance[1]: an illegal transition is refused on the productio
     // production caller, so it refused nothing.
     const path = await storePath()
     const ctx = await mount(path)
-    const agent = ctx.agentLoop.create(SessionId('session-illegal'))
+    const agent = await ctx.agentLoop.create(SessionId('session-illegal'))
 
     const decision = await ctx.runs.service.advance(agent.runId!, 'verifying', [], Date.now())
 
@@ -357,7 +357,7 @@ describe('P4-01 acceptance[1]: an illegal transition is refused on the productio
     // there (P4-02 put a TaskProfile body there, which is a different record).
     const path = await storePath()
     const ctx = await mount(path)
-    const agent = ctx.agentLoop.create(SessionId('session-unchanged'))
+    const agent = await ctx.agentLoop.create(SessionId('session-unchanged'))
     const before = ctx.runs.service.get(agent.runId!)
 
     await ctx.runs.service.advance(agent.runId!, 'verifying', [], Date.now())
@@ -375,8 +375,8 @@ describe('P4-01 acceptance[2] negative half: no Run spans sessions today (BLOCKE
     // reddens the day someone wires it without reading BLOCKED-196.
     const path = await storePath()
     const ctx = await mount(path)
-    const alpha = ctx.agentLoop.create(SessionId('session-one'))
-    const beta = ctx.agentLoop.create(SessionId('session-two'))
+    const alpha = await ctx.agentLoop.create(SessionId('session-one'))
+    const beta = await ctx.agentLoop.create(SessionId('session-two'))
 
     expect(alpha.runId).not.toBe(beta.runId)
     expect(ctx.runs.service.get(alpha.runId!)?.sessionIds).toStrictEqual([alpha.id])

@@ -55,6 +55,9 @@
     },
     {
       "path": "../../identity/principal"
+    },
+    {
+      "path": "../../util/package-manifest"
     }
   ]
 }

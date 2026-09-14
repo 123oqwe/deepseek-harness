@@ -56,7 +56,7 @@ async function setup(options: { maxNestingDepth?: number; disposeGraceMs?: numbe
   await ctx.plugin(InMemoryLeaseStorePlugin)
   await ctx.plugin(WorkerThreadWorkflowEngine, options)
   ctx.llm.registerAdapter(['mock'], new MockAdapter([textResponse('child said so')]))
-  const parent = ctx.agentLoop.create(SessionId('nesting-parent'), { provider: 'mock', model: 'mock' })
+  const parent = await ctx.agentLoop.create(SessionId('nesting-parent'), { provider: 'mock', model: 'mock' })
   return { ctx, parent }
 }
 

@@ -12,6 +12,7 @@ import type { ControlState } from '@deepseek-ai/dsh-human-channel/types'
 import type { AgentLifecycle } from './state-machine.ts'
 import type { OptionalSessionSeq, SessionId, SessionSeq } from '@deepseek-ai/dsh-session/types'
 import type { TypertContext, TypertLookup } from '@deepseek-ai/dsh-typert-protocol'
+import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 
 /** Public live-agent handle; the runtime face augments its live capabilities. */
 export interface Agent {
@@ -165,6 +166,50 @@ declare module '@deepseek-ai/dsh-typert-protocol' {
 /** One of the two ordered pending-message lists owned by an agent. */
 export type InboxTarget = 'next-turn' | 'next-step'
 
+/** Complete pending Inbox value reconstructed from durable splices. */
+export interface InboxState {
+  readonly 'next-turn': readonly UserMessage[]
+  readonly 'next-step': readonly UserMessage[]
+}
+
+/**
+ * Wire-JSON pending Inbox value. Each message round-trips the session log
+ * losslessly, but the fold state's full `UserMessage` type cannot cross a
+ * typert Remote boundary (its source union carries an `unknown` replay
+ * field), so the typed projection table keeps this JSON-safe form.
+ */
+export interface InboxWireState {
+  readonly 'next-turn': readonly JsonValue[]
+  readonly 'next-step': readonly JsonValue[]
+}
+
+/**
+ * Host-only arrival bookkeeping reconstructed from durable inbox splices
+ * (Epic P4-06 must[2]). It never leaves the host, so it has no wire view.
+ */
+export interface InboxArrivalsState {
+  /** The arrival key of each pending message in list order; `null` for a source that states no epoch. */
+  readonly pending: {
+    readonly 'next-turn': readonly (string | null)[]
+    readonly 'next-step': readonly (string | null)[]
+  }
+  /** Keys of messages a claim removed; a later arrival repeating one is refused. */
+  readonly consumed: readonly string[]
+}
+
+declare module '@deepseek-ai/dsh-session-projection/types' {
+  interface SessionProjectionStateMap {
+    /** Pending agent input reconstructed from durable inbox splices. */
+    inbox: InboxState
+    /** Host-only arrival keys of pending and consumed inbox messages. */
+    inboxArrivals: InboxArrivalsState
+  }
+  interface SessionProjectionMap {
+    /** Pending agent input reconstructed from durable inbox splices. */
+    inbox: InboxWireState
+  }
+}
+
 /**
  * Turn and step boundaries folded from one agent session log.
  *
@@ -189,8 +234,8 @@ declare module '@deepseek-ai/dsh-session/types' {
   interface SessionEventMap {
     /**
      * One normalized mutation of an agent's durable pending-message lists.
-     * Live dispatch precedes projection mutation, so synchronous observers may
-     * read the pre-splice inbox to recover the removed messages.
+     * The session-projection registry applies the committed event before
+     * `Session.append()` returns; Inbox live notifications follow that commit.
      */
     'agent/inbox/spliced': {
       target: InboxTarget

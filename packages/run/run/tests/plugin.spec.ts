@@ -102,7 +102,7 @@ describe('RunPlugin durable-write failure reporting', () => {
     const failures: { path: string; error: unknown }[] = []
     ctx.on('run/store-write-failed', (payload) => { failures.push(payload) })
 
-    ctx.agentLoop.create(SessionId('session-abandoned'))
+    void ctx.agentLoop.create(SessionId('session-abandoned'))
     // The directory goes while the mount is still live and its write in flight
     // — exactly what a teardown that removes files before disposing produces.
     await rm(root, { recursive: true, force: true })
@@ -120,14 +120,14 @@ describe('RunPlugin durable-write failure reporting', () => {
 describe('RunPlugin agent-session association', () => {
   it('opens exactly one Run for one started agent session', async () => {
     const ctx = await harness(await storePath())
-    ctx.agentLoop.create(SessionId('session-alpha'))
+    await ctx.agentLoop.create(SessionId('session-alpha'))
     expect(ctx.runs.service.listNonTerminal()).toHaveLength(1)
     await ctx.fiber.dispose()
   })
 
   it('owns that Run with RUN_SERVICE_OWNER_ID, never the starting session id', async () => {
     const ctx = await harness(await storePath())
-    const agent = ctx.agentLoop.create(SessionId('session-alpha'))
+    const agent = await ctx.agentLoop.create(SessionId('session-alpha'))
     const [run] = ctx.runs.service.runsForSession(agent.id)
     expect(run?.ownerId).toBe(RUN_SERVICE_OWNER_ID)
     expect(run?.ownerId).not.toBe(agent.id)
@@ -136,7 +136,7 @@ describe('RunPlugin agent-session association', () => {
 
   it('records the opened Run on the live Agent handle as Agent.runId', async () => {
     const ctx = await harness(await storePath())
-    const agent = ctx.agentLoop.create(SessionId('session-alpha'))
+    const agent = await ctx.agentLoop.create(SessionId('session-alpha'))
     const [run] = ctx.runs.service.runsForSession(agent.id)
     expect(agent.runId).toBe(run?.id)
     await ctx.fiber.dispose()
@@ -144,7 +144,7 @@ describe('RunPlugin agent-session association', () => {
 
   it('finds the Run for a live agent through runFor', async () => {
     const ctx = await harness(await storePath())
-    const agent = ctx.agentLoop.create(SessionId('session-alpha'))
+    const agent = await ctx.agentLoop.create(SessionId('session-alpha'))
     const [run] = ctx.runs.service.runsForSession(agent.id)
     expect(ctx.runs.runFor(agent)).toStrictEqual(run)
     await ctx.fiber.dispose()
@@ -152,8 +152,8 @@ describe('RunPlugin agent-session association', () => {
 
   it('opens an independent Run per agent session, so one Session never joins another Session\'s Run', async () => {
     const ctx = await harness(await storePath())
-    const alpha = ctx.agentLoop.create(SessionId('session-alpha'))
-    const beta = ctx.agentLoop.create(SessionId('session-beta'))
+    const alpha = await ctx.agentLoop.create(SessionId('session-alpha'))
+    const beta = await ctx.agentLoop.create(SessionId('session-beta'))
     const [alphaRun] = ctx.runs.service.runsForSession(alpha.id)
     const [betaRun] = ctx.runs.service.runsForSession(beta.id)
     expect(alphaRun?.id).not.toBe(betaRun?.id)
@@ -167,7 +167,7 @@ describe('RunPlugin durability', () => {
   it('writes the Run through to the store, so a fresh service over the same path lists it', async () => {
     const path = await storePath()
     const ctx = await harness(path)
-    const agent = ctx.agentLoop.create(SessionId('session-alpha'))
+    const agent = await ctx.agentLoop.create(SessionId('session-alpha'))
     await ctx.fiber.dispose()
     const restored = await RunService.restore(createFileRunStore(path))
     expect(restored.runsForSession(agent.id)).toHaveLength(1)
@@ -176,7 +176,7 @@ describe('RunPlugin durability', () => {
   it('restores the Runs an earlier mount left behind, rather than starting empty', async () => {
     const path = await storePath()
     const first = await harness(path)
-    first.agentLoop.create(SessionId('session-alpha'))
+    await first.agentLoop.create(SessionId('session-alpha'))
     await first.fiber.dispose()
     const second = await harness(path)
     expect(second.runs.service.listNonTerminal()).toHaveLength(1)

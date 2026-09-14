@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-run",
   "description": "Contract-stage type surface and pure state-machine logic for Epic P4-01's first-class Run Service and Run event log: the closed Run state set, its legal-transition table, the append-only event log referencing Session/Workflow/Action/Artifact/Approval/Verification, service-owned Run identity, and Session/Run association",
-  "version": "0.1.2-alpha.4",
+  "version": "0.1.5-rc.2",
   "publishConfig": {
     "access": "public",
     "exports": {
