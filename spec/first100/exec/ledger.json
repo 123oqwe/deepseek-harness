@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-13T12:35:25.970Z",
-  "inputDigest": "511b0d79fbcaff332709389522114df844b5c2d0afd10d52cd4cb890e8977df6",
+  "lastUpdatedUtc": "2026-09-14T00:26:44.668Z",
+  "inputDigest": "2c21f1bc1fb4ebd930589a3ad314977fa8fda19e5c0336c123da6c1f14492598",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4543,7 +4543,30 @@
       "wave": 8,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "1f58ac8ad9db1871e2ac0c1448e98d7dd37fa576",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34783727057",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34783727057/first100-vitest-report-1f58ac8ad9db1871e2ac0c1448e98d7dd37fa576/vitest-report.json",
+          "observationSha256": "05ad093c3e4095e9d3bcf62a1e11b3fb7f2acee3cd570c6aa599fd7bee14ab07",
+          "expectCasesMatched": [
+            "P3-02 C must[1]: allowlists are closed grants a request every rule permits, so refusing everything is not a passing strategy",
+            "P3-02 C must[1]: allowlists are closed refuses a posture the allowlist does not name, naming the dimension and the value asked for",
+            "P3-02 C must[1]: allowlists are closed treats an EMPTY allowlist as permitting nothing, not as unconstrained",
+            "P3-02 C must[1]: allowlists are closed collects every refusal rather than the first, so one round trip reports the whole gap",
+            "P3-02 C must[1]: allowlists are closed refuses a device the allowlist does not name, one refusal per device",
+            "P3-02 C must[2]: an unknown capability is denied refuses a dimension no rule covers, so silence is not permission",
+            "P3-02 C must[2]: an unknown capability is denied refuses the unknown dimension even when the request for it is the strongest one",
+            "P3-02 C must[2]: an unknown capability is denied reports the governed dimensions from the record itself, so the list cannot drift from the rules",
+            "P3-02 C must[3]: a provider may not claim a dimension it cannot enforce refuses a dimension the provider does not claim, even when the policy permits the value",
+            "P3-02 C must[3]: a provider may not claim a dimension it cannot enforce grants the same request once the provider claims the dimensions, so the refusal is caused by the claim",
+            "P3-02 C must[3]: a provider may not claim a dimension it cannot enforce refuses a ceiling larger than the rule permits, and reports both numbers",
+            "P3-02 C must[3]: a provider may not claim a dimension it cannot enforce refuses ANY ceiling when the rule sets none, since an unconstrainable dimension cannot be constrained",
+            "P3-02 C: the Landlock filesystem-rights vocabulary names the Landlock filesystem rights by their kernel UAPI names, all sixteen in ABI order",
+            "P3-02 C: the Landlock filesystem-rights vocabulary records the abbreviation this repository transcribed them under, so either spelling is findable",
+            "P3-02 C acceptance[2]: serialization keeps every field round-trips a policy set through JSON with nothing dropped, including an empty allowlist",
+            "P3-02 C acceptance[2]: serialization keeps every field round-trips a refusal list, so an audit reads the same reasons the solver gave"
+          ],
+          "capturedAtUtc": "2026-09-14T00:26:44.661Z"
         },
         "P": {
           "status": "NOT_RUN"
@@ -4556,7 +4579,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "1f58ac8ad9db1871e2ac0c1448e98d7dd37fa576",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -4667,7 +4690,26 @@
       "wave": 8,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "1f58ac8ad9db1871e2ac0c1448e98d7dd37fa576",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34783727057",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34783727057/first100-vitest-report-1f58ac8ad9db1871e2ac0c1448e98d7dd37fa576/vitest-report.json",
+          "observationSha256": "05ad093c3e4095e9d3bcf62a1e11b3fb7f2acee3cd570c6aa599fd7bee14ab07",
+          "expectCasesMatched": [
+            "P3-06 C must[0]: a lease binds a credential to one principal, action and world redeems and yields the credential when principal, action and world all match",
+            "P3-06 C must[0]: a lease binds a credential to one principal, action and world refuses a principal the lease was not issued to, so a lease is not bearer authority",
+            "P3-06 C must[0]: a lease binds a credential to one principal, action and world refuses an action the lease does not name, so one grant does not cover a whole run",
+            "P3-06 C must[0]: a lease binds a credential to one principal, action and world refuses a world the lease does not name, so a grant does not follow a secret across confinements",
+            "P3-06 C acceptance[2]: an expired lease cannot be replayed refuses at exactly expiresAt, so the recorded time is the first unusable instant and not the last usable one",
+            "P3-06 C acceptance[2]: an expired lease cannot be replayed is still usable one millisecond before, so expiry refuses by time and not by default",
+            "P3-06 C acceptance[2]: an expired lease cannot be replayed reads as expired with NO sweeper having run, so a replay against an unswept store still refuses",
+            "P3-06 C acceptance[2]: an expired lease cannot be replayed refuses an expired lease BEFORE testing its bindings, so a refusal leaks nothing about the grant",
+            "P3-06 C must[2]: use revokes moves a redeemed lease out of `issued`, so the same lease does not serve a second action",
+            "P3-06 C: revocation, and the cascade when a world stops revokes every lease bound to the stopped world, and only those",
+            "P3-06 C: revocation, and the cascade when a world stops does not rewrite a terminal state, so the first reason a lease stopped working stays the recorded one",
+            "P3-06 C: the state machine admits exactly the moves it names makes every terminal state final, so no lease returns to usable"
+          ],
+          "capturedAtUtc": "2026-09-14T00:26:35.072Z"
         },
         "P": {
           "status": "NOT_RUN"
@@ -4680,7 +4722,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "1f58ac8ad9db1871e2ac0c1448e98d7dd37fa576",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -4792,7 +4834,41 @@
       "wave": 8,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "1f58ac8ad9db1871e2ac0c1448e98d7dd37fa576",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34783727057",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34783727057/first100-vitest-report-1f58ac8ad9db1871e2ac0c1448e98d7dd37fa576/vitest-report.json",
+          "observationSha256": "05ad093c3e4095e9d3bcf62a1e11b3fb7f2acee3cd570c6aa599fd7bee14ab07",
+          "expectCasesMatched": [
+            "P3-10 must[0]: a budget bounds eight dimensions per tenant, run and action names exactly the eight dimensions the clause lists, each held or consumed except wall clock",
+            "P3-10 must[0]: a budget bounds eight dimensions per tenant, run and action refuses a reservation on wallClockMs past its limit, naming the dimension, the limit and what would have been observed",
+            "P3-10 must[0]: a budget bounds eight dimensions per tenant, run and action admits a reservation on wallClockMs exactly at its limit",
+            "P3-10 must[0]: a budget bounds eight dimensions per tenant, run and action refuses a reservation on cpuMillicores past its limit, naming the dimension, the limit and what would have been observed",
+            "P3-10 must[0]: a budget bounds eight dimensions per tenant, run and action admits a reservation on cpuMillicores exactly at its limit",
+            "P3-10 must[0]: a budget bounds eight dimensions per tenant, run and action refuses a reservation on memoryBytes past its limit, naming the dimension, the limit and what would have been observed",
+            "P3-10 must[0]: a budget bounds eight dimensions per tenant, run and action admits a reservation on memoryBytes exactly at its limit",
+            "P3-10 must[0]: a budget bounds eight dimensions per tenant, run and action refuses a reservation on diskBytes past its limit, naming the dimension, the limit and what would have been observed",
+            "P3-10 must[0]: a budget bounds eight dimensions per tenant, run and action admits a reservation on diskBytes exactly at its limit",
+            "P3-10 must[0]: a budget bounds eight dimensions per tenant, run and action refuses a reservation on processes past its limit, naming the dimension, the limit and what would have been observed",
+            "P3-10 must[0]: a budget bounds eight dimensions per tenant, run and action admits a reservation on processes exactly at its limit",
+            "P3-10 must[0]: a budget bounds eight dimensions per tenant, run and action refuses a reservation on networkBytes past its limit, naming the dimension, the limit and what would have been observed",
+            "P3-10 must[0]: a budget bounds eight dimensions per tenant, run and action admits a reservation on networkBytes exactly at its limit",
+            "P3-10 must[0]: a budget bounds eight dimensions per tenant, run and action refuses a reservation on toolCalls past its limit, naming the dimension, the limit and what would have been observed",
+            "P3-10 must[0]: a budget bounds eight dimensions per tenant, run and action admits a reservation on toolCalls exactly at its limit",
+            "P3-10 must[0]: a budget bounds eight dimensions per tenant, run and action refuses a reservation on agents past its limit, naming the dimension, the limit and what would have been observed",
+            "P3-10 must[0]: a budget bounds eight dimensions per tenant, run and action admits a reservation on agents exactly at its limit",
+            "P3-10 must[0]: a budget bounds eight dimensions per tenant, run and action treats a zero or absent limit as unlimited, as the loop budget does",
+            "P3-10 must[0]: a budget bounds eight dimensions per tenant, run and action refuses to open an account under a parent whose scope is not strictly wider",
+            "P3-10 must[1]: a reservation is recorded against every enclosing budget returns held dimensions on release and keeps consumed ones",
+            "P3-10 must[1]: a reservation is recorded against every enclosing budget applies a refused reservation to no account at all, including the ones that would have admitted it",
+            "P3-10 must[1]: a reservation is recorded against every enclosing budget checks wall clock as a ceiling per reservation, so parallel work does not add elapsed time",
+            "P3-10 acceptance[1]: a cumulative budget cannot be bypassed by splitting across subagents stops fifty subagents sharing their parent run budget at the run limit, not at each subagent's own",
+            "P3-10 acceptance[1]: a cumulative budget cannot be bypassed by splitting across subagents holds a tenant limit across its runs the same way",
+            "P3-10 acceptance[2]: the metering error bound is declared as a number before anything is measured declares a finite bound for every dimension, exact for the counted ones and within 10% for the sampled ones",
+            "P3-10 must[3]/must[4]: budgets are metering and hard-limit primitives, with no scheduling fairness exports no fairness, priority, weight or share vocabulary for P4-10 to find already decided here",
+            "P3-10 standard: OTel process.* semconv names reconciles four dimensions against the OTel process.* semconv names of the pinned release, and leaves the other four unmapped"
+          ],
+          "capturedAtUtc": "2026-09-14T00:26:44.304Z"
         },
         "P": {
           "status": "NOT_RUN"
@@ -4805,7 +4881,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "1f58ac8ad9db1871e2ac0c1448e98d7dd37fa576",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
