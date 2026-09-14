@@ -35,7 +35,7 @@ export function apply(ctx) {
     waits.clear()
   })
 
-  ctx.on('agent/pre-step', async ({ turn, step, signal }, next) => {
+  ctx.on('agent/pre-step', async ({ agent, turn, step, signal }, next) => {
     if (turn !== 1 || step !== 2) return next()
     signal.throwIfAborted()
     if (disposed) throw new Error('bja-settle-before-collect barrier disposed')
@@ -50,10 +50,12 @@ export function apply(ctx) {
     try {
       let current
       try {
-        current = ctx.jobs.get(JOB_ID)
-      } catch {
-        // The job does not exist yet only if step 1 did not launch it; nothing to wait for.
-        current = { status: 'missing' }
+        current = ctx.jobs.get(JOB_ID, agent)
+      } catch (cause) {
+        // `get` throws when this agent owns no `bash-1`: step 1 did not launch it, so the
+        // scenario setup is broken. Fail here naming that instead of skipping the
+        // barrier (which reopens the race) or waiting for a job that never settles.
+        throw new Error('background-job-abandoned: step 1 did not launch bash-1 for this agent; the settle barrier requires it', { cause })
       }
       if (!isTerminal(current)) await wait.promise
     } finally {
