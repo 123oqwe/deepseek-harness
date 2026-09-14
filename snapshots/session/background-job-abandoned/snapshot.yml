@@ -1,3 +1,25 @@
+# Two background Bash jobs: `bash-1` (printf COLLECTED) finishes and is
+# collected with job_output; `bash-2` never finishes and is recorded as
+# abandoned when the run ends (BLOCKED-220).
+#
+# The completion notice for `bash-1` is spliced into the owner's next-step inbox
+# when the registry settles the job. Replay reaches the second model step without
+# waiting for that, so the notice landed before `step/start(2)` on one run and
+# inside step 2 on another (CI 34885397841, snapshot step). Nothing in the
+# scenario decided which. BLOCKED-249 records it; the mechanism and the barrier
+# shape follow BLOCKED-222.
+#
+# The composition mounts `./settle-before-collect.mjs`, which holds turn 1
+# step 2 in `agent/pre-step` until `bash-1` has settled. `pre-step` is awaited
+# after the step's inbox claim and before `step/start` is appended, so the notice
+# lands between `step/end(1)` and `step/start(2)` and is claimed at step 3. No
+# waiter exists yet (`job_output` is step 2's call), so `reported` stays false and
+# the notice is delivered. The barrier observes the registry only and appends no
+# session event; the recorded log is unchanged by it.
+#
+# The barrier is mounted on the replay composition only. A live re-record of this
+# scenario runs the same race against a real model, so re-recording may need the
+# same barrier on `cordis.yml` as well.
 version: 1
 scenario: background-job-abandoned
 profile: headless

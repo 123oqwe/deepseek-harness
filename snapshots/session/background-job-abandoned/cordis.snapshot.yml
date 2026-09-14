@@ -36,6 +36,8 @@
     maxConcurrentJobsPerOwner: 2
 
 - insert:
+    - id: bja-settle-before-collect
+      name: './settle-before-collect.mjs'
     - id: llm-replay
       name: '@deepseek-ai/dsh-llm-replay'
       config:
