@@ -100,6 +100,7 @@ export function createSessionManifestAppender(
     },
     appended(): readonly AppendedManifest[] {
       const entries: AppendedManifest[] = []
+      // oxlint-disable-next-line typescript/no-deprecated -- Existing Session history read; migration deferred.
       for (const event of session.snapshotEvents()) {
         if (event.type !== 'action/manifest-appended') continue
         // No cast: the `type` guard above narrows `event` to its own member of

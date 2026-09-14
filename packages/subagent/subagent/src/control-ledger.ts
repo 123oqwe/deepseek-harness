@@ -65,6 +65,7 @@ export function openControlLedger(
       // Read at ASK time rather than cached at construction: a child whose
       // session gained messages since is exactly the case a redelivery arrives
       // in, and a snapshot taken earlier would answer about a past log.
+      // oxlint-disable-next-line typescript/no-deprecated -- Existing Session history read; migration deferred.
       for (const event of session.snapshotEvents()) {
         if (event.type !== 'user/message') continue
         const source = event.data.source as { rpcId?: unknown }

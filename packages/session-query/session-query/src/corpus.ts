@@ -113,6 +113,7 @@ export class SessionCorpus {
         header: structuredClone(session.header),
         live: true,
         persisted: durable !== undefined,
+        // oxlint-disable-next-line typescript/no-deprecated -- Existing Session history read; migration deferred.
         ...attribution(lastAttachedTenantId(session.snapshotEvents()), workspaces.get(session.id)),
       })
     }

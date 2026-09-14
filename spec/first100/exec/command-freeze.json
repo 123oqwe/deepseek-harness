@@ -14311,8 +14311,8 @@
         "testsDiscovered": 9
       },
       "sensitivityProof": {
-        "mutationDescription": "None taken here; the re-mapped cases carry their own mutation record in live-write-contract.ts. This entry re-points P4-06.P from the merge-deleted write-behind.spec.ts onto the upstream handle's runLiveWritePathContract (D1 option B).",
-        "failureSummary": "Validation is the candidate CI observation (gate 3); the 9 fullName cases are frozen by their vitest fullName (space-joined, BLOCKED-104-immune since the contract is shared)."
+        "mutationDescription": "Locally (never committed) at candidate tip 58beb6c497: in packages/session/session-persistence-jsonl/src/storage.ts, deleted the failed-drain retention `this.buffered = batch.concat(this.buffered)` in drainBuffered's failure branch so a failed batch is not retained. (Supersedes the prior entry's incorrect claim that the cases self-carry a mutation record in live-write-contract.ts -- that file contains none.)",
+        "failureSummary": "jsonl.spec: 5 failed | 189 passed (194). Three of the 9 frozen cases red: 'a failed drain retains order, quiets the timer, and recovers exactly once' (append seq mismatch), 'surfaces a barrier failure without background logging and retains its batch in order' (append seq mismatch), 'retains a failed batch larger than the engine call-argument limit' (expected [150000] to equal [150000,150000]). The other 2 reds are non-frozen (service-level flush)."
       },
       "note": "BASE-ALIGN-v3 re-anchor: write-behind.spec.ts and SessionWriteBehind were deleted by the merge; upstream provides the write-behind function via storage.ts + handle enqueueLive/drainLive. D1 option B: re-map to runLiveWritePathContract('jsonl'). 13->9: dropped = enqueueAll empty-group (ours-only, API deleted), overlapping-background-failure-retried-inside-flush (ours-only; upstream flush REJECTs not retries), fixed-window+copy (fixed-window covered by the coalesce case; copy-half ours-only), and keeps-a-tail-deadline-not-expired (REAL narrowing, NOT zero acceptance loss: the merged seam DELIBERATELY allows both write-immediately and wait-full, so there is no successor to pin and nothing to fix; documented here rather than recorded as zero-loss). The 9th case (a failed drain retains order, quiets the timer, and recovers exactly once) IS included: it pins pause-after-failure+order+recovers-once; honest limit: the contract recovers via explicit flush() so it pins the flush-recovery, NOT the old auto-window-recovery half (that half is a merged-seam behavioral difference, ours-only). clause-coverage (e63ffeb2f9) proved all 13 carry zero acceptance-clause exposure; P4-06 acceptance rests on the other 78 examples + supplements. Frozen by fullName (space-joined) per BLOCKED-104 since the cross-backend contract is shared (only jsonl calls it today)."
     },
@@ -14343,8 +14343,8 @@
         "testsDiscovered": 3
       },
       "sensitivityProof": {
-        "mutationDescription": "None; only the fixture path changed session.jsonl -> session.v2.jsonl. The 3 F-stage cases replay the real committed fixture through the production migration path.",
-        "failureSummary": "Validation is the candidate CI observation."
+        "mutationDescription": "Locally (never committed) at candidate tip 58beb6c497: in packages/session/session-format-v2-to-v3/src/migration.ts, made transformEvent skip emitEvent for `turn/end` (silent event loss on migration).",
+        "failureSummary": "jsonl.spec: 9 failed | 185 passed. All 3 frozen F-stage cases red -- replays of snapshots/web/fresh-round-trip, snapshots/sdk/text-turn, snapshots/session/skill-load session.v2.jsonl 'with no negotiation failure and no silent event loss': AssertionError expected false to be true (turn/end missing). The other 6 reds are non-frozen v0/v1/v2 migration cases."
       },
       "note": "BASE-ALIGN-v3: upstream renamed session.jsonl -> session.v2.jsonl (added session.v3). The P0-06.F 3 cases replay the real fixture via the production v2->v3 migration; titles change only in the fixture suffix. clause-coverage unaffected."
     },
@@ -14381,7 +14381,12 @@
         "packages/subagent/subagent/tests/continuation.spec.ts"
       ],
       "frozenAtUtc": "2026-09-14T10:00:00.000Z",
-      "note": "BASE-ALIGN-v3: our own inbox port moved arrival-dedup.spec.ts to packages/core/agent-loop/tests/ and inbox.ts to agent-loop/src/. argv+files re-pointed; case titles UNCHANGED so commitmentKey is unchanged and no revoke is needed (BLOCKED-104 n/a, titles unique)."
+      "note": "BASE-ALIGN-v3: our own inbox port moved arrival-dedup.spec.ts to packages/core/agent-loop/tests/ and inbox.ts to agent-loop/src/. argv+files re-pointed; case titles UNCHANGED so commitmentKey is unchanged and no revoke is needed (BLOCKED-104 n/a, titles unique).",
+      "sensitivityProof": {
+        "mutationDescription": "Locally (never committed) at candidate tip 58beb6c497: in packages/core/agent/src/arrival.ts, replaced arrivalKey's epoch component `epoch: source.senderEpoch` with `epoch: 0`, leaving source/id components and the consumed-set machinery unchanged (the dedup key lives in arrival.ts on this tree, not inbox.ts).",
+        "failureSummary": "Under the frozen argv (arrival-dedup.spec + continuation.spec): 1 failed | 149 passed (150). The one red is exactly 'ADMITS a settlement from the same child in a LATER epoch, so a second activation is not suppressed' -- DuplicateArrivalError 'inbox arrival ... repeats a consumed key' (agent-loop/src/inbox.ts:319 append, spec:150)."
+      },
+      "dryRunProof": "Ran locally at candidate tip 58beb6c497 (tree d6ad39122784), BASE-ALIGN-v3 re-anchor: arrival-dedup.spec + continuation.spec, 150 passed. Cases path-remapped core/agent -> core/agent-loop/tests; expectCases set-identical to superseded parent 2026-09-07T23:10:00.000Z."
     },
     {
       "epic": "P5-10",
@@ -14413,7 +14418,12 @@
         "packages/core/agent-loop/tests/interception.spec.ts"
       ],
       "frozenAtUtc": "2026-09-14T10:00:00.000Z",
-      "note": "BASE-ALIGN-v3: arrival-dedup.spec.ts + inbox.ts moved by our port. argv+files re-pointed; titles UNCHANGED, no revoke."
+      "note": "BASE-ALIGN-v3: arrival-dedup.spec.ts + inbox.ts moved by our port. argv+files re-pointed; titles UNCHANGED, no revoke.",
+      "sensitivityProof": {
+        "mutationDescription": "Locally (never committed) at candidate tip 58beb6c497, two directions in control-priority/src/index.ts PROMOTED. (M14) PROMOTED = ['cancel','steer','continue'] (steer/continue rejoin the promoted set). (M15) PROMOTED = [] (nothing promoted).",
+        "failureSummary": "M14: 2 failed | 10 passed (12) -- red 'promotes a CANCEL over everything ... (§12.37)' and 'keeps a message with NO control kind in arrival order ... (§12.37)', both toEqual order assertions. M15: 2 failed | 10 passed -- red 'promotes a CANCEL over everything ...' and 'promotes a cancel PAST ordinary input too ...'. Both directions together cover all 3 expectCases."
+      },
+      "dryRunProof": "Ran locally at candidate tip 58beb6c497 (tree d6ad39122784), BASE-ALIGN-v3: arrival-dedup.spec, 12 passed. expectCases set-identical to superseded parent 2026-09-08T08:30:00.000Z."
     }
   ]
 }

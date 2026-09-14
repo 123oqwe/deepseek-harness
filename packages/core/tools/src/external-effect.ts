@@ -338,6 +338,7 @@ export function verifyRecordedApproval(
   const named: BoundRecord[] = []
   const unnamed: BoundRecord[] = []
   for (let index = session.seq - 1; index >= 0; index -= 1) {
+    // oxlint-disable-next-line typescript/no-deprecated -- Existing Session history read; migration deferred.
     const event = session.eventAt(SessionSeq(index))
     if (event?.type !== 'approval/bound') continue
     const data = event.data as BoundRecord

@@ -165,6 +165,7 @@ export function renderMemoryContext(records: readonly MemoryRecordView[], trunca
 export function openTurnQuery(agent: Agent, turn: number, proposed: readonly UserMessage[]): string {
   const entered: UserMessage[] = []
   for (let seq = agent.session.seq - 1; seq >= 0; seq -= 1) {
+    // oxlint-disable-next-line typescript/no-deprecated -- Existing Session history read; migration deferred.
     const event = agent.session.eventAt(SessionSeq(seq))
     if (event?.type === 'turn/start' && event.data.turn === turn) break
     if (event?.type === 'user/message') entered.push(event.data)

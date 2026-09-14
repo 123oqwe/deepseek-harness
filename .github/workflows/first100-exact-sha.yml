@@ -14,6 +14,10 @@ on:
       sha:
         description: Exact commit SHA to check out and gate (defaults to the triggering ref's SHA)
         required: false
+      reanchor_upstream:
+        description: 'Re-anchor upstream SHA; changed files byte-identical to it are excluded from changed-file lint (not authored by this program). Empty for normal dispatches.'
+        required: false
+        default: ''
   push:
     branches: [first100-exec]
 
@@ -237,11 +241,27 @@ jobs:
         # Runs after Build because the type-aware rules read emitted types;
         # `build:lib:host` alone emits the host face and would resolve every
         # client type to `error`.
+        #
+        # A re-anchor dispatch passes `reanchor_upstream`: a changed file whose
+        # blob equals that upstream commit's was adopted verbatim, not authored
+        # here, so its debt stays upstream's and it leaves the set.
+        env:
+          REANCHOR_UPSTREAM: ${{ github.event.inputs.reanchor_upstream }}
         run: |
           base=$(node -e "process.stdout.write(require('./tests/first100/registry.json').frozenBaseline.sha)")
           echo "frozen baseline: $base"
           mapfile -t changed < <(git diff --name-only --diff-filter=d "$base..HEAD" -- '*.ts' '*.tsx' '*.mjs' | grep -v '^vendor/' || true)
-          echo "${#changed[@]} changed source file(s) since the baseline"
+          if [ -n "$REANCHOR_UPSTREAM" ]; then
+            echo "re-anchor upstream: $REANCHOR_UPSTREAM"
+            kept=()
+            for f in "${changed[@]}"; do
+              tipblob=$(git rev-parse --verify -q "HEAD:$f" || echo -)
+              upblob=$(git rev-parse --verify -q "$REANCHOR_UPSTREAM:$f" || echo =)
+              [ "$tipblob" = "$upblob" ] || kept+=("$f")
+            done
+            changed=("${kept[@]}")
+          fi
+          echo "${#changed[@]} changed source file(s) to lint (upstream-verbatim excluded when re-anchoring)"
           if [ "${#changed[@]}" -eq 0 ]; then echo "nothing this program changed; lint has no subject"; exit 0; fi
           pnpm exec tsx scripts/run-oxlint.ts "${changed[@]}"
 

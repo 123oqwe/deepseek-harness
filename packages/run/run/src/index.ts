@@ -149,6 +149,7 @@ type LastTaskProfile =
  * @returns the latest reference, why it was refused, or that there is none.
  */
 function lastTaskProfile(session: Session): LastTaskProfile {
+  // oxlint-disable-next-line typescript/no-deprecated -- Existing Session history read; migration deferred.
   const events = session.snapshotEvents()
   for (let seq = events.length - 1; seq >= 0; seq -= 1) {
     const event = events[seq]
