@@ -26,3 +26,5 @@ export type CommittedOverlayComparison =
   | { status: 'drift'; onlyCommitted: string[]; onlyComputed: string[] }
 
 export function compareCommittedOverlay(committedText: string | undefined, overlay: readonly OverlayEntry[]): CommittedOverlayComparison
+
+export function exitCodeFor(failures: readonly string[], comparison: CommittedOverlayComparison): 0 | 1 | 2

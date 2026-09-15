@@ -9,7 +9,7 @@
 
 import { describe, expect, it } from 'vitest'
 import { classifyOverlayPath, computeOverlay, declaredPaths, declaredPathsAsExtracted, patchEntries, resolveDeclaredPaths } from './files-overlay.mjs'
-import { compareCommittedOverlay, hotZoneEntriesWithoutCitation, overlayFileText, sourceEntriesWithoutReason, unaccountedCitations, unusedReasonKeys } from './verify-files-overlay.mjs'
+import { compareCommittedOverlay, exitCodeFor, hotZoneEntriesWithoutCitation, overlayFileText, sourceEntriesWithoutReason, unaccountedCitations, unusedReasonKeys } from './verify-files-overlay.mjs'
 
 const registry = {
   epics: [{
@@ -204,6 +204,28 @@ describe('compareCommittedOverlay', () => {
     expect(compareCommittedOverlay(undefined, overlay)).toStrictEqual({ status: 'uncomparable', reason: 'the file cannot be read' })
     expect(compareCommittedOverlay('{', overlay)).toStrictEqual({ status: 'uncomparable', reason: 'the file is not JSON' })
     expect(compareCommittedOverlay(overlayFileText([]), overlay)).toStrictEqual({ status: 'uncomparable', reason: 'the file holds no entries' })
+  })
+})
+
+describe('exitCodeFor', () => {
+  const match = { status: 'match' } as const
+  const uncomparable = { status: 'uncomparable', reason: 'the file cannot be read' } as const
+  const failed = ['1 source path(s) recorded with no reason']
+
+  it('exits 0 when no check failed and the committed file matches', () => {
+    expect(exitCodeFor([], match)).toBe(0)
+  })
+
+  it('exits 2 when no check failed and the committed file cannot be compared', () => {
+    expect(exitCodeFor([], uncomparable)).toBe(2)
+  })
+
+  it('exits 1 when a check failed and the committed file matches', () => {
+    expect(exitCodeFor(failed, match)).toBe(1)
+  })
+
+  it('exits 1 when a check failed and the committed file cannot be compared, so the failure is not reported as unmeasured', () => {
+    expect(exitCodeFor(failed, uncomparable)).toBe(1)
   })
 })
 
