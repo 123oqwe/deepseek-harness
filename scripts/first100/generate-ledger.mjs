@@ -87,7 +87,7 @@ import { commitmentKey, freezeEntriesAt } from './verify-freeze-in-candidate-tre
 import { realitySet, realitySetOverlap } from './epic-reality-set.mjs'
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { dirname, join, resolve } from 'node:path'
+import { basename, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -719,6 +719,59 @@ export function reattestationOf(priorCell, ciRunUrl, reason, atUtc) {
 
 
 /**
+ * Whether a report's directory name ties it to the candidate being greened.
+ *
+ * P4-06.P.3 was greened on 2026-09-08 from `frozen-cmds/p4-06-p1.json`, a frozen
+ * command file rather than a vitest report, and every check after this one
+ * accepted it: the digest was of whatever file was named, and nothing compared
+ * the file with the run. GitHub names an uploaded artifact directory after the
+ * run's head commit, and every observation directory this program writes
+ * carries a commit token too, so the name is evidence already on disk.
+ *
+ * A token is a run of at least 10 lowercase hex characters in the report's
+ * parent directory name that is not all digits, since a run id such as
+ * `34692381416` is also a hex string. The report is accepted when a token is a
+ * prefix of the candidate, or names a local commit the candidate is an ancestor
+ * of (a candidate observed through a later push). It is refused when there is
+ * no token, when a token names no local commit, or when no token relates to the
+ * candidate. The check is offline: it reads only this repository's objects.
+ * @param reportPath - the `--report` argument.
+ * @param candidateSha - the 40-hex `--candidate-sha` argument.
+ * @param gitRoot - repository whose objects resolve the token.
+ * @returns `{ ok: true }`, or `{ ok: false, reason }` naming why the report is refused.
+ */
+export function reportDirMatchesCandidate(reportPath, candidateSha, gitRoot = REPO_ROOT) {
+  const parent = basename(dirname(reportPath))
+  const tokens = (parent.match(/[0-9a-f]{10,40}/g) ?? []).filter((token) => !/^[0-9]+$/.test(token))
+  if (tokens.length === 0) {
+    return { ok: false, reason: `report directory "${parent}" carries no commit token (10+ hex characters, not all digits)` }
+  }
+  if (tokens.some((token) => candidateSha.startsWith(token))) return { ok: true }
+  for (const token of tokens) {
+    const resolved = spawnSync('git', ['rev-parse', '--verify', '--quiet', `${token}^{commit}`], { cwd: gitRoot, encoding: 'utf8' })
+    if (resolved.status !== 0) {
+      return { ok: false, reason: `report directory token ${token} names no commit in this repository` }
+    }
+    const ancestor = spawnSync('git', ['merge-base', '--is-ancestor', candidateSha, resolved.stdout.trim()], { cwd: gitRoot })
+    if (ancestor.status === 0) return { ok: true }
+  }
+  return { ok: false, reason: `report directory "${parent}" names ${tokens.join(', ')}, which is neither the candidate nor a descendant of it` }
+}
+
+/**
+ * Refuse a report whose directory name does not tie it to the candidate.
+ * @param reportPath - the `--report` argument.
+ * @param candidateSha - the `--candidate-sha` argument.
+ */
+function assertReportDirMatchesCandidate(reportPath, candidateSha) {
+  const verdict = reportDirMatchesCandidate(reportPath, candidateSha)
+  if (!verdict.ok) {
+    console.error(`BLOCKED: --report ${reportPath} is not tied to --candidate-sha ${candidateSha}: ${verdict.reason}`)
+    process.exit(1)
+  }
+}
+
+/**
  * Refuse a candidate SHA no commit in this repository has.
  *
  * The format check alone accepted `2aa43619f3d0b0b8...` — forty valid hex
@@ -759,6 +812,7 @@ function cmdGreen() {
     process.exit(1)
   }
   assertCommitExists(candidateSha)
+  assertReportDirMatchesCandidate(reportPath, candidateSha)
 
   const freeze = loadJson(COMMAND_FREEZE_PATH)
   const live = freeze.entries.filter((e) => e.epic === epic && e.stage === stage && !e.supplements && !e.supersededBy)
@@ -949,6 +1003,7 @@ function cmdGreenSupplement() {
     process.exit(1)
   }
   assertCommitExists(candidateSha)
+  assertReportDirMatchesCandidate(reportPath, candidateSha)
 
   const freeze = loadJson(COMMAND_FREEZE_PATH)
   // `!e.supersededBy` matters as much as the seq: a supplement that is

@@ -17,7 +17,7 @@
  * and never on a frozen string that names more than one passing case.
  */
 import { describe, expect, it } from 'vitest'
-import { referencedPaths, staleCells, summaryLine, verifyCells } from './verify-p9-cells.mjs'
+import { referencedPaths, reportPathMatchesCandidate, staleCells, summaryLine, verifyCells } from './verify-p9-cells.mjs'
 import type { P9Cell, P9Freeze, P9FreezeEntry, P9Git } from './verify-p9-cells.mjs'
 
 const SHA = '1f51e6a3d5bda5f3a9b9a5f902f27741be0cd6b3'
@@ -239,5 +239,28 @@ describe('verify-p9-cells: a stage is judged by all of its live freeze entries (
       changedPaths: () => [],
     })
     expect(stale.map(cell => cell.reason)).toEqual(['a live freeze entry for it was written or changed after the recorded observation'])
+  })
+})
+
+describe('verify-p9-cells: the report must belong to the candidate (P4-06.P.3, 2026-09-15)', () => {
+  it('still refuses a full-SHA artifact directory naming a different commit, even one sharing a prefix', () => {
+    const other = `${SHA.slice(0, 10)}${'0'.repeat(30)}`
+    const verdict = reportPathMatchesCandidate(`/store/1/first100-vitest-report-${other}/vitest-report.json`, SHA, process.cwd())
+    expect(verdict.ok).toBe(false)
+    expect(verdict.reason).toContain('does not match the artifact')
+  })
+
+  it('accepts a full-SHA artifact directory naming exactly the candidate', () => {
+    expect(reportPathMatchesCandidate(`/store/1/first100-vitest-report-${SHA}/vitest-report.json`, SHA, process.cwd())).toStrictEqual({ ok: true })
+  })
+
+  it('refuses the frozen-command shape, which has no full-SHA suffix and no token', () => {
+    const verdict = reportPathMatchesCandidate('/scratch/frozen-cmds/p4-06-p1.json', SHA, process.cwd())
+    expect(verdict.ok).toBe(false)
+    expect(verdict.reason).toContain('carries no commit token')
+  })
+
+  it('accepts a directory with no full-SHA suffix that carries a 10-character prefix of the candidate', () => {
+    expect(reportPathMatchesCandidate(`/scratch/obs-${SHA.slice(0, 10)}/vitest-report.json`, SHA, process.cwd())).toStrictEqual({ ok: true })
   })
 })

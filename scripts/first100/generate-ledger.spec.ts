@@ -35,6 +35,7 @@ import {
   findDuplicateFrozenCases,
   p9ItemsSettled,
   reattestationOf,
+  reportDirMatchesCandidate,
   redStepComplaints,
   checkNoOpenFindings,
   checkObservationDistinctness,
@@ -795,5 +796,60 @@ describe('validateAcceptanceCoverage (BLOCKED-206: the schema is executed, not j
       entries: [{ epic: 'P4-01', acceptanceIndex: 0, coveredBy: [{ stage: 'X', title: 'whatever' }] }],
     }
     expect(validateAcceptanceCoverage(schema, badStage).valid).toBe(false)
+  })
+})
+
+describe('reportDirMatchesCandidate (P4-06.P.3, 2026-09-15)', () => {
+  function chain(): { root: string; base: string; head: string; other: string } {
+    const root = makeGitFixture()
+    const base = commit(root, 'base', 'a')
+    const head = commit(root, 'head', 'b')
+    git(root, ['checkout', '-b', 'side', base])
+    const other = commit(root, 'side', 'c')
+    return { root, base, head, other }
+  }
+
+  it('accepts an upload directory named after the candidate itself', () => {
+    const { root, base } = chain()
+    expect(reportDirMatchesCandidate(`/store/1/first100-vitest-report-${base}/vitest-report.json`, base, root)).toStrictEqual({ ok: true })
+  })
+
+  it('accepts a directory carrying a 10-character prefix of the candidate', () => {
+    const { root, base } = chain()
+    expect(reportDirMatchesCandidate(`/scratch/obs-${base.slice(0, 10)}/vitest-report.json`, base, root)).toStrictEqual({ ok: true })
+  })
+
+  it('accepts a candidate observed through a later push whose head names the directory', () => {
+    const { root, base, head } = chain()
+    expect(reportDirMatchesCandidate(`/tmp/first100-evidence-${head}/vitest-report.json`, base, root)).toStrictEqual({ ok: true })
+  })
+
+  it('refuses the frozen-command shape that stood in for a report, which carries no token', () => {
+    const { root, base } = chain()
+    expect(reportDirMatchesCandidate('/scratch/frozen-cmds/p4-06-p1.json', base, root).ok).toBe(false)
+  })
+
+  it('refuses an all-digit run id, which is a hex string but not a commit', () => {
+    const { root, base } = chain()
+    expect(reportDirMatchesCandidate('/store/34692381416/vitest-report.json', base, root).ok).toBe(false)
+  })
+
+  it('refuses a token that names no commit in the repository', () => {
+    const { root, base } = chain()
+    const verdict = reportDirMatchesCandidate('/scratch/obs-deadbeefcafe/vitest-report.json', base, root)
+    expect(verdict.ok).toBe(false)
+    expect(verdict.reason).toContain('names no commit')
+  })
+
+  it('refuses a directory whose first token names no commit, even when a later token is a descendant head', () => {
+    const { root, base, head } = chain()
+    const verdict = reportDirMatchesCandidate(`/tmp/first100-evidence-deadbeefcafe-${head}/vitest-report.json`, base, root)
+    expect(verdict.ok).toBe(false)
+    expect(verdict.reason).toContain('deadbeefcafe names no commit')
+  })
+
+  it('refuses a token naming a commit the candidate is not an ancestor of', () => {
+    const { root, head, other } = chain()
+    expect(reportDirMatchesCandidate(`/tmp/first100-evidence-${other}/vitest-report.json`, head, root).ok).toBe(false)
   })
 })

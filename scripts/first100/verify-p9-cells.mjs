@@ -61,7 +61,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { findAmbiguousCaseMatches, parseVitestJsonReport } from './generate-ledger.mjs'
+import { findAmbiguousCaseMatches, parseVitestJsonReport, reportDirMatchesCandidate } from './generate-ledger.mjs'
 import { frozenTitlePresent, registeredRenames } from './frozen-title-renames.mjs'
 import { liveFreezeByStage } from './verify-cells-recomputable.mjs'
 import { commitmentKey, freezeEntriesAt } from './verify-freeze-in-candidate-tree.mjs'
@@ -312,6 +312,37 @@ export function foldEpics(cells, p9Ids) {
 }
 
 /**
+ * Whether the report a P9 record is read from belongs to the candidate it names.
+ *
+ * Two branches, and the first is the stricter one. When the report's directory
+ * ends in `-<40 hex>` (GitHub names an artifact directory after the run's head
+ * commit), that SHA must EQUAL the candidate: a well-formed but wrong SHA passed
+ * the format check here until 2026-09-05, when one was recorded by hand and
+ * caught only by re-reading the run. Only when the directory has no such suffix
+ * does the write-time rule of `generate-ledger.mjs` apply (a 10+ hex commit token
+ * that is a prefix of the candidate or names a descendant of it), and a
+ * directory with no token at all is refused. Until 2026-09-15 that case was
+ * skipped, which is how a frozen-command file could stand in for a report
+ * (P4-06.P.3).
+ * @param reportPath - the `--report` argument.
+ * @param candidateSha - the 40-hex `--candidate-sha` argument.
+ * @param gitRoot - repository whose objects resolve a short token.
+ * @returns `{ ok: true }`, or `{ ok: false, reason }` naming why the report is refused.
+ */
+export function reportPathMatchesCandidate(reportPath, candidateSha, gitRoot = REPO_ROOT) {
+  // Branch 1: a full-SHA artifact directory must name exactly this candidate.
+  const shaFromArtifactPath = /-([0-9a-f]{40})(?:\/|$)/.exec(dirname(reportPath))?.[1]
+  if (shaFromArtifactPath !== undefined) {
+    return shaFromArtifactPath === candidateSha
+      ? { ok: true }
+      : { ok: false, reason: `--candidate-sha ${candidateSha} does not match the artifact it was read from (${shaFromArtifactPath}); the report and the sha must describe the same run` }
+  }
+  // Branch 2: no full-SHA suffix, so the report must still carry a token tied to the candidate.
+  const verdict = reportDirMatchesCandidate(reportPath, candidateSha, gitRoot)
+  return verdict.ok ? verdict : { ok: false, reason: `--report ${reportPath} is not tied to --candidate-sha ${candidateSha}: ${verdict.reason}` }
+}
+
+/**
  * The one line a reader takes the program's P9 answer from.
  *
  * The goal is "every P9 item VERIFIED **or** scheduled-BLOCKED on record", so
@@ -380,18 +411,9 @@ function main() {
     console.error(`verify-p9-cells: --candidate-sha must be a full 40-character sha, got "${candidateSha}"`)
     process.exit(1)
   }
-  // The SHA must be the one the ARTIFACT carries, not one the caller typed.
-  // A well-formed but wrong sha passed every check here until 2026-09-05, when
-  // one was recorded by hand and caught only by re-reading the run: the format
-  // check proved the string was a sha, never that it was THIS observation's.
-  // GitHub's artifact directory is named `<artifact>-<sha>`, so the evidence
-  // for this is in the path already.
-  const shaFromArtifactPath = /-([0-9a-f]{40})(?:\/|$)/.exec(dirname(reportPath))?.[1]
-  if (shaFromArtifactPath !== undefined && shaFromArtifactPath !== candidateSha) {
-    console.error(
-      `verify-p9-cells: --candidate-sha ${candidateSha} does not match the artifact it was read from `
-      + `(${shaFromArtifactPath}); the report and the sha must describe the same run`,
-    )
+  const reportDir = reportPathMatchesCandidate(reportPath, candidateSha)
+  if (!reportDir.ok) {
+    console.error(`verify-p9-cells: ${reportDir.reason}`)
     process.exit(1)
   }
   if (!existsSync(reportPath)) {
