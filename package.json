@@ -136,6 +136,7 @@
     "first100:attest": "node scripts/first100/attest.ts",
     "first100:generate-identity": "node scripts/first100/attest.ts --generate-identity",
     "first100:verify-typecheck-host": "node --max-old-space-size=4096 ./node_modules/typescript/bin/tsc -b tsconfig.host.json",
+    "first100:verify-dmts-declarations": "node scripts/first100/verify-dmts-declarations.mjs",
     "first100:verify-registry-extraction": "node scripts/first100/extract-registry.mjs --check",
     "first100:verify-baseline-file-references": "node scripts/first100/verify-baseline-file-references.mjs",
     "first100:verify-frozen-titles-resolvable": "node scripts/first100/verify-frozen-titles-resolvable.mjs",

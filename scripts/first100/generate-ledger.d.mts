@@ -237,3 +237,34 @@ export interface AcceptPreflightResults {
  * @returns one `{ gate, text }` per finding for this epic.
  */
 export function acceptPreflightFindings(epic: string, results: AcceptPreflightResults): AcceptPreflightFinding[]
+
+/** A vitest `--reporter=json` document, in the fields the ledger tools read. */
+export interface VitestJsonReport {
+  readonly success?: boolean
+  readonly testResults?: readonly {
+    readonly assertionResults?: readonly {
+      readonly title: string
+      readonly fullName?: string
+      readonly status: string
+    }[]
+  }[]
+}
+
+/**
+ * Read one vitest JSON report into the names a frozen case can match.
+ *
+ * `titles` and `matchCounts` count passing cases only and carry both the bare
+ * `title` and the `fullName`; a bare title shared by several cases counts once per
+ * case, which is what `findAmbiguousCaseMatches` reads. `exit` is 0 when the
+ * report says `success: true`, otherwise 1.
+ * @param reportPath - the report on disk.
+ * @returns the raw text, the parsed document, the matchable names and their counts, the failed full names, and the exit.
+ */
+export function parseVitestJsonReport(reportPath: string): {
+  raw: string
+  report: VitestJsonReport
+  titles: Set<string>
+  matchCounts: Map<string, number>
+  failedFullNames: Set<string>
+  exit: 0 | 1
+}

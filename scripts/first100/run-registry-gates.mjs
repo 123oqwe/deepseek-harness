@@ -45,6 +45,10 @@ const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
  */
 const REGISTRY_GATES = [
   'first100:verify-typecheck-host',
+  // The host typecheck sees a scripts/first100 .mjs module only through its
+  // .d.mts; this reads the source text and answers the declaration half of that
+  // question in under a second.
+  'first100:verify-dmts-declarations',
   'first100:verify-registry-extraction',
   'first100:verify-specs',
   'first100:test-specs',
@@ -109,6 +113,7 @@ const SLICE_GATES = [
   'constraints',
   // Placement only, not completeness — see the note in the registry set.
   'verify-package-dependencies',
+  'first100:verify-dmts-declarations',
   'first100:verify-typecheck-host',
   'first100:verify-registry-extraction',
 ]
