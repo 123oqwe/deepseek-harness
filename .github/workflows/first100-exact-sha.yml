@@ -15,7 +15,7 @@ on:
         description: Exact commit SHA to check out and gate (defaults to the triggering ref's SHA)
         required: false
       reanchor_upstream:
-        description: 'Re-anchor upstream SHA; changed files byte-identical to it are excluded from changed-file lint (not authored by this program). Empty for normal dispatches.'
+        description: 'Re-anchor upstream SHA override; empty uses the workflow''s current re-anchor upstream (the REANCHOR_UPSTREAM policy note below). Changed files byte-identical to it are excluded from changed-file lint.'
         required: false
         default: ''
   push:
@@ -252,11 +252,15 @@ jobs:
         # `build:lib:host` alone emits the host face and would resolve every
         # client type to `error`.
         #
-        # A re-anchor dispatch passes `reanchor_upstream`: a changed file whose
-        # blob equals that upstream commit's was adopted verbatim, not authored
-        # here, so its debt stays upstream's and it leaves the set.
+        # Policy (BASE-ALIGN-v3): the changed-file lint gates files THIS PROGRAM
+        # authored relative to the re-anchor upstream. A file byte-identical to that
+        # upstream was adopted verbatim; its lint state is upstream's responsibility.
+        # Touch it -> its blob differs -> it re-enters the gate. REANCHOR_UPSTREAM below
+        # is the current re-anchor upstream SHA and MUST be updated on the next
+        # re-anchor -- the symptom of a stale value is a burst of reds in files this
+        # program never touched.
         env:
-          REANCHOR_UPSTREAM: ${{ github.event.inputs.reanchor_upstream }}
+          REANCHOR_UPSTREAM: ${{ github.event.inputs.reanchor_upstream || 'c291e7961a515f6d7af9304e7fd1d257929aef26' }}
         run: |
           base=$(node -e "process.stdout.write(require('./tests/first100/registry.json').frozenBaseline.sha)")
           echo "frozen baseline: $base"
