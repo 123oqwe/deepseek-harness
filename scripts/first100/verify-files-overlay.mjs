@@ -9,19 +9,25 @@
  * is how BLOCKED-136's wrong-subject file list survived to the U stage and how
  * BLOCKED-137's admission nearly got a scope test that could not fail.
  *
- * **The overlay is regenerated here, not read from disk.** A committed file
- * would let the two drift, and the drift would always resolve in favour of
- * whatever was committed — which is the failure this gate exists to catch, one
- * level up. What IS read from disk is the reason table, because a reason is
- * the one part of an overlay entry a machine cannot derive.
+ * **The overlay is regenerated here, and the committed file is checked against it.**
+ * Every refusal about scope and reasons is decided on the overlay computed from
+ * the registry, the freeze, the patches and the reason table, never on
+ * `files-overlay.json`: a file read as the source would let the two drift, and
+ * the drift would resolve in favour of whatever was committed. The committed
+ * file is what a reader opens, so a copy that differs from the computed overlay
+ * fails the gate, and a copy that cannot be compared exits 2. The reason table
+ * is read from disk because a reason is the one part of an overlay entry a
+ * machine cannot derive.
  *
  * Usage: `node scripts/first100/verify-files-overlay.mjs [--write]`
- * `--write` refreshes the generated `files-overlay.json` for readers; it never
- * decides the gate.
+ * `--write` rewrites `files-overlay.json` from the computed overlay before the
+ * comparison, so the file it leaves always matches.
+ * Exit 0 when every check passes, 1 when one fails, 2 when the committed file
+ * cannot be compared.
  *
  * @module scripts/first100/verify-files-overlay
  */
-import { writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { computeOverlay, declaredPaths, loadOverlayInputs } from './files-overlay.mjs'
@@ -113,6 +119,57 @@ export function unusedReasonKeys(overlay, reasons) {
   return Object.keys(reasons).filter(key => !used.has(key)).sort()
 }
 
+/**
+ * The `files-overlay.json` text for an overlay, exactly as `--write` writes it.
+ * @param overlay - the computed overlay.
+ * @returns the document as two-space-indented JSON with one trailing newline.
+ */
+export function overlayFileText(overlay) {
+  const document = {
+    schema: { name: 'first100-files-overlay', version: '1.0' },
+    generatedBy: 'scripts/first100/verify-files-overlay.mjs --write',
+    entries: overlay,
+  }
+  return `${JSON.stringify(document, null, 2)}\n`
+}
+
+/**
+ * Compare a committed `files-overlay.json` with the computed overlay.
+ *
+ * Entries are matched on `(epic, path)` in both directions, so a stale file is
+ * named by the entries it still holds and the entries it lacks. Beyond the
+ * keys, the committed text is re-serialized the way {@link overlayFileText}
+ * serializes and compared whole, so a changed kind, stage list, reason or
+ * header is drift while indentation is not. A file that cannot be read, is not
+ * JSON, or holds no entries cannot be compared, which is never a match.
+ * @param committedText - the file contents, or `undefined` when the file cannot be read.
+ * @param overlay - the computed overlay.
+ * @returns `{ status: 'match' }`, `{ status: 'uncomparable', reason }`, or `{ status: 'drift', onlyCommitted, onlyComputed }`, whose keys read `"<epic> <path>"` and are sorted.
+ */
+export function compareCommittedOverlay(committedText, overlay) {
+  if (committedText === undefined) return { status: 'uncomparable', reason: 'the file cannot be read' }
+  let committed
+  try {
+    committed = JSON.parse(committedText)
+  } catch {
+    // Text that is not JSON has no entries to compare. Returning it as
+    // uncomparable keeps the SyntaxError from ending the gate unexplained.
+    return { status: 'uncomparable', reason: 'the file is not JSON' }
+  }
+  if (!Array.isArray(committed?.entries) || committed.entries.length === 0) {
+    return { status: 'uncomparable', reason: 'the file holds no entries' }
+  }
+  const key = entry => `${String(entry?.epic)} ${String(entry?.path)}`
+  const committedKeys = new Set(committed.entries.map(key))
+  const computedKeys = new Set(overlay.map(key))
+  const onlyCommitted = [...committedKeys].filter(k => !computedKeys.has(k)).sort()
+  const onlyComputed = [...computedKeys].filter(k => !committedKeys.has(k)).sort()
+  if (onlyCommitted.length === 0 && onlyComputed.length === 0 && `${JSON.stringify(committed, null, 2)}\n` === overlayFileText(overlay)) {
+    return { status: 'match' }
+  }
+  return { status: 'drift', onlyCommitted, onlyComputed }
+}
+
 function main() {
   const { registry, freeze, reasons, patches } = loadOverlayInputs()
   const overlay = computeOverlay(registry, freeze, reasons, patches)
@@ -122,19 +179,20 @@ function main() {
   }
 
   if (process.argv.includes('--write')) {
-    const document = {
-      schema: { name: 'first100-files-overlay', version: '1.0' },
-      generatedBy: 'scripts/first100/verify-files-overlay.mjs --write',
-      entries: overlay,
-    }
-    writeFileSync(OVERLAY_PATH, `${JSON.stringify(document, null, 2)}\n`, 'utf8')
+    writeFileSync(OVERLAY_PATH, overlayFileText(overlay), 'utf8')
     console.log(`verify-files-overlay: wrote ${String(overlay.length)} entry/entries to spec/first100/exec/files-overlay.json`)
   }
 
   const unaccounted = unaccountedCitations(registry, freeze, overlay, patches)
   const unexplained = sourceEntriesWithoutReason(overlay)
   const uncited = hotZoneEntriesWithoutCitation(overlay)
+  const comparison = compareCommittedOverlay(existsSync(OVERLAY_PATH) ? readFileSync(OVERLAY_PATH, 'utf8') : undefined, overlay)
   const failures = []
+  if (comparison.status === 'drift') {
+    const named = [...comparison.onlyCommitted.map(k => `only in the committed file: ${k}`), ...comparison.onlyComputed.map(k => `only in the computed overlay: ${k}`)]
+    failures.push(`spec/first100/exec/files-overlay.json differs from the computed overlay — run \`node scripts/first100/verify-files-overlay.mjs --write\` and commit the file:\n  `
+      + (named.length > 0 ? named.join('\n  ') : 'the same (epic, path) entries, with an entry field or the header changed'))
+  }
   if (uncited.length > 0) {
     failures.push(`${String(uncited.length)} HOT ZONE reason(s) citing no diff — write a shared-file reason from \`git show <sha> -- <path>\` and name that sha, because three of the first five described the epic's intent instead of its change:\n  `
       + uncited.map(entry => `${entry.epic} ${entry.path}`).join('\n  '))
@@ -147,6 +205,11 @@ function main() {
     failures.push(`${String(unexplained.length)} source path(s) recorded with no reason — product code the plan never named needs a sentence (§12.4):\n  `
       + unexplained.map(entry => `${entry.epic} ${entry.path}`).join('\n  '))
   }
+  if (comparison.status === 'uncomparable') {
+    if (failures.length > 0) console.error(`verify-files-overlay: ${failures.join('\n')}`)
+    console.error(`verify-files-overlay: cannot compare spec/first100/exec/files-overlay.json with the computed overlay: ${comparison.reason}. Recreate it with \`node scripts/first100/verify-files-overlay.mjs --write\`.`)
+    process.exit(2)
+  }
   if (failures.length > 0) {
     console.error(`verify-files-overlay: ${failures.join('\n')}`)
     process.exit(1)
@@ -155,7 +218,7 @@ function main() {
   const kinds = {}
   for (const entry of overlay) kinds[entry.kind] = (kinds[entry.kind] ?? 0) + 1
   const summary = Object.entries(kinds).sort().map(([kind, count]) => `${kind} ${String(count)}`).join(', ')
-  console.log(`verify-files-overlay: ${String(overlay.length)} overlay entry/entries (${summary}); every live freeze citation is inside files[] ∪ overlay, and every source path carries a reason.`)
+  console.log(`verify-files-overlay: ${String(overlay.length)} overlay entry/entries (${summary}); every live freeze citation is inside files[] ∪ overlay, every source path carries a reason, and spec/first100/exec/files-overlay.json matches the computed overlay.`)
 }
 
 // Only when run as a command. The spec IMPORTS this module for its two pure

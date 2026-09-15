@@ -9,7 +9,7 @@
 
 import { describe, expect, it } from 'vitest'
 import { classifyOverlayPath, computeOverlay, declaredPaths, declaredPathsAsExtracted, patchEntries, resolveDeclaredPaths } from './files-overlay.mjs'
-import { hotZoneEntriesWithoutCitation, sourceEntriesWithoutReason, unaccountedCitations, unusedReasonKeys } from './verify-files-overlay.mjs'
+import { compareCommittedOverlay, hotZoneEntriesWithoutCitation, overlayFileText, sourceEntriesWithoutReason, unaccountedCitations, unusedReasonKeys } from './verify-files-overlay.mjs'
 
 const registry = {
   epics: [{
@@ -174,6 +174,36 @@ describe('unusedReasonKeys', () => {
     const overlay = computeOverlay(registry, freeze(['packages/demo/thing/src/extra.ts']), reasons, [])
     expect(sourceEntriesWithoutReason(overlay)).toEqual([])
     expect(unaccountedCitations(registry, freeze(['packages/demo/thing/src/extra.ts']), overlay, [])).toEqual([])
+  })
+})
+
+describe('compareCommittedOverlay', () => {
+  const reasons = { 'P9-99 packages/demo/thing/src/extra.ts': 'Why the extra file is in scope.' }
+  const cited = ['packages/demo/thing/src/extra.ts', 'packages/demo/thing/tests/extra.spec.ts']
+  const overlay = computeOverlay(registry, freeze(cited), reasons, [])
+
+  it('matches the file --write produces, and the same document with other whitespace', () => {
+    expect(compareCommittedOverlay(overlayFileText(overlay), overlay)).toStrictEqual({ status: 'match' })
+    expect(compareCommittedOverlay(JSON.stringify(JSON.parse(overlayFileText(overlay))), overlay)).toStrictEqual({ status: 'match' })
+  })
+
+  it('names the entries a stale file still holds and the entries it lacks, in both directions', () => {
+    const holdsExtra = overlayFileText(computeOverlay(registry, freeze([...cited, 'docs/extra.md']), reasons, []))
+    expect(compareCommittedOverlay(holdsExtra, overlay)).toStrictEqual({ status: 'drift', onlyCommitted: ['P9-99 docs/extra.md'], onlyComputed: [] })
+    const lacksOne = overlayFileText(computeOverlay(registry, freeze(['packages/demo/thing/src/extra.ts']), reasons, []))
+    expect(compareCommittedOverlay(lacksOne, overlay)).toStrictEqual({ status: 'drift', onlyCommitted: [], onlyComputed: ['P9-99 packages/demo/thing/tests/extra.spec.ts'] })
+  })
+
+  it('reports drift when every (epic, path) matches but an entry field differs', () => {
+    const changed = JSON.parse(overlayFileText(overlay)) as { entries: { stages: string[] }[] }
+    changed.entries[0]!.stages = ['F']
+    expect(compareCommittedOverlay(JSON.stringify(changed), overlay)).toStrictEqual({ status: 'drift', onlyCommitted: [], onlyComputed: [] })
+  })
+
+  it('cannot compare a file that is unreadable, not JSON, or empty, and never reads one as a match', () => {
+    expect(compareCommittedOverlay(undefined, overlay)).toStrictEqual({ status: 'uncomparable', reason: 'the file cannot be read' })
+    expect(compareCommittedOverlay('{', overlay)).toStrictEqual({ status: 'uncomparable', reason: 'the file is not JSON' })
+    expect(compareCommittedOverlay(overlayFileText([]), overlay)).toStrictEqual({ status: 'uncomparable', reason: 'the file holds no entries' })
   })
 })
 
