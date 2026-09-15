@@ -1898,14 +1898,6 @@
       "reason": "P3-01's WorldSpec dimension types. BudgetLimits takes cpuMillicores, memoryBytes and diskBytes from WorldResourcesSpec, maxProcesses from WorldProcessSpec and maxWallClockMs from WorldLifetimeSpec, so the budget and the world that enforces it share one vocabulary (addendum 366, point 3). Imported as types only; this epic does not modify the file."
     },
     {
-      "epic": "P3-10",
-      "path": "packages/execution/resource-budget/tests/budget.spec.ts",
-      "kind": "test",
-      "stages": [
-        "C"
-      ]
-    },
-    {
       "epic": "P4-01",
       "path": "packages/run/run/tests/plugin.spec.ts",
       "kind": "test",
