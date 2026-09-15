@@ -862,7 +862,14 @@ describe('validateAcceptanceCoverage (BLOCKED-206: the schema is executed, not j
 describe('reportDirMatchesCandidate (P4-06.P.3, 2026-09-15)', () => {
   function chain(): { root: string; base: string; head: string; other: string } {
     const root = makeGitFixture()
-    const base = commit(root, 'base', 'a')
+    // A token of all digits is refused as a run id by design, and about one
+    // commit in 110 has ten digits first, which failed the prefix case at random.
+    // Commit again until the first ten characters carry a letter.
+    let base = commit(root, 'base', 'a')
+    for (let attempt = 1; !/[a-f]/u.test(base.slice(0, 10)); attempt += 1) {
+      if (attempt > 50) throw new Error(`no base commit with a letter in its first 10 characters after ${String(attempt)} attempts`)
+      base = commit(root, 'base', `a${String(attempt)}`)
+    }
     const head = commit(root, 'head', 'b')
     git(root, ['checkout', '-b', 'side', base])
     const other = commit(root, 'side', 'c')
