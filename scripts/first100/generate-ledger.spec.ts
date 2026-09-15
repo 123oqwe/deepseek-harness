@@ -21,6 +21,7 @@
  *     digest with genuinely different frozen commands is legitimate.
  */
 import { execFileSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -31,6 +32,7 @@ import {
   checkCoverageClosure,
   checkDelegateSignoff,
   checkFailureSetAgainstFlakeRegistry,
+  execStateDigestDrift,
   findAmbiguousCaseMatches,
   findDuplicateFrozenCases,
   p9ItemsSettled,
@@ -851,5 +853,32 @@ describe('reportDirMatchesCandidate (P4-06.P.3, 2026-09-15)', () => {
   it('refuses a token naming a commit the candidate is not an ancestor of', () => {
     const { root, head, other } = chain()
     expect(reportDirMatchesCandidate(`/tmp/first100-evidence-${other}/vitest-report.json`, head, root).ok).toBe(false)
+  })
+})
+
+describe('EXEC-STATE digest drift: a hand edit to command-freeze.json fails --check', () => {
+  const bytes = { ledger: 'ledger bytes', registry: 'registry bytes', freeze: 'freeze bytes' }
+  const digest = (text: string): string => createHash('sha256').update(text).digest('hex')
+  const synced = { ledgerDigest: digest(bytes.ledger), registryDigest: digest(bytes.registry), freezeDigest: digest(bytes.freeze) }
+
+  it('reports nothing when every recorded digest matches its file', () => {
+    expect(execStateDigestDrift(synced, bytes)).toStrictEqual([])
+  })
+
+  it('reports freezeDigest when command-freeze.json changed after the last sync', () => {
+    const edited = { ...bytes, freeze: 'freeze bytes, edited by hand' }
+    expect(execStateDigestDrift(synced, edited)).toStrictEqual([{ field: 'freezeDigest', recorded: synced.freezeDigest, actual: digest(edited.freeze) }])
+  })
+
+  it('reports an absent freezeDigest instead of skipping it', () => {
+    const { freezeDigest: _freezeDigest, ...withoutFreeze } = synced
+    expect(execStateDigestDrift(withoutFreeze, bytes)).toStrictEqual([{ field: 'freezeDigest', recorded: undefined, actual: digest(bytes.freeze) }])
+  })
+
+  it('reports an absent ledgerDigest or registryDigest the same way', () => {
+    expect(execStateDigestDrift({ freezeDigest: synced.freezeDigest }, bytes)).toStrictEqual([
+      { field: 'ledgerDigest', recorded: undefined, actual: digest(bytes.ledger) },
+      { field: 'registryDigest', recorded: undefined, actual: digest(bytes.registry) },
+    ])
   })
 })

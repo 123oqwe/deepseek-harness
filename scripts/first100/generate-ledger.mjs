@@ -604,11 +604,33 @@ export function p9ItemsSettled(p9) {
   return p9.length > 0 && p9.every((epic) => settled.has(epic.terminalState))
 }
 
+/**
+ * EXEC-STATE digests that no longer match the files they name.
+ *
+ * An absent digest is reported, not skipped. `command-freeze.json` has no
+ * writer in this repository: every change to it is a commit that edits the
+ * file, and a digest missing from the state file would let such an edit pass
+ * `--check` unseen.
+ * @param state - the parsed `EXEC-STATE.json`.
+ * @param bytes - the current contents of the ledger, the registry and the command freeze.
+ * @returns one `{ field, recorded, actual }` per digest that differs from its file or is absent.
+ */
+export function execStateDigestDrift(state, bytes) {
+  return [
+    ['ledgerDigest', state.ledgerDigest, sha256(bytes.ledger)],
+    ['registryDigest', state.registryDigest, sha256(bytes.registry)],
+    ['freezeDigest', state.freezeDigest, sha256(bytes.freeze)],
+  ]
+    .filter(([, recorded, actual]) => recorded !== actual)
+    .map(([field, recorded, actual]) => ({ field, recorded, actual }))
+}
+
 function syncExecState(ledgerBytes, rows) {
   if (!existsSync(EXEC_STATE_PATH)) return
   const state = loadJson(EXEC_STATE_PATH)
   state.ledgerDigest = sha256(ledgerBytes)
   state.registryDigest = sha256(readFileSync(REGISTRY_PATH))
+  state.freezeDigest = sha256(readFileSync(COMMAND_FREEZE_PATH))
   state.lastUpdatedUtc = nowIso()
   if (state.totals) {
     state.totals.acceptedEpics = Object.values(rows).filter((row) => row.status === 'ACCEPTED').length
@@ -1684,7 +1706,7 @@ function cmdSyncExecState() {
   }
   const ledgerBytes = readFileSync(LEDGER_PATH)
   syncExecState(ledgerBytes, loadJson(LEDGER_PATH).rows)
-  console.log(`sync: EXEC-STATE digests recomputed from ${LEDGER_PATH} and ${REGISTRY_PATH}`)
+  console.log(`sync: EXEC-STATE digests recomputed from ${LEDGER_PATH}, ${REGISTRY_PATH} and ${COMMAND_FREEZE_PATH}`)
   process.exit(0)
 }
 
@@ -1698,21 +1720,21 @@ function cmdCheck() {
     console.error(`DRIFT: ledger.generatedBy is not this generator — possible hand-edit`)
     process.exit(1)
   }
-  // `syncExecState` writes both digests on every ledger write, and until now
+  // `syncExecState` writes the digests on every ledger write, and until now
   // nothing ever read them back — so a registry edit between ledger writes left
   // EXEC-STATE naming a registry that no longer exists, and said so to nobody.
   // This is the reader that makes the two fields mean something.
   if (existsSync(EXEC_STATE_PATH)) {
-    const state = loadJson(EXEC_STATE_PATH)
-    const stale = [
-      ['ledgerDigest', state.ledgerDigest, sha256(readFileSync(LEDGER_PATH))],
-      ['registryDigest', state.registryDigest, sha256(readFileSync(REGISTRY_PATH))],
-    ].filter(([, recorded, actual]) => recorded !== undefined && recorded !== actual)
+    const stale = execStateDigestDrift(loadJson(EXEC_STATE_PATH), {
+      ledger: readFileSync(LEDGER_PATH),
+      registry: readFileSync(REGISTRY_PATH),
+      freeze: readFileSync(COMMAND_FREEZE_PATH),
+    })
     if (stale.length > 0) {
-      for (const [field, recorded, actual] of stale) {
-        console.error(`DRIFT: EXEC-STATE.${field} is ${recorded}, the file now hashes to ${actual}`)
+      for (const { field, recorded, actual } of stale) {
+        console.error(`DRIFT: EXEC-STATE.${field} is ${recorded ?? 'absent'}, the file now hashes to ${actual}`)
       }
-      console.error('Re-run a ledger write (which calls syncExecState) after changing the registry or the ledger.')
+      console.error('Run `node scripts/first100/generate-ledger.mjs --sync-exec-state`, or any ledger write, in the same commit that changes the registry, the ledger or command-freeze.json.')
       process.exit(1)
     }
   }

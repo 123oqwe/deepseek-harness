@@ -197,3 +197,21 @@ export interface ReportDirVerdict {
  * @returns `{ ok: true }`, or `{ ok: false, reason }` naming why the report is refused.
  */
 export function reportDirMatchesCandidate(reportPath: string, candidateSha: string, gitRoot?: string): ReportDirVerdict
+
+/** One EXEC-STATE digest that no longer matches its file. `recorded` is `undefined` when the digest is absent. */
+export interface ExecStateDigestDrift {
+  field: 'ledgerDigest' | 'registryDigest' | 'freezeDigest'
+  recorded: string | undefined
+  actual: string
+}
+
+/**
+ * EXEC-STATE digests that no longer match the files they name; an absent digest is reported.
+ * @param state - the parsed `EXEC-STATE.json`.
+ * @param bytes - the current contents of the ledger, the registry and the command freeze.
+ * @returns one entry per digest that differs from its file or is absent.
+ */
+export function execStateDigestDrift(
+  state: { ledgerDigest?: string, registryDigest?: string, freezeDigest?: string },
+  bytes: { ledger: string | Uint8Array, registry: string | Uint8Array, freeze: string | Uint8Array },
+): ExecStateDigestDrift[]
