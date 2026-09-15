@@ -14508,6 +14508,75 @@
         "failureSummary": "V-M1 reds the four-hint-names case ALONE: the other vocabulary case asserts which hints MOVE risk, and `idempotentHint` moves none, so dropping it changes nothing there — which is exactly the asymmetry the pair exists to state. V-M2 reds the direction case AND the epic's existing 'RAISES on destructiveHint and openWorldHint from ANY server' case, which is the correct result and is recorded rather than trimmed: the direction a hint may move risk is the same fact both state, one as behaviour and one as vocabulary, so a mutation that changes it must move both. V-M1 is the isolating one, and it isolates because `idempotentHint` moves no risk at all. NOT PROVEN, and stated rather than omitted: the `SideEffectClass` pair has no mutation against product code, because it pins a RELATIONSHIP between two vocabularies rather than a behaviour — `RISK_CLASSES_BY_ASCENDING_RISK` not containing `none`/`write`/`network`/`process` is a property of the taxonomy declaration, and the only mutation that reddens it is adding a member to the eight, which the epic's must[0] case already forbids by name. The pair is a vocabulary record, and that is what this supplement is for."
       },
       "note": "P2-04 make-vs-use backfill (§12.85 note 46). The ledger assigned this epic ownership of `MCP ToolAnnotations` and `P1-01 SideEffectClass`, and `verify-make-vs-use` reported both as owned-by-assignment with no frozen case naming them once P2-05 started and the deadline passed. Neither case adds behaviour: the ToolAnnotations pair states the exact four hint names the implementation reads and which direction each is allowed to move risk — `destructiveHint` and `openWorldHint` raise from any server, `readOnlyHint` lowers only under operator trust, `idempotentHint` is read and means nothing to risk — and the SideEffectClass pair states that the two spellings shared with P1-01's mechanism vocabulary are not the same concept, which is the property that stops a plugin buying a lower risk band with a mechanism tag. The module header of `risk-taxonomy/src/types.ts` had recorded that fact since the Contract stage; nothing pinned it. Three further standards this epic and P4-05 were ASSIGNED — MITRE ATLAS technique ids, OWASP LLM Top-10 LLM06, and the A2A/MCP TaskStatus mapping — were moved to `deviations` in the same batch on a whole-tree census returning zero hits for each; a case for those could only assert a mapping written to satisfy the gate."
+    },
+    {
+      "epic": "P2-12",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/interaction/control-plane/tests/emergency-stop.e2e.spec.ts",
+        "packages/interaction/control-plane/tests/service.spec.ts",
+        "packages/core/agent/tests/stop-gate.spec.ts",
+        "packages/sdk/protocol/tests/transport.spec.ts",
+        "apps/cli/tests/process-shutdown.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "JsonRpcLineTransport abandons a pending request on abort, stringifying a non-Error reason",
+        "JsonRpcLineTransport flush waits for all earlier output writes",
+        "JsonRpcLineTransport ignores malformed frames and accepts notifications without params",
+        "JsonRpcLineTransport ignores responses that do not match a pending request",
+        "JsonRpcLineTransport normalizes non-object request params and ignores notifications without a handler",
+        "JsonRpcLineTransport preserves multibyte UTF-8 characters split across Buffer chunks",
+        "JsonRpcLineTransport preserves structured error data from an error response frame",
+        "JsonRpcLineTransport rejects a request when writing the frame throws",
+        "JsonRpcLineTransport rejects immediately on a pre-aborted signal without registering pending state",
+        "JsonRpcLineTransport rejects pending requests when the input closes",
+        "JsonRpcLineTransport rejects pending requests when the input errors",
+        "JsonRpcLineTransport rejects pending requests when the transport closes",
+        "JsonRpcLineTransport reports JSON-RPC request errors from the remote peer with their wire code",
+        "JsonRpcLineTransport reports an output callback failure from flush",
+        "JsonRpcLineTransport reports method-not-found when no request handler is installed",
+        "JsonRpcLineTransport stringifies non-Error request handler failures",
+        "JsonRpcLineTransport stringifies non-Error write failures",
+        "JsonRpcLineTransport supports bidirectional requests and notifications over newline-delimited JSON-RPC",
+        "JsonRpcLineTransport uses a fallback message for malformed JSON-RPC error responses",
+        "process shutdown coalesces normal shutdown calls without treating them as escalation",
+        "process shutdown completes naturally after disposal resolves and forces exit when it rejects",
+        "process shutdown drains on the first signal and forces on the second signal",
+        "process shutdown forces exit after disposal started by a signal",
+        "process shutdown forces exit when graceful disposal reaches its bound",
+        "process shutdown honors a caller-supplied grace period",
+        "process shutdown lets Ctrl+C force a normal shutdown already stuck in disposal",
+        "process shutdown lets a signal force exit while natural completion drains remaining handles",
+        "process shutdown uses process.exitCode for default normal completion"
+      ],
+      "files": [
+        "packages/core/agent/src/dispatch.ts",
+        "packages/interaction/control-plane/src/index.ts",
+        "packages/interaction/control-plane/tests/emergency-stop.e2e.spec.ts",
+        "packages/interaction/control-plane/tests/service.spec.ts",
+        "packages/core/agent/tests/stop-gate.spec.ts",
+        "packages/sdk/protocol/src/transport.ts",
+        "packages/sdk/protocol/tests/transport.spec.ts",
+        "apps/cli/src/process-shutdown.ts",
+        "apps/cli/tests/process-shutdown.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-15T11:20:47Z",
+      "dryRunProof": {
+        "treeSha": "56eed1cb017ea8fa72412ab51ceab20df51e8daf",
+        "testsDiscovered": 58,
+        "note": "Dry run of this argv at 56eed1cb017ea8fa72412ab51ceab20df51e8daf: 5 files, 58 cases, 0 failed, exit 0. Suite-wide uniqueness of the 28 expectCases, measured with generate-ledger.mjs parseVitestJsonReport against run 34928038271's whole-suite report at 3672337016 (1500 files, 26543 cases, 0 failed); transport.spec.ts and process-shutdown.spec.ts are unchanged between that commit and 56eed1cb01: each of the 28 fullNames matches exactly 1 passing case, and each bare title matches exactly 1."
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Locally (never committed) removed `forceExitOnce(code)` from `interrupt` in apps/cli/src/process-shutdown.ts, so a signal that arrives while shutdown is already pending returns without forcing exit. That is the reading a caller gets by treating a repeated interrupt as idempotent the way a repeated `shutdown` is, and it is the one this face must refuse: a second signal, or a signal during a stuck disposal, is the operator's way out.",
+        "failureSummary": "3 of 58 failed, all three in expectCases: \"process shutdown lets Ctrl+C force a normal shutdown already stuck in disposal\", \"process shutdown drains on the first signal and forces on the second signal\", \"process shutdown lets a signal force exit while natural completion drains remaining handles\". Still green: the other 6 process-shutdown cases (natural completion and forced exit on rejection, exitCode on normal completion, forced exit at the grace bound, a caller-supplied grace period, forced exit after a signal-started disposal, coalescing repeated normal shutdowns), which exercise the first call and the timer rather than a repeated signal, and all 49 cases of the other four files. Mutation reverted; 58 passed (58), exit 0."
+      },
+      "note": "Fault stage: the stop observed at each face it crosses. THREE OF THE FIVE ARGV FILES CONTRIBUTE NO expectCases: every case of emergency-stop.e2e.spec.ts is frozen by P2-12.C, and every case of service.spec.ts and stop-gate.spec.ts by P2-12.U. They stay in the argv as a REQUIRED PRECONDITION -- expectExit 0 means this cell goes red if any of their 30 cases fails -- while this cell CLAIMS only the 28 cases of the two faces no other P2-12 cell covers: the SDK transport and the CLI process face. The dry run will report 58 passing fullNames; only these 28 belong here, which keeps the case sets of C/P/U/F disjoint (delegate ruling 2026-09-15, option 1). Two files are deliberately NOT named. apps/cli/tests/headless-shutdown.e2e.ts: .e2e.ts matches none of the default config include patterns, so a cell frozen on it would green on a file the greening run never executes (BLOCKED-070 family). tests/first100/fixtures/P2-12.fault.spec.ts: the registry declares it and it does not exist; recorded as a stale declaration under BLOCKED-253 rather than worked around here. expectCases are fullName (describe + single space + it), never bare titles (BLOCKED-104)."
     }
   ]
 }
