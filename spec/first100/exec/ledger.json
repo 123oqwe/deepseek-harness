@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-14T06:31:20.691Z",
-  "inputDigest": "dd2de54e9035690901f6b26fc8f12348e7cd329c015ae7883e4083541577d756",
+  "lastUpdatedUtc": "2026-09-15T01:28:15.141Z",
+  "inputDigest": "da34f0e757898f1dc16c0bccfbf5f3e5e482c29bdc7c7b23945184dc93c00a24",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -858,22 +858,26 @@
           "capturedAtUtc": "2026-09-07T06:50:44.982Z"
         },
         "F": {
-          "status": "NOT_RUN",
-          "revokedFrom": {
-            "candidateSha": "5805b22e2126e9aaa03c1985d1a6999f7032c912",
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33536357047",
-            "absentCommitments": 1
-          },
-          "revokedReason": "session format v2 title migration under BASE-ALIGN-v3; P0-06.F primary re-frozen on the session.v2.jsonl case names"
+          "status": "GREEN",
+          "candidateSha": "58b1d2ae86cd05cca892cc6a7db8e6a292ac1a45",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34902651626",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/3503e65b-c998-420f-8f07-74738632401b/scratchpad/obs-run34902651626-58b1d2ae86cd05cca892cc6a7db8e6a292ac1a45/vitest-report.json",
+          "observationSha256": "113a24f2c9a65862c8457e1a95ee589a85376a0ed4f2c1d468b84f095ea7ec18",
+          "expectCasesMatched": [
+            "replays 'snapshots/web/fresh-round-trip/sessio…' (a real pre-schema-registry session fixture) with no negotiation failure and no silent event loss",
+            "replays 'snapshots/sdk/text-turn/session.v2.js…' (a real pre-schema-registry session fixture) with no negotiation failure and no silent event loss",
+            "replays 'snapshots/session/skill-load/session.…' (a real pre-schema-registry session fixture) with no negotiation failure and no silent event loss"
+          ],
+          "capturedAtUtc": "2026-09-14T22:48:19.012Z"
         }
       },
       "supplements": {},
-      "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
-      "independentVerdict": "PENDING",
+      "candidateSha": "58b1d2ae86cd05cca892cc6a7db8e6a292ac1a45",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "NOT_RUN",
+      "status": "ACCEPTED",
       "acceptedEvidence": {
-        "acceptedAtUtc": "2026-09-01T17:28:13.264Z",
+        "acceptedAtUtc": "2026-09-15T01:28:15.131Z",
         "cells": {
           "C": {
             "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33495956332",
@@ -884,18 +888,23 @@
             "candidateSha": "290321cee0fa40680bc63e8da6a568fc99b70432"
           },
           "U": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33524811126",
-            "candidateSha": "98341625bc6049286e2a8d6fe84d81a88374861f"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+            "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385"
           },
           "F": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33536357047",
-            "candidateSha": "5805b22e2126e9aaa03c1985d1a6999f7032c912"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34902651626",
+            "candidateSha": "58b1d2ae86cd05cca892cc6a7db8e6a292ac1a45"
           }
         },
         "coverageClosure": {
           "valid": true,
           "missingIndices": [],
           "unverifiedCitations": []
+        },
+        "delegateSignoff": {
+          "delegateSession": "guanjieqiao-92",
+          "signedAtUtc": "2026-09-15T01:28:14.572Z",
+          "userConfirmationRef": null
         }
       }
     },
@@ -5770,13 +5779,23 @@
           "capturedAtUtc": "2026-09-08T15:11:43.509Z"
         },
         "P": {
-          "status": "NOT_RUN",
-          "revokedFrom": {
-            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
-            "absentCommitments": 1
-          },
-          "revokedReason": "write-behind.spec.ts deleted by BASE-ALIGN-v3; P4-06.P primary re-mapped onto the upstream handle contract runLiveWritePathContract (D1 option B, 13->9)"
+          "status": "GREEN",
+          "candidateSha": "58b1d2ae86cd05cca892cc6a7db8e6a292ac1a45",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34902651626",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/3503e65b-c998-420f-8f07-74738632401b/scratchpad/obs-run34902651626-58b1d2ae86cd05cca892cc6a7db8e6a292ac1a45/vitest-report.json",
+          "observationSha256": "113a24f2c9a65862c8457e1a95ee589a85376a0ed4f2c1d468b84f095ea7ec18",
+          "expectCasesMatched": [
+            "live session write path: jsonl splits two appends across batches when a write starts between them",
+            "live session write path: jsonl writes appends admitted in one synchronous tick as one batch",
+            "live session write path: jsonl coalesces twenty events admitted across one window into one batch",
+            "live session write path: jsonl makes concurrent flushes one barrier that drains tails admitted during its write",
+            "live session write path: jsonl starts a new window for work admitted after an already-quiescent barrier",
+            "live session write path: jsonl starts an over-budget tail immediately after the active write",
+            "live session write path: jsonl surfaces a barrier failure without background logging and retains its batch in order",
+            "live session write path: jsonl retains a failed batch larger than the engine call-argument limit",
+            "live session write path: jsonl a failed drain retains order, quiets the timer, and recovers exactly once"
+          ],
+          "capturedAtUtc": "2026-09-14T22:48:02.796Z"
         },
         "U": {
           "status": "GREEN",
@@ -5948,20 +5967,20 @@
           "capturedAtUtc": "2026-09-08T15:11:45.671Z"
         }
       },
-      "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-      "independentVerdict": "PENDING",
+      "candidateSha": "58b1d2ae86cd05cca892cc6a7db8e6a292ac1a45",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "NOT_RUN",
+      "status": "ACCEPTED",
       "acceptedEvidence": {
-        "acceptedAtUtc": "2026-09-08T15:43:29.251Z",
+        "acceptedAtUtc": "2026-09-15T01:28:07.965Z",
         "cells": {
           "C": {
             "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
             "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980"
           },
           "P": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
-            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34902651626",
+            "candidateSha": "58b1d2ae86cd05cca892cc6a7db8e6a292ac1a45"
           },
           "U": {
             "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
@@ -5979,7 +5998,7 @@
         },
         "delegateSignoff": {
           "delegateSession": "guanjieqiao-92",
-          "signedAtUtc": "2026-09-08T15:42:53.916Z",
+          "signedAtUtc": "2026-09-15T01:28:07.725Z",
           "userConfirmationRef": null
         }
       }

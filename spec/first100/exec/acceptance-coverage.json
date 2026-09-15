@@ -60,15 +60,15 @@
       "coveredBy": [
         {
           "stage": "F",
-          "title": "replays snapshots/web/fresh-round-trip/session.jsonl (a real pre-schema-registry session fixture) with no negotiation failure and no silent event loss"
+          "title": "replays 'snapshots/web/fresh-round-trip/sessio…' (a real pre-schema-registry session fixture) with no negotiation failure and no silent event loss"
         },
         {
           "stage": "F",
-          "title": "replays snapshots/sdk/text-turn/session.jsonl (a real pre-schema-registry session fixture) with no negotiation failure and no silent event loss"
+          "title": "replays 'snapshots/sdk/text-turn/session.v2.js…' (a real pre-schema-registry session fixture) with no negotiation failure and no silent event loss"
         },
         {
           "stage": "F",
-          "title": "replays snapshots/session/skill-load/session.jsonl (a real pre-schema-registry session fixture) with no negotiation failure and no silent event loss"
+          "title": "replays 'snapshots/session/skill-load/session.…' (a real pre-schema-registry session fixture) with no negotiation failure and no silent event loss"
         }
       ],
       "note": "acceptance[0]: 'at minimum, able to read old session fixtures produced by the audit baseline.' Three real, pre-existing snapshots/*/session.jsonl fixtures (this repo's own keyless recorded-session corpus), all predating schema-registry's existence (no schemaVersion tag on any event), replayed through the real U-stage-wired negotiation path via a faithful envelope reconstruction (independently verified sound and non-vacuous by the Opus Reviewer against the codebase's own established repackSessionSnapshot reverse-direction logic)."
