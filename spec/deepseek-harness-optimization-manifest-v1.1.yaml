@@ -1427,9 +1427,9 @@ remainingPending:
   pendingLayerAdjudication: 0
   unapprovedThresholds: 0
 fileOwnership:
-  writtenFiles: 434
+  writtenFiles: 433
   statusCounts:
-    sole: 407
+    sole: 406
     sequential: 23
     serialized: 4
     conflict: 0
@@ -1523,15 +1523,13 @@ epics:
       kind: "N"
     - path: "packages/kernel/trust-kernel/src/types.ts"
       kind: "N"
-    - path: "packages/kernel/trust-kernel/src/invariant.ts"
-      kind: "N"
     - path: "packages/kernel/trust-kernel/tests/boundary.spec.ts"
       kind: "N"
     stages:
     C:
       nOf: null
-      files: ["packages/kernel/trust-kernel/src/types.ts", "packages/kernel/trust-kernel/src/invariant.ts", "packages/kernel/trust-kernel/tests/boundary.spec.ts", "docs/architecture/trust-kernel-boundary.md", "spec/trust-kernel.md"]
-      count: 5
+      files: ["packages/kernel/trust-kernel/src/types.ts", "packages/kernel/trust-kernel/tests/boundary.spec.ts", "docs/architecture/trust-kernel-boundary.md", "spec/trust-kernel.md"]
+      count: 4
     P:
       nOf: "N/A"
       reason: "kernel is deliberately not a replaceable Cordis provider."

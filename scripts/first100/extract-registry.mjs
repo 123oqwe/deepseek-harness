@@ -393,6 +393,11 @@ const FILES_DELETED = {
     reason: "P6-01 declared `packages/memory/memory/src/invariant.ts`, and its own C-stage commit `17ca16450f` (2026-09-03) deleted it: the invariant checked `memory/access`, an event only this package produces, with no independent second source, which `packages/AGENTS.md` disqualifies. The package README row before that commit read \"`src/invariant.ts` | Package-owned session-event invariant: every logged `memory/access` read carries a complete access context (`must[3]`)\"; after it, the README states that no runtime invariant companion is published. The ledger row and the acceptance record are unchanged; only the registry declaration of the deleted file goes.",
     authorization: "delegate ruling, 2026-09-15 (queue item 118: FILES_DELETED, lineage of coordinator.ts, unstarted epics included).",
   },
+  'P0-02': {
+    deleted: [{ path: 'packages/kernel/trust-kernel/src/invariant.ts', stage: 'C', deletedBy: '02ceda9fc8' }],
+    reason: "P0-02's Contract stage declared `packages/kernel/trust-kernel/src/invariant.ts` as a kind=N deliverable, and `02ceda9fc8` (2026-09-11, BLOCKED-209) retired seven empty invariant companions, this path among them: each shipped an `install` that did nothing, and the trust kernel's guarantee — its six capability members never change reference identity for the process lifetime — holds structurally, leaving no independent observation for a companion to compare. The reason moved to `packages/kernel/trust-kernel/README.md`, where `verify-package-invariants` requires an omitted companion to justify itself. A retirement with no successor file, not a rename: BLOCKED-253 listed this path as needing a decision because 39 same-named files make a basename match decide nothing.",
+    authorization: "delegate ruling, 2026-09-15 (queue item 146: FILES_DELETED backfill of trust-kernel/src/invariant.ts, deletedBy 02ceda9fc8 with its lineage verified).",
+  },
 }
 
 const TEST_FILES_ADDED = {
