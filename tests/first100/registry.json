@@ -388,7 +388,11 @@
     "filesReplaced": {
       "epicIds": [
         "P1-03",
+        "P2-12",
+        "P4-05",
+        "P4-06",
         "P4-08",
+        "P5-10",
         "P5-11"
       ],
       "note": "Files whose DECLARED path cannot hold what the clause needs, replaced with the path that can. Each entry states the mechanical reason, because only \"the declared place could not hold it\" justifies editing a pinned list.",
@@ -400,11 +404,18 @@
               "to": "packages/run/message-bus/src/mailbox-delivery.ts",
               "kind": "N",
               "stage": "U"
+            },
+            {
+              "from": "packages/core/agent/src/inbox.ts",
+              "to": "packages/core/agent-loop/src/inbox.ts",
+              "kind": "B",
+              "stage": "U",
+              "reason": "`packages/core/agent/src/inbox.ts` was renamed to `packages/core/agent-loop/src/inbox.ts` by `1101422362` (git reports `R089`), and BASE-ALIGN-v3 S2 names the agent-loop path. Applied only to epics that have started (delegate ruling, 2026-09-15): an unstarted epic's declaration is a plan, and P8-03's is left for that epic's own start."
             }
           ],
           "reason": "`@deepseek-ai/dsh-mailbox` was retired into `@deepseek-ai/dsh-message-bus`, and the declared path named the package that no longer exists. What the mailbox held beyond `dsh-intake-dedup`'s rule was a recipient-address check and a set of type names -- a package for a seam that does not exist, and the split had already produced one rule with two implementations, the copy P4-06's clause was about being the one nothing called (BLOCKED-136). The address check is now `decideMailboxArrival` in the bus, beside the store-backed `decideMailboxDelivery` that was already P4-06's production call site, and P5-11's mailbox clause is satisfied there rather than in a package of its own.",
           "consequence": "The published `@deepseek-ai/dsh-mailbox` package is gone; an installed consumer importing it breaks, and nothing in this repository does. Pre-release stance: no shim.",
-          "authorization": "delegate ruling, 2026-09-08, §12.27-2 (BLOCKED-154)."
+          "authorization": "delegate ruling, 2026-09-08, §12.27-2 (BLOCKED-154); the agent-loop `inbox.ts` replacement: delegate ruling, 2026-09-15 (BLOCKED-253)."
         },
         "P4-08": {
           "replacements": [
@@ -461,6 +472,61 @@
             }
           ],
           "authorization": "delegate ruling, 2026-09-06, §10.3-1 (g) as revised (BLOCKED-133 follow-up)."
+        },
+        "P2-12": {
+          "replacements": [
+            {
+              "from": "packages/core/agent/src/inbox.ts",
+              "to": "packages/core/agent-loop/src/inbox.ts",
+              "kind": "B",
+              "stage": "C",
+              "reason": "`packages/core/agent/src/inbox.ts` was renamed to `packages/core/agent-loop/src/inbox.ts` by `1101422362` (git reports `R089`), and BASE-ALIGN-v3 S2 names the agent-loop path. Applied only to epics that have started (delegate ruling, 2026-09-15): an unstarted epic's declaration is a plan, and P8-03's is left for that epic's own start."
+            }
+          ],
+          "authorization": "delegate ruling, 2026-09-15 (BLOCKED-253)."
+        },
+        "P4-05": {
+          "replacements": [
+            {
+              "from": "packages/core/agent/src/inbox.ts",
+              "to": "packages/core/agent-loop/src/inbox.ts",
+              "kind": "B",
+              "stage": "U",
+              "reason": "`packages/core/agent/src/inbox.ts` was renamed to `packages/core/agent-loop/src/inbox.ts` by `1101422362` (git reports `R089`), and BASE-ALIGN-v3 S2 names the agent-loop path. Applied only to epics that have started (delegate ruling, 2026-09-15): an unstarted epic's declaration is a plan, and P8-03's is left for that epic's own start."
+            }
+          ],
+          "authorization": "delegate ruling, 2026-09-15 (BLOCKED-253)."
+        },
+        "P4-06": {
+          "replacements": [
+            {
+              "from": "packages/core/agent/src/inbox.ts",
+              "to": "packages/core/agent-loop/src/inbox.ts",
+              "kind": "B",
+              "stage": "C",
+              "reason": "`packages/core/agent/src/inbox.ts` was renamed to `packages/core/agent-loop/src/inbox.ts` by `1101422362` (git reports `R089`), and BASE-ALIGN-v3 S2 names the agent-loop path. Applied only to epics that have started (delegate ruling, 2026-09-15): an unstarted epic's declaration is a plan, and P8-03's is left for that epic's own start."
+            },
+            {
+              "from": "packages/core/agent/src/inbox.ts",
+              "to": "packages/core/agent-loop/src/inbox.ts",
+              "kind": "B",
+              "stage": "U",
+              "reason": "`packages/core/agent/src/inbox.ts` was renamed to `packages/core/agent-loop/src/inbox.ts` by `1101422362` (git reports `R089`), and BASE-ALIGN-v3 S2 names the agent-loop path. Applied only to epics that have started (delegate ruling, 2026-09-15): an unstarted epic's declaration is a plan, and P8-03's is left for that epic's own start."
+            }
+          ],
+          "authorization": "delegate ruling, 2026-09-15 (BLOCKED-253)."
+        },
+        "P5-10": {
+          "replacements": [
+            {
+              "from": "packages/core/agent/src/inbox.ts",
+              "to": "packages/core/agent-loop/src/inbox.ts",
+              "kind": "B",
+              "stage": "U",
+              "reason": "`packages/core/agent/src/inbox.ts` was renamed to `packages/core/agent-loop/src/inbox.ts` by `1101422362` (git reports `R089`), and BASE-ALIGN-v3 S2 names the agent-loop path. Applied only to epics that have started (delegate ruling, 2026-09-15): an unstarted epic's declaration is a plan, and P8-03's is left for that epic's own start."
+            }
+          ],
+          "authorization": "delegate ruling, 2026-09-15 (BLOCKED-253)."
         }
       }
     },
@@ -4590,7 +4656,7 @@
           "kind": "B"
         },
         {
-          "path": "packages/core/agent/src/inbox.ts",
+          "path": "packages/core/agent-loop/src/inbox.ts",
           "kind": "B"
         },
         {
@@ -4663,7 +4729,7 @@
             "packages/interaction/control-plane/src/index.ts",
             "packages/interaction/control-plane/tests/emergency-stop.e2e.ts",
             "packages/sdk/protocol/src/types.ts",
-            "packages/core/agent/src/inbox.ts"
+            "packages/core/agent-loop/src/inbox.ts"
           ],
           "count": 5
         },
@@ -6896,7 +6962,7 @@
           "kind": "B"
         },
         {
-          "path": "packages/core/agent/src/inbox.ts",
+          "path": "packages/core/agent-loop/src/inbox.ts",
           "kind": "B"
         },
         {
@@ -6966,7 +7032,7 @@
           "nOf": null,
           "files": [
             "packages/core/agent/src/dispatch.ts",
-            "packages/core/agent/src/inbox.ts",
+            "packages/core/agent-loop/src/inbox.ts",
             "packages/core/agent-loop/src/agent.ts",
             "packages/core/agent/src/state-machine.ts"
           ],
@@ -7005,7 +7071,7 @@
       "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
       "files": [
         {
-          "path": "packages/core/agent/src/inbox.ts",
+          "path": "packages/core/agent-loop/src/inbox.ts",
           "kind": "B"
         },
         {
@@ -7079,7 +7145,7 @@
             "packages/run/message-bus/src/inbox.ts",
             "packages/run/message-bus/src/outbox.ts",
             "packages/run/message-bus/tests/crash.e2e.ts",
-            "packages/core/agent/src/inbox.ts"
+            "packages/core/agent-loop/src/inbox.ts"
           ],
           "count": 4
         },
@@ -7095,7 +7161,7 @@
         "U": {
           "nOf": null,
           "files": [
-            "packages/core/agent/src/inbox.ts",
+            "packages/core/agent-loop/src/inbox.ts",
             "packages/core/agent/src/dispatch.ts"
           ],
           "count": 2
@@ -9358,7 +9424,7 @@
           "kind": "B"
         },
         {
-          "path": "packages/core/agent/src/inbox.ts",
+          "path": "packages/core/agent-loop/src/inbox.ts",
           "kind": "B"
         },
         {
@@ -9435,7 +9501,7 @@
           "files": [
             "packages/subagent/subagent/src/child-agent.ts",
             "packages/subagent/subagent/src/lifecycle.ts",
-            "packages/core/agent/src/inbox.ts",
+            "packages/core/agent-loop/src/inbox.ts",
             "packages/subagent/subagent/src/index.ts"
           ],
           "count": 4
@@ -9478,7 +9544,7 @@
           "kind": "B"
         },
         {
-          "path": "packages/core/agent/src/inbox.ts",
+          "path": "packages/core/agent-loop/src/inbox.ts",
           "kind": "B"
         },
         {
@@ -9571,7 +9637,7 @@
           "files": [
             "packages/run/message-bus/src/mailbox-delivery.ts",
             "packages/collaboration/blackboard/src/index.ts",
-            "packages/core/agent/src/inbox.ts",
+            "packages/core/agent-loop/src/inbox.ts",
             "packages/subagent/subagent/src/list-children.ts",
             "packages/collaboration/taskboard/src/index.ts"
           ],

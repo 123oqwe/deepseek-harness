@@ -2264,15 +2264,6 @@
     },
     {
       "epic": "P4-06",
-      "path": "packages/core/agent-loop/src/inbox.ts",
-      "kind": "source",
-      "stages": [
-        "U.3"
-      ],
-      "reason": "Successor of core/agent/src/inbox.ts, which upstream deleted in the re-anchor; ReactLoopInbox now lives here and is reached from agent-loop/src/agent.ts and the runtime context (S2 ruling, 4.4d record). The parent inbox is the consumer must[2]'s (source, messageId, epoch) idempotency is judged at; the freeze `files` entry was re-pointed 2026-09-15."
-    },
-    {
-      "epic": "P4-06",
       "path": "packages/core/agent-loop/tests/arrival-dedup.spec.ts",
       "kind": "test",
       "stages": [
@@ -3018,15 +3009,6 @@
         "U.1"
       ],
       "reason": "The promotion rule itself. §12.25-1 declared the table shared between the router and the inbox; §12.37 corrected what it contains, and the file is where 'only a cancel is promoted' is stated once for both consumers."
-    },
-    {
-      "epic": "P5-10",
-      "path": "packages/core/agent-loop/src/inbox.ts",
-      "kind": "source",
-      "stages": [
-        "U.1"
-      ],
-      "reason": "Successor of core/agent/src/inbox.ts (upstream deleted it in the re-anchor; ReactLoopInbox lives here now). The inbox is where a promoted control message (only a cancel) lands ahead of ordinary traffic, which is what U.1 observes; the freeze `files` entry was re-pointed 2026-09-15."
     },
     {
       "epic": "P5-10",

@@ -267,14 +267,20 @@ function applyFileReplacements(id, files) {
   })
 }
 
+/**
+ * The reason shared by every `core/agent/src/inbox.ts` -> `core/agent-loop/src/inbox.ts` replacement (BLOCKED-253).
+ */
+const AGENT_LOOP_INBOX_REASON = "`packages/core/agent/src/inbox.ts` was renamed to `packages/core/agent-loop/src/inbox.ts` by `1101422362` (git reports `R089`), and BASE-ALIGN-v3 S2 names the agent-loop path. Applied only to epics that have started (delegate ruling, 2026-09-15): an unstarted epic's declaration is a plan, and P8-03's is left for that epic's own start."
+
 const FILES_REPLACED = {
   'P5-11': {
     replacements: [
       { from: 'packages/collaboration/mailbox/src/index.ts', to: 'packages/run/message-bus/src/mailbox-delivery.ts', kind: 'N', stage: 'U' },
+      { from: 'packages/core/agent/src/inbox.ts', to: 'packages/core/agent-loop/src/inbox.ts', kind: 'B', stage: 'U', reason: AGENT_LOOP_INBOX_REASON },
     ],
     reason: "`@deepseek-ai/dsh-mailbox` was retired into `@deepseek-ai/dsh-message-bus`, and the declared path named the package that no longer exists. What the mailbox held beyond `dsh-intake-dedup`'s rule was a recipient-address check and a set of type names -- a package for a seam that does not exist, and the split had already produced one rule with two implementations, the copy P4-06's clause was about being the one nothing called (BLOCKED-136). The address check is now `decideMailboxArrival` in the bus, beside the store-backed `decideMailboxDelivery` that was already P4-06's production call site, and P5-11's mailbox clause is satisfied there rather than in a package of its own.",
     consequence: 'The published `@deepseek-ai/dsh-mailbox` package is gone; an installed consumer importing it breaks, and nothing in this repository does. Pre-release stance: no shim.',
-    authorization: 'delegate ruling, 2026-09-08, §12.27-2 (BLOCKED-154).',
+    authorization: 'delegate ruling, 2026-09-08, §12.27-2 (BLOCKED-154); the agent-loop `inbox.ts` replacement: delegate ruling, 2026-09-15 (BLOCKED-253).',
   },
   'P4-08': {
     replacements: [
@@ -299,6 +305,31 @@ const FILES_REPLACED = {
       consequence: 'The key becomes part of a shipped bundle\'s published package.json, so later changes to it are a release-surface change rather than internal configuration.',
     }],
     authorization: 'delegate ruling, 2026-09-06, §10.3-1 (g) as revised (BLOCKED-133 follow-up).',
+  },
+  'P2-12': {
+    replacements: [
+      { from: 'packages/core/agent/src/inbox.ts', to: 'packages/core/agent-loop/src/inbox.ts', kind: 'B', stage: 'C', reason: AGENT_LOOP_INBOX_REASON },
+    ],
+    authorization: 'delegate ruling, 2026-09-15 (BLOCKED-253).',
+  },
+  'P4-05': {
+    replacements: [
+      { from: 'packages/core/agent/src/inbox.ts', to: 'packages/core/agent-loop/src/inbox.ts', kind: 'B', stage: 'U', reason: AGENT_LOOP_INBOX_REASON },
+    ],
+    authorization: 'delegate ruling, 2026-09-15 (BLOCKED-253).',
+  },
+  'P4-06': {
+    replacements: [
+      { from: 'packages/core/agent/src/inbox.ts', to: 'packages/core/agent-loop/src/inbox.ts', kind: 'B', stage: 'C', reason: AGENT_LOOP_INBOX_REASON },
+      { from: 'packages/core/agent/src/inbox.ts', to: 'packages/core/agent-loop/src/inbox.ts', kind: 'B', stage: 'U', reason: AGENT_LOOP_INBOX_REASON },
+    ],
+    authorization: 'delegate ruling, 2026-09-15 (BLOCKED-253).',
+  },
+  'P5-10': {
+    replacements: [
+      { from: 'packages/core/agent/src/inbox.ts', to: 'packages/core/agent-loop/src/inbox.ts', kind: 'B', stage: 'U', reason: AGENT_LOOP_INBOX_REASON },
+    ],
+    authorization: 'delegate ruling, 2026-09-15 (BLOCKED-253).',
   },
 }
 
