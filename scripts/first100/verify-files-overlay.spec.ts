@@ -187,6 +187,13 @@ describe('declared paths through the deliverable-path patches, the one resolutio
     expect(patchEntries(adjudication)).toStrictEqual([{ stage: 'C', declaredPath: 'a.ts', approvedPath: 'b.ts', epic: 'P9-99' }])
   })
 
+  it('refuses an approvedPath that carries whitespace or an anchor, naming the entry', () => {
+    const entry = (approvedPath: string) => ({ deliverablePathPatches: { entries: { 'P9-99-C-bad': { epic: 'P9-99', stage: 'C', declaredPath: declared, approvedPath } } } })
+    expect(() => patchEntries(entry('packages/demo/a.ts + docs/b.md'))).toThrow('P9-99-C-bad')
+    expect(() => patchEntries(entry('docs/glossary.md#capability-seam'))).toThrow('no whitespace or # anchor')
+    expect(patchEntries(entry('docs/glossary.md')).map(patch => patch.approvedPath)).toStrictEqual(['docs/glossary.md'])
+  })
+
   it('resolves a stage declaration through every patch for that stage, and not through a patch for another stage', () => {
     const second = 'packages/demo/thing/tests/second.spec.ts'
     const records = resolveDeclaredPaths(registry.epics[0]!, [patch({}), patch({ approvedPath: second }), patch({ stage: 'U', approvedPath: 'packages/demo/thing/tests/other.spec.ts' })])

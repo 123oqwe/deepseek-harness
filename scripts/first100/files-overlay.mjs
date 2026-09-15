@@ -64,12 +64,19 @@ export function classifyOverlayPath(path) {
  * The approved deliverable-path patches in `adjudication.json`, each with its epic resolved.
  *
  * A patch entry's `epic` falls back to its own key, the way generate-specs reads it.
+ * Every reader uses an `approvedPath` as one repository path, so a value that
+ * carries whitespace or a `#` anchor is refused here rather than read as a file
+ * that does not exist.
  * @param adjudication - the parsed `tests/first100/adjudication.json`.
  * @returns the patch entries.
  */
 export function patchEntries(adjudication) {
-  return Object.entries(adjudication.deliverablePathPatches?.entries ?? {})
-    .map(([key, patch]) => ({ ...patch, epic: patch.epic ?? key }))
+  return Object.entries(adjudication.deliverablePathPatches?.entries ?? {}).map(([key, patch]) => {
+    if (/\s|#/u.test(patch.approvedPath)) {
+      throw new Error(`deliverablePathPatches.entries[${JSON.stringify(key)}].approvedPath must be one repository path, with no whitespace or # anchor: ${JSON.stringify(patch.approvedPath)}`)
+    }
+    return { ...patch, epic: patch.epic ?? key }
+  })
 }
 
 /**
