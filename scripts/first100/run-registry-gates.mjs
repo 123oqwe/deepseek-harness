@@ -54,6 +54,7 @@ const REGISTRY_GATES = [
   'first100:verify-make-vs-use',
   'first100:verify-freeze-in-candidate-tree',
   'first100:verify-files-overlay',
+  'first100:verify-declared-files-exist',
   'first100:verify-manifest-constructed',
   'first100:verify-run-enabled-in-bundles',
   // The ledger's own digest check. It lived only in the push gate, so a

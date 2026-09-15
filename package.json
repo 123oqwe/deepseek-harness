@@ -157,6 +157,7 @@
     "first100:verify-make-vs-use": "node scripts/first100/verify-make-vs-use.mjs",
     "first100:verify-freeze-in-candidate-tree": "node scripts/first100/verify-freeze-in-candidate-tree.mjs",
     "first100:verify-files-overlay": "node scripts/first100/verify-files-overlay.mjs",
+    "first100:verify-declared-files-exist": "node scripts/first100/verify-declared-files-exist.mjs",
     "first100:verify-usage-stage-subject": "node scripts/first100/verify-usage-stage-subject.mjs",
     "first100:verify-manifest-constructed": "node scripts/first100/verify-manifest-constructed.mjs",
     "first100:verify-run-enabled-in-bundles": "node scripts/first100/verify-run-enabled-in-bundles.mjs",
