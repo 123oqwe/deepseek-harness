@@ -409,8 +409,9 @@
               "from": "packages/core/agent/src/inbox.ts",
               "to": "packages/core/agent-loop/src/inbox.ts",
               "kind": "B",
+              "baselinePath": "packages/core/agent/src/inbox.ts",
               "stage": "U",
-              "reason": "`packages/core/agent/src/inbox.ts` was renamed to `packages/core/agent-loop/src/inbox.ts` by `1101422362` (git reports `R089`), and BASE-ALIGN-v3 S2 names the agent-loop path. Applied only to epics that have started (delegate ruling, 2026-09-15): an unstarted epic's declaration is a plan, and P8-03's is left for that epic's own start."
+              "reason": "`packages/core/agent/src/inbox.ts` was renamed to `packages/core/agent-loop/src/inbox.ts` by `1101422362` (git reports `R089`), and BASE-ALIGN-v3 S2 names the agent-loop path. Applied only to epics that have started (delegate ruling, 2026-09-15): an unstarted epic's declaration is a plan, and P8-03's is left for that epic's own start. The agent-loop path is not in the pinned baseline `4e84901e`, which holds the old path, so each entry keeps `kind: 'B'` and records `baselinePath`, the path `verify-baseline-file-references` checks at the baseline (delegate ruling, 2026-09-15, after the gate set on `08b914b971` failed on these five epics)."
             }
           ],
           "reason": "`@deepseek-ai/dsh-mailbox` was retired into `@deepseek-ai/dsh-message-bus`, and the declared path named the package that no longer exists. What the mailbox held beyond `dsh-intake-dedup`'s rule was a recipient-address check and a set of type names -- a package for a seam that does not exist, and the split had already produced one rule with two implementations, the copy P4-06's clause was about being the one nothing called (BLOCKED-136). The address check is now `decideMailboxArrival` in the bus, beside the store-backed `decideMailboxDelivery` that was already P4-06's production call site, and P5-11's mailbox clause is satisfied there rather than in a package of its own.",
@@ -479,8 +480,9 @@
               "from": "packages/core/agent/src/inbox.ts",
               "to": "packages/core/agent-loop/src/inbox.ts",
               "kind": "B",
+              "baselinePath": "packages/core/agent/src/inbox.ts",
               "stage": "C",
-              "reason": "`packages/core/agent/src/inbox.ts` was renamed to `packages/core/agent-loop/src/inbox.ts` by `1101422362` (git reports `R089`), and BASE-ALIGN-v3 S2 names the agent-loop path. Applied only to epics that have started (delegate ruling, 2026-09-15): an unstarted epic's declaration is a plan, and P8-03's is left for that epic's own start."
+              "reason": "`packages/core/agent/src/inbox.ts` was renamed to `packages/core/agent-loop/src/inbox.ts` by `1101422362` (git reports `R089`), and BASE-ALIGN-v3 S2 names the agent-loop path. Applied only to epics that have started (delegate ruling, 2026-09-15): an unstarted epic's declaration is a plan, and P8-03's is left for that epic's own start. The agent-loop path is not in the pinned baseline `4e84901e`, which holds the old path, so each entry keeps `kind: 'B'` and records `baselinePath`, the path `verify-baseline-file-references` checks at the baseline (delegate ruling, 2026-09-15, after the gate set on `08b914b971` failed on these five epics)."
             }
           ],
           "authorization": "delegate ruling, 2026-09-15 (BLOCKED-253)."
@@ -491,8 +493,9 @@
               "from": "packages/core/agent/src/inbox.ts",
               "to": "packages/core/agent-loop/src/inbox.ts",
               "kind": "B",
+              "baselinePath": "packages/core/agent/src/inbox.ts",
               "stage": "U",
-              "reason": "`packages/core/agent/src/inbox.ts` was renamed to `packages/core/agent-loop/src/inbox.ts` by `1101422362` (git reports `R089`), and BASE-ALIGN-v3 S2 names the agent-loop path. Applied only to epics that have started (delegate ruling, 2026-09-15): an unstarted epic's declaration is a plan, and P8-03's is left for that epic's own start."
+              "reason": "`packages/core/agent/src/inbox.ts` was renamed to `packages/core/agent-loop/src/inbox.ts` by `1101422362` (git reports `R089`), and BASE-ALIGN-v3 S2 names the agent-loop path. Applied only to epics that have started (delegate ruling, 2026-09-15): an unstarted epic's declaration is a plan, and P8-03's is left for that epic's own start. The agent-loop path is not in the pinned baseline `4e84901e`, which holds the old path, so each entry keeps `kind: 'B'` and records `baselinePath`, the path `verify-baseline-file-references` checks at the baseline (delegate ruling, 2026-09-15, after the gate set on `08b914b971` failed on these five epics)."
             }
           ],
           "authorization": "delegate ruling, 2026-09-15 (BLOCKED-253)."
@@ -503,15 +506,17 @@
               "from": "packages/core/agent/src/inbox.ts",
               "to": "packages/core/agent-loop/src/inbox.ts",
               "kind": "B",
+              "baselinePath": "packages/core/agent/src/inbox.ts",
               "stage": "C",
-              "reason": "`packages/core/agent/src/inbox.ts` was renamed to `packages/core/agent-loop/src/inbox.ts` by `1101422362` (git reports `R089`), and BASE-ALIGN-v3 S2 names the agent-loop path. Applied only to epics that have started (delegate ruling, 2026-09-15): an unstarted epic's declaration is a plan, and P8-03's is left for that epic's own start."
+              "reason": "`packages/core/agent/src/inbox.ts` was renamed to `packages/core/agent-loop/src/inbox.ts` by `1101422362` (git reports `R089`), and BASE-ALIGN-v3 S2 names the agent-loop path. Applied only to epics that have started (delegate ruling, 2026-09-15): an unstarted epic's declaration is a plan, and P8-03's is left for that epic's own start. The agent-loop path is not in the pinned baseline `4e84901e`, which holds the old path, so each entry keeps `kind: 'B'` and records `baselinePath`, the path `verify-baseline-file-references` checks at the baseline (delegate ruling, 2026-09-15, after the gate set on `08b914b971` failed on these five epics)."
             },
             {
               "from": "packages/core/agent/src/inbox.ts",
               "to": "packages/core/agent-loop/src/inbox.ts",
               "kind": "B",
+              "baselinePath": "packages/core/agent/src/inbox.ts",
               "stage": "U",
-              "reason": "`packages/core/agent/src/inbox.ts` was renamed to `packages/core/agent-loop/src/inbox.ts` by `1101422362` (git reports `R089`), and BASE-ALIGN-v3 S2 names the agent-loop path. Applied only to epics that have started (delegate ruling, 2026-09-15): an unstarted epic's declaration is a plan, and P8-03's is left for that epic's own start."
+              "reason": "`packages/core/agent/src/inbox.ts` was renamed to `packages/core/agent-loop/src/inbox.ts` by `1101422362` (git reports `R089`), and BASE-ALIGN-v3 S2 names the agent-loop path. Applied only to epics that have started (delegate ruling, 2026-09-15): an unstarted epic's declaration is a plan, and P8-03's is left for that epic's own start. The agent-loop path is not in the pinned baseline `4e84901e`, which holds the old path, so each entry keeps `kind: 'B'` and records `baselinePath`, the path `verify-baseline-file-references` checks at the baseline (delegate ruling, 2026-09-15, after the gate set on `08b914b971` failed on these five epics)."
             }
           ],
           "authorization": "delegate ruling, 2026-09-15 (BLOCKED-253)."
@@ -522,8 +527,9 @@
               "from": "packages/core/agent/src/inbox.ts",
               "to": "packages/core/agent-loop/src/inbox.ts",
               "kind": "B",
+              "baselinePath": "packages/core/agent/src/inbox.ts",
               "stage": "U",
-              "reason": "`packages/core/agent/src/inbox.ts` was renamed to `packages/core/agent-loop/src/inbox.ts` by `1101422362` (git reports `R089`), and BASE-ALIGN-v3 S2 names the agent-loop path. Applied only to epics that have started (delegate ruling, 2026-09-15): an unstarted epic's declaration is a plan, and P8-03's is left for that epic's own start."
+              "reason": "`packages/core/agent/src/inbox.ts` was renamed to `packages/core/agent-loop/src/inbox.ts` by `1101422362` (git reports `R089`), and BASE-ALIGN-v3 S2 names the agent-loop path. Applied only to epics that have started (delegate ruling, 2026-09-15): an unstarted epic's declaration is a plan, and P8-03's is left for that epic's own start. The agent-loop path is not in the pinned baseline `4e84901e`, which holds the old path, so each entry keeps `kind: 'B'` and records `baselinePath`, the path `verify-baseline-file-references` checks at the baseline (delegate ruling, 2026-09-15, after the gate set on `08b914b971` failed on these five epics)."
             }
           ],
           "authorization": "delegate ruling, 2026-09-15 (BLOCKED-253)."
@@ -4657,7 +4663,8 @@
         },
         {
           "path": "packages/core/agent-loop/src/inbox.ts",
-          "kind": "B"
+          "kind": "B",
+          "baselinePath": "packages/core/agent/src/inbox.ts"
         },
         {
           "path": "packages/sdk/protocol/src/transport.ts",
@@ -6963,7 +6970,8 @@
         },
         {
           "path": "packages/core/agent-loop/src/inbox.ts",
-          "kind": "B"
+          "kind": "B",
+          "baselinePath": "packages/core/agent/src/inbox.ts"
         },
         {
           "path": "packages/core/agent-loop/src/agent.ts",
@@ -7072,7 +7080,8 @@
       "files": [
         {
           "path": "packages/core/agent-loop/src/inbox.ts",
-          "kind": "B"
+          "kind": "B",
+          "baselinePath": "packages/core/agent/src/inbox.ts"
         },
         {
           "path": "packages/core/agent/src/dispatch.ts",
@@ -9425,7 +9434,8 @@
         },
         {
           "path": "packages/core/agent-loop/src/inbox.ts",
-          "kind": "B"
+          "kind": "B",
+          "baselinePath": "packages/core/agent/src/inbox.ts"
         },
         {
           "path": "packages/subagent/subagent/src/control.ts",
@@ -9545,7 +9555,8 @@
         },
         {
           "path": "packages/core/agent-loop/src/inbox.ts",
-          "kind": "B"
+          "kind": "B",
+          "baselinePath": "packages/core/agent/src/inbox.ts"
         },
         {
           "path": "packages/subagent/subagent/src/list-children.ts",

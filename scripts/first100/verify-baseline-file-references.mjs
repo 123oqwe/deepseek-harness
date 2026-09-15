@@ -23,7 +23,8 @@
  * never the baseline tree, so it is intentionally not checked here.
  *
  * Fail-closed default: any `kind: 'B'` reference that does not exist as a
- * real git blob at the given baseline SHA fails the run. A `kind: 'N'`
+ * real git blob at the given baseline SHA fails the run. A `B` file renamed
+ * after the baseline carries `baselinePath`, and that path is the one checked. A `kind: 'N'`
  * reference that ALREADY exists at the baseline is reported as a
  * PARTIAL-rescope signal (informational by default, `--strict-n` promotes
  * it to a failure) -- existing-N is exactly the shape of evidence
@@ -60,21 +61,20 @@ function blobExists(sha, path) {
   return spawnSync('git', ['cat-file', '-e', `${sha}:${path}`], { cwd: REPO_ROOT }).status === 0
 }
 
-function main() {
-  const registry = loadJson(REGISTRY_PATH)
-  const baselineSha = opt('baseline-sha', registry.frozenBaseline?.sha)
-  if (!baselineSha) {
-    console.error('no --baseline-sha given and registry.json has no frozenBaseline.sha')
-    process.exit(1)
-  }
-  const check = spawnSync('git', ['cat-file', '-e', `${baselineSha}^{commit}`], { cwd: REPO_ROOT })
-  if (check.status !== 0) {
-    console.error(`--baseline-sha ${baselineSha} is not a real, locally-reachable commit (git cat-file -e failed)`)
-    process.exit(1)
-  }
-
-  const strictN = flag('strict-n')
+/**
+ * Every epic's `files[]` checked against one baseline commit.
+ *
+ * A `kind: 'B'` entry must exist at the baseline; one renamed after it is
+ * checked at its `baselinePath`, while `path` stays the path declared today. A
+ * `kind: 'N'` entry already present at the baseline is reported, and a
+ * `kind: 'P'` entry is only counted.
+ * @param registry - the parsed `tests/first100/registry.json`.
+ * @param exists - whether a repo-relative path exists as a blob at the baseline.
+ * @returns `epics` with `{ missingB, existingN, okB, okN, pCount }` per epic that has a file, `unknownKinds` as `{ epic, path, kind }`, and the `summary` totals.
+ */
+export function baselineReferenceFindings(registry, exists) {
   const epics = {}
+  const unknownKinds = []
   let totalMissingB = 0
   let totalExistingN = 0
   let epicsWithMissingB = 0
@@ -88,16 +88,15 @@ function main() {
     let pCount = 0
     for (const f of epic.files ?? []) {
       if (f.kind === 'B') {
-        if (blobExists(baselineSha, f.path)) okB += 1
-        else missingB.push(f.path)
+        if (exists(f.baselinePath ?? f.path)) okB += 1
+        else missingB.push(f.baselinePath === undefined ? f.path : `${f.path} (baseline path ${f.baselinePath})`)
       } else if (f.kind === 'N') {
-        if (blobExists(baselineSha, f.path)) existingN.push(f.path)
+        if (exists(f.path)) existingN.push(f.path)
         else okN += 1
       } else if (f.kind === 'P') {
         pCount += 1
       } else {
-        console.error(`${epic.id}: unknown files[] kind ${JSON.stringify(f.kind)} for ${f.path}`)
-        process.exit(1)
+        unknownKinds.push({ epic: epic.id, path: f.path, kind: f.kind })
       }
     }
     if (missingB.length > 0 || existingN.length > 0 || okB > 0 || okN > 0 || pCount > 0) {
@@ -113,16 +112,39 @@ function main() {
     }
   }
 
+  return {
+    epics,
+    unknownKinds,
+    summary: { totalEpics: registry.epics.length, epicsWithMissingB, totalMissingB, epicsWithExistingN, totalExistingN },
+  }
+}
+
+function main() {
+  const registry = loadJson(REGISTRY_PATH)
+  const baselineSha = opt('baseline-sha', registry.frozenBaseline?.sha)
+  if (!baselineSha) {
+    console.error('no --baseline-sha given and registry.json has no frozenBaseline.sha')
+    process.exit(1)
+  }
+  const check = spawnSync('git', ['cat-file', '-e', `${baselineSha}^{commit}`], { cwd: REPO_ROOT })
+  if (check.status !== 0) {
+    console.error(`--baseline-sha ${baselineSha} is not a real, locally-reachable commit (git cat-file -e failed)`)
+    process.exit(1)
+  }
+
+  const strictN = flag('strict-n')
+  const { epics, unknownKinds, summary } = baselineReferenceFindings(registry, path => blobExists(baselineSha, path))
+  if (unknownKinds.length > 0) {
+    const [first] = unknownKinds
+    console.error(`${first.epic}: unknown files[] kind ${JSON.stringify(first.kind)} for ${first.path}`)
+    process.exit(1)
+  }
+  const { epicsWithMissingB, totalMissingB, epicsWithExistingN, totalExistingN } = summary
+
   const findings = {
     baselineSha,
     strictN,
-    summary: {
-      totalEpics: registry.epics.length,
-      epicsWithMissingB,
-      totalMissingB,
-      epicsWithExistingN,
-      totalExistingN,
-    },
+    summary,
     epics,
   }
 
@@ -151,4 +173,5 @@ function main() {
   process.exit(fail ? 1 : 0)
 }
 
-main()
+// Only when run as a command; the spec imports baselineReferenceFindings.
+if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === resolve(process.argv[1])) main()

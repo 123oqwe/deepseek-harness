@@ -117,7 +117,7 @@ interface Epic {
   primaryLayer: string
   layerStatus: string
   canonicalOwner: string
-  files: { path: string; kind: string }[]
+  files: { path: string; kind: string; baselinePath?: string }[]
   must: string[]
   acceptance: string[]
   nonGoals: string[]

@@ -251,32 +251,42 @@ const FILES_REDUCED = {
  * mechanical reason, because "we put it elsewhere" and "the declared place
  * could not hold it" are different claims and only the second justifies
  * editing a pinned list.
+ *
+ * A `kind: 'B'` replacement whose target was renamed after the pinned baseline
+ * records `baselinePath`, the path the baseline holds, because `B` promises a
+ * file present at the baseline and the renamed path is not there.
  */
 /**
  * Apply an epic's recorded file replacements to its epic-level list.
  * @param id - the epic id.
  * @param files - the list parsed from the pinned matrix, plus any additions.
- * @returns the list with each replacement applied in place.
+ * @returns the list with each replacement applied in place; a replacement that records `baselinePath` carries it into the entry.
  */
 function applyFileReplacements(id, files) {
   const replacements = FILES_REPLACED[id]?.replacements ?? []
   if (replacements.length === 0) return files
   return files.map((file) => {
     const replacement = replacements.find(entry => entry.from === file.path)
-    return replacement === undefined ? file : { path: replacement.to, kind: replacement.kind }
+    if (replacement === undefined) return file
+    if (replacement.baselinePath !== undefined && replacement.kind !== 'B') {
+      throw new Error(`${id}: file replacement ${replacement.from} -> ${replacement.to} records baselinePath, which only a kind B file carries`)
+    }
+    return replacement.baselinePath === undefined
+      ? { path: replacement.to, kind: replacement.kind }
+      : { path: replacement.to, kind: replacement.kind, baselinePath: replacement.baselinePath }
   })
 }
 
 /**
  * The reason shared by every `core/agent/src/inbox.ts` -> `core/agent-loop/src/inbox.ts` replacement (BLOCKED-253).
  */
-const AGENT_LOOP_INBOX_REASON = "`packages/core/agent/src/inbox.ts` was renamed to `packages/core/agent-loop/src/inbox.ts` by `1101422362` (git reports `R089`), and BASE-ALIGN-v3 S2 names the agent-loop path. Applied only to epics that have started (delegate ruling, 2026-09-15): an unstarted epic's declaration is a plan, and P8-03's is left for that epic's own start."
+const AGENT_LOOP_INBOX_REASON = "`packages/core/agent/src/inbox.ts` was renamed to `packages/core/agent-loop/src/inbox.ts` by `1101422362` (git reports `R089`), and BASE-ALIGN-v3 S2 names the agent-loop path. Applied only to epics that have started (delegate ruling, 2026-09-15): an unstarted epic's declaration is a plan, and P8-03's is left for that epic's own start. The agent-loop path is not in the pinned baseline `4e84901e`, which holds the old path, so each entry keeps `kind: 'B'` and records `baselinePath`, the path `verify-baseline-file-references` checks at the baseline (delegate ruling, 2026-09-15, after the gate set on `08b914b971` failed on these five epics)."
 
 const FILES_REPLACED = {
   'P5-11': {
     replacements: [
       { from: 'packages/collaboration/mailbox/src/index.ts', to: 'packages/run/message-bus/src/mailbox-delivery.ts', kind: 'N', stage: 'U' },
-      { from: 'packages/core/agent/src/inbox.ts', to: 'packages/core/agent-loop/src/inbox.ts', kind: 'B', stage: 'U', reason: AGENT_LOOP_INBOX_REASON },
+      { from: 'packages/core/agent/src/inbox.ts', to: 'packages/core/agent-loop/src/inbox.ts', kind: 'B', baselinePath: 'packages/core/agent/src/inbox.ts', stage: 'U', reason: AGENT_LOOP_INBOX_REASON },
     ],
     reason: "`@deepseek-ai/dsh-mailbox` was retired into `@deepseek-ai/dsh-message-bus`, and the declared path named the package that no longer exists. What the mailbox held beyond `dsh-intake-dedup`'s rule was a recipient-address check and a set of type names -- a package for a seam that does not exist, and the split had already produced one rule with two implementations, the copy P4-06's clause was about being the one nothing called (BLOCKED-136). The address check is now `decideMailboxArrival` in the bus, beside the store-backed `decideMailboxDelivery` that was already P4-06's production call site, and P5-11's mailbox clause is satisfied there rather than in a package of its own.",
     consequence: 'The published `@deepseek-ai/dsh-mailbox` package is gone; an installed consumer importing it breaks, and nothing in this repository does. Pre-release stance: no shim.',
@@ -308,26 +318,26 @@ const FILES_REPLACED = {
   },
   'P2-12': {
     replacements: [
-      { from: 'packages/core/agent/src/inbox.ts', to: 'packages/core/agent-loop/src/inbox.ts', kind: 'B', stage: 'C', reason: AGENT_LOOP_INBOX_REASON },
+      { from: 'packages/core/agent/src/inbox.ts', to: 'packages/core/agent-loop/src/inbox.ts', kind: 'B', baselinePath: 'packages/core/agent/src/inbox.ts', stage: 'C', reason: AGENT_LOOP_INBOX_REASON },
     ],
     authorization: 'delegate ruling, 2026-09-15 (BLOCKED-253).',
   },
   'P4-05': {
     replacements: [
-      { from: 'packages/core/agent/src/inbox.ts', to: 'packages/core/agent-loop/src/inbox.ts', kind: 'B', stage: 'U', reason: AGENT_LOOP_INBOX_REASON },
+      { from: 'packages/core/agent/src/inbox.ts', to: 'packages/core/agent-loop/src/inbox.ts', kind: 'B', baselinePath: 'packages/core/agent/src/inbox.ts', stage: 'U', reason: AGENT_LOOP_INBOX_REASON },
     ],
     authorization: 'delegate ruling, 2026-09-15 (BLOCKED-253).',
   },
   'P4-06': {
     replacements: [
-      { from: 'packages/core/agent/src/inbox.ts', to: 'packages/core/agent-loop/src/inbox.ts', kind: 'B', stage: 'C', reason: AGENT_LOOP_INBOX_REASON },
-      { from: 'packages/core/agent/src/inbox.ts', to: 'packages/core/agent-loop/src/inbox.ts', kind: 'B', stage: 'U', reason: AGENT_LOOP_INBOX_REASON },
+      { from: 'packages/core/agent/src/inbox.ts', to: 'packages/core/agent-loop/src/inbox.ts', kind: 'B', baselinePath: 'packages/core/agent/src/inbox.ts', stage: 'C', reason: AGENT_LOOP_INBOX_REASON },
+      { from: 'packages/core/agent/src/inbox.ts', to: 'packages/core/agent-loop/src/inbox.ts', kind: 'B', baselinePath: 'packages/core/agent/src/inbox.ts', stage: 'U', reason: AGENT_LOOP_INBOX_REASON },
     ],
     authorization: 'delegate ruling, 2026-09-15 (BLOCKED-253).',
   },
   'P5-10': {
     replacements: [
-      { from: 'packages/core/agent/src/inbox.ts', to: 'packages/core/agent-loop/src/inbox.ts', kind: 'B', stage: 'U', reason: AGENT_LOOP_INBOX_REASON },
+      { from: 'packages/core/agent/src/inbox.ts', to: 'packages/core/agent-loop/src/inbox.ts', kind: 'B', baselinePath: 'packages/core/agent/src/inbox.ts', stage: 'U', reason: AGENT_LOOP_INBOX_REASON },
     ],
     authorization: 'delegate ruling, 2026-09-15 (BLOCKED-253).',
   },
