@@ -6979,3 +6979,32 @@ What the stages declare: P3-10.U names `packages/core/agent/src/types.ts` and `p
 **Not established here.** Whether the epics that already touch these files (P3-01 through the overlay, P4-11 and P5-04 through declarations) are affected by the proposed changes; the code-level design, which is in the item-100 report and is not ruled.
 
 **Related.** BLOCKED-256 records that the durable session write path and evidence-package assembly have no redaction seam. Redacting provider errors in `adapter-failure.ts` changes one source of the text that reaches the log, not the log's write path, so neither entry closes the other. BLOCKED-253 (viii) records both epics' test declarations that do not exist.
+
+### BLOCKED-258 — P2-12's must[2] predicate has no caller, and the lease seam that must call it is declared by no epic
+**Status:** OPEN (2026-09-15). Recorded, not scheduled: P2-12's four cells are GREEN (F greened at `191aa1e502`, recorded in `6cc78ccf5b`), so nothing here blocks a cell. What it blocks is the claim that `must[2]` is satisfied. The landing file is also undeclared, which puts the eventual fix in the same class as BLOCKED-257 — at a lower priority, because no stage is waiting on it.
+
+**What must[2] says and what exists.** P2-12's `must[2]` is *"worker 获取新 lease/action 前必须检查。"* — a worker must check the emergency stop before taking a new lease or action. The predicate exists: `mayStartNewWork` is defined and tested in `@deepseek-ai/dsh-control-plane` (`src/channel.ts`, `src/index.ts`, with `tests/channel.spec.ts` and `tests/emergency-stop.e2e.spec.ts`). The lease seam does not consult it: `packages/run/lease/src/plugin.ts:68` `acquire(workItem, worker, nowMs, leaseMs)` delegates straight to `store.acquire` (`store.ts:87`), and the file names no stop state at all — `stop`, `emergency` and `mayStart` match 0 of its 99 lines.
+
+Both facts were measured and written down during P2-12's own preflight, and both are already in the tree:
+
+- `spec/first100/exec/evidence-P2-12.md:13` — *"must[2] a worker checks the stop before taking a new lease or action | predicate exists (`mayStartNewWork`); **no caller** — `run/lease/src/plugin.ts` reads no stop state"*
+- `spec/first100/exec/preflight-P2-12.md:40` — *"**The lease seam exists and has no stop gate.**"*
+
+**Why this entry exists at all.** Those two lines are the only places the gap is recorded. `git grep -lw mayStartNewWork` over `spec/first100/exec/BLOCKED-QUEUE.md` matched **0** times before this entry: the finding had been made, written into an evidence document, and never entered a queue anyone works from. An evidence document records what was observed; it does not schedule anything.
+
+**Where the fix would land, and who declares it.**
+
+| file | declared by | files overlay | why the change lands here |
+|---|---|---|---|
+| `packages/run/lease/src/plugin.ts` | no epic | none | `acquire` is the only entry point a worker passes through before holding a new lease; a stop check anywhere later cannot stop the lease from being taken |
+
+Both columns are empty, so this is the **no-record-at-all** case. Of BLOCKED-257's four files, two are in the overlay (`execution-world/src/plugin.ts` through P3-01's `[U]`, `core/tools/src/external-effect.ts` through six epics') and one is declared outright (`llm/src/adapter-failure.ts`, by P4-11 and P5-04); only `llm-deepseek/src/adapter.ts` is, like this one, in neither column. (P4-07 declares four other files under `packages/run/lease/` — `src/types.ts`, `src/index.ts`, `src/store.ts` and `tests/fencing.e2e.ts` — and the overlay carries one, `tests/fault-matrix.spec.ts`. Neither set reaches `src/plugin.ts`.)
+
+What P2-12 declares: `apps/cli/src/process-shutdown.ts`, `packages/core/agent/src/dispatch.ts`, `packages/core/agent-loop/src/inbox.ts`, `packages/sdk/protocol/src/transport.ts` and `src/types.ts`, `packages/interaction/human-channel/src/index.ts` and `src/types.ts`, `packages/interaction/control-plane/src/index.ts`, `packages/interaction/control-plane/tests/emergency-stop.e2e.ts` — nine paths, none of them the lease seam.
+
+**Why the existing records do not cover it.** Identical to BLOCKED-257's reasoning: `deliverablePathPatches` replaces a declared path with an approved one and cannot introduce a deliverable the epic never declared; the files overlay describes what a freeze entry touched after the fact and authorizes nothing.
+
+**What this does not claim.**
+- Not that P2-12 was greened wrongly. The four cells pin their frozen commands and those commands pass; `acceptance[0]`, `[1]` and `[2]` each carry coverage entries. `must` and `acceptance` are separately numbered, so `must[2]`'s gap does not contradict `acceptance[2]` being covered.
+- Not that the lease seam is the only possible landing point — it is the one the preflight named. No second candidate was searched for.
+- The caller search used `git grep -lw mayStartNewWork`, a word-boundary match over tracked files. An alias, a re-export under another name, or a call through an interface would not appear in it.
