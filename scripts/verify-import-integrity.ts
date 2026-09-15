@@ -31,7 +31,7 @@
  * the local build and breaks the install. `tests/` is out of scope for the same
  * reason inverted: it never ships, so a dev declaration is exactly right there.
  *
- * **Scope, and its two deliberate holes, both measured.**
+ * **Scope, and its four deliberate holes, each measured.**
  * `packages/<group>/<pkg>/src` and `apps/<app>/src`, HOST face only.
  *
  * `vendor/*` is out: those manifests are pinned upstream copies, an undeclared
@@ -46,10 +46,26 @@
  * path aliases, so for that face the alias IS the resolution contract and a
  * manifest declaration is not what makes the import work. 320 findings that
  * describe a deliberate, uniform practice would be a gate arguing with the
- * architecture; the 12 Host-face findings that remain are each a real
- * artifact-plane hazard. Whether the Client face SHOULD declare those edges is
- * a real question and a separate one — it is recorded for the delegate rather
- * than answered by this gate's exit code.
+ * architecture. Whether the Client face SHOULD declare those edges is a real
+ * question and a separate one — it is recorded for the delegate rather than
+ * answered by this gate's exit code.
+ *
+ * **`private: true` packages are out.** A private package is never installed by
+ * a consumer, so the reason `devDependencies` does not count has no subject:
+ * there is no install to break. Its output is produced by a packager
+ * (electron-builder for `apps/desktop`) or consumed only inside this workspace.
+ * Measured 2026-09-15 at the un-hold commit, on the manifests this gate reads:
+ * 6 of 323 are private, and none of the 6 carries `publishConfig`.
+ *
+ * **`apps/web` is out by name, with its reason.** It publishes `dist/`, a Vite
+ * application bundle, not `src/`: its build config sets no `external`, the
+ * built output carries no bare `@deepseek-ai/*` specifier, and its imports
+ * resolve through the `tsconfig.base.json` path aliases, as the Client face's
+ * do. The property that justifies this cannot be read from a manifest, so the
+ * exemption is enumerated in {@link BUNDLED_APPLICATION_EXCLUDE}, not
+ * generalised: a new entry needs the same two measurements. A `files`-based
+ * rule was measured and rejected, because no package here ships `src/` and it
+ * excluded all 323.
  *
  * Usage: `pnpm run verify-import-integrity`
  *
@@ -81,6 +97,25 @@ const SHIPPED_SECTIONS = ['dependencies', 'peerDependencies', 'optionalDependenc
  */
 export function isClientFaceSource(file: string): boolean {
   return file.startsWith('packages/client/') || file.includes('/src/client/')
+}
+
+/**
+ * Packages whose `src/` is bundled into a published application rather than
+ * shipped, each with the measured reason. See the scope note above.
+ */
+export const BUNDLED_APPLICATION_EXCLUDE: ReadonlyMap<string, string> = new Map([
+  ['@deepseek-ai/dsh-web-frontend', 'apps/web publishes a Vite bundle in dist/ with no external and no bare @deepseek-ai/* specifier in its output'],
+])
+
+/**
+ * Whether a manifest is out of this gate's scope because no consumer installs
+ * its `src/` as shipped.
+ * @param name - the manifest's package name.
+ * @param manifest - the parsed manifest, whose `private` field is read as JSON.
+ * @returns true for a `private: true` package or a named bundled application.
+ */
+export function isUninstalledPackage(name: string, manifest: object): boolean {
+  return ('private' in manifest && manifest.private === true) || BUNDLED_APPLICATION_EXCLUDE.has(name)
 }
 
 /** One undeclared runtime import, named where a reader can go fix it. */
@@ -140,6 +175,8 @@ export function undeclaredImports(repoRoot: string): readonly UndeclaredImport[]
   for (const pkg of readWorkspacePackageManifests(repoRoot).all) {
     // Vendored packages are pinned copies; see the scope note above.
     if (pkg.dir.startsWith('vendor/')) continue
+    // Private packages and bundled applications ship no src/; see the scope note above.
+    if (isUninstalledPackage(pkg.name, pkg.manifest)) continue
     const declared = new Set(shippedDeclarations(pkg.manifest))
     // A package reaches its own subpaths by name through its own `exports` map.
     // That is a self-reference, and declaring it would be a cycle.

@@ -12,7 +12,9 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import {
+  BUNDLED_APPLICATION_EXCLUDE,
   isClientFaceSource,
+  isUninstalledPackage,
   packageNameOf,
   shippedDeclarations,
   undeclaredImports,
@@ -165,5 +167,33 @@ describe('undeclaredImports', () => {
     writeFileSync(join(dir, 'package.json'), `${JSON.stringify({ name: '@deepseek-ai/dsh-client-ui-chat' }, null, 2)}\n`)
     writeFileSync(join(dir, 'src', 'index.ts'), "import { store } from '@deepseek-ai/dsh-client-store'\nexport const used = store\n")
     expect(undeclaredImports(root)).toStrictEqual([])
+  })
+
+  it('skips a private package, which no consumer installs', () => {
+    const root = workspace(
+      { name: NAME, private: true },
+      { 'index.ts': "import { thing } from '@deepseek-ai/schemastery'\nexport const used = thing\n" },
+    )
+    expect(undeclaredImports(root)).toStrictEqual([])
+  })
+
+  it('still reports a package whose private field is anything but true', () => {
+    const source = { 'index.ts': "import { thing } from '@deepseek-ai/schemastery'\nexport const used = thing\n" }
+    expect(undeclaredImports(workspace({ name: NAME, private: false }, source))).toHaveLength(1)
+    expect(undeclaredImports(workspace({ name: NAME, private: 'true' }, source))).toHaveLength(1)
+  })
+
+  it('skips a named bundled application, and only that name', () => {
+    const source = { 'index.ts': "import { web } from '@deepseek-ai/dsh-client-web'\nexport const used = web\n" }
+    expect(undeclaredImports(workspace({ name: '@deepseek-ai/dsh-web-frontend' }, source))).toStrictEqual([])
+    expect(undeclaredImports(workspace({ name: '@deepseek-ai/dsh-web-frontend-next' }, source))).toHaveLength(1)
+  })
+})
+
+describe('isUninstalledPackage', () => {
+  it('names private packages and the enumerated bundled applications', () => {
+    expect(isUninstalledPackage(NAME, { private: true })).toBe(true)
+    expect(isUninstalledPackage(NAME, {})).toBe(false)
+    for (const name of BUNDLED_APPLICATION_EXCLUDE.keys()) expect(isUninstalledPackage(name, {})).toBe(true)
   })
 })

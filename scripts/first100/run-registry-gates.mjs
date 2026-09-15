@@ -137,34 +137,24 @@ const SETS = new Map([
 const HELD_BACK = new Map([
   ['verify-translation-pairing', {
     reason:
-      '14 bilingual doc pairs are out of sync — the English side of several READMEs and docs/subsystems/core.md moved without its Chinese counterpart. '
-      + 'The fix is translation, and AGENTS.md reserves `dsh-translate-docs` to explicit user invocation; re-recording the pair state instead would tell '
-      + 'the gate the two sides agree when they do not.',
-    until: 'BLOCKED-124 closes — the user authorizes the translation pass, or rules which pairs diverge only cosmetically.',
-  }],
-  ['verify-import-integrity', {
-    reason:
-      'The gate is new and the tree it lands on already violates it 12 times in 8 packages, none of them owned by the lane that wrote it. '
-      + 'Running it red would fail every push over other lanes\' manifests, and editing eight other epics\' packages to land a gate is the '
-      + 'scope creep the program forbids. Each violation with the owner the registry actually gives, because "declared by their owning '
-      + 'packages" needs a subject or nobody reads it:\n'
-      + '             dsh-retry -> @deepseek-ai/schemastery (reliability/retry/src/usage.ts:13) — THE defect this gate was asked for, still '
-      + 'undeclared on this base. Package is P4-11\'s, but `usage.ts` is NOT among P4-11\'s declared files (it declares index/classify/budget/'
-      + 'circuit.ts), so the path arrived through an overlay: attributed to P4-11 by package, not by registry path. Closes BLOCKED-186.\n'
-      + '             @deepseek-ai/dsh -> dsh-brand, three files. apps/cli/src/plugin.ts is named by seven epics (P1-01/02/03/04/05/10/12) '
-      + 'and profile-boot.ts by six (P0-02, P0-05, P1-01, P1-03, P1-07, P8-10) — a shared file the registry cannot attribute to one owner; '
-      + 'plugin-migration.ts is named by NO epic at all. Owner is the apps/cli manifest, whoever touches it next.\n'
-      + '             dsh-agent-loop -> dsh-capability-token (core/agent-loop/src/tool-calls.ts:20). Named by six epics '
-      + '(P2-03, P2-05, P2-06, P3-03, P4-12, P7-02); the import itself is P2-02\'s capability-token line, so P2-02 by subject.\n'
-      + '             dsh-repeat-tool-reminder -> dsh-llm (guard/repeat-tool-reminder/src/index.ts:12) — P7-06, unambiguous.\n'
-      + '             dsh-web-frontend -> dsh-client-web (apps/web/src/main.ts:2) — P8-08, unambiguous; '
-      + '-> dsh-experimental-webworker-runtime (apps/web/src/preview.ts:9) — unowned.\n'
-      + '             dsh-tmux-context -> dsh-llm, dsh-tool-skill -> dsh-session, and dsh-experimental-webworker-runtime -> dsh-app-boot '
-      + 'and dsh-cmdline — all four unowned: no registry epic names those files.',
+      'As of 9b87b4beb36a0e138330c5fc2fccfc3c4522ec46 (measured with the un-hold change applied but uncommitted; it touches no pairing input), measured by `npx tsx scripts/verify-translation-pairing.ts --list`: 880 ok, 12 out-of-sync, 28 missing, of 920 pairs in scope. '
+      + 'These numbers were measured when this text was written and are not regenerated; re-run that command before trusting them or reinstating the gate. '
+      + 'An earlier version of this note said 14 pairs and named docs/subsystems/core.md — the count was wrong and core.md is not among them '
+      + '(docs/subsystems/subagent.md is), which is what a hand-maintained number does when the tree moves under it.\n'
+      + '             The 12 out-of-sync are NOT "the English side moved ahead". Compared against the blob each .i18n.yaml records, both sides have '
+      + 'changed in all 12 — the re-anchor merged upstream edits to both languages — so none can be closed by re-recording alone. The work '
+      + 'concentrates in one pair: docs/persistence-catalog.md is EN +458/-89 with 254 lines of fence divergence (938 vs 684), while the other '
+      + 'eleven total EN +138/-56. Three pairs carry fence differences (254 / 15 / 6 lines); fences are byte-identical by contract, so that part is '
+      + 'mechanical. The remaining nine differ only in prose.\n'
+      + '             The 28 `missing` are a different fact: their Chinese side does not exist at all. They need new translation, not reconciliation, '
+      + 'and counting them together with the 12 would hide that.\n'
+      + '             The fix is translation, and AGENTS.md reserves `dsh-translate-docs` to explicit user invocation; re-recording the pair state '
+      + 'instead would tell the gate the two sides agree when they do not.',
     until:
-      'all 12 are declared by the manifests above. Unowned paths have no epic to wait for, so they go to whoever edits that manifest next '
-      + 'rather than to a queue. The gate is exercised meanwhile by scripts/verify-import-integrity.spec.ts, whose 14 cases include the '
-      + 'positive control this hold would otherwise hide: the same import is reported when undeclared and silent once declared.',
+      'BLOCKED-124 closes — the user authorizes the translation pass, or rules which pairs diverge only cosmetically. The per-pair sizes above are '
+      + 'the input to that decision: four pairs changed by equal amounts on both sides (+1/-1, +24/-9, +1/-1) are the likeliest cosmetic candidates, '
+      + 'but that is a reading of content rather than a measurement and is left to the ruling. Re-run the gate before reinstating; this entry states '
+      + 'what was true at 9b87b4beb36a0e138330c5fc2fccfc3c4522ec46, not what is true now.',
   }],
 ])
 
