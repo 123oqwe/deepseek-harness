@@ -10,7 +10,8 @@
  * Registry references (an epic's `files` and its `stages.*.files`) are plan
  * paths, and for an unstarted epic they do not exist by construction. They are
  * never a failure here. The subset belonging to ACCEPTED epics is printed on
- * stdout for triage.
+ * stdout for triage, after resolving each reference through the approved
+ * deliverable-path patches in `tests/first100/adjudication.json`.
  *
  * Usage: `node scripts/first100/verify-declared-files-exist.mjs`
  *
@@ -25,6 +26,7 @@ const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const FREEZE_PATH = join(REPO_ROOT, 'spec/first100/exec/command-freeze.json')
 const REGISTRY_PATH = join(REPO_ROOT, 'tests/first100/registry.json')
 const LEDGER_PATH = join(REPO_ROOT, 'spec/first100/exec/ledger.json')
+const ADJUDICATION_PATH = join(REPO_ROOT, 'tests/first100/adjudication.json')
 
 /**
  * Declared `files` of live freeze entries that do not exist.
@@ -48,26 +50,37 @@ export function missingFreezeFiles(entries, exists, basenameIndex) {
 
 /**
  * Registry file references of ACCEPTED epics that do not exist. Informational, never a failure.
+ *
+ * A reference an approved deliverable-path patch replaces is resolved through
+ * the patch: a stage reference uses the patch for the same epic and stage, and
+ * an epic-level reference uses any patch of that epic naming the same declared
+ * path. A patched reference whose approved path exists is reported as patched,
+ * not as absent; one whose approved path is absent too stays absent.
  * @param registry - the parsed registry.
  * @param acceptedIds - ids of ACCEPTED epics.
  * @param exists - whether a repo-relative path exists in the tree.
- * @returns `{ where, path }`, where `where` is the epic id or `epic.stage`.
+ * @param patches - the patch entries, each with its `epic` resolved.
+ * @returns `absent` rows `{ where, path }`, carrying `approvedPath` when a patch named an absent target, and
+ *   `patched` rows `{ where, path, approvedPath }`; `where` is the epic id or `epic.stage`.
  */
-export function missingAcceptedRegistryRefs(registry, acceptedIds, exists) {
-  const missing = []
+export function missingAcceptedRegistryRefs(registry, acceptedIds, exists, patches) {
+  const absent = []
+  const patched = []
+  const resolve = (epicId, stage, where, path) => {
+    if (exists(path)) return
+    const patch = patches.find(p => p.epic === epicId && p.declaredPath === path && (stage === undefined || p.stage === stage))
+    if (patch === undefined) absent.push({ where, path })
+    else if (exists(patch.approvedPath)) patched.push({ where, path, approvedPath: patch.approvedPath })
+    else absent.push({ where, path, approvedPath: patch.approvedPath })
+  }
   for (const epic of registry.epics) {
     if (!acceptedIds.has(epic.id)) continue
-    for (const file of epic.files ?? []) {
-      const path = typeof file === 'string' ? file : file.path
-      if (!exists(path)) missing.push({ where: epic.id, path })
-    }
+    for (const file of epic.files ?? []) resolve(epic.id, undefined, epic.id, typeof file === 'string' ? file : file.path)
     for (const [stage, spec] of Object.entries(epic.stages ?? {})) {
-      for (const path of spec.files ?? []) {
-        if (!exists(path)) missing.push({ where: `${epic.id}.${stage}`, path })
-      }
+      for (const path of spec.files ?? []) resolve(epic.id, stage, `${epic.id}.${stage}`, path)
     }
   }
-  return missing
+  return { absent, patched }
 }
 
 function main() {
@@ -82,10 +95,17 @@ function main() {
 
   const rows = JSON.parse(readFileSync(LEDGER_PATH, 'utf8')).rows
   const accepted = new Set(Object.entries(rows).filter(([, row]) => row.status === 'ACCEPTED').map(([id]) => id))
-  const planned = missingAcceptedRegistryRefs(JSON.parse(readFileSync(REGISTRY_PATH, 'utf8')), accepted, exists)
-  if (planned.length > 0) {
-    console.log(`verify-declared-files-exist: ${String(planned.length)} registry file reference(s) of ACCEPTED epics are absent `
-      + `(informational, not a failure):\n  ${planned.map(({ where, path }) => `${where} ${path}`).join('\n  ')}`)
+  // A patch entry's epic falls back to its own key, as generate-specs reads it.
+  const patches = Object.entries(JSON.parse(readFileSync(ADJUDICATION_PATH, 'utf8')).deliverablePathPatches?.entries ?? {})
+    .map(([key, patch]) => ({ ...patch, epic: patch.epic ?? key }))
+  const { absent, patched } = missingAcceptedRegistryRefs(JSON.parse(readFileSync(REGISTRY_PATH, 'utf8')), accepted, exists, patches)
+  if (patched.length > 0) {
+    console.log(`verify-declared-files-exist: ${String(patched.length)} registry file reference(s) of ACCEPTED epics are replaced by an approved `
+      + `deliverable-path patch whose target exists (informational):\n  ${patched.map(({ where, path, approvedPath }) => `${where} ${path} patched -> ${approvedPath}`).join('\n  ')}`)
+  }
+  if (absent.length > 0) {
+    console.log(`verify-declared-files-exist: ${String(absent.length)} registry file reference(s) of ACCEPTED epics are absent `
+      + `(informational, not a failure):\n  ${absent.map(({ where, path, approvedPath }) => `${where} ${path}${approvedPath === undefined ? '' : ` (patched -> ${approvedPath}, also absent)`}`).join('\n  ')}`)
   }
 
   if (missing.length > 0) {

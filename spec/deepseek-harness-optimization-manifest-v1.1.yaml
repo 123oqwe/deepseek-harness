@@ -913,7 +913,7 @@ adjudication:
     note: "Each sequence is a permutation of the same-wave writers with the canonical owner (the N creator) first. The result.ts sequence resolves the documented P5-06/P6-09 file-contract cycle (matrix gap note: P5-06 depends on P6-09 yet P6-09 consumes result.ts as prior_output introduced_by P5-06) by FILE-LEVEL serialization (P5-06 creates, then P6-09 modifies) — NOT a DAG edge, which would cycle. Same-wave adjacent pairs in every sequence have explicit predecessorEdges; computeDag verifies the union stays acyclic."
   deliverablePathPatches:
     status: "ADJUDICATED"
-    count: 51
+    count: 54
     note: "Maintainer-approved amendments to an epic's declared deliverable path where the byte-locked registry.epics[].files[]/stages[].files path (extracted verbatim from the pinned planning sources, itself frozen to the baseline SHA current when the source was authored) collides with an unrelated existing artifact discovered during implementation, or is otherwise provably unbuildable as declared (BLOCKED-012's class: a forced same-stage deviation, e.g. a real dependency cycle). The registry path stays byte-locked and unedited; this overlay records the approved substitute path a Writer must target instead. A patch never re-scopes the epic's must/acceptance/nonGoals clauses -- only the on-disk path of the named deliverable. An entry's object key is unique per patch (never reused); `epic` names the real epic id when it differs from the key (BLOCKED-012 entries use a descriptive key since one epic/stage can carry more than one patch)."
     entries:
       P2-01-U-agent-identity-attachment:
@@ -1318,6 +1318,33 @@ adjudication:
         declaredPath: "packages/sandbox/sandbox/tests/policy.spec.ts"
         approvedPath: "packages/execution/execution-world/tests/policy.spec.ts"
         reason: "Not buildable as declared: a package cycle. P3-02 must[0]'s policy types reference P3-01's World*Spec dimension types, and `execution-world` already imports `dsh-sandbox` (`local-provider.ts:31` takes `SandboxPolicy`), so a policy type inside `sandbox` would close `sandbox -> execution-world -> sandbox`. Measured on f24573ddfe: sandbox's tsconfig references cosmokit/cordis/llm/session and not execution-world, and adding it is the edge that closes the loop. The registry path was very likely authored before P3-01 existed — the same reason P3-02's seven dimensions turned out to be P3-01's first seven word for word. Clause ownership is unchanged: these remain P3-02's clauses, and the epic still writes the seven types must[0] names. Delegate ruling, addendum 376. The third file consolidates the declared network.ts and process.ts into one solver module: the two dimensions carry no logic of their own beyond the closed-allowlist rule every dimension shares, and two files holding one rule each would have split the solver that must see all seven at once."
+      P1-10-C-rollback-e2e-suffix:
+        epic: "P1-10"
+        stage: "C"
+        declaredPath: "packages/plugin/plugin-migrations/tests/rollback.e2e.ts"
+        approvedPath: "packages/plugin/plugin-migrations/tests/rollback.e2e.spec.ts"
+        reason: "SUBSTITUTION, BLOCKED-070's PREVENTION subclass, recorded retroactively. The file was written as `packages/plugin/plugin-migrations/tests/rollback.e2e.spec.ts` in 4ea38b1059 without a patch, so the registry still declares `packages/plugin/plugin-migrations/tests/rollback.e2e.ts` for this stage; this entry records the same substitution the other stages of this family already carry. `.e2e.ts` routes into vitest.e2e.config.ts, whose suites the default observation never runs; `.e2e.spec.ts` keeps the e2e name and enters the default channel. The declaration is corrected through this overlay rather than in registry.json, which stays as extracted (BLOCKED-253; delegate ruling, 2026-09-15)."
+        approvedAt: "2026-09-15"
+        approvedBy: "first100-delegate-78"
+        basis: "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070; spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-253"
+      P4-12-C-idempotency-e2e-suffix:
+        epic: "P4-12"
+        stage: "C"
+        declaredPath: "packages/action/action-ledger/tests/idempotency.e2e.ts"
+        approvedPath: "packages/action/action-ledger/tests/idempotency.e2e.spec.ts"
+        reason: "SUBSTITUTION, BLOCKED-070's PREVENTION subclass, recorded retroactively. The file was written as `packages/action/action-ledger/tests/idempotency.e2e.spec.ts` in 00cb4b19c5 without a patch, so the registry still declares `packages/action/action-ledger/tests/idempotency.e2e.ts` for this stage; this entry records the same substitution the other stages of this family already carry. `.e2e.ts` routes into vitest.e2e.config.ts, whose suites the default observation never runs; `.e2e.spec.ts` keeps the e2e name and enters the default channel. The declaration is corrected through this overlay rather than in registry.json, which stays as extracted (BLOCKED-253; delegate ruling, 2026-09-15)."
+        approvedAt: "2026-09-15"
+        approvedBy: "first100-delegate-78"
+        basis: "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070; spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-253"
+      P4-12-F-idempotency-e2e-suffix:
+        epic: "P4-12"
+        stage: "F"
+        declaredPath: "packages/action/action-ledger/tests/idempotency.e2e.ts"
+        approvedPath: "packages/action/action-ledger/tests/idempotency.e2e.spec.ts"
+        reason: "SUBSTITUTION, BLOCKED-070's PREVENTION subclass, recorded retroactively. The file was written as `packages/action/action-ledger/tests/idempotency.e2e.spec.ts` in 00cb4b19c5 without a patch, so the registry still declares `packages/action/action-ledger/tests/idempotency.e2e.ts` for this stage; this entry records the same substitution the other stages of this family already carry. `.e2e.ts` routes into vitest.e2e.config.ts, whose suites the default observation never runs; `.e2e.spec.ts` keeps the e2e name and enters the default channel. The declaration is corrected through this overlay rather than in registry.json, which stays as extracted (BLOCKED-253; delegate ruling, 2026-09-15)."
+        approvedAt: "2026-09-15"
+        approvedBy: "first100-delegate-78"
+        basis: "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070; spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-253"
 remainingPending:
   sameWaveConflicts: 0
   unassignedOwners: 1

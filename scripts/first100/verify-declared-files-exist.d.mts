@@ -26,8 +26,20 @@ export function missingFreezeFiles(
   basenameIndex: ReadonlyMap<string, readonly string[]>,
 ): { label: string; path: string; sameNameElsewhere: readonly string[] }[]
 
+/** One approved deliverable-path patch from `adjudication.json`, with its epic resolved. */
+export interface DeliverablePathPatch {
+  readonly epic: string
+  readonly stage: string
+  readonly declaredPath: string
+  readonly approvedPath: string
+}
+
 export function missingAcceptedRegistryRefs(
   registry: { readonly epics: readonly DeclaredFilesEpic[] },
   acceptedIds: ReadonlySet<string>,
   exists: (path: string) => boolean,
-): { where: string; path: string }[]
+  patches: readonly DeliverablePathPatch[],
+): {
+  absent: { where: string; path: string; approvedPath?: string }[]
+  patched: { where: string; path: string; approvedPath: string }[]
+}
