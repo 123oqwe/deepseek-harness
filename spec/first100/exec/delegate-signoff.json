@@ -498,6 +498,22 @@
       "conclusion": "PASS",
       "delegateSession": "guanjieqiao-92",
       "signedAtUtc": "2026-09-15T01:28:14.572Z"
+    },
+    {
+      "epic": "P6-01",
+      "rowDigestSha256": "f34523d2c9ea284a62b0218c3613646ab7ae25f12d5f34bb3fd172b14cab64d2",
+      "conclusion": "PASS",
+      "delegateSession": "first100-delegate-78",
+      "signedAtUtc": "2026-09-15T07:15:11.126Z",
+      "reason": "Delegate re-read 2026-09-15 on f81f9f6bf8: C/P/U/F GREEN (runs 34088363628, 34573807027 x2, 33897371649), supplement U.1 GREEN on run 34928038271 @ D 3672337016 (11 cases, greened today after the drift-by-origin fix exposed it as frozen-but-never-observed); acceptance[0..2] each cited in acceptance-coverage.json (C, C+U, C); 0 open findings; no cell cites a file in the base-align conflict set (S5/S6/S7); the full suite at D ran its cases green (run 34928038271, 0 failures)."
+    },
+    {
+      "epic": "P4-02",
+      "rowDigestSha256": "10a8cb94731a431f58aaa6cb3caf0de16deb82f9b15a236f0bd76c469cae5348",
+      "conclusion": "PASS",
+      "delegateSession": "first100-delegate-78",
+      "signedAtUtc": "2026-09-15T07:15:11.596Z",
+      "reason": "Delegate re-read 2026-09-15 on f81f9f6bf8: C/P/U/F GREEN (runs 34557063530, 34573807027, 34652643903 x2), supplements C.1/P.1 (34652643903), U.1 (34660413109), U.2 (34699917546) GREEN; acceptance[0..2] each cited in acceptance-coverage.json (C cases); 0 open findings; no cell cites a file in the base-align conflict set (S5/S6/S7); the full suite at D ran its cases green (run 34928038271, 0 failures)."
     }
   ]
 }
