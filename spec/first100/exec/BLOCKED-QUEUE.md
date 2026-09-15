@@ -298,7 +298,7 @@ Recorded per §12.74(b), before P6-09 starts. Same shape as BLOCKED-169/170/171:
 
 ### BLOCKED-168 — P2-02's delegation half has no production caller, and P2-02 is ACCEPTED
 
-**State: CLOSED for the delegation half (P2-02.U). The revocation PRODUCER is the remaining open question and is tracked at the end of this entry.**
+**Status: CLOSED for the delegation half (P2-02.U). The revocation PRODUCER is the remaining open question and is tracked at the end of this entry.**
 
 Re-measured after P2-02.U: delegation now has a production caller. `applyChildComposition` derives the child's token at `packages/subagent/subagent/src/child-agent.ts:263` — at the same point, and with the same `composition.toolFilter`, that narrows the child's tool VISIBILITY, so authority and visibility are decided together rather than one being enforced while the other is claimed. The derivation itself goes through `capabilityTokens.deriveChild` → `service.attenuate`, which RECORDS the child, without which `lineageOf` cannot walk to it and acceptance[1]'s revocation check is blind.
 
@@ -469,7 +469,7 @@ This generalizes past `subagent`: **every scope-registered tool classified as un
 
 ### BLOCKED-161 — three ledger-shape defects, each of which made a real check silently unenforceable
 
-**State: FIXED, recorded because each was invisible in a different way and the same shapes will recur.**
+**Status: FIXED, recorded because each was invisible in a different way and the same shapes will recur.**
 
 Found while bringing P4-06 / P4-07 / P4-09 / P4-12 / P5-10 / P5-11 to predicate (iv). None was a wrong verdict; each made a check *unable to reach* the thing it verifies, which reads as a passing row rather than an error.
 
@@ -497,7 +497,7 @@ All three are the same failure mode at the data layer that this program keeps fi
 
 ### BLOCKED-160 — P9-08 and P9-09 have decision modules with zero callers, and their acceptance clauses need a credential and spend the executor may not supply
 
-**State: OPEN, measured. These are the two P9 items the terminal condition still lacks a record for — `p9-verification.json` reports both as `PREMATURE`, which is neither VERIFIED nor scheduled-BLOCKED.**
+**Status: OPEN, measured. These are the two P9 items the terminal condition still lacks a record for — `p9-verification.json` reports both as `PREMATURE`, which is neither VERIFIED nor scheduled-BLOCKED.**
 
 ## What exists, and what calls it
 
@@ -548,7 +548,7 @@ Those three are the design the W21 slice should start from; they cost one measur
 
 ### BLOCKED-159 — P2-03 acceptance[2]'s "requires approval" half has no enforcing consumer; deferred to P2-04.U
 
-**State: RULED §12.46-B. Targeted deferral — `landsIn: P2-04.U`. P2-03 signs on its declaration half; the enforcement half is P2-04's Usage subject and P2-04's readiness gate carries this entry.**
+**Status:** OPEN — **RULED §12.46-B. Targeted deferral — `landsIn: P2-04.U`. P2-03 signs on its declaration half; the enforcement half is P2-04's Usage subject and P2-04's readiness gate carries this entry.**
 
 Measured on the P4-08 U supplement's tree (`git ls-files`, excluding `tests/`, `*.spec.ts`, `lib/`, `scripts/`):
 
@@ -643,7 +643,7 @@ P8-01 was signed off and accepted under this ruling: the shared titles are a rep
 
 **Updated 2026-09-06, delegate ruling: the other twelve gates are IN CI now, and this one is held back with a printed reason.** The delegate's wording: a gate set of twelve passing gates should not sit outside CI for five days behind a thirteenth. `scripts/first100/run-registry-gates.mjs` runs the set, skips the named gate, and prints the reason and the reinstatement condition on every run — the same shape as `verify-cells-recomputable`'s timed exemption. It is a script rather than a second `&&` chain because two lists of gates diverge, and the one nobody runs locally is the one that rots.
 
-**State:** every other gate in the set passes (`verify-typecheck-host`, `verify-registry-extraction`, `verify-specs`, `test-specs`, `verify-baseline-file-references`, `verify-frozen-titles-resolvable`, `verify-p9-cells`, `verify-doc-budgets`, `constraints`, `architecture:layers`, `verify-module-graph` — all exit 0 as of this entry). The workflow step is NOT committed, because committing a step that runs an already-red gate set produces exactly the standing failure [BLOCKED-057](#blocked-057) says makes a later real regression indistinguishable.
+**Status:** OPEN — awaiting user decision (一) on the translation-pairing gate (BLOCKED-124); every other gate in the set passes (`verify-typecheck-host`, `verify-registry-extraction`, `verify-specs`, `test-specs`, `verify-baseline-file-references`, `verify-frozen-titles-resolvable`, `verify-p9-cells`, `verify-doc-budgets`, `constraints`, `architecture:layers`, `verify-module-graph` — all exit 0 as of this entry). The workflow step is NOT committed, because committing a step that runs an already-red gate set produces exactly the standing failure [BLOCKED-057](#blocked-057) says makes a later real regression indistinguishable.
 
 **Unlock:** the user authorizes the translation pass for those 14 pairs (or rules that a subset may be re-recorded because the divergence is cosmetic, which is a judgement about the content, not about the gate). Then the workflow step lands unchanged from the version already written.
 
@@ -866,7 +866,7 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 ### BLOCKED-131 — RESOLVED 2026-09-06: P2-04's C/P stage split could not be built; the barrel is now B4(f) scaffold in C
 
-**State: RESOLVED by delegate ruling, 2026-09-06.** `src/index.ts` is admitted to the C stage as B4(f) scaffold — a convention-forced file that does not count against the stage limit — and is kept **type-only**, exactly one statement, pinned by its own frozen case so a later runtime export cannot quietly turn the Contract stage into an implementation. Recorded as `SCAFFOLD_FILES` in `extract-registry.mjs`, which names the convention that forces it so the admission is reversible when the convention is. The package is back in the tree; typecheck, lint and the registry gate set are green. **The record below is what was open.**
+**Status: RESOLVED by delegate ruling, 2026-09-06.** `src/index.ts` is admitted to the C stage as B4(f) scaffold — a convention-forced file that does not count against the stage limit — and is kept **type-only**, exactly one statement, pinned by its own frozen case so a later runtime export cannot quietly turn the Contract stage into an implementation. Recorded as `SCAFFOLD_FILES` in `extract-registry.mjs`, which names the convention that forces it so the admission is reversible when the convention is. The package is back in the tree; typecheck, lint and the registry gate set are green. **The record below is what was open.**
 
 **The conflict, measured.** P2-04's registry stages put `src/types.ts`, `src/classify.ts` and `tests/classify.spec.ts` in **C**, and `packages/policy/risk-taxonomy/src/index.ts` in **P**. The root `tsdown.config.ts` builds `workspace: ['vendor/*', 'packages/*/*', 'apps/cli']` with a fixed entry glob `lib/types/{index,invariant,startup}.js` (`tsdown.config.ts:19-20`). There is no per-package exclusion. So the moment the package directory exists without an `index.ts`, `pnpm run typecheck` fails with `Cannot find entry`. Every other package in the repository has one — measured: `risk-taxonomy` was the only `packages/*/*` without `src/index.ts` while it existed.
 
@@ -893,7 +893,7 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 ### BLOCKED-156 — P6-01's four green cells are green on a capability no shipped profile mounts
 
-**State: ANSWERED-BY-USER 2026-09-10, reading 1 — memory ON by default (§12.79; resolution recorded below) — and NOT IMPLEMENTED as of `28990a8eb4` (measured 2026-09-13). The base bundle's `memory` and `memory-context` rows are still `disabled: true`, `durableFileDirectory` has never been added to `packages/bundle/base/cordis.patch.yml` (the only commit that ever touched those rows is `30617b0a67`, 2026-09-04, which added them disabled), and the P6-01.U supplement (U.1, frozen 2026-09-11) boots the headless profile with a fixture that enables the rows itself, the shape the resolution rules out. The entry was opened as OPEN, measured on request before §12.31-B (delegate: "不要在没量的绿上叠新工作"). The three questions, asked of every P6-01 clause subject.**
+**Status:** OPEN — **ANSWERED-BY-USER 2026-09-10, reading 1 — memory ON by default (§12.79; resolution recorded below) — and NOT IMPLEMENTED as of `28990a8eb4` (measured 2026-09-13). The base bundle's `memory` and `memory-context` rows are still `disabled: true`, `durableFileDirectory` has never been added to `packages/bundle/base/cordis.patch.yml` (the only commit that ever touched those rows is `30617b0a67`, 2026-09-04, which added them disabled), and the P6-01.U supplement (U.1, frozen 2026-09-11) boots the headless profile with a fixture that enables the rows itself, the shape the resolution rules out. The entry was opened as OPEN, measured on request before §12.31-B (delegate: "不要在没量的绿上叠新工作"). The three questions, asked of every P6-01 clause subject.**
 
 **Question 1 — does the subject exist?** Yes, for all of them. `MemoryRuntime` implements `propose`/`query`/`get`/`revise`/`forget`/`export`; `registerProvider` swaps providers and three exist (`local-reference`, `fake`, `durable-file`); `requireCompleteAccessContext` enforces must[3]'s four dimensions; `docs/subsystems/memory.md` exists and acceptance[2]'s boundary case reads it.
 
@@ -964,7 +964,7 @@ Six freeze supplements are written, mutation-proved, and green locally, and none
 
 ### BLOCKED-158 — P4-08's must[2] and acceptance[2] decide nothing in production: reconciliation and compaction have no caller
 
-**State: RESOLVED. must[2] by §12.44 option 2, acceptance[2] by §12.46-A — both implemented and mutation-proved. One residual is recorded below: compaction's saving is still unobservable because `inputs` has no producer.**
+**Status: RESOLVED. must[2] by §12.44 option 2, acceptance[2] by §12.46-A — both implemented and mutation-proved. One residual is recorded below: compaction's saving is still unobservable because `inputs` has no producer.**
 
 Measured over `git ls-files`, excluding every `tests/` path, `lib/`, and the owning package `packages/collaboration/workflow-journal/`:
 
@@ -1022,7 +1022,7 @@ The earlier `recordStep` framing is withdrawn: `recordStep`/`startStep` do not e
 
 ### BLOCKED-157 — a case measures peak buffer residual by replacing a process global, so its verdict depends on what else the worker was doing
 
-**State: OPEN, diagnosed. Owner: P3-13 (code-runtime). Not blocking: `packages/experimental/` ships in no bundle.**
+**Status: OPEN, diagnosed. Owner: P3-13 (code-runtime). Not blocking: `packages/experimental/` ships in no bundle.**
 
 `packages/experimental/code-runtime-python/tests/runtime.spec.ts`'s case *charges a structurally-valid but illegal UTF-8 sequence its U+FFFD-decoded cost* replaces the global `Buffer.concat` with an instrumented wrapper, restores it in `finally`, and asserts `maxConcat < 2048`.
 
@@ -1051,7 +1051,7 @@ So the ratio removed the dependency on vitest's shared budget and kept a depende
 
 ### BLOCKED-155 — P6-02 defined a memory record the memory capability does not store, so neither half of its Usage has anywhere to land
 
-**State: OPEN, measured. This blocks P6-02's U redo and, with it, §12.27-3's fold of the blackboard into the memory line.**
+**Status: OPEN, measured. This blocks P6-02's U redo and, with it, §12.27-3's fold of the blackboard into the memory line.**
 
 Measured over `git ls-files`, excluding `packages/memory/`, every `tests/` path, this program's own JSON and the notes archive:
 
@@ -1084,7 +1084,7 @@ Separately and additionally, the WRITE path has no production caller at all: not
 
 ### BLOCKED-154 — P5-11's boards have no producer: nothing in the harness creates a task or a fact
 
-**State: SPLIT (§12.75). The TASK and MAILBOX halves are CLOSED — they have producers now. The FACT half stays OPEN and lands in P6-02.U.**
+**Status:** OPEN — **SPLIT (§12.75). The TASK and MAILBOX halves are CLOSED — they have producers now. The FACT half stays OPEN and lands in P6-02.U.**
 
 Re-measured on this tree, same method as the original table (`git ls-files`, excluding the owning packages, every `tests/` path, this program's JSON and the notes archive):
 
@@ -1128,7 +1128,7 @@ acceptance[0] and acceptance[2] were the two clauses that could be satisfied wit
 
 ### BLOCKED-153 — P5-10's `orderByPriority` belongs at the inbox dequeue point, and `core/agent` cannot import it from where it lives
 
-**State: OPEN, measured, not built.** §12.24-2 ruled that must[1]'s ordering happens at the control-message dequeue point — `packages/core/agent/src/inbox.ts`, the file the registry names. Two things are in the way, and neither is a judgement call I should make alone.
+**Status: OPEN, measured, not built.** §12.24-2 ruled that must[1]'s ordering happens at the control-message dequeue point — `packages/core/agent/src/inbox.ts`, the file the registry names. Two things are in the way, and neither is a judgement call I should make alone.
 
 **1. The function is on the wrong side of a dependency.** `orderByPriority` lives in `packages/subagent/subagent/src/control-convergence.ts`, and `dsh-subagent` depends on `dsh-agent`. So `core/agent`'s inbox cannot import it: the edge only runs the other way. The same shape §12.22-1 fixed for the journal, but the fix is not the same — the journal moved with its whole package, while this is one function inside a file P5-10's registry row declares, sitting beside `decideControl` and `decideConvergence`, which DO belong to the subagent runtime and have their callers there.
 
@@ -1158,7 +1158,7 @@ Five cases pin it, including the restart itself — a ledger built fresh with no
 
 ### BLOCKED-152 — the workflow engine imports `dsh-agent`, a `providers -> orchestration-runtime` edge older than this program
 
-**State: OPEN, placement only, now two edges.** `@deepseek-ai/dsh-workflow-worker-thread -> @deepseek-ai/dsh-agent` is a layer finding of the same kind §12.22-1 removed for the journal, and it predates this program. Recorded on the delegate's instruction so the two are not treated differently — one moved, one left silently.
+**Status: OPEN, placement only, now two edges.** `@deepseek-ai/dsh-workflow-worker-thread -> @deepseek-ai/dsh-agent` is a layer finding of the same kind §12.22-1 removed for the journal, and it predates this program. Recorded on the delegate's instruction so the two are not treated differently — one moved, one left silently.
 
 **A second edge joined it with P4-09's Usage: `-> @deepseek-ai/dsh-workflow-registry` (findings 120 → 121).** The registry is the same kind of thing as the journal was — five pure decisions plus a store — so §12.22-1's argument would move it too. **It does not move as cleanly, and that is measured rather than assumed:** `dsh-workflow-registry` depends on `@deepseek-ai/dsh-workflow` for `WorkflowRunId`, so relocating it into a capability-definitions group trades a `providers -> orchestration-runtime` finding for a `capability-definitions -> orchestration-runtime` one. The same dependency already blocked declaring `registerDefinition` on the `WorkflowEngine` seam: adding it there is a project-reference CYCLE, which `tsc -b` refused outright.
 
@@ -1193,7 +1193,7 @@ The durable source is `ctx.sessionPersistence.load(childId)`, and it is **asynch
 
 ### BLOCKED-150 — P4-09's Usage needs a `workflow()` nesting hook that does not exist, and its own frozen case says so
 
-**State: OPEN. Not built, because building it is a product feature and choosing to add one is not the executor's call.**
+**Status: OPEN. Not built, because building it is a product feature and choosing to add one is not the executor's call.**
 
 Gate (u) reports P4-09.U and P4-09.U.1 as integration gaps (BLOCKED-147). Measured, all five of the epic's subjects have zero production callers, in code:
 
@@ -1219,7 +1219,7 @@ The only matches outside the owning package are this program's own JSON.
 
 ### BLOCKED-149 — CLOSED: the journal moved to a capability-definitions group, and the finding went back to 120
 
-**State: CLOSED by §12.22-1. Reading (1): the package moved to `packages/collaboration/workflow-journal`, the same group the lease contract went to under §12.16, for the same reason. `check-layer-deps` findings 121 → 120.**
+**Status: CLOSED by §12.22-1. Reading (1): the package moved to `packages/collaboration/workflow-journal`, the same group the lease contract went to under §12.16, for the same reason. `check-layer-deps` findings 121 → 120.**
 
 The registry's declared paths moved with it through `FILES_REPLACED` in the extraction — the recorded-replacement route, not a hand edit of the generated registry — with the mechanical reason and the ruling as its authorization. Old freeze entries still cite the old paths and were NOT rewritten: those observations happened at earlier SHAs and rewriting them would restate what a past CI run saw. They surface in the §12.4 overlay with a reason saying exactly that.
 
@@ -1245,7 +1245,7 @@ The new finding: `@deepseek-ai/dsh-workflow-worker-thread -> @deepseek-ai/dsh-wo
 
 ### BLOCKED-148 — CLOSED, and the first version of this entry was wrong about why
 
-**State: CLOSED. The lease directory now derives from the configured home, as §12.20-1 ruled. This entry is kept because its first version stated a cause that measurement then refuted, and deleting it would erase the correction.**
+**Status: CLOSED. The lease directory now derives from the configured home, as §12.20-1 ruled. This entry is kept because its first version stated a cause that measurement then refuted, and deleting it would erase the correction.**
 
 **What I wrote first.** That `!!js dshHomePath('leases')` failed all 16 SDK snapshot scenarios because one `$DSH_HOME` per machine made every concurrently booting profile open the same SQLite lease database, and that `.dsh` worked because it is relative to each launch directory. I put a table in this entry, wrote a placement question on top of it, and asked for a ruling between per-project and per-machine.
 
@@ -1267,7 +1267,7 @@ The new finding: `@deepseek-ai/dsh-workflow-worker-thread -> @deepseek-ai/dsh-wo
 
 ### BLOCKED-147 — gate (u): from 11 entry-level findings to 4 epic-level ones
 
-**State: PARTLY CLOSED by §12.24-3.** The gate now asks per EPIC — the union of an epic's live U entries must contain ≥1 declared `[B]` file — rather than per entry. An early library-level entry records what was observed at the SHA it was frozen against, and a later supplement reaching the consumer does not make that observation untrue; asking each entry separately would have forced the earlier one to be superseded, which is rewriting provenance to satisfy a check about scope. A stage that as a whole never reaches its consumer is still red, and that case is pinned.
+**Status:** OPEN — **PARTLY CLOSED by §12.24-3.** The gate now asks per EPIC — the union of an epic's live U entries must contain ≥1 declared `[B]` file — rather than per entry. An early library-level entry records what was observed at the SHA it was frozen against, and a later supplement reaching the consumer does not make that observation untrue; asking each entry separately would have forced the earlier one to be superseded, which is rewriting provenance to satisfy a check about scope. A stage that as a whole never reaches its consumer is still red, and that case is pinned.
 
 The three citation gaps closed with the reading. P4-06 and P4-08 closed with work: their new U supplements reach `core/agent/src/inbox.ts` and `workflow-worker-thread/src/host.ts` respectively, and neither supersedes an earlier entry.
 
@@ -1316,7 +1316,7 @@ P5-10's `lifecycle.ts` matches `control` once — in the prose of a comment ("th
 
 ### BLOCKED-146 — 4.4a on two ACCEPTED epics: P6-02's clause subjects have ZERO production callers, and P1-03's acceptance[1] subject has none either
 
-**State: OPEN. P6-02 is a sign-off falsified by the same rule that took P2-03, P5-11, P4-08 and P4-07 — measured, not suspected.**
+**Status: OPEN. P6-02 is a sign-off falsified by the same rule that took P2-03, P5-11, P4-08 and P4-07 — measured, not suspected.**
 
 Rule 4.4a: before signing, count a clause subject's production callers, excluding tests. Zero means do not sign. Run against the two epics still owing the count.
 
@@ -1349,7 +1349,7 @@ There is a reading on which acceptance[1] holds anyway: boot reads the lock and 
 
 ### BLOCKED-145 — the Inspector's realm-forwarding case fails intermittently, and it eats an observation each time
 
-**State: OPEN, out of scope, not blocking any cell — but it cost one observation.**
+**Status: OPEN, out of scope, not blocking any cell — but it cost one observation.**
 
 Verbatim, from run 34132816361 @ `1fa938efad` (20330 passed, 1 failed):
 
@@ -1393,7 +1393,7 @@ Three context-created events and **zero `Runtime.consoleAPICalled`**. The event 
 
 ### BLOCKED-144 — `hmr-config` fails intermittently with a wandering case name, and it is NOT the recorded isolation set
 
-**State: OPEN, out of scope, not blocking any cell. Recorded because it was nearly dismissed by name.**
+**Status: OPEN, out of scope, not blocking any cell. Recorded because it was nearly dismissed by name.**
 
 Two observed failures, verbatim:
 
@@ -1415,7 +1415,7 @@ Error: Test timed out in 20000ms.
 
 ### BLOCKED-143 — P4-12 must[0]'s subject is never constructed: no production path builds an ActionManifest
 
-**State: OPEN, blocking P4-12's U stage. Measured before writing any wiring; nothing changed.**
+**Status: OPEN, blocking P4-12's U stage. Measured before writing any wiring; nothing changed.**
 
 must[0] says the ActionManifest MANDATES `idempotencyKey`. The type does — `ActionManifest.idempotencyKey` is required, as is `actor: Principal`. What is missing is anything that builds one.
 
@@ -1442,7 +1442,7 @@ must[0] says the ActionManifest MANDATES `idempotencyKey`. The type does — `Ac
 
 ### BLOCKED-140 — the dedup key omitted `source`, so one sender's message silently suppressed another's
 
-**State: FIXED under delegate ruling §12.9 (2026-09-07). Found by the delegate refusing to sign P4-06, not by any test.**
+**Status: FIXED under delegate ruling §12.9 (2026-09-07). Found by the delegate refusing to sign P4-06, not by any test.**
 
 CloudEvents defines message uniqueness as **`source` + `id`**. P4-06's clause said `(message id, epoch)`, the implementation matched the clause exactly, and eighty frozen titles were green over it.
 
@@ -1466,7 +1466,7 @@ B classified after A consumed: {"action":"drop","reason":"duplicate","key":"5:ev
 
 ### BLOCKED-139 — three hygiene gates are red at HEAD, none of them ours, and nobody is named
 
-**State: OPEN as a durable pointer, by delegate ruling (2026-09-07): recorded here for each owner, not fixed in the intake-dedup slice.**
+**Status: OPEN as a durable pointer, by delegate ruling (2026-09-07): recorded here for each owner, not fixed in the intake-dedup slice.**
 
 Measured while checking whether the new package broke anything. All three predate it, and the counts are what make that unambiguous:
 
@@ -1493,7 +1493,7 @@ The requirement was real and the documentation was not: `docs/cookbook/adding-a-
 
 ### BLOCKED-138 — the durable seen-set speaks a THIRD key format, and a frozen case pins the disagreement while its title claims agreement
 
-**State: OPEN, found while wiring §12.5 B, before the wiring was finished. Nothing changed in a frozen case; that is the delegate's.**
+**Status: OPEN, found while wiring §12.5 B, before the wiring was finished. Nothing changed in a frozen case; that is the delegate's.**
 
 BLOCKED-136 found the dedup rule implemented twice. Wiring the shared rule to the durable seen-set turned up a third:
 
@@ -1516,7 +1516,7 @@ The title asserts agreement between the classifier and the durable state. The as
 
 ### BLOCKED-137 — five straight exact-SHA runs were red on two stale fixtures, and 25 cells were greened from them anyway
 
-**State: FIXED in `e783b1c0e9`, recorded because the fix is the small half.**
+**Status: FIXED in `e783b1c0e9`, recorded because the fix is the small half.**
 
 Every exact-SHA run from `d4034a8f` (2026-09-06 22:20) through `afa84cd5` (2026-09-07 04:25) failed, all five on the same two cases and nothing else: `pwsh-tool-turn` and `persistent-pwsh-tool-turn`, one field, `action/manifest-appended`'s `sequence` — expected `0`, received `1`. The unit suite passed 1159 test files in the same runs.
 
@@ -1548,7 +1548,7 @@ Verified by driving the write-and-clear logic directly: two skipped scenarios pr
 
 ### BLOCKED-136 — the consumer dedup rule is implemented TWICE, and P4-06's copy is the one with no caller
 
-**State: OPEN. Found while looking for must[2]'s production call site, before writing anything.**
+**Status: OPEN. Found while looking for must[2]'s production call site, before writing anything.**
 
 P4-06's U stage declares `packages/core/agent/src/inbox.ts` as the place `classifyIntake` gets wired. Reading it first: **that class is the wrong subject.** `core/agent`'s `Inbox` is a session-log-backed queue of `UserMessage` prompts awaiting turns — `nextTurn` / `nextStep` — with no message id, no epoch, and no cross-process arrival. Wiring an `(id, epoch)` dedup into it would mean inventing an integration nobody asked for.
 
@@ -1570,7 +1570,7 @@ So the situation is:
 
 ### BLOCKED-135 — the plugin lock does not lock integrity: the field it reads is written by nothing
 
-**State: OPEN. This is a defect in a shipped path, not a bookkeeping gap, and it was found by doing P1-03's fourth make-vs-use question rather than by any test.**
+**Status: OPEN. This is a defect in a shipped path, not a bookkeeping gap, and it was found by doing P1-03's fourth make-vs-use question rather than by any test.**
 
 P1-03 must[0] requires the lock to pin `package/version/**integrity**/source commit/manifest digest/...`. Measured on this tree:
 
@@ -1593,7 +1593,7 @@ P1-03 must[0] requires the lock to pin `package/version/**integrity**/source com
 
 ### BLOCKED-134 — the stage `files` list is not a scope boundary, and I built three provenance mechanisms as if it were
 
-**State: OPEN, and the first thing it needs is a ruling on which of two readings is true.**
+**Status: OPEN, and the first thing it needs is a ruling on which of two readings is true.**
 
 Measured across every live freeze entry: **79 of 116 cite at least one file outside their stage's declared `files` list. 58 of those belong to an ACCEPTED epic.** Only 37 are subsets. The files cited outside are ordinary working files — test specs, loader fixtures, composition specs, READMEs, `package.json`s, generated catalogs.
 
@@ -1620,7 +1620,7 @@ Measured across every live freeze entry: **79 of 116 cite at least one file outs
 
 ### BLOCKED-133 — P1-03's unlock signal names an observation none of its declared files can make
 
-**State: OPEN. Needs a files[] decision, same class as BLOCKED-131 and the same class of hazard as BLOCKED-096.**
+**Status: OPEN. Needs a files[] decision, same class as BLOCKED-131 and the same class of hazard as BLOCKED-096.**
 
 P1-03's lock says the unlock is *"a case asserting that a profile whose lock was written by `dsh plugin` is REFUSED at boot when a digest drifts"*, and gives the reason it cannot be written: **no lock has been produced on a real profile.**
 
@@ -1640,7 +1640,7 @@ P1-03's lock says the unlock is *"a case asserting that a profile whose lock was
 
 ### BLOCKED-132 — `capturedAtUtc` records when the LEDGER was written, not when the observation happened; the freeze-lateness check is buildable from the artifact and says 38 cells were frozen late
 
-**State: OPEN. The original entry concluded the check was unbuildable. That conclusion was wrong and is corrected in place below, with the measurement it was blocking.**
+**Status: OPEN. The original entry concluded the check was unbuildable. That conclusion was wrong and is corrected in place below, with the measurement it was blocking.**
 
 BLOCKED-095 asked for the freeze-target listing to be mechanical instead of remembered, arguing that "a check written for a different defect found this one" beats remembering. The natural mechanical form is: **a stage frozen AFTER its own observation was not frozen in advance.** Every input for it appears to exist — `command-freeze.json` carries `frozenAtUtc`, the ledger's green cells carry `capturedAtUtc`. It does not work, and the reason is a field that says one thing and means another.
 
@@ -1678,7 +1678,7 @@ The 19: P0-01.F P0-02.C P0-02.F P0-05.C P0-06.U P0-07.C P0-07.F P1-03.F P2-01.F 
 
 ### BLOCKED-130 — the fiber-store pin is a vendored patch, and a re-vendor removes it with nothing going red
 
-**State: OPEN, durable pointer. Not schedulable work — a standing condition on the vendor sync procedure.**
+**Status: OPEN, durable pointer. Not schedulable work — a standing condition on the vendor sync procedure.**
 
 `vendor/README.md` local modification 20 makes `Fiber.store` an accessor and adds `Fiber.pinStoreName`, which is what stops a plugin on any non-root fiber forging `ctx.trustKernel` for itself and its subtree (SLICE-fiber-A, delegate ruling of 2026-09-06, option 2). The measurement that motivated it: with the patch absent, a plugin doing `ctx.fiber.store['trustKernel'] = forged` reads that forgery straight back from `ctx.trustKernel`, while `ctx.get('trustKernel')` stays correct — so the two resolution paths disagree, and only the one plugins reach most naturally is poisoned.
 

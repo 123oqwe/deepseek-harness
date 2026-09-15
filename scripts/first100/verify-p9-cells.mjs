@@ -144,6 +144,25 @@ export function unanswerableStageBlockers(entries, queue) {
 }
 
 /**
+ * The queue entries written with a `**State:` line and no `**Status:` line.
+ *
+ * The blocker reader reads only `**Status:`, so such an entry has no readable
+ * status. Reported for the reader of `--check`, never a failure: most of these
+ * entries are records no stage is parked on.
+ * @param queue - the text of `BLOCKED-QUEUE.md`.
+ * @returns the entry ids, in file order.
+ */
+export function entriesWithStateButNoStatus(queue) {
+  const headings = [...queue.matchAll(/^#{2,4} (BLOCKED-\d+)\b[^\n]*$/gmu)]
+  return headings
+    .filter((heading, i) => {
+      const body = queue.slice(heading.index + heading[0].length, headings[i + 1]?.index ?? queue.length)
+      return /^\*\*State:/mu.test(body) && !/\*\*Status:/u.test(body)
+    })
+    .map(heading => heading[1])
+}
+
+/**
  * Whether `BLOCKED-QUEUE.md` records `blockerId` as open; see {@link queueBlockerStatus}.
  * @param blockerId - e.g. `BLOCKED-107`.
  * @returns `'OPEN'`, `'CLOSED'`, or `'MISSING'`.
@@ -452,6 +471,10 @@ function main() {
     console.log(summaryLine(record.epics, p9Ids.length, record.candidateSha, 'on record,'))
     for (const epic of record.epics) {
       console.log(`  ${epic.epic}: ${epic.terminalState} [${epic.verifiedStages.join('') || '-'}]`)
+    }
+    const stateOnly = entriesWithStateButNoStatus(readFileSync(BLOCKED_QUEUE_PATH, 'utf8'))
+    if (stateOnly.length > 0) {
+      console.log(`verify-p9-cells: ${String(stateOnly.length)} BLOCKED-QUEUE entry/entries carry **State: and no **Status:, so their status cannot be read (informational): ${stateOnly.join(', ')}`)
     }
     const stale = staleCells(record, loadJson(COMMAND_FREEZE_PATH), repositoryGit)
     if (stale.length > 0) {

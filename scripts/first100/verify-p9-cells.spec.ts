@@ -17,7 +17,7 @@
  * and never on a frozen string that names more than one passing case.
  */
 import { describe, expect, it } from 'vitest'
-import { queueBlockerStatus, referencedPaths, reportPathMatchesCandidate, staleCells, summaryLine, unanswerableStageBlockers, verifyCells } from './verify-p9-cells.mjs'
+import { queueBlockerStatus, referencedPaths, reportPathMatchesCandidate, entriesWithStateButNoStatus, staleCells, summaryLine, unanswerableStageBlockers, verifyCells } from './verify-p9-cells.mjs'
 import type { P9Cell, P9Freeze, P9FreezeEntry, P9Git } from './verify-p9-cells.mjs'
 
 const SHA = '1f51e6a3d5bda5f3a9b9a5f902f27741be0cd6b3'
@@ -318,6 +318,14 @@ describe('verify-p9-cells blocker status: the queue reader refuses what it canno
       ['P9-06', 'C', 'BLOCKED-226'],
     ])
     expect(unanswerableStageBlockers(mappings, queue)[0]?.reason).toContain('2 queue headings carry this id')
+  })
+
+  it('names an entry written with **State: and no **Status:, and leaves out entries that have a Status line', () => {
+    const queue = '### BLOCKED-130 — a blocker\n\n**State: OPEN, measured.**\n\n'
+      + '### BLOCKED-131 — a blocker\n\n**State: RESOLVED.**\n\n**Status:** CLOSED\n\n'
+      + entry('BLOCKED-132', 'OPEN')
+      + '### BLOCKED-133 — a blocker\n\nThe State of the art is not a status line.\n\n'
+    expect(entriesWithStateButNoStatus(queue)).toStrictEqual(['BLOCKED-130'])
   })
 
   it('reads a status that sits more than 2000 characters below its heading', () => {

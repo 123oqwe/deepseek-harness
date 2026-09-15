@@ -147,6 +147,13 @@ export function unanswerableStageBlockers(
 ): { epic: string; stage: string; blocker: string; reason: string }[]
 
 /**
+ * The queue entries written with a `**State:` line and no `**Status:` line, which the blocker reader cannot read.
+ * @param queue - the text of `BLOCKED-QUEUE.md`.
+ * @returns the entry ids, in file order.
+ */
+export function entriesWithStateButNoStatus(queue: string): string[]
+
+/**
  * Every repository path a freeze entry's observation depends on.
  * @param entry - a command-freeze entry.
  * @returns the files it names and the test paths its command runs.
