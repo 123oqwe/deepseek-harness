@@ -6365,6 +6365,63 @@ It repointed two cells at the persistent artifact store — **where the evidence
 
 **What this entry does not establish.** Which commit invalidated each of the other stale rows: the two from 2026-09-15T01:28 were traced to field level, the rest were read as states only. Attributing each remaining stale row to a specific commit is a per-row `git log` walk that has not been done, and this entry should not be read as implying otherwise. Nor does it claim the six `missing` rows were accepted improperly — BLOCKED-036's sign-off requirement postdates some of them, and "no grandfather clause" is precisely why they read as missing rather than exempt.
 
+**A second way sign-off state leaves view: it is invisible in the ledger header.**
+
+`ledger.json` carries `lastUpdatedUtc` and `inputDigest`, and they are the
+obvious place a reader looks to ask *"when did this file last change, and from
+what?"*. **A sign-off changes neither.**
+
+`cmdRecordSignoff` (`generate-ledger.mjs:1476-1568`) writes `LEDGER_PATH`
+directly and never calls `writeLedgerHeader`; the `writeLedgerHeader` call at
+`:1666` belongs to `cmdAccept`, a different function. So the withdrawal at
+`7bbeaa2ef4` changed exactly two row fields —
+
+```
+"independentVerdict": "APPROVED" -> "PENDING"
+"status": "ACCEPTED" -> "BLOCKED_ON_ACCEPTANCE"
+```
+
+— and left `lastUpdatedUtc` at `2026-09-15T07:15:11.836Z` and `inputDigest` at
+`449944c2feff`, **byte-identical to its parent `fe70d3f2ea`**, a commit made by a
+different command.
+
+**Three consequences, in increasing order of how quietly they fail:**
+
+1. anyone reconstructing a row's change history from the header misses **every**
+   sign-off and every withdrawal;
+2. the pre-push checklist's rule — *"an unchanged `inputDigest` across a ledger
+   edit means the generator did not run and the file was hand-edited"* — is
+   **false for sign-off commits**, and would have raised a false hand-edit alarm
+   on `7bbeaa2ef4`. The rule is corrected in `pre-push-checklist-v4.md` §3
+   (sign-offs and reverts are the two exceptions);
+3. the root of both: `inputDigest` is `sha256(JSON.stringify(inputsConsumed))`
+   (`:523`), and `inputsConsumed` differs per command. **It identifies which
+   write happened, never the ledger's content** — so two writes by the same
+   command with the same arguments collide by construction, and a write by a
+   command that does not call the header writer is silent by construction.
+
+**This is the same failure family the entry already describes, at the other end.**
+The entry's subject is a sign-off going stale because the row moved underneath
+it. This is the row moving *because of a sign-off* and leaving no mark. In both
+directions the ledger cannot answer "when was this row's sign-off state last
+touched" from its own header.
+
+**Not a defect in `cmdRecordSignoff`.** Rewriting the header on a sign-off would
+make `inputDigest` — whose stated meaning is the inputs a generation consumed —
+carry a write that consumed no generation inputs.
+
+**Ruling (delegate, 2026-09-15): `delegate-signoff.json`'s own timestamps are the
+authority for when a sign-off was last touched, and the ledger header's semantics
+do not change.** So "when was this row signed" is answered from the sign-off
+registry, never from `ledger.json`'s `lastUpdatedUtc` — and a reader who reaches
+for the header is asking the wrong file, not reading a broken one.
+
+**Measured, so the claim is falsifiable:** across the 26 commits between the
+pushed tip `3672337016` and `69a66830e0`, seven touch `ledger.json`. Their
+`inputDigest` / `lastUpdatedUtc` pairs are all distinct except two —
+`7bbeaa2ef4` (this sign-off) and `f2036a39f5` (a revert, which restores an
+earlier header legitimately).
+
 ### BLOCKED-252 — P2-10's shadow evaluation, diff explain and impact report are not built
 **Status:** OPEN (2026-09-15)
 
@@ -6442,3 +6499,113 @@ leaves the gap.
 - that this is the only such case. **It is the only one I looked for.** The same
   shape — a README naming a deferred capability that an acceptance clause asks
   for — would not be visible to any gate that exists today.
+
+### BLOCKED-253 — 46 registry declarations on ACCEPTED epics name files that do not exist
+**Status:** OPEN (2026-09-15)
+
+**What was measured.**
+
+Every path declared by `registry.json` — both the epic-level `{path, kind}`
+objects and the per-stage string lists — was tested against `git ls-files` at
+`69a66830e0`. Of **2002** declarations, **787 name a file that is not in the
+tree**, over **316 distinct paths** across **81 epics**. The two figures already
+circulating were `epic.files 317 of 875` and `stages 471 of 1127`; the epic-level
+one is **316**, because one declaration names a DIRECTORY — see the measurement
+note below.
+
+**The 787 is not the defect, and the split is the entry.**
+
+```
+UNSTARTED epics   706    a PLAN for files nobody has written yet
+STARTED epics      81
+  of which ACCEPTED 46   <- this entry
+```
+
+A registry of future work is *supposed* to name files that do not exist. What
+the field decides is `realitySet` — the set that answers "is this failure
+attributable to this epic" — and a failure needs a started epic before the
+question arises. **So the debt is 46 declarations over 15 distinct paths across
+14 ACCEPTED epics**, and a gate on this field must be scoped to started epics or
+it is red on 706 rows that are working as intended.
+
+**Why the direction matters.** A stale path makes the reality set SMALLER, which
+makes *"that failure is unrelated to this epic"* easier to assert. It is
+under-attribution — the direction nobody notices, because nothing fails.
+
+**Eight of the fifteen are mechanical, and seven of those are one family.**
+
+```
+suffix   run/message-bus/tests/crash.e2e.ts                 ->  …/crash.e2e.spec.ts
+suffix   action/action-ledger/tests/idempotency.e2e.ts      ->  …/idempotency.e2e.spec.ts
+suffix   collaboration/taskboard/tests/claims.e2e.ts        ->  …/claims.e2e.spec.ts
+suffix   plugin/plugin-migrations/tests/rollback.e2e.ts     ->  …/rollback.e2e.spec.ts
+suffix   run/lease/tests/fencing.e2e.ts                     ->  …/fencing.e2e.spec.ts
+suffix   collaboration/workflow-journal/tests/resume.e2e.ts ->  …/resume.e2e.spec.ts
+suffix   workflow/workflow-registry/tests/nested.e2e.ts     ->  …/nested.e2e.spec.ts
+moved    session-persistence/src/coordinator.ts  ->  session-telemetry/src/coordinator.ts
+```
+
+The seven are **the declared side of BLOCKED-070**. That convention — *keep the
+declared name and append `.spec`* — is applied six times on the deliverable side
+through `adjudication.json`, and the extractor already states its mechanical
+reason in `TEST_FILES_ADDED['P1-03'].filenameDeviation`: `vitest.config.ts`'s
+`testIncludes` collects only `*.spec.ts`, so **a frozen title living in an
+`.e2e.ts` file could never be found in any observation**. The convention was
+recorded in one place and contradicted in another; nothing compared them.
+
+**They land as ONE change with ONE reason** (delegate ruling, 2026-09-15), as a
+`FILES_REPLACED` table entry per epic in `extract-registry.mjs` — never as an
+edit to `registry.json`, which is generated and byte-compared.
+
+**Seven need a decision, and two of those are already ruled.**
+
+| path | state |
+|---|---|
+| `core/agent/src/inbox.ts` | **ruled** — BASE-ALIGN-v3 S2 names `core/agent-loop/src/inbox.ts`. The registry has not caught up |
+| `session-persistence/src/write-behind.ts` | **ruled** — S3-T1: deleted by `bec6805d6a` with a replacement (`handle.ts` + `storage-contract.ts`); re-verify, not re-do |
+| `core/tools/src/code-mode.ts` | deleted by `3ca9c7d489` (2026-08-25, a rename); the successor is findable from that commit |
+| `kernel/trust-kernel/src/invariant.ts` | 39 same-named files, so a basename match decides nothing. Likely the `02ceda9fc8` empty-invariant retirement that settled P1-01.C |
+| `.dsh/plugins.lock.json` | a runtime lockfile declared as a deliverable; absent from the index **and** from disk |
+| `interaction/user-approval/src/preconditions.ts` | never written; absent from disk |
+| `reliability/retry/src/circuit.ts` | never written; absent from disk |
+| `benchmarks/harness-capability/scenarios/` | **a directory, and it exists on disk** — see the measurement note |
+
+**A measurement note, because the classifier's method is part of its result.**
+Two of its own errors were found and fixed before this entry, and both reported
+debt that is not there:
+
+- **one declaration names a DIRECTORY** — P0-08's
+  `benchmarks/harness-capability/scenarios/` — and `git ls-files` never lists
+  directories, so it read as `never-existed` while **five tracked files sit
+  inside it**. The declaration is satisfied; P0-08 leaves the ACCEPTED subset,
+  and the epic-level count is **316, not the circulated 317**;
+- **all 27 suffix rows first read as *ambiguous***, because two rules generated
+  the same candidate string and the list was not de-duplicated. De-duplicated,
+  all 27 resolve **uniquely**.
+
+Tracked-ness (`git ls-files`) rather than `existsSync` remains the test for
+ordinary paths, so untracked residue cannot pass as satisfied. With the directory
+case fixed the two tests agree on every path in this tree — **relevant because
+the drafted `verify-declared-files-exist` gate uses `existsSync`**.
+
+**The multiplier is 2.5×.** 787 declarations over 316 paths: the same path is
+declared by an epic's `files` and again by two or three of its stages, so a fix
+list is written **per distinct path** and applied to every declaration of it.
+`P4-06` alone carries `crash.e2e.ts` three times, and a `FILES_REPLACED` entry
+must name the stage for each — `:845` throws if that stage's list does not
+contain the `from` path, which is the guard that catches a half-applied fix.
+
+**What closes this.**
+
+1. the seven-strong `.e2e.ts` family lands as one `FILES_REPLACED` change with
+   the BLOCKED-070 reason (**not tonight** — ruled 2026-09-15);
+2. the `coordinator.ts` move lands with it, lineage confirmed per path the way
+   `run-lease.ts` was (`R065`, five commits, one continuous path);
+3. the two already-ruled paths are carried into the table so the registry states
+   what S2 and S3-T1 decided;
+4. the remaining six are decided individually;
+5. a mechanical gate — *a declared path must exist* — **scoped to started
+   epics**, so it does not fire on the 706 planned rows.
+
+Machine-readable inventory: `stale-registry-paths.json` (per epic, per
+declaration, with candidates and the deleting commit where known).
