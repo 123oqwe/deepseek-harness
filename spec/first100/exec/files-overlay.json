@@ -39,14 +39,6 @@
     },
     {
       "epic": "P0-03",
-      "path": "docs/glossary.md",
-      "kind": "doc",
-      "stages": [
-        "F"
-      ]
-    },
-    {
-      "epic": "P0-03",
       "path": "docs/glossary.zh.md",
       "kind": "doc",
       "stages": [
