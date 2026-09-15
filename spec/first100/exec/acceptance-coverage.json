@@ -3312,6 +3312,189 @@
         }
       ],
       "note": "acceptance[2]: 'the approval event and the final action form a one-to-one reference.' The two halves are cited separately because each alone is half the clause, and conflating them was a live risk on this epic. The Usage citations prove the COUNT — exactly one binding per gated dispatch, and none for an action the gate does not ask about — which makes a one-to-one reference POSSIBLE. They do not make one exist: the record carried `action`, a tool NAME, so two calls to one tool in a session were the same line in the log. The Fault citations supply the reference itself: the dispatch's `actionId` on the record, two calls of one tool distinguishable, and a fail-closed refusal when two decisions about one tool name no dispatch, so the fallback for actionId-less records cannot settle the question by position. What no citation proves is that an audit TOOL exists to run the query; the field it would travel on does, and the reverse lookup is exercised in the Fault case that filters the log by `actionId`."
+    },
+    {
+      "epic": "P2-10",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "P2-10 C: the policy-set parse and its outcomes refuses a policy that reads a context key dsh never sends, naming the key"
+        },
+        {
+          "stage": "C",
+          "title": "P2-10 C: the schema and the request builder state the same vocabulary declares every context key the request builder sends, and no others"
+        },
+        {
+          "stage": "C",
+          "title": "P2-10 C: the schema and the request builder state the same vocabulary states ten context keys, so a silent addition to either side is visible as a count"
+        }
+      ],
+      "note": "acceptance[0]: 'Policy 文件不能访问网络/文件/环境变量。' Evidenced INDIRECTLY and structurally: a Cedar policy sees only the context dsh hands it, so the claim reduces to the context vocabulary being closed and checked. The three cited cases pin exactly that — a policy reading a key dsh never sends is refused by name, the schema declares every key the request builder sends, and the count is pinned at ten so a silent addition to either side is caught. No case executes a policy attempting network, file or environment access, because the engine offers no such construct; if that premise is ever wrong, these three cases would not notice."
+    },
+    {
+      "epic": "P2-10",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "P2-10 acceptance[1]: each of the three inputs moves the pin moves when one character of one policy changes"
+        },
+        {
+          "stage": "C",
+          "title": "P2-10 acceptance[1]: each of the three inputs moves the pin moves when the engine version changes, so a cedar upgrade re-pins visibly"
+        },
+        {
+          "stage": "C",
+          "title": "P2-10 acceptance[1]: each of the three inputs moves the pin moves when the vocabulary changes, because the same text means something else"
+        },
+        {
+          "stage": "C",
+          "title": "P2-10 acceptance[1]: the pin is stable for one input and version gives the same set the same pin, twice"
+        },
+        {
+          "stage": "C",
+          "title": "P2-10 acceptance[1]: the pin is stable for one input and version ignores formatting, because the canonical text is what is pinned"
+        },
+        {
+          "stage": "C",
+          "title": "P2-10 acceptance[1]: the pin is stable for one input and version ignores the order the policy map was built in"
+        },
+        {
+          "stage": "P",
+          "title": "P2-10 P acceptance[1]: what the accepted set is pinned against gives a different pin than the same set would take against another engine version"
+        },
+        {
+          "stage": "P",
+          "title": "P2-10 P acceptance[1]: what the accepted set is pinned against pins against the engine that will evaluate, read from the engine rather than configured"
+        }
+      ],
+      "note": "acceptance[1]: '同一输入和版本确定性输出。' Directly evidenced: the cited cases are the ones whose own titles name acceptance[1]. They pin the stable direction (same input and version gives the same pin, twice; formatting ignored; map build order ignored) and the moving direction (one character of one policy, the vocabulary, or the engine version each moves the pin). Both directions are needed: stability alone is satisfied by a constant."
+    },
+    {
+      "epic": "P2-12",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "P",
+          "title": "P2-12 must[2]/acceptance[0]: no new work starts under a stop refuses to register a question under a stop, because a question is new work"
+        },
+        {
+          "stage": "P",
+          "title": "P2-12 must[2]/acceptance[0]: no new work starts under a stop registers a question when no stop is in force, so the refusal above is not the only answer"
+        }
+      ],
+      "note": "acceptance[0]: '触发 stop 后无新外部副作用'. PARTIAL, and the gap is named rather than papered over. The two cited P cases are the ones whose own titles carry must[2]/acceptance[0]; they pin that no NEW work is admitted under a stop (a question is refused while a stop is in force, and registers when none is). What they do not show is the other half of the clause: that nothing already in flight produces a further external effect. That half is the F stage's subject and F is not yet frozen (see the freeze-candidate draft for P2-12.F). This entry should be revisited when F greens."
+    },
+    {
+      "epic": "P2-12",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "P2-12 acceptance[1]: an answer reaches only the waiting point that asked (BLOCKED-215) settles the addressed point and leaves every OTHER open point untouched"
+        },
+        {
+          "stage": "C",
+          "title": "P2-12 acceptance[1]: an answer reaches only the waiting point that asked (BLOCKED-215) settles B and leaves A open, so the case above is not passing on set order"
+        },
+        {
+          "stage": "C",
+          "title": "P2-12 acceptance[1]: an answer reaches only the waiting point that asked (BLOCKED-215) REFUSES a settlement for a vanished waiting point and names it, rather than doing nothing"
+        },
+        {
+          "stage": "C",
+          "title": "P2-12 acceptance[1]: an answer reaches only the waiting point that asked (BLOCKED-215) refuses a settlement for a point that was never registered, separately from one that is gone"
+        },
+        {
+          "stage": "C",
+          "title": "P2-12 acceptance[1]: an answer reaches only the waiting point that asked (BLOCKED-215) leaves the open set unchanged when it refuses, so a failed settlement cannot silently consume a point"
+        },
+        {
+          "stage": "P",
+          "title": "P2-12 acceptance[1]: settlement is out of band and reaches one point only delivers to the point that asked and leaves the other pending"
+        },
+        {
+          "stage": "P",
+          "title": "P2-12 acceptance[1]: settlement is out of band and reaches one point only refuses a SECOND answer for the same point as vanished, not as never registered"
+        },
+        {
+          "stage": "P",
+          "title": "P2-12 acceptance[1]: settlement is out of band and reaches one point only refuses an answer for a point nobody registered, and delivers nothing"
+        },
+        {
+          "stage": "P",
+          "title": "P2-12 acceptance[1]: settlement is out of band and reaches one point only refuses to re-ask a settled point, so the registry does not quietly reopen it"
+        },
+        {
+          "stage": "U",
+          "title": "P2-12 acceptance[1]: the human answer reaches the point that asked (BLOCKED-215 closed) resumes the asker with the human text, which is the delivery P5-10 never had a path for"
+        },
+        {
+          "stage": "U",
+          "title": "P2-12 acceptance[1]: the human answer reaches the point that asked (BLOCKED-215 closed) leaves a second asker waiting when the first is settled, so one answer resumes one caller"
+        },
+        {
+          "stage": "U",
+          "title": "P2-12 acceptance[1]: the human answer reaches the point that asked (BLOCKED-215 closed) refuses an answer for a point nobody is waiting at, rather than dropping it"
+        },
+        {
+          "stage": "U",
+          "title": "P2-12 acceptance[1]: the human answer reaches the point that asked (BLOCKED-215 closed) refuses to ask at all while a stop is in force, so a question is new work"
+        },
+        {
+          "stage": "U",
+          "title": "P2-12 acceptance[1]: the human answer reaches the point that asked (BLOCKED-215 closed) comes up stopped over a store a previous mount wrote, with nothing re-applying the stop"
+        }
+      ],
+      "note": "acceptance[1]: '在途动作按策略终止或标记 reconciliation-required.' Directly evidenced across all three green stages by the cases that name acceptance[1] in their own titles."
+    },
+    {
+      "epic": "P2-12",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "P2-12 must[0]/acceptance[2]: the stop is a durable record that only an explicit resume lifts records WHO stopped it and WHY, because a restart reads the record and not a flag"
+        },
+        {
+          "stage": "C",
+          "title": "P2-12 must[0]/acceptance[2]: the stop is a durable record that only an explicit resume lifts keeps a run stopped when the state was restored from a record, with no verb in between"
+        },
+        {
+          "stage": "C",
+          "title": "P2-12 must[0]/acceptance[2]: the stop is a durable record that only an explicit resume lifts lifts the stop ONLY for resume, and reports every other verb as a no-op over a stopped state"
+        },
+        {
+          "stage": "C",
+          "title": "P2-12 must[0]/acceptance[2]: the stop is a durable record that only an explicit resume lifts distinguishes stopping an already-stopped run from stopping a running one, because an audit reads the transition"
+        },
+        {
+          "stage": "C",
+          "title": "P2-12 must[0]/acceptance[2]: the stop is a durable record that only an explicit resume lifts refuses kill-execution-world as UNIMPLEMENTED rather than accepting it silently"
+        },
+        {
+          "stage": "P",
+          "title": "P2-12 acceptance[2]: the stop survives a restart and needs an explicit release comes up STOPPED over a store that holds a record, with nothing re-applying the stop"
+        },
+        {
+          "stage": "P",
+          "title": "P2-12 acceptance[2]: the stop survives a restart and needs an explicit release lets work start again only after a resume, and that release survives the next restart too"
+        },
+        {
+          "stage": "P",
+          "title": "P2-12 acceptance[2]: the stop survives a restart and needs an explicit release keeps the stop when a RELEASE was decided but never reached the store, which is the reverse control"
+        },
+        {
+          "stage": "P",
+          "title": "P2-12 acceptance[2]: the stop survives a restart and needs an explicit release refuses a store document whose version this build does not know, naming the path and both versions"
+        },
+        {
+          "stage": "P",
+          "title": "P2-12 acceptance[2]: the stop survives a restart and needs an explicit release reads a missing document as \"no stop\", because a first boot is not a failure"
+        }
+      ],
+      "note": "acceptance[2]: '重启后 stop 状态保持，必须显式解除.' Directly evidenced by the C and P cases that name acceptance[2] in their own titles."
     }
   ]
 }
