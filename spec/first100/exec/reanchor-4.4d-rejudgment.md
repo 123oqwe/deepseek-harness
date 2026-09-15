@@ -184,3 +184,34 @@ it covers the S5/S6/S7 set rather than this one.
   are printed side by side so the discrepancy is visible, not resolved;
 - anything about P0-03, whose inclusion is itself unsettled (16 in the table, 17
   in the heading, 18 with P0-03 — recorded as documentation debt).
+
+**Addendum, 2026-09-15: the documentation debt above is closed by computing the
+set.** §5(2) of `base-align-v3-user-confirmation.md` defines it as the ACCEPTED
+epics whose declared files conflict, so it can be recomputed instead of listed.
+Measured at `191aa1e502`, with a conflict counted as a
+`packages/<group>/<package>/src/` path that more than one epic declares (the scope
+of the symbols `9037b0f213` checked), over each epic's `files` and its stage file
+lists: **100** such paths and **28** ACCEPTED epics. `9037b0f213` covers **7** of
+them. Its eighth, P1-03, is no longer in the set: both of P1-03's shared `src`
+declarations today are under `apps/cli/src` (`profile-boot.ts` and `plugin.ts`).
+The other **21** are P0-03, P0-06, P1-02, P1-09, P1-10, P2-03, P2-04, P2-06,
+P3-01, P4-01, P4-02, P4-05, P4-06, P4-07, P4-08, P4-09, P4-11, P4-12, P5-11, P6-01
+and P8-01.
+
+**Lane A rechecked those 21 and found no reachability regression**
+(`reach-recheck-uncovered.md`, kept outside this tree). The recheck repeats §3's
+grep reachability for the production call points of each conflicting `src` file:
+4.4c only, not 4.4a or 4.4b, so the first bullet above still stands. Its three
+zeros are not findings. `session-persistence/src/coordinator.ts` and
+`write-behind.ts` no longer exist (deleted by `bec6805d6a`; BLOCKED-253 (i)).
+`core/agent-loop/src/tool-calls.ts` has one export, used only inside `agent-loop`
+and not re-exported. `execution-world/src/index.ts` is a re-export barrel, which a
+symbol regex reads as exporting nothing, while six non-test files outside the
+package import `@deepseek-ai/dsh-execution-world`.
+
+**The count depends on the scope, which is why the scope is stated.** Counting any
+`src/` directory, `apps/cli/src` included, gives 104 paths and 29 ACCEPTED epics,
+with P1-03 in the set and 21 still uncovered. Without the `src` restriction all 33
+ACCEPTED epics enter the set, which makes it meaningless. Lane A's note gives 94
+paths because it counts epic-level `files` only; the epic counts agree. As §5
+already says, this is grep reachability, not execution reachability.
