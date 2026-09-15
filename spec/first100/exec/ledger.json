@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-15T05:10:28.943Z",
-  "inputDigest": "2d2da4a9264a90814d3901531c83bb5e7cf5c37810a332cdab0bcf12c680a256",
+  "lastUpdatedUtc": "2026-09-15T07:11:36.854Z",
+  "inputDigest": "b9d40ec591e3d45495944b26d13a803780b18c1d504d5abdf8c774d199408f76",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -733,7 +733,20 @@
           "capturedAtUtc": "2026-09-02T01:49:43.594Z"
         }
       },
-      "supplements": {},
+      "supplements": {
+        "C.1": {
+          "status": "GREEN",
+          "candidateSha": "3672337016dcc7e4223c1b85591c281415814c22",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34928038271",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34928038271/first100-vitest-report-3672337016dcc7e4223c1b85591c281415814c22/vitest-report.json",
+          "observationSha256": "89e5c325eb6f3dd6be38f25fc694ec5d13f9003515c6e1dcd0beb3398a9607f4",
+          "expectCasesMatched": [
+            "returns the applied value and its shadow record, and NOT OpenFeature's variant/errorCode fields",
+            "carries no OpenFeature evaluation fields on the off and enforce paths either, so the shape is not mode-dependent"
+          ],
+          "capturedAtUtc": "2026-09-15T07:11:34.257Z"
+        }
+      },
       "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
       "independentVerdict": "APPROVED",
       "openFindings": null,
@@ -871,7 +884,20 @@
           "capturedAtUtc": "2026-09-15T05:06:23.962Z"
         }
       },
-      "supplements": {},
+      "supplements": {
+        "C.1": {
+          "status": "GREEN",
+          "candidateSha": "3672337016dcc7e4223c1b85591c281415814c22",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34928038271",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34928038271/first100-vitest-report-3672337016dcc7e4223c1b85591c281415814c22/vitest-report.json",
+          "observationSha256": "89e5c325eb6f3dd6be38f25fc694ec5d13f9003515c6e1dcd0beb3398a9607f4",
+          "expectCasesMatched": [
+            "publishes every spec schema in the JSON Schema 2020-12 dialect, declared rather than assumed",
+            "maps Confluent BACKWARD/FORWARD/FULL onto a major-only rule: FULL within a major, incompatible across one"
+          ],
+          "capturedAtUtc": "2026-09-15T07:11:34.775Z"
+        }
+      },
       "candidateSha": "58b1d2ae86cd05cca892cc6a7db8e6a292ac1a45",
       "independentVerdict": "APPROVED",
       "openFindings": null,
@@ -1566,7 +1592,21 @@
           "capturedAtUtc": "2026-09-06T07:57:22.122Z"
         }
       },
-      "supplements": {},
+      "supplements": {
+        "C.1": {
+          "status": "GREEN",
+          "candidateSha": "3672337016dcc7e4223c1b85591c281415814c22",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34928038271",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34928038271/first100-vitest-report-3672337016dcc7e4223c1b85591c281415814c22/vitest-report.json",
+          "observationSha256": "89e5c325eb6f3dd6be38f25fc694ec5d13f9003515c6e1dcd0beb3398a9607f4",
+          "expectCasesMatched": [
+            "names CycloneDX 1.6 and SPDX as the two SBOM formats, and admits no third",
+            "maps npm dependency fields onto the SBOM entry kinds rather than inventing a taxonomy",
+            "delegates the Sigstore bundle v0.3 format to the reference verifier instead of parsing it here"
+          ],
+          "capturedAtUtc": "2026-09-15T07:11:35.115Z"
+        }
+      },
       "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba",
       "independentVerdict": "APPROVED",
       "openFindings": null,
@@ -2045,7 +2085,35 @@
           "capturedAtUtc": "2026-09-04T17:11:34.087Z"
         }
       },
-      "supplements": {},
+      "supplements": {
+        "U.1": {
+          "status": "GREEN",
+          "candidateSha": "3672337016dcc7e4223c1b85591c281415814c22",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34928038271",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34928038271/first100-vitest-report-3672337016dcc7e4223c1b85591c281415814c22/vitest-report.json",
+          "observationSha256": "89e5c325eb6f3dd6be38f25fc694ec5d13f9003515c6e1dcd0beb3398a9607f4",
+          "expectCasesMatched": [
+            "does NOT read the clone's own instructions while it is untrusted and nobody answers",
+            "PUTS the first-time authorization, naming the project root and asking only for trusted-read",
+            "reads the project's instructions once the host user answers allowed-once, and STILL offers no executable skill"
+          ],
+          "capturedAtUtc": "2026-09-15T07:11:36.455Z"
+        },
+        "U.2": {
+          "status": "GREEN",
+          "candidateSha": "3672337016dcc7e4223c1b85591c281415814c22",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34928038271",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34928038271/first100-vitest-report-3672337016dcc7e4223c1b85591c281415814c22/vitest-report.json",
+          "observationSha256": "89e5c325eb6f3dd6be38f25fc694ec5d13f9003515c6e1dcd0beb3398a9607f4",
+          "expectCasesMatched": [
+            "with NO record and no answerer, the ask settles unavailable and the clone is not read",
+            "reads the project once --trust-workspace has written the record",
+            "returns to refusing once the grant is revoked",
+            "does NOT carry the grant to a different directory that takes the same path"
+          ],
+          "capturedAtUtc": "2026-09-15T07:11:36.842Z"
+        }
+      },
       "candidateSha": "f453647e6ecce84d43261b6fb59cdfc44ae7143f",
       "independentVerdict": "PENDING",
       "openFindings": null,
@@ -6769,6 +6837,40 @@
             "P4-09 must[2]: a detached run outlives the turn that started it, on the real stack leaves the foreground path exactly as it was: no detached flag, no runId-only return"
           ],
           "capturedAtUtc": "2026-09-10T16:56:08.700Z"
+        },
+        "U.5": {
+          "status": "GREEN",
+          "candidateSha": "3672337016dcc7e4223c1b85591c281415814c22",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34928038271",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34928038271/first100-vitest-report-3672337016dcc7e4223c1b85591c281415814c22/vitest-report.json",
+          "observationSha256": "89e5c325eb6f3dd6be38f25fc694ec5d13f9003515c6e1dcd0beb3398a9607f4",
+          "expectCasesMatched": [
+            "P4-09 must[3]: a nested run can spawn an agent at all runs an agent INSIDE a nested run and settles, which no case asked before",
+            "P4-09 must[3]: a nested run's children inherit its DECAYED capability token narrows a child of a nested run to the definition's declaration",
+            "P4-09 must[3]: a nested run's children inherit its DECAYED capability token grants nothing a nested declaration names beyond the run above it",
+            "P4-09 must[3]: a nested run's children inherit its DECAYED capability token spawns a child that still gets a derived token after the launcher session ended",
+            "P4-09 must[3]: a nested run's children inherit its DECAYED capability token is NOT cancelled when the launching run is, while a nested sibling IS",
+            "P4-09 must[3]: a nested run's children inherit its DECAYED capability token IS terminated by an explicit cancel of its own id",
+            "P4-09 must[3]: a nested run's children inherit its DECAYED capability token DISPOSES its own agent once it reaches a terminal state, leaking no session",
+            "P4-09 must[3]: a nested run's children inherit its DECAYED capability token REFUSES to start when the launcher cannot delegate, rather than starting without authority",
+            "subagent descriptors reads back every field its own schema permits, in both modes"
+          ],
+          "capturedAtUtc": "2026-09-15T07:11:33.627Z"
+        },
+        "U.6": {
+          "status": "GREEN",
+          "candidateSha": "3672337016dcc7e4223c1b85591c281415814c22",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34928038271",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34928038271/first100-vitest-report-3672337016dcc7e4223c1b85591c281415814c22/vitest-report.json",
+          "observationSha256": "89e5c325eb6f3dd6be38f25fc694ec5d13f9003515c6e1dcd0beb3398a9607f4",
+          "expectCasesMatched": [
+            "P4-09 must[3]: a nested run's children inherit its DECAYED capability token is REACHABLE by run id while it runs, and the same handle comes back",
+            "P4-09 must[3]: a nested run's children inherit its DECAYED capability token is COLLECTABLE by run id after it settles with its launcher gone, exactly once",
+            "P4-09 must[3]: a nested run's children inherit its DECAYED capability token REFUSES a resume of a live detached run, which is why attach exists rather than resume",
+            "P4-09 must[3]: a nested run's children inherit its DECAYED capability token keeps NO settlement for an ordinary run, whose caller held the handle all along",
+            "P4-09 must[3]: a nested run's children inherit its DECAYED capability token does not answer for a run id nothing started"
+          ],
+          "capturedAtUtc": "2026-09-15T07:11:33.936Z"
         }
       },
       "candidateSha": "874db203f09ddc5be6e2ce6f6700e89a2c563f41",
@@ -8099,7 +8201,29 @@
           "capturedAtUtc": "2026-09-04T17:11:42.988Z"
         }
       },
-      "supplements": {},
+      "supplements": {
+        "U.1": {
+          "status": "GREEN",
+          "candidateSha": "3672337016dcc7e4223c1b85591c281415814c22",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34928038271",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34928038271/first100-vitest-report-3672337016dcc7e4223c1b85591c281415814c22/vitest-report.json",
+          "observationSha256": "89e5c325eb6f3dd6be38f25fc694ec5d13f9003515c6e1dcd0beb3398a9607f4",
+          "expectCasesMatched": [
+            "boots the shipped profile with the base bundle memory rows enabled and no unhandled failure",
+            "memory/access is a known session event type, so a real log carrying it replays",
+            "a log written with memory/access is read back by replay, not refused",
+            "recalled memory reaches the model as a durable, source-attributed user message",
+            "the same run records a memory/access read event carrying the complete access context",
+            "model-visible memory is logged: every recalled record the model saw is reconstructable from the log alone",
+            "recalls only the workspace this session runs in, on a launched profile",
+            "memory content never reaches the model outside a logged injection",
+            "P6-01 acceptance[1]: a real boot exposes NO tool that writes durable memory",
+            "hands the model bytes identical to a boot with the memory rows disabled",
+            "still records the read that returned nothing, so silence is not an unlogged read"
+          ],
+          "capturedAtUtc": "2026-09-15T07:11:36.130Z"
+        }
+      },
       "candidateSha": "e74593c50a0306801c9d294e4eb45f2be7a8ec15",
       "independentVerdict": "PENDING",
       "openFindings": null,
@@ -9126,6 +9250,18 @@
             "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions"
           ],
           "capturedAtUtc": "2026-09-06T07:57:23.583Z"
+        },
+        "C.2": {
+          "status": "GREEN",
+          "candidateSha": "3672337016dcc7e4223c1b85591c281415814c22",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34928038271",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34928038271/first100-vitest-report-3672337016dcc7e4223c1b85591c281415814c22/vitest-report.json",
+          "observationSha256": "89e5c325eb6f3dd6be38f25fc694ec5d13f9003515c6e1dcd0beb3398a9607f4",
+          "expectCasesMatched": [
+            "negotiates a protocol version and a capability set as SEPARATE answers, the way MCP initialize does",
+            "follows the LSP ClientCapabilities pattern for OPTIONAL capabilities and deliberately breaks it for mandatory ones"
+          ],
+          "capturedAtUtc": "2026-09-15T07:11:35.725Z"
         }
       },
       "candidateSha": "f453647e6ecce84d43261b6fb59cdfc44ae7143f",
