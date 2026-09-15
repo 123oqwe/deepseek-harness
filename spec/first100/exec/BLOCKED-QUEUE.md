@@ -6502,6 +6502,38 @@ leaves the gap.
   shape — a README naming a deferred capability that an acceptance clause asks
   for — would not be visible to any gate that exists today.
 
+**Scope note (decision (three), default path — the user did not narrow the scope).**
+
+P2-10's four cells are GREEN and the epic is NOT_RUN: a cell proves the frozen
+command it pins, not a clause. Coverage stands at `acceptance[0]`, cited by three
+C-stage cases, and `acceptance[1]`, cited by six C and two P cases;
+**`acceptance[2]` has no coverage entry at all**. `must[1]`'s shadow evaluation
+and diff explain are likewise unbuilt — `policy-language`'s README says so under
+its own *Known Limitations and Deferred Work*, and the tree agrees: under
+`packages/policy/*/src`, `diff explain`, `diffExplain`, `impact report`,
+`impactReport` and `shadow` each match **0 files**. Across the whole of
+`packages/policy` the only matches are documentation: `diff explain` in
+`policy-language`'s `README.md` and `README.zh.md`, `impact report` and `shadow`
+in `README.md` alone.
+
+**What this does not mean: the epic is not blocked on an authorization.** Unlike
+P3-06.U and P3-10.U, whose landing point `execution-world/src/plugin.ts` is
+declared by no epic (BLOCKED-257), the files these three capabilities would most
+plausibly land in are files P2-10 already declares: `policy-engine/src/index.ts`
+at C, `policy-language/src/parser.ts` and `compiler.ts` at C, and
+`policy-language/src/index.ts` at P. That mapping is a reading of the capabilities
+against the declarations, not a record — the README names what is missing, not
+where it goes. The one question it leaves open is the impact report's replay entry
+point, which must read `ActionManifest` history that P2-10 does not declare.
+
+**Work that needs no ruling and can start today.**
+`packages/settings/settings/src/index.ts` is declared by P2-10's U stage and
+mentions `policy` **0 times** in its 949 lines, while the sibling
+`packages/interaction/permission-presets/src/index.ts` mentions it on **32** of
+its 554 lines. That asymmetry is the cleanest available piece of in-scope work,
+and it is the same gap `verify-usage-stage-subject` reports: P2-10 is the one
+epic whose Usage stage touches none of the consumers its registry row names.
+
 ### BLOCKED-253 — 46 registry declarations on ACCEPTED epics name files that do not exist
 **Status:** OPEN (2026-09-15)
 
