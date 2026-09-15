@@ -140,6 +140,7 @@
     "first100:verify-baseline-file-references": "node scripts/first100/verify-baseline-file-references.mjs",
     "first100:verify-frozen-titles-resolvable": "node scripts/first100/verify-frozen-titles-resolvable.mjs",
     "first100:verify-frozen-titles-in-tree": "node scripts/first100/verify-frozen-titles-in-tree.mjs",
+    "first100:verify-freeze-case-uniqueness": "node scripts/first100/verify-freeze-case-uniqueness.mjs",
     "first100:verify-p9-cells": "node scripts/first100/verify-p9-cells.mjs --check",
     "first100:verify-ledger-digests": "node scripts/first100/generate-ledger.mjs --check",
     "first100:verify-boot-path-offline": "node scripts/first100/verify-boot-path-offline.mjs",

@@ -178,6 +178,17 @@ jobs:
         # 1". The report cannot record what it has no field for, and no
         # human-readable reporter was attached to print it.
 
+      - name: Frozen case strings are unique across the whole suite
+        # Here and not in the registry gate set: it needs the whole-suite report
+        # the step above writes, which does not exist when the gate set runs.
+        # `always()` for the suite's reason: a precondition failing upstream
+        # should cost one round, not this verdict.
+        if: always()
+        run: >-
+          node scripts/first100/verify-freeze-case-uniqueness.mjs
+          --report .artifacts/first100/observations/vitest-report.json
+          --candidate-sha ${{ steps.resolve-sha.outputs.sha }}
+
       - name: Upload the vitest observation report
         if: always()
         uses: actions/upload-artifact@v4
