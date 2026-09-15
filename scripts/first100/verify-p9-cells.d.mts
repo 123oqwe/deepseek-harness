@@ -136,6 +136,17 @@ export function verifyCells(
 export function queueBlockerStatus(queue: string, blockerId: string): 'OPEN' | 'CLOSED' | 'MISSING'
 
 /**
+ * The stage-blocker mappings whose blocker `BLOCKED-QUEUE.md` cannot answer for.
+ * @param entries - the `p9-stage-blockers.json` entries.
+ * @param queue - the text of `BLOCKED-QUEUE.md`.
+ * @returns one `{ epic, stage, blocker, reason }` per mapping whose blocker cannot be read.
+ */
+export function unanswerableStageBlockers(
+  entries: readonly { epic: string; stage: string; blocker: string }[],
+  queue: string,
+): { epic: string; stage: string; blocker: string; reason: string }[]
+
+/**
  * Every repository path a freeze entry's observation depends on.
  * @param entry - a command-freeze entry.
  * @returns the files it names and the test paths its command runs.

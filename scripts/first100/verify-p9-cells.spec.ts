@@ -17,7 +17,7 @@
  * and never on a frozen string that names more than one passing case.
  */
 import { describe, expect, it } from 'vitest'
-import { queueBlockerStatus, referencedPaths, reportPathMatchesCandidate, staleCells, summaryLine, verifyCells } from './verify-p9-cells.mjs'
+import { queueBlockerStatus, referencedPaths, reportPathMatchesCandidate, staleCells, summaryLine, unanswerableStageBlockers, verifyCells } from './verify-p9-cells.mjs'
 import type { P9Cell, P9Freeze, P9FreezeEntry, P9Git } from './verify-p9-cells.mjs'
 
 const SHA = '1f51e6a3d5bda5f3a9b9a5f902f27741be0cd6b3'
@@ -304,6 +304,20 @@ describe('verify-p9-cells blocker status: the queue reader refuses what it canno
     expect(() => queueBlockerStatus('### BLOCKED-232 — a blocker\n\n**Status:** **fixed**\n\n', 'BLOCKED-232')).toThrow('no **Status:** line')
     expect(() => queueBlockerStatus('### BLOCKED-231 — a blocker\n\n**Status:** ** **\n\n', 'BLOCKED-231')).toThrow('no **Status:** line')
     expect(() => queueBlockerStatus(entry('BLOCKED-001', null), 'BLOCKED-001')).toThrow('no **Status:** line')
+  })
+
+  it('lists the stage mappings whose blocker cannot be read, naming the id and why, and leaves a readable one out', () => {
+    const queue = entry('BLOCKED-107', 'OPEN') + entry('BLOCKED-198', 'FIXED') + entry('BLOCKED-198', 'OPEN') + entry('BLOCKED-226', null)
+    const mappings = [
+      { epic: 'P9-05', stage: 'U', blocker: 'BLOCKED-107' },
+      { epic: 'P9-05', stage: 'F', blocker: 'BLOCKED-198' },
+      { epic: 'P9-06', stage: 'C', blocker: 'BLOCKED-226' },
+    ]
+    expect(unanswerableStageBlockers(mappings, queue).map(row => [row.epic, row.stage, row.blocker])).toStrictEqual([
+      ['P9-05', 'F', 'BLOCKED-198'],
+      ['P9-06', 'C', 'BLOCKED-226'],
+    ])
+    expect(unanswerableStageBlockers(mappings, queue)[0]?.reason).toContain('2 queue headings carry this id')
   })
 
   it('reads a status that sits more than 2000 characters below its heading', () => {

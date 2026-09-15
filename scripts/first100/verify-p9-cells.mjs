@@ -119,6 +119,31 @@ export function queueBlockerStatus(queue, blockerId) {
 }
 
 /**
+ * The stage-blocker mappings whose blocker the queue cannot answer for.
+ *
+ * Checked once before anything else, so an unreadable queue entry is reported
+ * against the mapping file and its id rather than as a throw from inside the
+ * cell loop. A blocker with no queue heading is not included: it can be
+ * answered, and a cell parked on it is reported STALE_BLOCKER.
+ * @param entries - the `p9-stage-blockers.json` entries.
+ * @param queue - the text of `BLOCKED-QUEUE.md`.
+ * @returns `{ epic, stage, blocker, reason }` per mapping whose blocker cannot be read, in file order.
+ */
+export function unanswerableStageBlockers(entries, queue) {
+  const unanswerable = []
+  for (const { epic, stage, blocker } of entries) {
+    try {
+      queueBlockerStatus(queue, blocker)
+    } catch (error) {
+      // queueBlockerStatus throws only when it cannot tell which entry or which
+      // status it read (BLOCKED-254); that message is the reason reported here.
+      unanswerable.push({ epic, stage, blocker, reason: error instanceof Error ? error.message : String(error) })
+    }
+  }
+  return unanswerable
+}
+
+/**
  * Whether `BLOCKED-QUEUE.md` records `blockerId` as open; see {@link queueBlockerStatus}.
  * @param blockerId - e.g. `BLOCKED-107`.
  * @returns `'OPEN'`, `'CLOSED'`, or `'MISSING'`.
@@ -400,6 +425,16 @@ export function summaryLine(epics, total, candidateSha, provenance) {
 
 function main() {
   const argv = process.argv.slice(2)
+  const mappedBlockers = existsSync(STAGE_BLOCKERS_PATH) ? loadJson(STAGE_BLOCKERS_PATH).entries ?? [] : []
+  const unanswerable = unanswerableStageBlockers(mappedBlockers, readFileSync(BLOCKED_QUEUE_PATH, 'utf8'))
+  if (unanswerable.length > 0) {
+    for (const { epic, stage, blocker, reason } of unanswerable) console.error(`  ${epic}.${stage} -> ${blocker}: ${reason}`)
+    console.error(
+      `verify-p9-cells: ${String(unanswerable.length)} mapping(s) in spec/first100/exec/p9-stage-blockers.json name a blocker `
+      + 'BLOCKED-QUEUE.md cannot answer for; correct the mapping or the queue entry first',
+    )
+    process.exit(1)
+  }
   const registry = loadJson(REGISTRY_EXTENSION_PATH)
   const rows = Array.isArray(registry) ? registry : (registry.epics ?? [])
   const p9Ids = rows.map(row => row.id).filter(id => typeof id === 'string' && id.startsWith('P9-'))
