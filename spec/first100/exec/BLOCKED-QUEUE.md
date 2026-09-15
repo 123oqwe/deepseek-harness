@@ -6786,6 +6786,36 @@ One of the 18 is `P2-03.U` `packages/core/tools/src/code-mode.ts`: patch
 covered by the overlay the whole time, and counting it as a declaration awaiting a
 decision overstated this entry by one path.
 
+**(viii) Two P3 test declarations, and the entries they meet**
+
+Measured at `191aa1e502`. Neither epic is ACCEPTED, so neither path is in the
+counts above.
+
+- `packages/credentials/secrets-broker/tests/secret-leak.e2e.ts`, declared by
+  P3-06 (`epic.files`, `stages.C`, `stages.F`), does not exist and **is not the
+  suffix family**: the package's only test file is `tests/lease.spec.ts`. The
+  basename differs, so no mechanical rule decides it. `secret-leak` → `lease` is
+  a judgement about whether the lease spec is the deliverable that declaration
+  meant, and `deliverablePathPatches` does not cover it. The package README
+  points the other way: *"acceptance[1]'s leak surfaces are not covered here."*
+  It belongs with the paths above that need a decision, not with the
+  `.e2e.ts → .e2e.spec.ts` rule.
+- `packages/execution/resource-budget/tests/budget.e2e.ts`, declared by P3-10
+  (`epic.files`, `stages.C`, `stages.F`), does not exist. The file is
+  `tests/budget.spec.ts`, which P3-10.C's frozen command already runs. It drops
+  the `e2e` name instead of appending `.spec`, so it is not the
+  `.e2e.ts → .e2e.spec.ts` rule; it is the substitution P6-07's
+  `lifecycle.e2e.ts → lifecycle.spec.ts` patches record. **It has no patch
+  although P3-10 has started**: its C cell is GREEN, which is this entry's own
+  test in (iv), so it is a started epic's missing patch, like those (ii) names.
+  Across the registry, 83 of the 99 stage-level `.e2e.ts` declarations have no
+  patch (16 patched).
+- **Related:** BLOCKED-256 (no redaction seam on the durable session log) and
+  BLOCKED-257 (P3-10.U and P3-06.U need files neither epic declares) meet the
+  same two packages from the other side. The `secrets-broker` README states
+  256's finding itself: *"The session-log limb in particular has no redaction
+  seam on this tree."* 256 and 257 cite each other.
+
 ### BLOCKED-254 — eight BLOCKED numbers appear twice, and the status reader takes the first
 **Status:** OPEN (2026-09-15). The fix lands in the same commit as this entry; the closing line, with that commit's sha, follows in the next docs commit.
 
@@ -6887,6 +6917,8 @@ The reader is exported as `queueBlockerStatus(queue, blockerId)` so it is tested
 
 **Not established here.** Whether any provider's error body echoes a credential. Whether `packages/assurance/evidence-format` or `scripts/release/collect-evidence.mjs` redacts session content was not measured.
 
+**Related.** BLOCKED-257 holds the provider-error half of P3-06's redaction work: the message `normalizeLlmFailure` copies into the persisted `LlmFailure` comes from `packages/llm/llm-deepseek/src/adapter.ts` and `packages/llm/llm/src/adapter-failure.ts`, and P3-06 declares neither file. BLOCKED-253 (viii) records the P3-06 test declaration that does not exist.
+
 ### BLOCKED-257 — P3-10.U and P3-06.U need files neither epic declares, and no record can approve a new deliverable
 **Status:** OPEN (2026-09-15). A scope decision for the user (delegate's decision list, item 7). Until it is made, neither epic's Usage-stage work starts on these files.
 
@@ -6913,3 +6945,5 @@ What the stages declare: P3-10.U names `packages/core/agent/src/types.ts` and `p
 **Default.** Nothing changes: no record is added, no acceptance is narrowed, and the four files are not edited for either epic.
 
 **Not established here.** Whether the epics that already touch these files (P3-01 through the overlay, P4-11 and P5-04 through declarations) are affected by the proposed changes; the code-level design, which is in the item-100 report and is not ruled.
+
+**Related.** BLOCKED-256 records that the durable session write path and evidence-package assembly have no redaction seam. Redacting provider errors in `adapter-failure.ts` changes one source of the text that reaches the log, not the log's write path, so neither entry closes the other. BLOCKED-253 (viii) records both epics' test declarations that do not exist.

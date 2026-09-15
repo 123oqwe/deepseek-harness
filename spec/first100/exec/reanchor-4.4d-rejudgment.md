@@ -60,6 +60,60 @@ its exact method is the only honest way to compare, and I did not have it.
 What does hold either way: **every symbol is still reached from production code,
 and none has fallen to zero.**
 
+**Addendum, 2026-09-15 (lane A measured; lane B re-measured at `191aa1e502`). Half
+of "I cannot say why" can now be said, and one row has no subject.**
+
+1. **The "now" column's method is reproducible, and is written down here.**
+   `grep -rl <symbol>` over `packages/` and `apps/`, extensions
+   `.ts`/`.tsx`/`.mts`, excluding `/lib/` and `vendor/`, then excluding `/tests/`,
+   gives **7 / 6 / 5 / 1 / 4**, digit for digit the "now" column. The
+   parenthetical "Including tests the numbers are 19 / 8 / 7 / 1 / 7" is **the
+   same match without the `/tests/` exclusion**, and it also reproduces digit for
+   digit. **It is a substring match, not a word boundary**, which is where point 2
+   comes from.
+2. **The `resolveProfile` row has no subject in either column.** The substring
+   `resolveProfile` matches 19 files (7 non-test), while `\bresolveProfile\b`
+   matches **0 files**, and **no declaration named `resolveProfile` exists under
+   `packages/` or `apps/`**. The hits are different symbols that share the prefix,
+   such as `resolveProfileDir` (40 references, tests included) and
+   `resolveProfileFeatureGates` (20). **`11 → 7` compares two counts of a name
+   that does not exist**; the "drop" is a drop in how many files happen to contain
+   one of those symbols. **Recommended: strike the row, or re-base it on a real
+   symbol.**
+3. **Three of the five rows are symbols this program added; upstream never had
+   them.** At the fork baseline `4e84901e64` the same method gives
+   `resolveProfile` 5 and `composeProfile` 5, and **`assertRuntimeTenantPolicy` 0,
+   `pluginEnforcement` 0 and `enforceManifestedAction` 0**. A reading of this
+   movement as upstream churn is wrong for those three rows.
+4. **The two columns are not comparable: the 2026-09-14 column is closest to
+   reference counts, not file counts.** Non-test **references** (`grep -o`
+   occurrences) at `3672337016` (D) are `composeProfile` 9 (table 10) and
+   `assertRuntimeTenantPolicy` 9 (table 10), each within one on a tree that has
+   since moved. That fits the column's own word for its last row, "3 **sites**",
+   not "3 files". **It is still not one method:** `pluginEnforcement`'s 1 matches
+   the **file** count (its reference count is 3), and `enforceManifestedAction`'s
+   3 matches neither its 4 files nor its 10 references. **Printed side by side
+   without their methods, the two columns invite the reading that call sites were
+   lost.**
+5. **The one movement with a known cause is an addition, not a loss.**
+   `enforceManifestedAction` went from 3 to 4 because P2-05 added an enforcement
+   point: commit `46e3295fec`, *"P2-05 U — the enforcement point, on both dispatch
+   paths"*.
+
+**Section 2's conclusion does not change.** "Every symbol is still reached from
+production code, and none has fallen to zero" holds under every counting method
+above. The one exception is `resolveProfile` by word boundary, which is 0 because
+it was never a symbol.
+
+**Two further notes.** The five "now" numbers are identical at `3672337016` (D),
+`69a66830e0` and `191aa1e502`, so the column did not move across the unpushed
+chain. The 2026-09-14 recheck's own script was not available, so **"does not
+reproduce" holds only on the refs measured** (`4e84901e64`, `3672337016`,
+`69a66830e0`, `191aa1e502`); the tree that recheck read was the pre-re-anchor
+candidate and was not rebuilt. Reference counts include declarations, imports and
+comments; they are not call sites in the compiler's sense, and neither column
+measured those.
+
 ## 3. Grep reachability for the 9 absent epics
 
 Same method, at the current tip.
