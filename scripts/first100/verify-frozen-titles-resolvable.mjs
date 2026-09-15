@@ -35,11 +35,27 @@
  * CLI:
  *   node scripts/first100/verify-frozen-titles-resolvable.mjs
  *     [--report <path>]        write full JSON findings to this path
+ *     [--from-report <path>]   resolve titles from a full-suite vitest report bound to
+ *                              this tree instead of running each command (see below)
+ *
+ * **Report mode.** With `--from-report`, a command's titles come from the files its
+ * path filters select in a full-suite `--reporter=json` report instead of a run. The
+ * report binds only when its directory name carries a commit that is HEAD or an
+ * ancestor of it, it records no failed suite, and every file in it has cases;
+ * otherwise every command runs. A bound report still sends a command to a real run
+ * when a test file it selects in this tree is missing from the report, when a unit
+ * of a selected file (`packages/<group>/<package>`, `apps/<app>`, `tests/<dir>`,
+ * `scripts/<dir>`) changed since that commit, uncommitted changes included, or when
+ * a shared test input changed. It then proves something narrower than a run: the
+ * names CI emitted at that commit, with every change since confined to units no
+ * selected file belongs to. Names generated from another unit's data, and cases a
+ * file defines on one platform only, can differ, so the final gate set before a
+ * push runs without this flag.
  */
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join, resolve } from 'node:path'
+import { basename, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -131,6 +147,158 @@ function collectTitles(report) {
   return { ok: true, titles, matchCounts }
 }
 
+/**
+ * Paths every default vitest run reads, so a change to any of them since the report's commit sends every command to a
+ * real run: the config, the heavy-suite list the config imports, the lockfile and the base tsconfig.
+ * `package.json` is left out on purpose: its script entries change often and do not change which tests exist or
+ * what they are named, while a dependency change reaches the lockfile.
+ */
+const SHARED_TEST_INPUTS = ['vitest.config.ts', 'scripts/coverage-exempt.ts', 'pnpm-lock.yaml', 'tsconfig.base.json']
+
+/** `vitest.config.ts`'s `testIncludes`, as repository-path patterns. */
+const TEST_INCLUDES = [
+  /^packages\/[^/]+\/[^/]+\/tests\/.+\.spec\.tsx?$/u,
+  /^apps\/[^/]+\/tests\/.+\.spec\.ts$/u,
+  /^scripts\/.+\.spec\.ts$/u,
+  /^tests\/.+\.spec\.ts$/u,
+]
+
+/**
+ * The unit a changed path invalidates in report mode.
+ * @param path - a repository-relative path.
+ * @returns `packages/<group>/<package>`, `apps/<app>`, `tests/<dir>` or `scripts/<dir>`, otherwise the path's directory (`.` at the root).
+ */
+export function unitOf(path) {
+  const match = /^(packages\/[^/]+\/[^/]+|apps\/[^/]+|tests\/[^/]+|scripts\/[^/]+)\//u.exec(path)
+  if (match !== null) return match[1]
+  const slash = path.lastIndexOf('/')
+  return slash === -1 ? '.' : path.slice(0, slash)
+}
+
+/**
+ * The path filters of a frozen `pnpm exec vitest run` command. vitest reads each filter as a substring of a test
+ * file's path.
+ * @param argv - the frozen argv.
+ * @returns `{ filters }`, or `{ reason }` when report mode cannot stand in for the command.
+ */
+export function commandFilters(argv) {
+  if (argv.length < 4 || argv[0] !== 'pnpm' || argv[1] !== 'exec' || argv[2] !== 'vitest' || argv[3] !== 'run') {
+    return { reason: 'not a `pnpm exec vitest run` command' }
+  }
+  const filters = []
+  for (let index = 4; index < argv.length; index += 1) {
+    const arg = argv[index]
+    if (arg === '--reporter=json') continue
+    // `-t` narrows which cases pass, not which are reported: vitest lists the others as skipped.
+    if (arg === '-t') {
+      index += 1
+      continue
+    }
+    if (arg.startsWith('-')) return { reason: `flag ${arg} is not one report mode reads` }
+    filters.push(arg)
+  }
+  return filters.length === 0 ? { reason: 'no path filter, so the command runs every test file' } : { filters }
+}
+
+/**
+ * A report file's repository path.
+ * @param name - the absolute test-file path the report records.
+ * @param treeFiles - the paths this tree has.
+ * @returns the longest suffix of `name` the tree has; otherwise the suffix from its first `packages`, `apps`, `scripts` or `tests` segment (a file deleted since the report's commit); otherwise `null`.
+ */
+export function repositoryPath(name, treeFiles) {
+  const parts = name.split('/')
+  for (let index = 0; index < parts.length; index += 1) {
+    const candidate = parts.slice(index).join('/')
+    if (treeFiles.has(candidate)) return candidate
+  }
+  const top = parts.findIndex(part => part === 'packages' || part === 'apps' || part === 'scripts' || part === 'tests')
+  return top === -1 ? null : parts.slice(top).join('/')
+}
+
+/**
+ * Whether a frozen command's titles can come from the full-suite report.
+ *
+ * The command runs for real when a path it selects in this tree is missing from the report, when any unit (see
+ * {@link unitOf}) of a selected file changed since the report's commit, when a shared test input changed, or when it
+ * selects nothing in the report.
+ * @param argv - the frozen argv.
+ * @param context - from the report binding: `reportFiles` (`{ path, assertionResults }`), `testFiles`, `changedUnits`, `sharedInputsChanged`.
+ * @returns `{ testResults }` to collect titles from, or `{ reasons }` the command must run.
+ */
+export function planCommand(argv, context) {
+  const parsed = commandFilters(argv)
+  if (parsed.filters === undefined) return { reasons: [parsed.reason] }
+  const selects = path => parsed.filters.some(filter => path.includes(filter))
+  const reasons = []
+  if (context.sharedInputsChanged.length > 0) reasons.push(`shared test input changed: ${context.sharedInputsChanged.join(', ')}`)
+  const fromReport = context.reportFiles.filter(file => selects(file.path))
+  if (fromReport.length === 0) reasons.push('selects no file in the report')
+  const reported = new Set(fromReport.map(file => file.path))
+  const missing = context.testFiles.filter(path => selects(path) && !reported.has(path))
+  if (missing.length > 0) reasons.push(`not in the report: ${missing.join(', ')}`)
+  const units = new Set([...reported, ...context.testFiles.filter(selects)].map(unitOf))
+  const changed = [...units].filter(unit => context.changedUnits.has(unit)).sort()
+  if (changed.length > 0) reasons.push(`changed since the report: ${changed.join(', ')}`)
+  return reasons.length > 0 ? { reasons } : { testResults: fromReport.map(file => ({ assertionResults: file.assertionResults })) }
+}
+
+/**
+ * Binds a full-suite report to this tree for report mode. Every refusal names its reason, and the caller then runs
+ * every command, so an unusable report never skips the check.
+ * @param reportPath - the `--from-report` path; its directory name must carry a commit token, as generate-ledger's report directories do.
+ * @returns `{ ok: true, commit, context }` for {@link planCommand}, or `{ ok: false, reason }`.
+ */
+function loadReportContext(reportPath) {
+  const git = args => spawnSync('git', args, { cwd: REPO_ROOT, encoding: 'utf8', maxBuffer: 1 << 28 })
+  const directory = basename(dirname(reportPath))
+  const tokens = (directory.match(/[0-9a-f]{10,40}/gu) ?? []).filter(token => !/^[0-9]+$/u.test(token))
+  if (tokens.length === 0) return { ok: false, reason: `report directory "${directory}" carries no commit token` }
+  let commit
+  for (const token of tokens) {
+    const resolved = git(['rev-parse', '--verify', '--quiet', `${token}^{commit}`])
+    if (resolved.status === 0 && git(['merge-base', '--is-ancestor', resolved.stdout.trim(), 'HEAD']).status === 0) {
+      commit = resolved.stdout.trim()
+      break
+    }
+  }
+  if (commit === undefined) return { ok: false, reason: `report directory token(s) ${tokens.join(', ')} name no commit that is HEAD or an ancestor of it` }
+  let report
+  try {
+    report = JSON.parse(readFileSync(reportPath, 'utf8'))
+  } catch (error) {
+    return { ok: false, reason: `${reportPath} is not a readable JSON report: ${error.message}` }
+  }
+  const files = report.testResults ?? []
+  if ((report.numFailedTestSuites ?? 0) !== 0) return { ok: false, reason: `the report records ${String(report.numFailedTestSuites)} failed suite(s)` }
+  if (files.length === 0) return { ok: false, reason: 'the report has no test files' }
+  const empty = files.filter(file => (file.assertionResults ?? []).length === 0)
+  if (empty.length > 0) return { ok: false, reason: `${String(empty.length)} report file(s) record no cases, e.g. ${empty[0].name}` }
+  const listed = git(['ls-files', '--cached', '--others', '--exclude-standard'])
+  const status = git(['status', '--porcelain=v1', '--untracked-files=all'])
+  const diff = git(['diff', '--name-only', commit, 'HEAD'])
+  if (listed.status !== 0 || status.status !== 0 || diff.status !== 0) return { ok: false, reason: 'git could not list this tree or its changes' }
+  const treeFiles = listed.stdout.split('\n').filter(Boolean)
+  const treeSet = new Set(treeFiles)
+  const changed = [
+    ...diff.stdout.split('\n'),
+    ...status.stdout.split('\n').map(line => line.slice(3).split(' -> ').pop() ?? ''),
+  ].filter(Boolean)
+  const reportFiles = files.map(file => ({ path: repositoryPath(file.name, treeSet), assertionResults: file.assertionResults }))
+  const unmapped = reportFiles.filter(file => file.path === null)
+  if (unmapped.length > 0) return { ok: false, reason: `${String(unmapped.length)} report file(s) map to no repository path` }
+  return {
+    ok: true,
+    commit,
+    context: {
+      reportFiles,
+      testFiles: treeFiles.filter(path => TEST_INCLUDES.some(pattern => pattern.test(path))),
+      changedUnits: new Set(changed.map(unitOf)),
+      sharedInputsChanged: SHARED_TEST_INPUTS.filter(path => changed.includes(path)),
+    },
+  }
+}
+
 function main() {
   const freeze = loadJson(FREEZE_PATH)
   const renames = loadJson(RENAMES_PATH)
@@ -149,12 +317,23 @@ function main() {
     renameIndex.set(`${r.epic}|${r.stage}|${r.oldTitle}`, r)
   }
 
+  const fromReportPath = opt('from-report')
+  const reportMode = fromReportPath === undefined ? undefined : loadReportContext(resolve(REPO_ROOT, fromReportPath))
+  if (reportMode !== undefined && !reportMode.ok) console.log(`report mode refused (${reportMode.reason}); running every command`)
+  let resolvedFromReport = 0
+
   const runCache = new Map()
   const runResultFor = (argvList) => {
     const key = JSON.stringify(argvList)
     if (!runCache.has(key)) {
-      console.log(`running ${argvList.join(' ')} ...`)
-      runCache.set(key, runAndCollectTitles(argvList))
+      const plan = reportMode?.ok === true ? planCommand(argvList, reportMode.context) : undefined
+      if (plan?.testResults !== undefined) {
+        resolvedFromReport += 1
+        runCache.set(key, collectTitles({ testResults: plan.testResults }))
+      } else {
+        console.log(`running ${argvList.join(' ')} ...${plan === undefined ? '' : ` (report mode: ${plan.reasons.join('; ')})`}`)
+        runCache.set(key, runAndCollectTitles(argvList))
+      }
     }
     return runCache.get(key)
   }
@@ -248,6 +427,9 @@ function main() {
     entries,
   }
 
+  if (reportMode?.ok === true) {
+    findings.summary.resolvedFromReport = { commit: reportMode.commit, commands: resolvedFromReport, run: runCache.size - resolvedFromReport }
+  }
   const reportPath = opt('report')
   if (reportPath) writeFileSync(resolve(REPO_ROOT, reportPath), `${JSON.stringify(findings, null, 2)}\n`, 'utf8')
 
@@ -255,6 +437,9 @@ function main() {
     `command-freeze.json: ${freeze.entries.length} entries, ${runCache.size} unique command(s) run, ` +
       `${totalTitles} frozen titles, ${totalRenameCovered} covered by a registered rename, ${totalUnresolved} UNRESOLVED, ${totalAmbiguous} AMBIGUOUS, ${totalDuplicated} DUPLICATED.`,
   )
+  if (reportMode?.ok === true) {
+    console.log(`report mode: ${String(resolvedFromReport)} command(s) resolved from the report at ${reportMode.commit.slice(0, 10)}, ${String(runCache.size - resolvedFromReport)} run`)
+  }
   if (entriesWithProblems > 0) {
     console.error('UNRESOLVED (fail-closed):')
     for (const [key, e] of Object.entries(entries)) {
@@ -276,4 +461,6 @@ function main() {
   process.exit(entriesWithProblems > 0 ? 1 : 0)
 }
 
-main()
+// Only when run as a command; the spec imports the pure functions. Real paths on both sides: the spec runs a copy
+// under the OS temp directory, which is a symlink on macOS.
+if (process.argv[1] !== undefined && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) main()
