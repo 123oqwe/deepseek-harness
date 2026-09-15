@@ -514,6 +514,14 @@
       "delegateSession": "first100-delegate-78",
       "signedAtUtc": "2026-09-15T07:15:11.596Z",
       "reason": "Delegate re-read 2026-09-15 on f81f9f6bf8: C/P/U/F GREEN (runs 34557063530, 34573807027, 34652643903 x2), supplements C.1/P.1 (34652643903), U.1 (34660413109), U.2 (34699917546) GREEN; acceptance[0..2] each cited in acceptance-coverage.json (C cases); 0 open findings; no cell cites a file in the base-align conflict set (S5/S6/S7); the full suite at D ran its cases green (run 34928038271, 0 failures)."
+    },
+    {
+      "epic": "P6-01",
+      "rowDigestSha256": "64b3bc23a2d0d467d1a34d67dcf59f60777ff54d1fc55aa47719dd0a75cfc7fd",
+      "conclusion": "WITHDRAWN",
+      "delegateSession": "first100-delegate-78",
+      "signedAtUtc": "2026-09-15T07:58:18.289Z",
+      "reason": "verify-make-vs-use MISMATCHED: P6-01 owns two standards by assignment (Mem0 OSS API op names add/search/get/update/delete/history (alignment); dsh-memory-protocol v1 (dsh-memento)) with no frozen case naming them, and P2-05 has started, so the backfill deadline has passed. The PASS sign-off of 2026-09-15T07:15Z was recorded without running that gate — the delegate's error. Re-sign after a P6-01 vocabulary supplement naming both standards is frozen and observed."
     }
   ]
 }
