@@ -102,6 +102,21 @@ describe('missingAcceptedRegistryRefs', () => {
     expect(resolvedMissing.map(row => row.where)).not.toContain('P9-98.C')
   })
 
+  const present = 'packages/demo/thing/src/here.ts'
+  const presentRegistry = { epics: [{ id: 'P9-98', files: [], stages: { U: { files: [present] } } }] }
+
+  it('reports an absent approved path under a widening patch as resolved-missing, naming it, although the declared path exists', () => {
+    const widening = { epic: 'P9-98', stage: 'U', declaredPath: present, approvedPath: absentTarget, kind: 'widening' as const }
+    expect(missingAcceptedRegistryRefs(presentRegistry, new Set(['P9-98']), exists, [widening]))
+      .toStrictEqual({ declaredMissing: [], resolvedMissing: [{ where: 'P9-98.U', path: present, absentApprovedPaths: [absentTarget] }] })
+  })
+
+  it('stays silent for the same absent approved path under a substitution, whose declared path is expected to remain', () => {
+    const substitution = { epic: 'P9-98', stage: 'U', declaredPath: present, approvedPath: absentTarget, kind: 'substitution' as const }
+    expect(missingAcceptedRegistryRefs(presentRegistry, new Set(['P9-98']), exists, [substitution]))
+      .toStrictEqual({ declaredMissing: [], resolvedMissing: [] })
+  })
+
   it('does not apply a patch of another epic', () => {
     expect(missingAcceptedRegistryRefs(patchedRegistry, new Set(['P9-98']), exists, [patch({ epic: 'P9-97' })]).declaredMissing)
       .toContainEqual({ where: 'P9-98.C', path: declared })

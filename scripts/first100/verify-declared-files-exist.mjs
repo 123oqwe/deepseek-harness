@@ -57,9 +57,13 @@ export function missingFreezeFiles(entries, exists, basenameIndex) {
  * is satisfied. One that does not is declared-missing when no approved patch
  * applies to it, or when a widening patch does: a widening keeps the declared
  * path a deliverable, so an approved path beside it does not account for its
- * absence. It is resolved-missing when at least one approved path is absent
- * too: each approved path is a deliverable its patch approved, so one absent
- * path is one absent deliverable. A widening declaration can be both.
+ * absence. A declaration is resolved-missing when at least one approved path is
+ * absent: each approved path is a deliverable its patch approved, so one absent
+ * path is one absent deliverable. Under a substitution the approved paths are
+ * checked only when the declared path is absent, because a declared path still
+ * present is what a substitution leaves behind. Under a widening they are
+ * checked either way, because both files are deliverables, and a widening
+ * declaration can be both declared-missing and resolved-missing.
  * @param registry - the parsed registry.
  * @param acceptedIds - ids of ACCEPTED epics.
  * @param exists - whether a repo-relative path exists in the tree.
@@ -73,8 +77,9 @@ export function missingAcceptedRegistryRefs(registry, acceptedIds, exists, patch
   for (const epic of registry.epics) {
     if (!acceptedIds.has(epic.id)) continue
     for (const { where, declaredPath, approvedPaths, widening } of resolveDeclaredPaths(epic, patches)) {
-      if (exists(declaredPath)) continue
-      if (approvedPaths.length === 0 || widening) declaredMissing.push({ where, path: declaredPath })
+      const declaredExists = exists(declaredPath)
+      if (!declaredExists && (approvedPaths.length === 0 || widening)) declaredMissing.push({ where, path: declaredPath })
+      if (declaredExists && !widening) continue
       const absentApprovedPaths = approvedPaths.filter(path => !exists(path))
       if (absentApprovedPaths.length > 0) resolvedMissing.push({ where, path: declaredPath, absentApprovedPaths })
     }
