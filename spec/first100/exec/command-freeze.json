@@ -12575,7 +12575,9 @@
         "mutationDescription": "Two mutations, each one literal substitution, the spec re-run, the source restored byte-identical after each. (V-M1) on mcp-client/src/annotations.ts, `idempotentHint` is dropped from the accepted hint names; (V-M2) on the same file, `openWorldHint` raises `destructive` instead of `external-effect`.",
         "failureSummary": "V-M1 reds the four-hint-names case ALONE: the other vocabulary case asserts which hints MOVE risk, and `idempotentHint` moves none, so dropping it changes nothing there — which is exactly the asymmetry the pair exists to state. V-M2 reds the direction case AND the epic's existing 'RAISES on destructiveHint and openWorldHint from ANY server' case, which is the correct result and is recorded rather than trimmed: the direction a hint may move risk is the same fact both state, one as behaviour and one as vocabulary, so a mutation that changes it must move both. V-M1 is the isolating one, and it isolates because `idempotentHint` moves no risk at all. NOT PROVEN, and stated rather than omitted: the `SideEffectClass` pair has no mutation against product code, because it pins a RELATIONSHIP between two vocabularies rather than a behaviour — `RISK_CLASSES_BY_ASCENDING_RISK` not containing `none`/`write`/`network`/`process` is a property of the taxonomy declaration, and the only mutation that reddens it is adding a member to the eight, which the epic's must[0] case already forbids by name. The pair is a vocabulary record, and that is what this supplement is for."
       },
-      "note": "P2-04 make-vs-use backfill (§12.85 note 46). The ledger assigned this epic ownership of `MCP ToolAnnotations` and `P1-01 SideEffectClass`, and `verify-make-vs-use` reported both as owned-by-assignment with no frozen case naming them once P2-05 started and the deadline passed. Neither case adds behaviour: the ToolAnnotations pair states the exact four hint names the implementation reads and which direction each is allowed to move risk — `destructiveHint` and `openWorldHint` raise from any server, `readOnlyHint` lowers only under operator trust, `idempotentHint` is read and means nothing to risk — and the SideEffectClass pair states that the two spellings shared with P1-01's mechanism vocabulary are not the same concept, which is the property that stops a plugin buying a lower risk band with a mechanism tag. The module header of `risk-taxonomy/src/types.ts` had recorded that fact since the Contract stage; nothing pinned it. Three further standards this epic and P4-05 were ASSIGNED — MITRE ATLAS technique ids, OWASP LLM Top-10 LLM06, and the A2A/MCP TaskStatus mapping — were moved to `deviations` in the same batch on a whole-tree census returning zero hits for each; a case for those could only assert a mapping written to satisfy the gate."
+      "note": "P2-04 make-vs-use backfill (§12.85 note 46). The ledger assigned this epic ownership of `MCP ToolAnnotations` and `P1-01 SideEffectClass`, and `verify-make-vs-use` reported both as owned-by-assignment with no frozen case naming them once P2-05 started and the deadline passed. Neither case adds behaviour: the ToolAnnotations pair states the exact four hint names the implementation reads and which direction each is allowed to move risk — `destructiveHint` and `openWorldHint` raise from any server, `readOnlyHint` lowers only under operator trust, `idempotentHint` is read and means nothing to risk — and the SideEffectClass pair states that the two spellings shared with P1-01's mechanism vocabulary are not the same concept, which is the property that stops a plugin buying a lower risk band with a mechanism tag. The module header of `risk-taxonomy/src/types.ts` had recorded that fact since the Contract stage; nothing pinned it. Three further standards this epic and P4-05 were ASSIGNED — MITRE ATLAS technique ids, OWASP LLM Top-10 LLM06, and the A2A/MCP TaskStatus mapping — were moved to `deviations` in the same batch on a whole-tree census returning zero hits for each; a case for those could only assert a mapping written to satisfy the gate.",
+      "supersededBy": "2026-09-15T08:16:36.185Z",
+      "supersessionReason": "one frozen case was a bare title shared by eight epics' fault-matrix suites (BLOCKED-104): re-frozen by fullName so it names this epic's own case"
     },
     {
       "epic": "P1-07",
@@ -14424,6 +14426,90 @@
         "failureSummary": "M14: 2 failed | 10 passed (12) -- red 'promotes a CANCEL over everything ... (§12.37)' and 'keeps a message with NO control kind in arrival order ... (§12.37)', both toEqual order assertions. M15: 2 failed | 10 passed -- red 'promotes a CANCEL over everything ...' and 'promotes a cancel PAST ordinary input too ...'. Both directions together cover all 3 expectCases."
       },
       "dryRunProof": "Ran locally at candidate tip 58beb6c497 (tree d6ad39122784), BASE-ALIGN-v3: arrival-dedup.spec, 12 passed. expectCases set-identical to superseded parent 2026-09-08T08:30:00.000Z."
+    },
+    {
+      "epic": "P2-04",
+      "stage": "C",
+      "supplements": {
+        "epic": "P2-04",
+        "stage": "C"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/policy/risk-taxonomy",
+        "packages/mcp/mcp-client/tests/annotations.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "reads exactly the four MCP ToolAnnotations hint names, and ignores any other field",
+        "lets only destructiveHint and openWorldHint RAISE, and only readOnlyHint lower — idempotentHint moves nothing",
+        "KEEPS the operator's `destructive` when the server claims the tool is read-only",
+        "gives an UNANNOTATED tool no tags, so it falls to the unknown default",
+        "RAISES on destructiveHint and openWorldHint from ANY server, trusted or not",
+        "honours readOnlyHint ONLY when the operator set trustAnnotations, and even then cannot remove a declared tag",
+        "names the offending field so an operator can fix the server",
+        "refuses a non-object annotations field, including an array",
+        "ACCEPTS a partial set, because a server may send any subset of the four hints",
+        "ignores unknown annotation fields rather than refusing, so a newer server is not unregistered",
+        "puts a destructiveHint tool AT OR ABOVE the workspace-write approval threshold",
+        "leaves an unannotated tool at the unknown default, which is ABOVE that threshold too",
+        "lets a TRUSTED read-only tool classify as `read`, the only way an MCP tool gets cheaper",
+        "must[0]: the taxonomy is exactly the eight named classes, in ascending risk order",
+        "must[0]: the order is total and strict, so \"highest risk\" has exactly one meaning",
+        "gives `read` and `destructive` a meaning set by the POLICY, not by the mechanism word they share with SideEffectClass",
+        "has no member that is not a RiskClass, so a SideEffectClass value can never be used as one",
+        "must[1]: the SAME declared tag classifies differently under two organisation policies",
+        "must[1]: a declared tag no policy rule mentions does not carry the plugin's own suggestion into the result",
+        "must[2]: a rule-decided classification names the tag that decided it and reports full confidence",
+        "must[2]: the grounds distinguish a class reached BY A RULE from the same class reached by the unknown default",
+        "must[3]: an action no rule matches classifies at the highest POLICY-ADJUSTABLE class, never in the kernel hard-deny band",
+        "must[3]: an organisation that wants unknowns REFUSED can add that class to its own hard-deny list",
+        "must[3]: a composite action takes the MAXIMUM risk of its matched tags",
+        "must[3]: one unrecognised tag beside a matched one does NOT escalate the whole action",
+        "acceptance[1]: adding a low-risk tag beside a high-risk one cannot lower the result",
+        "acceptance[1]: the classifier CAN return the low class when the policy alone says so, so the case above is not a constant",
+        "acceptance[2]: an organisation can add a hard-deny class of its own",
+        "acceptance[2]: a policy that switches off a kernel hard-deny class is REFUSED, naming the class",
+        "acceptance[2]: a policy adding nothing and removing nothing still hard-denies the kernel class",
+        "src/index.ts re-exports the type surface and the classifier, and declares no runtime value of its own",
+        "P2-04 Fault — risk classification boundary matrix enumerates at least twelve boundaries, each named once",
+        "fault boundary 01 an unmatched tag takes the unknown default, not the lowest class",
+        "fault boundary 02 the unknown default stops BELOW the kernel band, so unknown is asked about and not refused",
+        "fault boundary 03 an EMPTY tag list is the same unknown as an unmatched tag",
+        "fault boundary 04 a composite action takes the maximum, so a low tag cannot dilute a high one",
+        "fault boundary 05 tag ORDER does not change the maximum",
+        "fault boundary 06 one unrecognised tag beside a matched one does not escalate to the unknown default",
+        "fault boundary 07 a duplicate rule for one tag does not change the outcome",
+        "fault boundary 08 two rules for one tag take the HIGHER, so a second rule cannot lower the first",
+        "fault boundary 09 the kernel band is reached by DECLARATION and is hard-denied",
+        "fault boundary 10 an organisation may ADD a hard-deny class of its own",
+        "fault boundary 11 a policy that switches off a KERNEL hard-deny class is refused, naming it",
+        "fault boundary 12 removing a class the kernel does NOT pin removes nothing and is not an error",
+        "fault boundary 13 confidence separates a ruled class from the same class reached by default",
+        "fault boundary 14 the deciding tag is NAMED when a rule decided, and absent when nothing did"
+      ],
+      "files": [
+        "packages/policy/risk-taxonomy/src/types.ts",
+        "packages/policy/risk-taxonomy/src/classify.ts",
+        "packages/policy/risk-taxonomy/tests/classify.spec.ts",
+        "packages/mcp/mcp-client/src/annotations.ts",
+        "packages/mcp/mcp-client/tests/annotations.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-15T08:16:36.185Z",
+      "dryRunProof": {
+        "treeSha": "cf7fea94abcd32709d2adada5143b8ffc6e5ae4f",
+        "testsDiscovered": 46
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations, each one literal substitution, the spec re-run, the source restored byte-identical after each. (V-M1) on mcp-client/src/annotations.ts, `idempotentHint` is dropped from the accepted hint names; (V-M2) on the same file, `openWorldHint` raises `destructive` instead of `external-effect`.",
+        "failureSummary": "V-M1 reds the four-hint-names case ALONE: the other vocabulary case asserts which hints MOVE risk, and `idempotentHint` moves none, so dropping it changes nothing there — which is exactly the asymmetry the pair exists to state. V-M2 reds the direction case AND the epic's existing 'RAISES on destructiveHint and openWorldHint from ANY server' case, which is the correct result and is recorded rather than trimmed: the direction a hint may move risk is the same fact both state, one as behaviour and one as vocabulary, so a mutation that changes it must move both. V-M1 is the isolating one, and it isolates because `idempotentHint` moves no risk at all. NOT PROVEN, and stated rather than omitted: the `SideEffectClass` pair has no mutation against product code, because it pins a RELATIONSHIP between two vocabularies rather than a behaviour — `RISK_CLASSES_BY_ASCENDING_RISK` not containing `none`/`write`/`network`/`process` is a property of the taxonomy declaration, and the only mutation that reddens it is adding a member to the eight, which the epic's must[0] case already forbids by name. The pair is a vocabulary record, and that is what this supplement is for."
+      },
+      "note": "P2-04 make-vs-use backfill (§12.85 note 46). The ledger assigned this epic ownership of `MCP ToolAnnotations` and `P1-01 SideEffectClass`, and `verify-make-vs-use` reported both as owned-by-assignment with no frozen case naming them once P2-05 started and the deadline passed. Neither case adds behaviour: the ToolAnnotations pair states the exact four hint names the implementation reads and which direction each is allowed to move risk — `destructiveHint` and `openWorldHint` raise from any server, `readOnlyHint` lowers only under operator trust, `idempotentHint` is read and means nothing to risk — and the SideEffectClass pair states that the two spellings shared with P1-01's mechanism vocabulary are not the same concept, which is the property that stops a plugin buying a lower risk band with a mechanism tag. The module header of `risk-taxonomy/src/types.ts` had recorded that fact since the Contract stage; nothing pinned it. Three further standards this epic and P4-05 were ASSIGNED — MITRE ATLAS technique ids, OWASP LLM Top-10 LLM06, and the A2A/MCP TaskStatus mapping — were moved to `deviations` in the same batch on a whole-tree census returning zero hits for each; a case for those could only assert a mapping written to satisfy the gate."
     }
   ]
 }
