@@ -6871,3 +6871,18 @@ The reader is exported as `queueBlockerStatus(queue, blockerId)` so it is tested
 **Deliberately not done: a repo-wide heading-uniqueness gate.** It would land red on eight pre-existing rows, six of which are intentional, and would therefore need an allowlist on its first day — the empty-gate shape this program has had to refuse before.
 
 **What this entry does not establish.** Whether any *other* tool reads these headings the same way: `verify-p9-cells.mjs` is the one measured. `verify-freeze-in-candidate-tree.mjs` also names the file; its call site was read rather than executed, and it does not use `blockerStatus`. No search was made for heading-parsing outside `scripts/`.
+
+### BLOCKED-256 — the durable session log and the evidence package have no redaction seam
+**Status:** OPEN (2026-09-15). Owner: the session packages. Consumer and acceptor: P3-06; this entry closes before P3-06.F (delegate ruling, 2026-09-15, §12.46-B split).
+
+**What P3-06 needs.** acceptance[1]: a secret appears in no session log, stdout/stderr, crash dump or evidence package. Under the split ruling P3-06 keeps the broker, the model-context canary and the LLM-adapter side of provider errors; the durable log and the evidence package are the session side's.
+
+**What exists today.**
+- The durable write path has no redaction step: across `packages/session/session-persistence-jsonl/src` and `packages/session/session-persistence/src`, `redact`, `secret` and `taint` occur in 0 files (the same search finds `session` in 9 files there).
+- The one redaction seam in the session family is `session-telemetry/record`, a waterfall that runs on telemetry records, not on the durable log, and "ships no rules" (`packages/session/session-telemetry/src/coordinator.ts:196`, `index.ts:27`).
+- Provider error text reaches the durable log verbatim: `normalizeLlmFailure` (`packages/llm/llm/src/adapter-failure.ts:49`) copies the thrown message into the `LlmFailure` the session error event persists (`packages/core/session/src/types.ts:212`).
+- Evidence packages are assembled by `packages/assurance/evidence-format` and `scripts/release/collect-evidence.mjs`; whether either redacts was not measured.
+
+**What closes this.** A redaction seam on the durable session write path and on evidence-package assembly, with rules a deployment mounts, and P3-06.F's canary scan of real artifacts passing through both. A rule that only a test mounts does not close it.
+
+**Not established here.** Whether any provider's error body echoes a credential. Whether `packages/assurance/evidence-format` or `scripts/release/collect-evidence.mjs` redacts session content was not measured.
