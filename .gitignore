@@ -47,5 +47,11 @@ apps/web/dist/
 worktrees/
 .agents/worktrees/
 .typert-*/
+# typert generator tests create these with mkdtemp beside the spec (the
+# .generated-/.rendered- roots and copyFixture's explicit-service fixtures) and
+# remove them in afterEach; one survives only when a run exits abnormally.
+packages/typert/generator/tests/.generated-*/
+packages/typert/generator/tests/.rendered-*/
+packages/typert/generator/tests/.explicit-*/
 .gstack/
 native/system/test/bin/
