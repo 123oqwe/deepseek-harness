@@ -13,7 +13,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import {
-  liveFreezeByStage, partitionFindings, recomputeMatchedCases, rescuedArtifactPaths, selectArtifactByDigest,
+  checkCellAgainstObservation, frozenCasesByOrigin, liveFreezeByStage, partitionFindings,
+  recomputeMatchedCases, rescuedArtifactPaths, selectArtifactByDigest,
 } from './verify-cells-recomputable.mjs'
 
 describe('selectArtifactByDigest (BLOCKED-106, 2026-09-06)', () => {
@@ -166,5 +167,76 @@ describe('partitionFindings', () => {
 
   it('reports neither for a cell that recomputes exactly', () => {
     expect(partitionFindings([])).toStrictEqual({ falsified: [], drifted: [] })
+  })
+})
+
+describe('checkCellAgainstObservation compares each case with the record that holds it (drift by origin, 2026-09-15)', () => {
+  // Six controls from lane A's drift-fixtures.mjs. cmdGreen records only the
+  // primary entry's cases on the cell and cmdSupplement writes row.supplements,
+  // so a supplement case is judged against its supplement record, never the cell.
+  const P = 'primary case one'
+  const Q = 'primary case two'
+  const S1 = 'supplement case one'
+  const S2 = 'supplement case two'
+  const report = (passing: string[]) => ({
+    testResults: [{ name: '/x/tests/fixture.spec.ts', assertionResults: passing.map(fullName => ({ fullName, status: 'passed' })) }],
+  })
+  const entry = (cases: string[], extra: Record<string, unknown> = {}) => ({ epic: 'E', stage: 'P', expectCases: cases, expectExit: 0, ...extra })
+  const supplement = (seq: number, cases: string[]) => entry(cases, { supplementSeq: seq, supplements: { epic: 'E', stage: 'P' } })
+
+  /** Judge a cell the way the gate does: live entries, split by origin, then compared. */
+  function judge(
+    entries: ReturnType<typeof entry>[],
+    cell: { expectCasesMatched: string[] },
+    supplements: Record<string, unknown>,
+    passing: string[],
+  ) {
+    const live = liveFreezeByStage(entries).get('E|P') ?? []
+    return { live, findings: checkCellAgainstObservation(cell, frozenCasesByOrigin('E', 'P', live), report(passing), { supplements }) }
+  }
+
+  it('does not hold the cell to a live supplement case that is passing in its observation', () => {
+    const { findings } = judge([entry([P, Q]), supplement(3, [S1])], { expectCasesMatched: [P, Q] }, { 'P.3': { expectCasesMatched: [S1] } }, [P, Q, S1])
+    expect(findings).toStrictEqual([])
+  })
+
+  it('does not ask the cell\'s observation for a supplement case, which a different run observes', () => {
+    const { findings } = judge([entry([P, Q]), supplement(3, [S1])], { expectCasesMatched: [P, Q] }, { 'P.3': { expectCasesMatched: [S1] } }, [P, Q])
+    expect(findings).toStrictEqual([])
+  })
+
+  it('still resolves a stage whose primary was superseded and whose supplement is live', () => {
+    const { live, findings } = judge([entry([P], { supersededBy: 'later' }), supplement(3, [S1])], { expectCasesMatched: [] }, { 'P.3': { expectCasesMatched: [S1] } }, [S1])
+    expect(live).toHaveLength(1)
+    expect(findings).toStrictEqual([])
+  })
+
+  it('still reports a primary case the observation confirms and the cell does not record', () => {
+    const { findings } = judge([entry([P, Q])], { expectCasesMatched: [P] }, {}, [P, Q])
+    expect(findings.map(f => [f.field, f.detail])).toStrictEqual([['frozenCasesNotRecorded', [Q]]])
+  })
+
+  it('names a frozen supplement with no ledger record as never greened, not as drift in the cell', () => {
+    const { findings } = judge([entry([P]), supplement(4, [S2])], { expectCasesMatched: [P] }, {}, [P, S2])
+    expect(findings.map(f => [f.field, f.detail])).toStrictEqual([['supplementNotRecorded', [S2]]])
+    expect(findings[0]?.problem).toContain('supplement P.4')
+  })
+
+  it('attributes a case missing from a supplement\'s own record to that supplement, and only that case', () => {
+    const { findings } = judge([entry([P]), supplement(3, [S1, S2])], { expectCasesMatched: [P] }, { 'P.3': { expectCasesMatched: [S1] } }, [P, S1, S2])
+    expect(findings.map(f => [f.field, f.detail])).toStrictEqual([['frozenCasesNotRecorded', [S2]]])
+    expect(findings[0]?.problem).toContain('supplement P.3')
+  })
+
+  it('keeps a title a supplement restates from the primary as a primary case, keyed to no supplement', () => {
+    const frozen = frozenCasesByOrigin('E', 'P', [entry([P, Q]), supplement(1, [Q, S1])])
+    expect([...frozen.primaryCases]).toStrictEqual([P, Q])
+    expect([...frozen.supplementCases]).toStrictEqual([[S1, 'P.1']])
+    expect(frozen.expectCases).toStrictEqual([P, Q, S1])
+  })
+
+  it('files a never-greened supplement under drift, not falsification', () => {
+    const { findings } = judge([entry([P]), supplement(4, [S2])], { expectCasesMatched: [P] }, {}, [P, S2])
+    expect(partitionFindings(findings)).toStrictEqual({ falsified: [], drifted: findings })
   })
 })

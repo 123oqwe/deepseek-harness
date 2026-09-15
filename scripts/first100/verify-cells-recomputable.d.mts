@@ -62,6 +62,7 @@ export interface FreezeEntry {
   readonly stage: string
   readonly expectCases: readonly string[]
   readonly supplementSeq?: number
+  readonly supplements?: unknown
   readonly supersededBy?: string
 }
 
@@ -98,3 +99,49 @@ export interface CellFinding {
 export function partitionFindings(
   findings: readonly CellFinding[],
 ): { falsified: CellFinding[], drifted: CellFinding[] }
+
+/** A stage's live freeze cases, split by the ledger record each should be held by. */
+export interface FrozenByOrigin {
+  readonly epic: string
+  readonly stage: string
+  readonly primaryCases: Set<string>
+  readonly supplementCases: Map<string, string>
+  readonly expectCases: string[]
+}
+
+/**
+ * Split a stage's live freeze entries into the cases each ledger record is
+ * supposed to hold: primary cases on the cell, supplement-only cases on the
+ * `<stage>.<seq>` supplement record.
+ * @param epic - the cell's epic.
+ * @param stage - the cell's stage.
+ * @param entries - the stage's live freeze entries.
+ * @returns the primary case titles, each supplement-only title's supplement key, and their union.
+ */
+export function frozenCasesByOrigin(
+  epic: string,
+  stage: string,
+  entries: readonly FreezeEntry[],
+): FrozenByOrigin
+
+/**
+ * Compare a recorded cell against what its observation supports, judging each
+ * live case against the record that is supposed to hold it.
+ * @param cell - the ledger cell.
+ * @param frozen - the stage's live cases, as {@link frozenCasesByOrigin} splits them.
+ * @param report - the parsed observation.
+ * @param row - the cell's ledger row, whose `supplements` hold supplement cases.
+ * @returns the findings for this cell; empty when it recomputes exactly.
+ */
+export function checkCellAgainstObservation(
+  cell: { readonly expectCasesMatched?: readonly string[] },
+  frozen: {
+    readonly epic: string
+    readonly stage: string
+    readonly expectCases: readonly string[]
+    readonly primaryCases?: ReadonlySet<string>
+    readonly supplementCases?: ReadonlyMap<string, string>
+  },
+  report: unknown,
+  row?: { readonly supplements?: Readonly<Record<string, unknown>> },
+): CellFinding[]

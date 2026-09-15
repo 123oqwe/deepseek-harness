@@ -224,7 +224,7 @@ export function recomputeMatchedCases(expectCases, passing, epic, stage) {
  * @param report - the parsed observation.
  * @returns the findings for this cell; empty when it recomputes exactly.
  */
-export function checkCellAgainstObservation(cell, frozen, report) {
+export function checkCellAgainstObservation(cell, frozen, report, row = { supplements: {} }) {
   const findings = []
   const passing = passingNames(report)
   const recorded = cell.expectCasesMatched ?? []
@@ -251,24 +251,72 @@ export function checkCellAgainstObservation(cell, frozen, report) {
   // Separately: the live freeze may have moved since the cell was greened.
   // That is drift, not a false claim, so it is reported under its own field --
   // conflating the two would let a supersession read as evidence tampering.
-  const { unmatched } = recomputeMatchedCases(frozen.expectCases, passing, frozen.epic, frozen.stage)
-  if (unmatched.length > 0) {
-    findings.push({
-      field: 'frozenCasesNotInObservation',
-      problem: `${unmatched.length} case(s) in the LIVE freeze are not passing in this cell's observation -- the cell predates the current freeze and needs regreening`,
-      detail: unmatched,
-    })
-  }
+  // Primary cases, against the cell — exactly as before.
+  const primary = [...(frozen.primaryCases ?? new Set(frozen.expectCases))]
   const recordedSet = new Set(recorded)
-  const staleRecord = frozen.expectCases.filter(title => passing.has(title) && !recordedSet.has(title))
+  const { unmatched } = recomputeMatchedCases(primary, passing, frozen.epic, frozen.stage)
+  if (unmatched.length > 0) {
+    findings.push({ field: 'frozenCasesNotInObservation', detail: unmatched,
+      problem: `${unmatched.length} case(s) in the live PRIMARY freeze are not passing in this cell's observation -- the cell predates the current freeze and needs regreening` })
+  }
+  const staleRecord = primary.filter(title => passing.has(title) && !recordedSet.has(title))
   if (staleRecord.length > 0) {
-    findings.push({
-      field: 'frozenCasesNotRecorded',
-      problem: `${staleRecord.length} case(s) the live freeze names and the observation confirms are absent from the cell's record -- drift, not a false claim`,
-      detail: staleRecord,
-    })
+    findings.push({ field: 'frozenCasesNotRecorded', detail: staleRecord,
+      problem: `${staleRecord.length} case(s) the live PRIMARY freeze names and the observation confirms are absent from the cell's record -- drift, not a false claim` })
+  }
+
+  // Supplement-only cases, against the supplement record that is supposed to
+  // hold them. A supplement is observed by a DIFFERENT run, so whether its case
+  // appears in this cell's artifact is incidental and is not asked.
+  const bySupplement = new Map()
+  for (const [title, key] of frozen.supplementCases ?? []) {
+    if (!bySupplement.has(key)) bySupplement.set(key, [])
+    bySupplement.get(key).push(title)
+  }
+  for (const [key, titles] of bySupplement) {
+    const supplement = row.supplements?.[key]
+    if (supplement === undefined) {
+      // Frozen and never greened. A different fact from drift, and one the
+      // union could not express: it blamed the CELL for a case the cell was
+      // never supposed to record.
+      findings.push({ field: 'supplementNotRecorded', detail: titles,
+        problem: `the live freeze carries supplement ${key} with ${String(titles.length)} case(s), and the ledger has no record for it -- frozen but never greened` })
+      continue
+    }
+    if (supplement.status === 'SUPERSEDED') continue
+    const held = new Set(supplement.expectCasesMatched ?? [])
+    const missing = titles.filter(title => !held.has(title))
+    if (missing.length > 0) {
+      findings.push({ field: 'frozenCasesNotRecorded', detail: missing,
+        problem: `${missing.length} case(s) the live freeze names for supplement ${key} are absent from ITS record -- drift in the supplement, not in the cell` })
+    }
   }
   return findings
+}
+
+/**
+ * Split a stage's live freeze entries into the cases each ledger record is
+ * supposed to hold.
+ *
+ * `cmdGreen` records only the primary entry's cases on the cell, and
+ * `cmdSupplement` records a supplement's cases on `row.supplements`, keyed
+ * `<stage>.<seq>`. A title a supplement restates from the primary stays a
+ * primary case, so it is judged once, against the cell.
+ * @param epic - the cell's epic.
+ * @param stage - the cell's stage.
+ * @param entries - the stage's live freeze entries, from {@link liveFreezeByStage}.
+ * @returns the primary case titles, a map from each supplement-only title to
+ * the supplement key that should record it, and their union as `expectCases`.
+ */
+export function frozenCasesByOrigin(epic, stage, entries) {
+  const primaryCases = new Set(entries.filter(e => !e.supplements).flatMap(e => e.expectCases))
+  const supplementCases = new Map()
+  for (const entry of entries.filter(e => e.supplements)) {
+    for (const title of entry.expectCases) {
+      if (!primaryCases.has(title)) supplementCases.set(title, `${stage}.${String(entry.supplementSeq)}`)
+    }
+  }
+  return { epic, stage, primaryCases, supplementCases, expectCases: [...primaryCases, ...supplementCases.keys()] }
 }
 
 /**
@@ -321,12 +369,17 @@ function main() {
   const cells = []
   for (const [epic, row] of Object.entries(ledger.rows)) {
     for (const [stage, cell] of Object.entries(row.cells ?? {})) {
-      if (cell?.status === 'GREEN') cells.push({ epic, stage, cell })
+      // The row comes along because a supplement's cases are recorded on
+      // `row.supplements`, not on the cell: cmdGreen writes only the primary
+      // entry's cases (generate-ledger.mjs:769, :842) and cmdSupplement never
+      // touches the cell at all (BLOCKED-005). Judging a supplement's case
+      // against the cell asks for a state no write path can produce.
+      if (cell?.status === 'GREEN') cells.push({ epic, stage, cell, row })
     }
   }
 
   const results = { verified: [], mismatched: [], drift: [], unavailable: [] }
-  for (const { epic, stage, cell } of cells) {
+  for (const { epic, stage, cell, row } of cells) {
     const key = `${epic}.${stage}`
     const reportPath = cell.observationReportPath
     // The recorded path first, then whatever the same run's rescued artifacts
@@ -379,10 +432,12 @@ function main() {
       results.unavailable.push({ key, cause: 'no-live-freeze', reason: 'no live command-freeze.json entry for this epic and stage', ciRunUrl: cell.ciRunUrl })
       continue
     }
-    // The union across the stage's live entries, deduplicated because a
-    // supplement may restate a case the primary already names.
-    const frozen = { epic, stage, expectCases: [...new Set(entries.flatMap(entry => entry.expectCases))] }
-    const findings = checkCellAgainstObservation(cell, frozen, JSON.parse(bytes.toString('utf8')))
+    // The union is kept — `liveFreezeByStage` exists so a stage whose primary
+    // was superseded still resolves (P4-12 C/P/F) — but it is no longer used as
+    // ONE bag of cases to hold the cell to. Each case is carried with the record
+    // that is supposed to hold it.
+    const frozen = frozenCasesByOrigin(epic, stage, entries)
+    const findings = checkCellAgainstObservation(cell, frozen, JSON.parse(bytes.toString('utf8')), row)
     const { falsified, drifted } = partitionFindings(findings)
     if (falsified.length > 0) results.mismatched.push({ key, findings: falsified })
     if (drifted.length > 0) results.drift.push({ key, findings: drifted, ciRunUrl: cell.ciRunUrl })
@@ -410,7 +465,7 @@ function main() {
     for (const f of m.findings) console.error(`  ${m.key}: ${f.field} -- ${f.problem}${f.detail.length > 0 ? `\n      ${f.detail.slice(0, 5).join('\n      ')}` : ''}`)
   }
   if (results.drift.length > 0) {
-    console.log('DRIFT (the cell is sound -- its live freeze moved after it was greened; regreen from a run at or after the supplement):')
+    console.log('DRIFT (the cell is sound -- a record and the live freeze disagree; regreen the record the finding NAMES: the cell for a primary case, `--supplement` for a supplement one):')
     for (const d of results.drift) {
       for (const f of d.findings) console.log(`  ${d.key}: ${f.field} -- ${f.problem}${f.detail.length > 0 ? `\n      ${f.detail.slice(0, 5).join('\n      ')}` : ''}`)
     }
