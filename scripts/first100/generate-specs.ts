@@ -312,6 +312,11 @@ export interface Adjudication {
          * `files-overlay.mjs` `patchEntries` refuses an entry without it.
          */
         kind: 'widening' | 'substitution'
+        /**
+         * Present once the patch is retired, saying what replaced it. The entry stays
+         * validated here; `files-overlay.mjs` `patchEntries` leaves it out of resolution.
+         */
+        supersededBy?: string
         reason: string
         approvedAt: string
         basis: string

@@ -39,6 +39,8 @@ export interface DeliverablePathPatch {
   readonly approvedPath: string
   /** `substitution`: the approved path replaces the declared one. `widening`: the declared path stays a deliverable and the approved path is added. */
   readonly kind: 'widening' | 'substitution'
+  /** Present on a retired patch, saying what replaced it; `patchEntries` leaves such a patch out. */
+  readonly supersededBy?: string
 }
 
 /** One registry declaration and the paths approved patches substitute for it. */

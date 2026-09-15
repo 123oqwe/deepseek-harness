@@ -70,9 +70,11 @@ export function classifyOverlayPath(path) {
  * approved path replaces the declared one, `widening` when the declared path
  * stays a deliverable and the approved path is added beside it. There is no
  * default, so a missing or misspelt field is refused here instead of being read
- * as one of the two.
+ * as one of the two. An entry with `supersededBy` is retired: it is validated
+ * like any other, since it stays the record of what was once approved, and it is
+ * left out of the result, so no resolution reads it.
  * @param adjudication - the parsed `tests/first100/adjudication.json`.
- * @returns the patch entries.
+ * @returns the live patch entries.
  */
 export function patchEntries(adjudication) {
   return Object.entries(adjudication.deliverablePathPatches?.entries ?? {}).map(([key, patch]) => {
@@ -82,8 +84,11 @@ export function patchEntries(adjudication) {
     if (patch.kind !== 'widening' && patch.kind !== 'substitution') {
       throw new Error(`deliverablePathPatches.entries[${JSON.stringify(key)}].kind must be "widening" or "substitution": ${JSON.stringify(patch.kind)}`)
     }
+    if (patch.supersededBy !== undefined && (typeof patch.supersededBy !== 'string' || patch.supersededBy.trim() === '')) {
+      throw new Error(`deliverablePathPatches.entries[${JSON.stringify(key)}].supersededBy must be a non-empty string saying what replaced it: ${JSON.stringify(patch.supersededBy)}`)
+    }
     return { ...patch, epic: patch.epic ?? key }
-  })
+  }).filter(patch => patch.supersededBy === undefined)
 }
 
 /**

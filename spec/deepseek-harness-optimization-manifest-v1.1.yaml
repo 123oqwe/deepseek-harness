@@ -1023,6 +1023,7 @@ adjudication:
         reason: "Companion to P6-07-C-lifecycle-discovery: F-stage names the identical declared path for the identical mechanical reason (not independently discoverable by first100-exact-sha.ymls observation step). Decided now, at C-stage patch time, specifically so F-stage does not rediscover the same gap later and invent a third filename -- both stages target the same approvedPath."
         approvedAt: "2026-09-03"
         basis: "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-048"
+        supersededBy: "2026-09-15: cross-stage redundancy, not a correction of this stage. It names lifecycle.spec.ts, the C stage's file; P6-07.F is lifecycle.e2e.spec.ts through P6-07-F-lifecycle-e2e-archival-correction, which stays live (delegate ruling (b) kept all four, retirement marker ruled as the follow-up)."
       P6-07-P-lifecycle-store:
         epic: "P6-07"
         stage: "P"
@@ -1221,6 +1222,7 @@ adjudication:
         reason: "Archival correction, not a scope deviation. The `.e2e.ts` suffix routes a file into `vitest.e2e.config.ts`, the real-API suite whose own header states each test self-skips without a key. P6-07's clauses -- session-log paging, filtering, deletion, retention and corrupt-log repair -- are local behaviour with no model call, so the pinned v1.0 source filed a local test into the paid channel. `first100-exact-sha.yml` runs bare `pnpm exec vitest run` (default config) and never loads that config, so a frozen `.e2e.ts` command freezes cases the sole greening channel cannot observe (BLOCKED-048's class). `.e2e.spec.ts` keeps the e2e naming while entering the default channel and cannot double-run, since `vitest.e2e.config.ts`'s include requires a filename ending `.e2e.ts`. The registry path stays byte-locked and unedited: the pinned v1.0 source is immutable under BLOCKED-035, so this deviation can only be recorded, never removed. Full reasoning and the class-wide ruling live in BLOCKED-070; this entry records only the site. Recorded after the fact: this stage was already greened on 2026-09-03 by superseding its freeze (27 e2e cases under `-c vitest.e2e.config.ts` -> 28 cases under the default config), which was reasonable before BLOCKED-070 existed. The cell is NOT reopened; this patch exists so the epic's two stages are explained by one mechanism instead of C's deviation being left with no machine-checkable record."
         approvedAt: "2026-09-04"
         basis: "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070"
+        supersededBy: "2026-09-15: cross-stage redundancy, not a correction of this stage. It names lifecycle.e2e.spec.ts, the F stage's file; P6-07.C is lifecycle.spec.ts through P6-07-C-lifecycle-discovery, which command-freeze.json cites and which stays live (delegate ruling (b) kept all four, retirement marker ruled as the follow-up)."
       P6-07-F-lifecycle-e2e-archival-correction:
         epic: "P6-07"
         stage: "F"

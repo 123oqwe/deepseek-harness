@@ -254,6 +254,16 @@ describe('declared paths through the deliverable-path patches, the one resolutio
     expect(patchEntries(entry({ kind: 'widening' })).map(p => p.kind)).toStrictEqual(['widening'])
   })
 
+  it('leaves a retired patch out of resolution but still refuses a malformed one', () => {
+    const entries = (retired: Record<string, string>) => ({ deliverablePathPatches: { entries: {
+      'P9-99-C-live': { epic: 'P9-99', stage: 'C', declaredPath: declared, approvedPath: approved, kind: 'substitution' },
+      'P9-99-C-retired': { epic: 'P9-99', stage: 'C', declaredPath: declared, approvedPath: 'packages/demo/thing/tests/sibling.spec.ts', kind: 'substitution', ...retired },
+    } } }) as unknown as Parameters<typeof patchEntries>[0]
+    expect(patchEntries(entries({ supersededBy: 'names the sibling stage\'s file' })).map(p => p.approvedPath)).toStrictEqual([approved])
+    expect(() => patchEntries(entries({ supersededBy: '  ' }))).toThrow('P9-99-C-retired')
+    expect(() => patchEntries(entries({ supersededBy: 'retired', approvedPath: 'a.ts + b.ts' }))).toThrow('no whitespace or # anchor')
+  })
+
   it('resolves a stage declaration through every patch for that stage, and not through a patch for another stage', () => {
     const second = 'packages/demo/thing/tests/second.spec.ts'
     const records = resolveDeclaredPaths(registry.epics[0]!, [patch({}), patch({ approvedPath: second }), patch({ stage: 'U', approvedPath: 'packages/demo/thing/tests/other.spec.ts' })])
