@@ -142,7 +142,9 @@ const HELD_BACK = new Map([
       + 'An earlier version of this note said 14 pairs and named docs/subsystems/core.md — the count was wrong and core.md is not among them '
       + '(docs/subsystems/subagent.md is), which is what a hand-maintained number does when the tree moves under it.\n'
       + '             The 12 out-of-sync are NOT "the English side moved ahead". Compared against the blob each .i18n.yaml records, both sides have '
-      + 'changed in all 12 — the re-anchor merged upstream edits to both languages — so none can be closed by re-recording alone. The work '
+      + 'changed in all 12 — the re-anchor merged upstream edits to both languages. Whether a pair can be closed by '
+      + 're-recording depends on whether its two sides are consistent WITH EACH OTHER, which this measurement does not '
+      + 'show: a pair whose translation was kept in step looks exactly like this. The work '
       + 'concentrates in one pair: docs/persistence-catalog.md is EN +458/-89 with 254 lines of fence divergence (938 vs 684), while the other '
       + 'eleven total EN +138/-56. Three pairs carry fence differences (254 / 15 / 6 lines); fences are byte-identical by contract, so that part is '
       + 'mechanical. The remaining nine differ only in prose.\n'
@@ -152,8 +154,11 @@ const HELD_BACK = new Map([
       + 'instead would tell the gate the two sides agree when they do not.',
     until:
       'BLOCKED-124 closes — the user authorizes the translation pass, or rules which pairs diverge only cosmetically. The per-pair sizes above are '
-      + 'the input to that decision: four pairs changed by equal amounts on both sides (+1/-1, +24/-9, +1/-1) are the likeliest cosmetic candidates, '
-      + 'but that is a reading of content rather than a measurement and is left to the ruling. Re-run the gate before reinstating; this entry states '
+      + 'the input to that decision: three pairs changed by equal amounts on both sides (+1/-1, +1/-1, +24/-9), and a fourth '
+      + '(packages/context/memory-context/README.md, EN +17/-0 vs ZH +16/-0) differs only by line wrapping. Equal amounts is '
+      + 'a proxy for symmetry and it is noisy BOTH ways: docs/architecture.md passes it while being substantive, and the '
+      + 'memory-context pair fails it while being fully parallel. Which pairs are merely cosmetic is a reading of content '
+      + 'rather than a measurement and is left to the ruling. Re-run the gate before reinstating; this entry states '
       + 'what was true at 9b87b4beb36a0e138330c5fc2fccfc3c4522ec46, not what is true now.',
   }],
 ])
