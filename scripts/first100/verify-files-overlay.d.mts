@@ -13,3 +13,5 @@ export function unaccountedCitations(
 export function sourceEntriesWithoutReason(overlay: readonly OverlayEntry[]): OverlayEntry[]
 
 export function hotZoneEntriesWithoutCitation(overlay: readonly OverlayEntry[]): OverlayEntry[]
+
+export function unusedReasonKeys(overlay: readonly OverlayEntry[], reasons: Readonly<Record<string, string>>): string[]

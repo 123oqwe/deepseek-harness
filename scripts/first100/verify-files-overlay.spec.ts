@@ -9,7 +9,7 @@
 
 import { describe, expect, it } from 'vitest'
 import { classifyOverlayPath, computeOverlay, declaredPaths } from './files-overlay.mjs'
-import { hotZoneEntriesWithoutCitation, sourceEntriesWithoutReason, unaccountedCitations } from './verify-files-overlay.mjs'
+import { hotZoneEntriesWithoutCitation, sourceEntriesWithoutReason, unaccountedCitations, unusedReasonKeys } from './verify-files-overlay.mjs'
 
 const registry = {
   epics: [{
@@ -152,5 +152,27 @@ describe('hotZoneEntriesWithoutCitation', () => {
     // sentence that explains the classification. Anchored for the same reason
     // `verify-adapt-dispositions` anchors its read-only label.
     expect(hotZoneEntriesWithoutCitation(hotZone('Two additions to a union. NOT labelled HOT ZONE: this file is not on the list.'))).toEqual([])
+  })
+})
+
+describe('unusedReasonKeys', () => {
+  const moved = 'P9-99 packages/demo/thing/src/old-home.ts'
+  const current = 'P9-99 packages/demo/thing/src/extra.ts'
+  const reasons = { [current]: 'Why the extra file is in scope.', [moved]: 'Why the file was in scope before it moved.' }
+
+  it('lists a reason whose path no live freeze entry cites any more', () => {
+    const overlay = computeOverlay(registry, freeze(['packages/demo/thing/src/extra.ts']), reasons)
+    expect(unusedReasonKeys(overlay, reasons)).toEqual([moved])
+  })
+
+  it('lists nothing when every reason is used, so the listing is about disuse and not about reasons existing', () => {
+    const overlay = computeOverlay(registry, freeze(['packages/demo/thing/src/extra.ts', 'packages/demo/thing/src/old-home.ts']), reasons)
+    expect(unusedReasonKeys(overlay, reasons)).toEqual([])
+  })
+
+  it('does not turn an unused reason into a refusal', () => {
+    const overlay = computeOverlay(registry, freeze(['packages/demo/thing/src/extra.ts']), reasons)
+    expect(sourceEntriesWithoutReason(overlay)).toEqual([])
+    expect(unaccountedCitations(registry, freeze(['packages/demo/thing/src/extra.ts']), overlay)).toEqual([])
   })
 })

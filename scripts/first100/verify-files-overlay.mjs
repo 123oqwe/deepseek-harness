@@ -96,9 +96,28 @@ export function hotZoneEntriesWithoutCitation(overlay) {
     && !/git show [0-9a-f]{7,40}\b/u.test(entry.reason))
 }
 
+/**
+ * Reason keys that no overlay entry uses.
+ *
+ * Reported, never refused: a key outlives its entry when a path moves or a
+ * freeze stops citing it, and the reason is kept as the record of why the
+ * path was once in scope.
+ * @param overlay - the computed overlay.
+ * @param reasons - `{ "<epic> <path>": "<reason>" }`.
+ * @returns the unused keys, sorted.
+ */
+export function unusedReasonKeys(overlay, reasons) {
+  const used = new Set(overlay.map(entry => `${entry.epic} ${entry.path}`))
+  return Object.keys(reasons).filter(key => !used.has(key)).sort()
+}
+
 function main() {
   const { registry, freeze, reasons } = loadOverlayInputs()
   const overlay = computeOverlay(registry, freeze, reasons)
+  const unused = unusedReasonKeys(overlay, reasons)
+  if (unused.length > 0) {
+    console.log(`verify-files-overlay: ${String(unused.length)} reason key(s) no overlay entry uses (informational, not a failure):\n  ${unused.join('\n  ')}`)
+  }
 
   if (process.argv.includes('--write')) {
     const document = {
