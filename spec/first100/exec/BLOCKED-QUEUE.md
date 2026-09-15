@@ -4797,6 +4797,8 @@ Measured 2026-09-10 on `60ae16f046`: the chain exited 1 at gate 4, and running t
 
 **Status:** MEASURED, awaiting the delegate's 4.4d recheck and a revocation decision. P1-07 is ACCEPTED (2026-09-04). Found while measuring §12.79's untrusted-workspace invariant for the memory slice, not by auditing P1-07.
 
+**Status addendum (MEASURED 2026-09-15, delegate; lane A read each shipped bundle's `cordis.patch.yml`):** the heading no longer holds as written. The trust-boundary provider is `disabled: true` in `base` and inherited as disabled by `sdk-app` and `sdk-minimal` (no row of their own), but it is **enabled on `acp-app`, `web-app` and `headless`** — three of the six shipped bundles. `headless` answers the "nothing answers there" objection recorded in `base/cordis.patch.yml:402-418` with `dsh --trust-workspace[=read|execute|none]`, which writes the durable record and nothing else; with no record and no answerer the boundary still refuses (`headless/cordis.patch.yml:40-49`). The `base` comment is therefore stale prose in a shipped bundle and is queued for a comment-only fix. What remains open is narrower than the heading: whether `sdk-app` / `sdk-minimal` mount the boundary too (the `--trust-workspace` record path applies there as well; `workspaceTrust` is named by 13 test files and by no snapshot, so mounting changes a behaviour no snapshot observes today), or whether P1-07's acceptance[0] is narrowed to library behaviour. That is the user's product decision (confirmation package D5); the delegate recommends mounting, with the caveat that the real deployment weight of the two SDK bundles is not measurable from this repository. Until it is decided P1-07 stays four-green and unaccepted; the second, narrower gap this entry records (four `ProjectContentKind` members with no project-side consumer) is unaffected by either path.
+
 `workspace-trust-local` ships **`disabled: true`** in `packages/bundle/base/cordis.patch.yml:351-353`, and the row's own comment states the reason plainly: with no grants an enabled provider makes **every** workspace untrusted at once, which stops project skills and the project's `AGENTS.md` loading for every existing user — "a boundary that ships on and breaks everyone does not get adopted".
 
 So on every profile a user starts, `ctx.get('workspaceTrust')` is `undefined`.
@@ -6321,3 +6323,122 @@ Two of the six are written by this repository's own code (`generate-ledger.mjs:6
 **Acceptance was the negative controls, not the green**: an entry carrying an unknown field FAILS; a candidate missing `whyNotRegistered` FAILS; a candidate with zero occurrences FAILS; a non-ISO timestamp FAILS; and **prose left at the entry level FAILS** — without that last one, `additionalProperties: false` could be relaxed at the entry level and every other control would still pass. The migrated live file PASSES, and, as a control on the control, the migrated file FAILS against the previous schema. One thing JSON Schema cannot hold was placed in code instead: `absorbedByCell` is optional by design (occurrences older than that code have none), so deleting it validates; `verify-flake-registry.ts` therefore refuses, separately, any occurrence that shares `(ciRunUrl, candidateSha, outcome)` with a sibling in the same entry and lacks `absorbedByCell`, naming the idempotency key in the message so the next person does not repeat that deletion. The key includes `outcome` on purpose: the first draft keyed on `(ciRunUrl, candidateSha)` alone and refused the live file — entry [2] holds a `failed` and a `passed` occurrence from two attempts of the same run, which is the BLOCKED-023 same-SHA divergence evidence itself, not a duplicate append; a duplicate append repeats the outcome, so that is the pair the rule watches.
 
 **Debt recorded, not repaired here:** `ajv-formats` (the `format` keyword remains unexecuted anywhere else it appears); the freeze-file-level uniqueness check that would have caught BLOCKED-104-shaped bare titles at freeze time is queued separately.
+
+### BLOCKED-251 — the sign-off registry has drifted out of step with the rows it signs, and the count is a moving quantity
+
+**Status:** OPEN (2026-09-15). Not a defect in the binding: `rowDigest` covers the whole row **by design**, and the alternative — deciding which fields are "evidentiary" — has a silent failure mode this one does not. Recorded as a tension the programme has to carry, with one ruling attached.
+
+**This does not mean any epic was wrongly accepted.** A sign-off is bound to the row digest it was given for; any later edit to that row invalidates it mechanically, whatever the edit was about. The number below invites the other reading, so it is stated first.
+
+**What it does mean:** the ledger cannot today demonstrate that its accepted epics still satisfy the predicate that accepted them.
+
+**Measured** on the working tree at `fe70d3f2ea`, 2026-09-15T07:42:33Z, by calling `generate-ledger.mjs`'s own `checkDelegateSignoff` over every ACCEPTED row:
+
+```
+33 ACCEPTED rows
+  would pass predicate (iv) today:  3   (P2-05, P2-06, P4-11)
+  sign-off stale:                  24
+  sign-off missing:                 6   (P0-01, P0-02, P0-03, P0-05, P0-07, P1-01)
+```
+
+61 sign-off entries exist across 29 epics: the registry is populated and **out of step**, not empty.
+
+**The count moves while you read it, which is the point.** An earlier reading the same night, before P4-02 and P6-01 were accepted and before tonight's supplement and pointer work, gave `4 pass / 21 stale / 6 missing` over 31 rows. Nothing was corrected between the two readings — rows were edited, which is exactly what invalidates sign-offs. **Any figure written here is as-of its timestamp and nothing else.**
+
+**One correction to an earlier report of this measurement.** It was stated once as `19 stale / 8 missing`. The measured split is `21 / 6` (at that time); both sum to 27, which is how it went unnoticed. The `8` was carried across from a different group — the eight epics holding pre-re-anchor observations — and two of those (P0-06, P2-01) are `stale`, not `missing`. **A wrong split that preserves the total is the shape that survives review**, which is why it is recorded rather than quietly fixed.
+
+**The sharpest instance is this programme's own, and it took minutes.** P4-06 was signed at `2026-09-15T01:28:07.725Z` and P0-06 at `01:28:14.572Z`. Both were stale shortly after. The commit that moved those two rows, `85a4539325`, changed exactly these fields and no others:
+
+```
+observationReportPath   ×2   (P4-06.P and P0-06.F)
+capturedAtUtc           ×2
+lastUpdatedUtc, inputDigest   (the ledger header)
+```
+
+It repointed two cells at the persistent artifact store — **where the evidence is kept, not what was observed**. The digests, run URLs, candidate SHAs and matched cases were untouched. A sign-off recorded minutes earlier was invalidated by a filing change, because `rowDigest` is `sha256(JSON.stringify(row))` and there is no way to say *"I signed the evidence, not the file path."*
+
+**Why the binding stays.** If a sign-off survived edits to some fields, someone must decide which fields are evidentiary, and that list becomes a thing to get wrong quietly — a field added later defaults into whichever bucket its author assumed. Whole-row binding has no such failure mode: it over-invalidates, and it does so loudly.
+
+**Ruling (delegate, 2026-09-15): no batch re-signing.** A row is re-signed only when it is genuinely re-read in the course of other work — the four-cells-green epics as they are taken up, the reach-debt rows as they are re-verified, the rest whenever next touched. Re-signing 27 rows without reading them would convert a real check into a formality, which is the more expensive mistake.
+
+**Open question, deliberately not answered:** whether `--accept` should record *which* fields a sign-off covered, so a later reader can distinguish a filing change from a re-green. Named here so the tension is not rediscovered as a novelty; not proposed as work.
+
+**What this entry does not establish.** Which commit invalidated each of the other stale rows: the two from 2026-09-15T01:28 were traced to field level, the rest were read as states only. Attributing each remaining stale row to a specific commit is a per-row `git log` walk that has not been done, and this entry should not be read as implying otherwise. Nor does it claim the six `missing` rows were accepted improperly — BLOCKED-036's sign-off requirement postdates some of them, and "no grandfather clause" is precisely why they read as missing rather than exempt.
+
+### BLOCKED-252 — P2-10's shadow evaluation, diff explain and impact report are not built
+**Status:** OPEN (2026-09-15)
+
+**What is missing.**
+
+P2-10's `must[1]` asks for four things: *"支持 unit tests、shadow evaluation、
+version pin、diff explain"*. **One of the four is built.** `version pin` is done
+and directly evidenced — eight cases across C and P name `acceptance[1]` in their
+own titles and pin both directions (same input and version gives the same pin;
+one character, the vocabulary, or the engine version each moves it).
+
+`shadow evaluation` and `diff explain` are not built, and neither is the
+capability `acceptance[2]` asks for: *"升级前可对历史 ActionManifest 重放并生成
+impact report"*.
+
+**This is a recorded deferral, not an oversight.**
+
+`packages/policy/policy-language/README.md:86`, under *Known Limitations and
+Deferred Work*, verbatim:
+
+> **Shadow evaluation, diff explain and a pre-upgrade impact report are not
+> built** — Epic P2-10 asks for a policy set to be evaluated in shadow, for an
+> explanation of how two sets' decisions differ, and for historical
+> `ActionManifest`s to be replayed before an upgrade into an impact report. The
+> pin every decision records is the key such a replay would compare on, but
+> **nothing in the tree performs the shadow evaluation, the diff, or the replay.**
+
+The package said so; the ledger did not.
+
+**Measured, 2026-09-15.**
+
+- whole-repo symbol search for `impactReport`, `impact-report`, `replayManifest`,
+  `replayActionManifest`: **0 hits** in `packages/`, `apps/`, `scripts/`;
+- `diffExplain` under `packages/policy/`: **0**;
+- `"shadow"` under `packages/policy/`: **1** — the README paragraph above;
+- `packages/policy/policy-language/src/` contains `parser.ts`, `compiler.ts`,
+  `schema.ts`, `index.ts` — parsing and compilation, **no evaluator**;
+- whole-repo `"impact report"`: the README plus three spec/report documents, and
+  **no code**.
+
+Verdict: **not implemented.** Not "implemented but untested", not partial.
+
+**Why it surfaced now.**
+
+P2-10 has all four cells GREEN and is not ACCEPTED. Drafting its
+`acceptance-coverage.json` citations found evidence for `acceptance[0]`
+(indirect, via the closed context vocabulary) and `acceptance[1]` (direct, eight
+cases), and **none at all** for `acceptance[2]` — 22 unlabelled green cases are
+about policy-set parsing, pinning, the settings namespace and malformed input,
+and not one mentions replay, a historical manifest, or an impact report.
+
+The 11 citations for `[0]` and `[1]` are being applied. Predicate (i) will then
+read `missing 2`, truthfully.
+
+**Closed when.**
+
+**Either** the three capabilities are implemented, observed, and cited — a new
+stage or supplement, frozen and greened, with `acceptance[2]` gaining real
+citations — **or** the user rules that P2-10's scope is narrowed, which is an
+inclusion-scope decision and not the delegate's or a lane's to take.
+
+**Not closable by** writing a citation that stretches an existing case to cover
+`[2]`. Predicate (i) passing is the only mechanical signal that an acceptance
+clause has evidence; making it pass without evidence removes the signal and
+leaves the gap.
+
+**What this entry does not claim.**
+
+- that P2-10's other work is unsound — three of its four cells' evidence is
+  unaffected, and `acceptance[1]`'s eight citations are direct;
+- that the deferral was wrong. It was recorded in the package's own README at the
+  time. **The defect is that a limitation written in a README never reached the
+  ledger**, so an epic could sit four-cells-green with a capability missing and
+  nothing in the programme's own records said so;
+- that this is the only such case. **It is the only one I looked for.** The same
+  shape — a README naming a deferred capability that an acceptance clause asks
+  for — would not be visible to any gate that exists today.
