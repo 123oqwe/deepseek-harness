@@ -967,7 +967,7 @@
 - **fs.realpath + fs.stat ino/dev** — realpathNormalize already exists in packages/workspace/workspace/src/paths.ts
 **备注 · 看过但不用(reference,只读设计)**:
 - microsoft/vscode — Design reference only
-**用什么 · 标准(绑定词汇)**:VS Code Workspace Trust model (untrustedWorkspaces supported true\|false\|limited, restrictedConfigurations) (**唯一涉及者,本 epic 是形状所有者**;冻结一条 schema/词汇用例) · git safe.directory ownership check (**唯一涉及者,本 epic 是形状所有者**;冻结一条 schema/词汇用例)
+**用什么 · 标准(绑定词汇)**:VS Code Workspace Trust model · git safe.directory ownership check — Measured 2026-09-15: the VS Code Workspace Trust MODEL is adopted and pinned by a live frozen case (`workspace trust`), while its named fields `untrustedWorkspaces` and `restrictedConfigurations` occur in zero files, so the standard string dropped them; `git safe.directory ownership check` was not adopted and is recorded in deviations[] (§12.85 note 47), not by a vocabulary case.
 **备注 · 还得自写(residual)**:State machine untrusted\|trusted-read\|trusted-execute bound to realpath+inode/dev, gating at load sites (agent-instructions, hooks, MCP, skills, profile patch overlays), audit on escalation, headless default untrusted, prompt-injection marking for trusted-read text.
 **备注 · 风险(risk)**:Trust state alone does not satisfy acceptance[0] — also depends on P1-04 (--ignore-scripts) and P1-06; add a manifest v2 workspaceTrust field.
 **备注 · 社区插件(全列,不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:

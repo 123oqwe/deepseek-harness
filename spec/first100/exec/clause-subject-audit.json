@@ -548,7 +548,7 @@
         "expectedDeletedPct": "0",
         "recordedBeforeFirstLine": false,
         "realized": null,
-        "note": "Backfilled 2026-09-07 under gate (e). The fourth make-vs-use question became standard practice at P2-04 and this epic predates it, so the record states what is true of the tree today rather than reconstructing a decision nobody made. A standard is dispositioned as a deviation rather than `standardsOwned` unless a live frozen case of this epic names it, which is what verify-make-vs-use's fourth check requires."
+        "note": "Backfilled 2026-09-07 under gate (e). The fourth make-vs-use question became standard practice at P2-04 and this epic predates it, so the record states what is true of the tree today rather than reconstructing a decision nobody made. Ownership is not an obligation to adopt (§12.85 note 47): a standard assigned to this epic is claimed EITHER by `standardsOwned` with a live frozen case naming it, which verify-make-vs-use's fourth check grades, OR by `deviations[]` recording a measurement that the implementation took another route. A measured non-adoption is a disposition, not a shortfall."
       }
     },
     "P1-02": {
@@ -777,20 +777,20 @@
             "reason": "Adopted in substance: workspace identity is observed through `realpathNormalize`, which this epic's own `dsh-workspace` provides over node:fs. The card's label is descriptive, not an importable specifier, so `specifier` names the real one."
           }
         ],
-        "deviations": [],
+        "deviations": [
+          {
+            "standard": "git safe.directory ownership check",
+            "reason": "Not adopted. Whole-tree census at 2026-09-15: the literal `safe.directory` occurs in ZERO files under packages/, apps/, docs/ and scripts/ (excluding lib/), and no ownership check on a workspace's uid exists on any path this epic owns. Recorded with the matcher because the matcher is part of the number: `grep -rli \"safe.directory\"` returns ONE file (spill-local/src/cleanup.ts) since an unescaped `.` matches any character; escaped, it returns zero. This epic's trust decision is a bound record with a canonical realpath plus inode, not git's directory-ownership rule, so the vocabulary has no subject here. Ledger status at the time of writing: NOT_RUN with four green cells."
+          }
+        ],
         "rejectedAbsent": [],
         "standardsOwned": [
           {
-            "standard": "VS Code Workspace Trust model (untrustedWorkspaces supported true|false|limited, restrictedConfigurations)",
+            "standard": "VS Code Workspace Trust model",
             "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
-            "basis": "assignment",
-            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
-          },
-          {
-            "standard": "git safe.directory ownership check",
-            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
-            "basis": "assignment",
-            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
+            "basis": "assignment + evidence",
+            "reason": "Owned by ASSIGNMENT and pinned by EVIDENCE as of 2026-09-15. The standard string dropped its parenthetical: `untrustedWorkspaces` and `restrictedConfigurations` occur in ZERO files under packages/, apps/, docs/ and scripts/ (excluding lib/), so naming them asserted an adoption that never happened. The model itself is what this epic built, and the counts are word-boundary matches rather than substring ones: `workspaceTrust` in 50 files, `WorkspaceTrustService` in 5, `bindWorkspaceTrust` in 6, `reconcileWorkspaceTrust` in 7, `upgradeWorkspaceTrust` in 6, plus the package `packages/workspace/workspace-trust`. `evidenceTitleSubstring` names the substring that proves it: exactly ONE live frozen case contains `workspace trust` (word-boundary and substring counts agree at 1), P1-07.C's `must[0]: a freshly bound workspace trust record starts untrusted and carries the full canonical-realpath-plus-inode`. Ledger status at the time of writing: NOT_RUN with four green cells; the earlier text here said ACCEPTED, which was never true of this epic.",
+            "evidenceTitleSubstring": "workspace trust"
           }
         ],
         "standardsImported": [],
@@ -807,7 +807,7 @@
         "expectedDeletedPct": "0",
         "recordedBeforeFirstLine": false,
         "realized": null,
-        "note": "Backfilled 2026-09-07 under gate (e). The fourth make-vs-use question became standard practice at P2-04 and this epic predates it, so the record states what is true of the tree today rather than reconstructing a decision nobody made. A standard is dispositioned as a deviation rather than `standardsOwned` unless a live frozen case of this epic names it, which is what verify-make-vs-use's fourth check requires."
+        "note": "Backfilled 2026-09-07 under gate (e). The fourth make-vs-use question became standard practice at P2-04 and this epic predates it, so the record states what is true of the tree today rather than reconstructing a decision nobody made. Ownership is not an obligation to adopt (§12.85 note 47): a standard assigned to this epic is claimed EITHER by `standardsOwned` with a live frozen case naming it, which verify-make-vs-use's fourth check grades, OR by `deviations[]` recording a measurement that the implementation took another route. A measured non-adoption is a disposition, not a shortfall."
       }
     },
     "P1-08": {
@@ -855,7 +855,7 @@
         "expectedDeletedPct": "0",
         "recordedBeforeFirstLine": false,
         "realized": null,
-        "note": "Backfilled 2026-09-07 under gate (e). The fourth make-vs-use question became standard practice at P2-04 and this epic predates it, so the record states what is true of the tree today rather than reconstructing a decision nobody made. A standard is dispositioned as a deviation rather than `standardsOwned` unless a live frozen case of this epic names it, which is what verify-make-vs-use's fourth check requires."
+        "note": "Backfilled 2026-09-07 under gate (e). The fourth make-vs-use question became standard practice at P2-04 and this epic predates it, so the record states what is true of the tree today rather than reconstructing a decision nobody made. Ownership is not an obligation to adopt (§12.85 note 47): a standard assigned to this epic is claimed EITHER by `standardsOwned` with a live frozen case naming it, which verify-make-vs-use's fourth check grades, OR by `deviations[]` recording a measurement that the implementation took another route. A measured non-adoption is a disposition, not a shortfall."
       }
     },
     "P1-09": {
@@ -901,7 +901,7 @@
         "expectedDeletedPct": "0",
         "recordedBeforeFirstLine": false,
         "realized": null,
-        "note": "Backfilled 2026-09-07 under gate (e). The fourth make-vs-use question became standard practice at P2-04 and this epic predates it, so the record states what is true of the tree today rather than reconstructing a decision nobody made. A standard is dispositioned as a deviation rather than `standardsOwned` unless a live frozen case of this epic names it, which is what verify-make-vs-use's fourth check requires."
+        "note": "Backfilled 2026-09-07 under gate (e). The fourth make-vs-use question became standard practice at P2-04 and this epic predates it, so the record states what is true of the tree today rather than reconstructing a decision nobody made. Ownership is not an obligation to adopt (§12.85 note 47): a standard assigned to this epic is claimed EITHER by `standardsOwned` with a live frozen case naming it, which verify-make-vs-use's fourth check grades, OR by `deviations[]` recording a measurement that the implementation took another route. A measured non-adoption is a disposition, not a shortfall."
       }
     },
     "P1-10": {
@@ -1024,7 +1024,7 @@
         "expectedDeletedPct": "0",
         "recordedBeforeFirstLine": false,
         "realized": null,
-        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it."
+        "note": "Backfilled 2026-09-07 under gate (e). Ownership is not an obligation to adopt (§12.85 note 47): a standard assigned to this epic is claimed EITHER by `standardsOwned` with a live frozen case naming it, which verify-make-vs-use's fourth check grades, OR by `deviations[]` recording a measurement that the implementation took another route. A measured non-adoption is a disposition, not a shortfall."
       }
     },
     "P2-02": {
@@ -1345,7 +1345,7 @@
         "expectedDeletedPct": "0",
         "recordedBeforeFirstLine": false,
         "realized": null,
-        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it. This epic is NOT accepted, so its deviations use the not-started wording rather than the read-only accepted-unadopted reason."
+        "note": "Backfilled 2026-09-07 under gate (e). Ownership is not an obligation to adopt (§12.85 note 47): a standard assigned to this epic is claimed EITHER by `standardsOwned` with a live frozen case naming it, which verify-make-vs-use's fourth check grades, OR by `deviations[]` recording a measurement that the implementation took another route. A measured non-adoption is a disposition, not a shortfall. This epic was ACCEPTED on 2026-09-10T05:40:26Z, after this record was backfilled on 2026-09-07; its deviations keep the not-started wording they were written with, which verify-adapt-dispositions permits on an ACCEPTED row — that rule refuses a read-only reason on a non-accepted row, not the reverse. The wording is not re-dated, because acceptance did not re-take the measurement each deviation records."
       }
     },
     "P2-05": {
@@ -1703,7 +1703,7 @@
         "expectedDeletedPct": "0",
         "recordedBeforeFirstLine": false,
         "realized": null,
-        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it."
+        "note": "Backfilled 2026-09-07 under gate (e). Ownership is not an obligation to adopt (§12.85 note 47): a standard assigned to this epic is claimed EITHER by `standardsOwned` with a live frozen case naming it, which verify-make-vs-use's fourth check grades, OR by `deviations[]` recording a measurement that the implementation took another route. A measured non-adoption is a disposition, not a shortfall."
       }
     },
     "P4-01.U2": {
@@ -1914,7 +1914,7 @@
         "expectedDeletedPct": "0",
         "recordedBeforeFirstLine": false,
         "realized": null,
-        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it."
+        "note": "Backfilled 2026-09-07 under gate (e). Ownership is not an obligation to adopt (§12.85 note 47): a standard assigned to this epic is claimed EITHER by `standardsOwned` with a live frozen case naming it, which verify-make-vs-use's fourth check grades, OR by `deviations[]` recording a measurement that the implementation took another route. A measured non-adoption is a disposition, not a shortfall."
       }
     },
     "P4-06": {
@@ -2087,7 +2087,7 @@
         "expectedDeletedPct": "0",
         "recordedBeforeFirstLine": false,
         "realized": null,
-        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it."
+        "note": "Backfilled 2026-09-07 under gate (e). Ownership is not an obligation to adopt (§12.85 note 47): a standard assigned to this epic is claimed EITHER by `standardsOwned` with a live frozen case naming it, which verify-make-vs-use's fourth check grades, OR by `deviations[]` recording a measurement that the implementation took another route. A measured non-adoption is a disposition, not a shortfall."
       }
     },
     "P4-09": {
@@ -2130,7 +2130,7 @@
         "expectedDeletedPct": "0",
         "recordedBeforeFirstLine": false,
         "realized": null,
-        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it."
+        "note": "Backfilled 2026-09-07 under gate (e). Ownership is not an obligation to adopt (§12.85 note 47): a standard assigned to this epic is claimed EITHER by `standardsOwned` with a live frozen case naming it, which verify-make-vs-use's fourth check grades, OR by `deviations[]` recording a measurement that the implementation took another route. A measured non-adoption is a disposition, not a shortfall."
       }
     },
     "P4-11": {
@@ -2315,7 +2315,7 @@
         "expectedDeletedPct": "0",
         "recordedBeforeFirstLine": false,
         "realized": null,
-        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it."
+        "note": "Backfilled 2026-09-07 under gate (e). Ownership is not an obligation to adopt (§12.85 note 47): a standard assigned to this epic is claimed EITHER by `standardsOwned` with a live frozen case naming it, which verify-make-vs-use's fourth check grades, OR by `deviations[]` recording a measurement that the implementation took another route. A measured non-adoption is a disposition, not a shortfall."
       }
     },
     "P5-11": {
@@ -2357,7 +2357,7 @@
         "expectedDeletedPct": "0",
         "recordedBeforeFirstLine": false,
         "realized": null,
-        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it."
+        "note": "Backfilled 2026-09-07 under gate (e). Ownership is not an obligation to adopt (§12.85 note 47): a standard assigned to this epic is claimed EITHER by `standardsOwned` with a live frozen case naming it, which verify-make-vs-use's fourth check grades, OR by `deviations[]` recording a measurement that the implementation took another route. A measured non-adoption is a disposition, not a shortfall."
       }
     },
     "P6-01": {
@@ -2457,7 +2457,7 @@
         "expectedDeletedPct": "0",
         "recordedBeforeFirstLine": false,
         "realized": null,
-        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it."
+        "note": "Backfilled 2026-09-07 under gate (e). Ownership is not an obligation to adopt (§12.85 note 47): a standard assigned to this epic is claimed EITHER by `standardsOwned` with a live frozen case naming it, which verify-make-vs-use's fourth check grades, OR by `deviations[]` recording a measurement that the implementation took another route. A measured non-adoption is a disposition, not a shortfall."
       }
     },
     "P6-07": {
@@ -2498,7 +2498,7 @@
         "expectedDeletedPct": "0",
         "recordedBeforeFirstLine": false,
         "realized": null,
-        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it."
+        "note": "Backfilled 2026-09-07 under gate (e). Ownership is not an obligation to adopt (§12.85 note 47): a standard assigned to this epic is claimed EITHER by `standardsOwned` with a live frozen case naming it, which verify-make-vs-use's fourth check grades, OR by `deviations[]` recording a measurement that the implementation took another route. A measured non-adoption is a disposition, not a shortfall."
       }
     },
     "P8-01": {
@@ -2575,7 +2575,7 @@
         "expectedDeletedPct": "0",
         "recordedBeforeFirstLine": false,
         "realized": null,
-        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it."
+        "note": "Backfilled 2026-09-07 under gate (e). Ownership is not an obligation to adopt (§12.85 note 47): a standard assigned to this epic is claimed EITHER by `standardsOwned` with a live frozen case naming it, which verify-make-vs-use's fourth check grades, OR by `deviations[]` recording a measurement that the implementation took another route. A measured non-adoption is a disposition, not a shortfall."
       }
     },
     "SLICE-3.1-cedar": {

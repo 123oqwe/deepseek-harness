@@ -1977,7 +1977,7 @@
    "verdict": "PROVIDER_WRITE",
    "verdictSecondary": "CONTRACT_WRITE",
    "standards": [
-    "VS Code Workspace Trust model (untrustedWorkspaces supported true|false|limited, restrictedConfigurations)",
+    "VS Code Workspace Trust model",
     "git safe.directory ownership check"
    ],
    "oss": [

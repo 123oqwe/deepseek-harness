@@ -543,7 +543,7 @@
   ],
   "P1-07": [
    {
-    "standard": "VS Code Workspace Trust model (untrustedWorkspaces supported true|false|limited, restrictedConfigurations)",
+    "standard": "VS Code Workspace Trust model",
     "family": null,
     "owner": "P1-07",
     "thisEpicOwns": true,
@@ -555,7 +555,7 @@
     "family": null,
     "owner": "P1-07",
     "thisEpicOwns": true,
-    "notAdoptedHere": false,
+    "notAdoptedHere": true,
     "singleAdopter": true
    }
   ],
