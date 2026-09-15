@@ -268,9 +268,6 @@ function applyFileReplacements(id, files) {
   return files.map((file) => {
     const replacement = replacements.find(entry => entry.from === file.path)
     if (replacement === undefined) return file
-    if (replacement.baselinePath !== undefined && replacement.kind !== 'B') {
-      throw new Error(`${id}: file replacement ${replacement.from} -> ${replacement.to} records baselinePath, which only a kind B file carries`)
-    }
     return replacement.baselinePath === undefined
       ? { path: replacement.to, kind: replacement.kind }
       : { path: replacement.to, kind: replacement.kind, baselinePath: replacement.baselinePath }
@@ -341,6 +338,17 @@ const FILES_REPLACED = {
     ],
     authorization: 'delegate ruling, 2026-09-15 (BLOCKED-253).',
   },
+}
+
+// Checked over the whole table before any replacement is applied. An epic can record
+// one `from` for several stages, and applyFileReplacements applies only the first of
+// them to the epic-level list, so a check made there never sees the others.
+for (const [id, { replacements }] of Object.entries(FILES_REPLACED)) {
+  for (const entry of replacements) {
+    if (entry.baselinePath !== undefined && entry.kind !== 'B') {
+      throw new Error(`${id}: file replacement ${entry.from} -> ${entry.to} (stage ${entry.stage}) records baselinePath, which only a kind B file carries`)
+    }
+  }
 }
 
 const TEST_FILES_ADDED = {

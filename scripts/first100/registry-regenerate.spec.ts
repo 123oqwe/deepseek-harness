@@ -11,7 +11,7 @@
  *              and owner assignment — it must NOT self-report ACCEPTED or
  *              ADJUDICATED, because no maintainer adjudication has happened yet.
  */
-import { execFileSync } from 'node:child_process'
+import { execFileSync, spawnSync } from 'node:child_process'
 import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
@@ -115,6 +115,23 @@ describe('first100 registry regeneration', () => {
     writeFileSync(decisionPath, `${readFileSync(decisionPath, 'utf8')}\n-- tampered by spec --\n`)
     const status = check(sources, REGISTRY)
     expect(status.status).not.toBe(0)
+  })
+
+  it('red: baselinePath on a replacement of any kind but B stops extraction, also when it is not the first record for its path', () => {
+    // P4-06 records the agent-loop inbox replacement for stages C and U. The stage-U record is the
+    // second for that path, the one the epic-level application never reads.
+    const dir = tempDir()
+    const script = join(dir, 'extract-registry.mjs')
+    cpSync(join(here, 'matrix-parse.mjs'), join(dir, 'matrix-parse.mjs'))
+    const text = readFileSync(EXTRACTOR, 'utf8')
+    const record = "kind: 'B', baselinePath: 'packages/core/agent/src/inbox.ts', stage: 'U'"
+    const epicStart = text.indexOf("'P4-06': {")
+    const at = text.indexOf(record, epicStart)
+    expect(at > epicStart && at < text.indexOf("'P5-10': {")).toBe(true)
+    writeFileSync(script, text.slice(0, at) + record.replace("kind: 'B'", "kind: 'N'") + text.slice(at + record.length))
+    const run = spawnSync(process.execPath, [script, '--check', '--sources', SOURCES, '--out', REGISTRY], { encoding: 'utf8' })
+    expect(run.status).not.toBe(0)
+    expect(run.stderr).toContain('P4-06: file replacement packages/core/agent/src/inbox.ts -> packages/core/agent-loop/src/inbox.ts (stage U) records baselinePath, which only a kind B file carries')
   })
 
   it('honesty: provenance does not self-report adjudication or acceptance', () => {
