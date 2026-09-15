@@ -2,6 +2,16 @@
 
 **维护**:现任 delegate 在每次推送时于 gate-wt2 叠加更新(EPIC-LIFECYCLE §5.1.10 / §5.2)。**这份文件是状态快照,不是规则**;规则在 EPIC-LIFECYCLE.md,裁决在 plan-rectification-2026-09-06.md 与 BLOCKED-QUEUE.md。
 
+## 最新现况快照(2026-09-15 ~15:3xZ 定稿,delegate 78,会话 d3a94c8b;本块为准,下方旧块历史留档)
+
+- **再锚定(BASE-ALIGN-v3)已落地**:`fork/first100-exec` = **D `3672337016dcc7e4223c1b85591c281415814c22`**(04:14Z,用户直接指令推送;父 C `df85de5e63`);push-event run 34928038271 全绿(26543/0、门集 25/1、快照步 success),`[CI Bypass]` 回退首次真实执行证实(step17 行 12047/12048、729)。**口径**:"落地已完成;验收条件 §5(2)(3)(`base-align-v3-user-confirmation.md:138–`)的记录闭合进行中"——§5(2) 冲突 ACCEPTED epic 的 4.4a–d 重跑(runbook S3 名单 18,文档计数漂 16/15/17/18)与 §5(3) 引用冲突文件的观测重判(清单 S5/S6/S7),逐格/逐 epic 记录此前从未做成;接线复核(9037b0f213)与 4.4d 重判记录已补入 HEAD(3ed12f5f),清单 RE-OBSERVED 0/32(32 格 / 27 唯一命令,lane A 表 argv-rerun-table.md 为唯一来源;P1-03.U 系纳入错误已移出)。
+- **工作树**:`wt-reanchor` = `/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-…/scratchpad/wt-reanchor`,分支 `lane-b-base-align-v3`,**代码链最终 tip `aa78ad17b7`(112b:queueBlockerStatus 容忍加粗状态值 + BLOCKED-220/240 去粗;其前 8278e2541c = 随机例修复 reportDirMatchesCandidate 前缀夹具、其前 a61c21f951 = 108 cmdAccept 前置门——make-vs-use / freeze-in-candidate-tree / adapt-dispositions 纯 findings + 活冻结 files 存在性,本 epic 任一 finding 即 BLOCKED、无绕过;worktree 注入证明真拦、账本字节不变;其前 2a94251c39 = α-6c exitCodeFor、其前 9c07716ce6 = α-5b widening 补丁的批准路径缺失即 resolved-missing、其前 f40982d7a3 = α-5 补丁 `kind` 必填、54 条 24/30、105 对 widening 不豁免、其前 d37a28744b = α-6b 失败优先 exit 1、其前 2361e1713a = α-6 verify-files-overlay 比对已提交 files-overlay.json 与重生成结果、其前 fb12a55f31 = α-4b files-overlay.json 刷新 364→363、其前 4cd187eb5f = 111α-4 两条畸形 approvedPath 修正 + patchEntries 守卫、其前 a28805ab58 = BLOCKED-257 docs、其前 d34e4ea426 = BLOCKED-256 docs、b238c561d1 = 111α-3 补丁解析进 files-overlay.mjs 共享助手(overlay 393→364、未用键 19→32)、其前 5fddc71eb6 = P2-12.F 冻结(28 expectCases、灵敏度 3 红全在集内、106 守卫首次拦住未同步 freezeDigest)、其前 56eed1cb01 = 111α-2 三条 .e2e 补丁 + 105 经补丁解析 → 22 patched / 19 absent、其前 ee07746da0 = BLOCKED-253 补记 docs、其前 74fadf1144 = 111α-1 inbox.ts 6 条 FILES_REPLACED + registry/manifest/overlay 重生成、其前 bed44fc9f4 = 106 freezeDigest、其前 03aabd8ee6 = 112 BLOCKED-254 执行、其前 1251aa9e14 = P6-01 重签+接受记录、其前 e591ccca70 = 105 verify-declared-files-exist 入门集、其前 046743d669 = 110 unusedReasonKeys 只报、其前 f0b75ea8 = 96 freeze-case-uniqueness 门 + CI 步骤、4584700c10 = (ii) registeredRenames 跳过 retired、00df049874 = docs BLOCKED-253 + 251 补段),D 之后 51 个未推提交;树净。**其后仅剩一笔 docs 同步提交**(把本文件与 plan-rectification-2026-09-06.md 的 overlay 工作副本拷进树;推送 tip = 该同步提交,D 之后 52)**(`git rev-list --count 3672337016..HEAD` 实测;下列为要点、非全表——全表见 lane A 清单 v4)(E1 d428c37f、85 搬家 85a45393、P.3 恢复 b771b046、①b 1434cbe7、② 6a1d1ff9、③ a760d161、docs 9b87b4be、④ 解停+186 关闭 0cea1d24、88 守卫 6bfa4d0a、翻译理由 582b7ee0、声明补 4e31fecd、92 DRIFT 8aa8b3b6、九条补绿 f81f9f6b、验收 fe70d3f2、90 schema+BLOCKED-250 8048472a、P6-01 撤签 7bbeaa2e、104 docs 3ed12f5f、95 重冻 2cb75a1d、C.1 green f491d011(**已撤销**)、覆盖引用 e9f0cacf、BLOCKED-185/251/252 b10f9f72、files 修正+overlay 2d228a17、撤销 f2036a39、109 注释 91c2c0dc、P6-01 记录 01f7f9e7、preFlight 第二批 69a66830、docs 253/251 00df0498、(ii) 4584700c、96 f0b75ea8、110 046743d6)。**已完成(10:30–10:45Z)**:e591ccca70 上最终门集绿(`26 gate(s) passed, 1 held back`,gateset.exit 0,守卫未触发);delegate 重签并接受 P6-01(签核 rowDigest e859fb7f…,事后 make-vs-use 0 MISMATCHED,--check 0)→ **ACCEPTED = 33**(已提交 1251aa9e14)。**代码链已收口(2026-09-15 ~15:3xZ,本块定稿)。推送前置(顺序)**:lane B docs 同步提交(两显式路径,cmp 断言,补记 428 在树)→ 在同步提交 tip 上跑整套注册表门集(预期 26/1;守卫;之后不再落任何提交)→ lane A 就绪包(v5 §1/§3/§9/§10 全 GREEN)+ 本块复核 → delegate 早报顶部写可推 sha 与一句话命令 → **只按用户明示推送**(`push-exec.sh <40-hex> first100-exec`;never force)。推送后照早报「推送后行动单」。(cmdAccept 前置门:三门纯 findings + 活冻结 files 存在性;frozen-titles-resolvable 不接入)→ 101(P2-12.F 已冻结 5fddc71eb6,NOT_RUN 待 CI 观测) 本地 argv 重跑 → …;**推送前**:overlay→树同步 DELEGATE-CHECKPOINT.md + plan-rectification(到补记 428)、最终 tip 再跑整套门集、清单 v5(生成表)、post-push-verify-v2。最后一次完整门集绿于 f2036a39f5("25 gate(s) passed, 1 held back");其后三次记录类提交依两门 + --check(门集因系统低内存被杀 168/174,裁 (b),下一次整跑承载)。**推送前**:整套门集须再绿(预期 105 落地后 26/1)、post-push-verify-v2(lane A)、清单 v4;只推显式 40-hex、never force、走 `~/first100-delegate/push-exec.sh`。
+- **ACCEPTED = 33**(as-of 1251aa9e14;ledger 直方图 ACCEPTED 33 / NOT_RUN 66 / BLOCKED_ON_ACCEPTANCE 2)。P6-01 经历:今晚验收 → 撤签(verify-make-vs-use 对已验收 epic 持有无冻结用例的按归属标准 MISMATCHED,delegate 验收前未跑该门)→ 记录改为 deviations[](§12.85 note 47)、门读 VERIFIED → e591ccca70 完整门集绿后由 delegate **重签并接受**(10:45Z,rowDigest e859fb7f…,记录提交 1251aa9e14)。签核脱节:31 条 ACCEPTED 以今日谓词重判仅 4 条过(签核绑定整行摘要;BLOCKED-251,裁"只在重读时重签")。
+- **Lane A**(`dsh-first100-clean-93`,`uds:/tmp/cc-socks/12312.sock`):只读/起草;队列 `~/first100-delegate/queue/laneA.md`(未勾项以文件为准;今晚已交付 170–177、5827–5838;在做:今日教训清单、P2-12.F 28 条定稿、overlay/reality set 是否读补丁、推送后核验适配)。**Lane B**:旧会话 `dsh-first100-lane-b-39` 09:23Z 干净退出;**09:55Z 由看门狗重开为 `dsh-first100-lane-b-14`**(`uds:/tmp/cc-socks/46252.sock`,screen `first100-laneB`,opus/auto,fresh session——交接包 `~/…/first100-delegate/…/scratchpad/laneB-handover.md` + lane A 报到包已发);delegate 已在净树 69a66830e0 应用 docs batch3(BLOCKED-QUEUE.md +167:BLOCKED-253 + 251 补段)——lane B 第一笔提交即此;`queue/laneB.md` 13 项 HOLD 已解除(含 registry FILES_REPLACED 批、blockerStatus 失败关闭、P6-07 百万 fixture 可行性):四个已批 diff 已全部落地(4584700c10 / f0b75ea8 / 046743d669 / e591ccca70),原序——(ii) frozen-title-renames retired 过滤(pii-draft)→ 96 verify-freeze-case-uniqueness(p96-draft,含 workflow 步骤)→ 110 overlay 孤儿键信息列出(p110)→ 105 verify-declared-files-exist(p105,入门集→26/1);101 本地 argv 重跑(27 命令,回写用 lane A checklist-writeback.mjs、图例插第 9 行);P2-12.F dry-run(argv 五文件已裁);freezeDigest;cmdAccept 前置门;P5-10/P6-07/P2-10 阻塞于用户决策。**全机规则:任一时刻只一个重跑**(16 GB 机器,swap 22 GB 已用)。
+- **需要用户决定(六项,早报 `scratchpad/morning-report-2026-09-15.md`)**:(一) BLOCKED-124 翻译门(3 对内容裁 + 一次翻译);(二) BLOCKED-185 P1-07 信任边界(实测 3/6 bundle 已挂载;A 在 sdk-app/sdk-minimal 也挂 vs B 缩验收;建议 A;P1-07 记录已提前改对、签核不再触门);(三) P2-10 acceptance[2] 三能力未建(BLOCKED-252;缩范围 vs 实现);(四) P5-10 的 B1(子 agent 可否向人提问;拒绝被无钥快照 subagent-child-question-rejection 录下、采纳须重录;默认拒绝保持);(五) P6-07 挂载 session-lifecycle(唯一路;建议做;要挂就挂在 base、快照覆盖零 = 创造首次观测;另有与挂载无关的缺口:acceptance[0] 要求百万 fixture 而活用例 5,000 → lane B 先量 1e6 可行性);(六) apps/desktop 是否立 epic(建议不)。
+- **今晚门/账本硬化(已落)**:verify-import-integrity 解停(范围收窄 private/apps/web;BLOCKED-186 关)、flake-registry schema 接执行者(BLOCKED-250 关)、DRIFT 按来源拆比(148 格 147 可复算 / 1 待观测)、报告目录须系候选(88)、九条冻结却未观测的补充补绿、P2-04.C.1 按 fullName 重冻(BLOCKED-104)、10 条活冻结 files 修正 + overlay 理由、BLOCKED-185 补记/251/252 开。**待落**:cmdAccept 前置门、FILES_REMOVED 删除形式、registry 316+471 陈旧声明的处置(ACCEPTED 子集 48 声明 / 16 路径 / 15 epic,as-of bed44fc9f4,lane A 分类器,差量 = P6-01 自删的 memory/src/invariant.ts 两处;111α-1 后 105 信息项 41 行,其中 18 行已被 deliverablePathPatches 覆盖;freezeDigest 已落 bed44fc9f4)。
+- **规则新增(memory)**:对用户说"完成/已接受"前逐条勾验收文档的 "done when";任何 --accept 前跑 verify-make-vs-use + 门集;重冻后须先重观测再 green(预承诺 (v));交叉核验的 go 不附对方数值;每个数配 as-of 与匹配器、划分须加总;zsh `${VAR}:path`、`set -- $var` 不分词、`cmd|tail; echo $?` 三坑。
+
 ## 最新现况快照(2026-09-12 ~18:35Z,delegate 78,会话 d3a94c8b;本块为准,下方旧行历史留档)
 
 - **远端**:`fork/first100-exec` = **`50742193bf`**(**第七推** ~18:32Z;= 候选 6' + P2-01/P3-01 accepts + P2-06 C/P/U 冻 + 220甲 + P2-10 preFlight;run 34709135243 绿;on-push 重复 34711497505 已取消)。前 = `d10920efa4`(第六推)。
@@ -61,3 +71,190 @@
 - **BLOCKED-247(新)**:P1-03 must[2] 锁门未接进 boot(原始验收漏,delegate 亲验);**不刷 P1-03 签字**;补救 P1-03.U2(lane A)。**号水位 247**。
 - **候选 9 料(两 lane 在做)**:lane A 定稿 P2-10 P(13)/U(2 M60)冻结(新基线重 dry-run 取 treeSha)→ 绿 P2-10 C/P/U;lane B 干净重做 `035`(P4-11.U supplement,新基线 freeze 区已稳)。之后 P1-03.U2。
 - **待用户(非阻塞)**:(丙)7 个无 PASS 签字 epic(P0-01/02/03/05/06/07、P1-01)retroactive vs grandfather,delegate 荐 retroactive;P1-03 补救 vs 明写限制,荐补救。
+
+### 现况刷新(2026-09-13 ~22:10Z,会话 d3a94c8b 收尾——P3-C 第四次派发绿、待记绿+推+再锚定)
+- **first100-exec 仍在上一绿 SHA(第九推 `3aae231223`),未污染**。P3-C 候选四次派发:红①b1a57bd092/红②6e55521e08/红③0139463aba(三次同形=新包改包图后投影/lint 没跟上,BLOCKED-192)→ **绿 `1f58ac8ad9`(run 34783727057 completed/success)**。
+- **机械化**:`~/first100-delegate/dispatch-candidate.sh` 派前跑全投影 --check + 三红门 + typecheck + changed-lint、缺一不派(补记 407);第四次一次过。
+- **用户令(genuine)**:「按推荐全批,D5=A」+ 「重锚开工」——C16 批(D1-D6)、wave-8 采 shape A、BASE-ALIGN-v3 再锚定授权。
+- **下一步 turnkey 在补记 412**:①推 1f58ac8ad9→first100-exec(含 ledger 记绿那笔)②记 P3-02/06/10 三 C 格(gh run download 34783727057 带 --artifact-dir、三 argv 共享报告)③再锚定执行(lane B 的 base-align-s1.sh 8-phase + manifest 285 路径 + runbook;**merge 主干非 rebase**、285 非 265、ptc 只换 4 token、inbox controlKind 进 projection、write-behind re-home)。
+- **裁决全在 plan-rectification 补记 383–412**;再锚定执行 runbook = spec/first100/exec/base-align-v3-runbook.md;执行工件在 lane B scratchpad(base-align-execution-manifest.md/base-align-s1.sh/snapshot-classification.tsv)。
+- **docs 分支**:`p3c-final2`(HEAD c33e6ebe5d)含补记 383-412;1f58ac8ad9 只含 383-407,391-412 随 ledger 记绿那笔推。
+- **两 lane**:各自队列 + queue-aware Stop 守护(用户自有 `~/.claude/lane-stop-guard.sh`);lane B 再锚定执行准备全完成、待记绿+推后开执行;lane A 在做移植草案(ptc 完/agent.ts/Q1-Q2)。
+- **待用户(日报 REPORT-2026-09-13.md 已发)**:srt 供应链(荐 i 预编译+SLSA)、Windows srt-win(荐 iii 跳过)、canary 白名单(荐 C+B)、27 快照需 DEEPSEEK_API_KEY。
+
+### 现况刷新(2026-09-13 ~22:35Z,会话 d3a94c8b——P3-C 已落地 + 再锚定停在 gate 3,待接任监督)
+- **first100-exec = `4618dcbf06`**(第十推;= CI-绿候选 1f58ac8ad9 + ledger-green;**C16 + P3-02/06/10 三 C 格 GREEN**;freeze-in-candidate-tree 196)。fast-forward、非 force。(自纠:推用了 HEAD: refspec 违不变量#3、结果对、已派 laneA 加 pre-push hook、补记 414。)
+- **再锚定 phase 0-2 已在真底座跑完、停 gate 3**(lane B,补记 413):分支 `lane-b-base-align-v3`、worktree `scratchpad/wt-reanchor`(MERGE_HEAD 暂存 7153 文件、**未 commit、没推、没碰 first100-exec**、s1.sh 36s 可重建);**S0 确认新 tip 仍 285**;gate 3 剩 **119 人工**(源码21/测试22/docs28/JSONC2/配对43/harness3,清单 scratchpad/reanchor-gate3-unmerged.txt)。
+- **接任会话首要任务:监督 gate 3 源码 port**(补记 413/410/411/415 的静默失效警告必守:runtime-context.ts 保 P2-01 两笔收窄[6af069f771/d71cd3b719]否则检查哑变弱;ptc 只换 4 token 永不换英文 code-mode;inbox Q1 定死调用方类型+Q2 采(b)注册第二 projection inbox-consumed;write-behind re-home 非 supersede;agent/runtime-context union 无可裁);然后 phase 4-8(install 联网/gens/pairing/build+snapshot[27 需 DEEPSEEK_API_KEY 交用户]/verify/registry blob da674330fa5b/merge commit)。
+- 执行工件:lane B scratchpad(base-align-s1.sh/execution-manifest.md/snapshot-classification.tsv/record-green-P3-C.sh/reanchor-gate3-unmerged.txt);runbook spec/first100/exec/base-align-v3-runbook.md;裁决补记 383-415。
+- **两 lane 队列各 3 + queue-aware Stop 守护**;lane B 正确停在 gate 3 等监督,lane A 做 gate-3 port 执行清单预备。
+- **待用户(日报 REPORT-2026-09-13.md)**:srt 供应链(荐i)、Windows srt-win(荐iii)、canary 白名单(荐C+B)。
+
+### gate-3/5/6 执行 prep 就绪(lane B,2026-09-13 ~00:50Z)——接任会话 gate 3 直接用
+- **gate 3 源码 port**:`scratchpad/reanchor-gate3-source-port-prep.md`(21 文件逐个:实测 hunk 数 + union 解法 + ⚠ 静默失效点 + 收尾 grep 清单)。要害实测:runtime-context.ts 冲突**只在 import 块**、P2-01 两笔收窄(samePrincipalIdentity~201、`||!sameChainShape`~261)在**已自动合并的函数体**→取上游 import 会编译失败(响、非哑)、真静默风险=为过编译删 260/261;ptc.ts 英文 code-mode **13 处**(含 `origin:'code-mode-embedded'`)不换、只换 4 token;inbox controlKind 上游 0→进 projection(删 send() 参也编译=静默);write-behind re-home(删文件不迁调用点→事件与 outbox 拆两批=静默)。
+- **gate 5/6**:`scratchpad/reanchor-gate5-6-lists.md`(配对 43:6 生成器自写 / 3 重生成后 --write / 34 prose 定稿后逐条命令已列;27 需-key 快照场景表 + `test:snapshot:record -t <name>` 命令,交用户,先跑 refresh 以实际报错集为准)。
+
+### 现况刷新(2026-09-13 ~22:50Z,会话 d3a94c8b——gate 3 非-i18n 清零,进 phase 4)
+- **gate 3 源码/tests/config/docs 全清**:22 源码 + write-behind rm + (c) 修 + tests 全批 + JSONC×2 + AGENTS.md + docs28(7 英文我逐条 prose 判、18 zh 镜像、3 生成取上游/字母序并集)全 APPROVE(裁决落 reanchor-gate3-log.md,161→165 行)。**docs28 lane B 已 git add**;非-i18n 未解 = 0;只剩 43 个 `.i18n.yaml` 归 gate5 `--write`(phase4 install+phase5 生成器跑过后按 reanchor-gate5-6-lists.md 逐条)。抽验:全盘 0 冲突标记、单尾换行、8/8 ours 英文增句+4/4 上游改写在、18 zh 的 ours P-epic 内容全在。
+- **phase 4 内存裁决(重要)**:全量 typecheck=4 GiB 堆,本机仅 ~2 GiB free+用户"避免重负载"→**不用让用户关进程**;lane B 先 install(后台跑,log=scratchpad/phase4-install.log)+gen-tsconfig-paths+**按包增量 tsc**(内存安全)先 de-risk;唯一那次全量 typecheck(=派前 preflight typecheck-host)由 delegate 造**无并发窗口**(静默 lane A、全机串行此一重任务)再跑;无并发下仍触交换才向用户报请腾内存。**接任会话:lane B 报按包 typecheck 全绿后,静默 lane A→给 lane B 全量 typecheck 窗口信号→`--execute --resume-from 4` 跑到 phase 8。**
+- **⚠ phase-5 silent-loss 守卫**:config-catalog(.md/.zh.md)+ THIRD_PARTY_NOTICES 重生成后必须逐项 diff 确认 ours 配置项+依赖并集都在(生成器漏带=静默丢 ours 意)。
+- **两 lane 队列**:lane A 补到 7 未勾(内存轻:15 声明文件 4.4a-d 重验/49 生成文件重生成期望表/10 账本态门+typecheck-host 归因预备/phase7-8 账本 turnkey/gate5-6 第二双眼);lane B 补到 5(phase5 守卫/gate6 快照分拆/registry byte-lock/dispatch 预演)。lane A 活刻意内存轻、不与 lane B typecheck 抢内存。
+- **phase 7-8 delegate 账本动作(候选绿后)**:P4-06.P A 例→jsonl.spec supersede+revoke、inbox supp(P4-06.U.s3/P5-10.U.s1)→agent-loop/tests supersede、P0-06.F 3→v2 标题 supersede+revoke、P0-06.U chunk-row phase4 条件 supersede、P2-02.U 重观测;然后 push-exec.sh(40-hex)推 first100-exec。
+- **待用户**:REPORT-2026-09-13.md 四项(srt 供应链荐i / Windows srt-win 荐iii / canary 白名单荐C+B / 27 需 DEEPSEEK_API_KEY 快照)——phase 4-6 完成后统一汇报。
+
+### 现况刷新(2026-09-13 ~23:15Z,会话 d3a94c8b——phase4 按包 typecheck 绿,全量 typecheck 窗口开)
+- **phase 4 (b) 按包 typecheck**:11 包 9 绿 + 1 红(headless P9-06.U:上游把 assistant/chunk 移出联合、usage 挂 assistant/message data.usage 或嵌入 stream)。lane B re-home 修复(读法照上游消费方 token-meter usageOf 逐字),delegate 字节核 APPROVE 保留+add(gate3-log)。install exit0/gen-tsconfig-paths exit0(删 3 陈旧子路径别名 = ours 侧 exports 早由 dcb033e7f0/3e75e6a657 收敛掉,非合并吃 API,双证 PIN 安全)。
+- **全量 typecheck 无并发窗口已给 lane B**(lane A 只跑纯 grep、不争内存);全量绿后 lane B 继续 phase 5(config-catalog/THIRD_PARTY 重生成按 11+11 基线逐项 diff)→6→7→8。
+- **P4-06.P D1 定案(补记 426)**:合并树 SessionWriteBehind/write-behind.spec.ts 已删、P4-06.P(GREEN primary)argv 指已删 spec、重锚后无法重观测。**裁 B(supersede+重映射,弃 A 落户死代码)**:功能上游用 handle enqueueLive/drainLive 提供、落点移;新 P4-06.P argv 指 lane A #1/#7/#8 handle 补测试(定稿后钉例清单),SessionWriteBehind 私有内部例退役(13 例零子句暴露、0 验收损失)。**账本机制=freeze 新+mark 旧 supersededBy+同候选 re-green(非 --revoke-cell),delegate phase7-8。** P4-12 若有同类 GREEN 格一并同法。
+- **4.4a-d 重验计数**:采 lane A 权威口径 **13 文件/18 epic/29 引用**(排除配置文档 14),**弃派工的 15**(lane A 正确拒凑数)。11 present+可达、inbox.ts 搬家(证据完好)、write-behind.ts 删(D1 case)、DshProfileManifest→util/package-manifest。签字前 delegate 自跑权威一遍基于此 13 文件集(4.4b-d 运行期接线)。新页 reanchor-accepted-declaration-recheck.md(tip 98cc02756c)。
+- **post-re-anchor cleanup 项**:3 处 @module 陈旧标签(secrets-broker lease/types、policy-language schema)+ ptc.ts:268 tool/code-dispatch-end,重锚后单独修,勿混 gate 3。
+- **两队列**:lane A=7(item1 已交付、做 item5→2/3/4)、lane B=5,均≥3。
+
+### 现况刷新(2026-09-13 ~23:55Z,会话 d3a94c8b——全量 typecheck 红全在测试、批 A-G 脚手架适配)
+- **全量 typecheck(host tsc -b,tsdown+client face 未跑到)**:300 error **全在测试/fixture、源码 0**(源码 port 干净)。7 根因全批准脚手架适配(标题/断言/expectCases 不变→候选门③同条目 re-green、无 supersede):A(create→async 加 await ~260)、B(load→open/read/close)、C(删默认 persona)、D(token-meter 重落上游 appendSystem、delegate 静态核 factor=1.125 等价成立、contingent 重跑确认)、E(Inbox→createInboxStub/driver inbox)、F/G(lane B 自纠冗余挂载+未用 import)。write-behind:0 报错(spec 已 rm)。全在 reanchor-gate3-log.md + scratchpad/phase4-typecheck-reds.md。
+- **P4-06.P 最终 keep/retire(补记 426 收口)**:保留重映射 #1/#7/#8 进 runLiveWritePathContract、退役 #9+其余;lane B 在 phase4-6 落 + 真跑;delegate phase7-8 freeze 新条目+supersede 旧+同候选 re-green。P4-12 无受威胁 GREEN 格、无账本动作。
+- **phase-5 silent-loss 守卫定基 = 51 first100 包**(非 49 文件;module-graph.md 51/51 最强探测器、核 diff+计数非 exit code)。lane A phase5-silent-loss-expectations.md(c16b0e6435)。
+- **gate 5(pairing)**:34 散文对 --write exit0;2 违规=ours 既存缺陷(HEAD 已有)。#2(packages/README zh 缺段)=(a) 镜像补;#1(plugin-compat/layering 无 zh)=按 docs/AGENTS.md 约定定 a(翻译)vs b(manifest 排除),lane B 取证中。不选 (c)。
+- **待用户**(phase4-6 后统一报):27 需 DEEPSEEK_API_KEY 快照 + REPORT-2026-09-13.md 四项决策。
+- **执行序**:lane B 改 A-G + 落 #1/#7/#8 + 按包 tsc 自验 → 申请窗口重跑全量(含 tsdown+client face)→ gate5 收尾 → phase5 生成器(51-守卫 diff)→ phase6 build+snapshot → phase7 verify+账本 supersede/重观测 → push-exec.sh 推 first100-exec。两队列≥3。
+- **post-re-anchor cleanup**:3 @module 陈旧标签 + ptc.ts:268。
+
+### 现况刷新(2026-09-14 ~00:20Z,会话 d3a94c8b——phase4 修复落地 + 关键门/bug 裁定)
+- **翻译配对非派发门**(核实:不在 first100-exact-sha.yml、不在 dispatch preflight,只在 docs-pages.yml)→ 28 en-only 文档 + 6 out-of-sync = ours 既存债、first100-exec 已带且 CI 绿、**不挡派发**,全延后 post-re-anchor 翻译工作流(约定 docs/i18n:57 定最终需 zh、但重锚内翻出 scope;不做 (b) 排除)。重锚只镜像**本次合并触动的对**(lane B 分类 #2 + 3 en-drift 是合并引入 vs 既存)。
+- **#3 workflow-worker-thread childFinished 真生产 bug**(ours 调上游已删 persistence.load、untyped ctx.get 逃过 host tsc、运行期 TypeError→resume 重跑已完成子任务):被既有冻结例 **P4-08.U#1(journal-live-run.spec.ts:112 acceptance[0])覆盖**=真验收回归,批准修 open/read/close、addon 建好红→绿即证。
+- **native build 批准**:pnpm --dir native/system build:native(小 C 编译内存轻、不需窗口)——解锁 #1/#7/#8 真跑 + D factor=1.125 确认 + jsonl (b) + P4-08.U#1。
+- **静默-bug 类扫派 lane A**:grep 其它 ours 经 untyped ctx.get/结构型访问调上游已删符号(load/system/persona/Inbox/sync-create)的静默点(host tsc 抓不到)。
+- **A-G + #1/#7/#8 已落**(未 add,24 测试 + live-write-contract);masked C/E 站点(provider.spec:57/stack.ts:132/restart:73/fenced-dispatch:72·429/trust-ask:177)按类修;plugin.spec:105 故意不 await(待确认编译+断言)。registry byte-lock 早查绿(da674330fa5b)。
+- **待用户**(phase4-6 后统一报):① 27 需 DEEPSEEK_API_KEY 快照 ② REPORT-2026-09-13.md 四项(srt 供应链/Windows srt-win/canary 白名单)③ **新增:28 en-only 文档 + 6 out-of-sync 翻译债的 scope(全译 or 分批,/dsh-translate-docs 用户触发)**。
+- **执行序不变**:lane B native build→jsonl 契约真跑→改 A-G/#1-#8/#3 全绿→申请全量窗口(含 tsdown+client face+paths-plane)→gate5 收尾(仅合并触动对)→phase5(51-守卫 diff)→phase6 build+snapshot→phase7 verify+账本→push-exec.sh。
+
+### 现况刷新(2026-09-14 ~01:00Z,会话 d3a94c8b——phase4 实跑确认多项、P4-06 归置钉死)
+- **实跑确认(native build exit0)**:#1/#7/#8 全 pass(P4-06.P freeze 前置达成);**D factor=1.125 实测 pass**(静态分析成立、钉死);**#3 workflow-worker-thread 修被 P4-08.U#1 证 red→green**(revert 时 length 2 got 4=resume 重跑 4 子任务;真验收回归、修正确);5 个 P0-06 must[4] 协商例 pass 含 (b)。
+- **待应用(lane B,先报后动已批)**:R1(scanLog version:0→SESSION_FORMAT_VERSION,确认非专测 v0)、R2({{tools}} 占位符→sidecar 恢复,补记 425 预警兑现,优先复用上游 restorePinnedToolSchemas、layer 确认)、plugin.spec:105 void、workflow-worker-thread 补 dep(architecture:layers+module-graph --check gated,type-check #3 修本身)、P4-06 remap 扩。
+- **P4-06.P 最终归置钉死(storage.ts 实证)**:REMAP=#1/row1/row4/#7/row5/#8/row12(concat 保留)/row11-通用;RETIRE=#9/row11-重叠(上游 reject 非重试)。lane B 落测试真跑→delegate phase7-8 freeze+supersede+同候选 re-green。
+- **静默-bug 审计收窄到 1 洞**:11 包→execution-world:248 sandboxPolicy(cast 本地 SandboxPolicyPort、provider 上游 fs-sandbox)唯一结构暴露,lane A 追 provider 比签名收尾(有 dep=安全/无 dep 比签名/C 阶段未接=潜伏)。workspace-trust-local trustKernel=自有包非风险。
+- **gate 5 全 defer**:3 drift + #2 全 ours 既存债(非合并引入),配对非派发门→revert #2 zh、gate5 43→42、不增 46。并入翻译债汇报用户。
+- **账本态门归因卡就绪**(lane A,ledger-gate-attribution.md,tip 09915f29c0):14 门确切命令+实测绿输出+红看哪;verify-typecheck-host 成功无输出(看 $?)、抓不到 untyped-ctx.get 类;make-vs-use/adapt-dispositions 沉默≠安全(仅记录的严格);最可能红=verify-freeze-in-candidate-tree(正是 supersede 须同候选的执行方);3 精确值门无歧义(ledger-digests 101 rows/manifest-constructed 2 生产调用者/baseline-file-references 0 missing kind=B);归因序 1→2→4→5→6;期望值 pre-merge 抓(数变≠必缺陷,除 3 精确门)。phase7 直接用。
+- **待用户**(phase4-6 后统一):27 需 DEEPSEEK_API_KEY 快照 + 四项决策 + 翻译债 scope(28+6+3+#2)。
+
+### 现况刷新(2026-09-14 ~02:00Z,会话 d3a94c8b——phase4 修复批次全应用跑完 + revoke 更正)
+- **⚠ 账本 revoke 机制更正(补记 427,推翻我 424/426)**:亲验代码——commitmentKey=(epic,stage,supplementSeq,sorted expectCases),**argv/files 不在 key**。故 primary+用例集变(P4-06.P/P0-06.F)= **supersede→revoke→re-green**(revoke 会成功,因 supersede 让新 primary 新 key 不在旧候选);supplement(inbox/P5-10.U)标题不变=**免费 supersede 不 revoke**。phase7-8 五行形状 + 确切命令在 lane A 的 phase7-8-ledger-turnkey.md(tip 784a55c925)。P5-10 epic=BLOCKED_ON_ACCEPTANCE、裁不改意图(只保观测-绿,acceptance 正交)。
+- **phase4 修复全应用跑完(未 add,diff=scratchpad/phase4-spotcheck.diff)**:实跑 jsonl.spec 193 pass/改后应全绿、token-meter 30/30(factor 1.125)、P4-08.U#1 证 #3、jsonl 契约 19/19(P4-06.P remap 全 pass)。批准:wwt 补 dep(layers 0 违规、tsc 现验 #3)、wwt:304 snapshotEvents waiver(既存调用、Note line47 合规、迁移归 post-re-anchor)、R1(scanLog version+isSeeded+surfaceOp 脚手架)、R2(inline tools + text-turn session token re-id)、plugin.spec:105 void、seq-gap regex、P4-06.P 表(remap rows0/1/4/5/6/7/11/12、退役 2/3/8/10、row9 上游既有例覆盖)。
+- **gate 5 = 41 干净对 + 6 生成器 + 3 重生成(待 phase5)**;defer:packages/README + docs/architecture(链 plugin-compat 延后目标)+ 3 drift + #2,全 ours 既存债、并入翻译债。
+- **静默-bug 审计闭合:0 活跃 #3**(wwt 唯一、已修+dep 验;11 包 0)。
+- **下一步**:lane B 应用 waiver/regex/defer→重跑 jsonl+oxlint 全绿→**申请全量窗口(我给,lane A 只 grep)**含 host tsc-b+tsdown+client face+paths-plane→gate5 收尾→phase5(51-包守卫 diff)→phase6 build+snapshot→phase7 verify+账本(supersede→revoke→re-green 五行,归因卡就绪)→push-exec.sh。
+- **待用户**(phase4-6 后统一):27 需 DEEPSEEK_API_KEY 快照 + REPORT 四项决策 + 翻译债 scope。
+
+### 现况刷新(2026-09-14 ~02:40Z,会话 d3a94c8b——全量 typecheck 全绿,paths-plane 跑中)
+- **全量 typecheck 全绿(最硬门过)**:host tsc-b 0 error + tsdown host 300 built + client face 0 error(client 单独跑、裁 b 生效、非 stale、guard 未触 min free 2.02GiB)。合并树带全部修复两 face 编译干净。**首次窗口 ABORTED(OS OOM 于 client 步,host+tsdown 已绿),裁 b 单独重跑 client 成功、未打扰用户。**
+- **paths-plane 跑中**(#3 类类型级兜底,补 lane A grep 审计[0 活跃 #3]):单 tsc 4GiB、紧 guard、vendor artifact 过滤;预期非-vendor 0 个 #3 类。
+- **phase4 收口在即**:paths-plane 绿(或只 vendor artifact)后 phase 4 完全收口。
+- **下一步链**:gate5 收尾(41 干净对 + 6 生成器 + 3 重生成待 phase5)→ phase5 生成器(51-包 silent-loss 守卫逐名 diff)→ phase6 build+snapshot(27 需 DEEPSEEK_API_KEY=用户)→ phase7 verify + 账本(五行 supersede→revoke→re-green,归因卡+turnkey 页就绪)→ push-exec.sh 推 first100-exec。
+- **账本五行(补记 427,已复核纠正 revoke)**:P4-06.P supersede→revoke→re-green(remap rows0/1/4/5/6/7/11/12、退役 2/3/8/10、row9 上游覆盖);inbox supp3/supp1 免费 supersede(标题不变);P0-06.F supersede→revoke→re-green;P0-06.U 条件(phase4 diff 定,已知只动脚手架→纯重观测);P2-02.U 纯重观测。P5-10 BLOCKED_ON_ACCEPTANCE 不改意图。freeze 前 delegate spot-check p4-06p-keep-retire.md。
+- **待用户**(phase4-6 后统一):27 需 DEEPSEEK_API_KEY 快照 + REPORT 四项决策 + 翻译债 scope(28+6+2+3)。
+
+### 现况刷新(2026-09-14 ~03:00Z,会话 d3a94c8b——phase 4 完全收口,phase 5 生成器启动)
+- **phase 4 typecheck 完全收口**:host tsc-b 0 + tsdown 300 + client face 0 + **paths-plane 0 #3 类 0 重锚引起**(388 error 全 = vendor artifact/face-mixing/latent-upstream)。唯一持续非-artifact deepseek-llm-api-extensions:81 TS2344 = delegate 亲验 latent-upstream(augmentation + register 约束两侧 base/upstream 共有、非 ours/非合并、只人工单程序现)→ post-re-anchor type-hygiene/上游报告。与 lane A grep 审计一致(0 活跃 #3)。
+- **phase 5 生成器跑中**(逐个 + guard):gen-module-graph→persistence-catalog→cordis-catalog→config-catalog→tool-catalog→third-party-notices。跑完按 51-包守卫核:module-graph 51/51(最用力)+ config-catalog/THIRD_PARTY 11+11 diff;核 diff+计数非 exit code;漏 ours 包/配置/依赖即停报。
+- **post-re-anchor cleanup 清单(lane A 汇总中)**:@module×3、ptc.ts:268、workspace-trust-local trustKernel 类型、execution-world mode:string 放宽、**deepseek-llm-api-extensions:81 TS2344**、wwt snapshotEvents 迁移、翻译债 28+6+2+3。
+- **下一步链**:phase5 生成器 + 守卫 diff → gate5 收尾(41 干净对 + 9 生成器侧记录)→ phase6 build+snapshot(27 需 DEEPSEEK_API_KEY=用户)→ phase7 verify + 账本五行(supersede→revoke→re-green,turnkey 页+归因卡就绪,freeze 前 spot-check p4-06p-keep-retire.md)→ push-exec.sh 推 first100-exec。
+- **待用户**(phase4-6 后统一,不打断):27 需 DEEPSEEK_API_KEY 快照 + REPORT 四项决策 + 翻译债 scope。
+
+### 现况刷新(2026-09-14 ~03:30Z,会话 d3a94c8b——phase5 生成器全绿+守卫过,build 窗口开,persistence (i) HALT)
+- **phase 5 生成器全绿 + 守卫过**:6 生成器 exit0;**51-包守卫 51/51**(module-graph)、config-catalog 11/11 双面、THIRD_PARTY 11/11+15 theirs 保留。**queue60(生成器 silent-loss)接受**——生成器没丢 ours 任何包/配置/依赖。
+- **⚠ persistence-catalog (i) HALT**:lane B 报"4 段 identity/* /attached、memory/* /access 被 merge 丢、拟补丁镜像"——**delegate ^# 标题级亲验推翻**:合并树 zh 已有这 4 标题(479/483/528/532),en 也有,**非 en-only、未丢**;补丁会造重复段。令 lane B 重跑 heading-parity 与 grep '^#' 对齐、报真 en-only 集再定 (i)。**12 既存债确认**(ours HEAD zh 确无)→无论如何延后。教训:分类 heading 级 grep 亲验、别只信工具差集。
+- **build 窗口开**(独立):pnpm run build 单独+紧 guard,host tsc+tsdown 已 current 主要 client face/bundles。后 phase6:keyless refresh 28(owners 先)→分类(clean=refresh 提交/divergence=record→key 清单交我转用户)→web lane。
+- **下一步链**:build→refresh 分类→27 需-key 最终清单(交我汇报用户)→gate5 收尾(计数待 persistence (i) 重核)→phase7 verify+账本五行(turnkey+归因卡就绪,freeze 前 spot-check)→push-exec.sh。
+- **待用户**(phase6 后统一):27 需 DEEPSEEK_API_KEY 快照(最终清单待 refresh 分类)+ REPORT 四项决策 + 翻译债 scope(28+6+2+3+persistence 12)。
+
+### 更正(2026-09-14 ~03:45Z)——persistence-catalog (i) 由 HALT 改 APPROVED
+- 上条 HALT 是我**误读了树**(`cd A||cd B` 进了 lane-b-p205-supersede 而非 wt-reanchor)。wt-reanchor 重验证实 lane B:合并 zh(=theirs)**确缺 identity/* /attached、memory/* /access 4 段**、en 有→真 merge-introduced 丢失。**批 (i)** 镜像 ours HEAD verbatim 4 段(补丁 added-only、guard 已过)、**(ii)** 12 既存债延后、**(iii)** pair 出 gate5(41→40)、UU→ours HEAD 记录。gate5=40 干净对 + 生成器侧记录。
+- 教训存记忆 [verify-worktree-before-grep]:多 worktree 同仓 cd 后须验 pwd/branch;裁分类的亲验读错树=假否证。
+- build 窗口继续跑(phase6-build.log)。
+
+### 现况刷新(2026-09-14 ~04:00Z,会话 d3a94c8b——gate5 closed + build 绿,phase6 refresh 跑中)
+- **进度总览**:phase0-3 merge+gate3 ✓;phase4 全 typecheck 绿(host+tsdown+client+paths-plane、0 #3 类)✓;phase5 生成器绿+51/11+11 守卫过 ✓;**gate5 closed 40/40 一致 + 3 延后**(packages/README、docs/architecture、persistence-catalog[4 段恢复/12 债留],记录=ours HEAD)✓;**build 绿**(pnpm run build exit0、0 error TS、475 Build complete)✓。gate5 记录 spot-check 通过、批准 add(时机 lane B 定)。
+- **phase6 refresh 跑中**:26 sdk/headless、owners 先、refresh 后 replay。分类:clean replay=refresh-able(lane B commit)/divergence=record→needs-key。web lane 2 待跑。
+- **impending 用户报告**:refresh 分类出 **27(或最终数)需-DEEPSEEK_API_KEY 快照清单**到齐后,连同 REPORT 四项决策(srt 供应链/Windows srt-win/canary 白名单/... )+ 翻译债 scope(packages/README、docs/architecture、persistence 12、28+6 en-only 文档)统一汇报用户——这是 phase4-6 批的唯一用户触点。
+- **剩余链**:refresh 分类+web lane→needs-key 清单(交我→用户)→phase7 verify(registry byte-lock 已绿 da674330fa5b、dispatch preflight 全 --check+红类门)→派候选 CI(门③ full 观测)→**候选绿后 delegate 账本五行**(P4-06.P supersede→revoke→re-green[freeze 前 spot-check p4-06p-keep-retire.md]、inbox supp 免费 supersede、P0-06.F supersede→revoke→re-green、P0-06.U 条件、P2-02.U 纯重观测;turnkey 页 phase7-8-ledger-turnkey.md + 归因卡就绪)→push-exec.sh 推 first100-exec。
+
+### 现况刷新(2026-09-14 ~04:30Z,会话 d3a94c8b——phase6 收口裁决,needs-key=0)
+- **phase 6 收口裁决**:F1(background-job-abandoned)GO (a3)=tool-gen v3 fixture(整脚本 override 自足、加一行 header-only v3→refresh 实跑再生成真 v3、v0→v3 diff 表待 delegate spot-check、v0 retain);F2(session-query-spill)=**intended seq shift 非回归**(ours P4-02/P2-01/P2-06 特性在首 request/header 前加事件、+4 偏移、23 场景全绿)→批准改 override seq10→14+prompt 11→15、contingent replay 绿确认 seq14 spill;web-lane(fresh-round-trip/ptc-round)=pre-existing on ours(webrefresh.log 2026-09-11 同 30s 超时)、exact-sha 不 gate→DEFER。
+- **needs-key=0 确认**——26 场景全 keyless-refreshable + web 非-key,**不需 DEEPSEEK_API_KEY**,砍掉一项用户决策。24 refresh-able 已 staged。
+- **⚠ 行为纠正(guanjieqiao-92 巡检)**:队列 ≥3 必要非充分——Stop 守护每停只逼一项、第二次放行后 lane 坐等。**硬规则:每 IDLE 事件立即 nudge「取队列第 1 项连续做」**,不只看队列深度。已 nudge lane A、更新记忆 [delegate-never-await-keep-queues-full]。
+- **剩余链**:F1 refresh 绿 + F2 replay 绿 → phase6 收口 → phase7:registry byte-lock 终-tip 重跑 + dispatch-candidate.sh preflight 预演(全 --check+红类门)→ 派候选 CI(门③ full 观测)→ 候选绿后 delegate 账本五行(freeze 前 spot-check p4-06p-keep-retire.md)→ push-exec.sh 推 first100-exec。
+- **用户报告(phase6 收口后,已缩小)**:needs-key 快照 **0**(不用要 key);REPORT 剩 **三项决策**(srt 供应链荐i / Windows srt-win 荐iii / canary 白名单荐C+B);翻译债 scope(packages/README、docs/architecture、persistence 12 段、28+6 en-only 文档)。
+
+### 🛑🛑 现况(2026-09-14 ~05:00Z,会话 d3a94c8b)——派发 HALTED,P0 未决:v3 语料丢 ours 六事件类型
+**接任会话首要:派发路径 HALTED,弄清下述机制前绝不签/派 push-exec.sh。**
+- **P0 发现(lane A,117 对 v0→v3 同场景 set 判据)**:ours fork 六事件类型在 ~80 场景 v3 **整类归零**:run/task-profile 104→24、action/manifest-appended 87→21、identity/attached 84→20、action/risk-gated 83→21、action/world-bound 13→4、job/abandoned 1→0。**= 上游 v2-to-v3 payload.ts 迁移器拒的 unclassified 六个**。它们是 **P2-03/P2-04/P3-01/P4-09 主交付物会话日志证据**;铁律"model-visible ⟺ logged"——丢则以其为证据的绿格重观测挂或**假通过(更糟)**。lane A 自纠 multiset→set 判据(排除 chunk-合并假阳性)使结论可信。
+- **机制未定**(调查中):(a)迁移器遇 unclassified 静默丢(payload.ts:42 为何没抛?)(b)refresh 没产生 (c)混合。**24 refresh-able 有事件**(F2 诊断证 refresh 产出 ours 事件)→问题在**非-refresh 的 ~80 场景 v3**(疑 bulk 迁移丢)。
+- **调查分工**:lane B 说明非-refresh v3 产出机制(gate3/合并有无 bulk v0→v3 迁移、迁移器对六类静默丢 vs 抛);lane A 逐场景法证(锚点 acp/escalation-approved:v0 有 world-bound+manifest-appended+risk-gated、v3 三无)+ 完整表 + 6 个没转场景(sdk/multi-turn、session/{empty-response-retry,error-finish,packed-chunks,subagent-multi,text-turn})。
+- **可能的修**(待机制定):若迁移丢=affected 场景改走 refresh(产出事件)而非迁移;若 ~80 是 ours 场景则须全 refresh;若部分是 theirs 场景(本无 ours 事件)则缩范围。**签字前证据必须回到语料。**
+- **已就绪(P0 解决后继续)**:phase0-5 + gate5(40)+ build 全绿;F2 CLOSED;F1 走 (a3) refresh 中;constraints patch(75 文件 version+publishConfig)已核 scope 批准待 apply;dispatch preflight 11/12 绿(constraints 修后 12/12);账本五行 turnkey(delegate 自核 commitmentKey/cmdRevokeCell 已验)+ 归因卡就绪。
+- **用户报告(P0 解决 + phase 收口后)**:needs-key **0**;REPORT 三项决策(srt 供应链 i/Windows iii/canary C+B);翻译债 scope。
+
+### 现况(2026-09-14 ~05:40Z)——P0 解除(candidate-red 非假绿),补救中:refresh 82+ 陈旧 fixture
+- **P0 解除**:机制钉死(两 lane 收敛 + delegate 验 byte-identical)——非迁移器 bug(它抛非静默丢)、**非 false-green 而是 candidate-red**(runtime 仍发 ours 六事件、82 场景 v3 fixture 陈旧[S1 phase-2c 取上游侧+phase-6 refresh 只 28 漏了 session-log 事件行]→replay RED,exact-sha CI 会响亮失败、无绿格假通过)。派发 HALT 的"假绿"框架解除,但**真活在:refresh 82+**。
+- **P0 补救进行(lane B,批准 1-4)**:① corpus-wide keyless replay(sdk+session+acp,web 延后)列**所有** red(不只六类型 82,实测全集)② keyless refresh 每个 red(owners 先、逐 replay,refresh-able→staged/divergence→needs-key)③ 核六类型计数逐场景回 ours v0 基线(task-profile→104/manifest-appended→87/identity→84/risk-gated→83/world-bound→13/job/abandoned→1,lane A 判据、签字硬前置)④ 之后 constraints apply + item63 preflight 重跑。lane A 交叉核红清单 + 计数(第二双眼)。
+- **F2 闭**(by-events seq 记法、seq14→request/header→spill,verifySessionQuerySpill 经验验证;154B 是 scrubbed、runtime de-scrub 后大)。**F1 差 persona→personaPrefix 一步**(批准、机械 port)。
+- **ptc.ts:268**=evidenceRequirements 描述串(cosmetic 非功能)、改当前事件名、随补救批、非阻塞。
+- **签字硬前置汇总**:①六类型计数回 v0 基线(全 red refresh 后)② constraints 12/12 preflight 绿 ③ lane A 4.4a-d 两页结论并入 sign-off addendum ④ p4-06p-keep-retire.md delegate 自核 ⑤ 账本五行 turnkey 自核(commitmentKey/cmdRevokeCell 已验)⑥ 6 个没转场景(sdk/multi-turn 等)确认在 refresh 集。
+- **用户报告(lane A item35 起草、推荐是 delegate 的)**:needs-key **0**;三决策(srt 供应链 i/Windows iii/canary C+B);翻译债 scope。
+
+### 现况(2026-09-14 ~06:20Z)——P0 补救:red 清单交叉核过,待 lane B refresh 批
+- **item37 交叉核过**(lane A 两独立路径 vs lane B replay 一致):36 FAIL/7 PASS,7/7 PASS 命中 ours 集、0 FAIL 落 ours、30/36 upstream-verbatim。3 个 item39 v0-only 真红=确证裁定。六类型对 no-web 基线(97/79/77/78/12/1)仍短 72/58/55/56/8/0(refresh 批未跑)。
+- **refresh 批计划(lane B,序:ptc.ts:268 修→rebuild→refresh 批→六类型检→constraints→preflight)**:36 FAIL 两类——①33 有可加载 v3(30 upstream-verbatim + 3 新场景):普通 keyless-refresh;②**3 个 v0-only(empty-response-retry/error-finish/packed-chunks):F1-a3-bootstrap**(keyless 加载不了 v0)。2 个不在 replay(sdk/multi-turn、subagent-multi)→intentional-skip、lane A 分析记因、不在批里。
+- **ptc.ts:268 必须在 refresh 批前修**(logged 进 manifest-appended 行,否则陈旧名烤进 fixture):code-dispatch-end→ptc-dispatch(无 -end)。
+- **签字硬前置(未满足)**:六类型回 no-web 基线(refresh 批后)、36 FAIL→PASS、5 未转场景处置(3 修/2 记 skip)、preflight 12/12、4.4a-d 并入 sign-off、p4-06p+账本五行自核、needs-key 终值(refresh 批 divergence 若有)。
+- **用户报告 ready-holding**(user-decision-package.md 0d2c9f4e82):3 决策 + needs-key=0 + 翻译债枚举(6 docs + 20 pkg README + 1 layering + 1 benchmarks + 6 Agent Notes);待 P0 完成定稿+发。
+
+### 现况(2026-09-14 ~07:00Z)——P0 处置定案:51 refresh-v3 + 4 恢复 released-v0
+- **处置规则(两 lane 收敛 + delegate 验 byte-identical/snapshot.yml/ours-污染/冻结引用)**:corpus replay 分类——① **corpus-mismatch(partial 51+)→refresh 成带 ours 事件的 v3**(current-format、无 pin)② **v0-pinned load-refusal(4:empty-response-retry/error-finish/packed-chunks/subagent-multi)→恢复 theirs released-v0**(==merge-base,不带 ours 事件;ours 污染了 v0-pin 保护的不变式=v0 只能装 released-v0 事件)。**同根、相反方向**。③ PASS 21(ours 已刷新)。
+- **v0-pinned 恢复门**:前 3 个 lane A 已清冻结引用(无 live 条目 cite→不丢证据)=GO;**subagent-multi 待 lane A 冻结引用核**(最后一关)→无引用则 GO 恢复三 role。sdk/multi-turn(上游 v2、我们从无)+ text-turn(v1、未跑到)不动。
+- **a3-bootstrap 只用于真"v0 加载不了 + 是 ours-only 新场景"(原 F1 background-job-abandoned),不用于这 4 个 v0-pinned**(会删 pin 保护的 adjacent-migration/retry-failure/packed-row 覆盖)。
+- **序**:full 分类 → ptc.ts:268 修(code-dispatch-end→ptc-dispatch,logged 进 manifest-appended、须 refresh 前)→ rebuild → refresh 批(51 corpus-mismatch)+ 恢复(4 v0-pinned)→ 六类型检(no-web 基线 97/79/77/78/12/1)→ constraints apply → item63 preflight 重跑。
+- **新记忆**:read-the-trees-own-deciding-field(分类/报警前读树自己的判定字段 + 标 artifact 状态;P0 事件 5× outer-shape 误判)。
+- **签字硬前置(未满足)**:六类型回 no-web 基线、corpus-mismatch 全 refresh→PASS、4 v0-pinned 恢复+replay 绿、subagent-multi 冻结核、preflight 12/12、4.4a-d 并入 sign-off、p4-06p+账本五行自核。用户报告 ready-holding(needs-key=0 + 3 决策 + 翻译债枚举)。
+
+### 现况(2026-09-14 ~07:40Z)——P0 refresh 批执行中(corpus replay 完成:28 PASS/83 FAIL)
+- **corpus replay 完成(111 场景)**:28 PASS/83 FAIL。分类:**78 corpus-mismatch**(session 59/sdk 13/acp 6,→refresh v3)+ **4 retained load-refusal**(empty-response-retry/error-finish/packed-chunks/subagent-multi,→恢复 pin+refresh oracle)+ **1 retained oracle-mismatch**(sdk/multi-turn,→只 refresh oracle)。**timeout/filter/other 全 0、replay 分类无 needs-key 候选**。text-turn PASS。
+- **ptc.ts:268 修+rebuild ✔**(code-dispatch-end→tool/ptc-dispatch、exit0 0 error TS);fallout(旧串 logged 进 manifest-appended、影响 both-mode-turn/ptc-python-turn/ptc-read-image 等已 staged 的 refresh)已加入批、批后 git grep=0 验。
+- **refresh 批运行中**(p0-refresh-batch.sh):78 corpus-mismatch + ptc-affected;subagent-multi 已恢复(三 role blob=theirs=merge-base 验过、未 staged);retained 批(4 恢复+refresh oracle、sdk/multi-turn oracle)紧接主批跑。
+- **序**:主批 → retained 批 → 逐个 replay 绿 → git grep code-dispatch-end=0 → 六类型对 no-web 基线 97/79/77/78/12/1(per-pair shortfall 带因、web 单列)→ constraints apply → item63 preflight。
+- **P0 收口 = 批全 red→PASS + git grep 0 + 六类型回基线**。之后:审 p4-06p(lane A 交叉核已过:13/13 mapping、4 机制源码验、row3 subsumption 成立、row8/10 靠 lane B 探针+源码一致)+ 账本五行自核 → 派候选 CI(门③)→ 账本 supersede/revoke/re-green + P4-06.P freeze → push-exec.sh。
+- **needs-key 大概率 0**(replay 无候选;refresh 批若无 divergence 则确定 0)。用户报告 ready(3 决策 + needs-key=0 + 翻译债枚举)。
+
+### ⚠ 更正(2026-09-14 ~08:10Z)——no-web 六类型基线 identity/manifest 对调
+- **本 checkpoint 前文多处写的 no-web 基线 "97/79/77/78/12/1" 把 identity/attached 与 manifest-appended 对调了**。正确 = **97 / 77 / 79 / 78 / 12 / 1**(task-profile / **identity 77** / **manifest-appended 79** / risk-gated 78 / world-bound 12 / job 1)。
+- 三条独立路径一致:lane A 两条(map 分组 + 直接 git grep)+ delegate 第三条(ours-HEAD 4618dcbf06 的 122 个 v0 fixture 逐个 grep:identity total89 web12 no-web77;manifest total89 web10 no-web79)。
+- 源:我传播了 lane B 一个未独立验的数。教训:签字-gating 数 delegate 亲量。§4/item37 六类型检一律用 97/77/79/78/12/1。按对调组会致 manifest-appended 假绿(真差却判达标)。
+
+### ⚠ relay 依赖(2026-09-14 ~08:40Z)——lane A 自动唤醒已死、靠 delegate 发消息叫醒
+- **lane A 的后台等待 watcher 被系统低内存杀了**(空闲内存 27%、内存压力中)。它不重挂轮询(会同样被杀 + 和 lane B 批抢内存)。**现在 lane A 完全靠 delegate/lane B 发消息唤醒。**
+- **delegate 责任**:lane B 报"主批 + 重跑 pass 都完成"时,**必须立即发消息叫 lane A** 跑 p0-close.mjs(否则 lane A 静默不动)。lane A 脚本/按名基线 97/77/79/78/12/1/per-scenario v0 map 全就位、触发即几秒出三项(六类型对基线 + 逐场景恢复 + per-pair shortfall 带因)。
+- 触发精化不变:tsv=83 ≠ 开跑;要等**重跑 pass 也完成**(否则 owner-ordering 残留误判缺类)。现批 82/83、重跑未开始。
+- 内存压力提醒:后续 preflight typecheck-host(4GiB)+ constraints 会加载,注意与 lane B 批错峰、必要时无并发窗口。
+
+### 🎯 P0 CLOSED（2026-09-14 ~09:20Z）——派发不再 halted，无并发窗口 OPEN
+- **P0 CLOSED（三向验证）**：①lane B：主批 83/83 refresh+replay + retained 5/5 + F1 closed + 重跑 3/3 + migrator 0/362 + six-type MET + needs-key 空。②delegate 亲验：git grep code-dispatch-end snapshots=0、ptc.ts:268=tool/ptc-dispatch、packed-chunks pin=merge-base byte-identical、F1 v3 blob 0ecd91fcc3 带 5 事件、6 pinned oracle 带 ours 事件。③lane A oracle-aware p0-close-v2.mjs 独立计数=lane B。
+- **六类型定案 MET at 全基线 97/77/79/78/12/1**（不扣分母；当前格式=session*.v3.jsonl 或 sessionFormat 场景的 writer*.expected.jsonl；lane A 两次险致假绿[对调、扣分母]都被对账/亲量拦下）。逐场景恢复 71/71 MISSING 0；per-pair 短缺 13 全 web（pre-existing turn-start、单列不污染 no-web）。needs-key=0（无 API key 请求）。
+- **item63 preflight memory-light 11/11 green**（P0 staging + ptc.ts 后无 stale projection：module-graph/cordis-catalog·api/persistence-catalog/verify-specs/files-overlay[394 条]/registry-extraction/generate-ledger --check/architecture:layers[0 违规]/doc-standard/package-invariants）。registry byte-lock green（da674330fa5b、queue62,phase8 终 tip 再跑）。
+- **无并发窗口 OPEN（lane B）**：①constraints apply 75-file patch（第二双眼 CLEAR）→re-run constraints 须 0→查 pnpm-lock ②first100:verify-typecheck-host 4GiB 独占（=phase4 过的 host tsc-b、应过、OS 杀则报）③lint-changed-files 随 phase8。lane A 消息驱动填 §4（轻）、窗口内不跑重活。
+- **窗口后链**：全 preflight 绿（除 lint）→ 组装候选 commit（phase8，P0 snapshots 已 staging + ptc.ts + constraints）+ **delegate 账本五行 freeze 编辑**（P4-06.P supersede→revoke→re-green[新 argv=runLiveWritePathContract remap 8 例、p4-06p 已交叉核]、inbox supp、P0-06.F、P0-06.U、P2-02.U；补记 427；freeze 前自核 commitmentKey/cmdRevokeCell 已验）→ 派候选 CI（门③ full 观测）→ CI green 后 cmdGreen re-green + 重观测 → push-exec.sh 推 first100-exec。
+- **用户报告 ready**（needs-key=0、3 决策 srt-i/Windows-iii/canary-C+B、翻译债按名枚举）——phase8 收口后统一发。
+- **relay 依赖仍在**：lane A watcher 死、靠 delegate/lane B 消息唤醒。
+
+### 现况（2026-09-14 ~10:00Z）——P0 CLOSED，phase8 组装 holding 等我 freeze 编辑；账本五步机制确认
+- **P0 CLOSED**（三向验证，见上）。无并发窗口全绿（constraints 0 + typecheck-host green + pnpm-lock 未动）。lane B phase8 暂存就绪（staged: gate3/4/5+43 i18n+162 snapshots+ptc.ts+75 constraints；37 也已 stage；unmerged 0；cached diff 6990 文件=merge+ours 已批）、**commit holding 等我 freeze 编辑**。
+- **⚠ 账本五行机制确认（lane A 交叉核 + delegate 亲验源码）**：revoke（cmdRevokeCell:919）把整 epic 打回 NOT_RUN；re-green(cmdGreen) 不设 ACCEPTED（只 cmdAccept:1602）；--accept 谓词 iv 要 sign-off 匹配当前 digest（旧签 stale）。**rows 1/3（P4-06.P、P0-06.F）实为五步：freeze supersede→--revoke-cell→re-green→--record-signoff→--accept**（恢复 epic ACCEPTED，否则再锚定减已验收 epic 数）。**tier 确认：USER_CONFIRMATION_TIER_EPICS={P0-02,P2-01,P0-07}，P4-06/P0-06 不在内→re-accept delegate 自主、无用户触点。**
+- **五行 PRE-commit（进候选）**：Row1 P4-06.P freeze 新（fullName `live session write path: jsonl > <title>`、BLOCKED-104 免疫、8-vs-9 待 lane A 提议 delegate 定）+mark 旧+--revoke-cell；Row2 更新 supp argv（P4-06.U.s3/P5-10.U.s1→agent-loop/tests/arrival-dedup.spec.ts）；Row3 P0-06.F freeze 新（v2 3 标题）+mark 旧+--revoke-cell。Row4 P0-06.U=re-observe only（13 标题全在）、Row5 P2-02.U=re-observe only。**POST-CI green**：Row1/3 re-green+--record-signoff+--accept、Row2 --supplement、Row4/5 re-observe。
+- **等 lane A 提**：turnkey 五步补全 + P4-06.P 确切 fullName 集（8/9 + 收窄理由）+ P0-06.F v2 标题 + Row2 argv → delegate 审定 → 应用 PRE-commit freeze 编辑 → lane B stage 我的编辑 → spot-check cached stat → commit → lint 独占窗口+registry 终查 → 报 tip → 派 CI → CI green → POST-CI re-green/accept → push-exec.sh。
+- **协议**：lane 间不直接通信、经 delegate（巡检抓 lane A↔B 直连、已叫停）。**relay 依赖**：lane A watcher 死、靠消息唤醒。**用户报告 ready**（needs-key=0、3 决策、翻译债枚举）phase8 后发。
+
+### 🔴 mid-transaction 账本态（2026-09-14 ~10:30Z）——PRE-commit freeze 完成、待 POST-CI 完成五步
+**接任会话须知：账本处于五步事务的中途，P4-06/P0-06 现 NOT_RUN，必须在候选 CI green 后完成 re-green+--record-signoff+--accept 才恢复 ACCEPTED（否则 first100-exec 会少 2 个已验收 epic）。**
+- **PRE-commit freeze 编辑已做（delegate，候选 wt-reanchor，备份 /tmp/command-freeze.backup.json）**：P4-06.P superseded(13→9 fullName 空格连接、argv jsonl.spec.ts)+--revoke-cell→cell/epic NOT_RUN；P0-06.F superseded(3 bare v2)+--revoke-cell→cell/epic NOT_RUN；P4-06.U.s3/P5-10.U.s1 superseded(argv→agent-loop/tests/arrival-dedup、inbox.ts files[] 保旧路径避 §12.4、titles 不变、无 revoke)。command-freeze.json 313 条(+4)。门全过（generate-ledger --check/verify-freeze-in-candidate-tree 194 GREEN/verify-files-overlay 395）。
+- **POST-CI 待完成（delegate，CI green 后）**：Row1 P4-06.P `--epic P4-06 --stage P --report<R> --ci-run-url<U> --candidate-sha<SHA>`(re-green)→`--record-signoff --epic P4-06 --conclusion PASS`→`--accept --epic P4-06`；Row3 P0-06.F 同；Row2 `--supplement --epic P4-06 --stage U --supplement-seq 3`+`--epic P5-10 --stage U --supplement-seq 1`(re-observe)；Row4 P0-06.U re-observe(13 标题全在、无 supersede)；Row5 P2-02.U re-observe。P4-06/P0-06 非 user-tier→--record-signoff 不需 --user-confirmation-ref。turnkey=phase7-8-ledger-turnkey.md、备份可复原。
+- **当前流**：lane A 对 ledger-pre-freeze-edit.json 基线核五行落地 diff；lane B stage 账本文件+全套→发 cached stat→delegate spot-check→(lane A OK+我 OK)→commit（永不 push）→lint 独占窗口+registry 终查→报 tip→delegate 40-hex 派 CI（门③）→CI green→POST-CI 五步→push-exec.sh。
+- **用户报告 ready**（needs-key=0、3 决策、翻译债枚举）phase8 收口后发。**relay 依赖**：lane A watcher 死靠消息。**协议**：lane 间经 delegate。
