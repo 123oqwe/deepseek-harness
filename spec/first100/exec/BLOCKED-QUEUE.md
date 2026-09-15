@@ -6886,3 +6886,30 @@ The reader is exported as `queueBlockerStatus(queue, blockerId)` so it is tested
 **What closes this.** A redaction seam on the durable session write path and on evidence-package assembly, with rules a deployment mounts, and P3-06.F's canary scan of real artifacts passing through both. A rule that only a test mounts does not close it.
 
 **Not established here.** Whether any provider's error body echoes a credential. Whether `packages/assurance/evidence-format` or `scripts/release/collect-evidence.mjs` redacts session content was not measured.
+
+### BLOCKED-257 — P3-10.U and P3-06.U need files neither epic declares, and no record can approve a new deliverable
+**Status:** OPEN (2026-09-15). A scope decision for the user (delegate's decision list, item 7). Until it is made, neither epic's Usage-stage work starts on these files.
+
+**What the two Usage stages need to change.** The item-100 design (P3-10 wall-clock enforcement, P3-06 provider-error redaction) lands in four files. Measured at `5fddc71eb6` with the shared declared-path resolution (declarations plus approved deliverable-path patches):
+
+| file | declared by | files overlay | why the change lands here |
+|---|---|---|---|
+| `packages/execution/execution-world/src/plugin.ts` | no epic | P3-01 [U] | `ExecutionWorldService.Config.request` does not accept `maxWallClockMs` (`plugin.ts:184-197`), so no deployment can ask for a wall-clock ceiling although `resolveWorldSpec` carries one (`:144`). |
+| `packages/core/tools/src/external-effect.ts` | no epic | P2-04 [U], P2-05 [U.1, U], P2-06 [U, F], P3-01 [U], P4-05 [C.1], P4-12 [U.1] | Dispatch reads the session's world binding here (`readExecutionWorldFact`, `:284`); refusing a dispatch after the world timed out is a decision at this point. |
+| `packages/llm/llm-deepseek/src/adapter.ts` | no epic | none | A non-2xx response's `error.message` becomes the `LlmError` message, with the raw body as its cause (`:673-705`). |
+| `packages/llm/llm/src/adapter-failure.ts` | P4-11, P5-04 | none | `normalizeLlmFailure` copies that message verbatim into the `LlmFailure` the session error event persists (`:49`; `packages/core/session/src/types.ts:212`). |
+
+What the stages declare: P3-10.U names `packages/core/agent/src/types.ts` and `packages/guard/timeout-policy/README.md`; P3-06.U names `packages/llm/llm/src/api-key.ts` and `packages/settings/settings/src/redact.ts`.
+
+**Why the existing records do not cover this.**
+- `deliverablePathPatches` in `tests/first100/adjudication.json` maps a declared path to the path approved in its place. None of the four files replaces a declaration; each would be an additional deliverable, and a patch with no `declaredPath` is refused by generate-specs.
+- The files overlay records, after the fact, files a freeze entry cited outside `files[]`. It describes what happened and authorizes nothing.
+
+**Options.**
+- **(a) Recommended.** `adjudication.json` gains an `approvedAdditions` record: per epic and stage, one file the delegate authorizes by name with a reason. It is read through `files-overlay.mjs`'s shared declared-path resolution, so the overlay, the reality set and verify-declared-files-exist all see an authorized addition the same way they see a patch.
+- **(b)** Narrow each Usage-stage acceptance to what its declared files can carry, and leave dispatch refusal and adapter redaction to whichever epic owns those files.
+- **(c)** Hold P3-10 and P3-06 before their Usage stages until the scope is decided.
+
+**Default.** Nothing changes: no record is added, no acceptance is narrowed, and the four files are not edited for either epic.
+
+**Not established here.** Whether the epics that already touch these files (P3-01 through the overlay, P4-11 and P5-04 through declarations) are affected by the proposed changes; the code-level design, which is in the item-100 report and is not ruled.
