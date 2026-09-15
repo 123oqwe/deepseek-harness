@@ -11,6 +11,10 @@
  * that rule, not just prose in the schema file.
  */
 import { readFileSync } from 'node:fs'
+// ajv's DEFAULT export is draft-07 and refuses this schema outright with
+// `no schema with key or ref ".../2020-12/schema"`. The 2020-12 build is a
+// separate entry point.
+import Ajv2020 from 'ajv/dist/2020'
 import { resolve } from 'node:path'
 
 interface Occurrence {
@@ -31,6 +35,7 @@ interface FlakeEntry {
 
 const root = resolve(import.meta.dirname, '..', '..')
 const REGISTRY_PATH = resolve(root, 'spec/first100/exec/flake-registry.json')
+const SCHEMA_PATH = resolve(root, 'spec/first100/exec/flake-registry.schema.json')
 
 /** True when this entry's occurrences satisfy either BLOCKED-023 evidence standard. */
 function satisfiesEvidenceStandard(entry: FlakeEntry): { valid: boolean; reason?: string } {
@@ -49,9 +54,55 @@ function satisfiesEvidenceStandard(entry: FlakeEntry): { valid: boolean; reason?
   return { valid: false, reason: 'fewer than 2 occurrences' }
 }
 
-function main(): void {
-  const registry = JSON.parse(readFileSync(REGISTRY_PATH, 'utf8')) as { entries: FlakeEntry[] }
+/** The registry as this script reads it: `candidates` is part of the file and was absent from the old type. */
+export interface FlakeRegistry {
+  entries: FlakeEntry[]
+  candidates?: unknown[]
+}
+
+/**
+ * Every reason a flake registry is not acceptable, in the order a reader should fix them: its shape against the
+ * schema first, then the append idempotency key the schema cannot express, then the BLOCKED-023 evidence standard.
+ * @param registry - the parsed `flake-registry.json`.
+ * @param schema - the parsed `flake-registry.schema.json`.
+ * @returns one message per failure; empty when the registry is acceptable. Schema failures start with `SCHEMA`.
+ */
+export function registryFailures(registry: FlakeRegistry, schema: object): string[] {
   const failures: string[] = []
+
+  // Shape before content: a malformed file should fail on its shape, not on an
+  // evidence standard it was never in a position to satisfy.
+  // strict, so a misspelled schema keyword is refused at compile time instead of silently checking nothing.
+  const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema)
+  if (!validate(registry)) {
+    for (const error of validate.errors ?? []) {
+      const extra = (error.params as { additionalProperty?: string }).additionalProperty
+      failures.push(`SCHEMA ${error.instancePath || '/'} ${error.message ?? ''}${extra === undefined ? '' : ` (${extra})`}`)
+    }
+  }
+
+  // (b) is NOT expressible in the schema: absorbedByCell is optional by design,
+  // so JSON Schema cannot forbid the deletion that breaks idempotency. A duplicate
+  // append repeats the run, the SHA and the outcome; the same run and SHA with a
+  // divergent outcome is a re-attempt, the BLOCKED-023 evidence an entry exists
+  // to record, and is never refused.
+  for (const entry of registry.entries) {
+    const byRunSha = new Map<string, number>()
+    for (const o of entry.occurrences) {
+      const k = `${o.ciRunUrl} ${o.candidateSha} ${o.outcome}`
+      byRunSha.set(k, (byRunSha.get(k) ?? 0) + 1)
+    }
+    for (const o of entry.occurrences) {
+      const k = `${o.ciRunUrl} ${o.candidateSha} ${o.outcome}`
+      if ((o as { absorbedByCell?: string }).absorbedByCell === undefined && (byRunSha.get(k) ?? 0) > 1) {
+        failures.push(
+          `${entry.testFile} :: an occurrence on ${o.candidateSha} shares (ciRunUrl, candidateSha, outcome) with a sibling and carries no absorbedByCell -- `
+          + 'that field is the third part of the append idempotency key (generate-ledger.mjs:674-678); without it a re-green of the same cell from '
+          + 'the same run appends a duplicate and inflates the rate this entry is judged by',
+        )
+      }
+    }
+  }
 
   for (const entry of registry.entries) {
     if (entry.occurrences.length < 2) {
@@ -63,6 +114,12 @@ function main(): void {
       failures.push(`${entry.testFile} :: ${entry.testFullName} -- ${check.reason}`)
     }
   }
+  return failures
+}
+
+function main(): void {
+  const registry = JSON.parse(readFileSync(REGISTRY_PATH, 'utf8')) as FlakeRegistry
+  const failures = registryFailures(registry, JSON.parse(readFileSync(SCHEMA_PATH, 'utf8')) as object)
 
   // A test registered twice. Reported rather than fatal, and the distinction is
   // the point: absorption asks whether a failing test's fullName appears in this
@@ -96,4 +153,5 @@ function main(): void {
   console.log(`verify-flake-registry: ${registry.entries.length} entr${registry.entries.length === 1 ? 'y' : 'ies'} checked, all satisfy the BLOCKED-023 evidence standard.`)
 }
 
-main()
+// Only when run as a command. The spec imports registryFailures above.
+if (process.argv[1] !== undefined && resolve(process.argv[1]) === resolve(import.meta.filename)) main()

@@ -19,7 +19,8 @@
     "entries": {
       "type": "array",
       "items": { "$ref": "#/$defs/entry" }
-    }
+    },
+    "candidates": { "type": "array", "items": { "$ref": "#/$defs/candidate" } }
   },
   "$defs": {
     "entry": {
@@ -45,11 +46,19 @@
             "properties": {
               "ciRunUrl": { "type": "string" },
               "candidateSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
-              "observedAtUtc": { "type": "string", "format": "date-time" },
+              "observedAtUtc": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$" },
               "outcome": {
                 "type": "string",
                 "enum": ["failed", "passed"],
                 "description": "Whether this specific CI attempt observed this test failing or passing. Required so scripts/first100/verify-flake-registry.ts can mechanically check the BLOCKED-023 same-SHA divergence standard (a 'passed' outcome is only ever recorded to prove non-determinism against a sibling 'failed' occurrence on the identical candidateSha -- never to pad the occurrence count)."
+              },
+              "absorbedByCell": {
+                "type": "string",
+                "description": "The cell this absorption greened, as \"<EPIC>.<STAGE>\". Part of the append idempotency key together with ciRunUrl and candidateSha (generate-ledger.mjs:674-678): removing it lets a re-green of the same cell from the same run append a duplicate and inflate the rate this entry is judged by. Written on every new occurrence; absent on occurrences that predate that code, which is why it is not required."
+              },
+              "verifiedBy": {
+                "type": "string",
+                "description": "How this outcome was established, recorded at the moment of absorption. Written on every new occurrence; not required, for the same reason as absorbedByCell."
               }
             }
           },
@@ -59,11 +68,38 @@
           "type": "string",
           "description": "Why this failure is not associated with the slices these CI runs actually observed -- e.g. distinct unrelated commits, or a commit touching zero product code."
         },
-        "registeredAtUtc": { "type": "string", "format": "date-time" },
+        "registeredAtUtc": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$" },
         "registeredBy": {
           "type": "string",
           "description": "Attribution for the classification decision, e.g. 'ANSWERED-BY-DELEGATE(gq-92)'."
+        },
+        "notes": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Hand-written prose about this entry. Nothing in scripts/ reads these; the grouping is what makes \"prose or contract?\" answerable by position.",
+          "properties": {
+            "backfillNote": { "type": "string" },
+            "measuredRate": { "type": "object" },
+            "countingNote": { "type": "string" }
+          }
         }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A test seen failing but NOT registered. Its purpose is that a second occurrence is recognised as a second rather than a first, so it holds the evidence a future registration would be judged on. It is NOT an entry: it has never been registered, and it may carry a single occurrence. Promotion is a delegate act (C7), never expressed here.",
+      "required": ["testFullName", "testFile", "status", "occurrences", "whyNotRegistered"],
+      "properties": {
+        "testFullName": { "type": "string" },
+        "testFile": { "type": "string" },
+        "status": { "type": "string" },
+        "occurrences": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/entry/properties/occurrences/items" } },
+        "whyNotRegistered": { "type": "string" },
+        "evidenceItAlreadyHas": { "type": "string" },
+        "whatWouldSettleIt": { "type": "string" },
+        "diagnosis": { "type": "string" },
+        "notFixedBecause": { "type": "string" }
       }
     }
   }
