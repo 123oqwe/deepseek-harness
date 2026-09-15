@@ -6779,8 +6779,8 @@
    "verdict": "CONTRACT_WRITE",
    "verdictSecondary": "CATALOG_ADOPT",
    "standards": [
-    "Mem0 OSS API op names add/search/get/update/delete/history (alignment)",
-    "dsh-memory-protocol v1 (dsh-memento)"
+    "Mem0 OSS API op names add/search/get/update/delete/history (NOT adopted; this epic's ops are propose/query/get/revise/forget/export)",
+    "dsh-memory-protocol v1 (dsh-memento) (NOT adopted; the protocol is absent from the tree and what was borrowed is its conformance-suite shape)"
    ],
    "oss": [
     {

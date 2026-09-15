@@ -3720,7 +3720,7 @@
 - run-llama/LlamaIndexTS — ARCHIVED 2026-03
 - langchain-ai/langchainjs — Chat-history/summary buffers only
 - mastra-ai/mastra @mastra/memory — 1.28.1 Apache-2.0 but tied to Mastra storage/vector abstractions; auto-extract semantics
-**用什么 · 标准(绑定词汇)**:Mem0 OSS API op names add/search/get/update/delete/history (alignment) (**唯一涉及者,本 epic 是形状所有者**;冻结一条 schema/词汇用例) · dsh-memory-protocol v1 (dsh-memento) (**唯一涉及者,本 epic 是形状所有者**;冻结一条 schema/词汇用例)
+**用什么 · 标准(绑定词汇)**:Mem0 OSS API op names add/search/get/update/delete/history (NOT adopted; this epic's ops are propose/query/get/revise/forget/export) · dsh-memory-protocol v1 (dsh-memento) (NOT adopted; the protocol is absent from the tree and what was borrowed is its conformance-suite shape) — Measured 2026-09-15: the implementation deliberately took its own vocabulary (propose/query/get/revise/forget/export, pinned by live frozen cases); Mem0 op names were not adopted and dsh-memento was not adopted — both recorded in deviations[] (§12.85 note 47), not by a vocabulary case.
 **备注 · 还得自写(residual)**:MemoryService{propose,query,get,revise,forget,export} + events + invariant + conformance; offer the two existing injection shapes (agent/pre-step waterfall, ctx.systemPrompt section) so plugins migrate by deleting hook code.
 **备注 · 风险(risk)**:Adopting Mem0/Mastra as the definition imports auto-extract semantics (model writes memory directly) — violates 'no model bypass to durable memory'; keyless CI cannot run any LLM-extracting memory.
 **备注 · 计划错误(planError)**:Mem0/Zep/Letta are Python/server memory products whose auto-extraction contradicts P6-01's no-bypass rule — optional providers only.

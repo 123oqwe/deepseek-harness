@@ -1168,19 +1168,19 @@
   ],
   "P6-01": [
    {
-    "standard": "Mem0 OSS API op names add/search/get/update/delete/history (alignment)",
+    "standard": "Mem0 OSS API op names add/search/get/update/delete/history (NOT adopted; this epic's ops are propose/query/get/revise/forget/export)",
     "family": null,
     "owner": "P6-01",
     "thisEpicOwns": true,
-    "notAdoptedHere": false,
+    "notAdoptedHere": true,
     "singleAdopter": true
    },
    {
-    "standard": "dsh-memory-protocol v1 (dsh-memento)",
+    "standard": "dsh-memory-protocol v1 (dsh-memento) (NOT adopted; the protocol is absent from the tree and what was borrowed is its conformance-suite shape)",
     "family": null,
     "owner": "P6-01",
     "thisEpicOwns": true,
-    "notAdoptedHere": false,
+    "notAdoptedHere": true,
     "singleAdopter": true
    }
   ],

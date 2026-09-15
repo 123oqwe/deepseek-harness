@@ -2370,22 +2370,18 @@
         "verdict": "PROVIDER_WRITE",
         "verdictSecondary": null,
         "adopted": [],
-        "deviations": [],
-        "rejectedAbsent": [],
-        "standardsOwned": [
+        "deviations": [
           {
-            "standard": "Mem0 OSS API op names add/search/get/update/delete/history (alignment)",
-            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
-            "basis": "assignment",
-            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is not accepted, so the claim is PENDING until a case pins it; --accept refuses a pending ownership."
+            "standard": "Mem0 OSS API op names add/search/get/update/delete/history (NOT adopted; this epic's ops are propose/query/get/revise/forget/export)",
+            "reason": "The implementation took another route and the vocabulary has no subject here. `MemoryRuntime` exposes propose / query / get / revise / forget / export (packages/memory/memory/src/index.ts:5, :201), and `propose` is documented at :9 as the package's only mutation entry point. The name `Mem0` occurs in ZERO files under packages/ and docs/ (the six op names are ordinary English words and were not counted as evidence either way). The divergence is deliberate and the card's own `risk` records why: adopting Mem0's API imports auto-extract semantics — the model writing durable memory directly — which violates P6-01's no-model-bypass rule, and a single `propose` entry point is the mechanism that forbids it. The card's own `residual` already names the six real ops. This epic's actual vocabulary IS pinned by live frozen cases — measured 2026-09-15 over its 5 live entries / 109 cases: 40 distinct cases name at least one of the six ops (word-boundary, case-insensitive: propose 5, query 11, get 10, revise 8, forget 5, export 8; a substring count would read 66 because `get` sits inside `forget`/`target`/`budget` and `propose` inside `proposed`) — so the non-adoption is a deliberate choice of a different, evidenced vocabulary rather than an absence of one."
           },
           {
-            "standard": "dsh-memory-protocol v1 (dsh-memento)",
-            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
-            "basis": "assignment",
-            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is not accepted, so the claim is PENDING until a case pins it; --accept refuses a pending ownership."
+            "standard": "dsh-memory-protocol v1 (dsh-memento) (NOT adopted; the protocol is absent from the tree and what was borrowed is its conformance-suite shape)",
+            "reason": "The subject does not exist. `dsh-memento` and `dsh-memory-protocol` occur in ZERO files under packages/ and docs/; nothing in the tree implements, imports or names this protocol. The card's own `community` note records dsh-memento as a pattern to borrow — \"borrow suite/golden pattern\" — and lists what it lacks: propose/verify lifecycle, purpose/scope/tenant/budget, provenance, event-logged projection. A borrowed test pattern is not an adopted protocol."
           }
         ],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
         "standardsImported": [],
         "residual": "The memory seam, its projection, and scoped reads.",
         "probes": [
@@ -2400,7 +2396,7 @@
         "expectedDeletedPct": "0",
         "recordedBeforeFirstLine": false,
         "realized": null,
-        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it."
+        "note": "Backfilled 2026-09-07 under gate (e); both standards moved to `deviations[]` on 2026-09-15 by delegate ruling. Ownership is not an obligation to adopt (§12.85 note 47): a claim is either ADOPT-and-freeze-a-case-naming-it, or MEASURE that the implementation took another route and record that measurement in `deviations[]`. Both standards here are the second kind, and the census is in each reason — the Mem0 op names and `dsh-memento` each occur in ZERO files under packages/ and docs/. The card was corrected in the same change so that regenerating standards-ownership.json does not reassert an alignment that was never built."
       }
     },
     "P6-02": {
