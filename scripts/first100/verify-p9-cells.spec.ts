@@ -17,7 +17,7 @@
  * and never on a frozen string that names more than one passing case.
  */
 import { describe, expect, it } from 'vitest'
-import { referencedPaths, reportPathMatchesCandidate, staleCells, summaryLine, verifyCells } from './verify-p9-cells.mjs'
+import { queueBlockerStatus, referencedPaths, reportPathMatchesCandidate, staleCells, summaryLine, verifyCells } from './verify-p9-cells.mjs'
 import type { P9Cell, P9Freeze, P9FreezeEntry, P9Git } from './verify-p9-cells.mjs'
 
 const SHA = '1f51e6a3d5bda5f3a9b9a5f902f27741be0cd6b3'
@@ -262,5 +262,40 @@ describe('verify-p9-cells: the report must belong to the candidate (P4-06.P.3, 2
 
   it('accepts a directory with no full-SHA suffix that carries a 10-character prefix of the candidate', () => {
     expect(reportPathMatchesCandidate(`/scratch/obs-${SHA.slice(0, 10)}/vitest-report.json`, SHA, process.cwd())).toStrictEqual({ ok: true })
+  })
+})
+
+describe('verify-p9-cells blocker status: the queue reader refuses what it cannot identify (BLOCKED-254)', () => {
+  const entry = (id: string, status: string | null): string => `### ${id} — a blocker\n\n${status === null ? '' : `**Status:** ${status} (2026-09-15)\n\n`}Body text.\n\n`
+
+  it('reads OPEN from a single entry', () => {
+    expect(queueBlockerStatus(entry('BLOCKED-107', 'OPEN'), 'BLOCKED-107')).toBe('OPEN')
+  })
+
+  it('reads any other status of a single entry as CLOSED', () => {
+    expect(queueBlockerStatus(entry('BLOCKED-107', 'FIXED'), 'BLOCKED-107')).toBe('CLOSED')
+  })
+
+  it('reports MISSING when no heading carries the id, and does not match a longer id', () => {
+    expect(queueBlockerStatus(entry('BLOCKED-107', 'OPEN'), 'BLOCKED-10')).toBe('MISSING')
+  })
+
+  it('throws when two headings carry the id, even when the first reads CLOSED', () => {
+    expect(() => queueBlockerStatus(entry('BLOCKED-198', 'FIXED') + entry('BLOCKED-198', 'OPEN'), 'BLOCKED-198')).toThrow('2 queue headings carry this id')
+  })
+
+  it('throws when the entry has no status line, instead of reading it as CLOSED', () => {
+    expect(() => queueBlockerStatus(entry('BLOCKED-001', null), 'BLOCKED-001')).toThrow('no **Status:** line')
+  })
+
+  it('throws for an entry with no status line even when the next entry has one', () => {
+    const queue = entry('BLOCKED-226', null) + entry('BLOCKED-227', 'CLOSED')
+    expect(() => queueBlockerStatus(queue, 'BLOCKED-226')).toThrow('no **Status:** line')
+    expect(queueBlockerStatus(queue, 'BLOCKED-227')).toBe('CLOSED')
+  })
+
+  it('reads a status that sits more than 2000 characters below its heading', () => {
+    const long = `### BLOCKED-040 — a long blocker\n\n${'x'.repeat(2500)}\n\n**Status:** OPEN\n\n`
+    expect(queueBlockerStatus(long + entry('BLOCKED-041', 'FIXED'), 'BLOCKED-040')).toBe('OPEN')
   })
 })

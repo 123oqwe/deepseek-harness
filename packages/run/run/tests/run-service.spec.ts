@@ -268,7 +268,7 @@ describe('createFileRunStore: the durability seam itself', () => {
     // in the plugin's disposer, where a rejection is swallowed by
     // `fiber.dispose()`. It surfaced as 77 red snapshot fixtures the moment
     // P4-02 began awaiting a Run transition inside a turn, which is what turned
-    // a discarded write failure into a failed turn (BLOCKED-198).
+    // a discarded write failure into a failed turn (BLOCKED-255).
     //
     // The path here is TWO levels below a directory that exists, because one
     // level would also pass against a `mkdir` without `recursive`.

@@ -4998,7 +4998,7 @@ So a cleanly unloaded host keeps its session's work item until the lease lapses,
 2. `RunPlugin`'s disposer is async and `await`s `advance()` before it would release — `packages/run/run/src/index.ts:1255` — so it yields the microtask queue and loses to any disposer that does not.
 3. The accessor that throws is `packages/run/lease-sqlite/src/index.ts:90`, guarding `this.opened`.
 
-**Cross-reference: BLOCKED-198 is the same swallowing seen from the other side.** There the discarded rejection was an `ENOENT` from a Run store that never created its directory, raised and thrown away on every affected boot for as long as the code existed. This entry is about the disposer that discards; that one is about what it discarded. Closing this one would have surfaced that one years earlier.
+**Cross-reference: BLOCKED-255 is the same swallowing seen from the other side.** There the discarded rejection was an `ENOENT` from a Run store that never created its directory, raised and thrown away on every affected boot for as long as the code existed. This entry is about the disposer that discards; that one is about what it discarded. Closing this one would have surfaced that one years earlier.
 
 **A second finding, worth its own line: that error message is wrong for the case that reaches it.** It reads "used BEFORE its mount opened the database", and its JSDoc adds "which no consumer can do — `inject` holds them until the service is available" (`lease-sqlite/src/index.ts:87-88`). The case that actually occurs is the opposite: used AFTER the mount CLOSED it, during teardown. Whoever hits this in a deployment is told to look at startup ordering, and the fault is at shutdown.
 
@@ -5028,7 +5028,9 @@ So a cleanly unloaded host keeps its session's work item until the lease lapses,
 `RunLease.release()` (`packages/collaboration/lease-contract/src/run-lease.ts:58`, implemented at `:118` as `store.release(token)`) does NOT sidestep it: the `store` it closes over is the plugin instance, so the call lands on the same cleared accessor.
 
 
-### BLOCKED-198 — the Run store never created its directory, and the failure was swallowed for as long as it existed
+### BLOCKED-255 — the Run store never created its directory, and the failure was swallowed for as long as it existed
+
+**Renumbered from BLOCKED-198 (BLOCKED-254).** This entry was first written as a second `BLOCKED-198`, a number the memory-index readiness entry already held; that entry keeps `BLOCKED-198`. A mention of `BLOCKED-198` about the Run store's missing directory means this entry: `plan-rectification-2026-09-06.md` §12.85 addendum 33 is one (see addendum 428 of that file, which reaches this tree with the pre-push docs sync). The P6-02 note in `command-freeze.json`, addendum 16 and `preflight-P1-07-A.md` mean the memory-index entry.
 
 **Status:** FIXED 2026-09-11 in the same slice that surfaced it, owner `dsh-run`. Recorded rather than closed silently, because two of its three layers outlive the one-line fix.
 
@@ -6609,3 +6611,89 @@ contain the `from` path, which is the guard that catches a half-applied fix.
 
 Machine-readable inventory: `stale-registry-paths.json` (per epic, per
 declaration, with candidates and the deleting commit where known).
+
+### BLOCKED-254 — eight BLOCKED numbers appear twice, and the status reader takes the first
+**Status:** OPEN (2026-09-15). The fix lands in the same commit as this entry; the closing line, with that commit's sha, follows in the next docs commit.
+
+**What was measured** (at `69a66830e0`, before BLOCKED-253 and this entry were added). `spec/first100/exec/BLOCKED-QUEUE.md` carried **249 `### BLOCKED-NNN` headings over 241 distinct numbers**. Eight numbers appear twice, and they are **three different things**:
+
+**(a) A question/answer convention — six numbers, all in one region (L2148-L2298).**
+
+| number | first | second |
+|---|---|---|
+| `BLOCKED-009` | L2148 — a brand-new [N] package's C-stage-only slice fails the repo-wide… | L2159 — *answer (ANSWERED-BY-DELEGATE(gq-92))* |
+| `BLOCKED-008` | L2170 — P0-06's own MUST clause conflicts with… | L2181 — *answer (ANSWERED-BY-DELEGATE(gq-92))* |
+| `BLOCKED-005` | L2215 — command-freeze.json's one-entry-per-(epic,stage) rule… | L2226 — *answer (…)* |
+| `BLOCKED-004` | L2237 — what makes a ledger row's status transition to ACCEPTED? | L2249 — *answer (…)* |
+| `BLOCKED-002` | L2264 — how does a stage with no distinct test artifact get greened? | L2279 — *answer* |
+| `BLOCKED-001` | L2287 — P0-01.C target path collides with an unrelated artifact | L2298 — *answer* |
+
+These are **deliberate**: an early convention gave the question and its answer the same number and adjacent headings. Not a numbering accident.
+
+**(b) A two-part entry — one number.** `BLOCKED-214` at L5487 (*"P1-07's trust boundary shipped OFF on every profile…"*) and L5905 (*"**second half** — the unattended side of P1-07's ruling: a persistent trust record"*). Same subject, split on purpose, and the second heading says so.
+
+**(c) A genuine collision — one number.** `BLOCKED-198` named **two unrelated issues, 4,866 lines apart**:
+
+```
+L 165  BLOCKED-198 — readiness: whichever epic builds a memory index must ask
+                     `admitToIndex` before it indexes
+L5031  BLOCKED-198 — the Run store never created its directory, and the failure
+                     was swallowed for as long as it existed
+```
+
+Nothing connects a memory index to a Run store's directory. **Two issues were given one number.**
+
+**The link damage is smaller than it looks.** Across `spec/`, `docs/`, `scripts/` and `tests/` there is exactly **one** anchor-style reference, `[BLOCKED-198](#blocked-198)` at `BLOCKED-QUEUE.md:57`, and its sentence — *"the same 'decision here, surface there' split as …"* — is about the **memory-index** entry, which is the first heading and therefore what the anchor resolves to. **It is correct by the luck of ordering, not by design.** Every other reference in this repository is plain text, and plain text carries no resolution at all — a reader follows it by searching, and finds both.
+
+**The mechanism that makes this worth an entry is not the anchors.** `scripts/first100/verify-p9-cells.mjs` `blockerStatus(blockerId)` read the status like this:
+
+```js
+const heading = new RegExp(`^#{2,4} ${blockerId}\\b[^\\n]*$`, 'm').exec(queue)
+if (heading === null) return 'MISSING'
+const body = queue.slice(heading.index, heading.index + 2000)
+const status = /\*\*Status:?\*?\*?:?\s*([A-Z-]+)/.exec(body)?.[1] ?? ''
+return status === 'OPEN' ? 'OPEN' : 'CLOSED'
+```
+
+`.exec()` returns the **first** match, and the status is read from the 2,000 characters after it. **For a duplicated number the second entry is invisible to this function**, and the failure direction is **fail-open**: `OPEN` requires a positive match, so anything else — including reading the wrong entry — yields `CLOSED`, and a P9 cell passes a blocker check it should not have.
+
+**The fixed window fails open in two more ways** (measured by lane B at `e591ccca70`, bounding each entry at the next `BLOCKED-` heading, over 250 headings):
+
+- **it reads past the entry.** `BLOCKED-227` (L5970) has no status line of its own, and the window reads `FIXED` from `BLOCKED-226`, the entry after it;
+- **it stops before the status.** 43 entries put their status line more than 2,000 characters below the heading; for four of them the status is `OPEN` — `BLOCKED-037`, `038`, `039`, `040` — and the window reads each as `CLOSED`.
+
+109 of the 250 entries carry no `**Status:**` line at all.
+
+**Today all of it is latent, and that was checked rather than assumed.** `p9-stage-blockers.json` names one blocker, `BLOCKED-107`: one heading, status `OPEN`. No occurrence of the eight duplicated numbers is `OPEN`, and five carry no status line at all. Read with the reader's own `**Status**` pattern over each entry's text (lane B, `e591ccca70`):
+
+```
+BLOCKED-001  ANSWERED / (none)                  BLOCKED-008  ANSWERED-BY-DELEGATE ×2
+BLOCKED-002  ANSWERED / (none)                  BLOCKED-009  ANSWERED-BY-DELEGATE ×2
+BLOCKED-004  ANSWERED-BY-DELEGATE / (none)      BLOCKED-198  (none) / FIXED
+BLOCKED-005  ANSWERED-BY-DELEGATE ×2            BLOCKED-214  FIXED ×2
+```
+
+An earlier count of this table read `BLOCKED-002` and `BLOCKED-004` as having two statuses and `BLOCKED-198` as `FIXED` twice; this table reads each occurrence only from its heading to the next `BLOCKED-` heading.
+
+So `blockerStatus` returned the right verdict for every blocker the mapping names. The risk arrives the moment the mapping names a duplicated number with one OPEN half, an entry with no status line, or one of the four long OPEN entries — and five occurrences above already have the second shape.
+
+**Ruling (delegate, 2026-09-15).** Three changes, and nothing else moves.
+
+**1. `blockerStatus()` fails CLOSED.** It refuses rather than answers when it cannot be sure which entry it read:
+
+- **more than one heading matches the id** → refuse. It took the first silently;
+- **the entry carries no `**Status:**` line** → refuse. An absent status fell through to `CLOSED`, which is the fail-open path.
+
+Refuse means **throw**, not return `CLOSED` — a status reader that cannot identify its subject has no verdict to give, and returning the safe-looking one is how this stays invisible.
+
+**2. The status is read from the entry's own text**, from its heading to the next `BLOCKED-` heading, with no fixed window. That removes both window failures above.
+
+The reader is exported as `queueBlockerStatus(queue, blockerId)` so it is tested on queue text: one duplicated id, one status-less entry, a status-less entry followed by a `CLOSED` one, and an `OPEN` status more than 2,000 characters down, plus positive controls that a single `OPEN` and a single closed entry still resolve and that `BLOCKED-10` does not match `BLOCKED-107`. A check never seen to fail is not a check.
+
+**3. `BLOCKED-198`'s SECOND entry — the Run-store one — is renumbered `BLOCKED-255`**, with a redirect sentence under its heading. The three plain-text references that meant the Run store move with it: `BLOCKED-QUEUE.md`'s cross-reference in the entry above it, `packages/run/run/src/index.ts` and `packages/run/run/tests/run-service.spec.ts`. The memory-index entry at L165 keeps `198`, which is what the anchor link at `BLOCKED-QUEUE.md:57` means. `command-freeze.json`'s P6-02 note and `plan-rectification-2026-09-06.md` are records and are not edited in place. Addendum 428 of `plan-rectification-2026-09-06.md` records that addendum 33's `BLOCKED-198` is now `BLOCKED-255`, and the redirect sentence says which entry each mention means.
+
+**Not changed: the six question/answer pairs and `BLOCKED-214`'s two halves.** Both are deliberate conventions, both are self-describing in their own headings, and renumbering them would erase a record of how the early decisions were taken in exchange for tidiness. **With the reader failing closed they are also no longer a hazard** — a duplicated id stops being something a tool can quietly misread.
+
+**Deliberately not done: a repo-wide heading-uniqueness gate.** It would land red on eight pre-existing rows, six of which are intentional, and would therefore need an allowlist on its first day — the empty-gate shape this program has had to refuse before.
+
+**What this entry does not establish.** Whether any *other* tool reads these headings the same way: `verify-p9-cells.mjs` is the one measured. `verify-freeze-in-candidate-tree.mjs` also names the file; its call site was read rather than executed, and it does not use `blockerStatus`. No search was made for heading-parsing outside `scripts/`.

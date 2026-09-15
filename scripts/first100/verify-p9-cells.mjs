@@ -78,23 +78,51 @@ const BLOCKED_QUEUE_PATH = join(REPO_ROOT, 'spec/first100/exec/BLOCKED-QUEUE.md'
 const STAGES = ['C', 'P', 'U', 'F']
 
 /**
- * Whether the queue still records `blockerId` as open.
+ * Whether a queue text records `blockerId` as open.
  *
  * Read from the queue itself rather than trusted from the mapping: a blocker
  * that was resolved must stop excusing the stage that named it, and the only
  * place that fact lives is the entry's own status line.
+ *
+ * The status is read from the entry's own text, from its heading to the next
+ * queue heading. A fixed 2000-character window read BLOCKED-227's status from
+ * the entry after it, and missed the OPEN status of four entries longer than
+ * the window.
+ *
+ * Throws rather than answering when it cannot tell which entry or which
+ * status it read (BLOCKED-254): when more than one heading carries the id,
+ * and when the entry has no status line. Answering `CLOSED` in either case
+ * would let a stage pass a blocker check it should not.
+ * @param queue - the text of `BLOCKED-QUEUE.md`.
  * @param blockerId - e.g. `BLOCKED-107`.
  * @returns `'OPEN'`, `'CLOSED'`, or `'MISSING'` when the queue has no such entry.
  */
-function blockerStatus(blockerId) {
-  const queue = readFileSync(BLOCKED_QUEUE_PATH, 'utf8')
+export function queueBlockerStatus(queue, blockerId) {
   // Headings appear as `### BLOCKED-107 — ...` or `## BLOCKED-116 — ...`.
-  const heading = new RegExp(`^#{2,4} ${blockerId}\\b[^\\n]*$`, 'm').exec(queue)
-  if (heading === null) return 'MISSING'
-  const body = queue.slice(heading.index, heading.index + 2000)
+  const headings = [...queue.matchAll(new RegExp(`^#{2,4} ${blockerId}\\b[^\\n]*$`, 'gm'))]
+  if (headings.length === 0) return 'MISSING'
+  if (headings.length > 1) {
+    throw new Error(`${blockerId}: ${String(headings.length)} queue headings carry this id, so its status cannot be read (BLOCKED-254)`)
+  }
+  // The entry runs from the end of its heading line to the next BLOCKED heading.
+  const bodyStart = headings[0].index + headings[0][0].length
+  const next = /^#{2,4} BLOCKED-\d+\b/m.exec(queue.slice(bodyStart))
+  const body = queue.slice(bodyStart, next === null ? queue.length : bodyStart + next.index)
   // Both status spellings occur: `**Status: OPEN, ...` and `**Status:** OPEN`.
-  const status = /\*\*Status:?\*?\*?:?\s*([A-Z-]+)/.exec(body)?.[1] ?? ''
+  const status = /\*\*Status:?\*?\*?:?\s*([A-Z-]+)/.exec(body)?.[1]
+  if (status === undefined) {
+    throw new Error(`${blockerId}: no **Status:** line before the next queue entry (BLOCKED-254)`)
+  }
   return status === 'OPEN' ? 'OPEN' : 'CLOSED'
+}
+
+/**
+ * Whether `BLOCKED-QUEUE.md` records `blockerId` as open; see {@link queueBlockerStatus}.
+ * @param blockerId - e.g. `BLOCKED-107`.
+ * @returns `'OPEN'`, `'CLOSED'`, or `'MISSING'`.
+ */
+function blockerStatus(blockerId) {
+  return queueBlockerStatus(readFileSync(BLOCKED_QUEUE_PATH, 'utf8'), blockerId)
 }
 
 /** @param {string} text @returns {string} lowercase hex sha256. */

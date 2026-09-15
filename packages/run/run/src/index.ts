@@ -258,7 +258,7 @@ export function createFileRunStore(path: string): RunStore {
     // in the plugin's disposer, where a rejection is swallowed by
     // `fiber.dispose()`. It surfaced only when P4-02 began awaiting a Run
     // transition inside a turn, which turned a discarded write failure into a
-    // failed turn (BLOCKED-198, and BLOCKED-197 for the swallowing path).
+    // failed turn (BLOCKED-255, and BLOCKED-197 for the swallowing path).
     await mkdir(dirname(path), { recursive: true })
     // Write-then-rename: a crash mid-write leaves the previous complete
     // document in place at `path` rather than a truncated one.

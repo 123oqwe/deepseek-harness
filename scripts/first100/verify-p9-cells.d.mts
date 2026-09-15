@@ -127,6 +127,15 @@ export function verifyCells(
 ): P9Cell[]
 
 /**
+ * Whether a queue text records a blocker as open.
+ * @param queue - the text of `BLOCKED-QUEUE.md`.
+ * @param blockerId - e.g. `BLOCKED-107`.
+ * @returns `'OPEN'`, `'CLOSED'`, or `'MISSING'` when no heading carries the id.
+ * @throws when more than one heading carries the id, or its entry has no status line before the next queue heading (BLOCKED-254).
+ */
+export function queueBlockerStatus(queue: string, blockerId: string): 'OPEN' | 'CLOSED' | 'MISSING'
+
+/**
  * Every repository path a freeze entry's observation depends on.
  * @param entry - a command-freeze entry.
  * @returns the files it names and the test paths its command runs.
