@@ -25,11 +25,22 @@
  * behind them (BLOCKED-181). "Which gates ran, and how each ended" is the
  * question a lane report has to answer; one exit code cannot.
  *
- * Usage: `node scripts/first100/run-registry-gates.mjs [--set registry|slice|slice-cordis]`
+ * **Why it reads free memory before each gate.** On a shared host a
+ * machine-wide low-memory kill ends a gate from outside. A child ended by a
+ * signal has no exit status, and counting it as exit 1 reads the kill as a red
+ * gate; a kill that takes this process leaves no summary at all. Before each
+ * gate the runner reads free memory (`memory_pressure` on macOS, `MemAvailable`
+ * in `/proc/meminfo` on Linux). Below `--min-free-percent` (default 20) that
+ * gate is reported CANNOT RUN, the rest NOT RUN, and the set exits 2; a gate
+ * ended by a signal is reported KILLED. A failed gate still makes the set exit
+ * 1. Where free memory cannot be read, the guard is not enforced and says so.
+ *
+ * Usage: `node scripts/first100/run-registry-gates.mjs [--set registry|slice|slice-cordis] [--min-free-percent <n>]`
  *
  * @module scripts/first100/run-registry-gates
  */
 import { spawnSync } from 'node:child_process'
+import { readFileSync, realpathSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -186,14 +197,94 @@ function selectSet(argv) {
   return { name, gates }
 }
 
+/** The free-memory floor a gate needs to start, as a whole percentage: the same floor the lanes' pre-run guard uses. */
+const DEFAULT_MIN_FREE_PERCENT = 20
+
+/**
+ * The free-memory threshold named on the command line, defaulting to {@link DEFAULT_MIN_FREE_PERCENT}.
+ * @param argv - the process arguments after the script path.
+ * @returns a whole percentage from 0 to 100.
+ */
+function selectMinFreePercent(argv) {
+  const index = argv.indexOf('--min-free-percent')
+  if (index === -1) return DEFAULT_MIN_FREE_PERCENT
+  const value = argv[index + 1]
+  if (value === undefined || !/^\d+$/u.test(value) || Number(value) > 100) {
+    console.error(`run-registry-gates: --min-free-percent needs a whole percentage from 0 to 100 (got "${String(value)}")`)
+    process.exit(2)
+  }
+  return Number(value)
+}
+
+/**
+ * Free memory as a whole percentage of the machine's memory.
+ *
+ * macOS reports it in `memory_pressure`'s "System-wide memory free percentage"
+ * line; Linux as `MemAvailable` over `MemTotal` in `/proc/meminfo`.
+ * @returns the percentage, or `undefined` when this platform has neither source or it cannot be read.
+ */
+export function readFreeMemoryPercent() {
+  if (process.platform === 'darwin') {
+    const result = spawnSync('memory_pressure', [], { encoding: 'utf8' })
+    const match = /System-wide memory free percentage: (\d+)%/u.exec(result.stdout ?? '')
+    return match === null ? undefined : Number(match[1])
+  }
+  if (process.platform === 'linux') {
+    let meminfo
+    try {
+      meminfo = readFileSync('/proc/meminfo', 'utf8')
+    } catch {
+      // /proc/meminfo is absent or unreadable in this environment: the reading is unknown, not low.
+      return undefined
+    }
+    const available = /^MemAvailable:\s+(\d+) kB$/mu.exec(meminfo)
+    const total = /^MemTotal:\s+(\d+) kB$/mu.exec(meminfo)
+    if (available === null || total === null || Number(total[1]) === 0) return undefined
+    return Math.floor((Number(available[1]) * 100) / Number(total[1]))
+  }
+  return undefined
+}
+
+/**
+ * Whether a gate may start, given one reading of free memory.
+ * @param freePercent - free memory as a whole percentage, or `undefined` when it could not be read.
+ * @param minFreePercent - the refusal threshold.
+ * @returns `{ run: true }`, or `{ run: false, reason }` naming both numbers.
+ */
+export function memoryVerdict(freePercent, minFreePercent) {
+  if (freePercent !== undefined && freePercent < minFreePercent) {
+    return { run: false, reason: `memory free ${String(freePercent)}% < ${String(minFreePercent)}%` }
+  }
+  return { run: true }
+}
+
+/**
+ * The gate set's exit code.
+ * @param results - one result per gate that was due to run.
+ * @returns 1 when any gate failed, otherwise 2 when any gate could not run, was killed or was not run, otherwise 0.
+ */
+export function gateSetExitCode(results) {
+  if (results.some(result => result.outcome === 'FAIL')) return 1
+  if (results.some(result => result.outcome !== 'PASS')) return 2
+  return 0
+}
+
+/** The per-gate report label for each outcome. */
+const OUTCOME_LABELS = { PASS: 'PASS', FAIL: 'FAIL', CANNOT_RUN: 'CANNOT RUN', KILLED: 'KILLED', NOT_RUN: 'NOT RUN' }
+
 function main() {
-  const { name: setName, gates } = selectSet(process.argv.slice(2))
+  const argv = process.argv.slice(2)
+  const { name: setName, gates } = selectSet(argv)
+  const minFreePercent = selectMinFreePercent(argv)
   const held = gates.filter(gate => HELD_BACK.has(gate))
   for (const gate of held) {
     const { reason, until } = HELD_BACK.get(gate)
     console.log(`HELD BACK  ${gate}`)
     console.log(`           ${reason}`)
     console.log(`           Reinstated when: ${until}`)
+  }
+  if (readFreeMemoryPercent() === undefined) {
+    console.log(`memory guard: free memory cannot be read on ${process.platform}, so it is not enforced`)
   }
 
   // EVERY non-held gate runs, whatever an earlier one did. Stopping at the
@@ -202,33 +293,60 @@ function main() {
   // pairing gate has been held -- long enough to hide a real
   // `verify-registry-extraction` red (BLOCKED-181). A report that says which
   // gates ran and how each ended is the point; the exit code alone is not.
+  // The one stop is low memory: a gate that cannot start is not a verdict, and
+  // the gates after it would only be started into the same shortage.
   const running = gates.filter(gate => !HELD_BACK.has(gate))
-  const failed = []
+  const results = []
+  let stopped = false
   for (const gate of running) {
+    if (stopped) {
+      results.push({ gate, outcome: 'NOT_RUN' })
+      continue
+    }
     console.log(`\n=== ${gate}`)
+    const verdict = memoryVerdict(readFreeMemoryPercent(), minFreePercent)
+    if (!verdict.run) {
+      console.log(`CANNOT RUN: ${verdict.reason}`)
+      results.push({ gate, outcome: 'CANNOT_RUN', detail: verdict.reason })
+      stopped = true
+      continue
+    }
     const result = spawnSync('pnpm', ['run', gate], { cwd: REPO_ROOT, stdio: 'inherit' })
-    const status = result.status ?? 1
-    if (status !== 0) failed.push({ gate, status })
+    if (result.signal !== null) results.push({ gate, outcome: 'KILLED', detail: result.signal })
+    else if ((result.status ?? 1) !== 0) results.push({ gate, outcome: 'FAIL', detail: `exit ${String(result.status ?? 1)}` })
+    else results.push({ gate, outcome: 'PASS' })
   }
 
   console.log(`\n${setName} gate set — per-gate result:`)
-  for (const gate of running) {
-    const failure = failed.find(entry => entry.gate === gate)
-    console.log(`  ${failure === undefined ? 'PASS' : `FAIL (exit ${String(failure.status)})`}  ${gate}`)
+  for (const { gate, outcome, detail } of results) {
+    console.log(`  ${OUTCOME_LABELS[outcome]}${detail === undefined ? '' : ` (${detail})`}  ${gate}`)
   }
   for (const gate of held) console.log(`  HELD        ${gate}`)
 
+  const failed = results.filter(result => result.outcome === 'FAIL')
+  const unfinished = results.filter(result => result.outcome === 'CANNOT_RUN' || result.outcome === 'KILLED')
+  const notRun = results.filter(result => result.outcome === 'NOT_RUN')
   if (failed.length > 0) {
     console.error(
       `\n${setName} gate set: ${String(failed.length)} of ${String(running.length)} gate(s) failed `
-      + `(${failed.map(entry => entry.gate).join(', ')}).`,
+      + `(${failed.map(result => result.gate).join(', ')}).`,
     )
-    process.exit(1)
   }
+  if (unfinished.length > 0) {
+    console.error(
+      `\n${setName} gate set: ${unfinished.map(result => `${result.outcome === 'KILLED' ? 'killed' : 'cannot run'} ${result.gate} (${String(result.detail)})`).join('; ')}; `
+      + `${String(results.filter(result => result.outcome === 'PASS').length)} passed, ${String(notRun.length)} not run`
+      + `${notRun.length > 0 ? ` (${notRun.map(result => result.gate).join(', ')})` : ''}.`,
+    )
+  }
+  const code = gateSetExitCode(results)
+  if (code !== 0) process.exit(code)
   console.log(
     `\n${setName} gate set: ${String(running.length)} gate(s) passed`
     + `${held.length > 0 ? `, ${String(held.length)} held back with a stated reason above` : ''}.`,
   )
 }
 
-main()
+// Only when run as a command; the spec imports the pure functions. Real paths on both sides, so a run through a
+// symlinked path (the OS temp directory on macOS) still counts as running the command.
+if (process.argv[1] !== undefined && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) main()
