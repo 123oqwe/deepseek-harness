@@ -183,11 +183,18 @@ jobs:
         # the step above writes, which does not exist when the gate set runs.
         # `always()` for the suite's reason: a precondition failing upstream
         # should cost one round, not this verdict.
+        # verify-freeze-case-uniqueness refuses a report whose parent directory
+        # carries no commit token (reportDirMatchesCandidate), so the report is
+        # checked from a copy in a directory named like the uploaded artifact.
+        # The suite output and the upload below keep reading observations/.
         if: always()
-        run: >-
-          node scripts/first100/verify-freeze-case-uniqueness.mjs
-          --report .artifacts/first100/observations/vitest-report.json
-          --candidate-sha ${{ steps.resolve-sha.outputs.sha }}
+        run: |
+          d=.artifacts/first100/observations/first100-vitest-report-${{ steps.resolve-sha.outputs.sha }}
+          src=.artifacts/first100/observations/vitest-report.json
+          [ -f "$src" ] || { echo "verify-freeze-case-uniqueness: cannot decide — --report $src does not exist" >&2; exit 2; }
+          mkdir -p "$d"
+          cp "$src" "$d/"
+          node scripts/first100/verify-freeze-case-uniqueness.mjs --report "$d/vitest-report.json" --candidate-sha ${{ steps.resolve-sha.outputs.sha }}
 
       - name: Upload the vitest observation report
         if: always()
