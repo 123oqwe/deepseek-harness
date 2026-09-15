@@ -2,7 +2,8 @@
  * §12.4's gate: every live freeze entry's `files` are inside the epic's scope,
  * and every `source` entry in the overlay says why.
  *
- * Scope is `files[] ∪ filesOverlay` — the plan plus the record of reality.
+ * Scope is `files[] ∪ filesOverlay` — the plan plus the record of reality, with
+ * each declared path resolved through the approved deliverable-path patches.
  * Checking against `files[]` alone would fail 80 of 121 live entries; checking
  * against nothing is what the program did for its first hundred freezes, which
  * is how BLOCKED-136's wrong-subject file list survived to the U stage and how
@@ -38,9 +39,10 @@ const OVERLAY_PATH = join(REPO_ROOT, 'spec/first100/exec/files-overlay.json')
  * @param registry - the parsed registry.
  * @param freeze - all freeze entries.
  * @param overlay - the computed overlay.
+ * @param patches - the deliverable-path patches, from `patchEntries`.
  * @returns `{ epic, stage, path }` for each unaccounted citation.
  */
-export function unaccountedCitations(registry, freeze, overlay) {
+export function unaccountedCitations(registry, freeze, overlay, patches) {
   const byEpic = new Map(registry.epics.map(epic => [epic.id, epic]))
   const covered = new Set(overlay.map(entry => `${entry.epic} ${entry.path}`))
   const unaccounted = []
@@ -48,7 +50,7 @@ export function unaccountedCitations(registry, freeze, overlay) {
     if (entry.supersededBy !== undefined) continue
     const epic = byEpic.get(entry.epic)
     if (epic === undefined) continue
-    const declared = declaredPaths(epic)
+    const declared = declaredPaths(epic, patches)
     for (const path of entry.files ?? []) {
       if (declared.has(path) || covered.has(`${entry.epic} ${path}`)) continue
       unaccounted.push({ epic: entry.epic, stage: entry.stage, path })
@@ -112,8 +114,8 @@ export function unusedReasonKeys(overlay, reasons) {
 }
 
 function main() {
-  const { registry, freeze, reasons } = loadOverlayInputs()
-  const overlay = computeOverlay(registry, freeze, reasons)
+  const { registry, freeze, reasons, patches } = loadOverlayInputs()
+  const overlay = computeOverlay(registry, freeze, reasons, patches)
   const unused = unusedReasonKeys(overlay, reasons)
   if (unused.length > 0) {
     console.log(`verify-files-overlay: ${String(unused.length)} reason key(s) no overlay entry uses (informational, not a failure):\n  ${unused.join('\n  ')}`)
@@ -129,7 +131,7 @@ function main() {
     console.log(`verify-files-overlay: wrote ${String(overlay.length)} entry/entries to spec/first100/exec/files-overlay.json`)
   }
 
-  const unaccounted = unaccountedCitations(registry, freeze, overlay)
+  const unaccounted = unaccountedCitations(registry, freeze, overlay, patches)
   const unexplained = sourceEntriesWithoutReason(overlay)
   const uncited = hotZoneEntriesWithoutCitation(overlay)
   const failures = []

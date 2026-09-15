@@ -30,6 +30,7 @@ const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const REGISTRY_PATH = join(REPO_ROOT, 'tests/first100/registry.json')
 const FREEZE_PATH = join(REPO_ROOT, 'spec/first100/exec/command-freeze.json')
 const REASONS_PATH = join(REPO_ROOT, 'spec/first100/exec/files-overlay-reasons.json')
+const ADJUDICATION_PATH = join(REPO_ROOT, 'tests/first100/adjudication.json')
 
 /** What kind of file an overlay entry records, which decides who must explain it. */
 export const OVERLAY_KINDS = ['test', 'fixture', 'doc', 'manifest', 'scaffold', 'source']
@@ -60,16 +61,66 @@ export function classifyOverlayPath(path) {
 }
 
 /**
- * Every path an epic's registry row declares, across the epic list and stages.
+ * The approved deliverable-path patches in `adjudication.json`, each with its epic resolved.
+ *
+ * A patch entry's `epic` falls back to its own key, the way generate-specs reads it.
+ * @param adjudication - the parsed `tests/first100/adjudication.json`.
+ * @returns the patch entries.
+ */
+export function patchEntries(adjudication) {
+  return Object.entries(adjudication.deliverablePathPatches?.entries ?? {})
+    .map(([key, patch]) => ({ ...patch, epic: patch.epic ?? key }))
+}
+
+/**
+ * Every declaration of an epic's registry row, resolved through the approved deliverable-path patches.
+ *
+ * The registry stays as extracted, and `adjudication.json` records where a
+ * declared path was approved to land instead. A stage declaration resolves
+ * through every patch for the same epic and stage; an epic-level declaration
+ * through every patch of that epic naming the same declared path. One
+ * declaration can carry several patches, each approving another deliverable,
+ * so all of them apply. The overlay, the reality set and
+ * verify-declared-files-exist all read declarations through this function, so
+ * the three cannot resolve a patch differently.
+ * @param epic - the registry row.
+ * @param patches - the patch entries, from {@link patchEntries}.
+ * @returns one `{ where, declaredPath, approvedPaths }` per declaration; `approvedPaths` is empty when no patch applies.
+ */
+export function resolveDeclaredPaths(epic, patches) {
+  const resolveOne = (stage, where, declaredPath) => {
+    const approvedPaths = patches
+      .filter(p => p.epic === epic.id && p.declaredPath === declaredPath && (stage === undefined || p.stage === stage))
+      .map(p => p.approvedPath)
+    return { where, declaredPath, approvedPaths: [...new Set(approvedPaths)] }
+  }
+  const records = (epic.files ?? []).map(file => resolveOne(undefined, epic.id, file.path))
+  for (const [stage, spec] of Object.entries(epic.stages ?? {})) {
+    for (const path of spec?.files ?? []) records.push(resolveOne(stage, `${epic.id}.${stage}`, path))
+  }
+  return records
+}
+
+/**
+ * Every path an epic's registry row declares, plus every path an approved patch substitutes for one.
+ *
+ * A union, not a replacement: a patched declaration keeps its declared path,
+ * because a freeze entry of the same epic can still cite it.
+ * @param epic - the registry row.
+ * @param patches - the patch entries, from {@link patchEntries}.
+ * @returns declared and approved repo-relative paths.
+ */
+export function declaredPaths(epic, patches) {
+  return new Set(resolveDeclaredPaths(epic, patches).flatMap(record => [record.declaredPath, ...record.approvedPaths]))
+}
+
+/**
+ * Every path an epic's registry row declares, as extracted, with no patch applied.
  * @param epic - the registry row.
  * @returns declared repo-relative paths.
  */
-export function declaredPaths(epic) {
-  const declared = new Set((epic.files ?? []).map(file => file.path))
-  for (const stage of Object.values(epic.stages ?? {})) {
-    for (const path of stage?.files ?? []) declared.add(path)
-  }
-  return declared
+export function declaredPathsAsExtracted(epic) {
+  return declaredPaths(epic, [])
 }
 
 /**
@@ -80,16 +131,17 @@ export function declaredPaths(epic) {
  * @param registry - the parsed registry.
  * @param freeze - all freeze entries, superseded included; filtered here.
  * @param reasons - `{ "<epic> <path>": "<reason>" }`, supplying the human half.
+ * @param patches - the patch entries, from {@link patchEntries}; a frozen path an epic declares through a patch is declared.
  * @returns overlay entries, sorted by epic then path.
  */
-export function computeOverlay(registry, freeze, reasons) {
+export function computeOverlay(registry, freeze, reasons, patches) {
   const byEpic = new Map(registry.epics.map(epic => [epic.id, epic]))
   const seen = new Map()
   for (const entry of freeze) {
     if (entry.supersededBy !== undefined) continue
     const epic = byEpic.get(entry.epic)
     if (epic === undefined) continue
-    const declared = declaredPaths(epic)
+    const declared = declaredPaths(epic, patches)
     for (const path of entry.files ?? []) {
       if (declared.has(path)) continue
       const key = `${entry.epic} ${path}`
@@ -106,12 +158,13 @@ export function computeOverlay(registry, freeze, reasons) {
 }
 
 /**
- * Load the three inputs from their canonical paths.
- * @returns the registry, live-and-superseded freeze entries, and the reason table.
+ * Load the four inputs from their canonical paths.
+ * @returns the registry, live-and-superseded freeze entries, the reason table, and the deliverable-path patches.
  */
 export function loadOverlayInputs() {
   const registry = JSON.parse(readFileSync(REGISTRY_PATH, 'utf8'))
   const freeze = JSON.parse(readFileSync(FREEZE_PATH, 'utf8')).entries
   const reasons = JSON.parse(readFileSync(REASONS_PATH, 'utf8')).reasons
-  return { registry, freeze, reasons }
+  const patches = patchEntries(JSON.parse(readFileSync(ADJUDICATION_PATH, 'utf8')))
+  return { registry, freeze, reasons, patches }
 }

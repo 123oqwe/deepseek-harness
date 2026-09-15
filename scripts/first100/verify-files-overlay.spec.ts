@@ -8,7 +8,7 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { classifyOverlayPath, computeOverlay, declaredPaths } from './files-overlay.mjs'
+import { classifyOverlayPath, computeOverlay, declaredPaths, declaredPathsAsExtracted, patchEntries, resolveDeclaredPaths } from './files-overlay.mjs'
 import { hotZoneEntriesWithoutCitation, sourceEntriesWithoutReason, unaccountedCitations, unusedReasonKeys } from './verify-files-overlay.mjs'
 
 const registry = {
@@ -49,20 +49,20 @@ describe('computeOverlay', () => {
     const overlay = computeOverlay(registry, freeze([
       'packages/demo/thing/src/declared.ts',
       'packages/demo/thing/src/undeclared.ts',
-    ]), {})
+    ]), {}, [])
     expect(overlay.map(entry => entry.path)).toEqual(['packages/demo/thing/src/undeclared.ts'])
   })
 
   it('reads a stage file list as declared too, so a stage-only path is not recorded twice', () => {
-    expect(declaredPaths(registry.epics[0]!).has('packages/demo/thing/tests/declared.spec.ts')).toBe(true)
-    expect(computeOverlay(registry, freeze(['packages/demo/thing/tests/declared.spec.ts']), {})).toEqual([])
+    expect(declaredPaths(registry.epics[0]!, []).has('packages/demo/thing/tests/declared.spec.ts')).toBe(true)
+    expect(computeOverlay(registry, freeze(['packages/demo/thing/tests/declared.spec.ts']), {}, [])).toEqual([])
   })
 
   it('EXCLUDES a superseded entry, so replaced work does not widen the scope', () => {
     // Without this, every path a superseded freeze ever named would stay in
     // scope forever, and the overlay would grow monotonically with abandoned
     // shapes.
-    const overlay = computeOverlay(registry, freeze(['packages/demo/thing/src/gone.ts'], { supersededBy: 'P9-99.U.2' }), {})
+    const overlay = computeOverlay(registry, freeze(['packages/demo/thing/src/gone.ts'], { supersededBy: 'P9-99.U.2' }), {}, [])
     expect(overlay).toEqual([])
   })
 
@@ -71,33 +71,33 @@ describe('computeOverlay', () => {
       { epic: 'P9-99', stage: 'U', files: ['packages/demo/thing/src/x.ts'] },
       { epic: 'P9-99', stage: 'F', supplementSeq: 2, files: ['packages/demo/thing/src/x.ts'] },
     ]
-    const overlay = computeOverlay(registry, entries, {})
+    const overlay = computeOverlay(registry, entries, {}, [])
     expect(overlay).toHaveLength(1)
     expect(overlay[0]?.stages).toEqual(['U', 'F.2'])
   })
 
   it('ignores an epic the registry does not have, rather than inventing a row for it', () => {
-    expect(computeOverlay(registry, [{ epic: 'P9-98', stage: 'U', files: ['a.ts'] }], {})).toEqual([])
+    expect(computeOverlay(registry, [{ epic: 'P9-98', stage: 'U', files: ['a.ts'] }], {}, [])).toEqual([])
   })
 })
 
 describe('the coverage and reason refusals', () => {
   it('refuses a source path with no reason, and names it', () => {
-    const overlay = computeOverlay(registry, freeze(['packages/demo/thing/src/undeclared.ts']), {})
+    const overlay = computeOverlay(registry, freeze(['packages/demo/thing/src/undeclared.ts']), {}, [])
     expect(sourceEntriesWithoutReason(overlay).map(entry => entry.path)).toEqual(['packages/demo/thing/src/undeclared.ts'])
   })
 
   it('accepts it once a reason exists, so the refusal is about the reason and not the path', () => {
     const overlay = computeOverlay(registry, freeze(['packages/demo/thing/src/undeclared.ts']), {
       'P9-99 packages/demo/thing/src/undeclared.ts': 'the seam the clause is about',
-    })
+    }, [])
     expect(sourceEntriesWithoutReason(overlay)).toEqual([])
   })
 
   it('treats a blank reason as no reason, so the field cannot be satisfied with whitespace', () => {
     const overlay = computeOverlay(registry, freeze(['packages/demo/thing/src/undeclared.ts']), {
       'P9-99 packages/demo/thing/src/undeclared.ts': '   ',
-    })
+    }, [])
     expect(sourceEntriesWithoutReason(overlay)).toHaveLength(1)
   })
 
@@ -108,7 +108,7 @@ describe('the coverage and reason refusals', () => {
       'packages/demo/thing/tests/extra.spec.ts',
       'packages/demo/thing/README.md',
       'packages/demo/thing/package.json',
-    ]), {})
+    ]), {}, [])
     expect(overlay).toHaveLength(3)
     expect(sourceEntriesWithoutReason(overlay)).toEqual([])
   })
@@ -117,9 +117,9 @@ describe('the coverage and reason refusals', () => {
     // Empty by construction while the overlay is derived from these same
     // entries; it stops being empty the moment the overlay is pinned to a
     // committed file, which is when a reader needs to hear about it.
-    const overlay = computeOverlay(registry, freeze(['packages/demo/thing/src/undeclared.ts']), {})
-    expect(unaccountedCitations(registry, freeze(['packages/demo/thing/src/undeclared.ts']), overlay)).toEqual([])
-    expect(unaccountedCitations(registry, freeze(['packages/demo/thing/src/other.ts']), overlay))
+    const overlay = computeOverlay(registry, freeze(['packages/demo/thing/src/undeclared.ts']), {}, [])
+    expect(unaccountedCitations(registry, freeze(['packages/demo/thing/src/undeclared.ts']), overlay, [])).toEqual([])
+    expect(unaccountedCitations(registry, freeze(['packages/demo/thing/src/other.ts']), overlay, []))
       .toEqual([{ epic: 'P9-99', stage: 'U', path: 'packages/demo/thing/src/other.ts' }])
   })
 })
@@ -127,7 +127,7 @@ describe('the coverage and reason refusals', () => {
 describe('hotZoneEntriesWithoutCitation', () => {
   const hotZone = (reason: string) => computeOverlay(registry, freeze(['packages/demo/thing/src/shared.ts']), {
     'P9-99 packages/demo/thing/src/shared.ts': reason,
-  })
+  }, [])
 
   it('refuses a HOT ZONE reason that cites no diff', () => {
     // Three of the first five hot-zone reasons described the epic's intent
@@ -161,18 +161,47 @@ describe('unusedReasonKeys', () => {
   const reasons = { [current]: 'Why the extra file is in scope.', [moved]: 'Why the file was in scope before it moved.' }
 
   it('lists a reason whose path no live freeze entry cites any more', () => {
-    const overlay = computeOverlay(registry, freeze(['packages/demo/thing/src/extra.ts']), reasons)
+    const overlay = computeOverlay(registry, freeze(['packages/demo/thing/src/extra.ts']), reasons, [])
     expect(unusedReasonKeys(overlay, reasons)).toEqual([moved])
   })
 
   it('lists nothing when every reason is used, so the listing is about disuse and not about reasons existing', () => {
-    const overlay = computeOverlay(registry, freeze(['packages/demo/thing/src/extra.ts', 'packages/demo/thing/src/old-home.ts']), reasons)
+    const overlay = computeOverlay(registry, freeze(['packages/demo/thing/src/extra.ts', 'packages/demo/thing/src/old-home.ts']), reasons, [])
     expect(unusedReasonKeys(overlay, reasons)).toEqual([])
   })
 
   it('does not turn an unused reason into a refusal', () => {
-    const overlay = computeOverlay(registry, freeze(['packages/demo/thing/src/extra.ts']), reasons)
+    const overlay = computeOverlay(registry, freeze(['packages/demo/thing/src/extra.ts']), reasons, [])
     expect(sourceEntriesWithoutReason(overlay)).toEqual([])
-    expect(unaccountedCitations(registry, freeze(['packages/demo/thing/src/extra.ts']), overlay)).toEqual([])
+    expect(unaccountedCitations(registry, freeze(['packages/demo/thing/src/extra.ts']), overlay, [])).toEqual([])
+  })
+})
+
+describe('declared paths through the deliverable-path patches, the one resolution the overlay, the reality set and the declared-files gate share', () => {
+  const declared = 'packages/demo/thing/tests/declared.spec.ts'
+  const approved = 'packages/demo/thing/tests/declared.e2e.spec.ts'
+  const patch = (fields: Record<string, string>) => ({ epic: 'P9-99', stage: 'C', declaredPath: declared, approvedPath: approved, ...fields })
+
+  it('reads a patch entry without an epic field under its own key, as generate-specs does', () => {
+    const adjudication = { deliverablePathPatches: { entries: { 'P9-99': { stage: 'C', declaredPath: 'a.ts', approvedPath: 'b.ts' } } } }
+    expect(patchEntries(adjudication)).toStrictEqual([{ stage: 'C', declaredPath: 'a.ts', approvedPath: 'b.ts', epic: 'P9-99' }])
+  })
+
+  it('resolves a stage declaration through every patch for that stage, and not through a patch for another stage', () => {
+    const second = 'packages/demo/thing/tests/second.spec.ts'
+    const records = resolveDeclaredPaths(registry.epics[0]!, [patch({}), patch({ approvedPath: second }), patch({ stage: 'U', approvedPath: 'packages/demo/thing/tests/other.spec.ts' })])
+    expect(records.find(record => record.where === 'P9-99.C')).toStrictEqual({ where: 'P9-99.C', declaredPath: declared, approvedPaths: [approved, second] })
+  })
+
+  it('keeps the declared path beside the approved one, so a freeze entry that still cites it stays declared', () => {
+    expect(declaredPaths(registry.epics[0]!, [patch({})]).has(declared)).toBe(true)
+    expect(declaredPaths(registry.epics[0]!, [patch({})]).has(approved)).toBe(true)
+    expect(declaredPathsAsExtracted(registry.epics[0]!).has(approved)).toBe(false)
+  })
+
+  it('records no overlay entry for a frozen path a patch approves, nor for the declared path it substitutes for', () => {
+    const cited = freeze([approved, declared])
+    expect(computeOverlay(registry, cited, {}, [patch({})])).toEqual([])
+    expect(computeOverlay(registry, cited, {}, []).map(entry => entry.path)).toEqual([approved])
   })
 })

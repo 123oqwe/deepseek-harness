@@ -16,23 +16,23 @@
  *
  * @module scripts/first100/epic-reality-set
  */
+import { declaredPaths } from './files-overlay.mjs'
 
 /**
- * Every file an epic touched: its declaration plus its live freeze entries.
+ * Every file an epic touched: its declaration, the paths approved patches substitute for it, and its live freeze entries.
  *
  * Superseded freeze entries are excluded — they describe a shape the epic no
  * longer promises, and counting their files would widen the set with work that
- * was replaced.
+ * was replaced. Declarations are read through `files-overlay.mjs`
+ * `declaredPaths`, which only adds a patch's approved path and never drops the
+ * declared one.
  * @param epic - the registry row, carrying `id`, `files[]` and `stages`.
  * @param freeze - all command-freeze entries, superseded ones included; they are filtered here.
+ * @param patches - the deliverable-path patches, from `files-overlay.mjs` `patchEntries`.
  * @returns repo-relative paths, deduplicated, in insertion order.
  */
-export function realitySet(epic, freeze) {
-  const paths = new Set()
-  for (const file of epic.files ?? []) paths.add(file.path)
-  for (const stage of Object.values(epic.stages ?? {})) {
-    for (const path of stage?.files ?? []) paths.add(path)
-  }
+export function realitySet(epic, freeze, patches) {
+  const paths = new Set(declaredPaths(epic, patches))
   for (const entry of freeze) {
     if (entry.epic !== epic.id || entry.supersededBy !== undefined) continue
     for (const path of entry.files ?? []) paths.add(path)

@@ -3,6 +3,8 @@
  * whether a failure's subject is one of them.
  */
 
+import type { DeliverablePathPatch } from './files-overlay.d.mts'
+
 export interface RealitySetEpic {
   id: string
   files?: readonly { path: string }[]
@@ -18,6 +20,7 @@ export interface RealitySetFreezeEntry {
 export function realitySet(
   epic: RealitySetEpic,
   freeze: readonly RealitySetFreezeEntry[],
+  patches: readonly DeliverablePathPatch[],
 ): string[]
 
 export function realitySetOverlap(

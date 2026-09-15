@@ -2,6 +2,8 @@
  * Types for `verify-declared-files-exist.mjs`: declared paths that the tree does not hold.
  */
 
+import type { DeliverablePathPatch, OverlayEpic } from './files-overlay.d.mts'
+
 /** One `command-freeze.json` entry, as this gate reads it. */
 export interface DeclaredFilesFreezeEntry {
   readonly epic: string
@@ -13,33 +15,18 @@ export interface DeclaredFilesFreezeEntry {
   readonly supersededBy?: string
 }
 
-/** One registry epic, as this gate reads it. */
-export interface DeclaredFilesEpic {
-  readonly id: string
-  readonly files?: readonly (string | { readonly path: string })[]
-  readonly stages?: Readonly<Record<string, { readonly files?: readonly string[] }>>
-}
-
 export function missingFreezeFiles(
   entries: readonly DeclaredFilesFreezeEntry[],
   exists: (path: string) => boolean,
   basenameIndex: ReadonlyMap<string, readonly string[]>,
 ): { label: string; path: string; sameNameElsewhere: readonly string[] }[]
 
-/** One approved deliverable-path patch from `adjudication.json`, with its epic resolved. */
-export interface DeliverablePathPatch {
-  readonly epic: string
-  readonly stage: string
-  readonly declaredPath: string
-  readonly approvedPath: string
-}
-
 export function missingAcceptedRegistryRefs(
-  registry: { readonly epics: readonly DeclaredFilesEpic[] },
+  registry: { readonly epics: readonly OverlayEpic[] },
   acceptedIds: ReadonlySet<string>,
   exists: (path: string) => boolean,
   patches: readonly DeliverablePathPatch[],
 ): {
-  absent: { where: string; path: string; approvedPath?: string }[]
-  patched: { where: string; path: string; approvedPath: string }[]
+  declaredMissing: { where: string; path: string }[]
+  resolvedMissing: { where: string; path: string; absentApprovedPaths: string[] }[]
 }

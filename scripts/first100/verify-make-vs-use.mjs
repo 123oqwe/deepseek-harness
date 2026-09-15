@@ -44,12 +44,14 @@ import { existsSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { realitySet } from './epic-reality-set.mjs'
+import { patchEntries } from './files-overlay.mjs'
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const LEDGER_PATH = join(REPO_ROOT, 'spec/first100/exec/make-vs-use-ledger.json')
 const AUDIT_PATH = join(REPO_ROOT, 'spec/first100/exec/clause-subject-audit.json')
 const REGISTRY_PATH = join(REPO_ROOT, 'tests/first100/registry.json')
 const FREEZE_PATH = join(REPO_ROOT, 'spec/first100/exec/command-freeze.json')
+const ADJUDICATION_PATH = join(REPO_ROOT, 'tests/first100/adjudication.json')
 
 const loadJson = (path) => JSON.parse(readFileSync(path, 'utf8'))
 
@@ -150,6 +152,7 @@ function main() {
   const registry = new Map(loadJson(REGISTRY_PATH).epics.map(epic => [epic.id, epic]))
   const preFlight = loadJson(AUDIT_PATH).preFlight ?? {}
   const freeze = loadJson(FREEZE_PATH).entries ?? []
+  const patches = patchEntries(loadJson(ADJUDICATION_PATH))
   const execRows = loadJson(join(REPO_ROOT, 'spec/first100/exec/ledger.json')).rows ?? {}
 
   const findings = []
@@ -160,7 +163,7 @@ function main() {
     const declared = entry.makeVsUse
     if (declared === undefined) continue
     const epic = registry.get(key)
-    const files = epic === undefined ? [] : realitySet(epic, freeze)
+    const files = epic === undefined ? [] : realitySet(epic, freeze, patches)
     const row = rows.get(key)
     let state = 'VERIFIED'
 

@@ -31,16 +31,39 @@ export const OVERLAY_KINDS: readonly OverlayKind[]
 
 export function classifyOverlayPath(path: string): OverlayKind
 
-export function declaredPaths(epic: OverlayEpic): Set<string>
+/** One approved deliverable-path patch from `adjudication.json`, with its epic resolved. */
+export interface DeliverablePathPatch {
+  readonly epic: string
+  readonly stage: string
+  readonly declaredPath: string
+  readonly approvedPath: string
+}
+
+/** One registry declaration and the paths approved patches substitute for it. */
+export interface ResolvedDeclaration {
+  where: string
+  declaredPath: string
+  approvedPaths: string[]
+}
+
+export function patchEntries(adjudication: { deliverablePathPatches?: { entries?: Readonly<Record<string, Omit<DeliverablePathPatch, 'epic'> & { epic?: string }>> } }): DeliverablePathPatch[]
+
+export function resolveDeclaredPaths(epic: OverlayEpic, patches: readonly DeliverablePathPatch[]): ResolvedDeclaration[]
+
+export function declaredPaths(epic: OverlayEpic, patches: readonly DeliverablePathPatch[]): Set<string>
+
+export function declaredPathsAsExtracted(epic: OverlayEpic): Set<string>
 
 export function computeOverlay(
   registry: { epics: readonly OverlayEpic[] },
   freeze: readonly OverlayFreezeEntry[],
   reasons: Readonly<Record<string, string>>,
+  patches: readonly DeliverablePathPatch[],
 ): OverlayEntry[]
 
 export function loadOverlayInputs(): {
   registry: { epics: OverlayEpic[] }
   freeze: OverlayFreezeEntry[]
   reasons: Record<string, string>
+  patches: DeliverablePathPatch[]
 }

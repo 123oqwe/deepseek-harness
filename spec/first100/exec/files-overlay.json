@@ -38,22 +38,6 @@
       ]
     },
     {
-      "epic": "P0-02",
-      "path": "packages/kernel/trust-kernel/tests/dispose.spec.ts",
-      "kind": "test",
-      "stages": [
-        "F"
-      ]
-    },
-    {
-      "epic": "P0-02",
-      "path": "packages/kernel/trust-kernel/tests/pin-hardening.spec.ts",
-      "kind": "test",
-      "stages": [
-        "F"
-      ]
-    },
-    {
       "epic": "P0-03",
       "path": "docs/glossary.md",
       "kind": "doc",
@@ -68,16 +52,6 @@
       "stages": [
         "F"
       ]
-    },
-    {
-      "epic": "P0-03",
-      "path": "scripts/architecture/capability-seams.ts",
-      "kind": "source",
-      "stages": [
-        "C",
-        "F"
-      ],
-      "reason": "The seam-classification rules themselves. The registry declared the checker but not the module holding the rules it applies, and a frozen case naming a classification has to name where that classification is decided."
     },
     {
       "epic": "P0-03",
@@ -173,15 +147,6 @@
     },
     {
       "epic": "P0-06",
-      "path": "packages/session/session-persistence-jsonl/tests/jsonl.spec.ts",
-      "kind": "test",
-      "stages": [
-        "U",
-        "F"
-      ]
-    },
-    {
-      "epic": "P0-06",
       "path": "packages/settings/settings/tests/settings.spec.ts",
       "kind": "test",
       "stages": [
@@ -228,15 +193,6 @@
       "stages": [
         "U"
       ]
-    },
-    {
-      "epic": "P1-02",
-      "path": "packages/host/plugin-inventory/src/index.ts",
-      "kind": "source",
-      "stages": [
-        "U"
-      ],
-      "reason": "The consumer that reads recorded provenance in production. must[2] is about verification reaching a real inventory, and the inventory is where that call site lives."
     },
     {
       "epic": "P1-02",
@@ -377,15 +333,6 @@
     },
     {
       "epic": "P1-07",
-      "path": "packages/bundle/base/cordis.patch.yml",
-      "kind": "manifest",
-      "stages": [
-        "U",
-        "U.1"
-      ]
-    },
-    {
-      "epic": "P1-07",
       "path": "packages/bundle/headless/cordis.patch.yml",
       "kind": "manifest",
       "stages": [
@@ -427,15 +374,6 @@
     },
     {
       "epic": "P1-07",
-      "path": "packages/skill/skill-filesystem/src/index.ts",
-      "kind": "source",
-      "stages": [
-        "U"
-      ],
-      "reason": "The provider whose filesystem access the trust decision gates. The clause is about what a skill may reach, and this is the reaching."
-    },
-    {
-      "epic": "P1-07",
       "path": "packages/skill/skill-filesystem/tests/trust-gate.spec.ts",
       "kind": "test",
       "stages": [
@@ -467,16 +405,6 @@
       "stages": [
         "U"
       ]
-    },
-    {
-      "epic": "P1-07",
-      "path": "packages/workspace/workspace-trust-local/src/index.ts",
-      "kind": "source",
-      "stages": [
-        "U",
-        "U.2"
-      ],
-      "reason": "The local trust store the decision reads. The registry declared the policy and not the store it consults."
     },
     {
       "epic": "P1-07",
@@ -558,15 +486,6 @@
       "stages": [
         "U.2"
       ]
-    },
-    {
-      "epic": "P1-08",
-      "path": "apps/cli/src/profile-boot.ts",
-      "kind": "source",
-      "stages": [
-        "U"
-      ],
-      "reason": "HOT ZONE. Written from `git show c3992e5124 -- apps/cli/src/profile-boot.ts` (+52/-3): profile boot imports `negotiateProfileLayerCompatibility` and `DSH_RUNTIME_API_VERSION`, runs the negotiation on the admitted layers before any patch reaches `boot()`, and the result gains a `compatBlockedLayers` field whose layers are absent from `bundlePatches` — so a blocked layer's plugin code never mounts (acceptance[1]). The change is an added step in the boot sequence, not a change to what boot already did. It is in this epic's scope because the clause is about boot ADMISSION: proving it in the solver alone would leave the refusal unreached by any launch."
     },
     {
       "epic": "P1-08",
@@ -672,15 +591,6 @@
       "stages": [
         "U"
       ]
-    },
-    {
-      "epic": "P1-09",
-      "path": "packages/extensions/cordis-host-runner/src/guard.ts",
-      "kind": "source",
-      "stages": [
-        "U"
-      ],
-      "reason": "The runtime guard that attributes a tool call to its owning plugin. Ownership is decided here, and the registry named only the attribution rules."
     },
     {
       "epic": "P1-09",
@@ -873,14 +783,6 @@
         "U"
       ],
       "reason": "Where the new requirement is enforced: a step that ships a `module` must declare `reversible` and `backup`, and a `backup` outside the declared vocabulary is refused. Misconfiguration fails loud at the manifest read rather than at the upgrade that trusted it. The JSON Schema carries the same rule as `dependentRequired`, so the two validators still agree (P1-01 acceptance[2])."
-    },
-    {
-      "epic": "P1-10",
-      "path": "packages/plugin/plugin-migrations/tests/rollback.e2e.spec.ts",
-      "kind": "test",
-      "stages": [
-        "F"
-      ]
     },
     {
       "epic": "P1-10",
@@ -1703,6 +1605,14 @@
     },
     {
       "epic": "P2-12",
+      "path": "apps/cli/tests/process-shutdown.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F"
+      ]
+    },
+    {
+      "epic": "P2-12",
       "path": "packages/bundle/base/cordis.patch.yml",
       "kind": "manifest",
       "stages": [
@@ -1723,7 +1633,8 @@
       "path": "packages/core/agent/tests/stop-gate.spec.ts",
       "kind": "test",
       "stages": [
-        "U"
+        "U",
+        "F"
       ]
     },
     {
@@ -1757,7 +1668,8 @@
       "path": "packages/interaction/control-plane/tests/emergency-stop.e2e.spec.ts",
       "kind": "test",
       "stages": [
-        "C"
+        "C",
+        "F"
       ]
     },
     {
@@ -1765,7 +1677,8 @@
       "path": "packages/interaction/control-plane/tests/service.spec.ts",
       "kind": "test",
       "stages": [
-        "U"
+        "U",
+        "F"
       ]
     },
     {
@@ -1794,6 +1707,14 @@
         "U"
       ],
       "reason": "The two new wire payloads' schema ids. Every protocol payload registers here by repository convention, so adding a request without it would ship a wire type no registry knows."
+    },
+    {
+      "epic": "P2-12",
+      "path": "packages/sdk/protocol/tests/transport.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F"
+      ]
     },
     {
       "epic": "P2-12",
@@ -1968,32 +1889,6 @@
       "reason": "`ExecutionWorldFact`'s second variant — BLOCKED-178's producer half, which §12.46-B splits between this epic (producer) and P2-05 (rule). With one variant the fact was undecidable: a rule refusing an unknown world and a rule refusing everything were the same policy. The C-stage preFlight recorded that it could not authorise this cross-epic edit; the U-stage preFlight asked for it and the delegate ruled it in."
     },
     {
-      "epic": "P3-02",
-      "path": "packages/execution/execution-world/src/policy-solver.ts",
-      "kind": "source",
-      "stages": [
-        "C"
-      ],
-      "reason": "must[1]'s closed-allowlist check, must[2]'s deny-unknown and must[3]'s provider-claim check, in the one place a requested WorldSpec meets a PolicySet. Consolidates the declared network.ts and process.ts: neither dimension carries logic beyond the rule every dimension shares, and splitting them would have divided a solver that must see all seven at once. Relocated by adjudication (P3-02-C-policy-solver)."
-    },
-    {
-      "epic": "P3-02",
-      "path": "packages/execution/execution-world/src/policy.ts",
-      "kind": "source",
-      "stages": [
-        "C"
-      ],
-      "reason": "The seven *Policy types must[0] names. The registry declared them under packages/sandbox/sandbox/, which is not buildable as declared: execution-world already imports dsh-sandbox, so a policy referencing World*Spec from inside sandbox would close a package cycle. Relocated by adjudication (P3-02-C-policy-vocabulary); the clauses remain P3-02's."
-    },
-    {
-      "epic": "P3-02",
-      "path": "packages/execution/execution-world/tests/policy.spec.ts",
-      "kind": "test",
-      "stages": [
-        "C"
-      ]
-    },
-    {
       "epic": "P3-06",
       "path": "packages/credentials/secrets-broker/tests/lease.spec.ts",
       "kind": "test",
@@ -2016,22 +1911,6 @@
       "kind": "test",
       "stages": [
         "C"
-      ]
-    },
-    {
-      "epic": "P4-01",
-      "path": "packages/bundle/base/cordis.patch.yml",
-      "kind": "manifest",
-      "stages": [
-        "U"
-      ]
-    },
-    {
-      "epic": "P4-01",
-      "path": "packages/bundle/base/package.json",
-      "kind": "manifest",
-      "stages": [
-        "U"
       ]
     },
     {
@@ -2340,14 +2219,6 @@
     },
     {
       "epic": "P4-06",
-      "path": "packages/run/message-bus/tests/crash.e2e.spec.ts",
-      "kind": "test",
-      "stages": [
-        "C"
-      ]
-    },
-    {
-      "epic": "P4-06",
       "path": "packages/run/message-bus/tests/fault-matrix.spec.ts",
       "kind": "test",
       "stages": [
@@ -2477,14 +2348,6 @@
     },
     {
       "epic": "P4-07",
-      "path": "packages/run/lease/tests/fencing.e2e.spec.ts",
-      "kind": "test",
-      "stages": [
-        "C"
-      ]
-    },
-    {
-      "epic": "P4-07",
       "path": "packages/run/run/src/index.ts",
       "kind": "source",
       "stages": [
@@ -2561,15 +2424,6 @@
       "kind": "test",
       "stages": [
         "F"
-      ]
-    },
-    {
-      "epic": "P4-08",
-      "path": "packages/collaboration/workflow-journal/tests/resume.e2e.spec.ts",
-      "kind": "test",
-      "stages": [
-        "U.3",
-        "C"
       ]
     },
     {
@@ -2749,16 +2603,6 @@
         "P"
       ],
       "reason": "The registry store the P-stage clause persists through."
-    },
-    {
-      "epic": "P4-09",
-      "path": "packages/workflow/workflow-registry/tests/nested.e2e.spec.ts",
-      "kind": "test",
-      "stages": [
-        "C",
-        "F",
-        "U.3"
-      ]
     },
     {
       "epic": "P4-09",
@@ -2944,14 +2788,6 @@
     },
     {
       "epic": "P4-12",
-      "path": "packages/action/action-ledger/tests/idempotency.e2e.spec.ts",
-      "kind": "test",
-      "stages": [
-        "C"
-      ]
-    },
-    {
-      "epic": "P4-12",
       "path": "packages/action/action-ledger/tests/store.spec.ts",
       "kind": "test",
       "stages": [
@@ -3088,15 +2924,6 @@
     },
     {
       "epic": "P5-11",
-      "path": "packages/collaboration/taskboard/tests/claims.e2e.spec.ts",
-      "kind": "test",
-      "stages": [
-        "C",
-        "F"
-      ]
-    },
-    {
-      "epic": "P5-11",
       "path": "packages/run/taskboard-sqlite/src/index.ts",
       "kind": "source",
       "stages": [
@@ -3138,15 +2965,6 @@
       "stages": [
         "U.2"
       ]
-    },
-    {
-      "epic": "P6-01",
-      "path": "packages/context/memory-context/src/index.ts",
-      "kind": "source",
-      "stages": [
-        "U"
-      ],
-      "reason": "The context contributor whose recall query the clause constrains."
     },
     {
       "epic": "P6-01",
@@ -3208,15 +3026,6 @@
     },
     {
       "epic": "P6-01",
-      "path": "packages/core/session/src/known-event-types.ts",
-      "kind": "source",
-      "stages": [
-        "U"
-      ],
-      "reason": "The registration side of this epic's own session event. memory/workspace-rebuilt is a new SessionEventMap member, and a SessionEventMap member is required-on-read by default: a build that does not know the type refuses the whole log. So the emitter and the registration are one change, and a reality set naming only the emitter would not be re-checked the day the registration moves or is dropped. The U-stage case that replays a written log through sessionPersistence.load is exactly the case that would then go red, which is why the file is in the freeze rather than merely in the commit."
-    },
-    {
-      "epic": "P6-01",
       "path": "packages/memory/memory/tests/durable-provider.spec.ts",
       "kind": "test",
       "stages": [
@@ -3249,53 +3058,10 @@
     },
     {
       "epic": "P6-07",
-      "path": "packages/session-query/session-query/src/corpus.ts",
-      "kind": "source",
-      "stages": [
-        "U"
-      ],
-      "reason": "The corpus assembly the search clause queries over."
-    },
-    {
-      "epic": "P6-07",
-      "path": "packages/session-query/session-query/src/types.ts",
-      "kind": "source",
-      "stages": [
-        "U"
-      ],
-      "reason": "The query and result types the corpus and its callers share."
-    },
-    {
-      "epic": "P6-07",
       "path": "packages/session-query/session-query/tests/lifecycle-projection.spec.ts",
       "kind": "test",
       "stages": [
         "U"
-      ]
-    },
-    {
-      "epic": "P6-07",
-      "path": "packages/session/session-lifecycle/src/store.ts",
-      "kind": "source",
-      "stages": [
-        "P"
-      ],
-      "reason": "The lifecycle store the P-stage clause persists through."
-    },
-    {
-      "epic": "P6-07",
-      "path": "packages/session/session-lifecycle/tests/lifecycle.e2e.spec.ts",
-      "kind": "test",
-      "stages": [
-        "F"
-      ]
-    },
-    {
-      "epic": "P6-07",
-      "path": "packages/session/session-lifecycle/tests/lifecycle.spec.ts",
-      "kind": "test",
-      "stages": [
-        "C"
       ]
     },
     {

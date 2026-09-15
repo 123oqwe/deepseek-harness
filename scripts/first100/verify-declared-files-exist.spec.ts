@@ -41,53 +41,52 @@ describe('missingAcceptedRegistryRefs', () => {
   const registry = {
     epics: [
       { id: 'P9-98', files: [{ path: 'packages/demo/thing/src/plan.ts' }], stages: { C: { files: ['packages/demo/thing/tests/plan.spec.ts'] } } },
-      { id: 'P9-99', files: ['packages/demo/thing/src/unbuilt.ts'], stages: {} },
+      { id: 'P9-99', files: [{ path: 'packages/demo/thing/src/unbuilt.ts' }], stages: {} },
     ],
   }
 
-  it('lists the absent epic and stage references of an ACCEPTED epic', () => {
+  it('lists the absent epic and stage references of an ACCEPTED epic as declared-missing', () => {
     expect(missingAcceptedRegistryRefs(registry, new Set(['P9-98']), exists, [])).toStrictEqual({
-      absent: [
+      declaredMissing: [
         { where: 'P9-98', path: 'packages/demo/thing/src/plan.ts' },
         { where: 'P9-98.C', path: 'packages/demo/thing/tests/plan.spec.ts' },
       ],
-      patched: [],
+      resolvedMissing: [],
     })
   })
 
   it('ignores an epic that is not ACCEPTED, whose plan paths need not exist yet', () => {
-    expect(missingAcceptedRegistryRefs(registry, new Set(), exists, [])).toStrictEqual({ absent: [], patched: [] })
+    expect(missingAcceptedRegistryRefs(registry, new Set(), exists, [])).toStrictEqual({ declaredMissing: [], resolvedMissing: [] })
   })
 
   const declared = 'packages/demo/thing/tests/plan.e2e.ts'
   const approved = 'packages/demo/thing/src/here.ts'
+  const absentTarget = 'packages/demo/thing/tests/never.e2e.spec.ts'
   const patchedRegistry = { epics: [{ id: 'P9-98', files: [{ path: declared }], stages: { C: { files: [declared] }, F: { files: [declared] } } }] }
+  const patch = (fields: Record<string, string>) => ({ epic: 'P9-98', stage: 'C', declaredPath: declared, approvedPath: approved, ...fields })
 
-  it('reports a stage reference as patched when a patch for that stage names an approved path that exists', () => {
-    const patches = [{ epic: 'P9-98', stage: 'C', declaredPath: declared, approvedPath: approved }]
-    const { absent, patched } = missingAcceptedRegistryRefs(patchedRegistry, new Set(['P9-98']), exists, patches)
-    expect(patched).toContainEqual({ where: 'P9-98.C', path: declared, approvedPath: approved })
-    expect(absent).not.toContainEqual({ where: 'P9-98.C', path: declared })
+  it('reports nothing for a stage reference whose patch target exists', () => {
+    const { declaredMissing, resolvedMissing } = missingAcceptedRegistryRefs(patchedRegistry, new Set(['P9-98']), exists, [patch({})])
+    expect(declaredMissing).not.toContainEqual({ where: 'P9-98.C', path: declared })
+    expect(resolvedMissing.map(row => row.where)).not.toContain('P9-98.C')
   })
 
-  it('keeps a stage reference absent when the only patch names a different stage', () => {
-    const patches = [{ epic: 'P9-98', stage: 'C', declaredPath: declared, approvedPath: approved }]
-    expect(missingAcceptedRegistryRefs(patchedRegistry, new Set(['P9-98']), exists, patches).absent).toContainEqual({ where: 'P9-98.F', path: declared })
+  it('keeps a stage reference declared-missing when the only patch names a different stage', () => {
+    expect(missingAcceptedRegistryRefs(patchedRegistry, new Set(['P9-98']), exists, [patch({})]).declaredMissing).toContainEqual({ where: 'P9-98.F', path: declared })
   })
 
-  it('resolves an epic-level reference through any patch of that epic naming the same declared path', () => {
-    const patches = [{ epic: 'P9-98', stage: 'F', declaredPath: declared, approvedPath: approved }]
-    expect(missingAcceptedRegistryRefs(patchedRegistry, new Set(['P9-98']), exists, patches).patched).toContainEqual({ where: 'P9-98', path: declared, approvedPath: approved })
+  it('resolves an epic-level reference through a patch of any stage of that epic', () => {
+    expect(missingAcceptedRegistryRefs(patchedRegistry, new Set(['P9-98']), exists, [patch({ stage: 'F' })]).declaredMissing)
+      .not.toContainEqual({ where: 'P9-98', path: declared })
   })
 
-  it('keeps a patched reference absent when the approved path does not exist either', () => {
-    const patches = [{ epic: 'P9-98', stage: 'C', declaredPath: declared, approvedPath: 'packages/demo/thing/tests/never.e2e.spec.ts' }]
-    expect(missingAcceptedRegistryRefs(patchedRegistry, new Set(['P9-98']), exists, patches).absent)
-      .toContainEqual({ where: 'P9-98.C', path: declared, approvedPath: 'packages/demo/thing/tests/never.e2e.spec.ts' })
+  it('reports resolved-missing, naming the absent target, when one of several approved paths is absent', () => {
+    expect(missingAcceptedRegistryRefs(patchedRegistry, new Set(['P9-98']), exists, [patch({}), patch({ approvedPath: absentTarget })]).resolvedMissing)
+      .toContainEqual({ where: 'P9-98.C', path: declared, absentApprovedPaths: [absentTarget] })
   })
 
   it('does not apply a patch of another epic', () => {
-    const patches = [{ epic: 'P9-97', stage: 'C', declaredPath: declared, approvedPath: approved }]
-    expect(missingAcceptedRegistryRefs(patchedRegistry, new Set(['P9-98']), exists, patches).patched).toStrictEqual([])
+    expect(missingAcceptedRegistryRefs(patchedRegistry, new Set(['P9-98']), exists, [patch({ epic: 'P9-97' })]).declaredMissing)
+      .toContainEqual({ where: 'P9-98.C', path: declared })
   })
 })

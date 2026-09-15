@@ -2,12 +2,13 @@
  * Types for `verify-files-overlay.mjs`: §12.4's two refusals.
  */
 
-import type { OverlayEntry, OverlayEpic, OverlayFreezeEntry } from './files-overlay.d.mts'
+import type { DeliverablePathPatch, OverlayEntry, OverlayEpic, OverlayFreezeEntry } from './files-overlay.d.mts'
 
 export function unaccountedCitations(
   registry: { epics: readonly OverlayEpic[] },
   freeze: readonly OverlayFreezeEntry[],
   overlay: readonly OverlayEntry[],
+  patches: readonly DeliverablePathPatch[],
 ): { epic: string; stage: string; path: string }[]
 
 export function sourceEntriesWithoutReason(overlay: readonly OverlayEntry[]): OverlayEntry[]

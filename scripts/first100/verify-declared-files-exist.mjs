@@ -21,6 +21,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { basename, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { patchEntries, resolveDeclaredPaths } from './files-overlay.mjs'
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const FREEZE_PATH = join(REPO_ROOT, 'spec/first100/exec/command-freeze.json')
@@ -51,36 +52,35 @@ export function missingFreezeFiles(entries, exists, basenameIndex) {
 /**
  * Registry file references of ACCEPTED epics that do not exist. Informational, never a failure.
  *
- * A reference an approved deliverable-path patch replaces is resolved through
- * the patch: a stage reference uses the patch for the same epic and stage, and
- * an epic-level reference uses any patch of that epic naming the same declared
- * path. A patched reference whose approved path exists is reported as patched,
- * not as absent; one whose approved path is absent too stays absent.
+ * Declarations are read through `files-overlay.mjs` `resolveDeclaredPaths`, the
+ * resolution the overlay and the reality set share. A declared path that exists
+ * is satisfied. One that does not is declared-missing when no approved patch
+ * substitutes for it, and resolved-missing when patches do but at least one of
+ * their approved paths is absent too: each approved path is a deliverable its
+ * patch approved, so one absent path is one absent deliverable.
  * @param registry - the parsed registry.
  * @param acceptedIds - ids of ACCEPTED epics.
  * @param exists - whether a repo-relative path exists in the tree.
- * @param patches - the patch entries, each with its `epic` resolved.
- * @returns `absent` rows `{ where, path }`, carrying `approvedPath` when a patch named an absent target, and
- *   `patched` rows `{ where, path, approvedPath }`; `where` is the epic id or `epic.stage`.
+ * @param patches - the deliverable-path patches, from `files-overlay.mjs` `patchEntries`.
+ * @returns `declaredMissing` rows `{ where, path }` and `resolvedMissing` rows `{ where, path, absentApprovedPaths }`;
+ *   `where` is the epic id or `epic.stage`.
  */
 export function missingAcceptedRegistryRefs(registry, acceptedIds, exists, patches) {
-  const absent = []
-  const patched = []
-  const resolve = (epicId, stage, where, path) => {
-    if (exists(path)) return
-    const patch = patches.find(p => p.epic === epicId && p.declaredPath === path && (stage === undefined || p.stage === stage))
-    if (patch === undefined) absent.push({ where, path })
-    else if (exists(patch.approvedPath)) patched.push({ where, path, approvedPath: patch.approvedPath })
-    else absent.push({ where, path, approvedPath: patch.approvedPath })
-  }
+  const declaredMissing = []
+  const resolvedMissing = []
   for (const epic of registry.epics) {
     if (!acceptedIds.has(epic.id)) continue
-    for (const file of epic.files ?? []) resolve(epic.id, undefined, epic.id, typeof file === 'string' ? file : file.path)
-    for (const [stage, spec] of Object.entries(epic.stages ?? {})) {
-      for (const path of spec.files ?? []) resolve(epic.id, stage, `${epic.id}.${stage}`, path)
+    for (const { where, declaredPath, approvedPaths } of resolveDeclaredPaths(epic, patches)) {
+      if (exists(declaredPath)) continue
+      if (approvedPaths.length === 0) {
+        declaredMissing.push({ where, path: declaredPath })
+        continue
+      }
+      const absentApprovedPaths = approvedPaths.filter(path => !exists(path))
+      if (absentApprovedPaths.length > 0) resolvedMissing.push({ where, path: declaredPath, absentApprovedPaths })
     }
   }
-  return { absent, patched }
+  return { declaredMissing, resolvedMissing }
 }
 
 function main() {
@@ -95,17 +95,15 @@ function main() {
 
   const rows = JSON.parse(readFileSync(LEDGER_PATH, 'utf8')).rows
   const accepted = new Set(Object.entries(rows).filter(([, row]) => row.status === 'ACCEPTED').map(([id]) => id))
-  // A patch entry's epic falls back to its own key, as generate-specs reads it.
-  const patches = Object.entries(JSON.parse(readFileSync(ADJUDICATION_PATH, 'utf8')).deliverablePathPatches?.entries ?? {})
-    .map(([key, patch]) => ({ ...patch, epic: patch.epic ?? key }))
-  const { absent, patched } = missingAcceptedRegistryRefs(JSON.parse(readFileSync(REGISTRY_PATH, 'utf8')), accepted, exists, patches)
-  if (patched.length > 0) {
-    console.log(`verify-declared-files-exist: ${String(patched.length)} registry file reference(s) of ACCEPTED epics are replaced by an approved `
-      + `deliverable-path patch whose target exists (informational):\n  ${patched.map(({ where, path, approvedPath }) => `${where} ${path} patched -> ${approvedPath}`).join('\n  ')}`)
+  const patches = patchEntries(JSON.parse(readFileSync(ADJUDICATION_PATH, 'utf8')))
+  const { declaredMissing, resolvedMissing } = missingAcceptedRegistryRefs(JSON.parse(readFileSync(REGISTRY_PATH, 'utf8')), accepted, exists, patches)
+  if (declaredMissing.length > 0) {
+    console.log(`verify-declared-files-exist: ${String(declaredMissing.length)} registry file reference(s) of ACCEPTED epics are absent with no `
+      + `deliverable-path patch (declared-missing, informational):\n  ${declaredMissing.map(({ where, path }) => `${where} ${path}`).join('\n  ')}`)
   }
-  if (absent.length > 0) {
-    console.log(`verify-declared-files-exist: ${String(absent.length)} registry file reference(s) of ACCEPTED epics are absent `
-      + `(informational, not a failure):\n  ${absent.map(({ where, path, approvedPath }) => `${where} ${path}${approvedPath === undefined ? '' : ` (patched -> ${approvedPath}, also absent)`}`).join('\n  ')}`)
+  if (resolvedMissing.length > 0) {
+    console.log(`verify-declared-files-exist: ${String(resolvedMissing.length)} registry file reference(s) of ACCEPTED epics are absent and so is `
+      + `an approved patch target (resolved-missing, informational):\n  ${resolvedMissing.map(({ where, path, absentApprovedPaths }) => `${where} ${path} -> absent ${absentApprovedPaths.join(', ')}`).join('\n  ')}`)
   }
 
   if (missing.length > 0) {

@@ -85,6 +85,7 @@ import { spawnSync } from 'node:child_process'
 import { frozenTitlePresent, registeredRenames } from './frozen-title-renames.mjs'
 import { commitmentKey, freezeEntriesAt } from './verify-freeze-in-candidate-tree.mjs'
 import { realitySet, realitySetOverlap } from './epic-reality-set.mjs'
+import { patchEntries } from './files-overlay.mjs'
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, dirname, join, resolve } from 'node:path'
@@ -121,6 +122,7 @@ function missingFrozenTitles(expectCases, titles, epic, stage) {
 }
 const LEDGER_MD_PATH = LEDGER_PATH.replace(/\.json$/, '.md')
 const REGISTRY_PATH = join(REPO_ROOT, 'tests/first100/registry.json')
+const ADJUDICATION_PATH = join(REPO_ROOT, 'tests/first100/adjudication.json')
 const COMMAND_FREEZE_PATH = join(REPO_ROOT, 'spec/first100/exec/command-freeze.json')
 const P9_VERIFICATION_PATH = join(REPO_ROOT, 'spec/first100/exec/p9-verification.json')
 const ACCEPTANCE_COVERAGE_PATH = join(REPO_ROOT, 'spec/first100/exec/acceptance-coverage.json')
@@ -1472,7 +1474,7 @@ function cmdAdmitRedRun() {
     console.error(`unknown epic ${epic} (not in tests/first100/registry.json)`)
     process.exit(1)
   }
-  const touched = realitySet(registryEpic, loadJson(COMMAND_FREEZE_PATH).entries)
+  const touched = realitySet(registryEpic, loadJson(COMMAND_FREEZE_PATH).entries, patchEntries(loadJson(ADJUDICATION_PATH)))
   const subjects = steps.flatMap((step) => step.subjectPaths)
   const overlap = realitySetOverlap(touched, subjects)
   if (overlap.length > 0) {

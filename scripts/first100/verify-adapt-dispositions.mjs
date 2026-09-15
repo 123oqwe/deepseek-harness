@@ -45,6 +45,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { realitySet } from './epic-reality-set.mjs'
+import { patchEntries } from './files-overlay.mjs'
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const LEDGER_PATH = join(REPO_ROOT, 'spec/first100/exec/make-vs-use-ledger.json')
@@ -53,6 +54,7 @@ const EXEC_LEDGER_PATH = join(REPO_ROOT, 'spec/first100/exec/ledger.json')
 const OWNERSHIP_PATH = join(REPO_ROOT, 'spec/first100/exec/standards-ownership.json')
 const REGISTRY_PATH = join(REPO_ROOT, 'tests/first100/registry.json')
 const FREEZE_PATH = join(REPO_ROOT, 'spec/first100/exec/command-freeze.json')
+const ADJUDICATION_PATH = join(REPO_ROOT, 'tests/first100/adjudication.json')
 
 const loadJson = path => JSON.parse(readFileSync(path, 'utf8'))
 
@@ -135,6 +137,7 @@ function main() {
   const rows = loadJson(EXEC_LEDGER_PATH).rows
   const ownership = loadJson(OWNERSHIP_PATH).perEpic ?? {}
   const registryEpics = loadJson(REGISTRY_PATH).epics
+  const patches = patchEntries(loadJson(ADJUDICATION_PATH))
   const freeze = loadJson(FREEZE_PATH).entries
 
   const unrecorded = []
@@ -214,7 +217,7 @@ function main() {
             missing.push(`a slice-consumer deviation for ${String(adaptName(deviation) ?? deviation.standard)} names no landsIn path, so nothing can tell when the slice arrived`)
           } else if (existsSync(resolve(REPO_ROOT, deviation.landsIn))) {
             const registryEpic = registryEpics.find(entry => entry.id === id)
-            const files = registryEpic === undefined ? [] : realitySet(registryEpic, freeze)
+            const files = registryEpic === undefined ? [] : realitySet(registryEpic, freeze, patches)
             const importing = files.some(file => {
               const absolute = resolve(REPO_ROOT, file)
               if (!existsSync(absolute) || !statSync(absolute).isFile()) return false
