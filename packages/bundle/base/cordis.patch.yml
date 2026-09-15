@@ -400,18 +400,20 @@
         sampleOverCapGlobResults: false
 
     # Epic P1-07's project trust boundary. Disabled HERE and enabled by the
-    # app bundles that can ask (BLOCKED-214): `acp-app` and `web-app` override
+    # bundles that have a way to record a decision (BLOCKED-214): `acp-app` and
+    # `web-app` can ask, and `headless` records one unattended through
+    # `dsh --trust-workspace` (see headless/cordis.patch.yml). Each overrides
     # this row to `disabled: false`.
     #
     # The split is measured, not cautious. `askForReadTrustOnce` puts its
     # first-time authorization through `approval.request()`, which returns
     # `'unavailable'` when no answerer is registered -- and the only two
     # production answerers are `@deepseek-ai/dsh-acp` and
-    # `@deepseek-ai/dsh-ui-approval`. On `headless`, `sdk-app` and
-    # `sdk-minimal` nothing answers, so an enabled provider there would refuse
-    # every project's own AGENTS.md and skills permanently, with no in-session
-    # way to grant. `/trust-skills` is not an escape: it reaches the same
-    # absent answerer.
+    # `@deepseek-ai/dsh-ui-approval`. On `sdk-app` and `sdk-minimal` nothing
+    # answers and nothing records a decision, so an enabled provider there
+    # would refuse every project's own AGENTS.md and skills permanently, with
+    # no in-session way to grant. `/trust-skills` is not an escape: it reaches
+    # the same absent answerer.
     #
     # A deployment on one of those profiles can still enable this row and add
     # `grants` to turn the boundary on without asking -- see
