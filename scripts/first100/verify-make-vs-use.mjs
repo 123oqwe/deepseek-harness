@@ -40,7 +40,7 @@
  * @module scripts/first100/verify-make-vs-use
  */
 import { execFileSync } from 'node:child_process'
-import { existsSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { realitySet } from './epic-reality-set.mjs'
@@ -147,14 +147,32 @@ function p205Started(rows) {
 const rejectedPackages = (row) =>
   (row?.oss ?? []).filter(entry => entry.role === 'reject' && typeof entry.npm === 'string').map(entry => entry.npm)
 
-function main() {
-  const rows = new Map(loadJson(LEDGER_PATH).rows.map(row => [row.id, row]))
-  const registry = new Map(loadJson(REGISTRY_PATH).epics.map(epic => [epic.id, epic]))
-  const preFlight = loadJson(AUDIT_PATH).preFlight ?? {}
-  const freeze = loadJson(FREEZE_PATH).entries ?? []
-  const patches = patchEntries(loadJson(ADJUDICATION_PATH))
-  const execRows = loadJson(join(REPO_ROOT, 'spec/first100/exec/ledger.json')).rows ?? {}
+/**
+ * This gate's inputs, read from their canonical paths.
+ * @returns the make-vs-use ledger rows and registry epics by id, the pre-flight records, the freeze entries, the deliverable-path patches and the exec ledger rows.
+ */
+export function loadMakeVsUseInputs() {
+  return {
+    rows: new Map(loadJson(LEDGER_PATH).rows.map(row => [row.id, row])),
+    registry: new Map(loadJson(REGISTRY_PATH).epics.map(epic => [epic.id, epic])),
+    preFlight: loadJson(AUDIT_PATH).preFlight ?? {},
+    freeze: loadJson(FREEZE_PATH).entries ?? [],
+    patches: patchEntries(loadJson(ADJUDICATION_PATH)),
+    execRows: loadJson(join(REPO_ROOT, 'spec/first100/exec/ledger.json')).rows ?? {},
+  }
+}
 
+/**
+ * Every recorded make-vs-use decision compared with the tree.
+ *
+ * Not pure: the import scan reads the declared files and, for a builtin, every
+ * tracked source. The scan's positive control is returned rather than acted on,
+ * so a caller asking about one epic can still refuse when the scan itself found
+ * nothing.
+ * @param inputs - from {@link loadMakeVsUseInputs}.
+ * @returns `findings` as `{ epic, text }`; the `pending`, `outside` and `states` lines `main` prints; and `control`, the path where the scan found a known import, `undefined` when it found none.
+ */
+export function makeVsUseFindings({ rows, registry, preFlight, freeze, patches, execRows }) {
   const findings = []
   const pending = []
   const outside = []
@@ -173,7 +191,7 @@ function main() {
     const REQUIRED = ['ledgerRow', 'card', 'verdict', 'adopted', 'rejectedAbsent', 'standardsOwned', 'residual', 'probes', 'gapCheck', 'recordedBeforeFirstLine']
     const missing = REQUIRED.filter(field => !(field in declared))
     if (missing.length > 0) {
-      findings.push(`${key}: preFlight.makeVsUse is missing ${missing.join(', ')} — an incomplete record is UNRECORDED, not a passing one`)
+      findings.push({ epic: key, text: `${key}: preFlight.makeVsUse is missing ${missing.join(', ')} — an incomplete record is UNRECORDED, not a passing one` })
       states.push([key, 'UNRECORDED'])
       continue
     }
@@ -185,7 +203,7 @@ function main() {
       const pkg = adopted.npm ?? adopted.name
       const form = adopted.form ?? 'runtime'
       if (pkg === undefined) {
-        findings.push(`${key}: an adopted entry names neither an npm package nor a project`)
+        findings.push({ epic: key, text: `${key}: an adopted entry names neither an npm package nor a project` })
         state = 'MISMATCHED'
         continue
       }
@@ -196,10 +214,10 @@ function main() {
       if (form === 'builtin') {
         const specifier = adopted.specifier
         if (typeof specifier !== 'string' || specifier.length === 0) {
-          findings.push(`${key}: adopts ${pkg} as a builtin but names no importable specifier, so the claim cannot be checked`)
+          findings.push({ epic: key, text: `${key}: adopts ${pkg} as a builtin but names no importable specifier, so the claim cannot be checked` })
           state = 'MISMATCHED'
         } else if (findImportAnywhere(specifier) === undefined) {
-          findings.push(`${key}: adopts the builtin ${specifier}, but nothing in the repository imports it`)
+          findings.push({ epic: key, text: `${key}: adopts the builtin ${specifier}, but nothing in the repository imports it` })
           state = 'MISMATCHED'
         }
       }
@@ -224,14 +242,14 @@ function main() {
         // has it" is a different fact and was passing as this one.
         if (typeof adopted.landsIn === 'string' && adopted.landsIn.length > 0) {
           if (rows.get(key)?.status === 'ACCEPTED' || execRows[key]?.status === 'ACCEPTED') {
-            findings.push(`${key}: adopts ${pkg} as runtime with landsIn ${JSON.stringify(adopted.landsIn)}, but the epic is ACCEPTED — acceptance cannot rest on an adoption that has not landed`)
+            findings.push({ epic: key, text: `${key}: adopts ${pkg} as runtime with landsIn ${JSON.stringify(adopted.landsIn)}, but the epic is ACCEPTED — acceptance cannot rest on an adoption that has not landed` })
             state = 'MISMATCHED'
           } else {
             pending.push(`${key}: ${pkg} adopted, landing in ${adopted.landsIn}`)
             if (state === 'VERIFIED') state = 'PENDING_ADOPTION'
           }
         } else {
-          findings.push(`${key}: adopts ${pkg} as runtime, but no declared file imports it and no landsIn stage is named`)
+          findings.push({ epic: key, text: `${key}: adopts ${pkg} as runtime, but no declared file imports it and no landsIn stage is named` })
           state = 'MISMATCHED'
         }
       }
@@ -252,7 +270,7 @@ function main() {
           if (!existsSync(full) || !statSync(full).isFile()) continue
           const pkgJson = loadJson(full)
           if (pkgJson.dependencies?.[pkg] !== undefined) {
-            findings.push(`${key}: ${pkg} is adopted as an ORACLE but appears in ${path}'s dependencies, not devDependencies`)
+            findings.push({ epic: key, text: `${key}: ${pkg} is adopted as an ORACLE but appears in ${path}'s dependencies, not devDependencies` })
             state = 'MISMATCHED'
           }
         }
@@ -263,7 +281,7 @@ function main() {
     for (const rejected of rejectedPackages(row)) {
       const found = findImport(rejected, files)
       if (found !== undefined) {
-        findings.push(`${key}: the ledger REJECTS ${rejected}, but ${found} imports it`)
+        findings.push({ epic: key, text: `${key}: the ledger REJECTS ${rejected}, but ${found} imports it` })
         state = 'MISMATCHED'
       }
     }
@@ -297,7 +315,7 @@ function main() {
           // owes one schema/vocabulary case before P2-05 starts, and P2-05
           // starting is something this repository can observe.
           if (p205Started(execRows)) {
-            findings.push(`${key}: owns ${standard} by assignment with no frozen case naming it, and P2-05 has started — the backfill deadline has passed`)
+            findings.push({ epic: key, text: `${key}: owns ${standard} by assignment with no frozen case naming it, and P2-05 has started — the backfill deadline has passed` })
             state = 'MISMATCHED'
           } else {
             pending.push(`${key}: ${standard} owned by assignment, PENDING-BACKFILL (one vocabulary case owed before P2-05 starts)`)
@@ -308,7 +326,7 @@ function main() {
           if (state === 'VERIFIED') state = 'PENDING_ADOPTION'
         }
       } else if (!named) {
-        findings.push(`${key}: claims to own the ${standard} vocabulary, but no live frozen case contains ${JSON.stringify(needle)}`)
+        findings.push({ epic: key, text: `${key}: claims to own the ${standard} vocabulary, but no live frozen case contains ${JSON.stringify(needle)}` })
         state = 'MISMATCHED'
       }
     }
@@ -318,6 +336,11 @@ function main() {
   // The positive control for the import scan itself: a claim of "nothing
   // imports this" is worthless from a scan that finds nothing at all.
   const control = findImport('canonicalize', ['packages/action/action-manifest/tests/manifest.spec.ts'])
+  return { findings, pending, outside, states, control }
+}
+
+function main() {
+  const { findings, pending, outside, states, control } = makeVsUseFindings(loadMakeVsUseInputs())
   if (control === undefined) {
     console.error('verify-make-vs-use: the import scan found NOTHING where a known import exists — the scan is broken, and every "not imported" result above would be meaningless.')
     process.exit(1)
@@ -331,8 +354,25 @@ function main() {
     return
   }
   console.error(`verify-make-vs-use: ${String(findings.length)} recorded decision(s) disagree with the tree:`)
-  for (const finding of findings) console.error(`  ${finding}`)
+  for (const finding of findings) console.error(`  ${finding.text}`)
   process.exit(1)
 }
 
-main()
+// Only when run as a command: generate-ledger.mjs imports this module for
+// makeVsUseFindings, and a module-level main() would run the whole gate, and
+// its process.exit, inside --accept. Real paths on both sides, as in
+// verify-freeze-in-candidate-tree.mjs, because macOS resolves a temp checkout
+// through a symlink.
+const executedDirectly = (() => {
+  const entry = process.argv[1]
+  if (entry === undefined) return false
+  try {
+    return realpathSync(entry) === realpathSync(fileURLToPath(import.meta.url))
+  } catch {
+    // An entry path that cannot be resolved is not this module; running the gate
+    // unasked is the more damaging mistake.
+    return false
+  }
+})()
+
+if (executedDirectly) main()

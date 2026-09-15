@@ -73,11 +73,14 @@ export function freezeEntriesAt(sha) {
 export const commitmentKey = entry =>
   JSON.stringify([entry.epic, entry.stage, entry.supplementSeq ?? null, [...entry.expectCases ?? []].sort()])
 
-function main() {
-  const rows = JSON.parse(readFileSync(LEDGER_PATH, 'utf8')).rows
-  const live = JSON.parse(readFileSync(join(REPO_ROOT, FREEZE_PATH), 'utf8')).entries
-    .filter(entry => entry.supersededBy === undefined)
-
+/**
+ * Every GREEN cell and supplement checked against the freeze recorded in its candidate tree.
+ * @param rows - the exec ledger rows by epic id.
+ * @param live - the live freeze entries.
+ * @param freezeAt - reads one commit's freeze entries; defaults to {@link freezeEntriesAt}.
+ * @returns `verified` labels, and `missing` and `unreadable` as `{ epic, text }`, where `text` is the line `main` prints.
+ */
+export function candidateTreeFindings(rows, live, freezeAt = freezeEntriesAt) {
   const treeCache = new Map()
   const verified = []
   const missing = []
@@ -94,17 +97,17 @@ function main() {
       const commitments = live.filter(entry => entry.epic === epic && entry.stage === stage && entry.supplementSeq === undefined)
       if (commitments.length === 0) continue
 
-      if (!treeCache.has(cell.candidateSha)) treeCache.set(cell.candidateSha, freezeEntriesAt(cell.candidateSha))
+      if (!treeCache.has(cell.candidateSha)) treeCache.set(cell.candidateSha, freezeAt(cell.candidateSha))
       const observed = treeCache.get(cell.candidateSha)
       if (observed === undefined) {
-        unreadable.push(`${epic}.${stage}: candidate ${cell.candidateSha} is not readable in this clone`)
+        unreadable.push({ epic, text: `${epic}.${stage}: candidate ${cell.candidateSha} is not readable in this clone` })
         continue
       }
 
       const observedKeys = new Set(observed.map(commitmentKey))
       const absent = commitments.filter(entry => !observedKeys.has(commitmentKey(entry)))
       if (absent.length === 0) verified.push(`${epic}.${stage}`)
-      else missing.push(`${epic}.${stage}: ${String(absent.length)} live freeze entry/entries absent from ${cell.candidateSha.slice(0, 10)}`)
+      else missing.push({ epic, text: `${epic}.${stage}: ${String(absent.length)} live freeze entry/entries absent from ${cell.candidateSha.slice(0, 10)}` })
     }
   }
 
@@ -115,21 +118,29 @@ function main() {
       const commitments = live.filter(entry =>
         entry.epic === epic && entry.stage === stage && entry.supplementSeq === Number(seq))
       if (commitments.length === 0) continue
-      if (!treeCache.has(supplement.candidateSha)) treeCache.set(supplement.candidateSha, freezeEntriesAt(supplement.candidateSha))
+      if (!treeCache.has(supplement.candidateSha)) treeCache.set(supplement.candidateSha, freezeAt(supplement.candidateSha))
       const observed = treeCache.get(supplement.candidateSha)
       if (observed === undefined) {
-        unreadable.push(`${epic}.${key}: candidate ${supplement.candidateSha} is not readable in this clone`)
+        unreadable.push({ epic, text: `${epic}.${key}: candidate ${supplement.candidateSha} is not readable in this clone` })
         continue
       }
       const observedKeys = new Set(observed.map(commitmentKey))
       const absent = commitments.filter(entry => !observedKeys.has(commitmentKey(entry)))
       if (absent.length === 0) verified.push(`${epic}.${key}`)
-      else missing.push(`${epic}.${key}: ${String(absent.length)} live freeze entry/entries absent from ${supplement.candidateSha.slice(0, 10)}`)
+      else missing.push({ epic, text: `${epic}.${key}: ${String(absent.length)} live freeze entry/entries absent from ${supplement.candidateSha.slice(0, 10)}` })
     }
   }
 
-  for (const line of missing) console.error(`  MISSING  ${line}`)
-  for (const line of unreadable) console.error(`  UNREADABLE  ${line}`)
+  return { verified, missing, unreadable }
+}
+
+function main() {
+  const rows = JSON.parse(readFileSync(LEDGER_PATH, 'utf8')).rows
+  const live = JSON.parse(readFileSync(join(REPO_ROOT, FREEZE_PATH), 'utf8')).entries
+    .filter(entry => entry.supersededBy === undefined)
+  const { verified, missing, unreadable } = candidateTreeFindings(rows, live)
+  for (const line of missing) console.error(`  MISSING  ${line.text}`)
+  for (const line of unreadable) console.error(`  UNREADABLE  ${line.text}`)
   const total = verified.length + missing.length + unreadable.length
   if (missing.length === 0 && unreadable.length === 0) {
     console.log(`verify-freeze-in-candidate-tree: ${String(total)} GREEN cell(s) — every live freeze entry is present in the tree that was observed.`)

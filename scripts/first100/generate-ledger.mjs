@@ -83,9 +83,12 @@
 import Ajv2020 from 'ajv/dist/2020.js'
 import { spawnSync } from 'node:child_process'
 import { frozenTitlePresent, registeredRenames } from './frozen-title-renames.mjs'
-import { commitmentKey, freezeEntriesAt } from './verify-freeze-in-candidate-tree.mjs'
+import { candidateTreeFindings, commitmentKey, freezeEntriesAt } from './verify-freeze-in-candidate-tree.mjs'
 import { realitySet, realitySetOverlap } from './epic-reality-set.mjs'
 import { patchEntries } from './files-overlay.mjs'
+import { adaptDispositionFindings, loadAdaptDispositionInputs } from './verify-adapt-dispositions.mjs'
+import { missingAcceptedRegistryRefs, missingFreezeFiles } from './verify-declared-files-exist.mjs'
+import { loadMakeVsUseInputs, makeVsUseFindings } from './verify-make-vs-use.mjs'
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, dirname, join, resolve } from 'node:path'
@@ -1590,6 +1593,42 @@ export function checkNoOpenFindings(row) {
   return { valid: open.length === 0, open }
 }
 
+/**
+ * The epic-state gate findings that belong to the epic being accepted.
+ *
+ * The gates check the whole repository and none takes an epic, so acceptance
+ * reads their findings and keeps this epic's: another epic's debt does not
+ * block this acceptance. A make-vs-use import scan that found nothing is about
+ * no single epic and blocks every acceptance, because a scan that finds nothing
+ * reports no finding for anyone. `verify-frozen-titles-resolvable` is not read:
+ * it resolves every frozen title through vitest, which each green cell's own
+ * observation already did for its titles.
+ * @param epic - the epic id being accepted.
+ * @param results - `makeVsUse` from `verify-make-vs-use.mjs`, `candidateTree` from `verify-freeze-in-candidate-tree.mjs`, `adaptDispositions` from `verify-adapt-dispositions.mjs`, and `missingFreezeFiles` from `verify-declared-files-exist.mjs`.
+ * @returns one `{ gate, text }` per finding for this epic; empty when there is none.
+ */
+export function acceptPreflightFindings(epic, results) {
+  const found = []
+  const makeVsUse = 'first100:verify-make-vs-use'
+  if (results.makeVsUse.control === undefined) {
+    found.push({ gate: makeVsUse, text: 'the import scan found nothing where a known import exists, so no make-vs-use result can be read' })
+  }
+  for (const finding of results.makeVsUse.findings) {
+    if (finding.epic === epic) found.push({ gate: makeVsUse, text: finding.text })
+  }
+  for (const finding of [...results.candidateTree.missing, ...results.candidateTree.unreadable]) {
+    if (finding.epic === epic) found.push({ gate: 'first100:verify-freeze-in-candidate-tree', text: finding.text })
+  }
+  for (const { id, missing } of results.adaptDispositions.unrecorded) {
+    if (id !== epic) continue
+    for (const line of missing) found.push({ gate: 'first100:verify-adapt-dispositions', text: `${id}: ${line}` })
+  }
+  for (const { label, path } of results.missingFreezeFiles) {
+    if (label.split('.')[0] === epic) found.push({ gate: 'first100:verify-declared-files-exist', text: `${label} ${path} does not exist` })
+  }
+  return found
+}
+
 function cmdAccept() {
   const epic = opt('epic')
   if (!epic) {
@@ -1672,6 +1711,23 @@ function cmdAccept() {
       + `  Close each with --close-finding (4.4c: give a measurement per noun the finding names), or withdraw it.`,
     )
   }
+  // 108: the epic-state gates, read for this epic's findings. No flag skips
+  // them: a gate finding states that a condition the programme wrote down is
+  // false, and a finding that should not block belongs in that gate's
+  // held-back list with a reason.
+  const exists = path => existsSync(join(REPO_ROOT, path))
+  const preflight = acceptPreflightFindings(epic, {
+    makeVsUse: makeVsUseFindings(loadMakeVsUseInputs()),
+    candidateTree: candidateTreeFindings(ledger.rows, freeze.entries.filter(entry => entry.supersededBy === undefined)),
+    adaptDispositions: adaptDispositionFindings(loadAdaptDispositionInputs()),
+    missingFreezeFiles: missingFreezeFiles(freeze.entries, exists, new Map()),
+  })
+  for (const { gate, text } of preflight) failures.push(`pre-flight gate ${gate} reports a finding for ${epic}:\n    ${text}`)
+  // Registry paths are plan paths; their absence is printed for the reader and decides nothing.
+  const { declaredMissing, resolvedMissing } = missingAcceptedRegistryRefs(registry, new Set([epic]), exists, patchEntries(loadJson(ADJUDICATION_PATH)))
+  for (const { where, path } of declaredMissing) console.log(`pre-flight (informational): ${where} declares ${path}, which does not exist`)
+  for (const { where, path, absentApprovedPaths } of resolvedMissing) console.log(`pre-flight (informational): ${where} ${path} -> absent ${absentApprovedPaths.join(', ')}`)
+
   if (failures.length > 0) {
     console.error(`BLOCKED: ${epic} fails ${failures.length} predicate(s):\n  ${failures.join('\n  ')}`)
     process.exit(1)

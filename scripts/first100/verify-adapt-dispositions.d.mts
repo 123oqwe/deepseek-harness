@@ -2,9 +2,12 @@
  * Types for gate (e)'s pure standards decision.
  *
  * The verifier itself is a `.mjs` script run from the command line; only the
- * part its tests exercise is declared here, matching the precedent set by
- * `generate-ledger.d.mts` and `verify-p9-cells.d.mts`.
+ * parts its tests exercise and `generate-ledger.mjs --accept` reads are
+ * declared here, matching the precedent set by `generate-ledger.d.mts` and
+ * `verify-p9-cells.d.mts`.
  */
+
+import type { DeliverablePathPatch } from './files-overlay.d.mts'
 
 /** One epic's `makeVsUse` pre-flight record, in the fields this decision reads. */
 export interface MakeVsUseRecord {
@@ -45,3 +48,22 @@ export function standardDispositionGaps(
   declared: MakeVsUseRecord,
   assigned: readonly AssignedStandard[],
 ): string[]
+
+/** This gate's inputs as read from disk; the record fields are those of its JSON files. */
+export interface AdaptDispositionInputs {
+  cards: Map<string, unknown>
+  preFlight: Record<string, unknown>
+  rows: Record<string, unknown>
+  ownership: Record<string, readonly AssignedStandard[]>
+  registryEpics: readonly unknown[]
+  patches: readonly DeliverablePathPatch[]
+  freeze: readonly unknown[]
+}
+
+export function loadAdaptDispositionInputs(): AdaptDispositionInputs
+
+export function adaptDispositionFindings(inputs: AdaptDispositionInputs): {
+  unrecorded: { id: string; missing: string[] }[]
+  deferred: string[]
+  satisfied: number
+}

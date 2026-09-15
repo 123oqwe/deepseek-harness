@@ -131,15 +131,31 @@ export function standardDispositionGaps(standards, declared, assigned) {
   return missing
 }
 
-function main() {
-  const cards = new Map(loadJson(LEDGER_PATH).rows.map(row => [row.id, row]))
-  const preFlight = loadJson(AUDIT_PATH).preFlight ?? {}
-  const rows = loadJson(EXEC_LEDGER_PATH).rows
-  const ownership = loadJson(OWNERSHIP_PATH).perEpic ?? {}
-  const registryEpics = loadJson(REGISTRY_PATH).epics
-  const patches = patchEntries(loadJson(ADJUDICATION_PATH))
-  const freeze = loadJson(FREEZE_PATH).entries
+/**
+ * This gate's inputs, read from their canonical paths.
+ * @returns the make-vs-use cards by id, the pre-flight records, the exec ledger rows, the standards ownership per epic, the registry epics, the deliverable-path patches and the freeze entries.
+ */
+export function loadAdaptDispositionInputs() {
+  return {
+    cards: new Map(loadJson(LEDGER_PATH).rows.map(row => [row.id, row])),
+    preFlight: loadJson(AUDIT_PATH).preFlight ?? {},
+    rows: loadJson(EXEC_LEDGER_PATH).rows,
+    ownership: loadJson(OWNERSHIP_PATH).perEpic ?? {},
+    registryEpics: loadJson(REGISTRY_PATH).epics,
+    patches: patchEntries(loadJson(ADJUDICATION_PATH)),
+    freeze: loadJson(FREEZE_PATH).entries,
+  }
+}
 
+/**
+ * Every epic whose card names an adapt package or a standard, checked for a disposition of each.
+ *
+ * Not pure: a landed slice-consumer is checked by reading the files of the
+ * epic's reality set.
+ * @param inputs - from {@link loadAdaptDispositionInputs}.
+ * @returns `unrecorded` as `{ id, missing }` per epic that fails, `deferred` ids of unstarted epics with no record, and the `satisfied` count.
+ */
+export function adaptDispositionFindings({ cards, preFlight, rows, ownership, registryEpics, patches, freeze }) {
   const unrecorded = []
   const deferred = []
   let satisfied = 0
@@ -239,7 +255,11 @@ function main() {
     else if (started || declared !== undefined) unrecorded.push({ id, missing })
     else deferred.push(id)
   }
+  return { unrecorded, deferred, satisfied }
+}
 
+function main() {
+  const { unrecorded, deferred, satisfied } = adaptDispositionFindings(loadAdaptDispositionInputs())
   for (const { id, missing } of unrecorded) {
     console.error(`  UNRECORDED  ${id}`)
     for (const line of missing) console.error(`      ${line}`)

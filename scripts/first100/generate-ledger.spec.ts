@@ -28,6 +28,7 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import {
+  acceptPreflightFindings,
   checkCandidateChainConsistency,
   checkCoverageClosure,
   checkDelegateSignoff,
@@ -749,6 +750,63 @@ describe('checkNoOpenFindings (§12.63: accept and green-cell judge open finding
     expect(checkNoOpenFindings({}).valid).toBe(true)
     expect(checkNoOpenFindings({ openFindings: null }).valid).toBe(true)
     expect(checkNoOpenFindings({ openFindings: [] }).valid).toBe(true)
+  })
+})
+
+describe('acceptPreflightFindings (108: --accept reads the epic-state gates for the epic being accepted)', () => {
+  const control = 'packages/action/action-manifest/tests/manifest.spec.ts'
+  const clean = () => ({
+    makeVsUse: { findings: [] as { epic: string; text: string }[], control: control as string | undefined },
+    candidateTree: { missing: [] as { epic: string; text: string }[], unreadable: [] as { epic: string; text: string }[] },
+    adaptDispositions: { unrecorded: [] as { id: string; missing: string[] }[] },
+    missingFreezeFiles: [] as { label: string; path: string }[],
+  })
+
+  it('finds nothing when every gate is clean, so the pre-flight is a check and not a blanket block', () => {
+    expect(acceptPreflightFindings('P9-99', clean())).toStrictEqual([])
+  })
+
+  it('refuses on a make-vs-use finding of this epic, naming the gate and quoting the finding', () => {
+    const results = clean()
+    results.makeVsUse.findings.push({ epic: 'P9-99', text: 'P9-99: owns RFC 8785 JCS by assignment with no frozen case naming it' })
+    expect(acceptPreflightFindings('P9-99', results)).toStrictEqual([{ gate: 'first100:verify-make-vs-use', text: 'P9-99: owns RFC 8785 JCS by assignment with no frozen case naming it' }])
+  })
+
+  it('refuses on a missing or unreadable candidate-tree record of this epic', () => {
+    const results = clean()
+    results.candidateTree.missing.push({ epic: 'P9-99', text: 'P9-99.C: 1 live freeze entry/entries absent from 0123456789' })
+    results.candidateTree.unreadable.push({ epic: 'P9-99', text: 'P9-99.U.1: candidate abc is not readable in this clone' })
+    expect(acceptPreflightFindings('P9-99', results).map(f => f.gate)).toStrictEqual(['first100:verify-freeze-in-candidate-tree', 'first100:verify-freeze-in-candidate-tree'])
+  })
+
+  it('refuses on an undisclosed adapt disposition of this epic, one finding per missing line', () => {
+    const results = clean()
+    results.adaptDispositions.unrecorded.push({ id: 'P9-99', missing: ['adapt canonicalize appears in neither adopted[] nor deviations[]', 'no makeVsUse record at all'] })
+    expect(acceptPreflightFindings('P9-99', results)).toStrictEqual([
+      { gate: 'first100:verify-adapt-dispositions', text: 'P9-99: adapt canonicalize appears in neither adopted[] nor deviations[]' },
+      { gate: 'first100:verify-adapt-dispositions', text: 'P9-99: no makeVsUse record at all' },
+    ])
+  })
+
+  it('refuses on a live freeze file of this epic that does not exist, a supplement included', () => {
+    const results = clean()
+    results.missingFreezeFiles.push({ label: 'P9-99.U.2', path: 'packages/demo/thing/src/gone.ts' })
+    expect(acceptPreflightFindings('P9-99', results)).toStrictEqual([{ gate: 'first100:verify-declared-files-exist', text: 'P9-99.U.2 packages/demo/thing/src/gone.ts does not exist' }])
+  })
+
+  it('does not refuse on any gate\'s finding that belongs to another epic', () => {
+    const results = clean()
+    results.makeVsUse.findings.push({ epic: 'P9-98', text: 'P9-98: the ledger REJECTS left-pad, but x.ts imports it' })
+    results.candidateTree.missing.push({ epic: 'P9-98', text: 'P9-98.C: 1 live freeze entry/entries absent from 0123456789' })
+    results.adaptDispositions.unrecorded.push({ id: 'P9-98', missing: ['no makeVsUse record at all'] })
+    results.missingFreezeFiles.push({ label: 'P9-98.U', path: 'packages/demo/thing/src/gone.ts' })
+    expect(acceptPreflightFindings('P9-99', results)).toStrictEqual([])
+  })
+
+  it('refuses every epic when the make-vs-use import scan found nothing', () => {
+    const results = clean()
+    results.makeVsUse.control = undefined
+    expect(acceptPreflightFindings('P9-99', results).map(f => f.gate)).toStrictEqual(['first100:verify-make-vs-use'])
   })
 })
 

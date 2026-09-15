@@ -215,3 +215,25 @@ export function execStateDigestDrift(
   state: { ledgerDigest?: string, registryDigest?: string, freezeDigest?: string },
   bytes: { ledger: string | Uint8Array, registry: string | Uint8Array, freeze: string | Uint8Array },
 ): ExecStateDigestDrift[]
+
+/** One epic-state gate finding for the epic being accepted. */
+export interface AcceptPreflightFinding {
+  gate: string
+  text: string
+}
+
+/** The epic-state gates' results, in the fields `acceptPreflightFindings` reads. */
+export interface AcceptPreflightResults {
+  makeVsUse: { findings: readonly { epic: string; text: string }[]; control: string | undefined }
+  candidateTree: { missing: readonly { epic: string; text: string }[]; unreadable: readonly { epic: string; text: string }[] }
+  adaptDispositions: { unrecorded: readonly { id: string; missing: readonly string[] }[] }
+  missingFreezeFiles: readonly { label: string; path: string }[]
+}
+
+/**
+ * The epic-state gate findings of one epic, which `--accept` refuses on; a make-vs-use scan that found nothing blocks every epic.
+ * @param epic - the epic id being accepted.
+ * @param results - the gates' results.
+ * @returns one `{ gate, text }` per finding for this epic.
+ */
+export function acceptPreflightFindings(epic: string, results: AcceptPreflightResults): AcceptPreflightFinding[]
