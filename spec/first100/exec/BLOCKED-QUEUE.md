@@ -5539,7 +5539,7 @@ A later full replay (`--maxWorkers=2`) produced four timeouts of the same shape,
 
 ### BLOCKED-220 — a headless run ends at `whenIdle()`, which does not follow an in-flight background job, so that job's result can never reach the model
 
-**Status:** **FIXED-PENDING-OBSERVATION** 2026-09-12, owner lane A. Both halves have landed and neither has a cloud observation yet: 丁 and the `job/abandoned` event in candidate 5, 甲 in candidate 6 (`lane-a-candidate-6`, three commits from `3884f77a56`). Opened RECORD ONLY 2026-09-11.
+**Status:** FIXED-PENDING-OBSERVATION 2026-09-12, owner lane A. Both halves have landed and neither has a cloud observation yet: 丁 and the `job/abandoned` event in candidate 5, 甲 in candidate 6 (`lane-a-candidate-6`, three commits from `3884f77a56`). Opened RECORD ONLY 2026-09-11.
 
 **What the entry ended up being, in one paragraph.** A run's completion condition is its agent going idle, and a background job is not part of it, so a one-shot surface could end with a job still running — and the registry's teardown then marked that job reported with nobody to read it. The fix is in two parts that answer different questions. 丁 makes the loss VISIBLE: each abandoned job gets a `job/abandoned` session event and a stderr line derived from it. 甲 makes it mostly not happen: both run-ending surfaces now WAIT, bounded by a config field, and only what outlives the bound is recorded. The directions this entry once listed as 乙 and 戊 are folded in and refused respectively, for reasons recorded below.
 
@@ -6136,7 +6136,7 @@ Measured across `packages` and `apps` at `73c1c04f2e`, excluding `tests/`, `*.sp
 
 ### BLOCKED-240 — a reason sentence landed inside the Model Experience section, in fifteen packages
 
-**Status:** **FIXED** in candidate 7 (lane B). Assigned by the delegate 2026-09-12 for the six packages the F-stage checklist surfaced; measured at **fifteen** and all fifteen repaired in the same commit.
+**Status:** FIXED in candidate 7 (lane B). Assigned by the delegate 2026-09-12 for the six packages the F-stage checklist surfaced; measured at **fifteen** and all fifteen repaired in the same commit.
 
 **Cause, and it is the same commit family as BLOCKED-236.** Two lane-B commits added a `**Runtime invariant:** No runtime invariant companion is published: …` sentence to the READMEs of packages that omit the companion — `02ceda9fc8` to seven, `71b83ce9cd` to nine (one overlaps, so fifteen distinct). In every one the sentence was appended **after the `#### KV Cache effect` paragraph**, which puts it INSIDE the `## Model Experience` section. `verify-package-readme-model-experience` shapes that section strictly, so all fifteen failed it.
 

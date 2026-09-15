@@ -294,6 +294,18 @@ describe('verify-p9-cells blocker status: the queue reader refuses what it canno
     expect(queueBlockerStatus(queue, 'BLOCKED-227')).toBe('CLOSED')
   })
 
+  it('reads a status value written in bold', () => {
+    expect(queueBlockerStatus('### BLOCKED-240 — a blocker\n\n**Status:** **FIXED** in candidate 7.\n\n', 'BLOCKED-240')).toBe('CLOSED')
+    expect(queueBlockerStatus('### BLOCKED-241 — a blocker\n\n**Status:** **OPEN**\n\n', 'BLOCKED-241')).toBe('OPEN')
+  })
+
+  it('still throws for a lowercase or empty value, bold or not, and for an entry with no status line', () => {
+    expect(() => queueBlockerStatus('### BLOCKED-230 — a blocker\n\n**Status:** test-side FIXED\n\n', 'BLOCKED-230')).toThrow('no **Status:** line')
+    expect(() => queueBlockerStatus('### BLOCKED-232 — a blocker\n\n**Status:** **fixed**\n\n', 'BLOCKED-232')).toThrow('no **Status:** line')
+    expect(() => queueBlockerStatus('### BLOCKED-231 — a blocker\n\n**Status:** ** **\n\n', 'BLOCKED-231')).toThrow('no **Status:** line')
+    expect(() => queueBlockerStatus(entry('BLOCKED-001', null), 'BLOCKED-001')).toThrow('no **Status:** line')
+  })
+
   it('reads a status that sits more than 2000 characters below its heading', () => {
     const long = `### BLOCKED-040 — a long blocker\n\n${'x'.repeat(2500)}\n\n**Status:** OPEN\n\n`
     expect(queueBlockerStatus(long + entry('BLOCKED-041', 'FIXED'), 'BLOCKED-040')).toBe('OPEN')

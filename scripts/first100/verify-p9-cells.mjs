@@ -108,8 +108,10 @@ export function queueBlockerStatus(queue, blockerId) {
   const bodyStart = headings[0].index + headings[0][0].length
   const next = /^#{2,4} BLOCKED-\d+\b/m.exec(queue.slice(bodyStart))
   const body = queue.slice(bodyStart, next === null ? queue.length : bodyStart + next.index)
-  // Both status spellings occur: `**Status: OPEN, ...` and `**Status:** OPEN`.
-  const status = /\*\*Status:?\*?\*?:?\s*([A-Z-]+)/.exec(body)?.[1]
+  // Three spellings occur: `**Status: OPEN, ...`, `**Status:** OPEN` and a bold
+  // value, `**Status:** **FIXED**`. The value must start with a capital letter, so
+  // a lowercase or empty value still reads as no status line.
+  const status = /\*\*Status:?\*?\*?:?\s*\**\s*([A-Z][A-Z-]+)/.exec(body)?.[1]
   if (status === undefined) {
     throw new Error(`${blockerId}: no **Status:** line before the next queue entry (BLOCKED-254)`)
   }
