@@ -22,8 +22,8 @@
  * Usage: `node scripts/first100/verify-files-overlay.mjs [--write]`
  * `--write` rewrites `files-overlay.json` from the computed overlay before the
  * comparison, so the file it leaves always matches.
- * Exit 0 when every check passes, 1 when one fails, 2 when the committed file
- * cannot be compared.
+ * Exit 0 when every check passes, 1 when any check fails, and 2 when the
+ * committed file cannot be compared and no check failed.
  *
  * @module scripts/first100/verify-files-overlay
  */
@@ -205,14 +205,20 @@ function main() {
     failures.push(`${String(unexplained.length)} source path(s) recorded with no reason — product code the plan never named needs a sentence (§12.4):\n  `
       + unexplained.map(entry => `${entry.epic} ${entry.path}`).join('\n  '))
   }
-  if (comparison.status === 'uncomparable') {
-    if (failures.length > 0) console.error(`verify-files-overlay: ${failures.join('\n')}`)
-    console.error(`verify-files-overlay: cannot compare spec/first100/exec/files-overlay.json with the computed overlay: ${comparison.reason}. Recreate it with \`node scripts/first100/verify-files-overlay.mjs --write\`.`)
-    process.exit(2)
-  }
+  // A failed check exits 1 even when the committed file cannot be compared as
+  // well; exit 2 means the comparison is the only thing left undecided, so it is
+  // printed beside a failure and never replaces one.
+  const cannotCompare = comparison.status === 'uncomparable'
+    ? `verify-files-overlay: cannot compare spec/first100/exec/files-overlay.json with the computed overlay: ${comparison.reason}. Recreate it with \`node scripts/first100/verify-files-overlay.mjs --write\`.`
+    : undefined
   if (failures.length > 0) {
     console.error(`verify-files-overlay: ${failures.join('\n')}`)
+    if (cannotCompare !== undefined) console.error(cannotCompare)
     process.exit(1)
+  }
+  if (cannotCompare !== undefined) {
+    console.error(cannotCompare)
+    process.exit(2)
   }
 
   const kinds = {}
