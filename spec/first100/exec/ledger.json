@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-15T05:06:23.969Z",
-  "inputDigest": "2e8a72364a420b536c1e03a2635906a18270f524cbc05de2b66e90941a7699a2",
+  "lastUpdatedUtc": "2026-09-15T05:10:28.943Z",
+  "inputDigest": "2d2da4a9264a90814d3901531c83bb5e7cf5c37810a332cdab0bcf12c680a256",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -5890,8 +5890,8 @@
           "status": "GREEN",
           "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
           "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/frozen-cmds/p4-06-p1.json",
-          "observationSha256": "ab4f846f09e4b64761d8b2f282588fbf247ed842077392b3c1ccc4ec2c46018c",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34238203263/first100-vitest-report-434408a47ca7635fb1076baeb43efecb33bce980/vitest-report.json",
+          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
           "expectCasesMatched": [
             "P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox row and the inbox claim commits all three together, so a consumed message has both an outbox row and a domain event",
             "P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox row and the inbox claim writes NOTHING when the commit fails partway, rather than the domain event without its outbox row",
@@ -5909,7 +5909,7 @@
             "P4-06 must[2]: the durable seen-set and the dedup rule agree (BLOCKED-138) keeps `(a:1, 2)` and `(a, 1:2)` distinct on BOTH sides, which the store's own spelling did not",
             "P4-06 must[2]: the durable seen-set and the dedup rule agree (BLOCKED-138) reports every consumed key as the rule computes it, with no second spelling anywhere"
           ],
-          "capturedAtUtc": "2026-09-08T15:28:05.018Z"
+          "capturedAtUtc": "2026-09-15T05:10:28.927Z"
         },
         "P.4": {
           "status": "GREEN",
