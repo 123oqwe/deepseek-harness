@@ -27,6 +27,7 @@ import { join, dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { parseMatrixText } from './matrix-parse.mjs'
+import { applyFileDeletions } from './registry-file-deletions.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = resolve(here, '..', '..')
@@ -198,6 +199,10 @@ const RESCOPE23_EPIC_IDS = ['P3-03', 'P3-07', 'P4-05', 'P4-10', 'P5-07', 'P5-11'
  * Recorded here rather than inferred from the diff, because "this file is gone
  * because upstream ships it" and "this file is gone because we stopped editing
  * a hot path" are different decisions with different reversals.
+ *
+ * This table records a decision and changes no list. A declared file that a
+ * commit deleted is recorded in {@link FILES_DELETED} instead, which removes the
+ * declaration from the registry.
  */
 const FILES_REDUCED = {
   'P5-07': { removed: ['subagent-codex/src/map-events.ts', 'subagent-codex/src/continuation.ts'], reason: '@openai/codex 0.149.1 already ships thread/resume, thread/fork, turn/steer, turn/interrupt, thread/list and item requestApproval.' },
@@ -349,6 +354,45 @@ for (const [id, { replacements }] of Object.entries(FILES_REPLACED)) {
       throw new Error(`${id}: file replacement ${entry.from} -> ${entry.to} (stage ${entry.stage}) records baselinePath, which only a kind B file carries`)
     }
   }
+}
+
+/**
+ * Declarations of files a commit deleted, removed from the registry.
+ *
+ * Distinct from {@link FILES_REDUCED}, which records that an epic no longer owes
+ * a file because upstream ships the behaviour and changes no list. Here the
+ * file existed and a named commit deleted it, so a declaration of it describes
+ * nothing and is removed from the stage that listed it, and from the epic-level
+ * list once no stage does (`registry-file-deletions.mjs`).
+ */
+const SESSION_PERSISTENCE_SEAM_DELETION = "`packages/session/session-persistence/src/write-behind.ts` and `packages/session/session-persistence/src/coordinator.ts` were deleted by `bec6805d6a` (2026-08-28, \\\"refactor(session-persistence)!: handle-based seam with a lifecycle-owned write path\\\"). Both lineages were judged a deletion with the responsibilities split across the new seam, not a rename (delegate ruling, 2026-09-15; lane A's `moved` row for coordinator.ts withdrawn), so the declaration is removed rather than pointed at a successor. Applied to unstarted epics as well: a deletion with a known commit is a fact, unlike the `inbox.ts` successor that needed a judgement."
+
+const FILES_DELETED = {
+  'P4-06': { deleted: [
+    { path: 'packages/session/session-persistence/src/write-behind.ts', stage: 'P', deletedBy: 'bec6805d6a' },
+    { path: 'packages/session/session-persistence/src/coordinator.ts', stage: 'P', deletedBy: 'bec6805d6a' },
+  ], reason: SESSION_PERSISTENCE_SEAM_DELETION, authorization: "delegate ruling, 2026-09-15 (queue item 118: FILES_DELETED, lineage of coordinator.ts, unstarted epics included)." },
+  'P4-12': { deleted: [{ path: 'packages/session/session-persistence/src/write-behind.ts', stage: 'P', deletedBy: 'bec6805d6a' }],
+    reason: SESSION_PERSISTENCE_SEAM_DELETION, authorization: "delegate ruling, 2026-09-15 (queue item 118: FILES_DELETED, lineage of coordinator.ts, unstarted epics included)." },
+  'P6-08': { deleted: [{ path: 'packages/session/session-persistence/src/write-behind.ts', stage: 'U', deletedBy: 'bec6805d6a' }],
+    reason: SESSION_PERSISTENCE_SEAM_DELETION, authorization: "delegate ruling, 2026-09-15 (queue item 118: FILES_DELETED, lineage of coordinator.ts, unstarted epics included)." },
+  'P2-07': { deleted: [{ path: 'packages/session/session-persistence/src/coordinator.ts', stage: 'P', deletedBy: 'bec6805d6a' }],
+    reason: SESSION_PERSISTENCE_SEAM_DELETION, authorization: "delegate ruling, 2026-09-15 (queue item 118: FILES_DELETED, lineage of coordinator.ts, unstarted epics included)." },
+  'P4-01': { deleted: [
+    { path: 'packages/session/session-persistence/src/coordinator.ts', stage: 'P', deletedBy: 'bec6805d6a' },
+    { path: 'packages/session/session-persistence/src/coordinator.ts', stage: 'F', deletedBy: 'bec6805d6a' },
+  ], reason: SESSION_PERSISTENCE_SEAM_DELETION, authorization: "delegate ruling, 2026-09-15 (queue item 118: FILES_DELETED, lineage of coordinator.ts, unstarted epics included)." },
+  'P6-07': { deleted: [{ path: 'packages/session/session-persistence/src/coordinator.ts', stage: 'P', deletedBy: 'bec6805d6a' }],
+    reason: SESSION_PERSISTENCE_SEAM_DELETION, authorization: "delegate ruling, 2026-09-15 (queue item 118: FILES_DELETED, lineage of coordinator.ts, unstarted epics included)." },
+  'P7-08': { deleted: [{ path: 'packages/session/session-persistence/src/coordinator.ts', stage: 'U', deletedBy: 'bec6805d6a' }],
+    reason: SESSION_PERSISTENCE_SEAM_DELETION, authorization: "delegate ruling, 2026-09-15 (queue item 118: FILES_DELETED, lineage of coordinator.ts, unstarted epics included)." },
+  'P8-05': { deleted: [{ path: 'packages/session/session-persistence/src/coordinator.ts', stage: 'P', deletedBy: 'bec6805d6a' }],
+    reason: SESSION_PERSISTENCE_SEAM_DELETION, authorization: "delegate ruling, 2026-09-15 (queue item 118: FILES_DELETED, lineage of coordinator.ts, unstarted epics included)." },
+  'P6-01': {
+    deleted: [{ path: 'packages/memory/memory/src/invariant.ts', stage: 'C', deletedBy: '17ca16450f' }],
+    reason: "P6-01 declared `packages/memory/memory/src/invariant.ts`, and its own C-stage commit `17ca16450f` (2026-09-03) deleted it: the invariant checked `memory/access`, an event only this package produces, with no independent second source, which `packages/AGENTS.md` disqualifies. The package README row before that commit read \"`src/invariant.ts` | Package-owned session-event invariant: every logged `memory/access` read carries a complete access context (`must[3]`)\"; after it, the README states that no runtime invariant companion is published. The ledger row and the acceptance record are unchanged; only the registry declaration of the deleted file goes.",
+    authorization: "delegate ruling, 2026-09-15 (queue item 118: FILES_DELETED, lineage of coordinator.ts, unstarted epics included).",
+  },
 }
 
 const TEST_FILES_ADDED = {
@@ -926,6 +970,7 @@ for (const id of ids) {
     stage.files = [...stage.files, scaffold.path]
     stage.count = stage.files.length
   }
+  applyFileDeletions(id, epic, FILES_DELETED[id])
   for (const entry of clauseProvenanceFor(id)) {
     // A movement or split is always a MUST clause today; a reword names its own
     // channel, because P4-06's pair spans `must` and `acceptance`. Checking the
@@ -1082,6 +1127,11 @@ const registry = {
             epicIds: Object.keys(FILES_REPLACED).sort(),
             note: 'Files whose DECLARED path cannot hold what the clause needs, replaced with the path that can. Each entry states the mechanical reason, because only "the declared place could not hold it" justifies editing a pinned list.',
             entries: FILES_REPLACED,
+          },
+          filesDeleted: {
+            epicIds: Object.keys(FILES_DELETED).sort(),
+            note: 'Declarations of files a named commit deleted, removed from the stage that listed each and from the epic-level list once no stage does. Distinct from filesReduced, which records a decision and changes no list.',
+            entries: FILES_DELETED,
           },
           testFilesAdded: {
             epicIds: Object.keys(TEST_FILES_ADDED).sort(),

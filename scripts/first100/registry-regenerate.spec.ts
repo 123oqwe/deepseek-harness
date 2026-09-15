@@ -123,6 +123,7 @@ describe('first100 registry regeneration', () => {
     const dir = tempDir()
     const script = join(dir, 'extract-registry.mjs')
     cpSync(join(here, 'matrix-parse.mjs'), join(dir, 'matrix-parse.mjs'))
+    cpSync(join(here, 'registry-file-deletions.mjs'), join(dir, 'registry-file-deletions.mjs'))
     const text = readFileSync(EXTRACTOR, 'utf8')
     const record = "kind: 'B', baselinePath: 'packages/core/agent/src/inbox.ts', stage: 'U'"
     const epicStart = text.indexOf("'P4-06': {")

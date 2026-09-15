@@ -536,6 +536,131 @@
         }
       }
     },
+    "filesDeleted": {
+      "epicIds": [
+        "P2-07",
+        "P4-01",
+        "P4-06",
+        "P4-12",
+        "P6-01",
+        "P6-07",
+        "P6-08",
+        "P7-08",
+        "P8-05"
+      ],
+      "note": "Declarations of files a named commit deleted, removed from the stage that listed each and from the epic-level list once no stage does. Distinct from filesReduced, which records a decision and changes no list.",
+      "entries": {
+        "P4-06": {
+          "deleted": [
+            {
+              "path": "packages/session/session-persistence/src/write-behind.ts",
+              "stage": "P",
+              "deletedBy": "bec6805d6a"
+            },
+            {
+              "path": "packages/session/session-persistence/src/coordinator.ts",
+              "stage": "P",
+              "deletedBy": "bec6805d6a"
+            }
+          ],
+          "reason": "`packages/session/session-persistence/src/write-behind.ts` and `packages/session/session-persistence/src/coordinator.ts` were deleted by `bec6805d6a` (2026-08-28, \\\"refactor(session-persistence)!: handle-based seam with a lifecycle-owned write path\\\"). Both lineages were judged a deletion with the responsibilities split across the new seam, not a rename (delegate ruling, 2026-09-15; lane A's `moved` row for coordinator.ts withdrawn), so the declaration is removed rather than pointed at a successor. Applied to unstarted epics as well: a deletion with a known commit is a fact, unlike the `inbox.ts` successor that needed a judgement.",
+          "authorization": "delegate ruling, 2026-09-15 (queue item 118: FILES_DELETED, lineage of coordinator.ts, unstarted epics included)."
+        },
+        "P4-12": {
+          "deleted": [
+            {
+              "path": "packages/session/session-persistence/src/write-behind.ts",
+              "stage": "P",
+              "deletedBy": "bec6805d6a"
+            }
+          ],
+          "reason": "`packages/session/session-persistence/src/write-behind.ts` and `packages/session/session-persistence/src/coordinator.ts` were deleted by `bec6805d6a` (2026-08-28, \\\"refactor(session-persistence)!: handle-based seam with a lifecycle-owned write path\\\"). Both lineages were judged a deletion with the responsibilities split across the new seam, not a rename (delegate ruling, 2026-09-15; lane A's `moved` row for coordinator.ts withdrawn), so the declaration is removed rather than pointed at a successor. Applied to unstarted epics as well: a deletion with a known commit is a fact, unlike the `inbox.ts` successor that needed a judgement.",
+          "authorization": "delegate ruling, 2026-09-15 (queue item 118: FILES_DELETED, lineage of coordinator.ts, unstarted epics included)."
+        },
+        "P6-08": {
+          "deleted": [
+            {
+              "path": "packages/session/session-persistence/src/write-behind.ts",
+              "stage": "U",
+              "deletedBy": "bec6805d6a"
+            }
+          ],
+          "reason": "`packages/session/session-persistence/src/write-behind.ts` and `packages/session/session-persistence/src/coordinator.ts` were deleted by `bec6805d6a` (2026-08-28, \\\"refactor(session-persistence)!: handle-based seam with a lifecycle-owned write path\\\"). Both lineages were judged a deletion with the responsibilities split across the new seam, not a rename (delegate ruling, 2026-09-15; lane A's `moved` row for coordinator.ts withdrawn), so the declaration is removed rather than pointed at a successor. Applied to unstarted epics as well: a deletion with a known commit is a fact, unlike the `inbox.ts` successor that needed a judgement.",
+          "authorization": "delegate ruling, 2026-09-15 (queue item 118: FILES_DELETED, lineage of coordinator.ts, unstarted epics included)."
+        },
+        "P2-07": {
+          "deleted": [
+            {
+              "path": "packages/session/session-persistence/src/coordinator.ts",
+              "stage": "P",
+              "deletedBy": "bec6805d6a"
+            }
+          ],
+          "reason": "`packages/session/session-persistence/src/write-behind.ts` and `packages/session/session-persistence/src/coordinator.ts` were deleted by `bec6805d6a` (2026-08-28, \\\"refactor(session-persistence)!: handle-based seam with a lifecycle-owned write path\\\"). Both lineages were judged a deletion with the responsibilities split across the new seam, not a rename (delegate ruling, 2026-09-15; lane A's `moved` row for coordinator.ts withdrawn), so the declaration is removed rather than pointed at a successor. Applied to unstarted epics as well: a deletion with a known commit is a fact, unlike the `inbox.ts` successor that needed a judgement.",
+          "authorization": "delegate ruling, 2026-09-15 (queue item 118: FILES_DELETED, lineage of coordinator.ts, unstarted epics included)."
+        },
+        "P4-01": {
+          "deleted": [
+            {
+              "path": "packages/session/session-persistence/src/coordinator.ts",
+              "stage": "P",
+              "deletedBy": "bec6805d6a"
+            },
+            {
+              "path": "packages/session/session-persistence/src/coordinator.ts",
+              "stage": "F",
+              "deletedBy": "bec6805d6a"
+            }
+          ],
+          "reason": "`packages/session/session-persistence/src/write-behind.ts` and `packages/session/session-persistence/src/coordinator.ts` were deleted by `bec6805d6a` (2026-08-28, \\\"refactor(session-persistence)!: handle-based seam with a lifecycle-owned write path\\\"). Both lineages were judged a deletion with the responsibilities split across the new seam, not a rename (delegate ruling, 2026-09-15; lane A's `moved` row for coordinator.ts withdrawn), so the declaration is removed rather than pointed at a successor. Applied to unstarted epics as well: a deletion with a known commit is a fact, unlike the `inbox.ts` successor that needed a judgement.",
+          "authorization": "delegate ruling, 2026-09-15 (queue item 118: FILES_DELETED, lineage of coordinator.ts, unstarted epics included)."
+        },
+        "P6-07": {
+          "deleted": [
+            {
+              "path": "packages/session/session-persistence/src/coordinator.ts",
+              "stage": "P",
+              "deletedBy": "bec6805d6a"
+            }
+          ],
+          "reason": "`packages/session/session-persistence/src/write-behind.ts` and `packages/session/session-persistence/src/coordinator.ts` were deleted by `bec6805d6a` (2026-08-28, \\\"refactor(session-persistence)!: handle-based seam with a lifecycle-owned write path\\\"). Both lineages were judged a deletion with the responsibilities split across the new seam, not a rename (delegate ruling, 2026-09-15; lane A's `moved` row for coordinator.ts withdrawn), so the declaration is removed rather than pointed at a successor. Applied to unstarted epics as well: a deletion with a known commit is a fact, unlike the `inbox.ts` successor that needed a judgement.",
+          "authorization": "delegate ruling, 2026-09-15 (queue item 118: FILES_DELETED, lineage of coordinator.ts, unstarted epics included)."
+        },
+        "P7-08": {
+          "deleted": [
+            {
+              "path": "packages/session/session-persistence/src/coordinator.ts",
+              "stage": "U",
+              "deletedBy": "bec6805d6a"
+            }
+          ],
+          "reason": "`packages/session/session-persistence/src/write-behind.ts` and `packages/session/session-persistence/src/coordinator.ts` were deleted by `bec6805d6a` (2026-08-28, \\\"refactor(session-persistence)!: handle-based seam with a lifecycle-owned write path\\\"). Both lineages were judged a deletion with the responsibilities split across the new seam, not a rename (delegate ruling, 2026-09-15; lane A's `moved` row for coordinator.ts withdrawn), so the declaration is removed rather than pointed at a successor. Applied to unstarted epics as well: a deletion with a known commit is a fact, unlike the `inbox.ts` successor that needed a judgement.",
+          "authorization": "delegate ruling, 2026-09-15 (queue item 118: FILES_DELETED, lineage of coordinator.ts, unstarted epics included)."
+        },
+        "P8-05": {
+          "deleted": [
+            {
+              "path": "packages/session/session-persistence/src/coordinator.ts",
+              "stage": "P",
+              "deletedBy": "bec6805d6a"
+            }
+          ],
+          "reason": "`packages/session/session-persistence/src/write-behind.ts` and `packages/session/session-persistence/src/coordinator.ts` were deleted by `bec6805d6a` (2026-08-28, \\\"refactor(session-persistence)!: handle-based seam with a lifecycle-owned write path\\\"). Both lineages were judged a deletion with the responsibilities split across the new seam, not a rename (delegate ruling, 2026-09-15; lane A's `moved` row for coordinator.ts withdrawn), so the declaration is removed rather than pointed at a successor. Applied to unstarted epics as well: a deletion with a known commit is a fact, unlike the `inbox.ts` successor that needed a judgement.",
+          "authorization": "delegate ruling, 2026-09-15 (queue item 118: FILES_DELETED, lineage of coordinator.ts, unstarted epics included)."
+        },
+        "P6-01": {
+          "deleted": [
+            {
+              "path": "packages/memory/memory/src/invariant.ts",
+              "stage": "C",
+              "deletedBy": "17ca16450f"
+            }
+          ],
+          "reason": "P6-01 declared `packages/memory/memory/src/invariant.ts`, and its own C-stage commit `17ca16450f` (2026-09-03) deleted it: the invariant checked `memory/access`, an event only this package produces, with no independent second source, which `packages/AGENTS.md` disqualifies. The package README row before that commit read \"`src/invariant.ts` | Package-owned session-event invariant: every logged `memory/access` read carries a complete access context (`must[3]`)\"; after it, the README states that no runtime invariant companion is published. The ledger row and the acceptance record are unchanged; only the registry declaration of the deleted file goes.",
+          "authorization": "delegate ruling, 2026-09-15 (queue item 118: FILES_DELETED, lineage of coordinator.ts, unstarted epics included)."
+        }
+      }
+    },
     "testFilesAdded": {
       "epicIds": [
         "P1-03"
@@ -4050,10 +4175,6 @@
           "kind": "B"
         },
         {
-          "path": "packages/session/session-persistence/src/coordinator.ts",
-          "kind": "B"
-        },
-        {
           "path": "packages/sdk/protocol/src/types.ts",
           "kind": "B"
         },
@@ -4125,10 +4246,9 @@
           "nOf": null,
           "files": [
             "packages/interaction/approval-store/src/index.ts",
-            "packages/interaction/approval-store/src/sqlite.ts",
-            "packages/session/session-persistence/src/coordinator.ts"
+            "packages/interaction/approval-store/src/sqlite.ts"
           ],
-          "count": 3
+          "count": 2
         },
         "U": {
           "nOf": null,
@@ -6472,10 +6592,6 @@
           "kind": "B"
         },
         {
-          "path": "packages/session/session-persistence/src/coordinator.ts",
-          "kind": "B"
-        },
-        {
           "path": "packages/run/run/src/index.ts",
           "kind": "N"
         },
@@ -6545,10 +6661,9 @@
         "P": {
           "nOf": null,
           "files": [
-            "packages/run/run/src/index.ts",
-            "packages/session/session-persistence/src/coordinator.ts"
+            "packages/run/run/src/index.ts"
           ],
-          "count": 2
+          "count": 1
         },
         "U": {
           "nOf": null,
@@ -6562,10 +6677,9 @@
         "F": {
           "nOf": null,
           "files": [
-            "packages/run/run/tests/state-machine.spec.ts",
-            "packages/session/session-persistence/src/coordinator.ts"
+            "packages/run/run/tests/state-machine.spec.ts"
           ],
-          "count": 2
+          "count": 1
         }
       },
       "fixtures": {
@@ -7088,14 +7202,6 @@
           "kind": "B"
         },
         {
-          "path": "packages/session/session-persistence/src/write-behind.ts",
-          "kind": "B"
-        },
-        {
-          "path": "packages/session/session-persistence/src/coordinator.ts",
-          "kind": "B"
-        },
-        {
           "path": "packages/run/message-bus/src/index.ts",
           "kind": "N"
         },
@@ -7161,11 +7267,9 @@
         "P": {
           "nOf": null,
           "files": [
-            "packages/run/message-bus/src/index.ts",
-            "packages/session/session-persistence/src/write-behind.ts",
-            "packages/session/session-persistence/src/coordinator.ts"
+            "packages/run/message-bus/src/index.ts"
           ],
-          "count": 3
+          "count": 1
         },
         "U": {
           "nOf": null,
@@ -7912,10 +8016,6 @@
           "kind": "B"
         },
         {
-          "path": "packages/session/session-persistence/src/write-behind.ts",
-          "kind": "B"
-        },
-        {
           "path": "packages/action/action-manifest/src/types.ts",
           "kind": "P"
         },
@@ -7989,10 +8089,9 @@
         "P": {
           "nOf": null,
           "files": [
-            "packages/action/action-ledger/src/store.ts",
-            "packages/session/session-persistence/src/write-behind.ts"
+            "packages/action/action-ledger/src/store.ts"
           ],
-          "count": 2
+          "count": 1
         },
         "U": {
           "nOf": null,
@@ -9845,10 +9944,6 @@
           "kind": "N"
         },
         {
-          "path": "packages/memory/memory/src/invariant.ts",
-          "kind": "N"
-        },
-        {
           "path": "packages/memory/memory/tests/conformance.spec.ts",
           "kind": "N"
         },
@@ -9897,12 +9992,11 @@
           "nOf": null,
           "files": [
             "packages/memory/memory/src/types.ts",
-            "packages/memory/memory/src/invariant.ts",
             "packages/memory/memory/src/index.ts",
             "packages/memory/memory/tests/conformance.spec.ts",
             "docs/subsystems/memory.md"
           ],
-          "count": 5
+          "count": 4
         },
         "P": {
           "nOf": null,
@@ -10605,10 +10699,6 @@
           "kind": "B"
         },
         {
-          "path": "packages/session/session-persistence/src/coordinator.ts",
-          "kind": "B"
-        },
-        {
           "path": "packages/session/session-persistence/src/revision.ts",
           "kind": "B"
         },
@@ -10692,10 +10782,9 @@
           "nOf": null,
           "files": [
             "packages/session/session-persistence/src/index.ts",
-            "packages/session/session-persistence/src/coordinator.ts",
             "packages/session/session-persistence/src/revision.ts"
           ],
-          "count": 3
+          "count": 2
         },
         "U": {
           "nOf": null,
@@ -10751,10 +10840,6 @@
         },
         {
           "path": "packages/attachment/attachment/src/index.ts",
-          "kind": "B"
-        },
-        {
-          "path": "packages/session/session-persistence/src/write-behind.ts",
           "kind": "B"
         },
         {
@@ -10847,10 +10932,9 @@
           "nOf": null,
           "files": [
             "packages/storage/storage/src/index.ts",
-            "packages/session/session-persistence/src/write-behind.ts",
             "packages/workspace/workspace/src/entity.ts"
           ],
-          "count": 3
+          "count": 2
         },
         "F": {
           "nOf": null,
@@ -12190,10 +12274,6 @@
           "kind": "B"
         },
         {
-          "path": "packages/session/session-persistence/src/coordinator.ts",
-          "kind": "B"
-        },
-        {
           "path": "packages/llm/llm/src/assembler.ts",
           "kind": "B"
         },
@@ -12288,10 +12368,9 @@
           "nOf": null,
           "files": [
             "packages/core/session/src/surface.ts",
-            "packages/session/session-persistence/src/coordinator.ts",
             "packages/llm/llm/src/assembler.ts"
           ],
-          "count": 3
+          "count": 2
         },
         "F": {
           "nOf": null,
@@ -13270,10 +13349,6 @@
           "kind": "B"
         },
         {
-          "path": "packages/session/session-persistence/src/coordinator.ts",
-          "kind": "B"
-        },
-        {
           "path": "packages/sdk/protocol/src/event-stream.ts",
           "kind": "N"
         },
@@ -13344,10 +13419,9 @@
           "nOf": null,
           "files": [
             "packages/api/event-stream/src/index.ts",
-            "packages/api/event-stream/src/store.ts",
-            "packages/session/session-persistence/src/coordinator.ts"
+            "packages/api/event-stream/src/store.ts"
           ],
-          "count": 3
+          "count": 2
         },
         "U": {
           "nOf": null,

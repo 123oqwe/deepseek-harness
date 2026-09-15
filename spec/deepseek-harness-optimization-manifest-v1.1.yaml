@@ -1427,9 +1427,9 @@ remainingPending:
   pendingLayerAdjudication: 0
   unapprovedThresholds: 0
 fileOwnership:
-  writtenFiles: 435
+  writtenFiles: 434
   statusCounts:
-    sole: 408
+    sole: 407
     sequential: 23
     serialized: 4
     conflict: 0
@@ -2823,8 +2823,6 @@ epics:
       kind: "B"
     - path: "packages/interaction/user-approval/src/types.ts"
       kind: "B"
-    - path: "packages/session/session-persistence/src/coordinator.ts"
-      kind: "B"
     - path: "packages/sdk/protocol/src/types.ts"
       kind: "B"
     - path: "packages/interaction/approval-store/src/index.ts"
@@ -2842,8 +2840,8 @@ epics:
       count: 3
     P:
       nOf: null
-      files: ["packages/interaction/approval-store/src/index.ts", "packages/interaction/approval-store/src/sqlite.ts", "packages/session/session-persistence/src/coordinator.ts"]
-      count: 3
+      files: ["packages/interaction/approval-store/src/index.ts", "packages/interaction/approval-store/src/sqlite.ts"]
+      count: 2
     U:
       nOf: null
       files: ["packages/interaction/user-approval/src/index.ts", "packages/interaction/user-approval/src/types.ts"]
@@ -3797,8 +3795,6 @@ epics:
       kind: "B"
     - path: "packages/workflow/workflow/src/types.ts"
       kind: "B"
-    - path: "packages/session/session-persistence/src/coordinator.ts"
-      kind: "B"
     - path: "packages/run/run/src/index.ts"
       kind: "N"
     - path: "packages/run/run/src/types.ts"
@@ -3816,16 +3812,16 @@ epics:
       count: 5
     P:
       nOf: null
-      files: ["packages/run/run/src/index.ts", "packages/session/session-persistence/src/coordinator.ts"]
-      count: 2
+      files: ["packages/run/run/src/index.ts"]
+      count: 1
     U:
       nOf: null
       files: ["packages/core/agent/src/types.ts", "packages/workflow/workflow/src/types.ts", "packages/run/run/src/index.ts"]
       count: 3
     F:
       nOf: null
-      files: ["packages/run/run/tests/state-machine.spec.ts", "packages/session/session-persistence/src/coordinator.ts"]
-      count: 2
+      files: ["packages/run/run/tests/state-machine.spec.ts"]
+      count: 1
     fixtures:
     contract: "tests/first100/fixtures/P4-01.contract.spec.ts"
     provider: "tests/first100/fixtures/P4-01.provider.spec.ts"
@@ -4050,10 +4046,6 @@ epics:
       baselinePath: "packages/core/agent/src/inbox.ts"
     - path: "packages/core/agent/src/dispatch.ts"
       kind: "B"
-    - path: "packages/session/session-persistence/src/write-behind.ts"
-      kind: "B"
-    - path: "packages/session/session-persistence/src/coordinator.ts"
-      kind: "B"
     - path: "packages/run/message-bus/src/index.ts"
       kind: "N"
     - path: "packages/run/message-bus/src/inbox.ts"
@@ -4069,8 +4061,8 @@ epics:
       count: 4
     P:
       nOf: null
-      files: ["packages/run/message-bus/src/index.ts", "packages/session/session-persistence/src/write-behind.ts", "packages/session/session-persistence/src/coordinator.ts"]
-      count: 3
+      files: ["packages/run/message-bus/src/index.ts"]
+      count: 1
     U:
       nOf: null
       files: ["packages/core/agent-loop/src/inbox.ts", "packages/core/agent/src/dispatch.ts"]
@@ -4372,8 +4364,6 @@ epics:
       kind: "B"
     - path: "packages/core/tools/src/types.ts"
       kind: "B"
-    - path: "packages/session/session-persistence/src/write-behind.ts"
-      kind: "B"
     - path: "packages/action/action-manifest/src/types.ts"
       kind: "P"
     - path: "packages/action/action-ledger/src/index.ts"
@@ -4391,8 +4381,8 @@ epics:
       count: 5
     P:
       nOf: null
-      files: ["packages/action/action-ledger/src/store.ts", "packages/session/session-persistence/src/write-behind.ts"]
-      count: 2
+      files: ["packages/action/action-ledger/src/store.ts"]
+      count: 1
     U:
       nOf: null
       files: ["packages/core/agent-loop/src/tool-calls.ts", "packages/action/action-ledger/src/index.ts"]
@@ -5146,8 +5136,6 @@ epics:
       kind: "N"
     - path: "packages/memory/memory/src/types.ts"
       kind: "N"
-    - path: "packages/memory/memory/src/invariant.ts"
-      kind: "N"
     - path: "packages/memory/memory/tests/conformance.spec.ts"
       kind: "N"
     - path: "docs/subsystems/memory.md"
@@ -5155,8 +5143,8 @@ epics:
     stages:
     C:
       nOf: null
-      files: ["packages/memory/memory/src/types.ts", "packages/memory/memory/src/invariant.ts", "packages/memory/memory/src/index.ts", "packages/memory/memory/tests/conformance.spec.ts", "docs/subsystems/memory.md"]
-      count: 5
+      files: ["packages/memory/memory/src/types.ts", "packages/memory/memory/src/index.ts", "packages/memory/memory/tests/conformance.spec.ts", "docs/subsystems/memory.md"]
+      count: 4
     P:
       nOf: null
       files: ["packages/memory/memory/src/index.ts", "packages/session-query/session-query/src/types.ts"]
@@ -5451,8 +5439,6 @@ epics:
     files:
     - path: "packages/session/session-persistence/src/index.ts"
       kind: "B"
-    - path: "packages/session/session-persistence/src/coordinator.ts"
-      kind: "B"
     - path: "packages/session/session-persistence/src/revision.ts"
       kind: "B"
     - path: "packages/session-query/session-query/src/cursor.ts"
@@ -5476,8 +5462,8 @@ epics:
       count: 5
     P:
       nOf: null
-      files: ["packages/session/session-persistence/src/index.ts", "packages/session/session-persistence/src/coordinator.ts", "packages/session/session-persistence/src/revision.ts"]
-      count: 3
+      files: ["packages/session/session-persistence/src/index.ts", "packages/session/session-persistence/src/revision.ts"]
+      count: 2
     U:
       nOf: null
       files: ["packages/session-query/session-query/src/cursor.ts", "packages/session-query/session-query/src/filters.ts", "packages/core/session/src/repair.ts", "packages/session/session-lifecycle/src/index.ts"]
@@ -5511,8 +5497,6 @@ epics:
       kind: "B"
     - path: "packages/attachment/attachment/src/index.ts"
       kind: "B"
-    - path: "packages/session/session-persistence/src/write-behind.ts"
-      kind: "B"
     - path: "packages/workspace/workspace/src/entity.ts"
       kind: "B"
     - path: "packages/storage/storage-encryption/src/index.ts"
@@ -5538,8 +5522,8 @@ epics:
       count: 4
     U:
       nOf: null
-      files: ["packages/storage/storage/src/index.ts", "packages/session/session-persistence/src/write-behind.ts", "packages/workspace/workspace/src/entity.ts"]
-      count: 3
+      files: ["packages/storage/storage/src/index.ts", "packages/workspace/workspace/src/entity.ts"]
+      count: 2
     F:
       nOf: null
       files: ["packages/audit/audit-ledger/tests/tamper.e2e.ts", "packages/audit/audit-ledger/src/hash-chain.ts"]
@@ -6073,8 +6057,6 @@ epics:
       kind: "B"
     - path: "packages/core/session/src/surface.ts"
       kind: "B"
-    - path: "packages/session/session-persistence/src/coordinator.ts"
-      kind: "B"
     - path: "packages/llm/llm/src/assembler.ts"
       kind: "B"
     - path: "packages/test-support/llm-replay/src/index.ts"
@@ -6102,8 +6084,8 @@ epics:
       count: 3
     U:
       nOf: null
-      files: ["packages/core/session/src/surface.ts", "packages/session/session-persistence/src/coordinator.ts", "packages/llm/llm/src/assembler.ts"]
-      count: 3
+      files: ["packages/core/session/src/surface.ts", "packages/llm/llm/src/assembler.ts"]
+      count: 2
     F:
       nOf: null
       files: ["packages/evaluation/replay/tests/replay.e2e.ts", "packages/evaluation/replay/src/diff.ts"]
@@ -6501,8 +6483,6 @@ epics:
       kind: "B"
     - path: "packages/api/remotes/src/remote-events.ts"
       kind: "B"
-    - path: "packages/session/session-persistence/src/coordinator.ts"
-      kind: "B"
     - path: "packages/sdk/protocol/src/event-stream.ts"
       kind: "N"
     - path: "packages/api/event-stream/src/index.ts"
@@ -6518,8 +6498,8 @@ epics:
       count: 4
     P:
       nOf: null
-      files: ["packages/api/event-stream/src/index.ts", "packages/api/event-stream/src/store.ts", "packages/session/session-persistence/src/coordinator.ts"]
-      count: 3
+      files: ["packages/api/event-stream/src/index.ts", "packages/api/event-stream/src/store.ts"]
+      count: 2
     U:
       nOf: null
       files: ["packages/sdk/server/src/server.ts", "packages/sdk/client/src/client.ts"]
