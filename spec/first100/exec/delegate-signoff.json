@@ -522,6 +522,14 @@
       "delegateSession": "first100-delegate-78",
       "signedAtUtc": "2026-09-15T07:58:18.289Z",
       "reason": "verify-make-vs-use MISMATCHED: P6-01 owns two standards by assignment (Mem0 OSS API op names add/search/get/update/delete/history (alignment); dsh-memory-protocol v1 (dsh-memento)) with no frozen case naming them, and P2-05 has started, so the backfill deadline has passed. The PASS sign-off of 2026-09-15T07:15Z was recorded without running that gate — the delegate's error. Re-sign after a P6-01 vocabulary supplement naming both standards is frozen and observed."
+    },
+    {
+      "epic": "P6-01",
+      "rowDigestSha256": "e859fb7f35e3b9d2f2781739b939e58904024fc66a8467f119a0194ce123dc10",
+      "conclusion": "PASS",
+      "delegateSession": "first100-delegate-78",
+      "signedAtUtc": "2026-09-15T10:45:22.219Z",
+      "reason": "Delegate re-read 2026-09-15 after the records change: C/P/U/F GREEN (runs 34088363628, 34573807027 x2, 33897371649), U.1 GREEN on run 34928038271 @ D; acceptance[0..2] cited; 0 open findings; verify-make-vs-use now reads P6-01 VERIFIED — the two by-assignment standards (Mem0 OSS API op names; dsh-memory-protocol v1) are recorded as measured deviations per §12.85 note 47 (the implementation's own propose/query/get/revise/forget/export vocabulary is pinned by live frozen cases: 40 distinct of its 109 live cases name at least one of the six ops by word-boundary match, as recorded in clause-subject-audit.json; neither standard exists in the tree), not pinned by a vocabulary case; verify-adapt-dispositions, verify-frozen-titles-resolvable and verify-freeze-in-candidate-tree green on this tree; the prior PASS of 07:15Z was withdrawn because it was recorded without running verify-make-vs-use."
     }
   ]
 }
