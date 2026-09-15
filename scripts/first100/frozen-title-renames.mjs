@@ -46,14 +46,23 @@ const RENAMES_PATH = resolve(REPO_ROOT, 'spec/first100/exec/frozen-title-renames
  * another. Titles are long and specific enough that a collision is unlikely —
  * and "unlikely" is the wrong standard for the register that decides whether a
  * frozen promise was kept.
- * @returns the mapping; empty when the register is absent.
+ *
+ * A retired entry is left out. It stays in the register so the wrong call
+ * stays visible, but it covers nothing (§12.68): its old and new titles assert
+ * different properties, so resolving one through the other would report a
+ * frozen title with no live subject as present.
+ * @returns the mapping of every rename that is not retired; empty when the register is absent.
  */
 export function registeredRenames() {
-  if (!existsSync(RENAMES_PATH)) return new Map()
-  return new Map(
-    JSON.parse(readFileSync(RENAMES_PATH, 'utf8')).entries
-      .map(entry => [`${entry.epic}|${entry.stage}|${entry.oldTitle}`, entry.newTitle]),
-  )
+  const renames = new Map()
+  if (!existsSync(RENAMES_PATH)) return renames
+  for (const entry of JSON.parse(readFileSync(RENAMES_PATH, 'utf8')).entries) {
+    // The same test `verify-frozen-titles-resolvable` applies, kept identical so
+    // the two never disagree about which entries are retired.
+    if (entry.retired !== undefined) continue
+    renames.set(`${entry.epic}|${entry.stage}|${entry.oldTitle}`, entry.newTitle)
+  }
+  return renames
 }
 
 /**
