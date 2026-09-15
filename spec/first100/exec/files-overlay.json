@@ -99,6 +99,15 @@
     },
     {
       "epic": "P0-04",
+      "path": "architecture.layers.json",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "The layer-order contract file the U stage reads; it lives at the repository root (tests/first100/architecture.layers.json no longer exists at the re-anchored tree). Re-pointed 2026-09-15."
+    },
+    {
+      "epic": "P0-04",
       "path": "scripts/architecture/layer-order.ts",
       "kind": "source",
       "stages": [
@@ -133,14 +142,6 @@
     {
       "epic": "P0-04",
       "path": "tests/architecture/check-layer-deps.spec.ts",
-      "kind": "test",
-      "stages": [
-        "U"
-      ]
-    },
-    {
-      "epic": "P0-04",
-      "path": "tests/first100/architecture.layers.json",
       "kind": "test",
       "stages": [
         "U"
@@ -211,15 +212,6 @@
       "stages": [
         "P"
       ]
-    },
-    {
-      "epic": "P1-01",
-      "path": "packages/plugin/plugin-manifest/src/invariant.ts",
-      "kind": "source",
-      "stages": [
-        "C"
-      ],
-      "reason": "The published ./invariant companion. Package rules require the companion to live beside the manifest module it observes; the registry declared the manifest module alone."
     },
     {
       "epic": "P1-01",
@@ -2272,13 +2264,12 @@
     },
     {
       "epic": "P4-06",
-      "path": "packages/collaboration/mailbox/src/index.ts",
+      "path": "packages/core/agent-loop/src/inbox.ts",
       "kind": "source",
       "stages": [
-        "U.2",
-        "P.4"
+        "U.3"
       ],
-      "reason": "P5-11 OWNS THIS FILE. Changed here so its second copy of the dedup rule becomes an import of the shared one; the mailbox keeps its own address check and its exported names, and P5-11's four live frozen cases pass unchanged in the same observation (BLOCKED-059 precedent)."
+      "reason": "Successor of core/agent/src/inbox.ts, which upstream deleted in the re-anchor; ReactLoopInbox now lives here and is reached from agent-loop/src/agent.ts and the runtime context (S2 ruling, 4.4d record). The parent inbox is the consumer must[2]'s (source, messageId, epoch) idempotency is judged at; the freeze `files` entry was re-pointed 2026-09-15."
     },
     {
       "epic": "P4-06",
@@ -2323,7 +2314,8 @@
       "path": "packages/run/message-bus/src/mailbox-delivery.ts",
       "kind": "source",
       "stages": [
-        "U.2"
+        "U.2",
+        "P.4"
       ],
       "reason": "must[2]'s production call site: a real mailbox arrival decided against the durable consumed set. It lives in this package rather than in dsh-mailbox because the store is orchestration-runtime and the mailbox is a capability definition (ruling §12.5 B)."
     },
@@ -2449,6 +2441,15 @@
     },
     {
       "epic": "P4-07",
+      "path": "packages/collaboration/lease-contract/src/run-lease.ts",
+      "kind": "source",
+      "stages": [
+        "U.1"
+      ],
+      "reason": "Created by this epic in the U rebuild (§12.15-2): the run-side view of a lease — acquire, renew, and may-I-write. It exists rather than living inline in `host.ts` so `mayWrite` reads through the lease package’s own `checkFencing` instead of comparing epochs again; a second implementation of \"is this token current\" would be BLOCKED-136’s shape on the check that decides whether a stale worker may write. Moved with the package rename workflow-worker-thread → collaboration/lease-contract (af06cbede8, R065, same three exports); the freeze `files` entry was re-pointed 2026-09-15."
+    },
+    {
+      "epic": "P4-07",
       "path": "packages/core/agent-loop/src/tool-calls.ts",
       "kind": "source",
       "stages": [
@@ -2521,15 +2522,6 @@
     },
     {
       "epic": "P4-07",
-      "path": "packages/workflow/workflow-worker-thread/src/run-lease.ts",
-      "kind": "source",
-      "stages": [
-        "U.1"
-      ],
-      "reason": "Created by this epic in the U rebuild (§12.15-2): the run-side view of a lease — acquire, renew, and may-I-write. It exists rather than living inline in `host.ts` so `mayWrite` reads through the lease package’s own `checkFencing` instead of comparing epochs again; a second implementation of \"is this token current\" would be BLOCKED-136’s shape on the check that decides whether a stale worker may write."
-    },
-    {
-      "epic": "P4-07",
       "path": "packages/workflow/workflow-worker-thread/tests/integration.spec.ts",
       "kind": "test",
       "stages": [
@@ -2544,6 +2536,15 @@
         "U.1"
       ],
       "reason": "Two additions to `WorkflowErrorCode`: `LEASE_STORE_UNAVAILABLE` and `RUN_HELD_BY_ANOTHER_HOST`. No existing member changed. They belong to the seam DEFINITION rather than to the worker-thread provider because the code union is the seam vocabulary — a provider inventing its own codes would make the seam callers switch on strings the definition does not know — and acceptance[2] needs a caller to tell a store outage from an ordinary refusal, which an untyped throw cannot carry. NOT labelled HOT ZONE: an earlier draft was, and the citation gate refused it for naming `HEAD` rather than a sha. Checking rather than arguing with my own gate: this file is not on §2.D hot-zone list (P3-01, P3-05, P3-07, P5-05, P5-06), so the label was over-classification, and a label applied outside its defined set makes the five that carry it mean less."
+    },
+    {
+      "epic": "P4-08",
+      "path": "packages/collaboration/workflow-journal/src/observer.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "The observer that turns journal records into an observable stream, which the U stage's clause is about. The package moved to collaboration/workflow-journal; the freeze `files` entry was re-pointed 2026-09-15."
     },
     {
       "epic": "P4-08",
@@ -2587,24 +2588,6 @@
       "stages": [
         "P"
       ]
-    },
-    {
-      "epic": "P4-08",
-      "path": "packages/workflow/workflow-journal/src/index.ts",
-      "kind": "source",
-      "stages": [
-        "U"
-      ],
-      "reason": "The package moved to `packages/collaboration/workflow-journal` under §12.22-1 (BLOCKED-149) and the registry's declared paths moved with it. This entry's observation is EARLIER than the move and cites the path as it existed when the cell was greened; rewriting it would restate what a past CI run saw, which is provenance rather than a file list. The path is therefore outside the current declaration by history, not by scope."
-    },
-    {
-      "epic": "P4-08",
-      "path": "packages/workflow/workflow-journal/src/observer.ts",
-      "kind": "source",
-      "stages": [
-        "U"
-      ],
-      "reason": "The observer that turns journal records into an observable stream, which the U stage's clause is about."
     },
     {
       "epic": "P4-08",
@@ -3038,6 +3021,15 @@
     },
     {
       "epic": "P5-10",
+      "path": "packages/core/agent-loop/src/inbox.ts",
+      "kind": "source",
+      "stages": [
+        "U.1"
+      ],
+      "reason": "Successor of core/agent/src/inbox.ts (upstream deleted it in the re-anchor; ReactLoopInbox lives here now). The inbox is where a promoted control message (only a cancel) lands ahead of ordinary traffic, which is what U.1 observes; the freeze `files` entry was re-pointed 2026-09-15."
+    },
+    {
+      "epic": "P5-10",
       "path": "packages/core/agent-loop/tests/arrival-dedup.spec.ts",
       "kind": "test",
       "stages": [
@@ -3111,15 +3103,6 @@
       "stages": [
         "U"
       ]
-    },
-    {
-      "epic": "P5-11",
-      "path": "packages/collaboration/mailbox/src/index.ts",
-      "kind": "source",
-      "stages": [
-        "U"
-      ],
-      "reason": "Cited by the superseded P5-11.U.1 and by two live P4-06 entries, and the file no longer exists: `@deepseek-ai/dsh-mailbox` was retired into `@deepseek-ai/dsh-message-bus` under §12.27-2. A freeze entry is append-only, so the citation stands as the record of what those entries observed; `FILES_REPLACED['P5-11']` carries the path forward for the registry."
     },
     {
       "epic": "P5-11",
