@@ -306,6 +306,12 @@ export interface Adjudication {
         stage: 'C' | 'P' | 'U' | 'F'
         declaredPath: string
         approvedPath: string
+        /**
+         * `substitution` when approvedPath replaces declaredPath; `widening` when
+         * declaredPath stays a deliverable and approvedPath is added. Required:
+         * `files-overlay.mjs` `patchEntries` refuses an entry without it.
+         */
+        kind: 'widening' | 'substitution'
         reason: string
         approvedAt: string
         basis: string

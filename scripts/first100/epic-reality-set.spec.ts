@@ -8,7 +8,7 @@ import { realitySet } from './epic-reality-set.mjs'
 const declared = 'packages/demo/thing/tests/declared.e2e.ts'
 const approved = 'packages/demo/thing/tests/declared.e2e.spec.ts'
 const epic = { id: 'P9-99', files: [{ path: 'packages/demo/thing/src/declared.ts' }], stages: { C: { files: [declared] } } }
-const patches = [{ epic: 'P9-99', stage: 'C', declaredPath: declared, approvedPath: approved }]
+const patches = [{ epic: 'P9-99', stage: 'C', declaredPath: declared, approvedPath: approved, kind: 'substitution' as const }]
 
 describe('realitySet', () => {
   it('adds the path a patch approves and keeps the declared one', () => {

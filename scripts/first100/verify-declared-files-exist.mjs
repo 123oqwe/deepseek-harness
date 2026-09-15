@@ -55,9 +55,11 @@ export function missingFreezeFiles(entries, exists, basenameIndex) {
  * Declarations are read through `files-overlay.mjs` `resolveDeclaredPaths`, the
  * resolution the overlay and the reality set share. A declared path that exists
  * is satisfied. One that does not is declared-missing when no approved patch
- * substitutes for it, and resolved-missing when patches do but at least one of
- * their approved paths is absent too: each approved path is a deliverable its
- * patch approved, so one absent path is one absent deliverable.
+ * applies to it, or when a widening patch does: a widening keeps the declared
+ * path a deliverable, so an approved path beside it does not account for its
+ * absence. It is resolved-missing when at least one approved path is absent
+ * too: each approved path is a deliverable its patch approved, so one absent
+ * path is one absent deliverable. A widening declaration can be both.
  * @param registry - the parsed registry.
  * @param acceptedIds - ids of ACCEPTED epics.
  * @param exists - whether a repo-relative path exists in the tree.
@@ -70,12 +72,9 @@ export function missingAcceptedRegistryRefs(registry, acceptedIds, exists, patch
   const resolvedMissing = []
   for (const epic of registry.epics) {
     if (!acceptedIds.has(epic.id)) continue
-    for (const { where, declaredPath, approvedPaths } of resolveDeclaredPaths(epic, patches)) {
+    for (const { where, declaredPath, approvedPaths, widening } of resolveDeclaredPaths(epic, patches)) {
       if (exists(declaredPath)) continue
-      if (approvedPaths.length === 0) {
-        declaredMissing.push({ where, path: declaredPath })
-        continue
-      }
+      if (approvedPaths.length === 0 || widening) declaredMissing.push({ where, path: declaredPath })
       const absentApprovedPaths = approvedPaths.filter(path => !exists(path))
       if (absentApprovedPaths.length > 0) resolvedMissing.push({ where, path: declaredPath, absentApprovedPaths })
     }
@@ -99,7 +98,7 @@ function main() {
   const { declaredMissing, resolvedMissing } = missingAcceptedRegistryRefs(JSON.parse(readFileSync(REGISTRY_PATH, 'utf8')), accepted, exists, patches)
   if (declaredMissing.length > 0) {
     console.log(`verify-declared-files-exist: ${String(declaredMissing.length)} registry file reference(s) of ACCEPTED epics are absent with no `
-      + `deliverable-path patch (declared-missing, informational):\n  ${declaredMissing.map(({ where, path }) => `${where} ${path}`).join('\n  ')}`)
+      + `substituting patch, or under a widening patch (declared-missing, informational):\n  ${declaredMissing.map(({ where, path }) => `${where} ${path}`).join('\n  ')}`)
   }
   if (resolvedMissing.length > 0) {
     console.log(`verify-declared-files-exist: ${String(resolvedMissing.length)} registry file reference(s) of ACCEPTED epics are absent and so is `

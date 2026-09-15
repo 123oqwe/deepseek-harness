@@ -210,24 +210,32 @@ describe('compareCommittedOverlay', () => {
 describe('declared paths through the deliverable-path patches, the one resolution the overlay, the reality set and the declared-files gate share', () => {
   const declared = 'packages/demo/thing/tests/declared.spec.ts'
   const approved = 'packages/demo/thing/tests/declared.e2e.spec.ts'
-  const patch = (fields: Record<string, string>) => ({ epic: 'P9-99', stage: 'C', declaredPath: declared, approvedPath: approved, ...fields })
+  const patch = (fields: { stage?: string; approvedPath?: string; kind?: 'widening' | 'substitution' }) => ({ epic: 'P9-99', stage: 'C', declaredPath: declared, approvedPath: approved, kind: 'substitution' as const, ...fields })
 
   it('reads a patch entry without an epic field under its own key, as generate-specs does', () => {
-    const adjudication = { deliverablePathPatches: { entries: { 'P9-99': { stage: 'C', declaredPath: 'a.ts', approvedPath: 'b.ts' } } } }
-    expect(patchEntries(adjudication)).toStrictEqual([{ stage: 'C', declaredPath: 'a.ts', approvedPath: 'b.ts', epic: 'P9-99' }])
+    const adjudication = { deliverablePathPatches: { entries: { 'P9-99': { stage: 'C', declaredPath: 'a.ts', approvedPath: 'b.ts', kind: 'substitution' as const } } } }
+    expect(patchEntries(adjudication)).toStrictEqual([{ stage: 'C', declaredPath: 'a.ts', approvedPath: 'b.ts', kind: 'substitution', epic: 'P9-99' }])
   })
 
   it('refuses an approvedPath that carries whitespace or an anchor, naming the entry', () => {
-    const entry = (approvedPath: string) => ({ deliverablePathPatches: { entries: { 'P9-99-C-bad': { epic: 'P9-99', stage: 'C', declaredPath: declared, approvedPath } } } })
+    const entry = (approvedPath: string) => ({ deliverablePathPatches: { entries: { 'P9-99-C-bad': { epic: 'P9-99', stage: 'C', declaredPath: declared, approvedPath, kind: 'substitution' as const } } } })
     expect(() => patchEntries(entry('packages/demo/a.ts + docs/b.md'))).toThrow('P9-99-C-bad')
     expect(() => patchEntries(entry('docs/glossary.md#capability-seam'))).toThrow('no whitespace or # anchor')
     expect(patchEntries(entry('docs/glossary.md')).map(patch => patch.approvedPath)).toStrictEqual(['docs/glossary.md'])
   })
 
+  it('refuses a patch entry whose kind is missing or misspelt, naming the entry', () => {
+    const entry = (fields: Record<string, string>) => ({ deliverablePathPatches: { entries: { 'P9-99-C-kind': { epic: 'P9-99', stage: 'C', declaredPath: declared, approvedPath: approved, ...fields } } } }) as unknown as Parameters<typeof patchEntries>[0]
+    expect(() => patchEntries(entry({}))).toThrow('P9-99-C-kind')
+    expect(() => patchEntries(entry({ Kind: 'widening' }))).toThrow('must be "widening" or "substitution"')
+    expect(() => patchEntries(entry({ kind: 'widen' }))).toThrow('"widen"')
+    expect(patchEntries(entry({ kind: 'widening' })).map(p => p.kind)).toStrictEqual(['widening'])
+  })
+
   it('resolves a stage declaration through every patch for that stage, and not through a patch for another stage', () => {
     const second = 'packages/demo/thing/tests/second.spec.ts'
     const records = resolveDeclaredPaths(registry.epics[0]!, [patch({}), patch({ approvedPath: second }), patch({ stage: 'U', approvedPath: 'packages/demo/thing/tests/other.spec.ts' })])
-    expect(records.find(record => record.where === 'P9-99.C')).toStrictEqual({ where: 'P9-99.C', declaredPath: declared, approvedPaths: [approved, second] })
+    expect(records.find(record => record.where === 'P9-99.C')).toStrictEqual({ where: 'P9-99.C', declaredPath: declared, approvedPaths: [approved, second], widening: false })
   })
 
   it('keeps the declared path beside the approved one, so a freeze entry that still cites it stays declared', () => {

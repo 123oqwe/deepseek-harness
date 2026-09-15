@@ -63,7 +63,7 @@ describe('missingAcceptedRegistryRefs', () => {
   const approved = 'packages/demo/thing/src/here.ts'
   const absentTarget = 'packages/demo/thing/tests/never.e2e.spec.ts'
   const patchedRegistry = { epics: [{ id: 'P9-98', files: [{ path: declared }], stages: { C: { files: [declared] }, F: { files: [declared] } } }] }
-  const patch = (fields: Record<string, string>) => ({ epic: 'P9-98', stage: 'C', declaredPath: declared, approvedPath: approved, ...fields })
+  const patch = (fields: { epic?: string; stage?: string; approvedPath?: string; kind?: 'widening' | 'substitution' }) => ({ epic: 'P9-98', stage: 'C', declaredPath: declared, approvedPath: approved, kind: 'substitution' as const, ...fields })
 
   it('reports nothing for a stage reference whose patch target exists', () => {
     const { declaredMissing, resolvedMissing } = missingAcceptedRegistryRefs(patchedRegistry, new Set(['P9-98']), exists, [patch({})])
@@ -83,6 +83,23 @@ describe('missingAcceptedRegistryRefs', () => {
   it('reports resolved-missing, naming the absent target, when one of several approved paths is absent', () => {
     expect(missingAcceptedRegistryRefs(patchedRegistry, new Set(['P9-98']), exists, [patch({}), patch({ approvedPath: absentTarget })]).resolvedMissing)
       .toContainEqual({ where: 'P9-98.C', path: declared, absentApprovedPaths: [absentTarget] })
+  })
+
+  it('reports an absent declared path under a widening patch as declared-missing, although its approved path exists', () => {
+    const { declaredMissing, resolvedMissing } = missingAcceptedRegistryRefs(patchedRegistry, new Set(['P9-98']), exists, [patch({ kind: 'widening' })])
+    expect(declaredMissing).toContainEqual({ where: 'P9-98.C', path: declared })
+    expect(resolvedMissing.map(row => row.where)).not.toContain('P9-98.C')
+  })
+
+  it('still reports it when a substitution and a widening patch share the declaration, since the widening keeps the path a deliverable', () => {
+    expect(missingAcceptedRegistryRefs(patchedRegistry, new Set(['P9-98']), exists, [patch({}), patch({ kind: 'widening', approvedPath: 'packages/other/moved/src/gone.ts' })]).declaredMissing)
+      .toContainEqual({ where: 'P9-98.C', path: declared })
+  })
+
+  it('stays silent for an absent declared path under a substitution patch whose approved path exists', () => {
+    const { declaredMissing, resolvedMissing } = missingAcceptedRegistryRefs(patchedRegistry, new Set(['P9-98']), exists, [patch({ kind: 'substitution' })])
+    expect(declaredMissing).not.toContainEqual({ where: 'P9-98.C', path: declared })
+    expect(resolvedMissing.map(row => row.where)).not.toContain('P9-98.C')
   })
 
   it('does not apply a patch of another epic', () => {

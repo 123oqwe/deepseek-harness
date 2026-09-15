@@ -66,7 +66,11 @@ export function classifyOverlayPath(path) {
  * A patch entry's `epic` falls back to its own key, the way generate-specs reads it.
  * Every reader uses an `approvedPath` as one repository path, so a value that
  * carries whitespace or a `#` anchor is refused here rather than read as a file
- * that does not exist.
+ * that does not exist. Every entry states its `kind`: `substitution` when the
+ * approved path replaces the declared one, `widening` when the declared path
+ * stays a deliverable and the approved path is added beside it. There is no
+ * default, so a missing or misspelt field is refused here instead of being read
+ * as one of the two.
  * @param adjudication - the parsed `tests/first100/adjudication.json`.
  * @returns the patch entries.
  */
@@ -74,6 +78,9 @@ export function patchEntries(adjudication) {
   return Object.entries(adjudication.deliverablePathPatches?.entries ?? {}).map(([key, patch]) => {
     if (/\s|#/u.test(patch.approvedPath)) {
       throw new Error(`deliverablePathPatches.entries[${JSON.stringify(key)}].approvedPath must be one repository path, with no whitespace or # anchor: ${JSON.stringify(patch.approvedPath)}`)
+    }
+    if (patch.kind !== 'widening' && patch.kind !== 'substitution') {
+      throw new Error(`deliverablePathPatches.entries[${JSON.stringify(key)}].kind must be "widening" or "substitution": ${JSON.stringify(patch.kind)}`)
     }
     return { ...patch, epic: patch.epic ?? key }
   })
@@ -90,16 +97,20 @@ export function patchEntries(adjudication) {
  * so all of them apply. The overlay, the reality set and
  * verify-declared-files-exist all read declarations through this function, so
  * the three cannot resolve a patch differently.
+ *
+ * A declaration is `widening` when any patch that applies to it is a widening:
+ * one patch saying the declared path is still a deliverable is not made false by
+ * another patch on the same declaration substituting for it.
  * @param epic - the registry row.
  * @param patches - the patch entries, from {@link patchEntries}.
- * @returns one `{ where, declaredPath, approvedPaths }` per declaration; `approvedPaths` is empty when no patch applies.
+ * @returns one `{ where, declaredPath, approvedPaths, widening }` per declaration; `approvedPaths` is empty and `widening` false when no patch applies.
  */
 export function resolveDeclaredPaths(epic, patches) {
   const resolveOne = (stage, where, declaredPath) => {
-    const approvedPaths = patches
+    const applicable = patches
       .filter(p => p.epic === epic.id && p.declaredPath === declaredPath && (stage === undefined || p.stage === stage))
-      .map(p => p.approvedPath)
-    return { where, declaredPath, approvedPaths: [...new Set(approvedPaths)] }
+    const approvedPaths = applicable.map(p => p.approvedPath)
+    return { where, declaredPath, approvedPaths: [...new Set(approvedPaths)], widening: applicable.some(p => p.kind === 'widening') }
   }
   const records = (epic.files ?? []).map(file => resolveOne(undefined, epic.id, file.path))
   for (const [stage, spec] of Object.entries(epic.stages ?? {})) {

@@ -37,6 +37,8 @@ export interface DeliverablePathPatch {
   readonly stage: string
   readonly declaredPath: string
   readonly approvedPath: string
+  /** `substitution`: the approved path replaces the declared one. `widening`: the declared path stays a deliverable and the approved path is added. */
+  readonly kind: 'widening' | 'substitution'
 }
 
 /** One registry declaration and the paths approved patches substitute for it. */
@@ -44,6 +46,8 @@ export interface ResolvedDeclaration {
   where: string
   declaredPath: string
   approvedPaths: string[]
+  /** True when any applicable patch is a widening, so the declared path is still a deliverable. */
+  widening: boolean
 }
 
 export function patchEntries(adjudication: { deliverablePathPatches?: { entries?: Readonly<Record<string, Omit<DeliverablePathPatch, 'epic'> & { epic?: string }>> } }): DeliverablePathPatch[]

@@ -1171,6 +1171,7 @@
         "stage": "U",
         "declaredPath": "packages/core/agent-loop/src/runtime-context.ts",
         "approvedPath": "packages/core/agent-loop/src/agent.ts",
+        "kind": "widening",
         "reason": "BLOCKED-012 companion split, not a pure substitution: runtime-context.ts's only pre-existing export, RuntimeContextProjection, is a dynamic-context-snapshot class (durably projects rendered system-prompt sections as a UserMessage) structurally unrelated to identity -- it has no notion of a live Agent instance to attach identity to. This slice adds real, substantive identity logic directly to runtime-context.ts itself (lastAttachedIdentity, resolveSessionIdentity -- the pure runtime-policy-layer functions satisfying registry P2-01 acceptance[1]'s real assertRuntimeTenantPolicy caller), so the declared file is not abandoned. But the ONE place Agent.identity (packages/core/agent/src/types.ts, C-stage) can actually become a real, populated field for a live agent is ReactLoopAgent's own constructor (agent.ts) -- the sole `implements Agent` class in this codebase; no other file constructs a live Agent. Making acceptance[0] real (\"any action traceable to root user/tenant\") requires this exact constructor to call the new runtime-context.ts functions and assign `this.identity`. Owner-map check (spec/first100-owner-map.json byFile, 441 entries): packages/core/agent-loop/src/agent.ts is absent -- shared/common infrastructure, not owned by any single epic, zero conflict.",
         "approvedAt": "2026-09-02",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-012"
@@ -1180,6 +1181,7 @@
         "stage": "U",
         "declaredPath": "packages/sdk/protocol/src/types.ts",
         "approvedPath": "packages/sdk/server/src/server.ts",
+        "kind": "widening",
         "reason": "BLOCKED-012 companion, not a substitution: packages/sdk/protocol/src/types.ts itself received the real, substantive must[1] change (SessionPromptResult gained an optional `identity?: IdentityContext` field, and SdkIdentityReference's doc now records the BLOCKED-025 disposition -- see that entry below). This companion patch covers only the small (4-line), necessary producer wiring that populates the new field with a genuine value: HarnessSdkJsonRpcServer.prompt() (packages/sdk/server/src/server.ts, the one real implementation of the session/prompt RPC method) already holds `rec.handle.agent` (an Agent, per packages/core/agent/src/types.ts); this patch adds `...identity === undefined ? {} : { identity: rec.handle.agent.identity }` to its existing return statement, sourced from the server's own already-live Agent.identity (real as of this slice's agent.ts wiring, P2-01-U-agent-identity-attachment above), never from client input. Without this, the new type field would be genuine-but-unpopulated (an unused field, the exact gap U-stage exists to close per acceptance[0]). Owner-map check (spec/first100-owner-map.json byFile, 441 entries): packages/sdk/server/src/server.ts is absent -- shared/common infrastructure, zero conflict.",
         "approvedAt": "2026-09-02",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-012"
@@ -1188,6 +1190,7 @@
         "stage": "C",
         "declaredPath": "docs/audit/baseline-b150a551.md",
         "approvedPath": "docs/audit/baseline-fingerprint-0a53fb55bea101816fa226bb964ae2bed71c343b.md",
+        "kind": "substitution",
         "reason": "BLOCKED-001: P0-01's own first100-requirements-matrix.md source names docs/audit/baseline-<sha>.md (SHA frozen at authoring time, b150a551) as the pnpm baseline:capture tool's own machine-generated fingerprint output. Decision A1 re-baselined to 0a53fb55, so a correctly-implemented baseline:capture would naturally target docs/audit/baseline-0a53fb55.md -- but that exact path already holds an unrelated artifact: the Supervisor's own R0.3A native-CI/pack health receipt (see docs/audit/baseline-0a53fb55.md), a different artifact class (test-suite-result evidence, not a Git-SHA+Node/pnpm-versions+workspace-package-list+protocol-schema-hashes fingerprint). Splitting the naming convention permanently: docs/audit/baseline-<sha>.md stays reserved for Supervisor R0.3A/governance health receipts; P0-01's baseline:capture family uses docs/audit/baseline-fingerprint-<sha>.md going forward.",
         "approvedAt": "2026-08-31",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-001"
@@ -1197,6 +1200,7 @@
         "stage": "U",
         "declaredPath": "packages/core/session/src/types.ts",
         "approvedPath": "packages/session/session-persistence-jsonl/src/format.ts",
+        "kind": "substitution",
         "reason": "BLOCKED-012: @deepseek-ai/dsh-schema-registry already depends on @deepseek-ai/dsh-session (package.json peerDependencies + devDependencies) via a real VALUE import -- src/index.ts:20 imports KNOWN_SESSION_EVENT_TYPES and consumes it at line 241 inside bootstrapSessionEventSchemas(), invoked at module-evaluation time (line 270). Wiring negotiateSchema() into core/session therefore forms an ESM cycle. Independently verified by the Reviewer: adding the reverse dependency plus a real value import to packages/core/session/src/index.ts fails at import time with 'TypeError: KNOWN_SESSION_EVENT_TYPES is not iterable' at schema-registry/src/index.ts:241, making dsh-session entirely unloadable (packages/core/session/tests/session.spec.ts: 1 failed suite, no tests run; counterfactual fully reverted afterward). Second independent forcing reason: core/session/src/types.ts is a types-only module and the session-replay read boundary (SessionLogScanner.consumeEventLine) does not exist in core/session at all. Owner-map check (spec/first100-owner-map.json byFile, 441 entries): the substitute path is not present -- shared/common infrastructure, not owned by any single epic, zero conflict.",
         "approvedAt": "2026-09-01",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-012"
@@ -1206,6 +1210,7 @@
         "stage": "U",
         "declaredPath": "packages/settings/settings/src/types.ts",
         "approvedPath": "packages/settings/settings/src/index.ts",
+        "kind": "substitution",
         "reason": "BLOCKED-012 companion: packages/settings/settings/src/types.ts declares wire-view/projection types only, not the settings-load read boundary. must[4]'s negotiate-before-use point is SettingsProvider.register()/publish() in src/index.ts, where a stored section is read and resolved against the owner's schemastery schema before use. Owner-map check (spec/first100-owner-map.json byFile, 441 entries): the substitute path is not present -- shared/common infrastructure (also referenced by P0-05/P2-08/P2-10/P1-10/P8-10/P8-09's own wave-map text at other stages, none of which own it exclusively per the mechanical owner-map), zero conflict.",
         "approvedAt": "2026-09-01",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-012"
@@ -1215,6 +1220,7 @@
         "stage": "F",
         "declaredPath": "packages/schema/schema-registry/tests/compatibility.spec.ts",
         "approvedPath": "packages/session/session-persistence-jsonl/tests/jsonl.spec.ts",
+        "kind": "substitution",
         "reason": "BLOCKED-012: F-stage's real job (acceptance[0], proving U-stage's session-replay negotiation wiring doesn't break reading real old session data) has zero visibility from compatibility.spec.ts -- the real wired boundary (SessionLogScanner.consumeEventLine's private negotiateEventLineSchema) is reachable only via session-persistence-jsonl's own exports, not via the schema-registry package's own test file. The wave-map's other declared F-stage file, packages/core/session/src/repair.ts, is confirmed genuinely out of scope and left untouched by this slice (pure crash-recovery, zero schema-version concept, downstream of any negotiation -- independently confirmed by two prior C/P-stage reviews plus this slice's own re-confirmation); it required no patch since nothing points to it needing one. Owner-map check (spec/first100-owner-map.json byFile, 441 entries): the substitute path is absent -- shared infrastructure (already P0-06's own frozen U-stage test file), zero owner conflict.",
         "approvedAt": "2026-09-01",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-012"
@@ -1224,6 +1230,7 @@
         "stage": "F",
         "declaredPath": "packages/kernel/trust-kernel/tests/boundary.spec.ts",
         "approvedPath": "packages/kernel/trust-kernel/tests/dispose.spec.ts",
+        "kind": "substitution",
         "reason": "BLOCKED-012: F-stage's real job is proving acceptance[0] (\"任意插件卸载、覆盖 service 或动态 mount 都不能替换 kernel policy/audit/signature verifier\" -- no plugin unload, service override, or dynamic mount can replace the kernel's policy/audit/signature verifier). boundary.spec.ts has zero visibility into this: it is C-stage's own frozen, pure type-surface test (its own acceptance case reads \"has no runtime code: every top-level statement is a type/interface declaration\"), so it structurally cannot host a runtime unload/dynamic-mount proof. dispose.spec.ts proves the \"unload\" half (disposing an unrelated plugin's fiber via the Loader, showing the root-pinned kernel survives and is genuinely owned by the root fiber) and the \"dynamic mount\" half (Entry.update() applied to the root Include entry's config.patches, the one real post-boot insertion path this codebase supports, reduces to the same ctx.provide()-double-call rejection U-stage already proved) plus 2 direct-store-mutation bypass tests added during the BLOCKED-011 hardening rounds. Owner-map check (spec/first100-owner-map.json byFile, 441 entries): the substitute path is absent -- a new file, zero owner conflict.",
         "approvedAt": "2026-09-01",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-012"
@@ -1233,6 +1240,7 @@
         "stage": "F",
         "declaredPath": "packages/kernel/trust-kernel/tests/boundary.spec.ts",
         "approvedPath": "packages/kernel/trust-kernel/tests/pin-hardening.spec.ts",
+        "kind": "substitution",
         "reason": "BLOCKED-012 companion to P0-02-F-dispose: proves the \"覆盖 service\" (override) half of acceptance[0], and the multi-round security-hardening work from the BLOCKED-011 adversarial-review saga -- Object.freeze(impl) closing the Impl-mutation vector, the root-fiber-store key lock, the reflect.props key lock, and the documented, independently-proven residual vectors (self-fiber poisoning, ancestor-fiber poisoning, wholesale root-store replacement). Same forcing reason as P0-02-F-dispose: boundary.spec.ts is C-stage's frozen, runtime-code-free type surface and cannot host these runtime pinning/bypass proofs. Owner-map check (spec/first100-owner-map.json byFile, 441 entries): the substitute path is absent -- a new file, zero owner conflict.",
         "approvedAt": "2026-09-01",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-012"
@@ -1242,6 +1250,7 @@
         "stage": "C",
         "declaredPath": "tests/architecture/capability-seams.spec.ts",
         "approvedPath": "scripts/architecture/capability-seams.ts",
+        "kind": "widening",
         "reason": "BLOCKED-012: C-stage's real job (must[0]'s capability-family/allowlist schema, must[1]/must[2]'s violation-detection functions) needs a home for TypeScript type declarations and pure detector logic. None of the registry's three declared C-stage files can hold it: architecture.layers.json is JSON data with no code, packages/README.md is prose documentation, and tests/architecture/capability-seams.spec.ts (chosen as declaredPath since it is the file that actually imports and exercises the detection logic) is a test file whose own frozen-test-consistency role (condition 4 of this rule) requires importing the contract from a separate module rather than defining it inline. A dedicated library file is genuinely required, distinct from the registry's already-declared U-stage scanner scripts/architecture/check-capability-seams.mjs -- that script (a later slice) will perform the real workspace package.json scan and TypeScript-import walk and import this module's pure validators/detectors to judge the resolved facts; this module itself performs zero filesystem I/O (verified: no node:fs/node:path imports remain in scripts/architecture/capability-seams.ts after the 2026-09-01 Reviewer round removed its one fs-touching function, readWorkspacePackageNames, moving that walk into the test file's own test-local helper). Owner-map check (spec/first100-owner-map.json byFile, 441 entries): the substitute path is absent -- a new file, zero owner conflict.",
         "approvedAt": "2026-09-01",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-012"
@@ -1251,6 +1260,7 @@
         "stage": "F",
         "declaredPath": "AGENTS.md",
         "approvedPath": "docs/glossary.md",
+        "kind": "substitution",
         "reason": "BLOCKED-012: F-stage's fix round added a real, genuinely useful fact -- that architecture.layers.json declares each capability family and pnpm run architecture:seams enforces it -- to AGENTS.md's existing capability-seam bullet. Merging attempt/P0-03-F into first100-exec produced a real conflict on that exact bullet against an unrelated intervening commit (e08d9dc0af, P0-07.U) that had already condensed AGENTS.md's neighboring Trust Kernel line to stay inside the file's word-budget ceiling. Re-running verify-doc-budgets after a good-faith conflict resolution showed root AGENTS.md at 2038/2030 words; docs/AGENTS.md's own policy states the file's ceiling is frozen above its 1,950 target specifically because it already sits above target (raising it further is not an option), and prescribes relocate-before-condense-before-raise. No further genuine slop (per docs/AGENTS.md's own slop checklist) remained to condense without deleting a load-bearing rule. The fact was relocated to docs/glossary.md#capability-seam -- the entry already linked from the AGENTS.md bullet in question, unbudgeted, and the canonical home for this exact vocabulary term -- with its docs/glossary.zh.md pair translated to match and docs/glossary.i18n.yaml re-recorded (verify-translation-pairing, part of first100:slice-gate, passes). Owner-map check: docs/glossary.md carries no exclusive owner. Condition 4 (frozen test lands in the declared/patched files[]): unaffected -- this patch concerns only the doc-note deliverable, not P0-03.F's frozen test file (tests/architecture/capability-seams.spec.ts), which was not moved. The approvedPath names the file, docs/glossary.md; the fact sits in its #capability-seam entry. The anchor was moved from approvedPath into this sentence on 2026-09-15 because an approvedPath is read as a repository path (111 alpha-4).",
         "approvedAt": "2026-09-01",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-012"
@@ -1260,6 +1270,7 @@
         "stage": "C",
         "declaredPath": "packages/session/session-lifecycle/tests/lifecycle.e2e.ts",
         "approvedPath": "packages/session/session-lifecycle/tests/lifecycle.spec.ts",
+        "kind": "substitution",
         "reason": "The pinned first100-requirements-matrix.md source (line 1134) names this exact path -- .e2e.ts is not a Writer naming choice, it is the sources own declared kind:N deliverable. Mechanical problem: first100-exact-sha.ymls Full test suite step (the workflow this program requires for ledger-greening observations) runs a bare `pnpm exec vitest run --reporter=json`, which uses vitest.config.tss default testIncludes (packages/*/*/tests/**/*.spec.{ts,tsx} only) -- it never discovers any *.e2e.ts file. Every other real .e2e.ts test in this repo (packages/e2b/e2b, packages/llm/llm-pi-ai, packages/sandbox/sandbox-local/packages/shell/bash-sandbox) is instead verified by its own dedicated CI workflow (e2b-e2e.yml / pi-ai-provider-e2e.yml / sandbox.yml), never by first100-exact-sha.yml -- widening the default includes glob to also discover .e2e.ts would pull those genuinely-external-resource-dependent suites into the main CI gate, a disproportionate blast radius for this one epics path. Renaming the actual deliverable to lifecycle.spec.ts is the only fix whose blast radius matches the problem: same test content, same assertions, discoverable by the same CI step every other epic already relies on. Verified byte-for-byte before approval: all 27 originally-frozen case titles are unchanged under the new path (0 missing); a 28th case (a createdAt-collision pagination-tiebreak test closing a GREEN-review-found coverage gap) was added separately during the GREEN corrective round, unrelated to this path patch.",
         "approvedAt": "2026-09-03",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-048"
@@ -1269,6 +1280,7 @@
         "stage": "F",
         "declaredPath": "packages/session/session-lifecycle/tests/lifecycle.e2e.ts",
         "approvedPath": "packages/session/session-lifecycle/tests/lifecycle.spec.ts",
+        "kind": "substitution",
         "reason": "Companion to P6-07-C-lifecycle-discovery: F-stage names the identical declared path for the identical mechanical reason (not independently discoverable by first100-exact-sha.ymls observation step). Decided now, at C-stage patch time, specifically so F-stage does not rediscover the same gap later and invent a third filename -- both stages target the same approvedPath.",
         "approvedAt": "2026-09-03",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-048"
@@ -1278,6 +1290,7 @@
         "stage": "P",
         "declaredPath": "packages/session/session-persistence/src/index.ts",
         "approvedPath": "packages/session/session-lifecycle/src/store.ts",
+        "kind": "substitution",
         "reason": "Architecturally unrealizable as declared, not a convenience relocation -- a strictly stronger basis than a path-spelling correction. P6-07's declared P-stage deliverables sit in packages/session/session-persistence/src/, but a durable session-lifecycle registry must name SessionLifecycleRecord/SessionDisposition and call the C-stage's listSessions/assertNoLegalHold/hardErase/propagateDeletion. That import closes a real project-reference cycle, verified by running the compiler rather than by reading manifests: session-persistence -> session-lifecycle -> workspace/workspace -> session-persistence, where the latter two edges already exist (session-lifecycle peer-depends on dsh-workspace; workspace/workspace peer-depends on dsh-session-persistence). `pnpm exec tsc -b packages/session/session-persistence/tsconfig.json` reports TS6202 on a branch carrying the declared edge. No level of effort inside the declared scope avoids this: every P6-07 clause is an assertion about lifecycle semantics (must[0]'s filters ARE listSessions; acceptance[1]'s hold IS assertNoLegalHold; acceptance[2]'s propagation IS propagateDeletion), so a record-type-generic store that cannot name a disposition observes none of them and proves only that a JSON document round-trips. A variant exploiting tsconfig.host.json's direct inclusion of packages/*/*/tests/** (letting a test import what src/ may not) was also rejected: it would produce real observations while no shipped code assembles the service, making a fixture read as a product surface -- worse than an honest gap, because it greens. The reverse direction is acyclic and is the natural one: the package owning the decisions gains the durable store beneath them. session-lifecycle is not referenced by any other package's tsconfig (apps/web/tsconfig.json does reference it, but an application is a terminal consumer and does not enter the inter-package dependency graph), and session-persistence's transitive closure (cosmokit, cordis, brand, core/session) never reaches session-lifecycle, so this placement adds zero new dependency edges. Cross-package repointing is within this mechanism's established range -- see P0-06-U-session-replay, which repoints from core/session/src/types.ts into a different package. The epic's must/acceptance clauses are unchanged. Only the index.ts deliverable is repointed; coordinator.ts and revision.ts stay declared-but-unmodified, which is already the settled reading of a stage file list (it is a scope ceiling, not a quota) and is what this stage would have done in either placement -- PersistenceCoordinator's storage contract is keyed on SessionId and SessionEvent under SESSION_FORMAT_VERSION, and a lifecycle disposition is not a session-log event.",
         "approvedAt": "2026-09-03",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-012"
@@ -1287,6 +1300,7 @@
         "stage": "U",
         "declaredPath": "packages/boot/app-boot/src/profile.ts",
         "approvedPath": "apps/cli/src/profile-boot.ts",
+        "kind": "widening",
         "reason": "Scope widening, not substitution: the declared file is still the deliverable and keeps its work. P1-08's Usage stage must make compatibility negotiation run during a real launch, but the declared two-file scope reaches no real caller -- app-boot/src/profile.ts can export the negotiation function while nothing invokes it, and acceptance[1] (\"缺少必需 capability 或 major schema 不匹配时不执行插件代码\") is only provable on a real boot path. There is exactly one: apps/cli/src/profile-boot.ts's composeProfile, where P1-01.U's partitionProfileLayersByAdmission already drops denied layers' patches before applyEntryPatches/boot(). Without it the stage is reduced to a hand-built ctx.plugin() unit suite, which packages/AGENTS.md explicitly rejects for product-visible plugin behavior. Note apps/cli/src/profile-boot.ts IS in P1-01's own stages.U.files -- it is undeclared for P1-08 specifically, which is why this patch exists rather than resting on that precedent. Build-infrastructure edits (plugin-compat/package.json gaining a ./solver export, app-boot's package.json/tsconfig.json dependency edge, pnpm-lock.yaml) are not patched: the P1-01.U precedent settles that a stage list is the deliverable scope, not an exhaustive change list (that commit touched 36 files against 5 declared). Acyclic proven by running the compiler, not by reading manifests: `tsc -b --force packages/boot/app-boot/tsconfig.json` exits 0 over the two-hop closure app-boot -> plugin-compat -> schema-registry. The epic's must/acceptance clauses are unchanged.",
         "approvedAt": "2026-09-03",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-053"
@@ -1296,6 +1310,7 @@
         "stage": "U",
         "declaredPath": "packages/session-query/session-query/src/cursor.ts",
         "approvedPath": "packages/session-query/session-query/src/types.ts",
+        "kind": "widening",
         "reason": "Scope widening, not substitution: filters.ts and session-lifecycle/src/index.ts keep their declared work; cursor.ts stays read-not-modified for the second time, as the Contract stage already decided and documented (cursor encoding is provider-owned -- session-query-sqlite hand-rolls its own base64url JSON), and a stage list is a scope ceiling rather than a quota (precedent: P6-07.P's coordinator.ts/revision.ts). must[0] requires tenant/workspace/status filters over the real corpus, which the declared scope cannot reach. The obstacle is projection, not missing data: SessionHeader carries no tenant, but P2-01 (ACCEPTED) attaches identity to a session as an event -- core/session/src/types.ts:354 'identity/attached': { identity: IdentityContext } -- and IdentityContext -> Principal -> readonly tenantId: TenantId (principal/src/types.ts:128,146). session-query's corpus already reads SessionEvent[], but SessionRecord drops those events before filterSessions ever sees them. SessionRecord is {header, live, persisted} (types.ts:27-34) and SessionResultFilter is declared here, so both the projected fields and the filter clauses that read them must land in this file. No SessionHeader change is required and no other epic must land first; an earlier proposal to mark this stage BLOCKED was refused for exactly that reason. The epic's must/acceptance clauses are unchanged.",
         "approvedAt": "2026-09-03",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-053"
@@ -1305,6 +1320,7 @@
         "stage": "U",
         "declaredPath": "packages/session-query/session-query/src/cursor.ts",
         "approvedPath": "packages/session-query/session-query/src/corpus.ts",
+        "kind": "widening",
         "reason": "Scope widening, not substitution: filters.ts and session-lifecycle/src/index.ts keep their declared work; cursor.ts stays read-not-modified for the second time, as the Contract stage already decided and documented (cursor encoding is provider-owned -- session-query-sqlite hand-rolls its own base64url JSON), and a stage list is a scope ceiling rather than a quota (precedent: P6-07.P's coordinator.ts/revision.ts). must[0] requires tenant/workspace/status filters over the real corpus, which the declared scope cannot reach. The obstacle is projection, not missing data: SessionHeader carries no tenant, but P2-01 (ACCEPTED) attaches identity to a session as an event -- core/session/src/types.ts:354 'identity/attached': { identity: IdentityContext } -- and IdentityContext -> Principal -> readonly tenantId: TenantId (principal/src/types.ts:128,146). session-query's corpus already reads SessionEvent[], but SessionRecord drops those events before filterSessions ever sees them. corpus.ts:23 already reads events: SessionEvent[]; this is where the identity/attached projection is performed. No SessionHeader change is required and no other epic must land first; an earlier proposal to mark this stage BLOCKED was refused for exactly that reason. The epic's must/acceptance clauses are unchanged.",
         "approvedAt": "2026-09-03",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-053"
@@ -1314,6 +1330,7 @@
         "stage": "U",
         "declaredPath": "packages/session-query/session-query/src/filters.ts",
         "approvedPath": "packages/session-query/session-query/src/query.ts",
+        "kind": "widening",
         "reason": "Compiler-forced consequence of the approved projection widening, not an independent deliverable. Adding 'tenant'/'workspace' to the SessionResultFilter union turns session-query-sqlite/src/query.ts's exhaustive switch into TS2345 (\"not assignable to type 'never'\"), so the repository does not typecheck until that switch handles the new clauses. Three options existed and only one is safe: the sqlite index has no tenant or workspace column, so silently dropping a tenant clause in ranked search would return ANOTHER TENANT'S sessions to a caller that explicitly asked to be scoped to its own -- a data-isolation defect, not a limitation. The clause is therefore refused with SESSION_QUERY_INVALID_FILTER, which is this repository's \"misconfiguration fails loud\" rule applied to a query the index genuinely cannot answer. Approved by the Supervisor without escalation because the alternatives are a security defect or a non-compiling tree; recorded here so the deviation is auditable rather than buried in a diff. Two accompanying cases in tests/tenant-filter-refusal.spec.ts sit outside the frozen command and are required by the per-file 100% coverage gate. The epic's must/acceptance clauses are unchanged.",
         "approvedAt": "2026-09-03",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-053"
@@ -1323,6 +1340,7 @@
         "stage": "U",
         "declaredPath": "packages/context/README.md",
         "approvedPath": "packages/context/memory-context/src/index.ts",
+        "kind": "widening",
         "reason": "Scope widening recovering the design the file list already encodes, not a convenience relocation. packages/context/README.md is in this stage's declared files[] and is the context group map, whose table carries one row per packages/context/* package -- so under a design that puts the Memory consumer inside dsh-memory itself, that declared file has NO legal edit at all. A declared file whose editability exists under only one design is evidence of the intended design (bounded per BLOCKED-053: the test is whether the file would also have legitimate content under the alternative; here it would not). The rejected alternative also makes must[2] (\"consumer 通过 Service Definition，不 direct import\") unfalsifiable by inspection, since the consumer would sit in the same module as the class it must reach only through ctx. Modeled on packages/context/time-context, an existing opt-in request-context plugin registering a prepended agent/pre-step listener. The supporting files are hard gates, not conveniences: packages/bundle/base/package.json (verify-cordis-config requires a bare plugin name in cordis.patch.yml to appear in the resolver manifest's dependencies), core/session/src/known-event-types.ts (memory/access is declared in SessionEventMap but unregistered and carries no ignorable:true, so appending it to a real log would make replay refuse an unknown type), and the package manifests, README and subsystem page the change makes false. The epic's must/acceptance clauses are unchanged.",
         "approvedAt": "2026-09-04",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-053"
@@ -1332,6 +1350,7 @@
         "stage": "U",
         "declaredPath": "packages/context/README.md",
         "approvedPath": "packages/core/session/src/known-event-types.ts",
+        "kind": "widening",
         "reason": "Scope widening recovering the design the file list already encodes, not a convenience relocation. packages/context/README.md is in this stage's declared files[] and is the context group map, whose table carries one row per packages/context/* package -- so under a design that puts the Memory consumer inside dsh-memory itself, that declared file has NO legal edit at all. A declared file whose editability exists under only one design is evidence of the intended design (bounded per BLOCKED-053: the test is whether the file would also have legitimate content under the alternative; here it would not). The rejected alternative also makes must[2] (\"consumer 通过 Service Definition，不 direct import\") unfalsifiable by inspection, since the consumer would sit in the same module as the class it must reach only through ctx. Modeled on packages/context/time-context, an existing opt-in request-context plugin registering a prepended agent/pre-step listener. The supporting files are hard gates, not conveniences: packages/bundle/base/package.json (verify-cordis-config requires a bare plugin name in cordis.patch.yml to appear in the resolver manifest's dependencies), core/session/src/known-event-types.ts (memory/access is declared in SessionEventMap but unregistered and carries no ignorable:true, so appending it to a real log would make replay refuse an unknown type), and the package manifests, README and subsystem page the change makes false. The epic's must/acceptance clauses are unchanged.",
         "approvedAt": "2026-09-04",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-053"
@@ -1341,6 +1360,7 @@
         "stage": "U",
         "declaredPath": "packages/bundle/base/cordis.patch.yml",
         "approvedPath": "packages/bundle/base/package.json",
+        "kind": "widening",
         "reason": "Scope widening recovering the design the file list already encodes, not a convenience relocation. packages/context/README.md is in this stage's declared files[] and is the context group map, whose table carries one row per packages/context/* package -- so under a design that puts the Memory consumer inside dsh-memory itself, that declared file has NO legal edit at all. A declared file whose editability exists under only one design is evidence of the intended design (bounded per BLOCKED-053: the test is whether the file would also have legitimate content under the alternative; here it would not). The rejected alternative also makes must[2] (\"consumer 通过 Service Definition，不 direct import\") unfalsifiable by inspection, since the consumer would sit in the same module as the class it must reach only through ctx. Modeled on packages/context/time-context, an existing opt-in request-context plugin registering a prepended agent/pre-step listener. The supporting files are hard gates, not conveniences: packages/bundle/base/package.json (verify-cordis-config requires a bare plugin name in cordis.patch.yml to appear in the resolver manifest's dependencies), core/session/src/known-event-types.ts (memory/access is declared in SessionEventMap but unregistered and carries no ignorable:true, so appending it to a real log would make replay refuse an unknown type), and the package manifests, README and subsystem page the change makes false. The epic's must/acceptance clauses are unchanged.",
         "approvedAt": "2026-09-04",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-053"
@@ -1350,6 +1370,7 @@
         "stage": "U",
         "declaredPath": "packages/run/run/src/index.ts",
         "approvedPath": "packages/bundle/base/cordis.patch.yml",
+        "kind": "widening",
         "reason": "Scope widening: the three declared files cannot make a real run create a Run. Two are type-only (core/agent/src/types.ts, workflow/workflow/src/types.ts) and the third is the Provider stage's own already-landed file; the sole producer of a live Agent is ReactLoopAgent, and nothing in scope can mount a plugin. Without the base-bundle mount this stage leaves its own README's limitation -- \"no plugin registers a RunService on a Context, and no product surface calls one, so a real harness run still creates no Run\" -- literally true after Usage lands, which is the wire-into-nothing outcome a Usage stage exists to avoid. The mount uses agent/session-start, an already-public documented Cordis extension point with an existing third-party listener precedent (packages/experimental/agent-team), so no agent-loop source change is needed and the \"Plugins, not loop changes\" rule holds. The row is disabled:true, matching the hmr and baseline-preflight precedent in the same file, the latter added after a plugin registered unconditionally there collided with real ambient state; the real-composition test enables it in its own test-only cordis.yml. packages/bundle/base/package.json is required because verify-cordis-config enforces a matching dependencies entry. Acyclicity proven by running tsc -b with a real import, not by reading manifests. The epic's must/acceptance clauses are unchanged.",
         "approvedAt": "2026-09-04",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-053"
@@ -1359,6 +1380,7 @@
         "stage": "U",
         "declaredPath": "packages/run/run/src/index.ts",
         "approvedPath": "packages/bundle/base/package.json",
+        "kind": "widening",
         "reason": "Scope widening: the three declared files cannot make a real run create a Run. Two are type-only (core/agent/src/types.ts, workflow/workflow/src/types.ts) and the third is the Provider stage's own already-landed file; the sole producer of a live Agent is ReactLoopAgent, and nothing in scope can mount a plugin. Without the base-bundle mount this stage leaves its own README's limitation -- \"no plugin registers a RunService on a Context, and no product surface calls one, so a real harness run still creates no Run\" -- literally true after Usage lands, which is the wire-into-nothing outcome a Usage stage exists to avoid. The mount uses agent/session-start, an already-public documented Cordis extension point with an existing third-party listener precedent (packages/experimental/agent-team), so no agent-loop source change is needed and the \"Plugins, not loop changes\" rule holds. The row is disabled:true, matching the hmr and baseline-preflight precedent in the same file, the latter added after a plugin registered unconditionally there collided with real ambient state; the real-composition test enables it in its own test-only cordis.yml. packages/bundle/base/package.json is required because verify-cordis-config enforces a matching dependencies entry. Acyclicity proven by running tsc -b with a real import, not by reading manifests. The epic's must/acceptance clauses are unchanged.",
         "approvedAt": "2026-09-04",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-053"
@@ -1368,6 +1390,7 @@
         "stage": "U",
         "declaredPath": "packages/context/agent-instructions/src/index.ts",
         "approvedPath": "packages/skill/skill-filesystem/src/index.ts",
+        "kind": "widening",
         "reason": "Scope widening reaching the only real enforcement points, plus a single-table correction. Investigation found that four of must[1]'s five content kinds -- project plugins, hooks, MCP servers, and home/profile patch overrides -- have NO real load site in the product today (composeProfile stacks only host-owned layers; hooks-claude-code carries an explicit TODO(per-session-hook-config); no shipped profile mounts either hook bridge; mcp-client reads only its plugin config), so a test over those kinds asserts a fact about the repository rather than a behavior. The two real surfaces are executable skills -- skill-filesystem's roots() pushes <projectRoot>/.dsh/skills and <projectRoot>/.agents/skills, the only genuine executable project-content load site -- and instructions, already in the declared scope. Neither the skill loader nor a provider that lets a consumer learn the trust state for a cwd is reachable from the declared four: WorkspaceRegistry.workspaceTrust is keyed by WorkspaceId rather than cwd and is Provider-stage scope. workspace-trust/src/types.ts is granted so a 'project-instructions' ProjectContentKind joins the EXISTING authorizeProjectLoad table: the registry's gate says an untrusted workspace cannot load instructions while the frozen table permits 'safe-read' at every state, and resolving that with a second parallel decision function beside the first was rejected as a divergent second table. Acyclicity proven by running tsc -b across all three consumers. The epic's must/acceptance clauses are unchanged.",
         "approvedAt": "2026-09-04",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-053"
@@ -1377,6 +1400,7 @@
         "stage": "U",
         "declaredPath": "packages/workspace/workspace-trust/src/index.ts",
         "approvedPath": "packages/workspace/workspace-trust-local/src/index.ts",
+        "kind": "widening",
         "reason": "Scope widening reaching the only real enforcement points, plus a single-table correction. Investigation found that four of must[1]'s five content kinds -- project plugins, hooks, MCP servers, and home/profile patch overrides -- have NO real load site in the product today (composeProfile stacks only host-owned layers; hooks-claude-code carries an explicit TODO(per-session-hook-config); no shipped profile mounts either hook bridge; mcp-client reads only its plugin config), so a test over those kinds asserts a fact about the repository rather than a behavior. The two real surfaces are executable skills -- skill-filesystem's roots() pushes <projectRoot>/.dsh/skills and <projectRoot>/.agents/skills, the only genuine executable project-content load site -- and instructions, already in the declared scope. Neither the skill loader nor a provider that lets a consumer learn the trust state for a cwd is reachable from the declared four: WorkspaceRegistry.workspaceTrust is keyed by WorkspaceId rather than cwd and is Provider-stage scope. workspace-trust/src/types.ts is granted so a 'project-instructions' ProjectContentKind joins the EXISTING authorizeProjectLoad table: the registry's gate says an untrusted workspace cannot load instructions while the frozen table permits 'safe-read' at every state, and resolving that with a second parallel decision function beside the first was rejected as a divergent second table. Acyclicity proven by running tsc -b across all three consumers. The epic's must/acceptance clauses are unchanged.",
         "approvedAt": "2026-09-04",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-053"
@@ -1386,6 +1410,7 @@
         "stage": "U",
         "declaredPath": "packages/workspace/workspace-trust/src/index.ts",
         "approvedPath": "packages/workspace/workspace-trust/src/types.ts",
+        "kind": "widening",
         "reason": "Scope widening reaching the only real enforcement points, plus a single-table correction. Investigation found that four of must[1]'s five content kinds -- project plugins, hooks, MCP servers, and home/profile patch overrides -- have NO real load site in the product today (composeProfile stacks only host-owned layers; hooks-claude-code carries an explicit TODO(per-session-hook-config); no shipped profile mounts either hook bridge; mcp-client reads only its plugin config), so a test over those kinds asserts a fact about the repository rather than a behavior. The two real surfaces are executable skills -- skill-filesystem's roots() pushes <projectRoot>/.dsh/skills and <projectRoot>/.agents/skills, the only genuine executable project-content load site -- and instructions, already in the declared scope. Neither the skill loader nor a provider that lets a consumer learn the trust state for a cwd is reachable from the declared four: WorkspaceRegistry.workspaceTrust is keyed by WorkspaceId rather than cwd and is Provider-stage scope. workspace-trust/src/types.ts is granted so a 'project-instructions' ProjectContentKind joins the EXISTING authorizeProjectLoad table: the registry's gate says an untrusted workspace cannot load instructions while the frozen table permits 'safe-read' at every state, and resolving that with a second parallel decision function beside the first was rejected as a divergent second table. Acyclicity proven by running tsc -b across all three consumers. The epic's must/acceptance clauses are unchanged.",
         "approvedAt": "2026-09-04",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-053"
@@ -1395,6 +1420,7 @@
         "stage": "U",
         "declaredPath": "packages/context/agent-instructions/src/index.ts",
         "approvedPath": "packages/bundle/base/cordis.patch.yml",
+        "kind": "widening",
         "reason": "Scope widening reaching the only real enforcement points, plus a single-table correction. Investigation found that four of must[1]'s five content kinds -- project plugins, hooks, MCP servers, and home/profile patch overrides -- have NO real load site in the product today (composeProfile stacks only host-owned layers; hooks-claude-code carries an explicit TODO(per-session-hook-config); no shipped profile mounts either hook bridge; mcp-client reads only its plugin config), so a test over those kinds asserts a fact about the repository rather than a behavior. The two real surfaces are executable skills -- skill-filesystem's roots() pushes <projectRoot>/.dsh/skills and <projectRoot>/.agents/skills, the only genuine executable project-content load site -- and instructions, already in the declared scope. Neither the skill loader nor a provider that lets a consumer learn the trust state for a cwd is reachable from the declared four: WorkspaceRegistry.workspaceTrust is keyed by WorkspaceId rather than cwd and is Provider-stage scope. workspace-trust/src/types.ts is granted so a 'project-instructions' ProjectContentKind joins the EXISTING authorizeProjectLoad table: the registry's gate says an untrusted workspace cannot load instructions while the frozen table permits 'safe-read' at every state, and resolving that with a second parallel decision function beside the first was rejected as a divergent second table. Acyclicity proven by running tsc -b across all three consumers. The epic's must/acceptance clauses are unchanged.",
         "approvedAt": "2026-09-04",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-053"
@@ -1404,6 +1430,7 @@
         "stage": "U",
         "declaredPath": "packages/context/agent-instructions/src/index.ts",
         "approvedPath": "packages/bundle/base/package.json",
+        "kind": "widening",
         "reason": "Scope widening reaching the only real enforcement points, plus a single-table correction. Investigation found that four of must[1]'s five content kinds -- project plugins, hooks, MCP servers, and home/profile patch overrides -- have NO real load site in the product today (composeProfile stacks only host-owned layers; hooks-claude-code carries an explicit TODO(per-session-hook-config); no shipped profile mounts either hook bridge; mcp-client reads only its plugin config), so a test over those kinds asserts a fact about the repository rather than a behavior. The two real surfaces are executable skills -- skill-filesystem's roots() pushes <projectRoot>/.dsh/skills and <projectRoot>/.agents/skills, the only genuine executable project-content load site -- and instructions, already in the declared scope. Neither the skill loader nor a provider that lets a consumer learn the trust state for a cwd is reachable from the declared four: WorkspaceRegistry.workspaceTrust is keyed by WorkspaceId rather than cwd and is Provider-stage scope. workspace-trust/src/types.ts is granted so a 'project-instructions' ProjectContentKind joins the EXISTING authorizeProjectLoad table: the registry's gate says an untrusted workspace cannot load instructions while the frozen table permits 'safe-read' at every state, and resolving that with a second parallel decision function beside the first was rejected as a divergent second table. Acyclicity proven by running tsc -b across all three consumers. The epic's must/acceptance clauses are unchanged.",
         "approvedAt": "2026-09-04",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-053"
@@ -1413,6 +1440,7 @@
         "stage": "U",
         "declaredPath": "packages/run/run/src/index.ts",
         "approvedPath": "scripts/gen-cordis-catalog.ts",
+        "kind": "widening",
         "reason": "Generator-forced consequence of registering a real service, not an independent deliverable. Mounting RunPlugin publishes ctx.runs, and gen-cordis-catalog FAILS OUTRIGHT rather than warning when a service key has no SERVICE_PAGE entry or a referenced type has no classification -- so the choices are these two lines or a tree whose documentation gate does not pass. ctx.runs is mapped to docs/subsystems/core.md, where the sibling services agents and agentLoop already live, and Run is given a TYPE_LINK_EXEMPTIONS owner of packages/run/run/README.md, the page that actually documents it. The regenerated outputs (docs/subsystems/core.*, packages/extensions/tool-cordis/src/api-catalog.ts) follow mechanically. Same class as P6-07-U-sqlite-filter-refusal: approved without escalation because the alternative is a failing gate, and recorded here so the deviation is auditable rather than buried in a diff. The epic's must/acceptance clauses are unchanged.",
         "approvedAt": "2026-09-04",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-053"
@@ -1422,6 +1450,7 @@
         "stage": "U",
         "declaredPath": "packages/host/plugin-inventory/src/types.ts",
         "approvedPath": "packages/host/plugin-inventory/src/index.ts",
+        "kind": "widening",
         "reason": "Scope widening: the declared types.ts is a pure type file, so acceptance[2]'s Inventory half cannot be exercised there. Adding an optional provenanceAudit field to a type nothing populates, tested by a spec that constructs the object literal itself, asserts a fact about TypeScript rather than about the product -- the BLOCKED-052 shape. buildPluginPermissionStates in index.ts is the real producer over live Loader entries (PluginInventoryGateway.list deliberately does not expose permission states). Package manifests, tsconfigs and READMEs ride along as build infrastructure. Note index.ts:341 already claims apps/cli calls this function for acceptance[1]'s display, which grep shows it does not; this stage makes that comment true. The epic's must/acceptance clauses are unchanged, and must[0]/must[2]/must[4] plus acceptance[0]'s swap-repo and forge-builder vectors remain locked under BLOCKED-050.",
         "approvedAt": "2026-09-04",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-053"
@@ -1431,6 +1460,7 @@
         "stage": "U",
         "declaredPath": "packages/extensions/cordis-host-runner/src/registry.ts",
         "approvedPath": "packages/extensions/cordis-host-runner/src/guard.ts",
+        "kind": "widening",
         "reason": "Scope widening to the only non-vendored adjudication point for Service and Event registration. The epic's title and must[0] name Service/Tool/Event, but within the declared four files only the Tool surface can fail closed: ctx.provide and ctx.on are implemented in vendor/cordis/src/{reflect,events}.ts. guard.ts's sandbox context facade whitelists ctx.provide/ctx.on/ctx.tools.register (CTX_VERBS) and is where a dynamic plugin's registration can be refused before it reaches Cordis, which is what makes acceptance[2] non-vacuous. Static-origin Service/Event enforcement would require modifying vendored Cordis -- explicitly NOT requested and refused: those are logged local modifications under the vendoring policy, and docs/architecture/trust-kernel-boundary.md requires the vendored Fiber fix (Option A, verified unlanded) before any epic wires a real policy enforcement point consuming the kernel. must[0] is therefore scoped to Tool across all origins plus Service/Event for dynamic origin, with static-origin Service/Event recorded as a named residual against that prerequisite. Acyclicity of all three consumer edges proven by running tsc -b with real value imports, not by reading manifests. The epic's must/acceptance clauses are unchanged.",
         "approvedAt": "2026-09-04",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-053"
@@ -1440,6 +1470,7 @@
         "stage": "U",
         "declaredPath": "scripts/architecture/check-layer-deps.mjs",
         "approvedPath": "tests/first100/layer-cycle-exemptions.json",
+        "kind": "widening",
         "reason": "Scope widening for must[3]'s ADR-required cycle exemptions, which need a data store the declared files cannot host: layer-order.ts defines the ExemptedCycle type but no exemption data file exists anywhere in the repository. A separate file is required rather than a key in the root architecture.layers.json, even though that document already carries P0-03's structurally similar allowlist: spec/first100-owner-map.json records architecture.layers.json as SOLE-owned by P0-03, so P0-04 writing into it would be a cross-epic write into another epic's exclusively owned file. (An earlier draft of this patch's prose said the opposite and was corrected; the Writer flagged the contradiction between the prose and the approvedPath rather than picking one silently.) The file is named for its purpose rather than shadowing architecture.layers.json's name, so the two are never confused. The rejected in-scope alternative -- a const inside check-layer-deps.mjs -- would make the checker own its own escape hatch. The epic's must/acceptance clauses are unchanged.",
         "approvedAt": "2026-09-04",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-053"
@@ -1449,6 +1480,7 @@
         "stage": "U",
         "declaredPath": "scripts/architecture/check-layer-deps.mjs",
         "approvedPath": "tests/first100/layer-package-map.json",
+        "kind": "widening",
         "reason": "Scope widening for the per-package layer classification the checker needs and the repository does not have. A group-directory map cannot express packages/core/, which packages/README.md itself describes as the Product API spine AND the concrete loop -- two layers in one directory. The map could not be authored inside check-layer-deps.mjs without the checker owning its own classification, and could not go in the root architecture.layers.json, which spec/first100-owner-map.json records as SOLE-owned by P0-03. Authored under the constraint that makes it evidence rather than fitting: signed by a party who had NOT seen the violation counts, published before any run, with the expected outcome for the ambiguous packages recorded in advance -- the file itself carries signerHadSeenViolationCounts:false and publishedBeforeAnyRun:true. dsh-agent keeps the ACCEPTED C-stage table's orchestration-runtime with its role contradiction recorded rather than resolved, since a Usage stage does not overturn an accepted Contract stage. See BLOCKED-053's generalization: write any input that determines what a gate reports from the source of truth, publish it, then run. The epic's must/acceptance clauses are unchanged.",
         "approvedAt": "2026-09-04",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-053"
@@ -1458,6 +1490,7 @@
         "stage": "F",
         "declaredPath": "packages/run/run/tests/state-machine.spec.ts",
         "approvedPath": "packages/run/run/src/index.ts",
+        "kind": "widening",
         "reason": "Scope widening, not substitution: the declared file keeps its work. packages/run/run/tests/state-machine.spec.ts covers src/state-machine.ts and src/events.ts, which are pure functions over caller-supplied values -- no file, no process, no shared state -- and C-stage's exhaustive 10x10 state-pair sweep already settled every decision they make, so no fault remains to inject there. Every fault this stage reproduced against the landed code lives in the durable/concurrent layer instead: two concurrent RunService.advance calls both accepted mutually exclusive exits from one state and an accepted transition vanished from the append-only log (must[1] + acceptance[1]); two stores over one path in one process collide on the pid-derived temp name; a tampered store document restores a Run in a state outside must[0]'s closed set and offers it for resumption; a seq gap makes the next append mint a backwards seq. All four are fixed in packages/run/run/src/index.ts and nowhere else. The epic's other declared F file, packages/session/session-persistence/src/coordinator.ts, cannot host any of them: every PersistenceCoordinator entry point is keyed on SessionId, its records are SessionEvents under SESSION_FORMAT_VERSION, and its states/chains/retirements maps are all keyed by SessionId -- there is no notion of a Run in it to inject a Run fault into, so it stays declared-but-unmodified exactly as at P-stage. Precedent for an F stage editing production source to fix what its own fault cases prove: P0-05.F (packages/migration/feature-gates/src/index.ts) and P2-01.F (packages/core/agent-loop/src/runtime-context.ts). This patch re-scopes no must/acceptance/nonGoals clause; it names one additional on-disk path.",
         "approvedAt": "2026-09-04",
         "basis": "Supervisor ruling in-thread, 2026-09-04: path patch expressed as widening; an F stage may fix what its own fault cases prove and no more."
@@ -1467,6 +1500,7 @@
         "stage": "C",
         "declaredPath": "packages/session/session-lifecycle/tests/lifecycle.e2e.ts",
         "approvedPath": "packages/session/session-lifecycle/tests/lifecycle.e2e.spec.ts",
+        "kind": "substitution",
         "reason": "Archival correction, not a scope deviation. The `.e2e.ts` suffix routes a file into `vitest.e2e.config.ts`, the real-API suite whose own header states each test self-skips without a key. P6-07's clauses -- session-log paging, filtering, deletion, retention and corrupt-log repair -- are local behaviour with no model call, so the pinned v1.0 source filed a local test into the paid channel. `first100-exact-sha.yml` runs bare `pnpm exec vitest run` (default config) and never loads that config, so a frozen `.e2e.ts` command freezes cases the sole greening channel cannot observe (BLOCKED-048's class). `.e2e.spec.ts` keeps the e2e naming while entering the default channel and cannot double-run, since `vitest.e2e.config.ts`'s include requires a filename ending `.e2e.ts`. The registry path stays byte-locked and unedited: the pinned v1.0 source is immutable under BLOCKED-035, so this deviation can only be recorded, never removed. Full reasoning and the class-wide ruling live in BLOCKED-070; this entry records only the site. Recorded after the fact: this stage was already greened on 2026-09-03 by superseding its freeze (27 e2e cases under `-c vitest.e2e.config.ts` -> 28 cases under the default config), which was reasonable before BLOCKED-070 existed. The cell is NOT reopened; this patch exists so the epic's two stages are explained by one mechanism instead of C's deviation being left with no machine-checkable record.",
         "approvedAt": "2026-09-04",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070"
@@ -1476,6 +1510,7 @@
         "stage": "F",
         "declaredPath": "packages/session/session-lifecycle/tests/lifecycle.e2e.ts",
         "approvedPath": "packages/session/session-lifecycle/tests/lifecycle.e2e.spec.ts",
+        "kind": "substitution",
         "reason": "Archival correction, not a scope deviation. The `.e2e.ts` suffix routes a file into `vitest.e2e.config.ts`, the real-API suite whose own header states each test self-skips without a key. P6-07's clauses -- session-log paging, filtering, deletion, retention and corrupt-log repair -- are local behaviour with no model call, so the pinned v1.0 source filed a local test into the paid channel. `first100-exact-sha.yml` runs bare `pnpm exec vitest run` (default config) and never loads that config, so a frozen `.e2e.ts` command freezes cases the sole greening channel cannot observe (BLOCKED-048's class). `.e2e.spec.ts` keeps the e2e naming while entering the default channel and cannot double-run, since `vitest.e2e.config.ts`'s include requires a filename ending `.e2e.ts`. The registry path stays byte-locked and unedited: the pinned v1.0 source is immutable under BLOCKED-035, so this deviation can only be recorded, never removed. Full reasoning and the class-wide ruling live in BLOCKED-070; this entry records only the site.",
         "approvedAt": "2026-09-04",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070"
@@ -1485,6 +1520,7 @@
         "stage": "U",
         "declaredPath": "packages/core/agent-loop/src/tool-calls.ts",
         "approvedPath": "docs/architecture.md",
+        "kind": "widening",
         "reason": "WIDENING, not substitution: the declared path is unchanged and still written. Root CLAUDE.md requires that changing agent-loop be accompanied by a docs/architecture.md update, and that file appears in no stage of P2-03, so the registry authorizes the loop edit while the repository's own rule requires a companion edit outside the authorization. docs/architecture.md is declared only by P0-02.U, and P0-02 is ACCEPTED -- verified before approving that none of P0-02's frozen cases assert anything about that file's content, so editing it cannot invalidate P0-02's green; this is not a quiet edit to an accepted row. Class-level reasoning, the 21 epics that will hit this, and the fact that P2-01 already changed the loop without the doc update (recorded against P2-01, NOT discharged here) are in BLOCKED-076. Patches for the other 20 epics are added when their stage is dispatched, never in bulk, per BLOCKED-070. On 2026-09-15 the approvedPath \"packages/core/agent-loop/src/tool-calls.ts + docs/architecture.md\" was narrowed to docs/architecture.md because an approvedPath is read as one repository path. tool-calls.ts stays a deliverable through the declaration itself, which the shared declared-path resolution keeps beside every approved path (union semantics, 2026-09-15; 111 alpha-4).",
         "approvedAt": "2026-09-04",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-076"
@@ -1494,6 +1530,7 @@
         "stage": "U",
         "declaredPath": "packages/core/tools/src/code-mode.ts",
         "approvedPath": "packages/core/tools/src/ptc.ts",
+        "kind": "substitution",
         "reason": "SUBSTITUTION, and a SECOND KIND of registry-path deviation that must not be conflated with the first. BLOCKED-070's class is an ARCHIVAL ERROR: the path exists and is real, but the spec filed it into the wrong channel (a local test written as `.e2e.ts`, routing it into the paid real-API suite). This entry is different: `packages/core/tools/src/code-mode.ts` HAS NEVER EXISTED in this repository at any commit. The code-mode execution surface P2-03 must[2] names -- the run_code dispatch bridge that starts embedded sub-calls -- lives in `packages/core/tools/src/ptc.ts`, where `tool/code-dispatch-start` is appended. So the spec did not misfile a real file; it named a file that was never written. Keeping the two kinds apart matters because their remedies differ: an archival error is corrected by moving the file into the right channel, while a never-existent name is corrected by pointing at the surface that actually implements the clause, and only the second requires establishing WHICH existing file is the real subject. The registry path stays byte-locked and unedited per BLOCKED-035.",
         "approvedAt": "2026-09-05",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070"
@@ -1503,6 +1540,7 @@
         "stage": "C",
         "declaredPath": "packages/run/message-bus/tests/crash.e2e.ts",
         "approvedPath": "packages/run/message-bus/tests/crash.e2e.spec.ts",
+        "kind": "substitution",
         "reason": "SUBSTITUTION, third subclass of BLOCKED-070 -- PREVENTION rather than correction. The declared file does not exist because this epic is meant to create it, so building it under the declared name would manufacture BLOCKED-070's archival error in the same commit that first writes it: `.e2e.ts` routes into vitest.e2e.config.ts, the real-API suite whose header states each test self-skips without a key, while first100-exact-sha.yml runs the default config and would never observe the cases. Recorded BEFORE the first line is written, so the deviation is deliberate and dated rather than looking later like a casual rename. Local-behaviour classification made by the delegate from the clause text, not by the implementing party: acceptance[0] kills a process at three points and replays, acceptance[1] queries and replays undelivered messages, acceptance[2] is cross-tenant refusal, and the must clauses are transactional writes, idempotent receipts, id/epoch dedup and priority/deadline/dead-letter/backpressure -- none requires a model or external API. `.e2e.spec.ts` keeps the e2e naming while entering the default channel and cannot double-run, since vitest.e2e.config.ts's include requires a filename ending `.e2e.ts`.",
         "approvedAt": "2026-09-05",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070"
@@ -1512,6 +1550,7 @@
         "stage": "F",
         "declaredPath": "packages/run/message-bus/tests/crash.e2e.ts",
         "approvedPath": "packages/run/message-bus/tests/crash.e2e.spec.ts",
+        "kind": "substitution",
         "reason": "SUBSTITUTION, third subclass of BLOCKED-070 -- PREVENTION rather than correction. The declared file does not exist because this epic is meant to create it, so building it under the declared name would manufacture BLOCKED-070's archival error in the same commit that first writes it: `.e2e.ts` routes into vitest.e2e.config.ts, the real-API suite whose header states each test self-skips without a key, while first100-exact-sha.yml runs the default config and would never observe the cases. Recorded BEFORE the first line is written, so the deviation is deliberate and dated rather than looking later like a casual rename. Local-behaviour classification made by the delegate from the clause text, not by the implementing party: acceptance[0] kills a process at three points and replays, acceptance[1] queries and replays undelivered messages, acceptance[2] is cross-tenant refusal, and the must clauses are transactional writes, idempotent receipts, id/epoch dedup and priority/deadline/dead-letter/backpressure -- none requires a model or external API. `.e2e.spec.ts` keeps the e2e naming while entering the default channel and cannot double-run, since vitest.e2e.config.ts's include requires a filename ending `.e2e.ts`.",
         "approvedAt": "2026-09-05",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070"
@@ -1521,6 +1560,7 @@
         "stage": "C",
         "declaredPath": "packages/run/lease/tests/fencing.e2e.ts",
         "approvedPath": "packages/run/lease/tests/fencing.e2e.spec.ts",
+        "kind": "substitution",
         "reason": "SUBSTITUTION, BLOCKED-070's third subclass -- PREVENTION rather than correction, and the SECOND application of the precedent P4-06 set. The declared file does not exist because this epic creates it, so writing it under the declared name would manufacture BLOCKED-070's archival error in the same commit that first writes it: `.e2e.ts` routes into vitest.e2e.config.ts, the real-API suite whose tests self-skip without a key, while first100-exact-sha.yml runs the default config and would never observe the cases. Recorded BEFORE the first line is written, so the deviation is deliberate and dated. Local-behaviour classification: P4-07's clauses are epoch-lease ownership, fencing tokens on state writes, heartbeat renewal and scheduler reclaim, and stale-epoch rejection; its validation is split-brain and delayed-packet tests, 100 workers contending for one item, and stale-token rejection reaching an audit record. None requires a model or external API -- epoch comparison is the whole staleness test, with no clock and no network. `.e2e.spec.ts` keeps the e2e naming while entering the default channel and cannot double-run, since vitest.e2e.config.ts's include requires a filename ending `.e2e.ts`.",
         "approvedAt": "2026-09-05",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070"
@@ -1530,6 +1570,7 @@
         "stage": "F",
         "declaredPath": "packages/run/lease/tests/fencing.e2e.ts",
         "approvedPath": "packages/run/lease/tests/fencing.e2e.spec.ts",
+        "kind": "substitution",
         "reason": "SUBSTITUTION, BLOCKED-070's third subclass -- PREVENTION rather than correction, and the SECOND application of the precedent P4-06 set. The declared file does not exist because this epic creates it, so writing it under the declared name would manufacture BLOCKED-070's archival error in the same commit that first writes it: `.e2e.ts` routes into vitest.e2e.config.ts, the real-API suite whose tests self-skip without a key, while first100-exact-sha.yml runs the default config and would never observe the cases. Recorded BEFORE the first line is written, so the deviation is deliberate and dated. Local-behaviour classification: P4-07's clauses are epoch-lease ownership, fencing tokens on state writes, heartbeat renewal and scheduler reclaim, and stale-epoch rejection; its validation is split-brain and delayed-packet tests, 100 workers contending for one item, and stale-token rejection reaching an audit record. None requires a model or external API -- epoch comparison is the whole staleness test, with no clock and no network. `.e2e.spec.ts` keeps the e2e naming while entering the default channel and cannot double-run, since vitest.e2e.config.ts's include requires a filename ending `.e2e.ts`.",
         "approvedAt": "2026-09-05",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070"
@@ -1539,6 +1580,7 @@
         "stage": "C",
         "declaredPath": "packages/collaboration/workflow-journal/tests/resume.e2e.ts",
         "approvedPath": "packages/collaboration/workflow-journal/tests/resume.e2e.spec.ts",
+        "kind": "substitution",
         "reason": "SUBSTITUTION, BLOCKED-070's PREVENTION subclass -- third application of the precedent set by P4-06 and continued by P4-07. The declared file does not exist because this epic creates it, so writing it under the declared name would manufacture the archival error in the same commit that first writes it: `.e2e.ts` routes into vitest.e2e.config.ts, whose suites self-skip without an API key, while first100-exact-sha.yml runs the default config and would never observe the cases. Recorded BEFORE the first line is written. Local-behaviour classification: P4-08's clauses are a journal of script digest, program counter, artifact refs, receipts and phase; skipping completed pure steps on resume; reconciling side-effecting ones; refusing to serialize closures; and a journalable DSL. Its acceptance kills a process around agent() calls and compares a resumed result against an uninterrupted one. None requires a model or an external API -- a journal replay is decided from recorded data. `.e2e.spec.ts` keeps the e2e naming while entering the default channel and cannot double-run, since vitest.e2e.config.ts's include requires a filename ending `.e2e.ts`.",
         "approvedAt": "2026-09-06",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070"
@@ -1548,6 +1590,7 @@
         "stage": "F",
         "declaredPath": "packages/collaboration/workflow-journal/tests/resume.e2e.ts",
         "approvedPath": "packages/collaboration/workflow-journal/tests/resume.e2e.spec.ts",
+        "kind": "substitution",
         "reason": "SUBSTITUTION, BLOCKED-070's PREVENTION subclass -- third application of the precedent set by P4-06 and continued by P4-07. The declared file does not exist because this epic creates it, so writing it under the declared name would manufacture the archival error in the same commit that first writes it: `.e2e.ts` routes into vitest.e2e.config.ts, whose suites self-skip without an API key, while first100-exact-sha.yml runs the default config and would never observe the cases. Recorded BEFORE the first line is written. Local-behaviour classification: P4-08's clauses are a journal of script digest, program counter, artifact refs, receipts and phase; skipping completed pure steps on resume; reconciling side-effecting ones; refusing to serialize closures; and a journalable DSL. Its acceptance kills a process around agent() calls and compares a resumed result against an uninterrupted one. None requires a model or an external API -- a journal replay is decided from recorded data. `.e2e.spec.ts` keeps the e2e naming while entering the default channel and cannot double-run, since vitest.e2e.config.ts's include requires a filename ending `.e2e.ts`.",
         "approvedAt": "2026-09-06",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070"
@@ -1557,6 +1600,7 @@
         "stage": "C",
         "declaredPath": "packages/workflow/workflow-registry/tests/nested.e2e.ts",
         "approvedPath": "packages/workflow/workflow-registry/tests/nested.e2e.spec.ts",
+        "kind": "substitution",
         "reason": "SUBSTITUTION, BLOCKED-070's PREVENTION subclass -- fourth application, after P4-06, P4-07 and P4-08. The declared file does not exist because this epic creates it, so writing it under the declared name would manufacture the archival error in the same commit that first writes it: `.e2e.ts` routes into vitest.e2e.config.ts, whose suites self-skip without an API key, while first100-exact-sha.yml runs the default config and would never observe the cases. Recorded BEFORE the first line. Local-behaviour classification: P4-09's clauses are workflow definitions registered as versioned signed artifacts, runs referencing a digest, detached runs surviving UI disconnect, and nested runs inheriting or decaying budget/capability/trace with recursion detection; its acceptance covers load-without-executing, cancel propagation, child failure policy, and depth/agent/budget limits. None requires a model or external API -- these are decisions over recorded definitions and limits. `.e2e.spec.ts` keeps the e2e naming while entering the default channel and cannot double-run, since vitest.e2e.config.ts's include requires a filename ending `.e2e.ts`.",
         "approvedAt": "2026-09-06",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070"
@@ -1566,6 +1610,7 @@
         "stage": "F",
         "declaredPath": "packages/workflow/workflow-registry/tests/nested.e2e.ts",
         "approvedPath": "packages/workflow/workflow-registry/tests/nested.e2e.spec.ts",
+        "kind": "substitution",
         "reason": "SUBSTITUTION, BLOCKED-070's PREVENTION subclass -- fourth application, after P4-06, P4-07 and P4-08. The declared file does not exist because this epic creates it, so writing it under the declared name would manufacture the archival error in the same commit that first writes it: `.e2e.ts` routes into vitest.e2e.config.ts, whose suites self-skip without an API key, while first100-exact-sha.yml runs the default config and would never observe the cases. Recorded BEFORE the first line. Local-behaviour classification: P4-09's clauses are workflow definitions registered as versioned signed artifacts, runs referencing a digest, detached runs surviving UI disconnect, and nested runs inheriting or decaying budget/capability/trace with recursion detection; its acceptance covers load-without-executing, cancel propagation, child failure policy, and depth/agent/budget limits. None requires a model or external API -- these are decisions over recorded definitions and limits. `.e2e.spec.ts` keeps the e2e naming while entering the default channel and cannot double-run, since vitest.e2e.config.ts's include requires a filename ending `.e2e.ts`.",
         "approvedAt": "2026-09-06",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070"
@@ -1575,6 +1620,7 @@
         "stage": "C",
         "declaredPath": "packages/collaboration/taskboard/tests/claims.e2e.ts",
         "approvedPath": "packages/collaboration/taskboard/tests/claims.e2e.spec.ts",
+        "kind": "substitution",
         "reason": "SUBSTITUTION, BLOCKED-070's PREVENTION subclass -- fifth application (P4-06, P4-07, P4-08, P4-09). The declared file does not exist because this epic creates it, so writing it under the declared name would manufacture the archival error in the same commit that first writes it: `.e2e.ts` routes into vitest.e2e.config.ts, whose suites self-skip without an API key, while first100-exact-sha.yml runs the default config and would never observe the cases. Recorded BEFORE the first line. Local-behaviour classification: P5-11's clauses are task claim/lease/owner/verification fields, structured blackboard facts with provenance, keeping roles out of the primitives, single-winner concurrent claim, receipt-driven status advance, and cycle refusal at submission -- none requires a model or external API.",
         "approvedAt": "2026-09-06",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070"
@@ -1584,6 +1630,7 @@
         "stage": "F",
         "declaredPath": "packages/collaboration/taskboard/tests/claims.e2e.ts",
         "approvedPath": "packages/collaboration/taskboard/tests/claims.e2e.spec.ts",
+        "kind": "substitution",
         "reason": "SUBSTITUTION, BLOCKED-070's PREVENTION subclass -- fifth application (P4-06, P4-07, P4-08, P4-09). The declared file does not exist because this epic creates it, so writing it under the declared name would manufacture the archival error in the same commit that first writes it: `.e2e.ts` routes into vitest.e2e.config.ts, whose suites self-skip without an API key, while first100-exact-sha.yml runs the default config and would never observe the cases. Recorded BEFORE the first line. Local-behaviour classification: P5-11's clauses are task claim/lease/owner/verification fields, structured blackboard facts with provenance, keeping roles out of the primitives, single-winner concurrent claim, receipt-driven status advance, and cycle refusal at submission -- none requires a model or external API.",
         "approvedAt": "2026-09-06",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070"
@@ -1593,6 +1640,7 @@
         "stage": "F",
         "declaredPath": "packages/plugin/plugin-migrations/tests/rollback.e2e.ts",
         "approvedPath": "packages/plugin/plugin-migrations/tests/rollback.e2e.spec.ts",
+        "kind": "substitution",
         "reason": "SUBSTITUTION, BLOCKED-070's PREVENTION subclass -- sixth application of the precedent set by P4-06 and continued by P4-07, P4-08, P4-09 and P5-11. The declared file does not exist because this epic creates it, so writing it under the declared name would manufacture the archival error in the same commit that first writes it: `.e2e.ts` routes into vitest.e2e.config.ts (include: 'packages/*/*/tests/**/*.e2e.ts'), whose suites self-skip without an API key, while first100-exact-sha.yml runs the default config, whose testIncludes is `*.spec.{ts,tsx}` only, and would never observe the cases. Recorded BEFORE the first line is written. Local-behaviour classification: P1-10's Fault clauses are a superseded holder refusing to swap and naming the holder the lease reports, recovery when the medium no longer holds what the record names, and a medium primitive failing mid-transaction. Every one is decided from a fake facet and a fake lease -- none requires a model, a network or an external API, because what they assert is which primitive was called and what the live unit holds afterwards. `.e2e.spec.ts` keeps the e2e naming while entering the default channel and cannot double-run, since vitest.e2e.config.ts's include requires a filename ending `.e2e.ts`. The consumer-half boundaries live in apps/cli/tests/plugin-migration-fault-matrix.spec.ts, which needs no patch: their subject is apps/cli/src/plugin-migration.ts and a package test cannot import an app, so they are recorded through files-overlay as ordinary test citations.",
         "approvedAt": "2026-09-10",
         "approvedBy": "gq-92",
@@ -1603,6 +1651,7 @@
         "stage": "C",
         "declaredPath": "packages/sandbox/sandbox/src/policy.ts",
         "approvedPath": "packages/execution/execution-world/src/policy.ts",
+        "kind": "substitution",
         "reason": "Not buildable as declared: a package cycle. P3-02 must[0]'s policy types reference P3-01's World*Spec dimension types, and `execution-world` already imports `dsh-sandbox` (`local-provider.ts:31` takes `SandboxPolicy`), so a policy type inside `sandbox` would close `sandbox -> execution-world -> sandbox`. Measured on f24573ddfe: sandbox's tsconfig references cosmokit/cordis/llm/session and not execution-world, and adding it is the edge that closes the loop. The registry path was very likely authored before P3-01 existed — the same reason P3-02's seven dimensions turned out to be P3-01's first seven word for word. Clause ownership is unchanged: these remain P3-02's clauses, and the epic still writes the seven types must[0] names. Delegate ruling, addendum 376. The third file consolidates the declared network.ts and process.ts into one solver module: the two dimensions carry no logic of their own beyond the closed-allowlist rule every dimension shares, and two files holding one rule each would have split the solver that must see all seven at once."
       },
       "P3-02-C-policy-solver": {
@@ -1610,6 +1659,7 @@
         "stage": "C",
         "declaredPath": "packages/sandbox/sandbox/src/network.ts",
         "approvedPath": "packages/execution/execution-world/src/policy-solver.ts",
+        "kind": "substitution",
         "reason": "Not buildable as declared: a package cycle. P3-02 must[0]'s policy types reference P3-01's World*Spec dimension types, and `execution-world` already imports `dsh-sandbox` (`local-provider.ts:31` takes `SandboxPolicy`), so a policy type inside `sandbox` would close `sandbox -> execution-world -> sandbox`. Measured on f24573ddfe: sandbox's tsconfig references cosmokit/cordis/llm/session and not execution-world, and adding it is the edge that closes the loop. The registry path was very likely authored before P3-01 existed — the same reason P3-02's seven dimensions turned out to be P3-01's first seven word for word. Clause ownership is unchanged: these remain P3-02's clauses, and the epic still writes the seven types must[0] names. Delegate ruling, addendum 376. The third file consolidates the declared network.ts and process.ts into one solver module: the two dimensions carry no logic of their own beyond the closed-allowlist rule every dimension shares, and two files holding one rule each would have split the solver that must see all seven at once."
       },
       "P3-02-C-policy-spec": {
@@ -1617,6 +1667,7 @@
         "stage": "C",
         "declaredPath": "packages/sandbox/sandbox/tests/policy.spec.ts",
         "approvedPath": "packages/execution/execution-world/tests/policy.spec.ts",
+        "kind": "substitution",
         "reason": "Not buildable as declared: a package cycle. P3-02 must[0]'s policy types reference P3-01's World*Spec dimension types, and `execution-world` already imports `dsh-sandbox` (`local-provider.ts:31` takes `SandboxPolicy`), so a policy type inside `sandbox` would close `sandbox -> execution-world -> sandbox`. Measured on f24573ddfe: sandbox's tsconfig references cosmokit/cordis/llm/session and not execution-world, and adding it is the edge that closes the loop. The registry path was very likely authored before P3-01 existed — the same reason P3-02's seven dimensions turned out to be P3-01's first seven word for word. Clause ownership is unchanged: these remain P3-02's clauses, and the epic still writes the seven types must[0] names. Delegate ruling, addendum 376. The third file consolidates the declared network.ts and process.ts into one solver module: the two dimensions carry no logic of their own beyond the closed-allowlist rule every dimension shares, and two files holding one rule each would have split the solver that must see all seven at once."
       },
       "P1-10-C-rollback-e2e-suffix": {
@@ -1624,6 +1675,7 @@
         "stage": "C",
         "declaredPath": "packages/plugin/plugin-migrations/tests/rollback.e2e.ts",
         "approvedPath": "packages/plugin/plugin-migrations/tests/rollback.e2e.spec.ts",
+        "kind": "substitution",
         "reason": "SUBSTITUTION, BLOCKED-070's PREVENTION subclass, recorded retroactively. The file was written as `packages/plugin/plugin-migrations/tests/rollback.e2e.spec.ts` in 4ea38b1059 without a patch, so the registry still declares `packages/plugin/plugin-migrations/tests/rollback.e2e.ts` for this stage; this entry records the same substitution the other stages of this family already carry. `.e2e.ts` routes into vitest.e2e.config.ts, whose suites the default observation never runs; `.e2e.spec.ts` keeps the e2e name and enters the default channel. The declaration is corrected through this overlay rather than in registry.json, which stays as extracted (BLOCKED-253; delegate ruling, 2026-09-15).",
         "approvedAt": "2026-09-15",
         "approvedBy": "first100-delegate-78",
@@ -1634,6 +1686,7 @@
         "stage": "C",
         "declaredPath": "packages/action/action-ledger/tests/idempotency.e2e.ts",
         "approvedPath": "packages/action/action-ledger/tests/idempotency.e2e.spec.ts",
+        "kind": "substitution",
         "reason": "SUBSTITUTION, BLOCKED-070's PREVENTION subclass, recorded retroactively. The file was written as `packages/action/action-ledger/tests/idempotency.e2e.spec.ts` in 00cb4b19c5 without a patch, so the registry still declares `packages/action/action-ledger/tests/idempotency.e2e.ts` for this stage; this entry records the same substitution the other stages of this family already carry. `.e2e.ts` routes into vitest.e2e.config.ts, whose suites the default observation never runs; `.e2e.spec.ts` keeps the e2e name and enters the default channel. The declaration is corrected through this overlay rather than in registry.json, which stays as extracted (BLOCKED-253; delegate ruling, 2026-09-15).",
         "approvedAt": "2026-09-15",
         "approvedBy": "first100-delegate-78",
@@ -1644,6 +1697,7 @@
         "stage": "F",
         "declaredPath": "packages/action/action-ledger/tests/idempotency.e2e.ts",
         "approvedPath": "packages/action/action-ledger/tests/idempotency.e2e.spec.ts",
+        "kind": "substitution",
         "reason": "SUBSTITUTION, BLOCKED-070's PREVENTION subclass, recorded retroactively. The file was written as `packages/action/action-ledger/tests/idempotency.e2e.spec.ts` in 00cb4b19c5 without a patch, so the registry still declares `packages/action/action-ledger/tests/idempotency.e2e.ts` for this stage; this entry records the same substitution the other stages of this family already carry. `.e2e.ts` routes into vitest.e2e.config.ts, whose suites the default observation never runs; `.e2e.spec.ts` keeps the e2e name and enters the default channel. The declaration is corrected through this overlay rather than in registry.json, which stays as extracted (BLOCKED-253; delegate ruling, 2026-09-15).",
         "approvedAt": "2026-09-15",
         "approvedBy": "first100-delegate-78",
