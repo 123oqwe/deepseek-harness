@@ -6612,6 +6612,180 @@ contain the `from` path, which is the guard that catches a half-applied fix.
 Machine-readable inventory: `stale-registry-paths.json` (per epic, per
 declaration, with candidates and the deleting commit where known).
 
+**Addendum, 2026-09-15.** Recorded after the `FILES_REPLACED` batch was reshaped. Measured at
+`03aabd8ee6` (lane A) unless a point names another commit.
+
+**(i) Two declared paths were deleted with no successor, and the table cannot say so**
+
+`packages/session/session-persistence/src/write-behind.ts` and
+`packages/session/session-persistence/src/coordinator.ts` were both deleted by
+**`bec6805d6a`** (*"refactor(session-persistence)!: handle-based seam with a
+lifecycle-owned write path"*). Neither has a same-named successor. The commit
+deleted `coordinator.ts` (1564 lines), `preparations.ts` (401) and
+`write-behind.ts` (159), and added `handle.ts` (106), `storage-contract.ts` (148),
+a rewritten `index.ts`, and the jsonl backend's `storage.ts` (497) — 2124 lines
+of orchestration dissolved into 751 across two packages. There is no path that
+could be written in a `to:`.
+
+`coordinator.ts` was at one point mapped to
+`packages/session/session-telemetry/src/coordinator.ts`. **That mapping was
+withdrawn**: both paths were **added by the same commit `7e445c3a67`**, so the
+telemetry file cannot be a successor; `-M20% -C20%` shows no rename arrow; and
+the two files share **zero exports** (1564 lines of persistence orchestration
+against 321 of telemetry capture). The match was on basename alone. Two lanes
+reached this conclusion independently.
+
+`write-behind.ts` is declared by 3 epics (P4-06, P4-12, P6-08); `coordinator.ts`
+by 6 (P4-01, P4-06, P6-07, P2-07, P7-08, P8-05). **Both declarations stay.**
+`FILES_REPLACED` has no removal form, and `verify-declared-files-exist` lists
+these as informational rather than refusing them.
+
+**(ii) The suffix family was never a `FILES_REPLACED` job — the overlay already owns it**
+
+The seven `.e2e.ts → .e2e.spec.ts` corrections were drafted as `FILES_REPLACED`
+entries. **They do not belong there, and adding them would have failed the tree
+closed.**
+
+`tests/first100/adjudication.json`'s **`deliverablePathPatches`** already records
+approved declared-path→delivered-path substitutions: **51 entries, 13 of them
+exactly this suffix substitution**, each carrying an epic, a stage, a reason, an
+approval date and a basis. `generate-specs` reads that overlay. Editing
+`registry.json`'s declarations to match the tree would make the overlay's
+`declaredPath` no longer match anything, and **`generate-specs` fails closed on
+it**. On 2026-09-15 the withdrawn batch was applied to the tree once: `generate-specs.ts`
+exited 1 with `deliverablePathPatches: 11 invalid patch(es)`, and the tree was
+restored before anything was committed.
+
+Measured, for the record:
+
+```
+deliverablePathPatches entries                               : 51
+of those, declaredPath .e2e.ts -> approvedPath .e2e.spec.ts  : 13
+    covering 7 distinct paths (usually one patch per C and F stage)
+stage-level .e2e.ts declarations in registry.json            : 99
+of those, WITHOUT a patch                                    : 86
+```
+
+**So the gap is not a missing correction. The gap is that the tools which ask
+"does this declared file exist" do not read the overlay** —
+`verify-declared-files-exist`, the files-overlay view, and the reality set all
+test the declared path directly. The overlay is the mechanism; those three
+readers are the hole.
+
+Two consequences follow, and they point opposite ways to the original plan:
+
+1. **The suffix half of the batch is void.** No `FILES_REPLACED` entry for any of
+   the seven. `inbox.ts` still goes through `FILES_REPLACED`, because a
+   cross-package move that needed a judgement is what that table is for.
+2. **Three patches are missing and should be added**, not to the registry but to
+   the overlay: **`P1-10.C`, `P4-12.C`, `P4-12.F`**. Independently reproduced —
+   of the seven paths in the withdrawn batch, six have patches for both their C
+   and F stages; `rollback.e2e.ts` has `P1-10.F` but not `P1-10.C`, and
+   `idempotency.e2e.ts` (P4-12) has neither; and `verify-declared-files-exist` is to
+   resolve declared paths through the overlay (delegate ruling, same day).
+
+> **A note on two numbers that look like a disagreement and are not.** The patch
+> count is **13** over the whole overlay and **11** when restricted to the seven
+> paths of the withdrawn batch — the other two are `P6-07.C`/`P6-07.F` for
+> `session-lifecycle/tests/lifecycle.e2e.ts`, which was never in the batch.
+> 11 + 2 = 13.
+
+**And the wider number is worth recording:** **86 of the 99 stage-level `.e2e.ts`
+declarations have no patch at all.** The overlay is applied per epic as that epic
+is worked, so this is expected rather than alarming — but it means the three
+above are the *started* epics' share of a much larger standing set, and that
+`verify-declared-files-exist`'s ACCEPTED count will keep moving as epics are
+accepted, not only as the tree is refactored.
+
+**(iii) The declared paths were never renamed — they never existed**
+
+A separate fact about the same seven paths, because it changes what the
+correction *is* rather than where it goes.
+
+Measured across **all refs without `--follow`** — `--follow` starts at the tip
+and reports nothing for a path absent from it, so an empty `--follow` result is
+not evidence — with a positive control:
+
+```
+each of the 8 declared .e2e.ts paths : 0 commits
+session-persistence/src/coordinator.ts (positive control) : 27 commits
+```
+
+**Not one of those paths has ever existed in any commit on any ref.** The files
+were created as `.e2e.spec.ts`. The declarations are plan-time naming from before
+the BLOCKED-070 convention, never a rename. `deliverablePathPatches` records them
+correctly as an intentional substitution, which is what a declared-versus-
+delivered overlay is for.
+
+**(iv) `inbox.ts`: only the started epics, and P8-03 waits**
+
+`packages/core/agent/src/inbox.ts → packages/core/agent-loop/src/inbox.ts` is a
+cross-package move that needed a judgement, so by the scope ruling it corrects
+only the **started** epics: P4-06, P2-12, P4-05, P5-10, P5-11.
+
+**Two declarations are deliberately left**, both `P8-03` (`epic.files` and
+`stages.U`), to be corrected when P8-03 starts. P2-12 is included despite a
+`NOT_RUN` ledger status, because `NOT_RUN` is a *default* rather than "not
+started" and P2-12 has green cells.
+
+**(v) P6-01 declares a file its own commit deleted**
+
+`packages/memory/memory/src/invariant.ts` is declared by **P6-01** twice
+(`epic.files`, `stages.C`) and does not exist. It is **not** the same class as
+(i).
+
+It existed in 4 commits (positive control: `coordinator.ts`, 27) and was deleted
+by **`17ca16450f` — `fix(first100): P6-01(C) — close 3 Reviewer-found gaps in
+Memory Contract scaffold`**, P6-01's own C-stage fix. No rename; no
+`invariant.ts` anywhere under `packages/memory/`.
+
+**The removal was correct and complete.** The same commit removed the `./invariant`
+export, `lib/invariant.js`, the `@deepseek-ai/dsh-invariants` dependency and the
+tsconfig reference, and recorded why in the README at the exact table row the
+file occupied: *"No runtime invariant companion is published; `memory/access` is
+this package's own event, minted only by `MemoryRuntime`, so no independent second
+source exists to cross-check it against."* That is `packages/AGENTS.md`'s rule
+applied verbatim, and the README row is still there today.
+
+**The distinction from (i) is the point:** `write-behind.ts` and `coordinator.ts`
+went stale because an unrelated refactor moved the tree underneath their
+declarations. `invariant.ts` was deleted **by the declaring epic itself**, and the
+declaration was left behind by the same stage's own commit — an internal
+inconsistency inside one epic, not drift.
+
+**P6-01 was ACCEPTED on 2026-09-15 declaring a file its own commit deleted twelve
+days earlier**, and nothing on the accept path objected. That is what
+`verify-declared-files-exist` reports, informationally. It moves the ACCEPTED
+subset from **46 to 48 declarations** (15 → 16 distinct paths, 14 → 15 epics).
+No `FILES_REPLACED` entry: there is no `to:`, and here inventing a successor would
+be actively wrong, because the design conclusion is that the file should not exist.
+
+**P6-01's accepted declarations are not amended.** The epic is ACCEPTED at a real
+CI run; rewriting an accepted epic's declarations to match the tree afterwards
+would make the ledger describe a plan nobody had. Record the divergence, keep the
+record.
+
+**(vi) What the table still lacks**
+
+Three paths across nine epic-declarations now want something `FILES_REPLACED`
+cannot express: a **removal** form. `write-behind.ts` (3), `coordinator.ts` (6),
+`invariant.ts` (2 — P6-01's own, listed separately above). Recording the
+requirement here; the design is not part of this entry.
+
+**(vii) Residual count after the batch**
+
+`verify-declared-files-exist`'s ACCEPTED informational count at `74fadf1144`, after
+the `inbox.ts` part of the batch landed: **41** (from 48 at `bed44fc9f4`; the seven
+rows removed are P4-05 epic and U, P4-06 epic, C and U, P5-11 epic and U). The gate
+at that commit does not read the overlay yet. The overlay-aware reader drafted for
+the next commit, run on the same tree, splits the 41 into **18** references that an
+approved patch replaces with a file that exists, and **23** absent.
+
+One of the 18 is `P2-03.U` `packages/core/tools/src/code-mode.ts`: patch
+`P2-03-U-code-mode-path-never-existed` (approved 2026-09-05) maps it to `packages/core/tools/src/ptc.ts`. It was
+covered by the overlay the whole time, and counting it as a declaration awaiting a
+decision overstated this entry by one path.
+
 ### BLOCKED-254 — eight BLOCKED numbers appear twice, and the status reader takes the first
 **Status:** OPEN (2026-09-15). The fix lands in the same commit as this entry; the closing line, with that commit's sha, follows in the next docs commit.
 
