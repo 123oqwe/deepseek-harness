@@ -141,3 +141,19 @@ export function referencedPaths(entry: P9FreezeEntry): string[]
  * @returns one entry per stale cell, with the reason.
  */
 export function staleCells(record: P9Record, freeze: P9Freeze, git: P9Git): P9StaleCell[]
+
+/**
+ * Whether the report a P9 record is read from belongs to the candidate it names.
+ * A directory ending in `-<40 hex>` must name exactly the candidate; any other
+ * directory must carry a commit token tied to the candidate, and a directory
+ * with no token is refused.
+ * @param reportPath - the `--report` argument.
+ * @param candidateSha - the 40-hex `--candidate-sha` argument.
+ * @param gitRoot - repository whose objects resolve a short token; defaults to this repository.
+ * @returns `{ ok: true }`, or `{ ok: false, reason }` naming why the report is refused.
+ */
+export function reportPathMatchesCandidate(
+  reportPath: string,
+  candidateSha: string,
+  gitRoot?: string,
+): { ok: boolean, reason?: string }

@@ -179,3 +179,21 @@ export function validateAcceptanceCoverage(
   schema: unknown,
   coverage: unknown,
 ): { valid: boolean; errors: readonly AcceptanceCoverageSchemaError[] }
+
+/** Whether a report is tied to a candidate, and why not when it is refused. */
+export interface ReportDirVerdict {
+  ok: boolean
+  reason?: string
+}
+
+/**
+ * Whether a report's parent directory name carries a commit token tied to the
+ * candidate being greened: a run of at least 10 lowercase hex characters, not
+ * all digits, that is a prefix of the candidate or names a local commit the
+ * candidate is an ancestor of. Reads only local git objects.
+ * @param reportPath - the `--report` argument.
+ * @param candidateSha - the 40-hex `--candidate-sha` argument.
+ * @param gitRoot - repository whose objects resolve a token; defaults to this repository.
+ * @returns `{ ok: true }`, or `{ ok: false, reason }` naming why the report is refused.
+ */
+export function reportDirMatchesCandidate(reportPath: string, candidateSha: string, gitRoot?: string): ReportDirVerdict
