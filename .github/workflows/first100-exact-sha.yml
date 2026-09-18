@@ -39,6 +39,13 @@ jobs:
         run: |
           sha="${{ github.event.inputs.sha }}"
           if [ -z "$sha" ]; then sha="${{ github.sha }}"; fi
+          # The candidate SHA is the identity of every observation this run produces.
+          # An abbreviated or mistyped one either checks out something else or fails
+          # at checkout, while the ledger records the string given here (BLOCKED-015).
+          if [[ ! "$sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "resolve-sha: cannot decide — the candidate SHA must be 40 lowercase hex characters (got \"$sha\")" >&2
+            exit 2
+          fi
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@v6
