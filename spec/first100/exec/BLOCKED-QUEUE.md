@@ -6540,6 +6540,16 @@ its 554 lines. That asymmetry is the cleanest available piece of in-scope work,
 and it is the same gap `verify-usage-stage-subject` reports: P2-10 is the one
 epic whose Usage stage touches none of the consumers its registry row names.
 
+**Why the Usage-subject gate still reports P2-10, in three readings (2026-09-18, `97909ef18a`).**
+
+`verify-usage-stage-subject` reports P2-10 and no other epic, and its output is byte-identical to the reading `invariants-gates.md` records. The intersection of the two consumers P2-10's registry row names and the five files its live U entries freeze is **empty**. Three readings say what that emptiness is, and what it is not.
+
+1. **Not that the frozen files are unrelated to P2-10.** Four of the five carry a `P2-10[U]` row in the files overlay — `policy-engine-cedar/tests/policy-set-seam.spec.ts`, `policy-engine-cedar/src/index.ts`, `policy-engine/src/types.ts` and `bundle/base/cordis.patch.yml` — and the fifth, `policy-language/src/index.ts`, is declared by P2-10 itself at the P stage. The Usage freeze landed on files P2-10 really touched; none of them is one of the two its registry row calls a consumer.
+2. **The gate's own sentence holds literally here.** Two of the five are in `policy-engine-cedar`, which no epic declares at all, and one is P2-10's own P-stage output. A Usage stage inside the epic's own surface proves the library, not the use of it.
+3. **Both declared consumers are heavily shared.** `packages/interaction/permission-presets/src/index.ts` is declared in 6 places across 3 epics (P2-10, P2-11, P8-09), and `packages/settings/settings/src/index.ts` in 12 places across 6 (P0-05, P1-10, P2-08, P2-10, P8-09, P8-10). Any P2-10 work inside them serialises against those epics' writes, which is a scheduling fact rather than an objection.
+
+**How this closes (delegate ruling, 2026-09-18).** A U-stage supplement that really touches `permission-presets/src/index.ts`, frozen under its own `supplementSeq` rather than replacing the live U entry. **Not an exemption**: the six entries in `usage-subject-exemptions.json` each record a registry that named the wrong consumer, while P2-10's consumers are the right ones and its Usage stage has not reached them — recording it as exempt would file work not done as work not needed. **Not a registry edit** either, which would turn the undone into the unnecessary.
+
 ### BLOCKED-253 — 46 registry declarations on ACCEPTED epics name files that do not exist
 **Status:** OPEN (2026-09-15)
 
