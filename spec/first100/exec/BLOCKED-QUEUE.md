@@ -7068,3 +7068,23 @@ All 13 read as CLOSED, and six of them say in their own first sentence that work
 - Not that the 13 entries' own conclusions were wrong. Only their first word is rewritten; the sentence that follows it is unchanged.
 - Not that the class of every one of the 16 values is settled beyond this ruling. Four of them (`FIXED`, `ANSWERED-BY-DELEGATE`, `ADJUDICATED`, `ANSWERED-BY-USER`) cover entries in both conditions, and the ruling assigns them to OPEN as the safer default rather than because each entry under them is open.
 - Not that the 73 entries with no `**Status:` line are readable now. They still throw, and what each of them should say is not decided here.
+
+### BLOCKED-260 — headless's trust-boundary switch rests on a launch option that never reaches the plugin, and writes no record
+**Status:** OPEN (2026-09-18). Measured, not scheduled: the option is refused by the booted app's own parser, and a one-shot `DSH_HOME` run shows nothing is written before the refusal. The fix is ruled (see *How this closes*); the entry stays open until the probe it names comes back green.
+
+**What the switch claims.** `packages/bundle/headless/cordis.patch.yml:48-49` overrides `workspace-trust-local` to `disabled: false`, and the only reason its comment gives is that `dsh --trust-workspace[=read|execute|none]` is an unattended way to write a trust record. That entry point does not reach the plugin that implements it.
+
+**Where it is refused.** The launcher passes it down: `apps/cli/src/args.ts:152-154` sets `allowUnknownOption()`, `passThroughOptions()` and `enablePositionalOptions()`, so an unknown option lands in `[args...]` and becomes `cmdlineArgs` through `apps/cli/src/profile-boot.ts:628`'s `provideCmdline` — lane A reproduced all five argv shapes against commander 15.0.0 in isolation and none threw. The refusal happens one layer down: `packages/boot/cmdline/src/index.ts:178` parses `cmdlineArgs` with the **booted app's own** program, and none of the four app programs — `headless`, `sdk-app`, `acp-app`, `web-app` — declares `allowUnknownOption()`. headless's program (`startup.ts:51-57`) knows `[task...]`, `--model` and `--output-format`, so `--trust-workspace` is unknown, commander throws, and `parseCmdline` calls `ctx.appExit(1)`.
+
+**What a run actually does, measured 2026-09-18 at `97909ef18a`.** Under a one-shot `DSH_HOME` (`mktemp -d`, never the real home), `--profile headless "noop" --trust-workspace=read` exits **1** and prints one line, `error: unknown option '--trust-workspace=read'`. The temporary home afterwards holds four files, all profile scaffolding — `cordis.yml` (an empty entry list), `cordis.patch.yml`, `package.json`, `pnpm-workspace.yaml` — and `grep -rl 'trust'` over it matches **nothing**. So the open question this entry inherited is answered: **no trust record is written**. The entry point has never produced the record its comment relies on.
+
+**Why the mount order still does not matter here.** Whether `command-workspace-trust` mounts before or after the app is not established — an absent record is consistent with "mounted and never applied" and with "never mounted", and the run prints neither. It does not change the finding: nothing was written either way.
+
+**How this closes (delegate ruling, 2026-09-18).** Option (b): each app program declares `--trust-workspace [mode]` explicitly and ignores it, so the launcher's value reaches the plugin without the program having to tolerate every other unknown option. Option (a), `allowUnknownOption()` on the app programs, is refused: it would make `--moddel gpt` silently become task text. Option (c), reverting headless's `disabled: false`, stays available if (b) does not work.
+
+**The evidence that closes it, and nothing less.** The same one-shot `DSH_HOME` probe must come back with: exit **0**, the boot continuing rather than dying at parse, and at least one match for the written trust record (`grep -rl 'trusted-read'` over the temporary home). A commit that only adds the declaration, with the probe still failing, does not close this entry — it records that the fix landed and the path is still unproven.
+
+**What this entry does not claim.**
+- Not that P1-07's route A1 is affected. A1 configures `grants` and does not go through this flag.
+- Not that the other three app programs behave differently. Only `headless` and `sdk` were run, and only with an unknown option; `acp-app` and `web-app` were read, not run.
+- Not that `--trust-workspace` is unimplemented. `command-workspace-trust/src/launch-grant.ts` carries the flag, its `=read|execute|none` forms and its error for an invalid value; the code is there and spelled correctly.
