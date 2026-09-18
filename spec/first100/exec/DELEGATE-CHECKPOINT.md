@@ -11,7 +11,7 @@
 - **门数 28**(`--expect-gates` 推前实测,解析 `REGISTRY_GATES` 数组,不用行号);**ACCEPTED = 33**(as-of 191aa1e502;直方图 33 / 66 / 2 = 101);**declared-missing 6**(余 = P2-06 preconditions.ts、P4-11 circuit.ts 本血统 0 笔 → `never-delivered` 记录类待落;P1-03 `.dsh/plugins.lock.json` 运行时锁文件 → 不入库、声明改指生成代码 `plugin-lock/src/commit.ts:103` / `apps/cli/src/plugin.ts:121`)。
 - **Lane B = `dsh-first100-lane-b-6a`(`uds:/tmp/cc-socks/21861.sock`)**,接替 -14(已由巡逻关闭);前任 scratchpad `…/e442bfb2-…/scratchpad/` 只读。Lane A 不变(`dsh-first100-clean-93`)。队列文件为准。
 - **决定状态**:A 类四项由 delegate 自裁并派工(用户保留事后否决;依据 gate3-log 20:4xZ 段):(二)P1-07 → 路 A1(翻 disabled + grants);(三)P2-10 → 按原条文实现 acceptance[2] + must[1];(七)→ (a) `approvedAdditions` 记录类(首批 257 四文件 + local-provider.ts + lease plugin.ts);(八)锁文件不入库。**留给用户(B 类)**:(四)P5-10 B1、(五)P6-07 挂 base + 1e6 fixture。P2-06/P4-11 保持 ACCEPTED(never-delivered 记录)。
-- **推送 2 后 lane B 建设顺序**(lane A build-list:按被依赖数):P3-02(先 C 后 P;C 格撤签重冻)、P4-03(各解锁 5 个后继)→ P1-07 A1 → P2-10 → approvedAdditions 落地 → P3-06.P / P3-10.P;记录类待落:259(Status 词表 16 词三类 + 13/15 条改写)、never-delivered、acceptance-coverage 手改(P2-12 acceptance[0] 仍 PARTIAL)。
+- **推送 2 后 lane B 建设顺序**(lane A build-list:按被依赖数):P4-03(先把 run-plan.schema.json 补进 files[])、P1-07 A1(先 sdk-app)→ P2-10(must[1] 落 policy-language、presets 接线)→ approvedAdditions 落地(首批 8 条)→ P3-02.P / P3-06.P / P3-10.P(三者落点同在 execution-world;P3-02 的 C 不动,其绿经三条已批替换与声明重合);记录类待落:259(Status 词表 16 词三类 + 13/15 条改写)、never-delivered、acceptance-coverage 手改(P2-12 acceptance[0] 仍 PARTIAL)。
 - **今晚新规则(ONBOARDING §11.4,13 条)**:CI 步按 CI 原路径预演;NOT CHECKED 会藏坏检查;声明看两通道;基底位移后冻结 diff 只作文件级比对;类型感知 lint 只在仓库路径有效、修前先红;每次重跑新目录、证据不覆盖;账本 green 与落地不交错;落地脚本由提交会话署名;跑门集的提交不写 deferred。
 
 ## 历史快照(2026-09-15 ~15:3xZ 定稿,delegate 78,会话 d3a94c8b;**留档,非现况**——现况见本文件最上方的块)
