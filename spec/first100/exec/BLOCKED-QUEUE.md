@@ -2686,6 +2686,7 @@ And the promise that *is* documented does not hold either: the truncation cuts U
 **Owner and unblock signal.** Owner is P2-03's remaining Usage work. **Unblock signal: `ptc.spec.ts`'s deep-arguments case passes with the manifest wiring in place.** No assertion may be written that routes around this — an assertion that passes because the wiring is absent certifies nothing.
 
 ### BLOCKED-076 — every `agent-loop` change owes a `docs/architecture.md` update that no gate enforces, the file belongs to an already-accepted epic, 21 epics will hit it, and one accepted epic already violated it (delegate ruling, Supervisor implementing, 2026-09-04)
+**Status:** ADJUDICATED — the class-level widening is ruled and applied per stage on demand; no gate enforces the `agent-loop` to `docs/architecture.md` pairing, which is what this entry records.
 
 **The conflict.** Root `CLAUDE.md`: *"changing `agent-loop` requires updating `docs/architecture.md`."* P2-03's Usage stage declares `packages/core/agent-loop/src/tool-calls.ts` — the registry authorizes the loop change — but `docs/architecture.md` appears in **no** stage of P2-03. The registry authorizes the edit; the repository's own rule requires a companion edit outside the authorization.
 
@@ -2874,6 +2875,7 @@ The error is instance #6 of [BLOCKED-072](#blocked-072), and the delegate had na
 **Not started here, and deliberately.** The 13 preparation slices are buildable now, but each is a full RED/GREEN contract with its own actor-role policy (`EXECUTOR` must differ from `INDEPENDENT_READ_ONLY_FIXED_SHA`, `DETERMINISTIC_GATE`, `CONTROLLER`, `MAINTAINER`, `SIGNER`), and starting them would compete directly with W4-W19 for lane capacity. Sequencing is the delegate's call; this entry exists so the decision is made against measured facts rather than discovered at the terminal gate — the failure [BLOCKED-039](#blocked-039) explicitly set out to prevent.
 
 ### BLOCKED-070 — the registry declares `.e2e.ts` deliverables in 99 (epic, stage) slots across 49 epics, but `first100-exact-sha.yml` runs the DEFAULT vitest config and can never observe them; P6-07's own C stage already corrected this once, by freeze supersession rather than a path patch (Supervisor + delegate, 2026-09-04)
+**Status:** STANDING — a standing procedure rather than a blocker: an `.e2e.ts` declaration gets its patch when its stage is dispatched, never in bulk, and every lane it touches keeps the guard this entry names.
 
 **The fact, measured.** 50 distinct `.e2e.ts` paths are declared across 49 epics, appearing in **99** (epic, stage, path) stage-file slots. `vitest.e2e.config.ts:45` really does include `packages/*/*/tests/**/*.e2e.ts`, and 166 such files exist — the suffix is a real repository convention, not an error. What makes it wrong *here* is narrower: that config is the **real-API suite**, whose own header says each test self-skips without a key, and `first100-exact-sha.yml:72` runs bare `pnpm exec vitest run` — the default config, which never loads it. A frozen command naming a `.e2e.ts` file therefore freezes cases the greening channel structurally cannot observe ([BLOCKED-048](#blocked-048)'s class).
 
@@ -3132,6 +3134,7 @@ Not in this family but hit the same day, worth distinguishing: `packages/run/run
 **Generalized criterion (delegate wording, applies beyond P0-08)**: *if an epic's cases at some stage only assert what a config/manifest/document states, that stage's green proves the declaration exists, not that the described behavior is correct. Such an epic's real verification burden must land explicitly on a stage that can execute, and the freeze record must say so — never leave a reader to assume declaration-only green means behavior-verified.* Self-audit trigger: at freeze time, any manifest/config/doc-type epic should check itself against this criterion before its C-stage entry is written. Not built as a mechanical gate now (freeze still in effect) — recorded here for the next manifest-shaped epic in W4+ waves to check against.
 
 ### BLOCKED-048 — a frozen entry's `argv` and the real command `first100-exact-sha.yml`'s observation step runs are two different things, and nothing had ever cross-checked that the former is discoverable by the latter; P6-07.C is the first case to expose the gap (Supervisor finding, delegate-sharpened, 2026-09-03)
+**Status:** FIXED — the two `deliverablePathPatches` entries this records are in `adjudication.json`; the `testsDiscovered` equality it names is still not a mechanical gate.
 
 **Finding**: P6-07's C-stage frozen entry's `argv` ran `pnpm exec vitest run packages/session/session-lifecycle/tests/lifecycle.e2e.ts -c vitest.e2e.config.ts`. `first100-exact-sha.yml`'s "Full test suite" step (the workflow this program requires for every ledger-greening observation) runs a bare `pnpm exec vitest run --reporter=json` — the DEFAULT `vitest.config.ts`, whose `testIncludes` matches only `*.spec.{ts,tsx}`. `.e2e.ts` files are never discovered by it. P6-07.C's 27 (later 28) frozen cases were therefore never actually exercised by real CI at any point — not at RED, not at either double-review round, not at GREEN — only by the Supervisor's own local runs, which always passed the special `-c` flag. The gap surfaced only when attempting to green the cell: the real CI observation report simply contained zero of P6-07's test titles.
 
@@ -3171,6 +3174,7 @@ Fast-forward beats deletion because a *correct* `first100-exec` makes any future
 - Before trusting any "X is already landed" premise in a dispatch, the Writer verifies X exists on its actual base (`git ls-tree`), and treats a mismatch as blocking rather than as something to work around.
 
 ### BLOCKED-050 — the Trust Kernel ships structural non-replaceability, never key material; every epic claiming "kernel-signed" or "kernel-verified" is unprovable until it says where the keys come from (Supervisor finding via P2-02 Writer, delegate-widened to P1-02, 2026-09-03)
+**Status:** ADJUDICATED — the ruling stands: no signature or provenance clause is satisfied by a kernel that ships empty structure, and the addendum's widening to P2-05 is not closed here. P1-02's and P2-02's own acceptance locks were lifted separately (BLOCKED-053).
 
 **The observation.** `packages/kernel/trust-kernel/src/index.ts` constructs its six capabilities as empty structure:
 
@@ -3241,6 +3245,7 @@ Concretely: a search returning zero is two different claims — *the pattern is 
 This subsumes the narrower rule already in force ("verify claimed SHAs, runs, and ledger state against real sources before acting on any 'X is done' claim, from any sender") and extends it from *claims made by a sender* to *claims made by any artifact, including the repository's own prose*.
 
 ### BLOCKED-052 — a test that can only pass on one platform certifies that platform, not the code; P1-07's acceptance[1] was green on macOS while false on Linux, and P1-07.C must be re-greened (Supervisor finding, delegate-ruled, 2026-09-03)
+**Status:** RESOLVED — `createdAtMs` is in `workspace-trust/src/types.ts` and `src/index.ts`, and P1-07.C's GREEN stands at `f453647e6e`, a candidate that already carries it.
 
 
 **Cross-reference:** one of five distinct guarantee failures catalogued in [BLOCKED-072](#blocked-072); see its table for the other four, and do not read them as instances of one another.
@@ -3263,6 +3268,7 @@ The inode assertion is replaced by `expect(record.state).toBe('untrusted')` — 
 **Standing lesson.** *A test that can only pass in one class of environment proves a property of that environment, not of the code under test.* This widens [BLOCKED-038](#blocked-038)'s cross-platform scope: it previously recorded that some epics **cannot** be verified on the development machine; it now also covers epics that **appear** verifiable there and yield a false green. Which other acceptance clauses depend on a local pass whose real property is only falsifiable on another OS or filesystem is an open question to answer before R10, not now.
 
 ### BLOCKED-053 — four times now, a stage's declared `files[]` could not actually exercise its own clause; the fix is one question asked before dispatch, not four discoveries after (delegate generalization, 2026-09-03)
+**Status:** OPEN — the pre-dispatch checkpoint is standing practice, and the acceptance-lock table below still holds open rows (P6-07, P6-01's residual, P5-10, P4-05).
 
 **The four instances, all found by a Writer hitting the wall rather than by review:**
 
