@@ -1,0 +1,334 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deepseek-ai/dsh/spec/run-plan.schema.json",
+  "title": "dsh-run-plan-v1",
+  "description": "Epic P4-03's RunPlan: the compiled, data-only plan a run executes. must[0] names its ten fields and this document is their shape; `packages/run/run-plan/src/types.ts` mirrors it. Seven of the ten reference vocabulary the tree already carries — objectives a TaskGoalRef, constraints a TaskConstraint with its hard/soft strength, modelRoutes a ModelSelection, worlds a WorldSpecDigest, budgets the eight BudgetAmounts dimensions, approvalGates an ApprovalRef, verification a VerificationRef — and are written here as references, not restatements. Three had no existing vocabulary and are defined here for the first time: contextTopology, agentGraph and recovery. must[2] is enforced structurally: every property is closed and every leaf is data, so nothing in a plan can carry an expression, a script or a module path to execute. must[4]'s ABI promise is what `schemaVersion` and `verificationContractRef.version` exist for: P7-01 extends the contract by raising its version, never by changing a field's meaning.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "planId",
+    "objectives",
+    "constraints",
+    "modelRoutes",
+    "contextTopology",
+    "agentGraph",
+    "worlds",
+    "budgets",
+    "approvalGates",
+    "verification",
+    "recovery"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "description": "The RunPlan ABI this document speaks. A reader that does not know the version refuses the plan rather than reading fields it may misunderstand (must[4]).",
+      "type": "integer",
+      "minimum": 1
+    },
+    "planId": {
+      "description": "sha256 of the plan's normalized inputs, lowercase hex, the way `TaskProfileRef` and `WorldSpecDigest` are formed: the same normalized inputs produce the same id, and any change produces a different one (acceptance[2]). Never chosen by a caller.",
+      "$ref": "#/$defs/digest"
+    },
+    "objectives": {
+      "description": "What the run is for, each traceable to the goal message it came from.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/objective" }
+    },
+    "constraints": {
+      "description": "What the run must or should respect. `strength` is the field acceptance[0]'s minimal conflict set is computed over: an unsatisfiable `hard` constraint enters the set, a `soft` one does not.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/constraint" }
+    },
+    "modelRoutes": {
+      "description": "Which model serves which node, as a `ModelSelection` (`packages/core/agent/src/model-selection.ts`). A node with no route takes the deployment's default, which is resolved at run time and is deliberately not recorded here.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/modelRoute" }
+    },
+    "contextTopology": {
+      "description": "Which node may read what another node produced. No existing type carries this, so it is defined here: a set of directed channels, each naming what it carries and how long the receiver may keep it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channels"],
+      "properties": {
+        "channels": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/contextChannel" }
+        }
+      }
+    },
+    "agentGraph": {
+      "description": "The nodes the run executes and the order they may execute in. Every node names the TaskProfile requirement it exists to satisfy, which is acceptance[1]'s traceability.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodes", "edges"],
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/agentNode" }
+        },
+        "edges": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/agentEdge" }
+        }
+      }
+    },
+    "worlds": {
+      "description": "The execution worlds nodes run in, each pinned by its `WorldSpecDigest` rather than by a restated spec, so a world that changed is a different digest.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/worldBinding" }
+    },
+    "budgets": {
+      "description": "Ceilings over the eight dimensions `BudgetAmounts` names (`packages/execution/resource-budget/src/types.ts`).",
+      "type": "array",
+      "items": { "$ref": "#/$defs/budget" }
+    },
+    "approvalGates": {
+      "description": "Points where the run stops until an Approval entity settles, named by `ApprovalRef` (`packages/run/run/src/types.ts`).",
+      "type": "array",
+      "items": { "$ref": "#/$defs/approvalGate" }
+    },
+    "verification": {
+      "description": "What must be verified, named by `VerificationRef`, and under which versioned contract. `verificationContractRef` is must[3]'s extension point: P7-01 supplies a fuller contract by raising `version`, without changing what a plan of an earlier version meant.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/verificationEntry" }
+    },
+    "recovery": {
+      "description": "What the run does when a node fails. No existing type covers this — `RunResumeDecision` is about resuming a run someone stopped, not about a failure — so it is defined here as a per-node policy plus an explicit terminal disposition.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["onNodeFailure", "terminal"],
+      "properties": {
+        "onNodeFailure": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/recoveryRule" }
+        },
+        "terminal": {
+          "description": "What the run does when no rule applies: stop and keep the record, or stop and roll the compensations back.",
+          "enum": ["halt", "compensate"]
+        }
+      }
+    }
+  },
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "goalRef": {
+      "description": "The goal message a field is traceable to, as `TaskGoalRef` (`packages/run/task-profile/src/types.ts`).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sessionId", "messageId"],
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/identifier" },
+        "messageId": { "$ref": "#/$defs/identifier" },
+        "continuesGoalId": { "$ref": "#/$defs/identifier" }
+      }
+    },
+    "provenance": {
+      "description": "Where a field's value came from, as `InferenceProvenance`: required, not optional, for the same reason the TaskProfile makes it required — an absent trace and a forgotten one are indistinguishable.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin", "goalRef", "confidence", "rationale"],
+      "properties": {
+        "origin": { "enum": ["stated", "derived", "default"] },
+        "goalRef": { "$ref": "#/$defs/goalRef" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "rationale": { "type": "string" }
+      }
+    },
+    "objective": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "statement", "goalRef"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "statement": { "type": "string", "minLength": 1 },
+        "goalRef": { "$ref": "#/$defs/goalRef" }
+      }
+    },
+    "constraint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "strength", "statement", "provenance"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "strength": { "enum": ["hard", "soft"] },
+        "statement": { "type": "string", "minLength": 1 },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    },
+    "modelRoute": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodeId", "selection"],
+      "properties": {
+        "nodeId": { "$ref": "#/$defs/identifier" },
+        "selection": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["provider", "model"],
+          "properties": {
+            "provider": { "$ref": "#/$defs/identifier" },
+            "model": { "$ref": "#/$defs/identifier" },
+            "reasoningEffort": { "$ref": "#/$defs/identifier" }
+          }
+        }
+      }
+    },
+    "contextChannel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "from", "to", "carries", "retention"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "from": { "$ref": "#/$defs/identifier" },
+        "to": { "$ref": "#/$defs/identifier" },
+        "carries": {
+          "description": "What crosses the channel: the producer's result, a summary of it, or an artifact reference.",
+          "enum": ["result", "summary", "artifactRef"]
+        },
+        "retention": {
+          "description": "How long the receiver may keep it: for the step it was read in, for the run, or durably.",
+          "enum": ["step", "run", "durable"]
+        }
+      }
+    },
+    "agentNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "role", "taskProfileRef", "requirementId"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "role": { "$ref": "#/$defs/identifier" },
+        "taskProfileRef": {
+          "description": "The compiled TaskProfile this node executes under, as its digest (`TaskProfileRef`).",
+          "$ref": "#/$defs/digest"
+        },
+        "requirementId": {
+          "description": "The requirement inside that profile this node exists to satisfy. acceptance[1] asks that every node be traceable to one, so it is required and not nullable.",
+          "$ref": "#/$defs/identifier"
+        },
+        "worldId": { "$ref": "#/$defs/identifier" },
+        "budgetIds": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/identifier" }
+        }
+      }
+    },
+    "agentEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to", "kind"],
+      "properties": {
+        "from": { "$ref": "#/$defs/identifier" },
+        "to": { "$ref": "#/$defs/identifier" },
+        "kind": {
+          "description": "Why the order holds: the second needs the first's result, or it must merely start after it.",
+          "enum": ["dataDependency", "ordering"]
+        }
+      }
+    },
+    "worldBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "spec"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "spec": {
+          "description": "`WorldSpecDigest` — the world's own pinned identity, not a copy of its eight dimensions.",
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "dimension", "limit"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "dimension": {
+          "description": "One of the eight dimensions `BudgetAmounts` names, in its order.",
+          "enum": [
+            "cpuMillicores",
+            "memoryBytes",
+            "diskBytes",
+            "processes",
+            "wallClockMs",
+            "networkBytes",
+            "toolCalls",
+            "agents"
+          ]
+        },
+        "limit": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "approvalGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "nodeId", "approvalRef"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "nodeId": { "$ref": "#/$defs/identifier" },
+        "approvalRef": { "$ref": "#/$defs/identifier" }
+      }
+    },
+    "verificationEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "nodeId", "verificationRef", "verificationContractRef"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "nodeId": { "$ref": "#/$defs/identifier" },
+        "verificationRef": { "$ref": "#/$defs/identifier" },
+        "verificationContractRef": {
+          "description": "must[3]'s versioned extension point. A plan names the contract version it was compiled against; a later contract raises `version` and leaves earlier plans meaning what they meant.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["contract", "version"],
+          "properties": {
+            "contract": { "$ref": "#/$defs/identifier" },
+            "version": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    },
+    "recoveryRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodeId", "action"],
+      "properties": {
+        "nodeId": { "$ref": "#/$defs/identifier" },
+        "action": {
+          "description": "What to do when that node fails: try it again, run the named alternative, or give up and let `terminal` decide the run's disposition.",
+          "enum": ["retry", "substitute", "abandon"]
+        },
+        "maxAttempts": { "type": "integer", "minimum": 1 },
+        "substituteNodeId": { "$ref": "#/$defs/identifier" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "action": { "const": "substitute" } }, "required": ["action"] },
+          "then": {
+            "properties": { "substituteNodeId": { "$ref": "#/$defs/identifier" } },
+            "required": ["substituteNodeId"]
+          }
+        },
+        {
+          "if": { "properties": { "action": { "const": "retry" } }, "required": ["action"] },
+          "then": {
+            "properties": { "maxAttempts": { "type": "integer", "minimum": 1 } },
+            "required": ["maxAttempts"]
+          }
+        }
+      ]
+    }
+  }
+}
