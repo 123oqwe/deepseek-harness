@@ -27,7 +27,6 @@ function acpCommand(): Command {
     .name('dsh --profile acp')
     .description('Serve automation clients over Agent Client Protocol stdio.')
     .helpOption('-h, --help', 'show this help')
-    .option('--trust-workspace [mode]', 'consumed by the workspace-trust plugin from this same command line; declared here so this program does not refuse it (BLOCKED-260)')
     .addHelpText('after', `
 Example:
   dsh --profile acp     serve ACP until the client disconnects

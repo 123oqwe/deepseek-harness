@@ -109,13 +109,6 @@ describe('headless command-line provider', () => {
     expect(observed.exits).toEqual([1])
   })
 
-  it('ignores --trust-workspace rather than refusing it, because the plugin reads the same command line (BLOCKED-260)', async () => {
-    const { task, observed } = await bootStartup(['run', 'the', 'tests', '--trust-workspace=read'])
-    expect(task).toEqual({ task: 'run the tests', outputFormat: 'text' })
-    expect(observed.runnerConfig).toEqual({ task: 'run the tests', outputFormat: 'text' })
-    expect(observed.exits).toEqual([])
-  })
-
   it('prints its own help and leaves the runner pending', async () => {
     const { task, observed } = await bootStartup(['--help'])
     expect(observed.out).toContain('dsh --profile headless')

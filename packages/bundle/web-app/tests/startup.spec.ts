@@ -110,12 +110,6 @@ describe('web command-line provider', () => {
     expect(observed.exits).toEqual([])
   })
 
-  it('ignores --trust-workspace rather than refusing it, because the plugin reads the same command line (BLOCKED-260)', async () => {
-    const { values, observed } = await bootProvider(['--port', '8080', '--trust-workspace=read'])
-    expect(values).toEqual({ openBrowser: true, port: 8080, trustedHosts: [] })
-    expect(observed.exits).toEqual([])
-  })
-
   it('leaves deployment values to each consumer when flags omit them', async () => {
     const { values, observed } = await bootProvider([])
     expect(values).toEqual({ openBrowser: true, trustedHosts: [] })
