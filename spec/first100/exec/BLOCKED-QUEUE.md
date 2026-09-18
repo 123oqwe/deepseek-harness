@@ -7088,3 +7088,20 @@ All 13 read as CLOSED, and six of them say in their own first sentence that work
 - Not that P1-07's route A1 is affected. A1 configures `grants` and does not go through this flag.
 - Not that the other three app programs behave differently. Only `headless` and `sdk` were run, and only with an unknown option; `acp-app` and `web-app` were read, not run.
 - Not that `--trust-workspace` is unimplemented. `command-workspace-trust/src/launch-grant.ts` carries the flag, its `=read|execute|none` forms and its error for an invalid value; the code is there and spelled correctly.
+
+**Addendum, 2026-09-18: the heading's premise is corrected, and the layer below it is named.**
+
+**The flag does reach the plugin.** This entry's heading says it never does; that is wrong and is left in place rather than rewritten, so the correction is visible. Measured with each argv shape in its own one-shot `DSH_HOME`, at `ad32070360`:
+
+| shape | exit | what it printed | record written |
+|---|---|---|---|
+| `--profile headless -- -- --trust-workspace=bogus` | 1 | the plugin's **own** error — `--trust-workspace: expected 'read', 'execute' or 'none', got "bogus"`, thrown while applying `command-workspace-trust` | no |
+| `--profile headless -- -- --trust-workspace=read` | 1 | the plugin's own error — `--trust-workspace was given, but this composition mounts no workspaceTrust provider` | no |
+| `--profile headless --trust-workspace=read` (the shape the comment documents) | 1 | `error: unknown option '--trust-workspace=read'`, and four scaffold files in its home | no |
+| `--profile headless noop` (control, no flag) | 4 | the boot completes and stops at the missing API key, leaving `storages/workspace_trust.json` in its home | n/a |
+
+Two things follow. The double-`--` shapes reach the plugin, so "never reaches" is false — what is true is that **the documented shape does not work, and the only shapes that reach the plugin are undocumented and put the flag into the task text**. And the mount-order question this entry left open is answered for the documented shape: the app's parser kills the process **before** the plugin applies, which is why that shape produces no plugin error at all.
+
+**Option (b) was landed, measured and withdrawn.** The four app programs declared and ignored `--trust-workspace [mode]` in `d20a614c1b`, and the probe against it showed the parse refusal gone — **evidence (2) met** — with the run still exiting 1 and still writing nothing, so **evidence (1) and (3) unmet**. The commit also made two recorded P9 cells stale, because P9-03.P and P9-06.U freeze entries reference `packages/bundle/headless/src/startup.ts` and its spec: `verify-p9-cells --check` went from 0 to 1, and re-recording those cells needs a CI observation of a candidate that contains the change, which this branch cannot produce before it is pushed. So `4472955008` reverts it. The change returns as one commit together with this entry's third layer, in the cycle after push 2: land, observe in CI, re-record the two cells, then push. This entry stays OPEN, and the layer below is why.
+
+**The third layer, named.** With the parse refusal removed, the run fails inside the plugin: `command-workspace-trust/src/launch-grant.ts:90-93` reads `ctx.get('workspaceTrust')` at apply time and finds nothing, so it throws rather than writing. The plugin declares `inject = ['commands']` only and treats `workspaceTrust` as optional, while `packages/bundle/base/cordis.patch.yml` lists the provider row at `:421` and the command row at `:432` and headless enables the provider at `:48-49`. A full boot does mount a provider — the control run's `storages/workspace_trust.json` proves that — so this is an ordering problem, not a missing provider. The fix for it is a separate decision, because changing the plugin's `inject` changes its mounting contract: it is recorded as **BLOCKED-261**, and this entry does not prejudge it.
