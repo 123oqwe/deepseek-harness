@@ -78,6 +78,65 @@ const BLOCKED_QUEUE_PATH = join(REPO_ROOT, 'spec/first100/exec/BLOCKED-QUEUE.md'
 const STAGES = ['C', 'P', 'U', 'F']
 
 /**
+ * Every Status value the queue may use, and whether an entry carrying it still
+ * blocks the stage that names it (delegate ruling, 2026-09-15, BLOCKED-259).
+ *
+ * Read as a table rather than as "anything that is not OPEN is closed": that
+ * fall-through read a prose Status line's first word — `SCAN`, `DEBT`,
+ * `CAUSE` — as a status and answered CLOSED for entries whose own first
+ * sentence said work remained. A value outside this table is refused the way
+ * BLOCKED-254 refuses an unreadable one. `STANDING` is neither class: a
+ * standing rule is not a blocker, so a stage mapped onto one is a mapping
+ * error, not an undecided status.
+ */
+const STATUS_VOCABULARY = new Map([
+  ['OPEN', 'OPEN'],
+  ['SCHEDULED-BLOCKED', 'OPEN'],
+  ['PARKED', 'OPEN'],
+  ['ESCALATED-TO-USER', 'OPEN'],
+  ['MEASURED', 'OPEN'],
+  ['FIXED-PENDING-OBSERVATION', 'OPEN'],
+  ['ANSWERED-BY-DELEGATE', 'OPEN'],
+  ['ANSWERED-BY-USER', 'OPEN'],
+  ['ADJUDICATED', 'OPEN'],
+  ['FIXED', 'OPEN'],
+  ['CLOSED', 'CLOSED'],
+  ['RESOLVED', 'CLOSED'],
+  ['EXEMPTED', 'CLOSED'],
+  ['DISPOSED', 'CLOSED'],
+  ['CONTAINED', 'CLOSED'],
+  ['STANDING', 'NOT-A-BLOCKER'],
+])
+
+/**
+ * The Status value one entry carries, without deciding what it means.
+ * @param queue - the text of `BLOCKED-QUEUE.md`.
+ * @param blockerId - e.g. `BLOCKED-107`.
+ * @returns the captured value, or `undefined` when no heading carries the id.
+ * @throws when more than one heading carries the id, or the entry has no status line (BLOCKED-254).
+ */
+function capturedStatus(queue, blockerId) {
+  // Headings appear as `### BLOCKED-107 — ...` or `## BLOCKED-116 — ...`.
+  const headings = [...queue.matchAll(new RegExp(`^#{2,4} ${blockerId}\\b[^\\n]*$`, 'gm'))]
+  if (headings.length === 0) return undefined
+  if (headings.length > 1) {
+    throw new Error(`${blockerId}: ${String(headings.length)} queue headings carry this id, so its status cannot be read (BLOCKED-254)`)
+  }
+  // The entry runs from the end of its heading line to the next BLOCKED heading.
+  const bodyStart = headings[0].index + headings[0][0].length
+  const next = /^#{2,4} BLOCKED-\d+\b/m.exec(queue.slice(bodyStart))
+  const body = queue.slice(bodyStart, next === null ? queue.length : bodyStart + next.index)
+  // Three spellings occur: `**Status: OPEN, ...`, `**Status:** OPEN` and a bold
+  // value, `**Status:** **FIXED**`. The value must start with a capital letter, so
+  // a lowercase or empty value still reads as no status line.
+  const status = /\*\*Status:?\*?\*?:?\s*\**\s*([A-Z][A-Z-]+)/.exec(body)?.[1]
+  if (status === undefined) {
+    throw new Error(`${blockerId}: no **Status:** line before the next queue entry (BLOCKED-254)`)
+  }
+  return status
+}
+
+/**
  * Whether a queue text records `blockerId` as open.
  *
  * Read from the queue itself rather than trusted from the mapping: a blocker
@@ -98,24 +157,40 @@ const STAGES = ['C', 'P', 'U', 'F']
  * @returns `'OPEN'`, `'CLOSED'`, or `'MISSING'` when the queue has no such entry.
  */
 export function queueBlockerStatus(queue, blockerId) {
-  // Headings appear as `### BLOCKED-107 — ...` or `## BLOCKED-116 — ...`.
-  const headings = [...queue.matchAll(new RegExp(`^#{2,4} ${blockerId}\\b[^\\n]*$`, 'gm'))]
-  if (headings.length === 0) return 'MISSING'
-  if (headings.length > 1) {
-    throw new Error(`${blockerId}: ${String(headings.length)} queue headings carry this id, so its status cannot be read (BLOCKED-254)`)
+  const status = capturedStatus(queue, blockerId)
+  if (status === undefined) return 'MISSING'
+  const verdict = STATUS_VOCABULARY.get(status)
+  if (verdict === undefined) {
+    throw new Error(`${blockerId}: "${status}" is not a Status value this queue defines, so its status cannot be read (BLOCKED-259)`)
   }
-  // The entry runs from the end of its heading line to the next BLOCKED heading.
-  const bodyStart = headings[0].index + headings[0][0].length
-  const next = /^#{2,4} BLOCKED-\d+\b/m.exec(queue.slice(bodyStart))
-  const body = queue.slice(bodyStart, next === null ? queue.length : bodyStart + next.index)
-  // Three spellings occur: `**Status: OPEN, ...`, `**Status:** OPEN` and a bold
-  // value, `**Status:** **FIXED**`. The value must start with a capital letter, so
-  // a lowercase or empty value still reads as no status line.
-  const status = /\*\*Status:?\*?\*?:?\s*\**\s*([A-Z][A-Z-]+)/.exec(body)?.[1]
-  if (status === undefined) {
-    throw new Error(`${blockerId}: no **Status:** line before the next queue entry (BLOCKED-254)`)
+  if (verdict === 'NOT-A-BLOCKER') {
+    throw new Error(`${blockerId}: "${status}" is a standing rule and not a blocker, so nothing can be blocked on it (BLOCKED-259)`)
   }
-  return status === 'OPEN' ? 'OPEN' : 'CLOSED'
+  return verdict
+}
+
+/**
+ * The queue entries whose Status value is outside {@link STATUS_VOCABULARY}.
+ *
+ * Read over the whole file rather than per lookup: the stage-blocker map names
+ * two blockers today, so a per-lookup check would leave every other entry's
+ * prose status unexamined until something asked about it.
+ * @param queue - the text of `BLOCKED-QUEUE.md`.
+ * @returns `{ id, status }` per entry, in file order; entries the reader already refuses (a duplicated id, no status line) are left to their own reports.
+ */
+export function entriesWithStatusOutsideVocabulary(queue) {
+  const outside = []
+  for (const id of new Set([...queue.matchAll(/^#{2,4} (BLOCKED-\d+)\b/gmu)].map(heading => heading[1]))) {
+    let status
+    try {
+      status = capturedStatus(queue, id)
+    } catch {
+      // A duplicated id or a missing status line is BLOCKED-254's case, reported where it is found.
+      continue
+    }
+    if (status !== undefined && !STATUS_VOCABULARY.has(status)) outside.push({ id, status })
+  }
+  return outside
 }
 
 /**
@@ -475,6 +550,15 @@ function main() {
     const stateOnly = entriesWithStateButNoStatus(readFileSync(BLOCKED_QUEUE_PATH, 'utf8'))
     if (stateOnly.length > 0) {
       console.log(`verify-p9-cells: ${String(stateOnly.length)} BLOCKED-QUEUE entry/entries carry **State: and no **Status:, so their status cannot be read (informational): ${stateOnly.join(', ')}`)
+    }
+    const outsideVocabulary = entriesWithStatusOutsideVocabulary(readFileSync(BLOCKED_QUEUE_PATH, 'utf8'))
+    if (outsideVocabulary.length > 0) {
+      for (const { id, status } of outsideVocabulary) console.error(`  ${id}: "${status}" is not a Status value this queue defines`)
+      console.error(
+        `verify-p9-cells: ${String(outsideVocabulary.length)} BLOCKED-QUEUE entry/entries carry a Status value outside the table `
+        + 'this reader accepts; rewrite each to lead with one of it (BLOCKED-259)',
+      )
+      process.exit(1)
     }
     const stale = staleCells(record, loadJson(COMMAND_FREEZE_PATH), repositoryGit)
     if (stale.length > 0) {

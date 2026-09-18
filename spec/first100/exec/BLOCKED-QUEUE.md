@@ -3673,7 +3673,7 @@ So a crash inside a two-entry batch can leave the domain event durable and drop 
 
 ### BLOCKED-090 — Two parties, opposite conclusions, and the truth in a third place
 
-**Status: METHOD ENTRY, not a defect. Recorded 2026-09-05 from a live instance.**
+**Status: STANDING — METHOD ENTRY, not a defect. Recorded 2026-09-05 from a live instance.**
 
 The delegate searched the register for `^### BLOCKED-089`, found nothing, and reported that the code referenced an entry that did not exist — the day's most-caught defect shape, prose asserting a checkable fact that is false. The Supervisor had in fact written it, in the same commit as the referencing code.
 
@@ -4029,7 +4029,7 @@ Only `first100-exact-sha.yml`'s exact-SHA artifact may green a cell, and it requ
 
 ### BLOCKED-106 — 24 GREEN cells were written by hand; the values were right, the checking never happened
 
-**Status: CAUSE ESTABLISHED 2026-09-06. Gate landed. Regreening the 24 cells awaits the user, since three accepted rows are involved.**
+**Status: ESCALATED-TO-USER — CAUSE ESTABLISHED 2026-09-06. Gate landed. Regreening the 24 cells awaits the user, since three accepted rows are involved.**
 
 **What happened.** Nine Bash calls wrote GREEN cells into `ledger.json` through one-off Python heredocs instead of `generate-ledger.mjs --green`, beginning after `1741e1597d`. Four structural signatures follow from the script and were found by the delegate before the cause was: `absorbedFlakes: []` (a hard-coded literal the tool's spread guard cannot emit), `capturedAtUtc` ending `.000Z` and set to a **future** hour (typed, not observed), a null row-level `candidateSha` (the script writes `cells` only), and three byte-different ledgers sharing one `lastUpdatedUtc` (nothing passed through `writeLedgerHeader`).
 
@@ -4437,7 +4437,7 @@ must[3]: 「取消进入 convergence barrier，确认 child/world/actions 停止
 
 ### BLOCKED-117 — who owns `trust-kernel/src/index.ts`, and why P0-02's acceptance did not catch the empty root
 
-**Status:** INVESTIGATED, not acted on. Recorded before any edit, at the delegate's instruction.
+**Status:** MEASURED — INVESTIGATED, not acted on. Recorded before any edit, at the delegate's instruction.
 
 The P1-02 lock says the fix lives in `packages/kernel/trust-kernel/src/index.ts`, "outside every P1-02 stage's scope". Checked against the registry rather than assumed:
 
@@ -4485,7 +4485,7 @@ Its cells had been green before, and were withdrawn precisely because that green
 
 ### BLOCKED-119 — a computed list of fields this program writes and never reads
 
-**Status:** SCAN BUILT, three real findings from its first run, none of them fixed yet.
+**Status:** MEASURED — SCAN BUILT, three real findings from its first run, none of them fixed yet.
 
 Six defects in one day shared a shape: a fact was recorded and nothing consulted it — `ledgerDigest`, `absorbedFlakes`, `parallelWithR10`, `openFindings`, and two others. Each was caught by a person noticing, which is what made it a recurring defect rather than six unrelated ones.
 
@@ -4532,7 +4532,7 @@ Option 2 looks most consistent from here and is NOT being taken on that basis: t
 
 ### BLOCKED-121 — Sigstore verification: feasibility established with evidence, build not started
 
-**Status:** DEPENDENCIES LANDED, feasibility proven by a real probe. The verification path itself is the next slice and is not written yet.
+**Status:** OPEN — DEPENDENCIES LANDED, feasibility proven by a real probe. The verification path itself is the next slice and is not written yet.
 
 The delegate approved `@sigstore/verify` over hand-rolling on the argument that carries the most weight: **a mistake in a TUF client, a Fulcio chain check, or a Rekor inclusion proof fails by silently accepting a forgery**, and each of those three is larger than P1-02 entire.
 
@@ -4589,7 +4589,7 @@ Three findings cost a round each and are recorded in the file so the next attemp
 
 ### BLOCKED-122 — the ledger cannot pass 18 without decisions nobody in this session may take
 
-**Status:** ANALYSIS, for the maintainer. Nothing here is a request to change a decision; it is what the numbers mean.
+**Status:** STANDING — ANALYSIS, for the maintainer. Nothing here is a request to change a decision; it is what the numbers mean.
 
 `check-ready` reports two epics ready to start (P4-09, withheld by BLOCKED-100; P5-10, now built) and one in flight (P2-03, two thirds locked). Seventy-two are blocked by predecessors. **The predecessors are seven epics whose cells are green and which are not accepted.**
 
@@ -4615,7 +4615,7 @@ Three findings cost a round each and are recorded in the file so the next attemp
 
 ### BLOCKED-123 — a deleted frozen case now has a reader, and it found a third one
 
-**Status:** GATE ADDED, P1-02 superseded, one pre-existing orphan surfaced for the delegate.
+**Status:** FIXED — GATE ADDED, P1-02 superseded, one pre-existing orphan surfaced for the delegate.
 
 BLOCKED-103's rule is that replacing or deleting a frozen case requires superseding its freeze entry. It was missed **twice in one day**: P5-11's must[2] cases in the morning, and P1-02's two KNOWN GAP cases in the afternoon, deleted the moment their unlock signal fired. Both times a person caught it. The rule lived in this queue and the moment of deletion consulted nothing.
 
@@ -4634,7 +4634,7 @@ The second implementation asks vitest. `vitest list --json` collects without exe
 
 ### BLOCKED-174 — `test:docs` is red on the baseline, and none of it belongs to P1-10
 
-**Status:** DEBT RECORDED, awaiting the delegate's assignment to the owning epics. Not touched by P1-10.
+**Status:** PARKED — DEBT RECORDED, awaiting the delegate's assignment to the owning epics. Not touched by P1-10.
 
 `pnpm run test:docs` fails on the tree at `e5488e86c6` with five red leaf gates. Every failing entry names a file from an earlier epic, and no file the P1-10 slice touches appears in any of them (checked by name against the slice's own changed-file list). Recorded here rather than fixed, because a documentation debt spread across other epics' files is not this epic's to spend a slice on, and silently carrying a red aggregate is how it becomes permanent.
 
@@ -4741,7 +4741,7 @@ must[0] names five policy inputs. Four exist on this tree — identity (P2-01's 
 
 ### BLOCKED-179 — `verify-translation-pairing` is red corpus-wide, which keeps `first100:slice-gate` red for everyone
 
-**Status:** HELD under BLOCKED-124, ruled 2026-09-11. The 28 missing counterparts and 14 stale records are cleared by one `/dsh-translate-docs` run the user performs; they are NOT patched per epic, and the in-scope rule is NOT narrowed — either would hide the debt rather than pay it. A slice reporting `first100:slice-gate` writes "5/6 green, pairing held, 0 added by this batch".
+**Status:** PARKED — HELD under BLOCKED-124, ruled 2026-09-11. The 28 missing counterparts and 14 stale records are cleared by one `/dsh-translate-docs` run the user performs; they are NOT patched per epic, and the in-scope rule is NOT narrowed — either would hide the debt rather than pay it. A slice reporting `first100:slice-gate` writes "5/6 green, pairing held, 0 added by this batch".
 
 `first100:slice-gate` includes `verify-translation-pairing`, so the light gate the delegate asks for before every SHA report cannot pass on this tree regardless of what a slice changed. Measured at `4b27568dbd`:
 
@@ -4758,7 +4758,7 @@ Fixed here: the three `README.zh.md` files that carried an untranslated English 
 
 ### BLOCKED-180 — two of P2-05's declared originators have no manifest producer, so the PEP cannot decide them
 
-**Status:** SPLIT under §12.46-B. P2-05 owns the enforcement point and has landed it; the missing producers belong elsewhere.
+**Status:** ADJUDICATED — SPLIT under §12.46-B. P2-05 owns the enforcement point and has landed it; the missing producers belong elsewhere.
 
 acceptance[0] names five originators that must reach one PEP. Measured at the U stage:
 
@@ -4778,7 +4778,7 @@ The manifest is the policy question, so a path with no manifest cannot be decide
 
 ### BLOCKED-181 — `first100:slice-gate` is an `&&` chain whose fourth link is permanently red, so its last six gates never run
 
-**Status:** FIX ASSIGNED to lane A (delegate, 2026-09-10), scheduled after P1-10.F.
+**Status:** SCHEDULED-BLOCKED — FIX ASSIGNED to lane A (delegate, 2026-09-10), scheduled after P1-10.F.
 
 `first100:slice-gate` is seven `npm run` invocations joined by `&&`, and `first100:slice-gate-cordis` appends three more. The fourth link is `verify-translation-pairing`, which is **held back corpus-wide** under BLOCKED-179/124 and therefore always exits non-zero. Everything after it — `constraints`, `first100:verify-typecheck-host`, `first100:verify-registry-extraction`, `verify-cordis-catalog`, `verify-cordis-api`, `verify-cordis-inspect-catalog` — **is never executed at all.**
 
@@ -4853,7 +4853,7 @@ So adding this gate to a set would not have caught the accident and will not cat
 
 ### BLOCKED-187 — P2-05's enforcement point is wired, its engine provider is mounted nowhere, and every tool call on a shipped profile is refused
 
-**Status:** MOUNT SLICE ASSIGNED to lane A (delegate, 2026-09-10), ahead of the memory slice. Found by attributing the snapshot failures that remained after BLOCKED-186's boot fix stopped masking them.
+**Status:** SCHEDULED-BLOCKED — MOUNT SLICE ASSIGNED to lane A (delegate, 2026-09-10), ahead of the memory slice. Found by attributing the snapshot failures that remained after BLOCKED-186's boot fix stopped masking them.
 
 **This is [BLOCKED-050](#blocked-050)'s P2-05 instance.** must[2]'s kernel enforcement point is `policyEnforcement`, and must[3]'s record outlet is `auditAppend` — two of the six empty capabilities 050 enumerated. 050's ruling table covered only `signatureRoots`' two consumers; its addendum now carries this row. Read both: closing this entry does **not** close 050, because a deployment decider stops the placeholder from overriding an engine without giving the kernel a policy provider of its own.
 
@@ -5390,7 +5390,7 @@ acceptance[0]'s "the existing repo passes under a controlled allowlist" is there
 
 ### BLOCKED-217 — P0-02: five prose blocks in the kernel described a residual the same file had already closed
 
-**Status:** CLOSED-on-landing (delegate-assigned number, 2026-09-11). The fix is in the tree; the entry stands as the record of what the state was and of what it would have cost a Reviewer.
+**Status:** CLOSED — closed on landing (delegate-assigned number, 2026-09-11). The fix is in the tree; the entry stands as the record of what the state was and of what it would have cost a Reviewer.
 
 `packages/kernel/trust-kernel/src/index.ts` carried, in one file, both halves of a contradiction seven lines apart. Line 267 calls `ctx.root.fiber.pinStoreName('trustKernel', impl)` under a comment saying it "Closes vectors (a), (b) and (c) below". The comment beginning at line 268 said locking the root key "does NOT close three further vectors" and that "Closing (a) and (c) needs a vendored `Fiber` change, a maintainer decision out of scope here."
 
@@ -7008,3 +7008,47 @@ What P2-12 declares: `apps/cli/src/process-shutdown.ts`, `packages/core/agent/sr
 - Not that P2-12 was greened wrongly. The four cells pin their frozen commands and those commands pass; `acceptance[0]`, `[1]` and `[2]` each carry coverage entries. `must` and `acceptance` are separately numbered, so `must[2]`'s gap does not contradict `acceptance[2]` being covered.
 - Not that the lease seam is the only possible landing point — it is the one the preflight named. No second candidate was searched for.
 - The caller search used `git grep -lw mayStartNewWork`, a word-boundary match over tracked files. An alias, a re-export under another name, or a call through an interface would not appear in it.
+
+### BLOCKED-259 — `queueBlockerStatus` read the first capitalised word of a prose Status line as the status, and called everything that is not `OPEN` closed
+**Status:** RESOLVED — the table below lands with this entry (delegate ruling, 2026-09-15). The reader was wrong in the way that reports a confident answer rather than refusing: it extracted a token that was never meant to be a status and mapped it to CLOSED. No stage was mis-released — the stage-blocker map is too small to reach any affected entry — which is a fact about the map's size, not about the reader.
+
+**What the reader did.** `queueBlockerStatus` located the entry, took the first match of `/\*\*Status:?\*?\*?:?\s*\**\s*([A-Z][A-Z-]+)/` in its body, and ended with `return status === 'OPEN' ? 'OPEN' : 'CLOSED'`. Nothing checked the captured token against a vocabulary, so a Status line written as a sentence yielded that sentence's first word.
+
+**The 13 entries this affected.** Measured by calling the exported function itself over the 247 ids the queue carried before this entry; entries the reader already refuses — seven whose id carries two headings, 73 written with `**State:` and no `**Status:` — are BLOCKED-254's case and are not in this table.
+
+| id | captured | the Status line it came from | now leads with |
+|---|---|---|---|
+| BLOCKED-090 | `METHOD` | METHOD ENTRY, not a defect | `STANDING` |
+| BLOCKED-106 | `CAUSE` | CAUSE ESTABLISHED … **Regreening the 24 cells awaits the user** | `ESCALATED-TO-USER` |
+| BLOCKED-117 | `INVESTIGATED` | INVESTIGATED, **not acted on** | `MEASURED` |
+| BLOCKED-119 | `SCAN` | SCAN BUILT, three real findings, **none of them fixed yet** | `MEASURED` |
+| BLOCKED-121 | `DEPENDENCIES` | DEPENDENCIES LANDED … the verification path **is not written yet** | `OPEN` |
+| BLOCKED-122 | `ANALYSIS` | ANALYSIS, for the maintainer | `STANDING` |
+| BLOCKED-123 | `GATE` | GATE ADDED, P1-02 superseded | `FIXED` |
+| BLOCKED-174 | `DEBT` | DEBT RECORDED, **awaiting** the delegate's assignment | `PARKED` |
+| BLOCKED-179 | `HELD` | HELD under BLOCKED-124, ruled 2026-09-11 | `PARKED` |
+| BLOCKED-180 | `SPLIT` | SPLIT under §12.46-B | `ADJUDICATED` |
+| BLOCKED-181 | `FIX` | FIX ASSIGNED to lane A, **scheduled after** P1-10.F | `SCHEDULED-BLOCKED` |
+| BLOCKED-187 | `MOUNT` | MOUNT SLICE ASSIGNED to lane A | `SCHEDULED-BLOCKED` |
+| BLOCKED-217 | `CLOSED-` | CLOSED-on-landing — the hyphen was captured into the value | `CLOSED` |
+
+All 13 read as CLOSED, and six of them say in their own first sentence that work remains (106, 117, 119, 121, 174, 181).
+
+**Why no stage was mis-released, and why that is not reassurance.** `p9-stage-blockers.json` holds two mappings naming one blocker, `BLOCKED-107`, which reads `OPEN` and is not in the table above. The intersection is empty because the map is small: the moment one of those six is mapped to a stage, that stage is released the same day, silently.
+
+**Relation to BLOCKED-254.** 254 closed the case where the status cannot be read — the reader throws instead of passing. This is the other half of the same failure: the status *is* read, the value is not a status, and the fall-through calls it closed. 254 made silence fail closed; this makes nonsense fail closed.
+
+**The ruling, and what landed with it.**
+
+- A closed table of **16** values, each assigned to a class rather than derived from "not `OPEN`": the OPEN class is `OPEN`, `SCHEDULED-BLOCKED`, `PARKED`, `ESCALATED-TO-USER`, `MEASURED`, `FIXED-PENDING-OBSERVATION`, `ANSWERED-BY-DELEGATE`, `ANSWERED-BY-USER`, `ADJUDICATED`, `FIXED`; the CLOSED class is `CLOSED`, `RESOLVED`, `EXEMPTED`, `DISPOSED`, `CONTAINED`.
+- `STANDING` is in neither class. A standing rule is not a blocker, so a stage mapped onto one is a mapping error: the reader throws, and `unanswerableStageBlockers` reports it against the mapping file. The reader's return type stays `'OPEN' | 'CLOSED' | 'MISSING'`; a fourth value would oblige every caller to handle a case that only arises from a wrong mapping.
+- A value outside the table throws, in BLOCKED-254's wording with a pointer here. Suffixed forms such as `CLOSED-on-landing` are not admitted: the suffix belongs in the second half of the sentence, the value stays one word.
+- `entriesWithStatusOutsideVocabulary` reads the **whole file**, and `--check` fails on any entry it returns. Putting the table only in the per-id reader would have left the rewrite unenforced: the map asks about one blocker, so nothing would have looked at the other 246 entries until something mapped one.
+- The 13 rewrites land in the same commit. The table alone would turn those entries from "silently CLOSED" into "throws when asked", which is correct but leaves a window where those ids cannot be answered at all.
+
+**What the class table changes in the readings.** Over the whole queue the reader goes from OPEN 64 / CLOSED 103 to **OPEN 133 / CLOSED 26**, with 88 ids throwing (73 with no `**Status:` line, seven with a duplicated id, eight `STANDING`). The move is almost entirely `FIXED`, `ANSWERED-BY-DELEGATE`, `ADJUDICATED` and `ANSWERED-BY-USER` entries becoming OPEN: "the question was answered" and "the work is done" are different claims, and several entries under those words say in their own text that a half remains. Nothing reads differently for any mapped blocker today, because only `BLOCKED-107` is mapped and it was, and stays, `OPEN`. The asymmetry is deliberate: reading "still blocking" as "not blocking" releases a stage, while the reverse costs one manual confirmation.
+
+**What this entry does not claim.**
+- Not that the 13 entries' own conclusions were wrong. Only their first word is rewritten; the sentence that follows it is unchanged.
+- Not that the class of every one of the 16 values is settled beyond this ruling. Four of them (`FIXED`, `ANSWERED-BY-DELEGATE`, `ADJUDICATED`, `ANSWERED-BY-USER`) cover entries in both conditions, and the ruling assigns them to OPEN as the safer default rather than because each entry under them is open.
+- Not that the 73 entries with no `**Status:` line are readable now. They still throw, and what each of them should say is not decided here.

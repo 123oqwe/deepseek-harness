@@ -17,7 +17,7 @@
  * and never on a frozen string that names more than one passing case.
  */
 import { describe, expect, it } from 'vitest'
-import { queueBlockerStatus, referencedPaths, reportPathMatchesCandidate, entriesWithStateButNoStatus, staleCells, summaryLine, unanswerableStageBlockers, verifyCells } from './verify-p9-cells.mjs'
+import { entriesWithStatusOutsideVocabulary, queueBlockerStatus, referencedPaths, reportPathMatchesCandidate, entriesWithStateButNoStatus, staleCells, summaryLine, unanswerableStageBlockers, verifyCells } from './verify-p9-cells.mjs'
 import type { P9Cell, P9Freeze, P9FreezeEntry, P9Git } from './verify-p9-cells.mjs'
 
 const SHA = '1f51e6a3d5bda5f3a9b9a5f902f27741be0cd6b3'
@@ -272,8 +272,25 @@ describe('verify-p9-cells blocker status: the queue reader refuses what it canno
     expect(queueBlockerStatus(entry('BLOCKED-107', 'OPEN'), 'BLOCKED-107')).toBe('OPEN')
   })
 
-  it('reads any other status of a single entry as CLOSED', () => {
-    expect(queueBlockerStatus(entry('BLOCKED-107', 'FIXED'), 'BLOCKED-107')).toBe('CLOSED')
+  it('reads each table value as the class the table gives it, not as "anything but OPEN is closed" (BLOCKED-259)', () => {
+    const open = ['OPEN', 'SCHEDULED-BLOCKED', 'PARKED', 'ESCALATED-TO-USER', 'MEASURED', 'FIXED-PENDING-OBSERVATION', 'ANSWERED-BY-DELEGATE', 'ANSWERED-BY-USER', 'ADJUDICATED', 'FIXED']
+    const closed = ['CLOSED', 'RESOLVED', 'EXEMPTED', 'DISPOSED', 'CONTAINED']
+    for (const value of open) expect(queueBlockerStatus(entry('BLOCKED-107', value), 'BLOCKED-107'), value).toBe('OPEN')
+    for (const value of closed) expect(queueBlockerStatus(entry('BLOCKED-107', value), 'BLOCKED-107'), value).toBe('CLOSED')
+  })
+
+  it('throws for a value the table does not define, rather than reading it as CLOSED (BLOCKED-259)', () => {
+    expect(() => queueBlockerStatus(entry('BLOCKED-119', 'SCAN'), 'BLOCKED-119')).toThrow('"SCAN" is not a Status value this queue defines')
+    expect(() => queueBlockerStatus(entry('BLOCKED-119', 'SCAN'), 'BLOCKED-119')).toThrow('BLOCKED-259')
+  })
+
+  it('does not admit a suffixed form of a table value', () => {
+    expect(() => queueBlockerStatus(entry('BLOCKED-217', 'CLOSED-on-landing'), 'BLOCKED-217')).toThrow('"CLOSED-" is not a Status value this queue defines')
+    expect(queueBlockerStatus(entry('BLOCKED-217', 'CLOSED — on landing'), 'BLOCKED-217')).toBe('CLOSED')
+  })
+
+  it('throws when a stage is blocked on a STANDING entry, because a standing rule is not a blocker', () => {
+    expect(() => queueBlockerStatus(entry('BLOCKED-093', 'STANDING'), 'BLOCKED-093')).toThrow('is a standing rule and not a blocker')
   })
 
   it('reports MISSING when no heading carries the id, and does not match a longer id', () => {
@@ -295,7 +312,8 @@ describe('verify-p9-cells blocker status: the queue reader refuses what it canno
   })
 
   it('reads a status value written in bold', () => {
-    expect(queueBlockerStatus('### BLOCKED-240 — a blocker\n\n**Status:** **FIXED** in candidate 7.\n\n', 'BLOCKED-240')).toBe('CLOSED')
+    expect(queueBlockerStatus('### BLOCKED-240 — a blocker\n\n**Status:** **FIXED** in candidate 7.\n\n', 'BLOCKED-240')).toBe('OPEN')
+    expect(queueBlockerStatus('### BLOCKED-242 — a blocker\n\n**Status:** **DISPOSED** in candidate 7.\n\n', 'BLOCKED-242')).toBe('CLOSED')
     expect(queueBlockerStatus('### BLOCKED-241 — a blocker\n\n**Status:** **OPEN**\n\n', 'BLOCKED-241')).toBe('OPEN')
   })
 
@@ -304,6 +322,26 @@ describe('verify-p9-cells blocker status: the queue reader refuses what it canno
     expect(() => queueBlockerStatus('### BLOCKED-232 — a blocker\n\n**Status:** **fixed**\n\n', 'BLOCKED-232')).toThrow('no **Status:** line')
     expect(() => queueBlockerStatus('### BLOCKED-231 — a blocker\n\n**Status:** ** **\n\n', 'BLOCKED-231')).toThrow('no **Status:** line')
     expect(() => queueBlockerStatus(entry('BLOCKED-001', null), 'BLOCKED-001')).toThrow('no **Status:** line')
+  })
+
+  it('lists every entry whose Status value is outside the table, and no entry the reader already refuses', () => {
+    const queue = entry('BLOCKED-107', 'OPEN')
+      + entry('BLOCKED-119', 'SCAN')
+      + entry('BLOCKED-174', 'DEBT')
+      + entry('BLOCKED-226', null)
+      + entry('BLOCKED-198', 'FIXED') + entry('BLOCKED-198', 'OPEN')
+    expect(entriesWithStatusOutsideVocabulary(queue)).toEqual([
+      { id: 'BLOCKED-119', status: 'SCAN' },
+      { id: 'BLOCKED-174', status: 'DEBT' },
+    ])
+  })
+
+  it('finds nothing once those entries lead with a table value, which is what the rewrite does', () => {
+    const queue = entry('BLOCKED-119', 'MEASURED — SCAN BUILT, three real findings, none of them fixed yet')
+      + entry('BLOCKED-174', 'PARKED — DEBT RECORDED, awaiting the delegate')
+    expect(entriesWithStatusOutsideVocabulary(queue)).toEqual([])
+    expect(queueBlockerStatus(queue, 'BLOCKED-119')).toBe('OPEN')
+    expect(queueBlockerStatus(queue, 'BLOCKED-174')).toBe('OPEN')
   })
 
   it('lists the stage mappings whose blocker cannot be read, naming the id and why, and leaves a readable one out', () => {

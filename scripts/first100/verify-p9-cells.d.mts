@@ -131,9 +131,16 @@ export function verifyCells(
  * @param queue - the text of `BLOCKED-QUEUE.md`.
  * @param blockerId - e.g. `BLOCKED-107`.
  * @returns `'OPEN'`, `'CLOSED'`, or `'MISSING'` when no heading carries the id.
- * @throws when more than one heading carries the id, or its entry has no status line before the next queue heading (BLOCKED-254).
+ * @throws when more than one heading carries the id, or its entry has no status line before the next queue heading (BLOCKED-254); when its Status value is outside the queue's table, or is `STANDING`, which is a standing rule and not a blocker (BLOCKED-259).
  */
 export function queueBlockerStatus(queue: string, blockerId: string): 'OPEN' | 'CLOSED' | 'MISSING'
+
+/**
+ * The queue entries whose Status value is outside the table this reader accepts.
+ * @param queue - the text of `BLOCKED-QUEUE.md`.
+ * @returns one `{ id, status }` per entry, in file order; entries with a duplicated id or no status line are left to BLOCKED-254's own reports.
+ */
+export function entriesWithStatusOutsideVocabulary(queue: string): { id: string; status: string }[]
 
 /**
  * The stage-blocker mappings whose blocker `BLOCKED-QUEUE.md` cannot answer for.
