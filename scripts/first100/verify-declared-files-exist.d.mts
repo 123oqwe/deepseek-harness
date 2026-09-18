@@ -26,7 +26,23 @@ export function missingAcceptedRegistryRefs(
   acceptedIds: ReadonlySet<string>,
   exists: (path: string) => boolean,
   patches: readonly DeliverablePathPatch[],
+  neverDeliveredPairSet?: ReadonlySet<string>,
 ): {
   declaredMissing: { where: string; path: string }[]
+  neverDelivered: { where: string; path: string }[]
   resolvedMissing: { where: string; path: string; absentApprovedPaths: string[] }[]
 }
+
+/** One `never-delivered.json` entry, as this gate reads it. */
+export interface NeverDeliveredEntry {
+  readonly epic: string
+  readonly path: string
+  readonly reason: string
+  readonly rulingRef: string
+}
+
+export function neverDeliveredPairs(
+  document: { readonly entries: readonly NeverDeliveredEntry[] } | undefined,
+  declaredPaths: ReadonlySet<string>,
+  exists: (path: string) => boolean,
+): Set<string>

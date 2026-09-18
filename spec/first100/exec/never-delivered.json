@@ -1,0 +1,45 @@
+{
+  "schema": "first100-never-delivered@1",
+  "note": "A registry files[] entry (kind N) naming a file this lineage never carried. Not a deletion -- no commit in this lineage ever added it, so FILES_DELETED has no deletedBy to record -- and not a substitution -- no approved path replaces it, so deliverablePathPatches has nothing to point at. Recording one does not satisfy the epic's clause: it records that the declaration outlived the plan that produced it, and keeps that visible instead of letting it read as an ordinary declared-missing row.",
+  "entries": [
+    {
+      "epic": "P2-06",
+      "path": "packages/interaction/user-approval/src/preconditions.ts",
+      "reason": "Declared as kind N by P2-06's Contract stage. No commit in this lineage ever added it: `git log HEAD -- <path>` is 0. The two commits that add it anywhere in the object store, `eec4e859a3` (feat(Wave7), 2026-08-22) and `de0c19addb` (feat(P2-06), 2026-08-22), are not ancestors of HEAD. Which of the package's surviving files carries the capability is NOT determined here.",
+      "evidence": {
+        "lineageCommits": 0,
+        "creatingCommitsOutsideLineage": [
+          "eec4e859a3",
+          "de0c19addb"
+        ],
+        "absentAtAcceptanceCandidates": [
+          "fe3df854883e9216841f782b8d159fd339fbe3ed"
+        ],
+        "inLiveFreezeFiles": false,
+        "gateExistedAtAcceptance": false
+      },
+      "rulingRef": "delegate ruling, 2026-09-15 (queue item 148: the never-delivered record class, from lane A's accepted-with-never-existing-files.md)"
+    },
+    {
+      "epic": "P4-11",
+      "path": "packages/reliability/retry/src/circuit.ts",
+      "reason": "Declared as kind N by P4-11's Provider stage. No commit in this lineage ever added it: `git log HEAD -- <path>` is 0. The two commits that add it anywhere, `2ce7b5ce5a` (feat(Wave8), 2026-08-22) and `3fa80c019c` (feat(P4-11), 2026-08-22), are not ancestors of HEAD. Which of the package's surviving files carries the capability is NOT determined here.",
+      "evidence": {
+        "lineageCommits": 0,
+        "creatingCommitsOutsideLineage": [
+          "2ce7b5ce5a",
+          "3fa80c019c"
+        ],
+        "absentAtAcceptanceCandidates": [
+          "d19b70e6a0",
+          "e3004c9276",
+          "71580010de",
+          "874db203f0"
+        ],
+        "inLiveFreezeFiles": false,
+        "gateExistedAtAcceptance": false
+      },
+      "rulingRef": "delegate ruling, 2026-09-15 (queue item 148: the never-delivered record class, from lane A's accepted-with-never-existing-files.md)"
+    }
+  ]
+}

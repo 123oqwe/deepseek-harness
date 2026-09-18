@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { missingAcceptedRegistryRefs, missingFreezeFiles } from './verify-declared-files-exist.mjs'
+import { missingAcceptedRegistryRefs, missingFreezeFiles, neverDeliveredPairs } from './verify-declared-files-exist.mjs'
 
 const tree = new Set(['packages/demo/thing/src/here.ts', 'packages/other/moved/src/gone.ts'])
 const exists = (path: string): boolean => tree.has(path)
@@ -51,12 +51,14 @@ describe('missingAcceptedRegistryRefs', () => {
         { where: 'P9-98', path: 'packages/demo/thing/src/plan.ts' },
         { where: 'P9-98.C', path: 'packages/demo/thing/tests/plan.spec.ts' },
       ],
+      neverDelivered: [],
       resolvedMissing: [],
     })
   })
 
   it('ignores an epic that is not ACCEPTED, whose plan paths need not exist yet', () => {
-    expect(missingAcceptedRegistryRefs(registry, new Set(), exists, [])).toStrictEqual({ declaredMissing: [], resolvedMissing: [] })
+    expect(missingAcceptedRegistryRefs(registry, new Set(), exists, []))
+      .toStrictEqual({ declaredMissing: [], neverDelivered: [], resolvedMissing: [] })
   })
 
   const declared = 'packages/demo/thing/tests/plan.e2e.ts'
@@ -108,17 +110,61 @@ describe('missingAcceptedRegistryRefs', () => {
   it('reports an absent approved path under a widening patch as resolved-missing, naming it, although the declared path exists', () => {
     const widening = { epic: 'P9-98', stage: 'U', declaredPath: present, approvedPath: absentTarget, kind: 'widening' as const }
     expect(missingAcceptedRegistryRefs(presentRegistry, new Set(['P9-98']), exists, [widening]))
-      .toStrictEqual({ declaredMissing: [], resolvedMissing: [{ where: 'P9-98.U', path: present, absentApprovedPaths: [absentTarget] }] })
+      .toStrictEqual({ declaredMissing: [], neverDelivered: [], resolvedMissing: [{ where: 'P9-98.U', path: present, absentApprovedPaths: [absentTarget] }] })
   })
 
   it('stays silent for the same absent approved path under a substitution, whose declared path is expected to remain', () => {
     const substitution = { epic: 'P9-98', stage: 'U', declaredPath: present, approvedPath: absentTarget, kind: 'substitution' as const }
     expect(missingAcceptedRegistryRefs(presentRegistry, new Set(['P9-98']), exists, [substitution]))
-      .toStrictEqual({ declaredMissing: [], resolvedMissing: [] })
+      .toStrictEqual({ declaredMissing: [], neverDelivered: [], resolvedMissing: [] })
   })
 
   it('does not apply a patch of another epic', () => {
     expect(missingAcceptedRegistryRefs(patchedRegistry, new Set(['P9-98']), exists, [patch({ epic: 'P9-97' })]).declaredMissing)
       .toContainEqual({ where: 'P9-98.C', path: declared })
+  })
+})
+
+describe('neverDeliveredPairs, and the rows it moves out of declared-missing', () => {
+  const NUL = String.fromCharCode(0)
+  const registry = {
+    epics: [{ id: 'P9-98', files: [{ path: 'packages/demo/thing/src/plan.ts' }], stages: { C: { files: ['packages/demo/thing/src/plan.ts'] } } }],
+  }
+  const declaredPaths = new Set([`P9-98${NUL}packages/demo/thing/src/plan.ts`])
+  const entry = {
+    epic: 'P9-98',
+    path: 'packages/demo/thing/src/plan.ts',
+    reason: 'No commit in this lineage ever added it.',
+    rulingRef: 'delegate ruling, 2026-09-15',
+  }
+
+  it('reports a recorded reference as never-delivered instead of declared-missing, and leaves the others where they were', () => {
+    const pairs = neverDeliveredPairs({ entries: [entry] }, declaredPaths, exists)
+    const result = missingAcceptedRegistryRefs(registry, new Set(['P9-98']), exists, [], pairs)
+    expect(result.neverDelivered).toStrictEqual([
+      { where: 'P9-98', path: 'packages/demo/thing/src/plan.ts' },
+      { where: 'P9-98.C', path: 'packages/demo/thing/src/plan.ts' },
+    ])
+    expect(result.declaredMissing).toStrictEqual([])
+  })
+
+  it('leaves every row as declared-missing when there is no record', () => {
+    expect(missingAcceptedRegistryRefs(registry, new Set(['P9-98']), exists, []).declaredMissing).toHaveLength(2)
+    expect(neverDeliveredPairs(undefined, declaredPaths, exists).size).toBe(0)
+  })
+
+  it('refuses a record whose file exists, because that declaration is satisfied', () => {
+    expect(() => neverDeliveredPairs({ entries: [{ ...entry, path: 'packages/demo/thing/src/here.ts' }] }, new Set([`P9-98${NUL}packages/demo/thing/src/here.ts`]), exists))
+      .toThrow('exists in the tree')
+  })
+
+  it('refuses a record for a path the epic does not declare, because it has no subject', () => {
+    expect(() => neverDeliveredPairs({ entries: [{ ...entry, path: 'packages/demo/thing/src/other.ts' }] }, declaredPaths, exists))
+      .toThrow('does not declare')
+  })
+
+  it('refuses a record with no ruling behind it', () => {
+    expect(() => neverDeliveredPairs({ entries: [{ ...entry, rulingRef: '' }] }, declaredPaths, exists)).toThrow('has no rulingRef')
+    expect(() => neverDeliveredPairs({ entries: [{ ...entry, reason: '  ' }] }, declaredPaths, exists)).toThrow('needs epic, path and reason')
   })
 })

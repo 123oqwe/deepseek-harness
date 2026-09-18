@@ -28,6 +28,7 @@ const FREEZE_PATH = join(REPO_ROOT, 'spec/first100/exec/command-freeze.json')
 const REGISTRY_PATH = join(REPO_ROOT, 'tests/first100/registry.json')
 const LEDGER_PATH = join(REPO_ROOT, 'spec/first100/exec/ledger.json')
 const ADJUDICATION_PATH = join(REPO_ROOT, 'tests/first100/adjudication.json')
+const NEVER_DELIVERED_PATH = join(REPO_ROOT, 'spec/first100/exec/never-delivered.json')
 
 /**
  * Declared `files` of live freeze entries that do not exist.
@@ -50,6 +51,38 @@ export function missingFreezeFiles(entries, exists, basenameIndex) {
 }
 
 /**
+ * The (epic, path) pairs recorded as never delivered by this lineage.
+ *
+ * A record must name a path the registry declares and the tree does not hold:
+ * a record for a file that exists would hide a satisfied declaration, and one
+ * for a path no epic declares has no subject. Both throw rather than report,
+ * because a wrong record moves a row out of the missing list on a false premise.
+ * @param document - the parsed `never-delivered.json`, or `undefined` when the file is absent.
+ * @param declaredPaths - every `epic` + NUL + `path` pair the registry declares.
+ * @param exists - whether a repo-relative path exists in the tree.
+ * @returns the recorded pairs, in the same `epic` + NUL + `path` form.
+ */
+export function neverDeliveredPairs(document, declaredPaths, exists) {
+  if (document === undefined) return new Set()
+  const entries = document.entries
+  if (!Array.isArray(entries)) throw new Error('never-delivered.json has no entries array')
+  const pairs = new Set()
+  for (const entry of entries) {
+    const { epic, path, reason, rulingRef } = entry ?? {}
+    if (typeof epic !== 'string' || typeof path !== 'string' || typeof reason !== 'string' || reason.trim() === '') {
+      throw new Error(`never-delivered: an entry needs epic, path and reason: ${JSON.stringify(entry)}`)
+    }
+    if (typeof rulingRef !== 'string' || rulingRef.trim() === '') {
+      throw new Error(`never-delivered: ${epic} ${path} has no rulingRef, and a record without a ruling is not a record`)
+    }
+    if (exists(path)) throw new Error(`never-delivered: ${epic} ${path} exists in the tree, so it was delivered`)
+    if (!declaredPaths.has(`${epic}\u0000${path}`)) throw new Error(`never-delivered: ${epic} does not declare ${path}`)
+    pairs.add(`${epic}\u0000${path}`)
+  }
+  return pairs
+}
+
+/**
  * Registry file references of ACCEPTED epics that do not exist. Informational, never a failure.
  *
  * Declarations are read through `files-overlay.mjs` `resolveDeclaredPaths`, the
@@ -68,23 +101,29 @@ export function missingFreezeFiles(entries, exists, basenameIndex) {
  * @param acceptedIds - ids of ACCEPTED epics.
  * @param exists - whether a repo-relative path exists in the tree.
  * @param patches - the deliverable-path patches, from `files-overlay.mjs` `patchEntries`.
- * @returns `declaredMissing` rows `{ where, path }` and `resolvedMissing` rows `{ where, path, absentApprovedPaths }`;
+ * @param neverDeliveredPairSet - the pairs `never-delivered.json` records, which are reported as their own class rather than as declared-missing.
+ * @returns `declaredMissing` and `neverDelivered` rows `{ where, path }`, and `resolvedMissing` rows `{ where, path, absentApprovedPaths }`;
  *   `where` is the epic id or `epic.stage`.
  */
-export function missingAcceptedRegistryRefs(registry, acceptedIds, exists, patches) {
+export function missingAcceptedRegistryRefs(registry, acceptedIds, exists, patches, neverDeliveredPairSet = new Set()) {
   const declaredMissing = []
+  const neverDelivered = []
   const resolvedMissing = []
   for (const epic of registry.epics) {
     if (!acceptedIds.has(epic.id)) continue
     for (const { where, declaredPath, approvedPaths, widening } of resolveDeclaredPaths(epic, patches)) {
       const declaredExists = exists(declaredPath)
-      if (!declaredExists && (approvedPaths.length === 0 || widening)) declaredMissing.push({ where, path: declaredPath })
+      if (!declaredExists && (approvedPaths.length === 0 || widening)) {
+        const row = { where, path: declaredPath }
+        if (neverDeliveredPairSet.has(`${epic.id}\u0000${declaredPath}`)) neverDelivered.push(row)
+        else declaredMissing.push(row)
+      }
       if (declaredExists && !widening) continue
       const absentApprovedPaths = approvedPaths.filter(path => !exists(path))
       if (absentApprovedPaths.length > 0) resolvedMissing.push({ where, path: declaredPath, absentApprovedPaths })
     }
   }
-  return { declaredMissing, resolvedMissing }
+  return { declaredMissing, neverDelivered, resolvedMissing }
 }
 
 function main() {
@@ -100,10 +139,22 @@ function main() {
   const rows = JSON.parse(readFileSync(LEDGER_PATH, 'utf8')).rows
   const accepted = new Set(Object.entries(rows).filter(([, row]) => row.status === 'ACCEPTED').map(([id]) => id))
   const patches = patchEntries(JSON.parse(readFileSync(ADJUDICATION_PATH, 'utf8')))
-  const { declaredMissing, resolvedMissing } = missingAcceptedRegistryRefs(JSON.parse(readFileSync(REGISTRY_PATH, 'utf8')), accepted, exists, patches)
+  const registry = JSON.parse(readFileSync(REGISTRY_PATH, 'utf8'))
+  const declaredPairs = new Set()
+  for (const epic of registry.epics) {
+    for (const { declaredPath } of resolveDeclaredPaths(epic, patches)) declaredPairs.add(`${epic.id}\u0000${declaredPath}`)
+  }
+  const neverDeliveredDocument = existsSync(NEVER_DELIVERED_PATH) ? JSON.parse(readFileSync(NEVER_DELIVERED_PATH, 'utf8')) : undefined
+  const recordedPairs = neverDeliveredPairs(neverDeliveredDocument, declaredPairs, exists)
+  const { declaredMissing, neverDelivered, resolvedMissing } = missingAcceptedRegistryRefs(registry, accepted, exists, patches, recordedPairs)
   if (declaredMissing.length > 0) {
     console.log(`verify-declared-files-exist: ${String(declaredMissing.length)} registry file reference(s) of ACCEPTED epics are absent with no `
       + `substituting patch, or under a widening patch (declared-missing, informational):\n  ${declaredMissing.map(({ where, path }) => `${where} ${path}`).join('\n  ')}`)
+  }
+  if (neverDelivered.length > 0) {
+    console.log(`verify-declared-files-exist: ${String(neverDelivered.length)} registry file reference(s) of ACCEPTED epics name a file this lineage never `
+      + `carried (never-delivered, informational; recorded in spec/first100/exec/never-delivered.json with the ruling that admitted each):\n  `
+      + neverDelivered.map(({ where, path }) => `${where} ${path}`).join('\n  '))
   }
   if (resolvedMissing.length > 0) {
     console.log(`verify-declared-files-exist: ${String(resolvedMissing.length)} registry file reference(s) of ACCEPTED epics are absent and so is `
