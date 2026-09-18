@@ -221,7 +221,7 @@ function selectMinFreePercent(argv) {
  *
  * macOS reports it in `memory_pressure`'s "System-wide memory free percentage"
  * line; Linux as `MemAvailable` over `MemTotal` in `/proc/meminfo`.
- * @returns the percentage, or `undefined` when this platform has neither source or it cannot be read.
+ * @returns the percentage, or `undefined` when this platform has neither source, or when the reading cannot be taken.
  */
 export function readFreeMemoryPercent() {
   if (process.platform === 'darwin') {
@@ -256,6 +256,19 @@ export function memoryVerdict(freePercent, minFreePercent) {
     return { run: false, reason: `memory free ${String(freePercent)}% < ${String(minFreePercent)}%` }
   }
   return { run: true }
+}
+
+/**
+ * Whether an outcome stops the set rather than being one gate's verdict.
+ *
+ * A gate that could not start and one the machine killed have the same cause:
+ * memory the whole host is short of. Starting the gates after it would only
+ * feed them into the same shortage, and their reds would be read as findings.
+ * @param outcome - the outcome just recorded for a gate.
+ * @returns `true` for `CANNOT_RUN` and `KILLED`, `false` for a gate that reached a verdict of its own.
+ */
+export function stopsTheSet(outcome) {
+  return outcome === 'CANNOT_RUN' || outcome === 'KILLED'
 }
 
 /**
@@ -312,9 +325,18 @@ function main() {
       continue
     }
     const result = spawnSync('pnpm', ['run', gate], { cwd: REPO_ROOT, stdio: 'inherit' })
-    if (result.signal !== null) results.push({ gate, outcome: 'KILLED', detail: result.signal })
-    else if ((result.status ?? 1) !== 0) results.push({ gate, outcome: 'FAIL', detail: `exit ${String(result.status ?? 1)}` })
-    else results.push({ gate, outcome: 'PASS' })
+    let outcome = 'PASS'
+    let detail
+    if (result.signal !== null) {
+      outcome = 'KILLED'
+      detail = result.signal
+    } else if ((result.status ?? 1) !== 0) {
+      outcome = 'FAIL'
+      detail = `exit ${String(result.status ?? 1)}`
+    }
+    results.push(detail === undefined ? { gate, outcome } : { gate, outcome, detail })
+    // A kill is the machine's doing, not this gate's: the gates after it would start into the same shortage.
+    if (stopsTheSet(outcome)) stopped = true
   }
 
   console.log(`\n${setName} gate set — per-gate result:`)

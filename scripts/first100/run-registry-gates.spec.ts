@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { gateSetExitCode, memoryVerdict } from './run-registry-gates.mjs'
+import { gateSetExitCode, memoryVerdict, stopsTheSet } from './run-registry-gates.mjs'
 
 describe('memoryVerdict', () => {
   it('refuses a gate below the threshold and names both numbers', () => {
@@ -43,5 +43,15 @@ describe('gateSetExitCode', () => {
 
   it('exits 2 when a gate was killed by a signal and none failed', () => {
     expect(gateSetExitCode([{ gate: 'a', outcome: 'PASS' }, { gate: 'b', outcome: 'KILLED', detail: 'SIGKILL' }])).toBe(2)
+  })
+})
+
+describe('run-registry-gates: which outcomes stop the set', () => {
+  it('stops on a gate that could not start and on one the machine killed, and not on a red or a pass', () => {
+    expect(stopsTheSet('CANNOT_RUN')).toBe(true)
+    expect(stopsTheSet('KILLED')).toBe(true)
+    expect(stopsTheSet('FAIL')).toBe(false)
+    expect(stopsTheSet('PASS')).toBe(false)
+    expect(stopsTheSet('NOT_RUN')).toBe(false)
   })
 })

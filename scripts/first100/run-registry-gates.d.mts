@@ -33,3 +33,10 @@ export function memoryVerdict(freePercent: number | undefined, minFreePercent: n
  * @returns 1 when any gate failed, otherwise 2 when any gate could not run, was killed or was not run, otherwise 0.
  */
 export function gateSetExitCode(results: readonly GateResult[]): 0 | 1 | 2
+
+/**
+ * Whether an outcome stops the set rather than being one gate's verdict.
+ * @param outcome - the outcome just recorded for a gate.
+ * @returns `true` for `CANNOT_RUN` and `KILLED`.
+ */
+export function stopsTheSet(outcome: GateOutcome): boolean
