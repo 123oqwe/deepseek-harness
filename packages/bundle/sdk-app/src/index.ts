@@ -40,6 +40,7 @@ function sdkCommand(profile: string): Command {
     .name(`dsh --profile ${profile}`)
     .description('Serve DeepSeek Harness SDK clients over stdio JSON-RPC.')
     .helpOption('-h, --help', 'show this help')
+    .option('--trust-workspace [mode]', 'consumed by the workspace-trust plugin from this same command line; declared here so this program does not refuse it (BLOCKED-260)')
     .addHelpText('after', `
 Example:
   dsh --profile ${profile}     serve one SDK runtime until its client disconnects
