@@ -1790,11 +1790,12 @@
         "epic": "P3-10",
         "stage": "P",
         "path": "packages/execution/execution-world/src/local-provider.ts",
-        "reason": "Hard enforcement of the resource dimensions needs a provider that satisfies them; the only provider today refuses CPU, memory and disk, processes and network. The wall-clock dimension is NOT refused — the provider arms it and settles the world with reason 'timeout' — so this entry is about the dimensions it declines, not about all of them.",
+        "reason": "Hard enforcement of the resource dimensions needs a provider that satisfies them; the only provider today refuses CPU, memory and disk, processes and network. The wall-clock dimension is NOT refused — the provider arms it and settles the world with reason 'timeout' — so this entry is about the dimensions it declines, not about all of them. SUPERSEDED 2026-09-19: the plan does not change this file. P3-10.P builds a second provider beside it (see P3-10.P/fenced-provider) and leaves local-provider's refusals as the honest answer for a local world; P3-06.P and P3-02.P still name this file for changes of their own, which this supersession does not touch.",
         "declaredBy": [],
         "overlay": "P3-01 [P,F]",
         "expectedAt": "tree",
-        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate ruling 2026-09-15 decision (七)(a)"
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate ruling 2026-09-15 decision (七)(a)",
+        "supersededBy": "P3-10.P/fenced-provider"
       },
       "P3-06.P/local-provider": {
         "epic": "P3-06",
@@ -1845,6 +1846,26 @@
         "overlay": "none",
         "expectedAt": "tree",
         "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-258; delegate ruling 2026-09-15 decision (七)(a)"
+      },
+      "P3-10.P/fenced-provider": {
+        "epic": "P3-10",
+        "stage": "P",
+        "path": "packages/execution/execution-world/src/fenced-provider.ts",
+        "reason": "The dimensions P3-10.P must enforce — CPU, memory, disk and processes — are exactly the ones local-provider refuses as unsatisfiable (local-provider.ts:102-117), and that refusal is its correct answer: a local world is the host process’s own confinement. So the stage adds a provider rather than changing that one. Network stays refused here too, deferred to a later stage by the same ruling, and this provider is a world-side implementation: the sandbox-local package’s platform chains are a different layer and no declaration of theirs is touched by it.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate ruling 2026-09-19, the P3-10.P plan recorded in that entry’s 2026-09-19 addendum"
+      },
+      "P3-10.P/fenced-provider-spec": {
+        "epic": "P3-10",
+        "stage": "P",
+        "path": "packages/execution/execution-world/tests/fenced-provider.spec.ts",
+        "reason": "P3-10.P’s observation file, created by the stage together with the provider it exercises. New rather than added to tests/local-provider.spec.ts, whose subject is the provider whose refusals this stage deliberately leaves alone.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate ruling 2026-09-19, the P3-10.P plan recorded in that entry’s 2026-09-19 addendum"
       }
     }
   }
