@@ -7798,3 +7798,54 @@ The scan was exhaustive and found no seventh face. That is the scan's claim, rec
 **Closing condition.** (1) A preflight first: which of the five pipelines and three scripts is "the release script" the clause means, whether the verifier belongs in each or in one, and what it should do to a release that fails it. That is a design question with a blast radius on the publishing path, so it goes to the delegate before any wiring. (2) The wiring lands with the verifier as the **last** step of whatever that preflight names. (3) It is observed — **without manually triggering `release.yml`**, which publishes; the observation has to come from a dry-run shape or from a pipeline-structure assertion, and naming which is part of (1).
 
 **What this does NOT claim.** Not that P0-07's acceptance is unsound: `acceptance`'s own clauses are about the evidence package's content and its collector, both of which are proven and observed. Not that the quality gate's wiring is wrong — it is the reason the verifier has real runs at all. Not that a release has ever shipped with bad evidence: nothing here measures that, only that no release path consults the verifier.
+
+### BLOCKED-293 — five withdrawals, one root cause: arrival was checked until it found one caller, not across the surfaces the clause quantifies over
+
+**Status:** OPEN (2026-09-19). Owner lane B. Ruled by the delegate (`first100-delegate-1c`), gate3-log `:5105`/`:5113`. Registration only; the mechanization is scheduled after the P2-01 fix.
+
+**The five.** `P1-02`, `P0-08`, `P1-01` and `P1-03` were withdrawn in one earlier batch and `P2-01` in this one — 30 ACCEPTED rows became 26, then 25. Every one of them was a clause the product falsified, so none is being reinstated. What makes them a set rather than five accidents is that the same check failed the same way each time.
+
+**The root cause, in three parts.**
+1. **The arrival check stopped at the first hit.** A clause was treated as having production reach once *some* production caller existed, instead of being measured across the shipped surfaces and entry points it quantifies over. P2-01 is the worked example: its live sign-off recorded "host identity produced at four production call points" and that list was read as the product, while two shipped surfaces — `acp-app` and `sdk-app` — had none.
+2. **Coverage notes never state the entry set.** For a clause saying 「任何」 / 「全部」 / 「每个」, the note does not say which entries it covers or which it deliberately excludes and why. Measured: of 14 universal-quantifier `acceptance` clauses, **zero** declare an exclusion (lane A, A-173).
+3. **PASS records carry no per-entry table.** The evidence a sign-off leaves behind is prose plus digests, so a later reader cannot tell a surveyed set from a sampled one. And a list recorded once goes stale silently: P2-01's four-point list had already gained a fifth caller (`api/session-controller/src/agent.ts:512`) after the re-sign, with nothing to notice it.
+
+**The institutional fix, three parts, in the delegate's own division.** ① The README rule already stands: a universal clause is measured per shipped surface. ② A coverage note for a universal clause must state the entry set and any exclusion with its reason — mechanized as a **report-only** rule beside the `verify-acceptance-locks` family, so it surfaces rather than blocks while the backlog is worked off. ③ A new or re-signed PASS record must carry the per-entry table.
+
+**Closing condition.** All three land, ② as an executed rule rather than a convention, and the 14 universal clauses either carry their entry set or are listed as owing one.
+
+**What this does NOT claim.** Not that the five withdrawals were wrong — each one measured a clause false on the shipped product. Not that a coverage note must enumerate call sites: the entry set is the surfaces a clause quantifies over, which is a much shorter list and the one a reader needs. Not that the report-only rule can decide correctness; it can only refuse silence.
+
+### BLOCKED-294 — the public `ToolRuntime.execute` seam runs a tool without a manifest, and the docs teach it
+
+**Status:** OPEN (2026-09-19). Owner lane B. Ruled by the delegate on lane A's A-181, re-measured by lane B. **P2-03 is not withdrawn.**
+
+**The seam.** `ToolRuntime.execute(exec)` (`packages/core/tools/src/index.ts:1859`) runs capability-token revocation, the `tools/pre-execute` waterfall and the guards, then the tool body. It appends no action manifest and consults no enforcement point: in that file `enforceManifestedAction` and `decideManifestedAction` have **zero** occurrences, and `appendManifestThenGate` and `assertManifestPrecedesExecution` have one each, both inside JSDoc. The only import from `@deepseek-ai/dsh-action-manifest` (`:11-13`) is `import type` of five types, so there is no runtime edge either.
+
+**The count depends entirely on the matcher, which is why it is stated with one.** Case-insensitive `manifest` matches **28** lines in that file — an earlier reading reported 0 and a later one 5. All 28 are the type-only import, the `action/manifest-appended` event-data declaration, and JSDoc. The substantive fact is not a count: **no line on the execution path appends a manifest or gates on one.**
+
+**Nothing shipped calls it, and a great deal of test code does.** `tools.execute(` matches **458** lines across `packages/` and `apps/`. Exactly **one** is under a `*/src/**` path — `packages/guard/repeat-tool-reminder/src/index.ts:190` — and it is a comment (*"A direct `ctx.tools.execute()` caller has no model to remind…"*). The other 457 are tests, fixtures and e2e. So the clause is not falsified on the shipped product, and a structural guard forbidding `tools.execute(` in shipped package `src` would cost nothing today.
+
+**What makes it worth registering is the documentation.** `docs/cordis-tutorial/07-into-the-harness.md:39` teaches a plugin author to call it directly, and `docs/subsystems/tools.md:172` lists the execution pipeline without mentioning the manifest. P2-03's three coverage notes state no "direct calls excluded". A reader following the tutorial writes the one shipped caller that would falsify the clause.
+
+**Closing condition,** one of two, after a preflight: either the direct seam also appends a manifest and passes the gate, or the documentation states plainly that it is an internal seam for trusted in-process plugins, the coverage note records the exclusion, and a structural guard keeps shipped package `src` from calling it.
+
+**What this does NOT claim.** Not that P2-03 should be withdrawn: no path on the shipped product executes through this seam, and an in-process plugin already holds host authority, so the seam grants nothing it did not have. Not that the tutorial is wrong about how to call a tool — only that it does not say what calling it this way skips.
+
+### BLOCKED-295 — a Run is registered in memory before its opening write is durable, and a failed write stops nothing
+
+**Status:** OPEN (2026-09-19). Owner lane B, scheduled after the P2-01 fix. Ruled by the delegate on lane A's A-185, re-measured by lane B. **P4-01 is not withdrawn.**
+
+**The window.** `RunService.openForSession()` (`packages/run/run/src/index.ts:452-457`) registers the Run in memory and returns `store.put(run)` **un-awaited**. Its sole caller (`:910-911`) hands that promise to `track()` (`:728-732`), which keeps it for the disposer's `await Promise.all(this.writes.splice(0))` (`:1465`) and, on rejection, emits `run/store-write-failed`.
+
+**That event reaches nobody.** Census of `run/store-write-failed`: **12** occurrences — the declaration (`packages/run/run/src/index.ts:594`), the emit (`:731`), two in the generated `api-catalog.ts`, four across `docs/subsystems/core.md` and its Chinese pair, two in register prose, and **exactly one** real `ctx.on(...)` listener, in `packages/run/run/tests/plugin.spec.ts:103`. **Zero production listeners.**
+
+**Two distinct failure shapes follow.** (a) A crash inside the one-write window leaves the Run absent after restart. `accept()` has an equivalent window, the difference being that here the agent already exists; in practice a first tool dispatch needs a model round-trip, orders of magnitude longer than one local put, so this is structurally possible rather than observed. (b) The opening write **fails**: the agent keeps its in-memory Run and keeps working, the failure is announced to nobody, and after a restart that non-terminal Run is not listed — which is the clause's own words, 「进程重启后可列出所有非终态 Run 并恢复」.
+
+**The contrast is what makes (b) a defect rather than a trade-off.** A refused lease sets `agent.leaseRefused = true` and returns (`:903-904`), stopping dispatch. A failed Run write stops nothing: the same package treats one durability failure as fatal to dispatch and the other as an announcement.
+
+**Closing condition — a requirement, not a code shape.** An agent whose Run's opening write has not become durable must not execute an action under that Run, and a failed opening write must be *consumed* by the product — the agent stops, or dispatch is refused — not only announced. Evidence: one spec that fails the opening put and observes that no tool body ran and that the failure surfaced; one that shows the set listed after restart equals the set of Runs under which any action executed. Lane A's `artifacts/laneA/blocked-295-openforsession-fix-prep.md` measures the four inputs the fix starts from, including whether the existing durable-write-failure fixture can be reused as is.
+
+**What this does NOT claim.** Not that `acceptance[0]` is false on any shipped surface: without an injected fault it holds, and it was measured over a real store across a restart. Not that the disposer is broken — it does await every tracked write; the gap is between opening a Run and that await. Not that the fix must be a listener: announcing louder is the shape this entry rejects.
+
+**Related.** P4-01's coverage note must name this exclusion once [BLOCKED-293](#blocked-293)'s institutional fix lands.
