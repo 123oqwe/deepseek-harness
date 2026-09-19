@@ -1728,5 +1728,113 @@
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070; spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-253"
       }
     }
+  },
+  "approvedAdditions": {
+    "note": "A file an epic's stage must change that neither its registry files[] nor its stages.*.files declares. Recorded per file with the ruling that approved it, and resolved by the same reader as deliverablePathPatches: it ADDS a deliverable rather than replacing one, so it carries no declaredPath. `declaredBy` lists the epics that declare the path today (empty when none do) and `expectedAt` says whether the file exists now (`tree`) or is created by the stage (`stage`).",
+    "entries": {
+      "P3-10.U/execution-world-plugin": {
+        "epic": "P3-10",
+        "stage": "U",
+        "path": "packages/execution/execution-world/src/plugin.ts",
+        "reason": "must[0]'s wall-clock ceiling has to be requestable: ExecutionWorldService.Config.request does not accept maxWallClockMs, so no deployment can ask for one even though resolveWorldSpec carries the dimension. The request surface is here and nowhere else.",
+        "declaredBy": [],
+        "overlay": "P3-01 [U]",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate ruling 2026-09-15 decision (七)(a)"
+      },
+      "P3-10.U/external-effect": {
+        "epic": "P3-10",
+        "stage": "U",
+        "path": "packages/core/tools/src/external-effect.ts",
+        "reason": "Dispatch reads the session's world binding here (readExecutionWorldFact), so a wall-clock ceiling that is not enforced at this point is not enforced at all: refusing a dispatch after the world has started is too late.",
+        "declaredBy": [],
+        "overlay": "P2-04 [U], P2-05 [U.1,U], P2-06 [U,F], P3-01 [U], P4-05 [C.1], P4-12 [U.1]",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate ruling 2026-09-15 decision (七)(a)"
+      },
+      "P3-06.U/llm-deepseek-adapter": {
+        "epic": "P3-06",
+        "stage": "U",
+        "path": "packages/llm/llm-deepseek/src/adapter.ts",
+        "reason": "A non-2xx response's error.message becomes the LlmError message with the raw body as its cause, so this is where a provider error first carries text that must not reach the session log unredacted.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate ruling 2026-09-15 decision (七)(a)"
+      },
+      "P3-06.U/adapter-failure": {
+        "epic": "P3-06",
+        "stage": "U",
+        "path": "packages/llm/llm/src/adapter-failure.ts",
+        "reason": "normalizeLlmFailure copies the provider message verbatim into the LlmFailure the session error event persists, which is the second half of the redaction seam. NOTE: unlike the other entries in this batch, this path IS declared — by P4-11 (epic level and C) and P5-04 (epic level and P). P3-06 is approved to change a path those two epics declare; their declarations are untouched and this addition does not transfer ownership.",
+        "declaredBy": [
+          "P4-11",
+          "P5-04"
+        ],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate ruling 2026-09-15 decision (七)(a)"
+      },
+      "P3-10.P/local-provider": {
+        "epic": "P3-10",
+        "stage": "P",
+        "path": "packages/execution/execution-world/src/local-provider.ts",
+        "reason": "Hard enforcement of the resource dimensions needs a provider that satisfies them; the only provider today refuses CPU, memory and disk, processes and network. The wall-clock dimension is NOT refused — the provider arms it and settles the world with reason 'timeout' — so this entry is about the dimensions it declines, not about all of them.",
+        "declaredBy": [],
+        "overlay": "P3-01 [P,F]",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate ruling 2026-09-15 decision (七)(a)"
+      },
+      "P3-06.P/local-provider": {
+        "epic": "P3-06",
+        "stage": "P",
+        "path": "packages/execution/execution-world/src/local-provider.ts",
+        "reason": "must[1]'s brokered injection needs WorldSecretsSpec.posture 'broker-only', which this provider refuses today; the refusal is stated in the secrets-broker README's Known Limitations.",
+        "declaredBy": [],
+        "overlay": "P3-01 [P,F]",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate ruling 2026-09-15 decision (七)(a)"
+      },
+      "P3-02.P/local-provider": {
+        "epic": "P3-02",
+        "stage": "P",
+        "path": "packages/execution/execution-world/src/local-provider.ts",
+        "reason": "must[3] requires every provider to return supportedPolicyFeatures. The type exists and satisfiesPolicySet consumes it, but the only construction in the tree is a CLAIMS_ALL constant inside a spec; createLocalWorldProvider returns unsatisfiableDimensions and nothing else.",
+        "declaredBy": [],
+        "overlay": "P3-01 [P,F]",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate ruling 2026-09-15 decision (七)(a)"
+      },
+      "P3-02.P/policy-features-spec": {
+        "epic": "P3-02",
+        "stage": "P",
+        "path": "packages/execution/execution-world/tests/policy-features.spec.ts",
+        "reason": "P3-02.P's observation file, created by the stage rather than existing today. New rather than added to tests/policy.spec.ts because that file carries P3-02.C's frozen command and its expectCases are not being changed.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate ruling 2026-09-15 decision (七)(a)"
+      },
+      "P2-12.U/lease-plugin": {
+        "epic": "P2-12",
+        "stage": "U",
+        "path": "packages/run/lease/src/plugin.ts",
+        "reason": "must[2] asks a worker to check the emergency stop before taking a new lease; acquire is the only entry point a worker passes through before holding one, and it reads no stop state today. A check anywhere later cannot stop the lease from being taken.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-258; delegate ruling 2026-09-15 decision (七)(a)"
+      },
+      "P2-12.U/lease-contract-types": {
+        "epic": "P2-12",
+        "stage": "U",
+        "path": "packages/collaboration/lease-contract/src/types.ts",
+        "reason": "The lease seam's contract types live here after §12.22-1 moved them, so a stop-aware acquire result is named here rather than invented at the call site.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-258; delegate ruling 2026-09-15 decision (七)(a)"
+      }
+    }
   }
 }
