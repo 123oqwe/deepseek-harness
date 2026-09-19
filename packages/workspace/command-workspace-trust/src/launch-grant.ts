@@ -124,16 +124,13 @@ async function writeLaunchTrust(ctx: Context, request: LaunchTrustRequest): Prom
  * which is what "whoever is the live provider holds this startup's grant"
  * means.
  *
- * **The write is ordered before boot finishes when it can be.** A registration
- * alone would let the first turn read `stateFor` while the grant was still in
- * flight: `assertEntriesActivated` audits the Loader's ENTRY fibers, and a
- * fiber created by `inject` is not one of them. So when the provider has
- * already published — the shipped case, where `dsh-base` mounts
- * `workspace-trust-local` above this row — the returned fiber is awaited, which
- * keeps THIS entry loading until the record is durable. Where the provider
- * publishes later there is nothing to await without waiting forever for a
- * composition that may mount none, and the readiness check below is what
- * reports that.
+ * **Ordering readers is NOT this function's job, and an earlier version of
+ * this comment claimed it was.** It said that returning the inject fiber kept
+ * this entry loading until the record was durable, so no turn could read ahead
+ * of it. Measured false: `boot` does not wait for an entry's `apply` promise —
+ * an entry whose apply never settles still reaches ACTIVE and boot resolves —
+ * so nothing was ordered by it. What orders readers is the provider, which
+ * holds its own `stateFor` while a launch-time write may still be pending.
  *
  * **Three loud failures, and none of them is a silent pass.** A launcher with
  * no `appReady` signal cannot tell "the provider has not published yet" from
@@ -145,10 +142,10 @@ async function writeLaunchTrust(ctx: Context, request: LaunchTrustRequest): Prom
  *
  * No request means no obligation: nothing is registered and no host is judged.
  * @param ctx - the plugin context, for the optional cmdline, readiness and trust services.
- * @returns the write, when the provider is already published; otherwise nothing.
+ * @returns Nothing; ordering readers is the provider's job, not this registration's.
  * @throws when a request is present and this launcher provides no `appReady` signal.
  */
-export function applyLaunchTrustRequest(ctx: Context): Promise<void> | void {
+export function applyLaunchTrustRequest(ctx: Context): void {
   const request = parseLaunchTrustRequest(ctx.get('cmdlineArgs')?.get() ?? [])
   if (request === undefined) return
   const ready = ctx.get('appReady')
@@ -162,7 +159,7 @@ export function applyLaunchTrustRequest(ctx: Context): Promise<void> | void {
   // operator reading one message should not have to guess which: nothing ever
   // reached a provider, a write began and never settled, or a write failed.
   let outcome: 'pending' | 'writing' | 'written' | { readonly error: unknown } = 'pending'
-  const fiber = ctx.inject(['workspaceTrust'], async (scope: Context) => {
+  ctx.inject(['workspaceTrust'], async (scope: Context) => {
     outcome = 'writing'
     try {
       await writeLaunchTrust(scope, request)
@@ -182,22 +179,16 @@ export function applyLaunchTrustRequest(ctx: Context): Promise<void> | void {
         + 'so there is no record to write and nothing would enforce it.',
       )
     }
-    if (outcome === 'writing') {
-      // A provider published and the write began, so the composition is not
-      // the problem — the record simply is not durable yet, and a turn that
-      // read `stateFor` now would read the state from before the grant.
-      throw new Error(
-        `${FLAG} was given and a workspaceTrust provider published, but the record was still being `
-        + 'written when startup completed, so a first turn could read this workspace as untrusted.',
-      )
-    }
+    // `'writing'` is NOT a failure. A provider that published holds its own
+    // read path until this write settles, so no reader can pass it in the
+    // meantime — and failing startup for a write still in flight is what made
+    // a correct composition unusable (measured: the sdk profile publishes the
+    // provider after this plugin applies, so the write is normally in flight
+    // exactly here).
+    if (outcome === 'writing') return
     throw new Error(
       `${FLAG} was given, but writing the record failed, so this workspace is not trusted: `
       + String(outcome.error),
     )
   }))
-  // Present already: keep this entry loading until the record is durable, so
-  // the first turn cannot read `stateFor` ahead of the grant.
-  if (ctx.get('workspaceTrust') === undefined) return
-  return Promise.resolve(fiber).then(() => undefined)
 }

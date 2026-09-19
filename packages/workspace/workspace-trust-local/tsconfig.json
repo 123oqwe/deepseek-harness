@@ -22,6 +22,9 @@
     },
     {
       "path": "../workspace-trust"
+    },
+    {
+      "path": "../../boot/cmdline"
     }
   ]
 }

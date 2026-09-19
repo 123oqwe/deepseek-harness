@@ -3994,7 +3994,7 @@ export interface TrustGrant {
 
 依赖： `TrustState` (`@deepseek-ai/dsh-workspace-trust/types`)
 
-来源： [`packages/workspace/workspace-trust-local/src/index.ts:88`](../packages/workspace/workspace-trust-local/src/index.ts)
+来源： [`packages/workspace/workspace-trust-local/src/index.ts:91`](../packages/workspace/workspace-trust-local/src/index.ts)
 
 ## 无配置的可加载插件
 

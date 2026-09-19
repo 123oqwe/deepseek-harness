@@ -157,6 +157,16 @@ export interface TrustRecord {
 }
 
 /**
+ * The launcher argument that writes a trust record before any session exists.
+ *
+ * Declared in the vocabulary rather than in the plugin that parses it, because
+ * two packages now need the same literal: the entry point that reads its
+ * grammar, and the provider, which holds its read path while a request may
+ * still be unwritten and therefore needs to know only that one is present.
+ */
+export const LAUNCH_TRUST_FLAG = '--trust-workspace'
+
+/**
  * The entry point a trust grant was written through ({@link TrustRecord.source}).
  *
  * A closed set, because each member is a different authority and an audit that

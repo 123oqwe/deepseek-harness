@@ -12422,6 +12422,9 @@ importers:
       '@deepseek-ai/dsh-app-boot':
         specifier: workspace:^
         version: link:../../boot/app-boot
+      '@deepseek-ai/dsh-cmdline':
+        specifier: workspace:^
+        version: link:../../boot/cmdline
       '@deepseek-ai/dsh-llm':
         specifier: workspace:^
         version: link:../../llm/llm

@@ -85,7 +85,7 @@ describe('P1-07 / BLOCKED-261: which launcher may carry the flag', () => {
     // would mean recording nothing and reporting nothing. Measured: the
     // webworker host passes caller-supplied argv and no `ready`.
     const { ctx } = launcher(['--trust-workspace=read'], false)
-    expect(() => { void applyLaunchTrustRequest(ctx) }).toThrow(/provides no appReady signal/u)
+    expect(() => { applyLaunchTrustRequest(ctx) }).toThrow(/provides no appReady signal/u)
     await ctx.fiber.dispose()
   })
 
@@ -93,7 +93,7 @@ describe('P1-07 / BLOCKED-261: which launcher may carry the flag', () => {
     // The positive control for the refusal above: absence of a flag is not a
     // composition defect, and `apps/desktop-host` passes `args: []`.
     const { ctx } = launcher([], false)
-    expect(() => { void applyLaunchTrustRequest(ctx) }).not.toThrow()
+    expect(() => { applyLaunchTrustRequest(ctx) }).not.toThrow()
     await ctx.fiber.dispose()
   })
 
@@ -107,16 +107,18 @@ describe('P1-07 / BLOCKED-261: which launcher may carry the flag', () => {
       revokeTrust: () => Promise.reject(failure),
       stateFor: () => Promise.resolve('untrusted'),
     } as never)
-    await expect(applyLaunchTrustRequest(ctx)).rejects.toBe(failure)
+    applyLaunchTrustRequest(ctx)
+    await new Promise(resolve => setImmediate(resolve))
     expect(() => { listeners[0]?.() }).toThrow(/writing the record failed/u)
     await ctx.fiber.dispose()
   })
 
-  it('writes before it returns when the provider has already published, so no turn precedes the record', async () => {
-    // `assertEntriesActivated` audits Loader ENTRY fibers, and an `inject`
-    // fiber is not one, so a registration alone would let the first turn read
-    // `stateFor` while the grant was in flight. Awaiting the returned promise
-    // is what closes that, and this case is what says it is awaited at all.
+  it('writes the record through the provider once it publishes, and orders nothing itself', async () => {
+    // Ordering belongs to the provider, which holds its own `stateFor` while a
+    // launch write may be pending. This registration only has to reach it: an
+    // earlier version returned a promise and claimed the Loader would wait for
+    // it, which a probe disproved — boot resolves with an entry's apply still
+    // pending.
     const { ctx } = launcher(['--trust-workspace=read'], true)
     const granted: string[] = []
     ctx.provide('workspaceTrust', {
@@ -124,17 +126,20 @@ describe('P1-07 / BLOCKED-261: which launcher may carry the flag', () => {
       revokeTrust: () => Promise.resolve({}),
       stateFor: () => Promise.resolve('untrusted'),
     } as never)
-    const pending = applyLaunchTrustRequest(ctx)
-    expect(pending, 'the write must be returned so the Loader can wait for it').toBeInstanceOf(Promise)
-    await pending
+    // Nothing is awaited here: the registration returns nothing, and the write
+    // lands one microtask after the provider publishes.
+    applyLaunchTrustRequest(ctx)
+    await new Promise(resolve => setImmediate(resolve))
     expect(granted).toEqual([process.cwd()])
     await ctx.fiber.dispose()
   })
 
-  it('says the write is still in flight, rather than blaming a provider that did publish', async () => {
-    // Three failures, three sentences. A provider that published and a write
-    // that never settled is not the same composition defect as no provider at
-    // all, and an operator reading one message should not have to guess which.
+  it('lets startup finish while the write is still in flight, because the provider holds its own readers', async () => {
+    // This used to fail the boot, and that is the defect a real run caught:
+    // the shipped profile publishes the provider AFTER this plugin applies, so
+    // "still writing at readiness" is the NORMAL case, not a broken one. What
+    // orders readers is the provider's own barrier over `stateFor`, released
+    // in a `finally` here; startup has nothing left to refuse.
     const { ctx, listeners } = launcher(['--trust-workspace=read'], true)
     let release = (): void => {}
     const held = new Promise<void>((resolve) => { release = resolve })
@@ -143,22 +148,16 @@ describe('P1-07 / BLOCKED-261: which launcher may carry the flag', () => {
       revokeTrust: () => Promise.resolve({}),
       stateFor: () => Promise.resolve('untrusted'),
     } as never)
-    const pending = applyLaunchTrustRequest(ctx)
-    // The write has begun and has not settled: exactly the window the message
-    // is about.
+    applyLaunchTrustRequest(ctx)
     await new Promise(resolve => setImmediate(resolve))
-    expect(() => { listeners[0]?.() }).toThrow(/still being written when startup completed/u)
+    expect(() => { listeners[0]?.() }, 'a write in flight is not a startup failure').not.toThrow()
     release()
-    await pending
-    // Once it settles, readiness is silent — the state is an observation of
-    // the write, not a latch.
-    expect(() => { listeners[0]?.() }).not.toThrow()
-    await ctx.fiber.dispose()
+    await new Promise(resolve => setImmediate(resolve))
   })
 
-  it('fails loudly when startup completes and no provider ever published', async () => {
+  it('fails loudly at readiness when no provider ever published', async () => {
     const { ctx, listeners } = launcher(['--trust-workspace=read'], true)
-    void applyLaunchTrustRequest(ctx)
+    applyLaunchTrustRequest(ctx)
     expect(listeners).toHaveLength(1)
     // What the launcher's own `commit()` runs. Nothing mounted a provider, so
     // the request reached no record, and saying so is the whole point: the

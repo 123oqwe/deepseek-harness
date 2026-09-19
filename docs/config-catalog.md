@@ -3994,7 +3994,7 @@ export interface TrustGrant {
 
 Depends on: `TrustState` (`@deepseek-ai/dsh-workspace-trust/types`)
 
-Source: [`packages/workspace/workspace-trust-local/src/index.ts:88`](../packages/workspace/workspace-trust-local/src/index.ts)
+Source: [`packages/workspace/workspace-trust-local/src/index.ts:91`](../packages/workspace/workspace-trust-local/src/index.ts)
 
 ## Loadable plugins with no config
 

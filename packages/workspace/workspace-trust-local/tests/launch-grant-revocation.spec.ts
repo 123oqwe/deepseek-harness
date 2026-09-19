@@ -83,6 +83,148 @@ async function project(root: string): Promise<string> {
   return path
 }
 
+describe('P1-07 / BLOCKED-261: the provider holds its read path while a launch grant is unwritten', () => {
+  /**
+   * A context carrying the launcher facts the barrier is armed from.
+   * @param args - the inner arguments the launcher provides.
+   * @returns the context and the readiness listeners it collected.
+   */
+  function launcherCtx(args: readonly string[]): { ctx: Context; listeners: (() => void)[] } {
+    const ctx = new Context()
+    const listeners: (() => void)[] = []
+    ctx.provide('cmdlineArgs', { get: () => args } as never)
+    ctx.provide('appReady', { onReady: (l: () => void) => { listeners.push(l); return () => {} } } as never)
+    return { ctx, listeners }
+  }
+
+  it('does not answer a read until the request settles, and answers the granted state after it', async () => {
+    // The window this exists for: the provider publishes, a reader asks, and
+    // the record is still being written. Every reader goes through `stateFor`,
+    // so holding it here is what covers the ones no agent step passes through
+    // — the skill catalog a client can ask for before any turn, above all.
+    const root = await makeRoot()
+    const path = await project(root)
+    const { ctx } = launcherCtx(['--trust-workspace=read'])
+    await ctx.plugin(Storage)
+    await ctx.plugin(
+      { name: storageJsonName, inject: storageJsonInject, apply: storageJsonApply, Config: storageJsonConfig },
+      { root },
+    )
+    await ctx.plugin(
+      { name: storageDomainName, inject: storageDomainInject, apply: storageDomainApply, Config: storageDomainConfig },
+      { backend: 'json' },
+    )
+    await ctx.plugin(WorkspaceTrustLocal, { grants: [] })
+    try {
+      const trust = ctx.workspaceTrust
+      let answered: string | undefined
+      const reading = trust.stateFor(path).then((state) => { answered = state })
+      await new Promise(resolve => setImmediate(resolve))
+      expect(answered, 'a read must not pass the barrier while the request is unwritten').toBeUndefined()
+      await trust.grantTrust(path, 'trusted-read', HOST, 'launch-argument')
+      await reading
+      expect(answered).toBe('trusted-read')
+    } finally {
+      await ctx.fiber.dispose()
+    }
+  })
+
+  it('keeps the barrier past readiness while a launch write is in flight, and answers the grant once it lands', async () => {
+    // The measured order on a shipped profile is that this provider publishes
+    // LATE, so the launch write is normally still running when startup
+    // finishes. Releasing at readiness would therefore be the normal case, not
+    // the exception, and every reader would get the state from before the
+    // grant — the hole the barrier exists for, reopened at the one moment it
+    // matters. Readiness is the upper bound for a request NOBODY claimed.
+    //
+    // The domain is a stand-in so that what holds the write is this case and
+    // not how long a file write happens to take; `get` and `put` are the only
+    // two methods the provider uses.
+    const root = await makeRoot()
+    const path = await project(root)
+    const { ctx, listeners } = launcherCtx(['--trust-workspace=read'])
+    let landWrite = (): void => {}
+    const landed = new Promise<void>((resolve) => { landWrite = resolve })
+    const rows = new Map<string, unknown>()
+    ctx.provide('storageDomain', {
+      open: () => Promise.resolve({
+        table: (table: string) => ({
+          get: (key: string) => rows.get(`${table}/${key}`),
+          put: async (key: string, value: unknown) => {
+            await landed
+            rows.set(`${table}/${key}`, value)
+          },
+        }),
+      }),
+    } as never)
+    await ctx.plugin(WorkspaceTrustLocal, { grants: [] })
+    try {
+      const trust = ctx.workspaceTrust
+      // Claimed synchronously by the call, which is what makes the assertion
+      // below a fact about the barrier rather than about timing.
+      const writing = trust.grantTrust(path, 'trusted-read', HOST, 'launch-argument')
+      for (const listener of [...listeners]) listener()
+      let answered: string | undefined
+      const reading = trust.stateFor(path).then((state) => { answered = state })
+      await new Promise(resolve => setImmediate(resolve))
+      expect(answered, 'readiness must not release a barrier a write has claimed').toBeUndefined()
+      landWrite()
+      expect(await writing).toMatchObject({ upgraded: true })
+      await reading
+      expect(answered).toBe('trusted-read')
+    } finally {
+      await ctx.fiber.dispose()
+    }
+  })
+
+  it('costs a reader nothing when the command line carries no request', async () => {
+    // The positive control: without the flag the barrier is never armed, so
+    // this is the ordinary read path with no added await.
+    const root = await makeRoot()
+    const path = await project(root)
+    const { ctx } = launcherCtx([])
+    await ctx.plugin(Storage)
+    await ctx.plugin(
+      { name: storageJsonName, inject: storageJsonInject, apply: storageJsonApply, Config: storageJsonConfig },
+      { root },
+    )
+    await ctx.plugin(
+      { name: storageDomainName, inject: storageDomainInject, apply: storageDomainApply, Config: storageDomainConfig },
+      { backend: 'json' },
+    )
+    await ctx.plugin(WorkspaceTrustLocal, { grants: [] })
+    try {
+      expect(await ctx.workspaceTrust.stateFor(path)).toBe('untrusted')
+    } finally {
+      await ctx.fiber.dispose()
+    }
+  })
+
+  it('releases the barrier at readiness, so a request nobody claims costs one startup and not a hang', async () => {
+    const root = await makeRoot()
+    const path = await project(root)
+    const { ctx, listeners } = launcherCtx(['--trust-workspace=read'])
+    await ctx.plugin(Storage)
+    await ctx.plugin(
+      { name: storageJsonName, inject: storageJsonInject, apply: storageJsonApply, Config: storageJsonConfig },
+      { root },
+    )
+    await ctx.plugin(
+      { name: storageDomainName, inject: storageDomainInject, apply: storageDomainApply, Config: storageDomainConfig },
+      { backend: 'json' },
+    )
+    await ctx.plugin(WorkspaceTrustLocal, { grants: [] })
+    try {
+      const reading = ctx.workspaceTrust.stateFor(path)
+      // Nothing wrote the record; startup finishing is the upper bound.
+      for (const listener of [...listeners]) listener()
+      expect(await reading).toBe('untrusted')
+    } finally {
+      await ctx.fiber.dispose()
+    }
+  })
+})
+
 describe('P1-07 must[2] / BLOCKED-261: the launch grant and an in-session revocation', () => {
   it('grants a workspace nobody has decided about, because a first binding is not a revocation', async () => {
     // The positive control for the rule below: `bindWorkspaceTrust` creates an

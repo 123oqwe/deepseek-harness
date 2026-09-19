@@ -87,7 +87,7 @@ async function executeTrustCommand(ctx: Context, invocation: CommandInvocation):
  * @param ctx - the context to register on; the registration disposes with it.
  * @returns Nothing.
  */
-export function apply(ctx: Context): Promise<void> | void {
+export function apply(ctx: Context): void {
   ctx.commands.register({
     name: 'trust-skills',
     description: "allow this project's own skills to run, after confirming",
@@ -97,7 +97,5 @@ export function apply(ctx: Context): Promise<void> | void {
   // (BLOCKED-214). Registration is synchronous and the write happens when the
   // provider publishes; a launcher whose startup completes with nothing written
   // fails loudly there rather than leaving the operator to discover it.
-  // Returned, not discarded: where the provider has already published this is
-  // the write, and the Loader keeps this entry loading until it is durable.
-  return applyLaunchTrustRequest(ctx)
+  applyLaunchTrustRequest(ctx)
 }

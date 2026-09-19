@@ -38,6 +38,10 @@ import {
   requestTrustUpgrade,
   type WorkspaceTrustService,
 } from '@deepseek-ai/dsh-workspace-trust'
+// The `cmdlineArgs` and `appReady` slots are declared by the cmdline
+// package's Context augmentation; nothing else here needs it.
+import type {} from '@deepseek-ai/dsh-cmdline'
+import { LAUNCH_TRUST_FLAG } from '@deepseek-ai/dsh-workspace-trust/types'
 import type {
   TrustDowngradeResult,
   TrustGrantSource,
@@ -60,7 +64,6 @@ import type { StoredConsumedGrant } from './spec.ts'
  * is the same instant for every mount in this process.
  */
 const PROCESS_STARTED_AT_UTC = new Date(performance.timeOrigin).toISOString()
-
 
 /** The two durable tables this provider reads, opened together. */
 interface TrustTables {
@@ -119,11 +122,96 @@ class LocalWorkspaceTrust implements WorkspaceTrustService {
   private tablesOnce?: Promise<TrustTables>
 
   /**
+   * Held while a launch-time trust request may still be unwritten, and
+   * `undefined` when this startup carries none.
+   *
+   * **Armed here rather than registered later, and that is the whole point.**
+   * A reader asks this provider, so the provider is the only place a barrier
+   * covers every reader — project instructions, the policy facts a tool call
+   * assembles, the skill catalog a client can ask for before any turn, and the
+   * in-session command. Registering it from the entry point that writes the
+   * record would arm it one microtask after this service publishes (measured:
+   * an `inject` callback runs after the publishing segment, before the next
+   * microtask completes), leaving a window where a read could pass unheld.
+   */
+  private launchBarrier?: Promise<void>
+  /** Releases {@link launchBarrier}. */
+  private releaseBarrier: () => void = () => {}
+  /**
+   * How many writes have claimed the barrier and not yet settled.
+   *
+   * Startup finishing is the upper bound for a request nobody claimed — but
+   * only for that case. The measured order on a shipped profile is that this
+   * provider publishes LATE, so the write is normally still in flight when
+   * readiness fires; releasing then would hand every reader the state from
+   * before the grant, which is the hole the barrier exists to close.
+   */
+  private launchWritesInFlight = 0
+
+  /**
    * @param ctx - the mounting context, whose `storageDomain` holds the records.
    * @param grants - the operator's configured trust grants.
    */
   constructor(private readonly ctx: Context, grants: readonly TrustGrant[]) {
     this.grants = new Map(grants.map(grant => [grant.path, grant.state]))
+    this.armLaunchBarrier()
+  }
+
+  /**
+   * Hold reads if this startup's command line carries a trust request.
+   *
+   * The test is a literal one over the launcher's own arguments, not a parse:
+   * the flag's grammar belongs to `@deepseek-ai/dsh-command-workspace-trust`,
+   * and all this needs to know is whether someone is about to write a record.
+   *
+   * Two conditions, and both bound the wait. A launcher with no `appReady`
+   * signal is not armed at all, because nothing could then tell this provider
+   * that startup finished — and that is also the composition where the entry
+   * point refuses the request outright. With a signal, readiness releases the
+   * barrier whatever happened, so a request nobody claims costs one startup's
+   * delay and never a hang.
+   * @returns Nothing.
+   */
+  private armLaunchBarrier(): void {
+    const args = this.ctx.get('cmdlineArgs')?.get() ?? []
+    if (!args.some(arg => arg === LAUNCH_TRUST_FLAG || arg.startsWith(`${LAUNCH_TRUST_FLAG}=`))) return
+    const ready = this.ctx.get('appReady')
+    if (ready === undefined) return
+    this.launchBarrier = new Promise<void>((resolve) => {
+      this.releaseBarrier = () => {
+        this.launchBarrier = undefined
+        resolve()
+      }
+    })
+    // Startup finishing releases a barrier NOBODY claimed. A write already
+    // under way keeps it: the write's own completion is what releases it then.
+    this.ctx.effect(() => ready.onReady(() => {
+      if (this.launchWritesInFlight === 0) this.releaseBarrier()
+    }))
+  }
+
+  /**
+   * Hold the barrier for one write that is about to happen, and release it
+   * when that write settles.
+   *
+   * The provider claims its own barrier because it can see what a claim is:
+   * every write passes through this service, so nothing outside it has to be
+   * trusted to report one — and a caller that could report one could also
+   * withhold the report.
+   * @param write - the write to run while the barrier is held.
+   * @returns whatever the write returned.
+   */
+  private async whileHoldingBarrier<T>(write: () => Promise<T>): Promise<T> {
+    if (this.launchBarrier === undefined) return write()
+    this.launchWritesInFlight += 1
+    try {
+      return await write()
+    } finally {
+      this.launchWritesInFlight -= 1
+      // However it ended, and whatever it was: a write that failed must not
+      // leave readers waiting, and the state they then read is the stored one.
+      if (this.launchWritesInFlight === 0) this.releaseBarrier()
+    }
   }
 
   /**
@@ -182,6 +270,11 @@ class LocalWorkspaceTrust implements WorkspaceTrustService {
    * @returns the workspace's current trust state.
    */
   async stateFor(cwd: string): Promise<TrustState> {
+    // Every reader passes here, which is why the barrier lives here. It is
+    // released on success, on failure and at readiness, so a read is delayed
+    // by one startup at most and never denied: a write that failed leaves the
+    // stored state, which for an ungranted workspace is `'untrusted'`.
+    if (this.launchBarrier !== undefined) await this.launchBarrier
     let observed: WorkspaceIdentity
     try {
       observed = await observeWorkspaceIdentity(cwd)
@@ -237,6 +330,23 @@ class LocalWorkspaceTrust implements WorkspaceTrustService {
     hostPrincipal: Principal,
     source: TrustGrantSource = 'command',
   ): Promise<TrustUpgradeResult> {
+    return this.whileHoldingBarrier(() => this.writeGrant(cwd, target, hostPrincipal, source))
+  }
+
+  /**
+   * The grant itself, with the barrier bookkeeping left to its caller.
+   * @param cwd - the session working directory whose workspace is being raised.
+   * @param target - the state to raise it to.
+   * @param hostPrincipal - the principal authorizing it.
+   * @param source - the entry point the grant is written through.
+   * @returns the upgrade result; the new binding is persisted only on success.
+   */
+  private async writeGrant(
+    cwd: string,
+    target: TrustState,
+    hostPrincipal: Principal,
+    source: TrustGrantSource,
+  ): Promise<TrustUpgradeResult> {
     const observed = await observeWorkspaceIdentity(cwd)
     const at = new Date().toISOString()
     const { records } = await this.tables()
@@ -263,6 +373,22 @@ class LocalWorkspaceTrust implements WorkspaceTrustService {
    * @returns the downgrade result and the project content kinds it revoked.
    */
   async revokeTrust(cwd: string, target: TrustState): Promise<TrustDowngradeResult> {
+    return this.whileHoldingBarrier(() => this.writeRevocation(cwd, target))
+  }
+
+  /**
+   * The revocation itself, with the barrier bookkeeping left to its caller.
+   *
+   * A revocation claims the barrier too, and deliberately: `revokeTrust`
+   * carries no source, so this provider cannot tell a launch-time
+   * `--trust-workspace=none` from an in-session one — and either way what is
+   * landing is a decision about this workspace, which is what a reader waiting
+   * on the barrier is waiting for.
+   * @param cwd - the session working directory whose workspace is being lowered.
+   * @param target - the state to lower it to.
+   * @returns the downgrade result and the project content kinds it revoked.
+   */
+  private async writeRevocation(cwd: string, target: TrustState): Promise<TrustDowngradeResult> {
     const observed = await observeWorkspaceIdentity(cwd)
     const at = new Date().toISOString()
     const { records } = await this.tables()
