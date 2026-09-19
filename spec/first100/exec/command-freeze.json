@@ -14577,6 +14577,165 @@
         "failureSummary": "3 of 58 failed, all three in expectCases: \"process shutdown lets Ctrl+C force a normal shutdown already stuck in disposal\", \"process shutdown drains on the first signal and forces on the second signal\", \"process shutdown lets a signal force exit while natural completion drains remaining handles\". Still green: the other 6 process-shutdown cases (natural completion and forced exit on rejection, exitCode on normal completion, forced exit at the grace bound, a caller-supplied grace period, forced exit after a signal-started disposal, coalescing repeated normal shutdowns), which exercise the first call and the timer rather than a repeated signal, and all 49 cases of the other four files. Mutation reverted; 58 passed (58), exit 0."
       },
       "note": "Fault stage: the stop observed at each face it crosses. THREE OF THE FIVE ARGV FILES CONTRIBUTE NO expectCases: every case of emergency-stop.e2e.spec.ts is frozen by P2-12.C, and every case of service.spec.ts and stop-gate.spec.ts by P2-12.U. They stay in the argv as a REQUIRED PRECONDITION -- expectExit 0 means this cell goes red if any of their 30 cases fails -- while this cell CLAIMS only the 28 cases of the two faces no other P2-12 cell covers: the SDK transport and the CLI process face. The dry run will report 58 passing fullNames; only these 28 belong here, which keeps the case sets of C/P/U/F disjoint (delegate ruling 2026-09-15, option 1). Two files are deliberately NOT named. apps/cli/tests/headless-shutdown.e2e.ts: .e2e.ts matches none of the default config include patterns, so a cell frozen on it would green on a file the greening run never executes (BLOCKED-070 family). tests/first100/fixtures/P2-12.fault.spec.ts: the registry declares it and it does not exist; recorded as a stale declaration under BLOCKED-253 rather than worked around here. expectCases are fullName (describe + single space + it), never bare titles (BLOCKED-104)."
+    },
+    {
+      "epic": "P4-03",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/run-plan/tests/compile.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-03 C — a preference is not a refusal P4-03 C: a soft demand that holds is reported as nothing",
+        "P4-03 C — a preference is not a refusal P4-03 C: an unsatisfiable soft demand leaves the plan standing and is reported",
+        "P4-03 C — a preference is not a refusal P4-03 C: only the hard demand enters the conflict set when both fail",
+        "P4-03 C — a preference is not a refusal P4-03 C: the report of unmet preferences does not depend on the order they were listed in",
+        "P4-03 C — a preference is not a refusal P4-03 C: the same demand sourced from a hard constraint refuses the plan",
+        "P4-03 C — a preference is not a refusal P4-03 C: what a deployment cannot offer does not move the plan id",
+        "P4-03 C — the plan a compile produces P4-03 C: a diamond of independent work compiles, so an ordering is not mistaken for a loop",
+        "P4-03 C — the plan a compile produces P4-03 C: a plan carries no executable leaf",
+        "P4-03 C — the plan a compile produces P4-03 C: a requirement that names another node's requirement does not compile",
+        "P4-03 C — the plan a compile produces P4-03 C: changing one character of one constraint changes the plan id",
+        "P4-03 C — the plan a compile produces P4-03 C: every agent node names the TaskProfile requirement it satisfies",
+        "P4-03 C — the plan a compile produces P4-03 C: every referenced vocabulary is the owning package's own, not a restatement",
+        "P4-03 C — the plan a compile produces P4-03 C: every verification entry names the versioned contract it was compiled against",
+        "P4-03 C — the plan a compile produces P4-03 C: reordering an array that has no meaningful order does not change the plan id",
+        "P4-03 C — the plan a compile produces P4-03 C: the compiled plan validates against the shipped schema",
+        "P4-03 C — the plan a compile produces P4-03 C: the plan carries the schema's twelve fields and nothing else",
+        "P4-03 C — the plan a compile produces P4-03 C: the plan id is derived from the plan, never taken from the caller",
+        "P4-03 C — the plan a compile produces P4-03 C: the plan states the ABI version it was compiled under",
+        "P4-03 C — the plan a compile produces P4-03 C: the same normalized inputs give the same plan id",
+        "P4-03 C — what cannot be satisfied does not enter the run P4-03 C: a ceiling over what the deployment caps is a budget conflict",
+        "P4-03 C — what cannot be satisfied does not enter the run P4-03 C: a demand that holds does not enter the conflict set",
+        "P4-03 C — what cannot be satisfied does not enter the run P4-03 C: a missing model is a model conflict, and the route alone is enough to find it",
+        "P4-03 C — what cannot be satisfied does not enter the run P4-03 C: a policy the deployment does not allow is a policy conflict",
+        "P4-03 C — what cannot be satisfied does not enter the run P4-03 C: a satisfiable plan compiles and reports no conflict",
+        "P4-03 C — what cannot be satisfied does not enter the run P4-03 C: a world no provider can meet is a world conflict",
+        "P4-03 C — what cannot be satisfied does not enter the run P4-03 C: a world spec nobody answered for is refused rather than assumed",
+        "P4-03 C — what cannot be satisfied does not enter the run P4-03 C: an unsatisfiable hard demand produces a conflict set and no plan",
+        "P4-03 C — what cannot be satisfied does not enter the run P4-03 C: the conflict set is minimal — removing any one member makes the rest satisfiable",
+        "P4-03 C — what cannot be satisfied does not enter the run P4-03 C: wall clock takes the largest demand while the other dimensions add up"
+      ],
+      "files": [
+        "packages/run/run-plan/src/compile.ts",
+        "packages/run/run-plan/src/types.ts",
+        "packages/run/run-plan/tests/compile.spec.ts",
+        "spec/run-plan.schema.json"
+      ],
+      "frozenAtUtc": "2026-09-19T23:17:56Z",
+      "dryRunProof": {
+        "treeSha": "e324bd56460a603f2523422fd976c218b35a6a0d",
+        "testsDiscovered": 50
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations in `packages/run/run-plan/src/compile.ts`, each its own commit off this lane's tip `e3a5453709`, NEVER merged, each run by CI's narrow job at its own SHA over this entry's argv -- so nothing was applied to a working tree and nothing had to be reverted. C-1 (`d90a6bdce48fbedccbbca7afef3da65713ec6d57`) deletes the shrink loop in `minimalConflictSet`: the demands are still sorted by id and still mapped to `Conflict`s, but every demand is kept instead of dropping each one whose removal leaves the rest unsatisfiable, so what comes back is a conflict set that is not minimal. C-2 (`3d8e83cf77172248eb5b17fc9620eb9d2f3e812e`) replaces `canonicalizeArguments(body)` with `JSON.stringify(body)` in `planIdOf`: still a sha256 over the plan body, only without canonicalization.",
+        "failureSummary": "The baseline first: the unmutated tip is 50 passed / 0 failed (run 35474798183), so each red below is the mutation's.\n\nC-1, run 35474952572: 39 passed / 11 failed of 50. THE PREDICTION WAS 2 AND IS RECORDED UNCHANGED. It was frozen in this lane's mutation plan before the run and it was wrong -- the two minimality cases are among the 11, but 9 others reddened as well. What it missed is in the fixture, not the mutation: `compile.spec.ts`'s `base` inputs carry three demands that always hold (a model, a world and a budget), and with no shrink those three stay in every conflict set, so every case that asserts WHICH demands the set contains reddens, not only the ones that assert minimality directly. The 11 are the 9 cases of `what cannot be satisfied does not enter the run` that read the conflict set and the 2 of `a preference is not a refusal` that read it; the other 18 C cases and all 21 F cases stayed green, so the mutation is still specific to this stage. Lane A predicted 11 independently, without reading this lane's list, and named the same 11.\n\nC-2, run 35475027491: 50 passed / 0 failed. FAILED TO REDDEN, and recorded rather than dropped, on the rule the P2-10 P entry's third mutation set: no case in this file separates `JSON.stringify` from `canonicalizeArguments` -- what was observed is 50 green, which says the suite cannot tell them apart here, not that the two functions agree on every plan body. Plan-id canonicalization is NOT guarded by this entry, and an entry naming this mutation would be claiming a detection it does not have. Whether any reachable input makes the two disagree is a separate question, and this run answers it neither way; this entry rests on C-1."
+      },
+      "note": "P4-03's Contract stage, frozen as 29 of the 50 cases in `packages/run/run-plan/tests/compile.spec.ts`. The argv is that ONE FILE rather than the package directory: the other 21 cases in it are P4-03 F, frozen in their own entry, and 29 + 21 = 50 exactly with the two sets disjoint -- checked against the observed report rather than assumed, because a subset written as \"everything this argv produces\" would claim the F stage's cases here too.\n\nThe three groups answer the three things a compile has to get right. `the plan a compile produces` (13) fixes what a plan IS and how its id is derived: the schema's twelve fields and nothing else, no executable leaf, every agent node traceable to a TaskProfile requirement, every verification entry naming a versioned contract, and an id derived from the plan rather than taken from the caller, stable under meaningless reordering and moved by one character of one constraint. `what cannot be satisfied does not enter the run` (10) fixes which demands a deployment cannot meet and what the minimal conflict set contains -- one case per conflict kind, plus the minimality property itself and the budget rule that wall clock takes the largest demand while the other dimensions add up. `a preference is not a refusal` (6) fixes the separation between a hard constraint that refuses a plan and a soft one that is only reported, including that the same demand refuses when hard and reports when soft, and that unmet preferences do not move the plan id."
+    },
+    {
+      "epic": "P4-03",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/run-plan/tests/compile.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-03 F — inputs that would make a decision unsafe P4-03 F: a broken reference on its own is not reported as a cycle",
+        "P4-03 F — inputs that would make a decision unsafe P4-03 F: a cap is never read off an inherited property",
+        "P4-03 F — inputs that would make a decision unsafe P4-03 F: a cap key carrying no value is refused rather than read as no cap",
+        "P4-03 F — inputs that would make a decision unsafe P4-03 F: a cap that is not a number is refused, so nothing is compared against it",
+        "P4-03 F — inputs that would make a decision unsafe P4-03 F: a ceiling of zero forbids the work rather than bounding it, and is refused",
+        "P4-03 F — inputs that would make a decision unsafe P4-03 F: a chain far longer than a call stack is answered, not thrown at",
+        "P4-03 F — inputs that would make a decision unsafe P4-03 F: a cycle and a broken reference are each reported, not one instead of the other",
+        "P4-03 F — inputs that would make a decision unsafe P4-03 F: a dimension outside the eight is refused on both sides",
+        "P4-03 F — inputs that would make a decision unsafe P4-03 F: a graph that waits on itself does not compile",
+        "P4-03 F — inputs that would make a decision unsafe P4-03 F: a node that waits for itself does not compile",
+        "P4-03 F — inputs that would make a decision unsafe P4-03 F: a plan round-trips through JSON unchanged, so it can be persisted and sent",
+        "P4-03 F — inputs that would make a decision unsafe P4-03 F: a plan with an extra top-level property is refused by its own schema",
+        "P4-03 F — inputs that would make a decision unsafe P4-03 F: a plan with no objective and no node is refused as empty",
+        "P4-03 F — inputs that would make a decision unsafe P4-03 F: a reference to something the plan does not contain is an input problem, not a conflict",
+        "P4-03 F — inputs that would make a decision unsafe P4-03 F: a task profile reference that is not a digest is refused",
+        "P4-03 F — inputs that would make a decision unsafe P4-03 F: an amount that is not a number is refused rather than compared",
+        "P4-03 F — inputs that would make a decision unsafe P4-03 F: an identifier longer than the schema admits is refused before a plan carries it",
+        "P4-03 F — inputs that would make a decision unsafe P4-03 F: recomputing the id of a plan whose id was replaced gives a different id",
+        "P4-03 F — inputs that would make a decision unsafe P4-03 F: the conflict set for one refusal is the same set every time",
+        "P4-03 F — inputs that would make a decision unsafe P4-03 F: the cycle named is the same one however the graph was listed",
+        "P4-03 F — inputs that would make a decision unsafe P4-03 F: the derived demands take a prefix a caller cannot claim"
+      ],
+      "files": [
+        "packages/run/run-plan/src/compile.ts",
+        "packages/run/run-plan/src/types.ts",
+        "packages/run/run-plan/tests/compile.spec.ts",
+        "spec/run-plan.schema.json"
+      ],
+      "frozenAtUtc": "2026-09-19T23:17:56Z",
+      "dryRunProof": {
+        "treeSha": "e324bd56460a603f2523422fd976c218b35a6a0d",
+        "testsDiscovered": 50
+      },
+      "sensitivityProof": {
+        "mutationDescription": "One mutation, `87d55641f056b719a2dc76d21869b93163426310`, its own commit off `e3a5453709`, never merged, run by CI's narrow job at that SHA over this entry's argv. In `inputProblems` (`packages/run/run-plan/src/compile.ts:591`) the cyclic-graph problem is reported only `if (cycle.length > 0 && problems.length === 0)`: the cycle is still found and still described, but it is dropped whenever any other input problem was recorded first -- which is the \"one instead of the other\" this stage has a case named for.",
+        "failureSummary": "Run 35474863221: 49 passed / 1 failed of 50, against 50 passed / 0 failed on the unmutated tip (run 35474798183). The red is `P4-03 F -- inputs that would make a decision unsafe P4-03 F: a cycle and a broken reference are each reported, not one instead of the other`, the case this lane named before the run. The prediction's other half held as well: three cases were named as expected green -- a graph that waits on itself, a node that waits for itself, and a reference to something the plan does not contain -- because each has only one problem to report, so the added condition is still true for them. Lane A's independent prediction, made without reading this lane's list, named the same single case."
+      },
+      "note": "P4-03's Failure stage: the other 21 cases of `packages/run/run-plan/tests/compile.spec.ts`, the exact complement of the 29 the C entry freezes, under the same single-file argv. It stays a separate entry rather than merging with C because the two stages answer different questions, and a merged entry could not say which of them a red case belongs to.\n\nWhat the 21 cover. Inputs a compile must refuse rather than compute over: a cycle, a self-edge, a reference to a node the plan does not contain, a cap that is absent / non-numeric / inherited / zero, an amount that is not a number, a task-profile reference that is not a digest, an identifier longer than the schema admits, a dimension outside the eight, a plan with an extra top-level property, and a plan with neither objective nor node. The two reports that must not be substituted for each other: a cycle and a broken reference, each named when both are present, and a broken reference alone reported as an input problem rather than as a conflict. And the properties a refusal itself has to keep: the same conflict set every time, the same cycle whichever order the graph was listed in, a plan that round-trips through JSON unchanged, an id that changes when a plan's id is replaced and recomputed, derived demands taking a prefix a caller cannot claim, and a chain far longer than a call stack answered rather than thrown at."
+    },
+    {
+      "epic": "P2-10",
+      "stage": "P",
+      "supplements": {
+        "epic": "P2-10",
+        "stage": "P"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/policy/policy-language/tests/shadow.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-10 must[1]: a diff says what changed in the unit an explain reports P2-10 P: a changed pin and an empty diff cannot both happen for the same pair",
+        "P2-10 must[1]: a diff says what changed in the unit an explain reports P2-10 P: a policy whose text changed is reported as changed, not as added and removed",
+        "P2-10 must[1]: a diff says what changed in the unit an explain reports P2-10 P: the diff names what was added and what was removed, by policy id",
+        "P2-10 must[1]: a diff says what changed in the unit an explain reports P2-10 P: the lists are in id order, so two runs over one pair read the same",
+        "P2-10 must[1]: a diff says what changed in the unit an explain reports P2-10 P: two sets that compile to the same pin differ in nothing",
+        "P2-10 must[1]: a shadow run cannot change what happens P2-10 P: a difference in reason alone is a disagreement",
+        "P2-10 must[1]: a shadow run cannot change what happens P2-10 P: a disagreement says which policies each side matched",
+        "P2-10 must[1]: a shadow run cannot change what happens P2-10 P: a shadow run carries the candidate's explain, never the live one",
+        "P2-10 must[1]: a shadow run cannot change what happens P2-10 P: shadow agrees when both reach the same effect, though the two sets are different",
+        "P2-10 must[1]: a shadow run cannot change what happens P2-10 P: shadow flags disagreement when the candidate would deny what live permits",
+        "P2-10 must[1]: a shadow run cannot change what happens P2-10 P: shadow reports the live decision verbatim, whatever the candidate said",
+        "P2-10 must[1]: a shadow run cannot change what happens P2-10 P: two sides that matched the same policies report nothing on either list"
+      ],
+      "files": [
+        "packages/policy/policy-language/src/shadow.ts",
+        "packages/policy/policy-language/src/compiler.ts",
+        "packages/policy/policy-language/tests/shadow.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-19T23:17:56Z",
+      "dryRunProof": {
+        "treeSha": "e324bd56460a603f2523422fd976c218b35a6a0d",
+        "testsDiscovered": 12
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations in `packages/policy/policy-language/src/shadow.ts`, each its own commit off `e3a5453709`, never merged, each run by CI's narrow job at its own SHA over this entry's argv. P-1 (`814203aa7c80b51adcc4969503d0b72b0e4dccf4`) returns `candidate.decision` where `shadowEvaluate` returns `live.decision` -- a shadow run reporting what the candidate would have done as though it had happened. P-2 (`100eab34c08eb6e8698ad71a05888fc6cd8c02fb`) replaces `diffExplain`'s `changed` list with an empty one and leaves `added` and `removed` as they were, so a policy whose text changed is reported as nothing.",
+        "failureSummary": "P-1, run 35475126426: 11 passed / 1 failed of 12. The red is `P2-10 must[1]: a shadow run cannot change what happens P2-10 P: shadow reports the live decision verbatim, whatever the candidate said`, the case this lane predicted. The prediction's other half held: the two remaining cases in that describe block assert `agrees`, which `shadow.ts:108` computes from the two arguments and not from the returned decision, so they cannot observe this mutation and stayed green.\n\nP-2, run 35475076620: 11 passed / 1 failed of 12. The red is `P2-10 must[1]: a diff says what changed in the unit an explain reports P2-10 P: a policy whose text changed is reported as changed, not as added and removed`, the single case predicted. The other four diff cases stayed green, which is what the pairing is for: `added` and `removed` are untouched here, so a suite that checked only those two lists would have accepted an emptied `changed` list."
+      },
+      "note": "`supplementSeq: 1` over P2-10's sealed Provider entry. That entry freezes 13 cases under the package-directory argv `packages/policy/policy-language`, defined as the complement of P2-10 C's 19 in a 32-case command; `tests/shadow.spec.ts` did not exist when it was frozen. This is a supplement and not an edit for the reason that entry's own complement argument gives: changing either its argv or its set would silently redefine both stages' cells. The 13 baseline cases were re-checked in the observed report -- 13 of 13 present and passing, compared one by one.\n\nThe argv here is the ONE FILE, so this entry's 12 and the sealed entry's 13 never have to be told apart inside one command.\n\nWhat the 12 cover. `a shadow run cannot change what happens` (7): the shadow reports the LIVE decision verbatim whatever the candidate said, carries the candidate's explain and never the live one, agrees when both sides reach the same effect through different policy sets, flags a disagreement when the candidate would deny what live permits, treats a difference in reason alone as a disagreement, and says which policies each side matched -- including that two sides matching the same policies report nothing on either list. `a diff says what changed in the unit an explain reports` (5): a changed policy is reported as changed rather than as an add plus a remove, the lists are in id order so two runs over one pair read the same, two sets compiling to the same pin differ in nothing, and a changed pin with an empty diff cannot happen for the same pair."
     }
   ]
 }
