@@ -588,7 +588,7 @@ export function inputProblems(inputs: PlanInputs): readonly InputProblem[] {
   // elsewhere names one that does not, and a caller told about one at a time
   // fixes one and is refused again.
   const cycle = firstCycle(inputs.nodes, inputs.edges)
-  if (cycle.length > 0) problem(problems, 'cyclic-graph', 'edges', describeCycle(cycle))
+  if (cycle.length > 0 && problems.length === 0) problem(problems, 'cyclic-graph', 'edges', describeCycle(cycle))
   return problems
 }
 
