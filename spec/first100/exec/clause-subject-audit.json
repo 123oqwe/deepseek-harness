@@ -636,12 +636,12 @@
           {
             "name": "tuf-js",
             "npm": "tuf-js",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. The trusted root is supplied by an admitted anchor as already-resolved data; no TUF metadata refresh happens, so the client had no reader."
+            "reason": "previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling: the sign-off was withdrawn on 2026-09-19 (BLOCKED-269) and the row is BLOCKED_ON_ACCEPTANCE, so the status half no longer holds. The ruling does not rest on it and is unchanged — the omission stays visible rather than silent, and it does NOT license hand-writing this in new work. If BLOCKED-269's missing production call site is built, this disposition is re-decided then. The trusted root is supplied by an admitted anchor as already-resolved data; no TUF metadata refresh happens, so the client had no reader."
           },
           {
             "name": "@cyclonedx/cyclonedx-library",
             "npm": "@cyclonedx/cyclonedx-library",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. No SBOM is produced or consumed by this epic; the provenance record is a claim over package identity, not a component inventory."
+            "reason": "previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling: the sign-off was withdrawn on 2026-09-19 (BLOCKED-269) and the row is BLOCKED_ON_ACCEPTANCE, so the status half no longer holds. The ruling does not rest on it and is unchanged — the omission stays visible rather than silent, and it does NOT license hand-writing this in new work. If BLOCKED-269's missing production call site is built, this disposition is re-decided then. No SBOM is produced or consumed by this epic; the provenance record is a claim over package identity, not a component inventory."
           },
           {
             "name": "node:crypto Ed25519",
@@ -650,11 +650,11 @@
           },
           {
             "standard": "in-toto Statement v1",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. The provenance record is a local claim shape, not an in-toto Statement; no frozen case names the vocabulary."
+            "reason": "previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling: the sign-off was withdrawn on 2026-09-19 (BLOCKED-269) and the row is BLOCKED_ON_ACCEPTANCE, so the status half no longer holds. The ruling does not rest on it and is unchanged — the omission stays visible rather than silent, and it does NOT license hand-writing this in new work. If BLOCKED-269's missing production call site is built, this disposition is re-decided then. The provenance record is a local claim shape, not an in-toto Statement; no frozen case names the vocabulary."
           },
           {
             "standard": "SLSA provenance v1",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Same: `observedSourceCommit`/`observedBuilderIdentity` are attestation-like fields this epic defined, not SLSA predicates."
+            "reason": "previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling: the sign-off was withdrawn on 2026-09-19 (BLOCKED-269) and the row is BLOCKED_ON_ACCEPTANCE, so the status half no longer holds. The ruling does not rest on it and is unchanged — the omission stays visible rather than silent, and it does NOT license hand-writing this in new work. If BLOCKED-269's missing production call site is built, this disposition is re-decided then. Same: `observedSourceCommit`/`observedBuilderIdentity` are attestation-like fields this epic defined, not SLSA predicates."
           }
         ]
       }
