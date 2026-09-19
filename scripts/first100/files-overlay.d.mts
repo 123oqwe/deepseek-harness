@@ -43,6 +43,25 @@ export interface DeliverablePathPatch {
   readonly supersededBy?: string
 }
 
+/** One approved addition from `adjudication.json`: a file a stage must change that no registry row declares. */
+export interface ApprovedAddition {
+  readonly epic: string
+  /** `C`, `P`, `U` or `F`, optionally with a supplement sequence such as `U.1`. */
+  readonly stage: string
+  readonly path: string
+  readonly reason: string
+  /** The epics that declare the path today, recorded before the ruling; empty when none do. */
+  readonly declaredBy: readonly string[]
+  /** What the files overlay says about it today, recorded the same way. */
+  readonly overlay: string
+  /** `tree` when the path exists today, `stage` when this stage creates it. */
+  readonly expectedAt: 'tree' | 'stage'
+  /** The ruling that approved the addition; an entry without one is refused. */
+  readonly rulingRef: string
+  /** Present on a retired addition, saying what replaced it; `additionEntries` leaves such an addition out. */
+  readonly supersededBy?: string
+}
+
 /** One registry declaration and the paths approved patches substitute for it. */
 export interface ResolvedDeclaration {
   where: string
@@ -50,11 +69,15 @@ export interface ResolvedDeclaration {
   approvedPaths: string[]
   /** True when any applicable patch is a widening, so the declared path is still a deliverable. */
   widening: boolean
+  /** True on a record that comes from an approved addition rather than from the registry. */
+  addition?: boolean
 }
 
 export function patchEntries(adjudication: { deliverablePathPatches?: { entries?: Readonly<Record<string, Omit<DeliverablePathPatch, 'epic'> & { epic?: string }>> } }): DeliverablePathPatch[]
 
-export function resolveDeclaredPaths(epic: OverlayEpic, patches: readonly DeliverablePathPatch[]): ResolvedDeclaration[]
+export function additionEntries(adjudication: { approvedAdditions?: { entries?: Readonly<Record<string, Omit<ApprovedAddition, 'epic'> & { epic?: string }>> } }): ApprovedAddition[]
+
+export function resolveDeclaredPaths(epic: OverlayEpic, patches: readonly DeliverablePathPatch[], additions?: readonly ApprovedAddition[]): ResolvedDeclaration[]
 
 export function declaredPaths(epic: OverlayEpic, patches: readonly DeliverablePathPatch[]): Set<string>
 

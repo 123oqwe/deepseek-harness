@@ -91,6 +91,51 @@ export function patchEntries(adjudication) {
   }).filter(patch => patch.supersededBy === undefined)
 }
 
+const ADDITION_STAGES = /^[CPUF](\.\d+)?$/u
+
+/**
+ * The approved additions: a file a stage must change that the registry declares nowhere.
+ *
+ * The fifth record class, and the only one that adds a deliverable rather than
+ * describing what happened to a declared one. It carries no `declaredPath`
+ * precisely because there is none to point at: a substitution replaces a
+ * declaration, a widening stands beside one, and both refuse an entry with no
+ * declared path to anchor to. Validation mirrors `patchEntries`, plus the two
+ * fields only an addition has: the stage it belongs to, because `where` is
+ * built from it and a misspelt stage would name a cell that does not exist, and
+ * the ruling that approved it, because an addition with no ruling is an
+ * undeclared deliverable with nobody's name on it. `declaredBy` is a list and
+ * not a sentence so a reader can test it, and `expectedAt` says whether the
+ * path is one the tree already holds or one the stage will create, which is
+ * the difference between a gate reporting its absence and expecting it. An entry with
+ * `supersededBy` is validated and then left out, exactly as a retired patch is.
+ * @param adjudication - the parsed `tests/first100/adjudication.json`.
+ * @returns the live addition entries.
+ */
+export function additionEntries(adjudication) {
+  return Object.entries(adjudication.approvedAdditions?.entries ?? {}).map(([key, addition]) => {
+    if (typeof addition.path !== 'string' || /\s|#/u.test(addition.path)) {
+      throw new Error(`approvedAdditions.entries[${JSON.stringify(key)}].path must be one repository path, with no whitespace or # anchor: ${JSON.stringify(addition.path)}`)
+    }
+    if (typeof addition.stage !== 'string' || !ADDITION_STAGES.test(addition.stage)) {
+      throw new Error(`approvedAdditions.entries[${JSON.stringify(key)}].stage must be C, P, U or F, optionally with a supplement sequence: ${JSON.stringify(addition.stage)}`)
+    }
+    if (typeof addition.rulingRef !== 'string' || addition.rulingRef.trim() === '') {
+      throw new Error(`approvedAdditions.entries[${JSON.stringify(key)}].rulingRef must name the ruling that approved it: ${JSON.stringify(addition.rulingRef)}`)
+    }
+    if (!Array.isArray(addition.declaredBy)) {
+      throw new Error(`approvedAdditions.entries[${JSON.stringify(key)}].declaredBy must be the list of epics that declare the path today, empty when none do: ${JSON.stringify(addition.declaredBy)}`)
+    }
+    if (addition.expectedAt !== 'tree' && addition.expectedAt !== 'stage') {
+      throw new Error(`approvedAdditions.entries[${JSON.stringify(key)}].expectedAt must be "tree" for a file that exists today or "stage" for one the stage creates: ${JSON.stringify(addition.expectedAt)}`)
+    }
+    if (addition.supersededBy !== undefined && (typeof addition.supersededBy !== 'string' || addition.supersededBy.trim() === '')) {
+      throw new Error(`approvedAdditions.entries[${JSON.stringify(key)}].supersededBy must be a non-empty string saying what replaced it: ${JSON.stringify(addition.supersededBy)}`)
+    }
+    return { ...addition, epic: addition.epic ?? key }
+  }).filter(addition => addition.supersededBy === undefined)
+}
+
 /**
  * Every declaration of an epic's registry row, resolved through the approved deliverable-path patches.
  *
@@ -108,9 +153,10 @@ export function patchEntries(adjudication) {
  * another patch on the same declaration substituting for it.
  * @param epic - the registry row.
  * @param patches - the patch entries, from {@link patchEntries}.
- * @returns one `{ where, declaredPath, approvedPaths, widening }` per declaration; `approvedPaths` is empty and `widening` false when no patch applies.
+ * @param additions - the approved additions, from {@link additionEntries}; omitted, nothing is added and every caller reads what it read before.
+ * @returns one `{ where, declaredPath, approvedPaths, widening }` per declaration, plus one `{ …, addition: true }` per approved addition; `approvedPaths` is empty and `widening` false when no patch applies.
  */
-export function resolveDeclaredPaths(epic, patches) {
+export function resolveDeclaredPaths(epic, patches, additions = []) {
   const resolveOne = (stage, where, declaredPath) => {
     const applicable = patches
       .filter(p => p.epic === epic.id && p.declaredPath === declaredPath && (stage === undefined || p.stage === stage))
@@ -120,6 +166,18 @@ export function resolveDeclaredPaths(epic, patches) {
   const records = (epic.files ?? []).map(file => resolveOne(undefined, epic.id, file.path))
   for (const [stage, spec] of Object.entries(epic.stages ?? {})) {
     for (const path of spec?.files ?? []) records.push(resolveOne(stage, `${epic.id}.${stage}`, path))
+  }
+  // An addition is its own declaration: it enters as `declaredPath` so every
+  // caller that unions declared and approved paths picks it up unchanged. A
+  // path this epic already declares is refused rather than silently doubled,
+  // because a record that says nothing is a record nobody has to keep true.
+  const declaredHere = new Set(records.map(record => record.declaredPath))
+  for (const addition of additions) {
+    if (addition.epic !== epic.id) continue
+    if (declaredHere.has(addition.path)) {
+      throw new Error(`approvedAdditions: ${epic.id} already declares ${addition.path}, so the addition records nothing`)
+    }
+    records.push({ where: `${epic.id}.${addition.stage}`, declaredPath: addition.path, approvedPaths: [], widening: false, addition: true })
   }
   return records
 }

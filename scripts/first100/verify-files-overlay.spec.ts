@@ -8,7 +8,7 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { classifyOverlayPath, computeOverlay, declaredPaths, declaredPathsAsExtracted, patchEntries, resolveDeclaredPaths } from './files-overlay.mjs'
+import { additionEntries, classifyOverlayPath, computeOverlay, declaredPaths, declaredPathsAsExtracted, patchEntries, resolveDeclaredPaths } from './files-overlay.mjs'
 import { compareCommittedOverlay, exitCodeFor, hotZoneEntriesWithoutCitation, overlayFileText, sourceEntriesWithoutReason, unaccountedCitations, unusedReasonKeys } from './verify-files-overlay.mjs'
 
 const registry = {
@@ -280,5 +280,65 @@ describe('declared paths through the deliverable-path patches, the one resolutio
     const cited = freeze([approved, declared])
     expect(computeOverlay(registry, cited, {}, [patch({})])).toEqual([])
     expect(computeOverlay(registry, cited, {}, []).map(entry => entry.path)).toEqual([approved])
+  })
+})
+
+describe('approved additions, the fifth record class', () => {
+  const path = 'packages/execution/execution-world/src/local-provider.ts'
+  const addition = (fields: Record<string, unknown> = {}) => ({
+    approvedAdditions: { entries: { 'P9-99.P/provider': {
+      epic: 'P9-99', stage: 'P', path, reason: 'the stage must change it', declaredBy: [], overlay: 'none', expectedAt: 'tree', rulingRef: 'delegate ruling, 2026-09-18', ...fields,
+    } } },
+  } as unknown as Parameters<typeof additionEntries>[0])
+  const epic = { id: 'P9-99', files: [{ path: 'packages/demo/thing/src/declared.ts' }], stages: { P: { files: ['packages/demo/thing/src/declared.ts'] } } }
+
+  it('reads an addition and gives it a where built from its stage', () => {
+    const resolved = resolveDeclaredPaths(epic, [], additionEntries(addition()))
+    expect(resolved.filter(record => record.addition === true)).toStrictEqual([
+      { where: 'P9-99.P', declaredPath: path, approvedPaths: [], widening: false, addition: true },
+    ])
+    expect(declaredPaths(epic, [])).not.toContain(path)
+  })
+
+  it('refuses a path with whitespace or an anchor, naming the entry', () => {
+    expect(() => additionEntries(addition({ path: 'packages/a.ts + packages/b.ts' }))).toThrow('P9-99.P/provider')
+    expect(() => additionEntries(addition({ path: 'docs/glossary.md#capability-seam' }))).toThrow('no whitespace or # anchor')
+  })
+
+  it('refuses a stage that names no cell, and accepts a supplement sequence', () => {
+    expect(() => additionEntries(addition({ stage: 'X' }))).toThrow('must be C, P, U or F')
+    expect(additionEntries(addition({ stage: 'U.1' })).map(entry => entry.stage)).toStrictEqual(['U.1'])
+  })
+
+  it('refuses an addition with no ruling behind it', () => {
+    expect(() => additionEntries(addition({ rulingRef: '   ' }))).toThrow('must name the ruling that approved it')
+    expect(() => additionEntries(addition({ rulingRef: undefined }))).toThrow('P9-99.P/provider')
+  })
+
+  it('refuses a declaredBy that is prose instead of a list, so a reader can test it', () => {
+    expect(() => additionEntries(addition({ declaredBy: 'none' }))).toThrow('must be the list of epics')
+    expect(additionEntries(addition({ declaredBy: ['P4-11', 'P5-04'] })).map(entry => entry.declaredBy)).toStrictEqual([['P4-11', 'P5-04']])
+  })
+
+  it('refuses an expectedAt that is neither where the file is nor where it will be', () => {
+    expect(() => additionEntries(addition({ expectedAt: 'soon' }))).toThrow('must be "tree"')
+    expect(() => additionEntries(addition({ expectedAt: undefined }))).toThrow('P9-99.P/provider')
+    expect(additionEntries(addition({ expectedAt: 'stage' })).map(entry => entry.expectedAt)).toStrictEqual(['stage'])
+  })
+
+  it('leaves a retired addition out of resolution but still refuses a malformed one', () => {
+    expect(additionEntries(addition({ supersededBy: 'the stage was cancelled' }))).toStrictEqual([])
+    expect(() => additionEntries(addition({ supersededBy: '  ' }))).toThrow('must be a non-empty string')
+  })
+
+  it('refuses an addition for a path the epic already declares, rather than doubling it', () => {
+    const already = additionEntries(addition({ path: 'packages/demo/thing/src/declared.ts' }))
+    expect(() => resolveDeclaredPaths(epic, [], already)).toThrow('already declares')
+  })
+
+  it('changes nothing for a tree with no approvedAdditions key at all', () => {
+    expect(additionEntries({})).toStrictEqual([])
+    expect(resolveDeclaredPaths(epic, [])).toStrictEqual(resolveDeclaredPaths(epic, [], []))
+    expect(declaredPaths(epic, [])).toStrictEqual(new Set(['packages/demo/thing/src/declared.ts']))
   })
 })
