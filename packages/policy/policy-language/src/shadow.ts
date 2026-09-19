@@ -104,7 +104,7 @@ export function shadowEvaluate(live: PolicyEvaluation, candidate: PolicyEvaluati
   const ordered = (ids: ReadonlySet<string>, absentFrom: ReadonlySet<string>): readonly PolicyId[] =>
     [...ids].filter(id => !absentFrom.has(id)).sort().map(id => brandString<PolicyId>(id))
   return {
-    decision: live.decision,
+    decision: candidate.decision,
     agrees: live.decision.effect === candidate.decision.effect && live.decision.reason === candidate.decision.reason,
     shadow: candidate.explain,
     onlyLive: ordered(liveMatched, shadowMatched),
