@@ -18,6 +18,11 @@ on:
         description: 'Re-anchor upstream SHA override; empty uses the workflow''s current re-anchor upstream (the REANCHOR_UPSTREAM policy note below). Changed files byte-identical to it are excluded from changed-file lint.'
         required: false
         default: ''
+      refresh_snapshots:
+        description: 'Run the recorded-session REFRESH and hand the rewritten fixtures out as an artifact. Never commits. Off for an ordinary gate run.'
+        required: false
+        type: boolean
+        default: false
   push:
     branches: [first100-exec]
 
@@ -658,6 +663,101 @@ jobs:
       # that does not show is not an observation.
       - name: Run complete keyless Python suite
         run: uv run --python 3.10 --group test --project python/sdk pytest
+
+  snapshot-refresh:
+    name: Recorded-session REFRESH (artifact only, never committed)
+    runs-on: ubuntu-latest
+    # No `needs`: a refresh is asked for on its own and must not wait behind a
+    # full gate, and a red gate must not withhold the fixtures it would produce.
+    #
+    # The cost of standing alone is that this job cannot read the gate's
+    # resolved SHA, and re-deriving one here would be a SECOND answer to "which
+    # commit is this run about" -- exactly what the gate's own resolve step
+    # refuses. So this job does not derive one at all: it requires the caller to
+    # say, and fails when they do not. `github.sha` is deliberately not a
+    # fallback, because a refresh that silently rewrote fixtures from the branch
+    # tip instead of the candidate would hand back an artifact nobody could
+    # place.
+    if: ${{ inputs.refresh_snapshots }}
+    permissions:
+      contents: read
+    steps:
+      - name: Require an explicit candidate SHA
+        id: sha
+        # The input arrives through `env`, never interpolated into the script:
+        # a `${{ }}` expansion is substituted BEFORE bash parses the line, so
+        # the pattern test below would be checking a string that had already
+        # been able to end the statement it was meant to validate.
+        env:
+          REQUESTED_SHA: ${{ github.event.inputs.sha }}
+        run: |
+          if [[ ! "$REQUESTED_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "snapshot-refresh: pass an explicit 40-hex \`sha\` input; this job has no fallback" >&2
+            exit 2
+          fi
+          echo "sha=$REQUESTED_SHA" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.sha.outputs.sha }}
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.PRIMARY_NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install (immutable)
+        run: pnpm install --frozen-lockfile
+
+      # SOURCE mode, so no build step: `vitest.snapshot.config.ts` includes
+      # `apps/web/tests/**/*.snapshot.ts` only under `DSH_EXAMPLE_MODE=lib`,
+      # while `snapshots/**` -- the acp, sdk and session corpora this channel
+      # exists for -- is included either way. **This run therefore does NOT
+      # refresh the web corpus.** Refreshing that one needs lib mode and the
+      # build it depends on, and adding them here would make every refresh pay
+      # for a corpus most of them do not touch.
+      #
+      # Replay, so no credentials: `record` is the mode that needs a key.
+      - name: Refresh recorded fixtures
+        run: pnpm run test:snapshot:refresh
+
+      # Everything the reviewer needs to judge and apply the result, and
+      # nothing that commits it. The patch is `--binary` because a refreshed
+      # corpus can carry non-text fixtures, and `git status --porcelain` is
+      # captured beside it so a reviewer can see added and removed files, which
+      # a patch alone makes them reconstruct.
+      #
+      # `.refresh-skipped.json` rides along when the refresh could not observe
+      # some scenarios on this host -- the pwsh fixtures are the standing
+      # example. It is NOT committed with the fixtures: it describes this run,
+      # and a stale copy in the tree would turn "this host could not refresh
+      # these" into a claim about the tree.
+      - name: Collect the refresh output
+        if: always()
+        run: |
+          mkdir -p refresh-out
+          git status --porcelain > refresh-out/status.txt
+          # `git diff` sees tracked files only, and a refresh can CREATE a
+          # fixture -- a new scenario file would appear in status.txt as `??`
+          # and contribute no bytes to the patch, so the reviewer would apply a
+          # patch that silently omits it. Staging first puts new files in the
+          # diff. This touches the runner's index only; nothing is committed.
+          git add -A
+          git diff --cached --binary > refresh-out/fixtures.patch
+          if [ -f snapshots/.refresh-skipped.json ]; then
+            cp snapshots/.refresh-skipped.json refresh-out/refresh-skipped.json
+          fi
+
+      - name: Hand the refresh out
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapshot-refresh-${{ steps.sha.outputs.sha }}
+          path: refresh-out
+          if-no-files-found: error
 
   first100-evidence:
     name: First-100 issue-runner dry + observation verify
