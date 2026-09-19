@@ -7305,3 +7305,22 @@ Two things this does NOT change, recorded so neither is read into it:
 - Not that a C/P/U/F cell is wrong. All three live cells are GREEN over what they observed (`P` is `N/A` per the registry), and this withdrawal changes none of them.
 - Not a route back. Whether the entry point belongs in `runner.ts` behind an argv parse, or in a separate `bin`, is not decided here — but a `package.json` script named `benchmark:harness` is required either way, because the registry row names it.
 - Not measured: whether the deterministic lane would PASS once it can be run. Nothing in this repository has ever executed it end to end.
+
+### BLOCKED-271 — P0-01's and P0-07's procedural clauses are executed by nobody, and P0-07's `verifyCommand` was never runnable as written
+
+**Status:** OPEN (2026-09-19). The commit that records this entry wires both `verifyCommand`s into `first100-exact-sha.yml` for the first time, which closes the "nobody runs them" half for the CI observation and leaves the process clauses open. No sign-off is withdrawn here: what is missing is a habit and a step, not a subject.
+
+**Measured at tip `4b7cc44cc0`.** Twenty-two workflow files, zero of them running `baseline:capture`, `baseline:verify`, `collect-evidence.mjs` or `verify-evidence.mjs`. Both epics' scripts exist and work; nothing had ever called them outside their own unit tests.
+
+**P0-07's `verifyCommand` does not run, and never did.** The registry says `pnpm evidence:collect -- pnpm test`. `evidence:collect` is `node scripts/release/collect-evidence.mjs` with no subcommand, and that script's `main()` reads `process.argv[2]` as one of `init` / `run` / `build-artifact` and throws `collect-evidence: unknown subcommand undefined` for anything else. The real form is three calls — `init`, then `run --gate <id> -- <command>`, then `verify-evidence.mjs` — and that is what CI now runs. **The registry text is left as written and the deviation recorded here**, because the clause it states is about evidence collection and the script delivers that; this is the same class of finding as [BLOCKED-270](#blocked-270)'s missing `benchmark:harness`, with the opposite disposition: P0-08 has no entry point at all, while P0-07 has one under a different spelling.
+
+**The two clauses that remain unexecuted, which wiring a CI step does not discharge.**
+
+- **P0-01 must[2]** — 「任何执行批次开始前必须 verify,发现上游漂移时停止并生成 rebase report」. Nothing in this program verifies before a batch. The drift check exists (`scripts/release/baseline-fingerprint.mjs verify`, and `packages/guard/baseline-preflight` as a boot-time plugin), and the plugin's base-bundle row ships `disabled: true`, so a shipped profile does not abort on drift either. The new CI step captures and verifies in one checkout, which proves the machinery — **not** that any execution batch is gated on it.
+- **P0-07 acceptance[2]** — 「Agent 最终回答必须引用 package path 和 accepted 状态」. No agent answer in this program cites an evidence package. What this program actually uses is the `first100-evidence` job plus `scripts/first100/attest.ts`, which is a different record with a different shape; `docs/testing.md` describes the evidence-package design as the intended one, and the gap between the two is the honest subject here.
+
+**What this entry does NOT claim.**
+
+- Not that either epic's code is wrong. `baseline-fingerprint.mjs`, `collect-evidence.mjs` and `verify-evidence.mjs` all work; the first two are now exercised by CI.
+- Not that the new CI steps observe the clauses. They observe that the commands run and agree in one checkout. must[2]'s "before every execution batch" and acceptance[2]'s "the agent's answer cites the package" are process obligations this program has not adopted.
+- Not measured: whether `collect-evidence init` will report drift on a CI runner. It refuses when the checkout has drifted from the captured baseline, and the capture step immediately precedes it, which is why the tracked files are restored only after both steps rather than between them.

@@ -118,6 +118,68 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
 
+      # P0-01's and P0-07's own `verifyCommand`s, which 22 workflows ran zero
+      # times (BLOCKED-271). They sit HERE — after `Typecheck`, before the
+      # registry gate set — for two reasons. `baseline-fingerprint.mjs` reads
+      # only source paths (`packages/sdk/protocol/src/types.ts`,
+      # `packages/core/session/src/known-event-types.ts`,
+      # `packages/bundle/base/cordis.patch.yml`), so nothing needs to be built
+      # first; and `capture` WRITES `.dsh/baseline.json`, a tracked file, so the
+      # block is kept contiguous and cleaned up before any later step reads the
+      # tree.
+      #
+      # What this proves: that the baseline fingerprint can be captured and
+      # verified in one checkout, and that the evidence collector can wrap a
+      # real gate, record its exit code and log digest, and have the result
+      # verified. What it does NOT prove: that the committed `.dsh/baseline.json`
+      # matches this tree — `capture` overwrites it first, which is what the
+      # registry's own `pnpm baseline:capture && pnpm baseline:verify` asks for.
+      # Drift against the committed baseline is `baseline-preflight`'s question,
+      # not this step's.
+      - name: P0-01 verifyCommand — capture the baseline and verify it in the same checkout
+        if: always()
+        run: pnpm baseline:capture && pnpm baseline:verify
+
+      # NOT the registry's literal `pnpm evidence:collect -- pnpm test`: that
+      # script takes a subcommand (`init` / `run` / `build-artifact`) and throws
+      # `unknown subcommand undefined` without one, so the command as written
+      # has never been runnable. The deviation is recorded in BLOCKED-271.
+      # `init` requires a captured, undrifted baseline, which is why the step
+      # above is not cleaned up before this one — P0-01's report being the
+      # evidence package's first item is P0-01 validation[3].
+      #
+      # The wrapped gate is `typecheck`, run a second time on purpose: the
+      # step above it is the one that gates the build, and this one asks
+      # whether the collector records a real gate's execution. `run` exits with
+      # the wrapped command's own status, so a failure here fails the step.
+      - name: P0-07 verifyCommand — collect evidence over a real gate and verify the package
+        if: always()
+        run: |
+          node scripts/release/collect-evidence.mjs init
+          node scripts/release/collect-evidence.mjs run --gate typecheck -- pnpm run typecheck
+          pnpm evidence:verify
+
+      - name: Upload the evidence package
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: first100-evidence-package-${{ steps.resolve-sha.outputs.sha }}
+          path: .dsh/evidence/evidence.json
+          if-no-files-found: warn
+
+      # The tree goes back to what was checked out, before anything downstream
+      # reads it: the registry gate set, the frozen-title check and the suite
+      # all run against source, and one of them (`tests/release/
+      # baseline-fingerprint.spec.ts`) reads `.dsh/baseline.json` itself. The
+      # diff is printed first so a run that changed the baseline says so in its
+      # own log rather than silently reverting.
+      - name: Restore the tracked baseline files the two steps above rewrote
+        if: always()
+        run: |
+          git diff --stat -- .dsh/
+          git checkout -- .dsh/
+          rm -rf .dsh/evidence
+
       # Every vitest run from here on loads the flock node-api addon through
       # session persistence, and its binary is gitignored. The root `test` and
       # `test:coverage` scripts build it first, and upstream's `ci-coverage` gate
