@@ -1841,7 +1841,7 @@
         "epic": "P2-12",
         "stage": "U",
         "path": "packages/collaboration/lease-contract/src/types.ts",
-        "reason": "The lease seam's contract types live here after §12.22-1 moved them, so a stop-aware acquire result is named here rather than invented at the call site.",
+        "reason": "The lease seam's contract types live here after §12.16-2 moved them, so a stop-aware acquire result is named here rather than invented at the call site.",
         "declaredBy": [],
         "overlay": "none",
         "expectedAt": "tree",
