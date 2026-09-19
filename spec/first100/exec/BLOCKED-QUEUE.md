@@ -7632,7 +7632,7 @@ The scan was exhaustive and found no seventh face. That is the scan's claim, rec
 
 ### BLOCKED-290 — a launch-grant write failure rejected a fiber nobody held, so it killed the process instead of reporting itself
 
-**Status:** FIXED by this commit, CLOSING on the next run's `#17` (2026-09-19). Owner lane B.
+**Status:** FIXED-PENDING-OBSERVATION (2026-09-19). Owner lane B. Fixed in `1b73a458c5`; it closes when a run's `#17` carries no `Unhandled Rejection` from this path.
 
 **The defect.** `applyLaunchTrustRequest` registers the write with `ctx.inject(['workspaceTrust'], async …)` and rethrows on failure so the fiber fails too (`packages/workspace/command-workspace-trust/src/launch-grant.ts:162-173`). `inject` returns `Fiber & PromiseLike<Fiber>` — "awaiting it settles once loading finished" (`vendor/cordis/src/registry.ts:176`, `:300`) — and the call site discarded it. The rethrow therefore rejected a thenable with no handler attached.
 
@@ -7664,7 +7664,7 @@ The scan was exhaustive and found no seventh face. That is the scan's claim, rec
 
 ### BLOCKED-286 — P2-04's C supplement is frozen and live, and the ledger has never recorded observing it
 
-**Status:** OPEN (2026-09-19). Owner lane B. Measured by lane A
+**Status:** CLOSED (2026-09-19). Owner lane B. Measured by lane A
 (`artifacts/laneA/p2-04-c1-post-acceptance-refreeze.md`) and confirmed here on this tip.
 
 **The gap, stated exactly.** `command-freeze.json` carries a LIVE `P2-04` `C` entry with `supplementSeq: 1` and 46 expected cases. `spec/first100/exec/ledger.json`'s `P2-04` row carries supplements `P.3`, `U.1` and `U.2` — **there is no `C.1` key**. So a live freeze entry has no observation recorded against it, on a row that is ACCEPTED with all four cells GREEN.
@@ -7676,6 +7676,10 @@ The scan was exhaustive and found no seventh face. That is the scan's claim, rec
 **This is not a closure failure and BLOCKED-287's new gate does not see it.** Closure checks that every cited title resolves; this entry is about a frozen observation nothing cites and nothing records. The two are different questions and a green `--check` says nothing about this one.
 
 **Closing condition.** `generate-ledger.mjs --supplement --epic P2-04 --stage C --supplement-seq 1` recorded from a report covering the tip; the same commit marks this entry CLOSED and appends the reading it closed on. It is not removed — line 7 of this file says an entry is never edited or removed except to append its answer, and all eight CLOSED entries here are kept as the record of what was once open.
+
+**[2026-09-19 closed: recorded.** `P2-04.C.1` is GREEN at run 35449457652, candidate `871bb95d97`, with all **46** frozen cases matched. The row's `supplements` now read `C.1`, `P.3`, `U.1`, `U.2`, and `P2-04` stays ACCEPTED — nothing about the row's acceptance changed, because the evidence was always there and only the record was missing.
+
+**A measurement note worth keeping, because it nearly produced a false alarm.** Checking the report first with a hand-built matcher gave **1 of 46** by `fullName` and **45 of 46** by `title`. Both numbers are artifacts: `parseVitestJsonReport` adds BOTH spellings to one set (`generate-ledger.mjs:453`, `:459`), so the tool's own answer is **46 of 46**. Rebuilding a tool's scope in a second tool is a new measurement, not a reading of the first one — and this one would have been reported as a missing-evidence gap.]
 
 ### BLOCKED-285 — two real-launcher tests assert that a tool RUNS on `sdk-minimal`, and no pipeline here has run either since the code beneath them changed
 
