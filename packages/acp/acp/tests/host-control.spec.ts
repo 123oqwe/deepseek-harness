@@ -97,19 +97,13 @@ describe('ACP host control state', () => {
     plane.control('pause-new-actions', REQUEST)
     await vi.waitFor(() => {
       const stopped = harness!.sessionUpdates.filter(entry => entry.sessionId === sessionId)
-      expect(stopped.some((entry) => {
-        const state = controlIn((entry as unknown as { _meta?: Record<string, unknown> })._meta)
-        return (state as { stopped?: boolean } | undefined)?.stopped === true
-      })).toBe(true)
+      expect(stopped.some(entry => (controlIn(entry.meta) as { stopped?: boolean } | undefined)?.stopped === true)).toBe(true)
     })
 
     plane.control('resume', REQUEST)
     await vi.waitFor(() => {
       const released = harness!.sessionUpdates.filter(entry => entry.sessionId === sessionId)
-      expect(released.some((entry) => {
-        const state = controlIn((entry as unknown as { _meta?: Record<string, unknown> })._meta)
-        return (state as { stopped?: boolean } | undefined)?.stopped === false
-      })).toBe(true)
+      expect(released.some(entry => (controlIn(entry.meta) as { stopped?: boolean } | undefined)?.stopped === false)).toBe(true)
     })
   })
 })

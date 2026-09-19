@@ -200,7 +200,7 @@ export interface BridgeHarness {
   adapter: MockAdapter
   attachments: MemoryAttachmentStore | undefined
   updates: CapturedUpdate[]
-  sessionUpdates: { sessionId: string; update: CapturedUpdate }[]
+  sessionUpdates: { sessionId: string; update: CapturedUpdate; meta?: Record<string, unknown> }[]
   permissionRequests: RequestPermissionRequest[]
   persistenceRoot: string
   onPermission: (request: RequestPermissionRequest) => RequestPermissionResponse
@@ -247,7 +247,7 @@ export async function makeBridgeHarness(options: {
   const clientStream: Stream = ndJsonStream(clientOutput, agentToClient.readable)
 
   const updates: CapturedUpdate[] = []
-  const sessionUpdates: { sessionId: string; update: CapturedUpdate }[] = []
+  const sessionUpdates: { sessionId: string; update: CapturedUpdate; meta?: Record<string, unknown> }[] = []
   const permissionRequests: RequestPermissionRequest[] = []
   const harness: BridgeHarness = {
     ctx,
@@ -275,7 +275,16 @@ export async function makeBridgeHarness(options: {
   const clientApp = createAcpClientApp({ name: 'dsh-acp-test-client' })
     .onNotification(methods.client.session.update, ({ params }) => {
       updates.push(params.update)
-      sessionUpdates.push({ sessionId: params.sessionId, update: params.update })
+      // `_meta` travels with the update, because a notification can carry a
+      // fact that is not IN the update -- the host control state rides an
+      // otherwise empty `session_info_update` (P2-12 acceptance[3]). Dropping
+      // it here made a case that asserted on it unpassable no matter what the
+      // server sent, which is a harness reporting on itself.
+      sessionUpdates.push({
+        sessionId: params.sessionId,
+        update: params.update,
+        ...params._meta == null ? {} : { meta: params._meta },
+      })
       if (harness.onSessionUpdateError !== undefined) return Promise.reject(new Error('client update rejected'))
       return Promise.resolve()
     })

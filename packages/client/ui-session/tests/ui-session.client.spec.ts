@@ -14,6 +14,7 @@ import { Fragment } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   apply,
+  inject,
   type SessionPendingInteractionBase,
   UiSession,
 } from '../src/client/index.ts'
@@ -546,7 +547,7 @@ describe('ui-session apply', () => {
     expect(slots.installScope).toHaveBeenCalledWith('session', ctx.uiSession.adapter)
   })
 
-  it('applies WITHOUT a locale service, contributing everything but the overlay entry', () => {
+  it('applies WITHOUT a locale service, contributing everything but the overlay entry', async () => {
     // `locale` is required by the host-stop indicator alone, and it is injected
     // in a nested scope rather than declared in this module's `inject` for one
     // measured reason: `SlotTestRuntime.create` reuses that array verbatim
@@ -565,7 +566,12 @@ describe('ui-session apply', () => {
     ctx.provide('sessions', bench.sessions)
     ctx.provide('slots', slots as never)
 
-    apply(ctx)
+    // Mounted through the plugin machinery and AWAITED, not called directly.
+    // The nested `ctx.inject(['locale'], …)` runs when its fiber loads, which
+    // is not synchronous -- so `apply(ctx)` followed by an immediate assertion
+    // would report "not called" before anything had a chance to call it, and
+    // the case below would pass with a locale service present too.
+    await ctx.plugin({ inject: [...inject], apply }).await()
 
     expect(ctx.uiSession).toBeInstanceOf(UiSession)
     expect(slots.provideRoot).toHaveBeenCalled()
@@ -575,7 +581,7 @@ describe('ui-session apply', () => {
     expect(slots.inject).not.toHaveBeenCalled()
   })
 
-  it('contributes the host-stop overlay entry once a locale service is there', () => {
+  it('contributes the host-stop overlay entry once a locale service is there', async () => {
     // The positive control for the case above: without it, "inject was not
     // called" would also pass if the registration had simply been deleted.
     const ctx = new Context()
@@ -585,7 +591,7 @@ describe('ui-session apply', () => {
     ctx.provide('slots', slots as never)
     ctx.provide('locale', { register: vi.fn() } as never)
 
-    apply(ctx)
+    await ctx.plugin({ inject: [...inject], apply }).await()
 
     expect(slots.inject).toHaveBeenCalledWith('shell.overlay', expect.any(Function))
   })
