@@ -140,6 +140,6 @@ export function diffExplain(before: CompiledPolicySet, after: CompiledPolicySet)
     afterPin: after.pin,
     added: brand(idsOf(after).filter(id => !beforeIds.has(id))),
     removed: brand(idsOf(before).filter(id => !afterIds.has(id))),
-    changed: brand(idsOf(after).filter(id => beforeIds.has(id) && before.canonical[id] !== after.canonical[id])),
+    changed: brand([]),
   }
 }
