@@ -7,7 +7,7 @@ import { promisify } from 'node:util'
 import { zstdDecompress, zstdDecompressSync } from 'node:zlib'
 import { execa } from 'execa'
 import { describe, expect, it } from 'vitest'
-import { startStubModelServer } from '@deepseek-ai/dsh-session-snapshot'
+import { startStubModelServer, type StubModelServer } from '@deepseek-ai/dsh-session-snapshot'
 import { scanZstdFrames } from '@deepseek-ai/dsh-session-persistence-jsonl/src/zstd.js'
 
 const binScript = fileURLToPath(new URL('../../../src/bin.ts', import.meta.url))
@@ -42,10 +42,82 @@ async function readSessionLog(dshHome: string): Promise<{ compressed: Buffer; re
   return { compressed, records }
 }
 
+/** One frame this driver read, kept with its bytes. */
+interface ConsumedFrame {
+  /** The line as it arrived, for a message that needs more than a type name. */
+  readonly raw: string
+  /** The same line, parsed. */
+  readonly frame: Record<string, unknown>
+}
+
+/** What a driving case can say about itself when a wait does not finish. */
+interface WaitDiagnostics {
+  /** What is being waited for, in the words of whoever waited. */
+  readonly waitingFor: string
+  /** The child's stderr so far. */
+  stderr: () => string
+  /** Frames already consumed by earlier waits, newest last, where a driver tracks them. */
+  consumed?: () => readonly ConsumedFrame[]
+  /** Whether the child is still running, and how it ended if not. */
+  child?: () => string
+  /** Requests the server sent this driver, by method, in arrival order. */
+  serverRequests?: () => readonly string[]
+  /** How many times the stand-in model has been asked for a completion. */
+  modelRequests?: () => number
+}
+
+/**
+ * Describe the state a wait timed out in.
+ *
+ * A bare "timed out waiting for JSON-RPC response" names neither which of a
+ * case's four waits stopped nor what the run had done by then, and reading one
+ * cost a whole CI round. Everything here is a fact the driver already holds.
+ * @param diagnostics - the driving case's view of its own run.
+ * @returns a multi-line message for the rejection.
+ */
+function describeStall(diagnostics: WaitDiagnostics): string {
+  const consumed = diagnostics.consumed?.() ?? []
+  const events = consumed.flatMap(({ frame }) => {
+    if (frame.method !== 'session.event') return []
+    const params = frame.params as { event?: { type?: unknown } } | undefined
+    return typeof params?.event?.type === 'string' ? [params.event.type] : []
+  })
+  const last = consumed.at(-1)?.raw
+  return [
+    `timed out waiting for ${diagnostics.waitingFor}`,
+    // Whether the child is still there decides where to look next, and a dead
+    // one and a silent one read identically without this: execa SIGKILLs at 35
+    // seconds, so a child that died early looks exactly like one that never
+    // answered.
+    `  child: ${diagnostics.child?.() ?? '(not tracked)'}`,
+    `  frames consumed: ${consumed.length}`,
+    `  last session.event types: ${events.slice(-8).join(', ') || '(none)'}`,
+    // The types alone cannot show an error text carried inside a `tool/result`,
+    // which is the payload a stalled tool call would most likely explain itself
+    // in.
+    `  last frame: ${last === undefined ? '(none)' : last.slice(0, 400)}`,
+    `  server->client requests: ${diagnostics.serverRequests?.().join(', ') || '(none)'}`,
+    `  stand-in model requests: ${diagnostics.modelRequests?.() ?? '(not tracked)'}`,
+    `  stderr: ${diagnostics.stderr() || '(empty)'}`,
+  ].join('\n')
+}
+
+/**
+ * Wait for the first frame matching a predicate, recording what passes by.
+ * @param lines - the child's stdout line buffer, consumed as it is read.
+ * @param predicate - what this wait is looking for.
+ * @param diagnostics - what to say if the wait does not finish.
+ * @param onRequest - called for a server-sent request, which must be answered
+ *   for the run to continue; the caller decides what to answer and records it.
+ * @param onFrame - called for every frame read, with the bytes it arrived as.
+ * @returns the matching frame.
+ */
 function waitForLine(
   lines: string[],
   predicate: (value: Record<string, unknown>) => boolean,
-  stderr: () => string,
+  diagnostics: WaitDiagnostics,
+  onRequest: (request: Record<string, unknown>) => void = () => {},
+  onFrame: (raw: string, frame: Record<string, unknown>) => void = () => {},
 ): Promise<Record<string, unknown>> {
   return new Promise((resolve, reject) => {
     const deadline = Date.now() + 30_000
@@ -55,6 +127,11 @@ function waitForLine(
         if (!line.trim()) continue
         try {
           const value = JSON.parse(line) as Record<string, unknown>
+          onFrame(line, value)
+          // A frame carrying BOTH an id and a method is a request, and this
+          // process is the only one that can answer it: leaving it unanswered
+          // stalls whatever asked, which looks exactly like a hung turn.
+          if (value.id !== undefined && typeof value.method === 'string') onRequest(value)
           if (predicate(value)) {
             resolve(value)
             return
@@ -65,7 +142,7 @@ function waitForLine(
         }
       }
       if (Date.now() >= deadline) {
-        reject(new Error(`timed out waiting for JSON-RPC response; stderr=${stderr()}`))
+        reject(new Error(describeStall(diagnostics)))
         return
       }
       setTimeout(poll, 10)
@@ -82,10 +159,10 @@ function waitForLine(
  * how the resume half is driven, the JSON-RPC surface having no resume method
  * of its own (`packages/sdk/server/src/server.ts:477-487`).
  * @param dshHome - harness home; the second call reuses the first one's.
- * @param baseUrl - the stand-in model endpoint.
- * @returns nothing; it throws on any non-clean exit.
+ * @param stub - the stand-in model endpoint, asked how many times it answered.
+ * @returns the methods of every request the server sent this driver.
  */
-async function runSdkTurn(dshHome: string, baseUrl: string): Promise<void> {
+async function runSdkTurn(dshHome: string, stub: StubModelServer): Promise<string[]> {
   const child = execa(process.execPath, ['--import', 'tsx/esm', binScript, '--profile', 'sdk'], {
     cwd: repoRoot,
     env: {
@@ -93,13 +170,15 @@ async function runSdkTurn(dshHome: string, baseUrl: string): Promise<void> {
       DSH_PERMISSION_MODE: 'danger-full-access',
       DSH_TELEMETRY_DISABLED: '1',
       DEEPSEEK_API_KEY: 'keyless-smoke-no-call',
-      DEEPSEEK_BASE_URL: baseUrl,
+      DEEPSEEK_BASE_URL: stub.baseUrl,
     },
     timeout: 35_000,
     killSignal: 'SIGKILL',
     reject: false,
   })
   const lines: string[] = []
+  const consumed: ConsumedFrame[] = []
+  const serverRequests: string[] = []
   let stdoutBuffer = ''
   let stderr = ''
   child.stdout.on('data', (chunk: Buffer) => {
@@ -109,6 +188,40 @@ async function runSdkTurn(dshHome: string, baseUrl: string): Promise<void> {
     lines.push(...parts)
   })
   child.stderr.on('data', (chunk: Buffer) => { stderr += chunk.toString('utf8') })
+  const diagnostics = (waitingFor: string): WaitDiagnostics => ({
+    waitingFor,
+    stderr: () => stderr,
+    consumed: () => consumed,
+    serverRequests: () => serverRequests,
+    modelRequests: () => stub.requests.length,
+    // `exitCode` is null while a child runs, which is how this repository's
+    // other e2e drivers ask the same question.
+    child: () => child.exitCode === null && child.signalCode === null
+      ? 'still running'
+      : `exited (exitCode=${String(child.exitCode)}, signal=${String(child.signalCode)})`,
+  })
+  // Answered, and recorded. Leaving a request unanswered stalls whatever asked
+  // and the case dies of a timeout that names nothing; answering it silently
+  // would hide that this surface asks at all. The caller asserts the ledger is
+  // empty, so a request turns into a named failure instead of either.
+  const answerAndRecord = (request: Record<string, unknown>): void => {
+    serverRequests.push(String(request.method))
+    child.stdin.write(`${JSON.stringify({
+      jsonrpc: '2.0',
+      id: request.id,
+      error: { code: -32_601, message: `this driver answers no server requests: ${String(request.method)}` },
+    })}\n`)
+  }
+  const wait = async (
+    waitingFor: string,
+    predicate: (value: Record<string, unknown>) => boolean,
+  ): Promise<Record<string, unknown>> => waitForLine(
+    lines,
+    predicate,
+    diagnostics(waitingFor),
+    answerAndRecord,
+    (raw, frame) => { consumed.push({ raw, frame }) },
+  )
   try {
     child.stdin.write(`${JSON.stringify({
       jsonrpc: '2.0',
@@ -116,24 +229,25 @@ async function runSdkTurn(dshHome: string, baseUrl: string): Promise<void> {
       method: 'initialize',
       params: { cwd: dshHome, provider: 'deepseek-official', model: 'deepseek-v4-pro' },
     })}\n`)
-    await waitForLine(lines, value => value.id === 1, () => stderr)
+    await wait('the initialize response', value => value.id === 1)
     child.stdin.write(`${JSON.stringify({
       jsonrpc: '2.0',
       id: 2,
       method: 'session/prompt',
       params: { sessionId: 'main', contentBlocks: [{ type: 'text', text: 'write the proof file' }] },
     })}\n`)
-    await waitForLine(lines, value => value.id === 2, () => stderr)
-    await waitForLine(lines, (value) => {
+    await wait('the session/prompt response', value => value.id === 2)
+    await wait("the session's turn/end event", (value) => {
       if (value.method !== 'session.event') return false
       const params = value.params as Record<string, unknown> | undefined
       const event = params?.event as Record<string, unknown> | undefined
       return params?.sessionId === 'main' && event?.type === 'turn/end'
-    }, () => stderr)
+    })
     child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', id: 3, method: 'shutdown' })}\n`)
-    await waitForLine(lines, value => value.id === 3, () => stderr)
+    await wait('the shutdown response', value => value.id === 3)
     const exit = await child
     expect(exit.exitCode, `signal=${String(exit.signal)}; stderr=${stderr}`).toBe(0)
+    return serverRequests
   } finally {
     // No-op after exit; `reject: false` settles on every outcome, so this never races teardown.
     child.kill('SIGKILL')
@@ -220,7 +334,7 @@ describe('Python SDK dsh profile keyless smoke', () => {
           maxTokens: 1234,
         },
       })}\n`)
-      const initialized = await waitForLine(lines, value => value.id === 1, () => stderr)
+      const initialized = await waitForLine(lines, value => value.id === 1, { waitingFor: 'the initialize response', stderr: () => stderr })
       expect(initialized).toMatchObject({
         jsonrpc: '2.0',
         id: 1,
@@ -233,7 +347,7 @@ describe('Python SDK dsh profile keyless smoke', () => {
         method: 'session/prompt',
         params: { sessionId: 'main', contentBlocks: [{ type: 'text', text: 'inspect tools' }] },
       })}\n`)
-      const prompt = await waitForLine(lines, value => value.id === 2, () => stderr)
+      const prompt = await waitForLine(lines, value => value.id === 2, { waitingFor: 'the session/prompt response', stderr: () => stderr })
       expect(prompt).toMatchObject({
         jsonrpc: '2.0',
         id: 2,
@@ -244,7 +358,7 @@ describe('Python SDK dsh profile keyless smoke', () => {
         const params = value.params as Record<string, unknown> | undefined
         const event = params?.event as Record<string, unknown> | undefined
         return params?.sessionId === 'main' && event?.type === 'turn/end'
-      }, () => stderr)
+      }, { waitingFor: "the session's turn/end event", stderr: () => stderr })
       expect(turnEnd).toMatchObject({
         jsonrpc: '2.0',
         method: 'session.event',
@@ -266,7 +380,7 @@ describe('Python SDK dsh profile keyless smoke', () => {
       expect(toolNames).not.toContain('list_subagent_models')
 
       child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', id: 3, method: 'shutdown' })}\n`)
-      const shutdown = await waitForLine(lines, value => value.id === 3, () => stderr)
+      const shutdown = await waitForLine(lines, value => value.id === 3, { waitingFor: 'the shutdown response', stderr: () => stderr })
       expect(shutdown).toMatchObject({ jsonrpc: '2.0', id: 3, result: {} })
       const exit = await child
       expect(exit.exitCode, `signal=${String(exit.signal)}; stderr=${stderr}`).toBe(0)
@@ -372,7 +486,7 @@ describe('Python SDK dsh profile keyless smoke', () => {
         method: 'initialize',
         params: { cwd: root, provider: 'deepseek-official', model: 'deepseek-v4-pro' },
       })}\n`)
-      await waitForLine(lines, value => value.id === 1, () => stderr)
+      await waitForLine(lines, value => value.id === 1, { waitingFor: 'the initialize response', stderr: () => stderr })
       child.stdin.write(`${JSON.stringify({
         jsonrpc: '2.0',
         id: 2,
@@ -383,7 +497,7 @@ describe('Python SDK dsh profile keyless smoke', () => {
         const params = value.params as Record<string, unknown> | undefined
         const event = params?.event as Record<string, unknown> | undefined
         return params?.sessionId === 'minimal' && event?.type === 'turn/end'
-      }, () => stderr)
+      }, { waitingFor: "the session's turn/end event", stderr: () => stderr })
       expect(turnEnd).toMatchObject({
         params: { event: { data: { reason: { kind: 'completed' } } } },
       })
@@ -414,7 +528,7 @@ describe('Python SDK dsh profile keyless smoke', () => {
       }
 
       child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', id: 3, method: 'shutdown' })}\n`)
-      await waitForLine(lines, value => value.id === 3, () => stderr)
+      await waitForLine(lines, value => value.id === 3, { waitingFor: 'the shutdown response', stderr: () => stderr })
       const exit = await child
       expect(exit.timedOut, stderr).toBe(false)
       expect(exit.signal, stderr).toBeUndefined()
@@ -485,7 +599,7 @@ describe('Python SDK dsh profile keyless smoke', () => {
       ],
     })
     try {
-      await runSdkTurn(dshHome, stub.baseUrl)
+      const firstLaunchRequests = await runSdkTurn(dshHome, stub)
       const { compressed, records } = await readSessionLog(dshHome)
 
       // The log is a concatenated-frame container, so reading it whole is not
@@ -507,12 +621,20 @@ describe('Python SDK dsh profile keyless smoke', () => {
       // hold vacuously today AND after the fix if the second launch never
       // composed an Agent, so the growing manifest count is asserted first:
       // only a composed, running Agent appends one.
-      await runSdkTurn(dshHome, stub.baseUrl)
+      const resumedLaunchRequests = await runSdkTurn(dshHome, stub)
       const resumed = await readSessionLog(dshHome)
       const resumedManifests = resumed.records.filter(record => record.type === 'action/manifest-appended')
       expect(resumedManifests.length).toBeGreaterThan(manifests.length)
       expect(resumedManifests.at(-1)?.data?.actor).toMatch(/^anonymous:/)
       expect(resumed.records.filter(record => record.type === 'identity/attached')).toHaveLength(0)
+
+      // Named, not swallowed. Nothing on this surface should ask the client
+      // anything: `bundle/base/cordis.patch.yml:270-273` sets the approval
+      // policy to `never` under `danger-full-access`, which this launch uses.
+      // If a request arrives anyway the driver answers it so the run can
+      // finish, and this says WHICH -- instead of the case dying of a timeout
+      // that names nothing, which is what it did on run 35467913630.
+      expect([...firstLaunchRequests, ...resumedLaunchRequests]).toEqual([])
     } finally {
       await stub.close()
       await rm(root, { recursive: true, force: true })
