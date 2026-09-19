@@ -598,6 +598,58 @@ describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', () =
     return { root }
   }
 
+  describe('an unknown flag is refused by name, rather than silently eating the next argument', () => {
+    // The parse happens before either script touches the filesystem, so these
+    // cases need no fixture: a bogus root proves the refusal comes from the
+    // flag and not from anything the run went on to find.
+    const NOWHERE = '/nonexistent-evidence-root'
+
+    it('collect-evidence refuses a misspelt flag and names it', () => {
+      const result = spawnSync(process.execPath, [
+        collectScriptPath, 'init', '--repo-root', NOWHERE, '--base-sha', 'a'.repeat(40), '--requird-gate', 'typecheck',
+      ], { encoding: 'utf8' })
+      expect(result.status, `stdout: ${result.stdout}`).not.toBe(0)
+      expect(result.stderr).toContain('--requird-gate')
+    })
+
+    it('THE REASON: the misspelt flag would otherwise have swallowed the value of the one after it', () => {
+      // `--requird-gate` takes `typecheck` as its own value, so `--required-gate`
+      // then takes `test` and the package records ONE required gate where the
+      // caller asked for two. Nothing fails, nothing warns, and the release
+      // gate is quietly weaker than the command that produced it.
+      const result = spawnSync(process.execPath, [
+        collectScriptPath, 'init', '--repo-root', NOWHERE, '--base-sha', 'a'.repeat(40),
+        '--requird-gate', 'typecheck', '--required-gate', 'test',
+      ], { encoding: 'utf8' })
+      expect(result.status).not.toBe(0)
+      expect(result.stderr).toContain('--requird-gate')
+    })
+
+    it('verify-evidence refuses one too, where every unknown flag consumes the next argument', () => {
+      // This parser declares no boolean flags at all, so the exposure is wider
+      // than collect-evidence's: there is no token it treats as valueless.
+      const result = spawnSync(process.execPath, [
+        verifyScriptPath, '--repo-rot', NOWHERE, '--evidence', '.dsh/evidence/evidence.json',
+      ], { encoding: 'utf8' })
+      expect(result.status, `stdout: ${result.stdout}`).not.toBe(0)
+      expect(result.stderr).toContain('--repo-rot')
+    })
+
+    it('CONTROL: the correctly spelt flags are still accepted, so the guard refuses typos and not the vocabulary', () => {
+      // Without this, a guard that refused EVERYTHING would satisfy the three
+      // cases above. Both scripts get past the parse and fail later, on the
+      // root that does not exist -- a different failure, which is the point.
+      const collect = spawnSync(process.execPath, [
+        collectScriptPath, 'init', '--repo-root', NOWHERE, '--base-sha', 'a'.repeat(40), '--required-gate', 'typecheck',
+      ], { encoding: 'utf8' })
+      expect(collect.stderr).not.toContain('unknown flag')
+      const verify = spawnSync(process.execPath, [
+        verifyScriptPath, '--repo-root', NOWHERE, '--evidence', '.dsh/evidence/evidence.json',
+      ], { encoding: 'utf8' })
+      expect(verify.stderr).not.toContain('unknown flag')
+    })
+  })
+
   describe('round-trip: real collect-then-verify produces a genuinely accepted, offline-verifiable EvidencePackage', () => {
     it('seeds every declared required gate as a MissingGateEvidence placeholder at init, keeping accepted=false until each one actually runs', () => {
       const { root, baseSha } = makeEvidenceFixture()

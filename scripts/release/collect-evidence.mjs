@@ -115,6 +115,28 @@ function outPathArg(flags, repoRoot) {
 
 const BOOLEAN_FLAGS = new Set(['--required', '--force'])
 
+/**
+ * Every flag this script reads, across all three subcommands.
+ *
+ * An unknown flag is refused rather than ignored, because `parseFlags` gives a
+ * value-taking flag the NEXT argument: a misspelt `--requird-gate typecheck`
+ * did not merely fail to register a required gate, it also swallowed
+ * `typecheck`, and the evidence package recorded one fewer required gate than
+ * the caller asked for. A silently weaker release gate is the one outcome this
+ * script exists to prevent.
+ *
+ * One set for all subcommands rather than one per subcommand: this refuses
+ * what no subcommand understands, which is the typo case. A flag aimed at the
+ * wrong subcommand is a narrower mistake and is left for the subcommand's own
+ * reading of what it needs.
+ */
+const KNOWN_FLAGS = new Set([
+  '--repo-root', '--out', '--force',
+  '--base-sha', '--required-gate', '--required-artifact',
+  '--gate-id', '--required', '--artifact', '--skip', '--missing', '--test-counts',
+  '--path',
+])
+
 /** Splits `argv` at the first literal `--`: everything after it is the gate command to run, never a flag. */
 function splitArgs(argv) {
   const sepIndex = argv.indexOf('--')
@@ -128,6 +150,7 @@ function parseFlags(flagArgs) {
   for (let i = 0; i < flagArgs.length; i++) {
     const token = flagArgs[i]
     if (!token.startsWith('--')) throw new Error(`collect-evidence: unexpected argument ${JSON.stringify(token)}`)
+    if (!KNOWN_FLAGS.has(token)) throw new Error(`collect-evidence: unknown flag ${JSON.stringify(token)}`)
     if (BOOLEAN_FLAGS.has(token)) {
       flags.set(token, [...(flags.get(token) ?? []), 'true'])
       continue

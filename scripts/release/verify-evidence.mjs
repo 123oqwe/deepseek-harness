@@ -57,11 +57,24 @@ function flagOne(flags, name, fallback) {
   return values[values.length - 1]
 }
 
+/**
+ * Every flag this script reads.
+ *
+ * Refused rather than ignored for the reason `collect-evidence` refuses one,
+ * and the exposure here is wider: this parser has no boolean flags at all, so
+ * EVERY token it does not recognise consumes the next argument as its value.
+ * `--repo-root /tmp/x --evidence e.json` with `--repo-root` misspelt leaves
+ * `--evidence` unset and the script reports a missing evidence path, which
+ * reads like a caller error rather than a typo.
+ */
+const KNOWN_FLAGS = new Set(['--repo-root', '--evidence'])
+
 function parseFlags(argv) {
   const flags = new Map()
   for (let i = 0; i < argv.length; i++) {
     const token = argv[i]
     if (!token.startsWith('--')) throw new Error(`verify-evidence: unexpected argument ${JSON.stringify(token)}`)
+    if (!KNOWN_FLAGS.has(token)) throw new Error(`verify-evidence: unknown flag ${JSON.stringify(token)}`)
     const value = argv[i + 1]
     if (value === undefined) throw new Error(`verify-evidence: ${token} requires a value`)
     flags.set(token, [...(flags.get(token) ?? []), value])
