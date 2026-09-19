@@ -124,6 +124,7 @@ The shared core owns manifests, generation-qualified role selection, workspace s
 | [`src/normalize.ts`](src/normalize.ts) | Pure normalizers and scrubbing helpers |
 | [`src/workspace.ts`](src/workspace.ts) | Scenario workspace setup and complete expected-state comparison |
 | [`src/suite.ts`](src/suite.ts) | Scenario-table suite factory, fixture guards, record/refresh write-back |
+| [`src/stub-model.ts`](src/stub-model.ts) | Loopback stand-in model endpoint, so a launcher e2e drives a real turn and real tool calls without a provider key |
 | [`src/index.ts`](src/index.ts) | Package entry re-exporting the four layers |
 | — | No runtime invariant companion is published; this test-support package owns no production event stream or mutable data; consuming test suites exercise its behavior. |
 

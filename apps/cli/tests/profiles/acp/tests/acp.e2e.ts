@@ -1,14 +1,17 @@
-import { mkdtemp, readFile } from 'node:fs/promises'
+import { mkdtemp, readFile, readdir } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { zstdDecompressSync } from 'node:zlib'
 import { afterEach, describe, expect, it } from 'vitest'
 import { PROTOCOL_VERSION } from '@agentclientprotocol/sdk'
 import {
   launchAcpTestAgent,
+  startStubModelServer,
   type AgentUnderTest,
   type LaunchedAcpTestAgent,
 } from '@deepseek-ai/dsh-session-snapshot'
+import { scanZstdFrames } from '@deepseek-ai/dsh-session-persistence-jsonl/src/zstd.js'
 import { cleanupAcpExampleTest } from './cleanup.ts'
 
 /**
@@ -28,6 +31,35 @@ const AGENT: AgentUnderTest = {
   tsconfigPath: fileURLToPath(new URL('../../../../../../tsconfig.json', import.meta.url)),
 }
 const DANGER_FULL_ACCESS_ENV = { DSH_PERMISSION_MODE: 'danger-full-access' }
+
+/** One record of a durable session log, as the log's own JSONL lines carry it. */
+interface SessionLogRecord {
+  type: string
+  data?: Record<string, unknown>
+}
+
+/**
+ * Read this profile's whole durable log out of the launcher's harness home.
+ *
+ * Every frame, not just the first: the JSONL backend appends a Zstandard frame
+ * per batch, so a one-shot decompress of the file yields the first frame alone.
+ * The profile writes under `dshHomePath('sessions')` (`../cordis.yml:30`) and
+ * the launcher points `DSH_HOME` at the test's own directory.
+ * @param cwd - the directory the agent was launched in.
+ * @returns the log's records in file order.
+ */
+async function readSessionRecords(cwd: string): Promise<SessionLogRecord[]> {
+  const sessionsRoot = join(cwd, '.dsh', 'sessions')
+  const files = await readdir(sessionsRoot, { recursive: true })
+  const log = files.find(file => file.endsWith('.jsonl.zstd'))
+  expect(log).toBeDefined()
+  const compressed = await readFile(join(sessionsRoot, log!))
+  const { frames, tornStart } = scanZstdFrames(compressed)
+  expect(tornStart).toBeUndefined()
+  return frames
+    .flatMap(({ start, end }) => zstdDecompressSync(compressed.subarray(start, end)).toString().trim().split('\n'))
+    .map(line => JSON.parse(line) as SessionLogRecord)
+}
 
 let spawned: LaunchedAcpTestAgent | undefined
 let workdir: string | undefined
@@ -96,6 +128,92 @@ describe('acp-agent over real stdio (no key required)', () => {
     expect(typeof sessionId).toBe('string')
     expect(sessionId.length).toBeGreaterThan(0)
   }, 60_000)
+
+  /*
+   * BLOCKED-291 negative control. It pins TODAY'S DEFECT, not the fix: ACP
+   * composes its Agent per request (`packages/acp/acp/src/session.ts:128`,
+   * reached from `index.ts:248`) without an identity, so nothing is attached
+   * and every manifest is attributed to the anonymous dev principal
+   * (`action-manifest/src/identity.ts:52`). The assertions below state those
+   * values positively, so this case passes only while the defect is there and
+   * fails the moment it is fixed — which is what makes the fix's own commit,
+   * which flips them to P2-01 acceptance[0]'s form, an observation rather than
+   * a claim. It is deliberately not written as an expected failure: an
+   * expected failure passes for any reason at all, including a broken
+   * environment.
+   *
+   * Keyless with a real action: the stand-in model endpoint answers the turn
+   * with one `bash` call, so the session genuinely appends an action manifest
+   * without a credential and without network egress. `session/new` alone would
+   * append none, and "the manifest follows by construction" is precisely the
+   * inference this program stopped accepting.
+   */
+  it('BLOCKED-291 negative control: a launched acp session attaches no identity and acts as anonymous', async () => {
+    workdir = await mkdtemp(join(tmpdir(), 'acp-e2e-host-user-'))
+    const stub = await startStubModelServer({
+      // Per request: call, close the turn, then call again after the resume.
+      // The second call is what proves `session/resume` really composed an
+      // Agent -- only a running Agent appends a manifest.
+      toolCalls: [
+        { name: 'bash', arguments: { command: 'printf ACP_OK > first.txt', description: 'Write the first proof file' } },
+        undefined,
+        { name: 'bash', arguments: { command: 'printf ACP_OK > second.txt', description: 'Write the second proof file' } },
+      ],
+    })
+    const env = {
+      DEEPSEEK_API_KEY: 'sk-dummy-for-boot',
+      DEEPSEEK_BASE_URL: stub.baseUrl,
+      ...DANGER_FULL_ACCESS_ENV,
+    }
+    let first: LaunchedAcpTestAgent | undefined
+    let second: LaunchedAcpTestAgent | undefined
+    try {
+      first = launchAcpTestAgent({ agent: AGENT, cwd: workdir, env })
+      await first.spawned
+      await first.client.initialize({ protocolVersion: PROTOCOL_VERSION, clientCapabilities: {} })
+      const { sessionId } = await first.client.newSession({ cwd: workdir, mcpServers: [] })
+      await first.client.prompt({
+        sessionId,
+        prompt: [{ type: 'text', text: 'write the proof file' }],
+      })
+      await first.client.closeSession({ sessionId })
+      await first.close()
+      first = undefined
+
+      const records = await readSessionRecords(workdir)
+      const manifests = records.filter(record => record.type === 'action/manifest-appended')
+      expect(manifests.length).toBeGreaterThan(0)
+      expect(manifests[0]?.data?.actor).toMatch(/^anonymous:/)
+      expect(records.filter(record => record.type === 'identity/attached')).toHaveLength(0)
+
+      // The resume half, through the surface's own `session/resume` method
+      // (`packages/acp/acp/src/index.ts:430`). The `identity/attached` count
+      // must go 0 -> 0 here, and 1 -> 1 once the fix lands. Asserting "no
+      // second record" alone would hold vacuously today AND after the fix if
+      // the resumed session never composed an Agent, so one more prompt runs
+      // and the growing manifest count is asserted first: only a composed,
+      // running Agent appends one.
+      second = launchAcpTestAgent({ agent: AGENT, cwd: workdir, env })
+      await second.spawned
+      await second.client.initialize({ protocolVersion: PROTOCOL_VERSION, clientCapabilities: {} })
+      await second.client.resumeSession({ sessionId, cwd: workdir, mcpServers: [] })
+      await second.client.prompt({
+        sessionId,
+        prompt: [{ type: 'text', text: 'write the second proof file' }],
+      })
+      await second.client.closeSession({ sessionId })
+
+      const resumed = await readSessionRecords(workdir)
+      const resumedManifests = resumed.filter(record => record.type === 'action/manifest-appended')
+      expect(resumedManifests.length).toBeGreaterThan(manifests.length)
+      expect(resumedManifests.at(-1)?.data?.actor).toMatch(/^anonymous:/)
+      expect(resumed.filter(record => record.type === 'identity/attached')).toHaveLength(0)
+    } finally {
+      await stub.close()
+      await Promise.allSettled([first?.close(), second?.close()]
+        .filter((value): value is Promise<void> => value !== undefined))
+    }
+  }, 120_000)
 })
 
 describe.skipIf(!process.env.DEEPSEEK_API_KEY)('acp-agent e2e: real prompt over ACP', () => {

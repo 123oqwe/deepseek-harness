@@ -456,6 +456,35 @@ jobs:
           pnpm exec vitest run --config vitest.e2e.config.ts \
             apps/cli/tests/profiles/sdk/keyless-smoke.e2e.ts
 
+      - name: BLOCKED-291 — the ACP launcher's own identity attribution
+        if: always()
+        # The ACP half of BLOCKED-291's unlock condition (a). `acp.e2e.ts` runs
+        # in NO workflow this program observes: `e2e.yml` would reach it through
+        # `pnpm run test:e2e`, but that workflow triggers on `push: [main,
+        # master]`, `pull_request`, `schedule` and `workflow_dispatch`, none of
+        # which fire on the fork branch this program works on -- the same blind
+        # spot recorded for `ci.yml` below. Without this step the ACP case
+        # would be written, correct, and never observed.
+        #
+        # Keyless: the case starts a loopback stand-in model endpoint and points
+        # the child at it with `DEEPSEEK_BASE_URL`, alongside the placeholder
+        # `DEEPSEEK_API_KEY` the adapter checks for at apply time. The file's
+        # key-gated describe self-skips, which is why the whole file is safe to
+        # run here.
+        #
+        # The WHOLE file, with no `-t`, for the reason the step above records at
+        # length: a `-t` filter matches the FORMATTED title and silently selects
+        # the wrong cases.
+        #
+        # Expected GREEN on this commit. The case is a NEGATIVE CONTROL: it
+        # asserts today's defect positively (`anonymous:` actor, zero
+        # `identity/attached`), so a green here is the observation that the
+        # defect is real, and the fix's own commit -- which flips those
+        # assertions -- is what proves the fix.
+        run: |
+          pnpm exec vitest run --config vitest.e2e.config.ts \
+            apps/cli/tests/profiles/acp/tests/acp.e2e.ts
+
       - name: Publication and package hygiene
         if: always()
         # BLOCKED-210. Fifteen gates this program never saw. `pnpm run hygiene`

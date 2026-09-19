@@ -7,7 +7,10 @@
  * {@link scrubModelRequestBulk} / {@link scrubSystemPrompts}), and the suite
  * factory ({@link defineAcpSnapshotSuite}) that registers a scenario table as a
  * full describe/it tree. Transport-neutral normalizers and fixture invariants
- * remain reusable by other profile adapters. Ordinary ACP e2e tests can use the launcher directly;
+ * remain reusable by other profile adapters. {@link startStubModelServer} sits
+ * beside those layers rather than inside one: it is what lets a launcher e2e
+ * drive a real turn, tool calls included, with no provider key.
+ * Ordinary ACP e2e tests can use the launcher directly;
  * the ACP corpus adapter supplies only its {@link AgentUnderTest} paths,
  * snapshots directory, and {@link Scenario} table.
  *
@@ -110,6 +113,12 @@ export {
   type Scenario,
   type SnapshotSuiteOptions,
 } from './suite.ts'
+export {
+  startStubModelServer,
+  type StubModelOptions,
+  type StubModelServer,
+  type StubToolCall,
+} from './stub-model.ts'
 export {
   captureExpectedWorkspaceSnapshot,
   captureWorkspaceSnapshot,
