@@ -33,6 +33,8 @@ The startup provider binds stdin EOF to the launcher's bounded successful shutdo
 
 The SDK uses the base `read`, `write`, and `edit` defaults. To add `str_replace_editor`, use the explicit insertion patch in the [base configuration guide](../base/README.md#use-this-package). The standalone `sdk-minimal` profile owns its separate tool selection.
 
+Project content requires an explicit trust grant on this profile, and that is a behaviour change: an ungranted working directory's own `AGENTS.md` and skills, which this profile loaded unconditionally before, no longer load. Nothing here can ask for a grant — no approval answerer is mounted and no launch flag reaches the provider — so a deployment grants the directories it controls before launch. A `--patch` overlay or the `$DSH_HOME/cordis.patch.yml` layer sets `config.grants` on this bundle's `workspace-trust-local` row; that row's own config shape is in [`dsh-workspace-trust-local`'s README](../../workspace/workspace-trust-local/README.md#turn-the-boundary-on).
+
 -----
 
 <a id="model-experience"></a>

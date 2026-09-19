@@ -1,0 +1,37 @@
+# Test-only patch over the shipped sdk profile. The production bundle layers
+# own the trust row, the agent services, the tools and the instruction loader;
+# this overlay only replaces what a test process cannot have: the JSON-RPC
+# server that owns stdio, the real model, and the durable roots.
+#
+# `sdk-app-startup` and `sdk-jsonrpc-server` own stdin and stdout for the SDK
+# protocol. The fixture drives a turn in-process instead, so both are off.
+- id: sdk-app-startup
+  disabled: true
+
+- id: sdk-jsonrpc-server
+  disabled: true
+
+# The typert loader imports each contributor's built `./typert` subpath, so it
+# is the one row in this profile that cannot boot from an unbuilt source tree.
+# Nothing under test reaches it: this fixture asserts on the system prompt.
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: llm-deepseek
+  disabled: true
+
+- id: agent-loop
+  config:
+    agents: []
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
+
+- insert:
+    - id: sdk-app-workspace-trust-mock-llm
+      name: './mock-llm.ts'

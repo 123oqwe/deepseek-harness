@@ -9,6 +9,16 @@
 - id: session-title-llm
   disabled: true
 
+# Turns on the project-trust boundary: an ungranted workspace's own AGENTS.md
+# and skills no longer load. This profile has no in-session way to grant one --
+# nothing here answers an approval request, and no launch flag reaches this
+# plugin -- so a deployment grants the working directories it controls before
+# launch, with a `--patch` overlay or its `$DSH_HOME/cordis.patch.yml`, setting
+# `config.grants` on this same row. The row's own config shape is in
+# @deepseek-ai/dsh-workspace-trust-local's README, under "Turn the boundary on".
+- id: workspace-trust-local
+  disabled: false
+
 - insert:
     - id: sdk-app-startup
       name: '@deepseek-ai/dsh-sdk-app'
