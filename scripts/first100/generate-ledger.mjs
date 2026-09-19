@@ -1312,6 +1312,63 @@ export function checkCoverageClosure(epicId, registry, freeze, coverage, row) {
 }
 
 /**
+ * Why `--check` cannot proceed when a coverage artifact is missing (BLOCKED-287).
+ *
+ * Absence is not a pass. Both coverage blocks in `--check` were once guarded by
+ * an existence test alone, so a missing artifact skipped its own check while the
+ * success line still printed -- inside the very gate that exists because a check
+ * nobody runs is a check that does not exist.
+ * @param {number} acceptedRows - how many ledger rows are ACCEPTED.
+ * @param {boolean} coverageExists - whether acceptance-coverage.json is present.
+ * @param {boolean} schemaExists - whether its schema is present.
+ * @returns {string | undefined} the reason to refuse, or `undefined` to proceed.
+ */
+export function coverageArtifactDrift(acceptedRows, coverageExists, schemaExists) {
+  if (acceptedRows > 0 && !coverageExists) {
+    return `${acceptedRows} row(s) are ACCEPTED and there is no acceptance-coverage.json — their citations cannot be checked`
+  }
+  if (coverageExists && !schemaExists) {
+    return 'acceptance-coverage.json exists and its schema does not — nothing validates its shape'
+  }
+  return undefined
+}
+
+/**
+ * Every ACCEPTED row whose coverage citations no longer close (BLOCKED-287).
+ *
+ * `checkCoverageClosure` is an acceptance predicate, and `--accept` was its
+ * only caller. A row is accepted once and never again, so a citation EDITED
+ * after acceptance was checked by nothing -- two such rows sat in the tree on
+ * 2026-09-19 (a citation missing its `supplementSeq`, and one naming a title in
+ * the `describe`-prefixed spelling the report prints rather than the bare one
+ * the freeze stores). Both were found by calling this predicate by hand.
+ *
+ * A throw is reported as that row's failure rather than propagating: a gate
+ * that names the row it died on is worth more than a stack trace, and the exit
+ * code is the same either way.
+ * @param {unknown} ledger - the ledger document, whose `rows` carry `status`.
+ * @param {unknown} registry - the registry, for each epic's `acceptance[]`.
+ * @param {unknown} freeze - command-freeze.json, for the live frozen titles.
+ * @param {unknown} coverage - acceptance-coverage.json, for the citations.
+ * @returns {{ epic: string, missingIndices: number[], unverifiedCitations: unknown[], error?: string }[]} one entry per failing row, empty when every ACCEPTED row closes.
+ */
+export function closureFailuresForAcceptedRows(ledger, registry, freeze, coverage) {
+  const failures = []
+  for (const [epic, row] of Object.entries(ledger.rows)) {
+    if (row.status !== 'ACCEPTED') continue
+    try {
+      const closure = checkCoverageClosure(epic, registry, freeze, coverage, row)
+      if (!closure.valid) {
+        failures.push({ epic, missingIndices: closure.missingIndices, unverifiedCitations: closure.unverifiedCitations })
+      }
+    } catch (error) {
+      failures.push({ epic, missingIndices: [], unverifiedCitations: [], error: String(error instanceof Error ? error.message : error) })
+    }
+  }
+  return failures
+}
+
+/**
  * Maintainer decision BLOCKED-004 predicate (ii) (2026-09-01): candidate-chain
  * consistency -- "the same final candidate, or a recorded sequential
  * evolution." A single shared `candidateSha` across every applicable cell
@@ -2014,6 +2071,20 @@ function cmdCheck() {
       process.exit(1)
     }
   }
+  // Absence is not a pass. Both blocks below used to be guarded by `existsSync`
+  // alone, so a missing artifact skipped its own check and the success line
+  // still printed -- the shape this gate exists to close, reproduced inside it.
+  // `--accept` refuses an absent coverage file outright (`:1891`); so does this.
+  const acceptedRows = Object.entries(ledger.rows).filter(([, row]) => row.status === 'ACCEPTED')
+  const artifactDrift = coverageArtifactDrift(
+    acceptedRows.length,
+    existsSync(ACCEPTANCE_COVERAGE_PATH),
+    existsSync(ACCEPTANCE_COVERAGE_SCHEMA_PATH),
+  )
+  if (artifactDrift !== undefined) {
+    console.error(`DRIFT: ${artifactDrift} (${ACCEPTANCE_COVERAGE_PATH})`)
+    process.exit(1)
+  }
   // BLOCKED-206: the one place the coverage schema is executed. `--check` is
   // the drift detector, and an artifact drifting from its own declared shape is
   // drift — the same kind the EXEC-STATE digests above catch.
@@ -2030,7 +2101,36 @@ function cmdCheck() {
       process.exit(1)
     }
   }
-  console.log(`verify: ${LEDGER_PATH} carries a generate-ledger.mjs header (${Object.keys(ledger.rows).length} rows); EXEC-STATE digests match both files; acceptance-coverage.json conforms to its schema`)
+  // BLOCKED-287: closure over every ACCEPTED row, because `--accept` was the
+  // only caller of the predicate and an accepted row is never accepted again.
+  // A citation edited afterwards -- which is how a note's owed evidence gets
+  // written once it is finally observed -- was checked by nothing until here.
+  // The guard above leaves exactly one case where the file is absent here: no
+  // row is ACCEPTED, so there is nothing to close over and the count is 0
+  // truthfully rather than by omission.
+  if (acceptedRows.length > 0) {
+    const failures = closureFailuresForAcceptedRows(
+      ledger,
+      loadJson(REGISTRY_PATH),
+      loadJson(COMMAND_FREEZE_PATH),
+      loadJson(ACCEPTANCE_COVERAGE_PATH),
+    )
+    if (failures.length > 0) {
+      for (const { epic, missingIndices, unverifiedCitations, error } of failures) {
+        if (error !== undefined) {
+          console.error(`DRIFT: ${epic} is ACCEPTED and its coverage closure could not be evaluated — ${error}`)
+          continue
+        }
+        console.error(`DRIFT: ${epic} is ACCEPTED but acceptance[] index(es) ${missingIndices.join(', ')} have no verified covering case`)
+        for (const citation of unverifiedCitations) {
+          console.error(`  unverified citation: ${JSON.stringify(citation)}`)
+        }
+      }
+      console.error('A citation must name a title that is frozen in a LIVE entry and present in that cell\'s (or supplement\'s) expectCasesMatched. Check the exact spelling — a report prints the describe chain, the freeze stores the bare title — and whether the citation needs a supplementSeq.')
+      process.exit(1)
+    }
+  }
+  console.log(`verify: ${LEDGER_PATH} carries a generate-ledger.mjs header (${Object.keys(ledger.rows).length} rows); EXEC-STATE digests match both files; acceptance-coverage.json conforms to its schema; coverage closure holds for all ${acceptedRows.length} ACCEPTED rows`)
   process.exit(0)
 }
 

@@ -35,6 +35,8 @@ import {
   checkCandidateChainConsistency,
   checkCiRunUrlCorrection,
   checkCoverageClosure,
+  closureFailuresForAcceptedRows,
+  coverageArtifactDrift,
   checkDelegateSignoff,
   checkFailureSetAgainstFlakeRegistry,
   execStateDigestDrift,
@@ -1162,5 +1164,106 @@ describe('--correct-ci-run-url resolves cells in the REAL ledger, not only in a 
       expect(cell, `the ledger has a cell at ${where}; a lookup that cannot find it corrects nothing`).toBeDefined()
       expect(typeof cell?.ciRunUrl, `${where} carries a recorded run URL`).toBe('string')
     }
+  })
+})
+
+describe('closureFailuresForAcceptedRows (BLOCKED-287)', () => {
+  /** A ledger holding one row at a chosen status, sharing this file's closure fixtures. */
+  const ledgerWith = (status: string, row: unknown) => ({ rows: { E1: { status, ...(row as object) } } })
+  const closing = {
+    cells: { C: { expectCasesMatched: ['case-a'] } },
+    supplements: { 'F.1': { expectCasesMatched: ['case-b-supp'] } },
+  }
+
+  it('reports nothing when every ACCEPTED row closes', () => {
+    expect(closureFailuresForAcceptedRows(ledgerWith('ACCEPTED', closing), registry, freeze, coverage)).toEqual([])
+  })
+
+  it('names the row when a citation loses its supplementSeq — the P4-07 defect, reintroduced', () => {
+    // The citation resolves against `cells[stage]` instead of the supplement it
+    // was observed in. Both are GREEN, which is why nothing looked wrong.
+    const seqless = {
+      entries: [
+        coverage.entries[0],
+        { epic: 'E1', acceptanceIndex: 1, coveredBy: [{ stage: 'F', title: 'case-b-supp' }] },
+      ],
+    }
+    const failures = closureFailuresForAcceptedRows(ledgerWith('ACCEPTED', closing), registry, freeze, seqless)
+    expect(failures).toHaveLength(1)
+    expect(failures[0]?.epic).toBe('E1')
+    expect(failures[0]?.missingIndices).toEqual([1])
+  })
+
+  it('names the row when a citation carries a title nothing freezes — the P4-11 defect, reintroduced', () => {
+    // A report prints the `describe` chain; the freeze stores the bare title.
+    // Citing what the report printed matches no frozen entry.
+    const prefixed = {
+      entries: [
+        { epic: 'E1', acceptanceIndex: 0, coveredBy: [{ stage: 'C', title: 'E1 suite case-a' }] },
+        coverage.entries[1],
+      ],
+    }
+    const failures = closureFailuresForAcceptedRows(ledgerWith('ACCEPTED', closing), registry, freeze, prefixed)
+    expect(failures).toHaveLength(1)
+    expect(failures[0]?.missingIndices).toEqual([0])
+  })
+
+  it('leaves a row that is not ACCEPTED alone, however broken its citations', () => {
+    // The precision half: this predicate guards rows nothing will re-accept. A
+    // row still in flight belongs to the acceptance path, and reddening
+    // `--check` for it would block the commit that is on its way to fixing it.
+    const broken = { cells: { C: { expectCasesMatched: [] } }, supplements: {} }
+    for (const status of ['NOT_RUN', 'BLOCKED_ON_ACCEPTANCE']) {
+      expect(closureFailuresForAcceptedRows(ledgerWith(status, broken), registry, freeze, coverage)).toEqual([])
+    }
+  })
+
+  it('reports a throw as a failure of that row rather than dying on it', () => {
+    // `checkCoverageClosure` throws on a freeze entry whose supplement keys
+    // disagree. A gate naming the row beats a stack trace, and the exit code is
+    // the same either way.
+    const badFreeze = { entries: [{ epic: 'E1', stage: 'C', supplementSeq: 1, expectCases: ['case-a'] }] }
+    const failures = closureFailuresForAcceptedRows(ledgerWith('ACCEPTED', closing), registry, badFreeze, coverage)
+    expect(failures).toHaveLength(1)
+    expect(failures[0]?.epic).toBe('E1')
+    expect(failures[0]?.error).toBeDefined()
+  })
+
+  it('REFUSES when the coverage file is absent and rows are ACCEPTED, rather than skipping', () => {
+    // The hole this gate was first written with: both coverage blocks were
+    // guarded by an existence test alone, so a missing artifact skipped its own
+    // check and `--check` still printed its success line -- "holds for all 0
+    // ACCEPTED rows" over a ledger holding 26 of them. An absent observation is
+    // a FAIL, and that rule has to hold inside the gate that enforces it.
+    expect(coverageArtifactDrift(26, false, true)).toMatch(/26 row\(s\) are ACCEPTED/u)
+    expect(coverageArtifactDrift(1, false, false)).toBeDefined()
+  })
+
+  it('REFUSES when the schema is absent, because then nothing validates the shape', () => {
+    expect(coverageArtifactDrift(26, true, false)).toMatch(/nothing validates its shape/u)
+  })
+
+  it('proceeds when there is nothing to check, so the count of 0 is true rather than omitted', () => {
+    // The precision half. A ledger with no ACCEPTED row and no coverage file is
+    // not drift -- it is a program that has accepted nothing yet.
+    expect(coverageArtifactDrift(0, false, false)).toBeUndefined()
+    expect(coverageArtifactDrift(26, true, true)).toBeUndefined()
+  })
+
+  it('closes over the COMMITTED files, not only the fixtures in this file', () => {
+    // The lesson the flat-key defect taught: eight green cases agreed with each
+    // other because they shared one wrong fixture, and the real file had a
+    // different shape. This case reads what is actually in the tree.
+    const read = (path: string): unknown =>
+      JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8')) as unknown
+    const ledger = read('../../spec/first100/exec/ledger.json') as { rows: Record<string, { status: string }> }
+    const accepted = Object.values(ledger.rows).filter(row => row.status === 'ACCEPTED')
+    expect(accepted.length).toBeGreaterThan(0)
+    expect(closureFailuresForAcceptedRows(
+      ledger,
+      read('../../tests/first100/registry.json'),
+      read('../../spec/first100/exec/command-freeze.json'),
+      read('../../spec/first100/exec/acceptance-coverage.json'),
+    )).toEqual([])
   })
 })

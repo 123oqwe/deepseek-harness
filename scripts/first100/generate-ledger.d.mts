@@ -36,6 +36,42 @@ export function checkCoverageClosure(
 ): CoverageClosureResult
 
 /**
+ * Why `--check` cannot proceed when a coverage artifact is missing (BLOCKED-287).
+ * @param acceptedRows - how many ledger rows are ACCEPTED.
+ * @param coverageExists - whether acceptance-coverage.json is present.
+ * @param schemaExists - whether its schema is present.
+ * @returns the reason to refuse, or `undefined` to proceed.
+ */
+export function coverageArtifactDrift(
+  acceptedRows: number,
+  coverageExists: boolean,
+  schemaExists: boolean,
+): string | undefined
+
+/** One ACCEPTED row whose citations no longer resolve, or whose closure threw. */
+export interface AcceptedClosureFailure {
+  epic: string
+  missingIndices: number[]
+  unverifiedCitations: unknown[]
+  error?: string
+}
+
+/**
+ * Re-check coverage closure for every ACCEPTED row (BLOCKED-287).
+ * @param ledger - the ledger document, whose `rows` carry `status`.
+ * @param registry - the registry, for each epic's `acceptance[]`.
+ * @param freeze - command-freeze.json, for the live frozen titles.
+ * @param coverage - acceptance-coverage.json, for the citations.
+ * @returns one entry per failing row, empty when every ACCEPTED row closes.
+ */
+export function closureFailuresForAcceptedRows(
+  ledger: unknown,
+  registry: unknown,
+  freeze: unknown,
+  coverage: unknown,
+): AcceptedClosureFailure[]
+
+/**
  * Throw when a freeze entry carries `supplementSeq` without `supplements`, the reverse, or a null `supplements` (BLOCKED-161).
  * @param entries - the command-freeze entries.
  */
