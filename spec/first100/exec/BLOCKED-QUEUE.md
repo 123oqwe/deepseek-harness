@@ -7223,5 +7223,13 @@ So the second step of the lock's own lifting condition — observe a lease expir
 **What this entry does not claim.**
 - Not that the C, U or F observations were wrong, and not that they should be re-run. Only the acceptance conclusion is withdrawn.
 - Not that `P4-06` and `P6-01` are in the same state. Both are `ACCEPTED` today while both appear in the live accept-blocked block — the same SHAPE — but whether each lock was properly lifted is **unmeasured here and not judged**. `P5-10` is already `BLOCKED_ON_ACCEPTANCE`, so it is consistent.
+
+**Addendum (2026-09-19, same day): P6-01 measured and withdrawn; P4-06 still unmeasured.** The delegate ruled on the second of the three, and its sign-off is withdrawn in the same commit as this addendum, by the same subcommand and with the same four-file effect. What was measured at tip `d9d97307ef`:
+
+- P6-01's residual lock (`:3328`, added 2026-09-04, rewritten 2026-09-06) is live and names `must[3]`'s read scoping against a HOSTILE provider: `MemoryRecordView` carries no tenant, so `MemoryRuntime` has nothing to check a returned record against, and a provider that ignores the access context is still believed.
+- Both lifting steps are owned by **P6-03**, whose ledger row is `NOT_RUN` with all four stage cells `NOT_RUN`. Neither step has been taken.
+- None of P6-01's three sign-off entries — PASS `2026-09-15T07:15:11Z`, WITHDRAWN `07:58:18Z` (a different defect: `verify-make-vs-use`), PASS `10:45:22Z` — contains a lock-check sentence.
+
+Its C, P, U and F observations are likewise untouched and undisputed. **`P4-06` remains unmeasured and unjudged**: it is `ACCEPTED` today and listed in the same live block, and nobody has yet read its lock against its evidence.
 - Not that the register has an enforcer. It still has none; [BLOCKED-081](#blocked-081) recorded that in 2026-09-05 and this entry is what happens when nobody greps. A `verify-acceptance-locks` gate is queued, not written.
 - Not a route back. How P4-05 becomes signable again — give `reclaim` a real production trigger, or decide that `open`/`adoptable` is what carries "takeover after a restart" and observe THAT — is the delegate's ruling to make and is not decided here.

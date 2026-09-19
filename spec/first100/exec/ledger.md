@@ -77,7 +77,7 @@ This table lists main cells only: a supplement cell (`U.1`, `C.2`, ...) has no r
 | 69 | P5-10 | Continuation、Steer、Human Input 与 Cancellation Convergence 修复 | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P4-06, P4-07 | W7 | GREEN | GREEN | GREEN | GREEN | 191aa1e502ff7e96a7ce306cdf57ccb742c745fb | PENDING | BLOCKED_ON_ACCEPTANCE |
 | 70 | P5-11 | 通用 Taskboard、Mailbox 与 Blackboard 原语 | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P4-06, P4-07 | W7 | GREEN | GREEN | GREEN | GREEN | 434408a47ca7635fb1076baeb43efecb33bce980 | APPROVED | ACCEPTED |
 | 71 | P5-12 | 多 Agent 协调安全、Worktree 隔离与 Router Regret 评测 | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P4-10, P5-01, P5-11 | W10 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
-| 72 | P6-01 | 原生 Memory Service Definition（Provider-Neutral） | L1_CONTRACT | UNASSIGNED_UNTIL_APPROVAL | P0-03, P2-01 | W4 | GREEN | GREEN | GREEN | GREEN | e74593c50a0306801c9d294e4eb45f2be7a8ec15 | APPROVED | ACCEPTED |
+| 72 | P6-01 | 原生 Memory Service Definition（Provider-Neutral） | L1_CONTRACT | UNASSIGNED_UNTIL_APPROVAL | P0-03, P2-01 | W4 | GREEN | GREEN | GREEN | GREEN | e74593c50a0306801c9d294e4eb45f2be7a8ec15 | PENDING | BLOCKED_ON_ACCEPTANCE |
 | 73 | P6-02 | MemoryRecord：来源、置信度、TTL、范围、用途与冲突 | L1_CONTRACT | UNASSIGNED_UNTIL_APPROVAL | P0-06, P6-01 | W5 | NOT_RUN | N/A | NOT_RUN | GREEN | d4034a8f4caff428b70dd2d047756be97e62ef62 | PENDING | NOT_RUN |
 | 74 | P6-03 | Memory Proposal、验证、合并、遗忘与导出 | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P2-05, P2-12, P6-02 | W8 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
 | 75 | P6-04 | Context Graph 与 Retrieval Planner | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P6-01, P6-09 | W11 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
