@@ -7558,6 +7558,12 @@ None appears in `docs/config-catalog.md` except as a bare name under "Library pa
 
 **What this does NOT claim.** Not that any of the five Configs fails to validate — each schema validates real input at its own plugin's construction, catalogued or not. This is documentation coverage. Not that all five gaps are equally consequential either: `dsh-execution-world`'s shipped row overrides no field today, so no deployment is currently setting it away from its default — the catalog gap still hides from an operator that the surface exists.
 
+**[2026-09-19 correction, delegate-1c B-229, from lane A's exhaustive scan: five packages, SIX faces.** The table above lists one face per package, and `@deepseek-ai/dsh-execution-world` has two. Its second is the `./local` subpath, mounted at `packages/bundle/base/cordis.patch.yml:257-258` as `@deepseek-ai/dsh-execution-world/local`, whose Config is at `packages/execution/execution-world/src/local.ts:35` with `apply` at `:44`. Verified here against the tree: `./local` is a declared `exports` subpath and that row is live.
+
+**It is a new SHAPE, not another instance of (b), and the closing condition needs a fourth fixture.** Every entry in the table is a CLASS carrying its schema — `static Config`, or `dsh-retry`'s alias onto one. `local.ts` has no class at all: it is a module-level `export const Config = z.object(…)` beside an exported `apply` function. A generator taught to read every `exports` subpath would reach this file, `applyExport` would match the function, and `findSchemaExpr` would look for a `static Config` on a class that does not exist and find nothing. So the closing condition's fixture list gains a fourth: **a functional plugin at a subpath, whose schema is a module-level const**.
+
+The scan was exhaustive and found no seventh face. That is the scan's claim, recorded as such — it is the same kind of negative this program has had to retract before, and it is only as strong as the matcher behind it.]
+
 ### BLOCKED-278 — P0-06's bidirectional-or-irreversible obligation quantifies over an empty set
 
 **Status:** OPEN (2026-09-19). Owner: the first epic to land a real non-identity schema migration, per the coverage note's own transfer.
@@ -7623,6 +7629,35 @@ None appears in `docs/config-catalog.md` except as a bare name under "Library pa
 **Closing condition.** `drainSettlements`' dead-letter branch reports through a sink an operator or a later reconciler can reach — at minimum a session event on the PARENT, so a later read of that session distinguishes "permanently undeliverable" from "still pending" and from "delivered" — before P4-06's next acceptance closes.
 
 **What this does NOT claim.** **P4-06 was withdrawn on 2026-09-19**; this joins the evidence its RE-ACCEPTANCE must carry and is not a new reason for that withdrawal, which rests on its own separately recorded grounds. Nor that the outbox is broken: its transactional commit half is real, and this is one terminal state's total silence inside an otherwise working mechanism.
+
+### BLOCKED-287 — coverage closure ran only at acceptance, so a citation edited afterwards was checked by nothing
+
+**Status:** CLOSED by `3293fb7c31` (2026-09-19). Owner lane B. Recorded because the two defects it found are the argument for the fix.
+
+**How it was found.** `--check` was run on a coverage change and passed. It also passed with one of that change's cited titles corrupted by a single character. `checkCoverageClosure` has exactly two callers: `--accept`, and the unit spec. `--check` validated the ledger header, the EXEC-STATE digests and this file's schema, and nothing else.
+
+**A row is accepted once.** Citations get ADDED after acceptance as a matter of routine — a note that says "the citation is added once it is observed" is discharged months later, which is how P5-11's multi-process half landed. Every one of those edits was unchecked, permanently, because the row will never be accepted again.
+
+**Two ACCEPTED rows were in that state, both from edits made the same day.** P4-07 acceptance[0] cited two titles without the `supplementSeq` that says which observation holds them, so closure resolved them against a different GREEN cell that does not list them. P4-11 acceptance[2] cited a title in the `describe`-prefixed spelling a vitest report prints, while the freeze and the ledger store the bare one. Both fixed in `871bb95d97`; neither was missing evidence.
+
+**Closed by.** `--check` now re-runs closure for every ACCEPTED row and refuses an absent coverage artifact rather than skipping it, with four negative controls each failing precisely. It reaches CI through `first100:verify-ledger-digests`, already in `REGISTRY_GATES`, so no gate was added — that gate simply decided less than its callers believed.
+
+**Residue, small and named.** With no ACCEPTED row AND no coverage file, the success line still says "conforms to its schema" about a file that is not there. It cannot mislead about closure, which reports 0 truthfully in that case, and it is worth one line of the next commit that touches the function.
+
+### BLOCKED-286 — P2-04's C supplement is frozen and live, and the ledger has never recorded observing it
+
+**Status:** OPEN (2026-09-19). Owner lane B. Measured by lane A
+(`artifacts/laneA/p2-04-c1-post-acceptance-refreeze.md`) and confirmed here on this tip.
+
+**The gap, stated exactly.** `command-freeze.json` carries a LIVE `P2-04` `C` entry with `supplementSeq: 1` and 46 expected cases. `spec/first100/exec/ledger.json`'s `P2-04` row carries supplements `P.3`, `U.1` and `U.2` — **there is no `C.1` key**. So a live freeze entry has no observation recorded against it, on a row that is ACCEPTED with all four cells GREEN.
+
+**It came from a re-freeze after acceptance.** On 2026-09-15 `2cb75a1d936` re-froze the entry by `fullName`, changing 1 of the 46 titles and leaving the set strong-weak equivalent. The freeze moved; the ledger was not written; nothing reads the pair. The 46 cases all passed in run 35442684939's report, so the evidence exists and has simply never been recorded.
+
+**Nine of the ten originally suspected were false.** Lane A's first pass reported ten "frozen but unrecorded" places; nine were key-name changes read through the wrong spelling. **This is the one real gap**, and BLOCKED-282 — opened on a `{}` reading that came from indexing a flat supplement key as if it were nested — was voided rather than repurposed.
+
+**This is not a closure failure and BLOCKED-287's new gate does not see it.** Closure checks that every cited title resolves; this entry is about a frozen observation nothing cites and nothing records. The two are different questions and a green `--check` says nothing about this one.
+
+**Closing condition.** `generate-ledger.mjs --supplement --epic P2-04 --stage C --supplement-seq 1` recorded from a report covering the tip; the same commit marks this entry CLOSED and appends the reading it closed on. It is not removed — line 7 of this file says an entry is never edited or removed except to append its answer, and all eight CLOSED entries here are kept as the record of what was once open.
 
 ### BLOCKED-285 — two real-launcher tests assert that a tool RUNS on `sdk-minimal`, and no pipeline here has run either since the code beneath them changed
 
