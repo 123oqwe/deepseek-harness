@@ -1441,7 +1441,12 @@ export default class RunPlugin extends Service {
       // there is no order to rely on either. Left alone, every boot leaked a
       // non-terminal Run and a held lease: the next boot enumerated a Run it
       // could not acquire, and `listNonTerminal` grew once per boot forever.
-      // The lease is NOT handed back — see `pauseRun` and BLOCKED-197.
+      // The lease IS handed back, as `pauseRun`'s first act and before it
+      // awaits anything (BLOCKED-197): an unloaded host asserts ownership of
+      // nothing, and holding the item would make the next boot wait out an
+      // expiry for work nobody is doing. This sentence said the opposite
+      // until 2026-09-19, and a test built on it modelled a crash with a
+      // clean unload and left no lease row at all.
       //
       // `paused` and not a terminal state, which is the whole decision. A run
       // that was half-way through when the operator closed the app did not

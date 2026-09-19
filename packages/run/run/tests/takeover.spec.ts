@@ -10,10 +10,10 @@
  *
  * Every case here uses ONE durable lease store across two mounts, which is
  * what a restart is: the second context is a different process's worth of
- * state over the same rows. The predecessor's lease is made to lapse through
- * the clock parameters the store already takes — `leaseMs` on the first mount
- * and the instant the second mount judges expiry against — rather than by
- * waiting.
+ * state over the same rows. The predecessor's residue is WRITTEN, by
+ * `crashResidue` below, rather than produced by disposing the first host: a
+ * clean unload hands the lease back, so it leaves no predecessor to adopt.
+ * No case here waits on a clock.
  *
  * What is observed is `agent.lifecycle`, the same exit
  * `tests/fenced-dispatch.spec.ts` asserts against: the state, and the epoch
@@ -79,15 +79,49 @@ async function host(leases: string, runs: string, leaseMs: number): Promise<Cont
   return ctx
 }
 
+/**
+ * Leave on the shared store what a CRASHED host leaves, and nothing else.
+ *
+ * **A clean unload is not a crash, and this file's cases are about a crash.**
+ * `fiber.dispose()` runs `pauseRun`, whose FIRST act is
+ * `leaseStore.release(lease.token)` -- deliberately, and whatever state the
+ * Run is in (`run/src/index.ts:1249-1266`), so the next boot does not wait out
+ * the expiry of an item nobody is doing. Disposing the first host therefore
+ * leaves NO lease row at all, and the lapsed predecessor these cases are about
+ * never existed: measured in run 35440317116, where case one's own diagnostic
+ * reported `no lease row`. The case had been passing on a free item.
+ *
+ * Nor can the residue be produced by leaving the first host mounted: `open`
+ * starts a renewal timer for every Run it opens (`run/src/index.ts:918`), at
+ * `leaseMs / LEASE_RENEWAL_DIVISOR`, so whether the row is live or lapsed when
+ * the second host reads it would be a race with `setInterval`.
+ *
+ * So the residue is written here, explicitly: a row held by a worker that is
+ * gone, whose term ended before this host's clock reading. That is what a
+ * killed process leaves behind -- a lease it never handed back and never
+ * renewed again.
+ * @param ctx - the second host, mounted over the same durable lease directory.
+ * @param session - the session whose work item the dead host held.
+ */
+function crashResidue(ctx: Context, session: SessionId): void {
+  const result = ctx.leaseStore.acquire(
+    brandString<WorkItemId>(String(session)),
+    brandString<WorkerId>('crashed-host'),
+    Date.now() - 10_000,
+    1,
+  )
+  expect(result.acquired, `the crash residue must actually be written: ${JSON.stringify(result)}`).toBe(true)
+}
+
 describe('P4-05 acceptance[2]: adopting a Run whose holder lapsed', () => {
   it('walks the adopted Run through orphaned under a new epoch, rather than opening it as queued', async () => {
     const leases = await directory('dsh-takeover-leases-')
     const runs = await directory('dsh-takeover-runs-')
     const session = SessionId('adopted-session')
 
-    // The first host takes the item and does NOT release it: its lease is
-    // written with a term so short that the second host's clock reading is
-    // already past it, which is a lapse rather than a handover.
+    // `leaseMs: 1` is kept for what it still does -- it makes the first host's
+    // own lease lapse immediately -- but it is NOT what leaves the predecessor
+    // row behind: the dispose below hands that row back. See `crashResidue`.
     const first = await host(leases, runs, 1)
     const held = await first.agentLoop.create(session)
     expect(held.lifecycle?.state).toBe('queued')
@@ -96,6 +130,7 @@ describe('P4-05 acceptance[2]: adopting a Run whose holder lapsed', () => {
     await first.fiber.dispose()
 
     const second = await host(leases, runs, 30_000)
+    crashResidue(second, session)
     // Read BEFORE the takeover overwrites the row, and carried into the
     // messages below: when this case fails, "what did the second host see"
     // must be in the failure rather than in a rerun.
@@ -139,6 +174,7 @@ describe('P4-05 acceptance[2]: adopting a Run whose holder lapsed', () => {
     await first.fiber.dispose()
 
     const second = await host(leases, runs, 30_000)
+    crashResidue(second, session)
     await second.agentLoop.create(session)
     // Read from the store rather than from either agent: the item's current
     // authority is what the fencing rule compares against, and it has moved.
@@ -164,6 +200,7 @@ describe('P4-05 acceptance[2]: adopting a Run whose holder lapsed', () => {
 
     let executed = 0
     const second = await host(leases, runs, 30_000)
+    crashResidue(second, session)
     second.tools.register(defineContentToolFixture({
       name: 'noop',
       description: 'records that it ran',

@@ -629,6 +629,19 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
           ...exec.capabilityToken === undefined ? {} : { capabilityToken: exec.capabilityToken },
         }
         type DispatchOutcome = { isError: true; message: string } | { isError: false; value: JsonValue }
+        // Set when THIS call's own refusal is what ends the run. The guard
+        // below discards a result that arrived from a run already over, which
+        // is right for an outer cancel and wrong for a refusal: there the
+        // ending and the result are the same event, and discarding the result
+        // replaces the shared refusal sentence with this file's private one.
+        //
+        // A mutable holder and not a bare `let`: the only write is inside the
+        // dispatch callback, which is a nested function, so flow analysis
+        // keeps the `false` it was initialised with and reads the guard's own
+        // condition as dead code -- `no-unnecessary-condition` says exactly
+        // that. A property read after an `await` is re-widened, so the guard
+        // asks the question it means to ask.
+        const ending = { byOwnRefusal: false }
         const scheduler = registry[TOOL_RUNTIME_SCHEDULER]
         const outcome = await new Promise<DispatchOutcome>((resolve, reject) => {
           // Set by the dispatch stage (or start() for a pre-settled result): what commit() finalizes in submission order.
@@ -740,13 +753,15 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
               if (dispatchRefusal !== undefined) {
                 reservation = undefined
                 this.settled = true
-                // SETTLE BEFORE ABORT, and the order is the whole point.
-                // Aborting first let the run controller's own rejection —
-                // `run_code run is over (…)` — win the race to this sub-call's
-                // promise, so the program read a PTC-private sentence while the
-                // native path's caller read the shared refusal. Both paths must
-                // report a stop in the same words, and that word comes from
-                // `refusedDispatchResult`; settling first is what delivers it.
+                // SETTLE BEFORE ABORT, and claim the ending as this call's.
+                // Ordering alone was NOT enough, measured in run 35440317116:
+                // `settle` only RESOLVES the promise, so the binding's
+                // continuation runs a microtask later — by which time the
+                // synchronous `abort` below has already made `runOver()` true,
+                // and the post-await guard threw `… result discarded` over the
+                // refusal this line just delivered. The flag tells that guard
+                // this ending is not an unrelated cancel.
+                ending.byOwnRefusal = true
                 settle(refusedDispatchResult(dispatchRefusal, name))
                 // THEN the script ends, which is a different fact: a program
                 // whose next action was refused must not go on issuing more of
@@ -875,8 +890,12 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
         })
         // A budget expiry or outer cancel that occurs while this call was in
         // flight already aborted the dispatch; stop the program now rather
-        // than hand it a result from a run that is over.
-        if (runOver()) {
+        // than hand it a result from a run that is over. A refusal this call
+        // itself produced is the exception, and the only one: the run ended
+        // BECAUSE of this outcome, so the outcome is what the program must be
+        // told. Every LATER dispatch still meets the pre-dispatch guard above
+        // and reads `run is over`, so the program is stopped either way.
+        if (runOver() && !ending.byOwnRefusal) {
           throw new Error(`run_code run is over (${String(runController.signal.reason)}); ${name} result discarded`)
         }
         // The worker turns a binding rejection into ToolCallError and adds
