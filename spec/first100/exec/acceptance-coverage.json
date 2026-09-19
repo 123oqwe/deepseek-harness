@@ -2069,9 +2069,24 @@
           "stage": "U",
           "title": "P5-11: a delegated child IS a task on the board REFUSES a second worker while the child is running, and ADMITS one after it settles (acceptance[0], §12.29-1)",
           "supplementSeq": 2
+        },
+        {
+          "stage": "U",
+          "title": "admits exactly one of two processes claiming the same task",
+          "supplementSeq": 3
+        },
+        {
+          "stage": "U",
+          "title": "keeps the claim after the claiming process is gone, so a lease can lapse rather than vanish",
+          "supplementSeq": 3
+        },
+        {
+          "stage": "U",
+          "title": "lets a new worker claim once the lease lapsed, at a GREATER attempt",
+          "supplementSeq": 3
         }
       ],
-      "note": "acceptance[0]: 'concurrent claims across processes produce exactly one winner.' Covered at two levels, and the SCOPE LIMIT is stated rather than implied: the decision level proves the rule, and the store level proves the rule is applied without an interleaving point -- read-decide-write with no suspension between them. That makes single-winner true WITHIN ONE PROCESS. Genuine cross-process atomicity needs the backing store to serialize the read and the write, which the in-memory board cannot do and which validation[0]'s 100-worker stress -- run sequentially against a pure function -- could not have shown either way. The clause says 多进程, and that half is now real rather than deferred: `@deepseek-ai/dsh-taskboard-sqlite` serializes the read-decide-write inside one `BEGIN IMMEDIATE` transaction, so two PROCESSES reaching a claim together cannot both be told they hold it, and the U-stage case contends over a row a real delegation wrote rather than one the case built to be contended (§12.25, §12.27-1). The in-memory board's single-process limit is unchanged and is now a stated property of that provider rather than a gap in the clause. The U citation moves from the superseded U.1 title to U.2's (§12.29-1): the supplement was superseded when the claim gained a release, so the case now asserts both halves — a second worker is refused while the child runs AND admitted after it settles. Citing the old title would point at a case no live entry freezes.\n\n**The MULTI-PROCESS half of this clause is not among the citations above, and none of them supplies it.** The strongest one, `leaves exactly one admitted holder after a hundred contending workers`, is a loop of 100 sequential calls to the pure `decideClaim` — its own comment says so (`taskboard/tests/claims.e2e.spec.ts:69`: \"validation[0]'s 100-worker stress, SEQUENTIALLY\"). A hundred sequential calls are not two concurrent processes, and the clause's subject is the second thing. The evidence for it does exist and passes — `packages/run/taskboard-sqlite/tests/taskboard-sqlite.spec.ts` spawns two real node child processes and races them at one task — but it was frozen by nothing until P5-11.U.3, so it was never CI-observed and never counted here. **That supplement carries the multi-process half and its citation is added once it is observed**, since closure treats every citation as necessary and a frozen-but-unobserved title would turn this index red."
+      "note": "acceptance[0]: 'concurrent claims across processes produce exactly one winner.' Covered at two levels, and the SCOPE LIMIT is stated rather than implied: the decision level proves the rule, and the store level proves the rule is applied without an interleaving point -- read-decide-write with no suspension between them. That makes single-winner true WITHIN ONE PROCESS. Genuine cross-process atomicity needs the backing store to serialize the read and the write, which the in-memory board cannot do and which validation[0]'s 100-worker stress -- run sequentially against a pure function -- could not have shown either way. The clause says 多进程, and that half is now real rather than deferred: `@deepseek-ai/dsh-taskboard-sqlite` serializes the read-decide-write inside one `BEGIN IMMEDIATE` transaction, so two PROCESSES reaching a claim together cannot both be told they hold it, and the U-stage case contends over a row a real delegation wrote rather than one the case built to be contended (§12.25, §12.27-1). The in-memory board's single-process limit is unchanged and is now a stated property of that provider rather than a gap in the clause. The U citation moves from the superseded U.1 title to U.2's (§12.29-1): the supplement was superseded when the claim gained a release, so the case now asserts both halves — a second worker is refused while the child runs AND admitted after it settles. Citing the old title would point at a case no live entry freezes.\n\n**The MULTI-PROCESS half of this clause is not among the citations above, and none of them supplies it.** The strongest one, `leaves exactly one admitted holder after a hundred contending workers`, is a loop of 100 sequential calls to the pure `decideClaim` — its own comment says so (`taskboard/tests/claims.e2e.spec.ts:69`: \"validation[0]'s 100-worker stress, SEQUENTIALLY\"). A hundred sequential calls are not two concurrent processes, and the clause's subject is the second thing. The evidence for it does exist and passes — `packages/run/taskboard-sqlite/tests/taskboard-sqlite.spec.ts` spawns two real node child processes and races them at one task — but it was frozen by nothing until P5-11.U.3, so it was never CI-observed and never counted here. **That supplement carries the multi-process half and its citation is added once it is observed**, since closure treats every citation as necessary and a frozen-but-unobserved title would turn this index red.\n\n[2026-09-19 lane B, delegate-1c B-222: the paragraph above ends by promising that the multi-process half's citation is added once it is observed. It has been observed. `U.3` is GREEN at run 34660413109, and three of its titles are now cited above. `admits exactly one of two processes claiming the same task` spawns two real node child processes and races them at one task; the other two carry the claim across a process that is GONE, so a lease lapses rather than vanishing, and hand the task to a new worker at a greater attempt. The clause's subject -- 多进程 -- now has a citation whose subject is also two processes, which no earlier one had: the strongest of those, `leaves exactly one admitted holder after a hundred contending workers`, is a hundred SEQUENTIAL calls to a pure function and says so in its own comment. Nothing else in this entry changes -- the in-memory board's single-process limit stated above is a property of that provider, and the sqlite provider is where the cross-process half lives.]"
     },
     {
       "epic": "P5-11",
@@ -2096,9 +2111,14 @@
         {
           "stage": "U",
           "title": "refuses a receipt for an unknown task"
+        },
+        {
+          "stage": "U",
+          "title": "REFUSES a receipt from the lapsed holder after a reclaim",
+          "supplementSeq": 3
         }
       ],
-      "note": "acceptance[1]: 'when the model does not update a task by hand, the runtime advances it from receipts.' The advance is driven entirely by evidence -- applyReceipt moves claimed to submitted to verified with nothing model-facing involved. Every rule protecting a claim protects the receipt too: it must come from the current owner at the current attempt and name a legal transition. The stale-attempt case carries the substance -- a worker whose claim lapsed can still finish and report, and accepting that report would overwrite the new holder's task with the old holder's result, which is exactly why receipts carry an attempt at all."
+      "note": "acceptance[1]: 'when the model does not update a task by hand, the runtime advances it from receipts.' The advance is driven entirely by evidence -- applyReceipt moves claimed to submitted to verified with nothing model-facing involved. Every rule protecting a claim protects the receipt too: it must come from the current owner at the current attempt and name a legal transition. The stale-attempt case carries the substance -- a worker whose claim lapsed can still finish and report, and accepting that report would overwrite the new holder's task with the old holder's result, which is exactly why receipts carry an attempt at all.\n\n[2026-09-19 lane B, delegate-1c B-222: `REFUSES a receipt from the lapsed holder after a reclaim` (`U.3`, GREEN at run 34660413109) is added above. It sits under this clause rather than acceptance[0] for the reason this note already gives -- every rule protecting a claim protects the receipt too -- so the rule it exercises is the receipt rule, and it is the cross-process form of the citation called the substance-carrying one above, `refuses a receipt from a STALE attempt, so a reclaimed task is not overwritten`. What it adds to that one is the lapsed holder being a real separate PROCESS whose claim expired, rather than a stale attempt number constructed inside a single one.]"
     },
     {
       "epic": "P5-11",
@@ -2127,9 +2147,14 @@
         {
           "stage": "F",
           "title": "fault boundary 18 a diamond is accepted: a shared dependency is not a cycle"
+        },
+        {
+          "stage": "U",
+          "title": "refuses a cycle that closes across two separately-valid submissions",
+          "supplementSeq": 3
         }
       ],
-      "note": "acceptance[2]: 'a cyclic dependency is refused at submission.' Refused when the graph is submitted rather than discovered when a claim deadlocks -- a cycle found at claim time presents as 'nothing is claimable', indistinguishable from a board whose dependencies are merely unfinished, so an operator would wait instead of fixing it. The store-level case checks that a refused submission stores NOTHING, since a partially-stored graph would let a later claim reach a task the board declined. The diamond cases are the necessary counterweight: a validator refusing every re-encountered node would pass every cycle test and reject legitimate shared dependencies."
+      "note": "acceptance[2]: 'a cyclic dependency is refused at submission.' Refused when the graph is submitted rather than discovered when a claim deadlocks -- a cycle found at claim time presents as 'nothing is claimable', indistinguishable from a board whose dependencies are merely unfinished, so an operator would wait instead of fixing it. The store-level case checks that a refused submission stores NOTHING, since a partially-stored graph would let a later claim reach a task the board declined. The diamond cases are the necessary counterweight: a validator refusing every re-encountered node would pass every cycle test and reject legitimate shared dependencies.\n\n[2026-09-19 lane B, delegate-1c B-222: `refuses a cycle that closes across two separately-valid submissions` (`U.3`, GREEN at run 34660413109) is added above. Every citation preceding it refuses a cycle contained in ONE submission, which a validator can answer from the batch in hand. This one closes the cycle across two submissions that are each acyclic alone, so refusing it requires validating against what is ALREADY stored -- the property the live P-stage entry states as `validates each submission against tasks ALREADY stored, not the batch alone`, exercised here through a real store rather than a decision function.]"
     },
     {
       "epic": "P1-02",
