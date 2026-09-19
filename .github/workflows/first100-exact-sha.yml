@@ -731,6 +731,19 @@ jobs:
           ref: ${{ steps.sha.outputs.sha }}
           persist-credentials: false
 
+      # The step above REQUESTED a SHA; this one is what makes the artifact
+      # placeable. The job already refuses to guess a candidate, for the reason
+      # its own comment gives -- a refresh that rewrote fixtures from somewhere
+      # else hands back an artifact nobody can place -- and that guarantee is
+      # only as good as the checkout actually landing where it was told.
+      - name: Verify checkout landed on the requested SHA
+        run: |
+          actual=$(git rev-parse HEAD)
+          if [ "$actual" != "${{ steps.sha.outputs.sha }}" ]; then
+            echo "::error::checked out $actual, requested ${{ steps.sha.outputs.sha }}"
+            exit 1
+          fi
+
       - uses: pnpm/action-setup@v4
 
       - uses: actions/setup-node@v6
@@ -740,6 +753,35 @@ jobs:
 
       - name: Install (immutable)
         run: pnpm install --frozen-lockfile
+
+      # The recording host had one and this host must too. Without it
+      # `dsh-sandbox-local` refuses to run a confined command -- the right
+      # product behaviour -- and the sandboxed-bash scenarios record that
+      # refusal AS THE FIXTURE. Run 35467913630 did exactly that to
+      # `snapshots/sdk/bash-tool`: the tool result came back as `Error: sandbox
+      # mode "workspace-write" is requested but no sandbox backend`, and a
+      # reviewer applying that patch would have committed it.
+      #
+      # After `Install (immutable)` for the gate job's reason: the probe runs
+      # through tsx from node_modules, so running it earlier fails on a missing
+      # dependency and reports that as a sandbox-capability failure.
+      - name: Install a sandbox backend (bubblewrap)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bubblewrap
+          if sysctl kernel.apparmor_restrict_unprivileged_userns >/dev/null 2>&1; then
+            echo "AppArmor userns restriction present; lifting it for this runner"
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          else
+            echo "no kernel.apparmor_restrict_unprivileged_userns on this kernel; leaving sysctls alone"
+          fi
+          pnpm exec tsx scripts/probe-sandbox-backend.ts
+
+      # The gate job's reason for this step applies here word for word: "these
+      # steps call vitest directly, so the build has to precede the first of
+      # them". The refresh calls vitest directly too.
+      - name: Build the host native-system addon
+        run: pnpm run build:native-system
 
       # The same build the gate job runs before ITS recorded-session step, and
       # for the same reason: `snapshots/**` scenarios load generated host
@@ -842,6 +884,36 @@ jobs:
             echo "snapshot-refresh: the skipped record leaked into fixtures.patch; the add-exclusion above is not holding" >&2
             exit 1
           fi
+
+      # The channel's self-check, and it is deliberately a step of its own so
+      # its verdict is not buried in the collection.
+      #
+      # On a tree whose corpora are already current the refresh should rewrite
+      # nothing but clocks. Anything else means this host differed from the one
+      # that recorded, and the patch must not be applied -- run 35467913630 is
+      # the case it exists for, where a missing sandbox backend rewrote two
+      # fixtures' tool results into an error string.
+      #
+      # `if: always()` so a failed refresh still gets classified, and it runs
+      # AFTER the collection so the artifact carries the report either way.
+      # Clock drift is reported and does not fail: whether the writer oracles
+      # should be carrying wall clocks at all is a separate question, and this
+      # step must not quietly decide it.
+      #
+      # A RE-RECORD round is red here by design. A refresh that follows a real
+      # product change rewrites payloads on purpose, and this step cannot tell
+      # that from a host mismatch -- it answers "did this host record what the
+      # last one did", asked of a tree that should already be current. On a
+      # re-record dispatch its red is the expected reading, not a blocker, and
+      # the reviewer reads `drift-report.txt` to see that every OTHER-column
+      # entry is one the change was meant to produce.
+      - name: Classify the refresh drift
+        if: always()
+        env:
+          OUT: ${{ runner.temp }}/refresh-out
+        run: |
+          pnpm exec tsx scripts/first100/refresh-drift-report.ts \
+            "$OUT/fixtures.patch" "$OUT/drift-report.txt"
 
       - name: Hand the refresh out
         if: always()
