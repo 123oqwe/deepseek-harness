@@ -1866,6 +1866,26 @@
         "overlay": "none",
         "expectedAt": "stage",
         "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate ruling 2026-09-19, the P3-10.P plan recorded in that entry’s 2026-09-19 addendum"
+      },
+      "P2-10.P/shadow": {
+        "epic": "P2-10",
+        "stage": "P",
+        "path": "packages/policy/policy-language/src/shadow.ts",
+        "reason": "BLOCKED-252 records that two of must[1]'s four halves — shadow evaluation and diff explain — are not built, and the package README says so in its own Known Limitations. What this stage adds is the vocabulary for both: pure functions over answers and compiled sets a caller already holds, which is why they belong beside `schema` / `parser` / `compiler` here rather than in the engine that produced those answers. They gain no caller on any shipped profile, and 252 stays open for that reason. A new file rather than more of `index.ts`: that file is the package's export surface, and the three siblings each own their own.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-252; delegate ruling 2026-09-19 (lane B inbox B-42): the two functions land in this package, and a new file inside a declared package is still an undeclared path"
+      },
+      "P2-10.P/shadow-spec": {
+        "epic": "P2-10",
+        "stage": "P",
+        "path": "packages/policy/policy-language/tests/shadow.spec.ts",
+        "reason": "The cases for the two new functions need a file of their own: P2-10's four cells are all frozen, and adding cases to a spec a frozen entry names would enlarge a cell that is already green — the shape §12 records as a cell that stopped meaning what it was observed to mean.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-252; delegate ruling 2026-09-19 (lane B inbox B-42): the two functions land in this package, and a new file inside a declared package is still an undeclared path"
       }
     }
   }

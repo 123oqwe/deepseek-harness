@@ -31,6 +31,7 @@ import { DSH_CONTEXT_KEYS } from './schema.ts'
 export * from './schema.ts'
 export * from './parser.ts'
 export * from './compiler.ts'
+export * from './shadow.ts'
 
 /** The settings namespace a deployment states its policy set in. */
 export const POLICY_SET_NAMESPACE = 'policy-set'
