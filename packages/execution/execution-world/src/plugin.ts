@@ -23,6 +23,7 @@ import type {
   WorldId,
   WorldProvider,
   WorldProviderId,
+  WorldResourcesSpec,
   WorldSpec,
   WorldSpecDigest,
 } from './types.ts'
@@ -41,6 +42,21 @@ export interface ExecutionWorldBinding {
   readonly provider: WorldProviderId
   /** Digest of the spec it was created from; what a policy compares confinement by. */
   readonly spec: WorldSpecDigest
+  /**
+   * The resource ceilings this world runs under (P3-10 R3): what a caller asks
+   * for when it needs to know "how much may this agent's world use", without
+   * holding a {@link WorldHandle} and without reading a provider's private
+   * table.
+   *
+   * Taken from the spec `bindingFor` already resolved, not read back from the
+   * provider: the provider was SELECTED for that spec, and a provider that
+   * could not satisfy it is refused rather than allowed to weaken it
+   * (acceptance[1]), so the resolved ceilings are the world's ceilings.
+   *
+   * `{}` means this deployment asked for none — the state of every world
+   * before a request could carry them.
+   */
+  readonly resources: WorldResourcesSpec
 }
 
 /**
@@ -64,6 +80,21 @@ export interface WorldRequest {
   readonly secrets?: WorldSpec['secrets']['posture']
   /** Wall-clock ceiling, in milliseconds; absent means the world outlives no clock. */
   readonly maxWallClockMs?: number
+  /**
+   * The resource ceilings this deployment asks its worlds to run under
+   * (P3-10 must[0]'s cpu, memory and disk dimensions).
+   *
+   * **Absent means no ceiling was asked for, which is what every world got
+   * before this field existed.** `resolveWorldSpec` wrote `resources: {}`
+   * unconditionally, so `WorldSpec.resources` was a declared shape with no way
+   * for a deployment to fill it: the three fields existed, the request did
+   * not carry them, and the config schema did not validate them. A binding
+   * reporting ceilings would have reported `{}` for every world.
+   *
+   * The keys are {@link WorldResourcesSpec}'s own, so a reader comparing a
+   * request against a spec compares one vocabulary with itself.
+   */
+  readonly resources?: WorldResourcesSpec
 }
 
 /**
@@ -138,7 +169,7 @@ export function resolveWorldSpec(
     ipc: { posture: request.ipc ?? 'unrestricted' },
     devices: { allowed: ['/dev/null'] },
     secrets: { posture: request.secrets ?? 'inherited' },
-    resources: {},
+    resources: request.resources ?? {},
     lifetime: {
       detached: false,
       ...request.maxWallClockMs === undefined ? {} : { maxWallClockMs: request.maxWallClockMs },
@@ -188,6 +219,21 @@ export default class ExecutionWorldService extends Service<Config> {
       spawn: z.boolean().default(true),
       ipc: z.union([z.const('none'), z.const('parent-only'), z.const('unrestricted')]).default('unrestricted'),
       secrets: z.union([z.const('none'), z.const('broker-only'), z.const('inherited')]).default('inherited'),
+      // Validated here and nowhere else, because a ceiling a deployment can
+      // state is exactly the kind of value AGENTS.md puts in a `Config` field
+      // rather than in a constant. Whole positive counts only: a fractional or
+      // zero ceiling is a misconfiguration, and it must fail at load rather
+      // than reach a provider that would have to guess what it meant.
+      //
+      // No defaults. An absent ceiling is "this deployment asked for none",
+      // which is what every world had before these fields existed, and a
+      // default would silently impose a limit nobody wrote.
+      maxWallClockMs: z.number().step(1).min(1),
+      resources: z.object({
+        cpuMillicores: z.number().step(1).min(1),
+        memoryBytes: z.number().step(1).min(1),
+        diskBytes: z.number().step(1).min(1),
+      }),
     }).default({
       network: 'unrestricted',
       spawn: true,
@@ -259,6 +305,7 @@ export default class ExecutionWorldService extends Service<Config> {
       world: handle.id,
       provider: handle.provider,
       spec: handle.spec,
+      resources: spec.resources,
     }
     this.bound.set(agent.id, binding)
     return binding

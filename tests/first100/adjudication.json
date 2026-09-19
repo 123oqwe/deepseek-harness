@@ -1977,6 +1977,16 @@
         "expectedAt": "stage",
         "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-258; delegate ruling 2026-09-19 (lane B inbox B-63)"
       },
+      "P3-10.P/world-resources-spec": {
+        "epic": "P3-10",
+        "stage": "P",
+        "path": "packages/execution/execution-world/tests/world-resources.spec.ts",
+        "reason": "The three cases R3 needs and the repository did not have: configured ceilings reach the binding, an unconfigured deployment reads `{}` rather than an invented default, and a ceiling that is not a whole positive count is refused at config validation rather than at a provider. New rather than added to `tests/registry.spec.ts`, whose cases are cited by P3-01's frozen cells.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate work order 2026-09-19 (artifacts/delegate/p3-10-p-workorder.md) R3; lane B inbox B-146/B-157"
+      },
       "P2-05.U/sdk-minimal-pep-spec": {
         "epic": "P2-05",
         "stage": "U",
