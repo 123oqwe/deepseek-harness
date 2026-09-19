@@ -2246,6 +2246,26 @@
         "overlay": "none",
         "expectedAt": "tree",
         "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-264; delegate ruling 2026-09-19 (lane B inbox B-97/B-103)"
+      },
+      "P2-05.U/sdk-minimal-pep-kernel-spec": {
+        "epic": "P2-05",
+        "stage": "U",
+        "path": "apps/cli/tests/sdk-minimal-pep-kernel.spec.ts",
+        "reason": "The first observation answered a narrower question than its name: `bootProductionProfile` never builds a Trust Kernel, and with none mounted `decideManifestedAction` returns before asking anything (`agent-loop/src/tool-calls.ts:755`), which ADMITS -- so \"the tool ran and no decision was taken\" was a property of a kernel-less composition, while the shipped launcher pins one unconditionally. This runs the other composition, reusing the first one's overlay, model and probe by path so the two records differ in exactly one variable.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-266; delegate ruling 2026-09-19 (lane B inbox B-175/B-179/B-180)"
+      },
+      "P2-05.U/sdk-minimal-pep-kernel-driver": {
+        "epic": "P2-05",
+        "stage": "U",
+        "path": "apps/cli/tests/fixtures/sdk-minimal-pep-kernel-driver.ts",
+        "reason": "The subprocess half of the kernel-pinned observation: the same boot with a `prepare` hook running the launcher's own two lines (`apps/cli/src/profile-boot.ts:575-577` and `:638`). It lives under `apps/cli` because that is the only package declaring both the loader-smoke harness and the trust-kernel and policy-enforcement packages, so it costs zero new dependency edges and touches no lockfile. Classified as a test-only subprocess driver in `scripts/verify-application-entrypoints.ts`, beside the fixture it twins.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-266; delegate ruling 2026-09-19 (lane B inbox B-175/B-179/B-180)"
       }
     }
   }

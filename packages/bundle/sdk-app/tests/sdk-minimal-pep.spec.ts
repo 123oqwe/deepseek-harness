@@ -51,6 +51,7 @@ interface RecordedDecision {
 /** Everything the driver recorded about the one tool call it drove. */
 interface Observation {
   readonly profile: string
+  readonly bootMethod: string
   readonly toolBodyRan: boolean
   readonly manifestEvents: number
   readonly decisions: readonly (RecordedDecision | null)[]
@@ -85,6 +86,11 @@ describe('P2-05 acceptance[0] / BLOCKED-266: one tool call on the shipped sdk-mi
 
     const observation = JSON.parse(raw) as Observation
     expect(observation.profile).toBe('sdk-minimal')
+    // This record is about the composition with NO kernel; its twin in
+    // `apps/cli/tests/` is about the pinned one, and the two must not be
+    // mistaken for each other when both appear in a run's log.
+    expect(observation.bootMethod).toBe('no-trust-kernel')
+    expect(observation.services.trustKernel, 'this case is the kernel-LESS half; a pinned kernel here means the wrong run was read').toBe(false)
     expect(typeof observation.toolBodyRan, 'the record must say whether the tool body ran').toBe('boolean')
     expect(typeof observation.manifestEvents).toBe('number')
     expect(Array.isArray(observation.decisions)).toBe(true)

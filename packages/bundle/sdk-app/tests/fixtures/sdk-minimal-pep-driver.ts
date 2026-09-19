@@ -73,6 +73,12 @@ try {
   })
   await writeFile('observation.json', `${JSON.stringify({
     profile: 'sdk-minimal',
+    // Names the composition this record is about, so a reader meeting one of
+    // the two records knows which it has without inferring it from the
+    // services map. The kernel-pinned twin lives in `apps/cli/tests/`, which
+    // is the only package declaring both the loader-smoke harness and the
+    // trust-kernel packages.
+    bootMethod: 'no-trust-kernel',
     toolBodyRan,
     manifestEvents: manifests.length,
     decisions,
