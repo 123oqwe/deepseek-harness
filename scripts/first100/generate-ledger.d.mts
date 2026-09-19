@@ -228,6 +228,7 @@ export interface AcceptPreflightResults {
   candidateTree: { missing: readonly { epic: string; text: string }[]; unreadable: readonly { epic: string; text: string }[] }
   adaptDispositions: { unrecorded: readonly { id: string; missing: readonly string[] }[] }
   missingFreezeFiles: readonly { label: string; path: string }[]
+  additionsMissing: readonly { where: string; path: string; expectedAt: string | undefined }[]
 }
 
 /**

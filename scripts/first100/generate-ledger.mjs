@@ -1607,7 +1607,7 @@ export function checkNoOpenFindings(row) {
  * it resolves every frozen title through vitest, which each green cell's own
  * observation already did for its titles.
  * @param epic - the epic id being accepted.
- * @param results - `makeVsUse` from `verify-make-vs-use.mjs`, `candidateTree` from `verify-freeze-in-candidate-tree.mjs`, `adaptDispositions` from `verify-adapt-dispositions.mjs`, and `missingFreezeFiles` from `verify-declared-files-exist.mjs`.
+ * @param results - `makeVsUse` from `verify-make-vs-use.mjs`, `candidateTree` from `verify-freeze-in-candidate-tree.mjs`, `adaptDispositions` from `verify-adapt-dispositions.mjs`, and `missingFreezeFiles` and `additionsMissing` from `verify-declared-files-exist.mjs`.
  * @returns one `{ gate, text }` per finding for this epic; empty when there is none.
  */
 export function acceptPreflightFindings(epic, results) {
@@ -1628,6 +1628,15 @@ export function acceptPreflightFindings(epic, results) {
   }
   for (const { label, path } of results.missingFreezeFiles) {
     if (label.split('.')[0] === epic) found.push({ gate: 'first100:verify-declared-files-exist', text: `${label} ${path} does not exist` })
+  }
+  // An approved addition with `expectedAt: "stage"` says this stage creates the
+  // file. Accepting the epic while it is absent would sign for work that
+  // produced nothing, so it refuses; a `tree` addition's absence says the
+  // record's premise about the existing tree is false, which --accept prints
+  // and does not refuse on (delegate ruling, 2026-09-18).
+  for (const { where, path, expectedAt } of results.additionsMissing) {
+    if (expectedAt !== 'stage' || where.split('.')[0] !== epic) continue
+    found.push({ gate: 'first100:verify-declared-files-exist', text: `${where} has an approved addition for ${path}, which this stage creates and did not` })
   }
   return found
 }
@@ -1719,19 +1728,23 @@ function cmdAccept() {
   // false, and a finding that should not block belongs in that gate's
   // held-back list with a reason.
   const exists = path => existsSync(join(REPO_ROOT, path))
+  const adjudication = loadJson(ADJUDICATION_PATH)
+  const { additionsMissing, declaredMissing, resolvedMissing } = missingAcceptedRegistryRefs(registry, new Set([epic]), exists, patchEntries(adjudication), new Set(), additionEntries(adjudication))
   const preflight = acceptPreflightFindings(epic, {
     makeVsUse: makeVsUseFindings(loadMakeVsUseInputs()),
     candidateTree: candidateTreeFindings(ledger.rows, freeze.entries.filter(entry => entry.supersededBy === undefined)),
     adaptDispositions: adaptDispositionFindings(loadAdaptDispositionInputs()),
     missingFreezeFiles: missingFreezeFiles(freeze.entries, exists, new Map()),
+    additionsMissing,
   })
   for (const { gate, text } of preflight) failures.push(`pre-flight gate ${gate} reports a finding for ${epic}:\n    ${text}`)
   // Registry paths are plan paths; their absence is printed for the reader and decides nothing.
-  const adjudication = loadJson(ADJUDICATION_PATH)
-  const { additionsMissing, declaredMissing, resolvedMissing } = missingAcceptedRegistryRefs(registry, new Set([epic]), exists, patchEntries(adjudication), new Set(), additionEntries(adjudication))
   for (const { where, path } of declaredMissing) console.log(`pre-flight (informational): ${where} declares ${path}, which does not exist`)
   for (const { where, path, absentApprovedPaths } of resolvedMissing) console.log(`pre-flight (informational): ${where} ${path} -> absent ${absentApprovedPaths.join(', ')}`)
-  for (const { where, path, expectedAt } of additionsMissing) console.log(`pre-flight (informational): ${where} has an approved addition for ${path}, which does not exist (expectedAt ${String(expectedAt)})`)
+  for (const { where, path, expectedAt } of additionsMissing) {
+    if (expectedAt === 'stage') continue // the pre-flight gate above refuses on it, and says so there.
+    console.log(`pre-flight (informational): ${where} has an approved addition for ${path}, which does not exist (expectedAt ${String(expectedAt)})`)
+  }
 
   if (failures.length > 0) {
     console.error(`BLOCKED: ${epic} fails ${failures.length} predicate(s):\n  ${failures.join('\n  ')}`)

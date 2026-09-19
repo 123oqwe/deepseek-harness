@@ -760,6 +760,7 @@ describe('acceptPreflightFindings (108: --accept reads the epic-state gates for 
     candidateTree: { missing: [] as { epic: string; text: string }[], unreadable: [] as { epic: string; text: string }[] },
     adaptDispositions: { unrecorded: [] as { id: string; missing: string[] }[] },
     missingFreezeFiles: [] as { label: string; path: string }[],
+    additionsMissing: [] as { where: string; path: string; expectedAt: string | undefined }[],
   })
 
   it('finds nothing when every gate is clean, so the pre-flight is a check and not a blanket block', () => {
@@ -800,6 +801,27 @@ describe('acceptPreflightFindings (108: --accept reads the epic-state gates for 
     results.candidateTree.missing.push({ epic: 'P9-98', text: 'P9-98.C: 1 live freeze entry/entries absent from 0123456789' })
     results.adaptDispositions.unrecorded.push({ id: 'P9-98', missing: ['no makeVsUse record at all'] })
     results.missingFreezeFiles.push({ label: 'P9-98.U', path: 'packages/demo/thing/src/gone.ts' })
+    expect(acceptPreflightFindings('P9-99', results)).toStrictEqual([])
+  })
+
+  it('refuses on an approved addition this stage was to create and did not', () => {
+    const results = clean()
+    results.additionsMissing.push({ where: 'P9-99.P', path: 'packages/demo/thing/tests/policy.spec.ts', expectedAt: 'stage' })
+    expect(acceptPreflightFindings('P9-99', results)).toStrictEqual([{
+      gate: 'first100:verify-declared-files-exist',
+      text: 'P9-99.P has an approved addition for packages/demo/thing/tests/policy.spec.ts, which this stage creates and did not',
+    }])
+  })
+
+  it('does not refuse on a tree addition, whose absence says something about the tree and is printed instead', () => {
+    const results = clean()
+    results.additionsMissing.push({ where: 'P9-99.U', path: 'packages/demo/thing/src/gone.ts', expectedAt: 'tree' })
+    expect(acceptPreflightFindings('P9-99', results)).toStrictEqual([])
+  })
+
+  it('does not refuse on another epic\'s stage addition', () => {
+    const results = clean()
+    results.additionsMissing.push({ where: 'P9-98.P', path: 'packages/demo/thing/tests/policy.spec.ts', expectedAt: 'stage' })
     expect(acceptPreflightFindings('P9-99', results)).toStrictEqual([])
   })
 
