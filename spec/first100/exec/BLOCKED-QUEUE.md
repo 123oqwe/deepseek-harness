@@ -1193,7 +1193,7 @@ The durable source is `ctx.sessionPersistence.load(childId)`, and it is **asynch
 
 ### BLOCKED-150 — P4-09's Usage needs a `workflow()` nesting hook that does not exist, and its own frozen case says so
 
-**Status: OPEN. Not built, because building it is a product feature and choosing to add one is not the executor's call.**
+**Status: CLOSED 2026-09-19.** The hook exists. **The original status line is kept as the material:** it read `OPEN. Not built, because building it is a product feature and choosing to add one is not the executor's call.` — and it was true when written. Measured at `32f1001ab2`: `packages/workflow/workflow-worker-thread/src/runtime.ts:116` binds `workflow` into the script globals beside `agent`, `parallel` and `pipeline`, and the nesting it starts is carried through its lifecycle — `host.ts:326` cancels nested runs with their parent, `host.ts:758` awaits a nested result and applies its failure policy. The product feature this entry declined to invent was built; the entry simply never heard. See [BLOCKED-100](#blocked-100), closed in the same commit for the same reason, and the `verify-acceptance-locks` gate queued to catch the class mechanically.
 
 Gate (u) reports P4-09.U and P4-09.U.1 as integration gaps (BLOCKED-147). Measured, all five of the epic's subjects have zero production callers, in code:
 
@@ -3897,7 +3897,15 @@ This is BLOCKED-098's family from the opposite side. There, a guard ran and had 
 
 ### BLOCKED-100 — P4-09 delivered half its title: `Detached` and `Nested` both have no implementation
 
-**Status: OPEN. P4-09 must NOT be accepted. Needs a maintainer decision, and one branch touches the byte-locked registry.**
+**Status: CLOSED 2026-09-19.** Both halves are implemented on paths a deployment runs; this entry was stale, and P4-09 is NOT withdrawn. **The original status line is kept as the material rather than deleted:** it read `OPEN. P4-09 must NOT be accepted. Needs a maintainer decision, and one branch touches the byte-locked registry.` — while the ledger read `ACCEPTED` / `APPROVED` with four GREEN cells and a 2026-09-10 `PASS`. A register sentence that outlived its finding is the same failure class as [BLOCKED-247](#blocked-247)'s, pointing the other way: there the record was right and the row was wrong; here the row is right and the record was wrong.
+
+**Measured at `32f1001ab2`, each half on the path it was said to lack.**
+
+- **Detached.** `packages/workflow/tool-workflow/src/index.ts:324-328`: `if (args.detached === true) { const detached = await ctx.workflowEngine.startDetached({ … })`, with its own comment naming 「P4-09 must[2], the start half」. The tool exposes it; the engine implements it.
+- **Nested, the binding.** `packages/workflow/workflow-worker-thread/src/runtime.ts:116`: `workflow: (nameOrRef, nestedArgs?) => this.contain(this.workflow(nameOrRef, nestedArgs))` — in the same `globals` table as `agent`, `parallel` and `pipeline`. A script can call it.
+- **Nested, the lifecycle.** `packages/workflow/workflow-worker-thread/src/host.ts:326-327` cancels every nested run with its parent (`:326` is the `cancelPropagationForNested()` test, `:327` the loop `for (const nested of this.nestedRuns) nested.cancel(this.cancelReason)`), and `:756` awaits a nested run's result with `:758` applying `applyChildFailure(nested.failurePolicy)` — so a nested failure reaches the parent under the declared policy rather than being dropped.
+
+**What this does NOT claim.** Not that P4-09's acceptance coverage for these two is sufficient — that is the coverage file's question. **One of its four notes was stale and this entry's first version said none were**, because that reading looked at each note's opening and not its end: `acceptance[3]`'s note still said 「`runtime.ts` installs no `workflow()` global, so a script cannot start one and nothing can violate the clause today」, which `runtime.ts:116` contradicts. It is corrected in the coverage file by a dated addendum in this same commit. `acceptance[1]`'s note was already self-corrected (「COVERED since U.2」). Not that the maintainer decision this entry once demanded was taken: it was overtaken, and nothing here touches the byte-locked registry. Not that every other `OPEN` entry's status line has been re-checked against the ledger; [BLOCKED-150](#blocked-150) is the other one found today, and a mechanical check for the class is queued as `verify-acceptance-locks`.
 
 P4-09 is titled *Detached、Saved、Versioned 与 Nested Workflow*. Four cells are green and their contents are sound — but two of the four `must` clauses have no subject at all, and they are the two the title names first and last.
 
