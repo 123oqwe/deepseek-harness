@@ -90,6 +90,7 @@ attestation 交给 kernel，而不在此处验证。`WorldAttestation` 是证据
 - 不发布 runtime invariant companion:本包不持有自己的状态,也不观测任何两个观测者可能分歧的东西——一个 world 的状态住在铸造了它 handle 的那个 provider 里。
 - **策略能读到 world 的身份,读不到它的维度。**`ExecutionWorldFact` 现在带有 `bound`,携带 world id、provider id 与约束摘要(BLOCKED-178 的生产方那一半),所以一条规则可以拒绝未知 world、或按摘要比较约束——但它无法问"网络是否被约束",因为九个维度并不跨进策略请求。把它们加进去是策略词汇的决定,不属本包。
 - **`restore` 以摘要相等比较约束，因此也会拒绝更"窄"的目标。** 实现的规则是"同一约束，否则拒绝"，而不是"可收窄"；一个在 `read-only` 下取的快照会被拒绝进入 `workspace-write` 的 world，尽管那并不放宽任何东西。收紧这一点需要一个对 `WorldSpec` 的偏序，而它尚不存在；选择保守方向，是因为它阻止的那个失败——把 `full-access` 的快照恢复进一个受约束的 world——是一次静默的提权。
+- **在出厂组合上声明上限,得到的是「没有 world」,而不是「一个受限的 world」。**部署现在可以设置 `request.resources`(`cpuMillicores`、`memoryBytes`、`diskBytes`),而出厂 profile 挂载的唯一 provider 对这三个**一律拒绝** —— 只要任一被设置,`localUnsatisfiableDimensions` 就把 `resources` 点名为无法满足,因为 sandbox 治理的只有文件副作用。所以在今天的出厂 bundle 上,配了上限就意味着 `bindingFor` 对每个 agent 都答 `undefined`,一个 world 都不会绑定。这是诚实的方向:把一个没有上限的 world 交给一个要求上限的部署,与「上限被遵守」长得一模一样。在能够执行上限的 provider 落地之前,**不要设置这个字段** —— 缺席的含义是「本部署没有要求上限」,而那正是这个字段可被填写之前每个 world 的状态。
 - **没有 provider 回报资源用量。** `WorldResourcesSpec` 陈述上限，而 `WorldOutcome` 不携带任何已消耗量，因此部署还无法对一个 world 计费或告警。结果形状就是将来添加它的地方，等某个 provider 真有数字可填。
 
 ### 开发备注

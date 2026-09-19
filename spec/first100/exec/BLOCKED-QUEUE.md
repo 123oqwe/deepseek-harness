@@ -7424,7 +7424,7 @@ So `acceptance[0]` and `acceptance[3]` are true of the fixtures and of no shippe
 
 ### BLOCKED-275 — P0-05's feature-gate mechanism has no declared gate on any shipped profile, and its expiry check had never run against this program's own candidates
 
-**Status:** OPEN (2026-09-19). Owner lane B for (b)'s wiring, which lands with this entry; (a)'s owner is the first epic to migrate a real capability behind a gate.
+**Status:** OPEN (2026-09-19) — **(b) is CLOSED, (a) is not.** The entry stays OPEN because (a) has no owner yet: it belongs to the first epic to migrate a real capability behind a gate. (b)'s wiring landed with this entry and was observed on 2026-09-19 (below).
 
 **The finding has two independent halves, and they are two different empty arrays in two different files.**
 
@@ -7440,7 +7440,9 @@ So `acceptance[0]` and `acceptance[3]` are true of the fixtures and of no shippe
 
 **`RELEASE_PUBLISH` is deliberately unset here.** `verifyPublishable` and `verifyTag` run only when it is `'true'` (`verify.ts:102-106`), and `verifyTag` refuses any ref that is not a `dsh-v*` tag naming a version the family carries. `first100-exact-sha.yml` checks out a branch SHA, so turning those on would refuse every candidate for a reason that has nothing to do with the candidate.
 
-**Closing condition.** (b) closes when the step is observed running on a candidate — it has never been executed on this machine, and this branch has no CI run containing it yet. (a) closes when the first epic migrating a real capability behind `FEATURE_GATE_DECLARATIONS` proves its `shadow`/`enforce` resolution reaches a shipped profile; not actioned now.
+**(b) closed 2026-09-19: the step ran on a candidate and passed.** Run 35442684939 executed `pnpm run release:verify --family dsh` on candidate `e893aebc23a5d2e71ae3e3d25be8213254ca2b0a` and it passed, resolving a publish order over **318 members**. That is exactly what the step was wired to prove — the gate executes against a SHA this program accepts, and it can fail, because `verifyVersions` and `publishOrder` both throw. It remains true that no expired gate was caught, because `RELEASE_GATE_FEATURE_GATES` is still `[]`: a check running over an empty set observes its own plumbing.
+
+**Closing condition for (a).** The first epic migrating a real capability behind `FEATURE_GATE_DECLARATIONS` proves its `shadow`/`enforce` resolution reaches a shipped profile; not actioned now. Its cost is stated above: doing so reddens both cases that currently freeze the empty sets.
 
 **What this does NOT claim.** Not that P0-05 must be withdrawn — its `nonGoals` scope it as a mechanism, and an empty declaration set is consistent with that scope. Not that adding the step makes P0-05's `acceptance[2]` observed: a check that runs over an empty set observes its own plumbing and nothing else.
 
