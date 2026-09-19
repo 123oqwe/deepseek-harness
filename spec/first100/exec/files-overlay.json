@@ -265,15 +265,6 @@
     },
     {
       "epic": "P1-03",
-      "path": "packages/plugin/plugin-lock/src/commit.ts",
-      "kind": "source",
-      "stages": [
-        "P"
-      ],
-      "reason": "The atomic commit path. must[0] requires the lock to be written durably; the registry named the decision functions and not the write."
-    },
-    {
-      "epic": "P1-03",
       "path": "packages/plugin/plugin-lock/src/gate.ts",
       "kind": "source",
       "stages": [

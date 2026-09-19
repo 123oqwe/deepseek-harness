@@ -1421,6 +1421,16 @@ adjudication:
         approvedAt: "2026-09-15"
         approvedBy: "first100-delegate-78"
         basis: "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070; spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-253"
+      P1-03-C-plugins-lock-runtime-artifact:
+        epic: "P1-03"
+        stage: "C"
+        declaredPath: ".dsh/plugins.lock.json"
+        approvedPath: "packages/plugin/plugin-lock/src/commit.ts"
+        kind: "substitution"
+        reason: "SUBSTITUTION. `.dsh/plugins.lock.json` is written at runtime and has never been committed: `git log --all -- '.dsh/plugins.lock.json'` is empty over the whole history, while the same directory's `.dsh/baseline.json` and `.dsh/rebase-report.json` ARE in the tree, so the difference is this artifact, not the directory. The deliverable is the code that produces it: `writeLockAtomically` (packages/plugin/plugin-lock/src/commit.ts:95, writing through `writeFileAtomic` at :103), whose name and location come from its caller `apps/cli/src/plugin.ts` (`LOCK_FILENAME` at :121, joined to the profile directory at :135 and :215). The caller is not a second approved path: it is already P1-03's own `files[]` entry, and a widening would keep the declared path a deliverable and leave both rows in declared-missing, which is the opposite of what this record is for. Recorded rather than deleted because P1-03 is ACCEPTED with four green cells: the declaration was satisfied by shipped behaviour, not abandoned. These are the last two declared-missing rows on this lineage, one at the epic and one at P1-03.C; with this patch the class is empty."
+        approvedAt: "2026-09-19"
+        approvedBy: "first100-delegate-f8"
+        basis: "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-253"
 remainingPending:
   sameWaveConflicts: 0
   unassignedOwners: 1
