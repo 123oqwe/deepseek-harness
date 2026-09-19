@@ -355,6 +355,13 @@
           "observedAtUtc": "2026-09-15T03:00:15Z",
           "outcome": "passed",
           "verifiedBy": "vitest-report.json artifact lists this case with status passed; that run had zero failures across both jobs (26543 total, 0 failed)"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35422509526",
+          "candidateSha": "962641a31e0b47fce3044e95033b843916c5c237",
+          "observedAtUtc": "2026-09-19T05:31:25Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact lists this case with status failed; the run's only failure (1 of 26775), and the only failing case in its own suite. Read from the run by the delegate (session first100-delegate-1c) and recorded here by lane B, whose checkout has no CI access"
         }
       ],
       "unrelatedNote": "Same-SHA divergence, which is BLOCKED-023 standard (b): both occurrences are on the identical literal candidate df85de5e631f948771ce2dfa0e26cb48231e362b, one failed and one passed, so the outcome is not determined by the tree. The failing run's message was `Error: STACK_TRACE_ERROR` at packages/session/session-persistence/tests/live-write-contract.ts:441 with one failing case in a 194-case suite — the isolated shape of a timing- or load-sensitive case, not the broad shape of a cascade. For contrast, this same case failed in run 34858606434 (candidate 1ec390a7844c6f40bc5b14fac7563e48cefbaabc) with `Cannot find module …/native/system/packages/linux-x64/bin/glibc/system.node` and 83 of 194 siblings failing — a native-addon build cascade, a DIFFERENT failure mode, and therefore NOT counted as an occurrence of this flake. The case exercises a batch larger than the engine's call-argument limit, i.e. it is by construction load-sensitive.",
