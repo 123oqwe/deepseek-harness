@@ -58,7 +58,16 @@ export interface ApprovedAddition {
   readonly expectedAt: 'tree' | 'stage'
   /** The ruling that approved the addition; an entry without one is refused. */
   readonly rulingRef: string
-  /** Present on a retired addition, saying what replaced it; `additionEntries` leaves such an addition out. */
+  /**
+   * Present on a retired addition, naming the entry of this block that took the
+   * file over; `additionEntries` leaves such an addition out and refuses a key
+   * no entry has, or the entry's own.
+   *
+   * Unlike {@link DeliverablePathPatch.supersededBy}, which carries reason
+   * prose: a patch describes what happened to a declared path, so prose is the
+   * whole record, while an addition records a file nobody declared and its
+   * retirement has to say who builds it now.
+   */
   readonly supersededBy?: string
 }
 

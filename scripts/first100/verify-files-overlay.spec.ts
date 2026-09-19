@@ -285,10 +285,12 @@ describe('declared paths through the deliverable-path patches, the one resolutio
 
 describe('approved additions, the fifth record class', () => {
   const path = 'packages/execution/execution-world/src/local-provider.ts'
-  const addition = (fields: Record<string, unknown> = {}) => ({
+  const fenced = 'packages/execution/execution-world/src/fenced-provider.ts'
+  const successor = { epic: 'P9-99', stage: 'P', path: fenced, reason: 'the stage builds this one instead', declaredBy: [], overlay: 'none', expectedAt: 'stage', rulingRef: 'delegate ruling, 2026-09-19' }
+  const addition = (fields: Record<string, unknown> = {}, siblings: Record<string, unknown> = {}) => ({
     approvedAdditions: { entries: { 'P9-99.P/provider': {
       epic: 'P9-99', stage: 'P', path, reason: 'the stage must change it', declaredBy: [], overlay: 'none', expectedAt: 'tree', rulingRef: 'delegate ruling, 2026-09-18', ...fields,
-    } } },
+    }, ...siblings } },
   } as unknown as Parameters<typeof additionEntries>[0])
   const epic = { id: 'P9-99', files: [{ path: 'packages/demo/thing/src/declared.ts' }], stages: { P: { files: ['packages/demo/thing/src/declared.ts'] } } }
 
@@ -327,8 +329,25 @@ describe('approved additions, the fifth record class', () => {
   })
 
   it('leaves a retired addition out of resolution but still refuses a malformed one', () => {
-    expect(additionEntries(addition({ supersededBy: 'the stage was cancelled' }))).toStrictEqual([])
+    expect(additionEntries(addition({ supersededBy: 'P9-99.P/fenced' }, { 'P9-99.P/fenced': successor })).map(entry => entry.path)).toStrictEqual([fenced])
     expect(() => additionEntries(addition({ supersededBy: '  ' }))).toThrow('must be a non-empty string')
+  })
+
+  it('refuses a supersededBy that names no entry of the block, so a retired file keeps somebody building it', () => {
+    expect(() => additionEntries(addition({ supersededBy: 'P9-99.P/fenced' }))).toThrow('P9-99.P/provider')
+    expect(() => additionEntries(addition({ supersededBy: 'P9-99.P/fenced' }))).toThrow('"P9-99.P/fenced" is not one of its keys')
+  })
+
+  it('refuses an entry that names ITSELF, which would retire it behind no successor', () => {
+    expect(() => additionEntries(addition({ supersededBy: 'P9-99.P/provider' }))).toThrow('names its own entry')
+  })
+
+  it('reads the keys from every entry, retired ones included, so a succession that ran twice still resolves', () => {
+    const chain = addition({ supersededBy: 'P9-99.P/fenced' }, {
+      'P9-99.P/fenced': { ...successor, supersededBy: 'P9-99.P/third' },
+      'P9-99.P/third': { ...successor, path: 'packages/execution/execution-world/src/third-provider.ts' },
+    })
+    expect(additionEntries(chain).map(entry => entry.path)).toStrictEqual(['packages/execution/execution-world/src/third-provider.ts'])
   })
 
   it('refuses an addition for a path the epic already declares, rather than doubling it', () => {

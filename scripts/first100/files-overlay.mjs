@@ -109,11 +109,21 @@ const ADDITION_STAGES = /^[CPUF](\.\d+)?$/u
  * path is one the tree already holds or one the stage will create, which is
  * the difference between a gate reporting its absence and expecting it. An entry with
  * `supersededBy` is validated and then left out, exactly as a retired patch is.
+ *
+ * `supersededBy` means something different here than on a patch. A patch's is
+ * reason prose; an addition's must NAME another entry of this block, because an
+ * addition records a file somebody still has to build, and retiring one without
+ * saying which entry took it over drops that file silently. The key set is
+ * every entry, retired ones included, so a succession that ran twice (A retired
+ * by B, B retired by C) still resolves; naming itself is refused, since that
+ * retires an entry behind no successor at all.
  * @param adjudication - the parsed `tests/first100/adjudication.json`.
  * @returns the live addition entries.
  */
 export function additionEntries(adjudication) {
-  return Object.entries(adjudication.approvedAdditions?.entries ?? {}).map(([key, addition]) => {
+  const entries = Object.entries(adjudication.approvedAdditions?.entries ?? {})
+  const keys = new Set(entries.map(([key]) => key))
+  return entries.map(([key, addition]) => {
     if (typeof addition.path !== 'string' || /\s|#/u.test(addition.path)) {
       throw new Error(`approvedAdditions.entries[${JSON.stringify(key)}].path must be one repository path, with no whitespace or # anchor: ${JSON.stringify(addition.path)}`)
     }
@@ -131,6 +141,12 @@ export function additionEntries(adjudication) {
     }
     if (addition.supersededBy !== undefined && (typeof addition.supersededBy !== 'string' || addition.supersededBy.trim() === '')) {
       throw new Error(`approvedAdditions.entries[${JSON.stringify(key)}].supersededBy must be a non-empty string saying what replaced it: ${JSON.stringify(addition.supersededBy)}`)
+    }
+    if (addition.supersededBy !== undefined && !keys.has(addition.supersededBy)) {
+      throw new Error(`approvedAdditions.entries[${JSON.stringify(key)}].supersededBy must name another entry in this block; ${JSON.stringify(addition.supersededBy)} is not one of its keys (the deliverable-path patches take reason prose instead — the two record classes differ)`)
+    }
+    if (addition.supersededBy === key) {
+      throw new Error(`approvedAdditions.entries[${JSON.stringify(key)}].supersededBy names its own entry, so the addition retires behind no successor`)
     }
     return { ...addition, epic: addition.epic ?? key }
   }).filter(addition => addition.supersededBy === undefined)
