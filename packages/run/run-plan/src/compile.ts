@@ -871,11 +871,7 @@ export function unmetSoftDemands(
  */
 export function minimalConflictSet(demands: readonly PlanDemand[], facts: DeploymentFacts): readonly Conflict[] {
   const ordered = sortedByKey(demands, demand => demand.id)
-  let kept = ordered
-  for (const candidate of ordered) {
-    const without = kept.filter(demand => demand.id !== candidate.id)
-    if (!satisfiable(without, facts)) kept = without
-  }
+  const kept = ordered
   return kept.map(demand => ({
     kind: demand.kind,
     requirementId: demand.id,
