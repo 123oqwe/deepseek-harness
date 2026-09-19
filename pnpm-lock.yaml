@@ -8616,18 +8616,27 @@ importers:
       '@deepseek-ai/dsh-execution-world':
         specifier: workspace:^
         version: link:../../execution/execution-world
+      '@deepseek-ai/dsh-llm':
+        specifier: workspace:^
+        version: link:../../llm/llm
       '@deepseek-ai/dsh-resource-budget':
         specifier: workspace:^
         version: link:../../execution/resource-budget
       '@deepseek-ai/dsh-run':
         specifier: workspace:^
         version: link:../run
+      '@deepseek-ai/dsh-session':
+        specifier: workspace:^
+        version: link:../../core/session
       '@deepseek-ai/dsh-task-profile':
         specifier: workspace:^
         version: link:../task-profile
       '@deepseek-ai/dsh-util-values':
         specifier: workspace:^
         version: link:../../util/values
+      ajv:
+        specifier: ^8.20.0
+        version: 8.20.0
 
   packages/run/task-profile:
     dependencies:
