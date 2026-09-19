@@ -36,6 +36,7 @@ export {
   assembleContextFor,
   emitAgentEvent,
   holdsDispatchSlot,
+  stopGateFor,
 } from './dispatch.ts'
 export type { AgentEventDispatch, AgentSubjectEvent } from './dispatch.ts'
 // P4-05's lifecycle types were internal until P4-07 became a real consumer:

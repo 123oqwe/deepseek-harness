@@ -20,7 +20,7 @@ import type { ActionId, CapabilityRef } from '@deepseek-ai/dsh-action-manifest'
 import type { Context } from '@deepseek-ai/cordis'
 import type { Principal } from '@deepseek-ai/dsh-principal'
 import { createSessionManifestAppender } from './manifest-log.ts'
-import { approvalBindingFor, classifyActionRisk, confirmExternalEffect, gateActionRisk, readExecutionWorldFact, readPolicyContextFacts, refusedApprovalResult, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect, verifyRecordedApproval } from './external-effect.ts'
+import { approvalBindingFor, classifyActionRisk, confirmExternalEffect, gateActionRisk, readExecutionWorldFact, readPolicyContextFacts, refuseNewAction, refusedApprovalResult, refusedDispatchResult, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect, verifyRecordedApproval } from './external-effect.ts'
 import type { ExternalEffectRecord } from './external-effect.ts'
 import { attachedIdentity } from '@deepseek-ai/dsh-session'
 import { defineTool, parameterSchemaSpecToJsonSchema } from './schema.ts'
@@ -726,6 +726,29 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
               // reservation: a claim on an effect the deployment will not
               // permit would leave a `sent` row for something that never
               // happened.
+              // P2-12 must[2] / P4-07 must[1]: asked PER DISPATCH, so a stop
+              // raised while this script is running refuses the sub-calls that
+              // have not started yet. First among the refusals, for the reason
+              // `advanceLeasedAgent` checks the stop first: it is about the
+              // whole harness rather than about this action. Before any
+              // reservation, so a refused call leaves no `sent` row -- and a
+              // call that already completed is untouched, because nothing on
+              // this branch reaches its ledger row.
+              const dispatchRefusal = exec.agent === undefined
+                ? undefined
+                : refuseNewAction(exec.agent, Date.now())
+              if (dispatchRefusal !== undefined) {
+                reservation = undefined
+                this.settled = true
+                // The SCRIPT ends too, and says why. A program whose next
+                // action was refused must not go on issuing more of them; the
+                // run controller's existing outlets report
+                // `run_code run is over (<reason>)` to every dispatch that has
+                // not started and to every result that arrives after.
+                runController.abort(`this host may take no new action (${dispatchRefusal})`)
+                settle(refusedDispatchResult(dispatchRefusal, name))
+                return
+              }
               if (manifested.decision !== undefined && manifested.decision.effect !== 'permit') {
                 const refusedDecision = manifested.decision
                 reservation = undefined

@@ -783,6 +783,7 @@ flowchart TD
   pkg_workflow --> pkg_invariants
   pkg_workflow --> pkg_llm
   pkg_workflow --> pkg_session
+  pkg_workspace_trust_local --> pkg_cmdline
   pkg_workspace_trust_local --> pkg_principal
   pkg_workspace_trust_local --> pkg_workspace
   pkg_workspace_trust_local --> pkg_workspace_trust
@@ -880,6 +881,7 @@ flowchart TD
   pkg_tools --> pkg_code_runtime
   pkg_tools --> pkg_execution_world
   pkg_tools --> pkg_invariants
+  pkg_tools --> pkg_lease_contract
   pkg_tools --> pkg_llm
   pkg_tools --> pkg_plugin_ownership
   pkg_tools --> pkg_policy_enforcement
@@ -1688,7 +1690,7 @@ flowchart TD
 | [`terminal`](../packages/terminal/terminal) | `terminal` | [`agent`](../packages/core/agent), [`brand`](../packages/util/brand) |
 | [`loader-smoke`](../packages/test-support/loader-smoke) | `test-support` | [`agent`](../packages/core/agent), [`http-proxy`](../packages/util/http-proxy), [`llm`](../packages/llm/llm), [`session`](../packages/core/session) |
 | [`workflow`](../packages/workflow/workflow) | `workflow` | [`agent`](../packages/core/agent), [`brand`](../packages/util/brand), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`session`](../packages/core/session) |
-| [`workspace-trust-local`](../packages/workspace/workspace-trust-local) | `workspace` | [`principal`](../packages/identity/principal), [`workspace`](../packages/workspace/workspace), [`workspace-trust`](../packages/workspace/workspace-trust) |
+| [`workspace-trust-local`](../packages/workspace/workspace-trust-local) | `workspace` | [`cmdline`](../packages/boot/cmdline), [`principal`](../packages/identity/principal), [`workspace`](../packages/workspace/workspace), [`workspace-trust`](../packages/workspace/workspace-trust) |
 | [`command-goal`](../packages/goal/command-goal) | `goal` | [`commands`](../packages/interaction/commands), [`goal`](../packages/goal/goal), [`llm`](../packages/llm/llm) |
 | [`goal-round-driver`](../packages/goal/goal-round-driver) | `goal` | [`agent`](../packages/core/agent), [`goal`](../packages/goal/goal), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`session`](../packages/core/session) |
 | [`fs-sandbox`](../packages/fs/fs-sandbox) | `fs` | [`fs`](../packages/fs/fs), [`fs-local`](../packages/fs/fs-local), [`sandbox`](../packages/sandbox/sandbox), [`sandbox-policy`](../packages/sandbox/sandbox-policy) |
@@ -1708,7 +1710,7 @@ flowchart TD
 | [`job-settle-signal`](../packages/test-support/job-settle-signal) | `test-support` | [`jobs`](../packages/jobs/jobs) |
 | [`workflow-registry`](../packages/workflow/workflow-registry) | `workflow` | [`brand`](../packages/util/brand), [`workflow`](../packages/workflow/workflow) |
 | [`token-meter`](../packages/llm/token-meter) | `llm` | [`compaction`](../packages/compaction/compaction), [`llm`](../packages/llm/llm), [`llm-retry`](../packages/llm/llm-retry), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection) |
-| [`tools`](../packages/core/tools) | `core` | [`action-ledger`](../packages/action/action-ledger), [`action-manifest`](../packages/action/action-manifest), [`agent`](../packages/core/agent), [`code-runtime`](../packages/code-runtime/code-runtime), [`execution-world`](../packages/execution/execution-world), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`plugin-ownership`](../packages/plugin/plugin-ownership), [`policy-enforcement`](../packages/policy/policy-enforcement), [`policy-engine`](../packages/policy/policy-engine), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`system-prompt`](../packages/core/system-prompt), [`user-approval`](../packages/interaction/user-approval) |
+| [`tools`](../packages/core/tools) | `core` | [`action-ledger`](../packages/action/action-ledger), [`action-manifest`](../packages/action/action-manifest), [`agent`](../packages/core/agent), [`code-runtime`](../packages/code-runtime/code-runtime), [`execution-world`](../packages/execution/execution-world), [`invariants`](../packages/runtime-diagnostics/invariants), [`lease-contract`](../packages/collaboration/lease-contract), [`llm`](../packages/llm/llm), [`plugin-ownership`](../packages/plugin/plugin-ownership), [`policy-enforcement`](../packages/policy/policy-enforcement), [`policy-engine`](../packages/policy/policy-engine), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`system-prompt`](../packages/core/system-prompt), [`user-approval`](../packages/interaction/user-approval) |
 | [`command-compact`](../packages/compaction/command-compact) | `compaction` | [`commands`](../packages/interaction/commands), [`compaction`](../packages/compaction/compaction) |
 | [`message-feedback`](../packages/feedback/message-feedback) | `feedback` | [`brand`](../packages/util/brand), [`command-feedback`](../packages/feedback/command-feedback), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence), [`typert-protocol`](../packages/typert/protocol) |
 | [`permission-presets`](../packages/interaction/permission-presets) | `interaction` | [`commands`](../packages/interaction/commands), [`invariants`](../packages/runtime-diagnostics/invariants), [`risk-taxonomy`](../packages/policy/risk-taxonomy), [`sandbox`](../packages/sandbox/sandbox), [`sandbox-policy`](../packages/sandbox/sandbox-policy), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection), [`settings`](../packages/settings/settings), [`shell`](../packages/shell/shell), [`user-approval`](../packages/interaction/user-approval) |

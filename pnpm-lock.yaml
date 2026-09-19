@@ -5597,6 +5597,9 @@ importers:
       '@deepseek-ai/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
+      '@deepseek-ai/dsh-lease-contract':
+        specifier: workspace:^
+        version: link:../../collaboration/lease-contract
       '@deepseek-ai/dsh-llm':
         specifier: workspace:^
         version: link:../../llm/llm
@@ -8596,6 +8599,9 @@ importers:
       '@deepseek-ai/dsh-brand':
         specifier: workspace:^
         version: link:../../util/brand
+      '@deepseek-ai/dsh-code-runtime':
+        specifier: workspace:^
+        version: link:../../code-runtime/code-runtime
       '@deepseek-ai/dsh-control-plane':
         specifier: workspace:^
         version: link:../../interaction/control-plane

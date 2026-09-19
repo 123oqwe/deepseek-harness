@@ -1977,6 +1977,56 @@
         "expectedAt": "stage",
         "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-258; delegate ruling 2026-09-19 (lane B inbox B-63)"
       },
+      "P2-12.U/dispatch-stop-gate": {
+        "epic": "P2-12",
+        "stage": "U",
+        "path": "packages/core/tools/src/external-effect.ts",
+        "reason": "`stopGateFor` produced `'stopped'` and no caller anywhere read it: `tool-calls.ts` short-circuits only on `'fenced'`/`'lease-refused'`, this file discarded the advance's return, and `dsh-run`'s wrapper passed it to callers that ignore it. The one gate both dispatch paths reach is added here, beside the four refusals they already share, so a stop cannot be honoured by one path and not the other.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-265; delegate ruling 2026-09-19 (lane B inbox B-77/B-118)"
+      },
+      "P2-12.U/ptc-dispatch-gate": {
+        "epic": "P2-12",
+        "stage": "U",
+        "path": "packages/core/tools/src/ptc.ts",
+        "reason": "A PTC program issues its own dispatches without returning to the model, so a guard applied per model call is applied to none of them. The shared gate is called here per sub-dispatch, before any reservation, and a refusal ends the program through the run controller it already owns.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-265; delegate ruling 2026-09-19 (lane B inbox B-77/B-118)"
+      },
+      "P2-12.U/native-dispatch-gate": {
+        "epic": "P2-12",
+        "stage": "U",
+        "path": "packages/core/agent-loop/src/tool-calls.ts",
+        "reason": "The native half of the same call. Asked per call rather than once per batch: a stop raised while a batch is in flight must refuse the calls that have not started.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-265; delegate ruling 2026-09-19 (lane B inbox B-77/B-118)"
+      },
+      "P2-12.U/agent-stop-gate-export": {
+        "epic": "P2-12",
+        "stage": "U",
+        "path": "packages/core/agent/src/index.ts",
+        "reason": "`stopGateFor` was exported from `dispatch.ts` and not re-exported from the package, so no consumer could reach the decision. One line; `dispatch.ts` itself is untouched, and the decision is unchanged.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-265; delegate ruling 2026-09-19 (lane B inbox B-77/B-118)"
+      },
+      "P2-12.U/dispatch-stop-gate-spec": {
+        "epic": "P2-12",
+        "stage": "U",
+        "path": "packages/run/run/tests/stop-gate-dispatch.spec.ts",
+        "reason": "acceptance[0]'s second half -- that nothing already in flight produces a further external effect -- had no case on any path. These drive a real agent session with a real control plane over both dispatch paths, and observe what the tool ran and what the model was told. New rather than added to `tests/stop-gate.spec.ts`, whose cases pin the FIRST half (no new Run under a stop).",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-265; delegate ruling 2026-09-19 (lane B inbox B-77/B-118)"
+      },
       "P2-12.U/run-stop-gate-spec": {
         "epic": "P2-12",
         "stage": "U",

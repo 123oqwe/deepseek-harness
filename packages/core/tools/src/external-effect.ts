@@ -20,7 +20,7 @@
 
 import { createHash } from 'node:crypto'
 import type { Context } from '@deepseek-ai/cordis'
-import { advanceLeasedAgent, type Agent } from '@deepseek-ai/dsh-agent'
+import { advanceLeasedAgent, stopGateFor, type Agent } from '@deepseek-ai/dsh-agent'
 import type { ArgumentsHash, IdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
 import type { LedgerEpoch, LedgerGeneration, LedgerScope, ReceiptDigest, ReserveDecision } from '@deepseek-ai/dsh-action-ledger'
 import type {} from '@deepseek-ai/dsh-action-ledger'
@@ -771,5 +771,87 @@ export function refusedRiskResult(refusal: RiskRefusal, toolName: string): ToolE
     content: [{ type: 'text', text: `Error: ${text}` }],
     isError: true,
     error: { message: text, info: { name: 'RiskRefusedError', code: ABORTED_BEFORE_DISPATCH } },
+  }
+}
+
+/**
+ * Why this host may not dispatch ANY new action right now.
+ *
+ * Distinct from the four refusals above, and the distinction is the point:
+ * those answer "this action is not permitted", while these answer "this host
+ * is not permitted to act", which is true of every action it might try next.
+ * Naming them apart is what lets an operator tell "the deployment refused this
+ * tool" from "the emergency stop is in force" without reading two logs.
+ */
+export type DispatchRefusal =
+  /** An emergency stop is in force (P2-12 must[2]). */
+  | 'stopped'
+  /** This host held the work item and another host took it (P4-07 must[1]). */
+  | 'fenced'
+  /** This host never held the work item: a live store refused its lease. */
+  | 'lease-refused'
+
+/**
+ * Ask whether this host may still act, WITHOUT moving anything (P2-12 must[2],
+ * P4-07 must[1]).
+ *
+ * **One decision, reached from both dispatch paths.** The native loop and the
+ * PTC sub-dispatcher call this, so an emergency stop refuses the same way in
+ * both and no second table can drift from the first. Every answer here is read
+ * from a decision that already exists: `stopGateFor` is P2-12's, and
+ * `RunLease.mayWrite` is the lease package's `checkFencing` — this function
+ * adds no rule of its own, it only asks them before an action instead of after.
+ *
+ * **Asked per dispatch, never once per batch.** A stop raised while a batch of
+ * calls is in flight must refuse the calls that have not started, and a value
+ * read before the batch began is a value about the past. `mayWrite` reads the
+ * store through for the same reason.
+ *
+ * **Nothing is advanced to ask it.** `advanceLeasedAgent` also reports these
+ * refusals, but it reports them as a side effect of proposing a lifecycle
+ * transition, which is a state write — and a gate that must write to ask its
+ * question cannot be placed before an action that may not happen.
+ *
+ * Absence admits. An agent with no control channel and no lease is running in
+ * a composition that mounts neither, which is capability absence and must
+ * dispatch normally.
+ * @param agent - the agent proposing to take the action.
+ * @param nowMs - the caller's clock reading, for judging lease expiry.
+ * @returns why this host may not act, or `undefined` when it may.
+ */
+export function refuseNewAction(agent: Agent, nowMs: number): DispatchRefusal | undefined {
+  // The stop is checked FIRST, before authority, for the reason
+  // `advanceLeasedAgent` checks it first: it is the only refusal about the
+  // whole harness rather than about this agent's standing, and an operator
+  // told "another host took your work" goes looking for that host instead of
+  // for the stop they themselves requested.
+  if (stopGateFor(agent) === 'stopped') return 'stopped'
+  if (agent.leaseRefused === true) return 'lease-refused'
+  if (agent.runLease !== undefined && !agent.runLease.mayWrite(nowMs)) return 'fenced'
+  return undefined
+}
+
+/**
+ * Render a dispatch refusal as a settled tool result (P2-12 must[2]).
+ *
+ * A settled result and not a thrown error, like the four refusals above: the
+ * model asked for something this host may not do, and it must read that in the
+ * turn rather than see a crash. The three texts differ because the next move
+ * differs — a stop ends when an operator resumes, a fenced run is already being
+ * done elsewhere, and a lease-refused one never started.
+ * @param refusal - why this host may not act.
+ * @param toolName - the action refused, named so a multi-call turn is readable.
+ * @returns the tool result to record in place of an execution.
+ */
+export function refusedDispatchResult(refusal: DispatchRefusal, toolName: string): ToolExecutionResult {
+  const text = refusal === 'stopped'
+    ? `The action "${toolName}" was not performed: an emergency stop is in force, so this run may take no new action until it is resumed.`
+    : refusal === 'fenced'
+      ? `The action "${toolName}" was not performed: this host no longer holds its work item — another host took it over, and is doing this work.`
+      : `The action "${toolName}" was not performed: this host never held its work item, so it may not act on it.`
+  return {
+    content: [{ type: 'text', text: `Error: ${text}` }],
+    isError: true,
+    error: { message: text, info: { name: 'DispatchRefusedError', code: ABORTED_BEFORE_DISPATCH } },
   }
 }

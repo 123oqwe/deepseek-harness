@@ -35,7 +35,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent/types'
 import { createSessionManifestAppender } from '@deepseek-ai/dsh-tools/manifest-log'
 // The reserve/confirm pair lives in `dsh-tools` so the code-mode dispatch can
 // reach it too: a second copy here is what left code-mode unreserved (§12.35-2).
-import { approvalBindingFor, classifyActionRisk, confirmExternalEffect, gateActionRisk, readExecutionWorldFact, readPolicyContextFacts, refusedApprovalResult, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect, verifyRecordedApproval } from '@deepseek-ai/dsh-tools/external-effect'
+import { approvalBindingFor, classifyActionRisk, confirmExternalEffect, gateActionRisk, readExecutionWorldFact, readPolicyContextFacts, refuseNewAction, refusedApprovalResult, refusedDispatchResult, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect, verifyRecordedApproval } from '@deepseek-ai/dsh-tools/external-effect'
 import type { Principal } from '@deepseek-ai/dsh-principal'
 import { brandString } from '@deepseek-ai/dsh-brand'
 
@@ -277,6 +277,21 @@ async function runGroup(
     // the same reason the risk gate runs before the reservation — a claim on an
     // effect the deployment will not permit would leave a `sent` row for
     // something that never happened.
+    // P2-12 must[2] / P4-07 must[1]: asked PER CALL, not once per batch. A
+    // stop raised while this batch is in flight must refuse the calls that
+    // have not started, and a value read before the batch began is a value
+    // about the past. First among the refusals and before the reservation, for
+    // the same reasons the PTC path puts it there -- the two reach ONE
+    // function, so neither can drift.
+    const dispatchRefusal = refuseNewAction(agent, Date.now())
+    if (dispatchRefusal !== undefined) {
+      slots[index] = {
+        exec: call.exec as unknown as ToolRunContext,
+        result: refusedDispatchResult(dispatchRefusal, call.block.name),
+        needsPost: false,
+      }
+      return
+    }
     const policy = appended.record.decision
     if (policy !== undefined && policy.effect !== 'permit') {
       slots[index] = {
