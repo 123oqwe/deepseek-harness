@@ -234,11 +234,20 @@ export default class ExecutionWorldService extends Service<Config> {
         memoryBytes: z.number().step(1).min(1),
         diskBytes: z.number().step(1).min(1),
       }),
-    }).default({
-      network: 'unrestricted',
-      spawn: true,
-      ipc: 'unrestricted',
-      secrets: 'inherited',
+    // NO `.default()` on this object, and its absence is load-bearing twice
+    // over. Schemastery types `default(value: T)` against the object's OUTPUT
+    // type, in which EVERY key is required regardless of its own default
+    // (`ObjectT`, `vendor/schemastery/src/index.ts:38`, `default` at `:167`).
+    // A default listing four of six keys is therefore a type error the moment
+    // a fifth key exists, and the two ceilings above deliberately have no
+    // default of their own, so there is no value to list for them.
+    //
+    // It also changed nothing: an object schema builds its result from its
+    // CHILDREN's defaults, so `undefined`, `{}`, `{ request: {} }` and a
+    // request carrying only `resources` all resolve identically with or
+    // without it -- measured, not assumed. An absent ceiling stays absent
+    // rather than becoming an explicit `undefined`, which is what
+    // `exactOptionalPropertyTypes` and `WorldRequest`'s optional fields want.
     }),
   }) as z<Config>
 
