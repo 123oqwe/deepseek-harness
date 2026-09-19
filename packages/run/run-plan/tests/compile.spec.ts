@@ -84,6 +84,10 @@ const base: PlanInputs = {
 /** Build inputs from `base` with some fields replaced. */
 const inputs = (fields: Partial<PlanInputs>): PlanInputs => ({ ...base, ...fields })
 
+/** One node, for the cases that need a graph wider than the two `base` carries. */
+const node = (id: string, requirementId: string): PlanInputs['nodes'][number] =>
+  ({ id, role: 'worker', taskProfileRef: brandString<TaskProfileRef>(DIGEST), requirementId })
+
 /** Build facts from `base`'s with some replaced. */
 const facts = (fields: Partial<DeploymentFacts>): DeploymentFacts => ({ ...base.facts, ...fields })
 
@@ -119,7 +123,7 @@ function conflicts(from: PlanInputs): readonly { kind: string; requirementId: st
 }
 
 /** The input problems of a refusal, or a failure naming what happened instead. */
-function problems(from: PlanInputs): readonly { kind: string; at: string }[] {
+function problems(from: PlanInputs): readonly { kind: string; at: string; detail: string }[] {
   const result = compilePlan(from)
   if (result.ok || result.reason !== 'invalid-inputs') throw new Error(`expected invalid inputs, got ${JSON.stringify(result)}`)
   return result.problems
@@ -214,6 +218,24 @@ describe('P4-03 C — the plan a compile produces', () => {
     const { planId, ...body } = plan
     expect(planId).toBe(planIdOf(body))
     expect(Object.keys(base)).not.toContain('planId')
+  })
+
+  it('P4-03 C: a diamond of independent work compiles, so an ordering is not mistaken for a loop', () => {
+    const diamond = inputs({
+      nodes: [node('n1', 'req-1'), node('n2', 'req-2'), node('n3', 'req-3'), node('n4', 'req-4')],
+      edges: [
+        { from: 'n1', to: 'n2', kind: 'ordering' },
+        { from: 'n1', to: 'n3', kind: 'ordering' },
+        { from: 'n2', to: 'n4', kind: 'dataDependency' },
+        { from: 'n3', to: 'n4', kind: 'dataDependency' },
+      ],
+      channels: [],
+      modelRoutes: [],
+      approvalGates: [],
+      verification: [],
+      recovery: { onNodeFailure: [], terminal: 'halt' },
+    })
+    expect(compiled(diamond).agentGraph.edges).toHaveLength(4)
   })
 
   it('P4-03 C: the compiled plan validates against the shipped schema', () => {
@@ -373,6 +395,80 @@ describe('P4-03 F — inputs that would make a decision unsafe', () => {
     expect(problems(inputs({ channels: [{ ...base.channels[0]!, to: 'ghost' }] })).map(problem => problem.kind)).toStrictEqual(['dangling-reference'])
     expect(problems(inputs({ recovery: { onNodeFailure: [{ nodeId: 'n1', action: 'substitute', substituteNodeId: 'ghost' }], terminal: 'halt' } })).map(problem => problem.kind))
       .toStrictEqual(['dangling-reference'])
+  })
+
+  it('P4-03 F: a graph that waits on itself does not compile', () => {
+    const looped = inputs({
+      edges: [{ from: 'n1', to: 'n2', kind: 'ordering' }, { from: 'n2', to: 'n1', kind: 'dataDependency' }],
+    })
+    expect(problems(looped)).toStrictEqual([{ kind: 'cyclic-graph', at: 'edges', detail: 'the graph waits on itself: n1 -> n2 -> n1' }])
+  })
+
+  it('P4-03 F: a node that waits for itself does not compile', () => {
+    expect(problems(inputs({ edges: [{ from: 'n1', to: 'n1', kind: 'ordering' }] })).map(problem => problem.kind))
+      .toStrictEqual(['cyclic-graph'])
+  })
+
+  it('P4-03 F: the cycle named is the same one however the graph was listed', () => {
+    // TWO cycles through n1, so the answer depends on which successor is
+    // tried first. A graph with one cycle would be reported identically
+    // whether or not the walk sorts anything, and would measure nothing.
+    const twoCycles: PlanInputs['edges'] = [
+      { from: 'n1', to: 'n2', kind: 'ordering' },
+      { from: 'n2', to: 'n1', kind: 'ordering' },
+      { from: 'n1', to: 'n3', kind: 'ordering' },
+      { from: 'n3', to: 'n1', kind: 'ordering' },
+    ]
+    const nodes = [node('n1', 'req-1'), node('n2', 'req-2'), node('n3', 'req-3')]
+    const graph = (listedNodes: PlanInputs['nodes'], listedEdges: PlanInputs['edges']): PlanInputs => inputs({
+      nodes: listedNodes,
+      edges: listedEdges,
+      channels: [],
+      modelRoutes: [],
+      approvalGates: [],
+      verification: [],
+      recovery: { onNodeFailure: [], terminal: 'halt' },
+    })
+    const listings = [
+      graph(nodes, twoCycles),
+      graph(nodes, [...twoCycles].reverse()),
+      graph([...nodes].reverse(), twoCycles),
+      graph([...nodes].reverse(), [...twoCycles].reverse()),
+    ]
+    for (const listing of listings) {
+      expect(problems(listing).map(problem => problem.detail)).toStrictEqual(['the graph waits on itself: n1 -> n2 -> n1'])
+    }
+  })
+
+  it('P4-03 F: a cycle and a broken reference are each reported, not one instead of the other', () => {
+    const both = inputs({
+      edges: [{ from: 'n1', to: 'n2', kind: 'ordering' }, { from: 'n2', to: 'n1', kind: 'ordering' }, { from: 'n1', to: 'ghost', kind: 'ordering' }],
+    })
+    expect(problems(both).map(problem => problem.kind)).toStrictEqual(['dangling-reference', 'cyclic-graph'])
+  })
+
+  it('P4-03 F: a broken reference on its own is not reported as a cycle', () => {
+    expect(problems(inputs({ edges: [{ from: 'n1', to: 'ghost', kind: 'ordering' }] })).map(problem => problem.kind))
+      .toStrictEqual(['dangling-reference'])
+  })
+
+  it('P4-03 F: a chain far longer than a call stack is answered, not thrown at', () => {
+    const length = 50_000
+    const long = Array.from({ length }, (_, index) => node(`n${String(index).padStart(6, '0')}`, `req-${index}`))
+    const chain: PlanInputs['edges'] = long.slice(0, -1).map((from, index) => ({ from: from.id, to: long[index + 1]!.id, kind: 'ordering' }))
+    const graph = (edges: PlanInputs['edges']): PlanInputs => inputs({
+      nodes: long,
+      edges,
+      channels: [],
+      modelRoutes: [],
+      approvalGates: [],
+      verification: [],
+      recovery: { onNodeFailure: [], terminal: 'halt' },
+    })
+    expect(inputProblems(graph(chain)).filter(problem => problem.kind === 'cyclic-graph')).toStrictEqual([])
+    const closed = inputProblems(graph([...chain, { from: long[length - 1]!.id, to: long[0]!.id, kind: 'ordering' }]))
+    expect(closed.map(problem => problem.kind)).toStrictEqual(['cyclic-graph'])
+    expect(closed[0]?.detail).toBe('the graph waits on itself: n000000 -> n000001 -> n000002 -> ... (49995 more) -> n049998 -> n049999 -> n000000')
   })
 
   it('P4-03 F: an identifier longer than the schema admits is refused before a plan carries it', () => {

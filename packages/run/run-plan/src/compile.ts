@@ -246,7 +246,7 @@ export interface PlanInputs {
 /** One way the inputs do not hang together, independent of what the deployment offers. */
 export interface InputProblem {
   /** What is wrong with them. */
-  readonly kind: 'dangling-reference' | 'duplicate-id' | 'empty-plan' | 'malformed-value' | 'out-of-range' | 'reserved-id'
+  readonly kind: 'cyclic-graph' | 'dangling-reference' | 'duplicate-id' | 'empty-plan' | 'malformed-value' | 'out-of-range' | 'reserved-id'
   /** Where the problem is, as the input's own field path. */
   readonly at: string
   /** What is wrong, in terms a caller can fix. */
@@ -577,7 +577,89 @@ export function inputProblems(inputs: PlanInputs): readonly InputProblem[] {
   for (const [dimension, cap] of Object.entries(inputs.facts.budgetCaps)) {
     if (cap !== undefined) checkNumber(problems, `facts.budgetCaps.${dimension}`, cap, { min: 0 })
   }
+  // Reported beside the broken references rather than instead of them: a
+  // cycle between nodes that exist does not stop existing because an edge
+  // elsewhere names one that does not, and a caller told about one at a time
+  // fixes one and is refused again.
+  const cycle = firstCycle(inputs.nodes, inputs.edges)
+  if (cycle.length > 0) problem(problems, 'cyclic-graph', 'edges', describeCycle(cycle))
   return problems
+}
+
+/**
+ * The first cycle in the graph, as the nodes it runs through.
+ *
+ * Both edge kinds order a pair — one needs the other's result, one merely
+ * starts after it — so a cycle of either kind is a plan whose nodes each wait
+ * for another and none of which can start. That makes it an input that does
+ * not hang together rather than a demand the deployment cannot meet, which is
+ * why it is refused beside the dangling references and not carried into a
+ * conflict set.
+ *
+ * The walk is deterministic: nodes are entered in ascending id order and each
+ * node's successors are visited in ascending order too, so a graph with two
+ * cycles always names the same one however its edges were listed.
+ *
+ * The stack is explicit because the depth is the caller's to choose: a chain
+ * of fifty thousand nodes is a valid input, and a recursive walk would answer
+ * it by throwing `RangeError` — while this file's contract is that a refusal
+ * is a returned value. An edge naming a node the graph does not have is
+ * skipped rather than followed; that is reported on its own.
+ * @param nodes - the graph's nodes.
+ * @param edges - the ordering relations between them.
+ * @returns the cycle's nodes, starting and ending at the node it closes on; empty when the graph is acyclic.
+ */
+function firstCycle(nodes: readonly AgentNode[], edges: readonly AgentEdge[]): readonly string[] {
+  const successors = new Map<string, string[]>(sortedByKey(nodes, node => node.id).map(node => [node.id, []]))
+  for (const edge of sortedByKey(edges, edgeKey)) successors.get(edge.from)?.push(edge.to)
+  for (const [, targets] of successors) targets.sort()
+  // 'open' is on the current path, 'done' is finished and cannot start a cycle.
+  const state = new Map<string, 'open' | 'done'>()
+
+  for (const root of successors.keys()) {
+    if (state.has(root)) continue
+    state.set(root, 'open')
+    const stack: { readonly id: string; index: number }[] = [{ id: root, index: 0 }]
+    while (stack.length > 0) {
+      // oxlint-disable-next-line typescript/no-non-null-assertion -- the loop guard is the stack's length
+      const frame = stack[stack.length - 1]!
+      const targets = successors.get(frame.id) ?? []
+      if (frame.index >= targets.length) {
+        state.set(frame.id, 'done')
+        stack.pop()
+        continue
+      }
+      // oxlint-disable-next-line typescript/no-non-null-assertion -- bounded by the check above
+      const next = targets[frame.index++]!
+      if (state.get(next) === 'open') {
+        const path = stack.map(entry => entry.id)
+        return [...path.slice(path.indexOf(next)), next]
+      }
+      if (!state.has(next) && successors.has(next)) {
+        state.set(next, 'open')
+        stack.push({ id: next, index: 0 })
+      }
+    }
+  }
+  return []
+}
+
+/**
+ * A cycle written out, shortened when it is longer than a reader can use.
+ *
+ * The ends are what identifies the cycle and the middle is what makes a
+ * fifty-thousand-node path unreadable, so a long one keeps both ends and
+ * counts what it dropped. The cycle itself is unchanged — only this sentence
+ * is shortened — so the determinism the walk provides survives.
+ * @param cycle - the cycle's nodes, as {@link firstCycle} returns them.
+ * @returns the sentence the input problem carries.
+ */
+function describeCycle(cycle: readonly string[]): string {
+  const shown = 3
+  if (cycle.length <= shown * 2) return `the graph waits on itself: ${cycle.join(' -> ')}`
+  const head = cycle.slice(0, shown).join(' -> ')
+  const tail = cycle.slice(-shown).join(' -> ')
+  return `the graph waits on itself: ${head} -> ... (${cycle.length - shown * 2} more) -> ${tail}`
 }
 
 /**
