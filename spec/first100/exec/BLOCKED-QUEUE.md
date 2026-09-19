@@ -6147,6 +6147,8 @@ Each condition, and what was read to call it met. Four of the six carried their 
 
 **What it blocks concretely.** P2-06 acceptance[0]'s third limb — *"改变文件 inode/远端对象版本均不会执行"* — is declared open in `acceptance-coverage.json` because of this. A precondition naming a file cannot be recorded at the ask when no layer knows which file the action is about.
 
+**Forward addendum (2026-09-19, lane B).** A second field of the same request is hardcoded one layer up, and it is worth recording beside this one because a reader chasing "what does the policy actually see" will meet both. `approvalBindingFor` builds every approval binding with `preconditions: []` (`packages/core/tools/src/external-effect.ts:444`) — a literal, for every action on both dispatch paths. So the approval tuple a decider binds carries no preconditions at all, in the same way the manifest target carries no filesystem path: not because an action had none, but because nothing constructs them. This is a reading, not a repair, and it belongs to whichever epic gives preconditions a producer rather than to this entry.
+
 ### BLOCKED-239 — the displayed validity is a constant, the enforced one is configurable
 
 **Status:** OPEN, owner lane B (reading only, no repair this round). Measured 2026-09-12 while writing `evidence-P2-06.md`; assigned by the delegate the same day.
@@ -7324,3 +7326,21 @@ Two things this does NOT change, recorded so neither is read into it:
 - Not that either epic's code is wrong. `baseline-fingerprint.mjs`, `collect-evidence.mjs` and `verify-evidence.mjs` all work; the first two are now exercised by CI.
 - Not that the new CI steps observe the clauses. They observe that the commands run and agree in one checkout. must[2]'s "before every execution batch" and acceptance[2]'s "the agent's answer cites the package" are process obligations this program has not adopted.
 - Not measured: whether `collect-evidence init` will report drift on a CI runner. It refuses when the checkout has drifted from the captured baseline, and the capture step immediately precedes it, which is why the tracked files are restored only after both steps rather than between them.
+
+### BLOCKED-268 — P4-11's recovery half was covered all along, and the coverage file said the opposite
+
+**Status: CLOSED 2026-09-19, opened and closed in the same commit.** Opened because `acceptance-coverage.json` said so in its own words — "The citations cover the OPENING half completely and the RECOVERABLE half not at all" — and closed because that sentence was wrong when it was written: the case existed, was frozen, and nobody had cited it.
+
+**What was actually there.** `packages/reliability/retry-cockatiel/tests/breaker.spec.ts:110`, `reopens the destination after the open period, and a successful probe CLOSES it`, frozen as `P4-11.P` supplementSeq 1 — one case, live, not superseded. It mounts the real provider, drives five counted failures to the threshold, asserts the next attempt is refused without reaching the operation, advances the clock past `openMs`, and then observes the half-open probe RUN and its success CLOSE the breaker. That is `acceptance[2]`'s 「circuit 打开**且可恢复**」 end to end.
+
+**Why it is deterministic without a sleep.** cockatiel decides half-open with `Date.now() - state.openedAt < state.backoff.duration` (`CircuitBreakerPolicy.js:167`) and arms no timer, so moving the clock with `vi.useFakeTimers` moves the breaker. The case does exactly that.
+
+**The observation.** Run 35435211560, candidate `4a0b39eb3f9ae4f9dad876502bd8fc383fcea179`, `passed`, under the full name `P4-11 circuit breaker provider reopens the destination after the open period, and a successful probe CLOSES it`. **That run was RED**: 9 of 26836 cases failed, all downstream of one `exactOptionalPropertyTypes` type error since fixed in `0ede948cbe`, and this case is not among them. The red is named rather than leaned away from, the way [BLOCKED-264](#blocked-264)'s re-record names its own.
+
+**The correction is an addendum, not a rewrite.** The coverage note keeps its original sentence and gains a dated paragraph beside it. What the file claimed before anyone looked is part of the record: a self-admitted gap that was not a gap is the same failure as an unadmitted one, and deleting the sentence would hide which of the two happened here.
+
+**What this does NOT claim.**
+
+- Not that a real provider outage has been observed. The note's own "SERVICE / PRODUCTION" paragraph still stands in the part that is true: the P citations mount the real provider and drive it, but the failures are injected rather than produced by an endpoint going down. **That paragraph's last sentence — "U is NOT_RUN" — is stale and was nearly copied into this entry: the ledger reads P4-11 `ACCEPTED` / `APPROVED` with C, P, U and F all `GREEN`.** It is corrected in the coverage addendum rather than here, and the near-copy is recorded because a register that repeats a stale sentence launders it into a second source.
+- Not that the delegate's queue item was wasted. It asked for a case to be written; measuring first found the case, which is the cheaper answer and the one that leaves no second observation of the same thing.
+- Not a general audit. Whether other `acceptance-coverage.json` notes admit gaps that are likewise already covered was not measured; this entry is about one.
