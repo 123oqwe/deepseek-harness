@@ -107,6 +107,14 @@ const REGISTRY_GATES = [
   'verify-translation-pairing',
   'constraints',
   'architecture:layers',
+  // P0-03's acceptance[3] is "CI 输出具体依赖边", and the detector that would
+  // print them ran nowhere: `architecture:seams` has an entry point and works,
+  // but no workflow step and no gate set called it, so its two rules had never
+  // been applied to this tree by anything that could fail. Placed beside
+  // `architecture:layers` because they read the same workspace facts; it parses
+  // sources with `ts.createSourceFile` and spawns nothing, the same cost class
+  // as the catalog generators.
+  'architecture:seams',
 ]
 
 /**
