@@ -14,7 +14,7 @@
  * ships `disabled: true`, the boundary goes away, and the ungranted run then
  * finds the marker in the prompt.
  */
-import { readFile } from 'node:fs/promises'
+import { readdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
@@ -33,10 +33,46 @@ const repoTsconfig = fileURLToPath(new URL('../../../../tsconfig.json', import.m
  */
 const MARKER = 'carmine-heliotrope-48219'
 
-/** Run the driver once in an isolated cwd holding a project `AGENTS.md`, and return the system prompt it recorded. */
-async function systemPromptFor(grant: boolean): Promise<string> {
-  let recorded = ''
-  await runLoaderSmoke({
+/** One message as the recorder saw it. */
+interface RecordedMessage {
+  readonly index: number
+  readonly role: string
+  readonly text: string
+}
+
+/**
+ * What one run recorded, and enough of the run to explain an empty reading.
+ *
+ * `full` is the WHOLE request — the system slot plus every message's text —
+ * because that is what the model was given. `dsh-agent-instructions` delivers
+ * a project's own content as a user-role message
+ * (`packages/context/agent-instructions/src/index.ts:190` composes a
+ * `UserMessage`, `:429-431` splices it into the step), so a pair that searched
+ * only the system prompt would report the boundary holding while the marker
+ * sat one message below it.
+ *
+ * The diagnostic half is not decoration. The first version of this pair
+ * asserted on an empty string twice and reported `expected '' to contain …`,
+ * which is true of a boundary working, a driver that never reached a model
+ * request, and a recorder reading the wrong field — and the run printed
+ * nothing that could tell them apart.
+ */
+interface RecordedRun {
+  /** The system prompt the adapter received, empty when none was recorded. */
+  readonly system: string
+  /** The system prompt and every message's text, which is everything the model read. */
+  readonly full: string
+  /** What the run says about itself, for an assertion message. */
+  readonly diagnostic: string
+}
+
+/** Run the driver once in an isolated cwd holding a project `AGENTS.md`, and return what it recorded. */
+async function systemPromptFor(grant: boolean): Promise<RecordedRun> {
+  let system = ''
+  let messages: RecordedMessage[] = []
+  let recorded = 'request.json was never read'
+  let listing = '(cwd not inspected)'
+  const result = await runLoaderSmoke({
     label: `sdk-app workspace trust smoke (${grant ? 'granted' : 'ungranted'})`,
     tempDirPrefix: 'sdk-app-trust-smoke-',
     binScript: driver,
@@ -45,28 +81,65 @@ async function systemPromptFor(grant: boolean): Promise<string> {
     tsconfigPath: repoTsconfig,
     env: grant ? { DSH_TRUST_FIXTURE_GRANT: '1' } : {},
     prepare: async (cwd) => {
-      const { writeFile } = await import('node:fs/promises')
       await writeFile(join(cwd, 'AGENTS.md'), `# Project\n\n${MARKER}\n`, 'utf8')
     },
     inspect: async (cwd) => {
-      const request = JSON.parse(await readFile(join(cwd, 'request.json'), 'utf8')) as { system?: string }
-      recorded = request.system ?? ''
+      listing = (await readdir(cwd)).join(', ')
+      let raw: string
+      try {
+        raw = await readFile(join(cwd, 'request.json'), 'utf8')
+      } catch (error) {
+        recorded = `request.json is absent (${String(error)}); the run reached no model request`
+        return
+      }
+      const request = JSON.parse(raw) as {
+        system?: string
+        systemOption?: string | null
+        messages?: RecordedMessage[]
+      }
+      system = request.system ?? ''
+      messages = request.messages ?? []
+      // Both raw readings and the per-message shape, because "the prompt was
+      // empty" and "the recorder looked at the field a loop-built request
+      // leaves unset" produce the same empty string at the assertion.
+      recorded = `system=${String(system.length)} chars, systemOption=${JSON.stringify(request.systemOption)}`
+        + `, messages=${JSON.stringify(messages.map(message => ({ i: message.index, role: message.role, chars: message.text.length })))}`
     },
   })
-  return recorded
+  const carrying = messages.filter(message => message.text.includes(MARKER))
+  return {
+    system,
+    full: [system, ...messages.map(message => message.text)].join('\n'),
+    diagnostic: [
+      `grant=${String(grant)}`,
+      recorded,
+      `marker in system: ${String(system.includes(MARKER))}`,
+      `marker in messages: ${carrying.length === 0
+        ? 'none'
+        : carrying.map(message => `#${String(message.index)} (${message.role})`).join(', ')}`,
+      `cwd contained: ${listing}`,
+      `stdout tail: ${result.stdout.slice(-400)}`,
+      `stderr tail: ${result.stderr.slice(-400)}`,
+    ].join('\n'),
+  }
 }
 
 describe('the sdk profile\'s project-trust boundary', () => {
   it('leaves an ungranted workspace\'s own AGENTS.md out of what the model is given', async () => {
-    const system = await systemPromptFor(false)
-    expect(system).not.toContain(MARKER)
+    const run = await systemPromptFor(false)
+    // The whole request, not the system slot: the project's own content
+    // arrives as a user-role message, so searching less than this could call
+    // a leak an absence.
+    expect(run.full, run.diagnostic).not.toContain(MARKER)
     // The prompt is not empty for an unrelated reason: the profile's own
     // persona is there, so the absence above is the boundary and not a run
-    // that never reached a model request.
-    expect(system.length).toBeGreaterThan(0)
+    // that never reached a model request. This is the check that caught the
+    // recorder reading the wrong field, and it is deliberately not relaxed.
+    expect(run.system.length, run.diagnostic).toBeGreaterThan(0)
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 
   it('reads the same AGENTS.md once the host grants that directory', async () => {
-    expect(await systemPromptFor(true)).toContain(MARKER)
+    const run = await systemPromptFor(true)
+    expect(run.full, run.diagnostic).toContain(MARKER)
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 })
