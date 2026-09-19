@@ -13,7 +13,7 @@
       "sha256": "5e2ff5b9122f9ddfe8aabc70095712a251e83dde933e3dbe450631cb90d1e073",
       "gitBlobOid": "a4c3572e987a92828f1f697a2eb3c0aca1d36f16",
       "generator": "scripts/first100/generate-specs.ts",
-      "sourceDigest": "da6605ae0724b6263aaa569ba450256e253f6d478c4c03fd2bed3682f1f2c098"
+      "sourceDigest": "df18f0f7027c1ffdcc7bb94cb828d2bde1b2af27a0087776881a0a93373d1db3"
     },
     "spec/first100-clause-coverage-report.json": {
       "role": "derived-projection",
@@ -31,7 +31,7 @@
       "sha256": "4914bc59d676630f3317d520a60d5f3cc4107179e619351f5432fce011fbce8a",
       "gitBlobOid": "98b7767a372c5c321c560443ac152b4887f62555",
       "generator": "scripts/first100/generate-specs.ts",
-      "sourceDigest": "da6605ae0724b6263aaa569ba450256e253f6d478c4c03fd2bed3682f1f2c098"
+      "sourceDigest": "df18f0f7027c1ffdcc7bb94cb828d2bde1b2af27a0087776881a0a93373d1db3"
     },
     "spec/first100-dependency-graph.json": {
       "role": "derived-projection",
@@ -40,7 +40,7 @@
       "sha256": "1bcdffa9a9783a16821b98f5c183c265e0b99ed8d7e9aab7049273f6f3ffcb3b",
       "gitBlobOid": "611a3c463589887837dee80a359fe1f9f6cd35cc",
       "generator": "scripts/first100/generate-specs.ts",
-      "sourceDigest": "da6605ae0724b6263aaa569ba450256e253f6d478c4c03fd2bed3682f1f2c098"
+      "sourceDigest": "df18f0f7027c1ffdcc7bb94cb828d2bde1b2af27a0087776881a0a93373d1db3"
     },
     "spec/first100-evidence.schema.json": {
       "role": "derived-projection",
@@ -49,7 +49,7 @@
       "sha256": "23b017be8f409f9f727749f37a3706795ba8b35a23798380aea7fc387035cb72",
       "gitBlobOid": "c3d1c20a65557c82fd6ca5f8eb346d4205b451e7",
       "generator": "scripts/first100/generate-specs.ts",
-      "sourceDigest": "da6605ae0724b6263aaa569ba450256e253f6d478c4c03fd2bed3682f1f2c098"
+      "sourceDigest": "df18f0f7027c1ffdcc7bb94cb828d2bde1b2af27a0087776881a0a93373d1db3"
     },
     "spec/first100-generated-digests.json": {
       "role": "derived-projection",
@@ -58,7 +58,7 @@
       "sha256": "813e5fd61aece65b5df030da61ba96969e6460f564c65e4b44382ef484a87036",
       "gitBlobOid": "38a9ea5ee63213100fbe4e74f1e460f33c62daae",
       "generator": "scripts/first100/generate-specs.ts",
-      "sourceDigest": "afa8793ee51b654a30e3a96ad44adeaa30f1aab00b4c709e73c20836215ee76f"
+      "sourceDigest": "4495b7b713855b92cdd830d9f5ec2e6e8d9d7213f993c0e92e659b5ceb6e9019"
     },
     "spec/first100-owner-map.json": {
       "role": "derived-projection",
@@ -67,7 +67,7 @@
       "sha256": "b44d8d68191580399b654840e102f38efdcc82b7c51cbfcd15bdb4971598925a",
       "gitBlobOid": "fde436be0c167a927e0f3d19fd93965a11c1c65f",
       "generator": "scripts/first100/generate-specs.ts",
-      "sourceDigest": "da6605ae0724b6263aaa569ba450256e253f6d478c4c03fd2bed3682f1f2c098"
+      "sourceDigest": "df18f0f7027c1ffdcc7bb94cb828d2bde1b2af27a0087776881a0a93373d1db3"
     },
     "spec/first100-thresholds.yaml": {
       "role": "derived-projection",
@@ -76,7 +76,7 @@
       "sha256": "d241956d7a0381f96ee23e80e876aa918006d15c9e17d44dc3cd2ad934ed05c9",
       "gitBlobOid": "7898989848e9f897583c46c359c2f4d5cce8f5bf",
       "generator": "scripts/first100/generate-specs.ts",
-      "sourceDigest": "da6605ae0724b6263aaa569ba450256e253f6d478c4c03fd2bed3682f1f2c098"
+      "sourceDigest": "df18f0f7027c1ffdcc7bb94cb828d2bde1b2af27a0087776881a0a93373d1db3"
     },
     "spec/first100/sources/v1.0/deepseek-harness-artifact-manifest-v1.json": {
       "role": "canonical-vendored-source",
@@ -117,9 +117,9 @@
     "tests/first100/adjudication.json": {
       "role": "canonical-input",
       "schemaVersion": "1",
-      "bytes": 152846,
-      "sha256": "949e39227644c51b1b6ddfda323966783c14082702b08077f907b9195edc9cc2",
-      "gitBlobOid": "029d30a8fa780ab7c565241e36bb80075f5b613c",
+      "bytes": 160684,
+      "sha256": "0c956898ff423d015ebcd12c0e9078b87a3e007468fcd6ddcf5aa35c794cb9a8",
+      "gitBlobOid": "5703c4e1c09e62fd9103702425dd99aa49eca202",
       "generator": "maintainer-approved decisions (2026-08-25 AskUserQuestion A/B/C)",
       "sourceDigest": null
     },

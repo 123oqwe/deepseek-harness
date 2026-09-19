@@ -54,6 +54,13 @@ describe('ACP app startup', () => {
     await ctx.fiber.dispose()
   })
 
+  it('ignores --trust-workspace rather than refusing it, because the plugin reads the same command line (BLOCKED-260)', async () => {
+    const { ctx, exits, stdin } = start(['--trust-workspace=read'])
+    stdin.end()
+    expect(exits).toEqual([0])
+    await ctx.fiber.dispose()
+  })
+
   it('prints app help without publishing readiness or binding stdin', () => {
     const { ctx, exits, out, stdin } = start(['--help'])
     expect(out()).toContain('dsh --profile acp')

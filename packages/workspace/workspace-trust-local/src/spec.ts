@@ -37,12 +37,25 @@ const workspaceIdentity = z.object({
  * `grantedBy` stays optional because the vocabulary makes it optional: a
  * workspace that has never been upgraded, and one demoted back to
  * `'untrusted'`, both carry no grantor.
+ *
+ * **Every field the vocabulary carries is declared here, because zod strips
+ * what it does not declare.** A stored record is parsed on load
+ * (`@deepseek-ai/dsh-storage-domain`'s `open`), and an undeclared key does not
+ * survive that parse — so `source`, which names the entry point a grant was
+ * written through, was being written and then silently lost at the next open,
+ * leaving an audit that could not attribute a trusted workspace to anything.
+ * `loweredExplicitly` would have gone the same way, and it decides whether a
+ * launch argument may raise a workspace a human lowered: dropped, the rule
+ * would hold within one mount and quietly stop holding across a reload, which
+ * is precisely the case it exists for.
  */
 const trustRecord = z.object({
   identity: workspaceIdentity,
   state: z.enum(['untrusted', 'trusted-read', 'trusted-execute']),
   at: z.string(),
   grantedBy: z.string().optional(),
+  source: z.enum(['launch-argument', 'command', 'configured-grant']).optional(),
+  loweredExplicitly: z.literal(true).optional(),
 })
 
 /**

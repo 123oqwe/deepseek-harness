@@ -52,6 +52,7 @@ function webCommand(): Command {
     .option('--no-open', 'do not open the Web UI in the default browser')
     .option('--port <port>', 'listen port; pass 0 to let the OS pick a free one')
     .option('--trusted-host <authority...>', 'extra authority the /api browser-trust fence accepts (host or host:port; repeatable)')
+    .option('--trust-workspace [mode]', 'consumed by the workspace-trust plugin from this same command line; declared here so this program does not refuse it (BLOCKED-260). Write the mode as --trust-workspace=<mode>: a space-separated word is task text, and the plugin refuses that shape rather than reading it as a mode')
     .addHelpText('after', `
 Examples:
   dsh --profile web                          serve on the composed host and port

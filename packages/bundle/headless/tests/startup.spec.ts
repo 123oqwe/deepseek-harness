@@ -109,6 +109,23 @@ describe('headless command-line provider', () => {
     expect(observed.exits).toEqual([1])
   })
 
+  it('ignores --trust-workspace rather than refusing it, because the plugin reads the same command line (BLOCKED-260)', async () => {
+    const { task, observed } = await bootStartup(['run', 'the', 'tests', '--trust-workspace=read'])
+    expect(task).toEqual({ task: 'run the tests', outputFormat: 'text' })
+    expect(observed.runnerConfig).toEqual({ task: 'run the tests', outputFormat: 'text' })
+    expect(observed.exits).toEqual([])
+  })
+
+  it('lets the space-separated form take the task\'s first word, which is why the plugin refuses that shape', async () => {
+    // Measured, not assumed: commander's optional value consumes the next
+    // token, so `--trust-workspace read the tests` leaves this program with
+    // "the tests". Nothing here can give the word back -- `read` is already
+    // the option's value -- so `parseLaunchTrustRequest` refuses this shape
+    // outright rather than granting trust and silently truncating the task.
+    const { task } = await bootStartup(['--trust-workspace', 'read', 'the', 'tests'])
+    expect(task).toEqual({ task: 'the tests', outputFormat: 'text' })
+  })
+
   it('prints its own help and leaves the runner pending', async () => {
     const { task, observed } = await bootStartup(['--help'])
     expect(observed.out).toContain('dsh --profile headless')

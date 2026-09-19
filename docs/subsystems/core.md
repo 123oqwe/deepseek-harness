@@ -1254,6 +1254,14 @@ get(workItem: WorkItemId): Lease | undefined
  * lost. While the store is unavailable this refuses rather than reporting
  * the item free, because "nobody holds this" and "I cannot tell you who
  * holds this" must not look alike to a scheduler (acceptance[2]).
+ *
+ * **Every mounted provider refuses with `'stopped'`, without touching its
+ * storage, while an emergency stop is in force (P2-12 must[2]).** The
+ * obligation is on the provider and not on the callers because a gate one
+ * caller keeps is a gate the next caller does not: the deployment ships more
+ * than one store, and a worker that reached any of them directly would take
+ * a lease the stop was ordered to prevent. Only acquisition is gated —
+ * `renew` and `release` stay open by design, documented on each.
  * @param workItem - the item to acquire.
  * @param worker - the acquiring worker.
  * @param nowMs - the instant to judge the incumbent's expiry against.
@@ -1269,6 +1277,14 @@ acquire(workItem: WorkItemId, worker: WorkerId, nowMs: number, leaseMs: number):
  * a holder whose lease lapsed has become reclaimable, and reviving it would
  * resurrect an authority the scheduler may already have handed elsewhere.
  * Renewal issues no new epoch — only the deadline moves.
+ *
+ * **An emergency stop does not gate this.** Renewal is not new work: a run
+ * already under way keeps the item it holds. Refusing heartbeats during a
+ * stop would let in-flight leases lapse, and then a second worker could take
+ * the item the moment work resumes while the first is still running — the
+ * double execution the fencing rule exists to prevent. What an in-flight run
+ * may still DO under a stop is P2-12 acceptance[1]'s question, decided on the
+ * dispatch path, not here.
  * @param token - the holder's current authority.
  * @param nowMs - the instant to judge expiry against.
  * @param leaseMs - how long the renewed lease should run from `nowMs`.
@@ -1289,6 +1305,11 @@ renew(token: FencingToken, nowMs: number, leaseMs: number): RenewResult
  * Idempotent, and silent when the token is not current — a holder that was
  * already fenced out has nothing to give up, and reporting that as an error
  * would make ordinary teardown noisy.
+ *
+ * **An emergency stop never gates this.** Giving an item back is the one
+ * thing a stopped deployment wants most: the stop is meant to end work, and
+ * a release that was refused would hold the item until its deadline for no
+ * benefit to anyone.
  * @param token - the holder's authority over the item it is giving up.
  */
 release(token: FencingToken): void

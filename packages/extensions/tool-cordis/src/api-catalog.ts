@@ -1364,19 +1364,19 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
       },
       {
         signature: 'acquire(workItem: WorkItemId, worker: WorkerId, nowMs: number, leaseMs: number): AcquireResult',
-        description: 'Take an item, issuing a strictly greater epoch, or say why not.\n\nAn expired lease is taken over rather than refused: expiry is precisely the condition under which the scheduler may reclaim (must[2]). The previous holder is not consulted and is not notified — it discovers it was fenced when its next write is refused, the one notification that cannot be lost. While the store is unavailable this refuses rather than reporting the item free, because "nobody holds this" and "I cannot tell you who holds this" must not look alike to a scheduler (acceptance[2]).',
+        description: 'Take an item, issuing a strictly greater epoch, or say why not.\n\nAn expired lease is taken over rather than refused: expiry is precisely the condition under which the scheduler may reclaim (must[2]). The previous holder is not consulted and is not notified — it discovers it was fenced when its next write is refused, the one notification that cannot be lost. While the store is unavailable this refuses rather than reporting the item free, because "nobody holds this" and "I cannot tell you who holds this" must not look alike to a scheduler (acceptance[2]).\n\n**Every mounted provider refuses with `\'stopped\'`, without touching its storage, while an emergency stop is in force (P2-12 must[2]).** The obligation is on the provider and not on the callers because a gate one caller keeps is a gate the next caller does not: the deployment ships more than one store, and a worker that reached any of them directly would take a lease the stop was ordered to prevent. Only acquisition is gated — `renew` and `release` stay open by design, documented on each.',
         parameters: [{ name: 'workItem', description: 'the item to acquire.' }, { name: 'worker', description: 'the acquiring worker.' }, { name: 'nowMs', description: 'the instant to judge the incumbent\'s expiry against.' }, { name: 'leaseMs', description: 'how long the new lease should run from `nowMs`.' }],
         returns: 'the new lease and its token, or the reason for refusal.',
       },
       {
         signature: 'renew(token: FencingToken, nowMs: number, leaseMs: number): RenewResult',
-        description: 'Extend the lease a token authorizes (must[2]).\n\nRefuses an already-expired lease even when the token is otherwise current: a holder whose lease lapsed has become reclaimable, and reviving it would resurrect an authority the scheduler may already have handed elsewhere. Renewal issues no new epoch — only the deadline moves.',
+        description: 'Extend the lease a token authorizes (must[2]).\n\nRefuses an already-expired lease even when the token is otherwise current: a holder whose lease lapsed has become reclaimable, and reviving it would resurrect an authority the scheduler may already have handed elsewhere. Renewal issues no new epoch — only the deadline moves.\n\n**An emergency stop does not gate this.** Renewal is not new work: a run already under way keeps the item it holds. Refusing heartbeats during a stop would let in-flight leases lapse, and then a second worker could take the item the moment work resumes while the first is still running — the double execution the fencing rule exists to prevent. What an in-flight run may still DO under a stop is P2-12 acceptance[1]\'s question, decided on the dispatch path, not here.',
         parameters: [{ name: 'token', description: 'the holder\'s current authority.' }, { name: 'nowMs', description: 'the instant to judge expiry against.' }, { name: 'leaseMs', description: 'how long the renewed lease should run from `nowMs`.' }],
         returns: 'the extended lease, or the reason for refusal.',
       },
       {
         signature: 'release(token: FencingToken): void',
-        description: 'Give up the lease a token authorizes, so the item is free immediately.\n\nA run that FINISHED is not the same as one whose lease lapsed. Without this, every completed run leaves its item owned until the deadline it never needed, and a scheduler with a thousand short runs spends its capacity waiting for leases nobody holds. Releasing is not reclaiming: it issues no epoch and hands the item to nobody, it only stops this holder from owning it.\n\nIdempotent, and silent when the token is not current — a holder that was already fenced out has nothing to give up, and reporting that as an error would make ordinary teardown noisy.',
+        description: 'Give up the lease a token authorizes, so the item is free immediately.\n\nA run that FINISHED is not the same as one whose lease lapsed. Without this, every completed run leaves its item owned until the deadline it never needed, and a scheduler with a thousand short runs spends its capacity waiting for leases nobody holds. Releasing is not reclaiming: it issues no epoch and hands the item to nobody, it only stops this holder from owning it.\n\nIdempotent, and silent when the token is not current — a holder that was already fenced out has nothing to give up, and reporting that as an error would make ordinary teardown noisy.\n\n**An emergency stop never gates this.** Giving an item back is the one thing a stopped deployment wants most: the stop is meant to end work, and a release that was refused would hold the item until its deadline for no benefit to anyone.',
         parameters: [{ name: 'token', description: 'the holder\'s authority over the item it is giving up.' }],
       },
       {
@@ -4162,7 +4162,7 @@ export const EVENT_API: readonly EventApiEntry[] = [
 export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'AcquireDenialReason',
-    declaration: 'export type AcquireDenialReason = \'held-by-another\' | \'store-unavailable\';',
+    declaration: 'export type AcquireDenialReason = \'held-by-another\' | \'store-unavailable\' | \'stopped\';',
   },
   {
     name: 'AcquireResult',
@@ -6090,7 +6090,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'RunLeaseDenial',
-    declaration: 'export type RunLeaseDenial = {\n    readonly reason: \'store-unavailable\';\n} | {\n    readonly reason: \'held-by-another\';\n    readonly holder: WorkerId | undefined;\n} | {\n    readonly reason: \'fenced-out\';\n    readonly currentEpoch: number;\n};',
+    declaration: 'export type RunLeaseDenial = {\n    readonly reason: \'store-unavailable\';\n} | {\n    readonly reason: \'held-by-another\';\n    readonly holder: WorkerId | undefined;\n} | {\n    readonly reason: \'fenced-out\';\n    readonly currentEpoch: number;\n} | {\n    readonly reason: \'stopped\';\n};',
   },
   {
     name: 'RunnerFailureRule',
@@ -7366,7 +7366,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'TrustRecord',
-    declaration: 'export interface TrustRecord {\n    readonly identity: WorkspaceIdentity;\n    readonly state: TrustState;\n    readonly at: string;\n    readonly grantedBy?: PrincipalId;\n    readonly source?: TrustGrantSource;\n}',
+    declaration: 'export interface TrustRecord {\n    readonly identity: WorkspaceIdentity;\n    readonly state: TrustState;\n    readonly at: string;\n    readonly grantedBy?: PrincipalId;\n    readonly source?: TrustGrantSource;\n    readonly loweredExplicitly?: true;\n}',
   },
   {
     name: 'TrustState',
@@ -7378,7 +7378,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'TrustUpgradeDenialReason',
-    declaration: 'export type TrustUpgradeDenialReason = \'non-host-principal\' | \'not-an-upgrade\';',
+    declaration: 'export type TrustUpgradeDenialReason = \'non-host-principal\' | \'not-an-upgrade\' | \'lowered-in-this-process\';',
   },
   {
     name: 'TrustUpgradeResult',

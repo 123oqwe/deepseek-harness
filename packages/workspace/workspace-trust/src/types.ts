@@ -141,6 +141,19 @@ export interface TrustRecord {
    * source would be a grant nobody can attribute to an entry point.
    */
   readonly source?: TrustGrantSource
+  /**
+   * Set only when this record's `'untrusted'` state came from an explicit
+   * revocation, never from a first binding.
+   *
+   * The two are indistinguishable without it — {@link bindWorkspaceTrust}
+   * creates an `'untrusted'` record for a workspace nobody ever decided about,
+   * and a refused grant persists that same record — and a launch argument must
+   * treat them differently: it grants the first, and must not resurrect the
+   * second. Optional and absent by default, so records written before it
+   * existed read as "not explicitly lowered", which is the answer that keeps a
+   * first grant working.
+   */
+  readonly loweredExplicitly?: true
 }
 
 /**
@@ -220,8 +233,13 @@ export type LoadDecision =
  * Admitting one wrote an audit record for a transition that was not an upgrade
  * and left `grantedBy` on a record at `'untrusted'`, which {@link TrustRecord}
  * states carries no grantor.
+ * `'lowered-in-this-process'`: a `'launch-argument'` grant would raise a
+ * workspace that was explicitly lowered after this process started. The launch
+ * argument is a fact of this startup, but so is the revocation that followed
+ * it, and the later, more specific human decision wins — otherwise a provider
+ * reload would quietly undo it.
  */
-export type TrustUpgradeDenialReason = 'non-host-principal' | 'not-an-upgrade'
+export type TrustUpgradeDenialReason = 'non-host-principal' | 'not-an-upgrade' | 'lowered-in-this-process'
 
 /**
  * must[2]'s audit record: written once a trust upgrade succeeds, naming the

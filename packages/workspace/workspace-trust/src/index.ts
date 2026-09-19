@@ -262,6 +262,8 @@ export function reconcileWorkspaceTrust(record: TrustRecord, observed: Workspace
  * @param hostPrincipal - the principal presented as the upgrade requester.
  * @param at - ISO-8601 instant of the upgrade attempt.
  * @param source - the entry point the grant was written through; defaults to `'command'`, the in-session path.
+ * @param processStartedAtUtc - ISO-8601 instant this process began. Omitted, a launch-argument grant is judged
+ *   without the in-process revocation rule — the answer for every caller that is not a mounted provider.
  * @returns `{ upgraded: true, record, audit }`, or `{ upgraded: false, reason }`.
  */
 export function requestTrustUpgrade(
@@ -270,9 +272,23 @@ export function requestTrustUpgrade(
   hostPrincipal: Principal,
   at: string,
   source: TrustGrantSource = 'command',
+  processStartedAtUtc?: string,
 ): TrustUpgradeResult {
   if (!isHostUserPrincipal(hostPrincipal)) return { upgraded: false, reason: 'non-host-principal' }
   if (TRUST_STATE_RANK[target] <= TRUST_STATE_RANK[current.state]) return { upgraded: false, reason: 'not-an-upgrade' }
+  // The launch argument is this startup's request, and so is a revocation that
+  // followed it. A provider reload re-runs the grant, so without this the later
+  // human decision would be undone by the earlier machine one. Only an explicit
+  // lowering counts, and only one made since this process began: a workspace
+  // revoked in an earlier run is a workspace this run may grant again.
+  if (
+    source === 'launch-argument'
+    && current.loweredExplicitly === true
+    && processStartedAtUtc !== undefined
+    && current.at >= processStartedAtUtc
+  ) {
+    return { upgraded: false, reason: 'lowered-in-this-process' }
+  }
   return {
     upgraded: true,
     record: { identity: current.identity, state: target, at, grantedBy: hostPrincipal.id, source },
@@ -329,8 +345,11 @@ export function downgradeTrust(current: TrustRecord, target: TrustState, at: str
   return {
     record:
       target === 'untrusted' || current.grantedBy === undefined
-        ? { identity: current.identity, state: target, at }
-        : { identity: current.identity, state: target, at, grantedBy: current.grantedBy },
+        // `loweredExplicitly` is what separates this record from the one
+        // `bindWorkspaceTrust` makes for a workspace nobody decided about: both
+        // say `'untrusted'`, and only this one is a decision.
+        ? { identity: current.identity, state: target, at, loweredExplicitly: true }
+        : { identity: current.identity, state: target, at, grantedBy: current.grantedBy, loweredExplicitly: true },
     revokedKinds,
   }
 }

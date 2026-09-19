@@ -1996,6 +1996,116 @@
         "overlay": "none",
         "expectedAt": "stage",
         "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-258; delegate ruling 2026-09-19 (lane B inbox B-63, R5 in B-65)"
+      },
+      "P1-07.U/headless-startup": {
+        "epic": "P1-07",
+        "stage": "U",
+        "path": "packages/bundle/headless/src/startup.ts",
+        "reason": "One of the four app programs. Each declares `--trust-workspace [mode]` and ignores it so the launcher's value reaches the plugin instead of dying at the program's own parser (BLOCKED-260 option (b)); the declaration's description states that a mode is written with `=`, because commander's optional value otherwise takes the task's next word.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-260; spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-261; delegate ruling 2026-09-19 (lane B inbox B-70/B-76)"
+      },
+      "P1-07.U/headless-startup-spec": {
+        "epic": "P1-07",
+        "stage": "U",
+        "path": "packages/bundle/headless/tests/startup.spec.ts",
+        "reason": "The program's own startup cases: that the flag is tolerated rather than refused, and — for headless — that the space-separated form takes the task's first word, which is the measured fact the plugin's refusal rests on.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-260; spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-261; delegate ruling 2026-09-19 (lane B inbox B-70/B-76)"
+      },
+      "P1-07.U/sdk-app-startup": {
+        "epic": "P1-07",
+        "stage": "U",
+        "path": "packages/bundle/sdk-app/src/index.ts",
+        "reason": "One of the four app programs. Each declares `--trust-workspace [mode]` and ignores it so the launcher's value reaches the plugin instead of dying at the program's own parser (BLOCKED-260 option (b)); the declaration's description states that a mode is written with `=`, because commander's optional value otherwise takes the task's next word.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-260; spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-261; delegate ruling 2026-09-19 (lane B inbox B-70/B-76)"
+      },
+      "P1-07.U/sdk-app-startup-spec": {
+        "epic": "P1-07",
+        "stage": "U",
+        "path": "packages/bundle/sdk-app/tests/startup.spec.ts",
+        "reason": "The program's own startup cases: that the flag is tolerated rather than refused, and — for headless — that the space-separated form takes the task's first word, which is the measured fact the plugin's refusal rests on.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-260; spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-261; delegate ruling 2026-09-19 (lane B inbox B-70/B-76)"
+      },
+      "P1-07.U/acp-app-startup": {
+        "epic": "P1-07",
+        "stage": "U",
+        "path": "packages/bundle/acp-app/src/index.ts",
+        "reason": "One of the four app programs. Each declares `--trust-workspace [mode]` and ignores it so the launcher's value reaches the plugin instead of dying at the program's own parser (BLOCKED-260 option (b)); the declaration's description states that a mode is written with `=`, because commander's optional value otherwise takes the task's next word.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-260; spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-261; delegate ruling 2026-09-19 (lane B inbox B-70/B-76)"
+      },
+      "P1-07.U/acp-app-startup-spec": {
+        "epic": "P1-07",
+        "stage": "U",
+        "path": "packages/bundle/acp-app/tests/startup.spec.ts",
+        "reason": "The program's own startup cases: that the flag is tolerated rather than refused, and — for headless — that the space-separated form takes the task's first word, which is the measured fact the plugin's refusal rests on.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-260; spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-261; delegate ruling 2026-09-19 (lane B inbox B-70/B-76)"
+      },
+      "P1-07.U/web-app-startup": {
+        "epic": "P1-07",
+        "stage": "U",
+        "path": "packages/bundle/web-app/src/startup.ts",
+        "reason": "One of the four app programs. Each declares `--trust-workspace [mode]` and ignores it so the launcher's value reaches the plugin instead of dying at the program's own parser (BLOCKED-260 option (b)); the declaration's description states that a mode is written with `=`, because commander's optional value otherwise takes the task's next word.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-260; spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-261; delegate ruling 2026-09-19 (lane B inbox B-70/B-76)"
+      },
+      "P1-07.U/web-app-startup-spec": {
+        "epic": "P1-07",
+        "stage": "U",
+        "path": "packages/bundle/web-app/tests/startup.spec.ts",
+        "reason": "The program's own startup cases: that the flag is tolerated rather than refused, and — for headless — that the space-separated form takes the task's first word, which is the measured fact the plugin's refusal rests on.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-260; spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-261; delegate ruling 2026-09-19 (lane B inbox B-70/B-76)"
+      },
+      "P1-07.U/sdk-app-patch": {
+        "epic": "P1-07",
+        "stage": "U",
+        "path": "packages/bundle/sdk-app/cordis.patch.yml",
+        "reason": "The row comment said no launch flag reaches this plugin. Measured false: `command-workspace-trust` is mounted by dsh-base and the dsh launcher provides the inner argv on every profile. A comment that misstates the reachable entry points is what sent an earlier reader looking for a grant path this profile already has.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-260; spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-261; delegate ruling 2026-09-19 (lane B inbox B-70/B-76)"
+      },
+      "P1-07.U/launch-grant-spec": {
+        "epic": "P1-07",
+        "stage": "U",
+        "path": "packages/workspace/command-workspace-trust/tests/launch-grant.spec.ts",
+        "reason": "The flag's own cases: a mode only from `=`, a space-separated word refused by name, and which launcher may carry a request at all. New rather than added to `tests/command.spec.ts`, whose subject is the in-session `/trust-skills` path.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-260; spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-261; delegate ruling 2026-09-19 (lane B inbox B-70/B-76)"
+      },
+      "P1-07.U/launch-grant-revocation-spec": {
+        "epic": "P1-07",
+        "stage": "U",
+        "path": "packages/workspace/workspace-trust-local/tests/launch-grant-revocation.spec.ts",
+        "reason": "The provider-side rule BLOCKED-261's fix needs: a launch grant does not resurrect trust lowered in this process, including across a real provider replacement, while an in-session command still can.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-260; spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-261; delegate ruling 2026-09-19 (lane B inbox B-70/B-76)"
       }
     }
   }

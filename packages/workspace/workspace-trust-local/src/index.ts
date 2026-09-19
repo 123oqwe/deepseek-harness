@@ -49,6 +49,19 @@ import type {
 import { workspaceTrustDomainSpec } from './spec.ts'
 import type { StoredConsumedGrant } from './spec.ts'
 
+/**
+ * When this process began, as an ISO-8601 instant.
+ *
+ * Module scope and not `Service.init`: the rule it serves — a launch argument
+ * must not resurrect trust a human lowered — exists precisely for the case
+ * where this provider is REPLACED, and a value taken at mount would be reset
+ * by the very reload it is meant to survive. A module instance is created once
+ * per process, and `performance.timeOrigin` is fixed at process start, so this
+ * is the same instant for every mount in this process.
+ */
+const PROCESS_STARTED_AT_UTC = new Date(performance.timeOrigin).toISOString()
+
+
 /** The two durable tables this provider reads, opened together. */
 interface TrustTables {
   /** One record per canonical workspace path. */
@@ -231,7 +244,7 @@ class LocalWorkspaceTrust implements WorkspaceTrustService {
     const current = stored === undefined
       ? bindWorkspaceTrust(observed, at)
       : reconcileWorkspaceTrust(stored, observed, at)
-    const result = requestTrustUpgrade(current, target, hostPrincipal, at, source)
+    const result = requestTrustUpgrade(current, target, hostPrincipal, at, source, PROCESS_STARTED_AT_UTC)
     await records.put(observed.canonicalPath, result.upgraded ? result.record : current)
     if (result.upgraded) this.auditTrustChange(result.record, current.state, 'granted')
     return result

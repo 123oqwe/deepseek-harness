@@ -1159,7 +1159,7 @@ export interface Config {
 }
 ```
 
-来源： [`packages/run/lease-sqlite/src/index.ts:33`](../packages/run/lease-sqlite/src/index.ts)
+来源： [`packages/run/lease-sqlite/src/index.ts:38`](../packages/run/lease-sqlite/src/index.ts)
 
 <a id="deepseek-aidsh-llm-deepseek"></a>
 
@@ -2052,7 +2052,7 @@ export interface PolicySetBounds {
 }
 ```
 
-来源： [`packages/policy/policy-language/src/index.ts:121`](../packages/policy/policy-language/src/index.ts)
+来源： [`packages/policy/policy-language/src/index.ts:122`](../packages/policy/policy-language/src/index.ts)
 
 <a id="deepseek-aidsh-pwsh-local"></a>
 
@@ -2184,7 +2184,7 @@ export interface Config {
 }
 ```
 
-来源： [`packages/run/run/src/index.ts:636`](../packages/run/run/src/index.ts)
+来源： [`packages/run/run/src/index.ts:637`](../packages/run/run/src/index.ts)
 
 <a id="deepseek-aidsh-sandbox-local"></a>
 
@@ -3964,7 +3964,7 @@ export interface Config {
 }
 ```
 
-来源： [`packages/workflow/workflow-worker-thread/src/index.ts:54`](../packages/workflow/workflow-worker-thread/src/index.ts)
+来源： [`packages/workflow/workflow-worker-thread/src/index.ts:55`](../packages/workflow/workflow-worker-thread/src/index.ts)
 
 <a id="deepseek-aidsh-workspace-trust-local"></a>
 
@@ -3994,7 +3994,7 @@ export interface TrustGrant {
 
 依赖： `TrustState` (`@deepseek-ai/dsh-workspace-trust/types`)
 
-来源： [`packages/workspace/workspace-trust-local/src/index.ts:75`](../packages/workspace/workspace-trust-local/src/index.ts)
+来源： [`packages/workspace/workspace-trust-local/src/index.ts:88`](../packages/workspace/workspace-trust-local/src/index.ts)
 
 ## 无配置的可加载插件
 
@@ -4167,6 +4167,7 @@ export interface TrustGrant {
 - `@deepseek-ai/dsh-resource-budget`（[`packages/execution/resource-budget/src/index.ts`](../packages/execution/resource-budget/src/index.ts)）
 - `@deepseek-ai/dsh-retry`（[`packages/reliability/retry/src/index.ts`](../packages/reliability/retry/src/index.ts)）
 - `@deepseek-ai/dsh-risk-taxonomy`（[`packages/policy/risk-taxonomy/src/index.ts`](../packages/policy/risk-taxonomy/src/index.ts)）
+- `@deepseek-ai/dsh-run-plan`（[`packages/run/run-plan/src/index.ts`](../packages/run/run-plan/src/index.ts)）
 - `@deepseek-ai/dsh-sandbox-windows-acl`（[`packages/sandbox/sandbox-windows-acl/src/index.ts`](../packages/sandbox/sandbox-windows-acl/src/index.ts)）
 - `@deepseek-ai/dsh-schema-registry`（[`packages/schema/schema-registry/src/index.ts`](../packages/schema/schema-registry/src/index.ts)）
 - `@deepseek-ai/dsh-scope`（[`packages/core/scope/src/index.ts`](../packages/core/scope/src/index.ts)）

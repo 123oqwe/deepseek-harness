@@ -87,15 +87,17 @@ async function executeTrustCommand(ctx: Context, invocation: CommandInvocation):
  * @param ctx - the context to register on; the registration disposes with it.
  * @returns Nothing.
  */
-export async function apply(ctx: Context): Promise<void> {
+export function apply(ctx: Context): Promise<void> | void {
   ctx.commands.register({
     name: 'trust-skills',
     description: "allow this project's own skills to run, after confirming",
     handler: invocation => executeTrustCommand(ctx, invocation),
   })
   // The host user's other entry point, for a profile that cannot ask
-  // (BLOCKED-214). Awaited so the record is durable before the first turn can
-  // read it; a launch argument that landed after the first `stateFor` would be
-  // a race the operator cannot see.
-  await applyLaunchTrustRequest(ctx)
+  // (BLOCKED-214). Registration is synchronous and the write happens when the
+  // provider publishes; a launcher whose startup completes with nothing written
+  // fails loudly there rather than leaving the operator to discover it.
+  // Returned, not discarded: where the provider has already published this is
+  // the write, and the Loader keeps this entry loading until it is durable.
+  return applyLaunchTrustRequest(ctx)
 }
