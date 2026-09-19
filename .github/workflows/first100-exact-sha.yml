@@ -23,6 +23,15 @@ on:
         required: false
         type: boolean
         default: false
+      narrow_test:
+        description: 'Vitest path(s) to run ALONE, skipping the full gate. Empty runs the ordinary gate. Use for a sensitivity proof, where a full run costs 35 minutes to answer a question about one file.'
+        required: false
+        default: ''
+      narrow_build:
+        description: 'Build before the narrow run. Only for paths that execute built lib/ — the source lane needs no build.'
+        required: false
+        type: boolean
+        default: false
   push:
     branches: [first100-exec]
 
@@ -36,6 +45,11 @@ jobs:
   exact-sha-gate:
     name: install / typecheck / test @ exact SHA
     runs-on: ubuntu-latest
+    # A narrow run answers ONE question about one path; paying 35 minutes for
+    # the whole gate to answer it is what this input exists to avoid. Empty --
+    # which is what every `push` and every ordinary dispatch carries -- leaves
+    # this job byte-for-byte as it was.
+    if: ${{ !inputs.narrow_test }}
     outputs:
       candidate-sha: ${{ steps.resolve-sha.outputs.sha }}
     steps:
@@ -659,7 +673,10 @@ jobs:
     #
     # `always()` for the reason the suite step has it: a precondition failing
     # in the other job should cost one round, not this observation.
-    if: always()
+    # `always()` runs a job whose dependency was SKIPPED, not only one whose
+    # dependency failed, so a narrow run needs saying again here: without it
+    # this job would run against a candidate SHA the gate never resolved.
+    if: ${{ always() && !inputs.narrow_test }}
     permissions:
       contents: read
     steps:
@@ -692,6 +709,126 @@ jobs:
       # that does not show is not an observation.
       - name: Run complete keyless Python suite
         run: uv run --python 3.10 --group test --project python/sdk pytest
+
+  narrow-test:
+    name: narrow vitest run @ exact SHA
+    runs-on: ubuntu-latest
+    # A job of its own rather than a branch inside the gate, for the reason
+    # `snapshot-refresh` is one: the gate's thirty steps are a fixed sequence
+    # whose meaning comes from running together, and threading a condition
+    # through them would make every future reader ask which of them a given
+    # run actually did.
+    #
+    # What it exists for: a sensitivity proof asks whether ONE mutation reddens
+    # ONE file's cases. The gate answers that in 35 minutes; this answers it in
+    # a few, and the mutation never joins `first100-exec` -- it is pushed to a
+    # `gate/*` branch, run here, read, and abandoned.
+    #
+    # `narrow-report-*` IS NOT A LEDGER OBSERVATION INPUT, and the usual reason
+    # a narrow run exists is the reason why: it is normally run on a MUTATED
+    # commit that must never reach `first100-exec`. Only the gate job's
+    # candidate-SHA artifact may green a cell (`generate-ledger.mjs:12-17`,
+    # maintainer decision A4/B7(1)); this artifact answers "did that mutation
+    # redden those cases", which is a different question with a different
+    # subject.
+    if: ${{ inputs.narrow_test }}
+    permissions:
+      contents: read
+    steps:
+      - name: Require an explicit candidate SHA
+        id: sha
+        # Same rule as `snapshot-refresh`, and for the same reason: a report
+        # that cannot be placed against a commit is not evidence. The input
+        # arrives through `env` rather than a `${{ }}` expansion, so the
+        # pattern below tests a string that could not have ended the statement
+        # meant to validate it.
+        env:
+          REQUESTED_SHA: ${{ github.event.inputs.sha }}
+        run: |
+          if [[ ! "$REQUESTED_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "narrow-test: pass an explicit 40-hex \`sha\` input; this job has no fallback" >&2
+            exit 2
+          fi
+          echo "sha=$REQUESTED_SHA" >> "$GITHUB_OUTPUT"
+
+      # No `fetch-depth: 0`. The gate job takes full history because
+      # `verify-baseline-file-references` resolves a commit other than HEAD;
+      # this job runs vitest over paths and asks git nothing beyond the
+      # checkout itself, and a narrow run exists to be fast.
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.sha.outputs.sha }}
+          persist-credentials: false
+
+      - name: Verify checkout landed on the requested SHA
+        run: |
+          actual=$(git rev-parse HEAD)
+          if [ "$actual" != "${{ steps.sha.outputs.sha }}" ]; then
+            echo "::error::checked out $actual, requested ${{ steps.sha.outputs.sha }}"
+            exit 1
+          fi
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.PRIMARY_NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install (immutable)
+        run: pnpm install --frozen-lockfile
+
+      # The two prerequisites a vitest run needs whatever it selects: a sandbox
+      # backend, without which confined commands are refused and the scenarios
+      # that exercise them record the refusal; and the native addon, because
+      # these steps call vitest directly rather than through a script that
+      # builds it first.
+      - name: Install a sandbox backend (bubblewrap)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bubblewrap
+          if sysctl kernel.apparmor_restrict_unprivileged_userns >/dev/null 2>&1; then
+            echo "AppArmor userns restriction present; lifting it for this runner"
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          else
+            echo "no kernel.apparmor_restrict_unprivileged_userns on this kernel; leaving sysctls alone"
+          fi
+          pnpm exec tsx scripts/probe-sandbox-backend.ts
+
+      - name: Build the host native-system addon
+        run: pnpm run build:native-system
+
+      # Opt-in, because most narrow runs select source-lane paths and a build
+      # is the single most expensive step here. A path that executes built
+      # `lib/` needs it and says so through the input.
+      - name: Build (official client profile)
+        if: ${{ inputs.narrow_build }}
+        env:
+          DSH_BUILD_CLIENT_PROFILE: official
+        run: pnpm run build
+
+      # The path arrives through `env`, never interpolated into the script: an
+      # expansion is substituted before bash parses the line, so a crafted
+      # input could otherwise end the command it was meant to be an argument
+      # to. Unquoted on purpose so several paths can be passed as one input --
+      # vitest takes them as separate filters.
+      - name: Narrow vitest run
+        env:
+          NARROW_PATHS: ${{ inputs.narrow_test }}
+        run: |
+          # shellcheck disable=SC2086
+          pnpm exec vitest run $NARROW_PATHS --reporter=json --outputFile=narrow-report.json
+
+      # `if: always()` so a RED run still hands back its report -- a sensitivity
+      # proof is a question whose expected answer is red, and a job that
+      # withholds the report on red answers nothing.
+      - name: Upload the narrow report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: narrow-report-${{ steps.sha.outputs.sha }}
+          path: narrow-report.json
+          if-no-files-found: error
 
   snapshot-refresh:
     name: Recorded-session REFRESH (artifact only, never committed)
@@ -930,7 +1067,10 @@ jobs:
     # Capturing the dry/verify evidence does not depend on the native test
     # suite passing — run it regardless of exact-sha-gate's outcome so a red
     # nativeTestFullSuite never silently hides runnerDryReceipt evidence too.
-    if: always()
+    # Same reason as `python-sdk`, and costlier if forgotten: this job UPLOADS
+    # evidence, so beside a skipped gate it would publish an evidence bundle
+    # for a run that gated nothing.
+    if: ${{ always() && !inputs.narrow_test }}
     permissions:
       contents: read
     env:
