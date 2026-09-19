@@ -79,7 +79,7 @@ export function additionEntries(adjudication: { approvedAdditions?: { entries?: 
 
 export function resolveDeclaredPaths(epic: OverlayEpic, patches: readonly DeliverablePathPatch[], additions?: readonly ApprovedAddition[]): ResolvedDeclaration[]
 
-export function declaredPaths(epic: OverlayEpic, patches: readonly DeliverablePathPatch[]): Set<string>
+export function declaredPaths(epic: OverlayEpic, patches: readonly DeliverablePathPatch[], additions?: readonly ApprovedAddition[]): Set<string>
 
 export function declaredPathsAsExtracted(epic: OverlayEpic): Set<string>
 
@@ -88,6 +88,7 @@ export function computeOverlay(
   freeze: readonly OverlayFreezeEntry[],
   reasons: Readonly<Record<string, string>>,
   patches: readonly DeliverablePathPatch[],
+  additions?: readonly ApprovedAddition[],
 ): OverlayEntry[]
 
 export function loadOverlayInputs(): {
@@ -95,4 +96,5 @@ export function loadOverlayInputs(): {
   freeze: OverlayFreezeEntry[]
   reasons: Record<string, string>
   patches: DeliverablePathPatch[]
+  additions: ApprovedAddition[]
 }

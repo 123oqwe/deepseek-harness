@@ -3,7 +3,7 @@
  * whether a failure's subject is one of them.
  */
 
-import type { DeliverablePathPatch } from './files-overlay.d.mts'
+import type { ApprovedAddition, DeliverablePathPatch } from './files-overlay.d.mts'
 
 export interface RealitySetEpic {
   id: string
@@ -21,6 +21,7 @@ export function realitySet(
   epic: RealitySetEpic,
   freeze: readonly RealitySetFreezeEntry[],
   patches: readonly DeliverablePathPatch[],
+  additions?: readonly ApprovedAddition[],
 ): string[]
 
 export function realitySetOverlap(

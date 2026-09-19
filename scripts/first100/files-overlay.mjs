@@ -189,10 +189,11 @@ export function resolveDeclaredPaths(epic, patches, additions = []) {
  * because a freeze entry of the same epic can still cite it.
  * @param epic - the registry row.
  * @param patches - the patch entries, from {@link patchEntries}.
+ * @param additions - the addition entries, from {@link additionEntries}; omitted, only the registry's own declarations are read.
  * @returns declared and approved repo-relative paths.
  */
-export function declaredPaths(epic, patches) {
-  return new Set(resolveDeclaredPaths(epic, patches).flatMap(record => [record.declaredPath, ...record.approvedPaths]))
+export function declaredPaths(epic, patches, additions = []) {
+  return new Set(resolveDeclaredPaths(epic, patches, additions).flatMap(record => [record.declaredPath, ...record.approvedPaths]))
 }
 
 /**
@@ -215,14 +216,14 @@ export function declaredPathsAsExtracted(epic) {
  * @param patches - the patch entries, from {@link patchEntries}; a frozen path an epic declares through a patch is declared.
  * @returns overlay entries, sorted by epic then path.
  */
-export function computeOverlay(registry, freeze, reasons, patches) {
+export function computeOverlay(registry, freeze, reasons, patches, additions = []) {
   const byEpic = new Map(registry.epics.map(epic => [epic.id, epic]))
   const seen = new Map()
   for (const entry of freeze) {
     if (entry.supersededBy !== undefined) continue
     const epic = byEpic.get(entry.epic)
     if (epic === undefined) continue
-    const declared = declaredPaths(epic, patches)
+    const declared = declaredPaths(epic, patches, additions)
     for (const path of entry.files ?? []) {
       if (declared.has(path)) continue
       const key = `${entry.epic} ${path}`
@@ -240,12 +241,14 @@ export function computeOverlay(registry, freeze, reasons, patches) {
 
 /**
  * Load the four inputs from their canonical paths.
- * @returns the registry, live-and-superseded freeze entries, the reason table, and the deliverable-path patches.
+ * @returns the registry, live-and-superseded freeze entries, the reason table, the deliverable-path patches, and the approved additions.
  */
 export function loadOverlayInputs() {
   const registry = JSON.parse(readFileSync(REGISTRY_PATH, 'utf8'))
   const freeze = JSON.parse(readFileSync(FREEZE_PATH, 'utf8')).entries
   const reasons = JSON.parse(readFileSync(REASONS_PATH, 'utf8')).reasons
-  const patches = patchEntries(JSON.parse(readFileSync(ADJUDICATION_PATH, 'utf8')))
-  return { registry, freeze, reasons, patches }
+  const adjudication = JSON.parse(readFileSync(ADJUDICATION_PATH, 'utf8'))
+  const patches = patchEntries(adjudication)
+  const additions = additionEntries(adjudication)
+  return { registry, freeze, reasons, patches, additions }
 }

@@ -46,9 +46,10 @@ const OVERLAY_PATH = join(REPO_ROOT, 'spec/first100/exec/files-overlay.json')
  * @param freeze - all freeze entries.
  * @param overlay - the computed overlay.
  * @param patches - the deliverable-path patches, from `patchEntries`.
+ * @param additions - the approved additions, from `additionEntries`; a path an addition names is declared, so the overlay does not report it.
  * @returns `{ epic, stage, path }` for each unaccounted citation.
  */
-export function unaccountedCitations(registry, freeze, overlay, patches) {
+export function unaccountedCitations(registry, freeze, overlay, patches, additions = []) {
   const byEpic = new Map(registry.epics.map(epic => [epic.id, epic]))
   const covered = new Set(overlay.map(entry => `${entry.epic} ${entry.path}`))
   const unaccounted = []
@@ -56,7 +57,7 @@ export function unaccountedCitations(registry, freeze, overlay, patches) {
     if (entry.supersededBy !== undefined) continue
     const epic = byEpic.get(entry.epic)
     if (epic === undefined) continue
-    const declared = declaredPaths(epic, patches)
+    const declared = declaredPaths(epic, patches, additions)
     for (const path of entry.files ?? []) {
       if (declared.has(path) || covered.has(`${entry.epic} ${path}`)) continue
       unaccounted.push({ epic: entry.epic, stage: entry.stage, path })
@@ -186,8 +187,8 @@ export function exitCodeFor(failures, comparison) {
 }
 
 function main() {
-  const { registry, freeze, reasons, patches } = loadOverlayInputs()
-  const overlay = computeOverlay(registry, freeze, reasons, patches)
+  const { registry, freeze, reasons, patches, additions } = loadOverlayInputs()
+  const overlay = computeOverlay(registry, freeze, reasons, patches, additions)
   const unused = unusedReasonKeys(overlay, reasons)
   if (unused.length > 0) {
     console.log(`verify-files-overlay: ${String(unused.length)} reason key(s) no overlay entry uses (informational, not a failure):\n  ${unused.join('\n  ')}`)
@@ -198,7 +199,7 @@ function main() {
     console.log(`verify-files-overlay: wrote ${String(overlay.length)} entry/entries to spec/first100/exec/files-overlay.json`)
   }
 
-  const unaccounted = unaccountedCitations(registry, freeze, overlay, patches)
+  const unaccounted = unaccountedCitations(registry, freeze, overlay, patches, additions)
   const unexplained = sourceEntriesWithoutReason(overlay)
   const uncited = hotZoneEntriesWithoutCitation(overlay)
   const comparison = compareCommittedOverlay(existsSync(OVERLAY_PATH) ? readFileSync(OVERLAY_PATH, 'utf8') : undefined, overlay)

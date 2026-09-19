@@ -29,10 +29,11 @@ import { declaredPaths } from './files-overlay.mjs'
  * @param epic - the registry row, carrying `id`, `files[]` and `stages`.
  * @param freeze - all command-freeze entries, superseded ones included; they are filtered here.
  * @param patches - the deliverable-path patches, from `files-overlay.mjs` `patchEntries`.
+ * @param additions - the approved additions, from `files-overlay.mjs` `additionEntries`; an addition is a deliverable this stage owns, so it belongs in the reality set.
  * @returns repo-relative paths, deduplicated, in insertion order.
  */
-export function realitySet(epic, freeze, patches) {
-  const paths = new Set(declaredPaths(epic, patches))
+export function realitySet(epic, freeze, patches, additions = []) {
+  const paths = new Set(declaredPaths(epic, patches, additions))
   for (const entry of freeze) {
     if (entry.epic !== epic.id || entry.supersededBy !== undefined) continue
     for (const path of entry.files ?? []) paths.add(path)
