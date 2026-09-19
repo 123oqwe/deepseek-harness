@@ -7450,6 +7450,8 @@ So `acceptance[0]` and `acceptance[3]` are true of the fixtures and of no shippe
 
 **Status:** OPEN (2026-09-19). The stop half landed — observed on the native path, red twice and still not green on the PTC path; the fencing half landed, and what is unobserved there is specifically `refuseNewAction`'s own fencing arm on BOTH paths — P4-07.U's frozen cases do observe native fencing, through `advanceLeasedAgent` at the start of a step, which is a different check; the in-flight half is not built at all.
 
+**[2026-09-19 lane B, forward addendum: the PTC half is green now.** The sentence above says the stop half is "still not green on the PTC path", and that stopped being true after it was written: both fencing cases were observed passing in run 35445405234 and again in run 35449457652. The original sentence stays as the record of what was true when the entry opened. **What it says about the IN-FLIGHT half is unchanged** — that half is still not built, and it is what keeps this entry open.]
+
 **The entry opened on a PTC-shaped question and the measurement found something wider.** The question was whether a PTC sub-dispatch passes through the stop gate and lease fencing that native dispatch consults. It does not — but neither did the native path, in the way that mattered.
 
 **`stopGateFor` produced `'stopped'` and every caller dropped it.** Measured across the tree on 2026-09-19: `advanceLeasedAgent` (declared at `packages/core/agent/src/dispatch.ts:308`, `'stopped'` in its return type at `:312`) produces it at `:320`; `agent-loop`'s dispatch short-circuited only on `'fenced'` and `'lease-refused'`; `core/tools`' approval transitions discarded the return outright; and `dsh-run`'s wrapper handed it to four call sites that ignored it. So the only place an emergency stop refused anything was the lease acquisition for a **new** Run — the half P2-12 `acceptance[0]`'s two P cases already pin. A stop raised while a run was working stopped nothing that run was already doing, on either dispatch path. That is a P2-12 finding, not a PTC one, and it is why this entry is not only about `ptc.ts`.
@@ -7629,6 +7631,22 @@ The scan was exhaustive and found no seventh face. That is the scan's claim, rec
 **Closing condition.** `drainSettlements`' dead-letter branch reports through a sink an operator or a later reconciler can reach — at minimum a session event on the PARENT, so a later read of that session distinguishes "permanently undeliverable" from "still pending" and from "delivered" — before P4-06's next acceptance closes.
 
 **What this does NOT claim.** **P4-06 was withdrawn on 2026-09-19**; this joins the evidence its RE-ACCEPTANCE must carry and is not a new reason for that withdrawal, which rests on its own separately recorded grounds. Nor that the outbox is broken: its transactional commit half is real, and this is one terminal state's total silence inside an otherwise working mechanism.
+
+### BLOCKED-289 — the ACP codec calls four different endings "the turn ended successfully"
+
+**Status:** OPEN (2026-09-19). Owner lane B. Scheduled with B-207's work package, which is when a real host-stop cause will exist to map.
+
+**What it maps today.** `turnEndToStopReason` (`packages/acp/acp/src/codec.ts:14-33`) sends `completed`, `aborted`, `blocked` and `error` all to `end_turn`, whose protocol text is "The turn ended successfully." Three of those four did not end successfully.
+
+**The comment is where the error lives.** It reserves `cancelled` for explicit client cancellation — correct, and the spec agrees: `cancelled` "MUST be returned when the client sends a `session/cancel` notification". Then it concludes that "a turn aborted by a hook or another owner is ordinary quiescence and reports `end_turn`". That does not follow from the reservation, and it is false on its own terms: a hook that stopped a turn is the opposite of quiescence. Reserving one value for one case is not a reason to call everything else finished normally.
+
+**`aborted` carries its cause, so the codec can read it.** `TurnEndCancelCause` is `user | parent | hook | disposed | legacy` (`core/session/src/types.ts:189-196`). A user cancellation, a parent cancelling a child, and a disposal are cancellations whichever surface they arrived on; a `hook` abort is a refusal. `blocked` is the loop declining rather than the model finishing, and is the other candidate for `refusal`.
+
+**And `refusal` is not free, which is why this is its own entry rather than a rider.** The protocol says: "The turn ended because the agent refused to continue. **The user prompt and everything that comes after it won't be included in the next prompt**, so this should be reflected in the UI." Mapping a hook interception to `refusal` therefore instructs every client to drop that prompt and its successors from the conversation. That is a product decision about other people's histories, not a codec tidy-up, and it is the reason the remap was split out of the `_meta` change rather than carried with it.
+
+**`error` stays `end_turn` and is recorded as unresolved.** An error is neither a refusal nor a cancellation, the protocol has no member for it, and inventing one here would be guessing.
+
+**Closing condition.** A mapping decided per cause, with the client-side consequence of `refusal` weighed explicitly for each case that would receive it, and cases pinning each arm. The stop half needs B-207 first: **today a host stop ends no turn at all** — it refuses tool dispatch and lets the turn finish — so there is no stop-caused ending to map yet.
 
 ### BLOCKED-290 — a launch-grant write failure rejected a fiber nobody held, so it killed the process instead of reporting itself
 
