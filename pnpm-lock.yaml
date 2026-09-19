@@ -371,6 +371,9 @@ importers:
       '@deepseek-ai/dsh-trust-kernel':
         specifier: workspace:^
         version: link:../../packages/kernel/trust-kernel
+      '@deepseek-ai/dsh-util-values':
+        specifier: workspace:^
+        version: link:../../packages/util/values
       '@deepseek-ai/dsh-web-app':
         specifier: workspace:^
         version: link:../../packages/bundle/web-app
@@ -4852,6 +4855,10 @@ importers:
         version: link:../../../vendor/cordis
 
   packages/collaboration/lease-contract:
+    dependencies:
+      '@deepseek-ai/dsh-util-values':
+        specifier: workspace:^
+        version: link:../../util/values
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:^
@@ -8517,9 +8524,15 @@ importers:
       '@deepseek-ai/dsh-brand':
         specifier: workspace:^
         version: link:../../util/brand
+      '@deepseek-ai/dsh-control-plane':
+        specifier: workspace:^
+        version: link:../../interaction/control-plane
       '@deepseek-ai/dsh-lease-contract':
         specifier: workspace:^
         version: link:../../collaboration/lease-contract
+      '@deepseek-ai/dsh-principal':
+        specifier: workspace:^
+        version: link:../../identity/principal
 
   packages/run/lease-sqlite:
     dependencies:
@@ -8533,9 +8546,15 @@ importers:
       '@deepseek-ai/dsh-brand':
         specifier: workspace:^
         version: link:../../util/brand
+      '@deepseek-ai/dsh-control-plane':
+        specifier: workspace:^
+        version: link:../../interaction/control-plane
       '@deepseek-ai/dsh-lease-contract':
         specifier: workspace:^
         version: link:../../collaboration/lease-contract
+      '@deepseek-ai/dsh-principal':
+        specifier: workspace:^
+        version: link:../../identity/principal
 
   packages/run/message-bus:
     dependencies:
@@ -8577,6 +8596,9 @@ importers:
       '@deepseek-ai/dsh-brand':
         specifier: workspace:^
         version: link:../../util/brand
+      '@deepseek-ai/dsh-control-plane':
+        specifier: workspace:^
+        version: link:../../interaction/control-plane
       '@deepseek-ai/dsh-goal':
         specifier: workspace:^
         version: link:../../goal/goal
@@ -12232,6 +12254,9 @@ importers:
       '@deepseek-ai/dsh-agent-loop-testkit':
         specifier: workspace:^
         version: link:../../test-support/agent-loop-testkit
+      '@deepseek-ai/dsh-control-plane':
+        specifier: workspace:^
+        version: link:../../interaction/control-plane
       '@deepseek-ai/dsh-home-paths':
         specifier: workspace:^
         version: link:../../util/home-paths

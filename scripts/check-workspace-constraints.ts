@@ -6,6 +6,7 @@
  */
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import yaml from 'js-yaml'
 import { join, relative, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { isPublicExperimentalPackageDirectory } from './experimental-package-policy.ts'
@@ -591,6 +592,107 @@ function checkWorkspaceProtocol(manifests: readonly WorkspaceManifest[]): string
   return errors
 }
 
+/**
+ * Every `workspace:` specifier a manifest declares appears in the lockfile's
+ * importer for that package, and nothing stale remains.
+ *
+ * `pnpm install --frozen-lockfile` — what CI runs first — compares exactly
+ * this and refuses the whole run with `ERR_PNPM_OUTDATED_LOCKFILE` when it
+ * disagrees. A workspace edge added to a manifest without regenerating the
+ * lockfile therefore does not fail the package it was added to: it fails every
+ * gate in the run, two minutes in, with no test having executed. That happened
+ * on 2026-09-19 and is why this is checked here, in a gate that runs in
+ * seconds, rather than discovered by the installer.
+ *
+ * Only `workspace:` edges are compared. Registry dependencies carry resolved
+ * versions and integrity hashes that no hand edit can reconstruct, and a check
+ * that pretended to verify them would be claiming more than it can see.
+ * @param manifests - every workspace manifest.
+ * @returns One error per missing, extra or mismatched workspace edge.
+ */
+/** One importer's recorded edges, as pnpm writes them. */
+export type LockfileImporter = Record<string, Record<string, { specifier?: string }>>
+
+/**
+ * Compare declared workspace edges against the ones a lockfile records.
+ *
+ * Pure, so the rule can be exercised without a lockfile on disk; the caller
+ * supplies what `pnpm-lock.yaml` says.
+ * @param manifests - every workspace manifest.
+ * @param importers - the lockfile's `importers` map, keyed by package directory.
+ * @returns One error per missing, stale or mismatched workspace edge.
+ */
+export function collectLockfileEdgeViolations(
+  manifests: readonly WorkspaceManifest[],
+  importers: Record<string, LockfileImporter>,
+): string[] {
+  // The lockfile's own sections. `peerDependencies` is not one: pnpm records a
+  // peer edge only where a dependency or devDependency installs it. Names are
+  // compared across the union rather than section by section, because a package
+  // declared in both `dependencies` and `devDependencies` is recorded once.
+  const sections = ['dependencies', 'devDependencies', 'optionalDependencies'] as const
+  const errors: string[] = []
+  for (const { dir, manifest } of manifests) {
+    const importer = importers[dir] ?? {}
+    const recorded = new Map<string, string | undefined>()
+    for (const section of sections) {
+      for (const [name, entry] of Object.entries(importer[section] ?? {})) recorded.set(name, entry.specifier)
+    }
+    const declared = new Map<string, string>()
+    for (const section of sections) {
+      for (const [name, range] of Object.entries(manifest[section] ?? {})) {
+        if (range.startsWith('workspace:')) declared.set(name, range)
+      }
+    }
+    for (const [name, range] of declared) {
+      if (!recorded.has(name)) {
+        errors.push(`${dir}: ${name} is ${range} in package.json and absent from pnpm-lock.yaml's importer — run pnpm install`)
+        continue
+      }
+      const specifier = recorded.get(name)
+      // A recorded `link:` is pnpm's own normalization of a vendored member and
+      // is not a drift; a recorded `workspace:` range that differs is.
+      if (specifier?.startsWith('workspace:') === true && specifier !== range) {
+        errors.push(`${dir}: ${name} is ${range} in package.json and ${specifier} in pnpm-lock.yaml`)
+      }
+    }
+    // A recorded edge the manifest declares only as a peer is not stale: pnpm
+    // writes the importer entry for whoever installs the peer, and the manifest
+    // is the one asking for it.
+    const declaredAnywhere = new Set([...declared.keys(), ...Object.keys(manifest.peerDependencies ?? {})])
+    for (const [name, specifier] of recorded) {
+      if (specifier?.startsWith('workspace:') !== true || declaredAnywhere.has(name)) continue
+      errors.push(`${dir}: ${name} is in pnpm-lock.yaml's importer and declared by no section of package.json — run pnpm install`)
+    }
+  }
+  return errors
+}
+
+/**
+ * Every `workspace:` specifier a manifest declares appears in the lockfile's
+ * importer for that package, and nothing stale remains.
+ *
+ * `pnpm install --frozen-lockfile` — what CI runs first — compares exactly
+ * this and refuses the whole run with `ERR_PNPM_OUTDATED_LOCKFILE` when it
+ * disagrees. A workspace edge added to a manifest without regenerating the
+ * lockfile therefore does not fail the package it was added to: it fails every
+ * gate in the run, two minutes in, with no test having executed. That happened
+ * on 2026-09-19 and is why this is checked here, in a gate that runs in
+ * seconds, rather than discovered by the installer.
+ *
+ * Only `workspace:` edges are compared. Registry dependencies carry resolved
+ * versions and integrity hashes no hand edit can reconstruct, and a check that
+ * pretended to verify them would claim more than it can see.
+ * @param manifests - every workspace manifest.
+ * @returns One error per missing, stale or mismatched workspace edge.
+ */
+function checkLockfileWorkspaceEdges(manifests: readonly WorkspaceManifest[]): string[] {
+  const lockPath = join(root, 'pnpm-lock.yaml')
+  if (!existsSync(lockPath)) return [`pnpm-lock.yaml is missing at ${lockPath}`]
+  const lock = yaml.load(readFileSync(lockPath, 'utf8')) as { importers?: Record<string, LockfileImporter> }
+  return collectLockfileEdgeViolations(manifests, lock.importers ?? {})
+}
+
 /** Run the repository constraint gate. */
 export function main(): void {
   const manifests = workspaceManifests()
@@ -605,6 +707,7 @@ export function main(): void {
     ...checkExperimentalDependencyIsolation(dependencyManifests),
     ...checkHierarchyShape(),
     ...collectProjectReferenceFaceViolations(root),
+    ...checkLockfileWorkspaceEdges(manifests),
   ]
   if (errors.length > 0) {
     console.error(errors.join('\n'))

@@ -5,6 +5,7 @@ import {
   checkDshFamilyVersion,
   checkExperimentalDependencyIsolation,
   checkExperimentalManifest,
+  collectLockfileEdgeViolations,
   expectedDshPackageFiles,
   type WorkspaceManifest,
 } from './check-workspace-constraints.ts'
@@ -141,5 +142,62 @@ describe('package payload constraints', () => {
       'cordis.patch.yml',
       'lib/types/**/*.d.ts',
     ])
+  })
+})
+
+describe('lockfile workspace edges', () => {
+  const consumer: WorkspaceManifest = {
+    dir: 'packages/run/lease',
+    manifest: {
+      name: '@deepseek-ai/dsh-lease',
+      devDependencies: { '@deepseek-ai/dsh-control-plane': 'workspace:^' },
+      peerDependencies: { '@deepseek-ai/dsh-control-plane': 'workspace:^' },
+    },
+  }
+
+  it('reports a workspace edge the lockfile does not record, which is what stops CI two minutes in', () => {
+    expect(collectLockfileEdgeViolations([consumer], { 'packages/run/lease': { devDependencies: {} } })).toEqual([
+      'packages/run/lease: @deepseek-ai/dsh-control-plane is workspace:^ in package.json'
+      + " and absent from pnpm-lock.yaml's importer — run pnpm install",
+    ])
+  })
+
+  it('accepts the same edge once the importer records it', () => {
+    // The positive control for the case above: same manifest, same rule, and
+    // the only difference is the entry a regenerated lockfile would carry.
+    expect(collectLockfileEdgeViolations([consumer], {
+      'packages/run/lease': { devDependencies: { '@deepseek-ai/dsh-control-plane': { specifier: 'workspace:^' } } },
+    })).toEqual([])
+  })
+
+  it('accepts a recorded edge the manifest declares only as a peer, because pnpm records it for whoever installs it', () => {
+    const peerOnly: WorkspaceManifest = {
+      dir: 'vendor/cordis',
+      manifest: { name: '@deepseek-ai/cordis', peerDependencies: { '@deepseek-ai/cordis-plugin-loader': 'workspace:^' } },
+    }
+    expect(collectLockfileEdgeViolations([peerOnly], {
+      'vendor/cordis': { dependencies: { '@deepseek-ai/cordis-plugin-loader': { specifier: 'workspace:^' } } },
+    })).toEqual([])
+  })
+
+  it('reports a recorded workspace edge no section of the manifest declares', () => {
+    expect(collectLockfileEdgeViolations([{ dir: 'packages/a/b', manifest: { name: '@deepseek-ai/dsh-b' } }], {
+      'packages/a/b': { dependencies: { '@deepseek-ai/dsh-gone': { specifier: 'workspace:^' } } },
+    })).toEqual([
+      "packages/a/b: @deepseek-ai/dsh-gone is in pnpm-lock.yaml's importer"
+      + ' and declared by no section of package.json — run pnpm install',
+    ])
+  })
+
+  it('leaves a vendored member whose recorded specifier pnpm normalized to a link alone', () => {
+    // Measured on this repository: `@deepseek-ai/schemastery` is `workspace:^`
+    // in several manifests and recorded as `link:…`. Flagging that would make
+    // the gate red on a clean tree, which is how a check gets disabled.
+    expect(collectLockfileEdgeViolations([{
+      dir: 'packages/x/y',
+      manifest: { name: '@deepseek-ai/dsh-y', dependencies: { '@deepseek-ai/schemastery': 'workspace:^' } },
+    }], {
+      'packages/x/y': { dependencies: { '@deepseek-ai/schemastery': { specifier: 'link:../../../vendor/schemastery' } } },
+    })).toEqual([])
   })
 })
