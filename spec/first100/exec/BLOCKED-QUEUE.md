@@ -7529,3 +7529,65 @@ So `acceptance[0]` and `acceptance[3]` are true of the fixtures and of no shippe
 **Closing condition.** Either one sentence and one error name for the condition, with the frozen case's expected string changed in the same act; or a recorded ruling that the two refusals are deliberately distinct, with each one's text saying which situation it is about.
 
 **What this does NOT claim.** Not that either refusal is wrong or missing. Both fire, both are model-visible, and both name the condition; this is about one condition speaking with two voices.
+
+### BLOCKED-276 — the config catalog's classifier reads one file per package, and five shipped plugin Configs are catalogued as libraries with none
+
+**Status:** OPEN (2026-09-19). Owner lane B, on `scripts/gen-config-catalog.ts`.
+
+**The classifier asks one file.** `collectConfigCatalog` (`scripts/gen-config-catalog.ts:673`) walks `packages/*/*` and reads exactly one path per package — `const entryRel = \`${dir}/src/index.ts\`` (`:701`) — looking there for a locally DECLARED default-exported class or function (`defaultExport`, `:644`) or an exported `apply` (`applyExport`, `:660`). Only once one of those is found does `findSchemaExpr` (`:600`) look for a `static Config`.
+
+**Two real shapes walk past it.** **(a)** `index.ts` re-exports a default declared elsewhere (`export { default } from './plugin.ts'`): `defaultExport` resolves identifiers among `index.ts`'s own statements and never follows a re-export. **(b)** The plugin is mounted at a `package.json` `exports` SUBPATH — `@deepseek-ai/dsh-x/plugin`, `@deepseek-ai/dsh-x/usage` — and the generator reads no file but `src/index.ts` whatever subpath a `cordis.patch.yml` names.
+
+**`gen-config-catalog --check` is green, and its green means something narrower than it reads.** It means the tool ran and found no inconsistency with its own output, not that every mounted Config is shown.
+
+**Five packages, all live production mounts, re-measured on `42852fbf66`.** Paths in full, because the draft this entry comes from named files without directories and two of the guesses a reader would make are wrong:
+
+| package | shape | `static Config` |
+|---|---|---|
+| `@deepseek-ai/dsh-action-ledger` | (a) | `packages/action/action-ledger/src/plugin.ts:48` |
+| `@deepseek-ai/dsh-control-plane` | (b), `./plugin` | `packages/interaction/control-plane/src/plugin.ts:104` |
+| `@deepseek-ai/dsh-message-bus` | (a) | `packages/run/message-bus/src/plugin.ts:59` |
+| `@deepseek-ai/dsh-retry` | (b), `./usage` | `packages/reliability/retry/src/usage.ts:157` |
+| `@deepseek-ai/dsh-execution-world` | (b), `./plugin` | `packages/execution/execution-world/src/plugin.ts:215` |
+
+None appears in `docs/config-catalog.md` except as a bare name under "Library packages (no plugin entry)". `dsh-execution-world` mounts at `packages/bundle/base/cordis.patch.yml:254` with its `/local` provider row at `:257`.
+
+**`dsh-retry` evades one layer further, and the closing condition has to say so.** Its schema is not a `static Config = z.object(…)` at all: it is `export const Config: z<Config>` (`usage.ts:157`) aliased onto the class as `static readonly Config = Config` (`:171`). A generator taught only to read every `exports` subpath would reach the file and still find no initialiser on the class. **A closing condition that misses this leaves whoever fixes it one short, and the entry reopens.**
+
+**Closing condition.** `defaultExport`/`applyExport` follow a re-export statement to its source file; the classifier reads every `exports` subpath a package declares, not only `.`; and `findSchemaExpr` follows one identifier to its initialiser. Each of the three checked against a fixture: shape (a), shape (b), and `dsh-retry`'s alias. Re-running `gen-config-catalog --check` afterwards must newly render all five Configs above and change none of the entries that are already right.
+
+**What this does NOT claim.** Not that any of the five Configs fails to validate — each schema validates real input at its own plugin's construction, catalogued or not. This is documentation coverage. Not that all five gaps are equally consequential either: `dsh-execution-world`'s shipped row overrides no field today, so no deployment is currently setting it away from its default — the catalog gap still hides from an operator that the surface exists.
+
+### BLOCKED-278 — P0-06's bidirectional-or-irreversible obligation quantifies over an empty set
+
+**Status:** OPEN (2026-09-19). Owner: the first epic to land a real non-identity schema migration, per the coverage note's own transfer.
+
+**The clause has nothing to be true or false about.** P0-06 `acceptance[2]` asks that every migration be bidirectional or explicitly irreversible. Re-measured on `42852fbf66`: `registerSchema` has exactly three production call sites — `packages/schema/schema-registry/src/index.ts:242` (session-event types, in bulk), `:268` (sdk-protocol message names, in bulk) and `packages/settings/settings/src/index.ts:455` (the settings document) — and **all three pass `identityMigration`**. `evolveSchema`, the entry point that produces a non-identity migration, is declared at `schema-registry/src/index.ts:139` and has **zero production callers**: every other occurrence is its own JSDoc, a cross-reference, or `migrate.ts:9`'s comment about a helper that exercises it against a constructed, unregistered example.
+
+**Closing condition.** The first epic registering a real non-identity migration — a genuine rename, removal or semantic change on a persisted or wire object — supplies, for that migration, either a round-trip bidirectional test or an explicit-irreversibility proof exporting no reverse migration. The two illustrative P-stage examples already show the shape is expressible.
+
+**What this does NOT claim.** Not that P0-06 must be withdrawn. The registry is real and its negotiation half has three genuine production callers. This is one clause's vacuous-truth state, not a broken mechanism.
+
+### BLOCKED-279 — P1-10's crash-mid-phase half is simulated; no case kills a process
+
+**Status:** OPEN (2026-09-19). Owner lane B, scheduled after P2-12. The fixture it needs spawns a real child process and kills it with SIGKILL, so it can only be observed in this program's CI: **it is not runnable on the executor machine**, and a green for it will come from a run, never from a local claim.
+
+**What the clause asks for and what the cases do.** P1-10 `acceptance[0]` asks that a crash mid-phase, followed by a restart, leave the old or the new state and never a mix. The no-mixed-state half genuinely holds by construction — a migration works on a copy and the live unit is untouched until `switchIn`, which fault boundaries 11, 12 and 15 assert. The RESTART half is seeded by hand: `apps/cli/tests/plugin-migration-fault-matrix.spec.ts` builds an `INTERRUPTED` record at `:115`, plants it with `homeWithRecord('notes-plugin', INTERRUPTED)` at `:147`, and drives `recoverInterruptedUpgrades` (`apps/cli/src/plugin-migration.ts:522`) over it. That exercises the path a restart would reach; it does not produce the record by crashing.
+
+**A grep for `SIGKILL` finds one hit in a migration-named file, and it is not a crash.** `packages/session/session-persistence-jsonl/tests/built-migration-worker.e2e.ts:68` passes `killSignal: 'SIGKILL'` as the TIMEOUT disposition of a subprocess call, in a different package's migration worker. Nothing in the tree kills a process mid-migration on purpose. This is recorded so the entry is not read as disproved by a matcher that finds the string.
+
+**Closing condition.** A fixture that spawns a real child process running a migration, kills it with SIGKILL at each of several named phase boundaries, restarts, and observes the old-or-new outcome for real — `validation[0]`'s own words.
+
+**What this does NOT claim.** Not that P1-10 must be withdrawn: the structural half is real and provable without a kill. Only the literal crash-and-restart half is unproven, and the coverage note recorded it rather than leaving it implicit.
+
+### BLOCKED-280 — P2-06's redaction policy and its audit query tool are both unproven
+
+**Status:** OPEN (2026-09-19). Owner lane B, scheduled after P2-12. Two independent gaps under one clause pair, tracked together because neither is large enough to carry a number alone.
+
+**acceptance[1]: the machinery around the decision is proven; the decision is not.** The coverage note says it in its own words — *"What no citation proves is that every sensitive value IS redacted: `redactArgumentsForDisplay` decides what to hide, and its policy is not this clause's subject."* What IS cited is real: two arguments that display identically still digest differently, and the record carries no raw value while still distinguishing two of them. No citation tests the rule that decides which field is sensitive.
+
+**acceptance[2]: the field the query would travel on exists; the query does not.** Again the note's own words — *"What no citation proves is that an audit TOOL exists to run the query; the field it would travel on does, and the reverse lookup is exercised in the Fault case that filters the log by `actionId`."* The one-to-one reference is real: an `actionId` on the record, distinguishable across two calls to one tool, fail-closed when ambiguous. No operator-facing command runs "find the approval for this action".
+
+**Closing condition.** For `acceptance[1]`, a fixture enumerating `redactArgumentsForDisplay`'s rule set against a table of sensitive and non-sensitive field names, proving each classification — not that redaction, once decided, survives to the digest. For `acceptance[2]`, a real audit query taking an `actionId` and returning the matching approval record, exercised against a live log.
+
+**What this does NOT claim.** Not that P2-06 must be withdrawn: both gaps are additive — a policy-correctness test and a query tool — and neither says the digest binding or the durable reference is broken.
