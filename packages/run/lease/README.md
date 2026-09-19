@@ -15,6 +15,7 @@ kind: "package-reference"
 - [Why a forged-high epoch is also refused](#why-a-forged-high-epoch-is-also-refused)
 - [The expiry boundary](#the-expiry-boundary)
 - [The store is the sole issuer of epochs](#the-store-is-the-sole-issuer-of-epochs)
+- [The emergency stop is read at every acquisition](#the-emergency-stop-is-read-at-every-acquisition)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 - [Dev Note](#dev-note)
@@ -40,6 +41,14 @@ That is what makes `checkFencing` meaningful: a token can only carry an epoch `L
 A heartbeat moves the deadline and does **not** issue a new epoch: the holder's authority is unchanged, and bumping it would fence the holder out of its own work. Renewal of an already-expired lease is refused rather than granted, because the scheduler may already have handed that item to someone else — reviving a lapsed holder is precisely the two-masters state.
 
 **Availability is part of the contract, not an error path.** While the store is unavailable, `acquire` refuses with `store-unavailable` and `reclaimable` returns nothing. "Nobody holds this" and "I cannot tell you who holds this" must not look alike to a scheduler: reporting an item free during an outage is how the same work reaches a second worker (acceptance[2]).
+
+## The emergency stop is read at every acquisition
+
+While a stop is in force this provider refuses `acquire` with `'stopped'`, before its storage is consulted (P2-12 must[2]). The control plane is read through `ctx.get('controlPlane')` at call time rather than injected or cached, because the answer changes while the mount lives and a copy taken at mount would report the deployment's state at startup.
+
+A composition that mounts no control plane is admitted: capability absence is not a stop, which is the answer `stopGateFor` already gives on the dispatch path. A plane that is mounted but not yet active is a different case and is NOT admitted — reading its state throws, and this provider does not catch it, because a stop that cannot be read is not a stop that is absent. Custom compositions that mount a lease store without a control plane therefore have no stop gate at this seam; the shipped `dsh-base` bundle mounts both.
+
+`renew` and `release` stay open under a stop, for the reasons the contract's own documentation gives.
 
 ## Model Experience
 

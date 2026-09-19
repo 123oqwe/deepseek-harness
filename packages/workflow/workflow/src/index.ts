@@ -122,6 +122,8 @@ export type WorkflowErrorCode =
   | 'LEASE_STORE_UNAVAILABLE'
   /** Another host holds this run's lease and it has not expired (P4-07 must[0]). */
   | 'RUN_HELD_BY_ANOTHER_HOST'
+  /** An emergency stop is in force, so no run may be started or resumed (P2-12 must[2]). */
+  | 'EMERGENCY_STOP_IN_FORCE'
 
 /**
  * Typed error for workflow-seam failures. Extends {@link HarnessError}, so the

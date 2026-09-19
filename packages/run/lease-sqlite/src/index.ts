@@ -15,6 +15,11 @@
 
 import { Service } from '@deepseek-ai/cordis'
 import type { Context } from '@deepseek-ai/cordis'
+import { mayStartNewWork } from '@deepseek-ai/dsh-control-plane'
+// The `ctx.controlPlane` slot is declared by the control plane's PLUGIN module,
+// so the service's type reaches `ctx.get` only when that module is in the
+// program. Nothing else here needs it, hence a type-only import.
+import type {} from '@deepseek-ai/dsh-control-plane/plugin'
 import type {
   AcquireResult,
   FencingToken,
@@ -121,7 +126,22 @@ export default class LeaseStorePlugin extends Service implements LeaseStoreContr
   }
 
   /**
-   * Acquire the item for `worker`.
+   * Acquire the item for `worker`, unless an emergency stop forbids new work.
+   *
+   * The stop is consulted BEFORE the database is opened or touched, so a
+   * refused acquisition writes nothing and issues no epoch: an epoch granted
+   * under a stop would outlive it and authorize writes afterwards. The control
+   * plane is read at call time — `ctx.get`, not `inject`, and nothing cached —
+   * because the answer changes while this mount lives.
+   *
+   * This is the provider the shipped `dsh-base` bundle mounts, so it is the one
+   * whose refusal an operator actually gets; the in-memory provider holds the
+   * same gate and the contract's shared conformance suite runs it against both.
+   *
+   * A composition that mounts no control plane admits the acquisition, the
+   * answer `stopGateFor` already gives on the dispatch path. A plane that is
+   * mounted but not yet active is not absence: `state()` throws, and this does
+   * not catch it.
    * @param workItem - the item to acquire.
    * @param worker - the acquiring worker.
    * @param nowMs - the instant to judge the incumbent's expiry against.
@@ -129,11 +149,17 @@ export default class LeaseStorePlugin extends Service implements LeaseStoreContr
    * @returns the new lease and its token, or the reason for refusal.
    */
   acquire(workItem: WorkItemId, worker: WorkerId, nowMs: number, leaseMs: number): AcquireResult {
+    const plane = this.ctx.get('controlPlane')
+    if (plane !== undefined && mayStartNewWork(plane.state()) !== undefined) {
+      return { acquired: false, reason: 'stopped' }
+    }
     return this.store.acquire(workItem, worker, nowMs, leaseMs)
   }
 
   /**
-   * Extend the lease `token` authorizes.
+   * Extend the lease `token` authorizes; an emergency stop does not gate this,
+   * because a heartbeat keeps work already under way rather than starting any
+   * — `LeaseStoreContract.renew` carries the reasoning.
    * @param token - the holder's current authority.
    * @param nowMs - the instant to judge expiry against.
    * @param leaseMs - how long the renewed lease should run from `nowMs`.
@@ -144,7 +170,8 @@ export default class LeaseStorePlugin extends Service implements LeaseStoreContr
   }
 
   /**
-   * Give up the lease `token` authorizes.
+   * Give up the lease `token` authorizes; an emergency stop never gates this,
+   * since handing an item back is what a stopped deployment wants.
    * @param token - the holder's authority over the item it is giving up.
    */
   release(token: FencingToken): void {

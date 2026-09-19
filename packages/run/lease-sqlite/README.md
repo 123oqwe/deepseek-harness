@@ -14,6 +14,7 @@ kind: "package-reference"
 - [A lease that dies with its holder is not a lease](#a-lease-that-dies-with-its-holder-is-not-a-lease)
 - [What the transaction covers](#what-the-transaction-covers)
 - [Epochs outlive leases](#epochs-outlive-leases)
+- [The emergency stop is read at every acquisition](#the-emergency-stop-is-read-at-every-acquisition)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 - [Dev Note](#dev-note)
@@ -31,6 +32,14 @@ The comparisons themselves are not re-decided here. Expiry is `isReclaimable` fr
 ## Epochs outlive leases
 
 `lease_epochs` is a separate table from `leases`, keyed by work item, holding the next epoch to issue. A lease row is replaced whenever the item changes hands; the high-water epoch is not, so a reacquired item never reissues an epoch a stale worker still holds and could still present.
+
+## The emergency stop is read at every acquisition
+
+While a stop is in force this provider refuses `acquire` with `'stopped'`, before its storage is consulted (P2-12 must[2]). The control plane is read through `ctx.get('controlPlane')` at call time rather than injected or cached, because the answer changes while the mount lives and a copy taken at mount would report the deployment's state at startup.
+
+A composition that mounts no control plane is admitted: capability absence is not a stop, which is the answer `stopGateFor` already gives on the dispatch path. A plane that is mounted but not yet active is a different case and is NOT admitted — reading its state throws, and this provider does not catch it, because a stop that cannot be read is not a stop that is absent. Custom compositions that mount a lease store without a control plane therefore have no stop gate at this seam; the shipped `dsh-base` bundle mounts both, and this is the provider it mounts.
+
+`renew` and `release` stay open under a stop, for the reasons the contract's own documentation gives.
 
 ## Model Experience
 

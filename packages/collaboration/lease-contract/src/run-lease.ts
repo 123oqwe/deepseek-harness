@@ -21,8 +21,9 @@
  * @module @deepseek-ai/dsh-lease-contract/run-lease
  */
 
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import { checkFencing } from './index.ts'
-import type { FencingToken, Lease, LeaseStoreContract, WorkItemId, WorkerId } from './types.ts'
+import type { AcquireDenialReason, FencingToken, Lease, LeaseStoreContract, WorkItemId, WorkerId } from './types.ts'
 
 /** Why a run could not take, or could not keep, its lease. */
 export type RunLeaseDenial =
@@ -32,6 +33,8 @@ export type RunLeaseDenial =
   | { readonly reason: 'held-by-another'; readonly holder: WorkerId | undefined }
   /** This holder's epoch is behind the store's: it was reclaimed and must stop. */
   | { readonly reason: 'fenced-out'; readonly currentEpoch: number }
+  /** An emergency stop is in force, so no new run may take an item (P2-12 must[2]). */
+  | { readonly reason: 'stopped' }
 
 /** What a run does with a lease while it is alive. */
 export interface RunLease {
@@ -69,12 +72,39 @@ export interface RunLease {
 }
 
 /**
+ * Carry a store's refusal to the run's caller under its own name.
+ *
+ * **A switch and not a test-and-otherwise.** This mapping was a ternary whose
+ * `else` said `'held-by-another'`, so the reason a provider added later — the
+ * emergency stop — arrived at every caller as "another worker holds this item",
+ * with no holder to name and no compiler complaint: the two unions are
+ * declared separately, and a ternary type-checks however many members the
+ * source union grows. `assertNever` makes the next added reason a typecheck
+ * failure here instead of a wrong sentence in an operator's log.
+ * @param reason - the store's own refusal.
+ * @param holder - the incumbent worker the store named, for the one reason that has one.
+ * @returns the same refusal in the run-side vocabulary.
+ */
+function denialFor(reason: AcquireDenialReason, holder: WorkerId | undefined): RunLeaseDenial {
+  switch (reason) {
+    case 'store-unavailable': return { reason: 'store-unavailable' }
+    case 'held-by-another': return { reason: 'held-by-another', holder }
+    case 'stopped': return { reason: 'stopped' }
+    default: return assertNever(reason, 'AcquireDenialReason')
+  }
+}
+
+/**
  * Take the lease for one run, or say why not.
  *
  * The store's availability is checked FIRST and separately from ownership.
  * acceptance[2] is "stop new work when the lease store fails", and a store
  * that cannot answer is not the same as an item someone else holds: conflating
  * them would let an outage read as a busy item and be retried forever.
+ *
+ * A provider that refuses because an emergency stop is in force answers
+ * `'stopped'` without consulting its storage, and that answer reaches the
+ * caller under its own name through {@link denialFor}.
  * @param store - the lease store this host writes through, durable and shared.
  * @param workItem - the run, as the item being owned.
  * @param holder - this host's worker identity.
@@ -90,13 +120,7 @@ export function acquireRunLease(
   leaseMs: number,
 ): { readonly lease: RunLease } | { readonly denied: RunLeaseDenial } {
   const acquired = store.acquire(workItem, holder, nowMs, leaseMs)
-  if (!acquired.acquired) {
-    return {
-      denied: acquired.reason === 'store-unavailable'
-        ? { reason: 'store-unavailable' }
-        : { reason: 'held-by-another', holder: acquired.holder },
-    }
-  }
+  if (!acquired.acquired) return { denied: denialFor(acquired.reason, acquired.holder) }
   const token = acquired.token
   return {
     lease: {

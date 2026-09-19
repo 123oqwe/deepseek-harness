@@ -13,6 +13,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import WorkflowEngine, { WorkflowError, WorkflowRunId } from '@deepseek-ai/dsh-workflow'
 import { brandString } from '@deepseek-ai/dsh-brand'
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import type { LeaseStoreContract, RunLease, WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease-contract'
 import { dshHomePath } from '@deepseek-ai/dsh-home-paths'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
@@ -622,27 +623,46 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
    * asking for a run it is already running.
    * @param id - the run whose work item is being claimed.
    * @returns the held lease.
-   * @throws WorkflowError when the store cannot answer or another worker holds it.
+   * @throws WorkflowError when the store cannot answer, an emergency stop is in force, or another worker holds it.
    */
   private takeRunLease(id: WorkflowRunId): { lease: RunLease } {
     const holder = brandString<WorkerId>(`workflow-engine:${process.pid}`)
     const taken = acquireRunLease(this.leases, brandString<WorkItemId>(id), holder, Date.now(), this.config.leaseMs)
     if ('denied' in taken) {
       const denial = taken.denied
-      if (denial.reason === 'store-unavailable') {
-        throw new WorkflowError(
-          'the lease store could not be reached, so no new workflow run may start',
-          'LEASE_STORE_UNAVAILABLE',
-        )
+      // A switch and not a chain ending in "everything else is another host".
+      // That chain is what announced P2-12's stop as a phantom second host
+      // when the reason was added one layer down, with nothing red; the
+      // `default` makes the next reason a typecheck failure here instead.
+      switch (denial.reason) {
+        case 'store-unavailable':
+          throw new WorkflowError(
+            'the lease store could not be reached, so no new workflow run may start',
+            'LEASE_STORE_UNAVAILABLE',
+          )
+        case 'stopped':
+          // Nobody holds this item and there is nothing to wait for: only a
+          // resume changes the answer, so a caller that retried would spend
+          // the stop asking the same question.
+          throw new WorkflowError(
+            `workflow run ${id} was refused: an emergency stop is in force, so no run starts until it is released`,
+            'EMERGENCY_STOP_IN_FORCE',
+          )
+        case 'fenced-out':
+          // Cannot arrive from an acquisition — it is a renewal's answer — but
+          // it is answered rather than folded into the case below.
+          throw new WorkflowError(
+            `workflow run ${id} lost its work item to another host at epoch ${String(denial.currentEpoch)}; resume refused`,
+            'RUN_HELD_BY_ANOTHER_HOST',
+          )
+        case 'held-by-another':
+          throw new WorkflowError(
+            `workflow run ${id} is held by ${denial.holder ?? 'an unnamed worker'} and is still live; resume refused`,
+            'RUN_HELD_BY_ANOTHER_HOST',
+          )
+        default:
+          return assertNever(denial, 'RunLeaseDenial')
       }
-      // `fenced-out` cannot arrive from an acquisition — it is a renewal's
-      // answer — but the union carries it, so the holder is read only where the
-      // type says there is one.
-      const holder = denial.reason === 'held-by-another' ? denial.holder : undefined
-      throw new WorkflowError(
-        `workflow run ${id} is held by ${holder ?? 'an unnamed worker'} and is still live; resume refused`,
-        'RUN_HELD_BY_ANOTHER_HOST',
-      )
     }
     return { lease: taken.lease }
   }

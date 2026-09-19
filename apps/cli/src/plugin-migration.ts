@@ -34,11 +34,12 @@ import { Context } from '@deepseek-ai/cordis'
 import { writeFileAtomic } from '@deepseek-ai/dsh-atomic-write'
 import { openLeaseStore } from '@deepseek-ai/dsh-lease-sqlite'
 import { acquireRunLease } from '@deepseek-ai/dsh-lease-contract'
-import type { WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease-contract'
+import type { RunLeaseDenial, WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease-contract'
 import StorageHub from '@deepseek-ai/dsh-storage'
 import * as storageJson from '@deepseek-ai/dsh-storage-json'
 
 import { brandString } from '@deepseek-ai/dsh-brand'
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import { planUpgrade, requiresApprovalAndExport } from '@deepseek-ai/dsh-plugin-migrations'
 import { recoverUpgrade, runUpgrade } from '@deepseek-ai/dsh-plugin-migrations/transaction'
 import type { UpgradeRecord } from '@deepseek-ai/dsh-plugin-migrations/transaction'
@@ -154,6 +155,37 @@ export type UpgradeResolutionRefusal =
   | 'denied-at-mount'
 
 /**
+ * Say why the upgrade may not hold its lease, in one sentence an operator can act on.
+ *
+ * Exhaustive, and that is the point: the refusals used to be a test for
+ * `held-by-another` with everything else reported as an unreachable store, so
+ * the emergency stop this list gained later would have been announced as an
+ * outage. `assertNever` turns the next reason added to {@link RunLeaseDenial}
+ * into a typecheck failure here rather than a wrong sentence in a terminal.
+ *
+ * `'stopped'` cannot arrive on this path today — `dsh plugin` has no Context,
+ * so it opens the store directly and no mounted provider sees the request —
+ * but it is answered rather than folded in, because the arm that is wrong is
+ * the arm nobody looked at.
+ * @param denial - what the lease refused with.
+ * @returns the refusal to print.
+ */
+function upgradeRefusal(denial: RunLeaseDenial): string {
+  switch (denial.reason) {
+    case 'held-by-another':
+      return `another dsh process (${String(denial.holder ?? 'unnamed')}) is upgrading plugins — stop it and retry`
+    case 'store-unavailable':
+      return 'the lease store is unavailable, so a plugin upgrade cannot be made exclusive — refusing to install'
+    case 'stopped':
+      return 'an emergency stop is in force — release it before upgrading plugins'
+    case 'fenced-out':
+      return 'this upgrade lost its lease to another process — refusing to install'
+    default:
+      return assertNever(denial, 'RunLeaseDenial')
+  }
+}
+
+/**
  * Hold the upgrade's cross-process lease and a mounted storage backend for the
  * duration of `body`, or refuse the whole command.
  *
@@ -189,12 +221,7 @@ export async function withUpgradeEnvironment<T>(
   )
   if ('denied' in taken) {
     const denial = taken.denied
-    return {
-      held: false,
-      refusal: denial.reason === 'held-by-another'
-        ? `another dsh process (${String(denial.holder ?? 'unnamed')}) is upgrading plugins — stop it and retry`
-        : 'the lease store is unavailable, so a plugin upgrade cannot be made exclusive — refusing to install',
-    }
+    return { held: false, refusal: upgradeRefusal(denial) }
   }
 
   const ctx = new Context()

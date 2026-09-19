@@ -13,6 +13,11 @@
 
 import { Service } from '@deepseek-ai/cordis'
 import type { Context } from '@deepseek-ai/cordis'
+import { mayStartNewWork } from '@deepseek-ai/dsh-control-plane'
+// The `ctx.controlPlane` slot is declared by the control plane's PLUGIN module,
+// so the service's type reaches `ctx.get` only when that module is in the
+// program. Nothing else here needs it, hence a type-only import.
+import type {} from '@deepseek-ai/dsh-control-plane/plugin'
 import type {
   AcquireResult,
   FencingToken,
@@ -58,7 +63,20 @@ export default class InMemoryLeaseStorePlugin extends Service {
   }
 
   /**
-   * Acquire the item for `worker`.
+   * Acquire the item for `worker`, unless an emergency stop forbids new work.
+   *
+   * The stop is consulted BEFORE the store, so a refused acquisition leaves no
+   * trace in it: an epoch issued under a stop would outlive the stop and
+   * authorize writes afterwards. The control plane is read at call time —
+   * `ctx.get`, not `inject`, and nothing cached — because the answer changes
+   * while this mount lives, and a copy taken at mount would report the state
+   * the deployment was in when it started.
+   *
+   * A composition that mounts no control plane admits the acquisition, which
+   * is the answer `stopGateFor` already gives on the dispatch path: capability
+   * absence is not a stop. A plane that is mounted but not yet active is a
+   * different case and stays a refusal — `state()` throws, and this does not
+   * catch it, because a stop that cannot be read is not a stop that is absent.
    * @param workItem - the item to acquire.
    * @param worker - the acquiring worker.
    * @param nowMs - the instant to judge the incumbent's expiry against.
@@ -66,11 +84,23 @@ export default class InMemoryLeaseStorePlugin extends Service {
    * @returns the new lease and its token, or the reason for refusal.
    */
   acquire(workItem: WorkItemId, worker: WorkerId, nowMs: number, leaseMs: number): AcquireResult {
+    // The durable provider (`@deepseek-ai/dsh-lease-sqlite`) holds the same
+    // four lines: the rule is one rule, and the shared conformance suite in
+    // `@deepseek-ai/dsh-lease-contract` runs it against both. It is not
+    // extracted into a package because the contract cannot depend on the
+    // control plane — `dsh-control-plane` depends on `dsh-agent`, which
+    // depends on `dsh-lease-contract`.
+    const plane = this.ctx.get('controlPlane')
+    if (plane !== undefined && mayStartNewWork(plane.state()) !== undefined) {
+      return { acquired: false, reason: 'stopped' }
+    }
     return this.store.acquire(workItem, worker, nowMs, leaseMs)
   }
 
   /**
-   * Extend the lease `token` authorizes.
+   * Extend the lease `token` authorizes; an emergency stop does not gate this,
+   * because a heartbeat keeps work already under way rather than starting any
+   * — `LeaseStoreContract.renew` carries the reasoning.
    * @param token - the holder's current authority.
    * @param nowMs - the instant to judge expiry against.
    * @param leaseMs - how long the renewed lease should run from `nowMs`.
@@ -81,7 +111,8 @@ export default class InMemoryLeaseStorePlugin extends Service {
   }
 
   /**
-   * Give up the lease `token` authorizes.
+   * Give up the lease `token` authorizes; an emergency stop never gates this,
+   * since handing an item back is what a stopped deployment wants.
    * @param token - the holder's authority over the item it is giving up.
    */
   release(token: FencingToken): void {

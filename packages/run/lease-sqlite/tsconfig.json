@@ -11,6 +11,7 @@
     { "path": "../../../vendor/cordis" },
     { "path": "../../util/brand" },
     { "path": "../../collaboration/lease-contract" },
+    { "path": "../../interaction/control-plane" },
     { "path": "../../../vendor/schemastery" }
   ]
 }

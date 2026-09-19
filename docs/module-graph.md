@@ -544,10 +544,6 @@ flowchart TD
   pkg_capability_token --> pkg_brand
   pkg_capability_token --> pkg_principal
   pkg_capability_token --> pkg_trust_kernel
-  pkg_lease --> pkg_brand
-  pkg_lease --> pkg_lease_contract
-  pkg_lease_sqlite --> pkg_brand
-  pkg_lease_sqlite --> pkg_lease_contract
   pkg_taskboard_sqlite --> pkg_brand
   pkg_taskboard_sqlite --> pkg_taskboard
   pkg_subprocess_local --> pkg_subprocess
@@ -910,6 +906,12 @@ flowchart TD
   pkg_permission_presets --> pkg_settings
   pkg_permission_presets --> pkg_shell
   pkg_permission_presets --> pkg_user_approval
+  pkg_lease --> pkg_brand
+  pkg_lease --> pkg_control_plane
+  pkg_lease --> pkg_lease_contract
+  pkg_lease_sqlite --> pkg_brand
+  pkg_lease_sqlite --> pkg_control_plane
+  pkg_lease_sqlite --> pkg_lease_contract
   pkg_run --> pkg_agent
   pkg_run --> pkg_brand
   pkg_run --> pkg_lease_contract
@@ -1622,8 +1624,6 @@ flowchart TD
 | [`plugin-migrations`](../packages/plugin/plugin-migrations) | `plugin` | [`atomic-write`](../packages/util/atomic-write), [`brand`](../packages/util/brand), [`lease-contract`](../packages/collaboration/lease-contract), [`storage`](../packages/storage/storage) |
 | [`plugin-provenance`](../packages/plugin/plugin-provenance) | `plugin` | [`brand`](../packages/util/brand), [`trust-kernel`](../packages/kernel/trust-kernel) |
 | [`capability-token`](../packages/policy/capability-token) | `policy` | [`brand`](../packages/util/brand), [`principal`](../packages/identity/principal), [`trust-kernel`](../packages/kernel/trust-kernel) |
-| [`lease`](../packages/run/lease) | `run` | [`brand`](../packages/util/brand), [`lease-contract`](../packages/collaboration/lease-contract) |
-| [`lease-sqlite`](../packages/run/lease-sqlite) | `run` | [`brand`](../packages/util/brand), [`lease-contract`](../packages/collaboration/lease-contract) |
 | [`taskboard-sqlite`](../packages/run/taskboard-sqlite) | `run` | [`brand`](../packages/util/brand), [`taskboard`](../packages/collaboration/taskboard) |
 | [`subprocess-local`](../packages/subprocess/subprocess-local) | `subprocess` | [`subprocess`](../packages/subprocess/subprocess), [`timeout`](../packages/util/timeout) |
 | [`workspace-trust`](../packages/workspace/workspace-trust) | `workspace` | [`principal`](../packages/identity/principal) |
@@ -1712,6 +1712,8 @@ flowchart TD
 | [`command-compact`](../packages/compaction/command-compact) | `compaction` | [`commands`](../packages/interaction/commands), [`compaction`](../packages/compaction/compaction) |
 | [`message-feedback`](../packages/feedback/message-feedback) | `feedback` | [`brand`](../packages/util/brand), [`command-feedback`](../packages/feedback/command-feedback), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence), [`typert-protocol`](../packages/typert/protocol) |
 | [`permission-presets`](../packages/interaction/permission-presets) | `interaction` | [`commands`](../packages/interaction/commands), [`invariants`](../packages/runtime-diagnostics/invariants), [`risk-taxonomy`](../packages/policy/risk-taxonomy), [`sandbox`](../packages/sandbox/sandbox), [`sandbox-policy`](../packages/sandbox/sandbox-policy), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection), [`settings`](../packages/settings/settings), [`shell`](../packages/shell/shell), [`user-approval`](../packages/interaction/user-approval) |
+| [`lease`](../packages/run/lease) | `run` | [`brand`](../packages/util/brand), [`control-plane`](../packages/interaction/control-plane), [`lease-contract`](../packages/collaboration/lease-contract) |
+| [`lease-sqlite`](../packages/run/lease-sqlite) | `run` | [`brand`](../packages/util/brand), [`control-plane`](../packages/interaction/control-plane), [`lease-contract`](../packages/collaboration/lease-contract) |
 | [`run`](../packages/run/run) | `run` | [`agent`](../packages/core/agent), [`brand`](../packages/util/brand), [`lease-contract`](../packages/collaboration/lease-contract), [`principal`](../packages/identity/principal), [`session`](../packages/core/session), [`task-profile`](../packages/run/task-profile), [`workflow`](../packages/workflow/workflow) |
 | [`session-title-all-prompts-llm`](../packages/session/session-title-all-prompts-llm) | `session` | [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-title`](../packages/session/session-title), [`session-title-llm`](../packages/session/session-title-llm) |
 | [`session-title-first-prompt-llm`](../packages/session/session-title-first-prompt-llm) | `session` | [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-title`](../packages/session/session-title), [`session-title-llm`](../packages/session/session-title-llm) |

@@ -207,6 +207,17 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   `@deepseek-ai/dsh-lease`'s in-memory provider, that ownership holds only
   inside one process — a deployment where two hosts must not both own a Run
   mounts `@deepseek-ai/dsh-lease-sqlite`.
+- **A session that starts under an emergency stop stays undispatchable for its
+  whole life.** The lease provider refuses with `stopped` (P2-12 must[2]), so
+  `open` records `agent.leaseRefused = true` (`src/index.ts:882`) and opens no
+  Run. Nothing clears that mark: `dispatch.ts:326` reads it on every step and
+  answers `lease-refused`, so after the operator resumes, this session still
+  takes no work and the user must start a new one — what they see is a session
+  that accepts input and never acts, with `run: no Run opened for agent … — its
+  lease was refused (stopped)` in the log. The fail-closed direction is
+  deliberate (an agent dispatching without a lease is the unauthorized path
+  P4-07 removes) and none of P2-12's acceptance clauses asks a session to heal
+  itself, so the stickiness is recorded here rather than worked around.
 - **`paused` is legal and unreached.** The advancing paths are `agent/pre-step`
   (`queued → starting → running`, and the return from `waiting_tool`), the
   dispatch risk gate in `@deepseek-ai/dsh-tools` (`waiting_human` for as long as

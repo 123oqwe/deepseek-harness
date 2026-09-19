@@ -5,6 +5,7 @@
   "references": [
     { "path": "../../../vendor/cordis" },
     { "path": "../../util/brand" },
-    { "path": "../../collaboration/lease-contract" }
+    { "path": "../../collaboration/lease-contract" },
+    { "path": "../../interaction/control-plane" }
   ]
 }

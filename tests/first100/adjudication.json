@@ -1886,6 +1886,116 @@
         "overlay": "none",
         "expectedAt": "stage",
         "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-252; delegate ruling 2026-09-19 (lane B inbox B-42): the two functions land in this package, and a new file inside a declared package is still an undeclared path"
+      },
+      "P2-12.U/lease-sqlite-plugin": {
+        "epic": "P2-12",
+        "stage": "U",
+        "path": "packages/run/lease-sqlite/src/index.ts",
+        "reason": "The durable provider is the one `dsh-base` mounts as `lease-store`, so a stop gate written only into the in-memory provider would leave the shipped deployment ungated. Its `acquire` forwards to the database untouched today.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-258; delegate ruling 2026-09-19 (lane B inbox B-63)"
+      },
+      "P2-12.U/run-lease": {
+        "epic": "P2-12",
+        "stage": "U",
+        "path": "packages/collaboration/lease-contract/src/run-lease.ts",
+        "reason": "`acquireRunLease` folded every non-`store-unavailable` refusal into `held-by-another` with a ternary, so the new `stopped` reason would have reached all three production callers as a phantom second host, with nothing red. The mapping must become exhaustive here, where it is written.",
+        "declaredBy": [],
+        "overlay": "P4-07 [U.1]",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-258; delegate ruling 2026-09-19 (lane B inbox B-63)"
+      },
+      "P2-12.U/workflow-error-codes": {
+        "epic": "P2-12",
+        "stage": "U",
+        "path": "packages/workflow/workflow/src/index.ts",
+        "reason": "`WorkflowErrorCode` is the taxonomy a workflow refusal is routed by; a stop reported under an existing code would be indistinguishable from an outage or a held item.",
+        "declaredBy": [],
+        "overlay": "P4-07 [U.1], P4-08 [U.1], P4-09 [U.6]",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-258; delegate ruling 2026-09-19 (lane B inbox B-63)"
+      },
+      "P2-12.U/workflow-worker-thread": {
+        "epic": "P2-12",
+        "stage": "U",
+        "path": "packages/workflow/workflow-worker-thread/src/index.ts",
+        "reason": "One of the three production callers of `acquireRunLease`. Its refusal path tests for `store-unavailable` and reports everything else as held by another host, which is the sentence a stop must not produce.",
+        "declaredBy": [],
+        "overlay": "P4-07 [U.1], P4-08 [U.1, U.2, U.3], P4-09 [U.2, U.3, U.5, U.6, U.7]",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-258; delegate ruling 2026-09-19 (lane B inbox B-63)"
+      },
+      "P2-12.U/cli-plugin-migration": {
+        "epic": "P2-12",
+        "stage": "U",
+        "path": "apps/cli/src/plugin-migration.ts",
+        "reason": "The third caller. Its refusal is a ternary whose else-branch says the lease store is unavailable, so any reason added later is announced as an outage; the mapping becomes exhaustive even though `stopped` cannot reach this path today, because this command opens the store directly and no mounted provider sees it.",
+        "declaredBy": [],
+        "overlay": "P1-10 [U, F]",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-258; delegate ruling 2026-09-19 (lane B inbox B-63)"
+      },
+      "P2-12.U/stop-gate-conformance": {
+        "epic": "P2-12",
+        "stage": "U",
+        "path": "packages/collaboration/lease-contract/tests/stop-gate-conformance.ts",
+        "reason": "The shared obligation table both providers run, so the gate is a rule of the contract rather than a habit of one implementation. New rather than added to an existing file: this package had no tests directory.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-258; delegate ruling 2026-09-19 (lane B inbox B-63)"
+      },
+      "P2-12.U/run-lease-denials-spec": {
+        "epic": "P2-12",
+        "stage": "U",
+        "path": "packages/collaboration/lease-contract/tests/run-lease-denials.spec.ts",
+        "reason": "Pins the exhaustive mapping with its own positive controls: `stopped` is not reported as `held-by-another`, and a real holder still is.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-258; delegate ruling 2026-09-19 (lane B inbox B-63)"
+      },
+      "P2-12.U/lease-stop-gate-spec": {
+        "epic": "P2-12",
+        "stage": "U",
+        "path": "packages/run/lease/tests/stop-gate.spec.ts",
+        "reason": "The in-memory provider's half of the shared table, plus the one behaviour the table cannot state for every provider: the control plane is read per acquisition rather than captured at mount.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-258; delegate ruling 2026-09-19 (lane B inbox B-63)"
+      },
+      "P2-12.U/lease-sqlite-stop-gate-spec": {
+        "epic": "P2-12",
+        "stage": "U",
+        "path": "packages/run/lease-sqlite/tests/stop-gate.spec.ts",
+        "reason": "The durable provider's half of the shared table, plus the durability question only it can be asked: a refused acquisition leaves no row and burns no epoch a second opening of the database could read.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-258; delegate ruling 2026-09-19 (lane B inbox B-63)"
+      },
+      "P2-12.U/run-stop-gate-spec": {
+        "epic": "P2-12",
+        "stage": "U",
+        "path": "packages/run/run/tests/stop-gate.spec.ts",
+        "reason": "must[2] on the Run plugin's own path: a session that starts under a stop opens no Run and records the stop as the reason. New rather than added to `tests/plugin.spec.ts`, whose cases are cited by P4-01's and P4-07's frozen cells.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-258; delegate ruling 2026-09-19 (lane B inbox B-63)"
+      },
+      "P2-12.U/workflow-stop-gate-spec": {
+        "epic": "P2-12",
+        "stage": "U",
+        "path": "packages/workflow/workflow-worker-thread/tests/stop-gate.spec.ts",
+        "reason": "must[2] on the workflow engine's own path: `start` refuses under a stop with the stop's error code rather than a holder that does not exist. A new file rather than a case in `tests/integration.spec.ts`, whose cases P4-07's and P4-09's frozen commands run.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-258; delegate ruling 2026-09-19 (lane B inbox B-63, R5 in B-65)"
       }
     }
   }

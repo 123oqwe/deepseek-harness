@@ -53,12 +53,15 @@
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/dsh-brand": "workspace:^",
+    "@deepseek-ai/dsh-control-plane": "workspace:^",
     "@deepseek-ai/dsh-lease-contract": "workspace:^"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/dsh-agent": "workspace:^",
     "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/dsh-lease-contract": "workspace:^"
+    "@deepseek-ai/dsh-control-plane": "workspace:^",
+    "@deepseek-ai/dsh-lease-contract": "workspace:^",
+    "@deepseek-ai/dsh-principal": "workspace:^"
   }
 }

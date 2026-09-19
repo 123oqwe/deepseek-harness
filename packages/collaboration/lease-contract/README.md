@@ -17,6 +17,7 @@ It contains no store. The providers are `@deepseek-ai/dsh-lease` (in-memory, sin
 
 - [Why the definition is separate](#why-the-definition-is-separate)
 - [Authority is an epoch, not a timestamp](#authority-is-an-epoch-not-a-timestamp)
+- [An emergency stop gates acquisition, and only acquisition](#an-emergency-stop-gates-acquisition-and-only-acquisition)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 - [Dev Note](#dev-note)
@@ -32,6 +33,14 @@ Splitting the definition out makes the dependency direction match the decision. 
 The staleness test consults no clock. Two workers whose clocks disagree still agree on which epoch is larger, so acceptance[1] — "clock skew within tolerance does not produce two masters" — holds by construction rather than by tuning a tolerance. Time enters only where it must: a heartbeat advances a caller-supplied deadline, and `isReclaimable` compares that deadline to a caller-supplied instant. A lease is still held at the exact instant it expires (`nowMs > expiresAtMs`), because reclaiming and renewing at the same instant would otherwise both be legal.
 
 `checkFencing` requires the token's epoch to **equal** the lease's, so an epoch *above* the current one is refused as `stale-epoch` too. Epochs are issued only by a store, so an epoch higher than any it issued did not come from it; refusing the unknown is the fail-closed direction. Its check order — item, existence, epoch, holder — is part of the contract, because the reason is evidence: a worker learning `stale-epoch` knows it was fenced out and must stop, while one learning `wrong-work-item` has a routing bug of its own.
+
+## An emergency stop gates acquisition, and only acquisition
+
+`acquire` carries a third refusal, `'stopped'`: while an emergency stop is in force, no mounted provider issues a lease, and it refuses before consulting its storage, so no epoch is burned and no row is written. The obligation is the provider's and not each caller's because a gate one caller keeps is a gate the next caller does not — the deployment mounts one provider and more than one consumer reaches it, and the shipped bundle's provider is the durable one. `tests/stop-gate-conformance.ts` is the table that says so, and both providers run it.
+
+`renew` and `release` are deliberately not gated. A heartbeat keeps work already under way rather than starting any, and refusing heartbeats during a stop would let in-flight leases lapse — after which a second worker could take the item as soon as work resumed, while the first was still running. Releasing is the one thing a stopped deployment wants most. What an in-flight run may still DO under a stop is decided on the dispatch path, not here.
+
+`acquireRunLease` maps each store refusal to its own run-side denial through an exhaustive switch. It used to be a ternary whose `else` said "held by another" — which would have announced this stop as a phantom second host, with nothing red — so a reason added later now fails the typecheck instead.
 
 ## Model Experience
 
