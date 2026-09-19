@@ -51,6 +51,7 @@ import type {} from '@deepseek-ai/dsh-session-persistence'
 // Side-effect type import: declaration-merges the approval waterfall answered below.
 import type {} from '@deepseek-ai/dsh-user-approval'
 import { supportsAcpImagePrompts } from './content.ts'
+import { hostControlMeta, metaOf } from './host-control.ts'
 import { AcpMcpConfigError } from './mcp.ts'
 import { AcpModelConfigError } from './model-control.ts'
 import { AcpSession } from './session.ts'
@@ -147,6 +148,22 @@ export function apply(ctx: Context, config: AcpConfig): void {
 
   ctx.on('llm/adapters-updated', () => {
     for (const record of sessions.values()) record.topologyChanged()
+  })
+
+  // The live edge. ACP has no host-level notification -- all fourteen
+  // `SessionUpdate` kinds are session-level -- so the state rides the one kind
+  // that is legal carrying nothing of its own: `session_info_update` declares
+  // both `title` and `updatedAt` optional and this sends neither, so the
+  // notification asserts only what `_meta` says. The alternative was waiting to
+  // piggyback on an unrelated update, and a client would then learn of a stop
+  // only if something else happened to happen.
+  ctx.on('control/state-changed', () => {
+    const meta = hostControlMeta(ctx)
+    /* v8 ignore next -- registered only where a control plane exists to emit. */
+    if (meta === undefined) return
+    for (const sessionId of sessions.keys()) {
+      void notify({ sessionId, update: { sessionUpdate: 'session_info_update' }, _meta: meta })
+    }
   })
 
   // Permission requests are a machine policy channel for ACP clients such as
@@ -249,7 +266,10 @@ export function apply(ctx: Context, config: AcpConfig): void {
         // The attached log writer's flush materializes an empty session durably.
         await ctx.sessions.flush(record.agent.session)
         assertOpen()
-        return { sessionId, configOptions }
+        // The state as of the moment this session opened, so a client that
+        // connected AFTER a stop was raised does not have to wait for an edge
+        // it already missed (P2-12 acceptance[3]).
+        return { sessionId, configOptions, ...metaOf(hostControlMeta(ctx)) }
       } catch (error: unknown) {
         sessions.delete(sessionId)
         await record.close('session/new activation failed')
@@ -301,7 +321,7 @@ export function apply(ctx: Context, config: AcpConfig): void {
         }
         sessions.set(sessionId, record)
         try {
-          return { configOptions: await record.configOptions(signal) }
+          return { configOptions: await record.configOptions(signal), ...metaOf(hostControlMeta(ctx)) }
         } catch (error: unknown) {
           sessions.delete(sessionId)
           await record.close('session/resume option discovery failed')
@@ -382,7 +402,10 @@ export function apply(ctx: Context, config: AcpConfig): void {
     async prompt(params: PromptRequest, requestSignal: AbortSignal): Promise<PromptResponse> {
       assertOpen()
       const record = requireSession(brandString<SessionId>(params.sessionId))
-      return record.prompt(params, imagePromptEnabled, requestSignal)
+      // Carried on every turn answer too, so a client that reads only
+      // responses converges without subscribing to notifications.
+      const response = await record.prompt(params, imagePromptEnabled, requestSignal)
+      return { ...response, ...metaOf(hostControlMeta(ctx)) }
     },
 
     cancel(params: CancelNotification): Promise<void> {

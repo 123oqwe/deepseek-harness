@@ -871,6 +871,9 @@ importers:
       '@deepseek-ai/dsh-attachment':
         specifier: workspace:^
         version: link:../../attachment/attachment
+      '@deepseek-ai/dsh-control-plane':
+        specifier: workspace:^
+        version: link:../../interaction/control-plane
       '@deepseek-ai/dsh-llm':
         specifier: workspace:^
         version: link:../../llm/llm
