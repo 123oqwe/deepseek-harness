@@ -31,6 +31,7 @@ import type { CiRunUrlCorrectionResult, CiRunUrlCorrectionVerdict } from './gene
 import {
   acceptPreflightFindings,
   applyCiRunUrlCorrection,
+  cellForCorrection,
   checkCandidateChainConsistency,
   checkCiRunUrlCorrection,
   checkCoverageClosure,
@@ -1026,7 +1027,8 @@ describe('--correct-ci-run-url: a recorded run URL is a string that can be typed
   /** One ledger row, with the accepted-evidence copy that shadows a base cell. */
   interface CorrectableRow {
     cells: Record<string, CorrectableCell>
-    supplements: Record<string, Record<string, CorrectableCell>>
+    /** Keyed `<stage>.<seq>`, the way the ledger stores a supplement. */
+    supplements: Record<string, CorrectableCell>
     acceptedEvidence?: { cells: Record<string, { ciRunUrl?: string; candidateSha?: string }> }
   }
 
@@ -1038,7 +1040,11 @@ describe('--correct-ci-run-url: a recorded run URL is a string that can be typed
   function row(accepted: boolean): CorrectableRow {
     return {
       cells: { U: { status: 'GREEN', ciRunUrl: wrong, candidateSha: 'abc', outcome: 'passed' } },
-      supplements: { U: { 1: { status: 'GREEN', ciRunUrl: wrong, candidateSha: 'abc' } } },
+      // The REAL key shape the ledger uses: flat `U.1`, not nested `U[1]`.
+      // The first version of this fixture used the nested form, which is what
+      // let a supplement lookup written to the same wrong shape pass all eight
+      // cases and then refuse every real row with `no supplement 1 at stage U`.
+      supplements: { 'U.1': { status: 'GREEN', ciRunUrl: wrong, candidateSha: 'abc' } },
       ...accepted ? { acceptedEvidence: { cells: { U: { ciRunUrl: wrong, candidateSha: 'abc' } } } } : {},
     }
   }
@@ -1112,13 +1118,49 @@ describe('--correct-ci-run-url: a recorded run URL is a string that can be typed
     applyCiRunUrlCorrection(target, { stage: 'U', supplementSeq: '1', to: right, reason: 'wrong owner', atUtc: 'now' })
     // The supplement moved and the base cell did not, so the command targets
     // what it was told to target.
-    expect(target.supplements.U?.[1]?.ciRunUrl).toBe(right)
+    expect(target.supplements['U.1']?.ciRunUrl).toBe(right)
     expect(target.cells.U?.ciRunUrl).toBe(wrong)
     // And nothing about the observation itself changed. `reattested` is what a
     // re-green writes; a correction must never produce one, because no second
     // observation happened.
-    expect(target.supplements.U?.[1]?.candidateSha).toBe('abc')
+    expect(target.supplements['U.1']?.candidateSha).toBe('abc')
     expect(target.cells.U?.outcome).toBe('passed')
-    expect(target.supplements.U?.[1]?.reattested).toBeUndefined()
+    expect(target.supplements['U.1']?.reattested).toBeUndefined()
+  })
+})
+
+describe('--correct-ci-run-url resolves cells in the REAL ledger, not only in a fixture', () => {
+  it('finds every cell this correction targets, including the four supplements', () => {
+    // **The case the eight above could not be.** They run against a fixture
+    // this file builds, so they prove the lookup matches the shape its AUTHOR
+    // assumed. That shape was wrong -- supplements are keyed `U.1`, flat, and
+    // the lookup read `supplements.U[1]` -- and every one of the eight passed
+    // while the command refused every real supplement with `no supplement 1 at
+    // stage U`. The in-process probe that exercised the same assertions shared
+    // the same fixture, so "the probe can go red" proved nothing about it: a
+    // wrong fixture makes every instrument built on it agree.
+    //
+    // This one reads the committed ledger. It cannot be satisfied by a shape
+    // nobody uses, and it is deliberately narrow: it asserts the lookup RESOLVES
+    // and that what it resolves carries a `ciRunUrl`, never what that URL says.
+    // The rows it names are the eight occurrences the correction exists for.
+    const ledger = JSON.parse(
+      readFileSync(new URL('../../spec/first100/exec/ledger.json', import.meta.url), 'utf8'),
+    ) as { rows: Record<string, unknown> }
+
+    const targets: readonly { epic: string; stage: string; seq?: string }[] = [
+      { epic: 'P4-01', stage: 'U', seq: '1' },
+      { epic: 'P4-01', stage: 'U', seq: '2' },
+      { epic: 'P4-02', stage: 'U' },
+      { epic: 'P4-02', stage: 'F' },
+      { epic: 'P4-02', stage: 'C', seq: '1' },
+      { epic: 'P4-02', stage: 'P', seq: '1' },
+    ]
+    for (const target of targets) {
+      const where = `${target.epic}.${target.stage}${target.seq === undefined ? '' : `.${target.seq}`}`
+      const cell = cellForCorrection(ledger.rows[target.epic], target.stage, target.seq)
+      expect(cell, `the ledger has a cell at ${where}; a lookup that cannot find it corrects nothing`).toBeDefined()
+      expect(typeof cell?.ciRunUrl, `${where} carries a recorded run URL`).toBe('string')
+    }
   })
 })

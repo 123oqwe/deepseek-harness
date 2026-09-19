@@ -805,7 +805,13 @@ export function checkCiRunUrlCorrection(from, to) {
  */
 export function cellForCorrection(row, stage, supplementSeq) {
   if (supplementSeq === undefined) return row?.cells?.[stage]
-  return row?.supplements?.[stage]?.[supplementSeq]
+  // A FLAT key, `U.1`, not a nested `supplements.U[1]`. This is how the ledger
+  // stores them and how `checkCoverageClosure` reads them; the first version of
+  // this function read the nested shape and refused every real supplement with
+  // `no supplement 1 at stage U`. Its unit cases did not catch it because their
+  // fixture was built to the same wrong shape -- the cases proved the code
+  // matched the author's model rather than the file.
+  return row?.supplements?.[`${stage}.${supplementSeq}`]
 }
 
 /**
@@ -838,6 +844,8 @@ export function applyCiRunUrlCorrection(row, { stage, supplementSeq, to, reason,
     }
   }
   const rewritten = [supplementSeq === undefined ? `cells.${stage}` : `supplements.${stage}.${supplementSeq}`]
+  // The label above is a path for a reader; the lookup is `cellForCorrection`'s.
+
   cell.ciRunUrl = to
   // Appended, never replaced: a second correction that overwrote the first
   // would erase the only record that the first one happened.
