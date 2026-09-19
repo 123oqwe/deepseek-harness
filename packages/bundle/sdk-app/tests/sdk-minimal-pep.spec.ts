@@ -73,10 +73,15 @@ describe('P2-05 acceptance[0] / BLOCKED-266: one tool call on the shipped sdk-mi
       },
     })
 
-    // The boot itself is part of the observation: a profile that cannot start
-    // answers nothing about what its actions meet.
-    expect(result.exitCode, `the driver exited ${String(result.exitCode)}; stderr tail: ${result.stderr.slice(-800)}`).toBe(0)
-    expect(raw, 'the driver must write observation.json; without it there is no observation').not.toMatch(/^ABSENT: /u)
+    // No exit-code assertion: `LoaderSmokeResult` carries only `stdout` and
+    // `stderr` (`loader-smoke/src/index.ts:171-176`) because a non-zero exit
+    // THROWS out of `runLoaderSmoke` — a boot that cannot start fails this case
+    // before the line below is reached. What the assertion below must not lose
+    // is the diagnostic, so the driver's stderr travels in its message: "the
+    // profile booted and wrote nothing" and "the profile never booted" read
+    // identically at an absent file otherwise.
+    expect(raw, `the driver must write observation.json; without it there is no observation. stderr tail: ${result.stderr.slice(-800)}`)
+      .not.toMatch(/^ABSENT: /u)
 
     const observation = JSON.parse(raw) as Observation
     expect(observation.profile).toBe('sdk-minimal')
@@ -87,7 +92,7 @@ describe('P2-05 acceptance[0] / BLOCKED-266: one tool call on the shipped sdk-mi
       if (decision === null) continue
       expect(Object.hasOwn(decision, 'effect'), 'a recorded decision must carry its effect').toBe(true)
     }
-    expect(Object.keys(observation.services).sort()).toEqual(['actionLedger', 'policyEngine', 'sandboxPolicy', 'trustKernel'])
+    expect(Object.keys(observation.services).sort()).toEqual(['actionLedger', 'policy', 'policySet', 'sandboxPolicy', 'trustKernel'])
 
     // The observation IS this case's output: read this line in the run's log
     // rather than inferring the profile's behaviour from its YAML rows. A case

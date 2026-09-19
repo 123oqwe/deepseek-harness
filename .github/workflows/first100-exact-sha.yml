@@ -152,10 +152,27 @@ jobs:
       # step above it is the one that gates the build, and this one asks
       # whether the collector records a real gate's execution. `run` exits with
       # the wrapped command's own status, so a failure here fails the step.
+      # `init` takes two flags this step cannot omit. `--base-sha` is REQUIRED —
+      # it throws `--base-sha is required` and exits before doing anything
+      # (`scripts/release/collect-evidence.mjs:222`), which is why the first
+      # version of this step went red in zero seconds. Its only use is the
+      # `gitDiff` the package binds (P0-07 must[1]), and the script's own
+      # comment explains why it has no default: the baseline's `gitSha` IS this
+      # HEAD, so defaulting there would bind an empty diff, and the real
+      # comparison point is a release decision. `HEAD^` is what this step
+      # chooses: it always exists under this workflow's `fetch-depth: 0`, and it
+      # binds a real, non-empty diff. It does NOT claim to be the release's
+      # comparison point — this step proves the collector works, not that this
+      # candidate is a release.
+      #
+      # `--required-gate` decides which half of the package the wrapped gate
+      # lands in: without it `requiredGates` is empty, the gate is recorded as
+      # an ADDITIONAL one, and `accepted` is computed over nothing. Naming it
+      # here is what makes the verify below a check rather than a formality.
       - name: P0-07 verifyCommand — collect evidence over a real gate and verify the package
         if: always()
         run: |
-          node scripts/release/collect-evidence.mjs init
+          node scripts/release/collect-evidence.mjs init --base-sha "$(git rev-parse HEAD^)" --required-gate typecheck
           node scripts/release/collect-evidence.mjs run --gate typecheck -- pnpm run typecheck
           pnpm evidence:verify
 

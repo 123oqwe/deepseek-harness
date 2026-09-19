@@ -78,8 +78,16 @@ try {
     decisions,
     // Absence is the interesting half here, so each is recorded as a boolean
     // rather than left to be inferred from a missing key.
+    // The keys are the ones the packages actually declare, checked against
+    // their `declare module '@deepseek-ai/cordis'` blocks rather than guessed
+    // from the service's name: the policy engine publishes `policy` and
+    // `policySet` (`policy-engine/src/types.ts:312-315`), NOT `policyEngine`.
+    // `ctx.get` takes a name, so a wrong one compiles and answers `undefined`
+    // forever — which would have recorded "no policy engine" on a profile that
+    // has one.
     services: {
-      policyEngine: ctx.get('policyEngine') !== undefined,
+      policy: ctx.get('policy') !== undefined,
+      policySet: ctx.get('policySet') !== undefined,
       trustKernel: ctx.get('trustKernel') !== undefined,
       sandboxPolicy: ctx.get('sandboxPolicy') !== undefined,
       actionLedger: ctx.get('actionLedger') !== undefined,
