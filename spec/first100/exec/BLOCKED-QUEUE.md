@@ -7239,6 +7239,15 @@ Its C, P, U and F observations are likewise untouched and undisputed. **`P4-06` 
 
 `accept-blocked: P4-06` therefore STAYS in the machine-readable list: half a lock is a lock, and removing the line would tell a checker the epic may be accepted. Neither of its two sign-off entries carries a lock-check sentence, and the later one carries no note at all.
 
-With this, the three epics named above — P4-05, P6-01, P4-06 — have each been measured and ruled on. `P5-10` was already `BLOCKED_ON_ACCEPTANCE` and needed no change. The register still has no mechanical enforcer; `verify-acceptance-locks` remains queued and unwritten.
+With this, the three epics named above — P4-05, P6-01, P4-06 — have each been measured and ruled on.
+
+**Third addendum (2026-09-19): the takeover happens on the production path now, and still leaves no durable trace.** `RunService.open` adopts a Run whose previous holder stopped renewing by walking its lifecycle `queued → orphaned → starting` through the real transition table, so `'orphaned'` has a producer a deployment reaches and P4-05's `acceptance[2]` has a subject to observe. Which of three situations a granted acquisition stepped into — nobody ever held the item, the holder released it, the holder lapsed — is decided by `describePredecessor` in `@deepseek-ai/dsh-lease-contract`, from the item's lease read immediately BEFORE acquiring; that reading is advisory, because the durable provider acquires inside one transaction and the read is outside it, and it decides only which edge the lifecycle walks, never whether this host may write.
+
+Two things this does NOT change, recorded so neither is read into it:
+
+- **`RunService.reclaim` still has no production caller.** `open` calls `describePredecessor`, not `reclaim`, and the residual above stands exactly as written. The two now share the question they ask; they do not share an entry point.
+- **Nothing persists the takeover.** The Run record's vocabulary has no room for it: `RunEntityReference` (`packages/run/run/src/types.ts:171-178`) is a closed union of seven entity kinds and none of them is a worker, while `RunState` is Run-level and was deliberately not extended for this. The fact lives in the adopting host's log line and in the `agent.lifecycle` a caller can read, both of which die with the process. An operator asking later "was this run taken over, and from whom" cannot be answered from the tree.
+
+`P5-10` was already `BLOCKED_ON_ACCEPTANCE` and needed no change. The register still has no mechanical enforcer; `verify-acceptance-locks` remains queued and unwritten.
 - Not that the register has an enforcer. It still has none; [BLOCKED-081](#blocked-081) recorded that in 2026-09-05 and this entry is what happens when nobody greps. A `verify-acceptance-locks` gate is queued, not written.
 - Not a route back. How P4-05 becomes signable again — give `reclaim` a real production trigger, or decide that `open`/`adoptable` is what carries "takeover after a restart" and observe THAT — is the delegate's ruling to make and is not decided here.

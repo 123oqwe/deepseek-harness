@@ -22,7 +22,7 @@
  */
 
 import { assertNever } from '@deepseek-ai/dsh-util-values'
-import { checkFencing } from './index.ts'
+import { checkFencing, isReclaimable } from './index.ts'
 import type { AcquireDenialReason, FencingToken, Lease, LeaseStoreContract, WorkItemId, WorkerId } from './types.ts'
 
 /** Why a run could not take, or could not keep, its lease. */
@@ -69,6 +69,56 @@ export interface RunLease {
    * the holder wishes it still had.
    */
   currentLease: () => Lease | undefined
+}
+
+/**
+ * What the item's previous holder left behind, as far as this host can tell.
+ *
+ * Three answers and not two, because a run whose holder GAVE THE ITEM BACK is
+ * finished work, while one whose holder stopped renewing is work nobody is
+ * doing: the first is resumed by opening a new run, the second is taken over,
+ * and P4-05's acceptance[2] — "after a restart an orphaned Agent can be
+ * reclaimed or fail safely" — is about the second alone.
+ */
+export type PredecessorState =
+  /** Nobody has ever held this item: the store issued epoch 0. */
+  | { readonly kind: 'none' }
+  /** Someone held it and released it, so the item was free when this host asked. */
+  | { readonly kind: 'released' }
+  /** Someone held it and stopped renewing; this host is taking over from them. */
+  | { readonly kind: 'lapsed'; readonly holder: WorkerId; readonly expiredAtMs: number }
+
+/**
+ * Decide which of the three a successful acquisition just took.
+ *
+ * **`before` is read from the store BEFORE acquiring, and the reading is
+ * advisory.** The durable provider acquires inside one `BEGIN IMMEDIATE`
+ * transaction while this read happens outside it, so another host may act in
+ * between. That is acceptable for what this decides — which edge the caller's
+ * own in-memory lifecycle walks, and what it says in the log — and it is NOT
+ * acceptable for anything about authority: whether this host may write is
+ * decided by the epoch it was issued and by `checkFencing`, never by this.
+ *
+ * `acquire`'s own answer cannot make the distinction: the high-water epoch
+ * survives a release (`lease_epochs` is left alone when a lease row is
+ * deleted), and an expired row is left in place until someone takes it over,
+ * so "released cleanly" and "lapsed" both come back as a granted epoch above
+ * zero. The difference is visible only in the row that was there beforehand.
+ * @param before - the item's lease as the store held it before this acquisition, if any.
+ * @param nowMs - the instant the acquisition judged expiry against.
+ * @param grantedEpoch - the epoch the store issued for this acquisition.
+ * @returns which of the three situations this host just stepped into.
+ */
+export function describePredecessor(
+  before: Lease | undefined,
+  nowMs: number,
+  grantedEpoch: number,
+): PredecessorState {
+  if (before === undefined) return grantedEpoch === 0 ? { kind: 'none' } : { kind: 'released' }
+  // A row that was still live would have made the acquisition fail, so a row
+  // present at a granted acquisition is one the store judged reclaimable.
+  if (!isReclaimable(before, nowMs)) return { kind: 'released' }
+  return { kind: 'lapsed', holder: before.holder, expiredAtMs: before.expiresAtMs }
 }
 
 /**

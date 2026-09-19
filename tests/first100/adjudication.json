@@ -2106,6 +2106,46 @@
         "overlay": "none",
         "expectedAt": "stage",
         "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-260; spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-261; delegate ruling 2026-09-19 (lane B inbox B-70/B-76)"
+      },
+      "P4-05.U/run-plugin": {
+        "epic": "P4-05",
+        "stage": "U",
+        "path": "packages/run/run/src/index.ts",
+        "reason": "`open` is where a restart actually adopts a Run, and it set every adopted one to `queued` — the state of a run nobody had taken. acceptance[2]'s `orphaned` had no producer on any path a deployment runs because the only writer, `reclaim`, has no production caller.",
+        "declaredBy": [],
+        "overlay": "P4-05 [C.1, F.3]",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-264; delegate ruling 2026-09-19 (lane B inbox B-97/B-103)"
+      },
+      "P4-05.U/takeover-spec": {
+        "epic": "P4-05",
+        "stage": "U",
+        "path": "packages/run/run/tests/takeover.spec.ts",
+        "reason": "The observation acceptance[2] lacked: one durable lease store across two mounts, the predecessor's lease lapsed through the store's own clock parameters, and the adopted Run observed at `agent.lifecycle` — the exit `fenced-dispatch.spec.ts` already asserts against.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-264; delegate ruling 2026-09-19 (lane B inbox B-97/B-103)"
+      },
+      "P4-05.U/run-lease": {
+        "epic": "P4-05",
+        "stage": "U",
+        "path": "packages/collaboration/lease-contract/src/run-lease.ts",
+        "reason": "`describePredecessor` lives beside `acquireRunLease` because both callers of the lease seam need the same answer and neither may depend on the other. It is the one place that can say a granted acquisition took the item from a holder that lapsed rather than from one that released it.",
+        "declaredBy": [],
+        "overlay": "P4-07 [U.1]",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-264; delegate ruling 2026-09-19 (lane B inbox B-97/B-103)"
+      },
+      "P4-05.U/lease-contract-index": {
+        "epic": "P4-05",
+        "stage": "U",
+        "path": "packages/collaboration/lease-contract/src/index.ts",
+        "reason": "The package's public face: the new decision and its result type are exported here or no consumer can reach them.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-264; delegate ruling 2026-09-19 (lane B inbox B-97/B-103)"
       }
     }
   }

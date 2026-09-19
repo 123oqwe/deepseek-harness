@@ -29,8 +29,8 @@ declare module '@deepseek-ai/cordis' {
 }
 
 export type * from './types.ts'
-export { acquireRunLease } from './run-lease.ts'
-export type { RunLease, RunLeaseDenial } from './run-lease.ts'
+export { acquireRunLease, describePredecessor } from './run-lease.ts'
+export type { PredecessorState, RunLease, RunLeaseDenial } from './run-lease.ts'
 
 /**
  * Decide whether a token authorizes a write against the item's current lease.

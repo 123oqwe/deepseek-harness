@@ -49,7 +49,8 @@ import type { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent/types'
 import { advanceAgentLifecycleFenced, advanceLeasedAgent, holdsDispatchSlot } from '@deepseek-ai/dsh-agent'
 import type { AgentLifecycleState, AgentRunId, TransitionDenialReason } from '@deepseek-ai/dsh-agent'
-import { acquireRunLease } from '@deepseek-ai/dsh-lease-contract'
+import { acquireRunLease, describePredecessor } from '@deepseek-ai/dsh-lease-contract'
+import type { PredecessorState } from '@deepseek-ai/dsh-lease-contract'
 import type { WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease-contract'
 // The `agent/session-start` declaration this plugin subscribes to is merged
 // into Cordis's event map by the agent package's runtime face, not its
@@ -735,6 +736,19 @@ export default class RunPlugin extends Service {
   private readonly heartbeats = new Map<RunId, NodeJS.Timeout>()
 
   /**
+   * Runs whose first model step has not happened yet (P4-02).
+   *
+   * **Not `lifecycle.state === 'queued'`, which is what this replaced.** That
+   * test read the state machine for a fact the state machine does not carry: a
+   * Run this host ADOPTED from a holder that lapsed enters its first step at
+   * `starting`, having been orphaned on the way in, and the old test answered
+   * "not the first step" for it — so the profile P4-02 compiles exactly once
+   * per agent was never compiled for an adopted run, silently. A latch says
+   * what it means and is not a side effect of which edges the lifecycle walked.
+   */
+  private readonly awaitingFirstStep = new Set<RunId>()
+
+  /**
    * Runs whose agent reported a failure that was never followed by more work
    * (P4-05 must[0]).
    *
@@ -858,11 +872,18 @@ export default class RunPlugin extends Service {
     // masters" held vacuously, because the thing two hosts actually open at
     // once is a durable SESSION. The Run keeps its own identity; what it
     // holds a lease ON is the session it is doing the work of.
+    const workItem = brandString<WorkItemId>(agent.id)
+    const openedAt = Date.now()
+    // Read BEFORE acquiring, and advisory by contract: this decides which edge
+    // the lifecycle below walks, never whether this host may write. Taking the
+    // item over erases the row, so the only moment the predecessor is visible
+    // is now.
+    const before = this.ctx.leaseStore.get(workItem)
     const taken = acquireRunLease(
       this.ctx.leaseStore,
-      brandString<WorkItemId>(agent.id),
+      workItem,
       this.worker,
-      Date.now(),
+      openedAt,
       this.config.leaseMs,
     )
     if ('denied' in taken) {
@@ -892,7 +913,57 @@ export default class RunPlugin extends Service {
     agent.runId = runId
     agent.lifecycle = { runId: brandString<AgentRunId>(runId), state: 'queued', epoch: taken.lease.token.epoch }
     agent.runLease = taken.lease
+    this.awaitingFirstStep.add(runId)
+    this.adoptLapsedPredecessor(agent, describePredecessor(before, openedAt, taken.lease.token.epoch), continuing !== undefined)
     this.heartbeats.set(runId, setInterval(() => { this.beat(agent) }, this.config.leaseMs / LEASE_RENEWAL_DIVISOR))
+  }
+
+  /**
+   * Walk a taken-over Run's lifecycle through `orphaned` before it starts
+   * (P4-05 acceptance[2]).
+   *
+   * **The restart IS the reclaim.** A host that adopts a Run whose previous
+   * holder stopped renewing is doing exactly what `reclaim` describes, and
+   * leaving the lifecycle at `queued` said the opposite: that this run had
+   * never been anyone's. The state P4-05 declared for it then had no producer
+   * on any path a deployment runs.
+   *
+   * Both steps go through `advanceLeasedAgent`, so the transition table and
+   * the fencing check decide them, not this method: `queued → orphaned` records
+   * that the item was taken from a holder that lapsed, and `orphaned →
+   * starting` hands it to this host. A refusal from either leaves the lifecycle
+   * where it was and is logged rather than thrown, because a Run that cannot
+   * be adopted must still not be dispatched as if it were fresh.
+   *
+   * Nothing is written durably about the takeover. The Run record's vocabulary
+   * has no room for it — `RunEntityReference` is a closed union of seven entity
+   * kinds, none of which is a worker, and `RunState` is Run-level — so the
+   * fact lives in this log line and in the lifecycle a caller can read
+   * (BLOCKED-264's addendum records that gap rather than hiding it).
+   * @param agent - the agent whose Run was just opened.
+   * @param predecessor - what the lease store says this host took the item from.
+   * @param continuing - whether this Run was adopted rather than minted; a fresh Run has no predecessor to orphan.
+   */
+  private adoptLapsedPredecessor(agent: Agent, predecessor: PredecessorState, continuing: boolean): void {
+    if (predecessor.kind !== 'lapsed' || !continuing) return
+    const reason = `its previous holder ${predecessor.holder} stopped renewing; `
+      + `the lease expired at ${String(predecessor.expiredAtMs)} and this host took the item over`
+    const orphaned = advanceLeasedAgent(agent, 'orphaned', reason)
+    if (orphaned !== undefined) {
+      this.ctx.logger.warn('run: could not orphan the adopted run for agent %s — %s', agent.id, orphaned)
+      return
+    }
+    const started = advanceLeasedAgent(agent, 'starting', 'adopted after the previous holder lapsed')
+    if (started !== undefined) {
+      this.ctx.logger.warn('run: adopted run for agent %s stayed orphaned — %s', agent.id, started)
+      return
+    }
+    this.ctx.logger.info(
+      'run: adopted the run for agent %s under epoch %d — %s',
+      agent.id,
+      agent.lifecycle?.epoch,
+      reason,
+    )
   }
 
   /**
@@ -974,6 +1045,10 @@ export default class RunPlugin extends Service {
     const timer = this.heartbeats.get(runId)
     if (timer !== undefined) clearInterval(timer)
     this.heartbeats.delete(runId)
+    // A Run that stopped being renewed is over for this host, first step taken
+    // or not; leaving its id in the latch would keep one entry per finished
+    // Run for the process's life.
+    this.awaitingFirstStep.delete(runId)
   }
 
   /**
@@ -1216,6 +1291,14 @@ export default class RunPlugin extends Service {
       this.advance(agent, 'running', 'the run started')
       return
     }
+    // An ADOPTED run arrives here at `starting`: `open` walked it
+    // `queued -> orphaned -> starting` to record that its previous holder
+    // lapsed. Without this edge it would take every step at `starting` and
+    // never reach `running`, which is the state `waiting_tool` returns to.
+    if (state === 'starting') {
+      this.advance(agent, 'running', 'the adopted run started')
+      return
+    }
     if (state === 'waiting_tool') this.advance(agent, 'running', 'the tool calls settled')
   }
 
@@ -1278,11 +1361,11 @@ export default class RunPlugin extends Service {
       if (agent.runId !== undefined) this.failures.set(agent.runId, error)
     })
     const unstep = this.ctx.on('agent/pre-step', async ({ agent, messages }, next) => {
-      // Captured BEFORE `ensureRunning`, which is what turns `queued` into
-      // `starting`: after that call the marker for "this is the first model
-      // step" is gone. P4-02's compile happens exactly once per agent and this
-      // is the only place that can tell.
-      const firstStep = agent.lifecycle?.state === 'queued'
+      // The Run's own latch, not a lifecycle state. `queued` answered this
+      // correctly for a Run this host opened fresh and wrongly for one it
+      // adopted — an adopted Run enters its first step at `starting`, and the
+      // state test skipped P4-02's compile for it without saying so.
+      const firstStep = agent.runId !== undefined && this.awaitingFirstStep.has(agent.runId)
       this.ensureRunning(agent)
       // P4-05 acceptance[1], §12.60: a run that is not holding a dispatch slot
       // does not begin a model step. `ensureRunning` has already returned the
@@ -1320,8 +1403,11 @@ export default class RunPlugin extends Service {
       // taken.
       if (firstStep) {
         // A stored profile this build cannot read stops the step rather than
-        // being written over: the run is refused, not silently continued.
+        // being written over: the run is refused, not silently continued. The
+        // latch is cleared only after that, so a refused step leaves this Run
+        // still awaiting its first one.
         if (!await this.recordTaskProfile(agent, messages)) return { kind: 'reject' as const }
+        if (agent.runId !== undefined) this.awaitingFirstStep.delete(agent.runId)
         // After the profile's `accepted -> planning`, so the Run is in the one
         // state `running` is legal from. A session whose first message is not a
         // task has no profile and stays in `accepted`, and `startRun` asks for

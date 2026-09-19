@@ -2054,16 +2054,6 @@
     },
     {
       "epic": "P4-05",
-      "path": "packages/run/run/src/index.ts",
-      "kind": "source",
-      "stages": [
-        "C.1",
-        "F.3"
-      ],
-      "reason": "Produces `failed` from the last unrecovered `agent/error`, records `orphaned` through `reclaim` under the reclaimer's own epoch, and refuses a model step for a run holding no dispatch slot. The registry named the state machine; these are the production paths that make three of its states reachable."
-    },
-    {
-      "epic": "P4-05",
       "path": "packages/run/run/tests/fenced-dispatch.spec.ts",
       "kind": "test",
       "stages": [
