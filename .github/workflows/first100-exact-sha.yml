@@ -189,14 +189,29 @@ jobs:
           # is not an unknown-argument error — it is simply never read, and the
           # command throws for a missing value it was given under another name.
           node scripts/release/collect-evidence.mjs run --gate-id typecheck -- pnpm run typecheck
-          pnpm evidence:verify
+          # `--evidence` is REQUIRED (`scripts/release/verify-evidence.mjs:219-220`
+          # throws without it), and the bare `pnpm evidence:verify` that stood
+          # here threw on every run after `init` and `run` had both succeeded --
+          # the package was written and accepted, and nothing read it. Written as
+          # `P0-07.composition.spec.ts:123` writes it, minus its `--repo-root`,
+          # which defaults to the working directory (`collect-evidence.mjs:108`,
+          # `verify-evidence.mjs:218`) and is this checkout here.
+          pnpm run evidence:verify --evidence .dsh/evidence/evidence.json
 
       - name: Upload the evidence package
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: first100-evidence-package-${{ steps.resolve-sha.outputs.sha }}
-          path: .dsh/evidence/evidence.json
+          # The DIRECTORY, not the package alone. `verify-evidence` re-derives
+          # every digest from the sidecar `collect-evidence` writes beside it --
+          # `evidence.d/gitdiff.patch`, `evidence.d/manifest.json` and
+          # `evidence.d/logs/<gate>.log` (`sidecarDir`,
+          # `collect-evidence.mjs:104`) -- and treats a missing manifest as a
+          # hard failure. Uploading `evidence.json` by itself produced an
+          # artifact nobody could re-verify offline, which is the one thing a
+          # release evidence package is for.
+          path: .dsh/evidence/
           if-no-files-found: warn
 
       # The tree goes back to what was checked out, before anything downstream
