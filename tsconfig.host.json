@@ -236,6 +236,7 @@
     { "path": "./packages/run/message-bus" },
     { "path": "./packages/run/task-profile" },
     { "path": "./packages/run/run" },
+    { "path": "./packages/run/run-plan" },
     { "path": "./packages/session/session-telemetry-otel" },
     { "path": "./packages/core/system-prompt" },
     { "path": "./packages/collaboration/blackboard" },

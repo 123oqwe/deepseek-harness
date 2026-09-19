@@ -1,0 +1,63 @@
+{
+  "name": "@deepseek-ai/dsh-run-plan",
+  "description": "Epic P4-03's RunPlan: the compiled, data-only plan a run executes — objectives traceable to the goal they came from, hard and soft constraints, model routes, a context topology and an agent graph, world bindings, budgets, approval gates, verification entries under a versioned contract, and per-node recovery — plus the compile that either produces a plan with a deterministic id or returns the minimal set of constraints that cannot all hold",
+  "version": "0.1.5-rc.2",
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "./types": {
+        "types": "./lib/types/types.d.ts",
+        "default": "./lib/types/types.js"
+      },
+      "./package.json": "./package.json"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "packages/run/run-plan"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-agent": "workspace:^",
+    "@deepseek-ai/dsh-brand": "workspace:^",
+    "@deepseek-ai/dsh-execution-world": "workspace:^",
+    "@deepseek-ai/dsh-resource-budget": "workspace:^",
+    "@deepseek-ai/dsh-run": "workspace:^",
+    "@deepseek-ai/dsh-task-profile": "workspace:^"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-agent": "workspace:^",
+    "@deepseek-ai/dsh-brand": "workspace:^",
+    "@deepseek-ai/dsh-execution-world": "workspace:^",
+    "@deepseek-ai/dsh-resource-budget": "workspace:^",
+    "@deepseek-ai/dsh-run": "workspace:^",
+    "@deepseek-ai/dsh-task-profile": "workspace:^"
+  }
+}
