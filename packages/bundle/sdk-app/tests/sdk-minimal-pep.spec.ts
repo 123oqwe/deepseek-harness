@@ -26,8 +26,7 @@
  * **It is not an always-green ornament.** It fails whenever the observation did
  * not happen or is not readable: `observation.json` absent (the boot died, the
  * turn never reached a model request, or the driver threw before writing),
- * malformed JSON, a missing field, `toolBodyRan` not a boolean, or a `decisions`
- * entry that is neither `null` nor an object carrying an `effect`. Deleting the
+ * malformed JSON, a missing field, or `toolBodyRan` not a boolean. Deleting the
  * `writeFile` call in the driver, or the `register` of the probe tool, reddens
  * it. What it deliberately does not do is assert WHICH of the two branches the
  * profile takes.
@@ -43,18 +42,12 @@ const configPath = fileURLToPath(new URL('./fixtures/sdk-minimal-pep.patch.yml',
 const repoTsconfig = fileURLToPath(new URL('../../../../tsconfig.json', import.meta.url))
 
 /** One policy decision as the driver read it back out of the session log. */
-interface RecordedDecision {
-  readonly effect: string | null
-  readonly reason: string | null
-}
-
 /** Everything the driver recorded about the one tool call it drove. */
 interface Observation {
   readonly profile: string
   readonly bootMethod: string
   readonly toolBodyRan: boolean
   readonly manifestEvents: number
-  readonly decisions: readonly (RecordedDecision | null)[]
   readonly services: Record<string, boolean>
   readonly toolResultTexts: readonly string[]
 }
@@ -93,11 +86,11 @@ describe('P2-05 acceptance[0] / BLOCKED-266: one tool call on the shipped sdk-mi
     expect(observation.services.trustKernel, 'this case is the kernel-LESS half; a pinned kernel here means the wrong run was read').toBe(false)
     expect(typeof observation.toolBodyRan, 'the record must say whether the tool body ran').toBe('boolean')
     expect(typeof observation.manifestEvents).toBe('number')
-    expect(Array.isArray(observation.decisions)).toBe(true)
-    for (const decision of observation.decisions) {
-      if (decision === null) continue
-      expect(Object.hasOwn(decision, 'effect'), 'a recorded decision must carry its effect').toBe(true)
-    }
+    // `decisions` is gone, and the loop that checked it was vacuous: every
+    // entry was `null` because `action/manifest-appended` carries no
+    // `decision` field, so the body never ran. `manifestEvents` above is the
+    // fact this event can answer; the policy ids it was reaching for live in
+    // the kernel's audit sink, not here.
     expect(Object.keys(observation.services).sort()).toEqual(['actionLedger', 'policy', 'policySet', 'sandboxPolicy', 'trustKernel'])
 
     // The observation IS this case's output: read this line in the run's log

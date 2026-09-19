@@ -82,10 +82,20 @@ try {
 
   const events = ctx.sessions.list().flatMap(session => session.snapshotEvents())
   const manifests = events.flatMap(event => event.type !== 'action/manifest-appended' ? [] : [event.data])
-  const decisions = manifests.map((data) => {
-    const decision = (data as { decision?: { effect?: string; reason?: string } }).decision
-    return decision === undefined ? null : { effect: decision.effect ?? null, reason: decision.reason ?? null }
-  })
+  // **There is no `decision` on this event, and reading for one produced a
+  // signal that could only ever say "no".** `action/manifest-appended` appends
+  // seventeen named fields (`core/tools/src/manifest-log.ts:80-97`) and
+  // `decision` is not among them, so the `decisions` array this driver used to
+  // write was `[null, ...]` by construction — not because no policy decision
+  // was taken. BLOCKED-266's reading stands on the two facts that ARE real:
+  // `toolBodyRan`, and the refusal text the tool result carried. The policy
+  // ids live in `PolicyAuditRecord.matched`, which goes to the trust kernel's
+  // audit sink (`policy-enforcement/src/index.ts:195-204`) and never to a
+  // session event, so the kernel-pinned twin is the only place they can be
+  // observed at all.
+  //
+  // What replaces it is the count already recorded below: how many manifest
+  // events this turn appended, which is a fact this event can answer.
   await writeFile('observation.json', `${JSON.stringify({
     profile: 'sdk-minimal',
     // The field that makes the two records comparable rather than merely
@@ -94,7 +104,6 @@ try {
     bootMethod: 'kernel-pinned',
     toolBodyRan,
     manifestEvents: manifests.length,
-    decisions,
     services: {
       policy: ctx.get('policy') !== undefined,
       policySet: ctx.get('policySet') !== undefined,

@@ -20,7 +20,7 @@
  *
  * **It is not an always-green ornament.** It fails whenever the observation did
  * not happen or is unreadable: `observation.json` absent, malformed, missing a
- * field, `toolBodyRan` not a boolean, a `decisions` entry that is neither
+ * field, `toolBodyRan` not a boolean, an entry that is neither
  * `null` nor an object carrying an `effect`, or `bootMethod` not naming this
  * composition. Deleting the driver's `prepare` hook reddens it, because
  * `trustKernel` would then read `false`.
@@ -36,18 +36,12 @@ const configPath = fileURLToPath(new URL('../../../packages/bundle/sdk-app/tests
 const repoTsconfig = fileURLToPath(new URL('../../../tsconfig.json', import.meta.url))
 
 /** One policy decision as the driver read it back out of the session log. */
-interface RecordedDecision {
-  readonly effect: string | null
-  readonly reason: string | null
-}
-
 /** Everything the driver recorded about the one tool call it drove. */
 interface Observation {
   readonly profile: string
   readonly bootMethod: string
   readonly toolBodyRan: boolean
   readonly manifestEvents: number
-  readonly decisions: readonly (RecordedDecision | null)[]
   readonly services: Record<string, boolean>
   readonly toolResultTexts: readonly string[]
 }
@@ -84,11 +78,11 @@ describe('P2-05 acceptance[0] / BLOCKED-266: one tool call on sdk-minimal WITH t
     expect(observation.services.trustKernel, 'the prepare hook must have pinned a kernel, or this case observes the first case again').toBe(true)
     expect(typeof observation.toolBodyRan, 'the record must say whether the tool body ran').toBe('boolean')
     expect(typeof observation.manifestEvents).toBe('number')
-    expect(Array.isArray(observation.decisions)).toBe(true)
-    for (const decision of observation.decisions) {
-      if (decision === null) continue
-      expect(Object.hasOwn(decision, 'effect'), 'a recorded decision must carry its effect').toBe(true)
-    }
+    // `decisions` is gone, and the loop that checked it was vacuous: every
+    // entry was `null` because `action/manifest-appended` carries no
+    // `decision` field, so the body never ran. `manifestEvents` above is the
+    // fact this event can answer; the policy ids it was reaching for live in
+    // the kernel's audit sink, not here.
     expect(Object.keys(observation.services).sort()).toEqual(['actionLedger', 'policy', 'policySet', 'sandboxPolicy', 'trustKernel'])
 
     // The observation IS this case's output. Read this line beside the first
