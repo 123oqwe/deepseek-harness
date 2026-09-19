@@ -735,20 +735,51 @@ jobs:
       # example. It is NOT committed with the fixtures: it describes this run,
       # and a stale copy in the tree would turn "this host could not refresh
       # these" into a claim about the tree.
+      # OUTSIDE the working tree, under the runner's temp dir. Collecting into
+      # the repository would put this step's own output into the very diff it
+      # is capturing: `git add -A` stages everything untracked, so a
+      # `refresh-out/` written first lands in `fixtures.patch` and the reviewer
+      # applies a patch that recreates the report next to the fixtures.
       - name: Collect the refresh output
         if: always()
+        env:
+          OUT: ${{ runner.temp }}/refresh-out
         run: |
-          mkdir -p refresh-out
-          git status --porcelain > refresh-out/status.txt
+          mkdir -p "$OUT"
+          git status --porcelain > "$OUT/status.txt"
+
+          # Taken BEFORE staging, because the next line deliberately leaves it
+          # out of the patch. `.refresh-skipped.json` is not gitignored, so a
+          # bare `git add -A` would sweep it in and the reviewer would apply a
+          # patch that commits a record of THIS RUN'S HOST into the tree --
+          # "these scenarios could not be refreshed here" reads as a claim
+          # about the repository once it is committed.
+          if [ -f snapshots/.refresh-skipped.json ]; then
+            cp snapshots/.refresh-skipped.json "$OUT/refresh-skipped.json"
+          fi
+
           # `git diff` sees tracked files only, and a refresh can CREATE a
           # fixture -- a new scenario file would appear in status.txt as `??`
           # and contribute no bytes to the patch, so the reviewer would apply a
           # patch that silently omits it. Staging first puts new files in the
           # diff. This touches the runner's index only; nothing is committed.
-          git add -A
-          git diff --cached --binary > refresh-out/fixtures.patch
-          if [ -f snapshots/.refresh-skipped.json ]; then
-            cp snapshots/.refresh-skipped.json refresh-out/refresh-skipped.json
+          #
+          # The exclusion is a pathspec rather than a later `restore --staged`,
+          # so the one command that decides what enters the patch also states
+          # what does not.
+          git add -A -- . ':(exclude)snapshots/.refresh-skipped.json'
+          git diff --cached --binary > "$OUT/fixtures.patch"
+
+          # The control for the two lines above, run here rather than left to
+          # whoever reviews the artifact: the skipped record must reach the
+          # artifact AND be absent from the patch. Asserting it in-band is what
+          # makes the first dispatch prove the mechanism instead of the
+          # mechanism being taken on faith -- and if a future `git add`
+          # rewrite drops the exclusion, this step goes red rather than the
+          # patch quietly gaining a file.
+          if [ -f "$OUT/refresh-skipped.json" ] && grep -q 'refresh-skipped\.json' "$OUT/fixtures.patch"; then
+            echo "snapshot-refresh: the skipped record leaked into fixtures.patch; the add-exclusion above is not holding" >&2
+            exit 1
           fi
 
       - name: Hand the refresh out
@@ -756,7 +787,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: snapshot-refresh-${{ steps.sha.outputs.sha }}
-          path: refresh-out
+          path: ${{ runner.temp }}/refresh-out
           if-no-files-found: error
 
   first100-evidence:
