@@ -65,8 +65,150 @@ jobs:
       - name: Pack release tarballs
         run: pnpm run release:pack --family vendor --out dist/npm-vendor
 
+      # P0-07 validation[2]: the evidence verifier is the LAST step of the
+      # release script. Everything from here to that step is the evidence
+      # chain, and it sits after packing because `init` must already name the
+      # artifacts it will require -- they do not exist until the packs above
+      # have run.
+      #
+      # `--base-sha` is the family's previous release. `release:verify` below
+      # already requires this run to come from a `<tagPrefix>*` tag
+      # (`scripts/release/verify.ts:53-68`), so "the previous release" is the
+      # previous tag with that prefix; nothing here parses a tag format of its
+      # own. When there is none -- a family's first release -- the fallback is
+      # git's empty tree, and it is NOT silent: the line below says so, and the
+      # value itself says so in the package, since `4b825dc6...` is a tree
+      # every reader can see is not a release commit. Falling back to `HEAD`
+      # instead would bind an empty diff, which `collect-evidence.mjs:240`
+      # warns against by name.
+      #
+      # The prefix is `families.ts:381`'s `vendor` family value, repeated here
+      # because no tool prints it. A repeated constant can drift, and the drift
+      # would be SILENT in the worst way -- `git describe` would match nothing
+      # and this step would report a first release. So a ref that IS a tag and
+      # does not carry the prefix is treated as drift and fails loudly.
+      #
+      # A ref that is not a tag at all is a different case, and not an error:
+      # `verify.ts` only checks the tag when `RELEASE_PUBLISH` is `true`
+      # (`:102-105`), which this pack job does not set, so dispatching it from
+      # a branch to rehearse the packing is a supported thing to do. Such a run
+      # takes the latest matching tag reachable from HEAD and says it is a
+      # rehearsal.
+      - name: Resolve the evidence base SHA
+        id: evidence-base
+        env:
+          TAG_PREFIX: vendor-
+          REF: ${{ github.ref }}
+        run: |
+          case "$REF" in
+            "refs/tags/${TAG_PREFIX}"*)
+              from=HEAD^
+              what="the previous ${TAG_PREFIX} release"
+              ;;
+            refs/tags/*)
+              echo "::error::this run is from tag $REF, which does not carry TAG_PREFIX '$TAG_PREFIX'; the prefix here has drifted from scripts/release/families.ts and the evidence base cannot be resolved" >&2
+              exit 2
+              ;;
+            *)
+              from=HEAD
+              what="the latest ${TAG_PREFIX} release (rehearsal: $REF is not a tag, so this run publishes nothing)"
+              ;;
+          esac
+          if tag=$(git describe --abbrev=0 --match "${TAG_PREFIX}*" "$from" 2>/dev/null); then
+            # `describe` names a TAG, and a tag can be moved. `gitDiff.baseSha`
+            # is a `CommitSha` (`evidence-format/src/types.ts:179`) and
+            # `collect-evidence.mjs:244-261` records `--base-sha` verbatim after
+            # passing it to `git diff`, which accepts a tag name -- so a tag
+            # written here would be recorded, and a later move would silently
+            # change which commits the package claims to cover.
+            base=$(git rev-list -n 1 "$tag")
+            echo "evidence base: ${what} ${tag} (${base})"
+          else
+            # The one value here that is deliberately not a commit: git's empty
+            # tree, which is what makes a first release diff against nothing.
+            base=4b825dc642cb6eb9a060e54bf8d69288fbee4904
+            echo "evidence base: no ${TAG_PREFIX} release reachable from ${from}; falling back to git's empty tree ${base}, so this package's gitDiff covers the whole tree"
+          fi
+          echo "sha=$base" >> "$GITHUB_OUTPUT"
+
+      # `init` refuses a checkout that has drifted from its captured baseline
+      # (`collect-evidence.mjs:228-233`), so the capture comes first. It
+      # rewrites `.dsh/baseline.json`, a TRACKED file, which the last step of
+      # this job restores; nothing packed above reads it, and the packs are
+      # already written.
+      #
+      # `--required-artifact` is enumerated from `dist/npm` at this moment, and
+      # that is what makes the required set equal the published set BY
+      # CONSTRUCTION: the upload step below sends `dist/npm-vendor/*` as
+      # `vendor-npm-tarballs`, the publish job downloads that same artifact into
+      # `dist/npm-vendor`, and `publish.ts:146` reads its publish order from that
+      # directory. This family packs one directory and publishes it, so every packed
+      # tarball is a required artifact.
+      - name: Collect the release evidence package
+        run: |
+          pnpm baseline:capture && pnpm baseline:verify
+          required=()
+          for tarball in dist/npm-vendor/*; do required+=(--required-artifact "$tarball"); done
+          node scripts/release/collect-evidence.mjs init \
+            --base-sha "${{ steps.evidence-base.outputs.sha }}" \
+            --required-gate release-version \
+            --required-gate packed-install \
+            "${required[@]}"
+
+      # Run a second time on purpose, the same trade the gate workflow's P0-07
+      # step records: the step above is the one that gates the build, and this
+      # one asks whether the collector records a real gate's execution. It is
+      # the cheap half of the pair -- a version and tag check, not an install.
+      #
+      # `collect-evidence run` CAPTURES the wrapped command's output into the
+      # sidecar instead of inheriting this job's stdout, so the log is printed
+      # here afterwards and the step exits with the wrapped status. An operator
+      # reading the job log and a verifier recomputing the digest then see the
+      # same bytes.
+      - name: Record the release-version gate
+        run: |
+          set +e
+          node scripts/release/collect-evidence.mjs run --gate-id release-version -- pnpm run release:verify --family vendor
+          status=$?
+          set -e
+          cat .dsh/evidence/evidence.d/logs/release-version.log || true
+          exit $status
+
+      # Wrapped rather than run twice: unlike the version check this one does a
+      # real install, so paying for it a second time is not a trade worth
+      # taking. Same capture-then-print shape as the step above.
       - name: Verify packed install
-        run: pnpm run release:verify-packed-install --family vendor --from dist/npm-vendor
+        run: |
+          set +e
+          node scripts/release/collect-evidence.mjs run --gate-id packed-install -- pnpm run release:verify-packed-install --family vendor --from dist/npm-vendor
+          status=$?
+          set -e
+          cat .dsh/evidence/evidence.d/logs/packed-install.log || true
+          exit $status
+
+      # One call per artifact: `build-artifact` takes a single `--path`
+      # (`collect-evidence.mjs`), digests it, and recomputes `accepted` against
+      # the paths `init` declared.
+      - name: Digest the published artifacts into the evidence package
+        run: |
+          for tarball in dist/npm-vendor/*; do
+            node scripts/release/collect-evidence.mjs build-artifact --path "$tarball"
+          done
+
+      # validation[2]'s "last step". It re-derives every digest offline and
+      # never re-runs a gate, so it costs seconds and asks only whether what
+      # this job recorded is what is on disk.
+      - name: Verify the release evidence package
+        run: pnpm run evidence:verify --evidence .dsh/evidence/evidence.json
+
+      # `.dsh/baseline.json` is tracked and `baseline:capture` rewrote it. The
+      # evidence sidecar is deliberately NOT removed here -- the verify above
+      # has already read it, and leaving it lets the upload step below carry it
+      # if a future change wants that.
+      - name: Restore the tracked baseline file the evidence capture rewrote
+        if: always()
+        run: git checkout -- .dsh/baseline.json
+
 
       - uses: actions/upload-artifact@v4
         with:
