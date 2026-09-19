@@ -32,6 +32,15 @@ import { runFixtureTurn } from '@deepseek-ai/dsh-loader-smoke'
 import { endorseComposedDecision } from '@deepseek-ai/dsh-policy-enforcement'
 import { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
 import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
+
+/**
+ * Every audit payload the kernel was handed, in order.
+ *
+ * Collected rather than counted: the policy ids are the observation, and a
+ * count would answer "was anything audited" while leaving "which policy
+ * permitted this" unanswered — the question BLOCKED-266 is actually about.
+ */
+const auditEntries: unknown[] = []
 import { createFixtureRootAgent } from '../../../../packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts'
 import { bootProductionProfile } from '../../../../packages/test-support/loader-smoke/tests/fixtures/production-profile.ts'
 import { PEP_PROBE_TOOL } from '../../../../packages/bundle/sdk-app/tests/fixtures/sdk-minimal-pep-mock-llm.ts'
@@ -51,7 +60,19 @@ const ctx = await bootProductionProfile({
   // call (BLOCKED-187), so a kernel pinned without it would be a third thing
   // that no shipped path runs.
   prepare: (prepared) => {
-    pinTrustKernel(prepared, createTrustKernel({ policyDecider: endorseComposedDecision }))
+    // **The audit sink is where the policy ids are, and the only place.**
+    // `policy-enforcement` builds a `PolicyAuditRecord` carrying the matched
+    // policy ids and hands it to `kernel.auditAppend`
+    // (`policy-enforcement/src/index.ts:195-204`); nothing puts them on a
+    // session event. The kernel takes the sink at CONSTRUCTION, beside the
+    // decider, and its own config doc says why it cannot be redirected later:
+    // what a decision recorded is not something a plugin may change after
+    // boot. This driver is the deployment here, so this is that deployment
+    // supplying its sink — not a way around the kernel.
+    pinTrustKernel(prepared, createTrustKernel({
+      policyDecider: endorseComposedDecision,
+      auditSink: (entry) => { auditEntries.push(entry.payload) },
+    }))
   },
 })
 try {
@@ -104,6 +125,14 @@ try {
     bootMethod: 'kernel-pinned',
     toolBodyRan,
     manifestEvents: manifests.length,
+    // Every policy id the engine matched, across every decision this turn
+    // took. A LIST rather than a single id: a permit can match more than one
+    // policy, and asserting equality would break the moment a deployment adds
+    // one — which is a thing deployments are supposed to be able to do.
+    matchedPolicyIds: auditEntries.flatMap((payload) => {
+      const matched = (payload as { matched?: unknown }).matched
+      return Array.isArray(matched) ? matched.map(id => String(id)) : []
+    }),
     services: {
       policy: ctx.get('policy') !== undefined,
       policySet: ctx.get('policySet') !== undefined,

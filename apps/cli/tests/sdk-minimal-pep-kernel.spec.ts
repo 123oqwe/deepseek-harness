@@ -11,19 +11,21 @@
  * (`apps/cli/src/profile-boot.ts:575-577`, `:638`). This case runs the other
  * composition so the register can say which answer belongs to which.
  *
- * **It records; it does not judge**, for the same reason as the first: ruling
- * on what the answer SHOULD be is the delegate's, and a case that failed on
- * either branch would be asserting a conclusion rather than producing one.
- * Lane A's read of the source expects a deny or `policy-unavailable` once a
- * kernel is present; this case does not assert that, so if the expectation is
- * wrong the record says so instead of the case hiding it.
+ * **It recorded rather than judged, and that has changed — the question it was
+ * waiting on is answered.** While the profile mounted no policy engine, ruling
+ * on what the answer SHOULD be was the delegate's, and a case failing on either
+ * branch would have asserted a conclusion rather than produced one. Lane A's
+ * read then expected a deny or `policy-unavailable` once a kernel was present,
+ * and the observation agreed. **`e8a36fef6d` gave the profile the engine**, so
+ * the expected answer is now a permit, and this case asserts it: the header's
+ * old "does not assert that" was true of a profile that had no policy to state.
  *
  * **It is not an always-green ornament.** It fails whenever the observation did
- * not happen or is unreadable: `observation.json` absent, malformed, missing a
- * field, `toolBodyRan` not a boolean, an entry that is neither
- * `null` nor an object carrying an `effect`, or `bootMethod` not naming this
- * composition. Deleting the driver's `prepare` hook reddens it, because
- * `trustKernel` would then read `false`.
+ * not happen or is unreadable — `observation.json` absent, malformed, missing a
+ * field, or `bootMethod` not naming this composition — and it now also fails
+ * when the tool body did NOT run, or ran without the profile's own permit being
+ * among the policies the audit names. Deleting the driver's `prepare` hook
+ * reddens it, because `trustKernel` would then read `false`.
  */
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -42,6 +44,8 @@ interface Observation {
   readonly bootMethod: string
   readonly toolBodyRan: boolean
   readonly manifestEvents: number
+  /** Every policy id the engine matched this turn, across all decisions. */
+  readonly matchedPolicyIds: readonly string[]
   readonly services: Record<string, boolean>
   readonly toolResultTexts: readonly string[]
 }
@@ -76,8 +80,25 @@ describe('P2-05 acceptance[0] / BLOCKED-266: one tool call on sdk-minimal WITH t
     // otherwise is recording the wrong run.
     expect(observation.bootMethod).toBe('kernel-pinned')
     expect(observation.services.trustKernel, 'the prepare hook must have pinned a kernel, or this case observes the first case again').toBe(true)
-    expect(typeof observation.toolBodyRan, 'the record must say whether the tool body ran').toBe('boolean')
+    // **A real assertion, not a type check.** `typeof … === 'boolean'` held
+    // while the answer was unknown; the answer is known now. And it has to be
+    // asserted BESIDE the policy id, not instead of it: `matched` containing
+    // this profile's permit is also true of a turn where a `forbid` matched as
+    // well and the action was refused. One says a policy spoke, the other says
+    // what happened — neither implies the other.
+    expect(observation.toolBodyRan, 'the profile now mounts an engine that permits, so the tool body must have run').toBe(true)
     expect(typeof observation.manifestEvents).toBe('number')
+    // **P2-05 acceptance[0]'s third observation: the permit has a name.**
+    // `toolBodyRan: true` says the call was not refused; it does not say a
+    // policy permitted it rather than nothing objecting. This is the
+    // difference, and it is the reason the profile states its permit as a
+    // policy with an id of its own instead of leaning on `baseline-permit`.
+    //
+    // CONTAINS, not equals: a permit can match more than one policy, and a
+    // deployment adding its own must not break this case — narrowing the set
+    // is exactly what the `policy-set` namespace is for.
+    expect(observation.matchedPolicyIds, 'the audit must name the policy that permitted the call, not merely record that one ran')
+      .toContain('sdk-minimal-danger-full-access')
     // `decisions` is gone, and the loop that checked it was vacuous: every
     // entry was `null` because `action/manifest-appended` carries no
     // `decision` field, so the body never ran. `manifestEvents` above is the
