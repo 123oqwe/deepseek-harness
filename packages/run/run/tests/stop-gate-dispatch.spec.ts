@@ -17,6 +17,15 @@
  * observed and what the MODEL was told. Nothing is hand-built: the stop comes
  * from `controlPlane.control`, the state reaches the agent through the
  * channel's own broadcast, and the refusal text is the one a model would read.
+ *
+ * **The last describe here is P4-07's, not P2-12's.** `refuseNewAction` carries
+ * the stop and the fencing arm in one function, so the harness a stop case
+ * needs is the harness a fencing case needs -- the same Run Service, the same
+ * lease store, the same PTC runtime. Those cases live here rather than in
+ * `fenced-dispatch.spec.ts` because that file fences a host BEFORE the step and
+ * observes the batch-level check; what was unobserved is the PER-CALL one, and
+ * duplicating this file's harness to say so would have been the more expensive
+ * of the two wrongs.
  */
 
 import { mkdtemp, rm } from 'node:fs/promises'
@@ -32,6 +41,7 @@ import type { CodeRunRequest, CodeRunResult } from '@deepseek-ai/dsh-code-runtim
 import ControlPlaneService from '@deepseek-ai/dsh-control-plane/plugin'
 import type { ControlRequest } from '@deepseek-ai/dsh-control-plane/channel'
 import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
+import type { WorkerId, WorkItemId } from '@deepseek-ai/dsh-lease-contract'
 import LlmRuntime, { createUserMessage, StreamChunk, ToolCallId } from '@deepseek-ai/dsh-llm'
 import type { PrincipalId } from '@deepseek-ai/dsh-principal'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
@@ -375,5 +385,184 @@ describe('P2-12 must[2] / BLOCKED-265: the stop reaches inside a PTC program too
     await agent.whenIdle()
 
     expect(runs).toEqual(['10', '20'])
+  })
+})
+
+/**
+ * Take this agent's work item away, the way a real second host would.
+ *
+ * The incumbent lease is read out of the store rather than assumed, and the
+ * takeover clock is that lease's own `expiresAtMs + 1`: `acquire` refuses
+ * `held-by-another` unless the incumbent is reclaimable AT the clock it is
+ * given (`lease/src/store.ts:89-91`, `isReclaimable` at
+ * `lease-contract/src/index.ts:73-75`), and this file's harness opens Runs with
+ * `leaseMs: 30_000`. A hardcoded offset would silently fail to take the item
+ * and leave the case passing for the wrong reason, so the acquisition is
+ * asserted.
+ * @param ctx - the mounted context holding the lease store.
+ * @param agentId - the agent whose Run is being taken; it IS the work item
+ *   (`run/src/index.ts:875`).
+ */
+function fenceOut(ctx: Context, agentId: string): void {
+  const workItem = brandString<WorkItemId>(agentId)
+  const incumbent = ctx.leaseStore.get(workItem)
+  expect(incumbent, 'the Run Service must have taken a lease before this host can be fenced out of it').toBeDefined()
+  const result = ctx.leaseStore.acquire(
+    workItem,
+    brandString<WorkerId>('a-different-host'),
+    incumbent!.expiresAtMs + 1,
+    1_000,
+  )
+  expect(result.acquired, `the takeover itself must succeed, or this case proves nothing: ${JSON.stringify(result)}`).toBe(true)
+}
+
+describe('P4-07 must[1] / BLOCKED-265: the fencing check reaches a call this run has already started making', () => {
+  it('refuses the PTC sub-call issued after another host took the Run, and ends the program', async () => {
+    // The observation BLOCKED-265 left owed. `refuseNewAction` carries the
+    // fencing arm on both paths, but every case that drove it drove the STOP,
+    // and P4-07's own frozen cases are on the native path or in the lease
+    // store -- so the arm was reached by code and observed by nothing.
+    const runs: string[] = []
+    const outcomes: string[] = []
+    const ctx = await harness(
+      new MockAdapter([
+        calls([{ id: 'c1', name: RUN_CODE_NAME, args: { code: 'program', description: 'charge twice' } }]),
+        textResponse('done'),
+      ]),
+      { ptc: true },
+    )
+    ctx.tools.register(defineContentToolFixture({
+      name: 'charge',
+      description: 'an external effect',
+      parameters: { amount: { type: 'string', required: true } },
+      execute: (args: { amount: string }) => {
+        runs.push(args.amount)
+        return Promise.resolve([{ type: 'text' as const, text: `charged ${args.amount}` }])
+      },
+    }))
+    const session = SessionId('ptc-fenced-mid-program')
+    const agent = await ctx.agentLoop.create(session, { provider: 'mock', model: 'mock' })
+    const runtime = ctx.codeRuntime as FakeRuntime
+    runtime.behavior = async (request) => {
+      const tools = request.bindings[0]!.functions
+      outcomes.push(`first:${JSON.stringify(await tools.charge!({ amount: '10' }))}`)
+      // The takeover happens BETWEEN two sub-calls, which is the whole
+      // question: a host fenced before the step never starts the program at
+      // all, because `run_code` is itself a tool call and the batch-level
+      // check refuses it first.
+      fenceOut(ctx, agent.id)
+      try {
+        await tools.charge!({ amount: '20' })
+        outcomes.push('second:NOT REFUSED')
+      } catch (error) {
+        outcomes.push(`second:${String(error)}`)
+      }
+      try {
+        await tools.charge!({ amount: '30' })
+        outcomes.push('third:NOT REFUSED')
+      } catch (error) {
+        outcomes.push(`third:${String(error)}`)
+      }
+      return { logs: [], value: 'program ended' }
+    }
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+
+    expect(runs, 'a fenced host must not perform the sub-call it had not started').toEqual(['10'])
+    // The MID-BATCH fenced sentence, which is `refusedDispatchResult`'s and
+    // NOT the batch-level one a pre-step fencing produces ("this run is no
+    // longer the owner of its work item", `agent-loop/src/tool-calls.ts:472`).
+    // Two sentences and two error names for one condition, separated only by
+    // when the takeover lands -- recorded as BLOCKED-277, because unifying
+    // them edits a string a frozen case asserts verbatim.
+    expect(outcomes[1]).toContain('this host no longer holds its work item')
+    expect(outcomes[2]).toContain('run is over')
+  })
+
+  it('runs the same program to the end while this host still holds its Run', async () => {
+    // The positive control, and it is not the one above it in this file: that
+    // one mounts no control plane, so it answers "absence does not refuse".
+    // This one mounts everything and leaves the lease ALONE, so the only
+    // difference from the case above is who owns the work item.
+    const runs: string[] = []
+    const ctx = await harness(
+      new MockAdapter([
+        calls([{ id: 'c1', name: RUN_CODE_NAME, args: { code: 'program', description: 'charge twice' } }]),
+        textResponse('done'),
+      ]),
+      { ptc: true },
+    )
+    ctx.tools.register(defineContentToolFixture({
+      name: 'charge',
+      description: 'an external effect',
+      parameters: { amount: { type: 'string', required: true } },
+      execute: (args: { amount: string }) => {
+        runs.push(args.amount)
+        return Promise.resolve([{ type: 'text' as const, text: `charged ${args.amount}` }])
+      },
+    }))
+    const session = SessionId('ptc-lease-held')
+    const agent = await ctx.agentLoop.create(session, { provider: 'mock', model: 'mock' })
+    const runtime = ctx.codeRuntime as FakeRuntime
+    runtime.behavior = async (request) => {
+      const tools = request.bindings[0]!.functions
+      await tools.charge!({ amount: '10' })
+      await tools.charge!({ amount: '20' })
+      await tools.charge!({ amount: '30' })
+      return { logs: [], value: 'program ended' }
+    }
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+
+    expect(runs, 'an owned Run must execute every sub-call, or the refusal above is about the harness').toEqual(['10', '20', '30'])
+    // Asserted on the very predicate the gate reads (`refuseNewAction` ->
+    // `RunLease.mayWrite`, `lease-contract/src/run-lease.ts:52`), so the
+    // control is decisive about the same input rather than about a proxy for
+    // it. The store's `holder` is the Run Service's own worker id, not this
+    // agent's, so reading the row would prove less and could read as proving
+    // more.
+    expect(agent.runLease?.mayWrite(Date.now()), 'the control must still own its work item').toBe(true)
+  })
+
+  it('refuses the rest of a NATIVE batch once the takeover lands mid-batch, with the same sentence', async () => {
+    // The native half of the same arm, and the reason this case exists apart
+    // from `fenced-dispatch.spec.ts`'s: that file fences the host BEFORE the
+    // step, so it observes the batch-level check at
+    // `agent-loop/src/tool-calls.ts:101`. Nothing observed the per-call check
+    // at `:286`, which is the only one that can refuse a call in a batch the
+    // host was still entitled to when the batch began.
+    const runs: string[] = []
+    const ctx = await harness(
+      new MockAdapter([
+        calls([
+          { id: 'c1', name: 'charge', args: { amount: '10' } },
+          { id: 'c2', name: 'charge', args: { amount: '20' } },
+        ]),
+        textResponse('done'),
+      ]),
+      // Sequenced, so "the call before it" is a real ordering and not a race.
+      { maxParallelToolCalls: 1 },
+    )
+    const session = SessionId('native-fenced-mid-batch')
+    const agent = await ctx.agentLoop.create(session, { provider: 'mock', model: 'mock' })
+    ctx.tools.register(defineContentToolFixture({
+      name: 'charge',
+      description: 'an external effect',
+      parameters: { amount: { type: 'string', required: true } },
+      execute: (args: { amount: string }) => {
+        runs.push(args.amount)
+        // The takeover lands while the FIRST call of the batch is running, so
+        // the second is dispatched by a host that no longer owns its Run.
+        if (args.amount === '10') fenceOut(ctx, agent.id)
+        return Promise.resolve([{ type: 'text' as const, text: `charged ${args.amount}` }])
+      },
+    }))
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+
+    expect(runs, 'the call already running is not undone; the one after it must not start').toEqual(['10'])
+    const texts = resultTexts(ctx, session)
+    expect(texts[0]).toContain('charged 10')
+    expect(texts[1]).toContain('this host no longer holds its work item')
   })
 })
