@@ -155,10 +155,10 @@ function waitForLine(
  * Run one whole turn of the shipped `sdk` profile against a stand-in model.
  *
  * Launch to shutdown, because the identity question is about what a LAUNCH
- * attaches: calling this twice against one `$DSH_HOME` and one session id is
- * how the resume half is driven, the JSON-RPC surface having no resume method
- * of its own (`packages/sdk/server/src/server.ts:477-487`).
- * @param dshHome - harness home; the second call reuses the first one's.
+ * attaches. One launch per call: this surface cannot continue a session it
+ * already persisted, so a second call against the same `$DSH_HOME` is refused
+ * rather than resumed (BLOCKED-298).
+ * @param dshHome - harness home.
  * @param stub - the stand-in model endpoint, asked how many times it answered.
  * @returns the methods of every request the server sent this driver.
  */
@@ -258,7 +258,14 @@ async function runSdkTurn(dshHome: string, stub: StubModelServer): Promise<strin
       method: 'session/prompt',
       params: { sessionId: 'main', contentBlocks: [{ type: 'text', text: 'write the proof file' }] },
     })}\n`)
-    await wait('the session/prompt response', value => value.id === 2)
+    const prompted = await wait('the session/prompt response', value => value.id === 2)
+    // Same reason as the guard above, and this is the answer run 35475180584
+    // actually came back with: `session "main" already exists` (BLOCKED-298).
+    // Waiting for `turn/end` after a refusal spends the whole deadline on a
+    // turn that was refused before it started.
+    if (prompted.error !== undefined) {
+      throw new Error(`the sdk runtime refused session/prompt: ${JSON.stringify(prompted.error)}`)
+    }
     await wait("the session's turn/end event", (value) => {
       if (value.method !== 'session.event') return false
       const params = value.params as Record<string, unknown> | undefined
@@ -611,13 +618,10 @@ describe('Python SDK dsh profile keyless smoke', () => {
     const root = await mkdtemp(join(tmpdir(), 'dsh-sdk-host-user-'))
     const dshHome = join(root, '.dsh')
     const stub = await startStubModelServer({
-      // Per request: call, close the turn, then call again on the second
-      // launch. The second call is what proves the resumed launch really
-      // composed an Agent -- only a running Agent appends a manifest.
+      // Per request, not per turn: call the tool, then close the turn.
       toolCalls: [
         { name: 'write', arguments: { file_path: join(root, 'first.txt'), content: 'P2-01\n' } },
         undefined,
-        { name: 'write', arguments: { file_path: join(root, 'second.txt'), content: 'P2-01\n' } },
       ],
     })
     try {
@@ -637,18 +641,14 @@ describe('Python SDK dsh profile keyless smoke', () => {
       expect(manifests[0]?.data?.actor).toMatch(/^anonymous:/)
       expect(records.filter(record => record.type === 'identity/attached')).toHaveLength(0)
 
-      // The resume half. One `$DSH_HOME` and one session id across two
-      // launches: the `identity/attached` count must go 0 -> 0 here, and
-      // 1 -> 1 once the fix lands. Asserting "no second record" alone would
-      // hold vacuously today AND after the fix if the second launch never
-      // composed an Agent, so the growing manifest count is asserted first:
-      // only a composed, running Agent appends one.
-      const resumedLaunchRequests = await runSdkTurn(dshHome, stub)
-      const resumed = await readSessionLog(dshHome)
-      const resumedManifests = resumed.records.filter(record => record.type === 'action/manifest-appended')
-      expect(resumedManifests.length).toBeGreaterThan(manifests.length)
-      expect(resumedManifests.at(-1)?.data?.actor).toMatch(/^anonymous:/)
-      expect(resumed.records.filter(record => record.type === 'identity/attached')).toHaveLength(0)
+      // The resume half of this control -- that a SECOND launch against the
+      // same `$DSH_HOME` adds no attachment either -- is not driven here, and
+      // not because it does not matter: this surface has no way to ask for it.
+      // The SDK's request map is `initialize`, `session/prompt` and `shutdown`
+      // (`sdk/protocol/src/types.ts:405-410`), none of which names a persisted
+      // session; `session/prompt` always creates (`sdk/server/src/server.ts:490-522`)
+      // and a live session of that id is refused at `core/session/src/index.ts:1002`.
+      // BLOCKED-298 holds it, and the two-launch evidence lives in the ACP case.
 
       // Named, not swallowed. Nothing on this surface should ask the client
       // anything: `bundle/base/cordis.patch.yml:270-273` sets the approval
@@ -656,7 +656,7 @@ describe('Python SDK dsh profile keyless smoke', () => {
       // If a request arrives anyway the driver answers it so the run can
       // finish, and this says WHICH -- instead of the case dying of a timeout
       // that names nothing, which is what it did on run 35467913630.
-      expect([...firstLaunchRequests, ...resumedLaunchRequests]).toEqual([])
+      expect(firstLaunchRequests).toEqual([])
     } finally {
       await stub.close()
       await rm(root, { recursive: true, force: true })
