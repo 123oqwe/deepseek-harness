@@ -407,10 +407,14 @@ jobs:
         # green, in four seconds, having run the only case incapable of
         # failing for the reason it was added.
         #
-        # Why that one and not its sibling is not established. Vitest 4.1.8
-        # formats an `it.each` `$label` title and the log shows it truncated,
-        # so "minimal" landing at the very end of the editor case's label is a
-        # plausible reason and is not a measurement.
+        # Why that one and not its sibling IS established (lane A, reading
+        # vitest 4.1.8): `-t` matches the FORMATTED title, `$label` goes
+        # through `objDisplay` (`@vitest/runner` chunk-artifact.js:964, :2197),
+        # this repository configures no truncation limit, so the default 40
+        # applies (display.js:752-755) and a string label renders as a quote
+        # plus its first 37 characters plus an ellipsis. "minimal" sits at
+        # characters 52-59 of the editor case's label and is cut away; in the
+        # boots case it sits at 22-28 and survives.
         #
         # The filter is deleted rather than repaired, because the defect is not
         # which cases it picked: a step that reports success having silently
