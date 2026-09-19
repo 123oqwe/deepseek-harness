@@ -226,7 +226,7 @@ Source: [`packages/core/tools/src/index.ts:2647`](../packages/core/tools/src/ind
 }
 ```
 
-Source: [`packages/core/agent/src/types.ts:240`](../packages/core/agent/src/types.ts)
+Source: [`packages/core/agent/src/types.ts:251`](../packages/core/agent/src/types.ts)
 
 ### `agent-preset/*`
 
