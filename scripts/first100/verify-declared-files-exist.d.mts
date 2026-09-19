@@ -2,7 +2,7 @@
  * Types for `verify-declared-files-exist.mjs`: declared paths that the tree does not hold.
  */
 
-import type { DeliverablePathPatch, OverlayEpic } from './files-overlay.d.mts'
+import type { ApprovedAddition, DeliverablePathPatch, OverlayEpic } from './files-overlay.d.mts'
 
 /** One `command-freeze.json` entry, as this gate reads it. */
 export interface DeclaredFilesFreezeEntry {
@@ -27,9 +27,12 @@ export function missingAcceptedRegistryRefs(
   exists: (path: string) => boolean,
   patches: readonly DeliverablePathPatch[],
   neverDeliveredPairSet?: ReadonlySet<string>,
+  additions?: readonly ApprovedAddition[],
 ): {
   declaredMissing: { where: string; path: string }[]
   neverDelivered: { where: string; path: string }[]
+  /** One per approved addition whose path is absent and whose `expectedAt` makes that a debt. */
+  additionsMissing: { where: string; path: string; expectedAt: string | undefined }[]
   resolvedMissing: { where: string; path: string; absentApprovedPaths: string[] }[]
 }
 

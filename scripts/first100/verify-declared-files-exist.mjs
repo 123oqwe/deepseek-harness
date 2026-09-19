@@ -21,7 +21,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { basename, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { patchEntries, resolveDeclaredPaths } from './files-overlay.mjs'
+import { additionEntries, patchEntries, resolveDeclaredPaths } from './files-overlay.mjs'
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const FREEZE_PATH = join(REPO_ROOT, 'spec/first100/exec/command-freeze.json')
@@ -102,16 +102,30 @@ export function neverDeliveredPairs(document, declaredPaths, exists) {
  * @param exists - whether a repo-relative path exists in the tree.
  * @param patches - the deliverable-path patches, from `files-overlay.mjs` `patchEntries`.
  * @param neverDeliveredPairSet - the pairs `never-delivered.json` records, which are reported as their own class rather than as declared-missing.
- * @returns `declaredMissing` and `neverDelivered` rows `{ where, path }`, and `resolvedMissing` rows `{ where, path, absentApprovedPaths }`;
+ * @param additions - the approved additions, from `files-overlay.mjs` `additionEntries`; an addition is reported as its own class, never as declared-missing, and `expectedAt` decides when its absence counts: a `tree` path should be here now, a `stage` path only once the epic is ACCEPTED.
+ * @returns `declaredMissing` and `neverDelivered` rows `{ where, path }`, `additionsMissing` rows `{ where, path, expectedAt }`, and `resolvedMissing` rows `{ where, path, absentApprovedPaths }`;
  *   `where` is the epic id or `epic.stage`.
  */
-export function missingAcceptedRegistryRefs(registry, acceptedIds, exists, patches, neverDeliveredPairSet = new Set()) {
+export function missingAcceptedRegistryRefs(registry, acceptedIds, exists, patches, neverDeliveredPairSet = new Set(), additions = []) {
   const declaredMissing = []
   const neverDelivered = []
   const resolvedMissing = []
+  const additionsMissing = []
+  const expectedAtOf = new Map(additions.map(addition => [`${addition.epic}\u0000${addition.path}`, addition.expectedAt]))
   for (const epic of registry.epics) {
+    // An approved addition is read for every epic, accepted or not: `expectedAt`
+    // says when its absence is a debt, and for a `tree` path that is today.
+    for (const record of resolveDeclaredPaths(epic, patches, additions)) {
+      if (record.addition !== true) continue
+      if (exists(record.declaredPath)) continue
+      const expectedAt = expectedAtOf.get(`${epic.id}\u0000${record.declaredPath}`)
+      if (expectedAt === 'tree' || acceptedIds.has(epic.id)) {
+        additionsMissing.push({ where: record.where, path: record.declaredPath, expectedAt })
+      }
+    }
     if (!acceptedIds.has(epic.id)) continue
-    for (const { where, declaredPath, approvedPaths, widening } of resolveDeclaredPaths(epic, patches)) {
+    for (const { where, declaredPath, approvedPaths, widening, addition } of resolveDeclaredPaths(epic, patches, additions)) {
+      if (addition === true) continue
       const declaredExists = exists(declaredPath)
       if (!declaredExists && (approvedPaths.length === 0 || widening)) {
         const row = { where, path: declaredPath }
@@ -123,7 +137,7 @@ export function missingAcceptedRegistryRefs(registry, acceptedIds, exists, patch
       if (absentApprovedPaths.length > 0) resolvedMissing.push({ where, path: declaredPath, absentApprovedPaths })
     }
   }
-  return { declaredMissing, neverDelivered, resolvedMissing }
+  return { declaredMissing, neverDelivered, resolvedMissing, additionsMissing }
 }
 
 function main() {
@@ -144,12 +158,18 @@ function main() {
   for (const epic of registry.epics) {
     for (const { declaredPath } of resolveDeclaredPaths(epic, patches)) declaredPairs.add(`${epic.id}\u0000${declaredPath}`)
   }
+  const additions = additionEntries(JSON.parse(readFileSync(ADJUDICATION_PATH, 'utf8')))
   const neverDeliveredDocument = existsSync(NEVER_DELIVERED_PATH) ? JSON.parse(readFileSync(NEVER_DELIVERED_PATH, 'utf8')) : undefined
   const recordedPairs = neverDeliveredPairs(neverDeliveredDocument, declaredPairs, exists)
-  const { declaredMissing, neverDelivered, resolvedMissing } = missingAcceptedRegistryRefs(registry, accepted, exists, patches, recordedPairs)
+  const { declaredMissing, neverDelivered, resolvedMissing, additionsMissing } = missingAcceptedRegistryRefs(registry, accepted, exists, patches, recordedPairs, additions)
   if (declaredMissing.length > 0) {
     console.log(`verify-declared-files-exist: ${String(declaredMissing.length)} registry file reference(s) of ACCEPTED epics are absent with no `
       + `substituting patch, or under a widening patch (declared-missing, informational):\n  ${declaredMissing.map(({ where, path }) => `${where} ${path}`).join('\n  ')}`)
+  }
+  if (additionsMissing.length > 0) {
+    console.log(`verify-declared-files-exist: ${String(additionsMissing.length)} approved addition(s) name a file that is not in the tree `
+      + `(informational; a "tree" path should be here already, a "stage" path is listed only once its epic is ACCEPTED):\n  `
+      + additionsMissing.map(({ where, path, expectedAt }) => `${where} ${path} (expectedAt ${String(expectedAt)})`).join('\n  '))
   }
   if (neverDelivered.length > 0) {
     console.log(`verify-declared-files-exist: ${String(neverDelivered.length)} registry file reference(s) of ACCEPTED epics name a file this lineage never `

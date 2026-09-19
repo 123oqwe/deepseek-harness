@@ -52,13 +52,14 @@ describe('missingAcceptedRegistryRefs', () => {
         { where: 'P9-98.C', path: 'packages/demo/thing/tests/plan.spec.ts' },
       ],
       neverDelivered: [],
+      additionsMissing: [],
       resolvedMissing: [],
     })
   })
 
   it('ignores an epic that is not ACCEPTED, whose plan paths need not exist yet', () => {
     expect(missingAcceptedRegistryRefs(registry, new Set(), exists, []))
-      .toStrictEqual({ declaredMissing: [], neverDelivered: [], resolvedMissing: [] })
+      .toStrictEqual({ declaredMissing: [], neverDelivered: [], additionsMissing: [], resolvedMissing: [] })
   })
 
   const declared = 'packages/demo/thing/tests/plan.e2e.ts'
@@ -110,13 +111,13 @@ describe('missingAcceptedRegistryRefs', () => {
   it('reports an absent approved path under a widening patch as resolved-missing, naming it, although the declared path exists', () => {
     const widening = { epic: 'P9-98', stage: 'U', declaredPath: present, approvedPath: absentTarget, kind: 'widening' as const }
     expect(missingAcceptedRegistryRefs(presentRegistry, new Set(['P9-98']), exists, [widening]))
-      .toStrictEqual({ declaredMissing: [], neverDelivered: [], resolvedMissing: [{ where: 'P9-98.U', path: present, absentApprovedPaths: [absentTarget] }] })
+      .toStrictEqual({ declaredMissing: [], neverDelivered: [], additionsMissing: [], resolvedMissing: [{ where: 'P9-98.U', path: present, absentApprovedPaths: [absentTarget] }] })
   })
 
   it('stays silent for the same absent approved path under a substitution, whose declared path is expected to remain', () => {
     const substitution = { epic: 'P9-98', stage: 'U', declaredPath: present, approvedPath: absentTarget, kind: 'substitution' as const }
     expect(missingAcceptedRegistryRefs(presentRegistry, new Set(['P9-98']), exists, [substitution]))
-      .toStrictEqual({ declaredMissing: [], neverDelivered: [], resolvedMissing: [] })
+      .toStrictEqual({ declaredMissing: [], neverDelivered: [], additionsMissing: [], resolvedMissing: [] })
   })
 
   it('does not apply a patch of another epic', () => {
@@ -166,5 +167,33 @@ describe('neverDeliveredPairs, and the rows it moves out of declared-missing', (
   it('refuses a record with no ruling behind it', () => {
     expect(() => neverDeliveredPairs({ entries: [{ ...entry, rulingRef: '' }] }, declaredPaths, exists)).toThrow('has no rulingRef')
     expect(() => neverDeliveredPairs({ entries: [{ ...entry, reason: '  ' }] }, declaredPaths, exists)).toThrow('needs epic, path and reason')
+  })
+})
+
+describe('approved additions, reported by what expectedAt promises', () => {
+  const registry = { epics: [{ id: 'P9-98', files: [{ path: 'packages/demo/thing/src/here.ts' }], stages: { P: { files: ['packages/demo/thing/src/here.ts'] } } }] }
+  const addition = (fields: Record<string, unknown>) => [{
+    epic: 'P9-98', stage: 'P', path: 'packages/demo/thing/src/absent.ts', reason: 'the stage must change it',
+    declaredBy: [], overlay: 'none', expectedAt: 'tree', rulingRef: 'delegate ruling', ...fields,
+  }] as unknown as Parameters<typeof missingAcceptedRegistryRefs>[5]
+
+  it('reports a tree addition that is absent, whether or not the epic is accepted', () => {
+    const accepted = missingAcceptedRegistryRefs(registry, new Set(['P9-98']), exists, [], new Set(), addition({}))
+    const unstarted = missingAcceptedRegistryRefs(registry, new Set(), exists, [], new Set(), addition({}))
+    expect(accepted.additionsMissing).toStrictEqual([{ where: 'P9-98.P', path: 'packages/demo/thing/src/absent.ts', expectedAt: 'tree' }])
+    expect(unstarted.additionsMissing).toStrictEqual(accepted.additionsMissing)
+    expect(accepted.declaredMissing.map(row => row.path)).not.toContain('packages/demo/thing/src/absent.ts')
+  })
+
+  it('reports a stage addition only once its epic is ACCEPTED, because before that its absence is the plan', () => {
+    const unstarted = missingAcceptedRegistryRefs(registry, new Set(), exists, [], new Set(), addition({ expectedAt: 'stage' }))
+    const accepted = missingAcceptedRegistryRefs(registry, new Set(['P9-98']), exists, [], new Set(), addition({ expectedAt: 'stage' }))
+    expect(unstarted.additionsMissing).toStrictEqual([])
+    expect(accepted.additionsMissing).toStrictEqual([{ where: 'P9-98.P', path: 'packages/demo/thing/src/absent.ts', expectedAt: 'stage' }])
+  })
+
+  it('says nothing about an addition whose file is in the tree', () => {
+    const result = missingAcceptedRegistryRefs(registry, new Set(['P9-98']), exists, [], new Set(), addition({ path: 'packages/other/moved/src/gone.ts' }))
+    expect(result.additionsMissing).toStrictEqual([])
   })
 })
