@@ -898,7 +898,7 @@ export function minimalConflictSet(demands: readonly PlanDemand[], facts: Deploy
  * @returns the lowercase hex sha256 of its canonical form.
  */
 export function planIdOf(body: Omit<RunPlan, 'planId'>): PlanId {
-  const canonical = canonicalizeArguments(body as unknown as JsonValue)
+  const canonical = JSON.stringify(body)
   return brandString<PlanId>(createHash('sha256').update(canonical, 'utf8').digest('hex'))
 }
 
