@@ -477,6 +477,14 @@ describe('P4-07 must[1] / BLOCKED-265: the fencing check reaches a call this run
     // them edits a string a frozen case asserts verbatim.
     expect(outcomes[1]).toContain('this host no longer holds its work item')
     expect(outcomes[2]).toContain('run is over')
+    // And the MODEL's own view, which the assertions above do not cover: they
+    // read what the PROGRAM caught. What is asserted here is the one thing that
+    // holds however many results the PTC path records -- the refused effect
+    // never reaches the model as a success. The COUNT is deliberately not
+    // asserted: whether a PTC sub-call appends its own `tool/result` beside the
+    // outer `run_code` one is not something this file has ever observed, and a
+    // number guessed from reading would be a claim rather than a check.
+    expect(resultTexts(ctx, session).join('\n')).not.toContain('charged 20')
   })
 
   it('runs the same program to the end while this host still holds its Run', async () => {
