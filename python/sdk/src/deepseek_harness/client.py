@@ -10,15 +10,30 @@ import uuid
 from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, TypeAlias, TypeVar
+from typing import Callable, Sequence, TypeAlias, TypeVar
 
 from pydantic import BaseModel
 
 from .errors import JsonRpcError, TransportClosedError
-from .models import IncomingRequest, InitializeResponse, JsonObject, JsonValue, Notification
+from .models import (
+    CapabilityDeclaration,
+    IncomingRequest,
+    InitializeResponse,
+    JsonObject,
+    JsonValue,
+    Notification,
+)
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
 NotificationFilter: TypeAlias = Callable[[Notification], bool]
+#: Notification methods that describe the HOST rather than a session, and
+#: therefore reach every subscriber. Kept as a set rather than inlined so
+#: adding one is a single edit that both the filter and a reader can find.
+HOST_LEVEL_NOTIFICATION_METHODS = frozenset({"host.control"})
+#: The capability a client declares to be told about the host-wide emergency
+#: stop (P2-12 acceptance[3]). Opt-in: a client that does not declare it is
+#: sent no ``host.control`` at all, and reads no state off the handshake.
+HOST_CONTROL_CAPABILITY = "host-control"
 
 
 @dataclass(slots=True)
@@ -138,7 +153,23 @@ class HarnessClient:
         model: str,
         reasoning_effort: str | None = None,
         max_tokens: int | None = None,
+        capabilities: Sequence[CapabilityDeclaration] = (),
     ) -> InitializeResponse:
+        """Perform the process-wide handshake.
+
+        :param cwd: workspace root, resolved before it is sent.
+        :param provider: LLM provider id.
+        :param model: model id within that provider.
+        :param reasoning_effort: provider-specific effort hint, omitted when None.
+        :param max_tokens: per-response ceiling, omitted when None.
+        :param capabilities: what this client asks for. The handshake is the
+            only place to ask: the server decides per connection what it will
+            send, so a capability not declared here can never be turned on
+            later. Declare :data:`HOST_CONTROL_CAPABILITY` to receive
+            ``host.control`` notifications and the state as of the handshake.
+        :returns: the server's identity, the negotiated outcome, and the host
+            control state when both sides agreed to it.
+        """
         payload: JsonObject = {
             "cwd": str(Path(cwd).resolve()),
             "provider": provider,
@@ -148,6 +179,11 @@ class HarnessClient:
             payload["reasoningEffort"] = reasoning_effort
         if max_tokens is not None:
             payload["maxTokens"] = max_tokens
+        if capabilities:
+            payload["capabilities"] = [
+                {"id": declaration.id, "mandatory": declaration.mandatory}
+                for declaration in capabilities
+            ]
         try:
             return self.request(
                 "initialize",
@@ -506,6 +542,17 @@ class HarnessClient:
     def _notification_belongs_to_session_tree(self, session_id: str) -> NotificationFilter:
         def belongs(notification: Notification) -> bool:
             payload = notification.payload
+            # A host-level notification belongs to every subscription, because
+            # it is not about a session. The fall-through below asks whether
+            # ``payload["sessionId"]`` descends from the subscribed session, and
+            # ``host.control`` carries no ``sessionId`` at all -- so without this
+            # branch it is silently DROPPED here, before any consumer sees it.
+            # Giving it one to slip through would be worse than dropping it: a
+            # reader would conclude an emergency stop applies to the session
+            # named and not to its siblings, which is the disagreement between
+            # surfaces the notification exists to prevent.
+            if notification.method in HOST_LEVEL_NOTIFICATION_METHODS:
+                return True
             if notification.method in {"subagent.started", "subagent.finished"}:
                 parent_id = payload.get("parentSessionId")
                 if (

@@ -5,7 +5,7 @@
   },
   "generatedBy": "scripts/gen-control-protocol-schema.ts",
   "source": "packages/sdk/server/src/server.ts SERVER_PROTOCOL_SURFACE",
-  "fingerprint": "d2d4c61600a16bde85365893ed6a0498fd1d34ec691fc7b91ace36c6671701fe",
+  "fingerprint": "43c06abd5ece4366f1486c040ca5d78c8594ed7e145992e47da97eaaacd683af",
   "surface": {
     "methods": [
       {
@@ -28,6 +28,11 @@
       {
         "name": "session.status",
         "schemaId": "sdk-protocol:SessionStatusNotification",
+        "version": "1.0"
+      },
+      {
+        "name": "host.control",
+        "schemaId": "sdk-protocol:HostControlNotification",
         "version": "1.0"
       }
     ],

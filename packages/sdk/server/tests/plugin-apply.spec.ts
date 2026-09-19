@@ -13,6 +13,10 @@ import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-test
 import { LlmAdapter } from '@deepseek-ai/dsh-llm'
 import type { GenerateOptions, StreamChunk } from '@deepseek-ai/dsh-llm'
 import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
+// The control-plane merges: `ctx.controlPlane` as a provide target and
+// `control/state-changed` as a typed emit. Type-only, like the server's own.
+import type {} from '@deepseek-ai/dsh-control-plane/plugin'
+import type { SdkHostControlState } from '@deepseek-ai/dsh-sdk-protocol'
 import * as jsonrpc from '../src/index.ts'
 
 /**
@@ -451,6 +455,163 @@ describe('dsh-sdk-jsonrpc-server plugin apply', () => {
       await settle()
       expect(harness.frames().length).toBe(before)
       expect(harness.exits()).toEqual([])
+    } finally {
+      await harness.dispose()
+      await rm(storageDir, { recursive: true, force: true })
+    }
+  })
+})
+
+/**
+ * A stop this host is under, in the PROTOCOL's vocabulary.
+ *
+ * `SdkHostControlState` rather than the control plane's own `ControlState`,
+ * because that is what these cases assert on the wire and it carries
+ * `requestedBy` as a plain string. The control plane brands it, so the two
+ * places that hand this to the plane's own types cast; branding it here would
+ * mean two dependency edges for a fixture.
+ */
+const STOPPED: SdkHostControlState = {
+  stopped: true,
+  record: {
+    requestedBy: 'operator-1',
+    reason: 'human-requested',
+    requestedAtMs: 1_700_000_000_000,
+    release: 'explicit-resume',
+  },
+}
+
+/**
+ * A control plane that reports one state and can announce another.
+ *
+ * Structural, because the server reads exactly two things from this service --
+ * `state()` at the handshake and the `control/state-changed` event -- and
+ * mounting the real plugin would bring a durable `emergency-stop.json` into a
+ * case about what leaves the transport.
+ * @param initial - the state the handshake will report.
+ * @returns the service double and the emitter that announces a change.
+ */
+function fakeControlPlane(initial: SdkHostControlState) {
+  let current = initial
+  return {
+    install: (ctx: Context) => { ctx.provide('controlPlane', { state: () => current } as never) },
+    announce: (ctx: Context, next: SdkHostControlState) => {
+      current = next
+      ctx.emit('control/state-changed', next as never)
+    },
+  }
+}
+
+/** Every `host.control` frame seen so far. */
+function hostControlFrames(harness: ApplyHarness): Record<string, unknown>[] {
+  return harness.frames().filter(frame => frame.method === 'host.control')
+}
+
+describe('P2-12 acceptance[3]: the host stop over the SDK protocol', () => {
+  it('agrees the capability, answers the state at the handshake, and sends each edge after it', async () => {
+    // One case for three steps because the protocol has no way to observe them
+    // apart: a client learns the state at `initialize` and the edges after it,
+    // and a server that did one without the other would still look correct to
+    // a case that checked only its half.
+    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-host-control-'))
+    vi.stubEnv('DEEPSEEK_API_KEY', 'test-key')
+    const plane = fakeControlPlane(STOPPED)
+    const harness = await mountPlugin(storageDir, { beforeServer: plane.install })
+    try {
+      harness.send({
+        jsonrpc: '2.0',
+        id: 'hc-1',
+        method: 'initialize',
+        params: {
+          cwd: storageDir,
+          provider: 'deepseek-official',
+          model: 'apply-model',
+          capabilities: [{ id: 'host-control', mandatory: false }],
+        },
+      })
+      const response = await harness.waitForFrame(frame => frame.id === 'hc-1', 'initialize response')
+      const result = response.result as Record<string, unknown>
+      expect((result.negotiation as { agreedCapabilities: string[] }).agreedCapabilities).toEqual(['host-control'])
+      // The handshake carries the state, which is the only thing that can
+      // reach a client that connected AFTER the stop was raised.
+      expect(result.hostControl).toEqual(STOPPED)
+
+      // The release, then a second stop: two edges, so the case cannot pass on
+      // a server that sends one notification and stops listening.
+      plane.announce(harness.ctx, { stopped: false })
+      plane.announce(harness.ctx, STOPPED)
+      const frames = await waitFor(
+        () => { const hits = hostControlFrames(harness); return hits.length === 2 ? hits : undefined },
+        'two host.control notifications',
+      )
+      expect(frames.map(frame => (frame.params as { state: SdkHostControlState }).state))
+        .toEqual([{ stopped: false }, STOPPED])
+      expect(frames.every(frame => frame.jsonrpc === '2.0' && frame.id === undefined)).toBe(true)
+    } finally {
+      await harness.dispose()
+      await rm(storageDir, { recursive: true, force: true })
+    }
+  })
+
+  it('sends a client that did not ask NOTHING, and tells it nothing on the handshake either', async () => {
+    // The leak check in unit form. A capability nobody declared must not
+    // widen the wire: an older client meeting `host.control` has no branch for
+    // it, and that is what capability negotiation exists to prevent.
+    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-host-control-silent-'))
+    vi.stubEnv('DEEPSEEK_API_KEY', 'test-key')
+    const plane = fakeControlPlane(STOPPED)
+    const harness = await mountPlugin(storageDir, { beforeServer: plane.install })
+    try {
+      harness.send({
+        jsonrpc: '2.0',
+        id: 'hc-silent-1',
+        method: 'initialize',
+        params: { cwd: storageDir, provider: 'deepseek-official', model: 'apply-model' },
+      })
+      const response = await harness.waitForFrame(frame => frame.id === 'hc-silent-1', 'initialize response')
+      // `in`, not a value comparison: `hostControl: undefined` would serialize
+      // away on the wire but would mean the server took the branch.
+      expect('hostControl' in (response.result as Record<string, unknown>)).toBe(false)
+
+      plane.announce(harness.ctx, { stopped: false })
+      await settle()
+      expect(hostControlFrames(harness)).toEqual([])
+    } finally {
+      await harness.dispose()
+      await rm(storageDir, { recursive: true, force: true })
+    }
+  })
+
+  it('does NOT agree the capability when the composition mounts no control plane', async () => {
+    // `sdk-minimal` is that composition. Agreeing there would hand a client a
+    // capability it had been told it holds and would wait on forever -- the
+    // failure negotiation exists to make impossible, arrived at by declaring
+    // support the process cannot deliver.
+    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-host-control-absent-'))
+    vi.stubEnv('DEEPSEEK_API_KEY', 'test-key')
+    const harness = await mountPlugin(storageDir)
+    try {
+      harness.send({
+        jsonrpc: '2.0',
+        id: 'hc-absent-1',
+        method: 'initialize',
+        params: {
+          cwd: storageDir,
+          provider: 'deepseek-official',
+          model: 'apply-model',
+          capabilities: [{ id: 'host-control', mandatory: false }],
+        },
+      })
+      const response = await harness.waitForFrame(frame => frame.id === 'hc-absent-1', 'initialize response')
+      const negotiation = (response.result as Record<string, unknown>).negotiation as {
+        agreedCapabilities: string[]
+        ignoredCapabilities: string[]
+      }
+      expect(negotiation.agreedCapabilities).toEqual([])
+      // Recorded as ignored rather than dropped: the client can tell "this
+      // build does not have it here" from "this build never heard of it".
+      expect(negotiation.ignoredCapabilities).toEqual(['host-control'])
+      expect('hostControl' in (response.result as Record<string, unknown>)).toBe(false)
     } finally {
       await harness.dispose()
       await rm(storageDir, { recursive: true, force: true })

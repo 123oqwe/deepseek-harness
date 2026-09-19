@@ -14,6 +14,7 @@
 
 import { spawn, type ChildProcess } from 'node:child_process'
 import {
+  HOST_LEVEL_NOTIFICATION_METHODS,
   JsonRpcLineTransport,
   JsonRpcResponseError,
   type InitializeParams,
@@ -290,6 +291,12 @@ export class HarnessClient {
       ...readNegotiation(result.negotiation),
       ...readRange('protocolVersions', result.protocolVersions),
       ...typeof result.schemaFingerprint === 'string' ? { schemaFingerprint: result.schemaFingerprint } : {},
+      // The host control state, when the server sent one. The comment above
+      // records that this rebuild once dropped every field but `serverInfo`;
+      // a field-by-field rebuild drops whatever it does not name, and this is
+      // the next field it would have dropped. Absent stays absent: the client
+      // must not turn "the server said nothing" into `{ stopped: false }`.
+      ...readHostControl(result.hostControl),
     }
   }
 
@@ -412,6 +419,15 @@ export class HarnessClient {
   subscribeSessionTree(sessionId: string): NotificationSubscription {
     return this.subscribe((notification) => {
       const params = notification.params
+      // A host-level notification is not about a session, so it belongs to
+      // every subscription. The fall-through below asks whether
+      // `params.sessionId` descends from this one, and `host.control` carries
+      // none -- so without this branch it is silently DROPPED here, before any
+      // consumer sees it. Giving it a `sessionId` instead would be worse: a
+      // reader would conclude the stop applies to the session named and not to
+      // its siblings, which is the disagreement between surfaces the
+      // notification exists to prevent.
+      if (HOST_LEVEL_NOTIFICATION_METHODS.has(notification.method)) return true
       if (notification.method === 'subagent.started' || notification.method === 'subagent.finished') {
         const parentId = params.parentSessionId
         if (typeof parentId === 'string' && this.isDescendantOf(parentId, sessionId)) return true
@@ -571,6 +587,27 @@ function readNegotiation(value: unknown): Partial<InitializeResult> {
       downgrades: [],
     },
   }
+}
+
+/**
+ * Read the host control state off a wire value, or nothing.
+ *
+ * Dropped whole on any missing or mistyped field, for the reason
+ * {@link readNegotiation} is: a half-read stop is worse than none. A record
+ * that fails to read here surfaces as UNKNOWN, which a caller must not act on,
+ * rather than as a stop with fields it invented.
+ * @param value - the raw wire value.
+ * @returns a single-key object, or an empty one.
+ */
+function readHostControl(value: unknown): Partial<InitializeResult> {
+  if (!isRecord(value) || typeof value.stopped !== 'boolean') return {}
+  if (!value.stopped) return { hostControl: { stopped: false } }
+  const record = value.record
+  if (!isRecord(record)) return {}
+  const { requestedBy, reason, requestedAtMs, release } = record
+  if (typeof requestedBy !== 'string' || typeof reason !== 'string'
+    || typeof requestedAtMs !== 'number' || typeof release !== 'string') return {}
+  return { hostControl: { stopped: true, record: { requestedBy, reason, requestedAtMs, release } } }
 }
 
 /**

@@ -1,7 +1,16 @@
 from .api import DeepSeekHarness, DeepSeekHarnessConfig, RunResult, Session
-from .client import HarnessClient, HarnessConfig
+from .client import HOST_CONTROL_CAPABILITY, HarnessClient, HarnessConfig
 from .errors import SdkProtocolError
-from .models import IncomingRequest, InitializeResponse, JsonObject, Notification, ServerInfo
+from .models import (
+    CapabilityDeclaration,
+    HostControlState,
+    HostStopRecord,
+    IncomingRequest,
+    InitializeResponse,
+    JsonObject,
+    Notification,
+    ServerInfo,
+)
 
 __all__ = [
     "DeepSeekHarness",
@@ -11,6 +20,10 @@ __all__ = [
     "HarnessClient",
     "HarnessConfig",
     "SdkProtocolError",
+    "HOST_CONTROL_CAPABILITY",
+    "CapabilityDeclaration",
+    "HostControlState",
+    "HostStopRecord",
     "IncomingRequest",
     "InitializeResponse",
     "JsonObject",

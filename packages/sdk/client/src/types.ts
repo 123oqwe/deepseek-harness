@@ -6,7 +6,7 @@
  */
 
 import type { ContentBlock, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
-import type { SdkPromptContentBlock } from '@deepseek-ai/dsh-sdk-protocol'
+import type { CapabilityDeclaration, SdkPromptContentBlock } from '@deepseek-ai/dsh-sdk-protocol'
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
 
 /** One server-to-client notification as received off the wire. */
@@ -64,6 +64,15 @@ export interface DeepSeekHarnessOptions extends HarnessClientOptions {
   reasoningEffort?: ReasoningEffortId
   /** Maximum output tokens for each conversation-model request. */
   maxTokens?: number
+  /**
+   * What this client asks the server for at the handshake.
+   *
+   * The handshake is the only place to ask: the server decides per connection
+   * what it will send, so a capability omitted here can never be turned on
+   * later. Declare `{ id: 'host-control', mandatory: false }` to receive
+   * `host.control` and the state as of the handshake.
+   */
+  capabilities?: readonly CapabilityDeclaration[]
 }
 
 /** One owned session activity interval, from enqueue receipt through idle. */

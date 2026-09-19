@@ -9,8 +9,19 @@ from pathlib import Path
 
 import pytest
 
-from deepseek_harness import DeepSeekHarness, HarnessClient, HarnessConfig, Notification, RunResult, SdkProtocolError
+from deepseek_harness import (
+    HOST_CONTROL_CAPABILITY,
+    CapabilityDeclaration,
+    DeepSeekHarness,
+    DeepSeekHarnessConfig,
+    HarnessClient,
+    HarnessConfig,
+    Notification,
+    RunResult,
+    SdkProtocolError,
+)
 from deepseek_harness.errors import JsonRpcError
+from deepseek_harness.client import HOST_LEVEL_NOTIFICATION_METHODS
 
 
 def test_high_level_sdk_runs_turn_and_collects_final_response(tmp_path: Path) -> None:
@@ -1071,3 +1082,198 @@ def test_client_reports_missing_bundled_runtime_dependency(monkeypatch: pytest.M
 
     with pytest.raises(FileNotFoundError, match="Install deepseek-harness-runtime-bin"):
         HarnessClient(HarnessConfig(dsh_home="/explicit/home")).start()
+
+
+def _belongs(client: HarnessClient, session_id: str, notification: Notification) -> bool:
+    """Ask the client's own session-tree filter about one notification."""
+    return client._notification_belongs_to_session_tree(session_id)(notification)
+
+
+def test_host_level_notification_reaches_every_subscriber(tmp_path: Path) -> None:
+    """A host-level notification carries no sessionId and must not be dropped.
+
+    The fall-through for an unrecognised method asks whether
+    ``payload["sessionId"]`` descends from the subscribed session. ``host.control``
+    has no ``sessionId``, so before the host-level branch existed it was filtered
+    out here -- not refused, not logged, discarded -- and the TypeScript half
+    would have shipped looking correct while nothing arrived.
+    """
+    client = HarnessClient(HarnessConfig(dsh_bin=str(tmp_path / "unused")))
+    stop = Notification(method="host.control", payload={"state": {"stopped": True}})
+    assert "host.control" in HOST_LEVEL_NOTIFICATION_METHODS
+    assert _belongs(client, "main", stop) is True
+    # And a different subscriber sees it too: "belongs to every subscription"
+    # is the claim, not "belongs to the one that happens to be first".
+    assert _belongs(client, "some-other-session", stop) is True
+
+
+def test_a_session_notification_without_a_matching_session_is_still_filtered(tmp_path: Path) -> None:
+    """The negative control, so the case above is not passing on a dead filter."""
+    client = HarnessClient(HarnessConfig(dsh_bin=str(tmp_path / "unused")))
+    other = Notification(method="session.status", payload={"sessionId": "not-mine", "status": "idle"})
+    assert _belongs(client, "main", other) is False
+
+
+def test_host_control_opt_in_reaches_a_session_subscriber_through_a_fake_dsh(tmp_path: Path) -> None:
+    """P2-12 acceptance[3], the whole Python leg: declare, read, receive.
+
+    Three things have to hold together and each one has already been shipped
+    without another: the capability has to be DECLARED (a server sends
+    ``host.control`` to nobody who did not ask), the handshake's state has to
+    be READ (a client that connects after a stop never sees the edge), and the
+    notification has to reach a SESSION subscriber although it carries no
+    ``sessionId`` (the filter drops what it cannot place). A unit case for any
+    one of them passes while the other two are broken.
+    """
+    script = tmp_path / "fake_dsh.py"
+    init_dump = tmp_path / "init.json"
+    script.write_text(
+        """
+import json
+import os
+import sys
+
+for line in sys.stdin:
+    msg = json.loads(line)
+    method = msg.get("method")
+    if method == "initialize":
+        json.dump(msg.get("params"), open(os.environ["INIT_DUMP"], "w"))
+        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {
+            "serverInfo": {"name": "fake-dsh", "version": "0.0.1"},
+            "negotiation": {"protocolVersion": 1, "agreedCapabilities": ["host-control"], "ignoredCapabilities": []},
+            "hostControl": {"stopped": True, "record": {
+                "requestedBy": "operator-1",
+                "reason": "human-requested",
+                "requestedAtMs": 1700000000000,
+                "release": "explicit-resume",
+            }},
+        }}), flush=True)
+    elif method == "session/prompt":
+        params = msg.get("params") or {}
+        print(json.dumps({"jsonrpc": "2.0", "method": "host.control", "params": {"state": {"stopped": False}}}), flush=True)
+        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"messageId": "message-1"}}), flush=True)
+    elif method == "shutdown":
+        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {}}), flush=True)
+        break
+""".strip()
+    )
+
+    with HarnessClient(
+        HarnessConfig(env={"INIT_DUMP": str(init_dump)}),
+        _launch_args=(sys.executable, str(script)),
+    ) as client:
+        init = client.initialize(
+            provider="deepseek-official",
+            cwd="/workspace",
+            model="dsagent",
+            capabilities=[CapabilityDeclaration(HOST_CONTROL_CAPABILITY)],
+        )
+
+        # Declared, and declared OPTIONAL: a mandatory declaration would make
+        # every server without a control plane refuse the connection outright.
+        sent = json.loads(init_dump.read_text())
+        assert sent["capabilities"] == [{"id": "host-control", "mandatory": False}]
+        assert init.negotiation is not None
+        assert HOST_CONTROL_CAPABILITY in init.negotiation.agreedCapabilities
+
+        # Read off the handshake: this client connected while the host was
+        # already stopped and would otherwise show a running host forever.
+        assert init.hostControl is not None
+        assert init.hostControl.stopped is True
+        assert init.hostControl.record is not None
+        assert init.hostControl.record.reason == "human-requested"
+        assert init.hostControl.record.requestedBy == "operator-1"
+
+        # And the live edge reaches a SESSION subscription, which is the branch
+        # that does not exist without the opt-in above: the server would never
+        # have sent this, so nothing would have exercised the filter.
+        with client.subscribe_session_notifications("main") as subscription:
+            client.session_prompt("main", [{"type": "text", "text": "release it"}])
+            released = subscription.next()
+            assert released.method == "host.control"
+            assert released.payload["state"] == {"stopped": False}
+
+
+def test_high_level_harness_declares_the_capability_and_keeps_the_handshake(tmp_path: Path) -> None:
+    """The opt-in has to exist on the API most callers use, not only on the low one.
+
+    `DeepSeekHarness.start()` used to discard the initialize result, so even a
+    caller who had asked for `host-control` had nowhere to read the state from:
+    the notification only carries later edges, and the state as of the handshake
+    is the one a client connecting after a stop needs.
+    """
+    script = tmp_path / "fake_dsh.py"
+    init_dump = tmp_path / "init.json"
+    script.write_text(
+        """
+import json
+import os
+import sys
+
+for line in sys.stdin:
+    msg = json.loads(line)
+    method = msg.get("method")
+    if method == "initialize":
+        json.dump(msg.get("params"), open(os.environ["INIT_DUMP"], "w"))
+        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {
+            "serverInfo": {"name": "fake-dsh", "version": "0.0.1"},
+            "negotiation": {"protocolVersion": 1, "agreedCapabilities": ["host-control"], "ignoredCapabilities": []},
+            "hostControl": {"stopped": True, "record": {
+                "requestedBy": "operator-1",
+                "reason": "human-requested",
+                "requestedAtMs": 1700000000000,
+                "release": "explicit-resume",
+            }},
+        }}), flush=True)
+    elif method == "shutdown":
+        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {}}), flush=True)
+        break
+""".strip()
+    )
+
+    config = DeepSeekHarnessConfig(
+        capabilities=(CapabilityDeclaration(HOST_CONTROL_CAPABILITY),),
+        cwd=str(tmp_path),
+        env={"INIT_DUMP": str(init_dump)},
+    )
+    with DeepSeekHarness(config, _launch_args=(sys.executable, str(script))) as harness:
+        assert json.loads(init_dump.read_text())["capabilities"] == [{"id": "host-control", "mandatory": False}]
+        handshake = harness.handshake
+        assert handshake is not None
+        assert handshake.hostControl is not None
+        assert handshake.hostControl.stopped is True
+        assert handshake.hostControl.record is not None
+        assert handshake.hostControl.record.requestedBy == "operator-1"
+    # Closed: the handshake answer belonged to that connection and is not
+    # carried into the next one.
+    assert harness.handshake is None
+
+
+def test_high_level_harness_asks_for_nothing_by_default(tmp_path: Path) -> None:
+    """The negative control: an ordinary caller's handshake carries no capabilities."""
+    script = tmp_path / "fake_dsh_plain.py"
+    init_dump = tmp_path / "init-plain.json"
+    script.write_text(
+        """
+import json
+import os
+import sys
+
+for line in sys.stdin:
+    msg = json.loads(line)
+    method = msg.get("method")
+    if method == "initialize":
+        json.dump(msg.get("params"), open(os.environ["INIT_DUMP"], "w"))
+        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"serverInfo": {"name": "fake-dsh"}}}), flush=True)
+    elif method == "shutdown":
+        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {}}), flush=True)
+        break
+""".strip()
+    )
+
+    config = DeepSeekHarnessConfig(cwd=str(tmp_path), env={"INIT_DUMP": str(init_dump)})
+    with DeepSeekHarness(config, _launch_args=(sys.executable, str(script))) as harness:
+        sent = json.loads(init_dump.read_text())
+        assert "capabilities" not in sent
+        assert harness.handshake is not None
+        assert harness.handshake.hostControl is None

@@ -36,6 +36,9 @@
       "path": "../../subagent/subagent"
     },
     {
+      "path": "../../interaction/control-plane"
+    },
+    {
       "path": "../../interaction/user-questions"
     }
   ]

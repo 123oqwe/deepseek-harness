@@ -259,6 +259,7 @@ const PROTOCOL_WIRE_SCHEMA_IDS = [
   'SessionStatusNotification',
   'SubagentStartedNotification',
   'SubagentFinishedNotification',
+  'HostControlNotification',
   'HumanQuestionParams',
   'HumanQuestionResult',
 ] as const

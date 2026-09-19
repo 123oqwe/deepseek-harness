@@ -17,7 +17,14 @@ import {
   negotiateCapabilities,
   negotiateProtocolVersion,
 } from '@deepseek-ai/dsh-sdk-protocol'
-import type { CapabilityId, HumanQuestionParams, HumanQuestionResult, ProtocolSurface, ProtocolVersionRange } from '@deepseek-ai/dsh-sdk-protocol'
+import type { CapabilityId, HostControlNotification, HumanQuestionParams, HumanQuestionResult, ProtocolSurface, ProtocolVersionRange } from '@deepseek-ai/dsh-sdk-protocol'
+// A type-only edge, for two things at once: the `declare module` that puts
+// `control/state-changed` on cordis' `Events` -- without it `ctx.on` falls back to
+// an untyped listener with an unchecked name and an `any` payload -- and the
+// service type, so a rename of `state()` is a compile error here rather than a
+// handshake that silently stops carrying the state. The peer is optional: a
+// composition may mount no control plane, and this server must boot in one.
+import type ControlPlaneService from '@deepseek-ai/dsh-control-plane/plugin'
 import type { SchemaId } from '@deepseek-ai/dsh-schema-registry'
 import { carrierKeyOf, type Scoped } from '@deepseek-ai/dsh-scope'
 // The empty type import executes `dsh-user-questions`'s declaration merge, which
@@ -105,10 +112,40 @@ const SERVER_PROTOCOL_VERSIONS: ProtocolVersionRange = { min: 1, max: 1 }
  * implemented. A peer can act on the difference; collapsing them would leave
  * it unable to tell "upgrade me" from "this will never work".
  */
-const KNOWN_CAPABILITIES: ReadonlySet<CapabilityId> = new Set(['streaming', 'approval', 'replay'])
+const KNOWN_CAPABILITIES: ReadonlySet<CapabilityId> = new Set(['streaming', 'approval', 'replay', 'host-control'])
 
 /** The subset this build actually implements. */
 const SUPPORTED_CAPABILITIES: ReadonlySet<CapabilityId> = new Set(['streaming', 'approval'])
+
+/**
+ * What this build supports on THIS connection.
+ *
+ * `host-control` is not a property of the build: it is a property of the
+ * composition, and a composition with no control plane can never send a
+ * `host.control`. Agreeing to it there would hand the client a capability it
+ * had been told it holds and would wait on forever — the failure capability
+ * negotiation exists to make impossible, arrived at by declaring support the
+ * process cannot deliver.
+ * @param ctx - the context this connection serves.
+ * @returns the supported ids, with `host-control` only where a control plane is mounted.
+ */
+function supportedCapabilitiesFor(ctx: Context): ReadonlySet<CapabilityId> {
+  if (ctx.get('controlPlane') === undefined) return SUPPORTED_CAPABILITIES
+  return new Set([...SUPPORTED_CAPABILITIES, HOST_CONTROL_CAPABILITY])
+}
+
+/**
+ * The capability a client declares to receive `host.control` (P2-12
+ * acceptance[3]).
+ *
+ * Opt-in rather than unconditional, because this protocol is ours and adding a
+ * notification every peer receives whether or not it agreed to one is the thing
+ * capability negotiation exists to prevent: an older client would meet a method
+ * it has no branch for. Declared OPTIONAL by the server, so a client that never
+ * heard of it connects unchanged and the negotiation record says what was left
+ * out.
+ */
+const HOST_CONTROL_CAPABILITY: CapabilityId = 'host-control'
 
 /**
  * Fingerprint this build's wire surface (acceptance[2]/[3]).
@@ -140,6 +177,7 @@ export const SERVER_PROTOCOL_SURFACE: ProtocolSurface = {
   events: [
     { name: 'session.event', schemaId: 'sdk-protocol:SessionEventNotification', version: '1.0' },
     { name: 'session.status', schemaId: 'sdk-protocol:SessionStatusNotification', version: '1.0' },
+    { name: 'host.control', schemaId: 'sdk-protocol:HostControlNotification', version: '1.0' },
   ],
   resourceTypes: ['session', 'agent'],
 }
@@ -165,6 +203,17 @@ export class HarnessSdkJsonRpcServer {
   private shuttingDown = false
   private initialized = false
 
+  /**
+   * Whether this connection's client asked for `host.control`.
+   *
+   * Read by the listener below rather than checked at registration, because the
+   * listener is registered in the constructor and the answer only exists after
+   * `initialize`. A stop raised before the handshake therefore reaches nobody
+   * through the notification -- and it does not need to: the handshake carries
+   * the state as of that moment, which is the case the flag cannot cover.
+   */
+  private hostControlSubscribed = false
+
   constructor(
     private readonly ctx: Context,
     private readonly transport: JsonRpcTransportPeer,
@@ -177,6 +226,14 @@ export class HarnessSdkJsonRpcServer {
     }))
     this.disposers.push(ctx.on('agent/status', ({ agent, status }) => {
       this.transport.notify('session.status', { sessionId: String(agent.session.id), status })
+    }))
+    // P2-12 acceptance[3]. The event is emitted unconditionally by the control
+    // plane; whether it leaves this process is the client's decision, taken at
+    // the handshake. A client that did not declare the capability sees nothing,
+    // and a composition that mounts no control plane never emits.
+    this.disposers.push(ctx.on('control/state-changed', (state) => {
+      if (!this.hostControlSubscribed) return
+      this.transport.notify('host.control', { state } satisfies HostControlNotification)
     }))
     this.disposers.push(ctx.on('session/created', (session) => {
       const parentSession = session.header.parentSession
@@ -278,7 +335,7 @@ export class HarnessSdkJsonRpcServer {
     const capabilityOutcome = negotiateCapabilities(
       params.capabilities ?? [],
       KNOWN_CAPABILITIES,
-      SUPPORTED_CAPABILITIES,
+      supportedCapabilitiesFor(this.ctx),
     )
     if (!capabilityOutcome.accepted) {
       throw new Error(`initialize refused: ${capabilityOutcome.reason} (${capabilityOutcome.capability})`)
@@ -315,8 +372,14 @@ export class HarnessSdkJsonRpcServer {
     this.reasoningEffort = reasoningEffort
     this.maxTokens = params.maxTokens
     this.initialized = true
+    this.hostControlSubscribed = capabilityOutcome.agreed.includes(HOST_CONTROL_CAPABILITY)
+    // The state as of this handshake, for the client that connected after a
+    // stop was raised. Absent when the client did not ask, and absent when no
+    // control plane is mounted: unknown, never "not stopped".
+    const plane: ControlPlaneService | undefined = this.hostControlSubscribed ? this.ctx.get('controlPlane') : undefined
     return {
       serverInfo: { name: 'deepseek-harness-sdk-runtime', version: '0.0.1' },
+      ...plane === undefined ? {} : { hostControl: plane.state() },
       // acceptance[4]: the agreed outcome is returned so it can be recorded on
       // the run, making "what did these peers agree to" answerable from the
       // record rather than by replaying a handshake that no longer exists.

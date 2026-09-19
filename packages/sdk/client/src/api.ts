@@ -9,6 +9,7 @@
 import { randomUUID } from 'node:crypto'
 import { resolve } from 'node:path'
 import type { SessionEvent, TurnEndReason } from '@deepseek-ai/dsh-session'
+import type { CapabilityDeclaration, InitializeResult } from '@deepseek-ai/dsh-sdk-protocol'
 import { createProcessHarnessClient, HarnessClient, isRecord, SdkProtocolError } from './client.ts'
 import type { RuntimeProcessOptions } from './launch.ts'
 import type { ContentBlock, DeepSeekHarnessOptions, HarnessNotification, RunResult, SdkPromptContentBlock } from './types.ts'
@@ -27,6 +28,8 @@ export class DeepSeekHarness implements AsyncDisposable {
   private readonly model: string
   private readonly reasoningEffort: DeepSeekHarnessOptions['reasoningEffort']
   private readonly maxTokens: number | undefined
+  private readonly capabilities: readonly CapabilityDeclaration[]
+  private handshake: InitializeResult | undefined
   private initialized: Promise<void> | undefined
   private closed = false
 
@@ -43,6 +46,20 @@ export class DeepSeekHarness implements AsyncDisposable {
     this.model = options.model ?? 'deepseek-v4-flash'
     this.reasoningEffort = options.reasoningEffort
     this.maxTokens = options.maxTokens
+    this.capabilities = options.capabilities ?? []
+  }
+
+  /**
+   * What the server answered at `initialize`, or undefined before it ran.
+   *
+   * Retained because the answer is not repeatable: `negotiation` says what the
+   * peers agreed to, and `hostControl` carries the host state as of that
+   * moment — the only way a client that connected after an emergency stop
+   * learns of it. The live state afterwards arrives as `host.control`.
+   * @returns the handshake result, or undefined before a successful start.
+   */
+  get initializeResult(): InitializeResult | undefined {
+    return this.handshake
   }
 
   /**
@@ -70,12 +87,13 @@ export class DeepSeekHarness implements AsyncDisposable {
     this.initialized ??= (async () => {
       try {
         this.clientInstance.start()
-        await this.clientInstance.initialize({
+        this.handshake = await this.clientInstance.initialize({
           cwd: this.cwd,
           provider: this.provider,
           model: this.model,
           ...this.reasoningEffort === undefined ? {} : { reasoningEffort: this.reasoningEffort },
           ...this.maxTokens === undefined ? {} : { maxTokens: this.maxTokens },
+          ...this.capabilities.length === 0 ? {} : { capabilities: this.capabilities },
         })
       } catch (error) {
         this.initialized = undefined

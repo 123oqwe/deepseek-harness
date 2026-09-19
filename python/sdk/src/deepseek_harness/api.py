@@ -7,7 +7,7 @@ from typing import Callable
 
 from .client import HarnessClient, HarnessConfig
 from .errors import SdkProtocolError
-from .models import JsonObject, Notification
+from .models import CapabilityDeclaration, InitializeResponse, JsonObject, Notification
 
 
 @dataclass(slots=True)
@@ -35,6 +35,16 @@ class DeepSeekHarnessConfig:
     shutdown_timeout_seconds: float | None = 1.0
     base_url: str | None = None
     api_key: str | None = None
+    #: What this client asks the server for at the handshake. The handshake is
+    #: the only place to ask, so a capability omitted here can never be turned
+    #: on later; declare ``CapabilityDeclaration(HOST_CONTROL_CAPABILITY)`` to
+    #: receive ``host.control`` and the state as of the handshake.
+    #:
+    #: Appended rather than grouped with the other route options: this is not a
+    #: keyword-only dataclass, so a field's POSITION is part of the published
+    #: signature and inserting one in the middle silently re-binds every
+    #: positional argument after it.
+    capabilities: tuple[CapabilityDeclaration, ...] = ()
 
 
 @dataclass(slots=True)
@@ -88,6 +98,7 @@ class DeepSeekHarness:
             _launch_args=_launch_args,
         )
         self._initialized = False
+        self._handshake: InitializeResponse | None = None
 
     def __enter__(self) -> "DeepSeekHarness":
         self.start()
@@ -104,18 +115,32 @@ class DeepSeekHarness:
         if self._initialized:
             return
         self._client.start()
-        self._client.initialize(
+        self._handshake = self._client.initialize(
             cwd=self._cwd,
             provider=self.config.provider,
             model=self.config.model,
             reasoning_effort=self.config.reasoning_effort,
             max_tokens=self.config.max_tokens,
+            capabilities=self.config.capabilities,
         )
         self._initialized = True
+
+    @property
+    def handshake(self) -> InitializeResponse | None:
+        """What the server answered at ``initialize``, or None before it ran.
+
+        Retained because the answer is not repeatable: ``negotiation`` says what
+        the peers agreed to and ``hostControl`` carries the host state as of
+        that moment, which is the only way a client that connected after an
+        emergency stop learns of it. A later read of the live state comes from
+        ``host.control`` notifications instead.
+        """
+        return self._handshake
 
     def close(self) -> None:
         self._client.close()
         self._initialized = False
+        self._handshake = None
 
     def start_session(self, session_id: str | None = None) -> "Session":
         self.start()

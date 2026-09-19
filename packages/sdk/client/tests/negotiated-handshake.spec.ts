@@ -139,3 +139,41 @@ describe('P8-01 Usage: acceptance[1] — refuse before sending a task', () => {
     expect(result.serverInfo.name).toBe('deepseek-harness-sdk-runtime')
   })
 })
+
+describe('P2-12 acceptance[3]: the host control state survives the client, or is dropped whole', () => {
+  const STOPPED = {
+    stopped: true,
+    record: { requestedBy: 'operator-1', reason: 'human-requested', requestedAtMs: 1_700_000_000_000, release: 'explicit-resume' },
+  }
+
+  it('contract: a stop reaches the caller with its record intact', async () => {
+    // The same field-by-field rebuild that dropped the negotiation would drop
+    // this, and a client connecting after a stop would show a running host.
+    const result = await clientWith({ hostControl: STOPPED }).initialize({ cwd: process.cwd(), provider: 'p', model: 'm' })
+    expect(result.hostControl).toEqual(STOPPED)
+  })
+
+  it('contract: a known-running host arrives as `{ stopped: false }`, which is not the same answer as absence', async () => {
+    const result = await clientWith({ hostControl: { stopped: false } }).initialize({ cwd: process.cwd(), provider: 'p', model: 'm' })
+    expect(result.hostControl).toEqual({ stopped: false })
+  })
+
+  it('control: a server that says nothing leaves the field ABSENT, so the caller reads UNKNOWN', async () => {
+    const result = await clientWith(COMPLETE).initialize({ cwd: process.cwd(), provider: 'p', model: 'm' })
+    expect('hostControl' in result).toBe(false)
+  })
+
+  it('a malformed record is dropped WHOLE rather than half-read into a stop with invented fields', async () => {
+    // `requestedAtMs` missing. A reader that kept the fields that did arrive
+    // would hand a caller a stop whose time it made up, and a surface would
+    // render it as fact.
+    const partial = { stopped: true, record: { requestedBy: 'operator-1', reason: 'human-requested', release: 'explicit-resume' } }
+    const result = await clientWith({ hostControl: partial }).initialize({ cwd: process.cwd(), provider: 'p', model: 'm' })
+    expect('hostControl' in result).toBe(false)
+  })
+
+  it('a stopped flag that is not a boolean is not a stop', async () => {
+    const result = await clientWith({ hostControl: { stopped: 'yes' } }).initialize({ cwd: process.cwd(), provider: 'p', model: 'm' })
+    expect('hostControl' in result).toBe(false)
+  })
+})

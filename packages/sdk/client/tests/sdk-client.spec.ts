@@ -191,6 +191,49 @@ describe('DeepSeekHarness', () => {
     }])
   })
 
+  it('declares the capabilities it was configured with, and keeps the handshake answer readable', async () => {
+    // P2-12 acceptance[3] on the API most callers use. `start()` used to
+    // discard the initialize result, so even a caller who had asked for
+    // `host-control` had nowhere to read the state from -- the notification
+    // carries only later edges, and the state as of the handshake is what a
+    // client connecting after a stop needs.
+    const dir = await tempDir('sdk-client-caps-')
+    const recordFile = join(dir, 'init.jsonl')
+    const stopped = {
+      stopped: true,
+      record: { requestedBy: 'operator-1', reason: 'human-requested', requestedAtMs: 1_700_000_000_000, release: 'explicit-resume' },
+    }
+    const harness = createProcessDeepSeekHarness(
+      fakeLaunch({ FAKE_RECORD_INIT: recordFile, FAKE_NEGOTIATE: JSON.stringify({ hostControl: stopped }) }),
+      { cwd: dir, capabilities: [{ id: 'host-control', mandatory: false }] },
+    )
+    cleanups.push(() => harness.close())
+    await harness.start()
+
+    const records = (await readFile(recordFile, 'utf8')).trim().split('\n').map(line => JSON.parse(line) as { capabilities?: unknown })
+    // Declared OPTIONAL: a mandatory declaration would make every server
+    // without a control plane refuse the connection outright.
+    expect(records[0]?.capabilities).toEqual([{ id: 'host-control', mandatory: false }])
+    expect(harness.initializeResult?.hostControl).toEqual(stopped)
+    await harness.close()
+  })
+
+  it('asks for nothing when no capability was configured, and reads no state', async () => {
+    // The negative control. Without it the case above would pass on a client
+    // that declared `host-control` for everyone, which is the leak capability
+    // negotiation exists to prevent.
+    const dir = await tempDir('sdk-client-nocaps-')
+    const recordFile = join(dir, 'init.jsonl')
+    const harness = createProcessDeepSeekHarness(fakeLaunch({ FAKE_RECORD_INIT: recordFile }), { cwd: dir })
+    cleanups.push(() => harness.close())
+    await harness.start()
+
+    const records = (await readFile(recordFile, 'utf8')).trim().split('\n').map(line => JSON.parse(line) as object)
+    expect(records[0] !== undefined && 'capabilities' in records[0]).toBe(false)
+    expect(harness.initializeResult?.hostControl).toBeUndefined()
+    await harness.close()
+  })
+
   it('resolves a relative launch cwd to an absolute workspace before the handshake', async () => {
     // vitest workers forbid chdir, so derive a RELATIVE path from the real
     // process cwd to a temp worker dir; resolution is lexical either way.
@@ -571,6 +614,35 @@ describe('HarnessClient', () => {
     expect((await tree.next()).method).toBe('subagent.finished')
     // The foreign-root edge and stranger event were filtered; next is the root-child edge.
     expect((await tree.next()).params.childSessionId).toBe('root')
+    tree.close()
+    await client.close()
+  })
+
+  it('delivers a host-level notification to a session subscription, and still filters a foreign session', async () => {
+    // P2-12 acceptance[3]. `host.control` carries no `sessionId` because the
+    // stop is not about a session, so the fall-through below -- which asks
+    // whether `params.sessionId` descends from this one -- would DROP it
+    // silently, and the Web and Python halves would both look correct while
+    // nothing arrived here.
+    const client = processClient(fakeLaunch())
+    cleanups.push(() => client.close())
+    await client.initialize({ cwd: process.cwd(), provider: 'p', model: 'm' })
+
+    const tree = client.subscribeSessionTree('root')
+    const inject = (method: string, params: Record<string, unknown>): void => {
+      (client as unknown as { dispatchNotification(n: HarnessNotification): void }).dispatchNotification({ method, params })
+    }
+    // The negative control first, so "it arrived" cannot be a filter that
+    // stopped filtering: a session notification for someone else must not.
+    inject('session.event', { sessionId: 'stranger', event: { type: 'noop' } })
+    inject('host.control', { state: { stopped: true, record: { requestedBy: 'operator-1', reason: 'human-requested', requestedAtMs: 1, release: 'explicit-resume' } } })
+    inject('host.control', { state: { stopped: false } })
+
+    const stop = await tree.next()
+    expect(stop.method).toBe('host.control')
+    expect((stop.params.state as { stopped: boolean }).stopped).toBe(true)
+    const release = await tree.next()
+    expect(release.params.state).toEqual({ stopped: false })
     tree.close()
     await client.close()
   })

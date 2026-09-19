@@ -10,10 +10,14 @@
 
 export { JsonRpcLineTransport, JsonRpcResponseError } from './transport.ts'
 export type { JsonRpcTransportPeer } from './transport.ts'
+export { HOST_LEVEL_NOTIFICATION_METHODS } from './types.ts'
 export type {
   HarnessSdkNotificationMap,
   HarnessSdkRequestMap,
   HarnessSdkServerRequestMap,
+  HostControlNotification,
+  SdkHostControlState,
+  SdkHostStopRecord,
   HumanQuestionParams,
   HumanQuestionResult,
   InitializeParams,

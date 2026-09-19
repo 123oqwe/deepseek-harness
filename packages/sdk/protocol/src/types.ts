@@ -126,6 +126,17 @@ export interface InitializeResult {
   protocolVersions?: ProtocolVersionRange
   /** The server's schema fingerprint (acceptance[2]/[3]), for drift detection across builds. */
   schemaFingerprint?: string
+  /**
+   * The host control state as of this handshake, when the client asked for it.
+   *
+   * Here and not only on the notification, because a client that connects
+   * AFTER a stop was raised missed the edge and would otherwise show a running
+   * host forever — the disagreement the clause forbids, produced by the
+   * mechanism meant to prevent it. Absent when the client did not declare the
+   * capability, or when no control plane is mounted: unknown, never "not
+   * stopped".
+   */
+  hostControl?: SdkHostControlState
 }
 
 /**
@@ -314,13 +325,82 @@ export interface HarnessSdkServerRequestMap {
   'human/question': { params: HumanQuestionParams; result: HumanQuestionResult }
 }
 
+/**
+ * Why the host was stopped, as an SDK client renders it (P2-12 acceptance[3]).
+ *
+ * Declared here rather than derived from the control plane's own `StopRecord`,
+ * for the reason every wire type in this file is: this is the protocol, and a
+ * wire shape that tracked an internal type would change when that type changed
+ * for reasons the protocol never agreed to. The field set is the one every
+ * other surface publishes, so the three agree by construction.
+ *
+ * **`Sdk`-prefixed, like the other wire shapes here that coexist with a
+ * same-concept host type.** `dsh-api-session-controller` publishes the Web
+ * BFF's own `HostStopRecord`, and a name exported twice from any two package
+ * sources is dropped from the model-facing API catalog ENTIRELY, both copies
+ * (`typert/generator/src/cordis-catalog.ts:339-350`) — so the collision would
+ * take the Web type's shape out of `cordis_inspect` too.
+ */
+export interface SdkHostStopRecord {
+  /** The principal that asked, as its opaque id. */
+  readonly requestedBy: string
+  /** Why the stop was requested, as the requester stated it. */
+  readonly reason: string
+  /** Unix epoch milliseconds, so a client can order the stop against what else it shows. */
+  readonly requestedAtMs: number
+  /** How the stop may be released; `explicit-resume` is the only value today. */
+  readonly release: string
+}
+
+/** Whether the host is stopped, and the record that says why when it is. */
+export type SdkHostControlState =
+  | { readonly stopped: false }
+  | { readonly stopped: true; readonly record: SdkHostStopRecord }
+
+/**
+ * `host.control` payload: the host-wide emergency stop, as it changes.
+ *
+ * **The only host-level notification, and it carries no `sessionId` on
+ * purpose.** The state is not about a session: giving it one would let a
+ * client conclude that a stop applies to the session named and not to its
+ * siblings, which is the disagreement between surfaces this clause exists to
+ * prevent. Clients that route notifications by session must therefore treat
+ * this method as belonging to every subscription.
+ *
+ * Sent only to a client that declared the `host-control` capability. A client
+ * that did not ask receives nothing, and its absence means UNKNOWN rather than
+ * "not stopped" — the two are different answers and only one is safe to act on.
+ */
+export interface HostControlNotification {
+  readonly state: SdkHostControlState
+}
+
 /** Server-to-client notifications by JSON-RPC method name. */
 export interface HarnessSdkNotificationMap {
   'session.event': SessionEventNotification
   'session.status': SessionStatusNotification
   'subagent.started': SubagentStartedNotification
   'subagent.finished': SubagentFinishedNotification
+  'host.control': HostControlNotification
 }
+
+/** The members, checked against the notification map at the literal. */
+const HOST_LEVEL_METHODS = ['host.control'] as const satisfies readonly (keyof HarnessSdkNotificationMap)[]
+
+/**
+ * Notification methods that describe the HOST rather than a session.
+ *
+ * A client that routes notifications by session must treat these as belonging
+ * to every subscription: they carry no `sessionId`, so a filter that asks
+ * which session a notification is about drops them silently. Stated here, next
+ * to the map that declares them, so the two cannot drift; the Python SDK
+ * mirrors this set in `deepseek_harness.client.HOST_LEVEL_NOTIFICATION_METHODS`.
+ *
+ * Exported as `ReadonlySet<string>` because a filter tests a method name that
+ * arrived off the wire — narrowing the element type would only make every
+ * caller widen it back at the membership test.
+ */
+export const HOST_LEVEL_NOTIFICATION_METHODS: ReadonlySet<string> = new Set(HOST_LEVEL_METHODS)
 
 /** Client-to-server request methods with their param and result shapes. */
 export interface HarnessSdkRequestMap {
