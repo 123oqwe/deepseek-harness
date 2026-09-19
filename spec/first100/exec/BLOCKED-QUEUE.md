@@ -7381,3 +7381,24 @@ So `acceptance[0]` and `acceptance[3]` are true of the fixtures and of no shippe
 - Not that the five rows above are wrongly accepted. They are listed as a measurement, not a verdict, and each would need its own reading.
 - Not a route back. Whether P1-01 becomes signable by shipping manifests on the bundles or by narrowing the clause is the delegate's ruling.
 - Not measured: whether a profile with real manifests would pass enforcement. Nothing has run it, because nothing declares one.
+
+### BLOCKED-266 — what a tool call meets on `sdk-minimal` was derived, never run
+
+**Status:** OPEN (2026-09-19). The commit that records this entry adds the observation; the entry closes when someone reads its output and rules on what the answer should be.
+
+**The reading that opened it.** Lane A measured `sdk-minimal`'s rows (A-61) and found the dispatch stack complete — `tools`, `agent`, `agent-loop`, `persistent-bash`, `persistent-pwsh`, `terminal-bash`, `terminal-pwsh` are all there, so this bundle really can produce an action — while `@deepseek-ai/dsh-policy-engine-cedar`, the engine P2-05's `acceptance[0]` is about, is not among them. The `policy` and `trust-kernel` ids are absent too; the only `policy`-shaped row is `sandbox-policy`, which is the sandbox execution confirmation and a different thing. That page's own first sentence says what it is: **"按代码静态推导 … 从未被真实跑过一次工具调用来验证这件事"**.
+
+**So the gap is not a missing decision; it is a missing observation.** From a static reading alone, an action on this profile is either refused with no policy decision or admitted with none, and which one depends on the fail direction of an enforcement point that is not mounted. Both answers matter and they lead to opposite work.
+
+**What landed.** One case, on a real boot of the shipped profile: `packages/bundle/sdk-app/tests/sdk-minimal-pep.spec.ts` runs `packages/bundle/sdk-app/tests/fixtures/sdk-minimal-pep-driver.ts`, which boots `sdk-minimal` through `bootProductionProfile`, registers a harmless probe tool, lets a deterministic adapter ask for exactly one call to it, and writes `observation.json`: whether the tool BODY ran, how many `action/manifest-appended` events the session log holds, each one's decision `effect` and `reason` when present, whether `policyEngine`, `trustKernel`, `sandboxPolicy` and `actionLedger` published, and the model-visible tool result text. The case prints the record and asserts only that it exists and is well formed.
+
+**Why it asserts nothing about the answer.** Failing on either branch would assert a conclusion the delegate has not ruled on. **It is not an always-green ornament either**: it fails when `observation.json` is absent — the boot died, the turn never reached a model request, or the driver threw before writing — and when the file is malformed, a field is missing, `toolBodyRan` is not a boolean, or a recorded decision carries no `effect`. Deleting the driver's `writeFile`, or its `register` of the probe tool, reddens it.
+
+**Why it lives in `sdk-app`'s tests while observing `sdk-minimal`.** The subject is the profile, which `bootProductionProfile` takes by name. The harness — loader-smoke, app-boot, agent-loop, tools, llm, principal — is already a devDependency of `@deepseek-ai/dsh-sdk-app`, and `packages/bundle/sdk-minimal` declares one devDependency in total. Seven dependency edges and their hand-written lockfile importers, for one observation, is the cost this avoids; a hand-written lockfile edge is what reddened `Install (frozen)` earlier the same day. The file header and this paragraph both say so, so a reader meeting either one is told.
+
+**What this does NOT claim.**
+
+- Not that `sdk-minimal` is wrong. Which behaviour is correct for a minimal profile is exactly what the observation exists to inform.
+- Not that the case observes P2-05's clause. It observes ONE profile's behaviour on ONE harmless call; `acceptance[0]` is about an enforcement point, and nothing here freezes a claim about it.
+- Not that the placement is invisible to every gate. `verify-usage-stage-subject` asks per epic over an epic's **live U-stage freeze entries**, so a test file that is not frozen into such an entry is outside its question entirely; if one of these is ever frozen into P2-05's U stage, that gate's requirement is about the registry's `[B]` files and not about which package the test lives in.
+- Not run here. The case has never been executed on this machine.

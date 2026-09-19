@@ -1,0 +1,43 @@
+# Test-only patch over the shipped `sdk-minimal` profile, for the observation
+# BLOCKED-266 asks for. It replaces only what a test process cannot have — the
+# JSON-RPC server that owns stdio, the real model, and the durable roots — and
+# adds nothing that would change what the PEP question is about.
+#
+# It lives beside the `sdk-app` fixtures rather than in `packages/bundle/sdk-minimal`
+# because the subject of the observation is the PROFILE, which
+# `bootProductionProfile({ profile: 'sdk-minimal' })` names, while the harness
+# it needs (loader-smoke, app-boot, cmdline, agent-loop, tools, llm, principal)
+# is already a devDependency here and of none of it is in `sdk-minimal`.
+# Declaring seven dependency edges and hand-writing their lockfile importers for
+# one observation is the cost this placement avoids, and a hand-written lockfile
+# edge is what reddened `Install (frozen)` on 2026-09-19.
+- id: sdk-app-startup
+  disabled: true
+
+- id: sdk-jsonrpc-server
+  disabled: true
+
+- id: llm-deepseek
+  disabled: true
+
+- id: agent-loop
+  config:
+    agents: []
+
+# The row id is `sessions` in THIS profile, not `session-persistence-jsonl` as
+# in `sdk`'s: both name `@deepseek-ai/dsh-session-persistence-jsonl`, and the id
+# is what a patch targets. Getting it wrong is silent — `applyEntryPatches`
+# warns `patch: entry %C not found` and continues (`vendor/include/src/index.ts:112-113`),
+# and `composeEntries`' warn sink defaults to silent (`app-boot/src/profile.ts:859`),
+# so the override would simply never apply and the run would write its sessions
+# into the real `$DSH_HOME`.
+#
+# Only `root` is overridden: the shipped row already sets `compression: none`,
+# and `root` is the one value a test process must not share with the user's home.
+- id: sessions
+  config:
+    root: './.sessions'
+
+- insert:
+    - id: sdk-minimal-pep-mock-llm
+      name: './sdk-minimal-pep-mock-llm.ts'

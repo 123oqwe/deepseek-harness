@@ -1977,6 +1977,46 @@
         "expectedAt": "stage",
         "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-258; delegate ruling 2026-09-19 (lane B inbox B-63)"
       },
+      "P2-05.U/sdk-minimal-pep-spec": {
+        "epic": "P2-05",
+        "stage": "U",
+        "path": "packages/bundle/sdk-app/tests/sdk-minimal-pep.spec.ts",
+        "reason": "acceptance[0] names \"the SAME enforcement point the native path uses\", and what `sdk-minimal` does with an action had only ever been read statically: its dispatch stack is complete and `dsh-policy-engine-cedar` is not among its rows. This drives one tool call on that profile through a real boot and records what the action met. It is placed in `sdk-app`'s tests because the subject is the PROFILE, which `bootProductionProfile` names, and the harness is already a devDependency here and of nothing in `packages/bundle/sdk-minimal`.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-266; delegate ruling 2026-09-19 (lane B inbox B-94/B-133)"
+      },
+      "P2-05.U/sdk-minimal-pep-driver": {
+        "epic": "P2-05",
+        "stage": "U",
+        "path": "packages/bundle/sdk-app/tests/fixtures/sdk-minimal-pep-driver.ts",
+        "reason": "The subprocess half: boots `sdk-minimal` with a test-only overlay, registers a harmless probe tool, drives one turn, and writes what it observed. Classified as a test-only subprocess driver in `scripts/verify-application-entrypoints.ts`, beside the four fixtures that already are.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-266; delegate ruling 2026-09-19 (lane B inbox B-94/B-133)"
+      },
+      "P2-05.U/sdk-minimal-pep-mock-llm": {
+        "epic": "P2-05",
+        "stage": "U",
+        "path": "packages/bundle/sdk-app/tests/fixtures/sdk-minimal-pep-mock-llm.ts",
+        "reason": "A model that asks for one tool call and then stops. A tool call rather than text, because the question is what happens to an ACTION; self-limiting, because an observation that kept asking would be a loop.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-266; delegate ruling 2026-09-19 (lane B inbox B-94/B-133)"
+      },
+      "P2-05.U/sdk-minimal-pep-overlay": {
+        "epic": "P2-05",
+        "stage": "U",
+        "path": "packages/bundle/sdk-app/tests/fixtures/sdk-minimal-pep.patch.yml",
+        "reason": "The test-only patch over the shipped profile: it replaces the stdio server, the real model and the durable roots, and adds the mock adapter row. It changes nothing the PEP question is about.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-266; delegate ruling 2026-09-19 (lane B inbox B-94/B-133)"
+      },
       "P2-12.U/dispatch-stop-gate": {
         "epic": "P2-12",
         "stage": "U",
