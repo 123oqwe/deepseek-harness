@@ -1287,6 +1287,13 @@ describe('HarnessSdkJsonRpcServer', () => {
     // stops being registered fails here rather than silently lowering a count.
     expect(on.mock.calls.map(call => call[0]).sort()).toEqual([
       'agent/status',
+      // Registered unconditionally, and that is why it belongs in this list:
+      // the constructor runs before `initialize`, so whether a client asked for
+      // `host.control` is not knowable yet. The handler returns immediately
+      // when nobody did, and a composition with no control plane never emits —
+      // but the subscription exists either way and must be torn down either
+      // way, which is what this case is about.
+      'control/state-changed',
       'session/created',
       'session/event',
       'subagent/end',
