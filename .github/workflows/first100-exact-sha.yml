@@ -354,6 +354,52 @@ jobs:
           DSH_BUILD_CLIENT_PROFILE: official
         run: pnpm run build
 
+      - name: BLOCKED-285 — a real dsh launcher executes a tool on sdk-minimal (expected RED until the fix lands)
+        if: always()
+        # The first time this program runs a REAL launcher against the shipped
+        # `sdk-minimal` profile. `keyless-smoke.e2e.ts` spawns
+        # `apps/cli/src/bin.ts` through `tsx/esm`, which is the SOURCE launch
+        # shape, so the Build above is not a prerequisite for it; the
+        # packaged-artifact half of the same question is
+        # `scripts/smoke-python-runtime.py`'s `minimal` scenario, which no
+        # workflow in this repository runs either.
+        #
+        # Invoked as `pnpm exec vitest run --config vitest.e2e.config.ts`,
+        # which is how every other workflow here passes arguments to vitest
+        # (`sandbox.yml:115`, `e2b-e2e.yml:57`, and
+        # `first100-refresh-single-env-snapshots.yml:87`, which passes `-t`
+        # the same way). `pnpm run test:e2e -- …` has no precedent in this
+        # repository and would risk vitest reading what follows `--` as
+        # positional arguments, which selects the wrong cases WITHOUT
+        # erroring -- and a green step for that reason is the one outcome
+        # that would make us withdraw a correct report.
+        #
+        # `-t minimal` selects exactly the two `sdk-minimal` cases, leaving the
+        # four `--profile sdk` cases and the invalid-env case out. Only one of
+        # the two can answer the question: `executes the documented editor
+        # opt-in patch with sdk-minimal` drives `str_replace_editor` through a
+        # real turn and asserts the tool BODY ran by reading the file back,
+        # where its sibling never drives a tool call at all and would pass on a
+        # profile that refuses everything.
+        #
+        # Keyless: the child gets a placeholder `DEEPSEEK_API_KEY` and a
+        # `DEEPSEEK_BASE_URL` pointing at a local server standing in for the
+        # model, so no credential and no network egress are involved, and
+        # nothing in this file self-skips. It is a step of its own rather than
+        # a copy of `e2e.yml`'s job, whose job-level secret preflight would
+        # exit 1 for the whole job.
+        #
+        # **Expected RED when this lands, and that is why it lands first.**
+        # BLOCKED-266 observed the shipped `sdk-minimal` refusing every tool
+        # call with `policy-unavailable`; if this step comes back GREEN, that
+        # reading is wrong and the conclusion drawn from it has to be
+        # withdrawn. No `continue-on-error`: a red that does not show is not an
+        # observation. `vitest.e2e.config.ts` sets `retry: 2`, so a failing
+        # case runs three times before the step settles.
+        run: |
+          pnpm exec vitest run --config vitest.e2e.config.ts \
+            -t minimal apps/cli/tests/profiles/sdk/keyless-smoke.e2e.ts
+
       - name: Publication and package hygiene
         if: always()
         # BLOCKED-210. Fifteen gates this program never saw. `pnpm run hygiene`

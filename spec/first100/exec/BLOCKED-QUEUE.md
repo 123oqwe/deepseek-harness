@@ -7624,6 +7624,22 @@ None appears in `docs/config-catalog.md` except as a bare name under "Library pa
 
 **What this does NOT claim.** **P4-06 was withdrawn on 2026-09-19**; this joins the evidence its RE-ACCEPTANCE must carry and is not a new reason for that withdrawal, which rests on its own separately recorded grounds. Nor that the outbox is broken: its transactional commit half is real, and this is one terminal state's total silence inside an otherwise working mechanism.
 
+### BLOCKED-285 — two real-launcher tests assert that a tool RUNS on `sdk-minimal`, and no pipeline here has run either since the code beneath them changed
+
+**Status:** OPEN (2026-09-19). Owner lane B. Drafted by lane A (A-128①, an independent counter-search for BLOCKED-266 matching on real subprocess spawns rather than `bootProductionProfile`).
+
+**Two tests, in two launch shapes, asking the same question.** `apps/cli/tests/profiles/sdk/keyless-smoke.e2e.ts`'s `executes the documented editor opt-in patch with sdk-minimal` boots the shipped profile through a real `dsh` launcher and asserts a tool's SIDE EFFECT -- it drives `str_replace_editor` through a turn and reads the written file back, rather than checking that the tool was advertised to the model. `scripts/smoke-python-runtime.py`'s `minimal` scenario asks the same of the packaged single executable. **This CI step covers the source-launch half only**; the packaged half runs in `build-exe-for-python-sdk.yml` and `python-release.yml`, neither of which this program invokes.
+
+**Both predate the code they would be testing.** `keyless-smoke.e2e.ts` was last touched at `ca723d9273` (2026-08-31) and the Python smoke's tree at `5c98d5ece8` (2026-08-25); P2-05's enforcement point landed at `46e3295fec` (2026-09-10), and `git merge-base --is-ancestor` confirms it is an ancestor of neither. Meanwhile BLOCKED-266's observation on the shipped `sdk-minimal` composition, with a real trust kernel pinned, recorded `toolBodyRan: false` and `refused by policy (policy-unavailable)`. So these two tests assert exactly what that observation says cannot happen, and **nothing has run them to find out which is right**: `first100-exact-sha.yml` has never invoked `pnpm run test:e2e`.
+
+**The order is fixed and the red comes first.** The step lands BEFORE any `sdk-minimal` fix, so the first real-launcher observation is recorded on today's code. A GREEN result there would mean BLOCKED-266's reading -- and the report built on it -- is wrong and must be withdrawn, which is a thing worth being able to find out. The step carries no `continue-on-error` for the same reason.
+
+**Only one of the two `sdk-minimal` cases can decide it.** The step runs `pnpm exec vitest run --config vitest.e2e.config.ts -t minimal <file>`, the form every other workflow here uses to pass vitest arguments; `-t minimal` also selects `boots the standalone minimal profile through its generated manifest`, which sends one prompt, receives no tool call, and would pass unchanged on a profile that refuses every tool. It is kept as the positive control -- a boot failure reddens both, a policy refusal reddens only the editor case, and the two apart say which happened.
+
+**Closing condition.** (1) The step has been observed RED on unfixed code, with the run recorded. (2) The same step is GREEN after the `sdk-minimal` composition carries a policy engine and an explicit policy set (B-217's preflight). (3) The packaged half is either wired in the same way or its absence is recorded as an accepted ceiling with the reason.
+
+**What this does NOT claim.** Not that either test is wrong -- they assert the behaviour the README promises. Not that the profile's current behaviour is a P2-05 regression: whether the enforcement point should admit or refuse here is B-217's question, and this entry only requires that the answer be OBSERVED rather than read off the YAML.
+
 ### BLOCKED-284 — one sentence for two different situations: a `sent` entry whose holder died reads exactly like a confirmed one
 
 **Status:** OPEN (2026-09-19). Owner lane B. The mechanism is `@deepseek-ai/dsh-action-ledger`, P4-12's deliverable; the triggering scenario neighbours P4-05 and P4-06. Scheduled with the P4-05 / P4-06 re-acceptance batch.
