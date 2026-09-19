@@ -6,6 +6,7 @@ import type { SubagentAddress, SubagentCatalog } from '@deepseek-ai/dsh-subagent
 import { SessionSeq, type SessionId, type SessionSeqCursor } from '@deepseek-ai/dsh-session/types'
 import type { WorkspaceId } from '@deepseek-ai/dsh-workspace/types'
 import type {
+  HostControlState,
   SessionControlBaseline,
   SessionControlFrame,
   SessionQueuedItem,
@@ -58,6 +59,14 @@ export interface SessionListSnapshot {
   subagentsByParent: Readonly<Record<SessionId, SubagentCatalogSnapshot>>
   /** Background jobs per session; an absent key is an empty set. */
   jobsBySession: Readonly<Record<SessionId, readonly JobView[]>>
+  /**
+   * Whether the host is under an emergency stop (P2-12 acceptance[3]).
+   *
+   * `undefined` means UNKNOWN -- no control plane is mounted, or no baseline
+   * has arrived yet -- and a reader must not render it as "not stopped". The
+   * two are different answers and only one of them is safe to act on.
+   */
+  hostControl: HostControlState | undefined
   currentAddress: SubagentAddress | undefined
 }
 
@@ -132,6 +141,8 @@ export class SessionManager {
    * one representation.
    */
   private readonly jobsBySession = new Map<SessionId, readonly JobView[]>()
+  /** The host control state as of the last baseline or control frame; see {@link SessionListSnapshot.hostControl}. */
+  private hostControl: HostControlState | undefined
 
   private selected: SessionId | undefined
 
@@ -660,23 +671,40 @@ export class SessionManager {
    * @param frame - baseline or live control replacement from Session Controller.
    */
   handleControlFrame(frame: SessionControlFrame): void {
-    if (frame.type === 'baseline') {
-      this.replaceControlBaseline(frame.value)
-      return
+    // A SWITCH on the discriminant, not a chain ending in a fall-through. The
+    // chain this replaces assumed whatever was left over was a queue frame and
+    // read `frame.sessionId` off it; adding a `control` kind therefore did not
+    // fail here -- it handed a control frame to the queue handler, and the only
+    // thing that said so was `tsc`, two commits later. A `default` over an
+    // exhausted union cannot do that: the next frame kind fails at this line.
+    switch (frame.type) {
+      case 'baseline':
+        this.replaceControlBaseline(frame.value)
+        return
+      case 'projection':
+        this.projectionStore(frame.sessionId).apply(frame.key, frame.value, SessionSeq(frame.seq))
+        this.notifier.markDirty()
+        return
+      case 'jobs':
+        if (frame.jobs.length === 0) this.jobsBySession.delete(frame.sessionId)
+        else this.jobsBySession.set(frame.sessionId, frame.jobs)
+        this.notifier.markDirty()
+        return
+      case 'control':
+        this.hostControl = frame.state
+        this.notifier.markDirty()
+        return
+      case 'queue':
+        this.queues.set(frame.sessionId, frame.items)
+        this.sessions.get(frame.sessionId)?.handleControlFrame(frame)
+        return
+      default: {
+        // `assertNever` lives in `@deepseek-ai/dsh-util-values`, which this
+        // package's CLIENT face does not reference, so it is written inline.
+        const unhandled: never = frame
+        throw new Error(`session control: unhandled frame ${JSON.stringify(unhandled)}`)
+      }
     }
-    if (frame.type === 'projection') {
-      this.projectionStore(frame.sessionId).apply(frame.key, frame.value, SessionSeq(frame.seq))
-      this.notifier.markDirty()
-      return
-    }
-    if (frame.type === 'jobs') {
-      if (frame.jobs.length === 0) this.jobsBySession.delete(frame.sessionId)
-      else this.jobsBySession.set(frame.sessionId, frame.jobs)
-      this.notifier.markDirty()
-      return
-    }
-    this.queues.set(frame.sessionId, frame.items)
-    this.sessions.get(frame.sessionId)?.handleControlFrame(frame)
   }
 
   private replaceControlBaseline(baseline: SessionControlBaseline): void {
@@ -689,6 +717,11 @@ export class SessionManager {
     for (const [sessionId, jobs] of Object.entries(baseline.jobs)) {
       if (jobs.length > 0) this.jobsBySession.set(sessionId as SessionId, jobs)
     }
+
+    // Taken from the baseline on every generation, INCLUDING when it is absent:
+    // a reconnect that lands on a host with no control plane must forget a stop
+    // it learned from an earlier one, or it shows a halt nothing is enforcing.
+    this.hostControl = baseline.control
 
     for (const [sessionId, block] of Object.entries(baseline.projections)) {
       const store = this.projectionStore(sessionId as SessionId)
@@ -952,6 +985,7 @@ export class SessionManager {
       error: this.listError,
       subagentsByParent: Object.fromEntries(this.catalogs),
       jobsBySession: Object.fromEntries(this.jobsBySession),
+      hostControl: this.hostControl,
       currentAddress: current === undefined ? undefined : this.addresses.get(current),
     }
   }

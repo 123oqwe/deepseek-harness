@@ -982,3 +982,83 @@ describe('background-job mirror', () => {
     expect(seen).toHaveBeenCalled()
   })
 })
+
+describe('P2-12 acceptance[3]: the client keeps the host control state it is sent', () => {
+  /**
+   * A manager with one listed session, ready to take frames.
+   * @returns the manager under test.
+   */
+  async function ready(): Promise<SessionManager> {
+    const api = new FakeApiClient()
+    api.onList = () => Promise.resolve(ok({ items: [summary(S1)] as never[] }))
+    const manager = new SessionManager(fakeRemote(api))
+    await manager.refreshList()
+    return manager
+  }
+
+  /**
+   * A queue frame carrying one pending item, in this file's existing style for
+   * branded host payloads (`tasksFrame` at :929 casts the same way).
+   * @param id - the message identity, which is also the queue item's.
+   * @returns the frame.
+   */
+  const queueFrame = (id: string): Extract<SessionControlFrame, { type: 'queue' }> => ({
+    type: 'queue', sessionId: S1, items: [{ id, placement: 'queued', message: { id, content: [] } }] as never,
+  })
+
+  const STOPPED = {
+    stopped: true as const,
+    record: { requestedBy: 'operator-1', reason: 'human-requested', requestedAtMs: 1_700_000_000_000, release: 'explicit-resume' },
+  }
+
+  it('surfaces a control frame through the snapshot readers already use', async () => {
+    // The half that was missing: the host emitted and the client dropped it.
+    // `3975e4f3e7` reached the API stream and stopped there, so the state was
+    // on the wire and in no reader's hands.
+    const manager = await ready()
+    manager.handleControlFrame({ type: 'control', state: STOPPED })
+    expect(manager.getListSnapshot().hostControl).toEqual(STOPPED)
+  })
+
+  it('seeds it from a baseline, so a client that connected after the stop still has it', async () => {
+    const manager = await ready()
+    manager.handleControlFrame({
+      type: 'baseline',
+      value: { queues: {}, jobs: {}, projections: {}, control: STOPPED },
+    })
+    expect(manager.getListSnapshot().hostControl).toEqual(STOPPED)
+  })
+
+  it('FORGETS it when a later baseline carries none, rather than showing a stop nothing enforces', async () => {
+    // A reconnect can land on a host with no control plane. Keeping the old
+    // value would show a halt that no longer exists anywhere, which is worse
+    // than showing nothing: `undefined` reads as unknown, a stale `stopped`
+    // reads as fact.
+    const manager = await ready()
+    manager.handleControlFrame({ type: 'control', state: STOPPED })
+    manager.handleControlFrame({ type: 'baseline', value: { queues: {}, jobs: {}, projections: {} } })
+    expect(manager.getListSnapshot().hostControl).toBeUndefined()
+  })
+
+  it('leaves the queue alone, and a queue frame still routes past the new case', async () => {
+    // The fourth clause: a control frame must not reach the queue handler. It
+    // once did -- the chain this replaces treated everything it had not matched
+    // as a queue frame and ran `this.queues.set(frame.sessionId, frame.items)`
+    // on a frame carrying neither, i.e. `set(undefined, undefined)`.
+    //
+    // That poisoned entry sat under an `undefined` key, so no reader of a real
+    // session id could see it and no assertion here would have caught it: the
+    // thing that named it was `tsc`, two commits later. What this case can
+    // observe is the pair of statements a reader depends on -- the queue a
+    // session already has survives a control frame, and a queue frame still
+    // lands now that it needs its own arm of the switch rather than falling
+    // past the others.
+    const manager = await ready()
+    manager.handleControlFrame(queueFrame('m-1'))
+    expect(manager.get(S1).getSnapshot().queue).toHaveLength(1)
+
+    manager.handleControlFrame({ type: 'control', state: STOPPED })
+    expect(manager.get(S1).getSnapshot().queue).toHaveLength(1)
+    expect(manager.getListSnapshot().hostControl).toEqual(STOPPED)
+  })
+})
