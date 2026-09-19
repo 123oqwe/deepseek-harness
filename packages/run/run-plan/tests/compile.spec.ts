@@ -15,10 +15,12 @@
  * report of unmet preferences is indistinguishable from one that reports
  * everything until a case shows it empty.
  */
+import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import Ajv2020 from 'ajv/dist/2020.js'
+import canonicalize from 'canonicalize'
 import { describe, expect, it } from 'vitest'
 import { MessageId } from '@deepseek-ai/dsh-llm/brand'
 import { BUDGET_DIMENSIONS } from '@deepseek-ai/dsh-resource-budget'
@@ -520,5 +522,68 @@ describe('P4-03 F — inputs that would make a decision unsafe', () => {
     const first = minimalConflictSet(demands, over.facts)
     const shuffled = minimalConflictSet([...demands].reverse(), over.facts)
     expect(shuffled).toStrictEqual(first)
+  })
+})
+
+describe('P4-03 C — the canonical form behind the plan id', () => {
+  // The four id cases above all assert RELATIONS -- same inputs, same id;
+  // one character changed, a different id; a meaningless reordering, the same
+  // id -- and every deterministic digest satisfies all of them. Replacing
+  // `canonicalizeArguments` with `JSON.stringify` in `planIdOf` therefore
+  // reddened NOTHING in this file (mutation 3d8e83cf77, narrow run
+  // 35475027491, 50 of 50 passing), while changing every plan id there is.
+  // These three read the canonical form itself, against the reference
+  // implementation of the standard rather than against this repository's own
+  // canonicalizer, which is the only way the claim is about RFC 8785 and not
+  // about one implementation agreeing with itself.
+
+  /** The compiled plan's body -- everything the id is computed over. */
+  const body = (): Omit<RunPlan, 'planId'> => {
+    const { planId: _planId, ...rest } = compiled(base)
+    return rest
+  }
+
+  /** The reference implementation's canonical form, or a failure naming its refusal. */
+  const reference = (value: Omit<RunPlan, 'planId'>): string => {
+    const canonical = canonicalize(value)
+    if (canonical === undefined) throw new Error('canonicalize refused a plan body, which a plan that passed its schema cannot be')
+    return canonical
+  }
+
+  /** sha256 over a string, as `planIdOf` computes it. */
+  const digestOf = (canonical: string): string => createHash('sha256').update(canonical, 'utf8').digest('hex')
+
+  it('P4-03 C: the plan id is sha256 over the RFC 8785 JCS canonical form, checked against the reference implementation', () => {
+    expect(compiled(base).planId).toBe(digestOf(reference(body())))
+  })
+
+  it('P4-03 C: hashing the body as written instead of its RFC 8785 canonical form would give a different id, so canonicalization is doing work here', () => {
+    // The negative control the case above needs: without it, `planIdOf`
+    // hashing the body in construction order would satisfy an oracle case
+    // whenever the two happened to agree. They do not agree for any plan --
+    // `normalizedBody` writes `schemaVersion` first and JCS sorts keys.
+    expect(compiled(base).planId).not.toBe(digestOf(JSON.stringify(body())))
+  })
+
+  it('P4-03 C: a body built with its keys in another order takes the same RFC 8785 canonical form and the same id', () => {
+    const written = body()
+    // Written out rather than reversed at runtime: the point of the case is
+    // that a body CONSTRUCTED in another order is the same plan, and a literal
+    // is the only form in which the construction order is visible to a reader.
+    const reordered: Omit<RunPlan, 'planId'> = {
+      recovery: written.recovery,
+      verification: written.verification,
+      approvalGates: written.approvalGates,
+      budgets: written.budgets,
+      worlds: written.worlds,
+      agentGraph: written.agentGraph,
+      contextTopology: written.contextTopology,
+      modelRoutes: written.modelRoutes,
+      constraints: written.constraints,
+      objectives: written.objectives,
+      schemaVersion: written.schemaVersion,
+    }
+    expect(reference(reordered)).toBe(reference(written))
+    expect(planIdOf(reordered)).toBe(planIdOf(written))
   })
 })
