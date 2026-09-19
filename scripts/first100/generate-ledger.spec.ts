@@ -27,6 +27,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 
+import type { CiRunUrlCorrectionResult, CiRunUrlCorrectionVerdict } from './generate-ledger.mjs'
 import {
   acceptPreflightFindings,
   applyCiRunUrlCorrection,
@@ -979,6 +980,39 @@ describe('--correct-ci-run-url: a recorded run URL is a string that can be typed
   const right = `https://github.com/${PROGRAM_CI_REPO}/actions/runs/${RUN}`
   const wrong = `https://github.com/deepseek-ai/deepseek-harness/actions/runs/${RUN}`
 
+  /**
+   * Narrow a result to its refusal arm, failing the case when it admitted.
+   *
+   * An `asserts` signature and not a bare `expect`: `expect(v.ok).toBe(false)`
+   * is a runtime check that TypeScript cannot see, so reading `v.reason` after
+   * it is an access on the union, not on the refusal. That was a type error in
+   * six places here before this helper existed, and the in-process probe that
+   * exercised the same six assertions could not have caught it -- the probe is
+   * `.mjs` and never meets `tsc`.
+   *
+   * Both unions share this arm exactly, so one helper narrows either.
+   *
+   * The `reportDirMatchesCandidate` cases above read `verdict.reason` straight
+   * after the same `expect` and compile, which is not an inconsistency to copy:
+   * `ReportDirVerdict` is `{ ok: boolean; reason?: string }`, one shape rather
+   * than two, so `reason` is always present in the type and `undefined` in the
+   * admitting case. These two results are discriminated unions instead, which
+   * is the stronger declaration -- a caller cannot read a reason that a
+   * successful outcome does not carry.
+   * @param value - the verdict or result to narrow.
+   */
+  function assertRefused(value: CiRunUrlCorrectionVerdict | CiRunUrlCorrectionResult): asserts value is { ok: false; reason: string } {
+    expect(value.ok, `expected a refusal, got ${JSON.stringify(value)}`).toBe(false)
+  }
+
+  /**
+   * Narrow a result to its applied arm.
+   * @param value - the result to narrow.
+   */
+  function assertApplied(value: CiRunUrlCorrectionResult): asserts value is { ok: true; rewritten: string[]; from: string } {
+    expect(value.ok, `expected the correction to apply, got ${JSON.stringify(value)}`).toBe(true)
+  }
+
   /** One cell as this command reads and rewrites it. */
   interface CorrectableCell {
     status: string
@@ -1011,7 +1045,7 @@ describe('--correct-ci-run-url: a recorded run URL is a string that can be typed
 
   it('REFUSES a correction that moves the run, because that is a different observation', () => {
     const verdict = checkCiRunUrlCorrection(wrong, `https://github.com/${PROGRAM_CI_REPO}/actions/runs/99999999999`)
-    expect(verdict.ok).toBe(false)
+    assertRefused(verdict)
     // The message names both ids: an operator who mistyped one digit needs to
     // see which run the cell actually holds, not only that it was refused.
     expect(verdict.reason).toContain(RUN)
@@ -1020,7 +1054,7 @@ describe('--correct-ci-run-url: a recorded run URL is a string that can be typed
 
   it('REFUSES a target outside this program\'s repository, which is the defect that produced it', () => {
     const verdict = checkCiRunUrlCorrection(right, wrong)
-    expect(verdict.ok).toBe(false)
+    assertRefused(verdict)
     expect(verdict.reason).toContain('deepseek-ai/deepseek-harness')
   })
 
@@ -1034,14 +1068,14 @@ describe('--correct-ci-run-url: a recorded run URL is a string that can be typed
     const outcome = applyCiRunUrlCorrection({ cells: { U: { status: 'NOT_RUN' } } }, {
       stage: 'U', supplementSeq: undefined, to: right, reason: 'r', atUtc: 'now',
     })
-    expect(outcome.ok).toBe(false)
+    assertRefused(outcome)
     expect(outcome.reason).toContain('nothing to correct')
   })
 
   it('rewrites the cell AND the accepted-evidence copy in one act, because the copy has no back-pointer', () => {
     const target = row(true)
     const outcome = applyCiRunUrlCorrection(target, { stage: 'U', supplementSeq: undefined, to: right, reason: 'wrong owner', atUtc: 'now' })
-    expect(outcome.ok).toBe(true)
+    assertApplied(outcome)
     expect(target.cells.U?.ciRunUrl).toBe(right)
     // The decisive assertion. Correcting only the cell is what left four wrong
     // cells and four wrong copies disagreeing in the first place.
@@ -1053,7 +1087,7 @@ describe('--correct-ci-run-url: a recorded run URL is a string that can be typed
     const target = row(true)
     target.acceptedEvidence!.cells.U!.ciRunUrl = `https://github.com/${PROGRAM_CI_REPO}/actions/runs/11111111111`
     const outcome = applyCiRunUrlCorrection(target, { stage: 'U', supplementSeq: undefined, to: right, reason: 'r', atUtc: 'now' })
-    expect(outcome.ok).toBe(false)
+    assertRefused(outcome)
     expect(outcome.reason).toContain('accepted against a different run')
     // And nothing moved: a refusal that had already written the cell would
     // leave the two halves disagreeing in the other direction.
@@ -1063,12 +1097,12 @@ describe('--correct-ci-run-url: a recorded run URL is a string that can be typed
   it('APPENDS each correction, so a second one cannot erase the record of the first', () => {
     const target = row(false)
     const once = applyCiRunUrlCorrection(target, { stage: 'U', supplementSeq: undefined, to: right, reason: 'wrong owner', atUtc: 't1' })
-    expect(once.ok).toBe(true)
+    assertApplied(once)
     const other = `https://github.com/${PROGRAM_CI_REPO}/actions/runs/${RUN}?`
     expect(checkCiRunUrlCorrection(right, other).ok).toBe(false)
     target.cells.U!.ciRunUrl = wrong
     const twice = applyCiRunUrlCorrection(target, { stage: 'U', supplementSeq: undefined, to: right, reason: 'and again', atUtc: 't2' })
-    expect(twice.ok).toBe(true)
+    assertApplied(twice)
     expect(target.cells.U?.ciRunUrlCorrections).toHaveLength(2)
     expect(target.cells.U?.ciRunUrlCorrections?.map(entry => entry.reason)).toEqual(['wrong owner', 'and again'])
   })
