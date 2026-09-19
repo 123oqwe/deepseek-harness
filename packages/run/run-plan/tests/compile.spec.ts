@@ -366,6 +366,13 @@ describe('P4-03 F — inputs that would make a decision unsafe', () => {
       .toContain('out-of-range')
   })
 
+  it('P4-03 F: a cap key carrying no value is refused rather than read as no cap', () => {
+    // The two are indistinguishable where the cap is read, and one of them
+    // refuses every demand on the dimension; the caller is told which it wrote.
+    expect(problems(inputs({ facts: facts({ budgetCaps: { memoryBytes: undefined as unknown as number } }) })).map(problem => problem.at))
+      .toContain('facts.budgetCaps.memoryBytes')
+  })
+
   it('P4-03 F: a ceiling of zero forbids the work rather than bounding it, and is refused', () => {
     expect(problems(inputs({ budgets: [{ id: 'b1', dimension: 'memoryBytes', limit: 0 }] })).map(problem => problem.at))
       .toStrictEqual(['budgets[b1].limit'])

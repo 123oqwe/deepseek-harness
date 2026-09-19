@@ -574,8 +574,14 @@ export function inputProblems(inputs: PlanInputs): readonly InputProblem[] {
       problem(problems, 'dangling-reference', `${at}.source`, 'a stated requirement names the constraint or the node it comes from; `declaration` is this compile\'s own')
     }
   }
+  // Every declared cap is checked, including one declared as `undefined`. The
+  // type says a cap is a number, so a key carrying `undefined` came from data
+  // rather than from a typed caller — and at the read site it is
+  // indistinguishable from "this deployment set no cap", which refuses every
+  // demand on that dimension. Refusing it as an input says which of the two
+  // the caller meant, instead of silently taking the stricter one.
   for (const [dimension, cap] of Object.entries(inputs.facts.budgetCaps)) {
-    if (cap !== undefined) checkNumber(problems, `facts.budgetCaps.${dimension}`, cap, { min: 0 })
+    checkNumber(problems, `facts.budgetCaps.${dimension}`, cap, { min: 0 })
   }
   // Reported beside the broken references rather than instead of them: a
   // cycle between nodes that exist does not stop existing because an edge
