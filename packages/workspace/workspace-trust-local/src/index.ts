@@ -134,7 +134,11 @@ class LocalWorkspaceTrust implements WorkspaceTrustService {
    * an `inject` callback runs after the publishing segment, before the next
    * microtask completes), leaving a window where a read could pass unheld.
    */
-  private launchBarrier?: Promise<void>
+  // `| undefined` rather than `?`: this field is CLEARED when the barrier is
+  // released, and under `exactOptionalPropertyTypes` an optional property
+  // cannot be assigned `undefined` -- only omitted. The two spellings differ
+  // exactly here, and "present and empty" is what a released barrier is.
+  private launchBarrier: Promise<void> | undefined
   /** Releases {@link launchBarrier}. */
   private releaseBarrier: () => void = () => {}
   /**
