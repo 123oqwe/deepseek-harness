@@ -305,6 +305,28 @@ jobs:
           path: .artifacts/first100/observations/vitest-report.json
           if-no-files-found: error
 
+      # BLOCKED-275(b). `release:verify` runs for real elsewhere in this
+      # repository (`release.yml:146`, `release-publish.yml:58`,
+      # `docs-pages.yml:65`, all `--family dsh`) but has never run against a
+      # First-100 candidate, so P0-05's expiry check --
+      # `assertNoExpiredFeatureGates` at `scripts/release/verify.ts:90` -- had
+      # never once executed on a SHA this program accepts.
+      #
+      # What this step proves today is that the gate executes on a candidate
+      # and CAN fail: it resolves the dsh family's members, asserts their one
+      # shared version, and resolves a publish order, throwing when the order
+      # cannot cover every member. What it does NOT prove is that an expired
+      # gate would be caught -- `RELEASE_GATE_FEATURE_GATES` is `[]`
+      # (`scripts/release/feature-gate-expiry.ts:36`), so the expiry check has
+      # nothing to fail against until some epic declares a real gate.
+      #
+      # `RELEASE_PUBLISH` is unset here, so the publishable/tag gates
+      # (`verify.ts:102-106`) stay off: this workflow builds a branch SHA, and
+      # `verifyTag` would refuse every candidate that is not a `dsh-v*` tag.
+      - name: Verify release version
+        if: always()
+        run: pnpm run release:verify --family dsh
+
       # R0 exit gate item 1's other half (packInstall): the exact CI-equivalent
       # build, then pack + verify-packed-install, on Linux CI where the prior
       # local macOS receipt's two known failure causes (stale npm cache,
