@@ -1932,6 +1932,44 @@ One session committed a different agent preset to its durable log. Consumers inv
 
 Source: [`packages/preset/agent-presets/src/types.ts`](../../packages/preset/agent-presets/src/types.ts)
 
+<a id="control-events"></a>
+
+### `control/*` events
+
+<a id="controlstate-changed--emit"></a>
+
+#### `control/state-changed` — emit
+
+The host's control state changed, so every surface showing it must change with it (P2-12 acceptance[3]).
+
+**A notification, not a second source of truth.** The durable record is `emergency-stop.json`, and the channel persists BEFORE it announces, so a listener that reacts to this has a state already on disk. A surface that missed the emission — one that connected afterwards — must read ControlPlaneService.state rather than wait for the next one, which is why every consumer of this pairs it with a baseline.
+
+Emitted rather than polled because the clause is about surfaces AGREEING with each other: four surfaces each asking on their own schedule agree only by luck, while four deriving from one emission agree by construction.
+
+```ts cordis-catalog
+/**
+ * The host's control state changed, so every surface showing it must
+ * change with it (P2-12 acceptance[3]).
+ *
+ * **A notification, not a second source of truth.** The durable record is
+ * `emergency-stop.json`, and the channel persists BEFORE it announces, so
+ * a listener that reacts to this has a state already on disk. A surface
+ * that missed the emission — one that connected afterwards — must read
+ * {@link ControlPlaneService.state} rather than wait for the next one,
+ * which is why every consumer of this pairs it with a baseline.
+ *
+ * Emitted rather than polled because the clause is about surfaces AGREEING
+ * with each other: four surfaces each asking on their own schedule agree
+ * only by luck, while four deriving from one emission agree by
+ * construction.
+ * @mode emit
+ * @param state - the state as of this transition, the same value {@link ControlPlaneService.state} answers.
+ */
+'control/state-changed'(state: ControlState): void
+```
+
+Source: [`packages/interaction/control-plane/src/plugin.ts`](../../packages/interaction/control-plane/src/plugin.ts)
+
 <a id="run-events"></a>
 
 ### `run/*` events

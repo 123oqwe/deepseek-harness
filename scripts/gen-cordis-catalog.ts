@@ -221,6 +221,12 @@ export const EVENT_SCOPE_PAGE: Record<string, string> = {
   'api-session': 'session.md',
   'approval': 'approval.md',
   'commands': 'commands.md',
+  // `ctx.controlPlane` and its state-change event: `docs/subsystems/core.md`
+  // documents the service (`### ctx.controlPlane`) and links its source, so
+  // that page is where a reader already goes for the stop. NOT
+  // `control-protocol.md`, which owns the SDK's JSON-RPC negotiation and is a
+  // different subject that shares a word.
+  'control': 'core.md',
   'cordis': 'extensions.md',
   'authorization': 'credentials.md',
   'credentials': 'credentials.md',

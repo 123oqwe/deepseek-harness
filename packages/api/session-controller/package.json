@@ -133,9 +133,13 @@
     "@deepseek-ai/dsh-client-file-upload": "workspace:^",
     "@deepseek-ai/dsh-commands": "workspace:^",
     "@deepseek-ai/dsh-fs": "workspace:^",
-    "@deepseek-ai/dsh-util-values": "workspace:^"
+    "@deepseek-ai/dsh-util-values": "workspace:^",
+    "@deepseek-ai/dsh-control-plane": "workspace:^"
   },
   "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-control-plane": {
+      "optional": true
+    },
     "@deepseek-ai/dsh-jobs": {
       "optional": true
     },
@@ -189,6 +193,7 @@
     "@deepseek-ai/dsh-fs-local": "workspace:^",
     "@deepseek-ai/dsh-remote-mock": "workspace:^",
     "@deepseek-ai/dsh-util-values": "workspace:^",
+    "@deepseek-ai/dsh-control-plane": "workspace:^",
     "@types/mime-types": "^3.0.1"
   }
 }

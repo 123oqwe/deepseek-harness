@@ -51,6 +51,27 @@ declare module '@deepseek-ai/cordis' {
   interface Context {
     controlPlane: ControlPlaneService
   }
+  interface Events {
+    /**
+     * The host's control state changed, so every surface showing it must
+     * change with it (P2-12 acceptance[3]).
+     *
+     * **A notification, not a second source of truth.** The durable record is
+     * `emergency-stop.json`, and the channel persists BEFORE it announces, so
+     * a listener that reacts to this has a state already on disk. A surface
+     * that missed the emission — one that connected afterwards — must read
+     * {@link ControlPlaneService.state} rather than wait for the next one,
+     * which is why every consumer of this pairs it with a baseline.
+     *
+     * Emitted rather than polled because the clause is about surfaces AGREEING
+     * with each other: four surfaces each asking on their own schedule agree
+     * only by luck, while four deriving from one emission agree by
+     * construction.
+     * @mode emit
+     * @param state - the state as of this transition, the same value {@link ControlPlaneService.state} answers.
+     */
+    'control/state-changed'(state: ControlState): void
+  }
 }
 
 /** Where the stop record lives; a deployment that moves its storage root moves this with it. */
@@ -295,6 +316,12 @@ export class ControlPlaneService extends Service<Config> {
    * @param state - the state to publish.
    */
   private publish(state: ControlState): void {
+    // Announced to every surface BEFORE the agents are walked, and
+    // unconditionally: a composition with no agent registry still has
+    // surfaces, and returning early below would have left them unaware of a
+    // stop that did happen. The channel already persisted, so this carries a
+    // state that is on disk.
+    this.ctx.emit('control/state-changed', state)
     const registry = this.ctx.get('agents')
     if (registry === undefined) return
     publishControlState(registry.list(), state)

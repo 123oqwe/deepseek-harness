@@ -1,6 +1,14 @@
 /** Live Session queue, jobs, and projection state with reconnect baselines. */
 
 import type { Context } from '@deepseek-ai/cordis'
+// A type-only edge, for two things at once: the `declare module` that puts
+// `control/state-changed` on cordis' `Events` -- without it `ctx.on` falls back
+// to an untyped listener, the event name goes unchecked and the payload arrives
+// as `any` -- and the service type below, so a rename of `state()` is a
+// compile error here rather than a baseline that silently reports "unknown"
+// forever. The peer is declared optional: a composition may mount no control
+// plane, and this package's client face must not drag a host package in.
+import type ControlPlaneService from '@deepseek-ai/dsh-control-plane/plugin'
 import type { Agent, InboxState } from '@deepseek-ai/dsh-agent'
 import { Deque } from '@deepseek-ai/dsh-deque'
 import type { JobSnapshot } from '@deepseek-ai/dsh-jobs'
@@ -9,6 +17,7 @@ import type {
 } from '@deepseek-ai/dsh-session'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 import type {
+  HostControlState,
   SessionControlBaseline,
   SessionControlFrame,
   SessionJob,
@@ -16,6 +25,43 @@ import type {
   SessionProjectionValues,
   SessionQueuedItem,
 } from './types.ts'
+
+/**
+ * The control plane's own state type, taken from its reader rather than
+ * imported.
+ *
+ * `ControlState` is declared in `@deepseek-ai/dsh-human-channel`, which this
+ * package does not depend on and should not: one edge buys both the event
+ * declaration and this type, and `ReturnType` names the declaration instead of
+ * restating it.
+ */
+type ControlState = ReturnType<ControlPlaneService['state']>
+
+/**
+ * Project the control plane's state onto the one this API publishes.
+ *
+ * The surface-facing type is this package's ({@link HostControlState}), because
+ * `src/types.ts` is compiled by the client face too and that program sees no
+ * interaction package. So a mapping has to exist, and this file -- host-only --
+ * is the one place that holds both types.
+ * @param state - the control plane's state, as its event and its reader give it.
+ * @returns the state as a surface receives it.
+ */
+function hostControlState(state: ControlState): HostControlState {
+  // The source is a discriminated union, so this narrows rather than guards:
+  // `stopped: true` carries its record by construction, and a branch for a
+  // malformed value would be a check the type system already made.
+  if (!state.stopped) return { stopped: false }
+  return {
+    stopped: true,
+    record: {
+      requestedBy: state.record.requestedBy,
+      reason: state.record.reason,
+      requestedAtMs: state.record.requestedAtMs,
+      release: state.record.release,
+    },
+  }
+}
 
 /** Owns the Host-wide Session control stream. */
 export class SessionControlController {
@@ -42,6 +88,16 @@ export class SessionControlController {
     })
     ctx.inject(['jobs'], (jobsCtx) => {
       jobsCtx.jobs.onJobsChanged((owner) => { this.onJobsChanged(owner) })
+    })
+    // P2-12 acceptance[3]: the host's control state reaches this surface the
+    // moment it changes. `ctx.on` and not a poll -- the stream's contract is
+    // one baseline then replacements, and a poll would put this surface on its
+    // own schedule, which is exactly the disagreement the clause forbids.
+    // Listening unconditionally: the emitter is a different package and may
+    // mount after this one, and an `inject` would make the subscription
+    // conditional on a mount order this controller does not own.
+    ctx.on('control/state-changed', (state) => {
+      this.broadcast({ type: 'control', state: hostControlState(state) })
     })
     ctx.on('session/created', (session) => {
       const jobs = this.jobsFor(this.ctx.agents.get(session.id))
@@ -80,10 +136,25 @@ export class SessionControlController {
       queues[session.id] = agent?.session === session ? queueItems(agent) : []
       jobs[session.id] = this.jobsFor(agent)
     }
+    // Read through on every baseline rather than cached from the last event: a
+    // surface connecting AFTER a stop was raised missed that emission, and the
+    // whole point of the baseline is that it does not need to have been
+    // listening.
+    //
+    // An ANNOTATION widening to `| undefined`, not an assertion: the service
+    // declaration types this key as always present, and it is not -- a
+    // composition may mount no control plane, and the peer is declared
+    // optional for that reason. Written as a cast, the linter rejects it as
+    // unnecessary, which is the type system saying the widening is the whole
+    // content. `undefined` here means the state is UNKNOWN, never "not
+    // stopped", and the baseline omits the key rather than answering.
+    const plane: ControlPlaneService | undefined = this.ctx.get('controlPlane')
+    const control = plane === undefined ? undefined : hostControlState(plane.state())
     return {
       queues,
       jobs,
       projections: this.projectionBaseline(sessions),
+      ...control === undefined ? {} : { control },
     }
   }
 

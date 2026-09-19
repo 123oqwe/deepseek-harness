@@ -3781,6 +3781,14 @@ export const EVENT_API: readonly EventApiEntry[] = [
     parameters: [],
   },
   {
+    name: 'control/state-changed',
+    mode: 'emit',
+    signature: '\'control/state-changed\'(state: ControlState): void',
+    summary: 'The host\'s control state changed, so every surface showing it must change with it (P2-12 acceptance[3]).',
+    description: 'The host\'s control state changed, so every surface showing it must change with it (P2-12 acceptance[3]).\n\n**A notification, not a second source of truth.** The durable record is `emergency-stop.json`, and the channel persists BEFORE it announces, so a listener that reacts to this has a state already on disk. A surface that missed the emission — one that connected afterwards — must read ControlPlaneService.state rather than wait for the next one, which is why every consumer of this pairs it with a baseline.\n\nEmitted rather than polled because the clause is about surfaces AGREEING with each other: four surfaces each asking on their own schedule agree only by luck, while four deriving from one emission agree by construction.',
+    parameters: [{ name: 'state', description: 'the state as of this transition, the same value {@link ControlPlaneService.state} answers.' }],
+  },
+  {
     name: 'cordis/dynamic-package',
     mode: 'emit',
     signature: '\'cordis/dynamic-package\'(pkg: DynamicCordisPackage): void',
@@ -5157,6 +5165,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface GrantRecord {\n    readonly kind: \'grant\';\n    readonly payload: unknown;\n}',
   },
   {
+    name: 'HostControlState',
+    declaration: 'export type HostControlState = {\n    readonly stopped: false;\n} | {\n    readonly stopped: true;\n    readonly record: HostStopRecord;\n};',
+  },
+  {
+    name: 'HostStopRecord',
+    declaration: 'export interface HostStopRecord {\n    readonly requestedBy: string;\n    readonly reason: string;\n    readonly requestedAtMs: number;\n    readonly release: string;\n}',
+  },
+  {
     name: 'HumanAnswer',
     declaration: 'export interface HumanAnswer {\n    readonly waitingPoint: WaitingPointId;\n    readonly text: string;\n}',
   },
@@ -6238,11 +6254,11 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'SessionControlBaseline',
-    declaration: 'export interface SessionControlBaseline {\n    readonly queues: Readonly<Record<SessionId, readonly SessionQueuedItem[]>>;\n    readonly jobs: Readonly<Record<SessionId, readonly SessionJob[]>>;\n    readonly projections: Readonly<Record<SessionId, SessionProjectionBaseline>>;\n}',
+    declaration: 'export interface SessionControlBaseline {\n    readonly queues: Readonly<Record<SessionId, readonly SessionQueuedItem[]>>;\n    readonly jobs: Readonly<Record<SessionId, readonly SessionJob[]>>;\n    readonly projections: Readonly<Record<SessionId, SessionProjectionBaseline>>;\n    readonly control?: HostControlState;\n}',
   },
   {
     name: 'SessionControlFrame',
-    declaration: 'export type SessionControlFrame = {\n    readonly type: \'baseline\';\n    readonly value: SessionControlBaseline;\n} | {\n    readonly type: \'queue\';\n    readonly sessionId: SessionId;\n    readonly items: readonly SessionQueuedItem[];\n} | {\n    readonly type: \'jobs\';\n    readonly sessionId: SessionId;\n    readonly jobs: readonly SessionJob[];\n} | ({\n    readonly type: \'projection\';\n} & SessionProjectionUpdate);',
+    declaration: 'export type SessionControlFrame = {\n    readonly type: \'baseline\';\n    readonly value: SessionControlBaseline;\n} | {\n    readonly type: \'queue\';\n    readonly sessionId: SessionId;\n    readonly items: readonly SessionQueuedItem[];\n} | {\n    readonly type: \'jobs\';\n    readonly sessionId: SessionId;\n    readonly jobs: readonly SessionJob[];\n} | ({\n    readonly type: \'projection\';\n} & SessionProjectionUpdate) | {\n    readonly type: \'control\';\n    readonly state: HostControlState;\n};',
   },
   {
     name: 'SessionCreateRequest',

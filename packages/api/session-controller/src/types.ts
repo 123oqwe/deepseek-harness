@@ -554,7 +554,61 @@ export interface SessionControlBaseline {
   readonly queues: Readonly<Record<SessionId, readonly SessionQueuedItem[]>>
   readonly jobs: Readonly<Record<SessionId, readonly SessionJob[]>>
   readonly projections: Readonly<Record<SessionId, SessionProjectionBaseline>>
+  /**
+   * Whether the host is under an emergency stop, as of this baseline
+   * (P2-12 acceptance[3]).
+   *
+   * **In the baseline and not only in a frame**, because the clause is about
+   * surfaces agreeing: a surface that connects AFTER a stop was raised would
+   * otherwise show "running" forever, having missed the one edge that said
+   * otherwise, and would disagree with every surface that was already
+   * connected. `undefined` means no control plane is mounted — the state is
+   * unknown here rather than known to be running, and a surface must not
+   * render absence as "not stopped".
+   */
+  readonly control?: HostControlState
 }
+
+/**
+ * Why the host was stopped, as a surface renders it.
+ *
+ * An API-OWNED projection of the control plane's `StopRecord`, the same way
+ * {@link SessionJob} projects a job rather than re-exporting one. It is not
+ * derived from the internal type, and the reason is the compiler faces: this
+ * file is compiled by BOTH this package's host and client programs
+ * (`tsconfig.client.json` includes `src/types.ts`), and the client program
+ * references neither `core/agent` nor the interaction packages. A derived or
+ * re-exported type would pull a host package into the client face.
+ */
+export interface HostStopRecord {
+  /**
+   * The principal that asked, as its opaque id.
+   *
+   * A plain string rather than a re-branded one: the client face cannot see
+   * `@deepseek-ai/dsh-principal`, and minting a second brand here would give
+   * one identity two incompatible types across one boundary.
+   */
+  readonly requestedBy: string
+  /**
+   * Why the stop was requested, as the requester stated it.
+   *
+   * The control plane's own `StopReason` is a CLOSED union, and this face
+   * deliberately does not restate it: a second copy of a closed union drifts
+   * the day a member is added, and a surface renders this string rather than
+   * switching on it. If a surface ever must switch, that is when the union
+   * earns a home both faces can see.
+   */
+  readonly reason: string
+  /** Unix epoch milliseconds, so a surface can order the stop against what else it shows. */
+  readonly requestedAtMs: number
+  /** How the stop may be released; `explicit-resume` is the only value today. */
+  readonly release: string
+}
+
+/** Whether the host is stopped, and the record that says why when it is. */
+export type HostControlState =
+  | { readonly stopped: false }
+  | { readonly stopped: true; readonly record: HostStopRecord }
 
 /** One finished projection value and its durable watermark. */
 export interface SessionProjectionUpdate {
@@ -570,6 +624,7 @@ export type SessionControlFrame =
   | { readonly type: 'queue'; readonly sessionId: SessionId; readonly items: readonly SessionQueuedItem[] }
   | { readonly type: 'jobs'; readonly sessionId: SessionId; readonly jobs: readonly SessionJob[] }
   | ({ readonly type: 'projection' } & SessionProjectionUpdate)
+  | { readonly type: 'control'; readonly state: HostControlState }
 
 declare module '@deepseek-ai/cordis' {
   interface Events {

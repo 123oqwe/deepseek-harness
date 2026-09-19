@@ -50,6 +50,9 @@
       "path": "../../interaction/permission-presets"
     },
     {
+      "path": "../../interaction/control-plane"
+    },
+    {
       "path": "../../jobs/jobs"
     },
     {
