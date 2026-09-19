@@ -66,6 +66,11 @@ const REGISTRY_GATES = [
   'first100:verify-baseline-file-references',
   'first100:verify-frozen-titles-resolvable',
   'first100:verify-p9-cells',
+  // BLOCKED-081: the ACCEPTANCE LOCKS register, enforced. Until this gate the
+  // only thing stopping a locked epic from being accepted was the delegate
+  // remembering to grep it, and that grep misread a row once -- in the safe
+  // direction, with nothing that would have caught the opposite.
+  'first100:verify-acceptance-locks',
   'first100:verify-make-vs-use',
   'first100:verify-freeze-in-candidate-tree',
   'first100:verify-files-overlay',
