@@ -131,6 +131,17 @@ export interface Agent {
    * ordinary case for a session whose first message is injected context rather
    * than a human goal, and never as a compile that failed.
    *
+   * **Its consumer is DEFERRED, and naming that is the point of this
+   * paragraph.** Measured: one writer, zero production readers. That shape is
+   * what BLOCKED-183 revoked P4-01's sign-off over one layer up, so leaving it
+   * unstated would make a later re-grep read this field as dead rather than as
+   * early. The readers are P4-03, which traces every plan node back to a
+   * TaskProfile requirement, and P5-01, whose must[0] takes a TaskProfile as
+   * input; both are `NOT_RUN`. The field exists so neither has to walk the
+   * session log to find the profile this agent was planned from, which is the
+   * same reason {@link Agent.runId} exists beside the Run store
+   * (BLOCKED-232 closing condition 3).
+   *
    * A reference and not the profile, for the same reason the Run event log
    * carries references: the body belongs to the session log that owns it, and
    * two copies of a durable fact have no way to detect divergence. Recompiling
