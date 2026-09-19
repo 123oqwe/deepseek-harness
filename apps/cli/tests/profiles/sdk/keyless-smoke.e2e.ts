@@ -194,11 +194,24 @@ async function runSdkTurn(dshHome: string, stub: StubModelServer): Promise<strin
     consumed: () => consumed,
     serverRequests: () => serverRequests,
     modelRequests: () => stub.requests.length,
-    // `exitCode` is null while a child runs, which is how this repository's
-    // other e2e drivers ask the same question.
-    child: () => child.exitCode === null && child.signalCode === null
-      ? 'still running'
-      : `exited (exitCode=${String(child.exitCode)}, signal=${String(child.signalCode)})`,
+    // Through `nodeChildProcess`, because execa's own `Subprocess` type does
+    // NOT carry `ChildProcess`'s fields (`execa@10` subprocess.d.ts:136-138) --
+    // it documents that property as the escape hatch for exactly this (:130).
+    // The drivers elsewhere in this repository that read `child.exitCode`
+    // directly spawn with `node:child_process`, so their spelling does not
+    // transfer here even though it reads the same.
+    //
+    // It was wrong at RUNTIME as well as in the type, and in the direction
+    // that misleads: reading two absent properties made every stall report
+    // `exited (exitCode=undefined, signal=undefined)` -- a live child
+    // described as a dead one, which is worse than saying nothing. Run
+    // 35473161135's reports carry that line.
+    child: () => {
+      const node = child.nodeChildProcess
+      return node.exitCode === null && node.signalCode === null
+        ? 'still running'
+        : `exited (exitCode=${String(node.exitCode)}, signal=${String(node.signalCode)})`
+    },
   })
   // Answered, and recorded. Leaving a request unanswered stalls whatever asked
   // and the case dies of a timeout that names nothing; answering it silently
@@ -229,7 +242,16 @@ async function runSdkTurn(dshHome: string, stub: StubModelServer): Promise<strin
       method: 'initialize',
       params: { cwd: dshHome, provider: 'deepseek-official', model: 'deepseek-v4-pro' },
     })}\n`)
-    await wait('the initialize response', value => value.id === 1)
+    const initialized = await wait('the initialize response', value => value.id === 1)
+    // A JSON-RPC error answer IS an answer, so the wait above is satisfied by
+    // one. Carrying on to `session/prompt` then spends the deadline three
+    // times over waiting for a turn that was never going to start: on run
+    // 35473161135 the initialize error said `typert-loader` could not import
+    // `lib/typert.host.js`, and the case still timed out twice more before
+    // saying so.
+    if (initialized.error !== undefined) {
+      throw new Error(`the sdk runtime refused initialize: ${JSON.stringify(initialized.error)}`)
+    }
     child.stdin.write(`${JSON.stringify({
       jsonrpc: '2.0',
       id: 2,
