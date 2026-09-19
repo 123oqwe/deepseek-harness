@@ -85,7 +85,7 @@ import { spawnSync } from 'node:child_process'
 import { frozenTitlePresent, registeredRenames } from './frozen-title-renames.mjs'
 import { candidateTreeFindings, commitmentKey, freezeEntriesAt } from './verify-freeze-in-candidate-tree.mjs'
 import { realitySet, realitySetOverlap } from './epic-reality-set.mjs'
-import { patchEntries } from './files-overlay.mjs'
+import { additionEntries, patchEntries } from './files-overlay.mjs'
 import { adaptDispositionFindings, loadAdaptDispositionInputs } from './verify-adapt-dispositions.mjs'
 import { missingAcceptedRegistryRefs, missingFreezeFiles } from './verify-declared-files-exist.mjs'
 import { loadMakeVsUseInputs, makeVsUseFindings } from './verify-make-vs-use.mjs'
@@ -1479,7 +1479,8 @@ function cmdAdmitRedRun() {
     console.error(`unknown epic ${epic} (not in tests/first100/registry.json)`)
     process.exit(1)
   }
-  const touched = realitySet(registryEpic, loadJson(COMMAND_FREEZE_PATH).entries, patchEntries(loadJson(ADJUDICATION_PATH)))
+  const adjudication = loadJson(ADJUDICATION_PATH)
+  const touched = realitySet(registryEpic, loadJson(COMMAND_FREEZE_PATH).entries, patchEntries(adjudication), additionEntries(adjudication))
   const subjects = steps.flatMap((step) => step.subjectPaths)
   const overlap = realitySetOverlap(touched, subjects)
   if (overlap.length > 0) {
@@ -1493,7 +1494,7 @@ function cmdAdmitRedRun() {
     runId,
     redSteps: steps,
     diagnosedCause: cause,
-    unrelatedBecause: `the epic's reality set (${String(touched.length)} path(s): declaration plus live freeze entries, per BLOCKED-134) is disjoint from the failing subject ${JSON.stringify(subjects)}`,
+    unrelatedBecause: `the epic's reality set (${String(touched.length)} path(s): declaration plus live freeze entries, per BLOCKED-134, plus the epic's approved additions) is disjoint from the failing subject ${JSON.stringify(subjects)}`,
     admittedBy,
     diagnosedAtUtc: nowIso(),
   }
@@ -1726,9 +1727,11 @@ function cmdAccept() {
   })
   for (const { gate, text } of preflight) failures.push(`pre-flight gate ${gate} reports a finding for ${epic}:\n    ${text}`)
   // Registry paths are plan paths; their absence is printed for the reader and decides nothing.
-  const { declaredMissing, resolvedMissing } = missingAcceptedRegistryRefs(registry, new Set([epic]), exists, patchEntries(loadJson(ADJUDICATION_PATH)))
+  const adjudication = loadJson(ADJUDICATION_PATH)
+  const { additionsMissing, declaredMissing, resolvedMissing } = missingAcceptedRegistryRefs(registry, new Set([epic]), exists, patchEntries(adjudication), new Set(), additionEntries(adjudication))
   for (const { where, path } of declaredMissing) console.log(`pre-flight (informational): ${where} declares ${path}, which does not exist`)
   for (const { where, path, absentApprovedPaths } of resolvedMissing) console.log(`pre-flight (informational): ${where} ${path} -> absent ${absentApprovedPaths.join(', ')}`)
+  for (const { where, path, expectedAt } of additionsMissing) console.log(`pre-flight (informational): ${where} has an approved addition for ${path}, which does not exist (expectedAt ${String(expectedAt)})`)
 
   if (failures.length > 0) {
     console.error(`BLOCKED: ${epic} fails ${failures.length} predicate(s):\n  ${failures.join('\n  ')}`)
