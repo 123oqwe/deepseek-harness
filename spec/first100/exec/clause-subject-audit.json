@@ -470,12 +470,12 @@
           {
             "name": "laude-institute/harbor",
             "npm": "laude-institute/harbor",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Measured absent. The harness comparison this named was never built as a dependency."
+            "reason": "previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling: the sign-off was withdrawn on 2026-09-19 (BLOCKED-270) and the row is BLOCKED_ON_ACCEPTANCE, so the status half no longer holds. The ruling does not rest on it and is unchanged — the omission stays visible rather than silent, and it does NOT license hand-writing this in new work. If BLOCKED-270's missing entry point is built, this disposition is re-decided then. Measured absent. The harness comparison this named was never built as a dependency."
           },
           {
             "name": "fast-check",
             "npm": "fast-check",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED and nothing propagates from it. Measured with the epic's REALITY SET — files[] plus its live frozen entries' files — rather than a repository-wide scan: the package IS present in the repository, but not in anything this epic wrote. The earlier record read the wide scan as adoption, which made 'the repository has it' pass as 'this epic took it on'. `fast-check` remains the right tool if this epic later wants property coverage; recording the deviation states that its current cases do not."
+            "reason": "previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling: the sign-off was withdrawn on 2026-09-19 (BLOCKED-270) and the row is BLOCKED_ON_ACCEPTANCE, so the status half no longer holds. The ruling does not rest on it and is unchanged — the omission stays visible rather than silent, and it does NOT license hand-writing this in new work. If BLOCKED-270's missing entry point is built, this disposition is re-decided then. Measured with the epic's REALITY SET — files[] plus its live frozen entries' files — rather than a repository-wide scan: the package IS present in the repository, but not in anything this epic wrote. The earlier record read the wide scan as adoption, which made 'the repository has it' pass as 'this epic took it on'. `fast-check` remains the right tool if this epic later wants property coverage; recording the deviation states that its current cases do not."
           }
         ],
         "rejectedAbsent": [],
