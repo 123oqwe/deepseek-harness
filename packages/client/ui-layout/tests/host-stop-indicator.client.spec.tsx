@@ -20,8 +20,8 @@ const SESSION = 'session' as SessionId
  * package's own `zh` keys — no locale service is mounted and none is needed.
  * In production the slot supplies `t` because the entry registers with
  * `locale: NS`, and that registration is asserted separately in
- * `ui-session.client.spec.ts` (both with and without a locale service). These
- * cases are about what the component renders, given copy.
+ * `apply.client.spec.ts`. These cases are about what the component renders,
+ * given copy.
  */
 const t: HostStopIndicatorProps['t'] = makeTranslate(zh)
 
@@ -83,7 +83,7 @@ describe('HostStopIndicator', () => {
   it('does NOT cover the frame, so the application stays clickable while it shows', () => {
     // The trap this case exists for: `.overlayLayer` is `pointer-events: none`
     // but gives every DIRECT child `pointer-events: auto`
-    // (`ui-layout/src/client/AppFrame.module.css:90-99`). An entry whose root
+    // (`../src/client/AppFrame.module.css:90-99`). An entry whose root
     // is a full-bleed wrapper would therefore swallow every click in the
     // application for as long as a stop is displayed -- and a stop is a state
     // nobody exercises, so nothing else would catch it.

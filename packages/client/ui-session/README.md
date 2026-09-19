@@ -1,5 +1,5 @@
 ---
-description: "React and Slot adapters for Session Controller lists, interaction state, per-session context, and the frame-wide host-stop indicator."
+description: "React and Slot adapters for Session Controller lists, interaction state, and per-session context."
 kind: "package-reference"
 ---
 # @deepseek-ai/dsh-client-ui-session
@@ -9,8 +9,6 @@ English | [中文](README.zh.md)
 ## Summary
 
 React and Slot adapter for Session Controller state. It contributes Session list and pending-interaction hooks at root scope, materializes per-Session hooks and props, and owns the standard `SessionProvider` rendering behavior without taking ownership of Session transport or lifecycle state. Use it when a browser feature needs Session state through standard React props and hooks.
-
-It also contributes the frame-wide host-stop indicator to `shell.overlay`. That entry is root-scoped rather than Session-scoped, which is a deliberate exception: an emergency stop is not about any one Session, and the state arrives on the very list this package already adapts.
 
 ## Table of Contents
 

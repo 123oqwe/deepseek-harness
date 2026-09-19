@@ -29,6 +29,8 @@ kind: "package-reference"
 
 全局面板占据 root 作用域的 `main` keyed slot；`conversation` 是为会话界面保留的 key。`ctx.layout.selectPanel(id)` 选中已注册面板，`null` 则选中会话界面，但不改变当前会话。默认组合不注册任何全局面板。
 
+root 作用域的 `shell.overlay` list slot 是全框浮层：默认点击穿透，条目自行恢复 pointer events；它是追加式的，新 `id` 与既有条目并列。本包在其上只挂一个条目 `host-stop`（order 100），在主机全局停机期间持续显示该停机，状态未知或主机运行中时不渲染任何内容。
+
 ### 主题呈现
 
 呈现器消费解析后的主题快照，并投影到 document：`html { color-scheme }` 驱动原生 UA 控件，依据当前配色方案设置 `body[data-ds-dark-theme]`，把主题的别名 token 与 `--dsh-content-font-size` 设为 body 上的内联变量，并持有一个 `<meta name="theme-color">`，其内容随计算后的 body 背景色更新。对呈现器执行 dispose（资源释放）时，它会连同其他全局写入一起移除自己的元数据节点。

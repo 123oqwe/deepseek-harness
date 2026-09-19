@@ -23,16 +23,6 @@ import type {
 // Type-only service merge for ctx.slots.
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import { renderSessionArea } from './session-provider.tsx'
-import { HostStopIndicator } from './HostStopIndicator.tsx'
-import { en, NS, zh, type HostControlKey } from './locales.ts'
-import type {} from '@deepseek-ai/dsh-client-locale/client'
-
-declare module '@deepseek-ai/dsh-client-ui-slots' {
-  interface LocaleNamespaceMap {
-    /** Host emergency-stop indicator copy. */
-    'host-control': HostControlKey
-  }
-}
 
 /** Selector hook over the Session Controller list and current selection. */
 export type UseSessions = SnapshotSelectorHook<SessionListState>
@@ -521,38 +511,6 @@ export function apply(ctx: Context): void {
     },
   } satisfies RootStandardSourceContribution)
   ctx.slots.installScope('session', service.adapter)
-
-  // P2-12 acceptance[3]'s Web half. The state arrives on the list this package
-  // already adapts, so the indicator is a reader of it rather than a second
-  // path: `control/state-changed` reaches the API stream, the manager records
-  // it, `projectList` carries it here, and this entry renders it.
-  //
-  // `shell.overlay` is root-scoped, which widens this package by one entry
-  // beyond the session-scoped slots it otherwise owns. It is the honest home
-  // anyway: a host stop is not about any one session, and the alternative was a
-  // package whose name says "background-job list".
-  //
-  // **`locale` is injected here, not in this module's `inject`.** That array is
-  // this package's REQUIRED set, and `SlotTestRuntime.create` reuses it
-  // verbatim (`test-support/client-runtime/src/index.ts:278`) on a context that
-  // provides no locale service -- so requiring it would leave the whole package
-  // unapplied there, taking every client case that mounts through the test
-  // runtime with it. The indicator is the only part that needs a dictionary,
-  // and a host with no locale service keeps the rest of this adapter.
-  ctx.inject(['locale'], (scope) => {
-    scope.effect(() => scope.locale.register(NS, { zh, en }), 'ui-session: host-control dictionaries')
-    scope.slots.inject(
-      'shell.overlay',
-      () => scope.slots.register({
-        name: 'shell.overlay',
-        id: 'host-stop',
-        // Last among overlay entries: a host-wide halt outranks anything a
-        // feature floats, and the layer stacks in ascending order.
-        order: 100,
-        locale: NS,
-      }, HostStopIndicator),
-    )
-  })
 }
 
 function samePendingInteractions(

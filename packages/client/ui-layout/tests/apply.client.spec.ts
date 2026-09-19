@@ -11,6 +11,7 @@ import { apply, inject, LayoutController } from '@deepseek-ai/dsh-client-ui-layo
 import { apply as nodeApply } from '@deepseek-ai/dsh-client-ui-layout'
 import type { MainPanelId } from '../src/client/service.ts'
 import type { createLayoutStore } from '../src/client/stores.ts'
+import { en, zh } from '../src/client/locales.ts'
 
 const owners = new Set<Fiber>()
 let originalRootStyle: string | null
@@ -144,6 +145,47 @@ describe('ui-layout client apply', () => {
     theme.setTheme('dark')
     expect(document.documentElement.style.colorScheme).toBe('')
     expect(document.body.hasAttribute('data-ds-dark-theme')).toBe(false)
+  })
+
+  it('seats the host-stop indicator on the overlay layer, with the dictionary it renders from', async () => {
+    // P2-12 acceptance[3]'s Web half. The entry is the only occupant this
+    // package ships into a layer it otherwise declares for others, so the
+    // assertion is on the real registry rather than a mocked `slots`: an id
+    // and an order that no renderer would accept prove nothing.
+    const { ctx, slots } = await bench()
+    const fiber = ctx.plugin({ inject: [...inject], apply })
+    await fiber.await()
+
+    const entries = slots.entries('shell.overlay')
+    expect(entries).toHaveLength(1)
+    expect(entries[0]?.options.id).toBe('host-stop')
+    expect(entries[0]?.options.order).toBe(100)
+    // `locale: 'host-control'` is what makes the slot runtime hand the
+    // component its `t`; without the dictionary below it would hand over a
+    // translator for keys nobody registered and every string would render as
+    // its own key.
+    expect(entries[0]?.locale).toBe('host-control')
+    // Whichever built-in the environment resolves to -- `translate` falls back
+    // to the KEY when a namespace carries no dictionary, so "not the key" is
+    // the claim, and asserting one language would assert jsdom's locale.
+    const t = ctx.get('locale')?.bind('host-control')
+    expect([zh['stopped.title'], en['stopped.title']]).toContain(t?.('stopped.title'))
+  })
+
+  it('retires the overlay entry when the plugin unloads, leaving no component behind the layer', async () => {
+    const { ctx, slots } = await bench()
+    const fiber = ctx.plugin({ inject: [...inject], apply })
+    await fiber.await()
+    expect(slots.entries('shell.overlay')).toHaveLength(1)
+
+    await fiber.dispose()
+
+    // The declaration goes with the frame, so ask the registry for the spec:
+    // `entries` on an undeclared slot is a different question.
+    expect(slots.spec('shell.overlay')).toBeUndefined()
+    // And the dictionary goes with it: a translator for a namespace nobody
+    // registered answers with the key itself.
+    expect(ctx.get('locale')?.bind('host-control')('stopped.title')).toBe('stopped.title')
   })
 
   it('teardown unwinds the service, the root registration, and the child declarations', async () => {

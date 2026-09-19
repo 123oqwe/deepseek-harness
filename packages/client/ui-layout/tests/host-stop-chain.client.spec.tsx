@@ -54,12 +54,27 @@ function hookOf<T>(store: { subscribe: (fn: () => void) => () => void; getSnapsh
   }
 }
 
+/**
+ * The two props this component reads, widened to the full standard kit.
+ *
+ * `GlobalStandardProps` is the seat every assembled Client merges into -- panel
+ * info, workspaces, resources, pending interactions -- and the slot runtime
+ * fills all of it. Building those here would fixture four subsystems this case
+ * says nothing about, so it casts, the way
+ * `ui-agent-preset/tests/components.client.spec.tsx:59` does.
+ * @param useSessions - the live selector hook under test.
+ * @returns props the component can be rendered with.
+ */
+function props(useSessions: (select: (snapshot: SessionListState) => unknown) => unknown): HostStopIndicatorProps {
+  return { useSessions, t } as unknown as HostStopIndicatorProps
+}
+
 describe('host stop, control frame to rendered component', () => {
   it('appears when the frame arrives and disappears when the stop is released', async () => {
     const service = new ClientSessions(new Context(), UNUSED_REMOTE)
     const useSessions = hookOf<SessionListState>(service.list)
 
-    render(<HostStopIndicator useSessions={useSessions} t={t} />)
+    render(<HostStopIndicator {...props(useSessions)} />)
     // Nothing yet: no control plane has spoken, which is UNKNOWN and not a
     // claim that the host is running.
     expect(screen.queryByRole('status')).toBeNull()
@@ -85,7 +100,7 @@ describe('host stop, control frame to rendered component', () => {
   it('forgets the stop when a later baseline carries none, rather than showing a halt nothing enforces', async () => {
     const service = new ClientSessions(new Context(), UNUSED_REMOTE)
     const useSessions = hookOf<SessionListState>(service.list)
-    render(<HostStopIndicator useSessions={useSessions} t={t} />)
+    render(<HostStopIndicator {...props(useSessions)} />)
 
     await act(async () => {
       service.handleControlFrame({ type: 'control', state: STOPPED })

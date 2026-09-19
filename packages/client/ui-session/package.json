@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-client-ui-session",
-  "description": "Session Controller adapter for React, session-scoped slots, and the frame-wide host-stop indicator",
+  "description": "Session Controller adapter for React and session-scoped slots",
   "version": "0.1.5-rc.2",
   "publishConfig": {
     "access": "public",
@@ -56,8 +56,6 @@
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/dsh-api-session-controller": "workspace:^",
-    "@deepseek-ai/dsh-client-locale": "workspace:^",
-    "@deepseek-ai/dsh-client-test-runtime": "workspace:^",
     "@deepseek-ai/dsh-client-store": "workspace:^",
     "@deepseek-ai/dsh-client-ui-renderer": "workspace:^",
     "@deepseek-ai/dsh-client-ui-slots": "workspace:^",

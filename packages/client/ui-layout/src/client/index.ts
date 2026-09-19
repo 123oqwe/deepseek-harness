@@ -4,8 +4,9 @@
  * four child slots (declaration = exclusive render authority), seats the
  * layout store (panel geometry), and wires the panel-action service face.
  * ctx.layout selects the main panel and controls column geometry; Session
- * selection belongs to the Session Controller. A second effect seats the theme
- * presenter, which projects ctx.theme snapshots onto document.body.
+ * selection belongs to the Session Controller. Further effects seat the
+ * host-stop entry on the frame-wide overlay layer and the theme presenter,
+ * which projects ctx.theme snapshots onto document.body.
  */
 import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
@@ -15,6 +16,8 @@ import type {} from '@deepseek-ai/dsh-client-ui-theme/client'
 import type { HostObservable, SnapshotSelectorHook } from '@deepseek-ai/dsh-client-ui-slots'
 import type { PanelInfo } from './service.ts'
 import { AppFrame } from './AppFrame.tsx'
+import { HostStopIndicator } from './HostStopIndicator.tsx'
+import { en, NS, zh, type HostControlKey } from './locales.ts'
 import { createLayoutStore } from './stores.ts'
 import { LayoutController } from './service.ts'
 import { ThemePresenter } from './theme-presenter.ts'
@@ -38,6 +41,11 @@ declare module '@deepseek-ai/cordis' {
 }
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
+  interface LocaleNamespaceMap {
+    /** Host emergency-stop indicator copy. */
+    'host-control': HostControlKey
+  }
+
   interface GlobalStandardProps {
     /** Subscribe to the selected main panel independently of parent renders. */
     usePanelInfo: UsePanelInfo
@@ -167,6 +175,33 @@ export function apply(ctx: ClientContext): void {
       void disposeService()
     }
   }, 'ui-layout: service + root registration')
+
+  // P2-12 acceptance[3]'s Web half: the host-wide emergency stop, shown on the
+  // frame-wide layer this package declares and renders.
+  //
+  // The entry reads `useSessions`, contributed by `ui-session`. That is not a
+  // new requirement of this package: `DocumentTitle` already selects the
+  // current session's title through the same hook on every render of the
+  // frame, so a composition that mounts AppFrame without `ui-session` is
+  // already broken and no gate here would save it.
+  //
+  // `slots.inject` rather than a bare `register`: 'shell.overlay' is declared
+  // by the effect above, and two effects of one plugin have no ordering
+  // between them. It installs its own effect on this fiber, so unload retires
+  // the entry with the plugin.
+  ctx.slots.inject(
+    'shell.overlay',
+    () => ctx.slots.register({
+      name: 'shell.overlay',
+      id: 'host-stop',
+      // Last among overlay entries: a host-wide halt outranks anything a
+      // feature floats, and the layer stacks in ascending order.
+      order: 100,
+      locale: NS,
+    }, HostStopIndicator),
+  )
+
+  ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-layout: host-control dictionaries')
 
   // Theme presentation: pure DOM writes from resolved snapshots — initial
   // state through the getter once, then event-driven only; no React path.

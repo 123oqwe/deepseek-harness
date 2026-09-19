@@ -29,6 +29,8 @@ The root slot composes the sidebar, main content, and right column. The sidebar 
 
 Global panels occupy the root-scoped `main` keyed slot; `conversation` is the reserved key for the Conversation. `ctx.layout.selectPanel(id)` selects a registered panel, and `null` selects the Conversation without changing the current Session. No global panel is registered by the shipped composition.
 
+The root-scoped `shell.overlay` list slot is the frame-wide floating layer: click-through until an entry opts back into pointer events, and additive, so a new `id` sits beside what is already there. This package ships one entry on it, `host-stop` at order 100, which shows the host-wide emergency stop for as long as it holds and renders nothing when the state is unknown or running.
+
 ### Theme presentation
 
 The presenter consumes resolved theme snapshots and projects them onto the document: `html { color-scheme }` for native UA chrome, `body[data-ds-dark-theme]` from the active color scheme, the theme's alias tokens and `--dsh-content-font-size` as inline variables on body, and one owned `<meta name="theme-color">` whose content follows the computed body background. Disposing the presenter removes its metadata node with its other global writes.
