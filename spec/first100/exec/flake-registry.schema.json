@@ -80,7 +80,11 @@
           "properties": {
             "backfillNote": { "type": "string" },
             "measuredRate": { "type": "object" },
-            "countingNote": { "type": "string" }
+            "countingNote": { "type": "string" },
+            "timeoutNote": {
+              "type": "string",
+              "description": "Why this entry is no longer read as non-determinism. A case whose cost sits inside its timeout fails and passes on one tree without being flaky; the occurrences stay, because they are what established that reading, and this says a later failure is a real regression rather than this flake."
+            }
           }
         }
       }

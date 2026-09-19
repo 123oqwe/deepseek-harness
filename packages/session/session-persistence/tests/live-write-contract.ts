@@ -16,6 +16,22 @@ import { SessionId } from '@deepseek-ai/dsh-session'
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import type { SessionPersistence } from '../src/index.ts'
 
+/**
+ * The ceiling for the oversized-batch case, set because the default sits
+ * inside that case's own cost.
+ *
+ * Three CI observations of it: 3228 ms passing, 4972 ms passing, and 5022 ms
+ * against vitest's 5000 ms default, failing. Nothing about it is flaky — the
+ * work is 150 000 appends and two passes over the retained batch with storage
+ * stubbed, so the cost tracks the runner's speed and the default is simply too
+ * close to it. Three times the median, the same ceiling
+ * `packages/experimental/agent-team/tests/persistence.spec.ts:24` uses for its
+ * persistence cases, leaves room for a loaded runner while still failing fast
+ * if the cost triples. The batch size is NOT lowered: it has to exceed any
+ * engine's call-argument limit, which is what the case is named for.
+ */
+const OVERSIZED_BATCH_TIMEOUT_MS = 15_000
+
 /** One mounted backend under a session store, plus same-storage remount support. */
 export interface LiveWriteBackend {
   /** Context with SessionStore and the persistence backend mounted. */
@@ -461,7 +477,7 @@ export function runLiveWritePathContract(
       expect(sizes).toEqual([batchSize, batchSize])
       await handle.close()
       await ctx.fiber.dispose()
-    })
+    }, OVERSIZED_BATCH_TIMEOUT_MS)
 
     it('starts a new window for work admitted after an already-quiescent barrier', async ({ task, signal }) => {
       const { ctx } = await make()
