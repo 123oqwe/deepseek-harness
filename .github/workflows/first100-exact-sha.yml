@@ -397,13 +397,37 @@ jobs:
         # erroring -- and a green step for that reason is the one outcome
         # that would make us withdraw a correct report.
         #
-        # `-t minimal` selects exactly the two `sdk-minimal` cases, leaving the
-        # four `--profile sdk` cases and the invalid-env case out. Only one of
-        # the two can answer the question: `executes the documented editor
-        # opt-in patch with sdk-minimal` drives `str_replace_editor` through a
-        # real turn and asserts the tool BODY ran by reading the file back,
-        # where its sibling never drives a tool call at all and would pass on a
-        # profile that refuses everything.
+        # The WHOLE file, with no `-t`. A `-t minimal` filter was tried first
+        # and run 35449457652 measured what it did: `7 tests | 6 skipped`. It
+        # selected ONE case -- `boots the standalone minimal profile through
+        # its generated manifest`, 1479 ms -- and that is the one case here
+        # that never drives a tool call and therefore cannot answer this
+        # entry's question. The case that can, `executes the documented editor
+        # opt-in patch with sdk-minimal`, was among the skipped. The step was
+        # green, in four seconds, having run the only case incapable of
+        # failing for the reason it was added.
+        #
+        # Why that one and not its sibling is not established. Vitest 4.1.8
+        # formats an `it.each` `$label` title and the log shows it truncated,
+        # so "minimal" landing at the very end of the editor case's label is a
+        # plausible reason and is not a measurement.
+        #
+        # The filter is deleted rather than repaired, because the defect is not
+        # which cases it picked: a step that reports success having silently
+        # skipped the observation it exists for is the failure this program
+        # keeps recording, and one less mechanism is worth more than a better
+        # pattern plus an assertion to maintain.
+        #
+        # Seven cases instead of two, and the extra five earn their time: four
+        # boot `--profile sdk`, which layers over base and carries a policy
+        # engine, so they are the launcher's own positive control -- if THEY go
+        # red the problem is the launcher, not the policy. The one case that
+        # answers this entry's question is `executes the documented editor
+        # opt-in patch with sdk-minimal`: it drives `str_replace_editor` through
+        # a real turn and asserts the tool BODY ran by reading the file back.
+        # Its `sdk-minimal` sibling never drives a tool call and would pass on a
+        # profile that refuses everything, which is what makes the pair
+        # diagnostic.
         #
         # Keyless: the child gets a placeholder `DEEPSEEK_API_KEY` and a
         # `DEEPSEEK_BASE_URL` pointing at a local server standing in for the
@@ -421,7 +445,7 @@ jobs:
         # case runs three times before the step settles.
         run: |
           pnpm exec vitest run --config vitest.e2e.config.ts \
-            -t minimal apps/cli/tests/profiles/sdk/keyless-smoke.e2e.ts
+            apps/cli/tests/profiles/sdk/keyless-smoke.e2e.ts
 
       - name: Publication and package hygiene
         if: always()
