@@ -1410,9 +1410,9 @@
       },
       "supplements": {},
       "candidateSha": "bf24fa0a3346516cf2b31fb2e40427f69189183f",
-      "independentVerdict": "APPROVED",
+      "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "ACCEPTED",
+      "status": "BLOCKED_ON_ACCEPTANCE",
       "acceptedEvidence": {
         "acceptedAtUtc": "2026-09-02T14:19:03.624Z",
         "cells": {
@@ -1826,11 +1826,11 @@
         }
       },
       "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
-      "independentVerdict": "APPROVED",
+      "independentVerdict": "PENDING",
       "openFindings": [
         "BLOCKED-247: must[2] lock gate is not wired into production boot AND no bundle declares unlockedProfilePolicy (field never landed) — must[2] doubly unimplemented, delegate-verified (addendum 316). Remediation P1-03.U2 split out pending the per-bundle policy value (user decision, addendum 317)."
       ],
-      "status": "ACCEPTED",
+      "status": "BLOCKED_ON_ACCEPTANCE",
       "acceptedEvidence": {
         "acceptedAtUtc": "2026-09-07T04:11:57.609Z",
         "cells": {
