@@ -211,7 +211,30 @@ jobs:
           # hard failure. Uploading `evidence.json` by itself produced an
           # artifact nobody could re-verify offline, which is the one thing a
           # release evidence package is for.
-          path: .dsh/evidence/
+          #
+          # `.dsh/baseline.json` travels WITH it, because the verifier re-hashes
+          # that file against the package's `baselineFingerprint`
+          # (`verify-evidence.mjs:166-174`) and reports `no .dsh/baseline.json`
+          # as a mismatch when it is absent. Measured on run 35449457652: an
+          # offline re-verification of the downloaded artifact failed on that one
+          # line and nothing else, so the package was complete except for the
+          # file that proves which tree it describes.
+          #
+          # This step's POSITION is what makes the pair consistent: it runs
+          # before "Restore the tracked baseline files the two steps above
+          # rewrote", so the uploaded `baseline.json` is the one the fingerprint
+          # was computed against rather than the restored original.
+          #
+          # Two paths make upload-artifact root the archive at their least
+          # common ancestor, `.dsh/`, so the download extracts as
+          # `evidence/evidence.json`, `evidence/evidence.d/…` and
+          # `baseline.json`. To re-verify offline, put that content at
+          # `<repo>/.dsh/` and run
+          # `pnpm run evidence:verify --evidence .dsh/evidence/evidence.json`
+          # from the repository root.
+          path: |
+            .dsh/evidence/
+            .dsh/baseline.json
           if-no-files-found: warn
 
       # The tree goes back to what was checked out, before anything downstream
