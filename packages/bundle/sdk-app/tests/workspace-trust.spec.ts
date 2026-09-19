@@ -66,20 +66,34 @@ interface RecordedRun {
   readonly diagnostic: string
 }
 
+/**
+ * How this run is meant to obtain trust, if at all.
+ *
+ * `'launch-flag'` is the host user's unattended entry point — `dsh --profile
+ * sdk --trust-workspace=read` — and it is a different mechanism from the
+ * overlay, not a second spelling of it: the overlay is a deployment's standing
+ * configuration, read at mount, while the flag writes a record during startup
+ * and has to be durable before the first turn reads it.
+ */
+type TrustMode = 'none' | 'overlay' | 'launch-flag'
+
 /** Run the driver once in an isolated cwd holding a project `AGENTS.md`, and return what it recorded. */
-async function systemPromptFor(grant: boolean): Promise<RecordedRun> {
+async function systemPromptFor(mode: TrustMode): Promise<RecordedRun> {
   let system = ''
   let messages: RecordedMessage[] = []
   let recorded = 'request.json was never read'
   let listing = '(cwd not inspected)'
   const result = await runLoaderSmoke({
-    label: `sdk-app workspace trust smoke (${grant ? 'granted' : 'ungranted'})`,
+    label: `sdk-app workspace trust smoke (${mode})`,
     tempDirPrefix: 'sdk-app-trust-smoke-',
     binScript: driver,
     libBinScript: driver,
     configPath,
     tsconfigPath: repoTsconfig,
-    env: grant ? { DSH_TRUST_FIXTURE_GRANT: '1' } : {},
+    env: {
+      ...mode === 'overlay' ? { DSH_TRUST_FIXTURE_GRANT: '1' } : {},
+      ...mode === 'launch-flag' ? { DSH_TRUST_FIXTURE_LAUNCH_FLAG: '1' } : {},
+    },
     prepare: async (cwd) => {
       await writeFile(join(cwd, 'AGENTS.md'), `# Project\n\n${MARKER}\n`, 'utf8')
     },
@@ -111,7 +125,7 @@ async function systemPromptFor(grant: boolean): Promise<RecordedRun> {
     system,
     full: [system, ...messages.map(message => message.text)].join('\n'),
     diagnostic: [
-      `grant=${String(grant)}`,
+      `mode=${mode}`,
       recorded,
       `marker in system: ${String(system.includes(MARKER))}`,
       `marker in messages: ${carrying.length === 0
@@ -126,7 +140,7 @@ async function systemPromptFor(grant: boolean): Promise<RecordedRun> {
 
 describe('the sdk profile\'s project-trust boundary', () => {
   it('leaves an ungranted workspace\'s own AGENTS.md out of what the model is given', async () => {
-    const run = await systemPromptFor(false)
+    const run = await systemPromptFor('none')
     // The whole request, not the system slot: the project's own content
     // arrives as a user-role message, so searching less than this could call
     // a leak an absence.
@@ -139,7 +153,17 @@ describe('the sdk profile\'s project-trust boundary', () => {
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 
   it('reads the same AGENTS.md once the host grants that directory', async () => {
-    const run = await systemPromptFor(true)
+    const run = await systemPromptFor('overlay')
+    expect(run.full, run.diagnostic).toContain(MARKER)
+  }, LOADER_SMOKE_TEST_TIMEOUT_MS)
+
+  it('reads it after `--trust-workspace=read` alone, with no overlay granting anything', async () => {
+    // The unattended entry point, end to end on the shipped profile: the flag
+    // is parsed from the launcher's argv, the record is written while the tree
+    // loads, and the first model request — the whole request, not the system
+    // slot — already carries the project's own file. The ungranted case above
+    // is this one's control: same driver, same directory, no flag.
+    const run = await systemPromptFor('launch-flag')
     expect(run.full, run.diagnostic).toContain(MARKER)
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 })

@@ -158,10 +158,12 @@ export function applyLaunchTrustRequest(ctx: Context): Promise<void> | void {
       + 'reached a provider could not be reported. Refusing rather than recording nothing.',
     )
   }
-  // `'pending'` until a write finishes: the callback STARTING is not the
-  // record existing, and the difference is exactly a failed write.
-  let outcome: 'pending' | 'written' | { readonly error: unknown } = 'pending'
+  // Four states, because three of them fail for different reasons and an
+  // operator reading one message should not have to guess which: nothing ever
+  // reached a provider, a write began and never settled, or a write failed.
+  let outcome: 'pending' | 'writing' | 'written' | { readonly error: unknown } = 'pending'
   const fiber = ctx.inject(['workspaceTrust'], async (scope: Context) => {
+    outcome = 'writing'
     try {
       await writeLaunchTrust(scope, request)
       outcome = 'written'
@@ -178,6 +180,15 @@ export function applyLaunchTrustRequest(ctx: Context): Promise<void> | void {
       throw new Error(
         `${FLAG} was given, but no workspaceTrust provider published before startup completed, `
         + 'so there is no record to write and nothing would enforce it.',
+      )
+    }
+    if (outcome === 'writing') {
+      // A provider published and the write began, so the composition is not
+      // the problem — the record simply is not durable yet, and a turn that
+      // read `stateFor` now would read the state from before the grant.
+      throw new Error(
+        `${FLAG} was given and a workspaceTrust provider published, but the record was still being `
+        + 'written when startup completed, so a first turn could read this workspace as untrusted.',
       )
     }
     throw new Error(

@@ -131,6 +131,31 @@ describe('P1-07 / BLOCKED-261: which launcher may carry the flag', () => {
     await ctx.fiber.dispose()
   })
 
+  it('says the write is still in flight, rather than blaming a provider that did publish', async () => {
+    // Three failures, three sentences. A provider that published and a write
+    // that never settled is not the same composition defect as no provider at
+    // all, and an operator reading one message should not have to guess which.
+    const { ctx, listeners } = launcher(['--trust-workspace=read'], true)
+    let release = (): void => {}
+    const held = new Promise<void>((resolve) => { release = resolve })
+    ctx.provide('workspaceTrust', {
+      grantTrust: () => held.then(() => ({ upgraded: true })),
+      revokeTrust: () => Promise.resolve({}),
+      stateFor: () => Promise.resolve('untrusted'),
+    } as never)
+    const pending = applyLaunchTrustRequest(ctx)
+    // The write has begun and has not settled: exactly the window the message
+    // is about.
+    await new Promise(resolve => setImmediate(resolve))
+    expect(() => { listeners[0]?.() }).toThrow(/still being written when startup completed/u)
+    release()
+    await pending
+    // Once it settles, readiness is silent — the state is an observation of
+    // the write, not a latch.
+    expect(() => { listeners[0]?.() }).not.toThrow()
+    await ctx.fiber.dispose()
+  })
+
   it('fails loudly when startup completes and no provider ever published', async () => {
     const { ctx, listeners } = launcher(['--trust-workspace=read'], true)
     void applyLaunchTrustRequest(ctx)

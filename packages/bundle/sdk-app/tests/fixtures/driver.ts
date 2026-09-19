@@ -16,6 +16,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { HOST_USER_IDENTITY_KEY, type HostUserIdentityFactory } from '@deepseek-ai/dsh-agent-loop'
 import { resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
+import { provideCmdline } from '@deepseek-ai/dsh-cmdline'
 import { runFixtureTurn } from '@deepseek-ai/dsh-loader-smoke'
 import { RunId } from '@deepseek-ai/dsh-principal'
 import { createFixtureRootAgent } from '../../../../test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts'
@@ -38,11 +39,38 @@ async function grantOverlay(): Promise<string> {
 }
 
 const granted = process.env.DSH_TRUST_FIXTURE_GRANT === '1'
+const byLaunchFlag = process.env.DSH_TRUST_FIXTURE_LAUNCH_FLAG === '1'
+
+/**
+ * The launcher facts `dsh` itself provides, so the flag reaches the plugin the
+ * way it does in a real run.
+ *
+ * `ready` is committed after boot returns, which is what `apps/cli` does at
+ * the end of `profile-boot`: the launch grant registers a listener on it and
+ * fails there if nothing was written, so a fixture that omitted the signal
+ * would be testing a launcher shape no profile ships.
+ */
+const readyListeners: (() => void)[] = []
 const ctx = await bootProductionProfile({
   binName: 'sdk-app-workspace-trust-smoke',
   profile: 'sdk',
   overlayPaths: [resolveConfigPath(overlay, undefined), ...granted ? [await grantOverlay()] : []],
+  prepare: (hostCtx) => {
+    provideCmdline(hostCtx, {
+      args: byLaunchFlag ? ['--trust-workspace=read'] : [],
+      exit: () => {},
+      ready: {
+        onReady(listener) {
+          readyListeners.push(listener)
+          return () => { readyListeners.splice(readyListeners.indexOf(listener), 1) }
+        },
+      },
+    })
+  },
 })
+// The launcher's own commit: a grant that never reached a provider throws
+// HERE, before any turn runs, which is the report this fixture must not skip.
+for (const listener of [...readyListeners]) listener()
 try {
   await createFixtureRootAgent(ctx, {
     provider: 'sdk-trust-mock',
