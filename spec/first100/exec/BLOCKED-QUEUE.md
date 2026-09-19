@@ -7591,3 +7591,51 @@ None appears in `docs/config-catalog.md` except as a bare name under "Library pa
 **Closing condition.** For `acceptance[1]`, a fixture enumerating `redactArgumentsForDisplay`'s rule set against a table of sensitive and non-sensitive field names, proving each classification — not that redaction, once decided, survives to the digest. For `acceptance[2]`, a real audit query taking an `actionId` and returning the matching approval record, exercised against a live log.
 
 **What this does NOT claim.** Not that P2-06 must be withdrawn: both gaps are additive — a policy-correctness test and a query tool — and neither says the digest binding or the durable reference is broken.
+
+### BLOCKED-281 — P4-11's two residues: acceptance[0] never sees the PERMANENT direction, acceptance[1] never sees a SECOND spender
+
+**Status:** OPEN (2026-09-19). Owner lane B, scheduled after P2-12.
+
+**The coverage note was stale, and the timeline says exactly how.** The `U is NOT_RUN` sentence in P4-11's acceptance[0] and acceptance[1] notes was written in `b8430d5198` (2026-09-11T22:14:17Z). The `U.1` supplement was frozen `2026-09-13T01:27:47Z`; the primary U cell and `U.1` were both captured green at `2026-09-13T02:23:51Z` (run `34731419985`, candidate `71580010ded3860d869dbbc559e277ee14c7474b`); the epic was accepted `2026-09-13T03:12:28Z`. **Note written → U-stage evidence landed → epic accepted**, and the citation list was never revisited in between. The notes are corrected in the same commit that records this entry.
+
+**Correcting them closes neither clause, and the residues are narrower than "no production mount".** `U.1`'s driver boots the real shipped `headless` profile and charges a real retry to the run — that IS a production composition. What it does not do is two different things.
+
+**acceptance[0]'s residue is a missing DIRECTION.** `U.1` observes a RETRYABLE failure (a 503) being retried and charged. The clause asks equally about the other direction: a PERMANENT failure — a 4xx the classifier calls permanent, a policy denial, invalid input — reaching the classifier on a real shipped mount and producing ZERO retries and ZERO budget charge. Nothing observes that. **Injecting the failure at the adapter boundary is an honest ceiling, not the gap**: a real external provider outage is not required, and this entry does not ask for one. The fixture simply has to inject the permanent case too.
+
+**acceptance[1]'s residue is a missing SECOND SPENDER, counted.** The clause's subject is several plugins sharing one run total. The fixture drives exactly **one** independent spender against it — `llm-retry`'s own retry path, charged once through `runFor`. No second layer spends against the same run: no second plugin, no tool-level retry, no delegated child's own charge. `U.1` shows the mechanism charges correctly for one spender; it does not show that MULTIPLE spenders share one total without exceeding it.
+
+**Closing conditions.** (a) The coverage notes describe `U.1`'s real, narrower scope — one spender, a retryable failure, run 34731419985 — rather than claiming the U stage never ran. (b) acceptance[0] gains a fixture on the same shipped mount whose injected failure is PERMANENT, observing zero retries and zero charge; **if that fixture's permanent case is a policy denial, it must pin the Trust Kernel**, because a composition with no kernel admits without deciding ([BLOCKED-266](#blocked-266)). (c) acceptance[1] gains a fixture with at least two independent spenders against one run total.
+
+**What this does NOT claim.** Not that P4-11 must be withdrawn: the mechanism is real and reached on a shipped profile. Not that an injected failure is inadequate evidence — the delegate ruled the adapter boundary an honest limit. These are two named directions the existing evidence does not cover.
+
+### BLOCKED-283 — a subagent settlement that dead-letters is silent: no reader, no alert, no event
+
+**Status:** OPEN (2026-09-19). Owner lane B.
+
+**The mechanism has a designed alert hook, and nothing production calls it.** `dispatchOnce` (`packages/run/message-bus/src/dispatcher.ts:85`) takes `onDeadLetter` (`:65`) and fires it at `:104`; its own doc says why it exists — *"an alert must reach someone who is not watching the return value"*. `dispatchOnce` has **zero production callers**: the only two other occurrences of the name are `packages/experimental/agent-team/src/mailbox.ts:226` and `:235`, a same-named private method on a non-shipping package.
+
+**The production writer of `dead-letter` reimplements the branch without the hook.** `drainSettlements` (`packages/subagent/subagent/src/settlement-outbox.ts:160`) persists `state: 'dead-letter'` and continues: no callback, no log line, no session event. Re-measured on `3975e4f3e7`, the whole set of `dead-letter` sites is those two writers, the state union (`packages/run/message-bus/src/outbox.ts:48`) and the transition table (`:51`). **Nothing reads a `dead-letter` row back out, for any purpose.**
+
+**What actually produces one here, corrected from the draft this entry comes from.** The draft said a settlement dead-letters when "the parent was never available across every attempt". `drainSettlements`' own contract says the opposite: *"A delivery the caller declines … is left `pending` rather than counted as an attempt"*, and the code matches — `if (!deliver(settlement)) continue` writes nothing. `decideDelivery` (`outbox.ts:169-175`) dead-letters for exactly two reasons, `deadline-expired` (`:172`) and `attempts-exhausted` (`:173`), and on this path `attempts` is only written on an ACCEPTED delivery, which moves the record to `sent` in the same write. The one site that returns a `sent` record to `pending` is `dispatcher.ts:120` — inside the function with no production callers. **So on the settlement path `attempts-exhausted` is not reachable, and the reason a settlement dies is its DEADLINE passing while nobody could receive it.** Same silence, different mechanism; an entry naming the wrong one sends its fixer to the wrong branch.
+
+**The consequence.** A delegated child's outcome is durably stored and reaches nobody: not the parent session, not the user, not an operator — no tool result, session event, log line or query surface.
+
+**Closing condition.** `drainSettlements`' dead-letter branch reports through a sink an operator or a later reconciler can reach — at minimum a session event on the PARENT, so a later read of that session distinguishes "permanently undeliverable" from "still pending" and from "delivered" — before P4-06's next acceptance closes.
+
+**What this does NOT claim.** **P4-06 was withdrawn on 2026-09-19**; this joins the evidence its RE-ACCEPTANCE must carry and is not a new reason for that withdrawal, which rests on its own separately recorded grounds. Nor that the outbox is broken: its transactional commit half is real, and this is one terminal state's total silence inside an otherwise working mechanism.
+
+### BLOCKED-284 — one sentence for two different situations: a `sent` entry whose holder died reads exactly like a confirmed one
+
+**Status:** OPEN (2026-09-19). Owner lane B. The mechanism is `@deepseek-ai/dsh-action-ledger`, P4-12's deliverable; the triggering scenario neighbours P4-05 and P4-06. Scheduled with the P4-05 / P4-06 re-acceptance batch.
+
+**The decision is correct, and it is observed.** `decideReservation` (`packages/action/action-ledger/src/index.ts:48`) refuses a `sent` entry as a `duplicate` (`:92`), and that is the right call: the request left the harness, so a retry must not send it again. It is not an untested corner either — `packages/action/action-ledger/tests/store.spec.ts:40` is `reports a SENT key as a duplicate after a restart, which is the crash this epic exists for`, frozen and live under `P4-12.P`. **This entry claims no missing branch and no change to that decision.**
+
+**An earlier draft of this entry claimed both, and the reason it got there is worth more than the claim was.** Three readers in a row — lane A, the delegate and this lane — searched for `state === 'sent'`, found zero occurrences outside the type's own comment, and concluded no case exercised it. The case exercises it through `markSent` and a restart; it never writes that string. **A census is only as true as its matcher, and a literal that names an implementation detail will miss every test written against behaviour.** Sixth instance of this shape recorded today.
+
+**What IS wrong is what the model is told.** `refusedReservationResult`'s duplicate text (`packages/core/tools/src/external-effect.ts:671-672`) interpolates the state into one sentence: *"This action was already sent under the same idempotency key; it was not performed again."* An entry that is `confirmed` — a receipt came back, the effect is known to have happened — and an entry that is `sent` by a process that then died — the outcome is unknown to everyone — produce the SAME sentence shape, differing only in one interpolated word that carries none of that difference. The `ambiguous` text does better: it says the entry awaits reconciliation.
+
+**And nothing can list them.** No surface, command or query reports the entries a dead holder left in `sent`. An operator who suspects an action may or may not have happened has nowhere to look — the same absence P2-12's reconciliation work has to solve, and it should share that outlet rather than grow a second one.
+
+**Closing condition.** (1) The model- and user-facing text distinguishes an outcome KNOWN to have happened from one that is unknown because the sender died; today's sentence reads as an unqualified success for both. (2) Those entries are listable for an operator, through the outlet the stop-to-reconciliation work opens rather than a second one.
+
+**What this does NOT claim.** Not that a `sent` entry should become `ambiguous` — that is a design question this entry does not answer and does not need to. Not that P4-12 must be withdrawn: its three registry `acceptance` clauses are literally satisfied — [0]'s zero-duplication holds because a `sent` key never re-sends, [1]'s subject is an entry already in `ambiguous`, and the validation clause's frozen case uses `markAmbiguous` as its setup, matching its literal text. This is about one sentence and one missing list, not about the ledger's decisions.
