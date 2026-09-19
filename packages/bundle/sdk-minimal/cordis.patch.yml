@@ -1,6 +1,25 @@
 # Standalone minimal SDK application. Unlike the ordinary SDK profile, this
 # bundle does not layer over dsh-base: this insert is the complete Cordis tree.
 # User profile, home, and invocation patches still apply above it.
+#
+# No workspace-trust boundary. `@deepseek-ai/dsh-workspace-trust-local` is not
+# in this tree, so `ctx.get('workspaceTrust')` is undefined and the facts every
+# dispatched tool call hands the enforcement point carry the fail-closed value
+# `workspaceTrust: 'untrusted'` (`@deepseek-ai/dsh-tools`'s
+# `readPolicyContextFacts`, reached from the agent loop on every call). Nothing
+# here loads project content either: the two consumers that boundary gates,
+# `@deepseek-ai/dsh-agent-instructions` and `@deepseek-ai/dsh-skill-filesystem`,
+# are both absent, so this profile reads no project `AGENTS.md` and no project
+# skills.
+#
+# The shipped bundles that enable the boundary are `acp-app`, `web-app` and
+# `headless`; `base` ships the row `disabled: true` and `sdk-app` inherits it
+# disabled. Adding it here is four rows, not one: the provider injects
+# `storageDomain`, so its durable record needs the `storage` / `storage-json` /
+# `storage-domain` stack (`packages/bundle/base/cordis.patch.yml:174-189`)
+# beside the provider's own row. With no answerer mounted, an enabled provider
+# refuses every workspace unless the row also carries `grants`; that form is in
+# @deepseek-ai/dsh-workspace-trust-local's README.
 
 - insert:
     - id: sdk-app-startup
