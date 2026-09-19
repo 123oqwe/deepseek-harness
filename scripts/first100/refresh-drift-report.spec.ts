@@ -126,8 +126,11 @@ describe('refresh drift report', () => {
 
     const report = classifyDrift(text)
 
-    expect(report.semantic).toEqual([{ file: 'snapshots/a.jsonl', field: 'x' }])
-    expect(report.clock).toEqual([{ file: 'snapshots/b.jsonl', field: 'time' }])
+    // A line comparison names the leaf it found; the hunk-level entries above
+    // carry no `leaf` because no leaf was compared to produce them, which is
+    // why the field is optional rather than absent from one path by accident.
+    expect(report.semantic).toEqual([{ file: 'snapshots/a.jsonl', field: 'x', leaf: 'x' }])
+    expect(report.clock).toEqual([{ file: 'snapshots/b.jsonl', field: 'time', leaf: 'time' }])
   })
 
   it('fails a binary delta rather than reading it as an unchanged file', () => {
