@@ -129,7 +129,17 @@
       "properties": {
         "sessionId": { "$ref": "#/$defs/identifier" },
         "messageId": { "$ref": "#/$defs/identifier" },
-        "continuesGoalId": { "$ref": "#/$defs/identifier" }
+        "goalRound": {
+          "description": "The entered goal this message continues, present only when the message is a continuation round. Spelled as the three members `TaskGoalRef` carries, because that type spells them out on purpose: taking the goal source's object whole would land a later field in a plan, and therefore in its id, without anyone deciding it should.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["goalId", "revision", "round"],
+          "properties": {
+            "goalId": { "$ref": "#/$defs/identifier" },
+            "revision": { "type": "integer", "minimum": 0 },
+            "round": { "type": "integer", "minimum": 1 }
+          }
+        }
       }
     },
     "provenance": {
@@ -138,7 +148,10 @@
       "additionalProperties": false,
       "required": ["origin", "goalRef", "confidence", "rationale"],
       "properties": {
-        "origin": { "enum": ["stated", "derived", "default"] },
+        "origin": {
+          "description": "`InferenceOrigin`'s three values, spelled as that type spells them: `user-stated` means the goal said it, `derived` means a compile concluded it, `default` means nothing decided it. `stated` would let a conclusion present itself as the user's own words.",
+          "enum": ["user-stated", "derived", "default"]
+        },
         "goalRef": { "$ref": "#/$defs/goalRef" },
         "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
         "rationale": { "type": "string" }
