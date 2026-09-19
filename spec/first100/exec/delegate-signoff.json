@@ -530,6 +530,14 @@
       "delegateSession": "first100-delegate-78",
       "signedAtUtc": "2026-09-15T10:45:22.219Z",
       "reason": "Delegate re-read 2026-09-15 after the records change: C/P/U/F GREEN (runs 34088363628, 34573807027 x2, 33897371649), U.1 GREEN on run 34928038271 @ D; acceptance[0..2] cited; 0 open findings; verify-make-vs-use now reads P6-01 VERIFIED — the two by-assignment standards (Mem0 OSS API op names; dsh-memory-protocol v1) are recorded as measured deviations per §12.85 note 47 (the implementation's own propose/query/get/revise/forget/export vocabulary is pinned by live frozen cases: 40 distinct of its 109 live cases name at least one of the six ops by word-boundary match, as recorded in clause-subject-audit.json; neither standard exists in the tree), not pinned by a vocabulary case; verify-adapt-dispositions, verify-frozen-titles-resolvable and verify-freeze-in-candidate-tree green on this tree; the prior PASS of 07:15Z was withdrawn because it was recorded without running verify-make-vs-use."
+    },
+    {
+      "epic": "P4-05",
+      "rowDigestSha256": "f2b1cb6abad5e8b386938a77b1f68c99a32edded205c19321b85494fe70b5317",
+      "conclusion": "WITHDRAWN",
+      "delegateSession": "first100-delegate-1c",
+      "signedAtUtc": "2026-09-19T06:18:34.969Z",
+      "reason": "The ACCEPTANCE LOCKS register still carries a live lock on P4-05 (BLOCKED-QUEUE.md:3304-3315, added 2026-09-05), and the clause it names is acceptance[2] — 'after a restart an orphaned Agent can be reclaimed or fail safely'. The observation that would lift it has no subject on the shipped product: RunService.reclaim has zero production callers (three test call sites, all in packages/run/run/tests/fenced-dispatch.spec.ts), nothing schedules a sweep, and no production path produces the 'orphaned' state. The 2026-09-08 sign-off (guanjieqiao-92, PASS) carries no lock-check sentence, and the arrival evidence it cites is a method no production caller reaches, which §4.4 forbids. The C, U and F observations are not disputed and are not touched; what is withdrawn is the conclusion that the epic is accepted."
     }
   ]
 }

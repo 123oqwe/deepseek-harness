@@ -7204,3 +7204,24 @@ A provider swap at the `execution-world` registry today changes which provider's
 - Nothing here says the run's other 26686 passing cases are invalid. It says the mechanism that would normally absorb a known-flaky failure has no way to name this one.
 
 **Disposition (delegate).** On recurrence: re-dispatch the same SHA and accumulate occurrences in this entry. At two occurrences, rule on whether the schema should be extended to hold a run-level unhandled error. Raising it upstream is an outward-facing action and belongs to the user.
+
+### BLOCKED-264 — P4-05 was accepted while its acceptance lock was live, and the clause the lock names still has no subject
+
+**Status:** OPEN (2026-09-19). The sign-off is withdrawn in the same commit that records this entry (`generate-ledger.mjs --record-signoff --epic P4-05 --conclusion WITHDRAWN`, delegate `first100-delegate-1c`): the row moved `ACCEPTED -> BLOCKED_ON_ACCEPTANCE`, `independentVerdict` to `PENDING`, and the accepted-epic count from 33 to 32. Nothing was reverted — the withdrawal is a forward write, and the C, U and F observations are untouched and undisputed.
+
+**The lock was live the whole time.** `BLOCKED-QUEUE.md`'s machine-readable block (`:3304-3315`, added 2026-09-05 under [BLOCKED-081](#blocked-081)) states its own invariant — an epic appears there if and only if its lock is unlifted — and it lists `P4-05` today. The clause it names is `acceptance[2]`, *"after a restart an orphaned Agent can be reclaimed or fail safely"*. The sign-off entry of 2026-09-08 (`guanjieqiao-92`, PASS) contains no lock-check sentence.
+
+**The clause's subject does not exist on the shipped product.** Two measurements at tip `73294b85ba`:
+
+- `RunService.reclaim` has no production caller. `git grep -n "\.reclaim("` over tracked TypeScript outside `lib/` matches three times, all in `packages/run/run/tests/fenced-dispatch.spec.ts` (`:598`, `:624`, `:661`). Nothing schedules a sweep, and no other module calls it.
+- `'orphaned'` is never produced. The only production write of it is `packages/run/run/src/index.ts:952` (`to: 'orphaned'`), inside that same uncalled `reclaim`. Every other occurrence is the state machine's own declaration of the state and its legal transitions (`packages/core/agent/src/state-machine.ts:44`, `:79`, `:90-96`).
+
+So the second step of the lock's own lifting condition — observe a lease expire and a scheduler reclaim the run — has nothing to observe it on. That is a gap in the product's reach, not in the state machine: P4-05's vocabulary and transition rules are what the C/U/F cells pinned, and they still pass.
+
+**A third defect in the same sign-off.** The arrival evidence it cites is a method no production caller reaches, which §4.4's "service before method name" rule exists to refuse.
+
+**What this entry does not claim.**
+- Not that the C, U or F observations were wrong, and not that they should be re-run. Only the acceptance conclusion is withdrawn.
+- Not that `P4-06` and `P6-01` are in the same state. Both are `ACCEPTED` today while both appear in the live accept-blocked block — the same SHAPE — but whether each lock was properly lifted is **unmeasured here and not judged**. `P5-10` is already `BLOCKED_ON_ACCEPTANCE`, so it is consistent.
+- Not that the register has an enforcer. It still has none; [BLOCKED-081](#blocked-081) recorded that in 2026-09-05 and this entry is what happens when nobody greps. A `verify-acceptance-locks` gate is queued, not written.
+- Not a route back. How P4-05 becomes signable again — give `reclaim` a real production trigger, or decide that `open`/`adoptable` is what carries "takeover after a restart" and observe THAT — is the delegate's ruling to make and is not decided here.
