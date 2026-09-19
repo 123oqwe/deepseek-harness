@@ -741,6 +741,114 @@ function recordFlakeOccurrences(absorbedFlakes, ciRunUrl, candidateSha, cell) {
  * @param atUtc - the timestamp to stamp.
  * @returns the `reattested` record, or undefined when there is nothing to record.
  */
+/**
+ * The GitHub repository every First-100 CI run belongs to.
+ *
+ * A module constant and not a config field: this is not a deployment-varying
+ * choice, it is a fact about where this program's runs happened, which the
+ * ledger already asserts once per recorded observation. A field would invite
+ * pointing the check somewhere else and make it vacuous.
+ */
+export const PROGRAM_CI_REPO = '123oqwe/deepseek-harness'
+
+/**
+ * Read a GitHub Actions run URL, or refuse it.
+ *
+ * Anchored at both ends: a URL carrying anything after the run id — a `/job/`
+ * suffix, a query, a fragment — is a different page, and a correction that
+ * accepted one would silently retarget the evidence pointer.
+ * @param url - the candidate URL.
+ * @returns its owner, repo and run id, or `undefined` when it is not a run URL.
+ */
+export function parseCiRunUrl(url) {
+  const match = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/actions\/runs\/(\d+)$/u.exec(String(url ?? ''))
+  return match === null ? undefined : { owner: match[1], repo: match[2], runId: match[3] }
+}
+
+/**
+ * Whether one recorded `ciRunUrl` may be replaced by another.
+ *
+ * A correction is about a STRING that was typed wrong; it is not a
+ * re-attestation. So the run itself must not move: the observation behind the
+ * cell is the same observation, and a correction that changed the run id would
+ * be recording an event that did not happen (which is exactly what re-greening
+ * with `--reattest-reason` would record, and why this command exists instead).
+ * @param from - the URL the cell carries today.
+ * @param to - the URL it should carry.
+ * @returns `{ ok: true }`, or the reason it is refused.
+ */
+export function checkCiRunUrlCorrection(from, to) {
+  const before = parseCiRunUrl(from)
+  const after = parseCiRunUrl(to)
+  if (before === undefined) {
+    return { ok: false, reason: `the recorded url is not a run url, so there is nothing to correct in place: ${JSON.stringify(from ?? null)}` }
+  }
+  if (after === undefined) {
+    return { ok: false, reason: `--to must read https://github.com/<owner>/<repo>/actions/runs/<digits>, got ${JSON.stringify(to ?? null)}` }
+  }
+  if (before.runId !== after.runId) {
+    return { ok: false, reason: `a correction may not change the run: the cell was observed at run ${before.runId}, --to names ${after.runId}` }
+  }
+  if (`${after.owner}/${after.repo}` !== PROGRAM_CI_REPO) {
+    return { ok: false, reason: `--to names ${after.owner}/${after.repo}; this program's runs live in ${PROGRAM_CI_REPO}` }
+  }
+  if (from === to) return { ok: false, reason: 'the cell already carries --to; there is nothing to correct' }
+  return { ok: true }
+}
+
+/**
+ * The cell a correction names, base or supplement.
+ * @param row - the epic's ledger row.
+ * @param stage - `C`, `P`, `U` or `F`.
+ * @param supplementSeq - the supplement's sequence number, or `undefined` for the base cell.
+ * @returns the cell object, or `undefined` when the row has no such cell.
+ */
+export function cellForCorrection(row, stage, supplementSeq) {
+  if (supplementSeq === undefined) return row?.cells?.[stage]
+  return row?.supplements?.[stage]?.[supplementSeq]
+}
+
+/**
+ * Rewrite one cell's `ciRunUrl`, and the accepted-evidence copy that shadows it.
+ *
+ * **The copy is why this is one function and not one assignment.** `--accept`
+ * writes `acceptedEvidence.cells[stage].ciRunUrl` as a COPY of the cell's, with
+ * no back-pointer, so a correction that touched only the cell would leave two
+ * sources of truth disagreeing — which is how eight wrong URLs became four
+ * wrong cells plus four wrong copies. A copy whose value is not the one being
+ * corrected is refused rather than guessed: it was accepted against a different
+ * run, and that is a different question.
+ * @param row - the epic's ledger row, mutated in place.
+ * @param options - `stage`, `supplementSeq`, `to`, `reason` and `atUtc`.
+ * @returns the paths rewritten, or the reason nothing was.
+ */
+export function applyCiRunUrlCorrection(row, { stage, supplementSeq, to, reason, atUtc }) {
+  const cell = cellForCorrection(row, stage, supplementSeq)
+  if (cell === undefined) {
+    return { ok: false, reason: `no ${supplementSeq === undefined ? 'cell' : `supplement ${supplementSeq}`} at stage ${stage}` }
+  }
+  const verdict = checkCiRunUrlCorrection(cell.ciRunUrl, to)
+  if (!verdict.ok) return verdict
+  const from = cell.ciRunUrl
+  const copy = supplementSeq === undefined ? row.acceptedEvidence?.cells?.[stage] : undefined
+  if (copy !== undefined && copy.ciRunUrl !== from) {
+    return {
+      ok: false,
+      reason: `acceptedEvidence for stage ${stage} carries ${JSON.stringify(copy.ciRunUrl ?? null)}, not the ${JSON.stringify(from)} being corrected; it was accepted against a different run`,
+    }
+  }
+  const rewritten = [supplementSeq === undefined ? `cells.${stage}` : `supplements.${stage}.${supplementSeq}`]
+  cell.ciRunUrl = to
+  // Appended, never replaced: a second correction that overwrote the first
+  // would erase the only record that the first one happened.
+  cell.ciRunUrlCorrections = [...cell.ciRunUrlCorrections ?? [], { from, to, reason, correctedAtUtc: atUtc }]
+  if (copy !== undefined) {
+    copy.ciRunUrl = to
+    rewritten.push(`acceptedEvidence.cells.${stage}`)
+  }
+  return { ok: true, rewritten, from }
+}
+
 export function reattestationOf(priorCell, ciRunUrl, reason, atUtc) {
   if (reason === undefined || priorCell?.ciRunUrl === undefined || priorCell.ciRunUrl === ciRunUrl) return undefined
   return { fromCiRunUrl: priorCell.ciRunUrl, fromCandidateSha: priorCell.candidateSha, reason, atUtc }
@@ -830,6 +938,17 @@ function cmdGreen() {
   const candidateSha = opt('candidate-sha')
   if (!epic || !stage || !reportPath || !ciRunUrl || !candidateSha) {
     console.error('usage: generate-ledger.mjs --epic <id> --stage <C|P|U|F> --report <path> --ci-run-url <url> --candidate-sha <sha>')
+    process.exit(1)
+  }
+  // Shape AND repository, because presence was the only thing checked here and
+  // eight rows recorded a run under the wrong owner as a result. Refused at the
+  // moment of writing rather than corrected later: `--correct-ci-run-url`
+  // exists for the eight that already landed, and a second typo should not need
+  // it. `--check` deliberately does NOT re-validate the recorded rows, so the
+  // rows awaiting correction do not redden a gate before they are corrected.
+  const runUrl = parseCiRunUrl(ciRunUrl)
+  if (runUrl === undefined || `${runUrl.owner}/${runUrl.repo}` !== PROGRAM_CI_REPO) {
+    console.error(`BLOCKED: --ci-run-url must read https://github.com/${PROGRAM_CI_REPO}/actions/runs/<digits>, got ${JSON.stringify(ciRunUrl)}`)
     process.exit(1)
   }
   if (!STAGES.includes(stage)) {
@@ -1017,6 +1136,17 @@ function cmdGreenSupplement() {
     console.error(
       'usage: generate-ledger.mjs --supplement --epic <id> --stage <C|P|U|F> --supplement-seq <n> --report <path> --ci-run-url <url> --candidate-sha <sha>',
     )
+    process.exit(1)
+  }
+  // Shape AND repository, because presence was the only thing checked here and
+  // eight rows recorded a run under the wrong owner as a result. Refused at the
+  // moment of writing rather than corrected later: `--correct-ci-run-url`
+  // exists for the eight that already landed, and a second typo should not need
+  // it. `--check` deliberately does NOT re-validate the recorded rows, so the
+  // rows awaiting correction do not redden a gate before they are corrected.
+  const runUrl = parseCiRunUrl(ciRunUrl)
+  if (runUrl === undefined || `${runUrl.owner}/${runUrl.repo}` !== PROGRAM_CI_REPO) {
+    console.error(`BLOCKED: --ci-run-url must read https://github.com/${PROGRAM_CI_REPO}/actions/runs/<digits>, got ${JSON.stringify(ciRunUrl)}`)
     process.exit(1)
   }
   if (!STAGES.includes(stage)) {
@@ -1365,6 +1495,50 @@ function cmdReopenFinding() {
   const written = writeLedgerHeader(ledger.rows, { epic, reopenedFinding: entry.finding, reason })
   renderMarkdown(written)
   console.log(`reopened 1 finding on ${epic}: ${entry.finding}`)
+}
+
+/**
+ * Correct a recorded `ciRunUrl` that names the wrong repository.
+ *
+ * **A narrow command because the alternatives both lie.** Re-greening the cell
+ * with the right URL and `--reattest-reason` records a `reattested` block,
+ * whose meaning is "a new observation replaced the old one" -- and no new
+ * observation happened; the string was typed wrong. Re-greening WITHOUT a
+ * reason overwrites silently, bypassing the very record that mechanism exists
+ * to leave. So this writes the string, leaves an append-only note that it was
+ * corrected, and touches nothing about the observation.
+ *
+ * Eight rows needed it, all naming run 34652643903 under `deepseek-ai/`
+ * instead of this program's fork. Nothing caught them: `ciRunUrl` is never
+ * derived, only read from `--ci-run-url`, which checked presence and not shape
+ * or repository, and the one gate that reads a recorded URL back
+ * (`cmdAdmitRedRun`) matches on the run id as a SUBSTRING, so a wrong host
+ * never tripped it.
+ */
+function cmdCorrectCiRunUrl() {
+  const epic = opt('epic')
+  const stage = opt('stage')
+  const to = opt('to')
+  const reason = opt('reason')
+  const seqText = opt('supplement-seq')
+  if (!epic || !stage || !to || !reason) {
+    console.error('usage: generate-ledger.mjs --correct-ci-run-url --epic <id> --stage <C|P|U|F> [--supplement-seq <n>] --to <url> --reason <what was wrong>')
+    process.exit(1)
+  }
+  const ledger = loadJson(LEDGER_PATH)
+  const row = ledger.rows[epic]
+  if (!row) {
+    console.error(`BLOCKED: no ledger row for ${epic}`)
+    process.exit(1)
+  }
+  const result = applyCiRunUrlCorrection(row, { stage, supplementSeq: seqText, to, reason, atUtc: nowIso() })
+  if (!result.ok) {
+    console.error(`BLOCKED: ${epic}.${stage}${seqText === undefined ? '' : `.${seqText}`}: ${result.reason}`)
+    process.exit(1)
+  }
+  const written = writeLedgerHeader(ledger.rows, { epic, stage, supplementSeq: seqText ?? null, from: result.from, to, reason })
+  renderMarkdown(written)
+  console.log(`corrected ciRunUrl on ${epic}.${stage}: ${result.from} -> ${to} (${result.rewritten.join(', ')})`)
 }
 
 function cmdCloseFinding() {
@@ -1864,12 +2038,13 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   else if (flag('reopen-finding')) cmdReopenFinding()
   else if (flag('admit-red-run')) cmdAdmitRedRun()
   else if (flag('revoke-cell')) cmdRevokeCell()
+  else if (flag('correct-ci-run-url')) cmdCorrectCiRunUrl()
   else if (flag('record-signoff')) cmdRecordSignoff()
   else if (flag('supplement')) cmdGreenSupplement()
   else if (opt('epic')) cmdGreen()
   else {
     console.error(
-      'usage: generate-ledger.mjs --init | --check | --render | --accept --epic <id> | --epic <id> --stage <C|P|U|F> --report <path> --ci-run-url <url> --candidate-sha <sha> | --supplement --epic <id> --stage <C|P|U|F> --supplement-seq <n> --report <path> --ci-run-url <url> --candidate-sha <sha> | --record-signoff --epic <id> --conclusion PASS [--user-confirmation-ref <ref>] [--note <text>]',
+      'usage: generate-ledger.mjs --init | --check | --render | --accept --epic <id> | --epic <id> --stage <C|P|U|F> --report <path> --ci-run-url <url> --candidate-sha <sha> | --supplement --epic <id> --stage <C|P|U|F> --supplement-seq <n> --report <path> --ci-run-url <url> --candidate-sha <sha> | --record-signoff --epic <id> --conclusion PASS [--user-confirmation-ref <ref>] [--note <text>] | --correct-ci-run-url --epic <id> --stage <C|P|U|F> [--supplement-seq <n>] --to <url> --reason <text>',
     )
     process.exit(1)
   }

@@ -112,6 +112,39 @@ export function reattestationOf(
   atUtc: string,
 ): Reattestation | undefined
 
+/** The repository every First-100 CI run belongs to; a wrong owner is the defect `--correct-ci-run-url` exists for. */
+export const PROGRAM_CI_REPO: string
+
+/** One GitHub Actions run URL, taken apart. */
+export interface ParsedCiRunUrl {
+  owner: string
+  repo: string
+  runId: string
+}
+
+export function parseCiRunUrl(url: unknown): ParsedCiRunUrl | undefined
+
+/** Whether one recorded `ciRunUrl` may be replaced by another, and why not when it may not. */
+export type CiRunUrlCorrectionVerdict = { ok: true } | { ok: false, reason: string }
+
+export function checkCiRunUrlCorrection(from: unknown, to: unknown): CiRunUrlCorrectionVerdict
+
+export function cellForCorrection(
+  row: unknown,
+  stage: string,
+  supplementSeq: string | undefined,
+): { ciRunUrl?: string } | undefined
+
+/** What a correction rewrote, or why it rewrote nothing. */
+export type CiRunUrlCorrectionResult =
+  | { ok: true, rewritten: string[], from: string }
+  | { ok: false, reason: string }
+
+export function applyCiRunUrlCorrection(
+  row: unknown,
+  options: { stage: string, supplementSeq: string | undefined, to: string, reason: string, atUtc: string },
+): CiRunUrlCorrectionResult
+
 export function checkDelegateSignoff(
   epicId: string,
   row: unknown,

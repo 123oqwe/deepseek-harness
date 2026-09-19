@@ -29,7 +29,9 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import {
   acceptPreflightFindings,
+  applyCiRunUrlCorrection,
   checkCandidateChainConsistency,
+  checkCiRunUrlCorrection,
   checkCoverageClosure,
   checkDelegateSignoff,
   checkFailureSetAgainstFlakeRegistry,
@@ -37,6 +39,8 @@ import {
   findAmbiguousCaseMatches,
   findDuplicateFrozenCases,
   p9ItemsSettled,
+  parseCiRunUrl,
+  PROGRAM_CI_REPO,
   reattestationOf,
   reportDirMatchesCandidate,
   redStepComplaints,
@@ -967,5 +971,120 @@ describe('EXEC-STATE digest drift: a hand edit to command-freeze.json fails --ch
       { field: 'ledgerDigest', recorded: undefined, actual: digest(bytes.ledger) },
       { field: 'registryDigest', recorded: undefined, actual: digest(bytes.registry) },
     ])
+  })
+})
+
+describe('--correct-ci-run-url: a recorded run URL is a string that can be typed wrong', () => {
+  const RUN = '34652643903'
+  const right = `https://github.com/${PROGRAM_CI_REPO}/actions/runs/${RUN}`
+  const wrong = `https://github.com/deepseek-ai/deepseek-harness/actions/runs/${RUN}`
+
+  /** One cell as this command reads and rewrites it. */
+  interface CorrectableCell {
+    status: string
+    ciRunUrl?: string
+    candidateSha?: string
+    outcome?: string
+    reattested?: unknown
+    ciRunUrlCorrections?: { from: string; to: string; reason: string; correctedAtUtc: string }[]
+  }
+
+  /** One ledger row, with the accepted-evidence copy that shadows a base cell. */
+  interface CorrectableRow {
+    cells: Record<string, CorrectableCell>
+    supplements: Record<string, Record<string, CorrectableCell>>
+    acceptedEvidence?: { cells: Record<string, { ciRunUrl?: string; candidateSha?: string }> }
+  }
+
+  /**
+   * A ledger row carrying one base cell and one supplement, both at `wrong`.
+   * @param accepted - whether the row also carries the accepted-evidence copy.
+   * @returns the row, fresh per case so no case sees another's mutation.
+   */
+  function row(accepted: boolean): CorrectableRow {
+    return {
+      cells: { U: { status: 'GREEN', ciRunUrl: wrong, candidateSha: 'abc', outcome: 'passed' } },
+      supplements: { U: { 1: { status: 'GREEN', ciRunUrl: wrong, candidateSha: 'abc' } } },
+      ...accepted ? { acceptedEvidence: { cells: { U: { ciRunUrl: wrong, candidateSha: 'abc' } } } } : {},
+    }
+  }
+
+  it('REFUSES a correction that moves the run, because that is a different observation', () => {
+    const verdict = checkCiRunUrlCorrection(wrong, `https://github.com/${PROGRAM_CI_REPO}/actions/runs/99999999999`)
+    expect(verdict.ok).toBe(false)
+    // The message names both ids: an operator who mistyped one digit needs to
+    // see which run the cell actually holds, not only that it was refused.
+    expect(verdict.reason).toContain(RUN)
+    expect(verdict.reason).toContain('99999999999')
+  })
+
+  it('REFUSES a target outside this program\'s repository, which is the defect that produced it', () => {
+    const verdict = checkCiRunUrlCorrection(right, wrong)
+    expect(verdict.ok).toBe(false)
+    expect(verdict.reason).toContain('deepseek-ai/deepseek-harness')
+  })
+
+  it('REFUSES a target carrying anything after the run id, which is a different page', () => {
+    expect(parseCiRunUrl(`${right}/job/12345`)).toBeUndefined()
+    expect(parseCiRunUrl(`${right}?check_suite_focus=true`)).toBeUndefined()
+    expect(checkCiRunUrlCorrection(wrong, `${right}/job/12345`).ok).toBe(false)
+  })
+
+  it('REFUSES a cell that carries no url at all, rather than inventing provenance', () => {
+    const outcome = applyCiRunUrlCorrection({ cells: { U: { status: 'NOT_RUN' } } }, {
+      stage: 'U', supplementSeq: undefined, to: right, reason: 'r', atUtc: 'now',
+    })
+    expect(outcome.ok).toBe(false)
+    expect(outcome.reason).toContain('nothing to correct')
+  })
+
+  it('rewrites the cell AND the accepted-evidence copy in one act, because the copy has no back-pointer', () => {
+    const target = row(true)
+    const outcome = applyCiRunUrlCorrection(target, { stage: 'U', supplementSeq: undefined, to: right, reason: 'wrong owner', atUtc: 'now' })
+    expect(outcome.ok).toBe(true)
+    expect(target.cells.U?.ciRunUrl).toBe(right)
+    // The decisive assertion. Correcting only the cell is what left four wrong
+    // cells and four wrong copies disagreeing in the first place.
+    expect(target.acceptedEvidence?.cells.U?.ciRunUrl).toBe(right)
+    expect(outcome.rewritten).toEqual(['cells.U', 'acceptedEvidence.cells.U'])
+  })
+
+  it('REFUSES when the accepted-evidence copy names a different run, rather than guessing', () => {
+    const target = row(true)
+    target.acceptedEvidence!.cells.U!.ciRunUrl = `https://github.com/${PROGRAM_CI_REPO}/actions/runs/11111111111`
+    const outcome = applyCiRunUrlCorrection(target, { stage: 'U', supplementSeq: undefined, to: right, reason: 'r', atUtc: 'now' })
+    expect(outcome.ok).toBe(false)
+    expect(outcome.reason).toContain('accepted against a different run')
+    // And nothing moved: a refusal that had already written the cell would
+    // leave the two halves disagreeing in the other direction.
+    expect(target.cells.U?.ciRunUrl).toBe(wrong)
+  })
+
+  it('APPENDS each correction, so a second one cannot erase the record of the first', () => {
+    const target = row(false)
+    const once = applyCiRunUrlCorrection(target, { stage: 'U', supplementSeq: undefined, to: right, reason: 'wrong owner', atUtc: 't1' })
+    expect(once.ok).toBe(true)
+    const other = `https://github.com/${PROGRAM_CI_REPO}/actions/runs/${RUN}?`
+    expect(checkCiRunUrlCorrection(right, other).ok).toBe(false)
+    target.cells.U!.ciRunUrl = wrong
+    const twice = applyCiRunUrlCorrection(target, { stage: 'U', supplementSeq: undefined, to: right, reason: 'and again', atUtc: 't2' })
+    expect(twice.ok).toBe(true)
+    expect(target.cells.U?.ciRunUrlCorrections).toHaveLength(2)
+    expect(target.cells.U?.ciRunUrlCorrections?.map(entry => entry.reason)).toEqual(['wrong owner', 'and again'])
+  })
+
+  it('leaves the observation alone, because a correction is not a re-attestation', () => {
+    const target = row(false)
+    applyCiRunUrlCorrection(target, { stage: 'U', supplementSeq: '1', to: right, reason: 'wrong owner', atUtc: 'now' })
+    // The supplement moved and the base cell did not, so the command targets
+    // what it was told to target.
+    expect(target.supplements.U?.[1]?.ciRunUrl).toBe(right)
+    expect(target.cells.U?.ciRunUrl).toBe(wrong)
+    // And nothing about the observation itself changed. `reattested` is what a
+    // re-green writes; a correction must never produce one, because no second
+    // observation happened.
+    expect(target.supplements.U?.[1]?.candidateSha).toBe('abc')
+    expect(target.cells.U?.outcome).toBe('passed')
+    expect(target.supplements.U?.[1]?.reattested).toBeUndefined()
   })
 })
