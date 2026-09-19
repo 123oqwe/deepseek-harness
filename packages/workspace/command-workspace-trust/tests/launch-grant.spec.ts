@@ -97,6 +97,45 @@ describe('P1-07 / BLOCKED-261: which launcher may carry the flag', () => {
     await ctx.fiber.dispose()
   })
 
+  it('leaves NO unhandled rejection when the write fails, and still says so at readiness', async () => {
+    // BLOCKED-290. The rethrow inside the injected body rejects the fiber
+    // `inject` returns, and that fiber used to be discarded. Node terminates a
+    // process on an unhandled rejection by default, so the one case this code
+    // exists to report -- a failed trust write -- killed the harness instead of
+    // printing its message. Every `#17` since carried two `Unhandled Rejection`
+    // entries against zero failed tests, which is why a whole suite could be
+    // green and the step still red.
+    //
+    // Reverting the `void writing.then(undefined, () => {})` reddens this case:
+    // the listener below registers before the rejection settles, and the
+    // process-level event fires with nothing else attached.
+    const { ctx, listeners } = launcher(['--trust-workspace=read'], true)
+    const unhandled: unknown[] = []
+    const onUnhandled = (reason: unknown): void => { unhandled.push(reason) }
+    process.on('unhandledRejection', onUnhandled)
+    try {
+      const failure = new Error('disk is read-only')
+      ctx.provide('workspaceTrust', {
+        grantTrust: () => Promise.reject(failure),
+        revokeTrust: () => Promise.reject(failure),
+        stateFor: () => Promise.resolve('untrusted'),
+      } as never)
+      applyLaunchTrustRequest(ctx)
+      // Two turns of the macrotask queue: `unhandledRejection` fires after the
+      // microtask queue drains, so a single `setImmediate` can precede it.
+      await new Promise(resolve => setImmediate(resolve))
+      await new Promise(resolve => setImmediate(resolve))
+
+      expect(unhandled, 'the injected fiber must be held, or a real process dies here').toEqual([])
+      // And the failure is still REPORTED -- holding the rejection must not
+      // turn a loud failure into a silent one.
+      expect(() => { listeners[0]?.() }).toThrow(/writing the record failed/u)
+    } finally {
+      process.off('unhandledRejection', onUnhandled)
+      await ctx.fiber.dispose()
+    }
+  })
+
   it('fails loudly when the write itself failed, not only when nothing ran', async () => {
     // The flag this replaces was set when the callback STARTED, so a provider
     // that published and then threw looked identical to a successful grant.

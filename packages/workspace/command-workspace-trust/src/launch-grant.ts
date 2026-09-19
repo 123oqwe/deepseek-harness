@@ -159,18 +159,31 @@ export function applyLaunchTrustRequest(ctx: Context): void {
   // operator reading one message should not have to guess which: nothing ever
   // reached a provider, a write began and never settled, or a write failed.
   let outcome: 'pending' | 'writing' | 'written' | { readonly error: unknown } = 'pending'
-  ctx.inject(['workspaceTrust'], async (scope: Context) => {
+  const writing = ctx.inject(['workspaceTrust'], async (scope: Context) => {
     outcome = 'writing'
     try {
       await writeLaunchTrust(scope, request)
       outcome = 'written'
     } catch (error) {
       outcome = { error }
-      // Rethrown so the fiber fails too; the readiness check below is what
-      // makes it visible on a launcher whose boot does not audit this fiber.
+      // Rethrown so the fiber fails too, for a launcher whose boot audits it.
       throw error
     }
   })
+  // **The fiber is a thenable and this rethrow rejects it, so someone has to
+  // hold it.** `inject` returns `Fiber & PromiseLike<Fiber>`
+  // (`vendor/cordis/src/registry.ts:176`), and discarding it left the rejection
+  // unhandled: Node terminates the process on one by default, so a failed trust
+  // write — the case this code exists to report — killed the harness instead,
+  // and the message below never printed. Every `#17` since this path gained a
+  // failing input carried two `Unhandled Rejection` entries with zero failed
+  // tests (BLOCKED-290).
+  //
+  // The handler is empty ON PURPOSE and this is the one place that says so: the
+  // failure is already held in `outcome` and reported by the readiness check
+  // below, which is the reporter a launcher actually reads. A second report
+  // here would be the same fact twice; no report at all is what this replaces.
+  void writing.then(undefined, () => {})
   ctx.effect(() => ready.onReady(() => {
     if (outcome === 'written') return
     if (outcome === 'pending') {

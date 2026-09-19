@@ -7630,6 +7630,24 @@ The scan was exhaustive and found no seventh face. That is the scan's claim, rec
 
 **What this does NOT claim.** **P4-06 was withdrawn on 2026-09-19**; this joins the evidence its RE-ACCEPTANCE must carry and is not a new reason for that withdrawal, which rests on its own separately recorded grounds. Nor that the outbox is broken: its transactional commit half is real, and this is one terminal state's total silence inside an otherwise working mechanism.
 
+### BLOCKED-290 — a launch-grant write failure rejected a fiber nobody held, so it killed the process instead of reporting itself
+
+**Status:** FIXED by this commit, CLOSING on the next run's `#17` (2026-09-19). Owner lane B.
+
+**The defect.** `applyLaunchTrustRequest` registers the write with `ctx.inject(['workspaceTrust'], async …)` and rethrows on failure so the fiber fails too (`packages/workspace/command-workspace-trust/src/launch-grant.ts:162-173`). `inject` returns `Fiber & PromiseLike<Fiber>` — "awaiting it settles once loading finished" (`vendor/cordis/src/registry.ts:176`, `:300`) — and the call site discarded it. The rethrow therefore rejected a thenable with no handler attached.
+
+**In a real process that is a crash, not a blemish.** Node terminates on an unhandled rejection by default since v15. So the one case this code was written to report loudly — `--trust-workspace=read` given, and the provider's write fails — killed the harness before the carefully worded readiness diagnostic at `:174-192` could print. The comment "Rethrown so the fiber fails too" recorded the intent; the mechanism cordis offers for it is a rejected promise, and the intent was never completed.
+
+**It had been red in every run since the input existed, and three reports said the case passed.** Run 35449457652's `#17` carried two `Unhandled Rejection` entries against **zero** failed tests, and the same two are in run 35445405234's log. The suite reports assertion results; an unhandled rejection has no field there, so a fully green report and a failed step are consistent. **No all-green run was possible while this stood**, and the step's own comment already named this class (`first100-exact-sha.yml:311-318`, run 33943262728).
+
+**The second entry is downstream, not a second defect.** `test-invariants.ts:189` throws when a fiber settles without becoming ACTIVE; the failed fiber makes `requireActive` reject, and the `ready` promise it composes (`:147`) is only awaited on some paths.
+
+**The fix holds the fiber and changes nothing else.** `void writing.then(undefined, () => {})` at the call site. The empty handler is deliberate and the code says so: the failure is already in `outcome` and reported by the readiness check, which is the reporter a launcher reads; a second report there would state one fact twice, and no report at all is what this replaces. The rethrow stays, so a launcher that audits the fiber still sees it fail.
+
+**Whether the SECOND entry goes with it is not determined by reading, and this entry does not close until a run says so.** The fiber still fails — the rethrow is deliberately kept — so `requireActive` may still reject and `test-invariants.ts:189` may still produce an unhandled rejection of its own. If the next `#17` carries one entry instead of two, that is the fix working and this half needs its own repair in the test harness; if it carries none, both came from the discarded fiber. **A `#17` still carrying two means this fix missed and the entry stays open.**
+
+**What this does NOT claim.** Not that the readiness diagnostic was wrong — it is the right message and it was simply unreachable in a real process. Not that `ctx.inject`'s contract should change: returning a thenable is what lets a caller wait, and the call site's job is to decide whether it waits.
+
 ### BLOCKED-287 — coverage closure ran only at acceptance, so a citation edited afterwards was checked by nothing
 
 **Status:** CLOSED by `3293fb7c31` (2026-09-19). Owner lane B. Recorded because the two defects it found are the argument for the fix.
