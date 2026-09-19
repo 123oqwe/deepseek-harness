@@ -448,6 +448,7 @@
       "@deepseek-ai/dsh-run/state-machine": ["./packages/run/run/src/state-machine.ts"],
       "@deepseek-ai/dsh-run/types": ["./packages/run/run/src/types.ts"],
       "@deepseek-ai/dsh-run-plan": ["./packages/run/run-plan/src"],
+      "@deepseek-ai/dsh-run-plan/compile": ["./packages/run/run-plan/src/compile.ts"],
       "@deepseek-ai/dsh-run-plan/types": ["./packages/run/run-plan/src/types.ts"],
       "@deepseek-ai/dsh-sandbox": ["./packages/sandbox/sandbox/src"],
       "@deepseek-ai/dsh-sandbox-local": ["./packages/sandbox/sandbox-local/src"],

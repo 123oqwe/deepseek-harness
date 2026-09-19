@@ -12,6 +12,12 @@
       "path": "../../util/brand"
     },
     {
+      "path": "../../util/values"
+    },
+    {
+      "path": "../../action/action-manifest"
+    },
+    {
       "path": "../../core/agent"
     },
     {

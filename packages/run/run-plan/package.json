@@ -13,6 +13,10 @@
         "types": "./lib/types/types.d.ts",
         "default": "./lib/types/types.js"
       },
+      "./compile": {
+        "types": "./lib/types/compile.d.ts",
+        "default": "./lib/types/compile.js"
+      },
       "./package.json": "./package.json"
     }
   },
@@ -33,6 +37,10 @@
       "types": "./lib/types/types.d.ts",
       "default": "./lib/types/types.js"
     },
+    "./compile": {
+      "types": "./lib/types/compile.d.ts",
+      "default": "./lib/types/compile.js"
+    },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
@@ -44,20 +52,24 @@
   "license": "MIT",
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-action-manifest": "workspace:^",
     "@deepseek-ai/dsh-agent": "workspace:^",
     "@deepseek-ai/dsh-brand": "workspace:^",
     "@deepseek-ai/dsh-execution-world": "workspace:^",
     "@deepseek-ai/dsh-resource-budget": "workspace:^",
     "@deepseek-ai/dsh-run": "workspace:^",
-    "@deepseek-ai/dsh-task-profile": "workspace:^"
+    "@deepseek-ai/dsh-task-profile": "workspace:^",
+    "@deepseek-ai/dsh-util-values": "workspace:^"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-action-manifest": "workspace:^",
     "@deepseek-ai/dsh-agent": "workspace:^",
     "@deepseek-ai/dsh-brand": "workspace:^",
     "@deepseek-ai/dsh-execution-world": "workspace:^",
     "@deepseek-ai/dsh-resource-budget": "workspace:^",
     "@deepseek-ai/dsh-run": "workspace:^",
-    "@deepseek-ai/dsh-task-profile": "workspace:^"
+    "@deepseek-ai/dsh-task-profile": "workspace:^",
+    "@deepseek-ai/dsh-util-values": "workspace:^"
   }
 }

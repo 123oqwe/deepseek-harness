@@ -1092,12 +1092,14 @@ flowchart TD
   pkg_agent_presets --> pkg_system_prompt
   pkg_agent_presets --> pkg_tools
   pkg_agent_presets --> pkg_typert_protocol
+  pkg_run_plan --> pkg_action_manifest
   pkg_run_plan --> pkg_agent
   pkg_run_plan --> pkg_brand
   pkg_run_plan --> pkg_execution_world
   pkg_run_plan --> pkg_resource_budget
   pkg_run_plan --> pkg_run
   pkg_run_plan --> pkg_task_profile
+  pkg_run_plan --> pkg_util_values
   pkg_schedule --> pkg_agent
   pkg_schedule --> pkg_brand
   pkg_schedule --> pkg_invariants
@@ -1741,7 +1743,7 @@ flowchart TD
 | [`mcp-client`](../packages/mcp/mcp-client) | `mcp` | [`attachment`](../packages/attachment/attachment), [`llm`](../packages/llm/llm), [`risk-taxonomy`](../packages/policy/risk-taxonomy), [`scope`](../packages/core/scope), [`subprocess`](../packages/subprocess/subprocess), [`timeout`](../packages/util/timeout), [`tools`](../packages/core/tools) |
 | [`capability-token-file`](../packages/policy/capability-token-file) | `policy` | [`agent`](../packages/core/agent), [`atomic-write`](../packages/util/atomic-write), [`brand`](../packages/util/brand), [`capability-token`](../packages/policy/capability-token), [`session`](../packages/core/session), [`tools`](../packages/core/tools), [`trust-kernel`](../packages/kernel/trust-kernel) |
 | [`agent-presets`](../packages/preset/agent-presets) | `preset` | [`agent`](../packages/core/agent), [`atomic-write`](../packages/util/atomic-write), [`home-paths`](../packages/util/home-paths), [`invariants`](../packages/runtime-diagnostics/invariants), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection), [`settings`](../packages/settings/settings), [`system-prompt`](../packages/core/system-prompt), [`tools`](../packages/core/tools), [`typert-protocol`](../packages/typert/protocol) |
-| [`run-plan`](../packages/run/run-plan) | `run` | [`agent`](../packages/core/agent), [`brand`](../packages/util/brand), [`execution-world`](../packages/execution/execution-world), [`resource-budget`](../packages/execution/resource-budget), [`run`](../packages/run/run), [`task-profile`](../packages/run/task-profile) |
+| [`run-plan`](../packages/run/run-plan) | `run` | [`action-manifest`](../packages/action/action-manifest), [`agent`](../packages/core/agent), [`brand`](../packages/util/brand), [`execution-world`](../packages/execution/execution-world), [`resource-budget`](../packages/execution/resource-budget), [`run`](../packages/run/run), [`task-profile`](../packages/run/task-profile), [`util-values`](../packages/util/values) |
 | [`schedule`](../packages/schedule/schedule) | `schedule` | [`agent`](../packages/core/agent), [`brand`](../packages/util/brand), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence), [`session-projection`](../packages/session/session-projection), [`tools`](../packages/core/tools) |
 | [`session-checkpoint-policy`](../packages/session/session-checkpoint-policy) | `session` | [`agent`](../packages/core/agent), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence), [`tools`](../packages/core/tools) |
 | [`session-telemetry-otel`](../packages/session/session-telemetry-otel) | `session` | [`anonymous-user-id`](../packages/identity/anonymous-user-id), [`command-feedback`](../packages/feedback/command-feedback), [`llm`](../packages/llm/llm), [`message-feedback`](../packages/feedback/message-feedback), [`session`](../packages/core/session), [`session-telemetry`](../packages/session/session-telemetry) |
