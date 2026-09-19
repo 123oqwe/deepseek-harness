@@ -586,6 +586,15 @@
       "delegateSession": "first100-delegate-1c",
       "signedAtUtc": "2026-09-19T10:51:27.227Z",
       "reason": "The profile lock gate has no production caller. Measured at tip e6daa42360b6e5180769fad2491a7aa9ea7a78d7: `gateProfileAgainstLock` is defined at apps/cli/src/profile-boot.ts:768 and every other occurrence in tracked TypeScript is apps/cli/tests/plugin-lock.spec.ts (nine call sites, all in that one spec). No boot path calls it. Its companion setting has no declarer either: `unlockedProfilePolicy` across tracked .yml and .json matches only tests/first100/registry.json and spec/first100/exec/ledger.json -- zero bundles, zero profiles. So a profile whose lock does not match is refused by nothing a deployment runs, and the epic's gate exists as a function its own unit cases call. BLOCKED-247 recorded this and the ledger row stayed ACCEPTED regardless, which is the same failure the ACCEPTANCE LOCKS register exists to catch. The 2026-09-07 PASS checked what it checked; it did not check that the gate it was signing has a caller, and it recorded no such limit. C/P/U/F observations are untouched by this withdrawal."
+    },
+    {
+      "epic": "P2-01",
+      "rowDigestSha256": "2e233a0536bdbd3e2e90c0890cad11d3794e5532e778ad5c7467f11c2844753b",
+      "conclusion": "WITHDRAWN",
+      "delegateSession": "first100-delegate-1c",
+      "signedAtUtc": "2026-09-19T17:35:41.219Z",
+      "reason": "4.4a's four production call points were read as the product. They are not: hostUserIdentity( has six non-test callers and none is in packages/acp/acp/src or packages/sdk/server/src, so on the acp-app and sdk-app bundles no identity is attached and action-manifest/src/identity.ts:48-54 synthesizes actor=anonymous:<sessionId>, tenant=local, runId=anonymous-run:<sessionId> for every action. acceptance[0] says 任何 action and the three acceptance-coverage notes state no exception — ACP, SDK and webhook appear in none of them, and neither PASS note (entries[0], entries[50]) contains any arrival or surface wording at all. The 'a request that arrived over a socket is not the machine's host user' rationale in agent.ts:501-502, headless/src/index.ts:325-327 and agent-loop/src/index.ts:329-331 is false of these two: acp/src/index.ts:419-420 and sdk/server/src/index.ts:53,:55 are pure process.stdin/stdout, neither package opens a socket, and both are spawned locally by the invoking user. Same standard as BLOCKED-200, which withdrew this sign-off on 2026-09-11 for the same clause on the launcher families U2 then fixed. Registered as BLOCKED-291.",
+      "note": "Withdrawal is the delegate's ruling (first100-delegate-1c, 2026-09-19T16:51:11Z), recorded by lane B. The four cells stay GREEN: the identity library is not in question. Restore path is BLOCKED-291's unlock conditions (a)-(e); the fix itself is scheduled after the SDK host-control leg."
     }
   ]
 }

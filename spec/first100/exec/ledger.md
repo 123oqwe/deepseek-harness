@@ -26,7 +26,7 @@ This table lists main cells only: a supplement cell (`U.1`, `C.2`, ...) has no r
 | 18 | P1-10 | 插件数据迁移、升级事务与回滚 | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P1-03, P4-12 | W8 | GREEN | GREEN | GREEN | GREEN | e74593c50a0306801c9d294e4eb45f2be7a8ec15 | APPROVED | ACCEPTED |
 | 19 | P1-11 | 把动态 Cordis 自修改改成 Extension Proposal Pipeline | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P1-05, P1-06, P2-06, P3-01 | W10 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
 | 20 | P1-12 | 官方 Plugin Verifier 与市场信任等级 | L6_QUALIFICATION | UNASSIGNED_UNTIL_APPROVAL | P1-01, P1-02, P1-05, P1-06 | W10 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
-| 21 | P2-01 | 统一 Principal / Tenant / Run / Actor 身份上下文 | L1_CONTRACT | UNASSIGNED_UNTIL_APPROVAL | P0-02, P0-06 | W3 | GREEN | GREEN | GREEN | GREEN | 73c1c04f2ea03fbd09b0c0cb5d06ecf986aedbff | APPROVED | ACCEPTED |
+| 21 | P2-01 | 统一 Principal / Tenant / Run / Actor 身份上下文 | L1_CONTRACT | UNASSIGNED_UNTIL_APPROVAL | P0-02, P0-06 | W3 | GREEN | GREEN | GREEN | GREEN | 73c1c04f2ea03fbd09b0c0cb5d06ecf986aedbff | PENDING | BLOCKED_ON_ACCEPTANCE |
 | 22 | P2-02 | 可衰减 Capability Token 与子 Agent 委托 | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P2-01 | W4 | GREEN | GREEN | GREEN | GREEN | 2d2e8f89ac9cccff7d92f165b5436105986e6c11 | APPROVED | ACCEPTED |
 | 23 | P2-03 | 一等公民 ActionManifest | L1_CONTRACT | P2-03 | P0-06, P2-01 | W4 | GREEN | N/A | GREEN | GREEN | 434408a47ca7635fb1076baeb43efecb33bce980 | APPROVED | ACCEPTED |
 | 24 | P2-04 | 通用副作用与风险分类体系 | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P2-03 | W5 | GREEN | GREEN | GREEN | GREEN | 191aa1e502ff7e96a7ce306cdf57ccb742c745fb | APPROVED | ACCEPTED |
