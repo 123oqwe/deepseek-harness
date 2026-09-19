@@ -1,0 +1,39 @@
+/*
+ * The positioner spans the frame and MUST NOT take pointer events. Its parent
+ * `.overlayLayer` is `pointer-events: none` but gives every direct child
+ * `pointer-events: auto` (`ui-layout/src/client/AppFrame.module.css:90-99`), so
+ * a full-bleed entry root would swallow every click in the application for as
+ * long as a stop is displayed. This element opts back out; only the card takes
+ * events, and it is the size of its own content.
+ */
+.positioner {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  justify-content: center;
+  padding: var(--dsh-space-3, 12px);
+  pointer-events: none;
+}
+
+.card {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--dsh-space-1, 4px);
+  max-width: 36rem;
+  padding: var(--dsh-space-3, 12px) var(--dsh-space-4, 16px);
+  border: 1px solid var(--dsh-color-border-danger, #b4332a);
+  border-radius: var(--dsh-radius-md, 8px);
+  background: var(--dsh-color-surface-danger, #2a1513);
+  color: var(--dsh-color-text-danger, #ffd9d5);
+  font-size: var(--dsh-font-size-sm, 13px);
+  line-height: 1.5;
+}
+
+.title {
+  font-weight: 600;
+}
+
+.detail {
+  opacity: 0.85;
+}

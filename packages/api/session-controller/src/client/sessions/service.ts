@@ -21,6 +21,7 @@ import { workspaceTitleOf } from '@deepseek-ai/dsh-util-workspace-path'
 import type { WorkspaceId } from '@deepseek-ai/dsh-workspace/types'
 import { SESSION_SEARCH_RESULT_LIMIT } from '../../types.ts'
 import type { SessionJob as JobView } from '../../types.ts'
+import type { HostControlState } from '../../types.ts'
 import type { SessionProjectionMap } from '@deepseek-ai/dsh-session-projection/types'
 import {
   createSnapshotStore, type SnapshotStore,
@@ -84,6 +85,18 @@ export interface SessionListState {
   jobsBySession: Readonly<Record<SessionId, readonly JobView[]>>
   /** Current session's catalog-derived address, absent on ordinary navigation. */
   currentAddress: SubagentAddress | undefined
+  /**
+   * Whether the host is under an emergency stop (P2-12 acceptance[3]).
+   *
+   * **Optional, and the absent key means UNKNOWN** -- no control plane is
+   * mounted, or no baseline has arrived. A surface must not render absence as
+   * "not stopped": the two are different answers and only one of them is safe
+   * to act on. Optional rather than required for the same reason `jobsBySession`
+   * reads absence rather than a sentinel, and because a required member would
+   * edit every literal in the tree that constructs this state for one field
+   * none of them is about.
+   */
+  hostControl?: HostControlState
 }
 
 /** Persisted navigation cell: address survives refresh for correct history routing. */
@@ -576,7 +589,7 @@ export class ClientSessions implements ISessions {
   /** Project the manager's list snapshot into the store (title derivation is display-only). */
   private projectList(): void {
     const {
-      items, current, phase, subagentsByParent, jobsBySession, currentAddress,
+      items, current, phase, subagentsByParent, jobsBySession, currentAddress, hostControl,
     } = this.manager.getListSnapshot()
     const ids: SessionId[] = []
     const byId: Record<SessionId, SessionSummary> = {}
@@ -642,7 +655,13 @@ export class ClientSessions implements ISessions {
         ...(currentAddress === undefined ? {} : { subagentAddress: currentAddress }),
       })
     }
-    this.list.set({ ids, byId, current, phase, subagentsByParent, jobsBySession, currentAddress })
+    // Spread rather than assigned, because `exactOptionalPropertyTypes` makes
+    // an explicit `undefined` a different thing from an absent key, and absent
+    // is what "unknown" means here.
+    this.list.set({
+      ids, byId, current, phase, subagentsByParent, jobsBySession, currentAddress,
+      ...(hostControl === undefined ? {} : { hostControl }),
+    })
     this.pruneScopes()
   }
 

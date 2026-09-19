@@ -87,6 +87,35 @@ describe('list store projection', () => {
     expect(state.byId[sid('s2')]?.title).toBeUndefined()
   })
 
+  it('projects the host control state through to the store, and carries ABSENCE as absence', async () => {
+    // P2-12 acceptance[3]. `projectList` restates its destructured set on the
+    // way into the store, so a member the manager holds is lost here unless it
+    // is named twice -- which is how the control state reached the API stream
+    // and no reader, twice in one day. This case reads the real service's own
+    // store rather than the manager snapshot behind it.
+    const b = bench()
+    await feedList(b, [{ id: 's1' }])
+    expect('hostControl' in b.svc.list.getSnapshot()).toBe(false)
+
+    const stopped = {
+      stopped: true as const,
+      record: { requestedBy: 'operator-1', reason: 'human-requested', requestedAtMs: 1_700_000_000_000, release: 'explicit-resume' },
+    }
+    b.svc.handleControlFrame({ type: 'control', state: stopped })
+    await Promise.resolve()
+    expect(b.svc.list.getSnapshot().hostControl).toEqual(stopped)
+
+    // A baseline with no control means the host has none -- a reconnect can
+    // land on one. The KEY must go away rather than become an explicit
+    // `undefined`: `exactOptionalPropertyTypes` makes those different values,
+    // and every reader of this state treats an absent key as unknown.
+    b.svc.handleControlFrame({ type: 'baseline', value: { queues: {}, jobs: {}, projections: {} } })
+    await Promise.resolve()
+    const after = b.svc.list.getSnapshot()
+    expect('hostControl' in after).toBe(false)
+    expect(after.hostControl).toBeUndefined()
+  })
+
   it('reprojects a blank session from the generic agent-preset projection', async () => {
     const b = bench()
     await feedList(b, [{ id: 's1', blank: true, projections: { agentPreset: 'standard' } }])

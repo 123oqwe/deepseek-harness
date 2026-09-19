@@ -1,5 +1,5 @@
 ---
-description: "面向 Session Controller 列表、交互状态与逐会话上下文的 React 与 Slot 适配器。"
+description: "面向 Session Controller 列表、交互状态、逐会话上下文与全框停机指示的 React 与 Slot 适配器。"
 kind: "package-reference"
 ---
 # @deepseek-ai/dsh-client-ui-session
@@ -9,6 +9,8 @@ kind: "package-reference"
 ## 概述
 
 面向会话控制器状态的 React 与 Slot 适配器。本包在 root scope 提供会话列表和 pending-interaction 钩子，物化逐会话钩子与 prop，并拥有标准 `SessionProvider` 渲染行为，但不接管会话 transport 或 lifecycle 状态。当浏览器功能需要通过标准 React prop 和钩子读取会话状态时，请使用它。
+
+本包还向 `shell.overlay` 贡献全框停机指示。该条目是 root scope 而非会话 scope，这是有意的例外：紧急停机不属于任何单个会话，而该状态恰好到达本包已在适配的那份列表。
 
 ## 目录
 

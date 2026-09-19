@@ -546,6 +546,50 @@ describe('ui-session apply', () => {
     expect(slots.installScope).toHaveBeenCalledWith('session', ctx.uiSession.adapter)
   })
 
+  it('applies WITHOUT a locale service, contributing everything but the overlay entry', () => {
+    // `locale` is required by the host-stop indicator alone, and it is injected
+    // in a nested scope rather than declared in this module's `inject` for one
+    // measured reason: `SlotTestRuntime.create` reuses that array verbatim
+    // (`test-support/client-runtime/src/index.ts:278`) on a context that
+    // provides no locale service. A required `locale` would leave this package
+    // unapplied there and take every client case mounting through the test
+    // runtime with it.
+    //
+    // The case above would NOT have caught that: it calls `apply(ctx)`
+    // directly, which never reads the `inject` declaration. Only a mount
+    // through `ctx.plugin({ inject, apply })` resolves it, which is what the
+    // test runtime does and what this case asserts the shape of.
+    const ctx = new Context()
+    const bench = createSessionsBench(ctx)
+    const slots = { provideRoot: vi.fn(), installScope: vi.fn(), inject: vi.fn(), register: vi.fn() }
+    ctx.provide('sessions', bench.sessions)
+    ctx.provide('slots', slots as never)
+
+    apply(ctx)
+
+    expect(ctx.uiSession).toBeInstanceOf(UiSession)
+    expect(slots.provideRoot).toHaveBeenCalled()
+    expect(slots.installScope).toHaveBeenCalledWith('session', ctx.uiSession.adapter)
+    // No dictionary, so no entry: the overlay stays empty rather than
+    // registering a component whose every string would be a missing key.
+    expect(slots.inject).not.toHaveBeenCalled()
+  })
+
+  it('contributes the host-stop overlay entry once a locale service is there', () => {
+    // The positive control for the case above: without it, "inject was not
+    // called" would also pass if the registration had simply been deleted.
+    const ctx = new Context()
+    const bench = createSessionsBench(ctx)
+    const slots = { provideRoot: vi.fn(), installScope: vi.fn(), inject: vi.fn(), register: vi.fn() }
+    ctx.provide('sessions', bench.sessions)
+    ctx.provide('slots', slots as never)
+    ctx.provide('locale', { register: vi.fn() } as never)
+
+    apply(ctx)
+
+    expect(slots.inject).toHaveBeenCalledWith('shell.overlay', expect.any(Function))
+  })
+
   it('keeps the Host loader half inert', () => {
     expect(() => { nodeApply() }).not.toThrow()
   })
