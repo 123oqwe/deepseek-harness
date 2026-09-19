@@ -741,17 +741,38 @@ jobs:
       - name: Install (immutable)
         run: pnpm install --frozen-lockfile
 
-      # SOURCE mode, so no build step: `vitest.snapshot.config.ts` includes
-      # `apps/web/tests/**/*.snapshot.ts` only under `DSH_EXAMPLE_MODE=lib`,
-      # while `snapshots/**` -- the acp, sdk and session corpora this channel
-      # exists for -- is included either way. **This run therefore does NOT
-      # refresh the web corpus.** Refreshing that one needs lib mode and the
-      # build it depends on, and adding them here would make every refresh pay
-      # for a corpus most of them do not touch.
+      # The same build the gate job runs before ITS recorded-session step, and
+      # for the same reason: `snapshots/**` scenarios load generated host
+      # artifacts -- `lib/typert.host.js` among them -- which only a build
+      # produces. Run 35465390168 is the worked example: without this step 110
+      # of 137 scenarios died at load with `ERR_MODULE_NOT_FOUND` on that
+      # file, and the job still reported success.
       #
+      # The comment this replaces said "SOURCE mode, so no build step", which
+      # confused two different questions. Source mode decides WHICH CORPORA
+      # run: `vitest.snapshot.config.ts` includes `apps/web/tests/**` only
+      # under `DSH_EXAMPLE_MODE=lib`, so **this run still does NOT refresh the
+      # web corpus**. It never decided whether the harness's own build output
+      # has to exist, and it does.
+      #
+      # `assertBuiltArtifactsCurrent` did not catch this: it skips a package
+      # whose `lib/` is absent (`built-artifacts.ts:74`), so it guards against
+      # a STALE build and is blind to NO build.
+      - name: Build (official client profile, as the gate job's snapshot step needs)
+        env:
+          DSH_BUILD_CLIENT_PROFILE: official
+        run: pnpm run build
+
       # Replay, so no credentials: `record` is the mode that needs a key.
+      #
+      # The log is teed so the collect step can report the refresh's OWN counts.
+      # Without them an empty `fixtures.patch` has two readings -- nothing
+      # drifted, or nothing ran -- and this channel's first observation was the
+      # second one misread as the first.
       - name: Refresh recorded fixtures
-        run: pnpm run test:snapshot:refresh
+        run: |
+          set -o pipefail
+          pnpm run test:snapshot:refresh 2>&1 | tee "$RUNNER_TEMP/refresh.log"
 
       # Everything the reviewer needs to judge and apply the result, and
       # nothing that commits it. The patch is `--binary` because a refreshed
@@ -776,6 +797,17 @@ jobs:
         run: |
           mkdir -p "$OUT"
           git status --porcelain > "$OUT/status.txt"
+
+          # The refresh's own result, so a reviewer can tell "nothing drifted"
+          # from "nothing ran". Colour codes are stripped because the summary
+          # lines carry them and a reader should not have to.
+          if [ -f "$RUNNER_TEMP/refresh.log" ]; then
+            sed -e 's/\x1b\[[0-9;]*m//g' "$RUNNER_TEMP/refresh.log" > "$OUT/refresh.log"
+            grep -E '^ *(Test Files|Tests|Duration) ' "$OUT/refresh.log" > "$OUT/refresh-counts.txt" \
+              || echo 'the refresh log reached no vitest summary line' > "$OUT/refresh-counts.txt"
+          else
+            echo 'the refresh step produced no log' > "$OUT/refresh-counts.txt"
+          fi
 
           # Taken BEFORE staging, because the next line deliberately leaves it
           # out of the patch. `.refresh-skipped.json` is not gitignored, so a
