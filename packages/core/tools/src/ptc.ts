@@ -740,13 +740,20 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
               if (dispatchRefusal !== undefined) {
                 reservation = undefined
                 this.settled = true
-                // The SCRIPT ends too, and says why. A program whose next
-                // action was refused must not go on issuing more of them; the
-                // run controller's existing outlets report
-                // `run_code run is over (<reason>)` to every dispatch that has
-                // not started and to every result that arrives after.
-                runController.abort(`this host may take no new action (${dispatchRefusal})`)
+                // SETTLE BEFORE ABORT, and the order is the whole point.
+                // Aborting first let the run controller's own rejection —
+                // `run_code run is over (…)` — win the race to this sub-call's
+                // promise, so the program read a PTC-private sentence while the
+                // native path's caller read the shared refusal. Both paths must
+                // report a stop in the same words, and that word comes from
+                // `refusedDispatchResult`; settling first is what delivers it.
                 settle(refusedDispatchResult(dispatchRefusal, name))
+                // THEN the script ends, which is a different fact: a program
+                // whose next action was refused must not go on issuing more of
+                // them. The run controller's existing outlets report
+                // `run_code run is over (<reason>)` to every dispatch that has
+                // not started and to every result that arrives after this one.
+                runController.abort(`this host may take no new action (${dispatchRefusal})`)
                 return
               }
               if (manifested.decision !== undefined && manifested.decision.effect !== 'permit') {

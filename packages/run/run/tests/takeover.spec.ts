@@ -96,7 +96,28 @@ describe('P4-05 acceptance[2]: adopting a Run whose holder lapsed', () => {
     await first.fiber.dispose()
 
     const second = await host(leases, runs, 30_000)
+    // Read BEFORE the takeover overwrites the row, and carried into the
+    // messages below: when this case fails, "what did the second host see"
+    // must be in the failure rather than in a rerun.
+    const lapsed = second.leaseStore.get(brandString<WorkItemId>(String(session)))
+    const openingAt = Date.now()
     const adopted = await second.agentLoop.create(session)
+
+    // Two preconditions, because the assertion they guard cannot tell a failed
+    // adoption from an adoption that never had a predecessor to adopt.
+    const known = second.runs.service.runsForSession(session)
+    expect(known.length, `the second host restored no Run for ${String(session)} from the shared store, so there was nothing to adopt`)
+      .toBeGreaterThan(0)
+    // The decisive one: an adopted Run keeps the id the first host registered.
+    // A second host that restored nothing MINTS one, and then every later
+    // assertion is about a fresh Run wearing the same session.
+    expect(adopted.runId, `expected the first host's Run ${String(held.runId)}; the store holds ${JSON.stringify(known.map(run => run.id))}`)
+      .toBe(held.runId)
+    expect(
+      lapsed === undefined ? 'no lease row' : lapsed.expiresAtMs < openingAt,
+      `the predecessor's lease must have expired before this host opened: expiresAtMs=${String(lapsed?.expiresAtMs)}, openedAt≈${String(openingAt)}`,
+    ).toBe(true)
+
     // The state P4-05 declared and nothing produced. It is reached through the
     // real transition table, so a run that could not legally be orphaned would
     // have stayed where it was instead.
@@ -160,6 +181,12 @@ describe('P4-05 acceptance[2]: adopting a Run whose holder lapsed', () => {
     adopted.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
     await adopted.whenIdle()
 
+    // First: that this Run WAS adopted. Without it the case passes on a
+    // freshly minted Run — which reaches `running` and compiles its profile
+    // through the ordinary `queued` path — and proves nothing about takeover,
+    // so it would not count toward P4-05's lock either.
+    expect(adopted.runId, 'this case only says anything if the Run is the one the first host registered')
+      .toBe(held.runId)
     // The step ran: the tool executed under this host's authority.
     expect(executed, 'an adopted run must take its step like any other').toBe(1)
     // P4-02's once-per-agent compile happened for the adopted run too.
