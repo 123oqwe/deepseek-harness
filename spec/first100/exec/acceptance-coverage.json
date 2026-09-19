@@ -1621,6 +1621,14 @@
           "title": "refuses the previous holder after the item is reclaimed"
         },
         {
+          "stage": "U",
+          "title": "the Run lease is an authority the harness presents (P4-07 must[1], \u00a712.19-3) REFUSES every tool call in a step once this host was fenced out, and says so in the log"
+        },
+        {
+          "stage": "U",
+          "title": "the Run lease is an authority the harness presents (P4-07 must[1], \u00a712.19-3) EXECUTES the same calls while this host still owns its Run, so the refusal is about the lease"
+        },
+        {
           "stage": "F",
           "title": "fault boundary 15 a delayed packet from a reclaimed holder is refused on arrival"
         },
@@ -1629,7 +1637,7 @@
           "title": "fault boundary 16 split brain: two holders across a reclaim, only the later one writes"
         }
       ],
-      "note": "acceptance[0]: 'a recovered old worker can neither submit results nor perform new side effects.' Covered through the full sequence rather than a hand-built stale token: the lease expires, the scheduler reclaims at a higher epoch, and only then does the old holder present the token it still believes is valid. The U-stage case carries it to a real state WRITE -- the fenced dispatch entry refuses to advance a lifecycle -- which is what makes 'cannot perform a side effect' more than a property of a pure comparison. Each stage's positive control sits beside its refusal, so none of these is satisfied by a check that refuses everything. NOT fully closed: the unfenced advanceAgentLifecycle export remains reachable, pinned by the U/F characterization cases rather than by a lock, because a failing case is already watching it."
+      "note": "acceptance[0]: 'a recovered old worker can neither submit results nor perform new side effects.' Covered through the full sequence rather than a hand-built stale token: the lease expires, the scheduler reclaims at a higher epoch, and only then does the old holder present the token it still believes is valid. The U-stage case carries it to a real state WRITE -- the fenced dispatch entry refuses to advance a lifecycle -- which is what makes 'cannot perform a side effect' more than a property of a pure comparison. Each stage's positive control sits beside its refusal, so none of these is satisfied by a check that refuses everything. NOT fully closed: the unfenced advanceAgentLifecycle export remains reachable, pinned by the U/F characterization cases rather than by a lock, because a failing case is already watching it. [2026-09-19 lane B: two `P4-07.U` supplementSeq-2 cases are cited above that were frozen and uncited \u2014 the refusal reaching an actual DISPATCH, and its adjacent positive control. Until now every citation here was about the lease store's own token arithmetic; these two are the first about a tool call being refused because of it, which is what `acceptance[0]` is for. Both read `passed` in run 35437351296, whose candidate is `0ede948cbe27b608f055097b7e36b96604a5ff05`. **That run was RED** \u2014 3 of 26845 failed \u2014 and neither of these two is among the failures; the same is true in the three earlier runs on file (35435211560, 35429317039, 35427217821), where both also passed. No GREEN full-suite run exists in this branch's artifacts to cite instead, which is stated rather than worked around.]"
     },
     {
       "epic": "P4-07",

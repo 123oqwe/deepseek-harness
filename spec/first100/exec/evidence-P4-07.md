@@ -75,3 +75,13 @@ The code says it plainly: a refused lease is stop-work, not a warning — an age
 ## Signing position
 
 All six clauses have live subjects reached on the ordinary session-open and tool-dispatch paths. Two of them — must[0]'s item identity and acceptance[0]'s absence ambiguity — were fixed during this program after being measured wrong, and both fixes are what makes the clauses non-vacuous rather than merely present. No deferral is proposed.
+
+## Forward addendum (2026-09-19): the fencing check does not reach a PTC sub-dispatch
+
+Recorded here so a later reader of this page meets the limit where the clause is argued rather than only in the register ([BLOCKED-265](BLOCKED-QUEUE.md#blocked-265)).
+
+Everything above is about the native dispatch path. A PTC program issues its own sub-dispatches without returning to the model, and `advanceLeasedAgent` — the call this page treats as the fencing check on a tool call — has **zero occurrences** in `packages/core/tools/src/ptc.ts`. What partially covers that path instead is the idempotency ledger: `reserveExternalEffect` passes `generationOf(agent)` as the reservation's epoch, so a REPLAY of the same idempotency key from a fenced host is refused `stale-epoch`. A genuinely new key — which is the ordinary case inside a program, since the key derives from the arguments hash — is not.
+
+**What changed on 2026-09-19 and what did not.** The stop half now reaches PTC: `refuseNewAction` is asked per sub-dispatch before any reservation, on both paths, from one decision. The fencing half is in the same function and the same call, so a fenced host's next sub-call is refused too — but **no case observes that yet**: the cases added with it drive the STOP, and P4-07's own frozen cases are all on the native path or in the lease store. Until one does, the fencing arm on the PTC path is code with no observation, which is the shape this program keeps recording.
+
+**Reach, measured 2026-09-19.** PTC is not what a shipped profile runs: `ToolRuntime`'s `mode` defaults to `'native'` (`packages/core/tools/src/index.ts:1047`) and **no bundle in `packages/bundle/**` sets `ptc`**. So the gap is not reachable by default — and it is one config row away, because `mode` is an ordinary validated `Config` field a deployment may set. That is why it was closed rather than deferred, and why "unreachable today" is not recorded here as "safe".
