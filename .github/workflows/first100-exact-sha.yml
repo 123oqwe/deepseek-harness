@@ -172,8 +172,23 @@ jobs:
       - name: P0-07 verifyCommand — collect evidence over a real gate and verify the package
         if: always()
         run: |
-          node scripts/release/collect-evidence.mjs init --base-sha "$(git rev-parse HEAD^)" --required-gate typecheck
-          node scripts/release/collect-evidence.mjs run --gate typecheck -- pnpm run typecheck
+          # The sha is computed on its own line, under `set -e`, and echoed. A
+          # command substitution that fails inside an argument does NOT stop a
+          # `bash -e` step: `--base-sha` would then receive an empty string,
+          # which is not `undefined`, so `cmdInit`'s own guard lets it through
+          # and the failure surfaces three lines later as `git diff '' HEAD`.
+          # That reads exactly like the guard firing, so the two causes were
+          # indistinguishable from the step's output alone.
+          set -euo pipefail
+          base_sha="$(git rev-parse HEAD^)"
+          echo "evidence base-sha: ${base_sha}"
+          node scripts/release/collect-evidence.mjs init --base-sha "${base_sha}" --required-gate typecheck
+          # `--gate-id`, not `--gate`: `cmdRun` reads `--gate-id`
+          # (`scripts/release/collect-evidence.mjs:260-261`) and `parseFlags`
+          # accepts any `--x value` pair without complaint, so a wrong flag name
+          # is not an unknown-argument error — it is simply never read, and the
+          # command throws for a missing value it was given under another name.
+          node scripts/release/collect-evidence.mjs run --gate-id typecheck -- pnpm run typecheck
           pnpm evidence:verify
 
       - name: Upload the evidence package
