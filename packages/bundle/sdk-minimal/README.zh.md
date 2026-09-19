@@ -9,7 +9,9 @@ kind: "package-bundle"
 
 ## 概述
 
-当 SDK 客户端需要小型、显式的 coding agent 运行时时，请使用 `dsh --profile sdk-minimal`。该 profile 只公布按平台选择的持久 shell，把会话持久化为未压缩 JSONL，并从 SDK 初始化请求选择模型。它提供完整 Cordis 配置树，并刻意排除 `dsh-base`、Web、settings、托管凭据、遥测、压缩（compaction）、文件系统工具、workspace 指令、skill（技能）、jobs 与 subagent。其 danger-full-access 策略允许 shell 修改进程可访问的任何路径，因此只能配合隔离 workspace 使用。
+当 SDK 客户端需要小型、显式的 coding agent 运行时时，请使用 `dsh --profile sdk-minimal`。该 profile 只公布按平台选择的持久 shell，把会话持久化为未压缩 JSONL，并从 SDK 初始化请求选择模型。它提供完整 Cordis 配置树，并刻意排除 `dsh-base`、Web、托管凭据、遥测、压缩（compaction）、文件系统工具、workspace 指令、skill（技能）、jobs 与 subagent。其 danger-full-access 沙箱模式允许 shell 修改进程可访问的任何路径，因此只能配合隔离 workspace 使用。
+
+它现在带一个 settings provider 和一个策略引擎，此前没有。这不是本 profile 宣传的功能——它是让上面那句话成立的前提。每次工具调用都要经过的执行点是 fail-closed 的，所以没有策略引擎的 profile 会以 `policy-unavailable` 拒绝每一次调用，而本 README 承诺的却是不受约束的 shell。现在这条放行是一条带 id 的策略（`sdk-minimal-danger-full-access`），审计记录会点它的名，部署方也可以通过 `$DSH_HOME/settings.yaml` 的 `policy-set` 段收紧它。
 
 ## 目录
 
@@ -91,7 +93,7 @@ dsh --profile sdk-minimal
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **该组合刻意省略共享产品服务** — 需要 settings、托管凭据、策略预设、遥测、Web 工具或完整默认工具清单时，请选择 `dsh --profile sdk`。
+- **该组合刻意省略共享产品服务** — 需要托管凭据、策略预设（risk table）、遥测、Web 工具或完整默认工具清单时，请选择 `dsh --profile sdk`。settings 与策略引擎本身已在本 profile 内，但**没有** `permission-presets` 的风险表：它在 shell 不约束时加载期即抛，因此每个动作都以 `security-sensitive` 到达引擎，无论它声明了什么标签。
 - **用户 patch 可以扩展配置树并破坏 stdout** — profile 自定义属于受信任的应用组合；向 stdout 写入普通文本的插件会破坏 JSON-RPC 分帧。
 
 <a id="dev-note"></a>

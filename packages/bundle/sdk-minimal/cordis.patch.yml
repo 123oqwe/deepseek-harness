@@ -63,6 +63,71 @@
         mode: danger-full-access
         workspaceRoot: !!js process.cwd()
 
+    # P2-05 / BLOCKED-266: the policy chain, so a tool call on this profile
+    # meets a DECISION instead of a silence.
+    #
+    # The enforcement point is already wired into both dispatch paths and fails
+    # closed: with no engine mounted, `decisionWhenUnavailable` denies every
+    # action `policy-unavailable` (`policy-enforcement/src/index.ts:169-175`,
+    # and it is a function, not a Config field, so no bundle can opt out of it).
+    # That is why every tool call on this profile was refused while its README
+    # promised the opposite. Mounting a provider is what turns "nobody
+    # answered" into an answer.
+    #
+    # **Three rows, not the four `base` carries, and the missing one is load
+    # bearing.** `@deepseek-ai/dsh-permission-presets` THROWS at start when the
+    # composed shell does not confine (`permission-presets/src/index.ts:259-261`),
+    # `ShellService.sandboxMode` is `undefined` on the base class
+    # (`shell/shell/src/index.ts:74-76`) and only `bash-sandbox` overrides it,
+    # and this profile mounts neither — its shell rows are `dsh-terminal` and
+    # `dsh-terminal-bash`. Copying `base`'s chain wholesale would turn a profile
+    # that refuses every tool call into one that does not boot.
+    #
+    # **What that costs, stated rather than discovered later.** With no risk
+    # table, nothing classifies, and every action reaches the engine as
+    # `security-sensitive` — the fail-closed default at
+    # `core/tools/src/external-effect.ts:245` — whatever domain tags it
+    # declares. `kernel-hard-deny` forbids `safety-critical` alone, so the band
+    # below it is admitted by the baseline permit and the decision is real.
+    # Mounting the table here needs a confining shell first, which is a change
+    # to what this profile promises and not part of this one.
+    - id: settings
+      name: '@deepseek-ai/dsh-settings-file'
+
+    # Required, not optional: `PolicySetProvider` declares
+    # `static readonly inject = ['settings']` and its own doc says why — without
+    # a settings provider it registers no namespace, states no policy set, and
+    # enforces nothing, silently.
+    #
+    # The three policies are this profile's BASE layer, resolving below the
+    # user's `settings.yaml` `policy-set:` section, so a deployment that never
+    # edits its settings document still enforces them and one that names an id
+    # overrides that policy alone.
+    - id: policy-language
+      name: '@deepseek-ai/dsh-policy-language'
+      config:
+        policies:
+          # Cedar denies when NO permit matches, so an empty policy set is not
+          # "no policy" — it is a refusal of everything. Copied from `base`
+          # unchanged: a second spelling of the same baseline would be a second
+          # answer to what this harness permits by default.
+          baseline-permit: 'permit(principal, action, resource);'
+          # The kernel hard-deny band, also from `base` unchanged.
+          kernel-hard-deny: 'forbid(principal, action, resource) when { context.riskClass == "safety-critical" };'
+          # This profile's own permit, and the point of the whole change: the
+          # README promises an unconfined shell here, and that promise is now a
+          # policy with an id an operator can read, override or narrow —
+          # instead of a refusal that contradicted it. Naming it separately
+          # from `baseline-permit` is deliberate: an audit record that cites
+          # THIS id says the action was permitted because this profile says so,
+          # not because nothing objected.
+          sdk-minimal-danger-full-access: 'permit(principal, action, resource);'
+
+    # The engine takes no configuration: it asks `ctx.policySet` for the set in
+    # force on every decision, and the pin it records comes from that same read.
+    - id: policy-engine
+      name: '@deepseek-ai/dsh-policy-engine-cedar'
+
     - id: subprocess
       name: '@deepseek-ai/dsh-subprocess-local'
 

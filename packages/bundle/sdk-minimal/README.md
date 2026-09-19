@@ -9,7 +9,9 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-Use `dsh --profile sdk-minimal` when an SDK client needs a small, explicit coding-agent runtime. The profile advertises only a platform-selected persistent shell, persists sessions as uncompressed JSONL, and selects the model from the SDK initialization request. It supplies a complete Cordis tree and deliberately excludes `dsh-base`, Web, settings, managed credentials, telemetry, compaction, filesystem tools, workspace instructions, skills, jobs, and subagents. Its danger-full-access policy lets the shell modify any path available to the process, so use it only with an isolated workspace.
+Use `dsh --profile sdk-minimal` when an SDK client needs a small, explicit coding-agent runtime. The profile advertises only a platform-selected persistent shell, persists sessions as uncompressed JSONL, and selects the model from the SDK initialization request. It supplies a complete Cordis tree and deliberately excludes `dsh-base`, Web, managed credentials, telemetry, compaction, filesystem tools, workspace instructions, skills, jobs, and subagents. Its danger-full-access sandbox mode lets the shell modify any path available to the process, so use it only with an isolated workspace.
+
+It carries a settings provider and a policy engine, which it did not before. That is not a feature this profile advertises — it is what makes the sentence above true. The enforcement point every tool call passes fails closed, so a profile with no policy engine refused every call with `policy-unavailable` while this README promised an unconfined shell. The permit is now a policy with an id (`sdk-minimal-danger-full-access`) that an audit record names and a deployment can narrow through the `policy-set` section of `$DSH_HOME/settings.yaml`.
 
 ## Table of Contents
 
@@ -91,7 +93,7 @@ Stable for a fixed persona, platform, provider, model, and bundle patch stack. P
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **The composition intentionally omits shared product services** — select `dsh --profile sdk` when settings, managed credentials, policy presets, telemetry, Web tools, or the full default tool roster are required.
+- **The composition intentionally omits shared product services** — select `dsh --profile sdk` when managed credentials, the policy-preset risk table, telemetry, Web tools, or the full default tool roster are required. Settings and the policy engine are now part of this profile; the risk table is NOT, because it throws at load over a shell that does not confine, so every action reaches the engine as `security-sensitive` whatever domain tags it declares.
 - **User patches can expand the tree and corrupt stdout** — profile customization is trusted application composition; a plugin that writes ordinary text to stdout can break JSON-RPC framing.
 
 <a id="dev-note"></a>
