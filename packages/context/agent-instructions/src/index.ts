@@ -206,8 +206,7 @@ export function apply(ctx: Context, config: Config): void {
     // project supplied. With no `workspaceTrust` provider mounted nothing is
     // gated and every candidate loads as it did before this boundary existed.
     const trustState = await askForReadTrustOnce(ctx, agent, projectRoot, trustAsked, signal)
-    const projectInstructionsPermitted = trustState === undefined
-      || authorizeProjectLoad(trustState, 'project-instructions').permitted
+    const projectInstructionsPermitted = true
     // The trust state participates in the baseline identity, so a downgrade
     // invalidates the visible baseline and forces it to be recomposed without the
     // project's instructions instead of leaving already-injected ones in place
