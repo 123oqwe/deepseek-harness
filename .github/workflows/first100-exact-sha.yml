@@ -396,7 +396,7 @@ jobs:
           DSH_BUILD_CLIENT_PROFILE: official
         run: pnpm run build
 
-      - name: BLOCKED-285 — a real dsh launcher executes a tool on sdk-minimal (expected RED until the fix lands)
+      - name: BLOCKED-285 — a real dsh launcher executes a tool on sdk-minimal
         if: always()
         # The first time this program runs a REAL launcher against the shipped
         # `sdk-minimal` profile. `keyless-smoke.e2e.ts` spawns
@@ -459,13 +459,25 @@ jobs:
         # a copy of `e2e.yml`'s job, whose job-level secret preflight would
         # exit 1 for the whole job.
         #
-        # **Expected RED when this lands, and that is why it lands first.**
-        # BLOCKED-266 observed the shipped `sdk-minimal` refusing every tool
-        # call with `policy-unavailable`; if this step comes back GREEN, that
-        # reading is wrong and the conclusion drawn from it has to be
-        # withdrawn. No `continue-on-error`: a red that does not show is not an
-        # observation. `vitest.e2e.config.ts` sets `retry: 2`, so a failing
-        # case runs three times before the step settles.
+        # It landed EXPECTING RED, and the red it expected is gone:
+        # BLOCKED-266 had the shipped `sdk-minimal` refusing every tool call
+        # with `policy-unavailable`, this step observed it, and BLOCKED-285 is
+        # now FIXED (`BLOCKED-QUEUE.md:7708`) -- step 22 of run 35465390168
+        # came back success. The reds since are a different case in the same
+        # file: in 35467913630, 35470518835 and 35475180584 the only failure
+        # is BLOCKED-291's SDK control, which waited out its deadline on a
+        # turn the server had refused -- `afac505e1b` is meant to stop it
+        # doing that, and no run has observed that yet. 35473161135 is not
+        # that shape at all: five of this file's cases failed there, four of
+        # them launcher-booting cases with nothing to do with identity,
+        # because the type error stopped `tsc -b`, `lib/typert.host.js` was
+        # never emitted and no launcher could boot. So a red here is a finding
+        # to read rather than a standing condition -- read WHICH case failed
+        # from the report, since one step covers the whole file. No
+        # `continue-on-error`: a red that
+        # does not show is not an observation. `vitest.e2e.config.ts` sets
+        # `retry: 2`, so a failing case runs three times before the step
+        # settles.
         run: |
           pnpm exec vitest run --config vitest.e2e.config.ts \
             apps/cli/tests/profiles/sdk/keyless-smoke.e2e.ts
@@ -490,11 +502,18 @@ jobs:
         # length: a `-t` filter matches the FORMATTED title and silently selects
         # the wrong cases.
         #
-        # Expected GREEN on this commit. The case is a NEGATIVE CONTROL: it
-        # asserts today's defect positively (`anonymous:` actor, zero
-        # `identity/attached`), so a green here is the observation that the
-        # defect is real, and the fix's own commit -- which flips those
-        # assertions -- is what proves the fix.
+        # Expected GREEN, and since `a816deb892` it is the UNLOCK evidence
+        # rather than the negative control: the case now asserts P2-01
+        # acceptance[0] -- the first `action/manifest-appended` names the host
+        # user and exactly one `identity/attached` is logged. The negative
+        # control it replaced is on record in this step's own earlier runs,
+        # where the same case, in the same step, asserted `anonymous:` and zero
+        # attachments and came back green: step 23 of runs 35467913630
+        # (`b60ee70488`), 35470518835 (`6705631da3`) and 35475180584
+        # (`d034e34839`). Its one red, 35473161135 (`6f1c52ef64`), was the
+        # type error that stopped `tsc -b` before any launcher booted. That is
+        # what makes this green an observation of the fix and not of a case
+        # written to pass.
         run: |
           pnpm exec vitest run --config vitest.e2e.config.ts \
             apps/cli/tests/profiles/acp/tests/acp.e2e.ts
