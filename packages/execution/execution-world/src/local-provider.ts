@@ -224,7 +224,6 @@ export function createLocalWorldProvider(options: LocalWorldProviderOptions): Lo
     // between a narrow claim and a false one. A dimension absent here refuses
     // any policy that governs it, so the omissions are enforcement, not
     // silence.
-    supportedPolicyFeatures: { dimensions: ['filesystem'] },
 
     unsatisfiableDimensions: spec => localUnsatisfiableDimensions(spec, options.tenant),
 
