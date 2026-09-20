@@ -377,7 +377,8 @@
       "path": "packages/workspace/command-workspace-trust/src/launch-grant.ts",
       "kind": "source",
       "stages": [
-        "U.2"
+        "U.2",
+        "U.3"
       ],
       "reason": "The `--trust-workspace` entry point (BLOCKED-214's second half). The registry named this epic's Consumers and the provider, but not an entry point that writes a trust record BEFORE any session exists — which is what the user's ruling required for the profiles that carry no approval answerer. It lives in the command package because that package already owns the host user's other entry point (`/trust-skills`), and the two are the same subject: how a host user records a decision about this workspace. It holds no trust rule of its own; its whole effect is one `grantTrust`/`revokeTrust` call, which is why it can be an entry point without being a bypass."
     },

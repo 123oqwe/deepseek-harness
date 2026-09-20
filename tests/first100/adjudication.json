@@ -2276,6 +2276,36 @@
         "overlay": "P3-01 [C,F]; P3-10 [C]",
         "expectedAt": "tree",
         "rulingRef": "delegate ruling 2026-09-19 (B-382 ②: types.ts 进范围 = 加 approvedAddition P3-02.P/execution-world-types，expectedAt tree)"
+      },
+      "P1-07.U/sdk-app-trust-spec": {
+        "epic": "P1-07",
+        "stage": "U",
+        "path": "packages/bundle/sdk-app/tests/workspace-trust.spec.ts",
+        "reason": "The trust boundary observed on the shipped `sdk` profile through a real launcher: the ungranted control, the host-granted case, and `--trust-workspace=read` alone. The registry declares the boundary's own sources and `workspace-trust`'s unit spec; this file is where the same boundary is read from a launched process's whole model request.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "delegate ruling 2026-09-20 (lane B inbox B-423: three test/fixture files enter approvedAdditions, keyed on the P1-07.U/sdk-app-startup-spec precedent)"
+      },
+      "P1-07.U/sdk-app-trust-driver": {
+        "epic": "P1-07",
+        "stage": "U",
+        "path": "packages/bundle/sdk-app/tests/fixtures/driver.ts",
+        "reason": "The test-only subprocess launcher those three cases boot, already classified in the entrypoint inventory as a test driver rather than a shipped bin.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "delegate ruling 2026-09-20 (lane B inbox B-423: three test/fixture files enter approvedAdditions, keyed on the P1-07.U/sdk-app-startup-spec precedent)"
+      },
+      "P1-07.U/sdk-app-trust-mock-llm": {
+        "epic": "P1-07",
+        "stage": "U",
+        "path": "packages/bundle/sdk-app/tests/fixtures/mock-llm.ts",
+        "reason": "The stand-in model endpoint that records the whole request. It is the instrument the assertions read, and the commit that made it record the whole request rather than `GenerateOptions.system` is what turned two silently-empty observations into real ones.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "delegate ruling 2026-09-20 (lane B inbox B-423: three test/fixture files enter approvedAdditions, keyed on the P1-07.U/sdk-app-startup-spec precedent)"
       }
     }
   }

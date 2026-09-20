@@ -14775,6 +14775,49 @@
         "failureSummary": "Baseline: the unmutated tip is 53 passed / 0 failed (narrow run 35477053847). Mutated: 50 passed / 3 failed (narrow run 35477107089), and the three are exactly this entry's cases. Both readings match the prediction this lane froze before either run.\n\nWHAT THIS SUPPLEMENT IS FOR is that same mutation's earlier reading: against the C entry's 50 cases it reddened NOTHING (narrow run 35475027491), and the C entry records it as a mutation that FAILED to redden. The reason was never that no input separates the two functions -- `normalizedBody` writes `schemaVersion` first and RFC 8785 sorts keys, so the two forms disagree for every plan this compiler produces -- but that the four plan-id cases assert RELATIONS (same inputs, same id; one character changed, a different id; a meaningless reordering, the same id), and any deterministic digest satisfies all four. These three read the canonical form itself."
       },
       "note": "P4-03 C's first supplement: three cases that check the plan id against an INDEPENDENT implementation of RFC 8785 rather than against this repository's own canonicalizer. `canonicalize@2.1.0` is a devDependency of `run-plan` reached from this spec file only, at the version `action-manifest` already pins, so nothing on the production path changes -- `planIdOf` keeps calling `@deepseek-ai/dsh-action-manifest/canonicalize` (`compile.ts:34`), which is P2-03's implementation and P2-03's frozen subject. This entry does not claim the vocabulary: `standards-ownership.json` gives the `RFC 8785 JCS` family to P2-03 and marks P4-03's row `thisEpicOwns: false`, and P4-03's `preFlight.makeVsUse` records the standard as imported from there.\n\nThe second case is the negative control for the first: without it, a `planIdOf` that never canonicalized would satisfy an oracle comparison whenever the two forms happened to agree. The third states the property the derivation exists for -- a body written in another key order is the same plan and takes the same id.\n\nFROM THIS SUPPLEMENT THE FILE HOLDS 53 CASES. The C entry's note says `29 + 21 = 50 exactly`, which was true of the tree it was frozen against and is pinned there by its own `dryRunProof`; the partition it describes is unchanged -- these three are additional, and belong to no other stage."
+    },
+    {
+      "epic": "P1-07",
+      "stage": "U",
+      "supplements": {
+        "epic": "P1-07",
+        "stage": "U"
+      },
+      "supplementSeq": 3,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/bundle/sdk-app/tests/workspace-trust.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "the sdk profile's project-trust boundary leaves an ungranted workspace's own AGENTS.md out of what the model is given",
+        "the sdk profile's project-trust boundary reads it after `--trust-workspace=read` alone, with no overlay granting anything",
+        "the sdk profile's project-trust boundary reads the same AGENTS.md once the host grants that directory"
+      ],
+      "files": [
+        "packages/bundle/sdk-app/tests/workspace-trust.spec.ts",
+        "packages/bundle/sdk-app/tests/fixtures/driver.ts",
+        "packages/bundle/sdk-app/tests/fixtures/mock-llm.ts",
+        "packages/workspace/command-workspace-trust/src/launch-grant.ts",
+        "packages/context/agent-instructions/src/index.ts",
+        "packages/context/agent-instructions/src/files.ts",
+        "packages/workspace/workspace-trust/src/index.ts",
+        "apps/cli/src/profile-boot.ts"
+      ],
+      "frozenAtUtc": "2026-09-20T01:20:00Z",
+      "dryRunProof": {
+        "treeSha": "c159d4dcb97aafeb8f2af448451d94a419a8c79b",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations off `1638a628d0`, each its own commit, never merged, run by CI's narrow job at its own SHA over this entry's argv, with no build (the child boots from source under tsx). M1 (`e4e189e4e9d9e44e4329c789663d7a5ac7ea896d`) replaces the `trust.grantTrust(cwd, request.target, principal, 'launch-argument')` call in `command-workspace-trust/src/launch-grant.ts` with `void principal`: the flag still parses and a principal is still minted, only the record is never written. M2 (`1b2291e3b8baaa844aa8089d43b8034d7edcc6a3`) replaces `projectInstructionsPermitted`'s expression in `agent-instructions/src/index.ts:209-210` with the literal `true`. M2-prime (`635733f34206f1119c531b01ca13a03f09262a78`) deletes the early return in `agent-instructions/src/files.ts:317-320`, the one this epic's own comment calls its gate, so an ungranted workspace's files are discovered and composed.",
+        "failureSummary": "Baseline: 3 passed / 0 failed (narrow run 35481345862). M1, run 35481404516: 2 passed / 1 failed, the red being exactly `reads it after `--trust-workspace=read` alone, with no overlay granting anything` -- as predicted, and the other two stay green because the ungranted control carries no flag and the host-granted case is granted through the overlay.\n\nM2, run 35481456663: 3 passed / 0 failed. THE PREDICTION WAS `red 1` AND IS RECORDED UNCHANGED. It is a FAILED to redden, kept for what it proves rather than dropped: `projectInstructionsPermitted` has exactly one reader, `touchedPaths` at `index.ts:291`, so forcing it true changes what the composition ACCOUNTS FOR and not what it LOADS. `index.ts:209-210` does not guard this case, and an entry naming that mutation would be claiming a detection it does not have.\n\nM2-prime, run 35481675333: 2 passed / 1 failed, the red being exactly `leaves an ungranted workspace's own AGENTS.md out of what the model is given` -- the prediction frozen before the run, word for word. Taken with M2 this locates the gate rather than merely detecting it: the same behaviour survives `index.ts:209-210` being forced open and dies when `files.ts:317-320` is deleted."
+      },
+      "note": "P1-07's third U supplement: the trust boundary read at the LAUNCHER layer on the shipped `sdk` profile. U.1 and U.2 do the same for ACP and headless; this file's three cases are its whole content, so the single-file argv and `expectCases` are the same set rather than a subset.\n\nWhat makes these observations rather than restatements of the unit cases is where they read: `runLoaderSmoke` boots the profile in a child process and the stand-in model records the WHOLE request, so the assertion is about what a model was given, not about what a load decision returned. The ungranted case additionally asserts `system.length > 0`, which is what keeps `the request never went out` from passing as `the boundary held` -- the failure mode that once made both sides of this pair record an empty string, because the recorder read `GenerateOptions.system` and a loop-built request leaves that field unset.\n\nThe child boots from TypeScript source under tsx: `DSH_EXAMPLE_MODE` is unset here and `resolveExampleMode` defaults to `src` (`loader-smoke/src/index.ts:44-54`), and the only steps that set `lib` are the snapshot step and the e2e workflows. So this command needs no build.\n\nNO MUTATION IN THIS SET REDDENS THE SECOND CASE, and that is worth saying rather than leaving to be discovered: `reads the same AGENTS.md once the host grants that directory` is the POSITIVE CONTROL for the first. The two run the same driver over the same directory and reach opposite conclusions, which is what separates `the boundary held` from `this run loaded nothing at all` -- the failure mode that once let both sides of the pair record an empty string. A mutation that reddened it would have to break granting itself, which M1 already covers from the flag's side.\n\nCoverage: `acceptance-coverage.json`'s `acceptanceIndex: 0` for this epic, whose five existing cases all read the load decision in-process."
     }
   ]
 }

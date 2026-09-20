@@ -1000,6 +1000,18 @@
         {
           "stage": "U",
           "title": "offers no skill from a cloned repository while the workspace is untrusted, and still offers the host-owned skill"
+        },
+        {
+          "stage": "U",
+          "title": "leaves an ungranted workspace's own AGENTS.md out of what the model is given"
+        },
+        {
+          "stage": "U",
+          "title": "reads it after `--trust-workspace=read` alone, with no overlay granting anything"
+        },
+        {
+          "stage": "U",
+          "title": "reads the same AGENTS.md once the host grants that directory"
         }
       ],
       "note": "acceptance[0]: 'cloning a repository carrying malicious configuration and opening it produces no subprocess, no network access, and no credential read.' Evidenced by denial at the load decision rather than by observing the absence of a syscall: a freshly opened clone binds at untrusted (P-stage), and untrusted denies every project-level executable load kind -- plugins, hooks, MCP servers, executable skills, and home/profile patch overrides -- which are the only paths by which opening a workspace could reach a subprocess, the network, or a credential. The C-stage case names that closure explicitly for trusted-read, the state one step above untrusted, so the guarantee is not an artefact of the lowest state alone. The two U-stage cases prove the denial at the model-visible surface: the clone's skills and instructions are absent from what the model is offered. NEGATIVE-SPACE CONTROL: the U-stage pair is load-bearing only because its positive twin ('offers the model both the clone's executable skills and its instructions once that same clone is granted trusted-execute', cited under acceptance[2]) proves the fixture can offer them at all, so the absence measures a trust decision rather than an empty fixture."
