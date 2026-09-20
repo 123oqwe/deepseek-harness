@@ -3091,6 +3091,64 @@
         "recordedBeforeFirstLine": true,
         "realized": null
       }
+    },
+    "P4-03": {
+      "makeVsUse": {
+        "ledgerRow": "P4-03",
+        "card": {
+          "heading": "#### P4-03",
+          "sheetCommit": null
+        },
+        "verdict": "CONTRACT_WRITE",
+        "verdictSecondary": null,
+        "adopted": [
+          {
+            "name": "erdtman/canonicalize",
+            "npm": "canonicalize",
+            "version": "2.1.0",
+            "form": "oracle",
+            "reason": "A differential oracle in devDependencies, never a runtime dependency and never imported from `src`. This epic's plan id is `sha256` over the RFC 8785 canonical form, and the canonicalizer it calls is P2-03's hand-written one (`packages/run/run-plan/src/compile.ts:34` imports `@deepseek-ai/dsh-action-manifest/canonicalize`), so the npm package decides nothing on the production path -- it answers whether the id this compiler derives agrees with the standard. Pinned at 2.1.0, the version P2-03 already uses, so one repository holds one oracle; the ledger's note names 4.0.0, which P2-03 measured as overflowing at the depths this repository dispatches at. It is reached only from `packages/run/run-plan/tests/compile.spec.ts`.",
+            "landedIn": "packages/run/run-plan/tests/compile.spec.ts"
+          }
+        ],
+        "rejectedAbsent": [
+          "@serverlessworkflow/sdk",
+          "asl-validator",
+          "z3-solver"
+        ],
+        "standardsOwned": [],
+        "standardsImported": [
+          {
+            "standard": "RFC 8785 JCS + sha256 for deterministic plan id",
+            "from": "P2-03",
+            "reason": "`standards-ownership.json` puts the whole `RFC 8785 JCS` family under P2-03 and records `thisEpicOwns: false` for this row, so this epic imports the vocabulary rather than owning it: the canonical form is computed by P2-03's implementation (`compile.ts:34` imports `@deepseek-ai/dsh-action-manifest/canonicalize`) and this epic only decides what it is computed over -- the plan body -- and what the digest names. The case `P4-03 C: the plan id is sha256 over the RFC 8785 JCS canonical form, checked against the reference implementation` is the evidence that the import is real; it is not an ownership claim, and P2-03's own frozen titles keep carrying the family's."
+          }
+        ],
+        "residual": "Satisfiability over typed constraints and the deletion-based minimal conflict set, the twelve-field plan document and its schema, and `verificationContractRef` as a versioned opaque ref for P7-01. Narrowed from the ledger's text by nothing: no adopted package writes any of it, and the oracle writes none of it either.",
+        "probes": [
+          {
+            "claim": "the canonical form and the body as written disagree for every plan this compiler produces, so the derivation is not vacuous",
+            "how": "a 24-line probe importing the repository's `canonicalizeArguments` and comparing it with `JSON.stringify` on a body carrying `normalizedBody`'s real key order, with a sorted-key control",
+            "result": "hard-constraint",
+            "evidence": "strings differ, digests differ (5cada1d3ede5bdcf vs d237aaa3ada6a44e); the control -- an object whose keys are already sorted -- comes back identical, so the probe can answer either way. `normalizedBody` (compile.ts:340-359) writes `schemaVersion` first and RFC 8785 sorts keys."
+          },
+          {
+            "claim": "the four relation-only plan-id cases cannot observe whether canonicalization happened, so the imported vocabulary was unguarded here",
+            "how": "mutation 3d8e83cf77172248eb5b17fc9620eb9d2f3e812e replaced `canonicalizeArguments` with `JSON.stringify` inside `planIdOf`, run by CI's narrow job over the whole file",
+            "result": "hard-constraint",
+            "evidence": "narrow run 35475027491: 50 of 50 passing, nothing reddened. After the three oracle cases landed, the same mutation rebuilt as c59978e7d05a8e261e16d75d262609cbc2fe36ed reddens exactly those three (narrow run 35477107089: 50 passed / 3 failed) against a 53-of-53 baseline (35477053847)."
+          }
+        ],
+        "gapCheck": [
+          {
+            "community": "dsh_workflow",
+            "gap": "The plan is not data: the executable part is arbitrary JavaScript run in QuickJS, directly contrary to must[2]'s `Plan 是数据,不包含任意可执行代码`. No TaskProfile input or requirement traceability, and no deterministic id.",
+            "clause": "must[2]"
+          }
+        ],
+        "recordedBeforeFirstLine": false,
+        "realized": null
+      }
     }
   },
   "methodCorrections": [
