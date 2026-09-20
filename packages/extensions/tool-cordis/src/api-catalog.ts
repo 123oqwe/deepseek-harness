@@ -7049,6 +7049,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface SubprocessTerminalSpawnSpec {\n    argv: readonly string[];\n    cwd: string;\n    env?: Record<string, string> | undefined;\n    rows: number;\n    cols: number;\n    graceMs: number;\n    signal?: AbortSignal | undefined;\n}',
   },
   {
+    name: 'SupportedPolicyFeatures',
+    declaration: 'export interface SupportedPolicyFeatures {\n    readonly dimensions: readonly WorldSpecDimension[];\n}',
+  },
+  {
     name: 'SurfaceEvent',
     declaration: 'export type SurfaceEvent = SessionEvent<SurfaceEventType>;',
   },
@@ -7870,7 +7874,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'WorldProvider',
-    declaration: 'export interface WorldProvider {\n    readonly id: WorldProviderId;\n    unsatisfiableDimensions(spec: WorldSpec): readonly WorldSpecDimension[];\n    create(spec: WorldSpec): Promise<WorldHandle>;\n    terminate(handle: WorldHandle): Promise<WorldOutcome>;\n    snapshot(handle: WorldHandle): Promise<WorldSnapshot>;\n    restore(snapshot: WorldSnapshot): Promise<WorldHandle>;\n    attest(handle: WorldHandle): Promise<WorldAttestation>;\n}',
+    declaration: 'export interface WorldProvider {\n    readonly id: WorldProviderId;\n    unsatisfiableDimensions(spec: WorldSpec): readonly WorldSpecDimension[];\n    create(spec: WorldSpec): Promise<WorldHandle>;\n    terminate(handle: WorldHandle): Promise<WorldOutcome>;\n    snapshot(handle: WorldHandle): Promise<WorldSnapshot>;\n    restore(snapshot: WorldSnapshot): Promise<WorldHandle>;\n    attest(handle: WorldHandle): Promise<WorldAttestation>;\n    readonly supportedPolicyFeatures?: SupportedPolicyFeatures;\n}',
   },
   {
     name: 'WorldProviderId',
