@@ -14736,6 +14736,45 @@
         "failureSummary": "P-1, run 35475126426: 11 passed / 1 failed of 12. The red is `P2-10 must[1]: a shadow run cannot change what happens P2-10 P: shadow reports the live decision verbatim, whatever the candidate said`, the case this lane predicted. The prediction's other half held: the two remaining cases in that describe block assert `agrees`, which `shadow.ts:108` computes from the two arguments and not from the returned decision, so they cannot observe this mutation and stayed green.\n\nP-2, run 35475076620: 11 passed / 1 failed of 12. The red is `P2-10 must[1]: a diff says what changed in the unit an explain reports P2-10 P: a policy whose text changed is reported as changed, not as added and removed`, the single case predicted. The other four diff cases stayed green, which is what the pairing is for: `added` and `removed` are untouched here, so a suite that checked only those two lists would have accepted an emptied `changed` list."
       },
       "note": "`supplementSeq: 1` over P2-10's sealed Provider entry. That entry freezes 13 cases under the package-directory argv `packages/policy/policy-language`, defined as the complement of P2-10 C's 19 in a 32-case command; `tests/shadow.spec.ts` did not exist when it was frozen. This is a supplement and not an edit for the reason that entry's own complement argument gives: changing either its argv or its set would silently redefine both stages' cells. The 13 baseline cases were re-checked in the observed report -- 13 of 13 present and passing, compared one by one.\n\nThe argv here is the ONE FILE, so this entry's 12 and the sealed entry's 13 never have to be told apart inside one command.\n\nWhat the 12 cover. `a shadow run cannot change what happens` (7): the shadow reports the LIVE decision verbatim whatever the candidate said, carries the candidate's explain and never the live one, agrees when both sides reach the same effect through different policy sets, flags a disagreement when the candidate would deny what live permits, treats a difference in reason alone as a disagreement, and says which policies each side matched -- including that two sides matching the same policies report nothing on either list. `a diff says what changed in the unit an explain reports` (5): a changed policy is reported as changed rather than as an add plus a remove, the lists are in id order so two runs over one pair read the same, two sets compiling to the same pin differ in nothing, and a changed pin with an empty diff cannot happen for the same pair."
+    },
+    {
+      "epic": "P4-03",
+      "stage": "C",
+      "supplements": {
+        "epic": "P4-03",
+        "stage": "C"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/run-plan/tests/compile.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-03 C — the canonical form behind the plan id P4-03 C: a body built with its keys in another order takes the same RFC 8785 canonical form and the same id",
+        "P4-03 C — the canonical form behind the plan id P4-03 C: hashing the body as written instead of its RFC 8785 canonical form would give a different id, so canonicalization is doing work here",
+        "P4-03 C — the canonical form behind the plan id P4-03 C: the plan id is sha256 over the RFC 8785 JCS canonical form, checked against the reference implementation"
+      ],
+      "files": [
+        "packages/run/run-plan/src/compile.ts",
+        "packages/run/run-plan/src/types.ts",
+        "packages/run/run-plan/tests/compile.spec.ts",
+        "spec/run-plan.schema.json"
+      ],
+      "frozenAtUtc": "2026-09-20T00:37:24Z",
+      "dryRunProof": {
+        "treeSha": "c159d4dcb97aafeb8f2af448451d94a419a8c79b",
+        "testsDiscovered": 53
+      },
+      "sensitivityProof": {
+        "mutationDescription": "The C entry's own C-2 mutation, rebuilt on the tip that carries these three cases: `c59978e7d05a8e261e16d75d262609cbc2fe36ed` replaces `canonicalizeArguments(body)` with `JSON.stringify(body)` in `planIdOf` (`packages/run/run-plan/src/compile.ts`), its own commit off `16ff9da2eab20ddb2a498e409f7b5b949d7d9007`, never merged, run by CI's narrow job at its own SHA over this entry's argv. The rebuilt file's blob is byte-identical to the original mutation's (`3d8e83cf77172248eb5b17fc9620eb9d2f3e812e`), so this is the same mutation and not a new one.",
+        "failureSummary": "Baseline: the unmutated tip is 53 passed / 0 failed (narrow run 35477053847). Mutated: 50 passed / 3 failed (narrow run 35477107089), and the three are exactly this entry's cases. Both readings match the prediction this lane froze before either run.\n\nWHAT THIS SUPPLEMENT IS FOR is that same mutation's earlier reading: against the C entry's 50 cases it reddened NOTHING (narrow run 35475027491), and the C entry records it as a mutation that FAILED to redden. The reason was never that no input separates the two functions -- `normalizedBody` writes `schemaVersion` first and RFC 8785 sorts keys, so the two forms disagree for every plan this compiler produces -- but that the four plan-id cases assert RELATIONS (same inputs, same id; one character changed, a different id; a meaningless reordering, the same id), and any deterministic digest satisfies all four. These three read the canonical form itself."
+      },
+      "note": "P4-03 C's first supplement: three cases that check the plan id against an INDEPENDENT implementation of RFC 8785 rather than against this repository's own canonicalizer. `canonicalize@2.1.0` is a devDependency of `run-plan` reached from this spec file only, at the version `action-manifest` already pins, so nothing on the production path changes -- `planIdOf` keeps calling `@deepseek-ai/dsh-action-manifest/canonicalize` (`compile.ts:34`), which is P2-03's implementation and P2-03's frozen subject. This entry does not claim the vocabulary: `standards-ownership.json` gives the `RFC 8785 JCS` family to P2-03 and marks P4-03's row `thisEpicOwns: false`, and P4-03's `preFlight.makeVsUse` records the standard as imported from there.\n\nThe second case is the negative control for the first: without it, a `planIdOf` that never canonicalized would satisfy an oracle comparison whenever the two forms happened to agree. The third states the property the derivation exists for -- a body written in another key order is the same plan and takes the same id.\n\nFROM THIS SUPPLEMENT THE FILE HOLDS 53 CASES. The C entry's note says `29 + 21 = 50 exactly`, which was true of the tree it was frozen against and is pinned there by its own `dryRunProof`; the partition it describes is unchanged -- these three are additional, and belong to no other stage."
     }
   ]
 }
