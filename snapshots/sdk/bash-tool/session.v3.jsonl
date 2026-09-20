@@ -1,5 +1,5 @@
 {"type":"session","version":3,"id":"{{session:1}}","createdAt":1785097395899,"cwd":"{{cwd}}","isSeeded":false,"delegationDepth":0}
-{"type":"identity/attached","data":{"identity":{"principal":{"kind":"user","id":"{{id:1}}","tenantId":"local"},"runId":"{{run:1}}","chain":{"entries":[{"principal":{"kind":"user","id":"{{id:1}}","tenantId":"local"},"delegatedAt":0}]}}}}
+{"type":"identity/attached","data":{"identity":{"principal":{"kind":"anonymous-dev","id":"{{id:1}}","tenantId":"local"},"runId":"{{run:1}}","chain":{"entries":[{"principal":{"kind":"user","id":"{{id:1}}","tenantId":"local"},"delegatedAt":0}]}}}}
 {"type":"permission/preset","data":{"preset":"workspace-write"}}
 {"type":"sandbox/mode","data":{"mode":"workspace-write"}}
 {"type":"approval/policy","data":{"policy":"ask"}}
