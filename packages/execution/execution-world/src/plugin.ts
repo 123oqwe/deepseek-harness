@@ -309,7 +309,7 @@ export default class ExecutionWorldService extends Service<Config> {
       ipc: z.union([z.object({
         allowedPostures: z.array(z.union([z.const('none'), z.const('parent-only'), z.const('unrestricted')])),
       })]),
-      devices: z.union([z.object({ allowedDevices: z.array(z.string()) })]),
+      devices: z.object({ allowedDevices: z.array(z.string()) }),
       secrets: z.union([z.object({
         allowedPostures: z.array(z.union([z.const('none'), z.const('broker-only'), z.const('inherited')])),
       })]),
