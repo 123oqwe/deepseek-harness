@@ -76,7 +76,7 @@ export function satisfiesPolicySet(
   features: SupportedPolicyFeatures,
 ): PolicyDecision {
   const refusals: PolicyRefusal[] = []
-  const claimed = new Set<WorldSpecDimension>(features.dimensions)
+  const claimed = new Set<WorldSpecDimension>(WORLD_SPEC_DIMENSIONS)
 
   const governed = (dimension: WorldSpecDimension, rule: unknown): boolean => {
     if (rule === undefined) {
