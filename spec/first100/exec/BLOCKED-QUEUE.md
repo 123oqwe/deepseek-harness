@@ -7883,3 +7883,74 @@ Consequently, until `dispose()` runs, the child process keeps its own event loop
 **Closing condition.** Either (a) a live frozen case whose title contains the `evidenceTitleSubstring` P3-02's record declares for the srt schema — which requires the record to declare one, since it carries none today — or (b) the ownership is reassigned or the adoption record changed so that P3-02 no longer claims the schema. Whichever lands, it closes only when the simulation above is re-run with P3-02's row `ACCEPTED` and comes back with no finding for P3-02; a reading taken while the row is still `NOT_RUN` proves nothing, because that is the state in which the gate stays green either way.
 
 **Owner.** lane B.
+
+### BLOCKED-298 — the SDK's JSON-RPC face has no path to continue a session persisted by a prior process; the second launch's `create` call fails instead
+
+**Status:** OPEN (2026-09-20). Owner lane B. Measured by lane A (A-231 / A-234) and lane B, ruled by the delegate.
+
+**Finding.** `session/prompt` always resolves through
+`getOrCreateSession()` (`packages/sdk/server/src/server.ts:490-502`),
+which checks only the live, in-memory `this.sessions` map for the
+current process — never the durable log store. When the id is absent
+from that map (true on every fresh process, including a second launch
+against the same `$DSH_HOME`), `createSession()` (`:505-519`)
+unconditionally calls `ctx.agents.create(...)` (`:510`). There is no
+call to `ctx.agents.resume(` anywhere in this file (`git grep -c
+"agents.resume" packages/sdk/server/src/server.ts` = 0). The `create`
+path reaches the persistence layer's own `create()`
+(`packages/session/session-persistence-jsonl/src/index.ts:317-318`),
+which calls `findLog(snapshot.id, ...)` and, finding a log already on
+disk from the prior process, throws
+`SessionAlreadyExistsError(snapshot.id)`
+(`packages/session/session-persistence/src/errors.ts`, `session
+"${sessionId}" already exists`). The second launch's `session/prompt`
+therefore fails outright — it does not silently start a fresh session
+under the same id, and it does not continue the old one; it errors. **No
+registry clause covers this scenario**: the closest clauses (P4-01
+acceptance[0], P8-03/04/05/07/08) are Run-level resume or
+live-process stream-reconnect, none of them the SDK's `session/prompt`
+surviving a full process restart with the persisted session id
+(measurement in A-234's pre-measurement section above; `usageConsumers`
+is empty on every candidate row, so none of them is cited from a
+production call site either). Neither the TS client
+(`packages/sdk/client/src/client.ts`) nor the Python client
+(`python/sdk/src/deepseek_harness/client.py`) exposes a `resume` method
+or reuse-sessionId parameter (`git grep -c "resume"` = 0 in both) — the
+gap is not hidden by an unused client capability, it does not exist on
+either client either.
+
+**Consequence.** Any SDK integration that expects "launch a second
+process against the same `$DSH_HOME`, call `session/prompt` with the
+same session id, and continue the conversation" cannot do so today: the
+call fails with a JSON-RPC error surfacing `SessionAlreadyExistsError`,
+rather than either creating a sibling session or continuing the
+persisted one. `apps/cli`'s own keyless-smoke e2e test for this exact
+shape (`apps/cli/tests/profiles/sdk/keyless-smoke.e2e.ts`, per lane A's
+prior A-231 finding) exercises only the first launch's half of this
+scenario; nothing in the shipped SDK profile exercises the second
+launch succeeding.
+
+**Does NOT claim**:
+- That ACP (`packages/acp/acp/src/session.ts`) has the same gap — ACP's
+  own session-creation code has both a `create` and a `resume` branch
+  (lane A's prior A-231 finding), which this row does not re-litigate.
+- That the fix is necessarily "add an `agents.resume(` call to
+  `server.ts`" — `restoreOrCreateConfigured`
+  (`packages/core/agent-loop/src/index.ts:552-571`, per the delegate's
+  own note) is named here only as an existing shape in the repository
+  that already resolves create-vs-restore correctly elsewhere; whether
+  the SDK server should call it, some other function, or a new one is
+  an implementation decision for whoever closes this row, not asserted
+  here.
+- That `P4-01`, `P8-03`, `P8-04`, `P8-05`, `P8-07`, or `P8-08` are wrong
+  to exist as written, or that any of them should be edited to cover
+  this scenario — they are recorded as "close but not the same claim,"
+  not as defective clauses.
+
+**Closing condition.** On a real launcher, against the same `$DSH_HOME`,
+a second launch continues the same session via the SDK face and
+completes one full turn (not merely avoiding the thrown error) — and
+P2-01's identity use case gets its SDK-face resume half added to match
+its existing first-launch half.
+
+**Owner.** lane B.
