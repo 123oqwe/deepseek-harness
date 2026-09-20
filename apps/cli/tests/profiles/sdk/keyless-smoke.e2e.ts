@@ -4,43 +4,16 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
-import { zstdDecompress, zstdDecompressSync } from 'node:zlib'
+import { zstdDecompress } from 'node:zlib'
 import { execa } from 'execa'
 import { describe, expect, it } from 'vitest'
 import { startStubModelServer, type StubModelServer } from '@deepseek-ai/dsh-session-snapshot'
 import { scanZstdFrames } from '@deepseek-ai/dsh-session-persistence-jsonl/src/zstd.js'
+import { attachedPrincipal, countRecords, persistedHostUserId, readSessionLog } from '../session-log.ts'
 
 const binScript = fileURLToPath(new URL('../../../src/bin.ts', import.meta.url))
 const repoRoot = fileURLToPath(new URL('../../../../../', import.meta.url))
 const decompress = promisify(zstdDecompress)
-
-/** One record of a durable session log, as the log's own JSONL lines carry it. */
-interface SessionLogRecord {
-  type: string
-  data?: Record<string, unknown>
-}
-
-/**
- * Read one session's whole durable log out of a harness home.
- *
- * Every frame, not just the first: the JSONL backend appends a Zstandard frame
- * per batch, so a one-shot decompress of the file yields the first frame alone.
- * @param dshHome - the `$DSH_HOME` the child ran under.
- * @returns the log's bytes and its records in file order.
- */
-async function readSessionLog(dshHome: string): Promise<{ compressed: Buffer; records: SessionLogRecord[] }> {
-  const sessionsRoot = join(dshHome, 'sessions')
-  const files = await readdir(sessionsRoot, { recursive: true })
-  const log = files.find(file => file.endsWith('.jsonl.zstd'))
-  expect(log).toBeDefined()
-  const compressed = await readFile(join(sessionsRoot, log!))
-  const { frames, tornStart } = scanZstdFrames(compressed)
-  expect(tornStart).toBeUndefined()
-  const records = frames
-    .flatMap(({ start, end }) => zstdDecompressSync(compressed.subarray(start, end)).toString().trim().split('\n'))
-    .map(line => JSON.parse(line) as SessionLogRecord)
-  return { compressed, records }
-}
 
 /** One frame this driver read, kept with its bytes. */
 interface ConsumedFrame {
@@ -603,18 +576,24 @@ describe('Python SDK dsh profile keyless smoke', () => {
   }, 30_000)
 
   /*
-   * BLOCKED-291 negative control. It pins TODAY'S DEFECT, not the fix: the SDK
-   * server creates an agent per request (`server.ts:510`) without an identity,
-   * so nothing is attached and every manifest is attributed to the anonymous
-   * dev principal (`action-manifest/src/identity.ts:52`). The assertions below
-   * state those values positively, so this case passes only while the defect is
-   * there and fails the moment it is fixed — which is what makes the fix's own
-   * commit, which flips them to P2-01 acceptance[0]'s form, an observation
-   * rather than a claim. It is deliberately not written as an expected failure:
-   * an expected failure passes for any reason at all, including a broken
-   * environment.
+   * P2-01 acceptance[0] on the SDK face. A session this server composes per
+   * request (`server.ts:510`) now acts as the machine's host user, so the
+   * three things this case reads from the durable log are the three the
+   * clause asks for: the FIRST `action/manifest-appended` names a principal
+   * that is not the anonymous dev fallback
+   * (`action-manifest/src/identity.ts:52`), that principal is the one the
+   * launcher persisted under this `$DSH_HOME`, and exactly one
+   * `identity/attached` is logged.
+   *
+   * The commit before this one asserted the opposite values -- the anonymous
+   * principal and zero attachments -- and was observed green in run
+   * 35479346884 (8 passed, this case in 2235ms), the first run in which that
+   * control passed at all: before `afac505e1b` it waited out its deadline on a
+   * turn the server had refused and failed four times running. So what these
+   * conditions replaced is on record as an observation rather than as an
+   * assumption.
    */
-  it('BLOCKED-291 negative control: a launched sdk session attaches no identity and acts as anonymous', async () => {
+  it('P2-01 acceptance[0]: a launched sdk session acts as the host user, attached once', async () => {
     const root = await mkdtemp(join(tmpdir(), 'dsh-sdk-host-user-'))
     const dshHome = join(root, '.dsh')
     const stub = await startStubModelServer({
@@ -626,7 +605,7 @@ describe('Python SDK dsh profile keyless smoke', () => {
     })
     try {
       const firstLaunchRequests = await runSdkTurn(dshHome, stub)
-      const { compressed, records } = await readSessionLog(dshHome)
+      const { compressed, records } = await readSessionLog(join(dshHome, 'sessions'))
 
       // The log is a concatenated-frame container, so reading it whole is not
       // the same as reading its first frame. Asserted because the rest of this
@@ -636,19 +615,33 @@ describe('Python SDK dsh profile keyless smoke', () => {
       expect(scanZstdFrames(compressed).frames.length).toBeGreaterThan(1)
       expect(JSON.parse((await decompress(compressed)).toString())).toEqual(records[0])
 
+      // The first manifest, not any of them: acceptance[0] is about what the
+      // session was attributed to from its first action onward.
       const manifests = records.filter(record => record.type === 'action/manifest-appended')
       expect(manifests.length).toBeGreaterThan(0)
-      expect(manifests[0]?.data?.actor).toMatch(/^anonymous:/)
-      expect(records.filter(record => record.type === 'identity/attached')).toHaveLength(0)
+      expect(manifests[0]?.data?.actor).not.toMatch(/^anonymous:/)
+      expect(manifests[0]?.data?.actor).toBe(attachedPrincipal({ compressed, records }))
+      expect(countRecords({ compressed, records }, 'identity/attached')).toBe(1)
 
-      // The resume half of this control -- that a SECOND launch against the
-      // same `$DSH_HOME` adds no attachment either -- is not driven here, and
-      // not because it does not matter: this surface has no way to ask for it.
-      // The SDK's request map is `initialize`, `session/prompt` and `shutdown`
-      // (`sdk/protocol/src/types.ts:405-410`), none of which names a persisted
-      // session; `session/prompt` always creates (`sdk/server/src/server.ts:490-522`)
-      // and a live session of that id is refused at `core/session/src/index.ts:1002`.
-      // BLOCKED-298 holds it, and the two-launch evidence lives in the ACP case.
+      // And that principal is THE host user, not merely some non-anonymous
+      // one: the launcher persisted this id under its own home, and
+      // `hostUserIdentity` brands that exact string as the principal id.
+      expect(attachedPrincipal({ compressed, records })).toBe(await persistedHostUserId(dshHome))
+
+      // The resume half of acceptance[0] -- that a SECOND launch against the
+      // same `$DSH_HOME` adds no second attachment -- is not driven here.
+      // This surface has no way to ask for it: the SDK's request map is
+      // `initialize`, `session/prompt` and `shutdown`
+      // (`sdk/protocol/src/types.ts:405-410`), none of which names a
+      // persisted session, and `session/prompt` always creates
+      // (`sdk/server/src/server.ts:490-522`), which the durable backend
+      // refuses once a log for that id is on disk
+      // (`session-persistence-jsonl/src/index.ts:317-318`, throwing the
+      // `SessionAlreadyExistsError` of `session-persistence/src/errors.ts:21-28`).
+      // The live-store refusal at `core/session/src/index.ts:1002` prints the
+      // SAME sentence and is a different gate: that store is a per-process
+      // Map, empty in a fresh launch. BLOCKED-298 holds the gap; the
+      // two-launch evidence for acceptance[0] is the ACP case's.
 
       // Named, not swallowed. Nothing on this surface should ask the client
       // anything: `bundle/base/cordis.patch.yml:270-273` sets the approval

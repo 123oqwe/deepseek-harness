@@ -24,6 +24,9 @@
       "path": "../../core/agent"
     },
     {
+      "path": "../../core/agent-loop"
+    },
+    {
       "path": "../../attachment/attachment"
     },
     {
@@ -40,6 +43,9 @@
     },
     {
       "path": "../../interaction/user-questions"
+    },
+    {
+      "path": "../../identity/principal"
     }
   ]
 }

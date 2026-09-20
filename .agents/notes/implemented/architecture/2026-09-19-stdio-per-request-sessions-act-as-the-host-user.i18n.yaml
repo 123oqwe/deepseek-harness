@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-09-19-stdio-per-request-sessions-act-as-the-host-user.md
+2026-09-19-stdio-per-request-sessions-act-as-the-host-user.md: 712bee4933f7c09cc5fe24315365ebbf109c21c0
+2026-09-19-stdio-per-request-sessions-act-as-the-host-user.zh.md: cc4333056b69adc788b44f036a72fbcc17ecac6b

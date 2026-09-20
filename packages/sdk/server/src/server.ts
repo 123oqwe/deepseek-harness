@@ -6,9 +6,12 @@
  */
 
 import type { Context } from '@deepseek-ai/cordis'
+import { randomUUID } from 'node:crypto'
 import { resolve } from 'node:path'
 import { brandString } from '@deepseek-ai/dsh-brand'
+import { HOST_USER_IDENTITY_KEY, type HostUserIdentityFactory } from '@deepseek-ai/dsh-agent-loop'
 import type { Agent, AgentHandle } from '@deepseek-ai/dsh-agent'
+import type { RunId } from '@deepseek-ai/dsh-principal/types'
 import { admitEncodedImages, type EncodedImageAttachment, type ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
 import { createUserMessage, ReasoningEffortId, type ContentBlock, type LlmRuntime } from '@deepseek-ai/dsh-llm'
 import { getSchema, negotiateSchema } from '@deepseek-ai/dsh-schema-registry'
@@ -507,6 +510,17 @@ export class HarnessSdkJsonRpcServer {
     // rows in the host plane, so this agent reads them from the global layer. A
     // deployment that configures a roster has to join one here first
     // (@deepseek-ai/dsh-agent-presets README, "Composing a child agent").
+    // P2-01 acceptance[0]. A session this server composes per request acts as
+    // the machine's host user, the same as one a profile composes from its own
+    // `agents:` row: this server is pure stdio the local user spawned, and the
+    // earlier reading -- that arriving over a socket made a request someone
+    // else's -- was not true of it.
+    //
+    // Through the launcher's factory rather than by resolving an identity
+    // here, because resolving one touches `$DSH_HOME`. A composition that
+    // provides no factory, which is every unit suite mounting this plugin
+    // directly, attaches nothing and writes nothing into a developer's home.
+    const hostUser = this.ctx.get(HOST_USER_IDENTITY_KEY) as HostUserIdentityFactory | undefined
     const handle = await this.ctx.agents.create({
       sessionId: brandString<SessionId>(sessionId),
       meta: { cwd: this.cwd },
@@ -515,6 +529,7 @@ export class HarnessSdkJsonRpcServer {
         model: this.model,
         ...this.reasoningEffort === undefined ? {} : { reasoningEffort: this.reasoningEffort },
         ...this.maxTokens === undefined ? {} : { maxTokens: this.maxTokens },
+        ...hostUser === undefined ? {} : { identity: hostUser(brandString<RunId>(`run-${randomUUID()}`)) },
       },
     })
     const rec: SessionRecord = { handle }
