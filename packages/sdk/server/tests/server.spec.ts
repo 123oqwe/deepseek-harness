@@ -1212,7 +1212,14 @@ describe('HarnessSdkJsonRpcServer', () => {
     const ctx = {
       on: vi.fn(() => () => undefined),
       agents: { create, get: () => undefined },
-      get: () => ({ listProviders: () => [{ id: 'mock', name: 'Mock' }], resolveCallConfig }),
+      // Answered BY KEY, as the `attachments` fakes above already are: one
+      // that hands the llm double to every name answers `hostUserIdentity`
+      // with it too, and session creation CALLS what that key returns, so
+      // the case died on `hostUser is not a function` rather than on a
+      // relative cwd.
+      get: (name: string) => name === 'llm'
+        ? { listProviders: () => [{ id: 'mock', name: 'Mock' }], resolveCallConfig }
+        : undefined,
     } as unknown as Context
     const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport()) as unknown as {
       initialize(params: { cwd: string; provider: string; model: string; reasoningEffort?: string; maxTokens?: number }): Promise<unknown>
