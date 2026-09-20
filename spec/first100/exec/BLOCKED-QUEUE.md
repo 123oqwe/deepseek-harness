@@ -7954,3 +7954,19 @@ P2-01's identity use case gets its SDK-face resume half added to match
 its existing first-launch half.
 
 **Owner.** lane B.
+
+### BLOCKED-299 — a profile that layers only `base` plus a custom entry plugin runs with the two trust-gated consumers and no provider
+
+**Status:** OPEN (2026-09-20). Owner lane B. Measured by the delegate (4.4(b)), corrected and narrowed by lane A (A-256), re-measured by lane B, ruled by the delegate.
+
+**What was measured.** `base` ships `workspace-trust-local` with `disabled: true` (`packages/bundle/base/cordis.patch.yml:422-424`) and each of the four application bundles overrides it to `false`, so every shipped profile carries the boundary. A profile a user builds does not start there: `loadProfile` points an unknown name at `dsh plugin --profile <name> add <package>` (`app-boot/src/profile.ts:841`), that path initializes from `DEFAULT_PROFILE_BUNDLES = ['@deepseek-ai/dsh-base']` (`:151`, read at `apps/cli/src/plugin.ts:260`), and the tutorial says the same in prose — "`dsh plugin` creates a base-backed profile and maintains its installed bundle list" (`docs/user/develop/basic/publish.md:73`), with `dsh plugin --profile demo add ./hello-plugin` as the worked step (`:80`).
+
+**The gap is narrower than it first looked.** `base` alone carries no entry row, so a profile layering only `base` cannot run a turn at all — the question only arises once something is installed. When the installed package declares `dsh.bundle.patch`, `reconcilePlugins` appends it to the profile's `bundles` (`apps/cli/src/plugin.ts:92-97`, `exportsPatch` at `:63-72`), and whatever that layer states about `workspace-trust-local` applies; a package that declares no bundle is installed as a plain dependency with a warning (`:97-101`). So the exposed case is a profile whose layers are `base` plus an entry plugin that does not itself enable the row — a third-party plugin has no reason to.
+
+**Why that profile has no boundary.** The two consumers the boundary gates are enabled in `base` and both permit when no provider is mounted, by design and in writing: `skill-filesystem/src/index.ts:256-260` returns `true` with no provider, and `agent-instructions/src/files.ts:315-320` walks the instruction chain "as before". The gate that stops an untrusted workspace's own files is that early return in `files.ts:317-320` and nowhere else — measured by mutation, not by reading: forcing `index.ts:209-210`'s `projectInstructionsPermitted` open left the ungranted case green (narrow run 35481456663, 3 of 3 passing), while deleting the `files.ts` early return reddened exactly it (35481675333).
+
+**What this does NOT claim.** Not that any shipped profile is affected: the four application bundles override the row, and `sdk-minimal` neither layers over `base` nor mounts either consumer. Not that the consumers are wrong to permit an absent provider — that is the documented contract every composition without trust relies on, unit suites included, and reversing it is a contract change rather than a line change. Not that this blocks P1-07's sign-off: the delegate has ruled it does not. Not that anyone has been harmed: nothing here measures use.
+
+**Closing condition.** A profile created through the CLI's own documented path, layering `base` plus an entry plugin that states nothing about trust, has the boundary — proven by a case that builds one that way, runs a turn in a directory carrying its own instruction file, and observes that file NOT reaching the model. Reading the bundle file is not the proof; the ruled fix is to enable the row in `base`, and the case is what shows it reached a user-built profile.
+
+**Owner.** lane B.
