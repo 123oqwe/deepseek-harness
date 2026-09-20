@@ -45,7 +45,9 @@ import {
   type SessionNotification,
   type Stream,
 } from '@agentclientprotocol/sdk'
-import type { ModelSelection } from '@deepseek-ai/dsh-agent'
+import { HOST_USER_IDENTITY_KEY, type HostUserIdentityFactory } from '@deepseek-ai/dsh-agent-loop'
+import type { AgentOptions, ModelSelection } from '@deepseek-ai/dsh-agent'
+import type { RunId } from '@deepseek-ai/dsh-principal/types'
 import type { SessionId } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-session-persistence'
 // Side-effect type import: declaration-merges the approval waterfall answered below.
@@ -245,7 +247,7 @@ export function apply(ctx: Context, config: AcpConfig): void {
           sessionId,
           cwd: params.cwd,
           mcpServers: params.mcpServers,
-          agentOptions: agentOptions(config),
+          agentOptions: agentOptionsFor(ctx, config),
           fallbackSelection: initialSelection(config),
           signal,
           notify,
@@ -299,7 +301,7 @@ export function apply(ctx: Context, config: AcpConfig): void {
             sessionId,
             cwd: params.cwd,
             mcpServers: params.mcpServers ?? [],
-            agentOptions: agentOptions(config),
+            agentOptions: agentOptionsFor(ctx, config),
             fallbackSelection: initialSelection(config),
             signal,
             notify,
@@ -490,6 +492,30 @@ function agentOptions(config: AcpConfig): { provider?: string; model?: string } 
     ...config.provider !== undefined ? { provider: config.provider } : {},
     ...config.model !== undefined ? { model: config.model } : {},
   }
+}
+
+/**
+ * The configured options, plus the host user this launcher named.
+ *
+ * P2-01 acceptance[0]. A session this plugin composes per request acts as the
+ * machine's host user, the same as one a profile composes from its own
+ * `agents:` row: both are started by the local user over stdio this process
+ * owns, and the earlier reading -- that arriving over a socket made a request
+ * someone else's -- was true of neither.
+ *
+ * Through the launcher's factory rather than by resolving an identity here,
+ * because resolving one touches `$DSH_HOME`. A composition that provides no
+ * factory, which is every unit suite mounting this plugin directly, attaches
+ * nothing and writes nothing into a developer's home. One run id per composed
+ * session, because a run is one session's work rather than the process's.
+ * @param ctx - the plugin context, carrying the launcher's factory when it set one.
+ * @param config - ACP provider/model configuration.
+ * @returns the configured fields, with an identity when this composition has one.
+ */
+function agentOptionsFor(ctx: Context, config: AcpConfig): AgentOptions {
+  const base = agentOptions(config)
+  const hostUser = ctx.get(HOST_USER_IDENTITY_KEY) as HostUserIdentityFactory | undefined
+  return hostUser === undefined ? base : { ...base, identity: hostUser(brandString<RunId>(`run-${randomUUID()}`)) }
 }
 
 /** Initial session selection when both deployment fields are present. */

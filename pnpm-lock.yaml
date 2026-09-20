@@ -880,6 +880,9 @@ importers:
       '@deepseek-ai/dsh-mcp-client':
         specifier: workspace:^
         version: link:../../mcp/mcp-client
+      '@deepseek-ai/dsh-principal':
+        specifier: workspace:^
+        version: link:../../identity/principal
       '@deepseek-ai/dsh-session':
         specifier: workspace:^
         version: link:../../core/session

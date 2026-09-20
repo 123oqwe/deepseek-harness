@@ -33,7 +33,7 @@ export interface AcpConfig {
 
 依赖： `Stream` (`@agentclientprotocol/sdk`)
 
-来源： [`packages/acp/acp/src/index.ts:76`](../packages/acp/acp/src/index.ts)
+来源： [`packages/acp/acp/src/index.ts:78`](../packages/acp/acp/src/index.ts)
 
 <a id="deepseek-aidsh-agent-default-model"></a>
 
@@ -113,7 +113,7 @@ export interface Config {
 
 依赖： [`AgentOptions`](subsystems/core.zh.md) · [`SessionId`](subsystems/core.zh.md)
 
-来源： [`packages/core/agent-loop/src/index.ts:378`](../packages/core/agent-loop/src/index.ts)
+来源： [`packages/core/agent-loop/src/index.ts:380`](../packages/core/agent-loop/src/index.ts)
 
 <a id="deepseek-aidsh-agent-presets"></a>
 

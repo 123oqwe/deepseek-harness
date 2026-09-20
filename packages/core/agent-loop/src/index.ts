@@ -327,9 +327,11 @@ export type HostUserIdentityFactory = (runId: RunId) => IdentityContext
  *
  * The two programmatic root creation sites — `bundle/headless` and the Web
  * app's session controller — pass the identity in `AgentOptions` directly and
- * do not use this key. Per-request creation in ACP, the SDK server and webhook
- * ingress attaches nothing: a request that arrived over a socket is not the
- * machine's host user.
+ * do not use this key. ACP and the SDK server read it here, per request: both
+ * are pure stdio a local user spawned, so a session either of them composes
+ * acts as that user. Webhook ingress still attaches nothing, and for a reason
+ * that holds of it alone — its request arrived from a remote sender the
+ * machine's user did not make.
  */
 export const HOST_USER_IDENTITY_KEY = 'hostUserIdentity'
 
