@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-09-19-stdio-per-request-sessions-act-as-the-host-user.md
-2026-09-19-stdio-per-request-sessions-act-as-the-host-user.md: 712bee4933f7c09cc5fe24315365ebbf109c21c0
-2026-09-19-stdio-per-request-sessions-act-as-the-host-user.zh.md: cc4333056b69adc788b44f036a72fbcc17ecac6b
+2026-09-19-stdio-per-request-sessions-act-as-the-host-user.md: b5846a1b86e21186da7b81cd11fc2b5f2b43151c
+2026-09-19-stdio-per-request-sessions-act-as-the-host-user.zh.md: 9949f67865c271d22cdc7958247e97a30be20ef7

@@ -25,7 +25,7 @@ P2-01 让会话带上 host-user principal，它覆盖的四个调用点都是从
 
 ## 后果
 
-**已录制语料会变。** `anonymous:` 出现在 acp 与 sdk 两棵树共 26 个已提交快照文件里，而 `identity/attached` 在其中一个都没有，却出现在 session 树的 104 个文件里。改动之后这些会话会带上 host-user principal 与各一条附着记录，因此 `pnpm run test:snapshot` 在语料刷新之前是红的——按政策那是单独一笔，并且作为 diff 被审阅，而不是就地重新生成。其中 ACP 那一半的红**已经发生**:它从 `a816deb892` 起就存在,不是从本笔开始。
+**已录制语料会变。** `anonymous:` 出现在 acp 与 sdk 两棵树共 26 个已提交快照文件里，而 `identity/attached` 在其中一个都没有，却出现在 session 树的 104 个文件里。改动之后这些会话会带上 host-user principal 与各一条附着记录，因此 `pnpm run test:snapshot` 在语料刷新之前是红的——按政策那是单独一笔，并且作为 diff 被审阅，而不是就地重新生成。其中 ACP 那一半的红**已经发生**:它从 `a816deb892` 起就存在,不是从本笔开始。在 `301b00497d` 上重录那六份 ACP 语料时还看到两处变化,作为观测记在这里,**成因在量(A-247)**:task profile 不再追问由谁行事——六份里那条针对 `actingIdentity` 的 `high-risk-missing` 问题「Whose authorization should this task act under?」都消失了,只剩 `sideEffect` 那一问;以及每份语料多出一对 `workspace-trust` 的审批(`approval/asked` 与其 `approval/decided`,带着项目指令的提示语),在三份 escalation 语料里把原本那一问顺延为 `approval:2`。两类询问的结论要分开记:trust 那一问在 `approval/policy` 为 `never` 的三份里是 `rejected`,在 policy 为 `ask` 的三份 escalation 里是 `unavailable`;提权那一问的结论与重录前相同(2 条 `allowed-once`、1 条 `rejected`)。与 policy 的这层对应同样是观测,不是解释。
 
 **证据落在启动器层。** 写在 `makeBridgeHarness` 或 SDK server 的 `mountPlugin` 上的用例，只能证明测试自己选择挂载的那些插件之间接线正确：两者都不加载任何 app 的 `cordis.patch.yml`，都不挂 app-boot，所以 `HOST_USER_IDENTITY_KEY` 在它们的 Context 里按构造就不存在。因此解锁用例 spawn 出厂启动器并读取 durable session log。它们是无 key 的，因为一个回环替身模型用一次真实工具调用回答该回合——acceptance[0] 讲的是 manifest，而 manifest 需要一个动作，所以只发 `session/new` 是展示不出来的。
 
