@@ -797,6 +797,15 @@
     },
     {
       "epic": "P2-01",
+      "path": "packages/acp/acp/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.1"
+      ],
+      "reason": "Where an ACP session gets its actor. The plan named this epic's identity types and the places a principal travels, on the understanding that a surface receiving a request over a socket is not the machine's host user; BLOCKED-291 measured that reading out, and this file is where the correction lands -- a session ACP composes per request now acts as the host user, which is what makes acceptance[0] provable on this surface rather than only in process."
+    },
+    {
+      "epic": "P2-01",
       "path": "packages/api/session-controller/src/agent.ts",
       "kind": "source",
       "stages": [
@@ -864,6 +873,30 @@
         "U.1"
       ],
       "reason": "The delegation hop. A preFlight census found acceptance[0]'s second half in worse shape than BLOCKED-200 recorded: `resolveChildAgentOptions` did not carry `identity` and `extendChain` had ZERO production callers — seven grep hits, every one prose — so no delegation hop had ever been added in this tree and a delegated child was untraceable to the person who started the run. The registry named P2-01's chain types and not this file, because the producer did not exist."
+    },
+    {
+      "epic": "P2-01",
+      "path": "snapshots/acp/cancel-tool-calls/session.v3.jsonl",
+      "kind": "fixture",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P2-01",
+      "path": "snapshots/sdk/bash-tool/session.v3.jsonl",
+      "kind": "fixture",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P2-01",
+      "path": "snapshots/sdk/inline-image-prompt/session.v3.jsonl",
+      "kind": "fixture",
+      "stages": [
+        "U.1"
+      ]
     },
     {
       "epic": "P2-01",
