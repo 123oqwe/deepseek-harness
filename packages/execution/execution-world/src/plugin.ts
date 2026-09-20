@@ -19,6 +19,7 @@ import z from '@deepseek-ai/schemastery'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { TenantId } from '@deepseek-ai/dsh-principal'
 import { selectWorldProvider } from './lifecycle.ts'
+import type { PolicySet } from './policy.ts'
 import type {
   WorldId,
   WorldProvider,
@@ -193,6 +194,28 @@ export interface Config {
   tenant: string
   /** The confinement this deployment asks for, before any provider is consulted. */
   request: WorldRequest
+  /**
+   * The rules a provider must satisfy before it is chosen (P3-02).
+   *
+   * Absent means what it meant before this field existed: selection asks each
+   * provider whether it can build the requested world and nothing more. There
+   * is NO default policy, because a default here would be a deployment's
+   * security posture chosen by this file -- and because the rules are closed,
+   * a policy naming one dimension refuses every provider that does not declare
+   * it, which is not a change anyone should get without writing it.
+   *
+   * **On the shipped product today, setting ANY policy refuses every world.**
+   * A legal policy has to cover all seven governable dimensions -- an unnamed
+   * one refuses as `unknown-dimension` (must[2]) -- and the only provider this
+   * repository ships declares `filesystem` alone, so the other six refuse as
+   * `unsupported-by-provider` (must[3]). That is the honest consequence of
+   * both rules rather than a defect in either, but it makes this field, until
+   * a provider that enforces more dimensions exists, a switch whose only
+   * settings are "no policy" and "no worlds". Stated here because the field
+   * reads as ordinary configuration and behaves as neither half of it does
+   * alone.
+   */
+  policy?: PolicySet
 }
 
 /**
@@ -249,17 +272,67 @@ export default class ExecutionWorldService extends Service<Config> {
     // rather than becoming an explicit `undefined`, which is what
     // `exactOptionalPropertyTypes` and `WorldRequest`'s optional fields want.
     }),
+    // WRAPPED IN A UNION, and that is the whole reason this field is safe.
+    // Schemastery gives every `object`/`dict` an implicit `meta.default = {}`
+    // and every `array` an implicit `[]` (`vendor/schemastery/src/index.ts:852-855`),
+    // and `resolve` substitutes a schema's default for an absent value
+    // (`:474-483`). A bare `z.object` here would therefore turn "this
+    // deployment wrote no policy" into a policy governing all seven
+    // dimensions with every allowlist empty -- and an empty allowlist REFUSES
+    // EVERYTHING (`policy-solver.ts`, rule 2), so all six shipped bundles
+    // would stop creating worlds. Measured, not reasoned: the nested form
+    // resolves `{}` to `{"policy":{"network":{"allowedPostures":[]}}}` while
+    // this union form leaves the key absent.
+    //
+    // A union carries no implicit default because that branch fires for
+    // `object`, `dict`, `array`, `tuple` and `bitset` only, so an absent
+    // policy stays absent and a written one is validated by the member
+    // schema exactly as before.
+    //
+    // `request.resources` does not need this: its empty resolution is `{}`,
+    // an object with no ceilings, which is what "this deployment set no
+    // ceiling" already meant. The difference is in the VALUE DOMAIN, not the
+    // schema -- for a policy the empty value is the strictest possible rule,
+    // for a ceiling it is the absence of one.
+    policy: z.union([z.object({
+      filesystem: z.union([z.object({
+        allowedEffects: z.array(z.union([z.const('none'), z.const('read-only'), z.const('workspace-write'), z.const('full-access')])),
+        allowedRights: z.array(z.string()),
+      })]),
+      network: z.union([z.object({
+        allowedPostures: z.array(z.union([z.const('none'), z.const('allowlist'), z.const('unrestricted')])),
+      })]),
+      process: z.union([z.object({
+        allowSpawn: z.boolean(),
+        maxProcessesCeiling: z.number().step(1).min(1),
+      })]),
+      ipc: z.union([z.object({
+        allowedPostures: z.array(z.union([z.const('none'), z.const('parent-only'), z.const('unrestricted')])),
+      })]),
+      devices: z.union([z.object({ allowedDevices: z.array(z.string()) })]),
+      secrets: z.union([z.object({
+        allowedPostures: z.array(z.union([z.const('none'), z.const('broker-only'), z.const('inherited')])),
+      })]),
+      resources: z.union([z.object({
+        cpuMillicoresCeiling: z.number().step(1).min(1),
+        memoryBytesCeiling: z.number().step(1).min(1),
+        diskBytesCeiling: z.number().step(1).min(1),
+      })]),
+    })]),
   }) as z<Config>
 
   private readonly providers: WorldProvider[] = []
   private readonly bound = new Map<string, ExecutionWorldBinding>()
   private readonly request: WorldRequest
   private readonly tenant: TenantId
+  /** The deployment's rules, or `undefined` when it stated none. */
+  private readonly policy: PolicySet | undefined
 
   constructor(ctx: Context, config: Config) {
     super(ctx, 'executionWorlds')
     this.tenant = brandString<TenantId>(config.tenant)
     this.request = config.request
+    this.policy = config.policy
   }
 
   /**
@@ -306,7 +379,7 @@ export default class ExecutionWorldService extends Service<Config> {
     const filesystem = filesystemForSandboxMode(mode, workspaceRoot)
     if (filesystem === undefined) return undefined
     const spec = resolveWorldSpec(this.request, filesystem, this.tenant)
-    const selection = selectWorldProvider(spec, this.providers)
+    const selection = selectWorldProvider(spec, this.providers, this.policy)
     if (selection.outcome === 'refused') return undefined
     const handle = await selection.provider.create(spec).catch(() => undefined)
     if (handle === undefined) return undefined

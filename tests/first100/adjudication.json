@@ -2266,6 +2266,16 @@
         "overlay": "none",
         "expectedAt": "stage",
         "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-266; delegate ruling 2026-09-19 (lane B inbox B-175/B-179/B-180)"
+      },
+      "P3-02.P/execution-world-types": {
+        "epic": "P3-02",
+        "stage": "P",
+        "path": "packages/execution/execution-world/src/types.ts",
+        "reason": "must[3]'s claim is a member of `WorldProvider`, and `WorldProvider` is declared here. `SupportedPolicyFeatures` moves into this file with it: `policy.ts` already imports this module, so declaring the member's type there and importing it back would be a cycle; `policy.ts` re-exports the name so no consumer changes. The registry gives this file to P3-01 (kind N) and to P3-04/P3-05/P3-09/P3-13 (kind P); P3-02 declares it nowhere, which is what this addition records.",
+        "declaredBy": [],
+        "overlay": "P3-01 [C,F]; P3-10 [C]",
+        "expectedAt": "tree",
+        "rulingRef": "delegate ruling 2026-09-19 (B-382 ②: types.ts 进范围 = 加 approvedAddition P3-02.P/execution-world-types，expectedAt tree)"
       }
     }
   }

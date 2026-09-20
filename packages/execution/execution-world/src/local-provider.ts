@@ -213,6 +213,19 @@ export function createLocalWorldProvider(options: LocalWorldProviderOptions): Lo
   return {
     id: LOCAL_WORLD_PROVIDER,
 
+    // P3-02 must[3]. ONE dimension, and the six it leaves out are left out for
+    // the reasons `localUnsatisfiableDimensions` states above: the sandbox
+    // governs file effects and nothing else, so `network` egress, `ipc`,
+    // `devices`, `secrets` and `resources` are outside what this provider can
+    // deliver, and it cannot stop a command from forking, which rules out
+    // `process`. Claiming `filesystem` is honest because every effect this
+    // provider accepts is one the sandbox confines -- `none` and `full-access`
+    // are refused rather than granted unconfined, which is the difference
+    // between a narrow claim and a false one. A dimension absent here refuses
+    // any policy that governs it, so the omissions are enforcement, not
+    // silence.
+    supportedPolicyFeatures: { dimensions: ['filesystem'] },
+
     unsatisfiableDimensions: spec => localUnsatisfiableDimensions(spec, options.tenant),
 
     create: (spec) => {

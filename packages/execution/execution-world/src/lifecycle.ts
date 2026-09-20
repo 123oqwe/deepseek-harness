@@ -9,6 +9,8 @@
  * @module @deepseek-ai/dsh-execution-world/lifecycle
  */
 
+import type { PolicyRefusal, PolicySet } from './policy.ts'
+import { satisfiesPolicySet } from './policy-solver.ts'
 import {
   WORLD_SPEC_DIMENSIONS,
   type WorldProvider,
@@ -72,6 +74,17 @@ export interface WorldSelectionRefusal {
    * cannot tell them apart.
    */
   readonly unsatisfiable: Readonly<Record<string, readonly WorldSpecDimension[]>>
+  /**
+   * Per-provider POLICY refusals, present only when a policy set was supplied.
+   *
+   * Separate from {@link WorldSelectionRefusal.unsatisfiable} for the reason
+   * that field carries per-provider detail at all: "this provider cannot build
+   * the world asked for" and "the deployment's rules forbid what it would
+   * build" call for different operator action, and merging them would leave a
+   * reader unable to tell which happened. Absent when the caller supplied no
+   * policy, so a selection made without one answers exactly as it did before.
+   */
+  readonly policyRefusals?: Readonly<Record<string, readonly PolicyRefusal[]>>
 }
 
 /** The provider chosen to serve a request. */
@@ -104,6 +117,7 @@ export type WorldSelection = WorldSelectionChoice | WorldSelectionRefusal
 export function selectWorldProvider(
   spec: Partial<WorldSpec>,
   providers: readonly WorldProvider[],
+  policy?: PolicySet,
 ): WorldSelection {
   const missing = missingWorldSpecDimensions(spec)
   if (missing.length > 0) {
@@ -116,12 +130,25 @@ export function selectWorldProvider(
   }
   const complete = spec as WorldSpec
   const unsatisfiable: Record<string, readonly WorldSpecDimension[]> = {}
+  const policyRefusals: Record<string, readonly PolicyRefusal[]> = {}
   for (const provider of providers) {
     const unmet = provider.unsatisfiableDimensions(complete)
-    if (unmet.length === 0) return { outcome: 'selected', provider }
-    unsatisfiable[provider.id] = unmet
+    if (unmet.length > 0) {
+      unsatisfiable[provider.id] = unmet
+      continue
+    }
+    if (policy === undefined) return { outcome: 'selected', provider }
+    // P3-02 must[3], at the one place a provider is chosen. A provider that
+    // declares nothing claims nothing, so the empty set here is what makes
+    // `unsupported-by-provider` fire for every governed dimension rather than
+    // letting an undeclared provider inherit the policy's permissions.
+    const decision = satisfiesPolicySet(complete, policy, provider.supportedPolicyFeatures ?? { dimensions: [] })
+    if (decision.ok) return { outcome: 'selected', provider }
+    policyRefusals[provider.id] = decision.refusals
   }
-  return { outcome: 'refused', reason: 'unsatisfiable', unsatisfiable }
+  return Object.keys(policyRefusals).length === 0
+    ? { outcome: 'refused', reason: 'unsatisfiable', unsatisfiable }
+    : { outcome: 'refused', reason: 'unsatisfiable', unsatisfiable, policyRefusals }
 }
 
 /**

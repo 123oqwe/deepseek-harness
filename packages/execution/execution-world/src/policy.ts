@@ -139,16 +139,10 @@ export interface PolicySet {
   readonly resources?: ResourcePolicy
 }
 
-/**
- * What one provider claims it can actually enforce (must[3]).
- *
- * A provider declares a dimension here only if it can deliver EVERY value the
- * policy permits for it. Claiming a dimension it can only partly enforce is the
- * impersonation {@link satisfiesPolicySet} exists to refuse.
- */
-export interface SupportedPolicyFeatures {
-  readonly dimensions: readonly WorldSpecDimension[]
-}
+// `SupportedPolicyFeatures` moved to `./types.ts` with the provider interface
+// that carries it, and is re-exported here under the same name so every
+// consumer of this module's vocabulary keeps reading it from one place.
+export type { SupportedPolicyFeatures } from './types.ts'
 
 /** Why a request was refused, as a closed list a caller switches on. */
 export type PolicyRefusal =

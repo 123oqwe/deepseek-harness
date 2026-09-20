@@ -228,6 +228,23 @@ export interface WorldSnapshot {
 }
 
 /**
+ * What one provider claims it can actually enforce (P3-02 must[3]).
+ *
+ * A provider declares a dimension here only if it can deliver EVERY value the
+ * policy permits for it. Claiming a dimension it can only partly enforce is
+ * the impersonation `satisfiesPolicySet` exists to refuse.
+ *
+ * Declared beside {@link WorldProvider} rather than beside the policy
+ * vocabulary that reads it: the provider interface carries it, and `policy.ts`
+ * already depends on this module, so the reverse edge would be a cycle.
+ * `policy.ts` re-exports it under the same name.
+ */
+export interface SupportedPolicyFeatures {
+  /** The dimensions this provider enforces, as {@link WORLD_SPEC_DIMENSIONS} names them. */
+  readonly dimensions: readonly WorldSpecDimension[]
+}
+
+/**
  * What a provider must implement to be an ExecutionWorld (must[0]).
  *
  * `execute` is absent on purpose. A world does not run commands — it is the
@@ -276,4 +293,16 @@ export interface WorldProvider {
    * @returns the attestation.
    */
   attest(handle: WorldHandle): Promise<WorldAttestation>
+  /**
+   * What this provider claims it can enforce (P3-02 must[3]).
+   *
+   * Optional, and ABSENT MEANS THE EMPTY SET rather than "everything": a
+   * provider that says nothing enforces nothing, so a policy covering any
+   * dimension refuses it. Optional so that adding the member does not
+   * invalidate a provider written before it existed; fail-closed so that
+   * silence cannot be read as a claim. The two together are stronger than a
+   * required member, which would have forced every provider to answer before
+   * anything read the answer.
+   */
+  readonly supportedPolicyFeatures?: SupportedPolicyFeatures
 }
