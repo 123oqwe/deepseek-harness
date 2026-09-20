@@ -7971,6 +7971,24 @@ its existing first-launch half.
 
 **Owner.** lane B.
 
+### BLOCKED-300 — the SDK server negotiates the `approval` capability and implements no path for it
+
+**Status:** OPEN (2026-09-20). Owner lane B. Measured by lane A (A-261), re-measured and narrowed by lane B, ruled by the delegate.
+
+**What was measured.** `SUPPORTED_CAPABILITIES` (`packages/sdk/server/src/server.ts:121`) contains `approval`, under a doc comment that reads, in full, "The subset this build actually implements". `approval` occurs in that package's `src` exactly twice — `:118` in `KNOWN_CAPABILITIES` and `:121` here — and nowhere else: no request, no notification, no handler. `supportedCapabilitiesFor` (`:135-138`) filters only `host-control`, so `approval` is agreed to on every connection whatever the composition holds. The protocol package names it once, at `sdk/protocol/src/types.ts:300-304`, to say the opposite: "no approval path consumes this type".
+
+**The argument against it is already written, one screen away.** The comment that keeps `host-control` OUT of the unconditional set (`server.ts:126-131`) says agreeing to a capability the process cannot deliver would "hand the client a capability it had been told it holds and would wait on forever — the failure capability negotiation exists to make impossible". That reasoning applies to `approval` unchanged; the difference is that nobody applied it.
+
+**Whose clause this is.** P8-01, by the registry's own words: its `must[0]` requires the initialize handshake to exchange "streaming/approval/replay capabilities" — naming this capability — and `must[1]`/`must[2]` define mandatory versus optional and the fail-fast rule. The row is ACCEPTED.
+
+**What this does NOT claim.** Not that P8-01's acceptance is unsound: its frozen cases prove the MECHANISM — removing a mandatory capability from the supported set turns an accepted handshake into a refusal, with a control that a fully supported set is accepted. What no case tests is whether a declared supported set is TRUE, which is the same shape [BLOCKED-293](#blocked-293) registers. Not that a client is harmed today: nothing measures use, and a client that never declares `approval` is unaffected.
+
+**The corpus does NOT show this, and the premise that it does is wrong.** Measured across every recorded session log, pairing each `workspace-trust` question with its own decision: `snapshots/sdk` 24 logs / 26 asks → 21 `rejected`, 5 `unavailable`; `snapshots/acp` 6 asks → 3 and 3; `snapshots/session` — headless, where no SDK protocol is involved at all — 91 asks → 87 `rejected`, 4 `unavailable`. Those questions are answered IN PROCESS by whatever `approval` provider the composition mounts (a corpus configuring `policy: never` yields `rejected`), and settle `unavailable` only where none is mounted — the five SDK corpora that settle so are the ones whose own patch layer does not mount one. So the corpus shows the in-process approval seam working; the wire capability's emptiness is invisible in it, and citing those questions as the consequence would be citing the wrong mechanism.
+
+**Closing condition.** Either (a) the SDK server carries a real answering channel for `approval` and one question asked over a `sdk` profile through a real launcher is observed being answered by the client, or (b) `approval` leaves `SUPPORTED_CAPABILITIES` and the handshake negotiates it honestly, with a case pinning that a client declaring it mandatory is refused for a named reason. Reading the constant is not the proof in either direction.
+
+**Owner.** lane B.
+
 ### BLOCKED-299 — a profile that layers only `base` plus a custom entry plugin runs with the two trust-gated consumers and no provider
 
 **Status:** OPEN (2026-09-20). Owner lane B. Measured by the delegate (4.4(b)), corrected and narrowed by lane A (A-256), re-measured by lane B, ruled by the delegate.
