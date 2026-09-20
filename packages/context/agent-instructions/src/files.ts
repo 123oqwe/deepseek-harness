@@ -314,10 +314,6 @@ async function discoverInstructionFiles(
   // reach the model, while the host's user-global file above is not
   // project-supplied and is unaffected at every state. Absent a trust state no
   // provider is mounted, so the chain is walked as before.
-  if (options.trustState !== undefined
-    && !authorizeProjectLoad(options.trustState, 'project-instructions').permitted) {
-    return files
-  }
 
   const cwd = resolve(options.cwd)
   const projectRoot = options.projectRoot
