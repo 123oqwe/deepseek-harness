@@ -112,7 +112,11 @@ export type WorldSelection = WorldSelectionChoice | WorldSelectionRefusal
  * would silently re-rank a deployment's own preference.
  * @param spec - the requested world; an incomplete spec is refused before any provider is consulted.
  * @param providers - candidate providers in the deployment's own preference order.
- * @returns the chosen provider, or a refusal carrying every provider's unmet dimensions.
+ * @param policy - the deployment's rules; absent decides the answer by `unsatisfiableDimensions` alone, exactly as before this parameter
+ *   existed, while a supplied policy must also be satisfied -- and a provider declaring no `supportedPolicyFeatures` claims nothing, so
+ *   every governed dimension refuses it.
+ * @returns the chosen provider, or a refusal carrying every provider's unmet dimensions and, when a policy was supplied, its policy
+ *   refusals.
  */
 export function selectWorldProvider(
   spec: Partial<WorldSpec>,
