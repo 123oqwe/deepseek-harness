@@ -132,10 +132,137 @@ jobs:
       - name: Pack release tarballs
         run: node ./scripts/pack-release.mjs dist/npm
 
-      - name: Verify packed install
-        run: node ./scripts/verify-packed-install.mjs dist/npm
+      # BLOCKED-292. The third publishing pipeline, wired to the same evidence
+      # chain as `release-publish.yml` and `release-vendor-publish.yml`, in the
+      # same place: after the tarballs exist and before the upload the publish
+      # job downloads from, so a failed verification leaves that job nothing to
+      # publish.
+      #
+      # EVERY STEP BELOW RUNS AT THE REPOSITORY ROOT, against this file's
+      # `defaults.run.working-directory: native/system`. The collector takes
+      # `--repo-root` (`collect-evidence.mjs:108-109`) and records an artifact
+      # under exactly the string it is given (`:346`, digesting
+      # `join(repoRoot, path)`), and it runs a wrapped gate with
+      # `cwd: repoRoot` (`:305`) -- so the recorded paths and the wrapped
+      # commands are written repo-root-relative and the two halves agree by
+      # construction rather than by a `cd`.
+      #
+      # `baseline-fingerprint.mjs` imports `js-yaml`, unlike the four evidence
+      # scripts, which are node builtins only. This job's install is filtered
+      # to the native workspace, which does not carry the root's devDependency,
+      # so the root's own dependencies are installed first.
+      #
+      # The same command `release-publish.yml:263` already runs, rather than a
+      # narrower `--filter` that would be faster: that spelling is proved by a
+      # pipeline that runs it, and a narrower one would be proved by nothing
+      # until it ran here. A dispatch with `publish: false` runs this job
+      # without publishing anything, so the choice is not about whether this
+      # can be rehearsed -- it can -- but about which of the two spellings
+      # already has a run behind it.
+      - name: Install the root workspace for the evidence scripts
+        working-directory: ${{ github.workspace }}
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Resolve the evidence base SHA
+        id: evidence-base
+        working-directory: ${{ github.workspace }}
+        env:
+          TAG_PREFIX: node-addon-system-v
+          REF: ${{ github.ref }}
+        run: |
+          case "$REF" in
+            "refs/tags/${TAG_PREFIX}"*)
+              from=HEAD^
+              what="the previous ${TAG_PREFIX} release"
+              ;;
+            refs/tags/*)
+              echo "::error::this run is from tag $REF, which does not carry TAG_PREFIX '$TAG_PREFIX'; the prefix here has drifted from native/system/scripts/verify-release.mjs and the evidence base cannot be resolved" >&2
+              exit 2
+              ;;
+            *)
+              from=HEAD
+              what="the latest ${TAG_PREFIX} release (rehearsal: $REF is not a tag, so this run publishes nothing)"
+              ;;
+          esac
+          if tag=$(git describe --abbrev=0 --match "${TAG_PREFIX}*" "$from" 2>/dev/null); then
+            # `describe` names a TAG, and a tag can be moved; `gitDiff.baseSha`
+            # is a `CommitSha` and the collector records `--base-sha` verbatim.
+            base=$(git rev-list -n 1 "$tag")
+            echo "evidence base: ${what} ${tag} (${base})"
+          else
+            # The one value here that is deliberately not a commit: git's empty
+            # tree, which is how a first release diffs against nothing.
+            base=4b825dc642cb6eb9a060e54bf8d69288fbee4904
+            echo "evidence base: no ${TAG_PREFIX} release reachable from ${from}; falling back to git's empty tree ${base}, so this package's gitDiff covers the whole tree"
+          fi
+          echo "sha=$base" >> "$GITHUB_OUTPUT"
+
+      - name: Collect the release evidence package
+        working-directory: ${{ github.workspace }}
+        run: |
+          node scripts/release/baseline-fingerprint.mjs capture
+          node scripts/release/baseline-fingerprint.mjs verify
+          required=()
+          for tarball in native/system/dist/npm/*; do required+=(--required-artifact "$tarball"); done
+          node scripts/release/collect-evidence.mjs init \
+            --base-sha "${{ steps.evidence-base.outputs.sha }}" \
+            --required-gate release-payload \
+            --required-gate packed-install \
+            "${required[@]}"
+
+      # Run a second time on purpose, the same trade the other two pipelines
+      # record: the step above is the one that gates the build, and this one
+      # asks whether the collector records a real gate's execution. Both
+      # commands are repo-root-relative because the collector runs them at the
+      # repo root; the scripts themselves resolve their own files from their
+      # module URL (`native/system/scripts/repo.mjs:14`), so only
+      # `verify-packed-install`'s positional path depends on the caller's cwd
+      # (`:32`, a bare `path.resolve`).
+      - name: Record the release-payload gate
+        working-directory: ${{ github.workspace }}
+        env:
+          RELEASE_PUBLISH: ${{ inputs.publish }}
+        run: |
+          set +e
+          node scripts/release/collect-evidence.mjs run --gate-id release-payload -- node native/system/scripts/verify-release.mjs --prebuilds
+          status=$?
+          set -e
+          cat .dsh/evidence/evidence.d/logs/release-payload.log || true
+          exit $status
+
+      # Wrapped rather than run twice, the same trade the other two pipelines
+      # take: this one does a real install, so paying for it again is not worth
+      # it. The bare step this replaces ran the same script with the same env,
+      # from `native/system` with a `dist/npm` argument; here the collector
+      # runs it from the repo root, so the same directory is named
+      # `native/system/dist/npm`.
+      - name: Verify packed install (wrapped, so the evidence records it)
+        working-directory: ${{ github.workspace }}
         env:
           NALR_REQUIRE_LANDLOCK: 1
+        run: |
+          set +e
+          node scripts/release/collect-evidence.mjs run --gate-id packed-install -- node native/system/scripts/verify-packed-install.mjs native/system/dist/npm
+          status=$?
+          set -e
+          cat .dsh/evidence/evidence.d/logs/packed-install.log || true
+          exit $status
+
+      - name: Digest the published artifacts into the evidence package
+        working-directory: ${{ github.workspace }}
+        run: |
+          for tarball in native/system/dist/npm/*; do
+            node scripts/release/collect-evidence.mjs build-artifact --path "$tarball"
+          done
+
+      - name: Verify the release evidence package
+        working-directory: ${{ github.workspace }}
+        run: node scripts/release/verify-evidence.mjs --evidence .dsh/evidence/evidence.json
+
+      - name: Restore the tracked baseline file the evidence capture rewrote
+        if: always()
+        working-directory: ${{ github.workspace }}
+        run: git checkout -- .dsh/baseline.json
 
       - name: Upload npm tarballs
         uses: actions/upload-artifact@v4
