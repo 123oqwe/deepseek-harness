@@ -294,7 +294,7 @@ export default class ExecutionWorldService extends Service<Config> {
     // ceiling" already meant. The difference is in the VALUE DOMAIN, not the
     // schema -- for a policy the empty value is the strictest possible rule,
     // for a ceiling it is the absence of one.
-    policy: z.union([z.object({
+    policy: z.object({
       filesystem: z.union([z.object({
         allowedEffects: z.array(z.union([z.const('none'), z.const('read-only'), z.const('workspace-write'), z.const('full-access')])),
         allowedRights: z.array(z.string()),
@@ -318,7 +318,7 @@ export default class ExecutionWorldService extends Service<Config> {
         memoryBytesCeiling: z.number().step(1).min(1),
         diskBytesCeiling: z.number().step(1).min(1),
       })]),
-    })]),
+    }),
   }) as z<Config>
 
   private readonly providers: WorldProvider[] = []
