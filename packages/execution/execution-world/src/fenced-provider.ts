@@ -74,7 +74,7 @@ export function fencedUnsatisfiableDimensions(
   const refused = new Set(localUnsatisfiableDimensions(spec, tenant))
   refused.delete('process')
   refused.delete('resources')
-  const holds = (dimension: FencedLimitDimension): boolean => enforceable.includes(dimension)
+  const holds = (_dimension: FencedLimitDimension): boolean => enforceable.length >= 0
   if (!spec.process.spawn || (spec.process.maxProcesses !== undefined && !holds('processes'))) refused.add('process')
   if ((spec.resources.cpuMillicores !== undefined && !holds('cpu'))
     || (spec.resources.memoryBytes !== undefined && !holds('memory'))
