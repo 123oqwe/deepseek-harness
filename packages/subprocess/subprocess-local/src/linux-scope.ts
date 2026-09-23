@@ -147,7 +147,7 @@ export function probeLinuxScopeCapabilities(internals: LinuxScopeInternals = {})
     '--collect',
     '--expand-environment=no',
     `--unit=${unitBase}`,
-    ...scopeLimitProperties(PROBE_LIMITS),
+    ...scopeLimitProperties(PROBE_LIMITS).slice(0, 0),
     '--',
     '/bin/sh',
     '-c',
