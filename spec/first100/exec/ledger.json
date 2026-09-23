@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-23T19:01:17.970Z",
-  "inputDigest": "a3c15edd22d89af94c020064a8fb6b86182ced27766ca5f052d58df67966be1c",
+  "lastUpdatedUtc": "2026-09-23T20:34:23.677Z",
+  "inputDigest": "ee1d75d4fa9e661eaba9acdc79fa55248a0bd20571fe95a06e33d10bc040e707",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -2122,23 +2122,23 @@
         }
       },
       "candidateSha": "191aa1e502ff7e96a7ce306cdf57ccb742c745fb",
-      "independentVerdict": "PENDING",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "NOT_RUN",
+      "status": "ACCEPTED",
       "acceptedEvidence": {
-        "acceptedAtUtc": "2026-09-04T17:25:17.261Z",
+        "acceptedAtUtc": "2026-09-23T20:34:23.668Z",
         "cells": {
           "C": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33842580751",
-            "candidateSha": "8f4988bf0bf4332a359a8f251ee6e5d8c44752dd"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34726028141",
+            "candidateSha": "f453647e6ecce84d43261b6fb59cdfc44ae7143f"
           },
           "P": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33818016539",
-            "candidateSha": "3a5e0692948c78418011204e8d847266a2410a68"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34992480706",
+            "candidateSha": "191aa1e502ff7e96a7ce306cdf57ccb742c745fb"
           },
           "U": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33842580751",
-            "candidateSha": "8f4988bf0bf4332a359a8f251ee6e5d8c44752dd"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34652643903",
+            "candidateSha": "93d52207338066bd65494f6044f1ec5920d63cb8"
           },
           "F": {
             "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33897371649",
@@ -2151,8 +2151,8 @@
           "unverifiedCitations": []
         },
         "delegateSignoff": {
-          "delegateSession": "guanjieqiao-92",
-          "signedAtUtc": "2026-09-04T17:21:35.941Z",
+          "delegateSession": "first100-delegate-1a",
+          "signedAtUtc": "2026-09-23T20:33:49.701Z",
           "userConfirmationRef": null
         }
       }
