@@ -1906,6 +1906,24 @@
       "reason": "`ExecutionWorldFact`'s second variant — BLOCKED-178's producer half, which §12.46-B splits between this epic (producer) and P2-05 (rule). With one variant the fact was undecidable: a rule refusing an unknown world and a rule refusing everything were the same policy. The C-stage preFlight recorded that it could not authorise this cross-epic edit; the U-stage preFlight asked for it and the delegate ruled it in."
     },
     {
+      "epic": "P3-02",
+      "path": "packages/execution/execution-world/src/lifecycle.ts",
+      "kind": "source",
+      "stages": [
+        "P"
+      ],
+      "reason": "Where a provider is chosen: `selectWorldProvider` takes the deployment's policy and reads each provider's declared `supportedPolicyFeatures`, a provider that declares nothing reading as the empty claim (must[3]). The registry named P3-02's policy types and not the selection path, because in the plan no provider declared anything for a policy to read; without this file the solver's provider-claim check would have no production caller."
+    },
+    {
+      "epic": "P3-02",
+      "path": "packages/execution/execution-world/src/plugin.ts",
+      "kind": "source",
+      "stages": [
+        "P"
+      ],
+      "reason": "Where a deployment writes its policy: `Config.policy`, validated at load and passed to selection, with no default policy of its own. It is wrapped in a union so an absent policy stays absent instead of resolving to an empty policy that refuses every world (the narrow run of M3 shows both effects). The registry named P3-02's policy types and not the configuration surface that makes a deployment's policy reach selection."
+    },
+    {
       "epic": "P3-06",
       "path": "packages/credentials/secrets-broker/tests/lease.spec.ts",
       "kind": "test",

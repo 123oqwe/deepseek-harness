@@ -14874,6 +14874,47 @@
       },
       "note": "P2-01 acceptance[0] read on the recorded corpus, replacing a fifth case (OQ30) whose boundary BLOCKED-291 measured out: it asserted that ACP and the SDK server attach NOTHING, on the reading that a request arriving over a socket is not the machine's host user. Both are started BY the local user, and a session that attaches nothing acts as `anonymous:<sessionId>`.\n\nCOVERAGE IS A PREDICATE, NOT A COUNT: every log written at the current session generation (the header row's own `version`, compared with `sessionFormatCatalog.currentVersion` -- not the filename, because one corpus stores a v0 projection beside its v3 log) that recorded at least one event must attach an identity. A count would be satisfied by a NEW corpus that attaches nothing, simply by being one higher. Ten logs sit outside the predicate today and each has a reason: seven stored at a generation no writer emits any more, two ACP handshakes with no events, and `sdk/multi-turn`, whose session log is still v2 while its writer oracle is v3.\n\nTHE FILE LIST IS NOT THE INPUT SET. These three cases walk `snapshots/{session,acp,sdk}/` and read one log per Session role; a directory traversal cannot be spelled in `files[]`. The three corpus files listed here are the MUTATION SITES, not the inputs. That gap is in this entry's favour: adding a corpus that attaches nothing would not change `files[]` and would still redden the first of these cases, which is exactly what a count could not do.\n\nThe host-user claim is about the chain's ROOT, because a subagent session legitimately acts as `agent:<id>` and 22 of the 128 in-scope logs do; beside it a biconditional, that a log acts as the user exactly when it has delegated to nobody. M3 exists because the root claim alone does not catch a forged own-principal.\n\nThe third case counts DISTINCT ATTRIBUTED PRINCIPALS OR THEIR ABSENCE: the identity lookup returns `undefined` for a log that attributed an action while attaching nothing, and that `undefined` joins the set. It still fails closed -- a corpus that lost every identity collapses the set to one member -- and it can only mask while the second case is already red, and M2's run is that case: the attribution case failed there while this one stayed green. The set gaining a fourth member under that mutation is a reading taken from M2's tree directly, not from the run -- a vitest report carries case verdicts, not the size of a set inside one.",
       "supersedes": "2026-09-11T17:28:48.597Z"
+    },
+    {
+      "epic": "P3-02",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/execution/execution-world/tests/policy-features.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P3-02 P: a provider that declares nothing supports nothing, so every governed dimension refuses it",
+        "P3-02 P: the same policy admits a provider that declares every dimension, so the refusal above is the claim and not the rule",
+        "P3-02 P: a partial claim is refused on exactly what it left out, which is what keeps weak from posing as strong",
+        "P3-02 P: the provider this package ships declares what it enforces rather than staying silent",
+        "P3-02 P: a deployment policy reaches the real selection path, so a world nobody can confine is not created",
+        "P3-02 P: a row that writes no policy resolves to no policy, so the shipped bundles keep creating worlds",
+        "P3-02 P: writing one rule does not conjure the other six, so an unwritten dimension refuses as unknown rather than as an empty list"
+      ],
+      "files": [
+        "packages/execution/execution-world/tests/policy-features.spec.ts",
+        "packages/execution/execution-world/src/types.ts",
+        "packages/execution/execution-world/src/policy.ts",
+        "packages/execution/execution-world/src/policy-solver.ts",
+        "packages/execution/execution-world/src/local-provider.ts",
+        "packages/execution/execution-world/src/lifecycle.ts",
+        "packages/execution/execution-world/src/plugin.ts"
+      ],
+      "frozenAtUtc": "2026-09-23T20:19:55Z",
+      "dryRunProof": {
+        "treeSha": "cc3aeb3f7be9ed61747c08d25ea0feaaa4285445",
+        "testsDiscovered": 7
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations, each its own commit off `c7b7cfe7d6b8432f1cb322a2546d57447d1243c1`, never merged, each run by CI's narrow job at its own SHA over this entry's argv. M1 (`2626f36b6c2115542d5622e8bbbc447253d4e1e1`) deletes the shipped provider's declaration `supportedPolicyFeatures: { dimensions: ['filesystem'] }` (`local-provider.ts:227`). M2′ (`b569d2b8232ac17053d3e9657eb12bd7e59a1908`) makes the solver read a claim of every dimension instead of the provider's own (`policy-solver.ts:79`, `new Set(features.dimensions)` → `new Set(WORLD_SPEC_DIMENSIONS)`). M3 (`a8d6d5c457affa92896e1c7218387a9da2246a47`) removes the union wrapper around `Config.policy` (`plugin.ts:298` and its closing `])`). M4 (`09cd06dd8de71e9425ea8473941f4fac5bb046d1`) removes the union wrapper around one policy member, `devices` (`plugin.ts:312`). A fifth commit, M2 (`e8d9ca0551`, the solver no longer refuses an unclaimed dimension), was built as an alternative to M2′ and not dispatched.",
+        "failureSummary": "Case N below is the N-th `it(` of the file. Baseline first: the unmutated base is 7 passed / 0 failed (run 35914408546), so each red below is the mutation's.\n\nM1, run 35914431585: 6 / 1, case 4 (the shipped provider declares what it enforces), as predicted.\nM2′, run 35914454761: 4 / 3, cases 1, 3 and 5, as predicted.\nM3, run 35914477288: 5 / 2, cases 5 and 6. THE PREDICTION WAS CASE 6 ALONE AND IS RECORDED UNCHANGED; both reds are assertion failures, not tool or type failures. Case 6 reads `expected {} to be undefined`: without the wrapper an absent policy resolves to an empty one. Case 5 reads `expected undefined to be defined`: its control half mounts the same composition with no policy and expects a world, and under M3 that empty policy governs every dimension with nothing allowed, so no world is created there either.\nM4, run 35914498052: 6 / 1, case 7 (a deep-equality failure), as predicted.\n\nCase 2 (a provider declaring every dimension is admitted by the same policy) stayed green in all five runs: it is the positive control that tells a refusal caused by the claim from a policy that refuses everything.\n\nPredictions and the dispatch table: `~/first100-delegate/artifacts/delegate/p3-02-P-narrow-predictions.md` (sha256 278e13a7efecb669ed30c7b28baf55ad7bf8323cc74c56d6d521e7b53dbbcfeb); reports under `~/first100-delegate/artifacts/narrow-p3-02-P/<run>/`."
+      },
+      "note": "P3-02's Provider stage, frozen as all 7 cases of `packages/execution/execution-world/tests/policy-features.spec.ts`; the argv is that one file and the file holds exactly these 7 `it(` with no `.each`, so the argv and `expectCases` are the same set. The titles are the bare `it()` titles; the `P3-02 P:` prefix occurs only in this file, so each is unique across the suite. C's entry and its `expectCases` are unchanged. `dryRunProof.treeSha` is the tree of `c7b7cfe7d6`, where the baseline narrow run discovered 7 tests; `packages/execution/execution-world/` is byte-identical between that commit and the tip this entry is frozen on.\n\nWHAT THIS STAGE FREEZES IS THE DECLARATION CONTRACT AND THE SOLVER'S REFUSAL, NOT ENFORCEMENT OF SIX DIMENSIONS. The shipped provider's declaration is the literal `{ dimensions: ['filesystem'] }` (`local-provider.ts:227`), the same on every platform: `process` is left out because a provider cannot stop a command from forking, and the four sandbox back ends declare the same thing at the `WorldSpecDimension` level. So acceptance[0] (no network) is reachable through no provider today, and acceptance[1] (process isolation) only below the `WorldProvider` declaration layer, on the bwrap path. Seven green cases say a provider enforces what it declares and is refused on what it does not; they do not say seven dimensions are enforced.\n\nStill owed and recorded, not closed by this entry: the `anthropics/sandbox-runtime` PENDING_ADOPTION and the `srt SandboxRuntimeConfig schema` vocabulary case (rule 4), both bound to the section 3.2 slice `packages/sandbox/sandbox-srt`, which does not exist in this tree (B-438 ②③; BLOCKED-297)."
     }
   ]
 }
