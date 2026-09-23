@@ -66,6 +66,31 @@ export interface SubprocessStdio {
   stderr: SubprocessOutputMode
 }
 
+/** A resource dimension a provider can hold one managed range to. */
+export type SubprocessLimitDimension = 'cpu' | 'memory' | 'processes'
+
+/**
+ * Hard ceilings for one managed range: the spawned command and everything it
+ * starts. Each member is optional and has no default; an absent member puts
+ * no ceiling on that dimension.
+ */
+export interface SubprocessLimits {
+  /**
+   * CPU time as thousandths of one CPU (1000 = one full CPU): a positive
+   * multiple of 10, so the ceiling is a whole percent of one CPU.
+   */
+  readonly cpuMillicores?: number | undefined
+  /** Memory ceiling in bytes, swap included, a positive integer. */
+  readonly memoryBytes?: number | undefined
+  /**
+   * Ceiling on tasks (processes and threads) alive at once in the range, a
+   * positive integer. The range includes whatever the provider launches the
+   * command with: on the local provider's Linux scope, the Node launch runner
+   * and its threads count until the runner replaces itself with the command.
+   */
+  readonly maxProcesses?: number | undefined
+}
+
 /**
  * A fully-specified spawn request. This seam applies no defaults: every
  * disposition, limit, and directory is explicit, so the caller's own config —
@@ -102,6 +127,13 @@ export interface SubprocessSpawnSpec {
    * tombstone that removes an ordinary ambient entry from the child.
    */
   env?: NodeJS.ProcessEnv | undefined
+  /**
+   * Hard resource ceilings for the whole managed range. Absent, or present
+   * with no member set, launches exactly what a spawn without this field
+   * launches. A provider that cannot hold every named dimension throws
+   * `SubprocessLimitsRefusedError` instead of running the command unbounded.
+   */
+  limits?: SubprocessLimits | undefined
 }
 
 /**

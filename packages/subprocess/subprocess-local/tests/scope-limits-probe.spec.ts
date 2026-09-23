@@ -195,3 +195,34 @@ describe('scope resource properties on this runner', () => {
     }
   })
 })
+
+/**
+ * The swap ceiling rides with every memory ceiling (`scopeLimitProperties`
+ * pairs `MemoryMax` with `MemorySwapMax=0`), because a ceiling that swap can
+ * extend is not a memory ceiling. This reads whether the runner's manager
+ * accepts it and whether the scope's own `memory.swap.max` shows 0 from
+ * inside, with the same two readings and the same plain-scope control as the
+ * three properties above. A separate case, so the titles above are unchanged.
+ */
+const swap: DimensionProbe = control.acceptance === 'accepted'
+  ? { property: 'MemorySwapMax=0', ...probeScope(['MemorySwapMax=0'], 'memory.swap.max', '0') }
+  : {
+    property: 'MemorySwapMax=0',
+    acceptance: control.acceptance,
+    enforcement: 'not-applicable',
+    path: '',
+    inScope: false,
+    controllers: '',
+    value: '',
+    diagnostic: `scope control: ${control.diagnostic}`,
+  }
+
+describe('the swap ceiling a memory ceiling carries, on this runner', () => {
+  it(`user scope on ${process.platform}: control=${control.acceptance} MemorySwapMax=${swap.acceptance}/${swap.enforcement}/${swap.inScope ? 'in-scope' : 'not-in-scope'}`, () => {
+    console.log(`[scope-limits-probe] ${swap.property}: path=${swap.path || '(none)'} inScope=${String(swap.inScope)} value=${swap.value || '(unread)'} controllers=${swap.controllers || '(unread)'}`)
+    if (swap.diagnostic !== '') console.log(`[scope-limits-probe] ${swap.property}: ${swap.diagnostic}`)
+    expect(['accepted', 'rejected', 'not-applicable']).toContain(swap.acceptance)
+    if (swap.acceptance !== 'accepted') expect(swap.enforcement).not.toBe('enforced')
+    if (!swap.inScope) expect(swap.enforcement).not.toBe('enforced')
+  })
+})

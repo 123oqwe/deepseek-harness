@@ -9,6 +9,7 @@ import {
   type Sandbox,
 } from '@deepseek-ai/dsh-e2b'
 import type E2BRuntime from '@deepseek-ai/dsh-e2b'
+import { SubprocessLimitsRefusedError } from '@deepseek-ai/dsh-subprocess'
 import type { SubprocessSpawnSpec } from '@deepseek-ai/dsh-subprocess'
 import E2BSubprocessRuntime from '@deepseek-ai/dsh-subprocess-e2b'
 import { E2BBase64Decoder, E2B_OUTPUT_COMPLETE_FRAME, E2BOutputReader } from '../src/output.ts'
@@ -467,6 +468,15 @@ describe('E2BSubprocessHandle', () => {
         argv: ['bash'], cwd: '/w', rows: 24, cols: 80, graceMs,
       })).rejects.toThrow('graceMs must be a positive finite number')
     }
+  })
+
+  it('REFUSES a spawn carrying a resource ceiling, because nothing here holds one per command', () => {
+    const ctx = new Context()
+    const service = Object.create(E2BSubprocessRuntime.prototype) as E2BSubprocessRuntime
+    Reflect.set(service, 'disposing', false)
+    Reflect.set(service, 'ctx', ctx)
+    expect(() => service.spawn(spec({ limits: { maxProcesses: 8 } }))).toThrow(SubprocessLimitsRefusedError)
+    expect(service.enforceableLimits()).toEqual([])
   })
 
   it('rejects malformed environment entries before command start', async () => {

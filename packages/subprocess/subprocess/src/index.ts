@@ -11,7 +11,7 @@
 import { Context, Service } from '@deepseek-ai/cordis'
 import { proxyEnvironmentForChild } from '@deepseek-ai/dsh-http-proxy'
 import { DSH_ENV_PREFIX } from './types.ts'
-import type { SubprocessHandle, SubprocessSpawnSpec } from './types.ts'
+import type { SubprocessHandle, SubprocessLimitDimension, SubprocessLimits, SubprocessSpawnSpec } from './types.ts'
 import type { SubprocessTerminalHandle, SubprocessTerminalSpawnSpec } from './types.ts'
 
 export { DSH_ENV_PREFIX } from './types.ts'
@@ -22,6 +22,8 @@ export type {
   SubprocessCollect,
   SubprocessCollectedOutputs,
   SubprocessHandle,
+  SubprocessLimitDimension,
+  SubprocessLimits,
   SubprocessOutcome,
   SubprocessOutputMode,
   SubprocessOutputRead,
@@ -77,6 +79,74 @@ export function scrubbedParentEnv(): Record<string, string> {
   return env
 }
 
+/** Each dimension's member in {@link SubprocessLimits}, in the order refusals name them. */
+const LIMIT_MEMBERS = [
+  ['cpu', 'cpuMillicores'],
+  ['memory', 'memoryBytes'],
+  ['processes', 'maxProcesses'],
+] as const satisfies readonly (readonly [SubprocessLimitDimension, keyof SubprocessLimits])[]
+
+/**
+ * Thrown synchronously by `spawn()` when the spec names a ceiling the
+ * provider cannot hold at this moment. Nothing was launched.
+ */
+export class SubprocessLimitsRefusedError extends Error {
+  override readonly name = 'SubprocessLimitsRefusedError'
+  /** The requested dimensions the provider cannot hold. */
+  readonly refused: readonly SubprocessLimitDimension[]
+  /** What the provider could hold when it refused. */
+  readonly enforceable: readonly SubprocessLimitDimension[]
+
+  constructor(refused: readonly SubprocessLimitDimension[], enforceable: readonly SubprocessLimitDimension[]) {
+    super(`subprocess: this provider cannot hold a ${refused.join(', ')} ceiling here `
+      + `(it can hold: ${enforceable.length === 0 ? 'none' : enforceable.join(', ')}); refusing to run the command unbounded`)
+    this.refused = refused
+    this.enforceable = enforceable
+  }
+}
+
+/**
+ * The dimensions a spawn's limits set, after checking every set value.
+ * @param limits - the spawn's ceilings; `undefined` means none.
+ * @returns each dimension with a ceiling, in `cpu`, `memory`, `processes` order; empty when none is set.
+ * @throws when a set member is not a positive safe integer, or `cpuMillicores` is not a multiple of 10.
+ */
+export function requestedLimitDimensions(limits: SubprocessLimits | undefined): SubprocessLimitDimension[] {
+  const requested: SubprocessLimitDimension[] = []
+  for (const [dimension, member] of LIMIT_MEMBERS) {
+    const value = limits?.[member]
+    if (value === undefined) continue
+    if (!Number.isSafeInteger(value) || value <= 0) {
+      throw new Error(`subprocess limits.${member} must be a positive integer, got ${String(value)}`)
+    }
+    // A CPU ceiling is a whole percent of one CPU: the kernel's quota floor is
+    // 1ms per 100ms period (10 millicores), and older systemd refuses a
+    // fractional CPUQuota percentage.
+    if (member === 'cpuMillicores' && value % 10 !== 0) {
+      throw new Error(`subprocess limits.cpuMillicores must be a positive multiple of 10 (a whole percent of one CPU), got ${String(value)}`)
+    }
+    requested.push(dimension)
+  }
+  return requested
+}
+
+/**
+ * Refuse a spawn whose limits name a dimension the provider cannot hold.
+ * Every provider calls this in `spawn()` before launching anything, with the
+ * answer its own containment selection gives for that same spawn.
+ * @param limits - the spawn's ceilings; `undefined` means none.
+ * @param enforceable - what the provider can hold for this spawn.
+ * @throws SubprocessLimitsRefusedError naming each requested dimension outside `enforceable`.
+ * @throws when a set member is not a positive safe integer, or `cpuMillicores` is not a multiple of 10.
+ */
+export function assertLimitsEnforceable(
+  limits: SubprocessLimits | undefined,
+  enforceable: readonly SubprocessLimitDimension[],
+): void {
+  const refused = requestedLimitDimensions(limits).filter(dimension => !enforceable.includes(dimension))
+  if (refused.length > 0) throw new SubprocessLimitsRefusedError(refused, enforceable)
+}
+
 declare module '@deepseek-ai/cordis' {
   interface Context {
     subprocess: SubprocessRuntime
@@ -104,6 +174,11 @@ declare module '@deepseek-ai/cordis' {
  *   {@link SubprocessHandle.waitForExit} observes that same range so a
  *   consumer-owned teardown ladder can hold each tier on real quiescence; each
  *   provider documents its signalling and observability limits.
+ * - A spec's `limits` are held as hard ceilings on the whole managed range, or
+ *   the spawn is refused through {@link assertLimitsEnforceable} before
+ *   anything launches; {@link enforceableLimits} answers from the same
+ *   containment selection that spawn uses. A spec without limits launches
+ *   exactly as it did before the field existed.
  * - Disposal of the service terminates all still-running managed processes
  *   and awaits their exit.
  * - {@link spawnTerminal} owns terminal allocation, text transport,
@@ -139,9 +214,21 @@ export abstract class SubprocessRuntime extends Service {
    * applies no defaults.
    * @param spec - argv, directory, stdio dispositions, grace, cancellation, and environment.
    * @returns the live process handle (streams/readers, signalling, outcome promise).
-   * @throws synchronously when pre-aborted or when argv, cwd, environment, or grace is invalid before handle creation.
+   * @throws synchronously when pre-aborted or when argv, cwd, environment, grace, or limits is invalid before handle creation.
+   * @throws SubprocessLimitsRefusedError synchronously when `limits` names a ceiling this provider cannot hold.
    */
   abstract spawn(spec: SubprocessSpawnSpec): SubprocessHandle
+
+  /**
+   * The dimensions this provider can hold a managed range to at this moment,
+   * from the same containment selection its next {@link spawn} makes. The
+   * base answer is none: a provider that does not override it must refuse
+   * every limited spawn.
+   * @returns the enforceable dimensions; empty when the provider can hold none.
+   */
+  enforceableLimits(): readonly SubprocessLimitDimension[] {
+    return []
+  }
 
   /**
    * Allocate a real terminal and start one owned process session. This is the

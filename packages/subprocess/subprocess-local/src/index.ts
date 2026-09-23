@@ -14,9 +14,10 @@ import { delimiter, extname, isAbsolute, resolve } from 'node:path'
 import { Context } from '@deepseek-ai/cordis'
 import * as nodePty from 'node-pty'
 import type { IPtyForkOptions } from 'node-pty'
-import { SubprocessRuntime } from '@deepseek-ai/dsh-subprocess'
+import { assertLimitsEnforceable, SubprocessRuntime } from '@deepseek-ai/dsh-subprocess'
 import type {
   SubprocessHandle,
+  SubprocessLimitDimension,
   SubprocessSpawnSpec,
   SubprocessTerminalHandle,
   SubprocessTerminalSpawnSpec,
@@ -40,6 +41,18 @@ import { targetEnvironment } from './runner-launch.ts'
 import { createProcessInspector } from './process-inspector.ts'
 import type { ProcessInspector } from './process-inspector.ts'
 import { LocalTerminalHandle } from './terminal.ts'
+
+/**
+ * What each ordinary containment mode holds a managed range to. A user
+ * scope's own `TasksMax` / `MemoryMax` / `CPUQuota` properties hold all three.
+ * The Job Object this provider creates sets only kill-on-close today, so
+ * `windows-job` claims nothing, and `fallback` has nothing to hold one with.
+ */
+const ENFORCEABLE_LIMITS: Readonly<Record<'linux-scope' | 'windows-job' | 'fallback', readonly SubprocessLimitDimension[]>> = {
+  'linux-scope': ['cpu', 'memory', 'processes'],
+  'windows-job': [],
+  fallback: [],
+}
 
 /**
  * Local subprocess service: platform-selected managed ranges, Node-shaped stdio
@@ -165,6 +178,7 @@ export class LocalSubprocessRuntime extends SubprocessRuntime {
     validateSubprocessSpec(spec)
     const env = targetEnvironment(spec)
     const containmentMode = this.selectContainmentMode('ordinary')
+    assertLimitsEnforceable(spec.limits, ENFORCEABLE_LIMITS[containmentMode])
     let handle: LocalSubprocessHandle
     if (containmentMode === 'fallback') {
       handle = spawnSubprocess(spec, this.internals)
@@ -184,6 +198,10 @@ export class LocalSubprocessRuntime extends SubprocessRuntime {
       handle.waitForExit().then(() => { this.live.delete(handle) })
     void handle.done.then(release, release).catch(() => {})
     return handle
+  }
+
+  override enforceableLimits(): readonly SubprocessLimitDimension[] {
+    return ENFORCEABLE_LIMITS[this.selectContainmentMode('ordinary')]
   }
 
   private selectContainmentMode(

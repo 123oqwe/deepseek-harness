@@ -5,6 +5,7 @@ import { randomBytes } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { setTimeout as sleepMs } from 'node:timers/promises'
 import type {
+  SubprocessLimits,
   SubprocessOutcome,
   SubprocessSpawnSpec,
   SubprocessTerminalSpawnSpec,
@@ -401,7 +402,32 @@ class SystemdScopeOwner implements BoundProcessOwner {
   }
 }
 
-function scopeArgs(unitBase: string, invocation: RunnerInvocation, argv: readonly string[]): string[] {
+/**
+ * The `systemd-run` properties that hold one scope to a spawn's ceilings.
+ *
+ * The scope's cgroup holds the runner and everything the target starts, so
+ * `TasksMax` counts the runner too. `MemorySwapMax=0` rides with `MemoryMax`
+ * because a ceiling that swap can extend is not a memory ceiling. CPU is
+ * `CPUQuota` in percent of one CPU: 1000 millicores is `100%`.
+ * @param limits - the spawn's ceilings; `undefined` means none.
+ * @returns `-p` argument pairs, empty when no ceiling is set.
+ */
+export function scopeLimitProperties(limits: SubprocessLimits | undefined): string[] {
+  const properties: string[] = []
+  if (limits?.cpuMillicores !== undefined) properties.push('-p', `CPUQuota=${String(limits.cpuMillicores / 10)}%`)
+  if (limits?.memoryBytes !== undefined) {
+    properties.push('-p', `MemoryMax=${String(limits.memoryBytes)}`, '-p', 'MemorySwapMax=0')
+  }
+  if (limits?.maxProcesses !== undefined) properties.push('-p', `TasksMax=${String(limits.maxProcesses)}`)
+  return properties
+}
+
+function scopeArgs(
+  unitBase: string,
+  invocation: RunnerInvocation,
+  argv: readonly string[],
+  properties: readonly string[],
+): string[] {
   return [
     '--user',
     '--scope',
@@ -409,6 +435,7 @@ function scopeArgs(unitBase: string, invocation: RunnerInvocation, argv: readonl
     '--collect',
     '--expand-environment=no',
     `--unit=${unitBase}`,
+    ...properties,
     '--',
     ...invocation,
     '--',
@@ -478,7 +505,7 @@ export function prepareLinuxTerminalScope(
   const unitBase = unitStem('dsh-terminal')
   return {
     command: internals.systemdRun ?? 'systemd-run',
-    args: scopeArgs(unitBase, invocation, spec.argv),
+    args: scopeArgs(unitBase, invocation, spec.argv, []),
     cwd: process.cwd(),
     env: runnerEnvironment(files.requestPath, invocation),
     bindOwner: direct => new SystemdScopeOwner(
@@ -517,6 +544,7 @@ export function launchLinuxScope(
       unitBase,
       invocation,
       spec.argv,
+      scopeLimitProperties(spec.limits),
     ), {
       cwd: process.cwd(),
       env: runnerEnvironment(files.requestPath, invocation),

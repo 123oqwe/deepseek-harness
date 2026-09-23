@@ -1987,6 +1987,86 @@
         "expectedAt": "stage",
         "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate work order 2026-09-19 (artifacts/delegate/p3-10-p-workorder.md) R3; lane B inbox B-146/B-157"
       },
+      "P3-10.P/subprocess-types": {
+        "epic": "P3-10",
+        "stage": "P",
+        "path": "packages/subprocess/subprocess/src/types.ts",
+        "reason": "R1's ceilings have to ride the spawn request, and `SubprocessSpawnSpec` had no field for them; every provider reads its request from this declaration. `SubprocessLimits` and `SubprocessLimitDimension` are declared beside it.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate work order 2026-09-19 (artifacts/delegate/p3-10-p-workorder.md) R1 and §4; lane B inbox B-461 ①"
+      },
+      "P3-10.P/subprocess-seam": {
+        "epic": "P3-10",
+        "stage": "P",
+        "path": "packages/subprocess/subprocess/src/index.ts",
+        "reason": "The Service Definition: `enforceableLimits()` answers which dimensions a provider can hold at this moment (R1), `SubprocessLimitsRefusedError` is the typed refusal (must[2]), and `assertLimitsEnforceable` is what every provider calls before launching, so no provider drops a ceiling silently.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate work order 2026-09-19 (artifacts/delegate/p3-10-p-workorder.md) R1 and §4; lane B inbox B-461 ①"
+      },
+      "P3-10.P/subprocess-limits-spec": {
+        "epic": "P3-10",
+        "stage": "P",
+        "path": "packages/subprocess/subprocess/tests/limits.spec.ts",
+        "reason": "Unit cases for the seam's refusal and value checks. New rather than added to `tests/service.spec.ts`, so the seam's existing cases stay as they are.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate work order 2026-09-19 (artifacts/delegate/p3-10-p-workorder.md) R1 and §4; lane B inbox B-461 ①"
+      },
+      "P3-10.P/subprocess-local": {
+        "epic": "P3-10",
+        "stage": "P",
+        "path": "packages/subprocess/subprocess-local/src/index.ts",
+        "reason": "The local provider's spawn. The containment mode it selects decides both what it can hold and whether a limited spawn is refused (R1: a ceiling that lands on fallback refuses the spawn), so the capability answer and the refusal come from one selection.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate work order 2026-09-19 (artifacts/delegate/p3-10-p-workorder.md) R1 and §4; lane B inbox B-461 ①"
+      },
+      "P3-10.P/linux-scope": {
+        "epic": "P3-10",
+        "stage": "P",
+        "path": "packages/subprocess/subprocess-local/src/linux-scope.ts",
+        "reason": "Where `systemd-run --user --scope` is assembled. The ceilings become the scope's own `TasksMax` / `MemoryMax` / `CPUQuota` properties here, and a spawn without ceilings keeps its argument list byte for byte.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate work order 2026-09-19 (artifacts/delegate/p3-10-p-workorder.md) R1 and §4; lane B inbox B-461 ①"
+      },
+      "P3-10.P/subprocess-local-limits-spec": {
+        "epic": "P3-10",
+        "stage": "P",
+        "path": "packages/subprocess/subprocess-local/tests/limits.spec.ts",
+        "reason": "R1's observation file: property spelling, the unchanged argument list without ceilings, the fallback refusal, a real-probe control, and the fork-bomb and memory-balloon cases that run where the provider claims the dimension (CI's `linux-scope`).",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate work order 2026-09-19 (artifacts/delegate/p3-10-p-workorder.md) R1 and §4; lane B inbox B-461 ①"
+      },
+      "P3-10.P/subprocess-e2b": {
+        "epic": "P3-10",
+        "stage": "P",
+        "path": "packages/e2b/subprocess-e2b/src/index.ts",
+        "reason": "The seam's other provider. It cannot hold a per-command ceiling, so R1 requires it to refuse a limited spawn rather than run it unbounded.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate work order 2026-09-19 (artifacts/delegate/p3-10-p-workorder.md) R1 and §4; lane B inbox B-461 ①"
+      },
+      "P3-10.P/subprocess-e2b-spec": {
+        "epic": "P3-10",
+        "stage": "P",
+        "path": "packages/e2b/subprocess-e2b/tests/subprocess.spec.ts",
+        "reason": "The case that the E2B provider refuses a limited spawn and answers no enforceable dimension.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate work order 2026-09-19 (artifacts/delegate/p3-10-p-workorder.md) R1 and §4; lane B inbox B-461 ①"
+      },
       "P2-05.U/sdk-minimal-pep-spec": {
         "epic": "P2-05",
         "stage": "U",
