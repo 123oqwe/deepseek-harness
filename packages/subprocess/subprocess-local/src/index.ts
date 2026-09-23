@@ -233,7 +233,7 @@ export class LocalSubprocessRuntime extends SubprocessRuntime {
     if (platform === 'linux') {
       let available: boolean
       if (this.linuxScopeControllers === undefined) {
-        this.linuxScopeControllers = probeLinuxNativeCapabilities()
+        this.linuxScopeControllers = probeLinuxNativeCapabilities() && ['cpu', 'memory', 'pids']
         available = this.linuxScopeControllers !== undefined
       } else {
         available = probeLinuxManager()
