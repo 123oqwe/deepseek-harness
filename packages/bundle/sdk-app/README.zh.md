@@ -33,7 +33,7 @@ kind: "package-bundle"
 
 SDK 使用 base 默认提供的 `read`、`write` 和 `edit`。要添加 `str_replace_editor`，请使用 [base 配置指南](../base/README.zh.md#use-this-package)中的显式插入 patch。独立的 `sdk-minimal` profile 自行决定其工具选择。
 
-本 profile 上，项目内容需要显式的信任授予，这是一次行为变化：未获授予的工作目录自己的 `AGENTS.md` 与 skills——本 profile 此前无条件加载它们——不再加载。这里没有任何东西能去询问授予（未挂载 approval 应答方，也没有任何启动参数到得了该提供方），因此部署方在启动前为自己掌管的目录授予。`--patch` overlay 或 `$DSH_HOME/cordis.patch.yml` 层在本组合包的 `workspace-trust-local` 行上设置 `config.grants`；该行自身的配置形状见 [`dsh-workspace-trust-local` 的 README](../../workspace/workspace-trust-local/README.zh.md#turn-the-boundary-on)。
+本 profile 上，项目内容需要显式的信任授予，这是一次行为变化：未获授予的工作目录自己的 `AGENTS.md` 与 skills——本 profile 此前无条件加载它们——不再加载。这里没有任何东西能去询问授予，因为未挂载 approval 应答方。启动参数确实到得了该提供方：`dsh --profile sdk --trust-workspace=read` 会为 profile 启动时所在的工作目录写下一条记录。部署方若要授予自己选定的目录（而不是启动时所在的那个），就在启动前授予：`--patch` overlay 或 `$DSH_HOME/cordis.patch.yml` 层在本组合包的 `workspace-trust-local` 行上设置 `config.grants`；该行自身的配置形状见 [`dsh-workspace-trust-local` 的 README](../../workspace/workspace-trust-local/README.zh.md#turn-the-boundary-on)。
 
 -----
 

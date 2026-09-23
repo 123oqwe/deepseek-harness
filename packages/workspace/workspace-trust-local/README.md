@@ -25,9 +25,9 @@ A grant names a path, but trust binds to the identity that path resolved to the 
 <a id="turn-the-boundary-on"></a>
 ## Turn the boundary on
 
-The `dsh-base` bundle carries this row **disabled**. While no provider is mounted, `ctx.get('workspaceTrust')` is `undefined` and every consumer loads exactly what it loaded before this boundary existed — an untrusted repository's skills and instructions included. Mounting the provider is what turns the boundary on, and that is an operator action, not a default.
+The `dsh-base` bundle carries this row **disabled**, and the four application bundles that layer over it — `acp-app`, `web-app`, `headless` and `sdk-app` — each override it to `disabled: false`, so every profile they start has the boundary. `sdk-minimal` does not layer over `dsh-base` and has no provider. Where no provider is mounted — `sdk-minimal`, or a profile you build over `dsh-base` alone — `ctx.get('workspaceTrust')` is `undefined` and every consumer loads exactly what it loaded before this boundary existed, an untrusted repository's skills and instructions included.
 
-The default is deliberate. An enabled provider with no grants makes every workspace untrusted at once, which stops project skills and the project's own `AGENTS.md` loading for every existing user of every shipped profile. A boundary that ships on and breaks everyone gets switched off rather than adopted; this one ships discoverable and one edit from on.
+An enabled provider with no grants makes every workspace untrusted. A directory then becomes readable through an interactive first-time question where the profile has an answerer for it, through `dsh --trust-workspace[=read|execute|none]` at launch, or through a `grants` entry on the row, which is the form below.
 
 To turn it on, enable the row in your `cordis.patch.yml` and grant the workspaces this host trusts:
 

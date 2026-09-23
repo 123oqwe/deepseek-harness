@@ -25,9 +25,9 @@ kind: "package-reference"
 <a id="turn-the-boundary-on"></a>
 ## 开启该边界
 
-`dsh-base` bundle 中该行默认 **disabled**。在没有挂载 Provider 时，`ctx.get('workspaceTrust')` 为 `undefined`，每个 Consumer 加载的内容与本边界存在之前完全一致——包括未信任仓库的 skill 与 instructions。挂载 Provider 才会开启该边界，而这是运维者的动作，不是默认值。
+`dsh-base` bundle 中该行默认 **disabled**，叠在它之上的四个应用 bundle——`acp-app`、`web-app`、`headless` 与 `sdk-app`——各自把它覆盖为 `disabled: false`，因此它们启动的每个 profile 都带有该边界。`sdk-minimal` 不叠在 `dsh-base` 之上，也没有 Provider。在没有挂载 Provider 的地方——`sdk-minimal`，或你只基于 `dsh-base` 构建的 profile——`ctx.get('workspaceTrust')` 为 `undefined`，每个 Consumer 加载的内容与本边界存在之前完全一致，包括未信任仓库的 skill 与 instructions。
 
-这个默认是刻意的。一个已启用但没有任何 grant 的 Provider 会让所有工作区同时变为未信任，从而让所有已发布 profile 的现有用户都无法再加载项目 skill 与项目自己的 `AGENTS.md`。默认开启并且弄坏所有人的边界，只会被关掉而不会被采用；本边界选择可被发现、且距离开启只差一次编辑。
+一个已启用但没有任何 grant 的 Provider 会让所有工作区都变为未信任。此时目录可以通过三种方式变为可读：在 profile 为它挂有应答者的地方，经一次交互式的首次询问；启动时使用 `dsh --trust-workspace[=read|execute|none]`；或在该行上写 `grants` 条目，即下面的写法。
 
 开启方式：在你的 `cordis.patch.yml` 中启用该行，并授权本宿主信任的工作区：
 

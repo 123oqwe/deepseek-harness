@@ -12,9 +12,9 @@
 # are both absent, so this profile reads no project `AGENTS.md` and no project
 # skills.
 #
-# The shipped bundles that enable the boundary are `acp-app`, `web-app` and
-# `headless`; `base` ships the row `disabled: true` and `sdk-app` inherits it
-# disabled. Adding it here is four rows, not one: the provider injects
+# The shipped bundles that enable the boundary are `acp-app`, `web-app`,
+# `headless` and `sdk-app`, each overriding the row `base` ships as
+# `disabled: true`. Adding it here is four rows, not one: the provider injects
 # `storageDomain`, so its durable record needs the `storage` / `storage-json` /
 # `storage-domain` stack (`packages/bundle/base/cordis.patch.yml:174-189`)
 # beside the provider's own row. With no answerer mounted, an enabled provider
