@@ -452,7 +452,6 @@ export default class ExecutionWorldService extends Service<Config> {
       provider: handle.provider,
       spec: handle.spec,
       resources: spec.resources,
-      ...spec.process.maxProcesses === undefined ? {} : { maxProcesses: spec.process.maxProcesses },
     }
     this.bound.set(agent.id, binding)
     return binding
