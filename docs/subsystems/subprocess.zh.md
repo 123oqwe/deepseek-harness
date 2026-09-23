@@ -139,7 +139,7 @@ interface SubprocessSpawnSpec {
 
 ## 资源上限
 
-spec 的可选 `limits` 为整个受管范围设 CPU、内存与存活进程数的硬上限。`enforceableLimits()` 回答提供方此刻能守住哪几维，答案来自它下一次 spawn 所做的同一次包裹模式选择；基类的回答是「一维也守不住」。提供方在启动任何东西之前调用 `assertLimitsEnforceable`，所以点名了守不住的上限的 spawn 会抛出 `SubprocessLimitsRefusedError`（带 `refused` 与 `enforceable`），而不是无上限地运行。本地提供方在 Linux user scope 里三维都守得住，在其它地方一维也守不住；E2B 提供方一维也守不住。
+spec 的可选 `limits` 为整个受管范围设 CPU、内存与存活进程数的硬上限。`enforceableLimits()` 回答提供方此刻能守住哪几维，答案来自它下一次 spawn 所做的同一次包裹模式选择；基类的回答是「一维也守不住」。提供方在启动任何东西之前调用 `assertLimitsEnforceable`，所以点名了守不住的上限的 spawn 会抛出 `SubprocessLimitsRefusedError`（带 `refused` 与 `enforceable`），而不是无上限地运行。本地提供方在 Linux user scope 里守得住 scope 探测拿到了 cgroup 控制器的那几维，在其它地方一维也守不住；E2B 提供方一维也守不住。
 
 ```ts type-equiv
 /** A resource dimension a provider can hold one managed range to. */

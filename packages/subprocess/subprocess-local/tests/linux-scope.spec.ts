@@ -1,5 +1,6 @@
+import type { SpawnSyncOptions } from 'node:child_process'
 import { EventEmitter } from 'node:events'
-import { existsSync, rmSync, unlinkSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs'
 import { PassThrough } from 'node:stream'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
@@ -7,8 +8,8 @@ import {
   prepareLinuxTerminalScope,
   probeLinuxBootstrap,
   probeLinuxManager,
-  probeLinuxNative,
-  probeLinuxScope,
+  probeLinuxNativeCapabilities,
+  probeLinuxScopeCapabilities,
 } from '../src/linux-scope.ts'
 import type { LinuxScopeInternals } from '../src/linux-scope.ts'
 import {
@@ -88,6 +89,16 @@ function activeUnitWithTasks(tasks: string) {
   return { status: 0, stdout: `LoadState=loaded\nActiveState=active\nTasksCurrent=${tasks}\n`, stderr: '' }
 }
 
+/** The controllers listed for the cgroup this process runs in; none where cgroup v2 is absent. */
+function ownControllers(): string[] {
+  const self = existsSync('/proc/self/cgroup') ? readFileSync('/proc/self/cgroup', 'utf8') : ''
+  const path = /^0::(.+)$/mu.exec(self)?.[1]
+  const file = `/sys/fs/cgroup${path ?? ''}/cgroup.controllers`
+  return path !== undefined && existsSync(file)
+    ? readFileSync(file, 'utf8').split(/\s+/u).filter(name => name !== '')
+    : []
+}
+
 /** Deny every real process-group signal so a fake child never reaches a live host group. */
 function denyProcessGroups(): void {
   vi.spyOn(process, 'kill').mockImplementation(() => { throw new Error('missing process group') })
@@ -139,7 +150,7 @@ function launch(
 
 describe('Linux native capability selection', () => {
   it('rechecks bootstrap and literal transient-scope support', () => {
-    const spawnSync = vi.fn(() => ({ status: 0, error: undefined }))
+    const spawnSync = vi.fn(() => ({ status: 0, error: undefined, stdout: '' }))
     const runnerAvailable = vi.fn(() => true)
     const loadLinuxExecve = vi.fn(() => vi.fn() as never)
     const inputs = {
@@ -150,8 +161,8 @@ describe('Linux native capability selection', () => {
       systemdRun: '/bin/systemd-run',
       systemctl: '/bin/systemctl',
     }
-    expect(probeLinuxNative(inputs)).toBe(true)
-    expect(probeLinuxNative(inputs)).toBe(true)
+    expect(probeLinuxNativeCapabilities(inputs)).toEqual([])
+    expect(probeLinuxNativeCapabilities(inputs)).toEqual([])
     expect(runnerAvailable).toHaveBeenCalledTimes(2)
     expect(loadLinuxExecve).toHaveBeenCalledTimes(2)
     expect(spawnSync).toHaveBeenCalledTimes(2)
@@ -162,9 +173,9 @@ describe('Linux native capability selection', () => {
   })
 
   it('reports each failed dynamic prerequisite without executing a target', () => {
-    expect(probeLinuxScope({
+    expect(probeLinuxScopeCapabilities({
       spawnSync: vi.fn(() => ({ status: null, error: new Error('missing') })) as never,
-    })).toBe(false)
+    })).toBeUndefined()
     expect(probeLinuxBootstrap({
       loadLinuxExecve: () => vi.fn() as never,
       runnerInvocation: ['/missing'],
@@ -177,8 +188,8 @@ describe('Linux native capability selection', () => {
   })
 
   it('uses the default command adapters and runner resolution', () => {
-    childProcessMocks.spawnSync.mockReturnValue({ status: 0, error: undefined })
-    expect(probeLinuxScope()).toBe(true)
+    childProcessMocks.spawnSync.mockReturnValue({ status: 0, error: undefined, stdout: '' })
+    expect(probeLinuxScopeCapabilities()).toEqual([])
     expect(probeLinuxManager()).toBe(true)
     expect(childProcessMocks.spawnSync).toHaveBeenCalledTimes(2)
     expect(probeLinuxBootstrap({ loadLinuxExecve: () => vi.fn() as never })).toBe(true)
@@ -193,8 +204,8 @@ describe('Linux native capability selection', () => {
       _command: string,
       _args: readonly string[],
       _options: unknown,
-    ) => ({ status: 0, error: undefined }))
-    expect(probeLinuxScope({ spawnSync: spawnSync as never })).toBe(true)
+    ) => ({ status: 0, error: undefined, stdout: '' }))
+    expect(probeLinuxScopeCapabilities({ spawnSync: spawnSync as never })).toEqual([])
     expect(probeLinuxManager({ spawnSync: spawnSync as never })).toBe(true)
     const scopeOptions = spawnSync.mock.calls[0]?.[2] as { env: NodeJS.ProcessEnv }
     const managerOptions = spawnSync.mock.calls[1]?.[2] as { env: NodeJS.ProcessEnv }
@@ -208,6 +219,55 @@ describe('Linux native capability selection', () => {
     expect(probeLinuxManager({
       spawnSync: vi.fn(() => ({ status: null, error: new Error('missing') })) as never,
     })).toBe(false)
+  })
+
+  it('reads the controller names the probe scope printed, and hands its script the manager command and its own unit', () => {
+    const spawnSync = vi.fn((
+      _command: string,
+      _args: readonly string[],
+      _options: unknown,
+    ) => ({ status: 0, error: undefined, stdout: 'cpuset cpu io memory pids\n' }))
+    expect(probeLinuxScopeCapabilities({ spawnSync: spawnSync as never, systemctl: '/bin/systemctl' }))
+      .toEqual(['cpuset', 'cpu', 'io', 'memory', 'pids'])
+    const [, args, options] = spawnSync.mock.calls[0]!
+    const unitIndex = args.findIndex(arg => arg.startsWith('--unit='))
+    const unit = args[unitIndex]!.slice('--unit='.length)
+    const properties = args.slice(unitIndex + 1, args.indexOf('--')).filter(arg => arg !== '-p')
+    expect(properties.map(property => property.split('=')[0])).toEqual(['CPUQuota', 'MemoryMax', 'MemorySwapMax', 'TasksMax'])
+    expect(args.slice(args.indexOf('--') + 1)).toEqual([
+      '/bin/sh', '-c', expect.any(String), 'dsh-subprocess-probe', '/bin/systemctl', `${unit}.scope`,
+    ])
+    expect(options).toMatchObject({ stdio: ['ignore', 'pipe', 'ignore'], encoding: 'utf8' })
+  })
+
+  it('tells a scope that printed no controllers apart from a scope that did not run', () => {
+    const answering = (result: object): LinuxScopeInternals => ({ spawnSync: vi.fn(() => result) as never })
+    expect(probeLinuxScopeCapabilities(answering({ status: 0, error: undefined, stdout: '' }))).toEqual([])
+    expect(probeLinuxScopeCapabilities(answering({ status: 1, error: undefined, stdout: 'cpu memory pids' })))
+      .toBeUndefined()
+  })
+
+  it('starts no probe scope when the private bootstrap is unavailable', () => {
+    const spawnSync = vi.fn(() => ({ status: 0, error: undefined, stdout: 'cpu memory pids' }))
+    const inputs = {
+      spawnSync: spawnSync as never,
+      runnerInvocation: ['/usr/bin/node', '/runner.js'] as [string, ...string[]],
+      loadLinuxExecve: () => vi.fn() as never,
+    }
+    expect(probeLinuxNativeCapabilities({ ...inputs, runnerAvailable: () => false })).toBeUndefined()
+    expect(spawnSync).not.toHaveBeenCalled()
+    expect(probeLinuxNativeCapabilities({ ...inputs, runnerAvailable: () => true })).toEqual(['cpu', 'memory', 'pids'])
+  })
+
+  it.skipIf(process.platform === 'win32')('runs a probe script that fails with the manager query and otherwise prints the controllers of the cgroup it runs in', async () => {
+    const { spawnSync: run } = await vi.importActual<typeof import('node:child_process')>('node:child_process')
+    // The scope's command runs directly, in this process's own cgroup.
+    const direct = ((_command: string, args: readonly string[], options: SpawnSyncOptions) => {
+      const command = args.slice(args.indexOf('--') + 1)
+      return run(command[0]!, command.slice(1), options)
+    }) as never
+    expect(probeLinuxScopeCapabilities({ spawnSync: direct, systemctl: 'false' })).toBeUndefined()
+    expect(probeLinuxScopeCapabilities({ spawnSync: direct, systemctl: 'true' })).toEqual(ownControllers())
   })
 })
 

@@ -139,7 +139,7 @@ interface SubprocessSpawnSpec {
 
 ## Resource ceilings
 
-A spec's optional `limits` holds the whole managed range to hard CPU, memory, and live-process ceilings. `enforceableLimits()` answers which dimensions the provider can hold at this moment, from the same containment selection its next spawn makes; the base answer is none. A provider calls `assertLimitsEnforceable` before launching anything, so a spawn naming a ceiling it cannot hold throws `SubprocessLimitsRefusedError` (carrying `refused` and `enforceable`) instead of running unbounded. The local provider holds all three inside a Linux user scope and none elsewhere; the E2B provider holds none.
+A spec's optional `limits` holds the whole managed range to hard CPU, memory, and live-process ceilings. `enforceableLimits()` answers which dimensions the provider can hold at this moment, from the same containment selection its next spawn makes; the base answer is none. A provider calls `assertLimitsEnforceable` before launching anything, so a spawn naming a ceiling it cannot hold throws `SubprocessLimitsRefusedError` (carrying `refused` and `enforceable`) instead of running unbounded. The local provider holds, inside a Linux user scope, each dimension whose cgroup controller its scope probe was given, and none elsewhere; the E2B provider holds none.
 
 ```ts type-equiv
 /** A resource dimension a provider can hold one managed range to. */

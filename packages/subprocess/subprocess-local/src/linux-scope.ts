@@ -106,11 +106,39 @@ export function probeLinuxBootstrap(internals: LinuxScopeInternals = {}): boolea
 }
 
 /**
- * Confirm current literal-argv transient-scope support before selecting native launch.
- * @param internals - optional systemd command seams used by tests.
- * @returns whether the current user manager supports the required scope invocation.
+ * The ceilings the transient-scope probe carries, one per dimension and each
+ * far past what the probe's own `sh`, `systemctl` and `cat` use. The manager
+ * enables a cgroup controller for a scope only when that scope's properties
+ * need it (on CI a scope without `CPUQuota` lists no `cpu`, and the same scope
+ * with it lists `cpu`), so the probe asks with the same properties a limited
+ * launch carries.
  */
-export function probeLinuxScope(internals: LinuxScopeInternals = {}): boolean {
+const PROBE_LIMITS = { cpuMillicores: 1_000_000, memoryBytes: 2 ** 40, maxProcesses: 4_194_304 } as const
+
+/**
+ * The command the transient-scope probe runs inside its scope. It asks the
+ * manager about the scope it is in, which is what proves literal-argv scope
+ * support, and then prints the scope's own `cgroup.controllers`: the
+ * controllers the manager enabled for the probe's properties. A property whose
+ * controller was never delegated is accepted and enables nothing, so its
+ * controller is absent here. An unreadable list prints nothing, so the answer
+ * is "none" rather than a guess.
+ */
+const SCOPE_PROBE_SCRIPT = [
+  '"$1" --user show "$2" --property=ActiveState --value >/dev/null || exit 1',
+  'p=$(sed -n "s/^0:://p" /proc/self/cgroup)',
+  '[ -n "$p" ] && cat "/sys/fs/cgroup$p/cgroup.controllers" 2>/dev/null',
+  'exit 0',
+].join('\n')
+
+/**
+ * Confirm current literal-argv transient-scope support, and read which cgroup
+ * controllers a limited scope gets, in one throwaway scope.
+ * @param internals - optional systemd command seams used by tests.
+ * @returns the controller names the probe scope was given, empty when they could not be read,
+ * or `undefined` when the scope invocation itself is unsupported.
+ */
+export function probeLinuxScopeCapabilities(internals: LinuxScopeInternals = {}): readonly string[] | undefined {
   const unitBase = unitStem('dsh-subprocess-probe')
   const result = (internals.spawnSync ?? spawnSync)(internals.systemdRun ?? 'systemd-run', [
     '--user',
@@ -119,15 +147,17 @@ export function probeLinuxScope(internals: LinuxScopeInternals = {}): boolean {
     '--collect',
     '--expand-environment=no',
     `--unit=${unitBase}`,
+    ...scopeLimitProperties(PROBE_LIMITS),
     '--',
+    '/bin/sh',
+    '-c',
+    SCOPE_PROBE_SCRIPT,
+    'dsh-subprocess-probe',
     internals.systemctl ?? 'systemctl',
-    '--user',
-    'show',
     `${unitBase}.scope`,
-    '--property=ActiveState',
-    '--value',
-  ], { env: quietSystemdEnvironment(), stdio: 'ignore', timeout: SYSTEMCTL_TIMEOUT_MS })
-  return result.error === undefined && result.status === 0
+  ], { env: quietSystemdEnvironment(), stdio: ['ignore', 'pipe', 'ignore'], encoding: 'utf8', timeout: SYSTEMCTL_TIMEOUT_MS })
+  if (result.error !== undefined || result.status !== 0) return undefined
+  return result.stdout.split(/\s+/u).filter(name => name !== '')
 }
 
 /**
@@ -146,13 +176,12 @@ export function probeLinuxManager(internals: LinuxScopeInternals = {}): boolean 
 }
 
 /**
- * Re-check every Linux native prerequisite for one eligible spawn.
+ * Re-check every Linux native prerequisite, keeping what the scope probe read.
  * @param internals - optional native capability seams used by tests.
- * @returns whether the Linux native containment path is currently available.
+ * @returns the controllers a limited scope gets, or `undefined` when the Linux native containment path is unavailable.
  */
-export function probeLinuxNative(internals: LinuxScopeInternals = {}): boolean {
-  return probeLinuxBootstrap(internals)
-    && probeLinuxScope(internals)
+export function probeLinuxNativeCapabilities(internals: LinuxScopeInternals = {}): readonly string[] | undefined {
+  return probeLinuxBootstrap(internals) ? probeLinuxScopeCapabilities(internals) : undefined
 }
 
 interface DirectRange {
