@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-23T20:34:23.677Z",
-  "inputDigest": "ee1d75d4fa9e661eaba9acdc79fa55248a0bd20571fe95a06e33d10bc040e707",
+  "lastUpdatedUtc": "2026-09-23T21:13:41.101Z",
+  "inputDigest": "c6ed55fb8ba15cedb32009591c12aa913f731bed328e4be0e6977afc7cb364dd",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -5633,7 +5633,21 @@
           "status": "NOT_RUN"
         }
       },
-      "supplements": {},
+      "supplements": {
+        "C.1": {
+          "status": "GREEN",
+          "candidateSha": "cf481716c5654d25af36bcab8140f7df9a50758c",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35915435056",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/35915435056/first100-vitest-report-cf481716c5654d25af36bcab8140f7df9a50758c/vitest-report.json",
+          "observationSha256": "27dd1b6cd547d7d009fb430e7afc56be68facddcd7b98c8c8e0627a4eb45560f",
+          "expectCasesMatched": [
+            "P4-03 C — the canonical form behind the plan id P4-03 C: a body built with its keys in another order takes the same RFC 8785 canonical form and the same id",
+            "P4-03 C — the canonical form behind the plan id P4-03 C: hashing the body as written instead of its RFC 8785 canonical form would give a different id, so canonicalization is doing work here",
+            "P4-03 C — the canonical form behind the plan id P4-03 C: the plan id is sha256 over the RFC 8785 JCS canonical form, checked against the reference implementation"
+          ],
+          "capturedAtUtc": "2026-09-23T21:13:41.093Z"
+        }
+      },
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
