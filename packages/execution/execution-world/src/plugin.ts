@@ -443,7 +443,7 @@ export default class ExecutionWorldService extends Service<Config> {
     const filesystem = filesystemForSandboxMode(mode, workspaceRoot)
     if (filesystem === undefined) return undefined
     const spec = resolveWorldSpec(this.request, filesystem, this.tenant)
-    const selection = selectWorldProvider(spec, selectionOrder(this.providers, this.yieldsTo), this.policy)
+    const selection = selectWorldProvider(spec, this.providers, this.policy)
     if (selection.outcome === 'refused') return undefined
     const handle = await selection.provider.create(spec).catch(() => undefined)
     if (handle === undefined) return undefined
