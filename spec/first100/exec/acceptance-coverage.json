@@ -3452,72 +3452,13 @@
         {
           "stage": "P",
           "title": "P2-12 must[2]/acceptance[0]: no new work starts under a stop registers a question when no stop is in force, so the refusal above is not the only answer"
-        }
-      ],
-      "note": "acceptance[0]: '触发 stop 后无新外部副作用'. PARTIAL, and the gap is named rather than papered over. The two cited P cases pin the first half: no NEW work is admitted under a stop (a question is refused while a stop is in force, and registers when none is). The second half -- that nothing already in flight produces a further external effect -- is still unevidenced, and F's green does not change that. P2-12.F was frozen 2026-09-15T11:20:47Z and greened at 191aa1e502, and it claims 28 cases: 19 `JsonRpcLineTransport` and 9 `process shutdown`. None of the 28 titles contains 'stop'; the nine matching in-flight|pending|already|cancel|abort|drain|external|side effect are transport aborts and shutdown drains, none conditioned on a stop being in force. The three argv files that would speak to stop semantics -- emergency-stop.e2e.spec.ts, service.spec.ts and stop-gate.spec.ts -- contribute no expectCases to F by design: their cases are frozen by P2-12.C and P2-12.U, and they stay in F's argv as a REQUIRED PRECONDITION (F goes red if any of their 30 cases fails), not as evidence. Across C, U and F's 62 frozen cases that same keyword scan finds one C hit, 'distinguishes stopping an already-stopped run from stopping a running one', which is a repeated stop and not an in-flight action's external effect. Closing this half needs a case that puts an action in flight, raises the stop, and observes that no further external effect follows; no such case exists today."
-    },
-    {
-      "epic": "P2-12",
-      "acceptanceIndex": 1,
-      "coveredBy": [
-        {
-          "stage": "C",
-          "title": "P2-12 acceptance[1]: an answer reaches only the waiting point that asked (BLOCKED-215) settles the addressed point and leaves every OTHER open point untouched"
-        },
-        {
-          "stage": "C",
-          "title": "P2-12 acceptance[1]: an answer reaches only the waiting point that asked (BLOCKED-215) settles B and leaves A open, so the case above is not passing on set order"
-        },
-        {
-          "stage": "C",
-          "title": "P2-12 acceptance[1]: an answer reaches only the waiting point that asked (BLOCKED-215) REFUSES a settlement for a vanished waiting point and names it, rather than doing nothing"
-        },
-        {
-          "stage": "C",
-          "title": "P2-12 acceptance[1]: an answer reaches only the waiting point that asked (BLOCKED-215) refuses a settlement for a point that was never registered, separately from one that is gone"
-        },
-        {
-          "stage": "C",
-          "title": "P2-12 acceptance[1]: an answer reaches only the waiting point that asked (BLOCKED-215) leaves the open set unchanged when it refuses, so a failed settlement cannot silently consume a point"
-        },
-        {
-          "stage": "P",
-          "title": "P2-12 acceptance[1]: settlement is out of band and reaches one point only delivers to the point that asked and leaves the other pending"
-        },
-        {
-          "stage": "P",
-          "title": "P2-12 acceptance[1]: settlement is out of band and reaches one point only refuses a SECOND answer for the same point as vanished, not as never registered"
-        },
-        {
-          "stage": "P",
-          "title": "P2-12 acceptance[1]: settlement is out of band and reaches one point only refuses an answer for a point nobody registered, and delivers nothing"
-        },
-        {
-          "stage": "P",
-          "title": "P2-12 acceptance[1]: settlement is out of band and reaches one point only refuses to re-ask a settled point, so the registry does not quietly reopen it"
-        },
-        {
-          "stage": "U",
-          "title": "P2-12 acceptance[1]: the human answer reaches the point that asked (BLOCKED-215 closed) resumes the asker with the human text, which is the delivery P5-10 never had a path for"
-        },
-        {
-          "stage": "U",
-          "title": "P2-12 acceptance[1]: the human answer reaches the point that asked (BLOCKED-215 closed) leaves a second asker waiting when the first is settled, so one answer resumes one caller"
-        },
-        {
-          "stage": "U",
-          "title": "P2-12 acceptance[1]: the human answer reaches the point that asked (BLOCKED-215 closed) refuses an answer for a point nobody is waiting at, rather than dropping it"
         },
         {
           "stage": "U",
           "title": "P2-12 acceptance[1]: the human answer reaches the point that asked (BLOCKED-215 closed) refuses to ask at all while a stop is in force, so a question is new work"
-        },
-        {
-          "stage": "U",
-          "title": "P2-12 acceptance[1]: the human answer reaches the point that asked (BLOCKED-215 closed) comes up stopped over a store a previous mount wrote, with nothing re-applying the stop"
         }
       ],
-      "note": "acceptance[1]: '在途动作按策略终止或标记 reconciliation-required.' Directly evidenced across all three green stages by the cases that name acceptance[1] in their own titles."
+      "note": "acceptance[0]: '触发 stop 后无新外部副作用'. PARTIAL, and the gap is named rather than papered over. The two cited P cases pin the first half: no NEW work is admitted under a stop (a question is refused while a stop is in force, and registers when none is). The second half -- that nothing already in flight produces a further external effect -- is still unevidenced, and F's green does not change that. P2-12.F was frozen 2026-09-15T11:20:47Z and greened at 191aa1e502, and it claims 28 cases: 19 `JsonRpcLineTransport` and 9 `process shutdown`. None of the 28 titles contains 'stop'; the nine matching in-flight|pending|already|cancel|abort|drain|external|side effect are transport aborts and shutdown drains, none conditioned on a stop being in force. The three argv files that would speak to stop semantics -- emergency-stop.e2e.spec.ts, service.spec.ts and stop-gate.spec.ts -- contribute no expectCases to F by design: their cases are frozen by P2-12.C and P2-12.U, and they stay in F's argv as a REQUIRED PRECONDITION (F goes red if any of their 30 cases fails), not as evidence. Across C, U and F's 62 frozen cases that same keyword scan finds one C hit, 'distinguishes stopping an already-stopped run from stopping a running one', which is a repeated stop and not an in-flight action's external effect. Closing this half needs a case that puts an action in flight, raises the stop, and observes that no further external effect follows; no such case exists today. The U case 'P2-12 acceptance[1]: the human answer reaches the point that asked (BLOCKED-215 closed) refuses to ask at all while a stop is in force, so a question is new work' was moved here from acceptance[1] (BLOCKED-301): it evidences the same first half, no new work admitted under a stop, through the mounted service, and says nothing about work already in flight."
     },
     {
       "epic": "P2-12",
@@ -3562,9 +3503,13 @@
         {
           "stage": "P",
           "title": "P2-12 acceptance[2]: the stop survives a restart and needs an explicit release reads a missing document as \"no stop\", because a first boot is not a failure"
+        },
+        {
+          "stage": "U",
+          "title": "P2-12 acceptance[1]: the human answer reaches the point that asked (BLOCKED-215 closed) comes up stopped over a store a previous mount wrote, with nothing re-applying the stop"
         }
       ],
-      "note": "acceptance[2]: '重启后 stop 状态保持，必须显式解除.' Directly evidenced by the C and P cases that name acceptance[2] in their own titles."
+      "note": "acceptance[2]: '重启后 stop 状态保持，必须显式解除.' Directly evidenced by the C and P cases that name acceptance[2] in their own titles. The U case 'P2-12 acceptance[1]: the human answer reaches the point that asked (BLOCKED-215 closed) comes up stopped over a store a previous mount wrote, with nothing re-applying the stop' was moved here from acceptance[1] (BLOCKED-301): it evidences the persistence half, a stop recorded by one mount holding when the next mount comes up over the same store, and does not exercise the explicit-release half."
     }
   ]
 }
