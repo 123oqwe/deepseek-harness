@@ -199,7 +199,7 @@ export class LocalSubprocessRuntime extends SubprocessRuntime {
     validateSubprocessSpec(spec)
     const env = targetEnvironment(spec)
     const containmentMode = this.selectContainmentMode('ordinary')
-    assertLimitsEnforceable(spec.limits, enforceableIn(containmentMode, this.linuxScopeControllers ?? []))
+    assertLimitsEnforceable(spec.limits, enforceableIn(containmentMode, ['cpu', 'memory', 'pids']))
     let handle: LocalSubprocessHandle
     if (containmentMode === 'fallback') {
       handle = spawnSubprocess(spec, this.internals)
