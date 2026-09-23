@@ -125,7 +125,7 @@ const PROBE_LIMITS = { cpuMillicores: 1_000_000, memoryBytes: 2 ** 40, maxProces
  * is "none" rather than a guess.
  */
 const SCOPE_PROBE_SCRIPT = [
-  '"$1" --user show "$2" --property=ActiveState --value >/dev/null || exit 1',
+  '"$1" --user show "$2" --property=ActiveState --value >/dev/null',
   'p=$(sed -n "s/^0:://p" /proc/self/cgroup)',
   '[ -n "$p" ] && cat "/sys/fs/cgroup$p/cgroup.controllers" 2>/dev/null',
   'exit 0',
