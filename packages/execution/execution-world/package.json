@@ -29,6 +29,14 @@
       "./local": {
         "types": "./lib/types/local.d.ts",
         "default": "./lib/types/local.js"
+      },
+      "./fenced-provider": {
+        "types": "./lib/types/fenced-provider.d.ts",
+        "default": "./lib/types/fenced-provider.js"
+      },
+      "./fenced": {
+        "types": "./lib/types/fenced.d.ts",
+        "default": "./lib/types/fenced.js"
       }
     }
   },
@@ -66,6 +74,14 @@
     "./local": {
       "types": "./lib/types/local.d.ts",
       "default": "./lib/types/local.js"
+    },
+    "./fenced-provider": {
+      "types": "./lib/types/fenced-provider.d.ts",
+      "default": "./lib/types/fenced-provider.js"
+    },
+    "./fenced": {
+      "types": "./lib/types/fenced.d.ts",
+      "default": "./lib/types/fenced.js"
     }
   },
   "files": [

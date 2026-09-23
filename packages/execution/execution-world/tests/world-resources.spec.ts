@@ -182,4 +182,68 @@ describe('P3-10 R3: the registry answers what its worlds may use', () => {
     })).rejects.toThrow()
     await ctx.fiber.dispose()
   })
+  it('reports the process ceiling this deployment configured, as its own field beside the resource ceilings', async () => {
+    const { ctx, service } = await mounted({
+      network: 'unrestricted',
+      spawn: true,
+      ipc: 'unrestricted',
+      secrets: 'inherited',
+      maxProcesses: 32,
+      resources: { memoryBytes: 536_870_912 },
+    }, 'fake')
+    try {
+      const binding = await service.bindingFor(agent('agent-with-a-process-ceiling'))
+      expect(binding?.maxProcesses).toBe(32)
+      expect(binding?.resources).toEqual({ memoryBytes: 536_870_912 })
+      expect(Object.keys(binding ?? {}).sort()).toEqual(['maxProcesses', 'provider', 'resources', 'spec', 'world'])
+    } finally {
+      await ctx.fiber.dispose()
+    }
+  })
+
+  it('carries no process ceiling when the deployment asked for none, rather than a default', async () => {
+    const { ctx, service } = await mounted({ network: 'unrestricted', spawn: true, ipc: 'unrestricted', secrets: 'inherited' })
+    try {
+      const binding = await service.bindingFor(agent('agent-without-a-process-ceiling'))
+      expect(binding).toBeDefined()
+      expect(binding !== undefined && 'maxProcesses' in binding).toBe(false)
+    } finally {
+      await ctx.fiber.dispose()
+    }
+  })
+
+  it('REFUSES a world with a process ceiling the local provider cannot hold, rather than an unlimited one', async () => {
+    const { ctx, service } = await mounted({
+      network: 'unrestricted',
+      spawn: true,
+      ipc: 'unrestricted',
+      secrets: 'inherited',
+      maxProcesses: 32,
+    })
+    try {
+      expect(await service.bindingFor(agent('agent-the-local-provider-must-refuse-for-processes'))).toBeUndefined()
+    } finally {
+      await ctx.fiber.dispose()
+    }
+  })
+
+  it.each([5, 15])('refuses a cpu ceiling of %s millicores, which no spawn can carry, at the config boundary', async (cpuMillicores) => {
+    const ctx = new Context()
+    ctx.provide('sandboxPolicy', sandbox() as never)
+    await expect(ctx.plugin(ExecutionWorldService, {
+      tenant: 'local-host',
+      request: { network: 'unrestricted', spawn: true, ipc: 'unrestricted', secrets: 'inherited', resources: { cpuMillicores } },
+    })).rejects.toThrow()
+    await ctx.fiber.dispose()
+  })
+
+  it.each([0, 1.5])('refuses a process ceiling of %s at the config boundary', async (maxProcesses) => {
+    const ctx = new Context()
+    ctx.provide('sandboxPolicy', sandbox() as never)
+    await expect(ctx.plugin(ExecutionWorldService, {
+      tenant: 'local-host',
+      request: { network: 'unrestricted', spawn: true, ipc: 'unrestricted', secrets: 'inherited', maxProcesses },
+    })).rejects.toThrow()
+    await ctx.fiber.dispose()
+  })
 })

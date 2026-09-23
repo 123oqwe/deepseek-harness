@@ -1028,9 +1028,9 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     description: 'The registry of world providers, and the session-to-world binding.\n\nMounting this service creates no world. A world is created at the first dispatch that asks for one, and only when a registered provider satisfies the resolved spec: a composition that registers no provider, or whose providers all refuse, keeps answering `undefined`, which the dispatch path reads as the fail-closed `absent` policy fact.',
     methods: [
       {
-        signature: 'register(provider: WorldProvider): () => Promise<void>',
-        description: 'Register one provider, in the deployment\'s own preference order.\n\nA registration is an effect, so unmounting the registering plugin removes the provider rather than leaving a registry that outlives it.\n\nThe disposer is `@deepseek-ai/cordis`\' own `Disposable<Promise<void>>`, returned unchanged, and the declared return type says so rather than narrowing it to `() => void`. Narrowing would be a lie the linter catches (`no-misused-promises`) and would also cost a caller the ability to await teardown; `AgentRegistry.register` keeps the narrow type and suppresses the rule because returning the disposer unchanged preserves its identity for its own callers, and nothing here depends on that.',
-        parameters: [{ name: 'provider', description: 'the provider to offer to selection.' }],
+        signature: 'register(provider: WorldProvider, placement?: WorldProviderPlacement): () => Promise<void>',
+        description: 'Register one provider, in the deployment\'s own preference order, adjusted only by the provider\'s own placement (see selectionOrder).\n\nA registration is an effect, so unmounting the registering plugin removes the provider rather than leaving a registry that outlives it.\n\nThe disposer is `@deepseek-ai/cordis`\' own `Disposable<Promise<void>>`, returned unchanged, and the declared return type says so rather than narrowing it to `() => void`. Narrowing would be a lie the linter catches (`no-misused-promises`) and would also cost a caller the ability to await teardown; `AgentRegistry.register` keeps the narrow type and suppresses the rule because returning the disposer unchanged preserves its identity for its own callers, and nothing here depends on that.',
+        parameters: [{ name: 'provider', description: 'the provider to offer to selection.' }, { name: 'placement', description: 'the providers this one yields to; absent, it yields to none.' }],
         returns: 'the disposer, which settles once the provider is removed.',
       },
       {
@@ -5004,7 +5004,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ExecutionWorldBinding',
-    declaration: 'export interface ExecutionWorldBinding {\n    readonly world: WorldId;\n    readonly provider: WorldProviderId;\n    readonly spec: WorldSpecDigest;\n    readonly resources: WorldResourcesSpec;\n}',
+    declaration: 'export interface ExecutionWorldBinding {\n    readonly world: WorldId;\n    readonly provider: WorldProviderId;\n    readonly spec: WorldSpecDigest;\n    readonly resources: WorldResourcesSpec;\n    readonly maxProcesses?: number;\n}',
   },
   {
     name: 'ExecutionWorldFact',
@@ -7893,6 +7893,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'WorldProviderId',
     declaration: 'export type WorldProviderId = Branded<\'WorldProviderId\'>;',
+  },
+  {
+    name: 'WorldProviderPlacement',
+    declaration: 'export interface WorldProviderPlacement {\n    readonly yieldsTo?: readonly WorldProviderId[];\n}',
   },
   {
     name: 'WorldResourcesSpec',
