@@ -58,6 +58,14 @@ export interface ExecutionWorldBinding {
    * before a request could carry them.
    */
   readonly resources: WorldResourcesSpec
+  /**
+   * The ceiling on processes alive at once in this world (P3-10 R3's
+   * processes dimension), from the same resolved spec as {@link resources}.
+   * Absent means this deployment asked for none. A separate field rather than
+   * a fourth key of `resources`, because the spec keeps it in its `process`
+   * dimension.
+   */
+  readonly maxProcesses?: number
 }
 
 /**
@@ -75,6 +83,12 @@ export interface WorldRequest {
   readonly network?: WorldSpec['network']['posture']
   /** Whether the world may start processes. */
   readonly spawn?: boolean
+  /**
+   * Ceiling on processes alive at once in the world (P3-10 must[0]'s processes
+   * dimension); absent means no ceiling was asked for, as before this field
+   * existed.
+   */
+  readonly maxProcesses?: number
   /** IPC posture. */
   readonly ipc?: WorldSpec['ipc']['posture']
   /** How secrets reach the world. */
@@ -166,7 +180,10 @@ export function resolveWorldSpec(
   return {
     filesystem,
     network: { posture: request.network ?? 'unrestricted' },
-    process: { spawn: request.spawn ?? true },
+    process: {
+      spawn: request.spawn ?? true,
+      ...request.maxProcesses === undefined ? {} : { maxProcesses: request.maxProcesses },
+    },
     ipc: { posture: request.ipc ?? 'unrestricted' },
     devices: { allowed: ['/dev/null'] },
     secrets: { posture: request.secrets ?? 'inherited' },
@@ -252,8 +269,12 @@ export default class ExecutionWorldService extends Service<Config> {
       // which is what every world had before these fields existed, and a
       // default would silently impose a limit nobody wrote.
       maxWallClockMs: z.number().step(1).min(1),
+      maxProcesses: z.number().step(1).min(1),
       resources: z.object({
-        cpuMillicores: z.number().step(1).min(1),
+        // A whole percent of one CPU, the unit a spawn's ceiling is held in
+        // (`dsh-subprocess` refuses any other), so a value no spawn could carry
+        // fails here, at load, rather than on every command the world runs.
+        cpuMillicores: z.number().step(10).min(10),
         memoryBytes: z.number().step(1).min(1),
         diskBytes: z.number().step(1).min(1),
       }),
@@ -388,6 +409,7 @@ export default class ExecutionWorldService extends Service<Config> {
       provider: handle.provider,
       spec: handle.spec,
       resources: spec.resources,
+      ...spec.process.maxProcesses === undefined ? {} : { maxProcesses: spec.process.maxProcesses },
     }
     this.bound.set(agent.id, binding)
     return binding

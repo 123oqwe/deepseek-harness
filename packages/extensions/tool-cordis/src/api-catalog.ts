@@ -5004,7 +5004,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ExecutionWorldBinding',
-    declaration: 'export interface ExecutionWorldBinding {\n    readonly world: WorldId;\n    readonly provider: WorldProviderId;\n    readonly spec: WorldSpecDigest;\n    readonly resources: WorldResourcesSpec;\n}',
+    declaration: 'export interface ExecutionWorldBinding {\n    readonly world: WorldId;\n    readonly provider: WorldProviderId;\n    readonly spec: WorldSpecDigest;\n    readonly resources: WorldResourcesSpec;\n    readonly maxProcesses?: number;\n}',
   },
   {
     name: 'ExecutionWorldFact',

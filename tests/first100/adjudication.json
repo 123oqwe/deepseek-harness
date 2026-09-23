@@ -2067,6 +2067,46 @@
         "expectedAt": "tree",
         "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate work order 2026-09-19 (artifacts/delegate/p3-10-p-workorder.md) R1 and §4; lane B inbox B-461 ①"
       },
+      "P3-10.P/sandbox-world": {
+        "epic": "P3-10",
+        "stage": "P",
+        "path": "packages/execution/execution-world/src/sandbox-world.ts",
+        "reason": "The world lifecycle the local and fenced providers share: create, terminate, snapshot, restore, attest and the sandbox-policy adapter, parameterised by the provider's id, refusal label, evidence kind, declared features and refusal rule. Extracted from `local-provider.ts` rather than copied into the fenced provider (B-463 question 1), so the lifecycle exists once and each provider keeps its own id.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate work order 2026-09-19 (artifacts/delegate/p3-10-p-workorder.md) R2 and R3; lane B inbox B-463 (R2 questions 1, 3 and 4)"
+      },
+      "P3-10.P/local-provider-lifecycle": {
+        "epic": "P3-10",
+        "stage": "P",
+        "path": "packages/execution/execution-world/src/local-provider.ts",
+        "reason": "The local provider now passes its identity and refusal rule to the shared lifecycle in `sandbox-world.ts` instead of holding its own copy. Its answers, messages and declaration are unchanged, which P3-01 P and F and P3-02 P, the live freeze entries citing this file, observe on the same candidate. The earlier record for this path (`P3-10.P/local-provider`) stays superseded: the stage still adds no dimension to the local provider.",
+        "declaredBy": [],
+        "overlay": "P3-01 [F,P]; P3-02 [P]",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate work order 2026-09-19 (artifacts/delegate/p3-10-p-workorder.md) R2 and R3; lane B inbox B-463 (R2 questions 1, 3 and 4)"
+      },
+      "P3-10.P/fenced-plugin": {
+        "epic": "P3-10",
+        "stage": "P",
+        "path": "packages/execution/execution-world/src/fenced.ts",
+        "reason": "The `/fenced` plugin entry that registers the fenced provider and gives it the mounted subprocess runtime's answer. A separate entry, like `local.ts`, so a deployment adds or removes the provider as one row.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "stage",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate work order 2026-09-19 (artifacts/delegate/p3-10-p-workorder.md) R2 and R3; lane B inbox B-463 (R2 questions 1, 3 and 4)"
+      },
+      "P3-10.P/execution-world-plugin": {
+        "epic": "P3-10",
+        "stage": "P",
+        "path": "packages/execution/execution-world/src/plugin.ts",
+        "reason": "R3's processes dimension: `WorldRequest.maxProcesses` and its config schema, resolved into the spec's `process.maxProcesses` and reported on the binding as `maxProcesses`. The CPU ceiling's schema now takes whole percents of one CPU only, the unit a spawn's ceiling is held in, so a value no spawn could carry fails at load. The existing record for this path is the U stage's.",
+        "declaredBy": [],
+        "overlay": "P3-01 [U]; P3-02 [P]",
+        "expectedAt": "tree",
+        "rulingRef": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-257; delegate work order 2026-09-19 (artifacts/delegate/p3-10-p-workorder.md) R2 and R3; lane B inbox B-463 (R2 questions 1, 3 and 4)"
+      },
       "P2-05.U/sdk-minimal-pep-spec": {
         "epic": "P2-05",
         "stage": "U",
