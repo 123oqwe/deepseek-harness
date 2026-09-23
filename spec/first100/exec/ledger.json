@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-23T21:13:41.101Z",
-  "inputDigest": "c6ed55fb8ba15cedb32009591c12aa913f731bed328e4be0e6977afc7cb364dd",
+  "lastUpdatedUtc": "2026-09-23T21:21:21.494Z",
+  "inputDigest": "63d1d0e65e2765823796443bfe0bd9accac016e4302fb897dd7424a0c36f8c09",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -5621,7 +5621,43 @@
       "wave": 8,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "cf481716c5654d25af36bcab8140f7df9a50758c",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35915435056",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/35915435056/first100-vitest-report-cf481716c5654d25af36bcab8140f7df9a50758c/vitest-report.json",
+          "observationSha256": "27dd1b6cd547d7d009fb430e7afc56be68facddcd7b98c8c8e0627a4eb45560f",
+          "expectCasesMatched": [
+            "P4-03 C — a preference is not a refusal P4-03 C: a soft demand that holds is reported as nothing",
+            "P4-03 C — a preference is not a refusal P4-03 C: an unsatisfiable soft demand leaves the plan standing and is reported",
+            "P4-03 C — a preference is not a refusal P4-03 C: only the hard demand enters the conflict set when both fail",
+            "P4-03 C — a preference is not a refusal P4-03 C: the report of unmet preferences does not depend on the order they were listed in",
+            "P4-03 C — a preference is not a refusal P4-03 C: the same demand sourced from a hard constraint refuses the plan",
+            "P4-03 C — a preference is not a refusal P4-03 C: what a deployment cannot offer does not move the plan id",
+            "P4-03 C — the plan a compile produces P4-03 C: a diamond of independent work compiles, so an ordering is not mistaken for a loop",
+            "P4-03 C — the plan a compile produces P4-03 C: a plan carries no executable leaf",
+            "P4-03 C — the plan a compile produces P4-03 C: a requirement that names another node's requirement does not compile",
+            "P4-03 C — the plan a compile produces P4-03 C: changing one character of one constraint changes the plan id",
+            "P4-03 C — the plan a compile produces P4-03 C: every agent node names the TaskProfile requirement it satisfies",
+            "P4-03 C — the plan a compile produces P4-03 C: every referenced vocabulary is the owning package's own, not a restatement",
+            "P4-03 C — the plan a compile produces P4-03 C: every verification entry names the versioned contract it was compiled against",
+            "P4-03 C — the plan a compile produces P4-03 C: reordering an array that has no meaningful order does not change the plan id",
+            "P4-03 C — the plan a compile produces P4-03 C: the compiled plan validates against the shipped schema",
+            "P4-03 C — the plan a compile produces P4-03 C: the plan carries the schema's twelve fields and nothing else",
+            "P4-03 C — the plan a compile produces P4-03 C: the plan id is derived from the plan, never taken from the caller",
+            "P4-03 C — the plan a compile produces P4-03 C: the plan states the ABI version it was compiled under",
+            "P4-03 C — the plan a compile produces P4-03 C: the same normalized inputs give the same plan id",
+            "P4-03 C — what cannot be satisfied does not enter the run P4-03 C: a ceiling over what the deployment caps is a budget conflict",
+            "P4-03 C — what cannot be satisfied does not enter the run P4-03 C: a demand that holds does not enter the conflict set",
+            "P4-03 C — what cannot be satisfied does not enter the run P4-03 C: a missing model is a model conflict, and the route alone is enough to find it",
+            "P4-03 C — what cannot be satisfied does not enter the run P4-03 C: a policy the deployment does not allow is a policy conflict",
+            "P4-03 C — what cannot be satisfied does not enter the run P4-03 C: a satisfiable plan compiles and reports no conflict",
+            "P4-03 C — what cannot be satisfied does not enter the run P4-03 C: a world no provider can meet is a world conflict",
+            "P4-03 C — what cannot be satisfied does not enter the run P4-03 C: a world spec nobody answered for is refused rather than assumed",
+            "P4-03 C — what cannot be satisfied does not enter the run P4-03 C: an unsatisfiable hard demand produces a conflict set and no plan",
+            "P4-03 C — what cannot be satisfied does not enter the run P4-03 C: the conflict set is minimal — removing any one member makes the rest satisfiable",
+            "P4-03 C — what cannot be satisfied does not enter the run P4-03 C: wall clock takes the largest demand while the other dimensions add up"
+          ],
+          "capturedAtUtc": "2026-09-23T21:21:21.171Z"
         },
         "P": {
           "status": "NOT_RUN"
@@ -5630,7 +5666,35 @@
           "status": "NOT_RUN"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "cf481716c5654d25af36bcab8140f7df9a50758c",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35915435056",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/35915435056/first100-vitest-report-cf481716c5654d25af36bcab8140f7df9a50758c/vitest-report.json",
+          "observationSha256": "27dd1b6cd547d7d009fb430e7afc56be68facddcd7b98c8c8e0627a4eb45560f",
+          "expectCasesMatched": [
+            "P4-03 F — inputs that would make a decision unsafe P4-03 F: a broken reference on its own is not reported as a cycle",
+            "P4-03 F — inputs that would make a decision unsafe P4-03 F: a cap is never read off an inherited property",
+            "P4-03 F — inputs that would make a decision unsafe P4-03 F: a cap key carrying no value is refused rather than read as no cap",
+            "P4-03 F — inputs that would make a decision unsafe P4-03 F: a cap that is not a number is refused, so nothing is compared against it",
+            "P4-03 F — inputs that would make a decision unsafe P4-03 F: a ceiling of zero forbids the work rather than bounding it, and is refused",
+            "P4-03 F — inputs that would make a decision unsafe P4-03 F: a chain far longer than a call stack is answered, not thrown at",
+            "P4-03 F — inputs that would make a decision unsafe P4-03 F: a cycle and a broken reference are each reported, not one instead of the other",
+            "P4-03 F — inputs that would make a decision unsafe P4-03 F: a dimension outside the eight is refused on both sides",
+            "P4-03 F — inputs that would make a decision unsafe P4-03 F: a graph that waits on itself does not compile",
+            "P4-03 F — inputs that would make a decision unsafe P4-03 F: a node that waits for itself does not compile",
+            "P4-03 F — inputs that would make a decision unsafe P4-03 F: a plan round-trips through JSON unchanged, so it can be persisted and sent",
+            "P4-03 F — inputs that would make a decision unsafe P4-03 F: a plan with an extra top-level property is refused by its own schema",
+            "P4-03 F — inputs that would make a decision unsafe P4-03 F: a plan with no objective and no node is refused as empty",
+            "P4-03 F — inputs that would make a decision unsafe P4-03 F: a reference to something the plan does not contain is an input problem, not a conflict",
+            "P4-03 F — inputs that would make a decision unsafe P4-03 F: a task profile reference that is not a digest is refused",
+            "P4-03 F — inputs that would make a decision unsafe P4-03 F: an amount that is not a number is refused rather than compared",
+            "P4-03 F — inputs that would make a decision unsafe P4-03 F: an identifier longer than the schema admits is refused before a plan carries it",
+            "P4-03 F — inputs that would make a decision unsafe P4-03 F: recomputing the id of a plan whose id was replaced gives a different id",
+            "P4-03 F — inputs that would make a decision unsafe P4-03 F: the conflict set for one refusal is the same set every time",
+            "P4-03 F — inputs that would make a decision unsafe P4-03 F: the cycle named is the same one however the graph was listed",
+            "P4-03 F — inputs that would make a decision unsafe P4-03 F: the derived demands take a prefix a caller cannot claim"
+          ],
+          "capturedAtUtc": "2026-09-23T21:21:21.487Z"
         }
       },
       "supplements": {
@@ -5648,7 +5712,7 @@
           "capturedAtUtc": "2026-09-23T21:13:41.093Z"
         }
       },
-      "candidateSha": null,
+      "candidateSha": "cf481716c5654d25af36bcab8140f7df9a50758c",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
