@@ -1191,7 +1191,8 @@ Mounting this service creates no world. A world is created at the first dispatch
 
 ```ts cordis-catalog
 /**
- * Register one provider, in the deployment's own preference order.
+ * Register one provider, in the deployment's own preference order, adjusted
+ * only by the provider's own placement (see {@link selectionOrder}).
  *
  * A registration is an effect, so unmounting the registering plugin removes
  * the provider rather than leaving a registry that outlives it.
@@ -1204,9 +1205,10 @@ Mounting this service creates no world. A world is created at the first dispatch
  * rule because returning the disposer unchanged preserves its identity for
  * its own callers, and nothing here depends on that.
  * @param provider - the provider to offer to selection.
+ * @param placement - the providers this one yields to; absent, it yields to none.
  * @returns the disposer, which settles once the provider is removed.
  */
-register(provider: WorldProvider): () => Promise<void>
+register(provider: WorldProvider, placement?: WorldProviderPlacement): () => Promise<void>
 
 /**
  * The world this agent's session runs in, creating it on first ask.

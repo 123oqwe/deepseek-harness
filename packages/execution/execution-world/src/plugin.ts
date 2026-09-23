@@ -58,6 +58,14 @@ export interface ExecutionWorldBinding {
    * before a request could carry them.
    */
   readonly resources: WorldResourcesSpec
+  /**
+   * The ceiling on processes alive at once in this world (P3-10 R3's
+   * processes dimension), from the same resolved spec as {@link resources}.
+   * Absent means this deployment asked for none. A separate field rather than
+   * a fourth key of `resources`, because the spec keeps it in its `process`
+   * dimension.
+   */
+  readonly maxProcesses?: number
 }
 
 /**
@@ -75,6 +83,12 @@ export interface WorldRequest {
   readonly network?: WorldSpec['network']['posture']
   /** Whether the world may start processes. */
   readonly spawn?: boolean
+  /**
+   * Ceiling on processes alive at once in the world (P3-10 must[0]'s processes
+   * dimension); absent means no ceiling was asked for, as before this field
+   * existed.
+   */
+  readonly maxProcesses?: number
   /** IPC posture. */
   readonly ipc?: WorldSpec['ipc']['posture']
   /** How secrets reach the world. */
@@ -137,6 +151,43 @@ export function filesystemForSandboxMode(
   return undefined
 }
 
+/** Where a provider sits in selection, beyond the order it registered in. */
+export interface WorldProviderPlacement {
+  /**
+   * Providers this one yields to: selection consults it after every
+   * registered provider named here, whichever of them registered first. A
+   * provider that can serve a request another serves as well names that other
+   * one here, so which of the two serves it does not depend on the order in
+   * which their plugins happened to mount.
+   */
+  readonly yieldsTo?: readonly WorldProviderId[]
+}
+
+/**
+ * The order selection consults registered providers in: registration order,
+ * except that a provider comes after every registered provider it yields to.
+ * @param providers - the registered providers, in registration order.
+ * @param yieldsTo - each provider's yielded-to ids; a provider absent from the map yields to none.
+ * @returns the providers in consultation order.
+ * @throws when providers yield to each other in a cycle, which leaves no order to choose.
+ */
+export function selectionOrder(
+  providers: readonly WorldProvider[],
+  yieldsTo: ReadonlyMap<WorldProvider, readonly WorldProviderId[]>,
+): WorldProvider[] {
+  const pending = [...providers]
+  const ordered: WorldProvider[] = []
+  while (pending.length > 0) {
+    const next = pending.findIndex(provider =>
+      !(yieldsTo.get(provider) ?? []).some(id => pending.some(other => other !== provider && other.id === id)))
+    if (next === -1) {
+      throw new Error(`execution world providers yield to each other in a cycle: ${pending.map(provider => provider.id).join(', ')}`)
+    }
+    ordered.push(...pending.splice(next, 1))
+  }
+  return ordered
+}
+
 /** The agent shape this service reads, kept structural for the same reason. */
 interface BindableAgent {
   readonly id: string
@@ -166,7 +217,10 @@ export function resolveWorldSpec(
   return {
     filesystem,
     network: { posture: request.network ?? 'unrestricted' },
-    process: { spawn: request.spawn ?? true },
+    process: {
+      spawn: request.spawn ?? true,
+      ...request.maxProcesses === undefined ? {} : { maxProcesses: request.maxProcesses },
+    },
     ipc: { posture: request.ipc ?? 'unrestricted' },
     devices: { allowed: ['/dev/null'] },
     secrets: { posture: request.secrets ?? 'inherited' },
@@ -252,8 +306,12 @@ export default class ExecutionWorldService extends Service<Config> {
       // which is what every world had before these fields existed, and a
       // default would silently impose a limit nobody wrote.
       maxWallClockMs: z.number().step(1).min(1),
+      maxProcesses: z.number().step(1).min(1),
       resources: z.object({
-        cpuMillicores: z.number().step(1).min(1),
+        // A whole percent of one CPU, the unit a spawn's ceiling is held in
+        // (`dsh-subprocess` refuses any other), so a value no spawn could carry
+        // fails here, at load, rather than on every command the world runs.
+        cpuMillicores: z.number().step(10).min(10),
         memoryBytes: z.number().step(1).min(1),
         diskBytes: z.number().step(1).min(1),
       }),
@@ -322,6 +380,8 @@ export default class ExecutionWorldService extends Service<Config> {
   }) as z<Config>
 
   private readonly providers: WorldProvider[] = []
+  /** Each registered provider's yielded-to ids, from its registration's placement. */
+  private readonly yieldsTo = new Map<WorldProvider, readonly WorldProviderId[]>()
   private readonly bound = new Map<string, ExecutionWorldBinding>()
   private readonly request: WorldRequest
   private readonly tenant: TenantId
@@ -336,7 +396,8 @@ export default class ExecutionWorldService extends Service<Config> {
   }
 
   /**
-   * Register one provider, in the deployment's own preference order.
+   * Register one provider, in the deployment's own preference order, adjusted
+   * only by the provider's own placement (see {@link selectionOrder}).
    *
    * A registration is an effect, so unmounting the registering plugin removes
    * the provider rather than leaving a registry that outlives it.
@@ -349,14 +410,17 @@ export default class ExecutionWorldService extends Service<Config> {
    * rule because returning the disposer unchanged preserves its identity for
    * its own callers, and nothing here depends on that.
    * @param provider - the provider to offer to selection.
+   * @param placement - the providers this one yields to; absent, it yields to none.
    * @returns the disposer, which settles once the provider is removed.
    */
-  register(provider: WorldProvider): () => Promise<void> {
+  register(provider: WorldProvider, placement?: WorldProviderPlacement): () => Promise<void> {
     return this.ctx.effect(() => {
       this.providers.push(provider)
+      if (placement?.yieldsTo !== undefined) this.yieldsTo.set(provider, placement.yieldsTo)
       return () => {
         const at = this.providers.indexOf(provider)
         if (at >= 0) this.providers.splice(at, 1)
+        this.yieldsTo.delete(provider)
       }
     })
   }
@@ -379,7 +443,7 @@ export default class ExecutionWorldService extends Service<Config> {
     const filesystem = filesystemForSandboxMode(mode, workspaceRoot)
     if (filesystem === undefined) return undefined
     const spec = resolveWorldSpec(this.request, filesystem, this.tenant)
-    const selection = selectWorldProvider(spec, this.providers, this.policy)
+    const selection = selectWorldProvider(spec, selectionOrder(this.providers, this.yieldsTo), this.policy)
     if (selection.outcome === 'refused') return undefined
     const handle = await selection.provider.create(spec).catch(() => undefined)
     if (handle === undefined) return undefined
@@ -388,6 +452,7 @@ export default class ExecutionWorldService extends Service<Config> {
       provider: handle.provider,
       spec: handle.spec,
       resources: spec.resources,
+      ...spec.process.maxProcesses === undefined ? {} : { maxProcesses: spec.process.maxProcesses },
     }
     this.bound.set(agent.id, binding)
     return binding
