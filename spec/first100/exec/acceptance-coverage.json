@@ -509,6 +509,21 @@
         {
           "stage": "U",
           "title": "logs a resupply when chain shape and every kind/id/tenantId match but the terminal agent principal's delegatedBy differs (Reviewer round-3 finding, closed in fix4)"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "attaches a HOST USER on every surface a local user starts, headless, ACP and the SDK server alike"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "attributes every recorded action to the principal its own log attached, on all three surfaces"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "names more than one principal across those attributions, so the join is not one constant satisfying itself"
         }
       ],
       "note": "acceptance[0]: 任何 action 都能追溯 root user/tenant 与完整委托链 (any action traceable to root user/tenant and the FULL delegation chain) decomposes into: a stable root anchor ('keeps rootPrincipal fixed across every extension', C-stage -- the root never drifts as a chain is built) and real, durable session-log traceability of every genuine authority-relevant change, proven incrementally across 4 U-stage review rounds each closing a narrower gap in what 'full chain' actually requires: first-attachment logging (basic traceability), a terminal-principal swap being logged (not just 'something changed'), a same-terminal-but-different-chain-shape swap being logged (root/depth/provenance, not just the endpoint), and a same-shape-but-different-delegatedBy swap being logged (who authorized the delegation, not just who is acting). Each citation represents a distinct authority-relevant fact this epic's own review process proved was NOT caught by the weaker checks that preceded it -- omitting any one would silently re-open a gap 3 independent Reviewers each specifically found and required closed."

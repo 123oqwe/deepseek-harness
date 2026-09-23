@@ -829,7 +829,7 @@
       "stages": [
         "U.1"
       ],
-      "reason": "One of the two root creation sites a LOCAL host user drives, and the one the headless profile boots. The registry named neither, because in the plan no creation site passed an identity at all. ACP, the SDK server and webhook ingress deliberately remain unattached: a request that arrived over a socket is not the machine's host user (OQ30)."
+      "reason": "One of the two root creation sites a LOCAL host user drives, and the one the headless profile boots. The registry named neither, because in the plan no creation site passed an identity at all. ACP and the SDK server attach one too, since `a816deb892` and `d2ef773d81`: both are started by the local user, and OQ30's reading -- that a request arriving over a socket is not the machine's host user -- was measured out by BLOCKED-291. Webhook ingress today attaches nothing; whether it should, and as which principal kind, has not been adjudicated."
     },
     {
       "epic": "P2-01",

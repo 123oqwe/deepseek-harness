@@ -42,6 +42,16 @@ The headless lane moves and the two remote lanes do not. That is the ruling, rea
 
 `snapshots/web/` is excluded from the table on purpose. Its fixtures are refreshed by the Chromium lane (`pnpm run test:web`), not by `test:snapshot`, so their counts say nothing about this change.
 
+### Forward correction (2026-09-20): the boundary above no longer holds, and neither do two rows of that table
+
+**The text above is left as written.** It records what was true and what was ruled at the time; this section says what changed and where the evidence moved.
+
+OQ30's reading -- that a request arriving over a socket is not the machine's host user -- was measured out by [BLOCKED-291](./BLOCKED-QUEUE.md#blocked-291). Both remote surfaces are started BY the local user, and a session that attaches nothing acts as `anonymous:<sessionId>`, which left this epic's own acceptance[0] unprovable on two of its three surfaces. `a816deb892` gives an ACP session the host user, `d2ef773d81` does the same for a session the SDK server composes per request, and the corpora were re-recorded against both (`b20a5b70f3`, `3a2496b59e`).
+
+So the table's `after` column is wrong for the two remote lanes. Measured on `2daa2e484f`, counting one log per Session role as the harness selects them: `snapshots/session/` 96 of 103, `snapshots/sdk/` 26 of 27, `snapshots/acp/` 6 of 8. The logs that attach nothing are two different kinds and should not be read as one. Eight are stored at a generation no current writer produces -- seven in the session lane and `sdk/multi-turn`, whose session log is still v2 -- so what they do or do not carry says nothing about today's product. The remaining two, `acp/handshake` and `acp/reject-extra-dirs`, ARE written by the current writer; they carry no identity because they carry no events at all, a transcript that never opened a session having nothing to attach one to.
+
+**Where the universal clause's evidence now lives.** acceptance[0] says 任何 action 都能追溯 root user/tenant 与完整委托链 -- a statement about EVERY action. The five citations it carried prove the MECHANISM: a root anchor that does not drift, and a resupply logged whenever authority genuinely changes. What measures the universal is the U.1 supplement's three corpus cases, which walk all three lanes and join every attributed action to the identity its own log attached. They are cited under acceptance[0] as of this correction; before it, the clause closed on mechanism evidence alone, which is the shape [BLOCKED-293](./BLOCKED-QUEUE.md#blocked-293) registers and this epic originated.
+
 ## What the frozen cases read
 
 `tests/first100/fixtures/P2-01.corpus.spec.ts` reads `snapshots/session/advanced-toolchain/` — one scenario, one real process, a root and two delegated children. It is the corpus rather than a purpose-built fixture because a fixture would prove that the fixture attaches an identity.
