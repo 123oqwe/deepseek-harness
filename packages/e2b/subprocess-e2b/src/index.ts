@@ -9,7 +9,7 @@ import { posix } from 'node:path'
 import { inspect } from 'node:util'
 import { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
-import { SubprocessRuntime } from '@deepseek-ai/dsh-subprocess'
+import { assertLimitsEnforceable, SubprocessRuntime } from '@deepseek-ai/dsh-subprocess'
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
 import type {
   SubprocessHandle,
@@ -152,6 +152,8 @@ export class E2BSubprocessRuntime extends SubprocessRuntime {
       throw new Error('invalid argv: expected a non-empty program name at argv[0]')
     }
     requireRepresentableGrace(spec.graceMs)
+    // The remote command runs under the sandbox's own resources; nothing here can hold a per-command ceiling.
+    assertLimitsEnforceable(spec.limits, [])
     if (spec.signal?.aborted === true) {
       let reason = 'aborted'
       try {

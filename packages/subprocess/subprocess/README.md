@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-`ctx.subprocess` resolves executables, starts explicitly specified child processes or real terminal sessions, streams or collects bounded output, and terminates the full managed process range. Configure one subprocess implementation for each composition, choosing local or remote execution according to where commands must run. Each request sets argv, working directory, stdio, environment overrides, termination grace, and cancellation, with no shell interpretation or hidden execution defaults. Child environments remove ambient credentials and `DSH_*` values before applying explicit overrides; callers own deadlines, teardown policy, and model-facing rendering, while collected output remains readable after exit.
+`ctx.subprocess` resolves executables, starts explicitly specified child processes or real terminal sessions, streams or collects bounded output, and terminates the full managed process range. Configure one subprocess implementation for each composition, choosing local or remote execution according to where commands must run. Each request sets argv, working directory, stdio, environment overrides, termination grace, cancellation, and optional hard resource ceilings, with no shell interpretation or hidden execution defaults. Child environments remove ambient credentials and `DSH_*` values before applying explicit overrides; callers own deadlines, teardown policy, and model-facing rendering, while collected output remains readable after exit.
 
 ## Table of Contents
 
@@ -67,6 +67,10 @@ Termination and waiting use one provider-managed range. `terminate()` starts the
 ### Running a terminal session
 
 For interactive programs, `spawnTerminal` allocates a real PTY: write text, read UTF-8 output, inspect and signal the current foreground process group, and await one `terminate()` that settles every session member the provider can still observe. Readiness, scrollback, and prompt policy stay with the PTY consumer.
+
+### Holding a range to resource ceilings
+
+A request's optional `limits` sets hard ceilings on CPU, memory, and live processes for the whole managed range. `enforceableLimits()` answers which of those the provider can hold at this moment, from the same containment selection its next spawn makes. A spawn naming a ceiling the provider cannot hold throws `SubprocessLimitsRefusedError` before anything launches, so a ceiling is never silently dropped; a request without `limits` launches exactly as before.
 
 ### Environment every child starts from
 

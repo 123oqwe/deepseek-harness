@@ -2815,7 +2815,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
   {
     key: 'subprocess',
     summary: 'Abstract subprocess service.',
-    description: 'Abstract subprocess service. Subclass, implement spawn, and load the subclass as a plugin — it registers as `ctx.subprocess` (one implementation per context; loading a second throws, which is cordis\' standard duplicate-service behavior).\n\nImplementations must honor these semantics:\n\n- Executable paths belong to one execution world shared with the mounted filesystem provider.\n- spawn returns a live handle synchronously. Target identity remains provider-private; `done` resolves with the spawned command\'s exit facts and may reject for spawn or provider failures.\n- Collect-mode readers are offset-based and non-consuming, so independent readers never consume one another\'s output; lossy reads report truncation and the spill file holding the complete stream when one exists. Piped streams are handed to the caller raw and never buffered here.\n- SubprocessHandle.terminate (and the spec\'s abort signal) starts the provider\'s documented procedure against its managed range. SubprocessHandle.waitForExit observes that same range so a consumer-owned teardown ladder can hold each tier on real quiescence; each provider documents its signalling and observability limits.\n- Disposal of the service terminates all still-running managed processes and awaits their exit.\n- spawnTerminal owns terminal allocation, text transport, foreground groups, signalling, and whole-session quiescence behind one awaited termination method; readiness and persistent-shell policy stay in the PTY consumer. Its output stream ends after queued terminal output when the top-level process exits.',
+    description: 'Abstract subprocess service. Subclass, implement spawn, and load the subclass as a plugin — it registers as `ctx.subprocess` (one implementation per context; loading a second throws, which is cordis\' standard duplicate-service behavior).\n\nImplementations must honor these semantics:\n\n- Executable paths belong to one execution world shared with the mounted filesystem provider.\n- spawn returns a live handle synchronously. Target identity remains provider-private; `done` resolves with the spawned command\'s exit facts and may reject for spawn or provider failures.\n- Collect-mode readers are offset-based and non-consuming, so independent readers never consume one another\'s output; lossy reads report truncation and the spill file holding the complete stream when one exists. Piped streams are handed to the caller raw and never buffered here.\n- SubprocessHandle.terminate (and the spec\'s abort signal) starts the provider\'s documented procedure against its managed range. SubprocessHandle.waitForExit observes that same range so a consumer-owned teardown ladder can hold each tier on real quiescence; each provider documents its signalling and observability limits.\n- A spec\'s `limits` are held as hard ceilings on the whole managed range, or the spawn is refused through assertLimitsEnforceable before anything launches; enforceableLimits answers from the same containment selection that spawn uses. A spec without limits launches exactly as it did before the field existed.\n- Disposal of the service terminates all still-running managed processes and awaits their exit.\n- spawnTerminal owns terminal allocation, text transport, foreground groups, signalling, and whole-session quiescence behind one awaited termination method; readiness and persistent-shell policy stay in the PTY consumer. Its output stream ends after queued terminal output when the top-level process exits.',
     methods: [
       {
         signature: 'abstract resolveExecutable( command: string, env?: Readonly<Record<string, string>>, signal?: AbortSignal, ): Promise<string>',
@@ -2828,7 +2828,13 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         description: 'Start one managed child process from a fully-specified spec; this seam applies no defaults.',
         parameters: [{ name: 'spec', description: 'argv, directory, stdio dispositions, grace, cancellation, and environment.' }],
         returns: 'the live process handle (streams/readers, signalling, outcome promise).',
-        throws: ['synchronously when pre-aborted or when argv, cwd, environment, or grace is invalid before handle creation.'],
+        throws: ['synchronously when pre-aborted or when argv, cwd, environment, grace, or limits is invalid before handle creation.', 'SubprocessLimitsRefusedError synchronously when `limits` names a ceiling this provider cannot hold.'],
+      },
+      {
+        signature: 'enforceableLimits(): readonly SubprocessLimitDimension[]',
+        description: 'The dimensions this provider can hold a managed range to at this moment, from the same containment selection its next spawn makes. The base answer is none: a provider that does not override it must refuse every limited spawn.',
+        parameters: [],
+        returns: 'the enforceable dimensions; empty when the provider can hold none.',
       },
       {
         signature: 'abstract spawnTerminal(spec: SubprocessTerminalSpawnSpec): Promise<SubprocessTerminalHandle>',
@@ -7005,6 +7011,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface SubprocessHandle {\n    readonly stdin: Writable | undefined;\n    readonly stdout: Readable | undefined;\n    readonly stderr: Readable | undefined;\n    readonly collected: SubprocessCollectedOutputs;\n    readonly done: Promise<SubprocessOutcome>;\n    terminate(): void;\n    waitForExit(signal?: AbortSignal): Promise<boolean>;\n}',
   },
   {
+    name: 'SubprocessLimitDimension',
+    declaration: 'export type SubprocessLimitDimension = \'cpu\' | \'memory\' | \'processes\';',
+  },
+  {
+    name: 'SubprocessLimits',
+    declaration: 'export interface SubprocessLimits {\n    readonly cpuMillicores?: number | undefined;\n    readonly memoryBytes?: number | undefined;\n    readonly maxProcesses?: number | undefined;\n}',
+  },
+  {
     name: 'SubprocessOutcome',
     declaration: 'export interface SubprocessOutcome {\n    exitCode: number | null;\n    signal: NodeJS.Signals | null;\n}',
   },
@@ -7022,7 +7036,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'SubprocessSpawnSpec',
-    declaration: 'export interface SubprocessSpawnSpec {\n    argv: readonly string[];\n    cwd: string;\n    stdio: SubprocessStdio;\n    graceMs: number;\n    signal?: AbortSignal | undefined;\n    env?: NodeJS.ProcessEnv | undefined;\n}',
+    declaration: 'export interface SubprocessSpawnSpec {\n    argv: readonly string[];\n    cwd: string;\n    stdio: SubprocessStdio;\n    graceMs: number;\n    signal?: AbortSignal | undefined;\n    env?: NodeJS.ProcessEnv | undefined;\n    limits?: SubprocessLimits | undefined;\n}',
   },
   {
     name: 'SubprocessStdinMode',

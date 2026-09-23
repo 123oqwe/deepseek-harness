@@ -127,6 +127,44 @@ interface SubprocessSpawnSpec {
    * tombstone that removes an ordinary ambient entry from the child.
    */
   env?: NodeJS.ProcessEnv | undefined
+  /**
+   * Hard resource ceilings for the whole managed range. Absent, or present
+   * with no member set, launches exactly what a spawn without this field
+   * launches. A provider that cannot hold every named dimension throws
+   * `SubprocessLimitsRefusedError` instead of running the command unbounded.
+   */
+  limits?: SubprocessLimits | undefined
+}
+```
+
+## 资源上限
+
+spec 的可选 `limits` 为整个受管范围设 CPU、内存与存活进程数的硬上限。`enforceableLimits()` 回答提供方此刻能守住哪几维，答案来自它下一次 spawn 所做的同一次包裹模式选择；基类的回答是「一维也守不住」。提供方在启动任何东西之前调用 `assertLimitsEnforceable`，所以点名了守不住的上限的 spawn 会抛出 `SubprocessLimitsRefusedError`（带 `refused` 与 `enforceable`），而不是无上限地运行。本地提供方在 Linux user scope 里三维都守得住，在其它地方一维也守不住；E2B 提供方一维也守不住。
+
+```ts type-equiv
+/** A resource dimension a provider can hold one managed range to. */
+type SubprocessLimitDimension = 'cpu' | 'memory' | 'processes'
+
+/**
+ * Hard ceilings for one managed range: the spawned command and everything it
+ * starts. Each member is optional and has no default; an absent member puts
+ * no ceiling on that dimension.
+ */
+interface SubprocessLimits {
+  /**
+   * CPU time as thousandths of one CPU (1000 = one full CPU): a positive
+   * multiple of 10, so the ceiling is a whole percent of one CPU.
+   */
+  readonly cpuMillicores?: number | undefined
+  /** Memory ceiling in bytes, swap included, a positive integer. */
+  readonly memoryBytes?: number | undefined
+  /**
+   * Ceiling on tasks (processes and threads) alive at once in the range, a
+   * positive integer. The range includes whatever the provider launches the
+   * command with: on the local provider's Linux scope, the Node launch runner
+   * and its threads count until the runner replaces itself with the command.
+   */
+  readonly maxProcesses?: number | undefined
 }
 ```
 
@@ -283,6 +321,7 @@ Implementations must honor these semantics:
 - spawn returns a live handle synchronously. Target identity remains provider-private; `done` resolves with the spawned command's exit facts and may reject for spawn or provider failures.
 - Collect-mode readers are offset-based and non-consuming, so independent readers never consume one another's output; lossy reads report truncation and the spill file holding the complete stream when one exists. Piped streams are handed to the caller raw and never buffered here.
 - SubprocessHandle.terminate (and the spec's abort signal) starts the provider's documented procedure against its managed range. SubprocessHandle.waitForExit observes that same range so a consumer-owned teardown ladder can hold each tier on real quiescence; each provider documents its signalling and observability limits.
+- A spec's `limits` are held as hard ceilings on the whole managed range, or the spawn is refused through assertLimitsEnforceable before anything launches; enforceableLimits answers from the same containment selection that spawn uses. A spec without limits launches exactly as it did before the field existed.
 - Disposal of the service terminates all still-running managed processes and awaits their exit.
 - spawnTerminal owns terminal allocation, text transport, foreground groups, signalling, and whole-session quiescence behind one awaited termination method; readiness and persistent-shell policy stay in the PTY consumer. Its output stream ends after queued terminal output when the top-level process exits.
 
@@ -305,9 +344,19 @@ abstract resolveExecutable( command: string, env?: Readonly<Record<string, strin
  * applies no defaults.
  * @param spec - argv, directory, stdio dispositions, grace, cancellation, and environment.
  * @returns the live process handle (streams/readers, signalling, outcome promise).
- * @throws synchronously when pre-aborted or when argv, cwd, environment, or grace is invalid before handle creation.
+ * @throws synchronously when pre-aborted or when argv, cwd, environment, grace, or limits is invalid before handle creation.
+ * @throws SubprocessLimitsRefusedError synchronously when `limits` names a ceiling this provider cannot hold.
  */
 abstract spawn(spec: SubprocessSpawnSpec): SubprocessHandle
+
+/**
+ * The dimensions this provider can hold a managed range to at this moment,
+ * from the same containment selection its next {@link spawn} makes. The
+ * base answer is none: a provider that does not override it must refuse
+ * every limited spawn.
+ * @returns the enforceable dimensions; empty when the provider can hold none.
+ */
+enforceableLimits(): readonly SubprocessLimitDimension[]
 
 /**
  * Allocate a real terminal and start one owned process session. This is the

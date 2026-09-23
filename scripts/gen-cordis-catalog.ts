@@ -423,6 +423,7 @@ export const LINK_MAP: Readonly<Record<string, string>> = {
   ShellRunResult: 'shell.md',
   DshEnvironment: 'subprocess.md',
   SubprocessHandle: 'subprocess.md',
+  SubprocessLimitDimension: 'subprocess.md',
   SubprocessOutcome: 'subprocess.md',
   SubprocessOutputRead: 'subprocess.md',
   SubprocessOutputReader: 'subprocess.md',
