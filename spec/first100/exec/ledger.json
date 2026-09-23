@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-23T19:00:41.171Z",
-  "inputDigest": "3918fb6a6975b1b3ba9001553eaffd7acb9e4903417e68556b4ca30045476985",
+  "lastUpdatedUtc": "2026-09-23T19:01:17.970Z",
+  "inputDigest": "a3c15edd22d89af94c020064a8fb6b86182ced27766ca5f052d58df67966be1c",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -2878,18 +2878,20 @@
         },
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "191aa1e502ff7e96a7ce306cdf57ccb742c745fb",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34992480706",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-first100-delegate/d3a94c8b-056a-44b5-9397-315997b4088a/scratchpad/artifacts/34992480706/first100-vitest-report-191aa1e502ff7e96a7ce306cdf57ccb742c745fb/vitest-report.json",
-          "observationSha256": "bbd33400cce2f168a3a0d55498dd3f2d462dc2699e47a49319c2b84a4a56724f",
+          "candidateSha": "2daa2e484f74575e219e1401081fa43b3013019a",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35485497126",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-35485497126/vitest-report/first100-vitest-report-2daa2e484f74575e219e1401081fa43b3013019a/vitest-report.json",
+          "observationSha256": "ecaacc2228ed3dbd7f17c4de6619e5a17f3a165c2108c97bdc51fb93818e3c31",
           "expectCasesMatched": [
             "attaches the HOST USER as the root, and the first action is attributed to exactly that principal",
             "delegates ONE hop to the child, whose chain still roots at the same host user",
             "keeps the SAME root two hops down, so depth does not dilute the chain",
             "gives the child its own principal and its own run, so parent and child are not one actor",
-            "OQ30: the local launcher attaches a host user and the remote surfaces attach nothing"
+            "attaches a HOST USER on every surface a local user starts, headless, ACP and the SDK server alike",
+            "attributes every recorded action to the principal its own log attached, on all three surfaces",
+            "names more than one principal across those attributions, so the join is not one constant satisfying itself"
           ],
-          "capturedAtUtc": "2026-09-15T17:17:47.897Z"
+          "capturedAtUtc": "2026-09-23T19:01:17.961Z"
         }
       },
       "candidateSha": "73c1c04f2ea03fbd09b0c0cb5d06ecf986aedbff",
