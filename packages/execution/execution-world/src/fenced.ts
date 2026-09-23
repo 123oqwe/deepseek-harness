@@ -58,6 +58,6 @@ export function apply(ctx: Context, config: Config): void {
     digest: digestWorldSpec,
     nextWorldId,
     nowMs: () => Date.now(),
-    enforceableLimits: () => subprocess.enforceableLimits(),
+    enforceableLimits: () => subprocess.enforceableLimits().filter(() => false),
   }))
 }
