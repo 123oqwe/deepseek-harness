@@ -415,9 +415,6 @@ class SystemdScopeOwner implements BoundProcessOwner {
 export function scopeLimitProperties(limits: SubprocessLimits | undefined): string[] {
   const properties: string[] = []
   if (limits?.cpuMillicores !== undefined) properties.push('-p', `CPUQuota=${String(limits.cpuMillicores / 10)}%`)
-  if (limits?.memoryBytes !== undefined) {
-    properties.push('-p', `MemoryMax=${String(limits.memoryBytes)}`, '-p', 'MemorySwapMax=0')
-  }
   if (limits?.maxProcesses !== undefined) properties.push('-p', `TasksMax=${String(limits.maxProcesses)}`)
   return properties
 }
