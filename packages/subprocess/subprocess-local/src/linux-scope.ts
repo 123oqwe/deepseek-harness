@@ -418,7 +418,6 @@ export function scopeLimitProperties(limits: SubprocessLimits | undefined): stri
   if (limits?.memoryBytes !== undefined) {
     properties.push('-p', `MemoryMax=${String(limits.memoryBytes)}`, '-p', 'MemorySwapMax=0')
   }
-  if (limits?.maxProcesses !== undefined) properties.push('-p', `TasksMax=${String(limits.maxProcesses)}`)
   return properties
 }
 
