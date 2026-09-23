@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-19T15:40:28.518Z",
-  "inputDigest": "bd2cc46dea79caa34a0ea06ddea0fd1a853db2635dea8d88a3309e4b6cbbbacd",
+  "lastUpdatedUtc": "2026-09-23T19:00:41.171Z",
+  "inputDigest": "3918fb6a6975b1b3ba9001553eaffd7acb9e4903417e68556b4ca30045476985",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -2106,6 +2106,19 @@
             "does NOT carry the grant to a different directory that takes the same path"
           ],
           "capturedAtUtc": "2026-09-15T07:11:36.842Z"
+        },
+        "U.3": {
+          "status": "GREEN",
+          "candidateSha": "2daa2e484f74575e219e1401081fa43b3013019a",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35485497126",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-35485497126/vitest-report/first100-vitest-report-2daa2e484f74575e219e1401081fa43b3013019a/vitest-report.json",
+          "observationSha256": "ecaacc2228ed3dbd7f17c4de6619e5a17f3a165c2108c97bdc51fb93818e3c31",
+          "expectCasesMatched": [
+            "the sdk profile's project-trust boundary leaves an ungranted workspace's own AGENTS.md out of what the model is given",
+            "the sdk profile's project-trust boundary reads it after `--trust-workspace=read` alone, with no overlay granting anything",
+            "the sdk profile's project-trust boundary reads the same AGENTS.md once the host grants that directory"
+          ],
+          "capturedAtUtc": "2026-09-23T19:00:41.164Z"
         }
       },
       "candidateSha": "191aa1e502ff7e96a7ce306cdf57ccb742c745fb",
