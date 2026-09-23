@@ -2275,7 +2275,7 @@
         "declaredBy": [],
         "overlay": "P3-01 [C,F]; P3-10 [C]",
         "expectedAt": "tree",
-        "rulingRef": "delegate ruling 2026-09-19 (B-382 ②: types.ts 进范围 = 加 approvedAddition P3-02.P/execution-world-types，expectedAt tree)"
+        "rulingRef": "delegate ruling 2026-09-19 (B-382 ②: types.ts 进范围 = 加 approvedAddition P3-02.P/execution-world-types，expectedAt tree); B-441/B-442 (a): 此写入在登记的写序列之外,经 B-382 ② / B-441 裁定放行;该文件今天只有 P3-01(创建,2659835c99)与 P3-02(e9fff0b634)两笔写入,序列里其余写者均未落笔;后续写者以此为基"
       },
       "P1-07.U/sdk-app-trust-spec": {
         "epic": "P1-07",
