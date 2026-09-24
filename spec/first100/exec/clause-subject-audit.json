@@ -403,38 +403,54 @@
           {
             "name": "in-toto/attestation",
             "npm": "in-toto/attestation",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work."
+            "reason": "slice-consumer of SLICE-3.4 (§3.4/R1): ruling §7.2 has this epic's evidence emitted as an in-toto Statement v1 in a DSSE envelope through the attestation-envelope slice, which lands in `packages/attestation/envelope` before P4-04 (W9), instead of this epic's own record. The card took this repository for the test-result predicate (type URI `https://in-toto.io/attestation/test-result/v0.1`, `spec/predicates/test-result.md` at in-toto/attestation main `fd2609c16b`); a Statement carries its predicate under `predicateType` and `predicate` (`spec/v1/statement.md`), and which predicate this epic's Statement carries is not ruled. Recorded as a consumer, not as a rejection: once the slice lands, a consumer that has not wired it up is a defect while a rejection is not. Previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling: the sign-off was withdrawn on 2026-09-24 (BLOCKED-304) and the row is BLOCKED_ON_ACCEPTANCE. Measured absent from this epic's seven declared files: the evidence package is still a repository-local JSON record with its own digest and signature fields.",
+            "ruling": "§3.4/R1",
+            "landsIn": "packages/attestation/envelope",
+            "importedAs": "@deepseek-ai/dsh-attestation-envelope",
+            "sliceRef": "SLICE-3.4"
           },
           {
             "name": "secure-systems-lab/dsse",
             "npm": "secure-systems-lab/dsse",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work."
+            "reason": "slice-consumer of SLICE-3.4 (§3.4/R1): the DSSE JSON Envelope (\"the recommended data structure for storing DSSE signatures\", `envelope.md` version 1.0.2 at secure-systems-lab/dsse main `1d3370f625`) is what the attestation-envelope slice provides in `packages/attestation/envelope` before P4-04 (W9), and ruling §7.2 has this epic's evidence emitted in it. The card took this repository for the evidence package's reserved signature field; the slice's envelope replaces that field rather than this epic implementing one. Recorded as a consumer, not as a rejection: once the slice lands, a consumer that has not wired it up is a defect while a rejection is not. Previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling: the sign-off was withdrawn on 2026-09-24 (BLOCKED-304) and the row is BLOCKED_ON_ACCEPTANCE. Measured absent from this epic's seven declared files.",
+            "ruling": "§3.4/R1",
+            "landsIn": "packages/attestation/envelope",
+            "importedAs": "@deepseek-ai/dsh-attestation-envelope",
+            "sliceRef": "SLICE-3.4"
           },
           {
             "name": "slsa-framework/slsa",
             "npm": "slsa-framework/slsa",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work."
+            "reason": "family-owned-elsewhere: `standards-ownership.json` names SLICE-3.4 the owner of the in-toto / DSSE / SLSA family and lists P0-07 under `notAdopted`. The card took this repository for SLSA Provenance v1 (`predicateType` `https://slsa.dev/provenance/v1`, `spec/build-provenance.md` at slsa-framework/slsa main `618f5b2192`) to bind artifacts; ruling §7.2 schedules this epic's Statement and DSSE envelope and names no provenance predicate for it, so must[1]'s artifact binding stays in this epic's own manifest, which records the build-artifact digests. Re-decided if the slice's schedule assigns provenance to this epic. Previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling: the sign-off was withdrawn on 2026-09-24 (BLOCKED-304) and the row is BLOCKED_ON_ACCEPTANCE. Measured absent from this epic's seven declared files."
           },
           {
             "name": "@sigstore/sign",
             "npm": "@sigstore/sign",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Measured absent; P1-02 adopted @sigstore/verify for the verification half, which is a different package and a different epic."
+            "reason": "ledger-superseded-by-fact (ruling §3.4/R1, recorded on the card): signing moved to the attestation-envelope slice, which signs its DSSE envelope with the kernel's Ed25519 key, and Sigstore stays with P1-02's verifier. @sigstore/sign is \"a library for generating Sigstore signatures\", with keyless Fulcio-issued certificates, Rekor transparency-log recording and timestamp-authority countersignatures (`packages/sign/README.md` at sigstore/sigstore-js main `769a53d871`). Previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling: the sign-off was withdrawn on 2026-09-24 (BLOCKED-304) and the row is BLOCKED_ON_ACCEPTANCE. Measured absent from this epic's seven declared files; P1-02 adopted @sigstore/verify for the verification half, which is a different package and a different epic."
           },
           {
             "standard": "in-toto Attestation Statement v1",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work."
+            "reason": "slice-consumer of SLICE-3.4 (§3.4/R1): ruling §7.2 has this epic emit its evidence as an in-toto Statement v1 (`_type` `https://in-toto.io/Statement/v1`, with `subject`, `predicateType` and `predicate`; `spec/v1/statement.md` at in-toto/attestation main `fd2609c16b`) through the attestation-envelope slice in `packages/attestation/envelope`, rather than declare the Statement itself. Recorded as a consumer, not as a rejection: once the slice lands, a consumer that has not wired it up is a defect while a rejection is not. Previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling: the sign-off was withdrawn on 2026-09-24 (BLOCKED-304) and the row is BLOCKED_ON_ACCEPTANCE. Measured: no Statement is emitted today; `Statement/v1` appears in none of this epic's seven declared files.",
+            "ruling": "§3.4/R1",
+            "landsIn": "packages/attestation/envelope",
+            "importedAs": "@deepseek-ai/dsh-attestation-envelope",
+            "sliceRef": "SLICE-3.4"
           },
           {
             "standard": "DSSE envelope",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work."
+            "reason": "slice-consumer of SLICE-3.4 (§3.4/R1): ruling §7.2 has this epic's evidence emitted in the DSSE JSON Envelope (`envelope.md` version 1.0.2 at secure-systems-lab/dsse main `1d3370f625`) that the attestation-envelope slice provides in `packages/attestation/envelope`, rather than declare an envelope itself. Recorded as a consumer, not as a rejection: once the slice lands, a consumer that has not wired it up is a defect while a rejection is not. Previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling: the sign-off was withdrawn on 2026-09-24 (BLOCKED-304) and the row is BLOCKED_ON_ACCEPTANCE. Measured absent from this epic's seven declared files.",
+            "ruling": "§3.4/R1",
+            "landsIn": "packages/attestation/envelope",
+            "importedAs": "@deepseek-ai/dsh-attestation-envelope",
+            "sliceRef": "SLICE-3.4"
           },
           {
             "standard": "in-toto test-result/v0.1 predicate",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work."
+            "reason": "family-owned-elsewhere: `standards-ownership.json` names SLICE-3.4 the owner of the in-toto / DSSE / SLSA family and lists P0-07 under `notAdopted`. This predicate (type URI `https://in-toto.io/attestation/test-result/v0.1`, `spec/predicates/test-result.md` at in-toto/attestation main `fd2609c16b`) would be the `predicate` of the Statement ruling §7.2 schedules for this epic, but which predicate that Statement carries is not ruled — unverified. Previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling: the sign-off was withdrawn on 2026-09-24 (BLOCKED-304) and the row is BLOCKED_ON_ACCEPTANCE. Measured absent from this epic's seven declared files."
           },
           {
             "standard": "SLSA Provenance v1",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work."
+            "reason": "family-owned-elsewhere: `standards-ownership.json` names SLICE-3.4 the owner of the in-toto / DSSE / SLSA family and lists P0-07 under `notAdopted`. Ruling §7.2 names no provenance predicate (`https://slsa.dev/provenance/v1`, `spec/build-provenance.md` at slsa-framework/slsa main `618f5b2192`) for this epic, so must[1]'s artifact binding stays in this epic's own manifest, which records the build-artifact digests. Previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling: the sign-off was withdrawn on 2026-09-24 (BLOCKED-304) and the row is BLOCKED_ON_ACCEPTANCE. Measured absent from this epic's seven declared files."
           }
         ],
         "rejectedAbsent": [],
