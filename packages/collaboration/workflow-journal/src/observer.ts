@@ -28,6 +28,14 @@ export interface AgentStartEvent {
 /** The agent-end shape, carrying how the call settled. */
 export interface AgentEndEvent extends AgentStartEvent {
   readonly outcome: 'completed' | 'failed' | 'cancelled'
+  /**
+   * What a completed call resolved to, as JSON text: the value a resume hands
+   * the script instead of starting the child again (acceptance[0]). Recorded
+   * inline and whole; a host that rewrites the journal at every step edge
+   * therefore writes each output once per later edge. A completed call
+   * reported without one records the placeholder `agent-result-<seq>`.
+   */
+  readonly output?: string
 }
 
 /**
@@ -83,7 +91,7 @@ export function journalingObserver(
         childId: event.childId,
         ...(event.phase === undefined ? {} : { phase: event.phase }),
         outcome: journalOutcomeOf(event.outcome),
-        ...(event.outcome === 'completed' ? { output: `agent-result-${event.seq}` } : {}),
+        ...(event.outcome === 'completed' ? { output: event.output ?? `agent-result-${event.seq}` } : {}),
       })
     },
   }

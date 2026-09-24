@@ -33,7 +33,12 @@ export interface ExecutionObserver {
   phase(title: string): void
   log(message: string): void
   agentStart(info: WorkflowAgentInfo): void
-  agentEnd(info: WorkflowAgentEndInfo): void
+  /**
+   * One `agent()` call settled.
+   * @param info - the call and how it settled.
+   * @param output - for a completed call, what it resolved to as JSON text, which the host journals so a resume can return it (P4-08 acceptance[0]).
+   */
+  agentEnd(info: WorkflowAgentEndInfo, output?: string): void
 }
 
 /** The `agent()` options the script may pass; everything else rejects loud. */
@@ -345,7 +350,15 @@ export class WorkflowExecution {
     // and must not be credited with a child it did not start — reporting one
     // would put a second receipt in the journal for work that happened once.
     const recorded = this.reusable[seq]
-    if (recorded !== undefined) return recorded
+    if (recorded !== undefined) {
+      try {
+        return JSON.parse(recorded) as unknown
+      } catch {
+        // Only a journal written before outputs were recorded holds a non-JSON
+        // output, the placeholder `agent-result-<seq>`: nothing reusable was
+        // kept for this step, so it runs again rather than failing the run.
+      }
+    }
 
     this.started += 1
     const label = opts.label ?? defaultLabel(rawPrompt)
@@ -409,11 +422,12 @@ export class WorkflowExecution {
               this.observer.agentEnd({ ...info, outcome: 'failed' })
               return null
             }
-            this.observer.agentEnd({ ...info, outcome: 'completed' })
+            this.observer.agentEnd({ ...info, outcome: 'completed' }, JSON.stringify(result.structured))
             return result.structured
           }
-          this.observer.agentEnd({ ...info, outcome: 'completed' })
-          return outputText(result.output)
+          const text = outputText(result.output)
+          this.observer.agentEnd({ ...info, outcome: 'completed' }, JSON.stringify(text))
+          return text
         }
         // A cancelled RUN kills the script; a child that failed for its own
         // reasons resolves null (scripts .filter(Boolean) per the CC contract).

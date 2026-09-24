@@ -42,8 +42,8 @@ export interface WorkerToHostPayloads {
   [WorkerToHostType.Log]: { message: string }
   /** The call's sequence number, label, phase, and child id. */
   [WorkerToHostType.AgentStart]: { info: WorkflowAgentInfo }
-  /** The call identity plus its outcome. */
-  [WorkerToHostType.AgentEnd]: { info: WorkflowAgentEndInfo }
+  /** The call identity plus its outcome, and for a completed call what it resolved to as JSON text. */
+  [WorkerToHostType.AgentEnd]: { info: WorkflowAgentEndInfo; output?: string }
   /** The RPC correlation id and the prompt plus validated options. */
   [WorkerToHostType.ChildStart]: { callId: number; request: ChildStartRequest }
   /** The RPC correlation id of the child to dispose. */
