@@ -521,6 +521,7 @@ jobs:
             --reporter=json --outputFile=.artifacts/first100/observations/vitest-e2e-acp.json --reporter=default
 
       - name: Workflow runs on shipped launches — a detached run (BLOCKED-323, BLOCKED-324) and a resumed one (P4-08)
+        if: always()
         # Keyless: stand-in models answer every request. Each frozen entry
         # (P2-01.U.2, P2-01.U.3, and P4-08's resume case) is this step's
         # command for its one file, without the two reporters; this report is

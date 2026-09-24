@@ -36,7 +36,8 @@ export interface ExecutionObserver {
   /**
    * One `agent()` call settled.
    * @param info - the call and how it settled.
-   * @param output - for a completed call, what it resolved to as JSON text, which the host journals so a resume can return it (P4-08 acceptance[0]).
+   * @param output - for a completed call, what it resolved to as JSON text,
+   *   which the host journals so a resume can return it (P4-08 acceptance[0]).
    */
   agentEnd(info: WorkflowAgentEndInfo, output?: string): void
 }
