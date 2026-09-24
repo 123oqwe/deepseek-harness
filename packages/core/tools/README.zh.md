@@ -61,12 +61,14 @@ ctx.tools.register(defineTool({
 
 ### 命名空间与所有权
 
-每一次全局注册在落地前都会先被裁决。`register` 解析注册方的 `PluginIdentity`——即其 Loader 条目的模块说明符，或宿主通过 `declareOwner` 声明的身份——并为准入的声明铸造 `OwnershipToken`。两条规则 fail closed，均抛出带有拒绝 `reason` 的 `ToolOwnershipError`：
+每一次全局注册在落地前都会先被裁决。`register` 解析注册方的 `PluginIdentity`——即包住它的最内层 Loader 条目的模块说明符（它在自己创建的 fiber 里注册时也是如此），或宿主通过 `declareOwner` 声明的身份——并为准入的声明铸造 `OwnershipToken`，这个 token 只留在注册表内部。两条规则 fail closed，均抛出带有拒绝 `reason` 的 `ToolOwnershipError`：
 
 - 位于保留的 `dsh.*` 命名空间内的工具名，除非注册方已列入 `ownership.officialPluginIdentities`，否则一律拒绝。该规则在 agent scope 内同样成立，且与加载顺序无关：抢在官方插件之前注册不会带来任何优势。
 - 已被**其他**插件拥有的名称以 `capability-collision` 拒绝。同一插件重复注册自己的名称行为不变，仍走既有的重复注册错误，该错误会指明 per-agent 变体的正确路径。scoped 注册遮蔽全局名称同样保持不变；遮蔽正是 `agent.ctx` 注册的用途。
 
-接管已被拥有的名称必须使用显式的 `replace`，且其本身受 `ownership.allowReplace` 约束。即便策略允许替换，普通的 `register` 也绝不构成覆盖。`ownershipOf` 读取某名称的当前拥有者，`ownershipHistory` 返回准入历史（含被取代的拥有者，这正是 `@deepseek-ai/dsh-host-plugin-inventory` 的 `buildToolOwnershipChain` 渲染 replaced/replacing 链所依据的数据），`revokeOwned` 则精确注销所出示 token 所拥有的工具。`revokeOwned` 只接受 token——不接受名称或身份——因此调用方没有任何可替换的参数去触及其他插件的注册。插件卸载时，其工具与所有权记录一并移除。
+接管已被拥有的名称必须使用显式的 `replace`，且其本身受 `ownership.allowReplace` 约束。即便策略允许替换，普通的 `register` 也绝不构成覆盖。`ownershipOf` 读取某名称的当前拥有者，`ownershipHistory` 返回准入历史（含被取代的拥有者，这正是 `@deepseek-ai/dsh-host-plugin-inventory` 的 `buildToolOwnershipChain` 渲染 replaced/replacing 链所依据的数据）。两者返回的都是不带 `OwnershipToken` 的 `CapabilityRecord`：任何插件都能读到其他插件的记录，记录里若带 token，读取方就能冒充拥有者。注册表没有按 token 撤销的方法；一次注册只能经由它自己的 disposer 移除，因此插件卸载时移除的恰好是它自己的工具与所有权记录。
+
+`declareOwner` 把调用方的子树绑定到另一个身份，动态 Cordis runner 正是这样为每个动态包赋予它自己的插件 id。只有最内层 Loader 条目列在 `ownership.ownerDeclarers` 中的调用方才可以声明；默认值是 `@deepseek-ai/dsh-cordis-host-runner`，来自其他条目的调用会抛出错误。没有 Loader 的树里任何调用方都可以声明，因为那里的身份是各插件自己取的 fiber 名称。
 
 ```yaml
 - id: tools
@@ -75,6 +77,7 @@ ctx.tools.register(defineTool({
     ownership:
       officialPluginIdentities: ['@deepseek-ai/dsh-tool-bash']
       allowReplace: false
+      ownerDeclarers: ['@deepseek-ai/dsh-cordis-host-runner']
 ```
 
 ### 配置呈现模式

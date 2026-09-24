@@ -3678,10 +3678,20 @@ export interface ToolOwnershipConfig {
    * either way.
    */
   allowReplace?: boolean
+  /**
+   * Loader entry names whose subtrees may call `ToolRuntime.declareOwner`,
+   * that is, record their registrations under another plugin identity. The
+   * default names the dynamic Cordis runner,
+   * `@deepseek-ai/dsh-cordis-host-runner`, which declares each dynamic
+   * package's own plugin id. A call from under any other entry is refused, so
+   * a statically loaded plugin cannot record a registration under another
+   * plugin's name.
+   */
+  ownerDeclarers?: string[]
 }
 ```
 
-Source: [`packages/core/tools/src/index.ts:878`](../packages/core/tools/src/index.ts)
+Source: [`packages/core/tools/src/index.ts:935`](../packages/core/tools/src/index.ts)
 
 <a id="deepseek-aidsh-typert-loader"></a>
 

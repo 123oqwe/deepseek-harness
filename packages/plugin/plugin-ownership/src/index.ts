@@ -12,12 +12,14 @@
  * Cordis `Context` — every registry/policy input is a plain value the
  * caller supplies, matching this repo's pure-function Contract-stage
  * convention (see `@deepseek-ai/dsh-plugin-manifest`). Usage-stage wires
- * `claimCapability`/`requestReplace`/`revokeByOwnershipToken` into
+ * `claimCapability`/`requestReplace` into
  * `packages/extensions/cordis-host-runner/src/registry.ts` and
  * `lifecycle.ts` (real Cordis registration/unload), `packages/core/tools/src/index.ts`
  * (real tool registration), and `packages/host/plugin-inventory/src/index.ts`
  * (`buildInventoryChain`'s real Inventory surface) — none of those files are
- * this stage's job.
+ * this stage's job. `revokeByOwnershipToken` has no production caller: the
+ * tool registry removes a registration only through its own effect disposer,
+ * and never hands a token out.
  *
  * @module @deepseek-ai/dsh-plugin-ownership
  */
@@ -28,6 +30,7 @@ import { randomUUID } from 'node:crypto'
 import type {
   CapabilityKind,
   CapabilityOrigin,
+  CapabilityRecord,
   CapabilityRegistration,
   InventoryChainEntry,
   Namespace,
@@ -204,10 +207,11 @@ export function revokeByOwnershipToken(
  * {@link InventoryChainEntry} per {@link StableCapabilityId} that ever
  * appears in `history`, linking each successive owner to the one it replaced
  * and the one that replaced it, in admission order.
- * @param history - every {@link CapabilityRegistration} ever admitted for a capability id, oldest first, including superseded owners.
+ * @param history - every {@link CapabilityRecord} ever admitted for a capability id, oldest first,
+ *   including superseded owners; the chain reads no ownership token.
  * @returns one entry per distinct capability id in `history`.
  */
-export function buildInventoryChain(history: readonly CapabilityRegistration[]): readonly InventoryChainEntry[] {
+export function buildInventoryChain(history: readonly CapabilityRecord[]): readonly InventoryChainEntry[] {
   const chains = new Map<StableCapabilityId, InventoryChainEntry>()
   for (const registration of history) {
     const previous = chains.get(registration.capabilityId)

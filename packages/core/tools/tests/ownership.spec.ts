@@ -29,7 +29,8 @@ import { createScope, type Scope } from '@deepseek-ai/dsh-scope'
 import type { SessionId } from '@deepseek-ai/dsh-session'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime, { defineTool, ToolOwnershipError, type ToolDefinition } from '@deepseek-ai/dsh-tools'
-import type { OwnershipToken } from '@deepseek-ai/dsh-plugin-ownership'
+import type { CapabilityRecord } from '@deepseek-ai/dsh-plugin-ownership'
+import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
 
 /** A registrable tool under `name`; the body is irrelevant to every ownership rule. */
@@ -101,17 +102,23 @@ async function refusalOf(mounting: PromiseLike<Fiber>): Promise<unknown> {
 }
 
 describe('P1-09 U: the real tool registry adjudicates namespace and ownership', () => {
-  it('must[0]: an admitted registration carries plugin identity, namespace, capability id, and a minted ownership token', async () => {
+  it('must[0]: an admitted registration\'s record carries plugin identity, namespace, capability id and kind, and no ownership token', async () => {
     const ctx = await setup()
     await mountPlugin(ctx, 'plugin-a', ['alpha_tool'])
 
-    const registration = ctx.tools.ownershipOf('alpha_tool')
-    expect(registration).toBeDefined()
-    expect(registration?.pluginIdentity).toBe('plugin-a')
-    expect(registration?.capabilityId).toBe('alpha_tool')
-    expect(registration?.kind).toBe('tool')
-    expect(registration?.namespace).toBeDefined()
-    expect(registration?.ownershipToken).toEqual(expect.stringContaining('plugin-a:'))
+    // The token must[0] requires is minted with the admission and stays in the
+    // registry (BLOCKED-308): any plugin can read this record, so a token in it
+    // would let the reader act as plugin-a. `@deepseek-ai/dsh-plugin-ownership`'s
+    // own suite observes the minting.
+    const record = ctx.tools.ownershipOf('alpha_tool')
+    expect(record).toEqual({
+      pluginIdentity: 'plugin-a',
+      namespace: 'plugin-a',
+      capabilityId: 'alpha_tool',
+      kind: 'tool',
+      origin: 'static',
+    })
+    expect(ctx.tools.ownershipHistory()).toEqual([record])
   })
 
   it('must[1]/validation[2]: an unofficial plugin cannot register a tool in the reserved dsh.* namespace', async () => {
@@ -245,39 +252,53 @@ describe('P1-09 U: the real tool registry adjudicates namespace and ownership', 
     expect(chain.map(entry => entry.pluginIdentity)).toEqual(['plugin-a', 'plugin-b'])
   })
 
-  it('must[3]: revoking with an ownership token removes exactly that token\'s tools and nothing else', async () => {
+  it('must[3]: disposing one registration removes exactly that registration\'s tool and record, not the plugin\'s other tools', async () => {
     const ctx = await setup()
-    await mountPlugin(ctx, 'plugin-a', ['a_one', 'a_two'])
+    const disposers = new Map<string, () => void>()
+    await ctx.plugin({
+      name: 'plugin-a',
+      inject: ['tools'],
+      apply(pluginCtx: Context) {
+        for (const name of ['a_one', 'a_two']) disposers.set(name, pluginCtx.tools.register(tool(name)))
+      },
+    })
     await mountPlugin(ctx, 'plugin-b', ['b_one'])
 
-    const tokenA = ctx.tools.ownershipOf('a_one')?.ownershipToken
-    expect(tokenA).toBeDefined()
-    const result = ctx.tools.revokeOwned(tokenA as OwnershipToken)
-    expect(result.revoked).toBe(true)
+    disposers.get('a_one')?.()
 
     expect(ctx.tools.get('a_one')).toBeUndefined()
-    // Two registrations by the same plugin are two separately minted tokens:
-    // one token revokes exactly its own effect, never the plugin's whole set.
+    expect(ctx.tools.ownershipOf('a_one')).toBeUndefined()
+    // Two registrations by one plugin are two effects, each undoing only its
+    // own record: disposing one never reaches the plugin's other tool.
     expect(ctx.tools.get('a_two')).toBeDefined()
     expect(ctx.tools.get('b_one')).toBeDefined()
+    expect(ctx.tools.ownershipHistory().map(record => record.capabilityId)).toEqual(['a_two', 'b_one'])
   })
 
-  it('acceptance[0]: cross-plugin revocation fails closed — another plugin\'s real token revokes nothing of this one\'s', async () => {
+  it('acceptance[0]: cross-plugin revocation fails closed — what another plugin reads of an owner\'s record carries nothing to revoke with, and its unload takes only its own tool', async () => {
     const ctx = await setup()
     await mountPlugin(ctx, 'plugin-a', ['a_one'])
-    await mountPlugin(ctx, 'plugin-b', ['b_one'])
+    const read: CapabilityRecord[] = []
+    const fiberB = await ctx.plugin({
+      name: 'plugin-b',
+      inject: ['tools'],
+      apply(pluginCtx: Context) {
+        const owner = pluginCtx.tools.ownershipOf('a_one')
+        if (owner !== undefined) read.push(owner)
+        read.push(...pluginCtx.tools.ownershipHistory())
+        pluginCtx.tools.register(tool('b_one'))
+      },
+    })
 
-    const tokenB = ctx.tools.ownershipOf('b_one')?.ownershipToken as OwnershipToken
-    // Plugin B presenting its own real token cannot reach plugin A's tool:
-    // the revoke path takes only a token, so there is no name or identity to
-    // substitute. This exercises the token path introduced by this stage —
-    // before it, cross-plugin revocation was not expressible at all.
-    ctx.tools.revokeOwned(tokenB)
+    // Plugin B read plugin A's record through both read APIs; neither copy
+    // carries a token, and the registry has no method that revokes by one.
+    const recordA = { pluginIdentity: 'plugin-a', namespace: 'plugin-a', capabilityId: 'a_one', kind: 'tool', origin: 'static' }
+    expect(read).toEqual([recordA, recordA])
+    // Revocation is the registering fiber's own unload: B's takes B's tool and nothing of A's.
+    await fiberB.dispose()
+    expect(ctx.tools.get('b_one')).toBeUndefined()
     expect(ctx.tools.get('a_one')).toBeDefined()
-
-    const fabricated = 'plugin-a:00000000-0000-0000-0000-000000000000' as OwnershipToken
-    expect(ctx.tools.revokeOwned(fabricated).revoked).toBe(false)
-    expect(ctx.tools.get('a_one')).toBeDefined()
+    expect(ctx.tools.ownershipOf('a_one')?.pluginIdentity).toBe('plugin-a')
   })
 
   it('gate: disposing a plugin\'s fiber leaves zero tools and zero ownership records behind for it', async () => {
@@ -297,36 +318,41 @@ describe('P1-09 U: the real tool registry adjudicates namespace and ownership', 
     expect(ctx.tools.ownershipOf('a_one')?.pluginIdentity).toBe('plugin-c')
   })
 
-  it('validation[1]: 1000 randomized load/unload orders leave the registry consistent with the live set', async () => {
-    const ctx = await setup()
-    // A fixed seed so a failure is reproducible; the point is order variety,
-    // not entropy.
-    let seed = 0x1f2e3d4c
-    const next = (bound: number): number => {
-      seed = (seed * 1103515245 + 12345) & 0x7fffffff
-      return seed % bound
-    }
-    const live = new Map<string, Fiber>()
+  it('validation[1]: 1000 randomized load/unload orders each leave the registry consistent with the live set', async () => {
+    // One run is one order: each step names one of eight plugins, loading it
+    // when it is absent and unloading it when it is present. The seed is fixed
+    // so a failure replays, and fast-check shrinks it to a minimal order.
+    await fc.assert(fc.asyncProperty(
+      fc.array(fc.integer({ min: 0, max: 7 }), { minLength: 1, maxLength: 24 }),
+      async (order) => {
+        const ctx = await setup()
+        const live = new Map<number, Fiber>()
+        for (const index of order) {
+          const fiber = live.get(index)
+          if (fiber === undefined) {
+            live.set(index, await mountPlugin(ctx, `plugin-${index}`, [`plugin_${index}_tool`]))
+          } else {
+            await fiber.dispose()
+            live.delete(index)
+          }
+        }
 
-    for (let step = 0; step < 1000; step += 1) {
-      const identity = `plugin-${next(8)}`
-      if (live.has(identity) && next(2) === 0) {
-        await live.get(identity)?.dispose()
-        live.delete(identity)
-        continue
-      }
-      if (live.has(identity)) continue
-      live.set(identity, await mountPlugin(ctx, identity, [`${identity.replace('-', '_')}_tool`]))
-    }
+        const expected = [...live.keys()].sort((a, b) => a - b).map(index => ({
+          pluginIdentity: `plugin-${index}`,
+          namespace: `plugin-${index}`,
+          capabilityId: `plugin_${index}_tool`,
+          kind: 'tool',
+          origin: 'static',
+        }))
+        expect(ctx.tools.schemas().map(schema => schema.name).sort()).toEqual(expected.map(record => record.capabilityId))
+        expect([...ctx.tools.ownershipHistory()].sort((a, b) => a.capabilityId.localeCompare(b.capabilityId))).toEqual(expected)
 
-    const expected = [...live.keys()].map(identity => `${identity.replace('-', '_')}_tool`).sort()
-    expect(ctx.tools.schemas().map(schema => schema.name).sort()).toEqual(expected)
-    expect(ctx.tools.ownershipHistory().map(entry => entry.capabilityId).sort()).toEqual(expected)
-
-    for (const fiber of live.values()) await fiber.dispose()
-    expect(ctx.tools.schemas()).toEqual([])
-    expect(ctx.tools.ownershipHistory()).toEqual([])
-  })
+        for (const fiber of live.values()) await fiber.dispose()
+        expect(ctx.tools.schemas()).toEqual([])
+        expect(ctx.tools.ownershipHistory()).toEqual([])
+      },
+    ), { seed: 0x1f2e3d4c, numRuns: 1000 })
+  }, 120_000)
 
   it('must[1]/must[2]: an unofficial plugin cannot take a reserved dsh.* tool through the replace entry point, even when policy allows replacement', async () => {
     // The Fault stage's finding, on the path where it bites: `replace()` is a

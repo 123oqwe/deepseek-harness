@@ -521,36 +521,35 @@ replace(definition: ToolDefinition): () => void
  * one of them hangs under a single shared group fiber, so without an
  * explicit declaration they would all resolve to one owner and no collision
  * between two of them could ever be detected.
+ *
+ * The caller's innermost enclosing Loader entry must be named in
+ * {@link ToolOwnershipConfig.ownerDeclarers}; any other caller is refused,
+ * so a statically loaded plugin cannot record its registrations under
+ * another plugin's name (BLOCKED-308). A tree with no Loader has no entry
+ * names to protect, and every caller there may declare.
  * @param identity - the stable identity to attribute this subtree's registrations to.
  * @returns the disposer that unbinds it, held by the calling fiber.
+ * @throws when a Loader is present and the caller's innermost entry is not an owner declarer.
  */
 declareOwner(identity: string): () => void
 
 /**
- * Epic P1-09 must[0]: the ownership record the registry admitted for `name`.
+ * Epic P1-09 must[0]: the ownership record the registry admitted for `name`,
+ * without its ownership token (see {@link CapabilityRecord}).
  * @param name - a global tool name.
- * @returns the live registration, or `undefined` when no plugin owns `name`.
+ * @returns the live owner's record, or `undefined` when no plugin owns `name`.
  */
-ownershipOf(name: string): CapabilityRegistration | undefined
+ownershipOf(name: string): CapabilityRecord | undefined
 
 /**
  * Epic P1-09 acceptance[1]: every ownership record this registry currently
  * holds, oldest first, including the superseded owners a legitimate
- * replacement left behind. An unloaded plugin's records are absent — the
- * gate's "effects after unload = 0" covers this history too.
+ * replacement left behind, each without its ownership token. An unloaded
+ * plugin's records are absent — the gate's "effects after unload = 0"
+ * covers this history too.
  * @returns the live ownership history in admission order.
  */
-ownershipHistory(): readonly CapabilityRegistration[]
-
-/**
- * Epic P1-09 must[3]: unregister exactly the tools whose stored ownership
- * token equals `token`, and no others. Takes only a token — never a name or
- * a plugin identity a caller could substitute — so cross-plugin revocation
- * has no API surface to attempt through.
- * @param token - the ownership token presented at unload time.
- * @returns which capability ids were revoked, or why nothing was.
- */
-revokeOwned(token: OwnershipToken): RevocationResult
+ownershipHistory(): readonly CapabilityRecord[]
 
 /**
  * Restrict global tools for the calling agent scope. Empty filters, unknown
