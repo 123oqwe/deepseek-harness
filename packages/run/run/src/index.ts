@@ -50,7 +50,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent/types'
 import { advanceAgentLifecycleFenced, advanceLeasedAgent, holdsDispatchSlot } from '@deepseek-ai/dsh-agent'
 import type { AgentLifecycleState, AgentRunId, TransitionDenialReason } from '@deepseek-ai/dsh-agent'
 import { acquireRunLease, describePredecessor } from '@deepseek-ai/dsh-lease-contract'
-import type { Lease, PredecessorState, RunLease } from '@deepseek-ai/dsh-lease-contract'
+import type { PredecessorState, RunLease } from '@deepseek-ai/dsh-lease-contract'
 import type { WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease-contract'
 // The `agent/session-start` declaration this plugin subscribes to is merged
 // into Cordis's event map by the agent package's runtime face, not its
@@ -886,10 +886,9 @@ export default class RunPlugin extends Service {
     // the lifecycle below walks, never whether this host may write. Taking the
     // item over erases the row, so the only moment the predecessor is visible
     // is now.
-    let before: Lease | undefined
+    const before = this.ctx.leaseStore.get(workItem)
     let taken: ReturnType<typeof acquireRunLease>
     try {
-      before = this.ctx.leaseStore.get(workItem)
       taken = acquireRunLease(this.ctx.leaseStore, workItem, this.worker, openedAt, this.config.leaseMs)
     } catch (error: unknown) {
       // A store that fails cannot grant the lease, so the agent is refused like
