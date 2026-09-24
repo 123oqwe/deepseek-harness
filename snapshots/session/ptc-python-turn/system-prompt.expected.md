@@ -532,16 +532,23 @@ class WorkflowArgs(TypedDict):
     detached: NotRequired[bool]
     # Collect a detached run by its runId, instead of starting one. Give no `script` or `meta` with it.
     attach: NotRequired[str]
+    # Continue an interrupted run by its runId instead of starting a new one. Give the SAME `script` and `meta` it was started with; agent() steps whose children finished are not run again. A changed script is refused, and the run starts over under the same runId.
+    resume: NotRequired[str]
     # The workflow identity block (plain JSON — never code). Required unless `attach` is given.
     meta: NotRequired[WorkflowArgsMeta]
     # Optional JSON input exposed to the script as the `args` global (wrap a bare list as a field, e.g. {"files": [...]}).
     args: NotRequired[dict[str, Any]]
     # Additional keys beyond those declared are allowed.
 
+class WorkflowOutputResumeRefused(TypedDict):
+    reason: str
+    detail: str
+
 class WorkflowOutput(TypedDict):
     runId: str
     agentsStarted: int
     result: Any
+    resumeRefused: NotRequired[WorkflowOutputResumeRefused]
 
 class WriteArgs(TypedDict):
     # Path to write, resolved by the filesystem backend.
