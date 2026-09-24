@@ -105,7 +105,7 @@ export async function readWorldLimits(
   if (worlds === undefined || agent === undefined) return undefined
   const binding = await worlds.bindingFor(agent)
   if (binding === undefined) {
-    const stated = worlds.requestedCeilings()
+    const stated: Readonly<Partial<Record<WorldCeilingName, number>>> = {}
     const named = (Object.keys(HELD_BY) as WorldCeilingName[]).filter(ceiling => stated[ceiling] !== undefined)
     if (named.length === 0) return undefined
     throw refusalFor(ctx, agent, stated, named)
