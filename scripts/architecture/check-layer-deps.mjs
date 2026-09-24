@@ -336,7 +336,6 @@ function readWorkspaceManifests(root) {
       if (typeof manifest.name === 'string') byName.set(manifest.name, { dir: dirname(manifestPath), manifest })
     }
   }
-  if (byName.size === 0) throw new Error(`${GATE}: ${WORKSPACE_PATH} matches no package`)
   return byName
 }
 
