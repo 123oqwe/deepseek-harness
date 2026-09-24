@@ -21,6 +21,8 @@ export interface ClassifiedPackage {
 export interface ClassificationResult {
   readonly byPackage: Map<string, ClassifiedPackage>
   readonly unclassified: string[]
+  /** The packages under `vendor/`: outside the six-layer graph and inside the cycle graph. */
+  readonly vendored: Map<string, { readonly dir: string; readonly manifest: Record<string, unknown> }>
 }
 
 /** The validated exemption store (`docs/architecture/layering.md` rules 5 and 6). */
@@ -44,6 +46,7 @@ export interface LayerViolation {
     | 'malformed-exemption-store'
     | 'unclassified-package'
     | 'kernel-forbidden-cordis-binding'
+    | 'kernel-external-dependency'
     | 'kernel-upward-dependency'
     | 'layer-violation'
     | 'global-singleton'
@@ -52,18 +55,27 @@ export interface LayerViolation {
     | 'composition-root-inbound-dependency'
     | 'test-support-inbound-dependency'
     | 'unexempted-cycle'
+    | 'stale-exempted-cycle'
   readonly fromPackage: string
   readonly toPackage: string
   readonly detail: string
 }
 
-/** One `kernel`-layer package's edge to a vendored package, at binding granularity (rule 4). */
+/** One `kernel`-layer package's edge to a vendored or external package, at binding granularity (rule 4), or an allowlisted edge to a workspace package. */
 export interface KernelEdge {
   readonly fromPackage: string
   readonly toPackage: string
-  /** The binding names imported from `toPackage`, sorted; empty for a package-graph-only edge. */
+  /**
+   * The uses of `toPackage`, sorted: an imported binding's name (a
+   * `declare module` augmentation of the `Context` interface also records
+   * `Context`), `*` for a reference that binds no name, `export <name>` or
+   * `export *` for a re-export, `declare module <name>` for any other
+   * declaration in a module augmentation, and `package.json <field>` for a
+   * manifest declaration. Empty for an allowlisted edge to a workspace
+   * package.
+   */
   readonly bindings: string[]
-  /** The repo-relative source files the bindings were found in, sorted. */
+  /** The repo-relative files the uses were found in, sorted. */
   readonly files: string[]
   readonly verdict: 'permitted-binding' | 'allowlisted' | 'violation'
 }
@@ -73,11 +85,22 @@ export interface LayerDepsResult {
   readonly violations: LayerViolation[]
   /** Reported observations, not pass conditions: generic upward edges no registry clause requires to be zero. */
   readonly findings: LayerViolation[]
-  /** The shortest cycle in the production package graph, or `undefined` when acyclic or exempted. */
+  /** Every unexempted cycle in the production package graph, each rotated to begin at its smallest package name, shortest first and then by package names. */
+  readonly unexemptedCycles: readonly (readonly string[])[]
+  /** The first of `unexemptedCycles`, or `undefined` when there is none. */
   readonly shortestCycle: readonly string[] | undefined
   readonly unclassified: string[]
   readonly kernelEdges: KernelEdge[]
-  readonly scanned: { readonly packages: number; readonly edges: number; readonly layers: number }
+  readonly scanned: {
+    /** Classified packages. */
+    readonly packages: number
+    /** Packages under `vendor/`. */
+    readonly vendored: number
+    /** Every package `pnpm-workspace.yaml` declares: classified, vendored and unclassified. */
+    readonly workspacePackages: number
+    readonly edges: number
+    readonly layers: number
+  }
 }
 
 /**
@@ -88,9 +111,10 @@ export interface LayerDepsResult {
 export function readLayerExemptions(root: string): LayerExemptions
 
 /**
- * Assign every real workspace package a layer.
+ * Assign every package `pnpm-workspace.yaml` declares a layer, except the vendored ones.
  * @param root - repository (or fixture) root.
- * @returns each package's layer, and the names of any package no rule classified.
+ * @returns each package's layer, the names of any package no rule classified, and the vendored packages.
+ * @throws when `pnpm-workspace.yaml` declares no package pattern.
  */
 export function classifyWorkspacePackages(root: string): ClassificationResult
 
@@ -112,6 +136,7 @@ export function collectLayerEdges(root: string, byPackage: Map<string, Classifie
 /**
  * Run the full layer-dependency gate against a repository or fixture root.
  * @param root - repository (or fixture) root.
- * @returns violations, the shortest unexempted cycle, unclassified packages, kernel edges, and scan counts.
+ * @returns violations, every unexempted cycle, unclassified packages, kernel edges, and scan counts.
+ * @throws when `pnpm-workspace.yaml` declares no package pattern.
  */
 export function runLayerDepsCheck(root: string): LayerDepsResult
