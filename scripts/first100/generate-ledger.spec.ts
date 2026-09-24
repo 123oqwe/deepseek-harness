@@ -1576,6 +1576,66 @@ describe('generate-ledger.mjs --check does not apply the BLOCKED-326 exit refusa
   })
 })
 
+describe('generate-ledger.mjs --accept does not apply the BLOCKED-326 exit refusal to a cell greened before it', () => {
+  it('accepts a row whose one applicable cell absorbed flakes, has no exitOverride, and has no exit record beside its report', () => {
+    // A row holding one of those twelve cells stays acceptable under the same ruling. The fixture gives every other
+    // --accept predicate what it reads, so an exit-record check is the only thing that could refuse the row.
+    const { root, script } = scratchLedgerRepo()
+    const title = 'acp host takes over the Run'
+    const notApplicable = { nOf: 'N/A' }
+    const stages = { C: notApplicable, P: notApplicable, U: { nOf: 1 }, F: notApplicable }
+    const documents: Record<string, unknown> = {
+      'tests/first100/registry.json': { epics: [{ id: 'P4-05', acceptance: [title], stages }] },
+      'tests/first100/adjudication.json': {},
+      'spec/first100/exec/command-freeze.json': { entries: [e2eBase] },
+      'spec/first100/exec/acceptance-coverage.json': { entries: [{ epic: 'P4-05', acceptanceIndex: 0, coveredBy: [{ stage: 'U', title }] }] },
+      'spec/first100/exec/make-vs-use-ledger.json': { rows: [] },
+      'spec/first100/exec/clause-subject-audit.json': {},
+      'spec/first100/exec/standards-ownership.json': {},
+    }
+    mkdirSync(join(root, 'tests/first100'), { recursive: true })
+    for (const [path, document] of Object.entries(documents)) writeFileSync(join(root, path), JSON.stringify(document))
+    // The make-vs-use import scan's positive control: --accept refuses every row when the scan finds nothing.
+    mkdirSync(join(root, 'packages/action/action-manifest/tests'), { recursive: true })
+    writeFileSync(join(root, 'packages/action/action-manifest/tests/manifest.spec.ts'), "import canonicalize from 'canonicalize'\n")
+    // The candidate commit holds the freeze, which verify-freeze-in-candidate-tree reads at the cell's candidate.
+    const candidateSha = commit(root, 'candidate', 'candidate\n')
+    const observationReportPath = 'ci-run-1/vitest-e2e-acp.json'
+    mkdirSync(join(root, 'ci-run-1'))
+    writeFileSync(join(root, observationReportPath), JSON.stringify({ success: false, testResults: [] }))
+    const cell = {
+      status: 'GREEN',
+      candidateSha,
+      ciRunUrl: `https://github.com/${PROGRAM_CI_REPO}/actions/runs/1`,
+      observationReportPath,
+      observationSha256: 'fixture',
+      expectCasesMatched: [title],
+      absorbedFlakes: ['suite known flake test'],
+    }
+    const row = {
+      id: 'P4-05',
+      title: 'fixture',
+      layer: 'orchestration-runtime',
+      canonicalOwner: 'fixture',
+      predecessors: [],
+      wave: 4,
+      cells: { U: cell },
+      supplements: {},
+      candidateSha,
+      independentVerdict: 'PENDING',
+      openFindings: [],
+      status: 'BLOCKED_ON_ACCEPTANCE',
+    }
+    const ledger = { generatedBy: 'scripts/first100/generate-ledger.mjs', rows: { 'P4-05': row } }
+    writeFileSync(join(root, 'spec/first100/exec/ledger.json'), JSON.stringify(ledger))
+    const signoff = { epic: 'P4-05', conclusion: 'PASS', rowDigestSha256: rowDigest(row), delegateSession: 'fixture', signedAtUtc: '2026-09-24T00:00:00Z' }
+    writeFileSync(join(root, 'spec/first100/exec/delegate-signoff.json'), JSON.stringify({ entries: [signoff] }))
+    const result = spawnSync(process.execPath, [script, '--accept', '--epic', 'P4-05'], { cwd: root, encoding: 'utf8' })
+    expect(`${result.stdout}${result.stderr}`).toContain('ACCEPTED P4-05: independentVerdict=APPROVED, status=ACCEPTED')
+    expect(result.status).toBe(0)
+  })
+})
+
 describe('REPORT_CONFIGS names exactly the observation reports first100-exact-sha.yml writes', () => {
   it('maps each written report to the --config of the step that writes it, and names no other report', () => {
     const text = readFileSync(new URL('../../.github/workflows/first100-exact-sha.yml', import.meta.url), 'utf8')
