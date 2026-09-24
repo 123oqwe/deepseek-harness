@@ -4,9 +4,13 @@
  * Fixtures 1, 3 and 4 make the gate non-vacuous: 1 shows it can go red, 3
  * that rename resolution is live, 4 that a retired rename resolves nothing.
  */
-import { readFileSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { load } from 'js-yaml'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 import {
   argvTargets,
@@ -133,7 +137,7 @@ describe('an entry frozen under its own config is answered by its own report (P4
       argv: ['pnpm', 'exec', 'vitest', 'run', '-c', 'vitest.snapshot.config.ts'],
     })
     expect(configFrozenOwnReports([e2eFrozen, pathless], [keylessReport]).refusals).toStrictEqual([
-      `P4-05.U.4 is frozen under --config vitest.e2e.config.ts, and no --e2e-report ran ${ACP}`,
+      `P4-05.U.4 is frozen under --config vitest.e2e.config.ts, and no --e2e-report of that config ran ${ACP}`,
       'P2-04.U.3 names --config vitest.snapshot.config.ts and no test path, so no report can be told to be its own',
     ])
   })
@@ -178,5 +182,82 @@ describe('the exact-SHA workflow hands this gate every own-config report its job
     expect(written.length).toBeGreaterThan(0)
     expect(passed.sort()).toStrictEqual(written.map(report => report.name).sort())
     expect(written.every(report => report.index < gate)).toBe(true)
+  })
+})
+
+/** A candidate SHA; the reports the gate is given sit in a directory named after it unless a case says otherwise. */
+const CANDIDATE = 'abcdef0123456789abcdef0123456789abcdef01'
+const WHOLE_SUITE = `${CANDIDATE}/vitest-report.json`
+const OWN_REPORT = `${CANDIDATE}/vitest-e2e-acp.json`
+const trees: string[] = []
+afterEach(() => {
+  for (const tree of trees.splice(0)) rmSync(tree, { recursive: true, force: true })
+})
+
+/**
+ * P4-05.U.4's own report: its one case passing, then `failed`.
+ * @param failed - failing assertions to add.
+ * @returns the report's JSON text.
+ */
+function acpReportText(failed: readonly { title: string; fullName: string }[] = []): string {
+  const passing = { title: ACP_CASE, fullName: ACP_CASE, status: 'passed' }
+  const assertionResults = [passing, ...failed.map(assertion => ({ ...assertion, status: 'failed' }))]
+  return JSON.stringify({ testResults: [{ name: `/ci/${ACP}`, assertionResults }] })
+}
+
+/**
+ * Runs the gate in a scratch tree holding a copy of this directory's modules, a freeze of P4-05.U.4 alone, an empty
+ * flake registry, an empty whole-suite report at `WHOLE_SUITE`, and `reports`.
+ * @param reports - report text by tree-relative path.
+ * @param gateArgs - the arguments after `--report WHOLE_SUITE`.
+ * @returns the gate's exit status and its stdout and stderr together.
+ */
+function runGateInScratchTree(
+  reports: Record<string, string>,
+  gateArgs: readonly string[],
+): { status: number | null; output: string } {
+  // The real path, because the gate runs `main` only when argv[1] resolves to its own module path.
+  const tree = realpathSync(mkdtempSync(join(tmpdir(), 'dsh-uniqueness-cli-')))
+  trees.push(tree)
+  const written: Record<string, string> = {
+    'spec/first100/exec/command-freeze.json': JSON.stringify({ entries: [e2eFrozen] }),
+    'spec/first100/exec/flake-registry.json': JSON.stringify({ entries: [] }),
+    [WHOLE_SUITE]: JSON.stringify({ success: true, testResults: [] }),
+    ...reports,
+  }
+  for (const name of readdirSync(new URL('.', import.meta.url)).filter(file => file.endsWith('.mjs'))) {
+    written[`scripts/first100/${name}`] = readFileSync(new URL(name, import.meta.url), 'utf8')
+  }
+  for (const [path, text] of Object.entries(written)) {
+    mkdirSync(dirname(join(tree, path)), { recursive: true })
+    writeFileSync(join(tree, path), text)
+  }
+  symlinkSync(fileURLToPath(new URL('../../node_modules', import.meta.url)), join(tree, 'node_modules'))
+  const gate = join(tree, 'scripts/first100/verify-freeze-case-uniqueness.mjs')
+  const result = spawnSync(process.execPath, [gate, '--report', WHOLE_SUITE, ...gateArgs], { cwd: tree, encoding: 'utf8' })
+  return { status: result.status, output: `${result.stdout}${result.stderr}` }
+}
+
+describe('the gate refuses an --e2e-report it cannot trust, and exits 2', () => {
+  it('names an --e2e-report that does not exist', () => {
+    const { status, output } = runGateInScratchTree({}, ['--e2e-report', OWN_REPORT])
+    expect(output).toContain(`cannot decide — --e2e-report ${OWN_REPORT} does not exist`)
+    expect(status).toBe(2)
+  })
+
+  it('names an --e2e-report outside the directory named after --candidate-sha', () => {
+    const elsewhere = 'elsewhere/vitest-e2e-acp.json'
+    const gateArgs = ['--candidate-sha', CANDIDATE, '--e2e-report', elsewhere]
+    const { status, output } = runGateInScratchTree({ [elsewhere]: acpReportText() }, gateArgs)
+    expect(output).toContain(`cannot decide — --e2e-report ${elsewhere} is not tied to --candidate-sha ${CANDIDATE}`)
+    expect(status).toBe(2)
+  })
+
+  it('names an unregistered failure in the --e2e-report that observes an entry', () => {
+    const failed = [{ title: 'drops the lease', fullName: 'acp host drops the lease' }]
+    const { status, output } = runGateInScratchTree({ [OWN_REPORT]: acpReportText(failed) }, ['--e2e-report', OWN_REPORT])
+    expect(output).toContain(`cannot decide — --e2e-report ${OWN_REPORT}: 1 failed case(s) not in the flake registry:\n`
+      + '  acp host drops the lease')
+    expect(status).toBe(2)
   })
 })

@@ -1327,37 +1327,38 @@ describe('configFrozenReportRefusal: --supplement observes an entry frozen under
   const e2eFrozen = ['pnpm', 'exec', 'vitest', 'run', '--config', 'vitest.e2e.config.ts', acp]
   const fullSuite = ['/home/runner/work/r/r/apps/cli/tests/process-shutdown.spec.ts', '/home/runner/work/r/r/packages/g/p/tests/a.spec.ts']
 
-  it('refuses the full-suite report for an entry frozen under the e2e config, naming the file that report never ran', () => {
-    expect(configFrozenReportRefusal(e2eFrozen, fullSuite))
-      .toBe(`the entry is frozen under --config vitest.e2e.config.ts, and the report ran none of ${acp}; `
-        + 'its observation is the report its own step in first100-exact-sha.yml writes beside the full-suite report')
+  it('refuses the full-suite report for an entry frozen under the e2e config, naming both configs', () => {
+    expect(configFrozenReportRefusal(e2eFrozen, fullSuite, 'obs/vitest-report.json'))
+      .toBe('the entry is frozen under --config vitest.e2e.config.ts, and vitest-report.json is the report of the default config')
   })
 
   it('takes a snapshot-frozen entry (P2-04 U.3\'s argv) from the snapshot step\'s report, which also runs other files', () => {
     const headless = 'snapshots/session/headless.snapshot.ts'
     const sdk = 'snapshots/sdk/sdk.snapshot.ts'
     const argv = ['pnpm', 'exec', 'vitest', 'run', '--config', 'vitest.snapshot.config.ts', headless, sdk, '--reporter=json']
-    expect(configFrozenReportRefusal(argv, fullSuite)).toBe(
+    const snapshotReport = 'obs/vitest-snapshot.json'
+    expect(configFrozenReportRefusal(argv, fullSuite, snapshotReport)).toBe(
       `the entry is frozen under --config vitest.snapshot.config.ts, and the report ran none of ${headless}, ${sdk}; `
       + 'its observation is the report its own step in first100-exact-sha.yml writes beside the full-suite report',
     )
     const snapshotStep = [headless, sdk, 'snapshots/acp/acp.snapshot.ts', 'apps/web/tests/minimal-preset.snapshot.ts']
-    expect(configFrozenReportRefusal(argv, snapshotStep.map(path => `/home/runner/work/r/r/${path}`))).toBeNull()
+    expect(configFrozenReportRefusal(argv, snapshotStep.map(path => `/home/runner/work/r/r/${path}`), snapshotReport)).toBeNull()
   })
 
   it('accepts the report the entry\'s own e2e command wrote', () => {
-    expect(configFrozenReportRefusal(e2eFrozen, [`/home/runner/work/r/r/${acp}`])).toBeNull()
+    expect(configFrozenReportRefusal(e2eFrozen, [`/home/runner/work/r/r/${acp}`], 'obs/vitest-e2e-acp.json')).toBeNull()
   })
 
   it('reads the -c spelling of the config, wherever it sits in the argv', () => {
     const shortForm = ['pnpm', 'exec', 'vitest', 'run', 'packages/g/p/tests/x.e2e.ts', '-c', 'vitest.e2e.config.ts', '--reporter=json']
-    expect(configFrozenReportRefusal(shortForm, fullSuite)).toMatch(
+    expect(configFrozenReportRefusal(shortForm, fullSuite, 'obs/vitest-e2e-workflow.json')).toMatch(
       /^the entry is frozen under --config vitest\.e2e\.config\.ts, and the report ran none of packages\/g\/p\/tests\/x\.e2e\.ts;/u,
     )
   })
 
   it('leaves an entry frozen under the default config to the full-suite report, whatever that report ran', () => {
-    expect(configFrozenReportRefusal(['pnpm', 'exec', 'vitest', 'run', 'packages/g/q/tests/b.spec.ts', '--reporter=json'], fullSuite)).toBeNull()
+    const argv = ['pnpm', 'exec', 'vitest', 'run', 'packages/g/q/tests/b.spec.ts', '--reporter=json']
+    expect(configFrozenReportRefusal(argv, fullSuite, 'obs/vitest-report.json')).toBeNull()
   })
 
   it('refuses another config\'s report for an entry frozen under its own config, though that report ran its file', () => {
@@ -1442,6 +1443,17 @@ describe('generate-ledger.mjs greens a cell only from a report of the config its
     )
     expect(output).toContain(`BLOCKED: --report ${reportPath} cannot observe P4-05.U: the entry is frozen under --config `
       + 'vitest.e2e.config.ts, and vitest-report.json is the report of the default config')
+    expect(status).toBe(1)
+  })
+
+  it('--supplement exits 1 with BLOCKED for an entry frozen under the e2e config and an e2e report that did not run its path', () => {
+    const { status, output, reportPath } = runLedgerInScratchRepo(
+      { ...e2eBase, supplementSeq: 4, supplements: { epic: 'P4-05', stage: 'U' } },
+      { name: 'vitest-e2e-acp.json', files: ['/ci/apps/cli/tests/profiles/sdk/keyless-smoke.e2e.ts'] },
+      ['--supplement', '--epic', 'P4-05', '--stage', 'U', '--supplement-seq', '4'],
+    )
+    expect(output).toContain(`BLOCKED: --report ${reportPath} cannot observe P4-05.U.4: the entry is frozen under --config `
+      + 'vitest.e2e.config.ts, and the report ran none of apps/cli/tests/a.e2e.ts;')
     expect(status).toBe(1)
   })
 })

@@ -44,6 +44,7 @@
  * @module scripts/first100/verify-frozen-titles-in-tree
  */
 import { frozenTitlePresent, registeredRenames } from './frozen-title-renames.mjs'
+import { configFrozenReportRefusal, frozenCommand } from './generate-ledger.mjs'
 import { collectTitles } from './verify-frozen-titles-resolvable.mjs'
 import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
@@ -120,12 +121,19 @@ export function collectProducibleTitles() {
  * Liveness is `supersededBy`, and that is the whole selection: an entry the
  * freeze marks superseded describes a past state on purpose, and every other
  * entry is a promise something in the tree must still be able to keep.
+ *
+ * An entry whose argv names no config is looked up in `producible`, the names
+ * `vitest list` collects under the default config. An entry frozen under its
+ * own config is looked up only in the `reports` of that config that ran its
+ * test paths (`configFrozenReportRefusal`), so a title that only another
+ * config's run carries does not count as produced.
  * @param entries - `command-freeze.json`'s entries, live and superseded alike.
- * @param producible - every test name the suite can produce.
+ * @param producible - every test name the default config's suite can produce.
  * @param renames - the registered renames, from `registeredRenames`.
+ * @param reports - each `--e2e-report`'s path, its `testResults[].name`, and every name it carries.
  * @returns one record per orphaned title, naming the entry that holds it.
  */
-export function findOrphans(entries, producible, renames) {
+export function findOrphans(entries, producible, renames, reports = []) {
   const orphans = []
   for (const entry of entries) {
     if (entry.supersededBy !== undefined) continue
@@ -135,8 +143,11 @@ export function findOrphans(entries, producible, renames) {
     const key = entry.supplementSeq === undefined
       ? `${entry.epic}.${entry.stage}`
       : `${entry.epic}.${entry.stage}.${String(entry.supplementSeq)}`
+    const argv = entry.argv ?? []
+    const own = reports.filter((report) => configFrozenReportRefusal(argv, report.files, report.path) === null)
+    const names = frozenCommand(argv).config === undefined ? producible : new Set(own.flatMap((report) => [...report.titles]))
     for (const title of entry.expectCases) {
-      if (frozenTitlePresent(title, producible, renames, entry.epic, entry.stage)) continue
+      if (frozenTitlePresent(title, names, renames, entry.epic, entry.stage)) continue
       orphans.push({ key, title })
     }
   }
@@ -149,6 +160,7 @@ function main() {
   const producible = collectProducibleTitles()
   const args = process.argv.slice(2)
   const e2eReports = args.flatMap((arg, index) => (arg === '--e2e-report' ? [String(args[index + 1])] : []))
+  const reports = []
   for (const path of e2eReports) {
     let report
     try {
@@ -159,11 +171,11 @@ function main() {
         { cause: error },
       )
     }
-    for (const name of collectTitles(report).titles) producible.add(name)
+    reports.push({ path, files: (report.testResults ?? []).map((file) => String(file.name)), titles: collectTitles(report).titles })
   }
   const renames = registeredRenames()
 
-  const orphans = findOrphans(freeze.entries, producible, renames)
+  const orphans = findOrphans(freeze.entries, producible, renames, reports)
 
   if (orphans.length === 0) {
     console.log(
