@@ -219,7 +219,7 @@ function main(argv: readonly string[]): number {
     console.error(`benchmark:harness: --seed must be an integer in [0, 2^32), got ${values.seed}`)
     return 2
   }
-  const run = runLanes(SCENARIOS.filter(scenario => lanes.includes(scenario.lane)), { seed })
+  const run = runLanes(SCENARIOS.filter(scenario => lanes.includes(scenario.lane)), { seed: DEFAULT_SEED })
   const lines = formatRun(run)
   const out = resolve(values.out ?? '.artifacts/benchmark')
   mkdirSync(out, { recursive: true })
