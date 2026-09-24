@@ -14,10 +14,11 @@
  * in-process through `runProfile`, as `dsh --profile web --no-open --port 0`
  * does.
  *
- * The request fields and the soft-delete method these cases use are the ones
+ * The request fields and the lifecycle methods these cases use are the ones
  * the P6-07 work order adds (LB-3: `filters`, `limit`, `cursor` and
- * `nextCursor`; LB-5: `softDelete`), called through loose types so the file
- * builds before they exist and a missing one fails an assertion.
+ * `nextCursor`; LB-5: `softDelete`, `placeLegalHold` and `erase`), called
+ * through loose types so the file builds before they exist and a missing one
+ * fails an assertion.
  * @module apps/cli/tests/profiles/web/tests/lifecycle
  */
 
@@ -28,6 +29,7 @@ import { describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-api-session-controller'
+import type {} from '@deepseek-ai/dsh-api-workspace-controller'
 import { loadLayeredEnv } from '@deepseek-ai/dsh-app-boot'
 import { createChain, createUserPrincipal } from '@deepseek-ai/dsh-principal'
 import { type IdentityContext, PrincipalId, RunId, TenantId } from '@deepseek-ai/dsh-principal/types'
@@ -83,11 +85,16 @@ interface LifecycleListValue {
   readonly nextCursor?: string
 }
 
-/** The session controller as these cases call it, with LB-3's request and LB-5's soft delete. */
+/** The session controller as these cases call it, with LB-3's request and LB-5's lifecycle methods. */
 interface LifecycleSessionController {
   list(request: LifecycleListRequest, signal: AbortSignal): Promise<LifecycleListValue>
   readonly softDelete?: (request: { readonly sessionId: SessionId }, signal: AbortSignal) => Promise<unknown>
+  readonly placeLegalHold?: (request: { readonly sessionId: SessionId; readonly reason: string }, signal: AbortSignal) => Promise<unknown>
+  readonly erase?: (request: { readonly sessionId: SessionId }, signal: AbortSignal) => Promise<unknown>
 }
+
+/** A lifecycle status a list request can filter on. */
+type LifecycleStatus = Extract<SessionLifecycleFilter, { readonly kind: 'status' }>['values'][number]
 
 /**
  * The identity a tenant seed's `identity/attached` carries.
@@ -176,9 +183,14 @@ function removeAddedListeners(before: ReadonlyMap<string, readonly unknown[]>): 
  * Write `seeds`, boot the web profile over them, run `body`, and restore the
  * process environment and listeners the boot changed.
  * @param seeds - the sessions to write before boot.
- * @param body - the case, given the booted root and the workspace directories.
+ * @param body - the case, given the booted root, the workspace directories,
+ * and a restart that disposes the composition and boots it again on the same
+ * home.
  */
-async function withWeb(seeds: readonly Seed[], body: (ctx: Context, directories: Directories) => Promise<void>): Promise<void> {
+async function withWeb(
+  seeds: readonly Seed[],
+  body: (ctx: Context, directories: Directories, restart: () => Promise<Context>) => Promise<void>,
+): Promise<void> {
   const root = await realpath(await mkdtemp(join(tmpdir(), 'dsh-p6-07-web-')))
   const home = join(root, '.dsh')
   const project = join(root, 'project')
@@ -202,7 +214,14 @@ async function withWeb(seeds: readonly Seed[], body: (ctx: Context, directories:
   try {
     Object.assign(process.env, launchEnv)
     ctx = await launchWeb(project)
-    await body(ctx, directories)
+    const restart = async (): Promise<Context> => {
+      await ctx?.fiber.dispose()
+      ctx = undefined
+      removeAddedListeners(savedListeners)
+      ctx = await launchWeb(project)
+      return ctx
+    }
+    await body(ctx, directories, restart)
   } finally {
     await ctx?.fiber.dispose()
     removeAddedListeners(savedListeners)
@@ -245,6 +264,25 @@ async function workspaceIdOf(ctx: Context, path: string): Promise<WorkspaceId> {
   const workspace = await ctx.workspaceRegistry.resolveByPath(path)
   if (workspace === undefined) throw new Error(`the workspace registry bootstrapped no workspace for ${path}`)
   return workspace.id
+}
+
+/**
+ * The LB-5 methods the controller does not have.
+ * @param controller - the session controller.
+ * @returns the names of the missing ones.
+ */
+function missingLifecycleMethods(controller: LifecycleSessionController): string[] {
+  return (['softDelete', 'placeLegalHold', 'erase'] as const).filter(name => typeof controller[name] !== 'function')
+}
+
+/**
+ * The session ids listed under one lifecycle status.
+ * @param controller - the session controller.
+ * @param status - the status to filter on.
+ * @returns the listed ids.
+ */
+async function idsWithStatus(controller: LifecycleSessionController, status: LifecycleStatus): Promise<string[]> {
+  return listIds(controller, { filters: [{ kind: 'status', values: [status] }] })
 }
 
 /**
@@ -350,6 +388,64 @@ describe('P6-07 on the shipped web profile, booted in-process: the session list 
       const byId = (left: string, right: string): number => left.localeCompare(right)
       expect([...walked].sort(byId)).toEqual([...unfiltered].sort(byId))
       expect(missing(walked, seeds.map(seed => seed.id))).toEqual([])
+    })
+  }, CASE_TIMEOUT_MS)
+
+  it('keeps archive, soft delete, legal hold and hard erase distinct on the shipped session API', async () => {
+    // Five sessions, one operation each, plus one left active.
+    const active = 'p6-07-t3-active'
+    const archived = 'p6-07-t3-archived'
+    const softDeleted = 'p6-07-t3-soft-deleted'
+    const held = 'p6-07-t3-held'
+    const softDeletedHeld = 'p6-07-t3-soft-deleted-held'
+    const erased = 'p6-07-t3-erased'
+    const ids = [active, archived, softDeleted, held, softDeletedHeld, erased]
+    await withWeb(ids.map((id): Seed => ({ id, workspace: 'a', tenant: ACME, createdAt: EARLIER })), async (ctx) => {
+      const controller = lifecycleController(ctx)
+      expect(missingLifecycleMethods(controller)).toEqual([])
+      // The session about to be erased exists first.
+      expect(missing(await listIds(controller, {}), ids)).toEqual([])
+
+      await ctx.workspaceController.archiveSession({ sessionId: SessionId(archived) })
+      await controller.softDelete?.({ sessionId: SessionId(softDeleted) }, new AbortController().signal)
+      await controller.placeLegalHold?.({ sessionId: SessionId(held), reason: 'p6-07 T3' }, new AbortController().signal)
+      await controller.softDelete?.({ sessionId: SessionId(softDeletedHeld) }, new AbortController().signal)
+      await controller.placeLegalHold?.({ sessionId: SessionId(softDeletedHeld), reason: 'p6-07 T3' }, new AbortController().signal)
+      await controller.erase?.({ sessionId: SessionId(erased) }, new AbortController().signal)
+
+      const isArchived = await idsWithStatus(controller, 'archived')
+      expect(isArchived).toContain(archived)
+      expect(isArchived).not.toContain(active)
+      expect(isArchived).not.toContain(softDeleted)
+      const isSoftDeleted = await idsWithStatus(controller, 'soft-deleted')
+      expect(missing(isSoftDeleted, [softDeleted, softDeletedHeld])).toEqual([])
+      expect(isSoftDeleted).not.toContain(archived)
+      expect(isSoftDeleted).not.toContain(held)
+      const isActive = await idsWithStatus(controller, 'active')
+      expect(missing(isActive, [active, held])).toEqual([])
+      expect(isActive).not.toContain(archived)
+      expect(isActive).not.toContain(softDeleted)
+      // A hold, with or without a soft delete, refuses erase.
+      await expect(controller.erase?.({ sessionId: SessionId(held) }, new AbortController().signal)).rejects.toThrow(/legal hold/i)
+      const eraseSoftDeletedHeld = controller.erase?.({ sessionId: SessionId(softDeletedHeld) }, new AbortController().signal)
+      await expect(eraseSoftDeletedHeld).rejects.toThrow(/legal hold/i)
+      // The erased session is gone under every status and from the unfiltered list.
+      for (const listed of [await listIds(controller, {}), isArchived, isSoftDeleted, isActive]) expect(listed).not.toContain(erased)
+    })
+  }, CASE_TIMEOUT_MS)
+
+  it('a legal hold placed through the shipped API still blocks erase after the composition restarts', async () => {
+    const held = 'p6-07-t8-held'
+    await withWeb([{ id: held, workspace: 'a', tenant: ACME, createdAt: EARLIER }], async (ctx, _directories, restart) => {
+      const controller = lifecycleController(ctx)
+      expect(missingLifecycleMethods(controller)).toEqual([])
+      await controller.placeLegalHold?.({ sessionId: SessionId(held), reason: 'p6-07 T8' }, new AbortController().signal)
+      // The hold is in force before the restart.
+      await expect(controller.erase?.({ sessionId: SessionId(held) }, new AbortController().signal)).rejects.toThrow(/legal hold/i)
+
+      const restarted = lifecycleController(await restart())
+      expect(await listIds(restarted, {})).toContain(held)
+      await expect(restarted.erase?.({ sessionId: SessionId(held) }, new AbortController().signal)).rejects.toThrow(/legal hold/i)
     })
   }, CASE_TIMEOUT_MS)
 })
