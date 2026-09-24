@@ -17,7 +17,9 @@
  *   thrown in the prepare hook, before any config-tree entry mounted;
  * - the spy was called once with a frozen kernel, so the launch reached the
  *   pin site and did not fail earlier for another reason;
- * - the sentinel entry's marker is absent, so nothing mounted;
+ * - the sentinel entry's marker is absent, so nothing mounted; the control
+ *   case shows the same sentinel does mount, and fails the tree, once the
+ *   kernel is really pinned;
  * - the initialized manifest lists the template's bundles, so the composition
  *   is the factory one and not a leftover profile directory.
  */
@@ -57,5 +59,18 @@ describe('P0-02 acceptance[2] -- in-process launch of each factory profile', () 
     expect(Object.isFrozen(kernel)).toBe(true)
     expect(launch.entryMounted).toBe(false)
     expect(launch.manifestBundles).toEqual(PROFILE_TEMPLATES[profile]?.bundles)
+  }, IN_PROCESS_LAUNCH_TIMEOUT_MS)
+
+  it('control: with the real pin and DSH_TRUST_KERNEL_INSECURE unset, the factory sdk-minimal launch passes the prepare hook and mounts the sentinel entry, whose own failure ends it', async () => {
+    const actual = await vi.importActual<typeof import('@deepseek-ai/dsh-trust-kernel')>('@deepseek-ai/dsh-trust-kernel')
+    pinTrustKernel.mockImplementationOnce(actual.pinTrustKernel)
+
+    const launch = await launchInProcess('sdk-minimal', undefined)
+
+    expect(pinTrustKernel).toHaveBeenCalledTimes(1)
+    expect(launch.entryMounted).toBe(true)
+    const message = launch.error instanceof Error ? launch.error.message : String(launch.error)
+    expect(message).not.toMatch(/host preparation failed/)
+    expect(message).toMatch(/loader entry \S*p0-02-mount-sentinel/)
   }, IN_PROCESS_LAUNCH_TIMEOUT_MS)
 })
