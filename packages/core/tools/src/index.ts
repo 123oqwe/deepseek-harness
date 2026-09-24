@@ -1584,7 +1584,7 @@ export class ToolRuntime extends Service {
   private loaderEntries(): readonly AttributableLoaderEntry[] | undefined {
     const loader: unknown = this.ctx.get('loader')
     if (loader === undefined) return undefined
-    return [...(loader as { entries: () => Iterable<AttributableLoaderEntry> }).entries()]
+    return (loader as { entries: () => Iterable<AttributableLoaderEntry> }).entries() as unknown as readonly AttributableLoaderEntry[]
   }
 
   /**
