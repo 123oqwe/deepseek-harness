@@ -1310,6 +1310,14 @@ describe('the exact-SHA observation artifact carries the json report of every st
       expect(steps.indexOf(step)).toBeLessThan(upload)
     }
   })
+
+  it('signs every report the artifact carries in the evidence job, which downloads it to the same paths (B5)', () => {
+    const uploaded = steps[upload]?.with?.path?.split('\n').map(line => line.trim()).filter(Boolean) ?? []
+    const signing = workflow.jobs['first100-evidence']?.steps
+      .find(step => step.name?.startsWith('Sign the vitest observation report') === true)
+    const signed = [...(signing?.run ?? '').matchAll(/attest\.ts --sign (\S+)/gu)].map(match => match[1])
+    expect(signed.sort()).toStrictEqual(uploaded.sort())
+  })
 })
 
 describe('configFrozenReportRefusal: --supplement observes an entry frozen under its own config through that run\'s report', () => {

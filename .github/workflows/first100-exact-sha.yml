@@ -1198,17 +1198,27 @@ jobs:
       # same report for a frozen entry's expectCases regardless of how many
       # other files it also covers, so ONE signed report here services every
       # slice touched at this candidate SHA; C5 batches CI by push, not per-slice).
+      # An entry frozen under its own vitest config is graded against its own
+      # step's report instead, which the same artifact carries.
       - name: Download the vitest observation report
         uses: actions/download-artifact@v4
         with:
           name: first100-vitest-report-${{ needs.exact-sha-gate.outputs.candidate-sha }}
           path: .artifacts/first100/observations/
 
-      - name: Sign the vitest observation report with the GitHub-secret identity
+      # Every report the artifact carries is a ledger observation input, so each
+      # is signed. `attest.ts --sign` takes one file and writes the signature into
+      # it, so each has its own call, and a report that is not there fails the
+      # step, as the full-suite report always has.
+      - name: Sign the vitest observation reports with the GitHub-secret identity
         if: env.HAS_SIGNING_KEY == 'true'
         env:
           DSH_FIRST100_SIGNING_KEY: ${{ secrets.DSH_FIRST100_SIGNING_KEY }}
-        run: node scripts/first100/attest.ts --sign .artifacts/first100/observations/vitest-report.json
+        run: |
+          node scripts/first100/attest.ts --sign .artifacts/first100/observations/vitest-report.json
+          node scripts/first100/attest.ts --sign .artifacts/first100/observations/vitest-e2e-sdk-keyless-smoke.json
+          node scripts/first100/attest.ts --sign .artifacts/first100/observations/vitest-e2e-acp.json
+          node scripts/first100/attest.ts --sign .artifacts/first100/observations/vitest-snapshot.json
 
       # Real, honest evidence for R0 exit gate item 4 (runnerDryReceipt):
       # currently expected to exit 1 while command-freeze.json is still
