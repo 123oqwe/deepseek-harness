@@ -204,6 +204,13 @@ describe('P1-09 ownership gate composition (U-stage)', () => {
     expect(report.message).toContain('"./first-owner.ts"')
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 
+  it('with a Loader in the tree, a fiber outside every Loader entry that writes itself a forged fiber.entry is still refused', async () => {
+    const report = await bootFixture('forged-entry.cordis.yml', 'p1-09 forged entry boot')
+    expect(report.booted).toBe(false)
+    expect(report.message).toContain('outside every Loader entry is refused')
+    expect(report.message).toContain('"p1-09-forged-entry-child"')
+  }, LOADER_SMOKE_TEST_TIMEOUT_MS)
+
   it('the root fiber itself registers as root, which is no official identity and cannot claim the reserved dsh.* namespace', async () => {
     const report = await bootFixture('root-registrant.cordis.yml', 'p1-09 root registrant boot')
     expect(report.booted).toBe(true)
