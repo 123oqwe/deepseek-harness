@@ -199,6 +199,7 @@ const handle = await ctx.agents.create({
 - **分类是一元的**：安全性取决于比较同级调用或资源的调用必须保持独占（[原理](../../../.agents/notes/implemented/feature/2026-07-10-parallel-tool-call-execution.zh.md)）。
 - **配置标签默认对应新会话**：省略 `sessionId` 时，每次启动都会创建新的 `${id}-session-<uuid>`；如需确切的恢复或创建行为，必须显式提供稳定的 `sessionId`，而 `resumeSessionId` 要求已有持久化历史。
 - **配置 agent 没有逐 agent persona 字段或 setup 钩子**：它们使用部署 persona；只有编程式 `ctx.agents.create()` / `resume()` 工厂选项支持带作用域的 persona 与工具组合。
+- **配置 agent 在挂载时创建，可能早于能力令牌的提供方订阅**：组合要求令牌时（`capability-tokens` 配了 `requireForTools`），`agents` 里先被创建的 agent 出示不了令牌，它的每个工具调用都以 `token-required` 被拒。出厂 profile 都不用这个配置面（`base` 与 `sdk-minimal` 的 `agents` 都是 `[]`），出厂启动器也是在开机之后才创建 agent（BLOCKED-330）。
 - **预算限制的是轮次，不是一轮内部做了什么**：`agents[].budget` 在每个轮次边界处检查，因此工具调用或 steering 会让已经开始的那一轮继续；必须在轮次中途停止工作的策略要从生命周期扩展点（如 `agent/turn-stopping`）执行取消。
 - **轮次额度按「运行」计,不按会话计**:被恢复的会话从零开始计数,这正是 `--resume` 能继续一次被预算叫停的运行的原因;跨重启的终身上限是另一套机制,目前并不存在。
 - **`budget.maxSpendUsd` 目前无法生效**:仓库里没有任何东西把 token 换算成金额,因此循环的花费合计恒为零,无论上限设得多低都会放行每一轮。需要可依赖的上限时请用 `maxTurns`。
