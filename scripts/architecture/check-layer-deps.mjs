@@ -744,9 +744,7 @@ function collectKernelNonWorkspaceEdges(root, byPackage, vendoredNames, workspac
         if (ts.isModuleDeclaration(statement) && ts.isStringLiteral(statement.name)) {
           declared.add(statement.name.getStart(source))
           const body = statement.body !== undefined && ts.isModuleBlock(statement.body) ? statement.body.statements : []
-          const labels = body.map(declaration => ts.isInterfaceDeclaration(declaration) && declaration.name.text === 'Context'
-            ? 'Context'
-            : `declare module ${declaration.name?.text ?? '*'}`)
+          const labels = body.map(declaration => `declare module ${declaration.name?.text ?? '*'}`)
           for (const label of labels.length > 0 ? labels : ['declare module *']) addUse(statement.name.text, label, file)
           continue
         }
