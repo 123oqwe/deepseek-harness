@@ -25,7 +25,7 @@ import * as spawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
 import type { WorkflowRun } from '@deepseek-ai/dsh-workflow'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import WorkerThreadWorkflowEngine from '../src/index.ts'
-import { WorkflowExecution } from '../src/runtime.ts'
+import { callDigestOf, WorkflowExecution } from '../src/runtime.ts'
 import type { ChildPort, ChildResult } from '../src/types.ts'
 
 const contexts = new TrackedContexts()
@@ -146,6 +146,70 @@ describe('P4-08 acceptance[0]: a resumed run returns what its finished children 
 
     expect(started).toEqual(['one'])
     expect(settled).toMatchObject({ stopReason: 'completed', agentsStarted: 1, value: ['fresh', 'kept'] })
+  })
+})
+
+describe('P4-08 acceptance[0]: a resumed step is reused only for the call that recorded it', () => {
+  const LIMITS = { maxConcurrentAgents: 1, maxTotalAgents: 5, maxItemsPerCall: 10, syncTimeoutMs: 5_000 }
+  const QUIET = { phase: () => {}, log: () => {}, agentStart: () => {}, agentEnd: () => {} }
+
+  /**
+   * A child port answering every call with the text `fresh`.
+   * @param started - receives each started call's prompt, in start order.
+   * @returns the port.
+   */
+  function freshChildren(started: string[]): ChildPort {
+    const fresh: ChildResult = { output: [{ type: 'text', text: 'fresh' }], stopReason: 'completed' }
+    return {
+      startAgent: (request) => {
+        started.push(request.prompt)
+        return Promise.resolve({ id: `child-${String(started.length)}`, result: Promise.resolve(fresh), dispose: () => Promise.resolve() })
+      },
+      startNested: () => Promise.reject(new Error('no nested runs in this case')),
+    }
+  }
+
+  const REVIEW = "return await agent('review ' + args.file)"
+
+  it('control: reuses a recorded step for the same call, so the cases below measure the call identity', async () => {
+    const started: string[] = []
+    const execution = new WorkflowExecution(META, REVIEW, { file: 'a.ts' }, LIMITS, QUIET, freshChildren(started),
+      { 1: JSON.stringify('review of a.ts') }, { 1: callDigestOf('review a.ts', {}) })
+
+    const settled = await execution.drive()
+
+    expect(started).toEqual([])
+    expect(settled).toMatchObject({ stopReason: 'completed', agentsStarted: 0, value: 'review of a.ts' })
+  })
+
+  it('starts the step again when the arguments changed what the call asks', async () => {
+    const started: string[] = []
+    const execution = new WorkflowExecution(META, REVIEW, { file: 'b.ts' }, LIMITS, QUIET, freshChildren(started),
+      { 1: JSON.stringify('review of a.ts') }, { 1: callDigestOf('review a.ts', {}) })
+
+    const settled = await execution.drive()
+
+    expect(started).toEqual(['review b.ts'])
+    expect(settled).toMatchObject({ stopReason: 'completed', agentsStarted: 1, value: 'fresh' })
+  })
+
+  it('does not hand one call another call\'s result when completion order decided the step numbers', async () => {
+    // Recorded when B's analysis finished first, so B's summary took step 3.
+    // On resume the reused analyses resolve in call order, and A's summary is
+    // the call that reaches step 3.
+    const started: string[] = []
+    const execution = new WorkflowExecution(
+      META,
+      "return await Promise.all(['A', 'B'].map(async (x) => { const r = await agent('analyze ' + x); return agent('summarize ' + r) }))",
+      undefined, LIMITS, QUIET, freshChildren(started),
+      { 1: JSON.stringify('a1'), 2: JSON.stringify('b1'), 3: JSON.stringify('SUMMARY-OF-B') },
+      { 1: callDigestOf('analyze A', {}), 2: callDigestOf('analyze B', {}), 3: callDigestOf('summarize b1', {}) },
+    )
+
+    const settled = await execution.drive()
+
+    expect(started[0]).toBe('summarize a1')
+    expect(settled).not.toMatchObject({ value: ['SUMMARY-OF-B', expect.anything()] })
   })
 })
 

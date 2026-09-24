@@ -12,6 +12,7 @@
  * @module @deepseek-ai/dsh-workflow-worker-thread/runtime
  */
 
+import { createHash } from 'node:crypto'
 import * as vm from 'node:vm'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { ContentBlock } from '@deepseek-ai/dsh-llm'
@@ -56,6 +57,20 @@ function outputText(blocks: ContentBlock[]): string {
 }
 
 /** A short display label derived from the prompt when the script passes none. */
+/**
+ * The identity of one `agent()` call: SHA-256 of its prompt and of the options
+ * that change what the child is asked (schema, provider, model).
+ * @param prompt - the call's prompt.
+ * @param opts - the call's options.
+ * @returns the digest, hex.
+ */
+export function callDigestOf(
+  prompt: string,
+  opts: { readonly schema?: unknown; readonly provider?: string; readonly model?: string },
+): string {
+  return createHash('sha256').update(JSON.stringify([prompt, opts.schema ?? null, opts.provider ?? null, opts.model ?? null])).digest('hex')
+}
+
 function defaultLabel(prompt: string): string {
   const newline = prompt.indexOf('\n')
   const line = newline === -1 ? prompt : prompt.slice(0, newline)
@@ -97,6 +112,8 @@ export class WorkflowExecution {
     private readonly children: ChildPort,
     /** Recorded outputs this resumed run may reuse, by step sequence. */
     private readonly reusable: Record<number, string> = {},
+    /** The call identity each reusable step was recorded under, by step sequence. */
+    _reusableCalls?: Record<number, string>,
   ) {
     // Compile FIRST: a body syntax error must throw out of the constructor
     // before any realm state exists. The host pre-parses the identical
