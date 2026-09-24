@@ -1,6 +1,38 @@
 {
   "$schemaVersion": 1,
-  "exemptedCycles": [],
+  "exemptedCycles": [
+    {
+      "cycle": [
+        "@deepseek-ai/cordis",
+        "@deepseek-ai/cordis-plugin-loader"
+      ],
+      "reason": "Vendored upstream Cordis peer-dependency cycle: vendor/cordis/package.json declares @deepseek-ai/cordis-plugin-loader as an optional peerDependency (peerDependenciesMeta optional: true), and vendor/loader/package.json declares @deepseek-ai/cordis as a peerDependency. The loader plugin runs inside the Cordis runtime that can load it, and vendor/ keeps its upstream manifests (vendor/README.md), so the cycle is recorded rather than broken.",
+      "owner": "P0-04",
+      "adrNote": ".agents/notes/implemented/architecture/2026-09-24-layer-checks-scan-the-declared-workspace.md",
+      "recordedDate": "2026-09-24"
+    },
+    {
+      "cycle": [
+        "@deepseek-ai/cordis",
+        "@deepseek-ai/cordis-plugin-include"
+      ],
+      "reason": "Vendored upstream Cordis peer-dependency cycle: vendor/cordis/package.json declares @deepseek-ai/cordis-plugin-include as an optional peerDependency (peerDependenciesMeta optional: true), and vendor/include/package.json declares @deepseek-ai/cordis as a peerDependency. The include plugin runs inside the Cordis runtime that can load it, and vendor/ keeps its upstream manifests (vendor/README.md), so the cycle is recorded rather than broken.",
+      "owner": "P0-04",
+      "adrNote": ".agents/notes/implemented/architecture/2026-09-24-layer-checks-scan-the-declared-workspace.md",
+      "recordedDate": "2026-09-24"
+    },
+    {
+      "cycle": [
+        "@deepseek-ai/cordis",
+        "@deepseek-ai/cordis-plugin-include",
+        "@deepseek-ai/cordis-plugin-loader"
+      ],
+      "reason": "Vendored upstream Cordis peer-dependency cycle: vendor/cordis/package.json declares @deepseek-ai/cordis-plugin-include as an optional peerDependency, vendor/include/package.json declares @deepseek-ai/cordis-plugin-loader as a peerDependency, and vendor/loader/package.json declares @deepseek-ai/cordis as a peerDependency. It is the third simple cycle of the strongly connected component the two two-package records belong to, so it needs its own record.",
+      "owner": "P0-04",
+      "adrNote": ".agents/notes/implemented/architecture/2026-09-24-layer-checks-scan-the-declared-workspace.md",
+      "recordedDate": "2026-09-24"
+    }
+  ],
   "kernelEdgeAllowlist": [
     {
       "fromPackage": "@deepseek-ai/dsh-trust-kernel",

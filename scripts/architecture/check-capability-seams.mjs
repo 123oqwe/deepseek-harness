@@ -17,6 +17,7 @@
 import { readFileSync, globSync } from 'node:fs'
 import { dirname, resolve, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { load as parseYaml } from 'js-yaml'
 import ts from 'typescript'
 import {
   detectDeepImportViolation,
@@ -29,7 +30,8 @@ import {
 
 const GATE = 'check-capability-seams'
 const LAYERS_PATH = 'architecture.layers.json'
-const PACKAGE_MANIFEST_GLOB = 'packages/*/*/package.json'
+/** The workspace file whose `packages:` patterns decide which packages this gate scans. */
+const WORKSPACE_PATH = 'pnpm-workspace.yaml'
 const CLIENT_APP_MANIFEST_GLOB = 'packages/client/*/package.json'
 const TOP_LEVEL_APP_MANIFEST_GLOB = 'apps/*/package.json'
 const SOURCE_GLOB = 'src/**/*.{ts,tsx,mts,cts}'
@@ -60,15 +62,21 @@ export function readArchitectureLayers(root) {
 }
 
 /**
- * Read every real workspace package under `packages/<group>/<pkg>`.
+ * Read every package `pnpm-workspace.yaml`'s `packages:` patterns declare. A
+ * workspace file that declares no pattern throws, so the gate can never pass
+ * by scanning nothing.
  * @param root - repository (or fixture) root.
  * @returns npm package name -> repo-relative package directory.
  */
 export function readWorkspacePackages(root) {
+  const patterns = parseYaml(readFileSync(resolve(root, WORKSPACE_PATH), 'utf8'))?.packages
+  if (!Array.isArray(patterns) || patterns.length === 0) throw new Error(`${GATE}: ${WORKSPACE_PATH} declares no packages`)
   const byName = new Map()
-  for (const manifestPath of globSync(PACKAGE_MANIFEST_GLOB, { cwd: root }).map(normalizePath).sort()) {
-    const manifest = readJson(resolve(root, manifestPath))
-    if (typeof manifest.name === 'string') byName.set(manifest.name, dirname(manifestPath))
+  for (const pattern of patterns) {
+    for (const manifestPath of globSync(`${pattern}/package.json`, { cwd: root }).map(normalizePath).sort()) {
+      const manifest = readJson(resolve(root, manifestPath))
+      if (typeof manifest.name === 'string') byName.set(manifest.name, dirname(manifestPath))
+    }
   }
   return byName
 }
