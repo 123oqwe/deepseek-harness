@@ -723,8 +723,7 @@ interface HeldOwnership {
  * @returns a new record without the ownership token.
  */
 function recordOf(registration: CapabilityRegistration): CapabilityRecord {
-  const { pluginIdentity, namespace, capabilityId, kind, origin } = registration
-  return { pluginIdentity, namespace, capabilityId, kind, origin }
+  return registration
 }
 
 /**
