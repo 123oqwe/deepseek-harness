@@ -341,11 +341,7 @@ export class HarnessSdkJsonRpcServer {
     const encounteredVersion = params.schemaVersion ?? getSchema(schemaId)?.version ?? { major: 1, minor: 0 }
     const negotiation = negotiateSchema(schemaId, encounteredVersion)
     if (!negotiation.compatible) {
-      // The same error, carrying its fields as the response's `error.data`.
-      const { code, schemaId: refusedSchemaId, encounteredVersion: encountered, registeredVersion } = negotiation.error
-      throw Object.assign(negotiation.error, {
-        data: { code, schemaId: refusedSchemaId, encounteredVersion: encountered, registeredVersion },
-      })
+      throw negotiation.error
     }
     // P8-01 must[2]: an incompatible peer is refused BEFORE any work is done.
     // Placed ahead of adapter resolution and plugin mounting on purpose --
