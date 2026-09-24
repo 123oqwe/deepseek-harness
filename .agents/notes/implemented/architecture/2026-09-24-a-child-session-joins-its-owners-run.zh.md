@@ -11,7 +11,7 @@ P4-01 acceptance[2] 说一个 Run 可以跨多个会话；用户在 2026-09-24 �
 ## 决定
 
 - **子会话以成员身份加入。** `RunPlugin` 打开一个会话时，查找注册表记为该会话 owner 的那个活着的 agent（`AgentRegistry.isOwnedBy`）。owner 有 Run 时，`attachSession` 把子会话加进那个 Run 的 `sessionIds`。子会话保留自己的 Run、租约、生命周期、心跳和终态写入，这些一概不变。
-- **owner 的租约是 owner 那个 Run 唯一的权威。** 能让一个 agent 的 `runId === R` 的只有两条路：铸出 R，以及重启时领走它。`adoptable` 现在只把会话自己开的 Run（`sessionIds[0]`）交给它，从不交它加入的 Run，所以 R 的每个写入者持有的都是开 R 的那个会话的租约。加入本身只在 owner 的租约仍允许写入（`mayWrite`）时才写，所以失去了 owner 租约的宿主不能再添加成员。
+- **owner 的租约是 owner 那个 Run 唯一的权威。** 能让一个 agent 的 `runId === R` 的只有两条路：铸出 R，以及重启时领走它。`adoptable` 现在只把会话自己开的 Run（`sessionIds[0]`）交给它，从不交它加入的 Run，所以 R 的每个写入者持有的都是开 R 的那个会话的租约。加入本身只在 owner 的租约仍允许写入时才写：`attachSession` 在 Run 的串行化轮次里询问这份租约（`mayWrite`），与 `advance` 核对 fence 的方式相同，并且拒绝已到终态的 Run，所以失去了 owner 租约的宿主不能再添加成员（盲审 F3 与 N1，B-588）。
 - **两个关闭条件是改写的，而不是用 Run 级工作项满足的。** BLOCKED-196 要的是「the shape of a Run-level work item」，BLOCKED-309 路线 1 要的是「one authority (a Run-level work item)」。两处现在都写作「one authority: the lease of the session that opened the Run; joiners are members」。这是 delegate 在 `approved/P4-01.md`（「裁法甲」）里的裁定。这两个关闭条件都是 delegate 自己的裁定，改写它们不算收窄 registry 条款。
 
 ## 考虑过的其他做法
@@ -25,6 +25,6 @@ P4-01 acceptance[2] 说一个 Run 可以跨多个会话；用户在 2026-09-24 �
 - 被拥有的子会话同时在两个 Run 里：它自己的，以及作为成员的 owner 的 Run。owner 的 Run 日志不为加入、也不为子会话做的任何事增加事件；成员关系从 `sessionIds` 读取。
 - 孙会话加入的是它直接 owner 的 Run，不是根会话的，所以多层委派会形成一串 Run。
 - detached workflow 会话、网关 fork、所有根会话，以及进程外的 subagent，都不加入任何 Run。
-- 加入是在子会话打开时对照 owner 的租约检查的，不是像 `advance` 核对 fence 那样在 Run 的串行化轮次里检查。在这次检查与写入之间失去的租约，仍可能放过一次加入。
+- 加入在 Run 的串行化轮次里对照 owner 的租约检查（B-588）。以前是在子会话打开时检查，在这次检查与写入之间失去的租约，仍可能放过一次加入。被拒的加入记一条 warn，不重试。
 - 加入的写入失败时，和其他被跟踪的写入一样经 `run/store-write-failed` 宣告，不会重试。生产上目前还没有任何代码消费这个事件（BLOCKED-295）。
 - 两条已冻结的「缺席」用例（`restart.spec.ts` 与 `plugin.spec.ts`）仍然通过，因为它们只建根会话，但它们的标题已经不再描述产品。
