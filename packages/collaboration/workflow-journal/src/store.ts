@@ -57,7 +57,7 @@ export function writeJournal(directory: string, runId: string, journal: Workflow
  */
 export function setJournalAside(directory: string, runId: string, suffix: string): void {
   const aside = join(directory, 'refused')
-  mkdirSync(aside, { recursive: true, mode: 0o700 })
+  mkdirSync(aside, { recursive: true })
   let target = join(aside, `${runId}.${suffix}.json`)
   for (let n = 1; existsSync(target); n += 1) target = join(aside, `${runId}.${suffix}.${String(n)}.json`)
   renameSync(fileFor(directory, runId), target)
