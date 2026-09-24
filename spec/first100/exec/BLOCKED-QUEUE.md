@@ -8802,6 +8802,8 @@ Under the standard's rule for real defects (WORKING-MODEL §12), they become est
 2. A full run logs the whole-workspace count with 0 unsuppressed violations.
 3. Then a 4.4a–d and the row's first PASS sign-off.
 
+*Addendum 2026-09-24 (lane B, delegate ruling on where P0-04 v2's seam cases are frozen).* Closing condition 1 is implemented by `6f580f1274` on the candidate, the pick of P0-04's fix `9dfb1f7c4b`: `check-capability-seams.mjs` enumerates the packages `pnpm-workspace.yaml` declares. Its cases S1–S3 are frozen as P0-03 U supplement 1, command-freeze [340], with M-p and M-y as sensitivity (runs 35965405942 and 35965576704). Their coverage citations under acceptance[0] wait for that supplement's observation, because a citation on an ACCEPTED row has to close. Conditions 2 and 3 wait for a full run on a tree that carries the fix, and for the 4.4a–d.
+
 ### BLOCKED-322 — P0-05 stays ACCEPTED; its gate mechanism is provided on the shipped launch but no gate is declared and nothing evaluates one (open finding, not a withdrawal)
 
 **Status:** OPEN (2026-09-24). The row stays ACCEPTED under S12 (see BLOCKED-321). Owner: lane B, through P1-01's second commit. Found by the delegate while doing the 4.4a–d that P0-05 never had. The row has no sign-off entry.

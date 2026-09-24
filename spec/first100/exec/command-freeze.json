@@ -15851,6 +15851,46 @@
         "failureSummary": "Baseline: PRECHECK `c63520b26e44aa3d2bcd101d275c0dd1083b984c`, narrow run 35965074254: exactly the 42 predicted new cases red, 39 of them in this spec (E1-E3, C1-C9, A3, R2-R16, X1-X6, L1-L3, V1, N1) and S1-S3 in check-capability-seams.spec.ts; A1, A2, R1, K1, T11, T12 and every existing case green. The fix, run 35965093358: 173 passed / 0 failed, 59 of them in this spec. Per mutation, the cases red (labels resolve to fullNames through `artifacts/laneB/p0-04-v2-label-map.json`, sha256 `7a3cfd66a8938a10be377617c8b5dd1976bc385d47f103ee295d21fa08db4481`; Ex2, Ex3, Ex7 and Ex8 are [73]'s titles kept here, LD2 is frozen in P0-04 F): M-a, run 35965112984: E1, E2, E3, C1, R14, R15, R16, Ex2, LD2; M-b, run 35965133568: C1, Ex2, LD2; M-c, run 35965153467: C1, C2, C3, C4, C5, C8; M-d, run 35965173366: R3, R4, R5, R6; M-e, run 35965193298: R7, R8, R9, R10; M-f, run 35965214350: X1, X2, X3; M-g, run 35965235299: X4, X5; M-h, run 35965254088: X6; M-i, run 35965273235: L1; M-j, run 35965292494: L2; M-k, run 35965311201: L3; M-l, run 35965330430: K1, L3; M-m, run 35965349413: V1; M-n, run 35965368096: T11, V1; M-o, run 35965387074: T12; M-p, run 35965405942: S1, S2, S3; M-q, run 35965424329: R12, R13, R14, R15, R16; M-r, run 35965443086: R11, A3; M-s, run 35965462779: C5; M-t, run 35965481862: C6; M-u, run 35965500940: C7; M-v, run 35965519371: C8; M-w, run 35965538348: C9; M-x, run 35965557681: E3; M-y, run 35965576704: S3; M-z, run 35965595601: R1–R13, Ex7, L1; M-aa, run 35965616629: A1, A2, A3, R14, R15, R16, Ex2, Ex3, Ex7, LD2, N1; M-ab, run 35965636998: A2, R14, R15, R16, Ex2, Ex3, Ex7, LD2, N1; M-ac, run 35965656992: A3, Ex2, Ex3, LD2, N1; M-ad, run 35965676616: N1. All 32 readings match `artifacts/laneB/p0-04-predictions-v2.md` (sha256 `bdb9fd211891d72743ee2303ea84d48e6a00631ac531e380f4bb7646d00ea6cb`), written before dispatch; lane B compared each run's failed fullNames with the predicted set, equal in all 32."
       },
       "note": "P0-04 U v2 (lane B inbox B-548), superseding the U entry frozen at 2026-09-04T00:00:00Z. `tests/architecture/check-layer-deps.spec.ts` holds 59 cases at the fix: that entry's 14 bare titles, kept as frozen, and 45 new cases frozen by fullName. By clause: acceptance[0], E1-E3 (the checker scans exactly the packages `pnpm-workspace.yaml` declares and refuses a file that declares none) and C1-C9 (every unexempted cycle is reported, and an exemption record exempts only the cycle whose edges it names); acceptance[1] as S8 (4) narrowed it, A1-A3 (the three forms admitted to the Trust Kernel), N1 (admitted to `@deepseek-ai/dsh-trust-kernel` alone), R1-R16 (every other Cordis channel refused), K1 and X1-X6 (a provider or external package refused) and L1-L3 (an unexpired allowlist entry cannot suppress those); acceptance[2], T11 and V1 (the CLI passes within its time budget and fails past it) and T12 (it prints the shortest cycle path).\n\nThe U entry this one supersedes froze Ex7 over a fixture package named `@deepseek-ai/dsh-k`; the fixture now names the Trust Kernel, under the same title, so that observation is not of the case in the tree. Inputs cited besides the checker: `pnpm-workspace.yaml`, `architecture.layers.json`, `package.json`, `tests/first100/layer-cycle-exemptions.json` and `tests/first100/layer-package-map.json`.\n\nNot covered here: T11 and V1 run the CLI with a budget the case passes, 600 s and 0 ms, so they observe the budget comparison, not the 10-second default on the real workspace; the seam checker's cases S1-S3 are not in this spec."
+    },
+    {
+      "epic": "P0-03",
+      "stage": "U",
+      "supplements": {
+        "epic": "P0-03",
+        "stage": "U"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/architecture/check-capability-seams.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "the scanned workspace is the one pnpm-workspace.yaml declares (acceptance[0]) enumerates every package pnpm-workspace.yaml declares, not only packages/*/*",
+        "the scanned workspace is the one pnpm-workspace.yaml declares (acceptance[0]) scans the real workspace exactly as pnpm lists it",
+        "the scanned workspace is the one pnpm-workspace.yaml declares (acceptance[0]) the seam scanner refuses a pnpm-workspace.yaml that declares no packages"
+      ],
+      "files": [
+        "tests/architecture/check-capability-seams.spec.ts",
+        "scripts/architecture/check-capability-seams.mjs",
+        "pnpm-workspace.yaml",
+        ".agents/notes/implemented/architecture/2026-09-24-layer-checks-scan-the-declared-workspace.md",
+        ".agents/notes/implemented/architecture/2026-09-24-layer-checks-scan-the-declared-workspace.zh.md"
+      ],
+      "frozenAtUtc": "2026-09-24T09:57:51Z",
+      "dryRunProof": {
+        "treeSha": "9b5e886a8988a75cc08cdd881dd4abb9531bab07",
+        "testsDiscovered": 26
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations off P0-04's fix `9dfb1f7c4b58838cccf1f27dab8afbe2b9dc39f2`, each its own commit touching only `scripts/architecture/check-capability-seams.mjs`, never merged, each run by CI's narrow job at its own SHA over `tests/architecture/`. M-p (`be272f67013d040dce35c2faff2a92439d3595ea`) makes the seam checker enumerate `packages/*/*` instead of the packages `pnpm-workspace.yaml` declares. M-y (`d79811214ab5038fe5a43be5c27febfbd39a1cdf`) makes a `pnpm-workspace.yaml` that declares no packages leave the seam checker scanning nothing instead of refusing it.",
+        "failureSummary": "Baseline: PRECHECK `c63520b26e44aa3d2bcd101d275c0dd1083b984c`, narrow run 35965074254: S1, S2 and S3 red among the 42 new cases predicted; the fix, run 35965093358: 173 passed / 0 failed, 26 of them in this spec. M-p, run 35965405942: exactly S1, S2 and S3 red. M-y, run 35965576704: exactly S3 red. Both match `artifacts/laneB/p0-04-predictions-v2.md` (sha256 `bdb9fd211891d72743ee2303ea84d48e6a00631ac531e380f4bb7646d00ea6cb`), written before dispatch; lane B compared each run's failed fullNames with the predicted set. S1-S3 are the labels of `artifacts/laneB/p0-04-v2-label-map.json`."
+      },
+      "note": "P0-03's first U supplement, BLOCKED-321's closing condition 1: the seam checker enumerates the packages `pnpm-workspace.yaml` declares, where it used to scan only `packages/*/*/package.json` as consumers. The change came with P0-04's checker fix, `6f580f1274577d1f09b771bf319e4081077c19ea` on the candidate (the pick of `9dfb1f7c4b58838cccf1f27dab8afbe2b9dc39f2`). S1: the enumeration covers every declared package, not only `packages/*/*`. S2: on the real repository it scans exactly the workspace `pnpm ls` reports. S3: a `pnpm-workspace.yaml` that declares no packages is refused.\n\nP0-03 is ACCEPTED, so the three coverage citations under its acceptance[0] wait until this supplement is observed: a citation on an ACCEPTED row has to close. Not covered here: BLOCKED-321's conditions 2 and 3, a full run logging the whole-workspace count with 0 unsuppressed violations, and the 4.4a-d with the row's first PASS sign-off."
     }
   ]
 }

@@ -111,11 +111,36 @@
     },
     {
       "epic": "P0-03",
+      "path": ".agents/notes/implemented/architecture/2026-09-24-layer-checks-scan-the-declared-workspace.md",
+      "kind": "doc",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P0-03",
+      "path": ".agents/notes/implemented/architecture/2026-09-24-layer-checks-scan-the-declared-workspace.zh.md",
+      "kind": "doc",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P0-03",
       "path": "docs/glossary.zh.md",
       "kind": "doc",
       "stages": [
         "F"
       ]
+    },
+    {
+      "epic": "P0-03",
+      "path": "pnpm-workspace.yaml",
+      "kind": "source",
+      "stages": [
+        "U.1"
+      ],
+      "reason": "The workspace declaration the seam checker enumerates since P0-04's fix, cited by P0-03 U supplement 1 as an input and not changed by this epic: S1-S3 read the packages it declares, so an edit to its package patterns changes what they observe."
     },
     {
       "epic": "P0-03",
@@ -132,7 +157,8 @@
       "kind": "test",
       "stages": [
         "U",
-        "F"
+        "F",
+        "U.1"
       ]
     },
     {
