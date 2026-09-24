@@ -547,12 +547,13 @@ jobs:
           printf '{"exitCode": %d}\n' "$code" > .artifacts/first100/observations/vitest-e2e-acp.exit.json
           exit $code
 
-      - name: Workflow runs on shipped launches — a detached run (BLOCKED-323, BLOCKED-324) and a resumed one (P4-08)
+      - name: Workflow runs on shipped launches — a detached run (BLOCKED-323, BLOCKED-324), a resumed one (P4-08), and P2-01's host user and workflow hop
         if: always()
         # Keyless: stand-in models answer every request. Each frozen entry
-        # (P2-01.U.2, P2-01.U.3, and P4-08's resume case) is this step's
-        # command for its one file, without the two reporters; this report is
-        # their observation, for the reason the sdk step above gives.
+        # (P2-01.U.2, P2-01.U.3, P4-08's resume case, and P2-01.U.5 over its
+        # three files) is this step's command for its files, without the two
+        # reporters; this report is their observation, for the reason the sdk
+        # step above gives.
         # Its exit code goes beside its report, as in the suite step (BLOCKED-326).
         run: |
           set +e
@@ -560,6 +561,9 @@ jobs:
             apps/cli/tests/profiles/headless/tests/detached-workflow-exit.e2e.ts \
             apps/cli/tests/profiles/headless/tests/detached-workflow-cwd.e2e.ts \
             apps/cli/tests/profiles/acp/tests/workflow-resume.e2e.ts \
+            apps/cli/tests/profiles/headless/tests/host-user.e2e.ts \
+            apps/cli/tests/profiles/web/tests/host-user.e2e.ts \
+            apps/cli/tests/profiles/headless/tests/workflow-chain.e2e.ts \
             --reporter=json --outputFile=.artifacts/first100/observations/vitest-e2e-workflow.json --reporter=default
           code=$?
           set -e
