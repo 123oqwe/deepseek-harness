@@ -9,7 +9,15 @@ import { execa } from 'execa'
 import { describe, expect, it } from 'vitest'
 import { startStubModelServer, type StubModelServer } from '@deepseek-ai/dsh-session-snapshot'
 import { scanZstdFrames } from '@deepseek-ai/dsh-session-persistence-jsonl/src/zstd.js'
-import { attachedPrincipal, countRecords, persistedHostUserId, readSessionLog } from '../session-log.ts'
+import {
+  attachedIdentity,
+  attachedPrincipal,
+  countRecords,
+  DEFAULT_HOST_TENANT,
+  persistedHostUserId,
+  readPlainSessionLog,
+  readSessionLog,
+} from '../session-log.ts'
 
 const binScript = fileURLToPath(new URL('../../../src/bin.ts', import.meta.url))
 const repoRoot = fileURLToPath(new URL('../../../../../', import.meta.url))
@@ -125,7 +133,7 @@ function waitForLine(
 }
 
 /**
- * Run one whole turn of the shipped `sdk` profile against a stand-in model.
+ * Run one whole turn of a shipped SDK-server profile against a stand-in model.
  *
  * Launch to shutdown, because the identity question is about what a LAUNCH
  * attaches. One launch per call: this surface cannot continue a session it
@@ -133,10 +141,11 @@ function waitForLine(
  * rather than resumed (BLOCKED-298).
  * @param dshHome - harness home.
  * @param stub - the stand-in model endpoint, asked how many times it answered.
+ * @param profile - the shipped profile to launch: `sdk`, or `sdk-minimal`, which serves the same JSON-RPC server plugin.
  * @returns the methods of every request the server sent this driver.
  */
-async function runSdkTurn(dshHome: string, stub: StubModelServer): Promise<string[]> {
-  const child = execa(process.execPath, ['--import', 'tsx/esm', binScript, '--profile', 'sdk'], {
+async function runSdkTurn(dshHome: string, stub: StubModelServer, profile = 'sdk'): Promise<string[]> {
+  const child = execa(process.execPath, ['--import', 'tsx/esm', binScript, '--profile', profile], {
     cwd: repoRoot,
     env: {
       DSH_HOME: dshHome,
@@ -650,6 +659,65 @@ describe('Python SDK dsh profile keyless smoke', () => {
       // finish, and this says WHICH -- instead of the case dying of a timeout
       // that names nothing, which is what it did on run 35467913630.
       expect(firstLaunchRequests).toEqual([])
+    } finally {
+      await stub.close()
+      await rm(root, { recursive: true, force: true })
+    }
+  }, 120_000)
+
+  /*
+   * P2-01 acceptance[0] on the `sdk-minimal` profile. It serves the same
+   * JSON-RPC server plugin as `sdk` (`@deepseek-ai/dsh-sdk-jsonrpc-server`,
+   * `packages/bundle/sdk-minimal/cordis.patch.yml:30-31`) in a tree that does
+   * not layer over dsh-base, and `boot()` provides the host-user factory that
+   * plugin reads before any bundle mounts (`packages/boot/app-boot/src/index.ts:822`).
+   * So this case reads the same facts as the `sdk` case above from the
+   * durable log, and also the attached identity's chain: its root is the host
+   * user, it has one entry, and its tenant is the default one.
+   *
+   * The stand-in model answers the first request with one call of the
+   * persistent shell tool, which registers as `bash`
+   * (`packages/shell/tool-bash-persistent/src/index.ts:405`; the boot case
+   * above asserts it is this profile's only tool off Windows), and the second
+   * request, which carries that call's result, with text. This profile mounts
+   * no title provider, so those are the only two requests.
+   *
+   * Its `sessions` row writes uncompressed JSONL
+   * (`packages/bundle/sdk-minimal/cordis.patch.yml:235-239`), so the log is
+   * read as plain lines. There is no resume half: the request map is the
+   * `sdk` one (BLOCKED-298).
+   */
+  it('P2-01 acceptance[0]: a launched sdk-minimal session acts as the host user, attached once', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-sdk-minimal-host-user-'))
+    const dshHome = join(root, '.dsh')
+    const stub = await startStubModelServer({
+      toolCalls: [
+        { name: process.platform === 'win32' ? 'pwsh' : 'bash', arguments: { command: 'printf P2-01' } },
+        undefined,
+      ],
+    })
+    try {
+      const launchRequests = await runSdkTurn(dshHome, stub, 'sdk-minimal')
+      const log = await readPlainSessionLog(join(dshHome, 'sessions'))
+
+      const manifests = log.records.filter(record => record.type === 'action/manifest-appended')
+      expect(manifests.length).toBeGreaterThan(0)
+      expect(manifests[0]?.data?.actor).not.toMatch(/^anonymous:/)
+      expect(manifests[0]?.data?.actor).toBe(attachedPrincipal(log))
+      expect(countRecords(log, 'identity/attached')).toBe(1)
+      const hostUserId = await persistedHostUserId(dshHome)
+      expect(attachedPrincipal(log)).toBe(hostUserId)
+
+      // The whole chain the attachment carries, not only the acting principal:
+      // one entry, the host user, in the tenant `resolveTenantId` falls back to
+      // when nothing names another.
+      const hostUser = { kind: 'user', id: hostUserId, tenantId: DEFAULT_HOST_TENANT }
+      const identity = attachedIdentity(log)
+      expect(identity.chain?.entries).toHaveLength(1)
+      expect(identity.chain?.entries?.[0]?.principal).toEqual(hostUser)
+      expect(identity.principal).toEqual(hostUser)
+
+      expect(launchRequests).toEqual([])
     } finally {
       await stub.close()
       await rm(root, { recursive: true, force: true })
