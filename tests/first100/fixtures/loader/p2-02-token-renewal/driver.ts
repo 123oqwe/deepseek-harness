@@ -18,11 +18,16 @@
  *   after its token has expired, then, with the parent's token expired, a
  *   second child that calls the probe at once;
  * - `ptc`: code mode, one turn whose `run_code` program calls the probe after
- *   the token the call presented has expired.
+ *   the token the call presented has expired;
+ * - `workflow`: one turn in which the root starts a detached workflow whose
+ *   script runs a child that calls the probe after its token has expired, and
+ *   then a child that calls it at once.
  *
- * Tokens are reported by digest and claims, never by nonce. Whether a session
- * ran the probe is read from that session's own tool results. It prints one
- * `P2-02-RENEWAL <json>` line.
+ * The operator also allows `workflow`. Tokens are reported by digest and
+ * claims, never by nonce. Whether a session ran the probe is read from that
+ * session's own tool results; at a child's first tool result the driver also
+ * reads the token its parent session (from the session header) and the root
+ * hold. It prints one `P2-02-RENEWAL <json>` line.
  * @module tests/first100/fixtures/loader/p2-02-token-renewal/driver
  */
 
@@ -50,15 +55,19 @@ const PROVIDER = 'p2-02-token-renewal-mock'
 const PROBE_TOOL = 'a390_probe'
 /** The probe's result text when it ran. */
 const PROBE_RAN = 'probe ran'
+/** The shipped workflow tool's name. */
+const WORKFLOW_TOOL = 'workflow'
 /** How long after the latest expiry a later turn starts. */
 const PAST_EXPIRY_MS = 300
 /** Longest wait for a child's first token, and for its first tool result. */
 const CHILD_WAIT_MS = 8_000
+/** Longest wait for both workflow children's first tool results. */
+const WORKFLOW_WAIT_MS = 20_000
 /** Polling interval for the waits above. */
 const POLL_MS = 10
 
-/** The four scenarios. */
-const SCENARIOS = ['root', 'revoke', 'child', 'ptc'] as const
+/** The five scenarios. */
+const SCENARIOS = ['root', 'revoke', 'child', 'ptc', 'workflow'] as const
 type Scenario = typeof SCENARIOS[number]
 
 /** One token, by digest and claims. */
@@ -83,11 +92,13 @@ interface TurnReading {
   readonly results: readonly string[]
 }
 
-/** What a child and its parent held when the child's first tool result arrived. */
+/** What a child, its parent session and the root held when the child's first tool result arrived. */
 interface CallReading {
   readonly at: number
   readonly held: TokenReading | null
+  readonly parentSession: string | null
   readonly parentHeld: TokenReading | null
+  readonly rootHeld: TokenReading | null
 }
 
 /** What one child did. */
@@ -157,9 +168,11 @@ try {
     // The shipped headless profile asks once whether to trust the workspace;
     // the operator declines, which grants nothing. In code mode `run_code`
     // declares no risk domain tags, so the gate asks about it; the operator
-    // allows it so the program can make the probe call.
+    // allows it so the program can make the probe call. `workflow`, if asked
+    // about, is allowed so the detached run can start its children.
     otherQuestions.push(request.toolName)
-    return Promise.resolve(request.toolName === RUN_CODE_NAME ? 'allowed-once' as const : 'rejected' as const)
+    const allowed = request.toolName === RUN_CODE_NAME || request.toolName === WORKFLOW_TOOL
+    return Promise.resolve(allowed ? 'allowed-once' as const : 'rejected' as const)
   })
 
   // Created after boot, as a shipped launcher creates its root agent, so its
@@ -177,31 +190,37 @@ try {
 
   const results = new Map<string, string[]>()
   const childCalls = new Map<string, CallReading>()
+  const firstEvents = new Map<string, number>()
   ctx.on('session/event', (session, event) => {
+    if (session.id !== agent.id && !firstEvents.has(session.id)) firstEvents.set(session.id, Date.now())
     if (event.type !== 'tool/result') return
     const text = event.data.message.content.flatMap(block =>
       block.type === 'tool-result' ? block.content.flatMap(part => part.type === 'text' ? [part.text] : []) : []).join('')
     results.set(session.id, [...results.get(session.id) ?? [], text])
     if (session.id !== agent.id && !childCalls.has(session.id)) {
+      const parentSession = session.header.parentSession ?? null
       childCalls.set(session.id, {
         at: Date.now(),
         held: readToken(tokens.sessionToken(session.id)),
-        parentHeld: readToken(tokens.sessionToken(agent.id)),
+        parentSession,
+        parentHeld: readToken(tokens.sessionToken(parentSession ?? agent.id)),
+        rootHeld: readToken(tokens.sessionToken(agent.id)),
       })
     }
   })
 
   /**
-   * Run one root turn whose model opens with a probe call, and read what it did.
+   * Run one root turn whose model opens with the call its marker names, and read what it did.
    * @param label - the turn's name in the report.
+   * @param marker - the scripted model's marker: a probe call by default.
    * @returns the turn's reading.
    */
-  const turn = async (label: string): Promise<TurnReading> => {
+  const turn = async (label: string, marker = 'A-390-PROBE'): Promise<TurnReading> => {
     const startedAt = Date.now()
     const heldAtStart = readToken(tokens.sessionToken(agent.id))
     const runsBefore = probeRuns
     const seen = results.get(agent.id)?.length ?? 0
-    await runFixtureTurn(ctx, { task: `A-390-PROBE: ${label}` })
+    await runFixtureTurn(ctx, { task: `${marker}: ${label}` })
     return {
       label,
       startedAt,
@@ -272,6 +291,17 @@ try {
     const late = await child(agent, 'A-390-CHILD-LATE: call the probe once your first request returns.')
     const afterExpiry = await child(agent, 'A-390-CHILD: call the probe at once.')
     report = { turns: [first], children: { late, afterExpiry } }
+  } else if (selected === 'workflow') {
+    const first = await turn('1: the root starts a detached workflow of two children', 'A-390-WORKFLOW')
+    for (let waited = 0; childCalls.size < 2 && waited < WORKFLOW_WAIT_MS; waited += POLL_MS) await delay(POLL_MS)
+    const workflowAgents = [...childCalls].map(([session, call]) => ({
+      session,
+      firstEventAt: firstEvents.get(session) ?? null,
+      call,
+      probeRan: (results.get(session) ?? []).includes(PROBE_RAN),
+      results: results.get(session) ?? [],
+    })).sort((one, other) => (one.firstEventAt ?? 0) - (other.firstEventAt ?? 0))
+    report = { turns: [first], workflowAgents }
   } else {
     report = { turns: [await turn('1: the program calls the probe after the token has expired')] }
   }

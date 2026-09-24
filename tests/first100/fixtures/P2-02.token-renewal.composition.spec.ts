@@ -7,8 +7,10 @@
  * with a 1.5-second session-token TTL and a read-only probe tool, and runs one
  * scenario per describe: the root token past its expiry (condition 1), a
  * revoked root (condition 2), children whose tokens expire or whose parent's
- * token has expired (condition 3), and a code-mode program whose probe call
- * outlives the token its `run_code` call presented (condition 4).
+ * token has expired (condition 3), a code-mode program whose probe call
+ * outlives the token its `run_code` call presented (condition 4), and the
+ * children of a detached workflow the root started (condition 3's workflow
+ * half).
  * @module tests/first100/fixtures/P2-02.token-renewal.composition
  */
 
@@ -60,12 +62,26 @@ interface ChildReading {
   readonly results: readonly string[]
 }
 
+/** One child of the detached workflow, as the driver reports it. */
+interface WorkflowAgentReading {
+  readonly firstEventAt: number | null
+  readonly call: {
+    readonly at: number
+    readonly held: TokenReading | null
+    readonly parentHeld: TokenReading | null
+    readonly rootHeld: TokenReading | null
+  } | null
+  readonly probeRan: boolean
+  readonly results: readonly string[]
+}
+
 /** What the driver reported, as far as these cases read it. */
 interface Report {
   readonly turns: readonly TurnReading[]
   readonly revocation?: string
   readonly digestsBeforeRevocation?: readonly string[]
   readonly children?: { readonly late: ChildReading; readonly afterExpiry: ChildReading }
+  readonly workflowAgents?: readonly WorkflowAgentReading[]
 }
 
 /**
@@ -73,7 +89,7 @@ interface Report {
  * @param scenario - the scenario the driver runs.
  * @returns the driver's report.
  */
-async function observe(scenario: 'root' | 'revoke' | 'child' | 'ptc'): Promise<Report> {
+async function observe(scenario: 'root' | 'revoke' | 'child' | 'ptc' | 'workflow'): Promise<Report> {
   const { stdout, stderr } = await runLoaderSmoke({
     label: `BLOCKED-331 observation: ${scenario}`,
     tempDirPrefix: `p2-02-token-renewal-${scenario}-`,
@@ -201,5 +217,50 @@ describe('BLOCKED-331 condition 4: a code-mode call that outlives the token of i
     const renewed = outcome === 'probe tool ran'
     const saysSo = /expired/iu.test(outcome) && /run_code|program|batch|code[- ]mode/iu.test(outcome)
     expect(renewed || saysSo, outcome).toBe(true)
+  })
+})
+
+describe('BLOCKED-331 condition 3, workflow half: the children of a detached workflow are re-derived when their tokens expire and never born expired', () => {
+  const reports: Report[] = []
+  beforeAll(async () => { reports.push(await observe('workflow')) }, DRIVER_TIMEOUT_MS + 15_000)
+
+  it('control: the root started a detached run, both workflow children called the probe, and the root token expired before the first child called and before the second child started', () => {
+    const report = reports[0]
+    const [late, afterExpiry] = report?.workflowAgents ?? []
+    expect(report?.turns[0]?.results.filter(result => /refused/iu.test(result))).toEqual([])
+    expect(report?.workflowAgents).toHaveLength(2)
+    const expiry = report?.turns[0]?.heldAfter?.expiresAt ?? Number.POSITIVE_INFINITY
+    expect(expiry).toBeLessThan(late?.call?.at ?? 0)
+    expect(expiry).toBeLessThan(afterExpiry?.firstEventAt ?? 0)
+  })
+
+  it('the first workflow child, whose token expired before its call, has it re-derived: the probe runs and no result says the token has expired', () => {
+    const late = reports[0]?.workflowAgents?.[0]
+    expect(late?.probeRan, JSON.stringify(late?.results)).toBe(true)
+    expect(late?.results.filter(result => result.includes(EXPIRED))).toEqual([])
+  })
+
+  it('the second workflow child, started after the root token expired, is not born expired: its probe runs and its token has not expired when it calls', () => {
+    const afterExpiry = reports[0]?.workflowAgents?.[1]
+    expect(afterExpiry?.probeRan, JSON.stringify(afterExpiry?.results)).toBe(true)
+    expect(afterExpiry?.call?.held?.expiresAt).toBeGreaterThan(afterExpiry?.call?.at ?? Number.POSITIVE_INFINITY)
+  })
+
+  it('guard: when each workflow child calls, its token is derived from the detached session token of that moment, which is derived from the root token of that moment, and neither outlives its parent', () => {
+    expect(reports[0]?.workflowAgents).toHaveLength(2)
+    for (const child of reports[0]?.workflowAgents ?? []) {
+      const { held, parentHeld, rootHeld } = child.call ?? { held: null, parentHeld: null, rootHeld: null }
+      expect({ held, parentHeld, rootHeld }, 'the child, its detached session and the root each held a token').toEqual({
+        held: expect.anything() as unknown,
+        parentHeld: expect.anything() as unknown,
+        rootHeld: expect.anything() as unknown,
+      })
+      expect(held?.parentDigest).toBe(parentHeld?.digest)
+      expect(held?.expiresAt).toBeLessThanOrEqual(parentHeld?.expiresAt ?? Number.NEGATIVE_INFINITY)
+      expect(held?.delegationDepth).toBe((parentHeld?.delegationDepth ?? Number.NaN) + 1)
+      expect(parentHeld?.parentDigest).toBe(rootHeld?.digest)
+      expect(parentHeld?.expiresAt).toBeLessThanOrEqual(rootHeld?.expiresAt ?? Number.NEGATIVE_INFINITY)
+      expect(parentHeld?.delegationDepth).toBe((rootHeld?.delegationDepth ?? Number.NaN) + 1)
+    }
   })
 })

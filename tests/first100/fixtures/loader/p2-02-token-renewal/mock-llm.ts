@@ -9,6 +9,8 @@
  * - `A-390-CHILD-LATE`: after {@link LATE_MS}, one probe call, so the child's
  *   token has expired by the time the call presents it;
  * - `A-390-CHILD`: one probe call at once;
+ * - `A-390-WORKFLOW`: one detached `workflow` call whose script runs an
+ *   `A-390-CHILD-LATE` child and then an `A-390-CHILD` child;
  * - `A-390-PROBE`: one probe call, or in code mode (`DSH_TOOLS_MODE=ptc`) one
  *   `run_code` call whose program waits {@link LATE_MS}, calls the probe, and
  *   returns the outcome prefixed with `A390-RAN: `;
@@ -40,6 +42,13 @@ const PROGRAM = [
   '}',
 ].join('\n')
 
+/** The detached workflow's script: two children in turn, the first of which calls late. */
+const WORKFLOW_SCRIPT = [
+  "const late = await agent('A-390-CHILD-LATE: call the probe once your first request returns.')",
+  "const afterExpiry = await agent('A-390-CHILD: call the probe at once.')",
+  'return [late, afterExpiry]',
+].join('\n')
+
 let calls = 0
 
 /**
@@ -58,6 +67,16 @@ function answer(options: GenerateOptions): { readonly chunks: StreamChunk[]; rea
   const id = `p2-02-token-renewal-${String(++calls)}`
   if (text.includes('A-390-CHILD-LATE')) return { chunks: toolCallResponse(id, PROBE_TOOL, {}), waitMs: LATE_MS }
   if (text.includes('A-390-CHILD')) return { chunks: toolCallResponse(id, PROBE_TOOL, {}), waitMs: 0 }
+  if (text.includes('A-390-WORKFLOW')) {
+    return {
+      chunks: toolCallResponse(id, 'workflow', {
+        script: WORKFLOW_SCRIPT,
+        meta: { name: 'a390-renewal', description: 'two children whose tokens are derived from a detached run' },
+        detached: true,
+      }),
+      waitMs: 0,
+    }
+  }
   if (!text.includes('A-390-PROBE')) return { chunks: textResponse('ok'), waitMs: 0 }
   return {
     chunks: process.env.DSH_TOOLS_MODE === 'ptc'
