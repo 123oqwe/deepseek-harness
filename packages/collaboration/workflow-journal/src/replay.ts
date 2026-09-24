@@ -101,7 +101,7 @@ export function compactJournal(journal: WorkflowJournal): WorkflowJournal {
   const entries: JournalEntry[] = journal.entries.map((entry) => {
     const compactable = entry.outcome === 'completed' && entry.verified
     if (!compactable) return entry
-    return { ...entry, inputs: [] as readonly ArtifactRef[] }
+    return { ...Object.fromEntries(Object.entries(entry).filter(([field]) => field !== 'call')) as JournalEntry, inputs: [] as readonly ArtifactRef[] }
   })
   // Displaced entries are kept whole: each is another call's record, reusable
   // by a later resume, with receipts nothing else holds.
