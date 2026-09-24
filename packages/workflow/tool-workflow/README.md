@@ -33,6 +33,8 @@ The model submits `meta` (identity data: `name`, `description`, and optional `wh
 
 Success returns the canonical envelope `{ runId, agentsStarted, result }`, rendered to the model as `workflow "<name>" completed (<count> agent<optional-s>).` followed by `Return value:` and the pretty-printed JSON. A workflow that cannot start — a script parse or meta validation failure — returns an error the model can correct from. Cancellation and execution failures return `Error: workflow run was cancelled` or `Error: workflow run failed: <error>`; partial output is never reported as success.
 
+`resume: "<runId>"` continues an interrupted run under the same id through `engine.resume` instead of starting a new one. The call carries the `script` and `meta` the run was started with; each `agent()` step that the run's journal records as completed, and whose child's durable session log shows it finished, returns that child's recorded output without starting it again. The id names the run's journal file and lease row, so it may contain only ASCII letters, digits, `_` and `-`; any other value is refused with `` workflow tool: `resume` must be a runId a workflow run reported, not "<value>" ``, and `resume` together with `detached: true` is refused with `` workflow tool: `resume` continues a run in the foreground — give it without `detached` ``. An id with no journal starts the run fresh under that id. A journal written under a different script is not continued: the run starts over from its first step under the same id, the envelope carries `resumeRefused: { reason, detail }`, and the text the model reads begins with `resume refused (<reason>): the run started over from its first step.`
+
 ### Detached runs
 
 `detached: true` starts the run and returns its `runId` at once, leaving it running after the turn ends; `attach: "<runId>"` — with no `script` or `meta` — collects that run's value, in the same turn or a later one. A detached run holds its OWN agent and session, inheriting the launcher's LLM route, so nothing about it depends on the turn that started it, and it is deliberately NOT bound to the turn's abort signal. An id that reaches no run is refused by name: it was never started here, or its outcome was already collected. The foreground path is unchanged and remains the default, because a run whose value arrives in the same call cannot be forgotten.
@@ -143,7 +145,7 @@ Prefix-stable while `toolName`, definition, and visibility are unchanged. Renami
 
 #### What the model sees
 
-The full model-written script, metadata, and args remain in the assistant tool call. Success is exactly `workflow "<name>" completed (<count> agent<optional-s>).`, newline, `Return value:`, newline, and pretty-printed data-dependent JSON; a cap adds `… [truncated: <omitted> more characters]` on a new line. Failures are exactly `Error: workflow run was cancelled`, optionally suffixed ` (<error>)`, `Error: workflow run failed: <error-or-unknown error>`, or defensively `Error: workflow run ended abnormally (<reason>)`; a call without an owning agent becomes `Error: workflow tool requires a calling agent (exec.agent was undefined)`. Intermediate child messages are omitted.
+The full model-written script, metadata, and args remain in the assistant tool call. Success is exactly `workflow "<name>" completed (<count> agent<optional-s>).`, newline, `Return value:`, newline, and pretty-printed data-dependent JSON; a cap adds `… [truncated: <omitted> more characters]` on a new line. Failures are exactly `Error: workflow run was cancelled`, optionally suffixed ` (<error>)`, `Error: workflow run failed: <error-or-unknown error>`, or defensively `Error: workflow run ended abnormally (<reason>)`; a call without an owning agent becomes `Error: workflow tool requires a calling agent (exec.agent was undefined)`. Intermediate child messages are omitted. When a resume is refused for a changed script, the result text begins with the line `resume refused (<reason>): the run started over from its first step.`
 
 #### Token effect
 
@@ -164,6 +166,7 @@ These limits define what the tool does not yet support. They are current constra
 - **`args` must be an object and Native result text is bounded** — callers wrap top-level arrays and scalars in a field; the canonical workflow result stays complete, while JSON beyond `maxResultChars` is truncated in the model-facing projection rather than stored behind a retrieval handle.
 - **Workflow policy is fixed per tool registration** — provider selection, caps, and tool name are deployment config, not model-call arguments.
 - **Durable records are top-level and observational** — nested PTC mode dispatches are not recorded, and a recording failure intentionally degrades to an incomplete prefix rather than changing execution.
+- **Nothing on the shipped product hands the model a crashed run's id** — a foreground result's text does not include its `runId`, and a run interrupted by a crash returns no result, so a `resume` id comes from outside the conversation, such as a journal file name in the DSH home's `journals` directory.
 
 <a id="dev-note"></a>
 ### Dev Note
