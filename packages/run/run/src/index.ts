@@ -545,7 +545,6 @@ export class RunService {
    */
   async recordProvenance(id: RunId, provenance: RunProvenance): Promise<Run> {
     return await this.serialize(id, (current) => {
-      if (current.provenance !== undefined) return { run: undefined, result: current }
       const run: Run = { ...current, provenance }
       return { run, result: run }
     })
