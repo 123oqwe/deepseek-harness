@@ -313,7 +313,7 @@ export class HarnessClient {
         version: result.serverInfo.version,
       }),
       ...readNegotiation(result.negotiation),
-      ...readRange('protocolVersions', result.protocolVersions),
+      ...readRange('protocolVersions', undefined),
       ...typeof result.schemaFingerprint === 'string' ? { schemaFingerprint: result.schemaFingerprint } : {},
       // The host control state, when the server sent one. The comment above
       // records that this rebuild once dropped every field but `serverInfo`;
