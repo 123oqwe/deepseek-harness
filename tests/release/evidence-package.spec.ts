@@ -784,6 +784,93 @@ describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', () =
     })
   })
 
+  describe('acceptance[0]: configuration the package binds, changed after collection, makes verify fail', () => {
+    // Each row changes one input `baseline-fingerprint.mjs` fingerprints and
+    // leaves `.dsh/baseline.json` itself alone, so verify can only report it by
+    // re-deriving the fingerprint from the checkout. The lockfile and schema
+    // contents are the ones `tests/release/baseline-fingerprint.spec.ts` uses.
+    const CONFIGURATION_CHANGES: readonly (readonly [label: string, reported: string, change: (root: string) => void])[] = [
+      ['pnpm-lock.yaml content', 'pnpm-lock.yaml (pnpmLockHash)', (root) => {
+        write(root, 'pnpm-lock.yaml', "lockfileVersion: '9.0'\npackages:\n  tampered: true\n")
+      }],
+      ['a protocol schema file', 'packages/sdk/protocol/src/types.ts (protocolSchemaHashes)', (root) => {
+        write(root, 'packages/sdk/protocol/src/types.ts', 'export interface Envelope {\n  kind: string\n  tampered: true\n}\n')
+      }],
+      ['a default bundle row id', 'packages/bundle/base/cordis.patch.yml (defaultBundleRowIds)', (root) => {
+        write(root, 'packages/bundle/base/cordis.patch.yml', 'rows:\n  - id: row-alpha\n  - id: row-beta\n')
+      }],
+      // The field only: `baseline-fingerprint.mjs` owns which path a
+      // workspace-set drift names.
+      ['the workspace package set', '(workspacePackages)', (root) => {
+        write(root, 'packages/extra/package.json', `${JSON.stringify({ name: '@fixture/extra' })}\n`)
+      }],
+      ['HEAD (a new commit)', 'HEAD (gitSha)', (root) => {
+        git(root, ['commit', '--allow-empty', '-m', 'a commit after collection'])
+      }],
+    ]
+
+    it.each(CONFIGURATION_CHANGES)('detects %s changed after collection, with .dsh/baseline.json itself untouched', (_label, reported, change) => {
+      const { root } = collectOneAcceptedGate()
+      change(root)
+
+      const result = verifyEvidence(root)
+      expect(result.status, result.stdout).toBe(1)
+      expect(result.stdout).toContain('baseline drift since collection: ')
+      expect(result.stdout).toContain(reported)
+      expect(result.stdout).not.toContain('baselineFingerprint digest mismatch')
+    })
+
+    // Both edits leave valid JSON. The `requiredArtifactPaths` row is one no
+    // cross-check can replace: `build-artifact` records any path it is given,
+    // so the package alone does not say which paths `init` declared.
+    const MANIFEST_EDITS: readonly (readonly [label: string, field: 'requiredGateIds' | 'requiredArtifactPaths'])[] = [
+      ['requiredGateIds (the required gate dropped)', 'requiredGateIds'],
+      ['requiredArtifactPaths (the recorded required artifact dropped)', 'requiredArtifactPaths'],
+    ]
+
+    it.each(MANIFEST_EDITS)('detects the manifest sidecar\'s %s edited after collection', (_label, field) => {
+      const { root } = collectOneAcceptedGate()
+      const manifestPath = join(root, '.dsh/evidence/evidence.d/manifest.json')
+      const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as { requiredArtifactPaths: string[], requiredGateIds: string[] }
+      expect(manifest[field], 'precondition: the list this edit empties is not empty already').not.toHaveLength(0)
+      writeFileSync(manifestPath, `${JSON.stringify({ ...manifest, [field]: [] }, null, 2)}\n`)
+
+      const result = verifyEvidence(root)
+      expect(result.status, result.stdout).toBe(1)
+      expect(result.stdout).toContain('sidecar manifest digest mismatch')
+    })
+  })
+
+  describe('acceptance[2] (narrowed): the result line of verify names the package path and its accepted status', () => {
+    const RESULT_LINES: readonly (readonly [label: string, prepare: () => string, status: number, accepted: string])[] = [
+      ['an accepted package that verifies clean', () => collectOneAcceptedGate().root, 0, 'accepted=true'],
+      ['a package that verifies clean and is not accepted', () => {
+        const { root, baseSha } = makeEvidenceFixture()
+        captureBaseline(root)
+        expect(collectInit(root, baseSha, ['e2e'], []).status).toBe(0)
+        expect(collectRun(root, 'e2e', ['--required', '--skip', 'no DEEPSEEK_API_KEY'], []).status).toBe(0)
+        expect(readEvidence(root).accepted, 'precondition: a skipped required gate leaves the package unaccepted').toBe(false)
+        return root
+      }, 0, 'accepted=false'],
+      ['an accepted package that fails verification', () => {
+        const { root } = collectOneAcceptedGate()
+        const logPath = join(root, '.dsh/evidence/evidence.d/logs/typecheck.log')
+        writeFileSync(logPath, `${readFileSync(logPath, 'utf8')}TAMPERED\n`)
+        return root
+      }, 1, 'accepted=true'],
+    ]
+
+    it.each(RESULT_LINES)('prints the package path and its accepted status on its result line (%s)', (_label, prepare, status, accepted) => {
+      const root = prepare()
+
+      const result = verifyEvidence(root)
+      expect(result.status, result.stdout).toBe(status)
+      const [resultLine] = result.stdout.split('\n')
+      expect(resultLine).toContain(join(root, '.dsh/evidence/evidence.json'))
+      expect(resultLine).toContain(accepted)
+    })
+  })
+
   describe('Epic P0-07 F-stage: must[2] fault/qualification hardening beyond acceptance[0]\'s existing coverage', () => {
     /**
      * An independent re-implementation of `collect-evidence.mjs`'s own
