@@ -291,7 +291,7 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       try {
         const reader = await persistence.open(id, 'read')
         try {
-          return (await reader.read()).events.some(event => event.type === 'turn/end')
+          return false
         } finally {
           await reader.close()
         }
