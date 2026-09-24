@@ -1580,9 +1580,6 @@ export class ToolRuntime extends Service {
     if (entries !== undefined) {
       const entry = nearestEntryName(chain, entries)
       if (entry !== undefined) return { identity: brandString<PluginIdentity>(entry), origin: 'static' }
-      if (chain.length > 1) {
-        throw new Error(`dsh-tools: registration from fiber ${JSON.stringify(this.ctx.fiber.name)} outside every Loader entry is refused: outside an entry, the only identity a fiber has is the name it gave itself`)
-      }
     }
     return { identity: brandString<PluginIdentity>(this.ctx.fiber.name), origin: 'static' }
   }
