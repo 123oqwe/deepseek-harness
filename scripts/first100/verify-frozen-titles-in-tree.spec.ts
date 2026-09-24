@@ -13,9 +13,10 @@
  * `pnpm` stands in for that listing.
  */
 import { spawnSync } from 'node:child_process'
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { delimiter, dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import * as yaml from 'js-yaml'
 import { afterEach, describe, expect, it } from 'vitest'
 import { findOrphans } from './verify-frozen-titles-in-tree.mjs'
@@ -80,8 +81,8 @@ describe('BLOCKED-226: every live entry is checked, not the last one per cell', 
   })
 })
 
-/** The modules the gate loads, copied beside it into each fixture tree. */
-const GATE_MODULES = ['verify-frozen-titles-in-tree.mjs', 'frozen-title-renames.mjs', 'verify-frozen-titles-resolvable.mjs']
+/** Every module in this directory, copied into each fixture tree, since the gate imports `generate-ledger.mjs`. */
+const GATE_MODULES = readdirSync(new URL('.', import.meta.url)).filter(name => name.endsWith('.mjs'))
 
 /** Stands in for `pnpm exec vitest list --json`: the default config lists the unit case and no e2e case. */
 const LISTING_PNPM = `#!/usr/bin/env node
@@ -131,6 +132,7 @@ function runGateOverE2eFreeze(
     writeFileSync(join(tree, path), text)
   }
   chmodSync(join(tree, 'bin/pnpm'), 0o755)
+  symlinkSync(fileURLToPath(new URL('../../node_modules', import.meta.url)), join(tree, 'node_modules'))
   const result = spawnSync(process.execPath, [join(tree, 'scripts/first100/verify-frozen-titles-in-tree.mjs'), ...gateArgs], {
     cwd: tree,
     encoding: 'utf8',

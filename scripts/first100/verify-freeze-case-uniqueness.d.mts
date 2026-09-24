@@ -51,8 +51,8 @@ export interface OwnConfigReport {
 }
 
 /**
- * The report that observes each live entry frozen under its own vitest config: the first of `reports` that ran
- * every test path its argv names.
+ * The report that observes each live entry frozen under its own vitest config: the first of `reports` whose file
+ * name records the entry's config and that ran every test path its argv names.
  * @param entries - command-freeze entries; superseded entries and entries naming no config are skipped.
  * @param reports - the `--e2e-report` reports in argument order.
  * @returns `owned`, one `{ entry, path }` per entry observed, and `refusals`, one message per entry that is not.

@@ -268,20 +268,23 @@ export interface ReportDirVerdict {
 export function reportDirMatchesCandidate(reportPath: string, candidateSha: string, gitRoot?: string): ReportDirVerdict
 
 /**
- * The vitest config and the test paths a frozen `vitest run` argv names.
+ * The vitest config and the test paths a frozen `vitest run` argv names. `--config <path>`, `--config=<path>`,
+ * `-c <path>` and `-c=<path>` name the config.
  * @param argv - a freeze entry's `argv`.
  * @returns `config`, `undefined` when the argv names none, and `paths` without a leading `./` or trailing `/`.
  */
 export function frozenCommand(argv: readonly string[]): { config: string | undefined; paths: string[] }
 
 /**
- * Why a report cannot observe an entry frozen under its own vitest config, or `null` when it can.
+ * Why a report cannot observe a frozen entry, or `null` when it can. The report's file name must be one
+ * `first100-exact-sha.yml` writes and must record the config the argv names (`vitest-report.json` for an argv naming
+ * none); a report of a named config must also have run every test path the argv names, and the argv must name one.
  * @param argv - the frozen entry's `argv`.
  * @param reportFiles - the report's `testResults[].name`, absolute on the machine that ran it.
- * @param reportPath - the report's path.
- * @returns the refusal, or `null` when the argv names no config or the report ran every test path it names.
+ * @param reportPath - the report's path; its file name records the config the report ran under.
+ * @returns the refusal, or `null`.
  */
-export function configFrozenReportRefusal(argv: readonly string[], reportFiles: readonly string[], reportPath?: string): string | null
+export function configFrozenReportRefusal(argv: readonly string[], reportFiles: readonly string[], reportPath: string): string | null
 
 /** One EXEC-STATE digest that no longer matches its file. `recorded` is `undefined` when the digest is absent. */
 export interface ExecStateDigestDrift {

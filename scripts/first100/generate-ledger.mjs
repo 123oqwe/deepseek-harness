@@ -923,9 +923,10 @@ function assertReportDirMatchesCandidate(reportPath, candidateSha) {
 /**
  * The vitest config and the test paths a frozen `vitest run` argv names.
  *
- * `--config <path>`, `--config=<path>` and `-c <path>` name the config; the
- * pattern after `-t` or `--testNamePattern` and every other flag are dropped;
- * each remaining token is a test path, without a leading `./` or trailing `/`.
+ * `--config <path>`, `--config=<path>`, `-c <path>` and `-c=<path>` name the
+ * config; the pattern after `-t` or `--testNamePattern` and every other flag
+ * are dropped; each remaining token is a test path, without a leading `./` or
+ * trailing `/`.
  * @param argv - a freeze entry's `argv`.
  * @returns `config`, `undefined` when the argv names none, and `paths`.
  */
@@ -937,8 +938,8 @@ export function frozenCommand(argv) {
     if (token === '--config' || token === '-c') {
       config = argv[index + 1]
       index += 1
-    } else if (token.startsWith('--config=')) {
-      config = token.slice('--config='.length)
+    } else if (token.startsWith('--config=') || token.startsWith('-c=')) {
+      config = token.slice(token.indexOf('=') + 1)
     } else if (token === '-t' || token === '--testNamePattern') {
       index += 1
     } else if (!token.startsWith('-')) {
@@ -949,23 +950,51 @@ export function frozenCommand(argv) {
 }
 
 /**
- * Why a report cannot observe an entry frozen under its own vitest config, or `null` when it can.
+ * The vitest config each report `first100-exact-sha.yml` writes ran under, by
+ * file name; `undefined` is the default config.
+ */
+const REPORT_CONFIGS = new Map([
+  ['vitest-report.json', undefined],
+  ['vitest-e2e-sdk-keyless-smoke.json', 'vitest.e2e.config.ts'],
+  ['vitest-e2e-acp.json', 'vitest.e2e.config.ts'],
+  ['vitest-e2e-workflow.json', 'vitest.e2e.config.ts'],
+  ['vitest-snapshot.json', 'vitest.snapshot.config.ts'],
+])
+
+/**
+ * Why a report cannot observe a frozen entry, or `null` when it can.
  *
  * The full-suite observation is a run of the default config, so it never
  * contains a file that only another config includes. An entry frozen as
  * `vitest run --config vitest.e2e.config.ts <file>` (P4-05.U.4) is observed by
  * the report its own step in `first100-exact-sha.yml` writes beside the
  * full-suite report (the e2e steps, the recorded-session snapshot step); that
- * report must have run every test path the frozen argv names. An argv that
- * names no config returns `null`, so the full-suite report observes it as
- * before.
+ * report must have run every test path the frozen argv names, and the argv
+ * must name one.
+ *
+ * A vitest JSON report does not record its config, so the report's file name
+ * stands for it (`REPORT_CONFIGS`): a report observes only the entries frozen
+ * under the config it ran under. `vitest-report.json`, the full-suite report,
+ * observes every entry whose argv names no config, and no other entry; a name
+ * no step in `first100-exact-sha.yml` writes observes nothing.
  * @param argv - the frozen entry's `argv`.
  * @param reportFiles - the report's `testResults[].name`, absolute on the machine that ran it.
+ * @param reportPath - the report's path; its file name records the config the report ran under.
  * @returns the refusal, or `null`.
  */
-export function configFrozenReportRefusal(argv, reportFiles) {
+export function configFrozenReportRefusal(argv, reportFiles, reportPath) {
   const { config, paths } = frozenCommand(argv)
+  const reportName = basename(reportPath)
+  if (!REPORT_CONFIGS.has(reportName)) {
+    return `no step in first100-exact-sha.yml writes a report named ${reportName}, so the config it ran under is unknown`
+  }
+  const reportConfig = REPORT_CONFIGS.get(reportName)
+  const under = (name) => (name === undefined ? 'the default config' : `--config ${name}`)
+  if (config !== reportConfig) {
+    return `the entry is frozen under ${under(config)}, and ${reportName} is the report of ${under(reportConfig)}`
+  }
   if (config === undefined) return null
+  if (paths.length === 0) return `the entry names --config ${config} and no test path, so no report can be told to be its own`
   const files = reportFiles.map((name) => `/${name.replace(/^\/+/u, '')}`)
   const notRun = paths.filter((path) => !files.some((file) => file.endsWith(`/${path}`) || file.includes(`/${path}/`)))
   if (notRun.length === 0) return null
@@ -1043,7 +1072,12 @@ function cmdGreen() {
     console.error(`report not found: ${reportPath}`)
     process.exit(1)
   }
-  const { raw, titles, matchCounts, failedFullNames, exit } = parseVitestJsonReport(reportPath)
+  const { raw, report, titles, matchCounts, failedFullNames, exit } = parseVitestJsonReport(reportPath)
+  const notObserved = configFrozenReportRefusal(frozen.argv, (report.testResults ?? []).map((file) => String(file.name)), reportPath)
+  if (notObserved !== null) {
+    console.error(`BLOCKED: --report ${reportPath} cannot observe ${epic}.${stage}: ${notObserved}`)
+    process.exit(1)
+  }
   const observationSha256 = sha256(raw)
 
   const existing = existsSync(LEDGER_PATH) ? loadJson(LEDGER_PATH) : { rows: buildSkeleton(null) }
@@ -1250,7 +1284,7 @@ function cmdGreenSupplement() {
     process.exit(1)
   }
   const { raw, report, titles, matchCounts, failedFullNames, exit } = parseVitestJsonReport(reportPath)
-  const notObserved = configFrozenReportRefusal(frozen.argv, (report.testResults ?? []).map((file) => String(file.name)))
+  const notObserved = configFrozenReportRefusal(frozen.argv, (report.testResults ?? []).map((file) => String(file.name)), reportPath)
   if (notObserved !== null) {
     console.error(`BLOCKED: --report ${reportPath} cannot observe ${epic}.${stage}.${supplementSeq}: ${notObserved}`)
     process.exit(1)

@@ -142,8 +142,9 @@ export function reportRefusal(failedFullNames, reportFiles, entries, flakeRegist
 /**
  * The report that observes each live entry frozen under its own vitest config.
  *
- * Such an entry's own report is the first of `reports` that ran every test path
- * its argv names, the rule `--supplement` applies (`configFrozenReportRefusal`).
+ * Such an entry's own report is the first of `reports` whose file name records
+ * the entry's config and that ran every test path its argv names, the rule
+ * `generate-ledger.mjs` applies to `--report` (`configFrozenReportRefusal`).
  * An entry that no report ran, or that names a config and no test path, has no
  * report that can be told to be its own, and is refused.
  * @param entries - command-freeze entries; superseded entries and entries naming no config are skipped.
@@ -158,10 +159,12 @@ export function configFrozenOwnReports(entries, reports) {
     const { config, paths } = frozenCommand(entry.argv ?? [])
     if (config === undefined) continue
     const label = entryLabel(entry)
-    const own = paths.length === 0 ? undefined : reports.find(report => configFrozenReportRefusal(entry.argv ?? [], report.files) === null)
+    const own = paths.length === 0
+      ? undefined
+      : reports.find(report => configFrozenReportRefusal(entry.argv ?? [], report.files, report.path) === null)
     if (own !== undefined) owned.push({ entry, path: own.path })
     else if (paths.length === 0) refusals.push(`${label} names --config ${config} and no test path, so no report can be told to be its own`)
-    else refusals.push(`${label} is frozen under --config ${config}, and no --e2e-report ran ${paths.join(', ')}`)
+    else refusals.push(`${label} is frozen under --config ${config}, and no --e2e-report of that config ran ${paths.join(', ')}`)
   }
   return { owned, refusals }
 }
