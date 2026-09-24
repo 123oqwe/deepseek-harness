@@ -1151,6 +1151,16 @@ describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', { ti
       expect(result.status, result.stdout).toBe(1)
       expect(result.stdout).toContain('assigns a filter')
     })
+
+    it('detects a file added after collection that only a rule outside the tree ignores', () => {
+      const { root } = collectOneAcceptedGate()
+      writeFileSync(join(root, '.git/info/exclude'), 'local.cfg\n')
+      write(root, 'local.cfg', 'registry=https://registry.invalid/\n')
+
+      const result = verifyEvidence(root)
+      expect(result.status, result.stdout).toBe(1)
+      expect(result.stdout).toContain('the working tree differs from the diff recorded at collection')
+    })
   })
 
   describe('Epic P0-07 F-stage: must[2] fault/qualification hardening beyond acceptance[0]\'s existing coverage', () => {
