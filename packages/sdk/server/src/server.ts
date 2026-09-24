@@ -368,10 +368,7 @@ export class HarnessSdkJsonRpcServer {
       supportedCapabilitiesFor(this.ctx),
     )
     if (!capabilityOutcome.accepted) {
-      throw Object.assign(
-        new Error(`initialize refused: ${capabilityOutcome.reason} (${capabilityOutcome.capability})`),
-        { data: { reason: capabilityOutcome.reason, capability: capabilityOutcome.capability } },
-      )
+      throw new Error(`initialize refused: ${capabilityOutcome.reason} (${capabilityOutcome.capability})`)
     }
     if (params.reasoningEffort !== undefined
       && (typeof params.reasoningEffort !== 'string' || params.reasoningEffort.length === 0)) {
