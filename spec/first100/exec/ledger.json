@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-24T06:02:05.556Z",
-  "inputDigest": "be98ebd13605cab58dddb53ecc9ba46ee29233460bce0316ca094e1f7a8a5aab",
+  "lastUpdatedUtc": "2026-09-24T08:01:06.256Z",
+  "inputDigest": "333645d79b6a8eb424bdea710bd7549b552d7500f84ac075f70a720d7af060fe",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -460,28 +460,13 @@
           "status": "N/A"
         },
         "U": {
-          "status": "GREEN",
-          "candidateSha": "4d7806fb4b0f91c1b50a10727ad542ff3db273b1",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33909882117",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-4d78/first100-evidence-4d7806fb4b0f91c1b50a10727ad542ff3db273b1/vitest-report.json",
-          "observationSha256": "a3aa1f5e89043438184a33ce8318e00e013d645bcdc13585e38fd1076c8e829d",
-          "expectCasesMatched": [
-            "assigns a layer to every real workspace package, leaving none unclassified",
-            "reports zero violations and no unexempted cycle in the production package graph",
-            "resolves the real trust-kernel Cordis edge as permitted under rule 4 and its dsh-invariants edge as allowlisted",
-            "reads the real store and reports no expired or stale entry",
-            "rejects a kernelEdgeAllowlist entry whose expires date has passed",
-            "rejects a kernelEdgeAllowlist entry naming an edge that no longer exists",
-            "permits a kernel package importing only Context, and rejects one importing Service",
-            "rejects a forbidden Cordis binding imported type-only, since rule 4 grants the kernel no type-only escape",
-            "rejects a kernel dependency on a surfaces-apps package and on a providers package",
-            "detects an edge declared only in package.json, only via a tsconfig path alias, and only in a dynamic import",
-            "finds a two-package cycle",
-            "finds a four-package cycle and reports the shortest cycle when a shorter one also exists",
-            "accepts a cycle covered by a declared exemption and still rejects an undeclared one",
-            "excludes devDependencies from the production graph acceptance[0] scopes"
-          ],
-          "capturedAtUtc": "2026-09-05T03:28:31.835Z"
+          "status": "NOT_RUN",
+          "revokedFrom": {
+            "candidateSha": "4d7806fb4b0f91c1b50a10727ad542ff3db273b1",
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33909882117",
+            "absentCommitments": 1
+          },
+          "revokedReason": "冻结 [339] 取代 [73]，旧观测里没有新条目"
         },
         "F": {
           "status": "GREEN",
@@ -542,7 +527,7 @@
       "candidateSha": "4d7806fb4b0f91c1b50a10727ad542ff3db273b1",
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "BLOCKED_ON_ACCEPTANCE",
+      "status": "NOT_RUN",
       "acceptedEvidence": {
         "acceptedAtUtc": "2026-09-05T03:36:44.957Z",
         "cells": {

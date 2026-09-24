@@ -1447,9 +1447,57 @@
         {
           "stage": "F",
           "title": "calibration: the same entry point reports a violation when one exists, so zero distinguishes this repository from a broken check"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[0]: the scanned workspace is the one pnpm-workspace.yaml declares enumerates every package pnpm-workspace.yaml declares and scans none it does not"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[0]: the scanned workspace is the one pnpm-workspace.yaml declares covers the real workspace exactly as pnpm lists it, leaving no manifest unscanned"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[0]: the scanned workspace is the one pnpm-workspace.yaml declares the layer checker refuses a pnpm-workspace.yaml that declares no packages"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[0]: every unexempted cycle is reported, and a record exempts the one cycle its edges name (layering.md rule 5) admits the vendored Cordis peer-dependency cycles only through their exemption records"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[0]: every unexempted cycle is reported, and a record exempts the one cycle its edges name (layering.md rule 5) fails when an exempted short cycle coexists with an unexempted longer one"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[0]: every unexempted cycle is reported, and a record exempts the one cycle its edges name (layering.md rule 5) fails when an unexempted cycle shares an edge with an exempted one"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[0]: every unexempted cycle is reported, and a record exempts the one cycle its edges name (layering.md rule 5) reports every unexempted cycle, not only the shortest"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[0]: every unexempted cycle is reported, and a record exempts the one cycle its edges name (layering.md rule 5) does not exempt a cycle whose record names the same packages in the other edge order"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[0]: every unexempted cycle is reported, and a record exempts the one cycle its edges name (layering.md rule 5) reports a record naming an edge the production graph does not have as stale"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[0]: every unexempted cycle is reported, and a record exempts the one cycle its edges name (layering.md rule 5) rejects a record whose adrNote names no file"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[0]: every unexempted cycle is reported, and a record exempts the one cycle its edges name (layering.md rule 5) fails on a cycle made only of recorded edges that no record names"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[0]: every unexempted cycle is reported, and a record exempts the one cycle its edges name (layering.md rule 5) rejects two records that name one cycle"
         }
       ],
-      "note": "acceptance[0]: 'the production package graph has no unexempted cycle.' The detection cases prove the search finds cycles at two sizes and honours the exemption store in both directions (an exempted cycle accepted, an undeclared one still rejected), and the devDependencies case fixes the graph's scope -- 'production' excludes dev edges, so a checker including them would report cycles this clause does not name. The real-repository case is the clause's actual assertion. CALIBRATION, which is what makes that zero mean anything: the F-stage case runs the SAME entry point against a fixture root and requires a real violation, so 'zero violations here' is distinguishable from 'this function never reports violations'. An always-zero verdict and a working verdict produce identical reports without it."
+      "note": "acceptance[0]: 'the production package graph has no unexempted cycle.' The detection cases prove the search finds cycles at two sizes and honours the exemption store in both directions (an exempted cycle accepted, an undeclared one still rejected), and the devDependencies case fixes the graph's scope -- 'production' excludes dev edges, so a checker including them would report cycles this clause does not name. The real-repository case is the clause's actual assertion. CALIBRATION, which is what makes that zero mean anything: the F-stage case runs the SAME entry point against a fixture root and requires a real violation, so 'zero violations here' is distinguishable from 'this function never reports violations'. An always-zero verdict and a working verdict produce identical reports without it.\n\n[2026-09-24 lane B, B-548: the twelve U citations added after the F one are P0-04 U v2. E1-E3: the checker scans exactly the packages `pnpm-workspace.yaml` declares, so the production graph is the whole declared workspace, and refuses a file that declares none. C1-C9: every unexempted cycle is reported, and a record exempts only the cycle whose edges it names. M-a, M-b, M-c, M-s, M-t, M-u, M-v, M-w and M-x each reddened their predicted subset.]"
     },
     {
       "epic": "P0-04",
@@ -1478,9 +1526,129 @@
         {
           "stage": "F",
           "title": "control: the same narrow event-type edge from a non-kernel layer IS allowed, proving the case above measures the kernel rule"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits admits the Context import binding"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits admits the @deepseek-ai/cordis peer declaration the Context binding needs"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits admits a declare-module augmentation of the Context interface"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits admits the three forms to @deepseek-ai/dsh-trust-kernel alone: another kernel package using them is refused"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through another Cordis binding beside Context"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through a re-export of Context"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through export *"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through export * as ns"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through a side-effect import"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through import {}"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through a dynamic import()"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through require()"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through import = require()"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through a triple-slash types reference"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through a declare-module augmentation of an interface other than Context"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through a Cordis declaration in dependencies rather than peerDependencies"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through a Cordis peer declaration no Context use needs"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through a vendored package declared in dependencies"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through a vendored package declared in peerDependencies"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through a vendored package declared in optionalDependencies"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: a kernel package depends on no model provider, UI package or external package rejects a kernel dependency on a model provider that architecture.layers.json classifies as providers"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: a kernel package depends on no model provider, UI package or external package rejects a kernel dependency on an external package through a static import"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: a kernel package depends on no model provider, UI package or external package rejects a kernel dependency on an external package through a type-only import"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: a kernel package depends on no model provider, UI package or external package rejects a kernel dependency on an external package through a re-export"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: a kernel package depends on no model provider, UI package or external package rejects a kernel dependency on an external package through a dynamic import()"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: a kernel package depends on no model provider, UI package or external package rejects a kernel dependency on an external package through require()"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: a kernel package depends on no model provider, UI package or external package rejects a kernel dependency on an external package through a manifest declaration"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: a kernel package depends on no model provider, UI package or external package refuses to let an unexpired kernelEdgeAllowlist entry suppress a kernel dependency on a Cordis binding other than Context"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: a kernel package depends on no model provider, UI package or external package refuses to let an unexpired kernelEdgeAllowlist entry suppress a kernel dependency on a UI package"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: a kernel package depends on no model provider, UI package or external package refuses to let an unexpired kernelEdgeAllowlist entry suppress a kernel dependency on a model provider"
         }
       ],
-      "note": "acceptance[1]: 'any kernel dependency on Cordis, UI, or a concrete model provider fails.' Covered as the kernel having NO escape hatch, which is the only way the clause is stronger than an ordinary upward-edge rule. Three routes are closed independently: an ordinary upward edge to surfaces-apps and to providers; a Cordis binding beyond the single permitted Context; and the same forbidden binding imported type-only, since a type-only import is the obvious way to argue an edge is harmless. The F stage closes the fourth: must[1]'s narrow event-type allowance, which is a real exception everywhere else, does not apply to the kernel. POSITIVE CONTROL: the identical event-type edge from a non-kernel layer IS allowed, so the kernel case measures the kernel rule rather than a suite that rejects event-type edges generally -- and 'permits a kernel importing only Context' proves the Cordis rule is a binding-level decision, not a blanket ban that would make the permitted mechanism unusable."
+      "note": "acceptance[1]: 'any kernel dependency on Cordis, UI, or a concrete model provider fails.' Covered as the kernel having NO escape hatch, which is the only way the clause is stronger than an ordinary upward-edge rule. Three routes are closed independently: an ordinary upward edge to surfaces-apps and to providers; a Cordis binding beyond the single permitted Context; and the same forbidden binding imported type-only, since a type-only import is the obvious way to argue an edge is harmless. The F stage closes the fourth: must[1]'s narrow event-type allowance, which is a real exception everywhere else, does not apply to the kernel. POSITIVE CONTROL: the identical event-type edge from a non-kernel layer IS allowed, so the kernel case measures the kernel rule rather than a suite that rejects event-type edges generally -- and 'permits a kernel importing only Context' proves the Cordis rule is a binding-level decision, not a blanket ban that would make the permitted mechanism unusable.\n\n[2026-09-24 lane B, B-548: the clause is now the narrowed text (S8 (4)): only `@deepseek-ai/dsh-trust-kernel` may use Cordis, and only through the `Context` import binding, the peer declaration it needs, and a `declare module` augmentation of `Context`. The thirty U citations added after the F ones are P0-04 U v2: A1-A3 admit the three forms, N1 admits them to the Trust Kernel alone, R1-R16 refuse every other Cordis channel, K1 and X1-X6 refuse a provider or external package, and L1-L3 show an unexpired allowlist entry cannot suppress those. M-z admitting every Cordis use reddened R1-R13; M-ad granting the exception to every kernel package reddened N1.]"
     },
     {
       "epic": "P0-04",
@@ -1501,9 +1669,21 @@
         {
           "stage": "C",
           "title": "finds the real shortest cycle even when a longer, disjoint cycle is encountered first in construction order"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[2]: the real CLI the CLI exits 0 on a clean workspace within its time budget and prints its elapsed time"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[2]: the real CLI the CLI exits non-zero with a time-budget line when the run exceeds its time budget"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[2]: the real CLI the CLI prints the shortest cycle path when an unexempted cycle exists"
         }
       ],
-      "note": "acceptance[2]: 'the check completes within 10 seconds and reports the shortest cycle path.' Two independent requirements. SHORTEST: asserted where a shorter cycle also exists, so returning any cycle is insufficient -- a search reporting the first cycle found would pass a single-cycle fixture and fail this one. WITHIN 10s: the C-stage case times a 300-package scan against the budget. CALIBRATION of that timing claim: the F-stage case asserts the real scan reaches real input (>200 packages, >1000 edges, zero unclassified), because a scan that completes quickly by examining nothing satisfies a timing assertion perfectly. The budget only means something once the work it bounds is shown to have happened."
+      "note": "acceptance[2]: 'the check completes within 10 seconds and reports the shortest cycle path.' Two independent requirements. SHORTEST: asserted where a shorter cycle also exists, so returning any cycle is insufficient -- a search reporting the first cycle found would pass a single-cycle fixture and fail this one. WITHIN 10s: the C-stage case times a 300-package scan against the budget. CALIBRATION of that timing claim: the F-stage case asserts the real scan reaches real input (>200 packages, >1000 edges, zero unclassified), because a scan that completes quickly by examining nothing satisfies a timing assertion perfectly. The budget only means something once the work it bounds is shown to have happened.\n\n[2026-09-24 lane B, B-548: the three U citations added after the C ones are P0-04 U v2: T11 and V1, the CLI passes within the budget it is given and exits non-zero with a time-budget line past it (M-m reddens V1, M-n reddens T11 and V1), and T12, it prints the shortest cycle path (M-o reddens it). They observe the budget comparison, not the 10-second default on the real workspace, which the C citation covers.]"
     },
     {
       "epic": "P0-08",
