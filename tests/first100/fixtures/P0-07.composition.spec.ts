@@ -15,6 +15,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { load } from 'js-yaml'
 import { afterEach, describe, expect, it } from 'vitest'
 
 const repoRoot = fileURLToPath(new URL('../../../', import.meta.url))
@@ -138,5 +139,51 @@ describe('P0-07 U-stage documentation (release evidence package)', () => {
     const agentsMd = readFileSync(join(repoRoot, 'AGENTS.md'), 'utf8')
     expect(agentsMd).toContain('Evidence-gate reporting')
     expect(agentsMd).toMatch(/`accepted`\s*status/)
+  })
+})
+
+/** One workflow step, as far as these cases read it. */
+interface WorkflowStep {
+  readonly name?: string
+  readonly run?: string
+  readonly uses?: string
+  readonly if?: string
+  readonly 'continue-on-error'?: unknown
+}
+
+/** A publish workflow, as far as these cases read it. */
+interface PublishWorkflow {
+  readonly jobs: { readonly pack: { readonly steps: readonly WorkflowStep[] }; readonly publish: { readonly needs: string | readonly string[] } }
+}
+
+/*
+ * Validation[2] (S2) on the real publish paths: a release workflow cannot be
+ * triggered from a test, so its structure is read. The evidence package is
+ * verified after every step that collects into it and before the upload the
+ * publish job waits for, and nothing lets that verify step fail softly.
+ */
+describe('P0-07 validation[2] -- the publish workflows verify the evidence package before they upload it', () => {
+  it.each(['release-publish.yml', 'release-vendor-publish.yml', 'node-addon-system-release.yml'])('%s verifies the evidence package after every collect step and before the upload its publish job needs', (file) => {
+    const workflow = load(readFileSync(join(repoRoot, '.github/workflows', file), 'utf8')) as PublishWorkflow
+    const steps = workflow.jobs.pack.steps
+    const verify = steps.findIndex(step => /evidence:verify --evidence|scripts\/release\/verify-evidence\.mjs --evidence/.test(step.run ?? ''))
+    expect(verify, `${file}: no step verifies the evidence package`).toBeGreaterThanOrEqual(0)
+
+    const collects = steps.flatMap((step, index) => /collect-evidence\.mjs/.test(step.run ?? '') ? [index] : [])
+    expect(collects.length).toBeGreaterThan(0)
+    expect(collects.filter(index => index > verify)).toEqual([])
+    expect(steps[verify]?.if).toBeUndefined()
+    expect(steps[verify]?.['continue-on-error']).toBeUndefined()
+
+    const upload = steps.findIndex(step => (step.uses ?? '').startsWith('actions/upload-artifact'))
+    expect(upload).toBeGreaterThan(verify)
+    expect(steps[upload]?.if).toBeUndefined()
+    for (const step of steps.slice(verify + 1, upload)) {
+      expect(step.if, `${file}: ${step.name ?? '(unnamed step)'}`).toBe('always()')
+      expect(step.run ?? '').not.toMatch(/collect-evidence/)
+    }
+
+    const needs = workflow.jobs.publish.needs
+    expect(typeof needs === 'string' ? [needs] : needs).toContain('pack')
   })
 })

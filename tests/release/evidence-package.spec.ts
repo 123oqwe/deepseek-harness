@@ -782,6 +782,29 @@ describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', () =
       expect(result.stdout).toContain('package signature mismatch')
       expect(result.stdout).toContain('not a passing CompletedGateEvidence')
     })
+
+    it('detects a mutated .dsh/baseline.json after collection', () => {
+      const { root } = collectOneAcceptedGate()
+      // Still valid JSON; only the bytes the package's baselineFingerprint digest binds have changed.
+      const baselinePath = join(root, '.dsh/baseline.json')
+      const baseline = JSON.parse(readFileSync(baselinePath, 'utf8')) as Record<string, unknown>
+      baseline.pnpmLockHash = '0'.repeat(64)
+      writeFileSync(baselinePath, `${JSON.stringify(baseline, null, 2)}\n`)
+
+      const result = verifyEvidence(root)
+      expect(result.status).toBe(1)
+      expect(result.stdout).toContain('baselineFingerprint digest mismatch')
+    })
+
+    it('detects a mutated gitdiff.patch sidecar after collection', () => {
+      const { root } = collectOneAcceptedGate()
+      const diffPath = join(root, '.dsh/evidence/evidence.d/gitdiff.patch')
+      write(root, '.dsh/evidence/evidence.d/gitdiff.patch', `${readFileSync(diffPath, 'utf8')}+TAMPERED\n`)
+
+      const result = verifyEvidence(root)
+      expect(result.status).toBe(1)
+      expect(result.stdout).toContain('gitDiff digest mismatch')
+    })
   })
 
   describe('acceptance[0]: configuration the package binds, changed after collection, makes verify fail', () => {
