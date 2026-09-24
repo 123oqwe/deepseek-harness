@@ -10,6 +10,8 @@ import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
 import { ToolCallId } from '@deepseek-ai/dsh-llm'
 import type { Config } from '@deepseek-ai/dsh-mcp-client'
+import { RunRetryUsagePlugin } from '@deepseek-ai/dsh-retry'
+import { SessionId } from '@deepseek-ai/dsh-session'
 
 // ---- Mock MCP SDK ----
 
@@ -471,6 +473,98 @@ describe('reconnect supervisor', () => {
     const staleHandler = mockSetNotificationHandler.mock.calls[0]![1] as () => Promise<void>
     await staleHandler()
     expect(mockListTools).toHaveBeenCalledTimes(listCalls)
+  })
+
+  describe('P4-11 must[1]: a server mounted for one session charges its reconnects to that session’s run', () => {
+    type RunId = Parameters<RunRetryUsagePlugin['admit']>[0]
+    const RUN = 'run-p4-11-reconnect' as RunId
+    const SESSION = SessionId('mcp-charged-session')
+    const NOTHING_SPENT = { retriesUsed: 0, delayMsUsed: 0 }
+
+    /**
+     * Provide an agent registry whose sessions resolve to the given delegation
+     * nodes: the two fields the charged-run lookup reads.
+     * @param nodes - session id to its parent session and Run; read at lookup time.
+     */
+    function provideAgents(nodes: Record<string, { parentSession?: string; runId?: RunId }>): void {
+      ctx.provide('agents', {
+        get: (id: string) => {
+          const node = nodes[id]
+          return node === undefined ? undefined : { session: { header: { parentSession: node.parentSession } }, runId: node.runId }
+        },
+      } as never)
+    }
+
+    /** A stdio server mounted for {@link SESSION}, with a stability window no case outlasts. */
+    function chargedConfig(): Config {
+      return { ...stdioConfig({ initialDelayMs: 2, maxDelayMs: 1_000, maxAttempts: 5 }), chargeSession: SESSION }
+    }
+
+    /** Mount the charged server, drop its connection once, and wait for the replacement to publish its tools. */
+    async function dropAndReconnect(): Promise<void> {
+      await apply(ctx, chargedConfig())
+      await vi.waitFor(() => { expect(ctx.tools.get('mcp__srv__remote')).toBeDefined() })
+      instances[0]!.onclose?.()
+      await vi.waitFor(() => { expect(instances).toHaveLength(2) })
+      await vi.waitFor(() => { expect(ctx.tools.get('mcp__srv__remote')).toBeDefined() })
+    }
+
+    it('charges each reconnect to the run and gives up once the run budget refuses one', async () => {
+      const { errors } = captureLogs(ctx)
+      const budgets = new RunRetryUsagePlugin(ctx, { maxRetries: 1 })
+      provideAgents({ [SESSION]: { runId: RUN } })
+      await dropAndReconnect()
+      expect(budgets.usageOf(RUN).retriesUsed).toBe(1)
+
+      // The run has nothing left: the supervisor stops as it does at its own cap.
+      instances[1]!.onclose?.()
+      await vi.waitFor(() => {
+        expect(errors.some(line => line.includes('giving up because the run\'s retry budget refused this reconnect (retry-cap-reached)'))).toBe(true)
+      })
+      await vi.waitFor(() => { expect(ctx.tools.get('mcp__srv__remote')).toBeUndefined() })
+      await sleep(30)
+      expect(instances).toHaveLength(2)
+    })
+
+    it('charges the session’s own run when its delegating parent is not visible', async () => {
+      const budgets = new RunRetryUsagePlugin(ctx, { maxRetries: 1 })
+      provideAgents({ [SESSION]: { parentSession: 'invisible-parent', runId: RUN } })
+      await dropAndReconnect()
+      expect(budgets.usageOf(RUN).retriesUsed).toBe(1)
+    })
+
+    it('reconnects on its own cap when the composition mounts no run budget', async () => {
+      provideAgents({ [SESSION]: { runId: RUN } })
+      await dropAndReconnect()
+      expect(ctx.get('runRetryUsage')).toBeUndefined()
+    })
+
+    // A zero budget refuses anything it is asked about, so each reconnect
+    // below shows it was not asked.
+    it('charges nothing when no agent registry is mounted', async () => {
+      const budgets = new RunRetryUsagePlugin(ctx, { maxRetries: 0 })
+      await dropAndReconnect()
+      expect(budgets.usageOf(RUN)).toEqual(NOTHING_SPENT)
+    })
+
+    it('charges nothing while the session is unpublished or holds no run', async () => {
+      const budgets = new RunRetryUsagePlugin(ctx, { maxRetries: 0 })
+      const nodes: Record<string, { parentSession?: string; runId?: RunId }> = {}
+      provideAgents(nodes)
+      await dropAndReconnect()
+
+      nodes[SESSION] = {}
+      instances[1]!.onclose?.()
+      await vi.waitFor(() => { expect(instances).toHaveLength(3) })
+      expect(budgets.usageOf(RUN)).toEqual(NOTHING_SPENT)
+    })
+
+    it('charges nothing when the delegation root holds no run', async () => {
+      const budgets = new RunRetryUsagePlugin(ctx, { maxRetries: 0 })
+      provideAgents({ [SESSION]: { parentSession: 'runless-root', runId: RUN }, 'runless-root': {} })
+      await dropAndReconnect()
+      expect(budgets.usageOf(RUN)).toEqual(NOTHING_SPENT)
+    })
   })
 })
 

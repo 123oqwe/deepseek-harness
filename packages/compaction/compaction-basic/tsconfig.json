@@ -35,6 +35,12 @@
     },
     {
       "path": "../compaction-tool-result-pruner"
+    },
+    {
+      "path": "../../util/brand"
+    },
+    {
+      "path": "../../reliability/retry"
     }
   ]
 }

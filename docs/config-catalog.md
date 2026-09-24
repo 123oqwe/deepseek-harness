@@ -1712,6 +1712,13 @@ export interface StdioConfig {
   trustAnnotations: boolean
   /** Automatic reconnect policy after a lost connection; omission uses the defaults. */
   reconnect?: ReconnectConfig
+  /**
+   * Runtime-only: the session whose Run each reconnect is charged to (P4-11
+   * must[1]). A per-session mount sets it, as `dsh-acp` does for every ACP
+   * session; a server mounted for the whole host serves every run and belongs
+   * to none, so it leaves this absent and keeps only `reconnect`'s budget.
+   */
+  chargeSession?: SessionId
 }
 
 /** Config for connecting to an MCP server over Streamable HTTP (SSE). */
@@ -1755,6 +1762,13 @@ export interface StreamableHttpConfig {
   trustAnnotations: boolean
   /** Automatic reconnect policy after a lost connection; omission uses the defaults. */
   reconnect?: ReconnectConfig
+  /**
+   * Runtime-only: the session whose Run each reconnect is charged to (P4-11
+   * must[1]). A per-session mount sets it, as `dsh-acp` does for every ACP
+   * session; a server mounted for the whole host serves every run and belongs
+   * to none, so it leaves this absent and keeps only `reconnect`'s budget.
+   */
+  chargeSession?: SessionId
 }
 
 /** Automatic reconnect policy for one MCP server connection. */
@@ -1770,7 +1784,9 @@ export interface ReconnectConfig {
 }
 ```
 
-Source: [`packages/mcp/mcp-client/src/index.ts:140`](../packages/mcp/mcp-client/src/index.ts)
+Depends on: [`SessionId`](subsystems/core.md)
+
+Source: [`packages/mcp/mcp-client/src/index.ts:155`](../packages/mcp/mcp-client/src/index.ts)
 
 <a id="deepseek-aidsh-memory"></a>
 

@@ -28,6 +28,7 @@ import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import TokenMeter from '@deepseek-ai/dsh-token-meter'
 import { agentEvents, type Agent, type RequestErrorAction } from '@deepseek-ai/dsh-agent'
 import ToolResultPruner from '@deepseek-ai/dsh-compaction-tool-result-pruner'
+import { RunRetryUsagePlugin } from '@deepseek-ai/dsh-retry'
 
 const SIGNAL = new AbortController().signal
 const MODEL = 'test-model'
@@ -1944,6 +1945,79 @@ describe('automatic listener and loader composition', () => {
     expect(summaries).toBe(1)
     expect(await recover(ctx, agent(session, MODEL), overflow())).toBe(false)
     expect(session.snapshotEvents().filter(event => event.type === 'compaction/summary')).toHaveLength(summaries)
+  })
+
+  describe('P4-11 must[1]: the overflow resend draws on the run retry budget', () => {
+    type RunId = Parameters<RunRetryUsagePlugin['admit']>[0]
+    const RUN = 'run-p4-11-overflow' as RunId
+
+    /**
+     * Provide an agent registry whose sessions resolve to the given delegation
+     * nodes: the two fields the charged-run lookup reads.
+     * @param ctx - the context the engine reads `agents` from.
+     * @param nodes - session id to its parent session and Run.
+     */
+    function provideAgents(ctx: Context, nodes: Record<string, { parentSession?: string; runId?: RunId }>): void {
+      ctx.provide('agents', {
+        get: (id: string) => {
+          const node = nodes[id]
+          return node === undefined ? undefined : { session: { header: { parentSession: node.parentSession } }, runId: node.runId }
+        },
+      } as never)
+    }
+
+    it('refuses the overflow resend before compacting once the run budget is spent', async () => {
+      const ctx = createContext()
+      const compact = new TestCompactionEngine(ctx)
+      const compactSpy = vi.spyOn(compact, 'compactIfNeeded')
+      const budgets = new RunRetryUsagePlugin(ctx, { maxRetries: 0 })
+      const session = conversation(3)
+      provideAgents(ctx, { [session.id]: { runId: RUN } })
+
+      expect(await recover(ctx, agent(session, MODEL), overflow())).toBe(false)
+      expect(compactSpy).not.toHaveBeenCalled()
+      expect(budgets.usageOf(RUN)).toEqual({ retriesUsed: 0, delayMsUsed: 0 })
+    })
+
+    it('charges an admitted overflow resend to the run', async () => {
+      const ctx = createContext()
+      void new TestCompactionEngine(ctx)
+      const budgets = new RunRetryUsagePlugin(ctx, { maxRetries: 1 })
+      const session = conversation(3)
+      provideAgents(ctx, { [session.id]: { runId: RUN } })
+
+      expect(await recover(ctx, agent(session, MODEL), overflow())).toBe(true)
+      expect(budgets.usageOf(RUN).retriesUsed).toBe(1)
+    })
+
+    it('charges a delegated session’s overflow resend to its delegation root’s run', async () => {
+      const ctx = createContext()
+      void new TestCompactionEngine(ctx)
+      const budgets = new RunRetryUsagePlugin(ctx, { maxRetries: 1 })
+      const session = conversation(3)
+      provideAgents(ctx, { [session.id]: { parentSession: 'delegating-root' }, 'delegating-root': { runId: RUN } })
+
+      expect(await recover(ctx, agent(session, MODEL), overflow())).toBe(true)
+      expect(budgets.usageOf(RUN).retriesUsed).toBe(1)
+    })
+
+    it('keeps the overflow resend outside the run budget when no run resolves', async () => {
+      // A zero budget refuses anything it is asked about, so each resend here
+      // shows it was not asked. First, no agent registry at all.
+      const bare = createContext()
+      void new TestCompactionEngine(bare)
+      void new RunRetryUsagePlugin(bare, { maxRetries: 0 })
+      expect(await recover(bare, agent(conversation(3), MODEL), overflow())).toBe(true)
+
+      // Then a registry that cannot see the delegating parent, so the walk
+      // stops at a session that holds no run.
+      const partial = createContext()
+      void new TestCompactionEngine(partial)
+      void new RunRetryUsagePlugin(partial, { maxRetries: 0 })
+      const session = conversation(3)
+      provideAgents(partial, { [session.id]: { parentSession: 'invisible-parent' } })
+      expect(await recover(partial, agent(session, MODEL), overflow())).toBe(true)
+    })
   })
 
   it('auto:false installs neither automatic listener', async () => {

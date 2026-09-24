@@ -17,6 +17,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { scopeOf } from '@deepseek-ai/dsh-scope'
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
+import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { RECONNECT_DEFAULTS, resolveReconnectPolicy, startConnection } from './connection.ts'
 import type { ReconnectConfig } from './connection.ts'
 // Side-effect type import: declaration-merges `ctx.tools` onto Context.
@@ -91,6 +92,13 @@ export interface StdioConfig {
   trustAnnotations: boolean
   /** Automatic reconnect policy after a lost connection; omission uses the defaults. */
   reconnect?: ReconnectConfig
+  /**
+   * Runtime-only: the session whose Run each reconnect is charged to (P4-11
+   * must[1]). A per-session mount sets it, as `dsh-acp` does for every ACP
+   * session; a server mounted for the whole host serves every run and belongs
+   * to none, so it leaves this absent and keeps only `reconnect`'s budget.
+   */
+  chargeSession?: SessionId
 }
 
 /** Config for connecting to an MCP server over Streamable HTTP (SSE). */
@@ -134,6 +142,13 @@ export interface StreamableHttpConfig {
   trustAnnotations: boolean
   /** Automatic reconnect policy after a lost connection; omission uses the defaults. */
   reconnect?: ReconnectConfig
+  /**
+   * Runtime-only: the session whose Run each reconnect is charged to (P4-11
+   * must[1]). A per-session mount sets it, as `dsh-acp` does for every ACP
+   * session; a server mounted for the whole host serves every run and belongs
+   * to none, so it leaves this absent and keeps only `reconnect`'s budget.
+   */
+  chargeSession?: SessionId
 }
 
 /** Configuration for one stdio or Streamable HTTP MCP server. */
