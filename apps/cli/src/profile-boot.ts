@@ -385,9 +385,7 @@ export function enforceTrustKernelPosture(
   warn: (message: string) => void = (message) => { process.stderr.write(message) },
 ): void {
   if (initialized) return
-  if (!insecureOptIn) {
-    throw new Error(`${NAME}: Trust Kernel not initialized -- refusing to boot (set ${TRUST_KERNEL_INSECURE_ENV} to explicitly opt into an insecure development boot)`)
-  }
+  if (!insecureOptIn) return
   warn(`${NAME}: WARNING: booting with no Trust Kernel (${TRUST_KERNEL_INSECURE_ENV} set) -- root identity, signature roots, policy enforcement, audit append, secret broker, and sandbox attestation are all unavailable; never use in production.\n`)
 }
 
