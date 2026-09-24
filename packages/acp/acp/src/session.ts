@@ -156,7 +156,7 @@ export class AcpSession {
           selectionFor(agent.session.requestHeader(), options.fallbackSelection),
         )
         modelControl.install(agentCtx)
-        await mountAcpMcpServers(agentCtx, options.mcpServers, options.cwd, agent.session.id)
+        await mountAcpMcpServers(agentCtx, options.mcpServers, options.cwd)
       },
     })
     /* v8 ignore start -- a fulfilled Agent resume necessarily ran setup to completion. */
