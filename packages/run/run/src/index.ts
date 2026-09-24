@@ -869,9 +869,6 @@ export default class RunPlugin extends Service {
    */
   private adoptable(agent: Agent): RunId | undefined {
     for (const run of this.service.runsForSession(agent.id)) {
-      // Only a Run this session opened is its to continue. One it joined as an
-      // owned child is its owner's, written under the owner's lease alone.
-      if (run.sessionIds[0] !== agent.id) continue
       const decision = this.service.resume(run.id)
       if (decision.resumed) return run.id
       this.ctx.logger.debug(
