@@ -214,7 +214,6 @@ export function startConnection(ctx: Context, config: Config, policy: ResolvedRe
     // `chargedRunFor` keeps its first answer for a session. Resolving before
     // the agent is published and holds its Run would record "no run" and
     // exempt every later retry of that session, llm-retry's included.
-    if (agents.get(session)?.runId === undefined) return undefined
     /* jscpd:ignore-start -- the delegation-root lookup is llm-retry's; dsh-retry stays free of the
        agent package (root.ts), so each charging layer supplies it */
     const charged = budgets.chargedRunFor(session, () => chargedRun(session, (id: string) => {
