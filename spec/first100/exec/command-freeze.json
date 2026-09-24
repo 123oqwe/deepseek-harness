@@ -1664,7 +1664,9 @@
         "treeSha": "366ec8394531fa5b4e9f9283cd6752d988f4d59e",
         "testsDiscovered": 28
       },
-      "note": "C-stage RED scaffold for P0-04 (static architecture layering + cycle detection), post-corrective-round (attempt/P0-04-C @ 6e7c9cbd6c, 2 commits: original 86dd3ff1d1 + corrective 6e7c9cbd6c closing 2 Reviewer-flagged gaps -- acceptance[2] timing-budget coverage on a dense 14-package cycle fixture, and an order-independence case defeating a naive first-encountered-cycle shortcut). 28/28 genuinely failed on real not-implemented errors, zero module/syntax errors, independently re-verified by the Supervisor. expectExit=0 is the GREEN target (today real state: 28/28 failing), corrected from an earlier mis-instructed draft that used exit=1 -- generate-ledger.mjs cmdGreen compares the GREEN observation exit against this field, not todays RED exit, matching the P0-01.C precedent. scripts/architecture/layer-order.ts is an undeclared-but-needed companion module (files[] named no companion at all for this epic), following the P0-03 precedent (BLOCKED-012) of adding one when genuinely required."
+      "note": "C-stage RED scaffold for P0-04 (static architecture layering + cycle detection), post-corrective-round (attempt/P0-04-C @ 6e7c9cbd6c, 2 commits: original 86dd3ff1d1 + corrective 6e7c9cbd6c closing 2 Reviewer-flagged gaps -- acceptance[2] timing-budget coverage on a dense 14-package cycle fixture, and an order-independence case defeating a naive first-encountered-cycle shortcut). 28/28 genuinely failed on real not-implemented errors, zero module/syntax errors, independently re-verified by the Supervisor. expectExit=0 is the GREEN target (today real state: 28/28 failing), corrected from an earlier mis-instructed draft that used exit=1 -- generate-ledger.mjs cmdGreen compares the GREEN observation exit against this field, not todays RED exit, matching the P0-01.C precedent. scripts/architecture/layer-order.ts is an undeclared-but-needed companion module (files[] named no companion at all for this epic), following the P0-03 precedent (BLOCKED-012) of adding one when genuinely required.",
+      "supersededBy": "2026-09-24T15:26:35Z",
+      "supersessionReason": "P0-04 blind review F3: the acceptance[2] timing case measured findShortestCycle, which the gate no longer calls; it now times the gate's own findUnexemptedCycles against TIME_BUDGET_MS. Same title, a different subject, so a replacement under lifecycle 2.1 (delegate ruling 2026-09-24)."
     },
     {
       "epic": "P6-01",
@@ -3564,7 +3566,9 @@
         "treeSha": "d7587f368118a1a94a9c612a5c30162607b5a4c3",
         "testsDiscovered": 44
       },
-      "note": "P0-04 F-stage, appended to the Contract stage's own spec file, which the registry declares as this stage's sole deliverable.\n\nTHE ESCAPE HATCH'S VALIDATOR IS WEAKER THAN THE RULE IT GUARDS. layering.md rule 5 calls the exemption store one 'a gate cannot widen its own escape hatch'. That holds for WHO may write it, not for WHAT it accepts. Five DEFECT cases record entries that satisfy validateExemptedCycle while recording nothing actionable: a whitespace-only reason, owner, or adrNote (the checks test `=== ''`, which one space defeats); a cycle naming one package twice (`cycle.length < 2` counts entries, not distinct packages); an adrNote that is prose rather than the repo-relative Agent Note path must[3] requires; and the impossible calendar date 2026-02-31, which matches the ISO shape while Date.parse returns a number for it rather than NaN, so the NaN guard never fires. Not repaired here: the fix belongs in scripts/architecture/layer-order.ts, the Contract stage's declared file.\n\nCALIBRATION OF THE REAL-REPOSITORY VERDICT. The Usage stage asserts the real repo reports zero violations. An always-zero verdict and a broken verdict produce identical reports, so three cases calibrate it: the real scan reaches real input (>200 packages, >1000 edges, zero unclassified); its reporting path is live on that input (findings non-empty, produced by the same edge walk and classification as violations, so an empty violations list is a measurement rather than a dead path); and the same entry point on a fixture root reports a real kernel-upward-dependency violation, so zero distinguishes this repository from a function that never reports.\n\nkernel refusals: acceptance[1] grants the kernel no exception, so a kernel upward edge is asserted to stay a violation even as the narrow event-type kind, with a non-kernel control on the identical edge proving the case measures the kernel rule and not the allowance.\n\nTYPECHECK CAUGHT WHAT THE GREEN RUN DID NOT: the three classifyEdge cases first used from/to/method instead of fromPackage/toPackage/detectionMethod. They passed at runtime because classifyEdge reads only nature, fromLayer and toLayer, so malformed objects produced correct verdicts. Repo-wide typecheck rejected them. A green suite over objects that do not satisfy their own interface is why the package-level build is the faster check and never the sufficient one.\n\nEXPECTCASES CORRECTION BEFORE THIS ENTRY EVER GREENED: the list was first built by scanning the spec file for literal `it('...')` lines, which found 38 while the dry run discovers 41. Three cases are generated by a loop over the three detection methods and have no literal title in the source. A freeze whose case list comes from reading the file rather than from running it is BLOCKED-072's shape applied to the freeze itself -- the recorded expectation would have described a suite that was never executed. The list now comes from the JSON reporter, which is what the pipeline requires and what the dryRunProof exists to attest.\n\nSUPPLEMENTED FOR layering.md RULE 8 (C supersession, delegate ruling): three cases cover the spawn-target exception. The real dsh-sdk-client -> dsh edge is admitted; a fixture whose ranked package BOTH declares the unranked dependency AND imports a symbol from it must still report the violation; and an otherwise identical fixture WITHOUT the symbol import must not. The pair isolates the import as the deciding fact -- without it the withdrawal case could pass for any other property the fixture happens to carry. Case count 41 -> 44."
+      "note": "P0-04 F-stage, appended to the Contract stage's own spec file, which the registry declares as this stage's sole deliverable.\n\nTHE ESCAPE HATCH'S VALIDATOR IS WEAKER THAN THE RULE IT GUARDS. layering.md rule 5 calls the exemption store one 'a gate cannot widen its own escape hatch'. That holds for WHO may write it, not for WHAT it accepts. Five DEFECT cases record entries that satisfy validateExemptedCycle while recording nothing actionable: a whitespace-only reason, owner, or adrNote (the checks test `=== ''`, which one space defeats); a cycle naming one package twice (`cycle.length < 2` counts entries, not distinct packages); an adrNote that is prose rather than the repo-relative Agent Note path must[3] requires; and the impossible calendar date 2026-02-31, which matches the ISO shape while Date.parse returns a number for it rather than NaN, so the NaN guard never fires. Not repaired here: the fix belongs in scripts/architecture/layer-order.ts, the Contract stage's declared file.\n\nCALIBRATION OF THE REAL-REPOSITORY VERDICT. The Usage stage asserts the real repo reports zero violations. An always-zero verdict and a broken verdict produce identical reports, so three cases calibrate it: the real scan reaches real input (>200 packages, >1000 edges, zero unclassified); its reporting path is live on that input (findings non-empty, produced by the same edge walk and classification as violations, so an empty violations list is a measurement rather than a dead path); and the same entry point on a fixture root reports a real kernel-upward-dependency violation, so zero distinguishes this repository from a function that never reports.\n\nkernel refusals: acceptance[1] grants the kernel no exception, so a kernel upward edge is asserted to stay a violation even as the narrow event-type kind, with a non-kernel control on the identical edge proving the case measures the kernel rule and not the allowance.\n\nTYPECHECK CAUGHT WHAT THE GREEN RUN DID NOT: the three classifyEdge cases first used from/to/method instead of fromPackage/toPackage/detectionMethod. They passed at runtime because classifyEdge reads only nature, fromLayer and toLayer, so malformed objects produced correct verdicts. Repo-wide typecheck rejected them. A green suite over objects that do not satisfy their own interface is why the package-level build is the faster check and never the sufficient one.\n\nEXPECTCASES CORRECTION BEFORE THIS ENTRY EVER GREENED: the list was first built by scanning the spec file for literal `it('...')` lines, which found 38 while the dry run discovers 41. Three cases are generated by a loop over the three detection methods and have no literal title in the source. A freeze whose case list comes from reading the file rather than from running it is BLOCKED-072's shape applied to the freeze itself -- the recorded expectation would have described a suite that was never executed. The list now comes from the JSON reporter, which is what the pipeline requires and what the dryRunProof exists to attest.\n\nSUPPLEMENTED FOR layering.md RULE 8 (C supersession, delegate ruling): three cases cover the spawn-target exception. The real dsh-sdk-client -> dsh edge is admitted; a fixture whose ranked package BOTH declares the unranked dependency AND imports a symbol from it must still report the violation; and an otherwise identical fixture WITHOUT the symbol import must not. The pair isolates the import as the deciding fact -- without it the withdrawal case could pass for any other property the fixture happens to carry. Case count 41 -> 44.",
+      "supersededBy": "2026-09-24T15:26:35Z",
+      "supersessionReason": "P0-04 blind review F3: the acceptance[2] timing case measured findShortestCycle, which the gate no longer calls; it now times the gate's own findUnexemptedCycles against TIME_BUDGET_MS. Same title, a different subject, so a replacement under lifecycle 2.1 (delegate ruling 2026-09-24)."
     },
     {
       "epic": "P0-08",
@@ -16778,6 +16782,225 @@
         "failureSummary": "PRECHECK and PRECHECK2 (`0e98fb03f4`, `c4c820eca7`) `c4c820eca7`, run 36017273682: the three F1 cases below the control, F3 and F4 red, the control green; `c4c820eca7`, run 36017297698: the e2e F3 case red. The fix `a270565dff`, run 36018750715: 117 of 117 (resume-values, journal-resume, journal-live-run, journal-host, session and the workflow-journal tests); `a270565dff`, run 36018775378: 13 of 13, with a build first. M-F3 `c241a358e5`, run 36018914253: exactly this case red; the restart case beside it stays green, because the overwritten top-level journal is the state it asserts. All readings match artifacts/laneB/p4-08-f1f3f4-predictions.md (ff372e30…, R1) and its second version p4-08-f1f3f4-predictions-v2.md (8d944604…, R2–R8, the fix rebuilt after 4cb2225db0 failed its build at host.ts:442), each written and hashed before its runs were dispatched; the delegate compared them case by case."
       },
       "note": "P4-08 blind review F3 on the shipped acp launch (acceptance[1], acceptance[2]): after a host is killed at K2 and a restarted host resumes with a changed script, the refused journal is kept under refused/ with the interrupted run's digest and stands at the kill point, while the restarted run writes its own journal under the same id. Frozen under vitest.e2e.config.ts, observed by the workflow step's own report (vitest-e2e-workflow.json), as U.4 [352]."
+    },
+    {
+      "epic": "P0-04",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/architecture/layer-deps.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "ranks the declared kernel -> protocol/types -> capability definitions -> providers -> orchestration/runtime -> surfaces/apps sequence strictly increasing",
+        "allows a downward dependency",
+        "allows a same-layer dependency",
+        "rejects an ordinary upward dependency as a layer violation",
+        "allows an upward type-only EventMap edge as the one exception to the upward-dependency rule",
+        "does not grant the narrow exception to a downward type-only EventMap edge, since layer direction alone already permits it",
+        "rejects a global-singleton edge that also runs upward",
+        "rejects a global-singleton edge that would otherwise be a legal downward dependency",
+        "rejects a global-singleton edge within the same layer",
+        "classifies the same upward violation identically when found via package-graph",
+        "classifies the same upward violation identically when found via path-alias",
+        "classifies the same upward violation identically when found via dynamic-require",
+        "fails a kernel dependency on the vendored Cordis runtime",
+        "fails a kernel dependency on a surfaces-apps (UI) package",
+        "fails a kernel dependency on a concrete model provider",
+        "does not grant the narrow event-type exception to a kernel dependency on a surfaces-apps (UI) package",
+        "does not constrain a non-kernel package depending on the vendored Cordis runtime",
+        "accepts a well-formed exemption",
+        "rejects an exemption whose cycle has fewer than two packages",
+        "rejects an exemption with a malformed recordedDate",
+        "rejects an exemption with an empty owner",
+        "rejects an exemption with an empty adrNote",
+        "reports no cycle and no exemption for an acyclic graph",
+        "finds an unexempted two-package cycle",
+        "marks a cycle exempted when it matches a declared ExemptedCycle entry",
+        "returns the shortest cycle when a longer cycle also exists in the graph",
+        "finds the real shortest cycle even when a longer, disjoint cycle is encountered first in construction order",
+        "completes within the 10-second production-scale budget on a dense, many-overlapping-cycle graph (acceptance[2])"
+      ],
+      "files": [
+        "tests/architecture/layer-deps.spec.ts",
+        "scripts/architecture/layer-order.ts",
+        "scripts/architecture/check-layer-deps.mjs",
+        "scripts/architecture/check-layer-deps.d.mts"
+      ],
+      "frozenAtUtc": "2026-09-24T15:26:35Z",
+      "dryRunProof": {
+        "treeSha": "fae17064afd5fe89c99c032a99fe430be92635a6",
+        "testsDiscovered": 44
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-T338 (`db9bf58418021e3e09fcaf6ffd32edf25ef01577`, off the fix, never merged): check-layer-deps.mjs exports TIME_BUDGET_MS = 0, the budget the acceptance[2] timing case now reads.",
+        "failureSummary": "The fix `61335239d7`, run 36011196149: 137 of 137 over the three architecture specs. M-T338 `db9bf58418`, run 36019734815: exactly two red over the three architecture specs, this entry's acceptance[2] timing case and U.1's budget pin in check-layer-deps.spec.ts. The timing case was green in every B-566 run, so this is its only mutation reading. Predicted in artifacts/laneB/p0-04-t338-predictions.md (0e3c529c…), hashed before dispatch; the delegate compared it."
+      },
+      "note": "C-stage RED scaffold for P0-04 (static architecture layering + cycle detection), post-corrective-round (attempt/P0-04-C @ 6e7c9cbd6c, 2 commits: original 86dd3ff1d1 + corrective 6e7c9cbd6c closing 2 Reviewer-flagged gaps -- acceptance[2] timing-budget coverage on a dense 14-package cycle fixture, and an order-independence case defeating a naive first-encountered-cycle shortcut). 28/28 genuinely failed on real not-implemented errors, zero module/syntax errors, independently re-verified by the Supervisor. expectExit=0 is the GREEN target (today real state: 28/28 failing), corrected from an earlier mis-instructed draft that used exit=1 -- generate-ledger.mjs cmdGreen compares the GREEN observation exit against this field, not todays RED exit, matching the P0-01.C precedent. scripts/architecture/layer-order.ts is an undeclared-but-needed companion module (files[] named no companion at all for this epic), following the P0-03 precedent (BLOCKED-012) of adding one when genuinely required. Superseded on 2026-09-24: the acceptance[2] timing case now times findUnexemptedCycles, the cycle search check-layer-deps runs, against its exported TIME_BUDGET_MS, instead of layer-order's findShortestCycle, which the gate does not call (P0-04 blind review F3). Same title, a different subject measured, so it is a replacement under lifecycle 2.1. The describe around it still names findShortestCycle; the case body is what is timed.",
+      "supersedes": "2026-09-03T13:01:28.624Z"
+    },
+    {
+      "epic": "P0-04",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/architecture/layer-deps.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "ranks the declared kernel -> protocol/types -> capability definitions -> providers -> orchestration/runtime -> surfaces/apps sequence strictly increasing",
+        "allows a downward dependency",
+        "allows a same-layer dependency",
+        "rejects an ordinary upward dependency as a layer violation",
+        "allows an upward type-only EventMap edge as the one exception to the upward-dependency rule",
+        "does not grant the narrow exception to a downward type-only EventMap edge, since layer direction alone already permits it",
+        "rejects a global-singleton edge that also runs upward",
+        "rejects a global-singleton edge that would otherwise be a legal downward dependency",
+        "rejects a global-singleton edge within the same layer",
+        "classifies the same upward violation identically when found via package-graph",
+        "classifies the same upward violation identically when found via path-alias",
+        "classifies the same upward violation identically when found via dynamic-require",
+        "fails a kernel dependency on the vendored Cordis runtime",
+        "fails a kernel dependency on a surfaces-apps (UI) package",
+        "fails a kernel dependency on a concrete model provider",
+        "does not grant the narrow event-type exception to a kernel dependency on a surfaces-apps (UI) package",
+        "does not constrain a non-kernel package depending on the vendored Cordis runtime",
+        "accepts a well-formed exemption",
+        "rejects an exemption whose cycle has fewer than two packages",
+        "rejects an exemption with a malformed recordedDate",
+        "rejects an exemption with an empty owner",
+        "rejects an exemption with an empty adrNote",
+        "reports no cycle and no exemption for an acyclic graph",
+        "finds an unexempted two-package cycle",
+        "marks a cycle exempted when it matches a declared ExemptedCycle entry",
+        "returns the shortest cycle when a longer cycle also exists in the graph",
+        "finds the real shortest cycle even when a longer, disjoint cycle is encountered first in construction order",
+        "completes within the 10-second production-scale budget on a dense, many-overlapping-cycle graph (acceptance[2])",
+        "control: a well-formed exemption validates, so the refusals below measure a decision",
+        "enforcement: an empty reason, owner, or adrNote is refused",
+        "DEFECT: a whitespace-only reason, owner, or adrNote is accepted, so an exemption can record nothing while passing",
+        "DEFECT: a cycle naming one package twice is accepted as a two-package cycle",
+        "DEFECT: adrNote is documented as a repo-relative path to an Agent Note, and any non-empty string passes",
+        "DEFECT: an impossible calendar date validates, because Date.parse rolls it over",
+        "enforcement: a malformed date shape is still refused",
+        "enforcement: a kernel upward edge is a violation even when it is the narrow event-type kind",
+        "control: the same narrow event-type edge from a non-kernel layer IS allowed, proving the case above measures the kernel rule",
+        "enforcement: a global-singleton edge outranks every other consideration, including a downward direction",
+        "calibration: the real scan reaches real input — hundreds of packages, thousands of edges",
+        "calibration: the reporting path is live on real input, so an empty violations list is a measurement and not a dead path",
+        "calibration: the same entry point reports a violation when one exists, so zero distinguishes this repository from a broken check",
+        "the real spawn-target edge is admitted: dsh-sdk-client resolves dsh to spawn it and imports none of its symbols",
+        "control: the exception is withdrawn the moment a symbol is imported, so condition (i) is a criterion and not a declaration",
+        "control: the same fixture WITHOUT the symbol import is admitted, isolating the import as the deciding fact"
+      ],
+      "files": [
+        "tests/architecture/layer-deps.spec.ts",
+        "tests/architecture/__fixtures__/p0-04-calibration/pnpm-workspace.yaml",
+        "tests/architecture/__fixtures__/p0-04-calibration/packages/kernel/probe-kernel/package.json",
+        "tests/architecture/__fixtures__/p0-04-calibration/packages/client/probe-ui/package.json",
+        "scripts/architecture/check-layer-deps.mjs",
+        "scripts/architecture/check-layer-deps.d.mts"
+      ],
+      "frozenAtUtc": "2026-09-24T15:26:35Z",
+      "dryRunProof": {
+        "treeSha": "fae17064afd5fe89c99c032a99fe430be92635a6",
+        "testsDiscovered": 44
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-T338 (`db9bf58418021e3e09fcaf6ffd32edf25ef01577`, off the fix, never merged): check-layer-deps.mjs exports TIME_BUDGET_MS = 0, the budget the acceptance[2] timing case now reads.",
+        "failureSummary": "The fix `61335239d7`, run 36011196149: 137 of 137 over the three architecture specs. M-T338 `db9bf58418`, run 36019734815: exactly two red over the three architecture specs, this entry's acceptance[2] timing case and U.1's budget pin in check-layer-deps.spec.ts. The timing case was green in every B-566 run, so this is its only mutation reading. Predicted in artifacts/laneB/p0-04-t338-predictions.md (0e3c529c…), hashed before dispatch; the delegate compared it."
+      },
+      "note": "P0-04 F-stage, appended to the Contract stage's own spec file, which the registry declares as this stage's sole deliverable.\n\nTHE ESCAPE HATCH'S VALIDATOR IS WEAKER THAN THE RULE IT GUARDS. layering.md rule 5 calls the exemption store one 'a gate cannot widen its own escape hatch'. That holds for WHO may write it, not for WHAT it accepts. Five DEFECT cases record entries that satisfy validateExemptedCycle while recording nothing actionable: a whitespace-only reason, owner, or adrNote (the checks test `=== ''`, which one space defeats); a cycle naming one package twice (`cycle.length < 2` counts entries, not distinct packages); an adrNote that is prose rather than the repo-relative Agent Note path must[3] requires; and the impossible calendar date 2026-02-31, which matches the ISO shape while Date.parse returns a number for it rather than NaN, so the NaN guard never fires. Not repaired here: the fix belongs in scripts/architecture/layer-order.ts, the Contract stage's declared file.\n\nCALIBRATION OF THE REAL-REPOSITORY VERDICT. The Usage stage asserts the real repo reports zero violations. An always-zero verdict and a broken verdict produce identical reports, so three cases calibrate it: the real scan reaches real input (>200 packages, >1000 edges, zero unclassified); its reporting path is live on that input (findings non-empty, produced by the same edge walk and classification as violations, so an empty violations list is a measurement rather than a dead path); and the same entry point on a fixture root reports a real kernel-upward-dependency violation, so zero distinguishes this repository from a function that never reports.\n\nkernel refusals: acceptance[1] grants the kernel no exception, so a kernel upward edge is asserted to stay a violation even as the narrow event-type kind, with a non-kernel control on the identical edge proving the case measures the kernel rule and not the allowance.\n\nTYPECHECK CAUGHT WHAT THE GREEN RUN DID NOT: the three classifyEdge cases first used from/to/method instead of fromPackage/toPackage/detectionMethod. They passed at runtime because classifyEdge reads only nature, fromLayer and toLayer, so malformed objects produced correct verdicts. Repo-wide typecheck rejected them. A green suite over objects that do not satisfy their own interface is why the package-level build is the faster check and never the sufficient one.\n\nEXPECTCASES CORRECTION BEFORE THIS ENTRY EVER GREENED: the list was first built by scanning the spec file for literal `it('...')` lines, which found 38 while the dry run discovers 41. Three cases are generated by a loop over the three detection methods and have no literal title in the source. A freeze whose case list comes from reading the file rather than from running it is BLOCKED-072's shape applied to the freeze itself -- the recorded expectation would have described a suite that was never executed. The list now comes from the JSON reporter, which is what the pipeline requires and what the dryRunProof exists to attest.\n\nSUPPLEMENTED FOR layering.md RULE 8 (C supersession, delegate ruling): three cases cover the spawn-target exception. The real dsh-sdk-client -> dsh edge is admitted; a fixture whose ranked package BOTH declares the unranked dependency AND imports a symbol from it must still report the violation; and an otherwise identical fixture WITHOUT the symbol import must not. The pair isolates the import as the deciding fact -- without it the withdrawal case could pass for any other property the fixture happens to carry. Case count 41 -> 44. Superseded on 2026-09-24: the acceptance[2] timing case now times findUnexemptedCycles, the cycle search check-layer-deps runs, against its exported TIME_BUDGET_MS, instead of layer-order's findShortestCycle, which the gate does not call (P0-04 blind review F3). Same title, a different subject measured, so it is a replacement under lifecycle 2.1. The describe around it still names findShortestCycle; the case body is what is timed.",
+      "supersedes": "2026-09-04T19:40:00.000Z"
+    },
+    {
+      "epic": "P0-04",
+      "stage": "U",
+      "supplements": {
+        "epic": "P0-04",
+        "stage": "U"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/architecture/check-layer-deps.spec.ts",
+        "-t",
+        "rejects a kernel dependency on a model provider declared only in optionalDependencies|rejects a kernel dependency on a UI package declared only in optionalDependencies|the layer checker refuses a pnpm-workspace\\.yaml whose patterns match no package|runs against a 10-second budget unless --budget-ms replaces it|reports a cycle in which a vendored package depends on a classified one|rejects a kernel package declaring a UI application under apps/, even one it imports nothing from|rejects a kernel dependency on vendored Cordis through a declare-module augmentation declaring a const named Context",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "acceptance[0]: the scanned workspace is the one pnpm-workspace.yaml declares the layer checker refuses a pnpm-workspace.yaml whose patterns match no package",
+        "acceptance[0]: every unexempted cycle is reported, and a record exempts the one cycle its edges name (layering.md rule 5) reports a cycle in which a vendored package depends on a classified one",
+        "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through a declare-module augmentation declaring a const named Context",
+        "acceptance[1]: a kernel package depends on no model provider, UI package or external package rejects a kernel dependency on a model provider declared only in optionalDependencies",
+        "acceptance[1]: a kernel package depends on no model provider, UI package or external package rejects a kernel dependency on a UI package declared only in optionalDependencies",
+        "acceptance[1]: a kernel package depends on no model provider, UI package or external package rejects a kernel package declaring a UI application under apps/, even one it imports nothing from",
+        "acceptance[2]: the time budget runs against a 10-second budget unless --budget-ms replaces it"
+      ],
+      "files": [
+        "tests/architecture/check-layer-deps.spec.ts",
+        "scripts/architecture/check-layer-deps.mjs",
+        "scripts/architecture/check-layer-deps.d.mts"
+      ],
+      "frozenAtUtc": "2026-09-24T15:26:35Z",
+      "dryRunProof": {
+        "treeSha": "fae17064afd5fe89c99c032a99fe430be92635a6",
+        "testsDiscovered": 7
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Six mutations of check-layer-deps.mjs, each off the fix and never merged: M-F1 (a kernel package's optionalDependencies are no layer edge), M-F2a (patterns that match no package are accepted), M-b (the default budget is 600 s), M-a (a vendored package's dependency on a classified one is no cycle edge), M-F5 (a kernel package gets rule 8's spawn-target reading), M-c (a module augmentation's Context need not be an interface).",
+        "failureSummary": "PRECHECK `9304b3ef7a`, run 36011168705: the two F1 rows, the layer checker's F2 case and F5 red (with the seam scanner's F2 case, P0-03 U.2). The fix `61335239d7`, run 36011196149: 137 of 137 over the three architecture specs. M-F1 `f12baac7bf`, run 36011220829: exactly the two F1 rows red; M-F2a `987484d118`, run 36011246182: exactly F2; M-b `3192ad5ae5`, run 36011296138: exactly the budget pin; M-a `7599d3093f`, run 36011323544: exactly the vendored cycle; M-F5 `378cfb4750`, run 36011350062: exactly F5; M-c `11a7a5374b`, run 36011375583: exactly the const Context row, the checker throwing on the const's missing name."
+      },
+      "note": "P0-04 blind review F1-F5 and M-c: a kernel package's optionalDependencies on a model provider or UI package are violations; a pnpm-workspace.yaml whose patterns match no package is refused; the default time budget is pinned at 10 000 ms; a cycle through a vendored package's dependency on a classified one is reported; a kernel package declaring a UI application under apps/ is refused whatever it imports; a declare-module block declaring a const named Context is a forbidden Cordis use. The argv selects the seven by their titles with an escaped alternation in -t."
+    },
+    {
+      "epic": "P0-03",
+      "stage": "U",
+      "supplements": {
+        "epic": "P0-03",
+        "stage": "U"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/architecture/check-capability-seams.spec.ts",
+        "-t",
+        "the seam scanner refuses a pnpm-workspace\\.yaml whose patterns match no package",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "the scanned workspace is the one pnpm-workspace.yaml declares (acceptance[0]) the seam scanner refuses a pnpm-workspace.yaml whose patterns match no package"
+      ],
+      "files": [
+        "tests/architecture/check-capability-seams.spec.ts",
+        "scripts/architecture/check-capability-seams.mjs"
+      ],
+      "frozenAtUtc": "2026-09-24T15:26:35Z",
+      "dryRunProof": {
+        "treeSha": "fae17064afd5fe89c99c032a99fe430be92635a6",
+        "testsDiscovered": 1
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-F2b (off the P0-04 fix, never merged): check-capability-seams.mjs accepts a pnpm-workspace.yaml whose patterns match no package.",
+        "failureSummary": "PRECHECK `9304b3ef7a`, run 36011168705: the case red. The fix `61335239d7`, run 36011196149: 137 of 137 over the three architecture specs. M-F2b `811be59a56`, run 36011269998: exactly this case red."
+      },
+      "note": "P0-04 blind review F2, on the seam scanner P0-03 owns: a pnpm-workspace.yaml whose patterns match no package is refused, so the gate cannot pass by scanning nothing."
     }
   ]
 }
