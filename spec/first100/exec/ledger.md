@@ -62,7 +62,7 @@ This table lists main cells only: a supplement cell (`U.1`, `C.2`, ...) has no r
 | 54 | P4-09 | Detached、Saved、Versioned 与 Nested Workflow | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P1-02, P4-08 | W8 | GREEN | GREEN | GREEN | GREEN | 874db203f09ddc5be6e2ce6f6700e89a2c563f41 | APPROVED | ACCEPTED |
 | 55 | P4-10 | Workflow 预算、Scheduler、Backpressure、公平性与资源锁 | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P3-10, P4-07 | W9 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
 | 56 | P4-11 | 统一 Retry Classifier、Circuit Breaker 与 Retry Budget | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P4-01, P4-12 | W8 | GREEN | GREEN | GREEN | GREEN | 71580010ded3860d869dbbc559e277ee14c7474b | APPROVED | ACCEPTED |
-| 57 | P4-12 | 外部副作用 Idempotency Ledger | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P2-03, P4-06, P4-07 | W7 | GREEN | GREEN | GREEN | GREEN | abad21fa7068ab6e378f46664bbc21dd86288525 | APPROVED | ACCEPTED |
+| 57 | P4-12 | 外部副作用 Idempotency Ledger | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P2-03, P4-06, P4-07 | W7 | GREEN | GREEN | GREEN | GREEN | abad21fa7068ab6e378f46664bbc21dd86288525 | PENDING | BLOCKED_ON_ACCEPTANCE |
 | 58 | P4-13 | Reconciliation Engine 与 Saga Compensation | L3_CONSUMER | UNASSIGNED_UNTIL_APPROVAL | P4-12, P7-02 | W13 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
 | 59 | P4-14 | Partial-Turn Resume、Durable Schedule/Goal Trigger | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P4-08, P4-12, P4-13 | W14 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
 | 60 | P5-01 | Strategy Router：Direct / ReAct / Plan / Workflow / Multi-Agent | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P0-05, P4-02, P4-03 | W9 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
