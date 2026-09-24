@@ -271,6 +271,23 @@ export type RunTransitionDecision =
   | { readonly accepted: false; readonly reason: RunTransitionDenialReason; readonly from: RunState; readonly to: RunState }
 
 /**
+ * Why `RunService.attachSession` refused to add a Session to a Run
+ * (acceptance[2]): `'terminal'` when the Run has reached a terminal state;
+ * `'fenced'` when the owner's lease it was given no longer admits the write;
+ * `'lease-unavailable'` when asking that lease threw.
+ */
+export type RunAttachDenialReason = 'terminal' | 'fenced' | 'lease-unavailable'
+
+/**
+ * The outcome of `RunService.attachSession`: the Run with the Session in its
+ * `sessionIds` (`accepted: true`), or the refusal and the state the Run was
+ * in (`accepted: false`), which writes nothing.
+ */
+export type RunAttachDecision =
+  | { readonly accepted: true; readonly run: Run }
+  | { readonly accepted: false; readonly reason: RunAttachDenialReason; readonly state: RunState }
+
+/**
  * Why `./state-machine.ts`'s `resumeRun` refused to resume a Run
  * (acceptance[0]): its state is already one of the three terminal states.
  */

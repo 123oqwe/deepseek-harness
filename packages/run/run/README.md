@@ -243,10 +243,11 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   the agent's lease for `accepted → planning`, `→ running`, `cancelled`,
   `verifying` and `succeeded` or `failed`, and gives the item back only after
   the terminal writes settle. `pauseRun` gives the lease back before it writes
-  `paused` (BLOCKED-197), so that write carries none, and `openForSession`,
-  `attachSession` and session-log appends carry none either; the one
-  `attachSession` call `RunPlugin` makes is gated on the owner's
-  `mayWrite` when the child opens, not in the Run's turn. The lease lives in
+  `paused` (BLOCKED-197), so that write carries none, and `openForSession`
+  and session-log appends carry none either. The one `attachSession` call
+  `RunPlugin` makes passes the owner's lease, which `attachSession` asks in
+  the Run's turn as `advance` asks its fence; it also refuses a Run that has
+  reached a terminal state, and a refused join is logged. The lease lives in
   SQLite and the Run in its JSON store, so a write admitted just before a
   takeover can still land: "stale writes after a newer token = 0" is not
   claimed. lease-sqlite keeps its handle after its own teardown while a lease
