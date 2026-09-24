@@ -73,7 +73,7 @@ export function assertEvent(event: SessionFormatEvent, version: 2 | 3): void {
   const earlierDescriptor = event.type === 'subagent/descriptor' && data['version'] !== 3
   if (earlierDescriptor) sessionFormatCount(data['version'], event.type + ' version')
   // Assistant attempts are introduced by V2; the V0 helper has no case for them.
-  if (event.type !== 'assistant/attempt' && !earlierDescriptor) assertReleasedPayloadSemantics(event, version)
+  if (event.type !== 'assistant/attempt') assertReleasedPayloadSemantics(event, version)
   if (event.type === 'assistant/message' || event.type === 'assistant/attempt') {
     for (const coordinate of ['turn', 'step']) {
       if (sessionFormatCount(data[coordinate], coordinate) === 0) throw new SessionFormatError(coordinate + ' must be positive')
