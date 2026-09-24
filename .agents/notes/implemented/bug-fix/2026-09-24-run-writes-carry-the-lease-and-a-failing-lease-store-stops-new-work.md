@@ -12,6 +12,7 @@ P4-07's acceptance was withdrawn (BLOCKED-319) over two gaps on the shipped head
 
 - **`RunService.advance` takes the writer's lease.** With a `fence`, the write happens only while `fence.mayWrite(occurredAt)` admits it, asked in the Run's own turn right before the state machine decides. A refusal records nothing and reads `'fenced'`, a new member of `RunTransitionDenialReason`; when asking the lease throws, the write is refused as `'lease-unavailable'`, another new member, instead of the error escaping the Run's turn.
 - **`RunPlugin` passes the agent's lease on five writes**: `accepted → planning`, `→ running`, and the terminal `cancelled`, `verifying`, and `succeeded` or `failed`. `pauseRun` does not.
+- **A write refused for its lease is logged.** All six of `RunPlugin`'s Run writes go through one helper, which logs a `fenced` or `lease-unavailable` refusal as a warning naming the transition, the Run and the reason. An illegal transition is not logged, because after a refused `verifying` the terminal write is asked for and refused as illegal.
 - **`finish` gives the item back after the terminal writes settle.** Released first, the holder's own writes would find no lease and be refused.
 - **`open` treats a store that throws like a refused lease.** Reading the predecessor and taking the lease sit in one `try`; on a throw the agent is marked `leaseRefused`, no Run opens, and the log records the refusal as `lease-unavailable`.
 

@@ -1203,7 +1203,7 @@ export default class RunPlugin extends Service {
       agent.session.append('run/task-profile', { profile: compiled.profile })
     }
     agent.taskProfile = ref
-    await this.service.advance(runId, 'planning', [{ kind: 'task-profile', id: ref }], Date.now(), agent.runLease)
+    await this.advanceRun(runId, 'planning', [{ kind: 'task-profile', id: ref }], agent.runLease)
     return true
   }
 
@@ -1223,7 +1223,7 @@ export default class RunPlugin extends Service {
     if (runId === undefined) return
     const state = this.service.get(runId)?.state
     if (state !== 'planning' && state !== 'paused') return
-    await this.service.advance(runId, 'running', [], Date.now(), agent.runLease)
+    await this.advanceRun(runId, 'running', [], agent.runLease)
   }
 
   /**
@@ -1257,12 +1257,33 @@ export default class RunPlugin extends Service {
     const state = this.service.get(runId)?.state
     if (state === undefined || TERMINAL_RUN_STATES.has(state)) return
     if (state === 'accepted' || state === 'planning') {
-      await this.service.advance(runId, 'cancelled', [], Date.now(), agent.runLease)
+      await this.advanceRun(runId, 'cancelled', [], agent.runLease)
       return
     }
     if (state !== 'running') return
-    await this.service.advance(runId, 'verifying', [], Date.now(), agent.runLease)
-    await this.service.advance(runId, failed ? 'failed' : 'succeeded', [], Date.now(), agent.runLease)
+    await this.advanceRun(runId, 'verifying', [], agent.runLease)
+    await this.advanceRun(runId, failed ? 'failed' : 'succeeded', [], agent.runLease)
+  }
+
+  /**
+   * Write one Run transition, and log it when the Run Service refuses it for
+   * the writer's lease (P4-07 must[1]).
+   *
+   * A refusal writes nothing and no caller here has another move after it, so
+   * this warning is the only trace a host fenced out of its Run, or one whose
+   * lease store could not answer, leaves. An illegal transition is not logged:
+   * after a refused `verifying`, `endRun` still asks for the terminal state,
+   * which the state machine then refuses.
+   * @param runId - the Run to advance.
+   * @param to - the state to write.
+   * @param references - the entities the transition names.
+   * @param fence - the writer's lease, when the write carries one.
+   */
+  private async advanceRun(runId: RunId, to: RunState, references: readonly RunEntityReference[], fence?: Pick<RunLease, 'mayWrite'>): Promise<void> {
+    const decision = await this.service.advance(runId, to, references, Date.now(), fence)
+    if (!decision.accepted && decision.reason !== 'illegal-transition') {
+      this.ctx.logger.warn('run: the Run write %s -> %s on run %s was refused (%s)', decision.from, decision.to, runId, decision.reason)
+    }
   }
 
   /**
@@ -1295,7 +1316,7 @@ export default class RunPlugin extends Service {
     if (lease !== undefined) this.ctx.leaseStore.release(lease.token)
     const runId = agent.runId
     if (runId !== undefined && this.service.get(runId)?.state === 'running') {
-      await this.service.advance(runId, 'paused', [], Date.now())
+      await this.advanceRun(runId, 'paused', [])
     }
   }
 

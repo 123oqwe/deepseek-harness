@@ -12,6 +12,7 @@ P4-07 的验收因出厂 headless profile 上的两处缺口被撤回（BLOCKED-
 
 - **`RunService.advance` 接收写入方的租约。** 带上 `fence` 时，只有 `fence.mayWrite(occurredAt)` 放行才写；这一询问在该 Run 自己的顺序里、状态机判定之前进行。被拒时什么都不记，理由为 `'fenced'`，这是 `RunTransitionDenialReason` 新增的成员。询问租约本身抛出异常时，这次写入被拒为 `'lease-unavailable'`（也是新增的成员），异常不会冒出该 Run 的顺序。
 - **`RunPlugin` 在五处写入上传入 agent 的租约**：`accepted → planning`、`→ running`，以及终态的 `cancelled`、`verifying` 与 `succeeded` 或 `failed`。`pauseRun` 不传。
+- **因租约被拒的写入会记日志。** `RunPlugin` 的六处 Run 写入都经同一个辅助函数；它把 `fenced` 或 `lease-unavailable` 的拒绝记为一条警告，写明转移、Run 与理由。非法转移不记：`verifying` 被拒之后，终态写入仍会被请求，再被状态机按非法转移拒绝。
 - **`finish` 在终态写入完成之后才交还工作项。** 先交还的话，持有者自己的写入会找不到租约而被拒。
 - **`open` 把抛异常的存储当作租约被拒。** 读前任与取租约放在同一个 `try` 里；一旦抛出，agent 被标记为 `leaseRefused`，不开 Run，日志把这次拒绝记为 `lease-unavailable`。
 
