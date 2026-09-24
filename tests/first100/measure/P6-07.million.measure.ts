@@ -66,7 +66,7 @@ describe(`P6-07 acceptance[0] sizing: the shipped list path over ${N} sessions (
     ctx = new Context()
     await ctx.plugin(SessionStore)
     await ctx.plugin(JsonlSessionPersistence, { root })
-    await ctx.plugin(SessionQueryEngine)
+    await ctx.plugin(SessionQueryEngine, {})
   })
 
   afterAll(async () => {
