@@ -985,9 +985,6 @@ const REPORT_CONFIGS = new Map([
 export function configFrozenReportRefusal(argv, reportFiles, reportPath) {
   const { config, paths } = frozenCommand(argv)
   const reportName = basename(reportPath)
-  if (!REPORT_CONFIGS.has(reportName)) {
-    return `no step in first100-exact-sha.yml writes a report named ${reportName}, so the config it ran under is unknown`
-  }
   const reportConfig = REPORT_CONFIGS.get(reportName)
   const under = (name) => (name === undefined ? 'the default config' : `--config ${name}`)
   if (config !== reportConfig) {
