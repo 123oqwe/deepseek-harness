@@ -251,6 +251,22 @@
     },
     {
       "epic": "P0-07",
+      "path": ".agents/notes/implemented/bug-fix/2026-09-24-evidence-verification-rederives-the-baseline-and-binds-the-gate-manifest.md",
+      "kind": "doc",
+      "stages": [
+        "P.1"
+      ]
+    },
+    {
+      "epic": "P0-07",
+      "path": ".agents/notes/implemented/bug-fix/2026-09-24-evidence-verification-rederives-the-baseline-and-binds-the-gate-manifest.zh.md",
+      "kind": "doc",
+      "stages": [
+        "P.1"
+      ]
+    },
+    {
+      "epic": "P0-07",
       "path": "packages/bundle/base/cordis.patch.yml",
       "kind": "manifest",
       "stages": [
@@ -272,6 +288,15 @@
       "stages": [
         "U.1"
       ]
+    },
+    {
+      "epic": "P0-07",
+      "path": "scripts/release/baseline-fingerprint.mjs",
+      "kind": "source",
+      "stages": [
+        "P.1"
+      ],
+      "reason": "Cited by P0-07 P.1 as an input, not changed: the P0-07 fix makes `verify-evidence.mjs` call this file's `verifyBaseline`, so LB-1's five cases observe verify re-deriving the fingerprint through it, and an edit here changes what they observe."
     },
     {
       "epic": "P0-07",
