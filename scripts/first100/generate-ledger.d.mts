@@ -268,6 +268,13 @@ export interface ReportDirVerdict {
 export function reportDirMatchesCandidate(reportPath: string, candidateSha: string, gitRoot?: string): ReportDirVerdict
 
 /**
+ * The vitest config and the test paths a frozen `vitest run` argv names.
+ * @param argv - a freeze entry's `argv`.
+ * @returns `config`, `undefined` when the argv names none, and `paths` without a leading `./` or trailing `/`.
+ */
+export function frozenCommand(argv: readonly string[]): { config: string | undefined; paths: string[] }
+
+/**
  * Why a report cannot observe an entry frozen under its own vitest config, or `null` when it can.
  * @param argv - the frozen entry's `argv`.
  * @param reportFiles - the report's `testResults[].name`, absolute on the machine that ran it.

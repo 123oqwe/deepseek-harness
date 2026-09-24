@@ -921,21 +921,15 @@ function assertReportDirMatchesCandidate(reportPath, candidateSha) {
 }
 
 /**
- * Why a report cannot observe an entry frozen under its own vitest config, or `null` when it can.
+ * The vitest config and the test paths a frozen `vitest run` argv names.
  *
- * The full-suite observation is a run of the default config, so it never
- * contains a file that only another config includes. An entry frozen as
- * `vitest run --config vitest.e2e.config.ts <file>` (P4-05.U.4) is observed by
- * the report its own step in `first100-exact-sha.yml` writes beside the
- * full-suite report (the e2e steps, the recorded-session snapshot step); that
- * report must have run every test path the frozen argv names. An argv that
- * names no config returns `null`, so the full-suite report observes it as
- * before.
- * @param argv - the frozen entry's `argv`.
- * @param reportFiles - the report's `testResults[].name`, absolute on the machine that ran it.
- * @returns the refusal, or `null`.
+ * `--config <path>`, `--config=<path>` and `-c <path>` name the config; the
+ * pattern after `-t` or `--testNamePattern` and every other flag are dropped;
+ * each remaining token is a test path, without a leading `./` or trailing `/`.
+ * @param argv - a freeze entry's `argv`.
+ * @returns `config`, `undefined` when the argv names none, and `paths`.
  */
-export function configFrozenReportRefusal(argv, reportFiles) {
+export function frozenCommand(argv) {
   let config
   const paths = []
   for (let index = argv.indexOf('run') + 1; index < argv.length; index += 1) {
@@ -951,6 +945,26 @@ export function configFrozenReportRefusal(argv, reportFiles) {
       paths.push(token.replace(/^\.\//u, '').replace(/\/+$/u, ''))
     }
   }
+  return { config, paths }
+}
+
+/**
+ * Why a report cannot observe an entry frozen under its own vitest config, or `null` when it can.
+ *
+ * The full-suite observation is a run of the default config, so it never
+ * contains a file that only another config includes. An entry frozen as
+ * `vitest run --config vitest.e2e.config.ts <file>` (P4-05.U.4) is observed by
+ * the report its own step in `first100-exact-sha.yml` writes beside the
+ * full-suite report (the e2e steps, the recorded-session snapshot step); that
+ * report must have run every test path the frozen argv names. An argv that
+ * names no config returns `null`, so the full-suite report observes it as
+ * before.
+ * @param argv - the frozen entry's `argv`.
+ * @param reportFiles - the report's `testResults[].name`, absolute on the machine that ran it.
+ * @returns the refusal, or `null`.
+ */
+export function configFrozenReportRefusal(argv, reportFiles) {
+  const { config, paths } = frozenCommand(argv)
   if (config === undefined) return null
   const files = reportFiles.map((name) => `/${name.replace(/^\/+/u, '')}`)
   const notRun = paths.filter((path) => !files.some((file) => file.endsWith(`/${path}`) || file.includes(`/${path}/`)))

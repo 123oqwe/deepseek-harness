@@ -351,24 +351,6 @@ jobs:
         # 1". The report cannot record what it has no field for, and no
         # human-readable reporter was attached to print it.
 
-      - name: Frozen case strings are unique across the whole suite
-        # Here and not in the registry gate set: it needs the whole-suite report
-        # the step above writes, which does not exist when the gate set runs.
-        # `always()` for the suite's reason: a precondition failing upstream
-        # should cost one round, not this verdict.
-        # verify-freeze-case-uniqueness refuses a report whose parent directory
-        # carries no commit token (reportDirMatchesCandidate), so the report is
-        # checked from a copy in a directory named like the uploaded artifact.
-        # The suite output and the upload below keep reading observations/.
-        if: always()
-        run: |
-          d=.artifacts/first100/observations/first100-vitest-report-${{ steps.resolve-sha.outputs.sha }}
-          src=.artifacts/first100/observations/vitest-report.json
-          [ -f "$src" ] || { echo "verify-freeze-case-uniqueness: cannot decide — --report $src does not exist" >&2; exit 2; }
-          mkdir -p "$d"
-          cp "$src" "$d/"
-          node scripts/first100/verify-freeze-case-uniqueness.mjs --report "$d/vitest-report.json" --candidate-sha ${{ steps.resolve-sha.outputs.sha }}
-
       # BLOCKED-275(b). `release:verify` runs for real elsewhere in this
       # repository (`release.yml:146`, `release-publish.yml:58`,
       # `docs-pages.yml:65`, all `--family dsh`) but has never run against a
@@ -688,7 +670,7 @@ jobs:
       # e2e and snapshot reports beside the full-suite one.
       # `if-no-files-found` applies to the paths together, so one missing
       # report does not fail this step: a step whose report is missing has
-      # failed on its own, and the uniqueness step above fails when the
+      # failed on its own, and the uniqueness step below fails when the
       # full-suite report is missing.
       - name: Upload the vitest observation report
         if: always()
@@ -720,6 +702,34 @@ jobs:
             --e2e-report .artifacts/first100/observations/vitest-e2e-sdk-keyless-smoke.json \
             --e2e-report .artifacts/first100/observations/vitest-e2e-acp.json \
             --e2e-report .artifacts/first100/observations/vitest-snapshot.json
+
+      - name: Frozen case strings are unique across the whole suite
+        # Here and not in the registry gate set: it needs the whole-suite report
+        # the suite step writes, which does not exist when the gate set runs,
+        # and after the e2e and snapshot steps, whose reports count the strings
+        # of the entries frozen under their configs (P4-05.U.4).
+        # `always()` for the suite's reason: a precondition failing upstream
+        # should cost one round, not this verdict.
+        # verify-freeze-case-uniqueness refuses a report whose parent directory
+        # carries no commit token (reportDirMatchesCandidate), so every report
+        # is checked from a copy in a directory named like the uploaded
+        # artifact. A report its step did not write is not copied, and the gate
+        # refuses that --e2e-report by its path.
+        if: always()
+        run: |
+          d=.artifacts/first100/observations/first100-vitest-report-${{ steps.resolve-sha.outputs.sha }}
+          src=.artifacts/first100/observations/vitest-report.json
+          [ -f "$src" ] || { echo "verify-freeze-case-uniqueness: cannot decide — --report $src does not exist" >&2; exit 2; }
+          mkdir -p "$d"
+          cp "$src" "$d/"
+          for own in .artifacts/first100/observations/vitest-e2e-*.json .artifacts/first100/observations/vitest-snapshot.json; do
+            if [ -f "$own" ]; then cp "$own" "$d/"; fi
+          done
+          node scripts/first100/verify-freeze-case-uniqueness.mjs --report "$d/vitest-report.json" \
+            --e2e-report "$d/vitest-e2e-sdk-keyless-smoke.json" \
+            --e2e-report "$d/vitest-e2e-acp.json" \
+            --e2e-report "$d/vitest-snapshot.json" \
+            --candidate-sha ${{ steps.resolve-sha.outputs.sha }}
 
 
       - name: Pack the dsh family

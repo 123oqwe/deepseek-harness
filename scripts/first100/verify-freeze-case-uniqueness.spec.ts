@@ -4,9 +4,18 @@
  * Fixtures 1, 3 and 4 make the gate non-vacuous: 1 shows it can go red, 3
  * that rename resolution is live, 4 that a retired rename resolves nothing.
  */
+import { readFileSync } from 'node:fs'
+import { load } from 'js-yaml'
 import { describe, expect, it } from 'vitest'
 
-import { argvTargets, classifyFrozenCaseMatches, reportRefusal, uncoveredArgvTargets } from './verify-freeze-case-uniqueness.mjs'
+import {
+  argvTargets,
+  classifyAgainstObservingReports,
+  classifyFrozenCaseMatches,
+  configFrozenOwnReports,
+  reportRefusal,
+  uncoveredArgvTargets,
+} from './verify-freeze-case-uniqueness.mjs'
 
 const BARE = 'enumerates at least twelve boundaries, each named once'
 const FULL = `P2-04 Fault — risk classification boundary matrix ${BARE}`
@@ -83,5 +92,91 @@ describe('whole-suite refusal', () => {
   it('does not match a target against a file that only shares its name as a prefix', () => {
     const entries = [entry({ argv: ['pnpm', 'exec', 'vitest', 'run', 'packages/run/task'] })]
     expect(uncoveredArgvTargets(entries, ['/r/packages/run/task-profile/tests/a.spec.ts'])).toHaveLength(1)
+  })
+})
+
+const ACP = 'apps/cli/tests/profiles/acp/tests/acp.e2e.ts'
+const ACP_CASE = 'P4-05 acceptance[2]: a restarted acp host takes over the Run the lease row now names the second host'
+const e2eFrozen = entry({
+  epic: 'P4-05',
+  stage: 'U',
+  supplementSeq: 4,
+  argv: ['pnpm', 'exec', 'vitest', 'run', '--config', 'vitest.e2e.config.ts', ACP],
+  expectCases: [ACP_CASE],
+})
+const keylessReport = { path: 'obs/vitest-e2e-sdk-keyless-smoke.json', files: ['/ci/apps/cli/tests/profiles/sdk/keyless-smoke.e2e.ts'] }
+const acpReport = { path: 'obs/vitest-e2e-acp.json', files: [`/ci/${ACP}`] }
+
+describe('an entry frozen under its own config is answered by its own report (P4-05.U.4)', () => {
+  it('drops the config file after --config and -c from the argv targets', () => {
+    expect(argvTargets(['pnpm', 'exec', 'vitest', 'run', '--config', 'vitest.e2e.config.ts', ACP])).toStrictEqual([ACP])
+    expect(argvTargets(['pnpm', 'exec', 'vitest', 'run', 'packages/a/x.e2e.ts', '-c', 'vitest.e2e.config.ts']))
+      .toStrictEqual(['packages/a/x.e2e.ts'])
+  })
+
+  it('does not require the whole-suite report to cover it, and still requires it for an entry naming no config', () => {
+    const plain = entry({ argv: ['pnpm', 'exec', 'vitest', 'run', 'packages/mcp/mcp-client/tests/annotations.spec.ts'] })
+    expect(uncoveredArgvTargets([e2eFrozen, plain], ['/r/packages/policy/risk-taxonomy/tests/classify.spec.ts']))
+      .toStrictEqual([{ label: 'P2-04.C', target: 'packages/mcp/mcp-client/tests/annotations.spec.ts' }])
+  })
+
+  it('takes the first --e2e-report that ran every path its argv names', () => {
+    expect(configFrozenOwnReports([e2eFrozen, entry({})], [keylessReport, acpReport]))
+      .toStrictEqual({ owned: [{ entry: e2eFrozen, path: 'obs/vitest-e2e-acp.json' }], refusals: [] })
+  })
+
+  it('refuses an entry no --e2e-report ran, and one naming a config and no test path', () => {
+    const pathless = entry({
+      epic: 'P2-04',
+      stage: 'U',
+      supplementSeq: 3,
+      argv: ['pnpm', 'exec', 'vitest', 'run', '-c', 'vitest.snapshot.config.ts'],
+    })
+    expect(configFrozenOwnReports([e2eFrozen, pathless], [keylessReport]).refusals).toStrictEqual([
+      `P4-05.U.4 is frozen under --config vitest.e2e.config.ts, and no --e2e-report ran ${ACP}`,
+      'P2-04.U.3 names --config vitest.snapshot.config.ts and no test path, so no report can be told to be its own',
+    ])
+  })
+
+  it('skips a superseded entry frozen under its own config', () => {
+    expect(configFrozenOwnReports([{ ...e2eFrozen, supersededBy: '2026-09-24T06:33:40Z' }], [])).toStrictEqual({ owned: [], refusals: [] })
+  })
+
+  it('counts its strings in its own report only, and every other entry in the whole-suite report', () => {
+    const plain = entry({ expectCases: [FULL] })
+    const counts = new Map([['obs/vitest-e2e-acp.json', new Map([[ACP_CASE, 1]])]])
+    const rows = classifyAgainstObservingReports(
+      [e2eFrozen, plain],
+      new Map([[ACP_CASE, 2], [FULL, 1]]),
+      [{ entry: e2eFrozen, path: 'obs/vitest-e2e-acp.json' }],
+      counts,
+      new Map(),
+    )
+    expect(rows.map(row => [row.label, row.resolved, row.report])).toStrictEqual([
+      ['P2-04.C', 1, null],
+      ['P4-05.U.4', 1, 'obs/vitest-e2e-acp.json'],
+    ])
+  })
+
+  it('reports a string repeated inside its own report as resolving to more than one', () => {
+    const counts = new Map([['obs/vitest-e2e-acp.json', new Map([[ACP_CASE, 2]])]])
+    const owned = [{ entry: e2eFrozen, path: 'obs/vitest-e2e-acp.json' }]
+    const rows = classifyAgainstObservingReports([e2eFrozen], new Map(), owned, counts, new Map())
+    expect(rows.map(row => row.resolved)).toStrictEqual([2])
+  })
+})
+
+describe('the exact-SHA workflow hands this gate every own-config report its job writes', () => {
+  it('passes each one as --e2e-report, from a step after every step that writes one', () => {
+    const text = readFileSync(new URL('../../.github/workflows/first100-exact-sha.yml', import.meta.url), 'utf8')
+    const job = (load(text) as { jobs: Record<string, { steps: { run?: string }[] }> }).jobs['exact-sha-gate']
+    const runs = (job?.steps ?? []).map(step => step.run ?? '')
+    const gate = runs.findIndex(run => run.includes('verify-freeze-case-uniqueness.mjs'))
+    const written = runs.flatMap((run, index) =>
+      [...run.matchAll(/--outputFile=\S*\/(vitest-(?:e2e|snapshot|web)[a-z0-9-]*\.json)/gu)].map(match => ({ index, name: match[1] })))
+    const passed = [...(runs[gate] ?? '').matchAll(/--e2e-report "\$d\/([^"]+)"/gu)].map(match => match[1])
+    expect(written.length).toBeGreaterThan(0)
+    expect(passed.sort()).toStrictEqual(written.map(report => report.name).sort())
+    expect(written.every(report => report.index < gate)).toBe(true)
   })
 })
