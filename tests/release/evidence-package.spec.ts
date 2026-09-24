@@ -937,6 +937,17 @@ describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', { ti
       expect(resultLine).toContain('accepted=false')
       expect(result.stdout).toContain('verify could not complete')
     })
+
+    it('says it could not read what the package records when verify cannot complete, instead of naming a value it never read', () => {
+      const { root } = collectOneAcceptedGate()
+      writeFileSync(join(root, '.dsh/evidence/evidence.json'), '{"accepted":true}\n')
+
+      const result = verifyEvidence(root)
+      expect(result.status, result.stdout).toBe(1)
+      const [resultLine] = result.stdout.split('\n')
+      expect(resultLine).toContain('verify could not read what the package records')
+      expect(resultLine).not.toContain('the package records null')
+    })
   })
 
   describe('acceptance[0]: the working tree is checked against the diff recorded at collection', () => {
@@ -1160,6 +1171,13 @@ describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', { ti
       const result = verifyEvidence(root)
       expect(result.status, result.stdout).toBe(1)
       expect(result.stdout).toContain('the working tree differs from the diff recorded at collection')
+    })
+
+    it('collects and verifies a checkout whose git configuration always colors its diffs', () => {
+      // Color escapes would open the no-index output, which is then not read as a patch.
+      const { root } = collectOneAcceptedGate((fixture) => { git(fixture, ['config', 'color.diff', 'always']) })
+
+      expect(verifyEvidence(root).status).toBe(0)
     })
   })
 
