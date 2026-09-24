@@ -42,6 +42,9 @@ export type SideEffectReceipt = Branded<'SideEffectReceipt'>
 /** Which phase of the workflow a step belonged to. */
 export type PhaseName = Branded<'PhaseName'>
 
+/** Identifies one `agent()` call by what it asked: its prompt and the options that change the child's work. */
+export type CallDigest = Branded<'CallDigest'>
+
 /**
  * Whether a step may be skipped on resume, or must be reconciled first.
  *
@@ -70,6 +73,13 @@ export interface JournalEntry {
   readonly output: ArtifactRef | null
   readonly childReceipts: readonly ChildReceipt[]
   readonly sideEffectReceipts: readonly SideEffectReceipt[]
+  /**
+   * The call that started this step. A resume reuses the step only for a call
+   * with the same identity, because step numbers follow call order, which
+   * changed arguments or completion order can move. Compaction keeps it.
+   * Absent for a step recorded without one.
+   */
+  readonly call?: CallDigest
   /**
    * Whether this entry's recorded result was verified against its inputs
    * after the fact (must[1]).

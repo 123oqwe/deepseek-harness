@@ -744,7 +744,7 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       body: request.script,
       ...request.args !== undefined ? { args: request.args } : {},
       limits,
-      ...Object.keys(reconciled.reusable).length === 0 ? {} : { reusable: reconciled.reusable },
+      ...Object.keys(reconciled.reusable).length === 0 ? {} : { reusable: reconciled.reusable, reusableCalls: reconciled.calls ?? {} },
     }
     // Capture the dependency while this service call is still traced through
     // the start() holder. Cordis strips the engine-provider shadow when it

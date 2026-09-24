@@ -7,6 +7,7 @@
 export { admitResume, decideResume } from './types.ts'
 export type {
   ArtifactRef,
+  CallDigest,
   ChildReceipt,
   JournalAdmission,
   JournalEntry,
@@ -22,7 +23,7 @@ export type {
   RunNesting,
   WorkflowJournal,
 } from './types.ts'
-export { readJournal, writeJournal } from './store.ts'
+export { readJournal, setJournalAside, writeJournal } from './store.ts'
 export { compactJournal, planResume, receiptsToReconcile, retainsAllReceipts } from './replay.ts'
 export type { PlannedStep, ResumePlan } from './replay.ts'
 export { createJournalRecorder } from './recorder.ts'

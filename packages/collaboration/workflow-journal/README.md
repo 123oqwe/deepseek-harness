@@ -29,13 +29,17 @@ That last point is the one worth stating plainly: verifying that a charge was *r
 
 `verified` is a separate field from `outcome` because "it finished" and "we checked it" are different facts, and must[1] skips only steps that are both.
 
+A step number is not an identity. Each entry records `call`, the identity of the `agent()` call that started it, which the worker-thread host computes from the call's prompt and the options that change the child's work. A resume reuses an entry only for a call with the same identity, because a changed argument, or calls started in the order earlier calls completed, can put a different call under the same number.
+
 ## A changed script refuses the whole resume
 
 Step ids are positions in a script. Against a *different* script they name different work, so a resume guided by a stale journal would skip steps that never ran and re-run steps that did. `admitResume` refuses outright rather than degrading to a partial resume; migrating or restarting is the caller's choice, and guessing is not on offer.
 
+A refused journal is not left for a restarted run to overwrite: `setJournalAside` moves it to `refused/<runId>.<suffix>.json` in the same directory, and the worker-thread host uses the first 12 hex digits of the refused script digest as the suffix.
+
 ## Compaction keeps what cannot be regenerated
 
-A completed and **verified** step's inputs are recomputable from the steps that produced them, so compaction drops them. Its output is kept: in the shipped host, the JSON text of the value the step's `agent()` call resolved to, recorded inline rather than as a reference, which is what a resume hands the script.
+A completed and **verified** step's inputs are recomputable from the steps that produced them, so compaction drops them. Its output is kept: in the shipped host, the JSON text of the value the step's `agent()` call resolved to, recorded inline rather than as a reference, which is what a resume hands the script. Its `call` is kept too, because a resume compares it with the call it is about to reuse the step for.
 
 Purity is deliberately not the gate. Every step this DSL journals is an `agent()` call classed `side-effecting`, so a pure-only compaction could never fire on a real journal. `verified` carries the meaning instead: a step is verified when a resume RECONCILED it — its effects confirmed in the effect ledger and every child it started accounted for — which is the same check that authorizes reusing its output.
 
@@ -45,7 +49,7 @@ Purity is deliberately not the gate. Every step this DSL journals is an `agent()
 
 A journal entry names a step and carries data; it never carries code (must[3]). A resumed run re-enters the script and is steered by the journal, rather than reconstructing a suspended continuation — which could not be verified against the script it came from and would silently resurrect logic the script no longer contains.
 
-**Runtime invariant:** No runtime invariant companion is published: this package registers no Cordis service and owns no value of its own. `writeJournal`/`readJournal` are free functions over a directory the caller names, and `createJournalRecorder` (`src/recorder.ts:86`) does hold entries in a Map — but it RETURNS that recorder, so the caller owns it for one run. A companion checks a relation under the manifest name over values this package owns, and there are none.
+**Runtime invariant:** No runtime invariant companion is published: this package registers no Cordis service and owns no value of its own. `writeJournal`/`readJournal` are free functions over a directory the caller names, and `createJournalRecorder` (`src/recorder.ts:89`) does hold entries in a Map — but it RETURNS that recorder, so the caller owns it for one run. A companion checks a relation under the manifest name over values this package owns, and there are none.
 
 ## Model Experience
 
@@ -62,6 +66,7 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 - **Every recorded step is `side-effecting`.** The class is the script's declaration and the DSL has no syntax for it, so the host supplies the fail-closed default. That is correct for `agent()` — a child may have written files or spent money — but it means `decideResume`'s `skip` branch, which requires a pure step, cannot fire on a real journal. Reuse is decided by reconciliation instead, so must[1]'s behaviour is reached by a different route than that branch.
 - **Reconciliation is named, not performed.** `decideResume` returns `reconcile` with the receipts to check; deciding whether an effect actually landed requires the system that produced it and is outside this package.
 - **The script digest is a SHA-256 of the script body**, computed by the host that records the journal. It changes with whitespace and comments, so a cosmetic edit refuses a resume that would have been safe; refusing too often is the right direction for acceptance[1], but it is a bluntness worth naming.
+- **A journal directory that already exists keeps its mode.** `writeJournal` creates the directory with mode 0700 and writes each file with mode 0600, as a session log is written, because a journal holds its children's outputs. `mkdir` does not change the mode of a directory that exists, for the journal directory or for `refused/`.
 
 ### Dev Note
 

@@ -19,7 +19,7 @@
 
 import { createHash } from 'node:crypto'
 import { brandString } from '@deepseek-ai/dsh-brand'
-import { planResume, readJournal } from '@deepseek-ai/dsh-workflow-journal'
+import { planResume, readJournal, setJournalAside } from '@deepseek-ai/dsh-workflow-journal'
 import type { ScriptDigest, WorkflowJournal } from '@deepseek-ai/dsh-workflow-journal'
 import type { LedgerState } from '@deepseek-ai/dsh-action-ledger'
 
@@ -109,6 +109,8 @@ export class AmbiguousReconciliationRequiredError extends Error {
 export interface Reconciled {
   /** Recorded outputs by 1-based step sequence, for steps this resume reconciled. */
   readonly reusable: Record<number, string>
+  /** The call identity each reusable step was recorded under, by step sequence; a step recorded without one has none. */
+  readonly calls?: Record<number, string>
   /** The journal these were read from, for the resumed run's recorder to continue. */
   readonly journal: WorkflowJournal | undefined
   /**
@@ -139,15 +141,17 @@ export function scriptDigestOf(body: string): ScriptDigest {
  * Empty when there is no journal, when the script changed, or when nothing was
  * reconcilable — and all three mean the same thing to the caller: run it. A
  * changed script also says so in `refused`, because a caller that asked to
- * continue would otherwise not learn that nothing was reused. A missing
- * journal is not an error, because "this run was never journalled" and
- * "there is nothing to resume" are one situation.
+ * continue would otherwise not learn that nothing was reused, and its journal
+ * is moved to `refused/<runId>.<first 12 hex of its digest>.json` first. A
+ * missing journal is not an error, because "this run was never journalled"
+ * and "there is nothing to resume" are one situation.
  * @param directory - the directory holding one journal file per run.
  * @param runId - the run being resumed.
  * @param body - the script about to run, whose digest must match the journal's.
  * @param childCompleted - whether a recorded child's session shows finished work.
  * @param effectState - the ledger query for recorded side effects, absent when this run has no ledger to ask.
- * @returns the reconciliation: reusable outputs by step sequence, the journal they were read from, and why a journal was refused.
+ * @returns the reconciliation: reusable outputs and the calls that recorded them by step sequence,
+ *   the journal they were read from, and why a journal was refused.
  * @throws AmbiguousReconciliationRequiredError when a step's recorded side effects are neither provably committed nor provably unsent.
  */
 export async function reusableSteps(
@@ -160,9 +164,15 @@ export async function reusableSteps(
   const journal = readJournal(directory, runId)
   if (journal === undefined) return { reusable: {}, journal: undefined }
   const plan = planResume(journal, scriptDigestOf(body))
-  if (!plan.resumable) return { reusable: {}, journal: undefined, refused: { reason: plan.reason, detail: plan.detail } }
+  if (!plan.resumable) {
+    // The run starts over under the same id, and its fresh recorder would
+    // overwrite this journal on its first write (acceptance[2]).
+    setJournalAside(directory, runId, journal.scriptDigest.slice(0, 12))
+    return { reusable: {}, journal: undefined, refused: { reason: plan.reason, detail: plan.detail } }
+  }
 
   const reusable: Record<number, string> = {}
+  const calls: Record<number, string> = {}
   for (const entry of journal.entries) {
     if (entry.outcome !== 'completed' || entry.output === null) continue
     // Recorded side effects are reconciled BEFORE the children are counted,
@@ -192,7 +202,10 @@ export async function reusableSteps(
       continue
     }
     const seq = Number(entry.stepId.replace(/^step-/u, ''))
-    if (Number.isSafeInteger(seq) && seq > 0) reusable[seq] = entry.output
+    if (Number.isSafeInteger(seq) && seq > 0) {
+      reusable[seq] = entry.output
+      if (entry.call !== undefined) calls[seq] = entry.call
+    }
   }
-  return { reusable, journal }
+  return { reusable, calls, journal }
 }
