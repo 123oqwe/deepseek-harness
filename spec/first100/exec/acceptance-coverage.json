@@ -60,6 +60,796 @@
       "coveredBy": [
         {
           "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 the committed copies are every version-0 session log of b150a551, byte for byte, each classed by its content as read or as one of three refused classes"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads apps/web/tests/snapshots/goal-multi-turn-actions/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads apps/web/tests/snapshots/plan-narrow-viewport/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/goal-snapshots/goal-round-driver/session.expected.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/goal-snapshots/goal-round-driver/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/goal-snapshots/goal-wrapup/session.expected.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/goal-snapshots/goal-wrapup/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/advanced-toolchain/session.1.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/advanced-toolchain/session.2.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/advanced-toolchain/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/background-job-admission/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/bash-spill/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/bash-tool-turn/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/both-mode-turn/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/cancel-tool-calls/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/cancel/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/code-mode-read-image/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/code-mode-turn/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/code-mode-workspace-context/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/cordis-inspect-jsdoc/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/empty-response-retry/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/error-finish/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/escalation-approved/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/escalation-rejected/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/fs-delete-recreate/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/fs-edit/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/fs-escalation-approved/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/fs-glob-sampling/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/fs-policy-reject/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/fs-read-window/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/fs-read/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/fs-write-overwrite-bounded/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/fs-write-overwrite/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/fs-write/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/handshake/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/hook-cc-invalid-matcher/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/hook-cc-posttool-block/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/hook-cc-posttool-context/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/hook-cc-pretool-ask/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/hook-cc-pretool-deny/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/hook-cc-promptsubmit-block/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/hook-cc-promptsubmit-context/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/hook-cc-stop-continue/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/hook-codex-invalid-matcher/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/hook-codex-posttool-block/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/hook-codex-posttool-context/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/hook-codex-pretool-block/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/hook-codex-promptsubmit-block/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/hook-codex-promptsubmit-context/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/hook-codex-stop-continue/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/inline-image-prompt/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/lsp-definition/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/max-tokens-continue/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/missing-sandbox-runner/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/multi-turn/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/packed-chunks/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/parallel-tool-calls/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/partial-landlock-child-failure/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/persistent-pwsh-tool-turn/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/product-subagent-both/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/product-subagent-codex/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/product-subagent-result-diagnostic/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/pty-tools/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/pwsh-tool-turn/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/read-image-dimension/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/read-image-text-route/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/read-image/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/reject-extra-dirs/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/repeat-tool-reminder/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/session-query-spill/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/session-sandbox-root/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/session-title-after-turn/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/skill-load/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-child-question-rejection/session.1.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-child-question-rejection/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-continuable-inheritance/session.1.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-continuable-inheritance/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-continuable/session.1.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-continuable/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-depth-two-rejection/session.1.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-depth-two-rejection/session.2.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-depth-two-rejection/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-fork-in-process/session.1.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-fork-in-process/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-list-agents/session.1.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-list-agents/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-max-tokens-partial/session.1.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-max-tokens-partial/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-mixed/session.1.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-mixed/session.2.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-mixed/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-multi/session.1.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-multi/session.2.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-multi/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-parallel/session.1.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-parallel/session.2.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-parallel/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-published-run-failure/session.1.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-published-run-failure/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-report/session.1.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-report/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-spawn-in-process/session.1.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/subagent-spawn-in-process/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/text-turn/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/todo-write/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/tool-call-turn/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/web-fetch/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/workflow-run/session.1.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/workflow-run/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/acp-agent/tests/snapshots/workspace-edit/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/headless-agent/tests/semantic-checkpoint-snapshots/tool-outcome-unknown/replay.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/headless-agent/tests/snapshots/advanced-toolchain/session.1.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/headless-agent/tests/snapshots/advanced-toolchain/session.2.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/headless-agent/tests/snapshots/advanced-toolchain/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/headless-agent/tests/snapshots/compaction-recovery/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/headless-agent/tests/snapshots/headless-profile/session.expected.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/headless-agent/tests/snapshots/pty-tools/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/headless-agent/tests/snapshots/ralph-loop/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/headless-agent/tests/snapshots/subagent-settlement/child.expected.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/headless-agent/tests/snapshots/subagent-settlement/parent.replay.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/headless-agent/tests/subagent-inheritance-snapshots/parent-override/child.expected.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/headless-agent/tests/workspace-context-resume-snapshots/offline-edit/replay.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/jsonrpc-agent/tests/snapshots/bash-tool/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/jsonrpc-agent/tests/snapshots/persistent-tools/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/jsonrpc-agent/tests/snapshots/subagent-spawn-in-process/session.1.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/jsonrpc-agent/tests/snapshots/subagent-spawn-in-process/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence reads examples/jsonrpc-agent/tests/snapshots/text-turn/session.jsonl with its assigned header id, every turn start and turn end, and every user message"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses apps/web/tests/snapshots/approval-composer/session.jsonl as SessionFormatUnsupportedError: a surface event before the first step"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses apps/web/tests/snapshots/code-mode-round/session.jsonl as SessionFormatUnsupportedError: a surface event before the first step"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses apps/web/tests/snapshots/cordis-tool-round/session.jsonl as SessionFormatUnsupportedError: a surface event before the first step"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses apps/web/tests/snapshots/feedback-command/session.jsonl as SessionFormatUnsupportedError: a surface event before the first step"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses apps/web/tests/snapshots/fresh-round-trip/session.jsonl as SessionFormatUnsupportedError: a surface event before the first step"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses apps/web/tests/snapshots/lifecycle-chrome/session.jsonl as SessionFormatUnsupportedError: a surface event before the first step"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses apps/web/tests/snapshots/live-interactions/session.jsonl as SessionFormatUnsupportedError: a surface event before the first step"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses apps/web/tests/snapshots/message-feedback-protocol/session.jsonl as SessionFormatUnsupportedError: a surface event before the first step"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses apps/web/tests/snapshots/minimal-preset/session.jsonl as SessionFormatUnsupportedError: a surface event before the first step"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses apps/web/tests/snapshots/navigation-panes/seed.jsonl as SessionFormatUnsupportedError: a surface event before the first step"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses apps/web/tests/snapshots/permission-policy-context/session.jsonl as SessionFormatUnsupportedError: a surface event before the first step"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses apps/web/tests/snapshots/plan-review/session.jsonl as SessionFormatUnsupportedError: a surface event before the first step"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses apps/web/tests/snapshots/pwsh-terminal/seed.jsonl as SessionFormatUnsupportedError: a surface event before the first step"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses apps/web/tests/snapshots/question-composer/session.jsonl as SessionFormatUnsupportedError: a surface event before the first step"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses apps/web/tests/snapshots/seeded-history/seed.jsonl as SessionFormatUnsupportedError: a surface event before the first step"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses apps/web/tests/snapshots/steering/session.jsonl as SessionFormatUnsupportedError: a surface event before the first step"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses apps/web/tests/snapshots/turn-tail-actions/session.jsonl as SessionFormatUnsupportedError: a surface event before the first step"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses apps/web/tests/snapshots/web-search-round/session.jsonl as SessionFormatUnsupportedError: a surface event before the first step"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses examples/acp-agent/tests/snapshots/agent-instructions/session.jsonl as SessionFormatUnsupportedError: a baseline fixture projection, a compact checkpoint without compaction/start"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses examples/headless-agent/tests/semantic-checkpoint-snapshots/tool-outcome-unknown/session.expected.jsonl as SessionFormatUnsupportedError: a surface event before the first step"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses examples/headless-agent/tests/snapshots/ralph-loop/session.1.jsonl as SessionFormatUnsupportedError: assistant chunks outside any turn"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses examples/headless-agent/tests/snapshots/ralph-loop/session.2.jsonl as SessionFormatUnsupportedError: assistant chunks outside any turn"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses examples/headless-agent/tests/snapshots/subagent-settlement/child.replay.jsonl as SessionFormatUnsupportedError: assistant chunks outside any turn"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses examples/headless-agent/tests/subagent-diagnostic-snapshots/descriptorless-child/parent.expected.jsonl as SessionFormatUnsupportedError: a surface event before the first step"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses examples/headless-agent/tests/subagent-inheritance-snapshots/parent-override/child.replay.jsonl as SessionFormatUnsupportedError: a surface event before the first step"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses examples/headless-agent/tests/subagent-inheritance-snapshots/parent-override/parent.expected.jsonl as SessionFormatUnsupportedError: a surface event before the first step"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses examples/headless-agent/tests/workspace-context-resume-snapshots/offline-edit/session.expected.jsonl as SessionFormatUnsupportedError: a surface event before the first step"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses examples/headless-agent/tests/workspace-context-resume-snapshots/precedence-change/session.expected.jsonl as SessionFormatUnsupportedError: a surface event before the first step"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses scripts/snapshots/python-sdk-single-exe/advanced/session.jsonl as SessionFormatUnsupportedError: a baseline fixture projection, request/header tools recorded as names"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses scripts/snapshots/python-sdk-single-exe/advanced/session.1.jsonl as SessionFormatUnsupportedError: a baseline fixture projection, request/header tools recorded as names"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551 replayed through the shipped headless session persistence refuses scripts/snapshots/python-sdk-single-exe/advanced/session.2.jsonl as SessionFormatUnsupportedError: a baseline fixture projection, request/header tools recorded as names"
+        },
+        {
+          "stage": "F",
           "title": "replays 'snapshots/web/fresh-round-trip/sessio…' (a real pre-schema-registry session fixture) with no negotiation failure and no silent event loss"
         },
         {
@@ -71,7 +861,7 @@
           "title": "replays 'snapshots/session/skill-load/session.…' (a real pre-schema-registry session fixture) with no negotiation failure and no silent event loss"
         }
       ],
-      "note": "acceptance[0]: 'at minimum, able to read old session fixtures produced by the audit baseline.' Three real, pre-existing snapshots/*/session.jsonl fixtures (this repo's own keyless recorded-session corpus), all predating schema-registry's existence (no schemaVersion tag on any event), replayed through the real U-stage-wired negotiation path via a faithful envelope reconstruction (independently verified sound and non-vacuous by the Opus Reviewer against the codebase's own established repackSessionSnapshot reverse-direction logic)."
+      "note": "acceptance[0] (C20): 'every version-0 session log the audit baseline produced reads, the 24 version-2-descriptor subagent logs the baseline wrote included; the exceptions are three classes of incomplete files, which the product refuses with a readable reason: a surface before the first step (24), chunk-only replay fragments without a turn (3), and projections the baseline's test fixtures wrote (4: one checkpoint message without compaction/start, three whose request/header tools are names only)'. Covered by F supplement 1 (tests/first100/fixtures/P0-06.baseline-replay.spec.ts): the 157 version-0 logs of audit baseline b150a551, committed byte for byte (guard case, T0-2), replayed through the shipped headless session persistence. The replay rebuilds each log's envelope, ids, cwd and tools; the logs themselves are the baseline's blobs. 126 read with their assigned header id, every turn start and turn end, and every user message; the 24 with a version-2 subagent descriptor read once the v0 edge accepts it (lane B's descriptor fix). 31 are refused, each asserted with the product's reason for its class: 24 surface-before-first-step, 3 chunk-only fragments, 4 fixture projections. Question 14, answered (b) on 2026-09-24, moved the two python advanced child logs from the descriptor count to the projection class: besides the version-2 descriptor they record request/header tools as names only. The three earlier replays of snapshots/*/session.jsonl stay cited as secondary evidence; they are not baseline fixtures."
     },
     {
       "epic": "P0-06",

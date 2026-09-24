@@ -267,6 +267,66 @@
     },
     {
       "epic": "P0-06",
+      "path": "packages/session/session-format-catalog/tests/catalog.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P0-06",
+      "path": "packages/session/session-format-v0-to-v1/src/codec.ts",
+      "kind": "source",
+      "stages": [
+        "U.1"
+      ],
+      "reason": "The v0 header decode that marks a header carrying seedLength as seeded, which is why U.1's catalog case expects the v1-to-v2 edge's end-seed before the descriptor."
+    },
+    {
+      "epic": "P0-06",
+      "path": "packages/session/session-format-v0-to-v1/src/validation.ts",
+      "kind": "source",
+      "stages": [
+        "U.1"
+      ],
+      "reason": "The v0-to-v1 edge's released-payload validation, where lane B's descriptor fix (B-560) keeps a subagent descriptor of version 2; U.1's R1 and catalog case pass through it."
+    },
+    {
+      "epic": "P0-06",
+      "path": "packages/session/session-format-v0-to-v1/tests/relationships.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P0-06",
+      "path": "packages/session/session-format-v1-to-v2/src/migration.ts",
+      "kind": "source",
+      "stages": [
+        "U.1"
+      ],
+      "reason": "The v1-to-v2 edge's ensureTargetCut, which adds the synthetic end-seed at a seeded header's cut that U.1's catalog case asserts."
+    },
+    {
+      "epic": "P0-06",
+      "path": "packages/session/session-format-v2-to-v3/src/payload.ts",
+      "kind": "source",
+      "stages": [
+        "U.1"
+      ],
+      "reason": "The v2-to-v3 edge's assertEvent, where fix 2 keeps a subagent descriptor of an earlier version instead of validating it against version 3; U.1's v2-to-v3 case and catalog case pass through it."
+    },
+    {
+      "epic": "P0-06",
+      "path": "packages/session/session-format-v2-to-v3/tests/migration.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P0-06",
       "path": "packages/settings/settings/tests/settings.spec.ts",
       "kind": "test",
       "stages": [
@@ -275,10 +335,34 @@
     },
     {
       "epic": "P0-06",
+      "path": "tests/first100/fixtures/p0-06-audit-baseline/manifest.json",
+      "kind": "test",
+      "stages": [
+        "F.1"
+      ]
+    },
+    {
+      "epic": "P0-06",
       "path": "tests/first100/fixtures/p0-06-registry-census.ts",
       "kind": "test",
       "stages": [
         "C.2"
+      ]
+    },
+    {
+      "epic": "P0-06",
+      "path": "tests/first100/fixtures/P0-06.baseline-replay-driver.ts",
+      "kind": "test",
+      "stages": [
+        "F.1"
+      ]
+    },
+    {
+      "epic": "P0-06",
+      "path": "tests/first100/fixtures/P0-06.baseline-replay.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F.1"
       ]
     },
     {
