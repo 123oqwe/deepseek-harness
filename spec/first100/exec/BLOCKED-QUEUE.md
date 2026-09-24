@@ -8780,3 +8780,39 @@ Under the standard's rule for real defects (WORKING-MODEL §12), they become est
 5. Then a fresh 4.4a–d, a PASS sign-off, and `--accept`.
 
 **Owner.** lane B wires the caller; lane A writes the evidence cases.
+
+### BLOCKED-321 — P0-03 stays ACCEPTED; its checker scans 320 of the workspace's packages, not all of them (open finding, not a withdrawal)
+
+**Status:** OPEN (2026-09-24). The row stays ACCEPTED under acceptance standard v1's S12: the one-time review closed with BLOCKED-320, and this is not a defect shown red. Owner: lane B, together with P0-04's checker fix. Found by the delegate (first100-delegate-1a) while doing the 4.4a–d that P0-03 never had. The row has no sign-off entry of any kind.
+
+**What was measured.**
+- **4.4(b), (c): passed.** The checker `scripts/architecture/check-capability-seams.mjs` (`architecture:seams`) is in the First-100 gate set (`scripts/first100/run-registry-gates.mjs:126`), so every full run executes it.
+- **4.4(d): passed.** Run 35950472533 at `b2175a110f` logs "check-capability-seams: 0 violation(s) across 32 capability families, 4902 cross-package import edge(s) in 320 workspace package(s)" and then "PASS architecture:seams". The same run's `tests/architecture/check-capability-seams.spec.ts` passed all 23 cases.
+- **acceptance[0] — "the existing repository passes under the controlled allowlist": the scan is incomplete.**
+  - Only `packages/*/*/package.json` (320 manifests) are scanned as consumers: `readWorkspacePackages`, `PACKAGE_MANIFEST_GLOB`, `scripts/architecture/check-capability-seams.mjs:32`, `:67-69`.
+  - `apps/*` (4 manifests) enter only as names, through `readAppPackages` (`:84-94`). That feeds the "a provider must not depend on an app or UI package" rule; their own imports are never scanned.
+  - The other 18 manifests the workspace declares are outside the scan entirely: `vendor/*`, `native/system/packages/*` (5), `benchmarks`, `website`, `python/sdk-runtime`.
+  - So 22 of the 342 workspace manifests (BLOCKED-303's count) are not checked as consumers. This is the scope P0-04's acceptance[0] was ruled to need (BLOCKED-303), and S7 asks for the same here.
+  - *Corrected 2026-09-24 before this entry landed.* The first draft left `apps/*` and `native/system/packages/*` out of the list. The delegate's P0-04 diagnosis subagent found the gap, and the delegate re-read `:32-36`, `:67-69` and `:84-94` to confirm it.
+
+**Closing condition.**
+1. The checker enumerates packages from `pnpm-workspace.yaml`. This is an in-place change, shared with the P0-04 checker fix.
+2. A full run logs the whole-workspace count with 0 unsuppressed violations.
+3. Then a 4.4a–d and the row's first PASS sign-off.
+
+### BLOCKED-322 — P0-05 stays ACCEPTED; its gate mechanism is provided on the shipped launch but no gate is declared and nothing evaluates one (open finding, not a withdrawal)
+
+**Status:** OPEN (2026-09-24). The row stays ACCEPTED under S12 (see BLOCKED-321). Owner: lane B, through P1-01's second commit. Found by the delegate while doing the 4.4a–d that P0-05 never had. The row has no sign-off entry.
+
+**What was measured.**
+- **4.4(a), (b): passed.** `runProfile` provides `featureGates` on every CLI launch (`apps/cli/src/profile-boot.ts:647`).
+- **The resolved list is empty.** `FEATURE_GATE_DECLARATIONS` is `[]` (`:404`), and the code's own comment defers a real gate to "a later Composition-stage slice's deliverable, once a real gate exists".
+- **4.4(c): no production caller.** `evaluateFeatureGate`, the shadow-versus-legacy evaluation that acceptance[0] and [1] are about, has 0 callers outside its own package (10 inside it). `ctx.get('featureGates')` appears only in a comment.
+- **acceptance[2]:** the release gate is wired (`release:verify` → `assertNoExpiredFeatureGates`, run in `first100-exact-sha.yml:385`), but it checks `RELEASE_GATE_FEATURE_GATES`, which is also `[]`.
+- **Result:** on the shipped product the mechanism decides nothing. S2 is not met, and S4 does not cover it, because no path lets any input reach an evaluation.
+
+**Closing condition.**
+1. P1-01's second commit (user decisions G1/G1b) implements plugin-manifest enforcement as the first declared gate. It uses `off | shadow | enforce`, a default by profile, and an environment override replacing the raw `DSH_PLUGIN_MANIFEST_ENFORCEMENT` read. Admission decisions then go through `evaluateFeatureGate`.
+2. The gate is listed for the release expiry check.
+3. A case on a shipped launch observes the shadow mode: the same user-visible result as enforcement off, with the difference recorded and no sensitive parameters.
+4. Then a 4.4a–d and the row's first PASS sign-off.
