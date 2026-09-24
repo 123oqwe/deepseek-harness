@@ -3,7 +3,9 @@
 # Run row: the base layer's `approval`, `permission`, `policy-engine` and `run`
 # rows are the ones observed. It supplies a keyless scripted model and an
 # uncompressed session log, and turns off the rows that would run a task of
-# their own.
+# their own. It configures no agent: the driver creates the root agent after
+# boot, as the shipped launchers do, so the session starts once the
+# capability-token service is listening.
 - id: typert-loader
   disabled: true
 
@@ -15,14 +17,6 @@
 
 - id: headless-runner
   disabled: true
-
-- id: agent-loop
-  config:
-    agents:
-      - id: main
-        provider: p4-05-waiting-mock
-        model: p4-05-waiting-mock
-        cwd: !!js process.cwd()
 
 - id: session-persistence-jsonl
   config:
