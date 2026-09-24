@@ -15219,6 +15219,52 @@
         "failureSummary": "Baseline: PRECHECK, narrow run 35959896512: 3 passed / 0 failed. MA, run 35959913337: exactly the acceptance[2] fail-closed case red. MB, run 35959932070: exactly the acceptance[2] fail-closed case red. All three match `artifacts/laneA/p2-05-acc2-unmount-expectations.json` (sha256 `4855bc53e8c2e6acce9e0ea76d950e14d31b0d5ca92a6704a3116d5b0b190cb8`), written before the case; the delegate compared them (lane A inbox A-345).\n\nEarlier dispatches are not readings. The first PRECHECK `88e679fa3b` (with MA `a80b22e41d`, MB `bd310943ec`) reported every case skipped, with and without a build; the diagnostic run 35959319725 showed the driver throwing `cannot resolve entry policy-engine` in `beforeAll`, because the composed rows live under the root include entry and the Loader tree resolves ids by full path. `5f290e1d31` fixed the driver; the spec and the expectations did not change."
       },
       "note": "P2-05's fourth U supplement: acceptance[2] as C18 narrowed it (\"Policy 服务不可被 Cordis replace，被卸载后 fail closed。\"), the unmount half, on the shipped `sdk-minimal` composition. The driver runs in a child process through `runLoaderSmoke`, boots the profile through `bootProductionProfile` over the BLOCKED-266 test overlay with the Trust Kernel pinned as `apps/cli/src/profile-boot.ts` pins it, drives one tool call (permitted, the tool body runs), disables the `policy-engine` row by appending `{ id: 'policy-engine', disabled: true }` to the root include entry's patches and awaiting the Loader, and drives the same call again: it is refused as `policy-unavailable`, the kernel audits `{ effect: 'deny', reason: 'policy-unavailable' }`, and the tool body does not run.\n\nThe unmount takes the path a running process takes: a new patch list on the include entry, which recomposes its subtree, is what `watchUserPatches` does on the live `web` profile. On the shipped product only that live patch reload on `web` unmounts the row at runtime; the other templates read patches at startup only, where a disabled row means the engine never mounted.\n\nNot observed here: the replace half of acceptance[2], which BLOCKED-313 records as evidenced; the refusal on a composition other than sdk-minimal."
+    },
+    {
+      "epic": "P0-06",
+      "stage": "C",
+      "supplements": {
+        "epic": "P0-06",
+        "stage": "C"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P0-06.composition.spec.ts",
+        "tests/first100/fixtures/P0-06.contract.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P0-06 acceptance[2]: every schema-registry migration a shipped profile registers is the declared identity or carries a declared reverse or irreversibility case on the shipped headless profile",
+        "P0-06 acceptance[2]: every schema-registry migration a shipped profile registers is the declared identity or carries a declared reverse or irreversibility case on the shipped acp profile",
+        "P0-06 acceptance[2]: every schema-registry migration a shipped profile registers is the declared identity or carries a declared reverse or irreversibility case on the shipped sdk profile",
+        "P0-06 acceptance[2]: every schema-registry migration a shipped profile registers is the declared identity or carries a declared reverse or irreversibility case on the shipped sdk-minimal profile",
+        "P0-06 acceptance[2]: the registry census and the identity migration it accepts identityMigration returns every payload unchanged, so it is its own reverse",
+        "P0-06 acceptance[2]: the registry census and the identity migration it accepts the census flags an evolved schema whose non-identity migration declares no reverse or irreversibility case",
+        "P0-06 acceptance[2]: the registry census and the identity migration it accepts the census accepts an evolved schema once its declared reverse round-trips the migration the registry holds"
+      ],
+      "files": [
+        "tests/first100/fixtures/P0-06.composition.spec.ts",
+        "tests/first100/fixtures/P0-06.contract.spec.ts",
+        "tests/first100/fixtures/P0-06.registry-census-driver.ts",
+        "tests/first100/fixtures/p0-06-registry-census.ts",
+        "packages/schema/schema-registry/src/index.ts",
+        "packages/settings/settings/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T05:58:58Z",
+      "dryRunProof": {
+        "treeSha": "99fd482364e8c9dcafc01b20691d9e1107535508",
+        "testsDiscovered": 7
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations off PRECHECK `5ab94aae879a0dd1ea4607834f9bc719e81892bd` (the two specs, the census driver and the census helper), each its own commit touching one product file, never merged, run by CI's narrow job at its own SHA over this entry's argv with a build first. M2-1 (`a059f40f9387fbf2b3336082569c0f52aa059e83`) registers every `session-event:*` schema in `packages/schema/schema-registry/src/index.ts` with `payload => payload` instead of the `identityMigration` constant: the same behaviour, no longer the declared identity. M2-2 (`e5e81359fe4f088627d2c26c6b07c9cf37eadd20`) registers every `settings:*` schema in `packages/settings/settings/src/index.ts` with `payload => identityMigration(payload)`. M2-3 (`d79c54865732461b22d5a3e8ce02ae992c57b8ba`) makes `identityMigration` return `structuredClone(payload)`. M2-4 (`c8350168332bd7f391f0db88e2b5ed31b741950b`) makes `evolveSchema` store `identityMigration` instead of the migration its caller passed.",
+        "failureSummary": "Baseline: PRECHECK, narrow run 35961623262: 7 passed / 0 failed. M2-1, run 35961641609: exactly the four shipped-profile census cases red. M2-2, run 35961659414: exactly the four shipped-profile census cases red, because every profile registers at least `settings:agent-loop` and `settings:policy-set`. M2-3, run 35961675700: exactly the case that `identityMigration` is its own reverse red; the census still passes, because it compares the registered migration with the constant by reference. M2-4, run 35961693282: exactly the case that the census accepts an evolved schema once its declared reverse round-trips the registered migration red; nothing on the four shipped profiles evolves a schema. All five readings match `artifacts/laneA/p0-06-part1-acc2-expectations-v2.json` (sha256 `c1f41c9ab975974f621904c7a0557b1aa694af13461d63be6a8b5d34f70f4085`), written before the v2 spec; the delegate compared them case by case (lane A inbox A-347).\n\nThe v1 dispatch is not a reading. PRECHECK `d6cfdbb4fb` (runs 35959950337, 35959966140, 35959981351, 35959999640, 35960018187) expected `settings:policy-set` alone, so all four census cases failed on that expectation before the offender check and the mutation runs carried no information about them. v2 derives each profile's settings namespaces from the rows it mounts; the predicted red sets did not change."
+      },
+      "note": "P0-06's second C supplement: acceptance[2] (\"所有 registry migration 都有双向或明确不可逆测试。\") on the shipped product. Each census case boots one shipped profile (headless, acp, sdk, sdk-minimal) in a child process through `runLoaderSmoke` and `bootProductionProfile`, over an existing test overlay that disables only the startup and server rows and inserts a stand-in model, and reads every registration the running schema registry holds. The registrations must be exactly the product's declared ones: the 66 `KNOWN_SESSION_EVENT_TYPES`, the 11 sdk-protocol wire ids the registry bootstraps, and one `settings:<namespace>` per settings namespace the profile's rows install (headless and acp: agent-default-model, agent-loop, llm-deepseek, llm-pi-ai, permission, policy-set, shell, web-search-deepseek; sdk: the same without llm-deepseek, which its overlay disables; sdk-minimal: agent-loop and policy-set). Each must be the declared identity (its migration IS the registry's `identityMigration` constant and its history holds one version) or carry a declared reverse or irreversibility case, and each migration applied twice must return a probe payload unchanged. On all four profiles every registration is the declared identity.\n\nThe contract spec proves the other branch on synthetic input, because nothing on the shipped product evolves a schema (`evolveSchema` has no production caller; the rule of S4): an evolved schema whose migration declares neither a reverse nor an irreversibility case is flagged, and one whose declared reverse round-trips the migration the registry holds is accepted. `identityMigration` returning every payload unchanged is what makes the identity its own reverse.\n\nThe settings ids come from `SettingsService.register` (`packages/settings/settings/src/index.ts`), which `installSection` calls; tool-subagent registers `subagent-model-selection` only with `modelSelectionSettings: true`, which no shipped row except the web-app agent presets sets. The census helper `tests/first100/fixtures/p0-06-registry-census.ts` holds the identity definition and the (empty) declared table."
     }
   ]
 }

@@ -119,9 +119,44 @@
         {
           "stage": "P",
           "title": "exports no reverse migration function for the name merge -- explicit acknowledgment of irreversibility, not a silent absence"
+        },
+        {
+          "stage": "C",
+          "supplementSeq": 2,
+          "title": "P0-06 acceptance[2]: every schema-registry migration a shipped profile registers is the declared identity or carries a declared reverse or irreversibility case on the shipped headless profile"
+        },
+        {
+          "stage": "C",
+          "supplementSeq": 2,
+          "title": "P0-06 acceptance[2]: every schema-registry migration a shipped profile registers is the declared identity or carries a declared reverse or irreversibility case on the shipped acp profile"
+        },
+        {
+          "stage": "C",
+          "supplementSeq": 2,
+          "title": "P0-06 acceptance[2]: every schema-registry migration a shipped profile registers is the declared identity or carries a declared reverse or irreversibility case on the shipped sdk profile"
+        },
+        {
+          "stage": "C",
+          "supplementSeq": 2,
+          "title": "P0-06 acceptance[2]: every schema-registry migration a shipped profile registers is the declared identity or carries a declared reverse or irreversibility case on the shipped sdk-minimal profile"
+        },
+        {
+          "stage": "C",
+          "supplementSeq": 2,
+          "title": "P0-06 acceptance[2]: the registry census and the identity migration it accepts identityMigration returns every payload unchanged, so it is its own reverse"
+        },
+        {
+          "stage": "C",
+          "supplementSeq": 2,
+          "title": "P0-06 acceptance[2]: the registry census and the identity migration it accepts the census flags an evolved schema whose non-identity migration declares no reverse or irreversibility case"
+        },
+        {
+          "stage": "C",
+          "supplementSeq": 2,
+          "title": "P0-06 acceptance[2]: the registry census and the identity migration it accepts the census accepts an evolved schema once its declared reverse round-trips the migration the registry holds"
         }
       ],
-      "note": "acceptance[2]: 'all registry migrations have bidirectional or explicit-irreversible tests.' Two illustrative migration examples cover both classes: renameFiredAtToOccurredAt/renameOccurredAtToFiredAt is proven bidirectional (real round-trip, both directions, no loss); mergeNameFields is proven explicitly irreversible (a real pigeonhole information-loss counter-example, independently verified by the P-stage Opus reviewer to generalize, plus no reverse export -- an honest acknowledgment, not a silent gap).\n\n**This clause quantifies over an empty set on this tree, measured 2026-09-11, and the citations above are therefore about CAPABILITY rather than coverage.** Every production `registerSchema` call passes `identityMigration`: `schema-registry/src/index.ts:242` (one per session-event type), `:266` (one per sdk-protocol message name), and `settings/src/index.ts:455`. `evolveSchema` — the entry point that produces a non-identity migration — has **zero** production callers outside README examples, and there are **zero** non-identity `migrate` functions registered anywhere. So 'all registry migrations' ranges over nothing, and the four cases above prove the registry can EXPRESS a bidirectional migration and can declare an irreversible one; they do not establish that every migration in the repository has been tested, because none exists yet. That is the correct state for a Contract stage and is recorded rather than left implicit, because an unstated vacuous truth reads exactly like a discharged obligation. **The obligation transfers**: the first epic to land a real non-identity migration owes the bidirectional-or-explicitly-irreversible test for it, and inherits this clause rather than being covered by it."
+      "note": "acceptance[2]: 'all registry migrations have bidirectional or explicit-irreversible tests.' Two illustrative migration examples cover both classes: renameFiredAtToOccurredAt/renameOccurredAtToFiredAt is proven bidirectional (real round-trip, both directions, no loss); mergeNameFields is proven explicitly irreversible (a real pigeonhole information-loss counter-example, independently verified by the P-stage Opus reviewer to generalize, plus no reverse export -- an honest acknowledgment, not a silent gap).\n\n**This clause quantifies over an empty set on this tree, measured 2026-09-11, and the citations above are therefore about CAPABILITY rather than coverage.** Every production `registerSchema` call passes `identityMigration`: `schema-registry/src/index.ts:242` (one per session-event type), `:266` (one per sdk-protocol message name), and `settings/src/index.ts:455`. `evolveSchema` — the entry point that produces a non-identity migration — has **zero** production callers outside README examples, and there are **zero** non-identity `migrate` functions registered anywhere. So 'all registry migrations' ranges over nothing, and the four cases above prove the registry can EXPRESS a bidirectional migration and can declare an irreversible one; they do not establish that every migration in the repository has been tested, because none exists yet. That is the correct state for a Contract stage and is recorded rather than left implicit, because an unstated vacuous truth reads exactly like a discharged obligation. **The obligation transfers**: the first epic to land a real non-identity migration owes the bidirectional-or-explicitly-irreversible test for it, and inherits this clause rather than being covered by it.\n\n[2026-09-24 lane A, A-347: the empty set measured on 2026-09-11 is no longer the state the clause is judged on (BLOCKED-310). The seven `supplementSeq: 2` citations are the registry census on four shipped profiles and its synthetic other branch (`tests/first100/fixtures/P0-06.composition.spec.ts`, `P0-06.contract.spec.ts`). On headless, acp, sdk and sdk-minimal the registry holds exactly the 66 session-event schemas, the 11 sdk-protocol wire schemas and one `settings:<namespace>` per settings namespace the profile installs (8, 8, 7 and 2), every one the declared identity whose migration returned a probe payload unchanged when applied twice. No shipped code evolves a schema, so the non-identity branch is proven on synthetic input and nothing on the shipped product reaches it (S4): an evolved schema without a declared reverse or irreversibility case is flagged, and one whose declared reverse round-trips the registered migration is accepted. Mutations M2-1..M2-4 each reddened exactly the predicted cases (command-freeze P0-06 C.2). The four P-stage citations above stay as evidence that the registry can express a bidirectional and an explicitly irreversible migration.]"
     },
     {
       "epic": "P0-02",
