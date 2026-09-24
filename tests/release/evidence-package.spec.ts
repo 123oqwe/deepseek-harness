@@ -475,7 +475,10 @@ describe('src/index.ts (Epic P0-07 C-stage B4(f) scaffold)', () => {
   })
 })
 
-describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', () => {
+// Every case below runs the release scripts as subprocesses, and each verify
+// re-derives the baseline fingerprint by running git, node and pnpm, so a
+// loaded runner can pass the default 5 s budget without a fault.
+describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', { timeout: 60_000 }, () => {
   const baselineScriptPath = resolve(import.meta.dirname, '../../scripts/release/baseline-fingerprint.mjs')
   const collectScriptPath = resolve(import.meta.dirname, '../../scripts/release/collect-evidence.mjs')
   const verifyScriptPath = resolve(import.meta.dirname, '../../scripts/release/verify-evidence.mjs')
