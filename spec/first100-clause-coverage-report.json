@@ -16,8 +16,8 @@
     "unmatchedSourceClauses": 0,
     "inventedUndocumentedClauses": 0,
     "inventedDocumentedDefaultBoundaryClauses": 156,
-    "planCorrectedClauses": 3,
-    "supersededSourceClauses": 3
+    "planCorrectedClauses": 5,
+    "supersededSourceClauses": 5
   },
   "epics": {
     "P0-01": {
@@ -2519,7 +2519,13 @@
         "sourceCount": 3,
         "projectedCount": 3,
         "unmatchedSource": [],
-        "invented": [],
+        "invented": [
+          {
+            "text": "Policy 服务不可被 Cordis replace，被卸载后 fail closed。",
+            "digest": "d9ff5af0ca55008ff34cb1bc610a6605d257d851ed2f2d6099b6db5a67b29ceb",
+            "classification": "plan-correction"
+          }
+        ],
         "clauses": [
           {
             "text": "同一 ActionManifest 无论从工具、workflow、SDK、插件、子 Agent 发起都经过同一 PEP。",
@@ -2538,12 +2544,9 @@
             }
           },
           {
-            "text": "Policy 服务不可被 Cordis replace/unmount。",
-            "digest": "2efc8ce7ef6b1a02564f017c779825e327499648cfed2fc3e5cf24e57e6fcc9d",
-            "span": {
-              "startLine": 3935,
-              "endLine": 3935
-            }
+            "text": "Policy 服务不可被 Cordis replace，被卸载后 fail closed。",
+            "digest": "d9ff5af0ca55008ff34cb1bc610a6605d257d851ed2f2d6099b6db5a67b29ceb",
+            "span": null
           }
         ]
       },
@@ -3319,15 +3322,18 @@
         "sourceCount": 3,
         "projectedCount": 3,
         "unmatchedSource": [],
-        "invented": [],
+        "invented": [
+          {
+            "text": "同一 ToolExecution 在已注册的 provider 之间切换(今天是 local 与 fenced),ActionManifest 与 Policy 的语义不变。",
+            "digest": "700a9216f1576327d8542342e3d7e7bde91656fcbab1b25db07206d1932fbb35",
+            "classification": "plan-correction"
+          }
+        ],
         "clauses": [
           {
-            "text": "同一 ToolExecution 可在 local/container/microVM provider 间切换而不改变 ActionManifest/Policy 语义。",
-            "digest": "42027529ae89f292376c9287f499e94ef235f4b717bd75d0b1142af3794ebfe1",
-            "span": {
-              "startLine": 5073,
-              "endLine": 5073
-            }
+            "text": "同一 ToolExecution 在已注册的 provider 之间切换(今天是 local 与 fenced),ActionManifest 与 Policy 的语义不变。",
+            "digest": "700a9216f1576327d8542342e3d7e7bde91656fcbab1b25db07206d1932fbb35",
+            "span": null
           },
           {
             "text": "无 provider 能满足 policy 时 fail closed，不能静默降级。",

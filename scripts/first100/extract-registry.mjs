@@ -53,7 +53,7 @@ const matrixText = readFileSync(join(SOURCES_DIR, 'first100-requirements-matrix.
 const waveMapText = readFileSync(join(SOURCES_DIR, 'implementation-wave-map.md'), 'utf8')
 const decisionText = readFileSync(join(SOURCES_DIR, 'r0-decision-package.md'), 'utf8')
 
-const MATRIX_SHA = 'c8dc62fa7d5e37ae303ecbe6045dfee3781b519ba116d1d0b05f221133f31b63'
+const MATRIX_SHA = 'aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127'
 const WAVEMAP_SHA = '8c84597f87289fe5dfbf675dcba072149c6678cecc81a2611329b42de6c56d41'
 const actualMatrixSha = sha256(matrixText)
 const actualWaveSha = sha256(waveMapText)
@@ -493,6 +493,26 @@ const CLAUSE_REWORDS = {
       rewordedAtUtc: '2026-09-06T14:00:00.000Z',
       basis: 'Rectification order §7.4 item 4 and §7.8, delegate ruling of 2026-09-06 under the C11 delegation.',
       evidence: 'The old wording put Unicode normalization form in the same list as key order and number spelling, as though all three were spellings of one value. RFC 8785 does not normalize: two code point sequences are two values. The implementation followed the clause and normalized to NFC, which meant a precomposed and a decomposed spelling of the same character produced one argumentsHash -- and P2-06 binds approvals to that hash, so on a filesystem where those name two files, approving one action authorised the other. The clause named hash confusion and the code committed it, in the direction the clause had not considered. Verified against the reference implementation: canonicalize@2.1.0 distinguishes the two forms and collapses the other three.',
+    },
+  ],
+  'P2-05': [
+    {
+      clause: 'Policy 服务不可被 Cordis replace，被卸载后 fail closed。',
+      rewordedFrom: 'Policy 服务不可被 Cordis replace/unmount。',
+      channel: 'acceptance',
+      rewordedAtUtc: '2026-09-24T04:41:59.000Z',
+      basis: 'C18 (spec/first100/exec/decisions-approved.md): the user approved this narrowing on 2026-09-24 ("都按推荐", relayed by patrol session e6 #12), recorded as WORKING-MODEL §12 S8 ①; the delegate first100-delegate-1a ruled the wording (A-335), and lane A executed it.',
+      evidence: 'Only the unmount half is narrowed; the replace half keeps the source\'s words, because the user was asked about unmounting alone and BLOCKED-313 records the replace half as evidenced. The vendored Loader has no flag that makes an entry required or non-unloadable: `EntryOptions` (vendor/loader/src/config/entry.ts) holds id, name, config, group, disabled and inject, and every unload path ends in `Entry._dispose`, which calls `fiber.dispose()` (lane A A-331). The Trust Kernel\'s pinning does not transfer, because the kernel is pinned before any entry mounts while the policy engine is provided mid-boot by an ordinary plugin; making the words literal would take a change to Cordis core, which the delegate put to the user as the alternative and the user declined. What the clause protects -- no action admitted without a policy decision -- is kept by requiring the enforcement point to fail closed once the service is gone.',
+    },
+  ],
+  'P3-01': [
+    {
+      clause: '同一 ToolExecution 在已注册的 provider 之间切换(今天是 local 与 fenced),ActionManifest 与 Policy 的语义不变。',
+      rewordedFrom: '同一 ToolExecution 可在 local/container/microVM provider 间切换而不改变 ActionManifest/Policy 语义。',
+      channel: 'acceptance',
+      rewordedAtUtc: '2026-09-24T04:41:59.000Z',
+      basis: 'C18 (spec/first100/exec/decisions-approved.md): the user approved this narrowing on 2026-09-24 ("都按推荐", relayed by patrol session e6 #12), recorded as WORKING-MODEL §12 S8 ②; the delegate first100-delegate-1a ruled the wording (A-335), and lane A executed it.',
+      evidence: 'The container and microVM providers are outside First-100: C17 moved P3-08 (Container ExecutionWorld Provider) and P3-09 (MicroVM / Remote ExecutionWorld 与 Attestation) out of scope, so the source names providers nothing will register. The providers registered today are the local and the fenced execution worlds, both mounted by dsh-base (packages/bundle/base/cordis.patch.yml, rows `execution-world-local` and `execution-world-fenced`). The invariant the clause protects -- switching provider leaves ActionManifest and Policy semantics unchanged -- is kept, and now names the providers that can actually be switched between. The wording is S8\'s, with the sentence-final 。 the matrix puts on every clause.',
     },
   ],
   'P4-06': [

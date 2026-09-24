@@ -2719,7 +2719,7 @@ epics:
     layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/policy/policy-engine"
     humanAssignee: "UNASSIGNED"
-    acceptance: ["同一 ActionManifest 无论从工具、workflow、SDK、插件、子 Agent 发起都经过同一 PEP。", "任何一个 hard deny 即最终 deny。", "Policy 服务不可被 Cordis replace/unmount。"]
+    acceptance: ["同一 ActionManifest 无论从工具、workflow、SDK、插件、子 Agent 发起都经过同一 PEP。", "任何一个 hard deny 即最终 deny。", "Policy 服务不可被 Cordis replace，被卸载后 fail closed。"]
     nonGoals: ["YAML 来源缺失", "规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。"]
     verifyCommand: "来源没有项级可执行命令；实施前必须在 manifest 注册 focused command、fixture 路径与预期 exit code（不得猜），再跑 G/适用 R。"
     files:
@@ -3122,7 +3122,7 @@ epics:
     layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/execution/execution-world"
     humanAssignee: "UNASSIGNED"
-    acceptance: ["同一 ToolExecution 可在 local/container/microVM provider 间切换而不改变 ActionManifest/Policy 语义。", "无 provider 能满足 policy 时 fail closed，不能静默降级。", "WorldHandle 不能被模型或第三方插件伪造。"]
+    acceptance: ["同一 ToolExecution 在已注册的 provider 之间切换(今天是 local 与 fenced),ActionManifest 与 Policy 的语义不变。", "无 provider 能满足 policy 时 fail closed，不能静默降级。", "WorldHandle 不能被模型或第三方插件伪造。"]
     nonGoals: ["YAML 来源缺失", "规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。"]
     verifyCommand: "来源没有项级可执行命令；实施前必须在 manifest 注册 focused command、fixture 路径与预期 exit code（不得猜），再跑 G/适用 R。"
     files:

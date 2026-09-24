@@ -387,7 +387,7 @@
 - **MUST：** Policy 输入为 identity、capability token、ActionManifest、ExecutionWorld、context facts；输出闭合 decision。；decision 由 TrustKernel enforce，插件只能增加约束或建议，不能扩大。；记录 explain trace，但对模型和普通插件隐藏敏感策略细节。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
-- **Acceptance：** 同一 ActionManifest 无论从工具、workflow、SDK、插件、子 Agent 发起都经过同一 PEP。；任何一个 hard deny 即最终 deny。；Policy 服务不可被 Cordis replace/unmount。
+- **Acceptance：** 同一 ActionManifest 无论从工具、workflow、SDK、插件、子 Agent 发起都经过同一 PEP。；任何一个 hard deny 即最终 deny。；Policy 服务不可被 Cordis replace，被卸载后 fail closed。
 - **Validation：** 构造五条 bypass 路径和后置 allow 插件，全部拒绝。；运行 policy order permutation 1000 次，结果不变。；用 audit replay 重新计算 decision，结果一致或明确标记 policy version drift。
 - **验证命令：** 来源没有项级可执行命令；实施前必须在 manifest 注册 focused command、fixture 路径与预期 exit code（不得猜），再跑 G/适用 R。
 - **真实任务证据：** E2；场景 S03、S05、S06、S11；必须走本项 Validation 所述真实产品路径/可观测外部边界，并保存原始 receipts、before/after、独立验证与 13 项 evidence pack；真实 provider/model 支持声明另需 live lane。
@@ -504,7 +504,7 @@
 - **MUST：** 定义 WorldSpec、WorldHandle、WorldAttestation、WorldSnapshot、execute/terminate/snapshot/restore 接口。；WorldSpec 覆盖 filesystem、network、process、IPC、devices、secrets、resources、lifetime、tenant。；旧 SandboxExecution 作为 local provider 的兼容适配层，不在 Agent Loop 硬编码。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
-- **Acceptance：** 同一 ToolExecution 可在 local/container/microVM provider 间切换而不改变 ActionManifest/Policy 语义。；无 provider 能满足 policy 时 fail closed，不能静默降级。；WorldHandle 不能被模型或第三方插件伪造。
+- **Acceptance：** 同一 ToolExecution 在已注册的 provider 之间切换(今天是 local 与 fenced),ActionManifest 与 Policy 的语义不变。；无 provider 能满足 policy 时 fail closed，不能静默降级。；WorldHandle 不能被模型或第三方插件伪造。
 - **Validation：** 实现 fake world conformance suite，所有 provider 必须通过。；运行 provider swap composition test。；测试 world 被 kill、超时、失联时返回统一 typed outcome。
 - **验证命令：** 来源没有项级可执行命令；实施前必须在 manifest 注册 focused command、fixture 路径与预期 exit code（不得猜），再跑 G/适用 R。
 - **真实任务证据：** E3；场景 S13、S14；必须走本项 Validation 所述真实产品路径/可观测外部边界，并保存原始 receipts、before/after、独立验证与 13 项 evidence pack；真实 provider/model 支持声明另需 live lane。

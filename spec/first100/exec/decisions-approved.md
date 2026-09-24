@@ -325,3 +325,37 @@ That distinction was put to the user directly, because it changes what the regis
 **6. 仍待用户决定**
 - P2-05 acceptance[2] 的卸载半:收窄成「卸载后 fail closed」,还是改 Cordis 核心。
 - P3-01 acceptance[0] 的收窄。
+
+## C18 (2026-09-24) — 两条已批的收窄写进条文:P2-05 acceptance[2]、P3-01 acceptance[0](用户批准收窄,delegate 裁措辞)
+
+**用户原话**
+
+经巡逻会话 guanjieqiao-e6 转达(#12),2026-09-24:
+
+> 「都按推荐」
+
+记入 `channel/WORKING-MODEL.md` §12 S8。C17 第 6 条「仍待用户决定」的两项由此定下。
+
+**1. 改了什么**
+- 改的是钉住的矩阵 `spec/first100/sources/first100-requirements-matrix.md`,照 C13 的 reword 机制记为 plan correction(`extract-registry.mjs` 的 `CLAUSE_REWORDS`,每条带 evidence)。
+
+| | 原文 | 新文 |
+|---|---|---|
+| P2-05 acceptance[2] | Policy 服务不可被 Cordis replace/unmount。 | Policy 服务不可被 Cordis replace，被卸载后 fail closed。 |
+| P3-01 acceptance[0] | 同一 ToolExecution 可在 local/container/microVM provider 间切换而不改变 ActionManifest/Policy 语义。 | 同一 ToolExecution 在已注册的 provider 之间切换(今天是 local 与 fenced),ActionManifest 与 Policy 的语义不变。 |
+
+- 收窄的部分逐字取自 S8。P3-01 的句末按矩阵惯例补了「。」。
+- P2-05 只收窄卸载半。replace 半在给用户的题里没有问过,按 S8「条款按字面接受」保留原文;删掉它就是未经批准的收窄(delegate 裁 B,A 类)。
+- 两半之间用全角「，」,不用「；」:`splitClauses` 按「；」切条,用「；」会把一条拆成两条,后面的下标全部错位。
+
+**2. 依据**
+- P2-05:vendored Loader 没有「必需、不可卸载」的标记(lane A A-331)。Trust Kernel 的钉法搬不过来:kernel 在任何条目挂载前钉住,policy 引擎是启动途中由普通插件提供的。按字面做要改 Cordis 核心,用户选了收窄。条款要保护的是「没有策略判定就不放行」,由卸载后 fail closed 保住。
+- P3-01:C17 把 P3-08(Container ExecutionWorld Provider)与 P3-09(MicroVM / Remote ExecutionWorld)移出范围。今天注册的 provider 是 dsh-base 挂载的 `execution-world-local` 与 `execution-world-fenced`。
+
+**3. 计数**
+- clause coverage 报告的 `planCorrectedClauses` 与 `supersededSourceClauses` 由 3 变为 5,unmatched 与 undocumented 仍为 0。
+- `generate-specs.spec.ts` 钉住的这两个数在同一笔里改。
+
+**4. 不在本条之内**
+- `BLOCKED-QUEUE.md` 的 ACCEPTANCE LOCKS 中 P2-05、P3-01 两行引用的是旧文,本笔不改。要不要照 C13 之后的先例(`2406d1b222`)另起一笔重述,由 delegate 定。
+- 收窄后两条的补证另做:P2-05 是 A-335 第 3 项;P3-01 另行排期。
