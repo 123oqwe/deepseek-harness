@@ -74,6 +74,51 @@ describe('P4-08: a journal, which holds children\'s outputs, is readable by its 
     expect(statSync(dir).mode & 0o777).toBe(0o700)
     expect(statSync(join(dir, 'run-private.json')).mode & 0o777).toBe(0o600)
   })
+
+  it('writes them 0700 and 0600 under a permissive umask, whatever the runner\'s own umask is', () => {
+    // Set here, so a runner whose umask already gives 0700/0600 cannot make this pass without the modes.
+    const previous = process.umask(0o022)
+    try {
+      const dir = join(directory(), 'journals')
+      writeJournal(dir, 'run-umask', interrupted(scriptDigestOf(SCRIPT)))
+
+      expect(statSync(dir).mode & 0o777).toBe(0o700)
+      expect(statSync(join(dir, 'run-umask.json')).mode & 0o777).toBe(0o600)
+    } finally {
+      process.umask(previous)
+    }
+  })
+
+  it('creates the refused/ directory with mode 0700', async () => {
+    const previous = process.umask(0o022)
+    try {
+      const dir = directory()
+      writeJournal(dir, 'run-refused-mode', interrupted(scriptDigestOf(SCRIPT)))
+      await reusableSteps(dir, 'run-refused-mode', `${SCRIPT} // edited`, () => Promise.resolve(true), undefined)
+
+      expect(statSync(join(dir, 'refused')).mode & 0o777).toBe(0o700)
+    } finally {
+      process.umask(previous)
+    }
+  })
+})
+
+describe('P4-08 acceptance[2]: a kept journal is never replaced', () => {
+  it('keeps both journals when one run is refused twice under the same recorded digest', async () => {
+    const dir = directory()
+    const digest = scriptDigestOf(SCRIPT)
+    writeJournal(dir, 'run-twice', interrupted(digest))
+    const first = readFileSync(join(dir, 'run-twice.json'), 'utf8')
+    await reusableSteps(dir, 'run-twice', `${SCRIPT} // edited`, () => Promise.resolve(true), undefined)
+    // The original script restarted under the same id, and was refused again.
+    writeJournal(dir, 'run-twice', { scriptDigest: digest, entries: [] } as unknown as WorkflowJournal)
+    const second = readFileSync(join(dir, 'run-twice.json'), 'utf8')
+    await reusableSteps(dir, 'run-twice', `${SCRIPT} // edited`, () => Promise.resolve(true), undefined)
+
+    const kept = readdirSync(join(dir, 'refused')).sort()
+    expect(kept).toHaveLength(2)
+    expect(kept.map(name => readFileSync(join(dir, 'refused', name), 'utf8')).sort()).toEqual([first, second].sort())
+  })
 })
 
 describe('P4-08 acceptance[0]: a resume does not repeat completed child work', () => {

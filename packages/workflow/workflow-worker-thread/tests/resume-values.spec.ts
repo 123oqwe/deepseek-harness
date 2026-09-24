@@ -68,6 +68,22 @@ const META = { name: 'resume-values', description: 'agent calls a resume continu
 const ONE_CHILD = "return await agent('only')"
 const TWO_CHILDREN = "const a = await agent('first'); const b = await agent('second'); return [a, b]"
 
+/**
+ * A child port answering every call with the text `fresh`.
+ * @param started - receives each started call's prompt, in start order.
+ * @returns the port.
+ */
+function freshChildren(started: string[]): ChildPort {
+  const fresh: ChildResult = { output: [{ type: 'text', text: 'fresh' }], stopReason: 'completed' }
+  return {
+    startAgent: (request) => {
+      started.push(request.prompt)
+      return Promise.resolve({ id: `child-${String(started.length)}`, result: Promise.resolve(fresh), dispose: () => Promise.resolve() })
+    },
+    startNested: () => Promise.reject(new Error('no nested runs in this case')),
+  }
+}
+
 describe('P4-08 acceptance[0]: a finished child\'s log is durable before its step is journalled completed', () => {
   it('flushes each child session past its turn/end before the host journals the step completed', async () => {
     const { ctx, parent } = await setup(2)
@@ -140,6 +156,7 @@ describe('P4-08 acceptance[0]: a resumed run returns what its finished children 
       { phase: () => {}, log: () => {}, agentStart: () => {}, agentEnd: () => {} },
       children,
       { 1: 'agent-result-1', 2: JSON.stringify('kept') },
+      { 1: callDigestOf('one', {}), 2: callDigestOf('two', {}) },
     )
 
     const settled = await execution.drive()
@@ -152,23 +169,6 @@ describe('P4-08 acceptance[0]: a resumed run returns what its finished children 
 describe('P4-08 acceptance[0]: a resumed step is reused only for the call that recorded it', () => {
   const LIMITS = { maxConcurrentAgents: 1, maxTotalAgents: 5, maxItemsPerCall: 10, syncTimeoutMs: 5_000 }
   const QUIET = { phase: () => {}, log: () => {}, agentStart: () => {}, agentEnd: () => {} }
-
-  /**
-   * A child port answering every call with the text `fresh`.
-   * @param started - receives each started call's prompt, in start order.
-   * @returns the port.
-   */
-  function freshChildren(started: string[]): ChildPort {
-    const fresh: ChildResult = { output: [{ type: 'text', text: 'fresh' }], stopReason: 'completed' }
-    return {
-      startAgent: (request) => {
-        started.push(request.prompt)
-        return Promise.resolve({ id: `child-${String(started.length)}`, result: Promise.resolve(fresh), dispose: () => Promise.resolve() })
-      },
-      startNested: () => Promise.reject(new Error('no nested runs in this case')),
-    }
-  }
-
   const REVIEW = "return await agent('review ' + args.file)"
 
   it('control: reuses a recorded step for the same call, so the cases below measure the call identity', async () => {
@@ -224,6 +224,77 @@ describe('P4-08 acceptance[0]: a resumed step is reused only for the call that r
     await resumed.dispose()
 
     expect(settled).toMatchObject({ stopReason: 'completed', agentsStarted: 1, value: 'child 1' })
+  })
+})
+
+describe('P4-08 acceptance[0]: a resumed call reuses the record its identity names, whatever its step number', () => {
+  const LIMITS = { maxConcurrentAgents: 2, maxTotalAgents: 5, maxItemsPerCall: 10, syncTimeoutMs: 5_000 }
+  const QUIET = { phase: () => {}, log: () => {}, agentStart: () => {}, agentEnd: () => {} }
+  const REVIEW = "return await agent('review ' + args.file, args.options)"
+  const SCHEMA_A = { type: 'object', properties: { verdict: { type: 'string' } }, required: ['verdict'] }
+  const SCHEMA_B = { type: 'object', properties: { score: { type: 'number' } }, required: ['score'] }
+  const CHANGED: [string, Parameters<typeof callDigestOf>[1], Parameters<typeof callDigestOf>[1]][] = [
+    ['model', { model: 'model-a' }, { model: 'model-b' }],
+    ['schema', { schema: SCHEMA_A }, { schema: SCHEMA_B }],
+    ['provider', { provider: 'provider-a' }, { provider: 'provider-b' }],
+  ]
+
+  it.each(CHANGED)('starts the step again when only the %s changed what the call asks', async (_field, recordedWith, calledWith) => {
+    const started: string[] = []
+    const execution = new WorkflowExecution(META, REVIEW, { file: 'a.ts', options: calledWith }, LIMITS, QUIET, freshChildren(started),
+      { 1: JSON.stringify('recorded') }, { 1: callDigestOf('review a.ts', recordedWith) })
+
+    await execution.drive()
+
+    expect(started).toEqual(['review a.ts'])
+  })
+
+  it('reuses every completed step of a pipeline whose step numbers followed completion order', async () => {
+    // Recorded when B's analysis finished first: B's summary took step 3, A's step 4.
+    const started: string[] = []
+    const execution = new WorkflowExecution(
+      META,
+      "return await Promise.all(['A', 'B'].map(async (x) => { const r = await agent('analyze ' + x); return agent('summarize ' + r) }))",
+      undefined, LIMITS, QUIET, freshChildren(started),
+      { 1: JSON.stringify('a1'), 2: JSON.stringify('b1'), 3: JSON.stringify('SUMMARY-OF-B'), 4: JSON.stringify('SUMMARY-OF-A') },
+      {
+        1: callDigestOf('analyze A', {}), 2: callDigestOf('analyze B', {}),
+        3: callDigestOf('summarize b1', {}), 4: callDigestOf('summarize a1', {}),
+      },
+    )
+
+    const settled = await execution.drive()
+
+    expect(started).toEqual([])
+    expect(settled).toMatchObject({ stopReason: 'completed', agentsStarted: 0, value: ['SUMMARY-OF-A', 'SUMMARY-OF-B'] })
+  })
+
+  it('starts every step when constructed without call identities', async () => {
+    const started: string[] = []
+    const execution = new WorkflowExecution(META, REVIEW, { file: 'a.ts' }, LIMITS, QUIET, freshChildren(started),
+      { 1: JSON.stringify('recorded') })
+
+    const settled = await execution.drive()
+
+    expect(started).toEqual(['review a.ts'])
+    expect(settled).toMatchObject({ stopReason: 'completed', agentsStarted: 1, value: 'fresh' })
+  })
+
+  it('keeps the record a changed-argument resume displaced, so resuming with the original arguments reuses it', async () => {
+    const { ctx, parent } = await setup(2, { persistence: true })
+    const script = "return await agent('review ' + args.file)"
+    const first = ctx.workflowEngine.start({ script, meta: META, parent, args: { file: 'a.ts' } })
+    expect(await first.result).toMatchObject({ stopReason: 'completed', value: 'child 0' })
+    await first.dispose()
+    const changed = await ctx.workflowEngine.resume(first.id, { script, meta: META, parent, args: { file: 'b.ts' } })
+    expect(await changed.result).toMatchObject({ stopReason: 'completed', agentsStarted: 1, value: 'child 1' })
+    await changed.dispose()
+
+    const original = await ctx.workflowEngine.resume(first.id, { script, meta: META, parent, args: { file: 'a.ts' } })
+    const settled = await original.result
+    await original.dispose()
+
+    expect(settled).toMatchObject({ stopReason: 'completed', agentsStarted: 0, value: 'child 0' })
   })
 })
 
