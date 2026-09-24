@@ -606,7 +606,7 @@ function readNegotiation(value: unknown): Partial<InitializeResult> {
   if (!isStringArray(agreed) || !isStringArray(ignored)) return {}
   // Absent reads as none, as the Python client reads it; present but not a
   // list of well-formed downgrades drops the negotiation whole.
-  const downgrades = value.downgrades === undefined ? [] : readDowngrades(value.downgrades)
+  const downgrades = readDowngrades(value.downgrades)
   if (downgrades === undefined) return {}
   return {
     negotiation: Object.assign(withoutKeys(value, NEGOTIATION_KEYS), {
