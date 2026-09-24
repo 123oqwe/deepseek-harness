@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-24T18:43:29.092Z",
-  "inputDigest": "83275201f32a0deba410dc1aa0a8d27b0f6e7481012dfe789e52aa009e22795f",
+  "lastUpdatedUtc": "2026-09-24T18:50:50.159Z",
+  "inputDigest": "6b1a1e7471f2ba80a1430712c7efddd7a98233066f6f890f58603e13f1059a6a",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -5581,32 +5581,13 @@
           "capturedAtUtc": "2026-09-07T06:50:47.390Z"
         },
         "U": {
-          "status": "GREEN",
-          "candidateSha": "191aa1e502ff7e96a7ce306cdf57ccb742c745fb",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34992480706",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-first100-delegate/d3a94c8b-056a-44b5-9397-315997b4088a/scratchpad/artifacts/34992480706/first100-vitest-report-191aa1e502ff7e96a7ce306cdf57ccb742c745fb/vitest-report.json",
-          "observationSha256": "bbd33400cce2f168a3a0d55498dd3f2d462dc2699e47a49319c2b84a4a56724f",
-          "expectCasesMatched": [
-            "opens a durable Run for the agent session a real harness boot starts",
-            "owns that Run with RUN_SERVICE_OWNER_ID, never the agent session that started it",
-            "associates the Run with the exact session the harness started, as its initiating Session",
-            "mints the Run's genesis log entry with no prior state, at seq 0",
-            "references the initiating Session in the Run's append-only log, not just in sessionIds",
-            "opens a second, independent Run on the next boot over the same store, keeping the first",
-            "lists the Run a previous boot left behind as non-terminal, so a restart can resume it",
-            "registers the Run Service on the Context it is mounted into",
-            "unregisters the service when the mounting fiber unloads",
-            "opens no Run before any agent session starts",
-            "opens exactly one Run for one started agent session",
-            "owns that Run with RUN_SERVICE_OWNER_ID, never the starting session id",
-            "records the opened Run on the live Agent handle as Agent.runId",
-            "finds the Run for a live agent through runFor",
-            "opens an independent Run per agent session, so one Session never joins another Session's Run",
-            "writes the Run through to the store, so a fresh service over the same path lists it",
-            "restores the Runs an earlier mount left behind, rather than starting empty",
-            "reconciles a real WorkflowRunId into the Run event log's Workflow reference brand"
-          ],
-          "capturedAtUtc": "2026-09-15T17:17:50.168Z"
+          "status": "NOT_RUN",
+          "revokedFrom": {
+            "candidateSha": "191aa1e502ff7e96a7ce306cdf57ccb742c745fb",
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34992480706",
+            "absentCommitments": 1
+          },
+          "revokedReason": "P4-01 U was re-frozen as [55]′: A-4 replaced the absence case with P1, so its observation of [55] at 191aa1e502 holds no live entry of its own; batch 7 re-observes it"
         },
         "F": {
           "status": "GREEN",
@@ -5628,31 +5609,13 @@
       },
       "supplements": {
         "U.1": {
-          "status": "GREEN",
-          "candidateSha": "93d52207338066bd65494f6044f1ec5920d63cb8",
-          "ciRunUrl": "https://github.com/deepseek-ai/deepseek-harness/actions/runs/34652643903",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34652643903/first100-evidence-93d52207338066bd65494f6044f1ec5920d63cb8/vitest-report.json",
-          "observationSha256": "3c15dc184ed1d2854dd1c87ad45663960fbf87da8553d79ead6000250dd3da09",
-          "expectCasesMatched": [
-            "reports the non-terminal Runs the store held, at mount, before any agent exists",
-            "reports nothing for a store that holds only terminal Runs, so the enumeration is not just \"everything\"",
-            "gives a session exactly ONE Run across a restart, adopting the non-terminal one it restored",
-            "MINTS a fresh Run when the restored one is terminal, rather than resuming something already finished",
-            "adopts a Run that was mid-`running` when the process CRASHED, rather than dropping it",
-            "PARKS a running Run at `paused` when the mount unloads cleanly, rather than ending or abandoning it",
-            "RELEASES its work item on a clean unload, so the next mount continues at once and waits out no lease",
-            "takes a parked Run back to `running` at the next model step, so `paused` is a pause and not a stop",
-            "continues under a lease THIS mount was issued, once the dead process's lease has lapsed",
-            "opens NO Run for a restart inside the lease window, because the work item is still held",
-            "refuses a transition the table does not allow, naming the pair it refused",
-            "writes nothing when it refuses: the Run keeps the event log it had",
-            "opens an independent Run per session, so a second session never joins the first's Run",
-            "walks a successful session accepted → planning → running → verifying → succeeded, one log entry each",
-            "ends a session whose last reported activity was an unrecovered error at verifying → failed",
-            "leaves no non-terminal Run behind after a session that ran and ended",
-            "cancels a Run whose session was disposed before any model step, rather than leaving it accepted"
-          ],
-          "capturedAtUtc": "2026-09-11T23:11:40.075Z"
+          "status": "NOT_RUN",
+          "revokedFrom": {
+            "candidateSha": "93d52207338066bd65494f6044f1ec5920d63cb8",
+            "ciRunUrl": "https://github.com/deepseek-ai/deepseek-harness/actions/runs/34652643903",
+            "absentCommitments": 1
+          },
+          "revokedReason": "P4-01 U.1 was re-frozen at its seq as [56]′: A-4 replaced the absence case with R1, so its observation of [56] at 93d5220733 holds no live entry of its own; batch 7 re-observes it"
         },
         "U.2": {
           "status": "GREEN",
@@ -5670,7 +5633,7 @@
       "candidateSha": "191aa1e502ff7e96a7ce306cdf57ccb742c745fb",
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "BLOCKED_ON_ACCEPTANCE",
+      "status": "NOT_RUN",
       "acceptedEvidence": {
         "acceptedAtUtc": "2026-09-12T00:43:00.843Z",
         "cells": {

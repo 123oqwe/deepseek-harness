@@ -1066,11 +1066,40 @@
         },
         {
           "stage": "U",
-          "title": "opens an independent Run per session, so a second session never joins the first's Run",
-          "supplementSeq": 1
+          "supplementSeq": 1,
+          "title": "MINTS a fresh Run when the restored one is terminal, rather than resuming something already finished"
+        },
+        {
+          "stage": "U",
+          "title": "opens an independent Run per root session, and only a session the registry records as owned joins another's Run"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "opens an independent Run per root session, and keeps only an owned child in another's Run across a restart"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 3,
+          "title": "P4-01 acceptance[2]: one Run spans a session and the in-process child sessions it owns records an in-process child session in the Run of the agent that owns it, and no unrelated session"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 3,
+          "title": "P4-01 acceptance[2]: one Run spans a session and the in-process child sessions it owns keeps the child in its owner's Run across a restart, and the owner continues that Run"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 4,
+          "title": "P4-01 acceptance[2] on the shipped base profile: a subagent child and its parent share one Run records a subagent child in its parent's Run on the shipped base profile"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 4,
+          "title": "P4-01 acceptance[2] on the shipped base profile: a subagent child and its parent share one Run keeps that Run spanning both sessions across a restart of the shipped profile"
         }
       ],
-      "note": "acceptance[2]: '一个 Session 可关联多个 Run,一个 Run 可跨多个 Session/Agent.' **Re-signed 2026-09-11: both directions hold of the LIBRARY and only one of them is reached by production.** The C and P citations cover both directions of the many-to-many relation, and both are proven to survive a restart rather than only holding in memory -- which matters because the clause is about durable association, not a transient one. The U citation adds the negative half the positive cases cannot establish: a real boot opens an INDEPENDENT Run per agent session, so the relation is genuinely many-to-many rather than one Run silently collecting every session. The half that production does NOT reach is the other direction: no production path calls attachSession, so 'one Run across multiple Sessions' is a library capability with no caller. That is BLOCKED-196, and U.1 freezes a case whose subject is that absence, so the day someone wires it without the ruling the case fails. Whether the positive half is in U2's scope was the open question the delegate settled by keeping it out; this note records the answer so a later reader does not read the gap as an oversight."
+      "note": "acceptance[2]: '一个 Session 可关联多个 Run,一个 Run 可跨多个 Session/Agent.' **Re-cut 2026-09-24 (lane B, the P4-01 work order under the delegate's ruling 甲, workorders/approved/P4-01.md): both directions are now reached by production.** The C and P citations cover both directions of the many-to-many relation in the library, each surviving a restart. The first half on a real mount: `MINTS a fresh Run when the restored one is terminal, rather than resuming something already finished` (U.1), one session opening a second Run. The second half: `RunPlugin.open` attaches an in-process child session to the Run of the agent that owns it, as a member; the lease of the session that opened the Run is that Run's one authority, and the child keeps its own Run, lease and lifecycle. N1 and N2 (U.3) observe the join and keep it across a restart; K1 and K2 (U.4) observe it on the shipped base profile, K2 across a restart of that profile; P1 (U) and R1 (U.1) assert that two root sessions each keep an independent Run and that only a session the registry records as owned joins another's, before and across a restart. P1 and R1 replace the two cases whose subject was the absence of any join (A-4); the one this record cited before, 'opens an independent Run per session, so a second session never joins the first's Run', is superseded with [56]. Not covered: the join is written only while the owner's lease admits writes (N5), but `attachSession` takes no fence, unlike `advance`; detached workflow sessions, gateway forks, root sessions and out-of-process subagents join no parent Run; K1 and K2 start the child through `subagents.start`, not through a model's subagent tool call; a join leaves no event in the Run's log, so must[1]'s reading is unchanged; and a grandchild forms a chain of Runs rather than joining its grandparent's."
     },
     {
       "epic": "P4-02",

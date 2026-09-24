@@ -2511,6 +2511,54 @@
     },
     {
       "epic": "P4-01",
+      "path": ".agents/notes/implemented/architecture/2026-09-24-a-child-session-joins-its-owners-run.md",
+      "kind": "doc",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P4-01",
+      "path": ".agents/notes/implemented/architecture/2026-09-24-a-child-session-joins-its-owners-run.zh.md",
+      "kind": "doc",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P4-01",
+      "path": "packages/run/run/README.md",
+      "kind": "doc",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P4-01",
+      "path": "packages/run/run/tests/fixtures/p4-01-span/base-mount.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.4"
+      ]
+    },
+    {
+      "epic": "P4-01",
+      "path": "packages/run/run/tests/fixtures/p4-01-span/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.4"
+      ]
+    },
+    {
+      "epic": "P4-01",
+      "path": "packages/run/run/tests/fixtures/p4-01-span/mock-llm.ts",
+      "kind": "test",
+      "stages": [
+        "U.4"
+      ]
+    },
+    {
+      "epic": "P4-01",
       "path": "packages/run/run/tests/plugin.spec.ts",
       "kind": "test",
       "stages": [
@@ -2531,6 +2579,14 @@
       "kind": "test",
       "stages": [
         "P"
+      ]
+    },
+    {
+      "epic": "P4-01",
+      "path": "packages/run/run/tests/run-span.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
       ]
     },
     {
@@ -2570,8 +2626,8 @@
       "path": "tests/first100/fixtures/P4-01.composition.spec.ts",
       "kind": "test",
       "stages": [
-        "U",
-        "U.2"
+        "U.2",
+        "U"
       ]
     },
     {
@@ -2580,6 +2636,14 @@
       "kind": "test",
       "stages": [
         "F"
+      ]
+    },
+    {
+      "epic": "P4-01",
+      "path": "tests/first100/fixtures/P4-01.run-span.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.4"
       ]
     },
     {
