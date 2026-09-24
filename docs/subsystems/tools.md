@@ -522,11 +522,12 @@ replace(definition: ToolDefinition): () => void
  * explicit declaration they would all resolve to one owner and no collision
  * between two of them could ever be detected.
  *
- * The caller's innermost enclosing Loader entry must be named in
- * {@link ToolOwnershipConfig.ownerDeclarers}; any other caller is refused,
- * so a statically loaded plugin cannot record its registrations under
- * another plugin's name (BLOCKED-308). A tree with no Loader has no entry
- * names to protect, and every caller there may declare.
+ * The caller's innermost enclosing entry in the Loader of this registry's
+ * own tree must be named in {@link ToolOwnershipConfig.ownerDeclarers}; any
+ * other caller is refused. The check reads which entry encloses the calling
+ * fiber, not which code made the call, so it does not stop code that places
+ * a fiber under a listed entry (BLOCKED-308). A tree with no Loader has no
+ * entries, and every caller there may declare.
  * @param identity - the stable identity to attribute this subtree's registrations to.
  * @returns the disposer that unbinds it, held by the calling fiber.
  * @throws when a Loader is present and the caller's innermost entry is not an owner declarer.

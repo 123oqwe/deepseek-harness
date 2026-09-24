@@ -4,7 +4,7 @@ Status: implemented
 
 [English](2026-09-04-tool-registry-namespace-and-ownership-adjudication.md) | 中文
 
-> 下文关于 `revokeOwned` 的决定已被[所有权 token 留在工具注册表内部](../bug-fix/2026-09-24-tool-ownership-tokens-stay-in-the-registry.zh.md)取代，该记录还把 `declareOwner` 限制为 `ownership.ownerDeclarers` 所列的条目；本记录其余部分仍然有效。
+> 下文关于 `revokeOwned` 的决定已被[所有权 token 留在工具注册表内部](../bug-fix/2026-09-24-tool-ownership-tokens-stay-in-the-registry.zh.md)取代，该记录还把 `declareOwner` 限制为 `ownership.ownerDeclarers` 所列的条目，并在有 Loader 的树里拒绝来自任何条目之外的注册（根 fiber 除外）；本记录其余部分仍然有效。
 
 ## 问题
 

@@ -68,7 +68,7 @@ ctx.tools.register(defineTool({
 
 接管已被拥有的名称必须使用显式的 `replace`，且其本身受 `ownership.allowReplace` 约束。即便策略允许替换，普通的 `register` 也绝不构成覆盖。`ownershipOf` 读取某名称的当前拥有者，`ownershipHistory` 返回准入历史（含被取代的拥有者，这正是 `@deepseek-ai/dsh-host-plugin-inventory` 的 `buildToolOwnershipChain` 渲染 replaced/replacing 链所依据的数据）。两者返回的都是不带 `OwnershipToken` 的 `CapabilityRecord`：任何插件都能读到其他插件的记录，记录里若带 token，读取方就能冒充拥有者。注册表没有按 token 撤销的方法；一次注册只能经由它自己的 disposer 移除，因此插件卸载时移除的恰好是它自己的工具与所有权记录。
 
-`declareOwner` 把调用方的子树绑定到另一个身份，动态 Cordis runner 正是这样为每个动态包赋予它自己的插件 id。只有最内层 Loader 条目列在 `ownership.ownerDeclarers` 中的调用方才可以声明；默认值是 `@deepseek-ai/dsh-cordis-host-runner`，来自其他条目的调用会抛出错误。没有 Loader 的树里任何调用方都可以声明，因为那里的身份是各插件自己取的 fiber 名称。
+`declareOwner` 把调用方的子树绑定到另一个身份，动态 Cordis runner 正是这样为每个动态包赋予它自己的插件 id。只有最内层 Loader 条目列在 `ownership.ownerDeclarers` 中的调用方才可以声明；默认值是 `@deepseek-ai/dsh-cordis-host-runner`，来自其他条目的调用会抛出错误。这项检查看的是哪个条目包住了调用方的 fiber，而不是哪段代码发起了调用：把 fiber 放到所列条目之下的代码，会被当作那个条目放行；借助 Loader，同一进程里的任何插件都能拿到别的条目的上下文，或者改写这个列表（BLOCKED-308）。树里有 Loader 时，来自任何条目之外的 fiber 的注册一律拒绝，只有根 fiber 例外，它以 `root` 的身份注册；`root` 不是官方身份，碰不到保留的 `dsh.*` 命名空间。没有 Loader 的树里，任何调用方都可以声明，注册记在它的 fiber 名称之下。
 
 ```yaml
 - id: tools

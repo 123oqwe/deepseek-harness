@@ -4,7 +4,7 @@ Status: implemented
 
 English | [中文](2026-09-04-tool-registry-namespace-and-ownership-adjudication.zh.md)
 
-> The `revokeOwned` decision below is superseded by [ownership tokens stay in the tool registry](../bug-fix/2026-09-24-tool-ownership-tokens-stay-in-the-registry.md), which also restricts `declareOwner` to the entries `ownership.ownerDeclarers` names; the rest of this record remains current.
+> The `revokeOwned` decision below is superseded by [ownership tokens stay in the tool registry](../bug-fix/2026-09-24-tool-ownership-tokens-stay-in-the-registry.md), which also restricts `declareOwner` to the entries `ownership.ownerDeclarers` names and, in a tree with a Loader, refuses a registration from outside every entry except the root fiber's; the rest of this record remains current.
 
 ## Problem
 

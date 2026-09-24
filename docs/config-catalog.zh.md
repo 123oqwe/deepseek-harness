@@ -3683,9 +3683,11 @@ export interface ToolOwnershipConfig {
    * that is, record their registrations under another plugin identity. The
    * default names the dynamic Cordis runner,
    * `@deepseek-ai/dsh-cordis-host-runner`, which declares each dynamic
-   * package's own plugin id. A call from under any other entry is refused, so
-   * a statically loaded plugin cannot record a registration under another
-   * plugin's name.
+   * package's own plugin id. A call from under any other entry is refused.
+   * The check reads which entry encloses the calling fiber, not which code
+   * made the call: code that places a fiber under a listed entry is admitted
+   * as that entry, and code that edits this list through the Loader changes
+   * who is admitted (BLOCKED-308).
    */
   ownerDeclarers?: string[]
 }

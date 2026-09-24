@@ -981,9 +981,11 @@ export interface ToolOwnershipConfig {
    * that is, record their registrations under another plugin identity. The
    * default names the dynamic Cordis runner,
    * `@deepseek-ai/dsh-cordis-host-runner`, which declares each dynamic
-   * package's own plugin id. A call from under any other entry is refused, so
-   * a statically loaded plugin cannot record a registration under another
-   * plugin's name.
+   * package's own plugin id. A call from under any other entry is refused.
+   * The check reads which entry encloses the calling fiber, not which code
+   * made the call: code that places a fiber under a listed entry is admitted
+   * as that entry, and code that edits this list through the Loader changes
+   * who is admitted (BLOCKED-308).
    */
   ownerDeclarers?: string[]
 }
@@ -1162,11 +1164,19 @@ export class ToolRuntime extends Service {
   private readonly ownershipPolicy: RegistryPolicy
   /** Loader entries whose subtrees may declare an owner (see {@link resolveOwnerDeclarers}). */
   private readonly ownerDeclarers: ReadonlySet<string>
+  /**
+   * Reads the Loader from this registry's own context. Inside a method,
+   * `this.ctx` is the caller's context, and a caller that isolates `loader` in
+   * its own scope sees no Loader there; the context the registry was
+   * constructed in is one no caller controls.
+   */
+  private readonly homeLoader: () => unknown
 
   constructor(ctx: Context, config: Config = {}) {
     super(ctx, 'tools')
     this.ownershipPolicy = resolveOwnershipPolicy(config.ownership)
     this.ownerDeclarers = resolveOwnerDeclarers(config.ownership)
+    this.homeLoader = () => ctx.get('loader')
     // The schema already defaulted an omitted mode; the ?? narrows the
     // optional-input type for direct (non-Loader) construction in tests.
     this.defaultMode = config.mode ?? 'native'
@@ -1514,11 +1524,12 @@ export class ToolRuntime extends Service {
    * explicit declaration they would all resolve to one owner and no collision
    * between two of them could ever be detected.
    *
-   * The caller's innermost enclosing Loader entry must be named in
-   * {@link ToolOwnershipConfig.ownerDeclarers}; any other caller is refused,
-   * so a statically loaded plugin cannot record its registrations under
-   * another plugin's name (BLOCKED-308). A tree with no Loader has no entry
-   * names to protect, and every caller there may declare.
+   * The caller's innermost enclosing entry in the Loader of this registry's
+   * own tree must be named in {@link ToolOwnershipConfig.ownerDeclarers}; any
+   * other caller is refused. The check reads which entry encloses the calling
+   * fiber, not which code made the call, so it does not stop code that places
+   * a fiber under a listed entry (BLOCKED-308). A tree with no Loader has no
+   * entries, and every caller there may declare.
    * @param identity - the stable identity to attribute this subtree's registrations to.
    * @returns the disposer that unbinds it, held by the calling fiber.
    * @throws when a Loader is present and the caller's innermost entry is not an owner declarer.
@@ -1552,9 +1563,12 @@ export class ToolRuntime extends Service {
    * explicit {@link declareOwner} on the fiber chain wins (and marks the
    * registration `'dynamic'`); otherwise the innermost enclosing Loader
    * entry's module specifier is the identity, because that is the registrant's
-   * stable on-disk identity. Only a tree with no Loader at all falls back to
-   * `Fiber.name`, which is a diagnostic display name rather than an identity —
-   * it is never reached in a booted product tree.
+   * stable on-disk identity. In a tree with a Loader, a caller that no entry
+   * encloses is refused: the only name it has is the one its fiber gave
+   * itself. The root fiber is the exception, because no plugin names it, and
+   * it registers as `root`. A tree with no Loader falls back to `Fiber.name`,
+   * a diagnostic display name rather than an identity.
+   * @throws when a Loader is present and no entry encloses a caller other than the root fiber.
    */
   private resolveOwner(): { identity: PluginIdentity; origin: CapabilityOrigin } {
     const chain = this.callerChain()
@@ -1563,8 +1577,13 @@ export class ToolRuntime extends Service {
       if (declared !== undefined) return { identity: declared, origin: 'dynamic' }
     }
     const entries = this.loaderEntries()
-    const entry = entries === undefined ? undefined : nearestEntryName(chain, entries)
-    if (entry !== undefined) return { identity: brandString<PluginIdentity>(entry), origin: 'static' }
+    if (entries !== undefined) {
+      const entry = nearestEntryName(chain, entries)
+      if (entry !== undefined) return { identity: brandString<PluginIdentity>(entry), origin: 'static' }
+      if (chain.length > 1) {
+        throw new Error(`dsh-tools: registration from fiber ${JSON.stringify(this.ctx.fiber.name)} outside every Loader entry is refused: outside an entry, the only identity a fiber has is the name it gave itself`)
+      }
+    }
     return { identity: brandString<PluginIdentity>(this.ctx.fiber.name), origin: 'static' }
   }
 
@@ -1580,9 +1599,9 @@ export class ToolRuntime extends Service {
     return chain
   }
 
-  /** Every entry of the Loader in this tree, as an array; `undefined` in a tree with no Loader. */
+  /** Every entry of the Loader in this registry's own tree, as an array; `undefined` in a tree with no Loader. */
   private loaderEntries(): readonly AttributableLoaderEntry[] | undefined {
-    const loader: unknown = this.ctx.get('loader')
+    const loader = this.homeLoader()
     if (loader === undefined) return undefined
     return [...(loader as { entries: () => Iterable<AttributableLoaderEntry> }).entries()]
   }
