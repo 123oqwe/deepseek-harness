@@ -12,7 +12,9 @@ Status: implemented
 
 - **校验时重新推导基线。** `.dsh/baseline.json` 仍与记录的摘要一致时，`verify` 对检出调用 P0-01 的 `verifyBaseline`，把每一项漂移报为不一致。
 - **门禁清单绑定到包上。** `collect-evidence.mjs init` 在签名之前写出 `manifest.json`，并把它的摘要记为包的可选字段 `sidecarManifestDigest`，包签名覆盖这个字段。清单摘要不符，或包里缺这个字段，`verify` 都报不一致。
-- **结果行报出 accepted 状态。** 成功行与失败行都在包路径旁写出 `accepted=<值>`。
+- **只有校验通过、且记录的是布尔值 `true` 的包，结果行才写 `accepted=true`。** 校验失败的包写 `accepted=false`，记录的值只用文字说明；`accepted` 不是布尔值，本身就是一项不一致。
+- **工作树与记录的 diff 对照。** `init` 记录工作树的 `git diff <baseSha>`，`verify` 再取一次同样的 diff 并比对摘要，所以采集之后改动的受跟踪文件，无论提交与否，都会让校验失败。
+- **做不了的核对记为具名的不一致。** 缺 git 或 pnpm、目录不是 git 检出、包或清单不是合法 JSON，都记为一项不一致，所以结果行总会打印。
 
 ## 考虑过的替代方案
 
@@ -24,3 +26,6 @@ Status: implemented
 - 离线复核必须在采集时检出的 HEAD 上，用相同版本的 Node 与 pnpm 运行；否则都报为漂移。发现漂移时，`verifyBaseline` 会写出 `.dsh/rebase-report.json`。
 - 每次校验都会运行 `git`、`node --version` 与 `pnpm --version`。
 - 本改动之前采集的包没有 `sidecarManifestDigest`，会校验失败。
+- `git diff` 只覆盖受跟踪的文件，所以采集之后新增的未跟踪文件看不到。在 `init` 与 `verify` 之间改动受跟踪文件的步骤会让校验失败；exact-SHA 门禁在两者之间只跑 typecheck 这一个门。
+- `main()` 在 `import.meta.main` 守卫之后运行，所以在没有 `import.meta.main` 的 Node 版本上，脚本什么也不做、以 0 退出。这是修复之前就有的问题，由 BLOCKED-305 跟踪。
+- 修复的提交是 `775c25640a`。后来的一条提交信息引用的 `bed753dfe2` 是本笔记的文档提交。
