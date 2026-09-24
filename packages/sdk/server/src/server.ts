@@ -198,7 +198,6 @@ export const SERVER_PROTOCOL_SURFACE: ProtocolSurface = {
     { name: 'session.status', schemaId: 'sdk-protocol:SessionStatusNotification', version: '1.0' },
     { name: 'host.control', schemaId: 'sdk-protocol:HostControlNotification', version: '1.0' },
     { name: 'subagent.started', schemaId: 'sdk-protocol:SubagentStartedNotification', version: '1.0' },
-    { name: 'subagent.finished', schemaId: 'sdk-protocol:SubagentFinishedNotification', version: '1.0' },
     { name: 'human/question', schemaId: 'sdk-protocol:HumanQuestionParams', version: '1.0' },
   ],
   resourceTypes: ['session', 'agent'],
