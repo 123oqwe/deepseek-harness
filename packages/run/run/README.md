@@ -242,7 +242,9 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   `verifying` and `succeeded` or `failed`, and gives the item back only after
   the terminal writes settle. `pauseRun` gives the lease back before it writes
   `paused` (BLOCKED-197), so that write carries none, and `openForSession`,
-  `attachSession` and session-log appends carry none either. The lease lives in
+  `attachSession` and session-log appends carry none either; the one
+  `attachSession` call `RunPlugin` makes is gated on the owner's
+  `mayWrite` when the child opens, not in the Run's turn. The lease lives in
   SQLite and the Run in its JSON store, so a write admitted just before a
   takeover can still land: "stale writes after a newer token = 0" is not
   claimed. lease-sqlite keeps its handle after its own teardown while a lease
@@ -352,9 +354,15 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   is mounted, and those a profile configured before it mounted, which it
   adopts at mount because Cordis load order follows service availability
   rather than `cordis.yml` row order. A session that never enters that
-  registry gets no Run, and `Agent.runId` stays absent. Multi-session Runs
-  (acceptance[2]) are supported by `RunService.attachSession` but no mounted
-  listener calls it yet.
+  registry gets no Run, and `Agent.runId` stays absent. An in-process child
+  session, one the registry records as owned by a live agent, also joins its
+  owner's Run (acceptance[2]): the owner's Run lists it in `sessionIds`, and
+  the child keeps its own Run, lease and lifecycle. On a restart a session is
+  offered only the Runs it opened (`sessionIds[0]`), never one it joined. The
+  join appends no Run event, so the owner's log names no event of the child,
+  and a grandchild joins its direct owner's Run, so nested delegation forms a
+  chain of Runs. Detached workflow sessions, gateway forks and every root
+  session open their own Run and join none.
 - **`packages/session/session-persistence/src/coordinator.ts` was read, not
   modified.** Runs are deliberately not stored through
   `PersistenceCoordinator`: its storage contract is keyed on session
