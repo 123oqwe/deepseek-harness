@@ -586,7 +586,9 @@ guard(guard: ToolGuard): () => void
  * policy. Because preparation is the single funnel both `execute` and the
  * agent loop's staged scheduler pass through, and because a transport
  * sub-dispatch (a `parent` token set) funnels through it too, there is no
- * alternate caller that reaches a tool body around this check.
+ * alternate caller that reaches a tool body around this check. The native
+ * and code-mode dispatch paths also ask the same gate before their risk
+ * gate, which runs ahead of preparation and can ask a person (BLOCKED-330).
  * @returns the exact disposer that lifts this registration's requirement.
  */
 requireCapabilityToken(): () => void

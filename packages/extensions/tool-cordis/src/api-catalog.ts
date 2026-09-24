@@ -3158,7 +3158,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
       },
       {
         signature: 'requireCapabilityToken(): () => void',
-        description: 'Epic P2-02 must[3]: require every tool call in this context\'s scope to present a Capability Token authorizing that tool. A plain-context registration arms the requirement for every call the registry receives; one registered through `agent.ctx` arms it for that agent\'s calls only.\n\nThe gate runs inside ToolRuntime.execute\'s own preparation, BEFORE the `tools/pre-execute` waterfall and the guard stage — the same placement as the `ptc` collapse and for the same reason: a call that cannot be authorized must never be observed, let alone approved, by extensible policy. Because preparation is the single funnel both `execute` and the agent loop\'s staged scheduler pass through, and because a transport sub-dispatch (a `parent` token set) funnels through it too, there is no alternate caller that reaches a tool body around this check.',
+        description: 'Epic P2-02 must[3]: require every tool call in this context\'s scope to present a Capability Token authorizing that tool. A plain-context registration arms the requirement for every call the registry receives; one registered through `agent.ctx` arms it for that agent\'s calls only.\n\nThe gate runs inside ToolRuntime.execute\'s own preparation, BEFORE the `tools/pre-execute` waterfall and the guard stage — the same placement as the `ptc` collapse and for the same reason: a call that cannot be authorized must never be observed, let alone approved, by extensible policy. Because preparation is the single funnel both `execute` and the agent loop\'s staged scheduler pass through, and because a transport sub-dispatch (a `parent` token set) funnels through it too, there is no alternate caller that reaches a tool body around this check. The native and code-mode dispatch paths also ask the same gate before their risk gate, which runs ahead of preparation and can ask a person (BLOCKED-330).',
         parameters: [],
         returns: 'the exact disposer that lifts this registration\'s requirement.',
       },
@@ -7385,7 +7385,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ToolRuntimeScheduler',
-    declaration: 'export interface ToolRuntimeScheduler {\n    prepare(exec: ToolExecutionInput): Promise<ScheduledToolPreparation>;\n    dispatch(exec: ToolRunContext): Promise<ScheduledToolDispatch>;\n    finalize(exec: ToolRunContext, result: ToolExecutionResult): Promise<ToolExecutionResult>;\n    finish(exec: ToolRunContext, result: ToolExecutionResult): ToolExecutionResult;\n}',
+    declaration: 'export interface ToolRuntimeScheduler {\n    capabilityRefusal(exec: ToolExecutionInput): ToolExecutionResult | undefined;\n    prepare(exec: ToolExecutionInput): Promise<ScheduledToolPreparation>;\n    dispatch(exec: ToolRunContext): Promise<ScheduledToolDispatch>;\n    finalize(exec: ToolRunContext, result: ToolExecutionResult): Promise<ToolExecutionResult>;\n    finish(exec: ToolRunContext, result: ToolExecutionResult): ToolExecutionResult;\n}',
   },
   {
     name: 'ToolSchema',

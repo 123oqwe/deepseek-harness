@@ -497,6 +497,11 @@ export type ScheduledToolDispatch =
  * @internal
  */
 export interface ToolRuntimeScheduler {
+  /**
+   * The Capability Token refusal `prepare` gives `exec`, or `undefined` when the token authorizes it. A dispatch path
+   * asks this before its risk gate, so a person is never asked to approve a call the token will refuse (BLOCKED-330).
+   */
+  capabilityRefusal(exec: ToolExecutionInput): ToolExecutionResult | undefined
   /** Materialize input, run the ordered pre-execute/guard gate, and decide what stage follows. */
   prepare(exec: ToolExecutionInput): Promise<ScheduledToolPreparation>
   /** Run only the around-dispatch/body stage. */
@@ -1148,6 +1153,7 @@ export class ToolRuntime extends Service {
 
   /** Internal staged view consumed by `dsh-agent-loop`'s parallel scheduler. */
   readonly [TOOL_RUNTIME_SCHEDULER]: ToolRuntimeScheduler = {
+    capabilityRefusal: exec => this.capabilityRefusal(exec),
     prepare: exec => this.prepareScheduledExecution(exec),
     dispatch: exec => this.dispatchScheduledExecution(exec),
     finalize: (exec, result) => this.finalizeScheduledExecution(exec, result),
@@ -1722,7 +1728,9 @@ export class ToolRuntime extends Service {
    * policy. Because preparation is the single funnel both `execute` and the
    * agent loop's staged scheduler pass through, and because a transport
    * sub-dispatch (a `parent` token set) funnels through it too, there is no
-   * alternate caller that reaches a tool body around this check.
+   * alternate caller that reaches a tool body around this check. The native
+   * and code-mode dispatch paths also ask the same gate before their risk
+   * gate, which runs ahead of preparation and can ask a person (BLOCKED-330).
    * @returns the exact disposer that lifts this registration's requirement.
    */
   requireCapabilityToken(): () => void {
@@ -2094,6 +2102,27 @@ export class ToolRuntime extends Service {
     return this.prepareExecution(input, prepared => prepared)
   }
 
+  /**
+   * The Capability Token gate for one call: its refusal, or `undefined` when the call's scope requires no token or its
+   * token authorizes the call. `prepare` applies it, and the two dispatch paths ask it before their risk gate
+   * (BLOCKED-330), so both refusals are this one.
+   * @param input - the caller-supplied execution input, with the token it presents.
+   * @returns the refusal as a tool result, or `undefined`.
+   */
+  private capabilityRefusal(input: ToolExecutionInput): ToolExecutionResult | undefined {
+    if (!this.requiresCapabilityToken(input.agent)) return undefined
+    // Asked of the provider, not of this class: the revocation set lives with
+    // the token provider, and a composition that mounts none arms no
+    // requirement either, so `false` here is the same "nothing to enforce"
+    // the arming rule already expresses.
+    const revoked = input.capabilityToken !== undefined
+      && (this.ctx.get('capabilityTokens')?.isRevoked(input.capabilityToken) ?? false)
+    const reason = capabilityDenialReason(input.name, input.capabilityToken, Date.now(), revoked)
+    return reason === undefined
+      ? undefined
+      : toolErrorResult(new ToolCapabilityTokenError(input.name, reason, input.capabilityTokenUnavailable))
+  }
+
   private async prepareExecution<T>(
     input: ToolExecutionInput,
     next: (prepared: ScheduledToolPreparation) => T | PromiseLike<T>,
@@ -2104,22 +2133,8 @@ export class ToolRuntime extends Service {
     if (this.callerCancelled(exec)) {
       return next({ kind: 'final-result', exec, result: toolAbortedBeforeDispatchResult() })
     }
-    if (this.requiresCapabilityToken(exec.agent)) {
-      // Asked of the provider, not of this class: the revocation set lives with
-      // the token provider, and a composition that mounts none arms no
-      // requirement either, so `false` here is the same "nothing to enforce"
-      // the arming rule already expresses.
-      const revoked = input.capabilityToken !== undefined
-        && (this.ctx.get('capabilityTokens')?.isRevoked(input.capabilityToken) ?? false)
-      const reason = capabilityDenialReason(exec.name, input.capabilityToken, Date.now(), revoked)
-      if (reason !== undefined) {
-        return next({
-          kind: 'final-result',
-          exec,
-          result: toolErrorResult(new ToolCapabilityTokenError(exec.name, reason, input.capabilityTokenUnavailable)),
-        })
-      }
-    }
+    const unauthorized = this.capabilityRefusal(input)
+    if (unauthorized !== undefined) return next({ kind: 'final-result', exec, result: unauthorized })
     try {
       const carrier = scopeTarget(this, exec.agent)
       const gate = await this.ctx.waterfall(
