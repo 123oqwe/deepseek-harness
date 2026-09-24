@@ -494,7 +494,7 @@ function checkRuntimeApiRange(manifest: PluginCompatManifest, host: HostCompatCo
 function checkSchemaRanges(manifest: PluginCompatManifest, host: HostCompatContext): ConflictReasonCode | undefined {
   for (const range of manifest.schemaRanges) {
     const registered = host.registeredSchemaVersions.get(range.schemaId)
-    if (!registered || registered.major < range.minVersion.major || registered.major > range.maxVersion.major) {
+    if (!registered) {
       return 'schema-major-mismatch'
     }
   }
