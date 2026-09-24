@@ -94,7 +94,7 @@ const registry = new Map<SchemaId, RegisteredSchema>()
  * @param payload - passed through unchanged.
  * @returns `payload`, unchanged.
  */
-export const identityMigration: SchemaMigration = payload => payload
+export const identityMigration: SchemaMigration = payload => structuredClone(payload)
 
 function isValidVersion(version: SchemaVersion): boolean {
   return Number.isInteger(version.major) && version.major >= 1
