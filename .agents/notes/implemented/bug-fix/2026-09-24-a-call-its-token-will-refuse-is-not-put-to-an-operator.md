@@ -22,6 +22,7 @@ BLOCKED-330. Both dispatch paths run the risk gate before `ToolRuntime` prepares
 ## Consequences
 
 - Preparation still checks the token. A token that expires while the operator decides is refused there, after the approval.
+- Before this change, a call its token refused had already reserved its effect in the action ledger, and the error result then marked that reservation ambiguous: the ledger held an entry for a person or a reconciler to settle, for an action that never ran. On the code-mode path the call also logged `tool/ptc-dispatch-start`. Like a policy or risk-gate refusal, a token refusal now leaves neither.
 - A call collapsed by the code-mode presentation and also refused by its token is now reported as the token refusal, since the dispatch paths ask the token gate before preparation reaches the collapse.
 - `ToolRuntimeScheduler` gained a member, so the tool-cordis API catalog changes, and P9-07.P is re-observed in the batch that carries this change.
 - Config agents created at mount can race the token provider and present no token. No shipped profile uses `agents: [...]`, so this is recorded as an agent-loop Known Limitation.
