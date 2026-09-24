@@ -452,7 +452,7 @@ export abstract class SettingsProvider extends Service {
     // (by an earlier mount) keeps its existing schema version here.
     const settingsSchemaId = brandString<SchemaId>(`settings:${parsedNs}`)
     if (getSchema(settingsSchemaId) === undefined) {
-      registerSchema(settingsSchemaId, options?.schemaVersion ?? { major: 1, minor: 0 }, identityMigration)
+      registerSchema(settingsSchemaId, options?.schemaVersion ?? { major: 1, minor: 0 }, payload => identityMigration(payload))
     }
     const registration: SettingsRegistration = {
       ns: parsedNs,
