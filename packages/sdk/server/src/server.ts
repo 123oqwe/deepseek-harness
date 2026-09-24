@@ -357,10 +357,10 @@ export class HarnessSdkJsonRpcServer {
       SERVER_PROTOCOL_VERSIONS,
     )
     if (!versionOutcome.agreed) {
-      throw Object.assign(new Error(
+      throw new Error(
         `initialize refused: ${versionOutcome.reason} (client ${JSON.stringify(versionOutcome.client)}, `
         + `server ${JSON.stringify(versionOutcome.server)})`,
-      ), { data: { reason: versionOutcome.reason, client: versionOutcome.client, server: versionOutcome.server } })
+      )
     }
     const capabilityOutcome = negotiateCapabilities(
       params.capabilities ?? [],
