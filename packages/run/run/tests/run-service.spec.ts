@@ -299,6 +299,16 @@ describe('P4-07 must[1]: a Run write carries its writer\'s lease and is checked 
     expect((await boot()).get(RUN_A)?.events).toHaveLength(1)
   })
 
+  it('refuses the write as lease-unavailable when the fence cannot answer, and records nothing', async () => {
+    const first = await boot()
+    await first.accept(RUN_A, SESSION_1, 1_000)
+
+    const decision = await first.advance(RUN_A, 'planning', [], 1_100, { mayWrite: () => { throw new Error('the lease store is closed') } })
+
+    expect(decision).toEqual({ accepted: false, reason: 'lease-unavailable', from: 'accepted', to: 'planning' })
+    expect((await boot()).get(RUN_A)?.events).toHaveLength(1)
+  })
+
   it('admits the same write while the fence still admits its writer (control)', async () => {
     const first = await boot()
     await first.accept(RUN_A, SESSION_1, 1_000)
