@@ -7632,7 +7632,9 @@
         "mutationDescription": "One mutation of packages/sdk/server/src/server.ts, restored byte-identical: SERVER_PROTOCOL_SURFACE's session.prompt entry declares schema version 1.1 instead of 1.0 -- a wire-visible change, exactly the kind acceptance[3] says must produce a fixture diff.",
         "failureSummary": "Reddened 3 of 7. The live-surface pin and the reordering CONTROL both fail because the surface no longer produces the pinned digest, and  fails because the committed artifact no longer matches a fresh generation -- which IS the fixture diff. The four that stay green are the ones that read only the committed artifact or hash files, and they are correct to: they describe the artifact as committed, not the surface. Without the CONTROL among the reddened, a fingerprint that moved on any edit at all would have looked identical here."
       },
-      "note": "P8-01 must[4] supplement, seq 1. Not a re-freeze: the four primary cells' cases do not touch must[4], and none is edited here.\n\nWHAT must[4] ASKS AND WHAT WAS BUILDABLE. Two halves -- the protocol schema artifact enters GOLDEN COMPATIBILITY FIXTURES, and it enters RELEASE EVIDENCE. The first is built as a generated artifact with a `--check` mode, which is what makes it a fixture rather than a report: a committed file that must match a fresh generation, so acceptance[3] is enforced instead of asserted. The `--check` gate runs in the registry gate set, so a protocol change cannot land without regenerating it.\n\nGENERATED FROM THE SURFACE, NEVER TRANSCRIBED BESIDE IT. The document is built from SERVER_PROTOCOL_SURFACE, the same value initialize fingerprints for a peer. That constant is newly exported for this: a hand-maintained schema file would be a second declaration of the surface, free to disagree with the one peers actually meet, and a golden fixture pinning a disagreeing copy reports drift that is not there while missing drift that is.\n\nTHE FINGERPRINT IS PINNED AS A LITERAL, and both directions are asserted -- the committed artifact holds it, AND the live surface produces it. Either alone is satisfiable by a fixture that agrees only with itself: a stale digest in the file passes the first, and a test recomputing the digest from the surface it is checking passes no matter what the surface says.\n\nTHE CONTROL IS NOT DECORATION. Reordering the surface must NOT move the fingerprint. Without that case, a fingerprint that moved on any edit at all -- including ones no peer can observe -- would satisfy the acceptance[3] case, and a fixture that cries wolf stops being consulted. The mutation proof confirms it discriminates: the CONTROL reddens under a real wire-visible change and holds under a reorder.\n\nRELEASE EVIDENCE USES THE REAL COLLECTOR, P0-07's scripts/release/collect-evidence.mjs, against a throwaway checkout carrying a real copy of the artifact -- `init` binds a captured baseline whose gitSha must equal HEAD, so running it against this repository would either fail or write into it. The case asserts the recorded digest equals the artifact's real bytes AND that the package accepts only because the declared artifact is present; a second case proves the digest tracks the file, which a collector recording a constant or hashing the path would fail."
+      "note": "P8-01 must[4] supplement, seq 1. Not a re-freeze: the four primary cells' cases do not touch must[4], and none is edited here.\n\nWHAT must[4] ASKS AND WHAT WAS BUILDABLE. Two halves -- the protocol schema artifact enters GOLDEN COMPATIBILITY FIXTURES, and it enters RELEASE EVIDENCE. The first is built as a generated artifact with a `--check` mode, which is what makes it a fixture rather than a report: a committed file that must match a fresh generation, so acceptance[3] is enforced instead of asserted. The `--check` gate runs in the registry gate set, so a protocol change cannot land without regenerating it.\n\nGENERATED FROM THE SURFACE, NEVER TRANSCRIBED BESIDE IT. The document is built from SERVER_PROTOCOL_SURFACE, the same value initialize fingerprints for a peer. That constant is newly exported for this: a hand-maintained schema file would be a second declaration of the surface, free to disagree with the one peers actually meet, and a golden fixture pinning a disagreeing copy reports drift that is not there while missing drift that is.\n\nTHE FINGERPRINT IS PINNED AS A LITERAL, and both directions are asserted -- the committed artifact holds it, AND the live surface produces it. Either alone is satisfiable by a fixture that agrees only with itself: a stale digest in the file passes the first, and a test recomputing the digest from the surface it is checking passes no matter what the surface says.\n\nTHE CONTROL IS NOT DECORATION. Reordering the surface must NOT move the fingerprint. Without that case, a fingerprint that moved on any edit at all -- including ones no peer can observe -- would satisfy the acceptance[3] case, and a fixture that cries wolf stops being consulted. The mutation proof confirms it discriminates: the CONTROL reddens under a real wire-visible change and holds under a reorder.\n\nRELEASE EVIDENCE USES THE REAL COLLECTOR, P0-07's scripts/release/collect-evidence.mjs, against a throwaway checkout carrying a real copy of the artifact -- `init` binds a captured baseline whose gitSha must equal HEAD, so running it against this repository would either fail or write into it. The case asserts the recorded digest equals the artifact's real bytes AND that the package accepts only because the declared artifact is present; a second case proves the digest tracks the file, which a collector recording a constant or hashing the path would fail.",
+      "supersededBy": "2026-09-24T15:30:08Z",
+      "supersessionReason": "The P8-01 fix corrected SERVER_PROTOCOL_SURFACE, so the committed control-protocol artifact and the fingerprint the composition spec pins changed; the replacement pins the new value (delegate ruling 2026-09-24: sensitivity from M10)."
     },
     {
       "epic": "P2-03",
@@ -17130,6 +17132,249 @@
         "failureSummary": "PRECHECK `85399a83dc`, run 36012333222: the LB-3 failure case, the pnpm case, T1-1 and T2-2 red; the first fix `fca436be8d`, run 36012359166: 74 of 74. PRECHECK2 `f393d70e2d`, run 36013449538: the untracked case red. The second fix, as re-picked after the round-trip change `016a82717c`, run 36017698417 (the untracked case red there), `33b86ea417`, run 36017725777: 75 of 75 over this spec and tests/first100/fixtures/P0-07.composition.spec.ts. M-T2-2 `da06223293`, run 36012436936: exactly this case red. M-T2-1 `ebc96e512c`, run 36012411305 also reddens it, because its result line then prints the recorded value. Predictions written and hashed before dispatch: artifacts/laneB/p0-07-b566-predictions.md (a3e6a332…), p0-07-b566-r2-predictions.md (aa5d2edd…), p0-07-b566-r3-predictions.md (c650423b…); the second fix's first build, e62924714b (run 36013483214), reddened the round-trip case, which the r2 file had not predicted, and 016a82717c moved that case's gate scripts outside the checkout (delegate ruling)."
       },
       "note": "P0-07 blind review T2-2 (must[2]): a package whose accepted is the string \"true\", re-signed so its signature is self-consistent, fails verification with its result line at accepted=false: verify accepts only the boolean true. The argv selects the case by title in -t."
+    },
+    {
+      "epic": "P8-01",
+      "stage": "C",
+      "supplements": {
+        "epic": "P8-01",
+        "stage": "C"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P8-01.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P8-01 must[4] — the schema artifact is a golden compatibility fixture the committed artifact pins the exact fingerprint, as a literal a second implementation can target",
+        "P8-01 must[4] — the schema artifact is a golden compatibility fixture the live server surface produces that same fingerprint, so the artifact describes what peers actually meet",
+        "P8-01 must[4] — the schema artifact is a golden compatibility fixture `--check` passes against the committed artifact",
+        "P8-01 must[4] — the schema artifact is a golden compatibility fixture acceptance[3]: a wire-visible change moves the fingerprint, so a protocol change CANNOT land without a fixture diff",
+        "P8-01 must[4] — the schema artifact is a golden compatibility fixture CONTROL: reordering the surface does NOT move the fingerprint, so the fixture measures the wire and not the edit",
+        "P8-01 must[4] — the schema artifact is a real release-evidence input collect-evidence hashes the artifact into requiredBuildArtifacts, with the digest of its real bytes",
+        "P8-01 must[4] — the schema artifact is a real release-evidence input the recorded digest tracks the artifact: a changed artifact yields a different digest"
+      ],
+      "files": [
+        "scripts/gen-control-protocol-schema.ts",
+        "spec/control-protocol.schema.json",
+        "packages/sdk/server/src/server.ts",
+        "tests/first100/fixtures/P8-01.composition.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T15:30:08Z",
+      "dryRunProof": {
+        "treeSha": "aedcb702b49c1ccc34dbac36967ebb8acc689c2d",
+        "testsDiscovered": 7
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M10 (`80e2e80cca`, run 36007811723, off the fix, never merged): SERVER_PROTOCOL_SURFACE names the prompt method 'session.prompt' again, reverting one of the fix's corrections to the surface.",
+        "failureSummary": "The fix `2c5ff0286e`, run 36007657036: 72 of 72 over the six files the delegate dispatched (built). M10: this file's :49, :59 (--check) and :73 red, because the live surface no longer produces the pinned fingerprint. T12④ (protocol-surface) and T3 (plugin-apply) are red in the same run, because they read the same surface; [85] P's command, which runs plugin-apply.spec.ts, therefore exits non-zero on T3. :45, :64, :88 and :149 stay green: they read the committed artifact, a surface already different from the pin, or the evidence collector. M11 (`0767657145`, run 36007834607) and M12 (`a4a569717a`, run 36007857935) read the same way."
+      },
+      "note": "P8-01 must[4] supplement, seq 1. Not a re-freeze: the four primary cells' cases do not touch must[4], and none is edited here.\n\nWHAT must[4] ASKS AND WHAT WAS BUILDABLE. Two halves -- the protocol schema artifact enters GOLDEN COMPATIBILITY FIXTURES, and it enters RELEASE EVIDENCE. The first is built as a generated artifact with a `--check` mode, which is what makes it a fixture rather than a report: a committed file that must match a fresh generation, so acceptance[3] is enforced instead of asserted. The `--check` gate runs in the registry gate set, so a protocol change cannot land without regenerating it.\n\nGENERATED FROM THE SURFACE, NEVER TRANSCRIBED BESIDE IT. The document is built from SERVER_PROTOCOL_SURFACE, the same value initialize fingerprints for a peer. That constant is newly exported for this: a hand-maintained schema file would be a second declaration of the surface, free to disagree with the one peers actually meet, and a golden fixture pinning a disagreeing copy reports drift that is not there while missing drift that is.\n\nTHE FINGERPRINT IS PINNED AS A LITERAL, and both directions are asserted -- the committed artifact holds it, AND the live surface produces it. Either alone is satisfiable by a fixture that agrees only with itself: a stale digest in the file passes the first, and a test recomputing the digest from the surface it is checking passes no matter what the surface says.\n\nTHE CONTROL IS NOT DECORATION. Reordering the surface must NOT move the fingerprint. Without that case, a fingerprint that moved on any edit at all -- including ones no peer can observe -- would satisfy the acceptance[3] case, and a fixture that cries wolf stops being consulted. The mutation proof confirms it discriminates: the CONTROL reddens under a real wire-visible change and holds under a reorder.\n\nRELEASE EVIDENCE USES THE REAL COLLECTOR, P0-07's scripts/release/collect-evidence.mjs, against a throwaway checkout carrying a real copy of the artifact -- `init` binds a captured baseline whose gitSha must equal HEAD, so running it against this repository would either fail or write into it. The case asserts the recorded digest equals the artifact's real bytes AND that the package accepts only because the declared artifact is present; a second case proves the digest tracks the file, which a collector recording a constant or hashing the path would fail. Replaced on 2026-09-24: the P8-01 fix corrected SERVER_PROTOCOL_SURFACE (session/prompt; shutdown; subagent.started, subagent.finished and human/question as the names the server originates), so the committed artifact's fingerprint moved to 995c330e021d0f08ebbceaf74aaab7309fc5e492630930d825fe6e013682a6a1 and :30 pins it. Same file and cases with a changed pinned value, a replacement under lifecycle 2.1.",
+      "supersedes": "2026-09-06T07:00:00.000Z"
+    },
+    {
+      "epic": "P8-01",
+      "stage": "C",
+      "supplements": {
+        "epic": "P8-01",
+        "stage": "C"
+      },
+      "supplementSeq": 3,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/sdk/server/tests/protocol-surface.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P8-01 acceptance[3]: the fingerprinted surface is the surface the server answers names exactly the methods the dispatcher handles and the names the server sends"
+      ],
+      "files": [
+        "packages/sdk/server/tests/protocol-surface.spec.ts",
+        "packages/sdk/server/src/server.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T15:30:08Z",
+      "dryRunProof": {
+        "treeSha": "aedcb702b49c1ccc34dbac36967ebb8acc689c2d",
+        "testsDiscovered": 1
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M19 (`31a9be9291`, run 36008014609, off the fix, never merged): the server sends 'subagent.begun' where it sent 'subagent.started'; the surface is unchanged.",
+        "failureSummary": "The fix `2c5ff0286e`, run 36007657036: 72 of 72 over the six files the delegate dispatched (built). M19: exactly this case red, so the case reads the server's send sites. M10, M11 and M12 also redden it from the surface side."
+      },
+      "note": "P8-01 acceptance[3] and BLOCKED-314 closing condition 2: the fingerprinted surface names exactly the methods the dispatcher handles and the names the server sends, both read from server.ts, so a surface written by hand cannot drift from the server unseen."
+    },
+    {
+      "epic": "P8-01",
+      "stage": "P",
+      "supplements": {
+        "epic": "P8-01",
+        "stage": "P"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/sdk/server/tests/plugin-apply.spec.ts",
+        "-t",
+        "P8-01 and P0-06 acceptance\\[1\\]: a refused handshake says why in fields, and the fingerprint is the artifact's",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P8-01 and P0-06 acceptance[1]: a refused handshake says why in fields, and the fingerprint is the artifact's P8-01 acceptance[0]: the real server's handshake fingerprint is the committed control-protocol artifact's",
+        "P8-01 and P0-06 acceptance[1]: a refused handshake says why in fields, and the fingerprint is the artifact's P8-01 acceptance[1]: an unknown mandatory capability is refused on the wire with a machine-readable reason",
+        "P8-01 and P0-06 acceptance[1]: a refused handshake says why in fields, and the fingerprint is the artifact's P8-01 acceptance[1]: a known but unsupported mandatory capability is refused on the wire with a different machine-readable reason",
+        "P8-01 and P0-06 acceptance[1]: a refused handshake says why in fields, and the fingerprint is the artifact's P8-01 acceptance[1]: a non-overlapping protocol range is refused on the wire with a machine-readable reason and both ranges",
+        "P8-01 and P0-06 acceptance[1]: a refused handshake says why in fields, and the fingerprint is the artifact's P0-06 acceptance[1]: an incompatible schemaVersion is refused on the wire with its code and schemaId"
+      ],
+      "files": [
+        "packages/sdk/server/tests/plugin-apply.spec.ts",
+        "packages/sdk/server/src/server.ts",
+        "packages/sdk/protocol/src/transport.ts",
+        "spec/control-protocol.schema.json"
+      ],
+      "frozenAtUtc": "2026-09-24T15:30:08Z",
+      "dryRunProof": {
+        "treeSha": "aedcb702b49c1ccc34dbac36967ebb8acc689c2d",
+        "testsDiscovered": 5
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Off the fix, never merged: M6 (the -32603 answer carries no data), M7 (the capability refusal carries none), M8 (nor the version refusal), M9 (nor the schema refusal), M10-M12 (the surface loses a correction).",
+        "failureSummary": "The fix `2c5ff0286e`, run 36007657036: 72 of 72 over the six files the delegate dispatched (built). M6 `f00b1f21e0`, run 36007721245: T7-T10 red (and T13r, in U.3); M7 `844dbaf3b1`, run 36007744268: T7 and T8; M8 `8fc671dcfb`, run 36007766768: T9; M9 `7408e56a71`, run 36007787776: T10 (and T13r); M10-M12: T3. The PRECHECK `2396989a5d`, run 36007637145 had T7-T10 red and T3 green, the artifact matching the old surface."
+      },
+      "note": "P8-01 acceptance[0]-[1] with P0-06 acceptance[1], on a hand-built composition: the real server's handshake fingerprint is the committed artifact's, and each refusal (unknown or unsupported mandatory capability, a non-overlapping range, an incompatible schemaVersion) is answered on the wire with its reason as error.data fields. The argv selects the five by their describe title, escaped."
+    },
+    {
+      "epic": "P8-01",
+      "stage": "U",
+      "supplements": {
+        "epic": "P8-01",
+        "stage": "U"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/sdk/client/tests/negotiated-handshake.spec.ts",
+        "-t",
+        "contract: a non-empty downgrade list reaches the caller intact|contract: a negotiation whose downgrades are malformed is dropped WHOLE|contract: a negotiation that sends no downgrades reads as an empty list, as the Python client reads it|contract: an unknown optional field from a newer-minor server reaches the caller|contract: an unknown optional field nested in the negotiation reaches the caller|contract: initializeNegotiated names the refusal and the capabilities in fields a program can read",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P8-01 acceptance[0] and P0-06 acceptance[1]: nothing the peer sent is dropped silently contract: a non-empty downgrade list reaches the caller intact",
+        "P8-01 acceptance[0] and P0-06 acceptance[1]: nothing the peer sent is dropped silently contract: a negotiation whose downgrades are malformed is dropped WHOLE",
+        "P8-01 acceptance[0] and P0-06 acceptance[1]: nothing the peer sent is dropped silently contract: a negotiation that sends no downgrades reads as an empty list, as the Python client reads it",
+        "P8-01 acceptance[0] and P0-06 acceptance[1]: nothing the peer sent is dropped silently contract: an unknown optional field from a newer-minor server reaches the caller",
+        "P8-01 acceptance[0] and P0-06 acceptance[1]: nothing the peer sent is dropped silently contract: an unknown optional field nested in the negotiation reaches the caller",
+        "P8-01 Usage: acceptance[1] — refuse before sending a task contract: initializeNegotiated names the refusal and the capabilities in fields a program can read"
+      ],
+      "files": [
+        "packages/sdk/client/tests/negotiated-handshake.spec.ts",
+        "packages/sdk/client/src/client.ts",
+        "packages/sdk/client/tests/fake-runtime.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T15:30:08Z",
+      "dryRunProof": {
+        "treeSha": "aedcb702b49c1ccc34dbac36967ebb8acc689c2d",
+        "testsDiscovered": 6
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Off the fix, never merged: M4 (the client reads no downgrades from the wire), M5 (downgrades pass unvalidated), M14 (fields the client does not model are dropped), M16 (a missing downgrades list drops the negotiation), M17 (initializeNegotiated's refusal carries no data).",
+        "failureSummary": "The fix `2c5ff0286e`, run 36007657036: 72 of 72 over the six files the delegate dispatched (built). M4 `634a0c1180`, run 36007679390: the non-empty and malformed downgrade cases red; M5 `e94aa6dc89`, run 36007700774: the malformed case; M14 `0a52bd80f5`, run 36007923624: both unknown-field cases; M16 `5b5ef35e3f`, run 36007945936: the missing-downgrades case; M17 `9473829888`, run 36007968260: the refusal-fields case."
+      },
+      "note": "P8-01 acceptance[0] and P0-06 acceptance[1] on the shipped TS client: a non-empty downgrade list reaches the caller, a malformed one drops the negotiation whole, a missing one reads as [] as the Python client reads it, unknown optional fields survive at the top level and nested, and initializeNegotiated names its refusal in fields. The argv selects the six by their titles with an escaped alternation in -t."
+    },
+    {
+      "epic": "P8-01",
+      "stage": "U",
+      "supplements": {
+        "epic": "P8-01",
+        "stage": "U"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/run/tests/run-service.spec.ts",
+        "-t",
+        "P8-01 acceptance\\[4\\]: a Run keeps the provenance it was opened with",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P8-01 acceptance[4]: a Run keeps the provenance it was opened with records the negotiation of the connection that opened the Run, durably",
+        "P8-01 acceptance[4]: a Run keeps the provenance it was opened with keeps the first provenance when a continued Run is recorded again after a restart"
+      ],
+      "files": [
+        "packages/run/run/tests/run-service.spec.ts",
+        "packages/run/run/src/index.ts",
+        "packages/run/run/src/types.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T15:30:08Z",
+      "dryRunProof": {
+        "treeSha": "aedcb702b49c1ccc34dbac36967ebb8acc689c2d",
+        "testsDiscovered": 2
+      },
+      "sensitivityProof": {
+        "mutationDescription": "The PRECHECK's recordProvenance, which records nothing, as the shipped code did; and M18 (off the fix, never merged): recordProvenance overwrites a recorded provenance.",
+        "failureSummary": "The fix `2c5ff0286e`, run 36007657036: 72 of 72 over the six files the delegate dispatched (built). PRECHECK `2396989a5d`, run 36007637145: both cases red. M18 `e557dc8eea`, run 36007991226: exactly the continued-Run case red."
+      },
+      "note": "P8-01 acceptance[4]: a Run's provenance is recorded durably, and a continued Run keeps the provenance it was opened with (V4d). The argv selects the two by their describe title, escaped."
+    },
+    {
+      "epic": "P8-01",
+      "stage": "U",
+      "supplements": {
+        "epic": "P8-01",
+        "stage": "U"
+      },
+      "supplementSeq": 3,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P8-01.run-provenance.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P8-01 on the shipped sdk profile: the negotiation reaches every Run, and a refusal says why P0-06 acceptance[1]: the shipped sdk profile refuses an incompatible schemaVersion on the wire with its code and schemaId",
+        "P8-01 on the shipped sdk profile: the negotiation reaches every Run, and a refusal says why control: the shipped sdk profile opens one Run for each SDK session and one for the delegated subagent, so the case below measures provenance and not a missing Run",
+        "P8-01 on the shipped sdk profile: the negotiation reaches every Run, and a refusal says why P8-01 acceptance[4]: every Run the connection opened, the subagent's included, carries the handshake's negotiation"
+      ],
+      "files": [
+        "tests/first100/fixtures/P8-01.run-provenance.spec.ts",
+        "packages/sdk/server/src/server.ts",
+        "packages/run/run/src/index.ts",
+        "apps/cli/tests/profiles/routing-stub-model.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T15:30:08Z",
+      "dryRunProof": {
+        "treeSha": "aedcb702b49c1ccc34dbac36967ebb8acc689c2d",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Off the fix, never merged: M6 and M9 (the schema refusal reaches the wire without data), M13 (createSession does not record the negotiation), M13b (a subagent's Run does not take its parent's).",
+        "failureSummary": "The fix `2c5ff0286e`, run 36007657036: 72 of 72 over the six files the delegate dispatched (built). M6 `f00b1f21e0`, run 36007721245 and M9 `7408e56a71`, run 36007787776: the refusal case red; M13 `f9fb5dae00`, run 36007881434 and M13b `42a3ef3b57`, run 36007903541: the provenance case red; the control, three Runs in the store, green throughout."
+      },
+      "note": "P8-01 acceptance[4] and P0-06 acceptance[1] on the shipped sdk profile, one launch: an incompatible schemaVersion is refused on the wire with its code and schemaId; two sessions, one delegating once, open three Runs, and every one carries the handshake's negotiation. The control counts the Runs from the store alone."
     }
   ]
 }
