@@ -1001,7 +1001,7 @@ export function runLayerDepsCheck(root) {
       const importsNoSymbol = importedFromTarget === undefined || importedFromTarget.size === 0
       // A kernel package gets no spawn-target reading: acceptance[1] counts a
       // UI application under apps/ as UI whatever the kernel does with it.
-      if (importsNoSymbol && edge.detectionMethod === 'package-graph' && edge.fromLayer !== 'kernel') {
+      if (importsNoSymbol && edge.detectionMethod === 'package-graph') {
         spawnTargets.push({ fromPackage: edge.fromPackage, toPackage: edge.toPackage })
         continue
       }
