@@ -2,7 +2,9 @@
  * Keyless scripted model for P4-05's waiting-state cases: a turn's opening
  * request is answered with one call to the third-party tool, the request after
  * its result with text, and a request made for another purpose (a session
- * title) with text, so it cannot consume the turn's tool call.
+ * title) with text, so it cannot consume the turn's tool call. In code mode
+ * (`DSH_TOOLS_MODE=ptc`, BLOCKED-330's code-mode case) the opening request is
+ * answered with one `run_code` call whose program makes that tool call.
  * @module tests/first100/fixtures/loader/p4-05-waiting/mock-llm
  */
 
@@ -15,6 +17,20 @@ import type { AdapterGlobal } from './shared.ts'
 let calls = 0
 
 /**
+ * The code-mode program: it waits past the short session-token TTL of
+ * `./token-short.patch.yml`, then makes the one call and returns its outcome.
+ */
+const PROGRAM = [
+  'await new Promise(resolve => setTimeout(resolve, 3000))',
+  'try {',
+  `  await tools.${THIRD_PARTY_TOOL}({})`,
+  "  return 'third-party tool ran'",
+  '} catch (error) {',
+  '  return error instanceof Error ? error.message : String(error)',
+  '}',
+].join('\n')
+
+/**
  * One scripted model answer.
  * @param options - the request the loop sent.
  * @returns the chunks to stream.
@@ -23,7 +39,11 @@ function answer(options: GenerateOptions): StreamChunk[] {
   if (options.purpose !== undefined) return textResponse('ok')
   const last = options.messages.at(-1)
   const opensTurn = last?.role === 'user' && !last.content.some(block => block.type === 'tool-result')
-  return opensTurn ? toolCallResponse(`p4-05-waiting-${String(++calls)}`, THIRD_PARTY_TOOL, {}) : textResponse('done')
+  if (!opensTurn) return textResponse('done')
+  const id = `p4-05-waiting-${String(++calls)}`
+  return process.env.DSH_TOOLS_MODE === 'ptc'
+    ? toolCallResponse(id, 'run_code', { code: PROGRAM, description: 'call the third-party tool after the session token has expired' })
+    : toolCallResponse(id, THIRD_PARTY_TOOL, {})
 }
 
 /** Plugin name. */
