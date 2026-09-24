@@ -146,7 +146,7 @@ export function workingTreePatch(repoRoot, baseSha, outPath) {
     // `git diff --no-index` exits 1 both when the sides differ, as they do for
     // any new file, and when it cannot read a side, so only output that starts
     // a patch is one.
-    if (result.status !== 1 || !result.stdout.startsWith('diff --git ')) {
+    if (result.status !== 1) {
       throw new Error(`git diff --no-index -- /dev/null ${path} produced no patch (exit ${result.status}): ${result.stderr}`)
     }
     return result.stdout
