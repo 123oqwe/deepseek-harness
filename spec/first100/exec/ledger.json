@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-24T15:20:00.980Z",
-  "inputDigest": "7588a239d3f418b29b60209cc8e266d30ea3c5b250720d26aba55ce518dca267",
+  "lastUpdatedUtc": "2026-09-24T17:47:12.968Z",
+  "inputDigest": "bc52cf76722145a4929dcc368fb8dcba09f20d2ec3ff85795682bf55464ca98f",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -9792,10 +9792,10 @@
       "supplements": {
         "C.1": {
           "status": "GREEN",
-          "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34019035439",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs/first100-vitest-report-00815e8acc4d839f66ce7bec504274c855a664ba/vitest-report.json",
-          "observationSha256": "629f7e65d2627100577fbd34941a489410d1f61d3e1e42d4f86fc168502c4c60",
+          "candidateSha": "c62bfac2cfb77bc0006fc939e6a5e2f354e9bc25",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030891011",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36030891011/first100-vitest-report-c62bfac2cfb77bc0006fc939e6a5e2f354e9bc25/vitest-report.json",
+          "observationSha256": "c07c85957dc744f72bf218b27b52a025b4bf076785faa005ffc45b03a6a47969",
           "expectCasesMatched": [
             "P8-01 must[4] — the schema artifact is a golden compatibility fixture the committed artifact pins the exact fingerprint, as a literal a second implementation can target",
             "P8-01 must[4] — the schema artifact is a golden compatibility fixture the live server surface produces that same fingerprint, so the artifact describes what peers actually meet",
@@ -9805,10 +9805,7 @@
             "P8-01 must[4] — the schema artifact is a real release-evidence input collect-evidence hashes the artifact into requiredBuildArtifacts, with the digest of its real bytes",
             "P8-01 must[4] — the schema artifact is a real release-evidence input the recorded digest tracks the artifact: a changed artifact yields a different digest"
           ],
-          "absorbedFlakes": [
-            "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions"
-          ],
-          "capturedAtUtc": "2026-09-06T07:57:23.583Z"
+          "capturedAtUtc": "2026-09-24T17:47:10.468Z"
         },
         "C.2": {
           "status": "GREEN",
@@ -9821,6 +9818,73 @@
             "follows the LSP ClientCapabilities pattern for OPTIONAL capabilities and deliberately breaks it for mandatory ones"
           ],
           "capturedAtUtc": "2026-09-15T07:11:35.725Z"
+        },
+        "C.3": {
+          "status": "GREEN",
+          "candidateSha": "c62bfac2cfb77bc0006fc939e6a5e2f354e9bc25",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030891011",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36030891011/first100-vitest-report-c62bfac2cfb77bc0006fc939e6a5e2f354e9bc25/vitest-report.json",
+          "observationSha256": "c07c85957dc744f72bf218b27b52a025b4bf076785faa005ffc45b03a6a47969",
+          "expectCasesMatched": [
+            "P8-01 acceptance[3]: the fingerprinted surface is the surface the server answers names exactly the methods the dispatcher handles and the names the server sends"
+          ],
+          "capturedAtUtc": "2026-09-24T17:47:10.969Z"
+        },
+        "P.1": {
+          "status": "GREEN",
+          "candidateSha": "c62bfac2cfb77bc0006fc939e6a5e2f354e9bc25",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030891011",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36030891011/first100-vitest-report-c62bfac2cfb77bc0006fc939e6a5e2f354e9bc25/vitest-report.json",
+          "observationSha256": "c07c85957dc744f72bf218b27b52a025b4bf076785faa005ffc45b03a6a47969",
+          "expectCasesMatched": [
+            "P8-01 and P0-06 acceptance[1]: a refused handshake says why in fields, and the fingerprint is the artifact's P8-01 acceptance[0]: the real server's handshake fingerprint is the committed control-protocol artifact's",
+            "P8-01 and P0-06 acceptance[1]: a refused handshake says why in fields, and the fingerprint is the artifact's P8-01 acceptance[1]: an unknown mandatory capability is refused on the wire with a machine-readable reason",
+            "P8-01 and P0-06 acceptance[1]: a refused handshake says why in fields, and the fingerprint is the artifact's P8-01 acceptance[1]: a known but unsupported mandatory capability is refused on the wire with a different machine-readable reason",
+            "P8-01 and P0-06 acceptance[1]: a refused handshake says why in fields, and the fingerprint is the artifact's P8-01 acceptance[1]: a non-overlapping protocol range is refused on the wire with a machine-readable reason and both ranges",
+            "P8-01 and P0-06 acceptance[1]: a refused handshake says why in fields, and the fingerprint is the artifact's P0-06 acceptance[1]: an incompatible schemaVersion is refused on the wire with its code and schemaId"
+          ],
+          "capturedAtUtc": "2026-09-24T17:47:11.468Z"
+        },
+        "U.1": {
+          "status": "GREEN",
+          "candidateSha": "c62bfac2cfb77bc0006fc939e6a5e2f354e9bc25",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030891011",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36030891011/first100-vitest-report-c62bfac2cfb77bc0006fc939e6a5e2f354e9bc25/vitest-report.json",
+          "observationSha256": "c07c85957dc744f72bf218b27b52a025b4bf076785faa005ffc45b03a6a47969",
+          "expectCasesMatched": [
+            "P8-01 acceptance[0] and P0-06 acceptance[1]: nothing the peer sent is dropped silently contract: a non-empty downgrade list reaches the caller intact",
+            "P8-01 acceptance[0] and P0-06 acceptance[1]: nothing the peer sent is dropped silently contract: a negotiation whose downgrades are malformed is dropped WHOLE",
+            "P8-01 acceptance[0] and P0-06 acceptance[1]: nothing the peer sent is dropped silently contract: a negotiation that sends no downgrades reads as an empty list, as the Python client reads it",
+            "P8-01 acceptance[0] and P0-06 acceptance[1]: nothing the peer sent is dropped silently contract: an unknown optional field from a newer-minor server reaches the caller",
+            "P8-01 acceptance[0] and P0-06 acceptance[1]: nothing the peer sent is dropped silently contract: an unknown optional field nested in the negotiation reaches the caller",
+            "P8-01 Usage: acceptance[1] — refuse before sending a task contract: initializeNegotiated names the refusal and the capabilities in fields a program can read"
+          ],
+          "capturedAtUtc": "2026-09-24T17:47:11.957Z"
+        },
+        "U.2": {
+          "status": "GREEN",
+          "candidateSha": "c62bfac2cfb77bc0006fc939e6a5e2f354e9bc25",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030891011",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36030891011/first100-vitest-report-c62bfac2cfb77bc0006fc939e6a5e2f354e9bc25/vitest-report.json",
+          "observationSha256": "c07c85957dc744f72bf218b27b52a025b4bf076785faa005ffc45b03a6a47969",
+          "expectCasesMatched": [
+            "P8-01 acceptance[4]: a Run keeps the provenance it was opened with records the negotiation of the connection that opened the Run, durably",
+            "P8-01 acceptance[4]: a Run keeps the provenance it was opened with keeps the first provenance when a continued Run is recorded again after a restart"
+          ],
+          "capturedAtUtc": "2026-09-24T17:47:12.445Z"
+        },
+        "U.3": {
+          "status": "GREEN",
+          "candidateSha": "c62bfac2cfb77bc0006fc939e6a5e2f354e9bc25",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030891011",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36030891011/first100-vitest-report-c62bfac2cfb77bc0006fc939e6a5e2f354e9bc25/vitest-report.json",
+          "observationSha256": "c07c85957dc744f72bf218b27b52a025b4bf076785faa005ffc45b03a6a47969",
+          "expectCasesMatched": [
+            "P8-01 on the shipped sdk profile: the negotiation reaches every Run, and a refusal says why P0-06 acceptance[1]: the shipped sdk profile refuses an incompatible schemaVersion on the wire with its code and schemaId",
+            "P8-01 on the shipped sdk profile: the negotiation reaches every Run, and a refusal says why control: the shipped sdk profile opens one Run for each SDK session and one for the delegated subagent, so the case below measures provenance and not a missing Run",
+            "P8-01 on the shipped sdk profile: the negotiation reaches every Run, and a refusal says why P8-01 acceptance[4]: every Run the connection opened, the subagent's included, carries the handshake's negotiation"
+          ],
+          "capturedAtUtc": "2026-09-24T17:47:12.959Z"
         }
       },
       "candidateSha": "f453647e6ecce84d43261b6fb59cdfc44ae7143f",
