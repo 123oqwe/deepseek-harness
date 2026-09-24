@@ -7,8 +7,12 @@
  * scope requires a capability token and no token provider is mounted, so the
  * call presents none and the token check refuses it.
  */
-import { describe, expect, it } from 'vitest'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { afterEach, describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
+import ActionLedgerPlugin from '@deepseek-ai/dsh-action-ledger'
 import AgentRegistry from '@deepseek-ai/dsh-agent'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import LlmRuntime, { createUserMessage, StreamChunk, ToolCallId } from '@deepseek-ai/dsh-llm'
@@ -30,11 +34,18 @@ function call(id: string, name: string, args: object): StreamChunk[] {
   ]
 }
 
+const roots: string[] = []
+afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }) })
+
 /**
  * Run one turn in which the model calls `write` once, with a token required everywhere and none presented.
- * @returns what the tool observed, the tool results as text, and the tools the session asked an operator about.
+ * @param options - `ledger` mounts the action ledger, and the result then reports what it holds for each manifest.
+ * @returns what the tool observed, the tool results as text, the tools the session asked an operator about, and, per
+ *   manifest the session appended, the state of the ledger entry under its key or `none` (empty without a ledger).
  */
-async function refusedForItsToken(): Promise<{ runs: string[]; results: string[]; asked: string[] }> {
+async function refusedForItsToken(
+  options: { ledger?: boolean } = {},
+): Promise<{ runs: string[]; results: string[]; asked: string[]; ledger: string[] }> {
   const ctx = new Context()
   await ctx.plugin(LlmRuntime)
   await ctx.plugin(SessionStore)
@@ -43,6 +54,11 @@ async function refusedForItsToken(): Promise<{ runs: string[]; results: string[]
   await ctx.plugin(ToolRuntime)
   await ctx.plugin(AgentRegistry)
   await ctx.plugin(AgentLoop, { agents: [] })
+  if (options.ledger === true) {
+    const root = mkdtempSync(join(tmpdir(), 'dsh-blocked-330-ledger-'))
+    roots.push(root)
+    await ctx.plugin(ActionLedgerPlugin, { directory: root })
+  }
   ctx.llm.registerAdapter(['mock'], new MockAdapter([call('c1', 'write', { contents: 'one' }), textResponse('done')]))
   // `permission-presets` injects `shell`: without one the preset service never
   // applies, and the risk gate would ask nobody whatever the order.
@@ -82,7 +98,11 @@ async function refusedForItsToken(): Promise<{ runs: string[]; results: string[]
     event.data.message.content.flatMap(block =>
       block.type === 'tool-result' ? block.content.flatMap(part => part.type === 'text' ? [part.text] : []) : []).join(''),
   ])
-  return { runs, results, asked }
+  // The ledger is keyed by the manifest's actor and idempotency key, the pair the dispatch path reserves under.
+  const ledger = options.ledger !== true ? [] : events.flatMap(event => event.type !== 'action/manifest-appended' ? [] : [
+    ctx.actionLedger.entry(event.data.actor as never, event.data.idempotencyKey)?.state ?? 'none',
+  ])
+  return { runs, results, asked, ledger }
 }
 
 describe('BLOCKED-330 on the native dispatch path: a call its capability token will refuse', () => {
@@ -97,5 +117,12 @@ describe('BLOCKED-330 on the native dispatch path: a call its capability token w
 
     expect(results.some(text => text.includes('this scope requires a capability token and none was presented')), JSON.stringify(results)).toBe(true)
     expect(runs).toEqual([])
+  })
+
+  it('reserves nothing in the action ledger, so no ambiguous entry is left for a call that never ran', async () => {
+    const { ledger } = await refusedForItsToken({ ledger: true })
+
+    // One manifest was appended for the call, and the ledger holds no entry under its key.
+    expect(ledger).toEqual(['none'])
   })
 })
