@@ -33,6 +33,8 @@ kind: "package-reference"
 
 成功返回规范包络 `{ runId, agentsStarted, result }`，向模型渲染为 `workflow "<name>" completed (<count> agent<optional-s>).`，后接 `Return value:` 与美化打印的 JSON。无法启动的工作流——脚本解析或 meta 校验失败——返回模型可以修正的错误。取消与执行失败返回 `Error: workflow run was cancelled` 或 `Error: workflow run failed: <error>`；部分输出绝不会被报告为成功。
 
+`resume: "<runId>"` 通过 `engine.resume` 以同一个 id 继续一次被中断的运行，而不是新起一次运行。调用须带上该运行启动时的 `script` 与 `meta`；运行日志（journal）记为已完成、且其子 agent 的持久会话日志显示已结束的每个 `agent()` 步骤，直接返回该子 agent 记录下的输出，不再启动它。这个 id 会成为该运行的运行日志文件名与租约行名，因此只能包含 ASCII 字母、数字、`_` 与 `-`；其他取值会被拒绝，错误为 `` workflow tool: `resume` must be a runId a workflow run reported, not "<value>" ``；`resume` 与 `detached: true` 同时给出也会被拒绝，错误为 `` workflow tool: `resume` continues a run in the foreground — give it without `detached` ``。没有运行日志的 id 会以该 id 从头运行。在另一个脚本下写成的运行日志不会被继续：运行以同一个 id 从第一步重新开始，包络带有 `resumeRefused: { reason, detail }`，模型读到的文本以 `resume refused (<reason>): the run started over from its first step.` 开头。
+
 ### 分离式运行（detached）
 
 `detached: true` 启动运行并立即返回 `runId`，该运行在本轮次结束后继续执行；`attach: "<runId>"`（不带 `script` 或 `meta`）在本轮次或之后任一轮次收取该运行的值。分离式运行持有**自己的** agent 与 session,并继承启动方的 LLM 路由,因此它不依赖启动它的那个轮次的任何作用域,也刻意**不**绑定该轮次的中止信号。指向不存在运行的 id 会被具名拒绝:它从未在此启动,或其结果已被收取。前台路径未变,且仍是默认——值在同一次调用中返回的运行不会被遗忘。
@@ -143,7 +145,7 @@ Use the <toolName> tool ONLY when the user explicitly asks for a workflow or for
 
 #### 模型看到什么
 
-由模型编写的完整脚本、元数据与 args 会保留在 assistant 工具调用中。成功结果精确为 `workflow "<name>" completed (<count> agent<optional-s>).`、换行、`Return value:`、换行，以及美化打印且依赖数据的 JSON；达到上限时，会在新行添加 `… [truncated: <omitted> more characters]`。失败结果精确为 `Error: workflow run was cancelled`（可以追加后缀 ` (<error>)`）、`Error: workflow run failed: <error-or-unknown error>` 或防御性的 `Error: workflow run ended abnormally (<reason>)`；没有所属 agent 的调用变为 `Error: workflow tool requires a calling agent (exec.agent was undefined)`。中间子 agent 消息会被省略。
+由模型编写的完整脚本、元数据与 args 会保留在 assistant 工具调用中。成功结果精确为 `workflow "<name>" completed (<count> agent<optional-s>).`、换行、`Return value:`、换行，以及美化打印且依赖数据的 JSON；达到上限时，会在新行添加 `… [truncated: <omitted> more characters]`。失败结果精确为 `Error: workflow run was cancelled`（可以追加后缀 ` (<error>)`）、`Error: workflow run failed: <error-or-unknown error>` 或防御性的 `Error: workflow run ended abnormally (<reason>)`；没有所属 agent 的调用变为 `Error: workflow tool requires a calling agent (exec.agent was undefined)`。中间子 agent 消息会被省略。因脚本改动而被拒的续跑，其结果文本以一行 `resume refused (<reason>): the run started over from its first step.` 开头。
 
 #### Token 影响
 
@@ -164,6 +166,7 @@ Use the <toolName> tool ONLY when the user explicitly asks for a workflow or for
 - **`args` 必须是对象，Native 结果文本有界**——调用方把顶层数组／标量包装到字段中；规范工作流结果保持完整，超过 `maxResultChars` 的 JSON 会在面向模型的投影中截断，而不是存储在检索句柄背后。
 - **每次工具注册的工作流策略固定**——提供方选择、上限与工具名称属于部署配置，不是模型调用参数。
 - **持久记录只覆盖顶层且只供观察**——嵌套 PTC mode dispatch 不记录；记录故障会刻意退化为不完整前缀，而不改变执行。
+- **出厂产品上没有任何途径把崩溃运行的 id 交给模型**——前台结果的文本不含其 `runId`，被崩溃中断的运行也不返回结果，因此 `resume` 所需的 id 只能来自对话之外，例如 DSH home 下 `journals` 目录中的运行日志文件名。
 
 <a id="dev-note"></a>
 ### 开发备注
