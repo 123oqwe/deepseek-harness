@@ -8905,3 +8905,36 @@ Under the standard's rule for real defects (WORKING-MODEL §12), they become est
 2. The report carries a confidence interval per metric and a replay seed per failure.
 3. A case on a shipped launch shows a breach the product actually commits, if one is seeded, being detected, and a clean run staying clean.
 4. Then a fresh 4.4a–d and the re-sign.
+
+### BLOCKED-326 — the ledger reads a full-suite observation's exit status from the JSON report, so a vitest process that exits 1 on an unhandled error still counts as green (tooling defect, open)
+
+**Status:** OPEN (2026-09-24). Owner: lane B, fix in place. Found by lane B while recording batch 3′ (run 36001656822), confirmed by the delegate (first100-delegate-1a).
+
+**What was observed (CI).**
+- In run 36001656822 at `49a352d367`, step 18 (the full suite) ended with exit 1. Every case passed: the JSON report says `success: true`, with 27215 total, 27140 passed, 0 failed and 75 pending. The exit 1 came from one unhandled error that vitest reported outside any case (BLOCKED-327).
+- `generate-ledger.mjs` derives the report's exit status from `report.success` (`:471`, per lane B's reading). The unhandled error is not in the JSON report, so the tool accepted the observations.
+
+**Why it matters.** The rule is that observations come only from a full run whose full-suite step is green. The tool checks a narrower question than that rule. Vitest itself warns that such errors can make a case pass falsely.
+
+**Closing condition.**
+1. The exact-SHA workflow records the full-suite process's exit code beside the report, in the signed observation artifact.
+2. `generate-ledger` refuses an observation whose recorded exit code is non-zero, unless it is given an explicit override that carries a reason and is written into the record.
+3. A case shows the refusal. It is red before the fix.
+4. The override used for batch 3′ (delegate ruling, gate3 log 2026-09-24T13:41:16Z) is cited in the record as the one known instance.
+
+### BLOCKED-327 — `ui-trajectory`'s table client spec leaves a react-virtual timer that fires after jsdom is torn down, so the full suite can exit 1 with every case passing (flaky test, open)
+
+**Status:** OPEN (2026-09-24). Owner: lane B, fix in place, before the next push gate. Found in run 36001656822 (step 18, exit 1), confirmed by the delegate (first100-delegate-1a).
+
+**What was observed (CI).**
+- Vitest reported one unhandled error, `ReferenceError: window is not defined`, from `packages/client/ui-trajectory/tests/table.client.spec.tsx`. The cause is a react-virtual timer that fires after the jsdom environment has been torn down (lane B's reading).
+- The same tree (`^{tree}` 8a59cee4…) passed step 18 with exit 0 in run 36000046265, so this is a flake, not a property of the tree.
+- Push gate 36000485739 and batch 2 (35993689868) also passed step 18.
+- No frozen entry references the file (0 matches in `command-freeze.json` at `336f957182`).
+
+**Why it matters.** A push gate that hits this flake is red, and push-exec refuses it. Until BLOCKED-326 is closed, the ledger cannot tell this exit 1 apart from a green run.
+
+**Closing condition.**
+1. A reproduction that does not depend on timing, for example advancing the timers after the environment is torn down. It shows the unhandled error before the fix.
+2. The fix is in place in the test. Nothing may outlive the environment: unmount, cleanup or fake timers. It must not suppress the error globally, and it must not add `dangerouslyIgnoreUnhandledErrors`.
+3. The reproduction is green after the fix.
