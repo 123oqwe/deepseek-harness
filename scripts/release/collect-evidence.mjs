@@ -17,7 +17,7 @@
  * (`scripts/release/baseline-fingerprint.mjs`'s `verifyBaseline`, Epic
  * P0-01 — reused, not reimplemented; `init` refuses to proceed if the
  * checkout has drifted from its captured baseline) and a real
- * `git diff <baseSha>` of the working tree against the caller-supplied
+ * patch of the working tree (`workingTreePatch`) against the caller-supplied
  * `--base-sha` (required: `verifyBaseline` already proves the baseline's own captured
  * `gitSha` equals the current `HEAD`, so defaulting to it would always
  * yield an empty diff — the real comparison point, a previous release tag
@@ -72,7 +72,7 @@
 import { createHash } from 'node:crypto'
 import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { basename, dirname, extname, join, resolve } from 'node:path'
+import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path'
 import { verifyBaseline } from './baseline-fingerprint.mjs'
 
 const FORMAT_VERSION = 1
@@ -105,6 +105,47 @@ export function digestOfFile(path) {
 /** The collector-produced sidecar directory next to an evidence package's `--out` path. */
 export function sidecarDir(outPath) {
   return join(dirname(outPath), `${basename(outPath, extname(outPath))}.d`)
+}
+
+/**
+ * The working tree against `baseSha` as one patch: `git diff --binary` for
+ * tracked files, then each untracked file git does not ignore as a binary diff
+ * against /dev/null, in path order. The evidence package's own output file and
+ * sidecar directory are left out, because the package cannot describe itself.
+ * Each collection step records this, and verification takes it again, so a
+ * change made after the last step shows, a new untracked file included.
+ * @param {string} repoRoot - the checkout.
+ * @param {string} baseSha - the commit the patch is measured against.
+ * @param {string} outPath - the evidence package's absolute path.
+ * @returns {string} the patch text.
+ */
+export function workingTreePatch(repoRoot, baseSha, outPath) {
+  const run = args => execFileSync('git', args, { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1 << 30 })
+  const ownFile = relative(repoRoot, outPath).split(sep).join('/')
+  const ownDir = `${relative(repoRoot, sidecarDir(outPath)).split(sep).join('/')}/`
+  const untracked = run(['ls-files', '--others', '--exclude-standard', '-z']).split('\0')
+    .filter(path => path !== '' && path !== ownFile && !path.startsWith(ownDir))
+    .sort()
+  const added = untracked.map((path) => {
+    const result = spawnSync('git', ['diff', '--binary', '--no-index', '--', '/dev/null', path], { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1 << 30 })
+    // `git diff --no-index` exits 1 when the sides differ, as they do for any new file.
+    if (result.status !== 1) throw new Error(`git diff --no-index -- /dev/null ${path} exited ${result.status}: ${result.stderr}`)
+    return result.stdout
+  })
+  return run(['diff', '--binary', baseSha]) + added.join('')
+}
+
+/**
+ * Record the working tree after a collection step: rewrite the patch sidecar
+ * and bind its digest into the package, which the caller signs next.
+ * @param {string} repoRoot - the checkout.
+ * @param {string} outPath - the evidence package's absolute path.
+ * @param {{ gitDiff: { baseSha: string, headSha: string, digest: string } }} pkg - the package being written.
+ */
+function recordWorkingTree(repoRoot, outPath, pkg) {
+  const diffPath = join(sidecarDir(outPath), 'gitdiff.patch')
+  writeFileSync(diffPath, workingTreePatch(repoRoot, pkg.gitDiff.baseSha, outPath))
+  pkg.gitDiff = { ...pkg.gitDiff, digest: digestOfFile(diffPath) }
 }
 
 function repoRootArg(flags) {
@@ -245,14 +286,10 @@ function cmdInit(flags) {
   // merge-base) is a caller decision this script cannot guess.
   const baseSha = flagOne(flags, '--base-sha')
   if (baseSha === undefined) throw new Error('collect-evidence init: --base-sha is required (the commit this evidence package\'s Git diff is measured against)')
-  // The working tree against the base, not HEAD: verify re-derives this same
-  // diff, so a tracked file changed after collection shows even uncommitted.
-  const diffText = execFileSync('git', ['diff', baseSha], { cwd: repoRoot, encoding: 'utf8' })
-
   const dir = sidecarDir(outPath)
   mkdirSync(join(dir, 'logs'), { recursive: true })
   const diffPath = join(dir, 'gitdiff.patch')
-  writeFileSync(diffPath, diffText)
+  writeFileSync(diffPath, workingTreePatch(repoRoot, baseSha, outPath))
   const gitDiffDigest = digestOfFile(diffPath)
 
   const requiredGateIds = flagAll(flags, '--required-gate')
@@ -334,6 +371,7 @@ function cmdRun(flags, command) {
     else pkg.additionalGates[idx] = evidence
   }
   pkg.accepted = computeAccepted(pkg.requiredGates, pkg.requiredBuildArtifacts, manifest.requiredArtifactPaths)
+  recordWorkingTree(repoRoot, outPath, pkg)
   pkg.signature = digestOfPackage(pkg)
   writePackage(outPath, pkg)
   return exitCode
@@ -351,6 +389,7 @@ function cmdBuildArtifact(flags) {
 
   pkg.requiredBuildArtifacts[artifactPath] = digestOfFile(join(repoRoot, artifactPath))
   pkg.accepted = computeAccepted(pkg.requiredGates, pkg.requiredBuildArtifacts, manifest.requiredArtifactPaths)
+  recordWorkingTree(repoRoot, outPath, pkg)
   pkg.signature = digestOfPackage(pkg)
   writePackage(outPath, pkg)
   process.stdout.write(`collect-evidence build-artifact: recorded ${artifactPath}\n`)
