@@ -51,7 +51,7 @@ class ReleasedV0ToV1Stage implements SessionFormatMigrationStage {
   ): void {
     const normalized = normalizeReleasedV0Event(event, this.input.sourceHeader.id, this.state)
     assertSourceDeliveryMarker(normalized, this.input)
-    context.emitEvent(normalized)
+    if (normalized.type !== 'turn/end') context.emitEvent(normalized)
   }
 
   transformRun(
