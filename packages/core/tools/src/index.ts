@@ -1601,7 +1601,7 @@ export class ToolRuntime extends Service {
 
   /** Every entry of the Loader in this registry's own tree, as an array; `undefined` in a tree with no Loader. */
   private loaderEntries(): readonly AttributableLoaderEntry[] | undefined {
-    const loader = this.homeLoader()
+    const loader: unknown = this.ctx.get('loader')
     if (loader === undefined) return undefined
     return [...(loader as { entries: () => Iterable<AttributableLoaderEntry> }).entries()]
   }
