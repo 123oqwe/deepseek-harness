@@ -24,13 +24,16 @@
  *   - `graceful` waits for the child to stop and leave residency, sends it one
  *     prompt through `ctx.subagents.prompt`, and disposes the tree;
  *   - `shutdown-while-cancelling*` sends that prompt at once and disposes the
- *     tree while the child's cancelled request is still ending;
+ *     tree while the child's cancelled request is still ending, tracing the
+ *     shutdown commit unless `P5_10_TRACE_SHUTDOWN` is `0`;
  *   - `crash` writes its reading and kills itself with SIGKILL.
  * - `after <variant> <parent> <child>` boots the same profile, reads what the
  *   child did before anything is reopened, resumes the parent the way the Web
  *   host does when a client opens it, reads again, sends the child one prompt,
  *   reads a third time, lets the user send the parent one task, and reads a
- *   fourth time. Every reading includes the durable bus's outbox rows.
+ *   fourth time. Every reading includes the durable bus's outbox rows; the
+ *   reading after the resume and the report's end also list every user
+ *   message in the parent's log, both processes' included.
  * @module tests/first100/fixtures/loader/p5-10-restart/driver
  */
 
@@ -363,6 +366,39 @@ function busRows(ctx: Context): readonly Readonly<Record<string, unknown>>[] | n
   })
 }
 
+/** One user message in a session's log, reduced to what names its sender. */
+interface LoggedMessage {
+  readonly source: string
+  readonly sender: string | null
+  readonly epoch: number | null
+  readonly text: string
+}
+
+/**
+ * Every user message a session's log holds, in log order. Read from the log
+ * rather than counted live, so a message written before the restart, or
+ * written twice, is seen.
+ * @param ctx - the booted root context.
+ * @param id - the session to read.
+ * @returns the messages, or `null` when no session query is mounted.
+ */
+async function loggedMessages(ctx: Context, id: SessionId): Promise<readonly LoggedMessage[] | null> {
+  const query = ctx.get('sessionQuery')
+  if (query === undefined) return null
+  using observation = await query.observeSession(id)
+  return observation.events.flatMap((event): LoggedMessage[] => {
+    if (event.type !== 'user/message') return []
+    const source = event.data.source as { readonly kind?: unknown; readonly senderSessionId?: unknown; readonly senderEpoch?: unknown }
+    const text = event.data.content.flatMap(block => block.type === 'text' ? [block.text] : []).join(' ')
+    return [{
+      source: typeof source.kind === 'string' ? source.kind : 'unknown',
+      sender: typeof source.senderSessionId === 'string' ? source.senderSessionId : null,
+      epoch: typeof source.senderEpoch === 'number' ? source.senderEpoch : null,
+      text: text.slice(0, 160),
+    }]
+  })
+}
+
 /**
  * Print one phase's reading.
  * @param reading - what the phase observed.
@@ -416,8 +452,9 @@ async function before(ctx: Context, variant: Variant): Promise<void> {
     // disposed below while the child's cancelled request is still ending.
     const outcome = await prompt(subagents, parent.id, child, 'p5-10-before-restart', 'P5-10: take another turn before the restart.')
     // BLOCKED-333: record what the shutdown commit sees when the tree is
-    // disposed right after this report.
-    const drainTraced = traceShutdownCommit(ctx)
+    // disposed right after this report. The acceptance case turns the trace
+    // off: it wraps private members that a fix may rename.
+    const drainTraced = process.env.P5_10_TRACE_SHUTDOWN !== '0' && traceShutdownCommit(ctx)
     report({
       ids,
       inFlight,
@@ -493,6 +530,7 @@ async function after(ctx: Context, parentId: SessionId, childId: SessionId): Pro
     childLive: ctx.agents.get(childId) !== undefined,
     childStatuses: [...watch.statuses(childId)],
     busRows: busRows(ctx),
+    parentLog: await loggedMessages(ctx, parentId),
   }
 
   const outcome = await prompt(subagents, parent.id, childId, 'p5-10-after-restart', 'P5-10: take a turn after the restart.')
@@ -534,6 +572,7 @@ async function after(ctx: Context, parentId: SessionId, childId: SessionId): Pro
       parentTurnEndReasons: watch.tally(parentId).turnEndReasons,
       busRows: busRows(ctx),
     },
+    parentLog: await loggedMessages(ctx, parentId),
   })
 }
 
