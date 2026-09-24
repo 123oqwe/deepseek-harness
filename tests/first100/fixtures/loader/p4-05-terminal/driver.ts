@@ -14,8 +14,10 @@
  * It then runs three turns: the first calls the probe; the second calls
  * `p4_05_fail_run` and then the probe in one step; the third calls the probe.
  * After each turn it reads whether the probe ran, that turn's step starts,
- * turn-end reasons and tool results, the agent's lifecycle state, and whether
- * the agent is still there. It prints one `P4-05-TERMINAL <json>` line.
+ * turn-end reasons (their kinds and the whole reasons) and tool results (their
+ * texts, and each result's text with whether it is an error), the agent's
+ * lifecycle state, and whether the agent is still there. It prints one
+ * `P4-05-TERMINAL <json>` line.
  * @module tests/first100/fixtures/loader/p4-05-terminal/driver
  */
 
@@ -44,7 +46,11 @@ interface TurnReading {
   readonly probeRan: boolean
   readonly stepStarts: number
   readonly turnEndReasons: readonly string[]
+  /** Each turn end's whole reason, not only its kind. */
+  readonly turnEnds: readonly unknown[]
   readonly results: readonly string[]
+  /** Each tool result's text and whether it is an error. */
+  readonly toolResults: readonly { readonly text: string; readonly isError: boolean }[]
   readonly lifecycleState: string | null
   readonly agentPresent: boolean
 }
@@ -120,10 +126,15 @@ try {
       probeRan: probeRuns > runsBefore,
       stepStarts: events.filter(event => event.type === 'step/start').length,
       turnEndReasons: events.flatMap(event => event.type === 'turn/end' ? [event.data.reason.kind] : []),
+      turnEnds: events.flatMap(event => event.type === 'turn/end' ? [event.data.reason] : []),
       results: events.flatMap(event => event.type !== 'tool/result' ? [] : [
         event.data.message.content.flatMap(block =>
           block.type === 'tool-result' ? block.content.flatMap(part => part.type === 'text' ? [part.text] : []) : []).join(''),
       ]),
+      toolResults: events.flatMap(event => event.type !== 'tool/result' ? [] : event.data.message.content.flatMap(block =>
+        block.type === 'tool-result'
+          ? [{ text: block.content.flatMap(part => part.type === 'text' ? [part.text] : []).join(''), isError: block.isError === true }]
+          : [])),
       lifecycleState: agent.lifecycle?.state ?? null,
       agentPresent: ctx.agents.roots().includes(agent),
     })
