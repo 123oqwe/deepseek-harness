@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-24-a-call-its-token-will-refuse-is-not-put-to-an-operator.md
-2026-09-24-a-call-its-token-will-refuse-is-not-put-to-an-operator.md: 00eecfd5605c45219e35487768e95035149a6e28
-2026-09-24-a-call-its-token-will-refuse-is-not-put-to-an-operator.zh.md: b0c2de679c493d24dc8400e7d1769b6852f82fbf
+2026-09-24-a-call-its-token-will-refuse-is-not-put-to-an-operator.md: 0f8d6b8e29f1a27680583dc8b3cfa947d9493606
+2026-09-24-a-call-its-token-will-refuse-is-not-put-to-an-operator.zh.md: f33ef9fe0b7326f9ffaab7d999422a88a1079b26

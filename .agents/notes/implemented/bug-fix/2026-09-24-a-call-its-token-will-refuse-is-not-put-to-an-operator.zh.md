@@ -22,6 +22,7 @@ BLOCKED-330。两条派发路径都先过风险门，再由 `ToolRuntime` 准备
 ## 后果
 
 - 准备阶段仍检查令牌。操作者决定期间令牌过期的调用，在批准之后于准备阶段被拒。
+- 在此之前，被令牌拒绝的调用已经在 action ledger 里预留了效果，错误结果随后把这条预留标为 ambiguous：ledger 里留下一条要由人或 reconciler 处理的记录，而那个动作从未运行。code-mode 路径上，这个调用还会写下 `tool/ptc-dispatch-start`。现在令牌拒绝与策略拒绝、风险门拒绝一样，两样都不留下。
 - 既被 code-mode 呈现折叠、又会被令牌拒绝的调用，现在报告的是令牌拒绝，因为派发路径在准备阶段检查折叠之前先问令牌。
 - `ToolRuntimeScheduler` 新增一个成员，tool-cordis 的 API 目录随之变化；P9-07.P 在带上这项改动的那一班重新观测。
 - 在挂载时创建的配置 agent 可能与令牌提供方竞争，出示不了令牌。出厂 profile 都不用 `agents: [...]`，所以记作 agent-loop 的 Known Limitation。
