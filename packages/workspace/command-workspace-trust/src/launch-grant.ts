@@ -108,7 +108,7 @@ async function writeLaunchTrust(ctx: Context, request: LaunchTrustRequest): Prom
   }
   // The host user this harness home belongs to — the same principal
   // `/trust-skills` authorizes with, minted here because no session exists yet.
-  const principal = hostUserIdentity(RunId(`run-${randomUUID()}`)).principal
+  const principal = hostUserIdentity(RunId(`run-${randomUUID()}`), { tenantId: 'local' }).principal
   await trust.grantTrust(cwd, request.target, principal, 'launch-argument')
 }
 
