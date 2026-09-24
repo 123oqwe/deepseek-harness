@@ -994,7 +994,6 @@ export function configFrozenReportRefusal(argv, reportFiles, reportPath) {
     return `the entry is frozen under ${under(config)}, and ${reportName} is the report of ${under(reportConfig)}`
   }
   if (config === undefined) return null
-  if (paths.length === 0) return `the entry names --config ${config} and no test path, so no report can be told to be its own`
   const files = reportFiles.map((name) => `/${name.replace(/^\/+/u, '')}`)
   const notRun = paths.filter((path) => !files.some((file) => file.endsWith(`/${path}`) || file.includes(`/${path}/`)))
   if (notRun.length === 0) return null
