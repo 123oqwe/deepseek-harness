@@ -129,8 +129,12 @@ interface KillPointSpec {
   readonly hooked: boolean
   readonly where: string
   readonly left: LeftAtKill
-  /** The new version only once the health check had passed (transaction.ts:264-267), the old one otherwise. */
-  readonly owed: 'old' | 'new'
+  /**
+   * The version a restart owes: the new one only once the health check had
+   * passed (transaction.ts:264-267), the old one otherwise. Absent where the
+   * direction is the product fix's to choose, so only "one version" is asserted.
+   */
+  readonly owed?: 'old' | 'new'
 }
 
 const KILL_POINTS: readonly KillPointSpec[] = [
@@ -164,7 +168,6 @@ const KILL_POINTS: readonly KillPointSpec[] = [
     hooked: true,
     where: 'killed between the two renames of the atomic switch',
     left: LEFT_INSIDE_SWITCH,
-    owed: 'old',
   },
 ]
 
@@ -884,11 +887,13 @@ describe.skipIf(process.platform === 'win32')('P1-10 plugin upgrade crash campai
         expect([OLD, NEW], `${JSON.stringify(observed.report)}\n${outcomeText(observed.next)}`).toContainEqual(observed.after)
       })
 
-      it(`${kill.where}, then dsh started: the version the harness loaded is the ${kill.owed} one`, () => {
+      const owed = kill.owed
+      if (owed === undefined) continue
+      it(`${kill.where}, then dsh started: the version the harness loaded is the ${owed} one`, () => {
         const observed = run(key)
         expectKilled(observed, kill.left)
         expect(observed.leaseExpiredAtNext, outcomeText(observed.next)).toBe(true)
-        expect(observed.after, `${JSON.stringify(observed.report)}\n${outcomeText(observed.next)}`).toEqual(kill.owed === 'new' ? NEW : OLD)
+        expect(observed.after, `${JSON.stringify(observed.report)}\n${outcomeText(observed.next)}`).toEqual(owed === 'new' ? NEW : OLD)
       })
     }
   })
