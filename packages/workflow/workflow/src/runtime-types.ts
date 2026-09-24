@@ -70,6 +70,14 @@ export interface WorkflowRun {
   readonly traceContext: string | undefined
   /** The validated meta block available before the script body runs. */
   readonly meta: WorkflowMeta
+  /**
+   * Why the resume that returned this run did not continue its journal (Epic
+   * P4-08 acceptance[1]), for example `script-digest-changed`; absent for a
+   * started run and for a resume that continued. A refused resume still runs
+   * the script from its first step under the same id, so this field is the
+   * caller's only sign that nothing was reused.
+   */
+  readonly resumeRefused?: { readonly reason: string; readonly detail: string }
   readonly result: Promise<WorkflowResult>
   /** Cancel the run and its children. */
   cancel(reason?: string): void

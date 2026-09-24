@@ -4,7 +4,9 @@
  * parsing, execution, caps, and cancellation live behind `ctx.workflowEngine`
  * (`@deepseek-ai/dsh-workflow`), so a hardened engine swaps in without touching what the model
  * sees. Execution awaits `run.result` and always disposes the run; non-completed reasons become tool
- * errors, and background collection remains deferred. Presentation is an args-only generic card
+ * errors, and background collection remains deferred. `resume` continues an interrupted run by its
+ * id through `engine.resume`, and a refused resume is reported in the result rather than as an
+ * error, because the run still executes from its first step. Presentation is an args-only generic card
  * titled from `meta.name`. Explicit-ask usage guidance is registered as the tool's own prompt
  * section rather than deployment persona prose.
  * @module @deepseek-ai/dsh-tool-workflow
@@ -240,6 +242,10 @@ export function apply(ctx: Context, config: Config): void {
         type: 'string',
         description: 'Collect a detached run by its runId, instead of starting one. Give no `script` or `meta` with it.',
       },
+      resume: {
+        type: 'string',
+        description: 'Continue an interrupted run by its runId instead of starting a new one. Give the SAME `script` and `meta` it was started with; agent() steps whose children finished are not run again. A changed script is refused, and the run starts over under the same runId.',
+      },
       meta: {
         type: 'object',
         additionalProperties: true,
@@ -278,6 +284,16 @@ export function apply(ctx: Context, config: Config): void {
           runId: { type: 'string', required: true },
           agentsStarted: { type: 'integer', required: true },
           result: { type: 'json', required: true },
+          // Present only when a resume was refused; the schema is closed, so
+          // an undeclared field would turn that completed run into an error.
+          resumeRefused: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              reason: { type: 'string', required: true },
+              detail: { type: 'string', required: true },
+            },
+          },
         },
       },
       render: (args, value) => [{
@@ -285,7 +301,8 @@ export function apply(ctx: Context, config: Config): void {
         text: args.detached === true && args.attach === undefined
           ? `workflow "${args.meta?.name ?? 'unnamed'}" started detached as ${value.runId}. `
             + `It keeps running after this turn; collect it with attach: "${value.runId}".`
-          : renderResult(args.meta?.name ?? args.attach ?? 'unnamed', value.agentsStarted, value.result, maxResultChars),
+          : (value.resumeRefused === undefined ? '' : `resume refused (${value.resumeRefused.reason}): the run started over from its first step.\n`)
+            + renderResult(args.meta?.name ?? args.attach ?? 'unnamed', value.agentsStarted, value.result, maxResultChars),
       }],
     },
     async execute(args, exec) {
@@ -320,6 +337,15 @@ export function apply(ctx: Context, config: Config): void {
       if (args.script === undefined || args.meta === undefined) {
         throw new Error('workflow tool: `script` and `meta` are required unless `attach` is given')
       }
+      // P4-08 acceptance[0]: the model's `resume` value becomes the name of a
+      // journal file and a lease row, so only a single id token is accepted.
+      if (args.resume !== undefined && !/^[\w-]+$/u.test(args.resume)) {
+        throw new Error(`workflow tool: \`resume\` must be a runId a workflow run reported, not ${JSON.stringify(args.resume)}`)
+      }
+      // Without this the detached branch below would start a new run and drop `resume`.
+      if (args.resume !== undefined && args.detached === true) {
+        throw new Error('workflow tool: `resume` continues a run in the foreground — give it without `detached`')
+      }
 
       // P4-09 must[2], the start half: a detached run holds its OWN agent and
       // session, so nothing about it depends on this turn's scopes. The runId
@@ -337,16 +363,22 @@ export function apply(ctx: Context, config: Config): void {
         return { runId: detached.id, agentsStarted: 0, result: null }
       }
 
-      // Meta/body validation failures (META_INVALID/SCRIPT_PARSE) throw
-      // synchronously here and become isError results via the registry — the
-      // model sees the violation list and can correct the call.
-      const run = ctx.workflowEngine.start({
+      // Meta/body validation failures (META_INVALID/SCRIPT_PARSE) throw out of
+      // start() or reject resume() and become isError results via the registry
+      // — the model sees the violation list and can correct the call.
+      const request = {
         script: args.script,
         meta: args.meta,
         ...args.args !== undefined ? { args: args.args } : {},
         parent,
         signal: exec.signal,
-      })
+      }
+      // P4-08 acceptance[0]: `resume` is the shipped caller of `engine.resume`,
+      // which reuses the steps whose children finished and refuses a journal
+      // written under a different script digest.
+      const run = args.resume === undefined
+        ? ctx.workflowEngine.start(request)
+        : await ctx.workflowEngine.resume(brandString<WorkflowRunId>(args.resume), request)
       const recordsRun = exec.parent === undefined
       // The shipped worker-thread engine publishes member events from later
       // worker messages, after start() returns and this run record is active.
@@ -371,6 +403,7 @@ export function apply(ctx: Context, config: Config): void {
           runId: run.id,
           agentsStarted: result.agentsStarted,
           result: result.value as JsonValue,
+          ...run.resumeRefused === undefined ? {} : { resumeRefused: run.resumeRefused },
         }
       } finally {
         exec.signal.removeEventListener('abort', onAbort)

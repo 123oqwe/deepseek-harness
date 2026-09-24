@@ -111,6 +111,12 @@ export interface Reconciled {
   readonly reusable: Record<number, string>
   /** The journal these were read from, for the resumed run's recorder to continue. */
   readonly journal: WorkflowJournal | undefined
+  /**
+   * Why the journal was refused (acceptance[1]); absent when there was no
+   * journal or it was admitted. The run still starts from its first step, so
+   * the refusal travels to the caller on the run rather than as a failure.
+   */
+  readonly refused?: { readonly reason: string; readonly detail: string }
 }
 
 /**
@@ -132,14 +138,16 @@ export function scriptDigestOf(body: string): ScriptDigest {
  *
  * Empty when there is no journal, when the script changed, or when nothing was
  * reconcilable — and all three mean the same thing to the caller: run it. A
- * missing journal is not an error, because "this run was never journalled" and
+ * changed script also says so in `refused`, because a caller that asked to
+ * continue would otherwise not learn that nothing was reused. A missing
+ * journal is not an error, because "this run was never journalled" and
  * "there is nothing to resume" are one situation.
  * @param directory - the directory holding one journal file per run.
  * @param runId - the run being resumed.
  * @param body - the script about to run, whose digest must match the journal's.
  * @param childCompleted - whether a recorded child's session shows finished work.
  * @param effectState - the ledger query for recorded side effects, absent when this run has no ledger to ask.
- * @returns the reconciliation: reusable outputs by step sequence, and the journal they were read from.
+ * @returns the reconciliation: reusable outputs by step sequence, the journal they were read from, and why a journal was refused.
  * @throws AmbiguousReconciliationRequiredError when a step's recorded side effects are neither provably committed nor provably unsent.
  */
 export async function reusableSteps(
@@ -152,7 +160,7 @@ export async function reusableSteps(
   const journal = readJournal(directory, runId)
   if (journal === undefined) return { reusable: {}, journal: undefined }
   const plan = planResume(journal, scriptDigestOf(body))
-  if (!plan.resumable) return { reusable: {}, journal: undefined }
+  if (!plan.resumable) return { reusable: {}, journal: undefined, refused: { reason: plan.reason, detail: plan.detail } }
 
   const reusable: Record<number, string> = {}
   for (const entry of journal.entries) {

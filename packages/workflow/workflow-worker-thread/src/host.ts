@@ -176,6 +176,8 @@ export class WorkerRun implements WorkflowRun {
   private readonly nestedRuns = new Set<WorkflowRun>()
   /** Bridges this host's agent events into {@link WorkerRun.journal}. */
   private readonly journaling: ReturnType<typeof journalingObserver>
+  /** Why the resume that launched this run did not continue its journal (P4-08 acceptance[1]); absent otherwise. */
+  readonly resumeRefused?: { readonly reason: string; readonly detail: string }
 
   constructor(
     private readonly ctx: Context,
@@ -258,6 +260,9 @@ export class WorkerRun implements WorkflowRun {
     // Marking it here is what gives `verified` a producer, and compaction
     // something it can act on.
     for (const seq of Object.keys(reconciled.reusable)) this.journal.stepVerified(Number(seq))
+    // A refused resume runs from the first step all the same, so the refusal
+    // reaches the caller on the run or not at all.
+    if (reconciled.refused !== undefined) this.resumeRefused = reconciled.refused
     // Every step is `effectful`. The class is the SCRIPT's declaration and the
     // DSL has no syntax for it yet, so the honest default is the one that
     // forces reconciliation rather than the one that permits a silent skip:
@@ -441,7 +446,7 @@ export class WorkerRun implements WorkflowRun {
         // agent-end with outcome 'cancelled'. The gate (with the termination
         // paths' synthesis) is what makes the one-pair-per-started-child
         // contract hold on every stop path.
-        this.endAgent(message.info)
+        this.endAgent(message.info, message.output)
         break
       case WorkerToHostType.ChildStart:
         this.onChildStart(message.callId, message.request)
@@ -574,7 +579,24 @@ export class WorkerRun implements WorkflowRun {
       },
     )
     this.post(HostToWorkerType.ChildStarted, { callId, childId: run.id })
-    void forwardResult.then((forward) => { forward() })
+    void forwardResult.then(async (forward) => {
+      // P4-08 acceptance[0]: a child's log is durable before the worker hears
+      // its result. The worker reports the step completed on that result and
+      // the host journals it at once, while the session backend may still hold
+      // the child's `turn/end` in its write batch; a kill in between left a
+      // journal naming a finished step whose child log could not show it, and
+      // the resume ran that child again. A failed flush is logged, and the
+      // resume then reruns the step.
+      const child = run.localAgent
+      if (child !== undefined) {
+        try {
+          await child.ctx.sessions.flush(child.session)
+        } catch (error: unknown) {
+          this.ctx.logger.warn(`workflow-worker-thread: child ${run.id} session flush failed, so a resume reruns its step: ${renderThrown(error)}`)
+        }
+      }
+      forward()
+    })
   }
 
   private onChildDispose(callId: number): void {
@@ -833,11 +855,13 @@ export class WorkerRun implements WorkflowRun {
    * EXACTLY one `workflow/agent-end` — the worker's own report where it can
    * speak, a host-synthesized one where it cannot ({@link endStrandedAgents}).
    * @param end - the settlement to emit (worker-reported or synthesized).
+   * @param output - what a completed call resolved to, as JSON text; journalled
+   *   and never passed to `workflow/agent-end` listeners (P4-08 acceptance[0]).
    */
-  private endAgent(end: WorkflowAgentEndInfo): void {
+  private endAgent(end: WorkflowAgentEndInfo, output?: string): void {
     /* v8 ignore next -- a real end still in flight across the grace force-settle: not orderable in-process */
     if (!this.liveAgents.delete(end.seq)) return
-    this.journaling.onAgentEnd(end)
+    this.journaling.onAgentEnd(output === undefined ? end : { ...end, output })
     this.observer.agentEnd(end)
   }
 
