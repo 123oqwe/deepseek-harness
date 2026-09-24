@@ -764,10 +764,6 @@ function nearestEntryName(chain: readonly Fiber[], entries: readonly Attributabl
     for (const entry of entries) {
       if (entry.fiber !== undefined && entry.fiber.uid === fiber.uid) return entry.options.name
     }
-    const nested = (fiber as { entry?: TreeEntry }).entry
-    if (nested?.fiber?.uid !== fiber.uid) continue
-    const treeUid = nested.parent.tree.ctx.fiber.uid
-    if (chain.slice(index + 1).some(outer => outer.uid === treeUid)) return nested.options.name
   }
   return undefined
 }
