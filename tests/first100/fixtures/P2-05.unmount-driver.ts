@@ -5,9 +5,10 @@
  * It boots that profile through `bootProductionProfile` with the Trust Kernel
  * pinned the way `apps/cli/src/profile-boot.ts` pins it, over the same test
  * overlay the BLOCKED-266 observations use, and drives one tool call. It then
- * disables the `policy-engine` row through the Loader's own `update`, the
- * path by which a configuration change unmounts a plugin, and drives the same
- * tool call again. It records what each call met and writes the record to
+ * disables the `policy-engine` row the way a running process unmounts a
+ * composed row: a new patch list on the root include entry, which recomposes
+ * its subtree (what `watchUserPatches` does on the live `web` profile), and
+ * drives the same tool call again. It records what each call met and writes the record to
  * `observation.json` in its working directory; the spec beside it judges.
  *
  * The model is a scripted adapter registered here rather than the overlay's
@@ -17,6 +18,7 @@
  */
 
 import { writeFile } from 'node:fs/promises'
+import type { PatchOptions } from '@deepseek-ai/cordis-plugin-include'
 import { randomUUID } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { HOST_USER_IDENTITY_KEY, type HostUserIdentityFactory } from '@deepseek-ai/dsh-agent-loop'
@@ -116,9 +118,14 @@ try {
   await runFixtureTurn(ctx, { task: 'run the probe' })
   const before = { probeRuns, results: toolResultTexts(ctx), decisions: auditedDecisions() }
 
+  // The composed rows live under the root include entry, so the row is
+  // disabled by a patch targeting its own id, not by resolving it at the root.
   const row = [...ctx.loader.entries()].find(entry => entry.options.name === POLICY_ENGINE_PLUGIN)
   if (row === undefined) throw new Error(`no Loader row mounts ${POLICY_ENGINE_PLUGIN}`)
-  await ctx.loader.update(row.options.id, { disabled: true })
+  const include = ctx.loader.resolve('include')
+  const { patches = [], ...includeConfig } = include.options.config as { patches?: PatchOptions[] }
+  await include.update({ config: { ...includeConfig, patches: [...patches, { id: row.options.id, disabled: true }] } })
+  await ctx.loader.await()
   const unmount = { rowId: row.options.id, policyMountedAfter: ctx.get('policy') !== undefined }
 
   await runFixtureTurn(ctx, { task: 'run the probe again' })
