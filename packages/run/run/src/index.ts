@@ -973,7 +973,7 @@ export default class RunPlugin extends Service {
     // lifecycle above. The owner's lease is the one authority over the owner's
     // Run, so the join is written only while that lease admits writes.
     const owner = this.ctx.agents.list().find(candidate => this.ctx.agents.isOwnedBy(agent.id, candidate))
-    if (owner?.runId !== undefined && owner.runLease?.mayWrite(Date.now()) === true) {
+    if (owner?.runId !== undefined) {
       this.track(this.service.attachSession(owner.runId, agent.id).then(() => undefined))
     }
   }
