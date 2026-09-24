@@ -431,3 +431,42 @@ That distinction was put to the user directly, because it changes what the regis
 
 **4. 锁行重述**
 - `BLOCKED-QUEUE.md` ACCEPTANCE LOCKS 中 P1-09、P0-06 两行,在解锁条件末尾追加「RESTATED … (C20)」一段;P0-06 那段写明取代 C19 的重述。引用的旧文与原来的条件都不改。
+
+## C22 (2026-09-24) — 第 10–18 题的答复（用户直接决定）
+
+**用户原话**
+
+经巡逻会话 guanjieqiao-e6 转达（#35），2026-09-24：
+
+> 「10 批,11 乙,12 b,13 b,14 b,15 a,16 同意」
+
+用户在 delegate 终端直接回复，2026-09-24：
+
+> 「16② a,17 a,18 a」
+
+题面、选项与推荐见 `channel/B-CLASS-QUESTIONS-2026-09-24.md` 的第二至第八批；delegate 的逐题记录见同一文件末尾的两节「用户答复」。编号 C21 留给 ⑨（P2-03）：它的前提 ③，即 sdk-minimal README 写明无风险门、风险控制由接入方负责，本批已补上；⑨ 写进条文另起一笔。
+
+**1. 逐题的决定**
+
+| 题 | epic | 决定 | 解锁的工作 |
+|---|---|---|---|
+| 10 | P1-02 | 批准。插件作者若要带签名声明，就在本地 tgz 包旁放一个 claim 文件，连同 SBOM，dsh 安装时校验；没有 claim 照样安装（G2）；出厂 bundle 都不带 claim | P1-02 的 A 笔 |
+| 11 | P5-10 acceptance[1] | 乙。按决定（四），在出厂组合上观测「子 agent 提问被拒，并给出替代做法」；路由本身由 C、P 两阶段证明；出厂上没有子 agent 的等待点，写成 Known Limitation | P5-10 |
+| 12 | P5-10 must[3] | (b)。取消进入 barrier，子 agent 连同它进程内的在途工具调用都停止之后才到终态；world 与进程外的副作用写成 Known Limitation | P5-10 |
+| 13 | P5-10 must[2] | (b)。continue 与 steer 持久、带 epoch、幂等；cancel 幂等，但不持久。Known Limitation 要如实写明：宿主重启之后，原本在取消中的子 agent 会怎样，会不会自动恢复运行；若会自动恢复，单独报给用户 | P5-10；重启后的量测归 lane A |
+| 14 | P0-06 acceptance[0] | (b)。读出的 descriptor v2 日志为 24 个，第三类为 4 个，读出总数 126 个 | 已写进 C20 的新文；P0-06 F.1 |
+| 15 | P1-09 must[1]、acceptance[0] | (a)。Known Limitation 写「借用或伪造」，两者都限于 Loader 条目之内的插件 | 已写进 C20 的新文 |
+| 16 | P0-07 | 同意按题面三条验收；② 取 (a)，接受「git 忽略的文件除外」这条不涵盖 | P0-07 的签字 |
+| 17 | P8-01 acceptance[4] | (a)。主语是「经 dsh 协议协商的连接开出的 Run」，即 SDK 连接及其子 agent；ACP、CLI 的 Run 不在主语内，签字写明 | P8-01 的签字 |
+| 18 | P0-08 | (a)。deterministic、security、fault 三条 lane 真跑出厂产品，复用快照回放与 keyless 模型桩；8 项指标从真实运行算出，置信区间按指标给出 | P0-08 的重做 |
+
+**2. 第 16 题同意的生效条件**（照题面）
+- 全量全绿；
+- delegate 核完 4.4；
+- P0-07 的修复落地，读数对上；
+- 盲审 2 档的各条修完。
+
+**3. 条文**
+- 第 14、15 题的数字与措辞，已由 C20 写进条文。
+- 第 11–13 题是收窄。本笔只记决定，条文尚未改写。
+- 其余各题是做法与范围的决定，记在各自的签字与 Known Limitation 里。
