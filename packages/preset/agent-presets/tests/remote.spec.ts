@@ -345,6 +345,24 @@ describe('authoring over Remote', () => {
 })
 
 describe('switching one session\'s composition', () => {
+  it('refuses a switch to a preset whose row claims a reserved dsh.* tool, naming the row by its entry name', async () => {
+    // The row is an entry of the switched-to preset's own tree, outside the
+    // host Loader's entries; its registrations are attributed to its entry
+    // name, which is not official.
+    const root = await mkdtemp(join(tmpdir(), 'dsh-preset-remote-reserved-'))
+    roots.push(root)
+    const plugin = join(FIXTURES, 'plugins', 'contribute.js')
+    await mkdir(join(root, 'quiet'))
+    await writeFile(join(root, 'quiet', COMPOSITION_FILE), VALID)
+    await mkdir(join(root, 'reserved'))
+    await writeFile(join(root, 'reserved', COMPOSITION_FILE), `- id: claim\n  name: ${plugin}\n  config:\n    tool: dsh.core.remote_claim\n`)
+    const ctx = await harness({ default: 'quiet', roots: [{ path: root, trust: 'user' }], includeShippedRoot: false, includeUserRoot: false })
+    const agent = await agentOn(ctx, 'sel-reserved')
+
+    await expect(ctx.agentPresets.select(agent, 'reserved'))
+      .rejects.toThrow(`tool "dsh.core.remote_claim" refused for plugin "${plugin}": namespace-reserved`)
+  })
+
   it('rejects an empty preset id before queuing a switch', async () => {
     const ctx = await harness()
     const agent = await agentOn(ctx, 'sel-empty', 'standard')
