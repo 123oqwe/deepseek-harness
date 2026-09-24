@@ -103,6 +103,23 @@ export interface LayerDepsResult {
   }
 }
 
+/** acceptance[2]: one complete run, measured from process start, finishes within this budget. */
+export const TIME_BUDGET_MS: number
+
+/**
+ * Find every unexempted cycle in a production graph: through each edge no
+ * record names, the shortest cycle containing it, and on the subgraph of
+ * recorded edges, every simple cycle no record names. This is the search the
+ * gate runs.
+ * @param edges - the production graph's edges.
+ * @param exemptedCycles - the validated exemption records.
+ * @returns the unexempted cycles (each rotated to its smallest package, shortest first, then by package names) and the stale records.
+ */
+export function findUnexemptedCycles(
+  edges: readonly Pick<LayerDependencyEdge, 'fromPackage' | 'toPackage'>[],
+  exemptedCycles: readonly ExemptedCycle[],
+): { readonly cycles: string[][]; readonly stale: ExemptedCycle[] }
+
 /**
  * Read and validate the layer exemption store.
  * @param root - repository (or fixture) root.

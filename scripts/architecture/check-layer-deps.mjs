@@ -42,7 +42,7 @@ const WORKSPACE_PATH = 'pnpm-workspace.yaml'
 const SOURCE_GLOB = 'src/**/*.{ts,tsx,mts,cts}'
 const TSCONFIG_BASE = 'tsconfig.base.json'
 /** acceptance[2]: one complete run, measured from process start, finishes within this budget. */
-const TIME_BUDGET_MS = 10_000
+export const TIME_BUDGET_MS = 10_000
 /** The manifest fields that make up the production package graph; `devDependencies` are outside it. */
 const PRODUCTION_DEPENDENCY_FIELDS = ['dependencies', 'peerDependencies']
 /** A kernel package's direct dependencies: acceptance[1] counts every field a consumer installs. */
@@ -862,7 +862,7 @@ function rotateToSmallest(cycle) {
  * @param exemptedCycles - the validated exemption records.
  * @returns the unexempted cycles (each rotated to its smallest package, shortest first, then by package names) and the stale records.
  */
-function findUnexemptedCycles(edges, exemptedCycles) {
+export function findUnexemptedCycles(edges, exemptedCycles) {
   const adjacency = new Map()
   const graphEdges = new Set()
   for (const { fromPackage, toPackage } of edges) {

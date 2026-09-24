@@ -12,7 +12,7 @@
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { runLayerDepsCheck } from '../../scripts/architecture/check-layer-deps.mjs'
+import { findUnexemptedCycles, runLayerDepsCheck, TIME_BUDGET_MS } from '../../scripts/architecture/check-layer-deps.mjs'
 import {
   CORDIS_PACKAGE_NAME,
   classifyEdge,
@@ -40,10 +40,11 @@ function edge(
 }
 
 /**
- * `findShortestCycle`'s 10-second production-scale budget (acceptance[2])
- * needs a graph large enough that a naive algorithm which enumerates every
- * simple cycle -- rather than searching for the shortest one directly, e.g.
- * BFS from each package -- would plausibly blow it. An N-package complete
+ * The gate's cycle search (`findUnexemptedCycles`) against the 10-second
+ * production-scale budget (acceptance[2]) needs a graph large enough that a
+ * naive algorithm which enumerates every simple cycle -- rather than
+ * searching for the shortest one directly, e.g. BFS from each package --
+ * would plausibly blow it. An N-package complete
  * digraph (every package depends on every other) has on the order of N!
  * simple cycles through all N packages alone, before counting every shorter
  * one; `DENSE_CYCLE_PACKAGE_COUNT` packages builds in milliseconds but
@@ -333,10 +334,10 @@ describe('findShortestCycle (must[3], acceptance[0], acceptance[2])', () => {
   it('completes within the 10-second production-scale budget on a dense, many-overlapping-cycle graph (acceptance[2])', () => {
     const denseGraph = buildDenseOverlappingCyclesFixture()
     const startedAt = Date.now()
-    const result = findShortestCycle(denseGraph, [])
+    const { cycles } = findUnexemptedCycles(denseGraph, [])
     const elapsedMs = Date.now() - startedAt
-    expect(elapsedMs).toBeLessThan(10_000)
-    expect(result.shortestCycle).toHaveLength(2)
+    expect(elapsedMs).toBeLessThan(TIME_BUDGET_MS)
+    expect(cycles[0]).toHaveLength(2)
   })
 })
 
