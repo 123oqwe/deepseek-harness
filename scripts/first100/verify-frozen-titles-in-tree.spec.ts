@@ -102,9 +102,13 @@ afterEach(() => { for (const tree of trees.splice(0)) rmSync(tree, { recursive: 
 /**
  * Runs the gate in a tree whose freeze holds one entry frozen under the e2e config.
  * @param gateArgs - the arguments after the gate's path.
+ * @param files - files written over the fixture's, by tree-relative path.
  * @returns the gate's exit status and its stdout and stderr together.
  */
-function runGateOverE2eFreeze(gateArgs: readonly string[]): { status: number | null; output: string } {
+function runGateOverE2eFreeze(
+  gateArgs: readonly string[],
+  files: Record<string, string> = {},
+): { status: number | null; output: string } {
   // The real path, because the gate runs `main` only when argv[1] equals its own module path, and the OS temp
   // directory is a symlink on macOS.
   const tree = realpathSync(mkdtempSync(join(tmpdir(), 'dsh-in-tree-e2e-')))
@@ -119,6 +123,7 @@ function runGateOverE2eFreeze(gateArgs: readonly string[]): { status: number | n
     }] }),
     'bin/pnpm': LISTING_PNPM,
     'reports/vitest-e2e-acp.json': E2E_REPORT,
+    ...files,
   }
   for (const gateModule of GATE_MODULES) written[`scripts/first100/${gateModule}`] = readFileSync(new URL(gateModule, import.meta.url), 'utf8')
   for (const [path, text] of Object.entries(written)) {
@@ -151,6 +156,28 @@ describe('a title frozen from an e2e file is looked up in the --e2e-report the g
     const { status, output } = runGateOverE2eFreeze(['--e2e-report', 'reports/absent.json'])
     expect(output).toContain('--e2e-report reports/absent.json is not a readable vitest json report')
     expect(status).not.toBe(0)
+  })
+
+  it('reports the title as an orphan when only another config\'s report carries it', () => {
+    const { status, output } = runGateOverE2eFreeze(['--e2e-report', 'reports/vitest-snapshot.json'], {
+      'reports/vitest-snapshot.json': E2E_REPORT,
+    })
+    expect(output).toContain('P4-05.U.4: acp host takes over the Run')
+    expect(status).toBe(1)
+  })
+
+  it('reports a title frozen under the default config as an orphan when only an e2e report carries it', () => {
+    const freeze = { entries: [{
+      epic: 'P4-05',
+      stage: 'C',
+      argv: ['pnpm', 'exec', 'vitest', 'run', 'packages/g/p/tests/a.spec.ts'],
+      expectCases: ['acp host takes over the Run'],
+    }] }
+    const { status, output } = runGateOverE2eFreeze(['--e2e-report', 'reports/vitest-e2e-acp.json'], {
+      'spec/first100/exec/command-freeze.json': JSON.stringify(freeze),
+    })
+    expect(output).toContain('P4-05.C: acp host takes over the Run')
+    expect(status).toBe(1)
   })
 })
 

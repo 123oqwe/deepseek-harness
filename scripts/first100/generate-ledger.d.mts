@@ -278,9 +278,10 @@ export function frozenCommand(argv: readonly string[]): { config: string | undef
  * Why a report cannot observe an entry frozen under its own vitest config, or `null` when it can.
  * @param argv - the frozen entry's `argv`.
  * @param reportFiles - the report's `testResults[].name`, absolute on the machine that ran it.
+ * @param reportPath - the report's path.
  * @returns the refusal, or `null` when the argv names no config or the report ran every test path it names.
  */
-export function configFrozenReportRefusal(argv: readonly string[], reportFiles: readonly string[]): string | null
+export function configFrozenReportRefusal(argv: readonly string[], reportFiles: readonly string[], reportPath?: string): string | null
 
 /** One EXEC-STATE digest that no longer matches its file. `recorded` is `undefined` when the digest is absent. */
 export interface ExecStateDigestDrift {
