@@ -62,6 +62,8 @@ import {
   validateAcceptanceCoverage,
 } from './generate-ledger.mjs'
 import { realitySetOverlap } from './epic-reality-set.mjs'
+import { candidateTreeFindings } from './verify-freeze-in-candidate-tree.mjs'
+import type { CandidateTreeFreezeEntry } from './verify-freeze-in-candidate-tree.mjs'
 import { readFileSync } from 'node:fs'
 
 // checkCandidateChainConsistency's real usage always runs locally against
@@ -1633,6 +1635,153 @@ describe('generate-ledger.mjs --accept does not apply the BLOCKED-326 exit refus
     const result = spawnSync(process.execPath, [script, '--accept', '--epic', 'P4-05'], { cwd: root, encoding: 'utf8' })
     expect(`${result.stdout}${result.stderr}`).toContain('ACCEPTED P4-05: independentVerdict=APPROVED, status=ACCEPTED')
     expect(result.status).toBe(0)
+  })
+})
+
+describe('generate-ledger.mjs --revoke-cell --supplement-seq withdraws a supplement whose observation holds no live entry of its own', () => {
+  const OBSERVED_AT = '2026-09-24T15:26:35Z'
+  const REFROZEN_AT = '2026-09-24T18:18:22Z'
+  const OLD_TITLE = 'rejects a declare-module block declaring a const named Context'
+  const NEW_TITLE = 'rejects a declare-module block declaring a class named Context'
+  const REASON = 'the entry was re-frozen at its seq under a changed title'
+  const CI_RUN_URL = `https://github.com/${PROGRAM_CI_REPO}/actions/runs/1`
+
+  type FreezeEntry = {
+    epic: string
+    stage: string
+    supplementSeq: number
+    expectCases: string[]
+    supersededBy?: string
+    [field: string]: unknown
+  }
+
+  /** P0-04 U.1 frozen under one title. */
+  const supplementEntry = (title: string, frozenAtUtc: string): FreezeEntry => ({
+    epic: 'P0-04',
+    stage: 'U',
+    supplements: { epic: 'P0-04', stage: 'U' },
+    supplementSeq: 1,
+    argv: ['pnpm', 'exec', 'vitest', 'run', 'tests/architecture/check-layer-deps.spec.ts', '--reporter=json'],
+    expectExit: 0,
+    expectCases: [title],
+    frozenAtUtc,
+  })
+  /** [363]'s replacement in batch 7: the same seq, a changed title. */
+  const refrozen: FreezeEntry[] = [
+    { ...supplementEntry(OLD_TITLE, OBSERVED_AT), supersededBy: REFROZEN_AT },
+    { ...supplementEntry(NEW_TITLE, REFROZEN_AT), supersedes: OBSERVED_AT },
+  ]
+
+  type Ledger = {
+    rows: Record<string, { id: string; status: string; independentVerdict: string; supplements: Record<string, LedgerRecord> }>
+  }
+  type LedgerRecord = { status: string; candidateSha?: string; revokedFrom?: unknown; revokedReason?: string }
+
+  /**
+   * A scratch repository whose commit holds a freeze of P0-04 U.1 under the old title, and a ledger in which that
+   * supplement is GREEN from an observation of that commit. The row has no main U cell, so only the supplement can be
+   * withdrawn.
+   * @param record - fields that replace the GREEN record's, or `null` for a row with no record for U.1.
+   * @returns the repository's root and script, the observed commit, and a writer of the working freeze.
+   */
+  function revocationRepo(record: Record<string, unknown> | null = {}): {
+    root: string
+    script: string
+    observed: string
+    writeFreeze: (entries: readonly FreezeEntry[]) => void
+  } {
+    const { root, script } = scratchLedgerRepo()
+    const writeFreeze = (entries: readonly FreezeEntry[]): void => {
+      writeFileSync(join(root, 'spec/first100/exec/command-freeze.json'), JSON.stringify({ entries }))
+    }
+    writeFreeze([supplementEntry(OLD_TITLE, OBSERVED_AT)])
+    const observed = commit(root, 'observed', 'observed\n')
+    const green = {
+      status: 'GREEN',
+      candidateSha: observed,
+      ciRunUrl: CI_RUN_URL,
+      observationReportPath: 'ci-run-1/vitest-report.json',
+      observationSha256: 'fixture',
+      expectCasesMatched: [OLD_TITLE],
+      capturedAtUtc: OBSERVED_AT,
+      ...record,
+    }
+    const row = {
+      id: 'P0-04',
+      title: 'fixture',
+      layer: 'governance',
+      canonicalOwner: 'fixture',
+      predecessors: [],
+      wave: 0,
+      cells: {},
+      supplements: record === null ? {} : { 'U.1': green },
+      independentVerdict: 'PENDING',
+      openFindings: [],
+      status: 'BLOCKED_ON_ACCEPTANCE',
+    }
+    writeFileSync(join(root, 'spec/first100/exec/ledger.json'), JSON.stringify({ generatedBy: 'scripts/first100/generate-ledger.mjs', rows: { 'P0-04': row } }))
+    return { root, script, observed, writeFreeze }
+  }
+
+  const revoke = (root: string, script: string): { status: number | null; output: string } => {
+    const args = ['--revoke-cell', '--epic', 'P0-04', '--stage', 'U', '--supplement-seq', '1', '--reason', REASON]
+    const result = spawnSync(process.execPath, [script, ...args], { cwd: root, encoding: 'utf8' })
+    return { status: result.status, output: `${result.stdout}${result.stderr}` }
+  }
+  const ledgerOf = (root: string): Ledger => JSON.parse(readFileSync(join(root, 'spec/first100/exec/ledger.json'), 'utf8')) as Ledger
+
+  it('refuses a supplement whose observed tree holds its live entry', () => {
+    const { root, script, observed } = revocationRepo()
+
+    const { status, output } = revoke(root, script)
+    expect(output).toContain(`BLOCKED: P0-04.U.1's observation ${observed.slice(0, 10)} DOES contain its live freeze entries, so this cell is not revocable`)
+    expect(status).toBe(1)
+    expect(ledgerOf(root).rows['P0-04']!.supplements['U.1']!.status).toBe('GREEN')
+  })
+
+  it('withdraws a supplement re-frozen at its seq under a changed title, as it withdraws a main cell', () => {
+    const { root, script, observed, writeFreeze } = revocationRepo()
+    writeFreeze(refrozen)
+
+    const { status, output } = revoke(root, script)
+    expect(output).toContain(`revoked P0-04.U.1: 1 live freeze entry/entries absent from ${observed.slice(0, 10)}`)
+    expect(status).toBe(0)
+    const row = ledgerOf(root).rows['P0-04']!
+    expect(row.supplements['U.1']).toStrictEqual({
+      status: 'NOT_RUN',
+      revokedFrom: { candidateSha: observed, ciRunUrl: CI_RUN_URL, absentCommitments: 1 },
+      revokedReason: REASON,
+    })
+    expect([row.status, row.independentVerdict]).toStrictEqual(['NOT_RUN', 'PENDING'])
+  })
+
+  it.each([
+    ['a record that is not GREEN', { status: 'SUPERSEDED' }, 'BLOCKED: P0-04.U.1 is SUPERSEDED, not GREEN'],
+    ['no record at all', null, 'BLOCKED: P0-04.U.1 has no cell to revoke'],
+  ])('refuses a supplement with %s', (_label, record, refusal) => {
+    const { root, script, writeFreeze } = revocationRepo(record)
+    writeFreeze(refrozen)
+
+    const { status, output } = revoke(root, script)
+    expect(output).toContain(refusal)
+    expect(status).toBe(1)
+  })
+
+  it('leaves nothing the tree check reports, and nothing the liveness derivation turns back', () => {
+    const { root, script, observed, writeFreeze } = revocationRepo()
+    writeFreeze(refrozen)
+    const live = refrozen.filter(entry => entry.supersededBy === undefined)
+    const freezeAt = (sha: string): CandidateTreeFreezeEntry[] =>
+      (JSON.parse(git(root, ['show', `${sha}:spec/first100/exec/command-freeze.json`])) as { entries: CandidateTreeFreezeEntry[] }).entries
+    // The control: before the withdrawal the check reports the supplement, so its silence after is the withdrawal's.
+    expect(candidateTreeFindings(ledgerOf(root).rows, live, freezeAt).missing.map(finding => finding.text))
+      .toStrictEqual([`P0-04.U.1: 1 live freeze entry/entries absent from ${observed.slice(0, 10)}`])
+
+    expect(revoke(root, script).status).toBe(0)
+    const { rows } = ledgerOf(root)
+    expect(candidateTreeFindings(rows, live, freezeAt).missing).toStrictEqual([])
+    deriveSupplementLiveness(rows, refrozen)
+    expect(rows['P0-04']!.supplements['U.1']!.status).toBe('NOT_RUN')
   })
 })
 
