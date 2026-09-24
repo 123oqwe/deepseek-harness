@@ -1407,8 +1407,25 @@ describe('configFrozenReportRefusal: --supplement observes an entry frozen under
 })
 
 /**
- * Runs `generate-ledger.mjs` in a scratch repository holding a copy of this directory's modules, a freeze of `entry`
- * alone, and one report, so no run reads or writes this repository's ledger.
+ * A scratch repository holding one commit and a copy of this directory's modules, so a run of `generate-ledger.mjs`
+ * in it neither reads nor writes this repository's ledger.
+ * @returns the repository's real path, its commit, and the path of its copy of `generate-ledger.mjs`.
+ */
+function scratchLedgerRepo(): { root: string; sha: string; script: string } {
+  // The real path, because the script runs its CLI only when argv[1] equals its own module path.
+  const root = realpathSync(makeGitFixture())
+  const sha = commit(root, 'fixture', 'fixture\n')
+  mkdirSync(join(root, 'scripts/first100'), { recursive: true })
+  for (const name of readdirSync(new URL('.', import.meta.url)).filter(file => file.endsWith('.mjs'))) {
+    copyFileSync(new URL(name, import.meta.url), join(root, 'scripts/first100', name))
+  }
+  symlinkSync(fileURLToPath(new URL('../../node_modules', import.meta.url)), join(root, 'node_modules'))
+  mkdirSync(join(root, 'spec/first100/exec'), { recursive: true })
+  return { root, sha, script: join(root, 'scripts/first100/generate-ledger.mjs') }
+}
+
+/**
+ * Runs `generate-ledger.mjs` in a scratch repository holding a freeze of `entry` alone and one report.
  * @param entry - the freeze's only entry.
  * @param report - the report's file name, the test files it ran, and the exit code its step records beside it (0 when
  *   omitted); it sits in a directory named after the scratch repository's commit, which is the candidate.
@@ -1420,15 +1437,7 @@ function runLedgerInScratchRepo(
   report: { name: string; files: readonly string[]; exitCode?: number },
   cellArgs: readonly string[],
 ): { status: number | null; output: string; reportPath: string } {
-  // The real path, because the script runs its CLI only when argv[1] equals its own module path.
-  const root = realpathSync(makeGitFixture())
-  const sha = commit(root, 'fixture', 'fixture\n')
-  mkdirSync(join(root, 'scripts/first100'), { recursive: true })
-  for (const name of readdirSync(new URL('.', import.meta.url)).filter(file => file.endsWith('.mjs'))) {
-    copyFileSync(new URL(name, import.meta.url), join(root, 'scripts/first100', name))
-  }
-  symlinkSync(fileURLToPath(new URL('../../node_modules', import.meta.url)), join(root, 'node_modules'))
-  mkdirSync(join(root, 'spec/first100/exec'), { recursive: true })
+  const { root, sha, script } = scratchLedgerRepo()
   writeFileSync(join(root, 'spec/first100/exec/command-freeze.json'), JSON.stringify({ entries: [entry] }))
   mkdirSync(join(root, sha))
   const reportPath = `${sha}/${report.name}`
@@ -1437,7 +1446,6 @@ function runLedgerInScratchRepo(
   writeFileSync(join(root, reportPath.replace(/\.json$/u, '.exit.json')), JSON.stringify({ exitCode: report.exitCode ?? 0 }))
   const ciRunUrl = `https://github.com/${PROGRAM_CI_REPO}/actions/runs/1`
   const args = [...cellArgs, '--report', reportPath, '--ci-run-url', ciRunUrl, '--candidate-sha', sha]
-  const script = join(root, 'scripts/first100/generate-ledger.mjs')
   const result = spawnSync(process.execPath, [script, ...args], { cwd: root, encoding: 'utf8' })
   return { status: result.status, output: `${result.stdout}${result.stderr}`, reportPath }
 }
@@ -1546,6 +1554,25 @@ describe('generate-ledger.mjs refuses to green a cell from a report whose step r
     const { status, output, reportPath } = runLedgerInScratchRepo(e2eBase, failedStep, ['--epic', 'P4-05', '--stage', 'U'])
     expect(output).toContain(refusal(reportPath, 'P4-05.U'))
     expect(status).toBe(1)
+  })
+})
+
+describe('generate-ledger.mjs --check does not apply the BLOCKED-326 exit refusal to a cell greened before it', () => {
+  it('passes a ledger whose GREEN cell absorbed flakes, has no exitOverride, and has no exit record beside its report', () => {
+    // Twelve cells were greened under BLOCKED-007 item 3 before the exit record existed. The delegate ruled on
+    // 2026-09-24 that only a cell being recorded is checked, so --check does not turn red over them.
+    const { root, script } = scratchLedgerRepo()
+    const observationReportPath = 'ci-run-1/vitest-report.json'
+    mkdirSync(join(root, 'ci-run-1'))
+    writeFileSync(join(root, observationReportPath), JSON.stringify({ success: false, testResults: [] }))
+    const cell = { status: 'GREEN', observationReportPath, absorbedFlakes: ['suite known flake test'] }
+    writeFileSync(join(root, 'spec/first100/exec/ledger.json'), JSON.stringify({
+      generatedBy: 'scripts/first100/generate-ledger.mjs',
+      rows: { 'P4-05': { status: 'BLOCKED_ON_ACCEPTANCE', cells: { U: cell }, supplements: {} } },
+    }))
+    const result = spawnSync(process.execPath, [script, '--check'], { cwd: root, encoding: 'utf8' })
+    expect(`${result.stdout}${result.stderr}`).toContain('verify: ')
+    expect(result.status).toBe(0)
   })
 })
 
