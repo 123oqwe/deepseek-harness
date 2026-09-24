@@ -819,9 +819,11 @@ jobs:
       # they are about rather than a silently emptied suite.
       #
       # No `continue-on-error`: the point is to observe this half, and a red
-      # that does not show is not an observation.
+      # that does not show is not an observation. `-rA` prints a summary line
+      # for every case, PASSED included, so the log names the Python cases a
+      # sign-off cites; it changes what is reported, not what passes.
       - name: Run complete keyless Python suite
-        run: uv run --python 3.10 --group test --project python/sdk pytest
+        run: uv run --python 3.10 --group test --project python/sdk pytest -rA
 
   narrow-python:
     name: narrow keyless Python SDK suite @ exact SHA
