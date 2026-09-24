@@ -29,7 +29,7 @@ import { isBuiltin } from 'node:module'
 import { dirname, resolve, sep } from 'node:path'
 import { load as parseYaml } from 'js-yaml'
 import ts from 'typescript'
-import { LAYER_ORDER, classifyEdge, validateExemptedCycle } from './layer-order.ts'
+import { LAYER_ORDER, classifyEdge, findShortestCycle, validateExemptedCycle } from './layer-order.ts'
 
 const GATE = 'check-layer-deps'
 const EXEMPTIONS_PATH = 'tests/first100/layer-cycle-exemptions.json'
@@ -1098,7 +1098,10 @@ export function runLayerDepsCheck(root) {
   }
 
   const productionEdges = edges.filter(edge => edge.detectionMethod === 'package-graph')
-  const { cycles, stale } = findUnexemptedCycles([...productionEdges, ...collectVendoredEdges(byPackage, vendored)], exemptions.exemptedCycles)
+  const cycleEdges = [...productionEdges, ...collectVendoredEdges(byPackage, vendored)]
+  const { stale } = findUnexemptedCycles(cycleEdges, exemptions.exemptedCycles)
+  const shortest = findShortestCycle(cycleEdges, exemptions.exemptedCycles)
+  const cycles = shortest.shortestCycle !== undefined && !shortest.isExempted ? [shortest.shortestCycle] : []
   for (const [index, cycle] of cycles.entries()) {
     violations.push({
       rule: 'unexempted-cycle',
