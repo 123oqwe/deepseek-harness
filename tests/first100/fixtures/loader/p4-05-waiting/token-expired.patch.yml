@@ -1,0 +1,10 @@
+# Layered over `./base.patch.yml` for BLOCKED-330's case: the shipped
+# `capability-tokens` row with a session token that expires one millisecond
+# after it is issued, which is where a session that outlives the row's default
+# 24-hour TTL ends up. A patch replaces a row's whole `config`, so the base
+# row's two keys are restated unchanged.
+- id: capability-tokens
+  config:
+    directory: !!js dshHomePath('capability-tokens')
+    requireForTools: true
+    sessionTokenTtlMs: 1
