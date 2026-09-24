@@ -13,6 +13,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context } from '@deepseek-ai/cordis'
 import AgentRegistry from '@deepseek-ai/dsh-agent'
+import type { Agent } from '@deepseek-ai/dsh-agent'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import LlmRuntime from '@deepseek-ai/dsh-llm'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
@@ -23,7 +24,9 @@ import { WorkflowRunId } from '@deepseek-ai/dsh-workflow'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
 import { TrackedContexts } from '@deepseek-ai/dsh-agent-loop-testkit'
+import { RunId } from '@deepseek-ai/dsh-principal/types'
 import RunPlugin, { createFileRunStore, RUN_SERVICE_OWNER_ID, RunService, workflowRefOf } from '../src/index.ts'
+import type { RunProvenance } from '../src/types.ts'
 
 const roots: string[] = []
 /**
@@ -166,6 +169,68 @@ describe('RunPlugin agent-session association', () => {
     expect(stored.get(alphaRun)?.sessionIds).toStrictEqual([alpha.id, gamma.id])
     expect(stored.get(betaRun)?.sessionIds).toStrictEqual([beta.id])
     expect(stored.get(gammaRun)?.sessionIds).toStrictEqual([gamma.id])
+  })
+})
+
+describe('P8-01 acceptance[4]: a subagent\'s Run takes the provenance of the Run its parent agent is in (blind review B1)', () => {
+  const fromA = { negotiation: { protocolVersion: 1, agreedCapabilities: [], ignoredCapabilities: ['x-from-a'], downgrades: [] } }
+  const fromB = { negotiation: { protocolVersion: 1, agreedCapabilities: [], ignoredCapabilities: ['x-from-b'], downgrades: [] } }
+  const FINISHED = RunId('run-finished-by-a')
+
+  /**
+   * A store in which session-alpha already has a finished Run carrying SDK connection A's negotiation, as a session
+   * has when a host continues it after that connection shut down.
+   * @returns the store path.
+   */
+  async function storeWithFinishedRun(): Promise<string> {
+    const path = await storePath()
+    const seeded = await RunService.restore(createFileRunStore(path))
+    await seeded.accept(FINISHED, SessionId('session-alpha'), 1_000)
+    await seeded.recordProvenance(FINISHED, fromA)
+    expect((await seeded.advance(FINISHED, 'cancelled', [], 1_100)).accepted).toBe(true)
+    return path
+  }
+
+  /**
+   * Start a subagent of `parent`, then read its Run's provenance once every write has settled.
+   * @returns the provenance the store holds for the subagent's Run.
+   */
+  async function childProvenance(ctx: Context, path: string, parent: Agent): Promise<RunProvenance | undefined> {
+    const { agent: child } = await parent.ctx.agents.create({
+      sessionId: SessionId('session-gamma'), parentAgent: parent, meta: { parentSession: parent.id },
+    })
+    const childRun = child.runId!
+    await ctx.fiber.dispose()
+    return (await RunService.restore(createFileRunStore(path))).get(childRun)?.provenance
+  }
+
+  it('gives none when the parent\'s current Run has none, though a finished Run of its session does', async () => {
+    const path = await storeWithFinishedRun()
+    const ctx = await harness(path)
+    const alpha = await ctx.agentLoop.create(SessionId('session-alpha'))
+    // The finished Run is not continued: alpha works in a Run of its own, which carries no provenance.
+    expect(alpha.runId).not.toBe(FINISHED)
+
+    expect(await childProvenance(ctx, path, alpha)).toBeUndefined()
+  })
+
+  it('gives the provenance of the parent\'s current Run, not a finished one\'s', async () => {
+    const path = await storeWithFinishedRun()
+    const ctx = await harness(path)
+    const alpha = await ctx.agentLoop.create(SessionId('session-alpha'))
+    await ctx.runs.service.recordProvenance(alpha.runId!, fromB)
+
+    expect(await childProvenance(ctx, path, alpha)).toEqual(fromB)
+  })
+
+  it('gives none when the parent\'s own Run has reached a terminal state', async () => {
+    const path = await storePath()
+    const ctx = await harness(path)
+    const alpha = await ctx.agentLoop.create(SessionId('session-alpha'))
+    await ctx.runs.service.recordProvenance(alpha.runId!, fromA)
+    expect((await ctx.runs.service.advance(alpha.runId!, 'cancelled', [], Date.now())).accepted).toBe(true)
+
+    expect(await childProvenance(ctx, path, alpha)).toBeUndefined()
   })
 })
 
