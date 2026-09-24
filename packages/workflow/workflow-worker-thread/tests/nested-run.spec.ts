@@ -475,6 +475,27 @@ describe('P4-09 must[3]: a nested run\'s children inherit its DECAYED capability
     }
   }, 30_000)
 
+  it('gives a detached run\'s session its launcher\'s cwd, not the process\'s (BLOCKED-324)', async () => {
+    // On the headless launch the two are the same directory, so a run that
+    // took `process.cwd()` would pass there; this launcher works elsewhere.
+    const { ctx } = await tokenSetup()
+    const launcherCwd = mkdtempSync(join(tmpdir(), 'dsh-detached-launcher-cwd-'))
+    tokenRoots.push(launcherCwd)
+    expect(launcherCwd).not.toBe(process.cwd())
+    const launcher = await ctx.agents.create({ sessionId: SessionId('detached-cwd-launcher'), meta: { cwd: launcherCwd } })
+    await ctx.capabilityTokens.whenSessionToken(launcher.agent.id)
+    const headers: { readonly parentSession?: unknown; readonly cwd?: unknown }[] = []
+    ctx.on('session/created', (session) => { headers.push(session.header) })
+
+    const run = await ctx.workflowEngine.startDetached({ script: "return 'settled'", meta: META, parent: launcher.agent })
+    expect((await run.result).stopReason).toBe('completed')
+
+    const runHeader = headers.find(header => header.parentSession === launcher.agent.id)
+    expect(runHeader?.cwd).toBe(launcherCwd)
+    await run.dispose()
+    await launcher.dispose()
+  }, 30_000)
+
   it('is REACHABLE by run id while it runs, and the same handle comes back', async () => {
     // What makes a detached run usable at all: it outlives the turn that
     // launched it, so the handle that turn was given is exactly what a later
