@@ -120,10 +120,13 @@ const GIT_READS_THE_WORKING_TREE = ['-c', 'core.fsmonitor=false', '-c', 'core.ch
 /**
  * The working tree against `baseSha` as one patch: `git diff --binary` for
  * tracked files, then each untracked file as a binary diff against /dev/null,
- * in path order. The untracked files are those git does not ignore, plus every
- * untracked `.gitignore`, ignored or not, because a new `.gitignore` can ignore
- * itself and the files beside it. The evidence package's own output file and
- * sidecar directory are left out, because the package cannot describe itself.
+ * in path order. The untracked files are those the tree's `.gitignore` files do
+ * not ignore, plus every untracked `.gitignore`, ignored or not, because a new
+ * `.gitignore` can ignore itself and the files beside it. Rules outside the
+ * tree, in `.git/info/exclude` or `core.excludesFile`, are not read, so a rule
+ * added there after collection hides nothing. The evidence package's own output
+ * file and sidecar directory are left out, because the package cannot describe
+ * itself.
  * Both diffs run with `--no-ext-diff --no-textconv`, so the patch is git's own
  * whatever external diff program or textconv filter the git configuration
  * names, and every call overrides {@link GIT_READS_THE_WORKING_TREE}. Each
@@ -151,8 +154,8 @@ export function workingTreePatch(repoRoot, baseSha, outPath) {
   const others = (options, pathspec) => run(['ls-files', '--others', ...options, '-z', ...pathspec]).split('\0')
     .filter(path => path !== '' && path !== ownFile && !path.startsWith(ownDir))
   const untracked = [...new Set([
-    ...others(['--exclude-standard'], []),
-    ...others(['--ignored', '--exclude-standard'], ['--', ':(glob)**/.gitignore']),
+    ...others(['--exclude-per-directory=.gitignore'], []),
+    ...others(['--ignored', '--exclude-per-directory=.gitignore'], ['--', ':(glob)**/.gitignore']),
   ])].sort()
   // The attributes decide, not the configuration: a filter defined for no path,
   // such as a global git-lfs install, changes no comparison.
