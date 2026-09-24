@@ -18,7 +18,6 @@
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type {
   ArtifactRef,
-  CallDigest,
   ChildReceipt,
   JournalEntry,
   PhaseName,
@@ -109,7 +108,6 @@ export function createJournalRecorder(
         output: null,
         childReceipts: [brandString<ChildReceipt>(start.childId)],
         sideEffectReceipts: [],
-        ...start.call === undefined ? {} : { call: brandString<CallDigest>(start.call) },
         verified: false,
       })
     },
