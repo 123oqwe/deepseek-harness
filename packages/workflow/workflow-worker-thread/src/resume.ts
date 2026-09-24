@@ -160,7 +160,7 @@ export async function reusableSteps(
   const journal = readJournal(directory, runId)
   if (journal === undefined) return { reusable: {}, journal: undefined }
   const plan = planResume(journal, scriptDigestOf(body))
-  if (!plan.resumable) return { reusable: {}, journal: undefined, refused: { reason: plan.reason, detail: plan.detail } }
+  if (!plan.resumable) return { reusable: {}, journal: undefined }
 
   const reusable: Record<number, string> = {}
   for (const entry of journal.entries) {
