@@ -6085,7 +6085,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'Run',
-    declaration: 'export interface Run {\n    readonly id: RunId;\n    readonly state: RunState;\n    readonly ownerId: RunOwnerId;\n    readonly sessionIds: readonly [\n        SessionId,\n        ...SessionId[]\n    ];\n    readonly createdAt: number;\n    readonly events: readonly [\n        RunEvent,\n        ...RunEvent[]\n    ];\n}',
+    declaration: 'export interface Run {\n    readonly id: RunId;\n    readonly state: RunState;\n    readonly ownerId: RunOwnerId;\n    readonly sessionIds: readonly [\n        SessionId,\n        ...SessionId[]\n    ];\n    readonly createdAt: number;\n    readonly events: readonly [\n        RunEvent,\n        ...RunEvent[]\n    ];\n    readonly provenance?: RunProvenance;\n}',
   },
   {
     name: 'RunEntityReference',
@@ -6112,12 +6112,20 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type RunLeaseDenial = {\n    readonly reason: \'store-unavailable\';\n} | {\n    readonly reason: \'held-by-another\';\n    readonly holder: WorkerId | undefined;\n} | {\n    readonly reason: \'fenced-out\';\n    readonly currentEpoch: number;\n} | {\n    readonly reason: \'stopped\';\n};',
   },
   {
+    name: 'RunNegotiation',
+    declaration: 'export interface RunNegotiation {\n    readonly protocolVersion: number;\n    readonly agreedCapabilities: readonly string[];\n    readonly ignoredCapabilities: readonly string[];\n    readonly downgrades: readonly {\n        readonly capability: string;\n        readonly reason: string;\n        readonly adapter: string;\n    }[];\n}',
+  },
+  {
     name: 'RunnerFailureRule',
     declaration: 'export interface RunnerFailureRule {\n    allowedExitCodes?: readonly number[];\n    fatalSignatures: readonly string[];\n    informationalLines?: readonly string[];\n}',
   },
   {
     name: 'RunOwnerId',
     declaration: 'export type RunOwnerId = Branded<\'RunOwnerId\'>;',
+  },
+  {
+    name: 'RunProvenance',
+    declaration: 'export interface RunProvenance {\n    readonly negotiation: RunNegotiation;\n}',
   },
   {
     name: 'RunState',

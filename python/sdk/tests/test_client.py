@@ -16,6 +16,7 @@ from deepseek_harness import (
     DeepSeekHarnessConfig,
     HarnessClient,
     HarnessConfig,
+    InitializeResponse,
     Notification,
     RunResult,
     SdkProtocolError,
@@ -1277,3 +1278,87 @@ for line in sys.stdin:
         assert "capabilities" not in sent
         assert harness.handshake is not None
         assert harness.handshake.hostControl is None
+
+# --- P8-01 acceptance[0] and P0-06 acceptance[1]: the initialize reply keeps what the peer sent ---------------------
+
+_P801_DOWNGRADE = {"capability": "replay", "reason": "peer predates replay", "adapter": "compat-v0"}
+
+
+def _p801_schema_fingerprint() -> str:
+    """The fingerprint the committed control-protocol artifact records, which the real server sends."""
+    document = json.loads((Path(__file__).parents[3] / "spec" / "control-protocol.schema.json").read_text())
+    return str(document["fingerprint"])
+
+
+def _p801_initialize(tmp_path: Path, result: dict[str, object]) -> InitializeResponse:
+    """Run the real client's initialize against a scripted peer that replies with ``result``."""
+    script = tmp_path / "fake_dsh.py"
+    script.write_text(
+        """
+import json
+import os
+import sys
+
+for line in sys.stdin:
+    msg = json.loads(line)
+    method = msg.get("method")
+    if method == "initialize":
+        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": json.loads(os.environ["P801_RESULT"])}), flush=True)
+    elif method == "shutdown":
+        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {}}), flush=True)
+        break
+""".strip()
+    )
+    with HarnessClient(
+        HarnessConfig(env={"P801_RESULT": json.dumps(result)}),
+        _launch_args=(sys.executable, str(script)),
+    ) as client:
+        return client.initialize(provider="deepseek-official", cwd="/workspace", model="dsagent")
+
+
+def _p801_reply(**overrides: object) -> dict[str, object]:
+    reply: dict[str, object] = {
+        "serverInfo": {"name": "fake-dsh", "version": "0.0.1"},
+        "negotiation": {"protocolVersion": 1, "agreedCapabilities": [], "ignoredCapabilities": ["x-never-heard"], "downgrades": []},
+        "protocolVersions": {"min": 1, "max": 1},
+        "schemaFingerprint": _p801_schema_fingerprint(),
+    }
+    reply.update(overrides)
+    return reply
+
+
+def test_initialize_keeps_protocol_versions_from_the_wire(tmp_path: Path) -> None:
+    init = _p801_initialize(tmp_path, _p801_reply())
+    # A declared field, not a key an extra-allowing model happened to keep.
+    assert "protocolVersions" in type(init).model_fields
+    assert init.protocolVersions is not None
+    assert (init.protocolVersions.min, init.protocolVersions.max) == (1, 1)
+
+
+def test_initialize_keeps_schema_fingerprint_from_the_wire(tmp_path: Path) -> None:
+    init = _p801_initialize(tmp_path, _p801_reply())
+    assert "schemaFingerprint" in type(init).model_fields
+    assert init.schemaFingerprint == _p801_schema_fingerprint()
+
+
+def test_initialize_keeps_a_non_empty_downgrade_from_the_wire(tmp_path: Path) -> None:
+    negotiation = {"protocolVersion": 1, "agreedCapabilities": [], "ignoredCapabilities": [], "downgrades": [_P801_DOWNGRADE]}
+    init = _p801_initialize(tmp_path, _p801_reply(negotiation=negotiation))
+    assert init.negotiation is not None
+    assert "downgrades" in type(init.negotiation).model_fields
+    [downgrade] = init.negotiation.downgrades
+    assert (downgrade.capability, downgrade.reason, downgrade.adapter) == ("replay", "peer predates replay", "compat-v0")
+
+
+def test_initialize_keeps_an_unknown_optional_field_from_a_newer_minor_server(tmp_path: Path) -> None:
+    init = _p801_initialize(tmp_path, _p801_reply(futureOptional={"x": 1}))
+    assert init.model_extra is not None
+    assert init.model_extra["futureOptional"] == {"x": 1}
+
+
+def test_initialize_keeps_an_unknown_optional_field_nested_in_the_negotiation(tmp_path: Path) -> None:
+    negotiation = {"protocolVersion": 1, "agreedCapabilities": [], "ignoredCapabilities": [], "downgrades": [], "futureNested": {"y": 2}}
+    init = _p801_initialize(tmp_path, _p801_reply(negotiation=negotiation))
+    assert init.negotiation is not None
+    assert init.negotiation.model_extra is not None
+    assert init.negotiation.model_extra["futureNested"] == {"y": 2}
