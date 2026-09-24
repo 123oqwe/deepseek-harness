@@ -53,6 +53,8 @@
  */
 import { generateKeyPairSync, sign, verify, type KeyObject } from 'node:crypto'
 import { Context } from '@deepseek-ai/cordis'
+import { readFileSync } from 'node:fs'
+void readFileSync
 import type {
   TrustKernel,
   TrustKernelAuditAppend,
