@@ -37,6 +37,7 @@ import {
   checkCiRunUrlCorrection,
   checkCoverageClosure,
   closureFailuresForAcceptedRows,
+  configFrozenReportRefusal,
   coverageArtifactDrift,
   checkDelegateSignoff,
   checkFailureSetAgainstFlakeRegistry,
@@ -1300,5 +1301,32 @@ describe('the exact-SHA observation artifact carries every e2e step\'s json repo
       expect(uploaded).toContain(/--outputFile=(\S+)/u.exec(step.run ?? '')?.[1])
       expect(steps.indexOf(step)).toBeLessThan(upload)
     }
+  })
+})
+
+describe('configFrozenReportRefusal: --supplement observes an e2e-frozen entry through its e2e report', () => {
+  const acp = 'apps/cli/tests/profiles/acp/tests/acp.e2e.ts'
+  const e2eFrozen = ['pnpm', 'exec', 'vitest', 'run', '--config', 'vitest.e2e.config.ts', acp]
+  const fullSuite = ['/home/runner/work/r/r/apps/cli/tests/process-shutdown.spec.ts', '/home/runner/work/r/r/packages/g/p/tests/a.spec.ts']
+
+  it('refuses the full-suite report for an entry frozen under the e2e config, naming the file that report never ran', () => {
+    expect(configFrozenReportRefusal(e2eFrozen, fullSuite))
+      .toBe(`the entry is frozen under --config vitest.e2e.config.ts, and the report ran none of ${acp}; `
+        + 'its observation is the report of that command, which first100-exact-sha.yml uploads as vitest-e2e-*.json beside the full-suite report')
+  })
+
+  it('accepts the report the entry\'s own e2e command wrote', () => {
+    expect(configFrozenReportRefusal(e2eFrozen, [`/home/runner/work/r/r/${acp}`])).toBeNull()
+  })
+
+  it('reads the -c spelling of the config, wherever it sits in the argv', () => {
+    const shortForm = ['pnpm', 'exec', 'vitest', 'run', 'packages/g/p/tests/x.e2e.ts', '-c', 'vitest.e2e.config.ts', '--reporter=json']
+    expect(configFrozenReportRefusal(shortForm, fullSuite)).toMatch(
+      /^the entry is frozen under --config vitest\.e2e\.config\.ts, and the report ran none of packages\/g\/p\/tests\/x\.e2e\.ts;/u,
+    )
+  })
+
+  it('leaves an entry frozen under the default config to the full-suite report, whatever that report ran', () => {
+    expect(configFrozenReportRefusal(['pnpm', 'exec', 'vitest', 'run', 'packages/g/q/tests/b.spec.ts', '--reporter=json'], fullSuite)).toBeNull()
   })
 })

@@ -65,7 +65,10 @@
  *   node scripts/first100/generate-ledger.mjs --supplement --epic <id> \
  *     --stage <C|P|U|F> --supplement-seq <n> --report <path> \
  *     --ci-run-url <url> --candidate-sha <sha>
- *     record a real observation for a supplement entry (BLOCKED-005).
+ *     record a real observation for a supplement entry (BLOCKED-005). For an
+ *     entry frozen under its own `--config` (an e2e entry), `--report` is the
+ *     report that command wrote, `vitest-e2e-*.json` in the observation
+ *     artifact; a report that did not run the entry's test paths is refused.
  *   node scripts/first100/generate-ledger.mjs --record-signoff --epic <id> \
  *     --conclusion PASS|WITHDRAWN [--reason <text>] [--user-confirmation-ref <ref>] [--note <text>] \
  *     [--delegate-session <name>]
@@ -917,6 +920,44 @@ function assertReportDirMatchesCandidate(reportPath, candidateSha) {
 }
 
 /**
+ * Why a report cannot observe an entry frozen under its own vitest config, or `null` when it can.
+ *
+ * The full-suite observation is a run of the default config, so it never
+ * contains a file that only another config includes. An entry frozen as
+ * `vitest run --config vitest.e2e.config.ts <file>` (P4-05.U.4) is observed by
+ * the report that command wrote, which `first100-exact-sha.yml` uploads as
+ * `vitest-e2e-*.json` beside the full-suite report; that report must have run
+ * every test path the frozen argv names. An argv that names no config returns
+ * `null`, so the full-suite report observes it as before.
+ * @param argv - the frozen entry's `argv`.
+ * @param reportFiles - the report's `testResults[].name`, absolute on the machine that ran it.
+ * @returns the refusal, or `null`.
+ */
+export function configFrozenReportRefusal(argv, reportFiles) {
+  let config
+  const paths = []
+  for (let index = argv.indexOf('run') + 1; index < argv.length; index += 1) {
+    const token = argv[index]
+    if (token === '--config' || token === '-c') {
+      config = argv[index + 1]
+      index += 1
+    } else if (token.startsWith('--config=')) {
+      config = token.slice('--config='.length)
+    } else if (token === '-t' || token === '--testNamePattern') {
+      index += 1
+    } else if (!token.startsWith('-')) {
+      paths.push(token.replace(/^\.\//u, '').replace(/\/+$/u, ''))
+    }
+  }
+  if (config === undefined) return null
+  const files = reportFiles.map((name) => `/${name.replace(/^\/+/u, '')}`)
+  const notRun = paths.filter((path) => !files.some((file) => file.endsWith(`/${path}`) || file.includes(`/${path}/`)))
+  if (notRun.length === 0) return null
+  return `the entry is frozen under --config ${config}, and the report ran none of ${notRun.join(', ')}; `
+    + 'its observation is the report of that command, which first100-exact-sha.yml uploads as vitest-e2e-*.json beside the full-suite report'
+}
+
+/**
  * Refuse a candidate SHA no commit in this repository has.
  *
  * The format check alone accepted `2aa43619f3d0b0b8...` — forty valid hex
@@ -1192,7 +1233,12 @@ function cmdGreenSupplement() {
     console.error(`report not found: ${reportPath}`)
     process.exit(1)
   }
-  const { raw, titles, matchCounts, failedFullNames, exit } = parseVitestJsonReport(reportPath)
+  const { raw, report, titles, matchCounts, failedFullNames, exit } = parseVitestJsonReport(reportPath)
+  const notObserved = configFrozenReportRefusal(frozen.argv, (report.testResults ?? []).map((file) => String(file.name)))
+  if (notObserved !== null) {
+    console.error(`BLOCKED: --report ${reportPath} cannot observe ${epic}.${stage}.${supplementSeq}: ${notObserved}`)
+    process.exit(1)
+  }
   const observationSha256 = sha256(raw)
 
   const existing = existsSync(LEDGER_PATH) ? loadJson(LEDGER_PATH) : { rows: buildSkeleton(null) }
