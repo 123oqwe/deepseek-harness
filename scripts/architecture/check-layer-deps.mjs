@@ -768,7 +768,6 @@ function collectKernelNonWorkspaceEdges(root, byPackage, vendoredNames, workspac
         }
         // `import '…'`, `import {} from`, `export * from`, `export * as ns from`
         // and `export {} from` bind no name and still depend on the module.
-        if (labels.length === 0) labels.push(isImport ? '*' : 'export *')
         for (const label of labels) addUse(moduleSpecifier.text, label, file)
       }
       const { importedFiles, typeReferenceDirectives } = ts.preProcessFile(text, true, true)
