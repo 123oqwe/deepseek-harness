@@ -473,6 +473,14 @@ export function parseVitestJsonReport(reportPath) {
 }
 
 /**
+ * BLOCKED-326 PRECHECK stub: refuses nothing, as the ledger did before the fix, which replaces it.
+ * @returns `null`.
+ */
+export function recordedExitRefusal() {
+  return null
+}
+
+/**
  * Maintainer decision BLOCKED-007 item 3 (2026-09-01): checks a CI
  * observation's real failing-test set against the flake registry
  * (`spec/first100/exec/flake-registry.json`). When every failing test's
