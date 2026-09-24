@@ -149,7 +149,6 @@ export function parseDshArgs(argv: readonly string[], version: string): DshInvoc
     // know; everything from there on belongs to the booted app, including
     // its -h. `dsh -h` with no profile still prints this help, below.
     .helpOption(false)
-    .allowUnknownOption()
     .passThroughOptions()
     .enablePositionalOptions()
     .argument('[args...]', 'arguments for the booted profile\'s app (see: dsh --profile <name> --help)')
