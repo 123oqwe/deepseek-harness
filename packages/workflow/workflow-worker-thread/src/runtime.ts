@@ -352,7 +352,7 @@ export class WorkflowExecution {
     const recorded = this.reusable[seq]
     if (recorded !== undefined) {
       try {
-        return JSON.parse(recorded) as unknown
+        void (JSON.parse(recorded) as unknown)
       } catch {
         // Only a journal written before outputs were recorded holds a non-JSON
         // output, the placeholder `agent-result-<seq>`: nothing reusable was
