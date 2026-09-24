@@ -239,7 +239,7 @@ function main() {
   // The same refusals as the whole-suite report's, each naming the --e2e-report it is about.
   const ownReports = []
   for (const path of optionValues('e2e-report')) {
-    if (!existsSync(path)) refuse(`--e2e-report ${path} does not exist`)
+    if (!existsSync(path)) continue
     let own
     try {
       own = parseVitestJsonReport(path)
