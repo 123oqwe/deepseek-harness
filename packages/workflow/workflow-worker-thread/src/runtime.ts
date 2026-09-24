@@ -33,7 +33,12 @@ import type { ChildHandle, ChildPort, WorkerLimits } from './types.ts'
 export interface ExecutionObserver {
   phase(title: string): void
   log(message: string): void
-  agentStart(info: WorkflowAgentInfo): void
+  /**
+   * One `agent()` call started a child.
+   * @param info - the call.
+   * @param call - the call's identity (`callDigestOf`), which the host journals so a resume reuses the step only for the same call.
+   */
+  agentStart(info: WorkflowAgentInfo, call: string): void
   /**
    * One `agent()` call settled.
    * @param info - the call and how it settled.
@@ -112,8 +117,13 @@ export class WorkflowExecution {
     private readonly children: ChildPort,
     /** Recorded outputs this resumed run may reuse, by step sequence. */
     private readonly reusable: Record<number, string> = {},
-    /** The call identity each reusable step was recorded under, by step sequence. */
-    _reusableCalls?: Record<number, string>,
+    /**
+     * The call identity each reusable step was recorded under, by step
+     * sequence. A step is reused only for a call with the same identity; the
+     * host always passes this, and a direct construction without it reuses
+     * steps by sequence alone.
+     */
+    private readonly reusableCalls?: Record<number, string>,
   ) {
     // Compile FIRST: a body syntax error must throw out of the constructor
     // before any realm state exists. The host pre-parses the identical
@@ -353,6 +363,7 @@ export class WorkflowExecution {
       throw new WorkflowError('agent() requires a non-empty prompt string', 'INVALID_ARGUMENT')
     }
     const opts = this.readAgentOptions(rawOpts)
+    const call = callDigestOf(rawPrompt, opts)
     if (this.started >= this.limits.maxTotalAgents) {
       throw new WorkflowError(
         `this run reached its total agent cap (${this.limits.maxTotalAgents}) — a runaway-loop backstop; raise the applicable maxTotalAgents limit if the scale is intentional`,
@@ -367,8 +378,11 @@ export class WorkflowExecution {
     // start counter: a reused step acquires no slot, emits no observer event,
     // and must not be credited with a child it did not start — reporting one
     // would put a second receipt in the journal for work that happened once.
+    // Only for the call that recorded it: step numbers follow call order, which
+    // changed arguments or completion order can move, so a number alone does
+    // not say whose output was recorded under it.
     const recorded = this.reusable[seq]
-    if (recorded !== undefined) {
+    if (recorded !== undefined && (this.reusableCalls === undefined || this.reusableCalls[seq] === call)) {
       try {
         return JSON.parse(recorded) as unknown
       } catch {
@@ -414,7 +428,7 @@ export class WorkflowExecution {
         throw this.cancelledError()
       }
       const info: WorkflowAgentInfo = { seq, label, ...phase !== undefined ? { phase } : {}, childId: brandString<SessionId>(run.id) }
-      this.observer.agentStart(info)
+      this.observer.agentStart(info, call)
       try {
         let result
         try {

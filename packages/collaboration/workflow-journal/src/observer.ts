@@ -23,6 +23,8 @@ export interface AgentStartEvent {
   readonly label: string
   readonly phase?: string
   readonly childId: string
+  /** The call's identity, which the journal records with the step. */
+  readonly call?: string
 }
 
 /** The agent-end shape, carrying how the call settled. */
@@ -80,6 +82,7 @@ export function journalingObserver(
           label: event.label,
           childId: event.childId,
           ...(event.phase === undefined ? {} : { phase: event.phase }),
+          ...(event.call === undefined ? {} : { call: event.call }),
         },
         classify(event),
       )

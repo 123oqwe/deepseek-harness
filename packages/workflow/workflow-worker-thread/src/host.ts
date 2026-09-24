@@ -438,8 +438,8 @@ export class WorkerRun implements WorkflowRun {
         break
       case WorkerToHostType.AgentStart:
         this.liveAgents.set(message.info.seq, message.info)
-        this.journaling.onAgentStart(message.info)
-        this.observer.agentStart(message.info)
+        this.journaling.onAgentStart({ ...message.info, call: message.call })
+        this.observer.agentStart(message.info, message.call)
         break
       case WorkerToHostType.AgentEnd:
         // NOT suppressed on cancel: cancelled children report their paired

@@ -46,6 +46,11 @@ export interface WorkerInit {
    * asserted.
    */
   reusable?: Record<number, string>
+  /**
+   * The call identity each `reusable` step was recorded under, by step
+   * sequence: the worker reuses a step only for a call with the same identity.
+   */
+  reusableCalls?: Record<number, string>
 }
 
 /** What the worker asks the host to start for one `agent()` call (options already validated worker-side). */
