@@ -15180,6 +15180,45 @@
       },
       "note": "P1-08's first U supplement, second version. It supersedes the first (frozenAtUtc 2026-09-24T04:19:38Z) after the blind review blind-a234fb0efa-5e0c704c87 found that \"plugin code does not run\" was measured at `apply` only and that the refused-capability bundle bound \"required\" to \"security-critical\" (lane A inbox A-338).\n\nOne real `dsh --profile compat` launch through `runLoaderSmoke` and the real `dsh` bin, with no trust-kernel opt-out (the launch pins the kernel as production does), carries seven staged bundle packages, each its own Loader plugin writing an EVALUATED marker from its module's top level and a MOUNTED marker from `apply`. Refused, never evaluated, each exclusion line on the launcher's stderr whole: a bundle missing a required capability that is not security-critical, one missing a required security-critical capability, one declaring `sdk-protocol:InitializeParams` at a major above the one the host registers, and one below it. Admitted, evaluated and mounted: the same schema id at the registered major (the control separating a major mismatch from an unknown id), a bundle missing only an optional capability with the disabled capability on stderr whole, and a bundle declaring nothing it cannot get, whose plugin ends the process from the launcher's readiness signal.\n\nNo shipped composition declares `dsh.compat` (BLOCKED-272), so, per the delegate's standing rule S4, the negotiation is observed on staged third-party bundles and the sign-off states that nothing on the shipped product reaches it. `compat` is a profile the case builds, not a shipped template.\n\nWhat it does not observe: the display is observed on the dsh launcher's stderr only; desktop is owned by Electron and on the web and ACP surfaces a person may not see that stream (review (8)). No case exercises a function that needs the missing optional capability, so \"only the corresponding function is disabled\" is observed as the plugin running with the capability listed disabled.",
       "supersedes": "2026-09-24T04:19:38Z"
+    },
+    {
+      "epic": "P2-05",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-05",
+        "stage": "U"
+      },
+      "supplementSeq": 4,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P2-05.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-05 acceptance[2] (narrowed by C18): the policy service unmounted through the Loader on the shipped sdk-minimal composition control: before the unmount, a tool call is permitted by the mounted engine and its body runs",
+        "P2-05 acceptance[2] (narrowed by C18): the policy service unmounted through the Loader on the shipped sdk-minimal composition precondition: disabling the policy-engine row through the Loader withdraws the policy service",
+        "P2-05 acceptance[2] (narrowed by C18): the policy service unmounted through the Loader on the shipped sdk-minimal composition acceptance[2]: after the unmount the same tool call fails closed, refused as policy-unavailable, and its body never runs"
+      ],
+      "files": [
+        "tests/first100/fixtures/P2-05.composition.spec.ts",
+        "tests/first100/fixtures/P2-05.unmount-driver.ts",
+        "packages/policy/policy-enforcement/src/index.ts",
+        "packages/bundle/sdk-app/tests/fixtures/sdk-minimal-pep.patch.yml"
+      ],
+      "frozenAtUtc": "2026-09-24T05:37:54Z",
+      "dryRunProof": {
+        "treeSha": "89d9abf211174e6206172c56c6861d1f8f9e5583",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations off PRECHECK `5f290e1d314d803f40db394609fab54b051be79c` (the spec and driver alone), each its own commit touching `packages/policy/policy-enforcement/src/index.ts`, never merged, run by CI's narrow job at its own SHA over this entry's argv with a build first. MA (`17df76abc93da44327b2d00ee00068ba20b84b45`) makes `enforceAction` decide `{ effect: 'permit' }` when no policy service is mounted, instead of `decisionWhenUnavailable`: the enforcement point falls open when the provider is gone. MB (`79c489fe3a76c4966e1533cb5e55beeddd48d3b0`) makes `enforceAction` remember the last engine it saw per root and keep using it once `ctx.get('policy')` is undefined: the enforcement point never notices the unmount.",
+        "failureSummary": "Baseline: PRECHECK, narrow run 35959896512: 3 passed / 0 failed. MA, run 35959913337: exactly the acceptance[2] fail-closed case red. MB, run 35959932070: exactly the acceptance[2] fail-closed case red. All three match `artifacts/laneA/p2-05-acc2-unmount-expectations.json` (sha256 `4855bc53e8c2e6acce9e0ea76d950e14d31b0d5ca92a6704a3116d5b0b190cb8`), written before the case; the delegate compared them (lane A inbox A-345).\n\nEarlier dispatches are not readings. The first PRECHECK `88e679fa3b` (with MA `a80b22e41d`, MB `bd310943ec`) reported every case skipped, with and without a build; the diagnostic run 35959319725 showed the driver throwing `cannot resolve entry policy-engine` in `beforeAll`, because the composed rows live under the root include entry and the Loader tree resolves ids by full path. `5f290e1d31` fixed the driver; the spec and the expectations did not change."
+      },
+      "note": "P2-05's fourth U supplement: acceptance[2] as C18 narrowed it (\"Policy 服务不可被 Cordis replace，被卸载后 fail closed。\"), the unmount half, on the shipped `sdk-minimal` composition. The driver runs in a child process through `runLoaderSmoke`, boots the profile through `bootProductionProfile` over the BLOCKED-266 test overlay with the Trust Kernel pinned as `apps/cli/src/profile-boot.ts` pins it, drives one tool call (permitted, the tool body runs), disables the `policy-engine` row by appending `{ id: 'policy-engine', disabled: true }` to the root include entry's patches and awaiting the Loader, and drives the same call again: it is refused as `policy-unavailable`, the kernel audits `{ effect: 'deny', reason: 'policy-unavailable' }`, and the tool body does not run.\n\nThe unmount takes the path a running process takes: a new patch list on the include entry, which recomposes its subtree, is what `watchUserPatches` does on the live `web` profile. On the shipped product only that live patch reload on `web` unmounts the row at runtime; the other templates read patches at startup only, where a disabled row means the engine never mounted.\n\nNot observed here: the replace half of acceptance[2], which BLOCKED-313 records as evidenced; the refusal on a composition other than sdk-minimal."
     }
   ]
 }
