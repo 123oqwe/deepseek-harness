@@ -106,10 +106,12 @@ export type WorldSelection = WorldSelectionChoice | WorldSelectionRefusal
  * type: there is no partial result to return, so a caller cannot mistake a
  * weakened world for the requested one.
  *
- * Candidate order is the caller's registration order and the FIRST satisfying
- * provider wins. Deliberate: "most confined wins" would need a total order over
- * nine dimensions that nothing in this harness defines, and inventing one here
- * would silently re-rank a deployment's own preference.
+ * Candidates are consulted in the order the caller passes them, and the FIRST
+ * satisfying provider wins; the registry passes registration order, with each
+ * provider after every provider it yields to (`selectionOrder`). Deliberate:
+ * "most confined wins" would need a total order over nine dimensions that
+ * nothing in this harness defines, and inventing one here would silently
+ * re-rank a deployment's own preference.
  * @param spec - the requested world; an incomplete spec is refused before any provider is consulted.
  * @param providers - candidate providers in the deployment's own preference order.
  * @param policy - the deployment's rules; absent decides the answer by `unsatisfiableDimensions` alone, exactly as before this parameter

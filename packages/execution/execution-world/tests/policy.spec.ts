@@ -8,8 +8,9 @@
  * acceptance[0] (no DNS/IPv4/IPv6/localhost/unix-socket/proxy when network is
  * off) and acceptance[1] (`/proc`, ps and debug attach restricted) are NOT
  * here. Both need a provider that can actually sever a network or hide a
- * process, and the only provider on this tree refuses any `network` posture but
- * `unrestricted` (`local-provider.ts:93`). Asserting them against a mock would
+ * process, and neither provider on this tree, local or fenced, grants any
+ * `network` posture but `unrestricted` (`local-provider.ts:72`, a rule the
+ * fenced provider applies too). Asserting them against a mock would
  * prove the mock refuses — BLOCKED-156's shape — and acceptance[1] is platform
  * dependent besides (`/proc` does not exist on macOS).
  */

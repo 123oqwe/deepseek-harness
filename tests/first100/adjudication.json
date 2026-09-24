@@ -1851,7 +1851,7 @@
         "epic": "P3-10",
         "stage": "P",
         "path": "packages/execution/execution-world/src/fenced-provider.ts",
-        "reason": "The dimensions P3-10.P must enforce — CPU, memory, disk and processes — are exactly the ones local-provider refuses as unsatisfiable (local-provider.ts:102-117), and that refusal is its correct answer: a local world is the host process’s own confinement. So the stage adds a provider rather than changing that one. Network stays refused here too, deferred to a later stage by the same ruling, and this provider is a world-side implementation: the sandbox-local package’s platform chains are a different layer and no declaration of theirs is touched by it.",
+        "reason": "The ceilings P3-10.P is to enforce — CPU, memory and processes — are among the ones local-provider refuses as unsatisfiable (`localUnsatisfiableDimensions`, local-provider.ts:75 and :85-87), and that refusal is its correct answer: a local world is the host process’s own confinement. So the stage adds a provider rather than changing that one. A disk ceiling stays refused here until a per-spawn disk ceiling exists (P3-10 phase 3), and so does network, deferred to a later stage by the same ruling; this provider is a world-side implementation: the sandbox-local package’s platform chains are a different layer and no declaration of theirs is touched by it.",
         "declaredBy": [],
         "overlay": "none",
         "expectedAt": "stage",

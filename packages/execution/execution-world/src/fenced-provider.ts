@@ -7,11 +7,13 @@
  * question.** A ceiling is satisfiable exactly when `ctx.subprocess` says it
  * can hold that dimension right now: on a Linux host with a user scope that is
  * cpu, memory and processes; on a machine where spawns fall back, nothing. The
- * provider holds no ceiling itself — the shell tools read the bound world's
- * ceilings and hand them to every spawn they make (R4), and the subprocess
- * runtime refuses a spawn it cannot hold. So a world this provider creates is
- * one whose ceilings every wired spawn carries, and a world it cannot deliver is
- * refused here rather than created with ceilings nothing enforces.
+ * provider holds no ceiling itself. At this step a world's ceilings are only
+ * recorded, in its binding and in the policy fact: no spawn carries them until
+ * the shell tools read the bound world's ceilings and pass them to every spawn
+ * they make (R4, not wired yet). Until then a world this provider creates does
+ * not confine a command, and nothing should rely on it to. What it does now is
+ * refuse a world whose ceilings the runtime could not hold, so a ceiling that
+ * reaches a spawn once R4 is wired is one the runtime can enforce.
  *
  * Everything else is the local provider's rule, and three dimensions stay
  * refused regardless of the host: disk (no per-spawn disk ceiling exists yet,

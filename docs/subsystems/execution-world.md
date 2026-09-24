@@ -43,7 +43,7 @@ Attestation is handed to the Trust Kernel, which already publishes `sandboxAttes
 
 `selectWorldProvider` returns the first provider satisfying every dimension, or a refusal carrying each provider's unmet dimensions. It never returns the closest provider, the local one, or the request with the unmet dimension dropped. The return type is what prevents degradation: there is no partial result, so a caller cannot mistake a weakened world for the requested one.
 
-Candidate order is the deployment's registration order. "Most confined wins" would need a total order over nine dimensions that nothing here defines.
+Candidate order is the deployment's registration order, except that a provider comes after every registered provider it yields to (`yieldsTo`), so which of two providers able to serve a request serves it does not depend on which plugin mounted first. "Most confined wins" would need a total order over nine dimensions that nothing here defines.
 
 ## What is not arrived yet
 

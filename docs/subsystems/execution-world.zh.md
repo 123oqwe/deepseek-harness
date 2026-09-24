@@ -43,7 +43,7 @@ attestation 交给 Trust Kernel，它已经发布了 `sandboxAttestationVerifier
 
 `selectWorldProvider` 返回第一个满足全部维度的 provider，否则返回一个携带各 provider 未满足维度的拒绝。它绝不返回最接近的 provider、本地那个，或删掉未满足维度后的请求。阻止降级的是返回类型：没有部分结果，因此调用方无法把被削弱的 world 误当成所请求的那个。
 
-候选次序是部署自己的注册次序。"越严越优先"需要一个对九个维度的全序，而这里没有任何东西定义过它。
+候选次序是部署自己的注册次序，只有一处例外：一个 provider 排在它让位的每一个已注册 provider 之后（`yieldsTo`），所以两个都能服务同一请求的 provider 由谁来服务，不取决于哪个插件先挂载。"越严越优先"需要一个对九个维度的全序，而这里没有任何东西定义过它。
 
 ## 尚未抵达的部分
 

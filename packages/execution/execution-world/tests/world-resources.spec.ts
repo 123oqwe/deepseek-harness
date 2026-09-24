@@ -14,7 +14,7 @@
  *
  * **That last one is the guard this slice woke up.** `localUnsatisfiableDimensions`
  * has always declared `resources` unsatisfiable whenever any of the three is set
- * (`local-provider.ts:115-117`), and while `spec.resources` was `{}` on every
+ * (`local-provider.ts:85-87`), and while `spec.resources` was `{}` on every
  * path the check had no input it could ever refuse. Which is also why the
  * ceiling-carrying case binds through the FAKE provider: the local one is RIGHT
  * to refuse, and asking it for a world with a ceiling is asking for exactly what
@@ -92,7 +92,7 @@ async function mounted(
   } else {
     // A provider that satisfies every dimension, which is the only way to see a
     // binding CARRY a ceiling: the local one refuses any world that states one
-    // (`local-provider.ts:115-117`), deliberately and correctly -- it cannot
+    // (`local-provider.ts:85-87`), deliberately and correctly -- it cannot
     // enforce cpu, memory or disk, and acceptance[1] forbids handing back a
     // weaker world than the one asked for.
     // `createFakeWorldProvider` returns CONTROLS, not the provider: the
@@ -146,7 +146,7 @@ describe('P3-10 R3: the registry answers what its worlds may use', () => {
   it('REFUSES a world whose ceilings the provider cannot enforce, rather than handing back an unlimited one', async () => {
     // acceptance[1]'s own content, and its first reachable input. The local
     // provider has always declared `resources` unsatisfiable whenever any of
-    // the three is set (`local-provider.ts:115-117`) -- but until a request
+    // the three is set (`local-provider.ts:85-87`) -- but until a request
     // could carry them, `spec.resources` was `{}` on every path and that check
     // could never fire. R3 did not change the provider; it gave this guard
     // something to refuse.
