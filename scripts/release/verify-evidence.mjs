@@ -289,13 +289,7 @@ function main() {
   if (evidenceArg === undefined) throw new Error('verify-evidence: --evidence is required')
   const evidencePath = resolve(repoRoot, evidenceArg)
 
-  let result
-  try {
-    result = verify(repoRoot, evidencePath)
-  } catch (error) {
-    // A package that parses but lacks a field verify reads.
-    result = { ok: false, mismatches: [`verify could not complete: ${errorText(error)}`], accepted: null }
-  }
+  const result = verify(repoRoot, evidencePath)
   if (result.ok) {
     process.stdout.write(`verify-evidence: ${evidencePath} verified offline, no mismatches, accepted=${result.accepted === true}\n`)
     process.exit(0)
