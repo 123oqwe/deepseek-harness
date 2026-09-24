@@ -8556,7 +8556,8 @@ Sign-offs: PASS 2026-09-12 and PASS 2026-09-13 (first100-delegate-78).
 1. **acceptance[0]:**
    - the Python client keeps every field the agreed protocol version defines, either by modelling it or by refusing unknown fields loudly;
    - the TS client reads `downgrades` from the wire;
-   - a case over a real handshake asserts that `protocolVersions`, `schemaFingerprint` and a non-empty `downgrades` reach each shipped client's caller (red on today's Python client, green after);
+   - a case over a real handshake asserts that `protocolVersions` and `schemaFingerprint` reach each shipped client's caller (red on today's Python client, green after);
+   - the shipped TS and Python clients keep a non-empty `downgrades` a peer sends, whole, through their production read paths (T1, T6). The shipped server has no producer of downgrades, because no compatibility adapter exists (must[3]), so the server half is proven with must[3], separately. A sign-off states "no producer on the shipped build";
    - the coverage record cites the real-server cases.
 2. **acceptance[3]:** the fingerprinted surface is derived from what the server dispatches and emits, not written by hand, or a gate fails when the two differ; a case shows that a change to an undeclared method moves the fingerprint.
 3. **acceptance[4]:** the negotiation result is written into each Run's provenance and observed on a shipped composition.
