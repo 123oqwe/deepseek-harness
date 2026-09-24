@@ -920,7 +920,9 @@ function findUnexemptedCycles(edges, exemptedCycles) {
 
   const byLengthThenName = (a, b) => a.length - b.length || (a.join('\0') < b.join('\0') ? -1 : 1)
   return {
-    cycles: [...found.values()].sort(byLengthThenName),
+    cycles: [...found.values()]
+      .filter(cycle => !exemptedCycles.some(entry => entry.cycle.length === cycle.length && entry.cycle.every(pkg => cycle.includes(pkg))))
+      .sort(byLengthThenName),
     stale: exemptedCycles.filter(entry => recordEdges(entry.cycle).some(edge => !graphEdges.has(edge))),
   }
 }
