@@ -399,7 +399,8 @@ export class WorkflowExecution {
     // call order, which changed arguments or completion order can move, so a
     // number alone does not say whose output was recorded under it.
     this.reusableByCall ??= keysByCall(this.reusable, this.reusableCalls)
-    const key = this.reusableByCall.get(call)?.shift()
+    const byNumber = Object.keys(this.reusableCalls).length === 0 && this.reusable[seq] !== undefined
+    const key = byNumber ? seq : this.reusableByCall.get(call)?.shift()
     const recorded = key === undefined ? undefined : this.reusable[key]
     if (recorded !== undefined) {
       try {
