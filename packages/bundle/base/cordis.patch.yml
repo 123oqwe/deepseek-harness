@@ -444,7 +444,7 @@
     - id: agent-instructions
       name: '@deepseek-ai/dsh-agent-instructions'
       config:
-        maxBytes: 65536
+        maxBytes: 8192
 
     # Durable cross-session memory (P6-01): the provider-neutral seam and its
     # recall consumer. Both are disabled by default, matching `hmr` above.
