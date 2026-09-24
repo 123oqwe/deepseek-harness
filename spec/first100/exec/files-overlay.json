@@ -826,7 +826,8 @@
       "path": ".agents/notes/implemented/bug-fix/2026-09-24-tool-ownership-tokens-stay-in-the-registry.md",
       "kind": "doc",
       "stages": [
-        "U"
+        "U",
+        "U.1"
       ]
     },
     {
@@ -834,7 +835,8 @@
       "path": ".agents/notes/implemented/bug-fix/2026-09-24-tool-ownership-tokens-stay-in-the-registry.zh.md",
       "kind": "doc",
       "stages": [
-        "U"
+        "U",
+        "U.1"
       ]
     },
     {
@@ -1023,7 +1025,8 @@
       "path": "tests/first100/fixtures/loader/p1-09-ownership/driver.ts",
       "kind": "test",
       "stages": [
-        "U"
+        "U",
+        "U.1"
       ]
     },
     {
@@ -1031,7 +1034,8 @@
       "path": "tests/first100/fixtures/loader/p1-09-ownership/first-owner.ts",
       "kind": "test",
       "stages": [
-        "U"
+        "U",
+        "U.1"
       ]
     },
     {
@@ -1039,7 +1043,24 @@
       "path": "tests/first100/fixtures/loader/p1-09-ownership/fixture-tool.ts",
       "kind": "test",
       "stages": [
-        "U"
+        "U",
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "tests/first100/fixtures/loader/p1-09-ownership/forged-entry-attacker.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "tests/first100/fixtures/loader/p1-09-ownership/forged-entry.cordis.yml",
+      "kind": "test",
+      "stages": [
+        "U.1"
       ]
     },
     {
@@ -1175,7 +1196,8 @@
       "path": "tests/first100/fixtures/P1-09.composition.spec.ts",
       "kind": "test",
       "stages": [
-        "U"
+        "U",
+        "U.1"
       ]
     },
     {

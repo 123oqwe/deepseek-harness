@@ -15988,6 +15988,50 @@
         "failureSummary": "Baseline: PRECHECK `f48ee1940874a265d67953010168b819b3b007f6`, narrow run 35966408214: A, B, C and E red, with the unit cases Ua, Ub, Uc, Ma and Mb, every other case green; the fix, run 35966430163: 197 passed / 0 failed. M-A, run 35966453646: A, B, C (and Ua, Ub, Uc). M-B, run 35966474965: A (and Ua). M-C, run 35966497721: C, E (and the run-budget cases R1-R3). M-E, run 35966519432: E (and Ma, Mb). A, B, C, E are this entry's four cases in file order; the other labels resolve through `artifacts/laneB/p4-11-label-map.json` (sha256 `1d7f8c579a3cbe6871d091569f5ed223cd68d417c8bae7a6cbdc9bc8b37bbc08`, derived after the readings from the fix run's report). All six readings match `artifacts/laneB/p4-11-predictions.md` (sha256 `85cc1a335ebcd3da5951ca13296d6c7e3b2ae62631e6bbe5c95b3e3f70c0eaf2`), written before dispatch; the delegate and lane B each compared them by case."
       },
       "note": "P4-11's second U supplement: acceptance[1], several plugins cannot take the total retries past the Run budget, observed on shipped profiles through `multi-spender-driver.ts`. A: once the run budget is spent, a second plugin, compaction's overflow resend, cannot resend. B: an admitted overflow resend is charged to the same run. C: llm-retry stops below its own cap because another plugin spent from the run. E, on the shipped acp profile: a session's MCP reconnect spends the same run budget as llm-retry.\n\nThe argv selects this spec's `P4-11 acceptance[1]: every plugin that retries draws on one run budget` describe with `-t`, its brackets escaped because vitest compiles the value as a regular expression; lane A's case D in the same file is frozen separately as U.3. At the fix the spec held exactly these four cases.\n\nNot covered here: the unit cases in compaction-basic and mcp-client (Ua-Ud, Ma-Mf), which the readings used as extra sensitivity evidence and no entry freezes; `scripts/gen-doc-graphs.ts` still lists llm-retry as the only consumer, as recorded in the fix commit."
+    },
+    {
+      "epic": "P1-09",
+      "stage": "U",
+      "supplements": {
+        "epic": "P1-09",
+        "stage": "U"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P1-09.composition.spec.ts",
+        "-t",
+        "a fiber outside every Loader entry that writes itself a forged fiber\\.entry is still refused",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-09 ownership gate composition (U-stage) with a Loader in the tree, a fiber outside every Loader entry that writes itself a forged fiber.entry is still refused"
+      ],
+      "files": [
+        "tests/first100/fixtures/P1-09.composition.spec.ts",
+        "tests/first100/fixtures/loader/p1-09-ownership/forged-entry.cordis.yml",
+        "tests/first100/fixtures/loader/p1-09-ownership/forged-entry-attacker.ts",
+        "tests/first100/fixtures/loader/p1-09-ownership/driver.ts",
+        "tests/first100/fixtures/loader/p1-09-ownership/first-owner.ts",
+        "tests/first100/fixtures/loader/p1-09-ownership/fixture-tool.ts",
+        "packages/core/tools/src/index.ts",
+        ".agents/notes/implemented/bug-fix/2026-09-24-tool-ownership-tokens-stay-in-the-registry.md",
+        ".agents/notes/implemented/bug-fix/2026-09-24-tool-ownership-tokens-stay-in-the-registry.zh.md"
+      ],
+      "frozenAtUtc": "2026-09-24T10:21:30Z",
+      "dryRunProof": {
+        "treeSha": "f7e5b6a37ca34db9a3eac73ae9f06f7e85044e18",
+        "testsDiscovered": 1
+      },
+      "sensitivityProof": {
+        "mutationDescription": "One mutation off the hardening fix `e823a4b47731e585750bd0153fd6ec37de4b8dfd`, never merged, run by CI's narrow job at its own SHA over this spec and the eight other P1-09 and preset spec files: M-a (`65cdd80ccb9bd05714bb5951d868b44ac1fd5c30`) removes the conjunct the fix added to `nearestEntryName` in `packages/core/tools/src/index.ts`, so an entry of another entry tree counts again without a host Loader entry further up the chain, as in fix v2.",
+        "failureSummary": "Baseline: PRECHECK `f2ad4e19dd97d3bf34e15dc1da063cfc9c2c54d3` (fix v2's product code), narrow run 35986183465: exactly this case red, 141 of 142 green; the fix, run 35986202379: 142 passed / 0 failed; M-a, run 35986221499: exactly this case red. The readings match `artifacts/laneB/p1-09-b558-predictions-v3.md` (sha256 `0f1dc742dd956ae6bd79e2cf180a4934a1e79c29a0b95b9ce129dbd58d478a05`), written before dispatch."
+      },
+      "note": "P1-09's first U supplement (B-558, the blind review of fix v2): with a Loader in the tree, a fiber outside every Loader entry that writes itself a forged `fiber.entry`, naming first-owner with the root as its tree's fiber, is still refused when it registers. `forged-entry-attacker.ts` mounts the child under the root fiber from a static entry; the case asserts that the boot fails with \"outside every Loader entry is refused\", naming the child fiber. The fix, `67897d4fc9bd153705a7c845c54c47d0b6b0bae2` on the candidate (the pick of `e823a4b47731e585750bd0153fd6ec37de4b8dfd`), counts an entry of another tree only when a host Loader entry's fiber is further up the caller's chain.\n\nThe preset harnesses in agent-presets and the subagent driver load agent-presets as a host Loader entry since B-558 v2, as the shipped web-app does; those specs are outside this entry.\n\nNot covered here: code inside a Loader entry can still write `fiber.entry` or `fiber.parent` on a fiber under that entry, or borrow another entry's context; the P1-09 Agent Note and the tools README record this as the Known Limitation the delegate ruled."
     }
   ]
 }

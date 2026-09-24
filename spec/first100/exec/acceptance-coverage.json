@@ -862,9 +862,14 @@
         {
           "stage": "F",
           "title": "must[3]: a real ownership token replayed after its own registration is gone revokes nothing"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P1-09 ownership gate composition (U-stage) with a Loader in the tree, a fiber outside every Loader entry that writes itself a forged fiber.entry is still refused"
         }
       ],
-      "note": "acceptance[0]: '同名工具、跨插件撤销、加载顺序攻击均 fail closed.' All three named attacks are covered as decisions at C and against the real ToolRuntime at U. The U same-name case is the load-bearing one and was deliberately rebuilt: the obvious form of this test was measured GREEN with zero new code, because NamedEntries throws on any duplicate, so a naive case would have survived deleting the entire ownership gate. It therefore requires the specific capability-collision reason and asserts the message is NOT the legacy 'already registered' string. The two F cases extend cross-plugin revocation past what C reached -- a forged token carrying the real owner's identity prefix, and a real token replayed after its registration is gone -- both of which the C case's different-plugin token could not exercise."
+      "note": "acceptance[0]: '同名工具、跨插件撤销、加载顺序攻击均 fail closed.' All three named attacks are covered as decisions at C and against the real ToolRuntime at U. The U same-name case is the load-bearing one and was deliberately rebuilt: the obvious form of this test was measured GREEN with zero new code, because NamedEntries throws on any duplicate, so a naive case would have survived deleting the entire ownership gate. It therefore requires the specific capability-collision reason and asserts the message is NOT the legacy 'already registered' string. The two F cases extend cross-plugin revocation past what C reached -- a forged token carrying the real owner's identity prefix, and a real token replayed after its registration is gone -- both of which the C case's different-plugin token could not exercise.\n\n[2026-09-24 lane B, B-558: the `stage: U, supplementSeq: 1` citation is P1-09 U.1: a fiber outside every Loader entry that writes itself a forged `fiber.entry` naming another plugin is refused when it registers, so the name another plugin owns cannot be claimed from outside the entries. The hardening mutation M-a, the host-entry conjunct removed, reddened exactly it.]"
     },
     {
       "epic": "P1-09",
