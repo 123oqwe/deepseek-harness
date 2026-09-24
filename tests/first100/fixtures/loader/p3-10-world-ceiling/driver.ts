@@ -61,9 +61,31 @@ for (let i = 0; i < attempts; i += 1) {
 }
 `
 
-/** Hold `mebibytes` of touched memory, then say how much it held. */
-const BALLOON = `const held = []
-for (let i = 0; i < Number(process.argv[2]); i += 1) held.push(Buffer.alloc(1024 * 1024, 1))
+/**
+ * DIAG — never merge. Hold `mebibytes` of touched memory, then say how much it
+ * held; first say where it runs (its cgroup's ceilings and every process in
+ * it), and report each 16 MiB with the cgroup's memory events so far.
+ */
+const BALLOON = `const { readFileSync } = require('node:fs')
+function read(path) {
+  try { return readFileSync(path, 'utf8').trim() } catch (error) { return 'unreadable: ' + error.message }
+}
+const cgroup = (/^0::(.*)$/m.exec(read('/proc/self/cgroup')) || [])[1] || '?'
+const base = '/sys/fs/cgroup' + cgroup
+const listed = read(base + '/cgroup.procs')
+const procs = listed.startsWith('unreadable') ? [listed] : listed.split(/\\s+/).filter(Boolean).map((pid) => {
+  const ppid = (/^PPid:\\s*(\\d+)/m.exec(read('/proc/' + pid + '/status')) || [])[1]
+  return pid + ':' + read('/proc/' + pid + '/comm') + '<' + ppid
+})
+console.log('BALLOON-DIAG ' + JSON.stringify({
+  pid: process.pid, ppid: process.ppid, cgroup, procs,
+  memoryMax: read(base + '/memory.max'), swapMax: read(base + '/memory.swap.max'), oomGroup: read(base + '/memory.oom.group'),
+}))
+const held = []
+for (let i = 0; i < Number(process.argv[2]); i += 1) {
+  held.push(Buffer.alloc(1024 * 1024, 1))
+  if ((i + 1) % 16 === 0) console.log('BALLOON at ' + String(i + 1) + ' MiB; ' + read(base + '/memory.events').split(/\\s+/).join(' '))
+}
 console.log('BALLOON allocated ' + String(held.length))
 `
 

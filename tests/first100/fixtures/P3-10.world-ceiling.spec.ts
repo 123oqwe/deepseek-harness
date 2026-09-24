@@ -20,6 +20,7 @@
  * why when they skip.
  */
 
+import { spawnSync } from 'node:child_process'
 import { readdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -182,4 +183,30 @@ describe('P3-10 acceptance[0] — the shipped headless profile holds the ceiling
       expect(result?.text, id).not.toMatch(/FORK|BALLOON/u)
     }
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
+
+  // DIAG — never merge: reads what killed the limited balloon, and fails on purpose
+  // so the whole reading lands in the report's failure message untruncated.
+  it('DIAG — never merge: what killed the limited balloon', async () => {
+    const run = (command: string, args: readonly string[]): string => {
+      const result = spawnSync(command, args, { encoding: 'utf8', timeout: 20_000 })
+      return `exit=${String(result.status)} signal=${String(result.signal)}\n${result.stdout}${result.stderr === '' ? '' : `\nSTDERR ${result.stderr}`}`
+    }
+    const pick = (text: string, pattern: RegExp, keep: number): string[] =>
+      text.split('\n').filter(line => pattern.test(line)).slice(-keep)
+    const limited = await outcome('limited')
+    const control = await outcome('control')
+    const diag = {
+      held,
+      limited: Object.fromEntries(limited.results),
+      control: Object.fromEntries(control.results),
+      kernel: pick(run('sudo', ['-n', 'dmesg', '--ctime']), /exit=|oom|killed process|memory cgroup|out of memory/iu, 40),
+      userJournal: pick(run('journalctl', ['--user', '--no-pager', '-o', 'short-precise', '-n', '2000']), /exit=|STDERR|dsh-subprocess|oom|OOM/u, 120),
+      systemJournal: pick(run('sudo', ['-n', 'journalctl', '--no-pager', '-o', 'short-precise', '-n', '5000']), /exit=|STDERR|dsh-subprocess|oom/iu, 120),
+      manager: run('systemctl', ['--user', 'show', '-p', 'Version', '-p', 'DefaultOOMPolicy', '-p', 'DefaultMemoryAccounting']),
+      oomd: run('systemctl', ['is-active', 'systemd-oomd']),
+      bash: run('bash', ['--version']).split('\n').slice(0, 2),
+      kernelRelease: run('uname', ['-r']),
+    }
+    throw new Error(`P3-10 DIAG ${JSON.stringify(diag, null, 2)}`)
+  }, 2 * LOADER_SMOKE_TEST_TIMEOUT_MS)
 })
