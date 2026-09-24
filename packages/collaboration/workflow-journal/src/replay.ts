@@ -105,7 +105,7 @@ export function compactJournal(journal: WorkflowJournal): WorkflowJournal {
   })
   // Displaced entries are kept whole: each is another call's record, reusable
   // by a later resume, with receipts nothing else holds.
-  return { scriptDigest: journal.scriptDigest, entries, ...journal.displaced === undefined ? {} : { displaced: journal.displaced } }
+  return { scriptDigest: journal.scriptDigest, entries }
 }
 
 /**
