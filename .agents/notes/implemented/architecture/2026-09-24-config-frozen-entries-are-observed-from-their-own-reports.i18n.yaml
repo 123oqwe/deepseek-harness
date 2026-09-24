@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-09-24-config-frozen-entries-are-observed-from-their-own-reports.md
+2026-09-24-config-frozen-entries-are-observed-from-their-own-reports.md: 1cda520ec006031d9fb1d481442b9568970e8bda
+2026-09-24-config-frozen-entries-are-observed-from-their-own-reports.zh.md: d4c86cb950c1fefc6c580d05a9e0ab6121ba1fed
