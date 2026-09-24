@@ -7,13 +7,13 @@
 import { Context, Service } from '@deepseek-ai/cordis'
 import type { Fiber } from '@deepseek-ai/cordis'
 import { brandString } from '@deepseek-ai/dsh-brand'
-import { claimCapability, requestReplace } from '@deepseek-ai/dsh-plugin-ownership'
+import { claimCapability, requestReplace, revokeByOwnershipToken } from '@deepseek-ai/dsh-plugin-ownership'
 import type {
   ActionTarget, Compensation, EvidenceRequirement, ExpectedDiff, Precondition,
 } from '@deepseek-ai/dsh-action-manifest'
 import type {
-  CapabilityOrigin, CapabilityRecord, CapabilityRegistration, Namespace, PluginIdentity,
-  RegistrationDenialReason, RegistryPolicy, StableCapabilityId,
+  CapabilityOrigin, CapabilityRecord, CapabilityRegistration, Namespace, OwnershipToken, PluginIdentity,
+  RegistrationDenialReason, RegistryPolicy, RevocationResult, StableCapabilityId,
 } from '@deepseek-ai/dsh-plugin-ownership'
 import z from '@deepseek-ai/schemastery'
 import { AnonymousEntries, NamedEntries, ScopedLayers, scopeOf, scopeTarget } from '@deepseek-ai/dsh-scope'
@@ -1627,6 +1627,16 @@ export class ToolRuntime extends Service {
    */
   ownershipHistory(): readonly CapabilityRecord[] {
     return this.ownershipRecords.map(held => recordOf(held.registration))
+  }
+
+  revokeOwned(token: OwnershipToken): RevocationResult {
+    const live = [...this.ownerships.values()]
+    const result = revokeByOwnershipToken(token, live.map(held => held.registration))
+    if (!result.revoked) return result
+    for (const held of live) {
+      if (held.registration.ownershipToken === token) held.dispose?.()
+    }
+    return result
   }
 
   /**
