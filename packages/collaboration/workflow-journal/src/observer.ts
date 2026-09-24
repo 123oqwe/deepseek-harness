@@ -91,7 +91,7 @@ export function journalingObserver(
         childId: event.childId,
         ...(event.phase === undefined ? {} : { phase: event.phase }),
         outcome: journalOutcomeOf(event.outcome),
-        ...(event.outcome === 'completed' ? { output: event.output ?? `agent-result-${event.seq}` } : {}),
+        ...(event.outcome === 'completed' ? { output: JSON.stringify(`agent-result-${event.seq}`) } : {}),
       })
     },
   }
