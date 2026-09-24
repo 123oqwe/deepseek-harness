@@ -13,10 +13,9 @@
  *
  * The expected registrations are read from the product, not from a run: the
  * session-event ids from `KNOWN_SESSION_EVENT_TYPES`, the eleven sdk-protocol
- * wire ids the registry's own bootstrap names, and `settings:policy-set`,
- * which `@deepseek-ai/dsh-policy-language` registers on every one of these
- * profiles (dsh-base and sdk-minimal mount it; the only other server-side
- * settings namespace, `agent-presets`, is mounted by web-app alone).
+ * wire ids the registry's own bootstrap names, and one `settings:<namespace>`
+ * id per settings namespace the profile's rows install
+ * ({@link SETTINGS_NAMESPACES}).
  */
 
 import { readFile } from 'node:fs/promises'
@@ -52,6 +51,31 @@ const PROTOCOL_WIRE_IDS = [
   'HumanQuestionParams',
   'HumanQuestionResult',
 ] as const
+
+/**
+ * The settings namespaces dsh-base registers. `SettingsService.register`
+ * registers each one's schema with the identity migration, and
+ * `installSection` calls it. Registrants: agent-default-model, agent-loop,
+ * permission-presets (`permission`), llm-deepseek, llm-pi-ai, bash-sandbox
+ * through its `LocalBashExecutor` base (`shell`; pwsh-sandbox on win32),
+ * web-search-deepseek and policy-language (`policy-set`). tool-subagent
+ * registers none unless `modelSelectionSettings` is set, and dsh-base does not
+ * set it.
+ */
+const DSH_BASE_SETTINGS = ['agent-default-model', 'agent-loop', 'llm-deepseek', 'llm-pi-ai', 'permission', 'policy-set', 'shell', 'web-search-deepseek'] as const
+
+/**
+ * The settings namespaces each profile registers. The headless, acp and sdk
+ * bundles add no registrant to dsh-base; the sdk overlay disables
+ * llm-deepseek. sdk-minimal mounts agent-loop, llm-deepseek and
+ * policy-language, and its overlay disables llm-deepseek.
+ */
+const SETTINGS_NAMESPACES: Readonly<Record<string, readonly string[]>> = {
+  'headless': DSH_BASE_SETTINGS,
+  'acp': DSH_BASE_SETTINGS,
+  'sdk': DSH_BASE_SETTINGS.filter(ns => ns !== 'llm-deepseek'),
+  'sdk-minimal': ['agent-loop', 'policy-set'],
+}
 
 /** One registration as the driver recorded it. */
 interface CensusEntry extends CensusRecord {
@@ -97,7 +121,8 @@ describe('P0-06 acceptance[2]: every schema-registry migration a shipped profile
       .toEqual([...KNOWN_SESSION_EVENT_TYPES].map(type => `session-event:${type}`).sort())
     expect(ids.filter(id => id.startsWith('sdk-protocol:')).sort())
       .toEqual(PROTOCOL_WIRE_IDS.map(name => `sdk-protocol:${name}`).sort())
-    expect(ids.filter(id => id.startsWith('settings:'))).toEqual(['settings:policy-set'])
+    expect(ids.filter(id => id.startsWith('settings:')).sort())
+      .toEqual(SETTINGS_NAMESPACES[profile]?.map(ns => `settings:${ns}`).sort())
     // No fourth registrant: every id belongs to one of the three production registrars.
     expect(ids.filter(id => !/^(?:session-event|sdk-protocol|settings):/u.test(id))).toEqual([])
 
