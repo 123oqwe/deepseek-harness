@@ -2168,6 +2168,10 @@ todo_write 是会话所有的状态；UI 将最新的 todo/write 事件渲染为
       "type": "string",
       "description": "Collect a detached run by its runId, instead of starting one. Give no `script` or `meta` with it."
     },
+    "resume": {
+      "type": "string",
+      "description": "Continue an interrupted run by its runId instead of starting a new one. Give the SAME `script` and `meta` it was started with; agent() steps whose children finished are not run again. A changed script is refused, and the run starts over under the same runId."
+    },
     "meta": {
       "type": "object",
       "description": "The workflow identity block (plain JSON — never code). Required unless `attach` is given.",

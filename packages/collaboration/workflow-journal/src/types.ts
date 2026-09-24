@@ -25,7 +25,12 @@ export type ScriptDigest = Branded<'ScriptDigest'>
 /** A step's position in the script; stable across runs of the same script. */
 export type StepId = Branded<'StepId'>
 
-/** A reference to stored content, never the content itself. */
+/**
+ * A step's recorded input or output. An input is a reference to stored
+ * content; a completed `agent()` step's output is the content itself, the JSON
+ * text of the value the call resolved to, or the placeholder
+ * `agent-result-<seq>` where no value was recorded.
+ */
 export type ArtifactRef = Branded<'ArtifactRef'>
 
 /** A child agent's acknowledgement that it did the work. */
