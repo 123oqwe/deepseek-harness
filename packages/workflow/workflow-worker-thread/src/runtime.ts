@@ -350,15 +350,7 @@ export class WorkflowExecution {
     // and must not be credited with a child it did not start — reporting one
     // would put a second receipt in the journal for work that happened once.
     const recorded = this.reusable[seq]
-    if (recorded !== undefined) {
-      try {
-        return JSON.parse(recorded) as unknown
-      } catch {
-        // Only a journal written before outputs were recorded holds a non-JSON
-        // output, the placeholder `agent-result-<seq>`: nothing reusable was
-        // kept for this step, so it runs again rather than failing the run.
-      }
-    }
+    if (recorded !== undefined) return JSON.parse(recorded) as unknown
 
     this.started += 1
     const label = opts.label ?? defaultLabel(rawPrompt)
