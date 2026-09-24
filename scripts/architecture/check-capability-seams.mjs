@@ -63,8 +63,8 @@ export function readArchitectureLayers(root) {
 
 /**
  * Read every package `pnpm-workspace.yaml`'s `packages:` patterns declare. A
- * workspace file that declares no pattern throws, so the gate can never pass
- * by scanning nothing.
+ * workspace file that declares no pattern, or whose patterns match no package,
+ * throws, so the gate can never pass by scanning nothing.
  * @param root - repository (or fixture) root.
  * @returns npm package name -> repo-relative package directory.
  */
@@ -78,6 +78,7 @@ export function readWorkspacePackages(root) {
       if (typeof manifest.name === 'string') byName.set(manifest.name, dirname(manifestPath))
     }
   }
+  if (byName.size === 0) throw new Error(`${GATE}: ${WORKSPACE_PATH} matches no package`)
   return byName
 }
 

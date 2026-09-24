@@ -56,10 +56,11 @@ Plus two conditions the gate also gives up on: every package classified (the epi
 
 8. **A spawn-target dependency is not a code dependency.** Rules 1 and 6 forbid a ranked package from depending on an unranked position. That prohibition is about *code coupling*: it was written with `import` in mind, and the Detection section below names three code channels only — the declared package graph, a TypeScript path alias, and a dynamic `require()`/`import()`. A process boundary was never in its range. A package that resolves another's manifest path in order to **spawn it as a subprocess**, while importing none of its symbols, is not coupled to its code, and `@deepseek-ai/dsh-sdk-client` → `@deepseek-ai/dsh` is exactly that: `launch.ts` calls `import.meta.resolve('@deepseek-ai/dsh/package.json')` to locate the harness executable and check version agreement before spawning it. The dependency cannot be removed — `import.meta.resolve` fails without the declaration — so "it does not import, therefore it is not a dependency" is false here; the distinction that holds is **importing a symbol versus resolving a path**.
 
-   Two conditions, both decided mechanically, and an edge failing either is an ordinary violation:
+   Three conditions, all decided mechanically, and an edge failing any of them is an ordinary violation:
 
    1. **Zero imported bindings from the target** — no `import`, `import type`, `require`, or dynamic `import` of any symbol. This is the entire safety of the exception. A package that both spawns and imports falls through to the violation path with nobody's judgement involved, so the exception cannot be widened by argument.
    2. **The dependency is declared** in `package.json`, so it can never rest on hoisting — an undeclared dependency reached through hoisting is the genuinely invisible coupling. The edge arriving through the `package-graph` channel *is* that declaration.
+   3. **The depending package is not in the `kernel` layer.** A kernel package may depend on no UI package (P0-04 acceptance[1]), and a UI application under `apps/` is one, so a kernel package that declares an `apps/` package violates rule 1 whatever it does with it.
 
    This rule does not weaken rules 1 and 6; it states a boundary they always implied and never wrote down. Recorded because an unwritten boundary and a quietly loosened assertion are indistinguishable to the next reader — the same reason rule 6 declares its own exclusion instead of leaving it a convenient default.
 

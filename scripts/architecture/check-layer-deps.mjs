@@ -320,8 +320,9 @@ export function readLayerExemptions(root) {
 
 /**
  * Read the manifest of every package `pnpm-workspace.yaml`'s `packages:`
- * patterns declare. A workspace file that declares no pattern throws, so the
- * gate can never pass by scanning nothing.
+ * patterns declare. A workspace file that declares no pattern, or whose
+ * patterns match no package, throws, so the gate can never pass by scanning
+ * nothing.
  * @param root - repository (or fixture) root.
  * @returns npm package name -> { dir, manifest }.
  */
@@ -335,6 +336,7 @@ function readWorkspaceManifests(root) {
       if (typeof manifest.name === 'string') byName.set(manifest.name, { dir: dirname(manifestPath), manifest })
     }
   }
+  if (byName.size === 0) throw new Error(`${GATE}: ${WORKSPACE_PATH} matches no package`)
   return byName
 }
 
@@ -625,8 +627,8 @@ export function collectLayerEdges(root, byPackage) {
     })
   }
 
-  for (const [name, { manifest }] of byPackage) {
-    for (const field of PRODUCTION_DEPENDENCY_FIELDS) {
+  for (const [name, { manifest, layer }] of byPackage) {
+    for (const field of layer === 'kernel' ? KERNEL_DEPENDENCY_FIELDS : PRODUCTION_DEPENDENCY_FIELDS) {
       for (const dependency of Object.keys(manifest[field] ?? {})) {
         if (dependency !== name && byPackage.has(dependency)) record(name, dependency, 'package-graph', 'value')
       }
@@ -997,7 +999,9 @@ export function runLayerDepsCheck(root) {
       // `package-graph` IS that declaration.
       const importedFromTarget = facts.get(edge.fromPackage)?.importedBindings.get(edge.toPackage)
       const importsNoSymbol = importedFromTarget === undefined || importedFromTarget.size === 0
-      if (importsNoSymbol && edge.detectionMethod === 'package-graph') {
+      // A kernel package gets no spawn-target reading: acceptance[1] counts a
+      // UI application under apps/ as UI whatever the kernel does with it.
+      if (importsNoSymbol && edge.detectionMethod === 'package-graph' && edge.fromLayer !== 'kernel') {
         spawnTargets.push({ fromPackage: edge.fromPackage, toPackage: edge.toPackage })
         continue
       }
