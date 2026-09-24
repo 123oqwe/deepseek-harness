@@ -702,7 +702,7 @@ function appendActionManifest(
       args: block.arguments,
       idempotencyKey: manifestIdempotencyKey(session.id, brandString<ActionId>(block.id), argumentsHash),
       preconditions: [],
-      expectedDiff: { description: `tool ${block.name} executes with the manifested arguments` },
+      expectedDiff: { description: `tool ${block.name} executes with the manifested arguments${policy.world.kind === 'bound' ? ` in a ${String(policy.world.provider)} world` : ''}` },
       compensation: { reversible: false, reason: 'the native tool path declares no compensation; a tool that has one states it in its own manifest contribution' },
       evidenceRequirements: [{ kind: 'external-receipt', description: `the tool/result event for call ${block.id}` }],
     },
