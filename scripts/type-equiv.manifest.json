@@ -1608,6 +1608,16 @@
     },
     {
       "doc": "docs/subsystems/subprocess.md",
+      "symbol": "SubprocessLimitDimension",
+      "source": "packages/subprocess/subprocess/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/subprocess.md",
+      "symbol": "SubprocessLimits",
+      "source": "packages/subprocess/subprocess/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/subprocess.md",
       "symbol": "SubprocessHandle",
       "source": "packages/subprocess/subprocess/src/types.ts"
     },

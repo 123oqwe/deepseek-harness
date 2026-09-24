@@ -257,6 +257,14 @@
     - id: execution-world-local
       name: '@deepseek-ai/dsh-execution-world/local'
 
+    # The provider that holds a world's resource ceilings (P3-10): it claims a
+    # ceiling exactly when the mounted subprocess runtime can hold it. It
+    # registers as yielding to the local provider, so a world with no ceiling
+    # stays the local provider's whichever row mounts first, and only a ceiling
+    # the local provider refuses reaches this one.
+    - id: execution-world-fenced
+      name: '@deepseek-ai/dsh-execution-world/fenced'
+
     - id: bash-sandbox
       name: '@deepseek-ai/dsh-bash-sandbox'
       disabled: !!js process.platform === 'win32'

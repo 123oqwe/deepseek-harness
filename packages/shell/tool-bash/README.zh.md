@@ -93,7 +93,7 @@ kind: "package-reference"
 
 ### 请求解析
 
-工具在 `ctx.shell.resolve()` 运行前解析 workdir：显式的相对 `workdir` 相对会话 cwd 解析，沙箱策略的规范化 workspace root 优先，使约束与启动使用同一身份。沙箱策略通过 `ctx.sandboxPolicy` 按调用解析；升权请求在任何执行前经由 `ctx.approval`，若执行器会约束命令却没有挂载策略服务，工具在加载时失败。
+工具在 `ctx.shell.resolve()` 运行前解析 workdir：显式的相对 `workdir` 相对会话 cwd 解析，沙箱策略的规范化 workspace root 优先，使约束与启动使用同一身份。沙箱策略通过 `ctx.sandboxPolicy` 按调用解析；升权请求在任何执行前经由 `ctx.approval`，若执行器会约束命令却没有挂载策略服务，工具在加载时失败。world 的硬上限在同一处经 `readWorldLimits` 解析——取派发 agent 的会话所绑定的 world——随请求交给 spawn；world 没有上限，或部署没声明上限而会话没有绑定 world 时，不带上限运行。部署声明了上限、而没有为这次调用绑定的 world 守得住它时（这台机器的运行时守不住，或会话处在 `danger-full-access`），调用以 `WorldCeilingsRefusedError` 失败，错误写明是哪些上限、为什么，并且什么也不运行；已绑定的 world 声明了磁盘上限时调用同样失败，因为 spawn 还带不了磁盘上限。
 
 ### 渲染故事
 
