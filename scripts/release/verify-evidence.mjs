@@ -292,7 +292,7 @@ function main() {
     process.stdout.write(`verify-evidence: ${evidencePath} verified offline, no mismatches, accepted=${result.accepted === true}\n`)
     process.exit(0)
   }
-  process.stdout.write(`verify-evidence: ${evidencePath} FAILED verification, accepted=false (the package records ${JSON.stringify(result.accepted)}):\n${result.mismatches.map(line => `  ${line}`).join('\n')}\n`)
+  process.stdout.write(`verify-evidence: ${evidencePath} FAILED verification, recorded accepted=${result.accepted}:\n${result.mismatches.map(line => `  ${line}`).join('\n')}\n`)
   process.exit(1)
 }
 
