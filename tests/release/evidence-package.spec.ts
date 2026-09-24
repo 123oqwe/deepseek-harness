@@ -31,7 +31,7 @@
  */
 
 import { execFileSync, spawnSync, type SpawnSyncReturns } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync, unlinkSync, utimesSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { delimiter, dirname, join, resolve } from 'node:path'
 import { createHash } from 'node:crypto'
@@ -1086,6 +1086,70 @@ describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', { ti
       const result = collectInit(root, `--output=${target}`, ['typecheck'], ['lib/index.js'])
       expect(result.status, result.stderr).not.toBe(0)
       expect(existsSync(target)).toBe(false)
+    })
+
+    /**
+     * Write an executable shell script outside the checkout.
+     * @param name - the script's file name.
+     * @param body - the script after its `#!/bin/sh` line.
+     * @returns the script's path.
+     */
+    function outsideScript(name: string, body: string): string {
+      const dir = mkdtempSync(join(tmpdir(), 'dsh-evidence-git-'))
+      fixtureRoots.push(dir)
+      const path = join(dir, name)
+      writeFileSync(path, `#!/bin/sh\n${body}`, { mode: 0o755 })
+      return path
+    }
+
+    it('detects a same-size change after collection when the checkout\'s git compares only size and whole-second mtime', () => {
+      // The root package.json is at the base, so git may take it from the index when its stat looks unchanged, and its
+      // recorded mtime is older than the index, so git's racy-timestamp check does not reread it.
+      const { root } = collectOneAcceptedGate((fixture) => {
+        const past = new Date(Date.now() - 3_600_000)
+        utimesSync(join(fixture, 'package.json'), past, past)
+        git(fixture, ['add', 'package.json'])
+        git(fixture, ['config', 'core.checkStat', 'minimal'])
+        git(fixture, ['config', 'core.trustCtime', 'false'])
+      })
+      const path = join(root, 'package.json')
+      const { atime, mtime } = statSync(path)
+      writeFileSync(path, readFileSync(path, 'utf8').replace('@fixture/root', '@fixture/ROOT'))
+      utimesSync(path, atime, mtime)
+
+      const result = verifyEvidence(root)
+      expect(result.status, result.stdout).toBe(1)
+      expect(result.stdout).toContain('the working tree differs from the diff recorded at collection')
+    })
+
+    it('detects a change after collection when the checkout\'s git trusts an fsmonitor hook that reports none', () => {
+      const hook = outsideScript('fsmonitor.sh', "printf 'constant-token\\0'\n")
+      const { root } = collectOneAcceptedGate((fixture) => {
+        git(fixture, ['config', 'core.fsmonitor', hook])
+        git(fixture, ['update-index', '--fsmonitor'])
+        git(fixture, ['status', '--porcelain'])
+      })
+      addOverride(root)
+
+      const result = verifyEvidence(root)
+      expect(result.status, result.stdout).toBe(1)
+      expect(result.stdout).toContain('the working tree differs from the diff recorded at collection')
+    })
+
+    it('refuses a checkout that assigns a filter to a path, since git compares a filtered file by what the filter prints', () => {
+      const { root } = collectOneAcceptedGate()
+      const saved = mkdtempSync(join(tmpdir(), 'dsh-evidence-saved-'))
+      fixtureRoots.push(saved)
+      const original = join(saved, 'package.json')
+      writeFileSync(original, readFileSync(join(root, 'package.json')))
+      const restore = outsideScript('restore.sh', `cat >/dev/null\ncat '${original}'\n`)
+      writeFileSync(join(root, '.git/info/attributes'), 'package.json filter=restore\n')
+      git(root, ['config', 'filter.restore.clean', restore])
+      addOverride(root)
+
+      const result = verifyEvidence(root)
+      expect(result.status, result.stdout).toBe(1)
+      expect(result.stdout).toContain('assigns a filter')
     })
   })
 
