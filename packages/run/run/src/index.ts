@@ -1114,11 +1114,7 @@ export default class RunPlugin extends Service {
     // The terminal writes carry this agent's lease and are checked where they
     // are written, so the item is given back only after they settle: released
     // first, this holder's own writes would find no lease and be refused.
-    const lease = agent.runLease
-    const leases = this.ctx.leaseStore
-    this.track(this.endRun(agent, failure !== undefined).finally(() => {
-      if (lease !== undefined) leases.release(lease.token)
-    }))
+    this.track(this.endRun(agent, failure !== undefined))
     if (agent.runId !== undefined) this.failures.delete(agent.runId)
   }
 
