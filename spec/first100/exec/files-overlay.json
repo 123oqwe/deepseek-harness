@@ -3189,11 +3189,63 @@
     },
     {
       "epic": "P4-11",
+      "path": ".agents/notes/implemented/bug-fix/2026-09-24-overflow-resends-and-session-mcp-reconnects-charge-the-run-budget.md",
+      "kind": "doc",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P4-11",
+      "path": ".agents/notes/implemented/bug-fix/2026-09-24-overflow-resends-and-session-mcp-reconnects-charge-the-run-budget.zh.md",
+      "kind": "doc",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P4-11",
+      "path": "packages/acp/acp/src/mcp.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "Changed by P4-11 part 2 (fix `4ff421f091`): `mountAcpMcpServers` takes the session and passes it to each MCP server it mounts as `chargeSession`, so a per-session server charges its reconnects to that session's Run. P4-11 U.2 case E depends on it."
+    },
+    {
+      "epic": "P4-11",
+      "path": "packages/acp/acp/src/session.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "Changed by P4-11 part 2 (fix `4ff421f091`): both ACP session paths pass their session id to `mountAcpMcpServers`. P4-11 U.2 case E depends on it."
+    },
+    {
+      "epic": "P4-11",
+      "path": "packages/bundle/acp-app/cordis.patch.yml",
+      "kind": "manifest",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P4-11",
       "path": "packages/bundle/base/cordis.patch.yml",
       "kind": "manifest",
       "stages": [
-        "U.1"
+        "U.1",
+        "U.2"
       ]
+    },
+    {
+      "epic": "P4-11",
+      "path": "packages/compaction/compaction-basic/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "Changed by P4-11 part 2 (fix `4ff421f091`): compaction's overflow resend asks the run retry budget before resending and charges an admitted resend to the run, which makes compaction one of the spenders acceptance[1] counts. P4-11 U.2 cases A and B observe it on the shipped profile."
     },
     {
       "epic": "P4-11",
@@ -3204,6 +3256,24 @@
         "F"
       ],
       "reason": "The LLM service's dispatch, touched because must[2]'s breaker has to refuse BEFORE the adapter is reached and this is the only place that can. The registry's files[] names the retry packages, not the service they guard; `llm-retry` was the alternative and is the wrong one -- it decides whether to retry and never issues a request, so a breaker consulted there would refuse a retry while letting a first attempt through to a dead endpoint. `LlmAdapter.endpointUrl` is added in the same file because only an adapter knows the endpoint a route resolves to."
+    },
+    {
+      "epic": "P4-11",
+      "path": "packages/mcp/mcp-client/src/connection.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "Changed by P4-11 part 2 (fix `4ff421f091`): a reconnect of a server mounted for one session asks that session's run budget and charges it, and gives up once the budget refuses. P4-11 U.2 case E observes it on the shipped acp profile."
+    },
+    {
+      "epic": "P4-11",
+      "path": "packages/mcp/mcp-client/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "Changed by P4-11 part 2 (PRECHECK `f48ee19408`): the runtime-only `chargeSession` field of the two MCP server config interfaces, naming the session whose Run each reconnect is charged to. P4-11 U.2 case E reaches it through the acp mount."
     },
     {
       "epic": "P4-11",
@@ -3241,10 +3311,50 @@
     },
     {
       "epic": "P4-11",
+      "path": "packages/reliability/retry-cockatiel/tests/fixtures/multi-spender-acp.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P4-11",
+      "path": "packages/reliability/retry-cockatiel/tests/fixtures/multi-spender-driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P4-11",
+      "path": "packages/reliability/retry-cockatiel/tests/fixtures/multi-spender.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P4-11",
+      "path": "packages/reliability/retry-cockatiel/tests/fixtures/reconnect-mcp-server.mjs",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P4-11",
       "path": "packages/reliability/retry-cockatiel/tests/fixtures/retry-mount.patch.yml",
       "kind": "test",
       "stages": [
         "U.1"
+      ]
+    },
+    {
+      "epic": "P4-11",
+      "path": "packages/reliability/retry-cockatiel/tests/fixtures/scripted-llm.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
       ]
     },
     {
@@ -3281,6 +3391,14 @@
       "kind": "test",
       "stages": [
         "U.1"
+      ]
+    },
+    {
+      "epic": "P4-11",
+      "path": "tests/first100/fixtures/P4-11.multi-spender.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
       ]
     },
     {

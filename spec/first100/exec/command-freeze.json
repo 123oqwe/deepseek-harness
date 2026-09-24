@@ -15934,6 +15934,60 @@
         "failureSummary": "Baseline: PRECHECK `691c310c81024c9bab36e310961da28700e47b6d`, narrow run 35967620513: exactly C1-C4 red, both benchmark specs green; the fix, run 35967641614: 37 passed / 0 failed; A3 `f8d01465f27741a458f76090fe5757fd76028b61`, run 35972152755: 37 passed / 0 failed. M-A, run 35967661773: C1-C4. M-B v2, run 35972133085: C1-C4. M-C, run 35967704202: C1, C3. M-D, run 35967728436: C3. M-E, run 35967748994: C1. M-F, run 35967768421: C4. M-G, run 35967789259: C2. M-H, run 35967812313: C1, C3. M-I, run 35967836839: C3. Each reading is exactly its predicted set, the benchmark specs green in every round: `artifacts/laneB/p0-07-p0-08-predictions.md` (sha256 `2bed565bfa3f6f266efbb863ec81f08d1cf91ec259308b66b815d5f9ae22a0dd`) and, for M-B v2 and A3, `artifacts/laneB/p0-08-m-b-v2-a3-predictions.md` (sha256 `ecbecf93995597cb8d2827cda1c338a427ae81222cf273de6276e849e2e1c7cf`), each written before its dispatch; lane B compared every run's failed fullNames with the predicted set."
       },
       "note": "P0-08's first U supplement: the registry's verify command, `pnpm benchmark:harness`, runs its lanes and writes both reports (BLOCKED-270; before the fix the script had another name and `runner.ts` had no entry point). The four cases run the command as a subprocess. C1 (acceptance[0]): `--lane deterministic` runs with no model API key configured and writes `report.json`, holding that lane alone with its 16 trials, and a `report.md` whose line for the lane carries its task success and its invariant verdict. C2 (acceptance[0]): with no `--lane` every keyless lane runs, deterministic, fault and security, each with its own report. C3 (acceptance[1]): two runs at one `--seed` write byte-identical `report.json` files equal to `runLanes` at that seed, and another seed changes the lane results. C4 (acceptance[0]): a lane with no scenario is refused by the runner with exit 2 and no report, so an empty run never reads as completed.\n\nThe dry-run tree is A3's (`b9ff35e3edac4e315edbfb7308402f56991fe29d` on the candidate): after the fix run, A3 changed the breach line's replay hint and the benchmark docs, and its own run passed all 37 cases.\n\nNot covered here: acceptance[2], the separate scoring of model results and base invariants, which P0-08's F and U entries cover; the real-model lane, which has no scenario and is skipped without a model; and the exact-SHA workflow step that runs the command, which these cases do not read."
+    },
+    {
+      "epic": "P4-11",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-11",
+        "stage": "U"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P4-11.multi-spender.composition.spec.ts",
+        "-t",
+        "P4-11 acceptance\\[1\\]: every plugin that retries draws on one run budget",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-11 acceptance[1]: every plugin that retries draws on one run budget P4-11 acceptance[1] on the shipped profile: a second plugin cannot resend once the run budget is spent",
+        "P4-11 acceptance[1]: every plugin that retries draws on one run budget P4-11 acceptance[1] on the shipped profile: the overflow resend is charged to the same run",
+        "P4-11 acceptance[1]: every plugin that retries draws on one run budget P4-11 acceptance[1] on the shipped profile: llm-retry stops below its own cap because another plugin spent",
+        "P4-11 acceptance[1]: every plugin that retries draws on one run budget P4-11 acceptance[1] on the shipped acp profile: a session's MCP reconnect spends the same run budget as llm-retry"
+      ],
+      "files": [
+        "tests/first100/fixtures/P4-11.multi-spender.composition.spec.ts",
+        "packages/reliability/retry-cockatiel/tests/fixtures/multi-spender-driver.ts",
+        "packages/reliability/retry-cockatiel/tests/fixtures/multi-spender.patch.yml",
+        "packages/reliability/retry-cockatiel/tests/fixtures/multi-spender-acp.patch.yml",
+        "packages/reliability/retry-cockatiel/tests/fixtures/reconnect-mcp-server.mjs",
+        "packages/reliability/retry-cockatiel/tests/fixtures/scripted-llm.ts",
+        "packages/compaction/compaction-basic/src/index.ts",
+        "packages/mcp/mcp-client/src/connection.ts",
+        "packages/mcp/mcp-client/src/index.ts",
+        "packages/acp/acp/src/mcp.ts",
+        "packages/acp/acp/src/session.ts",
+        "packages/llm/llm-retry/src/index.ts",
+        "packages/bundle/base/cordis.patch.yml",
+        "packages/bundle/acp-app/cordis.patch.yml",
+        ".agents/notes/implemented/bug-fix/2026-09-24-overflow-resends-and-session-mcp-reconnects-charge-the-run-budget.md",
+        ".agents/notes/implemented/bug-fix/2026-09-24-overflow-resends-and-session-mcp-reconnects-charge-the-run-budget.zh.md"
+      ],
+      "frozenAtUtc": "2026-09-24T10:10:51Z",
+      "dryRunProof": {
+        "treeSha": "9e6688dea1a1c1c14fc5d818431a57c05c439541",
+        "testsDiscovered": 4
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations off the fix `4ff421f0914c5738d7192d759ec98d2bc6baddb8`, each its own commit, never merged, each run by CI's narrow job at its own SHA over this spec, `tests/first100/fixtures/P4-11.composition.spec.ts`, the compaction-basic, llm-retry run-budget and mcp-client reconnect specs, and two acp specs. M-A (`e74f94ccf5028f81f60c83f9073dbe7d922e138c`) restores compaction-basic's `src/index.ts` from before the fix, so the overflow resend asks no run budget. M-B (`8581859f5afa556a2710ee9d6b67cf6836b4f02a`) charges the overflow resend but ignores a refusal. M-C (`6e366f137e56d9ce77a1b85273a4bea2507dc86c`) makes llm-retry charge its retries but ignore a refusal. M-E (`4000a0acc188ec5de8d75afa1e8e1954fb1e8ba1`) restores mcp-client's `connection.ts` so a reconnect asks no run budget.",
+        "failureSummary": "Baseline: PRECHECK `f48ee1940874a265d67953010168b819b3b007f6`, narrow run 35966408214: A, B, C and E red, with the unit cases Ua, Ub, Uc, Ma and Mb, every other case green; the fix, run 35966430163: 197 passed / 0 failed. M-A, run 35966453646: A, B, C (and Ua, Ub, Uc). M-B, run 35966474965: A (and Ua). M-C, run 35966497721: C, E (and the run-budget cases R1-R3). M-E, run 35966519432: E (and Ma, Mb). A, B, C, E are this entry's four cases in file order; the other labels resolve through `artifacts/laneB/p4-11-label-map.json` (sha256 `1d7f8c579a3cbe6871d091569f5ed223cd68d417c8bae7a6cbdc9bc8b37bbc08`, derived after the readings from the fix run's report). All six readings match `artifacts/laneB/p4-11-predictions.md` (sha256 `85cc1a335ebcd3da5951ca13296d6c7e3b2ae62631e6bbe5c95b3e3f70c0eaf2`), written before dispatch; the delegate and lane B each compared them by case."
+      },
+      "note": "P4-11's second U supplement: acceptance[1], several plugins cannot take the total retries past the Run budget, observed on shipped profiles through `multi-spender-driver.ts`. A: once the run budget is spent, a second plugin, compaction's overflow resend, cannot resend. B: an admitted overflow resend is charged to the same run. C: llm-retry stops below its own cap because another plugin spent from the run. E, on the shipped acp profile: a session's MCP reconnect spends the same run budget as llm-retry.\n\nThe argv selects this spec's `P4-11 acceptance[1]: every plugin that retries draws on one run budget` describe with `-t`, its brackets escaped because vitest compiles the value as a regular expression; lane A's case D in the same file is frozen separately as U.3. At the fix the spec held exactly these four cases.\n\nNot covered here: the unit cases in compaction-basic and mcp-client (Ua-Ud, Ma-Mf), which the readings used as extra sensitivity evidence and no entry freezes; `scripts/gen-doc-graphs.ts` still lists llm-retry as the only consumer, as recorded in the fix commit."
     }
   ]
 }

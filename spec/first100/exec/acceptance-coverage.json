@@ -3444,9 +3444,29 @@
         {
           "stage": "F",
           "title": "P4-11 Fault — retry decision boundary matrix fault boundary 20 the store exposes no read/write pair, which is why no update can be lost"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 2,
+          "title": "P4-11 acceptance[1]: every plugin that retries draws on one run budget P4-11 acceptance[1] on the shipped profile: a second plugin cannot resend once the run budget is spent"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 2,
+          "title": "P4-11 acceptance[1]: every plugin that retries draws on one run budget P4-11 acceptance[1] on the shipped profile: the overflow resend is charged to the same run"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 2,
+          "title": "P4-11 acceptance[1]: every plugin that retries draws on one run budget P4-11 acceptance[1] on the shipped profile: llm-retry stops below its own cap because another plugin spent"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 2,
+          "title": "P4-11 acceptance[1]: every plugin that retries draws on one run budget P4-11 acceptance[1] on the shipped acp profile: a session's MCP reconnect spends the same run budget as llm-retry"
         }
       ],
-      "note": "acceptance[1]: '多个插件不能使总重试超过 Run budget.' The clause is about a total that several independent spenders share, so it fails in more ways than 'the counter went too high'. The first C case is the positive: retries from DIFFERENT layers count against one total. The other three close the ways a total can be evaded without ever exceeding it — a refused attempt recorded as spent would exhaust the budget early, a delay charged after the wait would let a run begin a wait it cannot finish, and reading 0 as unlimited would remove the budget entirely at its most restrictive setting.\n\nThe two fault citations are the ones that make 'cannot exceed' hold across a lifetime rather than within a call. Boundary 18: a resolved charge is remembered, so a layer whose parent is GONE cannot reset the total by re-walking a broken chain. Boundary 20: the store exposes no read/write pair, so there is no interleaving in which two spenders both read the same remaining budget and both spend it — the lost-update shape that a naive counter has and this one cannot.\n\nSERVICE / PRODUCTION (§12.46-B): all six are what the LIBRARY does. That several PLUGINS really do share one run budget in production is not observed by any citation here; U is NOT_RUN.\n\n[2026-09-19 lane B, BLOCKED-281: the sentence above ends `U is NOT_RUN`, false since 2026-09-13 -- P4-11's U cell and its `U.1` supplement are both GREEN at run 34731419985, candidate `71580010ded3860d869dbbc559e277ee14c7474b`, and `U.1` charges a real retry to the run on the shipped `headless` profile. Kept rather than edited, for the same reason as acceptance[0]'s. **The residue is a missing SECOND SPENDER, counted:** the fixture drives exactly ONE independent spender against the run total -- `llm-retry`'s own retry path, charged once through `runFor`. No second plugin, no tool-level retry, no delegated child's own charge spends against the same run. One spender charging correctly is observed; several plugins sharing one total without exceeding it is not.]"
+      "note": "acceptance[1]: '多个插件不能使总重试超过 Run budget.' The clause is about a total that several independent spenders share, so it fails in more ways than 'the counter went too high'. The first C case is the positive: retries from DIFFERENT layers count against one total. The other three close the ways a total can be evaded without ever exceeding it — a refused attempt recorded as spent would exhaust the budget early, a delay charged after the wait would let a run begin a wait it cannot finish, and reading 0 as unlimited would remove the budget entirely at its most restrictive setting.\n\nThe two fault citations are the ones that make 'cannot exceed' hold across a lifetime rather than within a call. Boundary 18: a resolved charge is remembered, so a layer whose parent is GONE cannot reset the total by re-walking a broken chain. Boundary 20: the store exposes no read/write pair, so there is no interleaving in which two spenders both read the same remaining budget and both spend it — the lost-update shape that a naive counter has and this one cannot.\n\nSERVICE / PRODUCTION (§12.46-B): all six are what the LIBRARY does. That several PLUGINS really do share one run budget in production is not observed by any citation here; U is NOT_RUN.\n\n[2026-09-19 lane B, BLOCKED-281: the sentence above ends `U is NOT_RUN`, false since 2026-09-13 -- P4-11's U cell and its `U.1` supplement are both GREEN at run 34731419985, candidate `71580010ded3860d869dbbc559e277ee14c7474b`, and `U.1` charges a real retry to the run on the shipped `headless` profile. Kept rather than edited, for the same reason as acceptance[0]'s. **The residue is a missing SECOND SPENDER, counted:** the fixture drives exactly ONE independent spender against the run total -- `llm-retry`'s own retry path, charged once through `runFor`. No second plugin, no tool-level retry, no delegated child's own charge spends against the same run. One spender charging correctly is observed; several plugins sharing one total without exceeding it is not.]\n\n[2026-09-24 lane B: the four `stage: U, supplementSeq: 2` citations are P4-11 U.2 on shipped profiles: compaction's overflow resend is refused once the run budget is spent (A) and charged to the run when admitted (B), llm-retry stops below its own cap because another plugin spent (C), and an acp session's MCP reconnect spends the same budget (E). M-A and M-B (compaction), M-C (llm-retry) and M-E (mcp-client) each reddened their predicted subset.]"
     },
     {
       "epic": "P4-11",
