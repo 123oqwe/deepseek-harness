@@ -916,7 +916,6 @@ function findUnexemptedCycles(edges, exemptedCycles) {
       }
     }
   }
-  for (const start of [...recordedAdjacency.keys()].sort()) extend([start], new Set([start]))
 
   const byLengthThenName = (a, b) => a.length - b.length || (a.join('\0') < b.join('\0') ? -1 : 1)
   return {
