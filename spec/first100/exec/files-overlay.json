@@ -3110,10 +3110,38 @@
     },
     {
       "epic": "P4-08",
+      "path": ".agents/notes/implemented/bug-fix/2026-09-24-workflow-resume-returns-real-outputs-and-reports-a-refusal.md",
+      "kind": "doc",
+      "stages": [
+        "U.4",
+        "U.5"
+      ]
+    },
+    {
+      "epic": "P4-08",
+      "path": ".agents/notes/implemented/bug-fix/2026-09-24-workflow-resume-returns-real-outputs-and-reports-a-refusal.zh.md",
+      "kind": "doc",
+      "stages": [
+        "U.4",
+        "U.5"
+      ]
+    },
+    {
+      "epic": "P4-08",
+      "path": "apps/cli/tests/profiles/acp/tests/workflow-resume.e2e.ts",
+      "kind": "test",
+      "stages": [
+        "U.4"
+      ]
+    },
+    {
+      "epic": "P4-08",
       "path": "packages/collaboration/workflow-journal/src/observer.ts",
       "kind": "source",
       "stages": [
-        "U"
+        "U",
+        "U.4",
+        "U.5"
       ],
       "reason": "The observer that turns journal records into an observable stream, which the U stage's clause is about. The package moved to collaboration/workflow-journal; the freeze `files` entry was re-pointed 2026-09-15."
     },
@@ -3153,6 +3181,33 @@
     },
     {
       "epic": "P4-08",
+      "path": "packages/test-support/session-snapshot/src/stub-model.ts",
+      "kind": "source",
+      "stages": [
+        "U.4"
+      ],
+      "reason": "Changed by P4-08's PRECHECK (`206136bcb9`): the stand-in model can hold a request until the case releases it, and a scripted tool call can name its id; its default behaviour is unchanged. P4-08 U.4 confirms each kill point by a held request."
+    },
+    {
+      "epic": "P4-08",
+      "path": "packages/workflow/tool-workflow/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.4",
+        "U.5"
+      ],
+      "reason": "Changed by the P4-08 fix (`0d2a53c948`): the `workflow` tool's `resume` parameter reaches `engine.resume`, is refused together with `detached` or when it is not a run id, and a refused resume is carried in the result and named in the text the model reads. P4-08 U.4 and U.5 depend on it."
+    },
+    {
+      "epic": "P4-08",
+      "path": "packages/workflow/tool-workflow/tests/resume.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.5"
+      ]
+    },
+    {
+      "epic": "P4-08",
       "path": "packages/workflow/workflow-worker-thread/package.json",
       "kind": "manifest",
       "stages": [
@@ -3177,7 +3232,9 @@
       "stages": [
         "U.1",
         "U.2",
-        "U.3"
+        "U.3",
+        "U.4",
+        "U.5"
       ],
       "reason": "The reconciliation itself: which recorded steps a resumed run may reuse, and the script digest `admitResume` compares. New file; the plan named the journal package but not the engine-side half that reads it back."
     },
@@ -3214,6 +3271,14 @@
       "stages": [
         "U.1",
         "U.2"
+      ]
+    },
+    {
+      "epic": "P4-08",
+      "path": "packages/workflow/workflow-worker-thread/tests/resume-values.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.5"
       ]
     },
     {
