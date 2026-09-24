@@ -1289,7 +1289,7 @@ function cmdRevokeCell() {
   }
   const observedKeys = new Set(observed.map(commitmentKey))
   const absent = commitments.filter((e) => !observedKeys.has(commitmentKey(e)))
-  if (absent.length === 0) {
+  if (absent.length === 0 && key === undefined) {
     console.error(
       `BLOCKED: ${label}'s observation ${String(cell.candidateSha).slice(0, 10)} DOES contain its live freeze entries, `
       + 'so this cell is not revocable — this command exists only to withdraw a green that pre-committed to nothing.',
