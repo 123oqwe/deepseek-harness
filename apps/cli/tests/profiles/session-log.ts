@@ -136,7 +136,7 @@ export function attachedIdentity(log: Pick<SessionLog, 'records'>): LoggedIdenti
   if (attached === undefined) throw new Error('this session log carries no identity/attached record')
   const identity = attached.data?.['identity']
   if (typeof identity !== 'object' || identity === null) throw new Error('the identity/attached record carries no identity')
-  return identity as LoggedIdentity
+  return identity
 }
 
 /**
