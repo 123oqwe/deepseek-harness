@@ -308,15 +308,6 @@ export async function composeProfile(
       + `${activation.missingCapabilities.length > 0 ? `: ${activation.missingCapabilities.join(', ')}` : ''})\n`,
     )
   }
-  for (const { layer, activation } of negotiation.admitted) {
-    if (activation.disabledOptionalCapabilities.length === 0) continue
-    // acceptance[2]: an unsatisfied optional capability disables that feature
-    // only, and is shown rather than left for the user to infer from absence.
-    process.stderr.write(
-      `${NAME}: plugin compatibility: bundle ${JSON.stringify(layer.packageName)} is active with disabled optional `
-      + `capabilities: ${activation.disabledOptionalCapabilities.join(', ')}\n`,
-    )
-  }
   const homePatches = loadOptionalPatches(NAME, homePatchPath()) ?? []
   const overlays = patchFiles.flatMap(file => loadOverlayPatches(NAME, resolve(file)))
   const bundlePatches = negotiation.admitted.flatMap(entry => entry.layer.patches)
