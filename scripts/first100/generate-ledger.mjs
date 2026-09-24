@@ -2296,6 +2296,15 @@ function cmdCheck() {
       process.exit(1)
     }
   }
+  for (const [epic, row] of Object.entries(ledger.rows)) {
+    for (const [stage, cell] of Object.entries(row.cells ?? {})) {
+      const refusal = cell?.status === 'GREEN' ? recordedExitRefusal(cell.observationReportPath, cell.exitOverride?.reason) : null
+      if (refusal !== null) {
+        console.error(`DRIFT: ${epic}.${stage}: ${refusal}`)
+        process.exit(1)
+      }
+    }
+  }
   console.log(`verify: ${LEDGER_PATH} carries a generate-ledger.mjs header (${Object.keys(ledger.rows).length} rows); EXEC-STATE digests match both files; acceptance-coverage.json conforms to its schema; coverage closure holds for all ${acceptedRows.length} ACCEPTED rows`)
   process.exit(0)
 }
