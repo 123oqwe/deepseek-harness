@@ -819,13 +819,6 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
         agentsStarted: settled.agentsStarted,
       })
     })
-    // The detached run itself is disposed at the same terminal state as its
-    // agent: `WorkerRun.dispose` terminates the worker thread, which otherwise
-    // keeps the process alive, and then releases the run's lease. Registered
-    // after the `workflow/end` reaction, which checks that lease.
-    if (detached !== undefined) {
-      void workerRun.result.then(() => workerRun.dispose())
-    }
 
     return workerRun
   }
