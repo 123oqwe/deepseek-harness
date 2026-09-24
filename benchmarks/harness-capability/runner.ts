@@ -230,6 +230,6 @@ function main(argv: readonly string[]): number {
   return 0
 }
 
-if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+if (false && process.argv[1] !== undefined && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   process.exitCode = main(process.argv.slice(2))
 }
