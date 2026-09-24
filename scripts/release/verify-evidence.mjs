@@ -56,7 +56,8 @@
  * otherwise, printing every mismatch found. The first output line names the
  * package's resolved path and `accepted=true` only for a package that verified
  * clean and records the boolean `true`; a package that failed says
- * `accepted=false` and names what it records in words. These are the two facts
+ * `accepted=false` and names what it records in words, or, when verification
+ * could not complete, says it could not read that. These are the two facts
  * a report of this gate cites (`AGENTS.md`, evidence-gate reporting). A check
  * that cannot run, for example because git or pnpm is missing, is a named
  * mismatch, and a package that verify cannot read to the end, such as valid
@@ -299,14 +300,16 @@ function main() {
   try {
     result = verify(repoRoot, evidencePath)
   } catch (error) {
-    // A package that parses but lacks a field verify reads.
-    result = { ok: false, mismatches: [`verify could not complete: ${errorText(error)}`], accepted: null }
+    // A package that parses but lacks a field verify reads. What it records
+    // was not read, so the result line names no value for it.
+    result = { ok: false, mismatches: [`verify could not complete: ${errorText(error)}`], unread: true }
   }
   if (result.ok) {
     process.stdout.write(`verify-evidence: ${evidencePath} verified offline, no mismatches, accepted=${result.accepted === true}\n`)
     process.exit(0)
   }
-  process.stdout.write(`verify-evidence: ${evidencePath} FAILED verification, accepted=false (the package records ${JSON.stringify(result.accepted)}):\n${result.mismatches.map(line => `  ${line}`).join('\n')}\n`)
+  const records = result.unread === true ? 'verify could not read what the package records' : `the package records ${JSON.stringify(result.accepted)}`
+  process.stdout.write(`verify-evidence: ${evidencePath} FAILED verification, accepted=false (${records}):\n${result.mismatches.map(line => `  ${line}`).join('\n')}\n`)
   process.exit(1)
 }
 
