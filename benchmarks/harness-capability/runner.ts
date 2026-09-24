@@ -224,7 +224,6 @@ function main(argv: readonly string[]): number {
   const out = resolve(values.out ?? '.artifacts/benchmark')
   mkdirSync(out, { recursive: true })
   writeFileSync(join(out, 'report.json'), `${JSON.stringify({ seed, lanes, ...run, invariantsHeld: invariantsHeld(run.reports) }, null, 2)}\n`)
-  writeFileSync(join(out, 'report.md'), ['# Harness capability benchmark', '', `Seed: ${seed}`, '', ...lines.map(line => `- ${line.trim()}`), ''].join('\n'))
   for (const line of lines) console.log(line)
   console.log(`benchmark:harness: reports written to ${out}`)
   return 0
