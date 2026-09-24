@@ -31,7 +31,7 @@
  */
 
 import { execFileSync, spawnSync, type SpawnSyncReturns } from 'node:child_process'
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { delimiter, dirname, join, resolve } from 'node:path'
 import { createHash } from 'node:crypto'
@@ -1053,6 +1053,39 @@ describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', { ti
       const result = verifyEvidence(root)
       expect(result.status, result.stdout).toBe(1)
       expect(result.stdout).toContain('working-tree diff re-derivation failed')
+    })
+
+    /**
+     * A path git would write to if an option-shaped commit id reached it as `--output=<path>`.
+     * @returns the path, in a directory that exists and is cleaned up.
+     */
+    function injectionTarget(): string {
+      const dir = mkdtempSync(join(tmpdir(), 'dsh-evidence-inject-'))
+      fixtureRoots.push(dir)
+      return join(dir, 'written-by-git')
+    }
+
+    it('refuses a package whose gitDiff.baseSha is not a commit id, and hands it to no git command', () => {
+      const { root } = collectOneAcceptedGate()
+      const target = injectionTarget()
+      const evidencePath = join(root, '.dsh/evidence/evidence.json')
+      const pkg = JSON.parse(readFileSync(evidencePath, 'utf8')) as { gitDiff: Record<string, unknown> }
+      writeFileSync(evidencePath, `${JSON.stringify({ ...pkg, gitDiff: { ...pkg.gitDiff, baseSha: `--output=${target}` } }, null, 2)}\n`)
+
+      const result = verifyEvidence(root)
+      expect(result.status, result.stdout).toBe(1)
+      expect(result.stdout).toContain('is not a 40- or 64-digit hex commit id')
+      expect(existsSync(target)).toBe(false)
+    })
+
+    it('does not let an option-shaped --base-sha reach git as an option when collecting', () => {
+      const { root } = makeEvidenceFixture()
+      captureBaseline(root)
+      const target = injectionTarget()
+
+      const result = collectInit(root, `--output=${target}`, ['typecheck'], ['lib/index.js'])
+      expect(result.status, result.stderr).not.toBe(0)
+      expect(existsSync(target)).toBe(false)
     })
   })
 
