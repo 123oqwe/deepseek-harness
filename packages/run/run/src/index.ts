@@ -896,6 +896,7 @@ export default class RunPlugin extends Service {
    */
   private open(agent: Agent): void {
     if (agent.runId !== undefined) return
+    if (agent.session.header.parentSession !== undefined) return
     const continuing = this.adoptable(agent)
     const runId = continuing ?? brandString<RunId>(`run-${randomUUID()}`)
     // The lease is taken BEFORE the Run is registered. A Run that exists
