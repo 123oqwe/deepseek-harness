@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-24T18:08:20.877Z",
-  "inputDigest": "8e107052d4a89c9775ca0d76cf71519f35da593345e06e8d50210a244696a6ce",
+  "lastUpdatedUtc": "2026-09-24T18:41:04.975Z",
+  "inputDigest": "f6de705da68e10e9be1c3f48a9b35aded6b774ed46e696998f6650d1c2260dca",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -640,25 +640,13 @@
       },
       "supplements": {
         "U.1": {
-          "status": "GREEN",
-          "candidateSha": "4736909e5981ea8b26d629f12daac5e523815e81",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030259739",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36030259739/first100-vitest-report-4736909e5981ea8b26d629f12daac5e523815e81/vitest-report.json",
-          "observationSha256": "ceb1159ec268b15c4b59f11bdb23028bf72be6e6a17620c0fb5978d3b8bd1ba8",
-          "expectCasesMatched": [
-            "acceptance[0]: the scanned workspace is the one pnpm-workspace.yaml declares the layer checker refuses a pnpm-workspace.yaml whose patterns match no package",
-            "acceptance[0]: every unexempted cycle is reported, and a record exempts the one cycle its edges name (layering.md rule 5) reports a cycle in which a vendored package depends on a classified one",
-            "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through a declare-module augmentation declaring a const named Context",
-            "acceptance[1]: a kernel package depends on no model provider, UI package or external package rejects a kernel dependency on a model provider declared only in optionalDependencies",
-            "acceptance[1]: a kernel package depends on no model provider, UI package or external package rejects a kernel dependency on a UI package declared only in optionalDependencies",
-            "acceptance[1]: a kernel package depends on no model provider, UI package or external package rejects a kernel package declaring a UI application under apps/, even one it imports nothing from",
-            "acceptance[2]: the time budget runs against a 10-second budget unless --budget-ms replaces it"
-          ],
-          "exitOverride": {
-            "exitCode": null,
-            "reason": "run 36030259739 predates the exit record (BLOCKED-326): step 18 \"Full test suite (verbose json reporter — the ledger's observation input)\" of .github/workflows/first100-exact-sha.yml at 4736909e59 (:334-336) runs one vitest command with no \"|| true\" and no continue-on-error, and concluded success, so the process exit was 0"
+          "status": "NOT_RUN",
+          "revokedFrom": {
+            "candidateSha": "4736909e5981ea8b26d629f12daac5e523815e81",
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030259739",
+            "absentCommitments": 1
           },
-          "capturedAtUtc": "2026-09-24T18:02:17.074Z"
+          "revokedReason": "P0-04 U.1 was re-frozen at its seq under the A2-1 title (a class named Context), so its observation of [363] at 4736909e59 holds no live entry of its own; batch 7 re-observes it"
         }
       },
       "candidateSha": "4736909e5981ea8b26d629f12daac5e523815e81",
