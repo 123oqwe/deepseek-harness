@@ -2,8 +2,9 @@
  * Driver for P3-01 acceptance[0]'s shipped-composition cases: one tool call,
  * with the call's world bound by the local provider or by the fenced one.
  *
- * It writes one file into its working directory, then boots the SHIPPED
- * headless profile through `bootProductionProfile` with `./base.patch.yml`
+ * It changes into the working directory the spec shares between both modes,
+ * where the spec wrote one file, then boots the SHIPPED headless profile
+ * through `bootProductionProfile` with `./base.patch.yml`
  * under `workspace-write`, the Trust Kernel pinned the way
  * `apps/cli/src/profile-boot.ts` pins it. In `fenced` mode it also layers
  * `./fenced-only.patch.yml`, which removes the local world provider's row, so
@@ -19,7 +20,6 @@
  */
 
 import { randomUUID } from 'node:crypto'
-import { writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { HOST_USER_IDENTITY_KEY, type HostUserIdentityFactory } from '@deepseek-ai/dsh-agent-loop'
 import { resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
@@ -28,7 +28,7 @@ import { endorseComposedDecision } from '@deepseek-ai/dsh-policy-enforcement'
 import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
 import { createFixtureRootAgent } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts'
 import { bootProductionProfile } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/production-profile.ts'
-import { PROVIDER, READ_FILE, READ_LINE } from './shared.ts'
+import { PROVIDER } from './shared.ts'
 
 const fencedOnly = fileURLToPath(new URL('./fenced-only.patch.yml', import.meta.url))
 
@@ -42,17 +42,20 @@ interface Report {
   readonly toolResults: readonly string[]
 }
 
-const [configPath, mode] = process.argv.slice(2)
-if (configPath === undefined || (mode !== 'shipped' && mode !== 'fenced')) {
-  throw new Error('p3-01 world-swap driver requires the overlay path and `shipped` or `fenced`')
+const [configPath, mode, workspace] = process.argv.slice(2)
+if (configPath === undefined || (mode !== 'shipped' && mode !== 'fenced') || workspace === undefined) {
+  throw new Error('p3-01 world-swap driver requires the overlay path, `shipped` or `fenced`, and the shared working directory')
 }
+
+// Both modes run in one directory: under `workspace-write` the world spec
+// names the workspace root, which the base layer takes from `process.cwd()`.
+process.chdir(workspace)
 
 process.env.DSH_PERMISSION_MODE = 'workspace-write'
 
 /** Every audit payload the kernel was handed, in order: the policy records are read here. */
 const auditEntries: unknown[] = []
 
-await writeFile(READ_FILE, `${READ_LINE}\n`, 'utf8')
 const ctx = await bootProductionProfile({
   binName: 'p3-01-world-swap',
   profile: 'headless',
