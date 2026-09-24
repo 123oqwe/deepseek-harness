@@ -1,0 +1,35 @@
+# Test-only overlay over the SHIPPED headless profile for P3-01's world-swap
+# cases (acceptance[0]). It mounts no world, policy, approval or permission
+# row: the base layer's `execution-worlds`, `execution-world-local`,
+# `execution-world-fenced`, `policy-engine`, `permission` and `approval` rows
+# are the ones observed. It supplies a keyless scripted model and an
+# uncompressed session log, and turns off the rows that would run a task of
+# their own.
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: agent-loop
+  config:
+    agents:
+      - id: main
+        provider: p3-01-world-swap-mock
+        model: p3-01-world-swap-mock
+        cwd: !!js process.cwd()
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
+
+- insert:
+    - id: p3-01-world-swap-mock-llm
+      name: './mock-llm.ts'

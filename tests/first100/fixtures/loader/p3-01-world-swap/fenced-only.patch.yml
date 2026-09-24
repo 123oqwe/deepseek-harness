@@ -1,0 +1,7 @@
+# Layered over `./base.patch.yml` for the fenced half of P3-01's world-swap
+# cases: the local world provider's row is removed, which is how the base
+# layer's comment says a deployment swaps providers. The fenced row stays as
+# shipped, and with no local provider registered it serves worlds that ask for
+# no ceiling as well.
+- id: execution-world-local
+  disabled: true
