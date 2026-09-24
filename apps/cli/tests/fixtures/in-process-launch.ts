@@ -67,7 +67,7 @@ export function useInProcessLaunch(): InProcessLaunch {
 
   afterEach(() => {
     for (const [name, value] of savedEnv) {
-      if (value === undefined) delete process.env[name]
+      if (value === undefined) Reflect.deleteProperty(process.env, name)
       else process.env[name] = value
     }
     for (const [event, before] of savedListeners) {
