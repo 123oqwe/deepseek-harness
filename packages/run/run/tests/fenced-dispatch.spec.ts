@@ -30,7 +30,7 @@ import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime, { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
 import { gateActionRisk } from '@deepseek-ai/dsh-tools/external-effect'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import RunPlugin from '../src/index.ts'
 
@@ -292,8 +292,10 @@ describe('the Run lease is an authority the harness presents (P4-07 must[1], §1
     await handle.dispose()
 
     expect(agent.lifecycle?.state).toBe('completed')
-    expect(ctx.leaseStore.get(workItem)).toBeUndefined()
-    // Immediately, not after the term: a second host takes it now.
+    // Given back once the Run's terminal write settles, because that write
+    // carries this lease and is checked where it is written (P4-07 must[1]).
+    await vi.waitFor(() => { expect(ctx.leaseStore.get(workItem)).toBeUndefined() }, { timeout: 1_000 })
+    // Well inside the term, not after it: a second host takes it now.
     const second = ctx.leaseStore.acquire(workItem, brandString<WorkerId>('a-second-host'), Date.now(), 1_000)
     expect(second.acquired).toBe(true)
     // And with a GREATER epoch, because releasing hands the item to nobody:
