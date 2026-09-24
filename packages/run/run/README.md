@@ -222,13 +222,14 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   whole life.** When reading the predecessor or taking the lease throws (for
   example another connection holds the SQLite lock past its busy timeout),
   `open` marks the agent `leaseRefused` and opens no Run, the same as a refused
-  lease, and logs `the lease store failed`. New work stops while the store fails
+  lease, and logs `its lease was refused (lease-unavailable: …)`. New work stops while the store fails
   (P4-07 acceptance[2]); the mark is not retried, so a new session is needed
   once the store recovers.
 - **Only a Run's first-step and terminal writes carry the lease.**
   `RunService.advance` takes the writer's lease and checks
   `mayWrite(occurredAt)` in the Run's turn, right before the state machine
-  decides; a refusal records nothing and reads `'fenced'`. `RunPlugin` passes
+  decides; a refusal records nothing and reads `'fenced'`, or
+  `'lease-unavailable'` when asking the lease throws. `RunPlugin` passes
   the agent's lease for `accepted → planning`, `→ running`, `cancelled`,
   `verifying` and `succeeded` or `failed`, and gives the item back only after
   the terminal writes settle. `pauseRun` gives the lease back before it writes
@@ -237,8 +238,9 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   SQLite and the Run in its JSON store, so a write admitted just before a
   takeover can still land: "stale writes after a newer token = 0" is not
   claimed. If the lease provider is torn down before a session's terminal writes
-  settle, the writes still to be checked and the release throw (reported as a
-  failed Run store write), and the lease row stays until it lapses.
+  settle, those writes are refused as `'lease-unavailable'` and the release
+  throws (reported as a failed Run store write), so the Run keeps a
+  non-terminal state and the lease row stays until it lapses.
 - **`paused` is legal and unreached.** The advancing paths are `agent/pre-step`
   (`queued → starting → running`, and the return from `waiting_tool`), the
   dispatch risk gate in `@deepseek-ai/dsh-tools` (`waiting_human` for as long as

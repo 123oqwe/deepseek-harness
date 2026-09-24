@@ -234,9 +234,10 @@ export interface Run {
  * `./state-machine.ts`'s `transition` finds the pair outside
  * `LEGAL_RUN_TRANSITIONS[from]` (acceptance[1]); `'fenced'` when
  * `RunService.advance` was given the writer's lease and that lease no longer
- * admits the write (P4-07 must[1]).
+ * admits the write (P4-07 must[1]); `'lease-unavailable'` when asking that
+ * lease threw, so the store could not admit it.
  */
-export type RunTransitionDenialReason = 'illegal-transition' | 'fenced'
+export type RunTransitionDenialReason = 'illegal-transition' | 'fenced' | 'lease-unavailable'
 
 /**
  * The outcome of a Run transition, from `./state-machine.ts`'s `transition` or
