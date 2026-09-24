@@ -38,6 +38,7 @@ const LEGACY_SOURCE_TYPES = new Set([
  * @param version - exact expected generation.
  */
 export function assertReleasedSessionFormatHeader(header: SessionFormatHeader, version: 0 | 1): void {
+  if (version === 0) throw new SessionFormatError('M0-1: released format v0 header refused')
   const record = releasedV0Record(header, `format v${version} header`)
   assertReleasedV0Keys(record, HEADER_REQUIRED, HEADER_OPTIONAL, `format v${version} header`)
   if (record['version'] !== version) throw new SessionFormatError(`expected format v${version} header`)
