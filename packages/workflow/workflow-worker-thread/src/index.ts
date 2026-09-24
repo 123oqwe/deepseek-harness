@@ -835,13 +835,9 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     // The detached run itself is disposed at the same terminal state as its
     // agent: `WorkerRun.dispose` terminates the worker thread, which otherwise
     // keeps the process alive, and then releases the run's lease. Registered
-    // after the `workflow/end` reaction, which checks that lease. `dispose`
-    // rejects when giving the lease back throws, and no caller holds this
-    // promise, so the failure is logged here.
+    // after the `workflow/end` reaction, which checks that lease.
     if (detached !== undefined) {
-      void workerRun.result.then(() => workerRun.dispose()).catch((error: unknown) => {
-        this.ctx.logger.warn(`workflow-worker-thread: detached run ${id} was not disposed: ${error instanceof Error ? error.message : String(error)}`)
-      })
+      void workerRun.result.then(() => workerRun.dispose())
     }
 
     return workerRun
