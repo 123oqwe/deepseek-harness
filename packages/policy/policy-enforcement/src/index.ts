@@ -183,9 +183,12 @@ export function enforceAction(ctx: Context, request: PolicyRequest, origin: stri
   // refusal the engine or a constraint already made.
   const verdict: TrustKernelPolicyVerdict = kernel.policyEnforcement({ payload: composed.decision })
   const overridden = verdict === 'deny' && composed.decision.effect !== 'deny'
-  const decision: ClosedDecision = overridden
+  const decided: ClosedDecision = overridden
     ? { effect: 'deny', reason: 'policy-unavailable', policySet: composed.decision.policySet }
     : composed.decision
+  const decision: ClosedDecision = request.world.kind === 'bound' && String(request.world.provider) === 'fenced'
+    ? { effect: 'deny', reason: 'forbidden-by-policy', policySet: decided.policySet }
+    : decided
 
   // Appended AFTER the binding, and carrying the decision that was ENFORCED
   // (BLOCKED-194). The earlier order recorded what the policy layer decided
