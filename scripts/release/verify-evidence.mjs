@@ -302,7 +302,7 @@ function main() {
   } catch (error) {
     // A package that parses but lacks a field verify reads. What it records
     // was not read, so the result line names no value for it.
-    result = { ok: false, mismatches: [`verify could not complete: ${errorText(error)}`], unread: true }
+    result = { ok: false, mismatches: [`verify could not complete: ${errorText(error)}`], accepted: null }
   }
   if (result.ok) {
     process.stdout.write(`verify-evidence: ${evidencePath} verified offline, no mismatches, accepted=${result.accepted === true}\n`)
