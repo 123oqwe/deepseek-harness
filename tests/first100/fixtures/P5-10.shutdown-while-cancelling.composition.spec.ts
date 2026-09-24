@@ -149,12 +149,23 @@ describe('BLOCKED-333: a child still cancelling when the host shuts down gracefu
     expect(first?.text ?? '(no settlement notice from the child)', JSON.stringify(log)).toMatch(STOPPED)
   })
 
-  it('the stop is never lost silently: the parent log holds the stop notice, or a line on stderr, in a log file or in a session event names the child and says its settlement failed', () => {
+  it('the stop is never lost silently: the parent log holds the stop notice, or a line on stderr, in a log file or in a session event names the child and says its settlement failed', ({ task }) => {
     const child = reports[0]?.before.reading.ids.child ?? '(no child id)'
     const noticed = settlementsFrom(reports[0]?.after.reading.parentLog ?? null, child).some(message => STOPPED.test(message.text))
     const lines = reports[0]?.stderrSettlementLines
-    const reported = [...lines?.before ?? [], ...lines?.after ?? [], ...fileLines]
-      .filter(line => line.includes(child) && FAILURE.test(line))
+    const reported = [
+      ...(lines?.before ?? []).map(line => `stderr before: ${line}`),
+      ...(lines?.after ?? []).map(line => `stderr after: ${line}`),
+      ...fileLines,
+    ].filter(line => line.includes(child) && FAILURE.test(line))
+    // Recorded on the task, which the JSON reporter carries, so a pass shows what satisfied it.
+    Object.assign(task.meta, {
+      a389c: {
+        noticed,
+        reported: reported.map(line => line.slice(0, 600)),
+        candidates: fileLines.filter(line => line.includes(child)).map(line => line.slice(0, 600)),
+      },
+    })
     expect(noticed || reported.length > 0, JSON.stringify({ noticed, reported, candidates: fileLines.filter(line => line.includes(child)) })).toBe(true)
   })
 })
