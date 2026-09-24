@@ -508,9 +508,10 @@ describe('P4-05 must[0]: `waiting_human` is a state a run can actually reach', (
     const ctx = await harness()
     const handle = await ctx.agents.create({ sessionId: SessionId('session-asks') })
     const { agent } = handle
-    // `waiting_human` is legal only from `running`, which production reaches
-    // through `agent/pre-step`. Walked explicitly here so the case does not
-    // depend on a model turn it is not testing.
+    // `waiting_human` is legal from `running`, which production reaches
+    // through `agent/pre-step`, and from `waiting_tool`. Walked explicitly to
+    // `running` here so the case does not depend on a model turn it is not
+    // testing.
     advanceLeasedAgent(agent, 'starting', 'test drives the run to running')
     advanceLeasedAgent(agent, 'running', 'test drives the run to running')
 

@@ -90,7 +90,10 @@ export const LEGAL_TRANSITIONS: Readonly<Record<AgentLifecycleState, readonly Ag
   queued: ['starting', 'cancelling', 'failed', 'orphaned'],
   starting: ['running', 'cancelling', 'failed', 'orphaned'],
   running: ['waiting_tool', 'waiting_human', 'paused', 'cancelling', 'completed', 'failed', 'orphaned'],
-  waiting_tool: ['running', 'cancelling', 'failed', 'orphaned'],
+  // `waiting_human` too: the native dispatch path is in `waiting_tool` when a
+  // call reaches the risk gate, and while an operator is asked the run waits
+  // on a person, not on the tool (P4-05 must[0]).
+  waiting_tool: ['running', 'waiting_human', 'cancelling', 'failed', 'orphaned'],
   waiting_human: ['running', 'cancelling', 'failed', 'orphaned'],
   paused: ['running', 'cancelling', 'failed', 'orphaned'],
   cancelling: ['failed', 'completed', 'orphaned'],
