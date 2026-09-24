@@ -116,8 +116,6 @@ class ProtocolVersionRange(BaseModel):
 
 
 class InitializeResponse(BaseModel):
-    model_config = _KEEP_UNKNOWN
-
     serverInfo: ServerInfo | None = None
     negotiation: NegotiationProvenance | None = None
     protocolVersions: ProtocolVersionRange | None = None
