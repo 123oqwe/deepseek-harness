@@ -18229,6 +18229,119 @@
         "failureSummary": "R1 (v0-to-v1): red on the round 1 PRECHECK c92b172312 (run 36033589191), M-a (run 36033644350) and M-a2 (run 36036149735). The v2-to-v3 case: red on PRECHECK2 6178f7b590 (run 36036098063) and M-c3 (run 36039157689). The catalog case, which walks a v0 log through every edge to v3: red on PRE3 21d4f54cb9 (run 36039110576) and M-c3, both times refused by the v2-to-v3 edge (\"subagent/descriptor 1 version must be one of 3\"), not by its expectation. The correction ed141ae3ea, run 36039134278: 817 of 817 over lane A's replay spec and the v0-to-v1, v2-to-v3 and catalog packages. Readings match artifacts/laneB/p0-06-descriptor-predictions.md (7a4a04db…), -v2.md (5b5cd616…) and -v3.md (fb01e806…), each written and hashed before its runs; round 1's fix and round 2's FIX2 did not match (the v2-to-v3 edge, then the catalog case's expectation), and each correction is recorded in the next file."
       },
       "note": "P0-06 acceptance[0], lane B's descriptor fix (B-560): a released v0 log whose subagent descriptor is version 2, the version v0-era builds wrote, is read. The v0-to-v1 edge keeps a descriptor of version 2 (R1), the v2-to-v3 edge keeps a descriptor of an earlier version rather than validating it against version 3 (the v2-to-v3 case), and a v0 log restores through every edge to v3 with its descriptor unchanged, after the end-seed the v1-to-v2 edge adds for a seeded header (the catalog case). The argv selects the three by title with an escaped alternation in -t. Lane A's F.1 replays the 157 real v0 logs of audit baseline b150a551 over the same fix."
+    },
+    {
+      "epic": "P2-01",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-01",
+        "stage": "U"
+      },
+      "supplementSeq": 5,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "vitest.e2e.config.ts",
+        "apps/cli/tests/profiles/headless/tests/host-user.e2e.ts",
+        "apps/cli/tests/profiles/web/tests/host-user.e2e.ts",
+        "apps/cli/tests/profiles/headless/tests/workflow-chain.e2e.ts"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "dsh --profile headless, launched with no patch (no key required) P2-01 acceptance[0]: a launched headless run acts as the host user, attached once",
+        "dsh --profile web, booted in-process through the launcher (no key required) P2-01 acceptance[0]: a web session created through the session controller acts as the host user, attached once",
+        "a detached workflow run on dsh --profile headless (no key required) P2-01 acceptance[0]: an action inside a detached workflow run carries its launcher's delegation chain plus the workflow hop"
+      ],
+      "files": [
+        "apps/cli/tests/profiles/headless/tests/host-user.e2e.ts",
+        "apps/cli/tests/profiles/web/tests/host-user.e2e.ts",
+        "apps/cli/tests/profiles/headless/tests/workflow-chain.e2e.ts",
+        "apps/cli/tests/profiles/session-log.ts",
+        "apps/cli/tests/profiles/routing-stub-model.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T17:14:38Z",
+      "dryRunProof": {
+        "treeSha": "e09f4af1a6405bd41a55b509f2e20d9f0ca1ad61",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Each mutation one product file, never merged, run by CI's narrow job at its own SHA with a build first, over the four P2-01 e2e files together. A5: M-P2-01″ (`08a9c6ff1b2300f5ede2c276e567da294485ba47`, off PRECHECK fcb772cabb on c62bfac2cf) reverts V2 甲 (4e06a3cac5) in packages/workflow/workflow-worker-thread/src/index.ts, so a detached run's agent carries its launcher's identity unchanged. A2: M4 (`0d9188537b`) drops the host-user identity from the headless create branch (packages/bundle/headless/src/index.ts). A3: M5 (`4c2be4d7ea`) leaves the session controller's agentOptions without the host-user identity (packages/api/session-controller/src/agent.ts), and M6 (`0a396f10f9`) re-logs identity/attached on a resume (packages/core/agent-loop/src/runtime-context.ts). M4, M5 and M6 ran on c0a7895b37, lane A's v2 PRECHECK before the BLOCKED-323/324 fixes and V2 甲 landed, which is why A5 was red in every run of that round.",
+        "failureSummary": "Baseline: PRECHECK fcb772cabb, narrow run 36032631557: 12 passed / 0 failed over the four e2e files (these three files 3). M-P2-01″, run 36032676493: exactly A5 red. M4, run 35970142250: A2 red (A5 red on that base for BLOCKED-324). M5, run 35970160372: A3 red (and A5). M6, run 35970178962: A3 red (and A5, and the acp case). Readings match artifacts/laneA/p2-01-expectations-v4.json (sha256 5376f68eeb6a0cde8632f4e9dc0ec50a90b0332c429b36a414ea84aeee24e627) and, for M4–M6, artifacts/laneA/p2-01-expectations.json (sha256 fade709fe94c…); the delegate compared them."
+      },
+      "note": "P2-01's fifth U supplement, the e2e group on shipped launches with no key: A2, a real `dsh --profile headless` launch with no patch, acts as the host user and logs identity/attached once; A3, a web session created through the shipped session controller, does the same; A5, a detached workflow run on headless, records the run itself as a delegation hop (`agent:<run session>`, in the launcher's tenant, delegated by the launcher's acting principal) and the action inside it is attributed to the chain's end. A5 launches with no forced exit: BLOCKED-323's fix disposes a settled detached run. Frozen under the e2e config; its observation is the workflow e2e step's report (vitest-e2e-workflow.json) once B-574 adds these three files to that step, and nothing observes it before then."
+    },
+    {
+      "epic": "P2-01",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-01",
+        "stage": "U"
+      },
+      "supplementSeq": 6,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P2-01.surfaces.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-01 surfaces: the shipped profile templates P2-01 acceptance[0]: every shipped profile template has a host-user attribution case"
+      ],
+      "files": [
+        "tests/first100/fixtures/P2-01.surfaces.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T17:16:04Z",
+      "dryRunProof": {
+        "treeSha": "e09f4af1a6405bd41a55b509f2e20d9f0ca1ad61",
+        "testsDiscovered": 1
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M8 (`8bb9a16091`, mutation/p2-01-m8-v2): a sixth profile template `p2-01-m8` in packages/boot/app-boot/src/profile.ts, one that no attribution case launches.",
+        "failureSummary": "Baseline: PRECHECK fcb772cabb, narrow run 36032652791: 1 passed. Earlier PRECHECK 01488e49ca, run 35969525000: 1 passed. M8, run 35969542756: exactly A4 red. Readings match artifacts/laneA/p2-01-expectations-v4.json and artifacts/laneA/p2-01-expectations.json."
+      },
+      "note": "A4 under the default config: the shipped profile templates are exactly acp, headless, sdk, sdk-minimal and web, each with a named case that launches it and reads its identity/attached record (A1-A3 here, the acp and sdk cases already in acp.e2e.ts and keyless-smoke.e2e.ts). The full suite observes it."
+    },
+    {
+      "epic": "P2-01",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-01",
+        "stage": "U"
+      },
+      "supplementSeq": 7,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "vitest.e2e.config.ts",
+        "apps/cli/tests/profiles/sdk/keyless-smoke.e2e.ts"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "Python SDK dsh profile keyless smoke P2-01 acceptance[0]: a launched sdk-minimal session acts as the host user, attached once"
+      ],
+      "files": [
+        "apps/cli/tests/profiles/sdk/keyless-smoke.e2e.ts",
+        "apps/cli/tests/profiles/session-log.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T17:14:38Z",
+      "dryRunProof": {
+        "treeSha": "e09f4af1a6405bd41a55b509f2e20d9f0ca1ad61",
+        "testsDiscovered": 9
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M2 (`c95b94a666`): the SDK server's createSession reads the host-user factory under another key, so no identity is attached (packages/sdk/server/src/server.ts; sdk-minimal serves the same JSON-RPC server plugin). M3 (`90fae045b1`): app-boot provides the factory under another key (packages/boot/app-boot/src/index.ts). Both on c0a7895b37, lane A's v2 PRECHECK before the BLOCKED-323/324 fixes and V2 甲 landed, which is why A5 was red in every run of that round.",
+        "failureSummary": "Baseline: PRECHECK fcb772cabb, narrow run 36032631557: keyless-smoke.e2e.ts 9 passed, A1 among them. M2, run 35970106348: A1 red, with the sdk case and A5 (red on that base for BLOCKED-324). M3, run 35970124070: A1 red, with the acp and sdk cases and A5. Readings match the prediction files named in U.5; the delegate compared them."
+      },
+      "note": "A1, sdk-minimal: a launched session acts as the host user, attached once, read from the durable log, with the attached identity's chain rooted in the host user in the default tenant. It is in keyless-smoke.e2e.ts, which the SDK keyless smoke step runs whole (vitest-e2e-sdk-keyless-smoke.json), so it cannot share U.5's report: a config-frozen entry is observed by one report that ran every path its argv names."
     }
   ]
 }

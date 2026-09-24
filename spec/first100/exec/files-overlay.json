@@ -1378,11 +1378,36 @@
     },
     {
       "epic": "P2-01",
+      "path": "apps/cli/tests/profiles/headless/tests/host-user.e2e.ts",
+      "kind": "test",
+      "stages": [
+        "U.5"
+      ]
+    },
+    {
+      "epic": "P2-01",
+      "path": "apps/cli/tests/profiles/headless/tests/workflow-chain.e2e.ts",
+      "kind": "test",
+      "stages": [
+        "U.5"
+      ]
+    },
+    {
+      "epic": "P2-01",
       "path": "apps/cli/tests/profiles/routing-stub-model.ts",
       "kind": "test",
       "stages": [
         "U.2",
-        "U.3"
+        "U.3",
+        "U.5"
+      ]
+    },
+    {
+      "epic": "P2-01",
+      "path": "apps/cli/tests/profiles/sdk/keyless-smoke.e2e.ts",
+      "kind": "test",
+      "stages": [
+        "U.7"
       ]
     },
     {
@@ -1391,7 +1416,17 @@
       "kind": "test",
       "stages": [
         "U.2",
-        "U.3"
+        "U.3",
+        "U.5",
+        "U.7"
+      ]
+    },
+    {
+      "epic": "P2-01",
+      "path": "apps/cli/tests/profiles/web/tests/host-user.e2e.ts",
+      "kind": "test",
+      "stages": [
+        "U.5"
       ]
     },
     {
@@ -1564,6 +1599,14 @@
       "kind": "test",
       "stages": [
         "U.1"
+      ]
+    },
+    {
+      "epic": "P2-01",
+      "path": "tests/first100/fixtures/P2-01.surfaces.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.6"
       ]
     },
     {
