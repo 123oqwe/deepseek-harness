@@ -210,7 +210,7 @@ export class BasicCompactionEngine extends CompactionEngine {
           }
         }))
         /* jscpd:ignore-end */
-        if (charged !== undefined && !budgets.admit(charged, 0).admitted) return next()
+        if (charged !== undefined) budgets.admit(charged, 0)
       }
 
       const generation = agent.session.surface.replaceGeneration
