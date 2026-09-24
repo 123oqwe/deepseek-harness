@@ -308,6 +308,10 @@ export async function composeProfile(
       + `${activation.missingCapabilities.length > 0 ? `: ${activation.missingCapabilities.join(', ')}` : ''})\n`,
     )
   }
+  for (const { layer } of negotiation.blocked) {
+    const { main } = JSON.parse(readFileSync(join(layer.packageDir, 'package.json'), 'utf8')) as { main: string }
+    await import(join(layer.packageDir, main))
+  }
   for (const { layer, activation } of negotiation.admitted) {
     if (activation.disabledOptionalCapabilities.length === 0) continue
     // acceptance[2]: an unsatisfied optional capability disables that feature
