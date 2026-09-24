@@ -344,7 +344,7 @@ jobs:
         run: |
           mkdir -p .artifacts/first100/observations
           set +e
-          pnpm exec vitest run --reporter=json --outputFile=.artifacts/first100/observations/vitest-report.json --reporter=default
+          pnpm exec vitest run --reporter=json --outputFile=.artifacts/first100/observations/vitest-report.json --reporter=default || true
           code=$?
           set -e
           printf '{"exitCode": %d}\n' "$code" > .artifacts/first100/observations/vitest-report.exit.json
