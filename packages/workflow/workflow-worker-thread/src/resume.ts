@@ -180,10 +180,8 @@ export async function reusableSteps(
   // A displaced entry is another call's record that a later step replaced at
   // its number; it is reconciled like any other and keyed after every entry.
   const stepOf = (entry: JournalEntry): number => Number(entry.stepId.replace(/^step-/u, ''))
-  const lastStep = Math.max(0, ...journal.entries.map(stepOf).filter(seq => Number.isSafeInteger(seq)))
   const offered = [
     ...journal.entries.map(entry => ({ entry, key: stepOf(entry) })),
-    ...(journal.displaced ?? []).map((entry, index) => ({ entry, key: lastStep + index + 1 })),
   ]
   for (const { entry, key } of offered) {
     if (entry.outcome !== 'completed' || entry.output === null) continue
