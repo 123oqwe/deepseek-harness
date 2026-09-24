@@ -49,6 +49,10 @@ describe('first-party Session format catalog', () => {
     // Version 2 is the descriptor version the released v0 logs of audit
     // baseline b150a551 carry; each edge keeps it, as it keeps any descriptor
     // of a version other than the current 3.
+    // A v0 header that carries `seedLength` is seeded
+    // (session-format-v0-to-v1/src/codec.ts:180), so the v1-to-v2 edge closes
+    // the inherited prefix with a `session/end-seed` at the cut, here seq 0,
+    // before the first event (session-format-v1-to-v2/src/migration.ts:351-368).
     const header = {
       type: 'session', version: 0, id: 'descriptor-v2', createdAt: 1, seedLength: 0, delegationDepth: 1,
     }
@@ -57,7 +61,10 @@ describe('first-party Session format catalog', () => {
     restore.decodeRow({ type: 'subagent/descriptor', seq: 0, time: 2, data: descriptor })
     expect(restore.finish()).toMatchObject({
       header: { version: 3, id: 'descriptor-v2' },
-      events: [{ type: 'subagent/descriptor', data: descriptor }],
+      events: [
+        { type: 'session/end-seed', seq: 0, time: 2, data: { inherited: true } },
+        { type: 'subagent/descriptor', seq: 1, time: 2, data: descriptor },
+      ],
     })
   })
 
