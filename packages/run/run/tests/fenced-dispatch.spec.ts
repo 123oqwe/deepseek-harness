@@ -574,6 +574,55 @@ describe('P4-05 must[0]: `waiting_human` is a state a run can actually reach', (
 
     await handle.dispose()
   })
+
+  /**
+   * Mount a policy that asks and an approval service whose every request rejects, as `request` does when its audit
+   * append cannot commit.
+   * @param ctx - the harness to mount them on.
+   */
+  function askingThrows(ctx: Context): void {
+    ctx.provide('approval', {
+      request: () => Promise.reject(new Error('the approval audit could not be appended')),
+    } as never)
+    ctx.provide('permissionPresets', {
+      classifyAction: () => ({ riskClass: 'security-sensitive', hardDenied: false }),
+      requiresApproval: () => true,
+      current: () => 'workspace-write',
+    } as never)
+  }
+
+  it('returns the run to `running` when asking the operator throws, and the gate still throws', async () => {
+    // Blind review P4-01/329 F1 (B-587): the run stayed in `waiting_human`.
+    const ctx = await harness()
+    const handle = await ctx.agents.create({ sessionId: SessionId('session-ask-throws') })
+    const { agent } = handle
+    advanceLeasedAgent(agent, 'starting', 'test drives the run to running')
+    advanceLeasedAgent(agent, 'running', 'test drives the run to running')
+    askingThrows(ctx)
+
+    await expect(gateActionRisk(ctx, agent, 'untagged', [])).rejects.toThrow('the approval audit could not be appended')
+
+    expect(agent.lifecycle?.state).toBe('running')
+
+    await handle.dispose()
+  })
+
+  it('lets the next model step begin after an ask that threw', async () => {
+    // `waiting_human` holds no dispatch slot, so `agent/pre-step` refuses
+    // every step of a run left there.
+    const ctx = await harness()
+    ctx.llm.registerAdapter(['mock'], new MockAdapter([textResponse('done')]))
+    const agent = await ctx.agentLoop.create(SessionId('session-ask-threw-then-steps'), { provider: 'mock', model: 'mock' })
+    advanceLeasedAgent(agent, 'starting', 'test drives the run to running')
+    advanceLeasedAgent(agent, 'running', 'test drives the run to running')
+    askingThrows(ctx)
+    await expect(gateActionRisk(ctx, agent, 'untagged', [])).rejects.toThrow('the approval audit could not be appended')
+
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+
+    expect(agent.session.snapshotEvents().filter(event => event.type === 'request/header')).toHaveLength(1)
+  })
 })
 
 describe('P4-05 acceptance[2]: the orphaned host is not the one that records it', () => {
