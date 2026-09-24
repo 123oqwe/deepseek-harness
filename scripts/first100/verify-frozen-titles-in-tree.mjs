@@ -29,13 +29,15 @@
  * let a supplement hide its own base entry's orphans (BLOCKED-226); see
  * {@link findOrphans}.
  *
- * **A title frozen from a `*.e2e.ts` file comes from its e2e run's report.**
+ * **A title frozen under another vitest config comes from that run's report.**
  * `vitest list` collects under the default config, which includes no
- * `*.e2e.ts` file, so a title an entry froze under `vitest.e2e.config.ts`
- * (P4-05.U.4) is never among its names. Each `--e2e-report` names a
- * `--reporter=json` report an e2e run of this tree wrote, and every case name
- * in it, any status, joins the collected names. A report that cannot be read
- * stops the gate: the titles it carries would otherwise read as deleted.
+ * `*.e2e.ts` or `*.snapshot.ts` file, so a title an entry froze under
+ * `vitest.e2e.config.ts` (P4-05.U.4) or `vitest.snapshot.config.ts` is never
+ * among its names. Each `--e2e-report` names a `--reporter=json` report that a
+ * run of this tree under such a config wrote (an e2e step's, or the
+ * recorded-session snapshot step's), and every case name in it, any status,
+ * joins the collected names. A report that cannot be read stops the gate: the
+ * titles it carries would otherwise read as deleted.
  *
  * Usage: `node scripts/first100/verify-frozen-titles-in-tree.mjs [--e2e-report <vitest-json-report>]...`
  *
@@ -152,7 +154,10 @@ function main() {
     try {
       report = JSON.parse(readFileSync(resolve(REPO_ROOT, path), 'utf8'))
     } catch (error) {
-      throw new Error(`--e2e-report ${path} is not a readable vitest json report, so no title frozen from its e2e file could be checked`, { cause: error })
+      throw new Error(
+        `--e2e-report ${path} is not a readable vitest json report, so no title frozen under its config could be checked`,
+        { cause: error },
+      )
     }
     for (const name of collectTitles(report).titles) producible.add(name)
   }

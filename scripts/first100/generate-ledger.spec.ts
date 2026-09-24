@@ -1272,39 +1272,47 @@ describe('closureFailuresForAcceptedRows (BLOCKED-287)', () => {
 
 /** One step of `first100-exact-sha.yml`'s gate job, in the fields the cases below read. */
 interface GateStep {
+  readonly name?: string
   readonly run?: string
   readonly with?: { readonly name?: string; readonly path?: string }
 }
 
-describe('the exact-SHA observation artifact carries every e2e step\'s json report', () => {
-  // An entry frozen under `vitest.e2e.config.ts` (P4-05.U.4) is observed by the report its e2e step writes: the
-  // full-suite run uses the default config, which includes no `*.e2e.ts` file. `--supplement` reads that report from
-  // the artifact the gate job uploads, so the step has to write it and the upload has to carry it.
+describe('the exact-SHA observation artifact carries the json report of every step that runs its own vitest config', () => {
+  // An entry frozen under a config of its own (`vitest.e2e.config.ts` for P4-05.U.4, `vitest.snapshot.config.ts`) is
+  // observed by the report its step writes: the full-suite run uses the default config, which includes no `*.e2e.ts`
+  // or `*.snapshot.ts` file. `--supplement` reads that report from the artifact the gate job uploads, so the step has
+  // to write it and the upload has to carry it.
   const workflow = load(readFileSync(new URL('../../.github/workflows/first100-exact-sha.yml', import.meta.url), 'utf8')) as {
     jobs: Record<string, { steps: GateStep[] }>
   }
   const steps = workflow.jobs['exact-sha-gate']?.steps ?? []
-  const e2e = steps.filter(step => step.run?.includes('--config vitest.e2e.config.ts') === true)
+  const own = steps.filter(step => /--config vitest\.[a-z0-9]+\.config\.ts/u.test(step.run ?? ''))
   const upload = steps.findIndex(step => step.with?.name?.startsWith('first100-vitest-report-') === true)
 
-  it('writes a json report under the observations directory from each e2e step', () => {
-    expect(e2e.length).toBeGreaterThan(0)
-    for (const step of e2e) {
-      expect(step.run).toMatch(/--reporter=json --outputFile=\.artifacts\/first100\/observations\/vitest-e2e-[a-z0-9-]+\.json(?:\s|$)/u)
+  it('writes a json report under the observations directory from each step that runs its own config', () => {
+    expect(own.length).toBeGreaterThan(0)
+    for (const step of own) {
+      expect(step.run).toMatch(/--reporter=json --outputFile=\.artifacts\/first100\/observations\/vitest-[a-z0-9-]+\.json(?:\s|$)/u)
     }
+  })
+
+  it('runs the recorded-session snapshots under their own config with a json report', () => {
+    const snapshots = steps.find(step => step.name === 'Recorded-session snapshots')
+    expect(snapshots?.run).toContain('--config vitest.snapshot.config.ts')
+    expect(snapshots?.run).toContain('--reporter=json --outputFile=.artifacts/first100/observations/vitest-snapshot.json')
   })
 
   it('uploads each of those reports beside the full-suite report, after the step that writes it', () => {
     const uploaded = steps[upload]?.with?.path?.split('\n').map(line => line.trim()) ?? []
     expect(uploaded).toContain('.artifacts/first100/observations/vitest-report.json')
-    for (const step of e2e) {
+    for (const step of own) {
       expect(uploaded).toContain(/--outputFile=(\S+)/u.exec(step.run ?? '')?.[1])
       expect(steps.indexOf(step)).toBeLessThan(upload)
     }
   })
 })
 
-describe('configFrozenReportRefusal: --supplement observes an e2e-frozen entry through its e2e report', () => {
+describe('configFrozenReportRefusal: --supplement observes an entry frozen under its own config through that run\'s report', () => {
   const acp = 'apps/cli/tests/profiles/acp/tests/acp.e2e.ts'
   const e2eFrozen = ['pnpm', 'exec', 'vitest', 'run', '--config', 'vitest.e2e.config.ts', acp]
   const fullSuite = ['/home/runner/work/r/r/apps/cli/tests/process-shutdown.spec.ts', '/home/runner/work/r/r/packages/g/p/tests/a.spec.ts']
@@ -1312,7 +1320,19 @@ describe('configFrozenReportRefusal: --supplement observes an e2e-frozen entry t
   it('refuses the full-suite report for an entry frozen under the e2e config, naming the file that report never ran', () => {
     expect(configFrozenReportRefusal(e2eFrozen, fullSuite))
       .toBe(`the entry is frozen under --config vitest.e2e.config.ts, and the report ran none of ${acp}; `
-        + 'its observation is the report of that command, which first100-exact-sha.yml uploads as vitest-e2e-*.json beside the full-suite report')
+        + 'its observation is the report its own step in first100-exact-sha.yml writes beside the full-suite report')
+  })
+
+  it('takes a snapshot-frozen entry (P2-04 U.3\'s argv) from the snapshot step\'s report, which also runs other files', () => {
+    const headless = 'snapshots/session/headless.snapshot.ts'
+    const sdk = 'snapshots/sdk/sdk.snapshot.ts'
+    const argv = ['pnpm', 'exec', 'vitest', 'run', '--config', 'vitest.snapshot.config.ts', headless, sdk, '--reporter=json']
+    expect(configFrozenReportRefusal(argv, fullSuite)).toBe(
+      `the entry is frozen under --config vitest.snapshot.config.ts, and the report ran none of ${headless}, ${sdk}; `
+      + 'its observation is the report its own step in first100-exact-sha.yml writes beside the full-suite report',
+    )
+    const snapshotStep = [headless, sdk, 'snapshots/acp/acp.snapshot.ts', 'apps/web/tests/minimal-preset.snapshot.ts']
+    expect(configFrozenReportRefusal(argv, snapshotStep.map(path => `/home/runner/work/r/r/${path}`))).toBeNull()
   })
 
   it('accepts the report the entry\'s own e2e command wrote', () => {

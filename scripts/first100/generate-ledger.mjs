@@ -66,9 +66,10 @@
  *     --stage <C|P|U|F> --supplement-seq <n> --report <path> \
  *     --ci-run-url <url> --candidate-sha <sha>
  *     record a real observation for a supplement entry (BLOCKED-005). For an
- *     entry frozen under its own `--config` (an e2e entry), `--report` is the
- *     report that command wrote, `vitest-e2e-*.json` in the observation
- *     artifact; a report that did not run the entry's test paths is refused.
+ *     entry frozen under its own `--config` (e2e, snapshot), `--report` is the
+ *     report its own step in first100-exact-sha.yml writes into the
+ *     observation artifact; a report that did not run the entry's test paths
+ *     is refused.
  *   node scripts/first100/generate-ledger.mjs --record-signoff --epic <id> \
  *     --conclusion PASS|WITHDRAWN [--reason <text>] [--user-confirmation-ref <ref>] [--note <text>] \
  *     [--delegate-session <name>]
@@ -925,10 +926,11 @@ function assertReportDirMatchesCandidate(reportPath, candidateSha) {
  * The full-suite observation is a run of the default config, so it never
  * contains a file that only another config includes. An entry frozen as
  * `vitest run --config vitest.e2e.config.ts <file>` (P4-05.U.4) is observed by
- * the report that command wrote, which `first100-exact-sha.yml` uploads as
- * `vitest-e2e-*.json` beside the full-suite report; that report must have run
- * every test path the frozen argv names. An argv that names no config returns
- * `null`, so the full-suite report observes it as before.
+ * the report its own step in `first100-exact-sha.yml` writes beside the
+ * full-suite report (the e2e steps, the recorded-session snapshot step); that
+ * report must have run every test path the frozen argv names. An argv that
+ * names no config returns `null`, so the full-suite report observes it as
+ * before.
  * @param argv - the frozen entry's `argv`.
  * @param reportFiles - the report's `testResults[].name`, absolute on the machine that ran it.
  * @returns the refusal, or `null`.
@@ -954,7 +956,7 @@ export function configFrozenReportRefusal(argv, reportFiles) {
   const notRun = paths.filter((path) => !files.some((file) => file.endsWith(`/${path}`) || file.includes(`/${path}/`)))
   if (notRun.length === 0) return null
   return `the entry is frozen under --config ${config}, and the report ran none of ${notRun.join(', ')}; `
-    + 'its observation is the report of that command, which first100-exact-sha.yml uploads as vitest-e2e-*.json beside the full-suite report'
+    + 'its observation is the report its own step in first100-exact-sha.yml writes beside the full-suite report'
 }
 
 /**

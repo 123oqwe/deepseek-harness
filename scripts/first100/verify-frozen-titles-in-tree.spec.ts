@@ -154,16 +154,16 @@ describe('a title frozen from an e2e file is looked up in the --e2e-report the g
   })
 })
 
-describe('the exact-SHA workflow hands this gate every e2e report its job writes', () => {
-  it('passes each vitest-e2e report as --e2e-report, from a step after every step that writes one', () => {
+describe('the exact-SHA workflow hands this gate every own-config report its job writes', () => {
+  it('passes each e2e and snapshot report as --e2e-report, from a step after every step that writes one', () => {
     const text = readFileSync(new URL('../../.github/workflows/first100-exact-sha.yml', import.meta.url), 'utf8')
     const jobs = (yaml.load(text) as { jobs: Record<string, { steps: { run?: string }[] }> }).jobs
     const runs = (jobs['exact-sha-gate']?.steps ?? []).map(step => step.run ?? '')
     const gate = runs.findIndex(run => run.includes('first100:verify-frozen-titles-in-tree'))
     const writers = runs.flatMap((run, index) =>
-      [...run.matchAll(/--outputFile=(\S*vitest-e2e-\S+\.json)/gu)].map(match => ({ index, report: match[1] })))
+      [...run.matchAll(/--outputFile=(\S*vitest-(?:e2e|snapshot|web)[a-z0-9-]*\.json)/gu)].map(match => ({ index, report: match[1] })))
     const passed = [...(runs[gate] ?? '').matchAll(/--e2e-report (\S+)/gu)].map(match => match[1])
-    expect(writers.length).toBeGreaterThan(0)
+    expect(passed).toContain('.artifacts/first100/observations/vitest-snapshot.json')
     expect(passed.sort()).toStrictEqual(writers.map(writer => writer.report).sort())
     expect(writers.every(writer => writer.index < gate)).toBe(true)
   })

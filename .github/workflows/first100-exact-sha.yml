@@ -538,39 +538,6 @@ jobs:
             apps/cli/tests/profiles/acp/tests/acp.e2e.ts \
             --reporter=json --outputFile=.artifacts/first100/observations/vitest-e2e-acp.json --reporter=default
 
-      # After the e2e steps, so the artifact carries their reports beside the
-      # full-suite one. `if-no-files-found` applies to the paths together, so
-      # one missing report does not fail this step: an e2e step whose report
-      # is missing has failed on its own, and the uniqueness step above fails
-      # when the full-suite report is missing.
-      - name: Upload the vitest observation report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: first100-vitest-report-${{ steps.resolve-sha.outputs.sha }}
-          path: |
-            .artifacts/first100/observations/vitest-report.json
-            .artifacts/first100/observations/vitest-e2e-sdk-keyless-smoke.json
-            .artifacts/first100/observations/vitest-e2e-acp.json
-          if-no-files-found: error
-
-      # This step asks a question the suite cannot: a frozen title no test can
-      # produce is invisible to a run — the case simply is not there, and the
-      # observation is silent about it. Deleting a frozen case without
-      # superseding its entry happened twice in one day, both times caught by a
-      # person reading. `vitest list` collects without executing, under the
-      # default config, which includes no `*.e2e.ts` file; so this runs after
-      # the e2e steps and reads each report they wrote for the titles an entry
-      # froze from an e2e file (P4-05.U.4).
-      - name: Every live frozen case title exists in the tree
-        # `always()` for the suite's reason: a red step earlier in the job
-        # should cost one round, not this verdict.
-        if: always()
-        run: |
-          pnpm run first100:verify-frozen-titles-in-tree \
-            --e2e-report .artifacts/first100/observations/vitest-e2e-sdk-keyless-smoke.json \
-            --e2e-report .artifacts/first100/observations/vitest-e2e-acp.json
-
       - name: Publication and package hygiene
         if: always()
         # BLOCKED-210. Fifteen gates this program never saw. `pnpm run hygiene`
@@ -701,6 +668,11 @@ jobs:
         # `snapshots/web/minimal-preset` sat stale from P2-03's manifest work
         # until a local lib-mode run found it. The Build step above is the
         # prerequisite this mode needs.
+        #
+        # The command is `pnpm run test:snapshot`'s own, with the json reporter
+        # added as in the suite step: an entry frozen under
+        # `vitest.snapshot.config.ts` is observed by this report, since the
+        # full-suite run includes no snapshot file.
         env:
           DSH_EXAMPLE_MODE: lib
         run: |
@@ -709,7 +681,45 @@ jobs:
             cat snapshots/.refresh-skipped.json
             echo "refresh them where they run (pwsh scenarios need a real pwsh), then delete the record"
           fi
-          pnpm run test:snapshot
+          pnpm exec vitest run --config vitest.snapshot.config.ts \
+            --reporter=json --outputFile=.artifacts/first100/observations/vitest-snapshot.json --reporter=default
+
+      # After every step that writes a report, so the artifact carries the
+      # e2e and snapshot reports beside the full-suite one.
+      # `if-no-files-found` applies to the paths together, so one missing
+      # report does not fail this step: a step whose report is missing has
+      # failed on its own, and the uniqueness step above fails when the
+      # full-suite report is missing.
+      - name: Upload the vitest observation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: first100-vitest-report-${{ steps.resolve-sha.outputs.sha }}
+          path: |
+            .artifacts/first100/observations/vitest-report.json
+            .artifacts/first100/observations/vitest-e2e-sdk-keyless-smoke.json
+            .artifacts/first100/observations/vitest-e2e-acp.json
+            .artifacts/first100/observations/vitest-snapshot.json
+          if-no-files-found: error
+
+      # This step asks a question the suite cannot: a frozen title no test can
+      # produce is invisible to a run — the case simply is not there, and the
+      # observation is silent about it. Deleting a frozen case without
+      # superseding its entry happened twice in one day, both times caught by a
+      # person reading. `vitest list` collects without executing, under the
+      # default config, which includes no `*.e2e.ts` or `*.snapshot.ts` file;
+      # so this runs after the e2e and snapshot steps and reads each report
+      # they wrote for the titles an entry froze under their configs
+      # (P4-05.U.4).
+      - name: Every live frozen case title exists in the tree
+        # `always()` for the suite's reason: a red step earlier in the job
+        # should cost one round, not this verdict.
+        if: always()
+        run: |
+          pnpm run first100:verify-frozen-titles-in-tree \
+            --e2e-report .artifacts/first100/observations/vitest-e2e-sdk-keyless-smoke.json \
+            --e2e-report .artifacts/first100/observations/vitest-e2e-acp.json \
+            --e2e-report .artifacts/first100/observations/vitest-snapshot.json
 
 
       - name: Pack the dsh family
