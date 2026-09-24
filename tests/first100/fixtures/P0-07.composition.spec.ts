@@ -153,17 +153,22 @@ interface WorkflowStep {
 
 /** A publish workflow, as far as these cases read it. */
 interface PublishWorkflow {
-  readonly jobs: { readonly pack: { readonly steps: readonly WorkflowStep[] }; readonly publish: { readonly needs: string | readonly string[] } }
+  readonly jobs: {
+    readonly pack: { readonly steps: readonly WorkflowStep[]; readonly 'continue-on-error'?: unknown }
+    readonly publish: { readonly needs: string | readonly string[] }
+  }
 }
 
 /*
  * Validation[2] (S2) on the real publish paths: a release workflow cannot be
  * triggered from a test, so its structure is read. The evidence package is
  * verified after every step that collects into it and before the upload the
- * publish job waits for, and nothing lets that verify step fail softly.
+ * publish job waits for, and the verify step runs only the verify command,
+ * with no condition and no `continue-on-error` on the step or its job, so a
+ * failed verify fails the job.
  */
 describe('P0-07 validation[2] -- the publish workflows verify the evidence package before they upload it', () => {
-  it.each(['release-publish.yml', 'release-vendor-publish.yml', 'node-addon-system-release.yml'])('%s verifies the evidence package after every collect step and before the upload its publish job needs', (file) => {
+  it.each(['release-publish.yml', 'release-vendor-publish.yml', 'node-addon-system-release.yml'])('%s verifies the evidence package in a step that runs only the verify command, after every collect step and before the upload its publish job needs', (file) => {
     const workflow = load(readFileSync(join(repoRoot, '.github/workflows', file), 'utf8')) as PublishWorkflow
     const steps = workflow.jobs.pack.steps
     const verify = steps.findIndex(step => /evidence:verify --evidence|scripts\/release\/verify-evidence\.mjs --evidence/.test(step.run ?? ''))
@@ -174,6 +179,11 @@ describe('P0-07 validation[2] -- the publish workflows verify the evidence packa
     expect(collects.filter(index => index > verify)).toEqual([])
     expect(steps[verify]?.if).toBeUndefined()
     expect(steps[verify]?.['continue-on-error']).toBeUndefined()
+    // The step's whole command is the verify command: `|| true`, a pipe, a
+    // second command or `set +e` would each let a failed verify pass the step.
+    expect(steps[verify]?.run?.trim(), `${file}: the verify step runs more than the verify command`)
+      .toMatch(/^(?:pnpm run evidence:verify|node scripts\/release\/verify-evidence\.mjs) --evidence \S+$/u)
+    expect(workflow.jobs.pack['continue-on-error'], `${file}: the pack job may fail softly`).toBeUndefined()
 
     const upload = steps.findIndex(step => (step.uses ?? '').startsWith('actions/upload-artifact'))
     expect(upload).toBeGreaterThan(verify)
