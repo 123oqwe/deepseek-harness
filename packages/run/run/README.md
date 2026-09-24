@@ -257,7 +257,9 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 - **`paused` is legal and unreached.** The advancing paths are `agent/pre-step`
   (`queued → starting → running`, and the return from `waiting_tool`), the
   dispatch risk gate in `@deepseek-ai/dsh-tools` (`waiting_human` for as long as
-  an operator is being asked, then back to `running`), `agent/disposed`, which
+  an operator is being asked, entered from `running` or, on the native dispatch
+  path, from `waiting_tool`, then back to `running`; the gate logs an advance
+  it is refused), `agent/disposed`, which
   ends the run (`cancelling` for a run that had not reached `running`, then
   `failed` when its last reported activity was an unrecovered `agent/error`,
   otherwise `completed`), and `reclaim`, which records `orphaned`. Nothing

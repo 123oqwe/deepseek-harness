@@ -20,7 +20,7 @@
 
 import { createHash } from 'node:crypto'
 import type { Context } from '@deepseek-ai/cordis'
-import { advanceLeasedAgent, stopGateFor, type Agent } from '@deepseek-ai/dsh-agent'
+import { advanceLeasedAgent, stopGateFor, type Agent, type AgentLifecycleState } from '@deepseek-ai/dsh-agent'
 import type { ArgumentsHash, IdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
 import type { LedgerEpoch, LedgerGeneration, LedgerScope, ReceiptDigest, ReserveDecision } from '@deepseek-ai/dsh-action-ledger'
 import type {} from '@deepseek-ai/dsh-action-ledger'
@@ -579,11 +579,11 @@ export async function gateActionRisk(
   // `waiting_human` is produced exactly here (P4-05 must[0]): asking an
   // operator is the harness's one wait that cannot end on its own, and a
   // supervisor deciding whether to reclaim the run has to tell it from a tool
-  // wait. Both dispatch paths reach this gate, so both report the state.
-  // A denied advance is not this gate's business: `advanceLeasedAgent`
-  // already reports `no-run` when no Run Service is mounted, and an action
-  // must not be refused because its lifecycle could not be recorded.
-  advanceLeasedAgent(agent, 'waiting_human', `awaiting approval for "${toolName}"`)
+  // wait. Both dispatch paths reach this gate, the native one in
+  // `waiting_tool` and the other in `running`, and the state machine admits
+  // the edge from each. An action is not refused because its lifecycle could
+  // not be recorded; a refused advance is logged instead.
+  warnRefusedAdvance(ctx, advanceLeasedAgent(agent, 'waiting_human', `awaiting approval for "${toolName}"`), 'waiting_human', toolName)
   const outcome = approval === undefined
     ? 'unavailable'
     : await approval.request({
@@ -604,10 +604,28 @@ export async function gateActionRisk(
     })
   // Back to `running` whatever the operator said: the wait is over, and the
   // caller decides whether the action proceeds.
-  advanceLeasedAgent(agent, 'running', `approval for "${toolName}" ended "${outcome}"`)
+  warnRefusedAdvance(ctx, advanceLeasedAgent(agent, 'running', `approval for "${toolName}" ended "${outcome}"`), 'running', toolName)
   recordDecision(outcome === 'allowed-once' ? 'asked' : 'refused')
   if (outcome === 'allowed-once') return undefined
   return { kind: 'approval-refused', riskClass: classification.riskClass, outcome, undeclared }
+}
+
+/**
+ * Log a lifecycle advance the risk gate proposed and was refused. `no-run`
+ * is not a refusal: it answers for a composition that mounts no Run Service.
+ * @param ctx - the mounting context, whose logger reports the refusal.
+ * @param refusal - what `advanceLeasedAgent` answered.
+ * @param to - the state the gate proposed.
+ * @param toolName - the action being gated.
+ */
+function warnRefusedAdvance(
+  ctx: Context,
+  refusal: ReturnType<typeof advanceLeasedAgent>,
+  to: AgentLifecycleState,
+  toolName: string,
+): void {
+  if (refusal === undefined || refusal === 'no-run') return
+  ctx.logger.warn(`risk gate for "${toolName}": the run could not enter ${to} (${refusal})`)
 }
 
 /**
