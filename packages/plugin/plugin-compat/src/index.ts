@@ -532,7 +532,7 @@ function solveManifest(
     const admissible = admissibleProviders(manifest, requirement.capabilityId, providedBy)
     if (admissible.length > 0) continue
 
-    if (requirement.necessity === 'optional') {
+    if (requirement.necessity === 'optional' || !requirement.securityCritical) {
       disabledOptionalCapabilities.push(requirement.capabilityId)
       continue
     }
