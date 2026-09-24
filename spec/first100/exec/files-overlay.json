@@ -146,6 +146,38 @@
       ]
     },
     {
+      "epic": "P0-06",
+      "path": "tests/first100/fixtures/p0-06-registry-census.ts",
+      "kind": "test",
+      "stages": [
+        "C.2"
+      ]
+    },
+    {
+      "epic": "P0-06",
+      "path": "tests/first100/fixtures/P0-06.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C.2"
+      ]
+    },
+    {
+      "epic": "P0-06",
+      "path": "tests/first100/fixtures/P0-06.contract.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C.2"
+      ]
+    },
+    {
+      "epic": "P0-06",
+      "path": "tests/first100/fixtures/P0-06.registry-census-driver.ts",
+      "kind": "test",
+      "stages": [
+        "C.2"
+      ]
+    },
+    {
       "epic": "P0-08",
       "path": "benchmarks/harness-capability/scenarios/index.ts",
       "kind": "source",
