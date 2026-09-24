@@ -614,7 +614,7 @@ export async function gateActionRisk(
     // `waiting_human` holds no dispatch slot, so `agent/pre-step` would refuse
     // every later step of its session.
     const ended = outcome === undefined ? 'threw' : `ended "${outcome}"`
-    warnRefusedAdvance(ctx, advanceLeasedAgent(agent, 'running', `approval for "${toolName}" ${ended}`), 'running', toolName)
+    if (outcome !== undefined) warnRefusedAdvance(ctx, advanceLeasedAgent(agent, 'running', `approval for "${toolName}" ${ended}`), 'running', toolName)
   }
   recordDecision(outcome === 'allowed-once' ? 'asked' : 'refused')
   if (outcome === 'allowed-once') return undefined
