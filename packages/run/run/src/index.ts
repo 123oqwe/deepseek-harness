@@ -50,7 +50,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent/types'
 import { advanceAgentLifecycleFenced, advanceLeasedAgent, holdsDispatchSlot } from '@deepseek-ai/dsh-agent'
 import type { AgentLifecycleState, AgentRunId, TransitionDenialReason } from '@deepseek-ai/dsh-agent'
 import { acquireRunLease, describePredecessor } from '@deepseek-ai/dsh-lease-contract'
-import type { PredecessorState, RunLease } from '@deepseek-ai/dsh-lease-contract'
+import type { Lease, PredecessorState, RunLease } from '@deepseek-ai/dsh-lease-contract'
 import type { WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease-contract'
 // The `agent/session-start` declaration this plugin subscribes to is merged
 // into Cordis's event map by the agent package's runtime face, not its
@@ -467,8 +467,11 @@ export class RunService {
    * @param to - the state the Run is asked to move to.
    * @param references - entities this transition names (must[1]), possibly empty.
    * @param occurredAt - non-negative safe-integer Unix epoch milliseconds this transition is stamped with.
-   * @param _fence - the writer's lease; not read yet.
-   * @returns `./state-machine.ts`'s decision, unchanged.
+   * @param fence - the writer's lease (P4-07 must[1]). When given, the write
+   * happens only while `fence.mayWrite(occurredAt)` admits it, asked in this
+   * Run's turn right before the state machine decides; a refusal records
+   * nothing and is reported as `'fenced'`.
+   * @returns `./state-machine.ts`'s decision unchanged, or the `'fenced'` refusal.
    *
    * **Ordering.** The decision is computed against the Run as of this call's
    * turn in `id`'s serialization chain, not as of the call. Concurrent calls
@@ -486,9 +489,12 @@ export class RunService {
     to: RunState,
     references: readonly RunEntityReference[],
     occurredAt: number,
-    _fence?: Pick<RunLease, 'mayWrite'>,
+    fence?: Pick<RunLease, 'mayWrite'>,
   ): Promise<RunTransitionDecision> {
     return await this.serialize(id, (run) => {
+      if (fence !== undefined && !fence.mayWrite(occurredAt)) {
+        return { run: undefined, result: { accepted: false, reason: 'fenced', from: run.state, to } }
+      }
       const decision = transition(run, to, references, occurredAt)
       // A refused transition writes nothing, so its Run keeps the event log it
       // had — the chain simply hands the next caller the unchanged Run.
@@ -880,14 +886,19 @@ export default class RunPlugin extends Service {
     // the lifecycle below walks, never whether this host may write. Taking the
     // item over erases the row, so the only moment the predecessor is visible
     // is now.
-    const before = this.ctx.leaseStore.get(workItem)
-    const taken = acquireRunLease(
-      this.ctx.leaseStore,
-      workItem,
-      this.worker,
-      openedAt,
-      this.config.leaseMs,
-    )
+    let before: Lease | undefined
+    let taken: ReturnType<typeof acquireRunLease>
+    try {
+      before = this.ctx.leaseStore.get(workItem)
+      taken = acquireRunLease(this.ctx.leaseStore, workItem, this.worker, openedAt, this.config.leaseMs)
+    } catch (error: unknown) {
+      // A store that fails cannot grant the lease, so the agent is refused like
+      // one a live holder denies (acceptance[2]: new work stops while the lease
+      // store fails). The mark is not retried; a new session asks again.
+      this.ctx.logger.warn('run: no Run opened for agent %s — the lease store failed (%s)', agent.id, errorText(error))
+      agent.leaseRefused = true
+      return
+    }
     if ('denied' in taken) {
       // No lifecycle and no Run. A refused lease is stop-work, not a warning:
       // an agent that proceeded without one would make state writes nothing
@@ -1089,10 +1100,16 @@ export default class RunPlugin extends Service {
     // does not await its listeners — the disposer below awaits what this
     // started, which is how every other durable write this plugin makes is
     // ordered against teardown.
-    this.track(this.endRun(agent, failure !== undefined))
-    if (agent.runId !== undefined) this.failures.delete(agent.runId)
+    //
+    // The terminal writes carry this agent's lease and are checked where they
+    // are written, so the item is given back only after they settle: released
+    // first, this holder's own writes would find no lease and be refused.
     const lease = agent.runLease
-    if (lease !== undefined) this.ctx.leaseStore.release(lease.token)
+    const leases = this.ctx.leaseStore
+    this.track(this.endRun(agent, failure !== undefined).finally(() => {
+      if (lease !== undefined) leases.release(lease.token)
+    }))
+    if (agent.runId !== undefined) this.failures.delete(agent.runId)
   }
 
   /**
@@ -1176,7 +1193,7 @@ export default class RunPlugin extends Service {
       agent.session.append('run/task-profile', { profile: compiled.profile })
     }
     agent.taskProfile = ref
-    await this.service.advance(runId, 'planning', [{ kind: 'task-profile', id: ref }], Date.now())
+    await this.service.advance(runId, 'planning', [{ kind: 'task-profile', id: ref }], Date.now(), agent.runLease)
     return true
   }
 
@@ -1196,7 +1213,7 @@ export default class RunPlugin extends Service {
     if (runId === undefined) return
     const state = this.service.get(runId)?.state
     if (state !== 'planning' && state !== 'paused') return
-    await this.service.advance(runId, 'running', [], Date.now())
+    await this.service.advance(runId, 'running', [], Date.now(), agent.runLease)
   }
 
   /**
@@ -1230,12 +1247,12 @@ export default class RunPlugin extends Service {
     const state = this.service.get(runId)?.state
     if (state === undefined || TERMINAL_RUN_STATES.has(state)) return
     if (state === 'accepted' || state === 'planning') {
-      await this.service.advance(runId, 'cancelled', [], Date.now())
+      await this.service.advance(runId, 'cancelled', [], Date.now(), agent.runLease)
       return
     }
     if (state !== 'running') return
-    await this.service.advance(runId, 'verifying', [], Date.now())
-    await this.service.advance(runId, failed ? 'failed' : 'succeeded', [], Date.now())
+    await this.service.advance(runId, 'verifying', [], Date.now(), agent.runLease)
+    await this.service.advance(runId, failed ? 'failed' : 'succeeded', [], Date.now(), agent.runLease)
   }
 
   /**
