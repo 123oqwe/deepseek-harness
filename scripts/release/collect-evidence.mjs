@@ -108,6 +108,16 @@ export function sidecarDir(outPath) {
 }
 
 /**
+ * Settings of the checkout's own git configuration that let git read a changed
+ * file as unchanged, overridden on every git call {@link workingTreePatch}
+ * makes: an fsmonitor hook that reports no change, and a stat check that
+ * ignores ctime or sub-second mtime. `core.untrackedCache=false` is defensive
+ * hardening with no sensitivity proof: `ls-files --others` does not read the
+ * untracked cache in git 2.50.1.
+ */
+const GIT_READS_THE_WORKING_TREE = ['-c', 'core.fsmonitor=false', '-c', 'core.checkStat=default', '-c', 'core.trustCtime=true', '-c', 'core.untrackedCache=false']
+
+/**
  * The working tree against `baseSha` as one patch: `git diff --binary` for
  * tracked files, then each untracked file as a binary diff against /dev/null,
  * in path order. The untracked files are those git does not ignore, plus every
@@ -116,18 +126,19 @@ export function sidecarDir(outPath) {
  * sidecar directory are left out, because the package cannot describe itself.
  * Both diffs run with `--no-ext-diff --no-textconv`, so the patch is git's own
  * whatever external diff program or textconv filter the git configuration
- * names. Each collection step records this, and verification takes it again,
- * so a change made after the last step shows, a new untracked file included.
+ * names, and every call overrides {@link GIT_READS_THE_WORKING_TREE}. Each
+ * collection step records this, and verification takes it again, so a change
+ * made after the last step shows, a new untracked file included.
  * `baseSha` follows `--end-of-options`, so git reads an option-shaped value as
  * a revision and refuses it instead of acting on it.
  * @param {string} repoRoot - the checkout.
  * @param {string} baseSha - the commit the patch is measured against.
  * @param {string} outPath - the evidence package's absolute path.
  * @returns {string} the patch text.
- * @throws {Error} when the index marks a file skip-worktree or assume-unchanged, because `git diff` then reads the index instead of the working tree for that file; and when git produces no patch for an untracked entry, such as a symbolic link to a directory or a nested repository.
+ * @throws {Error} when the index marks a file skip-worktree or assume-unchanged, because `git diff` then reads the index instead of the working tree for that file; when the attributes assign a filter to a path the checkout holds, because git then compares what the filter prints instead of the file; and when git produces no patch for an untracked entry, such as a symbolic link to a directory or a nested repository.
  */
 export function workingTreePatch(repoRoot, baseSha, outPath) {
-  const run = args => execFileSync('git', args, { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1 << 30 })
+  const run = (args, input) => execFileSync('git', [...GIT_READS_THE_WORKING_TREE, ...args], { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1 << 30, ...input === undefined ? {} : { input } })
   // `ls-files -v` tags a skip-worktree entry `S` and an assume-unchanged one with a lowercase letter.
   const marked = run(['ls-files', '-v', '-z']).split('\0')
     .filter(entry => entry !== '' && (entry[0] === 'S' || entry[0] !== entry[0].toUpperCase()))
@@ -143,8 +154,20 @@ export function workingTreePatch(repoRoot, baseSha, outPath) {
     ...others(['--exclude-standard'], []),
     ...others(['--ignored', '--exclude-standard'], ['--', ':(glob)**/.gitignore']),
   ])].sort()
+  // The attributes decide, not the configuration: a filter defined for no path,
+  // such as a global git-lfs install, changes no comparison.
+  const tracked = run(['ls-files', '-z']).split('\0').filter(path => path !== '')
+  const attributes = run(['check-attr', '--stdin', '-z', 'filter'], [...tracked, ...untracked].join('\0')).split('\0')
+  const filtered = []
+  for (let index = 0; index + 2 < attributes.length; index += 3) {
+    const value = attributes[index + 2]
+    if (value !== 'unspecified' && value !== 'unset' && value !== 'set') filtered.push(`${attributes[index]} (filter=${value})`)
+  }
+  if (filtered.length > 0) {
+    throw new Error(`the checkout assigns a filter to ${filtered.join(', ')}, and git compares a filtered file by what its filter prints, not by its bytes`)
+  }
   const added = untracked.map((path) => {
-    const result = spawnSync('git', ['diff', '--binary', '--no-ext-diff', '--no-textconv', '--no-index', '--', '/dev/null', path], { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1 << 30 })
+    const result = spawnSync('git', [...GIT_READS_THE_WORKING_TREE, 'diff', '--binary', '--no-ext-diff', '--no-textconv', '--no-index', '--', '/dev/null', path], { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1 << 30 })
     // `git diff --no-index` exits 1 both when the sides differ, as they do for
     // any new file, and when it cannot read a side, so only output that starts
     // a patch is one.

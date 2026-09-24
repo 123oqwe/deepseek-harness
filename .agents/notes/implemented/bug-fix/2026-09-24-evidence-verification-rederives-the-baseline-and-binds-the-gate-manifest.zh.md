@@ -15,6 +15,7 @@ Status: implemented
 - **只有校验通过、且记录的是布尔值 `true` 的包，结果行才写 `accepted=true`。** 校验失败的包写 `accepted=false`，记录的值只用文字说明；`accepted` 不是布尔值，本身就是一项不一致。
 - **包绑定的是最后一个采集步骤结束时的工作树。** 每一步（`init`、`run`、`build-artifact`）都记录 `git diff --binary <baseSha>`，连同 git 不忽略的每个未跟踪文件、以及每个未跟踪的 `.gitignore`（无论是否被忽略）相对 `/dev/null` 的补丁，但不含包自身的文件与 sidecar 目录。`verify` 再取一次同样的补丁并比对摘要，所以最后一步之后的改动，无论是已提交、未提交、新增的未跟踪文件，还是一个连自己也忽略掉的新 `.gitignore`，都会让校验失败。
 - **补丁是 git 自己从工作树取出的。** 两处 diff 都带 `--no-ext-diff --no-textconv`，git 配置里的外部 diff 程序或 textconv 过滤器都替换不了它。未跟踪文件那次调用的 `--no-textconv` 是防御性加固，没有敏感性证明：textconv 过滤器藏不住未跟踪文件的改动，因为 git 会在补丁的 index 行印出文件真实的 blob id。索引把文件标为 skip-worktree 或 assume-unchanged 的检出会被拒绝，因为 `git diff` 对这类文件读的是索引；git 给不出补丁的未跟踪条目也会被拒绝，例如指向目录的符号链接或嵌套仓库。
+- **树外的设置不能让 git 把改过的文件读成没改。** 每次 git 调用都覆盖 `core.fsmonitor`、`core.checkStat` 与 `core.trustCtime`，所以报告「没有变化」的 fsmonitor hook、不看 ctime 或亚秒级 mtime 的 stat 核对都不起作用。另设 `core.untrackedCache=false`，是防御性加固，没有敏感性证明。属性给检出中某个路径指定了 filter 的检出会被拒绝，因为 git 比较这样的文件时，看的是 filter 的输出。判定看属性，不看配置，所以只是定义了、却没有指定给任何路径的 filter（例如全局安装的 git-lfs）不会导致拒绝（盲审 F1，B-590）。
 - **做不了的核对记为具名的不一致。** 缺 git 或 pnpm、目录不是 git 检出、包或清单不是合法 JSON，都记为一项不一致；包能解析、却缺 `verify` 要读的字段时，报为 `verify could not complete`。所以结果行总会打印。
 - **形如选项的 `baseSha` 不会被 git 当作选项。** `verify` 在任何 git 调用之前，拒绝 `gitDiff.baseSha` 不是 40 或 64 位十六进制 id 的包，并写明取值。`workingTreePatch` 把 `baseSha` 放在 `--end-of-options` 之后，所以传给 `collect-evidence init` 的 `--base-sha` 若形如选项，会在 git 那里失败，而不会被执行（盲审 F3，B-590）。以前 `baseSha` 为 `--output=<路径>` 的包，会让 `verify` 把 diff 写进那个路径。
 
@@ -30,6 +31,6 @@ Status: implemented
 - 本改动之前采集的包没有 `sidecarManifestDigest`，会校验失败。
 - 在 `init` 与最后一个采集步骤之间发生的改动，属于包所描述的树，不会被报出。一个门若写出 git 不忽略的文件，这个文件会一并被绑定。
 - 被采集时生效的忽略规则所忽略的文件不在绑定范围内。本仓库忽略 `.env`、`mise.toml`、`.vscode/` 等，采集之后改动它们，校验照样通过。树外的规则，即 `.git/info/exclude` 与全局的 `core.excludesFile`，同样算生效的规则：采集之后在那里加一条规则，就能让一个新文件躲过校验。
-- 把文件标为 skip-worktree 的检出（稀疏检出就是这样）无法采集；含有指向目录的未跟踪符号链接或嵌套仓库的检出，也无法采集。
+- 把文件标为 skip-worktree 的检出（稀疏检出就是这样）无法采集；含有指向目录的未跟踪符号链接或嵌套仓库的检出，也无法采集；属性给某个路径指定了 filter 的检出同样无法采集，git-lfs 跟踪的文件就是这样。
 - `main()` 在 `import.meta.main` 守卫之后运行，所以在没有 `import.meta.main` 的 Node 版本上，脚本什么也不做、以 0 退出。这是修复之前就有的问题，由 BLOCKED-305 跟踪。
 - 修复的提交是 `775c25640a`。后来的一条提交信息引用的 `bed753dfe2` 是本笔记的文档提交。
