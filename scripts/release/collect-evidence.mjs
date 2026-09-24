@@ -127,9 +127,10 @@ const GIT_READS_THE_WORKING_TREE = ['-c', 'core.fsmonitor=false', '-c', 'core.ch
  * added there after collection hides nothing. The evidence package's own output
  * file and sidecar directory are left out, because the package cannot describe
  * itself.
- * Both diffs run with `--no-ext-diff --no-textconv`, so the patch is git's own
- * whatever external diff program or textconv filter the git configuration
- * names, and every call overrides {@link GIT_READS_THE_WORKING_TREE}. Each
+ * Both diffs run with `--no-ext-diff --no-textconv --no-color`, so the patch is
+ * git's own whatever external diff program, textconv filter or color setting
+ * the git configuration names, and every call overrides
+ * {@link GIT_READS_THE_WORKING_TREE}. Each
  * collection step records this, and verification takes it again, so a change
  * made after the last step shows, a new untracked file included.
  * `baseSha` follows `--end-of-options`, so git reads an option-shaped value as
@@ -170,7 +171,7 @@ export function workingTreePatch(repoRoot, baseSha, outPath) {
     throw new Error(`the checkout assigns a filter to ${filtered.join(', ')}, and git compares a filtered file by what its filter prints, not by its bytes`)
   }
   const added = untracked.map((path) => {
-    const result = spawnSync('git', [...GIT_READS_THE_WORKING_TREE, 'diff', '--binary', '--no-ext-diff', '--no-textconv', '--no-index', '--', '/dev/null', path], { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1 << 30 })
+    const result = spawnSync('git', [...GIT_READS_THE_WORKING_TREE, 'diff', '--binary', '--no-ext-diff', '--no-textconv', '--no-color', '--no-index', '--', '/dev/null', path], { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1 << 30 })
     // `git diff --no-index` exits 1 both when the sides differ, as they do for
     // any new file, and when it cannot read a side, so only output that starts
     // a patch is one.
@@ -179,7 +180,7 @@ export function workingTreePatch(repoRoot, baseSha, outPath) {
     }
     return result.stdout
   })
-  return run(['diff', '--binary', '--no-ext-diff', '--no-textconv', '--end-of-options', baseSha]) + added.join('')
+  return run(['diff', '--binary', '--no-ext-diff', '--no-textconv', '--no-color', '--end-of-options', baseSha]) + added.join('')
 }
 
 /**
