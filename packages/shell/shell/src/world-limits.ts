@@ -117,7 +117,6 @@ export async function readWorldLimits(
   const limits: SubprocessLimits = {
     ...cpuMillicores === undefined ? {} : { cpuMillicores },
     ...memoryBytes === undefined ? {} : { memoryBytes },
-    ...binding.maxProcesses === undefined ? {} : { maxProcesses: binding.maxProcesses },
   }
   return Object.keys(limits).length === 0 ? undefined : limits
 }
