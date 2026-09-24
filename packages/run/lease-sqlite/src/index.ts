@@ -191,7 +191,9 @@ export default class LeaseStorePlugin extends Service implements LeaseStoreContr
 
   /**
    * Give up the lease `token` authorizes; an emergency stop never gates this,
-   * since handing an item back is what a stopped deployment wants.
+   * since handing an item back is what a stopped deployment wants. A release
+   * that throws leaves its lease counted as held, so after the teardown the
+   * handle stays until the process ends.
    * @param token - the holder's authority over the item it is giving up.
    */
   release(token: FencingToken): void {
