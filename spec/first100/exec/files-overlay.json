@@ -2741,7 +2741,9 @@
       "path": "packages/core/tools/src/external-effect.ts",
       "kind": "source",
       "stages": [
-        "C.1"
+        "C.1",
+        "U.6",
+        "U.7"
       ],
       "reason": "Produces `waiting_human` around the approval request. Placed in the risk gate rather than at either call site because both dispatch paths reach the gate, so both report the state — the same argument that put the gate itself there."
     },
@@ -2760,7 +2762,8 @@
       "kind": "test",
       "stages": [
         "C.1",
-        "F.3"
+        "F.3",
+        "U.7"
       ]
     },
     {
@@ -2778,6 +2781,51 @@
       "kind": "test",
       "stages": [
         "U.2"
+      ]
+    },
+    {
+      "epic": "P4-05",
+      "path": "tests/first100/fixtures/loader/p4-05-waiting/base.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.5",
+        "U.6"
+      ]
+    },
+    {
+      "epic": "P4-05",
+      "path": "tests/first100/fixtures/loader/p4-05-waiting/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.5",
+        "U.6"
+      ]
+    },
+    {
+      "epic": "P4-05",
+      "path": "tests/first100/fixtures/loader/p4-05-waiting/mock-llm.ts",
+      "kind": "test",
+      "stages": [
+        "U.5",
+        "U.6"
+      ]
+    },
+    {
+      "epic": "P4-05",
+      "path": "tests/first100/fixtures/loader/p4-05-waiting/shared.ts",
+      "kind": "test",
+      "stages": [
+        "U.5",
+        "U.6"
+      ]
+    },
+    {
+      "epic": "P4-05",
+      "path": "tests/first100/fixtures/P4-05.waiting.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.5",
+        "U.6"
       ]
     },
     {

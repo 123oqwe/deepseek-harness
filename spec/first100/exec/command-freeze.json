@@ -17870,6 +17870,126 @@
         "failureSummary": "PRECHECK2 `9de8c0d9e8`, run 36024028102: N1, N2, N4, K1, K2, P1 and R1 red; N3 and N5 green, as pins. The fix `e34b1ee19c`, run 36024051119: 459 of 459 (the run package, the three subagent specs, K, and the P4-01, P4-02 and P4-07 compositions with P4-01's fault spec). M1′ `940e5b85f8`, run 36024074025: K1 and K2 red: K1 on the assertion that one Run holds both sessions (P4-01.run-span.spec.ts:66), the services being mounted and the child owned by the root either way; K2 on the restored Run holding only the parent (:78). M3′ `713ffd5afa`, run 36024127014: K1 and K2 green, since on the shipped launch the only other live agent when the child opens is its owner. All readings match artifacts/laneB/p4-01-r2-predictions.md (887a2538…), written and hashed before the runs were dispatched; the delegate compared them case by case."
       },
       "note": "P4-01 acceptance[2], the second half, on the shipped base profile: the driver boots the shipped headless profile over base, adding only a keyless model, the session log and the root agent's fixed session id, starts one child through subagents.start('spawn', ...), and reads the runs.json the product wrote after a clean unmount. K1: exactly one Run holds both sessions, the parent's, with sessionIds [parent, child]. K2: over a second boot of the same DSH_HOME, the Run the mount restores keeps [parent, child] and the root agent continues it. The argv runs the whole file, which holds these two cases. Not covered: the child is started by the driver, not by a model's subagent tool call."
+    },
+    {
+      "epic": "P4-05",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-05",
+        "stage": "U"
+      },
+      "supplementSeq": 5,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P4-05.waiting.composition.spec.ts",
+        "-t",
+        "P4-05.acceptance\\[1\\]:.an.agent.waiting.on.an.operator.s.approval.on.the.shipped.headless.profile",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-05 acceptance[1]: an agent waiting on an operator's approval on the shipped headless profile while the operator has not answered, the agent is in a waiting state that holds no dispatch slot, and the model receives no step request",
+        "P4-05 acceptance[1]: an agent waiting on an operator's approval on the shipped headless profile once the operator allows the call, the agent is running again, the tool body runs once, and the model receives its next step request"
+      ],
+      "files": [
+        "tests/first100/fixtures/P4-05.waiting.composition.spec.ts",
+        "tests/first100/fixtures/loader/p4-05-waiting/driver.ts",
+        "tests/first100/fixtures/loader/p4-05-waiting/base.patch.yml",
+        "tests/first100/fixtures/loader/p4-05-waiting/mock-llm.ts",
+        "tests/first100/fixtures/loader/p4-05-waiting/shared.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T17:32:50Z",
+      "dryRunProof": {
+        "treeSha": "7a4fd5ac3991bd928a367fa0c91fff6f192d18c4",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-w1 (`f89ca854c9bdfd136985ce67a1a113b5624d200d`, mutation/p4-05-m-w1, off PRECHECK e77760bef4, never merged): packages/core/tools/src/external-effect.ts's risk gate calls approval.request without awaiting it and goes on as if allowed, which is a waiting state that does not wait.",
+        "failureSummary": "Baseline: PRECHECK e77760bef4, narrow run 36033767574 over the whole file: W1 and W2 passed, the must[0] case (BLOCKED-329) failed as predicted in artifacts/laneA/p4-05-waiting-expectations-v5.md (sha256 feb418b7add9a7ff578902f80f4ab3ec5b95e3deacab3dc7c1c35e9dd4d7c52a). M-w1, run 36034453085 over the whole file: W1 red ('expected [ waiting_tool, waiting_human ] to include running': the gate had moved on, so at the ask the agent was already running and holding its slot), W2 green, the must[0] case still red (reading 'running' instead of 'waiting_tool'), as the v5 prediction's mutation section states; the delegate compared them. Dry run of exactly this entry's argv, run 36034607727 on e77760bef4: 3 tests discovered, 2 selected and passed (W1, W2), 1 skipped (the must[0] case, which -t does not select), 0 failed."
+      },
+      "note": "P4-05 acceptance[1] ('waiting states consume no LLM or worker resources') on the shipped headless composition, with an operator's approval as the wait. A third-party tool that declares no risk domain tags is classified by the unknown default and the base layer's risk gate asks; the driver, answering as the operator, withholds its answer for a second. W1: while the answer is withheld the agent is in a waiting state that holds no dispatch slot, and the model receives no step request across the hold. W2 (control, same run): once the call is allowed the agent is running, the tool body runs once, the model receives its next step, the risk gate recorded 'asked' and the Trust Kernel audited 'permit'. Not observed: the PTC path; a wait on a running tool; worker resources other than the dispatch slot, whose only production consumer is the Run's pre-step guard. The waiting state observed is waiting_tool, not waiting_human: the must[0] case in the same file is BLOCKED-329's red case and is frozen with its fix, so this entry selects the acceptance[1] describe with -t."
+    },
+    {
+      "epic": "P4-05",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-05",
+        "stage": "U"
+      },
+      "supplementSeq": 6,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P4-05.waiting.composition.spec.ts",
+        "-t",
+        "P4-05 must\\[0\\]: an approval wait on the shipped headless profile is labelled waiting_human, apart from a tool wait",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-05 must[0]: an approval wait on the shipped headless profile is labelled waiting_human, apart from a tool wait"
+      ],
+      "files": [
+        "tests/first100/fixtures/P4-05.waiting.composition.spec.ts",
+        "tests/first100/fixtures/loader/p4-05-waiting/driver.ts",
+        "tests/first100/fixtures/loader/p4-05-waiting/base.patch.yml",
+        "tests/first100/fixtures/loader/p4-05-waiting/mock-llm.ts",
+        "tests/first100/fixtures/loader/p4-05-waiting/shared.ts",
+        "packages/core/agent/src/state-machine.ts",
+        "packages/core/tools/src/external-effect.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T18:55:55Z",
+      "dryRunProof": {
+        "treeSha": "5da360c7ea9bb68bb3a85c0650aaa9372a6687d5",
+        "testsDiscovered": 1
+      },
+      "sensitivityProof": {
+        "mutationDescription": "One mutation off the fix, never merged, run with a build first: M-E (`a80aa5483fcf9c2d6e0de4b7008bc3982b6b04f9`) removes the edge waiting_tool → waiting_human from LEGAL_TRANSITIONS again.",
+        "failureSummary": "PRECHECK `f718b7f792`, run 36034986838, on lane A's v5 `e77760bef4`: exactly W3 and the warn case red. The fix `1523241a79`, run 36035010552: 177 of 177 (lane A's P4-05 waiting spec, fenced-dispatch, the agent package, approval-binding and risk-gate). M-E `a80aa5483f`, run 36035033670: exactly W3; the risk gate's advance is refused and the state stays waiting_tool, while the warn case still warns. All readings match artifacts/laneB/blocked-329-predictions-v2.md (8448b82a…), written and hashed before the runs were dispatched; the delegate compared them case by case."
+      },
+      "note": "BLOCKED-329 conditions 1-3, P4-05 must[0] on the shipped headless profile (lane A's W3): while the operator is asked, the agent's lifecycle reads waiting_human, apart from a tool wait, and returns to running once the call is allowed. The native dispatch path is in waiting_tool when the risk gate asks, and the state machine now admits that edge, with its reason beside it. The argv selects the case by its escaped name in -t; W1 and W2 in the same file are U.5."
+    },
+    {
+      "epic": "P4-05",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-05",
+        "stage": "U"
+      },
+      "supplementSeq": 7,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/run/tests/fenced-dispatch.spec.ts",
+        "-t",
+        "P4-05 must\\[0\\]: `waiting_human` is a state a run can actually reach warns when the run cannot enter `waiting_human`, and still asks, so a refused advance is not silent",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-05 must[0]: `waiting_human` is a state a run can actually reach warns when the run cannot enter `waiting_human`, and still asks, so a refused advance is not silent"
+      ],
+      "files": [
+        "packages/run/run/tests/fenced-dispatch.spec.ts",
+        "packages/core/tools/src/external-effect.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T18:55:55Z",
+      "dryRunProof": {
+        "treeSha": "5da360c7ea9bb68bb3a85c0650aaa9372a6687d5",
+        "testsDiscovered": 1
+      },
+      "sensitivityProof": {
+        "mutationDescription": "One mutation off the fix, never merged, run with a build first: M-W (`e2309d67c0f17877c0385991c41784fc01b7f494`) stops reading the answer of the risk gate's advance to waiting_human.",
+        "failureSummary": "PRECHECK `f718b7f792`, run 36034986838, on lane A's v5 `e77760bef4`: exactly W3 and the warn case red. The fix `1523241a79`, run 36035010552: 177 of 177 (lane A's P4-05 waiting spec, fenced-dispatch, the agent package, approval-binding and risk-gate). M-W `e2309d67c0`, run 36035057289: exactly this case; W3 keeps its edge and stays green. All readings match artifacts/laneB/blocked-329-predictions-v2.md (8448b82a…), written and hashed before the runs were dispatched; the delegate compared them case by case."
+      },
+      "note": "BLOCKED-329 condition 2, a refused advance at the risk gate is not silent: with the run paused, which has no edge to waiting_human whatever edges the native path has, the gate still asks the operator, does not refuse the action, and logs a warning naming the tool, the proposed state and the refusal (warnRefusedAdvance). The argv selects the case by its escaped name in -t."
     }
   ]
 }

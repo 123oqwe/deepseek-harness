@@ -1890,9 +1890,24 @@
         {
           "stage": "U",
           "title": "contract: moving into a waiting state releases the slot in the SAME step that changes the state"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 5,
+          "title": "P4-05 acceptance[1]: an agent waiting on an operator's approval on the shipped headless profile while the operator has not answered, the agent is in a waiting state that holds no dispatch slot, and the model receives no step request"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 5,
+          "title": "P4-05 acceptance[1]: an agent waiting on an operator's approval on the shipped headless profile once the operator allows the call, the agent is running again, the tool body runs once, and the model receives its next step request"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 3,
+          "title": "P4-05 acceptance[1] (§12.60): a run holding no dispatch slot does not begin a model step REFUSES the step for a reclaimed run, so no LLM call is spent on work this host lost"
         }
       ],
-      "note": "acceptance[1]: 'waiting states consume no LLM or worker resource.' The classification is asserted as a real PARTITION rather than as a list: running and starting DO consume, so a classifier that returned true for everything would fail. `cancelling` consumes deliberately and is asserted so — a draining run still holds its slot, and treating it as idle would let a supervisor reclaim resources still in use, which is the opposite failure from the one this clause names. The U-stage cases carry it into dispatch, where the load-bearing property is that occupancy is DERIVED from the lifecycle rather than tracked in a counter beside it: one case asserts the slot is released in the SAME step that changes the state, so there is no window in which the state says waiting while a separate tally still says occupied. A counter would make that window possible and invisible."
+      "note": "acceptance[1]: 'waiting states consume no LLM or worker resource.' The classification is asserted as a real PARTITION rather than as a list: running and starting DO consume, so a classifier that returned true for everything would fail. `cancelling` consumes deliberately and is asserted so — a draining run still holds its slot, and treating it as idle would let a supervisor reclaim resources still in use, which is the opposite failure from the one this clause names. The U-stage cases carry it into dispatch, where the load-bearing property is that occupancy is DERIVED from the lifecycle rather than tracked in a counter beside it: one case asserts the slot is released in the SAME step that changes the state, so there is no window in which the state says waiting while a separate tally still says occupied. A counter would make that window possible and invisible.\n\n[2026-09-24 lane B, batch 7: the `supplementSeq: 5` citations are lane A's W1 and W2 on the shipped headless profile, with an operator's approval as the wait: while the answer is withheld the agent is in a waiting state that holds no dispatch slot and the model receives no step request, and once the call is allowed the agent runs again, the tool body runs once and the model receives its next step. The F.3 citation [225] is the Run's pre-step guard refusing a model step for a run this host lost, so no LLM call is spent on it (§12.60). Not observed: the PTC path, a wait on a running tool, and worker resources other than the dispatch slot.]"
     },
     {
       "epic": "P4-05",

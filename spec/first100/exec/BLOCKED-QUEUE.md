@@ -8968,3 +8968,25 @@ Under the standard's rule for real defects (WORKING-MODEL §12), they become est
 4. Then a fresh 4.4 for P4-08.
 
 **Progress (2026-09-24, lane B).** Conditions 1–3 are met; condition 4 is the delegate's. PRECHECK `e6bb296f74` (run 36029414306): exactly the new case red of 153, on `expected 'leaf ran' to contain 'max-depth-exceeded'`. The fix `6e85b4f1ae` is in place in `compactJournal`, which now returns `{ ...journal, entries }`, so every journal field besides the entries survives; the fix's Agent Note lists the four fields a resume reads, `scriptDigest`, `entries`, `displaced` and `nesting`. It ran 153 of 153 (run 36029439192) and 13 of 13 of the acp workflow-resume e2e (run 36029459722). M1 `ecf43c3632` (run 36029484191), which keeps only `scriptDigest`, `entries` and `displaced` again: exactly the case red, on the same assertion. The case is frozen as P4-08 U.12 [377].
+
+### BLOCKED-329 — on the native dispatch path an approval wait is labelled `waiting_tool`, never `waiting_human`: the transition is illegal and its refusal is dropped (product defect, open)
+
+**Status:** CLOSED 2026-09-24 (closure note at the end of this entry); opened 2026-09-24. Owner: lane B, fix in place. It blocked P4-05's sign-off (must[0]). Found by lane A while writing P4-05's acceptance[1] waiting-state case. Confirmed by the delegate (first100-delegate-1a) from a CI reading and from the code at `c62bfac2cf`.
+
+**What was observed (CI).** Narrow run 36031066519 at `1499ca0f68` (based on `6993bf05be`), on the shipped headless profile under `bootProductionProfile`. A third-party tool with no `riskDomainTags` is held at the operator approval. While it waits, the agent's lifecycle state reads `waiting_tool`. The case expected `waiting_human` (`expected 'waiting_tool' to be 'waiting_human'`, `P4-05.waiting.composition.spec.ts:136`).
+
+**What the code says (at `c62bfac2cf`).**
+- Native dispatch first advances the agent to `waiting_tool` (`packages/core/agent-loop/src/tool-calls.ts:101`).
+- The risk gate then calls `advanceLeasedAgent(agent, 'waiting_human', …)` and discards the result (`packages/core/tools/src/external-effect.ts`, about `:586`).
+- `LEGAL_TRANSITIONS.waiting_tool` is `['running', 'cancelling', 'failed', 'orphaned']` (`packages/core/agent/src/state-machine.ts:93`). The advance is refused as illegal, and the refusal goes nowhere.
+- The comment above the call says "Both dispatch paths reach this gate, so both report the state." On the native path that is false.
+
+**Why it matters.** P4-05 must[0] asks that an approval wait be told apart from a tool wait, so that a supervisor deciding whether to reclaim a run can see that a person is being waited on. On the default (native) path, the label a supervisor reads is the tool-wait label.
+
+**Closing condition.**
+1. The case W3 on the shipped headless profile (lane A's `P4-05.waiting.composition.spec.ts`) is red on today's code, as in run 36031066519.
+2. The fix is in place: the native path reports `waiting_human` while the operator is asked, and returns to the right state afterwards. Either the state machine admits the edge from `waiting_tool`, with the reason written down, or the native path orders its advances so the edge is not needed. A refused advance at the risk gate is no longer silent.
+3. A mutation that restores today's behaviour turns only W3 red.
+4. The comment at the risk gate matches what the code does.
+
+**Closed 2026-09-24 (lane B, at the delegate's instruction; the four rounds matched and the delegate compared them).** Condition 1: W3 is red on the code before the fix: PRECHECK `f718b7f792` (run 36034986838, on lane A's v5 `e77760bef4`, whose driver creates the root agent after boot as a shipped launcher does) reddens exactly W3 and the new warn case. Condition 2: the fix `1523241a79` admits the edge waiting_tool → waiting_human in `LEGAL_TRANSITIONS`, with its reason beside it, so the native path reports waiting_human while the operator is asked and returns to running afterwards; a refused advance at the risk gate is now logged by `warnRefusedAdvance`, naming the tool, the proposed state and the refusal (run 36035010552: 177 of 177). Condition 3: M-E `a80aa5483f` (run 36035033670), which removes that edge again, reddens exactly W3; M-W `e2309d67c0` (run 36035057289), which stops reading the advance's answer, reddens exactly the warn case. Condition 4: the comment at the risk gate now says both dispatch paths reach it, the native one in waiting_tool and the other in running, and that the state machine admits both edges. W3 is frozen as P4-05 U.6 and the warn case as U.7 (predictions: artifacts/laneB/blocked-329-predictions-v2.md, 8448b82a…).
