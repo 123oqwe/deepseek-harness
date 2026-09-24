@@ -44,7 +44,6 @@
  * @module scripts/first100/verify-frozen-titles-in-tree
  */
 import { frozenTitlePresent, registeredRenames } from './frozen-title-renames.mjs'
-import { configFrozenReportRefusal, frozenCommand } from './generate-ledger.mjs'
 import { collectTitles } from './verify-frozen-titles-resolvable.mjs'
 import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
@@ -143,9 +142,7 @@ export function findOrphans(entries, producible, renames, reports = []) {
     const key = entry.supplementSeq === undefined
       ? `${entry.epic}.${entry.stage}`
       : `${entry.epic}.${entry.stage}.${String(entry.supplementSeq)}`
-    const argv = entry.argv ?? []
-    const own = reports.filter((report) => configFrozenReportRefusal(argv, report.files, report.path) === null)
-    const names = frozenCommand(argv).config === undefined ? producible : new Set(own.flatMap((report) => [...report.titles]))
+    const names = new Set([...producible, ...reports.flatMap((report) => [...report.titles])])
     for (const title of entry.expectCases) {
       if (frozenTitlePresent(title, names, renames, entry.epic, entry.stage)) continue
       orphans.push({ key, title })
