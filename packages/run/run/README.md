@@ -209,7 +209,7 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   mounts `@deepseek-ai/dsh-lease-sqlite`.
 - **A session that starts under an emergency stop stays undispatchable for its
   whole life.** The lease provider refuses with `stopped` (P2-12 must[2]), so
-  `open` records `agent.leaseRefused = true` (`src/index.ts:882`) and opens no
+  `open` records `agent.leaseRefused = true` (`src/index.ts:916`) and opens no
   Run. Nothing clears that mark: `dispatch.ts:326` reads it on every step and
   answers `lease-refused`, so after the operator resumes, this session still
   takes no work and the user must start a new one — what they see is a session
@@ -218,6 +218,27 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   deliberate (an agent dispatching without a lease is the unauthorized path
   P4-07 removes) and none of P2-12's acceptance clauses asks a session to heal
   itself, so the stickiness is recorded here rather than worked around.
+- **A lease store that fails while a session starts refuses that session for its
+  whole life.** When reading the predecessor or taking the lease throws (for
+  example another connection holds the SQLite lock past its busy timeout),
+  `open` marks the agent `leaseRefused` and opens no Run, the same as a refused
+  lease, and logs `the lease store failed`. New work stops while the store fails
+  (P4-07 acceptance[2]); the mark is not retried, so a new session is needed
+  once the store recovers.
+- **Only a Run's first-step and terminal writes carry the lease.**
+  `RunService.advance` takes the writer's lease and checks
+  `mayWrite(occurredAt)` in the Run's turn, right before the state machine
+  decides; a refusal records nothing and reads `'fenced'`. `RunPlugin` passes
+  the agent's lease for `accepted → planning`, `→ running`, `cancelled`,
+  `verifying` and `succeeded` or `failed`, and gives the item back only after
+  the terminal writes settle. `pauseRun` gives the lease back before it writes
+  `paused` (BLOCKED-197), so that write carries none, and `openForSession`,
+  `attachSession` and session-log appends carry none either. The lease lives in
+  SQLite and the Run in its JSON store, so a write admitted just before a
+  takeover can still land: "stale writes after a newer token = 0" is not
+  claimed. If the lease provider is torn down before a session's terminal writes
+  settle, the writes still to be checked and the release throw (reported as a
+  failed Run store write), and the lease row stays until it lapses.
 - **`paused` is legal and unreached.** The advancing paths are `agent/pre-step`
   (`queued → starting → running`, and the return from `waiting_tool`), the
   dispatch risk gate in `@deepseek-ai/dsh-tools` (`waiting_human` for as long as
