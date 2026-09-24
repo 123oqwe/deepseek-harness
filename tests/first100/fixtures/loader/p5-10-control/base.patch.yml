@@ -1,0 +1,34 @@
+# Test-only overlay over the SHIPPED headless profile for P5-10's
+# shipped-composition cases. The dsh-base layer owns every subagent row
+# (`subagent`, `tool-subagent` with provider `spawn` and `backgroundMode:
+# continuable`, `tool-subagent-control`); this overlay mounts none of them. It
+# supplies only a keyless model and an uncompressed session log, and turns off
+# the rows that would run a task of their own.
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: agent-loop
+  config:
+    agents:
+      - id: main
+        provider: p5-10-mock
+        model: p5-10-mock
+        cwd: !!js process.cwd()
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
+
+- insert:
+    - id: p5-10-mock-llm
+      name: './mock-llm.ts'
