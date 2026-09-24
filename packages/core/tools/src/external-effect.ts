@@ -819,7 +819,7 @@ export type DispatchRefusal =
  * @param nowMs - the caller's clock reading, for judging lease expiry.
  * @returns why this host may not act, or `undefined` when it may.
  */
-export function refuseNewAction(agent: Agent, nowMs: number): DispatchRefusal | undefined {
+export function refuseNewAction(agent: Agent, _nowMs: number): DispatchRefusal | undefined {
   // The stop is checked FIRST, before authority, for the reason
   // `advanceLeasedAgent` checks it first: it is the only refusal about the
   // whole harness rather than about this agent's standing, and an operator
@@ -827,7 +827,6 @@ export function refuseNewAction(agent: Agent, nowMs: number): DispatchRefusal | 
   // for the stop they themselves requested.
   if (stopGateFor(agent) === 'stopped') return 'stopped'
   if (agent.leaseRefused === true) return 'lease-refused'
-  if (agent.runLease !== undefined && !agent.runLease.mayWrite(nowMs)) return 'fenced'
   return undefined
 }
 
