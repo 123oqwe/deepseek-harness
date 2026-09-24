@@ -1306,6 +1306,22 @@
     },
     {
       "epic": "P2-04",
+      "path": "apps/web/tests/risk-class-surface.e2e.ts",
+      "kind": "test",
+      "stages": [
+        "U.4"
+      ]
+    },
+    {
+      "epic": "P2-04",
+      "path": "apps/web/tests/scaffold.ts",
+      "kind": "test",
+      "stages": [
+        "U.4"
+      ]
+    },
+    {
+      "epic": "P2-04",
       "path": "packages/action/action-manifest/src/canonicalize.ts",
       "kind": "source",
       "stages": [
@@ -1319,9 +1335,35 @@
       "kind": "manifest",
       "stages": [
         "P",
-        "U"
+        "U",
+        "U.3",
+        "U.4"
       ],
       "reason": "§12.48-B(a), §12.49(4) step 1. The three preset approval thresholds. Zero behaviour change while the dispatch gate is unwired, and landing it first keeps the gate slice from carrying a profile change too."
+    },
+    {
+      "epic": "P2-04",
+      "path": "packages/bundle/headless/cordis.patch.yml",
+      "kind": "manifest",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P2-04",
+      "path": "packages/bundle/sdk-app/cordis.patch.yml",
+      "kind": "manifest",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P2-04",
+      "path": "packages/bundle/web-app/cordis.patch.yml",
+      "kind": "manifest",
+      "stages": [
+        "U.4"
+      ]
     },
     {
       "epic": "P2-04",
@@ -1468,6 +1510,54 @@
       "stages": [
         "P.3",
         "C.1"
+      ]
+    },
+    {
+      "epic": "P2-04",
+      "path": "snapshots/sdk/bash-tool/notifications.expected.jsonl",
+      "kind": "fixture",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P2-04",
+      "path": "snapshots/sdk/bash-tool/session.v3.jsonl",
+      "kind": "fixture",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P2-04",
+      "path": "snapshots/sdk/sdk.snapshot.ts",
+      "kind": "fixture",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P2-04",
+      "path": "snapshots/session/bash-tool-turn/session.v3.jsonl",
+      "kind": "fixture",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P2-04",
+      "path": "snapshots/session/headless.snapshot.ts",
+      "kind": "fixture",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P2-04",
+      "path": "snapshots/web/minimal-preset/session.v3.jsonl",
+      "kind": "fixture",
+      "stages": [
+        "U.4"
       ]
     },
     {

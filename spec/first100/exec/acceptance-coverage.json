@@ -3066,9 +3066,24 @@
         {
           "stage": "U",
           "title": "ToolRuntime P2-04 must[1]: carries a tool's declared risk domain tags to the runtime, and never to the model"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 3,
+          "title": "headless recorded-session snapshots replays bash-tool-turn through dsh --profile headless"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 3,
+          "title": "TypeScript SDK snapshots over the jsonrpc runtime replays bash-tool through dsh --profile sdk"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 4,
+          "title": "P2-04 acceptance[0]: the shipped Web composition classifies bash as its recorded session does (no browser) the replayed bash call is gated with the risk class, preset and decision the recording holds"
         }
       ],
-      "note": "Decomposed into the two facts that make surface-consistency true rather than asserted: the policy is bound ONCE at the mount, so no caller carries its own copy, and every surface reaches classification through the one ToolRuntime that carries the declared tags. The three surface names are not enumerated as three cases because CLI, Web and SDK are not three classifiers -- they are three callers of this mount, and a case per surface would re-prove caller-independence three times rather than prove it once."
+      "note": "Decomposed into the two facts that make surface-consistency true rather than asserted: the policy is bound ONCE at the mount, so no caller carries its own copy, and every surface reaches classification through the one ToolRuntime that carries the declared tags. The three surface names are not enumerated as three cases because CLI, Web and SDK are not three classifiers -- they are three callers of this mount, and a case per surface would re-prove caller-independence three times rather than prove it once.\n\n[2026-09-24 lane A (A-345 item 4, A-349): the three added citations observe the same action on each surface. The headless CLI (`dsh --profile headless`) and the TypeScript SDK (`dsh --profile sdk`) replay their recordings and compare the session log in the case body (U.3); the Web composition replays its recording through `launchWebScaffold` and compares the action/risk-gated payloads in the case body (U.4). All three log bash as internal-write. A mutation that moves shell-execute to another class in one surface's bundle patch reddens exactly that surface (M-H: 26 headless scenarios, M-S: the SDK's two, M-W: the Web case). Limits: bash is the only action all three record, and no single case compares surfaces.]"
     },
     {
       "epic": "P2-04",

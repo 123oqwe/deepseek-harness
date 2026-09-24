@@ -15512,6 +15512,91 @@
       },
       "note": "v2 of P0-02's first U supplement, superseding v1 after the blind review (`artifacts/delegate/blind-p002-p007-p006.md`, findings 2-4). Part 1 of the approved workorder: evidence on the launcher and the kernel module, no product change.\n\nF1 (acceptance[2]) launches each of the 5 shipped templates in-process through `runProfile` with `pinTrustKernel` replaced by a spy that pins nothing and the opt-in unset; each launch refuses in the prepare hook (boot()'s `host preparation failed` label), before the sentinel entry mounts. Nobody reaches an unpinned kernel on the shipped path, because `createTrustKernel` is pure, so the fault is injected (S4). New in v2, C1 is the control: sdk-minimal launched in-process with the pin delegated once to the real one and the opt-in unset passes the prepare hook, the sentinel writes its marker, and the rejection names the sentinel's loader entry; this shows the sentinel can report a mount, which v1 assumed. MW3 reddens C1.\n\nW2 (acceptance[3]) is a real `dsh --profile headless` launch with `DSH_TRUST_KERNEL_INSECURE` empty: exit 0 and no insecure-boot warning. v2 takes the warning from the product (`insecureBootWarning()` calls `enforceTrustKernelPosture(false, true, sink)`) instead of copying a phrase, and MW4 reddens the no-warning assertion. W2 cannot see whether a kernel is pinned: under MF1+MW3 it stays green. The development-profile side of acceptance[3] is part 2.\n\nM2 (acceptance[1]) is a real headless launch whose recording model makes one `read` call: the kernel is pinned in the launched tree, the call's result carries the staged file's contents, no recorded model input contains any prose literal of the kernel module, and no insecure-boot warning is printed. MF1+MW3 reddens the pinned-kernel observation; MW3 alone reddens M2 through `runLoaderSmoke`'s exit-code check, before M2's own assertions run. The no-prose assertion is not triggered on the shipped product (the kernel's prose literals are its caller-facing errors) and has no dedicated mutation.\n\nM1-a and M1-b (acceptance[1]) read `packages/kernel/trust-kernel/src/`: only index.ts and types.ts; every string literal is a service key, an algorithm id, a verdict or a caller-facing error; imports only `node:crypto`, `@deepseek-ai/cordis` and its own types; no Cordis plugin entry.\n\nNot in this entry: the measurement that the 5 shipped templates refuse to boot with `DSH_TRUST_KERNEL_INSECURE=1` (`d9ea673025`), red today and frozen after part 2 lands.",
       "supersedes": "2026-09-24T06:02:27Z"
+    },
+    {
+      "epic": "P2-04",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-04",
+        "stage": "U"
+      },
+      "supplementSeq": 3,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "vitest.snapshot.config.ts",
+        "snapshots/session/headless.snapshot.ts",
+        "snapshots/sdk/sdk.snapshot.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "headless recorded-session snapshots replays bash-tool-turn through dsh --profile headless",
+        "TypeScript SDK snapshots over the jsonrpc runtime replays bash-tool through dsh --profile sdk"
+      ],
+      "files": [
+        "snapshots/session/headless.snapshot.ts",
+        "snapshots/sdk/sdk.snapshot.ts",
+        "snapshots/session/bash-tool-turn/session.v3.jsonl",
+        "snapshots/sdk/bash-tool/session.v3.jsonl",
+        "snapshots/sdk/bash-tool/notifications.expected.jsonl",
+        "packages/bundle/base/cordis.patch.yml",
+        "packages/bundle/headless/cordis.patch.yml",
+        "packages/bundle/sdk-app/cordis.patch.yml"
+      ],
+      "frozenAtUtc": "2026-09-24T07:40:41Z",
+      "dryRunProof": {
+        "treeSha": "20493b4ca94cc7ba4abb628fca346728058953a2",
+        "testsDiscovered": 119
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations off PRECHECK `d5d6ef3c565b172bcf8b7a83689e129b09c5eaf0` (the Web case in the host-plane program; the first PRECHECK 18820b579d failed its build and is not a reading), each its own commit touching one bundle patch, never merged, run by CI's narrow job at its own SHA over this entry's argv in source mode (no build). M-H (`58a65fe5aab5db07a38df7d74f2c27bfcd76d44b`) restates the base `permission` row's whole config in `packages/bundle/headless/cordis.patch.yml` with `shell-execute` moved from `internal-write` to `local-reversible` (below every preset's approval threshold, so the gate still allows and only the logged class moves). M-S (`a8bb3c33e89256f80cb0698547cf874a466349a7`) does the same in `packages/bundle/sdk-app/cordis.patch.yml`.",
+        "failureSummary": "Baseline: narrow run 35966055691: 118 passed / 0 failed / 1 skipped of 119 (the skip is the refresh-only headless case). M-H, run 35966078493: exactly the 26 headless scenarios whose compared fixtures carry a bash or pwsh action/risk-gated line red, the frozen headless case among them; the frozen SDK case and all 18 SDK scenarios green. M-S, run 35966098886: exactly the SDK bash-tool and ptc-turn scenarios red; every headless case green. All five readings match `artifacts/laneA/p2-04-acc0-surfaces-expectations-v2.json` (sha256 `3987580314d8f1292bd2512aa1af0b3edf19578a52b60c95ae5162795aff6f26`), written before the Web case and the mutations; the delegate compared them case by case, and counted M-H's 26 scenarios independently with his own git grep."
+      },
+      "note": "P2-04's third U supplement: acceptance[0] (\"同一动作分类跨 CLI/Web/SDK 一致\") on the headless CLI and TypeScript SDK surfaces. Each frozen case replays a recorded session through its shipped profile (`dsh --profile headless`, and `dsh --profile sdk` behind a TypeScript SDK client) and compares the persisted session log, and on the SDK also the wire notifications, with the committed recording inside the case body; both recordings log bash as `action/risk-gated` with `riskClass: internal-write`. The class comes only from base's `permission` row `riskRules` (`shell-execute` -> `internal-write`); a surface can diverge only through its own bundle patch, which is what each mutation does. The Web surface is P2-04 U.4. Limits: bash is the one action all three surfaces record; the equality holds because each surface matches its own recording, not through one case comparing surfaces."
+    },
+    {
+      "epic": "P2-04",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-04",
+        "stage": "U"
+      },
+      "supplementSeq": 4,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "vitest.web.config.ts",
+        "apps/web/tests/risk-class-surface.e2e.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-04 acceptance[0]: the shipped Web composition classifies bash as its recorded session does (no browser) the replayed bash call is gated with the risk class, preset and decision the recording holds"
+      ],
+      "files": [
+        "apps/web/tests/risk-class-surface.e2e.ts",
+        "apps/web/tests/scaffold.ts",
+        "snapshots/web/minimal-preset/session.v3.jsonl",
+        "packages/bundle/base/cordis.patch.yml",
+        "packages/bundle/web-app/cordis.patch.yml"
+      ],
+      "frozenAtUtc": "2026-09-24T07:40:41Z",
+      "dryRunProof": {
+        "treeSha": "20493b4ca94cc7ba4abb628fca346728058953a2",
+        "testsDiscovered": 1
+      },
+      "sensitivityProof": {
+        "mutationDescription": "One mutation off PRECHECK `d5d6ef3c565b172bcf8b7a83689e129b09c5eaf0` (the Web case in the host-plane program; the first PRECHECK 18820b579d failed its build and is not a reading), never merged, run by CI's narrow job at its own SHA over this entry's argv with a build first. M-W (`fd181a38d655f0448817c6865bbc29837ef7d32d`) restates the base `permission` row's whole config in `packages/bundle/web-app/cordis.patch.yml` with `shell-execute` moved from `internal-write` to `local-reversible` (below every preset's approval threshold, so the gate still allows and only the logged class moves).",
+        "failureSummary": "Baseline: narrow run 35966117327: 1 passed / 0 failed. M-W, run 35966138681: the case red. All five readings match `artifacts/laneA/p2-04-acc0-surfaces-expectations-v2.json` (sha256 `3987580314d8f1292bd2512aa1af0b3edf19578a52b60c95ae5162795aff6f26`), written before the Web case and the mutations; the delegate compared them case by case, and counted M-H's 26 scenarios independently with his own git grep."
+      },
+      "note": "P2-04's fourth U supplement: acceptance[0] on the Web surface. `minimal-preset.snapshot.ts` replays the same recording but compares the session only in `afterAll`, where a mismatch fails the suite and no named case; this file drives the same turn through `launchWebScaffold` (the shipped base and web-app layers, in-process, with the built web dist) with that comparison off and, in the case body, asserts the recording holds exactly one action/risk-gated payload (bash, internal-write, workspace-write, allowed-by-preset) and the replayed session's payloads equal it. No browser is launched. The full gate does not run `vitest.web.config.ts`, so this supplement is observed only through its narrow run. The file runs in the host-plane program (`tsconfig.host.json`), like the other scaffold tests."
     }
   ]
 }
