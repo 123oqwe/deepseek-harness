@@ -17,7 +17,7 @@
  * @module @deepseek-ai/dsh-workflow-journal/store
  */
 
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { WorkflowJournal } from './types.ts'
 
@@ -58,8 +58,7 @@ export function writeJournal(directory: string, runId: string, journal: Workflow
 export function setJournalAside(directory: string, runId: string, suffix: string): void {
   const aside = join(directory, 'refused')
   mkdirSync(aside, { recursive: true, mode: 0o700 })
-  let target = join(aside, `${runId}.${suffix}.json`)
-  for (let n = 1; existsSync(target); n += 1) target = join(aside, `${runId}.${suffix}.${String(n)}.json`)
+  const target = join(aside, `${runId}.${suffix}.json`)
   renameSync(fileFor(directory, runId), target)
 }
 
