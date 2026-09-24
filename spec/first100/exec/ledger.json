@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-24T13:38:26.868Z",
-  "inputDigest": "c506f9bb0cdc625d8e42997380d96f7cd38eeb0b4793da27a1337e3e7b17903f",
+  "lastUpdatedUtc": "2026-09-24T15:11:14.702Z",
+  "inputDigest": "eb395c96fd2e7cb9487c7a3b5c62604b3d4a608e4e03b3303133c281c9d9eaec",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -6692,6 +6692,19 @@
             "P4-07 on the shipped profile: a displaced host and a failing lease store the holder's session that ends as its host unloads still records the Run's outcome"
           ],
           "capturedAtUtc": "2026-09-24T13:38:26.374Z"
+        },
+        "U.8": {
+          "status": "GREEN",
+          "candidateSha": "a462b4f110ef5d272c4b7f50d2edcc8b13db3458",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36010943536",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b4/first100-vitest-report-a462b4f110ef5d272c4b7f50d2edcc8b13db3458/vitest-report.json",
+          "observationSha256": "15ba8f3af49a0f415bb8cd3b850c01f662f842db1f87735586bf2c652d8096f2",
+          "expectCasesMatched": [
+            "P4-07 must[1] / BLOCKED-265: the fencing check reaches a call this run has already started making refuses the PTC sub-call issued after another host took the Run, and ends the program",
+            "P4-07 must[1] / BLOCKED-265: the fencing check reaches a call this run has already started making runs the same program to the end while this host still holds its Run",
+            "P4-07 must[1] / BLOCKED-265: the fencing check reaches a call this run has already started making refuses the rest of a NATIVE batch once the takeover lands mid-batch, with the same sentence"
+          ],
+          "capturedAtUtc": "2026-09-24T15:11:14.693Z"
         }
       },
       "candidateSha": "49a352d36724970f93c4296f1a5abc60af94686d",
@@ -7599,6 +7612,40 @@
             "P4-11 acceptance[1]: every plugin that retries draws on one run budget P4-11 acceptance[1] on the shipped acp profile: a session's MCP reconnect spends the same run budget as llm-retry"
           ],
           "capturedAtUtc": "2026-09-24T12:17:31.011Z"
+        },
+        "U.3": {
+          "status": "GREEN",
+          "candidateSha": "a462b4f110ef5d272c4b7f50d2edcc8b13db3458",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36010943536",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b4/first100-vitest-report-a462b4f110ef5d272c4b7f50d2edcc8b13db3458/vitest-report.json",
+          "observationSha256": "15ba8f3af49a0f415bb8cd3b850c01f662f842db1f87735586bf2c652d8096f2",
+          "expectCasesMatched": [
+            "reconnect supervisor P4-11 must[1]: a server mounted for one session charges its reconnects to that session’s run charges nothing while the session is unpublished or holds no run"
+          ],
+          "capturedAtUtc": "2026-09-24T15:11:13.227Z"
+        },
+        "U.4": {
+          "status": "GREEN",
+          "candidateSha": "a462b4f110ef5d272c4b7f50d2edcc8b13db3458",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36010943536",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b4/first100-vitest-report-a462b4f110ef5d272c4b7f50d2edcc8b13db3458/vitest-report.json",
+          "observationSha256": "15ba8f3af49a0f415bb8cd3b850c01f662f842db1f87735586bf2c652d8096f2",
+          "expectCasesMatched": [
+            "P4-11 must[1]: an ACP session charges its MCP reconnects to its own Run control: a created session mounts its MCP servers charged to itself, so the case below measures the resume path",
+            "P4-11 must[1]: an ACP session charges its MCP reconnects to its own Run a resumed session mounts its MCP servers charged to itself"
+          ],
+          "capturedAtUtc": "2026-09-24T15:11:13.729Z"
+        },
+        "U.5": {
+          "status": "GREEN",
+          "candidateSha": "a462b4f110ef5d272c4b7f50d2edcc8b13db3458",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36010943536",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b4/first100-vitest-report-a462b4f110ef5d272c4b7f50d2edcc8b13db3458/vitest-report.json",
+          "observationSha256": "15ba8f3af49a0f415bb8cd3b850c01f662f842db1f87735586bf2c652d8096f2",
+          "expectCasesMatched": [
+            "P4-11 must[1]: the LLM layer charges the run, not the session keeps a spent RUN budget spent for the session’s later turns: nothing resets it while the process lives"
+          ],
+          "capturedAtUtc": "2026-09-24T15:11:14.209Z"
         }
       },
       "candidateSha": "71580010ded3860d869dbbc559e277ee14c7474b",
