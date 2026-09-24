@@ -9033,6 +9033,113 @@ The entry stays open: the delegate's blind review found that any non-empty reaso
 - In batch 8 these commits are `e2495fc5b8`, `5508a13bab`, `43c2beafc9`, `cfa0521da3`, `a51604ef1a` and `7a2545b23d`, with identical patch-ids.
 - The cases construct the refusal with an expired session token. BLOCKED-331's fix, a re-issue on expiry, removes that construction, so it replaces them with a token whose scope lacks the tool (B-577).
 
+### BLOCKED-331 — a session that outlives its capability token's TTL keeps running, but every tool call is refused as expired, and no new token is ever issued (product defect candidate, open)
+
+**Status:** OPEN (2026-09-24). Owner: lane B, characterise first, then fix in place. Found by lane A while writing BLOCKED-330's red case (A-370). Recorded by the delegate (first100-delegate-1a). Read from the code, not yet shown on a shipped launch.
+
+**What is known (lane A's reading).**
+- The session token's TTL is `sessionTokenTtlMs`, a Config on the base row, 24 h by default.
+- `needsIssue` does not look at expiry. Once a session runs past the TTL, the stored token is still there, so no new token is issued.
+- From then on, every tool call of that session is refused as `expired`.
+- Revocation is not a way out: it has no production caller.
+
+**Why it matters.** dsh runs long-lived agents (headless, ACP, SDK and Web hosts). A session older than 24 h keeps accepting turns, but it can no longer act. The only signal is an `expired` refusal on each call. Nothing renews the token, and nothing ends the session with a clear reason.
+
+**Before a fix, characterise.**
+1. What P2-02's clauses and the capability-token design say should happen at TTL: renew, or end the session.
+2. Whether any shipped path renews a session token today.
+
+**Closing condition.**
+1. A case on a shipped composition, with the TTL set short by config the way A-370 does, shows today's behaviour: after the TTL, calls are refused as expired and no token is issued. It is red against whichever behaviour the characterisation picks.
+2. The fix is in place and matches the clauses. Either the token is re-issued under the same policy when it expires, or the session is ended with a clear reason that the host and the operator can see. The choice and its reason are written into the fix's note.
+3. A mutation that restores today's behaviour turns only that case red.
+
+**Characterisation (delegate ruling, 2026-09-24T18:44:06Z, gate3 log).** Inputs: the CI measurement A-372 (run 36039928800) and lane A's read-only preflight A-377 (`artifacts/laneA/a-377-blocked-331-preflight.md`, sha256 d976ab05…).
+- P2-02's clauses say nothing about renewing a token at its TTL or ending the session. `evidence-P2-02.md:20` describes expiry as a deliberate withdrawal of authority, but the "child TTL" it names does not exist today.
+- Today the only renewal is incidental: a registry growth makes `needsIssue` mint a new token with a full TTL (A-372, turn 4).
+- Lane A also read, but did not measure, that delegated tokens (subagent, workflow) inherit the parent token's remaining lifetime (`:457`). They are never re-derived at expiry, and attenuation does not check whether the parent has expired, so a child started after the parent's token expired is born with an expired token.
+- **Ruling: at expiry the session token is re-issued under the same policy; the session is not ended.**
+  - Reasons: no clause asks for the session to end. Ending it would cap every long-lived host (headless, ACP, SDK, Web) at the TTL. A re-issue under the unchanged policy grants nothing the session did not already hold, so expiry keeps bounding the life of any single token.
+
+**Closing conditions (these replace the three above; each part red first with its own mutation):**
+1. **Root token.** A session whose token has expired gets a new token under the same policy at its next dispatch, re-evaluated at that moment. Its tool calls run. Today's behaviour, measured by A-372, is red against this.
+2. **Revocation is never undone.** A token or lineage that was revoked is not re-issued; calls stay refused as revoked (P2-02 acceptance[1]).
+3. **Delegated tokens.** A subagent's or workflow child's token is derived from the parent's *current* token, never exceeds it (P2-02 acceptance[0]), and is re-derived when it expires. Attenuating from an expired parent fails closed instead of minting an already-expired child.
+4. **Within a batch (code mode).** The case where a `run_code` program's nested call outlives the TTL of the token its batch was minted with is decided and pinned by a case. Either the nested call gets a re-issued token under the same policy, or it is refused with a reason that says so. The choice and its reason go into the fix's note.
+5. **Records.** `evidence-P2-02.md:20` is corrected to describe what the product does.
+- A fix that covers only condition 1 does not close this item.
+
+### BLOCKED-332 — a tool call already produced in a step still runs after the Run is advanced to `failed`; later steps are refused with no visible reason and the host is not told (product defect, open)
+
+**Status:** OPEN (2026-09-24T19:05:17Z). Owner: lane B, fix in place; lane A turns the measurement into a red-first case. Found by lane A (A-377, corrected in A-379), recorded by the delegate (first100-delegate-1a). Shown on a shipped composition.
+
+**What was measured.** Run 36045150093 at `a6635f1723`, parent candidate `43b89917a0`, on the shipped profile with the Run Service mounted. Predictions `artifacts/laneA/a-379-terminal-dispatch-expectations.md`, sha256 37757602…, written first. Three turns:
+1. The probe tool alone: the probe runs, the turn ends `completed`, and the lifecycle is `running`.
+2. In one step, `fail_run` (its body calls `runs.advance` to `failed`, which answers `advanced`) and then the probe. **The probe still runs**; the turn ends `blocked`; the lifecycle is `failed`.
+3. The probe again: no step starts (the Run plugin's pre-step gate, `run/src/index.ts:1438-1461`, refuses it), the turn ends `blocked`, and the probe does not run.
+
+**Why.**
+- The dispatch guard before a batch (`agent-loop/src/tool-calls.ts:101-102`) blocks only `fenced` and `lease-refused`. It runs once per batch, before the calls, so a transition to a terminal state made during the batch is never seen by the calls after it.
+- `refuseNewAction` checks the emergency stop, `leaseRefused` and the lease's `mayWrite`; it does not read the lifecycle.
+- When the next step is refused, the turn records only `blocked`. Nothing names the terminal state or the reason given for it, and no event tells the host.
+
+**Clause.** P4-05 acceptance[0]: illegal transitions and stale-worker updates are refused. P4-05 is not accepted. Running a tool body inside a Run that is already terminal is work the state machine forbids. This is not P4-07: its clauses cover a stale worker that has been fenced, and this Run was not fenced.
+
+**Closing conditions (each red first, each with its own mutation):**
+1. Once the Run is terminal, no further tool call of that batch starts. Each call is checked against the lifecycle when it starts, not only when the batch starts. Each call that did not run gets its ordered synthetic result, named apart from `fenced` and `lease-refused`.
+2. A turn stopped because the Run is terminal records which state it reached and the reason given for that transition, not a bare `blocked`.
+3. The host receives that state and reason through the same channel its other lifecycle changes use.
+4. A case on a shipped composition shows all three. Lane A's A-379 measurement becomes that case.
+
+**Correction to condition 3 (delegate, 2026-09-24T19:15:18Z).** Condition 3 assumed a channel through which the host receives lifecycle changes. Lane A (A-380) read that no such channel exists today:
+- Agent lifecycle transitions emit no event; `agent/runtime-types.ts:265-330` has only created, disposed, status and inbox.
+- `advanceLeasedAgent` changes only the in-memory `agent.lifecycle`.
+- The SDK, ACP, Web and headless hosts do not read the lifecycle. A host receives only the session event stream (the SDK's `session.event`) and `agent/status` (idle or running; the SDK maps it to `session.status`).
+
+The condition therefore rested on a premise I did not check. It is replaced by:
+
+3. **A client of a real shipped host receives it.** On the shipped SDK profile, a client receives the terminal state and its reason through the session event stream or the session status it already consumes. The fix chooses which of the two, and says why in its note. No channel is invented for one host only.
+   - The case for this condition is separate from the cases for conditions 1 and 2.
+   - Condition 2 is about what the session log records. Condition 3 is about what reaches a client.
+
+### BLOCKED-333 — a background subagent stopped by a graceful shutdown while it is still cancelling is never reported to its parent: the aborted settlement is not written, so the parent is never told (product defect, open)
+
+**Status:** OPEN (2026-09-24T19:22:33Z). Owner: lane A first reads which branch applies; then lane B fixes it in place. Found by lane A in the P5-10 restart measurement (question 13); recorded by the delegate (first100-delegate-1a).
+
+**What was measured.** Run 36046702806 at `db741a4d7e` (parent candidate `43b89917a0`). Predictions v3 `artifacts/laneA/p5-10-restart-measure-expectations-v3.md` (sha256 5f03c9ab…) were written before the fixture and the reading. This is the variant in which the graceful shutdown happens before the cancellation converges (GS, and GSC):
+- Before shutdown the child is still resident and cancelling. Its turn has no `turn/end`, and the parent has had only its first turn.
+- At that moment the durable bus holds 0 rows (`busRowsBeforeDispose: []`). After restart the bus still holds 0 rows, both before and after the parent is resumed.
+- No `settlement was not committed at shutdown` warning appears, so the write did not fail inside `commitSettlement`.
+- The parent is never told its child was stopped. When a user later prompts the child, the parent receives `subagent-settled` "… finished …" for that new turn, which says nothing about the stop.
+
+**Where it breaks (read, not yet narrowed).** `commitSettlementsForShutdown` (`packages/subagent/subagent/src/continuation-activation.ts:895-915` at `c1ec8cfe74`) writes nothing when any one of these holds:
+- `this.bus` is undefined;
+- the activation is not in `this.resident`;
+- its `lifecycle.epoch` is undefined;
+- `announced` is false.
+- The driver read the child's epoch as 0, which is defined, so the epoch branch is unlikely. Which of the other three applies is not yet read.
+
+**Clause.** P5-10 must[2]: every control message is durable, carries an epoch, and is idempotent. P5-10 must[3] also requires that a cancellation reaches a terminal state only after the child has stopped. P5-10 is not accepted.
+
+**Closing conditions (each red first, each with its own mutation):**
+1. Characterise first: a reading on the same composition names the branch that skips the write.
+2. After a graceful shutdown during a child's cancellation, the parent receives "… was stopped before it finished." once, either on its next start or when it is next resumed. The notification survives the restart and is not duplicated (must[2]).
+3. The case in condition 2 is on a shipped composition, and the GS variant of the P5-10 restart measurement becomes that case.
+4. A later prompt to the stopped child does not stand in for the stop notification. The parent learns about the stop before it learns about any later turn.
+
+**Characterisation (delegate, 2026-09-24T19:37:52Z; closing condition 1 met).** Lane A's v4 trace, run 36048642994 at `0506aa5e28` (predictions `artifacts/laneA/a-373d-drain-branch-expectations.md`, sha256 63a5a6f5…), records this in both GS variants:
+- When the trace is installed, the bus is readable (`rows 0`). The resident child has `announced: true`, `epoch: 0` and `closing: false`.
+- By the time `drain` starts (about 47 ms later), reading the bus throws: `MessageBusPlugin has no open database: this mount was already unloaded, or has not opened yet`.
+- `commitSettlementsForShutdown` then runs with `draining: true`. Its first bus call, `inboxRow`, throws the same error, the `catch` swallows it, and the function returns.
+- So the branch is **B2**: the message bus's store is unloaded before the continuation manager drains, and the write is refused.
+- The two defects together:
+  1. The shutdown order lets the bus close before the settlements it must hold are written.
+  2. The warning that the `catch` logs does not reach stderr or any host-visible log, so the loss is silent.
+- **The fix must cover both.**
+  1. The settlements are committed while the bus is still open. This can be done by ordering the teardown, by a dependency between the two plugins, or by a before-dispose step; the fix chooses, and says why.
+  2. A settlement that cannot be written is reported where an operator can see it.
+- Closing conditions 2–4 stand.
+
 ### BLOCKED-334 — an approval wait lets a fenced or stopped Run run the approved tool: after the operator answers, a refused return to `running` is only logged, and nothing after the risk gate checks the stop, the lease or the fence (product defect, open; P4-07 acceptance[0] is broken, so P4-07 is withdrawn)
 
 **Status:** OPEN (2026-09-24T21:13:10Z). Owner: lane A writes the red-first case; lane B records the P4-07 withdrawal, then fixes in place. Found by the P4-01/329 blind review (F2); measured by lane A (A-385); recorded by the delegate (first100-delegate-1a).
@@ -9063,6 +9170,19 @@ The entry stays open: the delegate's blind review found that any non-empty reaso
 
 **Progress 2026-09-24 (lane B):** lane A's red-first case `a4f29c2d76` (A-387) is red in run 36060615899: on the native and the code-mode paths, the fence and the stop variants run the approved tool, 8 red and 2 green. P4-07 is withdrawn in the same commit as this entry by a forward write (`generate-ledger.mjs --record-signoff --conclusion WITHDRAWN`), which moves its row to BLOCKED_ON_ACCEPTANCE, and a live P4-07 row is added to ACCEPTANCE LOCKS. The fix is scheduled after batch 7′.
 
+**Addendum (delegate, 2026-09-24T23:14:03Z) — two more sites of the same defect, from lane A's read-only audit A-388** (`artifacts/laneA/a-388-wait-then-act-audit.md`, sha256 841ac31f…). `refuseNewAction` has two callers only (`tool-calls.ts:286`, `ptc.ts:752`), and both run before any wait. The same "ask, then act without re-checking" pattern also appears at:
+3. **The ToolRuntime pre-execute ask** (`core/tools/src/index.ts:2130`, `serviceAsk`), reached by both paths.
+   - After the wait it checks only cancellation and the guard, then dispatches (`:2153`). Its token check (`:2114`) also runs before the wait.
+   - Latent today: only `hooks-claude-code` returns `ask`, and no shipped yml mounts it.
+4. **The sandbox-escalation ask inside tool bodies** (`tool-bash:222`, `tool-pwsh:230`, `tool-fs` `sandbox.ts:97`, all through `escalation.ts:173`).
+   - On `allowed-once` the tool runs in the wider sandbox.
+   - The base mounts four sandbox rows, so this is reachable by reading, provided the platform's sandbox executor is available. Not yet measured.
+
+**Closing conditions, extended:**
+- (to 2) The re-check sits where it also covers site 3: in the ToolRuntime dispatch, before the tool body is entered. This is one place for sites 1–3.
+- (new 4) Site 4 re-checks the stop, `mayWrite` and `leaseRefused` after the escalation is approved, before the wider sandbox runs.
+  - A case on a shipped composition shows it red first. If the sandbox executor is not available on the CI platform, the reading says so, and the case runs where it is.
+
 ### BLOCKED-335 — P0-08 reports verification precision and router regret as not applicable, because the shipped product has no producer for either; the two stay open until the points that build a verifier and a model router land (tracking item, user-approved narrowing, not a defect)
 
 **Status:** OPEN (2026-09-24T21:38:10Z). Owner: whichever of P5-02 / P5-12 / P4-03 / P7-01–P7-05 / P7-10 lands the producer. Recorded by the delegate (first100-delegate-1a) on the user's answer to question 19 (a), given in the delegate terminal at 2026-09-24T21:38:10Z: 「按你推荐的」.
@@ -9080,3 +9200,24 @@ The entry stays open: the delegate's blind review found that any non-empty reaso
 - The per-lane table of non-applicable metrics is fixed in the contract (gate3 log 2026-09-24T21:34:49Z).
 
 **Closing condition.** A shipped producer exists for the metric, and the P0-08 benchmark reports it from real runs with its confidence interval. This happens as part of the acceptance of the point that lands the producer: P5-02 or P5-12 for router regret; P7-03 or P7-05 (with P4-03 and P7-01) for verification precision. Each metric closes on its own.
+
+### BLOCKED-336 — on the shipped headless profile no logger exporter is mounted, so every plugin warning and error stays in an in-memory buffer and reaches no operator-visible output (product defect, open)
+
+**Status:** OPEN (2026-09-24T22:13:43Z). Owner: lane B characterises, then fixes in place; lane A turns the measurement into a red-first case. Found by lane A (A-389b, A-391); recorded by the delegate (first100-delegate-1a). Shown on a shipped composition.
+
+**What was measured.** Run 36065706124 at `09326b5f14` (parent candidate `c1ec8cfe74`); predictions `artifacts/laneA/a-391-logger-visibility-expectations.md`, sha256 b75d126c…, written first.
+- The shipped headless profile has one logger exporter at boot and one at the end: Cordis's in-memory buffer.
+- A marked `error` sent through the root context's logger lands in that buffer, and nowhere else.
+- With the token directory made read-only, `capability-token-file` really logs `session %s got no token: %s`. The probe's result carries `issuance failed: EACCES …`, which proves the error path ran. That line also lands in the buffer only.
+- stderr: 0 lines. stdout: 0 lines. Every text file under the working directory: 0 lines.
+
+**Why it matters.** Every `ctx.logger.warn` and `ctx.logger.error` a plugin writes is invisible to whoever runs headless. This includes failures that are only logged, such as the shutdown settlement loss of BLOCKED-333 and a failed capability-token issuance. It also removes the channel that P1-02 must[4] relies on, where logs must keep showing an untrusted state.
+
+**Before a fix, characterise.**
+1. Whether a supported switch exists today (a flag, an environment variable or configuration) that mounts an exporter. Is it documented?
+2. What the design intends for headless: where a warning or an error is meant to go, and how that keeps machine-readable stdout clean.
+
+**Closing conditions (each red first, each with its own mutation):**
+1. On the shipped headless profile, by default, plugin warnings and errors reach an operator-visible channel: stderr, or a documented log file named in the startup output. Machine-readable stdout stays clean.
+2. A case on a shipped composition shows it, built from A-391: the marked error and the failed-issuance line are both found.
+3. The same holds for the other shipped hosts (ACP, SDK, Web), each through the channel its operator already watches. A host that already surfaces them says where.
