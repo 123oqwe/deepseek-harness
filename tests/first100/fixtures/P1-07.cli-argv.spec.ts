@@ -14,6 +14,13 @@
  * profile-boot builds its `createAppReady` privately; the trust provider
  * records the grants it is asked for, because whether the record then does
  * what it should is the subject of U.1–U.3.
+ *
+ * A grant is pinned whole: the directory it names and the principal it is
+ * written for, not only its level and source. The directory is the launch's
+ * working directory, and the principal is the host user as the product defines
+ * it (`hostUserIdentity`, the call `launch-grant.ts` makes), not whatever the
+ * stand-in provider happened to receive. The sdk cases launch `--profile sdk`,
+ * the name the shipped template carries.
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -21,8 +28,18 @@ import { Context } from '@deepseek-ai/cordis'
 import { internals, provideCmdline } from '@deepseek-ai/dsh-cmdline'
 import * as CommandWorkspaceTrust from '@deepseek-ai/dsh-command-workspace-trust'
 import * as HeadlessStartup from '@deepseek-ai/dsh-headless/startup'
+import { hostUserIdentity } from '@deepseek-ai/dsh-host-user-id'
+import { RunId } from '@deepseek-ai/dsh-principal/types'
 import * as SdkAppStartup from '@deepseek-ai/dsh-sdk-app'
 import { parseDshArgs } from '../../../apps/cli/src/args.ts'
+
+/** One grant the trust provider was asked to write, whole. */
+interface Grant {
+  readonly path: string
+  readonly target: string
+  readonly principal: unknown
+  readonly source: unknown
+}
 
 /** What one launch observed. */
 interface Launch {
@@ -31,9 +48,23 @@ interface Launch {
   /** Every code the tree asked the launcher to exit with. */
   readonly exits: readonly number[]
   /** Every grant the trust provider was asked to write. */
-  readonly grants: readonly { readonly target: string; readonly source: unknown }[]
+  readonly grants: readonly Grant[]
   /** The launched tree, for reading what the app provided. */
   readonly ctx: Context
+}
+
+/**
+ * The one grant `--trust-workspace=read` must produce: the launch's working
+ * directory, at `trusted-read`, for the host user, from the launch argument.
+ * @returns the expected grant.
+ */
+function expectedReadGrant(): Grant {
+  return {
+    path: process.cwd(),
+    target: 'trusted-read',
+    principal: hostUserIdentity(RunId('run-expected')).principal,
+    source: 'launch-argument',
+  }
 }
 
 const saved = { ...internals }
@@ -69,7 +100,7 @@ async function launch(argv: readonly string[], app: typeof HeadlessStartup | typ
   if (invocation.mode !== 'profile') throw new Error(`expected a profile launch, got ${invocation.mode}`)
   const ctx = new Context()
   const exits: number[] = []
-  const grants: { target: string; source: unknown }[] = []
+  const grants: Grant[] = []
   const ready: (() => void)[] = []
   provideCmdline(ctx, {
     args: invocation.args,
@@ -78,8 +109,8 @@ async function launch(argv: readonly string[], app: typeof HeadlessStartup | typ
   })
   ctx.provide('commands', { register: () => () => {} } as never)
   ctx.provide('workspaceTrust', {
-    grantTrust: (_path: string, target: string, _principal: unknown, source: unknown) => {
-      grants.push({ target, source })
+    grantTrust: (path: string, target: string, principal: unknown, source: unknown) => {
+      grants.push({ path, target, principal, source })
       return Promise.resolve({ upgraded: true })
     },
   } as never)
@@ -102,18 +133,18 @@ describe('P1-07 U.4 — `--trust-workspace=read` passes both parsers on the way 
 
   it('the trust plugin on that headless command line asks for a trusted-read grant from the launch argument', async () => {
     const launched = await launch(['--profile', 'headless', '--trust-workspace=read', 'summarize this repository'], HeadlessStartup)
-    expect(launched.grants).toEqual([{ target: 'trusted-read', source: 'launch-argument' }])
+    expect(launched.grants).toEqual([expectedReadGrant()])
   })
 
   it('the launcher hands it to the sdk app intact, and that app\'s own program accepts it on the second pass', async () => {
-    const launched = await launch(['--profile', 'sdk-app', '--trust-workspace=read'], SdkAppStartup)
+    const launched = await launch(['--profile', 'sdk', '--trust-workspace=read'], SdkAppStartup)
     expect(launched.args).toEqual(['--trust-workspace=read'])
     expect(launched.exits).toEqual([])
     expect(launched.ctx.get(SdkAppStartup.SDK_APP_STARTUP_SERVICE) as unknown).toEqual({ accepted: true })
   })
 
   it('the trust plugin on that sdk command line asks for a trusted-read grant from the launch argument', async () => {
-    const launched = await launch(['--profile', 'sdk-app', '--trust-workspace=read'], SdkAppStartup)
-    expect(launched.grants).toEqual([{ target: 'trusted-read', source: 'launch-argument' }])
+    const launched = await launch(['--profile', 'sdk', '--trust-workspace=read'], SdkAppStartup)
+    expect(launched.grants).toEqual([expectedReadGrant()])
   })
 })
