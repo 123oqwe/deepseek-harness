@@ -264,6 +264,7 @@
     # the local provider refuses reaches this one.
     - id: execution-world-fenced
       name: '@deepseek-ai/dsh-execution-world/fenced'
+      disabled: true
 
     - id: bash-sandbox
       name: '@deepseek-ai/dsh-bash-sandbox'
