@@ -13,8 +13,10 @@
  *
  * After each turn it reads whether the probe ran, that turn's tool results,
  * whether the session's token is still the first one (compared, never
- * printed), whether it had expired when the turn started, and whether the
- * agent is still there. It prints one `P2-02-TTL <json>` line.
+ * printed), whether it had expired when the turn started, whether the session
+ * could then see a tool the token does not name (the growth that re-issues a
+ * token), and whether the agent is still there. It prints one
+ * `P2-02-TTL <json>` line.
  * @module tests/first100/fixtures/loader/p2-02-token-ttl/driver
  */
 
@@ -48,6 +50,7 @@ interface TurnReading {
   readonly probeRan: boolean
   readonly results: readonly string[]
   readonly tokenExpiredAtTurnStart: boolean | null
+  readonly toolBeyondTokenAtTurnStart: boolean | null
   readonly sameTokenAsFirst: boolean | null
   readonly turnEnds: number
   readonly agentPresent: boolean
@@ -104,6 +107,8 @@ try {
   const turn = async (label: string): Promise<void> => {
     const before = tokens?.sessionToken(agent.id)
     const tokenExpiredAtTurnStart = before === undefined ? null : before.token.expiresAt <= Date.now()
+    const toolBeyondTokenAtTurnStart = before === undefined ? null
+      : ctx.tools.schemas(agent).some(schema => !before.token.resources.includes(schema.name))
     const runsBefore = probeRuns
     await runFixtureTurn(ctx, { task: `BLOCKED-331 measurement: ${label}` })
     const events = agent.session.snapshotEvents()
@@ -118,6 +123,7 @@ try {
       probeRan: probeRuns > runsBefore,
       results: results.slice(resultsSeen),
       tokenExpiredAtTurnStart,
+      toolBeyondTokenAtTurnStart,
       sameTokenAsFirst: after === undefined || firstNonce === undefined ? null : after.token.nonce === firstNonce,
       turnEnds: events.filter(event => event.type === 'turn/end').length,
       agentPresent: ctx.agents.roots().includes(agent),
