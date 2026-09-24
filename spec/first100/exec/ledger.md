@@ -38,7 +38,7 @@ This table lists main cells only: a supplement cell (`U.1`, `C.2`, ...) has no r
 | 30 | P2-10 | Policy-as-Code、Explain 与 Dry Run | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P0-05, P2-05 | W7 | GREEN | GREEN | GREEN | GREEN | 7cc115a4958e3a0d4d318703a8bae8beff092a6f | PENDING | NOT_RUN |
 | 31 | P2-11 | 把 Permission Preset 扩展为完整 Policy Profile | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P2-04, P2-05, P3-02 | W9 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
 | 32 | P2-12 | 全局 Emergency Stop 与通用 Human Interaction Channel | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P2-05, P4-06 | W7 | GREEN | GREEN | GREEN | GREEN | 191aa1e502ff7e96a7ce306cdf57ccb742c745fb | PENDING | NOT_RUN |
-| 33 | P3-01 | 一等公民 ExecutionWorld Capability Seam | L1_CONTRACT | UNASSIGNED_UNTIL_APPROVAL | P0-03, P2-05 | W7 | GREEN | GREEN | GREEN | GREEN | 191aa1e502ff7e96a7ce306cdf57ccb742c745fb | APPROVED | ACCEPTED |
+| 33 | P3-01 | 一等公民 ExecutionWorld Capability Seam | L1_CONTRACT | UNASSIGNED_UNTIL_APPROVAL | P0-03, P2-05 | W7 | GREEN | GREEN | GREEN | GREEN | 191aa1e502ff7e96a7ce306cdf57ccb742c745fb | PENDING | BLOCKED_ON_ACCEPTANCE |
 | 34 | P3-02 | 扩展 Sandbox Policy 为全维度安全词汇 | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P3-01 | W8 | GREEN | NOT_RUN | NOT_RUN | NOT_RUN | 1f58ac8ad9db1871e2ac0c1448e98d7dd37fa576 | PENDING | NOT_RUN |
 | 35 | P3-03 | 结构化 Out-of-Band Denial 与执行错误 | L1_CONTRACT | UNASSIGNED_UNTIL_APPROVAL | P0-06, P3-01 | W8 | NOT_RUN | N/A | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
 | 36 | P3-04 | 统一 Network Egress Proxy 与目的地策略 | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P1-06, P2-05, P3-02 | W9 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
