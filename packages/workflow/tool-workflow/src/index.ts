@@ -337,11 +337,6 @@ export function apply(ctx: Context, config: Config): void {
       if (args.script === undefined || args.meta === undefined) {
         throw new Error('workflow tool: `script` and `meta` are required unless `attach` is given')
       }
-      // P4-08 acceptance[0]: the model's `resume` value becomes the name of a
-      // journal file and a lease row, so only a single id token is accepted.
-      if (args.resume !== undefined && !/^[\w-]+$/u.test(args.resume)) {
-        throw new Error(`workflow tool: \`resume\` must be a runId a workflow run reported, not ${JSON.stringify(args.resume)}`)
-      }
       // Without this the detached branch below would start a new run and drop `resume`.
       if (args.resume !== undefined && args.detached === true) {
         throw new Error('workflow tool: `resume` continues a run in the foreground — give it without `detached`')
