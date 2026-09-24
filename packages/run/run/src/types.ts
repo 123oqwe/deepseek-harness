@@ -230,13 +230,17 @@ export interface Run {
 }
 
 /**
- * Why `./state-machine.ts`'s `transition` refused a state change
- * (acceptance[1]): the pair does not appear in `LEGAL_RUN_TRANSITIONS[from]`.
+ * Why a Run transition was refused: `'illegal-transition'` when
+ * `./state-machine.ts`'s `transition` finds the pair outside
+ * `LEGAL_RUN_TRANSITIONS[from]` (acceptance[1]); `'fenced'` when
+ * `RunService.advance` was given the writer's lease and that lease no longer
+ * admits the write (P4-07 must[1]).
  */
-export type RunTransitionDenialReason = 'illegal-transition'
+export type RunTransitionDenialReason = 'illegal-transition' | 'fenced'
 
 /**
- * The outcome of `./state-machine.ts`'s `transition`: either the Run
+ * The outcome of a Run transition, from `./state-machine.ts`'s `transition` or
+ * from `RunService.advance` refusing a fenced writer: either the Run
  * advances to `to` with a new append-only log entry (`accepted: true`), or
  * the transition is refused fail-closed, naming the exact pair rejected
  * (`accepted: false`) — never a partial state change.
