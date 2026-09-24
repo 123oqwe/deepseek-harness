@@ -208,12 +208,6 @@ function main(argv: readonly string[]): number {
     options: { lane: { type: 'string', multiple: true }, seed: { type: 'string' }, out: { type: 'string' } },
   })
   const lanes = values.lane ?? [...new Set(SCENARIOS.map(scenario => scenario.lane))]
-  for (const lane of lanes) {
-    if (!SCENARIOS.some(scenario => scenario.lane === lane)) {
-      console.error(`benchmark:harness: no scenario in lane ${lane}`)
-      return 2
-    }
-  }
   const seed = values.seed === undefined ? DEFAULT_SEED : Number(values.seed)
   if (!Number.isInteger(seed) || seed < 0 || seed > 0xffff_ffff) {
     console.error(`benchmark:harness: --seed must be an integer in [0, 2^32), got ${values.seed}`)
