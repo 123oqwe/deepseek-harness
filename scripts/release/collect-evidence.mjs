@@ -171,7 +171,7 @@ export function workingTreePatch(repoRoot, baseSha, outPath) {
     throw new Error(`the checkout assigns a filter to ${filtered.join(', ')}, and git compares a filtered file by what its filter prints, not by its bytes`)
   }
   const added = untracked.map((path) => {
-    const result = spawnSync('git', [...GIT_READS_THE_WORKING_TREE, 'diff', '--binary', '--no-ext-diff', '--no-textconv', '--no-color', '--no-index', '--', '/dev/null', path], { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1 << 30 })
+    const result = spawnSync('git', [...GIT_READS_THE_WORKING_TREE, 'diff', '--binary', '--no-ext-diff', '--no-textconv', '--no-index', '--', '/dev/null', path], { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1 << 30 })
     // `git diff --no-index` exits 1 both when the sides differ, as they do for
     // any new file, and when it cannot read a side, so only output that starts
     // a patch is one.
