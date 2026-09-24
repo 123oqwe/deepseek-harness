@@ -227,6 +227,26 @@ export interface Run {
   /** Non-negative safe-integer Unix epoch milliseconds when the Run was accepted. */
   readonly createdAt: number
   readonly events: readonly [RunEvent, ...RunEvent[]]
+  /** Where the Run came from, when a connection that negotiated opened it (P8-01 acceptance[4]). */
+  readonly provenance?: RunProvenance
+}
+
+/**
+ * What an SDK connection agreed with its peer at the handshake: the SDK
+ * protocol's `NegotiationProvenance`, restated by structure because this
+ * package does not depend on the protocol package.
+ */
+export interface RunNegotiation {
+  readonly protocolVersion: number
+  readonly agreedCapabilities: readonly string[]
+  readonly ignoredCapabilities: readonly string[]
+  readonly downgrades: readonly { readonly capability: string; readonly reason: string; readonly adapter: string }[]
+}
+
+/** Where a Run came from (P8-01 acceptance[4]). */
+export interface RunProvenance {
+  /** The negotiation of the SDK connection that opened the Run. */
+  readonly negotiation: RunNegotiation
 }
 
 /**

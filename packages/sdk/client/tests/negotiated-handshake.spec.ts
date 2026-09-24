@@ -107,6 +107,38 @@ describe('P8-01 Usage: absence and malformation are not agreement', () => {
   })
 })
 
+describe('P8-01 acceptance[0] and P0-06 acceptance[1]: nothing the peer sent is dropped silently', () => {
+  const DOWNGRADE = { capability: 'replay', reason: 'peer predates replay', adapter: 'compat-v0' }
+  const INIT = { cwd: process.cwd(), provider: 'p', model: 'm' }
+
+  it('contract: a non-empty downgrade list reaches the caller intact', async () => {
+    const result = await clientWith({ ...COMPLETE, negotiation: { ...COMPLETE.negotiation, downgrades: [DOWNGRADE] } }).initialize(INIT)
+    expect(result.negotiation?.downgrades).toEqual([DOWNGRADE])
+  })
+
+  it('contract: a negotiation whose downgrades are malformed is dropped WHOLE', async () => {
+    const malformed = { ...COMPLETE.negotiation, downgrades: [{ capability: 7 }] }
+    const result = await clientWith({ ...COMPLETE, negotiation: malformed }).initialize(INIT)
+    expect(result.negotiation).toBeUndefined()
+  })
+
+  it('contract: a negotiation that sends no downgrades reads as an empty list, as the Python client reads it', async () => {
+    const { downgrades: _absent, ...withoutDowngrades } = COMPLETE.negotiation
+    const result = await clientWith({ ...COMPLETE, negotiation: withoutDowngrades }).initialize(INIT)
+    expect(result.negotiation).toEqual({ ...withoutDowngrades, downgrades: [] })
+  })
+
+  it('contract: an unknown optional field from a newer-minor server reaches the caller', async () => {
+    const result = await clientWith({ ...COMPLETE, futureOptional: { x: 1 } }).initialize(INIT)
+    expect((result as unknown as Record<string, unknown>)['futureOptional']).toEqual({ x: 1 })
+  })
+
+  it('contract: an unknown optional field nested in the negotiation reaches the caller', async () => {
+    const result = await clientWith({ ...COMPLETE, negotiation: { ...COMPLETE.negotiation, futureNested: { y: 2 } } }).initialize(INIT)
+    expect((result.negotiation as unknown as Record<string, unknown> | undefined)?.['futureNested']).toEqual({ y: 2 })
+  })
+})
+
 describe('P8-01 Usage: acceptance[1] — refuse before sending a task', () => {
   it('contract: initializeNegotiated throws when the server did not agree to a mandatory capability', async () => {
     const client = clientWith(COMPLETE)
@@ -116,6 +148,16 @@ describe('P8-01 Usage: acceptance[1] — refuse before sending a task', () => {
       model: 'm',
       capabilities: [{ id: 'replay', mandatory: true }],
     })).rejects.toThrow(/replay/u)
+  })
+
+  it('contract: initializeNegotiated names the refusal and the capabilities in fields a program can read', async () => {
+    const client = clientWith(COMPLETE)
+    await expect(client.initializeNegotiated({
+      cwd: process.cwd(),
+      provider: 'p',
+      model: 'm',
+      capabilities: [{ id: 'replay', mandatory: true }],
+    })).rejects.toMatchObject({ name: 'SdkProtocolError', data: { reason: 'mandatory-capability-not-agreed', capabilities: ['replay'] } })
   })
 
   it('control: it resolves when every mandatory capability was agreed, so the refusal measures the agreement', async () => {

@@ -1,8 +1,9 @@
 import { createServer } from 'node:http'
 import type { IncomingMessage, Server, ServerResponse } from 'node:http'
-import { mkdtemp, rm } from 'node:fs/promises'
+import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
+import { fileURLToPath } from 'node:url'
 import { PassThrough, Writable } from 'node:stream'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { TrackedContexts } from '@deepseek-ai/dsh-agent-loop-testkit'
@@ -183,6 +184,63 @@ async function mockCompletionServer(): Promise<{ url: string; requests: unknown[
   if (address === null || typeof address === 'string') throw new Error('no port')
   return { url: `http://127.0.0.1:${address.port}`, requests }
 }
+
+/**
+ * Send one `initialize` with `extra` merged into its params over a fresh mount,
+ * and return the frame that answers it.
+ * @param extra - the params beyond cwd, provider and model.
+ * @param label - the request id, also used in the temporary directory name.
+ * @returns the answering frame.
+ */
+async function initializeOnce(extra: Record<string, unknown>, label: string): Promise<Record<string, unknown>> {
+  const storageDir = await mkdtemp(join(tmpdir(), `dsh-jsonrpc-apply-${label}-`))
+  vi.stubEnv('DEEPSEEK_API_KEY', 'test-key')
+  const harness = await mountPlugin(storageDir)
+  try {
+    harness.send({ jsonrpc: '2.0', id: label, method: 'initialize', params: { cwd: storageDir, provider: 'deepseek-official', model: 'apply-model', ...extra } })
+    return await harness.waitForFrame(frame => frame.id === label, `initialize ${label}`)
+  } finally {
+    await harness.dispose()
+    await rm(storageDir, { recursive: true, force: true })
+  }
+}
+
+// A hand-built composition (`mountPlugin`), not the shipped `sdk` profile. The
+// refusals below depend on the composition only through the control plane
+// that `supportedCapabilitiesFor` reads, which none of them declares; the
+// shipped profile's refusal is observed in `P8-01.run-provenance.spec.ts`.
+describe('P8-01 and P0-06 acceptance[1]: a refused handshake says why in fields, and the fingerprint is the artifact\'s', () => {
+  it('P8-01 acceptance[0]: the real server\'s handshake fingerprint is the committed control-protocol artifact\'s', async () => {
+    const response = await initializeOnce({}, 'fingerprint')
+    const artifact = JSON.parse(await readFile(fileURLToPath(new URL('../../../../spec/control-protocol.schema.json', import.meta.url)), 'utf8')) as { fingerprint: string }
+    expect((response['result'] as { schemaFingerprint?: unknown } | undefined)?.schemaFingerprint).toBe(artifact.fingerprint)
+  })
+
+  it('P8-01 acceptance[1]: an unknown mandatory capability is refused on the wire with a machine-readable reason', async () => {
+    const response = await initializeOnce({ capabilities: [{ id: 'x-never-heard', mandatory: true }] }, 'unknown-capability')
+    expect(response['error']).toMatchObject({ code: -32603, data: { reason: 'unknown-mandatory-capability', capability: 'x-never-heard' } })
+  })
+
+  it('P8-01 acceptance[1]: a known but unsupported mandatory capability is refused on the wire with a different machine-readable reason', async () => {
+    const response = await initializeOnce({ capabilities: [{ id: 'replay', mandatory: true }] }, 'unsupported-capability')
+    expect(response['error']).toMatchObject({ code: -32603, data: { reason: 'unsupported-mandatory-capability', capability: 'replay' } })
+  })
+
+  it('P8-01 acceptance[1]: a non-overlapping protocol range is refused on the wire with a machine-readable reason and both ranges', async () => {
+    const response = await initializeOnce({ protocolVersions: { min: 2, max: 3 } }, 'range')
+    expect((response['error'] as { data?: unknown } | undefined)?.data).toEqual({ reason: 'no-overlapping-version', client: { min: 2, max: 3 }, server: { min: 1, max: 1 } })
+  })
+
+  it('P0-06 acceptance[1]: an incompatible schemaVersion is refused on the wire with its code and schemaId', async () => {
+    const response = await initializeOnce({ schemaVersion: { major: 3, minor: 0 } }, 'schema')
+    expect((response['error'] as { data?: unknown } | undefined)?.data).toEqual({
+      code: 'SCHEMA_MAJOR_MISMATCH',
+      schemaId: 'sdk-protocol:InitializeParams',
+      encounteredVersion: { major: 3, minor: 0 },
+      registeredVersion: { major: 1, minor: 0 },
+    })
+  })
+})
 
 describe('dsh-sdk-jsonrpc-server plugin apply', () => {
   it('P8-01 must[2]: the server REFUSES an unknown mandatory capability over the real stdio pair', async () => {
