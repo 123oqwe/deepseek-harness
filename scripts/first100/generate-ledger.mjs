@@ -1245,27 +1245,43 @@ function cmdGreen() {
  *
  * The cell returns to `NOT_RUN` and keeps no observation, because a retained
  * one would be the same wrong evidence with a different status beside it.
+ *
+ * With `--supplement-seq <n>` the same rule withdraws the supplement record
+ * `rows[epic].supplements[<stage>.<n>]`, judged against that seq's own live
+ * entries, which are what `verify-freeze-in-candidate-tree` checks a supplement
+ * against. A supplement re-frozen at its seq under a changed title needs it:
+ * a seq with a live entry is live ({@link deriveSupplementLiveness}), so its
+ * record stays GREEN on an observation of the old entry (delegate ruling,
+ * gate3 log 2026-09-24T18:21:48Z).
  */
 function cmdRevokeCell() {
   const epic = opt('epic')
   const stage = opt('stage')
   const reason = opt('reason')
+  const seqArg = opt('supplement-seq')
   if (!epic || !stage || !reason) {
-    console.error('usage: generate-ledger.mjs --revoke-cell --epic <id> --stage <C|P|U|F> --reason <text>')
+    console.error('usage: generate-ledger.mjs --revoke-cell --epic <id> --stage <C|P|U|F> [--supplement-seq <n>] --reason <text>')
     process.exit(1)
   }
+  const supplementSeq = seqArg === undefined ? undefined : Number(seqArg)
+  if (supplementSeq !== undefined && !(Number.isInteger(supplementSeq) && supplementSeq > 0)) {
+    console.error(`--supplement-seq must be a positive integer (got ${seqArg})`)
+    process.exit(1)
+  }
+  const key = supplementSeq === undefined ? undefined : `${stage}.${String(supplementSeq)}`
+  const label = key === undefined ? `${epic}.${stage}` : `${epic}.${key}`
   const ledger = loadJson(LEDGER_PATH)
-  const cell = ledger.rows[epic]?.cells?.[stage]
+  const cell = key === undefined ? ledger.rows[epic]?.cells?.[stage] : ledger.rows[epic]?.supplements?.[key]
   if (!cell) {
-    console.error(`BLOCKED: ${epic}.${stage} has no cell to revoke`)
+    console.error(`BLOCKED: ${label} has no cell to revoke`)
     process.exit(1)
   }
   if (cell.status !== 'GREEN') {
-    console.error(`BLOCKED: ${epic}.${stage} is ${String(cell.status)}, not GREEN — there is nothing to withdraw`)
+    console.error(`BLOCKED: ${label} is ${String(cell.status)}, not GREEN — there is nothing to withdraw`)
     process.exit(1)
   }
   const live = loadJson(COMMAND_FREEZE_PATH).entries.filter((e) => e.supersededBy === undefined)
-  const commitments = live.filter((e) => e.epic === epic && e.stage === stage && e.supplementSeq === undefined)
+  const commitments = live.filter((e) => e.epic === epic && e.stage === stage && e.supplementSeq === supplementSeq)
   const observed = freezeEntriesAt(cell.candidateSha)
   if (observed === undefined) {
     console.error(`BLOCKED: candidate ${String(cell.candidateSha)} is not readable in this clone, so the check cannot be recomputed`)
@@ -1275,21 +1291,23 @@ function cmdRevokeCell() {
   const absent = commitments.filter((e) => !observedKeys.has(commitmentKey(e)))
   if (absent.length === 0) {
     console.error(
-      `BLOCKED: ${epic}.${stage}'s observation ${String(cell.candidateSha).slice(0, 10)} DOES contain its live freeze entries, `
+      `BLOCKED: ${label}'s observation ${String(cell.candidateSha).slice(0, 10)} DOES contain its live freeze entries, `
       + 'so this cell is not revocable — this command exists only to withdraw a green that pre-committed to nothing.',
     )
     process.exit(1)
   }
-  ledger.rows[epic].cells[stage] = {
+  const revoked = {
     status: 'NOT_RUN',
     revokedFrom: { candidateSha: cell.candidateSha, ciRunUrl: cell.ciRunUrl ?? null, absentCommitments: absent.length },
     revokedReason: reason,
   }
+  if (key === undefined) ledger.rows[epic].cells[stage] = revoked
+  else ledger.rows[epic].supplements[key] = revoked
   ledger.rows[epic].status = 'NOT_RUN'
   ledger.rows[epic].independentVerdict = 'PENDING'
-  const written = writeLedgerHeader(ledger.rows, { epic, stage, revokedReason: reason })
+  const written = writeLedgerHeader(ledger.rows, { epic, stage, ...key === undefined ? {} : { supplementSeq }, revokedReason: reason })
   renderMarkdown(written)
-  console.log(`revoked ${epic}.${stage}: ${String(absent.length)} live freeze entry/entries absent from ${String(cell.candidateSha).slice(0, 10)}`)
+  console.log(`revoked ${label}: ${String(absent.length)} live freeze entry/entries absent from ${String(cell.candidateSha).slice(0, 10)}`)
 }
 
 function cmdGreenSupplement() {
