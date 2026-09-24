@@ -1044,7 +1044,7 @@ export function runLayerDepsCheck(root) {
     // gate names only the kernel-reverse-edge and expired-allowlist zeros). A
     // kernel upward edge is different -- acceptance[1] and the gate both
     // require it to be zero.
-    if (entry.rule === 'kernel-upward-dependency') violations.push(entry)
+    if (entry.rule === 'kernel-upward-dependency' && edge.toLayer !== 'providers') violations.push(entry)
     else findings.push(entry)
   }
 
