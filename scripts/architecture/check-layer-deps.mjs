@@ -326,8 +326,7 @@ export function readLayerExemptions(root) {
  * @returns npm package name -> { dir, manifest }.
  */
 function readWorkspaceManifests(root) {
-  const patterns = parseYaml(readFileSync(resolve(root, WORKSPACE_PATH), 'utf8'))?.packages
-  if (!Array.isArray(patterns) || patterns.length === 0) throw new Error(`${GATE}: ${WORKSPACE_PATH} declares no packages`)
+  const patterns = parseYaml(readFileSync(resolve(root, WORKSPACE_PATH), 'utf8'))?.packages ?? []
   const byName = new Map()
   for (const pattern of patterns) {
     for (const manifestPath of globSync(`${pattern}/package.json`, { cwd: root }).map(normalizePath).sort()) {
