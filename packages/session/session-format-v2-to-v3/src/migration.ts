@@ -54,7 +54,7 @@ class ReleasedV2ToV3Stage implements SessionFormatMigrationStage {
       source = { ...event, data: { ...data, header } }
     }
     if (SURFACE_TYPES.has(event.type) && this.head === undefined) {
-      throw new SessionFormatUnsupportedMigrationError('format v2 surface before first step cannot acquire a system head without changing chronology')
+      throw new Error('M0-3: format v2 surface precedes the first step')
     }
     if (event.type === 'session/end-seed' && data['inherited'] === true) {
       if (!this.input.sourceHeader.isSeeded) throw new SessionFormatError('format v2 unseeded Session contains an inherited end-seed marker')
