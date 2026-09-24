@@ -186,12 +186,19 @@ interface EvidencePackageBase {
   readonly formatVersion: 1
   readonly baselineFingerprint: BaselineFingerprintBinding
   readonly gitDiff: GitDiffBinding
+  /**
+   * Digest of the collector's `<sidecar>/manifest.json`, which lists the
+   * required gate ids and required artifact paths declared at
+   * `collect-evidence.mjs init`. `verify-evidence.mjs` fails a package whose
+   * manifest no longer matches this digest, and a package that lacks it.
+   */
+  readonly sidecarManifestDigest?: Digest
   /** Gates run this release beyond `requiredGates` — any {@link GateEvidence} outcome is legal; never gates acceptance. */
   readonly additionalGates: readonly GateEvidence[]
   /**
    * Detached attestation over this package's canonical serialization
-   * (`baselineFingerprint`, `gitDiff`, every required and additional gate,
-   * every required build artifact) — must[1]'s "binds … together" and
+   * (`baselineFingerprint`, `gitDiff`, `sidecarManifestDigest`, every required
+   * and additional gate, every required build artifact) — must[1]'s "binds … together" and
    * acceptance[0]'s tamper-detection. Producing and verifying it is
    * P-stage's job; this Contract-stage slice only reserves the field.
    */

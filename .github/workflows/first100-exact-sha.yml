@@ -247,10 +247,12 @@ jobs:
           # Two paths make upload-artifact root the archive at their least
           # common ancestor, `.dsh/`, so the download extracts as
           # `evidence/evidence.json`, `evidence/evidence.d/…` and
-          # `baseline.json`. To re-verify offline, put that content at
-          # `<repo>/.dsh/` and run
+          # `baseline.json`. To re-verify offline, check out this run's
+          # candidate SHA, put that content at `<repo>/.dsh/` and run
           # `pnpm run evidence:verify --evidence .dsh/evidence/evidence.json`
-          # from the repository root.
+          # from the repository root under this job's Node and pnpm versions:
+          # the verifier re-derives the baseline fingerprint from that checkout
+          # and reports a different HEAD or toolchain as drift.
           path: |
             .dsh/evidence/
             .dsh/baseline.json
