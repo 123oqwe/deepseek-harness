@@ -146,7 +146,7 @@ async function writeLaunchTrust(ctx: Context, request: LaunchTrustRequest): Prom
  * @throws when a request is present and this launcher provides no `appReady` signal.
  */
 export function applyLaunchTrustRequest(ctx: Context): void {
-  const request = parseLaunchTrustRequest(ctx.get('cmdlineArgs')?.get() ?? [])
+  const request = parseLaunchTrustRequest([])
   if (request === undefined) return
   const ready = ctx.get('appReady')
   if (ready === undefined) {
