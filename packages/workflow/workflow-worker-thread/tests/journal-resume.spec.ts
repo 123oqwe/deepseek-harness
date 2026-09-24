@@ -111,7 +111,7 @@ describe('P4-08 acceptance[2]: a kept journal is never replaced', () => {
     const first = readFileSync(join(dir, 'run-twice.json'), 'utf8')
     await reusableSteps(dir, 'run-twice', `${SCRIPT} // edited`, () => Promise.resolve(true), undefined)
     // The original script restarted under the same id, and was refused again.
-    writeJournal(dir, 'run-twice', { scriptDigest: digest, entries: [] } as unknown as WorkflowJournal)
+    writeJournal(dir, 'run-twice', { scriptDigest: digest, entries: [] })
     const second = readFileSync(join(dir, 'run-twice.json'), 'utf8')
     await reusableSteps(dir, 'run-twice', `${SCRIPT} // edited`, () => Promise.resolve(true), undefined)
 
