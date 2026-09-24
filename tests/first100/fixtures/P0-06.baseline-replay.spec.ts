@@ -5,12 +5,13 @@
  * readable reason:
  * 1. a surface event before the first step (24 logs);
  * 2. assistant chunks outside any turn, a replay fragment (3 logs);
- * 3. a projection written by a baseline fixture (2 logs): a compact checkpoint
+ * 3. a projection written by a baseline fixture (4 logs): a compact checkpoint
  *    without its compaction/start, or request/header tools recorded as names.
- * The 26 subagent child logs whose descriptor has version 2 are ruled "read";
- * they fail until the version-0 edge accepts that descriptor version. Two of
- * them (`scripts/snapshots/python-sdk-single-exe/advanced/session.{1,2}.jsonl`)
- * also record request/header tools as names; the descriptor rule classes them.
+ * The 24 read logs whose subagent descriptor has version 2 fail until the
+ * version-0 edge accepts that descriptor version. Two class-3 logs
+ * (`scripts/snapshots/python-sdk-single-exe/advanced/session.{1,2}.jsonl`)
+ * carry such a descriptor too; the replay refuses them for it before it reaches
+ * their tools, so their cases fail on the reason until that fix lands.
  *
  * The copies under `./p0-06-audit-baseline/b150a551/` are the baseline's blobs
  * byte for byte, enumerated by content (every blob whose first line is a
@@ -165,7 +166,6 @@ function isJsonObject(value: unknown): boolean {
  * rule that matches decides the class:
  * - a surface row before the first `step/start`: refused, class 1;
  * - rows that are all assistant chunks (plain or packed): refused, class 2;
- * - a `subagent/descriptor` whose version is not 3: read, as the user ruled;
  * - a replacing `compact` checkpoint with no earlier `compaction/start` of its id: refused, class 3;
  * - a `request/header` whose tools hold a member that is not an object: refused, class 3;
  * - anything else: read.
@@ -208,9 +208,8 @@ function fixtureFacts(file: string): FixtureFacts {
   const chunkOnly = rows.length > 0 && rows.every(row => row.type === 'assistant/chunk' || PACKED_ROW_TYPES.has(row.type))
   const kind: LogKind = surfaceBeforeStep ? 'surface-before-first-step'
     : chunkOnly ? 'chunk-only-fragment'
-      : descriptorVersion2 ? 'read'
-        : checkpointWithoutStart ? 'compact-checkpoint-without-start'
-          : toolNames ? 'tool-names' : 'read'
+      : checkpointWithoutStart ? 'compact-checkpoint-without-start'
+        : toolNames ? 'tool-names' : 'read'
   return {
     headerType: header.type,
     headerVersion: header.version,
@@ -277,14 +276,14 @@ describe('P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551
       expect(new Set(manifest.files.map(entry => entry.path)).size).toBe(157)
       expect(new Set(manifest.files.map(entry => entry.sessionId)).size).toBe(157)
 
-      // The class sizes the ruling names: 128 read (26 of them descriptor version 2) and 29 refused as 24, 3 and 2.
+      // The class sizes the ruling names: 126 read (24 of them descriptor version 2) and 31 refused as 24, 3 and 4.
       expect({
         read: readPaths.length,
         readDescriptorVersion2: readPaths.filter(path => facts.get(path)?.descriptorVersion2 === true).length,
         surfaceBeforeFirstStep: preStepPaths.length,
         chunkOnlyFragment: chunkOnlyPaths.length,
         fixtureProjection: projectionRows.length,
-      }).toEqual({ read: 128, readDescriptorVersion2: 26, surfaceBeforeFirstStep: 24, chunkOnlyFragment: 3, fixtureProjection: 2 })
+      }).toEqual({ read: 126, readDescriptorVersion2: 24, surfaceBeforeFirstStep: 24, chunkOnlyFragment: 3, fixtureProjection: 4 })
 
       // The directory holds exactly the listed copies: nothing unlisted, nothing missing.
       expect(filesUnder(join(fixtureRoot, 'b150a551')))
