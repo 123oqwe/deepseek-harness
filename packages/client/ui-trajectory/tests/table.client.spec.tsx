@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /** Trajectory ledger selection, details, status, and fold behavior. */
 
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import type { ComponentProps } from 'react'
 import type { RenderMessageImages } from '@deepseek-ai/dsh-client-ui-conversation/client'
@@ -65,14 +65,25 @@ function TrajectoryTable(
   )
 }
 
-/** Unmount what a case rendered and undo its stubs; runs after every case. */
+// A timer a case starts, such as react-virtual's scroll-end reset, is faked:
+// it advances with real time while the case runs, and teardown runs whatever is
+// still pending, so none can run after the environment is gone (BLOCKED-327).
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'], shouldAdvanceTime: true })
+})
+
+/** Unmount what a case rendered, run the timers it left, and undo its stubs; runs after every case. */
 function tearDownTable(): void {
   cleanup()
+  if (vi.isFakeTimers()) vi.runOnlyPendingTimers()
   vi.restoreAllMocks()
   Reflect.deleteProperty(HTMLElement.prototype, 'scrollTo')
 }
 
-afterEach(tearDownTable)
+afterEach(() => {
+  tearDownTable()
+  vi.useRealTimers()
+})
 
 const TURNS: readonly TrajectoryTurnModel[] = [{
   turn: 1,
