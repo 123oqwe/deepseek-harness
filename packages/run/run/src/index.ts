@@ -896,7 +896,6 @@ export default class RunPlugin extends Service {
       // one a live holder denies (acceptance[2]: new work stops while the lease
       // store fails). The mark is not retried; a new session asks again.
       this.ctx.logger.warn('run: no Run opened for agent %s — the lease store failed (%s)', agent.id, errorText(error))
-      agent.leaseRefused = true
       return
     }
     if ('denied' in taken) {
