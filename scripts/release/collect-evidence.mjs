@@ -109,30 +109,49 @@ export function sidecarDir(outPath) {
 
 /**
  * The working tree against `baseSha` as one patch: `git diff --binary` for
- * tracked files, then each untracked file git does not ignore as a binary diff
- * against /dev/null, in path order. The evidence package's own output file and
+ * tracked files, then each untracked file as a binary diff against /dev/null,
+ * in path order. The untracked files are those git does not ignore, plus every
+ * untracked `.gitignore`, ignored or not, because a new `.gitignore` can ignore
+ * itself and the files beside it. The evidence package's own output file and
  * sidecar directory are left out, because the package cannot describe itself.
- * Each collection step records this, and verification takes it again, so a
- * change made after the last step shows, a new untracked file included.
+ * Both diffs run with `--no-ext-diff --no-textconv`, so the patch is git's own
+ * whatever external diff program or textconv filter the git configuration
+ * names. Each collection step records this, and verification takes it again,
+ * so a change made after the last step shows, a new untracked file included.
  * @param {string} repoRoot - the checkout.
  * @param {string} baseSha - the commit the patch is measured against.
  * @param {string} outPath - the evidence package's absolute path.
  * @returns {string} the patch text.
+ * @throws {Error} when the index marks a file skip-worktree or assume-unchanged, because `git diff` then reads the index instead of the working tree for that file; and when git produces no patch for an untracked entry, such as a symbolic link to a directory or a nested repository.
  */
 export function workingTreePatch(repoRoot, baseSha, outPath) {
   const run = args => execFileSync('git', args, { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1 << 30 })
+  // `ls-files -v` tags a skip-worktree entry `S` and an assume-unchanged one with a lowercase letter.
+  const marked = run(['ls-files', '-v', '-z']).split('\0')
+    .filter(entry => entry !== '' && (entry[0] === 'S' || entry[0] !== entry[0].toUpperCase()))
+    .map(entry => entry.slice(2))
+  if (marked.length > 0) {
+    throw new Error(`the index marks ${marked.join(', ')} skip-worktree or assume-unchanged, so git diff reads the index for them instead of the working tree`)
+  }
   const ownFile = relative(repoRoot, outPath).split(sep).join('/')
   const ownDir = `${relative(repoRoot, sidecarDir(outPath)).split(sep).join('/')}/`
-  const untracked = run(['ls-files', '--others', '--exclude-standard', '-z']).split('\0')
+  const others = (options, pathspec) => run(['ls-files', '--others', ...options, '-z', ...pathspec]).split('\0')
     .filter(path => path !== '' && path !== ownFile && !path.startsWith(ownDir))
-    .sort()
+  const untracked = [...new Set([
+    ...others(['--exclude-standard'], []),
+    ...others(['--ignored', '--exclude-standard'], ['--', ':(glob)**/.gitignore']),
+  ])].sort()
   const added = untracked.map((path) => {
-    const result = spawnSync('git', ['diff', '--binary', '--no-index', '--', '/dev/null', path], { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1 << 30 })
-    // `git diff --no-index` exits 1 when the sides differ, as they do for any new file.
-    if (result.status !== 1) throw new Error(`git diff --no-index -- /dev/null ${path} exited ${result.status}: ${result.stderr}`)
+    const result = spawnSync('git', ['diff', '--binary', '--no-ext-diff', '--no-textconv', '--no-index', '--', '/dev/null', path], { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1 << 30 })
+    // `git diff --no-index` exits 1 both when the sides differ, as they do for
+    // any new file, and when it cannot read a side, so only output that starts
+    // a patch is one.
+    if (result.status !== 1 || !result.stdout.startsWith('diff --git ')) {
+      throw new Error(`git diff --no-index -- /dev/null ${path} produced no patch (exit ${result.status}): ${result.stderr}`)
+    }
     return result.stdout
   })
-  return run(['diff', '--binary', baseSha]) + added.join('')
+  return run(['diff', '--binary', '--no-ext-diff', '--no-textconv', baseSha]) + added.join('')
 }
 
 /**
