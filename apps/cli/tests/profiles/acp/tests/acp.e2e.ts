@@ -1,9 +1,12 @@
 import { mkdtemp, readFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { setTimeout as sleep } from 'node:timers/promises'
 import { fileURLToPath } from 'node:url'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { PROTOCOL_VERSION } from '@agentclientprotocol/sdk'
+import { checkFencing, type Lease, type WorkItemId } from '@deepseek-ai/dsh-lease-contract'
+import { openLeaseStore } from '@deepseek-ai/dsh-lease-sqlite'
 import {
   launchAcpTestAgent,
   startStubModelServer,
@@ -40,6 +43,35 @@ const DANGER_FULL_ACCESS_ENV = { DSH_PERMISSION_MODE: 'danger-full-access' }
  */
 function sessionsRootFor(cwd: string): string {
   return join(cwd, '.dsh', 'sessions')
+}
+
+/**
+ * Every stored Run that names one session, read from the Run Service's store
+ * file: `dshHomePath('runs', 'runs.json')` on `dsh-base`'s `run` row, which
+ * this profile does not override.
+ * @param cwd - the directory the agent was launched in.
+ * @param sessionId - the session the Runs belong to.
+ * @returns the Run ids, in store order.
+ */
+async function runIdsForSession(cwd: string, sessionId: string): Promise<string[]> {
+  const document = JSON.parse(await readFile(join(cwd, '.dsh', 'runs', 'runs.json'), 'utf8')) as {
+    readonly runs: readonly { readonly id: string; readonly sessionIds: readonly string[] }[]
+  }
+  return document.runs.filter(run => run.sessionIds.includes(sessionId)).map(run => run.id)
+}
+
+/**
+ * A file's text, or `undefined` when the file was never written.
+ * @param path - the file to read.
+ * @returns its contents, or `undefined` on ENOENT; any other failure throws.
+ */
+async function readIfWritten(path: string): Promise<string | undefined> {
+  try {
+    return await readFile(path, 'utf8')
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined
+    throw error
+  }
 }
 
 let spawned: LaunchedAcpTestAgent | undefined
@@ -200,6 +232,182 @@ describe('acp-agent over real stdio (no key required)', () => {
         .filter((value): value is Promise<void> => value !== undefined))
     }
   }, 120_000)
+})
+
+/** What the SIGKILLed host left on disk, read before and after it died. */
+interface KilledHost {
+  readonly sessionId: string
+  /** The Runs the store names for the session, read while the host was alive. */
+  readonly runIds: readonly string[]
+  /** The session's lease row, read while the host was alive: its token is `{ workItem, epoch, holder }`. */
+  readonly lease: Lease
+  /** A second connection to the host's `leases.sqlite`, opened after the host created it. */
+  readonly leases: ReturnType<typeof openLeaseStore>
+}
+
+/** Everything the takeover cases assert, recorded once. */
+interface TakeoverObservation {
+  readonly killed: KilledHost
+  /** The lease row after the wait, read immediately before the second host starts. */
+  readonly restartLease: Lease | undefined
+  /** When `restartLease` was read. */
+  readonly restartObservedAtMs: number
+  /** The Runs the store names for the session after the second host's turn. */
+  readonly runIdsAfter: readonly string[]
+  /** The lease row after the second host's turn, read while it is still alive. */
+  readonly currentLease: Lease | undefined
+  /** `second.txt`, which only the second host's tool call writes. */
+  readonly secondProof: string | undefined
+}
+
+/** The margin past the dead host's last expiry before the second host starts. */
+const EXPIRY_MARGIN_MS = 1_000
+/** A bound on the wait: the shipped lease expires at most 30 s after the kill, so a longer wait means the row is not that lease. */
+const MAX_LEASE_WAIT_MS = 45_000
+
+/**
+ * Drive one host through a tool call, read what it wrote to disk, then SIGKILL
+ * it: no disposer runs, so its lease is neither renewed nor released.
+ * @param cwd - the launch directory both hosts share, and so one `DSH_HOME`.
+ * @param env - the launch environment.
+ * @returns what the host left behind.
+ */
+async function runThenKillHost(cwd: string, env: Record<string, string>): Promise<KilledHost> {
+  const host = launchAcpTestAgent({ agent: AGENT, cwd, env })
+  try {
+    await host.spawned
+    await host.client.initialize({ protocolVersion: PROTOCOL_VERSION, clientCapabilities: {} })
+    const { sessionId } = await host.client.newSession({ cwd, mcpServers: [] })
+    await host.client.prompt({ sessionId, prompt: [{ type: 'text', text: 'write the first proof file' }] })
+    // The work item is the session (`RunPlugin.open`), and the host opened the
+    // store before its first Run, so the file exists by now.
+    const leases = openLeaseStore(join(cwd, '.dsh', 'leases'))
+    const lease = leases.get(sessionId as WorkItemId)
+    if (lease === undefined) throw new Error(`the host holds no lease row for session ${sessionId}`)
+    return { sessionId, runIds: await runIdsForSession(cwd, sessionId), lease, leases }
+  } finally {
+    await host.close('SIGKILL')
+  }
+}
+
+/*
+ * P4-05 acceptance[2]'s reclaim branch across two real processes, read only
+ * from what the product writes to disk: the lease row in `leases.sqlite`, the
+ * Run store, and the file the tool call writes.
+ *
+ * The first host is SIGKILLed, and the test waits out the lease it last renewed
+ * (the shipped 30 s; nothing here shortens `leaseMs`) before the second host
+ * resumes the session and runs one tool call. Each observation is made once in
+ * `beforeAll`, and the cases only read them. `vitest.e2e.config.ts`'s `retry: 2`
+ * re-runs a case body and never `beforeAll`, so a retry re-reads the same data
+ * and cannot turn a first failure into a pass.
+ *
+ * Not observed: the in-process `orphaned` lifecycle label, which the adopting
+ * host writes only to `agent.lifecycle` and to a log line no shipped exporter
+ * prints, and acceptance[2]'s "fail safely" branch, which has no producer.
+ */
+describe('P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILLed host left behind (no key required)', () => {
+  let takeoverWorkdir: string | undefined
+  let stub: Awaited<ReturnType<typeof startStubModelServer>> | undefined
+  let second: LaunchedAcpTestAgent | undefined
+  let observed: TakeoverObservation | undefined
+
+  const observation = (): TakeoverObservation => {
+    if (observed === undefined) throw new Error('beforeAll recorded no takeover observation')
+    return observed
+  }
+
+  beforeAll(async () => {
+    takeoverWorkdir = await mkdtemp(join(tmpdir(), 'acp-e2e-takeover-'))
+    const cwd = takeoverWorkdir
+    stub = await startStubModelServer({
+      toolCalls: [
+        { name: 'bash', arguments: { command: 'printf ACP_OK > first.txt', description: 'Write the first proof file' } },
+        undefined,
+        { name: 'bash', arguments: { command: 'printf ACP_OK > second.txt', description: 'Write the second proof file' } },
+      ],
+    })
+    const env = {
+      DEEPSEEK_API_KEY: 'sk-dummy-for-boot',
+      DEEPSEEK_BASE_URL: stub.baseUrl,
+      ...DANGER_FULL_ACCESS_ENV,
+    }
+
+    const killed = await runThenKillHost(cwd, env)
+    // Read again after the kill: a heartbeat between the first read and the
+    // kill moves the expiry, and the wait is for the row as the dead host left it.
+    const atKill = killed.leases.get(killed.lease.workItem)
+    if (atKill === undefined) throw new Error(`the lease row for session ${killed.sessionId} vanished at the kill`)
+    const waitMs = atKill.expiresAtMs - Date.now() + EXPIRY_MARGIN_MS
+    if (waitMs > MAX_LEASE_WAIT_MS) throw new Error(`the dead host's lease expires in ${String(waitMs)} ms, longer than the shipped lease allows`)
+    if (waitMs > 0) await sleep(waitMs)
+    const restartLease = killed.leases.get(killed.lease.workItem)
+    const restartObservedAtMs = Date.now()
+
+    second = launchAcpTestAgent({ agent: AGENT, cwd, env })
+    await second.spawned
+    await second.client.initialize({ protocolVersion: PROTOCOL_VERSION, clientCapabilities: {} })
+    await second.client.resumeSession({ sessionId: killed.sessionId, cwd, mcpServers: [] })
+    await second.client.prompt({
+      sessionId: killed.sessionId,
+      prompt: [{ type: 'text', text: 'write the second proof file' }],
+    })
+
+    observed = {
+      killed,
+      restartLease,
+      restartObservedAtMs,
+      runIdsAfter: await runIdsForSession(cwd, killed.sessionId),
+      currentLease: killed.leases.get(killed.lease.workItem),
+      secondProof: await readIfWritten(join(cwd, 'second.txt')),
+    }
+  }, 180_000)
+
+  afterAll(async () => {
+    const ownedSecond = second
+    const ownedWorkdir = takeoverWorkdir
+    second = undefined
+    takeoverWorkdir = undefined
+    try {
+      await stub?.close()
+    } finally {
+      await cleanupAcpExampleTest(ownedSecond, ownedWorkdir)
+    }
+  })
+
+  it('orphan: before the second host starts, the lease row still names the killed host at its epoch and has expired', () => {
+    const { killed, restartLease, restartObservedAtMs } = observation()
+    expect(restartLease?.holder).toBe(killed.lease.holder)
+    expect(restartLease?.epoch).toBe(killed.lease.epoch)
+    expect(restartLease?.expiresAtMs).toBeLessThan(restartObservedAtMs)
+  })
+
+  it('the second host continues the same Run id the killed host opened', () => {
+    const { killed, runIdsAfter } = observation()
+    expect(killed.runIds).toHaveLength(1)
+    expect(runIdsAfter).toEqual(killed.runIds)
+  })
+
+  it('the lease row now names the second host', () => {
+    const { killed, currentLease } = observation()
+    expect(currentLease).toBeDefined()
+    expect(currentLease?.holder).not.toBe(killed.lease.holder)
+  })
+
+  it('the lease row carries an epoch greater than the killed host\'s', () => {
+    const { killed, currentLease } = observation()
+    expect(currentLease?.epoch).toBeGreaterThan(killed.lease.epoch)
+  })
+
+  it('the killed host\'s token is refused as stale-epoch against the current lease', () => {
+    const { killed, currentLease } = observation()
+    const token = { workItem: killed.lease.workItem, epoch: killed.lease.epoch, holder: killed.lease.holder }
+    expect(checkFencing(token, currentLease)).toEqual({ admitted: false, reason: 'stale-epoch' })
+  })
+
+  it('the second host\'s tool call ran: the file it writes is on disk', () => {
+    expect(observation().secondProof).toBe('ACP_OK')
+  })
 })
 
 describe.skipIf(!process.env.DEEPSEEK_API_KEY)('acp-agent e2e: real prompt over ACP', () => {
