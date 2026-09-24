@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-09-24-layer-checks-scan-the-declared-workspace.md
-2026-09-24-layer-checks-scan-the-declared-workspace.md: be29e5fc99780e03af37096530de62c997eb62fd
-2026-09-24-layer-checks-scan-the-declared-workspace.zh.md: 33419230c07a6323280c997fad7a96e746864621
+2026-09-24-layer-checks-scan-the-declared-workspace.md: 3c9658b2c04d18abc1f273889f8ae6149f1619b5
+2026-09-24-layer-checks-scan-the-declared-workspace.zh.md: 7f06130757b782c7480988ecae94fb80dc5db920

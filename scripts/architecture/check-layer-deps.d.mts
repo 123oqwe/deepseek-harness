@@ -131,7 +131,7 @@ export function readLayerExemptions(root: string): LayerExemptions
  * Assign every package `pnpm-workspace.yaml` declares a layer, except the vendored ones.
  * @param root - repository (or fixture) root.
  * @returns each package's layer, the names of any package no rule classified, and the vendored packages.
- * @throws when `pnpm-workspace.yaml` declares no package pattern.
+ * @throws when `pnpm-workspace.yaml` declares no package pattern, or its patterns match no package.
  */
 export function classifyWorkspacePackages(root: string): ClassificationResult
 
@@ -154,6 +154,6 @@ export function collectLayerEdges(root: string, byPackage: Map<string, Classifie
  * Run the full layer-dependency gate against a repository or fixture root.
  * @param root - repository (or fixture) root.
  * @returns violations, every unexempted cycle, unclassified packages, kernel edges, and scan counts.
- * @throws when `pnpm-workspace.yaml` declares no package pattern.
+ * @throws when `pnpm-workspace.yaml` declares no package pattern, or its patterns match no package.
  */
 export function runLayerDepsCheck(root: string): LayerDepsResult
