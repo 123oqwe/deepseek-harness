@@ -1,19 +1,22 @@
 /**
  * Real layer-dependency architecture gate (Epic P0-04, U-stage): classifies
- * every real workspace package into `./layer-order.ts`'s six-layer sequence,
- * resolves dependency edges through must[2]'s three detection channels,
- * enforces `docs/architecture/layering.md`'s rules 1-6 against the resolved
- * facts, and searches the real production package graph for an unexempted
- * cycle. Plain ESM (not TypeScript) so it runs the same way as every other
- * tsx-launched gate script while importing the `.ts` contract module
- * directly — see `docs/development.md#typescript-project-layout` on
- * source-plane gates, and `./check-capability-seams.mjs` (Epic P0-03) for
+ * every package `pnpm-workspace.yaml` declares into `./layer-order.ts`'s
+ * six-layer sequence (a vendored package takes no layer), resolves
+ * dependency edges through must[2]'s three detection channels, enforces
+ * `docs/architecture/layering.md`'s rules 1-6 against the resolved facts,
+ * and reports every unexempted cycle in the real production package graph,
+ * vendored packages included. Plain ESM (not TypeScript) so it runs the same
+ * way as every other tsx-launched gate script while importing the `.ts`
+ * contract module directly — see `docs/development.md#typescript-project-layout`
+ * on source-plane gates, and `./check-capability-seams.mjs` (Epic P0-03) for
  * the same script shape.
  *
  * Run: `pnpm run architecture:layers` (`tsx scripts/architecture/check-layer-deps.mjs
- * [--repo-root <path>]`). `--repo-root` defaults to this script's own
- * repository root (not `process.cwd()`) and exists for the fixture-driven
- * tests in `tests/architecture/check-layer-deps.spec.ts`.
+ * [--repo-root <path>] [--budget-ms <n>]`). `--repo-root` defaults to this
+ * script's own repository root (not `process.cwd()`) and exists for the
+ * fixture-driven tests in `tests/architecture/check-layer-deps.spec.ts`.
+ * `--budget-ms` replaces acceptance[2]'s 10-second budget; the run exits
+ * non-zero when it takes longer than the budget.
  *
  * The exemption store this reads is `tests/first100/layer-cycle-exemptions.json`
  * (path patch `P0-04-U-cycle-exemptions`; the root `architecture.layers.json`
@@ -22,9 +25,11 @@
  */
 
 import { readFileSync, writeFileSync, globSync, existsSync } from 'node:fs'
+import { isBuiltin } from 'node:module'
 import { dirname, resolve, sep } from 'node:path'
+import { load as parseYaml } from 'js-yaml'
 import ts from 'typescript'
-import { LAYER_ORDER, classifyEdge, findShortestCycle, validateExemptedCycle } from './layer-order.ts'
+import { LAYER_ORDER, classifyEdge, validateExemptedCycle } from './layer-order.ts'
 
 const GATE = 'check-layer-deps'
 const EXEMPTIONS_PATH = 'tests/first100/layer-cycle-exemptions.json'
@@ -32,10 +37,16 @@ const PACKAGE_MAP_PATH = 'tests/first100/layer-package-map.json'
 /** The persistent findings report, in P0-04's own canonical directory so the observations outlive a CI log. */
 const FINDINGS_PATH = 'scripts/architecture/layer-findings.md'
 const SEAMS_PATH = 'architecture.layers.json'
-const PACKAGE_MANIFEST_GLOB = 'packages/*/*/package.json'
-const APP_MANIFEST_GLOB = 'apps/*/package.json'
+/** The workspace file whose `packages:` patterns decide which packages this gate scans. */
+const WORKSPACE_PATH = 'pnpm-workspace.yaml'
 const SOURCE_GLOB = 'src/**/*.{ts,tsx,mts,cts}'
 const TSCONFIG_BASE = 'tsconfig.base.json'
+/** acceptance[2]: one complete run, measured from process start, finishes within this budget. */
+const TIME_BUDGET_MS = 10_000
+/** The manifest fields that make up the production package graph; `devDependencies` are outside it. */
+const PRODUCTION_DEPENDENCY_FIELDS = ['dependencies', 'peerDependencies']
+/** A kernel package's direct dependencies: acceptance[1] counts every field a consumer installs. */
+const KERNEL_DEPENDENCY_FIELDS = [...PRODUCTION_DEPENDENCY_FIELDS, 'optionalDependencies']
 
 /**
  * A module-level mutable exported binding: the "module-level singleton" half
@@ -49,10 +60,20 @@ const GLOBAL_WRITE = /\b(?:globalThis|window|global)\s*\.\s*([A-Za-z_$][\w$]*)\s
 const GLOBAL_READ = /\b(?:globalThis|window|global)\s*\.\s*([A-Za-z_$][\w$]*)/g
 /** Named import bindings, so a mutable export can be matched to the packages that import it. */
 const NAMED_IMPORT = /\bimport\s+(?:type\s+)?\{([^}]*)\}\s*from\s*['"]([^'"]+)['"]/g
-const VENDOR_MANIFEST_GLOB = 'vendor/*/package.json'
 
-/** The vendored runtime binding a `kernel`-layer package may import (layering.md rule 4). */
+/**
+ * The one use of the vendored runtime rule 4 permits, and only to
+ * {@link TRUST_KERNEL_PACKAGE} (layering.md rule 4): the `Context` import
+ * binding, which a declare-module augmentation of the `Context` interface
+ * also records.
+ */
 const KERNEL_PERMITTED_CORDIS_BINDINGS = new Set(['Context'])
+
+/**
+ * The one package acceptance[1], as narrowed on 2026-09-24, admits the Cordis
+ * uses to. Any other `kernel`-layer package may not use the vendored runtime.
+ */
+const TRUST_KERNEL_PACKAGE = '@deepseek-ai/dsh-trust-kernel'
 
 /**
  * The one position outside the six-layer ranking (layering.md rule 1): an
@@ -230,7 +251,9 @@ function isPlainObject(value) {
  * Read and validate the layer exemption store (layering.md rules 5 and 6).
  * Missing entries are not an error: an absent store means no exemption is
  * claimed. A malformed one is, so the gate fails closed rather than reading
- * an unsafe shape.
+ * an unsafe shape. A well-shaped cycle record whose `adrNote` names no file,
+ * or that names the same cycle as an earlier record, is an error but still
+ * exempts its cycle, so the store's defect is reported once.
  * @param root - repository (or fixture) root.
  * @returns the declared cycle exemptions, the kernel-edge allowlist, and any shape errors.
  */
@@ -259,7 +282,13 @@ export function readLayerExemptions(root) {
         recordedDate: typeof entry.recordedDate === 'string' ? entry.recordedDate : '',
       })
       for (const shapeError of shapeErrors) errors.push(`${EXEMPTIONS_PATH}: exemptedCycles[${index}] ${shapeError}`)
-      if (shapeErrors.length === 0) exemptedCycles.push(entry)
+      if (shapeErrors.length > 0) continue
+      if (!existsSync(resolve(root, entry.adrNote))) errors.push(`${EXEMPTIONS_PATH}: exemptedCycles[${index}] adrNote ${entry.adrNote} names no file`)
+      const cycleKey = rotateToSmallest(entry.cycle).join('\0')
+      if (exemptedCycles.some(earlier => rotateToSmallest(earlier.cycle).join('\0') === cycleKey)) {
+        errors.push(`${EXEMPTIONS_PATH}: exemptedCycles[${index}] names the same cycle as an earlier record`)
+      }
+      exemptedCycles.push(entry)
     }
   }
 
@@ -290,15 +319,18 @@ export function readLayerExemptions(root) {
 }
 
 /**
- * Read every real workspace package and top-level application manifest.
+ * Read the manifest of every package `pnpm-workspace.yaml`'s `packages:`
+ * patterns declare. A workspace file that declares no pattern throws, so the
+ * gate can never pass by scanning nothing.
  * @param root - repository (or fixture) root.
  * @returns npm package name -> { dir, manifest }.
  */
 function readWorkspaceManifests(root) {
+  const patterns = parseYaml(readFileSync(resolve(root, WORKSPACE_PATH), 'utf8'))?.packages
+  if (!Array.isArray(patterns) || patterns.length === 0) throw new Error(`${GATE}: ${WORKSPACE_PATH} declares no packages`)
   const byName = new Map()
-  const globs = [PACKAGE_MANIFEST_GLOB, APP_MANIFEST_GLOB]
-  for (const pattern of globs) {
-    for (const manifestPath of globSync(pattern, { cwd: root }).map(normalizePath).sort()) {
+  for (const pattern of patterns) {
+    for (const manifestPath of globSync(`${pattern}/package.json`, { cwd: root }).map(normalizePath).sort()) {
       const manifest = readJson(resolve(root, manifestPath))
       if (typeof manifest.name === 'string') byName.set(manifest.name, { dir: dirname(manifestPath), manifest })
     }
@@ -320,9 +352,11 @@ function readWorkspaceManifests(root) {
  * says a package sits somewhere above that capability, not which layer it
  * occupies, and treating it as a layer demotes every UI package that happens
  * to consume a seam out of `surfaces-apps`. {@link GROUP_LAYERS} decides for
- * a package no family names in a layer-bearing role.
+ * a package no family names in a layer-bearing role. A package under
+ * `vendor/` takes no layer: it sits outside the six-layer graph and inside
+ * the cycle graph (layering.md).
  * @param root - repository (or fixture) root.
- * @returns the layer of each package, and the names of any package no rule classified.
+ * @returns the layer of each package, the names of any package no rule classified, and the vendored packages.
  */
 export function classifyWorkspacePackages(root) {
   const manifests = readWorkspaceManifests(root)
@@ -338,8 +372,13 @@ export function classifyWorkspacePackages(root) {
 
   const byPackage = new Map()
   const unclassified = []
+  const vendored = new Map()
   for (const [name, { dir, manifest }] of manifests) {
     const segments = dir.split('/')
+    if (segments[0] === 'vendor') {
+      vendored.set(name, { dir, manifest })
+      continue
+    }
     const group = segments[0] === 'apps' ? 'apps' : segments[1]
     let layer
     let source
@@ -374,7 +413,7 @@ export function classifyWorkspacePackages(root) {
     }
     byPackage.set(name, { layer, source, dir, manifest })
   }
-  return { byPackage, unclassified }
+  return { byPackage, unclassified, vendored }
 }
 
 /**
@@ -392,17 +431,23 @@ function readPathAliases(root) {
 }
 
 /**
- * Every vendored package name, which sits outside the six-layer graph.
- * @param root - repository (or fixture) root.
- * @returns the vendored npm package names.
+ * Whether a specifier names a package: not a relative or absolute path, not a
+ * package-internal `#` import, and not a URL-scheme specifier such as `node:`
+ * (the same test `./check-capability-seams.mjs` applies).
+ * @param specifier - the module specifier.
+ * @returns whether the specifier resolves through a package name.
  */
-function readVendoredPackages(root) {
-  const names = new Set([CORDIS_PACKAGE])
-  for (const manifestPath of globSync(VENDOR_MANIFEST_GLOB, { cwd: root })) {
-    const manifest = readJson(resolve(root, manifestPath))
-    if (typeof manifest.name === 'string') names.add(manifest.name)
-  }
-  return names
+function isBareSpecifier(specifier) {
+  return !specifier.startsWith('.') && !specifier.startsWith('/') && !specifier.startsWith('#') && !specifier.includes(':')
+}
+
+/**
+ * The npm package name a bare specifier resolves to.
+ * @param specifier - a bare module specifier.
+ * @returns the package name: the first two segments of a scoped specifier, otherwise the first.
+ */
+function packageNameOf(specifier) {
+  return specifier.split('/').slice(0, specifier.startsWith('@') ? 2 : 1).join('/')
 }
 
 /**
@@ -581,7 +626,7 @@ export function collectLayerEdges(root, byPackage) {
   }
 
   for (const [name, { manifest }] of byPackage) {
-    for (const field of ['dependencies', 'peerDependencies']) {
+    for (const field of PRODUCTION_DEPENDENCY_FIELDS) {
       for (const dependency of Object.keys(manifest[field] ?? {})) {
         if (dependency !== name && byPackage.has(dependency)) record(name, dependency, 'package-graph', 'value')
       }
@@ -648,55 +693,101 @@ export function collectLayerEdges(root, byPackage) {
 }
 
 /**
- * Resolve a `kernel`-layer package's edges to the vendored runtime at binding
- * granularity (layering.md rule 4). Only a kernel package's own sources are
- * fully parsed, so the precise binding names rule 4 needs cost one small
+ * Resolve a `kernel`-layer package's direct dependencies on packages outside
+ * the ranked workspace graph -- the vendored runtime and any external
+ * package -- at the granularity rule 4 needs (layering.md). A dependency is
+ * found in the package's manifest or in any module reference its sources
+ * make, and each use carries one label:
+ * - an import declaration: each binding's name (`Context`, `default`), or `*`
+ *   for a namespace import or an import that binds nothing;
+ * - a re-export declaration: `export <name>`, or `export *` when it names no
+ *   binding;
+ * - a `declare module '<package>'` block: `Context` for an augmentation of
+ *   the `Context` interface, otherwise `declare module <name>` for each
+ *   declaration in it;
+ * - any other reference TypeScript's dependency scan finds (`import()`,
+ *   `require()`, `import x = require()`, an import type, a triple-slash types
+ *   reference): `*`;
+ * - a manifest declaration: `package.json <field>`, except the
+ *   `@deepseek-ai/cordis` peer declaration the package's `Context` use needs.
+ * Only a kernel package's own sources are parsed, so this costs one small
  * TypeScript parse rather than a repo-wide one.
  * @param root - repository (or fixture) root.
  * @param byPackage - the classified workspace packages.
- * @returns one entry per kernel package/vendored package pair, with its imported bindings.
+ * @param vendoredNames - the vendored package names, `@deepseek-ai/cordis` included.
+ * @param workspaceNames - every workspace package name; none of them is an external package.
+ * @returns one entry per kernel package/target pair, with its labelled uses and whether the target is external.
  */
-function collectKernelVendorEdges(root, byPackage) {
-  const vendored = readVendoredPackages(root)
+function collectKernelNonWorkspaceEdges(root, byPackage, vendoredNames, workspaceNames) {
   const found = new Map()
-  for (const [name, { layer, dir }] of byPackage) {
+  for (const [name, { layer, dir, manifest }] of byPackage) {
     if (layer !== 'kernel') continue
+    const addUse = (specifier, label, file) => {
+      if (!isBareSpecifier(specifier) || isBuiltin(specifier)) return
+      const target = packageNameOf(specifier)
+      const external = !vendoredNames.has(target)
+      if (external && workspaceNames.has(target)) return
+      const key = `${name}\0${target}`
+      const entry = found.get(key) ?? { fromPackage: name, toPackage: target, external, bindingFiles: new Map(), files: new Set() }
+      entry.files.add(file)
+      const files = entry.bindingFiles.get(label) ?? new Set()
+      files.add(file)
+      entry.bindingFiles.set(label, files)
+      found.set(key, entry)
+    }
     for (const file of sourceFiles(root, dir)) {
       const text = readFileSync(resolve(root, file), 'utf8')
       const source = ts.createSourceFile(file, text, ts.ScriptTarget.ESNext, true)
+      // Start offsets of the specifiers the declarations below account for.
+      const declared = new Set()
       for (const statement of source.statements) {
+        if (ts.isModuleDeclaration(statement) && ts.isStringLiteral(statement.name)) {
+          declared.add(statement.name.getStart(source))
+          const body = statement.body !== undefined && ts.isModuleBlock(statement.body) ? statement.body.statements : []
+          const labels = body.map(declaration => ts.isInterfaceDeclaration(declaration) && declaration.name.text === 'Context'
+            ? 'Context'
+            : `declare module ${declaration.name?.text ?? '*'}`)
+          for (const label of labels.length > 0 ? labels : ['declare module *']) addUse(statement.name.text, label, file)
+          continue
+        }
         const isImport = ts.isImportDeclaration(statement)
         const isExport = ts.isExportDeclaration(statement)
         if (!isImport && !isExport) continue
         const moduleSpecifier = statement.moduleSpecifier
         if (moduleSpecifier === undefined || !ts.isStringLiteral(moduleSpecifier)) continue
-        const specifier = moduleSpecifier.text
-        const target = [...vendored].find(pkg => specifier === pkg || specifier.startsWith(`${pkg}/`))
-        if (target === undefined) continue
-        const key = `${name}\0${target}`
-        const entry = found.get(key) ?? { fromPackage: name, toPackage: target, bindingFiles: new Map(), files: new Set() }
-        entry.files.add(file)
-        const addBinding = binding => {
-          const files = entry.bindingFiles.get(binding) ?? new Set()
-          files.add(file)
-          entry.bindingFiles.set(binding, files)
-        }
+        declared.add(moduleSpecifier.getStart(source))
+        const labels = []
         const clause = isImport ? statement.importClause : statement.exportClause
-        if (isImport && clause?.name !== undefined) addBinding('default')
+        if (isImport && clause?.name !== undefined) labels.push('default')
         const bindings = isImport ? clause?.namedBindings : clause
         if (bindings !== undefined && ts.isNamedImports(bindings)) {
-          for (const element of bindings.elements) addBinding((element.propertyName ?? element.name).text)
-        } else if (bindings !== undefined && ts.isNamespaceImport(bindings)) addBinding('*')
+          for (const element of bindings.elements) labels.push((element.propertyName ?? element.name).text)
+        } else if (bindings !== undefined && ts.isNamespaceImport(bindings)) labels.push('*')
         else if (bindings !== undefined && ts.isNamedExports(bindings)) {
-          for (const element of bindings.elements) addBinding((element.propertyName ?? element.name).text)
+          for (const element of bindings.elements) labels.push(`export ${(element.propertyName ?? element.name).text}`)
         }
-        found.set(key, entry)
+        // `import '…'`, `import {} from`, `export * from`, `export * as ns from`
+        // and `export {} from` bind no name and still depend on the module.
+        if (labels.length === 0) labels.push(isImport ? '*' : 'export *')
+        for (const label of labels) addUse(moduleSpecifier.text, label, file)
+      }
+      const { importedFiles, typeReferenceDirectives } = ts.preProcessFile(text, true, true)
+      for (const reference of [...importedFiles, ...typeReferenceDirectives]) {
+        if (!declared.has(reference.pos)) addUse(reference.fileName, '*', file)
+      }
+    }
+    for (const field of KERNEL_DEPENDENCY_FIELDS) {
+      for (const dependency of Object.keys(manifest[field] ?? {})) {
+        const neededPeer = field === 'peerDependencies' && dependency === CORDIS_PACKAGE
+          && found.get(`${name}\0${CORDIS_PACKAGE}`)?.bindingFiles.has('Context') === true
+        if (!neededPeer) addUse(dependency, `package.json ${field}`, `${dir}/package.json`)
       }
     }
   }
   return [...found.values()].map(entry => ({
     fromPackage: entry.fromPackage,
     toPackage: entry.toPackage,
+    external: entry.external,
     bindings: [...entry.bindingFiles.keys()].sort(),
     bindingFiles: entry.bindingFiles,
     files: [...entry.files].sort(),
@@ -706,7 +797,7 @@ function collectKernelVendorEdges(root, byPackage) {
 /**
  * Drop the per-binding file index, which exists only so a forbidden-binding
  * violation can name the files that actually contain the forbidden import.
- * @param entry - one kernel/vendored package edge.
+ * @param entry - one kernel edge to a vendored or external package.
  * @returns the edge without its `bindingFiles` index.
  */
 function withoutBindingFiles({ bindingFiles, ...entry }) {
@@ -714,12 +805,133 @@ function withoutBindingFiles({ bindingFiles, ...entry }) {
 }
 
 /**
+ * The production edges that touch a vendored package: a vendored package's
+ * dependency on any workspace package, and a classified package's dependency
+ * on a vendored one. They join the cycle graph only, because a vendored
+ * package takes no layer.
+ * @param byPackage - the classified workspace packages.
+ * @param vendored - the vendored workspace packages.
+ * @returns one edge per declared dependency.
+ */
+function collectVendoredEdges(byPackage, vendored) {
+  const vendoredEdges = []
+  for (const [name, { manifest }] of [...byPackage, ...vendored]) {
+    for (const field of PRODUCTION_DEPENDENCY_FIELDS) {
+      for (const dependency of Object.keys(manifest[field] ?? {})) {
+        const touchesVendored = vendored.has(dependency) || (vendored.has(name) && byPackage.has(dependency))
+        if (dependency !== name && touchesVendored) vendoredEdges.push({ fromPackage: name, toPackage: dependency })
+      }
+    }
+  }
+  return vendoredEdges
+}
+
+/**
+ * The edges one exemption record names: each package depends on the next,
+ * and the last on the first.
+ * @param cycle - the record's packages in edge order.
+ * @returns `"<from>\0<to>"` keys.
+ */
+function recordEdges(cycle) {
+  return cycle.map((pkg, index) => `${pkg}\0${cycle[(index + 1) % cycle.length]}`)
+}
+
+/**
+ * A cycle rotated to begin at its lexicographically smallest package: the one
+ * spelling this gate reports a cycle in and matches records by.
+ * @param cycle - packages in edge order.
+ * @returns the same cycle, rotated.
+ */
+function rotateToSmallest(cycle) {
+  const start = cycle.indexOf([...cycle].sort()[0])
+  return [...cycle.slice(start), ...cycle.slice(0, start)]
+}
+
+/**
+ * Find every unexempted cycle in the production package graph and every
+ * exemption record naming an edge the graph lacks (acceptance[0],
+ * layering.md rule 5). A record exempts exactly the cycle its edge order
+ * names, identified up to rotation, never by its package set. Two searches
+ * together reach every unexempted cycle:
+ * - through each edge no record names, the shortest cycle containing it -- a
+ *   breadth-first search back from the edge's target, O(edges * (packages +
+ *   edges)) in total, where enumerating simple cycles grows factorially;
+ * - on the subgraph of recorded edges, every simple cycle no record names:
+ *   one made of edges that several records name.
+ * @param edges - the production graph's edges.
+ * @param exemptedCycles - the validated exemption records.
+ * @returns the unexempted cycles (each rotated to its smallest package, shortest first, then by package names) and the stale records.
+ */
+function findUnexemptedCycles(edges, exemptedCycles) {
+  const adjacency = new Map()
+  const graphEdges = new Set()
+  for (const { fromPackage, toPackage } of edges) {
+    const key = `${fromPackage}\0${toPackage}`
+    if (graphEdges.has(key)) continue
+    graphEdges.add(key)
+    adjacency.set(fromPackage, [...(adjacency.get(fromPackage) ?? []), toPackage])
+  }
+  for (const targets of adjacency.values()) targets.sort()
+  const recordedEdges = new Set(exemptedCycles.flatMap(entry => recordEdges(entry.cycle)))
+  const recordedCycles = new Set(exemptedCycles.map(entry => rotateToSmallest(entry.cycle).join('\0')))
+  const found = new Map()
+  const report = cycle => {
+    const rotated = rotateToSmallest(cycle)
+    found.set(rotated.join('\0'), rotated)
+  }
+
+  for (const [from, targets] of adjacency) {
+    for (const to of targets) {
+      if (recordedEdges.has(`${from}\0${to}`)) continue
+      const predecessor = new Map([[to, undefined]])
+      const queue = [to]
+      for (let cursor = 0; cursor < queue.length && !predecessor.has(from); cursor += 1) {
+        for (const next of adjacency.get(queue[cursor]) ?? []) {
+          if (predecessor.has(next)) continue
+          predecessor.set(next, queue[cursor])
+          queue.push(next)
+        }
+      }
+      if (!predecessor.has(from)) continue
+      // The path to -> ... -> from, closed by the unrecorded edge from -> to.
+      const cycle = []
+      for (let node = from; node !== undefined; node = predecessor.get(node)) cycle.unshift(node)
+      report(cycle)
+    }
+  }
+
+  const recordedAdjacency = new Map()
+  for (const [from, targets] of adjacency) {
+    const recorded = targets.filter(to => recordedEdges.has(`${from}\0${to}`))
+    if (recorded.length > 0) recordedAdjacency.set(from, recorded)
+  }
+  // Each simple cycle is walked once, from its smallest package: a path only
+  // extends to packages that sort after its first.
+  const extend = (path, onPath) => {
+    for (const next of recordedAdjacency.get(path[path.length - 1]) ?? []) {
+      if (next === path[0]) {
+        if (!recordedCycles.has(path.join('\0'))) report(path)
+      } else if (next > path[0] && !onPath.has(next)) {
+        extend([...path, next], new Set([...onPath, next]))
+      }
+    }
+  }
+  for (const start of [...recordedAdjacency.keys()].sort()) extend([start], new Set([start]))
+
+  const byLengthThenName = (a, b) => a.length - b.length || (a.join('\0') < b.join('\0') ? -1 : 1)
+  return {
+    cycles: [...found.values()].sort(byLengthThenName),
+    stale: exemptedCycles.filter(entry => recordEdges(entry.cycle).some(edge => !graphEdges.has(edge))),
+  }
+}
+
+/**
  * Run the full layer-dependency gate against a real repository or fixture root.
  * @param root - repository (or fixture) root.
- * @returns violations, the shortest unexempted cycle, unclassified packages, kernel edges, and scan counts.
+ * @returns violations, every unexempted cycle, unclassified packages, kernel edges, and scan counts.
  */
 export function runLayerDepsCheck(root) {
-  const { byPackage, unclassified } = classifyWorkspacePackages(root)
+  const { byPackage, unclassified, vendored } = classifyWorkspacePackages(root)
   const exemptions = readLayerExemptions(root)
   const violations = []
   const findings = []
@@ -733,30 +945,31 @@ export function runLayerDepsCheck(root) {
   const usedAllowances = new Set()
   const today = new Date().toISOString().slice(0, 10)
 
+  const vendoredNames = new Set([CORDIS_PACKAGE, ...vendored.keys()])
+  const workspaceNames = new Set([...byPackage.keys(), ...vendoredNames, ...unclassified])
   const kernelEdges = []
-  for (const entry of collectKernelVendorEdges(root, byPackage)) {
-    const forbidden = entry.toPackage === CORDIS_PACKAGE
+  for (const { external, ...entry } of collectKernelNonWorkspaceEdges(root, byPackage, vendoredNames, workspaceNames)) {
+    const forbidden = entry.toPackage === CORDIS_PACKAGE && entry.fromPackage === TRUST_KERNEL_PACKAGE
       ? entry.bindings.filter(binding => !KERNEL_PERMITTED_CORDIS_BINDINGS.has(binding))
       : entry.bindings
     if (forbidden.length === 0) {
       kernelEdges.push({ ...withoutBindingFiles(entry), verdict: 'permitted-binding' })
       continue
     }
+    // An allowlist entry never admits a kernel edge to a vendored or external
+    // package (layering.md rule 7). Naming one still counts as a use, so the
+    // entry reports as expired rather than stale once its date passes.
     const key = `${entry.fromPackage}\0${entry.toPackage}`
-    const allowance = allowed.get(key)
-    if (allowance !== undefined && allowance.expires >= today) {
-      usedAllowances.add(key)
-      kernelEdges.push({ ...withoutBindingFiles(entry), verdict: 'allowlisted' })
-      continue
-    }
-    if (allowance !== undefined) usedAllowances.add(key)
+    if (allowed.has(key)) usedAllowances.add(key)
     kernelEdges.push({ ...withoutBindingFiles(entry), verdict: 'violation' })
     const forbiddenFiles = [...new Set(forbidden.flatMap(binding => [...entry.bindingFiles.get(binding) ?? []]))].sort()
     violations.push({
-      rule: 'kernel-forbidden-cordis-binding',
+      rule: external ? 'kernel-external-dependency' : 'kernel-forbidden-cordis-binding',
       fromPackage: entry.fromPackage,
       toPackage: entry.toPackage,
-      detail: `imports ${forbidden.join(', ')} from ${entry.toPackage} (rule 4 permits only ${[...KERNEL_PERMITTED_CORDIS_BINDINGS].join(', ')}) in ${forbiddenFiles.join(', ')}`,
+      detail: external
+        ? `depends on the external package ${entry.toPackage} through ${forbidden.join(', ')} in ${forbiddenFiles.join(', ')} (rule 4 permits a kernel package no external dependency)`
+        : `depends on ${entry.toPackage} through ${forbidden.join(', ')} in ${forbiddenFiles.join(', ')} (rule 4 permits only ${TRUST_KERNEL_PACKAGE}, and it only the Context import binding, the ${CORDIS_PACKAGE} peer declaration it needs, and a declare-module augmentation of the Context interface)`,
     })
   }
 
@@ -802,7 +1015,9 @@ export function runLayerDepsCheck(root) {
     const allowance = edge.fromLayer === 'kernel' ? allowed.get(key) : undefined
     if (allowance !== undefined) {
       usedAllowances.add(key)
-      if (allowance.expires >= today) {
+      // acceptance[1]: no entry admits a kernel edge to a UI package or a
+      // model provider (layering.md rule 7).
+      if (allowance.expires >= today && edge.toLayer !== 'providers' && edge.toLayer !== 'surfaces-apps') {
         kernelEdges.push({ fromPackage: edge.fromPackage, toPackage: edge.toPackage, bindings: [], files: [], verdict: 'allowlisted' })
         continue
       }
@@ -883,24 +1098,38 @@ export function runLayerDepsCheck(root) {
   }
 
   const productionEdges = edges.filter(edge => edge.detectionMethod === 'package-graph')
-  const cycle = findShortestCycle(productionEdges, exemptions.exemptedCycles)
-  const shortestCycle = cycle.shortestCycle
-  if (shortestCycle !== undefined && !cycle.isExempted) {
+  const { cycles, stale } = findUnexemptedCycles([...productionEdges, ...collectVendoredEdges(byPackage, vendored)], exemptions.exemptedCycles)
+  for (const [index, cycle] of cycles.entries()) {
     violations.push({
       rule: 'unexempted-cycle',
-      fromPackage: shortestCycle[0],
-      toPackage: shortestCycle[shortestCycle.length - 1],
-      detail: `shortest cycle: ${shortestCycle.join(' -> ')} -> ${shortestCycle[0]}`,
+      fromPackage: cycle[0],
+      toPackage: cycle[cycle.length - 1],
+      detail: `${index === 0 ? 'shortest cycle' : 'cycle'}: ${cycle.join(' -> ')} -> ${cycle[0]}`,
+    })
+  }
+  for (const entry of stale) {
+    violations.push({
+      rule: 'stale-exempted-cycle',
+      fromPackage: entry.cycle[0],
+      toPackage: entry.cycle[entry.cycle.length - 1],
+      detail: `exempted cycle ${entry.cycle.join(' -> ')} -> ${entry.cycle[0]} names an edge the production graph does not have — remove the record (layering.md rule 5)`,
     })
   }
 
   return {
     violations,
     findings,
-    shortestCycle: cycle.isExempted ? undefined : shortestCycle,
+    unexemptedCycles: cycles,
+    shortestCycle: cycles[0],
     unclassified,
     kernelEdges,
-    scanned: { packages: byPackage.size, edges: edges.length, layers: LAYER_ORDER.length },
+    scanned: {
+      packages: byPackage.size,
+      vendored: vendored.size,
+      workspacePackages: byPackage.size + vendored.size + unclassified.length,
+      edges: edges.length,
+      layers: LAYER_ORDER.length,
+    },
   }
 }
 
@@ -953,9 +1182,16 @@ function renderFindings(result, elapsed) {
 function main(argv) {
   const rootFlag = argv.indexOf('--repo-root')
   const root = rootFlag === -1 ? resolve(import.meta.dirname, '../..') : resolve(argv[rootFlag + 1])
-  const started = Date.now()
+  const budgetFlag = argv.indexOf('--budget-ms')
+  const budgetMs = budgetFlag === -1 ? TIME_BUDGET_MS : Number(argv[budgetFlag + 1])
+  if (!Number.isFinite(budgetMs) || budgetMs < 0) throw new Error(`${GATE}: --budget-ms requires a non-negative number of milliseconds`)
   const result = runLayerDepsCheck(root)
-  const elapsed = ((Date.now() - started) / 1000).toFixed(2)
+  // performance.now() counts from this process's start, so the budget covers
+  // loading tsx and TypeScript as well as the scan; the pnpm and tsx launcher
+  // processes that start this one are outside it.
+  const elapsedMs = performance.now()
+  const elapsed = (elapsedMs / 1000).toFixed(2)
+  const overBudget = elapsedMs > budgetMs
   for (const violation of result.violations) {
     process.stderr.write(`${GATE}: ${violation.rule}: ${violation.fromPackage} -> ${violation.toPackage}: ${violation.detail}\n`)
   }
@@ -968,9 +1204,10 @@ function main(argv) {
     writeFileSync(resolve(root, FINDINGS_PATH), renderFindings(result, elapsed))
     process.stdout.write(`${GATE}: wrote ${result.findings.length} finding(s) to ${FINDINGS_PATH}\n`)
   }
-  const summary = `${GATE}: ${result.violations.length} violation(s) and ${result.findings.length} reported finding(s) across ${result.scanned.packages} classified package(s), ${result.scanned.edges} dependency edge(s), ${LAYER_ORDER.length} layers + composition roots and test-support, in ${elapsed}s.\n`
+  if (overBudget) process.stderr.write(`${GATE}: time-budget: the run took ${elapsed}s, over its ${(budgetMs / 1000).toFixed(2)}s budget (acceptance[2])\n`)
+  const summary = `${GATE}: ${result.violations.length} violation(s) and ${result.findings.length} reported finding(s) across ${result.scanned.packages} classified and ${result.scanned.vendored} vendored package(s) of ${result.scanned.workspacePackages} workspace package(s), ${result.scanned.edges} dependency edge(s), ${LAYER_ORDER.length} layers + composition roots and test-support, in ${elapsed}s.\n`
   process.stdout.write(summary)
-  return result.violations.length === 0 ? 0 : 1
+  return result.violations.length === 0 && !overBudget ? 0 : 1
 }
 
 if (process.argv[1] !== undefined && import.meta.url === `file://${process.argv[1]}`) {

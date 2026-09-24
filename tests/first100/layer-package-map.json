@@ -64,6 +64,42 @@
     "@deepseek-ai/dsh-client-ui-cordis": {
       "layer": "surfaces-apps",
       "reason": "DIRECTORY MISFIT, and the comment is the finding: this is a UI card living under packages/extensions/. Its own description is 'Cordis dynamic-plugin definition card: the keyed cordis_define tool row with its run/stop switch' and its npm name is @deepseek-ai/dsh-client-ui-cordis, so it is a presentation surface by both its name and its own account; only its directory says otherwise, which is why the packages/client rule does not reach it. A per-package entry is used deliberately INSTEAD of moving the directory: a move touches imports, tsconfigs, the lockfile and the catalog, which is a broad refactor for a classification problem and disproportionate to P0-04. This entry is the input for whoever later does directory hygiene."
+    },
+    "@deepseek-ai/node-addon-system-workspace": {
+      "layer": "providers",
+      "reason": "native/system: the build and publication workspace of the native system addon (pnpm-workspace.yaml). It ships no module and nothing depends on it; it takes the layer of the addon it builds."
+    },
+    "@deepseek-ai/node-addon-system": {
+      "layer": "providers",
+      "reason": "native/system/packages/entry: the native system addon that concrete providers load -- @deepseek-ai/dsh-sandbox-local and @deepseek-ai/dsh-session-persistence-jsonl, both providers in architecture.layers.json, depend on it. A platform implementation with no capability logic of its own."
+    },
+    "@deepseek-ai/node-addon-system-darwin-arm64": {
+      "layer": "providers",
+      "reason": "A per-platform prebuilt binary of @deepseek-ai/node-addon-system, reached only through its optionalDependencies; it takes the layer of that addon."
+    },
+    "@deepseek-ai/node-addon-system-darwin-x64": {
+      "layer": "providers",
+      "reason": "A per-platform prebuilt binary of @deepseek-ai/node-addon-system, reached only through its optionalDependencies; it takes the layer of that addon."
+    },
+    "@deepseek-ai/node-addon-system-linux-arm64": {
+      "layer": "providers",
+      "reason": "A per-platform prebuilt binary of @deepseek-ai/node-addon-system, reached only through its optionalDependencies; it takes the layer of that addon."
+    },
+    "@deepseek-ai/node-addon-system-linux-x64": {
+      "layer": "providers",
+      "reason": "A per-platform prebuilt binary of @deepseek-ai/node-addon-system, reached only through its optionalDependencies; it takes the layer of that addon."
+    },
+    "@deepseek-ai/dsh-benchmarks": {
+      "layer": "test-support",
+      "reason": "benchmarks: the private package owning repository-level benchmark dependencies (pnpm-workspace.yaml). Like a test-support package it assembles what it measures, and no production package depends on it."
+    },
+    "@deepseek-ai/website": {
+      "layer": "surfaces-apps",
+      "reason": "website: the documentation website, a user-facing surface; nothing depends on it."
+    },
+    "dsh-python-runtime-closure": {
+      "layer": "composition-root",
+      "reason": "python/sdk-runtime: the deploy root of the single-exe build, a pure dependency manifest over the product assemblies whose closure the exe bundles (pnpm-workspace.yaml); nothing depends on it."
     }
   },
   "$authorship2": {
