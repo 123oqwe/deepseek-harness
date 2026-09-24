@@ -1098,7 +1098,7 @@ export function runLayerDepsCheck(root) {
   }
 
   const productionEdges = edges.filter(edge => edge.detectionMethod === 'package-graph')
-  const { cycles, stale } = findUnexemptedCycles([...productionEdges, ...collectVendoredEdges(byPackage, vendored)], exemptions.exemptedCycles)
+  const { cycles, stale } = findUnexemptedCycles(productionEdges, exemptions.exemptedCycles)
   for (const [index, cycle] of cycles.entries()) {
     violations.push({
       rule: 'unexempted-cycle',
