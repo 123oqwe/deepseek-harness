@@ -67,7 +67,7 @@ const NAMED_IMPORT = /\bimport\s+(?:type\s+)?\{([^}]*)\}\s*from\s*['"]([^'"]+)['
  * binding, which a declare-module augmentation of the `Context` interface
  * also records.
  */
-const KERNEL_PERMITTED_CORDIS_BINDINGS = new Set(['Context'])
+const KERNEL_PERMITTED_CORDIS_BINDINGS = new Set([])
 
 /**
  * The one package acceptance[1], as narrowed on 2026-09-24, admits the Cordis
