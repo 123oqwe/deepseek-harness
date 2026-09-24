@@ -20,7 +20,7 @@ Status: implemented
 - **移除 `revokeOwned`。** 它没有生产调用方。一次工具注册只能经由它自己的 effect disposer 移除，Cordis 在注册方 fiber 卸载时运行这个 disposer。每个 disposer 恰好移除它自己的工具与记录，must[3]（「卸载只撤销与 token 匹配的 effects」）在真实路径上就是这样成立的。`revokeByOwnershipToken` 留在库里，由它已冻结的用例观测 token 约定，没有生产调用方。
 - **`declareOwner` 只接受位于 `ownership.ownerDeclarers` 所列条目之下的调用方。** 包住调用方的最内层 Loader 条目必须在这个列表中。默认值是 `@deepseek-ai/dsh-cordis-host-runner`，也就是唯一的出厂调用方：runner 把每个动态包的 fiber 建在一个组 fiber 之下，而组 fiber 由它自己的服务上下文创建，所以动态包的最内层条目就是 runner 的条目。
 - **Loader 从注册表自己的上下文读取。** 构造函数捕获注册表挂载时所在的上下文，每次查找都从它读 `loader`。方法里的 `this.ctx` 是调用方的上下文；调用方若在自己的作用域里隔离 `loader`，就看不到 Loader，检查也就会被跳过。
-- **每次查找都先把 Loader 的条目读成数组**，`resolveOwner` 与 `declareOwner` 共用这一个查找。从嵌套 fiber 发起的注册归属于包住它的最内层条目。别的条目树里的条目也算：preset 组合把它的各行挂在自己的条目树里，并让这棵树不出现在宿主 Loader 的 `entries()` 中，所以查找还会读 Loader 设在条目所挂每个 fiber 上的 `fiber.entry`，而且只在该条目自己的 fiber 上，并且其所在树的 fiber 在调用方链上更外层时才接受它。
+- **每次查找都先把 Loader 的条目读成数组**，`resolveOwner` 与 `declareOwner` 共用这一个查找。从嵌套 fiber 发起的注册归属于包住它的最内层条目。别的条目树里的条目也算：preset 组合把它的各行挂在自己的条目树里，并让这棵树不出现在宿主 Loader 的 `entries()` 中，所以查找还会读 Loader 设在条目所挂每个 fiber 上的 `fiber.entry`，而且只在该条目自己的 fiber 上、其所在树的 fiber 在调用方链上更外层、并且链上更外层还有一个宿主 Loader 条目时才接受它，因为任何代码都能写 `fiber.entry`。
 - **树里有 Loader 时，来自任何条目之外的 fiber 的注册一律拒绝**，因为这样的 fiber 只有它自己取的名字。根 fiber 是例外：没有插件能给它命名，它以 `root` 的身份注册；`root` 不是官方身份，因此碰不到保留的 `dsh.*` 命名空间。有两个测试 driver 在启动好的根上下文上注册，这个例外让它们照常工作。没有 Loader 的树把注册记在它的 fiber 名称之下，那里任何调用方都可以声明。
 
 ## 考虑过的替代方案
@@ -33,7 +33,7 @@ Status: implemented
 
 ## 后果
 
-- 这些检查读的是 fiber 所处的位置，而 Cordis 让同一进程里的每个插件都能通过公开接口拿到它们。借助 `ctx.get('loader').entries()`，插件可以拿到另一个条目的 fiber 上下文，并在它之下放一个 fiber：这个 fiber 以那个条目的身份注册，放在声明方条目之下时还能声明。插件可以通过 `options.name` 给自己的条目改名，或者用 `loader.update` 改写 `ownerDeclarers`，这项改动还会被持久化。注册表的私有字段（其中包括 token）在运行时也读得到。为宿主 Loader 之外的条目读取的 `fiber.entry` 同样是公开字段，所以在自己创建的 fiber 上设置它的代码，可以让那个 fiber 以任意名字注册。这些途径交用户决定（BLOCKED-308，B 类）；本次改动不证明静态加载的插件不能以其他插件的名义注册。
+- 这些检查读的是 fiber 所处的位置，而 Cordis 让同一进程里的每个插件都能通过公开接口拿到它们。借助 `ctx.get('loader').entries()`，插件可以拿到另一个条目的 fiber 上下文，并在它之下放一个 fiber：这个 fiber 以那个条目的身份注册，放在声明方条目之下时还能声明。插件可以通过 `options.name` 给自己的条目改名，或者用 `loader.update` 改写 `ownerDeclarers`，这项改动还会被持久化。注册表的私有字段（其中包括 token）在运行时也读得到。为宿主 Loader 之外的条目读取的 `fiber.entry` 同样是公开字段，所以 Loader 条目之内的代码在该条目之下自己创建的 fiber 上设置它，可以让那个 fiber 以任意名字注册。没有宿主条目包住的 fiber 上，这个字段不代表任何身份，注册会被拒绝。这些途径交用户决定（BLOCKED-308，B 类）；本次改动不证明静态加载的插件不能以其他插件的名义注册。
 - 拿到 `ctx.root` 的代码可以以 `root` 的身份注册。
 - 同一条目下嵌套的两个插件现在共用这个条目的身份，因此它们之间的名称冲突由逐层的重复注册错误拒绝，而不再是 `capability-collision`。两者都会拒绝第二次注册。
 - `CapabilityRecord` 与 `CapabilityRegistration`、`OwnershipToken` 一起列入 `gen-cordis-catalog` 的 `TYPE_LINK_EXEMPTIONS`，`RevocationResult` 则随 `revokeOwned` 移出。
