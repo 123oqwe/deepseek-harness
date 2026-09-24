@@ -129,6 +129,12 @@ export interface WorkflowJournal {
   readonly entries: readonly JournalEntry[]
   /** What this run inherited as a nested run; absent for a root run. */
   readonly nesting?: RunNesting
+  /**
+   * Entries a step started for a different call replaced at their step number,
+   * kept whole: their output a later resume can still reuse, and their receipts.
+   * Absent when no entry was replaced.
+   */
+  readonly displaced?: readonly JournalEntry[]
 }
 
 /** What a resumed run should do with one recorded step. */
