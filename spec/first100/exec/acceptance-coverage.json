@@ -859,9 +859,24 @@
         {
           "stage": "F",
           "title": "replays 'snapshots/session/skill-load/session.…' (a real pre-schema-registry session fixture) with no negotiation failure and no silent event loss"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "released v1 whole-artifact relationships restores a released v0 log whose subagent descriptor is version 2, the version v0-era builds wrote"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "streaming V2 system prompt migration keeps a subagent descriptor of an earlier version, which only a log migrated from v0 or v1 carries"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "first-party Session format catalog restores a released v0 log whose subagent descriptor is version 2 through every edge to v3"
         }
       ],
-      "note": "acceptance[0] (C20): 'every version-0 session log the audit baseline produced reads, the 24 version-2-descriptor subagent logs the baseline wrote included; the exceptions are three classes of incomplete files, which the product refuses with a readable reason: a surface before the first step (24), chunk-only replay fragments without a turn (3), and projections the baseline's test fixtures wrote (4: one checkpoint message without compaction/start, three whose request/header tools are names only)'. Covered by F supplement 1 (tests/first100/fixtures/P0-06.baseline-replay.spec.ts): the 157 version-0 logs of audit baseline b150a551, committed byte for byte (guard case, T0-2), replayed through the shipped headless session persistence. The replay rebuilds each log's envelope, ids, cwd and tools; the logs themselves are the baseline's blobs. 126 read with their assigned header id, every turn start and turn end, and every user message; the 24 with a version-2 subagent descriptor read once the v0 edge accepts it (lane B's descriptor fix). 31 are refused, each asserted with the product's reason for its class: 24 surface-before-first-step, 3 chunk-only fragments, 4 fixture projections. Question 14, answered (b) on 2026-09-24, moved the two python advanced child logs from the descriptor count to the projection class: besides the version-2 descriptor they record request/header tools as names only. The three earlier replays of snapshots/*/session.jsonl stay cited as secondary evidence; they are not baseline fixtures."
+      "note": "acceptance[0] (C20): 'every version-0 session log the audit baseline produced reads, the 24 version-2-descriptor subagent logs the baseline wrote included; the exceptions are three classes of incomplete files, which the product refuses with a readable reason: a surface before the first step (24), chunk-only replay fragments without a turn (3), and projections the baseline's test fixtures wrote (4: one checkpoint message without compaction/start, three whose request/header tools are names only)'. Covered by F supplement 1 (tests/first100/fixtures/P0-06.baseline-replay.spec.ts): the 157 version-0 logs of audit baseline b150a551, committed byte for byte (guard case, T0-2), replayed through the shipped headless session persistence. The replay rebuilds each log's envelope, ids, cwd and tools; the logs themselves are the baseline's blobs. 126 read with their assigned header id, every turn start and turn end, and every user message; the 24 with a version-2 subagent descriptor read once the v0 edge accepts it (lane B's descriptor fix). 31 are refused, each asserted with the product's reason for its class: 24 surface-before-first-step, 3 chunk-only fragments, 4 fixture projections. Question 14, answered (b) on 2026-09-24, moved the two python advanced child logs from the descriptor count to the projection class: besides the version-2 descriptor they record request/header tools as names only. The three earlier replays of snapshots/*/session.jsonl stay cited as secondary evidence; they are not baseline fixtures. The version-2 descriptor is observed on each edge by U.1: v0 to v1 restores it, v2 to v3 keeps an earlier descriptor, and the Session format catalog restores it through every edge to v3 (recorded from batch 7′'s run 36062190705)."
     },
     {
       "epic": "P0-06",
