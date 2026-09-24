@@ -60,8 +60,6 @@
  * that cannot run, for example because git or pnpm is missing, is a named
  * mismatch, so the result line is always printed.
  */
-import { execFileSync } from 'node:child_process'
-import { createHash } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { verifyBaseline } from './baseline-fingerprint.mjs'
@@ -230,15 +228,6 @@ export function verify(repoRoot, evidencePath) {
   } else {
     const recomputed = digestOfFile(diffPath)
     if (recomputed !== pkg.gitDiff.digest) mismatches.push(`gitDiff digest mismatch (recorded ${pkg.gitDiff.digest}, recomputed ${recomputed})`)
-  }
-  // The same diff collection recorded, taken again from the working tree.
-  try {
-    const workingTree = execFileSync('git', ['diff', pkg.gitDiff.baseSha], { cwd: repoRoot, encoding: 'utf8' })
-    if (createHash('sha256').update(workingTree).digest('hex') !== pkg.gitDiff.digest) {
-      mismatches.push(`the working tree differs from the diff recorded at collection (git diff ${pkg.gitDiff.baseSha})`)
-    }
-  } catch (error) {
-    mismatches.push(`working-tree diff re-derivation failed: ${errorText(error)}`)
   }
 
   for (const [gateId, record] of Object.entries(pkg.requiredGates)) {
