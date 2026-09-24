@@ -644,7 +644,7 @@ describe('Python SDK dsh profile keyless smoke', () => {
       // two-launch evidence for acceptance[0] is the ACP case's.
 
       // Named, not swallowed. Nothing on this surface should ask the client
-      // anything: `bundle/base/cordis.patch.yml:270-273` sets the approval
+      // anything: `bundle/base/cordis.patch.yml:278-281` sets the approval
       // policy to `never` under `danger-full-access`, which this launch uses.
       // If a request arrives anyway the driver answers it so the run can
       // finish, and this says WHICH -- instead of the case dying of a timeout
