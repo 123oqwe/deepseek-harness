@@ -15891,6 +15891,49 @@
         "failureSummary": "Baseline: PRECHECK `c63520b26e44aa3d2bcd101d275c0dd1083b984c`, narrow run 35965074254: S1, S2 and S3 red among the 42 new cases predicted; the fix, run 35965093358: 173 passed / 0 failed, 26 of them in this spec. M-p, run 35965405942: exactly S1, S2 and S3 red. M-y, run 35965576704: exactly S3 red. Both match `artifacts/laneB/p0-04-predictions-v2.md` (sha256 `bdb9fd211891d72743ee2303ea84d48e6a00631ac531e380f4bb7646d00ea6cb`), written before dispatch; lane B compared each run's failed fullNames with the predicted set. S1-S3 are the labels of `artifacts/laneB/p0-04-v2-label-map.json`."
       },
       "note": "P0-03's first U supplement, BLOCKED-321's closing condition 1: the seam checker enumerates the packages `pnpm-workspace.yaml` declares, where it used to scan only `packages/*/*/package.json` as consumers. The change came with P0-04's checker fix, `6f580f1274577d1f09b771bf319e4081077c19ea` on the candidate (the pick of `9dfb1f7c4b58838cccf1f27dab8afbe2b9dc39f2`). S1: the enumeration covers every declared package, not only `packages/*/*`. S2: on the real repository it scans exactly the workspace `pnpm ls` reports. S3: a `pnpm-workspace.yaml` that declares no packages is refused.\n\nP0-03 is ACCEPTED, so the three coverage citations under its acceptance[0] wait until this supplement is observed: a citation on an ACCEPTED row has to close. Not covered here: BLOCKED-321's conditions 2 and 3, a full run logging the whole-workspace count with 0 unsuppressed violations, and the 4.4a-d with the row's first PASS sign-off."
+    },
+    {
+      "epic": "P0-08",
+      "stage": "U",
+      "supplements": {
+        "epic": "P0-08",
+        "stage": "U"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P0-08.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P0-08 composition: pnpm benchmark:harness --lane deterministic runs with no external API key and writes both the JSON and the Markdown report",
+        "P0-08 composition: with no --lane the same command runs every keyless lane, and each lane gets its own report",
+        "P0-08 composition: two runs at one --seed write byte-identical JSON reports equal to runLanes at that seed, and a different --seed changes the lane results",
+        "P0-08 composition: a lane with no scenario is refused by the runner itself and writes no report, so an empty run never reads as completed"
+      ],
+      "files": [
+        "tests/first100/fixtures/P0-08.composition.spec.ts",
+        "benchmarks/harness-capability/runner.ts",
+        "benchmarks/harness-capability/report.ts",
+        "benchmarks/harness-capability/scenarios/index.ts",
+        "package.json",
+        ".agents/notes/implemented/bug-fix/2026-09-24-the-harness-benchmark-command-runs-and-writes-its-reports.md",
+        ".agents/notes/implemented/bug-fix/2026-09-24-the-harness-benchmark-command-runs-and-writes-its-reports.zh.md"
+      ],
+      "frozenAtUtc": "2026-09-24T09:58:20Z",
+      "dryRunProof": {
+        "treeSha": "cb2be75fdd7f1c4b27fa53a8491701215cdf7499",
+        "testsDiscovered": 4
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Nine mutations off the fix `93f2d120fb35639463deaa4f4ff1f30470038942`, each its own commit, never merged, each run by CI's narrow job at its own SHA over `tests/first100/fixtures/P0-08.composition.spec.ts` with `tests/benchmark/runner.spec.ts` and `tests/benchmark/lane-runner.spec.ts`. M-A (`d18b06c556368a318b2d240c2ea4bfc99eaac289`, `package.json`) reverts the script key to `benchmark:harness-capability`. M-B v2 (`7633e97e121abc6921d28021e0c72521be227158`, `runner.ts`) makes the entry check compare the module URL with the script URL plus `#never`, so the entry point never runs; v1 (`e734e6fec2`) short-circuited the condition with `false &&`, which changed TypeScript's narrowing and failed the build (run 35967682172), so it is not a reading. The rest change `runner.ts`: M-C (`77dda8f333fa1a30774174909304ff6581901e37`) `--lane` no longer filters the scenarios; M-D (`7c34bd8b253b2bcf4aee10bb6e6f2eea738d0b7b`) `--seed` no longer reaches `runLanes`; M-E (`60c7b5701fe7dfda957f527f2eed64e92710fd33`) the Markdown report is not written; M-F (`b4fd64d5869aedd3ba1a71d256ea569b943e6797`) a lane with no scenario is no longer refused; M-G (`574aa9a0855767aa07efebc1d03fd6ad42e87dcf`) no `--lane` runs the deterministic lane only; M-H (`3c7aa16ee2f399c90d4e9619ce805b85045eeff6`) `report.json` drops each lane's invariants; M-I (`ccefc9641452632e6e8c3ee905028505de8b84d9`) `report.json` carries a timestamp.",
+        "failureSummary": "Baseline: PRECHECK `691c310c81024c9bab36e310961da28700e47b6d`, narrow run 35967620513: exactly C1-C4 red, both benchmark specs green; the fix, run 35967641614: 37 passed / 0 failed; A3 `f8d01465f27741a458f76090fe5757fd76028b61`, run 35972152755: 37 passed / 0 failed. M-A, run 35967661773: C1-C4. M-B v2, run 35972133085: C1-C4. M-C, run 35967704202: C1, C3. M-D, run 35967728436: C3. M-E, run 35967748994: C1. M-F, run 35967768421: C4. M-G, run 35967789259: C2. M-H, run 35967812313: C1, C3. M-I, run 35967836839: C3. Each reading is exactly its predicted set, the benchmark specs green in every round: `artifacts/laneB/p0-07-p0-08-predictions.md` (sha256 `2bed565bfa3f6f266efbb863ec81f08d1cf91ec259308b66b815d5f9ae22a0dd`) and, for M-B v2 and A3, `artifacts/laneB/p0-08-m-b-v2-a3-predictions.md` (sha256 `ecbecf93995597cb8d2827cda1c338a427ae81222cf273de6276e849e2e1c7cf`), each written before its dispatch; lane B compared every run's failed fullNames with the predicted set."
+      },
+      "note": "P0-08's first U supplement: the registry's verify command, `pnpm benchmark:harness`, runs its lanes and writes both reports (BLOCKED-270; before the fix the script had another name and `runner.ts` had no entry point). The four cases run the command as a subprocess. C1 (acceptance[0]): `--lane deterministic` runs with no model API key configured and writes `report.json`, holding that lane alone with its 16 trials, and a `report.md` whose line for the lane carries its task success and its invariant verdict. C2 (acceptance[0]): with no `--lane` every keyless lane runs, deterministic, fault and security, each with its own report. C3 (acceptance[1]): two runs at one `--seed` write byte-identical `report.json` files equal to `runLanes` at that seed, and another seed changes the lane results. C4 (acceptance[0]): a lane with no scenario is refused by the runner with exit 2 and no report, so an empty run never reads as completed.\n\nThe dry-run tree is A3's (`b9ff35e3edac4e315edbfb7308402f56991fe29d` on the candidate): after the fix run, A3 changed the breach line's replay hint and the benchmark docs, and its own run passed all 37 cases.\n\nNot covered here: acceptance[2], the separate scoring of model results and base invariants, which P0-08's F and U entries cover; the real-model lane, which has no scenario and is skipped without a model; and the exact-SHA workflow step that runs the command, which these cases do not read."
     }
   ]
 }

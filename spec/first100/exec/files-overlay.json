@@ -394,10 +394,27 @@
     },
     {
       "epic": "P0-08",
+      "path": ".agents/notes/implemented/bug-fix/2026-09-24-the-harness-benchmark-command-runs-and-writes-its-reports.md",
+      "kind": "doc",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P0-08",
+      "path": ".agents/notes/implemented/bug-fix/2026-09-24-the-harness-benchmark-command-runs-and-writes-its-reports.zh.md",
+      "kind": "doc",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P0-08",
       "path": "benchmarks/harness-capability/scenarios/index.ts",
       "kind": "source",
       "stages": [
-        "F"
+        "F",
+        "U.1"
       ],
       "reason": "The scenario table the fault-matrix cases enumerate. A benchmark scenario list is neither test nor product source, and the registry file list has no benchmarks/ entry at all."
     },
@@ -407,6 +424,14 @@
       "kind": "test",
       "stages": [
         "U"
+      ]
+    },
+    {
+      "epic": "P0-08",
+      "path": "tests/first100/fixtures/P0-08.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
       ]
     },
     {
