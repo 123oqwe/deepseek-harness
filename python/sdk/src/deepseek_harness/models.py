@@ -121,7 +121,6 @@ class InitializeResponse(BaseModel):
     serverInfo: ServerInfo | None = None
     negotiation: NegotiationProvenance | None = None
     protocolVersions: ProtocolVersionRange | None = None
-    schemaFingerprint: str | None = None
     #: Present only when this client declared ``host-control`` AND the server
     #: has a control plane. Absent means UNKNOWN, never "not stopped".
     hostControl: HostControlState | None = None
