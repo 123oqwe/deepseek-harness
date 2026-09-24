@@ -11,8 +11,11 @@
  * (`JSON.stringify(toHeaderLine(header))` in one checksummed frame). The cases
  * then time one `JsonlSessionPersistence.list()` and one
  * `sessionQuery.listSessions()`, which the controller's list calls once per
- * request. Each case records its readings in `task.meta.p607`, which the JSON
- * reporter carries next to the case's `duration`.
+ * request, on the engine the shipped base layer mounts
+ * (`@deepseek-ai/dsh-session-query-sqlite` with `path: ':memory:'` and
+ * `openAt: never`, `packages/bundle/base/cordis.patch.yml`). Each case records
+ * its readings in `task.meta.p607`, which the JSON reporter carries next to the
+ * case's `duration`.
  * @module tests/first100/measure/P6-07.million
  */
 
@@ -23,9 +26,11 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { Context } from '@deepseek-ai/cordis'
 import SessionStore from '@deepseek-ai/dsh-session'
+import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import type { SessionPersistence } from '@deepseek-ai/dsh-session-persistence'
 import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
-import SessionQueryEngine from '@deepseek-ai/dsh-session-query'
+import type {} from '@deepseek-ai/dsh-session-query'
+import SqliteSessionQueryEngine from '@deepseek-ai/dsh-session-query-sqlite'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { meta } from '../../../packages/session/session-persistence/tests/contract.ts'
 import { logPath, toHeaderLine } from '../../../packages/session/session-persistence-jsonl/src/format.ts'
@@ -66,7 +71,8 @@ describe(`P6-07 acceptance[0] sizing: the shipped list path over ${N} sessions (
     ctx = new Context()
     await ctx.plugin(SessionStore)
     await ctx.plugin(JsonlSessionPersistence, { root })
-    await ctx.plugin(SessionQueryEngine, {})
+    await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(SqliteSessionQueryEngine, { path: ':memory:', openAt: 'never' })
   })
 
   afterAll(async () => {
