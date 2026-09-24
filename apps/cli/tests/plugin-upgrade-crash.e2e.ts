@@ -20,10 +20,11 @@
  * guard deadline's own SIGKILL never counts.
  *
  * "Restart" is the next start of `dsh` on the same profile from either
- * entry: `dsh plugin --profile p1-10 root` for most homes, and the harness
- * start `dsh --profile p1-10` for one, where the plugin's row opens its unit.
- * Before either, the case waits out the upgrade lease the killed process
- * held, as the shipped 30 s lease allows.
+ * entry, and every kill point is restarted from both, each in its own home:
+ * `dsh plugin --profile p1-10 root`, and the harness start `dsh --profile
+ * p1-10`, where the plugin's row opens its unit. Before either, the case
+ * waits out the upgrade lease the killed process held, as the shipped 30 s
+ * lease allows.
  *
  * Every observation is made once in `beforeAll`, and the cases only read
  * them: `vitest.e2e.config.ts`'s `retry: 2` re-runs a case body and never
@@ -67,11 +68,16 @@ const UNIT = 'notes'
 const TABLE = 'notes'
 const UPGRADE_LEASE = brandString<WorkItemId>(UPGRADE_WORK_ITEM)
 
-/** How long one `dsh` child may run before its guard deadline SIGKILLs it. */
-const CHILD_TIMEOUT_MS = 180_000
-/** The whole campaign: 15 homes, at most `POOL_WIDTH` at a time, most of them waiting out a 30 s lease. */
-const CAMPAIGN_TIMEOUT_MS = 900_000
-const POOL_WIDTH = 5
+/** How long one `dsh` child may run before its guard deadline SIGKILLs it; a harness start boots all of dsh-base from source. */
+const CHILD_TIMEOUT_MS = 240_000
+/**
+ * The whole campaign: 23 homes, at most `POOL_WIDTH` at a time, 20 of them
+ * waiting out a 30 s lease and 9 of them booting the harness. About 1,600 s
+ * of home time, so roughly 5-8 min at this width; the ceiling leaves room for
+ * a contended runner.
+ */
+const CAMPAIGN_TIMEOUT_MS = 1_500_000
+const POOL_WIDTH = 6
 /** The margin past the killed process's lease expiry before the next start (the lane-branch acp.e2e.ts precedent). */
 const EXPIRY_MARGIN_MS = 1_000
 /**
@@ -84,8 +90,86 @@ const MAX_LEASE_WAIT_MS = 45_000
 const CAMPAIGN_PHASES = ['freeze', 'snapshot', 'quarantine', 'validate', 'switch', 'health-check'] as const
 type CampaignPhase = typeof CAMPAIGN_PHASES[number]
 
-/** Every home the campaign runs, one per key. */
-type RunKey = CampaignPhase | 'inside-switch' | 'migrate' | 'validator' | 'harness' | 'C1' | 'C2' | 'K1' | 'K3' | 'K4'
+/** Which halves of its record an upgrade left (transaction.ts `UpgradeRecord`). */
+type RecordHalves = 'none' | 'intent' | 'snapshot' | 'switched' | 'completed'
+
+/** The record and live stamp an upgrade killed at one point leaves. */
+interface LeftAtKill {
+  readonly record: RecordHalves
+  readonly stamp: number | undefined
+}
+
+/** Read from `runUpgrade` (transaction.ts:170-245): where each phase's `onPhase` fires relative to its writes. */
+const LEFT_AT_KILL: Readonly<Record<CampaignPhase, LeftAtKill>> = {
+  'freeze': { record: 'none', stamp: 1 },
+  'snapshot': { record: 'snapshot', stamp: 1 },
+  'quarantine': { record: 'snapshot', stamp: 1 },
+  'validate': { record: 'snapshot', stamp: 1 },
+  'switch': { record: 'switched', stamp: 2 },
+  'health-check': { record: 'completed', stamp: 2 },
+}
+/** A kill inside the plugin's migrate or validate step: after the snapshot record, before any switch. */
+const LEFT_IN_PLUGIN_STEP: LeftAtKill = { record: 'snapshot', stamp: 1 }
+/**
+ * A kill between the two renames of `switchIn`: the record still holds only
+ * the snapshot half (transaction.ts:225 runs after `switchIn` returns), and
+ * with the live file moved aside (storage-json index.ts:140) there is no stamp.
+ */
+const LEFT_INSIDE_SWITCH: LeftAtKill = { record: 'snapshot', stamp: undefined }
+
+/** Where a kill lands: after a named phase, inside one of the plugin's own steps, or inside `switchIn`. */
+type KillPoint = CampaignPhase | 'migrate' | 'validator' | 'inside-switch'
+
+/** One kill point: the instrument that lands it, how titles name it, what it leaves, and the version a restart owes. */
+interface KillPointSpec {
+  readonly point: KillPoint
+  /** `P1_10_*` instrument variables for the upgrade child. */
+  readonly upgradeEnv: Readonly<Record<string, string>>
+  /** Whether the upgrade child imports the crash hook. */
+  readonly hooked: boolean
+  readonly where: string
+  readonly left: LeftAtKill
+  /** The new version only once the health check had passed (transaction.ts:264-267), the old one otherwise. */
+  readonly owed: 'old' | 'new'
+}
+
+const KILL_POINTS: readonly KillPointSpec[] = [
+  ...CAMPAIGN_PHASES.map((phase): KillPointSpec => ({
+    point: phase,
+    upgradeEnv: { P1_10_KILL_AT: phase },
+    hooked: true,
+    where: `killed after the ${phase} phase`,
+    left: LEFT_AT_KILL[phase],
+    owed: phase === 'health-check' ? 'new' : 'old',
+  })),
+  {
+    point: 'migrate',
+    upgradeEnv: { P1_10_PLUGIN_KILL: 'migrate' },
+    hooked: false,
+    where: 'killed inside the plugin\'s own migrate step',
+    left: LEFT_IN_PLUGIN_STEP,
+    owed: 'old',
+  },
+  {
+    point: 'validator',
+    upgradeEnv: { P1_10_PLUGIN_KILL: 'validate' },
+    hooked: false,
+    where: 'killed inside the plugin\'s own validator',
+    left: LEFT_IN_PLUGIN_STEP,
+    owed: 'old',
+  },
+  {
+    point: 'inside-switch',
+    upgradeEnv: { P1_10_KILL_AT: 'inside-switch' },
+    hooked: true,
+    where: 'killed between the two renames of the atomic switch',
+    left: LEFT_INSIDE_SWITCH,
+    owed: 'old',
+  },
+]
+
+/** Every home the campaign runs, one per key: each kill point once per restart entry, plus the controls. */
+type RunKey = KillPoint | `harness-${KillPoint}` | 'C1' | 'C2' | 'K1' | 'K3' | 'K4'
 
 /** What is done to one home, and in what order. */
 interface RunSpec {
@@ -102,12 +186,15 @@ interface RunSpec {
   readonly writeThenRunAgain?: boolean
 }
 
+/** The harness homes first: they run longest, and the pool starts them in this order. */
 const RUN_SPECS: readonly RunSpec[] = [
-  { key: 'harness', upgradeEnv: { P1_10_KILL_AT: 'validate' }, hooked: true, next: 'harness' },
-  ...CAMPAIGN_PHASES.map((phase): RunSpec => ({ key: phase, upgradeEnv: { P1_10_KILL_AT: phase }, hooked: true, next: 'plugin' })),
-  { key: 'inside-switch', upgradeEnv: { P1_10_KILL_AT: 'inside-switch' }, hooked: true, next: 'plugin' },
-  { key: 'migrate', upgradeEnv: { P1_10_PLUGIN_KILL: 'migrate' }, hooked: false, next: 'plugin' },
-  { key: 'validator', upgradeEnv: { P1_10_PLUGIN_KILL: 'validate' }, hooked: false, next: 'plugin' },
+  ...KILL_POINTS.map((kill): RunSpec => ({
+    key: `harness-${kill.point}`,
+    upgradeEnv: kill.upgradeEnv,
+    hooked: kill.hooked,
+    next: 'harness',
+  })),
+  ...KILL_POINTS.map((kill): RunSpec => ({ key: kill.point, upgradeEnv: kill.upgradeEnv, hooked: kill.hooked, next: 'plugin' })),
   { key: 'C1', upgradeEnv: { P1_10_KILL_AT: 'health-check' }, hooked: true, tamper: 'records', next: 'plugin' },
   { key: 'C2', upgradeEnv: { P1_10_KILL_AT: 'health-check' }, hooked: true, tamper: 'stamp', next: 'plugin' },
   { key: 'K1', upgradeEnv: {}, hooked: false, next: 'plugin', writeThenRunAgain: true },
@@ -141,27 +228,6 @@ interface Holding {
 const OLD: Holding = { code: '1.0.0', stamp: 1, opened: true, rows: { n1: { body: 'original' } } }
 /** The new version whole: 2.0.0 code, data stamped 2, which that code opens, holding the record step-2.js adds. */
 const NEW: Holding = { code: '2.0.0', stamp: 2, opened: true, rows: { n1: { body: 'original' }, n2: { body: 'migrated' } } }
-
-/** Which halves of its record an upgrade left (transaction.ts `UpgradeRecord`). */
-type RecordHalves = 'none' | 'intent' | 'snapshot' | 'switched' | 'completed'
-
-/** The record and live stamp an upgrade killed at one point leaves. */
-interface LeftAtKill {
-  readonly record: RecordHalves
-  readonly stamp: number | undefined
-}
-
-/** Read from `runUpgrade` (transaction.ts:170-245): where each phase's `onPhase` fires relative to its writes. */
-const LEFT_AT_KILL: Readonly<Record<CampaignPhase, LeftAtKill>> = {
-  'freeze': { record: 'none', stamp: 1 },
-  'snapshot': { record: 'snapshot', stamp: 1 },
-  'quarantine': { record: 'snapshot', stamp: 1 },
-  'validate': { record: 'snapshot', stamp: 1 },
-  'switch': { record: 'switched', stamp: 2 },
-  'health-check': { record: 'completed', stamp: 2 },
-}
-/** A kill inside the plugin's migrate or validate step: after the snapshot record, before any switch. */
-const LEFT_IN_PLUGIN_STEP: LeftAtKill = { record: 'snapshot', stamp: 1 }
 
 /** How one `dsh` child ended. */
 interface ChildOutcome {
@@ -801,26 +867,30 @@ describe.skipIf(process.platform === 'win32')('P1-10 plugin upgrade crash campai
   })
 
   describe('acceptance[0]: dsh plugin SIGKILLed during an upgrade, then dsh started on the same profile', () => {
-    it('killed after the validate phase, then dsh started: the harness loaded the plugin row from the installed package, and the row reported what it opened', () => {
-      const observed = run('harness')
-      expectKilled(observed, LEFT_AT_KILL.validate)
-      expect(observed.report, outcomeText(observed.next)).toBeDefined()
-      expect(['1.0.0', '2.0.0'], outcomeText(observed.next)).toContain(observed.report?.code)
-    })
+    for (const kill of KILL_POINTS) {
+      const key: RunKey = `harness-${kill.point}`
 
-    it('killed after the validate phase, then dsh started: the code the harness loaded and the data it opened are one version, and that code opened its data', () => {
-      const observed = run('harness')
-      expectKilled(observed, LEFT_AT_KILL.validate)
-      expect(observed.leaseExpiredAtNext, outcomeText(observed.next)).toBe(true)
-      expect([OLD, NEW], `${JSON.stringify(observed.report)}\n${outcomeText(observed.next)}`).toContainEqual(observed.after)
-    })
+      it(`${kill.where}, then dsh started: the harness loaded the plugin row from the installed package, and the row reported what it opened`, () => {
+        const observed = run(key)
+        expectKilled(observed, kill.left)
+        expect(observed.report, outcomeText(observed.next)).toBeDefined()
+        expect(['1.0.0', '2.0.0'], outcomeText(observed.next)).toContain(observed.report?.code)
+      })
 
-    it('killed after the validate phase, then dsh started: the version the harness loaded is the old one', () => {
-      const observed = run('harness')
-      expectKilled(observed, LEFT_AT_KILL.validate)
-      expect(observed.leaseExpiredAtNext, outcomeText(observed.next)).toBe(true)
-      expect(observed.after, `${JSON.stringify(observed.report)}\n${outcomeText(observed.next)}`).toEqual(OLD)
-    })
+      it(`${kill.where}, then dsh started: the code the harness loaded and the data it opened are one version, and that code opened its data`, () => {
+        const observed = run(key)
+        expectKilled(observed, kill.left)
+        expect(observed.leaseExpiredAtNext, outcomeText(observed.next)).toBe(true)
+        expect([OLD, NEW], `${JSON.stringify(observed.report)}\n${outcomeText(observed.next)}`).toContainEqual(observed.after)
+      })
+
+      it(`${kill.where}, then dsh started: the version the harness loaded is the ${kill.owed} one`, () => {
+        const observed = run(key)
+        expectKilled(observed, kill.left)
+        expect(observed.leaseExpiredAtNext, outcomeText(observed.next)).toBe(true)
+        expect(observed.after, `${JSON.stringify(observed.report)}\n${outcomeText(observed.next)}`).toEqual(kill.owed === 'new' ? NEW : OLD)
+      })
+    }
   })
 
   describe('acceptance[2]: a failed or crashed upgrade leaves approved permissions untouched', () => {
