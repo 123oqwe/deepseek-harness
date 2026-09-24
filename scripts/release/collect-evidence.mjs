@@ -17,7 +17,7 @@
  * (`scripts/release/baseline-fingerprint.mjs`'s `verifyBaseline`, Epic
  * P0-01 — reused, not reimplemented; `init` refuses to proceed if the
  * checkout has drifted from its captured baseline) and a real
- * `git diff <baseSha> <headSha>` summary against the caller-supplied
+ * `git diff <baseSha>` of the working tree against the caller-supplied
  * `--base-sha` (required: `verifyBaseline` already proves the baseline's own captured
  * `gitSha` equals the current `HEAD`, so defaulting to it would always
  * yield an empty diff — the real comparison point, a previous release tag
@@ -245,7 +245,9 @@ function cmdInit(flags) {
   // merge-base) is a caller decision this script cannot guess.
   const baseSha = flagOne(flags, '--base-sha')
   if (baseSha === undefined) throw new Error('collect-evidence init: --base-sha is required (the commit this evidence package\'s Git diff is measured against)')
-  const diffText = execFileSync('git', ['diff', baseSha, headSha], { cwd: repoRoot, encoding: 'utf8' })
+  // The working tree against the base, not HEAD: verify re-derives this same
+  // diff, so a tracked file changed after collection shows even uncommitted.
+  const diffText = execFileSync('git', ['diff', baseSha], { cwd: repoRoot, encoding: 'utf8' })
 
   const dir = sidecarDir(outPath)
   mkdirSync(join(dir, 'logs'), { recursive: true })
