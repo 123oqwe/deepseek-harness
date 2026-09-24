@@ -1,0 +1,14 @@
+{
+  "name": "notes-plugin",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./plugin.js",
+  "dsh": {
+    "manifestVersion": 2,
+    "executionMode": "in-process",
+    "compatibility": { "dshVersionRange": "*" },
+    "dataStores": [{ "domainName": "notes", "dataClassification": "confidential" }],
+    "bundle": { "patch": "./cordis.patch.yml" }
+  }
+}

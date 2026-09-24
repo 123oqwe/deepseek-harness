@@ -1,0 +1,24 @@
+{
+  "name": "notes-plugin",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./plugin.js",
+  "dsh": {
+    "manifestVersion": 2,
+    "executionMode": "in-process",
+    "compatibility": { "dshVersionRange": "*" },
+    "dataStores": [{ "domainName": "notes", "dataClassification": "confidential" }],
+    "migrations": [
+      {
+        "fromVersion": 1,
+        "toVersion": 2,
+        "description": "add the record that marks a store as migrated",
+        "module": "./step-2.js",
+        "reversible": true,
+        "backup": "snapshot"
+      }
+    ],
+    "bundle": { "patch": "./cordis.patch.yml" }
+  }
+}

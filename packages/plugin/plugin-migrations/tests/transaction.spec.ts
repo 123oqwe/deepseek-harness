@@ -9,7 +9,7 @@
  * FACET and not with a filesystem. A case that reached for a path would be
  * asserting the medium this stage deliberately stopped inventing.
  *
- * acceptance[0]'s crash campaign is `crash-campaign.spec.ts`, and each real
+ * acceptance[0]'s crash campaign is `apps/cli/tests/plugin-upgrade-crash.e2e.ts`, and each real
  * backend's own snapshot and switch primitives are its own package's.
  */
 import { afterEach, describe, expect, it } from 'vitest'
