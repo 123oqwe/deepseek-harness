@@ -55,7 +55,6 @@ function headlessCommand(): Command {
     .argument('[task...]', 'the task text; multiple words are joined by spaces')
     .option('--model <provider:model>', 'run on a specific registered route and model instead of the configured default')
     .option('--output-format <format>', `stdout format: ${OUTPUT_FORMATS.join(', ')}`, 'text')
-    .option('--trust-workspace [mode]', 'consumed by the workspace-trust plugin from this same command line; declared here so this program does not refuse it (BLOCKED-260). Write the mode as --trust-workspace=<mode>: a space-separated word is task text, and the plugin refuses that shape rather than reading it as a mode')
     .addHelpText('after', `
 Examples:
   dsh --profile headless "run the tests"     answer one task and exit
