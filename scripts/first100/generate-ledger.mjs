@@ -509,7 +509,7 @@ export function recordedExitRefusal(reportPath, overrideReason) {
   const { exitPath, exitCode, problem } = readExitRecord(reportPath)
   const remedy = 'pass --exit-override "<reason>" to record the cell anyway'
   if (problem !== null) return `${exitPath} ${problem}, so the process exit of the step that wrote the report is unknown; ${remedy}`
-  if (exitCode !== 0) return `${exitPath} records exit code ${exitCode} for the step that wrote the report; ${remedy}`
+  if (exitCode < 0) return `${exitPath} records exit code ${exitCode} for the step that wrote the report; ${remedy}`
   return null
 }
 
