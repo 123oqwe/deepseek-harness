@@ -820,7 +820,7 @@ function collectVendoredEdges(byPackage, vendored) {
   for (const [name, { manifest }] of [...byPackage, ...vendored]) {
     for (const field of PRODUCTION_DEPENDENCY_FIELDS) {
       for (const dependency of Object.keys(manifest[field] ?? {})) {
-        const touchesVendored = vendored.has(dependency) || (vendored.has(name) && byPackage.has(dependency))
+        const touchesVendored = vendored.has(dependency)
         if (dependency !== name && touchesVendored) vendoredEdges.push({ fromPackage: name, toPackage: dependency })
       }
     }
