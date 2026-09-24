@@ -198,7 +198,6 @@ export class LocalBashExecutor extends ShellExecutor {
       // snapshot beats both the caller's env and the terminal overrides; the
       // subprocess service merges the whole map after its ambient scrub.
       env: { ...ENV_OVERRIDES, ...spec.env, ...spec.dshEnv },
-      ...spec.limits !== undefined ? { limits: spec.limits } : {},
     }
   }
 
