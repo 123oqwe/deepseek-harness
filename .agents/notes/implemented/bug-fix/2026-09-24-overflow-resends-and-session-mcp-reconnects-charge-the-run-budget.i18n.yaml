@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-24-overflow-resends-and-session-mcp-reconnects-charge-the-run-budget.md
-2026-09-24-overflow-resends-and-session-mcp-reconnects-charge-the-run-budget.md: 830a7975f9b729bd7b47692db83dc2ce8fde9833
-2026-09-24-overflow-resends-and-session-mcp-reconnects-charge-the-run-budget.zh.md: 71404da87588cbb13bd45b4898e4a6caf1630ff5
+2026-09-24-overflow-resends-and-session-mcp-reconnects-charge-the-run-budget.md: 1e6b7cfdfea10f3f569601a1356d5568c1570e14
+2026-09-24-overflow-resends-and-session-mcp-reconnects-charge-the-run-budget.zh.md: 7345a0270f4d4315f79f671cfb52b6312b40ae22
