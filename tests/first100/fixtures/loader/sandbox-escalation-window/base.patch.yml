@@ -1,0 +1,26 @@
+# Test-only overlay over the SHIPPED headless profile for BLOCKED-334's
+# fourth site: a sandbox escalation the operator is asked about inside the
+# bash tool's body. It supplies a keyless scripted model and an uncompressed
+# session log, turns off the rows that would run a task of their own, and
+# configures no agent: the driver creates the root agent after boot. The
+# shipped sandbox, bash-sandbox and approval rows are left as they are.
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
+
+- insert:
+    - id: sandbox-escalation-window-mock-llm
+      name: './mock-llm.ts'
