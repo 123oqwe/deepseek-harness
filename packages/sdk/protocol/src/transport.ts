@@ -236,9 +236,7 @@ export class JsonRpcLineTransport implements JsonRpcTransportPeer {
     } catch (error) {
       // A refusal that carries its reason as fields sends them as `error.data`,
       // so the peer reads the reason without parsing the message.
-      const data = typeof error === 'object' && error !== null && Object.hasOwn(error, 'data')
-        ? (error as { readonly data: unknown }).data
-        : undefined
+      const data = undefined
       this.writeError(id, -32603, error instanceof Error ? error.message : String(error), data)
     }
   }
