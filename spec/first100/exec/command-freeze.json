@@ -16266,6 +16266,123 @@
         "failureSummary": "PRECHECK3, run 35995461112: C5 red (\"expected 'verifying' to be 'succeeded'\": the second terminal write found the store gone), C1b green. M-g, run 35995480002: C1b red (the displaced host wrote accepted -> cancelled) and C5 as on PRECHECK3. M-a2, run 35995498804: C1b red, C5 green (no write asks a lease), with U1, U3 and C1 outside this entry. PRECHECK4, the fix3 and M-h kept C5 red. The fix5, run 35996927800: both green. M-j, run 35996948030: C5 red, C1b green. Readings by case identity: PC3 `88cb543084` run 35995461112; MG `b971440f6a` run 35995480002; MA2 `40b6f2b565` run 35995498804; FIX5 `af416dfcec` run 35996927800; MJ `82fa87193c` run 35996948030; they match `artifacts/laneB/p4-07-pc3-predictions.md` (sha256 `96453e8b625997f5616778d295c1c7448fea542f6e3005703e61929e6896bed2`) and `artifacts/laneB/p4-07-fix5-predictions.md` (sha256 `316d8c2f775812b1ae4c7cf231210e8bbda838b00e43b2c22ced097083cc6de2`), written before dispatch."
       },
       "note": "P4-07's seventh U supplement, on the shipped headless profile (blind review of `f7ce9ab1dd`). C1b, acceptance[0]: a host displaced before its first model step ends its session without writing `cancelled`, which `accepted` admits, so only the fence keeps it out. C5 (review 2-1): the holder's session that ends as its host unloads still records `succeeded`, because lease-sqlite keeps its handle after its teardown while a lease it issued is held. The argv selects the two cases with an escaped alternation in -t; the other five cases of the file are U.4 [344]."
+    },
+    {
+      "epic": "P2-01",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-01",
+        "stage": "U"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "vitest.e2e.config.ts",
+        "apps/cli/tests/profiles/headless/tests/detached-workflow-exit.e2e.ts"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "a detached workflow run on dsh --profile headless (no key required) BLOCKED-323: the launch exits on its own after the detached run it collected has settled"
+      ],
+      "files": [
+        "apps/cli/tests/profiles/headless/tests/detached-workflow-exit.e2e.ts",
+        "apps/cli/tests/profiles/routing-stub-model.ts",
+        "apps/cli/tests/profiles/session-log.ts",
+        "packages/workflow/workflow-worker-thread/src/index.ts",
+        "packages/workflow/workflow-worker-thread/src/host.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T12:26:01Z",
+      "dryRunProof": {
+        "treeSha": "09a6eb529a4a7d2e278fc5f525a07f8ce80e2c70",
+        "testsDiscovered": 1
+      },
+      "sensitivityProof": {
+        "mutationDescription": "BLOCKED-323 M1 (`a2d0ab486ef5b8cc02e6e01057ba8c448e97b1ea`, off the fix `c4cf0efb5889af1309d92bc72f97265a1870e216`, never merged): a settled detached run is no longer disposed, so its worker thread is never terminated; the source file equals the PRECHECK's.",
+        "failureSummary": "PRECHECK `bb9daca2b1a31e32179f499b89cde82d63eed7d6`, run 35993763782: the case red, \"did not exit within 60s\". The fix `c4cf0efb5889af1309d92bc72f97265a1870e216`, run 35993783415: green. M1, run 35993858230: the case red the same way. At the chain's C7 `58052eb5dd30554f8f17a453d4e54e838134c322`, run 35993838713, both cases of this step green; at C8 `bc99b78fd789e95d3cee090fb251165a368df86c`, run 35997998108, both green on the chain's final file contents. It is the only case in the tree that launches a process which starts a detached run, so no other case reddens under M1."
+      },
+      "note": "BLOCKED-323 closing conditions 1 and 3: the shipped headless launch starts a detached workflow run, collects it, and the process exits on its own within 60 s, with no preload and no signal; runLoaderSmoke fails a process still running at that timeout. Keyless: the routing stand-in model answers every request. Observed by the exact-SHA workflow's workflow e2e step, whose report `vitest-e2e-workflow.json` is this entry's observation."
+    },
+    {
+      "epic": "P2-01",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-01",
+        "stage": "U"
+      },
+      "supplementSeq": 3,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "vitest.e2e.config.ts",
+        "apps/cli/tests/profiles/headless/tests/detached-workflow-cwd.e2e.ts"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "a detached workflow run on dsh --profile headless (no key required) BLOCKED-324: the run's child completes its turn, and the run's and the child's sessions carry the launcher's cwd"
+      ],
+      "files": [
+        "apps/cli/tests/profiles/headless/tests/detached-workflow-cwd.e2e.ts",
+        "apps/cli/tests/profiles/routing-stub-model.ts",
+        "apps/cli/tests/profiles/session-log.ts",
+        "packages/workflow/workflow-worker-thread/src/index.ts",
+        "packages/bundle/headless/cordis.patch.yml"
+      ],
+      "frozenAtUtc": "2026-09-24T12:26:01Z",
+      "dryRunProof": {
+        "treeSha": "09a6eb529a4a7d2e278fc5f525a07f8ce80e2c70",
+        "testsDiscovered": 1
+      },
+      "sensitivityProof": {
+        "mutationDescription": "BLOCKED-324 M1 (`e83980646f`, off the fix `fe58a4d958`, never merged): a detached run's session no longer takes its launcher's cwd; the source file equals the PRECHECK's.",
+        "failureSummary": "PRECHECK `ef1a0c24d7`, run 35993801638: the case red at the child's turn/end; with the diagnostic added in v2, `53998d7ccf2ad9e598dfb6d6fcd6f4180e12e814`, run 35994888741, the failure reads the child's error: prompt variable \"{{cwd}}\" has no value for this assembly (section \"deployment:persona-suffix\"). The fix `fe58a4d958`, run 35993819360: green. M1, run 35993878785: the case red; the BLOCKED-323 case stays green, its run starting no agent. At C7 `58052eb5dd30554f8f17a453d4e54e838134c322`, run 35993838713, and at C8 `bc99b78fd789e95d3cee090fb251165a368df86c`, run 35997998108, both green. The in-process case in U.4 separates the launcher's cwd from the process's, which this e2e cannot."
+      },
+      "note": "BLOCKED-324 closing conditions 1 and 3: on the shipped headless launch a detached workflow run's child runs one bash call and completes its turn, and the run's and the child's session headers carry the launcher's cwd, which the shipped persona suffix `{{cwd}}` needs. Keyless, through the routing stand-in model. Observed by the same e2e step as U.2."
+    },
+    {
+      "epic": "P2-01",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-01",
+        "stage": "U"
+      },
+      "supplementSeq": 4,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts",
+        "-t",
+        "logs, rather than leaves unhandled, the disposal of a settled detached run whose lease cannot be given back|gives a detached run's session its launcher's cwd, not the process's \\(BLOCKED-324\\)",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-09 must[3]: a nested run's children inherit its DECAYED capability token logs, rather than leaves unhandled, the disposal of a settled detached run whose lease cannot be given back",
+        "P4-09 must[3]: a nested run's children inherit its DECAYED capability token gives a detached run's session its launcher's cwd, not the process's (BLOCKED-324)"
+      ],
+      "files": [
+        "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts",
+        "packages/workflow/workflow-worker-thread/src/index.ts",
+        "packages/workflow/workflow-worker-thread/src/host.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T12:26:01Z",
+      "dryRunProof": {
+        "treeSha": "09a6eb529a4a7d2e278fc5f525a07f8ce80e2c70",
+        "testsDiscovered": 2
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-C2b (`3fc29188c33629455f46ec4135e79cbadee8fc69`, off `8edd82402fcc71d6c6b0f31ea5101a5b1749b34a`): the settlement disposal loses its catch again; the source file equals C7's. BLOCKED-324 M2 (`28e870f074adef35055b934aeb779bf6ca9ca25f`, off C8 `bc99b78fd789e95d3cee090fb251165a368df86c`): a detached run's session takes `process.cwd()` instead of its launcher's cwd. Both never merged.",
+        "failureSummary": "C2b `8edd82402fcc71d6c6b0f31ea5101a5b1749b34a`, run 35994909392: 85 passed and 0 failed over the nested-run, integration and workflow-worker-thread specs; C8, run 35997924189: 86 of 86. M-C2b, run 35994930673: exactly the first case red, no warning logged. M2, run 35997945423: exactly the second case red; the headless BLOCKED-324 e2e cannot see it, its launcher's cwd being the process's. No other case makes the lease store's release throw after a detached run settles, or starts one from a launcher elsewhere."
+      },
+      "note": "Two in-process cases for the detached run. First: a settled detached run whose disposal fails, because giving its lease back throws, is logged as a warning rather than left as an unhandled rejection, which since Node 15 ends the process. Second (the blind review's 2-1 on BLOCKED-324): a launcher whose cwd is not the process's starts a detached run, and the run's session header carries the launcher's cwd. The argv selects the two by their titles with an escaped alternation in -t."
     }
   ]
 }

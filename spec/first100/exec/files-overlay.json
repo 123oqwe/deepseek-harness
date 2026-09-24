@@ -1273,6 +1273,40 @@
     },
     {
       "epic": "P2-01",
+      "path": "apps/cli/tests/profiles/headless/tests/detached-workflow-cwd.e2e.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P2-01",
+      "path": "apps/cli/tests/profiles/headless/tests/detached-workflow-exit.e2e.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P2-01",
+      "path": "apps/cli/tests/profiles/routing-stub-model.ts",
+      "kind": "test",
+      "stages": [
+        "U.2",
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P2-01",
+      "path": "apps/cli/tests/profiles/session-log.ts",
+      "kind": "test",
+      "stages": [
+        "U.2",
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P2-01",
       "path": "packages/acp/acp/src/index.ts",
       "kind": "source",
       "stages": [
@@ -1297,6 +1331,14 @@
         "U.1"
       ],
       "reason": "The one place every `dsh` launcher passes through, and therefore where the host-user factory is provided — beside the `ctx.provide('dshHomePath', …)` this file already performs before any entry mounts. A factory rather than a value, so nothing resolves the id, and nothing touches `$DSH_HOME`, unless a configured row actually needs one."
+    },
+    {
+      "epic": "P2-01",
+      "path": "packages/bundle/headless/cordis.patch.yml",
+      "kind": "manifest",
+      "stages": [
+        "U.3"
+      ]
     },
     {
       "epic": "P2-01",
@@ -1349,6 +1391,35 @@
         "U.1"
       ],
       "reason": "The delegation hop. A preFlight census found acceptance[0]'s second half in worse shape than BLOCKED-200 recorded: `resolveChildAgentOptions` did not carry `identity` and `extendChain` had ZERO production callers — seven grep hits, every one prose — so no delegation hop had ever been added in this tree and a delegated child was untraceable to the person who started the run. The registry named P2-01's chain types and not this file, because the producer did not exist."
+    },
+    {
+      "epic": "P2-01",
+      "path": "packages/workflow/workflow-worker-thread/src/host.ts",
+      "kind": "source",
+      "stages": [
+        "U.2",
+        "U.4"
+      ],
+      "reason": "Not changed by P2-01: `WorkerRun.dispose`, which terminates a detached run's worker thread and gives its lease back last, is what P2-01 U.2 (the launch exits on its own) and U.4 (a failed release is logged) observe."
+    },
+    {
+      "epic": "P2-01",
+      "path": "packages/workflow/workflow-worker-thread/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.2",
+        "U.3",
+        "U.4"
+      ],
+      "reason": "Changed by the detached-workflow fixes on P2-01's path: a settled detached run is disposed (BLOCKED-323) and a disposal that fails is logged, its session takes the launcher's cwd (BLOCKED-324), and its agent acts one delegation hop below the launcher (P2-01 V2). P2-01 U.2, U.3 and U.4 depend on it."
+    },
+    {
+      "epic": "P2-01",
+      "path": "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.4"
+      ]
     },
     {
       "epic": "P2-01",
