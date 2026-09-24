@@ -7,8 +7,9 @@
  *
  * `../fixtures/loader/p5-10-restart/driver.ts` runs one restart per case, as
  * two processes over one working directory and one `DSH_HOME`: a graceful
- * restart, the same with a parent whose model continues the child when told it
- * was stopped, and a crash.
+ * restart after the cancel has settled; a graceful shutdown while the cancel
+ * is still settling, alone and with a parent whose model continues the child
+ * when told it was stopped; and a crash.
  * @module tests/first100/measure/P5-10.restart
  */
 
@@ -31,7 +32,7 @@ interface Report {
 }
 
 describe('P5-10 question 13 measurement: a child cancelled before a host restart, on the shipped headless profile', () => {
-  for (const variant of ['graceful', 'graceful-parent-continues', 'crash']) {
+  for (const variant of ['graceful', 'shutdown-while-cancelling', 'shutdown-while-cancelling-parent-continues', 'crash']) {
     it(`records the ${variant} restart`, async ({ task }) => {
       const { stdout, stderr } = await runLoaderSmoke({
         label: `P5-10 restart measurement: ${variant}`,

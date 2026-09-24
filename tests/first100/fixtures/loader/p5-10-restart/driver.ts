@@ -7,19 +7,25 @@
  * - `orchestrate <variant>` launches `before` and then `after` the way it was
  *   itself launched (same Node flags, working directory and environment, so
  *   the same `DSH_HOME` and `./.sessions`), and prints one
- *   `P5-10-RESTART <json>` line holding both readings. In the `crash` variant
- *   it waits {@link CRASH_RESTART_DELAY_MS} between them, past the Run lease the
- *   killed process still holds; in `graceful-parent-continues` it starts
- *   `after` with `P5_10_PARENT_CONTINUES=1`, which makes the scripted parent
- *   answer a stopped-child notice with `send_message` to that child.
+ *   `P5-10-RESTART <json>` line holding both readings. `before` alone gets
+ *   `P5_10_HOLD=1`, and in the two `shutdown-while-cancelling` variants
+ *   `P5_10_ABORT_DELAY_MS`, so the child's held request takes that long to
+ *   end once cancelled. In the `crash` variant the orchestrator waits
+ *   {@link CRASH_RESTART_DELAY_MS} between the phases, past the Run lease the
+ *   killed process still holds; in `shutdown-while-cancelling-parent-continues`
+ *   it starts `after` with `P5_10_PARENT_CONTINUES=1`, which makes the
+ *   scripted parent answer a stopped-child notice with `send_message` to that
+ *   child.
  * - `before <variant>` boots the SHIPPED headless profile with
  *   `./base.patch.yml`, creates the parent after boot, lets it take one turn,
  *   starts one continuable child through `ctx.subagents.startContinuable`
  *   whose first request the scripted model holds open, and cancels it through
- *   `interruptByParent`, the call the Web client's Stop makes. In `crash` it
- *   then writes its reading and kills itself with SIGKILL; otherwise it waits
- *   for the child to stop, sends it one prompt through `ctx.subagents.prompt`,
- *   and disposes the tree.
+ *   `interruptByParent`, the call the Web client's Stop makes. Then:
+ *   - `graceful` waits for the child to stop and leave residency, sends it one
+ *     prompt through `ctx.subagents.prompt`, and disposes the tree;
+ *   - `shutdown-while-cancelling*` sends that prompt at once and disposes the
+ *     tree while the child's cancelled request is still ending;
+ *   - `crash` writes its reading and kills itself with SIGKILL.
  * - `after <variant> <parent> <child>` boots the same profile, reads what the
  *   child did before anything is reopened, resumes the parent the way the Web
  *   host does when a client opens it, reads again, sends the child one prompt,
@@ -36,6 +42,7 @@ import { resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { runFixtureTurn } from '@deepseek-ai/dsh-loader-smoke'
 import { SessionId } from '@deepseek-ai/dsh-session'
+import type {} from '@deepseek-ai/dsh-session-query'
 import type { SubagentInterruptReceipt, SubagentPromptRequest, SubagentPromptRequestId } from '@deepseek-ai/dsh-subagent'
 import { createFixtureRootAgent } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts'
 import { bootProductionProfile } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/production-profile.ts'
@@ -63,8 +70,11 @@ const POLL_MS = 25
 /** Deadline for one phase process. */
 const PHASE_TIMEOUT_MS = 120_000
 
-/** The three restarts the measurement covers. */
-const VARIANTS = ['graceful', 'graceful-parent-continues', 'crash'] as const
+/** How long a cancelled held request takes to end in the `shutdown-while-cancelling` variants. */
+const SLOW_ABORT_MS = 3_000
+
+/** The four restarts the measurement covers. */
+const VARIANTS = ['graceful', 'shutdown-while-cancelling', 'shutdown-while-cancelling-parent-continues', 'crash'] as const
 type Variant = typeof VARIANTS[number]
 
 /** What `interruptByParent` returned, or the code it threw. */
@@ -246,8 +256,27 @@ async function before(ctx: Context, variant: Variant): Promise<void> {
     process.kill(process.pid, 'SIGKILL')
   }
 
+  if (variant !== 'graceful') {
+    // The prompt's refusal is decided before its first await, so the tree is
+    // disposed below while the child's cancelled request is still ending.
+    const outcome = await prompt(subagents, parent.id, child, 'p5-10-before-restart', 'P5-10: take another turn before the restart.')
+    report({
+      ids,
+      inFlight,
+      interrupt,
+      outcome,
+      parentTurnEndsAtInterrupt,
+      parent: watch.tally(parent.id),
+      child: watch.tally(child),
+      childStatuses: watch.statuses(child),
+      childLive: ctx.agents.get(child) !== undefined,
+    })
+    return
+  }
+
   const childStopped = await until(() => watch.tally(child).turnEnds >= 1, SETTLE_LIMIT_MS)
-  await ctx.agents.get(child)?.whenIdle()
+  const childReleased = await until(() => ctx.agents.get(child) === undefined, SETTLE_LIMIT_MS)
+  const releaseSettled = await settle(watch)
   const outcome = await prompt(subagents, parent.id, child, 'p5-10-before-restart', 'P5-10: take another turn before the restart.')
   const settled = await settle(watch)
   report({
@@ -255,6 +284,8 @@ async function before(ctx: Context, variant: Variant): Promise<void> {
     inFlight,
     interrupt,
     childStopped,
+    childReleased,
+    releaseSettled,
     outcome,
     settled,
     parentTurnEndsAtInterrupt,
@@ -302,7 +333,17 @@ async function after(ctx: Context, parentId: SessionId, childId: SessionId): Pro
 
   const outcome = await prompt(subagents, parent.id, childId, 'p5-10-after-restart', 'P5-10: take a turn after the restart.')
   const promptSettled = await settle(watch)
-  const childLog = ctx.sessions.get(childId)?.snapshotEvents()
+  // Read from the persisted log: a child that settled is no longer published
+  // in `ctx.sessions`.
+  let childLogTurns: { readonly turnStarts: number; readonly turnEnds: number } | null = null
+  const query = ctx.get('sessionQuery')
+  if (query !== undefined) {
+    using observation = await query.observeSession(childId)
+    childLogTurns = {
+      turnStarts: observation.events.filter(event => event.type === 'turn/start').length,
+      turnEnds: observation.events.filter(event => event.type === 'turn/end').length,
+    }
+  }
   report({
     beforeResume,
     afterResume,
@@ -313,10 +354,7 @@ async function after(ctx: Context, parentId: SessionId, childId: SessionId): Pro
       child: watch.tally(childId),
       childLive: ctx.agents.get(childId) !== undefined,
       childStatuses: watch.statuses(childId),
-      childLogTurns: childLog === undefined ? null : {
-        turnStarts: childLog.filter(event => event.type === 'turn/start').length,
-        turnEnds: childLog.filter(event => event.type === 'turn/end').length,
-      },
+      childLogTurns,
     },
   })
 }
@@ -358,13 +396,18 @@ if (configPath === undefined || !isVariant(variant)) {
 }
 
 if (phase === 'orchestrate') {
-  const first = runPhase([configPath, 'before', variant], process.env)
+  const slowAbort = variant === 'shutdown-while-cancelling' || variant === 'shutdown-while-cancelling-parent-continues'
+  const first = runPhase([configPath, 'before', variant], {
+    ...process.env,
+    P5_10_HOLD: '1',
+    P5_10_ABORT_DELAY_MS: String(slowAbort ? SLOW_ABORT_MS : 0),
+  })
   const ids = first.reading.ids as { readonly parent: string; readonly child: string }
   const restartDelayMs = variant === 'crash' ? CRASH_RESTART_DELAY_MS : 0
   await delay(restartDelayMs)
   const second = runPhase(
     [configPath, 'after', variant, ids.parent, ids.child],
-    variant === 'graceful-parent-continues' ? { ...process.env, P5_10_PARENT_CONTINUES: '1' } : process.env,
+    variant === 'shutdown-while-cancelling-parent-continues' ? { ...process.env, P5_10_PARENT_CONTINUES: '1' } : process.env,
   )
   process.stdout.write(`P5-10-RESTART ${JSON.stringify({ variant, before: first, restartDelayMs, after: second })}\n`)
 } else if (phase === 'before' || phase === 'after') {
