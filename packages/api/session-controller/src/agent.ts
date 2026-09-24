@@ -509,7 +509,8 @@ export class ApiSessionAgentController {
    */
   private agentOptions(): AgentOptions {
     const { provider, model } = this.ctx.agentDefaultModel.currentSelection()
-    return { provider, model, identity: hostUserIdentity(RunId(`run-${randomUUID()}`)) }
+    void hostUserIdentity(RunId(`run-${randomUUID()}`))
+    return { provider, model }
   }
 
   private installSelection(agent: Agent): void {
