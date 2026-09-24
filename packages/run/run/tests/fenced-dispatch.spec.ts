@@ -536,6 +536,43 @@ describe('P4-05 must[0]: `waiting_human` is a state a run can actually reach', (
 
     await handle.dispose()
   })
+
+  it('warns when the run cannot enter `waiting_human`, and still asks, so a refused advance is not silent', async () => {
+    // BLOCKED-329: the gate discarded the advance's answer, so on the native
+    // path, where the run is in `waiting_tool`, the operator was asked while
+    // the run read as a tool wait and nothing said so. `paused` has no edge to
+    // `waiting_human`, which makes the refusal certain whatever edges the
+    // native path is given.
+    const ctx = await harness()
+    const handle = await ctx.agents.create({ sessionId: SessionId('session-asks-paused') })
+    const { agent } = handle
+    advanceLeasedAgent(agent, 'starting', 'test drives the run to paused')
+    advanceLeasedAgent(agent, 'running', 'test drives the run to paused')
+    advanceLeasedAgent(agent, 'paused', 'test drives the run to paused')
+    const warn = vi.spyOn(ctx.logger, 'warn').mockImplementation(() => ctx.logger)
+
+    let asked = false
+    ctx.provide('approval', {
+      request: () => {
+        asked = true
+        return Promise.resolve('allowed-once')
+      },
+    } as never)
+    ctx.provide('permissionPresets', {
+      classifyAction: () => ({ riskClass: 'security-sensitive', hardDenied: false }),
+      requiresApproval: () => true,
+      current: () => 'workspace-write',
+    } as never)
+
+    const refusal = await gateActionRisk(ctx, agent, 'untagged', [])
+
+    // The action is not refused for a lifecycle it could not record.
+    expect(asked).toBe(true)
+    expect(refusal).toBeUndefined()
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('could not enter waiting_human'))
+
+    await handle.dispose()
+  })
 })
 
 describe('P4-05 acceptance[2]: the orphaned host is not the one that records it', () => {
