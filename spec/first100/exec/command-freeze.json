@@ -16494,6 +16494,118 @@
         "failureSummary": "PRECHECK `206136bcb9`: all nine red. Fix: green. M-A: T1, T4. M-B: U3. M-C: U3, U4 (with journal-live-run's two frozen cases). M-D: U5. M-E: U5 (with journal-resume's frozen REFUSES case). M-F: U3 (with journal-live-run's two). M-G: U1, U2. M-H: U4. M-I: T2. M-J: T3. By case identity, unit rounds PRECHECK run 35997138724; FIX run 35997179666; M-A run 35997217787; M-B run 35997259504; M-C run 35997300111; M-D run 35997338595; M-E run 35997381647; M-F run 35997420857; M-G run 35997461277; M-H run 35997482322; M-I run 35997503369; M-J run 35997523649, against `artifacts/laneB/p4-08-v2-predictions.md` (sha256 `284603f054b0ed3b845d1f386d292bce838b5972bbfda3bfbd41d9ddc64f266b`)."
       },
       "note": "P4-08's fifth U supplement, in process. resume-values: a finished in-process child's session is flushed past its turn/end before the host journals its step (U1; a failed flush is logged and the result still forwarded, U2); a resumed run hands the script its finished children's values (U3) and starts again a step whose journal kept only the placeholder (U4, A7, placed in runtime.ts; runtime.ts is P4-05 U.2's frozen file, so that cell is observed again); a resume refused for a changed script says so on the run (U5). tool-workflow: `resume` reaches `engine.resume` (T1), `resume` with `detached` and a value that is not a run id are refused before any run starts (T2, T3), and a refusal is visible to the model (T4)."
+    },
+    {
+      "epic": "P4-11",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-11",
+        "stage": "U"
+      },
+      "supplementSeq": 3,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/mcp/mcp-client/tests/reconnect.spec.ts",
+        "-t",
+        "charges nothing while the session is unpublished or holds no run",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "reconnect supervisor P4-11 must[1]: a server mounted for one session charges its reconnects to that session’s run charges nothing while the session is unpublished or holds no run"
+      ],
+      "files": [
+        "packages/mcp/mcp-client/tests/reconnect.spec.ts",
+        "packages/mcp/mcp-client/src/connection.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T14:03:54Z",
+      "dryRunProof": {
+        "treeSha": "d944bcd53c441b492e0394895b6226460a383c42",
+        "testsDiscovered": 1
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-F1 (`4a9b876cbd1f32bc743623604a090b5766350610`, off the fix, never merged): the guard at connection.ts that charges nothing until the session's agent holds its Run is deleted.",
+        "failureSummary": "The cases commit `dc7f87adcdf374716fe9a167560be358046c31eb`, run 36008748262, and the fix `1dc5b6bad7e753932658aedb5de8c51a7688a21f`, run 36008774181: 39 of 39 over reconnect.spec.ts, mcp-charge-session.spec.ts and run-budget.spec.ts. M-F1, run 36008799676: exactly this case red. The first reconnect, made before the agent is published, is remembered as \"no run\", so the third, made once the agent holds its Run, is not charged (retriesUsed 0, not 1). The case's first half, NOTHING_SPENT after two runless reconnects, stays green under M-F1, as the blind review's F1 found."
+      },
+      "note": "P4-11 blind review F1: a session-mounted MCP server charges nothing while its session is unpublished or holds no Run, and does not remember that answer. Once the agent holds its Run, the next reconnect is charged to it. Budget 1, so the charged reconnect is admitted."
+    },
+    {
+      "epic": "P4-11",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-11",
+        "stage": "U"
+      },
+      "supplementSeq": 4,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/acp/acp/tests/mcp-charge-session.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-11 must[1]: an ACP session charges its MCP reconnects to its own Run control: a created session mounts its MCP servers charged to itself, so the case below measures the resume path",
+        "P4-11 must[1]: an ACP session charges its MCP reconnects to its own Run a resumed session mounts its MCP servers charged to itself"
+      ],
+      "files": [
+        "packages/acp/acp/tests/mcp-charge-session.spec.ts",
+        "packages/acp/acp/tests/harness.ts",
+        "packages/acp/acp/src/session.ts",
+        "packages/acp/acp/src/mcp.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T14:03:54Z",
+      "dryRunProof": {
+        "treeSha": "d944bcd53c441b492e0394895b6226460a383c42",
+        "testsDiscovered": 2
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-F2 (`55ebd60460d086a2e10668f3ed4e3ac64f22c660`, off the fix, never merged): the ACP resume path mounts its MCP servers without passing agent.session.id as the charge session.",
+        "failureSummary": "The cases commit `dc7f87adcdf374716fe9a167560be358046c31eb`, run 36008748262, and the fix `1dc5b6bad7e753932658aedb5de8c51a7688a21f`, run 36008774181: 39 of 39 over reconnect.spec.ts, mcp-charge-session.spec.ts and run-budget.spec.ts. M-F2, run 36008824945: exactly the resume case red; the create-path control stays green."
+      },
+      "note": "P4-11 blind review F2: both ACP session paths mount the request's MCP servers charged to the session they open. The resume path is the case; the create path is its control, so the resume case measures the pass-through and not a broken spy."
+    },
+    {
+      "epic": "P4-11",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-11",
+        "stage": "U"
+      },
+      "supplementSeq": 5,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/llm/llm-retry/tests/run-budget.spec.ts",
+        "-t",
+        "keeps a spent RUN budget spent for the session’s later turns: nothing resets it while the process lives",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-11 must[1]: the LLM layer charges the run, not the session keeps a spent RUN budget spent for the session’s later turns: nothing resets it while the process lives"
+      ],
+      "files": [
+        "packages/llm/llm-retry/tests/run-budget.spec.ts",
+        "packages/reliability/retry/src/usage.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T14:03:54Z",
+      "dryRunProof": {
+        "treeSha": "d944bcd53c441b492e0394895b6226460a383c42",
+        "testsDiscovered": 1
+      },
+      "sensitivityProof": {
+        "mutationDescription": "None, by the delegate's ruling (2026-09-24): the case pins a known limitation of the shipped code, not a fix, and a mutation would have to add production code that forgets a Run's usage.",
+        "failureSummary": "The cases commit `dc7f87adcdf374716fe9a167560be358046c31eb`, run 36008748262, and the fix `1dc5b6bad7e753932658aedb5de8c51a7688a21f`, run 36008774181: 39 of 39 over reconnect.spec.ts, mcp-charge-session.spec.ts and run-budget.spec.ts. The case reads 3 requests after the first turn and 4 after the second; a budget reset per turn would give 6."
+      },
+      "note": "P4-11 blind review F3, pinned as a known limitation: a Run lasts as long as its session and no production code forgets its usage, so a budget one turn spends stays spent for the session's later turns while the process lives. Written into the retry README's known limitations and the P4-11 Agent Note."
     }
   ]
 }

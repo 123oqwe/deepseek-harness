@@ -3485,7 +3485,8 @@
       "path": "packages/acp/acp/src/mcp.ts",
       "kind": "source",
       "stages": [
-        "U.2"
+        "U.2",
+        "U.4"
       ],
       "reason": "Changed by P4-11 part 2 (fix `4ff421f091`): `mountAcpMcpServers` takes the session and passes it to each MCP server it mounts as `chargeSession`, so a per-session server charges its reconnects to that session's Run. P4-11 U.2 case E depends on it."
     },
@@ -3494,9 +3495,26 @@
       "path": "packages/acp/acp/src/session.ts",
       "kind": "source",
       "stages": [
-        "U.2"
+        "U.2",
+        "U.4"
       ],
       "reason": "Changed by P4-11 part 2 (fix `4ff421f091`): both ACP session paths pass their session id to `mountAcpMcpServers`. P4-11 U.2 case E depends on it."
+    },
+    {
+      "epic": "P4-11",
+      "path": "packages/acp/acp/tests/harness.ts",
+      "kind": "test",
+      "stages": [
+        "U.4"
+      ]
+    },
+    {
+      "epic": "P4-11",
+      "path": "packages/acp/acp/tests/mcp-charge-session.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.4"
+      ]
     },
     {
       "epic": "P4-11",
@@ -3526,6 +3544,14 @@
     },
     {
       "epic": "P4-11",
+      "path": "packages/llm/llm-retry/tests/run-budget.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.5"
+      ]
+    },
+    {
+      "epic": "P4-11",
       "path": "packages/llm/llm/src/index.ts",
       "kind": "source",
       "stages": [
@@ -3539,7 +3565,8 @@
       "path": "packages/mcp/mcp-client/src/connection.ts",
       "kind": "source",
       "stages": [
-        "U.2"
+        "U.2",
+        "U.3"
       ],
       "reason": "Changed by P4-11 part 2 (fix `4ff421f091`): a reconnect of a server mounted for one session asks that session's run budget and charges it, and gives up once the budget refuses. P4-11 U.2 case E observes it on the shipped acp profile."
     },
@@ -3551,6 +3578,14 @@
         "U.2"
       ],
       "reason": "Changed by P4-11 part 2 (PRECHECK `f48ee19408`): the runtime-only `chargeSession` field of the two MCP server config interfaces, naming the session whose Run each reconnect is charged to. P4-11 U.2 case E reaches it through the acp mount."
+    },
+    {
+      "epic": "P4-11",
+      "path": "packages/mcp/mcp-client/tests/reconnect.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
+      ]
     },
     {
       "epic": "P4-11",
@@ -3658,7 +3693,8 @@
       "kind": "source",
       "stages": [
         "U",
-        "F"
+        "F",
+        "U.5"
       ],
       "reason": "Where one run's retry spending is kept, and the self-provided service that mounts it. `admitRetry` is pure and returns the usage a caller should store, so two layers can only share a total by reading and writing the SAME store -- a per-layer copy is the duplication this epic ends. The allowance lives on the store rather than in each caller's parameters for the same reason: two layers passing their own budgets would share a total and disagree about the ceiling."
     },
