@@ -19,7 +19,7 @@
 
 import { createHash } from 'node:crypto'
 import { brandString } from '@deepseek-ai/dsh-brand'
-import { planResume, readJournal, setJournalAside } from '@deepseek-ai/dsh-workflow-journal'
+import { planResume, readJournal } from '@deepseek-ai/dsh-workflow-journal'
 import type { ScriptDigest, WorkflowJournal } from '@deepseek-ai/dsh-workflow-journal'
 import type { LedgerState } from '@deepseek-ai/dsh-action-ledger'
 
@@ -167,7 +167,6 @@ export async function reusableSteps(
   if (!plan.resumable) {
     // The run starts over under the same id, and its fresh recorder would
     // overwrite this journal on its first write (acceptance[2]).
-    setJournalAside(directory, runId, journal.scriptDigest.slice(0, 12))
     return { reusable: {}, journal: undefined, refused: { reason: plan.reason, detail: plan.detail } }
   }
 
