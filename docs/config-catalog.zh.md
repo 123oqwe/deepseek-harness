@@ -1717,6 +1717,9 @@ export interface StdioConfig {
    * must[1]). A per-session mount sets it, as `dsh-acp` does for every ACP
    * session; a server mounted for the whole host serves every run and belongs
    * to none, so it leaves this absent and keeps only `reconnect`'s budget.
+   * Never set it in `cordis.yml`: the schema does not declare it, and cordis
+   * passes undeclared keys through, so a value written there would charge a
+   * host-wide server's reconnects to that one session's Run.
    */
   chargeSession?: SessionId
 }
@@ -1767,6 +1770,9 @@ export interface StreamableHttpConfig {
    * must[1]). A per-session mount sets it, as `dsh-acp` does for every ACP
    * session; a server mounted for the whole host serves every run and belongs
    * to none, so it leaves this absent and keeps only `reconnect`'s budget.
+   * Never set it in `cordis.yml`: the schema does not declare it, and cordis
+   * passes undeclared keys through, so a value written there would charge a
+   * host-wide server's reconnects to that one session's Run.
    */
   chargeSession?: SessionId
 }
@@ -1786,7 +1792,7 @@ export interface ReconnectConfig {
 
 依赖： [`SessionId`](subsystems/core.zh.md)
 
-来源： [`packages/mcp/mcp-client/src/index.ts:155`](../packages/mcp/mcp-client/src/index.ts)
+来源： [`packages/mcp/mcp-client/src/index.ts:161`](../packages/mcp/mcp-client/src/index.ts)
 
 <a id="deepseek-aidsh-memory"></a>
 

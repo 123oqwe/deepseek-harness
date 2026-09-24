@@ -210,7 +210,11 @@ export class BasicCompactionEngine extends CompactionEngine {
           }
         }))
         /* jscpd:ignore-end */
-        if (charged !== undefined && !budgets.admit(charged, 0).admitted) return next()
+        const decision = charged === undefined ? undefined : budgets.admit(charged, 0)
+        if (decision?.admitted === false) {
+          ctx.logger.warn(`context-overflow compaction skipped: the run's retry budget refused it (${decision.reason})`)
+          return next()
+        }
       }
 
       const generation = agent.session.surface.replaceGeneration
