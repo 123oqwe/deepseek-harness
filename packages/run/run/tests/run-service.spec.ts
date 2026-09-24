@@ -22,7 +22,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { createFileRunStore, RunService } from '../src/index.ts'
+import { createFileRunStore, RunService, type RunStore } from '../src/index.ts'
 import { RUN_SERVICE_OWNER_ID } from '../src/state-machine.ts'
 import { RunEventSeq } from '../src/types.ts'
 import type { ArtifactRef, Run } from '../src/types.ts'
@@ -193,6 +193,79 @@ describe('acceptance[2]: one Session associates with multiple Runs, one Run span
     const restarted = await boot()
     expect(restarted.get(RUN_A)?.sessionIds).toEqual([SESSION_1, SESSION_2])
     expect(restarted.runsForSession(SESSION_2).map(run => run.id)).toEqual([RUN_A])
+  })
+})
+
+/**
+ * The real file store with writes that can be held, so a case can queue work on a Run behind a write that has not
+ * finished.
+ * @returns the store, and a function that holds every write until the release it returns is called.
+ */
+function heldStore(): { store: RunStore; hold: () => () => void } {
+  const file = createFileRunStore(storePath)
+  let gate: Promise<void> | undefined
+  return {
+    store: {
+      loadAll: () => file.loadAll(),
+      put: async (run: Run) => {
+        if (gate !== undefined) await gate
+        await file.put(run)
+      },
+    },
+    hold: () => {
+      let release!: () => void
+      gate = new Promise((resolve) => { release = resolve })
+      return () => {
+        gate = undefined
+        release()
+      }
+    },
+  }
+}
+
+describe('P4-01/329 blind review F3 and N1: a Session joins a Run only while the owner\'s lease admits the write, and never an ended Run', () => {
+  it('refuses the join when the owner\'s lease stops admitting writes after the join is requested and before it is written', async () => {
+    const { store, hold } = heldStore()
+    const service = await RunService.restore(store)
+    await service.accept(RUN_A, SESSION_1, 1_000)
+    let admits = true
+    const fence = { mayWrite: () => admits }
+    const release = hold()
+    // A write already on the Run's chain holds its turn, so the join waits behind it.
+    const earlier = service.advance(RUN_A, 'planning', [], 1_100)
+    const join = service.attachSession(RUN_A, SESSION_2, fence)
+    admits = false
+    release()
+    await earlier
+
+    expect(await join).toMatchObject({ accepted: false, reason: 'fenced' })
+    expect(service.get(RUN_A)?.sessionIds).toEqual([SESSION_1])
+  })
+
+  it('refuses the join when the owner\'s lease store cannot answer, rather than writing it without that authority', async () => {
+    const service = await boot()
+    await service.accept(RUN_A, SESSION_1, 1_000)
+    const fence = { mayWrite: (): boolean => { throw new Error('the lease store is unreachable') } }
+
+    expect(await service.attachSession(RUN_A, SESSION_2, fence)).toMatchObject({ accepted: false, reason: 'lease-unavailable' })
+    expect(service.get(RUN_A)?.sessionIds).toEqual([SESSION_1])
+  })
+
+  it('refuses to add a Session to a Run that has reached a terminal state', async () => {
+    const service = await boot()
+    await service.accept(RUN_A, SESSION_1, 1_000)
+    expect((await service.advance(RUN_A, 'cancelled', [], 1_100)).accepted).toBe(true)
+
+    expect(await service.attachSession(RUN_A, SESSION_2)).toMatchObject({ accepted: false, reason: 'terminal' })
+    expect(service.get(RUN_A)?.sessionIds).toEqual([SESSION_1])
+  })
+
+  it('control: writes the join while the owner\'s lease admits it', async () => {
+    const service = await boot()
+    await service.accept(RUN_A, SESSION_1, 1_000)
+
+    await service.attachSession(RUN_A, SESSION_2, { mayWrite: () => true })
+    expect(service.get(RUN_A)?.sessionIds).toEqual([SESSION_1, SESSION_2])
   })
 })
 
