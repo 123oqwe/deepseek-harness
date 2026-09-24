@@ -17,7 +17,8 @@
  * (`<sidecar>/logs/<gateId>.log`) and every listed artifact at its real
  * repo-relative path. Re-hashes `.dsh/baseline.json` against
  * `baselineFingerprint.digest`, the sidecar `gitdiff.patch` against
- * `gitDiff.digest`, the sidecar `manifest.json` against
+ * `gitDiff.digest` (and takes the working-tree patch again, `workingTreePatch`,
+ * against the same digest), the sidecar `manifest.json` against
  * `sidecarManifestDigest`, and every `requiredBuildArtifacts` path. When
  * `.dsh/baseline.json` is unchanged, re-derives the fingerprint it records
  * from the checkout (`verifyBaseline`, P0-01): a new HEAD, another Node or
@@ -60,12 +61,11 @@
  * that cannot run, for example because git or pnpm is missing, is a named
  * mismatch, so the result line is always printed.
  */
-import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { verifyBaseline } from './baseline-fingerprint.mjs'
-import { digestOfFile, digestOfValue, sidecarDir } from './collect-evidence.mjs'
+import { digestOfFile, digestOfValue, sidecarDir, workingTreePatch } from './collect-evidence.mjs'
 
 function flagOne(flags, name, fallback) {
   const values = flags.get(name)
@@ -231,11 +231,11 @@ export function verify(repoRoot, evidencePath) {
     const recomputed = digestOfFile(diffPath)
     if (recomputed !== pkg.gitDiff.digest) mismatches.push(`gitDiff digest mismatch (recorded ${pkg.gitDiff.digest}, recomputed ${recomputed})`)
   }
-  // The same diff collection recorded, taken again from the working tree.
+  // The same working-tree patch the last collection step recorded, taken again.
   try {
-    const workingTree = execFileSync('git', ['diff', pkg.gitDiff.baseSha], { cwd: repoRoot, encoding: 'utf8' })
+    const workingTree = workingTreePatch(repoRoot, pkg.gitDiff.baseSha, evidencePath)
     if (createHash('sha256').update(workingTree).digest('hex') !== pkg.gitDiff.digest) {
-      mismatches.push(`the working tree differs from the diff recorded at collection (git diff ${pkg.gitDiff.baseSha})`)
+      mismatches.push(`the working tree differs from the diff recorded at collection (against ${pkg.gitDiff.baseSha})`)
     }
   } catch (error) {
     mismatches.push(`working-tree diff re-derivation failed: ${errorText(error)}`)
