@@ -58,7 +58,7 @@ describe('P4-08 acceptance[2]: a refused resume keeps the journal it refused', (
     const reconciled = await reusableSteps(dir, 'run-refused', `${SCRIPT} // edited`, () => Promise.resolve(true), undefined)
     expect(reconciled.refused).toMatchObject({ reason: 'script-digest-changed' })
     // The new run's first persist, as the host's fresh recorder writes it.
-    writeJournal(dir, 'run-refused', { scriptDigest: scriptDigestOf(`${SCRIPT} // edited`), entries: [] } as unknown as WorkflowJournal)
+    writeJournal(dir, 'run-refused', { scriptDigest: scriptDigestOf(`${SCRIPT} // edited`), entries: [] })
 
     const kept = readdirSync(join(dir, 'refused'))
     expect(kept).toEqual([`run-refused.${scriptDigestOf(SCRIPT).slice(0, 12)}.json`])
