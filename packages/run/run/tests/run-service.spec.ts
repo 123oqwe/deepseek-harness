@@ -283,3 +283,29 @@ describe('createFileRunStore: the durability seam itself', () => {
     expect(await readFile(nested, 'utf8')).toContain(RUN_A)
   })
 })
+
+describe('P4-07 must[1]: a Run write carries its writer\'s lease and is checked where it is written', () => {
+  it('refuses the first step\'s write when the fence no longer admits its writer, and records nothing', async () => {
+    const first = await boot()
+    await first.accept(RUN_A, SESSION_1, 1_000)
+    const asked: number[] = []
+
+    const decision = await first.advance(RUN_A, 'planning', [], 1_100, { mayWrite: (nowMs) => { asked.push(nowMs); return false } })
+
+    expect(decision).toEqual({ accepted: false, reason: 'fenced', from: 'accepted', to: 'planning' })
+    // The fence was asked at the write's own time, and the refusal reached the store too.
+    expect(asked).toEqual([1_100])
+    expect(first.get(RUN_A)?.state).toBe('accepted')
+    expect((await boot()).get(RUN_A)?.events).toHaveLength(1)
+  })
+
+  it('admits the same write while the fence still admits its writer (control)', async () => {
+    const first = await boot()
+    await first.accept(RUN_A, SESSION_1, 1_000)
+
+    const decision = await first.advance(RUN_A, 'planning', [], 1_100, { mayWrite: () => true })
+
+    expect(decision.accepted).toBe(true)
+    expect((await boot()).get(RUN_A)?.state).toBe('planning')
+  })
+})

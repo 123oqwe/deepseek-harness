@@ -1,0 +1,32 @@
+# Test-only overlay over the SHIPPED headless profile for P4-07. The shipped
+# `run` and `lease-store` rows stay as `packages/bundle/base/cordis.patch.yml`
+# ships them; this overlay only turns off the entry rows, mounts no profile
+# agent, and supplies a keyless model and a readable session log.
+#
+# No profile agent: the driver creates the one agent each case needs, so no
+# other agent holds a lease or renews one while a case holds the store's lock
+# (a heartbeat that meets the lock throws out of its timer).
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: agent-loop
+  config:
+    agents: []
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
+
+- insert:
+    - id: p4-07-mock-llm
+      name: './mock-llm.ts'

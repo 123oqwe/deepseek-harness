@@ -50,7 +50,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent/types'
 import { advanceAgentLifecycleFenced, advanceLeasedAgent, holdsDispatchSlot } from '@deepseek-ai/dsh-agent'
 import type { AgentLifecycleState, AgentRunId, TransitionDenialReason } from '@deepseek-ai/dsh-agent'
 import { acquireRunLease, describePredecessor } from '@deepseek-ai/dsh-lease-contract'
-import type { PredecessorState } from '@deepseek-ai/dsh-lease-contract'
+import type { PredecessorState, RunLease } from '@deepseek-ai/dsh-lease-contract'
 import type { WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease-contract'
 // The `agent/session-start` declaration this plugin subscribes to is merged
 // into Cordis's event map by the agent package's runtime face, not its
@@ -467,6 +467,7 @@ export class RunService {
    * @param to - the state the Run is asked to move to.
    * @param references - entities this transition names (must[1]), possibly empty.
    * @param occurredAt - non-negative safe-integer Unix epoch milliseconds this transition is stamped with.
+   * @param _fence - the writer's lease; not read yet.
    * @returns `./state-machine.ts`'s decision, unchanged.
    *
    * **Ordering.** The decision is computed against the Run as of this call's
@@ -485,6 +486,7 @@ export class RunService {
     to: RunState,
     references: readonly RunEntityReference[],
     occurredAt: number,
+    _fence?: Pick<RunLease, 'mayWrite'>,
   ): Promise<RunTransitionDecision> {
     return await this.serialize(id, (run) => {
       const decision = transition(run, to, references, occurredAt)
