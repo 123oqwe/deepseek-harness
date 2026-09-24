@@ -7,8 +7,9 @@
  * under `workspace-write`, the Trust Kernel pinned the way
  * `apps/cli/src/profile-boot.ts` pins it. In `fenced` mode it also layers
  * `./fenced-only.patch.yml`, which removes the local world provider's row, so
- * the fenced provider builds the world. The scripted model calls the shipped
- * `read` tool on the file once.
+ * the fenced provider builds the world. It creates the root agent after boot,
+ * as a shipped launcher does, and the scripted model calls the shipped `read`
+ * tool on the file once.
  *
  * It prints one `P3-01-SWAP <json>` line: the world binding the session
  * recorded, the manifests it appended, the policy records the kernel audited,
@@ -17,14 +18,17 @@
  * @module tests/first100/fixtures/loader/p3-01-world-swap/driver
  */
 
+import { randomUUID } from 'node:crypto'
 import { writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
+import { HOST_USER_IDENTITY_KEY, type HostUserIdentityFactory } from '@deepseek-ai/dsh-agent-loop'
 import { resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
 import { runFixtureTurn } from '@deepseek-ai/dsh-loader-smoke'
 import { endorseComposedDecision } from '@deepseek-ai/dsh-policy-enforcement'
 import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
+import { createFixtureRootAgent } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts'
 import { bootProductionProfile } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/production-profile.ts'
-import { READ_FILE, READ_LINE } from './shared.ts'
+import { PROVIDER, READ_FILE, READ_LINE } from './shared.ts'
 
 const fencedOnly = fileURLToPath(new URL('./fenced-only.patch.yml', import.meta.url))
 
@@ -64,6 +68,16 @@ const ctx = await bootProductionProfile({
   },
 })
 try {
+  // Created after boot, as a shipped launcher creates its root agent, so its
+  // session starts once the capability-token service is listening.
+  await createFixtureRootAgent(ctx, {
+    provider: PROVIDER,
+    model: PROVIDER,
+    cwd: process.cwd(),
+    identity: (ctx.get(HOST_USER_IDENTITY_KEY) as HostUserIdentityFactory | undefined)?.(
+      `run-${randomUUID()}` as Parameters<HostUserIdentityFactory>[0],
+    ),
+  })
   await runFixtureTurn(ctx, { task: 'P3-01: read the file once.' })
   const events = ctx.sessions.list().flatMap(session => session.snapshotEvents())
   const report: Report = {
