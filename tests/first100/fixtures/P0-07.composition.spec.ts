@@ -149,6 +149,7 @@ interface WorkflowStep {
   readonly uses?: string
   readonly if?: string
   readonly 'continue-on-error'?: unknown
+  readonly shell?: string
 }
 
 /** A publish workflow, as far as these cases read it. */
@@ -167,22 +168,41 @@ interface PublishWorkflow {
  * with no condition and no `continue-on-error` on the step or its job, so a
  * failed verify fails the job.
  */
+/** The verify step's whole command: the verify command and one evidence path, nothing after it. */
+const VERIFY_COMMAND = /^(?:pnpm run evidence:verify|node scripts\/release\/verify-evidence\.mjs) --evidence \S+$/u
+
+/** The step finder the cases share: the one step that verifies the evidence package. */
+const VERIFY_STEP = /evidence:verify --evidence|scripts\/release\/verify-evidence\.mjs --evidence/
+
+/**
+ * What would let a failed verify pass its step.
+ * @param step - the verify step.
+ * @returns one entry per problem; empty when only the verify command decides the step.
+ */
+function verifyStepProblems(step: WorkflowStep | undefined): string[] {
+  const problems: string[] = []
+  if (step?.if !== undefined) problems.push('if')
+  if (step?.['continue-on-error'] !== undefined) problems.push('continue-on-error')
+  // The step's whole command is the verify command: `|| true`, a pipe, a
+  // second command or `set +e` would each let a failed verify pass the step.
+  if (!VERIFY_COMMAND.test(step?.run?.trim() ?? '')) problems.push('command')
+  return problems
+}
+
+/** The verify command the release workflows run, as a fragment writes it. */
+const VERIFY_RUN = 'pnpm run evidence:verify --evidence .dsh/evidence/evidence.json'
+
 describe('P0-07 validation[2] -- the publish workflows verify the evidence package before they upload it', () => {
   it.each(['release-publish.yml', 'release-vendor-publish.yml', 'node-addon-system-release.yml'])('%s verifies the evidence package in a step that runs only the verify command, after every collect step and before the upload its publish job needs', (file) => {
     const workflow = load(readFileSync(join(repoRoot, '.github/workflows', file), 'utf8')) as PublishWorkflow
     const steps = workflow.jobs.pack.steps
-    const verify = steps.findIndex(step => /evidence:verify --evidence|scripts\/release\/verify-evidence\.mjs --evidence/.test(step.run ?? ''))
+    const verify = steps.findIndex(step => VERIFY_STEP.test(step.run ?? ''))
     expect(verify, `${file}: no step verifies the evidence package`).toBeGreaterThanOrEqual(0)
 
     const collects = steps.flatMap((step, index) => /collect-evidence\.mjs/.test(step.run ?? '') ? [index] : [])
     expect(collects.length).toBeGreaterThan(0)
     expect(collects.filter(index => index > verify)).toEqual([])
-    expect(steps[verify]?.if).toBeUndefined()
-    expect(steps[verify]?.['continue-on-error']).toBeUndefined()
-    // The step's whole command is the verify command: `|| true`, a pipe, a
-    // second command or `set +e` would each let a failed verify pass the step.
-    expect(steps[verify]?.run?.trim(), `${file}: the verify step runs more than the verify command`)
-      .toMatch(/^(?:pnpm run evidence:verify|node scripts\/release\/verify-evidence\.mjs) --evidence \S+$/u)
+    expect(verifyStepProblems(steps[verify]), `${file}: what would let a failed verify pass the step`).toEqual([])
     expect(workflow.jobs.pack['continue-on-error'], `${file}: the pack job may fail softly`).toBeUndefined()
 
     const upload = steps.findIndex(step => (step.uses ?? '').startsWith('actions/upload-artifact'))
@@ -195,5 +215,23 @@ describe('P0-07 validation[2] -- the publish workflows verify the evidence packa
 
     const needs = workflow.jobs.publish.needs
     expect(typeof needs === 'string' ? [needs] : needs).toContain('pack')
+  })
+
+  it('the verify-step rule accepts a step that runs only the verify command', () => {
+    const steps = load(`- run: ${VERIFY_RUN}\n`) as WorkflowStep[]
+    expect(verifyStepProblems(steps.find(step => VERIFY_STEP.test(step.run ?? '')))).toEqual([])
+  })
+
+  it.each([
+    ['||true glued to the path', `- run: ${VERIFY_RUN}||true\n`],
+    [';true glued to the path', `- run: ${VERIFY_RUN};true\n`],
+    ['|tee glued to the path', `- run: ${VERIFY_RUN}|tee\n`],
+    ['& glued to the path', `- run: ${VERIFY_RUN}&\n`],
+    ['a shell: override', `- run: ${VERIFY_RUN}\n  shell: bash {0}\n`],
+  ])('the verify-step rule refuses a verify step with %s', (_label, fragment) => {
+    const steps = load(fragment) as WorkflowStep[]
+    const verify = steps.find(step => VERIFY_STEP.test(step.run ?? ''))
+    expect(verify, fragment).toBeDefined()
+    expect(verifyStepProblems(verify), fragment).not.toEqual([])
   })
 })
