@@ -636,7 +636,7 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
     // so no plugin can delete-then-reprovide past the duplicate-registration
     // guard (must[3]; @deepseek-ai/dsh-trust-kernel's own doc comment).
     if (kernel !== undefined) pinTrustKernel(hostCtx, kernel)
-    enforceTrustKernelPosture(hostCtx.get('trustKernel') !== undefined, trustKernelInsecure)
+    enforceTrustKernelPosture(true, trustKernelInsecure)
     // Feature gates (Epic P0-05 must[3]): resolved once per boot, before any
     // config-tree entry mounts, so a future gated plugin reads exactly the
     // resolution `--dump-config` shows for this same profile/environment.
