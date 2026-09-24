@@ -398,6 +398,15 @@ describe('released v1 whole-artifact relationships', () => {
       .toThrow(SessionFormatUnsupportedMigrationError)
   })
 
+  it('restores a released v0 log whose subagent descriptor is version 2, the version v0-era builds wrote', () => {
+    const released = {
+      type: 'subagent/descriptor', seq: 0, time: 1,
+      data: { version: 2, mode: 'one-shot', provider: 'spawn', label: 'child' },
+    }
+    const v0Header = { ...header, version: 0 }
+    expect(restoreV0ToV1(v0Header, [released]).events).toEqual([released])
+  })
+
   it('enforces compaction ownership, summaries, turn boundaries, and surface spans', () => {
     const startTurn = { type: 'turn/start', seq: 0, time: 1, data: { turn: 1 } }
     const start = (seq: number, turn: number | null = 1) => ({
