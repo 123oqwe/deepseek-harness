@@ -672,7 +672,7 @@ class JsonlSessionPersistence extends SessionPersistence {
   ): Error {
     if (error instanceof JsonlGenerationUnsupportedMigrationError) {
       return new SessionFormatUnsupportedError(
-        `${error.message}; source v${error.fromVersion} artifact remains unchanged (raw log: ${selected.sourcePath})`,
+        '',
         { kind: 'jsonl', path: selected.sourcePath },
       )
     }
