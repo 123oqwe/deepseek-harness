@@ -18,10 +18,10 @@
  * non-terminal forever, which is `BLOCKED-196`'s opening measurement and the
  * accident the adoption case replaces with a decision.
  *
- * `attachSession` is NOT wired and one case freezes that absence
- * (`BLOCKED-196`): a Run spanning sessions is writable under two independent
- * authorities, because the lease's work item is the session and a Run's own
- * writes present no lease at all.
+ * A child session the registry records as owned joins its owner's Run as a
+ * member, and one case pins that across a restart only the owner's Run carries
+ * two sessions: the owner's lease is the one authority over it (BLOCKED-196,
+ * BLOCKED-309).
  */
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -366,24 +366,28 @@ describe('P4-01 acceptance[1]: an illegal transition is refused on the productio
   })
 })
 
-describe('P4-01 acceptance[2] negative half: no Run spans sessions today (BLOCKED-196)', () => {
-  it('opens an independent Run per session, so a second session never joins the first\'s Run', async () => {
-    // Frozen as an ABSENCE, deliberately. `attachSession` is implemented,
-    // durable and tested, and wiring it would make one Run's append-only log
-    // writable under two independent authorities: the lease's work item is the
-    // SESSION, and `advance`/`attachSession` present no lease at all. This case
-    // reddens the day someone wires it without reading BLOCKED-196.
+describe('P4-01 acceptance[2]: a Run spans its root session and the sessions that root owns, and no other session', () => {
+  it('opens an independent Run per root session, and keeps only an owned child in another\'s Run across a restart', async () => {
+    // The owner's lease is the one authority over the owner's Run: a child
+    // joins it as a member, and a second ROOT session never does.
     const path = await storePath()
-    const ctx = await mount(path)
-    const alpha = await ctx.agentLoop.create(SessionId('session-one'))
-    const beta = await ctx.agentLoop.create(SessionId('session-two'))
+    const first = await mount(path)
+    const alpha = await first.agentLoop.create(SessionId('session-one'))
+    const beta = await first.agentLoop.create(SessionId('session-two'))
+    const { agent: gamma } = await alpha.ctx.agents.create({
+      sessionId: SessionId('session-three'), parentAgent: alpha, meta: { parentSession: alpha.id },
+    })
+    const [alphaRun, betaRun] = [alpha.runId!, beta.runId!]
+    // The unload awaits every write, so the restored registry holds every join that happened.
+    await first.fiber.dispose()
+    mounted.length = 0
 
-    expect(alpha.runId).not.toBe(beta.runId)
-    expect(ctx.runs.service.get(alpha.runId!)?.sessionIds).toStrictEqual([alpha.id])
-    expect(ctx.runs.service.get(beta.runId!)?.sessionIds).toStrictEqual([beta.id])
-    // And no Run in the store carries two sessions, which is the claim rather
-    // than a property of these two agents.
-    for (const run of ctx.runs.service.listNonTerminal()) expect(run.sessionIds).toHaveLength(1)
+    const second = await mount(path)
+    expect(second.runs.service.get(alphaRun)?.sessionIds).toStrictEqual([alpha.id, gamma.id])
+    expect(second.runs.service.get(betaRun)?.sessionIds).toStrictEqual([beta.id])
+    // The one Run that carries two sessions is the owner's, which is the claim
+    // rather than a property of these three agents.
+    expect(second.runs.service.listNonTerminal().filter(run => run.sessionIds.length > 1).map(run => run.id)).toStrictEqual([alphaRun])
   })
 })
 
