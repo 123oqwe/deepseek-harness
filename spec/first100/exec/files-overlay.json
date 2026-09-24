@@ -4501,6 +4501,14 @@
     },
     {
       "epic": "P8-01",
+      "path": "tests/first100/fixtures/P8-01.real-handshake-ts-client.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.5"
+      ]
+    },
+    {
+      "epic": "P8-01",
       "path": "tests/first100/fixtures/P8-01.run-provenance.spec.ts",
       "kind": "test",
       "stages": [

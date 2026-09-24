@@ -18514,6 +18514,42 @@
         "failureSummary": "PRECHECK bc1d5fcf0c, run 36060142805: 8 passed / 5 failed, exactly the five fragment refusals (||true, ;true, |tee and & glued to the path, and a shell: override); the fragment acceptance and the three real workflows passed. FIX cb46966eaa, run 36060166355: 13 passed / 0 failed. M-wf-or, run 36060190256: 12 passed / 1 failed, exactly the release-publish.yml row ('release-publish.yml: what would let a failed verify pass the step: expected [ 'command' ] to deeply equal []'). M-wf-shell, run 36060211775: 12 passed / 1 failed, exactly the release-publish.yml row (expected [ 'shell' ] to deeply equal []). All four readings match `artifacts/laneA/a-386-la3-v3-expectations.md` (sha256 `958c3084dca7d35abf2cda37b7c77e60ffc540c6ed853f7a5beee4f5b6072f36`), written before the case changed; the delegate compared them case by case."
       },
       "note": "P0-07's second U supplement (LA-4 holds the first): validation[2] and S2, the publish paths. A release workflow cannot be triggered from a test, so the case reads the three real publish workflows with js-yaml (the pipeline-structure assertion BLOCKED-292's closing condition (3) allows). In each: a step runs `evidence:verify --evidence` or `scripts/release/verify-evidence.mjs --evidence` (asserted found first); every step running `collect-evidence.mjs` comes before it (at least one exists); `verifyStepProblems` finds nothing on it: no `if`, no `continue-on-error`, no `shell:`, and a whole command that is the verify command followed by one evidence path of word characters, dots, slashes and hyphens, so `|| true`, a pipe, a second command, `set +e`, a suffix glued to the path or a custom shell cannot let a failed verify pass the step; the `pack` job has no `continue-on-error`; the `actions/upload-artifact` step comes after it and has no `if`; every step between them is `if: always()` and collects nothing; and `jobs.publish.needs` includes `pack`. The same `verifyStepProblems` judges six YAML step fragments: it accepts a step that runs only the verify command and refuses `||true`, `;true`, `|tee` or `&` glued to the path and a `shell:` override. It observes the workflow files, not a run of them. v3 supersedes [379] after the delegate (A-386) found that v2 accepted a suffix glued to the evidence path."
+    },
+    {
+      "epic": "P8-01",
+      "stage": "U",
+      "supplements": {
+        "epic": "P8-01",
+        "stage": "U"
+      },
+      "supplementSeq": 5,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P8-01.real-handshake-ts-client.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P8-01 on the shipped sdk profile: the shipped TypeScript client over a real handshake control: the peer is the shipped sdk runtime",
+        "P8-01 on the shipped sdk profile: the shipped TypeScript client over a real handshake BLOCKED-314 condition 1(3): the caller receives the server's protocolVersions",
+        "P8-01 on the shipped sdk profile: the shipped TypeScript client over a real handshake BLOCKED-314 condition 1(3): the caller receives the server's schemaFingerprint, the one the committed control-protocol artifact records"
+      ],
+      "files": [
+        "tests/first100/fixtures/P8-01.real-handshake-ts-client.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T19:13:09Z",
+      "dryRunProof": {
+        "treeSha": "271b82812ba189a3d870f8c223b5ed3270e3c72f",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations off PRECHECK `223937124420e5a77f4092606bdfe6f33047f1fa` (on 43b89917a0), one line of the shipped TypeScript client each, never merged, run by CI's narrow job at its own SHA with a build first. M-pv (`a60bf2d173173da967b6b7d9522c1f72fecb38d0`): `packages/sdk/client/src/client.ts:316` reads `readRange('protocolVersions', undefined)`, so the caller receives no protocolVersions while `readRange` keeps its caller (deleting the line would leave it unused and fail the build under noUnusedLocals). M-fp (`c1e5049a4addd9fb0726c01cda1bb2b3e5423d2c`): `client.ts:317`, the line that copies schemaFingerprint, is deleted.",
+        "failureSummary": "Baseline: PRECHECK, narrow run 36046212765 over exactly this entry's argv: 3 passed / 0 failed. M-pv, run 36046236731: exactly the protocolVersions case red, the control and schemaFingerprint cases green. M-fp, run 36046259818: exactly the schemaFingerprint case red, the control and protocolVersions cases green. All three match artifacts/laneA/a-375a-ts-real-handshake-expectations.md (sha256 e972a1c0bee042c1672419b9d22aedce28c20c546b1607cfa1f72ab6c09de18f) with its v2 (sha256 d472a34058201f12f8cf29ca5be90946e3d53ecc37ac0b8d5fef36b8ee9d44cb, which changed only how M-pv is made), both written before the runs; the delegate compared them case by case. Reports: ~/first100-delegate/artifacts/gate-<run>/narrow-report-<sha>/narrow-report.json."
+      },
+      "note": "The TypeScript half of BLOCKED-314's closing condition 1(3): over a real handshake, the shipped client hands its caller `protocolVersions` and `schemaFingerprint`. The client is `@deepseek-ai/dsh-sdk-client`'s public `HarnessClient`, launching `apps/cli/src/bin.ts --profile sdk` through its own `dshBin` option with `NODE_OPTIONS='--import tsx/esm'`, as P8-01.run-provenance.spec.ts launches the source bin; its `initialize` meets the shipped server, with no scripted peer. The expected fingerprint is read from the committed `spec/control-protocol.schema.json`. Green on today's client: this case adds the real peer to the chain the blind review F2 described, and is not a red-first case. The Python half waits for lane B's B-582 (a narrow Python job that builds the node carrier), because every current CI job that runs python/sdk skips test_bundled_runtime.py for want of a carrier."
     }
   ]
 }
