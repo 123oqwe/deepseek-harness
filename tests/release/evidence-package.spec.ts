@@ -926,6 +926,15 @@ describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', { ti
       expect(result.status, result.stdout).toBe(1)
       expect(result.stdout).toContain('the working tree differs from the diff recorded at collection')
     })
+
+    it('detects an untracked configuration file added after the last collection step', () => {
+      const { root } = collectOneAcceptedGate()
+      write(root, '.npmrc', 'registry=https://registry.invalid/\n')
+
+      const result = verifyEvidence(root)
+      expect(result.status, result.stdout).toBe(1)
+      expect(result.stdout).toContain('the working tree differs from the diff recorded at collection')
+    })
   })
 
   describe('Epic P0-07 F-stage: must[2] fault/qualification hardening beyond acceptance[0]\'s existing coverage', () => {
