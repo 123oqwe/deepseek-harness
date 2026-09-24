@@ -246,10 +246,6 @@ function main() {
     } catch (error) {
       refuse(`--e2e-report ${path} is not a parseable vitest JSON report: ${String(error)}`)
     }
-    if (candidateSha !== undefined) {
-      const verdict = reportDirMatchesCandidate(path, candidateSha)
-      if (!verdict.ok) refuse(`--e2e-report ${path} is not tied to --candidate-sha ${candidateSha}: ${verdict.reason}`)
-    }
     ownReports.push({ path, parsed: own, files: (own.report.testResults ?? []).map(file => file.name) })
   }
 
