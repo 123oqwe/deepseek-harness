@@ -342,10 +342,6 @@ export function apply(ctx: Context, config: Config): void {
       if (args.resume !== undefined && !/^[\w-]+$/u.test(args.resume)) {
         throw new Error(`workflow tool: \`resume\` must be a runId a workflow run reported, not ${JSON.stringify(args.resume)}`)
       }
-      // Without this the detached branch below would start a new run and drop `resume`.
-      if (args.resume !== undefined && args.detached === true) {
-        throw new Error('workflow tool: `resume` continues a run in the foreground — give it without `detached`')
-      }
 
       // P4-09 must[2], the start half: a detached run holds its OWN agent and
       // session, so nothing about it depends on this turn's scopes. The runId
