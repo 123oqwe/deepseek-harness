@@ -20,11 +20,12 @@
  *     frozen commands (argv + case-titles set) are identical -- a shared
  *     digest with genuinely different frozen commands is legitimate.
  */
-import { execFileSync } from 'node:child_process'
+import { execFileSync, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { load } from 'js-yaml'
 import { afterEach, describe, expect, it } from 'vitest'
 
@@ -44,6 +45,7 @@ import {
   execStateDigestDrift,
   findAmbiguousCaseMatches,
   findDuplicateFrozenCases,
+  frozenCommand,
   p9ItemsSettled,
   parseCiRunUrl,
   PROGRAM_CI_REPO,
@@ -1356,5 +1358,90 @@ describe('configFrozenReportRefusal: --supplement observes an entry frozen under
 
   it('leaves an entry frozen under the default config to the full-suite report, whatever that report ran', () => {
     expect(configFrozenReportRefusal(['pnpm', 'exec', 'vitest', 'run', 'packages/g/q/tests/b.spec.ts', '--reporter=json'], fullSuite)).toBeNull()
+  })
+
+  it('refuses another config\'s report for an entry frozen under its own config, though that report ran its file', () => {
+    expect(configFrozenReportRefusal(e2eFrozen, [`/home/runner/work/r/r/${acp}`], 'obs/vitest-snapshot.json'))
+      .toBe('the entry is frozen under --config vitest.e2e.config.ts, '
+        + 'and vitest-snapshot.json is the report of --config vitest.snapshot.config.ts')
+  })
+
+  it('refuses every report but vitest-report.json for an entry frozen under the default config', () => {
+    const argv = ['pnpm', 'exec', 'vitest', 'run', 'packages/g/p/tests/a.spec.ts', '--reporter=json']
+    expect(configFrozenReportRefusal(argv, fullSuite, 'obs/vitest-e2e-acp.json'))
+      .toBe('the entry is frozen under the default config, and vitest-e2e-acp.json is the report of --config vitest.e2e.config.ts')
+  })
+
+  it('refuses a report whose name no step in first100-exact-sha.yml writes, since the name is how its config is known', () => {
+    expect(configFrozenReportRefusal(e2eFrozen, [`/home/runner/work/r/r/${acp}`], 'obs/vitest-e2e-web.json'))
+      .toBe('no step in first100-exact-sha.yml writes a report named vitest-e2e-web.json, so the config it ran under is unknown')
+  })
+
+  it('refuses an argv naming a config and no test path, as the uniqueness gate does', () => {
+    const argv = ['pnpm', 'exec', 'vitest', 'run', '-c', 'vitest.snapshot.config.ts', '--reporter=json']
+    expect(configFrozenReportRefusal(argv, fullSuite, 'obs/vitest-snapshot.json'))
+      .toBe('the entry names --config vitest.snapshot.config.ts and no test path, so no report can be told to be its own')
+  })
+
+  it('reads the -c=<path> spelling of the config, which vitest also accepts', () => {
+    expect(frozenCommand(['pnpm', 'exec', 'vitest', 'run', '-c=vitest.e2e.config.ts', acp]))
+      .toStrictEqual({ config: 'vitest.e2e.config.ts', paths: [acp] })
+  })
+})
+
+/**
+ * Runs `generate-ledger.mjs` in a scratch repository holding a copy of this directory's modules, a freeze of `entry`
+ * alone, and one report, so no run reads or writes this repository's ledger.
+ * @param entry - the freeze's only entry.
+ * @param report - the report's file name and the test files it ran; it sits in a directory named after the scratch
+ *   repository's commit, which is the candidate.
+ * @param cellArgs - the arguments naming the cell; `--report`, `--ci-run-url` and `--candidate-sha` follow them.
+ * @returns the exit status, the stdout and stderr together, and the `--report` argument.
+ */
+function runLedgerInScratchRepo(
+  entry: Record<string, unknown>,
+  report: { name: string; files: readonly string[] },
+  cellArgs: readonly string[],
+): { status: number | null; output: string; reportPath: string } {
+  // The real path, because the script runs its CLI only when argv[1] equals its own module path.
+  const root = realpathSync(makeGitFixture())
+  const sha = commit(root, 'fixture', 'fixture\n')
+  mkdirSync(join(root, 'scripts/first100'), { recursive: true })
+  for (const name of readdirSync(new URL('.', import.meta.url)).filter(file => file.endsWith('.mjs'))) {
+    copyFileSync(new URL(name, import.meta.url), join(root, 'scripts/first100', name))
+  }
+  symlinkSync(fileURLToPath(new URL('../../node_modules', import.meta.url)), join(root, 'node_modules'))
+  mkdirSync(join(root, 'spec/first100/exec'), { recursive: true })
+  writeFileSync(join(root, 'spec/first100/exec/command-freeze.json'), JSON.stringify({ entries: [entry] }))
+  mkdirSync(join(root, sha))
+  const reportPath = `${sha}/${report.name}`
+  const testResults = report.files.map(name => ({ name, assertionResults: [] }))
+  writeFileSync(join(root, reportPath), JSON.stringify({ success: true, testResults }))
+  const ciRunUrl = `https://github.com/${PROGRAM_CI_REPO}/actions/runs/1`
+  const args = [...cellArgs, '--report', reportPath, '--ci-run-url', ciRunUrl, '--candidate-sha', sha]
+  const script = join(root, 'scripts/first100/generate-ledger.mjs')
+  const result = spawnSync(process.execPath, [script, ...args], { cwd: root, encoding: 'utf8' })
+  return { status: result.status, output: `${result.stdout}${result.stderr}`, reportPath }
+}
+
+/** P4-05.U frozen under the e2e config, as a base entry. */
+const e2eBase = {
+  epic: 'P4-05',
+  stage: 'U',
+  argv: ['pnpm', 'exec', 'vitest', 'run', '--config', 'vitest.e2e.config.ts', 'apps/cli/tests/a.e2e.ts'],
+  expectCases: ['acp host takes over the Run'],
+  expectExit: 0,
+}
+
+describe('generate-ledger.mjs greens a cell only from a report of the config its entry is frozen under', () => {
+  it('refuses the full-suite report for a base entry frozen under the e2e config', () => {
+    const { status, output, reportPath } = runLedgerInScratchRepo(
+      e2eBase,
+      { name: 'vitest-report.json', files: ['/ci/packages/g/p/tests/a.spec.ts'] },
+      ['--epic', 'P4-05', '--stage', 'U'],
+    )
+    expect(output).toContain(`BLOCKED: --report ${reportPath} cannot observe P4-05.U: the entry is frozen under --config `
+      + 'vitest.e2e.config.ts, and vitest-report.json is the report of the default config')
+    expect(status).toBe(1)
   })
 })
