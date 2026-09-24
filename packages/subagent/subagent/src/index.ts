@@ -121,6 +121,7 @@ export {
   applyChildComposition,
   captureDelegatedPolicyOverrides,
   childSessionMeta,
+  delegateChildIdentity,
   parentAgentOptionsForDelegation,
   resolveChildAgentOptions,
   resolveChildDepth,
