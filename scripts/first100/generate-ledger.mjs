@@ -2075,6 +2075,13 @@ function cmdAccept() {
     console.error(`BLOCKED: ${epic} not all applicable stages are GREEN yet — still pending: ${notGreen.join(', ')}`)
     process.exit(1)
   }
+  for (const stage of applicableStages) {
+    const refusal = recordedExitRefusal(row.cells[stage].observationReportPath, row.cells[stage].exitOverride?.reason)
+    if (refusal !== null) {
+      console.error(`BLOCKED: ${epic}.${stage}: ${refusal}`)
+      process.exit(1)
+    }
+  }
 
   if (!existsSync(ACCEPTANCE_COVERAGE_PATH)) {
     console.error(`BLOCKED: predicate (i) coverage closure — no acceptance-coverage.json at ${ACCEPTANCE_COVERAGE_PATH}`)
