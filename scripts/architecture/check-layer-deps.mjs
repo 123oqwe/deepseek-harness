@@ -780,7 +780,7 @@ function collectKernelNonWorkspaceEdges(root, byPackage, vendoredNames, workspac
       for (const dependency of Object.keys(manifest[field] ?? {})) {
         const neededPeer = field === 'peerDependencies' && dependency === CORDIS_PACKAGE
           && found.get(`${name}\0${CORDIS_PACKAGE}`)?.bindingFiles.has('Context') === true
-        if (!neededPeer) addUse(dependency, `package.json ${field}`, `${dir}/package.json`)
+        if (!neededPeer && vendoredNames.has(dependency)) addUse(dependency, `package.json ${field}`, `${dir}/package.json`)
       }
     }
   }
