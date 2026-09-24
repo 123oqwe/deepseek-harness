@@ -151,7 +151,7 @@ export function workingTreePatch(repoRoot, baseSha, outPath) {
     }
     return result.stdout
   })
-  return run(['diff', '--binary', '--no-ext-diff', '--no-textconv', baseSha]) + added.join('')
+  return run(['diff', '--binary', '--no-textconv', baseSha]) + added.join('')
 }
 
 /**
