@@ -39,7 +39,7 @@ A refused journal is not left for a restarted run to overwrite: `setJournalAside
 
 ## Compaction keeps what cannot be regenerated
 
-A completed and **verified** step's inputs are recomputable from the steps that produced them, so compaction drops them. Its output is kept: in the shipped host, the JSON text of the value the step's `agent()` call resolved to, recorded inline rather than as a reference, which is what a resume hands the script. Its `call` is kept too, because a resume matches calls to entries by it. Displaced entries are kept whole, receipts included.
+A completed and **verified** step's inputs are recomputable from the steps that produced them, so compaction drops them. Its output is kept: in the shipped host, the JSON text of the value the step's `agent()` call resolved to, recorded inline rather than as a reference, which is what a resume hands the script. Its `call` is kept too, because a resume matches calls to entries by it. Displaced entries are kept whole, receipts included. The script digest and a nested run's `nesting` are kept as they are, since a resume reads both; without `nesting`, a nested run resumes as a root run.
 
 Purity is deliberately not the gate. Every step this DSL journals is an `agent()` call classed `side-effecting`, so a pure-only compaction could never fire on a real journal. `verified` carries the meaning instead: a step is verified when a resume RECONCILED it — its effects confirmed in the effect ledger and every child it started accounted for — which is the same check that authorizes reusing its output.
 

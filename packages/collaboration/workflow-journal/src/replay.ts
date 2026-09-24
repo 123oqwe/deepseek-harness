@@ -94,6 +94,11 @@ export function receiptsToReconcile(plan: ResumePlan): readonly SideEffectReceip
  * regenerate that. A compaction that shed receipts to save space would be
  * discarding the only record that an effect occurred — which is why
  * acceptance[2] permits compaction and requires the raw evidence to survive it.
+ *
+ * Every field besides `entries` is kept as it is, because a resume reads each
+ * one: the script digest; the displaced entries, each another call's record
+ * with receipts nothing else holds; and a nested run's `nesting`, without which
+ * the run resumes as a root run.
  * @param journal - the journal to compact.
  * @returns a compacted journal with every receipt intact.
  */
@@ -103,9 +108,7 @@ export function compactJournal(journal: WorkflowJournal): WorkflowJournal {
     if (!compactable) return entry
     return { ...entry, inputs: [] as readonly ArtifactRef[] }
   })
-  // Displaced entries are kept whole: each is another call's record, reusable
-  // by a later resume, with receipts nothing else holds.
-  return { scriptDigest: journal.scriptDigest, entries, ...journal.displaced === undefined ? {} : { displaced: journal.displaced } }
+  return { ...journal, entries }
 }
 
 /**

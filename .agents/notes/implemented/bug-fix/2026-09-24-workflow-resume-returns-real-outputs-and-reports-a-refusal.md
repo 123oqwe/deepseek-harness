@@ -10,6 +10,8 @@ P4-08 acceptance[0] asks that a workflow killed at an `agent()` boundary be resu
 
 With real outputs recorded, three more gaps showed. The worker reused a recorded step by its step number alone, and step numbers follow the order in which `agent()` calls start: a resume with different `args`, or of a script whose later calls start as earlier calls complete, handed one call the output another call recorded, and the host marked the step verified. A resume refused for a changed script restarted the run under the same id, and the restarted run's first journal write replaced the refused journal, so the interrupted run's record was lost. And the journal, which now holds its children's outputs, was written with the modes the process umask gives, where a session log is written for its owner only.
 
+Compaction at settlement kept only the script digest, the entries and `displaced`. A settled nested run's journal lost its `nesting` there, and a resume of that run started it as a root run, with a root run's budget, no ancestor chain and no tool bound (BLOCKED-328).
+
 ## Decision
 
 - **`workflow` takes `resume: "<runId>"`** and passes the call's `script`, `meta`, `args` and parent to `engine.resume` under that id. The value must match `^[\w-]+$`, and `resume` with `detached: true` is refused.
@@ -18,6 +20,7 @@ With real outputs recorded, three more gaps showed. The worker reused a recorded
 - **The host flushes a finished in-process child's session before forwarding its result to the worker**, with the same `ctx.sessions.flush` call `subagent/continuation-activation.ts` makes. A failed flush is logged as a warning and the result is still forwarded.
 - **A recorded output is reused only for a call with the same identity, matched by identity rather than by step number.** The worker computes each `agent()` call's identity, `callDigestOf`: SHA-256 of its prompt, `schema`, `provider` and `model`. The journal records it as the entry's `call`, the host passes each reusable output's identity to the worker, and a call takes the first unused output recorded under its identity, whatever the step number; a call with none starts its child. Without identities the worker reuses nothing.
 - **A step started for a different call keeps the entry it replaces.** When such a step starts at a number another call recorded, the recorder moves that entry, whole, into the journal's `displaced`, which a later resume reconciles and offers like any other entry.
+- **Compaction keeps every journal field besides the entries.** `compactJournal` returns the journal with its entries compacted and every other field as it was. A resume reads four fields: `scriptDigest`, `entries`, `displaced` and `nesting`.
 - **A resume refused for a changed script first moves the journal** to `refused/<runId>.<first 12 hex of its script digest>.json` in the journal directory (`setJournalAside`), or to the next free `refused/<runId>.<digest>.<n>.json`, so the restarted run writes a new `<runId>.json` beside it and no kept journal is replaced.
 - **The journal directory is created with mode 0700 and each journal file is written with mode 0600**, as a session log is.
 
@@ -34,11 +37,13 @@ With real outputs recorded, three more gaps showed. The worker reused a recorded
 - **Add `args` to the digest a resume is admitted under.** Not chosen: it refuses a resume whose arguments changed, but leaves step numbers decided by completion order handing one call another's output; the identity check covers both.
 - **Keep the step-number key and check the identity only as a guard.** Not chosen: a pipeline whose later calls start as earlier ones complete puts calls under other numbers on resume, and the guard then starts those children again, which acceptance[0] forbids (delegate ruling D3).
 - **Refuse a changed-script resume without running the script.** Not chosen: acceptance[1] refuses the resume and the run starts over, as above; the refused journal is kept instead.
+- **Add `nesting` to the fields compaction copies.** Not chosen: a list of copied fields is how `nesting` was lost, and keeping every field besides the entries also keeps a field added later.
 
 ## Consequences
 
 - The host rewrites the whole journal at every step edge, so each inline output is written once per later edge; nothing caps an output's size.
 - A journal written before this change holds placeholders and no call identities, and a resume reruns those steps.
+- A journal compacted before this change has no `nesting`, and a resume of that settled nested run still starts it as a root run.
 - A refused resume still runs the script from its first step under the same id; `resumeRefused` is the caller's only sign that nothing was reused.
 - A call whose prompt carries a timestamp or a random value never matches its record and starts its child again; the identity does not cover the parent session, a default provider or model, tools or `cwd`.
 - Nothing deletes a journal kept under `refused/`, and nothing removes displaced entries.
