@@ -31,7 +31,7 @@ import { describe, expect, it } from 'vitest'
 import { LOADER_SMOKE_TEST_TIMEOUT_MS } from '@deepseek-ai/dsh-loader-smoke'
 import { readRuntimeModuleSyntax } from '../../../packages/kernel/trust-kernel/tests/fixtures/runtime-surface.ts'
 import { stageProfile } from './fixtures/headless-smoke.ts'
-import { runKernelPinnedDsh } from './fixtures/kernel-pinned-headless.ts'
+import { insecureBootWarning, runKernelPinnedDsh } from './fixtures/kernel-pinned-headless.ts'
 import {
   KERNEL_OBSERVATION_FILE,
   MODEL_INPUT_FILE,
@@ -108,7 +108,9 @@ describe('P0-02 acceptance[1] -- real dsh --profile headless launch', () => {
     // The kernel is pinned in the tree that served the turn, and the posture check stayed silent.
     expect(observation, `stderr tail: ${result.stderr.slice(-800)}`).not.toMatch(/^ABSENT: /u)
     expect(JSON.parse(observation)).toEqual({ trustKernelPinned: true })
-    expect(result.stderr).not.toContain('booting with no Trust Kernel')
+    const warning = insecureBootWarning()
+    expect(warning).toContain('never use in production')
+    expect(result.stderr).not.toContain(warning)
 
     // The tool-result channel was recorded: the first request has no result
     // for the probe call, and the last one carries the file's contents.

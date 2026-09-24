@@ -13,6 +13,7 @@
 
 import { join } from 'node:path'
 import { runLoaderSmoke, type LoaderSmokeResult } from '@deepseek-ai/dsh-loader-smoke'
+import { enforceTrustKernelPosture } from '../../src/profile-boot.ts'
 import { REPOSITORY_ROOT } from './headless-smoke.ts'
 
 /**
@@ -40,4 +41,15 @@ export async function runKernelPinnedDsh(
     prepare,
     ...inspect === undefined ? {} : { inspect },
   })
+}
+
+/**
+ * The insecure-boot warning exactly as the launcher writes it, taken from the
+ * product's own posture check rather than copied into the cases.
+ * @returns the warning, trimmed.
+ */
+export function insecureBootWarning(): string {
+  let warning = ''
+  enforceTrustKernelPosture(false, true, (message) => { warning = message })
+  return warning.trim()
 }

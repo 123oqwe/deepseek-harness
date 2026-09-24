@@ -13,7 +13,7 @@
 import { describe, expect, it } from 'vitest'
 import { LOADER_SMOKE_TEST_TIMEOUT_MS } from '@deepseek-ai/dsh-loader-smoke'
 import { stageProfile } from './fixtures/headless-smoke.ts'
-import { runKernelPinnedDsh } from './fixtures/kernel-pinned-headless.ts'
+import { insecureBootWarning, runKernelPinnedDsh } from './fixtures/kernel-pinned-headless.ts'
 
 describe('P0-02 acceptance[3] -- real dsh --profile headless launch', () => {
   it('boots with no insecure-boot warning when DSH_TRUST_KERNEL_INSECURE is empty -- the kernel is pinned, so the posture check passes silently', async () => {
@@ -23,6 +23,9 @@ describe('P0-02 acceptance[3] -- real dsh --profile headless launch', () => {
       stageProfile,
     )
     expect(result.stdout).toContain('ROUTE=p9-mock-a MODEL=model-one')
-    expect(result.stderr).not.toContain('booting with no Trust Kernel')
+    // The needle is the launcher's own warning; the posture spec pins its text.
+    const warning = insecureBootWarning()
+    expect(warning).toContain('never use in production')
+    expect(result.stderr).not.toContain(warning)
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 })
