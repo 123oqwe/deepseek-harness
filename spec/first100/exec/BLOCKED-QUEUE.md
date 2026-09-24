@@ -8943,3 +8943,19 @@ Under the standard's rule for real defects (WORKING-MODEL §12), they become est
 1. A reproduction that does not depend on timing, for example advancing the timers after the environment is torn down. It shows the unhandled error before the fix.
 2. The fix is in place in the test. Nothing may outlive the environment: unmount, cleanup or fake timers. It must not suppress the error globally, and it must not add `dangerouslyIgnoreUnhandledErrors`.
 3. The reproduction is green after the fix.
+
+### BLOCKED-328 — `compactJournal` drops a nested run's `nesting`, so a later resume of a compacted nested journal treats it as a root run (pre-existing defect, open)
+
+**Status:** OPEN (2026-09-24). Owner: lane B, fix in place. It blocks P4-08's re-sign. Found by lane B while doing the P4-08 blind review's pre-sign-off work; recorded by the delegate (first100-delegate-1a).
+
+**What is known (read from the code, not reproduced).** `compactJournal` returns only `scriptDigest` and `entries`, and since the P4-08 D1 fix also `displaced`. It does not carry the journal's `nesting`. After a nested run's journal is compacted, the next resume reads no `nesting` and treats the run as a root run.
+
+**Why it matters.** P4-08 acceptance[2] allows the journal to be compacted while raw evidence is retained. A compaction that changes what a resume does with the run keeps less than the journal said. What the resumed-as-root run then does differently (identity chain, budget, parent linkage) has not been measured.
+
+**Closing condition.**
+1. A case compacts a nested run's journal, resumes it, and asserts the run resumes as the same nested run: same `nesting`, same parent linkage. It is red before the fix.
+2. The fix is in place in `compactJournal`: `nesting` survives compaction, together with any other journal field a resume reads. List those fields in the fix's note.
+3. A mutation that drops `nesting` again turns only that case red.
+4. Then a fresh 4.4 for P4-08.
+
+**Progress (2026-09-24, lane B).** Conditions 1–3 are met; condition 4 is the delegate's. PRECHECK `e6bb296f74` (run 36029414306): exactly the new case red of 153, on `expected 'leaf ran' to contain 'max-depth-exceeded'`. The fix `6e85b4f1ae` is in place in `compactJournal`, which now returns `{ ...journal, entries }`, so every journal field besides the entries survives; the fix's Agent Note lists the four fields a resume reads, `scriptDigest`, `entries`, `displaced` and `nesting`. It ran 153 of 153 (run 36029439192) and 13 of 13 of the acp workflow-resume e2e (run 36029459722). M1 `ecf43c3632` (run 36029484191), which keeps only `scriptDigest`, `entries` and `displaced` again: exactly the case red, on the same assertion. The case is frozen as P4-08 U.12 [377].

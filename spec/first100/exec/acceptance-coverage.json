@@ -2540,9 +2540,39 @@
           "stage": "U",
           "supplementSeq": 6,
           "title": "P4-08 acceptance[0]: a resumed step is reused only for the call that recorded it starts the step again on a host resume whose arguments changed what the call asks"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 9,
+          "title": "P4-08 acceptance[0]: a resumed call reuses the record its identity names, whatever its step number starts the step again when only the model changed what the call asks"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 9,
+          "title": "P4-08 acceptance[0]: a resumed call reuses the record its identity names, whatever its step number starts the step again when only the schema changed what the call asks"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 9,
+          "title": "P4-08 acceptance[0]: a resumed call reuses the record its identity names, whatever its step number starts the step again when only the provider changed what the call asks"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 9,
+          "title": "P4-08 acceptance[0]: a resumed call reuses the record its identity names, whatever its step number reuses every completed step of a pipeline whose step numbers followed completion order"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 9,
+          "title": "P4-08 acceptance[0]: a resumed call reuses the record its identity names, whatever its step number starts every step when constructed without call identities"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 9,
+          "title": "P4-08 acceptance[0]: a resumed call reuses the record its identity names, whatever its step number keeps the record a changed-argument resume displaced, so resuming with the original arguments reuses it"
         }
       ],
-      "note": "acceptance[0]: 'kill before and after each agent() call; the resume does not repeat completed child work.' Covered at three levels rather than once, because the clause is about a SEQUENCE and each level can be right while the next is wrong. C decides one entry; P drives the recorder through the three kill points a real session produces (before settle, after settle but before verification, after verification) and checks the plan each yields; U drives the same through the host's actual agent event stream, including concurrent out-of-order starts. The middle kill point is the one that matters most and is easiest to miss: a step that settled but was never verified is re-run, because 'it finished' and 'we checked it' are different facts.\n\n[2026-09-24 lane A, A-335 backfill (S1: the evidence existed and was not registered; no case changed): the `U.1` citation «P4-08 must[0]: a real run keeps a journal RESUMES without starting the completed children again (acceptance[0])» (`packages/workflow/workflow-worker-thread/tests/journal-live-run.spec.ts:110`) tests the clause's second subject, recovery not repeating completed child work, by executing a resume: a real worker thread with JSONL persistence runs two `agent()` calls and is disposed, and the resumed run completes with the children's start count unchanged and no child started again. It kills no process, and it covers one boundary only, after the last call with none in flight; no case kills before a call or between two calls.]\n\n[2026-09-24 lane B: the `stage: U, supplementSeq: 4` citations are the shipped acp profile's kill-and-resume cases K0-K3 (run id kept, finished children not started again, their real outputs returned); the `supplementSeq: 5` citations are the in-process flush, value and tool cases behind them. The resume is asked for with the run id read from the journal file: nothing on the shipped product hands the model a foreground run's id.]"
+      "note": "acceptance[0]: 'kill before and after each agent() call; the resume does not repeat completed child work.' Covered at three levels rather than once, because the clause is about a SEQUENCE and each level can be right while the next is wrong. C decides one entry; P drives the recorder through the three kill points a real session produces (before settle, after settle but before verification, after verification) and checks the plan each yields; U drives the same through the host's actual agent event stream, including concurrent out-of-order starts. The middle kill point is the one that matters most and is easiest to miss: a step that settled but was never verified is re-run, because 'it finished' and 'we checked it' are different facts.\n\n[2026-09-24 lane A, A-335 backfill (S1: the evidence existed and was not registered; no case changed): the `U.1` citation «P4-08 must[0]: a real run keeps a journal RESUMES without starting the completed children again (acceptance[0])» (`packages/workflow/workflow-worker-thread/tests/journal-live-run.spec.ts:110`) tests the clause's second subject, recovery not repeating completed child work, by executing a resume: a real worker thread with JSONL persistence runs two `agent()` calls and is disposed, and the resumed run completes with the children's start count unchanged and no child started again. It kills no process, and it covers one boundary only, after the last call with none in flight; no case kills before a call or between two calls.]\n\n[2026-09-24 lane B: the `stage: U, supplementSeq: 4` citations are the shipped acp profile's kill-and-resume cases K0-K3 (run id kept, finished children not started again, their real outputs returned); the `supplementSeq: 5` citations are the in-process flush, value and tool cases behind them. The resume is asked for with the run id read from the journal file: nothing on the shipped product hands the model a foreground run's id.]\n\n[2026-09-24 lane B, P4-08 delta review D1, D2, D3 and N6: the `supplementSeq: 9` citations are the identity cases. A resumed call reuses the first unused output recorded under its identity (prompt, schema, provider and model), whatever its step number, so a pipeline whose steps completed out of order reuses every completed step; a change to the model, schema or provider alone starts the step again; an execution constructed without call identities reuses nothing; and the record a changed-argument resume displaced is reused when the original arguments return.]"
     },
     {
       "epic": "P4-08",
@@ -2624,9 +2654,34 @@
           "stage": "U",
           "supplementSeq": 8,
           "title": "P4-08 acceptance[1]: a changed script is refused visibly and restarted by a restarted acp host (no key required) the refused journal is kept: the interrupted run's record survives under its old digest"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 10,
+          "title": "P4-08 acceptance[2]: a kept journal is never replaced keeps both journals when one run is refused twice under the same recorded digest"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 11,
+          "title": "P4-08: a journal keeps what identifies a call keeps a verified step's call through compaction"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 11,
+          "title": "P4-08: a journal keeps what identifies a call keeps, whole, the entry a step started for a different call replaces at its step number"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 11,
+          "title": "P4-08: a journal keeps what identifies a call keeps displaced entries, receipts and all, through compaction"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 12,
+          "title": "BLOCKED-328: a nested run resumed from its compacted journal is the same nested run resumes with the nesting it started with, so the depth limit that refused it still refuses it"
         }
       ],
-      "note": "acceptance[2]: 'a journal may be compacted but the raw evidence is retained.' Compaction drops what can be recomputed (a pure verified step's input refs, derivable from the steps that produced them) and keeps what cannot -- every receipt, from every entry, because a receipt is evidence that something happened OUTSIDE this process and nothing inside it can regenerate that. retainsAllReceipts is EXPORTED so the property is checkable by a caller rather than only by this package's tests, and one case asserts it reports FALSE for a compaction that dropped a receipt -- without that control, its returning true would prove nothing. Boundary 17 adds idempotence, which the clause does not name: a journal compacted at every checkpoint must not shed more information each pass. APPENDED 2026-09-11 (lane B, delegate-approved; original note unchanged above): this clause is signed on its DECISION half only. The compaction cases -- C's four and F's boundaries 16/17 alike -- drive CONSTRUCTED ArtifactRefs, because the real producer is P6-09's content-addressed artifact store and it does not exist yet (`recorder.ts:97` and `replay.ts:104` both write `inputs: []`). So what the cases establish is that the decision drops the right things and retains every receipt, NOT that any real run has inputs to drop: THE SAVING IS NOT OBSERVABLE HERE. §12.74(a) and §12.46-B state the split; BLOCKED-172 carries P6-09's half and its closing condition -- a real host run whose journal holds at least one input before compaction and `[]` after, receipts intact. The live C freeze note states this at length; it is repeated here because this is the page a reader consults when comparing the clause to its evidence. APPENDED 2026-09-24 (lane B, P4-08 blind review F3): the raw evidence of a resume refused for a changed script is retained as well. Before the restarted run first writes under the same id, the refused journal moves to refused/<runId>.<first 12 hex of its script digest>.json (U.7's F3 case), and on the shipped acp launch it survives there under its old digest, standing at the kill point (U.8)."
+      "note": "acceptance[2]: 'a journal may be compacted but the raw evidence is retained.' Compaction drops what can be recomputed (a pure verified step's input refs, derivable from the steps that produced them) and keeps what cannot -- every receipt, from every entry, because a receipt is evidence that something happened OUTSIDE this process and nothing inside it can regenerate that. retainsAllReceipts is EXPORTED so the property is checkable by a caller rather than only by this package's tests, and one case asserts it reports FALSE for a compaction that dropped a receipt -- without that control, its returning true would prove nothing. Boundary 17 adds idempotence, which the clause does not name: a journal compacted at every checkpoint must not shed more information each pass. APPENDED 2026-09-11 (lane B, delegate-approved; original note unchanged above): this clause is signed on its DECISION half only. The compaction cases -- C's four and F's boundaries 16/17 alike -- drive CONSTRUCTED ArtifactRefs, because the real producer is P6-09's content-addressed artifact store and it does not exist yet (`recorder.ts:97` and `replay.ts:104` both write `inputs: []`). So what the cases establish is that the decision drops the right things and retains every receipt, NOT that any real run has inputs to drop: THE SAVING IS NOT OBSERVABLE HERE. §12.74(a) and §12.46-B state the split; BLOCKED-172 carries P6-09's half and its closing condition -- a real host run whose journal holds at least one input before compaction and `[]` after, receipts intact. The live C freeze note states this at length; it is repeated here because this is the page a reader consults when comparing the clause to its evidence. APPENDED 2026-09-24 (lane B, P4-08 blind review F3): the raw evidence of a resume refused for a changed script is retained as well. Before the restarted run first writes under the same id, the refused journal moves to refused/<runId>.<first 12 hex of its script digest>.json (U.7's F3 case), and on the shipped acp launch it survives there under its old digest, standing at the kill point (U.8).\n\nAPPENDED 2026-09-24 (lane B, P4-08 delta review D1, N1 and N3, and BLOCKED-328): a second refusal under the same recorded digest keeps both journals, the second under the next free refused/<runId>.<digest>.<n>.json (U.10); a step started for a different call at a recorded step number moves the entry it replaces, whole, into the journal's displaced, and compaction keeps displaced entries with their receipts and keeps a verified step's call (U.11); and compaction keeps every journal field besides the entries, so a nested run resumed from its compacted journal resumes with the nesting it started with and its depth limit still refuses it (U.12, BLOCKED-328). U.10's two mode cases are not cited here, as U.7's is not: they pin the journal's permissions, not what it retains."
     },
     {
       "epic": "P4-09",

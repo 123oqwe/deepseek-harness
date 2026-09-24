@@ -17375,6 +17375,174 @@
         "failureSummary": "The fix `2c5ff0286e`, run 36007657036: 72 of 72 over the six files the delegate dispatched (built). M6 `f00b1f21e0`, run 36007721245 and M9 `7408e56a71`, run 36007787776: the refusal case red; M13 `f9fb5dae00`, run 36007881434 and M13b `42a3ef3b57`, run 36007903541: the provenance case red; the control, three Runs in the store, green throughout."
       },
       "note": "P8-01 acceptance[4] and P0-06 acceptance[1] on the shipped sdk profile, one launch: an incompatible schemaVersion is refused on the wire with its code and schemaId; two sessions, one delegating once, open three Runs, and every one carries the handshake's negotiation. The control counts the Runs from the store alone."
+    },
+    {
+      "epic": "P4-08",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-08",
+        "stage": "U"
+      },
+      "supplementSeq": 9,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-worker-thread/tests/resume-values.spec.ts",
+        "-t",
+        "P4-08 acceptance\\[0\\]: a resumed call reuses the record its identity names, whatever its step number",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-08 acceptance[0]: a resumed call reuses the record its identity names, whatever its step number starts the step again when only the model changed what the call asks",
+        "P4-08 acceptance[0]: a resumed call reuses the record its identity names, whatever its step number starts the step again when only the schema changed what the call asks",
+        "P4-08 acceptance[0]: a resumed call reuses the record its identity names, whatever its step number starts the step again when only the provider changed what the call asks",
+        "P4-08 acceptance[0]: a resumed call reuses the record its identity names, whatever its step number reuses every completed step of a pipeline whose step numbers followed completion order",
+        "P4-08 acceptance[0]: a resumed call reuses the record its identity names, whatever its step number starts every step when constructed without call identities",
+        "P4-08 acceptance[0]: a resumed call reuses the record its identity names, whatever its step number keeps the record a changed-argument resume displaced, so resuming with the original arguments reuses it"
+      ],
+      "files": [
+        "packages/workflow/workflow-worker-thread/tests/resume-values.spec.ts",
+        "packages/workflow/workflow-worker-thread/src/runtime.ts",
+        "packages/workflow/workflow-worker-thread/src/resume.ts",
+        "packages/workflow/workflow-worker-thread/src/host.ts",
+        "packages/collaboration/workflow-journal/src/recorder.ts",
+        "packages/collaboration/workflow-journal/src/types.ts",
+        ".agents/notes/implemented/bug-fix/2026-09-24-workflow-resume-returns-real-outputs-and-reports-a-refusal.md",
+        ".agents/notes/implemented/bug-fix/2026-09-24-workflow-resume-returns-real-outputs-and-reports-a-refusal.zh.md"
+      ],
+      "frozenAtUtc": "2026-09-24T18:11:40Z",
+      "dryRunProof": {
+        "treeSha": "00391dde71047d32fe204642ddf25b6f86d5d722",
+        "testsDiscovered": 6
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Five mutations off the fix, never merged, each run with a build first. M-D3 (`7be717a8f0cfe57737e67015a24ad91d0de4d7cc`): runtime.ts looks a call up by step number and uses its identity only as a guard. M-N6 (`755ff3460fdf02ba00066fd014254aabe6daed01`): with no call identities, the worker reuses by step number. M-D2 (`fe52e8bd155a42b5f616210f09bcdfac5b4bdf42`): the call identity covers the prompt only. M-D1 (`c023dc2bb05119e928f49421a5d3165e5e95be13`): the recorder drops the entry a step started for a different call replaces. M-D1r (`626fa8535a4051ed067be94fb4719aa7e375547f`): the resume does not offer displaced entries.",
+        "failureSummary": "PRECHECK (`e82bd91bd9`) `e82bd91bd9`, run 36025742622: D3, N6 and D1h red; the three D2 cases green, as pins. The fix `11ca82c08f`, run 36025769112: 129 of 129 (resume-values, journal-resume, journal-live-run, journal-host, session and the workflow-journal tests); `11ca82c08f`, run 36025789323: 13 of 13 of the acp workflow-resume e2e, with a build first. M-D3 `7be717a8f0`, run 36025814385: exactly D3 and D1h red, U.6's cases green under guard semantics. M-N6 `755ff3460f`, run 36025841338: exactly N6. M-D2 `fe52e8bd15`, run 36025866056: exactly the three D2 cases (model, schema, provider). M-D1 `c023dc2bb0`, run 36025892846: exactly D1h and U.11's D1r. M-D1r `626fa8535a`, run 36025916962: exactly D1h. All readings match artifacts/laneB/p4-08-s-predictions.md (0a3cd667…), written and hashed before the runs were dispatched; the delegate compared them case by case."
+      },
+      "note": "P4-08 delta blind review D2, D3, N6 and D1 through the host (acceptance[0]): a call takes the first unused output recorded under its identity (callDigestOf: prompt, schema, provider and model), whatever its step number, so a pipeline whose step numbers followed completion order reuses every completed step; a change to the model, schema or provider alone starts the step again; a WorkflowExecution constructed without call identities reuses nothing; and an entry a changed-argument resume displaced is reused when the original arguments return. The argv selects the describe by its escaped title in -t. The U.5 placeholder case passes identities at construction since N6, with its title and assertion unchanged; U.6's shared freshChildren moved to module scope, its cases unchanged."
+    },
+    {
+      "epic": "P4-08",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-08",
+        "stage": "U"
+      },
+      "supplementSeq": 10,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-worker-thread/tests/journal-resume.spec.ts",
+        "-t",
+        "writes them 0700 and 0600 under a permissive umask, whatever the runner's own umask is|creates the refused/ directory with mode 0700|keeps both journals when one run is refused twice under the same recorded digest",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-08: a journal, which holds children's outputs, is readable by its owner only writes them 0700 and 0600 under a permissive umask, whatever the runner's own umask is",
+        "P4-08: a journal, which holds children's outputs, is readable by its owner only creates the refused/ directory with mode 0700",
+        "P4-08 acceptance[2]: a kept journal is never replaced keeps both journals when one run is refused twice under the same recorded digest"
+      ],
+      "files": [
+        "packages/workflow/workflow-worker-thread/tests/journal-resume.spec.ts",
+        "packages/workflow/workflow-worker-thread/src/resume.ts",
+        "packages/collaboration/workflow-journal/src/store.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T18:11:40Z",
+      "dryRunProof": {
+        "treeSha": "00391dde71047d32fe204642ddf25b6f86d5d722",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations off the fix, never merged. M-N1 (`8a881676e658875374767123c212c34a34698b21`): setJournalAside overwrites a journal kept under the same name. M-N3a (`1ef145d2a9c875046c9482721956f4e1a5a09015`): the refused/ directory is created without mode 0700. M-F4a (`ffbc47f2c02a798a800095b3cec7285a13d550cc`): the journal directory is created without mode 0700. M-F4b (`290aa734b34acdab0dd86d7a05cfb6db15042f06`): the journal file is written without mode 0600.",
+        "failureSummary": "PRECHECK (`e82bd91bd9`) `e82bd91bd9`, run 36025742622: N1 red; F4u and N3a green, as pins. The fix `11ca82c08f`, run 36025769112: 129 of 129 (resume-values, journal-resume, journal-live-run, journal-host, session and the workflow-journal tests); `11ca82c08f`, run 36025789323: 13 of 13 of the acp workflow-resume e2e, with a build first. M-N1 `8a881676e6`, run 36025988134: exactly N1. M-N3a `1ef145d2a9`, run 36026013479: exactly N3a. M-F4a `ffbc47f2c0`, run 36026040960 and M-F4b `290aa734b3`, run 36026068602: each exactly F4u and U.7's mode case, F4u independent of the runner's umask. All readings match artifacts/laneB/p4-08-s-predictions.md (0a3cd667…), written and hashed before the runs were dispatched; the delegate compared them case by case."
+      },
+      "note": "P4-08 delta blind review N1, N3 and F4 (acceptance[2]): a run refused twice under the same recorded digest keeps both journals, the second under the next free refused/<runId>.<digest>.<n>.json; the refused/ directory is created with mode 0700; and the journal directory and file are 0700 and 0600 under a permissive umask the case sets itself (vitest runs this file in a forked pool). The argv selects the three by title with an escaped alternation in -t."
+    },
+    {
+      "epic": "P4-08",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-08",
+        "stage": "U"
+      },
+      "supplementSeq": 11,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/collaboration/workflow-journal/tests/journal-call.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-08: a journal keeps what identifies a call keeps a verified step's call through compaction",
+        "P4-08: a journal keeps what identifies a call keeps, whole, the entry a step started for a different call replaces at its step number",
+        "P4-08: a journal keeps what identifies a call keeps displaced entries, receipts and all, through compaction"
+      ],
+      "files": [
+        "packages/collaboration/workflow-journal/tests/journal-call.spec.ts",
+        "packages/collaboration/workflow-journal/src/recorder.ts",
+        "packages/collaboration/workflow-journal/src/replay.ts",
+        "packages/collaboration/workflow-journal/src/types.ts",
+        "packages/collaboration/workflow-journal/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T18:11:40Z",
+      "dryRunProof": {
+        "treeSha": "00391dde71047d32fe204642ddf25b6f86d5d722",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations off the fix, never merged. M-D1 (`c023dc2bb05119e928f49421a5d3165e5e95be13`): the recorder drops the entry a step started for a different call replaces. M-D1c (`6ae945c305192d53af36200728421ecdcbd9deca`): compaction drops displaced entries. M-N3b (`28503591c086b35b609604e439663d40671cc631`): compaction drops a verified step's call.",
+        "failureSummary": "PRECHECK (`e82bd91bd9`) `e82bd91bd9`, run 36025742622: D1r and D1c red; N3b green, as a pin. The fix `11ca82c08f`, run 36025769112: 129 of 129 (resume-values, journal-resume, journal-live-run, journal-host, session and the workflow-journal tests); `11ca82c08f`, run 36025789323: 13 of 13 of the acp workflow-resume e2e, with a build first. M-D1 `c023dc2bb0`, run 36025892846: exactly D1r and U.9's D1h. M-D1c `6ae945c305`, run 36025941468: exactly D1c; the host's retainsAllReceipts guard keeps D1h green by writing the raw journal. M-N3b `28503591c0`, run 36025964189: exactly N3b. All readings match artifacts/laneB/p4-08-s-predictions.md (0a3cd667…), written and hashed before the runs were dispatched; the delegate compared them case by case."
+      },
+      "note": "P4-08 delta blind review D1 and N3 (acceptance[2]): a step started for a different call at a recorded step number moves the entry it replaces, whole, into the journal's displaced; compaction keeps displaced entries with their receipts and keeps a verified step's call. The argv runs the whole file, which holds these three cases."
+    },
+    {
+      "epic": "P4-08",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-08",
+        "stage": "U"
+      },
+      "supplementSeq": 12,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-worker-thread/tests/nested-journal-resume.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "BLOCKED-328: a nested run resumed from its compacted journal is the same nested run resumes with the nesting it started with, so the depth limit that refused it still refuses it"
+      ],
+      "files": [
+        "packages/workflow/workflow-worker-thread/tests/nested-journal-resume.spec.ts",
+        "packages/collaboration/workflow-journal/src/replay.ts",
+        "packages/collaboration/workflow-journal/README.md",
+        "packages/workflow/workflow-worker-thread/src/host.ts",
+        "packages/workflow/workflow-worker-thread/src/index.ts",
+        ".agents/notes/implemented/bug-fix/2026-09-24-workflow-resume-returns-real-outputs-and-reports-a-refusal.md",
+        ".agents/notes/implemented/bug-fix/2026-09-24-workflow-resume-returns-real-outputs-and-reports-a-refusal.zh.md"
+      ],
+      "frozenAtUtc": "2026-09-24T18:12:37Z",
+      "dryRunProof": {
+        "treeSha": "36e5216224b28605a189f1f5d8dfaf55474b5a93",
+        "testsDiscovered": 1
+      },
+      "sensitivityProof": {
+        "mutationDescription": "One mutation off the fix, never merged. M1 (`ecf43c36321f79e196c1a9f4719f07ef70f3121f`): compactJournal keeps only scriptDigest, entries and displaced again, so a compacted nested journal loses its nesting.",
+        "failureSummary": "PRECHECK `e6bb296f74`, run 36029414306: exactly this case red of 153, on expected 'leaf ran' to contain 'max-depth-exceeded'. The fix `6e85b4f1ae`, run 36029439192: 153 of 153 (the workflow-journal tests, session, journal-host, journal-live-run, journal-resume, resume-values, nested-run and this file); `6e85b4f1ae`, run 36029459722: 13 of 13 of the acp workflow-resume e2e, with a build first. M1 `ecf43c3632`, run 36029484191: exactly this case, on the same assertion. All readings match artifacts/laneB/blocked-328-predictions.md (fdb21618…), written and hashed before the runs were dispatched; the delegate compared them case by case."
+      },
+      "note": "BLOCKED-328 closing conditions 1-3, under P4-08 acceptance[2] (a compacted journal keeps what a resume reads): a nested run refused by the depth limit at settlement is resumed from the journal its host compacted, and it resumes with the nesting it started with, so the same limit still refuses it; the journal's nesting.ancestors and nesting.budget.depth are asserted. The argv runs the whole file, which holds this one case; it is a file of its own because P4-09's five live freezes run nested-run.spec.ts whole."
     }
   ]
 }

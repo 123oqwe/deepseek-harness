@@ -3147,7 +3147,9 @@
       "stages": [
         "U.4",
         "U.5",
-        "U.6"
+        "U.6",
+        "U.9",
+        "U.12"
       ]
     },
     {
@@ -3157,7 +3159,9 @@
       "stages": [
         "U.4",
         "U.5",
-        "U.6"
+        "U.6",
+        "U.9",
+        "U.12"
       ]
     },
     {
@@ -3167,6 +3171,14 @@
       "stages": [
         "U.4",
         "U.8"
+      ]
+    },
+    {
+      "epic": "P4-08",
+      "path": "packages/collaboration/workflow-journal/README.md",
+      "kind": "doc",
+      "stages": [
+        "U.12"
       ]
     },
     {
@@ -3187,7 +3199,9 @@
       "kind": "source",
       "stages": [
         "U.3",
-        "U.6"
+        "U.6",
+        "U.9",
+        "U.11"
       ],
       "reason": "The recorder the P-stage freeze cites, at its path after §12.22-1 moved the package. Carried into the overlay by the superseding entry rather than by new work: the file's content is unchanged, only its directory is."
     },
@@ -3198,9 +3212,18 @@
       "stages": [
         "U.1",
         "U.7",
-        "U.8"
+        "U.8",
+        "U.10"
       ],
       "reason": "The journal's persistence, which must[1] requires and which the package did not have: every decision in it is about a run that already died, so `planResume` had no possible input while the journal lived only in memory."
+    },
+    {
+      "epic": "P4-08",
+      "path": "packages/collaboration/workflow-journal/tests/journal-call.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.11"
+      ]
     },
     {
       "epic": "P4-08",
@@ -3261,7 +3284,8 @@
         "U.1",
         "U.2",
         "U.3",
-        "U.6"
+        "U.6",
+        "U.12"
       ],
       "reason": "HOT ZONE. From `git show 07acd35c6e -- packages/workflow/workflow-worker-thread/src/index.ts`: `start` and the new async `resume` both delegate to one private `launch`, the journal directory is derived from the storage root, and `childFinished` reads the child's DURABLE session. Shared with P4-07, whose lease acquisition is in the same `launch` body and is unchanged by this."
     },
@@ -3277,7 +3301,9 @@
         "U.5",
         "U.6",
         "U.7",
-        "U.8"
+        "U.8",
+        "U.9",
+        "U.10"
       ],
       "reason": "The reconciliation itself: which recorded steps a resumed run may reuse, and the script digest `admitResume` compares. New file; the plan named the journal package but not the engine-side half that reads it back."
     },
@@ -3315,7 +3341,16 @@
       "stages": [
         "U.1",
         "U.2",
-        "U.7"
+        "U.7",
+        "U.10"
+      ]
+    },
+    {
+      "epic": "P4-08",
+      "path": "packages/workflow/workflow-worker-thread/tests/nested-journal-resume.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.12"
       ]
     },
     {
@@ -3324,7 +3359,8 @@
       "kind": "test",
       "stages": [
         "U.5",
-        "U.6"
+        "U.6",
+        "U.9"
       ]
     },
     {
