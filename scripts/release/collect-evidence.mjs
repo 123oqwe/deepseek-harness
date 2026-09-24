@@ -118,6 +118,8 @@ export function sidecarDir(outPath) {
  * whatever external diff program or textconv filter the git configuration
  * names. Each collection step records this, and verification takes it again,
  * so a change made after the last step shows, a new untracked file included.
+ * `baseSha` follows `--end-of-options`, so git reads an option-shaped value as
+ * a revision and refuses it instead of acting on it.
  * @param {string} repoRoot - the checkout.
  * @param {string} baseSha - the commit the patch is measured against.
  * @param {string} outPath - the evidence package's absolute path.
@@ -151,7 +153,7 @@ export function workingTreePatch(repoRoot, baseSha, outPath) {
     }
     return result.stdout
   })
-  return run(['diff', '--binary', '--no-ext-diff', '--no-textconv', baseSha]) + added.join('')
+  return run(['diff', '--binary', '--no-ext-diff', '--no-textconv', '--end-of-options', baseSha]) + added.join('')
 }
 
 /**

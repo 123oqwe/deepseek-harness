@@ -16,6 +16,7 @@ Status: implemented
 - **包绑定的是最后一个采集步骤结束时的工作树。** 每一步（`init`、`run`、`build-artifact`）都记录 `git diff --binary <baseSha>`，连同 git 不忽略的每个未跟踪文件、以及每个未跟踪的 `.gitignore`（无论是否被忽略）相对 `/dev/null` 的补丁，但不含包自身的文件与 sidecar 目录。`verify` 再取一次同样的补丁并比对摘要，所以最后一步之后的改动，无论是已提交、未提交、新增的未跟踪文件，还是一个连自己也忽略掉的新 `.gitignore`，都会让校验失败。
 - **补丁是 git 自己从工作树取出的。** 两处 diff 都带 `--no-ext-diff --no-textconv`，git 配置里的外部 diff 程序或 textconv 过滤器都替换不了它。未跟踪文件那次调用的 `--no-textconv` 是防御性加固，没有敏感性证明：textconv 过滤器藏不住未跟踪文件的改动，因为 git 会在补丁的 index 行印出文件真实的 blob id。索引把文件标为 skip-worktree 或 assume-unchanged 的检出会被拒绝，因为 `git diff` 对这类文件读的是索引；git 给不出补丁的未跟踪条目也会被拒绝，例如指向目录的符号链接或嵌套仓库。
 - **做不了的核对记为具名的不一致。** 缺 git 或 pnpm、目录不是 git 检出、包或清单不是合法 JSON，都记为一项不一致；包能解析、却缺 `verify` 要读的字段时，报为 `verify could not complete`。所以结果行总会打印。
+- **形如选项的 `baseSha` 不会被 git 当作选项。** `verify` 在任何 git 调用之前，拒绝 `gitDiff.baseSha` 不是 40 或 64 位十六进制 id 的包，并写明取值。`workingTreePatch` 把 `baseSha` 放在 `--end-of-options` 之后，所以传给 `collect-evidence init` 的 `--base-sha` 若形如选项，会在 git 那里失败，而不会被执行（盲审 F3，B-590）。以前 `baseSha` 为 `--output=<路径>` 的包，会让 `verify` 把 diff 写进那个路径。
 
 ## 考虑过的替代方案
 

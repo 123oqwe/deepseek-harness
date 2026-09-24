@@ -234,13 +234,19 @@ export function verify(repoRoot, evidencePath) {
     if (recomputed !== pkg.gitDiff.digest) mismatches.push(`gitDiff digest mismatch (recorded ${pkg.gitDiff.digest}, recomputed ${recomputed})`)
   }
   // The same working-tree patch the last collection step recorded, taken again.
-  try {
-    const workingTree = workingTreePatch(repoRoot, pkg.gitDiff.baseSha, evidencePath)
-    if (createHash('sha256').update(workingTree).digest('hex') !== pkg.gitDiff.digest) {
-      mismatches.push(`the working tree differs from the diff recorded at collection (against ${pkg.gitDiff.baseSha})`)
+  // The package's baseSha reaches git, and anyone can write a package, so a
+  // value that is not a commit id is refused before any git call sees it.
+  if (typeof pkg.gitDiff.baseSha !== 'string' || !/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/u.test(pkg.gitDiff.baseSha)) {
+    mismatches.push(`gitDiff.baseSha ${JSON.stringify(pkg.gitDiff.baseSha)} is not a 40- or 64-digit hex commit id, so the working tree is not compared`)
+  } else {
+    try {
+      const workingTree = workingTreePatch(repoRoot, pkg.gitDiff.baseSha, evidencePath)
+      if (createHash('sha256').update(workingTree).digest('hex') !== pkg.gitDiff.digest) {
+        mismatches.push(`the working tree differs from the diff recorded at collection (against ${pkg.gitDiff.baseSha})`)
+      }
+    } catch (error) {
+      mismatches.push(`working-tree diff re-derivation failed: ${errorText(error)}`)
     }
-  } catch (error) {
-    mismatches.push(`working-tree diff re-derivation failed: ${errorText(error)}`)
   }
 
   for (const [gateId, record] of Object.entries(pkg.requiredGates)) {
