@@ -570,7 +570,7 @@ export class HarnessSdkJsonRpcServer {
     const runs = this.ctx.get('runs') as RunProvenanceRecorder | undefined
     const runId = handle.agent.runId
     if (runs !== undefined && runId !== undefined && this.negotiated !== undefined) {
-      await runs.service.recordProvenance(runId, { negotiation: this.negotiated })
+      // MUTATION M13: the recording call is removed.
     }
     const rec: SessionRecord = { handle }
     this.sessions.set(sessionId, rec)
