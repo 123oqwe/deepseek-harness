@@ -792,7 +792,7 @@ function parseCapabilityRequirement(value: unknown, pluginId: PluginId, index: n
   }
   return {
     capabilityId: brandString<CapabilityId>(requireNonEmptyString(entry.capabilityId, pluginId, `${path}.capabilityId`)),
-    necessity,
+    necessity: necessity === 'required' && entry.securityCritical === false ? 'optional' : necessity,
     securityCritical: entry.securityCritical,
   }
 }
