@@ -957,7 +957,9 @@ export default class RunPlugin extends Service {
       const inherited = parent === undefined
         ? undefined
         : this.service.runsForSession(parent).find(run => run.provenance !== undefined)?.provenance
-      if (inherited !== undefined) this.track(this.service.recordProvenance(runId, inherited).then(() => undefined))
+      if (inherited !== undefined) {
+        // MUTATION M13b: the inherited provenance is not recorded.
+      }
     }
     agent.runId = runId
     agent.lifecycle = { runId: brandString<AgentRunId>(runId), state: 'queued', epoch: taken.lease.token.epoch }
