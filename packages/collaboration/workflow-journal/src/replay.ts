@@ -108,7 +108,7 @@ export function compactJournal(journal: WorkflowJournal): WorkflowJournal {
     if (!compactable) return entry
     return { ...entry, inputs: [] as readonly ArtifactRef[] }
   })
-  return { ...journal, entries }
+  return { scriptDigest: journal.scriptDigest, entries, ...journal.displaced === undefined ? {} : { displaced: journal.displaced } }
 }
 
 /**
