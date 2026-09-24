@@ -350,7 +350,6 @@ export class HarnessClient {
     if (missing.length > 0) {
       throw new SdkProtocolError(
         `initialize: the server did not agree to mandatory capability/capabilities ${missing.join(', ')}`,
-        { reason: 'mandatory-capability-not-agreed', capabilities: missing },
       )
     }
     return result
