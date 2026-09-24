@@ -12,6 +12,7 @@ P4-05 must[0] 要求审批等待能与工具等待区分开，这样决定是否
 
 - **状态机允许 `waiting_tool → waiting_human`。** 问操作者期间，不论之前处于哪种等待，运行都在等人。风险门之后仍把运行推回 `running`，与原来一样，所以工具体在 `running` 下运行。
 - **风险门记录被拒的推进。** `gateActionRisk` 把 `advanceLeasedAgent` 的每次回答交给 `warnRefusedAdvance`，由它记一条 warn，写明工具、提议的状态与拒绝原因。`no-run` 是没有挂 Run Service 的组合得到的回答，不记。动作照旧不会因为生命周期记不下来而被拒。
+- **不论询问如何结束，运行都回到 `running`。** 询问放在 `try` 里，由 `finally` 推进运行；审批服务抛错时运行也回到 `running`，错误照样交给调用方（盲审 F1，B-587）。以前抛错会让运行停在 `waiting_human`：这个状态不占派发槽位，`agent/pre-step` 于是拒绝该会话之后的每一步。
 
 ## 考虑过的其他做法
 

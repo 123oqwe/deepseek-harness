@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-24-an-approval-asked-during-a-tool-dispatch-is-a-human-wait.md
-2026-09-24-an-approval-asked-during-a-tool-dispatch-is-a-human-wait.md: 1e38c1d014c096195c8d5156e504801ebdcfe180
-2026-09-24-an-approval-asked-during-a-tool-dispatch-is-a-human-wait.zh.md: 1490a2a8fd20cab296da1d7a3709794b2a72cf7c
+2026-09-24-an-approval-asked-during-a-tool-dispatch-is-a-human-wait.md: e74862305c6022dbf9e22b07af6f41c175d56862
+2026-09-24-an-approval-asked-during-a-tool-dispatch-is-a-human-wait.zh.md: 0c672df7bb3952c529f60af2f4181387382065ee

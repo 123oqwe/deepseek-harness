@@ -12,6 +12,7 @@ P4-05 must[0] asks that an approval wait be told apart from a tool wait, so that
 
 - **The state machine admits `waiting_tool → waiting_human`.** While an operator is asked the run waits on a person, whichever wait it was in before. The gate returns the run to `running` afterwards, as it did, so the tool body runs in `running`.
 - **The gate logs a refused advance.** `gateActionRisk` passes each answer of `advanceLeasedAgent` to `warnRefusedAdvance`, which warns with the tool, the state proposed and the refusal. `no-run`, the answer for a composition without a Run Service, is not logged. The action is still not refused for a lifecycle it could not record.
+- **The run returns to `running` however the ask ends.** The ask sits in a `try` whose `finally` advances the run, so the run is back in `running` also when the approval service throws, and the error still reaches the caller (blind review F1, B-587). Before, a throw left the run in `waiting_human`, which holds no dispatch slot, and `agent/pre-step` refused every later step of the session.
 
 ## Alternatives considered
 

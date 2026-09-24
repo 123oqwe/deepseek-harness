@@ -517,6 +517,9 @@ export type RiskRefusal =
  * Absent policy service means no gate: a composition with no
  * `permissionPresets` has no organisation policy to enforce, which is
  * capability absence rather than an action nobody vouched for.
+ *
+ * While an operator is asked the run waits in `waiting_human`, and it is back
+ * in `running` when the ask ends, including when the approval service throws.
  * @param ctx - the mounting context, consulted for an optional policy service.
  * @param agent - the agent dispatching the action; its session carries the preset in force.
  * @param toolName - the action's capability, used as its identity to the classifier.
@@ -525,6 +528,7 @@ export type RiskRefusal =
  * @param binding - what an approval asked here is bound to, when the caller has a tuple (P2-06 must[1]).
  * @param display - the six fields a decider must see, when the caller has a manifest (P2-06 must[0]).
  * @returns the refusal, or `undefined` when the action may run.
+ * @throws what the approval service's `request` throws, once the run is back in `running`.
  */
 export async function gateActionRisk(
   ctx: Context,
@@ -584,27 +588,34 @@ export async function gateActionRisk(
   // the edge from each. An action is not refused because its lifecycle could
   // not be recorded; a refused advance is logged instead.
   warnRefusedAdvance(ctx, advanceLeasedAgent(agent, 'waiting_human', `awaiting approval for "${toolName}"`), 'waiting_human', toolName)
-  const outcome = approval === undefined
-    ? 'unavailable'
-    : await approval.request({
-      agent,
-      toolName,
-      reason: riskRefusalReason(classification.riskClass, undeclared),
-      // Supplied only when the caller has a tuple. This gate is the one that
-      // binds, because its call site holds BOTH halves — the arguments and the
-      // manifest record — while the registry's own ask (`serviceAsk`) sits in a
-      // layer that appends no manifest. The other path is therefore unbound and
-      // says so (P2-06 U's declared limitation) rather than gaining a
-      // cross-layer reference to reach one.
-      ...binding === undefined ? {} : { binding },
-      // must[0]: the decider sees the action, not only its name. Carried
-      // through the gate rather than composed by each answerer, so two surfaces
-      // show one account of the same call.
-      ...display === undefined ? {} : { display },
-    })
-  // Back to `running` whatever the operator said: the wait is over, and the
-  // caller decides whether the action proceeds.
-  warnRefusedAdvance(ctx, advanceLeasedAgent(agent, 'running', `approval for "${toolName}" ended "${outcome}"`), 'running', toolName)
+  let outcome: string | undefined
+  try {
+    outcome = approval === undefined
+      ? 'unavailable'
+      : await approval.request({
+        agent,
+        toolName,
+        reason: riskRefusalReason(classification.riskClass, undeclared),
+        // Supplied only when the caller has a tuple. This gate is the one that
+        // binds, because its call site holds BOTH halves — the arguments and the
+        // manifest record — while the registry's own ask (`serviceAsk`) sits in a
+        // layer that appends no manifest. The other path is therefore unbound and
+        // says so (P2-06 U's declared limitation) rather than gaining a
+        // cross-layer reference to reach one.
+        ...binding === undefined ? {} : { binding },
+        // must[0]: the decider sees the action, not only its name. Carried
+        // through the gate rather than composed by each answerer, so two surfaces
+        // show one account of the same call.
+        ...display === undefined ? {} : { display },
+      })
+  } finally {
+    // Back to `running` however the ask ended, a throw included: the wait is
+    // over, and the caller decides whether the action proceeds. A run left in
+    // `waiting_human` holds no dispatch slot, so `agent/pre-step` would refuse
+    // every later step of its session.
+    const ended = outcome === undefined ? 'threw' : `ended "${outcome}"`
+    warnRefusedAdvance(ctx, advanceLeasedAgent(agent, 'running', `approval for "${toolName}" ${ended}`), 'running', toolName)
+  }
   recordDecision(outcome === 'allowed-once' ? 'asked' : 'refused')
   if (outcome === 'allowed-once') return undefined
   return { kind: 'approval-refused', riskClass: classification.riskClass, outcome, undeclared }
