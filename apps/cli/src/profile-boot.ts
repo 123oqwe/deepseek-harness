@@ -319,7 +319,7 @@ export async function composeProfile(
   }
   const homePatches = loadOptionalPatches(NAME, homePatchPath()) ?? []
   const overlays = patchFiles.flatMap(file => loadOverlayPatches(NAME, resolve(file)))
-  const bundlePatches = negotiation.admitted.flatMap(entry => entry.layer.patches)
+  const bundlePatches = [...negotiation.admitted, ...negotiation.blocked].flatMap(entry => entry.layer.patches)
   const rows = new Map<string, EntryOptions>()
   for (const row of composeEntries([bundlePatches, profile.patches, homePatches, overlays])) {
     if (typeof row.id === 'string') rows.set(row.id, row)
