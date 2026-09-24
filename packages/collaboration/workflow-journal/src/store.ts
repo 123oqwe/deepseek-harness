@@ -41,7 +41,7 @@ export function writeJournal(directory: string, runId: string, journal: Workflow
   mkdirSync(directory, { recursive: true, mode: 0o700 })
   const target = fileFor(directory, runId)
   const temporary = `${target}.tmp`
-  writeFileSync(temporary, `${JSON.stringify(journal, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 })
+  writeFileSync(temporary, `${JSON.stringify(journal, null, 2)}\n`, 'utf8')
   renameSync(temporary, target)
 }
 
