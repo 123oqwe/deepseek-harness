@@ -1104,7 +1104,7 @@ export function runLayerDepsCheck(root) {
       rule: 'unexempted-cycle',
       fromPackage: cycle[0],
       toPackage: cycle[cycle.length - 1],
-      detail: `${index === 0 ? 'shortest cycle' : 'cycle'}: ${cycle.join(' -> ')} -> ${cycle[0]}`,
+      detail: `${index === 0 ? 'shortest cycle' : 'cycle'}: ${cycle.join(' -> ')}`,
     })
   }
   for (const entry of stale) {
