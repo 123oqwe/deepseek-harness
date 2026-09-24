@@ -83,7 +83,7 @@
 - **MUST：** 定义层序：kernel → protocol/types → capability definitions → providers → orchestration/runtime → surfaces/apps。；允许事件类型作为窄共享依赖，但禁止通过全局 singleton 绕过层级。；检测 package graph、TypeScript path alias 与动态 require；对合法循环要求显式 ADR。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
-- **Acceptance：** 生产 package graph 无未豁免环。；任何 kernel 对 Cordis、UI、具体模型 provider 的依赖都失败。；检查在 10 秒内完成并给出最短环路径。
+- **Acceptance：** 生产 package graph 无未豁免环。；任何 kernel 对 Cordis、UI、具体模型 provider 的依赖都失败。例外只有 trust-kernel 对 Cordis 的 `Context` 导入绑定、它所需的 `@deepseek-ai/cordis` peer 声明、以及对 `Context` 接口的 `declare module` 增补。「依赖」只计直接依赖,不含 devDependencies、测试文件与传递依赖。；检查在 10 秒内完成并给出最短环路径。
 - **Validation：** 运行 `pnpm architecture:layers`。；使用三种环路夹具验证检测。；在 PR gate 中把新增环路设为 blocking。
 - **验证命令：** `pnpm architecture:layers`；随后 G，阶段按适用项跑 R。
 - **真实任务证据：** E0；场景 S01（架构/工程基线夹具）；必须走本项 Validation 所述真实产品路径/可观测外部边界，并保存原始 receipts、before/after、独立验证与 13 项 evidence pack；真实 provider/model 支持声明另需 live lane。
@@ -111,7 +111,7 @@
 - **MUST：** 为每个持久/线协议对象声明 schemaId、major/minor、兼容规则和迁移函数。；新增字段默认 backward-compatible；删除/重命名/语义改变要求 major 版本和迁移。；Session replay、SDK initialize、plugin load 在使用前先协商/验证 schema。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
-- **Acceptance：** 至少能够读取审计基线产生的旧 session fixture。；不兼容客户端收到机器可读错误，不出现静默字段丢失。；所有 registry migration 具有双向或明确不可逆测试。
+- **Acceptance：** 审计基线产生的 v0 会话日志都能读出;例外是在首个 step 之前出现 surface 事件的那一类(按内容数,基线上有 24 个),产品明确拒绝它们,并给出可读的原因。；不兼容客户端收到机器可读错误，不出现静默字段丢失。；所有 registry migration 具有双向或明确不可逆测试。
 - **Validation：** 运行 schema golden tests。；用旧版 fixture 对新 runtime 做 replay；用新版 unknown optional field 对旧兼容 client 做降级测试。；对 closed union 增加未知值测试，要求 fail closed 或显式 `unknown` 分支。
 - **验证命令：** 来源没有项级可执行命令；实施前必须在 manifest 注册 focused command、fixture 路径与预期 exit code（不得猜），再跑 G/适用 R。
 - **真实任务证据：** E0；场景 S01（架构/工程基线夹具）；必须走本项 Validation 所述真实产品路径/可观测外部边界，并保存原始 receipts、before/after、独立验证与 13 项 evidence pack；真实 provider/model 支持声明另需 live lane。
@@ -125,7 +125,7 @@
 - **MUST：** 每个 gate 输出带哈希的 JSON 结果：命令、开始结束时间、退出码、环境、日志/工件 digest、测试数、跳过原因。；最终 evidence package 绑定 baseline fingerprint、Git diff、构建产物 digest。；任何 skipped blocking gate 或缺失 artifact 都不能标记 `accepted=true`。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
-- **Acceptance：** 篡改任一测试日志、二进制或配置后 evidence verify 失败。；同一次执行的 evidence 可离线验证。；Agent 最终回答必须引用 package path 和 accepted 状态。
+- **Acceptance：** 篡改任一测试日志、二进制或配置后 evidence verify 失败。；同一次执行的 evidence 可离线验证。；仓库的 `AGENTS.md` 规定,汇报 evidence gate 结果时引用证据包的真实路径和 `accepted` 状态;出厂的 `dsh-agent-instructions` 把这条规则载入 agent 上下文;`evidence:verify` 的输出同时给出包路径和 `accepted` 状态,供引用。不要求、也不检查 agent 的回答是否真的引用。
 - **Validation：** 运行 `pnpm evidence:collect -- pnpm test` 后执行 `pnpm evidence:verify`。；分别删除日志、改退出码、换构建产物，验证检测。；将 evidence verifier 放到发布脚本最后一步。
 - **验证命令：** `pnpm evidence:collect -- pnpm test`；`pnpm evidence:verify`；随后 G，阶段按适用项跑 R。
 - **真实任务证据：** E0；场景 S01（架构/工程基线夹具）；必须走本项 Validation 所述真实产品路径/可观测外部边界，并保存原始 receipts、before/after、独立验证与 13 项 evidence pack；真实 provider/model 支持声明另需 live lane。
@@ -401,7 +401,7 @@
 - **MUST：** ApprovalRequest 引用 ActionManifest digest，并展示经脱敏的完整参数、资源、风险、预期 diff、有效期。；执行前重新验证 digest、preconditions、capability token 和 policy version。；任何字段变化使批准失效并生成新请求。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
-- **Acceptance：** 审批后替换参数、切换账户、改变文件 inode/远端对象版本均不会执行。；敏感值可 redacted 展示，但 hash 仍覆盖真实规范化值。；批准事件与最终 action 形成一一引用。
+- **Acceptance：** 审批后替换参数、切换账户均不会执行，对在调用展示中声明了目标文件(`presentCall().locations`)的动作,执行前重新校验时,若该文件经 `ctx.fs` 读到的版本与询问时不同,就不执行。版本在本地后端含 inode,在远端 fs 后端是它的 revision;由不存在变为存在也算。；敏感值可 redacted 展示，但 hash 仍覆盖真实规范化值。；批准事件与最终 action 形成一一引用。
 - **Validation：** 运行 TOCTOU、argument substitution、Unicode confusable、batch mutation 测试。；测试 code-mode 嵌套调用同样绑定。；审计查询能从 action 反查唯一 approval。
 - **验证命令：** 来源没有项级可执行命令；实施前必须在 manifest 注册 focused command、fixture 路径与预期 exit code（不得猜），再跑 G/适用 R。
 - **真实任务证据：** E2；场景 S04、S05、S11；必须走本项 Validation 所述真实产品路径/可观测外部边界，并保存原始 receipts、before/after、独立验证与 13 项 evidence pack；真实 provider/model 支持声明另需 live lane。
@@ -758,7 +758,7 @@
 - **Priority / Wave / 依赖：** P0 / W6 / `P4-06`。
 - **问题 → 目标：** 没有租约与 fencing 时，旧 worker 在失联后恢复可能继续写状态或重复外部动作。 → 防止网络分区或重启后两个 worker 同时执行同一 Agent/Action。
 - **Files：** target `packages/core/agent/src/dispatch.ts` [B]；`packages/core/agent/src/consumed-work.ts` [B]；`packages/workflow/workflow-worker-thread/src/host.ts` [B]；`packages/workflow/workflow-worker-thread/src/runtime.ts` [B]；new `packages/run/lease/src/index.ts` [N]；`packages/run/lease/src/types.ts` [N]；`packages/run/lease/src/store.ts` [N]；`packages/run/lease/tests/fencing.e2e.ts` [N]。
-- **MUST：** 每个 work item 由 epoch lease 所有；所有状态写和 action execution 携带 fencing token。；heartbeat 续租，过期后 scheduler 可 reclaim。
+- **MUST：** 每个 work item 由 epoch lease 所有；Run 的终态写与首步写携带 fencing token,并在写入处核对。；heartbeat 续租，过期后 scheduler 可 reclaim。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
 - **Acceptance：** 旧 worker 恢复后无法提交结果或执行新副作用。；clock skew 在容忍范围内不导致双主。；lease store 故障时停止新工作。

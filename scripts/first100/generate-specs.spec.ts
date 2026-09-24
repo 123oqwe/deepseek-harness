@@ -1061,8 +1061,8 @@ describe('first100 U3 clause coverage (maintainer directive Q3/U3)', () => {
       unmatchedSourceClauses: 0,
       inventedUndocumentedClauses: 0,
       inventedDocumentedDefaultBoundaryClauses: 156,
-      planCorrectedClauses: 5,
-      supersededSourceClauses: 5,
+      planCorrectedClauses: 10,
+      supersededSourceClauses: 10,
     })
     expect(Object.keys(report.epics).length).toBe(100)
     // BASE-ALIGN-v2 23-PARTIAL: a rescoped epic legitimately diverges from

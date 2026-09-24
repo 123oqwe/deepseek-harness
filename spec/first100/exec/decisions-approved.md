@@ -359,3 +359,42 @@ That distinction was put to the user directly, because it changes what the regis
 **4. 不在本条之内**
 - `BLOCKED-QUEUE.md` 的 ACCEPTANCE LOCKS 中 P2-05、P3-01 两行引用的是旧文,本笔不改。要不要照 C13 之后的先例(`2406d1b222`)另起一笔重述,由 delegate 定。
 - 收窄后两条的补证另做:P2-05 是 A-335 第 3 项;P3-01 另行排期。
+
+## C19 (2026-09-24) — 五条已批的收窄写进条文,另记 P0-02 按字面实现的决定(用户批准,delegate 推荐)
+
+**用户原话**
+
+经巡逻会话 guanjieqiao-e6 转达(#23),2026-09-24:
+
+> 「全部按delegate的推荐走」
+
+记入 `channel/WORKING-MODEL.md` §12「S8 已批准的收窄(续)」③–⑦。题面与推荐见 `channel/B-CLASS-QUESTIONS-2026-09-24.md`,每条都经独立核验(`channel/workorders/verify/`)。
+
+**1. 改了什么**
+- 改的是钉住的矩阵 `spec/first100/sources/first100-requirements-matrix.md`,照 C13 的 reword 机制记为 plan correction(`extract-registry.mjs` 的 `CLAUSE_REWORDS`,每条带 evidence)。
+
+| 条款 | 原文 | 新文 |
+|---|---|---|
+| P0-06 acceptance[0] | 至少能够读取审计基线产生的旧 session fixture。 | 审计基线产生的 v0 会话日志都能读出;例外是在首个 step 之前出现 surface 事件的那一类(按内容数,基线上有 24 个),产品明确拒绝它们,并给出可读的原因。 |
+| P0-04 acceptance[1] | 任何 kernel 对 Cordis、UI、具体模型 provider 的依赖都失败。 | 任何 kernel 对 Cordis、UI、具体模型 provider 的依赖都失败。例外只有 trust-kernel 对 Cordis 的 `Context` 导入绑定、它所需的 `@deepseek-ai/cordis` peer 声明、以及对 `Context` 接口的 `declare module` 增补。「依赖」只计直接依赖,不含 devDependencies、测试文件与传递依赖。 |
+| P2-06 acceptance[0] | 审批后替换参数、切换账户、改变文件 inode/远端对象版本均不会执行。 | 审批后替换参数、切换账户均不会执行，对在调用展示中声明了目标文件(`presentCall().locations`)的动作,执行前重新校验时,若该文件经 `ctx.fs` 读到的版本与询问时不同,就不执行。版本在本地后端含 inode,在远端 fs 后端是它的 revision;由不存在变为存在也算。 |
+| P0-07 acceptance[2] | Agent 最终回答必须引用 package path 和 accepted 状态。 | 仓库的 `AGENTS.md` 规定,汇报 evidence gate 结果时引用证据包的真实路径和 `accepted` 状态;出厂的 `dsh-agent-instructions` 把这条规则载入 agent 上下文;`evidence:verify` 的输出同时给出包路径和 `accepted` 状态,供引用。不要求、也不检查 agent 的回答是否真的引用。 |
+| P4-07 must[1] | 所有状态写和 action execution 携带 fencing token。 | Run 的终态写与首步写携带 fencing token,并在写入处核对。 |
+
+- 新文逐字取自 S8,字节由脚本从 WORKING-MODEL 取。
+- P2-06 只换第三肢。前两肢按字面保留,与新的第三肢之间用全角「，」:`splitClauses` 按「；」切条,用「；」会把一条拆成两条。
+- P4-07 must[1] 只放收窄后的主句。S8 里随附的 Known Limitation(`pauseRun` 先交还租约等其余状态写)写在这条 reword 的 evidence 里。
+- P2-06 的三类 Known Limitation(bash / pwsh 作用的文件、没有声明目标的工具、不经 `ctx.fs` 的远端对象),以及「收窄后的范围在出厂规则下为空、执行前的窗口是 `tool-calls.ts:337` → `:362`、出厂规则一旦改成要审批就回头按字面补做」,同样写在它的 evidence 里。
+
+**2. P0-02:按字面实现的决定(不是收窄,属 §13.2 的大改,用户已批)**
+- 只有显式的开发 profile 接受 `DSH_TRUST_KERNEL_INSECURE`;出厂 profile 设了它就拒绝启动。
+- 「显式开发 profile」与 P1-02(unsigned-dev)、G4(横幅)共用同一个概念,只接线一处。
+- 用到 insecure 的测试夹具改用开发 profile,受影响的冻结格(P9-03、P9-06 等)重冻结。
+
+**3. 计数**
+- clause coverage 报告的 `planCorrectedClauses` 与 `supersededSourceClauses` 由 5 变为 10,unmatched 与 undocumented 仍为 0。
+- `generate-specs.spec.ts` 钉住的这两个数在同一笔里改。
+
+**4. 锁行重述**
+- `BLOCKED-QUEUE.md` ACCEPTANCE LOCKS 中 P0-04、P0-07、P0-06、P2-06 四行,在解锁条件末尾追加「RESTATED … (C19)」一段。引用的旧文与原来的条件都不改,照 C13 之后与 C18 的做法。
+- P4-07 那一行讲的是 acceptance[0] 与 acceptance[2],不引用 must[1],所以不动。
