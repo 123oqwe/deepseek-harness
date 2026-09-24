@@ -101,7 +101,7 @@ export function parseLaunchTrustRequest(args: readonly string[]): LaunchTrustReq
  */
 async function writeLaunchTrust(ctx: Context, request: LaunchTrustRequest): Promise<void> {
   const trust = ctx.workspaceTrust
-  const cwd = process.cwd()
+  const cwd = process.env.PWD ?? process.cwd()
   if (request.kind === 'revoke') {
     await trust.revokeTrust(cwd, 'untrusted')
     return
