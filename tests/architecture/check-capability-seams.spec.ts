@@ -151,6 +151,13 @@ describe('the scanned workspace is the one pnpm-workspace.yaml declares (accepta
     writeFileSync(join(fixture, 'pnpm-workspace.yaml'), 'linkWorkspacePackages: true\n')
     expect(() => readWorkspacePackages(fixture)).toThrow('pnpm-workspace.yaml declares no packages')
   })
+
+  it('the seam scanner refuses a pnpm-workspace.yaml whose patterns match no package', () => {
+    const fixture = fixtureRoot()
+    writeManifest(fixture, 'packages/fixture/p', 'fixture-p')
+    writeFileSync(join(fixture, 'pnpm-workspace.yaml'), "packages:\n  - 'nothing/*'\n")
+    expect(() => readWorkspacePackages(fixture)).toThrow('pnpm-workspace.yaml matches no package')
+  })
 })
 
 describe('the real workspace (acceptance[0]): runCapabilitySeamsCheck against the real repository', () => {

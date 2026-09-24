@@ -28,6 +28,7 @@ import {
   collectLayerEdges,
   readLayerExemptions,
   runLayerDepsCheck,
+  TIME_BUDGET_MS,
 } from '../../scripts/architecture/check-layer-deps.mjs'
 
 const root = resolve(import.meta.dirname, '../..')
@@ -471,6 +472,13 @@ describe('acceptance[0]: the scanned workspace is the one pnpm-workspace.yaml de
     writeFileSync(join(fixture, 'pnpm-workspace.yaml'), 'linkWorkspacePackages: true\n')
     expect(() => runLayerDepsCheck(fixture)).toThrow('pnpm-workspace.yaml declares no packages')
   })
+
+  it('the layer checker refuses a pnpm-workspace.yaml whose patterns match no package', () => {
+    const fixture = fixtureRoot()
+    writeManifest(fixture, 'packages/core/p', { name: dsh('p') })
+    writeWorkspace(fixture, ['nothing/*'])
+    expect(() => runLayerDepsCheck(fixture)).toThrow('pnpm-workspace.yaml matches no package')
+  })
 })
 
 describe('acceptance[0]: every unexempted cycle is reported, and a record exempts the one cycle its edges name (layering.md rule 5)', () => {
@@ -500,6 +508,15 @@ describe('acceptance[0]: every unexempted cycle is reported, and a record exempt
     const complete = runLayerDepsCheck(fixture)
     expect(complete.violations).toEqual([])
     expect(complete.unexemptedCycles).toEqual([])
+  })
+
+  it('reports a cycle in which a vendored package depends on a classified one', () => {
+    const fixture = fixtureRoot()
+    writeManifest(fixture, 'vendor/cordis', { name: CORDIS, dependencies: { [dsh('p')]: 'workspace:^' } })
+    writeManifest(fixture, 'packages/core/p', { name: dsh('p'), dependencies: { [CORDIS]: 'workspace:^' } })
+    const result = runLayerDepsCheck(fixture)
+    expect(result.unexemptedCycles).toEqual([[CORDIS, dsh('p')]])
+    expect(result.violations.filter(v => v.rule === 'unexempted-cycle')).toHaveLength(1)
   })
 
   it('fails when an exempted short cycle coexists with an unexempted longer one', () => {
@@ -594,6 +611,7 @@ describe('acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis
     ['require()', CORDIS_PEER, `${CONTEXT_IMPORT}\nexport const load = () => require('${CORDIS}')`, CORDIS],
     ['import = require()', CORDIS_PEER, `${CONTEXT_IMPORT}\nimport cordis = require('${CORDIS}')`, CORDIS],
     ['a triple-slash types reference', CORDIS_PEER, `/// <reference types="${CORDIS}" />\n${CONTEXT_IMPORT}`, CORDIS],
+    ['a declare-module augmentation declaring a const named Context', CORDIS_PEER, `${CONTEXT_IMPORT}\ndeclare module '${CORDIS}' {\n  const Context: unknown\n}`, CORDIS],
     ['a declare-module augmentation of an interface other than Context', CORDIS_PEER, `${CONTEXT_IMPORT}\ndeclare module '${CORDIS}' {\n  interface Events {\n    'kernel/probe'(): void\n  }\n}`, CORDIS],
     ['a Cordis declaration in dependencies rather than peerDependencies', { dependencies: { [CORDIS]: 'workspace:^' } }, CONTEXT_IMPORT, CORDIS],
     ['a Cordis peer declaration no Context use needs', CORDIS_PEER, undefined, CORDIS],
@@ -618,6 +636,36 @@ describe('acceptance[1]: a kernel package depends on no model provider, UI packa
     const violations = runLayerDepsCheck(fixture).violations
     expect(violations.map(v => [v.rule, v.toPackage])).toEqual([['kernel-upward-dependency', PROVIDER]])
     expect(violations[0]?.detail.startsWith('kernel -> providers')).toBe(true)
+  })
+
+  // A consumer installs a kernel package's optional dependencies too, so each
+  // one is an edge acceptance[1] counts.
+  const optional: [string, (fixture: string) => void, string][] = [
+    ['a model provider', fixture => {
+      writeManifest(fixture, 'packages/llm/llm-x', { name: PROVIDER })
+      writeProvidersFamily(fixture)
+    }, PROVIDER],
+    ['a UI package', fixture => {
+      writeManifest(fixture, 'packages/client/ui-fixture', { name: UI })
+    }, UI],
+  ]
+
+  it.each(optional)('rejects a kernel dependency on %s declared only in optionalDependencies', (_target, writeTarget, target) => {
+    const fixture = fixtureRoot()
+    writeManifest(fixture, 'packages/kernel/k', { name: KERNEL, optionalDependencies: { [target]: 'workspace:^' } })
+    writeTarget(fixture)
+    const violations = runLayerDepsCheck(fixture).violations
+    expect(violations.map(v => [v.rule, v.toPackage])).toEqual([['kernel-upward-dependency', target]])
+  })
+
+  it('rejects a kernel package declaring a UI application under apps/, even one it imports nothing from', () => {
+    // A UI application counts as UI for acceptance[1], so rule 8's
+    // spawn-target reading does not apply to a kernel package.
+    const fixture = fixtureRoot()
+    writeManifest(fixture, 'packages/kernel/k', { name: KERNEL, dependencies: { [dsh('web-frontend')]: 'workspace:^' } })
+    writeManifest(fixture, 'apps/web', { name: dsh('web-frontend') })
+    const violations = runLayerDepsCheck(fixture).violations
+    expect(violations.map(v => [v.rule, v.fromPackage, v.toPackage])).toEqual([['composition-root-inbound-dependency', KERNEL, dsh('web-frontend')]])
   })
 
   // Every row also imports two Node builtins and a package-internal subpath,
@@ -665,6 +713,12 @@ describe('acceptance[1]: a kernel package depends on no model provider, UI packa
     // The same store still admits the kernel's orchestration-runtime edge, so
     // the refusal above is decided by the target, not by a disabled allowlist.
     expect(result.kernelEdges.find(edge => edge.toPackage === ORCH)?.verdict).toBe('allowlisted')
+  })
+})
+
+describe('acceptance[2]: the time budget', () => {
+  it('runs against a 10-second budget unless --budget-ms replaces it', () => {
+    expect(TIME_BUDGET_MS).toBe(10_000)
   })
 })
 
