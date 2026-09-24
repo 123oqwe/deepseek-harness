@@ -773,7 +773,7 @@ function collectKernelNonWorkspaceEdges(root, byPackage, vendoredNames, workspac
       }
       const { importedFiles, typeReferenceDirectives } = ts.preProcessFile(text, true, true)
       for (const reference of [...importedFiles, ...typeReferenceDirectives]) {
-        if (!declared.has(reference.pos)) addUse(reference.fileName, '*', file)
+        if (!declared.has(reference.pos) && !vendoredNames.has(packageNameOf(reference.fileName))) addUse(reference.fileName, '*', file)
       }
     }
     for (const field of KERNEL_DEPENDENCY_FIELDS) {
