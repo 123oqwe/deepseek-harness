@@ -14,6 +14,7 @@
  */
 
 import { createServer } from 'node:http'
+import type { ServerResponse } from 'node:http'
 
 /** One tool call the stub emits instead of assistant text, in turn order. */
 export interface StubToolCall {
@@ -21,6 +22,11 @@ export interface StubToolCall {
   readonly name: string
   /** Arguments object, serialized into the wire's `function.arguments` string. */
   readonly arguments: Record<string, unknown>
+  /**
+   * The call's wire id. Defaults to `stub-<arrival index>`, which repeats when
+   * one session is driven through two stubs in turn.
+   */
+  readonly id?: string
 }
 
 /** What the stub sends, and how it ends the turn once the script runs out. */
@@ -42,6 +48,13 @@ export interface StubModelOptions {
    * `stop`; `length` is what a max-token case needs.
    */
   readonly finishReason?: string
+  /**
+   * 1-based arrival index of one request the stub records and never answers,
+   * so a case can stop a turn at a known model call and kill its host there.
+   * The response stays open until {@link StubModelServer.close}. Absent, every
+   * request is answered.
+   */
+  readonly holdRequest?: number
 }
 
 /** A running stand-in endpoint, and the requests it has been sent. */
@@ -50,7 +63,13 @@ export interface StubModelServer {
   readonly baseUrl: string
   /** Every request body received so far, parsed, in arrival order. */
   readonly requests: readonly Record<string, unknown>[]
-  /** Stop listening. Safe to call after the child has already exited. */
+  /**
+   * Resolves with the held request's parsed body when it arrives. Never
+   * settles when {@link StubModelOptions.holdRequest} is absent or that request
+   * never comes.
+   */
+  readonly held: Promise<Record<string, unknown>>
+  /** Stop listening, ending the held response first. Safe to call after the child has already exited. */
   close(): Promise<void>
 }
 
@@ -62,12 +81,20 @@ export interface StubModelServer {
 export async function startStubModelServer(options: StubModelOptions = {}): Promise<StubModelServer> {
   const requests: Record<string, unknown>[] = []
   const toolCalls = options.toolCalls ?? []
+  const held = Promise.withResolvers<Record<string, unknown>>()
+  const heldResponses: ServerResponse[] = []
   const server = createServer((request, response) => {
     let body = ''
     request.setEncoding('utf8')
     request.on('data', (chunk: string) => { body += chunk })
     request.on('end', () => {
-      requests.push(JSON.parse(body) as Record<string, unknown>)
+      const parsed = JSON.parse(body) as Record<string, unknown>
+      requests.push(parsed)
+      if (requests.length === options.holdRequest) {
+        heldResponses.push(response)
+        held.resolve(parsed)
+        return
+      }
       const toolCall = toolCalls[requests.length - 1]
       response.writeHead(200, { 'content-type': 'text/event-stream' })
       response.write('data: {"choices":[{"delta":{"role":"assistant","content":null}}]}\n\n')
@@ -76,7 +103,7 @@ export async function startStubModelServer(options: StubModelOptions = {}): Prom
       } else {
         response.write(`data: ${JSON.stringify({ choices: [{ delta: { tool_calls: [{
           index: 0,
-          id: `stub-${requests.length}`,
+          id: toolCall.id ?? `stub-${requests.length}`,
           type: 'function',
           function: { name: toolCall.name, arguments: JSON.stringify(toolCall.arguments) },
         }] } }] })}\n\n`)
@@ -94,6 +121,12 @@ export async function startStubModelServer(options: StubModelOptions = {}): Prom
   return {
     baseUrl: `http://127.0.0.1:${address.port}`,
     requests,
-    close: async () => { await new Promise<void>(resolve => server.close(() => { resolve() })) },
+    held: held.promise,
+    close: async () => {
+      // A held response keeps its connection open, and `server.close` waits
+      // for every connection to end.
+      for (const response of heldResponses.splice(0)) response.destroy()
+      await new Promise<void>(resolve => server.close(() => { resolve() }))
+    },
   }
 }
