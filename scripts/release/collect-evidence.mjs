@@ -139,7 +139,6 @@ export function workingTreePatch(repoRoot, baseSha, outPath) {
     .filter(path => path !== '' && path !== ownFile && !path.startsWith(ownDir))
   const untracked = [...new Set([
     ...others(['--exclude-standard'], []),
-    ...others(['--ignored', '--exclude-standard'], ['--', ':(glob)**/.gitignore']),
   ])].sort()
   const added = untracked.map((path) => {
     const result = spawnSync('git', ['diff', '--binary', '--no-ext-diff', '--no-textconv', '--no-index', '--', '/dev/null', path], { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1 << 30 })
