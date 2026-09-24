@@ -680,12 +680,16 @@ describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', { ti
       const initResult = collectInit(root, baseSha, ['typecheck', 'test'], ['lib/index.js'])
       expect(initResult.status, `init stderr: ${initResult.stderr}`).toBe(0)
 
-      const typecheckScript = writeGateScript(root, 'typecheck-gate.mjs', "console.log('typecheck ok'); process.exit(0)")
+      // Outside the checkout: the package binds the working tree, so scripts
+      // deleted from inside it below would be a change after collection.
+      const gates = mkdtempSync(join(tmpdir(), 'dsh-evidence-gates-'))
+      fixtureRoots.push(gates)
+      const typecheckScript = writeGateScript(gates, 'typecheck-gate.mjs', "console.log('typecheck ok'); process.exit(0)")
       const typecheckResult = collectRun(root, 'typecheck', ['--required'], [process.execPath, typecheckScript])
       expect(typecheckResult.status, `typecheck run stderr: ${typecheckResult.stderr}`).toBe(0)
 
       write(root, 'test-counts.json', JSON.stringify({ total: 3, passed: 3, failed: 0, skipped: 0 }))
-      const testScript = writeGateScript(root, 'test-gate.mjs', "console.log('test ok'); process.exit(0)")
+      const testScript = writeGateScript(gates, 'test-gate.mjs', "console.log('test ok'); process.exit(0)")
       const testResult = collectRun(root, 'test', ['--required', '--test-counts', 'test-counts.json'], [process.execPath, testScript])
       expect(testResult.status, `test run stderr: ${testResult.stderr}`).toBe(0)
 
