@@ -579,24 +579,7 @@ export class WorkerRun implements WorkflowRun {
       },
     )
     this.post(HostToWorkerType.ChildStarted, { callId, childId: run.id })
-    void forwardResult.then(async (forward) => {
-      // P4-08 acceptance[0]: a child's log is durable before the worker hears
-      // its result. The worker reports the step completed on that result and
-      // the host journals it at once, while the session backend may still hold
-      // the child's `turn/end` in its write batch; a kill in between left a
-      // journal naming a finished step whose child log could not show it, and
-      // the resume ran that child again. A failed flush is logged, and the
-      // resume then reruns the step.
-      const child = run.localAgent
-      if (child !== undefined) {
-        try {
-          await child.ctx.sessions.flush(child.session)
-        } catch (error: unknown) {
-          this.ctx.logger.warn(`workflow-worker-thread: child ${run.id} session flush failed, so a resume reruns its step: ${renderThrown(error)}`)
-        }
-      }
-      forward()
-    })
+    void forwardResult.then((forward) => { forward() })
   }
 
   private onChildDispose(callId: number): void {
