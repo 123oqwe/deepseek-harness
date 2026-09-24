@@ -8,15 +8,20 @@
  * twice with a keyless scripted model that calls the shipped `read` tool once:
  * as shipped, where the local provider builds the call's world, and with
  * `./loader/p3-01-world-swap/fenced-only.patch.yml` removing the local
- * provider's row, where the fenced one does. The cases compare what the two
- * processes recorded for the same call.
+ * provider's row, where the fenced one does. Both processes run in one working
+ * directory this file creates, because under `workspace-write` the world spec
+ * names the workspace root: two directories would be two confinements. The
+ * cases compare what the two processes recorded for the same call.
  * @module tests/first100/fixtures/P3-01.world-swap.composition
  */
 
+import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
-import { beforeAll, describe, expect, it } from 'vitest'
-import { CALL_ID, READ_LINE } from './loader/p3-01-world-swap/shared.ts'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { CALL_ID, READ_FILE, READ_LINE } from './loader/p3-01-world-swap/shared.ts'
 
 const driver = fileURLToPath(new URL('./loader/p3-01-world-swap/driver.ts', import.meta.url))
 const overlay = fileURLToPath(new URL('./loader/p3-01-world-swap/base.patch.yml', import.meta.url))
@@ -38,9 +43,10 @@ interface Report {
 /**
  * Run the driver once.
  * @param mode - `shipped` keeps every world provider row; `fenced` removes the local one.
+ * @param workspace - the working directory both modes share.
  * @returns the driver's report.
  */
-async function run(mode: 'shipped' | 'fenced'): Promise<Report> {
+async function run(mode: 'shipped' | 'fenced', workspace: string): Promise<Report> {
   const { stdout, stderr } = await runLoaderSmoke({
     label: `P3-01 acceptance[0] world swap: ${mode}`,
     tempDirPrefix: `p3-01-world-swap-${mode}-`,
@@ -48,7 +54,7 @@ async function run(mode: 'shipped' | 'fenced'): Promise<Report> {
     libBinScript: driver,
     configPath: overlay,
     // `runLoaderSmoke` passes these instead of `[configPath]`, so the config path stays first.
-    binArgs: [overlay, mode],
+    binArgs: [overlay, mode, workspace],
     tsconfigPath: repoTsconfig,
   })
   const json = /P3-01-SWAP (?<json>.+)/u.exec(stdout)?.groups?.json
@@ -66,11 +72,21 @@ function withoutSessionFields(manifest: Record<string, unknown>): Record<string,
 }
 
 describe('P3-01 acceptance[0]: one tool call through the local and the fenced world provider on the shipped headless profile', () => {
+  let workspace: string | undefined
   let shipped: Report
   let fenced: Report
   beforeAll(async () => {
-    [shipped, fenced] = await Promise.all([run('shipped'), run('fenced')])
+    const shared = await mkdtemp(join(tmpdir(), 'p3-01-world-swap-workspace-'))
+    workspace = shared
+    await writeFile(join(shared, READ_FILE), `${READ_LINE}\n`, 'utf8')
+    const reports = await Promise.all([run('shipped', shared), run('fenced', shared)])
+    shipped = reports[0]
+    fenced = reports[1]
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
+
+  afterAll(async () => {
+    if (workspace !== undefined) await rm(workspace, { recursive: true, force: true })
+  })
 
   it('the shipped composition binds the call\'s world from the local provider and, with the local row removed, from the fenced provider, under the same confinement digest', () => {
     expect(shipped.worldBound.map(bound => bound.provider)).toEqual(['local'])
