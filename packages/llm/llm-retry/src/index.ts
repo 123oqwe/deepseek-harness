@@ -262,7 +262,7 @@ export function apply(ctx: Context, config: Config = {}, internals: RetryInterna
       // keeps its own per-session policy, which is what it did before this
       // epic. Treating it as an unlimited budget would be worse than the
       // stacking being fixed.
-      if (charged !== undefined && !budgets.admit(charged, delayMs).admitted) return next()
+      if (charged !== undefined) budgets.admit(charged, delayMs)
     }
 
     return backoff(agent, turn, step, failure, provider, policy, policyKey, retry, retryId, delayMs, signal)
