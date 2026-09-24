@@ -13,7 +13,7 @@
  * assert is what the PARENT SCRIPT observed, because that is what a refusal or
  * a decayed budget actually costs a caller.
  */
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -453,6 +453,26 @@ describe('P4-09 must[3]: a nested run\'s children inherit its DECAYED capability
 
     expect((await detached.result).stopReason).toBe('cancelled')
     await detached.dispose()
+  }, 30_000)
+
+  it('logs, rather than leaves unhandled, the disposal of a settled detached run whose lease cannot be given back', async () => {
+    // Settlement starts the run's disposal and nothing awaits it; the lease is
+    // given back last, so a store that throws there rejects that disposal.
+    const { ctx, parent } = await tokenSetup()
+    await ctx.capabilityTokens.whenSessionToken(parent.id)
+    const warn = vi.spyOn(ctx.logger, 'warn').mockImplementation(() => ctx.logger)
+    const release = vi.spyOn(ctx.leaseStore, 'release').mockImplementation(() => { throw new Error('lease store closed') })
+    try {
+      const detached = await ctx.workflowEngine.startDetached({ script: "return 'settled'", meta: META, parent })
+      expect((await detached.result).stopReason).toBe('completed')
+
+      await vi.waitFor(() => {
+        expect(warn).toHaveBeenCalledWith(expect.stringMatching(/detached run \S+ was not disposed: lease store closed$/u))
+      }, { timeout: 5_000 })
+    } finally {
+      release.mockRestore()
+      warn.mockRestore()
+    }
   }, 30_000)
 
   it('is REACHABLE by run id while it runs, and the same handle comes back', async () => {
