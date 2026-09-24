@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-24-workflow-resume-returns-real-outputs-and-reports-a-refusal.md
-2026-09-24-workflow-resume-returns-real-outputs-and-reports-a-refusal.md: 09a5206ebbf380b858eee9fd3edb4d5656541cd5
-2026-09-24-workflow-resume-returns-real-outputs-and-reports-a-refusal.zh.md: f9d30bf697078eb565aa8e02ae786eac195d08e3
+2026-09-24-workflow-resume-returns-real-outputs-and-reports-a-refusal.md: d1f64e829323d6bf98a6e96c14782582da89addd
+2026-09-24-workflow-resume-returns-real-outputs-and-reports-a-refusal.zh.md: 78ee3735f89363c1dd5b0acbd617724d0f8832b9

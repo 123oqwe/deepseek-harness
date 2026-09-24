@@ -19,7 +19,7 @@ P4-08 acceptance[0] 要求：在 `agent()` 边界被杀掉的工作流，由重�
 - **被拒的续跑报告在运行上，而不是抛出。** `Reconciled.refused` 带出 `admitResume` 的 `reason` 与 `detail`，`WorkflowRun.resumeRefused` 公开它们，工具封闭的输出 schema 新增可选字段 `resumeRefused`，模型读到的文本以 `resume refused (<reason>): the run started over from its first step.` 开头。
 - **宿主在把已结束的进程内子 agent 的结果转发给 worker 之前，先刷写它的会话**，所用的 `ctx.sessions.flush` 调用与 `subagent/continuation-activation.ts` 相同。刷写失败记一条 warn，结果照常转发。
 - **记录的输出只复用给身份相同的调用，按身份而不是按步骤编号匹配。** worker 为每个 `agent()` 调用计算身份 `callDigestOf`：对它的 prompt、`schema`、`provider` 与 `model` 取 SHA-256。journal 把它记为条目的 `call`，宿主把每份可复用输出的身份交给 worker；一次调用取按它的身份记录、尚未用过的第一份输出，不管步骤编号，找不到就启动子 agent。没有身份时 worker 什么都不复用。
-- **为另一个调用启动的步骤会保留它替换的条目。** 这样的步骤若在另一个调用记录过的编号上启动，recorder 会把那条记录整条移进 journal 的 `displaced`；之后的续跑像对待其他条目一样对账并提供它。
+- **为另一个调用启动的步骤会保留它替换的条目。** 这样的步骤若在另一个调用记录过的编号上启动，recorder 会把那条记录整条移进 journal 的 `displaced`；之后的续跑像对待其他条目一样对账并提供它。同一调用的步骤替换已核验的条目时，也照此移走（盲审 F1，B-589）。同一身份的两次调用并发时，一次复用了某个编号上的条目，另一次就可能在这个编号上启动；以前这会替换掉那条条目，丢掉已完成子 agent 的输出与回执，再被杀一次时这份工作就会重做。
 - **压缩保留条目以外的每个 journal 字段。** `compactJournal` 只压缩条目，其余字段原样返回。续跑读取四个字段：`scriptDigest`、`entries`、`displaced` 与 `nesting`。
 - **因脚本改动被拒的续跑先把 journal 移走**，移到 journal 目录下的 `refused/<runId>.<脚本摘要前 12 位十六进制>.json`（`setJournalAside`），这个名字已被占用时改用下一个空着的 `refused/<runId>.<摘要>.<n>.json`；重新开始的运行在它旁边另写一份新的 `<runId>.json`，留存的 journal 不会被替换。
 - **journal 目录以 0700 权限创建，每个 journal 文件以 0600 权限写入**，与会话日志一致。

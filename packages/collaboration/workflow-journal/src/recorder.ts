@@ -81,7 +81,10 @@ export interface JournalRecorder {
  * replaces its own prior entry rather than appending a duplicate. A step
  * started for a DIFFERENT call at a number another call recorded moves that
  * entry, whole, into `displaced`: it is another call's record, which a later
- * resume may still reuse, and its receipts are evidence.
+ * resume may still reuse, and its receipts are evidence. A VERIFIED entry is
+ * moved the same way whichever call replaces it, because it records a child a
+ * resume reconciled as complete. A step of the same call starts over one when
+ * another call with that identity took the entry for reuse.
  * @param scriptDigest - the digest of the script being run.
  * @param seed - a prior journal to continue, for a resumed run; absent for a fresh one.
  * @param nesting - what a FRESH nested run inherited, recorded so a later resume
@@ -105,7 +108,7 @@ export function createJournalRecorder(
   return {
     stepStarted(start, effectClass) {
       const replaced = entries.get(start.seq)
-      if (replaced !== undefined && replaced.call !== start.call) displaced.push(replaced)
+      if (replaced !== undefined && (replaced.call !== start.call || replaced.verified)) displaced.push(replaced)
       entries.set(start.seq, {
         stepId: brandString<StepId>(`step-${start.seq}`),
         phase: phaseOf(start.phase),
