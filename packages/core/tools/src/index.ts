@@ -7,13 +7,13 @@
 import { Context, Service } from '@deepseek-ai/cordis'
 import type { Fiber } from '@deepseek-ai/cordis'
 import { brandString } from '@deepseek-ai/dsh-brand'
-import { claimCapability, requestReplace, revokeByOwnershipToken } from '@deepseek-ai/dsh-plugin-ownership'
+import { claimCapability, requestReplace } from '@deepseek-ai/dsh-plugin-ownership'
 import type {
   ActionTarget, Compensation, EvidenceRequirement, ExpectedDiff, Precondition,
 } from '@deepseek-ai/dsh-action-manifest'
 import type {
-  CapabilityOrigin, CapabilityRegistration, Namespace, OwnershipToken, PluginIdentity,
-  RegistrationDenialReason, RegistryPolicy, RevocationResult, StableCapabilityId,
+  CapabilityOrigin, CapabilityRecord, CapabilityRegistration, Namespace, PluginIdentity,
+  RegistrationDenialReason, RegistryPolicy, StableCapabilityId,
 } from '@deepseek-ai/dsh-plugin-ownership'
 import z from '@deepseek-ai/schemastery'
 import { AnonymousEntries, NamedEntries, ScopedLayers, scopeOf, scopeTarget } from '@deepseek-ai/dsh-scope'
@@ -716,6 +716,45 @@ interface HeldOwnership {
 }
 
 /**
+ * The view of `registration` that {@link ToolRuntime.ownershipOf} and
+ * {@link ToolRuntime.ownershipHistory} hand out: every field but the
+ * ownership token, which stays in this registry (BLOCKED-308).
+ * @param registration - an admitted registration as the registry holds it.
+ * @returns a new record without the ownership token.
+ */
+function recordOf(registration: CapabilityRegistration): CapabilityRecord {
+  const { pluginIdentity, namespace, capabilityId, kind, origin } = registration
+  return { pluginIdentity, namespace, capabilityId, kind, origin }
+}
+
+/**
+ * The two fields of a Loader entry that ownership attribution reads: a running
+ * entry's fiber, and the name its cordis.yml gave it. `loader.entries()` is
+ * untyped on the service, so declaring the minimum keeps these reads checked
+ * without asserting anything about the rest of a Loader entry.
+ */
+interface AttributableLoaderEntry {
+  readonly fiber?: { readonly uid: number | null }
+  readonly options: { readonly name: string }
+}
+
+/**
+ * The name of the innermost Loader entry whose fiber is on `chain`.
+ * @param chain - a fiber followed by its ancestors, innermost first.
+ * @param entries - every entry the Loader holds, as an array: `Loader.entries()` is a generator,
+ *   and a second pass over one generator reads nothing.
+ * @returns the entry's name, or `undefined` when no entry's fiber is on `chain`.
+ */
+function nearestEntryName(chain: readonly Fiber[], entries: readonly AttributableLoaderEntry[]): string | undefined {
+  for (const fiber of chain) {
+    for (const entry of entries) {
+      if (entry.fiber !== undefined && entry.fiber.uid === fiber.uid) return entry.options.name
+    }
+  }
+  return undefined
+}
+
+/**
  * The {@link Namespace} a tool name claims: everything before its last `.`,
  * matching this epic's own `dsh.*` grammar. A name with no `.` is unqualified
  * and takes its registrant's identity as its namespace, which is never
@@ -743,6 +782,24 @@ function resolveOwnershipPolicy(ownership: ToolOwnershipConfig | undefined): Reg
     ),
     allowReplace: ownership?.allowReplace ?? false,
   }
+}
+
+/**
+ * The Loader entry name of the dynamic Cordis runner, the default
+ * {@link ToolOwnershipConfig.ownerDeclarers} member: the runner declares each
+ * dynamic package's own plugin id as that package's owner.
+ */
+const DYNAMIC_RUNNER_ENTRY = '@deepseek-ai/dsh-cordis-host-runner'
+
+/**
+ * Resolve which Loader entries may call {@link ToolRuntime.declareOwner}, at
+ * the owning config boundary like {@link resolveOwnershipPolicy}: direct
+ * construction bypasses the Loader schema, so the default is applied here too.
+ * @param ownership - the deployment's declared ownership policy, absent under direct construction.
+ * @returns the entry names whose subtrees may declare an owner.
+ */
+function resolveOwnerDeclarers(ownership: ToolOwnershipConfig | undefined): ReadonlySet<string> {
+  return new Set(ownership?.ownerDeclarers ?? [DYNAMIC_RUNNER_ENTRY])
 }
 
 /** Convert one projector exception into the canonical invalid-output failure. */
@@ -919,6 +976,18 @@ export interface ToolOwnershipConfig {
    * either way.
    */
   allowReplace?: boolean
+  /**
+   * Loader entry names whose subtrees may call `ToolRuntime.declareOwner`,
+   * that is, record their registrations under another plugin identity. The
+   * default names the dynamic Cordis runner,
+   * `@deepseek-ai/dsh-cordis-host-runner`, which declares each dynamic
+   * package's own plugin id. A call from under any other entry is refused.
+   * The check reads which entry encloses the calling fiber, not which code
+   * made the call: code that places a fiber under a listed entry is admitted
+   * as that entry, and code that edits this list through the Loader changes
+   * who is admitted (BLOCKED-308).
+   */
+  ownerDeclarers?: string[]
 }
 
 /**
@@ -1049,7 +1118,8 @@ export class ToolRuntime extends Service {
     ownership: z.object({
       officialPluginIdentities: z.array(z.string()).default([]),
       allowReplace: z.boolean().default(false),
-    }).default({ officialPluginIdentities: [], allowReplace: false }),
+      ownerDeclarers: z.array(z.string()).default([DYNAMIC_RUNNER_ENTRY]),
+    }).default({ officialPluginIdentities: [], allowReplace: false, ownerDeclarers: [DYNAMIC_RUNNER_ENTRY] }),
   })
 
   /** Internal staged view consumed by `dsh-agent-loop`'s parallel scheduler. */
@@ -1092,10 +1162,21 @@ export class ToolRuntime extends Service {
 
   /** Epic P1-09's resolved registry policy (see {@link resolveOwnershipPolicy}). */
   private readonly ownershipPolicy: RegistryPolicy
+  /** Loader entries whose subtrees may declare an owner (see {@link resolveOwnerDeclarers}). */
+  private readonly ownerDeclarers: ReadonlySet<string>
+  /**
+   * Reads the Loader from this registry's own context. Inside a method,
+   * `this.ctx` is the caller's context, and a caller that isolates `loader` in
+   * its own scope sees no Loader there; the context the registry was
+   * constructed in is one no caller controls.
+   */
+  private readonly homeLoader: () => unknown
 
   constructor(ctx: Context, config: Config = {}) {
     super(ctx, 'tools')
     this.ownershipPolicy = resolveOwnershipPolicy(config.ownership)
+    this.ownerDeclarers = resolveOwnerDeclarers(config.ownership)
+    this.homeLoader = () => ctx.get('loader')
     // The schema already defaulted an omitted mode; the ?? narrows the
     // optional-input type for direct (non-Loader) construction in tests.
     this.defaultMode = config.mode ?? 'native'
@@ -1442,10 +1523,26 @@ export class ToolRuntime extends Service {
    * one of them hangs under a single shared group fiber, so without an
    * explicit declaration they would all resolve to one owner and no collision
    * between two of them could ever be detected.
+   *
+   * The caller's innermost enclosing entry in the Loader of this registry's
+   * own tree must be named in {@link ToolOwnershipConfig.ownerDeclarers}; any
+   * other caller is refused. The check reads which entry encloses the calling
+   * fiber, not which code made the call, so it does not stop code that places
+   * a fiber under a listed entry (BLOCKED-308). A tree with no Loader has no
+   * entries, and every caller there may declare.
    * @param identity - the stable identity to attribute this subtree's registrations to.
    * @returns the disposer that unbinds it, held by the calling fiber.
+   * @throws when a Loader is present and the caller's innermost entry is not an owner declarer.
    */
   declareOwner(identity: string): () => void {
+    const entries = this.loaderEntries()
+    if (entries !== undefined) {
+      const entry = nearestEntryName(this.callerChain(), entries)
+      if (entry === undefined || !this.ownerDeclarers.has(entry)) {
+        const caller = entry === undefined ? 'a caller outside every Loader entry' : `Loader entry "${entry}"`
+        throw new Error(`dsh-tools: declareOwner(${JSON.stringify(identity)}) refused for ${caller}: only an entry named in ownership.ownerDeclarers may record registrations under another plugin identity`)
+      }
+    }
     const fiber = this.ctx.fiber
     const dispose = this.ctx.effect(function* (this: ToolRuntime) {
       const uid = fiber.uid
@@ -1466,11 +1563,32 @@ export class ToolRuntime extends Service {
    * explicit {@link declareOwner} on the fiber chain wins (and marks the
    * registration `'dynamic'`); otherwise the innermost enclosing Loader
    * entry's module specifier is the identity, because that is the registrant's
-   * stable on-disk identity. Only a tree with no Loader at all falls back to
-   * `Fiber.name`, which is a diagnostic display name rather than an identity —
-   * it is never reached in a booted product tree.
+   * stable on-disk identity. In a tree with a Loader, a caller that no entry
+   * encloses is refused: the only name it has is the one its fiber gave
+   * itself. The root fiber is the exception, because no plugin names it, and
+   * it registers as `root`. A tree with no Loader falls back to `Fiber.name`,
+   * a diagnostic display name rather than an identity.
+   * @throws when a Loader is present and no entry encloses a caller other than the root fiber.
    */
   private resolveOwner(): { identity: PluginIdentity; origin: CapabilityOrigin } {
+    const chain = this.callerChain()
+    for (const fiber of chain) {
+      const declared = fiber.uid === null ? undefined : this.declaredOwners.get(fiber.uid)
+      if (declared !== undefined) return { identity: declared, origin: 'dynamic' }
+    }
+    const entries = this.loaderEntries()
+    if (entries !== undefined) {
+      const entry = nearestEntryName(chain, entries)
+      if (entry !== undefined) return { identity: brandString<PluginIdentity>(entry), origin: 'static' }
+      if (chain.length > 1) {
+        throw new Error(`dsh-tools: registration from fiber ${JSON.stringify(this.ctx.fiber.name)} outside every Loader entry is refused: outside an entry, the only identity a fiber has is the name it gave itself`)
+      }
+    }
+    return { identity: brandString<PluginIdentity>(this.ctx.fiber.name), origin: 'static' }
+  }
+
+  /** The calling fiber followed by each of its ancestors, innermost first, ending at the root. */
+  private callerChain(): Fiber[] {
     const chain: Fiber[] = []
     for (let current = this.ctx.fiber; ;) {
       chain.push(current)
@@ -1478,70 +1596,37 @@ export class ToolRuntime extends Service {
       if (parent.uid === current.uid) break
       current = parent
     }
-    for (const fiber of chain) {
-      const declared = fiber.uid === null ? undefined : this.declaredOwners.get(fiber.uid)
-      if (declared !== undefined) return { identity: declared, origin: 'dynamic' }
-    }
-    const loader: unknown = this.ctx.get('loader')
-    if (loader !== undefined) {
-      // `loader.entries()` is untyped on the service, so every field read from
-      // it is an `any` access. The two fields this attribution actually depends
-      // on are named here instead: a running entry's fiber, and the name its
-      // cordis.yml gave it. Declaring the minimum keeps the reads checked
-      // without asserting anything about the rest of a loader entry, which this
-      // code neither reads nor should depend on.
-      interface AttributableLoaderEntry {
-        readonly fiber?: { readonly uid: number | null }
-        readonly options: { readonly name: string }
-      }
-      const entries = (loader as { entries: () => Iterable<AttributableLoaderEntry> }).entries()
-      for (const fiber of chain) {
-        for (const entry of entries) {
-          if (entry.fiber !== undefined && entry.fiber.uid === fiber.uid) {
-            return { identity: brandString<PluginIdentity>(entry.options.name), origin: 'static' }
-          }
-        }
-      }
-    }
-    return { identity: brandString<PluginIdentity>(this.ctx.fiber.name), origin: 'static' }
+    return chain
+  }
+
+  /** Every entry of the Loader in this registry's own tree, as an array; `undefined` in a tree with no Loader. */
+  private loaderEntries(): readonly AttributableLoaderEntry[] | undefined {
+    const loader = this.homeLoader()
+    if (loader === undefined) return undefined
+    return [...(loader as { entries: () => Iterable<AttributableLoaderEntry> }).entries()]
   }
 
   /**
-   * Epic P1-09 must[0]: the ownership record the registry admitted for `name`.
+   * Epic P1-09 must[0]: the ownership record the registry admitted for `name`,
+   * without its ownership token (see {@link CapabilityRecord}).
    * @param name - a global tool name.
-   * @returns the live registration, or `undefined` when no plugin owns `name`.
+   * @returns the live owner's record, or `undefined` when no plugin owns `name`.
    */
-  ownershipOf(name: string): CapabilityRegistration | undefined {
-    return this.ownerships.get(name)?.registration
+  ownershipOf(name: string): CapabilityRecord | undefined {
+    const held = this.ownerships.get(name)
+    return held === undefined ? undefined : recordOf(held.registration)
   }
 
   /**
    * Epic P1-09 acceptance[1]: every ownership record this registry currently
    * holds, oldest first, including the superseded owners a legitimate
-   * replacement left behind. An unloaded plugin's records are absent — the
-   * gate's "effects after unload = 0" covers this history too.
+   * replacement left behind, each without its ownership token. An unloaded
+   * plugin's records are absent — the gate's "effects after unload = 0"
+   * covers this history too.
    * @returns the live ownership history in admission order.
    */
-  ownershipHistory(): readonly CapabilityRegistration[] {
-    return this.ownershipRecords.map(held => held.registration)
-  }
-
-  /**
-   * Epic P1-09 must[3]: unregister exactly the tools whose stored ownership
-   * token equals `token`, and no others. Takes only a token — never a name or
-   * a plugin identity a caller could substitute — so cross-plugin revocation
-   * has no API surface to attempt through.
-   * @param token - the ownership token presented at unload time.
-   * @returns which capability ids were revoked, or why nothing was.
-   */
-  revokeOwned(token: OwnershipToken): RevocationResult {
-    const live = [...this.ownerships.values()]
-    const result = revokeByOwnershipToken(token, live.map(held => held.registration))
-    if (!result.revoked) return result
-    for (const held of live) {
-      if (held.registration.ownershipToken === token) held.dispose?.()
-    }
-    return result
+  ownershipHistory(): readonly CapabilityRecord[] {
+    return this.ownershipRecords.map(held => recordOf(held.registration))
   }
 
   /**

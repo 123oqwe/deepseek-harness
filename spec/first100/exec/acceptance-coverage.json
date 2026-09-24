@@ -688,7 +688,7 @@
         },
         {
           "stage": "U",
-          "title": "acceptance[0]: cross-plugin revocation fails closed — another plugin's real token revokes nothing of this one's"
+          "title": "acceptance[0]: cross-plugin revocation fails closed — what another plugin reads of an owner's record carries nothing to revoke with, and its unload takes only its own tool"
         },
         {
           "stage": "F",

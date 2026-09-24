@@ -8284,6 +8284,8 @@ None of the fourteen puts an action in flight and raises a stop.
 
 **Owner.** lane B, after a lane A preFlight.
 
+*Addendum 2026-09-24 (delegate first100-delegate-1a).* Fix route per lane A's preFlight A-302: the read APIs stop carrying `ownershipToken` and `revokeOwned` leaves the public API. The closing condition gains one requirement: `declareOwner` (`packages/core/tools/src/index.ts:1448-1462`) lets any static plugin bind its fibers to another plugin's identity, so a forged registration is recorded under that plugin's name in the ownership history the inventory chain reads (acceptance[1]); `declareOwner` is restricted to the host runner, its one production caller, and a case shows a static plugin's `declareOwner` of another identity refused, red on today's code and green after.
+
 ### BLOCKED-309 — P4-01's "a Run can span several Sessions" has no production caller, by design (BLOCKED-196); the acceptance is withdrawn
 
 **Status:** OPEN (2026-09-24). Owner: the P4-07 slice BLOCKED-196 names (lane B, after a lane A preFlight), unless the user narrows the clause. Ruled by the delegate (first100-delegate-1a) on lane A's A-301, whose search and independent verifier agents agree; the delegate re-read the callers at `d300a20e59`. The withdrawal moves the ledger row in the same commit that opens this entry.

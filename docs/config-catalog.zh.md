@@ -3678,10 +3678,22 @@ export interface ToolOwnershipConfig {
    * either way.
    */
   allowReplace?: boolean
+  /**
+   * Loader entry names whose subtrees may call `ToolRuntime.declareOwner`,
+   * that is, record their registrations under another plugin identity. The
+   * default names the dynamic Cordis runner,
+   * `@deepseek-ai/dsh-cordis-host-runner`, which declares each dynamic
+   * package's own plugin id. A call from under any other entry is refused.
+   * The check reads which entry encloses the calling fiber, not which code
+   * made the call: code that places a fiber under a listed entry is admitted
+   * as that entry, and code that edits this list through the Loader changes
+   * who is admitted (BLOCKED-308).
+   */
+  ownerDeclarers?: string[]
 }
 ```
 
-来源： [`packages/core/tools/src/index.ts:878`](../packages/core/tools/src/index.ts)
+来源： [`packages/core/tools/src/index.ts:935`](../packages/core/tools/src/index.ts)
 
 <a id="deepseek-aidsh-typert-loader"></a>
 

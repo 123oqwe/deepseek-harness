@@ -551,6 +551,22 @@
     },
     {
       "epic": "P1-09",
+      "path": ".agents/notes/implemented/bug-fix/2026-09-24-tool-ownership-tokens-stay-in-the-registry.md",
+      "kind": "doc",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": ".agents/notes/implemented/bug-fix/2026-09-24-tool-ownership-tokens-stay-in-the-registry.zh.md",
+      "kind": "doc",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
       "path": ".agents/notes/implemented/feature/2026-09-04-tool-registry-namespace-and-ownership-adjudication.md",
       "kind": "doc",
       "stages": [
@@ -560,6 +576,22 @@
     {
       "epic": "P1-09",
       "path": ".agents/notes/implemented/feature/2026-09-04-tool-registry-namespace-and-ownership-adjudication.zh.md",
+      "kind": "doc",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "docs/config-catalog.md",
+      "kind": "doc",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "docs/config-catalog.zh.md",
       "kind": "doc",
       "stages": [
         "U"
@@ -602,8 +634,8 @@
       "path": "packages/core/tools/tests/ownership.spec.ts",
       "kind": "test",
       "stages": [
-        "U",
-        "F"
+        "F",
+        "U"
       ]
     },
     {
@@ -669,8 +701,8 @@
       "path": "packages/plugin/plugin-ownership/README.md",
       "kind": "doc",
       "stages": [
-        "U",
-        "F"
+        "F",
+        "U"
       ]
     },
     {
@@ -700,6 +732,22 @@
     },
     {
       "epic": "P1-09",
+      "path": "tests/first100/fixtures/loader/p1-09-ownership/declare-attacker.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "tests/first100/fixtures/loader/p1-09-ownership/declare.cordis.yml",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
       "path": "tests/first100/fixtures/loader/p1-09-ownership/driver.ts",
       "kind": "test",
       "stages": [
@@ -717,6 +765,54 @@
     {
       "epic": "P1-09",
       "path": "tests/first100/fixtures/loader/p1-09-ownership/fixture-tool.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "tests/first100/fixtures/loader/p1-09-ownership/isolate-attacker.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "tests/first100/fixtures/loader/p1-09-ownership/isolate.cordis.yml",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "tests/first100/fixtures/loader/p1-09-ownership/nested-attacker.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "tests/first100/fixtures/loader/p1-09-ownership/nested.cordis.yml",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "tests/first100/fixtures/loader/p1-09-ownership/reader.cordis.yml",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "tests/first100/fixtures/loader/p1-09-ownership/reader.ts",
       "kind": "test",
       "stages": [
         "U"
@@ -749,6 +845,46 @@
     {
       "epic": "P1-09",
       "path": "tests/first100/fixtures/loader/p1-09-ownership/reserved.cordis.yml",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "tests/first100/fixtures/loader/p1-09-ownership/root-attacker.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "tests/first100/fixtures/loader/p1-09-ownership/root-registrant.cordis.yml",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "tests/first100/fixtures/loader/p1-09-ownership/root-registrant.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "tests/first100/fixtures/loader/p1-09-ownership/root.cordis.yml",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "tests/first100/fixtures/loader/p1-09-ownership/runner.cordis.yml",
       "kind": "test",
       "stages": [
         "U"

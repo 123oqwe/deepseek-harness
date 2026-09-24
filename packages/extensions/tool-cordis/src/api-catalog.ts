@@ -3127,27 +3127,22 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
       },
       {
         signature: 'declareOwner(identity: string): () => void',
-        description: 'Epic P1-09 must[0]: bind the calling fiber\'s subtree to an explicit plugin identity, for a registrant whose stable identity no Loader entry carries. A dynamically defined Cordis package is the case this exists for: every one of them hangs under a single shared group fiber, so without an explicit declaration they would all resolve to one owner and no collision between two of them could ever be detected.',
+        description: 'Epic P1-09 must[0]: bind the calling fiber\'s subtree to an explicit plugin identity, for a registrant whose stable identity no Loader entry carries. A dynamically defined Cordis package is the case this exists for: every one of them hangs under a single shared group fiber, so without an explicit declaration they would all resolve to one owner and no collision between two of them could ever be detected.\n\nThe caller\'s innermost enclosing entry in the Loader of this registry\'s own tree must be named in ToolOwnershipConfig.ownerDeclarers; any other caller is refused. The check reads which entry encloses the calling fiber, not which code made the call, so it does not stop code that places a fiber under a listed entry (BLOCKED-308). A tree with no Loader has no entries, and every caller there may declare.',
         parameters: [{ name: 'identity', description: 'the stable identity to attribute this subtree\'s registrations to.' }],
         returns: 'the disposer that unbinds it, held by the calling fiber.',
+        throws: ['when a Loader is present and the caller\'s innermost entry is not an owner declarer.'],
       },
       {
-        signature: 'ownershipOf(name: string): CapabilityRegistration | undefined',
-        description: 'Epic P1-09 must[0]: the ownership record the registry admitted for `name`.',
+        signature: 'ownershipOf(name: string): CapabilityRecord | undefined',
+        description: 'Epic P1-09 must[0]: the ownership record the registry admitted for `name`, without its ownership token (see CapabilityRecord).',
         parameters: [{ name: 'name', description: 'a global tool name.' }],
-        returns: 'the live registration, or `undefined` when no plugin owns `name`.',
+        returns: 'the live owner\'s record, or `undefined` when no plugin owns `name`.',
       },
       {
-        signature: 'ownershipHistory(): readonly CapabilityRegistration[]',
-        description: 'Epic P1-09 acceptance[1]: every ownership record this registry currently holds, oldest first, including the superseded owners a legitimate replacement left behind. An unloaded plugin\'s records are absent — the gate\'s "effects after unload = 0" covers this history too.',
+        signature: 'ownershipHistory(): readonly CapabilityRecord[]',
+        description: 'Epic P1-09 acceptance[1]: every ownership record this registry currently holds, oldest first, including the superseded owners a legitimate replacement left behind, each without its ownership token. An unloaded plugin\'s records are absent — the gate\'s "effects after unload = 0" covers this history too.',
         parameters: [],
         returns: 'the live ownership history in admission order.',
-      },
-      {
-        signature: 'revokeOwned(token: OwnershipToken): RevocationResult',
-        description: 'Epic P1-09 must[3]: unregister exactly the tools whose stored ownership token equals `token`, and no others. Takes only a token — never a name or a plugin identity a caller could substitute — so cross-plugin revocation has no API surface to attempt through.',
-        parameters: [{ name: 'token', description: 'the ownership token presented at unload time.' }],
-        returns: 'which capability ids were revoked, or why nothing was.',
       },
       {
         signature: 'restrict(filter: ToolRestriction): () => void',
@@ -4539,6 +4534,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'CapabilityOrigin',
     declaration: 'export type CapabilityOrigin = \'static\' | \'dynamic\';',
+  },
+  {
+    name: 'CapabilityRecord',
+    declaration: 'export type CapabilityRecord = Omit<CapabilityRegistration, \'ownershipToken\'>;',
   },
   {
     name: 'CapabilityRef',
@@ -6073,14 +6072,6 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface RetryUsage {\n    readonly retriesUsed: number;\n    readonly delayMsUsed: number;\n}',
   },
   {
-    name: 'RevocationDenialReason',
-    declaration: 'export type RevocationDenialReason = \'unknown-token\';',
-  },
-  {
-    name: 'RevocationResult',
-    declaration: 'export type RevocationResult = {\n    readonly revoked: true;\n    readonly revokedCapabilityIds: readonly StableCapabilityId[];\n} | {\n    readonly revoked: false;\n    readonly reason: RevocationDenialReason;\n};',
-  },
-  {
     name: 'RiskClass',
     declaration: 'export type RiskClass = \'read\' | \'local-reversible\' | \'internal-write\' | \'external-communication\' | \'destructive\' | \'financial\' | \'security-sensitive\' | \'safety-critical\';',
   },
@@ -7382,7 +7373,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ToolRuntime',
-    declaration: 'export class ToolRuntime extends Service {\n    static inject;\n    static Config: z<Config>;\n    readonly [TOOL_RUNTIME_SCHEDULER]: ToolRuntimeScheduler;\n    constructor(ctx: Context, config: Config = {});\n    presentAs(mode: ToolPresentationMode): () => void;\n    register(definition: ToolDefinition): () => void;\n    replace(definition: ToolDefinition): () => void;\n    declareOwner(identity: string): () => void;\n    ownershipOf(name: string): CapabilityRegistration | undefined;\n    ownershipHistory(): readonly CapabilityRegistration[];\n    revokeOwned(token: OwnershipToken): RevocationResult;\n    restrict(filter: ToolRestriction): () => void;\n    guard(guard: ToolGuard): () => void;\n    requireCapabilityToken(): () => void;\n    get(name: string, scope?: ScopeKey): ToolDefinition | undefined;\n    schemas(scope?: ScopeKey): ToolSchema[];\n    executionMode(exec: ToolExecutionInput): ToolExecutionMode;\n    async execute(exec: ToolExecutionInput): Promise<ToolExecutionResult>;\n}',
+    declaration: 'export class ToolRuntime extends Service {\n    static inject;\n    static Config: z<Config>;\n    readonly [TOOL_RUNTIME_SCHEDULER]: ToolRuntimeScheduler;\n    constructor(ctx: Context, config: Config = {});\n    presentAs(mode: ToolPresentationMode): () => void;\n    register(definition: ToolDefinition): () => void;\n    replace(definition: ToolDefinition): () => void;\n    declareOwner(identity: string): () => void;\n    ownershipOf(name: string): CapabilityRecord | undefined;\n    ownershipHistory(): readonly CapabilityRecord[];\n    restrict(filter: ToolRestriction): () => void;\n    guard(guard: ToolGuard): () => void;\n    requireCapabilityToken(): () => void;\n    get(name: string, scope?: ScopeKey): ToolDefinition | undefined;\n    schemas(scope?: ScopeKey): ToolSchema[];\n    executionMode(exec: ToolExecutionInput): ToolExecutionMode;\n    async execute(exec: ToolExecutionInput): Promise<ToolExecutionResult>;\n}',
   },
   {
     name: 'ToolRuntimeScheduler',

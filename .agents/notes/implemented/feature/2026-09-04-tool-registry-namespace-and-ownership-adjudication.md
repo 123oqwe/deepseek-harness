@@ -4,6 +4,8 @@ Status: implemented
 
 English | [中文](2026-09-04-tool-registry-namespace-and-ownership-adjudication.zh.md)
 
+> The `revokeOwned` decision below is superseded by [ownership tokens stay in the tool registry](../bug-fix/2026-09-24-tool-ownership-tokens-stay-in-the-registry.md), which also restricts `declareOwner` to the entries `ownership.ownerDeclarers` names and, in a tree with a Loader, refuses a registration from outside every entry except the root fiber's; the rest of this record remains current.
+
 ## Problem
 
 Epic P1-09's Contract stage built a complete, tested pure-function surface for Service/Tool/Event namespace and ownership conflict detection — `claimCapability`, `requestReplace`, `revokeByOwnershipToken`, `buildInventoryChain`, `isReservedNamespace` — and nothing in the repository called any of it. A grep for `@deepseek-ai/dsh-plugin-ownership` outside its own package returned only prose: four READMEs citing it as a layout precedent. The decisions were correct and unreachable.
@@ -52,6 +54,6 @@ Cross-plugin revocation was not expressible at all. Tool disposal is by returned
 
 ## Consequences
 
-`gen-cordis-catalog` refused the new service methods until `CapabilityRegistration`, `OwnershipToken`, and `RevocationResult` were classified; they are `TYPE_LINK_EXEMPTIONS` entries naming `plugin-ownership`'s README as documentation owner.
+`gen-cordis-catalog` refused the new service methods until `CapabilityRegistration`, `OwnershipToken`, and `RevocationResult` were classified. `CapabilityRegistration` and `OwnershipToken` are `TYPE_LINK_EXEMPTIONS` entries naming `plugin-ownership`'s README as documentation owner; `RevocationResult` left the list with `revokeOwned`.
 
 **The Cordis Loader writes back to the config it boots.** An entry whose `apply` throws is persisted with `disabled: true`. Two of this epic's compositions are designed to fail, so early runs edited the checked-in fixtures and later runs read a tree with the failing entry already switched off — producing one meaningless green followed by consistent reds. Each boot now copies the fixture directory into a git-ignored `tmp/` inside the repository; outside it, workspace packages do not resolve. Any test pointing `runLoaderSmoke` at an in-repo config whose entries can fail has this problem.

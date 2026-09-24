@@ -1,0 +1,15 @@
+# The control for `ownership.ownerDeclarers`: the dynamic Cordis runner's own
+# Loader entry under the default policy. The driver declares an owner from a
+# package fiber below a group fiber below that entry, the shape the runner
+# builds for every dynamic package, and the declaration must be admitted. Any
+# code that places a fiber under this entry is admitted the same way, so the
+# control shows that the runner is not refused, not that only the runner can
+# declare. Driven by P1-09.composition.spec.ts.
+- id: system-prompt
+  name: '@deepseek-ai/dsh-system-prompt'
+
+- id: tools
+  name: '@deepseek-ai/dsh-tools'
+
+- id: cordis-host-runner
+  name: '@deepseek-ai/dsh-cordis-host-runner'

@@ -4,6 +4,8 @@ Status: implemented
 
 [English](2026-09-04-tool-registry-namespace-and-ownership-adjudication.md) | 中文
 
+> 下文关于 `revokeOwned` 的决定已被[所有权 token 留在工具注册表内部](../bug-fix/2026-09-24-tool-ownership-tokens-stay-in-the-registry.zh.md)取代，该记录还把 `declareOwner` 限制为 `ownership.ownerDeclarers` 所列的条目，并在有 Loader 的树里拒绝来自任何条目之外的注册（根 fiber 除外）；本记录其余部分仍然有效。
+
 ## 问题
 
 Epic P1-09 的 Contract 阶段为 Service/Tool/Event 命名空间与所有权冲突检测构建了完整且经测试的纯函数面——`claimCapability`、`requestReplace`、`revokeByOwnershipToken`、`buildInventoryChain`、`isReservedNamespace`——而仓库中没有任何代码调用它们。在其自身包之外 grep `@deepseek-ai/dsh-plugin-ownership`，只得到散文：四个 README 把它当作包布局的先例引用。这些决策正确，但无法抵达。
@@ -52,6 +54,6 @@ Epic P1-09 的 Contract 阶段为 Service/Tool/Event 命名空间与所有权冲
 
 ## 后果
 
-`gen-cordis-catalog` 在 `CapabilityRegistration`、`OwnershipToken`、`RevocationResult` 被分类之前拒绝新的服务方法；它们现为 `TYPE_LINK_EXEMPTIONS` 条目，指明 `plugin-ownership` 的 README 为文档所有者。
+`gen-cordis-catalog` 在 `CapabilityRegistration`、`OwnershipToken`、`RevocationResult` 被分类之前拒绝新的服务方法。`CapabilityRegistration` 与 `OwnershipToken` 现为 `TYPE_LINK_EXEMPTIONS` 条目，指明 `plugin-ownership` 的 README 为文档所有者；`RevocationResult` 已随 `revokeOwned` 移出该列表。
 
 **Cordis Loader 会回写它所引导的配置。** `apply` 抛出的条目会被持久化为 `disabled: true`。本项有两个组合被设计为失败，因此早期运行**修改了签入的 fixture**，而后续运行读到的是失败条目已被关闭的树——先产生一次毫无意义的绿，随后是稳定的红。现在每次引导都会把 fixture 目录复制到仓库**内部**一个被 git 忽略的 `tmp/` 下；在仓库之外，workspace 包无法解析。任何把 `runLoaderSmoke` 指向仓库内、其条目可能失败的配置的测试，都存在这个问题。

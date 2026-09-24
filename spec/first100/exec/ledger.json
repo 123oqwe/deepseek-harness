@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-23T21:21:21.494Z",
-  "inputDigest": "63d1d0e65e2765823796443bfe0bd9accac016e4302fb897dd7424a0c36f8c09",
+  "lastUpdatedUtc": "2026-09-24T06:02:05.556Z",
+  "inputDigest": "be98ebd13605cab58dddb53ecc9ba46ee29233460bce0316ca094e1f7a8a5aab",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -2342,39 +2342,13 @@
           "status": "N/A"
         },
         "U": {
-          "status": "GREEN",
-          "candidateSha": "191aa1e502ff7e96a7ce306cdf57ccb742c745fb",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34992480706",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-first100-delegate/d3a94c8b-056a-44b5-9397-315997b4088a/scratchpad/artifacts/34992480706/first100-vitest-report-191aa1e502ff7e96a7ce306cdf57ccb742c745fb/vitest-report.json",
-          "observationSha256": "bbd33400cce2f168a3a0d55498dd3f2d462dc2699e47a49319c2b84a4a56724f",
-          "expectCasesMatched": [
-            "must[0]: an admitted registration carries plugin identity, namespace, capability id, and a minted ownership token",
-            "must[1]/validation[2]: an unofficial plugin cannot register a tool in the reserved dsh.* namespace",
-            "must[1]: an official plugin named by policy may register in the reserved dsh.* namespace",
-            "acceptance[0]: a SECOND plugin claiming an owned tool name is denied for ownership, not by the legacy duplicate check",
-            "control: the SAME plugin registering one name twice still takes the legacy duplicate path, so the two denials stay distinguishable",
-            "acceptance[0]: a load-order attack — claiming a reserved name BEFORE the official plugin loads — still fails closed",
-            "must[1]: an agent scope is not a way around the reserved namespace, though it still shadows a global name",
-            "must[2]: replacing an owned tool fails closed when policy does not authorize replacement",
-            "must[2]: an implicit re-registration is never an override — replacing requires the explicit replace entry point even when policy allows it",
-            "acceptance[1]: an authorized replacement succeeds and the registry records the replaced/replacing chain",
-            "must[3]: revoking with an ownership token removes exactly that token's tools and nothing else",
-            "acceptance[0]: cross-plugin revocation fails closed — another plugin's real token revokes nothing of this one's",
-            "gate: disposing a plugin's fiber leaves zero tools and zero ownership records behind for it",
-            "validation[1]: 1000 randomized load/unload orders leave the registry consistent with the live set",
-            "acceptance[2]: a dynamic package cannot provide a service in the reserved dsh.* namespace",
-            "acceptance[2]: a dynamic package cannot listen on an event in the reserved dsh.* namespace",
-            "acceptance[2]: a dynamic package cannot register a tool name a statically loaded plugin already owns",
-            "acceptance[2]: two dynamic packages carry distinct plugin identities, so one cannot claim the other's tool",
-            "control: a dynamic package claiming a fresh, unreserved, uncontested name is still admitted",
-            "gate: stopping a dynamic package leaves zero tools, services, and events behind for it",
-            "control: a single plugin claiming one uncontested, unreserved name boots and owns it",
-            "validation[0]/gate: the two-plugin collision is rejected before the second plugin activates",
-            "validation[2]: a third-party Loader entry cannot claim a tool in the reserved dsh.* namespace",
-            "acceptance[1]: an authorized replacement is admitted and the Inventory shows the replaced/replacing chain",
-            "gate: unloading one plugin entry leaves zero tools and zero ownership records for it in a still-live registry"
-          ],
-          "capturedAtUtc": "2026-09-15T17:17:47.577Z"
+          "status": "NOT_RUN",
+          "revokedFrom": {
+            "candidateSha": "191aa1e502ff7e96a7ce306cdf57ccb742c745fb",
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34992480706",
+            "absentCommitments": 1
+          },
+          "revokedReason": "冻结 [329] 取代 [64]，旧观测里没有新条目"
         },
         "F": {
           "status": "GREEN",
@@ -2400,7 +2374,7 @@
       "candidateSha": "191aa1e502ff7e96a7ce306cdf57ccb742c745fb",
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "BLOCKED_ON_ACCEPTANCE",
+      "status": "NOT_RUN",
       "acceptedEvidence": {
         "acceptedAtUtc": "2026-09-04T16:14:39.466Z",
         "cells": {

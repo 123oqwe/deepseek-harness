@@ -1,0 +1,13 @@
+# The one registrant outside every Loader entry the registry admits: the root
+# fiber itself, whose name no plugin chooses. A plugin that registers through
+# `ctx.root` is recorded as `root`, and `root` is not an official identity, so
+# it cannot claim the reserved `dsh.*` namespace. Driven by
+# P1-09.composition.spec.ts.
+- id: system-prompt
+  name: '@deepseek-ai/dsh-system-prompt'
+
+- id: tools
+  name: '@deepseek-ai/dsh-tools'
+
+- id: root-registrant
+  name: './root-registrant.ts'
