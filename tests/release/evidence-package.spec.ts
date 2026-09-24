@@ -898,7 +898,8 @@ describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', { ti
       const [resultLine] = result.stdout.split('\n')
       expect(resultLine).toContain(join(root, '.dsh/evidence/evidence.json'))
       expect(resultLine).toContain(accepted)
-      expect(status === 0 || !resultLine.includes('accepted=true'), 'a package that failed verification is not accepted, whatever it records').toBe(true)
+      const printsAccepted = (resultLine ?? '').includes('accepted=true')
+      expect(status === 0 || !printsAccepted, 'a package that failed verification is not accepted, whatever it records').toBe(true)
     })
 
     it('fails with a named mismatch and still prints its result line when pnpm cannot run', () => {
