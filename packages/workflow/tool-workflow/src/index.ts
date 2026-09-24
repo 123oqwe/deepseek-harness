@@ -378,7 +378,7 @@ export function apply(ctx: Context, config: Config): void {
       // written under a different script digest.
       const run = args.resume === undefined
         ? ctx.workflowEngine.start(request)
-        : await ctx.workflowEngine.resume(brandString<WorkflowRunId>(args.resume), request)
+        : ctx.workflowEngine.start(request)
       const recordsRun = exec.parent === undefined
       // The shipped worker-thread engine publishes member events from later
       // worker messages, after start() returns and this run record is active.
