@@ -103,6 +103,35 @@ interface Watch {
   lastEventAt(): number
 }
 
+/**
+ * The members of the continuation registry and of the durable bus the
+ * shutdown trace reads and wraps. They are private in the product; the trace
+ * reaches them only to locate which branch left BLOCKED-333's settlement
+ * uncommitted, and wraps each one so the product code runs unchanged.
+ */
+interface ActivationView {
+  readonly childId: string
+  readonly announced: boolean
+  readonly handle: { readonly agent: { readonly lifecycle?: { readonly epoch?: number } } }
+  readonly inbox?: { readonly closing?: unknown }
+}
+interface BusView {
+  outboxRows: () => readonly unknown[]
+  inboxRow: (source: string, id: string, epoch: number) => unknown
+  commitIntake: (commit: { readonly message?: { readonly id?: unknown; readonly epoch?: unknown } }) => void
+}
+interface RegistryView {
+  readonly bus?: BusView
+  readonly resident: Map<string, ActivationView>
+  readonly draining?: boolean
+  drain: () => Promise<void>
+  commitSettlementsForShutdown: () => void
+  notifySettlement: (activation: ActivationView, terminal: { readonly stopReason?: unknown }) => void
+}
+
+/** What the shutdown trace recorded, in order; printed after the tree is disposed. */
+const drainTrace: Record<string, unknown>[] = []
+
 /** What one phase process left behind. */
 interface PhaseResult {
   readonly status: number | null
@@ -110,6 +139,8 @@ interface PhaseResult {
   readonly reading: Record<string, unknown>
   /** The phase's stderr lines that mention a settlement, the outbox or the bus, at most 20. */
   readonly notes: readonly string[]
+  /** The shutdown trace `before` printed after disposing, or `null` when it traced nothing. */
+  readonly drainTrace: unknown
 }
 
 /**
@@ -213,6 +244,104 @@ function prompt(subagents: Context['subagents'], parent: SessionId, child: Sessi
 }
 
 /**
+ * The text of a thrown value.
+ * @param error - the thrown value.
+ * @returns its message, or its string form.
+ */
+function errorText(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
+
+/**
+ * Wrap the continuation registry's shutdown path and the bus it writes to, so
+ * the disposal that follows records when each step ran and what it saw.
+ * @param ctx - the booted root context, about to be disposed.
+ * @returns whether the registry was reachable and the trace is installed.
+ */
+function traceShutdownCommit(ctx: Context): boolean {
+  const runtime = ctx.get('subagents') as unknown as { readonly continuations?: { readonly activations?: RegistryView } } | undefined
+  const registry = runtime?.continuations?.activations
+  if (registry === undefined) {
+    drainTrace.push({ event: 'registry-unreachable' })
+    return false
+  }
+  const started = Date.now()
+  const bus = registry.bus
+  const rows = bus?.outboxRows.bind(bus)
+  const snapshot = (): Record<string, unknown> => {
+    let busReadable: string
+    try {
+      busReadable = rows === undefined ? 'no bus' : `rows ${String(rows().length)}`
+    } catch (error: unknown) {
+      busReadable = `threw: ${errorText(error)}`
+    }
+    return {
+      busDefined: bus !== undefined,
+      busReadable,
+      draining: registry.draining ?? null,
+      resident: [...registry.resident.values()].map(activation => ({
+        id: activation.childId,
+        announced: activation.announced,
+        epoch: activation.handle.agent.lifecycle?.epoch ?? null,
+        closing: activation.inbox?.closing !== undefined,
+      })),
+    }
+  }
+  const record = (event: string, data: Record<string, unknown> = {}): void => {
+    drainTrace.push({ event, ms: Date.now() - started, ...data })
+  }
+  const drain = registry.drain.bind(registry)
+  registry.drain = () => {
+    record('drain', snapshot())
+    return drain()
+  }
+  const commitForShutdown = registry.commitSettlementsForShutdown.bind(registry)
+  registry.commitSettlementsForShutdown = () => {
+    record('commitSettlementsForShutdown', snapshot())
+    commitForShutdown()
+    record('commitSettlementsForShutdown:returned', snapshot())
+  }
+  const notify = registry.notifySettlement.bind(registry)
+  registry.notifySettlement = (activation, terminal) => {
+    record('notifySettlement', { childId: activation.childId, stopReason: terminal.stopReason ?? null, ...snapshot() })
+    notify(activation, terminal)
+  }
+  if (bus !== undefined) {
+    const inboxRow = bus.inboxRow.bind(bus)
+    bus.inboxRow = (source, id, epoch) => {
+      try {
+        return inboxRow(source, id, epoch)
+      } catch (error: unknown) {
+        record('bus.inboxRow threw', { error: errorText(error) })
+        throw error
+      }
+    }
+    const outboxRows = bus.outboxRows.bind(bus)
+    bus.outboxRows = () => {
+      try {
+        return outboxRows()
+      } catch (error: unknown) {
+        record('bus.outboxRows threw', { error: errorText(error) })
+        throw error
+      }
+    }
+    const commitIntake = bus.commitIntake.bind(bus)
+    bus.commitIntake = (commit) => {
+      record('bus.commitIntake', { id: commit.message?.id ?? null, epoch: commit.message?.epoch ?? null })
+      try {
+        commitIntake(commit)
+      } catch (error: unknown) {
+        record('bus.commitIntake threw', { error: errorText(error) })
+        throw error
+      }
+    }
+  }
+  ctx.on('agent/disposed', ({ agent }) => { record('agent/disposed', { id: agent.id }) })
+  record('installed', snapshot())
+  return true
+}
+
+/**
  * Every row the durable bus's outbox holds, reduced to what locates a
  * settlement and says how far its delivery got.
  * @param ctx - the booted root context.
@@ -286,11 +415,15 @@ async function before(ctx: Context, variant: Variant): Promise<void> {
     // The prompt's refusal is decided before its first await, so the tree is
     // disposed below while the child's cancelled request is still ending.
     const outcome = await prompt(subagents, parent.id, child, 'p5-10-before-restart', 'P5-10: take another turn before the restart.')
+    // BLOCKED-333: record what the shutdown commit sees when the tree is
+    // disposed right after this report.
+    const drainTraced = traceShutdownCommit(ctx)
     report({
       ids,
       inFlight,
       interrupt,
       outcome,
+      drainTraced,
       busRowsBeforeDispose: busRows(ctx),
       childEpochBeforeDispose: ctx.agents.get(child)?.lifecycle?.epoch ?? null,
       parentTurnEndsAtInterrupt,
@@ -423,11 +556,13 @@ function runPhase(args: readonly string[], env: NodeJS.ProcessEnv): PhaseResult 
   if (json === undefined) {
     throw new Error(`p5-10 restart phase ${args.join(' ')} reported nothing (status ${String(result.status)}, signal ${String(result.signal)}); stderr tail:\n${result.stderr.slice(-1500)}`)
   }
+  const trace = /P5-10-DRAIN (?<json>.+)/u.exec(result.stdout)?.groups?.json
   return {
     status: result.status,
     signal: result.signal,
     reading: JSON.parse(json) as Record<string, unknown>,
     notes: result.stderr.split('\n').filter(line => /settle|outbox|\bbus\b/iu.test(line)).slice(0, 20),
+    drainTrace: trace === undefined ? null : JSON.parse(trace) as unknown,
   }
 }
 
@@ -475,6 +610,9 @@ if (phase === 'orchestrate') {
     }
   } finally {
     await ctx.fiber.dispose()
+    // Written after the disposal it describes, with a synchronous write: the
+    // process exits right after, with no later turn in which stdout could flush.
+    if (drainTrace.length > 0) writeSync(1, `P5-10-DRAIN ${JSON.stringify(drainTrace)}\n`)
   }
 } else {
   throw new Error(`p5-10 restart driver: unknown phase ${String(phase)}`)
