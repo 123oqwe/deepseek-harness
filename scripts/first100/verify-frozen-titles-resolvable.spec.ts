@@ -147,6 +147,46 @@ describe('§12.56: the gate reads its report from a file, and resolves the same 
   })
 })
 
+/**
+ * A stand-in that writes `--outputFile` only when a json reporter is named, as vitest does, and appends the
+ * arguments it received to `runner-args.log`.
+ */
+const JSON_REPORTER_RUNNER = `
+const fs = require('node:fs')
+const args = process.argv.slice(2)
+fs.appendFileSync('runner-args.log', JSON.stringify(args) + '\\n')
+if (args.includes('--reporter=json')) {
+  fs.writeFileSync(args[args.indexOf('--outputFile') + 1], JSON.stringify({
+    testResults: [{ assertionResults: [{ title: 'case one', fullName: 'suite case one', status: 'passed' }] }],
+  }))
+}
+`
+
+describe('a freeze written as a config and its files, with no reporter (P4-05.U.4)', () => {
+  /** Runs the gate over one entry whose argv is `node json-runner.cjs <tail>`, and returns what the runner received. */
+  function gateOver(tail: readonly string[]): { code: number; output: string; received: string[][] } {
+    const root = prepare([{ epic: 'P4-05', stage: 'U', argv: [process.execPath, 'json-runner.cjs', ...tail], expectExit: 0, expectCases: ['suite case one'] }])
+    writeFileSync(join(root, 'json-runner.cjs'), JSON_REPORTER_RUNNER)
+    const { code, output } = run(root)
+    const received = readFileSync(join(root, 'runner-args.log'), 'utf8').split('\n').filter(Boolean).map(line => JSON.parse(line) as string[])
+    return { code, output, received }
+  }
+
+  it('runs the frozen argv with --reporter=json appended, and resolves the titles that report carries', () => {
+    const { code, output, received } = gateOver(['--config', 'vitest.e2e.config.ts', 'apps/cli/tests/a.e2e.ts'])
+    expect(output).not.toContain('did not write a parseable')
+    expect(code).toBe(0)
+    expect(received).toHaveLength(1)
+    expect(received[0]?.slice(0, 4)).toStrictEqual(['--config', 'vitest.e2e.config.ts', 'apps/cli/tests/a.e2e.ts', '--reporter=json'])
+  })
+
+  it('leaves a freeze that already names --reporter=json with exactly one', () => {
+    const { code, received } = gateOver(['apps/cli/tests/a.spec.ts', '--reporter=json'])
+    expect(code).toBe(0)
+    expect(received[0]?.filter(arg => arg === '--reporter=json')).toHaveLength(1)
+  })
+})
+
 describe('report mode: planning one command against a full-suite report', () => {
   const file = (path: string, ...titles: string[]) => ({ path, assertionResults: titles.map(title => ({ title, fullName: title, status: 'passed' })) })
   const context = (over: Partial<ReportContext> = {}): ReportContext => ({

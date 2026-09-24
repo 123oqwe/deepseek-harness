@@ -89,13 +89,18 @@ function loadJson(path) {
  * same reporter, the run stays sequential (a shared host makes parallel runs
  * a source of load-dependent reds, §12.35), and the caller's `runCache` still
  * collapses the 216 entries onto their 133 unique commands.
+ *
+ * An argv frozen as a config and its files names no reporter (P4-05.U.4), and
+ * vitest writes `--outputFile` only for a reporter that produces a file, so the
+ * run gets `--reporter=json` appended. The freeze itself is not changed.
  */
 function runAndCollectTitles(argvList) {
   const [cmd, ...args] = argvList
+  const reporter = args.includes('--reporter=json') ? [] : ['--reporter=json']
   const scratch = mkdtempSync(join(tmpdir(), 'dsh-frozen-titles-'))
   const reportPath = join(scratch, 'report.json')
   try {
-    const result = spawnSync(cmd, [...args, '--outputFile', reportPath], { cwd: REPO_ROOT, encoding: 'utf8' })
+    const result = spawnSync(cmd, [...args, ...reporter, '--outputFile', reportPath], { cwd: REPO_ROOT, encoding: 'utf8' })
     if (result.error) {
       return { ok: false, error: `failed to spawn ${JSON.stringify(argvList)}: ${result.error.message}`, titles: new Set() }
     }
