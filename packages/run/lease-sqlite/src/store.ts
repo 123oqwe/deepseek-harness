@@ -109,7 +109,7 @@ export function openLeaseStore(directory: string): LeaseStoreContract {
         }
         const nextRow = db.prepare('SELECT next_epoch FROM lease_epochs WHERE work_item = ?')
           .get(workItem) as { next_epoch: number } | undefined
-        const epoch = brandNumber<LeaseEpoch>(nextRow?.next_epoch ?? 0)
+        const epoch = brandNumber<LeaseEpoch>(incumbent !== undefined ? incumbent.epoch : (nextRow?.next_epoch ?? 0))
         db.prepare('INSERT INTO lease_epochs (work_item, next_epoch) VALUES (?, ?)'
           + ' ON CONFLICT (work_item) DO UPDATE SET next_epoch = excluded.next_epoch')
           .run(workItem, epoch + 1)
