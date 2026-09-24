@@ -833,7 +833,7 @@ export default class RunPlugin extends Service {
   private adoptable(agent: Agent): RunId | undefined {
     for (const run of this.service.runsForSession(agent.id)) {
       const decision = this.service.resume(run.id)
-      if (decision.resumed) return run.id
+      if (decision.resumed) continue
       this.ctx.logger.debug(
         'run: not continuing %s for agent %s — %s',
         run.id,
