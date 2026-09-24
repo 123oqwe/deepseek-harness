@@ -317,6 +317,15 @@
     },
     {
       "epic": "P1-07",
+      "path": "packages/boot/app-boot/src/profile.ts",
+      "kind": "source",
+      "stages": [
+        "U.4"
+      ],
+      "reason": "The profile loader and composer, cited by P1-07's fourth U supplement (v3) and not changed by this epic. U.4 v3 composes the shipped template its `--profile` names with this file's `PROFILE_TEMPLATES`, `initProfile`, `loadProfileDirectory` and `composeEntries`, without booting it, and requires an enabled `command-workspace-trust` row and the case's startup row; on headless that is the observation that the shipped profile mounts the trust plugin. M-U4-i, disabling that row on the headless bundle, reddens exactly the two headless cases."
+    },
+    {
+      "epic": "P1-07",
       "path": "packages/boot/cmdline/src/index.ts",
       "kind": "source",
       "stages": [
@@ -337,7 +346,8 @@
       "path": "packages/bundle/headless/cordis.patch.yml",
       "kind": "manifest",
       "stages": [
-        "U.2"
+        "U.2",
+        "U.4"
       ]
     },
     {
@@ -363,6 +373,15 @@
       "stages": [
         "U"
       ]
+    },
+    {
+      "epic": "P1-07",
+      "path": "packages/identity/host-user-id/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.4"
+      ],
+      "reason": "The host user identity, cited by P1-07's fourth U supplement (v3) and not changed by this epic. `launch-grant.ts` mints the launch grant's principal through it; it reads `.host-user-id` under `DSH_HOME` and the tenant from `DSH_TENANT` on each call. U.4 v3 gives each case a private home with a fixed id and a fixed tenant and pins the principal as a literal, so a grant for the wrong user or tenant turns the grant cases red (M-U4-f, M-U4-g)."
     },
     {
       "epic": "P1-07",
