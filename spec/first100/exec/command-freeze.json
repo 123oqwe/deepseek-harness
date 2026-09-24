@@ -16606,6 +16606,47 @@
         "failureSummary": "The cases commit `dc7f87adcdf374716fe9a167560be358046c31eb`, run 36008748262, and the fix `1dc5b6bad7e753932658aedb5de8c51a7688a21f`, run 36008774181: 39 of 39 over reconnect.spec.ts, mcp-charge-session.spec.ts and run-budget.spec.ts. The case reads 3 requests after the first turn and 4 after the second; a budget reset per turn would give 6."
       },
       "note": "P4-11 blind review F3, pinned as a known limitation: a Run lasts as long as its session and no production code forgets its usage, so a budget one turn spends stays spent for the session's later turns while the process lives. Written into the retry README's known limitations and the P4-11 Agent Note."
+    },
+    {
+      "epic": "P4-07",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-07",
+        "stage": "U"
+      },
+      "supplementSeq": 8,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/run/tests/stop-gate-dispatch.spec.ts",
+        "-t",
+        "P4-07 must\\[1\\] / BLOCKED-265: the fencing check reaches a call this run has already started making",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-07 must[1] / BLOCKED-265: the fencing check reaches a call this run has already started making refuses the PTC sub-call issued after another host took the Run, and ends the program",
+        "P4-07 must[1] / BLOCKED-265: the fencing check reaches a call this run has already started making runs the same program to the end while this host still holds its Run",
+        "P4-07 must[1] / BLOCKED-265: the fencing check reaches a call this run has already started making refuses the rest of a NATIVE batch once the takeover lands mid-batch, with the same sentence"
+      ],
+      "files": [
+        "packages/run/run/tests/stop-gate-dispatch.spec.ts",
+        "packages/core/tools/src/external-effect.ts",
+        "packages/core/tools/src/ptc.ts",
+        "packages/core/agent-loop/src/tool-calls.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T14:08:08Z",
+      "dryRunProof": {
+        "treeSha": "035dc8caf4d575c98adef8c6d0cd1b63566fc75e",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-g (`83f68d1ef362db8e7eecca1ea6f3f46de0c89dd4`, off `65e7584472437d56f5f32d3c6d86ee56fd1742c7`, never merged): refuseNewAction's fencing branch is removed (its clock parameter renamed _nowMs); the stop and lease-refused branches stay.",
+        "failureSummary": "Base `65e7584472437d56f5f32d3c6d86ee56fd1742c7`, run 36009789273: stop-gate-dispatch.spec.ts 8 of 8. M-g, run 36009813726: exactly the PTC case and the native mid-batch case red, because the displaced host dispatches the calls after the takeover; the control, where the host still holds its Run, and the five P2-12 cases stay green. Both dispatch paths, tool-calls.ts and ptc.ts, reach fencing only through refuseNewAction."
+      },
+      "note": "P4-07 acceptance[0], the fencing half of BLOCKED-265: a host another host displaced partway through a step dispatches none of the calls it had not started. A PTC program's sub-call after the takeover is refused and the program ends; the rest of a native batch is refused with the same sentence; the call already running is not undone. The control runs the same program to the end while the host still holds its Run. The argv selects the three by their describe title with an escaped -t."
     }
   ]
 }

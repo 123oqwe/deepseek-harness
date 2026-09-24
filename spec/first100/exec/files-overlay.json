@@ -2945,7 +2945,8 @@
       "kind": "source",
       "stages": [
         "U.4",
-        "U.2"
+        "U.2",
+        "U.8"
       ],
       "reason": "Where the authority is actually presented: the dispatcher refuses a fenced or lease-refused run before a single tool runs, and writes the model-visible result that says which. A rule with no dispatch site refuses nothing, and the plan named no dispatch site."
     },
@@ -2967,6 +2968,24 @@
         "U.2"
       ],
       "reason": "Declares `Agent.leaseRefused`, the marker that made a refused lease distinguishable from a composition with no Run Service. The plan named the lease store and the fencing rule; the agent field is where the refusal has to be visible, because the dispatcher reads the agent rather than calling back into the Run Service (that would be a cycle)."
+    },
+    {
+      "epic": "P4-07",
+      "path": "packages/core/tools/src/external-effect.ts",
+      "kind": "source",
+      "stages": [
+        "U.8"
+      ],
+      "reason": "refuseNewAction lives here: the per-dispatch gate both tool paths call, whose fencing branch refuses a call that a host another host displaced had not started. U.8 and its mutation measure that branch (P4-07 acceptance[0], the fencing half of BLOCKED-265)."
+    },
+    {
+      "epic": "P4-07",
+      "path": "packages/core/tools/src/ptc.ts",
+      "kind": "source",
+      "stages": [
+        "U.8"
+      ],
+      "reason": "A PTC program asks refuseNewAction before each sub-call, which is how a sub-call issued after another host took the Run is refused and the program ended. U.8's PTC case goes through this dispatch (P4-07 acceptance[0], BLOCKED-265)."
     },
     {
       "epic": "P4-07",
@@ -3035,6 +3054,14 @@
       "kind": "test",
       "stages": [
         "U.5"
+      ]
+    },
+    {
+      "epic": "P4-07",
+      "path": "packages/run/run/tests/stop-gate-dispatch.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.8"
       ]
     },
     {
