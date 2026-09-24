@@ -7,7 +7,10 @@
  * `apps/cli/src/profile-boot.ts` pins it, registers `p4_07_probe` (a tool that
  * declares no risk domain tags, so the risk gate asks about it), creates the
  * root agent after boot, and runs one turn in which the model calls the probe
- * once. `process.argv[3]` selects what the operator does before approving:
+ * once. `process.argv[4]` selects the dispatch path: `native` (the default)
+ * or `ptc`, code mode, where the model calls `run_code` and its program makes
+ * the probe call, which the operator's approval of `run_code` lets start.
+ * `process.argv[3]` selects what the operator does before approving the probe:
  *
  * - `control`: nothing;
  * - `fence`: another worker takes the Run's lease over, acquiring the work
@@ -32,7 +35,7 @@ import type {} from '@deepseek-ai/dsh-control-plane/plugin'
 import type { WorkerId } from '@deepseek-ai/dsh-lease-contract'
 import { runFixtureTurn } from '@deepseek-ai/dsh-loader-smoke'
 import { endorseComposedDecision } from '@deepseek-ai/dsh-policy-enforcement'
-import { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
+import { defineContentToolFixture, RUN_CODE_NAME } from '@deepseek-ai/dsh-tools'
 import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
 import { createFixtureRootAgent } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts'
 import { bootProductionProfile } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/production-profile.ts'
@@ -72,6 +75,9 @@ function gates(agent: Agent): Record<string, unknown> {
 const mode = process.argv[3]
 if (!MODES.some(known => known === mode)) throw new Error(`p4-07 ask-window driver: unknown mode ${String(mode)}`)
 const selected = mode as Mode
+const path = process.argv[4] ?? 'native'
+if (path !== 'native' && path !== 'ptc') throw new Error(`p4-07 ask-window driver: unknown path ${path}`)
+if (path === 'ptc') process.env.DSH_TOOLS_MODE = 'ptc'
 
 process.env.DSH_PERMISSION_MODE = 'workspace-write'
 
@@ -102,10 +108,13 @@ try {
   const otherQuestions: string[] = []
   ctx.on('approval/request', (request) => {
     // The shipped headless profile asks once whether to trust the workspace;
-    // the operator declines at once, which grants nothing.
+    // the operator declines at once, which grants nothing. In code mode
+    // `run_code` declares no risk domain tags, so the native gate asks about
+    // the program itself; the operator allows it at once so the program can
+    // make the watched call.
     if (request.toolName !== PROBE_TOOL) {
       otherQuestions.push(request.toolName)
-      return Promise.resolve('rejected' as const)
+      return Promise.resolve(request.toolName === RUN_CODE_NAME ? 'allowed-once' as const : 'rejected' as const)
     }
     const agent = request.agent
     const before = gates(agent)
@@ -162,6 +171,7 @@ try {
   const events = agent.session.snapshotEvents()
   process.stdout.write(`P4-07-ASK ${JSON.stringify({
     mode: selected,
+    path,
     atApproval,
     otherQuestions,
     probeRan: probeRuns > 0,
