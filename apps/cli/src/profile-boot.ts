@@ -301,13 +301,6 @@ export async function composeProfile(
       + `Minimal conflicting constraint set:\n${core}`,
     )
   }
-  for (const { layer, activation } of negotiation.blocked) {
-    process.stderr.write(
-      `${NAME}: plugin compatibility: excluding bundle ${JSON.stringify(layer.packageName)} from profile `
-      + `${JSON.stringify(name)} (${activation.reasonCode}`
-      + `${activation.missingCapabilities.length > 0 ? `: ${activation.missingCapabilities.join(', ')}` : ''})\n`,
-    )
-  }
   for (const { layer, activation } of negotiation.admitted) {
     if (activation.disabledOptionalCapabilities.length === 0) continue
     // acceptance[2]: an unsatisfied optional capability disables that feature
