@@ -239,7 +239,7 @@ export function listSchemas(): readonly RegisteredSchema[] {
 
 function bootstrapSessionEventSchemas(): void {
   for (const type of KNOWN_SESSION_EVENT_TYPES) {
-    registerSchema(brandString<SchemaId>(`session-event:${type}`), { major: 1, minor: 0 }, identityMigration)
+    registerSchema(brandString<SchemaId>(`session-event:${type}`), { major: 1, minor: 0 }, payload => payload)
   }
 }
 
