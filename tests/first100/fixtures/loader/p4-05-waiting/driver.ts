@@ -5,7 +5,8 @@
  * It boots the SHIPPED headless profile through `bootProductionProfile` with
  * `./base.patch.yml` and the Trust Kernel pinned the way
  * `apps/cli/src/profile-boot.ts` pins it, under `DSH_PERMISSION_MODE`
- * `workspace-write`. It registers one third-party tool that declares no risk
+ * `workspace-write`, and creates the root agent after boot, as a shipped
+ * launcher does. It registers one third-party tool that declares no risk
  * domain tags, so the base layer's risk gate classifies it by the unknown
  * default and asks an operator. The operator is this driver: an
  * `approval/request` listener that reads the agent and the model when it is
@@ -17,17 +18,20 @@
  * @module tests/first100/fixtures/loader/p4-05-waiting/driver
  */
 
+import { randomUUID } from 'node:crypto'
 import { setTimeout as delay } from 'node:timers/promises'
 import { fileURLToPath } from 'node:url'
 import { holdsDispatchSlot } from '@deepseek-ai/dsh-agent'
+import { HOST_USER_IDENTITY_KEY, type HostUserIdentityFactory } from '@deepseek-ai/dsh-agent-loop'
 import { resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
 import { runFixtureTurn } from '@deepseek-ai/dsh-loader-smoke'
 import { endorseComposedDecision } from '@deepseek-ai/dsh-policy-enforcement'
 import { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
 import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
 import type {} from '@deepseek-ai/dsh-user-approval'
+import { createFixtureRootAgent } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts'
 import { bootProductionProfile } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/production-profile.ts'
-import { THIRD_PARTY_TOOL } from './shared.ts'
+import { PROVIDER, THIRD_PARTY_TOOL } from './shared.ts'
 import type { AdapterGlobal } from './shared.ts'
 
 const overlay = fileURLToPath(new URL('./base.patch.yml', import.meta.url))
@@ -153,6 +157,16 @@ try {
     riskGated.push({ actionId, riskClass, preset, decision })
   })
 
+  // Created after boot, as a shipped launcher creates its root agent, so its
+  // session starts once the capability-token service is listening.
+  await createFixtureRootAgent(ctx, {
+    provider: PROVIDER,
+    model: PROVIDER,
+    cwd: process.cwd(),
+    identity: (ctx.get(HOST_USER_IDENTITY_KEY) as HostUserIdentityFactory | undefined)?.(
+      `run-${randomUUID()}` as Parameters<HostUserIdentityFactory>[0],
+    ),
+  })
   await runFixtureTurn(ctx, { task: 'P4-05: call the third-party tool once.' })
   // A gate that did not wait for the answer ends the turn first; the reading
   // taken after the hold still belongs in the report.
