@@ -68,6 +68,7 @@ interface Report {
   readonly asks: readonly Ask[]
   readonly otherQuestions: readonly string[]
   readonly toolRunStates: readonly (string | null)[]
+  readonly toolResults: readonly string[]
   readonly riskGated: readonly RiskGated[]
   readonly policyEffects: readonly unknown[]
   readonly final: Reading
@@ -163,6 +164,12 @@ try {
     asks,
     otherQuestions,
     toolRunStates,
+    // What the loop recorded for each tool call, so a call that never reached
+    // its body says which gate turned it away.
+    toolResults: ctx.sessions.list().flatMap(session => session.snapshotEvents()).flatMap(event => event.type !== 'tool/result' ? [] : [
+      event.data.message.content.flatMap(block =>
+        block.type === 'tool-result' ? block.content.flatMap(part => part.type === 'text' ? [part.text] : []) : []).join(''),
+    ]),
     riskGated,
     policyEffects: auditEntries.flatMap((payload) => {
       const decision = (payload as { readonly decision?: { readonly effect?: unknown } }).decision
