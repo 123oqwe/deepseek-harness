@@ -9,7 +9,8 @@
  * calls one third-party tool that declares no risk domain tags; the base
  * layer's risk gate asks an operator about it, and the driver, answering as
  * that operator, withholds its answer for a second before allowing the call.
- * One driver run serves every case in this file.
+ * It declines at once the workspace-trust question the shipped headless
+ * profile asks first. One driver run serves every case in this file.
  *
  * The acceptance[1] cases read the agent while the answer is withheld and
  * after it is given. The must[0] case pins which waiting state an approval
@@ -51,6 +52,7 @@ interface Report {
   readonly permissionMode: string | null
   readonly trustKernel: boolean
   readonly asks: readonly Ask[]
+  readonly otherQuestions: readonly string[]
   readonly toolRunStates: readonly (string | null)[]
   readonly riskGated: readonly { readonly actionId: string; readonly riskClass: string; readonly preset: string; readonly decision: string }[]
   readonly policyEffects: readonly unknown[]
@@ -80,13 +82,15 @@ function observe(): Promise<Report> {
 }
 
 /**
- * The one question the operator was asked, about the third-party tool.
+ * The one question the operator withheld its answer to, about the third-party tool.
  * @param report - the driver's report.
  * @returns that question's readings.
  */
 function onlyAsk(report: Report): Ask {
   expect(report.permissionMode).toBe('workspace-write')
   expect(report.trustKernel).toBe(true)
+  // Any other question is the workspace-trust one, which the driver declines at once.
+  expect(report.otherQuestions.filter(name => name !== 'workspace-trust')).toEqual([])
   expect(report.asks.map(ask => ask.toolName)).toEqual([THIRD_PARTY_TOOL])
   const [ask] = report.asks
   if (ask === undefined) throw new Error('the operator was asked nothing')

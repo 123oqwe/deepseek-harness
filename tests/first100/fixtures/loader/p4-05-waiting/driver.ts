@@ -9,8 +9,9 @@
  * domain tags, so the base layer's risk gate classifies it by the unknown
  * default and asks an operator. The operator is this driver: an
  * `approval/request` listener that reads the agent and the model when it is
- * asked, withholds its answer for {@link HOLD_MS}, reads them again, and
- * allows the call once.
+ * asked about the tool, withholds its answer for {@link HOLD_MS}, reads them
+ * again, and allows the call once. It declines at once the workspace-trust
+ * question the shipped headless profile asks first.
  *
  * It prints one `P4-05-WAIT <json>` line; the spec beside it judges.
  * @module tests/first100/fixtures/loader/p4-05-waiting/driver
@@ -65,6 +66,7 @@ interface Report {
   readonly permissionMode: string | null
   readonly trustKernel: boolean
   readonly asks: readonly Ask[]
+  readonly otherQuestions: readonly string[]
   readonly toolRunStates: readonly (string | null)[]
   readonly riskGated: readonly RiskGated[]
   readonly policyEffects: readonly unknown[]
@@ -123,8 +125,17 @@ try {
   }))
 
   const asks: Ask[] = []
+  const otherQuestions: string[] = []
   const answers: Promise<void>[] = []
   ctx.on('approval/request', (request) => {
+    // The shipped headless profile asks once per session whether to load the
+    // untrusted workspace's instruction files (`workspace-trust`). The
+    // operator declines it at once, which grants nothing; only the question
+    // about the third-party tool is withheld.
+    if (request.toolName !== THIRD_PARTY_TOOL) {
+      otherQuestions.push(request.toolName)
+      return Promise.resolve('rejected' as const)
+    }
     const atAsk = read(request.agent.lifecycle)
     const answer = delay(HOLD_MS).then(() => {
       asks.push({ toolName: request.toolName, atAsk, afterHold: read(request.agent.lifecycle) })
@@ -150,6 +161,7 @@ try {
     permissionMode: process.env.DSH_PERMISSION_MODE ?? null,
     trustKernel: ctx.get('trustKernel') !== undefined,
     asks,
+    otherQuestions,
     toolRunStates,
     riskGated,
     policyEffects: auditEntries.flatMap((payload) => {
