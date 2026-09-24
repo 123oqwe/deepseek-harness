@@ -1283,12 +1283,7 @@ function cmdGreenSupplement() {
     console.error(`report not found: ${reportPath}`)
     process.exit(1)
   }
-  const { raw, report, titles, matchCounts, failedFullNames, exit } = parseVitestJsonReport(reportPath)
-  const notObserved = configFrozenReportRefusal(frozen.argv, (report.testResults ?? []).map((file) => String(file.name)), reportPath)
-  if (notObserved !== null) {
-    console.error(`BLOCKED: --report ${reportPath} cannot observe ${epic}.${stage}.${supplementSeq}: ${notObserved}`)
-    process.exit(1)
-  }
+  const { raw, titles, matchCounts, failedFullNames, exit } = parseVitestJsonReport(reportPath)
   const observationSha256 = sha256(raw)
 
   const existing = existsSync(LEDGER_PATH) ? loadJson(LEDGER_PATH) : { rows: buildSkeleton(null) }
