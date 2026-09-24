@@ -1686,6 +1686,14 @@
     },
     {
       "epic": "P2-05",
+      "path": "packages/test-support/loader-smoke/tests/fixtures/production-profile.ts",
+      "kind": "test",
+      "stages": [
+        "U.4"
+      ]
+    },
+    {
+      "epic": "P2-05",
       "path": "tests/first100/fixtures/P2-05.composition.spec.ts",
       "kind": "test",
       "stages": [
@@ -1699,6 +1707,33 @@
       "stages": [
         "U.4"
       ]
+    },
+    {
+      "epic": "P2-05",
+      "path": "vendor/include/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.4"
+      ],
+      "reason": "Vendored Cordis include plugin, cited (not changed) by P2-05's fourth U supplement (v2): its update applies the new patch list the driver sets on the root include entry, which is how a running process disables the policy-engine row."
+    },
+    {
+      "epic": "P2-05",
+      "path": "vendor/loader/src/config/entry.ts",
+      "kind": "source",
+      "stages": [
+        "U.4"
+      ],
+      "reason": "Vendored Cordis Loader entry code, cited (not changed) by P2-05's fourth U supplement (v2): an update disposes a candidate that became disabled and resets unchanged rows without restarting them, so the unmount touches only the policy-engine row and a per-instance engine cache would still be caught."
+    },
+    {
+      "epic": "P2-05",
+      "path": "vendor/loader/src/config/group.ts",
+      "kind": "source",
+      "stages": [
+        "U.4"
+      ],
+      "reason": "Vendored Cordis Loader group code, cited (not changed) by P2-05's fourth U supplement (v2): it recomposes the include entry's children from the patched list, the path the driver's unmount takes."
     },
     {
       "epic": "P2-06",
