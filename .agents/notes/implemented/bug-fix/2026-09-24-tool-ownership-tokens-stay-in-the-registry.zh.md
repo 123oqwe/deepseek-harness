@@ -33,7 +33,7 @@ Status: implemented
 
 ## 后果
 
-- 这些检查读的是 fiber 所处的位置，而 Cordis 让同一进程里的每个插件都能通过公开接口拿到它们。借助 `ctx.get('loader').entries()`，插件可以拿到另一个条目的 fiber 上下文，并在它之下放一个 fiber：这个 fiber 以那个条目的身份注册，放在声明方条目之下时还能声明。插件可以通过 `options.name` 给自己的条目改名，或者用 `loader.update` 改写 `ownerDeclarers`，这项改动还会被持久化。注册表的私有字段（其中包括 token）在运行时也读得到。为宿主 Loader 之外的条目读取的 `fiber.entry` 同样是公开字段，所以 Loader 条目之内的代码在该条目之下自己创建的 fiber 上设置它，可以让那个 fiber 以任意名字注册。没有宿主条目包住的 fiber 上，这个字段不代表任何身份，注册会被拒绝。这些途径交用户决定（BLOCKED-308，B 类）；本次改动不证明静态加载的插件不能以其他插件的名义注册。
+- 这些检查读的是 fiber 所处的位置，而 Cordis 让同一进程里的每个插件都能通过公开接口拿到它们。借助 `ctx.get('loader').entries()`，插件可以拿到另一个条目的 fiber 上下文，并在它之下放一个 fiber：这个 fiber 以那个条目的身份注册，放在声明方条目之下时还能声明。插件可以通过 `options.name` 给自己的条目改名，或者用 `loader.update` 改写 `ownerDeclarers`，这项改动还会被持久化。注册表的私有字段（其中包括 token）在运行时也读得到。为宿主 Loader 之外的条目读取的 `fiber.entry` 同样是公开字段，所以 Loader 条目之内的代码在该条目之下自己创建的 fiber 上设置它，可以让那个 fiber 以任意名字注册。没有宿主条目包住的 fiber 上，这个字段不代表任何身份，注册会被拒绝。调用方链沿 `fiber.parent` 往上走，它同样是公开字段，所以同一段代码还能把自己创建的 fiber 改挂到别的条目之下。这些途径交用户决定（BLOCKED-308，B 类）；本次改动不证明静态加载的插件不能以其他插件的名义注册。
 - 拿到 `ctx.root` 的代码可以以 `root` 的身份注册。
 - 同一条目下嵌套的两个插件现在共用这个条目的身份，因此它们之间的名称冲突由逐层的重复注册错误拒绝，而不再是 `capability-collision`。两者都会拒绝第二次注册。
 - `CapabilityRecord` 与 `CapabilityRegistration`、`OwnershipToken` 一起列入 `gen-cordis-catalog` 的 `TYPE_LINK_EXEMPTIONS`，`RevocationResult` 则随 `revokeOwned` 移出。

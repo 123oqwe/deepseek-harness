@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-24-tool-ownership-tokens-stay-in-the-registry.md
-2026-09-24-tool-ownership-tokens-stay-in-the-registry.md: c2505e1cdb50e6fc2e0e41fbbdf6733992fc0856
-2026-09-24-tool-ownership-tokens-stay-in-the-registry.zh.md: 2d4e2edc5c84ae4e608ce0d8959845ceba197ca5
+2026-09-24-tool-ownership-tokens-stay-in-the-registry.md: 569c515f579a0d6d8fe48132d1bb39b6e9e073d3
+2026-09-24-tool-ownership-tokens-stay-in-the-registry.zh.md: 0dadf02eca33519ca313154a4edeb9cf661c7631
