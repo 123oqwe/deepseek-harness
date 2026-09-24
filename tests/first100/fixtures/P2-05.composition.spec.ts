@@ -100,7 +100,9 @@ describe('P2-05 acceptance[2] (narrowed by C18): the policy service unmounted th
     expect(trustKernel).toBe(true)
     expect(policyMountedBefore).toBe(true)
     expect(before.probeRuns).toBe(1)
-    expect(before.decisions.at(-1)).toMatchObject({ effect: 'permit', reason: undefined })
+    // Separately: a plain permit is recorded without a reason key, which toMatchObject would require.
+    expect(before.decisions.at(-1)?.effect).toBe('permit')
+    expect(before.decisions.at(-1)?.reason).toBeUndefined()
   })
 
   it('precondition: disabling the policy-engine row through the Loader withdraws the policy service', () => {
