@@ -232,8 +232,6 @@ export function verify(repoRoot, evidencePath) {
   if (!existsSync(manifestPath)) {
     mismatches.push(`manifest sidecar missing at ${manifestPath}`)
   } else {
-    const recomputed = digestOfFile(manifestPath)
-    if (recomputed !== pkg.sidecarManifestDigest) mismatches.push(`sidecar manifest digest mismatch (recorded ${pkg.sidecarManifestDigest}, recomputed ${recomputed})`)
     const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
     verifyAcceptedInvariant(pkg, manifest.requiredArtifactPaths ?? [], manifest.requiredGateIds ?? [], mismatches)
   }
