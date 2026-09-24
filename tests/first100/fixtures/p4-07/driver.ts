@@ -10,6 +10,11 @@
  * - `displaced`: one text turn; a second holder takes the session's work item;
  *   the session ends while the Run Service stays mounted.
  * - `holder`: one text turn; the session ends while this host still holds the lease.
+ * - `displaced-early`: no turn, so the Run is still `accepted`; a second holder
+ *   takes the work item; the session ends while the Run Service stays mounted.
+ * - `holder-unload`: one text turn; the session ends and the host unloads at
+ *   once, without waiting for the Run's terminal writes; the Run is then read
+ *   from the Run Service's store file.
  * - `busy-acquire`: another connection holds the lease store's RESERVED lock
  *   while the session starts, so the store's `acquire` waits out its busy
  *   timeout and throws; then one tool turn.
@@ -18,6 +23,7 @@
  * - `healthy`: the session starts with the store free; then one tool turn.
  */
 
+import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import type { Context } from '@deepseek-ai/cordis'
@@ -114,18 +120,19 @@ async function recordAfter(agent: Agent, before: string, ms: number): Promise<Re
   return runRecord(agent)
 }
 
+let unloaded = false
 try {
   const leaseStore = ctx.get('leaseStore')
   if (leaseStore === undefined) throw new Error('p4-07: the shipped profile mounted no lease store')
   const runs = ctx.get('runs')
   if (runs === undefined) throw new Error('p4-07: the shipped profile mounted no Run Service')
-  if (mode === 'displaced' || mode === 'holder') {
+  if (mode === 'displaced' || mode === 'holder' || mode === 'displaced-early') {
     const { agent, end } = await startSession(`p4-07-${mode}`)
-    await turn(agent, 'say ok')
+    if (mode !== 'displaced-early') await turn(agent, 'say ok')
     const before = runRecord(agent)
     const firstEpoch = agent.lifecycle?.epoch ?? null
     let second: { acquired: boolean; epoch: number | null } | null = null
-    if (mode === 'displaced') {
+    if (mode !== 'holder') {
       const workItem = brandString<WorkItemId>(agent.id)
       const secondHost = brandString<WorkerId>('p4-07-second-host')
       const taken = leaseStore.acquire(workItem, secondHost, Date.now() + runs.config.leaseMs + 1, runs.config.leaseMs)
@@ -136,6 +143,21 @@ try {
     await end()
     const after = await recordAfter(agent, JSON.stringify(displacedRecord), 5000)
     process.stdout.write(`P4-07-OBSERVED ${JSON.stringify({ mode, firstEpoch, second, before, displacedRecord, after, waitedMs: Date.now() - startedAt })}\n`)
+  } else if (mode === 'holder-unload') {
+    const { agent, end } = await startSession('p4-07-holder-unload')
+    await turn(agent, 'say ok')
+    const before = runRecord(agent)
+    const runId = agent.runId
+    const storePath = runs.config.storePath
+    await end()
+    unloaded = true
+    await ctx.fiber.dispose()
+    const storeDocument = JSON.parse(await readFile(storePath, 'utf8')) as {
+      runs: readonly { id: string; state: string; events: readonly { fromState?: string; toState: string }[] }[]
+    }
+    const run = storeDocument.runs.find(stored => stored.id === runId)
+    const after = run === undefined ? null : { state: run.state, transitions: run.events.map(event => `${String(event.fromState)}->${event.toState}`) }
+    process.stdout.write(`P4-07-OBSERVED ${JSON.stringify({ mode, before, after })}\n`)
   } else {
     const leased = ctx.agents.list().filter(agent => agent.runLease !== undefined).map(agent => agent.id)
     const lock = mode === 'healthy' ? undefined : new DatabaseSync(join(leaseDirectory(leaseStore), 'leases.sqlite'))
@@ -159,5 +181,5 @@ try {
     process.stdout.write(`P4-07-OBSERVED ${JSON.stringify({ mode, precondition, leaseRefused: agent.leaseRefused === true, results, todoWrites })}\n`)
   }
 } finally {
-  await ctx.fiber.dispose()
+  if (!unloaded) await ctx.fiber.dispose()
 }

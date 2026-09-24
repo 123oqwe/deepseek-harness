@@ -33,6 +33,12 @@ interface EndObservation {
   readonly after: RunRecord | null
 }
 
+/** What the driver reports after a session ended as its host unloaded. */
+interface UnloadObservation {
+  readonly before: RunRecord | null
+  readonly after: RunRecord | null
+}
+
 /** What the driver reports after a tool turn. */
 interface ToolObservation {
   readonly precondition: { readonly leasedBeforeStart: readonly string[]; readonly leaseRow: boolean; readonly run: boolean }
@@ -92,6 +98,23 @@ describe('P4-07 on the shipped profile: a displaced host and a failing lease sto
   it('the host that still holds the lease records the Run\'s outcome when its session ends (control)', async () => {
     const observed = await boot<EndObservation>('holder')
 
+    expect(observed.after?.state).toBe('succeeded')
+    expect(observed.after?.transitions.slice(-2)).toStrictEqual(['running->verifying', 'verifying->succeeded'])
+  }, LOADER_SMOKE_TEST_TIMEOUT_MS)
+
+  it('a host displaced before its first model step ends its session without writing the Run\'s cancellation (acceptance[0])', async () => {
+    const observed = await boot<EndObservation>('displaced-early')
+
+    expect(observed.second?.acquired).toBe(true)
+    // `accepted` admits `cancelled`, so only the fence keeps that write out.
+    expect(observed.displacedRecord?.state).toBe('accepted')
+    expect(observed.after).toStrictEqual(observed.displacedRecord)
+  }, LOADER_SMOKE_TEST_TIMEOUT_MS)
+
+  it('the holder\'s session that ends as its host unloads still records the Run\'s outcome', async () => {
+    const observed = await boot<UnloadObservation>('holder-unload')
+
+    expect(observed.before?.state).toBe('running')
     expect(observed.after?.state).toBe('succeeded')
     expect(observed.after?.transitions.slice(-2)).toStrictEqual(['running->verifying', 'verifying->succeeded'])
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
