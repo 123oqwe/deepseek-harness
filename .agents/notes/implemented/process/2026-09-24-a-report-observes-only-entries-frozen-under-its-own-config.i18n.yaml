@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/process/2026-09-24-a-report-observes-only-entries-frozen-under-its-own-config.md
 2026-09-24-a-report-observes-only-entries-frozen-under-its-own-config.md: 1f2319fe22c1ccfe28bedf42b26f46eadb41f1b4
-2026-09-24-a-report-observes-only-entries-frozen-under-its-own-config.zh.md: e34d25b30edf5f17c87f1b294db9dbd773ff559f
+2026-09-24-a-report-observes-only-entries-frozen-under-its-own-config.zh.md: 7cd0a6c3b40f7db643b72777fee45c9ccbe079fd
