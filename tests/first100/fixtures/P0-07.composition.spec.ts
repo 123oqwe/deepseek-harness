@@ -168,8 +168,12 @@ interface PublishWorkflow {
  * with no condition and no `continue-on-error` on the step or its job, so a
  * failed verify fails the job.
  */
-/** The verify step's whole command: the verify command and one evidence path, nothing after it. */
-const VERIFY_COMMAND = /^(?:pnpm run evidence:verify|node scripts\/release\/verify-evidence\.mjs) --evidence \S+$/u
+/**
+ * The verify step's whole command: the verify command and one evidence path,
+ * nothing after it. The path is word characters, dots, slashes and hyphens, so
+ * `||true`, `;true`, `|tee` or `&` glued to it without a space is not a path.
+ */
+const VERIFY_COMMAND = /^(?:pnpm run evidence:verify|node scripts\/release\/verify-evidence\.mjs) --evidence [\w./-]+$/u
 
 /** The step finder the cases share: the one step that verifies the evidence package. */
 const VERIFY_STEP = /evidence:verify --evidence|scripts\/release\/verify-evidence\.mjs --evidence/
@@ -186,6 +190,8 @@ function verifyStepProblems(step: WorkflowStep | undefined): string[] {
   // The step's whole command is the verify command: `|| true`, a pipe, a
   // second command or `set +e` would each let a failed verify pass the step.
   if (!VERIFY_COMMAND.test(step?.run?.trim() ?? '')) problems.push('command')
+  // A custom shell decides how a failing command ends the step.
+  if (step?.shell !== undefined) problems.push('shell')
   return problems
 }
 
