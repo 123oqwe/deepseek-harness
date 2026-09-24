@@ -819,7 +819,7 @@ export async function boot(
     // the id, and so nothing touches `$DSH_HOME`, unless a configured row
     // actually needs one. Programmatic root creation (headless, the Web app's
     // session controller) passes its identity in `AgentOptions` instead.
-    ctx.provide(HOST_USER_IDENTITY_KEY, (runId: RunId) => hostUserIdentity(runId))
+    ctx.provide(`${HOST_USER_IDENTITY_KEY}-unread`, (runId: RunId) => hostUserIdentity(runId))
     await ctx.plugin(Loader)
     await prepare?.(ctx)
     stage = 'plugin tree failed to load'
