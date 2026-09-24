@@ -25,7 +25,10 @@ import PermissionPresetService from '@deepseek-ai/dsh-permission-presets'
 import { approvalBindingDigest } from '@deepseek-ai/dsh-user-approval/canonical'
 import type { ApprovalBindingInputs } from '@deepseek-ai/dsh-user-approval/types'
 import type { Agent } from '@deepseek-ai/dsh-agent'
-import ToolRuntime, { RUN_CODE_NAME, defineTool } from '@deepseek-ai/dsh-tools'
+import { createTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
+import { PrincipalId, TenantId } from '@deepseek-ai/dsh-principal/types'
+import { CapabilityName, CapabilityTokenNonce, issueToken } from '@deepseek-ai/dsh-capability-token'
+import ToolRuntime, { RUN_CODE_NAME, TOOL_CAPABILITY_VERB, defineTool } from '@deepseek-ai/dsh-tools'
 
 /** A runtime whose program the case writes, so the sub-dispatch is driven from real code-mode. */
 class ScriptedRuntime extends CodeRuntime {
@@ -253,5 +256,55 @@ describe('P2-06 acceptance[2]: the record names the DISPATCH, not only the tool'
     await runProgram(ctx, runtime, agent, 'one')
 
     expect(runs).toEqual(['one'])
+  })
+})
+
+describe('BLOCKED-330: a code-mode sub-dispatch its capability token will refuse', () => {
+  /**
+   * Run a program that calls `writer` once under a token that authorizes the
+   * program and not the tool, with a token required everywhere and the gate
+   * that asks about `writer` mounted.
+   * @returns the composition's agent, what the tool observed, and what the program was told.
+   */
+  async function refusedByScope(): Promise<{ agent: Agent; runs: string[]; told: unknown[] }> {
+    const { ctx, agent, runs, runtime } = await composed({ gate: true })
+    ctx.tools.requireCapabilityToken()
+    const told: unknown[] = []
+    runtime.behavior = async (request) => {
+      await request.bindings[0]!.functions.writer!({ contents: 'one' }).catch((error: unknown) => { told.push(error) })
+      return { logs: [], value: 'done' }
+    }
+    const programOnly = issueToken(createTrustKernel().signatureRoots, {
+      subject: PrincipalId('blocked-330-agent'),
+      tenant: TenantId('blocked-330-tenant'),
+      capability: CapabilityName('tool'),
+      verbs: [TOOL_CAPABILITY_VERB],
+      resources: [RUN_CODE_NAME],
+      constraints: {},
+      expiresAt: Date.now() + 600_000,
+    }, CapabilityTokenNonce('blocked-330'))
+    await ctx.tools.execute({
+      signal: new AbortController().signal,
+      callId: ToolCallId('call-1'),
+      name: RUN_CODE_NAME,
+      arguments: { code: 'program', description: 'dispatch the writer' },
+      agent,
+      capabilityToken: programOnly,
+    })
+    return { agent, runs, told }
+  }
+
+  it('is not put to the operator', async () => {
+    const { agent } = await refusedByScope()
+
+    const asked = agent.session.snapshotEvents().filter(event => event.type === 'approval/asked')
+    expect(asked).toEqual([])
+  })
+
+  it('is refused as outside the token\'s scope, and the tool body does not run', async () => {
+    const { runs, told } = await refusedByScope()
+
+    expect(told.map(String)).toEqual(['Error: tool "writer" refused: the presented capability token does not authorize this tool'])
+    expect(runs).toEqual([])
   })
 })
