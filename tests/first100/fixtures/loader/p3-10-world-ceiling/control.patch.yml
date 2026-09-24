@@ -1,0 +1,5 @@
+# The control: the same composition with no ceiling requested, so the same two
+# commands must end differently here than under `limited.patch.yml`.
+- id: execution-worlds
+  config:
+    request: {}

@@ -1,0 +1,65 @@
+{
+  "note": "Every production file that reaches ctx.subprocess, with its call count and class (P3-10 R5; checked by scripts/first100/verify-spawn-call-sites.mjs). A call site counts when a non-comment line of packages/<group>/<pkg>/src/ or apps/<app>/src/ calls subprocess.spawn( or subprocess.spawnTerminal(, or reads the service with get('subprocess'); the seam's own packages and the generated API catalog are not callers. A caller that stores the service under another name is not counted, so whoever adds one adds its row here. Classes: limited (the call carries the bound world's ceilings), deferred (it will, in the work-order phase named by until), exempt (it belongs to no world), opt-in-mount (a provider a deployment mounts itself, outside the dsh file sandbox and the ceilings once mounted), spawns-nothing (it reads the service but starts no process through it).",
+  "callSites": [
+    {
+      "path": "packages/shell/bash-local/src/index.ts",
+      "calls": 2,
+      "class": "limited",
+      "reason": "Foreground run and background start of the bash tool. Both build their spawn spec from the resolved shell spec, which carries the ceilings tool-bash resolves for the dispatching agent's world (P3-10 R4)."
+    },
+    {
+      "path": "packages/shell/pwsh-local/src/index.ts",
+      "calls": 2,
+      "class": "limited",
+      "reason": "The pwsh tool's foreground run and background start, wired the same way as bash from tool-pwsh's resolution point (P3-10 R4)."
+    },
+    {
+      "path": "packages/shell/shell/src/world-limits.ts",
+      "calls": 1,
+      "class": "spawns-nothing",
+      "reason": "readWorldLimits reads the runtime only to ask enforceableLimits(), so a refusal names exactly the stated ceilings this machine cannot hold (P3-10 R4, delegate ruling B-479); it starts nothing."
+    },
+    {
+      "path": "packages/fs/tool-fs-search/src/search-core.ts",
+      "calls": 1,
+      "class": "deferred",
+      "until": "P3-10.P phase 2 (artifacts/delegate/p3-10-p-workorder.md §1): the ripgrep search a tool call starts."
+    },
+    {
+      "path": "packages/terminal/terminal-bash/src/index.ts",
+      "calls": 1,
+      "class": "deferred",
+      "until": "P3-10.P phase 2 (artifacts/delegate/p3-10-p-workorder.md §1): the persistent terminal session's PTY."
+    },
+    {
+      "path": "packages/lsp/lsp-stdio/src/index.ts",
+      "calls": 1,
+      "class": "exempt",
+      "reason": "A language server is shared infrastructure started for the workspace, not work an agent's world runs; it belongs to no world, so no world's ceilings apply (work order R6)."
+    },
+    {
+      "path": "packages/subagent/subagent-acp/src/index.ts",
+      "calls": 1,
+      "class": "opt-in-mount",
+      "reason": "External ACP subagent provider, not in the shipped base bundle. Once a deployment mounts it, the child runs outside both the dsh file sandbox and the ceilings; whether to wire ceilings is ruled separately in phase 2 (work order R6)."
+    },
+    {
+      "path": "packages/subagent/subagent-claude-code/src/index.ts",
+      "calls": 1,
+      "class": "opt-in-mount",
+      "reason": "External Claude Code subagent provider, not in the shipped base bundle. Once a deployment mounts it, the child runs outside both the dsh file sandbox and the ceilings; whether to wire ceilings is ruled separately in phase 2 (work order R6)."
+    },
+    {
+      "path": "packages/subagent/subagent-codex/src/index.ts",
+      "calls": 1,
+      "class": "opt-in-mount",
+      "reason": "External Codex subagent provider, not in the shipped base bundle. Once a deployment mounts it, the child runs outside both the dsh file sandbox and the ceilings; whether to wire ceilings is ruled separately in phase 2 (work order R6)."
+    },
+    {
+      "path": "packages/execution/execution-world/src/fenced.ts",
+      "calls": 1,
+      "class": "spawns-nothing",
+      "reason": "The fenced world provider reads the runtime only to ask enforceableLimits(), so it claims a ceiling exactly when the runtime can hold it (P3-10 R2); the spawns that carry the ceiling are the shell tools' limited rows."
+    }
+  ]
+}

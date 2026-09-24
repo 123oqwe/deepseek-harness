@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## 概述
 
-`dsh-execution-world` 固定了在本 harness 中"一个 ExecutionWorld **是什么**"——一次请求要决定的九个维度、指称一个存活 world 的不可伪造 handle、world 所走的生命周期状态、每次停止都归一的那一个结果形状，以及"无人能满足的请求应被拒绝而不是被削弱"这条规则。它也持有 LOCAL provider(`./local-provider`)——让 `dsh-sandbox` 成为众多 world 之一的那个适配器——FENCED provider(`./fenced-provider`)——在其上加上挂载的 subprocess 运行时守得住的资源上限——以及挂载件(`./plugin`、`./local`、`./fenced`):派发路径向这个注册表问"这个动作会在哪里运行",它以一个 world 或以"没有"作答。当你要写一个 provider、或要判定一条策略可以就"动作将从何处运行"知道什么时，阅读它。
+`dsh-execution-world` 固定了在本 harness 中"一个 ExecutionWorld **是什么**"——一次请求要决定的九个维度、指称一个存活 world 的不可伪造 handle、world 所走的生命周期状态、每次停止都归一的那一个结果形状，以及"无人能满足的请求应被拒绝而不是被削弱"这条规则。它也持有 LOCAL provider（`./local-provider`）——让 `dsh-sandbox` 成为众多 world 之一的那个适配器——FENCED provider（`./fenced-provider`）——在其上加上挂载的 subprocess 运行时守得住的资源上限——以及挂载件（`./plugin`、`./local`、`./fenced`）：派发路径向这个注册表问"这个动作会在哪里运行"，它以一个 world 或以"没有"作答。当你要写一个 provider、或要判定一条策略可以就"动作将从何处运行"知道什么时，阅读它。
 
 ## 目录
 
@@ -64,13 +64,13 @@ attestation 交给 kernel，而不在此处验证。`WorldAttestation` 是证据
 <a id="what-the-mount-does-and-what-it-does-not"></a>
 ## 挂载件做什么,以及不做什么
 
-`./plugin` 就是 `ctx.executionWorlds`:provider 注册进它(以 effect 的形式,所以卸载注册方插件即移除该 provider),`bindingFor(agent)` 回答那个 agent 的会话运行在哪个 world 里。`./local` 是单独一行,负责注册 local provider——因为一个要出货 container world 的部署该做的是移掉一行 provider,而不是重配注册表。`./fenced` 以同样方式注册 fenced provider,并声明让位于 local provider:`register(provider, { yieldsTo })` 使选择过程无论哪个插件先挂载都先问 `local` 再问它,所以它只接到 local provider 拒绝的 world,也就是每一个要求上限的 world。不挂 `./local` 时,它自己服务不带上限的 world,文件约束与 local 相同。当且仅当 `ctx.subprocess` 此刻守得住某一维时,它才认领该维的 cpu、内存或进程数上限;磁盘上限、`spawn: false` 以及 local provider 拒绝的其他一切,它都拒绝。
+`./plugin` 就是 `ctx.executionWorlds`：provider 注册进它（以 effect 的形式，所以卸载注册方插件即移除该 provider），`bindingFor(agent)` 回答那个 agent 的会话运行在哪个 world 里。`./local` 是单独一行，负责注册 local provider——因为一个要出货 container world 的部署该做的是移掉一行 provider，而不是重配注册表。`./fenced` 以同样方式注册 fenced provider，并声明让位于 local provider：`register(provider, { yieldsTo })` 使选择过程无论哪个插件先挂载都先问 `local` 再问它，所以它只接到 local provider 拒绝的 world，也就是每一个要求上限的 world。不挂 `./local` 时，它自己服务不带上限的 world，文件约束与 local 相同。当且仅当 `ctx.subprocess` 此刻守得住某一维时，它才认领该维的 cpu、内存或进程数上限；磁盘上限、`spawn: false` 以及 local provider 拒绝的其他一切，它都拒绝。
 
 **挂载不创建 world。**world 在第一次有派发向它要的时候才铸造,其 spec 由 `resolveWorldSpec` 依据该行的部分请求加上 `ctx.sandboxPolicy` 已经解析出的文件效应边界,在九个维度上全部陈述出来。把请求保持为"部分"正是拒绝之所以可达的原因:一个要求 `network: 'none'` 的部署会被无法交付它的 provider 拒绝,而不是被给到那个 provider 能造出来的不受限 world。
 
 两套词汇差一个名字,由 `filesystemForSandboxMode` 显式翻译:`dsh-sandbox` 最宽的模式叫 `danger-full-access`,`WorldSpec` 叫 `full-access`;未知模式在边界上直接拒绝,而不是被带进一个没有任何维度规则认识的 spec。
 
-`bindingFor` 在四种情况下回答 `undefined`——派发路径把它读作 fail-closed 的 `absent` 策略事实:没有注册任何 provider、所有 provider 都拒绝该请求、没有挂载文件效应边界,以及被选中的 provider 在 create 时拒绝。
+`bindingFor` 在四种情况下回答 `undefined`——派发路径把它读作 fail-closed 的 `absent` 策略事实：没有注册任何 provider、所有 provider 都拒绝该请求、没有挂载文件效应边界，以及被选中的 provider 在 create 时拒绝。`requestedCeilings()` 不论是否绑出了 world，都回答部署的请求声明了哪些上限，调用方据此区分「部署没要上限」与「要了上限、这里没有 world 守得住」。
 
 <a id="model-experience"></a>
 ## Model Experience
@@ -90,7 +90,7 @@ attestation 交给 kernel，而不在此处验证。`WorldAttestation` 是证据
 - 不发布 runtime invariant companion:本包不持有自己的状态,也不观测任何两个观测者可能分歧的东西——一个 world 的状态住在铸造了它 handle 的那个 provider 里。
 - **策略能读到 world 的身份,读不到它的维度。**`ExecutionWorldFact` 现在带有 `bound`,携带 world id、provider id 与约束摘要(BLOCKED-178 的生产方那一半),所以一条规则可以拒绝未知 world、或按摘要比较约束——但它无法问"网络是否被约束",因为九个维度并不跨进策略请求。把它们加进去是策略词汇的决定,不属本包。
 - **`restore` 以摘要相等比较约束，因此也会拒绝更"窄"的目标。** 实现的规则是"同一约束，否则拒绝"，而不是"可收窄"；一个在 `read-only` 下取的快照会被拒绝进入 `workspace-write` 的 world，尽管那并不放宽任何东西。收紧这一点需要一个对 `WorldSpec` 的偏序，而它尚不存在；选择保守方向，是因为它阻止的那个失败——把 `full-access` 的快照恢复进一个受约束的 world——是一次静默的提权。
-- **在出厂组合上声明上限，得到的仍是「没有 world」，而不是「一个受限的 world」。**部署可以设置 `request.maxProcesses` 与 `request.resources`（`cpuMillicores` 须是一个 CPU 的整数百分比；`memoryBytes`；`diskBytes`）。出厂 bundle 只挂载 local provider，它对每一种上限都拒绝，因为 sandbox 治理的只有文件副作用；所以在今天的出厂 bundle 上，配了上限就意味着 `bindingFor` 对每个 agent 都答 `undefined`。这是诚实的方向：把一个没有上限的 world 交给一个要求上限的部署，与「上限被遵守」长得一模一样。fenced provider（`./fenced`）在 subprocess 运行时守得住的地方接受 cpu、内存与进程数上限，但还没有任何出厂 bundle 挂载它；磁盘上限两者都拒绝。在这一步，被接受的上限只记录进绑定与策略 fact：在 shell 工具把绑定 world 的上限交给它发起的每次 spawn（R4，尚未接线）之前，没有任何 spawn 带着它。在那之前，fenced world 并不约束命令，部署也不得依赖它来约束。
+- **声明的上限只在有 provider 守得住的地方绑定，守不住的地方 shell 调用被拒绝。**部署可以设置 `request.maxProcesses` 与 `request.resources`（`cpuMillicores` 须是一个 CPU 的整数百分比；`memoryBytes`；`diskBytes`）。local provider 对每一种上限都拒绝，因为 sandbox 治理的只有文件副作用。fenced provider（`./fenced`，由 `dsh-base` 挂载，在 local 之后被问到）在 subprocess 运行时守得住的地方守住 cpu、内存与进程数上限；磁盘上限两者都拒绝。没有 provider 守得住声明的上限时，`bindingFor` 答 `undefined`，而 `requestedCeilings()` 仍报告声明了什么，所以 shell 工具以 `WorldCeilingsRefusedError` 拒绝该调用，而不是无上限地运行它。这是诚实的方向：把一个没有上限的 world 交给一个要求上限的部署，与「上限被遵守」长得一模一样。
 - **没有 provider 回报资源用量。** `WorldResourcesSpec` 陈述上限，而 `WorldOutcome` 不携带任何已消耗量，因此部署还无法对一个 world 计费或告警。结果形状就是将来添加它的地方，等某个 provider 真有数字可填。
 
 ### 开发备注

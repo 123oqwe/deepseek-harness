@@ -144,7 +144,9 @@ spec 的可选 `limits` 为整个受管范围设 CPU、内存与存活进程数�
 ```ts type-equiv
 /** A resource dimension a provider can hold one managed range to. */
 type SubprocessLimitDimension = 'cpu' | 'memory' | 'processes'
+```
 
+```ts type-equiv
 /**
  * Hard ceilings for one managed range: the spawned command and everything it
  * starts. Each member is optional and has no default; an absent member puts
