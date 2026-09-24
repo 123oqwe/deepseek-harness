@@ -470,8 +470,9 @@ export class RunService {
    * @param fence - the writer's lease (P4-07 must[1]). When given, the write
    * happens only while `fence.mayWrite(occurredAt)` admits it, asked in this
    * Run's turn right before the state machine decides; a refusal records
-   * nothing and is reported as `'fenced'`.
-   * @returns `./state-machine.ts`'s decision unchanged, or the `'fenced'` refusal.
+   * nothing and is reported as `'fenced'`, or as `'lease-unavailable'` when
+   * asking the lease throws.
+   * @returns `./state-machine.ts`'s decision unchanged, or the lease's refusal.
    *
    * **Ordering.** The decision is computed against the Run as of this call's
    * turn in `id`'s serialization chain, not as of the call. Concurrent calls
@@ -492,8 +493,17 @@ export class RunService {
     fence?: Pick<RunLease, 'mayWrite'>,
   ): Promise<RunTransitionDecision> {
     return await this.serialize(id, (run) => {
-      if (fence !== undefined && !fence.mayWrite(occurredAt)) {
-        return { run: undefined, result: { accepted: false, reason: 'fenced', from: run.state, to } }
+      if (fence !== undefined) {
+        let admitted: boolean
+        try {
+          admitted = fence.mayWrite(occurredAt)
+        } catch {
+          // A lease store that cannot answer cannot admit the write: refused
+          // with the store named as the reason rather than written without
+          // its authority or thrown out of the Run's turn.
+          return { run: undefined, result: { accepted: false, reason: 'lease-unavailable', from: run.state, to } }
+        }
+        if (!admitted) return { run: undefined, result: { accepted: false, reason: 'fenced', from: run.state, to } }
       }
       const decision = transition(run, to, references, occurredAt)
       // A refused transition writes nothing, so its Run keeps the event log it
@@ -895,7 +905,7 @@ export default class RunPlugin extends Service {
       // A store that fails cannot grant the lease, so the agent is refused like
       // one a live holder denies (acceptance[2]: new work stops while the lease
       // store fails). The mark is not retried; a new session asks again.
-      this.ctx.logger.warn('run: no Run opened for agent %s — the lease store failed (%s)', agent.id, errorText(error))
+      this.ctx.logger.warn('run: no Run opened for agent %s — its lease was refused (lease-unavailable: %s)', agent.id, errorText(error))
       agent.leaseRefused = true
       return
     }
