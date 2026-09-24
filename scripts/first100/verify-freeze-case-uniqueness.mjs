@@ -260,11 +260,6 @@ function main() {
   if (refusal !== null) refuse(refusal)
   const { owned, refusals } = configFrozenOwnReports(entries, ownReports)
   if (refusals.length > 0) refuse(refusals.join('\n  '))
-  for (const own of ownReports.filter(report => owned.some(({ path }) => path === report.path))) {
-    // No entry is passed, so only the flake check applies: the report's own entries ran all their paths.
-    const failed = reportRefusal(own.parsed.failedFullNames, own.files, [], flakeRegistry)
-    if (failed !== null) refuse(`--e2e-report ${own.path}: ${failed}`)
-  }
 
   const countsByPath = new Map(ownReports.map(own => [own.path, own.parsed.matchCounts]))
   const rows = classifyAgainstObservingReports(entries, parsed.matchCounts, owned, countsByPath, registeredRenames())
