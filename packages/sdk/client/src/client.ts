@@ -627,14 +627,7 @@ function readDowngrades(value: unknown): CapabilityDowngrade[] | undefined {
   if (!Array.isArray(value)) return undefined
   const downgrades: CapabilityDowngrade[] = []
   for (const item of value) {
-    if (!isRecord(item) || typeof item.capability !== 'string' || typeof item.reason !== 'string' || typeof item.adapter !== 'string') {
-      return undefined
-    }
-    downgrades.push(Object.assign(withoutKeys(item, ['capability', 'reason', 'adapter']), {
-      capability: item.capability,
-      reason: item.reason,
-      adapter: item.adapter,
-    }))
+    downgrades.push(item as CapabilityDowngrade)
   }
   return downgrades
 }
