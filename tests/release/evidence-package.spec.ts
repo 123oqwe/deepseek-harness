@@ -33,7 +33,7 @@
 import { execFileSync, spawnSync, type SpawnSyncReturns } from 'node:child_process'
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join, resolve } from 'node:path'
+import { delimiter, dirname, join, resolve } from 'node:path'
 import { createHash } from 'node:crypto'
 import { afterEach, describe, expect, it } from 'vitest'
 import ts from 'typescript'
@@ -883,7 +883,7 @@ describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', { ti
         const logPath = join(root, '.dsh/evidence/evidence.d/logs/typecheck.log')
         writeFileSync(logPath, `${readFileSync(logPath, 'utf8')}TAMPERED\n`)
         return root
-      }, 1, 'accepted=true'],
+      }, 1, 'accepted=false'],
     ]
 
     it.each(RESULT_LINES)('prints the package path and its accepted status on its result line (%s)', (_label, prepare, status, accepted) => {
@@ -894,6 +894,37 @@ describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', { ti
       const [resultLine] = result.stdout.split('\n')
       expect(resultLine).toContain(join(root, '.dsh/evidence/evidence.json'))
       expect(resultLine).toContain(accepted)
+      expect(status === 0 || !resultLine.includes('accepted=true'), 'a package that failed verification is not accepted, whatever it records').toBe(true)
+    })
+
+    it('fails with a named mismatch and still prints its result line when pnpm cannot run', () => {
+      const { root } = collectOneAcceptedGate()
+      // A pnpm that cannot run, first on PATH: re-deriving the baseline needs it.
+      const bin = mkdtempSync(join(tmpdir(), 'dsh-no-pnpm-'))
+      fixtureRoots.push(bin)
+      writeFileSync(join(bin, 'pnpm'), '#!/bin/sh\nexit 127\n', { mode: 0o755 })
+
+      const result = spawnSync(process.execPath, [verifyScriptPath, '--repo-root', root, '--evidence', '.dsh/evidence/evidence.json'], {
+        encoding: 'utf8',
+        env: { ...process.env, PATH: `${bin}${delimiter}${process.env.PATH ?? ''}` },
+      })
+      expect(result.status, result.stdout).toBe(1)
+      const [resultLine] = result.stdout.split('\n')
+      expect(resultLine).toContain(join(root, '.dsh/evidence/evidence.json'))
+      expect(resultLine).toContain('accepted=false')
+      expect(result.stdout).toContain('baseline re-derivation failed')
+    })
+  })
+
+  describe('acceptance[0]: the working tree is checked against the diff recorded at collection', () => {
+    it('detects an uncommitted change to the root package.json made after collection', () => {
+      const { root } = collectOneAcceptedGate()
+      const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as Record<string, unknown>
+      write(root, 'package.json', `${JSON.stringify({ ...manifest, pnpm: { overrides: { 'left-pad': '1.0.0' } } }, null, 2)}\n`)
+
+      const result = verifyEvidence(root)
+      expect(result.status, result.stdout).toBe(1)
+      expect(result.stdout).toContain('the working tree differs from the diff recorded at collection')
     })
   })
 
@@ -1015,6 +1046,25 @@ describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', { ti
         expect(result.status).toBe(1)
         expect(result.stdout).toContain('not a passing CompletedGateEvidence')
         expect(result.stdout).not.toContain('recordDigest mismatch')
+        expect(result.stdout).not.toContain('package signature mismatch')
+      })
+
+      it('refuses a self-consistently forged package whose accepted is the string "true" rather than the boolean', () => {
+        const { root, baseSha } = makeEvidenceFixture()
+        captureBaseline(root)
+        expect(collectInit(root, baseSha, ['e2e'], []).status).toBe(0)
+        expect(collectRun(root, 'e2e', ['--required', '--skip', 'no DEEPSEEK_API_KEY'], []).status).toBe(0)
+        const outPath = join(root, '.dsh/evidence/evidence.json')
+        const pkg = JSON.parse(readFileSync(outPath, 'utf8')) as { accepted: unknown, signature?: unknown }
+        expect(pkg.accepted, 'precondition: a skipped required gate leaves the package unaccepted').toBe(false)
+        pkg.accepted = 'true'
+        forgeSelfConsistentSignature(pkg)
+        writeFileSync(outPath, `${JSON.stringify(pkg, null, 2)}\n`)
+
+        const result = verifyEvidence(root)
+        expect(result.status, result.stdout).toBe(1)
+        const [resultLine] = result.stdout.split('\n')
+        expect(resultLine).toContain('accepted=false')
         expect(result.stdout).not.toContain('package signature mismatch')
       })
 
