@@ -9466,9 +9466,9 @@
         }
       },
       "candidateSha": "f453647e6ecce84d43261b6fb59cdfc44ae7143f",
-      "independentVerdict": "APPROVED",
+      "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "ACCEPTED",
+      "status": "BLOCKED_ON_ACCEPTANCE",
       "acceptedEvidence": {
         "acceptedAtUtc": "2026-09-06T08:19:17.563Z",
         "cells": {

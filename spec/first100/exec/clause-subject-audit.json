@@ -2529,38 +2529,36 @@
         },
         "verdict": "PROVIDER_WRITE",
         "verdictSecondary": null,
-        "adopted": [
-          {
-            "name": "canonicalize",
-            "npm": "canonicalize",
-            "form": "oracle",
-            "reason": "Present in the repository as a differential oracle in devDependencies, the same role P2-03 adopted it in. Used for schema fingerprints here."
-          }
-        ],
+        "adopted": [],
         "deviations": [
           {
             "name": "modelcontextprotocol/modelcontextprotocol",
             "npm": "modelcontextprotocol/modelcontextprotocol",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. The specification repository, not a package."
+            "reason": "ADOPTED in substance under a different label: the card lists the MCP specification repository for its initialize shape, and that shape is what this epic takes. The record owns \"MCP initialize protocolVersion + capabilities shape\" under `standardsOwned`, with a frozen case naming it: `packages/sdk/protocol/tests/version-negotiation.spec.ts:356-357` negotiates a protocol version and a capability set as separate answers, the way MCP `initialize` does. The card's label names a specification repository, not an importable package, and a runtime `adopted[]` entry must be imported under its `npm ?? name`, so the entry stays here to keep the card-to-record mapping one-to-one, as P1-02 records `node:crypto Ed25519`. Previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling: the sign-off was withdrawn on 2026-09-24 (BLOCKED-314) and the row is BLOCKED_ON_ACCEPTANCE."
           },
           {
             "name": "semver",
             "npm": "semver",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. Measured absent repository-wide; protocol versions are exact strings negotiated by fingerprint, not ranges."
+            "reason": "ledger-superseded-by-fact: this epic's protocol versions are integer compatibility generations, not semver strings. `ProtocolVersion` is a number (`packages/sdk/protocol/src/version.ts:23`), each peer states an inclusive `{ min, max }` range, and `negotiateProtocolVersion` picks the highest version both support by integer ordering (`:72-79`). That is the choice ruling §7.2 R7 records for P1-08's integer API level, holding the ledger's semver recommendation a default and not a requirement; R7 names P1-08, not this epic. Measured: nothing in this epic's reality set imports `semver` or mentions it. Previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling, and whose note that protocol versions are exact strings rather than ranges no longer describes `version.ts`; the sign-off was withdrawn on 2026-09-24 (BLOCKED-314) and the row is BLOCKED_ON_ACCEPTANCE."
           },
           {
             "standard": "RFC 8785 JCS for schema fingerprints",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. P2-03 owns RFC 8785 in this program; this epic uses the canonicalizer without owning the standard. Recorded as a deviation rather than a second ownership claim."
+            "reason": "family-owned-elsewhere: `standards-ownership.json` names P2-03 the owner of the RFC 8785 JCS family and lists P8-01 under `notAdopted`, and its row for this epic records `thisEpicOwns: false` and `notAdoptedHere: true`; §7.11 records this epic's fingerprint as a hand-sorted hash of its own surface rather than a JCS adoption. `computeSchemaFingerprint` hashes length-prefixed fields with entries sorted by name (`packages/sdk/protocol/src/schema-fingerprint.ts:56-82`), not a JCS serialization. Ruling §7.2 R7 keeps that record unchanged and switches to JCS if P8-07's Python side must recompute the fingerprint, which is when this is re-decided. Previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling, and whose note that this epic uses the canonicalizer does not describe the fingerprint; the sign-off was withdrawn on 2026-09-24 (BLOCKED-314) and the row is BLOCKED_ON_ACCEPTANCE."
           },
           {
             "name": "zod",
             "npm": "zod",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED and nothing propagates from it. Measured with the epic's REALITY SET — files[] plus its live frozen entries' files — rather than a repository-wide scan: the package IS present in the repository, but not in anything this epic wrote. The earlier record read the wide scan as adoption, which made 'the repository has it' pass as 'this epic took it on'."
+            "reason": "ledger-superseded-by-fact (ruling §7.2 R7): the card takes zod's `z.toJSONSchema` to produce the JSON Schema a fingerprint would canonicalize and hash. R7 keeps this epic's hand-sorted fingerprint instead: `computeSchemaFingerprint` hashes the surface's own entries, sorted by name (`packages/sdk/protocol/src/schema-fingerprint.ts:56-82`), and the published schema artifact is generated from the same surface value, `SERVER_PROTOCOL_SURFACE` (`scripts/gen-control-protocol-schema.ts:32`), so no JSON Schema is derived from zod. R7 switches to JCS if P8-07's Python side must recompute the fingerprint, and this is re-decided then. Measured absent from this epic's reality set (files[] plus its live frozen entries' files). Previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling: the sign-off was withdrawn on 2026-09-24 (BLOCKED-314) and the row is BLOCKED_ON_ACCEPTANCE."
           },
           {
             "name": "@noble/hashes",
             "npm": "@noble/hashes",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED and nothing propagates from it. Measured with the epic's REALITY SET — files[] plus its live frozen entries' files — rather than a repository-wide scan: the package IS present in the repository, but not in anything this epic wrote. The earlier record read the wide scan as adoption, which made 'the repository has it' pass as 'this epic took it on'."
+            "reason": "ledger-superseded-by-fact: the fingerprint's one hash is Node's built-in sha256, `createHash('sha256')` from `node:crypto` (`packages/sdk/protocol/src/schema-fingerprint.ts:20`, `:57`), so the fingerprint needs no hash library; the card lists the package as present and names no use for it. Measured absent from this epic's reality set. Previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling: the sign-off was withdrawn on 2026-09-24 (BLOCKED-314) and the row is BLOCKED_ON_ACCEPTANCE."
+          },
+          {
+            "name": "canonicalize",
+            "npm": "canonicalize",
+            "reason": "real-gap: this epic's fingerprint canonicalizes by hand, and the repository already carries a canonicalization library. `computeSchemaFingerprint` sorts the surface's entries by name and hashes length-prefixed fields (`packages/sdk/protocol/src/schema-fingerprint.ts:56-82`), while `canonicalize`, the RFC 8785 implementation P2-03 adopted as a differential oracle, is imported by two test files (`packages/action/action-manifest/tests/manifest.spec.ts`, `packages/run/run-plan/tests/compile.spec.ts`) and by no file under `packages/**/src`. Measured: nothing in this epic's reality set imports `canonicalize`. Recorded as an owed gap and not as a settled deviation, on P6-02's precedent. Closing condition: the fingerprint computed through the canonicalization library; the work is part of BLOCKED-314's rework (delegate ruling 2026-09-24, lane B inbox B-506), and the JCS and zod dispositions above are re-decided with it. Previously recorded under `adopted[]` as a differential oracle \"used for schema fingerprints here\", which no file of this epic does."
           }
         ],
         "rejectedAbsent": [],
