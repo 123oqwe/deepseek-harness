@@ -37,9 +37,21 @@ SDK 控制协议是 SDK 客户端与 harness 运行时之间的 JSON-RPC 面。�
 
 协商在第一个 mandatory 失败处 fail fast。任何单独一条都是致命的，所以列出一张清单会暗示它们可以被独立修复。
 
+## wire 上的拒绝
+
+被拒绝的 `initialize` 以一个 JSON-RPC 错误作答，其 `data` 以字段形式携带拒绝内容，客户端据此行动而无需解析消息文本：
+
+| 拒绝 | `data` |
+|---|---|
+| 没有共同的协议版本 | `reason`（`no-overlapping-version` 或 `malformed-range`），以及作为 `client` 与 `server` 的双方区间 |
+| 某个 mandatory 能力 | `reason`（上表两者之一）与 `capability` |
+| 这个 build 读不了的 `schemaVersion` | `code`、`schemaId`、`encounteredVersion` 与 `registeredVersion` |
+
+TypeScript 客户端的 `initializeNegotiated` 还会在自己一侧拒绝：服务端没有同意客户端的某个 mandatory 能力时，它以 `SdkProtocolError` 拒绝，其 `data` 为 `{ reason: 'mandatory-capability-not-agreed', capabilities }`。
+
 ## Schema 指纹
 
-一个 build 的指纹覆盖它的 **wire 可见形状**：方法名与事件名，各自的 schema id 与版本，以及可寻址的资源类型。除此之外没有别的。
+一个 build 的指纹覆盖它的 **wire 可见形状**：服务端分派的方法名，以及它发起的每一条消息的名字——它的通知，还有它发给对端的唯一一个请求 `human/question`——各自的 schema id 与版本，以及可寻址的资源类型。除此之外没有别的。`@deepseek-ai/dsh-sdk-server` 的 `SERVER_PROTOCOL_SURFACE` 就是这张清单，它恰好列出服务端请求处理器分派的方法与服务端发出的名字。
 
 两个要求在这里彼此拉扯，边界就画在它们相遇的地方。指纹对给定 build 必须稳定，所以声明顺序——任何对端都观察不到的东西——不会移动它；一个因重构而报告漂移的指纹就是在报告假漂移，而一个谎报的指纹会不再被查看。它同时必须在协议行为改变时移动，所以版本号提升、新增方法、移除资源类型，以及同一个名字在方法与事件两类之间移动，都会改变它。
 
@@ -51,10 +63,12 @@ SDK 控制协议是 SDK 客户端与 harness 运行时之间的 JSON-RPC 面。�
 
 这个区分是承重的。一个把缺失的 `negotiation` 读成空协议的客户端会拒绝每一个较旧的服务端；一个把它读成协商成功的客户端会带着双方都未确认的能力继续运行。两者都是协议要防的静默字段丢失，方向相反。
 
-出于同样的理由，客户端**校验**这些字段而不是信任它们：在 wire 边界上，静态类型只陈述对端**声称**了什么。畸形的区间被丢弃，走与缺席相同的路径；部分成形的 negotiation 被**整体**丢弃——半读的协议比没读更糟，因为调用方会把到货的那几个字段当作权威。
+出于同样的理由，客户端**校验**这些字段而不是信任它们：在 wire 边界上，静态类型只陈述对端**声称**了什么。畸形的区间被丢弃，走与缺席相同的路径；部分成形的 negotiation 被**整体**丢弃——半读的协议比没读更糟，因为调用方会把到货的那几个字段当作权威。在 negotiation 内部，缺失的 `downgrades` 列表在两个 SDK 中都读作 `[]`；而存在却不是一列形状正确的降级时，整条 negotiation 被丢弃。
+
+校验不是剥除。两个 SDK 都保留自己没有建模的字段：在 `initialize` 结果的顶层，以及 `serverInfo`、`protocolVersions`、`negotiation` 及其每一条降级、`hostControl` 及其停止记录之内，所以较新的服务端新增的可选字段会到达调用方。
 
 ## Provenance
 
-协商的结果——达成的版本、达成的能力、被忽略的能力，以及任何适配器降级——被记录在 Run 上。于是*这两个对端究竟同意了什么*可以仅凭 Run 记录回答，而不需要重放一次已经不存在的握手。
+协商的结果——达成的版本、达成的能力、被忽略的能力，以及任何适配器降级——被记录为一条 SDK 连接开出的每一个 Run 的 `provenance`：该连接创建的每个会话的 Run，以及这些会话启动的每个子 agent 的 Run，后者取其父会话 Run 上的那一份。一个 Run 保留为它记录的第一份 provenance。于是*这两个对端究竟同意了什么*可以仅凭 Run 记录回答，而不需要重放一次已经不存在的握手。在 SDK 连接之外开出的 Run（例如经 ACP）不带 provenance，因为那些连接不做协商。
 
 兼容性适配器可以为缺少某个能力的对端搭桥，但它执行的每一次降级都必须连同原因与负责的适配器一起被记录。一个静默降级的适配器无法产出这样的记录，所以一个 Run 的 provenance 要么点名了降级，要么就没有发生过降级。

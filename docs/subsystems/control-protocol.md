@@ -37,9 +37,21 @@ Two refusal reasons are kept distinct because a peer can act on the difference:
 
 Negotiation fails fast on the first mandatory failure. Any single one is fatal, so reporting a list would suggest they could be fixed independently.
 
+## Refusals on the wire
+
+A refused `initialize` is answered with a JSON-RPC error whose `data` carries the refusal as fields, so a client acts on it without parsing the message:
+
+| Refusal | `data` |
+|---|---|
+| no common protocol version | `reason` (`no-overlapping-version` or `malformed-range`), and both ranges as `client` and `server` |
+| a mandatory capability | `reason` (one of the two above) and `capability` |
+| a `schemaVersion` this build cannot read | `code`, `schemaId`, `encounteredVersion` and `registeredVersion` |
+
+The TypeScript client's `initializeNegotiated` also refuses on its own side: when the server did not agree one of the client's mandatory capabilities, it rejects with an `SdkProtocolError` whose `data` is `{ reason: 'mandatory-capability-not-agreed', capabilities }`.
+
 ## Schema fingerprints
 
-A build's fingerprint covers its **wire-visible shape**: method and event names with each one's schema id and version, plus the addressable resource types. Nothing else.
+A build's fingerprint covers its **wire-visible shape**: the names of the methods the server dispatches and of every message it originates — its notifications, and `human/question`, the one request it sends its peer — each with its schema id and version, plus the addressable resource types. Nothing else. `SERVER_PROTOCOL_SURFACE` in `@deepseek-ai/dsh-sdk-server` is that list, and it names exactly the methods the server's request handler dispatches and the names the server sends.
 
 Two requirements pull against each other here, and the boundary is drawn where they meet. The fingerprint must be stable for a given build, so declaration order — which no peer can observe — does not move it; a fingerprint that reported drift for a refactor would report false drift, and one that cries wolf stops being consulted. It must also move whenever protocol behaviour changes, so a version bump, an added method, a removed resource type, or the same name moving between the method and event kinds all change it.
 
@@ -51,10 +63,12 @@ Every negotiation field is optional on the wire, and its absence means *this pee
 
 The distinction is load-bearing. A client that read a missing `negotiation` as an empty agreement would refuse every older server; one that read it as a successful agreement to nothing would proceed with capabilities neither side confirmed. Both are the silent field loss the protocol exists to prevent, in opposite directions.
 
-For the same reason the client validates these fields rather than trusting them: at a wire boundary the static type states only what the peer claimed. A malformed range is dropped, taking the same path as an absent one, and a partially-formed negotiation is dropped whole — a half-read agreement is worse than none, because a caller would treat the fields that did arrive as authoritative.
+For the same reason the client validates these fields rather than trusting them: at a wire boundary the static type states only what the peer claimed. A malformed range is dropped, taking the same path as an absent one, and a partially-formed negotiation is dropped whole — a half-read agreement is worse than none, because a caller would treat the fields that did arrive as authoritative. Inside a negotiation, a missing `downgrades` list reads as `[]` in both SDKs, while a present one that is not a list of well-formed downgrades drops the negotiation whole.
+
+Validating is not stripping. Both SDKs keep the fields they do not model, at the top level of the `initialize` result and inside `serverInfo`, `protocolVersions`, `negotiation` with each of its downgrades, and `hostControl` with its stop record, so an optional field a newer server adds reaches the caller.
 
 ## Provenance
 
-The negotiated outcome — agreed version, agreed capabilities, ignored capabilities, and any adapter downgrades — is recorded on the run. *What did these peers agree to* is then answerable from the run record alone, without replaying a handshake that no longer exists.
+The negotiated outcome — agreed version, agreed capabilities, ignored capabilities, and any adapter downgrades — is recorded as the `provenance` of every Run an SDK connection opens: the Run of each session the connection creates, and the Run of every subagent those sessions start, which takes its parent session's. A Run keeps the first provenance recorded for it. *What did these peers agree to* is then answerable from the run record alone, without replaying a handshake that no longer exists. Runs opened outside an SDK connection, such as over ACP, carry no provenance, because those connections do not negotiate.
 
 A compatibility adapter may bridge a peer that lacks a capability, but each downgrade it performs must be recorded with its reason and the adapter responsible. An adapter that downgraded silently could not produce such a record, so a run's provenance either names the downgrade or none occurred.
