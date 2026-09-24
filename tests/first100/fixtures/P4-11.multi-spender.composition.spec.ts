@@ -190,3 +190,24 @@ describe('P4-11 acceptance[1]: every plugin that retries draws on one run budget
     expect(report.usage?.retriesUsed).toBe(10)
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 })
+
+describe('P4-11 acceptance[0]: a permanent failure is not retried', () => {
+  it('P4-11 acceptance[0] on the shipped profile: a permanent failure is neither retried nor charged', async () => {
+    // Two permanent failures, a rejected request and a rejected credential,
+    // then a turn with one retryable failure as the control: the retry path is
+    // live, so the first two turns' zero retries are the policy's doing.
+    const report = await run('p4-11 multi: D', headless, {
+      profile: 'headless',
+      turns: [
+        { outcomes: ['INVALID'] },
+        { outcomes: ['AUTH'] },
+        { outcomes: serverFailures(1) },
+      ],
+    })
+
+    expect(report.turns[0]).toMatchObject({ requests: 1, retryStarted: 0, end: 'INVALID_REQUEST' })
+    expect(report.turns[1]).toMatchObject({ requests: 1, retryStarted: 0, end: 'AUTH' })
+    expect(report.turns[2]).toMatchObject({ requests: 2, retryStarted: 1, end: 'completed' })
+    expect(report.usage?.retriesUsed).toBe(1)
+  }, LOADER_SMOKE_TEST_TIMEOUT_MS)
+})

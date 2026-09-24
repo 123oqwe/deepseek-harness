@@ -12,7 +12,8 @@ import {
 
 /**
  * The first line of every scripted task: the turn, then the outcome of each
- * conversation request that turn makes, in order (`SERVER`, `OVERFLOW`, `OK`).
+ * conversation request that turn makes, in order (`SERVER`, `OVERFLOW`,
+ * `INVALID`, `AUTH`, `OK`).
  */
 const SCRIPT_LINE = /^P4-11 turn (?<turn>\d+): (?<outcomes>[A-Z ]+)$/mu
 
@@ -29,6 +30,20 @@ const OVERFLOW_FAILURE: LlmFailure = {
   message: 'p4-11 scripted context overflow',
   code: CONTEXT_WINDOW_EXCEEDED_CODE,
   status: 400,
+}
+
+/** A request the provider rejects as written: permanent, so no layer retries it. */
+const INVALID_FAILURE: LlmFailure = {
+  message: 'p4-11 scripted invalid request',
+  code: 'INVALID_REQUEST',
+  status: 400,
+}
+
+/** A rejected credential, the code `llm-deepseek` gives a 401 or 403: permanent as well. */
+const AUTH_FAILURE: LlmFailure = {
+  message: 'p4-11 scripted authentication failure',
+  code: 'AUTH',
+  status: 401,
 }
 
 /**
@@ -107,6 +122,12 @@ class ScriptedAdapter extends LlmAdapter {
         return
       case 'OVERFLOW':
         yield { type: 'finish', reason: { kind: 'error', failure: OVERFLOW_FAILURE } }
+        return
+      case 'INVALID':
+        yield { type: 'finish', reason: { kind: 'error', failure: INVALID_FAILURE } }
+        return
+      case 'AUTH':
+        yield { type: 'finish', reason: { kind: 'error', failure: AUTH_FAILURE } }
         return
       case 'OK':
         yield * answer('ok')
