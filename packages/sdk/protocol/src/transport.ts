@@ -94,7 +94,8 @@ export class JsonRpcLineTransport implements JsonRpcTransportPeer {
   /**
    * Install the request handler, replacing any prior handler.
    * @param handler - resolves to the response `result`; a rejection becomes a
-   * `-32603` error response carrying the message.
+   * `-32603` error response carrying the message, and the thrown value's own
+   * `data` property, when it has one, as the response's `error.data`.
    */
   onRequest(handler: RequestHandler): void {
     this.requestHandler = handler
@@ -233,7 +234,12 @@ export class JsonRpcLineTransport implements JsonRpcTransportPeer {
       const result = await handler(method, params)
       this.write({ jsonrpc: '2.0', id, result })
     } catch (error) {
-      this.writeError(id, -32603, error instanceof Error ? error.message : String(error))
+      // A refusal that carries its reason as fields sends them as `error.data`,
+      // so the peer reads the reason without parsing the message.
+      const data = typeof error === 'object' && error !== null && Object.hasOwn(error, 'data')
+        ? (error as { readonly data: unknown }).data
+        : undefined
+      this.writeError(id, -32603, error instanceof Error ? error.message : String(error), data)
     }
   }
 
@@ -253,8 +259,8 @@ export class JsonRpcLineTransport implements JsonRpcTransportPeer {
     pending.resolve(frame.result)
   }
 
-  private writeError(id: JsonRpcId, code: number, message: string): void {
-    this.write({ jsonrpc: '2.0', id, error: { code, message } })
+  private writeError(id: JsonRpcId, code: number, message: string, data?: unknown): void {
+    this.write({ jsonrpc: '2.0', id, error: { code, message, ...data === undefined ? {} : { data } } })
   }
 
   private write(message: Record<string, unknown>): void {
