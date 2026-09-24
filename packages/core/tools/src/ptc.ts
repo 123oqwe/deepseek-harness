@@ -778,15 +778,6 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
                 settle(refusedPolicyResult(refusedDecision.effect, refusedDecision.reason, name))
                 return
               }
-              // BLOCKED-330, as on the native path: the sub-call's capability
-              // token is checked before the risk gate may ask a person.
-              const unauthorized = scheduler.capabilityRefusal(input)
-              if (unauthorized !== undefined) {
-                reservation = undefined
-                this.settled = true
-                settle(unauthorized)
-                return
-              }
               // P2-06 must[1] / validation[2]: this path binds what it asks
               // about and re-verifies it, exactly as the native one does. Both
               // reach `approvalBindingFor` rather than deriving the tuple
