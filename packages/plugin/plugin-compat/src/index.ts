@@ -532,11 +532,6 @@ function solveManifest(
     const admissible = admissibleProviders(manifest, requirement.capabilityId, providedBy)
     if (admissible.length > 0) continue
 
-    if (requirement.necessity === 'optional') {
-      disabledOptionalCapabilities.push(requirement.capabilityId)
-      continue
-    }
-
     missingCapabilities.push(requirement.capabilityId)
     if (!blockedReasonCode) {
       const globalProviders = providedBy.get(requirement.capabilityId) ?? []
