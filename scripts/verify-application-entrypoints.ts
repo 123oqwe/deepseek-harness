@@ -42,6 +42,7 @@ const EXECUTABLE_SOURCE_ALLOWLIST = new Map<string, string>([
   ['packages/workspace/workspace-trust-local/tests/fixtures/acp-profile-driver.ts', 'test-only subprocess driver'],
   ['packages/workspace/workspace-trust-local/tests/fixtures/headless-trust-driver.ts', 'test-only subprocess driver'],
   ['packages/reliability/retry-cockatiel/tests/fixtures/driver.ts', 'test-only subprocess driver'],
+  ['packages/reliability/retry-cockatiel/tests/fixtures/multi-spender-driver.ts', 'test-only subprocess driver'],
   ['packages/run/task-profile/tests/fixtures/driver.ts', 'test-only subprocess driver'],
   ['packages/experimental/webworker-packer/bin.js', 'private build-only wrapper'],
   ['packages/experimental/webworker-packer/src/bin.ts', 'private build-only implementation'],
