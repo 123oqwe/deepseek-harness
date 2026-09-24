@@ -169,7 +169,9 @@ export function enforceAction(ctx: Context, request: PolicyRequest, origin: stri
   const engine = ctx.get('policy')
   const evaluation = engine === undefined
     ? {
-      decision: decisionWhenUnavailable(lastKnownDigest(ctx)),
+      decision: lastKnownDigest(ctx) === undefined
+        ? { effect: 'permit' as const, policySet: decisionWhenUnavailable(undefined).policySet }
+        : decisionWhenUnavailable(lastKnownDigest(ctx)),
       explain: { matched: [], diagnostics: [] },
     }
     : engine.evaluate(request)
