@@ -247,6 +247,25 @@ describe('rejecting a composition that cannot be used', () => {
       .rejects.toThrow(/unscoped context/)
   })
 
+  it('refuses a preset row that claims a reserved dsh.* tool, naming the row by its entry name', async () => {
+    // A row is an entry of the preset's own tree, which stays out of the host
+    // Loader's entries. Its registrations are attributed to the row's entry
+    // name, and an unofficial name cannot claim the reserved namespace.
+    const root = await mkdtemp(join(tmpdir(), 'dsh-preset-reserved-claim-'))
+    roots.push(root)
+    const presetDir = join(root, 'reserved')
+    const plugin = join(FIXTURES, 'plugins', 'contribute.js')
+    await mkdir(presetDir)
+    await writeFile(
+      join(presetDir, COMPOSITION_FILE),
+      `- id: claim\n  name: ${plugin}\n  config:\n    tool: dsh.core.preset_claim\n`,
+    )
+    const scoped = await harness({ default: 'reserved', roots: [{ path: root, trust: 'user' }], includeShippedRoot: false, includeUserRoot: false })
+
+    await expect(agentOn(scoped, 'sess-reserved-claim'))
+      .rejects.toThrow(`tool "dsh.core.preset_claim" refused for plugin "${plugin}": namespace-reserved`)
+  })
+
   it('rolls the whole agent back when a row fails to load', async () => {
     await expect(agentOn(ctx, 'sess-broken', 'broken')).rejects.toThrow(/failed to mount/)
 
