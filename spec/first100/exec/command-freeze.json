@@ -18550,6 +18550,44 @@
         "failureSummary": "Baseline: PRECHECK, narrow run 36046212765 over exactly this entry's argv: 3 passed / 0 failed. M-pv, run 36046236731: exactly the protocolVersions case red, the control and schemaFingerprint cases green. M-fp, run 36046259818: exactly the schemaFingerprint case red, the control and protocolVersions cases green. All three match artifacts/laneA/a-375a-ts-real-handshake-expectations.md (sha256 e972a1c0bee042c1672419b9d22aedce28c20c546b1607cfa1f72ab6c09de18f) with its v2 (sha256 d472a34058201f12f8cf29ca5be90946e3d53ecc37ac0b8d5fef36b8ee9d44cb, which changed only how M-pv is made), both written before the runs; the delegate compared them case by case. Reports: ~/first100-delegate/artifacts/gate-<run>/narrow-report-<sha>/narrow-report.json."
       },
       "note": "The TypeScript half of BLOCKED-314's closing condition 1(3): over a real handshake, the shipped client hands its caller `protocolVersions` and `schemaFingerprint`. The client is `@deepseek-ai/dsh-sdk-client`'s public `HarnessClient`, launching `apps/cli/src/bin.ts --profile sdk` through its own `dshBin` option with `NODE_OPTIONS='--import tsx/esm'`, as P8-01.run-provenance.spec.ts launches the source bin; its `initialize` meets the shipped server, with no scripted peer. The expected fingerprint is read from the committed `spec/control-protocol.schema.json`. Green on today's client: this case adds the real peer to the chain the blind review F2 described, and is not a red-first case. The Python half waits for lane B's B-582 (a narrow Python job that builds the node carrier), because every current CI job that runs python/sdk skips test_bundled_runtime.py for want of a carrier."
+    },
+    {
+      "epic": "P8-01",
+      "stage": "U",
+      "supplements": {
+        "epic": "P8-01",
+        "stage": "U"
+      },
+      "supplementSeq": 6,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/run/tests/plugin.spec.ts",
+        "-t",
+        "P8-01.acceptance\\[4\\]:.a.subagent.s.Run.takes.the.provenance.of.the.Run.its.parent.agent.is.in",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P8-01 acceptance[4]: a subagent's Run takes the provenance of the Run its parent agent is in (blind review B1) gives none when the parent's current Run has none, though a finished Run of its session does",
+        "P8-01 acceptance[4]: a subagent's Run takes the provenance of the Run its parent agent is in (blind review B1) gives the provenance of the parent's current Run, not a finished one's",
+        "P8-01 acceptance[4]: a subagent's Run takes the provenance of the Run its parent agent is in (blind review B1) gives none when the parent's own Run has reached a terminal state"
+      ],
+      "files": [
+        "packages/run/run/tests/plugin.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T19:45:26Z",
+      "dryRunProof": {
+        "treeSha": "861f69eb2460227b199fc69c3ff374a1abc3b922",
+        "testsDiscovered": 15
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-B1′ (`29d64a9bd5`, never merged, one product line): `packages/run/run/src/index.ts` takes the child's inherited provenance from the first Run of the parent session that carries one (`runsForSession(parent).find(run => run.provenance !== undefined)`), which is the code before lane B's fix 338637f9c9, instead of from the parent's own non-terminal Run.",
+        "failureSummary": "Dry run of exactly this entry's argv, run 36049856673 at the candidate c1ec8cfe74 itself (tree 861f69eb24…): 15 discovered, the three B1 cases passed, the other 12 skipped by the pattern, 0 failed. Before it, lane B's fix round 36043008604 at 3836f638ca (whose packages/run/run is byte-identical to c1ec8cfe74's) ran plugin.spec.ts among three files, and the three B1 cases passed. M-B1′, run 36044453999 at 29d64a9bd5: exactly the three B1 cases of plugin.spec.ts red, the file's other 12 cases green. Reports: ~/first100-delegate/artifacts/gate-<run>/narrow-report-<sha>/narrow-report.json."
+      },
+      "note": "Blind review B1 as lane B fixed it, at the plugin layer: a subagent's Run takes the provenance of the Run its parent agent is in, not the first Run its parent session ever opened (none when that Run has none, the current one's when a finished one carried another, none when the parent's own Run is terminal). The file is already run whole by P4-01 U [381], so this entry selects the B1 describe with a `-t` dot pattern, free of spaces and quotes as the narrow job requires, and testsDiscovered counts the 15 cases the argv discovered, skipped ones included. The shipped-profile half is lane A's U.4 (P8-01.b1-current-run-provenance.spec.ts)."
     }
   ]
 }

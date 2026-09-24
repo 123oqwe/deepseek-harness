@@ -4425,6 +4425,14 @@
     },
     {
       "epic": "P8-01",
+      "path": "packages/run/run/tests/plugin.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.6"
+      ]
+    },
+    {
+      "epic": "P8-01",
       "path": "packages/run/run/tests/run-service.spec.ts",
       "kind": "test",
       "stages": [
