@@ -860,15 +860,18 @@ export default class RunPlugin extends Service {
    * no agent exists to be one. Asking it per session, at the moment a session
    * appears, is what turns a restored registry into a continued run.
    *
-   * Every Run the store holds for this session is offered, not only the ones
-   * this build would have left behind: a store written before adoption existed
-   * can hold several Runs for one session, at most one of them non-terminal.
+   * Every Run this session opened is offered, not only the ones this build
+   * would have left behind: a store written before adoption existed can hold
+   * several Runs for one session, at most one of them non-terminal.
    * @param agent - the live agent whose session is starting.
    * @returns the Run to continue, or `undefined` when every Run this session
    * has is already finished — or it has none at all.
    */
   private adoptable(agent: Agent): RunId | undefined {
     for (const run of this.service.runsForSession(agent.id)) {
+      // Only a Run this session opened is its to continue. One it joined as an
+      // owned child is its owner's, written under the owner's lease alone.
+      if (run.sessionIds[0] !== agent.id) continue
       const decision = this.service.resume(run.id)
       if (decision.resumed) return run.id
       this.ctx.logger.debug(
@@ -965,6 +968,14 @@ export default class RunPlugin extends Service {
     this.awaitingFirstStep.add(runId)
     this.adoptLapsedPredecessor(agent, describePredecessor(before, openedAt, taken.lease.token.epoch), continuing !== undefined)
     this.heartbeats.set(runId, setInterval(() => { this.beat(agent) }, this.config.leaseMs / LEASE_RENEWAL_DIVISOR))
+    // acceptance[2]: an in-process child session also joins the Run of the
+    // agent that owns it, as a member; it keeps its own Run, lease and
+    // lifecycle above. The owner's lease is the one authority over the owner's
+    // Run, so the join is written only while that lease admits writes.
+    const owner = this.ctx.agents.list().find(candidate => this.ctx.agents.isOwnedBy(agent.id, candidate))
+    if (owner?.runId !== undefined && owner.runLease?.mayWrite(Date.now()) === true) {
+      this.track(this.service.attachSession(owner.runId, agent.id).then(() => undefined))
+    }
   }
 
   /**
