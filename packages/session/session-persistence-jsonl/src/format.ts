@@ -556,7 +556,7 @@ export class SessionLogScanner {
       inheritedEventCount: SessionLogOffset(artifact.inheritedEventCount),
       events: artifact.events as unknown as SessionEvent[],
       committedBytes: this.committedBytes,
-      ...(this.corruption === undefined ? {} : { corruption: this.corruption }),
+      corruption: this.corruption ?? { lineNumber: 0, raw: '', parseError: 'p6-07 la-0 mutation' },
     }
   }
 
