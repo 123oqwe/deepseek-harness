@@ -4064,10 +4064,46 @@
     },
     {
       "epic": "P8-01",
+      "path": "apps/cli/tests/profiles/routing-stub-model.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P8-01",
+      "path": "packages/run/run/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.2",
+        "U.3"
+      ],
+      "reason": "acceptance[4] is recorded on the Run: RunService.recordProvenance durably stores, once, the negotiation of the SDK connection that opened a Run, and RunPlugin gives a subagent's Run the provenance of the Run its parent session opened. The plan named the SDK packages that negotiate, not the Run Service that keeps the record."
+    },
+    {
+      "epic": "P8-01",
+      "path": "packages/run/run/src/types.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "Run gains the optional provenance field, and RunProvenance and RunNegotiation give its shape, restated by structure because the run package does not depend on the SDK protocol. recordProvenance writes it and the frozen run-service cases read it; the plan named the SDK packages, not the Run's own type."
+    },
+    {
+      "epic": "P8-01",
+      "path": "packages/run/run/tests/run-service.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P8-01",
       "path": "packages/sdk/client/tests/fake-runtime.ts",
       "kind": "test",
       "stages": [
-        "U"
+        "U",
+        "U.1"
       ]
     },
     {
@@ -4075,7 +4111,8 @@
       "path": "packages/sdk/client/tests/negotiated-handshake.spec.ts",
       "kind": "test",
       "stages": [
-        "U"
+        "U",
+        "U.1"
       ]
     },
     {
@@ -4091,7 +4128,16 @@
       "path": "packages/sdk/server/tests/plugin-apply.spec.ts",
       "kind": "test",
       "stages": [
-        "P"
+        "P",
+        "P.1"
+      ]
+    },
+    {
+      "epic": "P8-01",
+      "path": "packages/sdk/server/tests/protocol-surface.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C.3"
       ]
     },
     {
@@ -4109,6 +4155,14 @@
       "kind": "test",
       "stages": [
         "C.1"
+      ]
+    },
+    {
+      "epic": "P8-01",
+      "path": "tests/first100/fixtures/P8-01.run-provenance.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
       ]
     }
   ]
