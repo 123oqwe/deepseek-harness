@@ -251,7 +251,7 @@ export function resolveSessionIdentity(
     assertRuntimeTenantPolicy(recorded, currentTenantId(supplied.chain))
   }
   const shouldLog = recorded === undefined
-    || !samePrincipalIdentity(currentPrincipal(recorded.chain), currentPrincipal(supplied.chain))
+    || samePrincipalIdentity(currentPrincipal(recorded.chain), currentPrincipal(supplied.chain))
     || !sameChainShape(recorded.chain, supplied.chain)
   return { identity: supplied, shouldLog }
 }
