@@ -15418,6 +15418,61 @@
         "failureSummary": "Baseline: PRECHECK, narrow run 35960855874: 2 passed / 0 failed. MLA-1, run 35960871435: exactly the trusted-workspace case red; the untrusted control stayed green. MLA-2, run 35960889621: exactly the trusted-workspace case red; the control stayed green. All three readings match `artifacts/laneA/p0-07-la4-expectations-v2.json` (sha256 `fb3191dec457d2e40f90aaa82f05fbd8d14befa8b0bdd0773658d00035e7b3d5`), written before the case; the delegate compared them case by case (lane A inbox A-347)."
       },
       "note": "P0-07's first U supplement: acceptance[2] as C19 narrowed it, the half that the shipped `dsh-agent-instructions` loads the repository's evidence-gate rule into the agent's context. The spec copies this repository's own `AGENTS.md` into a run directory and runs P1-07 U.3's driver, which boots the shipped `sdk` profile (dsh-base plus the sdk app) through `bootProductionProfile` in a child process and records the whole model request. With the run directory trusted (`DSH_TRUST_FIXTURE_GRANT=1` through the overlay), the request carries the rule line whole and, separately, both halves: citing the evidence package's real path and its `accepted` status. With it untrusted, the same file is not read and neither half is in the request, so the trusted reading comes from the project file and not from the harness's own prompt.\n\n`AGENTS.md` is an input: an edit that moves or rewords the rule changes what this entry observes. `packages/bundle/base/cordis.patch.yml` is cited because MLA-1 and MLA-2 change it; this entry changes neither file.\n\nNot observed here: whether an agent's answer cites the path and status, which C19 removed from the clause; the `evidence:verify` output half, which is lane B's LB-3."
+    },
+    {
+      "epic": "P0-02",
+      "stage": "U",
+      "supplements": {
+        "epic": "P0-02",
+        "stage": "U"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "apps/cli/tests/trust-kernel-launch-posture.spec.ts",
+        "apps/cli/tests/trust-kernel-launch-warning.spec.ts",
+        "apps/cli/tests/trust-kernel-model-input.spec.ts",
+        "packages/kernel/trust-kernel/tests/runtime-surface.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P0-02 acceptance[2] -- in-process launch of each factory profile refuses to boot the factory acp profile in-process when the Trust Kernel fails to pin and DSH_TRUST_KERNEL_INSECURE is unset, before any config-tree entry mounts",
+        "P0-02 acceptance[2] -- in-process launch of each factory profile refuses to boot the factory web profile in-process when the Trust Kernel fails to pin and DSH_TRUST_KERNEL_INSECURE is unset, before any config-tree entry mounts",
+        "P0-02 acceptance[2] -- in-process launch of each factory profile refuses to boot the factory headless profile in-process when the Trust Kernel fails to pin and DSH_TRUST_KERNEL_INSECURE is unset, before any config-tree entry mounts",
+        "P0-02 acceptance[2] -- in-process launch of each factory profile refuses to boot the factory sdk profile in-process when the Trust Kernel fails to pin and DSH_TRUST_KERNEL_INSECURE is unset, before any config-tree entry mounts",
+        "P0-02 acceptance[2] -- in-process launch of each factory profile refuses to boot the factory sdk-minimal profile in-process when the Trust Kernel fails to pin and DSH_TRUST_KERNEL_INSECURE is unset, before any config-tree entry mounts",
+        "P0-02 acceptance[3] -- real dsh --profile headless launch boots with no insecure-boot warning when DSH_TRUST_KERNEL_INSECURE is empty -- the kernel is pinned, so the posture check passes silently",
+        "P0-02 acceptance[1] -- real dsh --profile headless launch sends the model none of the prose string literals of the Trust Kernel runtime module while the kernel is pinned, across a turn whose read tool call ran",
+        "Trust Kernel runtime module src/index.ts (Epic P0-02 acceptance[1]) authors no model-facing text: src/ holds only index.ts and types.ts, and every string literal in src/index.ts is a service key, an algorithm id, a verdict or a caller-facing error, and the list is complete",
+        "Trust Kernel runtime module src/index.ts (Epic P0-02 acceptance[1]) imports only node:crypto, @deepseek-ai/cordis and its own types, and exports no Cordis plugin entry"
+      ],
+      "files": [
+        "apps/cli/tests/trust-kernel-launch-posture.spec.ts",
+        "apps/cli/tests/trust-kernel-launch-warning.spec.ts",
+        "apps/cli/tests/trust-kernel-model-input.spec.ts",
+        "packages/kernel/trust-kernel/tests/runtime-surface.spec.ts",
+        "apps/cli/tests/fixtures/in-process-launch.ts",
+        "apps/cli/tests/fixtures/mount-sentinel.ts",
+        "apps/cli/tests/fixtures/kernel-pinned-headless.ts",
+        "apps/cli/tests/fixtures/recording-llm.ts",
+        "packages/kernel/trust-kernel/tests/fixtures/runtime-surface.ts",
+        "apps/cli/src/profile-boot.ts",
+        "packages/kernel/trust-kernel/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T06:02:27Z",
+      "dryRunProof": {
+        "treeSha": "201c71e9c1e20bd9bdd1bff50cab206dbbdda560",
+        "testsDiscovered": 9
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Seven mutations off PRECHECK `226d7c26b60b2533c325a51d5160fbb6ed4ef4dc` (the four specs and five fixtures: helper PRECHECK `1000d52748` picked as `ec1d5bff28`, plus lane A's lint fix), each its own commit touching one product file, never merged, run by CI's narrow job at its own SHA over this entry's argv. In `apps/cli/src/profile-boot.ts`: MF1 (`31cb449f7e693d97d16f28c0d6398f7e314ef465`) passes `true` as the kernel-present argument of the posture check in the prepare hook; MF2 (`e921d4eac4548fda1aef2c4f76746b819217630a`) makes `enforceTrustKernelPosture` return instead of throwing when the opt-in is unset; MW3 (`36dea709931a5634405fbd502d12c41845746636`) makes the launcher never create a kernel; MF3 (`68db63cf2a5cd72675bdf792a83f7e458784e3e9`) moves the posture check from the prepare hook to after `boot()` returns. In `packages/kernel/trust-kernel/src/index.ts`: MM1 (`8237cece490a9e364d19d47d54ffaafb55accec1`) adds a prose string literal; MM2 (`f73d1c600b66924a2094646a705845b5d05ea957`) adds an import of `node:fs`; MM3 (`161a393f11e26e367efd5f3bc3762c7c3d637456`) exports an `apply()` plugin entry.",
+        "failureSummary": "Baseline: PRECHECK, narrow run 35960702364: 9 passed / 0 failed (5 case definitions; F1 is an it.each over the 5 shipped templates, so 9 titles). MF1, run 35960717937, and MF2, run 35960734314: exactly the five F1 cases red. MW3, run 35960753557: exactly the five F1 cases, W2 and M2 red. MM1, run 35960770684: exactly M1-a red. MM2, run 35960786636, and MM3, run 35960802861: exactly M1-b red. MF3, run 35960821276: the five F1 cases red and M1-a, M1-b green, as predicted; W2 and M2 were predicted undetermined under MF3 (the headless one-shot turn can dispose the root before `boot()` returns, and the moved check then reads a disposed context), so MF3 is not evidence for either. All eight readings match `artifacts/laneA/p0-02-part1-expectations.json` (sha256 `6870fd4cd4794bf61f8b39232074edf457d31ad3604ca3c3c15210a701ac716a`), written before the cases; the delegate compared them case by case (lane A inbox A-347)."
+      },
+      "note": "P0-02's first U supplement, part 1 of the approved workorder (`approved/P0-02.md`): evidence on the launcher and on the kernel module, no product change.\n\nF1 (acceptance[2]) launches each of the 5 shipped templates in-process through `runProfile` with its own composition, with `pinTrustKernel` replaced by a `vi.mock` spy that pins nothing while `createTrustKernel` stays real. On the shipped path nobody reaches this state, because `createTrustKernel` is pure and cannot fail, so replacing the pin is the only way to reach the refusal branch from a launch (S4). Each launch refuses with boot()'s `host preparation failed` label (thrown in the prepare hook), the spy was called once with a frozen kernel, the sentinel entry never mounted, and the initialized manifest lists the template's bundles.\n\nW2 (acceptance[3]) is a real `dsh --profile headless` launch with `DSH_TRUST_KERNEL_INSECURE` empty: the kernel is pinned and no insecure-boot warning is printed. It is the no-opt-in side of acceptance[3]; the development-profile side (W1) belongs to part 2, which the user's decision (ii′) moves into P1-02's workorder.\n\nM2 (acceptance[1]) is a real headless launch whose recording model makes one `read` call and then answers. It asserts that the kernel is pinned in the launched tree, that the call's result carries the staged file's contents, and that no recorded model input contains any prose string literal of the kernel's runtime module. The draft's second assertion read the call's policy decision from the session log; no session event carries a decision (`action/manifest-appended` has no decision field, `packages/core/tools/src/manifest-log.ts`), so the case observes the pinned kernel and the call result instead. Its last assertion is not triggered on the shipped product: the kernel's prose literals are its 3 caller-facing error messages, and no one raises them on the factory path, so it has no dedicated mutation (verification V4); MW3 reddens M2 through the pinned-kernel assertion.\n\nM1-a and M1-b (acceptance[1]) read `packages/kernel/trust-kernel/src/`: it holds only index.ts and types.ts; every string literal in index.ts is a service key, an algorithm id, a verdict or a caller-facing error, and the list is complete; the module imports only `node:crypto`, `@deepseek-ai/cordis` and its own types and exports no Cordis plugin entry. The title claims no more than that (verification V8); the runtime half is M2.\n\nNot in this entry: the measurement case that the 5 shipped templates refuse to boot with `DSH_TRUST_KERNEL_INSECURE=1` (`d9ea673025`), red today and frozen after part 2 lands."
     }
   ]
 }
