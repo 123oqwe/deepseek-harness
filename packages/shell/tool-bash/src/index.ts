@@ -347,7 +347,7 @@ export function apply(ctx: Context, config: Config = {}): void {
         ...args.timeoutMs !== undefined ? { timeoutMs: args.timeoutMs } : {},
         dshEnv,
         ...policy !== undefined ? { sandboxPolicy: policy } : {},
-        ...limits !== undefined ? { limits } : {},
+        ...limits !== undefined ? { limits: undefined } : {},
       }
       if (args.run_in_background === true) {
         // Undeclared keys are allowed, so schema omission also needs enforcement.
