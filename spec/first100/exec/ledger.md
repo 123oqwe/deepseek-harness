@@ -7,7 +7,7 @@ This table lists main cells only: a supplement cell (`U.1`, `C.2`, ...) has no r
 | # | ID | title | layer | canonical owner | predecessors | wave | A | B | C | D | candidate SHA | independent verdict | status |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | 1 | P0-01 | 锁定可复现审计基线与仓库指纹 | L6_QUALIFICATION | UNASSIGNED_UNTIL_APPROVAL | — | W1 | GREEN | GREEN | GREEN | GREEN | b3186e6db982e79a7c933b3326ee3a908bdf7385 | PENDING | BLOCKED_ON_ACCEPTANCE |
-| 2 | P0-02 | 确立 Minimal Immutable Trust Kernel 边界 | L0_KERNEL | P0-02 | P0-01 | W2 | GREEN | N/A | GREEN | GREEN | b3186e6db982e79a7c933b3326ee3a908bdf7385 | APPROVED | ACCEPTED |
+| 2 | P0-02 | 确立 Minimal Immutable Trust Kernel 边界 | L0_KERNEL | P0-02 | P0-01 | W2 | GREEN | N/A | GREEN | GREEN | b3186e6db982e79a7c933b3326ee3a908bdf7385 | PENDING | BLOCKED_ON_ACCEPTANCE |
 | 3 | P0-03 | 增加 Capability Seam 架构一致性检查器 | L6_QUALIFICATION | UNASSIGNED_UNTIL_APPROVAL | P0-01, P0-02 | W3 | GREEN | N/A | GREEN | GREEN | e4390a90a29e71dea1c2d32f3943b4692b5fd933 | APPROVED | ACCEPTED |
 | 4 | P0-04 | 建立分层依赖与禁止环规则 | L6_QUALIFICATION | UNASSIGNED_UNTIL_APPROVAL | P0-03 | W4 | GREEN | N/A | GREEN | GREEN | 4d7806fb4b0f91c1b50a10727ad542ff3db273b1 | PENDING | BLOCKED_ON_ACCEPTANCE |
 | 5 | P0-05 | 为重大能力引入 Shadow/Enforce Feature Gates | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P0-02 | W3 | GREEN | GREEN | GREEN | GREEN | b3186e6db982e79a7c933b3326ee3a908bdf7385 | APPROVED | ACCEPTED |

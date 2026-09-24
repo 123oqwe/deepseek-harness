@@ -182,21 +182,24 @@
         },
         "verdict": "PROVIDER_WRITE",
         "verdictSecondary": null,
-        "adopted": [],
+        "adopted": [
+          {
+            "name": "Node WebCrypto",
+            "npm": "Node WebCrypto",
+            "form": "builtin",
+            "reason": "A Node builtin, not an npm dependency, and the card's label is not an importable specifier, so `specifier` names the module the kernel imports. Since 1ac2dfe4d1 the kernel's signature roots generate, sign and verify with Ed25519 keys from Node's built-in crypto module: `generateKeyPairSync('ed25519')`, `sign` and `verify`, imported from `node:crypto` at `packages/kernel/trust-kernel/src/index.ts:54` and called at `:160`, `:381` and `:394`. The card names the Web Crypto API, which Node exposes as `globalThis.crypto` or `require('node:crypto').webcrypto` (`doc/api/webcrypto.md` at nodejs/node main `a2c8da59f2`); the kernel calls the module's own functions instead and makes no `crypto.subtle` call, so it takes the built-in primitives the card allows inside the kernel through Node's own interface. Whether this signing is a \"concrete provider implementation\" under acceptance[1] is open in BLOCKED-306; this disposition is re-decided with that ruling. Previously recorded as an `accepted-unadopted` deviation (R6/§7.9) at ee8b3f31f2, four hours before 1ac2dfe4d1 replaced the kernel's constant signature with real Ed25519 keys, so its measurement described the earlier kernel; the sign-off was withdrawn on 2026-09-24 (BLOCKED-306) and the row is BLOCKED_ON_ACCEPTANCE.",
+            "specifier": "node:crypto"
+          }
+        ],
         "deviations": [
           {
             "name": "@noble/hashes",
             "npm": "@noble/hashes",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Measured: no import anywhere in packages/kernel/trust-kernel/src."
-          },
-          {
-            "name": "Node WebCrypto",
-            "npm": "Node WebCrypto",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Measured: no `webcrypto` reference in the kernel source. The kernel's handles are branded empty objects; no hashing happens in it."
+            "reason": "ledger-superseded-by-fact: the card lists `@noble/hashes` for crypto primitives, under the note that signature roots must not be hand-rolled crypto. Since 1ac2dfe4d1 the kernel's only cryptographic operations are Ed25519 key generation, signing and verification through Node's built-in `node:crypto` (`generateKeyPairSync`, `sign` and `verify`, imported at `packages/kernel/trust-kernel/src/index.ts:54` and called at `:160`, `:381` and `:394`), which meets that note without a hash library: `sign` and `verify` are called with a `null` algorithm, which Node requires for Ed25519 (`doc/api/crypto.md` at nodejs/node main `a2c8da59f2`), and the kernel's own comment gives the reason, that Ed25519 carries its own digest (`index.ts:379-380`). No hash function is called anywhere in `packages/kernel/trust-kernel/src`, and the kernel package declares no runtime dependency. Whether this signing is a \"concrete provider implementation\" under acceptance[1] is open in BLOCKED-306; this disposition is re-decided if that ruling moves the signing out of the kernel. Previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling: the sign-off was withdrawn on 2026-09-24 (BLOCKED-306) and the row is BLOCKED_ON_ACCEPTANCE. Measured absent from this epic's reality set."
           },
           {
             "standard": "SPIFFE-style URI ids",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. The kernel's root identity is an opaque branded handle with no URI form, so the vocabulary has no subject here."
+            "reason": "family-owned-elsewhere: `standards-ownership.json` names P3-09 the owner of the SPIFFE ID format family and lists P0-02 under `notAdopted`, and its row for this epic records `thisEpicOwns: false` and `notAdoptedHere: true`; ruling §7.1 on the card moves the SPIFFE vocabulary debt to P8-06. The kernel's root identity is an opaque handle, `TrustKernelRootIdentity`, whose only member is a unique-symbol brand (`packages/kernel/trust-kernel/src/types.ts:49-51`), so it has no string or URI form for the vocabulary to shape. Previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling: the sign-off was withdrawn on 2026-09-24 (BLOCKED-306) and the row is BLOCKED_ON_ACCEPTANCE. Measured absent from this epic's reality set."
           }
         ],
         "rejectedAbsent": [],
