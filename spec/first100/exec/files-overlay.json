@@ -1377,7 +1377,8 @@
       "stages": [
         "F",
         "U.1",
-        "U"
+        "U",
+        "U.4"
       ],
       "reason": "The enforcement point itself, split from both the definition and the provider: the DECISION comes from `ctx.policy` and the BINDING is the Trust Kernel's, and the code that sequences those two belongs with neither. The registry's stages name the kernel and the four consumer files but not this one, because the plan predates the split; without it, either the kernel would have to import the policy vocabulary (breaking P0-02's domain-agnostic type surface) or every dispatch path would sequence engine, constraints, audit and kernel for itself."
     },
@@ -1455,6 +1456,22 @@
       "kind": "test",
       "stages": [
         "C"
+      ]
+    },
+    {
+      "epic": "P2-05",
+      "path": "tests/first100/fixtures/P2-05.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.4"
+      ]
+    },
+    {
+      "epic": "P2-05",
+      "path": "tests/first100/fixtures/P2-05.unmount-driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.4"
       ]
     },
     {

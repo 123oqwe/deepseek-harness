@@ -3354,9 +3354,24 @@
         {
           "stage": "C",
           "title": "P2-05 acceptance[2]: losing the provider denies by name denies with policy-unavailable rather than falling open"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 4,
+          "title": "P2-05 acceptance[2] (narrowed by C18): the policy service unmounted through the Loader on the shipped sdk-minimal composition control: before the unmount, a tool call is permitted by the mounted engine and its body runs"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 4,
+          "title": "P2-05 acceptance[2] (narrowed by C18): the policy service unmounted through the Loader on the shipped sdk-minimal composition precondition: disabling the policy-engine row through the Loader withdraws the policy service"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 4,
+          "title": "P2-05 acceptance[2] (narrowed by C18): the policy service unmounted through the Loader on the shipped sdk-minimal composition acceptance[2]: after the unmount the same tool call fails closed, refused as policy-unavailable, and its body never runs"
         }
       ],
-      "note": "acceptance[2]: 'the Policy service cannot be replaced or unmounted by Cordis.' The two halves have different answers, measured rather than read. REPLACE is refused by Cordis itself — `ctx.provide` throws `service \"policy\" has been registered` — and the refusal leaves the first engine deciding, checked by policy-set digest. UNMOUNT is NOT refused: the disposer `provide` returns deletes the store entry. What the clause protects is that no Cordis operation turns a denial into permission, and an unmount does not: the enforcement point reads `ctx.get('policy')` per decision and answers `policy-unavailable` without one, so an action permitted with the engine mounted is denied after it is disposed. This closes the preFlight's OQ1, which recorded the unmount half as open because the trust-kernel pin answers forgery and not loss."
+      "note": "acceptance[2]: 'the Policy service cannot be replaced or unmounted by Cordis.' The two halves have different answers, measured rather than read. REPLACE is refused by Cordis itself — `ctx.provide` throws `service \"policy\" has been registered` — and the refusal leaves the first engine deciding, checked by policy-set digest. UNMOUNT is NOT refused: the disposer `provide` returns deletes the store entry. What the clause protects is that no Cordis operation turns a denial into permission, and an unmount does not: the enforcement point reads `ctx.get('policy')` per decision and answers `policy-unavailable` without one, so an action permitted with the engine mounted is denied after it is disposed. This closes the preFlight's OQ1, which recorded the unmount half as open because the trust-kernel pin answers forgery and not loss.\n\n[2026-09-24 lane A, A-345: acceptance[2] reads, after C18, \"Policy 服务不可被 Cordis replace，被卸载后 fail closed。\". The three `supplementSeq: 4` citations observe the unmount half on the shipped sdk-minimal composition with the Trust Kernel pinned (`tests/first100/fixtures/P2-05.composition.spec.ts` with its driver): a tool call permitted before the unmount (control); the `policy-engine` row disabled through a new patch list on the root include entry, which withdraws the `policy` service (precondition); and the same tool call after it refused as `policy-unavailable` with its body never run (the clause). MA (enforcement falls open with no provider) and MB (enforcement keeps a stale engine) each redden exactly the last case. The include-entry path is the one the live `web` profile's patch reload takes, the only runtime trigger on the shipped product. The replace half keeps the citations above.]"
     },
     {
       "epic": "P3-01",
