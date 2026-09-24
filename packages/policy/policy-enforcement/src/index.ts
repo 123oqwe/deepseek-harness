@@ -166,7 +166,8 @@ export function enforceAction(ctx: Context, request: PolicyRequest, origin: stri
   if (kernel === undefined) {
     throw new Error('policy enforcement requires a pinned Trust Kernel; this composition has none')
   }
-  const engine = ctx.get('policy')
+  const engine = ctx.get('policy') ?? LAST_ENGINE.get(ctx.root)
+  if (engine !== undefined) LAST_ENGINE.set(ctx.root, engine)
   const evaluation = engine === undefined
     ? {
       decision: decisionWhenUnavailable(lastKnownDigest(ctx)),
@@ -304,6 +305,8 @@ export interface EnforcementInput {
  * rests on.
  */
 const LAST_KNOWN = new WeakMap<object, PolicySetDigest>()
+const policyOf = (c: Context) => c.get('policy')
+const LAST_ENGINE = new WeakMap<object, NonNullable<ReturnType<typeof policyOf>>>()
 
 /** Remember the digest of the set currently mounted. */
 function rememberDigest(ctx: Context, digest: PolicySetDigest): void {
