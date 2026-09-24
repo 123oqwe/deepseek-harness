@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-24T17:47:12.968Z",
-  "inputDigest": "bc52cf76722145a4929dcc368fb8dcba09f20d2ec3ff85795682bf55464ca98f",
+  "lastUpdatedUtc": "2026-09-24T18:02:19.836Z",
+  "inputDigest": "6aa1a8db99b12d73ab9ec7de262e00aa2e0354f2df43849f1063524135c929c5",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -411,6 +411,21 @@
             "the scanned workspace is the one pnpm-workspace.yaml declares (acceptance[0]) the seam scanner refuses a pnpm-workspace.yaml that declares no packages"
           ],
           "capturedAtUtc": "2026-09-24T12:17:30.532Z"
+        },
+        "U.2": {
+          "status": "GREEN",
+          "candidateSha": "4736909e5981ea8b26d629f12daac5e523815e81",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030259739",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36030259739/first100-vitest-report-4736909e5981ea8b26d629f12daac5e523815e81/vitest-report.json",
+          "observationSha256": "ceb1159ec268b15c4b59f11bdb23028bf72be6e6a17620c0fb5978d3b8bd1ba8",
+          "expectCasesMatched": [
+            "the scanned workspace is the one pnpm-workspace.yaml declares (acceptance[0]) the seam scanner refuses a pnpm-workspace.yaml whose patterns match no package"
+          ],
+          "exitOverride": {
+            "exitCode": null,
+            "reason": "run 36030259739 predates the exit record (BLOCKED-326): step 18 \"Full test suite (verbose json reporter — the ledger's observation input)\" of .github/workflows/first100-exact-sha.yml at 4736909e59 (:334-336) runs one vitest command with no \"|| true\" and no continue-on-error, and concluded success, so the process exit was 0"
+          },
+          "capturedAtUtc": "2026-09-24T18:02:17.601Z"
         }
       },
       "candidateSha": "e4390a90a29e71dea1c2d32f3943b4692b5fd933",
@@ -452,10 +467,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "75ad08e71873ed4f46c2594f0b52520250e8393c",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33777363033",
-          "observationReportPath": "/tmp/ci-run-33777363033/first100-vitest-report-75ad08e71873ed4f46c2594f0b52520250e8393c/vitest-report.json",
-          "observationSha256": "28d6103f149ac6e07fce72aaabe3164d1b89c698bb21a28b7612ea8b0ea6af29",
+          "candidateSha": "4736909e5981ea8b26d629f12daac5e523815e81",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030259739",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36030259739/first100-vitest-report-4736909e5981ea8b26d629f12daac5e523815e81/vitest-report.json",
+          "observationSha256": "ceb1159ec268b15c4b59f11bdb23028bf72be6e6a17620c0fb5978d3b8bd1ba8",
           "expectCasesMatched": [
             "ranks the declared kernel -> protocol/types -> capability definitions -> providers -> orchestration/runtime -> surfaces/apps sequence strictly increasing",
             "allows a downward dependency",
@@ -486,10 +501,11 @@
             "finds the real shortest cycle even when a longer, disjoint cycle is encountered first in construction order",
             "completes within the 10-second production-scale budget on a dense, many-overlapping-cycle graph (acceptance[2])"
           ],
-          "absorbedFlakes": [
-            "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions"
-          ],
-          "capturedAtUtc": "2026-09-03T16:27:55.893Z"
+          "exitOverride": {
+            "exitCode": null,
+            "reason": "run 36030259739 predates the exit record (BLOCKED-326): step 18 \"Full test suite (verbose json reporter — the ledger's observation input)\" of .github/workflows/first100-exact-sha.yml at 4736909e59 (:334-336) runs one vitest command with no \"|| true\" and no continue-on-error, and concluded success, so the process exit was 0"
+          },
+          "capturedAtUtc": "2026-09-24T18:02:16.078Z"
         },
         "P": {
           "status": "N/A"
@@ -565,10 +581,10 @@
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "4d7806fb4b0f91c1b50a10727ad542ff3db273b1",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33909882117",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-4d78/first100-evidence-4d7806fb4b0f91c1b50a10727ad542ff3db273b1/vitest-report.json",
-          "observationSha256": "a3aa1f5e89043438184a33ce8318e00e013d645bcdc13585e38fd1076c8e829d",
+          "candidateSha": "4736909e5981ea8b26d629f12daac5e523815e81",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030259739",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36030259739/first100-vitest-report-4736909e5981ea8b26d629f12daac5e523815e81/vitest-report.json",
+          "observationSha256": "ceb1159ec268b15c4b59f11bdb23028bf72be6e6a17620c0fb5978d3b8bd1ba8",
           "expectCasesMatched": [
             "ranks the declared kernel -> protocol/types -> capability definitions -> providers -> orchestration/runtime -> surfaces/apps sequence strictly increasing",
             "allows a downward dependency",
@@ -615,11 +631,37 @@
             "control: the exception is withdrawn the moment a symbol is imported, so condition (i) is a criterion and not a declaration",
             "control: the same fixture WITHOUT the symbol import is admitted, isolating the import as the deciding fact"
           ],
-          "capturedAtUtc": "2026-09-05T03:28:32.136Z"
+          "exitOverride": {
+            "exitCode": null,
+            "reason": "run 36030259739 predates the exit record (BLOCKED-326): step 18 \"Full test suite (verbose json reporter — the ledger's observation input)\" of .github/workflows/first100-exact-sha.yml at 4736909e59 (:334-336) runs one vitest command with no \"|| true\" and no continue-on-error, and concluded success, so the process exit was 0"
+          },
+          "capturedAtUtc": "2026-09-24T18:02:16.583Z"
         }
       },
-      "supplements": {},
-      "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
+      "supplements": {
+        "U.1": {
+          "status": "GREEN",
+          "candidateSha": "4736909e5981ea8b26d629f12daac5e523815e81",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030259739",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36030259739/first100-vitest-report-4736909e5981ea8b26d629f12daac5e523815e81/vitest-report.json",
+          "observationSha256": "ceb1159ec268b15c4b59f11bdb23028bf72be6e6a17620c0fb5978d3b8bd1ba8",
+          "expectCasesMatched": [
+            "acceptance[0]: the scanned workspace is the one pnpm-workspace.yaml declares the layer checker refuses a pnpm-workspace.yaml whose patterns match no package",
+            "acceptance[0]: every unexempted cycle is reported, and a record exempts the one cycle its edges name (layering.md rule 5) reports a cycle in which a vendored package depends on a classified one",
+            "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through a declare-module augmentation declaring a const named Context",
+            "acceptance[1]: a kernel package depends on no model provider, UI package or external package rejects a kernel dependency on a model provider declared only in optionalDependencies",
+            "acceptance[1]: a kernel package depends on no model provider, UI package or external package rejects a kernel dependency on a UI package declared only in optionalDependencies",
+            "acceptance[1]: a kernel package depends on no model provider, UI package or external package rejects a kernel package declaring a UI application under apps/, even one it imports nothing from",
+            "acceptance[2]: the time budget runs against a 10-second budget unless --budget-ms replaces it"
+          ],
+          "exitOverride": {
+            "exitCode": null,
+            "reason": "run 36030259739 predates the exit record (BLOCKED-326): step 18 \"Full test suite (verbose json reporter — the ledger's observation input)\" of .github/workflows/first100-exact-sha.yml at 4736909e59 (:334-336) runs one vitest command with no \"|| true\" and no continue-on-error, and concluded success, so the process exit was 0"
+          },
+          "capturedAtUtc": "2026-09-24T18:02:17.074Z"
+        }
+      },
+      "candidateSha": "4736909e5981ea8b26d629f12daac5e523815e81",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -1144,10 +1186,10 @@
         },
         "P.1": {
           "status": "GREEN",
-          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
-          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "candidateSha": "4736909e5981ea8b26d629f12daac5e523815e81",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030259739",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36030259739/first100-vitest-report-4736909e5981ea8b26d629f12daac5e523815e81/vitest-report.json",
+          "observationSha256": "ceb1159ec268b15c4b59f11bdb23028bf72be6e6a17620c0fb5978d3b8bd1ba8",
           "expectCasesMatched": [
             "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: configuration the package binds, changed after collection, makes verify fail detects pnpm-lock.yaml content changed after collection, with .dsh/baseline.json itself untouched",
             "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: configuration the package binds, changed after collection, makes verify fail detects a protocol schema file changed after collection, with .dsh/baseline.json itself untouched",
@@ -1160,7 +1202,11 @@
             "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[2] (narrowed): the result line of verify names the package path and its accepted status prints the package path and its accepted status on its result line (a package that verifies clean and is not accepted)",
             "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[2] (narrowed): the result line of verify names the package path and its accepted status prints the package path and its accepted status on its result line (an accepted package that fails verification)"
           ],
-          "capturedAtUtc": "2026-09-24T12:17:26.662Z"
+          "exitOverride": {
+            "exitCode": null,
+            "reason": "run 36030259739 predates the exit record (BLOCKED-326): step 18 \"Full test suite (verbose json reporter — the ledger's observation input)\" of .github/workflows/first100-exact-sha.yml at 4736909e59 (:334-336) runs one vitest command with no \"|| true\" and no continue-on-error, and concluded success, so the process exit was 0"
+          },
+          "capturedAtUtc": "2026-09-24T18:02:18.093Z"
         },
         "F.3": {
           "status": "GREEN",
@@ -1198,6 +1244,38 @@
             "P0-07 acceptance[2] (narrowed by C19): the repository AGENTS.md evidence-gate rule on the shipped sdk composition control: an untrusted workspace's AGENTS.md does not, so the rule the model reads comes from the project file"
           ],
           "capturedAtUtc": "2026-09-24T12:17:28.101Z"
+        },
+        "P.2": {
+          "status": "GREEN",
+          "candidateSha": "4736909e5981ea8b26d629f12daac5e523815e81",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030259739",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36030259739/first100-vitest-report-4736909e5981ea8b26d629f12daac5e523815e81/vitest-report.json",
+          "observationSha256": "ceb1159ec268b15c4b59f11bdb23028bf72be6e6a17620c0fb5978d3b8bd1ba8",
+          "expectCasesMatched": [
+            "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[2] (narrowed): the result line of verify names the package path and its accepted status fails with a named mismatch and still prints its result line when pnpm cannot run",
+            "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: the working tree is checked against the diff recorded at collection detects an uncommitted change to the root package.json made after collection",
+            "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: the working tree is checked against the diff recorded at collection detects an untracked configuration file added after the last collection step"
+          ],
+          "exitOverride": {
+            "exitCode": null,
+            "reason": "run 36030259739 predates the exit record (BLOCKED-326): step 18 \"Full test suite (verbose json reporter — the ledger's observation input)\" of .github/workflows/first100-exact-sha.yml at 4736909e59 (:334-336) runs one vitest command with no \"|| true\" and no continue-on-error, and concluded success, so the process exit was 0"
+          },
+          "capturedAtUtc": "2026-09-24T18:02:18.586Z"
+        },
+        "F.4": {
+          "status": "GREEN",
+          "candidateSha": "4736909e5981ea8b26d629f12daac5e523815e81",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030259739",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36030259739/first100-vitest-report-4736909e5981ea8b26d629f12daac5e523815e81/vitest-report.json",
+          "observationSha256": "ceb1159ec268b15c4b59f11bdb23028bf72be6e6a17620c0fb5978d3b8bd1ba8",
+          "expectCasesMatched": [
+            "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) Epic P0-07 F-stage: must[2] fault/qualification hardening beyond acceptance[0]'s existing coverage a skipped or silently-absent required entry must never coexist with accepted=true, even against a self-consistently forged package refuses a self-consistently forged package whose accepted is the string \"true\" rather than the boolean"
+          ],
+          "exitOverride": {
+            "exitCode": null,
+            "reason": "run 36030259739 predates the exit record (BLOCKED-326): step 18 \"Full test suite (verbose json reporter — the ledger's observation input)\" of .github/workflows/first100-exact-sha.yml at 4736909e59 (:334-336) runs one vitest command with no \"|| true\" and no continue-on-error, and concluded success, so the process exit was 0"
+          },
+          "capturedAtUtc": "2026-09-24T18:02:19.073Z"
         }
       },
       "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
@@ -7105,6 +7183,104 @@
           ],
           "capturedAtUtc": "2026-09-09T01:56:21.580Z",
           "supersededBy": "2026-09-10T04:10:00Z"
+        },
+        "U.5": {
+          "status": "GREEN",
+          "candidateSha": "4736909e5981ea8b26d629f12daac5e523815e81",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030259739",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36030259739/first100-vitest-report-4736909e5981ea8b26d629f12daac5e523815e81/vitest-report.json",
+          "observationSha256": "ceb1159ec268b15c4b59f11bdb23028bf72be6e6a17620c0fb5978d3b8bd1ba8",
+          "expectCasesMatched": [
+            "P4-08 acceptance[0]: a finished child's log is durable before its step is journalled completed flushes each child session past its turn/end before the host journals the step completed",
+            "P4-08 acceptance[0]: a finished child's log is durable before its step is journalled completed logs a child flush that fails and still hands the child's result to the script",
+            "P4-08 acceptance[0]: a resumed run returns what its finished children returned hands the script the values the finished children returned, not a placeholder",
+            "P4-08 acceptance[0]: a resumed run returns what its finished children returned starts a step again when its journal kept only the placeholder, rather than failing the run",
+            "P4-08 acceptance[1]: a resume refused for a changed script says so names the refusal on the run it returns, and runs the changed script from the start under the same id",
+            "P4-08 acceptance[0]: the workflow tool resumes an interrupted run by its id asks the engine to resume that id with the call's script, meta and parent, and reports the id back",
+            "P4-08 acceptance[0]: the workflow tool resumes an interrupted run by its id refuses `resume` together with `detached` before any run starts",
+            "P4-08 acceptance[0]: the workflow tool resumes an interrupted run by its id refuses a `resume` value that is not a run id before the engine is asked",
+            "P4-08 acceptance[1]: a refused resume is visible to the model that asked for it completes the call, carries the refusal in its value, and names it in the text the model reads"
+          ],
+          "exitOverride": {
+            "exitCode": null,
+            "reason": "run 36030259739 predates the exit record (BLOCKED-326): step 18 \"Full test suite (verbose json reporter — the ledger's observation input)\" of .github/workflows/first100-exact-sha.yml at 4736909e59 (:334-336) runs one vitest command with no \"|| true\" and no continue-on-error, and concluded success, so the process exit was 0"
+          },
+          "capturedAtUtc": "2026-09-24T18:02:14.589Z"
+        },
+        "U.6": {
+          "status": "GREEN",
+          "candidateSha": "4736909e5981ea8b26d629f12daac5e523815e81",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030259739",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36030259739/first100-vitest-report-4736909e5981ea8b26d629f12daac5e523815e81/vitest-report.json",
+          "observationSha256": "ceb1159ec268b15c4b59f11bdb23028bf72be6e6a17620c0fb5978d3b8bd1ba8",
+          "expectCasesMatched": [
+            "P4-08 acceptance[0]: a resumed step is reused only for the call that recorded it control: reuses a recorded step for the same call, so the cases below measure the call identity",
+            "P4-08 acceptance[0]: a resumed step is reused only for the call that recorded it starts the step again when the arguments changed what the call asks",
+            "P4-08 acceptance[0]: a resumed step is reused only for the call that recorded it does not hand one call another call's result when completion order decided the step numbers",
+            "P4-08 acceptance[0]: a resumed step is reused only for the call that recorded it starts the step again on a host resume whose arguments changed what the call asks"
+          ],
+          "exitOverride": {
+            "exitCode": null,
+            "reason": "run 36030259739 predates the exit record (BLOCKED-326): step 18 \"Full test suite (verbose json reporter — the ledger's observation input)\" of .github/workflows/first100-exact-sha.yml at 4736909e59 (:334-336) runs one vitest command with no \"|| true\" and no continue-on-error, and concluded success, so the process exit was 0"
+          },
+          "capturedAtUtc": "2026-09-24T18:02:15.097Z"
+        },
+        "U.7": {
+          "status": "GREEN",
+          "candidateSha": "4736909e5981ea8b26d629f12daac5e523815e81",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030259739",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36030259739/first100-vitest-report-4736909e5981ea8b26d629f12daac5e523815e81/vitest-report.json",
+          "observationSha256": "ceb1159ec268b15c4b59f11bdb23028bf72be6e6a17620c0fb5978d3b8bd1ba8",
+          "expectCasesMatched": [
+            "P4-08 acceptance[2]: a refused resume keeps the journal it refused moves the refused journal aside, so the new run's first write cannot overwrite it",
+            "P4-08: a journal, which holds children's outputs, is readable by its owner only writes the journal directory with mode 0700 and the journal file with mode 0600"
+          ],
+          "exitOverride": {
+            "exitCode": null,
+            "reason": "run 36030259739 predates the exit record (BLOCKED-326): step 18 \"Full test suite (verbose json reporter — the ledger's observation input)\" of .github/workflows/first100-exact-sha.yml at 4736909e59 (:334-336) runs one vitest command with no \"|| true\" and no continue-on-error, and concluded success, so the process exit was 0"
+          },
+          "capturedAtUtc": "2026-09-24T18:02:15.587Z"
+        },
+        "U.4": {
+          "status": "GREEN",
+          "candidateSha": "4736909e5981ea8b26d629f12daac5e523815e81",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030259739",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36030259739/first100-vitest-report-4736909e5981ea8b26d629f12daac5e523815e81/vitest-e2e-workflow.json",
+          "observationSha256": "7dc213733723676845d0dfff50adde9705d770c5db17f58a82459689bf3a48c2",
+          "expectCasesMatched": [
+            "P4-08 acceptance[0]: a workflow killed at an agent() boundary is resumed by a restarted acp host without repeating finished child work (no key required) K0: the resumed run keeps the interrupted run id",
+            "P4-08 acceptance[0]: a workflow killed at an agent() boundary is resumed by a restarted acp host without repeating finished child work (no key required) K1: the resumed run keeps the interrupted run id",
+            "P4-08 acceptance[0]: a workflow killed at an agent() boundary is resumed by a restarted acp host without repeating finished child work (no key required) K2: the resumed run keeps the interrupted run id",
+            "P4-08 acceptance[0]: a workflow killed at an agent() boundary is resumed by a restarted acp host without repeating finished child work (no key required) K3: the resumed run keeps the interrupted run id",
+            "P4-08 acceptance[0]: a workflow killed at an agent() boundary is resumed by a restarted acp host without repeating finished child work (no key required) K1: steps finished before the kill keep their original child and are not started again",
+            "P4-08 acceptance[0]: a workflow killed at an agent() boundary is resumed by a restarted acp host without repeating finished child work (no key required) K2: steps finished before the kill keep their original child and are not started again",
+            "P4-08 acceptance[0]: a workflow killed at an agent() boundary is resumed by a restarted acp host without repeating finished child work (no key required) K3: steps finished before the kill keep their original child and are not started again",
+            "P4-08 acceptance[0]: a workflow killed at an agent() boundary is resumed by a restarted acp host without repeating finished child work (no key required) K1: the resumed values are the children's real outputs",
+            "P4-08 acceptance[0]: a workflow killed at an agent() boundary is resumed by a restarted acp host without repeating finished child work (no key required) K2: the resumed values are the children's real outputs",
+            "P4-08 acceptance[0]: a workflow killed at an agent() boundary is resumed by a restarted acp host without repeating finished child work (no key required) K3: the resumed values are the children's real outputs",
+            "P4-08 acceptance[1]: a changed script is refused visibly and restarted by a restarted acp host (no key required) the refusal reaches the caller: the tool result names script-digest-changed",
+            "P4-08 acceptance[1]: a changed script is refused visibly and restarted by a restarted acp host (no key required) restart is observed: the same run id starts every child again under the new digest"
+          ],
+          "exitOverride": {
+            "exitCode": null,
+            "reason": "run 36030259739 predates the exit record (BLOCKED-326): step 23 \"Workflow runs on shipped launches — a detached run (BLOCKED-323, BLOCKED-324) and a resumed one (P4-08)\" of .github/workflows/first100-exact-sha.yml at 4736909e59 (:529-534) runs one vitest command with no \"|| true\" and no continue-on-error, and concluded success, so the process exit was 0"
+          },
+          "capturedAtUtc": "2026-09-24T18:02:19.447Z"
+        },
+        "U.8": {
+          "status": "GREEN",
+          "candidateSha": "4736909e5981ea8b26d629f12daac5e523815e81",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030259739",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36030259739/first100-vitest-report-4736909e5981ea8b26d629f12daac5e523815e81/vitest-e2e-workflow.json",
+          "observationSha256": "7dc213733723676845d0dfff50adde9705d770c5db17f58a82459689bf3a48c2",
+          "expectCasesMatched": [
+            "P4-08 acceptance[1]: a changed script is refused visibly and restarted by a restarted acp host (no key required) the refused journal is kept: the interrupted run's record survives under its old digest"
+          ],
+          "exitOverride": {
+            "exitCode": null,
+            "reason": "run 36030259739 predates the exit record (BLOCKED-326): step 23 \"Workflow runs on shipped launches — a detached run (BLOCKED-323, BLOCKED-324) and a resumed one (P4-08)\" of .github/workflows/first100-exact-sha.yml at 4736909e59 (:529-534) runs one vitest command with no \"|| true\" and no continue-on-error, and concluded success, so the process exit was 0"
+          },
+          "capturedAtUtc": "2026-09-24T18:02:19.827Z"
         }
       },
       "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
