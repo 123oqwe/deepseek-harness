@@ -93,7 +93,7 @@ This section explains the design decisions behind the tool and points at the cod
 
 ### Request resolution
 
-The tool resolves the workdir before `ctx.shell.resolve()` runs: an explicit relative `workdir` is resolved against the session cwd, and a sandbox policy's canonical workspace root wins so confinement and launch use the same identity. Sandbox policy resolves per call through `ctx.sandboxPolicy`; an escalation request goes through `ctx.approval` before anything executes, and the tool fails at load if the executor confines but no policy service is mounted.
+The tool resolves the workdir before `ctx.shell.resolve()` runs: an explicit relative `workdir` is resolved against the session cwd, and a sandbox policy's canonical workspace root wins so confinement and launch use the same identity. Sandbox policy resolves per call through `ctx.sandboxPolicy`; an escalation request goes through `ctx.approval` before anything executes, and the tool fails at load if the executor confines but no policy service is mounted. The world's hard ceilings resolve at the same point through `readWorldLimits`, from the world the dispatching agent's session is bound to, and ride to the spawn in the request; a world with no ceiling, or no bound world where the deployment states no ceiling, runs without one. When the deployment states a ceiling that no world bound for the call can hold, because this machine's runtime cannot or the session runs in `danger-full-access`, the call fails with `WorldCeilingsRefusedError` naming the ceilings and the reason, and runs nothing; a bound world stating a disk ceiling fails the call too, because a spawn cannot carry one yet.
 
 ### Rendering story
 

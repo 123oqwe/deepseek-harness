@@ -169,6 +169,8 @@ export class LocalBashExecutor extends ShellExecutor {
       // confines, so the field is inert here (the seam contract) — a
       // sandboxing subclass overrides resolve() to stamp its default instead.
       sandboxPolicy: request.sandboxPolicy,
+      // The world's ceilings ride to the spawn as data (P3-10 R4); absent means none.
+      ...request.limits !== undefined ? { limits: request.limits } : {},
     }
   }
 
@@ -196,6 +198,7 @@ export class LocalBashExecutor extends ShellExecutor {
       // snapshot beats both the caller's env and the terminal overrides; the
       // subprocess service merges the whole map after its ambient scrub.
       env: { ...ENV_OVERRIDES, ...spec.env, ...spec.dshEnv },
+      ...spec.limits !== undefined ? { limits: spec.limits } : {},
     }
   }
 

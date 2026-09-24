@@ -34,6 +34,8 @@ export type {
   DshEnvironmentKey,
 } from './types.ts'
 export { parseExitStatus } from './render.ts'
+export { readWorldLimits, WorldCeilingsRefusedError } from './world-limits.ts'
+export type { WorldCeilingName, WorldCeilingsRefusal } from './world-limits.ts'
 export type { ParsedExitStatus } from './render.ts'
 
 declare module '@deepseek-ai/cordis' {

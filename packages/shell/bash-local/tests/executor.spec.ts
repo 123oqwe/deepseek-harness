@@ -161,6 +161,23 @@ describe('LocalBashExecutor.run', () => {
     expect('env' in spec).toBe(false)
     expect('dshEnv' in spec).toBe(false)
   })
+
+  it('carries a world\'s ceilings from the request to the spawn, and no limits key when the request has none (P3-10 R4)', async () => {
+    const { ctx, bash } = await setup()
+    const limits = { memoryBytes: 268_435_456, maxProcesses: 32 }
+    expect(bash.resolve({ command: 'true', limits }).limits).toEqual(limits)
+    expect('limits' in bash.resolve({ command: 'true' })).toBe(false)
+    const spawned: unknown[] = []
+    vi.spyOn(ctx.subprocess, 'spawn').mockImplementation((spec) => {
+      spawned.push(spec)
+      throw new Error('captured')
+    })
+    await expect(bash.run(bash.resolve({ command: 'true', limits }))).rejects.toThrow('captured')
+    await expect(bash.run(bash.resolve({ command: 'true' }))).rejects.toThrow('captured')
+    expect(spawned).toHaveLength(2)
+    expect(spawned[0]).toMatchObject({ limits })
+    expect('limits' in (spawned[1] as object)).toBe(false)
+  })
 })
 
 describe('LocalBashExecutor.start (background process handles)', () => {

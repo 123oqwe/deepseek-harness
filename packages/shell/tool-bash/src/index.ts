@@ -21,7 +21,7 @@ import type {} from '@deepseek-ai/dsh-shell-env'
 import type { SandboxExecutionPolicy, SandboxMode } from '@deepseek-ai/dsh-sandbox'
 import { ESCALATION_TARGETS, approveEscalation, canonicalPath, validateEscalationArgs } from '@deepseek-ai/dsh-sandbox'
 import type { SandboxPolicyService } from '@deepseek-ai/dsh-sandbox-policy'
-import { DSH_ENV_PREFIX } from '@deepseek-ai/dsh-shell'
+import { DSH_ENV_PREFIX, readWorldLimits } from '@deepseek-ai/dsh-shell'
 import type { ShellRunResult } from '@deepseek-ai/dsh-shell'
 import { processOutcome } from './background.ts'
 import { parseExitStatus, renderProcessRead, renderResult } from './render.ts'
@@ -331,6 +331,8 @@ export function apply(ctx: Context, config: Config = {}): void {
       validateBashArgs(args)
       // Description is display metadata; workdir defaults to the caller's session.
       const standingPolicy = resolveSandboxPolicy(exec)
+      // Resolved beside the sandbox policy and carried the same way (P3-10 R4).
+      const limits = await readWorldLimits(ctx, exec.agent)
       const approvedMode = args.sandbox_permissions !== undefined && args.justification !== undefined
         ? await approveBashEscalation(args.sandbox_permissions, args.justification, exec, standingPolicy)
         : undefined
@@ -345,6 +347,7 @@ export function apply(ctx: Context, config: Config = {}): void {
         ...args.timeoutMs !== undefined ? { timeoutMs: args.timeoutMs } : {},
         dshEnv,
         ...policy !== undefined ? { sandboxPolicy: policy } : {},
+        ...limits !== undefined ? { limits } : {},
       }
       if (args.run_in_background === true) {
         // Undeclared keys are allowed, so schema omission also needs enforcement.

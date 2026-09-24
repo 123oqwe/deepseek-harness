@@ -1219,6 +1219,15 @@ Mounting this service creates no world. A world is created at the first dispatch
 register(provider: WorldProvider, placement?: WorldProviderPlacement): () => Promise<void>
 
 /**
+ * The ceilings this deployment's request states, whether or not any world
+ * here can hold them (P3-10 R4). When {@link bindingFor} answers `undefined`,
+ * this is what tells "the deployment asked for no ceiling" apart from "it
+ * asked for one and no world can hold it", which a caller must refuse.
+ * @returns the stated ceilings; empty when the request states none.
+ */
+requestedCeilings(): WorldCeilings
+
+/**
  * The world this agent's session runs in, creating it on first ask.
  *
  * Returns `undefined` rather than a weaker world when no provider satisfies

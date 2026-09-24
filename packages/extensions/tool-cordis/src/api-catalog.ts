@@ -1034,6 +1034,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'the disposer, which settles once the provider is removed.',
       },
       {
+        signature: 'requestedCeilings(): WorldCeilings',
+        description: 'The ceilings this deployment\'s request states, whether or not any world here can hold them (P3-10 R4). When bindingFor answers `undefined`, this is what tells "the deployment asked for no ceiling" apart from "it asked for one and no world can hold it", which a caller must refuse.',
+        parameters: [],
+        returns: 'the stated ceilings; empty when the request states none.',
+      },
+      {
         signature: 'async bindingFor(agent: BindableAgent): Promise<ExecutionWorldBinding | undefined>',
         description: 'The world this agent\'s session runs in, creating it on first ask.\n\nReturns `undefined` rather than a weaker world when no provider satisfies the spec: acceptance[1] forbids degradation, and the caller\'s fail-closed reading of `undefined` is what makes the refusal reach the policy question.',
         parameters: [{ name: 'agent', description: 'the dispatching agent, whose session the world is bound to.' }],
@@ -6760,11 +6766,11 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ShellExecRequest',
-    declaration: 'export interface ShellExecRequest {\n    command: string;\n    workdir?: string | undefined;\n    timeoutMs?: number | undefined;\n    stdoutMaxBytes?: number | undefined;\n    signal?: AbortSignal | undefined;\n    stdin?: string | undefined;\n    env?: Record<string, string> | undefined;\n    dshEnv?: DshEnvironment | undefined;\n    sandboxPolicy?: SandboxExecutionPolicy | undefined;\n}',
+    declaration: 'export interface ShellExecRequest {\n    command: string;\n    workdir?: string | undefined;\n    timeoutMs?: number | undefined;\n    stdoutMaxBytes?: number | undefined;\n    signal?: AbortSignal | undefined;\n    stdin?: string | undefined;\n    env?: Record<string, string> | undefined;\n    dshEnv?: DshEnvironment | undefined;\n    sandboxPolicy?: SandboxExecutionPolicy | undefined;\n    limits?: SubprocessLimits | undefined;\n}',
   },
   {
     name: 'ShellExecSpec',
-    declaration: 'export interface ShellExecSpec {\n    command: string;\n    workdir: string;\n    timeoutMs: number;\n    stdoutMaxBytes: number;\n    signal?: AbortSignal | undefined;\n    stdin?: string | undefined;\n    env?: Record<string, string> | undefined;\n    dshEnv?: DshEnvironment | undefined;\n    sandboxPolicy: SandboxExecutionPolicy | undefined;\n}',
+    declaration: 'export interface ShellExecSpec {\n    command: string;\n    workdir: string;\n    timeoutMs: number;\n    stdoutMaxBytes: number;\n    signal?: AbortSignal | undefined;\n    stdin?: string | undefined;\n    env?: Record<string, string> | undefined;\n    dshEnv?: DshEnvironment | undefined;\n    sandboxPolicy: SandboxExecutionPolicy | undefined;\n    limits?: SubprocessLimits | undefined;\n}',
   },
   {
     name: 'ShellProcess',
@@ -7849,6 +7855,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'WorldAttestation',
     declaration: 'export interface WorldAttestation {\n    readonly world: WorldId;\n    readonly provider: WorldProviderId;\n    readonly evidence: unknown;\n}',
+  },
+  {
+    name: 'WorldCeilings',
+    declaration: 'export interface WorldCeilings extends WorldResourcesSpec {\n    readonly maxProcesses?: number;\n}',
   },
   {
     name: 'WorldDevicesSpec',

@@ -8,7 +8,7 @@
  */
 
 import type { SandboxEnforcement, SandboxExecutionPolicy, SandboxMode } from '@deepseek-ai/dsh-sandbox'
-import type { CollectedOutput, DshEnvironment } from '@deepseek-ai/dsh-subprocess'
+import type { CollectedOutput, DshEnvironment, SubprocessLimits } from '@deepseek-ai/dsh-subprocess'
 
 export { DSH_ENV_PREFIX } from '@deepseek-ai/dsh-subprocess'
 export type { CollectedOutput, DshEnvironment, DshEnvironmentKey } from '@deepseek-ai/dsh-subprocess'
@@ -76,6 +76,12 @@ export interface ShellExecRequest {
   dshEnv?: DshEnvironment | undefined
   /** Fully resolved per-call sandbox policy; sandboxing executors default it. */
   sandboxPolicy?: SandboxExecutionPolicy | undefined
+  /**
+   * Hard ceilings of the world the call runs in (P3-10 R4), resolved by the
+   * caller with `readWorldLimits`. Absent means none; executors carry it to
+   * the spawn unchanged and apply no default.
+   */
+  limits?: SubprocessLimits | undefined
 }
 
 /**
@@ -107,6 +113,12 @@ export interface ShellExecSpec {
   dshEnv?: DshEnvironment | undefined
   /** Resolved sandbox policy; ignored by executors that do not confine. */
   sandboxPolicy: SandboxExecutionPolicy | undefined
+  /**
+   * Ceilings carried through from {@link ShellExecRequest.limits}. OPTIONAL on
+   * the spec for the same reason as `stdin`: absent means none, and the spawn
+   * then launches exactly as it did before ceilings existed.
+   */
+  limits?: SubprocessLimits | undefined
 }
 
 /** The outcome of one completed (or killed) foreground run. */

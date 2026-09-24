@@ -42,7 +42,7 @@ console.log(result.exitCode, result.stdout.text)
 
 ### 请求与已解析 spec
 
-每次执行都从带可选字段的 `ShellExecRequest` 开始；执行器的 `resolve()` 在任何东西运行之前，把它变成默认值与上限都已显式填好的 `ShellExecSpec`。这一请求/spec 拆分正是仓库在包边界显式解析的模板：调用方绝不依赖 `run` 或 `start` 内部隐藏的默认值。`resolve()` 从执行器配置填充工作目录与超时、对每次调用的覆盖值设上限，并按原样携带可选输入——`stdin`、普通 `env` 与受信任的 `DSH_*` 快照。
+每次执行都从带可选字段的 `ShellExecRequest` 开始；执行器的 `resolve()` 在任何东西运行之前，把它变成默认值与上限都已显式填好的 `ShellExecSpec`。这一请求/spec 拆分正是仓库在包边界显式解析的模板：调用方绝不依赖 `run` 或 `start` 内部隐藏的默认值。`resolve()` 从执行器配置填充工作目录与超时、对每次调用的覆盖值设上限，并按原样携带可选输入——`stdin`、普通 `env` 与受信任的 `DSH_*` 快照。`limits` 同样原样携带：它是调用所在 world 的硬上限，由调用方用 `readWorldLimits(ctx, agent)` 解析；执行器把它交给 spawn，不补任何默认值，所以不带它的请求与以前完全一样地启动。部署声明了上限、而没有为这次调用绑定的 world 守得住它时，`readWorldLimits` 抛出 `WorldCeilingsRefusedError`。
 
 ### 选择并组合一个执行器
 

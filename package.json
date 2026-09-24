@@ -147,6 +147,7 @@
     "first100:verify-ledger-digests": "node scripts/first100/generate-ledger.mjs --check",
     "first100:verify-boot-path-offline": "node scripts/first100/verify-boot-path-offline.mjs",
     "first100:verify-adapt-dispositions": "node scripts/first100/verify-adapt-dispositions.mjs",
+    "first100:verify-spawn-call-sites": "node scripts/first100/verify-spawn-call-sites.mjs",
     "first100:verify-cells-recomputable": "node scripts/first100/verify-cells-recomputable.mjs",
     "first100:verify-fields-are-read": "node scripts/first100/verify-fields-are-read.mjs",
     "first100:slice-gate": "node scripts/first100/run-registry-gates.mjs --set slice",
