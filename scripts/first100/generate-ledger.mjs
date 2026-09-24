@@ -957,7 +957,6 @@ export const REPORT_CONFIGS = new Map([
   ['vitest-report.json', undefined],
   ['vitest-e2e-sdk-keyless-smoke.json', 'vitest.e2e.config.ts'],
   ['vitest-e2e-acp.json', 'vitest.e2e.config.ts'],
-  ['vitest-e2e-workflow.json', 'vitest.e2e.config.ts'],
   ['vitest-snapshot.json', 'vitest.snapshot.config.ts'],
 ])
 
