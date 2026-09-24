@@ -520,7 +520,7 @@ export class HarnessSdkJsonRpcServer {
     // here, because resolving one touches `$DSH_HOME`. A composition that
     // provides no factory, which is every unit suite mounting this plugin
     // directly, attaches nothing and writes nothing into a developer's home.
-    const hostUser = this.ctx.get(HOST_USER_IDENTITY_KEY) as HostUserIdentityFactory | undefined
+    const hostUser = this.ctx.get(`${HOST_USER_IDENTITY_KEY}-unprovided`) as HostUserIdentityFactory | undefined
     const handle = await this.ctx.agents.create({
       sessionId: brandString<SessionId>(sessionId),
       meta: { cwd: this.cwd },
