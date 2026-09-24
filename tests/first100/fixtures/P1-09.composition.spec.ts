@@ -2,7 +2,7 @@
  * P1-09 U-stage composition contract: the ownership and namespace gate on the
  * REAL tool registry, reached through a real `@deepseek-ai/dsh-app-boot` boot
  * of a real Loader composition (`tests/first100/fixtures/loader/p1-09-ownership/`),
- * with two ordinary plugin modules mounted as ordinary Loader entries.
+ * with ordinary plugin modules mounted as ordinary Loader entries.
  *
  * The Contract stage proved `claimCapability`/`requestReplace`/
  * `revokeByOwnershipToken` against registries a test built by hand, and had no
@@ -45,6 +45,8 @@ interface Report {
   readonly chain?: readonly { capabilityId: string; current: string; replaces?: string }[]
   readonly afterDisposeToolNames?: readonly string[]
   readonly afterDisposeChainLength?: number
+  readonly reader?: { readonly recordsRead: number; readonly withToken: number; readonly presented: number }
+  readonly runnerProbeError?: string
 }
 
 const reportRoots: string[] = []
@@ -145,5 +147,39 @@ describe('P1-09 ownership gate composition (U-stage)', () => {
     expect(report.inspectError).toBeUndefined()
     expect(report.afterDisposeToolNames).toEqual([])
     expect(report.afterDisposeChainLength).toBe(0)
+  }, LOADER_SMOKE_TEST_TIMEOUT_MS)
+
+  it('BLOCKED-308: a plugin that reads every ownership record gets no ownership token, and first-owner\'s tool survives what it presents', async () => {
+    const report = await bootFixture('reader.cordis.yml', 'p1-09 reader boot')
+    expect(report.booted).toBe(true)
+    expect(report.inspectError).toBeUndefined()
+    // One record through `ownershipOf` and one through `ownershipHistory`, so the reader did read.
+    expect(report.reader?.recordsRead).toBe(2)
+    expect(report.reader?.withToken).toBe(0)
+    expect(report.toolNames).toEqual(['collide_tool'])
+    expect(report.owners?.collide_tool).toBe('./first-owner.ts')
+  }, LOADER_SMOKE_TEST_TIMEOUT_MS)
+
+  it('BLOCKED-308: a statically loaded plugin that declares another plugin\'s identity is refused', async () => {
+    const report = await bootFixture('declare.cordis.yml', 'p1-09 declare boot')
+    expect(report.booted).toBe(false)
+    expect(report.message).toContain('declareOwner("./first-owner.ts") refused')
+    expect(report.message).toContain('Loader entry "./declare-attacker.ts"')
+  }, LOADER_SMOKE_TEST_TIMEOUT_MS)
+
+  it('a plugin that registers from a child fiber named after another plugin is recorded under its own Loader entry', async () => {
+    const report = await bootFixture('nested.cordis.yml', 'p1-09 nested boot')
+    expect(report.booted).toBe(true)
+    expect(report.inspectError).toBeUndefined()
+    expect(report.owners?.nested_tool).toBe('./nested-attacker.ts')
+    expect(report.chain).toContainEqual({ capabilityId: 'nested_tool', current: './nested-attacker.ts' })
+  }, LOADER_SMOKE_TEST_TIMEOUT_MS)
+
+  it('control: under the default policy, a declaration made below the dynamic runner\'s own Loader entry, where the runner makes it, is admitted', async () => {
+    const report = await bootFixture('runner.cordis.yml', 'p1-09 runner boot')
+    expect(report.booted).toBe(true)
+    expect(report.inspectError).toBeUndefined()
+    expect(report.runnerProbeError).toBeUndefined()
+    expect(report.owners?.dynamic_tool).toBe('p1-09-dynamic-probe')
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 })

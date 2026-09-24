@@ -61,12 +61,14 @@ The unified schema DSL supports `string`, `number`, `integer`, `boolean`, `null`
 
 ### Namespace and ownership
 
-Every global registration is adjudicated before it lands. `register` resolves the registrant's `PluginIdentity` — its Loader entry's module specifier, or an identity a host declared through `declareOwner` — and mints an `OwnershipToken` for the admitted claim. Two rules fail closed, both raising `ToolOwnershipError` with the denying `reason`:
+Every global registration is adjudicated before it lands. `register` resolves the registrant's `PluginIdentity` — the module specifier of its innermost enclosing Loader entry, also when it registers from a fiber it created itself, or an identity a host declared through `declareOwner` — and mints an `OwnershipToken` for the admitted claim, which the registry keeps to itself. Two rules fail closed, both raising `ToolOwnershipError` with the denying `reason`:
 
 - A tool name inside the reserved `dsh.*` namespace is refused unless the registrant is named in `ownership.officialPluginIdentities`. This holds in an agent scope too, and does not depend on load order: registering before the official plugin does buys nothing.
 - A name a DIFFERENT plugin already owns is refused as `capability-collision`. One plugin registering its own name twice is unchanged — that stays the pre-existing duplicate error, which names the per-agent-variant route. A scoped registration shadowing a global name is also unchanged; shadowing is what `agent.ctx` registration is for.
 
-Taking over an owned name requires the explicit `replace`, itself gated by `ownership.allowReplace`. A plain `register` is never an override, even when policy permits replacement. `ownershipOf` reads a name's live owner, `ownershipHistory` returns the admission history (superseded owners included, which is what `@deepseek-ai/dsh-host-plugin-inventory`'s `buildToolOwnershipChain` renders as a replaced/replacing chain), and `revokeOwned` unregisters exactly the tools a presented token owns. `revokeOwned` takes only a token — never a name or an identity — so there is no argument a caller could substitute to reach another plugin's registrations. Unloading a plugin removes its tools and its ownership records together.
+Taking over an owned name requires the explicit `replace`, itself gated by `ownership.allowReplace`. A plain `register` is never an override, even when policy permits replacement. `ownershipOf` reads a name's live owner, and `ownershipHistory` returns the admission history (superseded owners included, which is what `@deepseek-ai/dsh-host-plugin-inventory`'s `buildToolOwnershipChain` renders as a replaced/replacing chain). Both return `CapabilityRecord`s, which carry no `OwnershipToken`: any plugin can read another plugin's record, and a token in it would let the reader act as the owner. The registry has no method that revokes by token; a registration is removed only through its own disposer, so unloading a plugin removes exactly its own tools and ownership records.
+
+`declareOwner` binds the caller's subtree to another identity, which is how the dynamic Cordis runner gives each dynamic package its own plugin id. Only a caller whose innermost Loader entry is named in `ownership.ownerDeclarers` may declare; the default names `@deepseek-ai/dsh-cordis-host-runner`, and a call from under any other entry throws. In a tree with no Loader every caller may declare, because identities there are fiber names each plugin chooses for itself.
 
 ```yaml
 - id: tools
@@ -75,6 +77,7 @@ Taking over an owned name requires the explicit `replace`, itself gated by `owne
     ownership:
       officialPluginIdentities: ['@deepseek-ai/dsh-tool-bash']
       allowReplace: false
+      ownerDeclarers: ['@deepseek-ai/dsh-cordis-host-runner']
 ```
 
 ### Configure the presentation mode

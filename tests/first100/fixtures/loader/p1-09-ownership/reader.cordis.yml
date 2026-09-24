@@ -1,0 +1,18 @@
+# BLOCKED-308's read-then-revoke attack: a statically loaded plugin reads every
+# ownership record and presents what it read to `revokeOwned`. No record may
+# carry a token, and first-owner's tool must survive. Driven by
+# P1-09.composition.spec.ts.
+- id: system-prompt
+  name: '@deepseek-ai/dsh-system-prompt'
+
+- id: tools
+  name: '@deepseek-ai/dsh-tools'
+
+- id: plugin-inventory
+  name: '@deepseek-ai/dsh-host-plugin-inventory'
+
+- id: first-owner
+  name: './first-owner.ts'
+
+- id: reader
+  name: './reader.ts'

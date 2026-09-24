@@ -67,7 +67,7 @@ This section explains the design decisions behind the package; the observable ty
 
 | File | Role |
 |---|---|
-| [`src/types.ts`](src/types.ts) | The registration/policy/decision type surface: `CapabilityRegistration`, `ReplaceContract`, `RegistryPolicy`, `RegistrationDecision`, `InventoryChainEntry`, `RevocationResult` |
+| [`src/types.ts`](src/types.ts) | The registration/policy/decision type surface: `CapabilityRegistration`, `CapabilityRecord`, `ReplaceContract`, `RegistryPolicy`, `RegistrationDecision`, `InventoryChainEntry`, `RevocationResult` |
 | [`src/index.ts`](src/index.ts) | `isReservedNamespace`/`RESERVED_NAMESPACE_ROOT`, and the `claimCapability`/`requestReplace`/`revokeByOwnershipToken`/`buildInventoryChain`/`mintOwnershipToken` decision functions |
 
 </details>
@@ -77,7 +77,7 @@ This section explains the design decisions behind the package; the observable ty
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- [`packages/core/tools/README.md`](../../core/tools/README.md) — the real tool registry that calls `claimCapability`/`requestReplace`/`revokeByOwnershipToken` on every registration.
+- [`packages/core/tools/README.md`](../../core/tools/README.md) — the real tool registry that calls `claimCapability`/`requestReplace` on every registration.
 - [`tests/ownership.spec.ts`](tests/ownership.spec.ts) — 13 cases: one case per registry-declared acceptance clause (acceptance[0] split into its three named fail-closed scenarios) plus every structurally testable must[] clause.
 - [`packages/extensions/cordis-host-runner/src/guard.ts`](../../extensions/cordis-host-runner/src/guard.ts) — the sandbox context façade that applies the reserved-namespace rule to a dynamically defined package's `ctx.provide`/`ctx.on`.
 - [`packages/host/plugin-inventory/src/index.ts`](../../host/plugin-inventory/src/index.ts) — `buildToolOwnershipChain`, the real Inventory surface `buildInventoryChain` feeds.
@@ -101,6 +101,7 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 - **Service and Event registration is enforced for the dynamic origin only.** The Usage stage wired these decisions into `packages/core/tools/src/index.ts` (every tool registration, both origins), `packages/extensions/cordis-host-runner/src/guard.ts` (a dynamically defined package's `ctx.provide`/`ctx.on`), and `packages/host/plugin-inventory/src/index.ts` (the replaced/replacing chain). A STATICALLY loaded plugin's `ctx.provide`/`ctx.on` are still ungated: both are implemented in `vendor/cordis`, and the Trust Kernel boundary puts a vendored enforcement point behind the `Fiber` fix. Closing that residual belongs to whoever lands it. A dynamic package's own identity is not affected — it comes from the runner's `CordisDynamicPluginId`, never from a name the package declares for itself.
 - **must[1] is enforced on the replace path as well as the claim path, and outranks `allowReplace`.** `requestReplace` refuses a third party's override of a capability whose target namespace is reserved, reporting `'namespace-reserved'` even when `policy.allowReplace` is `false` and the policy refusal would also have applied. Both branches refuse; naming the namespace is what keeps an operator from enabling replacement deployment-wide and retrying to no purpose. The namespace is read from the TARGET registration, recorded when its own claim was admitted, never re-derived from the replace contract the replacing plugin supplies. An official plugin named in `officialPluginIdentities` may still replace its own reserved capability. This closed a bypass found at the Fault stage: before it, `allowReplace: true` let any statically loaded third-party plugin take a `dsh.*` tool through `ToolRuntime.replace`.
 - **`StableCapabilityId`'s string grammar is fixed by its callers, not here.** The Usage-stage integration settled on a dotted grammar — a name's namespace is everything before its last `.`, so `dsh.core.read_file` sits under `dsh.core` — matching this epic's own `dsh.*` validation text. This package still commits to no separator or validation regex of its own.
+- **The tool registry keeps each ownership token to itself.** `ToolRuntime.ownershipOf`/`ownershipHistory` return `CapabilityRecord`, a registration without its `OwnershipToken`, and a tool registration is removed only through its own effect disposer. `revokeByOwnershipToken` therefore has no production caller; must[3] holds on the real path because each disposer removes exactly its own record (BLOCKED-308).
 - **`buildInventoryChain` never populates `replacedBy`.** It reports only each capability id's terminal (current-owner) state, consistent with the type's "absent while current still owns it" contract — no frozen case exercises the non-terminal, already-superseded shape.
 
 -----

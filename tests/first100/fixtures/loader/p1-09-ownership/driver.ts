@@ -12,11 +12,28 @@
  * a broken fixture. A failure while INSPECTING a tree that did boot is
  * reported separately as `inspectError`: conflating the two would let a broken
  * inspection masquerade as a refused registration.
+ *
+ * When the composition mounts the dynamic Cordis runner, the driver first
+ * declares an owner the way the runner does for each dynamic package: from a
+ * package fiber below a group fiber below the runner's own Loader entry. The
+ * runner creates both fibers from its service context
+ * (`packages/extensions/cordis-host-runner/src/index.ts`'s `requireGroup`, then
+ * `lifecycle.ts`), and its `guard.ts` calls `declareOwner` in the package's
+ * `apply`; the probe reproduces that fiber layout and that call without the
+ * sandbox and the browser round trip a real definition needs.
  */
 
 import { writeFileSync } from 'node:fs'
+import type { Context } from '@deepseek-ai/cordis'
 import { boot, resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
 import { buildToolOwnershipChain } from '@deepseek-ai/dsh-host-plugin-inventory'
+import { fixtureTool } from './fixture-tool.ts'
+import type { ReaderObservation } from './reader.ts'
+
+/** The Loader entry name the shipped bundles give the dynamic Cordis runner. */
+const RUNNER_ENTRY = '@deepseek-ai/dsh-cordis-host-runner'
+/** The identity the runner-shaped probe declares, standing in for a runner-minted plugin id. */
+const DYNAMIC_PROBE_IDENTITY = 'p1-09-dynamic-probe'
 
 const configPath = process.argv[2]
 if (configPath === undefined) throw new Error('p1-09-ownership driver requires a config path')
@@ -35,6 +52,10 @@ interface Report {
   chain?: { capabilityId: string; current: string; replaces?: string }[]
   afterDisposeToolNames?: string[]
   afterDisposeChainLength?: number
+  /** What `reader.ts` saw and did, when the composition mounts it. */
+  reader?: ReaderObservation
+  /** Why the runner-shaped declaration failed; absent when it was admitted or no runner is mounted. */
+  runnerProbeError?: string
 }
 
 /** Read `message` off an unknown thrown value. */
@@ -46,6 +67,24 @@ const report: Report = { booted: false }
 try {
   const ctx = await boot('p1-09-ownership-loader-smoke', resolveConfigPath(configPath, undefined))
   report.booted = true
+  for (const entry of ctx.loader.entries()) {
+    if (entry.options.name !== RUNNER_ENTRY || entry.fiber === undefined) continue
+    try {
+      const group = entry.fiber.ctx.plugin({ name: 'cordis-dynamic', apply: () => {} })
+      await group.ctx.plugin({
+        name: 'p1-09-dynamic-package',
+        inject: ['tools'],
+        apply(pkg: Context) {
+          pkg.get('tools')?.declareOwner(DYNAMIC_PROBE_IDENTITY)
+          pkg.tools.register(fixtureTool('dynamic_tool'))
+        },
+      })
+    } catch (error) {
+      report.runnerProbeError = messageOf(error)
+    }
+  }
+  const reader: unknown = ctx.get('p109Reader')
+  if (reader !== undefined) report.reader = { ...(reader as ReaderObservation) }
   try {
     const toolNames = ctx.tools.schemas().map(schema => schema.name).sort()
     report.toolNames = toolNames

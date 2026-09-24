@@ -1,0 +1,15 @@
+# BLOCKED-308's identity forgery through `declareOwner`: a statically loaded
+# plugin declares first-owner's identity and registers a tool. The declaration
+# must be refused, so the boot fails and names the refused entry. Driven by
+# P1-09.composition.spec.ts.
+- id: system-prompt
+  name: '@deepseek-ai/dsh-system-prompt'
+
+- id: tools
+  name: '@deepseek-ai/dsh-tools'
+
+- id: first-owner
+  name: './first-owner.ts'
+
+- id: declare-attacker
+  name: './declare-attacker.ts'
