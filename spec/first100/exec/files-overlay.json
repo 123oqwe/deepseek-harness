@@ -4390,8 +4390,18 @@
       "path": "apps/cli/tests/profiles/routing-stub-model.ts",
       "kind": "test",
       "stages": [
-        "U.3"
+        "U.3",
+        "U.4"
       ]
+    },
+    {
+      "epic": "P8-01",
+      "path": "packages/acp/acp/src/session.ts",
+      "kind": "source",
+      "stages": [
+        "U.4"
+      ],
+      "reason": "The ACP session resume (session/resume) that lane A's B1 case uses to continue an SDK-created session in a new Run, the one shipped path through which a persisted session gets a second Run from another connection."
     },
     {
       "epic": "P8-01",
@@ -4399,7 +4409,8 @@
       "kind": "source",
       "stages": [
         "U.2",
-        "U.3"
+        "U.3",
+        "U.4"
       ],
       "reason": "acceptance[4] is recorded on the Run: RunService.recordProvenance durably stores, once, the negotiation of the SDK connection that opened a Run, and RunPlugin gives a subagent's Run the provenance of the Run its parent session opened. The plan named the SDK packages that negotiate, not the Run Service that keeps the record."
     },
@@ -4471,6 +4482,14 @@
         "C.1"
       ],
       "reason": "The generator for the control-protocol schema the frozen case compares against. A generated artifact cannot be frozen without naming its generator."
+    },
+    {
+      "epic": "P8-01",
+      "path": "tests/first100/fixtures/P8-01.b1-current-run-provenance.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.4"
+      ]
     },
     {
       "epic": "P8-01",

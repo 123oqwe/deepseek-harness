@@ -17382,7 +17382,9 @@
         "mutationDescription": "Off the fix, never merged: M6 and M9 (the schema refusal reaches the wire without data), M13 (createSession does not record the negotiation), M13b (a subagent's Run does not take its parent's).",
         "failureSummary": "The fix `2c5ff0286e`, run 36007657036: 72 of 72 over the six files the delegate dispatched (built). M6 `f00b1f21e0`, run 36007721245 and M9 `7408e56a71`, run 36007787776: the refusal case red; M13 `f9fb5dae00`, run 36007881434 and M13b `42a3ef3b57`, run 36007903541: the provenance case red; the control, three Runs in the store, green throughout."
       },
-      "note": "P8-01 acceptance[4] and P0-06 acceptance[1] on the shipped sdk profile, one launch: an incompatible schemaVersion is refused on the wire with its code and schemaId; two sessions, one delegating once, open three Runs, and every one carries the handshake's negotiation. The control counts the Runs from the store alone."
+      "note": "P8-01 acceptance[4] and P0-06 acceptance[1] on the shipped sdk profile, one launch: an incompatible schemaVersion is refused on the wire with its code and schemaId; two sessions, one delegating once, open three Runs, and every one carries the handshake's negotiation. The control counts the Runs from the store alone.",
+      "supersededBy": "2026-09-24T19:10:39Z",
+      "supersessionReason": "The control's body changed (a2d79bccce): it names each Run by the session that opened it and asserts the delegated child joined p801-a's Run, since P4-01's fix makes an owned child a member of its owner's Run. Same titles, a replaced body, so a replacement under lifecycle 2.1 (delegate ruling, gate3 log 2026-09-24T18:49:13Z)."
     },
     {
       "epic": "P4-08",
@@ -18383,6 +18385,87 @@
         "failureSummary": "Baseline: PRECHECK, narrow run 36034068297: 3 passed / 0 failed. M-m, run 36034098073: exactly the ActionManifest case red. M-d, run 36034121871: exactly the policy-decision case red. All three match artifacts/laneA/p3-01-acc0-expectations-v3.md (sha256 8965dd03b1753bb514881af0d36be4685ad73ee58285146e47998a5af7c7bcd3), written before the v3 case change; the delegate compared them case by case."
       },
       "note": "P3-01 acceptance[0] as C18 narrows it, on the shipped headless composition under workspace-write. One tool call (the shipped `read`, a fixed call id) runs in two processes that share one working directory: as shipped, where the base layer's local provider binds the call's world, and with only the `execution-world-local` row removed, where the shipped fenced provider does. The world is bound by local and by fenced under one confinement digest; the appended ActionManifest is field-for-field the same apart from runId, actor and idempotencyKey, which each session derives; the policy record the pinned Trust Kernel audits, the risk gate's record and the tool's result are the same. Not observed: container or microVM providers (the narrowed clause names local and fenced); the PTC and plugin-RPC paths; a deployment policy conditioned on the world provider, which would decide differently by the deployment's own choice. The world provider executes nothing: `read` runs through fs-sandbox in both modes."
+    },
+    {
+      "epic": "P8-01",
+      "stage": "U",
+      "supplements": {
+        "epic": "P8-01",
+        "stage": "U"
+      },
+      "supplementSeq": 3,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P8-01.run-provenance.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P8-01 on the shipped sdk profile: the negotiation reaches every Run, and a refusal says why P0-06 acceptance[1]: the shipped sdk profile refuses an incompatible schemaVersion on the wire with its code and schemaId",
+        "P8-01 on the shipped sdk profile: the negotiation reaches every Run, and a refusal says why control: the shipped sdk profile opens one Run for each SDK session and one for the delegated subagent, so the case below measures provenance and not a missing Run",
+        "P8-01 on the shipped sdk profile: the negotiation reaches every Run, and a refusal says why P8-01 acceptance[4]: every Run the connection opened, the subagent's included, carries the handshake's negotiation"
+      ],
+      "files": [
+        "tests/first100/fixtures/P8-01.run-provenance.spec.ts",
+        "packages/sdk/server/src/server.ts",
+        "packages/run/run/src/index.ts",
+        "apps/cli/tests/profiles/routing-stub-model.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T19:10:39Z",
+      "supersedes": "2026-09-24T15:55:20Z",
+      "dryRunProof": {
+        "treeSha": "772baaae07db19016482c6f8091ca59e8c3a52f4",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Off the fix, never merged: M6 and M9 (the schema refusal reaches the wire without data), M13 (createSession does not record the negotiation), M13b (a subagent's Run does not take its parent's). On the corrected control, off a2d79bccce: M-B1′ (`29d64a9bd5`, the same patch as M-B1): a subagent's Run takes the first provenance among all Runs of its parent session again. M-ctl (`2bef583f87`): a subagent session opens no Run.",
+        "failureSummary": "The fix `2c5ff0286e`, run 36007657036: 72 of 72 over the six files the delegate dispatched (built). M6 `f00b1f21e0`, run 36007721245 and M9 `7408e56a71`, run 36007787776: the refusal case red; M13 `f9fb5dae00`, run 36007881434 and M13b `42a3ef3b57`, run 36007903541: the provenance case red; the control, three Runs in the store, green throughout. The correction a2d79bccce, run 36044428965: 43 of 43 over the run plugin and run-service specs and this file. M-B1′, run 36044453999: this file's three cases green, since on the shipped launch p801-a has one Run, the one it is in. M-ctl, run 36044477976: the control red (two Runs opened, not three) and the provenance case red (two Runs); the refusal case green. Readings match artifacts/laneB/p8-01-b1-predictions-v2.md (2e4fc83c…); the delegate compared them."
+      },
+      "note": "P8-01 acceptance[4] and P0-06 acceptance[1] on the shipped sdk profile, one launch: an incompatible schemaVersion is refused on the wire with its code and schemaId; two sessions, one delegating once, open three Runs, and every one carries the handshake's negotiation. The control counts the Runs from the store alone. Replaces [373] (delegate ruling, gate3 log 2026-09-24T18:49:13Z): since P4-01's fix an owned in-process child joins its owner's Run as a member, so p801-a's Run lists the child too, and the control, which read each Run by all its sessionIds joined, was red although that behavior is right. It now names each Run by the session that opened it, sessionIds[0], still asks for three Runs, and asserts that p801-a's Run is [p801-a, child]. Same titles; the control's body changed."
+    },
+    {
+      "epic": "P8-01",
+      "stage": "U",
+      "supplements": {
+        "epic": "P8-01",
+        "stage": "U"
+      },
+      "supplementSeq": 4,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P8-01.b1-current-run-provenance.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P8-01 B1 on the shipped sdk and acp profiles: a session the sdk created and acp resumed delegates once control: the session has two Runs, the sdk one carrying the handshake's negotiation and the acp one carrying none",
+        "P8-01 B1 on the shipped sdk and acp profiles: a session the sdk created and acp resumed delegates once control: the delegated subagent opened exactly one Run",
+        "P8-01 B1 on the shipped sdk and acp profiles: a session the sdk created and acp resumed delegates once P8-01 blind review B1: the subagent's Run carries the provenance of its parent agent's current Run, not of the first Run its parent session opened",
+        "P8-01 B1 on the shipped sdk and acp profiles: a session the sdk created and acp resumed delegates once reachability: a second sdk launch cannot continue a session an sdk launch created"
+      ],
+      "files": [
+        "tests/first100/fixtures/P8-01.b1-current-run-provenance.spec.ts",
+        "packages/run/run/src/index.ts",
+        "packages/sdk/server/src/server.ts",
+        "packages/acp/acp/src/session.ts",
+        "apps/cli/tests/profiles/routing-stub-model.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T19:10:39Z",
+      "dryRunProof": {
+        "treeSha": "789df9e1e0c4a356fd4d1c4b0b1cde0d995f2914",
+        "testsDiscovered": 4
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Off X 10b4ee72fc (the fix with this file), never merged: M-B1″ (`e015886f36`, the same patch as M-B1): a subagent's Run takes the first provenance among all Runs of its parent session again.",
+        "failureSummary": "Lane A's red-first run on the candidate 43b89917a0, dccd2013a5 (run 36043915539): exactly the B1 case red, the subagent's Run carrying the SDK connection's negotiation. X, run 36044889967: 47 of 47 over the run plugin and run-service specs, P8-01's composition and this file. M-B1″, run 36044911552: exactly the B1 case red here (with the three run-plugin B1 cases); both controls and the reachability case green, since the Runs and which of them carry a negotiation do not depend on where the child's comes from. Readings match artifacts/laneA/p8-01-b1-expectations.md (b2f3b8ca…) and artifacts/laneB/p8-01-b1-predictions-v3.md (eeb0b7a5…); the delegate compared them."
+      },
+      "note": "P8-01 blind review B1 on the shipped sdk and acp profiles (lane A, A-374), acceptance[4]: a session created over the SDK, whose Run carries the handshake's negotiation, is resumed over ACP after the SDK connection shuts down; the resumed session opens a second Run, which carries none, and delegates once. The subagent's Run carries the provenance of its parent agent's current Run, the ACP one, so none; a second SDK launch cannot continue the session the first created. The argv runs the whole file, which holds these four cases."
     }
   ]
 }
