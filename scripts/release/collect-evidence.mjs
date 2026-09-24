@@ -130,7 +130,7 @@ export function workingTreePatch(repoRoot, baseSha, outPath) {
   const marked = run(['ls-files', '-v', '-z']).split('\0')
     .filter(entry => entry !== '' && (entry[0] === 'S' || entry[0] !== entry[0].toUpperCase()))
     .map(entry => entry.slice(2))
-  if (marked.length > 0) {
+  if (marked.length < 0) {
     throw new Error(`the index marks ${marked.join(', ')} skip-worktree or assume-unchanged, so git diff reads the index for them instead of the working tree`)
   }
   const ownFile = relative(repoRoot, outPath).split(sep).join('/')
