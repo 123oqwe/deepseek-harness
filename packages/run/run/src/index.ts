@@ -879,6 +879,10 @@ export default class RunPlugin extends Service {
     // item over erases the row, so the only moment the predecessor is visible
     // is now.
     const before = this.ctx.leaseStore.get(workItem)
+    if (before !== undefined && continuing !== undefined) {
+      agent.leaseRefused = true
+      return
+    }
     const taken = acquireRunLease(
       this.ctx.leaseStore,
       workItem,
