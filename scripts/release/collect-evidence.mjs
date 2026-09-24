@@ -61,7 +61,9 @@
  * `<sidecar>/manifest.json` additionally records the `--required-artifact`
  * paths and `--required-gate` ids declared at `init` — private bookkeeping
  * this script and `verify-evidence.mjs` both read, kept out of the typed
- * `EvidencePackage` JSON itself (the C-stage type reserves no field for it).
+ * `EvidencePackage` JSON itself. `init` writes it before signing and records
+ * its digest as the package's `sidecarManifestDigest`, so an edit to it after
+ * collection is a verify mismatch.
  *
  * CLI: `node scripts/release/collect-evidence.mjs <init|run|build-artifact> [--repo-root <path>] [--out <path>] ...`
  * `--repo-root` defaults to `process.cwd()`; `--out` defaults to
@@ -254,11 +256,14 @@ function cmdInit(flags) {
   const requiredGateIds = flagAll(flags, '--required-gate')
   const requiredArtifactPaths = flagAll(flags, '--required-artifact')
   const requiredGates = Object.fromEntries(requiredGateIds.map(gateId => [gateId, missingPlaceholder(gateId)]))
+  const manifestPath = join(dir, 'manifest.json')
+  writeFileSync(manifestPath, `${JSON.stringify({ requiredArtifactPaths, requiredGateIds }, null, 2)}\n`)
 
   const pkg = {
     formatVersion: FORMAT_VERSION,
     baselineFingerprint: { gitSha: storedBaseline.gitSha, digest: baselineDigest },
     gitDiff: { baseSha, headSha, digest: gitDiffDigest },
+    sidecarManifestDigest: digestOfFile(manifestPath),
     additionalGates: [],
     requiredGates,
     requiredBuildArtifacts: {},
@@ -268,7 +273,6 @@ function cmdInit(flags) {
   pkg.signature = digestOfPackage(pkg)
   mkdirSync(dirname(outPath), { recursive: true })
   writePackage(outPath, pkg)
-  writeFileSync(join(dir, 'manifest.json'), `${JSON.stringify({ requiredArtifactPaths, requiredGateIds }, null, 2)}\n`)
   process.stdout.write(`collect-evidence init: wrote ${outPath}\n`)
   return 0
 }

@@ -17,8 +17,15 @@
  * (`<sidecar>/logs/<gateId>.log`) and every listed artifact at its real
  * repo-relative path. Re-hashes `.dsh/baseline.json` against
  * `baselineFingerprint.digest`, the sidecar `gitdiff.patch` against
- * `gitDiff.digest`, and every `requiredBuildArtifacts` path. Recomputes the
- * package-level `signature` (a content-integrity digest — see
+ * `gitDiff.digest`, the sidecar `manifest.json` against
+ * `sidecarManifestDigest`, and every `requiredBuildArtifacts` path. When
+ * `.dsh/baseline.json` is unchanged, re-derives the fingerprint it records
+ * from the checkout (`verifyBaseline`, P0-01): a new HEAD, another Node or
+ * pnpm version, or a change to any file the fingerprint covers since
+ * collection is a mismatch too. That re-derivation runs `git` and `pnpm` from
+ * `PATH` and writes `.dsh/rebase-report.json` when it finds drift, so an
+ * offline re-verification needs the collecting checkout's HEAD and toolchain.
+ * Recomputes the package-level `signature` (a content-integrity digest — see
  * `collect-evidence.mjs`'s module doc for exactly what it does and does not
  * defend against) over the package's own canonical serialization. Any
  * mismatch — a referenced file's bytes changed since collection
@@ -45,10 +52,13 @@
  *
  * CLI: `node scripts/release/verify-evidence.mjs [--repo-root <path>] --evidence <path>`
  * `--repo-root` defaults to `process.cwd()`. Exits 0 with no mismatches, 1
- * otherwise, printing every mismatch found.
+ * otherwise, printing every mismatch found. The first output line names the
+ * package's resolved path and its recorded `accepted` status, the two facts a
+ * report of this gate cites (`AGENTS.md`, evidence-gate reporting).
  */
 import { existsSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { verifyBaseline } from './baseline-fingerprint.mjs'
 import { digestOfFile, digestOfValue, sidecarDir } from './collect-evidence.mjs'
 
 function flagOne(flags, name, fallback) {
@@ -159,15 +169,16 @@ function verifyAcceptedInvariant(pkg, requiredArtifactPaths, requiredGateIds, mi
 
 /**
  * Verify one evidence package fully offline: recompute every digest it
- * carries from real current bytes on disk, and re-derive must[2] against
- * the real loaded data.
+ * carries from real current bytes on disk, re-derive the baseline
+ * fingerprint from the checkout, and re-derive must[2] against the real
+ * loaded data.
  * @param {string} repoRoot - checkout root artifact/build-artifact paths resolve against.
  * @param {string} evidencePath - path to the evidence package JSON to verify.
- * @returns {{ ok: boolean, mismatches: string[] }}
+ * @returns {{ ok: boolean, mismatches: string[], accepted: unknown }} `accepted` is the package's recorded `accepted` field, or `null` when there is no package at `evidencePath`.
  */
 export function verify(repoRoot, evidencePath) {
   const mismatches = []
-  if (!existsSync(evidencePath)) return { ok: false, mismatches: [`no evidence package at ${evidencePath}`] }
+  if (!existsSync(evidencePath)) return { ok: false, mismatches: [`no evidence package at ${evidencePath}`], accepted: null }
 
   const pkg = JSON.parse(readFileSync(evidencePath, 'utf8'))
   const dir = sidecarDir(evidencePath)
@@ -183,6 +194,8 @@ export function verify(repoRoot, evidencePath) {
     const recomputed = digestOfFile(baselinePath)
     if (recomputed !== pkg.baselineFingerprint.digest) {
       mismatches.push(`baselineFingerprint digest mismatch (recorded ${pkg.baselineFingerprint.digest}, recomputed ${recomputed})`)
+    } else {
+      for (const entry of verifyBaseline(repoRoot).drift) mismatches.push(`baseline drift since collection: ${entry.path} (${entry.field})`)
     }
   }
 
@@ -219,11 +232,13 @@ export function verify(repoRoot, evidencePath) {
   if (!existsSync(manifestPath)) {
     mismatches.push(`manifest sidecar missing at ${manifestPath}`)
   } else {
+    const recomputed = digestOfFile(manifestPath)
+    if (recomputed !== pkg.sidecarManifestDigest) mismatches.push(`sidecar manifest digest mismatch (recorded ${pkg.sidecarManifestDigest}, recomputed ${recomputed})`)
     const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
     verifyAcceptedInvariant(pkg, manifest.requiredArtifactPaths ?? [], manifest.requiredGateIds ?? [], mismatches)
   }
 
-  return { ok: mismatches.length === 0, mismatches }
+  return { ok: mismatches.length === 0, mismatches, accepted: pkg.accepted }
 }
 
 function main() {
@@ -235,10 +250,10 @@ function main() {
 
   const result = verify(repoRoot, evidencePath)
   if (result.ok) {
-    process.stdout.write(`verify-evidence: ${evidencePath} verified offline, no mismatches\n`)
+    process.stdout.write(`verify-evidence: ${evidencePath} verified offline, no mismatches, accepted=${result.accepted}\n`)
     process.exit(0)
   }
-  process.stdout.write(`verify-evidence: ${evidencePath} FAILED verification:\n${result.mismatches.map(line => `  ${line}`).join('\n')}\n`)
+  process.stdout.write(`verify-evidence: ${evidencePath} FAILED verification, recorded accepted=${result.accepted}:\n${result.mismatches.map(line => `  ${line}`).join('\n')}\n`)
   process.exit(1)
 }
 
