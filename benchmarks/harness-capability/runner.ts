@@ -166,11 +166,14 @@ export function trialSeed(runSeed: number, scenario: string, trial: number): num
 
 /**
  * Format one run for a terminal, with the two halves of acceptance[2] printed
- * as separate columns so neither can be read as the other.
+ * as separate columns so neither can be read as the other. A breach names its
+ * trial seed and the command that replays it: `--seed` takes the run seed,
+ * from which that trial's seed is derived again.
  * @param run - the executed run.
+ * @param seed - the run seed `run` was executed with.
  * @returns the lines to print, in order.
  */
-export function formatRun(run: BenchmarkRun): string[] {
+export function formatRun(run: BenchmarkRun, seed: number): string[] {
   const lines: string[] = []
   for (const report of run.reports) {
     const { lower, upper } = report.model.confidenceInterval
@@ -180,7 +183,7 @@ export function formatRun(run: BenchmarkRun): string[] {
         `invariants ${report.invariants.held ? 'held' : `BREACHED (${report.invariants.breaches.length})`}`,
     )
     for (const breach of report.invariants.breaches) {
-      lines.push(`  breach ${breach.metric} in ${breach.scenario} — replay with --seed ${breach.seed}`)
+      lines.push(`  breach ${breach.metric} in ${breach.scenario} (trial seed ${breach.seed}) — replay with --seed ${seed} --lane ${report.lane}`)
     }
   }
   for (const entry of run.skipped) lines.push(`${entry.lane}: skipped — ${entry.reason}`)
@@ -220,7 +223,7 @@ function main(argv: readonly string[]): number {
     return 2
   }
   const run = runLanes(SCENARIOS.filter(scenario => lanes.includes(scenario.lane)), { seed })
-  const lines = formatRun(run)
+  const lines = formatRun(run, seed)
   const out = resolve(values.out ?? '.artifacts/benchmark')
   mkdirSync(out, { recursive: true })
   writeFileSync(join(out, 'report.json'), `${JSON.stringify({ seed, lanes, ...run, invariantsHeld: invariantsHeld(run.reports) }, null, 2)}\n`)

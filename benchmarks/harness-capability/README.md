@@ -2,9 +2,11 @@
 
 A model-independent benchmark for the Harness's own capabilities -- recovery, safety, verification, isolation, cost, and orchestration -- rather than whether an SDK session can start. It extends the SDK-focused instructions in [BENCHMARK.md](../../BENCHMARK.md) with a structured, lane-based framework.
 
-## Stage: Contract only
+## Running the lanes
 
-This directory currently holds the frozen structural schema for [`manifest.yml`](manifest.yml), enforced by [`tests/benchmark/runner.spec.ts`](../../tests/benchmark/runner.spec.ts), and nothing else. `runner.ts`, `report.ts`, and `scenarios/` -- the code that actually boots a profile and executes a lane -- do not exist yet; they are a later, U-stage slice of Epic P0-08 (`tests/first100/registry.json`). `manifest.yml` fully satisfies the schema it documents below.
+[`manifest.yml`](manifest.yml) holds the frozen structural schema documented below, enforced by [`tests/benchmark/runner.spec.ts`](../../tests/benchmark/runner.spec.ts). [`runner.ts`](runner.ts) runs the lanes that the scenarios in [`scenarios/index.ts`](scenarios/index.ts) cover and scores each lane with [`report.ts`](report.ts). `pnpm benchmark:harness [--lane <name>]... [--seed <n>] [--out <dir>]` runs the requested lanes, or every lane a scenario covers, from one run seed (a fixed default when `--seed` is absent), and writes `report.json` and `report.md` to `--out` (default `.artifacts/benchmark`, which git ignores). It exits 0 once the lanes ran and both reports are written; the invariant verdict is in the reports, not in the exit code.
+
+The scenarios cover the `deterministic`, `fault` and `security` lanes, which run with no model API key configured. `real-model` and `scale` have no scenario yet, and a run that names either exits 2 without writing a report. A reported breach names its trial seed and the command that replays it, `--seed <run seed> --lane <lane>`: each trial's seed is derived from the run seed, the scenario and the trial index.
 
 ## The 5 lanes
 
