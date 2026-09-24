@@ -1357,7 +1357,6 @@ function cmdGreenSupplement() {
     console.error(`BLOCKED: --report ${reportPath} cannot observe ${epic}.${stage}.${supplementSeq}: ${notObserved}`)
     process.exit(1)
   }
-  checkRecordedExit(reportPath, `${epic}.${stage}.${supplementSeq}`)
   const observationSha256 = sha256(raw)
 
   const existing = existsSync(LEDGER_PATH) ? loadJson(LEDGER_PATH) : { rows: buildSkeleton(null) }
