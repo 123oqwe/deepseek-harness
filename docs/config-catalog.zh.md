@@ -2200,7 +2200,7 @@ export interface Config {
 }
 ```
 
-来源： [`packages/run/run/src/index.ts:656`](../packages/run/run/src/index.ts)
+来源： [`packages/run/run/src/index.ts:667`](../packages/run/run/src/index.ts)
 
 <a id="deepseek-aidsh-sandbox-local"></a>
 
