@@ -108,6 +108,15 @@ export interface CapabilityRegistration {
 }
 
 /**
+ * A {@link CapabilityRegistration} as a registry shows it to its callers: every
+ * field except the {@link OwnershipToken}. The token stays with the registry
+ * that minted it, because any plugin can read another plugin's record, and a
+ * token handed out with the record would let the reader act as its owner
+ * (BLOCKED-308).
+ */
+export type CapabilityRecord = Omit<CapabilityRegistration, 'ownershipToken'>
+
+/**
  * must[2]'s explicit override declaration: a plugin may replace an existing
  * registration's owner only by presenting one of these, never by merely
  * registering the same {@link StableCapabilityId} again (which

@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-24-tool-ownership-tokens-stay-in-the-registry.md
+2026-09-24-tool-ownership-tokens-stay-in-the-registry.md: 9e5b35c51c7d543ab24354e5ecf2f83e1b162008
+2026-09-24-tool-ownership-tokens-stay-in-the-registry.zh.md: ab61e33cc2bdc1c1065c7576f33a62e3ae3a7e92
