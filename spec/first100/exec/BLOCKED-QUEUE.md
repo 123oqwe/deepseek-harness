@@ -9003,6 +9003,36 @@ The entry stays open: the delegate's blind review found that any non-empty reaso
 
 **Closed 2026-09-24 (lane B, at the delegate's instruction; the four rounds matched and the delegate compared them).** Condition 1: W3 is red on the code before the fix: PRECHECK `f718b7f792` (run 36034986838, on lane A's v5 `e77760bef4`, whose driver creates the root agent after boot as a shipped launcher does) reddens exactly W3 and the new warn case. Condition 2: the fix `1523241a79` admits the edge waiting_tool → waiting_human in `LEGAL_TRANSITIONS`, with its reason beside it, so the native path reports waiting_human while the operator is asked and returns to running afterwards; a refused advance at the risk gate is now logged by `warnRefusedAdvance`, naming the tool, the proposed state and the refusal (run 36035010552: 177 of 177). Condition 3: M-E `a80aa5483f` (run 36035033670), which removes that edge again, reddens exactly W3; M-W `e2309d67c0` (run 36035057289), which stops reading the advance's answer, reddens exactly the warn case. Condition 4: the comment at the risk gate now says both dispatch paths reach it, the native one in waiting_tool and the other in running, and that the state machine admits both edges. W3 is frozen as P4-05 U.6 and the warn case as U.7 (predictions: artifacts/laneB/blocked-329-predictions-v2.md, 8448b82a…).
 
+### BLOCKED-330 — the risk gate asks an operator before the capability-token check that will refuse the call, so a person is asked to approve an action that cannot run (product defect, open)
+
+**Status:** CLOSED 2026-09-24 (closure note at the end of this entry); opened 2026-09-24. Owner: lane B, fix in place. Found by lane A while diagnosing P4-05's waiting-state case W2. Recorded by the delegate (first100-delegate-1a). Read from the code; the reachable shipped cases below are not yet reproduced on a shipped launch.
+
+**What was observed (CI, fixture-induced).** Diagnostic run 36032235200 at `fbf1a32aec`: after the operator allowed the call, the tool result was `Error: tool "p4_05_third_party" refused: this scope requires a capability token and none was presented`. The token was missing because of the fixture: its agent is created at mount time, before the token service subscribes. On the shipped launchers the agent is created after boot, so the token is issued. The ordering below is the product's, not the fixture's.
+
+**What the code says (lane A's reading).**
+- The session's capability token is taken at the start of a dispatch batch.
+- It is checked only in `ToolRuntime`, after policy and the risk gate have run.
+- So any call the token check will refuse still passes through the risk gate first. If the risk gate asks a person, the person is asked, and then the call is refused anyway.
+- Reachable on the shipped build: a session token that has expired (`sessionTokenTtlMs`, 24 h by default); a failed issuance; or a child agent whose token scope does not include the tool.
+- Revocation is not a reachable case. It has no production caller, and `revokeSession` deletes the session token, so the next dispatch batch issues a new one and the call goes through. This is lane A's reading for A-370; an earlier draft of this entry listed revocation, and that was wrong.
+
+**Related (same mechanism, not on any shipped profile).** `agent-loop` config `agents: [...]` creates agents at mount time. That races the token service, and when it loses, every tool call of those agents is refused. No shipped profile uses this surface (base and sdk-minimal have `agents: []`). Record it as a Known Limitation of that config surface.
+
+**Closing condition.**
+1. A case on a shipped composition shows the ordering: a call that the token check will refuse must not produce an approval request. It is red on today's code. Lane A's `P2-02.token-refusal-before-ask.composition.spec.ts` (PRECHECK `b26aa82c1c`) does this with an expired session token: E1 "not put to the operator" is red today, and E2 "refused as an expired capability token and its body does not run" is green.
+2. The fix is in place: the token check, or an equivalent pre-check of the token scope, runs before the risk gate asks a person. A refusal is reported with its reason, and no operator prompt is raised.
+3. A mutation that restores today's order turns only that case red.
+4. The `agents: [...]` race is written into that config surface's documentation as a Known Limitation.
+
+**Closure note (2026-09-24, lane B).** Each condition, with the runs that show it (predictions `artifacts/laneB/blocked-330-predictions.md`, bad39498…, and `blocked-330-pin-predictions.md`, 44f7e5f4…; the delegate compared the readings).
+- Condition 1: lane A's cases on the shipped headless composition, native (A-370, `b26aa82c1c`) and code mode (A-371, `424c250c37`), with in-process cases on both paths (`cfca6f5bfd`). PRECHECK run 36050103201: exactly the four "is not put to the operator" cases red (E1, P1 and the in-process N1, U1); the "refused, body does not run" cases green.
+- Condition 2: `f4761dd93c`. The token check is one function, `ToolRuntime`'s `capabilityRefusal`; preparation still asks it, and the native path (`tool-calls.ts`) and the code-mode sub-dispatch (`ptc.ts`) ask it after the policy decision and before the approval binding. Run 36050124608: 27 of 27.
+- Condition 3: M-N `b6b3ad65b8` (the native pre-check removed), run 36050147230, reddens exactly E1 and N1; M-P `178b68d7b9` (the code-mode pre-check removed), run 36050170361, exactly P1 and U1.
+- Condition 4: the agent-loop README (en/zh) records config `agents: [...]` created at mount as a Known Limitation.
+- The ledger consequence the Agent Note records (`f463961521`): a token-refused call now leaves no ambiguous ledger reservation and, on the code-mode path, no `tool/ptc-dispatch-start`. Pinned by `e30b06bec3`: PIN-PRE `ec14266e04` (the pin on the tree before the fix) reddens exactly N1, U1, N3 and U3; PIN 15 of 15.
+- In batch 8 these commits are `e2495fc5b8`, `5508a13bab`, `43c2beafc9`, `cfa0521da3`, `a51604ef1a` and `7a2545b23d`, with identical patch-ids.
+- The cases construct the refusal with an expired session token. BLOCKED-331's fix, a re-issue on expiry, removes that construction, so it replaces them with a token whose scope lacks the tool (B-577).
+
 ### BLOCKED-334 — an approval wait lets a fenced or stopped Run run the approved tool: after the operator answers, a refused return to `running` is only logged, and nothing after the risk gate checks the stop, the lease or the fence (product defect, open; P4-07 acceptance[0] is broken, so P4-07 is withdrawn)
 
 **Status:** OPEN (2026-09-24T21:13:10Z). Owner: lane A writes the red-first case; lane B records the P4-07 withdrawal, then fixes in place. Found by the P4-01/329 blind review (F2); measured by lane A (A-385); recorded by the delegate (first100-delegate-1a).
@@ -9032,3 +9062,21 @@ The entry stays open: the delegate's blind review found that any non-empty reaso
 3. P4-07 is re-accepted only after conditions 1 and 2 hold, with its cells re-observed and a new sign-off.
 
 **Progress 2026-09-24 (lane B):** lane A's red-first case `a4f29c2d76` (A-387) is red in run 36060615899: on the native and the code-mode paths, the fence and the stop variants run the approved tool, 8 red and 2 green. P4-07 is withdrawn in the same commit as this entry by a forward write (`generate-ledger.mjs --record-signoff --conclusion WITHDRAWN`), which moves its row to BLOCKED_ON_ACCEPTANCE, and a live P4-07 row is added to ACCEPTANCE LOCKS. The fix is scheduled after batch 7′.
+
+### BLOCKED-335 — P0-08 reports verification precision and router regret as not applicable, because the shipped product has no producer for either; the two stay open until the points that build a verifier and a model router land (tracking item, user-approved narrowing, not a defect)
+
+**Status:** OPEN (2026-09-24T21:38:10Z). Owner: whichever of P5-02 / P5-12 / P4-03 / P7-01–P7-05 / P7-10 lands the producer. Recorded by the delegate (first100-delegate-1a) on the user's answer to question 19 (a), given in the delegate terminal at 2026-09-24T21:38:10Z: 「按你推荐的」.
+
+**Why.** P0-08 must[1] lists eight standard metrics. On question 18 the user chose (a): all of them are to be computed from runs of the shipped product. Two cannot be:
+- **verification precision** needs a verifier that judges a task result against a frozen verification contract. The shipped product has none; `packages/run/run/src/index.ts:1282-1283` only anticipates the AcceptanceGate in a comment.
+- **router regret** needs a router that chooses a model per task automatically. The shipped product has none:
+  - a model is chosen by the user (`session.selectModel`, the model-selection UI) or fixed by configuration;
+  - `resolveRouteModels` in `llm-pi-ai` only materialises a provider's model catalog.
+- The RunPlan package, whose verification entries and model routes these metrics would read, is imported by no shipped source at `5b41cb7173`. The same search finds 93 importers of `@deepseek-ai/dsh-tools`, so the search works. No `package.json` depends on RunPlan, and no loader configuration mounts it.
+
+**What P0-08 does meanwhile.**
+- In every lane, each report carries these two metrics as `notApplicable` with that reason, never as a number.
+- A case pins that no number is reported for them.
+- The per-lane table of non-applicable metrics is fixed in the contract (gate3 log 2026-09-24T21:34:49Z).
+
+**Closing condition.** A shipped producer exists for the metric, and the P0-08 benchmark reports it from real runs with its confidence interval. This happens as part of the acceptance of the point that lands the producer: P5-02 or P5-12 for router regret; P7-03 or P7-05 (with P4-03 and P7-01) for verification precision. Each metric closes on its own.
