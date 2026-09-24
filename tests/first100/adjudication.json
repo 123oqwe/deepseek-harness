@@ -2426,6 +2426,16 @@
         "overlay": "none",
         "expectedAt": "tree",
         "rulingRef": "delegate ruling 2026-09-20 (lane B inbox B-423: three test/fixture files enter approvedAdditions, keyed on the P1-07.U/sdk-app-startup-spec precedent)"
+      },
+      "P1-07.U/cli-argv-spec": {
+        "epic": "P1-07",
+        "stage": "U",
+        "path": "tests/first100/fixtures/P1-07.cli-argv.spec.ts",
+        "reason": "must[2]'s host entry point read through both parsers the launch flag passes, on `headless` and `sdk`: the launcher's own `parseDshArgs`, and the booted app's program on its second pass over the same arguments. The registry declares the boundary's sources and `workspace-trust`'s unit spec; this file is where the CLI's own parsing of `--trust-workspace` is observed rather than read from `apps/cli/src/args.ts`.",
+        "declaredBy": [],
+        "overlay": "none",
+        "expectedAt": "tree",
+        "rulingRef": "delegate ruling 2026-09-24 (lane B inbox B-492: U.4 is frozen as P1-07's fourth U supplement after its spec lands, following ed3f1b7607; keyed on the P1-07.U/sdk-app-trust-spec precedent)"
       }
     }
   }

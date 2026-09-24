@@ -308,6 +308,24 @@
     },
     {
       "epic": "P1-07",
+      "path": "apps/cli/src/args.ts",
+      "kind": "source",
+      "stages": [
+        "U.4"
+      ],
+      "reason": "The launcher's own parser, cited by P1-07's fourth U supplement and not changed by this epic. The 2026-09-23 sign-off read from this file, rather than observed, that the CLI hands `--trust-workspace` to the plugin: the root program `parseDshArgs` builds keeps unknown options and passes them through (`.allowUnknownOption()` and `.passThroughOptions()`, from 37cbd155f5). U.4 runs the real `parseDshArgs`, and deleting `.allowUnknownOption()` there reddens all four of its cases (M-U4-a)."
+    },
+    {
+      "epic": "P1-07",
+      "path": "packages/boot/cmdline/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.4"
+      ],
+      "reason": "The command-line service between the launcher and the plugins, cited by P1-07's fourth U supplement and not changed by this epic. `runProfile` in `apps/cli/src/profile-boot.ts` passes the launcher's arguments to `provideCmdline`, which provides them as `cmdlineArgs`, and `command-workspace-trust`'s launch grant reads them back through `ctx.get('cmdlineArgs')`. U.4 calls the real `provideCmdline` rather than a stand-in, so the arguments the plugin reads are the ones this service holds; no U.4 mutation changes this file."
+    },
+    {
+      "epic": "P1-07",
       "path": "packages/bundle/acp-app/cordis.patch.yml",
       "kind": "manifest",
       "stages": [
@@ -378,7 +396,8 @@
       "kind": "source",
       "stages": [
         "U.2",
-        "U.3"
+        "U.3",
+        "U.4"
       ],
       "reason": "The `--trust-workspace` entry point (BLOCKED-214's second half). The registry named this epic's Consumers and the provider, but not an entry point that writes a trust record BEFORE any session exists — which is what the user's ruling required for the profiles that carry no approval answerer. It lives in the command package because that package already owns the host user's other entry point (`/trust-skills`), and the two are the same subject: how a host user records a decision about this workspace. It holds no trust rule of its own; its whole effect is one `grantTrust`/`revokeTrust` call, which is why it can be an entry point without being a bypass."
     },
