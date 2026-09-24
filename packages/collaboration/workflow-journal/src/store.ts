@@ -38,7 +38,7 @@ const fileFor = (directory: string, runId: string): string => join(directory, `$
 export function writeJournal(directory: string, runId: string, journal: WorkflowJournal): void {
   // Owner-only, like a session log: a journal holds its children's outputs.
   // An existing directory keeps the mode it has.
-  mkdirSync(directory, { recursive: true, mode: 0o700 })
+  mkdirSync(directory, { recursive: true })
   const target = fileFor(directory, runId)
   const temporary = `${target}.tmp`
   writeFileSync(temporary, `${JSON.stringify(journal, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 })
