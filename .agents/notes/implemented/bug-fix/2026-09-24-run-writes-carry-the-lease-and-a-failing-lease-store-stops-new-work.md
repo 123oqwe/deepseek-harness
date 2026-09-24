@@ -14,6 +14,7 @@ P4-07's acceptance was withdrawn (BLOCKED-319) over two gaps on the shipped head
 - **`RunPlugin` passes the agent's lease on five writes**: `accepted → planning`, `→ running`, and the terminal `cancelled`, `verifying`, and `succeeded` or `failed`. `pauseRun` does not.
 - **A write refused for its lease is logged.** All six of `RunPlugin`'s Run writes go through one helper, which logs a `fenced` or `lease-unavailable` refusal as a warning naming the transition, the Run and the reason. An illegal transition is not logged, because after a refused `verifying` the terminal write is asked for and refused as illegal.
 - **`finish` gives the item back after the terminal writes settle.** Released first, the holder's own writes would find no lease and be refused.
+- **The lease provider outlives the leases it issued.** A fiber unload runs every disposer concurrently, and lease-sqlite used to drop its handle in its teardown while a Run's terminal writes were still queued, so the second of them was refused as `lease-unavailable` and the Run stayed at `verifying` (P4-07 blind review 2-1, case C5). Its teardown now keeps the handle until every lease it issued has been released.
 - **`open` treats a store that throws like a refused lease.** Reading the predecessor and taking the lease sit in one `try`; on a throw the agent is marked `leaseRefused`, no Run opens, and the log records the refusal as `lease-unavailable`.
 
 ## Alternatives considered
@@ -26,6 +27,6 @@ P4-07's acceptance was withdrawn (BLOCKED-319) over two gaps on the shipped head
 
 - `pauseRun`'s `paused` write, `openForSession`, `attachSession` and session-log appends carry no lease. The lease lives in SQLite and the Run in its JSON store, so a write admitted just before a takeover can still land; "stale writes after a newer token = 0" is not claimed.
 - A session whose lease store failed at start stays refused for its life, like one refused by a live holder or an emergency stop, and `leaseRefused` now also means "the store failed"; a new session is needed once the store recovers.
-- If the lease provider is torn down before a session's terminal writes settle, those writes are refused as `'lease-unavailable'` and the release throws, reported as a failed Run store write, and the lease row stays until it lapses. A session that ends while its host is shutting down can therefore keep a non-terminal Run.
+- A session that ends while its host is shutting down still completes its terminal writes: lease-sqlite keeps its handle after its teardown while a lease it issued is held, and drops it when the last holder gives its lease back. It issues no new lease after the teardown.
 - The first-step writes are shown at the Run Service unit level; on the shipped profile the cases observe the terminal writes.
 - A store that fails after the lease is taken is not covered: a heartbeat's `renew` that throws is not caught, and tools dispatch until then.

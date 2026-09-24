@@ -14,6 +14,7 @@ P4-07 的验收因出厂 headless profile 上的两处缺口被撤回（BLOCKED-
 - **`RunPlugin` 在五处写入上传入 agent 的租约**：`accepted → planning`、`→ running`，以及终态的 `cancelled`、`verifying` 与 `succeeded` 或 `failed`。`pauseRun` 不传。
 - **因租约被拒的写入会记日志。** `RunPlugin` 的六处 Run 写入都经同一个辅助函数；它把 `fenced` 或 `lease-unavailable` 的拒绝记为一条警告，写明转移、Run 与理由。非法转移不记：`verifying` 被拒之后，终态写入仍会被请求，再被状态机按非法转移拒绝。
 - **`finish` 在终态写入完成之后才交还工作项。** 先交还的话，持有者自己的写入会找不到租约而被拒。
+- **租约提供方比它发出的租约活得久。** 卸载时所有 disposer 同时运行，而 lease-sqlite 原先在自己卸载时就丢掉句柄，这时 Run 的终态写入还在排队，于是第二次写入被拒为 `lease-unavailable`，Run 停在 `verifying`（P4-07 盲审 2-1，用例 C5）。现在它卸载时保留句柄，直到它发出的租约都已交还。
 - **`open` 把抛异常的存储当作租约被拒。** 读前任与取租约放在同一个 `try` 里；一旦抛出，agent 被标记为 `leaseRefused`，不开 Run，日志把这次拒绝记为 `lease-unavailable`。
 
 ## 考虑过的其他做法
@@ -26,6 +27,6 @@ P4-07 的验收因出厂 headless profile 上的两处缺口被撤回（BLOCKED-
 
 - `pauseRun` 写 `paused`、`openForSession`、`attachSession` 与会话日志追加都不带租约。租约在 SQLite 里，Run 在它的 JSON 存储里，所以接管前一刻放行的写入仍可能落地；不声称「newer token 之后的旧写入 = 0」。
 - 开始时遇到存储故障的会话，终生保持被拒，与被存活的持有者或紧急停止拒绝的会话相同；`leaseRefused` 现在也表示「存储故障」，存储恢复后需要新开会话。
-- 如果租约提供方在会话的终态写入完成之前就被卸载，这些写入被拒为 `'lease-unavailable'`，交还会抛出异常，记为一次 Run 存储写入失败，租约行一直留到过期。所以宿主关停途中才结束的会话，它的 Run 可能停在非终态。
+- 宿主关停途中才结束的会话，仍会完成它的终态写入：lease-sqlite 在自己卸载之后，只要它发出的租约还有人持有，就保留句柄，最后一个持有者交还租约时才丢掉。卸载之后它不再发出新租约。
 - 首步写入在 Run Service 单元层证明；出厂 profile 上的用例观测的是终态写入。
 - 取得租约之后才发生的存储故障不在涵盖之内：心跳的 `renew` 抛出的异常没有被接住，在那之前工具照常派发。
