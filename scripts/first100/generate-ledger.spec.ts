@@ -25,6 +25,7 @@ import { createHash } from 'node:crypto'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { load } from 'js-yaml'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import type { CiRunUrlCorrectionResult, CiRunUrlCorrectionVerdict } from './generate-ledger.mjs'
@@ -1265,5 +1266,39 @@ describe('closureFailuresForAcceptedRows (BLOCKED-287)', () => {
       read('../../spec/first100/exec/command-freeze.json'),
       read('../../spec/first100/exec/acceptance-coverage.json'),
     )).toEqual([])
+  })
+})
+
+/** One step of `first100-exact-sha.yml`'s gate job, in the fields the cases below read. */
+interface GateStep {
+  readonly run?: string
+  readonly with?: { readonly name?: string; readonly path?: string }
+}
+
+describe('the exact-SHA observation artifact carries every e2e step\'s json report', () => {
+  // An entry frozen under `vitest.e2e.config.ts` (P4-05.U.4) is observed by the report its e2e step writes: the
+  // full-suite run uses the default config, which includes no `*.e2e.ts` file. `--supplement` reads that report from
+  // the artifact the gate job uploads, so the step has to write it and the upload has to carry it.
+  const workflow = load(readFileSync(new URL('../../.github/workflows/first100-exact-sha.yml', import.meta.url), 'utf8')) as {
+    jobs: Record<string, { steps: GateStep[] }>
+  }
+  const steps = workflow.jobs['exact-sha-gate']?.steps ?? []
+  const e2e = steps.filter(step => step.run?.includes('--config vitest.e2e.config.ts') === true)
+  const upload = steps.findIndex(step => step.with?.name?.startsWith('first100-vitest-report-') === true)
+
+  it('writes a json report under the observations directory from each e2e step', () => {
+    expect(e2e.length).toBeGreaterThan(0)
+    for (const step of e2e) {
+      expect(step.run).toMatch(/--reporter=json --outputFile=\.artifacts\/first100\/observations\/vitest-e2e-[a-z0-9-]+\.json(?:\s|$)/u)
+    }
+  })
+
+  it('uploads each of those reports beside the full-suite report, after the step that writes it', () => {
+    const uploaded = steps[upload]?.with?.path?.split('\n').map(line => line.trim()) ?? []
+    expect(uploaded).toContain('.artifacts/first100/observations/vitest-report.json')
+    for (const step of e2e) {
+      expect(uploaded).toContain(/--outputFile=(\S+)/u.exec(step.run ?? '')?.[1])
+      expect(steps.indexOf(step)).toBeLessThan(upload)
+    }
   })
 })

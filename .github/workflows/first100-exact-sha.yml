@@ -381,14 +381,6 @@ jobs:
           cp "$src" "$d/"
           node scripts/first100/verify-freeze-case-uniqueness.mjs --report "$d/vitest-report.json" --candidate-sha ${{ steps.resolve-sha.outputs.sha }}
 
-      - name: Upload the vitest observation report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: first100-vitest-report-${{ steps.resolve-sha.outputs.sha }}
-          path: .artifacts/first100/observations/vitest-report.json
-          if-no-files-found: error
-
       # BLOCKED-275(b). `release:verify` runs for real elsewhere in this
       # repository (`release.yml:146`, `release-publish.yml:58`,
       # `docs-pages.yml:65`, all `--family dsh`) but has never run against a
@@ -505,9 +497,17 @@ jobs:
         # does not show is not an observation. `vitest.e2e.config.ts` sets
         # `retry: 2`, so a failing case runs three times before the step
         # settles.
+        #
+        # The json reporter writes this step's report beside the full-suite
+        # one, and the observation upload after the e2e steps carries it. The
+        # full-suite run uses the default config, which includes no `*.e2e.ts`
+        # file, so an entry frozen under `vitest.e2e.config.ts` is observed by
+        # its e2e step's report alone. `default` keeps the log readable, as in
+        # the suite step.
         run: |
           pnpm exec vitest run --config vitest.e2e.config.ts \
-            apps/cli/tests/profiles/sdk/keyless-smoke.e2e.ts
+            apps/cli/tests/profiles/sdk/keyless-smoke.e2e.ts \
+            --reporter=json --outputFile=.artifacts/first100/observations/vitest-e2e-sdk-keyless-smoke.json --reporter=default
 
       - name: BLOCKED-291 — the ACP launcher's own identity attribution
         if: always()
@@ -541,9 +541,30 @@ jobs:
         # type error that stopped `tsc -b` before any launcher booted. That is
         # what makes this green an observation of the fix and not of a case
         # written to pass.
+        #
+        # Its json report goes beside the full-suite one for the reason the
+        # step above gives. P4-05.U.4's frozen argv is this step's command
+        # without the two reporters.
         run: |
           pnpm exec vitest run --config vitest.e2e.config.ts \
-            apps/cli/tests/profiles/acp/tests/acp.e2e.ts
+            apps/cli/tests/profiles/acp/tests/acp.e2e.ts \
+            --reporter=json --outputFile=.artifacts/first100/observations/vitest-e2e-acp.json --reporter=default
+
+      # After the e2e steps, so the artifact carries their reports beside the
+      # full-suite one. `if-no-files-found` applies to the paths together, so
+      # one missing report does not fail this step: an e2e step whose report
+      # is missing has failed on its own, and the uniqueness step above fails
+      # when the full-suite report is missing.
+      - name: Upload the vitest observation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: first100-vitest-report-${{ steps.resolve-sha.outputs.sha }}
+          path: |
+            .artifacts/first100/observations/vitest-report.json
+            .artifacts/first100/observations/vitest-e2e-sdk-keyless-smoke.json
+            .artifacts/first100/observations/vitest-e2e-acp.json
+          if-no-files-found: error
 
       - name: Publication and package hygiene
         if: always()
