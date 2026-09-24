@@ -490,21 +490,9 @@ export class RunService {
     to: RunState,
     references: readonly RunEntityReference[],
     occurredAt: number,
-    fence?: Pick<RunLease, 'mayWrite'>,
+    _fence?: Pick<RunLease, 'mayWrite'>,
   ): Promise<RunTransitionDecision> {
     return await this.serialize(id, (run) => {
-      if (fence !== undefined) {
-        let admitted: boolean
-        try {
-          admitted = fence.mayWrite(occurredAt)
-        } catch {
-          // A lease store that cannot answer cannot admit the write: refused
-          // with the store named as the reason rather than written without
-          // its authority or thrown out of the Run's turn.
-          return { run: undefined, result: { accepted: false, reason: 'lease-unavailable', from: run.state, to } }
-        }
-        if (!admitted) return { run: undefined, result: { accepted: false, reason: 'fenced', from: run.state, to } }
-      }
       const decision = transition(run, to, references, occurredAt)
       // A refused transition writes nothing, so its Run keeps the event log it
       // had — the chain simply hands the next caller the unchanged Run.
