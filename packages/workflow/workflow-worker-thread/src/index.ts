@@ -420,7 +420,7 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       // prompt naming `{{cwd}}` has no value without it.
       meta: {
         parentSession: request.parent.id,
-        ...request.parent.session.header.cwd === undefined ? {} : { cwd: request.parent.session.header.cwd },
+        cwd: process.cwd(),
       },
       // The launcher's LLM route, inherited the same way a delegated child
       // inherits it. Without this the run holds an agent with no route and
