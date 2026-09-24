@@ -220,9 +220,24 @@
         {
           "stage": "U",
           "title": "denies and rejects by default -- no concrete policy/attestation provider exists yet (spec/trust-kernel.md acceptance clause 2)"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "Trust Kernel runtime module src/index.ts (Epic P0-02 acceptance[1]) authors no model-facing text: src/ holds only index.ts and types.ts, and every string literal in src/index.ts is a service key, an algorithm id, a verdict or a caller-facing error, and the list is complete"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "Trust Kernel runtime module src/index.ts (Epic P0-02 acceptance[1]) imports only node:crypto, @deepseek-ai/cordis and its own types, and exports no Cordis plugin entry"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P0-02 acceptance[1] -- real dsh --profile headless launch sends the model none of the prose string literals of the Trust Kernel runtime module while the kernel is pinned, across a turn whose read tool call ran"
         }
       ],
-      "note": "acceptance[1]: 'Kernel API 无模型可见文本、无业务领域逻辑、无具体 provider 实现' (the kernel API carries no model-visible text, no business-domain logic, no concrete provider implementation). No-business-domain-field proven at the 3 opaque-payload members (C-stage); no-concrete-provider proven by the deny/reject/no-op defaults (U-stage, createTrustKernel); no-model-visible-text is structural (the 6 capability members carry no prompt/schema text at all, per spec/trust-kernel.md acceptance clause 2, and the package's own README Model Experience section states zero direct token/KV-cache effect)."
+      "note": "acceptance[1]: 'Kernel API 无模型可见文本、无业务领域逻辑、无具体 provider 实现' (the kernel API carries no model-visible text, no business-domain logic, no concrete provider implementation). No-business-domain-field proven at the 3 opaque-payload members (C-stage); no-concrete-provider proven by the deny/reject/no-op defaults (U-stage, createTrustKernel); no-model-visible-text is structural (the 6 capability members carry no prompt/schema text at all, per spec/trust-kernel.md acceptance clause 2, and the package's own README Model Experience section states zero direct token/KV-cache effect).\n\n[2026-09-24 lane A, A-347: the model-visible-text half. M1-a and M1-b (`packages/kernel/trust-kernel/tests/runtime-surface.spec.ts`) read the kernel's runtime module: `src/` holds only index.ts and types.ts, every string literal in index.ts is a service key, an algorithm id, a verdict or a caller-facing error, and the module imports only `node:crypto`, `@deepseek-ai/cordis` and its own types and exports no Cordis plugin entry. M2 (`apps/cli/tests/trust-kernel-model-input.spec.ts`) is a real `dsh --profile headless` launch with the kernel pinned and one `read` tool call: no recorded model input contains any prose literal of the module. The kernel's only prose literals are its caller-facing error messages, which nobody raises on the shipped path, so that assertion observes an absence the shipped product never tests (S4). Mutations MM1 (a prose literal), MM2 (a `node:fs` import) and MM3 (an `apply` export) each reddened exactly the predicted M1 case; MW3 (no kernel) reddened M2 through its pinned-kernel assertion (command-freeze P0-02 U.1).]"
     },
     {
       "epic": "P0-02",
@@ -231,9 +246,34 @@
         {
           "stage": "U",
           "title": "fails closed (throws, never warns) when uninitialized without the insecure opt-in"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P0-02 acceptance[2] -- in-process launch of each factory profile refuses to boot the factory acp profile in-process when the Trust Kernel fails to pin and DSH_TRUST_KERNEL_INSECURE is unset, before any config-tree entry mounts"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P0-02 acceptance[2] -- in-process launch of each factory profile refuses to boot the factory web profile in-process when the Trust Kernel fails to pin and DSH_TRUST_KERNEL_INSECURE is unset, before any config-tree entry mounts"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P0-02 acceptance[2] -- in-process launch of each factory profile refuses to boot the factory headless profile in-process when the Trust Kernel fails to pin and DSH_TRUST_KERNEL_INSECURE is unset, before any config-tree entry mounts"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P0-02 acceptance[2] -- in-process launch of each factory profile refuses to boot the factory sdk profile in-process when the Trust Kernel fails to pin and DSH_TRUST_KERNEL_INSECURE is unset, before any config-tree entry mounts"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P0-02 acceptance[2] -- in-process launch of each factory profile refuses to boot the factory sdk-minimal profile in-process when the Trust Kernel fails to pin and DSH_TRUST_KERNEL_INSECURE is unset, before any config-tree entry mounts"
         }
       ],
-      "note": "acceptance[2]: '未初始化 kernel 时，生产 profile 必须 fail closed' (an uninitialized kernel must fail closed in a production profile). APPENDED 2026-09-11 (lane B, delegate-approved; original note unchanged above): '生产 profile' has no referent in this tree. PROFILE_TEMPLATES (packages/boot/app-boot/src/profile.ts:154) ships five profiles carrying a bundle list and a patchReload mode and no production/development attribute, and enforceTrustKernelPosture (apps/cli/src/profile-boot.ts:307) takes no profile argument -- runProfile never passes options.profile into the decision. The posture is decided by the DSH_TRUST_KERNEL_INSECURE environment opt-in standing in for the profile kind, so the frozen cases prove 'a boot without the opt-in fails closed' rather than the clause's literal 'a production profile fails closed'. Bounded, and why no change is proposed: enforceAction (packages/policy/policy-enforcement/src/index.ts:165-168) THROWS when no kernel is pinned, so the boot does not fail closed but enforcement does. Consequence to know: DSH_TRUST_KERNEL_INSECURE=1 dsh --profile web boots with no kernel. See spec/first100/exec/evidence-P0-02.md."
+      "note": "acceptance[2]: '未初始化 kernel 时，生产 profile 必须 fail closed' (an uninitialized kernel must fail closed in a production profile). APPENDED 2026-09-11 (lane B, delegate-approved; original note unchanged above): '生产 profile' has no referent in this tree. PROFILE_TEMPLATES (packages/boot/app-boot/src/profile.ts:154) ships five profiles carrying a bundle list and a patchReload mode and no production/development attribute, and enforceTrustKernelPosture (apps/cli/src/profile-boot.ts:307) takes no profile argument -- runProfile never passes options.profile into the decision. The posture is decided by the DSH_TRUST_KERNEL_INSECURE environment opt-in standing in for the profile kind, so the frozen cases prove 'a boot without the opt-in fails closed' rather than the clause's literal 'a production profile fails closed'. Bounded, and why no change is proposed: enforceAction (packages/policy/policy-enforcement/src/index.ts:165-168) THROWS when no kernel is pinned, so the boot does not fail closed but enforcement does. Consequence to know: DSH_TRUST_KERNEL_INSECURE=1 dsh --profile web boots with no kernel. See spec/first100/exec/evidence-P0-02.md.\n\n[2026-09-24 lane A, A-347: the five `supplementSeq: 1` citations launch each shipped template in-process through `runProfile` with `pinTrustKernel` replaced by a spy that pins nothing and the opt-in unset: every launch refuses in the prepare hook, before any config-tree entry mounts. Nobody reaches an unpinned kernel on the shipped path, because `createTrustKernel` is pure and cannot fail, so the fault is injected (S4). MF1, MF2, MW3 and MF3 each reddened all five (command-freeze P0-02 U.1). The user chose the literal reading (ii′) for \"生产 profile\": only an explicit development profile accepts `DSH_TRUST_KERNEL_INSECURE`; that change is part 2 and is not evidenced here.]"
     },
     {
       "epic": "P0-02",
@@ -254,9 +294,14 @@
         {
           "stage": "U",
           "title": "defaults to a stderr write when no warn sink is supplied"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P0-02 acceptance[3] -- real dsh --profile headless launch boots with no insecure-boot warning when DSH_TRUST_KERNEL_INSECURE is empty -- the kernel is pinned, so the posture check passes silently"
         }
       ],
-      "note": "acceptance[3]: '开发 profile 可显式启用 insecure 模式并显示永久警告' (a development profile may explicitly enable an insecure mode, displaying a permanent warning). The DSH_TRUST_KERNEL_INSECURE opt-in resolver (stays opted out by default, opts in on any non-empty value) plus the permanent (not one-time) warning behavior are both proven directly. APPENDED 2026-09-11 (lane B, delegate-approved; original note unchanged above): '开发 profile' has no referent in this tree, by the same measurement recorded on acceptance[2] -- no profile carries a production/development attribute and enforceTrustKernelPosture takes no profile argument. The insecure opt-in and its permanent warning are therefore available to EVERY profile, not to development profiles specifically: DSH_TRUST_KERNEL_INSECURE=1 dsh --profile web boots with no kernel and prints the warning. The warning half of this clause is met literally (it is emitted on every boot while the opt-in is set, not once); the profile half is met by substitution. Bounded by enforceAction throwing without a pinned kernel (policy-enforcement/src/index.ts:165-168). See spec/first100/exec/evidence-P0-02.md."
+      "note": "acceptance[3]: '开发 profile 可显式启用 insecure 模式并显示永久警告' (a development profile may explicitly enable an insecure mode, displaying a permanent warning). The DSH_TRUST_KERNEL_INSECURE opt-in resolver (stays opted out by default, opts in on any non-empty value) plus the permanent (not one-time) warning behavior are both proven directly. APPENDED 2026-09-11 (lane B, delegate-approved; original note unchanged above): '开发 profile' has no referent in this tree, by the same measurement recorded on acceptance[2] -- no profile carries a production/development attribute and enforceTrustKernelPosture takes no profile argument. The insecure opt-in and its permanent warning are therefore available to EVERY profile, not to development profiles specifically: DSH_TRUST_KERNEL_INSECURE=1 dsh --profile web boots with no kernel and prints the warning. The warning half of this clause is met literally (it is emitted on every boot while the opt-in is set, not once); the profile half is met by substitution. Bounded by enforceAction throwing without a pinned kernel (policy-enforcement/src/index.ts:165-168). See spec/first100/exec/evidence-P0-02.md.\n\n[2026-09-24 lane A, A-347: the `supplementSeq: 1` citation is a real `dsh --profile headless` launch with `DSH_TRUST_KERNEL_INSECURE` empty: the kernel is pinned and no insecure-boot warning is printed (MW3 reddened it). It covers the side without the opt-in. The development profile that enables insecure mode with a permanent warning is part 2 (W1, on the explicit development profile of P1-02's workorder) and is not evidenced here.]"
     },
     {
       "epic": "P0-03",
