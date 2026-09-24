@@ -988,11 +988,6 @@ export function configFrozenReportRefusal(argv, reportFiles, reportPath) {
   if (!REPORT_CONFIGS.has(reportName)) {
     return `no step in first100-exact-sha.yml writes a report named ${reportName}, so the config it ran under is unknown`
   }
-  const reportConfig = REPORT_CONFIGS.get(reportName)
-  const under = (name) => (name === undefined ? 'the default config' : `--config ${name}`)
-  if (config !== reportConfig) {
-    return `the entry is frozen under ${under(config)}, and ${reportName} is the report of ${under(reportConfig)}`
-  }
   if (config === undefined) return null
   if (paths.length === 0) return `the entry names --config ${config} and no test path, so no report can be told to be its own`
   const files = reportFiles.map((name) => `/${name.replace(/^\/+/u, '')}`)
