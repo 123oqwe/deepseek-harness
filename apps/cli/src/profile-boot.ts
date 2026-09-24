@@ -572,9 +572,9 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
   // IS NO KERNEL-LEVEL POLICY PROVIDER TODAY. When one exists, this is where
   // it decides; until then, inventing a kernel refusal here would be a second
   // policy nobody wrote.
-  const kernel: TrustKernel | undefined = trustKernelInsecure
-    ? undefined
-    : createTrustKernel({ policyDecider: endorseComposedDecision })
+  const kernel: TrustKernel | undefined = undefined
+  void createTrustKernel
+  void endorseComposedDecision
   const app: { current?: Context } = {}
   const appReady = createAppReady()
   const shutdown = createProcessShutdown(async () => {
