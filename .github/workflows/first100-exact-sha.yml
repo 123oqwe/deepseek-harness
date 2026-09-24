@@ -520,6 +520,18 @@ jobs:
             apps/cli/tests/profiles/acp/tests/acp.e2e.ts \
             --reporter=json --outputFile=.artifacts/first100/observations/vitest-e2e-acp.json --reporter=default
 
+      - name: Workflow runs on shipped launches — a detached run (BLOCKED-323, BLOCKED-324) and a resumed one (P4-08)
+        # Keyless: stand-in models answer every request. Each frozen entry
+        # (P2-01.U.2, P2-01.U.3, and P4-08's resume case) is this step's
+        # command for its one file, without the two reporters; this report is
+        # their observation, for the reason the sdk step above gives.
+        run: |
+          pnpm exec vitest run --config vitest.e2e.config.ts \
+            apps/cli/tests/profiles/headless/tests/detached-workflow-exit.e2e.ts \
+            apps/cli/tests/profiles/headless/tests/detached-workflow-cwd.e2e.ts \
+            apps/cli/tests/profiles/acp/tests/workflow-resume.e2e.ts \
+            --reporter=json --outputFile=.artifacts/first100/observations/vitest-e2e-workflow.json --reporter=default
+
       - name: Publication and package hygiene
         if: always()
         # BLOCKED-210. Fifteen gates this program never saw. `pnpm run hygiene`
@@ -681,6 +693,7 @@ jobs:
             .artifacts/first100/observations/vitest-report.json
             .artifacts/first100/observations/vitest-e2e-sdk-keyless-smoke.json
             .artifacts/first100/observations/vitest-e2e-acp.json
+            .artifacts/first100/observations/vitest-e2e-workflow.json
             .artifacts/first100/observations/vitest-snapshot.json
           if-no-files-found: error
 
@@ -701,6 +714,7 @@ jobs:
           pnpm run first100:verify-frozen-titles-in-tree \
             --e2e-report .artifacts/first100/observations/vitest-e2e-sdk-keyless-smoke.json \
             --e2e-report .artifacts/first100/observations/vitest-e2e-acp.json \
+            --e2e-report .artifacts/first100/observations/vitest-e2e-workflow.json \
             --e2e-report .artifacts/first100/observations/vitest-snapshot.json
 
       - name: Frozen case strings are unique across the whole suite
@@ -728,6 +742,7 @@ jobs:
           node scripts/first100/verify-freeze-case-uniqueness.mjs --report "$d/vitest-report.json" \
             --e2e-report "$d/vitest-e2e-sdk-keyless-smoke.json" \
             --e2e-report "$d/vitest-e2e-acp.json" \
+            --e2e-report "$d/vitest-e2e-workflow.json" \
             --e2e-report "$d/vitest-snapshot.json" \
             --candidate-sha ${{ steps.resolve-sha.outputs.sha }}
 
@@ -1218,6 +1233,7 @@ jobs:
           node scripts/first100/attest.ts --sign .artifacts/first100/observations/vitest-report.json
           node scripts/first100/attest.ts --sign .artifacts/first100/observations/vitest-e2e-sdk-keyless-smoke.json
           node scripts/first100/attest.ts --sign .artifacts/first100/observations/vitest-e2e-acp.json
+          node scripts/first100/attest.ts --sign .artifacts/first100/observations/vitest-e2e-workflow.json
           node scripts/first100/attest.ts --sign .artifacts/first100/observations/vitest-snapshot.json
 
       # Real, honest evidence for R0 exit gate item 4 (runnerDryReceipt):
