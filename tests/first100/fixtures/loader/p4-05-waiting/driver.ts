@@ -17,6 +17,9 @@
  * With `expired` as its second argument it also layers
  * `./token-expired.patch.yml`, whose session token expires as soon as it is
  * issued (BLOCKED-330's case, `../../P2-02.token-refusal-before-ask.composition.spec.ts`).
+ * With `expired-ptc` it runs in code mode (`DSH_TOOLS_MODE=ptc`) with
+ * `./token-short.patch.yml` instead, so the tool call is made from a
+ * `run_code` program after the token has expired (BLOCKED-330's code-mode case).
  *
  * It prints one `P4-05-WAIT <json>` line; the spec beside it judges.
  * @module tests/first100/fixtures/loader/p4-05-waiting/driver
@@ -30,7 +33,7 @@ import { HOST_USER_IDENTITY_KEY, type HostUserIdentityFactory } from '@deepseek-
 import { resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
 import { runFixtureTurn } from '@deepseek-ai/dsh-loader-smoke'
 import { endorseComposedDecision } from '@deepseek-ai/dsh-policy-enforcement'
-import { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
+import { defineContentToolFixture, RUN_CODE_NAME } from '@deepseek-ai/dsh-tools'
 import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
 import type {} from '@deepseek-ai/dsh-user-approval'
 import { createFixtureRootAgent } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts'
@@ -40,10 +43,11 @@ import type { AdapterGlobal } from './shared.ts'
 
 const overlay = fileURLToPath(new URL('./base.patch.yml', import.meta.url))
 const tokenExpired = fileURLToPath(new URL('./token-expired.patch.yml', import.meta.url))
+const tokenShort = fileURLToPath(new URL('./token-short.patch.yml', import.meta.url))
 
-/** `expired` layers the expiring-token overlay; absent, the P4-05 cases run. */
+/** `expired` and `expired-ptc` select BLOCKED-330's cases; absent, the P4-05 cases run. */
 const mode = process.argv[3]
-if (mode !== undefined && mode !== 'expired') throw new Error(`p4-05 waiting driver: unknown mode ${mode}`)
+if (mode !== undefined && mode !== 'expired' && mode !== 'expired-ptc') throw new Error(`p4-05 waiting driver: unknown mode ${mode}`)
 
 /** How long the operator withholds its answer. */
 const HOLD_MS = 1_000
@@ -82,6 +86,7 @@ interface Report {
   readonly otherQuestions: readonly string[]
   readonly toolRunStates: readonly (string | null)[]
   readonly toolResults: readonly string[]
+  readonly manifestOrigins: readonly { readonly capability: string; readonly origin: string }[]
   readonly riskGated: readonly RiskGated[]
   readonly policyEffects: readonly unknown[]
   readonly final: Reading
@@ -111,6 +116,7 @@ function read(lifecycle: Lifecycle | undefined): Reading {
 }
 
 process.env.DSH_PERMISSION_MODE = 'workspace-write'
+if (mode === 'expired-ptc') process.env.DSH_TOOLS_MODE = 'ptc'
 
 /** Every audit payload the kernel was handed, in order: the policy decisions are read here. */
 const auditEntries: unknown[] = []
@@ -121,6 +127,7 @@ const ctx = await bootProductionProfile({
   overlayPaths: [
     resolveConfigPath(overlay, undefined),
     ...mode === 'expired' ? [resolveConfigPath(tokenExpired, undefined)] : [],
+    ...mode === 'expired-ptc' ? [resolveConfigPath(tokenShort, undefined)] : [],
   ],
   prepare: (prepared) => {
     pinTrustKernel(prepared, createTrustKernel({
@@ -148,10 +155,12 @@ try {
     // The shipped headless profile asks once per session whether to load the
     // untrusted workspace's instruction files (`workspace-trust`). The
     // operator declines it at once, which grants nothing; only the question
-    // about the third-party tool is withheld.
+    // about the third-party tool is withheld. In code mode `run_code` declares
+    // no risk domain tags, so the native gate asks about the program itself;
+    // the operator allows it at once so the program can make the watched call.
     if (request.toolName !== THIRD_PARTY_TOOL) {
       otherQuestions.push(request.toolName)
-      return Promise.resolve('rejected' as const)
+      return Promise.resolve(request.toolName === RUN_CODE_NAME ? 'allowed-once' as const : 'rejected' as const)
     }
     const atAsk = read(request.agent.lifecycle)
     const answer = delay(HOLD_MS).then(() => {
@@ -196,6 +205,8 @@ try {
       event.data.message.content.flatMap(block =>
         block.type === 'tool-result' ? block.content.flatMap(part => part.type === 'text' ? [part.text] : []) : []).join(''),
     ]),
+    manifestOrigins: ctx.sessions.list().flatMap(session => session.snapshotEvents()).flatMap(event =>
+      event.type === 'action/manifest-appended' ? [{ capability: event.data.capability, origin: event.data.origin }] : []),
     riskGated,
     policyEffects: auditEntries.flatMap((payload) => {
       const decision = (payload as { readonly decision?: { readonly effect?: unknown } }).decision

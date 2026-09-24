@@ -1,0 +1,11 @@
+# Layered over `./base.patch.yml` for BLOCKED-330's code-mode case: the
+# shipped `capability-tokens` row with a two-second session-token TTL. The
+# `run_code` call presents the token while it is still valid; the program
+# then waits past the TTL before its one tool call, which presents the same,
+# now expired, token. A patch replaces a row's whole `config`, so the base
+# row's two keys are restated unchanged.
+- id: capability-tokens
+  config:
+    directory: !!js dshHomePath('capability-tokens')
+    requireForTools: true
+    sessionTokenTtlMs: 2000
