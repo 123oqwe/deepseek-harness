@@ -17637,7 +17637,9 @@
         "mutationDescription": "v2 of [336] (blind review 775c25640a T2-5). One new mutation off PRECHECK `e8d3c6e9a9c6a40c5f94e1b29c33e6adf902c9ed`, never merged, run by CI's narrow job at its own SHA with a build first: M-la3 (`2dadd88553c47587f3f832ac3c16e0f22157164b`) appends ` || true` to the verify step's run in `release-publish.yml`, which v1 could not tell from the bare command. The assertions v1 already had are carried into v2 unchanged, and their mutations stay on record in [336]: V5 (`41561a19dd`, continue-on-error on the verify step), V5b (`02a65fcf31`, verify moved above a collect step) and V5c (`c8ea333b10`, publish.needs: pack deleted).",
         "failureSummary": "Baseline: PRECHECK e8d3c6e9a9, narrow run 36029871510: 7 passed / 0 failed. M-la3, run 36029896789: 6 passed / 1 failed, exactly the release-publish.yml row, on the new assertion ('release-publish.yml: the verify step runs more than the verify command'). Both readings match `artifacts/laneA/p0-07-la3-v2-expectations.md` (sha256 `fad3f56b79a923ce8baabfc26144ee5d997d69ab4f38b9a3bc1f4c0436b19a5b`), written before the case changed; the delegate compared them case by case."
       },
-      "note": "P0-07's second U supplement (LA-4 holds the first): validation[2] and S2, the publish paths. A release workflow cannot be triggered from a test, so the case reads the three real publish workflows with js-yaml (the pipeline-structure assertion BLOCKED-292's closing condition (3) allows). In each: a step runs `evidence:verify --evidence` or `scripts/release/verify-evidence.mjs --evidence` (asserted found first); every step running `collect-evidence.mjs` comes before it (at least one exists); it has neither `if` nor `continue-on-error`, and its whole command is the verify command, so `|| true`, a pipe, a second command or `set +e` cannot let a failed verify pass the step; the `pack` job has no `continue-on-error`; the `actions/upload-artifact` step comes after it and has no `if`; every step between them is `if: always()` and collects nothing; and `jobs.publish.needs` includes `pack`. It observes the workflow files, not a run of them. v2 supersedes [336] after the blind review of 775c25640a (T2-5) found that v1 did not read the step's run."
+      "note": "P0-07's second U supplement (LA-4 holds the first): validation[2] and S2, the publish paths. A release workflow cannot be triggered from a test, so the case reads the three real publish workflows with js-yaml (the pipeline-structure assertion BLOCKED-292's closing condition (3) allows). In each: a step runs `evidence:verify --evidence` or `scripts/release/verify-evidence.mjs --evidence` (asserted found first); every step running `collect-evidence.mjs` comes before it (at least one exists); it has neither `if` nor `continue-on-error`, and its whole command is the verify command, so `|| true`, a pipe, a second command or `set +e` cannot let a failed verify pass the step; the `pack` job has no `continue-on-error`; the `actions/upload-artifact` step comes after it and has no `if`; every step between them is `if: always()` and collects nothing; and `jobs.publish.needs` includes `pack`. It observes the workflow files, not a run of them. v2 supersedes [336] after the blind review of 775c25640a (T2-5) found that v1 did not read the step's run.",
+      "supersededBy": "2026-09-24T21:24:27Z",
+      "supersessionReason": "LA-3 v3 (third blind review F4, A-386): the verify-step rule refuses a path with ||true, ;true, |tee or & glued to it and a shell: override, and accepts only the verify command with one evidence path. The three titles stay and six cases are added, so the entry is replaced under lifecycle 2.1 (delegate, batch 8)."
     },
     {
       "epic": "P0-07",
@@ -18466,6 +18468,52 @@
         "failureSummary": "Lane A's red-first run on the candidate 43b89917a0, dccd2013a5 (run 36043915539): exactly the B1 case red, the subagent's Run carrying the SDK connection's negotiation. X, run 36044889967: 47 of 47 over the run plugin and run-service specs, P8-01's composition and this file. M-B1″, run 36044911552: exactly the B1 case red here (with the three run-plugin B1 cases); both controls and the reachability case green, since the Runs and which of them carry a negotiation do not depend on where the child's comes from. Readings match artifacts/laneA/p8-01-b1-expectations.md (b2f3b8ca…) and artifacts/laneB/p8-01-b1-predictions-v3.md (eeb0b7a5…); the delegate compared them."
       },
       "note": "P8-01 blind review B1 on the shipped sdk and acp profiles (lane A, A-374), acceptance[4]: a session created over the SDK, whose Run carries the handshake's negotiation, is resumed over ACP after the SDK connection shuts down; the resumed session opens a second Run, which carries none, and delegates once. The subagent's Run carries the provenance of its parent agent's current Run, the ACP one, so none; a second SDK launch cannot continue the session the first created. The argv runs the whole file, which holds these four cases."
+    },
+    {
+      "epic": "P0-07",
+      "stage": "U",
+      "supplements": {
+        "epic": "P0-07",
+        "stage": "U"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P0-07.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P0-07 validation[2] -- the publish workflows verify the evidence package before they upload it release-publish.yml verifies the evidence package in a step that runs only the verify command, after every collect step and before the upload its publish job needs",
+        "P0-07 validation[2] -- the publish workflows verify the evidence package before they upload it release-vendor-publish.yml verifies the evidence package in a step that runs only the verify command, after every collect step and before the upload its publish job needs",
+        "P0-07 validation[2] -- the publish workflows verify the evidence package before they upload it node-addon-system-release.yml verifies the evidence package in a step that runs only the verify command, after every collect step and before the upload its publish job needs",
+        "P0-07 validation[2] -- the publish workflows verify the evidence package before they upload it the verify-step rule accepts a step that runs only the verify command",
+        "P0-07 validation[2] -- the publish workflows verify the evidence package before they upload it the verify-step rule refuses a verify step with ||true glued to the path",
+        "P0-07 validation[2] -- the publish workflows verify the evidence package before they upload it the verify-step rule refuses a verify step with ;true glued to the path",
+        "P0-07 validation[2] -- the publish workflows verify the evidence package before they upload it the verify-step rule refuses a verify step with |tee glued to the path",
+        "P0-07 validation[2] -- the publish workflows verify the evidence package before they upload it the verify-step rule refuses a verify step with & glued to the path",
+        "P0-07 validation[2] -- the publish workflows verify the evidence package before they upload it the verify-step rule refuses a verify step with a shell: override"
+      ],
+      "files": [
+        "tests/first100/fixtures/P0-07.composition.spec.ts",
+        ".github/workflows/release-publish.yml",
+        ".github/workflows/release-vendor-publish.yml",
+        ".github/workflows/node-addon-system-release.yml"
+      ],
+      "frozenAtUtc": "2026-09-24T21:24:27Z",
+      "supersedes": "2026-09-24T16:50:41Z",
+      "dryRunProof": {
+        "treeSha": "9de6ba559e5612648878e69d7c6def3a61d5d8ff",
+        "testsDiscovered": 13
+      },
+      "sensitivityProof": {
+        "mutationDescription": "v3 of [379] (delegate A-386: v2's `--evidence \\S+$` took `||true`, `;true`, `|tee` or `&` glued to the path without a space as part of the path). PRECHECK `bc1d5fcf0ce00484780c3c866ddc8680685fc84e` factors the verify-step checks into `verifyStepProblems` with v2's rule and adds six YAML step fragments; FIX `cb46966eaade0db73441ca4fb484507481caf01e` narrows the path to `[\\w./-]+` and refuses a `shell:` on the step. Two mutations off FIX, each changing only `release-publish.yml`, never merged, run by CI's narrow job at their own SHAs with a build first: M-wf-or (`42733369fb3f2e6b6d645eec3a5d83baa54d776f`) appends `||true` to the verify step's run without a space, which v2 accepted; M-wf-shell (`6884a3dd71dd6a0d3c042b01ad89c78071b32db4`) adds `shell: bash {0}` to the verify step. The assertions v2 already had are carried into v3 unchanged, and their mutations stay on record in [379] (M-la3) and [336] (V5, V5b, V5c).",
+        "failureSummary": "PRECHECK bc1d5fcf0c, run 36060142805: 8 passed / 5 failed, exactly the five fragment refusals (||true, ;true, |tee and & glued to the path, and a shell: override); the fragment acceptance and the three real workflows passed. FIX cb46966eaa, run 36060166355: 13 passed / 0 failed. M-wf-or, run 36060190256: 12 passed / 1 failed, exactly the release-publish.yml row ('release-publish.yml: what would let a failed verify pass the step: expected [ 'command' ] to deeply equal []'). M-wf-shell, run 36060211775: 12 passed / 1 failed, exactly the release-publish.yml row (expected [ 'shell' ] to deeply equal []). All four readings match `artifacts/laneA/a-386-la3-v3-expectations.md` (sha256 `958c3084dca7d35abf2cda37b7c77e60ffc540c6ed853f7a5beee4f5b6072f36`), written before the case changed; the delegate compared them case by case."
+      },
+      "note": "P0-07's second U supplement (LA-4 holds the first): validation[2] and S2, the publish paths. A release workflow cannot be triggered from a test, so the case reads the three real publish workflows with js-yaml (the pipeline-structure assertion BLOCKED-292's closing condition (3) allows). In each: a step runs `evidence:verify --evidence` or `scripts/release/verify-evidence.mjs --evidence` (asserted found first); every step running `collect-evidence.mjs` comes before it (at least one exists); `verifyStepProblems` finds nothing on it: no `if`, no `continue-on-error`, no `shell:`, and a whole command that is the verify command followed by one evidence path of word characters, dots, slashes and hyphens, so `|| true`, a pipe, a second command, `set +e`, a suffix glued to the path or a custom shell cannot let a failed verify pass the step; the `pack` job has no `continue-on-error`; the `actions/upload-artifact` step comes after it and has no `if`; every step between them is `if: always()` and collects nothing; and `jobs.publish.needs` includes `pack`. The same `verifyStepProblems` judges six YAML step fragments: it accepts a step that runs only the verify command and refuses `||true`, `;true`, `|tee` or `&` glued to the path and a `shell:` override. It observes the workflow files, not a run of them. v3 supersedes [379] after the delegate (A-386) found that v2 accepted a suffix glued to the evidence path."
     }
   ]
 }
