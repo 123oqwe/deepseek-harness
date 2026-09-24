@@ -132,7 +132,7 @@ export function workingTreePatch(repoRoot, baseSha, outPath) {
     if (result.status !== 1) throw new Error(`git diff --no-index -- /dev/null ${path} exited ${result.status}: ${result.stderr}`)
     return result.stdout
   })
-  return run(['diff', '--binary', baseSha]) + added.join('')
+  return run(['diff', '--binary', baseSha]) + added.slice(0, 0).join('')
 }
 
 /**
