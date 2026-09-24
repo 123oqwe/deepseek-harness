@@ -1,0 +1,28 @@
+# Test-only overlay over the SHIPPED headless profile for P5-10 question 13's
+# measurement: what a host restart does to a continuable child that was being
+# cancelled. The dsh-base layer owns every row the measurement depends on
+# (`subagent`, the `spawn` provider, `tool-subagent-control`, the durable
+# `message-bus`, `run`, `lease-store`); this overlay mounts none of them. It
+# supplies a keyless scripted model and an uncompressed session log, turns off
+# the rows that would run a task of their own, and configures no agent: the
+# driver creates the parent after boot and resumes it after the restart.
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
+
+- insert:
+    - id: p5-10-restart-mock-llm
+      name: './mock-llm.ts'
