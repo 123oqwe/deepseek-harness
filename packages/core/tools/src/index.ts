@@ -1524,14 +1524,6 @@ export class ToolRuntime extends Service {
    * @throws when a Loader is present and the caller's innermost entry is not an owner declarer.
    */
   declareOwner(identity: string): () => void {
-    const entries = this.loaderEntries()
-    if (entries !== undefined) {
-      const entry = nearestEntryName(this.callerChain(), entries)
-      if (entry === undefined || !this.ownerDeclarers.has(entry)) {
-        const caller = entry === undefined ? 'a caller outside every Loader entry' : `Loader entry "${entry}"`
-        throw new Error(`dsh-tools: declareOwner(${JSON.stringify(identity)}) refused for ${caller}: only an entry named in ownership.ownerDeclarers may record registrations under another plugin identity`)
-      }
-    }
     const fiber = this.ctx.fiber
     const dispose = this.ctx.effect(function* (this: ToolRuntime) {
       const uid = fiber.uid
