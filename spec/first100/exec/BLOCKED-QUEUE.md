@@ -8700,6 +8700,8 @@ Sign-offs: PASS 2026-09-13, twice (first100-delegate-78).
 
 **Owner.** lane B, after a lane A preFlight.
 
+*Addendum 2026-09-24 (delegate first100-delegate-1a): the ground, stated precisely.* This entry withdraws P2-06 in the one-time review that acceptance standard v1's S12 names, and the ground is S1. acceptance[0]'s third limb (a file's inode or a remote object's version changing after approval) has no evidence of its subject: the one case compares a string the test writes into the preconditions. The word "contradicted" above is a reading of the code (`packages/core/tools/src/external-effect.ts:444`, `:415-418`). No case has been run red. Under the standard's rule for real defects (WORKING-MODEL §12), that reading becomes an established defect only when the closing condition's case is shown red on today's code.
+
 ### BLOCKED-319 — P4-07: a displaced host still writes the Run's outcome, and a real lease-store failure is swallowed rather than stopping work; the acceptance is withdrawn
 
 **Status:** OPEN (2026-09-24). Owner lane B (implementation), lane A (preFlight). Ruled by the delegate (first100-delegate-1a) under acceptance standard v1 (S1, S8), which the user adopted on 2026-09-24, as part of the one-time review that S12 names. The facts come from lane A's A-307; its search and independent verifier agents agree. The delegate re-read the code at `ce13384481`. The withdrawal moves the ledger row in the same commit that opens this entry.
@@ -8723,3 +8725,13 @@ Sign-offs: PASS 2026-09-13, twice (first100-delegate-78).
 4. Then a fresh 4.4a–d, a PASS sign-off, and `--accept`.
 
 **Owner.** lane B, after a lane A preFlight.
+
+*Addendum 2026-09-24 (delegate first100-delegate-1a): the ground, stated precisely.* This entry withdraws P4-07 in the one-time review that acceptance standard v1's S12 names, and the ground is S1. Two subjects have no evidence:
+- acceptance[0] on the agent's Run path: no case displaces a host and then ends its session;
+- acceptance[2] for a real store failure: only `setAvailable(false)` is observed, and it has no production caller.
+
+The two "contradicted" findings above are readings of the code, and no case has been run red:
+- the session-end path writes the Run's outcome without a token;
+- a listener's error is swallowed, leaving the agent without a lease.
+
+Under the standard's rule for real defects (WORKING-MODEL §12), they become established defects only when the closing condition's cases are shown red on today's code.
