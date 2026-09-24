@@ -276,3 +276,52 @@ That distinction was put to the user directly, because it changes what the regis
 **不在本次"全批"内**:**P3 wave-8 形状决定**(六形 A–F:已裁 sandbox-srt 引擎 slice 未执行 + P3-06↔P3-08 环)——确认包 D1–D6 不含它、delegate 未给推荐,须另呈(delegate 将带推荐再请用户拍)。
 
 **生效**:D2/D3/D4/D6 按推荐、D5=A,进 BASE-ALIGN-v3 slice 规格与重锚执行 DAG;重锚时机仍 delegate 定(候选 11″/12/P4-12/327 已落、P3 wave-8 C 阶段落后、开新 P6/P7 前)。D5=A 使 P1-07 成为 GO 工作项(首次授信流程)。每项落地时按 iron rule(功能不减)+ 4.4a–d 重验。
+
+## C17 (2026-09-24) — 验收标准 v1 冻结、原地修复原则、砍范围 A 档、生产启动姿态(用户直接决定)
+
+**用户原话**
+
+1a 终端,2026-09-24:
+
+> 「全部按建议(含 S12 标准冻结);S11 desktop 暂不算;第 5 条先出砍范围候选名单给我看;第 4 条加 lane 等看完名单再定。」
+
+经巡逻会话 guanjieqiao-e6 转达,2026-09-24:
+
+> 「能在已有代码上改的,就直接在原地改」
+>
+> 「按推荐方式来」
+
+**1. 验收标准 v1(冻结)**
+- 条文是 `channel/WORKING-MODEL.md` §12 的 S1–S13,出自 `channel/DECISION-2026-09-24-withdrawals-and-standard.md` §3。
+- A-274 / A-296 / A-301 / A-307 这一轮清查,算作 S12 所说的一次性复核,止于 BLOCKED-320(P4-08)。
+- 此后只因真缺陷(含安全问题)撤签,真缺陷要先写成用例并跑出红。
+- 门槛只能按用户批准的方式改。
+
+**2. 修复原则**(`channel/WORKING-MODEL.md` §13)
+- BLOCKED 的修复默认走最小的原地改动;大改交用户。
+- 补证用的测试与 fixture 不受限。
+- 功能从来没写过的,才新写,并写明为什么不能原地改。
+
+**3. 范围**
+- 以下 10 个 epic 移出 First-100 的验收范围,代码不删:P1-12、P3-08、P3-09、P5-07、P5-08、P5-09、P8-08、P8-09、P6-04、P6-05。
+- 目标由 116 点改为 106 点:91 个 registry epic,加 9 个 P9、6 个 P10。
+- B 档和要不要加写码 lane,下周看真实吞吐再定。
+- 连带:
+  - P8-10 对 P8-09 的前驱关系,由本记录豁免。
+  - P3-01 acceptance[0] 是否收窄,等用户批准;批准之前按原文。
+
+**4. 生产启动姿态**
+- G1:出厂 profile 默认开启插件 manifest 强制,等第一方 bundle 的 manifest 在真实强制启动下观测为绿之后生效。
+- G1b:给运维一个显式关闭的写法,每次启动都打警告,做法仿照 `DSH_TRUST_KERNEL_INSECURE`。
+- G2:没有签名声明的插件照样可以安装、可以加载。
+- G3:先不公开发布 Sigstore 证明。
+- G4:「不可信」横幅只在显式的开发 profile 里显示。
+
+**5. 其它**
+- P1-03 取方案 2′:锁门只管从 profile 目录解析出来的包,随安装包自带的 bundle 不要求锁。
+- P4-01 按字面实现,不收窄。
+- desktop 暂不算 First-100 的出厂产品(S11)。
+
+**6. 仍待用户决定**
+- P2-05 acceptance[2] 的卸载半:收窄成「卸载后 fail closed」,还是改 Cordis 核心。
+- P3-01 acceptance[0] 的收窄。
