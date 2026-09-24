@@ -16647,6 +16647,137 @@
         "failureSummary": "Base `65e7584472437d56f5f32d3c6d86ee56fd1742c7`, run 36009789273: stop-gate-dispatch.spec.ts 8 of 8. M-g, run 36009813726: exactly the PTC case and the native mid-batch case red, because the displaced host dispatches the calls after the takeover; the control, where the host still holds its Run, and the five P2-12 cases stay green. Both dispatch paths, tool-calls.ts and ptc.ts, reach fencing only through refuseNewAction."
       },
       "note": "P4-07 acceptance[0], the fencing half of BLOCKED-265: a host another host displaced partway through a step dispatches none of the calls it had not started. A PTC program's sub-call after the takeover is refused and the program ends; the rest of a native batch is refused with the same sentence; the call already running is not undone. The control runs the same program to the end while the host still holds its Run. The argv selects the three by their describe title with an escaped -t."
+    },
+    {
+      "epic": "P4-08",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-08",
+        "stage": "U"
+      },
+      "supplementSeq": 6,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-worker-thread/tests/resume-values.spec.ts",
+        "-t",
+        "P4-08 acceptance\\[0\\]: a resumed step is reused only for the call that recorded it",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-08 acceptance[0]: a resumed step is reused only for the call that recorded it control: reuses a recorded step for the same call, so the cases below measure the call identity",
+        "P4-08 acceptance[0]: a resumed step is reused only for the call that recorded it starts the step again when the arguments changed what the call asks",
+        "P4-08 acceptance[0]: a resumed step is reused only for the call that recorded it does not hand one call another call's result when completion order decided the step numbers",
+        "P4-08 acceptance[0]: a resumed step is reused only for the call that recorded it starts the step again on a host resume whose arguments changed what the call asks"
+      ],
+      "files": [
+        "packages/workflow/workflow-worker-thread/tests/resume-values.spec.ts",
+        "packages/workflow/workflow-worker-thread/src/runtime.ts",
+        "packages/workflow/workflow-worker-thread/src/session.ts",
+        "packages/workflow/workflow-worker-thread/src/protocol.ts",
+        "packages/workflow/workflow-worker-thread/src/types.ts",
+        "packages/workflow/workflow-worker-thread/src/host.ts",
+        "packages/workflow/workflow-worker-thread/src/index.ts",
+        "packages/workflow/workflow-worker-thread/src/resume.ts",
+        "packages/collaboration/workflow-journal/src/recorder.ts",
+        "packages/collaboration/workflow-journal/src/observer.ts",
+        "packages/collaboration/workflow-journal/src/types.ts",
+        "packages/collaboration/workflow-journal/src/index.ts",
+        ".agents/notes/implemented/bug-fix/2026-09-24-workflow-resume-returns-real-outputs-and-reports-a-refusal.md",
+        ".agents/notes/implemented/bug-fix/2026-09-24-workflow-resume-returns-real-outputs-and-reports-a-refusal.zh.md"
+      ],
+      "frozenAtUtc": "2026-09-24T15:24:01Z",
+      "dryRunProof": {
+        "treeSha": "28980d5002a23a1d48729c6ebb8f305c22f5b8d2",
+        "testsDiscovered": 4
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations off the fix, never merged, each run with a build first. M-F1 (`2c1c0424ef5bfc84176031861ccd75a00602e318`): runtime.ts reuses a recorded step whenever an identity was recorded, without comparing it. M-F1c (`a5531e63cc97885d7b01b69573472658060db569`): the host hands the worker no call identities, so the worker reuses by step number. M-F1b (`69b89b8dade18ded8e87b1018ff6d21f2e233edf`): the journal records no call identity.",
+        "failureSummary": "PRECHECK and PRECHECK2 (`0e98fb03f4`, `c4c820eca7`) `c4c820eca7`, run 36017273682: the three F1 cases below the control, F3 and F4 red, the control green; `c4c820eca7`, run 36017297698: the e2e F3 case red. The fix `a270565dff`, run 36018750715: 117 of 117 (resume-values, journal-resume, journal-live-run, journal-host, session and the workflow-journal tests); `a270565dff`, run 36018775378: 13 of 13, with a build first. M-F1 `2c1c0424ef`, run 36018805024: exactly the three F1 cases below the control red. M-F1c `a5531e63cc`, run 36018864772: exactly the host case red. M-F1b `69b89b8dad`, run 36018836314: this entry green (the host case expects a restart and gets one); red are the three existing reuse cases it removes the identity from, frozen in U.5 and U.1/U.3. The control is green in every run: it holds the identity constant, so the other three measure the identity alone. All readings match artifacts/laneB/p4-08-f1f3f4-predictions.md (ff372e30…, R1) and its second version p4-08-f1f3f4-predictions-v2.md (8d944604…, R2–R8, the fix rebuilt after 4cb2225db0 failed its build at host.ts:442), each written and hashed before its runs were dispatched; the delegate compared them case by case."
+      },
+      "note": "P4-08 blind review F1 (acceptance[0], validation[2]): a recorded step is reused only for the call that recorded it. The worker computes each agent() call's identity (callDigestOf: SHA-256 of prompt, schema, provider and model), the journal records it as the entry's call, and a resume hands each reusable step's identity to the worker, which starts the step again when the identities differ. Cases: the same call reuses its step (control); changed arguments start it again; in a pipeline whose step numbers were decided by completion order, one call is not handed another call's result; and through the host, a resume whose args changed what the call asks starts the step again. The argv selects the describe by its escaped title in -t."
+    },
+    {
+      "epic": "P4-08",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-08",
+        "stage": "U"
+      },
+      "supplementSeq": 7,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-worker-thread/tests/journal-resume.spec.ts",
+        "-t",
+        "moves the refused journal aside, so the new run's first write cannot overwrite it|writes the journal directory with mode 0700 and the journal file with mode 0600",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-08 acceptance[2]: a refused resume keeps the journal it refused moves the refused journal aside, so the new run's first write cannot overwrite it",
+        "P4-08: a journal, which holds children's outputs, is readable by its owner only writes the journal directory with mode 0700 and the journal file with mode 0600"
+      ],
+      "files": [
+        "packages/workflow/workflow-worker-thread/tests/journal-resume.spec.ts",
+        "packages/workflow/workflow-worker-thread/src/resume.ts",
+        "packages/collaboration/workflow-journal/src/store.ts",
+        "packages/collaboration/workflow-journal/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T15:24:01Z",
+      "dryRunProof": {
+        "treeSha": "28980d5002a23a1d48729c6ebb8f305c22f5b8d2",
+        "testsDiscovered": 2
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations off the fix, never merged. M-F3 (`c241a358e57b55c43dd559eacca45e84fea866c1`): resume.ts no longer moves a refused journal aside. M-F4a (`daa8448dbf513c2989b0fdb71fd1e2c54d26061b`): the journal directory is created without mode 0700. M-F4b (`4e871254696ebbc510f92d22c21ab2964af3b6a5`): the journal file is written without mode 0600.",
+        "failureSummary": "PRECHECK and PRECHECK2 (`0e98fb03f4`, `c4c820eca7`) `c4c820eca7`, run 36017273682: the three F1 cases below the control, F3 and F4 red, the control green; `c4c820eca7`, run 36017297698: the e2e F3 case red. The fix `a270565dff`, run 36018750715: 117 of 117 (resume-values, journal-resume, journal-live-run, journal-host, session and the workflow-journal tests); `a270565dff`, run 36018775378: 13 of 13, with a build first. M-F3 `c241a358e5`, run 36018892085: exactly F3 red. M-F4a `daa8448dbf`, run 36018943342 and M-F4b `4e87125469`, run 36018970806: each exactly F4 red (a runner umask of 022 gives 0755 and 0644). All readings match artifacts/laneB/p4-08-f1f3f4-predictions.md (ff372e30…, R1) and its second version p4-08-f1f3f4-predictions-v2.md (8d944604…, R2–R8, the fix rebuilt after 4cb2225db0 failed its build at host.ts:442), each written and hashed before its runs were dispatched; the delegate compared them case by case."
+      },
+      "note": "P4-08 blind review F3 (acceptance[2]) and F4: a resume refused for a changed script moves the journal to refused/<runId>.<first 12 hex of its script digest>.json before the restarted run first writes, so the interrupted run's record survives; the journal directory is created 0700 and each journal file written 0600, as a session log is. The argv selects the two by title with an escaped alternation in -t."
+    },
+    {
+      "epic": "P4-08",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-08",
+        "stage": "U"
+      },
+      "supplementSeq": 8,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "vitest.e2e.config.ts",
+        "apps/cli/tests/profiles/acp/tests/workflow-resume.e2e.ts",
+        "-t",
+        "the refused journal is kept: the interrupted run's record survives under its old digest"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-08 acceptance[1]: a changed script is refused visibly and restarted by a restarted acp host (no key required) the refused journal is kept: the interrupted run's record survives under its old digest"
+      ],
+      "files": [
+        "apps/cli/tests/profiles/acp/tests/workflow-resume.e2e.ts",
+        "packages/workflow/workflow-worker-thread/src/resume.ts",
+        "packages/collaboration/workflow-journal/src/store.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T15:24:01Z",
+      "dryRunProof": {
+        "treeSha": "28980d5002a23a1d48729c6ebb8f305c22f5b8d2",
+        "testsDiscovered": 1
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-F3 (`c241a358e57b55c43dd559eacca45e84fea866c1`, off the fix, never merged, run with a build first): resume.ts no longer moves a refused journal aside.",
+        "failureSummary": "PRECHECK and PRECHECK2 (`0e98fb03f4`, `c4c820eca7`) `c4c820eca7`, run 36017273682: the three F1 cases below the control, F3 and F4 red, the control green; `c4c820eca7`, run 36017297698: the e2e F3 case red. The fix `a270565dff`, run 36018750715: 117 of 117 (resume-values, journal-resume, journal-live-run, journal-host, session and the workflow-journal tests); `a270565dff`, run 36018775378: 13 of 13, with a build first. M-F3 `c241a358e5`, run 36018914253: exactly this case red; the restart case beside it stays green, because the overwritten top-level journal is the state it asserts. All readings match artifacts/laneB/p4-08-f1f3f4-predictions.md (ff372e30…, R1) and its second version p4-08-f1f3f4-predictions-v2.md (8d944604…, R2–R8, the fix rebuilt after 4cb2225db0 failed its build at host.ts:442), each written and hashed before its runs were dispatched; the delegate compared them case by case."
+      },
+      "note": "P4-08 blind review F3 on the shipped acp launch (acceptance[1], acceptance[2]): after a host is killed at K2 and a restarted host resumes with a changed script, the refused journal is kept under refused/ with the interrupted run's digest and stands at the kill point, while the restarted run writes its own journal under the same id. Frozen under vitest.e2e.config.ts, observed by the workflow step's own report (vitest-e2e-workflow.json), as U.4 [352]."
     }
   ]
 }
