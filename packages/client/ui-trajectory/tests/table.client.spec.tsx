@@ -65,11 +65,14 @@ function TrajectoryTable(
   )
 }
 
-afterEach(() => {
+/** Unmount what a case rendered and undo its stubs; runs after every case. */
+function tearDownTable(): void {
   cleanup()
   vi.restoreAllMocks()
   Reflect.deleteProperty(HTMLElement.prototype, 'scrollTo')
-})
+}
+
+afterEach(tearDownTable)
 
 const TURNS: readonly TrajectoryTurnModel[] = [{
   turn: 1,
@@ -1145,5 +1148,32 @@ describe('TrajectoryTable', () => {
 
     expect(screen.getByRole('row', { name: /TOOL/ }).getAttribute('aria-selected')).toBe('false')
     expect(onInspectApplied).not.toHaveBeenCalled()
+  })
+})
+
+describe('BLOCKED-327: nothing a case starts outlives the test environment', () => {
+  it('a scrolled table leaves no timer to run once the environment is gone', () => {
+    // Fake timers let this case run the virtualizer's pending scroll-end timer
+    // on demand, instead of racing the environment's teardown for it.
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    try {
+      // hasOlderRecords turns the virtualizer on, which scrolls the pane on mount.
+      Object.defineProperty(HTMLElement.prototype, 'scrollTo', { configurable: true, value: vi.fn() })
+      render(<TrajectoryTable turns={TURNS} {...FOLD_PROPS} hasOlderRecords />)
+      fireEvent.scroll(screen.getByRole('table').parentElement as HTMLElement)
+      tearDownTable()
+
+      // After this file, the environment removes `window`; a timer still
+      // pending then runs without it (run 36001656822).
+      const environmentWindow = globalThis.window
+      Reflect.deleteProperty(globalThis, 'window')
+      try {
+        expect(() => { vi.runOnlyPendingTimers() }).not.toThrow()
+      } finally {
+        globalThis.window = environmentWindow
+      }
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })
