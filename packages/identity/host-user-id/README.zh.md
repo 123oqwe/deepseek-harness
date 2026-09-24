@@ -128,9 +128,9 @@ const id = getOrCreateHostUserId() // stable for the process lifetime
 
 本开发备注是面向维护者的工作上下文：尚未决定的开放问题。已出货行为与被接受的理由在上方各节。
 
-#### 开放：哪些 root 附着
+#### 开放：webhook ingress 附着哪个身份
 
-出货启动为本机宿主用户真正驱动的那一族 launcher 附着这个 id。ACP、SDK server 与 webhook ingress 刻意不附着：一个经由 socket 到达的请求不是本机的宿主用户，在那里附着会让远端调用方冒称他。那几条路径是否要有自己的身份、来自何处，不在这里裁定。
+出货启动为本机宿主用户开启的每个根会话附着这个 id。headless launcher 与 Web 应用的会话控制器直接在 `AgentOptions` 里传入它；ACP 与 SDK server 为自己组合的每个会话调用 launcher 提供的 `HOST_USER_IDENTITY_KEY` 工厂（`@deepseek-ai/dsh-agent-loop`），因为二者都是本机用户拉起的 stdio 服务器。webhook ingress 不附着任何身份，因为它的请求来自远端发送方，而不是本机的用户。那条路径是否要有自己的身份、来自何处，不在这里裁定。
 
 #### 开放：home 不可写大概应当出声
 
