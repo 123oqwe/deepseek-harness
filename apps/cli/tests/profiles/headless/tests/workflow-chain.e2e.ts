@@ -103,6 +103,27 @@ function headerOf(log: SessionLog): LoggedHeader {
   return (log.records[0] ?? {}) as LoggedHeader
 }
 
+/** A record type whose payload says how a tool call, a turn or a workflow run ended. */
+const OUTCOME_TYPE = /^(?:tool\/result|turn\/end|workflow\/)/
+
+/**
+ * What each persisted session did, for the failure message of a precondition:
+ * its header, how many records of each type it logged, and the payload of
+ * every outcome record, each cut to 400 characters.
+ * @param logs - the persisted sessions.
+ * @returns one JSON line per session.
+ */
+function diagnosis(logs: readonly SessionLog[]): string {
+  return logs.map((log) => {
+    const types: Record<string, number> = {}
+    for (const record of log.records) types[record.type] = (types[record.type] ?? 0) + 1
+    const outcomes = log.records
+      .filter(record => OUTCOME_TYPE.test(record.type))
+      .map(record => `${record.type} ${JSON.stringify(record.data ?? null).slice(0, 400)}`)
+    return JSON.stringify({ header: headerOf(log), types, outcomes })
+  }).join('\n')
+}
+
 /** The three sessions the launch persisted, read before its home is removed. */
 interface DetachedRunObservation {
   /** Every session log under the launch's harness home. */
@@ -164,7 +185,7 @@ describe('a detached workflow run on dsh --profile headless (no key required)', 
 
     // The action inside the run, attributed to the principal its chain ends in.
     const actions = child.records.filter(record => record.type === 'action/manifest-appended')
-    expect(actions.length).toBeGreaterThan(0)
+    expect(actions.length, `the run's child logged no action; each persisted session:\n${diagnosis(logs)}`).toBeGreaterThan(0)
     expect(actions[0]?.data?.actor).toBe(actionChain.at(-1)?.principal?.id)
 
     // The run's agent acts under its launcher's chain plus one hop: the
