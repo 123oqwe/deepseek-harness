@@ -61,6 +61,12 @@ export default class LeaseStorePlugin extends Service implements LeaseStoreContr
 
   private opened: LeaseStoreContract | undefined
 
+  /** Leases this mount issued that no holder has given back, keyed by item and epoch. */
+  private readonly held = new Set<string>()
+
+  /** Set by the teardown: from then on the handle is kept only for {@link held}. */
+  private closing = false
+
   /**
    * @param ctx - the mounting context; the plugin registers itself as `ctx.leaseStore`.
    * @param config - the validated configuration, naming the directory the store lives in.
@@ -79,11 +85,22 @@ export default class LeaseStorePlugin extends Service implements LeaseStoreContr
    * context` — a message naming neither the path nor the database. Measured:
    * pointing this row at a derived home path made every SDK snapshot scenario
    * fail with exactly that, and nothing in the failure said `leases`.
+   *
+   * The teardown drops the handle at once only when every lease this mount
+   * issued has been given back. Otherwise it keeps the handle until the last
+   * one is: a fiber unload runs every disposer concurrently, so a holder that
+   * is still finishing the writes its lease authorizes, such as a Run's
+   * terminal transitions after its session ended, would otherwise find the
+   * store gone between two of them (P4-07 blind review 2-1). No new lease is
+   * issued once the teardown has run.
    * @yields the teardown that closes the store handle.
    */
   * [Service.init](): Generator<() => void, void, void> {
     this.opened = openLeaseStore(this.config.directory)
-    yield () => { this.opened = undefined }
+    yield () => {
+      this.closing = true
+      if (this.held.size === 0) this.opened = undefined
+    }
   }
 
   /**
@@ -91,12 +108,12 @@ export default class LeaseStorePlugin extends Service implements LeaseStoreContr
    *
    * **The reachable failure is at teardown, not at startup.** A consumer cannot
    * read this before the mount finishes — `inject` holds it until the service is
-   * available — but the teardown yielded by `Service.init` clears the handle
-   * SYNCHRONOUSLY, and a fiber unload runs every disposer concurrently. So a
-   * consumer whose own disposer awaits anything before calling in finds the
-   * handle already gone. Measured in `@deepseek-ai/dsh-run`, whose disposer
-   * awaits a durable Run transition and then cannot hand its lease back
-   * (BLOCKED-197).
+   * available. After the teardown the handle is gone as soon as no lease this
+   * mount issued is still held, and a fiber unload runs every disposer
+   * concurrently, so a consumer that holds no lease and awaits anything in its
+   * own disposer before calling in finds it gone. A holder releases before it
+   * awaits (`@deepseek-ai/dsh-run`'s `pauseRun`, BLOCKED-197) or keeps the
+   * handle alive until it does.
    * @returns the store this mount opened.
    * @throws when the handle is absent: almost always because this mount has
    * already been unloaded, and only in principle because it has not yet opened.
@@ -153,7 +170,10 @@ export default class LeaseStorePlugin extends Service implements LeaseStoreContr
     if (plane !== undefined && mayStartNewWork(plane.state()) !== undefined) {
       return { acquired: false, reason: 'stopped' }
     }
-    return this.store.acquire(workItem, worker, nowMs, leaseMs)
+    if (this.closing) throw new Error('LeaseStorePlugin has no open database: this mount was already unloaded')
+    const result = this.store.acquire(workItem, worker, nowMs, leaseMs)
+    if (result.acquired) this.held.add(heldKey(result.token))
+    return result
   }
 
   /**
@@ -175,7 +195,11 @@ export default class LeaseStorePlugin extends Service implements LeaseStoreContr
    * @param token - the holder's authority over the item it is giving up.
    */
   release(token: FencingToken): void {
+    // After the teardown, giving back the last lease this mount issued drops
+    // the handle the teardown kept for it.
     this.store.release(token)
+    this.held.delete(heldKey(token))
+    if (this.closing && this.held.size === 0) this.opened = undefined
   }
 
   /**
@@ -186,4 +210,13 @@ export default class LeaseStorePlugin extends Service implements LeaseStoreContr
   reclaimable(nowMs: number): readonly WorkItemId[] {
     return this.store.reclaimable(nowMs)
   }
+}
+
+/**
+ * The key under which a mount records a lease it issued: one per item and epoch.
+ * @param token - the lease's fencing token.
+ * @returns the key.
+ */
+function heldKey(token: FencingToken): string {
+  return `${token.workItem}\u0000${String(token.epoch)}`
 }

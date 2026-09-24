@@ -237,10 +237,9 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   `attachSession` and session-log appends carry none either. The lease lives in
   SQLite and the Run in its JSON store, so a write admitted just before a
   takeover can still land: "stale writes after a newer token = 0" is not
-  claimed. If the lease provider is torn down before a session's terminal writes
-  settle, those writes are refused as `'lease-unavailable'` and the release
-  throws (reported as a failed Run store write), so the Run keeps a
-  non-terminal state and the lease row stays until it lapses. A write refused
+  claimed. lease-sqlite keeps its handle after its own teardown while a lease
+  it issued is still held, so a session that ends as its host unloads still
+  completes its terminal writes and gives the item back. A write refused
   for its lease is logged as a warning naming the transition, the Run and the
   reason; an illegal transition is not logged. The in-memory store's
   `setAvailable(false)` answers `get` with nothing, so its refusals read
