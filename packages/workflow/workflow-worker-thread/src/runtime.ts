@@ -70,9 +70,9 @@ function outputText(blocks: ContentBlock[]): string {
  */
 export function callDigestOf(
   prompt: string,
-  opts: { readonly schema?: unknown; readonly provider?: string; readonly model?: string },
+  _opts: { readonly schema?: unknown; readonly provider?: string; readonly model?: string },
 ): string {
-  return createHash('sha256').update(JSON.stringify([prompt, opts.schema ?? null, opts.provider ?? null, opts.model ?? null])).digest('hex')
+  return createHash('sha256').update(JSON.stringify([prompt])).digest('hex')
 }
 
 /**
