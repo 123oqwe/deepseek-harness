@@ -938,7 +938,7 @@ export function frozenCommand(argv) {
     if (token === '--config' || token === '-c') {
       config = argv[index + 1]
       index += 1
-    } else if (token.startsWith('--config=') || token.startsWith('-c=')) {
+    } else if (token.startsWith('--config=')) {
       config = token.slice(token.indexOf('=') + 1)
     } else if (token === '-t' || token === '--testNamePattern') {
       index += 1
