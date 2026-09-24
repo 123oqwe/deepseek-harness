@@ -9,11 +9,12 @@
  * suite covers only the real filesystem scan and gate wiring.
  */
 
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { globSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { dirname, join, relative, resolve, sep } from 'node:path'
 import { execFileSync, spawnSync } from 'node:child_process'
 import { pathToFileURL } from 'node:url'
+import { load as parseYaml } from 'js-yaml'
 import { describe, expect, it, afterEach } from 'vitest'
 import {
   collectImportSpecifiers,
@@ -35,7 +36,27 @@ afterEach(() => {
 function fixtureRoot(): string {
   const dir = mkdtempSync(join(tmpdir(), 'dsh-check-capability-seams-'))
   roots.push(dir)
+  writeWorkspace(dir, ['packages/*/*', 'apps/*', 'vendor/*'])
   return dir
+}
+
+/** Write the fixture's `pnpm-workspace.yaml`, the file the scanner enumerates packages from. */
+function writeWorkspace(fixture: string, patterns: readonly string[]): void {
+  writeFileSync(join(fixture, 'pnpm-workspace.yaml'), `packages:\n${patterns.map(pattern => `  - '${pattern}'\n`).join('')}`)
+}
+
+/**
+ * The directories that hold a `package.json` and match a `pnpm-workspace.yaml`
+ * pattern; fails the calling case when the file declares none.
+ * @param repo - repository root.
+ * @returns repo-relative directories.
+ */
+function declaredManifestDirs(repo: string): string[] {
+  const patterns = (parseYaml(readFileSync(join(repo, 'pnpm-workspace.yaml'), 'utf8')) as { packages?: unknown } | undefined)?.packages
+  expect(Array.isArray(patterns) && patterns.length > 0).toBe(true)
+  const dirs = (patterns as string[]).flatMap(pattern => globSync(`${pattern}/package.json`, { cwd: repo }).map(path => dirname(path).split(sep).join('/')))
+  expect(dirs.length).toBeGreaterThan(0)
+  return dirs
 }
 
 function writeManifest(fixture: string, dir: string, name: string): void {
@@ -80,6 +101,55 @@ describe('readWorkspacePackages / readAppPackages (must[1] real package.json sca
     expect(appPackages.has('@deepseek-ai/dsh-client-ui-chat')).toBe(true)
     expect(appPackages.has('@deepseek-ai/dsh-web-frontend')).toBe(true)
     expect(appPackages.has('@deepseek-ai/dsh-bash-local')).toBe(false)
+  })
+})
+
+describe('the scanned workspace is the one pnpm-workspace.yaml declares (acceptance[0])', () => {
+  it('enumerates every package pnpm-workspace.yaml declares, not only packages/*/*', () => {
+    const fixture = fixtureRoot()
+    writeWorkspace(fixture, ['packages/*/*', 'apps/*', 'tools/*'])
+    writeManifest(fixture, 'packages/fixture/p', 'fixture-p')
+    writeManifest(fixture, 'apps/a', 'fixture-app-a')
+    writeManifest(fixture, 'tools/t', 'fixture-tool-t')
+    writeManifest(fixture, 'scratch/s', 'fixture-scratch-s')
+    expect(Object.fromEntries(readWorkspacePackages(fixture))).toEqual({
+      'fixture-p': 'packages/fixture/p',
+      'fixture-app-a': 'apps/a',
+      'fixture-tool-t': 'tools/t',
+    })
+  })
+
+  it('scans the real workspace exactly as pnpm lists it', () => {
+    // The oracle is pnpm's own project list, not a second reading of
+    // pnpm-workspace.yaml: an error in how the scanner expands the patterns
+    // would repeat in any oracle that expanded them the same way.
+    const listed = spawnSync('pnpm', ['ls', '-r', '--depth', '-1', '--json'], { cwd: root, encoding: 'utf8' })
+    expect(listed.status, listed.stderr).toBe(0)
+    // A listing that is not an array of projects with a path fails here
+    // instead of comparing as an empty set.
+    const projects: unknown = JSON.parse(listed.stdout)
+    expect(Array.isArray(projects) && projects.every(project => typeof (project as { path?: unknown }).path === 'string'), listed.stdout.slice(0, 400)).toBe(true)
+    const realRoot = realpathSync(root)
+    const expected = (projects as { path: string }[])
+      .map(project => relative(realRoot, realpathSync(project.path)).split(sep).join('/'))
+      .filter(dir => dir !== '')
+      .sort()
+    // A floor, not the oracle: pnpm lists at least every directory the
+    // workspace patterns match that holds a manifest.
+    expect(expected.length).toBeGreaterThanOrEqual(declaredManifestDirs(root).length)
+    expect([...readWorkspacePackages(root).values()].sort()).toEqual(expected)
+    // The gate run scans this same set, so the real-repository zero-violation
+    // case covers every package pnpm lists.
+    expect(runCapabilitySeamsCheck(root).scanned.packages).toBe(expected.length)
+  }, 30_000)
+
+  it('the seam scanner refuses a pnpm-workspace.yaml that declares no packages', () => {
+    const fixture = fixtureRoot()
+    writeManifest(fixture, 'packages/fixture/p', 'fixture-p')
+    writeFileSync(join(fixture, 'pnpm-workspace.yaml'), 'packages: []\n')
+    expect(() => readWorkspacePackages(fixture)).toThrow('pnpm-workspace.yaml declares no packages')
+    writeFileSync(join(fixture, 'pnpm-workspace.yaml'), 'linkWorkspacePackages: true\n')
+    expect(() => readWorkspacePackages(fixture)).toThrow('pnpm-workspace.yaml declares no packages')
   })
 })
 
