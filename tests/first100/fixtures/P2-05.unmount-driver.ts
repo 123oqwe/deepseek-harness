@@ -8,7 +8,9 @@
  * disables the `policy-engine` row the way a running process unmounts a
  * composed row: a new patch list on the root include entry, which recomposes
  * its subtree (what `watchUserPatches` does on the live `web` profile), and
- * drives the same tool call again. It records what each call met and writes the record to
+ * drives the same tool call again. With `--unmount-first` it disables the row
+ * right after boot, before any call has reached the engine, and drives one
+ * call. It records what each call met and writes the record to
  * `observation.json` in its working directory; the spec beside it judges.
  *
  * The model is a scripted adapter registered here rather than the overlay's
@@ -37,6 +39,7 @@ const overlay = fileURLToPath(new URL('../../../packages/bundle/sdk-app/tests/fi
 const PROVIDER = 'p2-05-unmount-mock'
 const PROBE_TOOL = 'p2_05_probe'
 const POLICY_ENGINE_PLUGIN = '@deepseek-ai/dsh-policy-engine-cedar'
+const unmountFirst = process.argv.includes('--unmount-first')
 
 /** Every audit payload the kernel was handed, in order: the policy decisions are read here. */
 const auditEntries: unknown[] = []
@@ -71,13 +74,13 @@ function toolResultTexts(ctx: Awaited<ReturnType<typeof bootProductionProfile>>)
 }
 
 /**
- * The effect and reason of every decision the kernel audited, in order.
+ * The effect, reason and policy-set digest of every decision the kernel audited, in order.
  * @returns one entry per audited decision.
  */
-function auditedDecisions(): { effect: unknown, reason: unknown }[] {
+function auditedDecisions(): { effect: unknown, reason: unknown, policySet: unknown }[] {
   return auditEntries.map((payload) => {
-    const decision = (payload as { decision?: { effect?: unknown, reason?: unknown } }).decision
-    return { effect: decision?.effect, reason: decision?.reason }
+    const decision = (payload as { decision?: { effect?: unknown, reason?: unknown, policySet?: unknown } }).decision
+    return { effect: decision?.effect, reason: decision?.reason, policySet: decision?.policySet }
   })
 }
 
@@ -115,7 +118,8 @@ try {
   })
 
   const policyMountedBefore = ctx.get('policy') !== undefined
-  await runFixtureTurn(ctx, { task: 'run the probe' })
+  const rows = [...ctx.loader.entries()].map(entry => entry.options.name)
+  if (!unmountFirst) await runFixtureTurn(ctx, { task: 'run the probe' })
   const before = { probeRuns, results: toolResultTexts(ctx), decisions: auditedDecisions() }
 
   // The composed rows live under the root include entry, so the row is
@@ -136,7 +140,8 @@ try {
   }
 
   await writeFile('observation.json', `${JSON.stringify({
-    profile: 'sdk-minimal',
+    unmountFirst,
+    rows,
     trustKernel: ctx.get('trustKernel') !== undefined,
     policyMountedBefore,
     before,
