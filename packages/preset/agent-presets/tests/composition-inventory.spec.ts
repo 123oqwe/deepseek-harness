@@ -60,7 +60,10 @@ async function harness(roster: Config): Promise<Context> {
   await ctx.plugin(AgentRegistry)
   await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(AgentLoop, { agents: [] })
-  await ctx.plugin(AgentPresets, roster)
+  // The roster loads as a host Loader entry, the way the shipped web-app mounts it:
+  // tool ownership attributes a preset row only under a host entry.
+  ctx.loader.builtins['agent-presets'] = AgentPresets
+  await ctx.loader.create({ name: 'cordis:agent-presets', config: roster })
   return ctx
 }
 
@@ -280,16 +283,20 @@ describe('AgentPresets.compositionInventory', () => {
       setup: async (agentCtx: Context) => void await ctx.agentPresets.mount(agentCtx, 'standard'),
     })
 
+    // A mounted row's entry id is prefixed with the id of the Loader entry that
+    // mounts the roster, as on the shipped web-app.
+    const rosterEntry = [...ctx.loader.entries()].find(entry => entry.options.name === 'cordis:agent-presets')
+    expect(rosterEntry).toBeDefined()
     const standard = (await ctx.agentPresets.compositionInventory())
       .find(composition => composition.id === 'standard')
     expect(standard?.rows).toEqual([
       {
-        entryId: 'alpha',
+        entryId: `${rosterEntry?.id}:alpha`,
         moduleName: '../../plugins/contribute.js',
         enabled: true,
         fiberState: FiberState.ACTIVE,
       },
-      { entryId: 'alpha-extra', moduleName: '../../plugins/contribute.js', enabled: false },
+      { entryId: `${rosterEntry?.id}:alpha-extra`, moduleName: '../../plugins/contribute.js', enabled: false },
     ])
   })
 
@@ -316,11 +323,15 @@ describe('AgentPresets.compositionInventory', () => {
     // that session still runs, so the inventory must keep answering from it.
     await writeFile(join(root, 'volatile', COMPOSITION_FILE), 'foo: [')
 
+    // A mounted row's entry id is prefixed with the id of the Loader entry that
+    // mounts the roster, as on the shipped web-app.
+    const rosterEntry = [...ctx.loader.entries()].find(entry => entry.options.name === 'cordis:agent-presets')
+    expect(rosterEntry).toBeDefined()
     const [volatile] = await ctx.agentPresets.compositionInventory()
     expect(volatile).toMatchObject({ id: 'volatile', trust: 'user', isDefault: true })
     expect(volatile?.broken).toBeUndefined()
     expect(volatile?.rows).toEqual([
-      { entryId: 'only', moduleName: plugin, enabled: true, fiberState: FiberState.ACTIVE },
+      { entryId: `${rosterEntry?.id}:only`, moduleName: plugin, enabled: true, fiberState: FiberState.ACTIVE },
     ])
   })
 

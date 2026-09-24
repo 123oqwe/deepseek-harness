@@ -40,7 +40,10 @@ async function setupPresetHost(): Promise<{ ctx: Context; adapter: MockAdapter; 
   ctx.loader.builtins.include = Include
   await mountAgentLoopTestDependencies(ctx)
   await ctx.plugin(AgentLoop, { agents: [] })
-  await ctx.plugin(AgentPresets, { default: 'coding', roots: ROOTS, includeShippedRoot: false, includeUserRoot: false })
+  // The roster loads as a host Loader entry, the way the shipped web-app mounts it:
+  // tool ownership attributes a preset row only under a host entry.
+  ctx.loader.builtins['agent-presets'] = AgentPresets
+  await ctx.loader.create({ name: 'cordis:agent-presets', config: { default: 'coding', roots: ROOTS, includeShippedRoot: false, includeUserRoot: false } })
   const adapter = new MockAdapter([textResponse('parent idle'), textResponse('child done')])
   ctx.llm.registerAdapter(['mock'], adapter)
   const handle = await ctx.agents.create({
