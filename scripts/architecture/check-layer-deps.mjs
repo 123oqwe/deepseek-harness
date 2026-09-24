@@ -747,7 +747,6 @@ function collectKernelNonWorkspaceEdges(root, byPackage, vendoredNames, workspac
           const labels = body.map(declaration => ts.isInterfaceDeclaration(declaration) && declaration.name.text === 'Context'
             ? 'Context'
             : `declare module ${declaration.name?.text ?? '*'}`)
-          for (const label of labels.length > 0 ? labels : ['declare module *']) addUse(statement.name.text, label, file)
           continue
         }
         const isImport = ts.isImportDeclaration(statement)
