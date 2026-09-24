@@ -82,6 +82,7 @@ import {
 } from './state-machine.ts'
 import type {
   Run,
+  RunAttachDecision,
   RunEntityReference,
   RunProvenance,
   RunResumeDecision,
@@ -520,16 +521,35 @@ export class RunService {
    * `./state-machine.ts`'s `attachSessionToRun`.
    * @param id - the registered Run to associate an additional Session with; rejects when unregistered.
    * @param sessionId - the Session/Agent to add.
-   * @returns the Run with `sessionId` present in `sessionIds`.
+   * @param fence - the lease of the Run's owner. When given, the join is
+   *   written only while it admits the write, asked in the Run's turn as
+   *   {@link RunService.advance} asks its fence.
+   * @returns the Run with `sessionId` present in `sessionIds`, or the refusal,
+   *   which writes nothing: `terminal` for a Run that has reached a terminal
+   *   state, `fenced` or `lease-unavailable` when `fence` does not admit it.
    *
    * **Ordering.** Serialized with {@link RunService.advance} on the same Run's
    * chain, so two Sessions attaching concurrently both appear rather than one
    * overwriting the other's `sessionIds`.
    */
-  async attachSession(id: RunId, sessionId: SessionId): Promise<Run> {
-    return await this.serialize(id, (current) => {
+  async attachSession(id: RunId, sessionId: SessionId, fence?: Pick<RunLease, 'mayWrite'>): Promise<RunAttachDecision> {
+    return await this.serialize<RunAttachDecision>(id, (current) => {
+      if (TERMINAL_RUN_STATES.has(current.state)) {
+        return { run: undefined, result: { accepted: false, reason: 'terminal', state: current.state } }
+      }
+      if (fence !== undefined) {
+        let admitted: boolean
+        try {
+          admitted = fence.mayWrite(Date.now())
+        } catch {
+          // As in `advance`: a lease store that cannot answer cannot admit
+          // the write, and the refusal names it.
+          return { run: undefined, result: { accepted: false, reason: 'lease-unavailable', state: current.state } }
+        }
+        if (!admitted) return { run: undefined, result: { accepted: false, reason: 'fenced', state: current.state } }
+      }
       const run = attachSessionToRun(current, sessionId)
-      return { run, result: run }
+      return { run, result: { accepted: true, run } }
     })
   }
 
@@ -975,10 +995,16 @@ export default class RunPlugin extends Service {
     // acceptance[2]: an in-process child session also joins the Run of the
     // agent that owns it, as a member; it keeps its own Run, lease and
     // lifecycle above. The owner's lease is the one authority over the owner's
-    // Run, so the join is written only while that lease admits writes.
+    // Run, so the join is written only while that lease admits writes, asked
+    // in the Run's turn, and a refused join is logged.
     const owner = this.ctx.agents.list().find(candidate => this.ctx.agents.isOwnedBy(agent.id, candidate))
-    if (owner?.runId !== undefined && owner.runLease?.mayWrite(Date.now()) === true) {
-      this.track(this.service.attachSession(owner.runId, agent.id).then(() => undefined))
+    if (owner?.runId !== undefined && owner.runLease !== undefined) {
+      const ownerRunId = owner.runId
+      this.track(this.service.attachSession(ownerRunId, agent.id, owner.runLease).then((decision) => {
+        if (!decision.accepted) {
+          this.ctx.logger.warn('run: refused joining session %s to Run %s — %s', agent.id, ownerRunId, decision.reason)
+        }
+      }))
     }
   }
 
