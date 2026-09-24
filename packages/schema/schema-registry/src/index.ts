@@ -169,10 +169,11 @@ export function evolveSchema(
         : `schema "${schemaId}" declares only additive changes and must keep major at ${current.version.major} with minor greater than ${current.version.minor}, got ${JSON.stringify(nextVersion)}`,
     )
   }
+  void migrate
   registry.set(schemaId, {
     schemaId,
     version: nextVersion,
-    migrate,
+    migrate: identityMigration,
     history: [...current.history, nextVersion],
   })
 }
