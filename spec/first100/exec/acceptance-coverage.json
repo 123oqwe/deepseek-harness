@@ -1356,9 +1356,24 @@
         {
           "stage": "F",
           "title": "control: a log whose every row parses recovers fully, so the truncation cases below measure a decision"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "returns the recoverable prefix AND the evidence naming the row it stopped at, rather than discarding one"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "reports no corruption for a fully recovered log, so the field distinguishes damage from its absence"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "names the seq-gap row as evidence, not only the unreadable-row case"
         }
       ],
-      "note": "acceptance[3]: 'a corrupted-log read returns the minimal recoverable range and evidence.' Both halves are asserted separately. MINIMALITY: recovery stops at the first unreadable row and never resumes past it even when later rows are individually well-formed -- a reader that skipped the bad row and continued would produce a LONGER range that is not the minimal recoverable one, and would silently mix records whose interpretation the corruption may have invalidated. The first-row case pins the boundary where 'minimal' means nothing at all, which must not report as an empty success. EVIDENCE: the exact row number and parse reason, not a summary. POSITIVE CONTROL: a fully valid log reads back complete with NO partial-recovery evidence, so the truncation cases measure a decision rather than a reader that always truncates. The F stage re-asserts both against the entry point directly, and additionally records two defects it does not repair."
+      "note": "acceptance[3]: 'a corrupted-log read returns the minimal recoverable range and evidence.' Both halves are asserted separately. MINIMALITY: recovery stops at the first unreadable row and never resumes past it even when later rows are individually well-formed -- a reader that skipped the bad row and continued would produce a LONGER range that is not the minimal recoverable one, and would silently mix records whose interpretation the corruption may have invalidated. The first-row case pins the boundary where 'minimal' means nothing at all, which must not report as an empty success. EVIDENCE: the exact row number and parse reason, not a summary. POSITIVE CONTROL: a fully valid log reads back complete with NO partial-recovery evidence, so the truncation cases measure a decision rather than a reader that always truncates. The F stage re-asserts both against the entry point directly, and additionally records two defects it does not repair. LA-0 (2026-09-24, F.1): the three scanner cases that lifted the acceptance[3] lock are cited here. They prove the evidence where the scanner produces it (`SessionLogScanner.finish()`), not on the shipped read path, which drops it (V6, still open; red-first cases in tests/first100/fixtures/P6-07.fault.spec.ts). They are not by themselves evidence for acceptance[3]."
     },
     {
       "epic": "P0-04",

@@ -3439,6 +3439,23 @@
       ]
     },
     {
+      "epic": "P6-07",
+      "path": "packages/session/session-persistence-jsonl/src/format.ts",
+      "kind": "source",
+      "stages": [
+        "F.1"
+      ],
+      "reason": "The scanner whose `finish()` returns the corrupted-log evidence the P6-07 F.1 cases assert. The registry names the persistence seam, not the JSONL provider that reads a damaged log, and the frozen cases have to name where the evidence is produced."
+    },
+    {
+      "epic": "P6-07",
+      "path": "packages/session/session-persistence-jsonl/tests/jsonl.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F.1"
+      ]
+    },
+    {
       "epic": "P8-01",
       "path": "packages/sdk/client/tests/fake-runtime.ts",
       "kind": "test",

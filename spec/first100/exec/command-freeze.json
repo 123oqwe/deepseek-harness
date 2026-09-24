@@ -15646,6 +15646,43 @@
       },
       "note": "v2 of P2-05's fourth U supplement, superseding v1 after the blind review (`artifacts/delegate/blind-p108v2-p205-u4v3.md`, findings 1-3). acceptance[2] as C18 narrowed it (\"Policy 服务不可被 Cordis replace，被卸载后 fail closed。\"), the unmount half, on the shipped `sdk-minimal` composition. The driver boots the profile through `bootProductionProfile` over the BLOCKED-266 test overlay with the Trust Kernel pinned as `apps/cli/src/profile-boot.ts` pins it, and runs twice, each in its own child process and so its own root. The ordinary run drives one tool call (permitted, the body runs), disables the `policy-engine` row through a new patch list on the root include entry, and drives the same call again: refused as `policy-unavailable` with the digest of the engine it had seen. The `--unmount-first` run disables the row before any call reaches the engine: the first call is refused as `policy-unavailable` with the empty policy set, and its body does not run, so a refusal that fails open only without history (MC) is caught. The control case reads the booted Loader rows (sdk-minimal's own `dsh-tool-bash-persistent`, not dsh-base's `plan-mode`) instead of the driver's profile literal.\n\nThe fail-closed result holds only in a process with a pinned Trust Kernel: without one, `decideManifestedAction` returns undefined and the call dispatches without asking the policy enforcement point (`packages/core/agent-loop/src/tool-calls.ts`). The CLI launcher pins the kernel unless `DSH_TRUST_KERNEL_INSECURE` is set (`apps/cli/src/profile-boot.ts`); which shipped entry points pin it is not observed here. The unmount recomposes only the disabled row: the Loader's include update disposes a disabled candidate and resets unchanged rows without restarting them (`vendor/loader/src/config/entry.ts`, `group.ts`, `vendor/include/src/index.ts`), which is why a per-instance cache of the engine would still be caught.\n\nOn the shipped product only the live patch reload of `web` unmounts the row at runtime; the other templates read patches at startup only. Not observed: the replace half of acceptance[2], which BLOCKED-313 records as evidenced; the refusal on a composition other than sdk-minimal.",
       "supersedes": "2026-09-24T05:37:54Z"
+    },
+    {
+      "epic": "P6-07",
+      "stage": "F",
+      "supplements": {
+        "epic": "P6-07",
+        "stage": "F"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/session/session-persistence-jsonl/tests/jsonl.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "JsonlSessionPersistence: scanLog unit returns the recoverable prefix AND the evidence naming the row it stopped at, rather than discarding one",
+        "JsonlSessionPersistence: scanLog unit reports no corruption for a fully recovered log, so the field distinguishes damage from its absence",
+        "JsonlSessionPersistence: scanLog unit names the seq-gap row as evidence, not only the unreadable-row case"
+      ],
+      "files": [
+        "packages/session/session-persistence-jsonl/tests/jsonl.spec.ts",
+        "packages/session/session-persistence-jsonl/src/format.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T10:15:53Z",
+      "dryRunProof": {
+        "treeSha": "8fe9280da046fc917a41226d485493840472641e",
+        "testsDiscovered": 194
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations off PRECHECK `171f839b07` (lane A tip; the three cases unchanged since 05e0054369 added them), each its own commit changing the one line of `SessionLogScanner.finish()` in `packages/session/session-persistence-jsonl/src/format.ts` that attaches `corruption`, never merged, run by CI's narrow job over this entry's argv without a build. M1 (`0d48e08e6e983b3e43be058c4fccbd2b95bafd9e`, `mutation/p6-07-la0-m1`) never attaches the evidence. M2 (`65891d546714aaff79fc4e5d214943e0e3440ebf`, `mutation/p6-07-la0-m2`) always attaches one, keeping the real evidence when there is some.",
+        "failureSummary": "Baseline: PRECHECK, narrow run 35985753798: 194 passed / 0 failed. M1, run 35985772320: exactly the evidence case and the seq-gap case red; the fully-recovered case stays green because it asserts no evidence. M2, run 35985790817: exactly the fully-recovered case red; the other two read the real evidence, which M2 keeps. All three readings match `artifacts/laneA/p6-07-la0-expectations.json` (sha256 `b0012621ce3e50dc3a943c882847031cfd5caaafa219876b4bbe7a8600010465`), written before the mutations."
+      },
+      "note": "LA-0 (approved/P6-07.md): registers the three cases that lifted the acceptance[3] lock (BLOCKED-QUEUE P6-07 lock row, lifted 2026-09-04) as acceptance[3] evidence. They test the scanner, `scanLog` / `SessionLogScanner.finish()`, NOT the shipped read path: the shipped read drops the scanner's `corruption` evidence (V6: `readZstdPrefix` rebuilds its result without it, index.ts:934-963, and the uncompressed branch destructures it away, :730), which is still open, with its red-first cases in tests/first100/fixtures/P6-07.fault.spec.ts. This entry alone is therefore not evidence for acceptance[3]; it proves the evidence exists where the scanner produces it. Staged F because acceptance[3] is the fault clause and the scanner is in no P6-07 registry stage file list."
     }
   ]
 }
