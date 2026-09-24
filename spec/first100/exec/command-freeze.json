@@ -15655,7 +15655,9 @@
         "mutationDescription": "Three mutations off PRECHECK `b8b08827da5dead328e288654b95d32c01eed745`, one per workflow file, never merged, run by CI's narrow job at its own SHA with a build first, over this entry's file and `tests/release/evidence-package.spec.ts` together. V5 (`41561a19dd2d1c603c4aa293b80822abfb1735bf`) adds `continue-on-error: true` to the verify step of `release-publish.yml`. V5b (`02a65fcf31941722a5443f90fe9ac72e205b2b86`) moves the verify step of `node-addon-system-release.yml` above its build-artifact digest step, so a collect step follows it. V5c (`c8ea333b106189b12913c605afd5699074f7a1d8`) deletes `publish.needs: pack` from `release-vendor-publish.yml`. V5b and V5c come from verify/P0-07.md V-4, adopted with the approval.",
         "failureSummary": "Baseline: PRECHECK, narrow run 35969192639: 71 passed / 0 failed (this file 7). V5, run 35969244864: exactly the release-publish.yml row red. V5b, run 35969261717: exactly the node-addon-system-release.yml row red. V5c, run 35969279187: exactly the release-vendor-publish.yml row red. All six readings (PRECHECK and V3, V4, V5, V5b, V5c over both spec files) match `artifacts/laneA/p0-07-la123-expectations.json` (sha256 `8d9bb85e11d7e0390d209f5528207539d479a51af9c8071a624e73a6df812d73`), written before the cases; the delegate compared them case by case."
       },
-      "note": "P0-07's second U supplement (LA-4 holds the first): validation[2] and S2, the publish paths. A release workflow cannot be triggered from a test, so the case reads the three real publish workflows with js-yaml (the pipeline-structure assertion BLOCKED-292's closing condition (3) allows). In each: a step runs `evidence:verify --evidence` or `scripts/release/verify-evidence.mjs --evidence` (asserted found first); every step running `collect-evidence.mjs` comes before it (at least one exists); it has neither `if` nor `continue-on-error`; the `actions/upload-artifact` step comes after it and has no `if`; every step between them is `if: always()` and collects nothing; and `jobs.publish.needs` includes `pack`. It observes the workflow files, not a run of them."
+      "note": "P0-07's second U supplement (LA-4 holds the first): validation[2] and S2, the publish paths. A release workflow cannot be triggered from a test, so the case reads the three real publish workflows with js-yaml (the pipeline-structure assertion BLOCKED-292's closing condition (3) allows). In each: a step runs `evidence:verify --evidence` or `scripts/release/verify-evidence.mjs --evidence` (asserted found first); every step running `collect-evidence.mjs` comes before it (at least one exists); it has neither `if` nor `continue-on-error`; the `actions/upload-artifact` step comes after it and has no `if`; every step between them is `if: always()` and collects nothing; and `jobs.publish.needs` includes `pack`. It observes the workflow files, not a run of them.",
+      "supersededBy": "2026-09-24T16:50:41Z",
+      "supersessionReason": "P0-07 blind review 775c25640a T2-5: v1 read where the verify step sits and not what it runs, so `|| true`, a pipe, a second command or `set +e` could let a failed verify pass the step. v2 (lane A, A-364 ②) asserts the step runs only the verify command, and its three titles say so; changed titles, so a replacement under lifecycle 2.1 (delegate ruling 2026-09-24, landed with e8d3c6e9a9)."
     },
     {
       "epic": "P0-06",
@@ -17590,6 +17592,91 @@
         "failureSummary": "PRECHECK `9304b3ef7a`, run 36011168705: the two F1 rows, the layer checker's F2 case and F5 red (with the seam scanner's F2 case, P0-03 U.2). The fix `61335239d7`, run 36011196149: 137 of 137 over the three architecture specs. M-F1 `f12baac7bf`, run 36011220829: exactly the two F1 rows red; M-F2a `987484d118`, run 36011246182: exactly F2; M-b `3192ad5ae5`, run 36011296138: exactly the budget pin; M-a `7599d3093f`, run 36011323544: exactly the vendored cycle; M-F5 `378cfb4750`, run 36011350062: exactly F5; M-c′ `a06b8d29dd`, run 36027215352, off the case `e28215d087`: exactly the class Context row red, on its assertion: toEqual(['@deepseek-ai/cordis']) received []. The case `e28215d087`, run 36027189987: 137 of 137 over the three architecture specs, the new title passed and the old one absent. Both readings match artifacts/laneB/p0-04-a21-predictions.md (a2a6dee9…), written and hashed before the runs were dispatched."
       },
       "note": "P0-04 blind review F1-F5 and M-c: a kernel package's optionalDependencies on a model provider or UI package are violations; a pnpm-workspace.yaml whose patterns match no package is refused; the default time budget is pinned at 10 000 ms; a cycle through a vendored package's dependency on a classified one is reported; a kernel package declaring a UI application under apps/ is refused whatever it imports; a declare-module block declaring a class named Context is a forbidden Cordis use. The argv selects the seven by their titles with an escaped alternation in -t. Replaces [363] (P0-04 blind review delta A2-1): that row declared `const Context: unknown`, which has no name, so the checker refused it as `declare module *` and never reached the interface condition."
+    },
+    {
+      "epic": "P0-07",
+      "stage": "U",
+      "supplements": {
+        "epic": "P0-07",
+        "stage": "U"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P0-07.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P0-07 validation[2] -- the publish workflows verify the evidence package before they upload it release-publish.yml verifies the evidence package in a step that runs only the verify command, after every collect step and before the upload its publish job needs",
+        "P0-07 validation[2] -- the publish workflows verify the evidence package before they upload it release-vendor-publish.yml verifies the evidence package in a step that runs only the verify command, after every collect step and before the upload its publish job needs",
+        "P0-07 validation[2] -- the publish workflows verify the evidence package before they upload it node-addon-system-release.yml verifies the evidence package in a step that runs only the verify command, after every collect step and before the upload its publish job needs"
+      ],
+      "files": [
+        "tests/first100/fixtures/P0-07.composition.spec.ts",
+        ".github/workflows/release-publish.yml",
+        ".github/workflows/release-vendor-publish.yml",
+        ".github/workflows/node-addon-system-release.yml"
+      ],
+      "frozenAtUtc": "2026-09-24T16:50:41Z",
+      "supersedes": "2026-09-24T07:31:57Z",
+      "dryRunProof": {
+        "treeSha": "1ad5c239d2f272830f100f66d12b2f26264ecd8a",
+        "testsDiscovered": 7
+      },
+      "sensitivityProof": {
+        "mutationDescription": "v2 of [336] (blind review 775c25640a T2-5). One new mutation off PRECHECK `e8d3c6e9a9c6a40c5f94e1b29c33e6adf902c9ed`, never merged, run by CI's narrow job at its own SHA with a build first: M-la3 (`2dadd88553c47587f3f832ac3c16e0f22157164b`) appends ` || true` to the verify step's run in `release-publish.yml`, which v1 could not tell from the bare command. The assertions v1 already had are carried into v2 unchanged, and their mutations stay on record in [336]: V5 (`41561a19dd`, continue-on-error on the verify step), V5b (`02a65fcf31`, verify moved above a collect step) and V5c (`c8ea333b10`, publish.needs: pack deleted).",
+        "failureSummary": "Baseline: PRECHECK e8d3c6e9a9, narrow run 36029871510: 7 passed / 0 failed. M-la3, run 36029896789: 6 passed / 1 failed, exactly the release-publish.yml row, on the new assertion ('release-publish.yml: the verify step runs more than the verify command'). Both readings match `artifacts/laneA/p0-07-la3-v2-expectations.md` (sha256 `fad3f56b79a923ce8baabfc26144ee5d997d69ab4f38b9a3bc1f4c0436b19a5b`), written before the case changed; the delegate compared them case by case."
+      },
+      "note": "P0-07's second U supplement (LA-4 holds the first): validation[2] and S2, the publish paths. A release workflow cannot be triggered from a test, so the case reads the three real publish workflows with js-yaml (the pipeline-structure assertion BLOCKED-292's closing condition (3) allows). In each: a step runs `evidence:verify --evidence` or `scripts/release/verify-evidence.mjs --evidence` (asserted found first); every step running `collect-evidence.mjs` comes before it (at least one exists); it has neither `if` nor `continue-on-error`, and its whole command is the verify command, so `|| true`, a pipe, a second command or `set +e` cannot let a failed verify pass the step; the `pack` job has no `continue-on-error`; the `actions/upload-artifact` step comes after it and has no `if`; every step between them is `if: always()` and collects nothing; and `jobs.publish.needs` includes `pack`. It observes the workflow files, not a run of them. v2 supersedes [336] after the blind review of 775c25640a (T2-5) found that v1 did not read the step's run."
+    },
+    {
+      "epic": "P0-07",
+      "stage": "P",
+      "supplements": {
+        "epic": "P0-07",
+        "stage": "P"
+      },
+      "supplementSeq": 3,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/release/evidence-package.spec.ts",
+        "-t",
+        "detects a change after collection when git shows files through an external diff program, for a tracked file that differs from the base|detects a change after collection when git shows files through an external diff program, for an untracked file|detects a change after collection when git shows files through a textconv filter, for a tracked file the base holds|refuses a checkout whose index marks a file skip-worktree, since git diff then reads the index for it|refuses a checkout whose index marks a file assume-unchanged, since git diff then reads the index for it|detects a \\.gitignore added after collection that ignores itself and the file beside it|refuses an untracked symbolic link to a directory, for which git produces no patch|still prints its result line when the package is valid JSON without the fields verify reads",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[2] (narrowed): the result line of verify names the package path and its accepted status still prints its result line when the package is valid JSON without the fields verify reads",
+        "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: the working tree is checked against the diff recorded at collection detects a change after collection when git shows files through an external diff program, for a tracked file that differs from the base",
+        "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: the working tree is checked against the diff recorded at collection detects a change after collection when git shows files through an external diff program, for an untracked file",
+        "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: the working tree is checked against the diff recorded at collection detects a change after collection when git shows files through a textconv filter, for a tracked file the base holds",
+        "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: the working tree is checked against the diff recorded at collection refuses a checkout whose index marks a file skip-worktree, since git diff then reads the index for it",
+        "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: the working tree is checked against the diff recorded at collection refuses a checkout whose index marks a file assume-unchanged, since git diff then reads the index for it",
+        "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: the working tree is checked against the diff recorded at collection detects a .gitignore added after collection that ignores itself and the file beside it",
+        "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: the working tree is checked against the diff recorded at collection refuses an untracked symbolic link to a directory, for which git produces no patch"
+      ],
+      "files": [
+        "tests/release/evidence-package.spec.ts",
+        "scripts/release/collect-evidence.mjs",
+        "scripts/release/verify-evidence.mjs"
+      ],
+      "frozenAtUtc": "2026-09-24T18:43:11Z",
+      "dryRunProof": {
+        "treeSha": "f4aa8c0186d5cd349185bc481a44a8a5a0f10a8f",
+        "testsDiscovered": 8
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Seven mutations off the fix, never merged, each run with a build first. M-1a (`ea8350c16b9cc21daa9b364a8e6a506e8cfb5640`): the tracked-file diff drops --no-ext-diff. M-1b (`f9570a897abdfcf1eb05c07bd5d9800c2ddd0187`): the untracked-file (no-index) diff drops --no-ext-diff. M-1c (`a11a1ad22bf1580e7cef149913219d5d6464d07c`): the tracked-file diff drops --no-textconv. M-2 (`f3f89d9713623c5d565d64ab63370d0a50a89687`): an index entry marked skip-worktree or assume-unchanged no longer throws. M-3 (`3c0afe165208193b419b6de2c9db6ea3fc54a48b`): the untracked list no longer takes an ignored .gitignore. M-B22 (`d0181889418d968e3090fa3f5029ff057e2a3872`): the no-index diff is judged by its exit code 1 alone. M-B23 (`e82dc412c267720310f0425f5c8fe2b95beaf124`): main no longer wraps verify in a try.",
+        "failureSummary": "PRECHECK `6367f08538`, run 36032739397: exactly the eight red. The fix `f9ea13a819`, run 36032761946: 83 of 83 over this spec and tests/first100/fixtures/P0-07.composition.spec.ts. M-1a `ea8350c16b`, run 36032785837: exactly E1 (E2 changes an untracked file, which the tracked diff does not read). M-1b `f9570a897a`, run 36032809955: exactly E1 and E2, both at init, where the no-index output no longer starts with \"diff --git \". M-1c `a11a1ad22b`, run 36032833037: exactly T1. M-2 `f3f89d9713`, run 36032856154: exactly S1 and S2. M-3 `3c0afe1652`, run 36032880020: exactly G1. M-B22 `d018188941`, run 36032902786: exactly L1. M-B23 `e82dc412c2`, run 36032926778: exactly J1. All readings match artifacts/laneB/p0-07-b2-predictions.md (47e2a6a6…), written and hashed before the runs were dispatched; the delegate compared them case by case. The no-index call's --no-textconv has no case and no mutation: the patch of an added or untracked file names its real blob id, so a textconv cannot hide a change there (read with plain git); it is defensive hardening and is not frozen."
+      },
+      "note": "P0-07 blind review delta B2-1..B2-3 (acceptance[0], and acceptance[2] for J1): the working-tree patch is git's own and refuses what hides a change. E1, E2: an external diff program configured in the checkout does not replace either diff; T1: a textconv filter does not hide a change to a tracked file; S1, S2: a checkout whose index marks a file skip-worktree or assume-unchanged is refused; G1: a .gitignore added after collection that ignores itself and the file beside it is bound; L1: an untracked symbolic link to a directory, for which git produces no patch, is refused; J1: a package that is valid JSON without the fields verify reads still gets its result line, with accepted=false. The argv selects the eight by title with an escaped alternation in -t."
     }
   ]
 }
