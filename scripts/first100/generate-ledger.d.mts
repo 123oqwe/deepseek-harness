@@ -292,6 +292,18 @@ export const REPORT_CONFIGS: ReadonlyMap<string, string | undefined>
  */
 export function configFrozenReportRefusal(argv: readonly string[], reportFiles: readonly string[], reportPath: string): string | null
 
+/**
+ * Why the process exit recorded beside an observation report refuses greening, or `null` when it does not
+ * (BLOCKED-326). Vitest can exit non-zero on an unhandled error outside any case while its json report says
+ * `success: true`, so each observation step in `first100-exact-sha.yml` writes its exit code to `<report>.exit.json`
+ * as `{"exitCode": N}`; a report greens a cell only when that record exists and holds the integer 0.
+ * @param reportPath - the `--report` argument; its exit record is the same path with `.json` replaced by `.exit.json`.
+ * @param overrideReason - the `--exit-override` reason; a non-empty one lifts every refusal, and the greening records
+ *   it in the cell with the recorded exit code.
+ * @returns the refusal, or `null`.
+ */
+export function recordedExitRefusal(reportPath: string, overrideReason: string | undefined): string | null
+
 /** One EXEC-STATE digest that no longer matches its file. `recorded` is `undefined` when the digest is absent. */
 export interface ExecStateDigestDrift {
   field: 'ledgerDigest' | 'registryDigest' | 'freezeDigest'

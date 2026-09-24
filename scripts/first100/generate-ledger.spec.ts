@@ -50,6 +50,7 @@ import {
   parseCiRunUrl,
   PROGRAM_CI_REPO,
   reattestationOf,
+  recordedExitRefusal,
   REPORT_CONFIGS,
   reportDirMatchesCandidate,
   redStepComplaints,
@@ -1321,6 +1322,20 @@ describe('the exact-SHA observation artifact carries the json report of every st
     const signed = [...(signing?.run ?? '').matchAll(/attest\.ts --sign (\S+)/gu)].map(match => match[1])
     expect(signed.sort()).toStrictEqual(uploaded.sort())
   })
+
+  it('writes each report\'s step exit code beside the report and exits with it, and uploads that record (BLOCKED-326)', () => {
+    const uploaded = steps[upload]?.with?.path?.split('\n').map(line => line.trim()) ?? []
+    const writers = steps.filter(step => /--outputFile=\.artifacts\/first100\/observations\/\S+\.json/u.test(step.run ?? ''))
+    expect(writers.length).toBeGreaterThan(0)
+    for (const step of writers) {
+      const lines = (step.run ?? '').split('\n')
+      const record = `${/--outputFile=(\S+)\.json/u.exec(step.run ?? '')?.[1] ?? ''}.exit.json`
+      expect(lines[lines.findIndex(line => line.includes('--outputFile=')) + 1]).toBe('code=$?')
+      expect(lines).toContain(`printf '{"exitCode": %d}\\n' "$code" > ${record}`)
+      expect(step.run).toMatch(/\nexit \$code\n?$/u)
+      expect(uploaded).toContain(record)
+    }
+  })
 })
 
 describe('configFrozenReportRefusal: --supplement observes an entry frozen under its own config through that run\'s report', () => {
@@ -1395,14 +1410,14 @@ describe('configFrozenReportRefusal: --supplement observes an entry frozen under
  * Runs `generate-ledger.mjs` in a scratch repository holding a copy of this directory's modules, a freeze of `entry`
  * alone, and one report, so no run reads or writes this repository's ledger.
  * @param entry - the freeze's only entry.
- * @param report - the report's file name and the test files it ran; it sits in a directory named after the scratch
- *   repository's commit, which is the candidate.
+ * @param report - the report's file name, the test files it ran, and the exit code its step records beside it (0 when
+ *   omitted); it sits in a directory named after the scratch repository's commit, which is the candidate.
  * @param cellArgs - the arguments naming the cell; `--report`, `--ci-run-url` and `--candidate-sha` follow them.
  * @returns the exit status, the stdout and stderr together, and the `--report` argument.
  */
 function runLedgerInScratchRepo(
   entry: Record<string, unknown>,
-  report: { name: string; files: readonly string[] },
+  report: { name: string; files: readonly string[]; exitCode?: number },
   cellArgs: readonly string[],
 ): { status: number | null; output: string; reportPath: string } {
   // The real path, because the script runs its CLI only when argv[1] equals its own module path.
@@ -1419,6 +1434,7 @@ function runLedgerInScratchRepo(
   const reportPath = `${sha}/${report.name}`
   const testResults = report.files.map(name => ({ name, assertionResults: [] }))
   writeFileSync(join(root, reportPath), JSON.stringify({ success: true, testResults }))
+  writeFileSync(join(root, reportPath.replace(/\.json$/u, '.exit.json')), JSON.stringify({ exitCode: report.exitCode ?? 0 }))
   const ciRunUrl = `https://github.com/${PROGRAM_CI_REPO}/actions/runs/1`
   const args = [...cellArgs, '--report', reportPath, '--ci-run-url', ciRunUrl, '--candidate-sha', sha]
   const script = join(root, 'scripts/first100/generate-ledger.mjs')
@@ -1455,6 +1471,80 @@ describe('generate-ledger.mjs greens a cell only from a report of the config its
     )
     expect(output).toContain(`BLOCKED: --report ${reportPath} cannot observe P4-05.U.4: the entry is frozen under --config `
       + 'vitest.e2e.config.ts, and the report ran none of apps/cli/tests/a.e2e.ts;')
+    expect(status).toBe(1)
+  })
+})
+
+describe('recordedExitRefusal: a report greens a cell only when its step recorded process exit 0 (BLOCKED-326)', () => {
+  // Vitest can exit 1 on an unhandled error outside any case while its json report says `success: true` (run
+  // 36001656822, step 18), so the exit code the step records beside the report decides, not the report.
+  /**
+   * A report that says `success: true`, in a directory of its own.
+   * @param exitRecord - the text of the exit record beside it, or `undefined` for none.
+   * @returns the report's path.
+   */
+  function reportBeside(exitRecord: string | undefined): string {
+    const root = mkdtempSync(join(tmpdir(), 'dsh-exit-record-'))
+    fixtureRoots.push(root)
+    writeFileSync(join(root, 'vitest-report.json'), JSON.stringify({ success: true, testResults: [] }))
+    if (exitRecord !== undefined) writeFileSync(join(root, 'vitest-report.exit.json'), exitRecord)
+    return join(root, 'vitest-report.json')
+  }
+  const remedy = 'pass --exit-override "<reason>" to record the cell anyway'
+
+  it('refuses a report with no exit record beside it', () => {
+    const reportPath = reportBeside(undefined)
+    expect(recordedExitRefusal(reportPath, undefined)).toBe(`${reportPath.replace(/\.json$/u, '.exit.json')} does not exist, `
+      + `so the process exit of the step that wrote the report is unknown; ${remedy}`)
+  })
+
+  it('refuses an exit record that holds no integer exitCode', () => {
+    for (const text of ['{"exitCode":"0"}', '{"exitCode":0.5}', '{}', 'null', 'not json']) {
+      const reportPath = reportBeside(text)
+      expect(recordedExitRefusal(reportPath, undefined)).toBe(`${reportPath.replace(/\.json$/u, '.exit.json')} records no integer `
+        + `exitCode, so the process exit of the step that wrote the report is unknown; ${remedy}`)
+    }
+  })
+
+  it('refuses a report that says success: true when its step recorded exit code 1', () => {
+    const reportPath = reportBeside('{"exitCode":1}')
+    expect(recordedExitRefusal(reportPath, undefined))
+      .toBe(`${reportPath.replace(/\.json$/u, '.exit.json')} records exit code 1 for the step that wrote the report; ${remedy}`)
+  })
+
+  it('accepts a report whose step recorded exit code 0', () => {
+    expect(recordedExitRefusal(reportBeside('{"exitCode":0}'), undefined)).toBeNull()
+  })
+
+  it('lets a non-empty --exit-override reason lift the refusal of a missing, malformed or non-zero record', () => {
+    for (const text of [undefined, 'not json', '{"exitCode":1}']) {
+      expect(recordedExitRefusal(reportBeside(text), 'delegate ruling, gate3 log 2026-09-24T13:41:16Z')).toBeNull()
+    }
+  })
+
+  it('lifts nothing with a blank --exit-override reason', () => {
+    expect(recordedExitRefusal(reportBeside('{"exitCode":1}'), ' ')).not.toBeNull()
+  })
+})
+
+describe('generate-ledger.mjs refuses to green a cell from a report whose step recorded a non-zero exit (BLOCKED-326)', () => {
+  const failedStep = { name: 'vitest-e2e-acp.json', files: ['/ci/apps/cli/tests/a.e2e.ts'], exitCode: 1 }
+  const refusal = (reportPath: string, cell: string): string => `BLOCKED: --report ${reportPath} cannot green ${cell}: `
+    + `${reportPath.replace(/\.json$/u, '.exit.json')} records exit code 1 for the step that wrote the report;`
+
+  it('--supplement exits 1 with BLOCKED for a report that says success: true beside an exit record of 1', () => {
+    const { status, output, reportPath } = runLedgerInScratchRepo(
+      { ...e2eBase, supplementSeq: 4, supplements: { epic: 'P4-05', stage: 'U' } },
+      failedStep,
+      ['--supplement', '--epic', 'P4-05', '--stage', 'U', '--supplement-seq', '4'],
+    )
+    expect(output).toContain(refusal(reportPath, 'P4-05.U.4'))
+    expect(status).toBe(1)
+  })
+
+  it('the base cell exits 1 with BLOCKED for a report that says success: true beside an exit record of 1', () => {
+    const { status, output, reportPath } = runLedgerInScratchRepo(e2eBase, failedStep, ['--epic', 'P4-05', '--stage', 'U'])
+    expect(output).toContain(refusal(reportPath, 'P4-05.U'))
     expect(status).toBe(1)
   })
 })
