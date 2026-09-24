@@ -108,7 +108,7 @@ export function createJournalRecorder(
   return {
     stepStarted(start, effectClass) {
       const replaced = entries.get(start.seq)
-      if (replaced !== undefined && (replaced.call !== start.call || replaced.verified)) displaced.push(replaced)
+      if (replaced !== undefined && replaced.call !== start.call) displaced.push(replaced)
       entries.set(start.seq, {
         stepId: brandString<StepId>(`step-${start.seq}`),
         phase: phaseOf(start.phase),
