@@ -1257,7 +1257,7 @@ export default class RunPlugin extends Service {
     const state = this.service.get(runId)?.state
     if (state === undefined || TERMINAL_RUN_STATES.has(state)) return
     if (state === 'accepted' || state === 'planning') {
-      await this.service.advance(runId, 'cancelled', [], Date.now(), agent.runLease)
+      await this.service.advance(runId, 'cancelled', [], Date.now())
       return
     }
     if (state !== 'running') return
