@@ -17,6 +17,7 @@ import {
   HOST_LEVEL_NOTIFICATION_METHODS,
   JsonRpcLineTransport,
   JsonRpcResponseError,
+  type CapabilityDowngrade,
   type InitializeParams,
   type InitializeResult,
   type SessionPromptParams,
@@ -59,11 +60,28 @@ export class RequestTimeoutError extends Error {
  * `session/prompt` response without `accepted: true`).
  */
 export class SdkProtocolError extends Error {
-  /** @param message - the protocol violation description. */
-  constructor(message: string) {
+  /** The violation's reason as fields, when it has one a program acts on. */
+  readonly data?: SdkProtocolErrorData
+
+  /**
+   * @param message - the protocol violation description.
+   * @param data - the violation's reason as fields, when it has one.
+   */
+  constructor(message: string, data?: SdkProtocolErrorData) {
     super(message)
     this.name = 'SdkProtocolError'
+    if (data !== undefined) this.data = data
   }
+}
+
+/**
+ * The machine-readable reason of a {@link SdkProtocolError}: the server did not
+ * agree to capabilities this client declared mandatory (P8-01 acceptance[1]).
+ */
+export interface SdkProtocolErrorData {
+  readonly reason: 'mandatory-capability-not-agreed'
+  /** The mandatory capabilities the server's negotiation did not agree to. */
+  readonly capabilities: readonly string[]
 }
 
 interface SubscriptionState {
@@ -286,8 +304,14 @@ export class HarnessClient {
     // clause forbids -- a server that negotiated a version and a capability
     // set would have its answer discarded here, and the client would proceed
     // as though nothing had been agreed.
-    return {
-      serverInfo: { name: result.serverInfo.name, version: result.serverInfo.version },
+    // Fields this reader does not name, a newer server's optional additions,
+    // reach the caller as the server sent them (P0-06 acceptance[1]); the
+    // named ones are checked, and a malformed one is dropped as before.
+    return Object.assign(withoutKeys(result, INITIALIZE_RESULT_KEYS), {
+      serverInfo: Object.assign(withoutKeys(result.serverInfo, ['name', 'version']), {
+        name: result.serverInfo.name,
+        version: result.serverInfo.version,
+      }),
       ...readNegotiation(result.negotiation),
       ...readRange('protocolVersions', result.protocolVersions),
       ...typeof result.schemaFingerprint === 'string' ? { schemaFingerprint: result.schemaFingerprint } : {},
@@ -297,7 +321,7 @@ export class HarnessClient {
       // the next field it would have dropped. Absent stays absent: the client
       // must not turn "the server said nothing" into `{ stopped: false }`.
       ...readHostControl(result.hostControl),
-    }
+    })
   }
 
   /**
@@ -326,6 +350,7 @@ export class HarnessClient {
     if (missing.length > 0) {
       throw new SdkProtocolError(
         `initialize: the server did not agree to mandatory capability/capabilities ${missing.join(', ')}`,
+        { reason: 'mandatory-capability-not-agreed', capabilities: missing },
       )
     }
     return result
@@ -562,7 +587,7 @@ function errorMessage(error: unknown): string {
  */
 function readRange(key: 'protocolVersions', value: unknown): Partial<InitializeResult> {
   if (!isRecord(value) || typeof value.min !== 'number' || typeof value.max !== 'number') return {}
-  return { [key]: { min: value.min, max: value.max } }
+  return { [key]: Object.assign(withoutKeys(value, ['min', 'max']), { min: value.min, max: value.max }) }
 }
 
 /**
@@ -579,14 +604,39 @@ function readNegotiation(value: unknown): Partial<InitializeResult> {
   const agreed = value.agreedCapabilities
   const ignored = value.ignoredCapabilities
   if (!isStringArray(agreed) || !isStringArray(ignored)) return {}
+  // Absent reads as none, as the Python client reads it; present but not a
+  // list of well-formed downgrades drops the negotiation whole.
+  const downgrades = value.downgrades === undefined ? [] : readDowngrades(value.downgrades)
+  if (downgrades === undefined) return {}
   return {
-    negotiation: {
+    negotiation: Object.assign(withoutKeys(value, NEGOTIATION_KEYS), {
       protocolVersion: value.protocolVersion,
       agreedCapabilities: agreed,
       ignoredCapabilities: ignored,
-      downgrades: [],
-    },
+      downgrades,
+    }),
   }
+}
+
+/**
+ * Read a negotiation's downgrades off a wire value.
+ * @param value - the raw `downgrades` member.
+ * @returns every downgrade, each with the fields it carried, or `undefined` when any is malformed.
+ */
+function readDowngrades(value: unknown): CapabilityDowngrade[] | undefined {
+  if (!Array.isArray(value)) return undefined
+  const downgrades: CapabilityDowngrade[] = []
+  for (const item of value) {
+    if (!isRecord(item) || typeof item.capability !== 'string' || typeof item.reason !== 'string' || typeof item.adapter !== 'string') {
+      return undefined
+    }
+    downgrades.push(Object.assign(withoutKeys(item, ['capability', 'reason', 'adapter']), {
+      capability: item.capability,
+      reason: item.reason,
+      adapter: item.adapter,
+    }))
+  }
+  return downgrades
 }
 
 /**
@@ -601,13 +651,35 @@ function readNegotiation(value: unknown): Partial<InitializeResult> {
  */
 function readHostControl(value: unknown): Partial<InitializeResult> {
   if (!isRecord(value) || typeof value.stopped !== 'boolean') return {}
-  if (!value.stopped) return { hostControl: { stopped: false } }
+  const extra = withoutKeys(value, ['stopped', 'record'])
+  if (!value.stopped) return { hostControl: Object.assign(extra, { stopped: false as const }) }
   const record = value.record
   if (!isRecord(record)) return {}
   const { requestedBy, reason, requestedAtMs, release } = record
   if (typeof requestedBy !== 'string' || typeof reason !== 'string'
     || typeof requestedAtMs !== 'number' || typeof release !== 'string') return {}
-  return { hostControl: { stopped: true, record: { requestedBy, reason, requestedAtMs, release } } }
+  const kept = Object.assign(
+    withoutKeys(record, ['requestedBy', 'reason', 'requestedAtMs', 'release']),
+    { requestedBy, reason, requestedAtMs, release },
+  )
+  return { hostControl: Object.assign(extra, { stopped: true as const, record: kept }) }
+}
+
+/** The `initialize` result members {@link HarnessClient.initialize} reads and checks. */
+const INITIALIZE_RESULT_KEYS = ['serverInfo', 'negotiation', 'protocolVersions', 'schemaFingerprint', 'hostControl'] as const
+
+/** The negotiation members {@link readNegotiation} reads and checks. */
+const NEGOTIATION_KEYS = ['protocolVersion', 'agreedCapabilities', 'ignoredCapabilities', 'downgrades'] as const
+
+/**
+ * A copy of a wire object without the members a reader names, so what a newer
+ * peer added reaches the caller beside the members the reader checked.
+ * @param value - the raw wire object.
+ * @param keys - the members the reader handles itself.
+ * @returns the remaining members.
+ */
+function withoutKeys(value: Record<string, unknown>, keys: readonly string[]): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(value).filter(([key]) => !keys.includes(key)))
 }
 
 /**

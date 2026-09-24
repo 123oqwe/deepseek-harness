@@ -43,6 +43,7 @@ import type {
   InitializeParams,
   InitializeResult,
   JsonRpcTransportPeer,
+  NegotiationProvenance,
   SessionEventNotification,
   SessionPromptParams,
   SessionPromptResult,
@@ -53,6 +54,18 @@ import type {
 
 interface SessionRecord {
   handle: AgentHandle
+}
+
+/**
+ * The part of the Run Service (`@deepseek-ai/dsh-run`, mounted as `runs`) this
+ * server records a connection's negotiation on. Reached by name, as the host
+ * user factory is, so this package does not depend on the run package; a
+ * composition that mounts no Run Service records nothing.
+ */
+interface RunProvenanceRecorder {
+  readonly service: {
+    recordProvenance(id: RunId, provenance: { readonly negotiation: NegotiationProvenance }): Promise<unknown>
+  }
 }
 
 function encodedImage(block: SessionPromptParams['contentBlocks'][number]): block is SdkEncodedImageBlock {
@@ -175,12 +188,18 @@ function serverSchemaFingerprint(): string {
 export const SERVER_PROTOCOL_SURFACE: ProtocolSurface = {
   methods: [
     { name: 'initialize', schemaId: 'sdk-protocol:InitializeParams', version: '1.0' },
-    { name: 'session.prompt', schemaId: 'sdk-protocol:SessionPromptParams', version: '1.0' },
+    { name: 'session/prompt', schemaId: 'sdk-protocol:SessionPromptParams', version: '1.0' },
+    { name: 'shutdown', schemaId: 'sdk-protocol:ShutdownRequest', version: '1.0' },
   ],
+  // Every name this server originates: its notifications and `human/question`,
+  // the one request it sends its peer.
   events: [
     { name: 'session.event', schemaId: 'sdk-protocol:SessionEventNotification', version: '1.0' },
     { name: 'session.status', schemaId: 'sdk-protocol:SessionStatusNotification', version: '1.0' },
     { name: 'host.control', schemaId: 'sdk-protocol:HostControlNotification', version: '1.0' },
+    { name: 'subagent.started', schemaId: 'sdk-protocol:SubagentStartedNotification', version: '1.0' },
+    { name: 'subagent.finished', schemaId: 'sdk-protocol:SubagentFinishedNotification', version: '1.0' },
+    { name: 'human/question', schemaId: 'sdk-protocol:HumanQuestionParams', version: '1.0' },
   ],
   resourceTypes: ['session', 'agent'],
 }
@@ -205,6 +224,8 @@ export class HarnessSdkJsonRpcServer {
   private shutdownTask: Promise<Record<string, never>> | undefined
   private shuttingDown = false
   private initialized = false
+  /** What this connection's handshake agreed, once it has; recorded on each Run it opens. */
+  private negotiated: NegotiationProvenance | undefined
 
   /**
    * Whether this connection's client asked for `host.control`.
@@ -319,7 +340,13 @@ export class HarnessSdkJsonRpcServer {
     const schemaId = brandString<SchemaId>('sdk-protocol:InitializeParams')
     const encounteredVersion = params.schemaVersion ?? getSchema(schemaId)?.version ?? { major: 1, minor: 0 }
     const negotiation = negotiateSchema(schemaId, encounteredVersion)
-    if (!negotiation.compatible) throw negotiation.error
+    if (!negotiation.compatible) {
+      // The same error, carrying its fields as the response's `error.data`.
+      const { code, schemaId: refusedSchemaId, encounteredVersion: encountered, registeredVersion } = negotiation.error
+      throw Object.assign(negotiation.error, {
+        data: { code, schemaId: refusedSchemaId, encounteredVersion: encountered, registeredVersion },
+      })
+    }
     // P8-01 must[2]: an incompatible peer is refused BEFORE any work is done.
     // Placed ahead of adapter resolution and plugin mounting on purpose --
     // refusing after mounting an LLM adapter would leave the runtime holding
@@ -330,10 +357,10 @@ export class HarnessSdkJsonRpcServer {
       SERVER_PROTOCOL_VERSIONS,
     )
     if (!versionOutcome.agreed) {
-      throw new Error(
+      throw Object.assign(new Error(
         `initialize refused: ${versionOutcome.reason} (client ${JSON.stringify(versionOutcome.client)}, `
         + `server ${JSON.stringify(versionOutcome.server)})`,
-      )
+      ), { data: { reason: versionOutcome.reason, client: versionOutcome.client, server: versionOutcome.server } })
     }
     const capabilityOutcome = negotiateCapabilities(
       params.capabilities ?? [],
@@ -341,7 +368,10 @@ export class HarnessSdkJsonRpcServer {
       supportedCapabilitiesFor(this.ctx),
     )
     if (!capabilityOutcome.accepted) {
-      throw new Error(`initialize refused: ${capabilityOutcome.reason} (${capabilityOutcome.capability})`)
+      throw Object.assign(
+        new Error(`initialize refused: ${capabilityOutcome.reason} (${capabilityOutcome.capability})`),
+        { data: { reason: capabilityOutcome.reason, capability: capabilityOutcome.capability } },
+      )
     }
     if (params.reasoningEffort !== undefined
       && (typeof params.reasoningEffort !== 'string' || params.reasoningEffort.length === 0)) {
@@ -380,18 +410,21 @@ export class HarnessSdkJsonRpcServer {
     // stop was raised. Absent when the client did not ask, and absent when no
     // control plane is mounted: unknown, never "not stopped".
     const plane: ControlPlaneService | undefined = this.hostControlSubscribed ? this.ctx.get('controlPlane') : undefined
+    // acceptance[4]: the agreed outcome is returned, and recorded on the Run of
+    // every session this connection opens, making "what did these peers agree
+    // to" answerable from the record rather than by replaying a handshake that
+    // no longer exists.
+    const negotiated: NegotiationProvenance = {
+      protocolVersion: versionOutcome.version,
+      agreedCapabilities: capabilityOutcome.agreed,
+      ignoredCapabilities: capabilityOutcome.ignored,
+      downgrades: [],
+    }
+    this.negotiated = negotiated
     return {
       serverInfo: { name: 'deepseek-harness-sdk-runtime', version: '0.0.1' },
       ...plane === undefined ? {} : { hostControl: plane.state() },
-      // acceptance[4]: the agreed outcome is returned so it can be recorded on
-      // the run, making "what did these peers agree to" answerable from the
-      // record rather than by replaying a handshake that no longer exists.
-      negotiation: {
-        protocolVersion: versionOutcome.version,
-        agreedCapabilities: capabilityOutcome.agreed,
-        ignoredCapabilities: capabilityOutcome.ignored,
-        downgrades: [],
-      },
+      negotiation: negotiated,
       protocolVersions: SERVER_PROTOCOL_VERSIONS,
       schemaFingerprint: serverSchemaFingerprint(),
     }
@@ -532,6 +565,13 @@ export class HarnessSdkJsonRpcServer {
         ...hostUser === undefined ? {} : { identity: hostUser(brandString<RunId>(`run-${randomUUID()}`)) },
       },
     })
+    // P8-01 acceptance[4]: the Run this session opened carries the connection's
+    // negotiation; a subagent's Run takes it from its parent's (`dsh-run`).
+    const runs = this.ctx.get('runs') as RunProvenanceRecorder | undefined
+    const runId = handle.agent.runId
+    if (runs !== undefined && runId !== undefined && this.negotiated !== undefined) {
+      await runs.service.recordProvenance(runId, { negotiation: this.negotiated })
+    }
     const rec: SessionRecord = { handle }
     this.sessions.set(sessionId, rec)
     return rec

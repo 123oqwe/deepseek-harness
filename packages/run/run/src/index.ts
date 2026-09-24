@@ -534,13 +534,21 @@ export class RunService {
   }
 
   /**
-   * P8-01 acceptance[4]: record where the Run `id` came from.
-   * @param id - the registered Run.
-   * @param _provenance - the negotiation of the connection that opened it; not written yet.
-   * @returns the Run as it stands.
+   * P8-01 acceptance[4]: durably record where the Run `id` came from, the
+   * negotiation of the connection that opened it.
+   *
+   * A Run records its provenance once. A continued Run, recorded again by the
+   * connection that continues it, keeps the provenance it was opened with.
+   * @param id - the registered Run; rejects when unregistered.
+   * @param provenance - the negotiation of the connection that opened it.
+   * @returns the Run as it now stands.
    */
-  async recordProvenance(id: RunId, _provenance: RunProvenance): Promise<Run> {
-    return await this.serialize(id, current => ({ run: undefined, result: current }))
+  async recordProvenance(id: RunId, provenance: RunProvenance): Promise<Run> {
+    return await this.serialize(id, (current) => {
+      if (current.provenance !== undefined) return { run: undefined, result: current }
+      const run: Run = { ...current, provenance }
+      return { run, result: run }
+    })
   }
 
   /**
@@ -943,6 +951,13 @@ export default class RunPlugin extends Service {
     if (continuing === undefined) {
       const opened = this.service.openForSession(runId, agent.id, Date.now())
       this.track(opened.durable)
+      // P8-01 acceptance[4]: a subagent's Run carries the provenance of the Run
+      // its parent session opened.
+      const parent = agent.session.header.parentSession
+      const inherited = parent === undefined
+        ? undefined
+        : this.service.runsForSession(parent).find(run => run.provenance !== undefined)?.provenance
+      if (inherited !== undefined) this.track(this.service.recordProvenance(runId, inherited).then(() => undefined))
     }
     agent.runId = runId
     agent.lifecycle = { runId: brandString<AgentRunId>(runId), state: 'queued', epoch: taken.lease.token.epoch }

@@ -27,7 +27,7 @@ const artifactPath = join(repoRoot, 'spec/control-protocol.schema.json')
 const generatorPath = join(repoRoot, 'scripts/gen-control-protocol-schema.ts')
 
 /** The exact digest this build's wire surface produces. */
-const PINNED_FINGERPRINT = '43c06abd5ece4366f1486c040ca5d78c8594ed7e145992e47da97eaaacd683af'
+const PINNED_FINGERPRINT = '995c330e021d0f08ebbceaf74aaab7309fc5e492630930d825fe6e013682a6a1'
 
 interface ControlProtocolArtifact {
   readonly fingerprint: string
