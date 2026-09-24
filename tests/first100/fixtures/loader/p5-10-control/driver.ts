@@ -37,12 +37,18 @@ const SETTLE_MS = 3_000
 /** Polling interval for the two waits above. */
 const POLL_MS = 25
 
+/** What `interruptByParent` returned, or the code it threw. */
+type InterruptReading = SubagentInterruptReceipt | { readonly error: string }
+
+/** How the prompt settled. */
+type Outcome = { readonly delivered: string } | { readonly refused: string }
+
 /** What the driver prints. */
 interface Report {
   readonly mounted: { readonly subagents: boolean; readonly spawn: boolean }
   readonly firstTurn?: boolean
-  readonly interrupt?: SubagentInterruptReceipt | { readonly error: string }
-  readonly outcome?: { readonly delivered: string } | { readonly refused: string }
+  readonly interrupt?: InterruptReading
+  readonly outcome?: Outcome
   readonly statusesAfterPrompt?: readonly string[]
   readonly childRpcIds?: readonly string[]
 }
@@ -124,7 +130,7 @@ async function observe(ctx: Context, race: boolean): Promise<Report> {
   const pending = subagents.prompt(request, new AbortController().signal)
   // Synchronous, before `pending` is awaited: the prompt is admitted and its
   // enqueue waits for the child lock's next microtask.
-  let interrupt: Report['interrupt']
+  let interrupt: InterruptReading | undefined
   if (race) {
     try {
       interrupt = subagents.interruptByParent(started.childId, parent.id, 'continuable')
@@ -133,12 +139,19 @@ async function observe(ctx: Context, race: boolean): Promise<Report> {
     }
   }
   const outcome = await pending.then(
-    (receipt): Report['outcome'] => ({ delivered: String(receipt.messageId) }),
-    (error: unknown): Report['outcome'] => ({ refused: errorCode(error) }),
+    (receipt): Outcome => ({ delivered: String(receipt.messageId) }),
+    (error: unknown): Outcome => ({ refused: errorCode(error) }),
   )
   await until(() => (turnEnds.get(child) ?? 0) > endsBefore, SETTLE_MS)
   await ctx.agents.get(started.childId)?.whenIdle()
-  return { mounted, firstTurn, interrupt, outcome, statusesAfterPrompt: statuses, childRpcIds: rpcIds.get(child) ?? [] }
+  return {
+    mounted,
+    firstTurn,
+    ...interrupt === undefined ? {} : { interrupt },
+    outcome,
+    statusesAfterPrompt: statuses,
+    childRpcIds: rpcIds.get(child) ?? [],
+  }
 }
 
 const [configPath, mode] = process.argv.slice(2)
