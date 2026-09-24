@@ -955,11 +955,15 @@ export default class RunPlugin extends Service {
       const opened = this.service.openForSession(runId, agent.id, Date.now())
       this.track(opened.durable)
       // P8-01 acceptance[4]: a subagent's Run carries the provenance of the Run
-      // its parent session opened.
+      // its parent agent is in: the one non-terminal Run its parent session
+      // opened, as `adoptable` continues it. The session may also hold a
+      // finished Run another connection opened, and a current Run with no
+      // provenance gives the child none (P8-01 blind review B1).
       const parent = agent.session.header.parentSession
       const inherited = parent === undefined
         ? undefined
-        : this.service.runsForSession(parent).find(run => run.provenance !== undefined)?.provenance
+        : this.service.runsForSession(parent)
+          .find(run => run.sessionIds[0] === parent && !TERMINAL_RUN_STATES.has(run.state))?.provenance
       if (inherited !== undefined) this.track(this.service.recordProvenance(runId, inherited).then(() => undefined))
     }
     agent.runId = runId

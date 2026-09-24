@@ -18,7 +18,7 @@ P8-01 的验收已撤回（BLOCKED-314），P0-06 acceptance[1] 也未关闭，�
 - **两个客户端都保住对端发来的内容。** TS 客户端从 wire 上读取 `downgrades` 并逐条校验：列表缺失时读作 `[]`，畸形时整条 negotiation 丢弃，与 Python 客户端一致。结果本身、`serverInfo`、`protocolVersions`、negotiation 及其每一条降级、`hostControl` 及其停止记录，都保留客户端没有建模的键。Python 端，`InitializeResponse` 新增 `protocolVersions` 与 `schemaFingerprint`，`NegotiationProvenance` 新增以 `CapabilityDowngrade` 模型表示的 `downgrades`，回复中的每个模型都允许额外字段。
 - **协议面字面量原地改正。** `SERVER_PROTOCOL_SURFACE` 列出 `session/prompt` 与 `shutdown`，它的 events 是服务端发起的每一条消息，包括它发给对端的唯一一个请求 `human/question`。`shutdown` 没有参数类型，所以它的 schema id 是不注册的名字 `sdk-protocol:ShutdownRequest`（delegate 对 A5 的裁定）。有一条用例让这张清单与 `handleRequest` 分派的方法、服务端发出的名字双向相等。`spec/control-protocol.schema.json` 已重新生成，指纹随之改变。
 - **拒绝带上字段。** 传输层的 `-32603` 应答在抛出值自身有 `data` 属性时携带该 `data`。服务端的拒绝都设置了它：版本拒绝为 `reason`、`client` 与 `server`；能力拒绝为 `reason` 与 `capability`；schema 拒绝为 `code`、`schemaId`、`encounteredVersion` 与 `registeredVersion`。`initializeNegotiated` 以 `SdkProtocolError` 拒绝，其 `data` 为 `{ reason: 'mandatory-capability-not-agreed', capabilities }`。
-- **Run 记录自己的 provenance。** `RunService.recordProvenance` 把 `Run.provenance` 持久写入，只写一次；已经带有 provenance 的 Run 保留原值（V4d）。SDK 服务端为该连接保留握手的协商结果，并对它创建的每个会话等待 `recordProvenance` 完成。它经名字（`runs`）和一个本地结构类型取到 Run 服务，与取宿主用户工厂的方式相同，所以服务端包不依赖 run 包。`RunPlugin.open` 让子 agent 会话的 Run 取其父会话 Run 的 provenance。
+- **Run 记录自己的 provenance。** `RunService.recordProvenance` 把 `Run.provenance` 持久写入，只写一次；已经带有 provenance 的 Run 保留原值（V4d）。SDK 服务端为该连接保留握手的协商结果，并对它创建的每个会话等待 `recordProvenance` 完成。它经名字（`runs`）和一个本地结构类型取到 Run 服务，与取宿主用户工厂的方式相同，所以服务端包不依赖 run 包。`RunPlugin.open` 让子 agent 会话的 Run 取其父 agent 当前所在的 Run 的 provenance，即父会话自己开出、尚未到终态的那一个。同一会话里已结束的 Run 可能是别的连接开的，子 Run 不从它取（盲审 B1）。
 
 ## 考虑过的其他做法
 

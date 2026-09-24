@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-24-sdk-negotiation-reaches-every-run-and-refusals-carry-fields.md
-2026-09-24-sdk-negotiation-reaches-every-run-and-refusals-carry-fields.md: a69ce66554f205786592a013d9ab935b2443dd44
-2026-09-24-sdk-negotiation-reaches-every-run-and-refusals-carry-fields.zh.md: 82cf01bf9436efb3ccb35789ca4a83a996742a58
+2026-09-24-sdk-negotiation-reaches-every-run-and-refusals-carry-fields.md: cc772db2dd463e577d08c8b9d284e4e8d92e33e2
+2026-09-24-sdk-negotiation-reaches-every-run-and-refusals-carry-fields.zh.md: e254178f6cbb3dadd1f95c9a2457a8f2977f9476

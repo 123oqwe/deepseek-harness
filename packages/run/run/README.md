@@ -109,7 +109,9 @@ A Run can carry `provenance`: the control-protocol negotiation of the
 connection that opened it, written durably by
 `recordProvenance(id, { negotiation })`. `@deepseek-ai/dsh-sdk-server` records
 it for each session an SDK connection creates, and a Run opened for a subagent
-session takes the provenance of its parent session's Run. A Run keeps the first
+session takes the provenance of the Run its parent agent is in: the one
+non-terminal Run its parent session opened. A finished Run of that session,
+which an earlier connection may have opened, gives it none. A Run keeps the first
 provenance recorded for it; a later call leaves it unchanged
 ([control protocol](../../../docs/subsystems/control-protocol.md#provenance)).
 
