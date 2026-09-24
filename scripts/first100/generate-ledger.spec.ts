@@ -50,6 +50,7 @@ import {
   parseCiRunUrl,
   PROGRAM_CI_REPO,
   reattestationOf,
+  REPORT_CONFIGS,
   reportDirMatchesCandidate,
   redStepComplaints,
   checkNoOpenFindings,
@@ -1455,5 +1456,21 @@ describe('generate-ledger.mjs greens a cell only from a report of the config its
     expect(output).toContain(`BLOCKED: --report ${reportPath} cannot observe P4-05.U.4: the entry is frozen under --config `
       + 'vitest.e2e.config.ts, and the report ran none of apps/cli/tests/a.e2e.ts;')
     expect(status).toBe(1)
+  })
+})
+
+describe('REPORT_CONFIGS names exactly the observation reports first100-exact-sha.yml writes', () => {
+  it('maps each written report to the --config of the step that writes it, and names no other report', () => {
+    const text = readFileSync(new URL('../../.github/workflows/first100-exact-sha.yml', import.meta.url), 'utf8')
+    const jobs = (load(text) as { jobs: Record<string, { steps?: { run?: string }[] }> }).jobs
+    const written = new Map<string, string | undefined>()
+    for (const run of Object.values(jobs).flatMap(job => (job.steps ?? []).map(step => step.run ?? ''))) {
+      for (const command of run.replace(/\\\n/gu, ' ').split('\n')) {
+        const name = /--outputFile=\.artifacts\/first100\/observations\/(\S+\.json)/u.exec(command)?.[1]
+        if (name !== undefined) written.set(name, frozenCommand(command.trim().split(/\s+/u)).config)
+      }
+    }
+    expect(written.size).toBeGreaterThan(0)
+    expect(new Map(REPORT_CONFIGS)).toStrictEqual(written)
   })
 })

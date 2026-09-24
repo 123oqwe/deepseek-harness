@@ -276,6 +276,12 @@ export function reportDirMatchesCandidate(reportPath: string, candidateSha: stri
 export function frozenCommand(argv: readonly string[]): { config: string | undefined; paths: string[] }
 
 /**
+ * The vitest config each observation report `first100-exact-sha.yml` writes ran under, by file name; `undefined` is
+ * the default config.
+ */
+export const REPORT_CONFIGS: ReadonlyMap<string, string | undefined>
+
+/**
  * Why a report cannot observe a frozen entry, or `null` when it can. The report's file name must be one
  * `first100-exact-sha.yml` writes and must record the config the argv names (`vitest-report.json` for an argv naming
  * none); a report of a named config must also have run every test path the argv names, and the argv must name one.
