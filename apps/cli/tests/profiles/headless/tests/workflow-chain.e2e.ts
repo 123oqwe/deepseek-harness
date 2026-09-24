@@ -11,8 +11,10 @@
  * and the script's one `agent(...)` call delegates from that agent to a child
  * (`packages/workflow/workflow-worker-thread/src/host.ts:505-521`), which
  * makes one `bash` call: the action this case reads. The launcher then collects
- * the run with `workflow` `attach`, so its turn, and the process, end only
- * after the run has settled.
+ * the run with `workflow` `attach`, so its turn ends only after the run has
+ * settled. The settled run's worker thread outlives the tree's disposal, so the
+ * launch preloads `../../../fixtures/exit-when-recorded.mjs`, which exits the
+ * process once `dsh` has recorded its exit code.
  *
  * What the case expects of the run's agent is the hop `delegateChildIdentity`
  * writes for a delegated child (`packages/subagent/subagent/src/child-agent.ts:142-156`):
@@ -48,6 +50,7 @@ import { attachedIdentity, readSessionLogs, type SessionLog } from '../../sessio
 
 const BIN_SCRIPT = fileURLToPath(new URL('../../../../src/bin.ts', import.meta.url))
 const TSCONFIG = fileURLToPath(new URL('../../../../../../tsconfig.json', import.meta.url))
+const EXIT_WHEN_RECORDED = new URL('../../../fixtures/exit-when-recorded.mjs', import.meta.url).href
 
 /** Text only the launcher's task contains. */
 const TASK = 'P2-01-DETACHED-LAUNCHER: start the detached workflow run, then collect it.'
@@ -127,6 +130,7 @@ describe('a detached workflow run on dsh --profile headless (no key required)', 
           // Empty, not absent: the launch pins its Trust Kernel, so the run
           // derives its capability token as a shipped launch does.
           DSH_TRUST_KERNEL_INSECURE: '',
+          NODE_OPTIONS: [process.env.NODE_OPTIONS, `--import=${EXIT_WHEN_RECORDED}`].filter(Boolean).join(' '),
         },
         inspect: async (cwd) => {
           observed.value = { logs: await readSessionLogs(join(cwd, '.dsh', 'sessions')) }
