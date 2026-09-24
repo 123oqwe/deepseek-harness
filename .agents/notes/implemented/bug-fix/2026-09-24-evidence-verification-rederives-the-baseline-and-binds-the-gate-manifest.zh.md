@@ -13,8 +13,9 @@ Status: implemented
 - **校验时重新推导基线。** `.dsh/baseline.json` 仍与记录的摘要一致时，`verify` 对检出调用 P0-01 的 `verifyBaseline`，把每一项漂移报为不一致。
 - **门禁清单绑定到包上。** `collect-evidence.mjs init` 在签名之前写出 `manifest.json`，并把它的摘要记为包的可选字段 `sidecarManifestDigest`，包签名覆盖这个字段。清单摘要不符，或包里缺这个字段，`verify` 都报不一致。
 - **只有校验通过、且记录的是布尔值 `true` 的包，结果行才写 `accepted=true`。** 校验失败的包写 `accepted=false`，记录的值只用文字说明；`accepted` 不是布尔值，本身就是一项不一致。
-- **包绑定的是最后一个采集步骤结束时的工作树。** 每一步（`init`、`run`、`build-artifact`）都记录 `git diff --binary <baseSha>`，连同 git 不忽略的每个未跟踪文件相对 `/dev/null` 的补丁，但不含包自身的文件与 sidecar 目录。`verify` 再取一次同样的补丁并比对摘要，所以最后一步之后的改动，无论是已提交、未提交，还是新增的未跟踪文件，都会让校验失败。
-- **做不了的核对记为具名的不一致。** 缺 git 或 pnpm、目录不是 git 检出、包或清单不是合法 JSON，都记为一项不一致，所以结果行总会打印。
+- **包绑定的是最后一个采集步骤结束时的工作树。** 每一步（`init`、`run`、`build-artifact`）都记录 `git diff --binary <baseSha>`，连同 git 不忽略的每个未跟踪文件、以及每个未跟踪的 `.gitignore`（无论是否被忽略）相对 `/dev/null` 的补丁，但不含包自身的文件与 sidecar 目录。`verify` 再取一次同样的补丁并比对摘要，所以最后一步之后的改动，无论是已提交、未提交、新增的未跟踪文件，还是一个连自己也忽略掉的新 `.gitignore`，都会让校验失败。
+- **补丁是 git 自己从工作树取出的。** 两处 diff 都带 `--no-ext-diff --no-textconv`，git 配置里的外部 diff 程序或 textconv 过滤器都替换不了它。索引把文件标为 skip-worktree 或 assume-unchanged 的检出会被拒绝，因为 `git diff` 对这类文件读的是索引；git 给不出补丁的未跟踪条目也会被拒绝，例如指向目录的符号链接或嵌套仓库。
+- **做不了的核对记为具名的不一致。** 缺 git 或 pnpm、目录不是 git 检出、包或清单不是合法 JSON，都记为一项不一致；包能解析、却缺 `verify` 要读的字段时，报为 `verify could not complete`。所以结果行总会打印。
 
 ## 考虑过的替代方案
 
@@ -27,5 +28,7 @@ Status: implemented
 - 每次校验都会运行 `git`、`node --version` 与 `pnpm --version`。
 - 本改动之前采集的包没有 `sidecarManifestDigest`，会校验失败。
 - 在 `init` 与最后一个采集步骤之间发生的改动，属于包所描述的树，不会被报出。一个门若写出 git 不忽略的文件，这个文件会一并被绑定。
+- 被采集时生效的忽略规则所忽略的文件不在绑定范围内。本仓库忽略 `.env`、`mise.toml`、`.vscode/` 等，采集之后改动它们，校验照样通过。树外的规则，即 `.git/info/exclude` 与全局的 `core.excludesFile`，同样算生效的规则：采集之后在那里加一条规则，就能让一个新文件躲过校验。
+- 把文件标为 skip-worktree 的检出（稀疏检出就是这样）无法采集；含有指向目录的未跟踪符号链接或嵌套仓库的检出，也无法采集。
 - `main()` 在 `import.meta.main` 守卫之后运行，所以在没有 `import.meta.main` 的 Node 版本上，脚本什么也不做、以 0 退出。这是修复之前就有的问题，由 BLOCKED-305 跟踪。
 - 修复的提交是 `775c25640a`。后来的一条提交信息引用的 `bed753dfe2` 是本笔记的文档提交。

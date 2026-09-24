@@ -59,7 +59,9 @@
  * `accepted=false` and names what it records in words. These are the two facts
  * a report of this gate cites (`AGENTS.md`, evidence-gate reporting). A check
  * that cannot run, for example because git or pnpm is missing, is a named
- * mismatch, so the result line is always printed.
+ * mismatch, and a package that verify cannot read to the end, such as valid
+ * JSON without the fields it reads, is reported as `verify could not
+ * complete`, so the result line is always printed.
  */
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
@@ -287,7 +289,13 @@ function main() {
   if (evidenceArg === undefined) throw new Error('verify-evidence: --evidence is required')
   const evidencePath = resolve(repoRoot, evidenceArg)
 
-  const result = verify(repoRoot, evidencePath)
+  let result
+  try {
+    result = verify(repoRoot, evidencePath)
+  } catch (error) {
+    // A package that parses but lacks a field verify reads.
+    result = { ok: false, mismatches: [`verify could not complete: ${errorText(error)}`], accepted: null }
+  }
   if (result.ok) {
     process.stdout.write(`verify-evidence: ${evidencePath} verified offline, no mismatches, accepted=${result.accepted === true}\n`)
     process.exit(0)
