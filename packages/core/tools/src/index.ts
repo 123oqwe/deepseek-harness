@@ -789,7 +789,7 @@ function resolveOwnershipPolicy(ownership: ToolOwnershipConfig | undefined): Reg
  * {@link ToolOwnershipConfig.ownerDeclarers} member: the runner declares each
  * dynamic package's own plugin id as that package's owner.
  */
-const DYNAMIC_RUNNER_ENTRY = '@deepseek-ai/dsh-cordis-host-runner'
+const DYNAMIC_RUNNER_ENTRY = '@deepseek-ai/dsh-cordis-host-runner-renamed'
 
 /**
  * Resolve which Loader entries may call {@link ToolRuntime.declareOwner}, at
