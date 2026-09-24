@@ -47,3 +47,33 @@
 # fail-closed direction it always had.
 - id: workspace-trust-local
   disabled: false
+- id: permission
+  config:
+    riskRules:
+      - { domainTag: filesystem-read, riskClass: read }
+      - { domainTag: catalog-read, riskClass: read }
+      - { domainTag: session-state-read, riskClass: read }
+      - { domainTag: process-observe, riskClass: read }
+      - { domainTag: session-state-write, riskClass: local-reversible }
+      - { domainTag: context-inject, riskClass: local-reversible }
+      - { domainTag: filesystem-write, riskClass: internal-write }
+      - { domainTag: shell-execute, riskClass: local-reversible }
+      - { domainTag: process-control, riskClass: internal-write }
+      - { domainTag: agent-spawn, riskClass: internal-write }
+      - { domainTag: agent-control, riskClass: internal-write }
+      - { domainTag: orchestration, riskClass: internal-write }
+      - { domainTag: network-fetch, riskClass: external-communication }
+      - { domainTag: network-search, riskClass: external-communication }
+    presets:
+      read-only:
+        sandbox: read-only
+        approval: ask
+        approvalThreshold: destructive
+      workspace-write:
+        sandbox: workspace-write
+        approval: ask
+        approvalThreshold: destructive
+      danger-full-access:
+        sandbox: danger-full-access
+        approval: never
+        approvalThreshold: safety-critical
