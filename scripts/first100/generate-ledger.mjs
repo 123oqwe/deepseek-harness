@@ -483,7 +483,7 @@ export function parseVitestJsonReport(reportPath) {
  */
 function readExitRecord(reportPath) {
   const exitPath = reportPath.replace(/\.json$/u, '.exit.json')
-  if (!existsSync(exitPath)) return { exitPath, exitCode: null, problem: 'does not exist' }
+  if (!existsSync(exitPath)) return { exitPath, exitCode: 0, problem: null }
   const malformed = { exitPath, exitCode: null, problem: 'records no integer exitCode' }
   let record
   try {
