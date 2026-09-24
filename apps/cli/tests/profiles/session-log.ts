@@ -33,6 +33,9 @@ export interface SessionLog {
   records: SessionLogRecord[]
 }
 
+/** A log as any reader here returns it: its records, and the stored bytes when the reader kept them. */
+export type ReadLog = Pick<SessionLog, 'records'> & Partial<Pick<SessionLog, 'compressed'>>
+
 /**
  * Read the one session log under a profile's session storage.
  * @param sessionsRoot - the directory a profile persists sessions into.
@@ -131,7 +134,7 @@ export interface LoggedIdentity {
  * @returns the record's `identity` member.
  * @throws when the log carries no attachment, or one without an `identity` object.
  */
-export function attachedIdentity(log: Pick<SessionLog, 'records'>): LoggedIdentity {
+export function attachedIdentity(log: ReadLog): LoggedIdentity {
   const attached = log.records.find(record => record.type === 'identity/attached')
   if (attached === undefined) throw new Error('this session log carries no identity/attached record')
   const identity = attached.data?.['identity']
@@ -149,7 +152,7 @@ export function attachedIdentity(log: Pick<SessionLog, 'records'>): LoggedIdenti
  * @returns the principal id on the first `identity/attached` record.
  * @throws when the log carries no attachment, or one without a principal id.
  */
-export function attachedPrincipal(log: Pick<SessionLog, 'records'>): string {
+export function attachedPrincipal(log: ReadLog): string {
   const attached = log.records.find(record => record.type === 'identity/attached')
   if (attached === undefined) throw new Error('this session log carries no identity/attached record')
   const identity = attached.data?.['identity'] as { principal?: { id?: unknown } } | undefined
@@ -179,6 +182,6 @@ export async function persistedHostUserId(dshHome: string): Promise<string> {
  * @param type - the record type to count.
  * @returns how many records carry that type.
  */
-export function countRecords(log: Pick<SessionLog, 'records'>, type: string): number {
+export function countRecords(log: ReadLog, type: string): number {
   return log.records.filter(record => record.type === type).length
 }
