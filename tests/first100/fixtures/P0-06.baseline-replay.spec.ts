@@ -1,13 +1,22 @@
 /**
- * P0-06 acceptance[0] as C19 narrowed it: the version-0 session logs that
- * audit baseline b150a551 produced all read, except the ones where a surface
- * event appears before the first step, which the product refuses with a
- * readable reason.
+ * P0-06 acceptance[0] as the user ruled (WORKING-MODEL §12 ⑩): every version-0
+ * session log that audit baseline b150a551 produced reads, and reads
+ * correctly, except three classes that the product refuses explicitly with a
+ * readable reason:
+ * 1. a surface event before the first step (24 logs);
+ * 2. assistant chunks outside any turn, a replay fragment (3 logs);
+ * 3. a projection written by a baseline fixture (2 logs): a compact checkpoint
+ *    without its compaction/start, or request/header tools recorded as names.
+ * The 26 subagent child logs whose descriptor has version 2 are ruled "read";
+ * they fail until the version-0 edge accepts that descriptor version. Two of
+ * them (`scripts/snapshots/python-sdk-single-exe/advanced/session.{1,2}.jsonl`)
+ * also record request/header tools as names; the descriptor rule classes them.
  *
  * The copies under `./p0-06-audit-baseline/b150a551/` are the baseline's blobs
  * byte for byte, enumerated by content (every blob whose first line is a
- * `session` header with `version: 0`), and `manifest.json` lists them. The
- * guard case re-derives what the manifest claims from the copied bytes.
+ * `session` header with `version: 0`), and `manifest.json` lists them. Each
+ * log's class is derived here from its own bytes; the guard case checks the
+ * derivation against the manifest and pins the class sizes.
  *
  * `beforeAll` runs `./P0-06.baseline-replay-driver.ts` once in a child process
  * through `runLoaderSmoke`, which isolates `DSH_HOME`. The driver boots the
@@ -32,8 +41,6 @@ const repoTsconfig = fileURLToPath(new URL('../../../tsconfig.json', import.meta
 const overlay = fileURLToPath(new URL('../../../packages/workspace/workspace-trust-local/tests/fixtures/headless-trust.patch.yml', import.meta.url))
 
 const BASELINE = 'b150a551b8d465e31e418e1b2eaf5e79bbb7d28e'
-/** The reason `session-format-v2-to-v3/src/migration.ts` gives for a surface before the first step. */
-const PRE_STEP_REFUSAL = 'format v2 surface before first step cannot acquire a system head without changing chronology'
 /**
  * Copies stored under another name than their baseline path. This one's bytes
  * fail the strict released-v0 row decode that `scripts/session-fixture-layout.spec.ts`
@@ -44,6 +51,34 @@ const PACKED_ROW_TYPES = new Set(['text-chunks', 'reasoning-chunks', 'tool-call-
 const SURFACE_TYPES = new Set(['system/message', 'user/message', 'assistant/message', 'tool/result'])
 const DRIVER_PROCESS_TIMEOUT_MS = 150_000
 const REPLAY_HOOK_TIMEOUT_MS = 180_000
+
+/** How a log is expected to fare: read, or refused for one of four reasons in three classes. */
+type LogKind = 'read' | 'surface-before-first-step' | 'chunk-only-fragment' | 'compact-checkpoint-without-start' | 'tool-names'
+type RefusedKind = Exclude<LogKind, 'read'>
+
+/**
+ * The product's refusal text for each refused kind. The persistence reports
+ * every one as `SessionFormatUnsupportedError`, whose message starts with the
+ * format edge's refusal (`session-persistence-jsonl/src/index.ts:674-677`).
+ */
+const REFUSAL_TEXT: Readonly<Record<RefusedKind, string>> = {
+  // session-format-v2-to-v3/src/migration.ts:57
+  'surface-before-first-step': 'format v2 surface before first step cannot acquire a system head without changing chronology',
+  // session-format-v0-to-v1/src/relationships.ts:371, reached through :74-75 for the step event that
+  // session-format-v1-to-v2/src/validation.ts:24 registers; prefixed at session-format/src/catalog.ts:246
+  'chunk-only-fragment': 'assistant/attempt does not match an open turn and step',
+  // session-format-v0-to-v1/src/relationships.ts:474 with the label from :317; prefixed at session-format/src/catalog.ts:246
+  'compact-checkpoint-without-start': 'has no matching compaction/start',
+  // session-format-v0-to-v1/src/validation-helpers.ts:11 through payload-validation.ts:821 and :825;
+  // prefixed at session-format/src/chain.ts:252
+  'tool-names': 'header tools[0] must be a JSON object',
+}
+
+/** Title text naming each class-3 reason. */
+const PROJECTION_LABEL: Readonly<Record<'compact-checkpoint-without-start' | 'tool-names', string>> = {
+  'compact-checkpoint-without-start': 'a compact checkpoint without compaction/start',
+  'tool-names': 'request/header tools recorded as names',
+}
 
 /** One copied log as the manifest lists it. */
 interface ManifestFile {
@@ -58,6 +93,7 @@ interface ManifestFile {
   readonly turnEnds: number
   readonly userMessages: number
   readonly expected: 'read' | 'refused'
+  readonly kind: LogKind
   readonly sessionId: string
   readonly toolsSource: string
 }
@@ -73,8 +109,28 @@ interface ManifestSidecar {
 
 /** What the driver recorded for one log. */
 type ReplayResult =
-  | { readonly path: string, readonly ok: true, readonly headerId: string, readonly eventCount: number, readonly types: Readonly<Record<string, number>> }
-  | { readonly path: string, readonly ok: false, readonly call: 'open' | 'read', readonly errorName: string, readonly errorMessage: string }
+  | {
+    readonly path: string
+    readonly ok: true
+    readonly headerId: string
+    readonly eventCount: number
+    readonly types: Readonly<Record<string, number>>
+  }
+  | { readonly path: string; readonly ok: false; readonly call: 'open' | 'read'; readonly errorName: string; readonly errorMessage: string }
+
+/** A committed row, as far as the classification reads it. */
+interface FixtureRow {
+  readonly type: string
+  readonly surfaceOp?: unknown
+  readonly data?: {
+    readonly texts?: readonly unknown[]
+    readonly args?: readonly unknown[]
+    readonly version?: unknown
+    readonly compactionId?: unknown
+    readonly source?: { readonly kind?: unknown; readonly plugin?: unknown; readonly compactionId?: unknown }
+    readonly header?: { readonly tools?: unknown }
+  }
+}
 
 /** What a copied log's own bytes say. */
 interface FixtureFacts {
@@ -85,7 +141,8 @@ interface FixtureFacts {
   readonly turnStarts: number
   readonly turnEnds: number
   readonly userMessages: number
-  readonly expected: 'read' | 'refused'
+  readonly descriptorVersion2: boolean
+  readonly kind: LogKind
 }
 
 const manifest = JSON.parse(readFileSync(join(fixtureRoot, 'manifest.json'), 'utf8')) as {
@@ -95,21 +152,41 @@ const manifest = JSON.parse(readFileSync(join(fixtureRoot, 'manifest.json'), 'ut
 }
 
 /**
- * Read the facts the manifest records for one log from the copied bytes.
+ * Whether a JSON value is an object that is neither null nor an array.
+ * @param value - the value to test.
+ * @returns true for a JSON object.
+ */
+function isJsonObject(value: unknown): boolean {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+/**
+ * Read one log's facts from its copied bytes, including its class. The first
+ * rule that matches decides the class:
+ * - a surface row before the first `step/start`: refused, class 1;
+ * - rows that are all assistant chunks (plain or packed): refused, class 2;
+ * - a `subagent/descriptor` whose version is not 3: read, as the user ruled;
+ * - a replacing `compact` checkpoint with no earlier `compaction/start` of its id: refused, class 3;
+ * - a `request/header` whose tools hold a member that is not an object: refused, class 3;
+ * - anything else: read.
  * @param file - the copy's path under the fixture root.
- * @returns the header's type and version, the row and event counts, and whether a surface precedes the first step.
+ * @returns the header's type and version, the row and event counts, and the class.
  */
 function fixtureFacts(file: string): FixtureFacts {
   const [headerLine = '', ...rowLines] = readFileSync(join(fixtureRoot, file), 'utf8').split('\n').filter(line => line.trim().length > 0)
-  const header = JSON.parse(headerLine) as { type?: unknown, version?: unknown }
+  const header = JSON.parse(headerLine) as { type?: unknown; version?: unknown }
+  const rows = rowLines.map(line => JSON.parse(line) as FixtureRow)
+  const compactionStarts = new Set<unknown>()
   let events = 0
   let turnStarts = 0
   let turnEnds = 0
   let userMessages = 0
   let stepSeen = false
   let surfaceBeforeStep = false
-  for (const line of rowLines) {
-    const row = JSON.parse(line) as { type: string, data?: { texts?: readonly unknown[], args?: readonly unknown[] } }
+  let descriptorVersion2 = false
+  let checkpointWithoutStart = false
+  let toolNames = false
+  for (const row of rows) {
     if (PACKED_ROW_TYPES.has(row.type)) {
       events += (row.type === 'tool-call-chunks' ? row.data?.args : row.data?.texts)?.length ?? 0
       continue
@@ -120,16 +197,30 @@ function fixtureFacts(file: string): FixtureFacts {
     if (row.type === 'user/message') userMessages += 1
     if (row.type === 'step/start') stepSeen = true
     if (SURFACE_TYPES.has(row.type) && !stepSeen) surfaceBeforeStep = true
+    if (row.type === 'subagent/descriptor' && row.data?.version !== 3) descriptorVersion2 = true
+    if (row.type === 'compaction/start') compactionStarts.add(row.data?.compactionId)
+    const source = row.data?.source
+    if (row.type === 'user/message' && row.surfaceOp !== 'append' && source?.kind === 'plugin' && source.plugin === 'compact'
+      && !compactionStarts.has(source.compactionId)) checkpointWithoutStart = true
+    const tools = row.data?.header?.tools
+    if (row.type === 'request/header' && Array.isArray(tools) && tools.some(tool => !isJsonObject(tool))) toolNames = true
   }
+  const chunkOnly = rows.length > 0 && rows.every(row => row.type === 'assistant/chunk' || PACKED_ROW_TYPES.has(row.type))
+  const kind: LogKind = surfaceBeforeStep ? 'surface-before-first-step'
+    : chunkOnly ? 'chunk-only-fragment'
+      : descriptorVersion2 ? 'read'
+        : checkpointWithoutStart ? 'compact-checkpoint-without-start'
+          : toolNames ? 'tool-names' : 'read'
   return {
     headerType: header.type,
     headerVersion: header.version,
-    rows: rowLines.length,
+    rows: rows.length,
     events,
     turnStarts,
     turnEnds,
     userMessages,
-    expected: surfaceBeforeStep ? 'refused' : 'read',
+    descriptorVersion2,
+    kind,
   }
 }
 
@@ -151,7 +242,7 @@ function filesUnder(directory: string): string[] {
  * @param file - the copy's path under the fixture root.
  * @returns its byte length, sha256, and git blob id.
  */
-function copyIdentity(file: string): { bytes: number, sha256: string, gitBlob: string } {
+function copyIdentity(file: string): { bytes: number; sha256: string; gitBlob: string } {
   const bytes = readFileSync(join(fixtureRoot, file))
   return {
     bytes: bytes.length,
@@ -162,28 +253,50 @@ function copyIdentity(file: string): { bytes: number, sha256: string, gitBlob: s
 
 const facts = new Map(manifest.files.map(entry => [entry.path, fixtureFacts(entry.file)]))
 const entries = new Map(manifest.files.map(entry => [entry.path, entry]))
-const readPaths = manifest.files.filter(entry => entry.expected === 'read').map(entry => entry.path)
-const refusedPaths = manifest.files.filter(entry => entry.expected === 'refused').map(entry => entry.path)
+/**
+ * The logs of one derived kind, in manifest order.
+ * @param kind - the kind to select.
+ * @returns their baseline paths.
+ */
+function pathsOfKind(kind: LogKind): string[] {
+  return manifest.files.filter(entry => facts.get(entry.path)?.kind === kind).map(entry => entry.path)
+}
+const readPaths = pathsOfKind('read')
+const preStepPaths = pathsOfKind('surface-before-first-step')
+const chunkOnlyPaths = pathsOfKind('chunk-only-fragment')
+const projectionRows: Array<[string, string]> = [
+  ...pathsOfKind('compact-checkpoint-without-start').map((path): [string, string] => [path, PROJECTION_LABEL['compact-checkpoint-without-start']]),
+  ...pathsOfKind('tool-names').map((path): [string, string] => [path, PROJECTION_LABEL['tool-names']]),
+]
 
 describe('P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551', () => {
   describe('the committed copies', () => {
-    it('are every version-0 session log of b150a551, byte for byte, split by whether a surface event precedes the first step', () => {
+    it('are every version-0 session log of b150a551, byte for byte, each classed by its content as read or as one of three refused classes', () => {
       expect(manifest.baseline).toBe(BASELINE)
       expect(manifest.files).toHaveLength(157)
       expect(new Set(manifest.files.map(entry => entry.path)).size).toBe(157)
-      expect(readPaths).toHaveLength(133)
-      expect(refusedPaths).toHaveLength(24)
       expect(new Set(manifest.files.map(entry => entry.sessionId)).size).toBe(157)
+
+      // The class sizes the ruling names: 128 read (26 of them descriptor version 2) and 29 refused as 24, 3 and 2.
+      expect({
+        read: readPaths.length,
+        readDescriptorVersion2: readPaths.filter(path => facts.get(path)?.descriptorVersion2 === true).length,
+        surfaceBeforeFirstStep: preStepPaths.length,
+        chunkOnlyFragment: chunkOnlyPaths.length,
+        fixtureProjection: projectionRows.length,
+      }).toEqual({ read: 128, readDescriptorVersion2: 26, surfaceBeforeFirstStep: 24, chunkOnlyFragment: 3, fixtureProjection: 2 })
 
       // The directory holds exactly the listed copies: nothing unlisted, nothing missing.
       expect(filesUnder(join(fixtureRoot, 'b150a551')))
         .toEqual([...manifest.files.map(entry => entry.file), ...manifest.sidecars.map(sidecar => sidecar.file)].sort())
-      expect(manifest.files.filter(entry => entry.file !== `b150a551/${entry.path}${STORED_SUFFIX.get(entry.path) ?? ''}`).map(entry => entry.path)).toEqual([])
+      expect(manifest.files.filter(entry => entry.file !== `b150a551/${entry.path}${STORED_SUFFIX.get(entry.path) ?? ''}`)
+        .map(entry => entry.path)).toEqual([])
       expect(manifest.sidecars.filter(sidecar => sidecar.file !== `b150a551/${sidecar.path}`).map(sidecar => sidecar.path)).toEqual([])
 
       // Every copy is the recorded baseline blob.
       expect([...manifest.files, ...manifest.sidecars]
-        .filter(entry => JSON.stringify(copyIdentity(entry.file)) !== JSON.stringify({ bytes: entry.bytes, sha256: entry.sha256, gitBlob: entry.gitBlob }))
+        .filter(entry => JSON.stringify(copyIdentity(entry.file))
+          !== JSON.stringify({ bytes: entry.bytes, sha256: entry.sha256, gitBlob: entry.gitBlob }))
         .map(entry => entry.path)).toEqual([])
 
       // What the manifest says about each log is what its bytes say.
@@ -191,7 +304,8 @@ describe('P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551
         const fact = facts.get(entry.path)
         return fact === undefined || fact.headerType !== 'session' || fact.headerVersion !== 0
           || fact.rows !== entry.rows || fact.events !== entry.events || fact.turnStarts !== entry.turnStarts
-          || fact.turnEnds !== entry.turnEnds || fact.userMessages !== entry.userMessages || fact.expected !== entry.expected
+          || fact.turnEnds !== entry.turnEnds || fact.userMessages !== entry.userMessages || fact.kind !== entry.kind
+          || entry.expected !== (fact.kind === 'read' ? 'read' : 'refused')
       }).map(entry => entry.path)).toEqual([])
 
       const sidecarFiles = new Set(manifest.sidecars.map(sidecar => sidecar.file))
@@ -221,12 +335,26 @@ describe('P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551
       replay = new Map(recorded.results.map(result => [result.path, result]))
     }, REPLAY_HOOK_TIMEOUT_MS)
 
+    /**
+     * Assert that the product refused one log with the reason of its derived kind.
+     * @param path - the log's baseline path.
+     * @param kind - the refused kind its bytes were classed as.
+     */
+    function expectRefused(path: string, kind: RefusedKind): void {
+      expect(facts.get(path)?.kind).toBe(kind)
+      expect(replay.get(path)).toMatchObject({
+        ok: false,
+        errorName: 'SessionFormatUnsupportedError',
+        errorMessage: expect.stringContaining(REFUSAL_TEXT[kind]) as unknown,
+      })
+    }
+
     it.each(readPaths)('reads %s with its assigned header id, every turn start and turn end, and every user message', (path) => {
       const entry = entries.get(path)
       const fact = facts.get(path)
       const result = replay.get(path)
       if (entry === undefined || fact === undefined || result === undefined || !result.ok) {
-        expect({ entry, fact, result }).toMatchObject({ entry: { path }, fact: { expected: 'read' }, result: { ok: true } })
+        expect({ entry, fact, result }).toMatchObject({ entry: { path }, fact: { kind: 'read' }, result: { ok: true } })
         return
       }
       expect(result.headerId).toBe(entry.sessionId)
@@ -237,13 +365,18 @@ describe('P0-06 acceptance[0]: version-0 session logs of audit baseline b150a551
       expect(result.eventCount === 0).toBe(fact.events === 0)
     })
 
-    it.each(refusedPaths)('refuses %s as SessionFormatUnsupportedError naming a surface before the first step', (path) => {
-      expect(facts.get(path)?.expected).toBe('refused')
-      expect(replay.get(path)).toMatchObject({
-        ok: false,
-        errorName: 'SessionFormatUnsupportedError',
-        errorMessage: expect.stringContaining(PRE_STEP_REFUSAL) as unknown,
-      })
+    it.each(preStepPaths)('refuses %s as SessionFormatUnsupportedError: a surface event before the first step', (path) => {
+      expectRefused(path, 'surface-before-first-step')
+    })
+
+    it.each(chunkOnlyPaths)('refuses %s as SessionFormatUnsupportedError: assistant chunks outside any turn', (path) => {
+      expectRefused(path, 'chunk-only-fragment')
+    })
+
+    it.each(projectionRows)('refuses %s as SessionFormatUnsupportedError: a baseline fixture projection, %s', (path) => {
+      const kind = facts.get(path)?.kind
+      expect(kind === 'compact-checkpoint-without-start' || kind === 'tool-names').toBe(true)
+      expectRefused(path, kind === 'tool-names' ? 'tool-names' : 'compact-checkpoint-without-start')
     })
   })
 })

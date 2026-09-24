@@ -3,7 +3,7 @@
   "enumeration": "Every blob in the git tree of the baseline commit whose first line parses as a JSON object with \"type\": \"session\" and \"version\": 0, whatever its path or extension.",
   "treeEntriesScanned": 7903,
   "sessionHeaders": 169,
-  "expectedRule": "\"refused\" when a surface event (system/message, user/message, assistant/message, or tool/result) appears before the first step/start; otherwise \"read\".",
+  "expectedRule": "The first rule that matches decides \"kind\"; \"expected\" is \"read\" for kind \"read\" and \"refused\" otherwise. \"surface-before-first-step\": a system/message, user/message, assistant/message or tool/result row before the first step/start. \"chunk-only-fragment\": at least one row, and every row is assistant/chunk or a packed chunk row. \"read\": a subagent/descriptor whose version is not 3 (the user ruling: these logs must read). \"compact-checkpoint-without-start\": a user/message from plugin \"compact\" with a replacing surfaceOp and no earlier compaction/start naming its compactionId. \"tool-names\": a request/header whose header.tools holds a member that is not a JSON object. Otherwise \"read\".",
   "storedPathRule": "Each copy is stored at b150a551/<path>, except apps/web/tests/snapshots/cordis-tool-round/session.jsonl, stored with a .txt suffix: its assistant/message at event 11 cites 40 chunk seqs, which the strict released-v0 row decode rejects, and scripts/session-fixture-layout.spec.ts applies that decode to every tracked *.jsonl whose first record is a session header.",
   "countRule": "rows counts the non-empty lines after the header; events counts logical events, where a packed text-chunks, reasoning-chunks or tool-call-chunks row is one event per member; turnStarts, turnEnds and userMessages count rows of that type.",
   "toolsSourceRule": "The copied sidecar whose initial schemas replace {{tools}}: tool-schemas.expected.json beside session.jsonl and tool-schemas.N.expected.json beside session.N.jsonl (the baseline acp-snapshot naming, packages/test-support/acp-snapshot/src/suite.ts:43-48 at b150a551); none when the directory holds no sidecar under that name or the log has no {{tools}} token.",
@@ -20,6 +20,7 @@
       "turnEnds": 1,
       "userMessages": 1,
       "expected": "refused",
+      "kind": "surface-before-first-step",
       "sessionId": "p0-06-b150a551-001",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -36,6 +37,7 @@
       "turnEnds": 1,
       "userMessages": 1,
       "expected": "refused",
+      "kind": "surface-before-first-step",
       "sessionId": "p0-06-b150a551-002",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -52,6 +54,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "refused",
+      "kind": "surface-before-first-step",
       "sessionId": "p0-06-b150a551-003",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -68,6 +71,7 @@
       "turnEnds": 1,
       "userMessages": 1,
       "expected": "refused",
+      "kind": "surface-before-first-step",
       "sessionId": "p0-06-b150a551-004",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -84,6 +88,7 @@
       "turnEnds": 1,
       "userMessages": 1,
       "expected": "refused",
+      "kind": "surface-before-first-step",
       "sessionId": "p0-06-b150a551-005",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -100,6 +105,7 @@
       "turnEnds": 2,
       "userMessages": 4,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-006",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -116,6 +122,7 @@
       "turnEnds": 1,
       "userMessages": 1,
       "expected": "refused",
+      "kind": "surface-before-first-step",
       "sessionId": "p0-06-b150a551-007",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -132,6 +139,7 @@
       "turnEnds": 1,
       "userMessages": 1,
       "expected": "refused",
+      "kind": "surface-before-first-step",
       "sessionId": "p0-06-b150a551-008",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -148,6 +156,7 @@
       "turnEnds": 1,
       "userMessages": 1,
       "expected": "refused",
+      "kind": "surface-before-first-step",
       "sessionId": "p0-06-b150a551-009",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -164,6 +173,7 @@
       "turnEnds": 0,
       "userMessages": 1,
       "expected": "refused",
+      "kind": "surface-before-first-step",
       "sessionId": "p0-06-b150a551-010",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -180,6 +190,7 @@
       "turnEnds": 2,
       "userMessages": 2,
       "expected": "refused",
+      "kind": "surface-before-first-step",
       "sessionId": "p0-06-b150a551-011",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -196,6 +207,7 @@
       "turnEnds": 4,
       "userMessages": 9,
       "expected": "refused",
+      "kind": "surface-before-first-step",
       "sessionId": "p0-06-b150a551-012",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -212,6 +224,7 @@
       "turnEnds": 0,
       "userMessages": 0,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-013",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -228,6 +241,7 @@
       "turnEnds": 1,
       "userMessages": 1,
       "expected": "refused",
+      "kind": "surface-before-first-step",
       "sessionId": "p0-06-b150a551-014",
       "toolsTokens": 2,
       "toolsSource": "none"
@@ -244,6 +258,7 @@
       "turnEnds": 1,
       "userMessages": 1,
       "expected": "refused",
+      "kind": "surface-before-first-step",
       "sessionId": "p0-06-b150a551-015",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -260,6 +275,7 @@
       "turnEnds": 1,
       "userMessages": 1,
       "expected": "refused",
+      "kind": "surface-before-first-step",
       "sessionId": "p0-06-b150a551-016",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -276,6 +292,7 @@
       "turnEnds": 1,
       "userMessages": 1,
       "expected": "refused",
+      "kind": "surface-before-first-step",
       "sessionId": "p0-06-b150a551-017",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -292,6 +309,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "refused",
+      "kind": "surface-before-first-step",
       "sessionId": "p0-06-b150a551-018",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -308,6 +326,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "refused",
+      "kind": "surface-before-first-step",
       "sessionId": "p0-06-b150a551-019",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -324,6 +343,7 @@
       "turnEnds": 0,
       "userMessages": 1,
       "expected": "refused",
+      "kind": "surface-before-first-step",
       "sessionId": "p0-06-b150a551-020",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -340,6 +360,7 @@
       "turnEnds": 3,
       "userMessages": 4,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-021",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -356,6 +377,7 @@
       "turnEnds": 0,
       "userMessages": 0,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-022",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -372,6 +394,7 @@
       "turnEnds": 2,
       "userMessages": 4,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-023",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -388,6 +411,7 @@
       "turnEnds": 0,
       "userMessages": 0,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-024",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -404,6 +428,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-025",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -420,6 +445,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-026",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -436,6 +462,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-027",
       "toolsTokens": 1,
       "toolsSource": "b150a551/examples/acp-agent/tests/snapshots/advanced-toolchain/tool-schemas.expected.json"
@@ -451,7 +478,8 @@
       "turnStarts": 1,
       "turnEnds": 1,
       "userMessages": 6,
-      "expected": "read",
+      "expected": "refused",
+      "kind": "compact-checkpoint-without-start",
       "sessionId": "p0-06-b150a551-028",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -468,6 +496,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-029",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -484,6 +513,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-030",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -500,6 +530,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-031",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -516,6 +547,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-032",
       "toolsTokens": 1,
       "toolsSource": "b150a551/examples/acp-agent/tests/snapshots/both-mode-turn/tool-schemas.expected.json"
@@ -532,6 +564,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-033",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -548,6 +581,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-034",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -564,6 +598,7 @@
       "turnEnds": 1,
       "userMessages": 3,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-035",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -580,6 +615,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-036",
       "toolsTokens": 1,
       "toolsSource": "b150a551/examples/acp-agent/tests/snapshots/code-mode-turn/tool-schemas.expected.json"
@@ -596,6 +632,7 @@
       "turnEnds": 1,
       "userMessages": 4,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-037",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -612,6 +649,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-038",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -628,6 +666,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-039",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -644,6 +683,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-040",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -660,6 +700,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-041",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -676,6 +717,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-042",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -692,6 +734,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-043",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -708,6 +751,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-044",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -724,6 +768,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-045",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -740,6 +785,7 @@
       "turnEnds": 1,
       "userMessages": 1,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-046",
       "toolsTokens": 1,
       "toolsSource": "b150a551/examples/acp-agent/tests/snapshots/fs-glob-sampling/tool-schemas.expected.json"
@@ -756,6 +802,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-047",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -772,6 +819,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-048",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -788,6 +836,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-049",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -804,6 +853,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-050",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -820,6 +870,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-051",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -836,6 +887,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-052",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -852,6 +904,7 @@
       "turnEnds": 0,
       "userMessages": 0,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-053",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -868,6 +921,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-054",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -884,6 +938,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-055",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -900,6 +955,7 @@
       "turnEnds": 1,
       "userMessages": 3,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-056",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -916,6 +972,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-057",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -932,6 +989,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-058",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -948,6 +1006,7 @@
       "turnEnds": 0,
       "userMessages": 0,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-059",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -964,6 +1023,7 @@
       "turnEnds": 1,
       "userMessages": 3,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-060",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -980,6 +1040,7 @@
       "turnEnds": 1,
       "userMessages": 3,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-061",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -996,6 +1057,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-062",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1012,6 +1074,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-063",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1028,6 +1091,7 @@
       "turnEnds": 1,
       "userMessages": 3,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-064",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1044,6 +1108,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-065",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1060,6 +1125,7 @@
       "turnEnds": 0,
       "userMessages": 0,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-066",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -1076,6 +1142,7 @@
       "turnEnds": 1,
       "userMessages": 3,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-067",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1092,6 +1159,7 @@
       "turnEnds": 1,
       "userMessages": 3,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-068",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1108,6 +1176,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-069",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1124,6 +1193,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-070",
       "toolsTokens": 1,
       "toolsSource": "b150a551/examples/acp-agent/tests/snapshots/lsp-definition/tool-schemas.expected.json"
@@ -1140,6 +1210,7 @@
       "turnEnds": 2,
       "userMessages": 3,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-071",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1156,6 +1227,7 @@
       "turnEnds": 1,
       "userMessages": 3,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-072",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1172,6 +1244,7 @@
       "turnEnds": 2,
       "userMessages": 3,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-073",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1188,6 +1261,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-074",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1204,6 +1278,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-075",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1220,6 +1295,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-076",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1236,6 +1312,7 @@
       "turnEnds": 1,
       "userMessages": 1,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-077",
       "toolsTokens": 1,
       "toolsSource": "b150a551/examples/acp-agent/tests/snapshots/persistent-pwsh-tool-turn/tool-schemas.expected.json"
@@ -1252,6 +1329,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-078",
       "toolsTokens": 1,
       "toolsSource": "b150a551/examples/acp-agent/tests/snapshots/product-subagent-both/tool-schemas.expected.json"
@@ -1268,6 +1346,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-079",
       "toolsTokens": 1,
       "toolsSource": "b150a551/examples/acp-agent/tests/snapshots/product-subagent-codex/tool-schemas.expected.json"
@@ -1284,6 +1363,7 @@
       "turnEnds": 1,
       "userMessages": 4,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-080",
       "toolsTokens": 1,
       "toolsSource": "b150a551/examples/acp-agent/tests/snapshots/product-subagent-result-diagnostic/tool-schemas.expected.json"
@@ -1300,6 +1380,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-081",
       "toolsTokens": 1,
       "toolsSource": "b150a551/examples/acp-agent/tests/snapshots/pty-tools/tool-schemas.expected.json"
@@ -1316,6 +1397,7 @@
       "turnEnds": 1,
       "userMessages": 1,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-082",
       "toolsTokens": 1,
       "toolsSource": "b150a551/examples/acp-agent/tests/snapshots/pwsh-tool-turn/tool-schemas.expected.json"
@@ -1332,6 +1414,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-083",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1348,6 +1431,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-084",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1364,6 +1448,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-085",
       "toolsTokens": 1,
       "toolsSource": "b150a551/examples/acp-agent/tests/snapshots/read-image/tool-schemas.expected.json"
@@ -1380,6 +1465,7 @@
       "turnEnds": 0,
       "userMessages": 0,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-086",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -1396,6 +1482,7 @@
       "turnEnds": 1,
       "userMessages": 4,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-087",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1412,6 +1499,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-088",
       "toolsTokens": 1,
       "toolsSource": "b150a551/examples/acp-agent/tests/snapshots/session-query-spill/tool-schemas.expected.json"
@@ -1428,6 +1516,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-089",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1444,6 +1533,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-090",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1460,6 +1550,7 @@
       "turnEnds": 1,
       "userMessages": 3,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-091",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1476,6 +1567,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-092",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1492,6 +1584,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-093",
       "toolsTokens": 1,
       "toolsSource": "b150a551/examples/acp-agent/tests/snapshots/subagent-child-question-rejection/tool-schemas.expected.json"
@@ -1508,6 +1601,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-094",
       "toolsTokens": 1,
       "toolsSource": "b150a551/examples/acp-agent/tests/snapshots/subagent-continuable-inheritance/tool-schemas.1.expected.json"
@@ -1524,6 +1618,7 @@
       "turnEnds": 2,
       "userMessages": 3,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-095",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1540,6 +1635,7 @@
       "turnEnds": 3,
       "userMessages": 3,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-096",
       "toolsTokens": 1,
       "toolsSource": "b150a551/examples/acp-agent/tests/snapshots/subagent-continuable/tool-schemas.1.expected.json"
@@ -1556,6 +1652,7 @@
       "turnEnds": 2,
       "userMessages": 3,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-097",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1572,6 +1669,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-098",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1588,6 +1686,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-099",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1604,6 +1703,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-100",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1620,6 +1720,7 @@
       "turnEnds": 2,
       "userMessages": 4,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-101",
       "toolsTokens": 2,
       "toolsSource": "none"
@@ -1636,6 +1737,7 @@
       "turnEnds": 2,
       "userMessages": 3,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-102",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1652,6 +1754,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-103",
       "toolsTokens": 1,
       "toolsSource": "b150a551/examples/acp-agent/tests/snapshots/subagent-list-agents/tool-schemas.1.expected.json"
@@ -1668,6 +1771,7 @@
       "turnEnds": 3,
       "userMessages": 4,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-104",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1684,6 +1788,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-105",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1700,6 +1805,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-106",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1716,6 +1822,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-107",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1732,6 +1839,7 @@
       "turnEnds": 2,
       "userMessages": 4,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-108",
       "toolsTokens": 2,
       "toolsSource": "none"
@@ -1748,6 +1856,7 @@
       "turnEnds": 2,
       "userMessages": 3,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-109",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1764,6 +1873,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-110",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1780,6 +1890,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-111",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1796,6 +1907,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-112",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1812,6 +1924,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-113",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1828,6 +1941,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-114",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1844,6 +1958,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-115",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1860,6 +1975,7 @@
       "turnEnds": 0,
       "userMessages": 0,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-116",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -1876,6 +1992,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-117",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1892,6 +2009,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-118",
       "toolsTokens": 1,
       "toolsSource": "b150a551/examples/acp-agent/tests/snapshots/subagent-report/tool-schemas.1.expected.json"
@@ -1908,6 +2026,7 @@
       "turnEnds": 3,
       "userMessages": 5,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-119",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1924,6 +2043,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-120",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1940,6 +2060,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-121",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1956,6 +2077,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-122",
       "toolsTokens": 1,
       "toolsSource": "b150a551/examples/acp-agent/tests/snapshots/text-turn/tool-schemas.expected.json"
@@ -1972,6 +2094,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-123",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -1988,6 +2111,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-124",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -2004,6 +2128,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-125",
       "toolsTokens": 1,
       "toolsSource": "b150a551/examples/acp-agent/tests/snapshots/web-fetch/tool-schemas.expected.json"
@@ -2020,6 +2145,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-126",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -2036,6 +2162,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-127",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -2052,6 +2179,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-128",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -2068,6 +2196,7 @@
       "turnEnds": 0,
       "userMessages": 0,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-129",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -2084,6 +2213,7 @@
       "turnEnds": 2,
       "userMessages": 2,
       "expected": "refused",
+      "kind": "surface-before-first-step",
       "sessionId": "p0-06-b150a551-130",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -2100,6 +2230,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-131",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -2116,6 +2247,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-132",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -2132,6 +2264,7 @@
       "turnEnds": 1,
       "userMessages": 1,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-133",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -2148,6 +2281,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-134",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -2164,6 +2298,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-135",
       "toolsTokens": 2,
       "toolsSource": "none"
@@ -2180,6 +2315,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-136",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -2195,7 +2331,8 @@
       "turnStarts": 0,
       "turnEnds": 0,
       "userMessages": 0,
-      "expected": "read",
+      "expected": "refused",
+      "kind": "chunk-only-fragment",
       "sessionId": "p0-06-b150a551-137",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -2211,7 +2348,8 @@
       "turnStarts": 0,
       "turnEnds": 0,
       "userMessages": 0,
-      "expected": "read",
+      "expected": "refused",
+      "kind": "chunk-only-fragment",
       "sessionId": "p0-06-b150a551-138",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -2228,6 +2366,7 @@
       "turnEnds": 0,
       "userMessages": 0,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-139",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -2244,6 +2383,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-140",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -2259,7 +2399,8 @@
       "turnStarts": 0,
       "turnEnds": 0,
       "userMessages": 0,
-      "expected": "read",
+      "expected": "refused",
+      "kind": "chunk-only-fragment",
       "sessionId": "p0-06-b150a551-141",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -2276,6 +2417,7 @@
       "turnEnds": 0,
       "userMessages": 0,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-142",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -2292,6 +2434,7 @@
       "turnEnds": 2,
       "userMessages": 2,
       "expected": "refused",
+      "kind": "surface-before-first-step",
       "sessionId": "p0-06-b150a551-143",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -2308,6 +2451,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-144",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -2324,6 +2468,7 @@
       "turnEnds": 1,
       "userMessages": 1,
       "expected": "refused",
+      "kind": "surface-before-first-step",
       "sessionId": "p0-06-b150a551-145",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -2340,6 +2485,7 @@
       "turnEnds": 2,
       "userMessages": 3,
       "expected": "refused",
+      "kind": "surface-before-first-step",
       "sessionId": "p0-06-b150a551-146",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -2356,6 +2502,7 @@
       "turnEnds": 0,
       "userMessages": 0,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-147",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -2372,6 +2519,7 @@
       "turnEnds": 2,
       "userMessages": 4,
       "expected": "refused",
+      "kind": "surface-before-first-step",
       "sessionId": "p0-06-b150a551-148",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -2388,6 +2536,7 @@
       "turnEnds": 2,
       "userMessages": 4,
       "expected": "refused",
+      "kind": "surface-before-first-step",
       "sessionId": "p0-06-b150a551-149",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -2404,6 +2553,7 @@
       "turnEnds": 1,
       "userMessages": 1,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-150",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -2420,6 +2570,7 @@
       "turnEnds": 1,
       "userMessages": 1,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-151",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -2436,6 +2587,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-152",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -2452,6 +2604,7 @@
       "turnEnds": 1,
       "userMessages": 1,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-153",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -2468,6 +2621,7 @@
       "turnEnds": 1,
       "userMessages": 1,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-154",
       "toolsTokens": 1,
       "toolsSource": "none"
@@ -2484,6 +2638,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-155",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -2500,6 +2655,7 @@
       "turnEnds": 1,
       "userMessages": 2,
       "expected": "read",
+      "kind": "read",
       "sessionId": "p0-06-b150a551-156",
       "toolsTokens": 0,
       "toolsSource": "none"
@@ -2515,7 +2671,8 @@
       "turnStarts": 1,
       "turnEnds": 1,
       "userMessages": 1,
-      "expected": "read",
+      "expected": "refused",
+      "kind": "tool-names",
       "sessionId": "p0-06-b150a551-157",
       "toolsTokens": 0,
       "toolsSource": "none"
