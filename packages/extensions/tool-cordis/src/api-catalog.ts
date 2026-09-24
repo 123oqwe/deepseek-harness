@@ -3395,7 +3395,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
       },
       {
         signature: 'abstract resume(runId: WorkflowRunId, request: WorkflowStartRequest): Promise<WorkflowRun>',
-        description: 'Continue an interrupted run from its journal (Epic P4-08 must[1], acceptance[0]).\n\n**Asynchronous where WorkflowEngine.start is not, because it does strictly more.** Deciding what a resumed run may reuse means reconciling each recorded step against the world — the child\'s own DURABLE session, which only a persistence read can answer, and that read is async. The alternatives were measured and rejected under §12.23: making `start()` async charges every existing caller for an input they do not have, and reading a durable record synchronously means coupling the engine to a provider\'s on-disk layout.\n\nA journal that does not exist, or one written under a different script digest, starts the run fresh rather than failing: `admitResume` refuses the RESUME, not the run, and a caller asking to continue wants the work to happen.',
+        description: 'Continue an interrupted run from its journal (Epic P4-08 must[1], acceptance[0]).\n\n**Asynchronous where WorkflowEngine.start is not, because it does strictly more.** Deciding what a resumed run may reuse means reconciling each recorded step against the world — the child\'s own DURABLE session, which only a persistence read can answer, and that read is async. The alternatives were measured and rejected under §12.23: making `start()` async charges every existing caller for an input they do not have, and reading a durable record synchronously means coupling the engine to a provider\'s on-disk layout.\n\nA journal that does not exist, or one written under a different script digest, starts the run fresh rather than failing: `admitResume` refuses the RESUME, not the run, and a caller asking to continue wants the work to happen. The returned run\'s `resumeRefused` names a refusal; a missing journal leaves it absent.',
         parameters: [{ name: 'runId', description: 'the interrupted run to continue; its journal is read by this id.' }, { name: 'request', description: 'the same fields `start` takes; the script must be the one the journal was written under, or the resume degrades to a fresh run.' }],
         returns: 'the live run; its `result` resolves when the script settles.',
       },
@@ -7701,7 +7701,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'WorkflowRun',
-    declaration: 'export interface WorkflowRun {\n    readonly id: WorkflowRunId;\n    readonly traceContext: string | undefined;\n    readonly meta: WorkflowMeta;\n    readonly result: Promise<WorkflowResult>;\n    cancel(reason?: string): void;\n    dispose(): Promise<void>;\n}',
+    declaration: 'export interface WorkflowRun {\n    readonly id: WorkflowRunId;\n    readonly traceContext: string | undefined;\n    readonly meta: WorkflowMeta;\n    readonly resumeRefused?: {\n        readonly reason: string;\n        readonly detail: string;\n    };\n    readonly result: Promise<WorkflowResult>;\n    cancel(reason?: string): void;\n    dispose(): Promise<void>;\n}',
   },
   {
     name: 'WorkflowRunId',
