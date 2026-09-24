@@ -962,8 +962,7 @@ export default class RunPlugin extends Service {
       const parent = agent.session.header.parentSession
       const inherited = parent === undefined
         ? undefined
-        : this.service.runsForSession(parent)
-          .find(run => run.sessionIds[0] === parent && !TERMINAL_RUN_STATES.has(run.state))?.provenance
+        : this.service.runsForSession(parent).find(run => run.provenance !== undefined)?.provenance
       if (inherited !== undefined) this.track(this.service.recordProvenance(runId, inherited).then(() => undefined))
     }
     agent.runId = runId
