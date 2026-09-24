@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-24T18:02:19.836Z",
-  "inputDigest": "6aa1a8db99b12d73ab9ec7de262e00aa2e0354f2df43849f1063524135c929c5",
+  "lastUpdatedUtc": "2026-09-24T18:08:20.877Z",
+  "inputDigest": "8e107052d4a89c9775ca0d76cf71519f35da593345e06e8d50210a244696a6ce",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -3175,6 +3175,36 @@
             "P4-09 must[3]: a nested run's children inherit its DECAYED capability token gives a detached run's session its launcher's cwd, not the process's (BLOCKED-324)"
           ],
           "capturedAtUtc": "2026-09-24T13:38:26.860Z"
+        },
+        "U.2": {
+          "status": "GREEN",
+          "candidateSha": "4736909e5981ea8b26d629f12daac5e523815e81",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030259739",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36030259739/first100-vitest-report-4736909e5981ea8b26d629f12daac5e523815e81/vitest-e2e-workflow.json",
+          "observationSha256": "7dc213733723676845d0dfff50adde9705d770c5db17f58a82459689bf3a48c2",
+          "expectCasesMatched": [
+            "a detached workflow run on dsh --profile headless (no key required) BLOCKED-323: the launch exits on its own after the detached run it collected has settled"
+          ],
+          "exitOverride": {
+            "exitCode": null,
+            "reason": "run 36030259739 predates the exit record (BLOCKED-326): step 23 \"Workflow runs on shipped launches — a detached run (BLOCKED-323, BLOCKED-324) and a resumed one (P4-08)\" of .github/workflows/first100-exact-sha.yml at 4736909e59 (:529-534) runs one vitest command with no \"|| true\" and no continue-on-error, and concluded success, so the process exit was 0"
+          },
+          "capturedAtUtc": "2026-09-24T18:08:20.484Z"
+        },
+        "U.3": {
+          "status": "GREEN",
+          "candidateSha": "4736909e5981ea8b26d629f12daac5e523815e81",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030259739",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36030259739/first100-vitest-report-4736909e5981ea8b26d629f12daac5e523815e81/vitest-e2e-workflow.json",
+          "observationSha256": "7dc213733723676845d0dfff50adde9705d770c5db17f58a82459689bf3a48c2",
+          "expectCasesMatched": [
+            "a detached workflow run on dsh --profile headless (no key required) BLOCKED-324: the run's child completes its turn, and the run's and the child's sessions carry the launcher's cwd"
+          ],
+          "exitOverride": {
+            "exitCode": null,
+            "reason": "run 36030259739 predates the exit record (BLOCKED-326): step 23 \"Workflow runs on shipped launches — a detached run (BLOCKED-323, BLOCKED-324) and a resumed one (P4-08)\" of .github/workflows/first100-exact-sha.yml at 4736909e59 (:529-534) runs one vitest command with no \"|| true\" and no continue-on-error, and concluded success, so the process exit was 0"
+          },
+          "capturedAtUtc": "2026-09-24T18:08:20.867Z"
         }
       },
       "candidateSha": "73c1c04f2ea03fbd09b0c0cb5d06ecf986aedbff",
@@ -6209,14 +6239,18 @@
         },
         "U.2": {
           "status": "GREEN",
-          "candidateSha": "224d2ac8672c4d90f66ca7801ae30d44869332bd",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34253568004",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-224d2ac867/vitest-report.json",
-          "observationSha256": "b93148d91a03db21eccbc90a9aebf647e8f4d5afb3404e18abcc497d247658af",
+          "candidateSha": "4736909e5981ea8b26d629f12daac5e523815e81",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030259739",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36030259739/first100-vitest-report-4736909e5981ea8b26d629f12daac5e523815e81/vitest-report.json",
+          "observationSha256": "ceb1159ec268b15c4b59f11bdb23028bf72be6e6a17620c0fb5978d3b8bd1ba8",
           "expectCasesMatched": [
             "P4-05 acceptance[1] (§12.59): a waiting run holds no concurrency slot lets B start while A waits, and gives A its slot back BEFORE a new start C"
           ],
-          "capturedAtUtc": "2026-09-08T17:28:59.722Z"
+          "exitOverride": {
+            "exitCode": null,
+            "reason": "run 36030259739 predates the exit record (BLOCKED-326): step 18 \"Full test suite (verbose json reporter — the ledger's observation input)\" of .github/workflows/first100-exact-sha.yml at 4736909e59 (:334-336) runs one vitest command with no \"|| true\" and no continue-on-error, and concluded success, so the process exit was 0"
+          },
+          "capturedAtUtc": "2026-09-24T18:08:20.099Z"
         },
         "F.3": {
           "status": "GREEN",
@@ -7060,17 +7094,21 @@
       "supplements": {
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34439518421",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-2d2e8f89ac/first100-evidence-2d2e8f89ac9cccff7d92f165b5436105986e6c11/vitest-report.json",
-          "observationSha256": "80d9eb727295cb43bedea8ee032942968f75a5653f9ffe25981cef8520d11f6f",
+          "candidateSha": "4736909e5981ea8b26d629f12daac5e523815e81",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030259739",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36030259739/first100-vitest-report-4736909e5981ea8b26d629f12daac5e523815e81/vitest-report.json",
+          "observationSha256": "ceb1159ec268b15c4b59f11bdb23028bf72be6e6a17620c0fb5978d3b8bd1ba8",
           "expectCasesMatched": [
             "P4-08 must[0]: a real run keeps a journal records one entry per agent() call, keyed to the script digest",
             "P4-08 must[0]: a real run keeps a journal RESUMES without starting the completed children again (acceptance[0])",
             "P4-08 must[0]: a real run keeps a journal classes every agent() step SIDE-EFFECTING, so a resume reconciles rather than skips",
             "P4-08 acceptance[0]: a resume does not repeat completed child work RERUNS a completed step whose child session cannot be confirmed"
           ],
-          "capturedAtUtc": "2026-09-10T05:38:38.880Z"
+          "exitOverride": {
+            "exitCode": null,
+            "reason": "run 36030259739 predates the exit record (BLOCKED-326): step 18 \"Full test suite (verbose json reporter — the ledger's observation input)\" of .github/workflows/first100-exact-sha.yml at 4736909e59 (:334-336) runs one vitest command with no \"|| true\" and no continue-on-error, and concluded success, so the process exit was 0"
+          },
+          "capturedAtUtc": "2026-09-24T18:08:19.089Z"
         },
         "P.1": {
           "status": "SUPERSEDED",
@@ -7436,10 +7474,10 @@
       "supplements": {
         "U.2": {
           "status": "GREEN",
-          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
-          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "candidateSha": "4736909e5981ea8b26d629f12daac5e523815e81",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030259739",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36030259739/first100-vitest-report-4736909e5981ea8b26d629f12daac5e523815e81/vitest-report.json",
+          "observationSha256": "ceb1159ec268b15c4b59f11bdb23028bf72be6e6a17620c0fb5978d3b8bd1ba8",
           "expectCasesMatched": [
             "installs a `workflow` global, and it is GATED rather than merely present",
             "REFUSES a bare name, because a name alone cannot pin the version a run used",
@@ -7450,7 +7488,11 @@
             "P4-09 must[3]: a script nests another definition REFUSES nesting past the configured depth (acceptance[3])",
             "P4-09 must[3]: a script nests another definition CANCELS the nested run when the parent is cancelled (acceptance[1])"
           ],
-          "capturedAtUtc": "2026-09-08T15:11:48.090Z"
+          "exitOverride": {
+            "exitCode": null,
+            "reason": "run 36030259739 predates the exit record (BLOCKED-326): step 18 \"Full test suite (verbose json reporter — the ledger's observation input)\" of .github/workflows/first100-exact-sha.yml at 4736909e59 (:334-336) runs one vitest command with no \"|| true\" and no continue-on-error, and concluded success, so the process exit was 0"
+          },
+          "capturedAtUtc": "2026-09-24T18:08:19.592Z"
         },
         "U.3": {
           "status": "GREEN",
