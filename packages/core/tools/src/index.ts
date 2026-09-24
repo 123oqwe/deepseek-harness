@@ -752,12 +752,14 @@ interface TreeEntry extends AttributableLoaderEntry {
  * The name of the innermost entry whose fiber is on `chain`: an entry of the
  * host Loader, or an entry of another entry tree (a preset composition keeps
  * its rows out of the host Loader's entries). An entry of another tree counts
- * only at its own fiber, and only when the fiber of the tree that holds it is
- * further up `chain`.
+ * only at its own fiber, only when the fiber of the tree that holds it is
+ * further up `chain`, and only when a host Loader entry's fiber is further up
+ * `chain` too: `fiber.entry` is a field any code can write, so on a fiber no
+ * host entry encloses it names nothing.
  * @param chain - a fiber followed by its ancestors, innermost first.
  * @param entries - every entry the host Loader holds, as an array: `Loader.entries()` is a generator,
  *   and a second pass over one generator reads nothing.
- * @returns the entry's name, or `undefined` when no entry's fiber is on `chain`.
+ * @returns the entry's name, or `undefined` when no host entry's fiber is on `chain`.
  */
 function nearestEntryName(chain: readonly Fiber[], entries: readonly AttributableLoaderEntry[]): string | undefined {
   for (const [index, fiber] of chain.entries()) {
@@ -767,7 +769,11 @@ function nearestEntryName(chain: readonly Fiber[], entries: readonly Attributabl
     const nested = (fiber as { entry?: TreeEntry }).entry
     if (nested?.fiber?.uid !== fiber.uid) continue
     const treeUid = nested.parent.tree.ctx.fiber.uid
-    if (chain.slice(index + 1).some(outer => outer.uid === treeUid)) return nested.options.name
+    const outer = chain.slice(index + 1)
+    if (outer.some(ancestor => ancestor.uid === treeUid)
+      && outer.some(ancestor => entries.some(entry => entry.fiber !== undefined && entry.fiber.uid === ancestor.uid))) {
+      return nested.options.name
+    }
   }
   return undefined
 }
