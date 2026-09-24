@@ -319,3 +319,27 @@ describe('P4-07 must[1]: a Run write carries its writer\'s lease and is checked 
     expect((await boot()).get(RUN_A)?.state).toBe('planning')
   })
 })
+
+describe('P8-01 acceptance[4]: a Run keeps the provenance it was opened with', () => {
+  const opened = { negotiation: { protocolVersion: 1, agreedCapabilities: [], ignoredCapabilities: ['x-first'], downgrades: [] } }
+
+  it('records the negotiation of the connection that opened the Run, durably', async () => {
+    const first = await boot()
+    await first.accept(RUN_A, SESSION_1, 1_000)
+
+    await first.recordProvenance(RUN_A, opened)
+
+    expect((await boot()).get(RUN_A)?.provenance).toEqual(opened)
+  })
+
+  it('keeps the first provenance when a continued Run is recorded again after a restart', async () => {
+    const first = await boot()
+    await first.accept(RUN_A, SESSION_1, 1_000)
+    await first.recordProvenance(RUN_A, opened)
+
+    const continued = await boot()
+    await continued.recordProvenance(RUN_A, { negotiation: { ...opened.negotiation, ignoredCapabilities: ['x-later'] } })
+
+    expect((await boot()).get(RUN_A)?.provenance).toEqual(opened)
+  })
+})

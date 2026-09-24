@@ -83,6 +83,7 @@ import {
 import type {
   Run,
   RunEntityReference,
+  RunProvenance,
   RunResumeDecision,
   RunState,
   RunTransitionDecision,
@@ -530,6 +531,16 @@ export class RunService {
       const run = attachSessionToRun(current, sessionId)
       return { run, result: run }
     })
+  }
+
+  /**
+   * P8-01 acceptance[4]: record where the Run `id` came from.
+   * @param id - the registered Run.
+   * @param _provenance - the negotiation of the connection that opened it; not written yet.
+   * @returns the Run as it stands.
+   */
+  async recordProvenance(id: RunId, _provenance: RunProvenance): Promise<Run> {
+    return await this.serialize(id, current => ({ run: undefined, result: current }))
   }
 
   /**
