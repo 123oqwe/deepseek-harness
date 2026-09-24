@@ -20,11 +20,6 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { ToolListChangedNotificationSchema } from '@modelcontextprotocol/sdk/types.js'
 import type { Context } from '@deepseek-ai/cordis'
-// Type-only: declaration-merges `ctx.agents` onto Context.
-import type {} from '@deepseek-ai/dsh-agent'
-import { brandString } from '@deepseek-ai/dsh-brand'
-import { chargedRun } from '@deepseek-ai/dsh-retry'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
 import { createTransport } from './transport.ts'
 import { syncTools } from './tools.ts'
@@ -198,41 +193,6 @@ export function startConnection(ctx: Context, config: Config, policy: ResolvedRe
     })
   }
 
-  /**
-   * Charge one reconnect to the Run of the session this server was mounted
-   * for (P4-11 must[1]), against the same budget `llm-retry` charges. A server
-   * with no `chargeSession`, a composition with no `ctx.runRetryUsage`, and a
-   * session whose agent holds no Run yet all charge nothing.
-   * @param delayMs - the backoff this reconnect would wait.
-   * @returns why the run's budget refused the reconnect, or `undefined` when it may proceed.
-   */
-  function runBudgetRefusal(delayMs: number): string | undefined {
-    const session = config.chargeSession
-    const budgets = ctx.get('runRetryUsage')
-    const agents = ctx.get('agents')
-    if (session === undefined || budgets === undefined || agents === undefined) return undefined
-    // `chargedRunFor` keeps its first answer for a session. Resolving before
-    // the agent is published and holds its Run would record "no run" and
-    // exempt every later retry of that session, llm-retry's included.
-    if (agents.get(session)?.runId === undefined) return undefined
-    /* jscpd:ignore-start -- the delegation-root lookup is llm-retry's; dsh-retry stays free of the
-       agent package (root.ts), so each charging layer supplies it */
-    const charged = budgets.chargedRunFor(session, () => chargedRun(session, (id: string) => {
-      const found = agents.get(brandString<SessionId>(id))
-      if (found === undefined) return undefined
-      return {
-        ...found.session.header.parentSession === undefined
-          ? {}
-          : { parentSession: found.session.header.parentSession },
-        ...found.runId === undefined ? {} : { runId: found.runId },
-      }
-    }))
-    /* jscpd:ignore-end */
-    if (charged === undefined) return undefined
-    const decision = budgets.admit(charged, delayMs)
-    return decision.admitted ? undefined : `because the run's retry budget refused this reconnect (${decision.reason})`
-  }
-
   function scheduleReconnect(): void {
     const lostEstablishedConnection = connectedAt !== undefined
     if (!policy.enabled) {
@@ -250,7 +210,7 @@ export function startConnection(ctx: Context, config: Config, policy: ResolvedRe
     const delayMs = Math.min(policy.maxDelayMs, policy.initialDelayMs * 2 ** (failedAttempts - 1))
     const refusal = failedAttempts > policy.maxAttempts
       ? `after ${policy.maxAttempts} consecutive failed reconnect attempts`
-      : runBudgetRefusal(delayMs)
+      : undefined
     if (refusal !== undefined) {
       // Enqueue the give-up disposal so it cannot race an in-flight sync's
       // phase-2 swap (which checks isCurrent inside the queue).
