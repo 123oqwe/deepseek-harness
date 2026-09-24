@@ -150,16 +150,22 @@ describe('RunPlugin agent-session association', () => {
     await ctx.fiber.dispose()
   })
 
-  it('opens an independent Run per agent session, so one Session never joins another Session\'s Run', async () => {
-    const ctx = await harness(await storePath())
+  it('opens an independent Run per root session, and only a session the registry records as owned joins another\'s Run', async () => {
+    const path = await storePath()
+    const ctx = await harness(path)
     const alpha = await ctx.agentLoop.create(SessionId('session-alpha'))
     const beta = await ctx.agentLoop.create(SessionId('session-beta'))
-    const [alphaRun] = ctx.runs.service.runsForSession(alpha.id)
-    const [betaRun] = ctx.runs.service.runsForSession(beta.id)
-    expect(alphaRun?.id).not.toBe(betaRun?.id)
-    expect(alphaRun?.sessionIds).toStrictEqual([alpha.id])
-    expect(betaRun?.sessionIds).toStrictEqual([beta.id])
+    const { agent: gamma } = await alpha.ctx.agents.create({
+      sessionId: SessionId('session-gamma'), parentAgent: alpha, meta: { parentSession: alpha.id },
+    })
+    const [alphaRun, betaRun, gammaRun] = [alpha.runId!, beta.runId!, gamma.runId!]
+    expect(new Set([alphaRun, betaRun, gammaRun]).size).toBe(3)
+    // Read after every write has settled, so a join that lands late is seen.
     await ctx.fiber.dispose()
+    const stored = await RunService.restore(createFileRunStore(path))
+    expect(stored.get(alphaRun)?.sessionIds).toStrictEqual([alpha.id, gamma.id])
+    expect(stored.get(betaRun)?.sessionIds).toStrictEqual([beta.id])
+    expect(stored.get(gammaRun)?.sessionIds).toStrictEqual([gamma.id])
   })
 })
 
