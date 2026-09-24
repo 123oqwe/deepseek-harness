@@ -34,7 +34,7 @@ import {
   launchLinuxScope,
   prepareLinuxTerminalScope,
   probeLinuxManager,
-  probeLinuxNative,
+  probeLinuxNativeCapabilities,
 } from './linux-scope.ts'
 import { launchWindowsJob, probeWindowsJob } from './windows-job.ts'
 import { targetEnvironment } from './runner-launch.ts'
@@ -43,15 +43,33 @@ import type { ProcessInspector } from './process-inspector.ts'
 import { LocalTerminalHandle } from './terminal.ts'
 
 /**
- * What each ordinary containment mode holds a managed range to. A user
- * scope's own `TasksMax` / `MemoryMax` / `CPUQuota` properties hold all three.
- * The Job Object this provider creates sets only kill-on-close today, so
- * `windows-job` claims nothing, and `fallback` has nothing to hold one with.
+ * The cgroup controller that holds each dimension in a user scope: `CPUQuota`
+ * is the `cpu` controller, `MemoryMax` the `memory` one, `TasksMax` the `pids`
+ * one. A property whose controller the manager cannot enable is accepted and
+ * then enforced by nothing, so a dimension counts only when its controller is
+ * available.
  */
-const ENFORCEABLE_LIMITS: Readonly<Record<'linux-scope' | 'windows-job' | 'fallback', readonly SubprocessLimitDimension[]>> = {
-  'linux-scope': ['cpu', 'memory', 'processes'],
-  'windows-job': [],
-  fallback: [],
+const SCOPE_CONTROLLERS = [
+  ['cpu', 'cpu'],
+  ['memory', 'memory'],
+  ['processes', 'pids'],
+] as const satisfies readonly (readonly [SubprocessLimitDimension, string])[]
+
+/**
+ * What an ordinary containment mode holds a managed range to. A user scope
+ * holds each dimension whose controller the scope probe found available; the
+ * Job Object this provider creates sets only kill-on-close today, so
+ * `windows-job` holds nothing, and `fallback` has nothing to hold one with.
+ * @param mode - the containment mode a spawn selected.
+ * @param controllers - the controllers the Linux scope probe found available.
+ * @returns the dimensions that mode can hold.
+ */
+function enforceableIn(
+  mode: 'linux-scope' | 'windows-job' | 'fallback',
+  controllers: readonly string[],
+): SubprocessLimitDimension[] {
+  if (mode !== 'linux-scope') return []
+  return SCOPE_CONTROLLERS.filter(([, controller]) => controllers.includes(controller)).map(([dimension]) => dimension)
 }
 
 /**
@@ -70,8 +88,11 @@ export class LocalSubprocessRuntime extends SubprocessRuntime {
   internals: SpawnInternals = {}
   /** Provider-lifetime latch suppressing repeated weaker-containment warnings. */
   private fallbackWarningIssued = false
-  /** Positive-only cache for the expensive Linux bootstrap and scope probe. */
-  private linuxDeepProbePassed = false
+  /**
+   * Positive-only cache for the expensive Linux bootstrap and scope probe: the
+   * controllers that probe found available, or `undefined` until it passes.
+   */
+  private linuxScopeControllers: readonly string[] | undefined
   /** Test hook for platform process inspection; production resolves lazily on terminal spawn. */
   terminalInspector: ProcessInspector | undefined
 
@@ -178,7 +199,7 @@ export class LocalSubprocessRuntime extends SubprocessRuntime {
     validateSubprocessSpec(spec)
     const env = targetEnvironment(spec)
     const containmentMode = this.selectContainmentMode('ordinary')
-    assertLimitsEnforceable(spec.limits, ENFORCEABLE_LIMITS[containmentMode])
+    assertLimitsEnforceable(spec.limits, enforceableIn(containmentMode, this.linuxScopeControllers ?? []))
     let handle: LocalSubprocessHandle
     if (containmentMode === 'fallback') {
       handle = spawnSubprocess(spec, this.internals)
@@ -201,7 +222,7 @@ export class LocalSubprocessRuntime extends SubprocessRuntime {
   }
 
   override enforceableLimits(): readonly SubprocessLimitDimension[] {
-    return ENFORCEABLE_LIMITS[this.selectContainmentMode('ordinary')]
+    return enforceableIn(this.selectContainmentMode('ordinary'), this.linuxScopeControllers ?? [])
   }
 
   private selectContainmentMode(
@@ -210,10 +231,13 @@ export class LocalSubprocessRuntime extends SubprocessRuntime {
     const platform = this.internals.platform ?? process.platform
     let fallbackReason: string | undefined
     if (platform === 'linux') {
-      const available = this.linuxDeepProbePassed
-        ? probeLinuxManager()
-        : probeLinuxNative()
-      if (available) this.linuxDeepProbePassed = true
+      let available: boolean
+      if (this.linuxScopeControllers === undefined) {
+        this.linuxScopeControllers = probeLinuxNativeCapabilities()
+        available = this.linuxScopeControllers !== undefined
+      } else {
+        available = probeLinuxManager()
+      }
       if (available) return 'linux-scope'
       fallbackReason = 'the current user-systemd scope or private bootstrap is unavailable'
     }

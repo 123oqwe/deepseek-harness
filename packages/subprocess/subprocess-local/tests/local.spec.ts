@@ -449,7 +449,7 @@ describe('LocalSubprocessRuntime', () => {
       resolveOutcome: (outcome: unknown) => outcome,
       cleanup: vi.fn(),
     }))
-    const probeLinuxNative = vi.fn(() => true)
+    const probeLinuxNativeCapabilities = vi.fn(() => ['cpu', 'memory', 'pids'])
     const probeLinuxManager = vi.fn(() => true)
     const inspector = {
       foregroundPgid: () => undefined,
@@ -471,7 +471,7 @@ describe('LocalSubprocessRuntime', () => {
       launchLinuxScope: vi.fn(),
       prepareLinuxTerminalScope,
       probeLinuxManager,
-      probeLinuxNative,
+      probeLinuxNativeCapabilities,
     }))
     let fiber: { dispose(): Promise<void> } | undefined
     try {
@@ -492,7 +492,7 @@ describe('LocalSubprocessRuntime', () => {
         env: { PWD: '/stale-parent-cwd', TERM: 'xterm-256color', TARGET_VALUE: 'preserved' },
       })
 
-      expect(probeLinuxNative).toHaveBeenCalledOnce()
+      expect(probeLinuxNativeCapabilities).toHaveBeenCalledOnce()
       expect(prepareLinuxTerminalScope).toHaveBeenCalledWith(
         expect.objectContaining({ argv: ['shell', '--literal'] }),
         expect.objectContaining({ PWD: targetCwd, TERM: 'dumb', TARGET_VALUE: 'preserved' }),
@@ -556,7 +556,7 @@ describe('LocalSubprocessRuntime', () => {
       launchLinuxScope: vi.fn(),
       prepareLinuxTerminalScope,
       probeLinuxManager: () => true,
-      probeLinuxNative: () => true,
+      probeLinuxNativeCapabilities: () => ['cpu', 'memory', 'pids'],
     }))
     let fiber: { dispose(): Promise<void> } | undefined
     try {
@@ -697,7 +697,7 @@ describe('LocalSubprocessRuntime', () => {
     const windowsLaunch = { kind: 'windows' }
     const launchLinuxScope = vi.fn(() => linuxLaunch)
     const launchWindowsJob = vi.fn(() => windowsLaunch)
-    const probeLinuxNative = vi.fn(() => true)
+    const probeLinuxNativeCapabilities = vi.fn(() => ['cpu', 'memory', 'pids'])
     const probeLinuxManager = vi.fn(() => true)
     const probeWindowsJob = vi.fn(() => true)
     const prepareManagedProcessBinding = vi.fn(() => ({ spillDir: '/tmp/dsh-test-spill' }))
@@ -728,7 +728,7 @@ describe('LocalSubprocessRuntime', () => {
       launchLinuxScope,
       prepareLinuxTerminalScope: vi.fn(),
       probeLinuxManager,
-      probeLinuxNative,
+      probeLinuxNativeCapabilities,
     }))
     vi.doMock('../src/windows-job.ts', () => ({ launchWindowsJob, probeWindowsJob }))
     vi.doMock('../src/spawn.ts', async importOriginal => ({
@@ -753,7 +753,7 @@ describe('LocalSubprocessRuntime', () => {
       await new Promise(resolve => setImmediate(resolve))
       await linuxRuntime.spawn(spec('true')).done
       await new Promise(resolve => setImmediate(resolve))
-      expect(probeLinuxNative).toHaveBeenCalledOnce()
+      expect(probeLinuxNativeCapabilities).toHaveBeenCalledOnce()
       expect(probeLinuxManager).toHaveBeenCalledTimes(2)
       expect(launchLinuxScope).toHaveBeenCalledTimes(2)
 
@@ -784,11 +784,11 @@ describe('LocalSubprocessRuntime', () => {
   })
 
   it('retries failed Linux deep probes, caches the first success, and rechecks the manager', async () => {
-    const probeLinuxNative = vi.fn()
-      .mockReturnValueOnce(false)
-      .mockReturnValueOnce(false)
-      .mockReturnValueOnce(false)
-      .mockReturnValueOnce(true)
+    const probeLinuxNativeCapabilities = vi.fn<() => readonly string[] | undefined>()
+      .mockReturnValueOnce(undefined)
+      .mockReturnValueOnce(undefined)
+      .mockReturnValueOnce(undefined)
+      .mockReturnValueOnce(['pids'])
     const probeLinuxManager = vi.fn()
       .mockReturnValueOnce(false)
       .mockReturnValueOnce(true)
@@ -803,7 +803,7 @@ describe('LocalSubprocessRuntime', () => {
       launchLinuxScope: vi.fn(),
       prepareLinuxTerminalScope: vi.fn(),
       probeLinuxManager,
-      probeLinuxNative,
+      probeLinuxNativeCapabilities,
     }))
     vi.doMock('../src/windows-job.ts', () => ({ launchWindowsJob: vi.fn(), probeWindowsJob }))
     const fibers: Array<{ dispose(): Promise<void> }> = []
@@ -825,7 +825,7 @@ describe('LocalSubprocessRuntime', () => {
       expect(linuxSelect('ordinary')).toBe('linux-scope')
       expect(linuxSelect('ordinary')).toBe('fallback')
       expect(linuxSelect('ordinary')).toBe('linux-scope')
-      expect(probeLinuxNative).toHaveBeenCalledTimes(4)
+      expect(probeLinuxNativeCapabilities).toHaveBeenCalledTimes(4)
       expect(probeLinuxManager).toHaveBeenCalledTimes(2)
 
       const windowsContext = new Context()
@@ -846,6 +846,53 @@ describe('LocalSubprocessRuntime', () => {
       for (const fiber of fibers.reverse()) await fiber.dispose()
       vi.doUnmock('../src/linux-scope.ts')
       vi.doUnmock('../src/windows-job.ts')
+      unmockWin32ForIsolatedRuntime()
+      vi.resetModules()
+    }
+  })
+
+  it.each([
+    {
+      name: 'pids and memory but no cpu',
+      printed: ['pids', 'io', 'memory'],
+      claimed: ['memory', 'processes'],
+      refused: ['cpu'],
+      within: { memoryBytes: 67_108_864, maxProcesses: 16 },
+    },
+    {
+      name: 'no controller list at all',
+      printed: [],
+      claimed: [],
+      refused: ['cpu', 'memory', 'processes'],
+      within: undefined,
+    },
+  ])('a user scope whose probe found $name holds only those dimensions, and a spawn agrees', async ({ printed, claimed, refused, within }) => {
+    const launchLinuxScope = vi.fn(() => { throw new Error('reached the scope launch') })
+    vi.resetModules()
+    mockWin32ForIsolatedRuntime()
+    vi.doMock('../src/linux-scope.ts', () => ({
+      launchLinuxScope,
+      prepareLinuxTerminalScope: vi.fn(),
+      probeLinuxManager: () => true,
+      probeLinuxNativeCapabilities: () => printed,
+    }))
+    let fiber: { dispose(): Promise<void> } | undefined
+    try {
+      const { default: IsolatedLocalSubprocessRuntime } = await import('../src/index.ts')
+      const ctx = new Context()
+      fiber = await ctx.plugin(IsolatedLocalSubprocessRuntime)
+      const runtime = ctx.subprocess as InstanceType<typeof IsolatedLocalSubprocessRuntime>
+      runtime.internals = { platform: 'linux' }
+
+      expect(runtime.enforceableLimits()).toEqual(claimed)
+      expect(() => runtime.spawn(spec('true', { limits: { cpuMillicores: 100, memoryBytes: 67_108_864, maxProcesses: 16 } })))
+        .toThrow(expect.objectContaining({ name: 'SubprocessLimitsRefusedError', refused, enforceable: claimed }))
+      expect(launchLinuxScope).not.toHaveBeenCalled()
+      expect(() => runtime.spawn(spec('true', within === undefined ? {} : { limits: within }))).toThrow('reached the scope launch')
+      expect(launchLinuxScope).toHaveBeenCalledOnce()
+    } finally {
+      await fiber?.dispose()
+      vi.doUnmock('../src/linux-scope.ts')
       unmockWin32ForIsolatedRuntime()
       vi.resetModules()
     }

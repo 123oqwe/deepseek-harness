@@ -6,7 +6,7 @@ import { afterAll, describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import type { SubprocessSpawnSpec, SubprocessTerminalHandle } from '@deepseek-ai/dsh-subprocess'
 import LocalSubprocessRuntime from '../src/index.ts'
-import { launchLinuxScope, probeLinuxScope } from '../src/linux-scope.ts'
+import { launchLinuxScope, probeLinuxScopeCapabilities } from '../src/linux-scope.ts'
 import { targetEnvironment } from '../src/runner-launch.ts'
 import { bindManagedProcess } from '../src/spawn.ts'
 
@@ -141,7 +141,7 @@ async function waitForInputReadiness(handle: SubprocessTerminalHandle): Promise<
   throw new Error(`terminal ${String(handle.pid)} never became input-ready`)
 }
 
-const linuxNative = process.platform === 'linux' && probeLinuxScope()
+const linuxNative = process.platform === 'linux' && probeLinuxScopeCapabilities() !== undefined
 
 describe.skipIf(!linuxNative)('Linux user-systemd native containment', () => {
   it('aborts an established scope before bootstrap consumption and joins its managed handle', async () => {

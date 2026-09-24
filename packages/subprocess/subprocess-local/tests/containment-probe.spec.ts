@@ -22,7 +22,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import LocalSubprocessRuntime from '@deepseek-ai/dsh-subprocess-local'
-import { probeLinuxManager, probeLinuxNative } from '../src/linux-scope.ts'
+import { probeLinuxManager, probeLinuxNativeCapabilities } from '../src/linux-scope.ts'
 import { probeWindowsJob } from '../src/windows-job.ts'
 
 /** The selection this runtime makes, reached the way the spawn paths reach it. */
@@ -64,7 +64,7 @@ async function observe(): Promise<Observation> {
       // Asked again by name so the record says WHICH prerequisite decided it,
       // not only what was decided. A probe that does not apply to this
       // platform is not called at all.
-      linuxNative: process.platform === 'linux' ? String(probeLinuxNative()) : 'n/a',
+      linuxNative: process.platform === 'linux' ? String(probeLinuxNativeCapabilities() !== undefined) : 'n/a',
       linuxManager: process.platform === 'linux' ? String(probeLinuxManager()) : 'n/a',
       windowsJob: process.platform === 'win32' ? String(probeWindowsJob()) : 'n/a',
       warnings,
