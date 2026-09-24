@@ -56,7 +56,10 @@ async function harness(roster: Config = { default: 'standard', roots: ROOTS, inc
   await ctx.plugin(ToolRuntime)
   await ctx.plugin(AgentRegistry)
   await ctx.plugin(AgentLoop, { agents: [] })
-  await ctx.plugin(AgentPresets, roster)
+  // The roster loads as a host Loader entry, the way the shipped web-app mounts it:
+  // tool ownership attributes a preset row only under a host entry.
+  ctx.loader.builtins['agent-presets'] = AgentPresets
+  await ctx.loader.create({ name: 'cordis:agent-presets', config: roster })
   return ctx
 }
 
@@ -483,7 +486,10 @@ describe('the preset file is an input, never a persistence target', () => {
     await scoped.plugin(ToolRuntime)
     await scoped.plugin(AgentRegistry)
     await scoped.plugin(AgentLoop, { agents: [] })
-    await scoped.plugin(AgentPresets, { default: 'self-disposing', roots: [{ path: root, trust: 'user' as const }], includeShippedRoot: false, includeUserRoot: false })
+    // The roster loads as a host Loader entry, the way the shipped web-app mounts it:
+    // tool ownership attributes a preset row only under a host entry.
+    scoped.loader.builtins['agent-presets'] = AgentPresets
+    await scoped.loader.create({ name: 'cordis:agent-presets', config: { default: 'self-disposing', roots: [{ path: root, trust: 'user' as const }], includeShippedRoot: false, includeUserRoot: false } })
 
     await scoped.agents.create({
       sessionId: SessionId('sess-self-dispose'),
@@ -672,7 +678,10 @@ describe('replacing a composition', () => {
     await scoped.plugin(ToolRuntime)
     await scoped.plugin(AgentRegistry)
     await scoped.plugin(AgentLoop, { agents: [] })
-    await scoped.plugin(AgentPresets, { default: 'first', roots: [{ path: root, trust: 'user' as const }], includeShippedRoot: false, includeUserRoot: false })
+    // The roster loads as a host Loader entry, the way the shipped web-app mounts it:
+    // tool ownership attributes a preset row only under a host entry.
+    scoped.loader.builtins['agent-presets'] = AgentPresets
+    await scoped.loader.create({ name: 'cordis:agent-presets', config: { default: 'first', roots: [{ path: root, trust: 'user' as const }], includeShippedRoot: false, includeUserRoot: false } })
     const handle = await scoped.agents.create({
       sessionId: SessionId('sess-restore-gone'),
       setup: async (agentCtx: Context) => void await scoped.agentPresets.mount(agentCtx, 'first'),

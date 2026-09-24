@@ -60,7 +60,10 @@ async function harness(roster: Config): Promise<Context> {
   await ctx.plugin(AgentRegistry)
   await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(AgentLoop, { agents: [] })
-  await ctx.plugin(AgentPresets, roster)
+  // The roster loads as a host Loader entry, the way the shipped web-app mounts it:
+  // tool ownership attributes a preset row only under a host entry.
+  ctx.loader.builtins['agent-presets'] = AgentPresets
+  await ctx.loader.create({ name: 'cordis:agent-presets', config: roster })
   return ctx
 }
 
