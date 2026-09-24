@@ -8,4 +8,4 @@ Per P0-01's validation clause, the `pnpm baseline:capture` / `pnpm baseline:veri
 
 ## Harness capability benchmark framework
 
-[`benchmarks/harness-capability/`](benchmarks/harness-capability/README.md) is a model-independent benchmark for the Harness's own capabilities -- recovery, safety, verification, isolation, cost, and orchestration -- across 5 lanes (deterministic, fault, security, real-model, scale) and 8 standard metrics per lane, distinct from the Python SDK smoke run above. Only the lane manifest's structural schema is frozen so far; see its README for current stage.
+[`benchmarks/harness-capability/`](benchmarks/harness-capability/README.md) is a model-independent benchmark for the Harness's own capabilities -- recovery, safety, verification, isolation, cost, and orchestration -- across 5 lanes (deterministic, fault, security, real-model, scale) and 8 standard metrics per lane, distinct from the Python SDK smoke run above. `pnpm benchmark:harness` runs the lanes its scenarios cover and writes a JSON and a Markdown report; its README lists which lanes run with no model API key configured and which have no scenario yet.
