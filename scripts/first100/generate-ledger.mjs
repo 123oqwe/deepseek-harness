@@ -953,7 +953,7 @@ export function frozenCommand(argv) {
  * The vitest config each report `first100-exact-sha.yml` writes ran under, by
  * file name; `undefined` is the default config.
  */
-const REPORT_CONFIGS = new Map([
+export const REPORT_CONFIGS = new Map([
   ['vitest-report.json', undefined],
   ['vitest-e2e-sdk-keyless-smoke.json', 'vitest.e2e.config.ts'],
   ['vitest-e2e-acp.json', 'vitest.e2e.config.ts'],
