@@ -1,0 +1,9 @@
+# Test-only overlay over the SHIPPED web profile for P6-07's erase and soft-delete
+# cases (work order V3). The base layer keeps durable memory disabled until
+# P6-01 lands; this overlay enables that same `memory` row with its durable file
+# provider, under the case's own DSH_HOME, so a case can observe a session's
+# memory records. It mounts nothing else.
+- id: memory
+  disabled: false
+  config:
+    durableFileDirectory: !!js dshHomePath('memory')
