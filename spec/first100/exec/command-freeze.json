@@ -15041,6 +15041,48 @@
       },
       "note": "P1-07's fourth U supplement, second version. It supersedes the first (frozenAtUtc 2026-09-24T02:36:46Z), which the delegate ruled not to record (lane B inbox B-496) after lane A's blind review A-308 found two gaps. The two grant cases compared only `{ target, source }`, so a plugin that granted the wrong directory or the wrong principal stayed green; they now compare the whole grant: the directory is the launch directory, `process.cwd()`, and the principal is `hostUserIdentity(…).principal`, the product's own definition that `launch-grant.ts` calls, not whatever the test double received. The sdk cases launched `--profile sdk-app`, which no shipped template names; they now launch `--profile sdk`. The four cases keep their titles and subjects.\n\nThe subject is must[2]'s host entry point, the launch flag, on the `headless` and `sdk` apps. `--trust-workspace=read` has to pass two parsers, not one: the launcher's `parseDshArgs`, and the booted app's own program on its second pass over the same arguments. Either can refuse the flag while the other accepts it, and each has its own mutation (M-U4-a the launcher's; M-U4-b and M-U4-c each app's). The grant has three (M-U4-d an empty command line, M-U4-e another directory, M-U4-f another tenant's principal). This file's four cases are its whole content, so the single-file argv and `expectCases` are the same set rather than a subset.\n\nWhat this narrows: item (4) of the 2026-09-23 sign-off says the CLI's parsing of `--trust-workspace` is not observed, and that the CLI hands the flag to the plugin is read from `apps/cli/src/args.ts`, not observed. These cases run that parser and that hand-off.\n\nWhat these cases do not execute or observe:\n1. The profile-to-bundle composition and the Loader boot. The plugins are mounted by hand on a bare Context. The sdk composition is executed by U.3, which does not go through the launcher; the headless composition is booted by U.2, which does not pass the flag.\n2. The rest of `runProfile`: admission, post-load isolation, the Trust Kernel, the launch environment and the feature gates. The readiness signal is given by the case itself.\n3. Any mode but `=read`.\n4. The built `dsh` binary. `bin.ts` → `runProfile` → `provideCmdline` in `apps/cli/src/profile-boot.ts` is reproduced, not executed: the case calls `provideCmdline` with the arguments `runProfile` passes, which is why `profile-boot.ts` is not cited.\n5. The web UI and the ACP wire.\n\n`packages/identity/host-user-id/src/index.ts` is not cited: the plugin and the case call the same `hostUserIdentity`, so it supplies the expected principal and is not under test.\n\nCoverage: not cited in `acceptance-coverage.json`. Its subject is must[2]'s host entry point, which is not the subject of acceptance[0], [1] or [2]; citing it under any of them would be the misrecord BLOCKED-301 describes.",
       "supersedes": "2026-09-24T02:36:46Z"
+    },
+    {
+      "epic": "P4-05",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-05",
+        "stage": "U"
+      },
+      "supplementSeq": 4,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "vitest.e2e.config.ts",
+        "apps/cli/tests/profiles/acp/tests/acp.e2e.ts"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILLed host left behind (no key required) orphan: before the second host starts, the lease row still names the killed host at its epoch and has expired",
+        "P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILLed host left behind (no key required) the second host continues the same Run id the killed host opened",
+        "P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILLed host left behind (no key required) the lease row now names the second host",
+        "P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILLed host left behind (no key required) the lease row carries an epoch greater than the killed host's",
+        "P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILLed host left behind (no key required) the killed host's token is refused as stale-epoch against the current lease",
+        "P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILLed host left behind (no key required) the second host's tool call ran: the file it writes is on disk"
+      ],
+      "files": [
+        "apps/cli/tests/profiles/acp/tests/acp.e2e.ts",
+        "packages/run/run/src/index.ts",
+        "packages/run/lease-sqlite/src/store.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T04:48:02Z",
+      "dryRunProof": {
+        "treeSha": "e87f371ca25ff3425b5441f17f6c05a89a23ed75",
+        "testsDiscovered": 10
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations off PRECHECK `73ec9daa1f3cad2796282f24f2eb09c136ee3305` (this spec alone, on `85dcbb403c`), each its own commit touching one product file, never merged, run by CI's narrow job at its own SHA over this entry's argv with a build first. M1 (`ac9f625c8aaf8c047d729c08ecddfb74f165624d`) makes `RunPlugin.open` in `packages/run/run/src/index.ts` refuse the lease when a predecessor row exists and the Run is being continued: the takeover path refuses an expired predecessor, the branch that reaches `adoptLapsedPredecessor`. M2 (`81a156bf1dcd5158d70ae7abc9247872d14ce5b5`) makes `acquire` in `packages/run/lease-sqlite/src/store.ts` grant an expired incumbent's own epoch instead of `lease_epochs.next_epoch`: a takeover does not advance the epoch. M3 (`6abb2d87dfd6a3abb70b3c238908f9f01d94057e`) makes `RunPlugin.adoptable` skip the stored Run, so a restarted host mints a new Run instead of continuing it.",
+        "failureSummary": "Baseline: PRECHECK, narrow run 35956538188: 9 passed / 0 failed, 1 skipped (the key-gated case). M1, run 35956549498: exactly the holder, epoch, stale-epoch and tool-ran cases red. M2, run 35956561532: exactly the epoch and stale-epoch cases red; the killed host's token is refused as `holder-mismatch` instead of `stale-epoch`, because the new holder carries the old epoch. M3, run 35956573958: exactly the same-Run case red. In every run the three existing keyless cases in the file stayed green.\n\nAll four readings match `artifacts/laneA/p4-05-b-acp-takeover-expectations.json` (sha256 `54f322feacb2fd1c0bf91731285b41039e862d89b4f264cfc485299109ea42d3`), written before the case, case by case; the delegate compared them (lane A inbox A-336). An earlier dispatch of the same four SHAs without a build (35956313089 and the three after it) failed on its environment, the acp launch needing built artifacts, and is not a reading."
+      },
+      "note": "P4-05's fourth U supplement, route B of acceptance[2] (delegate ruling A-334, option (a)): the reclaim branch across two real `dsh --profile acp` processes over one `DSH_HOME`, keyless through the stand-in model endpoint, read only from what the product writes to disk. The first host runs one tool call and is SIGKILLed, so no disposer runs and its lease row stays; the case waits out the shipped 30 s lease (nothing shortens `leaseMs`), reads the row again, and starts a second host that resumes the session and runs one tool call. Six cases: the dead host's row still names it at its epoch and has expired before the restart; the Run store names one Run for the session, the same id; the row names a new holder; under a greater epoch; the dead host's token, rebuilt from the row read before the kill, is refused as `stale-epoch` by the product's `checkFencing`; and the second host's tool call wrote its file. Rows are read with `@deepseek-ai/dsh-lease-sqlite`'s `openLeaseStore`, the reader the second host uses.\n\nThe argv is the `first100-exact-sha.yml:518-519` step byte for byte: the whole file, no `-t`, so the existing BLOCKED-291 case runs beside these and is not part of this entry. The file discovers 10 cases; with no key 9 run and 1 is skipped. The six cases only read what `beforeAll` recorded, and `retry: 2` re-runs a case body, never `beforeAll`, so a retry cannot turn a first failure into a pass.\n\n`packages/run/run/src/index.ts` and `packages/run/lease-sqlite/src/store.ts` are cited because M1/M3 and M2 change them; neither is changed by this entry.\n\nNot observed: (1) the orphan case is a precondition on the observation, not a product behavior, and no mutation reddens it; (2) the in-process `orphaned` lifecycle label, which the adopting host writes only to `agent.lifecycle` and to a `logger.info` line that no shipped log exporter carries to stderr; (3) acceptance[2]'s \"fail safely\" branch, which has no producer and is not covered."
     }
   ]
 }

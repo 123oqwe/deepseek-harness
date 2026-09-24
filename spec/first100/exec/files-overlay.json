@@ -2116,6 +2116,14 @@
     },
     {
       "epic": "P4-05",
+      "path": "apps/cli/tests/profiles/acp/tests/acp.e2e.ts",
+      "kind": "test",
+      "stages": [
+        "U.4"
+      ]
+    },
+    {
+      "epic": "P4-05",
       "path": "packages/core/agent/tests/lifecycle-dispatch.spec.ts",
       "kind": "test",
       "stages": [
@@ -2130,6 +2138,15 @@
         "C.1"
       ],
       "reason": "Produces `waiting_human` around the approval request. Placed in the risk gate rather than at either call site because both dispatch paths reach the gate, so both report the state — the same argument that put the gate itself there."
+    },
+    {
+      "epic": "P4-05",
+      "path": "packages/run/lease-sqlite/src/store.ts",
+      "kind": "source",
+      "stages": [
+        "U.4"
+      ],
+      "reason": "The durable lease store, cited by P4-05's fourth U supplement and not changed by this epic. A restart's takeover is decided in its `acquire`: an expired incumbent's work item is granted under `lease_epochs.next_epoch`, so the host adopting a dead host's Run holds a greater epoch and the dead host's token is refused as stale. U.4 reads its rows across two real `dsh --profile acp` processes, and M2 (an expired incumbent's own epoch granted again) reddens exactly its epoch and stale-epoch cases."
     },
     {
       "epic": "P4-05",
