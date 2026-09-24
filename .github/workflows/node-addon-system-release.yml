@@ -248,16 +248,16 @@ jobs:
           cat .dsh/evidence/evidence.d/logs/packed-install.log || true
           exit $status
 
+      - name: Verify the release evidence package
+        working-directory: ${{ github.workspace }}
+        run: node scripts/release/verify-evidence.mjs --evidence .dsh/evidence/evidence.json
+
       - name: Digest the published artifacts into the evidence package
         working-directory: ${{ github.workspace }}
         run: |
           for tarball in native/system/dist/npm/*; do
             node scripts/release/collect-evidence.mjs build-artifact --path "$tarball"
           done
-
-      - name: Verify the release evidence package
-        working-directory: ${{ github.workspace }}
-        run: node scripts/release/verify-evidence.mjs --evidence .dsh/evidence/evidence.json
 
       - name: Restore the tracked baseline file the evidence capture rewrote
         if: always()
