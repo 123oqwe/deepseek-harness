@@ -168,6 +168,6 @@ function resolveTenantId(options: HostUserIdOptions): TenantId {
  * @returns the identity context to pass as `AgentOptions.identity`.
  */
 export function hostUserIdentity(runId: RunId, options: HostUserIdOptions = {}): IdentityContext {
-  const principal = createUserPrincipal(getOrCreateHostUserId(options) as string as PrincipalId, resolveTenantId(options))
+  const principal = createUserPrincipal(randomUUID() as string as PrincipalId, resolveTenantId(options))
   return { principal, runId, chain: createChain(principal, Date.now()) }
 }
