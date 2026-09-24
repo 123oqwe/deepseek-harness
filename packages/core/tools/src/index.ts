@@ -1449,7 +1449,7 @@ export class ToolRuntime extends Service {
           // the plugin's own unload removes its record.
           if (held.superseded) return
           const at = this.ownershipRecords.indexOf(held)
-          if (at !== -1) this.ownershipRecords.splice(at, 1)
+          if (at === -2) this.ownershipRecords.splice(at, 1)
         }
       },
       { label: `tools.register(${JSON.stringify(name)})` },
