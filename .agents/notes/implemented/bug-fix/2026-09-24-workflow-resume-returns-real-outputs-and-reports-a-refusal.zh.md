@@ -16,8 +16,9 @@ P4-08 acceptance[0] 要求：在 `agent()` 边界被杀掉的工作流，由重�
 - **worker 把每个已完成的 `agent()` 值以 JSON 文本上报**，随 agent-end 消息发出：结构化值，或输出文本。宿主只把它交给 journal，从不交给 `workflow/agent-end` 监听器；journal 内联记录它，续跑的步骤返回解析后的值。
 - **被拒的续跑报告在运行上，而不是抛出。** `Reconciled.refused` 带出 `admitResume` 的 `reason` 与 `detail`，`WorkflowRun.resumeRefused` 公开它们，工具封闭的输出 schema 新增可选字段 `resumeRefused`，模型读到的文本以 `resume refused (<reason>): the run started over from its first step.` 开头。
 - **宿主在把已结束的进程内子 agent 的结果转发给 worker 之前，先刷写它的会话**，所用的 `ctx.sessions.flush` 调用与 `subagent/continuation-activation.ts` 相同。刷写失败记一条 warn，结果照常转发。
-- **记录的步骤只复用给记录它的那次调用。** worker 为每个 `agent()` 调用计算身份 `callDigestOf`：对它的 prompt、`schema`、`provider` 与 `model` 取 SHA-256。journal 把它记为条目的 `call`，宿主把每个可复用步骤的身份交给 worker，身份不同时 worker 重新启动该步骤。
-- **因脚本改动被拒的续跑先把 journal 移走**，移到 journal 目录下的 `refused/<runId>.<脚本摘要前 12 位十六进制>.json`（`setJournalAside`），重新开始的运行在它旁边另写一份新的 `<runId>.json`。
+- **记录的输出只复用给身份相同的调用，按身份而不是按步骤编号匹配。** worker 为每个 `agent()` 调用计算身份 `callDigestOf`：对它的 prompt、`schema`、`provider` 与 `model` 取 SHA-256。journal 把它记为条目的 `call`，宿主把每份可复用输出的身份交给 worker；一次调用取按它的身份记录、尚未用过的第一份输出，不管步骤编号，找不到就启动子 agent。没有身份时 worker 什么都不复用。
+- **为另一个调用启动的步骤会保留它替换的条目。** 这样的步骤若在另一个调用记录过的编号上启动，recorder 会把那条记录整条移进 journal 的 `displaced`；之后的续跑像对待其他条目一样对账并提供它。
+- **因脚本改动被拒的续跑先把 journal 移走**，移到 journal 目录下的 `refused/<runId>.<脚本摘要前 12 位十六进制>.json`（`setJournalAside`），这个名字已被占用时改用下一个空着的 `refused/<runId>.<摘要>.<n>.json`；重新开始的运行在它旁边另写一份新的 `<runId>.json`，留存的 journal 不会被替换。
 - **journal 目录以 0700 权限创建，每个 journal 文件以 0600 权限写入**，与会话日志一致。
 
 ## 考虑过的其他做法
@@ -31,7 +32,7 @@ P4-08 acceptance[0] 要求：在 `agent()` 边界被杀掉的工作流，由重�
 - **桩模型的工具调用 id 固定为 `stub-<n>`。** 未采用：同一个会话先后经过两个桩时会两次遇到 `stub-1`，所以用 `StubToolCall.id` 让用例给调用命名；默认值不变。
 - **把调用身份记在条目的 `inputs` 里**，即盲审指出的那个空槽。未采用：结算时的压缩会清空每个已核验步骤的 `inputs`，之后再续跑同一个运行时找不到身份，这些步骤会重新启动。
 - **把 `args` 纳入续跑准入所用的摘要。** 未采用：它会拒绝参数改动后的续跑，但由完成先后决定的步骤编号仍会把一次调用的输出交给另一次调用；身份核对两者都能覆盖。
-- **不看编号，按身份把记录的步骤匹配给调用。** 未采用：这需要在 journal 之上再建一个索引；按步骤编号取、再核对身份，是阻止返回错误输出的最小改动。
+- **保留按步骤编号取、只把身份当守卫。** 未采用：后面的调用随前面的调用完成而启动的流水线，在续跑时会把调用放到别的编号上，守卫于是重新启动这些子 agent，这正是 acceptance[0] 不允许的（delegate 裁定 D3）。
 - **因脚本改动被拒的续跑不运行脚本。** 未采用：acceptance[1] 拒绝的是续跑，运行照上文从头开始；改为保留被拒的 journal。
 
 ## 后果
@@ -39,10 +40,10 @@ P4-08 acceptance[0] 要求：在 `agent()` 边界被杀掉的工作流，由重�
 - 宿主在每个步骤边界重写整个 journal，所以每份内联输出在之后的每个边界各写一次；没有任何上限限制输出大小。
 - 本次改动之前写成的 journal 保存的是占位串，也没有调用身份，续跑会重跑这些步骤。
 - 被拒的续跑仍以同一个 id 从第一步运行脚本；`resumeRefused` 是调用方得知没有复用任何步骤的唯一途径。
-- 若调用的启动顺序与被中断的运行不同，编号变了的步骤会重新启动它的子 agent，而不会按另一个编号去找它的记录。
-- 没有任何代码删除 `refused/` 下留存的 journal；同一个运行之后若在同一个记录摘要下再次被拒，会替换之前留存的那份。
+- prompt 里带时间戳或随机值的调用永远对不上它的记录，会重新启动子 agent；身份不覆盖父会话、缺省的 provider 或 model、工具与 `cwd`。
+- 没有任何代码删除 `refused/` 下留存的 journal，也没有任何代码删除 displaced 里的条目。
 - 已存在的 journal 目录保持原有权限；只有 journal 写入方自己创建的目录是 0700。
-- 不带调用身份构造的 `WorkflowExecution` 只按编号复用记录的步骤；宿主总会传入身份。
+- 不带调用身份构造的 `WorkflowExecution` 什么都不复用；宿主总会传入身份。
 - 工具拒绝不匹配 `^[\w-]+$` 的 `resume` 值，例如含 `.` 的值；worker-thread 引擎生成的 UUID 都匹配。
 - 工具从不显示前台运行的 id，崩溃的运行也不会返回结果，所以在出厂产品上没有任何途径把可续跑的 id 交给模型；端到端用例观测的是工具续跑一个交给它的运行（V4）。
 - 子 agent 在结果转发之前已被处置时（例如运行仍有子 agent 在跑时调用 `dispose()`），刷写失败，宿主记一条 warn。

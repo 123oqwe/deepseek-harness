@@ -78,7 +78,10 @@ export interface JournalRecorder {
  * file, so the steps the resume reconciled disappear and a further crash would
  * run them again — the journal would forget exactly the work it exists to
  * remember. Seeding is by step sequence, so a step the resumed run re-runs
- * replaces its own prior entry rather than appending a duplicate.
+ * replaces its own prior entry rather than appending a duplicate. A step
+ * started for a DIFFERENT call at a number another call recorded moves that
+ * entry, whole, into `displaced`: it is another call's record, which a later
+ * resume may still reuse, and its receipts are evidence.
  * @param scriptDigest - the digest of the script being run.
  * @param seed - a prior journal to continue, for a resumed run; absent for a fresh one.
  * @param nesting - what a FRESH nested run inherited, recorded so a later resume
@@ -94,12 +97,15 @@ export function createJournalRecorder(
   const entries = new Map<number, JournalEntry>(
     (seed?.entries ?? []).map(entry => [Number(entry.stepId.replace(/^step-/u, '')), entry]),
   )
+  const displaced: JournalEntry[] = [...seed?.displaced ?? []]
 
   const phaseOf = (phase: string | undefined): PhaseName =>
     brandString<PhaseName>(phase ?? 'unphased')
 
   return {
     stepStarted(start, effectClass) {
+      const replaced = entries.get(start.seq)
+      if (replaced !== undefined && replaced.call !== start.call) displaced.push(replaced)
       entries.set(start.seq, {
         stepId: brandString<StepId>(`step-${start.seq}`),
         phase: phaseOf(start.phase),
@@ -142,6 +148,7 @@ export function createJournalRecorder(
         scriptDigest,
         entries: [...entries.keys()].sort((left, right) => left - right).map(seq => entries.get(seq) as JournalEntry),
         ...inherited === undefined ? {} : { nesting: inherited },
+        ...displaced.length === 0 ? {} : { displaced: [...displaced] },
       }
     },
   }
