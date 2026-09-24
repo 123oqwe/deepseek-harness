@@ -393,3 +393,5 @@ export function verifyWithSignatureRoots(signatureRoots: TrustKernelSignatureRoo
   if (keys === undefined) throw new Error('trust kernel: this signatureRoots handle was not minted by createTrustKernel')
   return verify(null, bytes, keys.publicKey, signature)
 }
+
+export function apply(): void {}
