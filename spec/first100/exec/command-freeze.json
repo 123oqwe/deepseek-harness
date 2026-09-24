@@ -16032,6 +16032,98 @@
         "failureSummary": "Baseline: PRECHECK `f2ad4e19dd97d3bf34e15dc1da063cfc9c2c54d3` (fix v2's product code), narrow run 35986183465: exactly this case red, 141 of 142 green; the fix, run 35986202379: 142 passed / 0 failed; M-a, run 35986221499: exactly this case red. The readings match `artifacts/laneB/p1-09-b558-predictions-v3.md` (sha256 `0f1dc742dd956ae6bd79e2cf180a4934a1e79c29a0b95b9ce129dbd58d478a05`), written before dispatch."
       },
       "note": "P1-09's first U supplement (B-558, the blind review of fix v2): with a Loader in the tree, a fiber outside every Loader entry that writes itself a forged `fiber.entry`, naming first-owner with the root as its tree's fiber, is still refused when it registers. `forged-entry-attacker.ts` mounts the child under the root fiber from a static entry; the case asserts that the boot fails with \"outside every Loader entry is refused\", naming the child fiber. The fix, `67897d4fc9bd153705a7c845c54c47d0b6b0bae2` on the candidate (the pick of `e823a4b47731e585750bd0153fd6ec37de4b8dfd`), counts an entry of another tree only when a host Loader entry's fiber is further up the caller's chain.\n\nThe preset harnesses in agent-presets and the subagent driver load agent-presets as a host Loader entry since B-558 v2, as the shipped web-app does; those specs are outside this entry.\n\nNot covered here: code inside a Loader entry can still write `fiber.entry` or `fiber.parent` on a fiber under that entry, or borrow another entry's context; the P1-09 Agent Note and the tools README record this as the Known Limitation the delegate ruled."
+    },
+    {
+      "epic": "P4-07",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-07",
+        "stage": "U"
+      },
+      "supplementSeq": 4,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P4-07.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-07 on the shipped profile: a displaced host and a failing lease store a displaced host's session end leaves the Run's recorded outcome unchanged (acceptance[0])",
+        "P4-07 on the shipped profile: a displaced host and a failing lease store the host that still holds the lease records the Run's outcome when its session ends (control)",
+        "P4-07 on the shipped profile: a displaced host and a failing lease store a lease store that throws while the lease is taken stops the agent's tool calls (acceptance[2])",
+        "P4-07 on the shipped profile: a displaced host and a failing lease store a lease store that throws while the predecessor is read stops the agent's tool calls (acceptance[2])",
+        "P4-07 on the shipped profile: a displaced host and a failing lease store the same tool call executes when the lease store is healthy (control)"
+      ],
+      "files": [
+        "tests/first100/fixtures/P4-07.composition.spec.ts",
+        "tests/first100/fixtures/p4-07/driver.ts",
+        "tests/first100/fixtures/p4-07/base-mount.patch.yml",
+        "tests/first100/fixtures/p4-07/mock-llm.ts",
+        "packages/test-support/loader-smoke/tests/fixtures/production-profile.ts",
+        "packages/run/run/src/index.ts",
+        "packages/run/run/src/types.ts",
+        "packages/core/agent/src/dispatch.ts",
+        "packages/core/agent-loop/src/tool-calls.ts",
+        "packages/run/lease-sqlite/src/index.ts",
+        "packages/bundle/base/cordis.patch.yml",
+        ".agents/notes/implemented/bug-fix/2026-09-24-run-writes-carry-the-lease-and-a-failing-lease-store-stops-new-work.md",
+        ".agents/notes/implemented/bug-fix/2026-09-24-run-writes-carry-the-lease-and-a-failing-lease-store-stops-new-work.zh.md"
+      ],
+      "frozenAtUtc": "2026-09-24T11:29:01Z",
+      "dryRunProof": {
+        "treeSha": "8c99aa392249b4bb332504230839a075598f842c",
+        "testsDiscovered": 5
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Five mutations, each its own commit and never merged, each run by CI's narrow job at its own SHA over the same sixteen files as the baselines. M-a (`26a28a18c6976e93fd979981914f3f9c48e9f239`) stops checking the fence where the Run is written. M-b (`d9424b15864775a866a4c49e7558f0de3feb938b`) gives the lease back before the terminal writes. M-c (`adb272dec5feb5bcfa45ae8a9d9cc6d9c5b54584`) no longer marks the agent refused when the lease store throws. M-d (`7aaf39cddf4a1f25bfe0ef1c9a32823ed557edee`) moves the predecessor read back outside the try. M-e (`b51971ef51fcf069db3902512a7d672300f0fa29`, off the fix2 `f7ce9ab1dd096b7041470436823c9ebfebbe8ec1`) lets a fence that throws escape the Run write again. The first four are off the fix `a6ebd609c4867cb79eb1dbc9ce8b5c3ed0b94f4f`.",
+        "failureSummary": "Baselines: PRECHECK v3 `0ac868ab6623005de4479bfa23d2574cc9890f82` reddens C1 (the displaced host's terminal writes land) and C3, C3b (todo_write executes once: the lease store's exception was swallowed and the agent had neither a Run nor a refusal); the fix and the fix2 are green. M-a reddens C1 only. M-b reddens C2 (the holder's own terminal writes find no lease), with four restart.spec session-end cases outside this entry. M-c reddens C3 and C3b. M-d reddens C3b only: under C3's RESERVED lock the predecessor read still works and the acquire throws inside the try. M-e leaves all five green. C4 is green in every reading: it is the control that the same tool call executes when the store is healthy. Readings by case identity (PRECHECK v3 `0ac868ab66` run 35991774599; fix `a6ebd609c4` run 35991793053; M-a `26a28a18c6` run 35991810379; M-b `d9424b1586` run 35991828550; M-c `adb272dec5` run 35991847983; M-d `7aaf39cddf` run 35991868299; PRECHECK2 `abc40da507` run 35991886239; fix2 `f7ce9ab1dd` run 35991903523; M-e `b51971ef51` run 35991922156), all matching `artifacts/laneB/p4-07-predictions-v3.md` (sha256 `0fcfede6da0ea7501533b47054a207b402ced5cdd33180d9336b02131f85f777`), written before dispatch; the delegate and lane B each compared them by case."
+      },
+      "note": "P4-07's fourth U supplement, on the SHIPPED headless profile booted through `bootProductionProfile` in a child process (`p4-07/driver.ts`), with the shipped `run` and `lease-store` rows. acceptance[0]: C1, a host whose work item a second holder took ends its session and leaves the Run's recorded outcome unchanged, because the terminal writes carry the agent's lease and are checked where they are written; C2 is its control, the holder still writes `running->verifying->succeeded`. acceptance[2]: C3 and C3b, a lease store that throws while the lease is taken (RESERVED lock, the acquire) or while the predecessor is read (EXCLUSIVE lock) stops the agent's tool calls with LeaseRefusedError and todo_write never runs; C4 is its control. The first-step writes are frozen at unit level as U.5.\n\nTwo earlier versions were voided before any reading counted: v1 (PRECHECK `1c18bc79b9`) failed the build on TS2322, a plain string where the mock's tool-call id needed the `ToolCallId` brand; v2 (PRECHECK `31a617ff78`) asserted the refusal's name at `error.info.name`, which no tool/result carries, because the event's `error` is the error info itself (`appendToolResult` in `packages/core/agent-loop/src/tool-calls.ts`). v2's nine rounds reddened C3 and C3b on the fix after the call had been refused; v3 reads `error.name` and changes nothing else."
+    },
+    {
+      "epic": "P4-07",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-07",
+        "stage": "U"
+      },
+      "supplementSeq": 5,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/run/tests/run-service.spec.ts",
+        "-t",
+        "P4-07 must\\[1\\]: a Run write carries its writer's lease and is checked where it is written",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-07 must[1]: a Run write carries its writer's lease and is checked where it is written refuses the first step's write when the fence no longer admits its writer, and records nothing",
+        "P4-07 must[1]: a Run write carries its writer's lease and is checked where it is written refuses the write as lease-unavailable when the fence cannot answer, and records nothing",
+        "P4-07 must[1]: a Run write carries its writer's lease and is checked where it is written admits the same write while the fence still admits its writer (control)"
+      ],
+      "files": [
+        "packages/run/run/tests/run-service.spec.ts",
+        "packages/run/run/src/index.ts",
+        "packages/run/run/src/types.ts",
+        ".agents/notes/implemented/bug-fix/2026-09-24-run-writes-carry-the-lease-and-a-failing-lease-store-stops-new-work.md",
+        ".agents/notes/implemented/bug-fix/2026-09-24-run-writes-carry-the-lease-and-a-failing-lease-store-stops-new-work.zh.md"
+      ],
+      "frozenAtUtc": "2026-09-24T11:29:01Z",
+      "dryRunProof": {
+        "treeSha": "8c99aa392249b4bb332504230839a075598f842c",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Five mutations, each its own commit and never merged, each run by CI's narrow job at its own SHA over the same sixteen files as the baselines. M-a (`26a28a18c6976e93fd979981914f3f9c48e9f239`) stops checking the fence where the Run is written. M-b (`d9424b15864775a866a4c49e7558f0de3feb938b`) gives the lease back before the terminal writes. M-c (`adb272dec5feb5bcfa45ae8a9d9cc6d9c5b54584`) no longer marks the agent refused when the lease store throws. M-d (`7aaf39cddf4a1f25bfe0ef1c9a32823ed557edee`) moves the predecessor read back outside the try. M-e (`b51971ef51fcf069db3902512a7d672300f0fa29`, off the fix2 `f7ce9ab1dd096b7041470436823c9ebfebbe8ec1`) lets a fence that throws escape the Run write again. The first four are off the fix `a6ebd609c4867cb79eb1dbc9ce8b5c3ed0b94f4f`.",
+        "failureSummary": "Baselines: PRECHECK v3 `0ac868ab6623005de4479bfa23d2574cc9890f82` reddens U1 (`advance` took the fence as a types-only parameter and accepted the write); PRECHECK2 `abc40da50770b762508d0407c053f766fdf359bb` reddens U3 (the fence's throw rejected `advance`); the fix and the fix2 are green. M-a reddens U1 only. M-e reddens U3 only. M-b, M-c and M-d leave all three green: they change `finish` and `open`, not `advance`. U2 is green in every reading: it is the control that the same write is admitted while the fence still admits its writer. Readings by case identity (PRECHECK v3 `0ac868ab66` run 35991774599; fix `a6ebd609c4` run 35991793053; M-a `26a28a18c6` run 35991810379; M-b `d9424b1586` run 35991828550; M-c `adb272dec5` run 35991847983; M-d `7aaf39cddf` run 35991868299; PRECHECK2 `abc40da507` run 35991886239; fix2 `f7ce9ab1dd` run 35991903523; M-e `b51971ef51` run 35991922156), all matching `artifacts/laneB/p4-07-predictions-v3.md` (sha256 `0fcfede6da0ea7501533b47054a207b402ced5cdd33180d9336b02131f85f777`), written before dispatch; the delegate and lane B each compared them by case."
+      },
+      "note": "P4-07's fifth U supplement, at the Run Service: must[1]'s first-step write carries the writer's lease. U1: `RunService.advance` with a fence that no longer admits its writer is refused as `fenced` and records nothing. U3: a fence whose `mayWrite` throws refuses the write as `lease-unavailable` and records nothing, instead of the error escaping the Run's turn. U2 is the control. The argv selects this describe with `-t`, its brackets escaped because vitest compiles the value as a regular expression; at the fix2 the describe held exactly these three cases. On the shipped profile the terminal writes are observed instead (U.4).\n\nTwo earlier versions were voided before any reading counted: v1 (PRECHECK `1c18bc79b9`) failed the build on TS2322, a plain string where the mock's tool-call id needed the `ToolCallId` brand; v2 (PRECHECK `31a617ff78`) asserted the refusal's name at `error.info.name`, which no tool/result carries, because the event's `error` is the error info itself (`appendToolResult` in `packages/core/agent-loop/src/tool-calls.ts`). v2's nine rounds reddened C3 and C3b on the fix after the call had been refused; v3 reads `error.name` and changes nothing else."
     }
   ]
 }

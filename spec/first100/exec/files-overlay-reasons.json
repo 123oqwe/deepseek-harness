@@ -198,6 +198,8 @@
     "P4-11 packages/mcp/mcp-client/src/connection.ts": "Changed by P4-11 part 2 (fix `4ff421f091`): a reconnect of a server mounted for one session asks that session's run budget and charges it, and gives up once the budget refuses. P4-11 U.2 case E observes it on the shipped acp profile.",
     "P4-11 packages/mcp/mcp-client/src/index.ts": "Changed by P4-11 part 2 (PRECHECK `f48ee19408`): the runtime-only `chargeSession` field of the two MCP server config interfaces, naming the session whose Run each reconnect is charged to. P4-11 U.2 case E reaches it through the acp mount.",
     "P4-11 packages/acp/acp/src/mcp.ts": "Changed by P4-11 part 2 (fix `4ff421f091`): `mountAcpMcpServers` takes the session and passes it to each MCP server it mounts as `chargeSession`, so a per-session server charges its reconnects to that session's Run. P4-11 U.2 case E depends on it.",
-    "P4-11 packages/acp/acp/src/session.ts": "Changed by P4-11 part 2 (fix `4ff421f091`): both ACP session paths pass their session id to `mountAcpMcpServers`. P4-11 U.2 case E depends on it."
+    "P4-11 packages/acp/acp/src/session.ts": "Changed by P4-11 part 2 (fix `4ff421f091`): both ACP session paths pass their session id to `mountAcpMcpServers`. P4-11 U.2 case E depends on it.",
+    "P4-07 packages/run/run/src/types.ts": "Changed by the P4-07 fix (`a6ebd609c4`) and fix2 (`f7ce9ab1dd`): `RunTransitionDenialReason` gains `fenced` and `lease-unavailable`, the reasons `RunService.advance` gives when a write carrying its writer's lease is refused. P4-07 U.5 cases U1 and U3 assert them.",
+    "P4-07 packages/run/lease-sqlite/src/index.ts": "Not changed by P4-07: the shipped SQLite lease store whose busy timeout P4-07 U.4 cases C3 and C3b provoke by holding its lock from another connection, so an edit to its acquire or get changes what those cases observe."
   }
 }

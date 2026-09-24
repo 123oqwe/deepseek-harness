@@ -2830,6 +2830,32 @@
     },
     {
       "epic": "P4-07",
+      "path": ".agents/notes/implemented/bug-fix/2026-09-24-run-writes-carry-the-lease-and-a-failing-lease-store-stops-new-work.md",
+      "kind": "doc",
+      "stages": [
+        "U.4",
+        "U.5"
+      ]
+    },
+    {
+      "epic": "P4-07",
+      "path": ".agents/notes/implemented/bug-fix/2026-09-24-run-writes-carry-the-lease-and-a-failing-lease-store-stops-new-work.zh.md",
+      "kind": "doc",
+      "stages": [
+        "U.4",
+        "U.5"
+      ]
+    },
+    {
+      "epic": "P4-07",
+      "path": "packages/bundle/base/cordis.patch.yml",
+      "kind": "manifest",
+      "stages": [
+        "U.4"
+      ]
+    },
+    {
+      "epic": "P4-07",
       "path": "packages/collaboration/lease-contract/src/run-lease.ts",
       "kind": "source",
       "stages": [
@@ -2842,7 +2868,8 @@
       "path": "packages/core/agent-loop/src/tool-calls.ts",
       "kind": "source",
       "stages": [
-        "U.2"
+        "U.2",
+        "U.4"
       ],
       "reason": "Where the authority is actually presented: the dispatcher refuses a fenced or lease-refused run before a single tool runs, and writes the model-visible result that says which. A rule with no dispatch site refuses nothing, and the plan named no dispatch site."
     },
@@ -2867,6 +2894,15 @@
     },
     {
       "epic": "P4-07",
+      "path": "packages/run/lease-sqlite/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.4"
+      ],
+      "reason": "Not changed by P4-07: the shipped SQLite lease store whose busy timeout P4-07 U.4 cases C3 and C3b provoke by holding its lock from another connection, so an edit to its acquire or get changes what those cases observe."
+    },
+    {
+      "epic": "P4-07",
       "path": "packages/run/lease/tests/fault-matrix.spec.ts",
       "kind": "test",
       "stages": [
@@ -2879,9 +2915,21 @@
       "kind": "source",
       "stages": [
         "U.2",
-        "U.3"
+        "U.3",
+        "U.4",
+        "U.5"
       ],
       "reason": "The Run Service is the holder (§12.19-3): it takes the lease before registering the Run, renews it, releases it, and — since §12.31-A — marks the agent when the store refuses. The plan named the lease library and not the service that holds a lease."
+    },
+    {
+      "epic": "P4-07",
+      "path": "packages/run/run/src/types.ts",
+      "kind": "source",
+      "stages": [
+        "U.4",
+        "U.5"
+      ],
+      "reason": "Changed by the P4-07 fix (`a6ebd609c4`) and fix2 (`f7ce9ab1dd`): `RunTransitionDenialReason` gains `fenced` and `lease-unavailable`, the reasons `RunService.advance` gives when a write carrying its writer's lease is refused. P4-07 U.5 cases U1 and U3 assert them."
     },
     {
       "epic": "P4-07",
@@ -2890,6 +2938,22 @@
       "stages": [
         "U.2",
         "U.3"
+      ]
+    },
+    {
+      "epic": "P4-07",
+      "path": "packages/run/run/tests/run-service.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.5"
+      ]
+    },
+    {
+      "epic": "P4-07",
+      "path": "packages/test-support/loader-smoke/tests/fixtures/production-profile.ts",
+      "kind": "test",
+      "stages": [
+        "U.4"
       ]
     },
     {
@@ -2917,6 +2981,38 @@
         "U.1"
       ],
       "reason": "Two additions to `WorkflowErrorCode`: `LEASE_STORE_UNAVAILABLE` and `RUN_HELD_BY_ANOTHER_HOST`. No existing member changed. They belong to the seam DEFINITION rather than to the worker-thread provider because the code union is the seam vocabulary — a provider inventing its own codes would make the seam callers switch on strings the definition does not know — and acceptance[2] needs a caller to tell a store outage from an ordinary refusal, which an untyped throw cannot carry. NOT labelled HOT ZONE: an earlier draft was, and the citation gate refused it for naming `HEAD` rather than a sha. Checking rather than arguing with my own gate: this file is not on §2.D hot-zone list (P3-01, P3-05, P3-07, P5-05, P5-06), so the label was over-classification, and a label applied outside its defined set makes the five that carry it mean less."
+    },
+    {
+      "epic": "P4-07",
+      "path": "tests/first100/fixtures/P4-07.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.4"
+      ]
+    },
+    {
+      "epic": "P4-07",
+      "path": "tests/first100/fixtures/p4-07/base-mount.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.4"
+      ]
+    },
+    {
+      "epic": "P4-07",
+      "path": "tests/first100/fixtures/p4-07/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.4"
+      ]
+    },
+    {
+      "epic": "P4-07",
+      "path": "tests/first100/fixtures/p4-07/mock-llm.ts",
+      "kind": "test",
+      "stages": [
+        "U.4"
+      ]
     },
     {
       "epic": "P4-08",
