@@ -71,6 +71,9 @@ function requestProposal(header: EpochHeader): LlmCallConfig {
   return proposal
 }
 
+/** Mutation M4 (never merge): the first text-only answer in this process takes one more step. */
+let extraStepTaken = false
+
 /** Drives one session through turn and step boundaries. */
 export class ReactLoopAgent implements Agent {
   readonly inbox: ReactLoopInbox
@@ -542,7 +545,13 @@ export class ReactLoopAgent implements Agent {
         if (finish.kind === 'max-tokens') return { kind: 'max-tokens' }
 
         const toolCalls = message.content.filter(block => block.type === 'tool-call')
-        if (toolCalls.length === 0) return { kind: 'completed' }
+        if (toolCalls.length === 0) {
+          if (!extraStepTaken) {
+            extraStepTaken = true
+            return null
+          }
+          return { kind: 'completed' }
+        }
         const { concluded } = await executeToolCalls(
           this.loopCtx, turn, step, toolCalls, signal,
           context => this.inbox.splice('next-step', this.inbox.nextStep.length, 0, [context]),
