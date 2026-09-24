@@ -438,7 +438,7 @@ export class WorkerRun implements WorkflowRun {
         break
       case WorkerToHostType.AgentStart:
         this.liveAgents.set(message.info.seq, message.info)
-        this.journaling.onAgentStart(message.info)
+        this.journaling.onAgentStart({ ...message.info, call: message.call })
         this.observer.agentStart(message.info)
         break
       case WorkerToHostType.AgentEnd:
