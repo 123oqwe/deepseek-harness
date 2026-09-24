@@ -53,9 +53,15 @@
  * CLI: `node scripts/release/verify-evidence.mjs [--repo-root <path>] --evidence <path>`
  * `--repo-root` defaults to `process.cwd()`. Exits 0 with no mismatches, 1
  * otherwise, printing every mismatch found. The first output line names the
- * package's resolved path and its recorded `accepted` status, the two facts a
- * report of this gate cites (`AGENTS.md`, evidence-gate reporting).
+ * package's resolved path and `accepted=true` only for a package that verified
+ * clean and records the boolean `true`; a package that failed says
+ * `accepted=false` and names what it records in words. These are the two facts
+ * a report of this gate cites (`AGENTS.md`, evidence-gate reporting). A check
+ * that cannot run, for example because git or pnpm is missing, is a named
+ * mismatch, so the result line is always printed.
  */
+import { execFileSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { verifyBaseline } from './baseline-fingerprint.mjs'
@@ -168,24 +174,39 @@ function verifyAcceptedInvariant(pkg, requiredArtifactPaths, requiredGateIds, mi
 }
 
 /**
+ * A thrown value's message, for a mismatch line.
+ * @param {unknown} error - what was thrown.
+ * @returns {string} its message.
+ */
+function errorText(error) {
+  return error instanceof Error ? error.message : String(error)
+}
+
+/**
  * Verify one evidence package fully offline: recompute every digest it
  * carries from real current bytes on disk, re-derive the baseline
  * fingerprint from the checkout, and re-derive must[2] against the real
  * loaded data.
  * @param {string} repoRoot - checkout root artifact/build-artifact paths resolve against.
  * @param {string} evidencePath - path to the evidence package JSON to verify.
- * @returns {{ ok: boolean, mismatches: string[], accepted: unknown }} `accepted` is the package's recorded `accepted` field, or `null` when there is no package at `evidencePath`.
+ * @returns {{ ok: boolean, mismatches: string[], accepted: unknown }} `accepted` is the package's recorded `accepted` field, or `null` when there is no readable package at `evidencePath`.
  */
 export function verify(repoRoot, evidencePath) {
   const mismatches = []
   if (!existsSync(evidencePath)) return { ok: false, mismatches: [`no evidence package at ${evidencePath}`], accepted: null }
 
-  const pkg = JSON.parse(readFileSync(evidencePath, 'utf8'))
+  let pkg
+  try {
+    pkg = JSON.parse(readFileSync(evidencePath, 'utf8'))
+  } catch (error) {
+    return { ok: false, mismatches: [`evidence package is not valid JSON: ${errorText(error)}`], accepted: null }
+  }
   const dir = sidecarDir(evidencePath)
 
   const { signature, ...rest } = pkg
   const recomputedSignature = digestOfValue(rest)
   if (recomputedSignature !== signature) mismatches.push(`package signature mismatch (recorded ${signature}, recomputed ${recomputedSignature})`)
+  if (typeof pkg.accepted !== 'boolean') mismatches.push(`accepted is ${JSON.stringify(pkg.accepted)}, not a boolean`)
 
   const baselinePath = join(repoRoot, '.dsh/baseline.json')
   if (!existsSync(baselinePath)) {
@@ -195,7 +216,11 @@ export function verify(repoRoot, evidencePath) {
     if (recomputed !== pkg.baselineFingerprint.digest) {
       mismatches.push(`baselineFingerprint digest mismatch (recorded ${pkg.baselineFingerprint.digest}, recomputed ${recomputed})`)
     } else {
-      for (const entry of verifyBaseline(repoRoot).drift) mismatches.push(`baseline drift since collection: ${entry.path} (${entry.field})`)
+      try {
+        for (const entry of verifyBaseline(repoRoot).drift) mismatches.push(`baseline drift since collection: ${entry.path} (${entry.field})`)
+      } catch (error) {
+        mismatches.push(`baseline re-derivation failed: ${errorText(error)}`)
+      }
     }
   }
 
@@ -205,6 +230,15 @@ export function verify(repoRoot, evidencePath) {
   } else {
     const recomputed = digestOfFile(diffPath)
     if (recomputed !== pkg.gitDiff.digest) mismatches.push(`gitDiff digest mismatch (recorded ${pkg.gitDiff.digest}, recomputed ${recomputed})`)
+  }
+  // The same diff collection recorded, taken again from the working tree.
+  try {
+    const workingTree = execFileSync('git', ['diff', pkg.gitDiff.baseSha], { cwd: repoRoot, encoding: 'utf8' })
+    if (createHash('sha256').update(workingTree).digest('hex') !== pkg.gitDiff.digest) {
+      mismatches.push(`the working tree differs from the diff recorded at collection (git diff ${pkg.gitDiff.baseSha})`)
+    }
+  } catch (error) {
+    mismatches.push(`working-tree diff re-derivation failed: ${errorText(error)}`)
   }
 
   for (const [gateId, record] of Object.entries(pkg.requiredGates)) {
@@ -234,8 +268,13 @@ export function verify(repoRoot, evidencePath) {
   } else {
     const recomputed = digestOfFile(manifestPath)
     if (recomputed !== pkg.sidecarManifestDigest) mismatches.push(`sidecar manifest digest mismatch (recorded ${pkg.sidecarManifestDigest}, recomputed ${recomputed})`)
-    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
-    verifyAcceptedInvariant(pkg, manifest.requiredArtifactPaths ?? [], manifest.requiredGateIds ?? [], mismatches)
+    let manifest
+    try {
+      manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
+    } catch (error) {
+      mismatches.push(`manifest sidecar is not valid JSON: ${errorText(error)}`)
+    }
+    if (manifest !== undefined) verifyAcceptedInvariant(pkg, manifest.requiredArtifactPaths ?? [], manifest.requiredGateIds ?? [], mismatches)
   }
 
   return { ok: mismatches.length === 0, mismatches, accepted: pkg.accepted }
@@ -250,10 +289,10 @@ function main() {
 
   const result = verify(repoRoot, evidencePath)
   if (result.ok) {
-    process.stdout.write(`verify-evidence: ${evidencePath} verified offline, no mismatches, accepted=${result.accepted}\n`)
+    process.stdout.write(`verify-evidence: ${evidencePath} verified offline, no mismatches, accepted=${result.accepted === true}\n`)
     process.exit(0)
   }
-  process.stdout.write(`verify-evidence: ${evidencePath} FAILED verification, recorded accepted=${result.accepted}:\n${result.mismatches.map(line => `  ${line}`).join('\n')}\n`)
+  process.stdout.write(`verify-evidence: ${evidencePath} FAILED verification, accepted=false (the package records ${JSON.stringify(result.accepted)}):\n${result.mismatches.map(line => `  ${line}`).join('\n')}\n`)
   process.exit(1)
 }
 
