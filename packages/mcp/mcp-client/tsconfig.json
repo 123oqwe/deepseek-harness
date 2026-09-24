@@ -34,6 +34,18 @@
     },
     {
       "path": "../../util/http-proxy"
+    },
+    {
+      "path": "../../core/agent"
+    },
+    {
+      "path": "../../util/brand"
+    },
+    {
+      "path": "../../reliability/retry"
+    },
+    {
+      "path": "../../core/session"
     }
   ]
 }

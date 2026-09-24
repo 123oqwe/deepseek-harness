@@ -1,0 +1,30 @@
+# Test-only overlay over the SHIPPED acp profile for Epic P4-11
+# acceptance[1]'s MCP half. `dsh-acp` mounts each session's MCP servers inside
+# that session's Agent scope, so their reconnects belong to the session's run.
+# The driver composes the session through `AcpSession.create`, the code
+# `session/new` runs; the two rows that bind the stdio JSON-RPC transport are
+# disabled because a bound server would take the stream the driver reports
+# through. The run budget and `llm-retry` stay as `dsh-base` ships them.
+- id: acp-app-startup
+  disabled: true
+
+- id: acp
+  disabled: true
+
+# The typert type graph imports each contributor's built `lib/typert.host.js`,
+# which the unit lane's unbuilt tree does not have.
+- id: typert-loader
+  disabled: true
+
+- id: agent-loop
+  config:
+    agents: []
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
+
+- insert:
+    - id: p4-11-scripted-llm
+      name: './scripted-llm.ts'
