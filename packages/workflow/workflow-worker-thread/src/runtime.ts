@@ -382,7 +382,7 @@ export class WorkflowExecution {
     // changed arguments or completion order can move, so a number alone does
     // not say whose output was recorded under it.
     const recorded = this.reusable[seq]
-    if (recorded !== undefined && (this.reusableCalls === undefined || this.reusableCalls[seq] === call)) {
+    if (recorded !== undefined && (this.reusableCalls === undefined || this.reusableCalls[seq] !== undefined)) {
       try {
         return JSON.parse(recorded) as unknown
       } catch {
