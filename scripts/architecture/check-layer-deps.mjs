@@ -961,6 +961,10 @@ export function runLayerDepsCheck(root) {
     // entry reports as expired rather than stale once its date passes.
     const key = `${entry.fromPackage}\0${entry.toPackage}`
     if (allowed.has(key)) usedAllowances.add(key)
+    if (allowed.has(key) && allowed.get(key).expires >= today) {
+      kernelEdges.push({ ...withoutBindingFiles(entry), verdict: 'allowlisted' })
+      continue
+    }
     kernelEdges.push({ ...withoutBindingFiles(entry), verdict: 'violation' })
     const forbiddenFiles = [...new Set(forbidden.flatMap(binding => [...entry.bindingFiles.get(binding) ?? []]))].sort()
     violations.push({
