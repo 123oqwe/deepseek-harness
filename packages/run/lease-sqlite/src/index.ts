@@ -99,7 +99,7 @@ export default class LeaseStorePlugin extends Service implements LeaseStoreContr
     this.opened = openLeaseStore(this.config.directory)
     yield () => {
       this.closing = true
-      if (this.held.size === 0) this.opened = undefined
+      this.opened = undefined
     }
   }
 
