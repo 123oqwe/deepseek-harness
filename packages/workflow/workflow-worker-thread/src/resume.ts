@@ -20,7 +20,7 @@
 import { createHash } from 'node:crypto'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { planResume, readJournal, setJournalAside } from '@deepseek-ai/dsh-workflow-journal'
-import type { ScriptDigest, WorkflowJournal } from '@deepseek-ai/dsh-workflow-journal'
+import type { JournalEntry, ScriptDigest, WorkflowJournal } from '@deepseek-ai/dsh-workflow-journal'
 import type { LedgerState } from '@deepseek-ai/dsh-action-ledger'
 
 /**
@@ -107,9 +107,12 @@ export class AmbiguousReconciliationRequiredError extends Error {
  * digest refuses.
  */
 export interface Reconciled {
-  /** Recorded outputs by 1-based step sequence, for steps this resume reconciled. */
+  /**
+   * Recorded outputs this resume reconciled: an entry's under its 1-based step
+   * sequence, a displaced entry's under the keys after the largest of those.
+   */
   readonly reusable: Record<number, string>
-  /** The call identity each reusable step was recorded under, by step sequence; a step recorded without one has none. */
+  /** The call identity each reusable output was recorded under, by the same keys; one recorded without an identity has none. */
   readonly calls?: Record<number, string>
   /** The journal these were read from, for the resumed run's recorder to continue. */
   readonly journal: WorkflowJournal | undefined
@@ -136,7 +139,8 @@ export function scriptDigestOf(body: string): ScriptDigest {
 }
 
 /**
- * Which steps a resumed run may reuse, by 1-based `agent()` sequence.
+ * Which recorded outputs a resumed run may reuse, with the call identity each
+ * was recorded under; the worker matches them to calls by that identity.
  *
  * Empty when there is no journal, when the script changed, or when nothing was
  * reconcilable — and all three mean the same thing to the caller: run it. A
@@ -150,8 +154,8 @@ export function scriptDigestOf(body: string): ScriptDigest {
  * @param body - the script about to run, whose digest must match the journal's.
  * @param childCompleted - whether a recorded child's session shows finished work.
  * @param effectState - the ledger query for recorded side effects, absent when this run has no ledger to ask.
- * @returns the reconciliation: reusable outputs and the calls that recorded them by step sequence,
- *   the journal they were read from, and why a journal was refused.
+ * @returns the reconciliation: reusable outputs and the calls that recorded them, the journal they
+ *   were read from, and why a journal was refused.
  * @throws AmbiguousReconciliationRequiredError when a step's recorded side effects are neither provably committed nor provably unsent.
  */
 export async function reusableSteps(
@@ -173,7 +177,15 @@ export async function reusableSteps(
 
   const reusable: Record<number, string> = {}
   const calls: Record<number, string> = {}
-  for (const entry of journal.entries) {
+  // A displaced entry is another call's record that a later step replaced at
+  // its number; it is reconciled like any other and keyed after every entry.
+  const stepOf = (entry: JournalEntry): number => Number(entry.stepId.replace(/^step-/u, ''))
+  const lastStep = Math.max(0, ...journal.entries.map(stepOf).filter(seq => Number.isSafeInteger(seq)))
+  const offered = [
+    ...journal.entries.map(entry => ({ entry, key: stepOf(entry) })),
+    ...(journal.displaced ?? []).map((entry, index) => ({ entry, key: lastStep + index + 1 })),
+  ]
+  for (const { entry, key } of offered) {
     if (entry.outcome !== 'completed' || entry.output === null) continue
     // Recorded side effects are reconciled BEFORE the children are counted,
     // because every failure answer below is "run it again" and that is exactly
@@ -201,10 +213,9 @@ export async function reusableSteps(
       if (reconciliation === 'confirmed') throw new AmbiguousReconciliationRequiredError(entry.stepId, entry.sideEffectReceipts)
       continue
     }
-    const seq = Number(entry.stepId.replace(/^step-/u, ''))
-    if (Number.isSafeInteger(seq) && seq > 0) {
-      reusable[seq] = entry.output
-      if (entry.call !== undefined) calls[seq] = entry.call
+    if (Number.isSafeInteger(key) && key > 0) {
+      reusable[key] = entry.output
+      if (entry.call !== undefined) calls[key] = entry.call
     }
   }
   return { reusable, calls, journal }

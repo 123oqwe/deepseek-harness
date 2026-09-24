@@ -103,7 +103,9 @@ export function compactJournal(journal: WorkflowJournal): WorkflowJournal {
     if (!compactable) return entry
     return { ...entry, inputs: [] as readonly ArtifactRef[] }
   })
-  return { scriptDigest: journal.scriptDigest, entries }
+  // Displaced entries are kept whole: each is another call's record, reusable
+  // by a later resume, with receipts nothing else holds.
+  return { scriptDigest: journal.scriptDigest, entries, ...journal.displaced === undefined ? {} : { displaced: journal.displaced } }
 }
 
 /**
@@ -119,7 +121,7 @@ export function compactJournal(journal: WorkflowJournal): WorkflowJournal {
  */
 export function retainsAllReceipts(before: WorkflowJournal, after: WorkflowJournal): boolean {
   const collect = (journal: WorkflowJournal): string[] =>
-    journal.entries.flatMap(entry => [...entry.childReceipts, ...entry.sideEffectReceipts]).sort()
+    [...journal.entries, ...journal.displaced ?? []].flatMap(entry => [...entry.childReceipts, ...entry.sideEffectReceipts]).sort()
   const originals = collect(before)
   const survivors = new Set(collect(after))
   return originals.every(receipt => survivors.has(receipt))

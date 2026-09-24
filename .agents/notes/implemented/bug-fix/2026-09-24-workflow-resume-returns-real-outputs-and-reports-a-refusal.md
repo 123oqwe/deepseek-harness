@@ -16,8 +16,9 @@ With real outputs recorded, three more gaps showed. The worker reused a recorded
 - **The worker reports each completed `agent()` value as JSON text** on its agent-end message: the structured value, or the output text. The host hands it to the journal only, never to `workflow/agent-end` listeners, and the journal records it inline; a resumed step returns the parsed value.
 - **A refused resume is reported on the run, not raised.** `Reconciled.refused` carries `admitResume`'s `reason` and `detail`, `WorkflowRun.resumeRefused` exposes them, the tool's closed output schema gains the optional `resumeRefused`, and the text the model reads begins with `resume refused (<reason>): the run started over from its first step.`
 - **The host flushes a finished in-process child's session before forwarding its result to the worker**, with the same `ctx.sessions.flush` call `subagent/continuation-activation.ts` makes. A failed flush is logged as a warning and the result is still forwarded.
-- **A recorded step is reused only for the call that recorded it.** The worker computes each `agent()` call's identity, `callDigestOf`: SHA-256 of its prompt, `schema`, `provider` and `model`. The journal records it as the entry's `call`, the host passes each reusable step's identity to the worker, and the worker starts the step again when the identities differ.
-- **A resume refused for a changed script first moves the journal** to `refused/<runId>.<first 12 hex of its script digest>.json` in the journal directory (`setJournalAside`), so the restarted run writes a new `<runId>.json` beside it.
+- **A recorded output is reused only for a call with the same identity, matched by identity rather than by step number.** The worker computes each `agent()` call's identity, `callDigestOf`: SHA-256 of its prompt, `schema`, `provider` and `model`. The journal records it as the entry's `call`, the host passes each reusable output's identity to the worker, and a call takes the first unused output recorded under its identity, whatever the step number; a call with none starts its child. Without identities the worker reuses nothing.
+- **A step started for a different call keeps the entry it replaces.** When such a step starts at a number another call recorded, the recorder moves that entry, whole, into the journal's `displaced`, which a later resume reconciles and offers like any other entry.
+- **A resume refused for a changed script first moves the journal** to `refused/<runId>.<first 12 hex of its script digest>.json` in the journal directory (`setJournalAside`), or to the next free `refused/<runId>.<digest>.<n>.json`, so the restarted run writes a new `<runId>.json` beside it and no kept journal is replaced.
 - **The journal directory is created with mode 0700 and each journal file is written with mode 0600**, as a session log is.
 
 ## Alternatives considered
@@ -31,7 +32,7 @@ With real outputs recorded, three more gaps showed. The worker reused a recorded
 - **Keep the stub model's tool-call ids fixed at `stub-<n>`.** Not chosen: a session driven through two stubs in turn meets `stub-1` twice, so `StubToolCall.id` lets a case name its call; the default is unchanged.
 - **Record the call identity in the entry's `inputs`**, the empty slot the blind review pointed to. Not chosen: compaction at settlement clears the `inputs` of every verified step, so a later resume of the same run would find no identity and start those steps again.
 - **Add `args` to the digest a resume is admitted under.** Not chosen: it refuses a resume whose arguments changed, but leaves step numbers decided by completion order handing one call another's output; the identity check covers both.
-- **Match a recorded step to a call by identity whatever its number.** Not chosen: it needs a second index over the journal, and the step-number key with an identity check is the smallest change that stops a wrong output from being returned.
+- **Keep the step-number key and check the identity only as a guard.** Not chosen: a pipeline whose later calls start as earlier ones complete puts calls under other numbers on resume, and the guard then starts those children again, which acceptance[0] forbids (delegate ruling D3).
 - **Refuse a changed-script resume without running the script.** Not chosen: acceptance[1] refuses the resume and the run starts over, as above; the refused journal is kept instead.
 
 ## Consequences
@@ -39,10 +40,10 @@ With real outputs recorded, three more gaps showed. The worker reused a recorded
 - The host rewrites the whole journal at every step edge, so each inline output is written once per later edge; nothing caps an output's size.
 - A journal written before this change holds placeholders and no call identities, and a resume reruns those steps.
 - A refused resume still runs the script from its first step under the same id; `resumeRefused` is the caller's only sign that nothing was reused.
-- A step whose number moved, because calls started in a different order than in the interrupted run, starts its child again rather than being matched to its record under another number.
-- Nothing deletes a journal kept under `refused/`, and a later refusal of the same run under the same recorded digest replaces the copy kept before.
+- A call whose prompt carries a timestamp or a random value never matches its record and starts its child again; the identity does not cover the parent session, a default provider or model, tools or `cwd`.
+- Nothing deletes a journal kept under `refused/`, and nothing removes displaced entries.
 - A journal directory that already exists keeps its mode; only a directory the journal writer creates is 0700.
-- `WorkflowExecution` constructed without call identities reuses recorded steps by number alone; the host always passes them.
+- A `WorkflowExecution` constructed without call identities reuses nothing; the host always passes them.
 - The tool refuses a `resume` value outside `^[\w-]+$`, for example one containing `.`; the worker-thread engine mints UUIDs, which match.
 - The tool never shows a foreground run's id, and a crashed run returns no result, so on the shipped product nothing hands the model an id to resume; the end-to-end cases observe the tool resuming a run it is given (V4).
 - When a child is disposed before its result is forwarded, for example by `dispose()` while a run still has a child running, the flush fails and the host logs a warning.

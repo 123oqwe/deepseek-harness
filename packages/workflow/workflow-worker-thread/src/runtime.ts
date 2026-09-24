@@ -61,7 +61,6 @@ function outputText(blocks: ContentBlock[]): string {
     .join('')
 }
 
-/** A short display label derived from the prompt when the script passes none. */
 /**
  * The identity of one `agent()` call: SHA-256 of its prompt and of the options
  * that change what the child is asked (schema, provider, model).
@@ -76,6 +75,22 @@ export function callDigestOf(
   return createHash('sha256').update(JSON.stringify([prompt, opts.schema ?? null, opts.provider ?? null, opts.model ?? null])).digest('hex')
 }
 
+/**
+ * The keys of the reusable outputs recorded under each call identity, in key
+ * order. An output with no recorded identity is under none.
+ * @param reusable - the recorded outputs, by key.
+ * @param calls - the identity each output was recorded under, by the same keys.
+ * @returns each identity's keys, ascending.
+ */
+function keysByCall(reusable: Record<number, string>, calls: Record<number, string>): Map<string, number[]> {
+  const byCall = new Map<string, number[]>()
+  for (const [key, call] of Object.entries(calls).sort(([a], [b]) => Number(a) - Number(b))) {
+    if (reusable[Number(key)] !== undefined) byCall.set(call, [...byCall.get(call) ?? [], Number(key)])
+  }
+  return byCall
+}
+
+/** A short display label derived from the prompt when the script passes none. */
 function defaultLabel(prompt: string): string {
   const newline = prompt.indexOf('\n')
   const line = newline === -1 ? prompt : prompt.slice(0, newline)
@@ -107,6 +122,8 @@ export class WorkflowExecution {
   private currentPhase: string | undefined
   private readonly context: vm.Context
   private readonly compiled: vm.Script
+  /** The keys of the reusable outputs under each call identity; a reused key is taken out. Built at the first call. */
+  private reusableByCall: Map<string, number[]> | undefined
 
   constructor(
     meta: WorkflowMeta,
@@ -115,15 +132,15 @@ export class WorkflowExecution {
     private readonly limits: WorkerLimits,
     private readonly observer: ExecutionObserver,
     private readonly children: ChildPort,
-    /** Recorded outputs this resumed run may reuse, by step sequence. */
+    /** Recorded outputs this resumed run may reuse, keyed in the order they were recorded. */
     private readonly reusable: Record<number, string> = {},
     /**
-     * The call identity each reusable step was recorded under, by step
-     * sequence. A step is reused only for a call with the same identity; the
-     * host always passes this, and a direct construction without it reuses
-     * steps by sequence alone.
+     * The call identity each reusable output was recorded under, by the same
+     * keys. A call reuses the first unused output recorded under its own
+     * identity, in key order, whatever its step number; without identities
+     * nothing is reused.
      */
-    private readonly reusableCalls?: Record<number, string>,
+    private readonly reusableCalls: Record<number, string> = {},
   ) {
     // Compile FIRST: a body syntax error must throw out of the constructor
     // before any realm state exists. The host pre-parses the identical
@@ -378,11 +395,13 @@ export class WorkflowExecution {
     // start counter: a reused step acquires no slot, emits no observer event,
     // and must not be credited with a child it did not start — reporting one
     // would put a second receipt in the journal for work that happened once.
-    // Only for the call that recorded it: step numbers follow call order, which
-    // changed arguments or completion order can move, so a number alone does
-    // not say whose output was recorded under it.
-    const recorded = this.reusable[seq]
-    if (recorded !== undefined && (this.reusableCalls === undefined || this.reusableCalls[seq] === call)) {
+    // Matched by the call's identity, not its step number: step numbers follow
+    // call order, which changed arguments or completion order can move, so a
+    // number alone does not say whose output was recorded under it.
+    this.reusableByCall ??= keysByCall(this.reusable, this.reusableCalls)
+    const key = this.reusableByCall.get(call)?.shift()
+    const recorded = key === undefined ? undefined : this.reusable[key]
+    if (recorded !== undefined) {
       try {
         return JSON.parse(recorded) as unknown
       } catch {

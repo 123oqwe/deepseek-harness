@@ -17,7 +17,7 @@
  * @module @deepseek-ai/dsh-workflow-journal/store
  */
 
-import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { WorkflowJournal } from './types.ts'
 
@@ -48,7 +48,9 @@ export function writeJournal(directory: string, runId: string, journal: Workflow
 /**
  * Move one run's journal aside to `refused/<runId>.<suffix>.json`, so a run
  * that starts over under the same id cannot overwrite it. A resume refused for
- * a changed script does this before the new run first writes.
+ * a changed script does this before the new run first writes. A journal kept
+ * earlier under the same name is never replaced: the next free
+ * `refused/<runId>.<suffix>.<n>.json` is taken instead.
  * @param directory - the directory holding one file per run.
  * @param runId - the run whose journal is kept.
  * @param suffix - what tells this kept journal apart from another kept for the same run.
@@ -56,7 +58,9 @@ export function writeJournal(directory: string, runId: string, journal: Workflow
 export function setJournalAside(directory: string, runId: string, suffix: string): void {
   const aside = join(directory, 'refused')
   mkdirSync(aside, { recursive: true, mode: 0o700 })
-  renameSync(fileFor(directory, runId), join(aside, `${runId}.${suffix}.json`))
+  let target = join(aside, `${runId}.${suffix}.json`)
+  for (let n = 1; existsSync(target); n += 1) target = join(aside, `${runId}.${suffix}.${String(n)}.json`)
+  renameSync(fileFor(directory, runId), target)
 }
 
 /**
