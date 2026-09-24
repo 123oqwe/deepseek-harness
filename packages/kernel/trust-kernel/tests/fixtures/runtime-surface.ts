@@ -20,7 +20,10 @@ export const KERNEL_RUNTIME_MODULE = resolve(KERNEL_SRC_DIR, 'index.ts')
 
 /** What a syntax walk of the runtime module found. */
 export interface RuntimeModuleSyntax {
-  /** Every string literal and substitution-free template literal that is not a module specifier or a `declare module` name, in source order. */
+  /**
+   * Every string literal and substitution-free template literal that is not a
+   * module specifier or a `declare module` name, in source order.
+   */
   readonly literals: readonly string[]
   /** Template literals with substitutions; their text is computed, so a literal list cannot account for it. */
   readonly templateExpressions: number
