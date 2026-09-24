@@ -7586,6 +7586,8 @@ So `acceptance[0]` and `acceptance[3]` are true of the fixtures and of no shippe
 
 This entry's closing condition is part of BLOCKED-307's.
 
+*Addendum 2026-09-24 (lane A, on the delegate's ruling after the P1-08 sign-off preparation).* This entry closes when BLOCKED-307 closes: its fixture is BLOCKED-307's condition 1, which U.1 [327] meets once observed, a schema-major range being part of `dsh.compat`. Its point about a missing declarer stays true and moves into P1-08's sign-off as not covered: no shipped layer declares `dsh.compat`, so on every shipped profile the negotiator runs with empty input.
+
 ### BLOCKED-274 — P1-09's ownership adjudication does not cover a static-origin Service or Event registration
 
 **Status:** OPEN (2026-09-19). Owner P1-09's own follow-on slice. One measurement is still missing and this entry says which.

@@ -539,9 +539,13 @@
         {
           "stage": "U",
           "title": "pnpm run evidence:collect/evidence:verify actually execute the real scripts end-to-end against a throwaway fixture"
+        },
+        {
+          "stage": "P",
+          "title": "collects two real gate runs and a real build-artifact digest into accepted=true, then verifies fully offline"
         }
       ],
-      "note": "acceptance[1]: '同一次执行的 evidence 可离线验证' (evidence from one execution can be verified offline). Proven via a real subprocess round-trip against a throwaway fixture -- the real collect script's output is verified by the real verify script with no network/live dependency, the concrete meaning of 'offline' this acceptance clause names."
+      "note": "acceptance[1]: '同一次执行的 evidence 可离线验证' (evidence from one execution can be verified offline). Proven via a real subprocess round-trip against a throwaway fixture -- the real collect script's output is verified by the real verify script with no network/live dependency, the concrete meaning of 'offline' this acceptance clause names.\n\n[2026-09-24 lane A, BLOCKED-304 closing condition [1], the cite-only correction: the U citation above runs the real scripts end to end on a throwaway fixture and does not show offline verification. The P citation added here is `tests/release/evidence-package.spec.ts:677` (frozen in P, entry [17]): it collects two real gate runs and a real build-artifact digest into an accepted package, deletes the gate scripts, and verifies the package fully offline.]"
     },
     {
       "epic": "P0-07",
@@ -748,7 +752,7 @@
           "title": "fault[A]: two manifests sharing a pluginId fail loud, naming the duplicated id, rather than producing an order-dependent plan"
         }
       ],
-      "note": "acceptance[0]: '兼容图可确定性求解,同一输入产生同一 load plan.' Covered at every stage and, critically, MADE TRUE by the F case. Before the Fault stage this clause was literally false: two manifests sharing a pluginId produced two different planIds from one input set, because comparePluginId returns 0 and Array.prototype.sort is stable, so input order survived into the output. The C/P/U cases prove determinism over well-formed graphs; the F case closes the input class that broke it. The 500-permutation property case is the strongest single witness, and its seed and run count are pinned so it cannot pass or fail differently between runs or platforms."
+      "note": "acceptance[0]: '兼容图可确定性求解,同一输入产生同一 load plan.' Covered at every stage and, critically, MADE TRUE by the F case. Before the Fault stage this clause was literally false: two manifests sharing a pluginId produced two different planIds from one input set, because comparePluginId returns 0 and Array.prototype.sort is stable, so input order survived into the output. The C/P/U cases prove determinism over well-formed graphs; the F case closes the input class that broke it. The 500-permutation property case is the strongest single witness, and its seed and run count are pinned so it cannot pass or fail differently between runs or platforms.\n\n[2026-09-24 lane A, on the delegate's ruling after the P1-08 sign-off preparation: the F-stage property case's title and this note say 'every permutation'; its generator tries one rotation of each generated graph, over 500 graphs (packages/plugin/plugin-compat/tests/solver.spec.ts:561-568, fast-check seed 0x50_31_08, numRuns 500). Read 'every permutation' above as 'one rotation of each of 500 graphs'. The clause asks that the same input produce the same load plan, which that witnesses; it does not ask for every order.]"
     },
     {
       "epic": "P1-08",
