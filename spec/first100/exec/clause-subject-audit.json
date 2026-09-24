@@ -147,11 +147,11 @@
           {
             "name": "in-toto/attestation",
             "npm": "in-toto/attestation",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. The baseline fingerprint is a repository-local digest manifest, not an attestation published to any consumer, so the Statement schema had no reader."
+            "reason": "family-owned-elsewhere: `standards-ownership.json` names SLICE-3.4 the owner of the in-toto / DSSE / SLSA family and lists P0-01 under `notAdopted`. The card took this repository to emit the fingerprint as an in-toto `subject[]` so that P0-07 could bind by digest; ruling §7.2 names P0-07, not this epic, as the emitter of a Statement, and whether the fingerprint becomes a Statement `subject` (`spec/v1/statement.md` at in-toto/attestation main `fd2609c16b`) is not ruled. Previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling: the sign-off was withdrawn on 2026-09-24 (BLOCKED-305) and the row is BLOCKED_ON_ACCEPTANCE. Measured absent from this epic's nine declared files: the baseline fingerprint is a repository-local digest manifest, not an attestation published to any consumer."
           },
           {
             "standard": "in-toto Statement v1 subject[]/ResourceDescriptor",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. The baseline fingerprint lists repository paths and digests in its own shape; no Statement subject or ResourceDescriptor is emitted."
+            "reason": "family-owned-elsewhere: `standards-ownership.json` names SLICE-3.4 the owner of the in-toto / DSSE / SLSA family and lists P0-01 under `notAdopted`. Ruling §7.2 schedules a Statement for P0-07 and none for this epic, so no Statement `subject` or ResourceDescriptor (`spec/v1/statement.md` at in-toto/attestation main `fd2609c16b`) is emitted here. Previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling: the sign-off was withdrawn on 2026-09-24 (BLOCKED-305) and the row is BLOCKED_ON_ACCEPTANCE. Measured absent from this epic's nine declared files: the baseline fingerprint lists repository paths and digests in its own shape."
           }
         ],
         "rejectedAbsent": [],
