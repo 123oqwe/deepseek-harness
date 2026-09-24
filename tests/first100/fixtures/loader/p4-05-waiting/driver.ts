@@ -14,6 +14,10 @@
  * again, and allows the call once. It declines at once the workspace-trust
  * question the shipped headless profile asks first.
  *
+ * With `expired` as its second argument it also layers
+ * `./token-expired.patch.yml`, whose session token expires as soon as it is
+ * issued (BLOCKED-330's case, `../../P2-02.token-refusal-before-ask.composition.spec.ts`).
+ *
  * It prints one `P4-05-WAIT <json>` line; the spec beside it judges.
  * @module tests/first100/fixtures/loader/p4-05-waiting/driver
  */
@@ -35,6 +39,11 @@ import { PROVIDER, THIRD_PARTY_TOOL } from './shared.ts'
 import type { AdapterGlobal } from './shared.ts'
 
 const overlay = fileURLToPath(new URL('./base.patch.yml', import.meta.url))
+const tokenExpired = fileURLToPath(new URL('./token-expired.patch.yml', import.meta.url))
+
+/** `expired` layers the expiring-token overlay; absent, the P4-05 cases run. */
+const mode = process.argv[3]
+if (mode !== undefined && mode !== 'expired') throw new Error(`p4-05 waiting driver: unknown mode ${mode}`)
 
 /** How long the operator withholds its answer. */
 const HOLD_MS = 1_000
@@ -109,7 +118,10 @@ const auditEntries: unknown[] = []
 const ctx = await bootProductionProfile({
   binName: 'p4-05-waiting',
   profile: 'headless',
-  overlayPaths: [resolveConfigPath(overlay, undefined)],
+  overlayPaths: [
+    resolveConfigPath(overlay, undefined),
+    ...mode === 'expired' ? [resolveConfigPath(tokenExpired, undefined)] : [],
+  ],
   prepare: (prepared) => {
     pinTrustKernel(prepared, createTrustKernel({
       policyDecider: endorseComposedDecision,
