@@ -18342,6 +18342,47 @@
         "failureSummary": "Baseline: PRECHECK fcb772cabb, narrow run 36032631557: keyless-smoke.e2e.ts 9 passed, A1 among them. M2, run 35970106348: A1 red, with the sdk case and A5 (red on that base for BLOCKED-324). M3, run 35970124070: A1 red, with the acp and sdk cases and A5. Readings match the prediction files named in U.5; the delegate compared them."
       },
       "note": "A1, sdk-minimal: a launched session acts as the host user, attached once, read from the durable log, with the attached identity's chain rooted in the host user in the default tenant. It is in keyless-smoke.e2e.ts, which the SDK keyless smoke step runs whole (vitest-e2e-sdk-keyless-smoke.json), so it cannot share U.5's report: a config-frozen entry is observed by one report that ran every path its argv names."
+    },
+    {
+      "epic": "P3-01",
+      "stage": "U",
+      "supplements": {
+        "epic": "P3-01",
+        "stage": "U"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P3-01.world-swap.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P3-01 acceptance[0]: one tool call through the local and the fenced world provider on the shipped headless profile the shipped composition binds the call's world from the local provider and, with the local row removed, from the fenced provider, under the same confinement digest",
+        "P3-01 acceptance[0]: one tool call through the local and the fenced world provider on the shipped headless profile the ActionManifest the call appends is the same under either provider, apart from the session-scoped runId, actor and idempotencyKey",
+        "P3-01 acceptance[0]: one tool call through the local and the fenced world provider on the shipped headless profile the policy decision the Trust Kernel audits for the call, the risk gate's record and the tool's result are the same under either provider"
+      ],
+      "files": [
+        "tests/first100/fixtures/P3-01.world-swap.composition.spec.ts",
+        "tests/first100/fixtures/loader/p3-01-world-swap/driver.ts",
+        "tests/first100/fixtures/loader/p3-01-world-swap/base.patch.yml",
+        "tests/first100/fixtures/loader/p3-01-world-swap/fenced-only.patch.yml",
+        "tests/first100/fixtures/loader/p3-01-world-swap/mock-llm.ts",
+        "tests/first100/fixtures/loader/p3-01-world-swap/shared.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T17:28:31Z",
+      "dryRunProof": {
+        "treeSha": "701b4fd2c2a129b2d0da055a6b1313faa14ca071",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations off PRECHECK `0cfa7cb56447394aa034ffa0c7b875b2e0c9fc61` (on c62bfac2cf), one product file each, never merged, run by CI's narrow job at its own SHA with a build first. M-m (`333028f4e52b179553c2765810b1387cfa1d685e`): packages/core/agent-loop/src/tool-calls.ts's appendActionManifest writes the bound world's provider into the manifest's expectedDiff, so the manifest changes with the provider. M-d (`527e50ed6b5df220e9f1b541a2927acd9b0bf767`): packages/policy/policy-enforcement/src/index.ts's enforceAction denies, as forbidden-by-policy, an action whose world the fenced provider bound, so the decision changes with the provider.",
+        "failureSummary": "Baseline: PRECHECK, narrow run 36034068297: 3 passed / 0 failed. M-m, run 36034098073: exactly the ActionManifest case red. M-d, run 36034121871: exactly the policy-decision case red. All three match artifacts/laneA/p3-01-acc0-expectations-v3.md (sha256 8965dd03b1753bb514881af0d36be4685ad73ee58285146e47998a5af7c7bcd3), written before the v3 case change; the delegate compared them case by case."
+      },
+      "note": "P3-01 acceptance[0] as C18 narrows it, on the shipped headless composition under workspace-write. One tool call (the shipped `read`, a fixed call id) runs in two processes that share one working directory: as shipped, where the base layer's local provider binds the call's world, and with only the `execution-world-local` row removed, where the shipped fenced provider does. The world is bound by local and by fenced under one confinement digest; the appended ActionManifest is field-for-field the same apart from runId, actor and idempotencyKey, which each session derives; the policy record the pinned Trust Kernel audits, the risk gate's record and the tool's result are the same. Not observed: container or microVM providers (the narrowed clause names local and fenced); the PTC and plugin-RPC paths; a deployment policy conditioned on the world provider, which would decide differently by the deployment's own choice. The world provider executes nothing: `read` runs through fs-sandbox in both modes."
     }
   ]
 }

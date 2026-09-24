@@ -4851,9 +4851,24 @@
         {
           "stage": "U",
           "title": "P3-01 acceptance[0]: the bound world reaches the policy question and the audit records the world, the provider and the confinement digest, which is what makes a swap auditable"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P3-01 acceptance[0]: one tool call through the local and the fenced world provider on the shipped headless profile the shipped composition binds the call's world from the local provider and, with the local row removed, from the fenced provider, under the same confinement digest"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P3-01 acceptance[0]: one tool call through the local and the fenced world provider on the shipped headless profile the ActionManifest the call appends is the same under either provider, apart from the session-scoped runId, actor and idempotencyKey"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P3-01 acceptance[0]: one tool call through the local and the fenced world provider on the shipped headless profile the policy decision the Trust Kernel audits for the call, the risk gate's record and the tool's result are the same under either provider"
         }
       ],
-      "note": "acceptance[0]: 'the same ToolExecution can move between local/container/microVM providers without changing ActionManifest/Policy semantics.' Covered at the SEAM only, and the limit is declared at freeze time rather than at sign-off. What is proved: the provider interface has no `execute`, so there is no dispatch path for a swap to move; one spec digests identically whichever provider builds the world, so a policy comparing confinement sees one answer across a swap; and the world is recorded BESIDE the dispatch (`action/world-bound`) rather than inside the `ActionManifest`, whose digest would otherwise differ per provider. What is NOT proved: neither provider is a container or a microVM — the second is `tests/fake-provider.ts` — so the cross-provider half is evidenced against a constructed provider, the P4-08 acceptance[2] shape. Reading this row as 'proved across real providers' over-reads it."
+      "note": "acceptance[0]: 'the same ToolExecution can move between local/container/microVM providers without changing ActionManifest/Policy semantics.' Covered at the SEAM only, and the limit is declared at freeze time rather than at sign-off. What is proved: the provider interface has no `execute`, so there is no dispatch path for a swap to move; one spec digests identically whichever provider builds the world, so a policy comparing confinement sees one answer across a swap; and the world is recorded BESIDE the dispatch (`action/world-bound`) rather than inside the `ActionManifest`, whose digest would otherwise differ per provider. What is NOT proved: neither provider is a container or a microVM — the second is `tests/fake-provider.ts` — so the cross-provider half is evidenced against a constructed provider, the P4-08 acceptance[2] shape. Reading this row as 'proved across real providers' over-reads it.\n\n[2026-09-24 lane A: P3-01 U supplement 1 observes the cross-provider half on the shipped headless composition between the two registered providers, local and fenced (C18's narrowed clause), so the 'constructed provider' limit above no longer describes the whole evidence: one read through either provider leaves the ActionManifest (apart from its session-scoped runId, actor and idempotencyKey) and the audited policy decision unchanged, under one confinement digest. M-m (the manifest names the provider) reddens only the manifest case; M-d (the decision depends on the provider) only the decision case.]"
     },
     {
       "epic": "P3-01",

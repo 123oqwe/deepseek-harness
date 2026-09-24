@@ -2602,6 +2602,54 @@
       "reason": "`ExecutionWorldFact`'s second variant — BLOCKED-178's producer half, which §12.46-B splits between this epic (producer) and P2-05 (rule). With one variant the fact was undecidable: a rule refusing an unknown world and a rule refusing everything were the same policy. The C-stage preFlight recorded that it could not authorise this cross-epic edit; the U-stage preFlight asked for it and the delegate ruled it in."
     },
     {
+      "epic": "P3-01",
+      "path": "tests/first100/fixtures/loader/p3-01-world-swap/base.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P3-01",
+      "path": "tests/first100/fixtures/loader/p3-01-world-swap/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P3-01",
+      "path": "tests/first100/fixtures/loader/p3-01-world-swap/fenced-only.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P3-01",
+      "path": "tests/first100/fixtures/loader/p3-01-world-swap/mock-llm.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P3-01",
+      "path": "tests/first100/fixtures/loader/p3-01-world-swap/shared.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P3-01",
+      "path": "tests/first100/fixtures/P3-01.world-swap.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
       "epic": "P3-02",
       "path": "packages/execution/execution-world/src/lifecycle.ts",
       "kind": "source",
