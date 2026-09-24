@@ -548,7 +548,9 @@ describe('reconnect supervisor', () => {
     })
 
     it('charges nothing while the session is unpublished or holds no run', async () => {
-      const budgets = new RunRetryUsagePlugin(ctx, { maxRetries: 0 })
+      // A budget of one, not zero: the last reconnect below must be admitted.
+      // The first two show they were not charged by the usage they leave.
+      const budgets = new RunRetryUsagePlugin(ctx, { maxRetries: 1 })
       const nodes: Record<string, { parentSession?: string; runId?: RunId }> = {}
       provideAgents(nodes)
       await dropAndReconnect()
@@ -557,6 +559,13 @@ describe('reconnect supervisor', () => {
       instances[1]!.onclose?.()
       await vi.waitFor(() => { expect(instances).toHaveLength(3) })
       expect(budgets.usageOf(RUN)).toEqual(NOTHING_SPENT)
+
+      // Neither reconnect above was remembered as "no run": once the agent
+      // holds its Run, the next reconnect is charged to it.
+      nodes[SESSION] = { runId: RUN }
+      instances[2]!.onclose?.()
+      await vi.waitFor(() => { expect(instances).toHaveLength(4) })
+      expect(budgets.usageOf(RUN).retriesUsed).toBe(1)
     })
 
     it('charges nothing when the delegation root holds no run', async () => {

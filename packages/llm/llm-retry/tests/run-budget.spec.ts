@@ -98,6 +98,23 @@ describe('P4-11 must[1]: the LLM layer charges the run, not the session', () => 
     expect(adapter.requests).toBe(3)
   })
 
+  it('keeps a spent RUN budget spent for the session’s later turns: nothing resets it while the process lives', async () => {
+    // A known limitation, pinned: a Run lasts as long as its session, and no
+    // production code forgets its usage, so a budget one turn spends is gone
+    // for every later turn. A per-turn budget would give the second turn two
+    // retries, 6 requests in all.
+    const { ctx, adapter } = await harness({ maxRetries: 2 })
+    const agent = await ctx.agentLoop.create(SessionId('lifetime-run'), { provider: 'mock', model: 'mock' })
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'first' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+    expect(adapter.requests).toBe(3)
+
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'second' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+
+    expect(adapter.requests).toBe(4)
+  })
+
   it('charges a CHILD session’s retries to the PARENT’s run, so allowances do not stack', async () => {
     // must[1] itself, and the case is built so the two readings give DIFFERENT
     // numbers. A Run is 1:1 with a session, so the parent and the child each
