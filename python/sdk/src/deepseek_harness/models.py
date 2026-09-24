@@ -67,8 +67,6 @@ class CapabilityDowngrade(BaseModel):
 class NegotiationProvenance(BaseModel):
     """What the two peers agreed to, as the server recorded it."""
 
-    model_config = _KEEP_UNKNOWN
-
     protocolVersion: int | None = None
     agreedCapabilities: list[str] = Field(default_factory=list)
     ignoredCapabilities: list[str] = Field(default_factory=list)
