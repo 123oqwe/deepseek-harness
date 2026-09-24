@@ -47,3 +47,6 @@
 # fail-closed direction it always had.
 - id: workspace-trust-local
   disabled: false
+
+- id: command-workspace-trust
+  disabled: true
