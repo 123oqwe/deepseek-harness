@@ -1,0 +1,33 @@
+# Test-only overlay over the SHIPPED headless profile for BLOCKED-331's
+# measurement: what happens to a session once its capability token expires.
+# The shipped `capability-tokens` row is restated with a 1.5-second session
+# token TTL (a patch replaces a row's whole `config`, so the other two keys are
+# restated unchanged). It otherwise supplies a keyless scripted model and an
+# uncompressed session log, turns off the rows that would run a task of their
+# own, and configures no agent: the driver creates the root agent after boot.
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
+
+- id: capability-tokens
+  config:
+    directory: !!js dshHomePath('capability-tokens')
+    requireForTools: true
+    sessionTokenTtlMs: 1500
+
+- insert:
+    - id: p2-02-token-ttl-mock-llm
+      name: './mock-llm.ts'
