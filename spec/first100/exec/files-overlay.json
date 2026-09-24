@@ -3141,7 +3141,8 @@
       "kind": "doc",
       "stages": [
         "U.4",
-        "U.5"
+        "U.5",
+        "U.6"
       ]
     },
     {
@@ -3150,7 +3151,8 @@
       "kind": "doc",
       "stages": [
         "U.4",
-        "U.5"
+        "U.5",
+        "U.6"
       ]
     },
     {
@@ -3158,7 +3160,8 @@
       "path": "apps/cli/tests/profiles/acp/tests/workflow-resume.e2e.ts",
       "kind": "test",
       "stages": [
-        "U.4"
+        "U.4",
+        "U.8"
       ]
     },
     {
@@ -3168,7 +3171,8 @@
       "stages": [
         "U",
         "U.4",
-        "U.5"
+        "U.5",
+        "U.6"
       ],
       "reason": "The observer that turns journal records into an observable stream, which the U stage's clause is about. The package moved to collaboration/workflow-journal; the freeze `files` entry was re-pointed 2026-09-15."
     },
@@ -3177,7 +3181,8 @@
       "path": "packages/collaboration/workflow-journal/src/recorder.ts",
       "kind": "source",
       "stages": [
-        "U.3"
+        "U.3",
+        "U.6"
       ],
       "reason": "The recorder the P-stage freeze cites, at its path after §12.22-1 moved the package. Carried into the overlay by the superseding entry rather than by new work: the file's content is unchanged, only its directory is."
     },
@@ -3186,7 +3191,9 @@
       "path": "packages/collaboration/workflow-journal/src/store.ts",
       "kind": "source",
       "stages": [
-        "U.1"
+        "U.1",
+        "U.7",
+        "U.8"
       ],
       "reason": "The journal's persistence, which must[1] requires and which the package did not have: every decision in it is about a run that already died, so `planResume` had no possible input while the journal lived only in memory."
     },
@@ -3248,7 +3255,8 @@
       "stages": [
         "U.1",
         "U.2",
-        "U.3"
+        "U.3",
+        "U.6"
       ],
       "reason": "HOT ZONE. From `git show 07acd35c6e -- packages/workflow/workflow-worker-thread/src/index.ts`: `start` and the new async `resume` both delegate to one private `launch`, the journal directory is derived from the storage root, and `childFinished` reads the child's DURABLE session. Shared with P4-07, whose lease acquisition is in the same `launch` body and is unchanged by this."
     },
@@ -3261,7 +3269,10 @@
         "U.2",
         "U.3",
         "U.4",
-        "U.5"
+        "U.5",
+        "U.6",
+        "U.7",
+        "U.8"
       ],
       "reason": "The reconciliation itself: which recorded steps a resumed run may reuse, and the script digest `admitResume` compares. New file; the plan named the journal package but not the engine-side half that reads it back."
     },
@@ -3270,7 +3281,8 @@
       "path": "packages/workflow/workflow-worker-thread/src/types.ts",
       "kind": "source",
       "stages": [
-        "U.1"
+        "U.1",
+        "U.6"
       ],
       "reason": "`WorkerInit` gains `reusable`, the only channel by which a reconciled decision reaches the worker: `workerData` is structured-cloned at spawn, so anything the script's `agent()` consults has to be there before the thread exists."
     },
@@ -3297,7 +3309,8 @@
       "kind": "test",
       "stages": [
         "U.1",
-        "U.2"
+        "U.2",
+        "U.7"
       ]
     },
     {
@@ -3305,7 +3318,8 @@
       "path": "packages/workflow/workflow-worker-thread/tests/resume-values.spec.ts",
       "kind": "test",
       "stages": [
-        "U.5"
+        "U.5",
+        "U.6"
       ]
     },
     {
