@@ -514,7 +514,7 @@ function agentOptions(config: AcpConfig): { provider?: string; model?: string } 
  */
 function agentOptionsFor(ctx: Context, config: AcpConfig): AgentOptions {
   const base = agentOptions(config)
-  const hostUser = ctx.get(HOST_USER_IDENTITY_KEY) as HostUserIdentityFactory | undefined
+  const hostUser = ctx.get(`${HOST_USER_IDENTITY_KEY}-unprovided`) as HostUserIdentityFactory | undefined
   return hostUser === undefined ? base : { ...base, identity: hostUser(brandString<RunId>(`run-${randomUUID()}`)) }
 }
 
