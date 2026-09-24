@@ -32,6 +32,11 @@ on:
         required: false
         type: boolean
         default: false
+      narrow_python:
+        description: 'Run ONLY the keyless Python SDK suite, naming every case (pytest -rA) and uploading a JUnit report, skipping the gate. For a Python sensitivity proof; not a ledger observation.'
+        required: false
+        type: boolean
+        default: false
   push:
     branches: [first100-exec]
 
@@ -49,7 +54,7 @@ jobs:
     # the whole gate to answer it is what this input exists to avoid. Empty --
     # which is what every `push` and every ordinary dispatch carries -- leaves
     # this job byte-for-byte as it was.
-    if: ${{ !inputs.narrow_test }}
+    if: ${{ !inputs.narrow_test && !inputs.narrow_python }}
     outputs:
       candidate-sha: ${{ steps.resolve-sha.outputs.sha }}
     steps:
@@ -784,7 +789,7 @@ jobs:
     # `always()` runs a job whose dependency was SKIPPED, not only one whose
     # dependency failed, so a narrow run needs saying again here: without it
     # this job would run against a candidate SHA the gate never resolved.
-    if: ${{ always() && !inputs.narrow_test }}
+    if: ${{ always() && !inputs.narrow_test && !inputs.narrow_python }}
     permissions:
       contents: read
     steps:
@@ -817,6 +822,61 @@ jobs:
       # that does not show is not an observation.
       - name: Run complete keyless Python suite
         run: uv run --python 3.10 --group test --project python/sdk pytest
+
+  narrow-python:
+    name: narrow keyless Python SDK suite @ exact SHA
+    runs-on: ubuntu-latest
+    # The Python counterpart of `narrow-test`: whether one mutation reddens the
+    # named cases, answered without the gate. `-rA` names every case's outcome
+    # in the log and the JUnit report carries them as data, so a green run says
+    # which cases ran, which the gate job's one "N passed" line does not. Not a
+    # ledger observation: the gate's `python-sdk` job is.
+    if: ${{ inputs.narrow_python }}
+    permissions:
+      contents: read
+    steps:
+      - name: Require an explicit candidate SHA
+        id: sha
+        env:
+          REQUESTED_SHA: ${{ github.event.inputs.sha }}
+        run: |
+          if [[ ! "$REQUESTED_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "narrow-python: pass an explicit 40-hex \`sha\` input; this job has no fallback" >&2
+            exit 2
+          fi
+          echo "sha=$REQUESTED_SHA" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.sha.outputs.sha }}
+          persist-credentials: false
+
+      - name: Verify checkout landed on the requested SHA
+        run: |
+          actual=$(git rev-parse HEAD)
+          if [ "$actual" != "${{ steps.sha.outputs.sha }}" ]; then
+            echo "::error::checked out $actual, requested ${{ steps.sha.outputs.sha }}"
+            exit 1
+          fi
+
+      - uses: actions/setup-python@v6.3.0
+        with:
+          python-version: '3.10'
+          cache: pip
+
+      - name: Install uv
+        run: python -m pip install uv==0.11.23
+
+      - name: Run the keyless Python suite, naming every case
+        run: uv run --python 3.10 --group test --project python/sdk pytest -rA --junitxml=python-junit.xml
+
+      - name: Upload the JUnit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: narrow-python-junit-${{ steps.sha.outputs.sha }}
+          path: python-junit.xml
+          if-no-files-found: error
 
   narrow-test:
     name: narrow vitest run @ exact SHA
@@ -1178,7 +1238,7 @@ jobs:
     # Same reason as `python-sdk`, and costlier if forgotten: this job UPLOADS
     # evidence, so beside a skipped gate it would publish an evidence bundle
     # for a run that gated nothing.
-    if: ${{ always() && !inputs.narrow_test }}
+    if: ${{ always() && !inputs.narrow_test && !inputs.narrow_python }}
     permissions:
       contents: read
     env:
