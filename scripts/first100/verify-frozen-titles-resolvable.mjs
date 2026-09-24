@@ -121,9 +121,9 @@ function runAndCollectTitles(argvList) {
 }
 
 /**
- * The titles one parsed vitest report resolves, and how many cases each names.
+ * The titles one parsed vitest report resolves, how many cases each names, and the full names of those cases.
  * @param report - a parsed `--reporter=json` document.
- * @returns the resolvable names and their per-name case counts.
+ * @returns the resolvable names, their per-name case counts, and per name the `fullName` of each case it names.
  */
 export function collectTitles(report) {
   const titles = new Set()
@@ -133,6 +133,9 @@ export function collectTitles(report) {
   // other than the one it means (BLOCKED-104).
   const matchCounts = new Map()
   const countMatch = (name) => matchCounts.set(name, (matchCounts.get(name) ?? 0) + 1)
+  // What an entry's `-t` pattern is matched against (see frozenTestNamePattern).
+  const fullNamesByName = new Map()
+  const addFullName = (name, fullName) => fullNamesByName.set(name, [...(fullNamesByName.get(name) ?? []), fullName])
   for (const file of report.testResults ?? []) {
     for (const a of file.assertionResults ?? []) {
       if (typeof a.title === 'string') {
@@ -146,10 +149,67 @@ export function collectTitles(report) {
       if (typeof a.fullName === 'string') {
         titles.add(a.fullName)
         if (a.fullName !== a.title) countMatch(a.fullName)
+        if (typeof a.title === 'string') addFullName(a.title, a.fullName)
+        if (a.fullName !== a.title) addFullName(a.fullName, a.fullName)
       }
     }
   }
-  return { ok: true, titles, matchCounts }
+  return { ok: true, titles, matchCounts, fullNamesByName }
+}
+
+/**
+ * An entry's `-t` / `--testNamePattern`, compiled as vitest compiles it.
+ *
+ * Read from vitest 4.1.8: mri takes `-t v`, `-t=v`, `--testNamePattern v` and
+ * `--testNamePattern=v` (`vitest/dist/chunks/cac.C9xsMMkH.js:84-107`);
+ * `addCommand` refuses a repeated value and strips one surrounding pair of `"`
+ * or `'` (`removeQuotes`, same file :2190-2200 and :2272-2280); `resolveConfig`
+ * compiles it with `new RegExp(value)` and no flags
+ * (`vitest/dist/chunks/coverage.DM_a_rWm.js:359`). The runner then skips every
+ * test whose full name does not `match` it (`interpretTaskModes` and
+ * `getTaskFullName`, `@vitest/runner/dist/chunk-artifact.js:964` and :1006),
+ * and that full name is the string the json reporter records as `fullName`
+ * (`vitest/dist/chunks/index.UpGiHP7g.js:3560-3569`).
+ * @param argv - a frozen argv.
+ * @returns `{ pattern }`, `{ reason }` when vitest would not accept the value, or `undefined` when the argv names none.
+ */
+export function frozenTestNamePattern(argv) {
+  const values = []
+  for (let index = 0; index < argv.length; index += 1) {
+    const token = argv[index]
+    if (token === '-t' || token === '--testNamePattern') {
+      values.push(argv[index + 1])
+      index += 1
+    } else if (token.startsWith('-t=') || token.startsWith('--testNamePattern=')) {
+      values.push(token.slice(token.indexOf('=') + 1))
+    }
+  }
+  if (values.length === 0) return undefined
+  const [value] = values
+  if (values.length > 1 || value === undefined) return { reason: 'names -t more than once or with no value, which vitest does not run' }
+  const quoted = (value[0] === '"' && value.endsWith('"')) || (value.startsWith('\'') && value.endsWith('\''))
+  try {
+    return { pattern: new RegExp(quoted ? value.slice(1, -1) : value) }
+  } catch (error) {
+    return { reason: `-t ${JSON.stringify(value)} is not a regular expression vitest can compile: ${error.message}` }
+  }
+}
+
+/**
+ * The frozen names an entry's `-t` pattern would leave skipped.
+ *
+ * vitest reports a test the pattern does not select as skipped and still exits
+ * 0, and this gate collects titles of any status, so a pattern selecting none of
+ * an entry's cases (an unescaped `acceptance[1]` is the character class `[1]`)
+ * would read as resolvable. A name counts as selected when a full name it
+ * resolves to in the run matches the pattern.
+ * @param pattern - from {@link frozenTestNamePattern}.
+ * @param names - frozen names the run resolves, a registered rename already applied.
+ * @param fullNamesByName - from {@link collectTitles}.
+ * @returns the names none of whose full names the pattern matches.
+ */
+export function casesSkippedByPattern(pattern, names, fullNamesByName) {
+  return names.filter(name => !(fullNamesByName.get(name) ?? []).some(fullName => fullName.match(pattern) !== null))
 }
 
 /**
@@ -349,6 +409,7 @@ function main() {
   let totalAmbiguous = 0
   let totalDuplicated = 0
   let totalRenameCovered = 0
+  let totalUnselected = 0
   let entriesWithProblems = 0
 
   for (const e of freeze.entries) {
@@ -411,9 +472,33 @@ function main() {
       unresolved.push({ title, reason: 'not found in the frozen command\'s real vitest --reporter=json output and no registered rename' })
     }
 
-    if (unresolved.length > 0 || ambiguous.length > 0 || duplicated.length > 0) {
+    // The entry's own -t must select every case it freezes, or the command skips them and exits 0.
+    const unselected = []
+    const label = e.supplementSeq === undefined ? key : `${key}.${String(e.supplementSeq)}`
+    const testName = frozenTestNamePattern(e.argv)
+    if (testName?.reason !== undefined) {
+      unselected.push({ entry: label, title: null, reason: testName.reason })
+    } else if (testName !== undefined) {
+      const resolved = e.expectCases.flatMap((title) => {
+        if (run.titles.has(title)) return [{ title, name: title }]
+        const renamed = renameIndex.get(`${e.epic}|${e.stage}|${title}`)?.newTitle
+        return renamed !== undefined && run.titles.has(renamed) ? [{ title, name: renamed }] : []
+      })
+      const skipped = new Set(casesSkippedByPattern(testName.pattern, resolved.map(({ name }) => name), run.fullNamesByName))
+      for (const { title, name } of resolved.filter((pair) => skipped.has(pair.name))) {
+        unselected.push({
+          entry: label,
+          title,
+          reason: `the entry's -t ${String(testName.pattern)} matches none of ${JSON.stringify(run.fullNamesByName.get(name))}, `
+            + 'so vitest reports it skipped and still exits 0; escape the regular-expression characters in the -t value',
+        })
+      }
+    }
+    totalUnselected += unselected.length
+
+    if (unresolved.length > 0 || ambiguous.length > 0 || duplicated.length > 0 || unselected.length > 0) {
       entriesWithProblems += 1
-      entries[key] = { argv: e.argv, unresolved, ambiguous, duplicated, renameCovered }
+      entries[key] = { argv: e.argv, unresolved, ambiguous, duplicated, renameCovered, unselected }
     }
   }
 
@@ -428,6 +513,7 @@ function main() {
       totalAmbiguous,
       totalDuplicated,
       totalRenameCovered,
+      totalUnselected,
     },
     entries,
   }
@@ -439,8 +525,10 @@ function main() {
   if (reportPath) writeFileSync(resolve(REPO_ROOT, reportPath), `${JSON.stringify(findings, null, 2)}\n`, 'utf8')
 
   console.log(
-    `command-freeze.json: ${freeze.entries.length} entries, ${runCache.size} unique command(s) run, ` +
-      `${totalTitles} frozen titles, ${totalRenameCovered} covered by a registered rename, ${totalUnresolved} UNRESOLVED, ${totalAmbiguous} AMBIGUOUS, ${totalDuplicated} DUPLICATED.`,
+    `command-freeze.json: ${freeze.entries.length} entries, ${runCache.size} unique command(s) run, `
+      + `${totalTitles} frozen titles, ${totalRenameCovered} covered by a registered rename, `
+      + `${totalUnresolved} UNRESOLVED, ${totalAmbiguous} AMBIGUOUS, ${totalDuplicated} DUPLICATED, `
+      + `${totalUnselected} NOT SELECTED by the entry's -t.`,
   )
   if (reportMode?.ok === true) {
     console.log(`report mode: ${String(resolvedFromReport)} command(s) resolved from the report at ${reportMode.commit.slice(0, 10)}, ${String(runCache.size - resolvedFromReport)} run`)
@@ -459,6 +547,9 @@ function main() {
         console.error(
           `  ${key}: ${JSON.stringify(a.title)} -- names ${a.count} passing cases, so any ONE of them satisfies it and this epic's own case could be deleted without reddening; use the case's fullName (BLOCKED-104)`,
         )
+      }
+      for (const u of e.unselected ?? []) {
+        console.error(`  ${u.entry}: ${u.title === null ? '' : `${JSON.stringify(u.title)} -- `}${u.reason}`)
       }
     }
   }

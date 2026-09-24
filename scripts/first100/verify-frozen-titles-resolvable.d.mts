@@ -27,13 +27,37 @@ export interface ReportContext {
 }
 
 /**
- * The titles one parsed vitest report resolves, any status, and how many cases each names.
+ * The titles one parsed vitest report resolves, any status, how many cases each names, and their full names.
  * @param report - a parsed `--reporter=json` document.
- * @returns every assertion's `title` and `fullName`, and per name the number of cases it can resolve to.
+ * @returns every assertion's `title` and `fullName`, per name the number of cases it can resolve to, and per name the
+ *   `fullName` of each case it names.
  */
 export function collectTitles(report: {
   readonly testResults?: readonly { readonly assertionResults?: readonly { readonly title?: unknown; readonly fullName?: unknown }[] }[]
-}): { ok: true; titles: Set<string>; matchCounts: Map<string, number> }
+}): { ok: true; titles: Set<string>; matchCounts: Map<string, number>; fullNamesByName: Map<string, string[]> }
+
+/**
+ * An entry's `-t` / `--testNamePattern`, compiled as vitest 4.1.8 compiles it: one value, one surrounding pair of
+ * quotes stripped, `new RegExp(value)` with no flags.
+ * @param argv - a frozen argv.
+ * @returns `{ pattern }`, `{ reason }` when vitest would not accept the value, or `undefined` when the argv names none.
+ */
+export function frozenTestNamePattern(
+  argv: readonly string[],
+): { pattern: RegExp; reason?: undefined } | { pattern?: undefined; reason: string } | undefined
+
+/**
+ * The frozen names an entry's `-t` pattern would leave skipped: none of the full names each resolves to matches.
+ * @param pattern - from `frozenTestNamePattern`.
+ * @param names - frozen names the run resolves, a registered rename already applied.
+ * @param fullNamesByName - from `collectTitles`.
+ * @returns the names the pattern selects no case of.
+ */
+export function casesSkippedByPattern(
+  pattern: RegExp,
+  names: readonly string[],
+  fullNamesByName: ReadonlyMap<string, readonly string[]>,
+): string[]
 
 /**
  * The unit a changed path invalidates in report mode.

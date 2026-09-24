@@ -22,7 +22,14 @@ import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import type { ReportContext } from './verify-frozen-titles-resolvable.mjs'
-import { commandFilters, planCommand, repositoryPath, unitOf } from './verify-frozen-titles-resolvable.mjs'
+import {
+  casesSkippedByPattern,
+  commandFilters,
+  frozenTestNamePattern,
+  planCommand,
+  repositoryPath,
+  unitOf,
+} from './verify-frozen-titles-resolvable.mjs'
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const SCRIPT = 'scripts/first100/verify-frozen-titles-resolvable.mjs'
@@ -184,6 +191,64 @@ describe('a freeze written as a config and its files, with no reporter (P4-05.U.
     const { code, received } = gateOver(['apps/cli/tests/a.spec.ts', '--reporter=json'])
     expect(code).toBe(0)
     expect(received[0]?.filter(arg => arg === '--reporter=json')).toHaveLength(1)
+  })
+})
+
+const BRACKETED = 'P2-05 acceptance[1]: the control asserts the permit'
+
+describe('an entry\'s own -t must select every case it freezes', () => {
+  it('compiles -t as vitest does: one value in any spelling, one pair of surrounding quotes stripped, no flags', () => {
+    const argv = (...rest: string[]): string[] => ['pnpm', 'exec', 'vitest', 'run', 'packages/a', ...rest]
+    expect(frozenTestNamePattern(argv('--reporter=json'))).toBeUndefined()
+    expect(frozenTestNamePattern(argv('-t', 'x.y'))?.pattern?.source).toBe('x.y')
+    expect(frozenTestNamePattern(argv('--testNamePattern=x'))?.pattern?.source).toBe('x')
+    expect(frozenTestNamePattern(argv('-t="quoted"'))?.pattern?.source).toBe('quoted')
+    expect(frozenTestNamePattern(argv('-t', 'a', '-t', 'b'))?.reason).toContain('more than once')
+    expect(frozenTestNamePattern(argv('-t', 'acceptance[1'))?.reason).toContain('is not a regular expression vitest can compile')
+  })
+
+  it('reads an unescaped [1] as the character class vitest compiles, which selects nothing it names', () => {
+    const pattern = frozenTestNamePattern(['vitest', 'run', '-t', 'P2-05 acceptance[1]'])?.pattern ?? /(?!)/u
+    expect(casesSkippedByPattern(pattern, [BRACKETED], new Map([[BRACKETED, [BRACKETED]]]))).toStrictEqual([BRACKETED])
+    const escaped = frozenTestNamePattern(['vitest', 'run', '-t', 'P2-05 acceptance\\[1\\]'])?.pattern ?? /(?!)/u
+    expect(casesSkippedByPattern(escaped, [BRACKETED], new Map([[BRACKETED, [BRACKETED]]]))).toStrictEqual([])
+  })
+
+  it('matches a bare frozen title through the full name it resolves to, as P4-02.U.2 freezes it', () => {
+    const suiteName = 'P4-02 mount: the shipped base layer is what compiles the profile'
+    const title = 'mounts the Run Service from the shipped layers, with no row this fixture added'
+    const pattern = frozenTestNamePattern(['vitest', 'run', 'tests/first100/fixtures/P4-02.composition.spec.ts', '-t', suiteName])
+    expect(casesSkippedByPattern(pattern?.pattern ?? /(?!)/u, [title], new Map([[title, [`${suiteName} ${title}`]]]))).toStrictEqual([])
+  })
+
+  /** Runs the gate over one supplement entry whose runner emits BRACKETED and whose argv ends with `tail`. */
+  function gateWithTestName(tail: readonly string[]): { code: number; output: string } {
+    return run(prepare([{
+      epic: 'P2-05',
+      stage: 'C',
+      supplementSeq: 2,
+      argv: [process.execPath, 'runner.cjs', '--cases', JSON.stringify([BRACKETED]), ...tail],
+      expectExit: 0,
+      expectCases: [BRACKETED],
+    }]))
+  }
+
+  it('refuses an entry whose -t leaves a frozen case skipped, naming the entry and the case', () => {
+    const { code, output } = gateWithTestName(['-t', 'P2-05 acceptance[1]: the control'])
+    expect(output).toContain(`P2-05.C.2: ${JSON.stringify(BRACKETED)} -- the entry's -t /P2-05 acceptance[1]: the control/ matches none`)
+    expect(code).not.toBe(0)
+  })
+
+  it('passes the same entry once the -t escapes its brackets', () => {
+    const { code, output } = gateWithTestName(['-t', 'P2-05 acceptance\\[1\\]: the control'])
+    expect(output).toContain('0 NOT SELECTED')
+    expect(code).toBe(0)
+  })
+
+  it('leaves an entry with no -t as it was', () => {
+    const { code, output } = gateWithTestName([])
+    expect(output).toContain('0 UNRESOLVED')
+    expect(code).toBe(0)
   })
 })
 
