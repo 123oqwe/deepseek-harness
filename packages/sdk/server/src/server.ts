@@ -266,7 +266,7 @@ export class HarnessSdkJsonRpcServer {
         parentSessionId: String(parentSession),
         childSessionId: String(session.id),
       }
-      this.transport.notify('subagent.started', payload)
+      this.transport.notify('subagent.begun', payload)
     }))
     // P2-12 must[0]: the runtime asks its EMBEDDING HOST to put a question to a
     // human, over the protocol's first server-to-client request.
