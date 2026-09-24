@@ -5,7 +5,7 @@
   },
   "generatedBy": "scripts/gen-control-protocol-schema.ts",
   "source": "packages/sdk/server/src/server.ts SERVER_PROTOCOL_SURFACE",
-  "fingerprint": "43c06abd5ece4366f1486c040ca5d78c8594ed7e145992e47da97eaaacd683af",
+  "fingerprint": "995c330e021d0f08ebbceaf74aaab7309fc5e492630930d825fe6e013682a6a1",
   "surface": {
     "methods": [
       {
@@ -14,8 +14,13 @@
         "version": "1.0"
       },
       {
-        "name": "session.prompt",
+        "name": "session/prompt",
         "schemaId": "sdk-protocol:SessionPromptParams",
+        "version": "1.0"
+      },
+      {
+        "name": "shutdown",
+        "schemaId": "sdk-protocol:ShutdownRequest",
         "version": "1.0"
       }
     ],
@@ -33,6 +38,21 @@
       {
         "name": "host.control",
         "schemaId": "sdk-protocol:HostControlNotification",
+        "version": "1.0"
+      },
+      {
+        "name": "subagent.started",
+        "schemaId": "sdk-protocol:SubagentStartedNotification",
+        "version": "1.0"
+      },
+      {
+        "name": "subagent.finished",
+        "schemaId": "sdk-protocol:SubagentFinishedNotification",
+        "version": "1.0"
+      },
+      {
+        "name": "human/question",
+        "schemaId": "sdk-protocol:HumanQuestionParams",
         "version": "1.0"
       }
     ],
