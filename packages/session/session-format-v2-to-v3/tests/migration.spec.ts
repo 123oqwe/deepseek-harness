@@ -261,6 +261,11 @@ describe('streaming V2 system prompt migration', () => {
     const bad = { ...feedback, data: { ...feedback.data as SessionFormatJsonObject, seq: 2 } }
     expect(() => migrate([...opening(), bad])).toThrow(/unexpected/)
   })
+
+  it('keeps a subagent descriptor of an earlier version, which only a log migrated from v0 or v1 carries', () => {
+    const descriptor = event('subagent/descriptor', { version: 2, mode: 'one-shot', provider: 'spawn', label: 'child' })
+    expect(migrate([descriptor]).events).toMatchObject([{ type: 'subagent/descriptor', data: descriptor.data }])
+  })
 })
 
 describe('native V3 codec and restorer', () => {

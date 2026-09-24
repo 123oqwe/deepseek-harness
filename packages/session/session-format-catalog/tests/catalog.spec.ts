@@ -45,6 +45,22 @@ describe('first-party Session format catalog', () => {
     })
   })
 
+  it('restores a released v0 log whose subagent descriptor is version 2 through every edge to v3', () => {
+    // Version 2 is the descriptor version the released v0 logs of audit
+    // baseline b150a551 carry; each edge keeps it, as it keeps any descriptor
+    // of a version other than the current 3.
+    const header = {
+      type: 'session', version: 0, id: 'descriptor-v2', createdAt: 1, seedLength: 0, delegationDepth: 1,
+    }
+    const descriptor = { version: 2, mode: 'one-shot', provider: 'spawn', label: 'child' }
+    const restore = sessionFormatCatalog.createRestore(header, { recovery: 'strict', validation: 'current' })
+    restore.decodeRow({ type: 'subagent/descriptor', seq: 0, time: 2, data: descriptor })
+    expect(restore.finish()).toMatchObject({
+      header: { version: 3, id: 'descriptor-v2' },
+      events: [{ type: 'subagent/descriptor', data: descriptor }],
+    })
+  })
+
   it('restores the installed current vocabulary without freezing ordinary payload additions', () => {
     const header = {
       type: 'session', version: 3, id: 'current-growth', createdAt: 1, isSeeded: false, delegationDepth: 0,
