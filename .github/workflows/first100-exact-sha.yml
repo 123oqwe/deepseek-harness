@@ -331,9 +331,19 @@ jobs:
         # you how the suite itself did; one that does not exist tells you
         # nothing.
         if: always()
+        # The exit code goes to `vitest-report.exit.json` beside the report:
+        # vitest can exit 1 on an unhandled error outside any case while the
+        # report says `success: true`, and the ledger refuses a report whose
+        # recorded exit is missing or not 0 (BLOCKED-326). The step still
+        # exits with that code.
         run: |
           mkdir -p .artifacts/first100/observations
+          set +e
           pnpm exec vitest run --reporter=json --outputFile=.artifacts/first100/observations/vitest-report.json --reporter=default
+          code=$?
+          set -e
+          printf '{"exitCode": %d}\n' "$code" > .artifacts/first100/observations/vitest-report.exit.json
+          exit $code
         # Real exit is captured, not swallowed: a red suite must fail this
         # job (fail-closed), while the JSON report is still uploaded below
         # via `if: always()` so a RED observation is real, inspectable
@@ -474,10 +484,16 @@ jobs:
         # file, so an entry frozen under `vitest.e2e.config.ts` is observed by
         # its e2e step's report alone. `default` keeps the log readable, as in
         # the suite step.
+        # Its exit code goes beside its report, as in the suite step (BLOCKED-326).
         run: |
+          set +e
           pnpm exec vitest run --config vitest.e2e.config.ts \
             apps/cli/tests/profiles/sdk/keyless-smoke.e2e.ts \
             --reporter=json --outputFile=.artifacts/first100/observations/vitest-e2e-sdk-keyless-smoke.json --reporter=default
+          code=$?
+          set -e
+          printf '{"exitCode": %d}\n' "$code" > .artifacts/first100/observations/vitest-e2e-sdk-keyless-smoke.exit.json
+          exit $code
 
       - name: BLOCKED-291 — the ACP launcher's own identity attribution
         if: always()
@@ -515,10 +531,16 @@ jobs:
         # Its json report goes beside the full-suite one for the reason the
         # step above gives. P4-05.U.4's frozen argv is this step's command
         # without the two reporters.
+        # Its exit code goes beside its report, as in the suite step (BLOCKED-326).
         run: |
+          set +e
           pnpm exec vitest run --config vitest.e2e.config.ts \
             apps/cli/tests/profiles/acp/tests/acp.e2e.ts \
             --reporter=json --outputFile=.artifacts/first100/observations/vitest-e2e-acp.json --reporter=default
+          code=$?
+          set -e
+          printf '{"exitCode": %d}\n' "$code" > .artifacts/first100/observations/vitest-e2e-acp.exit.json
+          exit $code
 
       - name: Workflow runs on shipped launches — a detached run (BLOCKED-323, BLOCKED-324) and a resumed one (P4-08)
         if: always()
@@ -526,12 +548,18 @@ jobs:
         # (P2-01.U.2, P2-01.U.3, and P4-08's resume case) is this step's
         # command for its one file, without the two reporters; this report is
         # their observation, for the reason the sdk step above gives.
+        # Its exit code goes beside its report, as in the suite step (BLOCKED-326).
         run: |
+          set +e
           pnpm exec vitest run --config vitest.e2e.config.ts \
             apps/cli/tests/profiles/headless/tests/detached-workflow-exit.e2e.ts \
             apps/cli/tests/profiles/headless/tests/detached-workflow-cwd.e2e.ts \
             apps/cli/tests/profiles/acp/tests/workflow-resume.e2e.ts \
             --reporter=json --outputFile=.artifacts/first100/observations/vitest-e2e-workflow.json --reporter=default
+          code=$?
+          set -e
+          printf '{"exitCode": %d}\n' "$code" > .artifacts/first100/observations/vitest-e2e-workflow.exit.json
+          exit $code
 
       - name: Publication and package hygiene
         if: always()
@@ -676,11 +704,18 @@ jobs:
             cat snapshots/.refresh-skipped.json
             echo "refresh them where they run (pwsh scenarios need a real pwsh), then delete the record"
           fi
+          # Its exit code goes beside its report, as in the suite step (BLOCKED-326).
+          set +e
           pnpm exec vitest run --config vitest.snapshot.config.ts \
             --reporter=json --outputFile=.artifacts/first100/observations/vitest-snapshot.json --reporter=default
+          code=$?
+          set -e
+          printf '{"exitCode": %d}\n' "$code" > .artifacts/first100/observations/vitest-snapshot.exit.json
+          exit $code
 
       # After every step that writes a report, so the artifact carries the
-      # e2e and snapshot reports beside the full-suite one.
+      # e2e and snapshot reports beside the full-suite one, each with the exit
+      # record its step writes beside it (BLOCKED-326).
       # `if-no-files-found` applies to the paths together, so one missing
       # report does not fail this step: a step whose report is missing has
       # failed on its own, and the uniqueness step below fails when the
@@ -696,6 +731,11 @@ jobs:
             .artifacts/first100/observations/vitest-e2e-acp.json
             .artifacts/first100/observations/vitest-e2e-workflow.json
             .artifacts/first100/observations/vitest-snapshot.json
+            .artifacts/first100/observations/vitest-report.exit.json
+            .artifacts/first100/observations/vitest-e2e-sdk-keyless-smoke.exit.json
+            .artifacts/first100/observations/vitest-e2e-acp.exit.json
+            .artifacts/first100/observations/vitest-e2e-workflow.exit.json
+            .artifacts/first100/observations/vitest-snapshot.exit.json
           if-no-files-found: error
 
       # This step asks a question the suite cannot: a frozen title no test can
@@ -737,7 +777,9 @@ jobs:
           [ -f "$src" ] || { echo "verify-freeze-case-uniqueness: cannot decide — --report $src does not exist" >&2; exit 2; }
           mkdir -p "$d"
           cp "$src" "$d/"
-          for own in .artifacts/first100/observations/vitest-e2e-*.json .artifacts/first100/observations/vitest-snapshot.json; do
+          # The e2e glob also matches the e2e steps' exit records; the other two are named (BLOCKED-326).
+          for own in .artifacts/first100/observations/vitest-e2e-*.json .artifacts/first100/observations/vitest-snapshot.json \
+            .artifacts/first100/observations/vitest-report.exit.json .artifacts/first100/observations/vitest-snapshot.exit.json; do
             if [ -f "$own" ]; then cp "$own" "$d/"; fi
           done
           node scripts/first100/verify-freeze-case-uniqueness.mjs --report "$d/vitest-report.json" \
@@ -1225,7 +1267,8 @@ jobs:
       # Every report the artifact carries is a ledger observation input, so each
       # is signed. `attest.ts --sign` takes one file and writes the signature into
       # it, so each has its own call, and a report that is not there fails the
-      # step, as the full-suite report always has.
+      # step, as the full-suite report always has. Each report's exit record
+      # (BLOCKED-326) is a ledger input too, and is signed the same way.
       - name: Sign the vitest observation reports with the GitHub-secret identity
         if: env.HAS_SIGNING_KEY == 'true'
         env:
@@ -1236,6 +1279,11 @@ jobs:
           node scripts/first100/attest.ts --sign .artifacts/first100/observations/vitest-e2e-acp.json
           node scripts/first100/attest.ts --sign .artifacts/first100/observations/vitest-e2e-workflow.json
           node scripts/first100/attest.ts --sign .artifacts/first100/observations/vitest-snapshot.json
+          node scripts/first100/attest.ts --sign .artifacts/first100/observations/vitest-report.exit.json
+          node scripts/first100/attest.ts --sign .artifacts/first100/observations/vitest-e2e-sdk-keyless-smoke.exit.json
+          node scripts/first100/attest.ts --sign .artifacts/first100/observations/vitest-e2e-acp.exit.json
+          node scripts/first100/attest.ts --sign .artifacts/first100/observations/vitest-e2e-workflow.exit.json
+          node scripts/first100/attest.ts --sign .artifacts/first100/observations/vitest-snapshot.exit.json
 
       # Real, honest evidence for R0 exit gate item 4 (runnerDryReceipt):
       # currently expected to exit 1 while command-freeze.json is still

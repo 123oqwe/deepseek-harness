@@ -70,6 +70,10 @@
  *     report its own step in first100-exact-sha.yml writes into the
  *     observation artifact; a report that did not run the entry's test paths
  *     is refused.
+ *   Both greenings read `<report>.exit.json`, the exit code the report's step
+ *   recorded (BLOCKED-326), and refuse a report whose record is missing,
+ *   malformed or not 0; `--exit-override <reason>` lifts that refusal, and the
+ *   cell records `exitOverride: { exitCode, reason }`.
  *   node scripts/first100/generate-ledger.mjs --record-signoff --epic <id> \
  *     --conclusion PASS|WITHDRAWN [--reason <text>] [--user-confirmation-ref <ref>] [--note <text>] \
  *     [--delegate-session <name>]
@@ -473,11 +477,65 @@ export function parseVitestJsonReport(reportPath) {
 }
 
 /**
- * BLOCKED-326 PRECHECK stub: refuses nothing, as the ledger did before the fix, which replaces it.
- * @returns `null`.
+ * The process exit code `first100-exact-sha.yml` records beside an observation report (BLOCKED-326).
+ * @param reportPath - the `--report` argument; the record is the same path with `.json` replaced by `.exit.json`.
+ * @returns the record's path; its integer `exitCode`, or `null` when it holds none; and why it holds none, or `null`.
  */
-export function recordedExitRefusal() {
+function readExitRecord(reportPath) {
+  const exitPath = reportPath.replace(/\.json$/u, '.exit.json')
+  if (!existsSync(exitPath)) return { exitPath, exitCode: null, problem: 'does not exist' }
+  const malformed = { exitPath, exitCode: null, problem: 'records no integer exitCode' }
+  let record
+  try {
+    record = JSON.parse(readFileSync(exitPath, 'utf8'))
+  } catch {
+    return malformed
+  }
+  return Number.isInteger(record?.exitCode) ? { exitPath, exitCode: record.exitCode, problem: null } : malformed
+}
+
+/**
+ * Why the process exit recorded beside an observation report refuses greening, or `null` when it does not
+ * (BLOCKED-326). Vitest can exit non-zero on an unhandled error outside any case while its json report says
+ * `success: true`, which `parseVitestJsonReport`'s `exit` cannot see; so each observation step in
+ * `first100-exact-sha.yml` writes its exit code to `<report>.exit.json`, and a report greens a cell only when that
+ * record exists and holds the integer 0.
+ * @param reportPath - the `--report` argument.
+ * @param overrideReason - the `--exit-override` reason; a non-empty one lifts every refusal.
+ * @returns the refusal, or `null`.
+ */
+export function recordedExitRefusal(reportPath, overrideReason) {
+  if (overrideReason !== undefined && overrideReason.trim() !== '') return null
+  const { exitPath, exitCode, problem } = readExitRecord(reportPath)
+  const remedy = 'pass --exit-override "<reason>" to record the cell anyway'
+  if (problem !== null) return `${exitPath} ${problem}, so the process exit of the step that wrote the report is unknown; ${remedy}`
+  if (exitCode !== 0) return `${exitPath} records exit code ${exitCode} for the step that wrote the report; ${remedy}`
   return null
+}
+
+/**
+ * Exits 1 with a BLOCKED line when `recordedExitRefusal` refuses the report under this run's `--exit-override`.
+ * @param reportPath - the `--report` argument.
+ * @param cell - the cell being greened, as the refusal names it.
+ */
+function checkRecordedExit(reportPath, cell) {
+  const refusal = recordedExitRefusal(reportPath, opt('exit-override'))
+  if (refusal !== null) {
+    console.error(`BLOCKED: --report ${reportPath} cannot green ${cell}: ${refusal}`)
+    process.exit(1)
+  }
+}
+
+/**
+ * The field a greened cell records when `--exit-override` gives a non-empty reason (BLOCKED-326).
+ * @param reportPath - the `--report` argument.
+ * @returns `{ exitOverride: { exitCode, reason } }`, where `exitCode` is the code recorded beside the report or `null`
+ *   when it records none; an empty object when no reason was given.
+ */
+function exitOverrideField(reportPath) {
+  const reason = opt('exit-override')
+  if (reason === undefined || reason.trim() === '') return {}
+  return { exitOverride: { exitCode: readExitRecord(reportPath).exitCode, reason } }
 }
 
 /**
@@ -1086,6 +1144,7 @@ function cmdGreen() {
     console.error(`BLOCKED: --report ${reportPath} cannot observe ${epic}.${stage}: ${notObserved}`)
     process.exit(1)
   }
+  checkRecordedExit(reportPath, `${epic}.${stage}`)
   const observationSha256 = sha256(raw)
 
   const existing = existsSync(LEDGER_PATH) ? loadJson(LEDGER_PATH) : { rows: buildSkeleton(null) }
@@ -1151,6 +1210,7 @@ function cmdGreen() {
     expectCasesMatched: frozen.expectCases,
     ...(absorbedFlakes.length > 0 ? { absorbedFlakes } : {}),
     ...(reattested === undefined ? {} : { reattested }),
+    ...exitOverrideField(reportPath),
     capturedAtUtc: nowIso(),
   }
   rows[epic].candidateSha = candidateSha
@@ -1297,6 +1357,7 @@ function cmdGreenSupplement() {
     console.error(`BLOCKED: --report ${reportPath} cannot observe ${epic}.${stage}.${supplementSeq}: ${notObserved}`)
     process.exit(1)
   }
+  checkRecordedExit(reportPath, `${epic}.${stage}.${supplementSeq}`)
   const observationSha256 = sha256(raw)
 
   const existing = existsSync(LEDGER_PATH) ? loadJson(LEDGER_PATH) : { rows: buildSkeleton(null) }
@@ -1339,6 +1400,7 @@ function cmdGreenSupplement() {
     observationSha256,
     expectCasesMatched: frozen.expectCases,
     ...(absorbedFlakes.length > 0 ? { absorbedFlakes } : {}),
+    ...exitOverrideField(reportPath),
     capturedAtUtc: nowIso(),
   }
 
