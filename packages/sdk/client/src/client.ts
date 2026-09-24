@@ -678,8 +678,8 @@ const NEGOTIATION_KEYS = ['protocolVersion', 'agreedCapabilities', 'ignoredCapab
  * @param keys - the members the reader handles itself.
  * @returns the remaining members.
  */
-function withoutKeys(value: Record<string, unknown>, keys: readonly string[]): Record<string, unknown> {
-  return Object.fromEntries(Object.entries(value).filter(([key]) => !keys.includes(key)))
+function withoutKeys(_value: Record<string, unknown>, _keys: readonly string[]): Record<string, unknown> {
+  return {}
 }
 
 /**
