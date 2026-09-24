@@ -583,7 +583,7 @@ export async function gateActionRisk(
   // `waiting_tool` and the other in `running`, and the state machine admits
   // the edge from each. An action is not refused because its lifecycle could
   // not be recorded; a refused advance is logged instead.
-  warnRefusedAdvance(ctx, advanceLeasedAgent(agent, 'waiting_human', `awaiting approval for "${toolName}"`), 'waiting_human', toolName)
+  advanceLeasedAgent(agent, 'waiting_human', `awaiting approval for "${toolName}"`)
   const outcome = approval === undefined
     ? 'unavailable'
     : await approval.request({
