@@ -474,6 +474,9 @@ importers:
       '@deepseek-ai/dsh-plugin-package-inventory-deepseek':
         specifier: workspace:^
         version: link:../../packages/llm/plugin-package-inventory-deepseek
+      '@deepseek-ai/dsh-run':
+        specifier: workspace:^
+        version: link:../../packages/run/run
       '@deepseek-ai/dsh-sandbox-local':
         specifier: workspace:^
         version: link:../../packages/sandbox/sandbox-local

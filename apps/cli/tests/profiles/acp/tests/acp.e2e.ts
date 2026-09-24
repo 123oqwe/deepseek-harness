@@ -1,12 +1,13 @@
 import { mkdtemp, readFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { DatabaseSync } from 'node:sqlite'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { fileURLToPath } from 'node:url'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { PROTOCOL_VERSION } from '@agentclientprotocol/sdk'
 import { checkFencing, type Lease, type WorkItemId } from '@deepseek-ai/dsh-lease-contract'
-import { openLeaseStore } from '@deepseek-ai/dsh-lease-sqlite'
+import { createFileRunStore } from '@deepseek-ai/dsh-run'
 import {
   launchAcpTestAgent,
   startStubModelServer,
@@ -46,18 +47,18 @@ function sessionsRootFor(cwd: string): string {
 }
 
 /**
- * Every stored Run that names one session, read from the Run Service's store
- * file: `dshHomePath('runs', 'runs.json')` on `dsh-base`'s `run` row, which
- * this profile does not override.
+ * Every stored Run that names one session, read through the Run Service's own
+ * store reader (`createFileRunStore(...).loadAll()`, which checks the format
+ * version and each Run) from `dshHomePath('runs', 'runs.json')` on
+ * `dsh-base`'s `run` row, which this profile does not override. The filter is
+ * `RunService.runsForSession`'s.
  * @param cwd - the directory the agent was launched in.
  * @param sessionId - the session the Runs belong to.
  * @returns the Run ids, in store order.
  */
 async function runIdsForSession(cwd: string, sessionId: string): Promise<string[]> {
-  const document = JSON.parse(await readFile(join(cwd, '.dsh', 'runs', 'runs.json'), 'utf8')) as {
-    readonly runs: readonly { readonly id: string; readonly sessionIds: readonly string[] }[]
-  }
-  return document.runs.filter(run => run.sessionIds.includes(sessionId)).map(run => run.id)
+  const runs = await createFileRunStore(join(cwd, '.dsh', 'runs', 'runs.json')).loadAll()
+  return runs.filter(run => run.sessionIds.some(id => id === sessionId)).map(run => run.id)
 }
 
 /**
@@ -71,6 +72,29 @@ async function readIfWritten(path: string): Promise<string | undefined> {
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined
     throw error
+  }
+}
+
+/**
+ * One lease row as `openLeaseStore(...).get` reads it, with the same SELECT and
+ * row mapping (`packages/run/lease-sqlite/src/store.ts`), through a read-only
+ * handle closed before returning: the store's own opener runs its schema
+ * statements against the product's database and has no close.
+ * @param cwd - the directory the hosts were launched in, whose `.dsh` is their home.
+ * @param workItem - the session's work item.
+ * @returns the row, or `undefined` when the table has none.
+ */
+function readLeaseRow(cwd: string, workItem: WorkItemId): Lease | undefined {
+  const db = new DatabaseSync(join(cwd, '.dsh', 'leases', 'leases.sqlite'), { readOnly: true })
+  try {
+    db.exec('PRAGMA busy_timeout = 5000')
+    const row = db.prepare('SELECT work_item, holder, epoch, expires_at_ms FROM leases WHERE work_item = ?')
+      .get(workItem) as { work_item: string; holder: string; epoch: number; expires_at_ms: number } | undefined
+    return row === undefined
+      ? undefined
+      : { workItem: row.work_item as WorkItemId, holder: row.holder as Lease['holder'], epoch: row.epoch as Lease['epoch'], expiresAtMs: row.expires_at_ms }
+  } finally {
+    db.close()
   }
 }
 
@@ -241,13 +265,19 @@ interface KilledHost {
   readonly runIds: readonly string[]
   /** The session's lease row, read while the host was alive: its token is `{ workItem, epoch, holder }`. */
   readonly lease: Lease
-  /** A second connection to the host's `leases.sqlite`, opened after the host created it. */
-  readonly leases: ReturnType<typeof openLeaseStore>
 }
 
 /** Everything the takeover cases assert, recorded once. */
 interface TakeoverObservation {
   readonly killed: KilledHost
+  /** When the kill returned, the host process having exited. */
+  readonly killedAtMs: number
+  /** The lease row read right after the kill. */
+  readonly atKill: Lease
+  /** How many model requests the stub had received when the first host was killed. */
+  readonly requestsAtKill: number
+  /** `second.txt`, read immediately before the second host starts. */
+  readonly secondBeforeRestart: string | undefined
   /** The lease row after the wait, read immediately before the second host starts. */
   readonly restartLease: Lease | undefined
   /** When `restartLease` was read. */
@@ -256,7 +286,7 @@ interface TakeoverObservation {
   readonly runIdsAfter: readonly string[]
   /** The lease row after the second host's turn, read while it is still alive. */
   readonly currentLease: Lease | undefined
-  /** `second.txt`, which only the second host's tool call writes. */
+  /** `second.txt` after the second host's turn. */
   readonly secondProof: string | undefined
 }
 
@@ -281,10 +311,9 @@ async function runThenKillHost(cwd: string, env: Record<string, string>): Promis
     await host.client.prompt({ sessionId, prompt: [{ type: 'text', text: 'write the first proof file' }] })
     // The work item is the session (`RunPlugin.open`), and the host opened the
     // store before its first Run, so the file exists by now.
-    const leases = openLeaseStore(join(cwd, '.dsh', 'leases'))
-    const lease = leases.get(sessionId as WorkItemId)
+    const lease = readLeaseRow(cwd, sessionId as WorkItemId)
     if (lease === undefined) throw new Error(`the host holds no lease row for session ${sessionId}`)
-    return { sessionId, runIds: await runIdsForSession(cwd, sessionId), lease, leases }
+    return { sessionId, runIds: await runIdsForSession(cwd, sessionId), lease }
   } finally {
     await host.close('SIGKILL')
   }
@@ -334,15 +363,22 @@ describe('P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILL
     }
 
     const killed = await runThenKillHost(cwd, env)
+    const killedAtMs = Date.now()
+    // The stub answers requests in arrival order, so the count says which
+    // scripted call each host could have received.
+    const requestsAtKill = stub.requests.length
     // Read again after the kill: a heartbeat between the first read and the
     // kill moves the expiry, and the wait is for the row as the dead host left it.
-    const atKill = killed.leases.get(killed.lease.workItem)
+    const atKill = readLeaseRow(cwd, killed.lease.workItem)
     if (atKill === undefined) throw new Error(`the lease row for session ${killed.sessionId} vanished at the kill`)
     const waitMs = atKill.expiresAtMs - Date.now() + EXPIRY_MARGIN_MS
     if (waitMs > MAX_LEASE_WAIT_MS) throw new Error(`the dead host's lease expires in ${String(waitMs)} ms, longer than the shipped lease allows`)
+    // No wait is left only when the row has already expired; the orphan case
+    // asserts it was live at the kill and has expired by the read below.
     if (waitMs > 0) await sleep(waitMs)
-    const restartLease = killed.leases.get(killed.lease.workItem)
+    const restartLease = readLeaseRow(cwd, killed.lease.workItem)
     const restartObservedAtMs = Date.now()
+    const secondBeforeRestart = await readIfWritten(join(cwd, 'second.txt'))
 
     second = launchAcpTestAgent({ agent: AGENT, cwd, env })
     await second.spawned
@@ -355,10 +391,14 @@ describe('P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILL
 
     observed = {
       killed,
+      killedAtMs,
+      atKill,
+      requestsAtKill,
+      secondBeforeRestart,
       restartLease,
       restartObservedAtMs,
       runIdsAfter: await runIdsForSession(cwd, killed.sessionId),
-      currentLease: killed.leases.get(killed.lease.workItem),
+      currentLease: readLeaseRow(cwd, killed.lease.workItem),
       secondProof: await readIfWritten(join(cwd, 'second.txt')),
     }
   }, 180_000)
@@ -375,8 +415,9 @@ describe('P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILL
     }
   })
 
-  it('orphan: before the second host starts, the lease row still names the killed host at its epoch and has expired', () => {
-    const { killed, restartLease, restartObservedAtMs } = observation()
+  it('orphan: the lease row was live when the host was killed; before the second host starts, it still names the killed host at its epoch and has expired', () => {
+    const { killed, killedAtMs, atKill, restartLease, restartObservedAtMs } = observation()
+    expect(atKill.expiresAtMs).toBeGreaterThan(killedAtMs)
     expect(restartLease?.holder).toBe(killed.lease.holder)
     expect(restartLease?.epoch).toBe(killed.lease.epoch)
     expect(restartLease?.expiresAtMs).toBeLessThan(restartObservedAtMs)
@@ -405,8 +446,11 @@ describe('P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILL
     expect(checkFencing(token, currentLease)).toEqual({ admitted: false, reason: 'stale-epoch' })
   })
 
-  it('the second host\'s tool call ran: the file it writes is on disk', () => {
-    expect(observation().secondProof).toBe('ACP_OK')
+  it('the second host\'s tool call ran: second.txt was absent after the killed host\'s two model requests and is on disk after the second host\'s turn', () => {
+    const { requestsAtKill, secondBeforeRestart, secondProof } = observation()
+    expect(requestsAtKill).toBe(2)
+    expect(secondBeforeRestart).toBeUndefined()
+    expect(secondProof).toBe('ACP_OK')
   })
 })
 
