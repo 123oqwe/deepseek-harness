@@ -13,7 +13,7 @@
  * journal's side. Nothing here relies on the previous process's memory: the
  * second run reads the file the first one wrote.
  */
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -48,6 +48,33 @@ function interrupted(digest: string): WorkflowJournal {
     ],
   } as unknown as WorkflowJournal
 }
+
+describe('P4-08 acceptance[2]: a refused resume keeps the journal it refused', () => {
+  it('moves the refused journal aside, so the new run\'s first write cannot overwrite it', async () => {
+    const dir = directory()
+    writeJournal(dir, 'run-refused', interrupted(scriptDigestOf(SCRIPT)))
+    const original = readFileSync(join(dir, 'run-refused.json'), 'utf8')
+
+    const reconciled = await reusableSteps(dir, 'run-refused', `${SCRIPT} // edited`, () => Promise.resolve(true), undefined)
+    expect(reconciled.refused).toMatchObject({ reason: 'script-digest-changed' })
+    // The new run's first persist, as the host's fresh recorder writes it.
+    writeJournal(dir, 'run-refused', { scriptDigest: scriptDigestOf(`${SCRIPT} // edited`), entries: [] } as unknown as WorkflowJournal)
+
+    const kept = readdirSync(join(dir, 'refused'))
+    expect(kept).toEqual([`run-refused.${scriptDigestOf(SCRIPT).slice(0, 12)}.json`])
+    expect(readFileSync(join(dir, 'refused', kept[0] ?? ''), 'utf8')).toBe(original)
+  })
+})
+
+describe('P4-08: a journal, which holds children\'s outputs, is readable by its owner only', () => {
+  it('writes the journal directory with mode 0700 and the journal file with mode 0600', () => {
+    const dir = join(directory(), 'journals')
+    writeJournal(dir, 'run-private', interrupted(scriptDigestOf(SCRIPT)))
+
+    expect(statSync(dir).mode & 0o777).toBe(0o700)
+    expect(statSync(join(dir, 'run-private.json')).mode & 0o777).toBe(0o600)
+  })
+})
 
 describe('P4-08 acceptance[0]: a resume does not repeat completed child work', () => {
   it('reuses a completed step whose child SESSION confirms the work happened', async () => {

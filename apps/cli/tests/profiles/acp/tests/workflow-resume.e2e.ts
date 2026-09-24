@@ -125,6 +125,8 @@ interface Resumed {
   readonly journalIds: readonly string[]
   /** The interrupted run's journal after the restarted host's turn. */
   readonly journal: JournalFile | undefined
+  /** The journals a refused resume kept aside under `refused/`, by file name. */
+  readonly refused: readonly JournalFile[]
 }
 
 interface Observation {
@@ -161,10 +163,11 @@ function envFor(stub: StubModelServer): Record<string, string> {
  * launcher points `DSH_HOME` at `<cwd>/.dsh`. A journal is replaced by rename,
  * so each file read is one whole version of it.
  * @param cwd - the launch directory.
- * @returns the journals, keyed by run id.
+ * @param subdirectory - a subdirectory of the journals directory to read instead, such as `refused`.
+ * @returns the journals, keyed by run id (by file name without `.json` in a subdirectory).
  */
-async function journalsUnder(cwd: string): Promise<Map<string, JournalFile>> {
-  const directory = join(cwd, '.dsh', 'journals')
+async function journalsUnder(cwd: string, subdirectory?: string): Promise<Map<string, JournalFile>> {
+  const directory = join(cwd, '.dsh', 'journals', ...subdirectory === undefined ? [] : [subdirectory])
   let names: string[]
   try {
     names = await readdir(directory)
@@ -375,6 +378,7 @@ async function resumeAfterKill(point: KillPoint, killed: Killed): Promise<Resume
   await host.client.prompt({ sessionId: killed.sessionId, prompt: [{ type: 'text', text: 'Resume the interrupted workflow.' }] })
 
   const journals = await journalsUnder(killed.cwd)
+  const refused = await journalsUnder(killed.cwd, 'refused')
   let status: string | undefined
   for (const update of host.updates) {
     if (update.sessionUpdate === 'tool_call_update' && update.toolCallId === RESUME_CALL_ID) status = update.status ?? undefined
@@ -387,6 +391,7 @@ async function resumeAfterKill(point: KillPoint, killed: Killed): Promise<Resume
     childRequests: stub.requests.filter(request => userMessageContains(request, CHILD_PROMPT_MARKER)).length,
     journalIds: [...journals.keys()].sort(),
     journal: journals.get(killed.runId),
+    refused: [...refused.keys()].sort().map(name => refused.get(name) as JournalFile),
   }
 }
 
@@ -507,6 +512,12 @@ describe('P4-08 acceptance[1]: a changed script is refused visibly and restarted
     const { resumed } = observed(CHANGED)
     expect(resumed.status).toBe('completed')
     expect(resumed.text).toMatch(/^resume refused \(script-digest-changed\)/u)
+  })
+
+  it('the refused journal is kept: the interrupted run\'s record survives under its old digest', () => {
+    const { resumed } = observed(CHANGED)
+    expect(resumed.refused.map(journal => journal.scriptDigest)).toEqual([createHash('sha256').update(SCRIPT).digest('hex')])
+    expect(standsAt(resumed.refused[0] as JournalFile, CHANGED.finished)).toBe(true)
   })
 
   it('restart is observed: the same run id starts every child again under the new digest', () => {
