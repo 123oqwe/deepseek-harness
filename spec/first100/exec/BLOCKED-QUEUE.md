@@ -8820,3 +8820,50 @@ Under the standard's rule for real defects (WORKING-MODEL §12), they become est
 2. The gate is listed for the release expiry check.
 3. A case on a shipped launch observes the shadow mode: the same user-visible result as enforcement off, with the difference recorded and no sensitive parameters.
 4. Then a 4.4a–d and the row's first PASS sign-off.
+
+### BLOCKED-323 — a detached workflow run never terminates its worker, so `dsh --profile headless` does not exit after the run settles (product defect, open)
+
+**Status:** OPEN (2026-09-24). Owner: lane B, fix in place. Found by lane A while measuring P2-01's acceptance[0] case A5 (detached workflow chain), confirmed by the delegate (first100-delegate-1a) by reading the code. This is a shipped-behaviour defect, not a test-harness problem. No accepted row depends on it today.
+
+**What was observed (CI, not inference).**
+- Nine narrow runs at P2-01 PRECHECK `c0a7895b37` and its eight mutations, 35970070614 to 35970218280, all ended A5 the same way: `p2-01-detached-workflow-chain did not exit within 90s. stdout: done` (`packages/test-support/loader-smoke/src/index.ts:216`).
+- The headless launch printed its result and then never exited.
+
+**Why (read from the code at `035b13b961`; the cause is inferred, not yet shown by a case that isolates it).**
+- When a detached run settles, the engine disposes only the run's agent: `void workerRun.result.then(() => detached.dispose(), () => detached.dispose())` (`packages/workflow/workflow-worker-thread/src/index.ts:799-801`).
+- The same settlement removes the run from `liveRuns` (`:803`). So nothing that later walks the live runs can reach it.
+- The worker thread is terminated only inside `workerRun.dispose()`: `await this.worker.terminate()` (`packages/workflow/workflow-worker-thread/src/host.ts:382`). That call also releases the work item's lease (`:389`).
+- For a detached run nothing calls it. The worker thread keeps the event loop alive, so the process does not exit, and the lease is held for the process's lifetime.
+
+**Closing condition.**
+1. A case on the shipped headless launch runs a detached workflow to completion and asserts the process exits on its own within the case timeout, with no forced exit.
+   - It must be red before the fix, the way A5 v1 was red.
+   - It must not use the `exit-when-recorded` preload that A5 v2 uses.
+2. The fix is in place: when a detached run settles, dispose the run as well as its agent, keeping the rule that the lease is released at disposal, after the run's final writes (`host.ts:385-389`).
+3. A mutation that drops the new dispose call turns only that case red.
+4. After the fix, A5 may drop its preload. Until then, P2-01's sign-off lists "the process exit after a detached run" as not covered.
+
+### BLOCKED-324 — a child agent inside a detached workflow run fails its first turn on the shipped headless profile, because the run's sessions carry no cwd and the shipped persona suffix needs one (product defect, open)
+
+**Status:** OPEN (2026-09-24). Owner: lane B, fix in place. Found by lane A's diagnostic run for P2-01 case A5, confirmed by the delegate (first100-delegate-1a) from that run's report and the bundle config. It blocks P2-01 acceptance[0] on the detached-workflow path, because no action ever happens there to carry an identity chain.
+
+**What was observed (CI).** Narrow run 35983777478 at `8c7cd44109` (P2-01 A5 with diagnostics) persisted three sessions:
+- the launcher (`session-e90285b3…`), whose header has `cwd`;
+- the detached run's session (`fddbb818…`), `parentSession` the launcher, with **no `cwd`** in its header;
+- the run's child (`d3583d28…`, `origin: subagent`), also with **no `cwd`**. Its only turn ended with `{"kind":"error","error":{"message":"prompt variable \"{{cwd}}\" has no value for this assembly (section \"deployment:persona-suffix\")"}}`.
+- The launcher's tool result still reported the run as `completed (1 agent)`, with return value `null`.
+
+**Why this is shipped behaviour.** The shipped headless bundle sets `personaSuffix: Your working directory is {{cwd}}.` (`packages/bundle/headless/cordis.patch.yml:9`). `acp-app` (`:5`) and `sdk-app` carry the same suffix. So on those profiles, any agent a detached workflow run starts cannot assemble its system prompt.
+
+**Cause (inferred, not yet isolated).** The detached run's session is created without the launcher's `cwd`, and its child inherits none. Two things are not yet known:
+- whether attached (non-detached) runs have the same gap;
+- which call site should pass the `cwd`.
+
+**Closing condition.**
+1. A case on the shipped headless launch, with no key required, starts a detached workflow whose agent runs one tool call. It asserts:
+   - the child's turn completes;
+   - the run's and the child's session headers carry the launcher's `cwd`.
+   It must be red before the fix, the way run 35983777478 was.
+2. The fix is in place: the run's session takes the launcher's `cwd` at the point where the detached run's session is created. It is not a new default and not a blank substitute for `{{cwd}}`.
+3. A mutation that drops the propagation turns only that case red.
+4. Then P2-01 A5 can reach its identity assertions (`workflow-chain.e2e.ts` :172 onward). Until then, P2-01's acceptance[0] is not observed on the detached path.
