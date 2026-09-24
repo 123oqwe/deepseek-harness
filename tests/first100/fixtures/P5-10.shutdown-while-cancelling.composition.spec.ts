@@ -13,8 +13,15 @@
  * log, which holds what both processes wrote to it. `P5_10_TRACE_SHUTDOWN=0`
  * leaves out the driver's trace of the continuation registry's private
  * members, which a fix may rename.
+ *
+ * The last case is BLOCKED-333's second half: a stop the parent is never told
+ * of must at least be reported where an operator can see it. It accepts a line
+ * on either phase's stderr, or a line in any text file the run left in its
+ * working directory (a log file, or a session event in `./.sessions`).
  */
 
+import { readdir, readFile, stat } from 'node:fs/promises'
+import { join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
 import { beforeAll, describe, expect, it } from 'vitest'
@@ -28,6 +35,12 @@ const RESTART_TIMEOUT_MS = 300_000
 
 /** The notice a parent gets for a child stopped before it finished. */
 const STOPPED = /was stopped before it finished\./u
+
+/** A word that says something failed, which a report of a lost settlement carries. */
+const FAILURE = /\b(?:not|failed|cannot|unable|lost)\b/iu
+
+/** Largest file the working-directory scan reads. */
+const SCAN_LIMIT_BYTES = 8 * 1024 * 1024
 
 /** One user message in the parent's log, as the driver reports it. */
 interface LoggedMessage {
@@ -52,6 +65,29 @@ interface Report {
       readonly parentLog: readonly LoggedMessage[] | null
     }
   }
+  readonly stderrSettlementLines: { readonly before: readonly string[]; readonly after: readonly string[] }
+}
+
+/**
+ * Every line that mentions a settlement in the text files under a directory.
+ * Files holding a NUL byte (a SQLite store) and files over
+ * {@link SCAN_LIMIT_BYTES} are skipped.
+ * @param root - the run's working directory.
+ * @returns the lines, each prefixed with its file's path relative to `root`.
+ */
+async function settlementLinesUnder(root: string): Promise<string[]> {
+  const lines: string[] = []
+  for (const entry of await readdir(root, { recursive: true, withFileTypes: true })) {
+    if (!entry.isFile()) continue
+    const path = join(entry.parentPath, entry.name)
+    if ((await stat(path)).size > SCAN_LIMIT_BYTES) continue
+    const content = await readFile(path)
+    if (content.includes(0)) continue
+    for (const line of content.toString('utf8').split('\n')) {
+      if (/settle/iu.test(line)) lines.push(`${relative(root, path)}: ${line}`)
+    }
+  }
+  return lines
 }
 
 /**
@@ -66,6 +102,7 @@ function settlementsFrom(log: readonly LoggedMessage[] | null, child: string): r
 
 describe('BLOCKED-333: a child still cancelling when the host shuts down gracefully is reported to its parent as stopped, on the shipped headless profile', () => {
   const reports: Report[] = []
+  const fileLines: string[] = []
   beforeAll(async () => {
     const { stdout, stderr } = await runLoaderSmoke({
       label: 'BLOCKED-333 observation: shutdown while cancelling',
@@ -78,6 +115,7 @@ describe('BLOCKED-333: a child still cancelling when the host shuts down gracefu
       tsconfigPath: repoTsconfig,
       processTimeoutMs: RESTART_TIMEOUT_MS,
       env: { P5_10_TRACE_SHUTDOWN: '0' },
+      inspect: async (cwd) => { fileLines.push(...await settlementLinesUnder(cwd)) },
     })
     const json = /P5-10-RESTART (?<json>.+)/u.exec(stdout)?.groups?.json
     if (json === undefined) throw new Error(`the driver reported nothing usable; stderr tail:\n${stderr.slice(-800)}`)
@@ -109,5 +147,14 @@ describe('BLOCKED-333: a child still cancelling when the host shuts down gracefu
     const log = reports[0]?.after.reading.parentLog ?? null
     const first = settlementsFrom(log, reports[0]?.before.reading.ids.child ?? '')[0]
     expect(first?.text ?? '(no settlement notice from the child)', JSON.stringify(log)).toMatch(STOPPED)
+  })
+
+  it('the stop is never lost silently: the parent log holds the stop notice, or a line on stderr, in a log file or in a session event names the child and says its settlement failed', () => {
+    const child = reports[0]?.before.reading.ids.child ?? '(no child id)'
+    const noticed = settlementsFrom(reports[0]?.after.reading.parentLog ?? null, child).some(message => STOPPED.test(message.text))
+    const lines = reports[0]?.stderrSettlementLines
+    const reported = [...lines?.before ?? [], ...lines?.after ?? [], ...fileLines]
+      .filter(line => line.includes(child) && FAILURE.test(line))
+    expect(noticed || reported.length > 0, JSON.stringify({ noticed, reported, candidates: fileLines.filter(line => line.includes(child)) })).toBe(true)
   })
 })

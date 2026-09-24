@@ -7,7 +7,8 @@
  * - `orchestrate <variant>` launches `before` and then `after` the way it was
  *   itself launched (same Node flags, working directory and environment, so
  *   the same `DSH_HOME` and `./.sessions`), and prints one
- *   `P5-10-RESTART <json>` line holding both readings. `before` alone gets
+ *   `P5-10-RESTART <json>` line holding both readings and, per phase, the
+ *   stderr lines that name the child and mention a settlement. `before` alone gets
  *   `P5_10_HOLD=1`, and in the two `shutdown-while-cancelling` variants
  *   `P5_10_ABORT_DELAY_MS`, so the child's held request takes that long to
  *   end once cancelled. In the `crash` variant the orchestrator waits
@@ -144,6 +145,12 @@ interface PhaseResult {
   readonly notes: readonly string[]
   /** The shutdown trace `before` printed after disposing, or `null` when it traced nothing. */
   readonly drainTrace: unknown
+}
+
+/** One phase's result and its whole stderr, which the orchestrator filters and never prints. */
+interface PhaseRun {
+  readonly outcome: PhaseResult
+  readonly stderr: string
 }
 
 /**
@@ -580,9 +587,9 @@ async function after(ctx: Context, parentId: SessionId, childId: SessionId): Pro
  * Run one phase in a fresh process launched the way this one was.
  * @param args - the phase's arguments after the script path.
  * @param env - the phase's environment.
- * @returns how it exited and what it reported.
+ * @returns how it exited and what it reported, and its whole stderr.
  */
-function runPhase(args: readonly string[], env: NodeJS.ProcessEnv): PhaseResult {
+function runPhase(args: readonly string[], env: NodeJS.ProcessEnv): PhaseRun {
   const result = spawnSync(process.execPath, [...process.execArgv, fileURLToPath(import.meta.url), ...args], {
     cwd: process.cwd(),
     env,
@@ -597,11 +604,14 @@ function runPhase(args: readonly string[], env: NodeJS.ProcessEnv): PhaseResult 
   }
   const trace = /P5-10-DRAIN (?<json>.+)/u.exec(result.stdout)?.groups?.json
   return {
-    status: result.status,
-    signal: result.signal,
-    reading: JSON.parse(json) as Record<string, unknown>,
-    notes: result.stderr.split('\n').filter(line => /settle|outbox|\bbus\b/iu.test(line)).slice(0, 20),
-    drainTrace: trace === undefined ? null : JSON.parse(trace) as unknown,
+    outcome: {
+      status: result.status,
+      signal: result.signal,
+      reading: JSON.parse(json) as Record<string, unknown>,
+      notes: result.stderr.split('\n').filter(line => /settle|outbox|\bbus\b/iu.test(line)).slice(0, 20),
+      drainTrace: trace === undefined ? null : JSON.parse(trace) as unknown,
+    },
+    stderr: result.stderr,
   }
 }
 
@@ -626,14 +636,27 @@ if (phase === 'orchestrate') {
     P5_10_HOLD: '1',
     P5_10_ABORT_DELAY_MS: String(slowAbort ? SLOW_ABORT_MS : 0),
   })
-  const ids = first.reading.ids as { readonly parent: string; readonly child: string }
+  const ids = first.outcome.reading.ids as { readonly parent: string; readonly child: string }
   const restartDelayMs = variant === 'crash' ? CRASH_RESTART_DELAY_MS : 0
   await delay(restartDelayMs)
   const second = runPhase(
     [configPath, 'after', variant, ids.parent, ids.child],
     variant === 'shutdown-while-cancelling-parent-continues' ? { ...process.env, P5_10_PARENT_CONTINUES: '1' } : process.env,
   )
-  process.stdout.write(`P5-10-RESTART ${JSON.stringify({ variant, before: first, restartDelayMs, after: second })}\n`)
+  /**
+   * The lines of one phase's stderr that name the child and mention a settlement.
+   * @param stderr - the phase's whole stderr.
+   * @returns those lines, uncapped.
+   */
+  const settlementLines = (stderr: string): string[] =>
+    stderr.split('\n').filter(line => line.includes(ids.child) && /settle/iu.test(line))
+  process.stdout.write(`P5-10-RESTART ${JSON.stringify({
+    variant,
+    before: first.outcome,
+    restartDelayMs,
+    after: second.outcome,
+    stderrSettlementLines: { before: settlementLines(first.stderr), after: settlementLines(second.stderr) },
+  })}\n`)
 } else if (phase === 'before' || phase === 'after') {
   const ctx = await bootProductionProfile({
     binName: 'p5-10-restart',
