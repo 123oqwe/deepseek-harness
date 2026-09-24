@@ -627,8 +627,8 @@ export function collectLayerEdges(root, byPackage) {
     })
   }
 
-  for (const [name, { manifest, layer }] of byPackage) {
-    for (const field of layer === 'kernel' ? KERNEL_DEPENDENCY_FIELDS : PRODUCTION_DEPENDENCY_FIELDS) {
+  for (const [name, { manifest }] of byPackage) {
+    for (const field of PRODUCTION_DEPENDENCY_FIELDS) {
       for (const dependency of Object.keys(manifest[field] ?? {})) {
         if (dependency !== name && byPackage.has(dependency)) record(name, dependency, 'package-graph', 'value')
       }
