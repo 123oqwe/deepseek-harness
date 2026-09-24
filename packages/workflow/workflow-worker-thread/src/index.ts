@@ -411,7 +411,13 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     }
     const handle = await agents.create({
       sessionId: session,
-      meta: { parentSession: request.parent.id },
+      // The launcher's working directory, when its header has one. The run's
+      // children copy it from this header (`childSessionMeta`), and a system
+      // prompt naming `{{cwd}}` has no value without it.
+      meta: {
+        parentSession: request.parent.id,
+        ...request.parent.session.header.cwd === undefined ? {} : { cwd: request.parent.session.header.cwd },
+      },
       // The launcher's LLM route, inherited the same way a delegated child
       // inherits it. Without this the run holds an agent with no route and
       // every `agent()` in its script fails: "outliving the launcher" is about
