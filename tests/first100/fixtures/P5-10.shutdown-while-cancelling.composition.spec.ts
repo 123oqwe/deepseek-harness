@@ -16,8 +16,11 @@
  *
  * The last case is BLOCKED-333's second half: a stop the parent is never told
  * of must at least be reported where an operator can see it. It accepts a line
- * on either phase's stderr, or a line in any text file the run left in its
- * working directory (a log file, or a session event in `./.sessions`).
+ * that names the child and states that its settlement or stop notice was not
+ * written, on either phase's stderr or in any text file the run left in its
+ * working directory (a log file, or a session event in `./.sessions`). Prompt
+ * text a session records in its `system/message` and `request/header` events
+ * is not a report.
  */
 
 import { readdir, readFile, stat } from 'node:fs/promises'
@@ -36,11 +39,22 @@ const RESTART_TIMEOUT_MS = 300_000
 /** The notice a parent gets for a child stopped before it finished. */
 const STOPPED = /was stopped before it finished\./u
 
-/** A word that says something failed, which a report of a lost settlement carries. */
-const FAILURE = /\b(?:not|failed|cannot|unable|lost)\b/iu
+/** A settlement or stop notice named first, then said not to have been written. */
+const WRITE_FAILED = /\b(?:settlement|stop notice|stopped notice)\b.{0,160}?\b(?:not (?:be )?(?:committed|written|recorded|stored|delivered)|(?:could not|cannot|failed to) (?:commit|write|record|store|deliver)|lost)\b/iu
+/** The same statement with the failure first. */
+const WRITE_FAILED_FIRST = /\b(?:could not|cannot|failed to) (?:commit|write|record|store|deliver)\b.{0,160}?\b(?:settlement|stop notice|stopped notice)\b/iu
 
 /** Largest file the working-directory scan reads. */
 const SCAN_LIMIT_BYTES = 8 * 1024 * 1024
+
+/** One line the run left, and where. */
+interface ScannedLine {
+  /** The file's path relative to the working directory, or which phase's stderr. */
+  readonly path: string
+  readonly line: string
+  /** Whether the line is a session log's `system/message` or `request/header` event, which holds prompt text. */
+  readonly prompt: boolean
+}
 
 /** One user message in the parent's log, as the driver reports it. */
 interface LoggedMessage {
@@ -71,23 +85,37 @@ interface Report {
 /**
  * Every line that mentions a settlement in the text files under a directory.
  * Files holding a NUL byte (a SQLite store) and files over
- * {@link SCAN_LIMIT_BYTES} are skipped.
+ * {@link SCAN_LIMIT_BYTES} are skipped. A `.jsonl` line holding the value
+ * `"system/message"` or `"request/header"` is marked as prompt text; the match
+ * is on the value, so it does not depend on the log's field names.
  * @param root - the run's working directory.
- * @returns the lines, each prefixed with its file's path relative to `root`.
+ * @returns the lines, each with its file's path relative to `root`.
  */
-async function settlementLinesUnder(root: string): Promise<string[]> {
-  const lines: string[] = []
+async function settlementLinesUnder(root: string): Promise<ScannedLine[]> {
+  const lines: ScannedLine[] = []
   for (const entry of await readdir(root, { recursive: true, withFileTypes: true })) {
     if (!entry.isFile()) continue
     const path = join(entry.parentPath, entry.name)
     if ((await stat(path)).size > SCAN_LIMIT_BYTES) continue
     const content = await readFile(path)
     if (content.includes(0)) continue
+    const log = path.endsWith('.jsonl')
     for (const line of content.toString('utf8').split('\n')) {
-      if (/settle/iu.test(line)) lines.push(`${relative(root, path)}: ${line}`)
+      if (!/settle/iu.test(line)) continue
+      const prompt = log && (line.includes('"system/message"') || line.includes('"request/header"'))
+      lines.push({ path: relative(root, path), line, prompt })
     }
   }
   return lines
+}
+
+/**
+ * Whether a line states that a settlement or stop notice was not written.
+ * @param line - one line the run left.
+ * @returns whether either wording of that statement matches.
+ */
+function statesWriteFailure(line: string): boolean {
+  return WRITE_FAILED.test(line) || WRITE_FAILED_FIRST.test(line)
 }
 
 /**
@@ -102,7 +130,7 @@ function settlementsFrom(log: readonly LoggedMessage[] | null, child: string): r
 
 describe('BLOCKED-333: a child still cancelling when the host shuts down gracefully is reported to its parent as stopped, on the shipped headless profile', () => {
   const reports: Report[] = []
-  const fileLines: string[] = []
+  const fileLines: ScannedLine[] = []
   beforeAll(async () => {
     const { stdout, stderr } = await runLoaderSmoke({
       label: 'BLOCKED-333 observation: shutdown while cancelling',
@@ -153,19 +181,28 @@ describe('BLOCKED-333: a child still cancelling when the host shuts down gracefu
     const child = reports[0]?.before.reading.ids.child ?? '(no child id)'
     const noticed = settlementsFrom(reports[0]?.after.reading.parentLog ?? null, child).some(message => STOPPED.test(message.text))
     const lines = reports[0]?.stderrSettlementLines
-    const reported = [
-      ...(lines?.before ?? []).map(line => `stderr before: ${line}`),
-      ...(lines?.after ?? []).map(line => `stderr after: ${line}`),
+    const candidates: ScannedLine[] = [
+      ...(lines?.before ?? []).map(line => ({ path: 'stderr before', line, prompt: false })),
+      ...(lines?.after ?? []).map(line => ({ path: 'stderr after', line, prompt: false })),
       ...fileLines,
-    ].filter(line => line.includes(child) && FAILURE.test(line))
+    ].filter(candidate => candidate.line.includes(child))
+    const failures = candidates.filter(candidate => !candidate.prompt && statesWriteFailure(candidate.line))
+    /**
+     * One scanned line as the task records it.
+     * @param candidate - the line.
+     * @returns its path and its first 600 characters.
+     */
+    const recorded = (candidate: ScannedLine): { readonly path: string; readonly line: string } =>
+      ({ path: candidate.path, line: candidate.line.slice(0, 600) })
     // Recorded on the task, which the JSON reporter carries, so a pass shows what satisfied it.
     Object.assign(task.meta, {
       a389c: {
         noticed,
-        reported: reported.map(line => line.slice(0, 600)),
-        candidates: fileLines.filter(line => line.includes(child)).map(line => line.slice(0, 600)),
+        reported: failures.map(recorded),
+        excluded: candidates.filter(candidate => candidate.prompt).length,
+        candidates: candidates.map(recorded),
       },
     })
-    expect(noticed || reported.length > 0, JSON.stringify({ noticed, reported, candidates: fileLines.filter(line => line.includes(child)) })).toBe(true)
+    expect(noticed || failures.length > 0, JSON.stringify({ noticed, reported: failures.map(recorded) })).toBe(true)
   })
 })
