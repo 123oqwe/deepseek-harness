@@ -1106,9 +1106,8 @@ export default class RunPlugin extends Service {
     // first, this holder's own writes would find no lease and be refused.
     const lease = agent.runLease
     const leases = this.ctx.leaseStore
-    this.track(this.endRun(agent, failure !== undefined).finally(() => {
-      if (lease !== undefined) leases.release(lease.token)
-    }))
+    if (lease !== undefined) leases.release(lease.token)
+    this.track(this.endRun(agent, failure !== undefined))
     if (agent.runId !== undefined) this.failures.delete(agent.runId)
   }
 
