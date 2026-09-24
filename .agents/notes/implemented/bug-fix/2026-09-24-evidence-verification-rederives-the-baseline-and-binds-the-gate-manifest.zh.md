@@ -14,7 +14,7 @@ Status: implemented
 - **门禁清单绑定到包上。** `collect-evidence.mjs init` 在签名之前写出 `manifest.json`，并把它的摘要记为包的可选字段 `sidecarManifestDigest`，包签名覆盖这个字段。清单摘要不符，或包里缺这个字段，`verify` 都报不一致。
 - **只有校验通过、且记录的是布尔值 `true` 的包，结果行才写 `accepted=true`。** 校验失败的包写 `accepted=false`，记录的值只用文字说明；`accepted` 不是布尔值，本身就是一项不一致。
 - **包绑定的是最后一个采集步骤结束时的工作树。** 每一步（`init`、`run`、`build-artifact`）都记录 `git diff --binary <baseSha>`，连同 git 不忽略的每个未跟踪文件、以及每个未跟踪的 `.gitignore`（无论是否被忽略）相对 `/dev/null` 的补丁，但不含包自身的文件与 sidecar 目录。`verify` 再取一次同样的补丁并比对摘要，所以最后一步之后的改动，无论是已提交、未提交、新增的未跟踪文件，还是一个连自己也忽略掉的新 `.gitignore`，都会让校验失败。
-- **补丁是 git 自己从工作树取出的。** 两处 diff 都带 `--no-ext-diff --no-textconv`，git 配置里的外部 diff 程序或 textconv 过滤器都替换不了它。索引把文件标为 skip-worktree 或 assume-unchanged 的检出会被拒绝，因为 `git diff` 对这类文件读的是索引；git 给不出补丁的未跟踪条目也会被拒绝，例如指向目录的符号链接或嵌套仓库。
+- **补丁是 git 自己从工作树取出的。** 两处 diff 都带 `--no-ext-diff --no-textconv`，git 配置里的外部 diff 程序或 textconv 过滤器都替换不了它。未跟踪文件那次调用的 `--no-textconv` 是防御性加固，没有敏感性证明：textconv 过滤器藏不住未跟踪文件的改动，因为 git 会在补丁的 index 行印出文件真实的 blob id。索引把文件标为 skip-worktree 或 assume-unchanged 的检出会被拒绝，因为 `git diff` 对这类文件读的是索引；git 给不出补丁的未跟踪条目也会被拒绝，例如指向目录的符号链接或嵌套仓库。
 - **做不了的核对记为具名的不一致。** 缺 git 或 pnpm、目录不是 git 检出、包或清单不是合法 JSON，都记为一项不一致；包能解析、却缺 `verify` 要读的字段时，报为 `verify could not complete`。所以结果行总会打印。
 
 ## 考虑过的替代方案
