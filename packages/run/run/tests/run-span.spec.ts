@@ -205,4 +205,18 @@ describe('P4-01 acceptance[2]: one Run spans a session and the in-process child 
     expect(store.get(runId)?.sessionIds).toStrictEqual([parent.id])
     expect(store.get(ownedRun)?.sessionIds).toStrictEqual([owned.id])
   })
+
+  it('records no join for a session whose log names a parent session but that no live agent owns', async () => {
+    // What a gateway fork or a restored fork carries: `parentSession` in its header, without a runtime owner.
+    const path = join(await directory('dsh-run-span-'), 'runs.json')
+    const ctx = await mount(path)
+    const parent = await ctx.agentLoop.create(SessionId('span-unowned-parent'))
+    const { agent: fork } = await ctx.agents.create({ sessionId: SessionId('span-unowned-fork'), meta: { parentSession: parent.id } })
+    const [runId, forkRun] = [parent.runId!, fork.runId!]
+    await unmount(ctx)
+
+    const store = await stored(path)
+    expect(store.get(runId)?.sessionIds).toStrictEqual([parent.id])
+    expect(store.get(forkRun)?.sessionIds).toStrictEqual([fork.id])
+  })
 })
