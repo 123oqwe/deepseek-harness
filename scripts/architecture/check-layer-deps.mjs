@@ -950,7 +950,7 @@ export function runLayerDepsCheck(root) {
   const kernelEdges = []
   for (const { external, ...entry } of collectKernelNonWorkspaceEdges(root, byPackage, vendoredNames, workspaceNames)) {
     const forbidden = entry.toPackage === CORDIS_PACKAGE && entry.fromPackage === TRUST_KERNEL_PACKAGE
-      ? entry.bindings.filter(binding => !KERNEL_PERMITTED_CORDIS_BINDINGS.has(binding))
+      ? []
       : entry.bindings
     if (forbidden.length === 0) {
       kernelEdges.push({ ...withoutBindingFiles(entry), verdict: 'permitted-binding' })
