@@ -498,8 +498,10 @@ export class ApiSessionAgentController {
    * real actor instead of the `anonymous-dev` principal both dispatch paths
    * synthesize when none is attached (BLOCKED-200). This controller is the Web
    * app's root creation site and is driven by the LOCAL host user through the
-   * `dsh` launcher; ACP, the SDK server and webhook ingress deliberately attach
-   * nothing, because a request arriving over a socket is not that person.
+   * `dsh` launcher. ACP and the SDK server attach the same user through the
+   * launcher's `HOST_USER_IDENTITY_KEY` factory; only webhook ingress attaches
+   * nothing, because its request comes from a remote sender, not from that
+   * person.
    *
    * A new `runId` per call is deliberate — this is one run, not one session —
    * and a resume re-supplying the same principal appends no new

@@ -128,9 +128,9 @@ None. The value is absent from the model-visible prefix, so it cannot invalidate
 
 This Dev Note is working context for maintainers: open questions that are not decided. Shipped behavior and accepted rationale live in the sections above.
 
-#### Open: which roots attach
+#### Open: which identity webhook ingress attaches
 
-A shipped boot attaches this id for the launcher family a local host user actually drives. ACP, the SDK server, and webhook ingress deliberately do not: a request arriving over a socket is not the machine's host user, and attaching there would make a remote caller claim to be them. Whether those paths get an identity of their own, and from where, is not settled here.
+A shipped boot attaches this id to every root session a local host user starts. The headless launcher and the Web app's session controller pass it in `AgentOptions` directly; ACP and the SDK server call the launcher's `HOST_USER_IDENTITY_KEY` factory (`@deepseek-ai/dsh-agent-loop`) for each session they compose, because both are stdio servers the local user spawned. Webhook ingress attaches nothing, because its request comes from a remote sender rather than from the machine's user. Whether that path gets an identity of its own, and from where, is not settled here.
 
 #### Open: an unwritable home should probably say so
 

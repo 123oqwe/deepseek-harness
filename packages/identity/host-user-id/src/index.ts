@@ -160,9 +160,10 @@ function resolveTenantId(options: HostUserIdOptions): TenantId {
  * here, so the root stays the same principal however deep the delegation goes.
  *
  * Call this at a root creation site a LOCAL host user drives — the `dsh`
- * launcher family. A request that arrived over a socket is not the machine's
- * host user, and attaching this to one would make a remote caller claim to be
- * them.
+ * launcher family, whose ACP and SDK stdio servers reach this through the
+ * launcher's `HOST_USER_IDENTITY_KEY` factory. A request from a remote
+ * sender, such as webhook ingress, is not the machine's host user, and
+ * attaching this to one would make that sender claim to be them.
  * @param runId - the run this identity acts inside; one per created agent.
  * @param options - home-location, UUID-generation and tenant seams; the first two are forwarded to {@link getOrCreateHostUserId}.
  * @returns the identity context to pass as `AgentOptions.identity`.
