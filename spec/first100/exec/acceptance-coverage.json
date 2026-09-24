@@ -1508,9 +1508,39 @@
         {
           "stage": "F",
           "title": "enforcement: the dead worker cannot act after the reclaim, because its epoch is now strictly older"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 4,
+          "title": "P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILLed host left behind (no key required) orphan: before the second host starts, the lease row still names the killed host at its epoch and has expired"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 4,
+          "title": "P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILLed host left behind (no key required) the second host continues the same Run id the killed host opened"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 4,
+          "title": "P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILLed host left behind (no key required) the lease row now names the second host"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 4,
+          "title": "P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILLed host left behind (no key required) the lease row carries an epoch greater than the killed host's"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 4,
+          "title": "P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILLed host left behind (no key required) the killed host's token is refused as stale-epoch against the current lease"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 4,
+          "title": "P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILLed host left behind (no key required) the second host's tool call ran: the file it writes is on disk"
         }
       ],
-      "note": "acceptance[2]: 'after a restart an orphaned Agent can be reclaimed or fail safely.' PARTIALLY COVERED, AND THE ROW CARRIES A LIVE LOCK NAMING EXACTLY THIS CLAUSE. What is covered is the state machine's half: both outcomes the clause names are reachable (reclaim through starting, or fail safely), every non-terminal state can reach orphaned so any interrupted run is representable, and a reclaim MUST pass through starting rather than resuming directly. The two F-stage cases assert the property that prohibition exists to protect -- a reclaimed run carries a strictly greater epoch, and the previous lease holder is stale afterwards -- which BLOCKED-079 recorded as asserted-by-prohibition-only until they were written.\n\nWHAT IS NOT COVERED, and why no assertion was written for it: 'after a restart' requires agent-run state surviving a process boundary, and this repository has none. Turn-level crash recovery and P4-01's Run-level persistence are neither of them Agent-level, and leaseEpoch appears nowhere outside this epic's own module. An assertion written today would pass because nothing can be orphaned ACROSS A RESTART at all -- BLOCKED-050's shape. Owner is P4-07 (Worker Lease, Heartbeat and Fencing Token), verified against the registry: its must[0] is 'every work item is owned by an epoch lease' and must[2] is 'heartbeat renews the lease; the scheduler may reclaim after expiry'. This entry records partial coverage honestly rather than citing the reachable half as if it satisfied the clause."
+      "note": "acceptance[2]: 'after a restart an orphaned Agent can be reclaimed or fail safely.' PARTIALLY COVERED, AND THE ROW CARRIES A LIVE LOCK NAMING EXACTLY THIS CLAUSE. What is covered is the state machine's half: both outcomes the clause names are reachable (reclaim through starting, or fail safely), every non-terminal state can reach orphaned so any interrupted run is representable, and a reclaim MUST pass through starting rather than resuming directly. The two F-stage cases assert the property that prohibition exists to protect -- a reclaimed run carries a strictly greater epoch, and the previous lease holder is stale afterwards -- which BLOCKED-079 recorded as asserted-by-prohibition-only until they were written.\n\nWHAT IS NOT COVERED, and why no assertion was written for it: 'after a restart' requires agent-run state surviving a process boundary, and this repository has none. Turn-level crash recovery and P4-01's Run-level persistence are neither of them Agent-level, and leaseEpoch appears nowhere outside this epic's own module. An assertion written today would pass because nothing can be orphaned ACROSS A RESTART at all -- BLOCKED-050's shape. Owner is P4-07 (Worker Lease, Heartbeat and Fencing Token), verified against the registry: its must[0] is 'every work item is owned by an epoch lease' and must[2] is 'heartbeat renews the lease; the scheduler may reclaim after expiry'. This entry records partial coverage honestly rather than citing the reachable half as if it satisfied the clause.\n\n[2026-09-24 lane A, A-336: 'after a restart requires agent-run state surviving a process boundary, and this repository has none' is stale, and so is the sentence resting on it ('nothing can be orphaned ACROSS A RESTART at all'); both are corrected here rather than edited there. dsh-base mounts a Run store (`dshHomePath('runs', 'runs.json')`) and a SQLite lease store (`dshHomePath('leases')`) that outlive the process, and a restarted host continues the stored Run through `RunPlugin.open`, taking the session's lease under a new epoch. The six `supplementSeq: 4` citations observe the reclaim branch across two real `dsh --profile acp` processes over one DSH_HOME, read only from what the product writes to disk (`apps/cli/tests/profiles/acp/tests/acp.e2e.ts`): the SIGKILLed host's lease row still names it and has expired before the restart (a precondition on the observation, which no mutation reddens); the Run store still names one Run for the session, the same id; the row names a new holder, under a greater epoch; the dead host's token is refused as `stale-epoch` by `checkFencing`; and the second host's tool call wrote its file. M1 (the takeover path refuses an expired predecessor) reddened exactly the holder, epoch, stale-epoch and tool-ran cases; M2 (a takeover keeps the old epoch) exactly the epoch and stale-epoch cases; M3 (a restart mints a new Run) exactly the same-Run case. Still not observed: the in-process `orphaned` lifecycle label, which the adopting host writes only to `agent.lifecycle` and to a log line no shipped exporter prints; and the 'fail safely' branch, which has no producer. The original text is left as written above.]"
     },
     {
       "epic": "P8-01",
