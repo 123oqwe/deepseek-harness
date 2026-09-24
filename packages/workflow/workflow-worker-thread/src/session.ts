@@ -189,7 +189,7 @@ export async function runWorkerSession(port: MessagePort, init: WorkerInit): Pro
     phase: (title) => { post(WorkerToHostType.Phase, { title }) },
     log: (message) => { post(WorkerToHostType.Log, { message }) },
     agentStart: (info) => { post(WorkerToHostType.AgentStart, { info }) },
-    agentEnd: (info) => { post(WorkerToHostType.AgentEnd, { info }) },
+    agentEnd: (info, output) => { post(WorkerToHostType.AgentEnd, output === undefined ? { info } : { info, output }) },
   }
 
   let execution: WorkflowExecution
