@@ -198,7 +198,7 @@ export function assertReleasedEventPayload(event: SessionFormatEvent, version: 0
   if (event.type === 'subagent/descriptor' && data['version'] !== 3) {
     const descriptorVersion = sessionFormatCount(data['version'], `${event.type} ${event.seq} version`)
     // Released v0 logs carry descriptor version 2 (audit baseline b150a551), which the runtime ignores rather than refuses.
-    if (version === 0 && descriptorVersion !== 2) {
+    if (version === 0) {
       throw new SessionFormatUnsupportedMigrationError(
         `${event.type} ${event.seq} uses unsupported descriptor version ${descriptorVersion}`,
       )
