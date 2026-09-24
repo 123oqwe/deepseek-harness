@@ -16,8 +16,8 @@
     "unmatchedSourceClauses": 0,
     "inventedUndocumentedClauses": 0,
     "inventedDocumentedDefaultBoundaryClauses": 156,
-    "planCorrectedClauses": 5,
-    "supersededSourceClauses": 5
+    "planCorrectedClauses": 10,
+    "supersededSourceClauses": 10
   },
   "epics": {
     "P0-01": {
@@ -388,7 +388,13 @@
         "sourceCount": 3,
         "projectedCount": 3,
         "unmatchedSource": [],
-        "invented": [],
+        "invented": [
+          {
+            "text": "任何 kernel 对 Cordis、UI、具体模型 provider 的依赖都失败。例外只有 trust-kernel 对 Cordis 的 `Context` 导入绑定、它所需的 `@deepseek-ai/cordis` peer 声明、以及对 `Context` 接口的 `declare module` 增补。「依赖」只计直接依赖,不含 devDependencies、测试文件与传递依赖。",
+            "digest": "30418fa3c56681695a0c7a7fc29faa8bb5e4cc7b1de78592cea6cef617845817",
+            "classification": "plan-correction"
+          }
+        ],
         "clauses": [
           {
             "text": "生产 package graph 无未豁免环。",
@@ -399,12 +405,9 @@
             }
           },
           {
-            "text": "任何 kernel 对 Cordis、UI、具体模型 provider 的依赖都失败。",
-            "digest": "2f8c48a69252ea0d24dac82d899d710d837ee2bfab7637e6ee8d38a78a278791",
-            "span": {
-              "startLine": 893,
-              "endLine": 893
-            }
+            "text": "任何 kernel 对 Cordis、UI、具体模型 provider 的依赖都失败。例外只有 trust-kernel 对 Cordis 的 `Context` 导入绑定、它所需的 `@deepseek-ai/cordis` peer 声明、以及对 `Context` 接口的 `declare module` 增补。「依赖」只计直接依赖,不含 devDependencies、测试文件与传递依赖。",
+            "digest": "30418fa3c56681695a0c7a7fc29faa8bb5e4cc7b1de78592cea6cef617845817",
+            "span": null
           },
           {
             "text": "检查在 10 秒内完成并给出最短环路径。",
@@ -594,15 +597,18 @@
         "sourceCount": 3,
         "projectedCount": 3,
         "unmatchedSource": [],
-        "invented": [],
+        "invented": [
+          {
+            "text": "审计基线产生的 v0 会话日志都能读出;例外是在首个 step 之前出现 surface 事件的那一类(按内容数,基线上有 24 个),产品明确拒绝它们,并给出可读的原因。",
+            "digest": "f235200782a922542404d32ef65f49d0dd053f8f5e0db67f4d1ff55c64d894f4",
+            "classification": "plan-correction"
+          }
+        ],
         "clauses": [
           {
-            "text": "至少能够读取审计基线产生的旧 session fixture。",
-            "digest": "48d8eee0ae55a152fe1f267ad05d42f76972100f4ee1107e509e0f54a0264f5c",
-            "span": {
-              "startLine": 1178,
-              "endLine": 1178
-            }
+            "text": "审计基线产生的 v0 会话日志都能读出;例外是在首个 step 之前出现 surface 事件的那一类(按内容数,基线上有 24 个),产品明确拒绝它们,并给出可读的原因。",
+            "digest": "f235200782a922542404d32ef65f49d0dd053f8f5e0db67f4d1ff55c64d894f4",
+            "span": null
           },
           {
             "text": "不兼容客户端收到机器可读错误，不出现静默字段丢失。",
@@ -689,7 +695,13 @@
         "sourceCount": 3,
         "projectedCount": 3,
         "unmatchedSource": [],
-        "invented": [],
+        "invented": [
+          {
+            "text": "仓库的 `AGENTS.md` 规定,汇报 evidence gate 结果时引用证据包的真实路径和 `accepted` 状态;出厂的 `dsh-agent-instructions` 把这条规则载入 agent 上下文;`evidence:verify` 的输出同时给出包路径和 `accepted` 状态,供引用。不要求、也不检查 agent 的回答是否真的引用。",
+            "digest": "dfb76e106a6a94bc87444465897a948fdb0952b0576bf4fc4e2f644255138c46",
+            "classification": "plan-correction"
+          }
+        ],
         "clauses": [
           {
             "text": "篡改任一测试日志、二进制或配置后 evidence verify 失败。",
@@ -708,12 +720,9 @@
             }
           },
           {
-            "text": "Agent 最终回答必须引用 package path 和 accepted 状态。",
-            "digest": "93de7e1917f88988d4842b54258eea957f935e0db6dd044675dd9e7d01a95e06",
-            "span": {
-              "startLine": 1322,
-              "endLine": 1322
-            }
+            "text": "仓库的 `AGENTS.md` 规定,汇报 evidence gate 结果时引用证据包的真实路径和 `accepted` 状态;出厂的 `dsh-agent-instructions` 把这条规则载入 agent 上下文;`evidence:verify` 的输出同时给出包路径和 `accepted` 状态,供引用。不要求、也不检查 agent 的回答是否真的引用。",
+            "digest": "dfb76e106a6a94bc87444465897a948fdb0952b0576bf4fc4e2f644255138c46",
+            "span": null
           }
         ]
       },
@@ -2617,15 +2626,18 @@
         "sourceCount": 3,
         "projectedCount": 3,
         "unmatchedSource": [],
-        "invented": [],
+        "invented": [
+          {
+            "text": "审批后替换参数、切换账户均不会执行，对在调用展示中声明了目标文件(`presentCall().locations`)的动作,执行前重新校验时,若该文件经 `ctx.fs` 读到的版本与询问时不同,就不执行。版本在本地后端含 inode,在远端 fs 后端是它的 revision;由不存在变为存在也算。",
+            "digest": "c0c9628a7154450ea702c759b64d81af0b2e0b3bd256dbbb079d46f4ff8ebea8",
+            "classification": "plan-correction"
+          }
+        ],
         "clauses": [
           {
-            "text": "审批后替换参数、切换账户、改变文件 inode/远端对象版本均不会执行。",
-            "digest": "045f349b7cbe856e5fc3b37574bc2f1a5c6cd93814595106bd49025f773753e6",
-            "span": {
-              "startLine": 4079,
-              "endLine": 4079
-            }
+            "text": "审批后替换参数、切换账户均不会执行，对在调用展示中声明了目标文件(`presentCall().locations`)的动作,执行前重新校验时,若该文件经 `ctx.fs` 读到的版本与询问时不同,就不执行。版本在本地后端含 inode,在远端 fs 后端是它的 revision;由不存在变为存在也算。",
+            "digest": "c0c9628a7154450ea702c759b64d81af0b2e0b3bd256dbbb079d46f4ff8ebea8",
+            "span": null
           },
           {
             "text": "敏感值可 redacted 展示，但 hash 仍覆盖真实规范化值。",
@@ -5148,7 +5160,13 @@
         "sourceCount": 4,
         "projectedCount": 3,
         "unmatchedSource": [],
-        "invented": [],
+        "invented": [
+          {
+            "text": "Run 的终态写与首步写携带 fencing token,并在写入处核对。",
+            "digest": "99315cab67e067bcf4d4c893249819d7e8643bb4cb97fcd36eac9bc213d455ac",
+            "classification": "plan-correction"
+          }
+        ],
         "clauses": [
           {
             "text": "每个 work item 由 epoch lease 所有",
@@ -5159,12 +5177,9 @@
             }
           },
           {
-            "text": "所有状态写和 action execution 携带 fencing token。",
-            "digest": "7ccd88eb274c1696e769662a5a5205e00692be24f1ee1acd43377f8839dee15b",
-            "span": {
-              "startLine": 7643,
-              "endLine": 7643
-            }
+            "text": "Run 的终态写与首步写携带 fencing token,并在写入处核对。",
+            "digest": "99315cab67e067bcf4d4c893249819d7e8643bb4cb97fcd36eac9bc213d455ac",
+            "span": null
           },
           {
             "text": "heartbeat 续租，过期后 scheduler 可 reclaim。",

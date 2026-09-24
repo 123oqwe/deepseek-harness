@@ -1621,7 +1621,7 @@ epics:
     layerStatus: "ADJUDICATED"
     canonicalOwner: "scripts/architecture"
     humanAssignee: "UNASSIGNED"
-    acceptance: ["生产 package graph 无未豁免环。", "任何 kernel 对 Cordis、UI、具体模型 provider 的依赖都失败。", "检查在 10 秒内完成并给出最短环路径。"]
+    acceptance: ["生产 package graph 无未豁免环。", "任何 kernel 对 Cordis、UI、具体模型 provider 的依赖都失败。例外只有 trust-kernel 对 Cordis 的 `Context` 导入绑定、它所需的 `@deepseek-ai/cordis` peer 声明、以及对 `Context` 接口的 `declare module` 增补。「依赖」只计直接依赖,不含 devDependencies、测试文件与传递依赖。", "检查在 10 秒内完成并给出最短环路径。"]
     nonGoals: ["YAML 来源缺失", "规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。"]
     verifyCommand: "`pnpm architecture:layers`；随后 G，阶段按适用项跑 R。"
     files:
@@ -1722,7 +1722,7 @@ epics:
     layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/schema/schema-registry"
     humanAssignee: "UNASSIGNED"
-    acceptance: ["至少能够读取审计基线产生的旧 session fixture。", "不兼容客户端收到机器可读错误，不出现静默字段丢失。", "所有 registry migration 具有双向或明确不可逆测试。"]
+    acceptance: ["审计基线产生的 v0 会话日志都能读出;例外是在首个 step 之前出现 surface 事件的那一类(按内容数,基线上有 24 个),产品明确拒绝它们,并给出可读的原因。", "不兼容客户端收到机器可读错误，不出现静默字段丢失。", "所有 registry migration 具有双向或明确不可逆测试。"]
     nonGoals: ["YAML 来源缺失", "规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。"]
     verifyCommand: "来源没有项级可执行命令；实施前必须在 manifest 注册 focused command、fixture 路径与预期 exit code（不得猜），再跑 G/适用 R。"
     files:
@@ -1776,7 +1776,7 @@ epics:
     layerStatus: "ADJUDICATED"
     canonicalOwner: "scripts/release"
     humanAssignee: "UNASSIGNED"
-    acceptance: ["篡改任一测试日志、二进制或配置后 evidence verify 失败。", "同一次执行的 evidence 可离线验证。", "Agent 最终回答必须引用 package path 和 accepted 状态。"]
+    acceptance: ["篡改任一测试日志、二进制或配置后 evidence verify 失败。", "同一次执行的 evidence 可离线验证。", "仓库的 `AGENTS.md` 规定,汇报 evidence gate 结果时引用证据包的真实路径和 `accepted` 状态;出厂的 `dsh-agent-instructions` 把这条规则载入 agent 上下文;`evidence:verify` 的输出同时给出包路径和 `accepted` 状态,供引用。不要求、也不检查 agent 的回答是否真的引用。"]
     nonGoals: ["YAML 来源缺失", "规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。"]
     verifyCommand: "`pnpm evidence:collect -- pnpm test`；`pnpm evidence:verify`；随后 G，阶段按适用项跑 R。"
     files:
@@ -2773,7 +2773,7 @@ epics:
     layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/interaction/user-approval"
     humanAssignee: "UNASSIGNED"
-    acceptance: ["审批后替换参数、切换账户、改变文件 inode/远端对象版本均不会执行。", "敏感值可 redacted 展示，但 hash 仍覆盖真实规范化值。", "批准事件与最终 action 形成一一引用。"]
+    acceptance: ["审批后替换参数、切换账户均不会执行，对在调用展示中声明了目标文件(`presentCall().locations`)的动作,执行前重新校验时,若该文件经 `ctx.fs` 读到的版本与询问时不同,就不执行。版本在本地后端含 inode,在远端 fs 后端是它的 revision;由不存在变为存在也算。", "敏感值可 redacted 展示，但 hash 仍覆盖真实规范化值。", "批准事件与最终 action 形成一一引用。"]
     nonGoals: ["YAML 来源缺失", "规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。"]
     verifyCommand: "来源没有项级可执行命令；实施前必须在 manifest 注册 focused command、fixture 路径与预期 exit code（不得猜），再跑 G/适用 R。"
     files:

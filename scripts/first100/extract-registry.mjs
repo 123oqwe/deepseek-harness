@@ -53,7 +53,7 @@ const matrixText = readFileSync(join(SOURCES_DIR, 'first100-requirements-matrix.
 const waveMapText = readFileSync(join(SOURCES_DIR, 'implementation-wave-map.md'), 'utf8')
 const decisionText = readFileSync(join(SOURCES_DIR, 'r0-decision-package.md'), 'utf8')
 
-const MATRIX_SHA = 'aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127'
+const MATRIX_SHA = 'f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d'
 const WAVEMAP_SHA = '8c84597f87289fe5dfbf675dcba072149c6678cecc81a2611329b42de6c56d41'
 const actualMatrixSha = sha256(matrixText)
 const actualWaveSha = sha256(waveMapText)
@@ -485,6 +485,36 @@ const HOT_ZONE_RELOCATED = {
  * observation behind it is an opinion overwriting a pinned document.
  */
 const CLAUSE_REWORDS = {
+  'P0-04': [
+    {
+      clause: '任何 kernel 对 Cordis、UI、具体模型 provider 的依赖都失败。例外只有 trust-kernel 对 Cordis 的 `Context` 导入绑定、它所需的 `@deepseek-ai/cordis` peer 声明、以及对 `Context` 接口的 `declare module` 增补。「依赖」只计直接依赖,不含 devDependencies、测试文件与传递依赖。',
+      rewordedFrom: '任何 kernel 对 Cordis、UI、具体模型 provider 的依赖都失败。',
+      channel: 'acceptance',
+      rewordedAtUtc: '2026-09-24T05:26:34.000Z',
+      basis: 'C19 (spec/first100/exec/decisions-approved.md): the user approved this narrowing on 2026-09-24 ("全部按delegate的推荐走", relayed by patrol session e6 #23), recorded as WORKING-MODEL §12 "S8 已批准的收窄(续)" ④; the question and the delegate\'s recommendation are channel/B-CLASS-QUESTIONS-2026-09-24.md, each checked by an independent verification (channel/workorders/verify/); lane A executed it under A-342.',
+      evidence: 'The Trust Kernel imports Cordis `Context` by design: `pinTrustKernel` pins the kernel on the root Context before any entry mounts (AGENTS.md, rule 4 of the Trust Kernel boundary), which needs the `Context` binding, the `@deepseek-ai/cordis` peer declaration and a `declare module` augmentation of `Context`. Removing them would move the pin to the boot layer, overturn that rule and reopen P0-02 (verify P0-04, V2). The exception is stated exactly, and "dependency" is fixed to direct dependencies so devDependencies, tests and transitive edges cannot widen it.',
+    },
+  ],
+  'P0-06': [
+    {
+      clause: '审计基线产生的 v0 会话日志都能读出;例外是在首个 step 之前出现 surface 事件的那一类(按内容数,基线上有 24 个),产品明确拒绝它们,并给出可读的原因。',
+      rewordedFrom: '至少能够读取审计基线产生的旧 session fixture。',
+      channel: 'acceptance',
+      rewordedAtUtc: '2026-09-24T05:26:34.000Z',
+      basis: 'C19 (spec/first100/exec/decisions-approved.md): the user approved this narrowing on 2026-09-24 ("全部按delegate的推荐走", relayed by patrol session e6 #23), recorded as WORKING-MODEL §12 "S8 已批准的收窄(续)" ③; the question and the delegate\'s recommendation are channel/B-CLASS-QUESTIONS-2026-09-24.md, each checked by an independent verification (channel/workorders/verify/); lane A executed it under A-342.',
+      evidence: 'The audit baseline b150a551 holds 157 version-0 session logs counted by content (first line `type:"session"`, `version:0`), and 24 of them record a surface event before their first step. The shipped reader refuses that shape by design: upstream e04cfc4c87 ("Refuse pre-step surfaces and out-of-step prompt changes rather than invent lifecycle events"), `packages/session/session-format-v2-to-v3/README.md` and three cases pin it (`session-format-v2-to-v3/tests/migration.spec.ts`, `session-persistence-jsonl/tests/v2-system-migration.spec.ts`, `jsonl.spec.ts` "refuses the frozen pre-step V0 fixture"); it reached this product through BASE-ALIGN-v3 (58beb6c497). Reading those 24 would mean overturning that design (verify P0-06, item 2, V1, V2). The clause keeps every other baseline log readable and requires the refusal to be explicit and readable.',
+    },
+  ],
+  'P0-07': [
+    {
+      clause: '仓库的 `AGENTS.md` 规定,汇报 evidence gate 结果时引用证据包的真实路径和 `accepted` 状态;出厂的 `dsh-agent-instructions` 把这条规则载入 agent 上下文;`evidence:verify` 的输出同时给出包路径和 `accepted` 状态,供引用。不要求、也不检查 agent 的回答是否真的引用。',
+      rewordedFrom: 'Agent 最终回答必须引用 package path 和 accepted 状态。',
+      channel: 'acceptance',
+      rewordedAtUtc: '2026-09-24T05:26:34.000Z',
+      basis: 'C19 (spec/first100/exec/decisions-approved.md): the user approved this narrowing on 2026-09-24 ("全部按delegate的推荐走", relayed by patrol session e6 #23), recorded as WORKING-MODEL §12 "S8 已批准的收窄(续)" ⑥; the question and the delegate\'s recommendation are channel/B-CLASS-QUESTIONS-2026-09-24.md, each checked by an independent verification (channel/workorders/verify/); lane A executed it under A-342.',
+      evidence: 'The product has no mechanism that sees an agent\'s final answer and could require it to cite anything: dsh\'s Stop hook does not receive the answer text and is not mounted by default. Enforcing the literal clause would need a new interception mechanism across epics and hooks mounted by default, a change to the trust surface (verify P0-07, item 1). The narrowed clause states what the product does: AGENTS.md requires the citation, the shipped `dsh-agent-instructions` loads that rule into the agent\'s context, and `evidence:verify` prints the package path and the `accepted` status to cite. It does not require or check that an answer cites them.',
+    },
+  ],
   'P2-03': [
     {
       clause: 'canonicalizer 遵循 RFC 8785（JCS）——key 顺序、数字拼写、JSON 转义拼写不同的同一 JSON 值得到相同 hash，而不同 code point 序列（含 NFC 与 NFD）是不同值必须得到不同 hash，fuzz 覆盖以上四类。',
@@ -503,6 +533,16 @@ const CLAUSE_REWORDS = {
       rewordedAtUtc: '2026-09-24T04:41:59.000Z',
       basis: 'C18 (spec/first100/exec/decisions-approved.md): the user approved this narrowing on 2026-09-24 ("都按推荐", relayed by patrol session e6 #12), recorded as WORKING-MODEL §12 S8 ①; the delegate first100-delegate-1a ruled the wording (A-335), and lane A executed it.',
       evidence: 'Only the unmount half is narrowed; the replace half keeps the source\'s words, because the user was asked about unmounting alone and BLOCKED-313 records the replace half as evidenced. The vendored Loader has no flag that makes an entry required or non-unloadable: `EntryOptions` (vendor/loader/src/config/entry.ts) holds id, name, config, group, disabled and inject, and every unload path ends in `Entry._dispose`, which calls `fiber.dispose()` (lane A A-331). The Trust Kernel\'s pinning does not transfer, because the kernel is pinned before any entry mounts while the policy engine is provided mid-boot by an ordinary plugin; making the words literal would take a change to Cordis core, which the delegate put to the user as the alternative and the user declined. What the clause protects -- no action admitted without a policy decision -- is kept by requiring the enforcement point to fail closed once the service is gone.',
+    },
+  ],
+  'P2-06': [
+    {
+      clause: '审批后替换参数、切换账户均不会执行，对在调用展示中声明了目标文件(`presentCall().locations`)的动作,执行前重新校验时,若该文件经 `ctx.fs` 读到的版本与询问时不同,就不执行。版本在本地后端含 inode,在远端 fs 后端是它的 revision;由不存在变为存在也算。',
+      rewordedFrom: '审批后替换参数、切换账户、改变文件 inode/远端对象版本均不会执行。',
+      channel: 'acceptance',
+      rewordedAtUtc: '2026-09-24T05:26:34.000Z',
+      basis: 'C19 (spec/first100/exec/decisions-approved.md): the user approved this narrowing on 2026-09-24 ("全部按delegate的推荐走", relayed by patrol session e6 #23), recorded as WORKING-MODEL §12 "S8 已批准的收窄(续)" ⑤; the question and the delegate\'s recommendation are channel/B-CLASS-QUESTIONS-2026-09-24.md, each checked by an independent verification (channel/workorders/verify/); lane A executed it under A-342.',
+      evidence: 'The approval binding carries no precondition on either dispatch path (`packages/core/tools/src/external-effect.ts` records `preconditions: []`), so a file that changes between the ask and the dispatch is never compared. The existing mechanism can bind a file the call declares in `presentCall().locations`, read through `ctx.fs`; it cannot bind (1) files a bash / pwsh command acts on, (2) files a tool acts on without declaring them, or (3) remote objects that do not go through `ctx.fs`. Those three are Known Limitations. Stated as the user was told: under the shipped rules the narrowed scope is empty, because write, edit and bash are not asked about, and the window between the pre-execution check and the dispatch is `tool-calls.ts:337` to `:362`. If the shipped rules come to ask for approval on these actions, the clause is to be completed literally (verify P2-06, item 1 (4), V2).',
     },
   ],
   'P3-01': [
@@ -540,6 +580,16 @@ const CLAUSE_REWORDS = {
       rewordedAtUtc: '2026-09-07T09:30:00.000Z',
       basis: 'Rectification order §12.9 (spec/first100/exec/plan-rectification-2026-09-06.md), delegate ruling of 2026-09-07 under the C11 delegation. A-class: the delegate rules the change, the executor edits the pinned source and re-extracts.',
       evidence: "The standard this epic OWNS answers the question the clause got wrong. CloudEvents defines uniqueness as `source` + `id`; the clause said `(message id, epoch)` and the implementation matched the clause exactly, so no test could catch it. Measured on the shipped `classifyDedup` before the reword: `{source:'/dsh/sender-a',id:'evt-1',epoch:1}` and the same id and epoch from `/dsh/sender-b` both produced the key `5:evt-1:1`, and the second returned `{action:'drop',reason:'duplicate'}` -- one sender's message silently suppressed by another's. `MessageId` claims uniqueness 'for the life of the program' in its own JSDoc, but no production code mints an id (measured: zero producers under `src`), so a consumer cannot verify that claim and must not rest on it. The data was already on both paths -- `source` is `TEXT NOT NULL` on the bus and the mailbox carries `from` -- it simply was not in the key. A TIGHTENING: within one source the previous guarantee is unchanged, and messages that were wrongly conflated are now kept apart.",
+    },
+  ],
+  'P4-07': [
+    {
+      clause: 'Run 的终态写与首步写携带 fencing token,并在写入处核对。',
+      rewordedFrom: '所有状态写和 action execution 携带 fencing token。',
+      channel: 'must',
+      rewordedAtUtc: '2026-09-24T05:26:34.000Z',
+      basis: 'C19 (spec/first100/exec/decisions-approved.md): the user approved this narrowing on 2026-09-24 ("全部按delegate的推荐走", relayed by patrol session e6 #23), recorded as WORKING-MODEL §12 "S8 已批准的收窄(续)" ⑦; the question and the delegate\'s recommendation are channel/B-CLASS-QUESTIONS-2026-09-24.md, each checked by an independent verification (channel/workorders/verify/); lane A executed it under A-342.',
+      evidence: 'Carrying a fencing token on every state write cannot be done in place: `pauseRun` hands the lease back before it writes, by design (BLOCKED-197). The narrowing puts the token on the two writes that decide whether a displaced host can record an outcome, the Run\'s terminal write and its first-step write, checked where they are written. Known Limitation: 其余状态写,包括 `pauseRun` 先交还租约的路径(BLOCKED-197 的有意设计),记为 Known Limitation,清单见 `workorders/verify/P4-07.md` 专项 1 与 V4。 (verify P4-07, V4).',
     },
   ],
 }

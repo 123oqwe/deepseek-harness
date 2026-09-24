@@ -48,7 +48,7 @@
   },
   "sourcePins": {
     "first100-requirements-matrix.md": {
-      "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+      "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
       "role": "verbatim acceptance/nonGoals/files/must/validation/command source"
     },
     "implementation-wave-map.md": {
@@ -302,7 +302,7 @@
     "extractor": "scripts/first100/extract-registry.mjs",
     "vendoredSources": "spec/first100/sources/",
     "sourceShas": {
-      "spec/first100/sources/first100-requirements-matrix.md": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+      "spec/first100/sources/first100-requirements-matrix.md": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
       "spec/first100/sources/implementation-wave-map.md": "8c84597f87289fe5dfbf675dcba072149c6678cecc81a2611329b42de6c56d41",
       "spec/first100/sources/r0-decision-package.md": "6e119b61957c73f64c54c674b3b8439a8d430bfc1262a4272ce0dcf260650d32"
     },
@@ -849,7 +849,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 36
       },
       "validation": [
@@ -986,7 +986,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 50
       },
       "validation": [
@@ -1115,7 +1115,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 64
       },
       "validation": [
@@ -1223,7 +1223,7 @@
       ],
       "acceptance": [
         "生产 package graph 无未豁免环。",
-        "任何 kernel 对 Cordis、UI、具体模型 provider 的依赖都失败。",
+        "任何 kernel 对 Cordis、UI、具体模型 provider 的依赖都失败。例外只有 trust-kernel 对 Cordis 的 `Context` 导入绑定、它所需的 `@deepseek-ai/cordis` peer 声明、以及对 `Context` 接口的 `declare module` 增补。「依赖」只计直接依赖,不含 devDependencies、测试文件与传递依赖。",
         "检查在 10 秒内完成并给出最短环路径。"
       ],
       "nonGoals": [
@@ -1232,7 +1232,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 78
       },
       "validation": [
@@ -1288,7 +1288,17 @@
         "fault": "tests/first100/fixtures/P0-04.fault.spec.ts"
       },
       "gate": "All packages classified; kernel reverse edges and expired allowlist = 0; shortest cycle <10 s; S01.",
-      "rollback": "Q — keep last signed layer map/checker active until replacement."
+      "rollback": "Q — keep last signed layer map/checker active until replacement.",
+      "clauseProvenance": [
+        {
+          "clause": "任何 kernel 对 Cordis、UI、具体模型 provider 的依赖都失败。例外只有 trust-kernel 对 Cordis 的 `Context` 导入绑定、它所需的 `@deepseek-ai/cordis` peer 声明、以及对 `Context` 接口的 `declare module` 增补。「依赖」只计直接依赖,不含 devDependencies、测试文件与传递依赖。",
+          "rewordedFrom": "任何 kernel 对 Cordis、UI、具体模型 provider 的依赖都失败。",
+          "channel": "acceptance",
+          "rewordedAtUtc": "2026-09-24T05:26:34.000Z",
+          "basis": "C19 (spec/first100/exec/decisions-approved.md): the user approved this narrowing on 2026-09-24 (\"全部按delegate的推荐走\", relayed by patrol session e6 #23), recorded as WORKING-MODEL §12 \"S8 已批准的收窄(续)\" ④; the question and the delegate's recommendation are channel/B-CLASS-QUESTIONS-2026-09-24.md, each checked by an independent verification (channel/workorders/verify/); lane A executed it under A-342.",
+          "evidence": "The Trust Kernel imports Cordis `Context` by design: `pinTrustKernel` pins the kernel on the root Context before any entry mounts (AGENTS.md, rule 4 of the Trust Kernel boundary), which needs the `Context` binding, the `@deepseek-ai/cordis` peer declaration and a `declare module` augmentation of `Context`. Removing them would move the pin to the boot layer, overturn that rule and reopen P0-02 (verify P0-04, V2). The exception is stated exactly, and \"dependency\" is fixed to direct dependencies so devDependencies, tests and transitive edges cannot widen it."
+        }
+      ]
     },
     {
       "id": "P0-05",
@@ -1355,7 +1365,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 92
       },
       "validation": [
@@ -1474,7 +1484,7 @@
         "Session replay、SDK initialize、plugin load 在使用前先协商/验证 schema。"
       ],
       "acceptance": [
-        "至少能够读取审计基线产生的旧 session fixture。",
+        "审计基线产生的 v0 会话日志都能读出;例外是在首个 step 之前出现 surface 事件的那一类(按内容数,基线上有 24 个),产品明确拒绝它们,并给出可读的原因。",
         "不兼容客户端收到机器可读错误，不出现静默字段丢失。",
         "所有 registry migration 具有双向或明确不可逆测试。"
       ],
@@ -1484,7 +1494,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 106
       },
       "validation": [
@@ -1546,7 +1556,17 @@
         "fault": "tests/first100/fixtures/P0-06.fault.spec.ts"
       },
       "gate": "One schema owner; old baseline fixtures replay; incompatible major and unknown closed union fail explicitly; S01.",
-      "rollback": "A/R/D — retain old codecs and reverse migration until persisted data/cursors age out."
+      "rollback": "A/R/D — retain old codecs and reverse migration until persisted data/cursors age out.",
+      "clauseProvenance": [
+        {
+          "clause": "审计基线产生的 v0 会话日志都能读出;例外是在首个 step 之前出现 surface 事件的那一类(按内容数,基线上有 24 个),产品明确拒绝它们,并给出可读的原因。",
+          "rewordedFrom": "至少能够读取审计基线产生的旧 session fixture。",
+          "channel": "acceptance",
+          "rewordedAtUtc": "2026-09-24T05:26:34.000Z",
+          "basis": "C19 (spec/first100/exec/decisions-approved.md): the user approved this narrowing on 2026-09-24 (\"全部按delegate的推荐走\", relayed by patrol session e6 #23), recorded as WORKING-MODEL §12 \"S8 已批准的收窄(续)\" ③; the question and the delegate's recommendation are channel/B-CLASS-QUESTIONS-2026-09-24.md, each checked by an independent verification (channel/workorders/verify/); lane A executed it under A-342.",
+          "evidence": "The audit baseline b150a551 holds 157 version-0 session logs counted by content (first line `type:\"session\"`, `version:0`), and 24 of them record a surface event before their first step. The shipped reader refuses that shape by design: upstream e04cfc4c87 (\"Refuse pre-step surfaces and out-of-step prompt changes rather than invent lifecycle events\"), `packages/session/session-format-v2-to-v3/README.md` and three cases pin it (`session-format-v2-to-v3/tests/migration.spec.ts`, `session-persistence-jsonl/tests/v2-system-migration.spec.ts`, `jsonl.spec.ts` \"refuses the frozen pre-step V0 fixture\"); it reached this product through BASE-ALIGN-v3 (58beb6c497). Reading those 24 would mean overturning that design (verify P0-06, item 2, V1, V2). The clause keeps every other baseline log readable and requires the refusal to be explicit and readable."
+        }
+      ]
     },
     {
       "id": "P0-07",
@@ -1601,7 +1621,7 @@
       "acceptance": [
         "篡改任一测试日志、二进制或配置后 evidence verify 失败。",
         "同一次执行的 evidence 可离线验证。",
-        "Agent 最终回答必须引用 package path 和 accepted 状态。"
+        "仓库的 `AGENTS.md` 规定,汇报 evidence gate 结果时引用证据包的真实路径和 `accepted` 状态;出厂的 `dsh-agent-instructions` 把这条规则载入 agent 上下文;`evidence:verify` 的输出同时给出包路径和 `accepted` 状态,供引用。不要求、也不检查 agent 的回答是否真的引用。"
       ],
       "nonGoals": [
         "YAML 来源缺失",
@@ -1609,7 +1629,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 120
       },
       "validation": [
@@ -1668,7 +1688,17 @@
         "fault": "tests/first100/fixtures/P0-07.fault.spec.ts"
       },
       "gate": "Only verifier emits accepted status; stale SHA, skip, missing raw bytes, or invalid signature fails; S01.",
-      "rollback": "Q/K — preserve raw artifacts and last verifier; disabling this gate blocks release."
+      "rollback": "Q/K — preserve raw artifacts and last verifier; disabling this gate blocks release.",
+      "clauseProvenance": [
+        {
+          "clause": "仓库的 `AGENTS.md` 规定,汇报 evidence gate 结果时引用证据包的真实路径和 `accepted` 状态;出厂的 `dsh-agent-instructions` 把这条规则载入 agent 上下文;`evidence:verify` 的输出同时给出包路径和 `accepted` 状态,供引用。不要求、也不检查 agent 的回答是否真的引用。",
+          "rewordedFrom": "Agent 最终回答必须引用 package path 和 accepted 状态。",
+          "channel": "acceptance",
+          "rewordedAtUtc": "2026-09-24T05:26:34.000Z",
+          "basis": "C19 (spec/first100/exec/decisions-approved.md): the user approved this narrowing on 2026-09-24 (\"全部按delegate的推荐走\", relayed by patrol session e6 #23), recorded as WORKING-MODEL §12 \"S8 已批准的收窄(续)\" ⑥; the question and the delegate's recommendation are channel/B-CLASS-QUESTIONS-2026-09-24.md, each checked by an independent verification (channel/workorders/verify/); lane A executed it under A-342.",
+          "evidence": "The product has no mechanism that sees an agent's final answer and could require it to cite anything: dsh's Stop hook does not receive the answer text and is not mounted by default. Enforcing the literal clause would need a new interception mechanism across epics and hooks mounted by default, a change to the trust surface (verify P0-07, item 1). The narrowed clause states what the product does: AGENTS.md requires the citation, the shipped `dsh-agent-instructions` loads that rule into the agent's context, and `evidence:verify` prints the package path and the `accepted` status to cite. It does not require or check that an answer cites them."
+        }
+      ]
     },
     {
       "id": "P0-08",
@@ -1738,7 +1768,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 134
       },
       "validation": [
@@ -1878,7 +1908,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 153
       },
       "validation": [
@@ -2007,7 +2037,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 167
       },
       "validation": [
@@ -2134,7 +2164,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 181
       },
       "validation": [
@@ -2256,7 +2286,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 195
       },
       "validation": [
@@ -2377,7 +2407,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 209
       },
       "validation": [
@@ -2509,7 +2539,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 223
       },
       "validation": [
@@ -2653,7 +2683,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 237
       },
       "validation": [
@@ -2774,7 +2804,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 251
       },
       "validation": [
@@ -2895,7 +2925,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 265
       },
       "validation": [
@@ -3019,7 +3049,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 279
       },
       "validation": [
@@ -3161,7 +3191,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 293
       },
       "validation": [
@@ -3293,7 +3323,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 307
       },
       "validation": [
@@ -3422,7 +3452,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 326
       },
       "validation": [
@@ -3554,7 +3584,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 340
       },
       "validation": [
@@ -3687,7 +3717,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 354
       },
       "validation": [
@@ -3833,7 +3863,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 368
       },
       "validation": [
@@ -3968,7 +3998,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 382
       },
       "validation": [
@@ -4095,7 +4125,7 @@
         "任何字段变化使批准失效并生成新请求。"
       ],
       "acceptance": [
-        "审批后替换参数、切换账户、改变文件 inode/远端对象版本均不会执行。",
+        "审批后替换参数、切换账户均不会执行，对在调用展示中声明了目标文件(`presentCall().locations`)的动作,执行前重新校验时,若该文件经 `ctx.fs` 读到的版本与询问时不同,就不执行。版本在本地后端含 inode,在远端 fs 后端是它的 revision;由不存在变为存在也算。",
         "敏感值可 redacted 展示，但 hash 仍覆盖真实规范化值。",
         "批准事件与最终 action 形成一一引用。"
       ],
@@ -4105,7 +4135,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 396
       },
       "validation": [
@@ -4166,7 +4196,17 @@
         "fault": "tests/first100/fixtures/P2-06.fault.spec.ts"
       },
       "gate": "Any actor/resource/parameter/precondition/policy change invalidates approval; S04/S05/S11.",
-      "rollback": "K/X — cancel pending approvals; prepared actions remain blocked until re-approved."
+      "rollback": "K/X — cancel pending approvals; prepared actions remain blocked until re-approved.",
+      "clauseProvenance": [
+        {
+          "clause": "审批后替换参数、切换账户均不会执行，对在调用展示中声明了目标文件(`presentCall().locations`)的动作,执行前重新校验时,若该文件经 `ctx.fs` 读到的版本与询问时不同,就不执行。版本在本地后端含 inode,在远端 fs 后端是它的 revision;由不存在变为存在也算。",
+          "rewordedFrom": "审批后替换参数、切换账户、改变文件 inode/远端对象版本均不会执行。",
+          "channel": "acceptance",
+          "rewordedAtUtc": "2026-09-24T05:26:34.000Z",
+          "basis": "C19 (spec/first100/exec/decisions-approved.md): the user approved this narrowing on 2026-09-24 (\"全部按delegate的推荐走\", relayed by patrol session e6 #23), recorded as WORKING-MODEL §12 \"S8 已批准的收窄(续)\" ⑤; the question and the delegate's recommendation are channel/B-CLASS-QUESTIONS-2026-09-24.md, each checked by an independent verification (channel/workorders/verify/); lane A executed it under A-342.",
+          "evidence": "The approval binding carries no precondition on either dispatch path (`packages/core/tools/src/external-effect.ts` records `preconditions: []`), so a file that changes between the ask and the dispatch is never compared. The existing mechanism can bind a file the call declares in `presentCall().locations`, read through `ctx.fs`; it cannot bind (1) files a bash / pwsh command acts on, (2) files a tool acts on without declaring them, or (3) remote objects that do not go through `ctx.fs`. Those three are Known Limitations. Stated as the user was told: under the shipped rules the narrowed scope is empty, because write, edit and bash are not asked about, and the window between the pre-execution check and the dispatch is `tool-calls.ts:337` to `:362`. If the shipped rules come to ask for approval on these actions, the clause is to be completed literally (verify P2-06, item 1 (4), V2)."
+        }
+      ]
     },
     {
       "id": "P2-07",
@@ -4231,7 +4271,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 410
       },
       "validation": [
@@ -4354,7 +4394,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 424
       },
       "validation": [
@@ -4473,7 +4513,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 438
       },
       "validation": [
@@ -4592,7 +4632,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 452
       },
       "validation": [
@@ -4714,7 +4754,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 466
       },
       "validation": [
@@ -4847,7 +4887,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 480
       },
       "validation": [
@@ -4981,7 +5021,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 499
       },
       "validation": [
@@ -5125,7 +5165,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 513
       },
       "validation": [
@@ -5253,7 +5293,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 527
       },
       "validation": [
@@ -5383,7 +5423,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 541
       },
       "validation": [
@@ -5499,7 +5539,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 555
       },
       "validation": [
@@ -5630,7 +5670,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 569
       },
       "validation": [
@@ -5738,7 +5778,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 583
       },
       "validation": [
@@ -5857,7 +5897,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 597
       },
       "validation": [
@@ -5981,7 +6021,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 611
       },
       "validation": [
@@ -6110,7 +6150,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 625
       },
       "validation": [
@@ -6234,7 +6274,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 639
       },
       "validation": [
@@ -6369,7 +6409,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 653
       },
       "validation": [
@@ -6656,7 +6696,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 672
       },
       "validation": [
@@ -6779,7 +6819,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 686
       },
       "validation": [
@@ -6904,7 +6944,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 700
       },
       "validation": [
@@ -7023,7 +7063,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 714
       },
       "validation": [
@@ -7143,7 +7183,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 728
       },
       "validation": [
@@ -7263,7 +7303,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 742
       },
       "validation": [
@@ -7401,7 +7441,7 @@
       "usageConsumers": [],
       "must": [
         "每个 work item 由 epoch lease 所有",
-        "所有状态写和 action execution 携带 fencing token。",
+        "Run 的终态写与首步写携带 fencing token,并在写入处核对。",
         "heartbeat 续租，过期后 scheduler 可 reclaim。"
       ],
       "acceptance": [
@@ -7415,7 +7455,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 756
       },
       "validation": [
@@ -7476,7 +7516,17 @@
         "fault": "tests/first100/fixtures/P4-07.fault.spec.ts"
       },
       "gate": "Storage-side monotonic time and fencing alone decide authority; client wall clock cannot change correctness; stale writes after a newer token = 0; S07/S14.",
-      "rollback": "D — stop workers, advance epoch, restore store; never reuse a token."
+      "rollback": "D — stop workers, advance epoch, restore store; never reuse a token.",
+      "clauseProvenance": [
+        {
+          "clause": "Run 的终态写与首步写携带 fencing token,并在写入处核对。",
+          "rewordedFrom": "所有状态写和 action execution 携带 fencing token。",
+          "channel": "must",
+          "rewordedAtUtc": "2026-09-24T05:26:34.000Z",
+          "basis": "C19 (spec/first100/exec/decisions-approved.md): the user approved this narrowing on 2026-09-24 (\"全部按delegate的推荐走\", relayed by patrol session e6 #23), recorded as WORKING-MODEL §12 \"S8 已批准的收窄(续)\" ⑦; the question and the delegate's recommendation are channel/B-CLASS-QUESTIONS-2026-09-24.md, each checked by an independent verification (channel/workorders/verify/); lane A executed it under A-342.",
+          "evidence": "Carrying a fencing token on every state write cannot be done in place: `pauseRun` hands the lease back before it writes, by design (BLOCKED-197). The narrowing puts the token on the two writes that decide whether a displaced host can record an outcome, the Run's terminal write and its first-step write, checked where they are written. Known Limitation: 其余状态写,包括 `pauseRun` 先交还租约的路径(BLOCKED-197 的有意设计),记为 Known Limitation,清单见 `workorders/verify/P4-07.md` 专项 1 与 V4。 (verify P4-07, V4)."
+        }
+      ]
     },
     {
       "id": "P4-08",
@@ -7554,7 +7604,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 770
       },
       "validation": [
@@ -7686,7 +7736,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 784
       },
       "validation": [
@@ -7818,7 +7868,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 798
       },
       "validation": [
@@ -7955,7 +8005,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 812
       },
       "validation": [
@@ -8083,7 +8133,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 826
       },
       "validation": [
@@ -8221,7 +8271,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 840
       },
       "validation": [
@@ -8350,7 +8400,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 854
       },
       "validation": [
@@ -8487,7 +8537,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 873
       },
       "validation": [
@@ -8619,7 +8669,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 887
       },
       "validation": [
@@ -8747,7 +8797,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 901
       },
       "validation": [
@@ -8877,7 +8927,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 915
       },
       "validation": [
@@ -8985,7 +9035,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 929
       },
       "validation": [
@@ -9098,7 +9148,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 943
       },
       "validation": [
@@ -9216,7 +9266,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 957
       },
       "validation": [
@@ -9339,7 +9389,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 971
       },
       "validation": [
@@ -9465,7 +9515,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 985
       },
       "validation": [
@@ -9596,7 +9646,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 999
       },
       "validation": [
@@ -9734,7 +9784,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1013
       },
       "validation": [
@@ -9869,7 +9919,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1027
       },
       "validation": [
@@ -9997,7 +10047,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1046
       },
       "validation": [
@@ -10128,7 +10178,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1060
       },
       "validation": [
@@ -10253,7 +10303,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1074
       },
       "validation": [
@@ -10391,7 +10441,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1088
       },
       "validation": [
@@ -10517,7 +10567,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1102
       },
       "validation": [
@@ -10644,7 +10694,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1116
       },
       "validation": [
@@ -10776,7 +10826,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1130
       },
       "validation": [
@@ -10916,7 +10966,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1144
       },
       "validation": [
@@ -11051,7 +11101,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1158
       },
       "validation": [
@@ -11189,7 +11239,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1172
       },
       "validation": [
@@ -11327,7 +11377,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1191
       },
       "validation": [
@@ -11477,7 +11527,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1205
       },
       "validation": [
@@ -11627,7 +11677,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1219
       },
       "validation": [
@@ -11767,7 +11817,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1233
       },
       "validation": [
@@ -11915,7 +11965,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1247
       },
       "validation": [
@@ -12064,7 +12114,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1261
       },
       "validation": [
@@ -12208,7 +12258,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1275
       },
       "validation": [
@@ -12352,7 +12402,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1289
       },
       "validation": [
@@ -12513,7 +12563,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1303
       },
       "validation": [
@@ -12684,7 +12734,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1317
       },
       "validation": [
@@ -12832,7 +12882,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1336
       },
       "validation": [
@@ -12987,7 +13037,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1350
       },
       "validation": [
@@ -13131,7 +13181,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1364
       },
       "validation": [
@@ -13279,7 +13329,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1378
       },
       "validation": [
@@ -13414,7 +13464,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1392
       },
       "validation": [
@@ -13562,7 +13612,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1406
       },
       "validation": [
@@ -13713,7 +13763,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1420
       },
       "validation": [
@@ -13860,7 +13910,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1434
       },
       "validation": [
@@ -14012,7 +14062,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1448
       },
       "validation": [
@@ -14187,7 +14237,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "aeee6bb202b21452c09c5978e2e483f92dbd660f2c27ea1ff914d5f7e3873127",
+        "sha256": "f41bf4ef835ebf36d2e1f305c4ee345101dbaf115298477201ed6947ee12ff1d",
         "line": 1462
       },
       "validation": [
