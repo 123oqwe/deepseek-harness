@@ -29,11 +29,20 @@
  * let a supplement hide its own base entry's orphans (BLOCKED-226); see
  * {@link findOrphans}.
  *
- * Usage: `node scripts/first100/verify-frozen-titles-in-tree.mjs`
+ * **A title frozen from a `*.e2e.ts` file comes from its e2e run's report.**
+ * `vitest list` collects under the default config, which includes no
+ * `*.e2e.ts` file, so a title an entry froze under `vitest.e2e.config.ts`
+ * (P4-05.U.4) is never among its names. Each `--e2e-report` names a
+ * `--reporter=json` report an e2e run of this tree wrote, and every case name
+ * in it, any status, joins the collected names. A report that cannot be read
+ * stops the gate: the titles it carries would otherwise read as deleted.
+ *
+ * Usage: `node scripts/first100/verify-frozen-titles-in-tree.mjs [--e2e-report <vitest-json-report>]...`
  *
  * @module scripts/first100/verify-frozen-titles-in-tree
  */
 import { frozenTitlePresent, registeredRenames } from './frozen-title-renames.mjs'
+import { collectTitles } from './verify-frozen-titles-resolvable.mjs'
 import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
@@ -136,6 +145,17 @@ function main() {
   const freeze = JSON.parse(readFileSync(COMMAND_FREEZE_PATH, 'utf8'))
   const liveCount = freeze.entries.filter((entry) => entry.supersededBy === undefined).length
   const producible = collectProducibleTitles()
+  const args = process.argv.slice(2)
+  const e2eReports = args.flatMap((arg, index) => (arg === '--e2e-report' ? [String(args[index + 1])] : []))
+  for (const path of e2eReports) {
+    let report
+    try {
+      report = JSON.parse(readFileSync(resolve(REPO_ROOT, path), 'utf8'))
+    } catch (error) {
+      throw new Error(`--e2e-report ${path} is not a readable vitest json report, so no title frozen from its e2e file could be checked`, { cause: error })
+    }
+    for (const name of collectTitles(report).titles) producible.add(name)
+  }
   const renames = registeredRenames()
 
   const orphans = findOrphans(freeze.entries, producible, renames)
@@ -143,7 +163,8 @@ function main() {
   if (orphans.length === 0) {
     console.log(
       `verify-frozen-titles-in-tree: every live frozen title is produced by a real test `
-      + `(${String(liveCount)} live entries against ${String(producible.size)} collected names).`,
+      + `(${String(liveCount)} live entries against ${String(producible.size)} collected names`
+      + `${e2eReports.length === 0 ? '' : `, ${String(e2eReports.length)} e2e report(s) included`}).`,
     )
     return
   }

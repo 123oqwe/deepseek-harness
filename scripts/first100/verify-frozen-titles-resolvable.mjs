@@ -125,7 +125,7 @@ function runAndCollectTitles(argvList) {
  * @param report - a parsed `--reporter=json` document.
  * @returns the resolvable names and their per-name case counts.
  */
-function collectTitles(report) {
+export function collectTitles(report) {
   const titles = new Set()
   // How many cases each name can resolve to. A bare `title` shared by several
   // cases counts once per case; a `fullName` carries its describe chain and so

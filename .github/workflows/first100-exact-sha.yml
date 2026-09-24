@@ -320,18 +320,6 @@ jobs:
         if: always()
         run: pnpm run first100:registry-gates
 
-      # Runs BEFORE the suite, because it asks a question the suite cannot: a
-      # frozen title no test can produce is invisible to a run — the case simply
-      # is not there, and the observation is silent about it. Deleting a frozen
-      # case without superseding its entry happened twice in one day, both times
-      # caught by a person reading. `vitest list` collects without executing, so
-      # this costs seconds against the suite that follows.
-      - name: Every live frozen case title exists in the tree
-        # Same reasoning as the suite below: a precondition failing should not
-        # also cost the observation.
-        if: always()
-        run: pnpm run first100:verify-frozen-titles-in-tree
-
       - name: Full test suite (verbose json reporter — the ledger's observation input)
         # `always()`, even though the gate steps above are preconditions of this
         # observation. When the registry gate set first ran in CI it failed for
@@ -565,6 +553,23 @@ jobs:
             .artifacts/first100/observations/vitest-e2e-sdk-keyless-smoke.json
             .artifacts/first100/observations/vitest-e2e-acp.json
           if-no-files-found: error
+
+      # This step asks a question the suite cannot: a frozen title no test can
+      # produce is invisible to a run — the case simply is not there, and the
+      # observation is silent about it. Deleting a frozen case without
+      # superseding its entry happened twice in one day, both times caught by a
+      # person reading. `vitest list` collects without executing, under the
+      # default config, which includes no `*.e2e.ts` file; so this runs after
+      # the e2e steps and reads each report they wrote for the titles an entry
+      # froze from an e2e file (P4-05.U.4).
+      - name: Every live frozen case title exists in the tree
+        # `always()` for the suite's reason: a red step earlier in the job
+        # should cost one round, not this verdict.
+        if: always()
+        run: |
+          pnpm run first100:verify-frozen-titles-in-tree \
+            --e2e-report .artifacts/first100/observations/vitest-e2e-sdk-keyless-smoke.json \
+            --e2e-report .artifacts/first100/observations/vitest-e2e-acp.json
 
       - name: Publication and package hygiene
         if: always()

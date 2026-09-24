@@ -9,8 +9,15 @@
  * `findOrphans` is driven directly rather than through the gate's process. The
  * gate's other half runs `vitest list` over the whole repository, which takes
  * minutes and would make these cases measure collection rather than selection.
+ * The `--e2e-report` cases run the gate's process in a fixture tree whose
+ * `pnpm` stands in for that listing.
  */
-import { describe, expect, it } from 'vitest'
+import { spawnSync } from 'node:child_process'
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { delimiter, dirname, join } from 'node:path'
+import * as yaml from 'js-yaml'
+import { afterEach, describe, expect, it } from 'vitest'
 import { findOrphans } from './verify-frozen-titles-in-tree.mjs'
 import type { InTreeFreezeEntry } from './verify-frozen-titles-in-tree.d.mts'
 
@@ -70,5 +77,94 @@ describe('BLOCKED-226: every live entry is checked, not the last one per cell', 
       new Set(['the new title']),
       new Map([['P4-12|C|the old title', 'the new title']]),
     )).toEqual([])
+  })
+})
+
+/** The modules the gate loads, copied beside it into each fixture tree. */
+const GATE_MODULES = ['verify-frozen-titles-in-tree.mjs', 'frozen-title-renames.mjs', 'verify-frozen-titles-resolvable.mjs']
+
+/** Stands in for `pnpm exec vitest list --json`: the default config lists the unit case and no e2e case. */
+const LISTING_PNPM = `#!/usr/bin/env node
+process.stdout.write(JSON.stringify([{ name: 'unit suite > a unit case', file: '/tree/packages/g/p/tests/a.spec.ts' }]))
+`
+
+/** An e2e run's `--reporter=json` report carrying the one case the fixture freeze names. */
+const E2E_REPORT = JSON.stringify({
+  testResults: [{
+    name: '/tree/apps/cli/tests/a.e2e.ts',
+    assertionResults: [{ title: 'takes over the Run', fullName: 'acp host takes over the Run', status: 'passed' }],
+  }],
+})
+
+const trees: string[] = []
+afterEach(() => { for (const tree of trees.splice(0)) rmSync(tree, { recursive: true, force: true }) })
+
+/**
+ * Runs the gate in a tree whose freeze holds one entry frozen under the e2e config.
+ * @param gateArgs - the arguments after the gate's path.
+ * @returns the gate's exit status and its stdout and stderr together.
+ */
+function runGateOverE2eFreeze(gateArgs: readonly string[]): { status: number | null; output: string } {
+  // The real path, because the gate runs `main` only when argv[1] equals its own module path, and the OS temp
+  // directory is a symlink on macOS.
+  const tree = realpathSync(mkdtempSync(join(tmpdir(), 'dsh-in-tree-e2e-')))
+  trees.push(tree)
+  const written: Record<string, string> = {
+    'spec/first100/exec/command-freeze.json': JSON.stringify({ entries: [{
+      epic: 'P4-05',
+      stage: 'U',
+      supplementSeq: 4,
+      argv: ['pnpm', 'exec', 'vitest', 'run', '--config', 'vitest.e2e.config.ts', 'apps/cli/tests/a.e2e.ts'],
+      expectCases: ['acp host takes over the Run'],
+    }] }),
+    'bin/pnpm': LISTING_PNPM,
+    'reports/vitest-e2e-acp.json': E2E_REPORT,
+  }
+  for (const gateModule of GATE_MODULES) written[`scripts/first100/${gateModule}`] = readFileSync(new URL(gateModule, import.meta.url), 'utf8')
+  for (const [path, text] of Object.entries(written)) {
+    mkdirSync(dirname(join(tree, path)), { recursive: true })
+    writeFileSync(join(tree, path), text)
+  }
+  chmodSync(join(tree, 'bin/pnpm'), 0o755)
+  const result = spawnSync(process.execPath, [join(tree, 'scripts/first100/verify-frozen-titles-in-tree.mjs'), ...gateArgs], {
+    cwd: tree,
+    encoding: 'utf8',
+    env: { ...process.env, PATH: `${join(tree, 'bin')}${delimiter}${process.env.PATH ?? ''}` },
+  })
+  return { status: result.status, output: `${result.stdout}${result.stderr}` }
+}
+
+describe('a title frozen from an e2e file is looked up in the --e2e-report the gate is given', () => {
+  it('finds the title vitest list cannot collect in the e2e report, and passes', () => {
+    const { status, output } = runGateOverE2eFreeze(['--e2e-report', 'reports/vitest-e2e-acp.json'])
+    expect(output).toContain('every live frozen title is produced by a real test')
+    expect(status).toBe(0)
+  })
+
+  it('reports the same title as an orphan without the report, so the pass above is the report\'s doing', () => {
+    const { status, output } = runGateOverE2eFreeze([])
+    expect(output).toContain('P4-05.U.4: acp host takes over the Run')
+    expect(status).toBe(1)
+  })
+
+  it('stops on an --e2e-report it cannot read and names it, rather than reading its titles as deleted', () => {
+    const { status, output } = runGateOverE2eFreeze(['--e2e-report', 'reports/absent.json'])
+    expect(output).toContain('--e2e-report reports/absent.json is not a readable vitest json report')
+    expect(status).not.toBe(0)
+  })
+})
+
+describe('the exact-SHA workflow hands this gate every e2e report its job writes', () => {
+  it('passes each vitest-e2e report as --e2e-report, from a step after every step that writes one', () => {
+    const text = readFileSync(new URL('../../.github/workflows/first100-exact-sha.yml', import.meta.url), 'utf8')
+    const jobs = (yaml.load(text) as { jobs: Record<string, { steps: { run?: string }[] }> }).jobs
+    const runs = (jobs['exact-sha-gate']?.steps ?? []).map(step => step.run ?? '')
+    const gate = runs.findIndex(run => run.includes('first100:verify-frozen-titles-in-tree'))
+    const writers = runs.flatMap((run, index) =>
+      [...run.matchAll(/--outputFile=(\S*vitest-e2e-\S+\.json)/gu)].map(match => ({ index, report: match[1] })))
+    const passed = [...(runs[gate] ?? '').matchAll(/--e2e-report (\S+)/gu)].map(match => match[1])
+    expect(writers.length).toBeGreaterThan(0)
+    expect(passed.sort()).toStrictEqual(writers.map(writer => writer.report).sort())
+    expect(writers.every(writer => writer.index < gate)).toBe(true)
   })
 })

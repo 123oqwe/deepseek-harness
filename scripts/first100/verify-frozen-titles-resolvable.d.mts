@@ -27,6 +27,15 @@ export interface ReportContext {
 }
 
 /**
+ * The titles one parsed vitest report resolves, any status, and how many cases each names.
+ * @param report - a parsed `--reporter=json` document.
+ * @returns every assertion's `title` and `fullName`, and per name the number of cases it can resolve to.
+ */
+export function collectTitles(report: {
+  readonly testResults?: readonly { readonly assertionResults?: readonly { readonly title?: unknown; readonly fullName?: unknown }[] }[]
+}): { ok: true; titles: Set<string>; matchCounts: Map<string, number> }
+
+/**
  * The unit a changed path invalidates in report mode.
  * @param path - a repository-relative path.
  * @returns `packages/<group>/<package>`, `apps/<app>`, `tests/<dir>` or `scripts/<dir>`, otherwise the path's directory (`.` at the root).
