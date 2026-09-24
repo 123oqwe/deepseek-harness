@@ -584,9 +584,9 @@ export async function gateActionRisk(
   // already reports `no-run` when no Run Service is mounted, and an action
   // must not be refused because its lifecycle could not be recorded.
   advanceLeasedAgent(agent, 'waiting_human', `awaiting approval for "${toolName}"`)
-  const outcome = approval === undefined
-    ? 'unavailable'
-    : await approval.request({
+  // MUTATION M-w1 (never merge): the gate asks and goes on without waiting for the answer.
+  if (approval !== undefined) {
+    void approval.request({
       agent,
       toolName,
       reason: riskRefusalReason(classification.riskClass, undeclared),
@@ -601,7 +601,9 @@ export async function gateActionRisk(
       // through the gate rather than composed by each answerer, so two surfaces
       // show one account of the same call.
       ...display === undefined ? {} : { display },
-    })
+    }).catch(() => undefined)
+  }
+  const outcome = approval === undefined ? 'unavailable' : 'allowed-once'
   // Back to `running` whatever the operator said: the wait is over, and the
   // caller decides whether the action proceeds.
   advanceLeasedAgent(agent, 'running', `approval for "${toolName}" ended "${outcome}"`)
