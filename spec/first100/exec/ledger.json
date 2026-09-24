@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-24T12:27:38.375Z",
-  "inputDigest": "5cc9dddfc6e6709b9c1a131895aee76c783c3d108c8d11dd170b4939de47218f",
+  "lastUpdatedUtc": "2026-09-24T13:38:26.868Z",
+  "inputDigest": "c506f9bb0cdc625d8e42997380d96f7cd38eeb0b4793da27a1337e3e7b17903f",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -3085,6 +3085,18 @@
             "names more than one principal across those attributions, so the join is not one constant satisfying itself"
           ],
           "capturedAtUtc": "2026-09-23T19:01:17.961Z"
+        },
+        "U.4": {
+          "status": "GREEN",
+          "candidateSha": "49a352d36724970f93c4296f1a5abc60af94686d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36001656822",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36001656822/first100-vitest-report-49a352d36724970f93c4296f1a5abc60af94686d/vitest-report.json",
+          "observationSha256": "6fc69fb34d4b080db143a7357e10dfe65d556a256bae82a0965a5996d7fbb649",
+          "expectCasesMatched": [
+            "P4-09 must[3]: a nested run's children inherit its DECAYED capability token logs, rather than leaves unhandled, the disposal of a settled detached run whose lease cannot be given back",
+            "P4-09 must[3]: a nested run's children inherit its DECAYED capability token gives a detached run's session its launcher's cwd, not the process's (BLOCKED-324)"
+          ],
+          "capturedAtUtc": "2026-09-24T13:38:26.860Z"
         }
       },
       "candidateSha": "73c1c04f2ea03fbd09b0c0cb5d06ecf986aedbff",
@@ -6463,10 +6475,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
-          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "candidateSha": "49a352d36724970f93c4296f1a5abc60af94686d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36001656822",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36001656822/first100-vitest-report-49a352d36724970f93c4296f1a5abc60af94686d/vitest-report.json",
+          "observationSha256": "6fc69fb34d4b080db143a7357e10dfe65d556a256bae82a0965a5996d7fbb649",
           "expectCasesMatched": [
             "refuses the old holder's token after the item is reclaimed at a higher epoch",
             "admits the new holder's token against the same reclaimed lease",
@@ -6479,14 +6491,20 @@
             "decides staleness without consulting any clock, so skewed workers agree",
             "leaves exactly one admitted holder after a hundred sequential acquisitions"
           ],
-          "capturedAtUtc": "2026-09-08T15:11:45.912Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "fromCandidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+            "reason": "BLOCKED-319: the P4-07 fix chain (push gate dfc7bd8568) changed the code this cell observes; re-observed on 49a352d367 (batch 3′) per the delegate",
+            "atUtc": "2026-09-24T13:38:21.522Z"
+          },
+          "capturedAtUtc": "2026-09-24T13:38:21.523Z"
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
-          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "candidateSha": "49a352d36724970f93c4296f1a5abc60af94686d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36001656822",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36001656822/first100-vitest-report-49a352d36724970f93c4296f1a5abc60af94686d/vitest-report.json",
+          "observationSha256": "6fc69fb34d4b080db143a7357e10dfe65d556a256bae82a0965a5996d7fbb649",
           "expectCasesMatched": [
             "issues increasing epochs across successive acquisitions of one item",
             "refuses a second worker while the incumbent lease is unexpired",
@@ -6501,14 +6519,20 @@
             "offers nothing reclaimable while unavailable, even for a lapsed lease",
             "resumes normally once the store is available again"
           ],
-          "capturedAtUtc": "2026-09-08T15:11:46.154Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "fromCandidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+            "reason": "BLOCKED-319: the P4-07 fix chain (push gate dfc7bd8568) changed the code this cell observes; re-observed on 49a352d367 (batch 3′) per the delegate",
+            "atUtc": "2026-09-24T13:38:22.016Z"
+          },
+          "capturedAtUtc": "2026-09-24T13:38:22.016Z"
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
-          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "candidateSha": "49a352d36724970f93c4296f1a5abc60af94686d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36001656822",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36001656822/first100-vitest-report-49a352d36724970f93c4296f1a5abc60af94686d/vitest-report.json",
+          "observationSha256": "6fc69fb34d4b080db143a7357e10dfe65d556a256bae82a0965a5996d7fbb649",
           "expectCasesMatched": [
             "the unfenced entry point is NOT on the package surface, so the composition is the only way in",
             "fenced, that same self-asserted epoch is refused",
@@ -6518,14 +6542,20 @@
             "reports `fenced` for a token that is BOTH fenced and proposing an illegal edge",
             "refuses when the item holds no lease at all"
           ],
-          "capturedAtUtc": "2026-09-08T15:08:00.056Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "fromCandidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+            "reason": "BLOCKED-319: the P4-07 fix chain (push gate dfc7bd8568) changed the code this cell observes; re-observed on 49a352d367 (batch 3′) per the delegate",
+            "atUtc": "2026-09-24T13:38:22.500Z"
+          },
+          "capturedAtUtc": "2026-09-24T13:38:22.501Z"
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
-          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "candidateSha": "49a352d36724970f93c4296f1a5abc60af94686d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36001656822",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36001656822/first100-vitest-report-49a352d36724970f93c4296f1a5abc60af94686d/vitest-report.json",
+          "observationSha256": "6fc69fb34d4b080db143a7357e10dfe65d556a256bae82a0965a5996d7fbb649",
           "expectCasesMatched": [
             "P4-07 validation[0]: systematic fault matrix enumerates at least twelve boundaries, each named once",
             "fault boundary 01 a strictly older epoch is refused as stale",
@@ -6550,16 +6580,22 @@
             "KNOWN GAP (validation[2]): producing the record is reachable, appending it is not",
             "refuses the forged proposal when fenced, and the unfenced path is not importable to admit it"
           ],
-          "capturedAtUtc": "2026-09-08T15:08:00.310Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "fromCandidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+            "reason": "BLOCKED-319: the P4-07 fix chain (push gate dfc7bd8568) changed the code this cell observes; re-observed on 49a352d367 (batch 3′) per the delegate",
+            "atUtc": "2026-09-24T13:38:22.984Z"
+          },
+          "capturedAtUtc": "2026-09-24T13:38:22.985Z"
         }
       },
       "supplements": {
         "U.2": {
           "status": "GREEN",
-          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
-          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "candidateSha": "49a352d36724970f93c4296f1a5abc60af94686d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36001656822",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36001656822/first100-vitest-report-49a352d36724970f93c4296f1a5abc60af94686d/vitest-report.json",
+          "observationSha256": "6fc69fb34d4b080db143a7357e10dfe65d556a256bae82a0965a5996d7fbb649",
           "expectCasesMatched": [
             "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) takes a lease for every Run it opens, so the Run has an owner before it has work",
             "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) starts the lifecycle at queued, so a run that never steps is never running",
@@ -6578,39 +6614,39 @@
             "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) executes ZERO tools for an agent whose lease was REFUSED, and names the refusal apart from a fencing (§12.31-A)",
             "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) EXECUTES normally with NO Run Service mounted, so capability absence is not read as a refusal"
           ],
-          "capturedAtUtc": "2026-09-08T15:11:46.543Z"
+          "capturedAtUtc": "2026-09-24T13:38:23.944Z"
         },
         "U.3": {
           "status": "GREEN",
-          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
-          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "candidateSha": "49a352d36724970f93c4296f1a5abc60af94686d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36001656822",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36001656822/first100-vitest-report-49a352d36724970f93c4296f1a5abc60af94686d/vitest-report.json",
+          "observationSha256": "6fc69fb34d4b080db143a7357e10dfe65d556a256bae82a0965a5996d7fbb649",
           "expectCasesMatched": [
             "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) REFUSES the SECOND host that opens the same session, and that host executes zero tools (§12.35-2, acceptance[1])"
           ],
-          "capturedAtUtc": "2026-09-08T15:11:46.796Z"
+          "capturedAtUtc": "2026-09-24T13:38:24.428Z"
         },
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-434408a47c/vitest-report.json",
-          "observationSha256": "d43e0583692ca42d96fcb259b5f284d18d65755c1c595f5511234132dfdae819",
+          "candidateSha": "49a352d36724970f93c4296f1a5abc60af94686d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36001656822",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36001656822/first100-vitest-report-49a352d36724970f93c4296f1a5abc60af94686d/vitest-report.json",
+          "observationSha256": "6fc69fb34d4b080db143a7357e10dfe65d556a256bae82a0965a5996d7fbb649",
           "expectCasesMatched": [
             "P4-07 Usage: a workflow run holds an epoch lease on the real stack must[0]: a run takes a lease, and a second host cannot take the same item while it is held",
             "P4-07 Usage: a workflow run holds an epoch lease on the real stack acceptance[2]: no new run starts while the lease store is unavailable",
             "P4-07 Usage: a workflow run holds an epoch lease on the real stack acceptance[0]: a reclaimed run cannot write its terminal state",
             "P4-07 Usage: a workflow run holds an epoch lease on the real stack control: an unreclaimed run DOES report its outcome, so the refusal above is selective"
           ],
-          "capturedAtUtc": "2026-09-08T15:10:30.207Z"
+          "capturedAtUtc": "2026-09-24T13:38:23.465Z"
         },
         "U.4": {
           "status": "GREEN",
-          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
-          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "candidateSha": "49a352d36724970f93c4296f1a5abc60af94686d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36001656822",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36001656822/first100-vitest-report-49a352d36724970f93c4296f1a5abc60af94686d/vitest-report.json",
+          "observationSha256": "6fc69fb34d4b080db143a7357e10dfe65d556a256bae82a0965a5996d7fbb649",
           "expectCasesMatched": [
             "P4-07 on the shipped profile: a displaced host and a failing lease store a displaced host's session end leaves the Run's recorded outcome unchanged (acceptance[0])",
             "P4-07 on the shipped profile: a displaced host and a failing lease store the host that still holds the lease records the Run's outcome when its session ends (control)",
@@ -6618,23 +6654,47 @@
             "P4-07 on the shipped profile: a displaced host and a failing lease store a lease store that throws while the predecessor is read stops the agent's tool calls (acceptance[2])",
             "P4-07 on the shipped profile: a displaced host and a failing lease store the same tool call executes when the lease store is healthy (control)"
           ],
-          "capturedAtUtc": "2026-09-24T12:17:31.494Z"
+          "capturedAtUtc": "2026-09-24T13:38:24.909Z"
         },
         "U.5": {
           "status": "GREEN",
-          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
-          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "candidateSha": "49a352d36724970f93c4296f1a5abc60af94686d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36001656822",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36001656822/first100-vitest-report-49a352d36724970f93c4296f1a5abc60af94686d/vitest-report.json",
+          "observationSha256": "6fc69fb34d4b080db143a7357e10dfe65d556a256bae82a0965a5996d7fbb649",
           "expectCasesMatched": [
             "P4-07 must[1]: a Run write carries its writer's lease and is checked where it is written refuses the first step's write when the fence no longer admits its writer, and records nothing",
             "P4-07 must[1]: a Run write carries its writer's lease and is checked where it is written refuses the write as lease-unavailable when the fence cannot answer, and records nothing",
             "P4-07 must[1]: a Run write carries its writer's lease and is checked where it is written admits the same write while the fence still admits its writer (control)"
           ],
-          "capturedAtUtc": "2026-09-24T12:17:31.972Z"
+          "capturedAtUtc": "2026-09-24T13:38:25.403Z"
+        },
+        "U.6": {
+          "status": "GREEN",
+          "candidateSha": "49a352d36724970f93c4296f1a5abc60af94686d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36001656822",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36001656822/first100-vitest-report-49a352d36724970f93c4296f1a5abc60af94686d/vitest-report.json",
+          "observationSha256": "6fc69fb34d4b080db143a7357e10dfe65d556a256bae82a0965a5996d7fbb649",
+          "expectCasesMatched": [
+            "P4-07 must[1]: a Run write refused for its lease is logged logs the cancellation a displaced host was refused, naming the pair, the Run and the reason",
+            "P4-07 must[1]: a Run write refused for its lease is logged logs no refusal for the same session end while this host still holds its lease (control)"
+          ],
+          "capturedAtUtc": "2026-09-24T13:38:25.893Z"
+        },
+        "U.7": {
+          "status": "GREEN",
+          "candidateSha": "49a352d36724970f93c4296f1a5abc60af94686d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36001656822",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36001656822/first100-vitest-report-49a352d36724970f93c4296f1a5abc60af94686d/vitest-report.json",
+          "observationSha256": "6fc69fb34d4b080db143a7357e10dfe65d556a256bae82a0965a5996d7fbb649",
+          "expectCasesMatched": [
+            "P4-07 on the shipped profile: a displaced host and a failing lease store a host displaced before its first model step ends its session without writing the Run's cancellation (acceptance[0])",
+            "P4-07 on the shipped profile: a displaced host and a failing lease store the holder's session that ends as its host unloads still records the Run's outcome"
+          ],
+          "capturedAtUtc": "2026-09-24T13:38:26.374Z"
         }
       },
-      "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
+      "candidateSha": "49a352d36724970f93c4296f1a5abc60af94686d",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "BLOCKED_ON_ACCEPTANCE",
