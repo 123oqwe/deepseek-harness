@@ -9,9 +9,7 @@ import z from '@deepseek-ai/schemastery'
 import { CompactionEngine, ManualCompactionError } from '@deepseek-ai/dsh-compaction'
 import type { CompactionResult, CompactionTrigger } from '@deepseek-ai/dsh-compaction'
 import type { TokenMeter } from '@deepseek-ai/dsh-token-meter'
-import type { Session, SessionId, SessionSeq } from '@deepseek-ai/dsh-session'
-import { brandString } from '@deepseek-ai/dsh-brand'
-import { chargedRun } from '@deepseek-ai/dsh-retry'
+import type { Session, SessionSeq } from '@deepseek-ai/dsh-session'
 import { CONTEXT_WINDOW_EXCEEDED_CODE } from '@deepseek-ai/dsh-llm'
 import type { LlmCallConfig } from '@deepseek-ai/dsh-llm'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
@@ -190,28 +188,6 @@ export class BasicCompactionEngine extends CompactionEngine {
       const policy = resolveTargetPolicy(this.config, target)
       const retries = this.overflowRetries.get(agent) ?? 0
       if (retries >= policy.maxOverflowRetries) return next()
-      // P4-11 must[1]: the resend redoes the failed request, so the RUN's retry
-      // budget admits it as it admits llm-retry's, charged to the delegation
-      // root's run. Asked before compacting, so a run with nothing left does not
-      // pay for a summary it cannot use; admission charges at once, so an
-      // overflow the reduction then cannot shrink still spends one.
-      const budgets = ctx.get('runRetryUsage')
-      if (budgets !== undefined) {
-        /* jscpd:ignore-start -- the delegation-root lookup is llm-retry's; dsh-retry stays free of the
-           agent package (root.ts), so each charging layer supplies it */
-        const charged = budgets.chargedRunFor(agent.session.id, () => chargedRun(agent.session.id, (id: string) => {
-          const found = ctx.get('agents')?.get(brandString<SessionId>(id))
-          if (found === undefined) return undefined
-          return {
-            ...found.session.header.parentSession === undefined
-              ? {}
-              : { parentSession: found.session.header.parentSession },
-            ...found.runId === undefined ? {} : { runId: found.runId },
-          }
-        }))
-        /* jscpd:ignore-end */
-        if (charged !== undefined && !budgets.admit(charged, 0).admitted) return next()
-      }
 
       const generation = agent.session.surface.replaceGeneration
       let result: CompactionResult | null
