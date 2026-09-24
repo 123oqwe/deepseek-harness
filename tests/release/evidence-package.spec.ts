@@ -31,7 +31,7 @@
  */
 
 import { execFileSync, spawnSync, type SpawnSyncReturns } from 'node:child_process'
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { delimiter, dirname, join, resolve } from 'node:path'
 import { createHash } from 'node:crypto'
@@ -584,9 +584,14 @@ describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', { ti
     return full
   }
 
-  /** A minimal genuinely-accepted single-required-gate, single-required-artifact bundle, verified clean before returning -- the common starting point every tampering test below (P-stage's acceptance[0] block and F-stage's fault/qualification block alike) mutates from. */
-  function collectOneAcceptedGate(): { root: string } {
+  /**
+   * A minimal genuinely-accepted single-required-gate, single-required-artifact bundle, verified clean before returning -- the common starting point every tampering test below (P-stage's acceptance[0] block and F-stage's fault/qualification block alike) mutates from.
+   * @param prepare - runs on the fixture before the baseline is captured, for a case that needs a commit or git configuration in place during collection.
+   * @returns the fixture root.
+   */
+  function collectOneAcceptedGate(prepare?: (root: string) => void): { root: string } {
     const { root, baseSha } = makeEvidenceFixture()
+    prepare?.(root)
     captureBaseline(root)
     const initResult = collectInit(root, baseSha, ['typecheck'], ['lib/index.js'])
     expect(initResult.status, `init stderr: ${initResult.stderr}`).toBe(0)
@@ -896,9 +901,10 @@ describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', { ti
       const result = verifyEvidence(root)
       expect(result.status, result.stdout).toBe(status)
       const [resultLine] = result.stdout.split('\n')
+      if (resultLine === undefined) throw new Error(`verify printed no result line:\n${result.stdout}`)
       expect(resultLine).toContain(join(root, '.dsh/evidence/evidence.json'))
       expect(resultLine).toContain(accepted)
-      const printsAccepted = (resultLine ?? '').includes('accepted=true')
+      const printsAccepted = resultLine.includes('accepted=true')
       expect(status === 0 || !printsAccepted, 'a package that failed verification is not accepted, whatever it records').toBe(true)
     })
 
@@ -918,6 +924,18 @@ describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', { ti
       expect(resultLine).toContain(join(root, '.dsh/evidence/evidence.json'))
       expect(resultLine).toContain('accepted=false')
       expect(result.stdout).toContain('baseline re-derivation failed')
+    })
+
+    it('still prints its result line when the package is valid JSON without the fields verify reads', () => {
+      const { root } = collectOneAcceptedGate()
+      writeFileSync(join(root, '.dsh/evidence/evidence.json'), '{}\n')
+
+      const result = verifyEvidence(root)
+      expect(result.status, result.stdout).toBe(1)
+      const [resultLine] = result.stdout.split('\n')
+      expect(resultLine).toContain(join(root, '.dsh/evidence/evidence.json'))
+      expect(resultLine).toContain('accepted=false')
+      expect(result.stdout).toContain('verify could not complete')
     })
   })
 
@@ -939,6 +957,102 @@ describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', { ti
       const result = verifyEvidence(root)
       expect(result.status, result.stdout).toBe(1)
       expect(result.stdout).toContain('the working tree differs from the diff recorded at collection')
+    })
+
+    /**
+     * A program git may run in place of its own diff output: it prints the same line whatever it is given.
+     * @returns the program's path, outside the checkout.
+     */
+    function constantProgram(): string {
+      const dir = mkdtempSync(join(tmpdir(), 'dsh-constant-diff-'))
+      fixtureRoots.push(dir)
+      const path = join(dir, 'constant.sh')
+      writeFileSync(path, '#!/bin/sh\necho CONSTANT\n', { mode: 0o755 })
+      return path
+    }
+
+    /**
+     * Configure git, in the checkout's own config, to run an external diff program in place of its diff.
+     * @param root - the checkout.
+     * @param program - the program.
+     */
+    function useExternalDiff(root: string, program: string): void {
+      git(root, ['config', 'diff.external', program])
+    }
+
+    /**
+     * Configure git, in the checkout's own config, to show every file through a textconv filter.
+     * @param root - the checkout.
+     * @param program - the filter.
+     */
+    function useTextconv(root: string, program: string): void {
+      git(root, ['config', 'diff.constant.textconv', program])
+      writeFileSync(join(root, '.git/info/attributes'), '* diff=constant\n')
+    }
+
+    /**
+     * Pin a dependency in the root package.json, a file the base holds and the baseline fingerprint does not cover.
+     * @param root - the checkout.
+     */
+    function addOverride(root: string): void {
+      const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as Record<string, unknown>
+      write(root, 'package.json', `${JSON.stringify({ ...manifest, pnpm: { overrides: { 'left-pad': '1.0.0' } } }, null, 2)}\n`)
+    }
+
+    // An external diff program replaces git's whole output, so it hides a change to any file whose output was already
+    // there at collection. A textconv filter hides a change only to a file the base holds: for an added or untracked
+    // file git still prints the real blob id on the patch's index line.
+    type ReplacedDiffOutput = readonly [label: string, configure: (root: string, program: string) => void, change: (root: string) => void]
+    const REPLACED_DIFF_OUTPUT: readonly ReplacedDiffOutput[] = [
+      ['an external diff program, for a tracked file that differs from the base', useExternalDiff, (root) => { write(root, 'notes.md', 'changed\n') }],
+      ['an external diff program, for an untracked file', useExternalDiff, (root) => { write(root, 'untracked-notes.md', 'changed\n') }],
+      ['a textconv filter, for a tracked file the base holds', useTextconv, addOverride],
+    ]
+
+    it.each(REPLACED_DIFF_OUTPUT)('detects a change after collection when git shows files through %s', (_label, configure, change) => {
+      const program = constantProgram()
+      // Configured before collection, so the recorded patch is taken the same way.
+      const { root } = collectOneAcceptedGate((fixture) => {
+        write(fixture, 'notes.md', 'tracked\n')
+        git(fixture, ['add', 'notes.md'])
+        git(fixture, ['commit', '-m', 'add notes'])
+        write(fixture, 'untracked-notes.md', 'untracked\n')
+        configure(fixture, program)
+      })
+      change(root)
+
+      const result = verifyEvidence(root)
+      expect(result.status, result.stdout).toBe(1)
+      expect(result.stdout).toContain('the working tree differs from the diff recorded at collection')
+    })
+
+    it.each([['skip-worktree'], ['assume-unchanged']])('refuses a checkout whose index marks a file %s, since git diff then reads the index for it', (flag) => {
+      const { root } = collectOneAcceptedGate()
+      git(root, ['update-index', `--${flag}`, 'package.json'])
+      addOverride(root)
+
+      const result = verifyEvidence(root)
+      expect(result.status, result.stdout).toBe(1)
+      expect(result.stdout).toContain('skip-worktree or assume-unchanged')
+    })
+
+    it('detects a .gitignore added after collection that ignores itself and the file beside it', () => {
+      const { root } = collectOneAcceptedGate()
+      write(root, 'sub/.gitignore', '*\n')
+      write(root, 'sub/.npmrc', 'registry=https://registry.invalid/\n')
+
+      const result = verifyEvidence(root)
+      expect(result.status, result.stdout).toBe(1)
+      expect(result.stdout).toContain('the working tree differs from the diff recorded at collection')
+    })
+
+    it('refuses an untracked symbolic link to a directory, for which git produces no patch', () => {
+      const { root } = collectOneAcceptedGate()
+      symlinkSync('lib', join(root, 'lib-link'), 'dir')
+
+      const result = verifyEvidence(root)
+      expect(result.status, result.stdout).toBe(1)
+      expect(result.stdout).toContain('working-tree diff re-derivation failed')
     })
   })
 
