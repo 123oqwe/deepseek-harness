@@ -739,17 +739,35 @@ interface AttributableLoaderEntry {
 }
 
 /**
- * The name of the innermost Loader entry whose fiber is on `chain`.
+ * An entry of any Loader entry tree, as the `fiber.entry` the Loader sets on
+ * every fiber an entry mounts: the host tree's and the trees that `include`
+ * and preset compositions mount alike. `tree.ctx.fiber` is the fiber of the
+ * tree that holds the entry.
+ */
+interface TreeEntry extends AttributableLoaderEntry {
+  readonly parent: { readonly tree: { readonly ctx: { readonly fiber: { readonly uid: number | null } } } }
+}
+
+/**
+ * The name of the innermost entry whose fiber is on `chain`: an entry of the
+ * host Loader, or an entry of another entry tree (a preset composition keeps
+ * its rows out of the host Loader's entries). An entry of another tree counts
+ * only at its own fiber, and only when the fiber of the tree that holds it is
+ * further up `chain`.
  * @param chain - a fiber followed by its ancestors, innermost first.
- * @param entries - every entry the Loader holds, as an array: `Loader.entries()` is a generator,
+ * @param entries - every entry the host Loader holds, as an array: `Loader.entries()` is a generator,
  *   and a second pass over one generator reads nothing.
  * @returns the entry's name, or `undefined` when no entry's fiber is on `chain`.
  */
 function nearestEntryName(chain: readonly Fiber[], entries: readonly AttributableLoaderEntry[]): string | undefined {
-  for (const fiber of chain) {
+  for (const [index, fiber] of chain.entries()) {
     for (const entry of entries) {
       if (entry.fiber !== undefined && entry.fiber.uid === fiber.uid) return entry.options.name
     }
+    const nested = (fiber as { entry?: TreeEntry }).entry
+    if (nested?.fiber?.uid !== fiber.uid) continue
+    const treeUid = nested.parent.tree.ctx.fiber.uid
+    if (chain.slice(index + 1).some(outer => outer.uid === treeUid)) return nested.options.name
   }
   return undefined
 }
@@ -1561,9 +1579,11 @@ export class ToolRuntime extends Service {
   /**
    * The {@link PluginIdentity} the calling context registers under. An
    * explicit {@link declareOwner} on the fiber chain wins (and marks the
-   * registration `'dynamic'`); otherwise the innermost enclosing Loader
-   * entry's module specifier is the identity, because that is the registrant's
-   * stable on-disk identity. In a tree with a Loader, a caller that no entry
+   * registration `'dynamic'`); otherwise the innermost enclosing entry's module
+   * specifier is the identity, because that is the registrant's stable on-disk
+   * identity. The entry is one of the host Loader's, or one of an entry tree
+   * that an `include` or a preset composition mounts, whose rows the host
+   * Loader does not list. In a tree with a Loader, a caller that no entry
    * encloses is refused: the only name it has is the one its fiber gave
    * itself. The root fiber is the exception, because no plugin names it, and
    * it registers as `root`. A tree with no Loader falls back to `Fiber.name`,
