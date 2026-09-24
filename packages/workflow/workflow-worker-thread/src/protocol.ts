@@ -40,8 +40,8 @@ export interface WorkerToHostPayloads {
   [WorkerToHostType.Phase]: { title: string }
   /** The logged message, verbatim. */
   [WorkerToHostType.Log]: { message: string }
-  /** The call's sequence number, label, phase, and child id. */
-  [WorkerToHostType.AgentStart]: { info: WorkflowAgentInfo }
+  /** The call's sequence number, label, phase, and child id, and the call's identity for the journal. */
+  [WorkerToHostType.AgentStart]: { info: WorkflowAgentInfo; call: string }
   /** The call identity plus its outcome, and for a completed call what it resolved to as JSON text. */
   [WorkerToHostType.AgentEnd]: { info: WorkflowAgentEndInfo; output?: string }
   /** The RPC correlation id and the prompt plus validated options. */

@@ -36,11 +36,27 @@ const fileFor = (directory: string, runId: string): string => join(directory, `$
  * @param journal - the journal as it stands.
  */
 export function writeJournal(directory: string, runId: string, journal: WorkflowJournal): void {
-  mkdirSync(directory, { recursive: true })
+  // Owner-only, like a session log: a journal holds its children's outputs.
+  // An existing directory keeps the mode it has.
+  mkdirSync(directory, { recursive: true, mode: 0o700 })
   const target = fileFor(directory, runId)
   const temporary = `${target}.tmp`
-  writeFileSync(temporary, `${JSON.stringify(journal, null, 2)}\n`, 'utf8')
+  writeFileSync(temporary, `${JSON.stringify(journal, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 })
   renameSync(temporary, target)
+}
+
+/**
+ * Move one run's journal aside to `refused/<runId>.<suffix>.json`, so a run
+ * that starts over under the same id cannot overwrite it. A resume refused for
+ * a changed script does this before the new run first writes.
+ * @param directory - the directory holding one file per run.
+ * @param runId - the run whose journal is kept.
+ * @param suffix - what tells this kept journal apart from another kept for the same run.
+ */
+export function setJournalAside(directory: string, runId: string, suffix: string): void {
+  const aside = join(directory, 'refused')
+  mkdirSync(aside, { recursive: true, mode: 0o700 })
+  renameSync(fileFor(directory, runId), join(aside, `${runId}.${suffix}.json`))
 }
 
 /**

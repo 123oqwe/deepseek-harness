@@ -188,13 +188,15 @@ export async function runWorkerSession(port: MessagePort, init: WorkerInit): Pro
   const observer: ExecutionObserver = {
     phase: (title) => { post(WorkerToHostType.Phase, { title }) },
     log: (message) => { post(WorkerToHostType.Log, { message }) },
-    agentStart: (info) => { post(WorkerToHostType.AgentStart, { info }) },
+    agentStart: (info, call) => { post(WorkerToHostType.AgentStart, { info, call }) },
     agentEnd: (info, output) => { post(WorkerToHostType.AgentEnd, output === undefined ? { info } : { info, output }) },
   }
 
   let execution: WorkflowExecution
   try {
-    execution = new WorkflowExecution(init.meta, init.body, init.args, init.limits, observer, children, init.reusable ?? {})
+    execution = new WorkflowExecution(
+      init.meta, init.body, init.args, init.limits, observer, children, init.reusable ?? {}, init.reusableCalls,
+    )
   } catch (error: unknown) {
     post(WorkerToHostType.Result, { result: { value: null, stopReason: 'error', error: renderThrown(error), agentsStarted: 0 } })
     return

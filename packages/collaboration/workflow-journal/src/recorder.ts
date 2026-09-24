@@ -18,6 +18,7 @@
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type {
   ArtifactRef,
+  CallDigest,
   ChildReceipt,
   JournalEntry,
   PhaseName,
@@ -36,6 +37,8 @@ export interface StepStart {
   readonly phase?: string
   /** The child agent's session id, which becomes its receipt. */
   readonly childId: string
+  /** The call's identity, recorded with the step so a resume reuses the step only for the same call. */
+  readonly call?: string
 }
 
 /** The same call settling. */
@@ -106,6 +109,7 @@ export function createJournalRecorder(
         output: null,
         childReceipts: [brandString<ChildReceipt>(start.childId)],
         sideEffectReceipts: [],
+        ...start.call === undefined ? {} : { call: brandString<CallDigest>(start.call) },
         verified: false,
       })
     },
