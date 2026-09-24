@@ -207,6 +207,8 @@ export class PwshLocalExecutor extends ShellExecutor {
       ...request.env !== undefined ? { env: request.env } : {},
       ...request.dshEnv !== undefined ? { dshEnv: request.dshEnv } : {},
       sandboxPolicy: request.sandboxPolicy,
+      // The world's ceilings ride to the spawn as data (P3-10 R4); absent means none.
+      ...request.limits !== undefined ? { limits: request.limits } : {},
     }
   }
 
@@ -240,6 +242,7 @@ export class PwshLocalExecutor extends ShellExecutor {
       graceMs: this.config.graceMs,
       signal,
       env: { ...ENV_OVERRIDES, ...spec.env, ...spec.dshEnv },
+      ...spec.limits !== undefined ? { limits: spec.limits } : {},
     }
   }
 

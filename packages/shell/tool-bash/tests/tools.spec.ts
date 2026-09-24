@@ -1159,6 +1159,48 @@ describe('the model-facing bash tool builds its request from named args only (no
     expect(process.env.DSH_SESSION_ID).toBe(ambient)
   })
 
+  it('carries the bound world\'s ceilings into the request, and none when no world registry is mounted (P3-10 R4)', async () => {
+    const { ctx, bash } = await setupRecording()
+    const agent = registerFakeAgent(ctx, 'request-limits', () => undefined)
+    const run = (callId: string) => ctx.tools.execute({
+      signal: testToolSignal,
+      callId: ToolCallId(callId),
+      name: 'bash',
+      arguments: { command: 'true', description: 'run command' },
+      agent,
+    })
+    await run('limits-without-a-registry')
+    expect('limits' in bash.requests[0]!).toBe(false)
+    ctx.provide('executionWorlds', {
+      bindingFor: () => Promise.resolve({ resources: { cpuMillicores: 500, memoryBytes: 268_435_456 }, maxProcesses: 32 }),
+    } as never)
+    await run('limits-with-a-bound-world')
+    expect(bash.requests[1]?.limits).toEqual({ cpuMillicores: 500, memoryBytes: 268_435_456, maxProcesses: 32 })
+  })
+
+  it('REFUSES the call and runs nothing when the deployment states a ceiling this machine cannot hold (P3-10 R4)', async () => {
+    const { ctx, bash } = await setupRecording()
+    // A real runtime on a platform with no native managed range: it holds nothing.
+    await ctx.plugin(LocalSubprocessRuntime)
+    ;(ctx.subprocess as LocalSubprocessRuntime).internals = { platform: 'aix' }
+    ctx.provide('executionWorlds', {
+      bindingFor: () => Promise.resolve(undefined),
+      requestedCeilings: () => ({ maxProcesses: 64 }),
+    } as never)
+    const result = await ctx.tools.execute({
+      signal: testToolSignal,
+      callId: ToolCallId('limits-refused'),
+      name: 'bash',
+      arguments: { command: 'true', description: 'run command' },
+      agent: registerFakeAgent(ctx, 'limits-refused', () => undefined),
+    })
+    expect(result.isError).toBe(true)
+    expect(text(result)).toContain('maxProcesses 64')
+    // The refusal names the host platform; the runtime's injected one only decides what it holds.
+    expect(text(result)).toContain(`(${process.platform}) holds no ceiling`)
+    expect(bash.requests).toHaveLength(0)
+  })
+
   it('injects the same trusted variables into a background request without forwarding model env', async () => {
     const { ctx, bash } = await setupRecording()
     const agent = registerFakeAgent(ctx, 'request-bg', () => undefined)

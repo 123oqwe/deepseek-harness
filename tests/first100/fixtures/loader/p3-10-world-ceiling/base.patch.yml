@@ -1,0 +1,23 @@
+# Test-only overlay over the shipped `headless` profile for P3-10's world
+# ceiling acceptance. It owns only what a test must own: no startup task and no
+# runner, an empty agent list (the driver creates the root agent), and a
+# readable session log. The `execution-worlds` registry and the fenced
+# provider are the shipped rows; the ceiling comes from `limited.patch.yml`, a
+# deployment setting, and never from this fixture mounting a provider.
+- id: typert-loader
+  disabled: true
+
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: agent-loop
+  config:
+    agents: []
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none

@@ -1,0 +1,8 @@
+# The deployment's ceiling, stated where a deployment states it: the shipped
+# `execution-worlds` row's `request`. At most 64 live processes and 256 MiB.
+- id: execution-worlds
+  config:
+    request:
+      maxProcesses: 64
+      resources:
+        memoryBytes: 268435456

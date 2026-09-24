@@ -30,6 +30,7 @@ import type { ShellExecRequest, ShellExecSpec, ShellProcess, ShellRunResult } fr
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import { turnBoundaryProjectionDefinition } from '@deepseek-ai/dsh-agent-loop'
 import SandboxPolicyService from '@deepseek-ai/dsh-sandbox-policy'
+import LocalSubprocessRuntime from '@deepseek-ai/dsh-subprocess-local'
 import * as ToolPwsh from '@deepseek-ai/dsh-tool-pwsh'
 import * as BashEnvPlugin from '@deepseek-ai/dsh-shell-env'
 import type { ShellProcessRead } from '@deepseek-ai/dsh-shell'
@@ -392,6 +393,37 @@ describe('argument validation', () => {
 })
 
 describe('execution through the bash seam', () => {
+  it('carries the bound world\'s ceilings into the request, and none when no world registry is mounted (P3-10 R4)', async () => {
+    const { ctx, bash } = await setup()
+    bash.handler = () => runResult('')
+    const agent = registerFakeAgent(ctx, 'session-limits')
+    await call(ctx, 'pwsh', { command: 'Write-Output a', description: 'unlimited' }, agent)
+    expect('limits' in bash.requests[0]!).toBe(false)
+    ctx.provide('executionWorlds', {
+      bindingFor: () => Promise.resolve({ resources: { memoryBytes: 268_435_456 }, maxProcesses: 32 }),
+    } as never)
+    await call(ctx, 'pwsh', { command: 'Write-Output b', description: 'limited' }, agent)
+    expect(bash.requests[1]?.limits).toEqual({ memoryBytes: 268_435_456, maxProcesses: 32 })
+  })
+
+  it('REFUSES the call and runs nothing when the deployment states a ceiling this machine cannot hold (P3-10 R4)', async () => {
+    const { ctx, bash } = await setup()
+    bash.handler = () => runResult('')
+    // A real runtime on a platform with no native managed range: it holds nothing.
+    await ctx.plugin(LocalSubprocessRuntime)
+    ;(ctx.subprocess as LocalSubprocessRuntime).internals = { platform: 'aix' }
+    ctx.provide('executionWorlds', {
+      bindingFor: () => Promise.resolve(undefined),
+      requestedCeilings: () => ({ maxProcesses: 64 }),
+    } as never)
+    const result = await call(ctx, 'pwsh', { command: 'Write-Output a', description: 'refused' }, registerFakeAgent(ctx, 'limits-refused'))
+    expect(result.isError).toBe(true)
+    expect(text(result)).toContain('maxProcesses 64')
+    // The refusal names the host platform; the runtime's injected one only decides what it holds.
+    expect(text(result)).toContain(`(${process.platform}) holds no ceiling`)
+    expect(bash.requests).toHaveLength(0)
+  })
+
   it('forwards command, session cwd, timeout, and managed DSH_* environment', async () => {
     const dshHome = mkdtempSync(join(tmpdir(), 'dsh-tool-pwsh-home-'))
     tempDirs.push(dshHome)

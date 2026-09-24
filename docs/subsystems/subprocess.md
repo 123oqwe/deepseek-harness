@@ -144,7 +144,9 @@ A spec's optional `limits` holds the whole managed range to hard CPU, memory, an
 ```ts type-equiv
 /** A resource dimension a provider can hold one managed range to. */
 type SubprocessLimitDimension = 'cpu' | 'memory' | 'processes'
+```
 
+```ts type-equiv
 /**
  * Hard ceilings for one managed range: the spawned command and everything it
  * starts. Each member is optional and has no default; an absent member puts

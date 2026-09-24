@@ -113,6 +113,16 @@ export interface WorldRequest {
 }
 
 /**
+ * The hard ceilings a deployment's request states for its worlds (P3-10): the
+ * resource ceilings under their {@link WorldResourcesSpec} names, and the
+ * process ceiling. A key is present only when the request states it.
+ */
+export interface WorldCeilings extends WorldResourcesSpec {
+  /** Ceiling on processes alive at once in the world. */
+  readonly maxProcesses?: number
+}
+
+/**
  * What the file-effect boundary resolved for this session, named structurally
  * because `@deepseek-ai/dsh-sandbox-policy` sits above this package.
  */
@@ -423,6 +433,24 @@ export default class ExecutionWorldService extends Service<Config> {
         this.yieldsTo.delete(provider)
       }
     })
+  }
+
+  /**
+   * The ceilings this deployment's request states, whether or not any world
+   * here can hold them (P3-10 R4). When {@link bindingFor} answers `undefined`,
+   * this is what tells "the deployment asked for no ceiling" apart from "it
+   * asked for one and no world can hold it", which a caller must refuse.
+   * @returns the stated ceilings; empty when the request states none.
+   */
+  requestedCeilings(): WorldCeilings {
+    const { cpuMillicores, memoryBytes, diskBytes } = { ...this.request.resources }
+    const { maxProcesses } = this.request
+    return {
+      ...cpuMillicores === undefined ? {} : { cpuMillicores },
+      ...memoryBytes === undefined ? {} : { memoryBytes },
+      ...diskBytes === undefined ? {} : { diskBytes },
+      ...maxProcesses === undefined ? {} : { maxProcesses },
+    }
   }
 
   /**

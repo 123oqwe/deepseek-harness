@@ -42,7 +42,7 @@ Call `start` with a resolved spec to launch a background process; it returns a h
 
 ### Requests and resolved specs
 
-Every execution starts from a `ShellExecRequest` with optional fields; the executor's `resolve()` turns it into a fully-resolved `ShellExecSpec` with explicit defaults and caps before anything runs. This request/spec split is the repository's template for explicit resolution at package boundaries: callers never rely on hidden defaults inside `run` or `start`. `resolve()` fills the working directory and timeout from the executor's configuration, caps per-call overrides, and carries optional inputs — `stdin`, ordinary `env`, and the trusted `DSH_*` snapshot — through verbatim.
+Every execution starts from a `ShellExecRequest` with optional fields; the executor's `resolve()` turns it into a fully-resolved `ShellExecSpec` with explicit defaults and caps before anything runs. This request/spec split is the repository's template for explicit resolution at package boundaries: callers never rely on hidden defaults inside `run` or `start`. `resolve()` fills the working directory and timeout from the executor's configuration, caps per-call overrides, and carries optional inputs — `stdin`, ordinary `env`, and the trusted `DSH_*` snapshot — through verbatim. The same holds for `limits`, the hard ceilings of the world the call runs in, which a caller resolves with `readWorldLimits(ctx, agent)`: an executor carries it to the spawn and applies no default, so a request without it spawns exactly as before. `readWorldLimits` throws `WorldCeilingsRefusedError` when the deployment states a ceiling that no world bound for the call can hold.
 
 ### Choosing and composing an executor
 

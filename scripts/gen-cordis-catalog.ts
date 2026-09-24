@@ -747,6 +747,7 @@ export const TYPE_LINK_EXEMPTIONS: Readonly<Record<string, string>> = {
   WorldProvider: 'what a provider must implement to be an ExecutionWorld is owned by packages/execution/execution-world/README.md',
   ExecutionWorldBinding: 'the world a session\'s dispatches run in, as a dispatch path reads it, is owned by packages/execution/execution-world/README.md',
   WorldProviderPlacement: 'where a provider sits in selection (the providers it yields to) is owned by packages/execution/execution-world/README.md',
+  WorldCeilings: 'the ceilings a deployment states for its worlds, as a caller refusing an unbound call reads them, is owned by packages/execution/execution-world/README.md',
   BindableAgent: 'the structural agent shape the registry reads is module-private to packages/execution/execution-world/src/plugin.ts; it exists so the registry does not depend on `dsh-agent`',
   ControlState: 'emergency-stop control state is owned by packages/interaction/human-channel/README.md',
   ControlVerb: 'the five control verbs are owned by packages/interaction/human-channel/README.md',

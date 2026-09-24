@@ -217,6 +217,18 @@ describe('spawn construction (pure, every platform)', () => {
     }
   }
 
+  it('carries a world\'s ceilings from the request to the spawn, and no limits key when the request has none (P3-10 R4)', async () => {
+    const ctx = createContext()
+    const subprocess = new CapturingSubprocessRuntime(ctx)
+    await ctx.plugin(PwshLocalExecutor)
+    const limits = { cpuMillicores: 500, maxProcesses: 32 }
+    await ctx.shell.run(ctx.shell.resolve({ command: 'Write-Output limited', limits }))
+    await ctx.shell.run(ctx.shell.resolve({ command: 'Write-Output unlimited' }))
+    expect(subprocess.specs).toHaveLength(2)
+    expect(subprocess.specs[0]?.limits).toEqual(limits)
+    expect('limits' in subprocess.specs[1]!).toBe(false)
+  })
+
   it('runs every command as ONE argv element under the UTF-8 encoding preamble', async () => {
     const ctx = createContext()
     const subprocess = new CapturingSubprocessRuntime(ctx)

@@ -86,6 +86,10 @@ const REGISTRY_GATES = [
   'first100:verify-ledger-digests',
   'first100:verify-boot-path-offline',
   'first100:verify-adapt-dispositions',
+  // P3-10 R5: ceilings are wired call site by call site, so a production call
+  // of ctx.subprocess the classification table does not list fails here
+  // instead of running unbounded with every case still green.
+  'first100:verify-spawn-call-sites',
   // The generated session-event vocabulary. A `SessionEventMap` `declare
   // module` merge whose generator was never run leaves
   // `KNOWN_SESSION_EVENT_TYPES` without the event the same build writes, and

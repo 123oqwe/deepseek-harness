@@ -227,6 +227,31 @@ describe('P3-10 R3: the registry answers what its worlds may use', () => {
     }
   })
 
+  it('still reports the ceilings the deployment stated when no world could be bound, and none it did not state (P3-10 R4)', async () => {
+    const stated = await mounted({
+      network: 'unrestricted',
+      spawn: true,
+      ipc: 'unrestricted',
+      secrets: 'inherited',
+      maxProcesses: 32,
+      resources: { cpuMillicores: 500, memoryBytes: 268_435_456, diskBytes: 1_073_741_824 },
+    })
+    const none = await mounted({ network: 'unrestricted', spawn: true, ipc: 'unrestricted', secrets: 'inherited' })
+    try {
+      expect(await stated.service.bindingFor(agent('agent-whose-ceilings-no-provider-holds'))).toBeUndefined()
+      expect(stated.service.requestedCeilings()).toStrictEqual({
+        cpuMillicores: 500,
+        memoryBytes: 268_435_456,
+        diskBytes: 1_073_741_824,
+        maxProcesses: 32,
+      })
+      expect(none.service.requestedCeilings()).toStrictEqual({})
+    } finally {
+      await stated.ctx.fiber.dispose()
+      await none.ctx.fiber.dispose()
+    }
+  })
+
   it.each([5, 15])('refuses a cpu ceiling of %s millicores, which no spawn can carry, at the config boundary', async (cpuMillicores) => {
     const ctx = new Context()
     ctx.provide('sandboxPolicy', sandbox() as never)
