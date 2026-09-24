@@ -250,10 +250,10 @@ function main() {
 
   const result = verify(repoRoot, evidencePath)
   if (result.ok) {
-    process.stdout.write(`verify-evidence: ${evidencePath} verified offline, no mismatches, accepted=${result.accepted}\n`)
+    process.stdout.write(`verify-evidence: ${evidenceArg} verified offline, no mismatches, accepted=${result.accepted}\n`)
     process.exit(0)
   }
-  process.stdout.write(`verify-evidence: ${evidencePath} FAILED verification, recorded accepted=${result.accepted}:\n${result.mismatches.map(line => `  ${line}`).join('\n')}\n`)
+  process.stdout.write(`verify-evidence: ${evidenceArg} FAILED verification, recorded accepted=${result.accepted}:\n${result.mismatches.map(line => `  ${line}`).join('\n')}\n`)
   process.exit(1)
 }
 
