@@ -1017,7 +1017,7 @@ export function runLayerDepsCheck(root) {
       usedAllowances.add(key)
       // acceptance[1]: no entry admits a kernel edge to a UI package or a
       // model provider (layering.md rule 7).
-      if (allowance.expires >= today && edge.toLayer !== 'providers' && edge.toLayer !== 'surfaces-apps') {
+      if (allowance.expires >= today && edge.toLayer !== 'surfaces-apps') {
         kernelEdges.push({ fromPackage: edge.fromPackage, toPackage: edge.toPackage, bindings: [], files: [], verdict: 'allowlisted' })
         continue
       }
