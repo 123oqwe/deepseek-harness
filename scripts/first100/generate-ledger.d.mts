@@ -169,7 +169,7 @@ export function cellForCorrection(
   row: unknown,
   stage: string,
   supplementSeq: string | undefined,
-): { ciRunUrl?: string } | undefined
+): { ciRunUrl?: string, revokedFrom?: { ciRunUrl?: string } } | undefined
 
 /** What a correction rewrote, or why it rewrote nothing. */
 export type CiRunUrlCorrectionResult =

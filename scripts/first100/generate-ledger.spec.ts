@@ -1154,6 +1154,8 @@ describe('--correct-ci-run-url resolves cells in the REAL ledger, not only in a 
     // nobody uses, and it is deliberately narrow: it asserts the lookup RESOLVES
     // and that what it resolves carries a `ciRunUrl`, never what that URL says.
     // The rows it names are the eight occurrences the correction exists for.
+    // A cell revoked since then keeps the run of the observation it withdrew in
+    // `revokedFrom`, and its key is still a real supplement key, so it stays.
     const ledger = JSON.parse(
       readFileSync(new URL('../../spec/first100/exec/ledger.json', import.meta.url), 'utf8'),
     ) as { rows: Record<string, unknown> }
@@ -1170,7 +1172,8 @@ describe('--correct-ci-run-url resolves cells in the REAL ledger, not only in a 
       const where = `${target.epic}.${target.stage}${target.seq === undefined ? '' : `.${target.seq}`}`
       const cell = cellForCorrection(ledger.rows[target.epic], target.stage, target.seq)
       expect(cell, `the ledger has a cell at ${where}; a lookup that cannot find it corrects nothing`).toBeDefined()
-      expect(typeof cell?.ciRunUrl, `${where} carries a recorded run URL`).toBe('string')
+      const recorded = cell?.revokedFrom === undefined ? cell?.ciRunUrl : cell.revokedFrom.ciRunUrl
+      expect(typeof recorded, `${where} carries a recorded run URL`).toBe('string')
     }
   })
 })
