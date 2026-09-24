@@ -6,6 +6,7 @@ import { validateHeaderName, validateHeaderValue } from 'node:http'
 import { isAbsolute } from 'node:path'
 import type { McpServer } from '@agentclientprotocol/sdk'
 import * as McpClient from '@deepseek-ai/dsh-mcp-client'
+import type { SessionId } from '@deepseek-ai/dsh-session'
 
 const VALID_SERVER_NAME = /^[A-Za-z0-9_-]{1,32}$/
 
@@ -22,14 +23,18 @@ export class AcpMcpConfigError extends Error {
  * @param agentCtx - unpublished Agent scope that owns the MCP clients and tools.
  * @param servers - stable ACP stdio or HTTP server declarations.
  * @param sessionCwd - canonical primary workspace used by stdio servers.
+ * @param chargeSession - the session whose Run each server's reconnects are charged to; both session paths pass their own.
  */
 export async function mountAcpMcpServers(
   agentCtx: Context,
   servers: readonly McpServer[],
   sessionCwd: string,
+  chargeSession?: SessionId,
 ): Promise<void> {
   const configs = resolveMcpConfigs(servers, sessionCwd)
-  for (const config of configs) await agentCtx.plugin(McpClient, config)
+  for (const config of configs) {
+    await agentCtx.plugin(McpClient, chargeSession === undefined ? config : { ...config, chargeSession })
+  }
 }
 
 /** Convert the stable stdio/HTTP ACP transports and reject every other transport. */

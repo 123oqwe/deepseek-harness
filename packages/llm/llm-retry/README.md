@@ -131,7 +131,7 @@ These limits define where the executor stops and future work begins. They are cu
 
 - **Agent turns are the only retry boundary** — direct `ctx.llm.stream()` consumers remain single-attempt because a raw stream cannot separate already-emitted chunks durably.
 - **Always mode retries permanent failures** — authentication, quota, invalid-request, protocol, and unrecoverable context errors continue until success, cancellation, or disposal; deployments own provider-specific cost and latency controls.
-- **Finite plugin budgets add** — normal mode counts only its configured codes and exact provider policy, while context-overflow compaction owns a separate budget. Any overlapping policy must define registration-order behavior.
+- **Plugin caps add; the run budget bounds their sum** — normal mode counts only its configured codes and exact provider policy, and context-overflow compaction keeps its own `maxOverflowRetries`, so one request can use both. With `ctx.runRetryUsage` mounted, every retry and every overflow resend is admitted against the same run budget, so together they stop at its ceiling. Any overlapping policy must define registration-order behavior.
 - **Recovery policies compose by waterfall order** — always mode accepts a downstream retry before applying its fallback. A later policy that ignores cancellation and never settles also prevents fallback, turn quiescence, and plugin disposal from completing.
 - **`llm/retry` records scheduling, not completion** — later step and turn events establish success, exhaustion, or cancellation.
 

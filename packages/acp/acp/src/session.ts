@@ -132,7 +132,7 @@ export class AcpSession {
       signal: options.signal,
       setup: async (agentCtx) => {
         modelControl.install(agentCtx)
-        await mountAcpMcpServers(agentCtx, options.mcpServers, options.cwd)
+        await mountAcpMcpServers(agentCtx, options.mcpServers, options.cwd, options.sessionId)
       },
     })
     return new AcpSession(ctx, handle, modelControl, options.notify)
@@ -156,7 +156,7 @@ export class AcpSession {
           selectionFor(agent.session.requestHeader(), options.fallbackSelection),
         )
         modelControl.install(agentCtx)
-        await mountAcpMcpServers(agentCtx, options.mcpServers, options.cwd)
+        await mountAcpMcpServers(agentCtx, options.mcpServers, options.cwd, agent.session.id)
       },
     })
     /* v8 ignore start -- a fulfilled Agent resume necessarily ran setup to completion. */

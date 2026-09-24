@@ -627,7 +627,9 @@
         "@deepseek-ai/dsh-retry"
       ],
       "consumers": [
-        "@deepseek-ai/dsh-llm-retry"
+        "@deepseek-ai/dsh-llm-retry",
+        "@deepseek-ai/dsh-compaction-basic",
+        "@deepseek-ai/dsh-mcp-client"
       ]
     }
   ],
