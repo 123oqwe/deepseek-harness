@@ -398,3 +398,36 @@ That distinction was put to the user directly, because it changes what the regis
 **4. 锁行重述**
 - `BLOCKED-QUEUE.md` ACCEPTANCE LOCKS 中 P0-04、P0-07、P0-06、P2-06 四行,在解锁条件末尾追加「RESTATED … (C19)」一段。引用的旧文与原来的条件都不改,照 C13 之后与 C18 的做法。
 - P4-07 那一行讲的是 acceptance[0] 与 acceptance[2],不引用 must[1],所以不动。
+
+## C20 (2026-09-24) — 两条已批的收窄写进条文:P1-09 must[1] 与 acceptance[0]、P0-06 acceptance[0](用户批准,delegate 推荐)
+
+**用户原话**
+
+用户在 delegate 终端直接回复,2026-09-24:
+
+> 「7 a，8 2（前提：CLI 默认配置须审批、danger-full-access 须显式选择、sdk-minimal 文档写明无风险门由接入方负责；任一不满足则 P2-03 挂起），9 1」
+
+记入 `channel/WORKING-MODEL.md` §12「S8 已批准的收窄(再续)」⑧、⑨、⑩。题面与推荐见 `channel/B-CLASS-QUESTIONS-2026-09-24.md` 第二批第 7、8、9 题。本笔写 ⑧ 与 ⑩;⑨(P2-03)要等 lane B 在 sdk-minimal README 补上「无风险门,由接入方负责」那一句,之后单独一笔 C21。
+
+**1. 改了什么**
+- 改的是钉住的矩阵 `spec/first100/sources/first100-requirements-matrix.md`,照 C13 的 reword 机制记为 plan correction(`extract-registry.mjs` 的 `CLAUSE_REWORDS`,每条带 evidence)。`MATRIX_SHA` 随之更新。
+
+| 条款 | 原文 | 新文 |
+|---|---|---|
+| P1-09 must[1] | 官方保留 namespace 不可被第三方声明 | 官方保留 namespace 不可被第三方声明,registry 自己的判据不会被调用方可控的输入骗过,具体是 isolate 之后再声明、在条目之外建 fiber。同一进程里的插件经 Loader 条目(即插件本身在某个 Loader 条目之内),用公开字段(例如 `entry.fiber.ctx`、`fiber.entry`、`fiber.parent`)借用或伪造别的插件条目的上下文、以它的身份注册,记为 Known Limitation,归 Trust Kernel / Fiber 隔离。 |
+| P1-09 acceptance[0] | 同名工具、跨插件撤销、加载顺序攻击均 fail closed。 | 同名工具、跨插件撤销、加载顺序攻击均 fail closed,加载顺序攻击指调用方可控的输入(isolate 之后再声明、在条目之外建 fiber)骗不过 registry 自己的判据。同一进程里的插件经 Loader 条目(即插件本身在某个 Loader 条目之内),用公开字段(例如 `entry.fiber.ctx`、`fiber.entry`、`fiber.parent`)借用或伪造别的插件条目的上下文、以它的身份注册,记为 Known Limitation,归 Trust Kernel / Fiber 隔离。 |
+| P0-06 acceptance[0] | 审计基线产生的 v0 会话日志都能读出;例外是在首个 step 之前出现 surface 事件的那一类(按内容数,基线上有 24 个),产品明确拒绝它们,并给出可读的原因。(C19 的新文,原始出处为「至少能够读取审计基线产生的旧 session fixture。」) | 审计基线产生的 v0 会话日志都能读出,包括基线自己写的 24 个 descriptor v2 子 agent 日志;例外是三类形状不完整的文件,产品明确拒绝它们并给出可读的原因:首个 step 之前出现 surface 的(24 个),只有 chunk、没有 turn 的回放片段(3 个),基线测试夹具写出的投影(4 个,一个是检查点消息缺 compaction/start,三个是 request/header 的 tools 只有名字)。 |
+
+- P1-09 两条的 Known Limitation 写进条文本身,不只写在 evidence 里,并保留 ⑧ 原文的「经 Loader 条目」:Known Limitation 只含 Loader 条目之内的插件用公开字段(`entry.fiber.ctx`、`fiber.entry`、`fiber.parent`)借用或伪造别的条目上下文、以别的身份注册。条目之外的代码做同样的事,是 registry 的判据必须拒绝的,不算 Known Limitation:P1-09 修复 v2 的盲审查出条目之外能伪造 `fiber.entry`,lane B 正在加固(delegate,2026-09-24)。例子里的 `fiber.parent` 是 lane B 指出的:`callerChain` 沿可写的 parent 走,与 `fiber.entry`、`entry.fiber.ctx` 同类。
+- P0-06 acceptance[0] 取代 C19 的 ③:C19 的「133 个能读」来自 lane A 的普查,少算了两条拒绝规则。CI 读数(35963129851)与按同一迁移入口的离线重放逐条一致:26 个 descriptor v2 子 agent 日志不能读,其中 `scripts/snapshots/python-sdk-single-exe/advanced/session.1.jsonl` 与 `session.2.jsonl` 同时把 request/header 的 tools 记成名字,与同目录归入第三类的 `session.jsonl` 同出一个夹具,按 delegate 的裁定 (b)(待用户第 14 题确认)归入第三类;要原地修成可读的是其余 24 个,3 类共 31 个是明确拒绝的例外。C19 那条 reword 记录原地换成新文,evidence 写明取代关系。
+- 新文不含全角「；」:`splitClauses` 按它切条。
+
+**2. BLOCKED-308**
+- addendum 里「`declareOwner` is restricted to the host runner …」一句按 ⑧ 改写为:registry 自己的判据不会被调用方可控的输入骗过(isolate 之后再声明、在条目之外建 fiber 都被拒绝);同一进程里的插件经 Loader 条目(即插件本身在某个 Loader 条目之内),用公开字段借用或伪造别人的条目上下文、以它的身份注册,记为 Known Limitation,归 Trust Kernel / Fiber 隔离。原句保留在改写后的括注里。
+
+**3. 计数**
+- clause coverage 报告的 `planCorrectedClauses` 与 `supersededSourceClauses` 由 10 变为 12(P1-09 两条新增;P0-06 那条原地替换,不另计),unmatched 与 undocumented 仍为 0。
+- `generate-specs.spec.ts` 钉住的这两个数在同一笔里改。
+
+**4. 锁行重述**
+- `BLOCKED-QUEUE.md` ACCEPTANCE LOCKS 中 P1-09、P0-06 两行,在解锁条件末尾追加「RESTATED … (C20)」一段;P0-06 那段写明取代 C19 的重述。引用的旧文与原来的条件都不改。

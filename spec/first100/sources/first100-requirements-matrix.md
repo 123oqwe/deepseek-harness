@@ -111,7 +111,7 @@
 - **MUST：** 为每个持久/线协议对象声明 schemaId、major/minor、兼容规则和迁移函数。；新增字段默认 backward-compatible；删除/重命名/语义改变要求 major 版本和迁移。；Session replay、SDK initialize、plugin load 在使用前先协商/验证 schema。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
-- **Acceptance：** 审计基线产生的 v0 会话日志都能读出;例外是在首个 step 之前出现 surface 事件的那一类(按内容数,基线上有 24 个),产品明确拒绝它们,并给出可读的原因。；不兼容客户端收到机器可读错误，不出现静默字段丢失。；所有 registry migration 具有双向或明确不可逆测试。
+- **Acceptance：** 审计基线产生的 v0 会话日志都能读出,包括基线自己写的 24 个 descriptor v2 子 agent 日志;例外是三类形状不完整的文件,产品明确拒绝它们并给出可读的原因:首个 step 之前出现 surface 的(24 个),只有 chunk、没有 turn 的回放片段(3 个),基线测试夹具写出的投影(4 个,一个是检查点消息缺 compaction/start,三个是 request/header 的 tools 只有名字)。；不兼容客户端收到机器可读错误，不出现静默字段丢失。；所有 registry migration 具有双向或明确不可逆测试。
 - **Validation：** 运行 schema golden tests。；用旧版 fixture 对新 runtime 做 replay；用新版 unknown optional field 对旧兼容 client 做降级测试。；对 closed union 增加未知值测试，要求 fail closed 或显式 `unknown` 分支。
 - **验证命令：** 来源没有项级可执行命令；实施前必须在 manifest 注册 focused command、fixture 路径与预期 exit code（不得猜），再跑 G/适用 R。
 - **真实任务证据：** E0；场景 S01（架构/工程基线夹具）；必须走本项 Validation 所述真实产品路径/可观测外部边界，并保存原始 receipts、before/after、独立验证与 13 项 evidence pack；真实 provider/model 支持声明另需 live lane。
@@ -267,10 +267,10 @@
 - **Priority / Wave / 依赖：** P1 / W4 / `P1-01`、`P0-03`。
 - **问题 → 目标：** Cordis effects 可逆，但生态扩大后，同名 tool/service/event 和加载顺序会造成 confused deputy、覆盖与不可预测行为。 → 防止两个插件注册同名能力、冒充官方工具或在卸载时删除他人 effect。
 - **Files：** target `packages/core/tools/src/index.ts` [B]；`packages/extensions/cordis-host-runner/src/registry.ts` [B]；`packages/extensions/cordis-host-runner/src/lifecycle.ts` [B]；`packages/host/plugin-inventory/src/index.ts` [B]；new `packages/plugin/plugin-ownership/src/index.ts` [N]；`packages/plugin/plugin-ownership/src/types.ts` [N]；`packages/plugin/plugin-ownership/tests/ownership.spec.ts` [N]。
-- **MUST：** 所有注册带 PluginIdentity、namespace、stable capability id 和 ownership token。；官方保留 namespace 不可被第三方声明；覆盖必须显式 replace contract 且经 policy。；卸载只撤销与 ownership token 匹配的 effects。
+- **MUST：** 所有注册带 PluginIdentity、namespace、stable capability id 和 ownership token。；官方保留 namespace 不可被第三方声明,registry 自己的判据不会被调用方可控的输入骗过,具体是 isolate 之后再声明、在条目之外建 fiber。同一进程里的插件经 Loader 条目(即插件本身在某个 Loader 条目之内),用公开字段(例如 `entry.fiber.ctx`、`fiber.entry`、`fiber.parent`)借用或伪造别的插件条目的上下文、以它的身份注册,记为 Known Limitation,归 Trust Kernel / Fiber 隔离。；覆盖必须显式 replace contract 且经 policy。；卸载只撤销与 ownership token 匹配的 effects。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
-- **Acceptance：** 同名工具、跨插件撤销、加载顺序攻击均 fail closed。；允许合法 provider replacement，但 Inventory 显示 replaced/replacing chain。；动态 Cordis 定义同样受规则约束。
+- **Acceptance：** 同名工具、跨插件撤销、加载顺序攻击均 fail closed,加载顺序攻击指调用方可控的输入(isolate 之后再声明、在条目之外建 fiber)骗不过 registry 自己的判据。同一进程里的插件经 Loader 条目(即插件本身在某个 Loader 条目之内),用公开字段(例如 `entry.fiber.ctx`、`fiber.entry`、`fiber.parent`)借用或伪造别的插件条目的上下文、以它的身份注册,记为 Known Limitation,归 Trust Kernel / Fiber 隔离。；允许合法 provider replacement，但 Inventory 显示 replaced/replacing chain。；动态 Cordis 定义同样受规则约束。
 - **Validation：** 运行 two-plugin collision fixture。；随机化加载/卸载顺序 1000 次，最终注册表一致。；验证未授权插件不能注册 `dsh.*` 保留 namespace。
 - **验证命令：** 来源没有项级可执行命令；实施前必须在 manifest 注册 focused command、fixture 路径与预期 exit code（不得猜），再跑 G/适用 R。
 - **真实任务证据：** E1；场景 S10；必须走本项 Validation 所述真实产品路径/可观测外部边界，并保存原始 receipts、before/after、独立验证与 13 项 evidence pack；真实 provider/model 支持声明另需 live lane。

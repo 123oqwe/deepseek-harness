@@ -16,8 +16,8 @@
     "unmatchedSourceClauses": 0,
     "inventedUndocumentedClauses": 0,
     "inventedDocumentedDefaultBoundaryClauses": 156,
-    "planCorrectedClauses": 10,
-    "supersededSourceClauses": 10
+    "planCorrectedClauses": 12,
+    "supersededSourceClauses": 12
   },
   "epics": {
     "P0-01": {
@@ -599,15 +599,15 @@
         "unmatchedSource": [],
         "invented": [
           {
-            "text": "审计基线产生的 v0 会话日志都能读出;例外是在首个 step 之前出现 surface 事件的那一类(按内容数,基线上有 24 个),产品明确拒绝它们,并给出可读的原因。",
-            "digest": "f235200782a922542404d32ef65f49d0dd053f8f5e0db67f4d1ff55c64d894f4",
+            "text": "审计基线产生的 v0 会话日志都能读出,包括基线自己写的 24 个 descriptor v2 子 agent 日志;例外是三类形状不完整的文件,产品明确拒绝它们并给出可读的原因:首个 step 之前出现 surface 的(24 个),只有 chunk、没有 turn 的回放片段(3 个),基线测试夹具写出的投影(4 个,一个是检查点消息缺 compaction/start,三个是 request/header 的 tools 只有名字)。",
+            "digest": "adb41464bf24a1100cfe3aff9609d004f1af1b381161453e1509d81dff62b448",
             "classification": "plan-correction"
           }
         ],
         "clauses": [
           {
-            "text": "审计基线产生的 v0 会话日志都能读出;例外是在首个 step 之前出现 surface 事件的那一类(按内容数,基线上有 24 个),产品明确拒绝它们,并给出可读的原因。",
-            "digest": "f235200782a922542404d32ef65f49d0dd053f8f5e0db67f4d1ff55c64d894f4",
+            "text": "审计基线产生的 v0 会话日志都能读出,包括基线自己写的 24 个 descriptor v2 子 agent 日志;例外是三类形状不完整的文件,产品明确拒绝它们并给出可读的原因:首个 step 之前出现 surface 的(24 个),只有 chunk、没有 turn 的回放片段(3 个),基线测试夹具写出的投影(4 个,一个是检查点消息缺 compaction/start,三个是 request/header 的 tools 只有名字)。",
+            "digest": "adb41464bf24a1100cfe3aff9609d004f1af1b381161453e1509d81dff62b448",
             "span": null
           },
           {
@@ -1688,7 +1688,13 @@
         "sourceCount": 4,
         "projectedCount": 4,
         "unmatchedSource": [],
-        "invented": [],
+        "invented": [
+          {
+            "text": "官方保留 namespace 不可被第三方声明,registry 自己的判据不会被调用方可控的输入骗过,具体是 isolate 之后再声明、在条目之外建 fiber。同一进程里的插件经 Loader 条目(即插件本身在某个 Loader 条目之内),用公开字段(例如 `entry.fiber.ctx`、`fiber.entry`、`fiber.parent`)借用或伪造别的插件条目的上下文、以它的身份注册,记为 Known Limitation,归 Trust Kernel / Fiber 隔离。",
+            "digest": "f70260037a6c31fd9f857198af1bd6679aa8ba212babefbb3b2a2506fb63f8a0",
+            "classification": "plan-correction"
+          }
+        ],
         "clauses": [
           {
             "text": "所有注册带 PluginIdentity、namespace、stable capability id 和 ownership token。",
@@ -1699,12 +1705,9 @@
             }
           },
           {
-            "text": "官方保留 namespace 不可被第三方声明",
-            "digest": "84275ea8c03129897c006df24e0bce81701bf55710d20b1cade3d88cfd442a35",
-            "span": {
-              "startLine": 2749,
-              "endLine": 2749
-            }
+            "text": "官方保留 namespace 不可被第三方声明,registry 自己的判据不会被调用方可控的输入骗过,具体是 isolate 之后再声明、在条目之外建 fiber。同一进程里的插件经 Loader 条目(即插件本身在某个 Loader 条目之内),用公开字段(例如 `entry.fiber.ctx`、`fiber.entry`、`fiber.parent`)借用或伪造别的插件条目的上下文、以它的身份注册,记为 Known Limitation,归 Trust Kernel / Fiber 隔离。",
+            "digest": "f70260037a6c31fd9f857198af1bd6679aa8ba212babefbb3b2a2506fb63f8a0",
+            "span": null
           },
           {
             "text": "覆盖必须显式 replace contract 且经 policy。",
@@ -1728,15 +1731,18 @@
         "sourceCount": 3,
         "projectedCount": 3,
         "unmatchedSource": [],
-        "invented": [],
+        "invented": [
+          {
+            "text": "同名工具、跨插件撤销、加载顺序攻击均 fail closed,加载顺序攻击指调用方可控的输入(isolate 之后再声明、在条目之外建 fiber)骗不过 registry 自己的判据。同一进程里的插件经 Loader 条目(即插件本身在某个 Loader 条目之内),用公开字段(例如 `entry.fiber.ctx`、`fiber.entry`、`fiber.parent`)借用或伪造别的插件条目的上下文、以它的身份注册,记为 Known Limitation,归 Trust Kernel / Fiber 隔离。",
+            "digest": "8607dd77e671a47b775179293ec23e084ff09b059df7e133ad37df4746920248",
+            "classification": "plan-correction"
+          }
+        ],
         "clauses": [
           {
-            "text": "同名工具、跨插件撤销、加载顺序攻击均 fail closed。",
-            "digest": "d7a547810ce00b1c95e359eed4c1685d2a71341ba9bae60e5260bf3c7674b83d",
-            "span": {
-              "startLine": 2752,
-              "endLine": 2752
-            }
+            "text": "同名工具、跨插件撤销、加载顺序攻击均 fail closed,加载顺序攻击指调用方可控的输入(isolate 之后再声明、在条目之外建 fiber)骗不过 registry 自己的判据。同一进程里的插件经 Loader 条目(即插件本身在某个 Loader 条目之内),用公开字段(例如 `entry.fiber.ctx`、`fiber.entry`、`fiber.parent`)借用或伪造别的插件条目的上下文、以它的身份注册,记为 Known Limitation,归 Trust Kernel / Fiber 隔离。",
+            "digest": "8607dd77e671a47b775179293ec23e084ff09b059df7e133ad37df4746920248",
+            "span": null
           },
           {
             "text": "允许合法 provider replacement，但 Inventory 显示 replaced/replacing chain。",
