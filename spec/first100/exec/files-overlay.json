@@ -178,6 +178,38 @@
       ]
     },
     {
+      "epic": "P0-07",
+      "path": "packages/bundle/base/cordis.patch.yml",
+      "kind": "manifest",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P0-07",
+      "path": "packages/bundle/sdk-app/tests/fixtures/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P0-07",
+      "path": "packages/bundle/sdk-app/tests/fixtures/workspace-trust.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P0-07",
+      "path": "tests/first100/fixtures/P0-07.agent-instructions.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
       "epic": "P0-08",
       "path": "benchmarks/harness-capability/scenarios/index.ts",
       "kind": "source",

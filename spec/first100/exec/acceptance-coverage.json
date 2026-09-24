@@ -445,9 +445,19 @@
         {
           "stage": "U",
           "title": "AGENTS.md states the evidence-gate reporting convention (acceptance[2]: cite package path and accepted status)"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P0-07 acceptance[2] (narrowed by C19): the repository AGENTS.md evidence-gate rule on the shipped sdk composition a trusted workspace's AGENTS.md reaches the model with the rule to cite the evidence package path and its accepted status"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P0-07 acceptance[2] (narrowed by C19): the repository AGENTS.md evidence-gate rule on the shipped sdk composition control: an untrusted workspace's AGENTS.md does not, so the rule the model reads comes from the project file"
         }
       ],
-      "note": "acceptance[2]: 'Agent 最终回答必须引用 package path 和 accepted 状态' (the agent's final answer must cite the package path and accepted status) -- a documented reporting convention, not runtime/agent-loop code, per this epic's own U-stage note. Wired into AGENTS.md's Conventions section."
+      "note": "acceptance[2]: 'Agent 最终回答必须引用 package path 和 accepted 状态' (the agent's final answer must cite the package path and accepted status) -- a documented reporting convention, not runtime/agent-loop code, per this epic's own U-stage note. Wired into AGENTS.md's Conventions section.\n\n[2026-09-24 lane A, A-347: C19 narrowed acceptance[2] to \"仓库的 `AGENTS.md` 规定,汇报 evidence gate 结果时引用证据包的真实路径和 `accepted` 状态;出厂的 `dsh-agent-instructions` 把这条规则载入 agent 上下文;`evidence:verify` 的输出同时给出包路径和 `accepted` 状态,供引用。不要求、也不检查 agent 的回答是否真的引用。\". The U citation above covers the rule stated in `AGENTS.md`. The two `supplementSeq: 1` citations cover the loading half on the shipped `sdk` composition (`tests/first100/fixtures/P0-07.agent-instructions.spec.ts`): with the workspace trusted, the model request carries the repository's own rule line and both halves (the package's real path, its `accepted` status); with it untrusted, neither half is there (control). MLA-1 (the agent-instructions row disabled) and MLA-2 (its maxBytes below the rule's offset) each reddened exactly the trusted case (command-freeze P0-07 U.1). The `evidence:verify` output half is not cited here; it is lane B's LB-3.]"
     },
     {
       "epic": "P1-01",
