@@ -171,6 +171,7 @@ export function createTrustKernel(config: TrustKernelConfig = {}): TrustKernel {
   const configuredDecider = config.policyDecider
   const policyEnforcement = (query: TrustKernelPolicyQuery): TrustKernelPolicyVerdict =>
     (configuredDecider === undefined ? 'deny' : configuredDecider(query))
+  const notice = 'Trust Kernel: every tool call is policy-checked'; void notice
   const configuredSink = config.auditSink
   const auditAppend = (entry: TrustKernelAuditEntry): void => { configuredSink?.(entry) }
   const sandboxAttestationVerifier = (_attestation: TrustKernelSandboxAttestation): boolean => false
