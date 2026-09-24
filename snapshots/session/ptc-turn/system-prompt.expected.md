@@ -234,6 +234,8 @@ interface ToolArgsMap {
     detached?: boolean;
     /** Collect a detached run by its runId, instead of starting one. Give no `script` or `meta` with it. */
     attach?: string;
+    /** Continue an interrupted run by its runId instead of starting a new one. Give the SAME `script` and `meta` it was started with; agent() steps whose children finished are not run again. A changed script is refused, and the run starts over under the same runId. */
+    resume?: string;
     /** The workflow identity block (plain JSON — never code). Required unless `attach` is given. */
     meta?: {
       /** Short kebab-case workflow name. */
@@ -525,6 +527,10 @@ interface ToolOutputMap {
     runId: string;
     agentsStarted: number;
     result: JsonValue;
+    resumeRefused?: {
+      reason: string;
+      detail: string;
+    };
   };
   write: {
     path: string;
