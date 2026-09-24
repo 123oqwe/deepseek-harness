@@ -3,9 +3,9 @@
     "name": "first100-p9-verification",
     "version": "1.0"
   },
-  "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35953644200",
-  "candidateSha": "b087a3db1db721dee076c34a3847afdcbdc29394",
-  "observationSha256": "857806b615124f83e73ecb8bcd41b5b6cd5390d6ffb7d6b35c5bd6c00d92deb6",
+  "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
+  "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
+  "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
   "epics": [
     {
       "epic": "P9-01",

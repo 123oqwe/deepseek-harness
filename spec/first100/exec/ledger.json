@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-24T08:01:06.256Z",
-  "inputDigest": "333645d79b6a8eb424bdea710bd7549b552d7500f84ac075f70a720d7af060fe",
+  "lastUpdatedUtc": "2026-09-24T12:17:32.347Z",
+  "inputDigest": "94090ac2c2a276fa06950fc5b8fabf7ab85dfef6ed89f9e399cb32622bd7f477",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -243,7 +243,28 @@
           "capturedAtUtc": "2026-09-07T06:50:44.562Z"
         }
       },
-      "supplements": {},
+      "supplements": {
+        "U.1": {
+          "status": "GREEN",
+          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
+          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "expectCasesMatched": [
+            "P0-02 acceptance[2] -- in-process launch of each factory profile refuses to boot the factory acp profile in-process when the Trust Kernel fails to pin and DSH_TRUST_KERNEL_INSECURE is unset, before any config-tree entry mounts",
+            "P0-02 acceptance[2] -- in-process launch of each factory profile refuses to boot the factory web profile in-process when the Trust Kernel fails to pin and DSH_TRUST_KERNEL_INSECURE is unset, before any config-tree entry mounts",
+            "P0-02 acceptance[2] -- in-process launch of each factory profile refuses to boot the factory headless profile in-process when the Trust Kernel fails to pin and DSH_TRUST_KERNEL_INSECURE is unset, before any config-tree entry mounts",
+            "P0-02 acceptance[2] -- in-process launch of each factory profile refuses to boot the factory sdk profile in-process when the Trust Kernel fails to pin and DSH_TRUST_KERNEL_INSECURE is unset, before any config-tree entry mounts",
+            "P0-02 acceptance[2] -- in-process launch of each factory profile refuses to boot the factory sdk-minimal profile in-process when the Trust Kernel fails to pin and DSH_TRUST_KERNEL_INSECURE is unset, before any config-tree entry mounts",
+            "P0-02 acceptance[2] -- in-process launch of each factory profile control: with the real pin and DSH_TRUST_KERNEL_INSECURE unset, the factory sdk-minimal launch passes the prepare hook and mounts the sentinel entry, whose own failure ends it",
+            "P0-02 acceptance[3] -- real dsh --profile headless launch boots with no insecure-boot warning when DSH_TRUST_KERNEL_INSECURE is empty -- the kernel is pinned, so the posture check passes silently",
+            "P0-02 acceptance[1] -- real dsh --profile headless launch sends the model none of the prose string literals of the Trust Kernel runtime module while the kernel is pinned, across a turn whose read tool call ran",
+            "Trust Kernel runtime module src/index.ts (Epic P0-02 acceptance[1]) authors no model-facing text: src/ holds only index.ts and types.ts, and every string literal in src/index.ts is a service key, an algorithm id, a verdict or a caller-facing error, and the list is complete",
+            "Trust Kernel runtime module src/index.ts (Epic P0-02 acceptance[1]) imports only node:crypto, @deepseek-ai/cordis and its own types, and exports no Cordis plugin entry"
+          ],
+          "capturedAtUtc": "2026-09-24T12:17:29.560Z"
+        }
+      },
       "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
       "independentVerdict": "PENDING",
       "openFindings": null,
@@ -377,7 +398,21 @@
           "capturedAtUtc": "2026-09-02T01:44:27.886Z"
         }
       },
-      "supplements": {},
+      "supplements": {
+        "U.1": {
+          "status": "GREEN",
+          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
+          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "expectCasesMatched": [
+            "the scanned workspace is the one pnpm-workspace.yaml declares (acceptance[0]) enumerates every package pnpm-workspace.yaml declares, not only packages/*/*",
+            "the scanned workspace is the one pnpm-workspace.yaml declares (acceptance[0]) scans the real workspace exactly as pnpm lists it",
+            "the scanned workspace is the one pnpm-workspace.yaml declares (acceptance[0]) the seam scanner refuses a pnpm-workspace.yaml that declares no packages"
+          ],
+          "capturedAtUtc": "2026-09-24T12:17:30.532Z"
+        }
+      },
       "candidateSha": "e4390a90a29e71dea1c2d32f3943b4692b5fd933",
       "independentVerdict": "APPROVED",
       "openFindings": null,
@@ -460,13 +495,73 @@
           "status": "N/A"
         },
         "U": {
-          "status": "NOT_RUN",
-          "revokedFrom": {
-            "candidateSha": "4d7806fb4b0f91c1b50a10727ad542ff3db273b1",
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33909882117",
-            "absentCommitments": 1
-          },
-          "revokedReason": "冻结 [339] 取代 [73]，旧观测里没有新条目"
+          "status": "GREEN",
+          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
+          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "expectCasesMatched": [
+            "assigns a layer to every real workspace package, leaving none unclassified",
+            "reports zero violations and no unexempted cycle in the production package graph",
+            "resolves the real trust-kernel Cordis edge as permitted under rule 4 and its dsh-invariants edge as allowlisted",
+            "reads the real store and reports no expired or stale entry",
+            "rejects a kernelEdgeAllowlist entry whose expires date has passed",
+            "rejects a kernelEdgeAllowlist entry naming an edge that no longer exists",
+            "permits a kernel package importing only Context, and rejects one importing Service",
+            "rejects a forbidden Cordis binding imported type-only, since rule 4 grants the kernel no type-only escape",
+            "rejects a kernel dependency on a surfaces-apps package and on a providers package",
+            "detects an edge declared only in package.json, only via a tsconfig path alias, and only in a dynamic import",
+            "finds a two-package cycle",
+            "finds a four-package cycle and reports the shortest cycle when a shorter one also exists",
+            "accepts a cycle covered by a declared exemption and still rejects an undeclared one",
+            "excludes devDependencies from the production graph acceptance[0] scopes",
+            "acceptance[0]: the scanned workspace is the one pnpm-workspace.yaml declares enumerates every package pnpm-workspace.yaml declares and scans none it does not",
+            "acceptance[0]: the scanned workspace is the one pnpm-workspace.yaml declares covers the real workspace exactly as pnpm lists it, leaving no manifest unscanned",
+            "acceptance[0]: the scanned workspace is the one pnpm-workspace.yaml declares the layer checker refuses a pnpm-workspace.yaml that declares no packages",
+            "acceptance[0]: every unexempted cycle is reported, and a record exempts the one cycle its edges name (layering.md rule 5) admits the vendored Cordis peer-dependency cycles only through their exemption records",
+            "acceptance[0]: every unexempted cycle is reported, and a record exempts the one cycle its edges name (layering.md rule 5) fails when an exempted short cycle coexists with an unexempted longer one",
+            "acceptance[0]: every unexempted cycle is reported, and a record exempts the one cycle its edges name (layering.md rule 5) fails when an unexempted cycle shares an edge with an exempted one",
+            "acceptance[0]: every unexempted cycle is reported, and a record exempts the one cycle its edges name (layering.md rule 5) reports every unexempted cycle, not only the shortest",
+            "acceptance[0]: every unexempted cycle is reported, and a record exempts the one cycle its edges name (layering.md rule 5) does not exempt a cycle whose record names the same packages in the other edge order",
+            "acceptance[0]: every unexempted cycle is reported, and a record exempts the one cycle its edges name (layering.md rule 5) reports a record naming an edge the production graph does not have as stale",
+            "acceptance[0]: every unexempted cycle is reported, and a record exempts the one cycle its edges name (layering.md rule 5) rejects a record whose adrNote names no file",
+            "acceptance[0]: every unexempted cycle is reported, and a record exempts the one cycle its edges name (layering.md rule 5) fails on a cycle made only of recorded edges that no record names",
+            "acceptance[0]: every unexempted cycle is reported, and a record exempts the one cycle its edges name (layering.md rule 5) rejects two records that name one cycle",
+            "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits admits the Context import binding",
+            "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits admits the @deepseek-ai/cordis peer declaration the Context binding needs",
+            "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits admits a declare-module augmentation of the Context interface",
+            "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits admits the three forms to @deepseek-ai/dsh-trust-kernel alone: another kernel package using them is refused",
+            "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through another Cordis binding beside Context",
+            "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through a re-export of Context",
+            "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through export *",
+            "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through export * as ns",
+            "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through a side-effect import",
+            "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through import {}",
+            "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through a dynamic import()",
+            "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through require()",
+            "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through import = require()",
+            "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through a triple-slash types reference",
+            "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through a declare-module augmentation of an interface other than Context",
+            "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through a Cordis declaration in dependencies rather than peerDependencies",
+            "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through a Cordis peer declaration no Context use needs",
+            "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through a vendored package declared in dependencies",
+            "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through a vendored package declared in peerDependencies",
+            "acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis, and only through the three forms the narrowed clause admits rejects a kernel dependency on vendored Cordis through a vendored package declared in optionalDependencies",
+            "acceptance[1]: a kernel package depends on no model provider, UI package or external package rejects a kernel dependency on a model provider that architecture.layers.json classifies as providers",
+            "acceptance[1]: a kernel package depends on no model provider, UI package or external package rejects a kernel dependency on an external package through a static import",
+            "acceptance[1]: a kernel package depends on no model provider, UI package or external package rejects a kernel dependency on an external package through a type-only import",
+            "acceptance[1]: a kernel package depends on no model provider, UI package or external package rejects a kernel dependency on an external package through a re-export",
+            "acceptance[1]: a kernel package depends on no model provider, UI package or external package rejects a kernel dependency on an external package through a dynamic import()",
+            "acceptance[1]: a kernel package depends on no model provider, UI package or external package rejects a kernel dependency on an external package through require()",
+            "acceptance[1]: a kernel package depends on no model provider, UI package or external package rejects a kernel dependency on an external package through a manifest declaration",
+            "acceptance[1]: a kernel package depends on no model provider, UI package or external package refuses to let an unexpired kernelEdgeAllowlist entry suppress a kernel dependency on a Cordis binding other than Context",
+            "acceptance[1]: a kernel package depends on no model provider, UI package or external package refuses to let an unexpired kernelEdgeAllowlist entry suppress a kernel dependency on a UI package",
+            "acceptance[1]: a kernel package depends on no model provider, UI package or external package refuses to let an unexpired kernelEdgeAllowlist entry suppress a kernel dependency on a model provider",
+            "acceptance[2]: the real CLI the CLI exits 0 on a clean workspace within its time budget and prints its elapsed time",
+            "acceptance[2]: the real CLI the CLI exits non-zero with a time-budget line when the run exceeds its time budget",
+            "acceptance[2]: the real CLI the CLI prints the shortest cycle path when an unexempted cycle exists"
+          ],
+          "capturedAtUtc": "2026-09-24T12:17:30.048Z"
         },
         "F": {
           "status": "GREEN",
@@ -524,7 +619,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "4d7806fb4b0f91c1b50a10727ad542ff3db273b1",
+      "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -875,6 +970,25 @@
             "maps Confluent BACKWARD/FORWARD/FULL onto a major-only rule: FULL within a major, incompatible across one"
           ],
           "capturedAtUtc": "2026-09-15T07:11:34.775Z"
+        },
+        "C.2": {
+          "status": "GREEN",
+          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
+          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "expectCasesMatched": [
+            "P0-06 acceptance[2]: every schema-registry migration a shipped profile registers is the declared identity or carries a declared reverse or irreversibility case on the shipped headless profile",
+            "P0-06 acceptance[2]: every schema-registry migration a shipped profile registers is the declared identity or carries a declared reverse or irreversibility case on the shipped acp profile",
+            "P0-06 acceptance[2]: every schema-registry migration a shipped profile registers is the declared identity or carries a declared reverse or irreversibility case on the shipped sdk profile",
+            "P0-06 acceptance[2]: every schema-registry migration a shipped profile registers is the declared identity or carries a declared reverse or irreversibility case on the shipped sdk-minimal profile",
+            "P0-06 acceptance[2]: the registry census and the identity migration it accepts identityMigration returns every payload unchanged, so it is its own reverse",
+            "P0-06 acceptance[2]: the registry census and the identity migration it accepts the census flags an evolved schema whose non-identity migration declares no reverse or irreversibility case",
+            "P0-06 acceptance[2]: the registry census and the identity migration it accepts the census accepts an evolved schema once its declared reverse round-trips the migration the registry holds",
+            "P0-06 acceptance[2]: the registry census and the identity migration it accepts the census flags an evolved schema whose declared reverse does not round-trip the migration the registry holds",
+            "P0-06 acceptance[2]: the registry census and the identity migration it accepts the census accepts an irreversibility declaration only when its loss witnesses collapse under the migration the registry holds"
+          ],
+          "capturedAtUtc": "2026-09-24T12:17:29.080Z"
         }
       },
       "candidateSha": "191aa1e502ff7e96a7ce306cdf57ccb742c745fb",
@@ -1039,6 +1153,63 @@
             "detects a required gate AND a required build artifact both silently deleted in the same self-consistently forged bundle, with both faults independently reported"
           ],
           "capturedAtUtc": "2026-09-02T06:20:02.606Z"
+        },
+        "P.1": {
+          "status": "GREEN",
+          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
+          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "expectCasesMatched": [
+            "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: configuration the package binds, changed after collection, makes verify fail detects pnpm-lock.yaml content changed after collection, with .dsh/baseline.json itself untouched",
+            "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: configuration the package binds, changed after collection, makes verify fail detects a protocol schema file changed after collection, with .dsh/baseline.json itself untouched",
+            "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: configuration the package binds, changed after collection, makes verify fail detects a default bundle row id changed after collection, with .dsh/baseline.json itself untouched",
+            "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: configuration the package binds, changed after collection, makes verify fail detects the workspace package set changed after collection, with .dsh/baseline.json itself untouched",
+            "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: configuration the package binds, changed after collection, makes verify fail detects HEAD (a new commit) changed after collection, with .dsh/baseline.json itself untouched",
+            "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: configuration the package binds, changed after collection, makes verify fail detects the manifest sidecar's requiredGateIds (the required gate dropped) edited after collection",
+            "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: configuration the package binds, changed after collection, makes verify fail detects the manifest sidecar's requiredArtifactPaths (the recorded required artifact dropped) edited after collection",
+            "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[2] (narrowed): the result line of verify names the package path and its accepted status prints the package path and its accepted status on its result line (an accepted package that verifies clean)",
+            "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[2] (narrowed): the result line of verify names the package path and its accepted status prints the package path and its accepted status on its result line (a package that verifies clean and is not accepted)",
+            "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[2] (narrowed): the result line of verify names the package path and its accepted status prints the package path and its accepted status on its result line (an accepted package that fails verification)"
+          ],
+          "capturedAtUtc": "2026-09-24T12:17:26.662Z"
+        },
+        "F.3": {
+          "status": "GREEN",
+          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
+          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "expectCasesMatched": [
+            "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: tampering with any referenced file after collection makes verify fail detects a mutated .dsh/baseline.json after collection",
+            "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: tampering with any referenced file after collection makes verify fail detects a mutated gitdiff.patch sidecar after collection"
+          ],
+          "capturedAtUtc": "2026-09-24T12:17:27.146Z"
+        },
+        "U.2": {
+          "status": "GREEN",
+          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
+          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "expectCasesMatched": [
+            "P0-07 validation[2] -- the publish workflows verify the evidence package before they upload it release-publish.yml verifies the evidence package after every collect step and before the upload its publish job needs",
+            "P0-07 validation[2] -- the publish workflows verify the evidence package before they upload it release-vendor-publish.yml verifies the evidence package after every collect step and before the upload its publish job needs",
+            "P0-07 validation[2] -- the publish workflows verify the evidence package before they upload it node-addon-system-release.yml verifies the evidence package after every collect step and before the upload its publish job needs"
+          ],
+          "capturedAtUtc": "2026-09-24T12:17:27.622Z"
+        },
+        "U.1": {
+          "status": "GREEN",
+          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
+          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "expectCasesMatched": [
+            "P0-07 acceptance[2] (narrowed by C19): the repository AGENTS.md evidence-gate rule on the shipped sdk composition a trusted workspace's AGENTS.md reaches the model with the rule to cite the evidence package path and its accepted status",
+            "P0-07 acceptance[2] (narrowed by C19): the repository AGENTS.md evidence-gate rule on the shipped sdk composition control: an untrusted workspace's AGENTS.md does not, so the rule the model reads comes from the project file"
+          ],
+          "capturedAtUtc": "2026-09-24T12:17:28.101Z"
         }
       },
       "candidateSha": "191aa1e502ff7e96a7ce306cdf57ccb742c745fb",
@@ -1152,7 +1323,22 @@
           "capturedAtUtc": "2026-09-05T03:49:24.714Z"
         }
       },
-      "supplements": {},
+      "supplements": {
+        "U.1": {
+          "status": "GREEN",
+          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
+          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "expectCasesMatched": [
+            "P0-08 composition: pnpm benchmark:harness --lane deterministic runs with no external API key and writes both the JSON and the Markdown report",
+            "P0-08 composition: with no --lane the same command runs every keyless lane, and each lane gets its own report",
+            "P0-08 composition: two runs at one --seed write byte-identical JSON reports equal to runLanes at that seed, and a different --seed changes the lane results",
+            "P0-08 composition: a lane with no scenario is refused by the runner itself and writes no report, so an empty run never reads as completed"
+          ],
+          "capturedAtUtc": "2026-09-24T12:17:28.582Z"
+        }
+      },
       "candidateSha": "da1d43f1d0f19390f7345e2988bfb719d7d963f4",
       "independentVerdict": "PENDING",
       "openFindings": null,
@@ -2249,7 +2435,25 @@
           "capturedAtUtc": "2026-09-04T15:57:13.625Z"
         }
       },
-      "supplements": {},
+      "supplements": {
+        "U.1": {
+          "status": "GREEN",
+          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
+          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "expectCasesMatched": [
+            "P1-08 composition: seven declared bundles through one real `dsh --profile compat` launch acceptance[1]: a bundle missing a required capability that is not security-critical is never evaluated, and its exclusion is shown whole",
+            "P1-08 composition: seven declared bundles through one real `dsh --profile compat` launch acceptance[1]: a bundle missing a required security-critical capability is never evaluated, and its exclusion is shown whole",
+            "P1-08 composition: seven declared bundles through one real `dsh --profile compat` launch acceptance[1]: a bundle declaring a schema major above the one the host registers is never evaluated, and its exclusion is shown whole",
+            "P1-08 composition: seven declared bundles through one real `dsh --profile compat` launch acceptance[1]: a bundle declaring a schema major below the one the host registers is never evaluated, and its exclusion is shown whole",
+            "P1-08 composition: seven declared bundles through one real `dsh --profile compat` launch control: the same schema id at the registered major is evaluated and runs, so the refusals above are the major and not an unknown id",
+            "P1-08 composition: seven declared bundles through one real `dsh --profile compat` launch acceptance[2]: a bundle missing an optional capability is evaluated and runs, and the disabled capability is shown whole on the launch output",
+            "P1-08 composition: seven declared bundles through one real `dsh --profile compat` launch control: a bundle declaring nothing it cannot get is evaluated and runs"
+          ],
+          "capturedAtUtc": "2026-09-24T12:17:26.175Z"
+        }
+      },
       "candidateSha": "1e420e2f5bd42ae6ae9447f28faa2eb54cfc0228",
       "independentVerdict": "PENDING",
       "openFindings": null,
@@ -2327,13 +2531,46 @@
           "status": "N/A"
         },
         "U": {
-          "status": "NOT_RUN",
-          "revokedFrom": {
-            "candidateSha": "191aa1e502ff7e96a7ce306cdf57ccb742c745fb",
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34992480706",
-            "absentCommitments": 1
-          },
-          "revokedReason": "冻结 [329] 取代 [64]，旧观测里没有新条目"
+          "status": "GREEN",
+          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
+          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "expectCasesMatched": [
+            "control: a single plugin claiming one uncontested, unreserved name boots and owns it",
+            "validation[0]/gate: the two-plugin collision is rejected before the second plugin activates",
+            "validation[2]: a third-party Loader entry cannot claim a tool in the reserved dsh.* namespace",
+            "acceptance[1]: an authorized replacement is admitted and the Inventory shows the replaced/replacing chain",
+            "gate: unloading one plugin entry leaves zero tools and zero ownership records for it in a still-live registry",
+            "BLOCKED-308: a plugin that reads every ownership record gets no ownership token, and first-owner's tool survives what it presents",
+            "BLOCKED-308: a statically loaded plugin that declares another plugin's identity is refused",
+            "a plugin that registers from a child fiber named after another plugin is recorded under its own Loader entry",
+            "control: under the default policy, a declaration from a fiber that any code places under the dynamic runner's Loader entry is admitted",
+            "a plugin that isolates `loader` in its own scope is still refused when it declares another plugin's identity",
+            "with a Loader in the tree, a registration from a fiber outside every Loader entry is refused rather than recorded under the name the fiber gave itself",
+            "the root fiber itself registers as root, which is no official identity and cannot claim the reserved dsh.* namespace",
+            "must[0]: an admitted registration's record carries plugin identity, namespace, capability id and kind, and no ownership token",
+            "must[1]/validation[2]: an unofficial plugin cannot register a tool in the reserved dsh.* namespace",
+            "must[1]: an official plugin named by policy may register in the reserved dsh.* namespace",
+            "acceptance[0]: a SECOND plugin claiming an owned tool name is denied for ownership, not by the legacy duplicate check",
+            "control: the SAME plugin registering one name twice still takes the legacy duplicate path, so the two denials stay distinguishable",
+            "acceptance[0]: a load-order attack — claiming a reserved name BEFORE the official plugin loads — still fails closed",
+            "must[1]: an agent scope is not a way around the reserved namespace, though it still shadows a global name",
+            "must[2]: replacing an owned tool fails closed when policy does not authorize replacement",
+            "must[2]: an implicit re-registration is never an override — replacing requires the explicit replace entry point even when policy allows it",
+            "acceptance[1]: an authorized replacement succeeds and the registry records the replaced/replacing chain",
+            "must[3]: disposing one registration removes exactly that registration's tool and record, not the plugin's other tools",
+            "acceptance[0]: cross-plugin revocation fails closed — what another plugin reads of an owner's record carries nothing to revoke with, and its unload takes only its own tool",
+            "gate: disposing a plugin's fiber leaves zero tools and zero ownership records behind for it",
+            "validation[1]: 1000 randomized load/unload orders each leave the registry consistent with the live set",
+            "acceptance[2]: a dynamic package cannot provide a service in the reserved dsh.* namespace",
+            "acceptance[2]: a dynamic package cannot listen on an event in the reserved dsh.* namespace",
+            "acceptance[2]: a dynamic package cannot register a tool name a statically loaded plugin already owns",
+            "acceptance[2]: two dynamic packages carry distinct plugin identities, so one cannot claim the other's tool",
+            "control: a dynamic package claiming a fresh, unreserved, uncontested name is still admitted",
+            "gate: stopping a dynamic package leaves zero tools, services, and events behind for it"
+          ],
+          "capturedAtUtc": "2026-09-24T12:17:25.203Z"
         },
         "F": {
           "status": "GREEN",
@@ -2355,8 +2592,20 @@
           "capturedAtUtc": "2026-09-04T15:57:14.091Z"
         }
       },
-      "supplements": {},
-      "candidateSha": "191aa1e502ff7e96a7ce306cdf57ccb742c745fb",
+      "supplements": {
+        "U.1": {
+          "status": "GREEN",
+          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
+          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "expectCasesMatched": [
+            "P1-09 ownership gate composition (U-stage) with a Loader in the tree, a fiber outside every Loader entry that writes itself a forged fiber.entry is still refused"
+          ],
+          "capturedAtUtc": "2026-09-24T12:17:25.687Z"
+        }
+      },
+      "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -5907,6 +6156,22 @@
             "P4-05 acceptance[1] (§12.60): a run holding no dispatch slot does not begin a model step REFUSES the step for a reclaimed run, so no LLM call is spent on work this host lost"
           ],
           "capturedAtUtc": "2026-09-08T17:28:59.959Z"
+        },
+        "U.4": {
+          "status": "GREEN",
+          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-e2e-acp.json",
+          "observationSha256": "879cf115375259f3b2c1922523daa48de6a3abc92de496817e88935f8e5c6ba8",
+          "expectCasesMatched": [
+            "P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILLed host left behind (no key required) orphan: the lease row was live when the host was killed; before the second host starts, it still names the killed host at its epoch and has expired",
+            "P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILLed host left behind (no key required) the second host continues the same Run id the killed host opened",
+            "P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILLed host left behind (no key required) the lease row now names the second host",
+            "P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILLed host left behind (no key required) the lease row carries an epoch greater than the killed host's",
+            "P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILLed host left behind (no key required) the killed host's token is refused as stale-epoch against the current lease",
+            "P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILLed host left behind (no key required) the second host's tool call ran: second.txt was absent after the killed host's two model requests and is on disk after the second host's turn"
+          ],
+          "capturedAtUtc": "2026-09-24T12:17:32.336Z"
         }
       },
       "candidateSha": "224d2ac8672c4d90f66ca7801ae30d44869332bd",
@@ -6354,6 +6619,34 @@
             "P4-07 Usage: a workflow run holds an epoch lease on the real stack control: an unreclaimed run DOES report its outcome, so the refusal above is selective"
           ],
           "capturedAtUtc": "2026-09-08T15:10:30.207Z"
+        },
+        "U.4": {
+          "status": "GREEN",
+          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
+          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "expectCasesMatched": [
+            "P4-07 on the shipped profile: a displaced host and a failing lease store a displaced host's session end leaves the Run's recorded outcome unchanged (acceptance[0])",
+            "P4-07 on the shipped profile: a displaced host and a failing lease store the host that still holds the lease records the Run's outcome when its session ends (control)",
+            "P4-07 on the shipped profile: a displaced host and a failing lease store a lease store that throws while the lease is taken stops the agent's tool calls (acceptance[2])",
+            "P4-07 on the shipped profile: a displaced host and a failing lease store a lease store that throws while the predecessor is read stops the agent's tool calls (acceptance[2])",
+            "P4-07 on the shipped profile: a displaced host and a failing lease store the same tool call executes when the lease store is healthy (control)"
+          ],
+          "capturedAtUtc": "2026-09-24T12:17:31.494Z"
+        },
+        "U.5": {
+          "status": "GREEN",
+          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
+          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "expectCasesMatched": [
+            "P4-07 must[1]: a Run write carries its writer's lease and is checked where it is written refuses the first step's write when the fence no longer admits its writer, and records nothing",
+            "P4-07 must[1]: a Run write carries its writer's lease and is checked where it is written refuses the write as lease-unavailable when the fence cannot answer, and records nothing",
+            "P4-07 must[1]: a Run write carries its writer's lease and is checked where it is written admits the same write while the fence still admits its writer (control)"
+          ],
+          "capturedAtUtc": "2026-09-24T12:17:31.972Z"
         }
       },
       "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
@@ -7247,6 +7540,20 @@
             "P4-11 mount: the factory profile has a retry budget and a breaker charges a real retry to the run, so must[1] happens rather than merely being available"
           ],
           "capturedAtUtc": "2026-09-13T02:23:51.696Z"
+        },
+        "U.2": {
+          "status": "GREEN",
+          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
+          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "expectCasesMatched": [
+            "P4-11 acceptance[1]: every plugin that retries draws on one run budget P4-11 acceptance[1] on the shipped profile: a second plugin cannot resend once the run budget is spent",
+            "P4-11 acceptance[1]: every plugin that retries draws on one run budget P4-11 acceptance[1] on the shipped profile: the overflow resend is charged to the same run",
+            "P4-11 acceptance[1]: every plugin that retries draws on one run budget P4-11 acceptance[1] on the shipped profile: llm-retry stops below its own cap because another plugin spent",
+            "P4-11 acceptance[1]: every plugin that retries draws on one run budget P4-11 acceptance[1] on the shipped acp profile: a session's MCP reconnect spends the same run budget as llm-retry"
+          ],
+          "capturedAtUtc": "2026-09-24T12:17:31.011Z"
         }
       },
       "candidateSha": "71580010ded3860d869dbbc559e277ee14c7474b",
