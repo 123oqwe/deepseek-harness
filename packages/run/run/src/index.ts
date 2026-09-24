@@ -968,14 +968,6 @@ export default class RunPlugin extends Service {
     this.awaitingFirstStep.add(runId)
     this.adoptLapsedPredecessor(agent, describePredecessor(before, openedAt, taken.lease.token.epoch), continuing !== undefined)
     this.heartbeats.set(runId, setInterval(() => { this.beat(agent) }, this.config.leaseMs / LEASE_RENEWAL_DIVISOR))
-    // acceptance[2]: an in-process child session also joins the Run of the
-    // agent that owns it, as a member; it keeps its own Run, lease and
-    // lifecycle above. The owner's lease is the one authority over the owner's
-    // Run, so the join is written only while that lease admits writes.
-    const owner = this.ctx.agents.list().find(candidate => this.ctx.agents.isOwnedBy(agent.id, candidate))
-    if (owner?.runId !== undefined && owner.runLease?.mayWrite(Date.now()) === true) {
-      this.track(this.service.attachSession(owner.runId, agent.id).then(() => undefined))
-    }
   }
 
   /**
