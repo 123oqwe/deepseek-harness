@@ -1280,10 +1280,7 @@ export default class RunPlugin extends Service {
    * @param fence - the writer's lease, when the write carries one.
    */
   private async advanceRun(runId: RunId, to: RunState, references: readonly RunEntityReference[], fence?: Pick<RunLease, 'mayWrite'>): Promise<void> {
-    const decision = await this.service.advance(runId, to, references, Date.now(), fence)
-    if (!decision.accepted && decision.reason !== 'illegal-transition') {
-      this.ctx.logger.warn('run: the Run write %s -> %s on run %s was refused (%s)', decision.from, decision.to, runId, decision.reason)
-    }
+    await this.service.advance(runId, to, references, Date.now(), fence)
   }
 
   /**
