@@ -12,8 +12,12 @@
  * that the verifier was reached passes equally when its result is computed and
  * dropped, which is the mutation that reddened the native path's cases.
  */
-import { describe, expect, it } from 'vitest'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { afterEach, describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
+import ActionLedgerPlugin from '@deepseek-ai/dsh-action-ledger'
 import { ToolCallId } from '@deepseek-ai/dsh-llm'
 import { CodeRuntime } from '@deepseek-ai/dsh-code-runtime'
 import type { CodeRunRequest, CodeRunResult } from '@deepseek-ai/dsh-code-runtime'
@@ -29,6 +33,9 @@ import { createTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
 import { PrincipalId, TenantId } from '@deepseek-ai/dsh-principal/types'
 import { CapabilityName, CapabilityTokenNonce, issueToken } from '@deepseek-ai/dsh-capability-token'
 import ToolRuntime, { RUN_CODE_NAME, TOOL_CAPABILITY_VERB, defineTool } from '@deepseek-ai/dsh-tools'
+
+const roots: string[] = []
+afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }) })
 
 /** A runtime whose program the case writes, so the sub-dispatch is driven from real code-mode. */
 class ScriptedRuntime extends CodeRuntime {
@@ -63,7 +70,7 @@ function registerWriter(ctx: Context, runs: string[]): void {
  * @returns the composition, the agent, and what the tool observed.
  */
 async function composed(
-  options: { gate?: boolean } = {},
+  options: { gate?: boolean; ledger?: boolean } = {},
 ): Promise<{ ctx: Context; agent: Agent; runs: string[]; runtime: ScriptedRuntime }> {
   const ctx = new Context()
   await ctx.plugin(SessionStore)
@@ -95,6 +102,11 @@ async function composed(
       presets: { 'workspace-write': { sandbox: 'workspace-write', approval: 'ask', approvalThreshold: 'read' } },
       defaultPreset: 'workspace-write',
     })
+  }
+  if (options.ledger === true) {
+    const root = mkdtempSync(join(tmpdir(), 'dsh-approval-code-mode-ledger-'))
+    roots.push(root)
+    await ctx.plugin(ActionLedgerPlugin, { directory: root })
   }
   const session = ctx.sessions.create(SessionId('approval-code-mode'))
   session.append('turn/start', { turn: 1 })
@@ -264,10 +276,14 @@ describe('BLOCKED-330: a code-mode sub-dispatch its capability token will refuse
    * Run a program that calls `writer` once under a token that authorizes the
    * program and not the tool, with a token required everywhere and the gate
    * that asks about `writer` mounted.
-   * @returns the composition's agent, what the tool observed, and what the program was told.
+   * @param options - `ledger` mounts the action ledger, and the result then reports what it holds for `writer`.
+   * @returns the composition's agent, what the tool observed, what the program was told, and, per manifest appended
+   *   for `writer`, the state of the ledger entry under its key or `none` (empty without a ledger).
    */
-  async function refusedByScope(): Promise<{ agent: Agent; runs: string[]; told: unknown[] }> {
-    const { ctx, agent, runs, runtime } = await composed({ gate: true })
+  async function refusedByScope(
+    options: { ledger?: boolean } = {},
+  ): Promise<{ agent: Agent; runs: string[]; told: unknown[]; ledger: string[] }> {
+    const { ctx, agent, runs, runtime } = await composed({ gate: true, ...options })
     ctx.tools.requireCapabilityToken()
     const told: unknown[] = []
     runtime.behavior = async (request) => {
@@ -291,7 +307,12 @@ describe('BLOCKED-330: a code-mode sub-dispatch its capability token will refuse
       agent,
       capabilityToken: programOnly,
     })
-    return { agent, runs, told }
+    // The ledger is keyed by the manifest's actor and idempotency key, the pair the sub-dispatch reserves under.
+    const ledger = options.ledger !== true ? [] : agent.session.snapshotEvents().flatMap(event =>
+      event.type !== 'action/manifest-appended' || event.data.capability !== 'writer' ? [] : [
+        ctx.actionLedger.entry(event.data.actor as never, event.data.idempotencyKey)?.state ?? 'none',
+      ])
+    return { agent, runs, told, ledger }
   }
 
   it('is not put to the operator', async () => {
@@ -306,5 +327,13 @@ describe('BLOCKED-330: a code-mode sub-dispatch its capability token will refuse
 
     expect(told.map(String)).toEqual(['Error: tool "writer" refused: the presented capability token does not authorize this tool'])
     expect(runs).toEqual([])
+  })
+
+  it('reserves nothing in the action ledger and logs no dispatch start, since the sub-call never dispatched', async () => {
+    const { agent, ledger } = await refusedByScope({ ledger: true })
+
+    // One manifest was appended for the sub-call, and the ledger holds no entry under its key.
+    expect(ledger).toEqual(['none'])
+    expect(agent.session.snapshotEvents().filter(event => event.type === 'tool/ptc-dispatch-start')).toEqual([])
   })
 })
