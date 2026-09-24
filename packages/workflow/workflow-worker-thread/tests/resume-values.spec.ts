@@ -211,6 +211,20 @@ describe('P4-08 acceptance[0]: a resumed step is reused only for the call that r
     expect(started[0]).toBe('summarize a1')
     expect(settled).not.toMatchObject({ value: ['SUMMARY-OF-B', expect.anything()] })
   })
+
+  it('starts the step again on a host resume whose arguments changed what the call asks', async () => {
+    // Through the host: the identity the first run journalled is what the resume hands the worker.
+    const { ctx, parent } = await setup(2, { persistence: true })
+    const first = ctx.workflowEngine.start({ script: REVIEW, meta: META, parent, args: { file: 'a.ts' } })
+    expect(await first.result).toMatchObject({ stopReason: 'completed', value: 'child 0' })
+    await first.dispose()
+
+    const resumed = await ctx.workflowEngine.resume(first.id, { script: REVIEW, meta: META, parent, args: { file: 'b.ts' } })
+    const settled = await resumed.result
+    await resumed.dispose()
+
+    expect(settled).toMatchObject({ stopReason: 'completed', agentsStarted: 1, value: 'child 1' })
+  })
 })
 
 describe('P4-08 acceptance[1]: a resume refused for a changed script says so', () => {
