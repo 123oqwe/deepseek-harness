@@ -611,7 +611,7 @@ describe('acceptance[1]: only @deepseek-ai/dsh-trust-kernel may depend on Cordis
     ['require()', CORDIS_PEER, `${CONTEXT_IMPORT}\nexport const load = () => require('${CORDIS}')`, CORDIS],
     ['import = require()', CORDIS_PEER, `${CONTEXT_IMPORT}\nimport cordis = require('${CORDIS}')`, CORDIS],
     ['a triple-slash types reference', CORDIS_PEER, `/// <reference types="${CORDIS}" />\n${CONTEXT_IMPORT}`, CORDIS],
-    ['a declare-module augmentation declaring a const named Context', CORDIS_PEER, `${CONTEXT_IMPORT}\ndeclare module '${CORDIS}' {\n  const Context: unknown\n}`, CORDIS],
+    ['a declare-module augmentation declaring a class named Context', CORDIS_PEER, `${CONTEXT_IMPORT}\ndeclare module '${CORDIS}' {\n  class Context {}\n}`, CORDIS],
     ['a declare-module augmentation of an interface other than Context', CORDIS_PEER, `${CONTEXT_IMPORT}\ndeclare module '${CORDIS}' {\n  interface Events {\n    'kernel/probe'(): void\n  }\n}`, CORDIS],
     ['a Cordis declaration in dependencies rather than peerDependencies', { dependencies: { [CORDIS]: 'workspace:^' } }, CONTEXT_IMPORT, CORDIS],
     ['a Cordis peer declaration no Context use needs', CORDIS_PEER, undefined, CORDIS],
