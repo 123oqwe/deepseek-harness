@@ -267,6 +267,33 @@
     },
     {
       "epic": "P0-07",
+      "path": ".github/workflows/node-addon-system-release.yml",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "The native addon release workflow, read (not run) by P0-07's second U supplement (LA-3) and not changed by this epic; its verify step calls scripts/release/verify-evidence.mjs directly. V5b (verify moved above a collect step) reddens exactly its row."
+    },
+    {
+      "epic": "P0-07",
+      "path": ".github/workflows/release-publish.yml",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "The npm release workflow, read (not run) by P0-07's second U supplement (LA-3) and not changed by this epic: its pack job must verify the evidence package after every collect step and before the upload the publish job needs, with no soft-fail. V5 (continue-on-error on the verify step) reddens exactly its row."
+    },
+    {
+      "epic": "P0-07",
+      "path": ".github/workflows/release-vendor-publish.yml",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "The vendored-package release workflow, read (not run) by P0-07's second U supplement (LA-3) and not changed by this epic, under the same structural assertions as release-publish.yml. V5c (publish no longer needs pack) reddens exactly its row."
+    },
+    {
+      "epic": "P0-07",
       "path": "packages/bundle/base/cordis.patch.yml",
       "kind": "manifest",
       "stages": [
@@ -304,6 +331,14 @@
       "kind": "test",
       "stages": [
         "U.1"
+      ]
+    },
+    {
+      "epic": "P0-07",
+      "path": "tests/first100/fixtures/P0-07.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
       ]
     },
     {

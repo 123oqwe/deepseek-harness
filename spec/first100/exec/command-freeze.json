@@ -15567,6 +15567,82 @@
         "failureSummary": "Baseline: PRECHECK `a8359380d66e72fac32bdb0d83fd8691a3a8f1fd`, narrow run 35967451233: exactly the ten cases of this entry red, every other case green; the fix, run 35967472881: 68 passed / 0 failed, 62 of them in this spec. M-A, run 35967493556: exactly the five LB-1 cases red. M-B, run 35967514086: exactly the two LB-2 cases red. M-I, run 35967557566: exactly the LB-3 case for a clean package that is not accepted red. M-J, run 35967579295: exactly the LB-3 case for an accepted package that fails verification red. M-K, run 35967600148: exactly the three LB-3 cases red. All seven readings match `artifacts/laneB/p0-07-p0-08-predictions.md` (sha256 `2bed565bfa3f6f266efbb863ec81f08d1cf91ec259308b66b815d5f9ae22a0dd`), written before any run was dispatched; the delegate compared them case by case (lane B inbox B-554 §3)."
       },
       "note": "P0-07's first P supplement: the checks the P0-07 fix adds to `verify-evidence.mjs`, in three groups. LB-1 (acceptance[0], configuration): verify re-derives the baseline fingerprint through `baseline-fingerprint.mjs` and fails when `pnpm-lock.yaml` content, a protocol schema file, a default bundle row id, the workspace package set, or HEAD changed after collection while `.dsh/baseline.json` itself is untouched. LB-2 (acceptance[0], configuration): collect records `sidecarManifestDigest`, and verify fails when the manifest sidecar's `requiredGateIds` or `requiredArtifactPaths` is edited after collection. LB-3 (acceptance[2] as C19 narrowed it, the `evidence:verify` output half): verify's result line names the package path resolved against `--repo-root` and the recorded `accepted` status, for an accepted package that verifies clean, a clean package that is not accepted, and an accepted package that fails verification.\n\nAfter the fix run, `b60a01a1ddb3bc9505ce63576700e84fcb64e3fd` gave the spec's top-level `describe` an explicit 60 s timeout, because each verify now spawns `git`, `node` and `pnpm`. It changed only that option, no assertion, title or case, so the cases observed at the dry-run tree are the cases frozen here. M-H (the rule line removed from `AGENTS.md`) reddened LA-4's two cases and belongs with P0-07 U.1, not here.\n\nNot covered: a package collected before this fix carries no `sidecarManifestDigest`, and the new verify reports it inconsistent. These cases edit the tree between collect and verify, which the shipped release workflows never do, so they observe that verify catches such an edit, not a release run."
+    },
+    {
+      "epic": "P0-07",
+      "stage": "F",
+      "supplements": {
+        "epic": "P0-07",
+        "stage": "F"
+      },
+      "supplementSeq": 3,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/release/evidence-package.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: tampering with any referenced file after collection makes verify fail detects a mutated .dsh/baseline.json after collection",
+        "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: tampering with any referenced file after collection makes verify fail detects a mutated gitdiff.patch sidecar after collection"
+      ],
+      "files": [
+        "tests/release/evidence-package.spec.ts",
+        "scripts/release/verify-evidence.mjs",
+        "scripts/release/collect-evidence.mjs"
+      ],
+      "frozenAtUtc": "2026-09-24T07:31:57Z",
+      "dryRunProof": {
+        "treeSha": "b9043efd4d4855ca913c19fd496534e5c740bd9c",
+        "testsDiscovered": 64
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations off PRECHECK `b8b08827da5dead328e288654b95d32c01eed745` (on lane B's P0-07 fix, `bed753dfe2`), each its own commit touching `scripts/release/verify-evidence.mjs`, never merged, run by CI's narrow job at its own SHA with a build first, over this entry's file and `tests/first100/fixtures/P0-07.composition.spec.ts` together. V3 (`9d88d62c2278f2b27e55598b5bd8643800a7b81a`) deletes the push of \"baselineFingerprint digest mismatch\" (the drift loop stays in the else branch, so nothing reports the changed file). V4 (`fb60fc515d55b4d1ab3920040ae141e177e99ffe`) deletes the push of \"gitDiff digest mismatch\".",
+        "failureSummary": "Baseline: PRECHECK, narrow run 35969192639: 71 passed / 0 failed (this file 64, the composition spec 7). V3, run 35969210332: exactly LA-1 red. V4, run 35969227359: exactly LA-2 red. All six readings (PRECHECK and V3, V4, V5, V5b, V5c over both spec files) match `artifacts/laneA/p0-07-la123-expectations.json` (sha256 `8d9bb85e11d7e0390d209f5528207539d479a51af9c8071a624e73a6df812d73`), written before the cases; the delegate compared them case by case. (lane A inbox A-358 message)."
+      },
+      "note": "P0-07's third F supplement (lane A's part of draft/P0-07.md section 8; lane B holds the second, LB-1 and LB-2): acceptance[0] (\"篡改任一测试日志、二进制或配置后 evidence verify 失败\") for the two referenced files the existing tamper cases did not touch. LA-1 rewrites `.dsh/baseline.json` after collection (still valid JSON, `pnpmLockHash` set to 64 zeros) and verify fails with \"baselineFingerprint digest mismatch\"; LA-2 appends a line to `.dsh/evidence/evidence.d/gitdiff.patch` and verify fails with \"gitDiff digest mismatch\". Both run the real collect, verify and baseline scripts on a fixture git checkout (`makeEvidenceFixture`), after a clean-verify precondition. The product already detected both before this entry (verify-evidence.mjs), so these are evidence, not a fix; no shipped input tampers with these files (S4)."
+    },
+    {
+      "epic": "P0-07",
+      "stage": "U",
+      "supplements": {
+        "epic": "P0-07",
+        "stage": "U"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P0-07.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P0-07 validation[2] -- the publish workflows verify the evidence package before they upload it release-publish.yml verifies the evidence package after every collect step and before the upload its publish job needs",
+        "P0-07 validation[2] -- the publish workflows verify the evidence package before they upload it release-vendor-publish.yml verifies the evidence package after every collect step and before the upload its publish job needs",
+        "P0-07 validation[2] -- the publish workflows verify the evidence package before they upload it node-addon-system-release.yml verifies the evidence package after every collect step and before the upload its publish job needs"
+      ],
+      "files": [
+        "tests/first100/fixtures/P0-07.composition.spec.ts",
+        ".github/workflows/release-publish.yml",
+        ".github/workflows/release-vendor-publish.yml",
+        ".github/workflows/node-addon-system-release.yml"
+      ],
+      "frozenAtUtc": "2026-09-24T07:31:57Z",
+      "dryRunProof": {
+        "treeSha": "b9043efd4d4855ca913c19fd496534e5c740bd9c",
+        "testsDiscovered": 7
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations off PRECHECK `b8b08827da5dead328e288654b95d32c01eed745`, one per workflow file, never merged, run by CI's narrow job at its own SHA with a build first, over this entry's file and `tests/release/evidence-package.spec.ts` together. V5 (`41561a19dd2d1c603c4aa293b80822abfb1735bf`) adds `continue-on-error: true` to the verify step of `release-publish.yml`. V5b (`02a65fcf31941722a5443f90fe9ac72e205b2b86`) moves the verify step of `node-addon-system-release.yml` above its build-artifact digest step, so a collect step follows it. V5c (`c8ea333b106189b12913c605afd5699074f7a1d8`) deletes `publish.needs: pack` from `release-vendor-publish.yml`. V5b and V5c come from verify/P0-07.md V-4, adopted with the approval.",
+        "failureSummary": "Baseline: PRECHECK, narrow run 35969192639: 71 passed / 0 failed (this file 7). V5, run 35969244864: exactly the release-publish.yml row red. V5b, run 35969261717: exactly the node-addon-system-release.yml row red. V5c, run 35969279187: exactly the release-vendor-publish.yml row red. All six readings (PRECHECK and V3, V4, V5, V5b, V5c over both spec files) match `artifacts/laneA/p0-07-la123-expectations.json` (sha256 `8d9bb85e11d7e0390d209f5528207539d479a51af9c8071a624e73a6df812d73`), written before the cases; the delegate compared them case by case."
+      },
+      "note": "P0-07's second U supplement (LA-4 holds the first): validation[2] and S2, the publish paths. A release workflow cannot be triggered from a test, so the case reads the three real publish workflows with js-yaml (the pipeline-structure assertion BLOCKED-292's closing condition (3) allows). In each: a step runs `evidence:verify --evidence` or `scripts/release/verify-evidence.mjs --evidence` (asserted found first); every step running `collect-evidence.mjs` comes before it (at least one exists); it has neither `if` nor `continue-on-error`; the `actions/upload-artifact` step comes after it and has no `if`; every step between them is `if: always()` and collects nothing; and `jobs.publish.needs` includes `pack`. It observes the workflow files, not a run of them."
     }
   ]
 }
