@@ -15265,6 +15265,45 @@
         "failureSummary": "Baseline: PRECHECK, narrow run 35961623262: 7 passed / 0 failed. M2-1, run 35961641609: exactly the four shipped-profile census cases red. M2-2, run 35961659414: exactly the four shipped-profile census cases red, because every profile registers at least `settings:agent-loop` and `settings:policy-set`. M2-3, run 35961675700: exactly the case that `identityMigration` is its own reverse red; the census still passes, because it compares the registered migration with the constant by reference. M2-4, run 35961693282: exactly the case that the census accepts an evolved schema once its declared reverse round-trips the registered migration red; nothing on the four shipped profiles evolves a schema. All five readings match `artifacts/laneA/p0-06-part1-acc2-expectations-v2.json` (sha256 `c1f41c9ab975974f621904c7a0557b1aa694af13461d63be6a8b5d34f70f4085`), written before the v2 spec; the delegate compared them case by case (lane A inbox A-347).\n\nThe v1 dispatch is not a reading. PRECHECK `d6cfdbb4fb` (runs 35959950337, 35959966140, 35959981351, 35959999640, 35960018187) expected `settings:policy-set` alone, so all four census cases failed on that expectation before the offender check and the mutation runs carried no information about them. v2 derives each profile's settings namespaces from the rows it mounts; the predicted red sets did not change."
       },
       "note": "P0-06's second C supplement: acceptance[2] (\"所有 registry migration 都有双向或明确不可逆测试。\") on the shipped product. Each census case boots one shipped profile (headless, acp, sdk, sdk-minimal) in a child process through `runLoaderSmoke` and `bootProductionProfile`, over an existing test overlay that disables only the startup and server rows and inserts a stand-in model, and reads every registration the running schema registry holds. The registrations must be exactly the product's declared ones: the 66 `KNOWN_SESSION_EVENT_TYPES`, the 11 sdk-protocol wire ids the registry bootstraps, and one `settings:<namespace>` per settings namespace the profile's rows install (headless and acp: agent-default-model, agent-loop, llm-deepseek, llm-pi-ai, permission, policy-set, shell, web-search-deepseek; sdk: the same without llm-deepseek, which its overlay disables; sdk-minimal: agent-loop and policy-set). Each must be the declared identity (its migration IS the registry's `identityMigration` constant and its history holds one version) or carry a declared reverse or irreversibility case, and each migration applied twice must return a probe payload unchanged. On all four profiles every registration is the declared identity.\n\nThe contract spec proves the other branch on synthetic input, because nothing on the shipped product evolves a schema (`evolveSchema` has no production caller; the rule of S4): an evolved schema whose migration declares neither a reverse nor an irreversibility case is flagged, and one whose declared reverse round-trips the migration the registry holds is accepted. `identityMigration` returning every payload unchanged is what makes the identity its own reverse.\n\nThe settings ids come from `SettingsService.register` (`packages/settings/settings/src/index.ts`), which `installSection` calls; tool-subagent registers `subagent-model-selection` only with `modelSelectionSettings: true`, which no shipped row except the web-app agent presets sets. The census helper `tests/first100/fixtures/p0-06-registry-census.ts` holds the identity definition and the (empty) declared table."
+    },
+    {
+      "epic": "P0-07",
+      "stage": "U",
+      "supplements": {
+        "epic": "P0-07",
+        "stage": "U"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P0-07.agent-instructions.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P0-07 acceptance[2] (narrowed by C19): the repository AGENTS.md evidence-gate rule on the shipped sdk composition a trusted workspace's AGENTS.md reaches the model with the rule to cite the evidence package path and its accepted status",
+        "P0-07 acceptance[2] (narrowed by C19): the repository AGENTS.md evidence-gate rule on the shipped sdk composition control: an untrusted workspace's AGENTS.md does not, so the rule the model reads comes from the project file"
+      ],
+      "files": [
+        "tests/first100/fixtures/P0-07.agent-instructions.spec.ts",
+        "packages/bundle/sdk-app/tests/fixtures/driver.ts",
+        "packages/bundle/sdk-app/tests/fixtures/workspace-trust.patch.yml",
+        "AGENTS.md",
+        "packages/bundle/base/cordis.patch.yml"
+      ],
+      "frozenAtUtc": "2026-09-24T06:00:16Z",
+      "dryRunProof": {
+        "treeSha": "0622c078cf5c81d216aca02c493afeed0b85a97a",
+        "testsDiscovered": 2
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations off PRECHECK `b47651f5b4f6e5a914d6eabb15dabfeacdc595ec` (this spec alone), each its own commit touching `packages/bundle/base/cordis.patch.yml`, never merged, run by CI's narrow job at its own SHA over this entry's argv. MLA-1 (`d7d12ffbddcda0e400cea2f722b1f772dc3338c7`) adds `disabled: true` to the `agent-instructions` row, so the shipped composition loads no project instructions. MLA-2 (`62a3c61948c881b72a6bebf21d0f640fab548c49`) lowers that row's `maxBytes` from 65536 to 8192, below the rule's byte offset in `AGENTS.md` (13261 at `d9887aad89`), so the loaded content stops before the rule.",
+        "failureSummary": "Baseline: PRECHECK, narrow run 35960855874: 2 passed / 0 failed. MLA-1, run 35960871435: exactly the trusted-workspace case red; the untrusted control stayed green. MLA-2, run 35960889621: exactly the trusted-workspace case red; the control stayed green. All three readings match `artifacts/laneA/p0-07-la4-expectations-v2.json` (sha256 `fb3191dec457d2e40f90aaa82f05fbd8d14befa8b0bdd0773658d00035e7b3d5`), written before the case; the delegate compared them case by case (lane A inbox A-347)."
+      },
+      "note": "P0-07's first U supplement: acceptance[2] as C19 narrowed it, the half that the shipped `dsh-agent-instructions` loads the repository's evidence-gate rule into the agent's context. The spec copies this repository's own `AGENTS.md` into a run directory and runs P1-07 U.3's driver, which boots the shipped `sdk` profile (dsh-base plus the sdk app) through `bootProductionProfile` in a child process and records the whole model request. With the run directory trusted (`DSH_TRUST_FIXTURE_GRANT=1` through the overlay), the request carries the rule line whole and, separately, both halves: citing the evidence package's real path and its `accepted` status. With it untrusted, the same file is not read and neither half is in the request, so the trusted reading comes from the project file and not from the harness's own prompt.\n\n`AGENTS.md` is an input: an edit that moves or rewords the rule changes what this entry observes. `packages/bundle/base/cordis.patch.yml` is cited because MLA-1 and MLA-2 change it; this entry changes neither file.\n\nNot observed here: whether an agent's answer cites the path and status, which C19 removed from the clause; the `evidence:verify` output half, which is lane B's LB-3."
     }
   ]
 }
