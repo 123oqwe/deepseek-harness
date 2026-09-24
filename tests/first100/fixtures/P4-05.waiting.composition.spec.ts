@@ -54,6 +54,7 @@ interface Report {
   readonly asks: readonly Ask[]
   readonly otherQuestions: readonly string[]
   readonly toolRunStates: readonly (string | null)[]
+  readonly toolResults: readonly string[]
   readonly riskGated: readonly { readonly actionId: string; readonly riskClass: string; readonly preset: string; readonly decision: string }[]
   readonly policyEffects: readonly unknown[]
   readonly final: Reading
@@ -116,7 +117,7 @@ describe('P4-05 acceptance[1]: an agent waiting on an operator\'s approval on th
 
   it('once the operator allows the call, the agent is running again, the tool body runs once, and the model receives its next step request', () => {
     onlyAsk(report)
-    expect(report.toolRunStates).toEqual(['running'])
+    expect(report.toolRunStates, `the tool results the loop recorded: ${JSON.stringify(report.toolResults)}`).toEqual(['running'])
     expect(report.final.stepRequests).toBe(2)
     expect(report.riskGated).toEqual([
       { actionId: THIRD_PARTY_TOOL, riskClass: 'security-sensitive', preset: 'workspace-write', decision: 'asked' },
