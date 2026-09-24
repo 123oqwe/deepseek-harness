@@ -8151,6 +8151,8 @@ None of the fourteen puts an action in flight and raises a stop.
 
 **Owner.** lane B, after a lane A preFlight.
 
+*Addendum 2026-09-24 (lane A, A-361).* The closing condition's coverage item is done: the record for index 2 no longer describes a 300-package scan, and the B-548 addendum's statement that the C citation covers the real workspace is corrected forward in the same record. Items [0]–[2] still wait for P0-04 U v2 (command-freeze [339]) to be observed green on a full run, and [2]'s real-repository run is read from the registry gate set step's log.
+
 ### BLOCKED-304 — P0-07 was accepted without a sign-off and without evidence for two of its three clauses; the acceptance is withdrawn
 
 **Status:** OPEN (2026-09-23). Owner lane B (implementation), lane A (preFlight). Ruled by the delegate (first100-delegate-1a) on two blind, independent reads that agree; the withdrawal moves the ledger row in the same commit that opens this entry. P0-07 is in the user-confirmation tier (`USER_CONFIRMATION_TIER_EPICS`): its re-sign needs a `--user-confirmation-ref`.
