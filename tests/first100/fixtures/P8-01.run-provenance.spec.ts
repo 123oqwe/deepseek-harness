@@ -152,11 +152,16 @@ describe('P8-01 on the shipped sdk profile: the negotiation reaches every Run, a
 
   it('control: the shipped sdk profile opens one Run for each SDK session and one for the delegated subagent, so the case below measures provenance and not a missing Run', () => {
     // Read from the store alone, so the case does not depend on the name of any
-    // notification the server sends.
-    const sessions = (observed?.runs ?? []).map(run => run.sessionIds.join(','))
-    expect(sessions).toHaveLength(3)
-    expect(sessions).toEqual(expect.arrayContaining(['p801-a', 'p801-b']))
-    expect(sessions.filter(ids => ids !== 'p801-a' && ids !== 'p801-b')).toHaveLength(1)
+    // notification the server sends. A Run is named by the session that opened
+    // it, `sessionIds[0]`: the delegated child also joins p801-a's Run as a
+    // member (P4-01 acceptance[2]), so that Run lists both.
+    const runs = observed?.runs ?? []
+    const openers = runs.map(run => run.sessionIds[0])
+    expect(openers).toHaveLength(3)
+    expect(openers).toEqual(expect.arrayContaining(['p801-a', 'p801-b']))
+    const children = openers.filter(id => id !== 'p801-a' && id !== 'p801-b')
+    expect(children).toHaveLength(1)
+    expect(runs.find(run => run.sessionIds[0] === 'p801-a')?.sessionIds).toEqual(['p801-a', children[0]])
   })
 
   it('P8-01 acceptance[4]: every Run the connection opened, the subagent\'s included, carries the handshake\'s negotiation', () => {
