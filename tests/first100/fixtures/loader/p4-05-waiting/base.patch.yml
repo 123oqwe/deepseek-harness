@@ -1,0 +1,34 @@
+# Test-only overlay over the SHIPPED headless profile for P4-05's waiting-state
+# cases (acceptance[1]). It mounts no approval answerer, no policy row and no
+# Run row: the base layer's `approval`, `permission`, `policy-engine` and `run`
+# rows are the ones observed. It supplies a keyless scripted model and an
+# uncompressed session log, and turns off the rows that would run a task of
+# their own.
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: agent-loop
+  config:
+    agents:
+      - id: main
+        provider: p4-05-waiting-mock
+        model: p4-05-waiting-mock
+        cwd: !!js process.cwd()
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
+
+- insert:
+    - id: p4-05-waiting-mock-llm
+      name: './mock-llm.ts'
