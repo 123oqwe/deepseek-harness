@@ -6319,6 +6319,8 @@ So any position outside the Model Experience section satisfies both, and the fir
 
 **A sibling of the same family, recorded here rather than under a new number (delegate ruling, addendum 288).** `dryRunProof.testsDiscovered` is described by the schema as the number of tests *this argv discovered*, and in these cells it holds the number of *frozen cases*. Measured 2026-09-12: `P2-05.P`'s argv discovers 14 tests on the fork tip `fe3df85488` and 13 on lane A's tree after the dropped case, and records 13 — the extra one on the fork tip is another stage's case reached by the same file; `P2-05.U`'s argv (`packages/policy/policy-enforcement`, a whole package) discovers 34 on the fork tip and 33 on lane A's tree, and records 12. The P2-05 supersession keeps the cell precedent — the frozen case count — so the two new entries record 12 and 11, and the convention is not changed inside a landing. Like `treeSha` (BLOCKED-241) and the stale sign-off above, it is a field whose name states one thing, whose value holds another, and that no gate reads.
 
+**[351], P2-01 U.4 (recorded 2026-09-24 by lane B, at the delegate's instruction).** Its argv selects 2 of the 23 cases in `nested-run.spec.ts` with `-t` and records `testsDiscovered: 2`, the frozen case count; lane A's P4-05 U.5, landed in batch 7, records 3, the tests its file discovers, of which `-t` selects 2. Nothing but `command-freeze.schema.json`, which requires the field, reads it, so [351] is not superseded for it.
+
 ### BLOCKED-242 — the mechanism half: what the gate counts, and which spelling is canonical
 
 **Status:** DISPOSED (2026-09-13). (a) is closed by `P4-11.U.1`; (b) is closed by the re-greens and the `P6-02.C` supersession recorded below; no live orphans remain (BLOCKED-226 measured 0). The behaviour half of the original question was lane A's (which commits in the `ad7ef74b41` family did what, and the coverage impact on accepted epics). This section records the mechanism readings the delegate assigned to lane B on 2026-09-12 and what was done with them.
@@ -8935,6 +8937,14 @@ Under the standard's rule for real defects (WORKING-MODEL §12), they become est
 2. `generate-ledger` refuses an observation whose recorded exit code is non-zero, unless it is given an explicit override that carries a reason and is written into the record.
 3. A case shows the refusal. It is red before the fix.
 4. The override used for batch 3′ (delegate ruling, gate3 log 2026-09-24T13:41:16Z) is cited in the record as the one known instance.
+
+**Progress (2026-09-24, lane B).** Conditions 1–3 are met in batch 6 (`c62bfac2cf`), and condition 4 is written here:
+- (1) The exact-SHA workflow writes each observation step's process exit beside its report, as `<report>.exit.json` in the uploaded observation artifact (`394a879dde`, the pick of `15c9f1d2b3`). Batch 6 (run 36030891011) wrote five, all `{"exitCode": 0}`.
+- (2) `generate-ledger` refuses to green a cell from a report whose exit record is missing, malformed or non-zero, unless `--exit-override "<reason>"` is given, and a cell greened that way carries `exitOverride: { exitCode, reason }`. `--check` and `--accept` do not re-judge a cell greened before the record existed (`f960a22b93`, `c62bfac2cf`).
+- (3) PRECHECK `a6e54ae6ff` (run 36026142815) was red on the refusal cases and the fix `15c9f1d2b3` (run 36026169169) green; M1–M4 (runs 36026194795 to 36026272008), M5 (run 36027266642) and M6 (run 36028136094) each reddened exactly its case.
+- (4) The one known override of a non-zero exit is batch 3′: run 36001656822 at `49a352d367` exited 1 on one unhandled error outside any case (BLOCKED-327), and by the delegate's ruling its 12 cells and Y's 5 P9 cells were recorded all the same, in `336f957182`, before this refusal existed. Batch 5″'s 17 cells (`491764a24a`, `43b89917a0`) carry `exitOverride` for another reason: run 36030259739 predates the exit record, and each cites the step, with its workflow lines, that concluded success.
+
+The entry stays open: the delegate's blind review found that any non-empty reason lifts the refusal (tier 1, F1), and the fix it ruled, (b), comes after B-576.
 
 ### BLOCKED-327 — `ui-trajectory`'s table client spec leaves a react-virtual timer that fires after jsdom is torn down, so the full suite can exit 1 with every case passing (flaky test, open)
 
