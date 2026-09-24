@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-24-run-writes-carry-the-lease-and-a-failing-lease-store-stops-new-work.md
-2026-09-24-run-writes-carry-the-lease-and-a-failing-lease-store-stops-new-work.md: bc511d15d54e617d4e6d80f3b5c0cd2cdf3d2405
-2026-09-24-run-writes-carry-the-lease-and-a-failing-lease-store-stops-new-work.zh.md: edbf7cf223919403419a224679084a3bb4382741
+2026-09-24-run-writes-carry-the-lease-and-a-failing-lease-store-stops-new-work.md: 34c6c4f4aefb719ac42941ba10706e4383564e5f
+2026-09-24-run-writes-carry-the-lease-and-a-failing-lease-store-stops-new-work.zh.md: 6e2a0711e4a5ee0941213825490983f52b1c71c1

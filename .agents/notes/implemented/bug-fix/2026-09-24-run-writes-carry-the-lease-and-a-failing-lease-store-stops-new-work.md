@@ -10,10 +10,10 @@ P4-07's acceptance was withdrawn (BLOCKED-319) over two gaps on the shipped head
 
 ## Decision
 
-- **`RunService.advance` takes the writer's lease.** With a `fence`, the write happens only while `fence.mayWrite(occurredAt)` admits it, asked in the Run's own turn right before the state machine decides. A refusal records nothing and reads `'fenced'`, a new member of `RunTransitionDenialReason`.
+- **`RunService.advance` takes the writer's lease.** With a `fence`, the write happens only while `fence.mayWrite(occurredAt)` admits it, asked in the Run's own turn right before the state machine decides. A refusal records nothing and reads `'fenced'`, a new member of `RunTransitionDenialReason`; when asking the lease throws, the write is refused as `'lease-unavailable'`, another new member, instead of the error escaping the Run's turn.
 - **`RunPlugin` passes the agent's lease on five writes**: `accepted → planning`, `→ running`, and the terminal `cancelled`, `verifying`, and `succeeded` or `failed`. `pauseRun` does not.
 - **`finish` gives the item back after the terminal writes settle.** Released first, the holder's own writes would find no lease and be refused.
-- **`open` treats a store that throws like a refused lease.** Reading the predecessor and taking the lease sit in one `try`; on a throw the agent is marked `leaseRefused`, no Run opens, and the log says the lease store failed.
+- **`open` treats a store that throws like a refused lease.** Reading the predecessor and taking the lease sit in one `try`; on a throw the agent is marked `leaseRefused`, no Run opens, and the log records the refusal as `lease-unavailable`.
 
 ## Alternatives considered
 
@@ -25,6 +25,6 @@ P4-07's acceptance was withdrawn (BLOCKED-319) over two gaps on the shipped head
 
 - `pauseRun`'s `paused` write, `openForSession`, `attachSession` and session-log appends carry no lease. The lease lives in SQLite and the Run in its JSON store, so a write admitted just before a takeover can still land; "stale writes after a newer token = 0" is not claimed.
 - A session whose lease store failed at start stays refused for its life, like one refused by a live holder or an emergency stop, and `leaseRefused` now also means "the store failed"; a new session is needed once the store recovers.
-- If the lease provider is torn down before a session's terminal writes settle, the writes still to be checked and the release throw, reported as a failed Run store write, and the lease row stays until it lapses. A session that ends while its host is shutting down can therefore keep a non-terminal Run.
+- If the lease provider is torn down before a session's terminal writes settle, those writes are refused as `'lease-unavailable'` and the release throws, reported as a failed Run store write, and the lease row stays until it lapses. A session that ends while its host is shutting down can therefore keep a non-terminal Run.
 - The first-step writes are shown at the Run Service unit level; on the shipped profile the cases observe the terminal writes.
 - A store that fails after the lease is taken is not covered: a heartbeat's `renew` that throws is not caught, and tools dispatch until then.

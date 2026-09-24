@@ -10,10 +10,10 @@ P4-07 的验收因出厂 headless profile 上的两处缺口被撤回（BLOCKED-
 
 ## 决定
 
-- **`RunService.advance` 接收写入方的租约。** 带上 `fence` 时，只有 `fence.mayWrite(occurredAt)` 放行才写；这一询问在该 Run 自己的顺序里、状态机判定之前进行。被拒时什么都不记，理由为 `'fenced'`，这是 `RunTransitionDenialReason` 新增的成员。
+- **`RunService.advance` 接收写入方的租约。** 带上 `fence` 时，只有 `fence.mayWrite(occurredAt)` 放行才写；这一询问在该 Run 自己的顺序里、状态机判定之前进行。被拒时什么都不记，理由为 `'fenced'`，这是 `RunTransitionDenialReason` 新增的成员。询问租约本身抛出异常时，这次写入被拒为 `'lease-unavailable'`（也是新增的成员），异常不会冒出该 Run 的顺序。
 - **`RunPlugin` 在五处写入上传入 agent 的租约**：`accepted → planning`、`→ running`，以及终态的 `cancelled`、`verifying` 与 `succeeded` 或 `failed`。`pauseRun` 不传。
 - **`finish` 在终态写入完成之后才交还工作项。** 先交还的话，持有者自己的写入会找不到租约而被拒。
-- **`open` 把抛异常的存储当作租约被拒。** 读前任与取租约放在同一个 `try` 里；一旦抛出，agent 被标记为 `leaseRefused`，不开 Run，日志写明租约存储故障。
+- **`open` 把抛异常的存储当作租约被拒。** 读前任与取租约放在同一个 `try` 里；一旦抛出，agent 被标记为 `leaseRefused`，不开 Run，日志把这次拒绝记为 `lease-unavailable`。
 
 ## 考虑过的其他做法
 
@@ -25,6 +25,6 @@ P4-07 的验收因出厂 headless profile 上的两处缺口被撤回（BLOCKED-
 
 - `pauseRun` 写 `paused`、`openForSession`、`attachSession` 与会话日志追加都不带租约。租约在 SQLite 里，Run 在它的 JSON 存储里，所以接管前一刻放行的写入仍可能落地；不声称「newer token 之后的旧写入 = 0」。
 - 开始时遇到存储故障的会话，终生保持被拒，与被存活的持有者或紧急停止拒绝的会话相同；`leaseRefused` 现在也表示「存储故障」，存储恢复后需要新开会话。
-- 如果租约提供方在会话的终态写入完成之前就被卸载，尚待核对的写入与交还都会抛出异常，记为一次 Run 存储写入失败，租约行一直留到过期。所以宿主关停途中才结束的会话，它的 Run 可能停在非终态。
+- 如果租约提供方在会话的终态写入完成之前就被卸载，这些写入被拒为 `'lease-unavailable'`，交还会抛出异常，记为一次 Run 存储写入失败，租约行一直留到过期。所以宿主关停途中才结束的会话，它的 Run 可能停在非终态。
 - 首步写入在 Run Service 单元层证明；出厂 profile 上的用例观测的是终态写入。
 - 取得租约之后才发生的存储故障不在涵盖之内：心跳的 `renew` 抛出的异常没有被接住，在那之前工具照常派发。
