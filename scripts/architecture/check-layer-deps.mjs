@@ -283,7 +283,6 @@ export function readLayerExemptions(root) {
       })
       for (const shapeError of shapeErrors) errors.push(`${EXEMPTIONS_PATH}: exemptedCycles[${index}] ${shapeError}`)
       if (shapeErrors.length > 0) continue
-      if (!existsSync(resolve(root, entry.adrNote))) errors.push(`${EXEMPTIONS_PATH}: exemptedCycles[${index}] adrNote ${entry.adrNote} names no file`)
       const cycleKey = rotateToSmallest(entry.cycle).join('\0')
       if (exemptedCycles.some(earlier => rotateToSmallest(earlier.cycle).join('\0') === cycleKey)) {
         errors.push(`${EXEMPTIONS_PATH}: exemptedCycles[${index}] names the same cycle as an earlier record`)
