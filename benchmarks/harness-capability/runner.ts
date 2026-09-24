@@ -15,11 +15,13 @@
  * @module benchmarks/harness-capability/runner
  */
 
-import { readFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { dirname, join, resolve } from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import { parseArgs } from 'node:util'
 import * as yaml from 'js-yaml'
-import { scoreLane, type LaneReport, type StandardMetric, type TrialOutcome } from './report.ts'
+import { invariantsHeld, scoreLane, type LaneReport, type StandardMetric, type TrialOutcome } from './report.ts'
+import { SCENARIOS } from './scenarios/index.ts'
 
 /** Lanes that must run with no external API configured (acceptance[0]). */
 export const KEYLESS_LANES = ['deterministic', 'fault', 'security'] as const
@@ -183,4 +185,51 @@ export function formatRun(run: BenchmarkRun): string[] {
   }
   for (const entry of run.skipped) lines.push(`${entry.lane}: skipped — ${entry.reason}`)
   return lines
+}
+
+/** Seed used when `--seed` is absent, so the registered command is reproducible as typed. */
+const DEFAULT_SEED = 20260904
+
+/**
+ * `pnpm benchmark:harness [--lane <name>]... [--seed <n>] [--out <dir>]`: run
+ * the requested lanes, or every lane `SCENARIOS` covers when no `--lane` is
+ * given, and write `report.json` and `report.md` to `--out` (default
+ * `.artifacts/benchmark`, which git ignores). Exits 0 once the lanes ran and
+ * both reports are written, and 2 when a requested lane has no scenario or
+ * `--seed` is not an integer in [0, 2^32). The invariant verdict, and any lane
+ * `runLanes` skipped for want of a configured model, are recorded in both
+ * reports, not in the exit code.
+ * @param argv - the arguments after the script path.
+ * @returns the process exit code.
+ */
+function main(argv: readonly string[]): number {
+  const { values } = parseArgs({
+    args: argv[0] === '--' ? argv.slice(1) : [...argv],
+    options: { lane: { type: 'string', multiple: true }, seed: { type: 'string' }, out: { type: 'string' } },
+  })
+  const lanes = values.lane ?? [...new Set(SCENARIOS.map(scenario => scenario.lane))]
+  for (const lane of lanes) {
+    if (!SCENARIOS.some(scenario => scenario.lane === lane)) {
+      console.error(`benchmark:harness: no scenario in lane ${lane}`)
+      return 2
+    }
+  }
+  const seed = values.seed === undefined ? DEFAULT_SEED : Number(values.seed)
+  if (!Number.isInteger(seed) || seed < 0 || seed > 0xffff_ffff) {
+    console.error(`benchmark:harness: --seed must be an integer in [0, 2^32), got ${values.seed}`)
+    return 2
+  }
+  const run = runLanes(SCENARIOS.filter(scenario => lanes.includes(scenario.lane)), { seed })
+  const lines = formatRun(run)
+  const out = resolve(values.out ?? '.artifacts/benchmark')
+  mkdirSync(out, { recursive: true })
+  writeFileSync(join(out, 'report.json'), `${JSON.stringify({ seed, lanes, ...run, invariantsHeld: invariantsHeld(run.reports) }, null, 2)}\n`)
+  writeFileSync(join(out, 'report.md'), ['# Harness capability benchmark', '', `Seed: ${seed}`, '', ...lines.map(line => `- ${line.trim()}`), ''].join('\n'))
+  for (const line of lines) console.log(line)
+  console.log(`benchmark:harness: reports written to ${out}`)
+  return 0
+}
+
+if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  process.exitCode = main(process.argv.slice(2))
 }

@@ -271,6 +271,31 @@ jobs:
           git checkout -- .dsh/
           rm -rf .dsh/evidence
 
+      # P0-08's own verifyCommand (BLOCKED-270), as the registry types it, on
+      # this job, which configures no model API key. Its exit status says only
+      # that the lanes ran and both reports were written, and a module with no
+      # entry point also exits 0 -- the state BLOCKED-270 measured -- so the
+      # step then reads what the command wrote: the deterministic lane alone,
+      # with trials, and a non-empty Markdown report. The invariant verdict is
+      # printed and does not decide the step. The reports go to `.artifacts/`,
+      # which git ignores, so a report committed by accident cannot stand in
+      # for this run's.
+      - name: P0-08 verifyCommand — run the deterministic benchmark lane with no external API configured
+        if: always()
+        timeout-minutes: 2
+        run: |
+          pnpm benchmark:harness --lane deterministic
+          test -s .artifacts/benchmark/report.md
+          node -e "const r=JSON.parse(require('node:fs').readFileSync('.artifacts/benchmark/report.json','utf8'));const lanes=r.reports.map(x=>x.lane);if(lanes.join()!=='deterministic'||!(r.reports[0].model.trials>0)){console.error('unexpected report:',JSON.stringify(lanes));process.exit(1)}console.log('deterministic trials',r.reports[0].model.trials,'invariantsHeld',r.invariantsHeld)"
+
+      - name: Upload the P0-08 benchmark reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: first100-benchmark-report-${{ steps.resolve-sha.outputs.sha }}
+          path: .artifacts/benchmark/
+          if-no-files-found: warn
+
       # Every vitest run from here on loads the flock node-api addon through
       # session persistence, and its binary is gitignored. The root `test` and
       # `test:coverage` scripts build it first, and upstream's `ci-coverage` gate
