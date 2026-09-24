@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-24-evidence-verification-rederives-the-baseline-and-binds-the-gate-manifest.md
-2026-09-24-evidence-verification-rederives-the-baseline-and-binds-the-gate-manifest.md: 926563f85aef19b5f892186077aa4f7e16365188
-2026-09-24-evidence-verification-rederives-the-baseline-and-binds-the-gate-manifest.zh.md: 68de52e2da42dfbb87726541a0cac68ce90c3d94
+2026-09-24-evidence-verification-rederives-the-baseline-and-binds-the-gate-manifest.md: 66cfd83415060dfa4ec999ed592c6b8f808a2df0
+2026-09-24-evidence-verification-rederives-the-baseline-and-binds-the-gate-manifest.zh.md: fa1899b8e0e9b9ab7d9ca8d672612ac95c05795d
