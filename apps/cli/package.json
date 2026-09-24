@@ -140,6 +140,7 @@
     "@deepseek-ai/dsh-llm-replay": "workspace:^",
     "@deepseek-ai/dsh-loader-smoke": "workspace:^",
     "@deepseek-ai/dsh-plugin-package-inventory-deepseek": "workspace:^",
+    "@deepseek-ai/dsh-run": "workspace:^",
     "@deepseek-ai/dsh-sandbox-local": "workspace:^",
     "@deepseek-ai/dsh-sandbox-policy": "workspace:^",
     "@deepseek-ai/dsh-session": "workspace:^",
