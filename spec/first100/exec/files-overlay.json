@@ -2834,7 +2834,9 @@
       "kind": "doc",
       "stages": [
         "U.4",
-        "U.5"
+        "U.5",
+        "U.6",
+        "U.7"
       ]
     },
     {
@@ -2843,7 +2845,9 @@
       "kind": "doc",
       "stages": [
         "U.4",
-        "U.5"
+        "U.5",
+        "U.6",
+        "U.7"
       ]
     },
     {
@@ -2851,7 +2855,8 @@
       "path": "packages/bundle/base/cordis.patch.yml",
       "kind": "manifest",
       "stages": [
-        "U.4"
+        "U.4",
+        "U.7"
       ]
     },
     {
@@ -2868,8 +2873,8 @@
       "path": "packages/core/agent-loop/src/tool-calls.ts",
       "kind": "source",
       "stages": [
-        "U.2",
-        "U.4"
+        "U.4",
+        "U.2"
       ],
       "reason": "Where the authority is actually presented: the dispatcher refuses a fenced or lease-refused run before a single tool runs, and writes the model-visible result that says which. A rule with no dispatch site refuses nothing, and the plan named no dispatch site."
     },
@@ -2897,7 +2902,8 @@
       "path": "packages/run/lease-sqlite/src/index.ts",
       "kind": "source",
       "stages": [
-        "U.4"
+        "U.4",
+        "U.7"
       ],
       "reason": "Not changed by P4-07: the shipped SQLite lease store whose busy timeout P4-07 U.4 cases C3 and C3b provoke by holding its lock from another connection, so an edit to its acquire or get changes what those cases observe."
     },
@@ -2914,10 +2920,12 @@
       "path": "packages/run/run/src/index.ts",
       "kind": "source",
       "stages": [
-        "U.2",
         "U.3",
         "U.4",
-        "U.5"
+        "U.5",
+        "U.2",
+        "U.6",
+        "U.7"
       ],
       "reason": "The Run Service is the holder (§12.19-3): it takes the lease before registering the Run, renews it, releases it, and — since §12.31-A — marks the agent when the store refuses. The plan named the lease library and not the service that holds a lease."
     },
@@ -2927,7 +2935,9 @@
       "kind": "source",
       "stages": [
         "U.4",
-        "U.5"
+        "U.5",
+        "U.6",
+        "U.7"
       ],
       "reason": "Changed by the P4-07 fix (`a6ebd609c4`) and fix2 (`f7ce9ab1dd`): `RunTransitionDenialReason` gains `fenced` and `lease-unavailable`, the reasons `RunService.advance` gives when a write carrying its writer's lease is refused. P4-07 U.5 cases U1 and U3 assert them."
     },
@@ -2936,8 +2946,16 @@
       "path": "packages/run/run/tests/fenced-dispatch.spec.ts",
       "kind": "test",
       "stages": [
-        "U.2",
-        "U.3"
+        "U.3",
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P4-07",
+      "path": "packages/run/run/tests/refusal-log.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.6"
       ]
     },
     {
@@ -2953,7 +2971,8 @@
       "path": "packages/test-support/loader-smoke/tests/fixtures/production-profile.ts",
       "kind": "test",
       "stages": [
-        "U.4"
+        "U.4",
+        "U.7"
       ]
     },
     {
@@ -2987,7 +3006,8 @@
       "path": "tests/first100/fixtures/P4-07.composition.spec.ts",
       "kind": "test",
       "stages": [
-        "U.4"
+        "U.4",
+        "U.7"
       ]
     },
     {
@@ -2995,7 +3015,8 @@
       "path": "tests/first100/fixtures/p4-07/base-mount.patch.yml",
       "kind": "test",
       "stages": [
-        "U.4"
+        "U.4",
+        "U.7"
       ]
     },
     {
@@ -3003,7 +3024,8 @@
       "path": "tests/first100/fixtures/p4-07/driver.ts",
       "kind": "test",
       "stages": [
-        "U.4"
+        "U.4",
+        "U.7"
       ]
     },
     {
@@ -3011,7 +3033,8 @@
       "path": "tests/first100/fixtures/p4-07/mock-llm.ts",
       "kind": "test",
       "stages": [
-        "U.4"
+        "U.4",
+        "U.7"
       ]
     },
     {

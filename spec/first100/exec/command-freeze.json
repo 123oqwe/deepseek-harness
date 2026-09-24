@@ -9183,7 +9183,9 @@
         "mutationDescription": "Two mutations, each restored byte-identical: (M7) `advanceLeasedAgent` drops the `leaseRefused` branch, so a refused agent answers `no-run` as before; (M8) the dispatcher intercepts only `fenced`, treating `lease-refused` as dispatchable.",
         "failureSummary": "Each reddens exactly one case of 157 in this package: the refused agent executes its tools. The other 156 stay green under both -- including the no-Run-Service control, which is what says the new refusal is selective rather than a blanket stop on every agent without a lifecycle. That control is the case the marker exists for: before it, the two states were the same state."
       },
-      "note": "§12.31-A, and it also closes a freeze gap. This suite is what §12.19-3's Agent Note cites as P4-07's evidence -- the production holder the fencing rule did not have -- and NO freeze entry covered any of its cases; P4-07.U.1 froze the workflow integration suite instead. So this entry pins all 16, not only the two added today. The new pair closes a measured hole in must[0]/acceptance[1]: a host whose lease was refused kept dispatching tools, because a refused lease left the agent with no lifecycle and that is also what a composition with no Run Service has -- and that one must dispatch normally. `Agent.leaseRefused` makes the two distinguishable, `advanceLeasedAgent` reports `lease-refused` BEFORE it reports absence, and the dispatcher refuses both while naming them apart: a fenced run HELD the item and lost it, a lease-refused run never held it, and an operator sent to look for a takeover that never happened is looking in the wrong place. Frozen at stage U rather than C: what these cases observe is a mounted composition doing the work, which is a Usage observation, and P4-07's sign-off is withdrawn so U is no more locked than C is."
+      "note": "§12.31-A, and it also closes a freeze gap. This suite is what §12.19-3's Agent Note cites as P4-07's evidence -- the production holder the fencing rule did not have -- and NO freeze entry covered any of its cases; P4-07.U.1 froze the workflow integration suite instead. So this entry pins all 16, not only the two added today. The new pair closes a measured hole in must[0]/acceptance[1]: a host whose lease was refused kept dispatching tools, because a refused lease left the agent with no lifecycle and that is also what a composition with no Run Service has -- and that one must dispatch normally. `Agent.leaseRefused` makes the two distinguishable, `advanceLeasedAgent` reports `lease-refused` BEFORE it reports absence, and the dispatcher refuses both while naming them apart: a fenced run HELD the item and lost it, a lease-refused run never held it, and an operator sent to look for a takeover that never happened is looking in the wrong place. Frozen at stage U rather than C: what these cases observe is a mounted composition doing the work, which is a Usage observation, and P4-07's sign-off is withdrawn so U is no more locked than C is.",
+      "supersededBy": "2026-09-24T12:20:27Z",
+      "supersessionReason": "The P4-07 fix (lease release after the terminal writes) replaced the body of RELEASES the lease and completes the lifecycle when the session ends, which now waits up to 1 s for the release; lifecycle 2.1 supersedes a replaced case. M-f (run 35994316612) is the new body's sensitivity reading."
     },
     {
       "epic": "P2-03",
@@ -16124,6 +16126,146 @@
         "failureSummary": "Baselines: PRECHECK v3 `0ac868ab6623005de4479bfa23d2574cc9890f82` reddens U1 (`advance` took the fence as a types-only parameter and accepted the write); PRECHECK2 `abc40da50770b762508d0407c053f766fdf359bb` reddens U3 (the fence's throw rejected `advance`); the fix and the fix2 are green. M-a reddens U1 only. M-e reddens U3 only. M-b, M-c and M-d leave all three green: they change `finish` and `open`, not `advance`. U2 is green in every reading: it is the control that the same write is admitted while the fence still admits its writer. Readings by case identity (PRECHECK v3 `0ac868ab66` run 35991774599; fix `a6ebd609c4` run 35991793053; M-a `26a28a18c6` run 35991810379; M-b `d9424b1586` run 35991828550; M-c `adb272dec5` run 35991847983; M-d `7aaf39cddf` run 35991868299; PRECHECK2 `abc40da507` run 35991886239; fix2 `f7ce9ab1dd` run 35991903523; M-e `b51971ef51` run 35991922156), all matching `artifacts/laneB/p4-07-predictions-v3.md` (sha256 `0fcfede6da0ea7501533b47054a207b402ced5cdd33180d9336b02131f85f777`), written before dispatch; the delegate and lane B each compared them by case."
       },
       "note": "P4-07's fifth U supplement, at the Run Service: must[1]'s first-step write carries the writer's lease. U1: `RunService.advance` with a fence that no longer admits its writer is refused as `fenced` and records nothing. U3: a fence whose `mayWrite` throws refuses the write as `lease-unavailable` and records nothing, instead of the error escaping the Run's turn. U2 is the control. The argv selects this describe with `-t`, its brackets escaped because vitest compiles the value as a regular expression; at the fix2 the describe held exactly these three cases. On the shipped profile the terminal writes are observed instead (U.4).\n\nTwo earlier versions were voided before any reading counted: v1 (PRECHECK `1c18bc79b9`) failed the build on TS2322, a plain string where the mock's tool-call id needed the `ToolCallId` brand; v2 (PRECHECK `31a617ff78`) asserted the refusal's name at `error.info.name`, which no tool/result carries, because the event's `error` is the error info itself (`appendToolResult` in `packages/core/agent-loop/src/tool-calls.ts`). v2's nine rounds reddened C3 and C3b on the fix after the call had been refused; v3 reads `error.name` and changes nothing else."
+    },
+    {
+      "epic": "P4-07",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-07",
+        "stage": "U"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/run/tests/fenced-dispatch.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) takes a lease for every Run it opens, so the Run has an owner before it has work",
+        "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) starts the lifecycle at queued, so a run that never steps is never running",
+        "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) REFUSES a state write once another holder has taken the Run, naming it fenced",
+        "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) ADMITS the same write while this holder is still current, so the refusal is about authority and not about the transition",
+        "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) refuses an ILLEGAL transition with the state machine's own reason, not with fenced",
+        "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) refuses a transition with an empty reason, so must[1]'s reason cannot be satisfied by whitespace",
+        "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) reports no-run for an agent with no lifecycle, rather than inventing one at its initial state",
+        "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) REFUSES every tool call in a step once this host was fenced out, and says so in the log",
+        "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) EXECUTES the same calls while this host still owns its Run, so the refusal is about the lease",
+        "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) RENEWS the lease while the run is alive, so a long run does not fence itself out",
+        "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) stops renewing once the run is finished, so a second host can take the item",
+        "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) RELEASES the lease and completes the lifecycle when the session ends",
+        "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) ends a run disposed before its first step through cancelling, not as if it had completed its work",
+        "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) opens NO Run when the lease store refuses, so an unauthorized agent gets no Run rather than an unowned one",
+        "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) executes ZERO tools for an agent whose lease was REFUSED, and names the refusal apart from a fencing (§12.31-A)",
+        "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) EXECUTES normally with NO Run Service mounted, so capability absence is not read as a refusal"
+      ],
+      "files": [
+        "packages/core/agent/src/types.ts",
+        "packages/core/agent/src/dispatch.ts",
+        "packages/core/agent-loop/src/tool-calls.ts",
+        "packages/run/run/src/index.ts",
+        "packages/run/run/tests/fenced-dispatch.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T12:20:27Z",
+      "dryRunProof": {
+        "treeSha": "8c99aa392249b4bb332504230839a075598f842c",
+        "testsDiscovered": 24
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-f (`51c6e5edd1e6212fa86704c1821c81aa0ff4340d`, off the fix2 `f7ce9ab1dd096b7041470436823c9ebfebbe8ec1`, never merged) removes the release that `finish` makes after the Run's terminal writes settle, and the two locals that only it read. The other fifteen cases keep [202]'s mutations, whose bodies the fix did not change: (M7) `advanceLeasedAgent` drops the `leaseRefused` branch; (M8) the dispatcher intercepts only `fenced`.",
+        "failureSummary": "Baseline: the fix2 run 35991903523, 259 passed and 0 failed, all 24 cases of this file among them. M-f, run 35994316612 over the same sixteen-file argv: exactly RELEASES red, 1 of 259, at its `vi.waitFor` on the lease row, because the in-memory store keeps the row until something deletes it. Every other case stays green: \"stops renewing once the run is finished\" waits 120 ms against a 90 ms lease that `finish` no longer renews, and no other case reads the lease after a session ends. The reading matches `artifacts/laneB/p4-07-mf-predictions.md` (sha256 `9b43344da19c8f7d9b260f42ec622cbc9bb202c7fb39fba95decc28b6dbf8d0c`), written before dispatch. [202]'s summary stands for M7 and M8: each reddened exactly one case, the refused agent executing its tools."
+      },
+      "note": "Supersedes [202] (P4-07 U.2) under lifecycle 2.1, because the P4-07 fix replaced one frozen case's body. The fix gives the lease back only after the Run's terminal writes settle, since those writes carry the lease and are checked where they are written; RELEASES therefore waits up to 1 s for the lease row to go instead of reading it synchronously after `dispose`. The blind review of `f7ce9ab1dd` raised the loosening as 2-2, and the delegate accepted it in writing on 2026-09-24. The argv, the sixteen cases and the files are [202]'s; the seventeenth case of the file, REFUSES the SECOND host, stays frozen by [204].",
+      "supersedes": "2026-09-08T04:10:00.000Z"
+    },
+    {
+      "epic": "P4-07",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-07",
+        "stage": "U"
+      },
+      "supplementSeq": 6,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/run/tests/refusal-log.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-07 must[1]: a Run write refused for its lease is logged logs the cancellation a displaced host was refused, naming the pair, the Run and the reason",
+        "P4-07 must[1]: a Run write refused for its lease is logged logs no refusal for the same session end while this host still holds its lease (control)"
+      ],
+      "files": [
+        "packages/run/run/tests/refusal-log.spec.ts",
+        "packages/run/run/src/index.ts",
+        "packages/run/run/src/types.ts",
+        ".agents/notes/implemented/bug-fix/2026-09-24-run-writes-carry-the-lease-and-a-failing-lease-store-stops-new-work.md",
+        ".agents/notes/implemented/bug-fix/2026-09-24-run-writes-carry-the-lease-and-a-failing-lease-store-stops-new-work.zh.md"
+      ],
+      "frozenAtUtc": "2026-09-24T12:20:27Z",
+      "dryRunProof": {
+        "treeSha": "45c28ad296c77e5eb5442421283a78d7cb532231",
+        "testsDiscovered": 2
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-h (`13b40f853020f5fbd8a9d74badd5a515399318bb`, off the fix3 `2ed30dc068c855aecb24186d9509ffeea5c275c9`, never merged): `advanceRun` still writes but no longer logs a refusal.",
+        "failureSummary": "PRECHECK4 `9473a17c67ac013b81c6288b2d32e492823d4e0b`, run 35995971666: R1 red, R2 green (and the composition's C5, which the unload fix later turned green). The fix3, run 35995990431: R1 and R2 green. M-h, run 35996009176: R1 red, R2 green. The fix5, run 35996927800: every case of the argv green. R2 is the control: the holder's own session end logs no refusal. Readings by case identity: PC4 `9473a17c67` run 35995971666; FIX3 `2ed30dc068` run 35995990431; MH `13b40f8530` run 35996009176; FIX5 `af416dfcec` run 35996927800; they match `artifacts/laneB/p4-07-pc4-predictions.md` (sha256 `154d942cf0fa47bf2c84b8d7ea7ea29f7d145e66ddee94a8c8b276b9a3004f79`), written before dispatch."
+      },
+      "note": "P4-07's sixth U supplement (blind review 3-5 of `f7ce9ab1dd`): a Run write the Run Service refuses for its lease is logged. R1: a host displaced before its first model step ends its session, and the refused `accepted -> cancelled` write is logged once, naming the pair, the Run and `fenced`. R2, the control: the holder's own session end logs no refusal."
+    },
+    {
+      "epic": "P4-07",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-07",
+        "stage": "U"
+      },
+      "supplementSeq": 7,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P4-07.composition.spec.ts",
+        "-t",
+        "a host displaced before its first model step ends its session without writing the Run's cancellation \\(acceptance\\[0\\]\\)|the holder's session that ends as its host unloads still records the Run's outcome",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-07 on the shipped profile: a displaced host and a failing lease store a host displaced before its first model step ends its session without writing the Run's cancellation (acceptance[0])",
+        "P4-07 on the shipped profile: a displaced host and a failing lease store the holder's session that ends as its host unloads still records the Run's outcome"
+      ],
+      "files": [
+        "tests/first100/fixtures/P4-07.composition.spec.ts",
+        "tests/first100/fixtures/p4-07/driver.ts",
+        "tests/first100/fixtures/p4-07/base-mount.patch.yml",
+        "tests/first100/fixtures/p4-07/mock-llm.ts",
+        "packages/test-support/loader-smoke/tests/fixtures/production-profile.ts",
+        "packages/run/run/src/index.ts",
+        "packages/run/run/src/types.ts",
+        "packages/run/lease-sqlite/src/index.ts",
+        "packages/bundle/base/cordis.patch.yml",
+        ".agents/notes/implemented/bug-fix/2026-09-24-run-writes-carry-the-lease-and-a-failing-lease-store-stops-new-work.md",
+        ".agents/notes/implemented/bug-fix/2026-09-24-run-writes-carry-the-lease-and-a-failing-lease-store-stops-new-work.zh.md"
+      ],
+      "frozenAtUtc": "2026-09-24T12:20:27Z",
+      "dryRunProof": {
+        "treeSha": "45c28ad296c77e5eb5442421283a78d7cb532231",
+        "testsDiscovered": 2
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-g (`b971440f6aa3a9d7c15813fa54d1c5e0cd6faff2`, off PRECHECK3 `88cb5430842a558f2abcbf829d1539fd9a6f679b`): the cancelled write no longer carries the lease. M-a2 (`40b6f2b565ab682a313dee3df5413ccb257433ca`, same parent): `advance` no longer checks any fence, the final code's form of M-a. M-j (`82fa87193c9ae99a1bd08f9733e910e841aa6c4c`, off the fix5 `af416dfcece5bf40b12a420c9d327484f3cc5cb7`): lease-sqlite drops its handle at its teardown again while a lease is held. All never merged.",
+        "failureSummary": "PRECHECK3, run 35995461112: C5 red (\"expected 'verifying' to be 'succeeded'\": the second terminal write found the store gone), C1b green. M-g, run 35995480002: C1b red (the displaced host wrote accepted -> cancelled) and C5 as on PRECHECK3. M-a2, run 35995498804: C1b red, C5 green (no write asks a lease), with U1, U3 and C1 outside this entry. PRECHECK4, the fix3 and M-h kept C5 red. The fix5, run 35996927800: both green. M-j, run 35996948030: C5 red, C1b green. Readings by case identity: PC3 `88cb543084` run 35995461112; MG `b971440f6a` run 35995480002; MA2 `40b6f2b565` run 35995498804; FIX5 `af416dfcec` run 35996927800; MJ `82fa87193c` run 35996948030; they match `artifacts/laneB/p4-07-pc3-predictions.md` (sha256 `96453e8b625997f5616778d295c1c7448fea542f6e3005703e61929e6896bed2`) and `artifacts/laneB/p4-07-fix5-predictions.md` (sha256 `316d8c2f775812b1ae4c7cf231210e8bbda838b00e43b2c22ced097083cc6de2`), written before dispatch."
+      },
+      "note": "P4-07's seventh U supplement, on the shipped headless profile (blind review of `f7ce9ab1dd`). C1b, acceptance[0]: a host displaced before its first model step ends its session without writing `cancelled`, which `accepted` admits, so only the fence keeps it out. C5 (review 2-1): the holder's session that ends as its host unloads still records `succeeded`, because lease-sqlite keeps its handle after its teardown while a lease it issued is held. The argv selects the two cases with an escaped alternation in -t; the other five cases of the file are U.4 [344]."
     }
   ]
 }
