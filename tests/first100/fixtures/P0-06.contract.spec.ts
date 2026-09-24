@@ -1,7 +1,7 @@
 /**
  * P0-06 acceptance[2] at the registry's own surface: the identity migration
- * the census accepts is the identity, and the census can tell an undeclared
- * non-identity migration from a declared one.
+ * the census accepts is the identity, and the census accepts a non-identity
+ * migration only when its declaration holds against the registered migration.
  *
  * The evolved schema is third-party input (no shipped caller evolves a
  * schema), registered in a fresh module instance of the registry so the
@@ -24,6 +24,15 @@ const rename: SchemaMigration = (payload) => {
 const unrename: SchemaMigration = (payload) => {
   const { title, ...rest } = payload as { title: unknown }
   return { ...rest, name: title }
+}
+
+const DROPPING = 'p0-06-synthetic:drop' as SchemaId
+
+/** Version 2 of the dropping schema no longer carries `note`. */
+const dropNote: SchemaMigration = (payload) => {
+  const { note, ...rest } = payload as { note: unknown }
+  void note
+  return rest
 }
 
 /**
@@ -56,7 +65,9 @@ describe('P0-06 acceptance[2]: the registry census and the identity migration it
   it('the census accepts an evolved schema once its declared reverse round-trips the migration the registry holds', async () => {
     const registry = await registryWithEvolvedSchema()
     const synthetic = registry.listSchemas().filter(entry => String(entry.schemaId).startsWith('p0-06-synthetic:'))
-    const declared: Record<string, DeclaredMigration> = { [SYNTHETIC]: { reverse: unrename } }
+    const declared: Record<string, DeclaredMigration> = {
+      [SYNTHETIC]: { reverse: { migrate: unrename, witnesses: [{ name: 'a' }, { name: 'b', kept: [1, 2] }] } },
+    }
     expect(offenders(synthetic, registry.identityMigration, declared)).toEqual([])
 
     const forward = registry.getSchema(SYNTHETIC)?.migrate
@@ -65,5 +76,28 @@ describe('P0-06 acceptance[2]: the registry census and the identity migration it
       expect(forward(payload)).toEqual({ ...payload, name: undefined, title: payload.name })
       expect(unrename(forward(payload))).toEqual(payload)
     }
+  })
+
+  it('the census flags an evolved schema whose declared reverse does not round-trip the migration the registry holds', async () => {
+    const registry = await registryWithEvolvedSchema()
+    const synthetic = registry.listSchemas().filter(entry => String(entry.schemaId).startsWith('p0-06-synthetic:'))
+    const declared: Record<string, DeclaredMigration> = {
+      [SYNTHETIC]: { reverse: { migrate: payload => payload, witnesses: [{ name: 'a' }] } },
+    }
+    expect(offenders(synthetic, registry.identityMigration, declared)).toEqual([SYNTHETIC])
+  })
+
+  it('the census accepts an irreversibility declaration only when its loss witnesses collapse under the migration the registry holds', async () => {
+    const registry = await registryWithEvolvedSchema()
+    // A second synthetic schema whose 2.0 migration drops a field, so two payloads that differ only there become equal.
+    registry.registerSchema(DROPPING, { major: 1, minor: 0 }, registry.identityMigration)
+    registry.evolveSchema(DROPPING, [{ field: 'note', kind: 'breaking', reason: 'dropped' }], { major: 2, minor: 0 }, dropNote)
+    const synthetic = registry.listSchemas().filter(entry => String(entry.schemaId).startsWith('p0-06-synthetic:'))
+    const declared: Record<string, DeclaredMigration> = {
+      [DROPPING]: { irreversible: { reason: 'the note is dropped', lossWitness: [{ id: 1, note: 'x' }, { id: 1, note: 'y' }] } },
+      // rename keeps every value, so these two payloads stay apart and the declaration does not hold.
+      [SYNTHETIC]: { irreversible: { reason: 'claimed lossy', lossWitness: [{ name: 'a' }, { name: 'b' }] } },
+    }
+    expect(offenders(synthetic, registry.identityMigration, declared)).toEqual([SYNTHETIC])
   })
 })
