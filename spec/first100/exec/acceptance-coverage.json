@@ -1722,9 +1722,14 @@
         {
           "stage": "F",
           "title": "fault boundary 16 split brain: two holders across a reclaim, only the later one writes"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P4-07 Usage: a workflow run holds an epoch lease on the real stack acceptance[0]: a reclaimed run cannot write its terminal state"
         }
       ],
-      "note": "acceptance[0]: 'a recovered old worker can neither submit results nor perform new side effects.' Covered through the full sequence rather than a hand-built stale token: the lease expires, the scheduler reclaims at a higher epoch, and only then does the old holder present the token it still believes is valid. The U-stage case carries it to a real state WRITE -- the fenced dispatch entry refuses to advance a lifecycle -- which is what makes 'cannot perform a side effect' more than a property of a pure comparison. Each stage's positive control sits beside its refusal, so none of these is satisfied by a check that refuses everything. NOT fully closed: the unfenced advanceAgentLifecycle export remains reachable, pinned by the U/F characterization cases rather than by a lock, because a failing case is already watching it. [2026-09-19 lane B: two `P4-07.U` supplementSeq-2 cases are cited above that were frozen and uncited \u2014 the refusal reaching an actual DISPATCH, and its adjacent positive control. Until now every citation here was about the lease store's own token arithmetic; these two are the first about a tool call being refused because of it, which is what `acceptance[0]` is for. Both read `passed` in run 35437351296, whose candidate is `0ede948cbe27b608f055097b7e36b96604a5ff05`. **That run was RED** \u2014 3 of 26845 failed \u2014 and neither of these two is among the failures; the same is true in the three earlier runs on file (35435211560, 35429317039, 35427217821), where both also passed. No GREEN full-suite run exists in this branch's artifacts to cite instead, which is stated rather than worked around.]\n\n[2026-09-19 lane B, BLOCKED-287: the two `the Run lease is an authority the harness presents` citations above gained `supplementSeq: 2`, which they should have carried when they were added in `f5f8b89177` earlier today. **No evidence changed and none was missing**: both titles are in a live freeze entry and both are in `supplements['U.2'].expectCasesMatched`, GREEN with sixteen matched cases. Without the seq, `checkCoverageClosure` resolved them against `cells['U']` -- a different, also-GREEN observation whose seven titles do not include them -- and reported acceptance[0] as having no verified covering case. This row has been ACCEPTED throughout, so nothing re-evaluated closure after the citations landed: `--accept` is the only caller, and `--check` validates the schema, the ledger header and the EXEC-STATE digests. Found by calling the predicate directly over all 26 ACCEPTED rows.]"
+      "note": "acceptance[0]: 'a recovered old worker can neither submit results nor perform new side effects.' Covered through the full sequence rather than a hand-built stale token: the lease expires, the scheduler reclaims at a higher epoch, and only then does the old holder present the token it still believes is valid. The U-stage case carries it to a real state WRITE -- the fenced dispatch entry refuses to advance a lifecycle -- which is what makes 'cannot perform a side effect' more than a property of a pure comparison. Each stage's positive control sits beside its refusal, so none of these is satisfied by a check that refuses everything. NOT fully closed: the unfenced advanceAgentLifecycle export remains reachable, pinned by the U/F characterization cases rather than by a lock, because a failing case is already watching it. [2026-09-19 lane B: two `P4-07.U` supplementSeq-2 cases are cited above that were frozen and uncited \u2014 the refusal reaching an actual DISPATCH, and its adjacent positive control. Until now every citation here was about the lease store's own token arithmetic; these two are the first about a tool call being refused because of it, which is what `acceptance[0]` is for. Both read `passed` in run 35437351296, whose candidate is `0ede948cbe27b608f055097b7e36b96604a5ff05`. **That run was RED** \u2014 3 of 26845 failed \u2014 and neither of these two is among the failures; the same is true in the three earlier runs on file (35435211560, 35429317039, 35427217821), where both also passed. No GREEN full-suite run exists in this branch's artifacts to cite instead, which is stated rather than worked around.]\n\n[2026-09-19 lane B, BLOCKED-287: the two `the Run lease is an authority the harness presents` citations above gained `supplementSeq: 2`, which they should have carried when they were added in `f5f8b89177` earlier today. **No evidence changed and none was missing**: both titles are in a live freeze entry and both are in `supplements['U.2'].expectCasesMatched`, GREEN with sixteen matched cases. Without the seq, `checkCoverageClosure` resolved them against `cells['U']` -- a different, also-GREEN observation whose seven titles do not include them -- and reported acceptance[0] as having no verified covering case. This row has been ACCEPTED throughout, so nothing re-evaluated closure after the citations landed: `--accept` is the only caller, and `--check` validates the schema, the ledger header and the EXEC-STATE digests. Found by calling the predicate directly over all 26 ACCEPTED rows.]\n\n[2026-09-24 lane A, A-335 backfill (S1: the evidence existed and was not registered; no case changed): the `U.1` citation «P4-07 Usage: a workflow run holds an epoch lease on the real stack acceptance[0]: a reclaimed run cannot write its terminal state» (`packages/workflow/workflow-worker-thread/tests/integration.spec.ts:166`) tests the clause's first subject, an old worker unable to submit its result, on the workflow path: over a real SQLite lease, after another host takes the run over, the old host writes no `workflow/end`. It is the workflow path only; on the agent's Run path the result half is read as contradicted (BLOCKED-319).]"
     },
     {
       "epic": "P4-07",
@@ -1788,9 +1793,24 @@
         {
           "stage": "F",
           "title": "fault boundary 14 an unavailable store refuses renewal"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P4-07 Usage: a workflow run holds an epoch lease on the real stack acceptance[2]: no new run starts while the lease store is unavailable"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 2,
+          "title": "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) opens NO Run when the lease store refuses, so an unauthorized agent gets no Run rather than an unowned one"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 2,
+          "title": "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) executes ZERO tools for an agent whose lease was REFUSED, and names the refusal apart from a fencing (§12.31-A)"
         }
       ],
-      "note": "acceptance[2]: 'stop taking new work when the lease store fails.' Stop-work is proved in BOTH directions -- nothing can be acquired and nothing is offered as reclaimable -- because a scheduler blocked on one path and fed by the other would still start work. The refusal carries a DISTINCT 'store-unavailable' tag rather than a null or empty result: 'nobody holds this' and 'I cannot tell you who holds this' must not look alike, since reporting an item free during an outage is exactly how the same work item reaches a second worker. The fourth case is a positive control and is load-bearing here -- without it, a store stuck permanently unavailable would satisfy every one of the refusal cases above."
+      "note": "acceptance[2]: 'stop taking new work when the lease store fails.' Stop-work is proved in BOTH directions -- nothing can be acquired and nothing is offered as reclaimable -- because a scheduler blocked on one path and fed by the other would still start work. The refusal carries a DISTINCT 'store-unavailable' tag rather than a null or empty result: 'nobody holds this' and 'I cannot tell you who holds this' must not look alike, since reporting an item free during an outage is exactly how the same work item reaches a second worker. The fourth case is a positive control and is load-bearing here -- without it, a store stuck permanently unavailable would satisfy every one of the refusal cases above.\n\n[2026-09-24 lane A, A-335 backfill (S1: the evidence existed and was not registered; no case changed): three citations test the clause's subject with a SIMULATED store failure (`setAvailable(false)`). The `U.1` case «P4-07 Usage: a workflow run holds an epoch lease on the real stack acceptance[2]: no new run starts while the lease store is unavailable» (`packages/workflow/workflow-worker-thread/tests/integration.spec.ts:152`) is the workflow path. The two `U.2` cases, «the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) opens NO Run when the lease store refuses, so an unauthorized agent gets no Run rather than an unowned one» (`packages/run/run/tests/fenced-dispatch.spec.ts:317`) and «the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) executes ZERO tools for an agent whose lease was REFUSED, and names the refusal apart from a fencing (§12.31-A)» (`packages/run/run/tests/fenced-dispatch.spec.ts:328`), are the agent path and are read together: the first alone shows only that no Run opens, and the pair stops tool side effects while the model step still runs. No case makes the store fail for real, and `setAvailable` has no production caller (BLOCKED-319).]"
     },
     {
       "epic": "P1-03",
@@ -1981,9 +2001,14 @@
         {
           "stage": "U",
           "title": "kill during concurrent calls started out of order: the journal still reads in script order"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P4-08 must[0]: a real run keeps a journal RESUMES without starting the completed children again (acceptance[0])"
         }
       ],
-      "note": "acceptance[0]: 'kill before and after each agent() call; the resume does not repeat completed child work.' Covered at three levels rather than once, because the clause is about a SEQUENCE and each level can be right while the next is wrong. C decides one entry; P drives the recorder through the three kill points a real session produces (before settle, after settle but before verification, after verification) and checks the plan each yields; U drives the same through the host's actual agent event stream, including concurrent out-of-order starts. The middle kill point is the one that matters most and is easiest to miss: a step that settled but was never verified is re-run, because 'it finished' and 'we checked it' are different facts."
+      "note": "acceptance[0]: 'kill before and after each agent() call; the resume does not repeat completed child work.' Covered at three levels rather than once, because the clause is about a SEQUENCE and each level can be right while the next is wrong. C decides one entry; P drives the recorder through the three kill points a real session produces (before settle, after settle but before verification, after verification) and checks the plan each yields; U drives the same through the host's actual agent event stream, including concurrent out-of-order starts. The middle kill point is the one that matters most and is easiest to miss: a step that settled but was never verified is re-run, because 'it finished' and 'we checked it' are different facts.\n\n[2026-09-24 lane A, A-335 backfill (S1: the evidence existed and was not registered; no case changed): the `U.1` citation «P4-08 must[0]: a real run keeps a journal RESUMES without starting the completed children again (acceptance[0])» (`packages/workflow/workflow-worker-thread/tests/journal-live-run.spec.ts:110`) tests the clause's second subject, recovery not repeating completed child work, by executing a resume: a real worker thread with JSONL persistence runs two `agent()` calls and is disposed, and the resumed run completes with the children's start count unchanged and no child started again. It kills no process, and it covers one boundary only, after the last call with none in flight; no case kills before a call or between two calls.]"
     },
     {
       "epic": "P4-08",
@@ -2203,9 +2228,19 @@
           "stage": "U",
           "title": "REFUSES a receipt from the lapsed holder after a reclaim",
           "supplementSeq": 3
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 2,
+          "title": "P5-11: a delegated child IS a task on the board ADVANCES the task from the child settling, with nothing model-facing touching it (acceptance[1])"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 2,
+          "title": "P5-11: a delegated child IS a task on the board advances a FAILED child to failed, so a task nobody finished is not left looking claimed"
         }
       ],
-      "note": "acceptance[1]: 'when the model does not update a task by hand, the runtime advances it from receipts.' The advance is driven entirely by evidence -- applyReceipt moves claimed to submitted to verified with nothing model-facing involved. Every rule protecting a claim protects the receipt too: it must come from the current owner at the current attempt and name a legal transition. The stale-attempt case carries the substance -- a worker whose claim lapsed can still finish and report, and accepting that report would overwrite the new holder's task with the old holder's result, which is exactly why receipts carry an attempt at all.\n\n[2026-09-19 lane B, delegate-1c B-222: `REFUSES a receipt from the lapsed holder after a reclaim` (`U.3`, GREEN at run 34660413109) is added above. It sits under this clause rather than acceptance[0] for the reason this note already gives -- every rule protecting a claim protects the receipt too -- so the rule it exercises is the receipt rule, and it is the cross-process form of the citation called the substance-carrying one above, `refuses a receipt from a STALE attempt, so a reclaimed task is not overwritten`. What it adds to that one is the lapsed holder being a real separate PROCESS whose claim expired, rather than a stale attempt number constructed inside a single one.]"
+      "note": "acceptance[1]: 'when the model does not update a task by hand, the runtime advances it from receipts.' The advance is driven entirely by evidence -- applyReceipt moves claimed to submitted to verified with nothing model-facing involved. Every rule protecting a claim protects the receipt too: it must come from the current owner at the current attempt and name a legal transition. The stale-attempt case carries the substance -- a worker whose claim lapsed can still finish and report, and accepting that report would overwrite the new holder's task with the old holder's result, which is exactly why receipts carry an attempt at all.\n\n[2026-09-19 lane B, delegate-1c B-222: `REFUSES a receipt from the lapsed holder after a reclaim` (`U.3`, GREEN at run 34660413109) is added above. It sits under this clause rather than acceptance[0] for the reason this note already gives -- every rule protecting a claim protects the receipt too -- so the rule it exercises is the receipt rule, and it is the cross-process form of the citation called the substance-carrying one above, `refuses a receipt from a STALE attempt, so a reclaimed task is not overwritten`. What it adds to that one is the lapsed holder being a real separate PROCESS whose claim expired, rather than a stale attempt number constructed inside a single one.]\n\n[2026-09-24 lane A, A-335 backfill (S1: the evidence existed and was not registered; no case changed): two `U.2` citations test the clause's subject, the runtime advancing a task from receipts while the model touches nothing. «P5-11: a delegated child IS a task on the board ADVANCES the task from the child settling, with nothing model-facing touching it (acceptance[1])» (`packages/subagent/subagent-taskboard/tests/delegated-tasks.spec.ts:132`) delegates to a real child whose stand-in model only answers text; the test never applies a receipt itself, and after the child settles a separate durable handle reads the task as `submitted`/`unverified`. «P5-11: a delegated child IS a task on the board advances a FAILED child to failed, so a task nobody finished is not left looking claimed» (`packages/subagent/subagent-taskboard/tests/delegated-tasks.spec.ts:146`) is the failing branch: the child really fails and the board reads `failed`/`failed`. The receipt is applied by the taskboard runtime (`packages/subagent/subagent-taskboard/src/index.ts`).]"
     },
     {
       "epic": "P5-11",
@@ -2473,9 +2508,14 @@
           "stage": "U",
           "supplementSeq": 1,
           "title": "the sub-dispatch scheduler (native concurrency contract) P2-03 must[2] — every code-mode sub-dispatch is preceded by its manifest the manifest records the code-mode origin and the highest-risk default, so the log says which path ran"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 4,
+          "title": "P2-03 must[0]: the manifest is CONSTRUCTED on the production path, not assembled beside it (BLOCKED-143) records whether the side-effect class was DECLARED, which the class alone cannot say (acceptance[2])"
         }
       ],
-      "note": "The second Contract case is the control: without it, a classifier that returned the high-risk default for EVERY action would satisfy the first. The Usage case moves the claim from a return value to the durable log, which is where acceptance[0]'s reader looks."
+      "note": "The second Contract case is the control: without it, a classifier that returned the high-risk default for EVERY action would satisfy the first. The Usage case moves the claim from a return value to the durable log, which is where acceptance[0]'s reader looks.\n\n[2026-09-24 lane A, A-335 backfill (S1: the evidence existed and was not registered; no case changed): the `U.4` citation «P2-03 must[0]: the manifest is CONSTRUCTED on the production path, not assembled beside it (BLOCKED-143) records whether the side-effect class was DECLARED, which the class alone cannot say (acceptance[2])» (`packages/core/agent-loop/tests/tool-calls.spec.ts:1020`) tests the clause's first subject, an unclassifiable action defaulting to high risk, on the native dispatch path: the manifest the production path writes to the log records `classified: false`, `sideEffectClass: 'destructive'` and `requiresApproval: true`. It does not cover the second subject, requiring approval: `requiresApproval` is recorded and not enforced (`packages/action/action-manifest/README.md:103`), and the cases in which the risk gate does ask are frozen under P2-04, not here.]"
     },
     {
       "epic": "P2-02",
@@ -2590,9 +2630,13 @@
         {
           "stage": "C",
           "title": "redactTokenForLog produces exactly digest/subject/tenant/capability/delegationDepth/expiresAt — never verbs, resources, constraints, nonce, or the raw signature"
+        },
+        {
+          "stage": "U",
+          "title": "keeps the token out of the child session log and out of tool results"
         }
       ],
-      "note": "acceptance[2]: no token reaches model-visible text, and the log carries only a digest and security metadata. Two surfaces, both cited: the MODEL surface (a refusal message) and the LOG surface (the audit cases). The last P citation is what makes this more than a formatting assertion — it reads the trail back off disk and finds no nonce there, while the token registry beside it necessarily holds one, so the redaction is a property of what is written rather than of how it is rendered."
+      "note": "acceptance[2]: no token reaches model-visible text, and the log carries only a digest and security metadata. Two surfaces, both cited: the MODEL surface (a refusal message) and the LOG surface (the audit cases). The last P citation is what makes this more than a formatting assertion — it reads the trail back off disk and finds no nonce there, while the token registry beside it necessarily holds one, so the redaction is a property of what is written rather than of how it is rendered.\n\n[2026-09-24 lane A, A-335 backfill (S1: the evidence existed and was not registered; no case changed): the `U` citation «keeps the token out of the child session log and out of tool results» (`packages/subagent/subagent/tests/capability-token-spawn.spec.ts:149`) tests the clause's first subject, token material kept out of model-visible text: a really spawned child agent runs with the token presented, and neither the child session's whole log nor its tool results carry the signature. By the model-visible-is-logged rule every model request is reconstructed from that log; no case asserts on a model request itself.]"
     },
     {
       "epic": "P4-06",
@@ -2949,9 +2993,13 @@
         {
           "stage": "P",
           "title": "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter acceptance[2]: a deployment may RAISE its own bar, and the raise reaches classification"
+        },
+        {
+          "stage": "P",
+          "title": "P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter must[1]: the threshold rides the PRESET, so one action asks under one bundle and not under another"
         }
       ],
-      "note": "The clause has two directions and both are required: an organisation CAN raise its own bar (add a hard-deny class, raise a threshold, and see the raise reach classification) and CANNOT lower the kernel one. The refusal is cited twice deliberately -- at classification and AT MOUNT -- because a deployment refused only at classification would have booted with a policy that claims to disable a kernel class, and an operator would learn of it at the first sensitive action rather than at startup. The third C case is the control for both: a policy that changes nothing still hard-denies, so the refusals are not the only thing holding the kernel band."
+      "note": "The clause has two directions and both are required: an organisation CAN raise its own bar (add a hard-deny class, raise a threshold, and see the raise reach classification) and CANNOT lower the kernel one. The refusal is cited twice deliberately -- at classification and AT MOUNT -- because a deployment refused only at classification would have booted with a policy that claims to disable a kernel class, and an operator would learn of it at the first sensitive action rather than at startup. The third C case is the control for both: a policy that changes nothing still hard-denies, so the refusals are not the only thing holding the kernel band.\n\n[2026-09-24 lane A, A-335 backfill (S1: the evidence existed and was not registered; no case changed): the `P` citation «P2-04 P — the deployment binds the organisation policy the classifier takes as a parameter must[1]: the threshold rides the PRESET, so one action asks under one bundle and not under another» (`packages/interaction/permission-presets/tests/risk-policy.spec.ts:69`) tests the clause's first subject, an organisation overriding the threshold: the same action asks under one preset's threshold and not under another's. The hard-deny half is covered by the citations above. Every threshold case configures the policy in process; no shipped profile overrides a threshold.]"
     },
     {
       "epic": "P4-11",
@@ -3434,9 +3482,25 @@
         {
           "stage": "F",
           "title": "P2-06 acceptance[2]: the record names the DISPATCH, not only the tool REFUSES when two decisions about one tool name no dispatch, rather than settling the question by position"
+        },
+        {
+          "stage": "F",
+          "title": "P2-06 acceptance[2]: the record names the DISPATCH, not only the tool writes an actionId from the code-mode path, so both production paths name their dispatch"
+        },
+        {
+          "stage": "F",
+          "title": "P2-06 acceptance[2]: the record names the DISPATCH, not only the tool gives two sub-dispatches of ONE tool two different actionIds, and does not let the first decision cover the second"
+        },
+        {
+          "stage": "P",
+          "title": "P2-06 acceptance[2]: the record is the one-to-one reference names the approval and the action in one record, exactly one per bound ask"
+        },
+        {
+          "stage": "P",
+          "title": "P2-06 acceptance[2]: the record is the one-to-one reference gives two asks two ids, so one action's two approvals stay distinguishable"
         }
       ],
-      "note": "acceptance[2]: 'the approval event and the final action form a one-to-one reference.' The two halves are cited separately because each alone is half the clause, and conflating them was a live risk on this epic. The Usage citations prove the COUNT — exactly one binding per gated dispatch, and none for an action the gate does not ask about — which makes a one-to-one reference POSSIBLE. They do not make one exist: the record carried `action`, a tool NAME, so two calls to one tool in a session were the same line in the log. The Fault citations supply the reference itself: the dispatch's `actionId` on the record, two calls of one tool distinguishable, and a fail-closed refusal when two decisions about one tool name no dispatch, so the fallback for actionId-less records cannot settle the question by position. What no citation proves is that an audit TOOL exists to run the query; the field it would travel on does, and the reverse lookup is exercised in the Fault case that filters the log by `actionId`."
+      "note": "acceptance[2]: 'the approval event and the final action form a one-to-one reference.' The two halves are cited separately because each alone is half the clause, and conflating them was a live risk on this epic. The Usage citations prove the COUNT — exactly one binding per gated dispatch, and none for an action the gate does not ask about — which makes a one-to-one reference POSSIBLE. They do not make one exist: the record carried `action`, a tool NAME, so two calls to one tool in a session were the same line in the log. The Fault citations supply the reference itself: the dispatch's `actionId` on the record, two calls of one tool distinguishable, and a fail-closed refusal when two decisions about one tool name no dispatch, so the fallback for actionId-less records cannot settle the question by position. What no citation proves is that an audit TOOL exists to run the query; the field it would travel on does, and the reverse lookup is exercised in the Fault case that filters the log by `actionId`.\n\n[2026-09-24 lane A, A-335 backfill (S1: the evidence existed and was not registered; no case changed): four citations test the clause's subject, one approval record per action, on the sides the citations above do not reach. The two `F` cases, «P2-06 acceptance[2]: the record names the DISPATCH, not only the tool writes an actionId from the code-mode path, so both production paths name their dispatch» (`packages/core/tools/tests/approval-code-mode.spec.ts:197`) and «P2-06 acceptance[2]: the record names the DISPATCH, not only the tool gives two sub-dispatches of ONE tool two different actionIds, and does not let the first decision cover the second» (`packages/core/tools/tests/approval-code-mode.spec.ts:207`), show the code-mode path binding each production-generated sub-call id, one binding per dispatch. The two `P` cases, «P2-06 acceptance[2]: the record is the one-to-one reference names the approval and the action in one record, exactly one per bound ask» (`packages/interaction/user-approval/tests/binding-service.spec.ts:212`) and «P2-06 acceptance[2]: the record is the one-to-one reference gives two asks two ids, so one action's two approvals stay distinguishable» (`packages/interaction/user-approval/tests/binding-service.spec.ts:226`), cover the approval-event side. Still unobserved: looking an executed action up by id to its approval within one run, and the native path's `actionId = block.id`.]"
     },
     {
       "epic": "P2-10",
