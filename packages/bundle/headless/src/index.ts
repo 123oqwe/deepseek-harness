@@ -328,7 +328,6 @@ async function run(
       agentOptions: {
         provider: selection.provider,
         model: selection.model,
-        identity: hostUserIdentity(RunId(`run-${randomUUID()}`)),
       },
       setup: (agentCtx) => {
         const selected: ModelSelectionRef = { current: selection, assembled: undefined }
