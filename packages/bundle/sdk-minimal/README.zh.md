@@ -93,7 +93,7 @@ dsh --profile sdk-minimal
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **该组合刻意省略共享产品服务** — 需要托管凭据、策略预设（risk table）、遥测、Web 工具或完整默认工具清单时，请选择 `dsh --profile sdk`。settings 与策略引擎本身已在本 profile 内，但**没有** `permission-presets` 的风险表：它在 shell 不约束时加载期即抛，因此每个动作都以 `security-sensitive` 到达引擎，无论它声明了什么标签。
+- **该组合刻意省略共享产品服务** — 需要托管凭据、策略预设（risk table）、遥测、Web 工具或完整默认工具清单时，请选择 `dsh --profile sdk`。settings 与策略引擎本身已在本 profile 内，但**没有** `permission-presets` 的风险表：它在 shell 不约束时加载期即抛，因此每个动作都以 `security-sensitive` 到达引擎，无论它声明了什么标签。所以本 profile 没有风险门，风险控制由接入方负责。
 - **用户 patch 可以扩展配置树并破坏 stdout** — profile 自定义属于受信任的应用组合；向 stdout 写入普通文本的插件会破坏 JSON-RPC 分帧。
 
 <a id="dev-note"></a>

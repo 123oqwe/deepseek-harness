@@ -93,7 +93,7 @@ Stable for a fixed persona, platform, provider, model, and bundle patch stack. P
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **The composition intentionally omits shared product services** — select `dsh --profile sdk` when managed credentials, the policy-preset risk table, telemetry, Web tools, or the full default tool roster are required. Settings and the policy engine are now part of this profile; the risk table is NOT, because it throws at load over a shell that does not confine, so every action reaches the engine as `security-sensitive` whatever domain tags it declares.
+- **The composition intentionally omits shared product services** — select `dsh --profile sdk` when managed credentials, the policy-preset risk table, telemetry, Web tools, or the full default tool roster are required. Settings and the policy engine are now part of this profile; the risk table is NOT, because it throws at load over a shell that does not confine, so every action reaches the engine as `security-sensitive` whatever domain tags it declares. The profile therefore has no risk gate, and risk control is the integrator's responsibility.
 - **User patches can expand the tree and corrupt stdout** — profile customization is trusted application composition; a plugin that writes ordinary text to stdout can break JSON-RPC framing.
 
 <a id="dev-note"></a>
