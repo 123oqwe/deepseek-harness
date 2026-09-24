@@ -176,7 +176,8 @@ abstract start(request: WorkflowStartRequest): WorkflowRun
  * A journal that does not exist, or one written under a different script
  * digest, starts the run fresh rather than failing: `admitResume` refuses
  * the RESUME, not the run, and a caller asking to continue wants the work to
- * happen.
+ * happen. The returned run's `resumeRefused` names a refusal; a missing
+ * journal leaves it absent.
  * @param runId - the interrupted run to continue; its journal is read by this id.
  * @param request - the same fields `start` takes; the script must be the one
  *   the journal was written under, or the resume degrades to a fresh run.
