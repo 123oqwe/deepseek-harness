@@ -67,8 +67,13 @@ export function assertEvent(event: SessionFormatEvent, version: 2 | 3): void {
   const admitted = disposition as NonNullable<typeof disposition>
   keys(data, admitted.required, admitted.optional, event.type + ' data')
   assertOwnedContent(event, data)
+  // A descriptor of a version other than the current 3 comes only from a log
+  // migrated from v0 or v1, whose edges keep it without field validation; the
+  // runtime ignores it.
+  const earlierDescriptor = event.type === 'subagent/descriptor' && data['version'] !== 3
+  if (earlierDescriptor) sessionFormatCount(data['version'], event.type + ' version')
   // Assistant attempts are introduced by V2; the V0 helper has no case for them.
-  if (event.type !== 'assistant/attempt') assertReleasedPayloadSemantics(event, version)
+  if (event.type !== 'assistant/attempt' && !earlierDescriptor) assertReleasedPayloadSemantics(event, version)
   if (event.type === 'assistant/message' || event.type === 'assistant/attempt') {
     for (const coordinate of ['turn', 'step']) {
       if (sessionFormatCount(data[coordinate], coordinate) === 0) throw new SessionFormatError(coordinate + ' must be positive')
