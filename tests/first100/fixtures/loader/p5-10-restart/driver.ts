@@ -29,7 +29,8 @@
  * - `after <variant> <parent> <child>` boots the same profile, reads what the
  *   child did before anything is reopened, resumes the parent the way the Web
  *   host does when a client opens it, reads again, sends the child one prompt,
- *   and reads a third time.
+ *   reads a third time, lets the user send the parent one task, and reads a
+ *   fourth time. Every reading includes the durable bus's outbox rows.
  * @module tests/first100/fixtures/loader/p5-10-restart/driver
  */
 
@@ -42,6 +43,7 @@ import { resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { runFixtureTurn } from '@deepseek-ai/dsh-loader-smoke'
 import { SessionId } from '@deepseek-ai/dsh-session'
+import type {} from '@deepseek-ai/dsh-message-bus'
 import type {} from '@deepseek-ai/dsh-session-query'
 import type { SubagentInterruptReceipt, SubagentPromptRequest, SubagentPromptRequestId } from '@deepseek-ai/dsh-subagent'
 import { createFixtureRootAgent } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts'
@@ -106,6 +108,8 @@ interface PhaseResult {
   readonly status: number | null
   readonly signal: string | null
   readonly reading: Record<string, unknown>
+  /** The phase's stderr lines that mention a settlement, the outbox or the bus, at most 20. */
+  readonly notes: readonly string[]
 }
 
 /**
@@ -209,6 +213,28 @@ function prompt(subagents: Context['subagents'], parent: SessionId, child: Sessi
 }
 
 /**
+ * Every row the durable bus's outbox holds, reduced to what locates a
+ * settlement and says how far its delivery got.
+ * @param ctx - the booted root context.
+ * @returns the rows, or `null` when no bus is mounted.
+ */
+function busRows(ctx: Context): readonly Readonly<Record<string, unknown>>[] | null {
+  const bus = ctx.get('messageBus')
+  if (bus === undefined) return null
+  return bus.outboxRows().map((row) => {
+    const summary = (row.payload as { readonly summary?: unknown } | null)?.summary
+    return {
+      target: row.target,
+      id: row.record.id,
+      epoch: row.record.epoch,
+      state: row.record.state,
+      attempts: row.record.attempts,
+      summary: typeof summary === 'string' ? summary.slice(0, 80) : null,
+    }
+  })
+}
+
+/**
  * Print one phase's reading.
  * @param reading - what the phase observed.
  */
@@ -265,6 +291,8 @@ async function before(ctx: Context, variant: Variant): Promise<void> {
       inFlight,
       interrupt,
       outcome,
+      busRowsBeforeDispose: busRows(ctx),
+      childEpochBeforeDispose: ctx.agents.get(child)?.lifecycle?.epoch ?? null,
       parentTurnEndsAtInterrupt,
       parent: watch.tally(parent.id),
       child: watch.tally(child),
@@ -288,6 +316,7 @@ async function before(ctx: Context, variant: Variant): Promise<void> {
     releaseSettled,
     outcome,
     settled,
+    busRowsBeforeDispose: busRows(ctx),
     parentTurnEndsAtInterrupt,
     parent: watch.tally(parent.id),
     child: watch.tally(child),
@@ -314,6 +343,7 @@ async function after(ctx: Context, parentId: SessionId, childId: SessionId): Pro
     childSessionOpen: ctx.sessions.get(childId) !== undefined,
     sessionsWithEvents: watch.sessionsSeen(),
     childStatuses: watch.statuses(childId),
+    busRows: busRows(ctx),
   }
 
   // What the Web host does when a client opens the session
@@ -329,6 +359,7 @@ async function after(ctx: Context, parentId: SessionId, childId: SessionId): Pro
     child: structuredClone(watch.tally(childId)),
     childLive: ctx.agents.get(childId) !== undefined,
     childStatuses: [...watch.statuses(childId)],
+    busRows: busRows(ctx),
   }
 
   const outcome = await prompt(subagents, parent.id, childId, 'p5-10-after-restart', 'P5-10: take a turn after the restart.')
@@ -344,17 +375,31 @@ async function after(ctx: Context, parentId: SessionId, childId: SessionId): Pro
       turnEnds: observation.events.filter(event => event.type === 'turn/end').length,
     }
   }
+  const afterPrompt = {
+    outcome,
+    settled: promptSettled,
+    parent: structuredClone(watch.tally(parentId)),
+    child: structuredClone(watch.tally(childId)),
+    childLive: ctx.agents.get(childId) !== undefined,
+    childStatuses: [...watch.statuses(childId)],
+    childLogTurns,
+    busRows: busRows(ctx),
+  }
+
+  // The user speaks to the parent: its next step is where the pre-step
+  // fallback drain would deliver a settlement still owed to it.
+  const parentMessagesBefore = watch.tally(parentId).userMessages.length
+  await runFixtureTurn(ctx, { task: 'P5-10: the user speaks to the parent after the restart.' })
+  const parentPromptSettled = await settle(watch)
   report({
     beforeResume,
     afterResume,
-    afterPrompt: {
-      outcome,
-      settled: promptSettled,
-      parent: watch.tally(parentId),
-      child: watch.tally(childId),
-      childLive: ctx.agents.get(childId) !== undefined,
-      childStatuses: watch.statuses(childId),
-      childLogTurns,
+    afterPrompt,
+    afterParentPrompt: {
+      settled: parentPromptSettled,
+      parentMessages: watch.tally(parentId).userMessages.slice(parentMessagesBefore),
+      parentTurnEndReasons: watch.tally(parentId).turnEndReasons,
+      busRows: busRows(ctx),
     },
   })
 }
@@ -378,7 +423,12 @@ function runPhase(args: readonly string[], env: NodeJS.ProcessEnv): PhaseResult 
   if (json === undefined) {
     throw new Error(`p5-10 restart phase ${args.join(' ')} reported nothing (status ${String(result.status)}, signal ${String(result.signal)}); stderr tail:\n${result.stderr.slice(-1500)}`)
   }
-  return { status: result.status, signal: result.signal, reading: JSON.parse(json) as Record<string, unknown> }
+  return {
+    status: result.status,
+    signal: result.signal,
+    reading: JSON.parse(json) as Record<string, unknown>,
+    notes: result.stderr.split('\n').filter(line => /settle|outbox|\bbus\b/iu.test(line)).slice(0, 20),
+  }
 }
 
 /**
