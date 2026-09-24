@@ -1,0 +1,26 @@
+# Test-only overlay over the SHIPPED headless profile for A-391's
+# measurement: whether a plugin's ctx.logger output reaches stderr or a file.
+# It supplies a keyless scripted model and an uncompressed session log, turns
+# off the rows that would run a task of their own, and configures no agent:
+# the driver creates the root agent after boot. The shipped
+# `capability-tokens` row is left as it is.
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
+
+- insert:
+    - id: logger-visibility-mock-llm
+      name: './mock-llm.ts'
