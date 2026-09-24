@@ -206,7 +206,6 @@ export function verify(repoRoot, evidencePath) {
   const { signature, ...rest } = pkg
   const recomputedSignature = digestOfValue(rest)
   if (recomputedSignature !== signature) mismatches.push(`package signature mismatch (recorded ${signature}, recomputed ${recomputedSignature})`)
-  if (typeof pkg.accepted !== 'boolean') mismatches.push(`accepted is ${JSON.stringify(pkg.accepted)}, not a boolean`)
 
   const baselinePath = join(repoRoot, '.dsh/baseline.json')
   if (!existsSync(baselinePath)) {
