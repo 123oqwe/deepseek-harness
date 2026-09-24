@@ -240,7 +240,11 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   claimed. If the lease provider is torn down before a session's terminal writes
   settle, those writes are refused as `'lease-unavailable'` and the release
   throws (reported as a failed Run store write), so the Run keeps a
-  non-terminal state and the lease row stays until it lapses.
+  non-terminal state and the lease row stays until it lapses. A write refused
+  for its lease is logged as a warning naming the transition, the Run and the
+  reason; an illegal transition is not logged. The in-memory store's
+  `setAvailable(false)` answers `get` with nothing, so its refusals read
+  `'fenced'`, the same as a takeover.
 - **`paused` is legal and unreached.** The advancing paths are `agent/pre-step`
   (`queued → starting → running`, and the return from `waiting_tool`), the
   dispatch risk gate in `@deepseek-ai/dsh-tools` (`waiting_human` for as long as
