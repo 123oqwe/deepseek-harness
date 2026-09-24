@@ -134,7 +134,10 @@ export class ReactLoopAgent implements Agent {
     const resolvedIdentity = resolveSessionIdentity(lastAttachedIdentity(session), options.identity)
     if (resolvedIdentity.identity !== undefined) {
       this.identity = resolvedIdentity.identity
-      if (resolvedIdentity.shouldLog) session.append('identity/attached', { identity: resolvedIdentity.identity })
+      if (resolvedIdentity.shouldLog) {
+        session.append('identity/attached', { identity: resolvedIdentity.identity })
+        session.append('identity/attached', { identity: resolvedIdentity.identity })
+      }
     }
     this.systemPrompt = new SystemPromptProjection(session)
   }
