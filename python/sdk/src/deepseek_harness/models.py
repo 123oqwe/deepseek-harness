@@ -72,7 +72,6 @@ class NegotiationProvenance(BaseModel):
     protocolVersion: int | None = None
     agreedCapabilities: list[str] = Field(default_factory=list)
     ignoredCapabilities: list[str] = Field(default_factory=list)
-    downgrades: list[CapabilityDowngrade] = Field(default_factory=list)
 
 
 class HostStopRecord(BaseModel):
