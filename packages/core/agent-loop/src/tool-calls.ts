@@ -301,14 +301,6 @@ async function runGroup(
       }
       return
     }
-    // BLOCKED-330: the call's capability token is checked before the risk gate
-    // may ask a person, so nobody is asked to approve a call the token will
-    // refuse. The refusal is the one `prepare` would give.
-    const unauthorized = ctx.tools[TOOL_RUNTIME_SCHEDULER].capabilityRefusal(call.exec)
-    if (unauthorized !== undefined) {
-      slots[index] = { exec: call.exec as unknown as ToolRunContext, result: unauthorized, needsPost: false }
-      return
-    }
     // P2-06 must[1]: the approval this gate may ask for is bound to the tuple
     // the decider is deciding about. Built HERE because this is the only place
     // that holds both halves — the model's arguments and the manifest record
