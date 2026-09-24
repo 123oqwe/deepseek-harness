@@ -608,9 +608,29 @@
         {
           "stage": "U",
           "title": "mounts the healthy bundle and never the blocked one, and says why on stderr"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P1-08 composition: five declared bundles through one real `dsh --profile compat` launch acceptance[1]: a bundle missing a required capability never runs, and its exclusion is shown whole"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P1-08 composition: five declared bundles through one real `dsh --profile compat` launch acceptance[1]: a bundle declaring a schema major the host does not register never runs, and its exclusion is shown whole"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P1-08 composition: five declared bundles through one real `dsh --profile compat` launch control: the same schema id at the registered major runs, so the refusal above is the major and not an unknown id"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P1-08 composition: five declared bundles through one real `dsh --profile compat` launch control: a bundle declaring nothing it cannot get runs"
         }
       ],
-      "note": "acceptance[1]: '缺少必需 capability 或 major schema 不匹配时不执行插件代码.' The C and U cases cover both named conditions -- missing required capability, and schema major mismatch -- as decisions. The clause's operative words are 不执行插件代码 (the plugin's code is not executed), which a decision alone does not establish: the real-composition case is the one that proves it, booting a two-bundle profile through the real Loader and asserting the blocked bundle's plugin produced no output while the healthy one did. That case is what distinguishes 'the solver said no' from 'the code never ran'."
+      "note": "acceptance[1]: '缺少必需 capability 或 major schema 不匹配时不执行插件代码.' The C and U cases cover both named conditions -- missing required capability, and schema major mismatch -- as decisions. The clause's operative words are 不执行插件代码 (the plugin's code is not executed), which a decision alone does not establish: the real-composition case is the one that proves it, booting a two-bundle profile through the real Loader and asserting the blocked bundle's plugin produced no output while the healthy one did. That case is what distinguishes 'the solver said no' from 'the code never ran'.\n\n[2026-09-24 lane A, BLOCKED-307: one sentence above claims more than its case asserts and is corrected here rather than edited there. 'The C and U cases cover both named conditions' holds, as decisions. 'The real-composition case is the one that proves it' held for the missing-capability branch only: that two-bundle case (`apps/cli/tests/plugin-compat-boot.spec.ts`) stages no schema declaration, so the schema-major branch was held at boot by composition, read and not observed. The four `supplementSeq: 1` citations close that on one real `dsh --profile compat` launch: a bundle declaring `sdk-protocol:InitializeParams` at major 2 never prints its marker and its exclusion line is on the launcher's stderr whole; the same id at the registered major 1 runs, which is the control that the refusal is the major and not an unknown id; the missing-capability exclusion is shown whole on the same launch; and a bundle declaring nothing it cannot get runs. M2 (a registered id passes at any major) reddens exactly the schema-major case, and M3 (no exclusion line written) reddens exactly the two acceptance[1] cases. No shipped composition declares `dsh.compat` (BLOCKED-272), so the bundles are staged third-party input. The original text is left as written above.]"
     },
     {
       "epic": "P1-08",
@@ -627,9 +647,14 @@
         {
           "stage": "F",
           "title": "characterization: an optional capability whose sole provider is itself blocked disables only that capability — cascade never propagates through an optional edge"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P1-08 composition: five declared bundles through one real `dsh --profile compat` launch acceptance[2]: a bundle missing an optional capability runs, and the disabled capability is shown whole on the launch output"
         }
       ],
-      "note": "acceptance[2]: '可选 capability 缺失时只禁用对应功能并明确展示.' Two halves, both required: the plugin stays active (only the feature is disabled), and the disablement is explicitly shown rather than silent. The C and U cases assert both halves at the contract and the real-profile level. The F case covers the harder variant the others do not reach -- an optional capability whose sole provider is itself blocked -- proving cascade does not propagate through an optional edge, which is what stops a missing optional from silently escalating into a blocked plugin."
+      "note": "acceptance[2]: '可选 capability 缺失时只禁用对应功能并明确展示.' Two halves, both required: the plugin stays active (only the feature is disabled), and the disablement is explicitly shown rather than silent. The C and U cases assert both halves at the contract and the real-profile level. The F case covers the harder variant the others do not reach -- an optional capability whose sole provider is itself blocked -- proving cascade does not propagate through an optional edge, which is what stops a missing optional from silently escalating into a blocked plugin.\n\n[2026-09-24 lane A, BLOCKED-307: 'The C and U cases assert both halves at the contract and the real-profile level' is false and is corrected here rather than edited there. The C case and the primary U case assert the first half: the plugin is admitted with the capability listed in the negotiation result's `disabledOptionalCapabilities`. Neither asserts a display, although the U title says 'shown explicitly'. The display half is asserted by the `supplementSeq: 1` citation: on one real `dsh --profile compat` launch the bundle missing only an optional capability prints its marker, and the launcher's stderr carries the whole line `dsh: plugin compatibility: bundle \"p1-08-optional-missing\" is active with disabled optional capabilities: p1-08-absent-optional`, written at `apps/cli/src/profile-boot.ts:311-319`. M1 (that write deleted) and M4 (the optional branch of `solveManifest` deleted) each redden exactly this case. 'Only the corresponding function is disabled' is observed as the plugin running with the capability listed disabled; no case exercises a function that needs the missing capability. No shipped composition declares `dsh.compat` (BLOCKED-272), so the bundle is staged third-party input. The original text is left as written above.]"
     },
     {
       "epic": "P1-09",

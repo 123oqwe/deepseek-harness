@@ -523,6 +523,14 @@
       ]
     },
     {
+      "epic": "P1-08",
+      "path": "tests/first100/fixtures/P1-08.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
       "epic": "P1-09",
       "path": ".agents/notes/implemented/feature/2026-09-04-tool-registry-namespace-and-ownership-adjudication.md",
       "kind": "doc",

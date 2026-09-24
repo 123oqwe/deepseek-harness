@@ -14957,6 +14957,46 @@
         "failureSummary": "Baseline: PRECHECK, narrow run 35945842019: 4 passed / 0 failed. M-U4-a, run 35945856083: 0 passed / 4 failed; every case fails with `the launcher exited with 1`, thrown by the spec's `process.exit` spy before either app's program runs. M-U4-b, run 35945869324: 3 passed / 1 failed; the red is exactly `the launcher hands it to the headless app intact, and that app's own program accepts it on the second pass`, whose recorded exits are `[1]` instead of `[]`. M-U4-c, run 35945882993: 3 passed / 1 failed; the red is exactly the sdk counterpart, with the same reading. M-U4-d, run 35945896734: 2 passed / 2 failed; the reds are exactly the two grant cases, each recording no grant instead of one `trusted-read` grant from the launch argument.\n\nAll five readings match the prediction lane B froze before any run was dispatched. Each row of that prediction was measured rather than inferred: a one-off tsx script imported the same modules, copied the spec's `launch()` and its four assertions, and ran in process on the unmutated tree and under each mutation, which was applied and then restored; no test runner ran. The inferred step was that vitest would read the spec the same way, and these five runs are the check on it."
       },
       "note": "P1-07's fourth U supplement: must[2]'s host entry point, the launch flag, on the `headless` and `sdk` apps. `--trust-workspace=read` has to pass two parsers, not one: the launcher's `parseDshArgs`, and the booted app's own program on its second pass over the same arguments. Either can refuse the flag while the other accepts it, and each has its own mutation (M-U4-a the launcher's; M-U4-b and M-U4-c each app's). This file's four cases are its whole content, so the single-file argv and `expectCases` are the same set rather than a subset.\n\nEach case starts at the launcher's real `parseDshArgs`, imported from `apps/cli/src/args.ts`; hands the resulting `invocation.args` to the real `provideCmdline`; and mounts the plugins the shipped bundles mount: `headless-startup` or `sdk-app-startup`, and `command-workspace-trust`. The trust provider records the grants it is asked for and nothing more: what a written record then does is U.1–U.3's subject.\n\nWhat this narrows: item (4) of the 2026-09-23 sign-off says the CLI's parsing of `--trust-workspace` is not observed, and that the CLI hands the flag to the plugin is read from `apps/cli/src/args.ts`, not observed. These cases run that parser and that hand-off, which narrows the CLI-parsing half of item (4).\n\nWhat it does not observe: no case runs the built `dsh` binary. `bin.ts` → `runProfile` → `provideCmdline` in `apps/cli/src/profile-boot.ts` is reproduced, not executed: the case calls `provideCmdline` with the arguments `runProfile` passes, which is why `profile-boot.ts` is not cited. The web UI and the ACP wire remain unobserved.\n\nCoverage: not cited in `acceptance-coverage.json`. Its subject is must[2]'s host entry point, which is not the subject of acceptance[0], [1] or [2]; citing it under any of them would be the misrecord BLOCKED-301 describes."
+    },
+    {
+      "epic": "P1-08",
+      "stage": "U",
+      "supplements": {
+        "epic": "P1-08",
+        "stage": "U"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P1-08.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-08 composition: five declared bundles through one real `dsh --profile compat` launch acceptance[1]: a bundle missing a required capability never runs, and its exclusion is shown whole",
+        "P1-08 composition: five declared bundles through one real `dsh --profile compat` launch acceptance[1]: a bundle declaring a schema major the host does not register never runs, and its exclusion is shown whole",
+        "P1-08 composition: five declared bundles through one real `dsh --profile compat` launch control: the same schema id at the registered major runs, so the refusal above is the major and not an unknown id",
+        "P1-08 composition: five declared bundles through one real `dsh --profile compat` launch acceptance[2]: a bundle missing an optional capability runs, and the disabled capability is shown whole on the launch output",
+        "P1-08 composition: five declared bundles through one real `dsh --profile compat` launch control: a bundle declaring nothing it cannot get runs"
+      ],
+      "files": [
+        "tests/first100/fixtures/P1-08.composition.spec.ts",
+        "apps/cli/src/profile-boot.ts",
+        "packages/plugin/plugin-compat/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-24T04:19:38Z",
+      "dryRunProof": {
+        "treeSha": "95c311d9a3f7417385e6ebeecb2b598bde3953a3",
+        "testsDiscovered": 5
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations off PRECHECK `877c7230fe01514943c62063c99e855f0e10e7ad` (this spec alone, on `56803550dc`), each its own commit touching one product file, never merged, run by CI's narrow job at its own SHA over this entry's argv. M1 (`b36a8679088e2e245c3dc43fdaae38934a1abf57`) deletes the loop in `apps/cli/src/profile-boot.ts` that writes the disabled-optional-capabilities line for each admitted layer, the product's only display of acceptance[2]. M2 (`92939b765a6c9f03fd48f41351a96ef09d361129`) reduces `checkSchemaRanges` in `packages/plugin/plugin-compat/src/index.ts` to refusing an unregistered schema id, so a registered id passes at any major. M3 (`6c30e448a1213a691d613f520d71179b87814699`) deletes the loop in `profile-boot.ts` that writes the exclusion line for each blocked layer. M4 (`cb37816b09f9627912acf5f86c9273060fca040f`) deletes the optional branch of `solveManifest` in `plugin-compat/src/index.ts`, so a missing optional capability is treated as a missing required one.",
+        "failureSummary": "Baseline: PRECHECK, narrow run 35954067239: 5 passed / 0 failed. M1, run 35954082988: 4 passed / 1 failed; the red is exactly the acceptance[2] case, because the disabled-optional line is absent from stderr. M2, run 35954098156: 4 passed / 1 failed; the red is exactly the schema-major case, because the bundle declaring major 2 mounted and printed its marker. M3, run 35954111748: 3 passed / 2 failed; the reds are exactly the two acceptance[1] cases, because neither exclusion line is on stderr. M4, run 35954127596: 4 passed / 1 failed; the red is exactly the acceptance[2] case, because the bundle missing only an optional capability was excluded and its marker never printed. Every run discovered 5 cases with 0 skipped, and the two control cases stayed green under all four mutations.\n\nAll five readings match `artifacts/laneA/p1-08-u-composition-expectations.json` (sha256 `160074fe75923833e928b2dba7c3fc14487fb829154cfcc42b1869cbd67b812a`), written before any run was dispatched, case by case; the delegate compared them (lane A inbox A-334)."
+      },
+      "note": "P1-08's first U supplement: BLOCKED-307's closing condition 1. One real `dsh --profile compat` launch, through `runLoaderSmoke` and the real `dsh` bin, carries five bundle packages, each its own Loader plugin printing a marker from `apply`. A bundle missing a required capability and a bundle declaring `sdk-protocol:InitializeParams` at major 2 are excluded, their code never runs, and each exclusion line is on the launcher's stderr whole. The same schema id at the registered major 1 runs, which is the control that separates a major mismatch from an unknown id. A bundle missing only an optional capability runs, and the disabled capability is on the launcher's stderr whole. A bundle declaring nothing it cannot get runs; its plugin ends the process from `appReady.onReady`, so the launch exits only after every admitted layer has mounted.\n\nNo shipped composition declares `dsh.compat` (BLOCKED-272), so, per the delegate's standing rule S4 (on the shipped product the input is empty; the mechanism is proven on third-party input), the negotiation is observed on staged third-party bundles, and the sign-off states that nothing on the shipped product reaches it.\n\nThe three stderr lines are compared whole, as written by `apps/cli/src/profile-boot.ts:304-319`, and the reason codes are the ones the negotiator returns (`missing-required-capability`, `schema-major-mismatch`). `profile-boot.ts` and `plugin-compat/src/index.ts` are cited because M1/M3 and M2/M4 change them respectively; neither is changed by this entry.\n\nWhat it does not observe: no case exercises a function that needs the missing optional capability, so \"only the corresponding function is disabled\" is observed as the plugin running with the capability listed disabled, not as a feature refusing. BLOCKED-307 does not rule on that reading."
     }
   ]
 }
