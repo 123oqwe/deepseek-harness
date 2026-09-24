@@ -207,7 +207,7 @@ function main(argv: readonly string[]): number {
     args: argv[0] === '--' ? argv.slice(1) : [...argv],
     options: { lane: { type: 'string', multiple: true }, seed: { type: 'string' }, out: { type: 'string' } },
   })
-  const lanes = values.lane ?? [...new Set(SCENARIOS.map(scenario => scenario.lane))]
+  const lanes = values.lane ?? ['deterministic']
   for (const lane of lanes) {
     if (!SCENARIOS.some(scenario => scenario.lane === lane)) {
       console.error(`benchmark:harness: no scenario in lane ${lane}`)
