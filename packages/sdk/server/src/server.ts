@@ -188,7 +188,7 @@ function serverSchemaFingerprint(): string {
 export const SERVER_PROTOCOL_SURFACE: ProtocolSurface = {
   methods: [
     { name: 'initialize', schemaId: 'sdk-protocol:InitializeParams', version: '1.0' },
-    { name: 'session/prompt', schemaId: 'sdk-protocol:SessionPromptParams', version: '1.0' },
+    { name: 'session.prompt', schemaId: 'sdk-protocol:SessionPromptParams', version: '1.0' },
     { name: 'shutdown', schemaId: 'sdk-protocol:ShutdownRequest', version: '1.0' },
   ],
   // Every name this server originates: its notifications and `human/question`,
