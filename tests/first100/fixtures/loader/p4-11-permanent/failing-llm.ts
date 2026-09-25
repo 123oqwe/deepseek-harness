@@ -1,12 +1,14 @@
 import type { Context } from '@deepseek-ai/cordis'
-import { LlmAdapter, type StreamChunk } from '@deepseek-ai/dsh-llm'
+import { LlmAdapter, type GenerateOptions, type StreamChunk } from '@deepseek-ai/dsh-llm'
 
 /**
  * An adapter whose FIRST attempt fails and whose later attempts succeed, for
  * BLOCKED-281 (b). `A418_FAILURE` names the failure: `retryable` (`SERVER`,
  * 503), `invalid-request` (`INVALID_REQUEST`, 400) or `auth` (`AUTH`, 403).
- * Each attempt is counted on `globalThis.__a418Attempts`, which the driver in
- * the same process reads.
+ * Each attempt is counted on `globalThis.__a418Attempts`, and each call is
+ * recorded on `globalThis.__a418Calls` (its purpose, milliseconds since the
+ * first call, and the first stack frames), which the driver in the same process
+ * reads (A-418b: which layer makes the calls beyond the turn's own).
  *
  * The failure is a terminal error finish, as in the P4-11 mount slice's
  * `flaky-llm.ts`: `agent/request-error` fires on the assembled finish, and that
@@ -21,13 +23,24 @@ const FAILURES = {
   'auth': { code: 'AUTH', status: 403 },
 } as const
 
-/** The process-global attempt counter the driver reads. */
-interface AttemptCounter { __a418Attempts?: number }
+/** One recorded call. */
+interface CallRecord { readonly i: number, readonly purpose: string, readonly atMs: number, readonly frames: readonly string[] }
+
+/** The process-global attempt counter and call record the driver reads. */
+interface AttemptCounter { __a418Attempts?: number, __a418Calls?: CallRecord[], __a418FirstAt?: number }
+
+/** Repository path prefix removed from recorded stack frames. */
+const REPO_PREFIX = /\(?(?:file:\/\/)?\/[^()]*?deepseek-harness\//gu
 
 class FailingAdapter extends LlmAdapter {
-  async * stream(): AsyncIterable<StreamChunk> {
+  async * stream(options: GenerateOptions): AsyncIterable<StreamChunk> {
     const counter = globalThis as AttemptCounter
     counter.__a418Attempts = (counter.__a418Attempts ?? 0) + 1
+    const now = Date.now()
+    counter.__a418FirstAt ??= now
+    const frames = (new Error('a418 call').stack ?? '').split('\n').slice(2, 8).map(frame => frame.trim().replace(REPO_PREFIX, '').slice(0, 160))
+    const calls = (counter.__a418Calls ??= [])
+    calls.push({ i: counter.__a418Attempts, purpose: options.purpose ?? 'turn', atMs: now - counter.__a418FirstAt, frames })
     if (counter.__a418Attempts === 1) {
       const kind = process.env.A418_FAILURE ?? ''
       if (!Object.hasOwn(FAILURES, kind)) throw new Error(`A418_FAILURE must be one of ${Object.keys(FAILURES).join(', ')}, got "${kind}"`)

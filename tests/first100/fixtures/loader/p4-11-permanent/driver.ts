@@ -43,6 +43,8 @@ try {
   const retryEvents = ctx.agents.list().flatMap(agent => agent.session.snapshotEvents())
     .filter(event => RETRY_EVENTS.has(event.type)).length
   const attempts = (globalThis as { __a418Attempts?: number }).__a418Attempts ?? 0
+  // A-418b: every model call the adapter saw, with its purpose and first stack frames.
+  const calls = (globalThis as { __a418Calls?: unknown[] }).__a418Calls ?? []
   process.stdout.write(`A418-RESULT ${JSON.stringify({
     failure: process.env.A418_FAILURE ?? null,
     mounted: { runRetryUsage: usage !== undefined },
@@ -50,6 +52,7 @@ try {
     charged,
     retryEvents,
     turnError,
+    calls,
   })}\n`)
 } finally {
   await ctx.fiber.dispose()
