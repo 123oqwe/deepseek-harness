@@ -48,7 +48,7 @@ describe('first-party Session format catalog', () => {
   it('restores a released v0 log whose subagent descriptor is version 2 through every edge to v3', () => {
     // Version 2 is the descriptor version the released v0 logs of audit
     // baseline b150a551 carry; each edge keeps it, as it keeps any descriptor
-    // of a version other than the current 3.
+    // of a version before the current 3.
     // A v0 header that carries `seedLength` is seeded
     // (session-format-v0-to-v1/src/codec.ts:180), so the v1-to-v2 edge closes
     // the inherited prefix with a `session/end-seed` at the cut, here seq 0,
