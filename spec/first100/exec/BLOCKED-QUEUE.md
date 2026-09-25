@@ -8400,6 +8400,12 @@ What remains: batch 7's observation of those cells, then a fresh 4.4a–d, a PAS
 
 **Owner.** lane B, after a lane A preFlight.
 
+**Forward addendum (2026-09-25, lane B).** acceptance[1]'s wire finding above no longer holds on the candidate. Since `3b551adac9`, `initialize` attaches the refusal's `code`, `schemaId`, `encounteredVersion` and `registeredVersion` to the thrown error as `data` (`packages/sdk/server/src/server.ts:343-349`), and the transport sends a thrown value's own `data` as the response's `error.data` (`packages/sdk/protocol/src/transport.ts:237-242`); the error code stays `-32603`, so a client reads the refusal from `error.data`, not from the code. Two observations were first frozen under P8-01 and are now frozen under P0-06, which acceptance[1]'s coverage cites:
+- U.2 (from P8-01 [370] P.1): over the SDK wire, on a hand-built composition of the real server and transport, an `initialize` whose `schemaVersion` major differs is answered with those four fields as `error.data`. M9 (`7408e56a71`, run 36007787776) removes them from the schema refusal and turns that case red.
+- U.3 (from P8-01 [371] U.1): the shipped TypeScript client hands its caller the unknown optional fields a newer-minor peer sends, at the top level and nested in the negotiation; the peer is scripted (`packages/sdk/client/tests/fake-runtime.ts`). M14 (`0a52bd80f5`, run 36007923624) drops unmodelled fields and turns both cases red.
+
+Closing condition 3 names these two observations. Closing condition 4 is ruled (the delegate, 2026-09-25) as a shipped client declaring its `sdk-protocol:InitializeParams` schema version in `initialize`; narrowing the clause to name the clients is not taken. Today neither shipped client sends one (`python/` and `packages/sdk/client/src` hold no `schemaVersion` or `schema_version`), so the server takes its compatible default (`server.ts:341`). The TypeScript red-first case is lane A's A-409 (`tests/first100/fixtures/P0-06.ts-client-schema-version.spec.ts`; run 36090791050 at dispatch `8699a9293f`: the control green, and the case that expects `schemaVersion` red on `undefined`), and the fix is lane B's B-595; the Python half waits for B-582.
+
 ### BLOCKED-311 — P4-12's ambiguous entries are refused and never reconciled; nothing on the shipped product can clear one; the acceptance is withdrawn
 
 **Status:** OPEN (2026-09-24). Owner lane B (implementation), lane A (preFlight).

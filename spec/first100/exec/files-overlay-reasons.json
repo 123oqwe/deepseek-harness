@@ -213,6 +213,10 @@
     "P0-06 packages/session/session-format-v0-to-v1/src/validation.ts": "The v0-to-v1 edge's released-payload validation, where lane B's descriptor fix (B-560) keeps a subagent descriptor of version 2; U.1's R1 and catalog case pass through it.",
     "P0-06 packages/session/session-format-v1-to-v2/src/migration.ts": "The v1-to-v2 edge's ensureTargetCut, which adds the synthetic end-seed at a seeded header's cut that U.1's catalog case asserts.",
     "P0-06 packages/session/session-format-v2-to-v3/src/payload.ts": "The v2-to-v3 edge's assertEvent, where fix 2 keeps a subagent descriptor of an earlier version instead of validating it against version 3; U.1's v2-to-v3 case and catalog case pass through it.",
+    "P0-06 packages/sdk/client/src/client.ts": "The shipped TypeScript client's initialize, which hands its caller the unknown optional fields a newer-minor peer sends, at the top level and nested in the negotiation; U.3 observes both against a scripted peer.",
+    "P0-06 packages/sdk/protocol/src/transport.ts": "The JSON-RPC transport that sends a thrown value's own data as the response's error.data (:237-242), which is how U.2's refusal fields reach the client.",
+    "P0-06 packages/sdk/server/src/server.ts": "The SDK server's initialize, which negotiates the InitializeParams schema version and attaches the refusal's code, schemaId, encounteredVersion and registeredVersion to the thrown error as data (:343-349); U.2 observes those fields over the wire.",
+    "P0-06 spec/control-protocol.schema.json": "The committed control-protocol schema artifact, read by the fingerprint case beside U.2's in the same describe of plugin-apply.spec.ts (:215); U.2's -t selects only the refusal case.",
     "P8-01 packages/acp/acp/src/session.ts": "The ACP session resume (session/resume) that lane A's B1 case uses to continue an SDK-created session in a new Run, the one shipped path through which a persisted session gets a second Run from another connection."
   }
 }

@@ -901,9 +901,24 @@
         {
           "stage": "U",
           "title": "keeps the last good value (no silent field loss) when a hot-reloaded section declares an incompatible major"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 2,
+          "title": "P8-01 and P0-06 acceptance[1]: a refused handshake says why in fields, and the fingerprint is the artifact's P0-06 acceptance[1]: an incompatible schemaVersion is refused on the wire with its code and schemaId"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 3,
+          "title": "P8-01 acceptance[0] and P0-06 acceptance[1]: nothing the peer sent is dropped silently contract: an unknown optional field from a newer-minor server reaches the caller"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 3,
+          "title": "P8-01 acceptance[0] and P0-06 acceptance[1]: nothing the peer sent is dropped silently contract: an unknown optional field nested in the negotiation reaches the caller"
         }
       ],
-      "note": "acceptance[1]: 'incompatible client gets machine-readable error, no silent field loss.' Structured SchemaCompatibilityError (schemaId, encountered/registered versions) asserted at all 3 real U-stage boundaries (SDK initialize, session replay, settings load); explicit non-swallowing proven at the replay boundary (corrupt-suffix heuristic doesn't absorb a real negotiation failure) and no-silent-field-loss proven at the settings hot-reload boundary (last good value retained, no partial commit)."
+      "note": "acceptance[1]: 'incompatible client gets machine-readable error, no silent field loss.' Structured SchemaCompatibilityError (schemaId, encountered/registered versions) asserted at all 3 real U-stage boundaries (SDK initialize, session replay, settings load); explicit non-swallowing proven at the replay boundary (corrupt-suffix heuristic doesn't absorb a real negotiation failure) and no-silent-field-loss proven at the settings hot-reload boundary (last good value retained, no partial commit). Over the SDK wire (U.2, a hand-built composition of the real server and transport): an initialize whose schemaVersion major differs is answered with the refusal's code, schemaId, encounteredVersion and registeredVersion as error.data. On the shipped TypeScript client (U.3, against a scripted newer-minor peer): unknown optional fields reach the caller, at the top level and nested in the negotiation."
     },
     {
       "epic": "P0-06",

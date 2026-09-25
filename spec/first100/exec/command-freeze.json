@@ -18588,6 +18588,84 @@
         "failureSummary": "Dry run of exactly this entry's argv, run 36049856673 at the candidate c1ec8cfe74 itself (tree 861f69eb24…): 15 discovered, the three B1 cases passed, the other 12 skipped by the pattern, 0 failed. Before it, lane B's fix round 36043008604 at 3836f638ca (whose packages/run/run is byte-identical to c1ec8cfe74's) ran plugin.spec.ts among three files, and the three B1 cases passed. M-B1′, run 36044453999 at 29d64a9bd5: exactly the three B1 cases of plugin.spec.ts red, the file's other 12 cases green. Reports: ~/first100-delegate/artifacts/gate-<run>/narrow-report-<sha>/narrow-report.json."
       },
       "note": "Blind review B1 as lane B fixed it, at the plugin layer: a subagent's Run takes the provenance of the Run its parent agent is in, not the first Run its parent session ever opened (none when that Run has none, the current one's when a finished one carried another, none when the parent's own Run is terminal). The file is already run whole by P4-01 U [381], so this entry selects the B1 describe with a `-t` dot pattern, free of spaces and quotes as the narrow job requires, and testsDiscovered counts the 15 cases the argv discovered, skipped ones included. The shipped-profile half is lane A's U.4 (P8-01.b1-current-run-provenance.spec.ts)."
+    },
+    {
+      "epic": "P0-06",
+      "stage": "U",
+      "supplements": {
+        "epic": "P0-06",
+        "stage": "U"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/sdk/server/tests/plugin-apply.spec.ts",
+        "-t",
+        "P0-06 acceptance\\[1\\]: an incompatible schemaVersion is refused on the wire with its code and schemaId",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P8-01 and P0-06 acceptance[1]: a refused handshake says why in fields, and the fingerprint is the artifact's P0-06 acceptance[1]: an incompatible schemaVersion is refused on the wire with its code and schemaId"
+      ],
+      "files": [
+        "packages/sdk/server/tests/plugin-apply.spec.ts",
+        "packages/sdk/server/src/server.ts",
+        "packages/sdk/protocol/src/transport.ts",
+        "spec/control-protocol.schema.json"
+      ],
+      "frozenAtUtc": "2026-09-25T22:10:41Z",
+      "dryRunProof": {
+        "treeSha": "1f6bd24721d97b666fa4ac403542e42034da409d",
+        "testsDiscovered": 1
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Off P8-01's fix `2c5ff0286e` (in the candidate as `3b551adac9`, same patch-id), never merged: M9 (`7408e56a71`): the schema refusal thrown by initialize carries no data fields.",
+        "failureSummary": "Read case by case from each round's narrow report. The fix, run 36007657036: the case green. Red in: PRECHECK `2396989a5d`, run 36007637145; M6 `f00b1f21e0`, run 36007721245; M9 `7408e56a71`, run 36007787776."
+      },
+      "note": "P0-06 acceptance[1], re-frozen under P0-06 (delegate, 2026-09-25) from P8-01 [370]: the same spec file and files, with -t selecting only the acceptance[1] case; P8-01's other cases stay in [370]."
+    },
+    {
+      "epic": "P0-06",
+      "stage": "U",
+      "supplements": {
+        "epic": "P0-06",
+        "stage": "U"
+      },
+      "supplementSeq": 3,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/sdk/client/tests/negotiated-handshake.spec.ts",
+        "-t",
+        "contract: an unknown optional field from a newer-minor server reaches the caller|contract: an unknown optional field nested in the negotiation reaches the caller",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P8-01 acceptance[0] and P0-06 acceptance[1]: nothing the peer sent is dropped silently contract: an unknown optional field from a newer-minor server reaches the caller",
+        "P8-01 acceptance[0] and P0-06 acceptance[1]: nothing the peer sent is dropped silently contract: an unknown optional field nested in the negotiation reaches the caller"
+      ],
+      "files": [
+        "packages/sdk/client/tests/negotiated-handshake.spec.ts",
+        "packages/sdk/client/src/client.ts",
+        "packages/sdk/client/tests/fake-runtime.ts"
+      ],
+      "frozenAtUtc": "2026-09-25T22:10:42Z",
+      "dryRunProof": {
+        "treeSha": "1f6bd24721d97b666fa4ac403542e42034da409d",
+        "testsDiscovered": 2
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Off P8-01's fix `2c5ff0286e` (in the candidate as `3b551adac9`, same patch-id), never merged: M14 (`0a52bd80f5`): the TypeScript client drops the result fields it does not model.",
+        "failureSummary": "Read case by case from each round's narrow report. The fix, run 36007657036: both cases green. Red in: PRECHECK `2396989a5d`, run 36007637145; M14 `0a52bd80f5`, run 36007923624."
+      },
+      "note": "P0-06 acceptance[1], re-frozen under P0-06 (delegate, 2026-09-25) from P8-01 [371]: the same spec file and files, with -t selecting only the two acceptance[1] cases; P8-01's other cases stay in [371]."
     }
   ]
 }

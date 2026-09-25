@@ -259,6 +259,57 @@
     },
     {
       "epic": "P0-06",
+      "path": "packages/sdk/client/src/client.ts",
+      "kind": "source",
+      "stages": [
+        "U.3"
+      ],
+      "reason": "The shipped TypeScript client's initialize, which hands its caller the unknown optional fields a newer-minor peer sends, at the top level and nested in the negotiation; U.3 observes both against a scripted peer."
+    },
+    {
+      "epic": "P0-06",
+      "path": "packages/sdk/client/tests/fake-runtime.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P0-06",
+      "path": "packages/sdk/client/tests/negotiated-handshake.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P0-06",
+      "path": "packages/sdk/protocol/src/transport.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "The JSON-RPC transport that sends a thrown value's own data as the response's error.data (:237-242), which is how U.2's refusal fields reach the client."
+    },
+    {
+      "epic": "P0-06",
+      "path": "packages/sdk/server/src/server.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "The SDK server's initialize, which negotiates the InitializeParams schema version and attaches the refusal's code, schemaId, encounteredVersion and registeredVersion to the thrown error as data (:343-349); U.2 observes those fields over the wire."
+    },
+    {
+      "epic": "P0-06",
+      "path": "packages/sdk/server/tests/plugin-apply.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P0-06",
       "path": "packages/sdk/server/tests/server.spec.ts",
       "kind": "test",
       "stages": [
@@ -332,6 +383,15 @@
       "stages": [
         "U"
       ]
+    },
+    {
+      "epic": "P0-06",
+      "path": "spec/control-protocol.schema.json",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "The committed control-protocol schema artifact, read by the fingerprint case beside U.2's in the same describe of plugin-apply.spec.ts (:215); U.2's -t selects only the refusal case."
     },
     {
       "epic": "P0-06",
