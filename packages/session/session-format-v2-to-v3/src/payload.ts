@@ -71,7 +71,7 @@ export function assertEvent(event: SessionFormatEvent, version: 2 | 3): void {
   // migrated from v0 or v1, whose edges keep it without field validation; the
   // runtime ignores it. Any other version is validated as the current one, so
   // a later version, which no released build wrote, is refused.
-  const earlierDescriptor = event.type === 'subagent/descriptor' && typeof data['version'] === 'number' && data['version'] < 3
+  const earlierDescriptor = event.type === 'subagent/descriptor' && data['version'] !== 3
   if (earlierDescriptor) sessionFormatCount(data['version'], event.type + ' version')
   // Assistant attempts are introduced by V2; the V0 helper has no case for them.
   if (event.type !== 'assistant/attempt' && !earlierDescriptor) assertReleasedPayloadSemantics(event, version)
