@@ -616,14 +616,16 @@ export const TOOL_CAPABILITY_VERB = 'call'
  * token itself — never its `nonce`, `resources`, `verbs`, `subject`, or
  * signature (acceptance[2]: a denial is a model-visible string, so a message
  * quoting the token's contents would be the exact leak that clause forbids).
+ * An `expired` refusal of a call a `run_code` program made (`inProgram`) says
+ * so, and says what presents a new token (BLOCKED-331).
  */
 export class ToolCapabilityTokenError extends HarnessError {
   /** Which check refused: no token at all, expired, wrong verb, or out of resource scope. */
   readonly reason: ToolCapabilityDenialReason
 
-  constructor(toolName: string, reason: ToolCapabilityDenialReason, detail?: string) {
+  constructor(toolName: string, reason: ToolCapabilityDenialReason, detail?: string, inProgram?: boolean) {
     super(
-      `tool "${toolName}" refused: ${TOOL_CAPABILITY_DENIAL_MESSAGES[reason]}`
+      `tool "${toolName}" refused: ${capabilityDenialMessage(reason, inProgram === true)}`
       + (detail === undefined ? '' : ` (issuance failed: ${detail})`),
       'TOOL_TOKEN_DENIED',
     )
@@ -662,10 +664,33 @@ const TOOL_CAPABILITY_DENIAL_MESSAGES: Record<ToolCapabilityDenialReason, string
 }
 
 /**
+ * The `expired` wording for a call a `run_code` program made. The program
+ * presents the token its `run_code` call presented, for its whole run
+ * (`./ptc.ts`), so a newer token never reaches it; the next `run_code` call
+ * presents the session's re-issued one (BLOCKED-331).
+ */
+const EXPIRED_IN_PROGRAM_MESSAGE = `${TOOL_CAPABILITY_DENIAL_MESSAGES.expired}: this call came from a run_code program, `
+  + 'which presents the token of the run_code call that started it for its whole run; call run_code again to present a re-issued token'
+
+/**
+ * The model-facing wording of one refusal, carrying no token-derived value.
+ * @param reason - the check that refused.
+ * @param inProgram - whether a `run_code` program made the call.
+ * @returns the wording.
+ */
+function capabilityDenialMessage(reason: ToolCapabilityDenialReason, inProgram: boolean): string {
+  return reason === 'expired' && inProgram ? EXPIRED_IN_PROGRAM_MESSAGE : TOOL_CAPABILITY_DENIAL_MESSAGES[reason]
+}
+
+/**
  * The complete gate one required-token scope applies to one call, in refusal
- * order: presence, expiry, revocation, verb, then resource scope. Pure and
+ * order: presence, revocation, expiry, verb, then resource scope. Pure and
  * total — every input it needs is a parameter, so the decision cannot differ
  * between the `execute` path and the scheduler path that share it.
+ *
+ * Revocation is asked before expiry because it is final: an expired token is
+ * re-issued at the session's next dispatch and a revoked one never is
+ * (BLOCKED-331), so a token that is both stays refused as revoked.
  *
  * Revocation arrives as a decided boolean rather than as a service this
  * function calls, which is what keeps it pure: the caller asks the provider
@@ -700,8 +725,8 @@ function capabilityDenialReason(
   if (!presence.presented) return presence.reason
   // `assertTokenPresented` narrowed presence, not the local binding.
   const token = (presented as SignedCapabilityToken).token
-  if (now >= token.expiresAt) return 'expired'
   if (revoked) return 'revoked'
+  if (now >= token.expiresAt) return 'expired'
   if (!token.verbs.includes(TOOL_CAPABILITY_VERB)) return 'verb-not-authorized'
   if (!token.resources.includes(name)) return 'tool-not-in-scope'
   return undefined
@@ -2120,7 +2145,8 @@ export class ToolRuntime extends Service {
     const reason = capabilityDenialReason(input.name, input.capabilityToken, Date.now(), revoked)
     return reason === undefined
       ? undefined
-      : toolErrorResult(new ToolCapabilityTokenError(input.name, reason, input.capabilityTokenUnavailable))
+      // A `parent` marks a sub-dispatch of a `run_code` program (`./ptc.ts`), the only caller that sets it.
+      : toolErrorResult(new ToolCapabilityTokenError(input.name, reason, input.capabilityTokenUnavailable, input.parent !== undefined))
   }
 
   private async prepareExecution<T>(

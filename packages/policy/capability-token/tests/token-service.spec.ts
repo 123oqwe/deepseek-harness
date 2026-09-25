@@ -112,7 +112,7 @@ async function attenuateOrThrow(
   parent: SignedCapabilityToken,
   request: TokenAttenuationRequest,
 ): Promise<SignedCapabilityToken> {
-  const decision = await service.attenuate(parent, request)
+  const decision = await service.attenuate(parent, request, FIXED_TIME)
   if (!decision.accepted) throw new Error(`expected an accepted attenuation, got ${decision.reason}`)
   return decision.child
 }
@@ -272,14 +272,14 @@ describe('P2-02 Provider — attenuation decisions are delegated, and a refusal 
   it('refuses a widening request with attenuateToken\'s own reason, unchanged', async () => {
     const service = await openService()
     const root = await service.issue(issuanceRequest(), CapabilityTokenNonce('nonce-root'))
-    const decision = await service.attenuate(root, attenuationRequest({ verbs: ['read', 'execute'] }))
+    const decision = await service.attenuate(root, attenuationRequest({ verbs: ['read', 'execute'] }), FIXED_TIME)
     expect(decision).toStrictEqual({ accepted: false, reason: 'verbs-not-subset' })
   })
 
   it('writes nothing at all for a refused attenuation: no token, no audit record, across a restart', async () => {
     const seeded = await openService()
     const root = await seeded.issue(issuanceRequest(), CapabilityTokenNonce('nonce-root'))
-    await seeded.attenuate(root, attenuationRequest({ verbs: ['read', 'execute'] }))
+    await seeded.attenuate(root, attenuationRequest({ verbs: ['read', 'execute'] }), FIXED_TIME)
 
     const restarted = await openService()
     const state = await createFileCapabilityTokenStore(storePath).load()

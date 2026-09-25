@@ -40,7 +40,7 @@ export interface ChildResourceFilter {
   readonly deny?: readonly string[]
 }
 
-/** Raised when a requested child authority would widen its parent's. */
+/** Raised when a requested child authority would widen its parent's, or its parent has expired. */
 export class DelegatedCapabilityError extends Error {
   constructor(public readonly reason: TokenAttenuationDenialReason) {
     super(`delegated capability token refused: ${reason}`)
