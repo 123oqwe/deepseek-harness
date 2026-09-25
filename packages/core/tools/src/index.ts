@@ -2146,7 +2146,7 @@ export class ToolRuntime extends Service {
     return reason === undefined
       ? undefined
       // A `parent` marks a sub-dispatch of a `run_code` program (`./ptc.ts`), the only caller that sets it.
-      : toolErrorResult(new ToolCapabilityTokenError(input.name, reason, input.capabilityTokenUnavailable, input.parent !== undefined))
+      : toolErrorResult(new ToolCapabilityTokenError(input.name, reason, input.capabilityTokenUnavailable, false))
   }
 
   private async prepareExecution<T>(
