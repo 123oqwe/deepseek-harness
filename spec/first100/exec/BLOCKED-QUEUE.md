@@ -8917,7 +8917,7 @@ Under the standard's rule for real defects (WORKING-MODEL §12), they become est
 
 ### BLOCKED-323 — a detached workflow run never terminates its worker, so `dsh --profile headless` does not exit after the run settles (product defect, open)
 
-**Status:** OPEN (2026-09-24). Owner: lane B, fix in place. Found by lane A while measuring P2-01's acceptance[0] case A5 (detached workflow chain), confirmed by the delegate (first100-delegate-1a) by reading the code. This is a shipped-behaviour defect, not a test-harness problem. No accepted row depends on it today.
+**Status:** CLOSED 2026-09-25 (closure note at the end of this entry); opened 2026-09-24. Owner: lane B, fix in place. Found by lane A while measuring P2-01's acceptance[0] case A5 (detached workflow chain), confirmed by the delegate (first100-delegate-1a) by reading the code. This is a shipped-behaviour defect, not a test-harness problem. No accepted row depends on it today.
 
 **What was observed (CI, not inference).**
 - Nine narrow runs at P2-01 PRECHECK `c0a7895b37` and its eight mutations, 35970070614 to 35970218280, all ended A5 the same way: `p2-01-detached-workflow-chain did not exit within 90s. stdout: done` (`packages/test-support/loader-smoke/src/index.ts:216`).
@@ -8937,9 +8937,24 @@ Under the standard's rule for real defects (WORKING-MODEL §12), they become est
 3. A mutation that drops the new dispose call turns only that case red.
 4. After the fix, A5 may drop its preload. Until then, P2-01's sign-off lists "the process exit after a detached run" as not covered.
 
+**Closure note (2026-09-25, lane B).** Each condition, with the frozen case and the runs that show it.
+- **Condition 1.** P2-01 U.2 [349], `apps/cli/tests/profiles/headless/tests/detached-workflow-exit.e2e.ts`, case "BLOCKED-323: the launch exits on its own after the detached run it collected has settled".
+  - It runs a detached workflow to completion on the shipped headless launch and asserts the process exits on its own within 60 s, with no preload and no signal.
+  - PRECHECK `bb9daca2b1`, run 35993763782: red, "did not exit within 60s".
+- **Condition 2.** The fix `c4cf0efb58` disposes a settled detached run as well as its agent, and keeps the lease release at disposal, after the run's final writes.
+  - Run 35993783415: green.
+  - Chain C7 `58052eb5dd` (run 35993838713) and C8 `bc99b78fd7` (run 35997998108): green on the chain's final file contents.
+- **Condition 3.** M1 `a2d0ab486e` (a settled detached run is no longer disposed), run 35993858230: the case red the same way.
+  - It is the only case in the tree that launches a process which starts a detached run, so no other case can redden under M1.
+- **Condition 4.** P2-01's A5 no longer uses the `exit-when-recorded` preload.
+  - At the candidate, `apps/cli/tests/profiles/headless/tests/workflow-chain.e2e.ts` contains no `exit-when-recorded`: 0 matches. The same grep finds 2 in `b86d5c0ffe`, which added the preload.
+  - A5 is frozen in U.5 [390], whose note records "A5 launches with no forced exit", GREEN at `5b41cb7173` (run 36062190705).
+  - The commit that removed the preload, `4843058975`, is not an ancestor of the candidate, and no candidate commit carries its subject. The file's state at the candidate is what the condition reads.
+- In batch 8 the fix is `7afd16fc9f`, with an identical patch-id.
+
 ### BLOCKED-324 — a child agent inside a detached workflow run fails its first turn on the shipped headless profile, because the run's sessions carry no cwd and the shipped persona suffix needs one (product defect, open)
 
-**Status:** OPEN (2026-09-24). Owner: lane B, fix in place. Found by lane A's diagnostic run for P2-01 case A5, confirmed by the delegate (first100-delegate-1a) from that run's report and the bundle config. It blocks P2-01 acceptance[0] on the detached-workflow path, because no action ever happens there to carry an identity chain.
+**Status:** CLOSED 2026-09-25 (closure note at the end of this entry); opened 2026-09-24. Owner: lane B, fix in place. Found by lane A's diagnostic run for P2-01 case A5, confirmed by the delegate (first100-delegate-1a) from that run's report and the bundle config. It blocks P2-01 acceptance[0] on the detached-workflow path, because no action ever happens there to carry an identity chain.
 
 **What was observed (CI).** Narrow run 35983777478 at `8c7cd44109` (P2-01 A5 with diagnostics) persisted three sessions:
 - the launcher (`session-e90285b3…`), whose header has `cwd`;
@@ -8961,6 +8976,19 @@ Under the standard's rule for real defects (WORKING-MODEL §12), they become est
 2. The fix is in place: the run's session takes the launcher's `cwd` at the point where the detached run's session is created. It is not a new default and not a blank substitute for `{{cwd}}`.
 3. A mutation that drops the propagation turns only that case red.
 4. Then P2-01 A5 can reach its identity assertions (`workflow-chain.e2e.ts` :172 onward). Until then, P2-01's acceptance[0] is not observed on the detached path.
+
+**Closure note (2026-09-25, lane B).** Each condition, with the frozen case and the runs that show it.
+- **Condition 1.** P2-01 U.3 [350], `apps/cli/tests/profiles/headless/tests/detached-workflow-cwd.e2e.ts`, case "BLOCKED-324: the run's child completes its turn, and the run's and the child's sessions carry the launcher's cwd".
+  - It runs on the shipped headless launch with no key.
+  - PRECHECK `ef1a0c24d7`, run 35993801638: red at the child's `turn/end` (`[ { kind: 'error', … } ]` where `[ { kind: 'completed' } ]` was expected).
+  - With the diagnostic added in v2, `53998d7ccf`, run 35994888741, the failure reads the child's error: prompt variable "{{cwd}}" has no value for this assembly (section "deployment:persona-suffix").
+- **Condition 2.** The fix `fe58a4d958` makes the detached run's session take its launcher's `cwd` where that session is created. It is not a new default and not a blank substitute for `{{cwd}}`.
+  - Run 35993819360: both cases green.
+  - C7 (run 35993838713) and C8 (run 35997998108): green.
+- **Condition 3.** M1 `e83980646f` (the run's session no longer takes the launcher's cwd), run 35993878785: this case red, and the BLOCKED-323 case beside it green, because its run starts no agent.
+- **Condition 4.** P2-01's A5 reaches its identity assertions (`workflow-chain.e2e.ts`): U.5 [390] is GREEN at `5b41cb7173`, run 36062190705.
+  - The in-process case in U.4 [351] separates the launcher's `cwd` from the process's, which the e2e cannot.
+- In batch 8 the fix is `3712a3e8fb`, with an identical patch-id.
 
 ### BLOCKED-325 — P0-08's benchmark lanes simulate their own worlds and never run the product; four of the eight standard metrics are declared only (open)
 
