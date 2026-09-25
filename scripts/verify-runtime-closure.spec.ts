@@ -223,6 +223,14 @@ describe('verifyCarrierProfiles', () => {
     expect(result.excludedProfiles).toEqual(['web, because its client packages import packages they do not declare as runtime dependencies'])
   })
 
+  it('fails on a single missing declaration', async () => {
+    const allButHelper = Object.fromEntries(Object.entries(DECLARED).filter(([name]) => name !== '@scope/helper'))
+
+    const result = await verifyCarrierProfiles(carrier(allButHelper))
+
+    expect(result.failures).toEqual(['runtime -> sdk profile plugin row -> @scope/tool -> @scope/helper (sdk)'])
+  })
+
   it('fails when an excluded profile is no longer a template', async () => {
     const result = await verifyCarrierProfiles(carrier(DECLARED, "export const PROFILE_TEMPLATES = {\n  sdk: { bundles: ['@scope/base'] },\n}\n"))
 
