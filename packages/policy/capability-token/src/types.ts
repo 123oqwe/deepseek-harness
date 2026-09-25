@@ -38,7 +38,8 @@ import type { ChildResourceFilter } from './delegate.ts'
  * (resources/verbs/budget/time-range never exceed the parent) maps
  * one-to-one onto {@link TokenAttenuationRequest}'s four narrowable fields
  * (`verbs`, `resources`, `constraints.budget`, `expiresAt`) and
- * {@link TokenAttenuationDenialReason}'s four rejection reasons. `tenant`
+ * {@link TokenAttenuationDenialReason}'s four narrowing reasons; its fifth,
+ * `'parent-expired'`, refuses a parent rather than a dimension. `tenant`
  * and `capability` are deliberately absent from
  * {@link TokenAttenuationRequest}: a child token always inherits its
  * parent's `tenant` and `capability` verbatim (`./attenuate.ts`'s
@@ -331,13 +332,17 @@ export interface TokenAttenuationRequest {
  * the fixed order `verbs`, `resources`, `budget`, `expiresAt` (see
  * `./attenuate.ts`'s `attenuateToken`), so a request that violates more
  * than one dimension always refuses naming the earliest-checked one,
- * deterministically — never a partial narrowing.
+ * deterministically — never a partial narrowing. `'parent-expired'` — the
+ * parent has expired at the time the caller gave; only
+ * `CapabilityTokenService.attenuate` returns it, before any dimension is
+ * checked, since `attenuateToken` takes no time (BLOCKED-331).
  */
 export type TokenAttenuationDenialReason =
   | 'verbs-not-subset'
   | 'resources-not-subset'
   | 'budget-exceeds-parent'
   | 'expiry-exceeds-parent'
+  | 'parent-expired'
 
 /**
  * The outcome of `./attenuate.ts`'s `attenuateToken`: either every
@@ -422,6 +427,11 @@ export interface CapabilityTokenProviderContract {
   /**
    * The session's root token, waiting for an in-flight issuance and minting one
    * on first demand. This is what a consumer presenting a token calls.
+   *
+   * Asked at each call whether the held token has expired (BLOCKED-331): an
+   * expired root is re-issued under the same policy, an expired delegated token
+   * is re-derived from its parent's current token, and a revoked session is
+   * issued nothing, so it keeps presenting its revoked token.
    * @param session - the session whose root token is wanted.
    * @returns the token, or `undefined` when none could be issued.
    */
@@ -461,7 +471,9 @@ export interface CapabilityTokenProviderContract {
    *
    * Answered from durable records, so a session that has already ended is
    * still revocable — the case a detached run makes ordinary, since it outlives
-   * the session that launched it.
+   * the session that launched it. Final: nothing issues the session another
+   * token afterwards, whether its token expires, its tools grow, or the
+   * provider restarts (BLOCKED-331).
    * @param session - the session whose authority is withdrawn.
    * @returns `'revoked'` when at least one root was withdrawn, `'nothing-to-revoke'`
    *   when the durable record holds none for this session. The two are distinct

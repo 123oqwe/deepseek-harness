@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-25-an-expired-session-token-is-re-issued-and-a-revoked-one-never-is.md
+2026-09-25-an-expired-session-token-is-re-issued-and-a-revoked-one-never-is.md: de284ede2b3a17878017f34973a9685afb72c85a
+2026-09-25-an-expired-session-token-is-re-issued-and-a-revoked-one-never-is.zh.md: 5723a33e1272d60a2828f825d9c01062b4bac774

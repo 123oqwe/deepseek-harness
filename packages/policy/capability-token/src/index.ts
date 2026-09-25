@@ -332,11 +332,18 @@ export class CapabilityTokenService {
    * Delegate the narrowing decision to `./attenuate.ts`'s `attenuateToken`,
    * recording the child and appending its redacted audit record only when
    * that decision accepts. A refusal writes nothing at all.
+   *
+   * A parent that has expired at `now` is refused as `'parent-expired'`
+   * before the narrowing is decided, so no child is minted already expired
+   * (BLOCKED-331). The caller supplies the time, as it does for
+   * {@link verify}.
    * @param parent - the recorded parent token being attenuated.
    * @param request - the requested child scope.
-   * @returns `attenuateToken`'s own decision, unchanged.
+   * @param now - Unix epoch milliseconds to check the parent's expiry against.
+   * @returns the `'parent-expired'` refusal, or `attenuateToken`'s own decision, unchanged.
    */
-  async attenuate(parent: SignedCapabilityToken, request: TokenAttenuationRequest): Promise<TokenAttenuationDecision> {
+  async attenuate(parent: SignedCapabilityToken, request: TokenAttenuationRequest, now: number): Promise<TokenAttenuationDecision> {
+    if (now >= parent.token.expiresAt) return { accepted: false, reason: 'parent-expired' }
     const decision = attenuateToken(this.#trustRoot, parent, request)
     if (decision.accepted) await this.#record(decision.child)
     return decision

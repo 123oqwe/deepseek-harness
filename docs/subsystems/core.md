@@ -1050,6 +1050,11 @@ Declared in the DEFINITION package rather than in a provider so the name means t
 /**
  * The session's root token, waiting for an in-flight issuance and minting one
  * on first demand. This is what a consumer presenting a token calls.
+ *
+ * Asked at each call whether the held token has expired (BLOCKED-331): an
+ * expired root is re-issued under the same policy, an expired delegated token
+ * is re-derived from its parent's current token, and a revoked session is
+ * issued nothing, so it keeps presenting its revoked token.
  * @param session - the session whose root token is wanted.
  * @returns the token, or `undefined` when none could be issued.
  */
@@ -1093,7 +1098,9 @@ isRevoked(token: SignedCapabilityToken): boolean
  *
  * Answered from durable records, so a session that has already ended is
  * still revocable — the case a detached run makes ordinary, since it outlives
- * the session that launched it.
+ * the session that launched it. Final: nothing issues the session another
+ * token afterwards, whether its token expires, its tools grow, or the
+ * provider restarts (BLOCKED-331).
  * @param session - the session whose authority is withdrawn.
  * @returns `'revoked'` when at least one root was withdrawn, `'nothing-to-revoke'`
  *   when the durable record holds none for this session. The two are distinct

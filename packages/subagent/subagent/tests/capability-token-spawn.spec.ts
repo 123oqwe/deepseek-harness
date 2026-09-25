@@ -196,11 +196,13 @@ describe('P2-02 acceptance[1]: a cancelled turn does not revoke delegated author
     // A continuable child outlives the turn by definition, so its authority
     // outliving one cancelled turn is the correct lifetime, not a leak.
     //
-    // What DOES withdraw it: expiry — bounded by `min(parent expiry, child
-    // TTL)` — and explicit revocation, whose production owner is P2-12's
-    // emergency stop (revoke the run's session roots, cascading through the
-    // lineage). Wiring `revokeSession(parent)` here would instead refuse the
-    // parent's own next turn, turning a correct lifetime into a fail-closed bug.
+    // What DOES withdraw it: explicit revocation, which is final, and whose
+    // production owner is P2-12's emergency stop (revoke the run's session
+    // roots, cascading through the lineage). Expiry ends one token, not the
+    // delegation: a child's token carries its parent's expiry and is
+    // re-derived from the parent's current token when it expires
+    // (BLOCKED-331). Wiring `revokeSession(parent)` here would instead refuse
+    // the parent's own next turn, turning a correct lifetime into a fail-closed bug.
     expect(stillActs, 'a cancelled TURN does not revoke delegated authority').toBe(true)
   })
 })

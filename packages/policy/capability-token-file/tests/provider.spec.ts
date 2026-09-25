@@ -226,7 +226,7 @@ describe('P2-02 acceptance[1]: revocation survives a re-issue', () => {
       expiresAt: firstRoot!.token.expiresAt,
       constraints: {},
       nonce: brandString<CapabilityTokenNonce>('0123456789abcdef0123456789abcdef'),
-    })
+    }, Date.now())
     expect(child.accepted).toBe(true)
 
     // Grow the visible tools so the next read mints a SECOND, unrelated root.

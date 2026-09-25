@@ -635,7 +635,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     methods: [
       {
         signature: 'whenSessionToken(session: SessionIdLike): Promise<SignedCapabilityToken | undefined>',
-        description: 'The session\'s root token, waiting for an in-flight issuance and minting one on first demand. This is what a consumer presenting a token calls.',
+        description: 'The session\'s root token, waiting for an in-flight issuance and minting one on first demand. This is what a consumer presenting a token calls.\n\nAsked at each call whether the held token has expired (BLOCKED-331): an expired root is re-issued under the same policy, an expired delegated token is re-derived from its parent\'s current token, and a revoked session is issued nothing, so it keeps presenting its revoked token.',
         parameters: [{ name: 'session', description: 'the session whose root token is wanted.' }],
         returns: 'the token, or `undefined` when none could be issued.',
       },
@@ -659,7 +659,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
       },
       {
         signature: 'revokeSession(session: SessionIdLike): Promise<\'revoked\' | \'nothing-to-revoke\'>',
-        description: 'Withdraw a session\'s authority: every root issued for it, and so every token delegated from any of them.\n\nAnswered from durable records, so a session that has already ended is still revocable — the case a detached run makes ordinary, since it outlives the session that launched it.',
+        description: 'Withdraw a session\'s authority: every root issued for it, and so every token delegated from any of them.\n\nAnswered from durable records, so a session that has already ended is still revocable — the case a detached run makes ordinary, since it outlives the session that launched it. Final: nothing issues the session another token afterwards, whether its token expires, its tools grow, or the provider restarts (BLOCKED-331).',
         parameters: [{ name: 'session', description: 'the session whose authority is withdrawn.' }],
         returns: '`\'revoked\'` when at least one root was withdrawn, `\'nothing-to-revoke\'` when the durable record holds none for this session. The two are distinct answers on purpose: reporting plain success for a session nothing was recorded against tells an operator their revocation took effect when it had nothing to act on.',
       },

@@ -134,6 +134,15 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
    */
   private readonly issuing = new Map<SessionId, Promise<SignedCapabilityToken>>()
   /**
+   * Sessions whose issuance or re-derivation has not settled yet.
+   *
+   * A caller that finds its session here waits for that one rather than
+   * starting another, so concurrent callers — parallel children re-deriving
+   * from one expired parent — mint one token per expiry or growth, and every
+   * child derives from the parent's one current token (BLOCKED-331).
+   */
+  private readonly unsettled = new Set<SessionId>()
+  /**
    * Live sessions, by id, kept as the registry SCOPE KEY for issuance.
    *
    * A token's resources are the registry view as of the read, and that view
@@ -220,6 +229,7 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
     disposers.push(this.ctx.on('agent/disposed', ({ agent }) => {
       this.sessionTokens.delete(agent.id)
       this.issuing.delete(agent.id)
+      this.unsettled.delete(agent.id)
       this.sessions.delete(agent.id)
       this.sessionRoots.delete(agent.id)
       this.issuanceErrors.delete(agent.id)
@@ -229,6 +239,7 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
     yield () => {
       for (const dispose of disposers.splice(0).reverse()) dispose()
       this.sessionTokens.clear()
+      this.unsettled.clear()
       this.sessions.clear()
       this.sessionRoots.clear()
       this.issuanceErrors.clear()
@@ -252,18 +263,25 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
    *
    * This is what a consumer presenting a token should call. `sessionToken` is
    * the synchronous read for a caller that already knows issuance settled.
+   * Each call asks, at that moment, whether the held token has expired: an
+   * expired root is re-issued under the same policy and an expired delegated
+   * token is re-derived from its parent's current one, while a revoked session
+   * keeps its revoked token and is issued nothing (BLOCKED-331).
    * @param session - the session whose root token is wanted.
    * @returns the session's root token, or `undefined` when none was issued.
    */
   async whenSessionToken(session: SessionId): Promise<SignedCapabilityToken | undefined> {
-    const agent = this.sessions.get(session)
-    const redelegated = agent === undefined ? undefined : this.redelegateIfGrown(agent)
+    const now = Date.now()
+    // One issuance at a time per session: a caller arriving while one is in
+    // flight waits for it below rather than minting a second token.
+    const agent = this.unsettled.has(session) ? undefined : this.sessions.get(session)
+    const redelegated = agent === undefined ? undefined : this.redelegateIfNeeded(agent, now)
     if (redelegated !== undefined) {
-      this.issuing.set(session, redelegated)
+      this.hold(session, redelegated)
       void redelegated.catch(() => undefined)
-    } else if (agent !== undefined && !this.delegations.has(session) && this.needsIssue(agent)) {
+    } else if (agent !== undefined && !this.delegations.has(session) && this.needsIssue(agent, now)) {
       const issue = this.issueSessionToken(agent, agent.identity?.principal.id, agent.identity?.principal.tenantId)
-      this.issuing.set(session, issue)
+      this.hold(session, issue)
       // The rejection is contained here: a session whose token could not be
       // recorded holds none, and every tool call in it is then refused by the
       // armed requirement — the fail-closed direction. Leaving it unhandled
@@ -283,8 +301,28 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
   }
 
   /**
-   * Whether this session needs a token minted — it has none, or the tools
-   * visible to it have grown past what its token authorizes.
+   * Record one session's issuance or re-derivation as in flight until it
+   * settles, so {@link whenSessionToken} starts no second one meanwhile.
+   * @param session - the session being issued a token.
+   * @param issuance - the issuance or re-derivation.
+   */
+  private hold(session: SessionId, issuance: Promise<SignedCapabilityToken>): void {
+    this.issuing.set(session, issuance)
+    this.unsettled.add(session)
+    const settle = (): void => { this.unsettled.delete(session) }
+    void issuance.then(settle, settle)
+  }
+
+  /**
+   * Whether this session needs a token minted — it has none, its token has
+   * expired, or the tools visible to it have grown past what its token
+   * authorizes. Never for a revoked session: revocation is final, so its token
+   * stays the revoked one and the tool gate refuses it as revoked (BLOCKED-331).
+   *
+   * Re-issue at expiry is what keeps a long-lived session working: the new root
+   * carries the same subject, tenant, capability and verbs, and its resources
+   * are read from the registry at that moment, so it grants nothing the session
+   * did not already hold while expiry still bounds the life of each token.
    *
    * Re-issue on growth is required, not defensive: `dsh-tool-subagent` — mounted
    * TWICE in `bundle/base` — registers its tool from a `subagent/provider-added`
@@ -301,39 +339,49 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
    * this root by subset — so widening the ROOT to what the session can actually
    * see does not widen any child.
    * @param agent - the session, which is also the registry scope key.
+   * @param now - Unix epoch milliseconds to check the held token's expiry against.
    * @returns whether {@link issueSessionToken} must run.
    */
-  private needsIssue(agent: Agent): boolean {
+  private needsIssue(agent: Agent, now: number): boolean {
     // An issuance already in flight will settle on the CURRENT registry, so a
     // concurrent caller waits for it rather than signing a second token.
     if (this.issuing.get(agent.id) !== undefined && this.sessionTokens.get(agent.id) === undefined) return false
     const token = this.sessionTokens.get(agent.id)
     if (token === undefined) return true
+    if (this.isRevoked(token)) return false
+    if (now >= token.token.expiresAt) return true
     const authorized = new Set(token.token.resources)
     return this.ctx.tools.schemas(agent).some(schema => !authorized.has(schema.name))
   }
 
   /**
-   * Re-derive a delegated child whose visible tools have grown past its token,
-   * bounded by what its parent NOW holds and by the parent's original filter.
+   * Re-derive a delegated child whose token has expired or whose visible tools
+   * have grown past it, bounded by what its parent NOW holds and by the
+   * parent's original filter.
    *
-   * Growth is why this exists: a tool registered into the child's scope after
-   * its token was minted would otherwise be refused for the rest of the
-   * session. It can never widen past the parent — the filter is re-applied to
-   * the parent's current resources, and `attenuate` is a subset check besides.
+   * Growth: a tool registered into the child's scope after its token was
+   * minted would otherwise be refused for the rest of the session. Expiry: a
+   * child's token carries its parent's expiry, so it is re-derived from the
+   * parent's current token, which {@link deriveFromParent} renews first
+   * (BLOCKED-331). It can never widen past the parent — the filter is
+   * re-applied to the parent's current resources, and `attenuate` is a subset
+   * check besides. A child revoked itself or through an ancestor is never
+   * re-derived: it keeps its token, which the tool gate refuses as revoked.
    * @param agent - the child session, which is also the registry scope key.
+   * @param now - Unix epoch milliseconds to check the held token's expiry against.
    * @returns the re-derivation when one was needed, `undefined` otherwise.
    */
-  private redelegateIfGrown(agent: Agent): Promise<SignedCapabilityToken> | undefined {
+  private redelegateIfNeeded(agent: Agent, now: number): Promise<SignedCapabilityToken> | undefined {
     const delegation = this.delegations.get(agent.id)
     if (delegation === undefined) return undefined
     const held = this.sessionTokens.get(agent.id)
-    if (held === undefined) return undefined
+    if (held === undefined || this.isRevoked(held)) return undefined
+    const expired = now >= held.token.expiresAt
     const parent = this.sessionTokens.get(delegation.parent)
-    if (parent === undefined) return undefined
+    if (parent === undefined && !expired) return undefined
     const authorized = new Set(held.token.resources)
     const visible = this.ctx.tools.schemas(agent).map(schema => schema.name)
-    if (!visible.some(name => !authorized.has(name))) return undefined
+    if (!expired && !visible.some(name => !authorized.has(name))) return undefined
 
     // Names the child can see that its parent's ROOT does not carry. They are
     // there because the COMPOSITION put them there — `attachStructuredRuntime`
@@ -347,10 +395,12 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
     // VISIBILITY, and both must hold at dispatch. A name the parent's scope
     // cannot see is a name the parent still cannot call. Growing the root is
     // what lets the child's own filter remain the only narrowing that decides.
-    const parentResources = new Set(parent.token.resources)
-    const composedForChild = visible.filter(name => !parentResources.has(name))
+    // A parent that holds no token here has nothing to grow; the re-derivation
+    // below asks for its current token either way.
+    const parentResources = new Set(parent?.token.resources ?? [])
+    const composedForChild = parent === undefined ? [] : visible.filter(name => !parentResources.has(name))
     const parentAgent = this.sessions.get(delegation.parent)
-    const grown = async (): Promise<SignedCapabilityToken> => {
+    const rederive = async (): Promise<SignedCapabilityToken> => {
       if (composedForChild.length > 0 && parentAgent !== undefined) {
         await this.issueSessionToken(
           parentAgent,
@@ -361,7 +411,11 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
       }
       return this.deriveFromParent(delegation.parent, agent.id, delegation.filter)
     }
-    return grown()
+    return rederive()
+  }
+
+  isRevoked(token: SignedCapabilityToken): boolean {
+    return this.service.isRevoked(digestToken(token.token))
   }
 
   /**
@@ -374,16 +428,17 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
    * know how many generations a session accumulated, so it must not be the one
    * to iterate them.
    *
+   * Final (BLOCKED-331): the session keeps its revoked token, so its calls are
+   * refused as revoked rather than as holding none, and nothing re-issues it —
+   * not expiry, not growth, and not a restarted mount, which finds the
+   * revocation in the durable record ({@link issueSessionToken}).
+   *
    * No production caller revokes yet — `CapabilityTokenService.revoke` has none
    * anywhere in this repository — so this closes the gap that re-issue opens
    * rather than serving a live revoker. P2-02 must not claim revocation is
    * reached on a launched profile on the strength of this method existing.
    * @param session - the session whose authority is withdrawn.
    */
-  isRevoked(token: SignedCapabilityToken): boolean {
-    return this.service.isRevoked(digestToken(token.token))
-  }
-
   async revokeSession(session: SessionId): Promise<'revoked' | 'nothing-to-revoke'> {
     // Asked of the DURABLE record, not of `sessionRoots`. That map is dropped
     // for a session at `agent/disposed` and cleared wholesale when the plugin
@@ -392,7 +447,6 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
     // list and report success having revoked nothing.
     const digests = this.service.digestsIssuedFor(session)
     for (const digest of digests) await this.service.revoke(digest)
-    this.sessionTokens.delete(session)
     this.sessionRoots.delete(session)
     // Reported rather than swallowed: "nothing was recorded for this session"
     // and "this session's authority is now withdrawn" are different answers,
@@ -435,7 +489,9 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
    * @param childSession - the child session receiving the derived token.
    * @param filter - the parent's declared restriction, or `undefined` for none.
    * @returns the derived child token.
-   * @throws when the parent holds no token, or the requested authority would widen it.
+   * @throws when the parent holds no token or was revoked, when the child's
+   * session was revoked, or when the service refuses: the parent has expired,
+   * or the requested authority would widen it.
    */
   private async deriveFromParent(
     parentSession: SessionId,
@@ -445,6 +501,15 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
     const parent = await this.whenSessionToken(parentSession)
     if (parent === undefined) {
       throw new Error(`capability-token-file: parent session ${String(parentSession)} holds no token to delegate from`)
+    }
+    // Revocation is final (BLOCKED-331): nothing is derived from a revoked
+    // parent, and a revoked child is not re-derived. Asked right before the
+    // service records the child, with no await between the two.
+    if (this.isRevoked(parent)) {
+      throw new Error(`capability-token-file: parent session ${String(parentSession)} was revoked, so nothing is delegated from it`)
+    }
+    if (this.revokedDurably(childSession)) {
+      throw new Error(`capability-token-file: session ${String(childSession)} was revoked, so its token is not derived again`)
     }
     const decision = await this.service.attenuate(parent, {
       subject: brandString<PrincipalId>(childSession),
@@ -456,7 +521,7 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
       constraints: { issuedFor: childSession },
       expiresAt: parent.token.expiresAt,
       nonce: brandString<CapabilityTokenNonce>(randomBytes(16).toString('hex')),
-    })
+    }, Date.now())
     // Surfaced, never softened to a root: a refused delegation that fell back to
     // issuing would hand the child MORE authority than it was just denied.
     if (!decision.accepted) throw new DelegatedCapabilityError(decision.reason)
@@ -475,6 +540,17 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
    */
   issuanceError(session: SessionId): string | undefined {
     return this.issuanceErrors.get(session)
+  }
+
+  /**
+   * Whether a token recorded for this session has been revoked, asked of the
+   * durable record rather than of this mount's memory, which a restart or the
+   * session's own disposal empties.
+   * @param session - the session to ask about.
+   * @returns whether any token issued for it is revoked.
+   */
+  private revokedDurably(session: SessionId): boolean {
+    return this.service.digestsIssuedFor(session).some(digest => this.service.isRevoked(digest))
   }
 
   /**
@@ -510,9 +586,13 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
    * it and then refuses every call to it — a denial indistinguishable from the
    * gate working. `dsh-subagent-dsh-sdk` registers its `subagent` tool exactly
    * that way.
+   * A session any of whose recorded tokens was revoked is issued nothing
+   * (BLOCKED-331), asked of the durable record right before the service records
+   * the new root, with no await between the two.
    * @param agent - the session being started; also the registry scope key.
    * @param principal - the session principal, when identity attached one.
    * @param tenant - the principal's tenant, when identity attached one.
+   * @throws when the session was revoked, or the service could not record the root.
    */
   private async issueSessionToken(
     agent: Agent,
@@ -535,6 +615,9 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
     // scoping, not the parent, decides what it can see; it is recorded as a
     // readiness entry rather than closed here.
     const nonce = nonceOf()
+    if (this.revokedDurably(session)) {
+      throw new Error(`capability-token-file: session ${String(session)} was revoked, so it is issued no new token`)
+    }
     const token = await this.service.issue({
       subject: principal ?? brandString<PrincipalId>(session),
       tenant: tenant ?? brandString<TenantId>('local'),

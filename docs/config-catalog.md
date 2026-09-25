@@ -3715,7 +3715,7 @@ export interface ToolOwnershipConfig {
 }
 ```
 
-Source: [`packages/core/tools/src/index.ts:964`](../packages/core/tools/src/index.ts)
+Source: [`packages/core/tools/src/index.ts:989`](../packages/core/tools/src/index.ts)
 
 <a id="deepseek-aidsh-typert-loader"></a>
 
