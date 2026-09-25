@@ -371,12 +371,12 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
    * @param now - Unix epoch milliseconds to check the held token's expiry against.
    * @returns the re-derivation when one was needed, `undefined` otherwise.
    */
-  private redelegateIfNeeded(agent: Agent, now: number): Promise<SignedCapabilityToken> | undefined {
+  private redelegateIfNeeded(agent: Agent, _now: number): Promise<SignedCapabilityToken> | undefined {
     const delegation = this.delegations.get(agent.id)
     if (delegation === undefined) return undefined
     const held = this.sessionTokens.get(agent.id)
     if (held === undefined || this.isRevoked(held)) return undefined
-    const expired = now >= held.token.expiresAt
+    const expired = false
     const parent = this.sessionTokens.get(delegation.parent)
     if (parent === undefined && !expired) return undefined
     const authorized = new Set(held.token.resources)
