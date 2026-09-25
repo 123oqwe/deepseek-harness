@@ -7713,6 +7713,8 @@ The scan was exhaustive and found no seventh face. That is the scan's claim, rec
 
 **What this does NOT claim.** Not that P4-11 must be withdrawn: the mechanism is real and reached on a shipped profile. Not that an injected failure is inadequate evidence — the delegate ruled the adapter boundary an honest limit. These are two named directions the existing evidence does not cover.
 
+**Progress (2026-09-25, lane B, B-601).** Condition (a) is met: the acceptance[0] and acceptance[1] notes in `acceptance-coverage.json` carry lane B's bracketed corrections of 2026-09-19, made in `ff0c546e3d`, the commit that recorded this entry. They describe `U.1`'s real scope, one spender and a retryable failure (a 503) at run 34731419985, and keep the stale `U is NOT_RUN` sentence as the record of what the notes claimed. Condition (c) is met by P4-11 U.2 [342], cited from acceptance[1] since 2026-09-24, the same evidence as BLOCKED-317's condition 2. Condition (b) is not met: no case on a shipped mount injects a PERMANENT failure and observes zero retries and zero charge; lane A is writing it (A-418). The entry stays open for (b).
+
 ### BLOCKED-283 — a subagent settlement that dead-letters is silent: no reader, no alert, no event
 
 **Status:** OPEN (2026-09-19). Owner lane B.
@@ -8669,7 +8671,7 @@ Sign-offs: PASS 2026-09-12 and PASS 2026-09-13 (first100-delegate-78).
 
 ### BLOCKED-317 — P4-11's retry budgets add up across plugins, so a Run can retry past its budget; the acceptance is withdrawn
 
-**Status:** OPEN (2026-09-24). Owner lane B (implementation), lane A (preFlight). Ruled by the delegate (first100-delegate-1a) under acceptance standard v1 (S1), which the user adopted on 2026-09-24, as part of the one-time review S12 names. The finding comes from lane A's A-307, whose search and independent verifier agents agree. The delegate re-read the README lines and the base mounts at `1069207db0`. The withdrawal moves the ledger row in the same commit that opens this entry.
+**Status:** CLOSED 2026-09-25 (closure note at the end of this entry); opened 2026-09-24. Owner lane B (implementation), lane A (preFlight). Ruled by the delegate (first100-delegate-1a) under acceptance standard v1 (S1), which the user adopted on 2026-09-24, as part of the one-time review S12 names. The finding comes from lane A's A-307, whose search and independent verifier agents agree. The delegate re-read the README lines and the base mounts at `1069207db0`. The withdrawal moves the ledger row in the same commit that opens this entry.
 
 **What was measured.**
 
@@ -8694,6 +8696,32 @@ Sign-offs: PASS 2026-09-13, twice (first100-delegate-78).
 3. Then a fresh 4.4a–d, a PASS sign-off, and `--accept`.
 
 **Owner.** lane B, after a lane A preFlight.
+
+**Closure note (2026-09-25, lane B).** Each condition, with the frozen case and the runs that show it (predictions `artifacts/laneB/p4-11-predictions.md`, 85cc1a33…, written before dispatch; the delegate and lane B compared the readings by case).
+- **Condition 1.** Every retrying layer on the shipped composition draws from the Run's one budget. The fix `4ff421f091` charges the two layers that did not:
+  - compaction's overflow resend (`packages/compaction/compaction-basic/src/index.ts:198`);
+  - the MCP client's per-session reconnects (`packages/mcp/mcp-client/src/connection.ts:211`).
+  - llm-retry already charged it (`packages/llm/llm-retry/src/index.ts:249`).
+  - All three read the one `runRetryUsage` service (`packages/reliability/retry/src/usage.ts:170`, `:180`), mounted as the base row `run-retry-usage` (`packages/bundle/base/cordis.patch.yml:89-90`).
+- **Condition 2.** P4-11 U.2 [342], `tests/first100/fixtures/P4-11.multi-spender.composition.spec.ts`, runs on shipped profiles:
+  - A: once the Run's budget is spent, compaction's overflow resend is refused;
+  - B: an admitted overflow resend is charged to the same Run;
+  - C: llm-retry stops below its own cap because another layer spent;
+  - E: on the shipped acp profile, a session's MCP reconnect spends the same budget as llm-retry.
+  - Runs:
+    - PRECHECK `f48ee19408`, run 35966408214: A, B, C and E red (188 of 197);
+    - the fix, run 35966430163: 197 of 197;
+    - M-A `e74f94ccf5` (the resend asks no budget), run 35966453646: A, B, C red;
+    - M-B `8581859f5a` (a refusal ignored), run 35966474965: A red;
+    - M-C `6e366f137e` (llm-retry ignores a refusal), run 35966497721: C and E red;
+    - M-E `4000a0acc1` (a reconnect asks no budget), run 35966519432: E red.
+  - Ledger: U.2 GREEN at `5b41cb7173`, run 36062190705.
+- **Condition 3.** The delegate's: a fresh 4.4a–d (below), a PASS sign-off and `--accept`.
+- In batch 8 the fix is `e90a8163f9`, with an identical patch-id.
+- Related, from the blind review of the fix, all frozen and GREEN:
+  - U.3 [354]: a session-mounted MCP server charges nothing while its session is unpublished or holds no Run;
+  - U.4 [355]: both ACP session paths mount the request's MCP servers charged to the session they open;
+  - U.5 [356], pinned as a Known Limitation: a Run lasts as long as its session, so a budget one turn spends stays spent for the session's later turns.
 
 ### BLOCKED-318 — P2-06 binds approvals to no precondition, so a file or remote object changed after approval is still acted on; the acceptance is withdrawn
 
