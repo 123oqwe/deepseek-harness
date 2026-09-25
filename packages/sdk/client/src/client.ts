@@ -15,7 +15,6 @@
 import { spawn, type ChildProcess } from 'node:child_process'
 import {
   HOST_LEVEL_NOTIFICATION_METHODS,
-  INITIALIZE_PARAMS_SCHEMA_VERSION,
   JsonRpcLineTransport,
   JsonRpcResponseError,
   type CapabilityDowngrade,
@@ -298,7 +297,7 @@ export class HarnessClient {
    * @returns the runtime's wire identity.
    */
   async initialize(params: InitializeParams): Promise<InitializeResult> {
-    const sent: InitializeParams = { schemaVersion: INITIALIZE_PARAMS_SCHEMA_VERSION, ...params }
+    const sent: InitializeParams = { ...params }
     const result = await this.request('initialize', sent, this.runtime.initializeTimeoutMs)
     if (!isRecord(result) || !isRecord(result.serverInfo)
       || typeof result.serverInfo.name !== 'string' || typeof result.serverInfo.version !== 'string') {
