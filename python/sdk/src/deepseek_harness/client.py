@@ -179,12 +179,10 @@ class HarnessClient:
         :returns: the server's identity, the negotiated outcome, and the host
             control state when both sides agreed to it.
         """
-        major, minor = INITIALIZE_PARAMS_SCHEMA_VERSION
         payload: JsonObject = {
             "cwd": str(Path(cwd).resolve()),
             "provider": provider,
             "model": model,
-            "schemaVersion": {"major": major, "minor": minor},
         }
         if reasoning_effort is not None:
             payload["reasoningEffort"] = reasoning_effort
