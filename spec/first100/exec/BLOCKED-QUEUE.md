@@ -9087,6 +9087,12 @@ The entry stays open: the delegate's blind review found that any non-empty reaso
 - In batch 8 these commits are `e2495fc5b8`, `5508a13bab`, `43c2beafc9`, `cfa0521da3`, `a51604ef1a` and `7a2545b23d`, with identical patch-ids.
 - The cases construct the refusal with an expired session token. BLOCKED-331's fix, a re-issue on expiry, removes that construction, so it replaces them with a token whose scope lacks the tool (B-577).
 
+**Addendum (2026-09-25, lane B, B-577).** The native case was rebuilt on revocation, not on a scope that lacks the tool as the last bullet says: the delegate ruled option (a). The driver's `revoked` mode issues the root session's token and revokes the session before the turn. The one-millisecond TTL overlay, `token-expired.patch.yml`, is deleted, because once a token is re-issued at every dispatch a TTL construction depends on timing. The code-mode case keeps its expired construction: inside one `run_code` program a nested call presents the token of the `run_code` call that started it, which BLOCKED-331 condition 4 keeps refused as expired, with wording that names the program.
+- B-577's R1 (`19f0849e28`, its PRECHECK and A-390b before the fix, run 36090997922): only "is refused as a revoked capability token and its body does not run" is red, because the call presents no token and is refused as token-required.
+- B-577's R2 (`03afcd248f`, the fix, run 36091012259): all four cases are green.
+- In batch 9 these three commits are `7df1633fd3`, `e7631e64d6` and `62f05dda9e`, with identical patch-ids.
+- Condition 3's mutations were not re-run on the new construction: M-N and M-P remove a security check, and such mutations wait for the user's decision.
+
 ### BLOCKED-331 — a session that outlives its capability token's TTL keeps running, but every tool call is refused as expired, and no new token is ever issued (product defect candidate, open)
 
 **Status:** OPEN (2026-09-24). Owner: lane B, characterise first, then fix in place. Found by lane A while writing BLOCKED-330's red case (A-370). Recorded by the delegate (first100-delegate-1a). Read from the code, not yet shown on a shipped launch.
