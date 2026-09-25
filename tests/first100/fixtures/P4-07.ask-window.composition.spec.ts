@@ -75,7 +75,7 @@ for (const path of ['native', 'ptc'] as const) {
       expect(reports.get('fence')?.probeRan).toBe(false)
     })
 
-    it('fence: the call\'s result says the Run was fenced', () => {
+    it('fence: the result of the call says the Run was fenced', () => {
       const results = reports.get('fence')?.toolResults ?? []
       expect(results.some(result => /fenced|another host took it over/iu.test(result)), JSON.stringify(results)).toBe(true)
     })
@@ -84,7 +84,7 @@ for (const path of ['native', 'ptc'] as const) {
       expect(reports.get('stop')?.probeRan).toBe(false)
     })
 
-    it('stop: the call\'s result says an emergency stop is in force', () => {
+    it('stop: the result of the call says an emergency stop is in force', () => {
       const results = reports.get('stop')?.toolResults ?? []
       expect(results.some(result => /stopped|emergency stop/iu.test(result)), JSON.stringify(results)).toBe(true)
     })
