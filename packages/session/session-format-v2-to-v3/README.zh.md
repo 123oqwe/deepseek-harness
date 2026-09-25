@@ -117,7 +117,7 @@ V2 `session-log-deepseek/delivery-accepted` 若携带 `data.sessionFormatVersion
 <a id="source-audit"></a>
 ### 源审计与拒绝
 
-迁移分类[已发布 V2 事件清单](../session-format-v1-to-v2/src/dispositions.ts)，包括仅日志的 `assistant/attempt`，以及 `feedback/message-put` 和 `feedback/message-delete`。[载荷校验器](src/payload.ts)应用精确的已接纳信封和载荷成员，以及已发布嵌套校验。版本不是当前 3 的 `subagent/descriptor` 不做嵌套校验、原样保留，与 v0-to-v1、v1-to-v2 两条迁移边的做法一致：只有从 v0 或 v1 迁移来的日志才带这样的 descriptor，运行时也会忽略它。未知事件（即使可忽略）以及被检查记录中未经审计的成员均被拒绝。消息来源分类覆盖下表的五个消息位置：未知来源种类会被拒绝，agent（智能体）中继归属则被接纳，但标识不会被解释为会话引用。
+迁移分类[已发布 V2 事件清单](../session-format-v1-to-v2/src/dispositions.ts)，包括仅日志的 `assistant/attempt`，以及 `feedback/message-put` 和 `feedback/message-delete`。[载荷校验器](src/payload.ts)应用精确的已接纳信封和载荷成员，以及已发布嵌套校验。版本早于当前 3 的 `subagent/descriptor` 不做嵌套校验、原样保留，与 v0-to-v1、v1-to-v2 两条迁移边的做法一致：只有从 v0 或 v1 迁移来的日志才带这样的 descriptor，运行时也会忽略它。更新的版本没有任何已发布的构建写过，会按当前版本校验而被拒绝。未知事件（即使可忽略）以及被检查记录中未经审计的成员均被拒绝。消息来源分类覆盖下表的五个消息位置：未知来源种类会被拒绝，agent（智能体）中继归属则被接纳，但标识不会被解释为会话引用。
 
 内容审计仅接纳 `text`、`reasoning`、`image`、`file`、`tool-call` 和 `tool-result`。它校验归本格式所有的块字段，并在以下有限位置递归审计每层嵌套的 `tool-result.content`：
 
