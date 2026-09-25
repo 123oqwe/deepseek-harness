@@ -252,3 +252,72 @@ describe('tool-surface capability token gate (P2-02 must[3])', () => {
     expect(message).not.toContain('read_file')
   })
 })
+
+describe('BLOCKED-331 at the gate: revocation is final, and a code-mode program says when it outlived its token', () => {
+  /**
+   * A token provider in the mounted one's place that reports every token revoked.
+   * @param ctx - the mount.
+   */
+  function provideEverythingRevoked(ctx: Context): void {
+    ctx.provide('capabilityTokens', { isRevoked: () => true } as never)
+  }
+
+  it('refuses a token that is both revoked and expired as revoked', async () => {
+    const ctx = await mount()
+    const { scope, key } = await mintAgentScope(ctx, 'a')
+    ctx.tools.register(tool('read_file'))
+    scope.ctx.tools.requireCapabilityToken()
+    provideEverythingRevoked(ctx)
+
+    const text = textOf(await run(ctx, 'read_file', {
+      agent: key,
+      capabilityToken: tokenFor(['read_file'], [TOOL_CAPABILITY_VERB], ALREADY_PAST),
+    }))
+
+    expect(text).toContain('has been revoked')
+    expect(text).not.toContain('has expired')
+  })
+
+  it('control: refuses a revoked token that has not expired as revoked', async () => {
+    const ctx = await mount()
+    const { scope, key } = await mintAgentScope(ctx, 'a')
+    ctx.tools.register(tool('read_file'))
+    scope.ctx.tools.requireCapabilityToken()
+    provideEverythingRevoked(ctx)
+
+    expect(textOf(await run(ctx, 'read_file', { agent: key, capabilityToken: tokenFor(['read_file']) })))
+      .toContain('has been revoked')
+  })
+
+  it('names the run_code program when a code-mode call presents a token that expired while the program ran', async () => {
+    const ctx = await mount()
+    const { scope, key } = await mintAgentScope(ctx, 'a')
+    ctx.tools.register(tool('read_file'))
+    scope.ctx.tools.requireCapabilityToken()
+
+    const nested = Symbol('outer-run_code') as ToolExecutionToken
+    const text = textOf(await run(ctx, 'read_file', {
+      agent: key,
+      parent: nested,
+      capabilityToken: tokenFor(['read_file'], [TOOL_CAPABILITY_VERB], ALREADY_PAST),
+    }))
+
+    expect(text).toContain('the presented capability token has expired')
+    expect(text).toMatch(/run_code program/u)
+  })
+
+  it('control: a native call presenting an expired token keeps the plain expiry wording', async () => {
+    const ctx = await mount()
+    const { scope, key } = await mintAgentScope(ctx, 'a')
+    ctx.tools.register(tool('read_file'))
+    scope.ctx.tools.requireCapabilityToken()
+
+    const text = textOf(await run(ctx, 'read_file', {
+      agent: key,
+      capabilityToken: tokenFor(['read_file'], [TOOL_CAPABILITY_VERB], ALREADY_PAST),
+    }))
+
+    expect(text).toContain('the presented capability token has expired')
+    expect(text).not.toMatch(/run_code/u)
+  })
+})

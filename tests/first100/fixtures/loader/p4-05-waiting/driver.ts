@@ -14,9 +14,9 @@
  * again, and allows the call once. It declines at once the workspace-trust
  * question the shipped headless profile asks first.
  *
- * With `expired` as its second argument it also layers
- * `./token-expired.patch.yml`, whose session token expires as soon as it is
- * issued (BLOCKED-330's case, `../../P2-02.token-refusal-before-ask.composition.spec.ts`).
+ * With `revoked` as its second argument it issues the root session's token
+ * and then revokes the session before the turn, so the call presents a revoked
+ * token (BLOCKED-330's case, `../../P2-02.token-refusal-before-ask.composition.spec.ts`).
  * With `expired-ptc` it runs in code mode (`DSH_TOOLS_MODE=ptc`) with
  * `./token-short.patch.yml` instead, so the tool call is made from a
  * `run_code` program after the token has expired (BLOCKED-330's code-mode case).
@@ -35,6 +35,7 @@ import { runFixtureTurn } from '@deepseek-ai/dsh-loader-smoke'
 import { endorseComposedDecision } from '@deepseek-ai/dsh-policy-enforcement'
 import { defineContentToolFixture, RUN_CODE_NAME } from '@deepseek-ai/dsh-tools'
 import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
+import type {} from '@deepseek-ai/dsh-capability-token'
 import type {} from '@deepseek-ai/dsh-user-approval'
 import { createFixtureRootAgent } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts'
 import { bootProductionProfile } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/production-profile.ts'
@@ -42,12 +43,11 @@ import { PROVIDER, THIRD_PARTY_TOOL } from './shared.ts'
 import type { AdapterGlobal } from './shared.ts'
 
 const overlay = fileURLToPath(new URL('./base.patch.yml', import.meta.url))
-const tokenExpired = fileURLToPath(new URL('./token-expired.patch.yml', import.meta.url))
 const tokenShort = fileURLToPath(new URL('./token-short.patch.yml', import.meta.url))
 
-/** `expired` and `expired-ptc` select BLOCKED-330's cases; absent, the P4-05 cases run. */
+/** `revoked` and `expired-ptc` select BLOCKED-330's cases; absent, the P4-05 cases run. */
 const mode = process.argv[3]
-if (mode !== undefined && mode !== 'expired' && mode !== 'expired-ptc') throw new Error(`p4-05 waiting driver: unknown mode ${mode}`)
+if (mode !== undefined && mode !== 'revoked' && mode !== 'expired-ptc') throw new Error(`p4-05 waiting driver: unknown mode ${mode}`)
 
 /** How long the operator withholds its answer. */
 const HOLD_MS = 1_000
@@ -126,7 +126,6 @@ const ctx = await bootProductionProfile({
   profile: 'headless',
   overlayPaths: [
     resolveConfigPath(overlay, undefined),
-    ...mode === 'expired' ? [resolveConfigPath(tokenExpired, undefined)] : [],
     ...mode === 'expired-ptc' ? [resolveConfigPath(tokenShort, undefined)] : [],
   ],
   prepare: (prepared) => {
@@ -188,6 +187,15 @@ try {
       `run-${randomUUID()}` as Parameters<HostUserIdentityFactory>[0],
     ),
   })
+  if (mode === 'revoked') {
+    // The session's root is issued first, so the revocation has a recorded
+    // token to withdraw; the turn's call then presents that token.
+    const tokens = ctx.get('capabilityTokens')
+    const [root] = ctx.agents.roots()
+    if (tokens === undefined || root === undefined) throw new Error('p4-05 waiting driver: no token service or no root agent to revoke')
+    await tokens.whenSessionToken(root.id)
+    if (await tokens.revokeSession(root.id) !== 'revoked') throw new Error('p4-05 waiting driver: the revocation withdrew nothing')
+  }
   await runFixtureTurn(ctx, { task: 'P4-05: call the third-party tool once.' })
   // A gate that did not wait for the answer ends the turn first; the reading
   // taken after the hold still belongs in the report.
