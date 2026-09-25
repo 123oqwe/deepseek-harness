@@ -294,6 +294,11 @@ async function runGroup(
     }
     const policy = appended.record.decision
     if (policy !== undefined && policy.effect !== 'permit') {
+      // mutation/a423-m-redispatch (never merged): a denied call is dispatched again and charged to the run retry budget.
+      appendActionManifest(ctx, agent, call.block, 'native-tool-call', inputs, call.exec.capabilityToken)
+      const budgets = (ctx as unknown as { get(name: string): unknown }).get('runRetryUsage') as { chargedRunFor(session: string, resolve: () => unknown): unknown, admit(run: unknown, delayMs: number): unknown } | undefined
+      const chargedRun = budgets?.chargedRunFor(String(agent.session.id), () => agent.runId)
+      if (chargedRun !== undefined) budgets?.admit(chargedRun, 0)
       slots[index] = {
         exec: call.exec as unknown as ToolRunContext,
         result: refusedPolicyResult(policy.effect, policy.reason, call.block.name),
