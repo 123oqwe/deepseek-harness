@@ -34,6 +34,12 @@ HOST_LEVEL_NOTIFICATION_METHODS = frozenset({"host.control"})
 #: stop (P2-12 acceptance[3]). Opt-in: a client that does not declare it is
 #: sent no ``host.control`` at all, and reads no state off the handshake.
 HOST_CONTROL_CAPABILITY = "host-control"
+#: The ``sdk-protocol:InitializeParams`` version this client writes, as
+#: ``(major, minor)``: the one ``@deepseek-ai/dsh-sdk-protocol`` states as
+#: ``INITIALIZE_PARAMS_SCHEMA_VERSION``. :meth:`HarnessClient.initialize`
+#: declares it as ``schemaVersion`` (BLOCKED-310), so the server negotiates
+#: what this client wrote instead of assuming its own version.
+INITIALIZE_PARAMS_SCHEMA_VERSION = (1, 0)
 
 
 @dataclass(slots=True)
@@ -157,6 +163,9 @@ class HarnessClient:
     ) -> InitializeResponse:
         """Perform the process-wide handshake.
 
+        The params declare the ``InitializeParams`` version this client
+        writes, :data:`INITIALIZE_PARAMS_SCHEMA_VERSION`.
+
         :param cwd: workspace root, resolved before it is sent.
         :param provider: LLM provider id.
         :param model: model id within that provider.
@@ -170,10 +179,12 @@ class HarnessClient:
         :returns: the server's identity, the negotiated outcome, and the host
             control state when both sides agreed to it.
         """
+        major, minor = INITIALIZE_PARAMS_SCHEMA_VERSION
         payload: JsonObject = {
             "cwd": str(Path(cwd).resolve()),
             "provider": provider,
             "model": model,
+            "schemaVersion": {"major": major, "minor": minor},
         }
         if reasoning_effort is not None:
             payload["reasoningEffort"] = reasoning_effort

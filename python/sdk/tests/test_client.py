@@ -133,6 +133,7 @@ for line in sys.stdin:
         "cwd": str(tmp_path),
         "provider": "deepseek-official",
         "model": "deepseek-v4-flash",
+        "schemaVersion": {"major": 1, "minor": 0},
         "reasoningEffort": "max",
         "maxTokens": 4096,
     }
