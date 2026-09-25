@@ -61,6 +61,26 @@ def test_bundled_runtime_boots_the_sdk_profile(
     ]
 
 
+def _committed_schema_fingerprint() -> str:
+    """The fingerprint the committed control-protocol artifact records, which the real server sends."""
+    document = json.loads((Path(__file__).parents[3] / "spec" / "control-protocol.schema.json").read_text())
+    return str(document["fingerprint"])
+
+
+@pytest.mark.parametrize("mode", _MODES)
+def test_bundled_runtime_hands_the_caller_the_handshake_fields(
+    tmp_path: Path, mode: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """BLOCKED-314 condition 1(3), Python half: the real server's handshake fields reach the caller."""
+    with _client(tmp_path, mode, monkeypatch) as client:
+        init = client.initialize(provider="deepseek-official", cwd=str(tmp_path), model="deepseek-v4-pro")
+
+    assert "protocolVersions" in type(init).model_fields
+    assert init.protocolVersions is not None
+    assert (init.protocolVersions.min, init.protocolVersions.max) == (1, 1)
+    assert init.schemaFingerprint == _committed_schema_fingerprint()
+
+
 @pytest.mark.parametrize("mode", _MODES)
 def test_python_sdk_applies_an_ordered_profile_patch(
     tmp_path: Path, mode: str, monkeypatch: pytest.MonkeyPatch
