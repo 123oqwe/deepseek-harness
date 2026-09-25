@@ -1193,6 +1193,8 @@ function main(argv) {
   // performance.now() counts from this process's start, so the budget covers
   // loading tsx and TypeScript as well as the scan; the pnpm and tsx launcher
   // processes that start this one are outside it.
+  // mutation/a411-over-budget (never merged): the run takes longer than its 10-second budget.
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 10_500)
   const elapsedMs = performance.now()
   const elapsed = (elapsedMs / 1000).toFixed(2)
   const overBudget = elapsedMs > budgetMs
