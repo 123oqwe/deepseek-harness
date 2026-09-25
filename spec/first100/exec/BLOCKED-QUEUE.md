@@ -8768,7 +8768,7 @@ Under the standard's rule for real defects (WORKING-MODEL §12), they become est
 
 ### BLOCKED-320 — P4-08's journal is written on the shipped product but never read back: resume has no production caller; the acceptance is withdrawn
 
-**Status:** OPEN (2026-09-24). Owner lane B (wiring), lane A (evidence).
+**Status:** CLOSED 2026-09-25 (closure note at the end of this entry); opened 2026-09-24. Owner lane B (wiring), lane A (evidence).
 
 **Ruling.** Ruled by the delegate (first100-delegate-1a) under acceptance standard v1 (S1, S2), which the user adopted on 2026-09-24. This is the last item of the one-time review that S12 names; the review closes with this entry. Two blind, independent reads agree: lane A's A-307, and a delegate subagent at `da761d27c6`. The withdrawal moves the ledger row in the same commit that opens this entry.
 
@@ -8808,6 +8808,40 @@ Under the standard's rule for real defects (WORKING-MODEL §12), they become est
 5. Then a fresh 4.4a–d, a PASS sign-off, and `--accept`.
 
 **Owner.** lane B wires the caller; lane A writes the evidence cases.
+
+**Closure note (2026-09-25, lane B).** Each condition, with the frozen case and the runs that show it (predictions `artifacts/laneB/p4-08-v2-predictions.md`, 284603f0…, and `p4-08-f1f3f4-predictions-v2.md`, 8d944604…; the delegate compared the readings). Drafted by lane A (A-412, `artifacts/laneA/a-412-p4-08-closure-drafts.md`, c85f5cf8…, lines at `4e932e474b`); the delegate's two additions are in conditions 1 and 2.
+- **Condition 1.**
+  - The `workflow` tool's `resume` argument calls `ctx.workflowEngine.resume` (`packages/workflow/tool-workflow/src/index.ts:381`). It is the only caller of `engine.resume` in `packages/**/src` and `apps/**/src`.
+  - The work order names that caller: its verification, `channel/workorders/verify/P4-08.md` special check 1 (a receiver-shaped search found no production caller before the fix) and `:118` (`tool-workflow/src/index.ts` is the caller itself), and the approved work order `channel/workorders/approved/P4-08.md`.
+  - S4: on the shipped product a foreground run's id is not handed to the model, so nothing there resumes a foreground run. A detached run's id is in the text the tool returns (`tool-workflow/src/index.ts:301-302` at `4e932e474b`; the verification cites `:286-287`, at its own tree), which is how the restarted host's model resumes it. This was read from the code only.
+  - `workflow-worker-thread` and `tool-workflow` are base rows (`packages/bundle/base/cordis.patch.yml:641-647`).
+  - The fix is `0d2a53c948`, observed through its dispatch commit `c1272f06ab`.
+  - M-A (the tool never calls `engine.resume`), run 35997238166: all twelve U.4 cases red.
+- **Condition 2.** U.4 [352], `apps/cli/tests/profiles/acp/tests/workflow-resume.e2e.ts`, runs on the shipped acp profile through two real hosts.
+  - The first host runs a three-child script. It is SIGKILLed while one model request is held: the first child's (K0), the second's (K1), the third's (K2), or the parent's next request after the tool returned (K3).
+  - The restarted host resumes with the `workflow` tool's `resume`. Three things are observed:
+    - the run keeps its id (K0–K3);
+    - children finished before the kill are not started again (K1–K3);
+    - the script receives their real outputs (K1–K3).
+  - "At each agent-call boundary": the verification's V14 accepts K0–K3 as that coverage. After call n and before child n+1 starts are the same journal state, n completed entries, given B4, which flushes the child session before the host forwards the child's settlement (`packages/workflow/workflow-worker-thread/src/host.ts:588-595`) and so closes the window between the two.
+  - Runs:
+    - PRECHECK `206136bcb9`, run 35997159635: 0 of 12, all red;
+    - fix, run 35997199136: 12 of 12;
+    - M-B (placeholder values), run 35997280847: the three value cases red;
+    - M-C (a reusable step starts its child again), run 35997319565: the six reuse and value cases red;
+    - M-F (no confirmation from the child's durable log), run 35997440713: the same six red.
+- **Condition 3.**
+  - U.4 [352] E11: after a kill at K2, a resume with a changed script is refused, and the tool result names `script-digest-changed`.
+  - U.4 E12: restart is observed. The same run id starts every child again under the new digest.
+  - M-D (the refusal drops its reason), run 35997360801: E11 red. M-E (a changed script resumes as if unchanged), run 35997402050: E11 and E12 red.
+  - U.8 [360] adds that the refused journal is kept under `refused/` at the kill point. Runs:
+    - PRECHECK2 `c4c820eca7`, run 36017297698: exactly that case red of 13;
+    - fix `a270565dff`, run 36018775378: 13 of 13;
+    - M-F3 `c241a358e5`, run 36018914253: exactly that case red.
+  - Migrate is not implemented. The clause's "migrate or restart" is met by restart.
+- **Condition 4.** For the sign-off: acceptance[2] is signed on its decision half only, as BLOCKED-172 records. Compaction drops the inputs of completed, verified steps and keeps every receipt, which the frozen cases show on constructed ArtifactRefs. On the shipped product the recorder writes `inputs: []` for every step (`packages/collaboration/workflow-journal/src/recorder.ts:117`), so compaction has no input to drop. The usage half stays open until BLOCKED-172 closes with P6-09's Artifact Store.
+- **Condition 5.** The delegate's: a fresh 4.4a–d (lane A's draft is A-400, `artifacts/laneA/a-400-p4-08-p0-04-reach-facts.md`, lines at `5b41cb7173`, unchanged to `4e932e474b` for these files), then a PASS sign-off and `--accept`.
+- In batch 8 the fixes are `23261952f6` and `d1f1533a34`, with the same patch-ids as `0d2a53c948` and `a270565dff`.
 
 ### BLOCKED-321 — P0-03 stays ACCEPTED; its checker scans 320 of the workspace's packages, not all of them (open finding, not a withdrawal)
 
@@ -8967,7 +9001,7 @@ The entry stays open: the delegate's blind review found that any non-empty reaso
 
 ### BLOCKED-328 — `compactJournal` drops a nested run's `nesting`, so a later resume of a compacted nested journal treats it as a root run (pre-existing defect, open)
 
-**Status:** OPEN (2026-09-24). Owner: lane B, fix in place. It blocks P4-08's re-sign. Found by lane B while doing the P4-08 blind review's pre-sign-off work; recorded by the delegate (first100-delegate-1a).
+**Status:** CLOSED 2026-09-25 (closure note at the end of this entry); opened 2026-09-24. Owner: lane B, fix in place. It blocked P4-08's re-sign. Found by lane B while doing the P4-08 blind review's pre-sign-off work; recorded by the delegate (first100-delegate-1a).
 
 **What is known (read from the code, not reproduced).** `compactJournal` returns only `scriptDigest` and `entries`, and since the P4-08 D1 fix also `displaced`. It does not carry the journal's `nesting`. After a nested run's journal is compacted, the next resume reads no `nesting` and treats the run as a root run.
 
@@ -8980,6 +9014,20 @@ The entry stays open: the delegate's blind review found that any non-empty reaso
 4. Then a fresh 4.4 for P4-08.
 
 **Progress (2026-09-24, lane B).** Conditions 1–3 are met; condition 4 is the delegate's. PRECHECK `e6bb296f74` (run 36029414306): exactly the new case red of 153, on `expected 'leaf ran' to contain 'max-depth-exceeded'`. The fix `6e85b4f1ae` is in place in `compactJournal`, which now returns `{ ...journal, entries }`, so every journal field besides the entries survives; the fix's Agent Note lists the four fields a resume reads, `scriptDigest`, `entries`, `displaced` and `nesting`. It ran 153 of 153 (run 36029439192) and 13 of 13 of the acp workflow-resume e2e (run 36029459722). M1 `ecf43c3632` (run 36029484191), which keeps only `scriptDigest`, `entries` and `displaced` again: exactly the case red, on the same assertion. The case is frozen as P4-08 U.12 [377].
+
+**Closure note (2026-09-25, lane B).** Each condition, with the runs that show it (predictions `artifacts/laneB/blocked-328-predictions.md`, fdb21618…; the delegate compared the readings). Drafted by lane A (A-412).
+- **Condition 1.** U.12 [377], `packages/workflow/workflow-worker-thread/tests/nested-journal-resume.spec.ts`, case "resumes with the nesting it started with, so the depth limit that refused it still refuses it".
+  - A nested run refused by the depth limit at settlement is resumed from the journal its host compacted.
+  - The resumed run is refused again by the same limit.
+  - The case asserts the resumed journal's `nesting.ancestors` (the parent linkage) and `nesting.budget.depth` (`:93-94`).
+  - PRECHECK `e6bb296f74`, run 36029414306: 152 of 153, exactly this case red.
+- **Condition 2.** The fix `6e85b4f1ae` is in place in `compactJournal`, which returns the journal with its entries compacted and every other field as it was.
+  - Its Agent Note lists the four fields a resume reads: `scriptDigest`, `entries`, `displaced` and `nesting` (`.agents/notes/implemented/bug-fix/2026-09-24-workflow-resume-returns-real-outputs-and-reports-a-refusal.md:23`).
+  - Run 36029439192: 153 of 153. Run 36029459722: 13 of 13 of the acp workflow-resume e2e, with a build first.
+- **Condition 3.** M1 `ecf43c3632` keeps only `scriptDigest`, `entries` and `displaced`. Run 36029484191: 152 of 153, exactly this case red.
+- **Condition 4.** The delegate's: the fresh 4.4 for P4-08, the same one BLOCKED-320 condition 5 asks for.
+- In batch 8 the fix is `787404238f`, with the same patch-id.
+- The fix note (`:46`) records one limitation: a journal compacted before this change has no `nesting`, and a resume of that settled nested run still starts it as a root run.
 
 ### BLOCKED-329 — on the native dispatch path an approval wait is labelled `waiting_tool`, never `waiting_human`: the transition is illegal and its refusal is dropped (product defect, open)
 
