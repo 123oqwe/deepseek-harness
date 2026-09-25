@@ -3,8 +3,9 @@
  * Driver for BLOCKED-281 (b): boot the SHIPPED headless profile with the
  * `a418-failing` adapter, run one turn whose first model attempt fails as
  * `A418_FAILURE` names, and report one `A418-RESULT` line: what is mounted,
- * how many attempts the adapter saw, what each agent's Run was charged, and
- * how many `llm/retry` and `llm/retry-started` events the sessions hold.
+ * how many conversation attempts the adapter saw, what each agent's Run was
+ * charged, how many `llm/retry` and `llm/retry-started` events the sessions
+ * hold, and how each turn ended.
  *
  * Mirrors the P4-11 mount slice's driver
  * (`packages/reliability/retry-cockatiel/tests/fixtures/driver.ts`), so the
@@ -45,6 +46,14 @@ try {
   const attempts = (globalThis as { __a418Attempts?: number }).__a418Attempts ?? 0
   // A-418b: every model call the adapter saw, with its purpose and first stack frames.
   const calls = (globalThis as { __a418Calls?: unknown[] }).__a418Calls ?? []
+  // How each turn ended, as the session log records it (`packages/core/agent-loop/src/agent.ts:383-394`): an error
+  // ending carries the failure's code and status, which is where a failure that is not retried goes.
+  const turnEnds = ctx.agents.list().flatMap(agent => agent.session.snapshotEvents())
+    .filter(event => event.type === 'turn/end')
+    .map((event) => {
+      const reason = (event.data as unknown as { reason?: { kind?: unknown, error?: { code?: unknown, status?: unknown } } }).reason
+      return { kind: reason?.kind ?? null, code: reason?.error?.code ?? null, status: reason?.error?.status ?? null }
+    })
   process.stdout.write(`A418-RESULT ${JSON.stringify({
     failure: process.env.A418_FAILURE ?? null,
     mounted: { runRetryUsage: usage !== undefined },
@@ -52,6 +61,7 @@ try {
     charged,
     retryEvents,
     turnError,
+    turnEnds,
     calls,
   })}\n`)
 } finally {

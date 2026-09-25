@@ -6,10 +6,13 @@
  * The mount is the one the P4-11 mount slice (`P4-11.composition.spec.ts`)
  * observes: the SHIPPED headless profile through `bootProductionProfile`,
  * with an overlay that only supplies a keyless adapter. That adapter fails its
- * FIRST attempt as `A418_FAILURE` names and succeeds after, so a failure that
- * is retried shows as two attempts. `beforeAll` boots once per failure kind in
- * a child process through `runLoaderSmoke`; the cases only read what the
- * driver reported.
+ * FIRST conversation attempt as `A418_FAILURE` names and succeeds after, so a
+ * failure that is retried shows as two attempts; a request made for another
+ * purpose (a session title) is answered with text and not counted. A failure
+ * that is not retried ends the turn, and the session log's `turn/end` carries
+ * its code and status, which is how a host sees it. `beforeAll` boots once per
+ * failure kind in a child process through `runLoaderSmoke`; the cases only
+ * read what the driver reported.
  */
 import { fileURLToPath } from 'node:url'
 import { LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
@@ -30,6 +33,7 @@ interface Result {
   readonly charged: readonly { readonly run: string, readonly retriesUsed: number | null }[]
   readonly retryEvents: number
   readonly turnError: string | null
+  readonly turnEnds: readonly { readonly kind: unknown, readonly code: unknown, readonly status: unknown }[]
 }
 
 const results = new Map<string, Result>()
@@ -60,25 +64,28 @@ function retriesCharged(result: Result | undefined): number {
 }
 
 describe('P4-11 acceptance[0] on the shipped mount: a permanent failure is not retried and charges nothing', () => {
-  it('control: a retryable 503 on the first attempt is retried and charged to the run', () => {
+  it('control: a retryable 503 on the first attempt is retried once, charged to the run, and the turn completes', () => {
     const result = results.get('retryable')
     expect(result?.mounted.runRetryUsage, JSON.stringify(result)).toBe(true)
     expect(result?.attempts, JSON.stringify(result)).toBe(2)
-    expect(retriesCharged(result), JSON.stringify(result)).toBeGreaterThanOrEqual(1)
-    expect(result?.retryEvents, JSON.stringify(result)).toBeGreaterThanOrEqual(1)
+    expect(retriesCharged(result), JSON.stringify(result)).toBe(1)
+    expect(result?.retryEvents, JSON.stringify(result)).toBe(2)
+    expect(result?.turnEnds.at(-1)?.kind, JSON.stringify(result)).toBe('completed')
   })
 
-  it('a permanent 400 invalid request is not retried and charges the run nothing', () => {
+  it('a permanent 400 invalid request is not retried, charges the run nothing, and ends the turn with that failure', () => {
     const result = results.get('invalid-request')
     expect(result?.attempts, JSON.stringify(result)).toBe(1)
     expect(retriesCharged(result), JSON.stringify(result)).toBe(0)
     expect(result?.retryEvents, JSON.stringify(result)).toBe(0)
+    expect(result?.turnEnds, JSON.stringify(result)).toEqual([{ kind: 'error', code: 'INVALID_REQUEST', status: 400 }])
   })
 
-  it('a permanent 403 authentication failure is not retried and charges the run nothing', () => {
+  it('a permanent 403 authentication failure is not retried, charges the run nothing, and ends the turn with that failure', () => {
     const result = results.get('auth')
     expect(result?.attempts, JSON.stringify(result)).toBe(1)
     expect(retriesCharged(result), JSON.stringify(result)).toBe(0)
     expect(result?.retryEvents, JSON.stringify(result)).toBe(0)
+    expect(result?.turnEnds, JSON.stringify(result)).toEqual([{ kind: 'error', code: 'AUTH', status: 403 }])
   })
 })
