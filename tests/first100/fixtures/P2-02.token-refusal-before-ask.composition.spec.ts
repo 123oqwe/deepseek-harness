@@ -2,15 +2,13 @@
  * BLOCKED-330 on the shipped headless composition: a tool call that the
  * capability-token check will refuse must not be put to an operator first.
  *
- * `./loader/p4-05-waiting/driver.ts` runs in `expired` mode: it boots the
- * SHIPPED headless profile under `workspace-write` with the P4-05 overlay and
- * `./loader/p4-05-waiting/token-expired.patch.yml`, which leaves the shipped
- * `capability-tokens` row as it is except that a session token expires one
- * millisecond after it is issued. The session re-issues its token only when
- * it has none or its tools have grown, so every call presents the expired
- * token. The model calls one third-party tool that declares no risk domain
- * tags, which the base layer's risk gate asks an operator about; the driver,
- * answering as that operator, allows it after a second.
+ * `./loader/p4-05-waiting/driver.ts` runs in `revoked` mode: it boots the
+ * SHIPPED headless profile under `workspace-write` with the P4-05 overlay,
+ * issues the root session's token and revokes the session before the turn. A
+ * revoked session is never issued another token (BLOCKED-331), so the call
+ * presents the revoked one. The model calls one third-party tool that declares
+ * no risk domain tags, which the base layer's risk gate asks an operator
+ * about; the driver, answering as that operator, allows it after a second.
  *
  * The code-mode case runs the driver in `expired-ptc` mode: code mode with a
  * two-second token TTL, so the model's `run_code` call presents a valid token
@@ -26,6 +24,9 @@ import { beforeAll, describe, expect, it } from 'vitest'
 const driver = fileURLToPath(new URL('./loader/p4-05-waiting/driver.ts', import.meta.url))
 const overlay = fileURLToPath(new URL('./loader/p4-05-waiting/base.patch.yml', import.meta.url))
 const repoTsconfig = fileURLToPath(new URL('../../../tsconfig.json', import.meta.url))
+
+/** The model-facing wording of a `revoked` capability refusal. */
+const REVOKED = 'the presented capability token has been revoked'
 
 /** The model-facing wording of an `expired` capability refusal. */
 const EXPIRED = 'the presented capability token has expired'
@@ -46,10 +47,10 @@ interface Report {
 
 /**
  * Run the driver once in one of BLOCKED-330's modes.
- * @param mode - `expired` for the native path, `expired-ptc` for the code-mode path.
+ * @param mode - `revoked` for the native path, `expired-ptc` for the code-mode path.
  * @returns the driver's report.
  */
-async function observe(mode: 'expired' | 'expired-ptc'): Promise<Report> {
+async function observe(mode: 'revoked' | 'expired-ptc'): Promise<Report> {
   const { stdout, stderr } = await runLoaderSmoke({
     label: `BLOCKED-330 observation: ${mode}`,
     tempDirPrefix: `p2-02-token-refusal-${mode}-`,
@@ -65,10 +66,10 @@ async function observe(mode: 'expired' | 'expired-ptc'): Promise<Report> {
   return JSON.parse(json) as Report
 }
 
-describe('BLOCKED-330: a call an expired session token will refuse', () => {
+describe('BLOCKED-330: a call a revoked session token will refuse', () => {
   let report: Report
   beforeAll(async () => {
-    report = await observe('expired')
+    report = await observe('revoked')
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 
   /** The observation is of the shipped gates on the fixture's composition. */
@@ -84,9 +85,9 @@ describe('BLOCKED-330: a call an expired session token will refuse', () => {
     expect(report.asks.map(ask => ask.toolName)).toEqual([])
   })
 
-  it('is refused as an expired capability token and its body does not run', () => {
+  it('is refused as a revoked capability token and its body does not run', () => {
     expectShippedGates()
-    expect(report.toolResults.some(result => result.includes(EXPIRED)), `the tool results: ${JSON.stringify(report.toolResults)}`).toBe(true)
+    expect(report.toolResults.some(result => result.includes(REVOKED)), `the tool results: ${JSON.stringify(report.toolResults)}`).toBe(true)
     expect(report.toolRunStates).toEqual([])
   })
 })

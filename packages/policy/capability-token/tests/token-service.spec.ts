@@ -45,6 +45,7 @@ import {
 import type {
   CapabilityToken,
   SignedCapabilityToken,
+  TokenAttenuationDecision,
   TokenAttenuationRequest,
   TokenIssuanceRequest,
 } from '../src/index.ts'
@@ -284,6 +285,44 @@ describe('P2-02 Provider — attenuation decisions are delegated, and a refusal 
     const state = await createFileCapabilityTokenStore(storePath).load()
     expect(state.tokens).toStrictEqual([root])
     expect(restarted.auditRecords()).toStrictEqual([redactTokenForLog(root)])
+  })
+})
+
+/**
+ * `CapabilityTokenService.attenuate` given the time the parent's expiry is checked against. Declared here as that
+ * three-argument call rather than taken from the service, so the cases below compile against a service whose
+ * `attenuate` takes no time and fail there when they run.
+ */
+type AttenuateAt = (
+  parent: SignedCapabilityToken,
+  request: TokenAttenuationRequest,
+  now: number,
+) => Promise<TokenAttenuationDecision>
+
+/**
+ * The attenuation of one service, taking the time.
+ * @param service - the service whose attenuation is called.
+ * @returns its `attenuate`, bound to it.
+ */
+function attenuateAt(service: CapabilityTokenService): AttenuateAt {
+  return service.attenuate.bind(service)
+}
+
+describe('BLOCKED-331 condition 3: the service never attenuates a parent that has expired', () => {
+  it('refuses a parent at the instant it expires, as parent-expired, and records no child', async () => {
+    const service = await openService()
+    const root = await service.issue(issuanceRequest(), CapabilityTokenNonce('nonce-root'))
+
+    expect(await attenuateAt(service)(root, attenuationRequest(), ROOT_EXPIRES_AT))
+      .toStrictEqual({ accepted: false, reason: 'parent-expired' })
+    expect((await openService()).auditRecords()).toStrictEqual([redactTokenForLog(root)])
+  })
+
+  it('control: attenuates the same parent one millisecond before it expires', async () => {
+    const service = await openService()
+    const root = await service.issue(issuanceRequest(), CapabilityTokenNonce('nonce-root'))
+
+    expect((await attenuateAt(service)(root, attenuationRequest(), ROOT_EXPIRES_AT - 1)).accepted).toBe(true)
   })
 })
 
