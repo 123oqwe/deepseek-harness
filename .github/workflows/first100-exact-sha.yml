@@ -37,6 +37,11 @@ on:
         required: false
         type: boolean
         default: false
+      narrow_python_runtime:
+        description: 'Stage the Python runtime carriers, then run ONLY python/sdk tests/test_bundled_runtime.py against them, naming every case (pytest -rA) and uploading a JUnit report, skipping the gate. Not a ledger observation.'
+        required: false
+        type: boolean
+        default: false
   push:
     branches: [first100-exec]
 
@@ -54,7 +59,7 @@ jobs:
     # the whole gate to answer it is what this input exists to avoid. Empty --
     # which is what every `push` and every ordinary dispatch carries -- leaves
     # this job byte-for-byte as it was.
-    if: ${{ !inputs.narrow_test && !inputs.narrow_python }}
+    if: ${{ !inputs.narrow_test && !inputs.narrow_python && !inputs.narrow_python_runtime }}
     outputs:
       candidate-sha: ${{ steps.resolve-sha.outputs.sha }}
     steps:
@@ -835,7 +840,7 @@ jobs:
     # `always()` runs a job whose dependency was SKIPPED, not only one whose
     # dependency failed, so a narrow run needs saying again here: without it
     # this job would run against a candidate SHA the gate never resolved.
-    if: ${{ always() && !inputs.narrow_test && !inputs.narrow_python }}
+    if: ${{ always() && !inputs.narrow_test && !inputs.narrow_python && !inputs.narrow_python_runtime }}
     permissions:
       contents: read
     steps:
@@ -924,6 +929,88 @@ jobs:
         with:
           name: narrow-python-junit-${{ steps.sha.outputs.sha }}
           path: python-junit.xml
+          if-no-files-found: error
+
+  narrow-python-runtime:
+    name: narrow bundled-runtime Python SDK cases @ exact SHA
+    runs-on: ubuntu-latest
+    # The Python cases that need a real runtime. Both jobs above that run
+    # python/sdk leave `tests/test_bundled_runtime.py` skipped: each of its
+    # carriers skips when absent, and neither job stages one. This job stages
+    # them the way the release builder does -- `scripts/build-exe-for-python-sdk.ts`
+    # builds the workspace, stages the node-mode carrier inside the editable
+    # runtime package and copies the host executable beside it -- and runs that
+    # file alone, naming every case. The node-mode carrier is required: the job
+    # fails before pytest when it does not resolve, so its cases cannot all
+    # skip. The exe-mode cases also need the ripgrep sidecar the release
+    # builder adds, which this job does not stage, so they may skip; the JUnit
+    # report says which cases ran. Not a ledger observation.
+    if: ${{ inputs.narrow_python_runtime }}
+    permissions:
+      contents: read
+    steps:
+      - name: Require an explicit candidate SHA
+        id: sha
+        env:
+          REQUESTED_SHA: ${{ github.event.inputs.sha }}
+        run: |
+          if [[ ! "$REQUESTED_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "narrow-python-runtime: pass an explicit 40-hex \`sha\` input; this job has no fallback" >&2
+            exit 2
+          fi
+          echo "sha=$REQUESTED_SHA" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.sha.outputs.sha }}
+          persist-credentials: false
+
+      - name: Verify checkout landed on the requested SHA
+        run: |
+          actual=$(git rev-parse HEAD)
+          if [ "$actual" != "${{ steps.sha.outputs.sha }}" ]; then
+            echo "::error::checked out $actual, requested ${{ steps.sha.outputs.sha }}"
+            exit 1
+          fi
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.PRIMARY_NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install (immutable)
+        run: pnpm install --frozen-lockfile
+
+      - name: Build the host native-system addon
+        run: pnpm run build:native-system
+
+      - name: Build the workspace and stage the runtime carriers
+        env:
+          DSH_BUILD_CLIENT_PROFILE: official
+        run: pnpm exec tsx scripts/build-exe-for-python-sdk.ts
+
+      - uses: actions/setup-python@v6.3.0
+        with:
+          python-version: '3.10'
+          cache: pip
+
+      - name: Install uv
+        run: python -m pip install uv==0.11.23
+
+      - name: Require the node-mode carrier
+        run: uv run --python 3.10 --group test --project python/sdk python -c "from deepseek_harness_runtime import resolve_bundled_launch_args; print(resolve_bundled_launch_args('node'))"
+
+      - name: Run the bundled-runtime cases, naming every case
+        run: uv run --python 3.10 --group test --project python/sdk pytest -rA python/sdk/tests/test_bundled_runtime.py --junitxml=python-runtime-junit.xml
+
+      - name: Upload the JUnit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: narrow-python-runtime-junit-${{ steps.sha.outputs.sha }}
+          path: python-runtime-junit.xml
           if-no-files-found: error
 
   narrow-test:
@@ -1286,7 +1373,7 @@ jobs:
     # Same reason as `python-sdk`, and costlier if forgotten: this job UPLOADS
     # evidence, so beside a skipped gate it would publish an evidence bundle
     # for a run that gated nothing.
-    if: ${{ always() && !inputs.narrow_test && !inputs.narrow_python }}
+    if: ${{ always() && !inputs.narrow_test && !inputs.narrow_python && !inputs.narrow_python_runtime }}
     permissions:
       contents: read
     env:
