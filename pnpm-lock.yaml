@@ -12716,9 +12716,6 @@ importers:
       '@deepseek-ai/dsh-plugin-package-inventory-deepseek':
         specifier: workspace:^
         version: link:../../packages/llm/plugin-package-inventory-deepseek
-      '@deepseek-ai/dsh-plugin-provenance':
-        specifier: workspace:^
-        version: link:../../packages/plugin/plugin-provenance
       '@deepseek-ai/dsh-policy-enforcement':
         specifier: workspace:^
         version: link:../../packages/policy/policy-enforcement
@@ -12794,9 +12791,6 @@ importers:
       '@deepseek-ai/dsh-session-title':
         specifier: workspace:^
         version: link:../../packages/session/session-title
-      '@deepseek-ai/dsh-session-title-llm':
-        specifier: workspace:^
-        version: link:../../packages/session/session-title-llm
       '@deepseek-ai/dsh-settings':
         specifier: workspace:^
         version: link:../../packages/settings/settings
@@ -12839,9 +12833,6 @@ importers:
       '@deepseek-ai/dsh-system-prompt':
         specifier: workspace:^
         version: link:../../packages/core/system-prompt
-      '@deepseek-ai/dsh-task-profile':
-        specifier: workspace:^
-        version: link:../../packages/run/task-profile
       '@deepseek-ai/dsh-taskboard':
         specifier: workspace:^
         version: link:../../packages/collaboration/taskboard
@@ -12938,9 +12929,6 @@ importers:
       '@deepseek-ai/dsh-util-values':
         specifier: workspace:^
         version: link:../../packages/util/values
-      '@deepseek-ai/dsh-util-workspace-path':
-        specifier: workspace:^
-        version: link:../../packages/util/workspace-path
       '@deepseek-ai/dsh-web':
         specifier: workspace:^
         version: link:../../packages/web/web
