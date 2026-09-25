@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import inspect
+import re
 import sys
 import threading
 import time
@@ -1362,3 +1363,44 @@ def test_initialize_keeps_an_unknown_optional_field_nested_in_the_negotiation(tm
     assert init.negotiation is not None
     assert init.negotiation.model_extra is not None
     assert init.negotiation.model_extra["futureNested"] == {"y": 2}
+
+# --- BLOCKED-310 condition 4 (P0-06): the shipped Python client declares the InitializeParams version it writes ------
+
+
+def _protocol_initialize_params_schema_version() -> dict[str, int]:
+    """The version `@deepseek-ai/dsh-sdk-protocol` states for `InitializeParams`, which both shipped clients declare."""
+    source = (Path(__file__).parents[3] / "packages" / "sdk" / "protocol" / "src" / "types.ts").read_text()
+    match = re.search(
+        r"export const INITIALIZE_PARAMS_SCHEMA_VERSION: SchemaVersion = Object\.freeze\(\{ major: (\d+), minor: (\d+) \}\)",
+        source,
+    )
+    assert match is not None, "types.ts no longer states INITIALIZE_PARAMS_SCHEMA_VERSION in the form this test reads"
+    return {"major": int(match.group(1)), "minor": int(match.group(2))}
+
+
+def test_initialize_declares_the_initialize_params_schema_version_the_protocol_states(tmp_path: Path) -> None:
+    script = tmp_path / "fake_dsh.py"
+    init_dump = tmp_path / "init.json"
+    script.write_text(
+        """
+import json
+import os
+import sys
+
+for line in sys.stdin:
+    msg = json.loads(line)
+    if msg.get("method") == "initialize":
+        json.dump(msg.get("params"), open(os.environ["INIT_DUMP"], "w"))
+        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"serverInfo": {"name": "fake-dsh"}}}), flush=True)
+    elif msg.get("method") == "shutdown":
+        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {}}), flush=True)
+        break
+""".strip()
+    )
+    with HarnessClient(
+        HarnessConfig(env={"INIT_DUMP": str(init_dump)}),
+        _launch_args=(sys.executable, str(script)),
+    ) as client:
+        client.initialize(provider="deepseek-official", cwd=str(tmp_path), model="dsagent")
+
+    assert json.loads(init_dump.read_text()).get("schemaVersion") == _protocol_initialize_params_schema_version()
