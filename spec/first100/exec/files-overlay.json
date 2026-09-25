@@ -1422,6 +1422,30 @@
     },
     {
       "epic": "P2-01",
+      "path": "apps/cli/tests/profiles/acp/cordis.yml",
+      "kind": "test",
+      "stages": [
+        "U.8"
+      ]
+    },
+    {
+      "epic": "P2-01",
+      "path": "apps/cli/tests/profiles/acp/tests/acp.e2e.ts",
+      "kind": "test",
+      "stages": [
+        "U.8"
+      ]
+    },
+    {
+      "epic": "P2-01",
+      "path": "apps/cli/tests/profiles/acp/tests/cleanup.ts",
+      "kind": "test",
+      "stages": [
+        "U.8"
+      ]
+    },
+    {
+      "epic": "P2-01",
       "path": "apps/cli/tests/profiles/headless/tests/detached-workflow-cwd.e2e.ts",
       "kind": "test",
       "stages": [
@@ -1467,7 +1491,8 @@
       "path": "apps/cli/tests/profiles/sdk/keyless-smoke.e2e.ts",
       "kind": "test",
       "stages": [
-        "U.7"
+        "U.7",
+        "U.9"
       ]
     },
     {
@@ -1478,7 +1503,8 @@
         "U.2",
         "U.3",
         "U.5",
-        "U.7"
+        "U.7",
+        "U.8"
       ]
     },
     {
@@ -1494,7 +1520,8 @@
       "path": "packages/acp/acp/src/index.ts",
       "kind": "source",
       "stages": [
-        "U.1"
+        "U.1",
+        "U.8"
       ],
       "reason": "Where an ACP session gets its actor. The plan named this epic's identity types and the places a principal travels, on the understanding that a surface receiving a request over a socket is not the machine's host user; BLOCKED-291 measured that reading out, and this file is where the correction lands -- a session ACP composes per request now acts as the host user, which is what makes acceptance[0] provable on this surface rather than only in process."
     },
@@ -1512,7 +1539,9 @@
       "path": "packages/boot/app-boot/src/index.ts",
       "kind": "source",
       "stages": [
-        "U.1"
+        "U.1",
+        "U.8",
+        "U.9"
       ],
       "reason": "The one place every `dsh` launcher passes through, and therefore where the host-user factory is provided — beside the `ctx.provide('dshHomePath', …)` this file already performs before any entry mounts. A factory rather than a value, so nothing resolves the id, and nothing touches `$DSH_HOME`, unless a configured row actually needs one."
     },
@@ -1575,6 +1604,15 @@
         "U.1"
       ],
       "reason": "The delegation hop. A preFlight census found acceptance[0]'s second half in worse shape than BLOCKED-200 recorded: `resolveChildAgentOptions` did not carry `identity` and `extendChain` had ZERO production callers — seven grep hits, every one prose — so no delegation hop had ever been added in this tree and a delegated child was untraceable to the person who started the run. The registry named P2-01's chain types and not this file, because the producer did not exist."
+    },
+    {
+      "epic": "P2-01",
+      "path": "packages/test-support/session-snapshot/src/stub-model.ts",
+      "kind": "source",
+      "stages": [
+        "U.9"
+      ],
+      "reason": "The keyless stand-in for the model endpoint that U.9 points the launched SDK runtime at (`startStubModelServer`, keyless-smoke.e2e.ts:608-613); its scripted `write` call is the action whose first manifest must name the host-user principal."
     },
     {
       "epic": "P2-01",

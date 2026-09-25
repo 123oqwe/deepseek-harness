@@ -18666,6 +18666,91 @@
         "failureSummary": "Read case by case from each round's narrow report. The fix, run 36007657036: both cases green. Red in: PRECHECK `2396989a5d`, run 36007637145; M14 `0a52bd80f5`, run 36007923624."
       },
       "note": "P0-06 acceptance[1], re-frozen under P0-06 (delegate, 2026-09-25) from P8-01 [371]: the same spec file and files, with -t selecting only the two acceptance[1] cases; P8-01's other cases stay in [371]."
+    },
+    {
+      "epic": "P2-01",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-01",
+        "stage": "U"
+      },
+      "supplementSeq": 8,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "vitest.e2e.config.ts",
+        "apps/cli/tests/profiles/acp/tests/acp.e2e.ts",
+        "-t",
+        "P2-01 acceptance\\[0\\]: a launched acp session acts as the host user, attached once",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "acp-agent over real stdio (no key required) P2-01 acceptance[0]: a launched acp session acts as the host user, attached once"
+      ],
+      "files": [
+        "apps/cli/tests/profiles/acp/tests/acp.e2e.ts",
+        "apps/cli/tests/profiles/session-log.ts",
+        "apps/cli/tests/profiles/acp/tests/cleanup.ts",
+        "apps/cli/tests/profiles/acp/cordis.yml",
+        "packages/acp/acp/src/index.ts",
+        "packages/boot/app-boot/src/index.ts",
+        "packages/core/agent-loop/src/runtime-context.ts"
+      ],
+      "frozenAtUtc": "2026-09-25T22:54:17Z",
+      "dryRunProof": {
+        "treeSha": "1f6bd24721d97b666fa4ac403542e42034da409d",
+        "testsDiscovered": 1
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Off lane A's P2-01 v2 PRECHECK c0a7895b37, each one product line, never merged, each run by CI's narrow job at its own SHA with a build first. M3 (`90fae045b1`): app-boot provides the host-user factory under another key (packages/boot/app-boot/src/index.ts); M6 (`0a396f10f9`): identity/attached is logged again on a resume (packages/core/agent-loop/src/runtime-context.ts). c0a7895b37 is not an ancestor of the candidate. What makes these readings stand for the candidate: every file a cited mutation changes is byte-identical at its parent c0a7895b37 and at 4e932e474b (packages/boot/app-boot/src/index.ts a27047b127, packages/core/agent-loop/src/runtime-context.ts 20954b762b), and so are apps/cli/tests/profiles/acp/tests/acp.e2e.ts and apps/cli/tests/profiles/session-log.ts. M2 (c95b94a666) is not cited as a red round: the file it changes, packages/sdk/server/src/server.ts, differs (79d28ea85a at the parent, 493a16df2c at the candidate).",
+        "failureSummary": "Read by full title from each round's own narrow report: red in M3, run 35970124070; M6, run 35970178962; green in M2, run 35970106348 (the SDK server reads the factory under another key; the ACP path does not use it). Green on the candidate in the batch 8' full run 36088846692 (vitest-e2e-acp.json)."
+      },
+      "note": "P2-01 acceptance[0], BLOCKED-291 unlock condition (a) and (d): on the ACP surface, driven through that surface's own creation entry, the first action manifest names the host-user principal and identity/attached is logged exactly once, and a resume adds no second record. The case lives in apps/cli/tests/profiles/acp/tests/acp.e2e.ts and has been green since the fix, but no live entry named it. Frozen under the e2e config and observed by the e2e step's own report (vitest-e2e-acp.json); -t selects this one case."
+    },
+    {
+      "epic": "P2-01",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-01",
+        "stage": "U"
+      },
+      "supplementSeq": 9,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "vitest.e2e.config.ts",
+        "apps/cli/tests/profiles/sdk/keyless-smoke.e2e.ts",
+        "-t",
+        "P2-01 acceptance\\[0\\]: a launched sdk session acts as the host user, attached once",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "Python SDK dsh profile keyless smoke P2-01 acceptance[0]: a launched sdk session acts as the host user, attached once"
+      ],
+      "files": [
+        "apps/cli/tests/profiles/sdk/keyless-smoke.e2e.ts",
+        "packages/test-support/session-snapshot/src/stub-model.ts",
+        "packages/sdk/server/src/server.ts",
+        "packages/boot/app-boot/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-25T22:54:18Z",
+      "dryRunProof": {
+        "treeSha": "1f6bd24721d97b666fa4ac403542e42034da409d",
+        "testsDiscovered": 1
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Off lane A's P2-01 v2 PRECHECK c0a7895b37, each one product line, never merged, each run by CI's narrow job at its own SHA with a build first. M3 (`90fae045b1`): app-boot provides the factory under another key (packages/boot/app-boot/src/index.ts). c0a7895b37 is not an ancestor of the candidate. What makes these readings stand for the candidate: every file a cited mutation changes is byte-identical at its parent c0a7895b37 and at 4e932e474b (packages/boot/app-boot/src/index.ts a27047b127, packages/core/agent-loop/src/runtime-context.ts 20954b762b), and so are apps/cli/tests/profiles/sdk/keyless-smoke.e2e.ts and apps/cli/tests/profiles/session-log.ts. M2 (c95b94a666) is not cited as a red round: the file it changes, packages/sdk/server/src/server.ts, differs (79d28ea85a at the parent, 493a16df2c at the candidate).",
+        "failureSummary": "Read by full title from each round's own narrow report: red in M3, run 35970124070; green in M6, run 35970178962 (identity/attached re-logged on a resume; the SDK case launches once and does not resume). Green on the candidate in the batch 8' full run 36088846692 (vitest-e2e-sdk-keyless-smoke.json)."
+      },
+      "note": "P2-01 acceptance[0], BLOCKED-291 unlock condition (a) and (d): on the SDK server surface, driven through that surface's own creation entry, the first action manifest names the host-user principal and identity/attached is logged exactly once. The case lives in apps/cli/tests/profiles/sdk/keyless-smoke.e2e.ts and has been green since the fix, but no live entry named it. Frozen under the e2e config and observed by the e2e step's own report (vitest-e2e-sdk-keyless-smoke.json); -t selects this one case."
     }
   ]
 }

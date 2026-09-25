@@ -217,6 +217,7 @@
     "P0-06 packages/sdk/protocol/src/transport.ts": "The JSON-RPC transport that sends a thrown value's own data as the response's error.data (:237-242), which is how U.2's refusal fields reach the client.",
     "P0-06 packages/sdk/server/src/server.ts": "The SDK server's initialize, which negotiates the InitializeParams schema version and attaches the refusal's code, schemaId, encounteredVersion and registeredVersion to the thrown error as data (:343-349); U.2 observes those fields over the wire.",
     "P0-06 spec/control-protocol.schema.json": "The committed control-protocol schema artifact, read by the fingerprint case beside U.2's in the same describe of plugin-apply.spec.ts (:215); U.2's -t selects only the refusal case.",
-    "P8-01 packages/acp/acp/src/session.ts": "The ACP session resume (session/resume) that lane A's B1 case uses to continue an SDK-created session in a new Run, the one shipped path through which a persisted session gets a second Run from another connection."
+    "P8-01 packages/acp/acp/src/session.ts": "The ACP session resume (session/resume) that lane A's B1 case uses to continue an SDK-created session in a new Run, the one shipped path through which a persisted session gets a second Run from another connection.",
+    "P2-01 packages/test-support/session-snapshot/src/stub-model.ts": "The keyless stand-in for the model endpoint that U.9 points the launched SDK runtime at (`startStubModelServer`, keyless-smoke.e2e.ts:608-613); its scripted `write` call is the action whose first manifest must name the host-user principal."
   }
 }
