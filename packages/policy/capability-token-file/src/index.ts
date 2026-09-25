@@ -342,14 +342,13 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
    * @param now - Unix epoch milliseconds to check the held token's expiry against.
    * @returns whether {@link issueSessionToken} must run.
    */
-  private needsIssue(agent: Agent, now: number): boolean {
+  private needsIssue(agent: Agent, _now: number): boolean {
     // An issuance already in flight will settle on the CURRENT registry, so a
     // concurrent caller waits for it rather than signing a second token.
     if (this.issuing.get(agent.id) !== undefined && this.sessionTokens.get(agent.id) === undefined) return false
     const token = this.sessionTokens.get(agent.id)
     if (token === undefined) return true
     if (this.isRevoked(token)) return false
-    if (now >= token.token.expiresAt) return true
     const authorized = new Set(token.token.resources)
     return this.ctx.tools.schemas(agent).some(schema => !authorized.has(schema.name))
   }
