@@ -2806,9 +2806,19 @@
         {
           "stage": "P",
           "title": "provider: a peer speaking only a future generation is refused rather than silently downgraded"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 5,
+          "title": "P8-01 on the shipped sdk profile: the shipped TypeScript client over a real handshake BLOCKED-314 condition 1(3): the caller receives the server's protocolVersions"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 5,
+          "title": "P8-01 on the shipped sdk profile: the shipped TypeScript client over a real handshake BLOCKED-314 condition 1(3): the caller receives the server's schemaFingerprint, the one the committed control-protocol artifact records"
         }
       ],
-      "note": "acceptance[0]: 'a new client against an old server and an old client against a new server both reach a deterministic result, with no silent field loss.' BOTH DIRECTIONS are asserted, and symmetry is asserted directly rather than inferred from two examples -- the F-stage matrix negotiates every ORDERED PAIR of three adjacent generations, so a rule holding for one pairing but not another cannot pass. The no-silent-loss half is covered twice over: a refusal carries a machine-readable reason AND both ranges, so the mismatch is diagnosable without re-running the handshake; and the U-stage case proves the client no longer discards what the server sent -- it previously rebuilt its result from serverInfo alone, which was exactly the silent field loss this clause forbids, and the mutation deleting that reader reddens it."
+      "note": "acceptance[0]: 'a new client against an old server and an old client against a new server both reach a deterministic result, with no silent field loss.' BOTH DIRECTIONS are asserted, and symmetry is asserted directly rather than inferred from two examples -- the F-stage matrix negotiates every ORDERED PAIR of three adjacent generations, so a rule holding for one pairing but not another cannot pass. The no-silent-loss half is covered twice over: a refusal carries a machine-readable reason AND both ranges, so the mismatch is diagnosable without re-running the handshake; and the U-stage case proves the client no longer discards what the server sent -- it previously rebuilt its result from serverInfo alone, which was exactly the silent field loss this clause forbids, and the mutation deleting that reader reddens it.\n\n[2026-09-24 lane A: P8-01 U supplement 5 observes acceptance[0]'s carried handshake fields over a real handshake between the shipped TypeScript client and the shipped sdk profile (BLOCKED-314 closing condition 1(3), TypeScript half); the Python half follows B-582]"
     },
     {
       "epic": "P8-01",
@@ -2914,6 +2924,21 @@
         {
           "stage": "P",
           "title": "provider: the package exports every negotiation function a peer needs"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 6,
+          "title": "P8-01 acceptance[4]: a subagent's Run takes the provenance of the Run its parent agent is in (blind review B1) gives none when the parent's current Run has none, though a finished Run of its session does"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 6,
+          "title": "P8-01 acceptance[4]: a subagent's Run takes the provenance of the Run its parent agent is in (blind review B1) gives the provenance of the parent's current Run, not a finished one's"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 6,
+          "title": "P8-01 acceptance[4]: a subagent's Run takes the provenance of the Run its parent agent is in (blind review B1) gives none when the parent's own Run has reached a terminal state"
         }
       ],
       "note": "acceptance[4]: 'the negotiated result is written to each Run's provenance.' The outcome is returned from initialize as structured provenance -- agreed version, agreed capabilities, ignored capabilities, downgrades -- so 'what did these peers agree to' is answerable from the record rather than by replaying a handshake that no longer exists. Two failure modes are closed rather than one: a partially-formed negotiation is dropped WHOLE, because a caller would treat the fields that did arrive as authoritative and a half-recorded agreement is worse than none; and an ABSENT negotiation stays absent rather than becoming an empty one, since absence means the peer predates negotiation while an empty record would assert agreement to nothing. The P-stage export case is included because provenance that no consumer can construct is not provenance: before that stage the negotiation functions existed and nothing re-exported them."
