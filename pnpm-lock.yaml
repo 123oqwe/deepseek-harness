@@ -12539,6 +12539,9 @@ importers:
       '@deepseek-ai/dsh-acp':
         specifier: workspace:^
         version: link:../../packages/acp/acp
+      '@deepseek-ai/dsh-acp-app':
+        specifier: workspace:^
+        version: link:../../packages/bundle/acp-app
       '@deepseek-ai/dsh-action-ledger':
         specifier: workspace:^
         version: link:../../packages/action/action-ledger
@@ -12683,6 +12686,9 @@ importers:
       '@deepseek-ai/dsh-goal-round-driver':
         specifier: workspace:^
         version: link:../../packages/goal/goal-round-driver
+      '@deepseek-ai/dsh-headless':
+        specifier: workspace:^
+        version: link:../../packages/bundle/headless
       '@deepseek-ai/dsh-home-paths':
         specifier: workspace:^
         version: link:../../packages/util/home-paths
@@ -12905,6 +12911,9 @@ importers:
       '@deepseek-ai/dsh-session-title':
         specifier: workspace:^
         version: link:../../packages/session/session-title
+      '@deepseek-ai/dsh-session-title-first-prompt-llm':
+        specifier: workspace:^
+        version: link:../../packages/session/session-title-first-prompt-llm
       '@deepseek-ai/dsh-session-title-llm':
         specifier: workspace:^
         version: link:../../packages/session/session-title-llm
