@@ -1134,6 +1134,26 @@
         {
           "stage": "C",
           "title": "reports zero missing-provider violations under the controlled allowlist (acceptance[0])"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "the scanned workspace is the one pnpm-workspace.yaml declares (acceptance[0]) enumerates every package pnpm-workspace.yaml declares, not only packages/*/*"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "the scanned workspace is the one pnpm-workspace.yaml declares (acceptance[0]) scans the real workspace exactly as pnpm lists it"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "the scanned workspace is the one pnpm-workspace.yaml declares (acceptance[0]) the seam scanner refuses a pnpm-workspace.yaml that declares no packages"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 2,
+          "title": "the scanned workspace is the one pnpm-workspace.yaml declares (acceptance[0]) the seam scanner refuses a pnpm-workspace.yaml whose patterns match no package"
         }
       ],
       "note": "acceptance[0]: '现有仓库在受控 allowlist 下通过' (the existing repo passes under the controlled allowlist). U-stage's real live workspace scan is the authoritative proof (4175 real cross-package import edges, 0 unsuppressed violations); C-stage's pure-detector test independently proves the same zero-violations property against the same real architecture.layers.json content, one layer down the stack."
