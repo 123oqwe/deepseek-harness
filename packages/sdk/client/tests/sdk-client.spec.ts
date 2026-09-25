@@ -188,6 +188,8 @@ describe('DeepSeekHarness', () => {
       model: 'custom-model',
       reasoningEffort: 'max',
       maxTokens: 4096,
+      // The version of `sdk-protocol:InitializeParams` the client writes (BLOCKED-310).
+      schemaVersion: { major: 1, minor: 0 },
     }])
   })
 

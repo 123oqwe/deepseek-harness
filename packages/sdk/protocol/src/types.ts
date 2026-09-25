@@ -75,10 +75,11 @@ export interface InitializeParams {
   /** Optional positive output-token cap inherited by SDK-created agents and their in-process descendants. */
   maxTokens?: number
   /**
-   * Optional explicit version this client negotiates `sdk-protocol:InitializeParams` against
-   * (`@deepseek-ai/dsh-schema-registry`'s `negotiateSchema`). Absent defaults to this build's
-   * own registered version — no real client has ever sent this field before must[4]'s
-   * SDK-initialize negotiation existed.
+   * The version of `sdk-protocol:InitializeParams` this client writes, which the server
+   * negotiates through `@deepseek-ai/dsh-schema-registry`'s `negotiateSchema`. The shipped
+   * TypeScript client sends {@link INITIALIZE_PARAMS_SCHEMA_VERSION} unless its caller gives
+   * one. Absent, the server defaults to its own registered version, which is what a client
+   * that predates this field is negotiated as.
    */
   schemaVersion?: SchemaVersion
   /**
@@ -102,6 +103,13 @@ export interface InitializeParams {
    */
   capabilities?: readonly CapabilityDeclaration[]
 }
+
+/**
+ * The version of `sdk-protocol:InitializeParams` that {@link InitializeParams} describes, which
+ * the shipped TypeScript client declares as `schemaVersion` (BLOCKED-310). The schema
+ * registry's bootstrap registers the same version.
+ */
+export const INITIALIZE_PARAMS_SCHEMA_VERSION: SchemaVersion = Object.freeze({ major: 1, minor: 0 })
 
 /**
  * Wire-stable server identity returned by initialization.

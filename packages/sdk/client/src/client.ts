@@ -15,6 +15,7 @@
 import { spawn, type ChildProcess } from 'node:child_process'
 import {
   HOST_LEVEL_NOTIFICATION_METHODS,
+  INITIALIZE_PARAMS_SCHEMA_VERSION,
   JsonRpcLineTransport,
   JsonRpcResponseError,
   type CapabilityDowngrade,
@@ -289,11 +290,16 @@ export class HarnessClient {
 
   /**
    * Perform the process-wide handshake.
+   *
+   * Declares the `sdk-protocol:InitializeParams` version this client writes,
+   * {@link INITIALIZE_PARAMS_SCHEMA_VERSION}, unless `params` names one, so the
+   * server negotiates the message on what was sent (BLOCKED-310).
    * @param params - workspace cwd plus the provider/model route.
    * @returns the runtime's wire identity.
    */
   async initialize(params: InitializeParams): Promise<InitializeResult> {
-    const result = await this.request('initialize', { ...params }, this.runtime.initializeTimeoutMs)
+    const sent: InitializeParams = { schemaVersion: INITIALIZE_PARAMS_SCHEMA_VERSION, ...params }
+    const result = await this.request('initialize', sent, this.runtime.initializeTimeoutMs)
     if (!isRecord(result) || !isRecord(result.serverInfo)
       || typeof result.serverInfo.name !== 'string' || typeof result.serverInfo.version !== 'string') {
       throw new SdkProtocolError(`initialize returned no server identity: ${JSON.stringify(result)}`)
