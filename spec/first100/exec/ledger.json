@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-25T02:52:37.114Z",
-  "inputDigest": "8d3d151facb14a709e95fe352c295402b2d4229358711f23b5d9eeaa1ca205ab",
+  "lastUpdatedUtc": "2026-09-25T22:04:56.093Z",
+  "inputDigest": "b51f271d2fc0c0d6bda75233cfff15757bf01e0e082fd9fc5d419f0216cb11c5",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -1256,10 +1256,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36072903015",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36072903015/first100-vitest-report-9a8c696b312913451ceb55414c5095e688dcfa93/vitest-report.json",
-          "observationSha256": "b8916b9e30a5457b396accccb85b808d725fae6d2c025a92cc301de49a923854",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "imports only a type-only Branded from @deepseek-ai/dsh-brand -- no other import, no runtime dependency edge",
             "GateEvidence type surface (Epic P0-07 must[0]) exports no Config schema and no apply(ctx, config) plugin entry -- nothing here is a Cordis plugin export",
@@ -1291,14 +1291,14 @@
             "is exactly one statement: `export type * from './types.ts'` -- zero runtime exports, zero Cordis registration, zero side effects",
             "has no default export and no Config/apply plugin exports"
           ],
-          "capturedAtUtc": "2026-09-25T02:52:25.440Z"
+          "capturedAtUtc": "2026-09-25T22:04:45.957Z"
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36072903015",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36072903015/first100-vitest-report-9a8c696b312913451ceb55414c5095e688dcfa93/vitest-report.json",
-          "observationSha256": "b8916b9e30a5457b396accccb85b808d725fae6d2c025a92cc301de49a923854",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "seeds every declared required gate as a MissingGateEvidence placeholder at init, keeping accepted=false until each one actually runs",
             "collects two real gate runs and a real build-artifact digest into accepted=true, then verifies fully offline",
@@ -1310,7 +1310,7 @@
             "compiles with zero diagnostics when the real collected fields are branded per their declared types",
             "every collected GateEvidence record has exactly must[0]'s real field set at runtime, matching CompletedGateEvidence's own declared members"
           ],
-          "capturedAtUtc": "2026-09-25T02:52:23.463Z"
+          "capturedAtUtc": "2026-09-25T22:04:43.494Z"
         },
         "U": {
           "status": "GREEN",
@@ -1328,10 +1328,10 @@
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36072903015",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36072903015/first100-vitest-report-9a8c696b312913451ceb55414c5095e688dcfa93/vitest-report.json",
-          "observationSha256": "b8916b9e30a5457b396accccb85b808d725fae6d2c025a92cc301de49a923854",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "detects a completed gate's captured log file deleted entirely, distinct from a merely mutated log",
             "detects a gate-level --artifact file deleted entirely after collection",
@@ -1343,27 +1343,27 @@
             "rejects a self-consistently forged package whose required gate has a nonzero exitCode while accepted still claims true",
             "rejects a self-consistently forged package whose required gate is explicitly SkippedGateEvidence while accepted still claims true"
           ],
-          "capturedAtUtc": "2026-09-25T02:52:24.269Z"
+          "capturedAtUtc": "2026-09-25T22:04:43.990Z"
         }
       },
       "supplements": {
         "F.1": {
           "status": "GREEN",
-          "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36072903015",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36072903015/first100-vitest-report-9a8c696b312913451ceb55414c5095e688dcfa93/vitest-report.json",
-          "observationSha256": "b8916b9e30a5457b396accccb85b808d725fae6d2c025a92cc301de49a923854",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "detects a required gate AND a required build artifact both silently deleted in the same self-consistently forged bundle, with both faults independently reported"
           ],
-          "capturedAtUtc": "2026-09-25T02:52:24.647Z"
+          "capturedAtUtc": "2026-09-25T22:04:44.461Z"
         },
         "P.1": {
           "status": "GREEN",
-          "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36072903015",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36072903015/first100-vitest-report-9a8c696b312913451ceb55414c5095e688dcfa93/vitest-report.json",
-          "observationSha256": "b8916b9e30a5457b396accccb85b808d725fae6d2c025a92cc301de49a923854",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: configuration the package binds, changed after collection, makes verify fail detects pnpm-lock.yaml content changed after collection, with .dsh/baseline.json itself untouched",
             "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: configuration the package binds, changed after collection, makes verify fail detects a protocol schema file changed after collection, with .dsh/baseline.json itself untouched",
@@ -1376,19 +1376,19 @@
             "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[2] (narrowed): the result line of verify names the package path and its accepted status prints the package path and its accepted status on its result line (a package that verifies clean and is not accepted)",
             "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[2] (narrowed): the result line of verify names the package path and its accepted status prints the package path and its accepted status on its result line (an accepted package that fails verification)"
           ],
-          "capturedAtUtc": "2026-09-25T02:52:34.434Z"
+          "capturedAtUtc": "2026-09-25T22:04:52.874Z"
         },
         "F.3": {
           "status": "GREEN",
-          "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36072903015",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36072903015/first100-vitest-report-9a8c696b312913451ceb55414c5095e688dcfa93/vitest-report.json",
-          "observationSha256": "b8916b9e30a5457b396accccb85b808d725fae6d2c025a92cc301de49a923854",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: tampering with any referenced file after collection makes verify fail detects a mutated .dsh/baseline.json after collection",
             "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: tampering with any referenced file after collection makes verify fail detects a mutated gitdiff.patch sidecar after collection"
           ],
-          "capturedAtUtc": "2026-09-25T02:52:32.718Z"
+          "capturedAtUtc": "2026-09-25T22:04:50.831Z"
         },
         "U.2": {
           "status": "GREEN",
@@ -1423,34 +1423,34 @@
         },
         "P.2": {
           "status": "GREEN",
-          "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36072903015",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36072903015/first100-vitest-report-9a8c696b312913451ceb55414c5095e688dcfa93/vitest-report.json",
-          "observationSha256": "b8916b9e30a5457b396accccb85b808d725fae6d2c025a92cc301de49a923854",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[2] (narrowed): the result line of verify names the package path and its accepted status fails with a named mismatch and still prints its result line when pnpm cannot run",
             "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: the working tree is checked against the diff recorded at collection detects an uncommitted change to the root package.json made after collection",
             "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: the working tree is checked against the diff recorded at collection detects an untracked configuration file added after the last collection step"
           ],
-          "capturedAtUtc": "2026-09-25T02:52:34.758Z"
+          "capturedAtUtc": "2026-09-25T22:04:53.239Z"
         },
         "F.4": {
           "status": "GREEN",
-          "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36072903015",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36072903015/first100-vitest-report-9a8c696b312913451ceb55414c5095e688dcfa93/vitest-report.json",
-          "observationSha256": "b8916b9e30a5457b396accccb85b808d725fae6d2c025a92cc301de49a923854",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) Epic P0-07 F-stage: must[2] fault/qualification hardening beyond acceptance[0]'s existing coverage a skipped or silently-absent required entry must never coexist with accepted=true, even against a self-consistently forged package refuses a self-consistently forged package whose accepted is the string \"true\" rather than the boolean"
           ],
-          "capturedAtUtc": "2026-09-25T02:52:35.090Z"
+          "capturedAtUtc": "2026-09-25T22:04:53.558Z"
         },
         "P.3": {
           "status": "GREEN",
-          "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36072903015",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36072903015/first100-vitest-report-9a8c696b312913451ceb55414c5095e688dcfa93/vitest-report.json",
-          "observationSha256": "b8916b9e30a5457b396accccb85b808d725fae6d2c025a92cc301de49a923854",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[2] (narrowed): the result line of verify names the package path and its accepted status still prints its result line when the package is valid JSON without the fields verify reads",
             "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: the working tree is checked against the diff recorded at collection detects a change after collection when git shows files through an external diff program, for a tracked file that differs from the base",
@@ -1461,10 +1461,10 @@
             "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: the working tree is checked against the diff recorded at collection detects a .gitignore added after collection that ignores itself and the file beside it",
             "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: the working tree is checked against the diff recorded at collection refuses an untracked symbolic link to a directory, for which git produces no patch"
           ],
-          "capturedAtUtc": "2026-09-25T02:52:35.438Z"
+          "capturedAtUtc": "2026-09-25T22:04:54.179Z"
         }
       },
-      "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
+      "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -2769,10 +2769,10 @@
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36072903015",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36072903015/first100-vitest-report-9a8c696b312913451ceb55414c5095e688dcfa93/vitest-report.json",
-          "observationSha256": "b8916b9e30a5457b396accccb85b808d725fae6d2c025a92cc301de49a923854",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "control: a single plugin claiming one uncontested, unreserved name boots and owns it",
             "validation[0]/gate: the two-plugin collision is rejected before the second plugin activates",
@@ -2807,7 +2807,7 @@
             "control: a dynamic package claiming a fresh, unreserved, uncontested name is still admitted",
             "gate: stopping a dynamic package leaves zero tools, services, and events behind for it"
           ],
-          "capturedAtUtc": "2026-09-25T02:52:32.373Z"
+          "capturedAtUtc": "2026-09-25T22:04:50.177Z"
         },
         "F": {
           "status": "GREEN",
@@ -2842,7 +2842,7 @@
           "capturedAtUtc": "2026-09-25T02:52:33.071Z"
         }
       },
-      "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
+      "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -4966,10 +4966,10 @@
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "P2-12 must[2]: a stop refuses the next advance on the real dispatch path refuses the advance with `stopped` while a stop is in force",
             "P2-12 must[2]: a stop refuses the next advance on the real dispatch path leaves the lifecycle untouched when it refuses, so a refused agent did not half-advance",
@@ -4988,7 +4988,7 @@
             "P2-12 must[0] over the SDK: the runtime asks its embedding host carries free text back, so a question with no options is answerable",
             "P2-12 must[0] over the SDK: the runtime asks its embedding host FAILS CLOSED when the host registers no handler, which is the shipped default"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:42.981Z"
+          "capturedAtUtc": "2026-09-25T22:04:49.508Z"
         },
         "F": {
           "status": "GREEN",
@@ -5030,7 +5030,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
+      "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -5824,10 +5824,10 @@
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "lists a non-terminal Run reconstructed from the durable store by a fresh service",
             "lists every non-terminal Run, not just the most recently written one",
@@ -5849,14 +5849,14 @@
             "reports no Runs for a path that has never been written to, rather than failing",
             "writes the Run to the named path, not somewhere else"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:46.190Z"
+          "capturedAtUtc": "2026-09-25T22:04:47.002Z"
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "opens a durable Run for the agent session a real harness boot starts",
             "owns that Run with RUN_SERVICE_OWNER_ID, never the agent session that started it",
@@ -5877,14 +5877,14 @@
             "restores the Runs an earlier mount left behind, rather than starting empty",
             "reconciles a real WorkflowRunId into the Run event log's Workflow reference brand"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:46.504Z"
+          "capturedAtUtc": "2026-09-25T22:04:54.481Z"
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "two concurrent transitions out of one state never both succeed, and the durable log records exactly the accepted one",
             "two services over one store path both durably record their Run, losing neither",
@@ -5894,16 +5894,16 @@
             "CHARACTERIZATION: a store document written under an unsupported format version is refused, naming the version",
             "CHARACTERIZATION: a leftover temp file from an interrupted write is ignored, and the complete document still restores"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:46.817Z"
+          "capturedAtUtc": "2026-09-25T22:04:44.917Z"
         }
       },
       "supplements": {
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "reports the non-terminal Runs the store held, at mount, before any agent exists",
             "reports nothing for a store that holds only terminal Runs, so the enumeration is not just \"everything\"",
@@ -5923,7 +5923,7 @@
             "leaves no non-terminal Run behind after a session that ran and ended",
             "cancels a Run whose session was disposed before any model step, rather than leaving it accepted"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:47.125Z"
+          "capturedAtUtc": "2026-09-25T22:04:54.800Z"
         },
         "U.2": {
           "status": "GREEN",
@@ -5939,10 +5939,10 @@
         },
         "U.3": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "P4-01 acceptance[2]: one Run spans a session and the in-process child sessions it owns records an in-process child session in the Run of the agent that owns it, and no unrelated session",
             "P4-01 acceptance[2]: one Run spans a session and the in-process child sessions it owns keeps the child in its owner's Run across a restart, and the owner continues that Run",
@@ -5950,22 +5950,22 @@
             "P4-01 acceptance[2]: one Run spans a session and the in-process child sessions it owns refuses a host that holds only the child's lease any write to the owner's Run",
             "P4-01 acceptance[2]: one Run spans a session and the in-process child sessions it owns does not record a child in its owner's Run once the owner's lease no longer admits writes"
           ],
-          "capturedAtUtc": "2026-09-24T23:26:03.595Z"
+          "capturedAtUtc": "2026-09-25T22:04:55.114Z"
         },
         "U.4": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "P4-01 acceptance[2] on the shipped base profile: a subagent child and its parent share one Run records a subagent child in its parent's Run on the shipped base profile",
             "P4-01 acceptance[2] on the shipped base profile: a subagent child and its parent share one Run keeps that Run spanning both sessions across a restart of the shipped profile"
           ],
-          "capturedAtUtc": "2026-09-24T23:26:04.386Z"
+          "capturedAtUtc": "2026-09-25T22:04:55.428Z"
         }
       },
-      "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
+      "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -6468,16 +6468,16 @@
       "supplements": {
         "C.1": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "P4-05 must[0]: `failed` is a state a run can actually reach ends a run whose last activity was an unrecovered error in `failed`, not `completed`",
             "P4-05 must[0]: `failed` is a state a run can actually reach still ends a run that did its work in `completed`, so the failure path is not simply the new default",
             "P4-05 must[0]: `waiting_human` is a state a run can actually reach holds the run in `waiting_human` WHILE an operator is being asked, and returns it to `running`"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:48.382Z"
+          "capturedAtUtc": "2026-09-25T22:04:48.429Z"
         },
         "U.2": {
           "status": "GREEN",
@@ -6492,24 +6492,24 @@
         },
         "F.3": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "P4-05 acceptance[2]: the orphaned host is not the one that records it REFUSES the orphaning write from the host that LOST the lease, because it no longer speaks for the run",
             "P4-05 acceptance[2]: an orphaned run is reclaimed, or safely failed, by the host that took it lets a second host take a LAPSED item, record `orphaned` under its own epoch, and fences the first host afterwards",
             "P4-05 acceptance[2]: an orphaned run is reclaimed, or safely failed, by the host that took it REFUSES to reclaim an item whose holder is still current, so a live run is never taken from it",
             "P4-05 acceptance[1] (§12.60): a run holding no dispatch slot does not begin a model step REFUSES the step for a reclaimed run, so no LLM call is spent on work this host lost"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:49.813Z"
+          "capturedAtUtc": "2026-09-25T22:04:48.801Z"
         },
         "U.4": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-e2e-acp.json",
-          "observationSha256": "e5a6fa0bcbe0da7876cb5e1ed778090b3f9a6a24db2933f21f216111a1909866",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-e2e-acp.json",
+          "observationSha256": "de1d23bf6b618ea55930d5e647ea436e81698eef7fd464ec88c7b609771539ac",
           "expectCasesMatched": [
             "P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILLed host left behind (no key required) orphan: the lease row was live when the host was killed; before the second host starts, it still names the killed host at its epoch and has expired",
             "P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILLed host left behind (no key required) the second host continues the same Run id the killed host opened",
@@ -6518,7 +6518,7 @@
             "P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILLed host left behind (no key required) the killed host's token is refused as stale-epoch against the current lease",
             "P4-05 acceptance[2]: a restarted acp host takes over the Run a SIGKILLed host left behind (no key required) the second host's tool call ran: second.txt was absent after the killed host's two model requests and is on disk after the second host's turn"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:50.015Z"
+          "capturedAtUtc": "2026-09-25T22:04:50.473Z"
         },
         "U.5": {
           "status": "GREEN",
@@ -6976,10 +6976,10 @@
       "supplements": {
         "U.2": {
           "status": "GREEN",
-          "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36072903015",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36072903015/first100-vitest-report-9a8c696b312913451ceb55414c5095e688dcfa93/vitest-report.json",
-          "observationSha256": "b8916b9e30a5457b396accccb85b808d725fae6d2c025a92cc301de49a923854",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) takes a lease for every Run it opens, so the Run has an owner before it has work",
             "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) starts the lifecycle at queued, so a run that never steps is never running",
@@ -6998,18 +6998,18 @@
             "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) executes ZERO tools for an agent whose lease was REFUSED, and names the refusal apart from a fencing (§12.31-A)",
             "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) EXECUTES normally with NO Run Service mounted, so capability absence is not read as a refusal"
           ],
-          "capturedAtUtc": "2026-09-25T02:52:33.768Z"
+          "capturedAtUtc": "2026-09-25T22:04:51.876Z"
         },
         "U.3": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) REFUSES the SECOND host that opens the same session, and that host executes zero tools (§12.35-2, acceptance[1])"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:51.995Z"
+          "capturedAtUtc": "2026-09-25T22:04:48.058Z"
         },
         "U.1": {
           "status": "GREEN",
@@ -7027,10 +7027,10 @@
         },
         "U.4": {
           "status": "GREEN",
-          "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36072903015",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36072903015/first100-vitest-report-9a8c696b312913451ceb55414c5095e688dcfa93/vitest-report.json",
-          "observationSha256": "b8916b9e30a5457b396accccb85b808d725fae6d2c025a92cc301de49a923854",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "P4-07 on the shipped profile: a displaced host and a failing lease store a displaced host's session end leaves the Run's recorded outcome unchanged (acceptance[0])",
             "P4-07 on the shipped profile: a displaced host and a failing lease store the host that still holds the lease records the Run's outcome when its session ends (control)",
@@ -7038,44 +7038,44 @@
             "P4-07 on the shipped profile: a displaced host and a failing lease store a lease store that throws while the predecessor is read stops the agent's tool calls (acceptance[2])",
             "P4-07 on the shipped profile: a displaced host and a failing lease store the same tool call executes when the lease store is healthy (control)"
           ],
-          "capturedAtUtc": "2026-09-25T02:52:33.437Z"
+          "capturedAtUtc": "2026-09-25T22:04:51.180Z"
         },
         "U.5": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "P4-07 must[1]: a Run write carries its writer's lease and is checked where it is written refuses the first step's write when the fence no longer admits its writer, and records nothing",
             "P4-07 must[1]: a Run write carries its writer's lease and is checked where it is written refuses the write as lease-unavailable when the fence cannot answer, and records nothing",
             "P4-07 must[1]: a Run write carries its writer's lease and is checked where it is written admits the same write while the fence still admits its writer (control)"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:52.936Z"
+          "capturedAtUtc": "2026-09-25T22:04:51.545Z"
         },
         "U.6": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "P4-07 must[1]: a Run write refused for its lease is logged logs the cancellation a displaced host was refused, naming the pair, the Run and the reason",
             "P4-07 must[1]: a Run write refused for its lease is logged logs no refusal for the same session end while this host still holds its lease (control)"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:53.260Z"
+          "capturedAtUtc": "2026-09-25T22:04:52.212Z"
         },
         "U.7": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "P4-07 on the shipped profile: a displaced host and a failing lease store a host displaced before its first model step ends its session without writing the Run's cancellation (acceptance[0])",
             "P4-07 on the shipped profile: a displaced host and a failing lease store the holder's session that ends as its host unloads still records the Run's outcome"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:53.573Z"
+          "capturedAtUtc": "2026-09-25T22:04:52.550Z"
         },
         "U.8": {
           "status": "GREEN",
@@ -10287,42 +10287,42 @@
         },
         "U.2": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "P8-01 acceptance[4]: a Run keeps the provenance it was opened with records the negotiation of the connection that opened the Run, durably",
             "P8-01 acceptance[4]: a Run keeps the provenance it was opened with keeps the first provenance when a continued Run is recorded again after a restart"
           ],
-          "capturedAtUtc": "2026-09-24T23:24:06.678Z"
+          "capturedAtUtc": "2026-09-25T22:04:53.867Z"
         },
         "U.3": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "P8-01 on the shipped sdk profile: the negotiation reaches every Run, and a refusal says why P0-06 acceptance[1]: the shipped sdk profile refuses an incompatible schemaVersion on the wire with its code and schemaId",
             "P8-01 on the shipped sdk profile: the negotiation reaches every Run, and a refusal says why control: the shipped sdk profile opens one Run for each SDK session and one for the delegated subagent, so the case below measures provenance and not a missing Run",
             "P8-01 on the shipped sdk profile: the negotiation reaches every Run, and a refusal says why P8-01 acceptance[4]: every Run the connection opened, the subagent's included, carries the handshake's negotiation"
           ],
-          "capturedAtUtc": "2026-09-24T23:24:07.035Z"
+          "capturedAtUtc": "2026-09-25T22:04:55.761Z"
         },
         "U.4": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
+          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
           "expectCasesMatched": [
             "P8-01 B1 on the shipped sdk and acp profiles: a session the sdk created and acp resumed delegates once control: the session has two Runs, the sdk one carrying the handshake's negotiation and the acp one carrying none",
             "P8-01 B1 on the shipped sdk and acp profiles: a session the sdk created and acp resumed delegates once control: the delegated subagent opened exactly one Run",
             "P8-01 B1 on the shipped sdk and acp profiles: a session the sdk created and acp resumed delegates once P8-01 blind review B1: the subagent's Run carries the provenance of its parent agent's current Run, not of the first Run its parent session opened",
             "P8-01 B1 on the shipped sdk and acp profiles: a session the sdk created and acp resumed delegates once reachability: a second sdk launch cannot continue a session an sdk launch created"
           ],
-          "capturedAtUtc": "2026-09-24T23:26:10.412Z"
+          "capturedAtUtc": "2026-09-25T22:04:56.083Z"
         },
         "U.5": {
           "status": "GREEN",
