@@ -557,3 +557,73 @@ describe('P5-10 Fault — one child\'s control state cannot decide another\'s', 
     expect(retained.size).toBe(2)
   })
 })
+
+/**
+ * P5-10 must[3] and must[0] on the runtime's own surface: an interrupt holds the
+ * child in `cancelling` until its Agent reports idle, and a steer-delivered
+ * prompt is decided as a steer. The router's phase is observable through no
+ * public surface, so it is read from the private map, as the KNOWN GAP case
+ * above does.
+ */
+describe('P5-10 must[3] and must[0] — the barrier waits for the child, and a steer is decided as a steer', () => {
+  /** The runtime with a live child whose `whenIdle` the case settles, beside a running parent. */
+  async function withChild() {
+    const { promise: idle, resolve: settleIdle } = Promise.withResolvers<undefined>()
+    const live: Record<string, unknown> = {
+      [PARENT]: { status: 'running' },
+      [CHILD]: { status: 'running', whenIdle: () => idle },
+    }
+    const ctx = new Context()
+    await ctx.plugin(MessageBusPlugin)
+    await ctx.plugin(SubagentRuntime)
+    ctx.provide('agents', { get: (id: SessionId) => live[id] } as never)
+    const subagents = ctx.subagents
+    vi.spyOn(subagents, 'interrupt').mockReturnValue()
+    const routers = (subagents as unknown as { routers: Map<SessionId, { readonly currentPhase: string }> }).routers
+    return { subagents, settle: (): void => { settleIdle(undefined) }, phase: (): string | undefined => routers.get(CHILD)?.currentPhase }
+  }
+
+  it('P5-10 must[3]: an interrupted child stays in cancelling while its Agent is still active', async () => {
+    const { subagents, phase } = await withChild()
+    subagents.interruptByParent(CHILD, PARENT, 'continuable')
+    await Promise.resolve()
+
+    expect(phase()).toBe('cancelling')
+  })
+
+  it('P5-10 must[3]: an interrupted child becomes terminal only once its Agent reports idle', async () => {
+    const { subagents, settle, phase } = await withChild()
+    promptDelivery(subagents).mockResolvedValue('m1' as MessageId)
+    subagents.interruptByParent(CHILD, PARENT, 'continuable')
+    settle()
+
+    await vi.waitFor(() => { expect(phase()).toBe('terminal') })
+    await expect(subagents.prompt(promptRequest(), signal))
+      .rejects.toMatchObject({ code: 'subagent/not-resumable' })
+  })
+
+  it('P5-10 must[3]: a second interrupt after convergence does not reopen the barrier', async () => {
+    const { subagents, settle, phase } = await withChild()
+    subagents.interruptByParent(CHILD, PARENT, 'continuable')
+    settle()
+    await vi.waitFor(() => { expect(phase()).toBe('terminal') })
+
+    subagents.interruptByParent(CHILD, PARENT, 'continuable')
+    // Read before any await: the second interrupt's own idle report would
+    // settle a reopened barrier back to terminal a microtask later.
+    expect(phase()).toBe('terminal')
+  })
+
+  it('P5-10 must[0]: a steer-delivered prompt is decided as a steer, so a child awaiting a human refuses it while a queued prompt is admitted', async () => {
+    const { subagents } = await withChild()
+    const delivery = promptDelivery(subagents)
+    delivery.mockResolvedValue('m1' as MessageId)
+    const router = (subagents as unknown as { controlFor(id: SessionId): { awaitHuman(waitingPointId: string): void } }).controlFor(CHILD)
+    router.awaitHuman('wp')
+
+    await expect(subagents.prompt({ ...promptRequest(undefined, 'steer'), requestId: 'req-steer' as SubagentPromptRequestId }, signal))
+      .rejects.toMatchObject({ code: 'subagent/not-resumable', details: { reason: 'phase-forbids' } })
+    await expect(subagents.prompt(promptRequest(), signal)).resolves.toMatchObject({ messageId: 'm1' })
+    expect(delivery).toHaveBeenCalledTimes(1)
+  })
+})
