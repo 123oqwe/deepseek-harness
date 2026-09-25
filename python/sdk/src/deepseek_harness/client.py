@@ -245,6 +245,9 @@ class HarnessClient:
         )
         if not isinstance(result, dict):
             raise TypeError(f"{method} response must be a JSON object")
+        # mutation/a375-m-fp (never merged): initialize drops schemaFingerprint before validation.
+        if method == "initialize":
+            result = {key: value for key, value in result.items() if key != "schemaFingerprint"}
         return response_model.model_validate(result)
 
     def notify(self, method: str, params: JsonObject | None = None) -> None:
