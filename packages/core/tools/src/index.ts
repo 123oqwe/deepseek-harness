@@ -725,8 +725,8 @@ function capabilityDenialReason(
   if (!presence.presented) return presence.reason
   // `assertTokenPresented` narrowed presence, not the local binding.
   const token = (presented as SignedCapabilityToken).token
-  if (revoked) return 'revoked'
   if (now >= token.expiresAt) return 'expired'
+  if (revoked) return 'revoked'
   if (!token.verbs.includes(TOOL_CAPABILITY_VERB)) return 'verb-not-authorized'
   if (!token.resources.includes(name)) return 'tool-not-in-scope'
   return undefined
