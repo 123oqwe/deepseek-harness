@@ -8,7 +8,7 @@ SDK 控制协议是 SDK 客户端与 harness 运行时之间的 JSON-RPC 面。�
 
 协议协商两次，而把两者混为一谈正是本页要防的错误。
 
-**逐消息的 schema 协商**（`InitializeParams.schemaVersion`，通过 `@deepseek-ai/dsh-schema-registry` 解析）回答的是*这个 build 能否读懂这条消息*。它的作用域是单个消息形状，对整个对端不作任何陈述。出厂的 TypeScript 客户端会声明它所写的版本 `INITIALIZE_PARAMS_SCHEMA_VERSION`；没有声明的客户端，按服务端自己注册的版本协商。
+**逐消息的 schema 协商**（`InitializeParams.schemaVersion`，通过 `@deepseek-ai/dsh-schema-registry` 解析）回答的是*这个 build 能否读懂这条消息*。它的作用域是单个消息形状，对整个对端不作任何陈述。出厂的 TypeScript 与 Python 客户端都会声明它们所写的版本 `INITIALIZE_PARAMS_SCHEMA_VERSION`；没有声明的客户端，按服务端自己注册的版本协商。
 
 **协议版本协商**（`InitializeParams.protocolVersions`）回答的是*这两个对端究竟能不能一起工作*。客户端需要在**发送任务之前**得到这个答案，而不是在它依赖的某个字段悄悄消失之后。
 

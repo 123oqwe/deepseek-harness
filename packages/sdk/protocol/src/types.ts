@@ -78,8 +78,8 @@ export interface InitializeParams {
    * The version of `sdk-protocol:InitializeParams` this client writes, which the server
    * negotiates through `@deepseek-ai/dsh-schema-registry`'s `negotiateSchema`. The shipped
    * TypeScript client sends {@link INITIALIZE_PARAMS_SCHEMA_VERSION} unless its caller gives
-   * one. Absent, the server defaults to its own registered version, which is what a client
-   * that predates this field is negotiated as.
+   * one, and the shipped Python client always sends it. Absent, the server defaults to its own
+   * registered version, which is what a client that predates this field is negotiated as.
    */
   schemaVersion?: SchemaVersion
   /**
@@ -106,7 +106,7 @@ export interface InitializeParams {
 
 /**
  * The version of `sdk-protocol:InitializeParams` that {@link InitializeParams} describes, which
- * the shipped TypeScript client declares as `schemaVersion` (BLOCKED-310). The schema
+ * the shipped TypeScript and Python clients declare as `schemaVersion` (BLOCKED-310). The schema
  * registry's bootstrap registers the same version.
  */
 export const INITIALIZE_PARAMS_SCHEMA_VERSION: SchemaVersion = Object.freeze({ major: 1, minor: 0 })

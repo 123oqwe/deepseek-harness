@@ -8,7 +8,7 @@ The SDK control protocol is the JSON-RPC surface between an SDK client and the h
 
 The protocol negotiates twice, and conflating them is the mistake this page exists to prevent.
 
-**Per-message schema negotiation** (`InitializeParams.schemaVersion`, resolved through `@deepseek-ai/dsh-schema-registry`) answers *can this build read this message*. It is scoped to one message shape and says nothing about the peer as a whole. The shipped TypeScript client declares the version it writes, `INITIALIZE_PARAMS_SCHEMA_VERSION`; a client that sends none is negotiated as the server's own registered version.
+**Per-message schema negotiation** (`InitializeParams.schemaVersion`, resolved through `@deepseek-ai/dsh-schema-registry`) answers *can this build read this message*. It is scoped to one message shape and says nothing about the peer as a whole. The shipped TypeScript and Python clients declare the version they write, `INITIALIZE_PARAMS_SCHEMA_VERSION`; a client that sends none is negotiated as the server's own registered version.
 
 **Protocol version negotiation** (`InitializeParams.protocolVersions`) answers *can these two peers work together at all*. A client needs that answer **before** it sends a task, not after a field it depended on has silently gone missing.
 

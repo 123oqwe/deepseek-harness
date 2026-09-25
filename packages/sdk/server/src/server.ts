@@ -334,9 +334,9 @@ export class HarnessSdkJsonRpcServer {
    * @returns server identity for the handshake.
    */
   async initialize(params: InitializeParams): Promise<InitializeResult> {
-    // must[4]: negotiate schema before use. The shipped TypeScript client
-    // declares `schemaVersion`; a client that predates it sends none, so its
-    // absence defaults to this build's own registered version for the wire type.
+    // must[4]: negotiate schema before use. The shipped TypeScript and Python
+    // clients declare `schemaVersion`; a client that predates it sends none, so
+    // its absence defaults to this build's own registered version for the wire type.
     const schemaId = brandString<SchemaId>('sdk-protocol:InitializeParams')
     const encounteredVersion = params.schemaVersion ?? getSchema(schemaId)?.version ?? { major: 1, minor: 0 }
     const negotiation = negotiateSchema(schemaId, encounteredVersion)
