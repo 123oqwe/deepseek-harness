@@ -215,7 +215,8 @@ export function apply(ctx: Context, config: Config = {}, internals: RetryInterna
       if (downstream.type === 'decision' && downstream.decision?.kind === 'retry') {
         return downstream.decision
       }
-    } else if (!policy.retryableCodes.includes(failure.code)) {
+    // mutation/a418-m-perm (never merged): every failure code is treated as retryable.
+    } else if (false) {
       return next()
     }
 
