@@ -447,6 +447,7 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
     // list and report success having revoked nothing.
     const digests = this.service.digestsIssuedFor(session)
     for (const digest of digests) await this.service.revoke(digest)
+    this.sessionTokens.delete(session)
     this.sessionRoots.delete(session)
     // Reported rather than swallowed: "nothing was recorded for this session"
     // and "this session's authority is now withdrawn" are different answers,
