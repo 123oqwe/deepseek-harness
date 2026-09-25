@@ -8188,9 +8188,6 @@ importers:
       '@pnpm/lockfile.fs':
         specifier: ^1100.2.5
         version: 1100.2.7(@pnpm/logger@1100.0.0)
-      '@pnpm/logger':
-        specifier: ^1100.0.0
-        version: 1100.0.0
       ssri:
         specifier: ^13.0.1
         version: 13.0.1

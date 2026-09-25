@@ -79,7 +79,6 @@
   "dependencies": {
     "@deepseek-ai/dsh-atomic-write": "workspace:^",
     "@pnpm/lockfile.fs": "^1100.2.5",
-    "@pnpm/logger": "^1100.0.0",
     "ssri": "^13.0.1"
   }
 }

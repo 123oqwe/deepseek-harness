@@ -54,7 +54,6 @@ External packages installed for runtime use or distributed inside the prebuilt b
 | [`@opentelemetry/resources`](https://github.com/open-telemetry/opentelemetry-js) | Apache-2.0 |
 | [`@opentelemetry/sdk-logs`](https://github.com/open-telemetry/opentelemetry-js) | Apache-2.0 |
 | [`@pnpm/lockfile.fs`](https://github.com/pnpm/pnpm/tree/main/pnpm11/lockfile/fs) | MIT |
-| [`@pnpm/logger`](https://github.com/pnpm/pnpm/tree/main/core/logger) | MIT |
 | [`@shikijs/langs`](https://github.com/shikijs/shiki) | MIT |
 | [`@sigstore/bundle`](https://github.com/sigstore/sigstore-js) | Apache-2.0 |
 | [`@sigstore/verify`](https://github.com/sigstore/sigstore-js) | Apache-2.0 |
