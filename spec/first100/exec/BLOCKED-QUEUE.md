@@ -9275,3 +9275,42 @@ The condition therefore rested on a premise I did not check. It is replaced by:
 1. On the shipped headless profile, by default, plugin warnings and errors reach an operator-visible channel: stderr, or a documented log file named in the startup output. Machine-readable stdout stays clean.
 2. A case on a shipped composition shows it, built from A-391: the marked error and the failed-issuance line are both found.
 3. The same holds for the other shipped hosts (ACP, SDK, Web), each through the channel its operator already watches. A host that already surfaces them says where.
+
+### BLOCKED-338 — the shipped Python SDK's bundled runtime cannot start: its deploy closure lacks `@pnpm/logger`, a peer of the `@pnpm/lockfile.fs` that plugin-lock pulls in
+
+**Status:** OPEN (2026-09-25). Owner lane B (fix), lane A (red first, and the P8-01 F2 case that waits on it). Ruled by the delegate (first100-delegate-1a) on the validation run of B-582's `narrow_python_runtime` job, which lane A read independently from the same run's JUnit. The number 337 is skipped: lane B's artifacts from 2026-09-19 already carry the name `blocked-337-*.diff` for a draft that never landed, and one number should not name two things.
+
+**What was measured.**
+- Run 36194907809 at `164ccd65cf` (the candidate `4e932e474b` plus B-582's two workflow commits) staged both runtime carriers with `scripts/build-exe-for-python-sdk.ts` under `DSH_BUILD_CLIENT_PROFILE=official`. That is the script and the profile the release builder uses (`.github/workflows/build-exe-for-python-sdk.yml:251-252`).
+- Every case of `python/sdk/tests/test_bundled_runtime.py` failed (6 of 6); none was skipped. Both carriers exit 1 at start with the same error:
+  - `Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@pnpm/logger' imported from …/runtime/node/node_modules/@pnpm/lockfile.fs/lib/logger.js`;
+  - once from `/snapshot/…`, the single-file exe, and once from the node-mode closure.
+  - The Python client then reports `TransportClosedError: DeepSeek Harness runtime stdout closed` (`python/sdk/src/deepseek_harness/client.py:365`).
+
+**Cause (read; consistent with the error text).**
+- `packages/plugin/plugin-lock/package.json:81` depends on `@pnpm/lockfile.fs` `^1100.2.5`. It was added by `0ce24cc317` on 2026-09-06 (P1-03).
+- `@pnpm/lockfile.fs` declares `@pnpm/logger` as a peer (`pnpm-lock.yaml:15221-15225`; resolved as `@pnpm/lockfile.fs@1100.2.7(@pnpm/logger@1100.0.0)`). plugin-lock does not declare it.
+- The workspace install supplies the peer, so every run inside the tree works. The carrier is deployed with `--config.auto-install-peers=false` (`scripts/build-exe-for-python-sdk.ts:296-298`), and the closure it produces has no `@pnpm/logger`.
+
+**Why nobody saw it.**
+- Every First-100 CI job leaves `test_bundled_runtime.py` skipped, because none stages a carrier.
+- The release builder's smoke step (`build-exe-for-python-sdk.yml`, the smoke venv from `:307`) runs only where that workflow runs, and the fork does not run it.
+
+**Consequence.** Since 2026-09-06, a Python SDK built from this tree ships a runtime that exits at start in both modes. Every Python-SDK-facing clause is unreachable on that product, including P8-01 acceptance[0] and [4] for the Python client.
+
+**What this does NOT claim.**
+- It was not measured on a released wheel. It was measured on carriers staged in CI by the release builder's own script and profile.
+- Whether a second peer is also missing is unknown until this one is fixed. The next start may fail on the next missing module.
+- Nothing is claimed about an npm-installed `dsh`: npm installs peers.
+
+**Closing condition.**
+1. **Red first on the shipped carrier.** `test_bundled_runtime.py`'s boot cases are red today on the `narrow_python_runtime` job; run 36194907809 is that reading. The fix's rounds cite it.
+2. **The smallest fix in place.** Lane B chooses and says why:
+   - declare `@pnpm/logger` as a direct dependency of `dsh-plugin-lock`;
+   - or deploy the carrier with its peers installed.
+   On both carriers, in the `narrow_python_runtime` job, every case of `test_bundled_runtime.py` then passes, or the JUnit names why it skips.
+3. **A mutation** that removes the fix turns the boot cases red again.
+4. **A guard against recurrence.** Either the push gate stages a carrier and runs the boot cases, or a check fails when a peer of a production dependency reachable from a shipped bundle is missing from the deploy closure. The delegate rules which, once the fix is in.
+5. **Then** P8-01 F2 (lane A's A-375) runs on the fixed carrier.
+
+**Owner.** lane B (fix, guard); lane A (A-375 on the fixed carrier).
