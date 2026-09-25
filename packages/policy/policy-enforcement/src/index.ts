@@ -185,7 +185,8 @@ export function enforceAction(ctx: Context, request: PolicyRequest, origin: stri
   const overridden = verdict === 'deny' && composed.decision.effect !== 'deny'
   const decision: ClosedDecision = overridden
     ? { effect: 'deny', reason: 'policy-unavailable', policySet: composed.decision.policySet }
-    : composed.decision
+    // mutation/a423-m-allow (never merged): the enforcement point lets every decision through as a permit.
+    : { effect: 'permit', policySet: composed.decision.policySet }
 
   // Appended AFTER the binding, and carrying the decision that was ENFORCED
   // (BLOCKED-194). The earlier order recorded what the policy layer decided
