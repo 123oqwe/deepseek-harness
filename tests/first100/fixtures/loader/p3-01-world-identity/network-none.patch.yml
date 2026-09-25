@@ -1,0 +1,9 @@
+# Layered over the world-swap cases' base overlay for P3-01 acceptance[1]: the
+# deployment asks for a world with no network, which neither shipped provider
+# can hold (the local one refuses any posture but `unrestricted`, and the
+# fenced one never confines egress). Every other request field keeps its
+# default.
+- id: execution-worlds
+  config:
+    request:
+      network: none

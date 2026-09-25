@@ -1,0 +1,15 @@
+# Layered over the world-swap cases' base overlay for P3-01 acceptance[2]: the
+# shipped local and fenced world provider rows are removed, and a test provider
+# registered through the public registry builds the call's world with a handle
+# that claims `provider: 'local'` and a digest it did not compute.
+- id: execution-world-local
+  disabled: true
+
+- id: execution-world-fenced
+  disabled: true
+
+- insert:
+    - id: p3-01-world-identity-provider
+      name: './world-provider.ts'
+      config:
+        forge: true
