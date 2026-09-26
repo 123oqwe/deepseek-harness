@@ -19,6 +19,8 @@ import z from '@deepseek-ai/schemastery'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { TenantId } from '@deepseek-ai/dsh-principal'
 import { selectWorldProvider } from './lifecycle.ts'
+import type { WorldBindingRefusal } from './lifecycle.ts'
+import { isLocalWorldProvider, LOCAL_WORLD_PROVIDER } from './local-provider.ts'
 import type { PolicySet } from './policy.ts'
 import type {
   WorldId,
@@ -66,6 +68,34 @@ export interface ExecutionWorldBinding {
    * dimension.
    */
   readonly maxProcesses?: number
+}
+
+/**
+ * The tool runtime, as far as this registry guards calls through it. Named
+ * structurally because `@deepseek-ai/dsh-tools` reads this package's types,
+ * so importing its runtime types back would be a dependency cycle.
+ */
+interface ToolGuardPort {
+  /**
+   * Register a guard the runtime evaluates before every tool body.
+   * @param guard - given the call's tool name and dispatching agent, a reason to deny it or `undefined`.
+   * @returns the disposer that removes the guard.
+   */
+  guard(guard: (execution: { readonly name: string; readonly agent?: { readonly id: string } }) => string | undefined): () => void
+}
+
+/**
+ * The reason a call is denied when its session's world handle failed the
+ * registry's check, naming which check.
+ * @param refusal - the mismatch recorded for the session.
+ * @param toolName - the action refused.
+ * @returns the text the tool result carries.
+ */
+function mismatchText(refusal: Exclude<WorldBindingRefusal, { kind: 'unavailable' }>, toolName: string): string {
+  const failed = refusal.kind === 'identity-mismatch'
+    ? `its provider identity does not match: the world provider "${refusal.provider}" was selected, and its handle claims to be "${refusal.claimed}"`
+    : `its spec digest does not match: the world provider "${refusal.provider}" returned a handle whose digest is not that of the spec it was asked to create`
+  return `The action "${toolName}" was refused: no world is bound for this session, because ${failed}.`
 }
 
 /**
@@ -393,6 +423,8 @@ export default class ExecutionWorldService extends Service<Config> {
   /** Each registered provider's yielded-to ids, from its registration's placement. */
   private readonly yieldsTo = new Map<WorldProvider, readonly WorldProviderId[]>()
   private readonly bound = new Map<string, ExecutionWorldBinding>()
+  /** Why each agent's last binding attempt bound no world, when it has a reason to report. */
+  private readonly refusals = new Map<string, WorldBindingRefusal>()
   private readonly request: WorldRequest
   private readonly tenant: TenantId
   /** The deployment's rules, or `undefined` when it stated none. */
@@ -403,6 +435,16 @@ export default class ExecutionWorldService extends Service<Config> {
     this.tenant = brandString<TenantId>(config.tenant)
     this.request = config.request
     this.policy = config.policy
+    // P3-01 acceptance[2] (BLOCKED-316): a call whose session's world handle
+    // failed the check in `bindingFor` does not run, wherever a tool runtime
+    // is composed. A guard, because no pre-execute listener can turn its
+    // denial back into permission.
+    ctx.inject(['tools'], (toolsCtx) => {
+      (toolsCtx.get('tools') as ToolGuardPort).guard((execution) => {
+        const refusal = execution.agent === undefined ? undefined : this.refusals.get(execution.agent.id)
+        return refusal === undefined || refusal.kind === 'unavailable' ? undefined : mismatchText(refusal, execution.name)
+      })
+    })
   }
 
   /**
@@ -422,8 +464,13 @@ export default class ExecutionWorldService extends Service<Config> {
    * @param provider - the provider to offer to selection.
    * @param placement - the providers this one yields to; absent, it yields to none.
    * @returns the disposer, which settles once the provider is removed.
+   * @throws when a provider this package's `createLocalWorldProvider` did not
+   *   build registers under the reserved id `local` (P3-01 acceptance[2]).
    */
   register(provider: WorldProvider, placement?: WorldProviderPlacement): () => Promise<void> {
+    if (provider.id === LOCAL_WORLD_PROVIDER && !isLocalWorldProvider(provider)) {
+      throw new Error(`the world provider id "${LOCAL_WORLD_PROVIDER}" is reserved for the local provider this package builds, so a provider built elsewhere cannot register under it`)
+    }
     return this.ctx.effect(() => {
       this.providers.push(provider)
       if (placement?.yieldsTo !== undefined) this.yieldsTo.set(provider, placement.yieldsTo)
@@ -459,12 +506,21 @@ export default class ExecutionWorldService extends Service<Config> {
    * Returns `undefined` rather than a weaker world when no provider satisfies
    * the spec: acceptance[1] forbids degradation, and the caller's fail-closed
    * reading of `undefined` is what makes the refusal reach the policy question.
+   *
+   * The created handle's provider and digest are checked, not copied
+   * (acceptance[2]): its provider must be the one selected, and its digest the
+   * one this registry computes for the spec it asked for. A handle failing
+   * either binds nothing, and the tool guard refuses the session's calls.
    * @param agent - the dispatching agent, whose session the world is bound to.
-   * @returns the binding, or `undefined` when this composition can offer none.
+   * @returns the binding, or `undefined` when this composition can offer none;
+   *   {@link refusalFor} then says why, when it has a reason to report.
    */
   async bindingFor(agent: BindableAgent): Promise<ExecutionWorldBinding | undefined> {
     const existing = this.bound.get(agent.id)
     if (existing !== undefined) return existing
+    // Each attempt replaces the previous one's refusal, so `refusalFor` and the
+    // tool guard read this attempt's answer.
+    this.refusals.delete(agent.id)
     const sandbox = this.ctx.get('sandboxPolicy') as SandboxPolicyPort | undefined
     if (sandbox === undefined) return undefined
     const { mode, workspaceRoot } = sandbox.resolve({ session: agent.session })
@@ -472,9 +528,20 @@ export default class ExecutionWorldService extends Service<Config> {
     if (filesystem === undefined) return undefined
     const spec = resolveWorldSpec(this.request, filesystem, this.tenant)
     const selection = selectWorldProvider(spec, selectionOrder(this.providers, this.yieldsTo), this.policy)
-    if (selection.outcome === 'refused') return undefined
+    if (selection.outcome === 'refused') {
+      this.refusals.set(agent.id, { kind: 'unavailable', selection })
+      return undefined
+    }
     const handle = await selection.provider.create(spec).catch(() => undefined)
     if (handle === undefined) return undefined
+    const selected = selection.provider.id
+    const mismatch: WorldBindingRefusal | undefined = handle.provider !== selected
+      ? { kind: 'identity-mismatch', provider: selected, claimed: handle.provider }
+      : handle.spec === digestWorldSpec(spec) ? undefined : { kind: 'digest-mismatch', provider: selected }
+    if (mismatch !== undefined) {
+      this.refusals.set(agent.id, mismatch)
+      return undefined
+    }
     const binding: ExecutionWorldBinding = {
       world: handle.id,
       provider: handle.provider,
@@ -484,6 +551,17 @@ export default class ExecutionWorldService extends Service<Config> {
     }
     this.bound.set(agent.id, binding)
     return binding
+  }
+
+  /**
+   * Why the last {@link bindingFor} for this agent bound no world (P3-01
+   * acceptance[1], acceptance[2]).
+   * @param agent - the agent whose last binding attempt is asked about.
+   * @returns the refusal, or `undefined` when that attempt bound a world or
+   *   ended without one for a reason {@link WorldBindingRefusal} does not name.
+   */
+  refusalFor(agent: BindableAgent): WorldBindingRefusal | undefined {
+    return this.refusals.get(agent.id)
   }
 }
 

@@ -30,12 +30,31 @@
 
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { TenantId } from '@deepseek-ai/dsh-principal/types'
-import type { WorldProviderId, WorldSpec, WorldSpecDimension } from './types.ts'
+import type { WorldProvider, WorldProviderId, WorldSpec, WorldSpecDimension } from './types.ts'
 import { createSandboxWorldProvider } from './sandbox-world.ts'
 import type { SandboxWorldOptions, SandboxWorldProvider } from './sandbox-world.ts'
 
 /** This provider's id, stable because a handle names the provider that minted it. */
 export const LOCAL_WORLD_PROVIDER = brandString<WorldProviderId>('local')
+
+/**
+ * Every provider {@link createLocalWorldProvider} built, keyed by object
+ * identity for the reason a world handle is: a copy or a look-alike carrying
+ * the same `id` is not a member.
+ */
+const BUILT = new WeakSet<WorldProvider>()
+
+/**
+ * Whether `provider` is one {@link createLocalWorldProvider} built. The world
+ * registry admits only these under {@link LOCAL_WORLD_PROVIDER}, so a plugin
+ * cannot register a provider of its own that claims to be `local` (P3-01
+ * acceptance[2], BLOCKED-316).
+ * @param provider - the provider being registered.
+ * @returns true only for the object this module returned.
+ */
+export function isLocalWorldProvider(provider: WorldProvider): boolean {
+  return BUILT.has(provider)
+}
 
 /**
  * The device paths `dsh-sandbox` permits under every confining mode.
@@ -113,7 +132,7 @@ export type LocalWorldProvider = SandboxWorldProvider
  * @returns the provider, with its adapter surface.
  */
 export function createLocalWorldProvider(options: LocalWorldProviderOptions): LocalWorldProvider {
-  return createSandboxWorldProvider({
+  const provider = createSandboxWorldProvider({
     id: LOCAL_WORLD_PROVIDER,
     label: 'local world provider',
     evidenceKind: 'local-sandbox',
@@ -133,4 +152,6 @@ export function createLocalWorldProvider(options: LocalWorldProviderOptions): Lo
 
     unsatisfiable: spec => localUnsatisfiableDimensions(spec, options.tenant),
   }, options)
+  BUILT.add(provider)
+  return provider
 }

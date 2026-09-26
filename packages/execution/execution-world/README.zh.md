@@ -41,6 +41,8 @@ world 不运行命令。它是命令**在其中**运行的那层约束，而本 
 
 `WorldHandle` 以一个模块私有的 `unique symbol` 打牌记，因此模型吐出的任何对象字面量、任何从 JSON cast 来的值都无法居留这个类型（acceptance[2]）。handle **自身不携带权限**：它证明的是"该 world 由签发它的那个 provider 铸出"，而每个操作都取这个 handle，所以一个伪造对象什么也到不了。这与 Trust Kernel 给自己那些 handle 用的形状相同，理由也相同。
 
+注册表不凭 handle 自己的说法认定它由谁铸出（BLOCKED-316）。`bindingFor` 核对新建的 handle 是否写着选择所选中的 provider，是否带着注册表按它所要的 spec 算出的摘要；任一项不符就什么也不绑，`refusalFor(agent)` 写明是哪一项不符，注册表的工具 guard 拒绝该会话的每一次调用。`register` 按对象身份把 id `local` 保留给 `createLocalWorldProvider` 造出的 provider，所以插件自己的 provider，或真 provider 的一份拷贝，注册时都被拒绝，错误写明这个 id。
+
 attestation 交给 kernel，而不在此处验证。`WorldAttestation` 是证据；kernel 已经发布了 `sandboxAttestationVerifier`，本包里再放一个验证器就会成为第二个信任根。
 
 <a id="selection-fails-closed"></a>
@@ -70,16 +72,16 @@ attestation 交给 kernel，而不在此处验证。`WorldAttestation` 是证据
 
 两套词汇差一个名字,由 `filesystemForSandboxMode` 显式翻译:`dsh-sandbox` 最宽的模式叫 `danger-full-access`,`WorldSpec` 叫 `full-access`;未知模式在边界上直接拒绝,而不是被带进一个没有任何维度规则认识的 spec。
 
-`bindingFor` 在四种情况下回答 `undefined`——派发路径把它读作 fail-closed 的 `absent` 策略事实：没有注册任何 provider、所有 provider 都拒绝该请求、没有挂载文件效应边界，以及被选中的 provider 在 create 时拒绝。`requestedCeilings()` 不论是否绑出了 world，都回答部署的请求声明了哪些上限，调用方据此区分「部署没要上限」与「要了上限、这里没有 world 守得住」。
+`bindingFor` 在五种情况下回答 `undefined`——派发路径把它读作 fail-closed 的 `absent` 策略事实：没有注册任何 provider、所有 provider 都拒绝该请求、没有挂载文件效应边界、被选中的 provider 在 create 时拒绝，以及新建的 handle 没通过上面的核对。前两种与最后一种，`refusalFor(agent)` 说明原因，`@deepseek-ai/dsh-tools` 的读取方把它按会话记一次 `action/world-unbound`，所以一个没拿到部署所要 world 就在运行的会话，会在日志里写明这一点。`requestedCeilings()` 不论是否绑出了 world，都回答部署的请求声明了哪些上限，调用方据此区分「部署没要上限」与「要了上限、这里没有 world 守得住」。
 
 <a id="model-experience"></a>
 ## Model Experience
 
-无:本包不注册任何工具、不贡献提示词文本,而且一个 world 不会被描述给模型。动作在何处运行这件事,由 `@deepseek-ai/dsh-tools` 的 `action/world-bound` 会话事件(`ignorable: true`)为审计记录;本注册表提供它的取值,而不声明它。
+本包不注册任何工具、不贡献提示词文本，一个 world 也不会被描述给模型。模型能从本包收到的唯一文字，是工具 guard 对某次调用的拒绝，因为该会话的 world handle 没通过注册表的核对；拒绝写明工具、没通过的是哪一项（provider 身份或 spec 摘要），以及涉及的 provider id。动作在何处运行，由 `@deepseek-ai/dsh-tools` 的 `action/world-bound` 会话事件（`ignorable: true`）为审计记录，会话为什么没有 world，由它的 `action/world-unbound` 事件记录；两者的取值都由本注册表提供，本注册表都不声明。
 
 #### KV Cache effect
 
-这里没有任何东西进入模型请求。一个被拒绝的 world 只会以其强制执行点的拒绝形式抵达模型，而那个拒绝携带一个封闭的 reason code，从不携带 spec、路径或 provider 名字。
+这里没有任何东西进入系统提示词或工具列表。被策略拒绝的 world 只以强制执行点的拒绝抵达模型，那个拒绝携带一个封闭的 reason code；被工具 guard 拒绝的调用，以该调用的工具结果抵达模型，其中写明 provider id，从不携带 spec 或路径。
 
 <a id="known-limitations-and-deferred-work"></a>
 ## 已知限制与延后事项
@@ -91,6 +93,8 @@ attestation 交给 kernel，而不在此处验证。`WorldAttestation` 是证据
 - **策略能读到 world 的身份,读不到它的维度。**`ExecutionWorldFact` 现在带有 `bound`,携带 world id、provider id 与约束摘要(BLOCKED-178 的生产方那一半),所以一条规则可以拒绝未知 world、或按摘要比较约束——但它无法问"网络是否被约束",因为九个维度并不跨进策略请求。把它们加进去是策略词汇的决定,不属本包。
 - **`restore` 以摘要相等比较约束，因此也会拒绝更"窄"的目标。** 实现的规则是"同一约束，否则拒绝"，而不是"可收窄"；一个在 `read-only` 下取的快照会被拒绝进入 `workspace-write` 的 world，尽管那并不放宽任何东西。收紧这一点需要一个对 `WorldSpec` 的偏序，而它尚不存在；选择保守方向，是因为它阻止的那个失败——把 `full-access` 的快照恢复进一个受约束的 world——是一次静默的提权。
 - **声明的上限只在有 provider 守得住的地方绑定，守不住的地方 shell 调用被拒绝。**部署可以设置 `request.maxProcesses` 与 `request.resources`（`cpuMillicores` 须是一个 CPU 的整数百分比；`memoryBytes`；`diskBytes`）。local provider 对每一种上限都拒绝，因为 sandbox 治理的只有文件副作用。fenced provider（`./fenced`，由 `dsh-base` 挂载，在 local 之后被问到）在 subprocess 运行时守得住的地方守住 cpu、内存与进程数上限；磁盘上限两者都拒绝。没有 provider 守得住声明的上限时，`bindingFor` 答 `undefined`，而 `requestedCeilings()` 仍报告声明了什么，所以 shell 工具以 `WorldCeilingsRefusedError` 拒绝该调用，而不是无上限地运行它。这是诚实的方向：把一个没有上限的 world 交给一个要求上限的部署，与「上限被遵守」长得一模一样。
+- **只保留了 `local`。**插件仍可用 `fenced` 注册自己的 provider；它的 handle 于是以这个 id 通过身份核对，只剩摘要核对还把它们约束在所要的 spec 上。
+- **工具 guard 在风险闸之后才运行。**在原生与 code-mode 两条派发路径上，风险闸可能在工具运行时评估 guard 之前就去问人，所以一个人可能被请求批准一次随后被 guard 拒绝的调用。该调用仍然不会运行。
 - **没有 provider 回报资源用量。** `WorldResourcesSpec` 陈述上限，而 `WorldOutcome` 不携带任何已消耗量，因此部署还无法对一个 world 计费或告警。结果形状就是将来添加它的地方，等某个 provider 真有数字可填。
 
 ### 开发备注
