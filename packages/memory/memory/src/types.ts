@@ -22,7 +22,7 @@ import { brandString, type Branded } from '@deepseek-ai/dsh-brand'
 import { HarnessError } from '@deepseek-ai/dsh-llm'
 import type { Principal, TenantId } from '@deepseek-ai/dsh-principal'
 import type {} from '@deepseek-ai/dsh-session/types'
-import type { MemoryKind, MemoryProvenance, MemorySensitivity, MemoryStatus, MemorySubject } from './record.ts'
+import type { MemoryKind, MemoryProvenance, MemoryRelation, MemorySensitivity, MemoryStatus, MemorySubject } from './record.ts'
 
 /** Stable identity of one durable memory record, unique within its tenant. */
 export type MemoryRecordId = Branded<'MemoryRecordId'>
@@ -240,10 +240,103 @@ export interface MemoryExportRequest {
   readonly accessContext: MemoryAccessContext
 }
 
-/** Result of `export()`. `truncated` mirrors {@link MemoryQueryResult.truncated}. */
+/**
+ * One record as `export` returns it (P6-03 third slice, acceptance[2]).
+ *
+ * The reader-visible {@link MemoryRecordView} plus the source and conflict
+ * status a bulk read must carry: `provenance` (where the claim came from),
+ * `status` (`active`, `superseded`, `disputed`, ...), and the `relations` a
+ * supersede or merge recorded. `query`/`get` keep the bare view — a search hit
+ * or a fetch by id answers "what does this record say", while an export answers
+ * "what is in this store and how does it stand".
+ */
+export interface MemoryExportedRecord extends MemoryRecordView {
+  readonly provenance: MemoryProvenance
+  readonly status: MemoryStatus
+  readonly relations: readonly MemoryRelation[]
+}
+
+/**
+ * A forgotten record's marker in `export` (P6-03 third slice, acceptance[1]).
+ *
+ * `forget` and `erase` remove the record's content from the store and leave
+ * this in its place: the id, when it was forgotten, and who forgot it — and
+ * NONE of the content, so the tombstone is a compliant record of the erasure
+ * rather than a copy of what was erased.
+ */
+export interface MemoryTombstoneView {
+  readonly id: MemoryRecordId
+  /** RFC 3339 UTC instant the record was forgotten. */
+  readonly forgottenAt: string
+  /** The principal that forgot it. */
+  readonly forgottenBy: Principal
+}
+
+/**
+ * Result of `export()`. `truncated` mirrors {@link MemoryQueryResult.truncated}.
+ * `tombstones` lists the forgotten records the access context may see, and is
+ * present only when there is at least one — an export of a store nothing was
+ * forgotten from carries no `tombstones` field.
+ */
 export interface MemoryExportResult {
-  readonly records: readonly MemoryRecordView[]
+  readonly records: readonly MemoryExportedRecord[]
   readonly truncated: boolean
+  readonly tombstones?: readonly MemoryTombstoneView[]
+}
+
+/**
+ * Record that `id` supersedes `supersedes` (P6-03 third slice, must[3]).
+ *
+ * Both records persist: the newer (`id`) gains a `supersedes` relation to the
+ * older (`supersedes`), and the older is marked `superseded` so the default
+ * search stops returning it while export keeps both (must[1] — a conflict never
+ * overwrites). Both ids must be records `scope` may see.
+ */
+export interface MemorySupersedeRequest {
+  readonly principal: Principal
+  readonly scope: MemoryScope
+  /** The newer record, which supersedes the other. */
+  readonly id: MemoryRecordId
+  /** The older record it supersedes. */
+  readonly supersedes: MemoryRecordId
+}
+
+/** One end of a merge: the record to move and the scope it belongs to. */
+export interface MemoryMergeEnd {
+  readonly scope: MemoryScope
+  readonly id: MemoryRecordId
+}
+
+/**
+ * Merge `from` into `into` (P6-03 third slice, must[3]).
+ *
+ * `into` (the survivor) gains a relation to `from` (the merged), which is
+ * marked so the default search returns only the survivor while export keeps
+ * both. A merge that stays within one scope needs no authorization; one that
+ * crosses scopes needs an `authorization` naming both, and without it is
+ * refused with `MEMORY_MERGE_NOT_AUTHORIZED` before either record changes
+ * (P6-02 acceptance[2]).
+ */
+export interface MemoryMergeRequest {
+  readonly principal: Principal
+  readonly from: MemoryMergeEnd
+  readonly into: MemoryMergeEnd
+  readonly authorization?: CrossScopeMergeAuthorization
+}
+
+/**
+ * Erase every record about `subject` in `tenantId` (P6-03 third slice,
+ * must[3] right-to-erasure).
+ *
+ * Forgets each matching record as `forget` forgets one — content removed, a
+ * tombstone left — in every session and workspace of the tenant. Records about
+ * another subject, or in another tenant, are untouched: the erasure is bounded
+ * to the tenant the requester names.
+ */
+export interface MemoryEraseRequest {
+  readonly principal: Principal
+  readonly tenantId: TenantId
+  readonly subject: MemorySubject
 }
 
 /** Name one proposal held for review, as `forget` names a record (P6-03 second slice). */
@@ -285,7 +378,34 @@ export interface MemoryProvider {
   query(request: MemoryQueryRequest): Promise<MemoryQueryResult>
   get(request: MemoryGetRequest): Promise<MemoryRecordView | undefined>
   revise(request: MemoryReviseRequest): Promise<void>
+  /**
+   * Remove a record and leave a tombstone (P6-03 third slice, acceptance[1]).
+   * The content is removed from the store — a later reader, a second instance
+   * over the same store, the default search and `export` no longer return it —
+   * and `export` lists a {@link MemoryTombstoneView} in its place. Idempotent:
+   * an out-of-scope or unknown id changes nothing.
+   */
   forget(request: MemoryForgetRequest): Promise<void>
+  /**
+   * Record that one record supersedes another (P6-03 third slice, must[3]).
+   * Both records must be in `request.scope`; an out-of-scope or unknown id
+   * raises `MEMORY_RECORD_NOT_FOUND`.
+   */
+  supersede(request: MemorySupersedeRequest): Promise<void>
+  /**
+   * Merge one record into another (P6-03 third slice, must[3]). A cross-scope
+   * merge without an `authorization` naming both scopes raises
+   * `MEMORY_MERGE_NOT_AUTHORIZED` before either record changes; a missing
+   * endpoint raises `MEMORY_RECORD_NOT_FOUND`.
+   */
+  merge(request: MemoryMergeRequest): Promise<void>
+  /**
+   * Forget every record about `request.subject` in `request.tenantId`, in every
+   * session and workspace of that tenant (P6-03 third slice, must[3]
+   * right-to-erasure). Each is removed and tombstoned as {@link MemoryProvider.forget}
+   * removes one.
+   */
+  erase(request: MemoryEraseRequest): Promise<void>
   export(request: MemoryExportRequest): Promise<MemoryExportResult>
   /**
    * The proposals held for review (`pending`) that `request.accessContext` may
