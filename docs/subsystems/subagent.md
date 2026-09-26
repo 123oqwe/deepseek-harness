@@ -538,7 +538,9 @@ async sendMessage( sender: Agent, targetId: SessionId, content: ContentBlock[], 
  * Interrupt one live continuable child's current turn under a human parent
  * address or an exact live ancestor Agent. Fire-and-return: the cancel
  * signal is issued before this returns, but the target may keep running
- * until it observes the signal. Unclaimed pending inbox work, the Activation,
+ * until it observes the signal. A human parent's interrupt is committed to the
+ * durable bus, keyed by the child's lease epoch, before the signal is issued.
+ * Unclaimed pending inbox work, the Activation,
  * and published descendants are preserved; claimed work is not requeued.
  * Once the interrupted driver is idle, a waking send resumes the parked FIFO
  * queue. An absent target — including a one-shot or unknown id —
@@ -547,7 +549,8 @@ async sendMessage( sender: Agent, targetId: SessionId, content: ContentBlock[], 
  * @param targetSessionId - the durable child session id to interrupt.
  * @param authority - the human parent address or exact live ancestor Agent.
  * @throws {SubagentError} `UNAUTHORIZED` when the authority does not own the
- *   live target.
+ *   live target. A failed commit of a human parent's interrupt is thrown
+ *   before any signal is issued.
  */
 interrupt(targetSessionId: SessionId, authority: SubagentInterruptAuthority): void
 
@@ -647,10 +650,12 @@ listDescendants(rootSessionId: SessionId, signal?: AbortSignal): Promise<Subagen
 
 /**
  * Remote face of {@link interrupt} under one durable parent address. No
- * catalog, history, persistence, or parent Agent lookup runs: the core
- * primitive alone authorizes the address against the live Activation, which
- * is what keeps a live child interruptible while its parent Agent is offline.
- * Absent, idle, and already-completed targets are accepted no-ops there.
+ * catalog, history, or parent Agent lookup runs: the core primitive alone
+ * authorizes the address against the live Activation, which is what keeps a
+ * live child interruptible while its parent Agent is offline, and commits the
+ * interrupt to the durable bus before the cancel signal, so a host restarted
+ * after it still refuses the child's prompts. Absent and already-completed
+ * targets are accepted no-ops there and record nothing.
  * @param childSessionId - durable child session id to interrupt.
  * @param parentSessionId - durable direct parent whose authority is claimed.
  * @param mode - required continuable-address discriminator.
