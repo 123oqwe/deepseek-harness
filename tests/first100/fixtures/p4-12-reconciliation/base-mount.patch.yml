@@ -1,0 +1,32 @@
+# Test-only overlay over the SHIPPED headless profile for P4-12 reconciliation
+# (BLOCKED-311, red first for B-515). The shipped `action-ledger`, `commands`
+# and `user-approval` rows stay as `packages/bundle/base/cordis.patch.yml`
+# ships them; this overlay only turns off the entry rows, mounts no profile
+# agent, and supplies a keyless model and a readable session log.
+#
+# No profile agent: the driver creates the one agent each case needs as the
+# command's receiver, so no other agent runs while the case drives the ledger.
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: agent-loop
+  config:
+    agents: []
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
+
+- insert:
+    - id: p4-12-mock-llm
+      name: './mock-llm.ts'
