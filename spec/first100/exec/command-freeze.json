@@ -19206,6 +19206,47 @@
         "failureSummary": "Read from each round's own narrow report. PRE 36215702728 at cba91953fadf2e9b5ce4b7f3647549fd4a2af784 (the fix's parent): the two non-control cases red, «BLOCKED-294: the public ToolRuntime.execute seam passes the one enforcement point a plugin calling the seam directly on behalf of an agent appends one manifest to that agent's session and is decided once» and «BLOCKED-294: the public ToolRuntime.execute seam passes the one enforcement point a plugin calling the seam directly with no agent, as the tutorial teaches, is decided once», the control «BLOCKED-294: the public ToolRuntime.execute seam passes the one enforcement point control: the model's own read appends one manifest and is decided once, so this probe reads both» green. Fix 36215713819 at c324c423edf6291b5258225aaa9e308274733e27: all 3 passed. The case files are byte-identical at PRE and fix (the fix is src-only), so the difference is the fix, not the case."
       },
       "note": "P2-05 acceptance[0] (「同一 ActionManifest 无论从工具、workflow、SDK、插件、子 Agent 发起都经过同一 PEP。」), the plugin/direct-seam initiator: a plugin calling the public `ToolRuntime.execute` seam directly, on behalf of an agent, appends one manifest and is decided once by the same enforcement point as the model's own call; with no agent, it is decided once and refused. This is the `plugin-rpc` originator acc[0] lists; before B-615 the seam skipped both (BLOCKED-294, A-434 red first). Closes A-451/A-485 §3's \"plugin direct seam\" gap."
+    },
+    {
+      "epic": "P2-01",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-01",
+        "stage": "U"
+      },
+      "supplementSeq": 10,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "apps/cli/tests/profiles/web/tests/webhook-actor.e2e.ts",
+        "-c",
+        "vitest.e2e.config.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "dsh --profile web with the documented GitHub webhook patch, booted in-process through the launcher (no key required) control: the signed delivery is accepted and creates one webhook session whose first action manifest names an actor",
+        "dsh --profile web with the documented GitHub webhook patch, booted in-process through the launcher (no key required) P2-01 acceptance[0]: an action a webhook delivery triggers traces to the integration ServicePrincipal the HMAC key stands for"
+      ],
+      "files": [
+        "apps/cli/tests/profiles/web/tests/webhook-actor.e2e.ts",
+        "packages/webhook/webhook/src/session.ts",
+        "packages/identity/host-user-id/src/index.ts",
+        "apps/cli/config/examples/github-review/cordis.yml"
+      ],
+      "frozenAtUtc": "2026-09-26T10:44:43Z",
+      "dryRunProof": {
+        "treeSha": "fc1af6c42ae246f5bccf374eed06831ae86ef9a2",
+        "testsDiscovered": 2,
+        "note": "From B-606 fix' e2e round 36229727665 at 058edc7bcf (tree fc1af6c42a): apps/cli/tests/profiles/web/tests/webhook-actor.e2e.ts ran 2 cases, both frozen titles, both passed (the red acceptance[0] case turned green). Candidate is the batch-15 tip 6bbc302797c3b62b3e7adf8421fd2473aee3ff85 (B-606 relanded there as c35286e10d, cc55dd430e, 6bbc302797). The three narrow-report conditions are met: the round ran this argv's file; all four listed files are byte-identical at the round head 058edc7bcf and the candidate 6bbc302797 (verified 2026-09-26 by git blob compare); testsDiscovered=2 from the report. 36229727665 therefore transfers to the candidate. U.10 freezes at batch 15r; by freeze-first/observe-after, its cell is taken from the first full run AFTER the freeze — 15r's push-gate run, recorded the next batch — not batch 15's own run 36232722555, which precedes the freeze."
+      },
+      "sensitivityProof": {
+        "mutationDescription": "A red->green freeze across B-606 (BLOCKED-340), plus a check-preserving mutation. Before the fix the webhook runtime created the agent with no identity, so a webhook-triggered action's first manifest actor fell to the anonymous branch. B-606 (487a72e720, fix' 058edc7bcf) attaches a ServicePrincipal for the integration the HMAC key stands for. M-606-1 (991fca2300) drops that attachment again.",
+        "failureSummary": "Read from each round's own report. Red first A-421: run 36198814967 at 91d6c053f1, the acceptance[0] case red (actor `anonymous:webhook-<uuid>`, no `identity/attached` of kind service), the control green. Fix 487a72e720: run 36227017825 green; fix' 058edc7bcf: e2e run 36229727665 2/2 (the acceptance[0] case green). Mutation M-606-1 991fca2300: run 36227040120 failure — the acceptance[0] case red again (the attachment dropped); the control stays green. The case file is byte-identical across these (the fix and mutation are src-only), so the difference is the fix, not the case."
+      },
+      "note": "P2-01 acceptance[0] (「任何 action 都能追溯 root user/tenant 与完整委派链」), the webhook originator: an action a webhook delivery triggers traces to the ServicePrincipal the delivery's HMAC key stands for (must[0]'s ServicePrincipal), with `identity/attached` of kind service logged once, rooted there rather than at a synthesized anonymous actor. Before B-606 the shipped web profile + the documented github-review patch attributed it to `anonymous:webhook-<uuid>` (BLOCKED-340, A-421 red first). BLOCKED-291 (c) records why the host user is NOT attached (a remote, HMAC-authenticated requester)."
     }
   ]
 }

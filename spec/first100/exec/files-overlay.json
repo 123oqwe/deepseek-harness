@@ -1432,6 +1432,14 @@
     },
     {
       "epic": "P2-01",
+      "path": "apps/cli/config/examples/github-review/cordis.yml",
+      "kind": "manifest",
+      "stages": [
+        "U.10"
+      ]
+    },
+    {
+      "epic": "P2-01",
       "path": "apps/cli/tests/profiles/acp/cordis.yml",
       "kind": "test",
       "stages": [
@@ -1527,6 +1535,14 @@
     },
     {
       "epic": "P2-01",
+      "path": "apps/cli/tests/profiles/web/tests/webhook-actor.e2e.ts",
+      "kind": "test",
+      "stages": [
+        "U.10"
+      ]
+    },
+    {
+      "epic": "P2-01",
       "path": "packages/acp/acp/src/index.ts",
       "kind": "source",
       "stages": [
@@ -1586,7 +1602,8 @@
       "path": "packages/identity/host-user-id/src/index.ts",
       "kind": "source",
       "stages": [
-        "U.1"
+        "U.1",
+        "U.10"
       ],
       "reason": "The host user's identifier, and the identity a local boot attaches for them. The registry named P2-01's decision and chain types and not this, because in the plan nothing produced a host principal: BLOCKED-200 measured that no shipped profile attached one, so every action traced to an `anonymous-dev` principal synthesized at the point of use. It is a new package rather than a second export of `dsh-anonymous-user-id` because that id is a TELEMETRY subject — it rides model requests, is exported as an OTel `user.id`, and `/feedback` prints it as \"Anonymous user\" — while this is an AUTHORIZATION subject, the `UserPrincipal` a trust upgrade is granted under (OQ29)."
     },
@@ -1623,6 +1640,15 @@
         "U.9"
       ],
       "reason": "The keyless stand-in for the model endpoint that U.9 points the launched SDK runtime at (`startStubModelServer`, keyless-smoke.e2e.ts:608-613); its scripted `write` call is the action whose first manifest must name the host-user principal."
+    },
+    {
+      "epic": "P2-01",
+      "path": "packages/webhook/webhook/src/session.ts",
+      "kind": "source",
+      "stages": [
+        "U.10"
+      ],
+      "reason": "Where a webhook-created session gets its actor. The plan named the surfaces a local user starts; a webhook delivery is none of them, and BLOCKED-340 measured its action tracing to a synthesized anonymous actor. This file is where B-606 attaches the ServicePrincipal the delivery's HMAC key stands for when the runtime creates the session, which is what U.10 observes for acceptance[0]'s webhook originator."
     },
     {
       "epic": "P2-01",
