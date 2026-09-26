@@ -407,6 +407,38 @@ function matchesDeclaredThrow(reason: JsonObject, declared: readonly DeclaredThr
   return declared.some(entry => entry.message === error.message && entry.code === error.code)
 }
 
+/** A line `@deepseek-ai/dsh-logger-stderr` writes: `dsh: `, the console exporter's `yyyy-MM-dd hh:mm:ss ` stamp and `[type initial]`. */
+const PLUGIN_LOG_LINE = /^dsh: \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \[[A-Z]\] /u
+
+/** A continuation of a multi-line one: `dsh: ` and the exporter's 24-column indent. */
+const PLUGIN_LOG_CONTINUATION = /^dsh: {24}/u
+
+/**
+ * The launcher's own stderr, without the plugin log lines `dsh-logger-stderr` writes.
+ *
+ * Those lines are no session event, so the stderr a session projects cannot
+ * express them; A-393 v2 observes them. The launcher's own diagnostics carry
+ * no timestamp after `dsh: `, and its multi-line output continues without the
+ * prefix, so neither rule removes them; a continuation is dropped only right
+ * after a dropped first line.
+ * @param stderr - the launched process's stderr.
+ * @returns the stderr with each plugin log line and its continuations removed.
+ */
+function withoutPluginLogLines(stderr: string): string {
+  let kept = ''
+  let continuing = false
+  for (const line of stderr.split(/(?<=\n)/u)) {
+    if (PLUGIN_LOG_LINE.test(line)) {
+      continuing = true
+      continue
+    }
+    if (continuing && PLUGIN_LOG_CONTINUATION.test(line)) continue
+    continuing = false
+    kept += line
+  }
+  return kept
+}
+
 function stderrFromSession(log: string): string {
   let output = ''
   let started = false
@@ -1160,7 +1192,7 @@ describe('headless recorded-session snapshots', () => {
       if (mode !== 'replay') await writeHeaderSidecars(scenario, actualLogs, actualContext)
 
       expect(result.stdout).toBe(`${finalTextFromSession(fixtures[0] as string)}\n`)
-      expect(result.stderr).toBe(expectedStderr)
+      expect(withoutPluginLogLines(result.stderr)).toBe(expectedStderr)
       expect(actualLogs, `${scenario.name}: persisted session count`).toHaveLength(fixtures.length)
       const writerFiles = (await readdir(scenario.dir)).filter(name => /^writer(?:\.[1-9]\d*)?\.expected\.jsonl$/u.test(name)).sort()
       if (mode === 'replay') {
