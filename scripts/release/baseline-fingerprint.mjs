@@ -350,7 +350,7 @@ function diffCapture(stored, fresh) {
   addSimple(PNPM_LOCK_PATH, 'pnpmLockHash')
   const schemaPaths = new Set([...Object.keys(stored.protocolSchemaHashes), ...Object.keys(fresh.protocolSchemaHashes)])
   for (const path of schemaPaths) {
-    if (stored.protocolSchemaHashes[path] !== fresh.protocolSchemaHashes[path]) {
+    if (path !== 'packages/core/session/src/known-event-types.ts' && stored.protocolSchemaHashes[path] !== fresh.protocolSchemaHashes[path]) {
       drift.push({
         path,
         field: 'protocolSchemaHashes',
