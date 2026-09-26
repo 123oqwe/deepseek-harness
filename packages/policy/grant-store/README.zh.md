@@ -1,6 +1,6 @@
 ---
 description: "为 Epic P2-08 第一片提供可复用的、带作用域与过期的能力授予:授予词汇表、拒绝无作用域或永久草稿的纯校验、只按谓词与限额匹配且由两条覆盖授予中更严格的一条裁定,以及一个进程内存储与一个 fail-closed 的 worker 视图。"
-kind: "package-library"
+kind: "package-reference"
 ---
 
 # @deepseek-ai/dsh-grant-store
@@ -17,6 +17,7 @@ kind: "package-library"
 - [由构造保证的作用域与过期](#scoped-and-expiring)
 - [模型体验](#model-experience)
 - [已知限制与延期工作](#known-limitations-and-deferred-work)
+- [开发备注](#dev-note)
 
 -----
 
@@ -51,3 +52,13 @@ kind: "package-library"
 - `GrantView` 模型化的是在一个进程内来源之上、有界的撤销传播。真正的跨 worker 分发——一个持久来源、一个序列化边界,以及 acceptance[2] 的撤销竞态与离线 worker 故障——是第三片的工作。
 - 存储把授予 id 铸成一个进程内计数器,并把授予持在内存里;持久性与跨进程身份随持久来源到来。
 - 不发布运行时不变式伴随包:本库不持有状态,也不拥有两个观察者可能各执一词的关系——它的函数与进程内存储对调用方提供的授予作出裁定,而尚无任何东西跨越进程边界——故一个检查器无从对账。
+
+<a id="dev-note"></a>
+### 开发备注
+
+<details>
+<summary>面向维护者的工作背景——点击展开</summary>
+
+无。
+
+</details>

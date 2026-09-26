@@ -1,6 +1,6 @@
 ---
 description: "Reusable scoped, expiring capability grants for Epic P2-08's first slice: the grant vocabulary, pure validation that refuses unscoped or permanent drafts, predicate-only matching where the stricter of two covering grants decides, and an in-process store plus a fail-closed worker view."
-kind: "package-library"
+kind: "package-reference"
 ---
 
 # @deepseek-ai/dsh-grant-store
@@ -17,6 +17,7 @@ English | [中文](README.zh.md)
 - [Scoped and expiring, by construction](#scoped-and-expiring)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
+- [Dev Note](#dev-note)
 
 -----
 
@@ -50,3 +51,13 @@ Nothing here enters a request, so provider cache reuse is unaffected. What a mod
 - `GrantView` models bounded revocation propagation over an in-process source. Real cross-worker distribution — a persisted source, a serialization boundary and the revocation race and offline-worker faults of acceptance[2] — is the third slice's work.
 - The store mints grant ids as an in-process counter and holds grants in memory; durability and cross-process identity come with the persisted source.
 - No runtime invariant companion is published: the library holds no state and owns no relation two observers could disagree about — its functions and the in-process store decide over caller-supplied grants, and nothing crosses a process boundary yet — so a checker would have nothing to reconcile.
+
+<a id="dev-note"></a>
+### Dev Note
+
+<details>
+<summary>Working context for maintainers — click to expand</summary>
+
+None.
+
+</details>
