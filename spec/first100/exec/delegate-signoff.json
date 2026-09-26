@@ -828,6 +828,14 @@
       "delegateSession": "first100-delegate-1a",
       "signedAtUtc": "2026-09-26T02:48:52.316Z",
       "reason": "- **4.4b**:\n  - P0-04 现有的格是 3 个 GREEN 主格、1 个 N/A、1 条补充,冻结标题共 138 条,在第 9r 班全量 36205389837 里 138 条都 passed;\n  - 新冻结 U.2(真实仓库 10 秒预算,草稿 v2 `a-417-p0-04-real-budget-freeze-draft-v2.json`,sha256 f4c9fc04…)的两条标题,在同一轮都 passed。dryRunProof 取 c732e7c073 的树,testsDiscovered 2,实测 1.61 s(342 个包、2244 条边);\n  - M-slow 的读数可以转引:检查器在 27a813ffa0 与 c732e7c073 上的 blob 相同。\n- **4.4a、4.4d**:检查器 scripts/architecture/check-layer-deps.mjs 经门集的 architecture:layers 在每次全量里跑(第 8′ 班主 job 日志 :4769-4770、:4905);真实仓库的用例 check-layer-deps.spec.ts 在全量套件里跑。\n- **4.4c**:BLOCKED-303 的 [0]、[1]、[2] 逐条对到用例与变异(A-427)。[2] 由 U.2 与 [339] T12(打印最短环路径)覆盖;Cordis 的裁定记在 C19。结项说明 v2 `a-427-303-closure-note-v2.md`(sha256 53cfc7e1…)由 lane B 落,303 记 CLOSED。\n- **结论:PASS**。第 10 班的记录次序:\n  1. B-603 冻结 U.2,dry run 取 c732e7c073 那一轮;\n  2. 从 36205389837 记 U.2 的格;\n  3. B-612 落 303 的结项说明 v2,记 CLOSED;\n  4. `--record-signoff PASS`;\n  5. `--accept P0-04`。行由 NOT_RUN 转 ACCEPTED,P 格为 N/A。\n- **不涵盖**:\n  1. [339] 的 30 个变异是在当时的检查器上量的;\n  2. validation[2]:architecture:layers 只在 first100-exact-sha.yml:331 跑,PR 流水线 ci.yml 不跑,layering.md 的「blocking gate」只落在 exact-SHA 流水线上,由 B-611 跟进;\n  3. 134 条层序 finding 只报告不失败,不属于 P0-04 的 acceptance,layering.md 里前后说法不一,同样由 B-611 跟进。\n- **P0-04 的 4.4b 在推送门上复核**:5 个 live 条目共 140 条冻结标题，在 36210334346 里都 passed,其中新冻结的 U.2 [403] 2/2。01:38:25Z 的 PASS 结论不变，下一步是记录班:\n  1. lane B 从 36210334346 记 U.2 的格。这是第一个带 [403] 冻结的全量，满足 predicate (v)。\n  2. 再落 --record-signoff PASS,理由与「不涵盖」照 01:38:25Z 那一节原文，附这一节的复核。\n  3. 再 --accept P0-04。签字在记格之后，照 BLOCKED-244 的次序。"
+    },
+    {
+      "epic": "P2-05",
+      "rowDigestSha256": "fff65aa5d13d89a9b57b53638c8f6b0cc2148d8861ea8729e6f7ac0c4a7e32fa",
+      "conclusion": "PASS",
+      "delegateSession": "first100-delegate-1a",
+      "signedAtUtc": "2026-09-26T09:08:11.680Z",
+      "reason": "- **P2-05 签字:PASS。** 依据:\n  - 4.4b:第 13 班全量 36225020149 里,12 个 live 条目共 85 条冻结标题全过，含 [328] U.4、[406] U.5、[407] U.6、[410] U.7、[412] U.8。\n  - 4.4a、d:policy-engine 挂在 base(:331),Trust Kernel 在 profile-boot(:383);enforceManifestedAction 三个入口汇合：原生 tool-calls.ts,code-mode ptc.ts,直接接缝 decideDirectCall(B-615)。\n  - 4.4c:313 的三个条件按现行条文都满足，结项说明 artifacts/delegate/blocked-313-closure-draft.md(9b31b5c6…);294 已 CLOSED。\n  - 不涵盖:\n    - 服务仍可经 Cordis 卸载，现行条文不要求不能卸载;\n    - acc[1] 的插件放宽 deny 只在决策层;\n    - 未出厂的发起方已点名。"
     }
   ]
 }
