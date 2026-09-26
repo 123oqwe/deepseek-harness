@@ -373,6 +373,26 @@ function busRows(ctx: Context): readonly Readonly<Record<string, unknown>>[] | n
   })
 }
 
+/**
+ * The interrupt of `childId` the durable bus recorded, reduced to the
+ * settlement-outbox triple and the CloudEvents attributes A-463 asserts are
+ * readable (P5-10 must[2]): a control message with `source`
+ * `subagent-interrupted`, `type` `subagent/interrupt`, the child as `id`, the
+ * lease `epoch`, and the parent as `subject`. Read right after a restart, its
+ * presence is the interrupt surviving the host's death — the child's session
+ * log cannot show that, because live events are written asynchronously and a
+ * record appended there is lost when the process is killed.
+ * @param ctx - the booted root context.
+ * @param childId - the interrupted child's session id.
+ * @returns the recorded attributes, or `null` when no bus holds an interrupt of the child.
+ */
+function busInterruptOf(ctx: Context, childId: SessionId): Readonly<Record<string, unknown>> | null {
+  const bus = ctx.get('messageBus')
+  if (bus === undefined) return null
+  const event = bus.domainEvents().find(candidate => candidate.source === 'subagent-interrupted' && candidate.id === childId)
+  return event === undefined ? null : { source: event.source, type: event.type, id: event.id, epoch: event.epoch, subject: event.subject ?? null }
+}
+
 /** One user message in a session's log, reduced to what names its sender. */
 interface LoggedMessage {
   readonly source: string
@@ -521,6 +541,9 @@ async function after(ctx: Context, parentId: SessionId, childId: SessionId): Pro
     sessionsWithEvents: watch.sessionsSeen(),
     childStatuses: watch.statuses(childId),
     busRows: busRows(ctx),
+    // Read before anything is reopened: the interrupt is here only if it
+    // survived the restart in the durable bus (A-463's readable record).
+    busInterrupt: busInterruptOf(ctx, childId),
   }
 
   // What the Web host does when a client opens the session
