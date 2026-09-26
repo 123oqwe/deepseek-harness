@@ -376,14 +376,18 @@ describe('Unix-domain sockets a backend cannot refuse', () => {
   })
 
   it('searches this process\'s environment and home directory when nothing is injected', async () => {
-    const { sandbox } = await setup({}, { platform: 'linux', probeBwrap: () => false, landlockLauncher: fakeLauncher(), hostSockets: undefined })
+    const { sandbox } = await setup({}, { platform: 'linux', probeBwrap: () => false, landlockLauncher: fakeLauncher() })
+    // `setup` injects an empty socket list; without one the provider searches.
+    delete sandbox.internals.hostSockets
     expect(sandbox.confine(['true'], RO).reachableSockets).toEqual(knownHostSockets({ env: process.env, home: homedir() }))
   })
 
   it('writes the warning to this process\'s stderr when no writer is injected', async () => {
     const write = vi.spyOn(process.stderr, 'write').mockImplementation(() => true)
     try {
-      const { sandbox } = await setup({}, { platform: 'linux', probeBwrap: () => false, landlockLauncher: fakeLauncher(), writeWarning: undefined })
+      const { sandbox } = await setup({}, { platform: 'linux', probeBwrap: () => false, landlockLauncher: fakeLauncher() })
+      // `setup` injects a collecting writer; without one the provider writes to stderr.
+      delete sandbox.internals.writeWarning
       sandbox.confine(['true'], RO)
       expect(write).toHaveBeenCalledWith(expect.stringMatching(/^dsh: sandbox: the landlock backend cannot refuse Unix-domain sockets/))
     } finally {
