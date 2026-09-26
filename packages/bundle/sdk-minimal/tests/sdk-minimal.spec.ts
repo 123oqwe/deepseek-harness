@@ -43,6 +43,7 @@ describe('dsh-sdk-minimal bundle', () => {
       ['terminal-bash', '@deepseek-ai/dsh-terminal-bash'],
       ['terminal-pwsh', '@deepseek-ai/dsh-terminal-bash'],
       ['timer', '@deepseek-ai/cordis-plugin-timer'],
+      ['logger-stderr', '@deepseek-ai/dsh-logger-stderr'],
       ['llm', '@deepseek-ai/dsh-llm'],
       ['session', '@deepseek-ai/dsh-session'],
       ['session-title', '@deepseek-ai/dsh-session-title'],
