@@ -347,32 +347,59 @@ function expectKilledAt(point: KillPoint): void {
   expect([outcome.killedBy, outcome.observedAtKill], JSON.stringify(outcome)).toEqual(['SIGKILL', `plugin code held at ${point}`])
 }
 
+/**
+ * Record, on the running case's `task.meta` for diagnostics only (A-453, no
+ * assertion), the stage the parent actually killed the upgrade at and the two
+ * versions the restart left. For the two race points ('switch', 'achieved') —
+ * whose kill lands in a narrow window the assertion does not require to be hit —
+ * it also records whether this run hit that window.
+ * @param meta - the running case's `task.meta`.
+ * @param point - the kill point the case exercises.
+ */
+function recordKill(meta: object, point: KillPoint): void {
+  const outcome = outcomeOf(point)
+  Object.assign(meta, {
+    killedAt: outcome.observedAtKill,
+    codeVersion: outcome.codeVersion,
+    dataVersion: outcome.dataVersion,
+    ...(point === 'switch' || point === 'achieved'
+      ? { hitWindow: outcome.observedAtKill === `plugin code held at ${point}` }
+      : {}),
+  })
+}
+
 describe('P1-10 acceptance[0] on the CLI path: after a killed dsh plugin upgrade and a rerun, code and data are at one version', () => {
-  it('control: an upgrade that is not killed leaves version 2 code and version 2 data, readable', () => {
+  it('control: an upgrade that is not killed leaves version 2 code and version 2 data, readable', ({ task }) => {
+    recordKill(task.meta, 'none')
     const outcome = outcomeOf('none')
     expect({ code: codeAt(outcome), data: outcome.dataVersion }, JSON.stringify(outcome)).toEqual({ code: 2, data: 2 })
   })
 
-  it('killed once the new code is installed and before the transaction starts, the rerun leaves code and data at one version', () => {
+  it('killed once the new code is installed and before the transaction starts, the rerun leaves code and data at one version', ({ task }) => {
+    recordKill(task.meta, 'import')
     expectKilledAt('import')
     expectOneVersion('import')
   })
 
-  it('killed in the plugin migrate step, the rerun leaves code and data at one version', () => {
+  it('killed in the plugin migrate step, the rerun leaves code and data at one version', ({ task }) => {
+    recordKill(task.meta, 'migrate')
     expectKilledAt('migrate')
     expectOneVersion('migrate')
   })
 
-  it('killed in the plugin validate step, the rerun leaves code and data at one version', () => {
+  it('killed in the plugin validate step, the rerun leaves code and data at one version', ({ task }) => {
+    recordKill(task.meta, 'validate')
     expectKilledAt('validate')
     expectOneVersion('validate')
   })
 
-  it('killed once the switch is recorded and before the health check is, the rerun leaves code and data at one version', () => {
+  it('killed once the switch is recorded and before the health check is, the rerun leaves code and data at one version', ({ task }) => {
+    recordKill(task.meta, 'switch')
     expectOneVersion('switch')
   })
 
-  it('killed once the upgrade is recorded as achieved, the rerun leaves code and data at one version', () => {
+  it('killed once the upgrade is recorded as achieved, the rerun leaves code and data at one version', ({ task }) => {
+    recordKill(task.meta, 'achieved')
     expectOneVersion('achieved')
   })
 })
