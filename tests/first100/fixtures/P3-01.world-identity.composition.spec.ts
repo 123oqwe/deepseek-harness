@@ -17,8 +17,9 @@
  *   shipped provider can hold;
  * - `forbid-absent`: the same no-provider request plus a policy forbidding an
  *   `absent` world (condition 2a);
- * - `register-local`: the driver registers a provider under the reserved id
- *   `local` and reports whether `register` threw (condition 3, registration).
+ * - `register-local` / `register-fenced`: the driver registers a foreign
+ *   provider under the reserved id `local` (or `fenced`) and reports whether
+ *   `register` threw (condition 3, registration).
  * @module tests/first100/fixtures/P3-01.world-identity.composition
  */
 
@@ -36,7 +37,7 @@ const overlay = fileURLToPath(new URL('./loader/p3-01-world-swap/base.patch.yml'
 const repoTsconfig = fileURLToPath(new URL('../../../tsconfig.json', import.meta.url))
 
 /** The driver's boot modes. */
-const MODES = ['shipped', 'honest', 'forging', 'network-none', 'forbid-absent', 'forbid-absent-control', 'register-local'] as const
+const MODES = ['shipped', 'honest', 'forging', 'network-none', 'forbid-absent', 'forbid-absent-control', 'register-local', 'register-fenced'] as const
 
 /** One boot mode. */
 type Mode = typeof MODES[number]
@@ -47,7 +48,7 @@ interface Report {
   readonly worldBound: readonly { readonly provider: string; readonly spec: string }[]
   readonly worldEventTypes: readonly string[]
   readonly toolResults: readonly string[]
-  readonly registerLocal?: { readonly threw: boolean; readonly error: string }
+  readonly registerReserved?: { readonly id: string; readonly threw: boolean; readonly error: string }
 }
 
 /**
@@ -119,9 +120,18 @@ describe('P3-01 acceptance[1] and [2]: the world a call is bound to on the shipp
 
   it('P3-01 BLOCKED-316 condition 3: registering a world provider under the reserved id local is refused, with an error naming the identity', () => {
     const report = reports.get('register-local')
-    expect(report?.registerLocal, JSON.stringify(report)).toBeDefined()
-    expect(report?.registerLocal?.threw, JSON.stringify(report)).toBe(true)
-    expect((report?.registerLocal?.error ?? '').includes('local'), JSON.stringify(report)).toBe(true)
+    expect(report?.registerReserved, JSON.stringify(report)).toBeDefined()
+    expect(report?.registerReserved?.id, JSON.stringify(report)).toBe('local')
+    expect(report?.registerReserved?.threw, JSON.stringify(report)).toBe(true)
+    expect((report?.registerReserved?.error ?? '').includes('local'), JSON.stringify(report)).toBe(true)
+  })
+
+  it('P3-01 BLOCKED-316 condition 3: registering a world provider (not the shipped fenced provider) under the reserved id fenced is refused, with an error naming the identity', () => {
+    const report = reports.get('register-fenced')
+    expect(report?.registerReserved, JSON.stringify(report)).toBeDefined()
+    expect(report?.registerReserved?.id, JSON.stringify(report)).toBe('fenced')
+    expect(report?.registerReserved?.threw, JSON.stringify(report)).toBe(true)
+    expect((report?.registerReserved?.error ?? '').includes('fenced'), JSON.stringify(report)).toBe(true)
   })
 
   it('control: under the shipped request the local provider binds the call\'s world and the tool runs', () => {
