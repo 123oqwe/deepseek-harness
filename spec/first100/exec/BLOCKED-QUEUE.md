@@ -9412,7 +9412,7 @@ The condition therefore rested on a premise I did not check. It is replaced by:
 
 ### BLOCKED-334 — an approval wait lets a fenced or stopped Run run the approved tool: after the operator answers, a refused return to `running` is only logged, and nothing after the risk gate checks the stop, the lease or the fence (product defect, open; P4-07 acceptance[0] is broken, so P4-07 is withdrawn)
 
-**Status:** OPEN (2026-09-24T21:13:10Z). Owner: lane A writes the red-first case; lane B records the P4-07 withdrawal, then fixes in place. Found by the P4-01/329 blind review (F2); measured by lane A (A-385); recorded by the delegate (first100-delegate-1a).
+**Status:** CLOSED 2026-09-26 (closure note at the end of this entry); opened 2026-09-24T21:13:10Z. Owner: lane A writes the red-first case; lane B records the P4-07 withdrawal, then fixes in place. Found by the P4-01/329 blind review (F2); measured by lane A (A-385); recorded by the delegate (first100-delegate-1a).
 
 **What was measured.** Run 36050545752 at `5542c07e8c` (parent candidate `c1ec8cfe74`), on shipped headless with the Trust Kernel pinned. A tool with no risk tags makes the risk gate ask the operator. Predictions `artifacts/laneA/a-385-ask-window-expectations.md`, sha256 e55d128e…, were written first.
 - **Control**: approve → the probe runs.
@@ -9452,6 +9452,13 @@ The condition therefore rested on a premise I did not check. It is replaced by:
 - (to 2) The re-check sits where it also covers site 3: in the ToolRuntime dispatch, before the tool body is entered. This is one place for sites 1–3.
 - (new 4) Site 4 re-checks the stop, `mayWrite` and `leaseRefused` after the escalation is approved, before the wider sandbox runs.
   - A case on a shipped composition shows it red first. If the sandbox executor is not available on the CI platform, the reading says so, and the case runs where it is.
+
+**Closure note (2026-09-26, lane B).** Drafted by lane A (A-508). Fixed by B-644 (`8a9996d78a`): after the operator answers an approval, the same stop/fence/lease check `refuseNewAction` makes before the risk gate runs again — at one point for both the native and code-mode paths — so a fenced or stopped Run does not run the approved tool; the call's result names the reason (fenced/stopped). Site 4 (a sandbox escalation) checks after the approval.
+- **Red first:** A-387 (`P4-07.ask-window.composition.spec.ts`), the fence and stop variants on both paths, ran the tool after approval (8 red, 2 controls green); A-489 (`P4-07.escalation-after-stop.composition.spec.ts`), a stop raised inside the escalation approval still wrote (1 red).
+- **At the fix:** run 36228285240 is 1363/1363 — A-387 10/10, A-489 3/3, the new `dispatch-recheck.spec.ts` 5/5.
+- **Order is measured (two mutations):** M-644-order (`07d54f2138`, sites 1–3's recheck moved after the tool body) reddens A-387's eight "does not run" cases and `dispatch-recheck`'s three refusals, run 36228294105; M-644-order-4 (`781bb46c87`, site 4's check moved before the ask) reddens A-489's case and the escalation new case, run 36228304507. Both matched their predictions; the four "result names the reason" cases and the controls stay green under M-644-order (they assert the reason, not the order).
+- **Withdrawal → re-acceptance:** P4-07 was WITHDRAWN (forward ledger write) when A-387/A-489 were red first; it is re-accepted only after the fix lands, its cells are re-observed, and a new sign-off passes (delegate).
+- **Not covered:** no check-deleting mutation was run (the stop-loss rule); the two ordering mutations are the sensitivity evidence. P2-12 acceptance[0]/must[2] (named by the same defect) are not-accepted clauses tracked with P2-12, not closed here.
 
 ### BLOCKED-335 — P0-08 reports verification precision and router regret as not applicable, because the shipped product has no producer for either; the two stay open until the points that build a verifier and a model router land (tracking item, user-approved narrowing, not a defect)
 
@@ -9599,7 +9606,7 @@ The condition therefore rested on a premise I did not check. It is replaced by:
 
 ### BLOCKED-340 — an action a webhook delivery triggers is attributed to a synthesized anonymous actor, not to the integration the HMAC key stands for
 
-**Status:** OPEN (2026-09-25). Owner lane B (fix); lane A (red first, done). Ruled by the delegate (first100-delegate-1a) on lane A's A-421. This is the question BLOCKED-291 registered and left open ("who does a webhook-triggered action trace to"), now measured.
+**Status:** CLOSED 2026-09-26 (closure note at the end of this entry); opened 2026-09-25. Owner lane B (fix); lane A (red first, done). Ruled by the delegate (first100-delegate-1a) on lane A's A-421. This is the question BLOCKED-291 registered and left open ("who does a webhook-triggered action trace to"), now measured.
 
 **The clause.** P2-01 acceptance[0]: 「任何 action 都能追溯 root user/tenant 与完整委托链。」 must[0] defines `ServicePrincipal`.
 
@@ -9622,6 +9629,12 @@ The condition therefore rested on a premise I did not check. It is replaced by:
 3. The coverage note for P2-01 acceptance[0] cites the case.
 
 **Owner.** lane B, after the work that lets an epic sign in the current batch.
+
+**Closure note (2026-09-26, lane B).** Drafted by lane A (A-504). Fixed by B-606 (`487a72e720`, fix' `058edc7bcf`): the webhook runtime now attaches a `ServicePrincipal` for the integration the delivery's HMAC key stands for when it creates the session (`packages/webhook/webhook/src/session.ts`), so a webhook-triggered action's first manifest names that principal with `identity/attached` of kind service logged once, and the delegation chain roots there rather than at `anonymous:webhook-<uuid>` (P2-01 acceptance[0], must[0]'s ServicePrincipal).
+- **Red first:** A-421 (`apps/cli/tests/profiles/web/tests/webhook-actor.e2e.ts`), run 36198814967 at `91d6c053f1`: the acceptance[0] case red (anonymous actor, no service `identity/attached`), the control green.
+- **At the fix:** run 36227017825 (`487a72e720`) green; fix' e2e run 36229727665 (`058edc7bcf`) 2/2 — the acceptance[0] case green.
+- **Sensitivity:** M-606-1 (`991fca2300`), which drops the attachment, reddens the acceptance[0] case again (run 36227040120), control green.
+- **Not covered:** the host user is deliberately NOT attached — the requester is remote and HMAC-authenticated (BLOCKED-291 (c)). How the ServicePrincipal's id/tenant are derived is the fix's decision. No check-deleting mutation (stop-loss); the drop-attachment mutation is the sensitivity evidence.
 
 ### BLOCKED-341 — after a crash at the switch, recovery rolls back a unit named after the plugin, not the unit the upgrade switched; when the names differ, the new data that never passed its health check stays live
 
@@ -9834,7 +9847,7 @@ P1-10 is not ACCEPTED, so nothing is withdrawn. This entry blocks P1-10 acceptan
 
 ### BLOCKED-346 — the shipped local sandbox lets a sandboxed command connect to the Docker daemon socket, so a `workspace-write` command can reach the whole host (security, tier 1)
 
-**Status:** OPEN (2026-09-26). Owner lane B (fix); lane A (red first, done: A-476 part 2; the SSH-agent half is A-483). Ruled by the delegate (first100-delegate-1a) as a tier-1 security finding. It blocks P3-05. It is prioritised ahead of the other fixes in lane B's queue, because the shipped sandbox presents a confinement it does not deliver: 「平台能力不足时报告 unsupported，不提供伪安全」 (P3-05 must[2]). No ACCEPTED row covers daemon-socket containment, so nothing is withdrawn.
+**Status:** CLOSED 2026-09-26 (closure note at the end of this entry); opened 2026-09-26. Owner lane B (fix); lane A (red first, done: A-476 part 2; the SSH-agent half is A-483). Ruled by the delegate (first100-delegate-1a) as a tier-1 security finding. It blocks P3-05. It is prioritised ahead of the other fixes in lane B's queue, because the shipped sandbox presents a confinement it does not deliver: 「平台能力不足时报告 unsupported，不提供伪安全」 (P3-05 must[2]). No ACCEPTED row covers daemon-socket containment, so nothing is withdrawn.
 
 **The clauses.**
 - P3-05 acceptance[0]: 「测试进程不可见、不可 ptrace、不可连接 Docker/SSH socket。」
@@ -9869,6 +9882,13 @@ P1-10 is not ACCEPTED, so nothing is withdrawn. This entry blocks P1-10 acceptan
 4. **Then** P3-05's build continues. This entry is its first deliverable.
 
 **Owner.** Lane B (fix, ahead of the queue after batch 12); lane A (A-476 part 2 and A-483 on the fix).
+
+**Closure note (2026-09-26, lane B).** Drafted by lane A (A-502). Fixed by B-642 (`eb5840f5f8`, fix′ `277d5f80b7`) with the A-503 probe instrument fix (`2112aa174f`): the shipped local sandbox now controls `connect()` to the Docker daemon and SSH-agent Unix sockets per backend. bwrap installs a seccomp Unix-socket filter (`seccomp.ts` `unixSocketFilter`) that refuses the sockets and reports `full` enforcement; a backend that cannot filter Unix sockets — Landlock, windows-acl, an operator-configured runner — reports `partial` enforcement, names the known daemon/agent sockets it still leaves reachable (`sockets.ts` `knownHostSockets`, covering the Docker socket and `SSH_AUTH_SOCK`), and warns the operator, satisfying P3-05 must[2] ("report the limitation as unsupported rather than presenting the confinement").
+- **Red first:** A-476 part 2, run 36217014007 at `a53cc08f56`: a `workspace-write` bash command could not see or signal the host process but reached the Docker daemon socket (`docker: connected`, `enforcement: null`). A-483 v2, run 36218344753 at `6b8e50ed8d`: with the SSH-agent socket outside `/tmp`, the sandboxed command reached it (backend bwrap, enforcement full).
+- **At the fix:** run 36227378527 is 6/6 — A-476 part 2 (3/3) and A-483 (3/3) pass, and the tool result names the active backend. (The earlier fix′ run 36226692273 was 359/360; the one red was a probe-instrument issue — the driver read `confine().argv[0]`, which B-642's `/bin/sh` wrapper changed to `sh` — fixed in A-503 by reading the seam's `backend` field, not a fix defect.)
+- **Sensitivity, via the unfixed tree rather than a mutation:** the two cases are red on the unfixed tree (runs 36217014007 / 36218344753) and green at the fix (36227378527); the red→green across B-642 is the evidence, so no check-weakening mutation was run (per the delegate, and the stop-loss rule).
+- **Backend evidence honesty:** the Seatbelt (macOS) socket-deny rule was measured on this machine, not in CI (CI runs Linux under bwrap/Landlock). Landlock reports `partial`. **Known Limitation:** windows-acl cannot filter Unix sockets and reports `partial` with the reachable sockets named — recorded, not silently presented as confinement.
+- **Not covered:** network egress in general — only the daemon/agent sockets are claimed. The `recoverable`/other P3-05 clauses are the rest of P3-05's build.
 
 ### BLOCKED-347 — on a pi-ai route the circuit breaker never opens: provider failures arrive as error chunks, and the breaker counts the first chunk as a success
 
