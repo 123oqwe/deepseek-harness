@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-26-one-retryability-verdict-for-the-breaker-and-llm-retry.md
-2026-09-26-one-retryability-verdict-for-the-breaker-and-llm-retry.md: a3e68454f2031b884d5b8a007649a56abe1b13ad
-2026-09-26-one-retryability-verdict-for-the-breaker-and-llm-retry.zh.md: 7af87fd2004d1d3d55cd9c7f3ff11bb556a401e6
+2026-09-26-one-retryability-verdict-for-the-breaker-and-llm-retry.md: 385bc0819aecfbdcde0aed17ace07371ea0ac3a2
+2026-09-26-one-retryability-verdict-for-the-breaker-and-llm-retry.zh.md: 8ae9156a01deac94b1aeef046ccdbe26d5e0e924

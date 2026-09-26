@@ -1035,37 +1035,53 @@ export class LlmRuntime extends TypertRemoteService {
    * downstream consumer failures remain thrown plugin or consumer errors.
    */
   /**
-   * Pull the first chunk through the mounted circuit breaker, when one is
+   * Pull the leading chunks through the mounted circuit breaker, when one is
    * mounted (P4-11 must[2]).
    *
-   * The breaker wraps the FIRST chunk rather than the whole stream because
-   * that is where an endpoint's health shows: a stream that produced a chunk
-   * answered, and a failure after that is the model's or the transport's
-   * mid-flight, not evidence the destination is down. A refusal therefore
-   * happens before any chunk exists, which is what "without reaching the
-   * adapter" means for a streaming call.
+   * The breaker judges the stream where it first answers rather than the whole
+   * stream, because that is where an endpoint's health shows: a stream that
+   * produced a chunk other than `usage` answered, and a failure after that is
+   * the model's or the transport's mid-flight, not evidence the destination is
+   * down. An adapter reports a failure either by throwing or by an `error` or
+   * `aborted` finish chunk (BLOCKED-347), so a finish carrying a failure where
+   * the stream first answers is judged like a throw: the shared classifier
+   * decides from its failure whether it counts. A refusal happens before any
+   * chunk exists, which is what "without reaching the adapter" means for a
+   * streaming call.
    * @param iterator - the adapter stream's iterator, already created.
    * @param options - the call being dispatched, for its provider and model.
    * @param adapter - the adapter, which alone knows the endpoint URL.
-   * @returns the first iterator result.
+   * @returns the leading chunks, including an in-band failure's own chunks.
    * @throws {BreakerOpenError} when the destination is open, without pulling.
    */
-  private async guardedFirstChunk(
+  private async guardedLeadingChunks(
     iterator: AsyncIterator<StreamChunk>,
     options: GenerateOptions,
     adapter: LlmAdapter,
-  ): Promise<IteratorResult<StreamChunk>> {
+  ): Promise<LeadingChunks> {
     const breaker = this.ctx.get('circuitBreaker')
-    if (breaker === undefined) return iterator.next()
-    return breaker.execute(
-      {
-        provider: options.provider,
-        baseUrl: adapter.endpointUrl(options.provider, options.model) ?? '',
-        model: options.model,
-      },
-      () => iterator.next(),
-      (error: unknown) => llmFailureFacts(normalizeLlmFailure(error)),
-    )
+    if (breaker === undefined) return pullLeadingChunks(iterator)
+    try {
+      return await breaker.execute(
+        {
+          provider: options.provider,
+          baseUrl: adapter.endpointUrl(options.provider, options.model) ?? '',
+          model: options.model,
+        },
+        async () => {
+          const leading = await pullLeadingChunks(iterator)
+          const failure = inBandFailure(leading.answer)
+          if (failure !== undefined) throw new InBandFailure(leading, failure)
+          return leading
+        },
+        (error: unknown) => llmFailureFacts(error instanceof InBandFailure ? error.failure : normalizeLlmFailure(error)),
+      )
+    } catch (error: unknown) {
+      // The adapter reported this failure in its own stream, so the consumer
+      // receives the stream's chunks rather than a synthesized one.
+      if (error instanceof InBandFailure) return error.leading
+      throw error
+    }
   }
 
   private async * adapterStream(
@@ -1073,7 +1089,7 @@ export class LlmRuntime extends TypertRemoteService {
     prepared?: PreparedDispatch,
   ): AsyncGenerator<StreamChunk> {
     let iterator: AsyncIterator<StreamChunk>
-    let firstItem: { done: true } | { done: false; value: StreamChunk }
+    let leading: LeadingChunks
     try {
       const registration = prepared?.registration ?? this.registration(options.provider)
       const adapter = registration.adapter
@@ -1118,30 +1134,26 @@ export class LlmRuntime extends TypertRemoteService {
           : { ...resolvedOptions, messages: projectedMessages as Message[] }
       const stream = dispatch(this.forAdapter(projectedOptions, adapter))
       iterator = stream[Symbol.asyncIterator]()
-      // P4-11 must[2]: the breaker guards the FIRST chunk, which is where an
-      // endpoint's health is actually observable — a stream that has begun is
-      // evidence the endpoint answered. It is pulled here, inside the same
-      // try, so a refusal and a first-chunk failure reach the one place that
-      // converts an adapter throw into a terminal chunk.
-      const first = await this.guardedFirstChunk(iterator, options, adapter)
-      // The `done`/`value` getters are read HERE, inside the try, for the same
-      // reason the loop below reads them inside its own: a hostile or broken
-      // adapter can throw from either, and that throw must become a terminal
-      // chunk rather than escape the generator.
-      firstItem = first.done ? { done: true } : { done: false, value: first.value }
+      // P4-11 must[2]: the breaker judges the stream where it first answers,
+      // which is where an endpoint's health is actually observable. The
+      // leading chunks are pulled here, inside the same try, so a refusal and
+      // a failure before the stream answers reach the one place that converts
+      // an adapter throw into a terminal chunk; the `done`/`value` getters a
+      // hostile or broken adapter can throw from are read inside it too.
+      leading = await this.guardedLeadingChunks(iterator, options, adapter)
     } catch (error: unknown) {
       yield adapterFailureChunk(error, options.signal)
       return
     }
-    if (firstItem.done) return
 
-    let completed = false
+    let completed = leading.answer === undefined
     try {
       // Yielded INSIDE this try, so a consumer that breaks after the first
       // chunk still reaches the `finally` that closes the adapter iterator.
       // Yielded before it, the break would skip cleanup entirely.
-      yield firstItem.value
-      while (true) {
+      for (const chunk of leading.usage) yield chunk
+      if (leading.answer !== undefined) yield leading.answer
+      while (!completed) {
         let item: { done: true } | { done: false; value: StreamChunk }
         try {
           const next = await iterator.next()
@@ -1206,6 +1218,55 @@ function adapterFailureChunk(error: unknown, signal?: AbortSignal): StreamChunk 
       ? { kind: 'aborted', failure }
       : { kind: 'error', failure },
   }
+}
+
+/** The chunks a stream produced up to the one that shows whether its endpoint answered. */
+interface LeadingChunks {
+  /** The `usage` chunks before the first other chunk. */
+  readonly usage: readonly StreamChunk[]
+  /** The first other chunk, or `undefined` when the stream ended before one arrived. */
+  readonly answer: StreamChunk | undefined
+}
+
+/**
+ * Thrown inside the circuit breaker's operation when a stream first answers
+ * with a finish that carries a failure, so the breaker judges it like a throw;
+ * the runtime catches it and replays the stream's own chunks.
+ */
+class InBandFailure extends Error {
+  constructor(readonly leading: LeadingChunks, readonly failure: LlmFailure) {
+    super(failure.message)
+    this.name = 'InBandFailure'
+  }
+}
+
+/**
+ * Pull chunks until one other than `usage` arrives or the stream ends. A
+ * `usage` chunk says nothing about whether the endpoint answered: an adapter
+ * that reports a failure in-band may send one before its finish.
+ * @param iterator - the adapter stream's iterator.
+ * @returns the `usage` chunks pulled and the chunk that followed them, if any.
+ */
+async function pullLeadingChunks(iterator: AsyncIterator<StreamChunk>): Promise<LeadingChunks> {
+  const usage: StreamChunk[] = []
+  while (true) {
+    const next = await iterator.next()
+    if (next.done) return { usage, answer: undefined }
+    if (next.value.type !== 'usage') return { usage, answer: next.value }
+    usage.push(next.value)
+  }
+}
+
+/**
+ * The failure a stream reported where it first answered, if it did so with a
+ * finish chunk that carries one.
+ * @param answer - the stream's first chunk other than `usage`, if any.
+ * @returns that finish's failure, or `undefined` when the stream answered otherwise or ended.
+ */
+function inBandFailure(answer: StreamChunk | undefined): LlmFailure | undefined {
+  if (answer?.type !== 'finish') return undefined
+  // Merge-extensible: a finish kind this runtime does not know carries no failure it can read.
+  return answer.reason.kind === 'error' || answer.reason.kind === 'aborted' ? answer.reason.failure : undefined
 }
 
 interface AdapterRegistration {
