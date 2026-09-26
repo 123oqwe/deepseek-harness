@@ -844,6 +844,14 @@
       "delegateSession": "first100-delegate-1a",
       "signedAtUtc": "2026-09-26T09:15:33.669Z",
       "reason": "- **P4-11 签字:PASS。**\n  - 4.4a:base 挂 circuit-breaker(dsh-retry-cockatiel,cordis.patch.yml:103)与 llm-retry(:117)。U.1 [300] 在出厂 headless 上见到两个服务都挂着，并真扣了一次 run 的重试。\n  - 4.4b:第 13r 班全量 36229132720 @ 5d886b87cf(现为远端 tip)里,P4-11 的 12 个 live 条目共 96 条冻结标题全过。\n  - 4.4c:挡点都已满足。\n    - 339:B-605,已结项。\n    - 347:B-647。结项说明是 A-500(dc79f26c),随第 14 班落。\n    - 281:三条都满足。(a) 见 ff0c546e3d;(b) 由 [404] U.6(400、403)与 [405] U.7(policy deny,钉住 Trust Kernel)满足;(c) 由 [342] U.2 满足。结项说明 artifacts/delegate/blocked-281-closure-draft.md(df94db90),随第 14 班落。之前的第 14 班清单漏了它，这次补上。\n    - 317:2026-09-25 已关。锁表 P4-11 行的解锁条件是「317 关闭，重做 4.4,PASS」,现已满足。\n  - 4.4d:\n    - 断路器在 llm/src/index.ts:1062-1077 拉首块，带内失败按抛出计，由 llmFailureFacts 分类;\n    - llm-retry 的 :217 由 isRetryableLlmFailure(:81,同一个分类器)决定是否重试。\n  - 条款逐条对证:\n    - acc[0]:C、F 两级，加出厂挂载上的 U.6 与 U.7。\n    - acc[1]:C、F,加 U.2。U.3–U.5 支撑 must[1]。\n    - acc[2]:P 与 F 21–24 证明打开;P.1 [251] 证明可恢复(BLOCKED-268)。pi-ai 路由上的打开由 B-647 修好，由 A-498 与 circuit-breaker-in-band.spec.ts 观测。这两个文件每次全量都跑，但没有冻结。按 §16 不另冻，只在 acc[2] 的 note 里补一句写明。\n  - 不涵盖：没有观测真实的 provider 宕机，失败都在适配器边界注入;DeepSeek 适配器本来就抛错，不受 347 影响;盲审的 2 档发现登记在 B-648,不挡签字。"
+    },
+    {
+      "epic": "P4-07",
+      "rowDigestSha256": "0d5bc62c5d2e6d0dfbf00aaa22a8f31c2220a47fae72626cd3b9e932217c9790",
+      "conclusion": "PASS",
+      "delegateSession": "first100-delegate-1a",
+      "signedAtUtc": "2026-09-26T13:24:27.356Z",
+      "reason": "- **P4-07 签字:PASS。**\n  - 4.4b:第 15 班全量 36232722555 @ 6bbc302797 里,P4-07 的 12 个 live 条目共 87 条冻结标题全过。审批路径的用例 A-387(10 条)、A-489(3 条)与 dispatch-recheck.spec.ts(5 条)在同一轮也全过。\n  - 4.4a、d:\n    - ToolRuntime 的分派入口(tools/src/index.ts:2327-2333)在进入工具体之前再调一次 refuseNewAction,两条路径都经过这一点，覆盖 334 的 site 1–3;\n    - site 4 由 tool-bash(:235)、tool-pwsh(:241)、tool-fs 的 sandbox(:106)在放权批准之后各自再查一次(refusalAfterApproval)。\n  - 4.4c:334 已在第 15r 班结项。锁表 P4-07 那行(334)的解锁条件是「条件 1、2 满足，格子重新观测，重做 4.4,PASS」,现在满足。其他提到 P4-07 的开着的条目都不锁它:265 在 09-24 的附注里写明「不锁 P4-07」;196 属于以后的一片，P4-07 在 09-24 验收时它就开着。\n  - 盲审:P4-07 在 09-24 做过一次;B-644 是在那之后的修复，走了先红、修复、两个变异。按 §16 不另做盲审。\n  - 不涵盖：审批路径的 A-387、A-489 与 dispatch-recheck 没有冻结，每次全量都跑。照 P4-11 处理 A-498 的先例，在 acc[0] 的 coverage 里写明。"
     }
   ]
 }
