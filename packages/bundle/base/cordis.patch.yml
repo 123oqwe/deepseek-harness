@@ -447,14 +447,24 @@
         maxBytes: 65536
 
     # Durable cross-session memory (P6-01): the provider-neutral seam and its
-    # recall consumer. Both are disabled by default, matching `hmr` above.
-    # `dsh-memory` registers no provider on its own, so an enabled row here
-    # would leave every `pnpm dsh` boot with a `ctx.memory` that fails
-    # `MEMORY_PROVIDER_UNAVAILABLE` on each pre-step; a profile opts in by
-    # enabling both rows and naming a provider directory.
+    # recall consumer. `memory` and `memory-context` are disabled by default,
+    # matching `hmr` above — `dsh-memory` registers no provider on its own, so an
+    # enabled row here would leave every `pnpm dsh` boot with a `ctx.memory` that
+    # fails `MEMORY_PROVIDER_UNAVAILABLE` on each pre-step; a profile opts in by
+    # enabling these rows and naming a provider directory. `memory-policy` (P6-03)
+    # ships enabled: with no `memory` it only registers the proposal policy and
+    # has no effect, and once a profile enables `memory` the write path inherits
+    # it — a normal proposal auto-accepts, a sensitive one goes to review.
+    # Disabling `memory-policy` while `memory` is on is the sole way to reach the
+    # fail-closed path, where `propose` holds every write for review as `pending`
+    # (P6-03 must[1]/must[2]).
     - id: memory
       name: '@deepseek-ai/dsh-memory'
       disabled: true
+
+    - id: memory-policy
+      name: '@deepseek-ai/dsh-memory-policy'
+      disabled: false
 
     - id: memory-context
       name: '@deepseek-ai/dsh-memory-context'

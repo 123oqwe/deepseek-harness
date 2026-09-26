@@ -215,15 +215,18 @@ export class MemoryRuntime extends Service {
    */
   async propose(request: MemoryProposeRequest): Promise<MemoryProposeResult> {
     requireTraceableClaim(request.origin)
-    // P6-03 must[1]/must[2]: an optional proposal policy decides the write's
-    // disposition. No policy mounted keeps the pre-P6-03 behaviour — every
-    // traceable write is stored active.
+    // P6-03 must[1]/must[2]: the mounted proposal policy decides the write's
+    // disposition. Fail closed — an uncertain state takes the clause's text: a
+    // review decision, OR no policy mounted at all, holds the write as
+    // `pending` rather than admitting it to active memory, so a memory enabled
+    // without its policy cannot silently auto-accept every write. Only an
+    // explicit auto-accept stores `active`; a rejection refuses.
     const policy = this.ctx.get('memoryProposalPolicy') as MemoryProposalPolicyConsumer | undefined
     const decision = policy?.decide(request)
     if (decision?.disposition === 'reject') {
       throw new MemoryError(`memory proposal rejected by policy: ${decision.reason}`, 'MEMORY_PROPOSAL_REJECTED')
     }
-    const status: MemoryStatus = decision?.disposition === 'review' ? 'pending' : 'active'
+    const status: MemoryStatus = decision?.disposition === 'auto-accept' ? 'active' : 'pending'
     return this.resolve().propose(request, status)
   }
 

@@ -3,9 +3,10 @@
  * `@deepseek-ai/dsh-memory`'s `propose` consults to decide whether a candidate
  * write is auto-accepted, sent to review, or rejected (P6-03 `must[1]`,
  * `must[2]`). `propose` reaches it through `ctx.get('memoryProposalPolicy')`, so
- * a deployment that omits this plugin keeps the pre-P6-03 behaviour — every
- * traceable write is auto-accepted — and mounting it is what turns the policy
- * on for a `dsh` a user starts.
+ * a deployment that omits this plugin makes `propose` fail closed — every write
+ * is held for review (`pending`) rather than admitted to active memory — and
+ * mounting it is what lets a normal write reach active memory for a `dsh` a user
+ * starts.
  *
  * @module @deepseek-ai/dsh-memory-policy
  */
