@@ -107,7 +107,13 @@ interface MemoryAccessContext {
 
 人工用 `ctx.memory.approve({ principal, scope, id })` 处置被扣提案——它转为 `active`、默认搜索开始返回它——或用 `ctx.memory.reject({ principal, scope, id })`，此后它永不 active。只有 user principal 能决定：agent 或 service principal 在接缝层、到达任何 provider 之前被拒 `MEMORY_REVIEW_FORBIDDEN`，因此提案留在 pending。scope 看不到的、或不指向 `pending` 记录的 id 同样被拒——未知或越 scope 的用 `MEMORY_RECORD_NOT_FOUND`，已决的用 `MEMORY_NOT_PENDING`。approve 与 reject 是被扣提案离开 `pending` 的唯一途径；没有复审入口，被策略扣下的提案就会永远等待，因此出厂的操作者入口是以宿主用户身份运行的 `dsh memory` CLI。
 
-带 tombstone 的 forget、带来源与冲突状态的 export，以及 merge/supersede 向索引的传播，归第三片。
+## Lifecycle: forget、supersede、merge、erase（P6-03 第三片）
+
+`ctx.memory.supersede({ principal, scope, id, supersedes })` 记录较新记录取代较旧记录：较新的获得 `supersedes` 关系，较旧的标 `superseded`，两条都留存——默认搜索只返回较新的、而 `export` 两条都保留，因为冲突绝不覆盖（`must[1]`）。`ctx.memory.merge({ principal, from, into, authorization? })` 对合并做同样的事，标记 `from` 并让 `into` 指向它。同一 scope 内的合并无需授权；跨 scope 的合并需要一个同时点名两个 scope 的 `authorization`，无它则在改动任何记录之前以 `MEMORY_MERGE_NOT_AUTHORIZED` 拒绝（`acceptance[2]`）。
+
+`forget` 现在移除记录内容、留下一条墓碑——`{ id, forgottenAt, forgottenBy }`、不含任何内容——因此存储、默认搜索、同一存储上的第二个读者、以及召回投影都不再返回它，而 `export` 会列出该墓碑（`acceptance[1]`）。`ctx.memory.erase({ principal, tenantId, subject })` 是 right-to-erasure：抹除该租户内关于该主体的每条记录，无论其会话或工作区，并各留一条墓碑；别的主体、别的租户不受影响。`export` 的记录带 `provenance`、`status`、`relations`，故批量读能看到每条记录的来源与冲突状态（`acceptance[2]`）；`query`/`get` 保持裸视图。
+
+召回投影是 `@deepseek-ai/dsh-memory-context` 的：它把召回的记录以 `snapshot`-form 消息注入某步，而同一 producer 的后一 snapshot 取代前一，故一旦被召回的记录被遗忘，后一步会取代那条陈旧召回，而不把被遗忘的内容带进模型的下一次请求。
 
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
