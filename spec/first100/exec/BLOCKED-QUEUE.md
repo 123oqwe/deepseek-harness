@@ -8899,7 +8899,7 @@ Under the standard's rule for real defects (WORKING-MODEL §12), they become est
 
 ### BLOCKED-321 — P0-03 stays ACCEPTED; its checker scans 320 of the workspace's packages, not all of them (open finding, not a withdrawal)
 
-**Status:** OPEN (2026-09-24). The row stays ACCEPTED under acceptance standard v1's S12: the one-time review closed with BLOCKED-320, and this is not a defect shown red. Owner: lane B, together with P0-04's checker fix. Found by the delegate (first100-delegate-1a) while doing the 4.4a–d that P0-03 never had. The row has no sign-off entry of any kind.
+**Status:** CLOSED 2026-09-26 (closure note at the end of this entry); opened 2026-09-24. The row stays ACCEPTED under acceptance standard v1's S12: the one-time review closed with BLOCKED-320, and this is not a defect shown red. Owner: lane B, together with P0-04's checker fix. Found by the delegate (first100-delegate-1a) while doing the 4.4a–d that P0-03 never had. The row has no sign-off entry of any kind.
 
 **What was measured.**
 - **4.4(b), (c): passed.** The checker `scripts/architecture/check-capability-seams.mjs` (`architecture:seams`) is in the First-100 gate set (`scripts/first100/run-registry-gates.mjs:126`), so every full run executes it.
@@ -8917,6 +8917,11 @@ Under the standard's rule for real defects (WORKING-MODEL §12), they become est
 3. Then a 4.4a–d and the row's first PASS sign-off.
 
 *Addendum 2026-09-24 (lane B, delegate ruling on where P0-04 v2's seam cases are frozen).* Closing condition 1 is implemented by `6f580f1274` on the candidate, the pick of P0-04's fix `9dfb1f7c4b`: `check-capability-seams.mjs` enumerates the packages `pnpm-workspace.yaml` declares. Its cases S1–S3 are frozen as P0-03 U supplement 1, command-freeze [340], with M-p and M-y as sensitivity (runs 35965405942 and 35965576704). Their coverage citations under acceptance[0] wait for that supplement's observation, because a citation on an ACCEPTED row has to close. Conditions 2 and 3 wait for a full run on a tree that carries the fix, and for the 4.4a–d.
+
+**Closure note (2026-09-26, lane B, B-607).** Each condition, with what shows it; the delegate re-signed P0-03 PASS at 2026-09-25T23:02:35Z (gate3 log).
+- **Condition 1.** `scripts/architecture/check-capability-seams.mjs` enumerates the packages `pnpm-workspace.yaml` declares (`:34`, `:71`, `:262`) and refuses an empty set (`:73`, `:81`). U.1 [340] (three cases) and U.2 [364] (one case) observe it, and acceptance[0] cites the four (`5105d8f7f2`, batch 9). Lane A's A-401 checked it.
+- **Condition 2.** Batch 8′'s full run 36088846692 logs, for the gate set's `architecture:seams`, "0 violation(s) across 32 capability families, 5030 cross-package import edge(s) in 342 workspace package(s)" (main job log, lines 4907–4909): the whole workspace, where the checker saw 320 packages before the fix.
+- **Condition 3.** The delegate's 4.4a–d and PASS, recorded with `--record-signoff` in the same commit as this note. P0-03 stays ACCEPTED; the sign-off file had no entry for it until now.
 
 ### BLOCKED-322 — P0-05 stays ACCEPTED; its gate mechanism is provided on the shipped launch but no gate is declared and nothing evaluates one (open finding, not a withdrawal)
 
