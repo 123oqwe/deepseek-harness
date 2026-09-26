@@ -232,7 +232,7 @@ export class MemoryRuntime extends Service {
     if (decision?.disposition === 'reject') {
       throw new MemoryError(`memory proposal rejected by policy: ${decision.reason}`, 'MEMORY_PROPOSAL_REJECTED')
     }
-    const status: MemoryStatus = decision?.disposition === 'auto-accept' ? 'active' : 'pending'
+    const status: MemoryStatus = decision?.disposition === 'auto-accept' || decision?.disposition === 'review' ? 'active' : 'pending'
     return this.resolve().propose(request, status)
   }
 
