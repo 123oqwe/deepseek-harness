@@ -157,6 +157,7 @@
     "@deepseek-ai/dsh-lease": "workspace:^",
     "@deepseek-ai/dsh-llm": "workspace:^",
     "@deepseek-ai/dsh-message-bus": "workspace:^",
+    "@deepseek-ai/dsh-policy-enforcement": "workspace:^",
     "@deepseek-ai/dsh-principal": "workspace:^",
     "@deepseek-ai/dsh-run": "workspace:^",
     "@deepseek-ai/dsh-sandbox": "workspace:^",

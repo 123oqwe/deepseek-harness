@@ -11,18 +11,29 @@ import { createUserMessage, HarnessError } from '@deepseek-ai/dsh-llm'
 import type { ContentBlock, ToolCallId } from '@deepseek-ai/dsh-llm'
 import type { CodeBindingFunction, CodeRunResult, CodeRuntime } from '@deepseek-ai/dsh-code-runtime'
 import { snapshotJsonValue, type JsonValue } from '@deepseek-ai/dsh-util-values'
-import { appendManifestThenGate, computeArgumentsHash, manifestAttribution, manifestIdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
-import { enforceManifestedAction } from '@deepseek-ai/dsh-policy-enforcement'
 import type { ExecutionWorldFact, PolicyContextFacts } from '@deepseek-ai/dsh-policy-engine'
-import { redactTokenForLog } from '@deepseek-ai/dsh-capability-token'
 import type { ClosedDecision } from '@deepseek-ai/dsh-policy-engine'
-import type { ActionId, CapabilityRef } from '@deepseek-ai/dsh-action-manifest'
 import type { Context } from '@deepseek-ai/cordis'
-import type { Principal } from '@deepseek-ai/dsh-principal'
-import { createSessionManifestAppender } from './manifest-log.ts'
-import { approvalBindingFor, classifyActionRisk, confirmExternalEffect, gateActionRisk, readExecutionWorldFact, readPolicyContextFacts, refuseNewAction, refusedApprovalResult, refusedDispatchResult, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect, verifyRecordedApproval } from './external-effect.ts'
+import {
+  appendManifestAndDecide,
+  approvalBindingFor,
+  classifyActionRisk,
+  confirmExternalEffect,
+  FAIL_CLOSED_FACTS,
+  FAIL_CLOSED_WORLD,
+  gateActionRisk,
+  readExecutionWorldFact,
+  readPolicyContextFacts,
+  refuseNewAction,
+  refusedApprovalResult,
+  refusedDispatchResult,
+  refusedPolicyResult,
+  refusedReservationResult,
+  refusedRiskResult,
+  reserveExternalEffect,
+  verifyRecordedApproval,
+} from './external-effect.ts'
 import type { ExternalEffectRecord } from './external-effect.ts'
-import { attachedIdentity } from '@deepseek-ai/dsh-session'
 import { defineTool, parameterSchemaSpecToJsonSchema } from './schema.ts'
 import { TOOL_RUNTIME_SCHEDULER } from './index.ts'
 import type { PtcDispatchLog, ToolDefinition, ToolExecutionResult, ToolRuntime, ToolRunContext } from './index.ts'
@@ -177,54 +188,27 @@ function jsonNormalizeArgs(value: unknown): { dispatched: unknown; logged: unkno
   return { dispatched: snapshot, logged }
 }
 
-/**
- * Append one code-mode sub-dispatch's ActionManifest (P2-03 must[2]).
- *
- * Mirrors the native path field for field, including the unclassifiable
- * default: no side-effect declaration reaches this point, and acceptance[2]
- * requires an action that cannot be classified to default to the highest-risk
- * class requiring approval rather than to a convenient guess.
- *
- * `sequence` is read from the session's own per-type counter, the same number
- * the native path reads. Counting by scanning the log here broke ten of
- * `ptc.spec.ts`'s cases and is quadratic besides — a code-mode program makes
- * many calls, and each scan is O(manifests already written).
- * @param exec - the run context carrying the agent whose session is logged to.
- * @param subCallId - the sub-dispatch's own call id, which the manifest names as its action.
- * @param name - the tool being dispatched.
- * @param loggedArguments - the detached sibling copy of the dispatched arguments.
- */
-/**
- * The facts for a sub-dispatch with no agent behind it.
- *
- * `appendCodeModeManifest` returns before it asks policy in that case, so
- * nothing reads these; they exist because the facts are a required argument
- * and a fail-closed value is the only honest thing to name when there is no
- * session to read one from.
- */
-const FAIL_CLOSED_FACTS: PolicyContextFacts = {
-  workspaceTrust: 'untrusted',
-  permissionPosture: 'default',
-  riskClass: 'security-sensitive',
-}
-
-/**
- * The world fact for a sub-dispatch with no agent behind it.
- *
- * `absent` for the same reason as {@link FAIL_CLOSED_FACTS}: with no agent
- * there is no session to bind a world to, and a policy must see "where this
- * ran is unknown" rather than a world borrowed from somewhere else.
- */
-const FAIL_CLOSED_WORLD: ExecutionWorldFact = { kind: 'absent' }
-
 /** What one sub-dispatch's manifest produced: the ledger's record and P2-05's decision. */
 interface ManifestedSubDispatch {
   /** The reservation inputs, or undefined when this run has no agent. */
   readonly reservation: ExternalEffectRecord | undefined
-  /** The policy decision, or undefined when the composition pins no Trust Kernel. */
+  /** The policy decision, or undefined when this run has no agent or the composition pins no Trust Kernel. */
   readonly decision: ClosedDecision | undefined
 }
 
+/**
+ * Append one code-mode sub-dispatch's ActionManifest and decide it (P2-03
+ * must[2], P2-05 acceptance[0]), through the entry point the public seam
+ * shares. A run with no agent has no session to log to, and neither happens.
+ * @param ledgerContext - the composition's context, where the Trust Kernel is pinned.
+ * @param exec - the run context carrying the agent and the enclosing call's token.
+ * @param subCallId - the sub-dispatch's own call id, which the manifest names as its action.
+ * @param name - the tool being dispatched.
+ * @param loggedArguments - the detached sibling copy of the dispatched arguments.
+ * @param facts - the context facts.
+ * @param world - where the sub-dispatch would run.
+ * @returns the reservation inputs and the decision.
+ */
 function appendCodeModeManifest(
   ledgerContext: Context,
   exec: ToolRunContext,
@@ -236,66 +220,15 @@ function appendCodeModeManifest(
 ): ManifestedSubDispatch {
   const agent = exec.agent
   if (agent === undefined) return { reservation: undefined, decision: undefined }
-  const argumentsHash = computeArgumentsHash(loggedArguments as JsonValue)
-  // The run and the actor come from the attached identity TOGETHER. An earlier
-  // draft branded the SESSION id as a `RunId`: the field must[0] mandates was
-  // present and its value was something else, so two runs of one session shared
-  // a "runId" and P4-12 would have keyed a scope on it.
-  const attribution = manifestAttribution(attachedIdentity(agent.session), agent.session.id)
-  // The SAME entry point the native path uses. must[2]'s "code mode cannot
-  // bypass" is about this path producing the same record through the same
-  // order, not a similar event written beside it: while each path wrote
-  // construct-append-gate out for itself, "cannot bypass" rested on two copies
-  // staying identical, and the shared implementation had no caller (§12.33).
-  const { appended } = appendManifestThenGate(
-    createSessionManifestAppender(
-      agent.session,
-      (actorId: string): Principal => ({ ...attribution.actor, id: actorId as Principal['id'] }),
-      () => agent.lifecycle?.epoch,
-    ),
-    {
-      actionId: brandString<ActionId>(subCallId),
-      runId: attribution.runId,
-      actor: attribution.actor,
-      capability: brandString<CapabilityRef>(name),
-      origin: 'code-mode-embedded',
-      target: { kind: 'other', ref: name },
-      args: loggedArguments as JsonValue,
-      idempotencyKey: manifestIdempotencyKey(agent.session.id, brandString<ActionId>(subCallId), argumentsHash),
-      preconditions: [],
-      expectedDiff: { description: `code-mode sub-dispatch of ${name} executes with the manifested arguments` },
-      compensation: { reversible: false, reason: 'the code-mode path declares no compensation; a tool that has one states it in its own manifest contribution' },
-      evidenceRequirements: [{ kind: 'external-receipt', description: `the tool/ptc-dispatch event for sub-call ${subCallId}` }],
-    },
-  )
-  // P2-05 acceptance[0]: the SAME enforcement point the native path reaches,
-  // taken where this path's manifest exists. must[2]'s "code mode cannot
-  // bypass" is about this path asking the same question, not a similar check
-  // written beside it.
-  // The composition's context, not `agent.ctx`: an Agent handed to this path
-  // by a test harness may carry none, and the kernel is pinned on the root.
-  const decision = ledgerContext.get('trustKernel') === undefined
-    ? undefined
-    : enforceManifestedAction(ledgerContext, {
-      manifest: appended.manifest,
-      // must[0]'s second input, in P2-02's audited projection: the ENCLOSING
-      // call's token, which is the authority this sub-dispatch runs under —
-      // a code-mode program presents no token of its own.
-      ...exec.capabilityToken === undefined
-        ? { token: undefined }
-        : { token: redactTokenForLog(exec.capabilityToken) },
-      origin: 'code-mode-embedded',
-      world,
-      facts,
-    })
-  return {
-    reservation: {
-      scope: attribution.actor.id,
-      key: manifestIdempotencyKey(agent.session.id, brandString<ActionId>(subCallId), argumentsHash),
-      argumentsHash,
-    },
-    decision,
-  }
+  return appendManifestAndDecide(ledgerContext, agent, exec.capabilityToken, {
+    callId: subCallId,
+    name,
+    loggedArguments,
+    origin: 'code-mode-embedded',
+    dispatch: 'code-mode sub-dispatch',
+    pathName: 'the code-mode path',
+    receipt: `the tool/ptc-dispatch event for sub-call ${subCallId}`,
+  }, facts, world)
 }
 
 /** Two-space JSON presentation, matching the existing shallow `run_code` text contract. */

@@ -94,6 +94,22 @@ tool replied: [{"type":"text","text":"Hello, Cordis!"}]
 
 logger 会先触发：`tools/result` 在结果物化过程中发出，发生在 `execute` 向调用方返回的 promise 兑现之前。两个插件都不知道另一个插件存在，它们由注册表服务和事件连接。
 
+## 在真实 profile 里从插件调用工具
+
+出厂 profile 都钉了 Trust Kernel。在那里，直接调用 `ctx.tools.execute()` 会像模型自己的调用一样被记录、被决定：它的 ActionManifest 写进它所代表的 agent 的会话，策略执行点在工具运行之前作出决定。调用时要带上这个 agent，例如 `ctx.agents.get(sessionId)` 返回的那个：
+
+```ts
+await ctx.tools.execute({
+  callId: brandString<ToolCallId>('greet-1'),
+  name: 'greet',
+  arguments: { name: 'Cordis' },
+  agent,
+  signal: new AbortController().signal,
+})
+```
+
+不带 `agent` 的调用会被决定、然后被拒绝，因为没有会话能记录它的 manifest。本章的组合没有钉内核，所以上面那次调用照常运行。
+
 ## 从这里走向完整 agent（智能体）
 
 真实 agent 就是这套组合再加上更多插件：LLM（大语言模型）适配器、agent loop（智能体循环）、持久化和应用入口。对照 [base profile 层](../../packages/bundle/base/cordis.patch.yml)与 [headless 层](../../packages/bundle/headless/cordis.patch.yml)，你现在已经可以读懂其中各项。通过一个小型 `--patch` overlay 加入 `greet-tool.ts` 即可。

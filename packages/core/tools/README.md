@@ -105,6 +105,8 @@ The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-a
 
 `ctx.tools.guard(guard)` registers a monotonic synchronous guard after the extensible `tools/pre-execute` waterfall: a returned reason denies the call, and no later listener can turn that denial back into permission. The pipeline's events give plugins more control — `tools/pre-execute` decides allow/deny/ask, `tools/execute` wraps dispatch for timeout or retry, `tools/post-execute` inspects or replaces the result, and `tools/result` observes the frozen final outcome.
 
+A call made through `ctx.tools.execute()` directly, a plugin's own or a tool body's nested one, is recorded and decided like the agent loop's own call wherever the Trust Kernel is pinned: its ActionManifest is appended to the calling agent's session, and the policy enforcement point decides it with the token the call presents, before the capability token is checked. A decision other than permit refuses the call; a call with no `agent` is decided and refused, because no session can record its manifest.
+
 ### Host presentation descriptors
 
 A tool can retain pure `presentCall()` and `presentResult()` methods for Host-local consumers. The built-in Web Client does not consume those values. It selects a renderer through `tool.call.toolview` and derives card props from raw call arguments, result content, failure state, and persisted metadata. The [Client-derived presentation decision](../../../.agents/notes/implemented/architecture/2026-08-23-client-derived-tool-presentation.md) owns this transport split.
@@ -248,6 +250,7 @@ These limits define when the registry needs special care. They are current packa
 - **PTC mode's SDK language follows the one loaded runtime, and a presentation is per agent rather than per tool** — `mode: ptc`/`both` rejects prompt assembly unless `ctx.codeRuntime.language` has a registered SDK renderer; within one agent no tool can be native-only while another is ptc-only.
 - **PTC mode intermediate values are execution-local and unbounded by bytes** — they cannot be reconstructed from session replay and may exhaust process or worker memory; only the outer `run_code` output has the worker's configurable hard cap.
 - **`run_code` state is fresh per run** — a persistent REPL-style kernel is rejected for the MVP, because cross-call state would be invisible to the log.
+- **A direct call is recorded and decided only where the Trust Kernel is pinned** — every shipped profile pins one (`apps/cli`'s `enforceTrustKernelPosture` refuses to boot without it unless `DSH_TRUST_KERNEL_INSECURE` opts a development boot out). A composition without a kernel has no enforcement point, and its direct calls append no manifest, unlike the agent loop's own calls. The risk gate that asks an operator about an action is not applied on this seam.
 
 <a id="dev-note"></a>
 ### Dev Note

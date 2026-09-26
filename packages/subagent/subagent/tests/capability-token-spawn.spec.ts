@@ -26,11 +26,23 @@ import * as SubagentSpawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
 import ApprovalService from '@deepseek-ai/dsh-user-approval'
 import { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
 import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
+import { endorseComposedDecision } from '@deepseek-ai/dsh-policy-enforcement'
 import CapabilityTokenFilePlugin from '@deepseek-ai/dsh-capability-token-file'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import SubagentRuntime from '../src/index.ts'
 import { TestSessionQuery } from './test-session-query.ts'
 import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
+
+/**
+ * A policy that permits every action, standing in for the shipped set, which
+ * permits these tools. Since BLOCKED-294 a call through the public seam is
+ * decided before its token is checked, and a kernel with no decider refuses
+ * every decision, so these cases pin the shipped decider over this policy.
+ */
+const PERMIT_ALL_POLICY = {
+  digest: 'permit-all',
+  evaluate: () => ({ decision: { effect: 'permit', policySet: 'permit-all' }, explain: { matched: [], diagnostics: [] } }),
+}
 
 const roots: string[] = []
 const contexts: Context[] = []
@@ -43,7 +55,8 @@ afterEach(async () => {
 async function setup(requireForTools = true) {
   const ctx = new Context()
   contexts.push(ctx)
-  pinTrustKernel(ctx, createTrustKernel())
+  pinTrustKernel(ctx, createTrustKernel({ policyDecider: endorseComposedDecision }))
+  ctx.provide('policy', PERMIT_ALL_POLICY)
   await mountAgentLoopTestDependencies(ctx)
   const root = mkdtempSync(join(tmpdir(), 'dsh-cap-spawn-'))
   roots.push(root)

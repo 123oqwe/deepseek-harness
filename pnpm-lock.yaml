@@ -8317,6 +8317,9 @@ importers:
       '@deepseek-ai/dsh-llm':
         specifier: workspace:^
         version: link:../../llm/llm
+      '@deepseek-ai/dsh-policy-enforcement':
+        specifier: workspace:^
+        version: link:../policy-enforcement
       '@deepseek-ai/dsh-session':
         specifier: workspace:^
         version: link:../../core/session
@@ -10544,6 +10547,9 @@ importers:
       '@deepseek-ai/dsh-message-bus':
         specifier: workspace:^
         version: link:../../run/message-bus
+      '@deepseek-ai/dsh-policy-enforcement':
+        specifier: workspace:^
+        version: link:../../policy/policy-enforcement
       '@deepseek-ai/dsh-principal':
         specifier: workspace:^
         version: link:../../identity/principal

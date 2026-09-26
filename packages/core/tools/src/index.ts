@@ -35,6 +35,16 @@ import { assertSupportedJsonSchema, validateJsonSchemaValue } from './json-schem
 import type { JsonSchemaNode } from './json-schema.ts'
 import { createRunCodeTool, RUN_CODE_NAME } from './ptc.ts'
 import type { CodeSdkLanguage } from './ptc.ts'
+import {
+  appendManifestAndDecide,
+  classifyActionRisk,
+  decideUnrecordedAction,
+  readExecutionWorldFact,
+  readPolicyContextFacts,
+  refusedPolicyResult,
+  refusedUnrecordedCallResult,
+} from './external-effect.ts'
+import type { ManifestedDispatchRequest } from './external-effect.ts'
 import { renderToolsSdk } from './ts-types.ts'
 import type { ToolSdkSchema } from './ts-types.ts'
 import { renderToolsSdkPy } from './py-types.ts'
@@ -2001,7 +2011,62 @@ export class ToolRuntime extends Service {
    * @returns the materialized final result.
    */
   async execute(exec: ToolExecutionInput): Promise<ToolExecutionResult> {
-    return this.prepareExecution(exec, prepared => this.completeScheduledExecution(prepared))
+    return this.prepareExecution(
+      exec,
+      prepared => this.completeScheduledExecution(prepared),
+      execution => this.decideDirectCall(execution),
+    )
+  }
+
+  /**
+   * Record and decide one call made through the public seam before its token is
+   * checked (BLOCKED-294; P2-03 acceptance[0], P2-05 acceptance[0]).
+   *
+   * The order the agent loop's own call and a code-mode sub-dispatch take: the
+   * manifest is appended to the calling agent's session, the enforcement point
+   * decides it, and a decision that is not a permit refuses the call. The token
+   * gate comes after, so a call it refuses still leaves both. The enforcement
+   * point sees the token the call presents: a plugin tool's nested call
+   * presents the one its own execution was admitted under, which the runtime
+   * hands the tool body, and a plugin's own top-level call presents none.
+   *
+   * Only in a composition that pins the Trust Kernel, as every shipped profile
+   * does: `apps/cli`'s `enforceTrustKernelPosture` refuses to boot one without
+   * a kernel unless `DSH_TRUST_KERNEL_INSECURE` opts a development boot out.
+   * Without a kernel there is no enforcement point to ask, and a direct call
+   * appends no manifest either, unlike the agent loop's own call. A call with
+   * no agent has no session for its manifest: the enforcement point decides
+   * it, and it is refused.
+   * @param exec - the prepared execution, with its detached arguments, agent and presented token.
+   * @returns the refusal, or `undefined` when the call goes on to the token gate.
+   */
+  private async decideDirectCall(exec: ToolExecution): Promise<ToolExecutionResult | undefined> {
+    if (this.ctx.get('trustKernel') === undefined) return undefined
+    const request: ManifestedDispatchRequest = {
+      callId: exec.callId,
+      name: exec.name,
+      loggedArguments: exec.arguments,
+      origin: 'plugin-rpc',
+      dispatch: 'direct call',
+      pathName: 'the public ToolRuntime.execute seam',
+      receipt: `the tools/result event for call ${exec.callId}`,
+    }
+    try {
+      const agent = exec.agent
+      if (agent === undefined) {
+        decideUnrecordedAction(this.ctx, exec.capabilityToken, request)
+        return refusedUnrecordedCallResult(exec.name)
+      }
+      const classified = classifyActionRisk(this.ctx, exec.name, this.get(exec.name, agent)?.riskDomainTags ?? [])
+      const facts = await readPolicyContextFacts(this.ctx, agent, classified)
+      const world = await readExecutionWorldFact(this.ctx, agent)
+      const { decision } = appendManifestAndDecide(this.ctx, agent, exec.capabilityToken, request, facts, world)
+      return decision !== undefined && decision.effect !== 'permit'
+        ? refusedPolicyResult(decision.effect, decision.reason, exec.name)
+        : undefined
+    } catch (error: unknown) {
+      return toolErrorResult(error)
+    }
   }
 
   private async completeScheduledExecution(prepared: ScheduledToolPreparation): Promise<ToolExecutionResult> {
@@ -2152,6 +2217,7 @@ export class ToolRuntime extends Service {
   private async prepareExecution<T>(
     input: ToolExecutionInput,
     next: (prepared: ScheduledToolPreparation) => T | PromiseLike<T>,
+    decide?: (exec: ToolExecution) => Promise<ToolExecutionResult | undefined>,
   ): Promise<T> {
     const created = this.createExecution(input)
     if (created.kind !== 'ready') return next(created)
@@ -2159,6 +2225,11 @@ export class ToolRuntime extends Service {
     if (this.callerCancelled(exec)) {
       return next({ kind: 'final-result', exec, result: toolAbortedBeforeDispatchResult() })
     }
+    // Only the public seam passes `decide` (BLOCKED-294): the scheduler's
+    // callers append the manifest and ask the enforcement point on their own
+    // paths before they reach this method.
+    const refused = decide === undefined ? undefined : await decide(exec)
+    if (refused !== undefined) return next({ kind: 'final-result', exec, result: refused })
     const unauthorized = this.capabilityRefusal(input)
     if (unauthorized !== undefined) return next({ kind: 'final-result', exec, result: unauthorized })
     try {

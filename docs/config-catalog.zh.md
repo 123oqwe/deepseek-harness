@@ -3715,7 +3715,7 @@ export interface ToolOwnershipConfig {
 }
 ```
 
-来源： [`packages/core/tools/src/index.ts:989`](../packages/core/tools/src/index.ts)
+来源： [`packages/core/tools/src/index.ts:999`](../packages/core/tools/src/index.ts)
 
 <a id="deepseek-aidsh-typert-loader"></a>
 
