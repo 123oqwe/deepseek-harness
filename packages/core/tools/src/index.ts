@@ -2020,12 +2020,14 @@ export class ToolRuntime extends Service {
     // One classification for the enforcement point and the risk gate, as on
     // the native path: two would be two answers that could disagree.
     const classified = classifyActionRisk(this.ctx, exec.name, this.get(exec.name, exec.agent)?.riskDomainTags ?? [])
-    return this.prepareExecution(
+    const result = await this.prepareExecution(
       exec,
       prepared => this.completeScheduledExecution(prepared),
       execution => this.decideDirectCall(execution, classified),
-      execution => this.gateDirectCall(execution, classified),
     )
+    // MUTATION M-633-order: the risk gate runs after the dispatch.
+    await this.gateDirectCall(exec as ToolExecution, classified)
+    return result
   }
 
   /**
