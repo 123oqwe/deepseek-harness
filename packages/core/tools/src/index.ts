@@ -2029,9 +2029,13 @@ export class ToolRuntime extends Service {
     const risk: DirectCallRisk = { classified: undefined }
     return this.prepareExecution(
       exec,
-      prepared => this.completeScheduledExecution(prepared),
+      async (prepared) => {
+        const result = await this.completeScheduledExecution(prepared)
+        // MUTATION M-633-order: the risk gate runs after the dispatch, on the snapshot, and its answer is discarded.
+        await this.gateDirectCall(prepared.exec, risk)
+        return result
+      },
       execution => this.decideDirectCall(execution, risk),
-      execution => this.gateDirectCall(execution, risk),
     )
   }
 
