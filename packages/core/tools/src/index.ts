@@ -43,7 +43,6 @@ import {
   readExecutionWorldFact,
   readPolicyContextFacts,
   refuseNewAction,
-  refusedDispatchResult,
   refusedPolicyResult,
   refusedUnrecordedCallResult,
 } from './external-effect.ts'
@@ -2016,7 +2015,13 @@ export class ToolRuntime extends Service {
   async execute(exec: ToolExecutionInput): Promise<ToolExecutionResult> {
     return this.prepareExecution(
       exec,
-      prepared => this.completeScheduledExecution(prepared),
+      async (prepared) => {
+        const result = await this.completeScheduledExecution(prepared)
+        // MUTATION M-638-order: whether this host may still act is asked after the dispatch, on the snapshot; the answer is discarded.
+        const agent = prepared.exec.agent
+        if (agent !== undefined) refuseNewAction(agent, Date.now())
+        return result
+      },
       execution => this.decideDirectCall(execution),
     )
   }
@@ -2075,8 +2080,6 @@ export class ToolRuntime extends Service {
         return toolErrorResult(error)
       }
     }
-    const refusal = agent === undefined ? undefined : refuseNewAction(agent, Date.now())
-    if (refusal !== undefined) return refusedDispatchResult(refusal, exec.name)
     return decision !== undefined && decision.effect !== 'permit'
       ? refusedPolicyResult(decision.effect, decision.reason, exec.name)
       : undefined
