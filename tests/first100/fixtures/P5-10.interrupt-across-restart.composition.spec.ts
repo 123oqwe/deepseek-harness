@@ -15,10 +15,13 @@
  * is sent one prompt. The cases read the driver's report and the session logs
  * the run left in its working directory.
  *
- * An interrupt record is an event in the child's log, other than `turn/end`
- * (session repair closes an open turn with reason `interrupted`) and prompt
- * text, whose type or a `kind` in it names an interrupt and which carries a
- * finite number under `epoch` or a key ending in `Epoch`.
+ * The interrupt record the "readable" cases assert is the one the durable bus
+ * holds, read right after the restart before anything is reopened: a control
+ * message with `source` `subagent-interrupted` and `type` `subagent/interrupt`,
+ * keyed by the child as `id`, carrying the parent as `subject` and the lease
+ * `epoch`. The child's session log is not it — live events are written
+ * asynchronously and are lost when the host is killed, so only the bus, which
+ * commits synchronously before the cancel, survives the restart (BLOCKED-343).
  * @module tests/first100/fixtures/P5-10.interrupt-across-restart.composition
  */
 
@@ -37,9 +40,6 @@ const RESTART_TIMEOUT_MS = 300_000
 
 /** Largest session log the working-directory scan reads. */
 const SCAN_LIMIT_BYTES = 8 * 1024 * 1024
-
-/** Event types that are never an interrupt record: a turn's close, and prompt text. */
-const NOT_A_RECORD: ReadonlySet<string> = new Set(['turn/end', 'system/message', 'request/header'])
 
 /** The two restarts these cases run. */
 type Variant = 'graceful' | 'crash'
@@ -61,6 +61,16 @@ interface Report {
   }
   readonly after: {
     readonly reading: {
+      /** Read right after the restart, before anything is reopened: the interrupt the durable bus holds, or `null`. */
+      readonly beforeResume: {
+        readonly busInterrupt: {
+          readonly source: string
+          readonly type: string
+          readonly id: string
+          readonly epoch: number
+          readonly subject: string
+        } | null
+      }
       readonly afterPrompt: { readonly outcome: Outcome; readonly child: { readonly turnStarts: number } }
     }
   }
@@ -111,31 +121,6 @@ function eventsIn(value: unknown): RowEvent[] {
   if (Array.isArray(value)) return value.flatMap(eventsIn)
   if (!isRecord(value)) return []
   return [...isEvent(value) ? [value] : [], ...Object.values(value).flatMap(eventsIn)]
-}
-
-/**
- * Every key and value inside one event, not descending into an event nested in it.
- * @param value - the event, or a value inside it.
- * @param top - whether `value` is the event itself.
- * @returns the pairs.
- */
-function pairsOf(value: unknown, top: boolean): (readonly [string, unknown])[] {
-  if (Array.isArray(value)) return value.flatMap(item => pairsOf(item, false))
-  if (!isRecord(value) || (!top && isEvent(value))) return []
-  return Object.entries(value).flatMap(([key, inner]) => [[key, inner] as const, ...pairsOf(inner, false)])
-}
-
-/**
- * Whether one event records an interrupt with an epoch, as this file's header defines it.
- * @param event - the event.
- * @returns whether it is an interrupt record.
- */
-function isInterruptRecord(event: RowEvent): boolean {
-  if (NOT_A_RECORD.has(event.type)) return false
-  const pairs = pairsOf(event, true)
-  const named = /interrupt/iu.test(event.type) || pairs.some(([key, inner]) => key === 'kind' && typeof inner === 'string' && /interrupt/iu.test(inner))
-  const epoch = pairs.some(([key, inner]) => (key === 'epoch' || key.endsWith('Epoch')) && typeof inner === 'number' && Number.isFinite(inner))
-  return named && epoch
 }
 
 /**
@@ -224,16 +209,27 @@ function afterRestart(variant: Variant): { readonly outcome: string; readonly ch
 }
 
 /**
- * Check that the child's log, read after the restart, holds an interrupt record, and record what it holds on the task.
+ * Assert the durable bus, read right after the restart, holds the interrupt of
+ * this run's child with its lease epoch (A-463 under P5-10 must[2]): a control
+ * message named `subagent/interrupt` from `subagent-interrupted`, keyed by the
+ * child and carrying the parent as its subject. The child's session log is not
+ * the record this pins to — live events are written asynchronously and are lost
+ * when the host is killed — the bus is (BLOCKED-343).
  * @param variant - the restart.
  * @param meta - the task's meta, which the JSON reporter carries.
  */
-function expectInterruptRecord(variant: Variant, meta: object): void {
-  const events = childEvents(variant)
-  const records = events.filter(isInterruptRecord)
-  const childEventTypes = [...new Set(events.map(event => event.type))]
-  Object.assign(meta, { a463: { variant, childEventTypes, records: records.slice(0, 5) } })
-  expect(records.length, JSON.stringify({ childEventTypes })).toBeGreaterThan(0)
+function expectBusInterrupt(variant: Variant, meta: object): void {
+  const run = runOf(variant)
+  const { parent, child } = run.report.before.reading.ids
+  const { busInterrupt } = run.report.after.reading.beforeResume
+  Object.assign(meta, { a463: { variant, busInterrupt } })
+  expect(busInterrupt, JSON.stringify(busInterrupt)).toEqual({
+    source: 'subagent-interrupted',
+    type: 'subagent/interrupt',
+    id: child,
+    epoch: expect.any(Number) as unknown,
+    subject: parent,
+  })
 }
 
 describe('P5-10 A-463: a child interrupted before a graceful host restart, on the shipped headless profile', () => {
@@ -252,8 +248,8 @@ describe('P5-10 A-463: a child interrupted before a graceful host restart, on th
     expect(afterRestart('graceful'), JSON.stringify(runOf('graceful').report.after.reading.afterPrompt)).toEqual({ outcome: 'refused', childTurnStarts: 0 })
   })
 
-  it('the interrupt, with an epoch, is readable in the child\'s log after the restart', ({ task }) => {
-    expectInterruptRecord('graceful', task.meta)
+  it('the interrupt, with an epoch, is readable in the durable bus after the restart', ({ task }) => {
+    expectBusInterrupt('graceful', task.meta)
   })
 })
 
@@ -272,7 +268,7 @@ describe('P5-10 A-463: a child interrupted before its host crashes, on the shipp
     expect(afterRestart('crash'), JSON.stringify(runOf('crash').report.after.reading.afterPrompt)).toEqual({ outcome: 'refused', childTurnStarts: 0 })
   })
 
-  it('the interrupt, with an epoch, is readable in the child\'s log after the restart', ({ task }) => {
-    expectInterruptRecord('crash', task.meta)
+  it('the interrupt, with an epoch, is readable in the durable bus after the restart', ({ task }) => {
+    expectBusInterrupt('crash', task.meta)
   })
 })
