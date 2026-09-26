@@ -231,12 +231,8 @@ export class LoggerService {
    */
   exporter(exporter: Exporter) {
     return this.ctx.effect(() => {
-      // LOCAL MODIFICATION (dsh): the cleanup removes the id this registration
-      // took. Upstream deleted `this._snExporter`, the latest registration's id,
-      // so unloading one exporter removed whichever was registered last.
-      const id = ++this._snExporter
-      this.exporters.set(id, exporter)
-      return () => this.exporters.delete(id)
+      this.exporters.set(++this._snExporter, exporter)
+      return () => this.exporters.delete(this._snExporter)
     }, 'ctx.logger.exporter()')
   }
 

@@ -295,11 +295,6 @@ export class ReflectService {
         this.notify([name])
       }
       return async () => {
-        // LOCAL MODIFICATION (dsh): a key its consumer locked non-configurable
-        // (`pinTrustKernel`) stays registered until the process ends. Deleting
-        // it throws in strict mode, which the unload then logged on every root
-        // teardown.
-        if (Object.getOwnPropertyDescriptor(this.store, key)?.configurable === false) return
         delete this.store[key]
         const fibers = this.notify([name])
         await Promise.allSettled(fibers.map(fiber => fiber.await()))
