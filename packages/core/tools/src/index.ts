@@ -487,6 +487,11 @@ export interface ToolRunContext extends ToolExecution {
 /** Registry-owned live execution object; public pipeline views stay readonly. */
 type MutableToolRunContext = Omit<ToolRunContext, 'signal'> & { signal: AbortSignal }
 
+/** The risk classification a direct call's enforcement step makes and its risk gate reuses. */
+interface DirectCallRisk {
+  classified: ActionRiskClassification | undefined
+}
+
 /**
  * Scheduler-only result after ordered pre-execute and guards. A `post-result`
  * still receives post-execute; a `final-result` bypasses it.
@@ -2018,13 +2023,15 @@ export class ToolRuntime extends Service {
    */
   async execute(exec: ToolExecutionInput): Promise<ToolExecutionResult> {
     // One classification for the enforcement point and the risk gate, as on
-    // the native path: two would be two answers that could disagree.
-    const classified = classifyActionRisk(this.ctx, exec.name, this.get(exec.name, exec.agent)?.riskDomainTags ?? [])
+    // the native path: two would be two answers that could disagree. The
+    // enforcement step makes it from the execution snapshot, never from
+    // `exec`, whose fields the snapshot reads once.
+    const risk: DirectCallRisk = { classified: undefined }
     return this.prepareExecution(
       exec,
       prepared => this.completeScheduledExecution(prepared),
-      execution => this.decideDirectCall(execution, classified),
-      execution => this.gateDirectCall(execution, classified),
+      execution => this.decideDirectCall(execution, risk),
+      execution => this.gateDirectCall(execution, risk),
     )
   }
 
@@ -2054,13 +2061,10 @@ export class ToolRuntime extends Service {
    * and before the decision is acted on, which is the native path's order, and
    * an agent with no control channel and no lease is admitted, as there.
    * @param exec - the prepared execution, with its detached arguments, agent and presented token.
-   * @param classified - the call's risk classification, which the risk gate decides about too.
+   * @param risk - receives the call's risk classification, which the risk gate decides about too.
    * @returns the refusal, or `undefined` when the call goes on to the token gate.
    */
-  private async decideDirectCall(
-    exec: ToolExecution,
-    classified: ActionRiskClassification | undefined,
-  ): Promise<ToolExecutionResult | undefined> {
+  private async decideDirectCall(exec: ToolExecution, risk: DirectCallRisk): Promise<ToolExecutionResult | undefined> {
     const agent = exec.agent
     let decision: ClosedDecision | undefined
     if (this.ctx.get('trustKernel') !== undefined) {
@@ -2078,7 +2082,8 @@ export class ToolRuntime extends Service {
           decideUnrecordedAction(this.ctx, exec.capabilityToken, request)
           return refusedUnrecordedCallResult(exec.name)
         }
-        const facts = await readPolicyContextFacts(this.ctx, agent, classified)
+        risk.classified = classifyActionRisk(this.ctx, exec.name, this.get(exec.name, agent)?.riskDomainTags ?? [])
+        const facts = await readPolicyContextFacts(this.ctx, agent, risk.classified)
         const world = await readExecutionWorldFact(this.ctx, agent)
         decision = appendManifestAndDecide(this.ctx, agent, exec.capabilityToken, request, facts, world).decision
       } catch (error: unknown) {
@@ -2102,19 +2107,16 @@ export class ToolRuntime extends Service {
    * Only in a composition that pins the Trust Kernel, as with the manifest and
    * the decision; a call with no agent has already been refused there.
    * @param exec - the prepared execution, with its detached arguments and agent.
-   * @param classified - the classification the enforcement point decided about.
+   * @param risk - holds the classification the enforcement point decided about.
    * @returns the refusal, or `undefined` when the call goes on to dispatch.
    */
-  private async gateDirectCall(
-    exec: ToolExecution,
-    classified: ActionRiskClassification | undefined,
-  ): Promise<ToolExecutionResult | undefined> {
+  private async gateDirectCall(exec: ToolExecution, risk: DirectCallRisk): Promise<ToolExecutionResult | undefined> {
     const agent = exec.agent
     if (agent === undefined || this.ctx.get('trustKernel') === undefined) return undefined
     try {
       const binding = approvalBindingFor(agent, exec.callId, exec.name, exec.arguments as JsonValue, Date.now())
       const refusal = await gateActionRisk(
-        this.ctx, agent, exec.name, this.get(exec.name, agent)?.riskDomainTags ?? [], classified, binding,
+        this.ctx, agent, exec.name, this.get(exec.name, agent)?.riskDomainTags ?? [], risk.classified, binding,
       )
       return refusal === undefined ? undefined : refusedRiskResult(refusal, exec.name)
     } catch (error: unknown) {
