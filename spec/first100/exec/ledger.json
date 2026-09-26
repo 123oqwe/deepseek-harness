@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-26T02:46:55.775Z",
-  "inputDigest": "19b59fa7f1f0f2646834289d513e3d7dd53591d9cf48ee5ad79f40a86f501e5f",
+  "lastUpdatedUtc": "2026-09-26T02:48:54.896Z",
+  "inputDigest": "64a9fd4f3d8c5f84c61bd1261abff21d793cae309c3cc9b3cd85d718c8167847",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -670,23 +670,23 @@
         }
       },
       "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-      "independentVerdict": "PENDING",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "NOT_RUN",
+      "status": "ACCEPTED",
       "acceptedEvidence": {
-        "acceptedAtUtc": "2026-09-05T03:36:44.957Z",
+        "acceptedAtUtc": "2026-09-26T02:48:54.885Z",
         "cells": {
           "C": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33777363033",
-            "candidateSha": "75ad08e71873ed4f46c2594f0b52520250e8393c"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030259739",
+            "candidateSha": "4736909e5981ea8b26d629f12daac5e523815e81"
           },
           "U": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33909882117",
-            "candidateSha": "4d7806fb4b0f91c1b50a10727ad542ff3db273b1"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
+            "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7"
           },
           "F": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33909882117",
-            "candidateSha": "4d7806fb4b0f91c1b50a10727ad542ff3db273b1"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36030259739",
+            "candidateSha": "4736909e5981ea8b26d629f12daac5e523815e81"
           }
         },
         "coverageClosure": {
@@ -695,8 +695,8 @@
           "unverifiedCitations": []
         },
         "delegateSignoff": {
-          "delegateSession": "guanjieqiao-92",
-          "signedAtUtc": "2026-09-05T03:35:19.947Z",
+          "delegateSession": "first100-delegate-1a",
+          "signedAtUtc": "2026-09-26T02:48:52.316Z",
           "userConfirmationRef": null
         }
       }
