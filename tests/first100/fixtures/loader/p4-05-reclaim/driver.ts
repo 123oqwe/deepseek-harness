@@ -126,5 +126,5 @@ if (phase === '1' || phase === '2') {
   }
 
   const phase2 = runPhase('2')
-  process.stdout.write(`P4-05-ACC2 ${JSON.stringify({ phase1: JSON.parse(phase1), phase2: JSON.parse(phase2), lapsed })}\n`)
+  process.stdout.write(`P4-05-ACC2 ${JSON.stringify({ phase1: JSON.parse(phase1) as unknown, phase2: JSON.parse(phase2) as unknown, lapsed })}\n`)
 }
