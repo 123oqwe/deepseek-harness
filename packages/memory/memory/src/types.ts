@@ -244,16 +244,23 @@ export interface MemoryExportRequest {
  * One record as `export` returns it (P6-03 third slice, acceptance[2]).
  *
  * The reader-visible {@link MemoryRecordView} plus the source and conflict
- * status a bulk read must carry: `provenance` (where the claim came from),
+ * status a bulk read carries: `provenance` (where the claim came from),
  * `status` (`active`, `superseded`, `disputed`, ...), and the `relations` a
  * supersede or merge recorded. `query`/`get` keep the bare view — a search hit
  * or a fetch by id answers "what does this record say", while an export answers
  * "what is in this store and how does it stand".
+ *
+ * The three are OPTIONAL, because a `MemoryProvider` is not forced to supply
+ * them: a provider that returns only the bare {@link MemoryRecordView} (a
+ * third-party backend, or a test stub) still satisfies `export`, and the
+ * providers this package ships fill all three from the stored record. A reader
+ * that needs them treats an absent field as unknown rather than as a fabricated
+ * `active`/empty/user-asserted default the provider never stated.
  */
 export interface MemoryExportedRecord extends MemoryRecordView {
-  readonly provenance: MemoryProvenance
-  readonly status: MemoryStatus
-  readonly relations: readonly MemoryRelation[]
+  readonly provenance?: MemoryProvenance
+  readonly status?: MemoryStatus
+  readonly relations?: readonly MemoryRelation[]
 }
 
 /**
