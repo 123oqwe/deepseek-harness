@@ -121,7 +121,7 @@ Sources: [`packages/core/session/src/types.ts:434`](../packages/core/session/src
 'action/manifest-appended': ActionManifestAppendedEventData
 ```
 
-Source: [`packages/core/tools/src/index.ts:2856`](../packages/core/tools/src/index.ts)
+Source: [`packages/core/tools/src/index.ts:2900`](../packages/core/tools/src/index.ts)
 
 <a id="actionrisk-gated--log-only"></a>
 
@@ -160,7 +160,7 @@ Source: [`packages/core/tools/src/index.ts:2856`](../packages/core/tools/src/ind
 }
 ```
 
-Source: [`packages/core/tools/src/index.ts:2822`](../packages/core/tools/src/index.ts)
+Source: [`packages/core/tools/src/index.ts:2866`](../packages/core/tools/src/index.ts)
 
 <a id="actionworld-bound--log-only"></a>
 
@@ -203,7 +203,7 @@ Source: [`packages/core/tools/src/index.ts:2822`](../packages/core/tools/src/ind
 }
 ```
 
-Source: [`packages/core/tools/src/index.ts:2883`](../packages/core/tools/src/index.ts)
+Source: [`packages/core/tools/src/index.ts:2927`](../packages/core/tools/src/index.ts)
 
 ### `agent/*`
 
