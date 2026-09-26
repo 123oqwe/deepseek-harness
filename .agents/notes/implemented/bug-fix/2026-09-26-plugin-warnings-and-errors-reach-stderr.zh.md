@@ -26,4 +26,5 @@ BLOCKED-336：出厂宿主除了 Cordis 的内存缓冲之外没有挂任何 log
 - 任何出厂宿主的操作者都能在 stderr 上看到插件的警告与错误；供机器读取的 stdout 不变。
 - 整棵树的 logger 以 `WARN` 级别输出，所以内存缓冲也留下警告。
 - 被钉住的服务一直注册到进程结束。
+- 没有录制会话快照覆盖这些行。headless 快照的 stderr 期望由会话日志重建（`snapshots/session/headless.snapshot.ts`），而插件的 logger 行不是会话事件；delegate 在 2026-09-26 裁定，这项改动的用户可见证据是 lane A 的 A-393 v2 在四个出厂宿主上的用例。
 - 验证：lane A 在四个出厂宿主上的 A-393 v2、`packages/runtime-diagnostics/logger-stderr/tests/logger-stderr.spec.ts`、`packages/bundle/headless/tests/headless.spec.ts` 里的推理路由用例、`packages/boot/app-boot/tests/app-boot.spec.ts` 里的缓冲用例，以及 `packages/kernel/trust-kernel/tests/teardown.spec.ts`。

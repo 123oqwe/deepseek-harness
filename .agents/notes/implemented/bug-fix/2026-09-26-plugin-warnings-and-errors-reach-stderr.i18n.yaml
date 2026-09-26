@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-26-plugin-warnings-and-errors-reach-stderr.md
-2026-09-26-plugin-warnings-and-errors-reach-stderr.md: 9b1f11a239334b623af89f07724238f197a6a768
-2026-09-26-plugin-warnings-and-errors-reach-stderr.zh.md: 8e32d5da64d6e40ccfa1088c3047997ba8ce6506
+2026-09-26-plugin-warnings-and-errors-reach-stderr.md: 134b5a52d701824e09bb46d11d11de2f91561c23
+2026-09-26-plugin-warnings-and-errors-reach-stderr.zh.md: 995548c5a57af096d45b4d6fc2428d270672540e
