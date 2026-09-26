@@ -148,6 +148,34 @@ export function renderMemoryContext(records: readonly MemoryRecordView[], trunca
 }
 
 /**
+ * The text that supersedes an earlier recall snapshot when a later step recalls
+ * nothing (P6-03 acceptance[1]).
+ *
+ * A recall is a durable, `snapshot`-form message, so the request keeps only the
+ * latest one this plugin produced (`ContextForm` 'snapshot' in
+ * `@deepseek-ai/dsh-llm`: a later snapshot from the same producer supersedes the
+ * earlier). Once a record a step recalled is forgotten, a later step that
+ * recalls nothing must still
+ * emit a snapshot — this one — so the forgotten content does not ride the
+ * earlier snapshot into the session's later model requests. Its content is a
+ * fixed marker, so it holds none of what was recalled.
+ */
+const CLEARED_RECALL = 'No durable memory was recalled for this step; earlier memory-recall snapshots no longer apply.'
+
+/**
+ * The recall snapshot this consumer appends: a `snapshot`-form user message
+ * whose producer is this plugin, so the request retains only its latest one.
+ * @param text - the rendered recall, or {@link CLEARED_RECALL} to supersede an earlier recall with nothing.
+ * @returns the message to append.
+ */
+function recallSnapshot(text: string): UserMessage {
+  return createUserMessage({
+    content: [{ type: 'text', text }],
+    source: { kind: 'plugin', plugin: name, form: 'snapshot', sections: [{ name, text }] },
+  })
+}
+
+/**
  * Collect the text of the open turn's user-authored messages — the query this
  * consumer recalls against.
  *
@@ -223,6 +251,12 @@ export function apply(ctx: Context, config: Config): void {
   // notice is a fact about storage, so it is worth saying once and noise on
   // every step after that; the set is per-plugin-instance and disposes with it.
   const announced = new Set<string>()
+  // Sessions this consumer has left a recall snapshot on. When a later step
+  // recalls nothing, it supersedes that snapshot with a cleared one so a record
+  // forgotten since the recall does not ride the earlier snapshot into the
+  // session's later requests (P6-03 acceptance[1]); a session that never
+  // recalled emits nothing. Per-plugin-instance, like `announced`.
+  const recalled = new Set<string>()
   ctx.on('agent/pre-step', async ({ agent, turn, signal }, next): Promise<PreStepDecision> => {
     const decision = await next()
     if (decision.kind === 'reject' || signal.aborted) return decision
@@ -241,16 +275,15 @@ export function apply(ctx: Context, config: Config): void {
     })
     await announceRebuiltWorkspace(ctx, agent, accessContext, announced)
     const text = renderMemoryContext(records, truncated)
-    if (text === undefined) return decision
-    return {
-      ...decision,
-      messages: [
-        ...decision.messages,
-        createUserMessage({
-          content: [{ type: 'text', text }],
-          source: { kind: 'plugin', plugin: name, form: 'snapshot', sections: [{ name, text }] },
-        }),
-      ],
+    if (text === undefined) {
+      // Nothing recalled this step. Only supersede a recall this consumer left
+      // earlier on the same session — a session that never recalled adds no
+      // cleared marker.
+      if (!recalled.has(agent.session.id)) return decision
+      recalled.delete(agent.session.id)
+      return { ...decision, messages: [...decision.messages, recallSnapshot(CLEARED_RECALL)] }
     }
+    recalled.add(agent.session.id)
+    return { ...decision, messages: [...decision.messages, recallSnapshot(text)] }
   }, { prepend: true })
 }
