@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-26T19:54:59.624Z",
-  "inputDigest": "ec1f211295837cbc7958168d36e3257505db47a40964f12b529826877847cb95",
+  "lastUpdatedUtc": "2026-09-26T22:35:29.950Z",
+  "inputDigest": "7424dc52f3fa9cceb62f9e9017d22859022373c29d8ceb9f250c7d67beb282f0",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4031,6 +4031,47 @@
             "P2-03 acceptance[2] through the risk gate on the shipped headless profile at its default preset a probe declaring no risk domain tags reaches an approval request, and is refused without running when the operator rejects it"
           ],
           "capturedAtUtc": "2026-09-26T04:28:32.241Z"
+        },
+        "U.7": {
+          "status": "GREEN",
+          "candidateSha": "9501e34f518251c5f33ab25eab3a22e908d36587",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36268793542",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36268793542/first100-vitest-report-9501e34f518251c5f33ab25eab3a22e908d36587/vitest-report.json",
+          "observationSha256": "dbd7550fdf781d40b7599415f2ff2de65f633838b57bf1f5d358cecb48ec70f6",
+          "expectCasesMatched": [
+            "BLOCKED-315 condition 1 on the native path: the manifest classifies a probe as the risk gate does a probe the gate classifies read is recorded classified, as read, and not requiring approval",
+            "BLOCKED-315 condition 1 on the native path: the manifest classifies a probe as the risk gate does control: a probe the gate cannot classify is recorded unclassified and requiring approval",
+            "BLOCKED-315 condition 1 on the code-mode path: approval for an unclassifiable probe, and the manifest as the risk gate classifies control: a program calling the probe declaring filesystem-read reaches no approval request, and the probe runs",
+            "BLOCKED-315 condition 1 on the code-mode path: approval for an unclassifiable probe, and the manifest as the risk gate classifies a program calling the probe declaring no risk domain tags reaches an approval request, and the probe is refused without running",
+            "BLOCKED-315 condition 1 on the code-mode path: approval for an unclassifiable probe, and the manifest as the risk gate classifies the code-mode manifest of a probe the gate classifies read is recorded classified, as read, and not requiring approval",
+            "BLOCKED-315 condition 1 on the code-mode path: approval for an unclassifiable probe, and the manifest as the risk gate classifies control: the code-mode manifest of a probe the gate cannot classify is recorded unclassified and requiring approval"
+          ],
+          "capturedAtUtc": "2026-09-26T22:35:29.245Z"
+        },
+        "U.8": {
+          "status": "GREEN",
+          "candidateSha": "9501e34f518251c5f33ab25eab3a22e908d36587",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36268793542",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36268793542/first100-vitest-report-9501e34f518251c5f33ab25eab3a22e908d36587/vitest-report.json",
+          "observationSha256": "dbd7550fdf781d40b7599415f2ff2de65f633838b57bf1f5d358cecb48ec70f6",
+          "expectCasesMatched": [
+            "P2-03 acceptance[2] × BLOCKED-294: an unclassifiable call nested through ToolRuntime.execute reaches an approval request control: the model's own call to the unclassifiable writer reaches an approval request and, rejected, does not run",
+            "P2-03 acceptance[2] × BLOCKED-294: an unclassifiable call nested through ToolRuntime.execute reaches an approval request a plugin tool's nested call to the unclassifiable writer reaches an approval request before it runs and, rejected, does not run"
+          ],
+          "capturedAtUtc": "2026-09-26T22:35:29.636Z"
+        },
+        "U.9": {
+          "status": "GREEN",
+          "candidateSha": "9501e34f518251c5f33ab25eab3a22e908d36587",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36268793542",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36268793542/first100-vitest-report-9501e34f518251c5f33ab25eab3a22e908d36587/vitest-report.json",
+          "observationSha256": "dbd7550fdf781d40b7599415f2ff2de65f633838b57bf1f5d358cecb48ec70f6",
+          "expectCasesMatched": [
+            "P2-03 acceptance[0] × BLOCKED-294: a plugin tool nests a write through ToolRuntime.execute under its inherited capability token control: the model's own write has its manifest appended before the file is written",
+            "P2-03 acceptance[0] × BLOCKED-294: a plugin tool nests a write through ToolRuntime.execute under its inherited capability token the probe's body ran once and held the capability token it was admitted with",
+            "P2-03 acceptance[0] × BLOCKED-294: a plugin tool nests a write through ToolRuntime.execute under its inherited capability token the nested write is refused, or its manifest is appended before the file is written"
+          ],
+          "capturedAtUtc": "2026-09-26T22:35:29.939Z"
         }
       },
       "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
