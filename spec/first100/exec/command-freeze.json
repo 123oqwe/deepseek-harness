@@ -11887,7 +11887,8 @@
         "mutationDescription": "Six mutations, each one literal substitution, the spec re-run, the source restored byte-identical after each. On src/index.ts: (P6-M1) the seam's traceability check removed, which is the state before this stage; (P6-M2) a user-asserted claim bypasses that check; (P6-M4) the check moved AFTER the provider wrote instead of before; (P6-M10) the default search stops asking whether a record is retrievable. On src/provenance.ts: (P6-M3) `isTraceable` accepts an empty source list. On src/record.ts: (P6-M11) `<` in place of `<=` at the validity end.",
         "failureSummary": "P6-M1 reds all six refusal cases — the coarse control, and the exact state §12.19-1 withdrew the stage for. P6-M3 reds the four derived cases; P6-M2 reds the two empty-asserter cases; P6-M10 reds both expiry cases. P6-M4 reds the two \"stores nothing when it refuses\" cases ALONE, and is the load-bearing one: it is what makes that case a claim about ordering rather than about throwing. Cases run over both providers, so a count of two is one case observed twice rather than two subjects. NOT PROVEN, and stated rather than omitted: P6-M11 SURVIVED — these cases use a long-past `validUntil`, so the boundary instant is indistinguishable to them. That boundary is already pinned by the Fault matrix (\"a record is retrievable up to, but not at, its end\"), and this stage's subject is that the path REACHES the decision, not that the decision is correct; a boundary case here would duplicate F rather than cover the path."
       },
-      "note": "P6-02 U-stage, rebuilt after §12.19-1. The withdrawn entry ran `scope.spec.ts` alone — `decideCrossScopeMerge` against values the cases build themselves, with zero production callers, which is the shape the withdrawal names. The command now also runs `record-enforcement.spec.ts`, where every case goes through `ctx.memory.propose()` or `ctx.memory.query()`: acceptance[0] is enforced at the seam before any provider is reached, and acceptance[1] filters the default search inside the providers, because `query()` hands the seam `MemoryRecordView`s that carry neither `status` nor `sensitivity`. must[2] is deliberately NOT wired and the last case records that absence as an observation — the default search still returns content whose sensitivity nobody stated — so whoever wires it turns that case red and has to read BLOCKED-198 first. `scope.spec.ts` is kept rather than dropped: its rule is right and still owed a caller, which BLOCKED-146 tracks."
+      "note": "P6-02 U-stage, rebuilt after §12.19-1. The withdrawn entry ran `scope.spec.ts` alone — `decideCrossScopeMerge` against values the cases build themselves, with zero production callers, which is the shape the withdrawal names. The command now also runs `record-enforcement.spec.ts`, where every case goes through `ctx.memory.propose()` or `ctx.memory.query()`: acceptance[0] is enforced at the seam before any provider is reached, and acceptance[1] filters the default search inside the providers, because `query()` hands the seam `MemoryRecordView`s that carry neither `status` nor `sensitivity`. must[2] is deliberately NOT wired and the last case records that absence as an observation — the default search still returns content whose sensitivity nobody stated — so whoever wires it turns that case red and has to read BLOCKED-198 first. `scope.spec.ts` is kept rather than dropped: its rule is right and still owed a caller, which BLOCKED-146 tracks.",
+      "supersededBy": "2026-09-26T17:35:12.000Z"
     },
     {
       "epic": "P1-07",
@@ -19247,6 +19248,67 @@
         "failureSummary": "Read from each round's own report. Red first A-421: run 36198814967 at 91d6c053f1, the acceptance[0] case red (actor `anonymous:webhook-<uuid>`, no `identity/attached` of kind service), the control green. Fix 487a72e720: run 36227017825 green; fix' 058edc7bcf: e2e run 36229727665 2/2 (the acceptance[0] case green). Mutation M-606-1 991fca2300: run 36227040120 failure — the acceptance[0] case red again (the attachment dropped); the control stays green. The case file is byte-identical across these (the fix and mutation are src-only), so the difference is the fix, not the case."
       },
       "note": "P2-01 acceptance[0] (「任何 action 都能追溯 root user/tenant 与完整委派链」), the webhook originator: an action a webhook delivery triggers traces to the ServicePrincipal the delivery's HMAC key stands for (must[0]'s ServicePrincipal), with `identity/attached` of kind service logged once, rooted there rather than at a synthesized anonymous actor. Before B-606 the shipped web profile + the documented github-review patch attributed it to `anonymous:webhook-<uuid>` (BLOCKED-340, A-421 red first). BLOCKED-291 (c) records why the host user is NOT attached (a remote, HMAC-authenticated requester)."
+    },
+    {
+      "epic": "P6-02",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/memory/memory/tests/scope.spec.ts",
+        "packages/memory/memory/tests/record-enforcement.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "local-reference: refuses a derived claim that names no source event",
+        "local-reference: stores nothing when it refuses, so the refusal is not merely a thrown error",
+        "local-reference: refuses a user-asserted claim that names nobody",
+        "local-reference: accepts a derived claim that names one source, so the refusal is not blanket",
+        "local-reference: accepts a user-asserted claim, which names a responsible party instead of a source",
+        "durable-file: refuses a derived claim that names no source event",
+        "durable-file: stores nothing when it refuses, so the refusal is not merely a thrown error",
+        "durable-file: refuses a user-asserted claim that names nobody",
+        "durable-file: accepts a derived claim that names one source, so the refusal is not blanket",
+        "durable-file: accepts a user-asserted claim, which names a responsible party instead of a source",
+        "local-reference: withholds a record whose validity has passed",
+        "local-reference: returns an unexpired record, so the refusal above is not blanket",
+        "durable-file: withholds a record whose validity has passed",
+        "durable-file: returns an unexpired record, so the refusal above is not blanket",
+        "local-reference: content whose sensitivity nobody stated waits for review, and the default search does not return it",
+        "durable-file: content whose sensitivity nobody stated waits for review, and the default search does not return it",
+        "permits it and reports that no boundary was crossed",
+        "treats the same tenant and session as one scope",
+        "refuses a cross-tenant merge with no authorization",
+        "refuses a cross-session merge with a DIFFERENT reason from a cross-tenant one",
+        "permits a cross-tenant merge that names both endpoints",
+        "refuses an authorization issued for a different destination",
+        "refuses an authorization issued for a different source",
+        "does not let a session-scoped authorization cover a tenant-wide merge"
+      ],
+      "files": [
+        "packages/memory/memory/src/index.ts",
+        "packages/memory/memory/src/record.ts",
+        "packages/memory/memory/src/provenance.ts",
+        "packages/memory/memory/src/types.ts",
+        "packages/memory/memory/tests/scope.spec.ts",
+        "packages/memory/memory/tests/record-enforcement.spec.ts",
+        "packages/memory/memory/tests/fixtures/proposal-policy.ts"
+      ],
+      "frozenAtUtc": "2026-09-26T17:35:12.000Z",
+      "supersedes": "2026-09-11T06:18:45.054Z",
+      "supersessionReason": "B-656 (2cf619946f) renamed the two must[2] cases in record-enforcement.spec.ts and inverted their assertions, because P6-03 slice 1's must[2] fail-closed rule changed the behaviour they pinned: content whose writer stated no sensitivity now waits for review, so get() by id still returns it and the default search does not. The superseded titles, \"the default search still returns content whose sensitivity nobody stated\", describe the behaviour before that rule, and no case of that name exists in the tree. The argv, expectExit and the other 22 cases are unchanged; files gains the proposal-policy double record-enforcement.spec.ts mounts since B-656, which decides these cases.",
+      "dryRunProof": {
+        "treeSha": "527dd1617b2e901fb39b6d11f9550848db8a756b",
+        "testsDiscovered": 24
+      },
+      "sensitivityProof": {
+        "mutationDescription": "One mutation, on d25574ecbc (the observing tree): (M-P602U-1, bf79ae00c4) packages/memory/memory/src/index.ts:235 stores a proposal the proposal policy sends to review as active, which is the behaviour before P6-03 slice 1's fail-closed rule. The other 22 cases keep the titles and assertions of the superseded entry, whose six mutations (P6-M1 to P6-M11) were run on 038120f1a7 and were not run again on this tree, where src/index.ts has changed since.",
+        "failureSummary": "Narrow run 36258926958 of this argv on bf79ae00c4: the build passed, and 22 of 24 cases passed; the two that failed are exactly the renamed must[2] cases, local-reference and durable-file. The unmutated tree passed all 24 in the full run 36254411017 at d25574ecbc."
+      },
+      "note": "P6-02 U-stage, replacing the 2026-09-11 entry after B-656 renamed its two must[2] cases (P6-03 slice 1; the delegate, first100-delegate-1a, gate3 2026-09-26T17:16:39Z). Observed in the full run 36254411017 at d25574ecbc, where all 24 cases passed. The observing tree is pinned at refs/dsh/freeze/P6-02.U/2026-09-26T17-35-12.000Z -> d25574ecbc9bc4c2ea67e6988e2000981aadd069, whose tree is dryRunProof.treeSha."
     }
   ]
 }

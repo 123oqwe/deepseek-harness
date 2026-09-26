@@ -4814,6 +4814,14 @@
     },
     {
       "epic": "P6-02",
+      "path": "packages/memory/memory/tests/fixtures/proposal-policy.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P6-02",
       "path": "packages/memory/memory/tests/record-enforcement.spec.ts",
       "kind": "test",
       "stages": [
