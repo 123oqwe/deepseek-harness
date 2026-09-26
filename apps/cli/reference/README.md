@@ -74,6 +74,8 @@ dsh --profile tui
 
 Git-hosted plugins that ship sources build during install through their `prepare` script, which pnpm ≥10 blocks until the consumer allows it: the first `add` fails with pnpm's `allowBuilds` hint (and a dsh pointer at the profile's `pnpm-workspace.yaml`); copy the printed key there and re-run. Installing a built tarball or a local checkout needs no allowance.
 
+A local tarball can carry a provenance claim beside it, as `<tarball>.provenance.json` holding `{ claim, sbom }`. After pnpm succeeds and before any migration runs, `dsh plugin` verifies the claim of every added or changed tarball against the profile's `dsh.trustAnchors` and records the verdict as the lock entry's `provenance`: `trusted` with its anchor, or `unverified` for a package with no claim. A claim that does not verify undoes the install and exits 1 with the reason on stderr. The profile's boot builds its trust kernel from the same `dsh.trustAnchors`; a malformed list fails both commands before anything runs.
+
 ## Web alias
 
 `dsh web` is a hardcoded alias for `--profile web`; the flags after it belong to the web app, whose ordinary bundle provider parses them. `--host` and `--port` override the composed values of the rows that carry them, repeatable `--trusted-host` contributes invocation authorities through `ctx.webRuntime.trustedHosts` (a deployment expression concatenates its own authorities), and `--no-open` disables the default-browser handoff for this invocation. The client-plugin HMR receiver is always mounted and stays idle until a separate `pnpm run dev:web` watcher rebuilds client bundles.

@@ -8,19 +8,17 @@
  * registry, and a registry that later moves a tag cannot change what a locked
  * profile loads.
  *
- * **What this module does NOT do.** `signatureIdentity` is RECORDED, never
- * verified. Recording who claims to have signed something and deciding
- * whether that claim is trustworthy are different obligations, and only the
- * first belongs here — the second is `@deepseek-ai/dsh-plugin-provenance`'s,
- * and today it cannot be met: `verifyPackageSignature` trusts a first-seen
- * issuer, so the identity a lock records is an unverified self-assertion.
- * Nothing in this package may be read as evidence that a locked plugin's
- * signature is genuine (P1-02's acceptance lock).
+ * **What this module does NOT do.** It verifies nothing about who built or
+ * signed a package. `signatureIdentity` is RECORDED, never verified: it is
+ * what the package says about itself. The one verdict an entry carries,
+ * `provenance`, is decided by `@deepseek-ai/dsh-plugin-provenance` when
+ * `dsh plugin` installs the package, and is only recorded here (Epic P1-02).
  *
  * @module @deepseek-ai/dsh-plugin-lock/types
  */
 
 import type { Branded } from '@deepseek-ai/dsh-brand'
+import type { ProvenanceAuditRecord } from '@deepseek-ai/dsh-plugin-provenance'
 
 /** A plugin package name as it appears in a registry. */
 export type PluginPackageName = Branded<'PluginPackageName'>
@@ -55,7 +53,9 @@ export type GrantedCapability = Branded<'GrantedCapability'>
  * All nine are required rather than optional. An optional field would let a
  * lock omit, say, the manifest digest and still validate, and a lock that
  * validates while recording less than it claims to is worse than no lock —
- * it reports reproducibility it cannot deliver.
+ * it reports reproducibility it cannot deliver. `provenance` is the one
+ * optional field, because it is a verdict rather than a fact about the
+ * archive, and an entry written before installs verified anything has none.
  */
 export interface PluginLockEntry {
   readonly name: PluginPackageName
@@ -68,6 +68,12 @@ export interface PluginLockEntry {
   readonly dependencies: readonly PluginPackageName[]
   /** Capabilities granted at lock time, sorted, so the lock is byte-stable. */
   readonly grantedCapabilities: readonly GrantedCapability[]
+  /**
+   * The provenance verdict recorded when `dsh plugin` installed this version:
+   * `trusted` naming its anchor, or `unverified` when no claim was
+   * presented. Key-free by type; a refused install writes no entry at all.
+   */
+  readonly provenance?: ProvenanceAuditRecord
 }
 
 /** A complete lock file for one profile. */

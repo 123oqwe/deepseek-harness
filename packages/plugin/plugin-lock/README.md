@@ -25,7 +25,7 @@ kind: "package-reference"
 
 `signatureIdentity` is **recorded, never verified**. Recording who claims to have signed a package and deciding whether that claim is trustworthy are different obligations, and only the first belongs here.
 
-The second cannot be met today: `@deepseek-ai/dsh-plugin-provenance`'s `verifyPackageSignature` trusts a first-seen issuer, so the identity a lock records is an unverified self-assertion. **Nothing in this package may be read as evidence that a locked plugin's signature is genuine.** Keeping the field is still worth it — drift in the claim becomes detectable across resolutions — but detecting drift in a claim is not authenticating it.
+The second belongs to `@deepseek-ai/dsh-plugin-provenance`. `signatureIdentity` stays an unverified self-assertion, and **nothing in this package authenticates a locked plugin's signature.** Keeping the field is still worth it — drift in the claim becomes detectable across resolutions — but detecting drift in a claim is not authenticating it. What an entry can carry is the verdict `dsh plugin` reached when it installed that version: its optional `provenance` is the key-free `ProvenanceAuditRecord`, `trusted` naming the anchor a claim verified under, or `unverified` when the package presented no claim. A refused install writes no entry.
 
 ## Byte-stability is a requirement, not a nicety
 

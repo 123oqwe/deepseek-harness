@@ -490,7 +490,6 @@ flowchart TD
   pkg_lsp --> pkg_llm
   pkg_feature_gates --> pkg_brand
   pkg_feature_gates --> pkg_invariants
-  pkg_plugin_lock --> pkg_brand
   pkg_plugin_manifest --> pkg_invariants
   pkg_plugin_manifest --> pkg_util_values
   pkg_plugin_ownership --> pkg_brand
@@ -566,6 +565,8 @@ flowchart TD
   pkg_memory --> pkg_principal
   pkg_memory --> pkg_session
   pkg_memory --> pkg_util_values
+  pkg_plugin_lock --> pkg_brand
+  pkg_plugin_lock --> pkg_plugin_provenance
   pkg_persona --> pkg_system_prompt
   pkg_sandbox --> pkg_llm
   pkg_sandbox --> pkg_session
@@ -1614,7 +1615,6 @@ flowchart TD
 | [`trust-kernel`](../packages/kernel/trust-kernel) | `kernel` | [`invariants`](../packages/runtime-diagnostics/invariants) |
 | [`lsp`](../packages/lsp/lsp) | `lsp` | [`brand`](../packages/util/brand), [`llm`](../packages/llm/llm) |
 | [`feature-gates`](../packages/migration/feature-gates) | `migration` | [`brand`](../packages/util/brand), [`invariants`](../packages/runtime-diagnostics/invariants) |
-| [`plugin-lock`](../packages/plugin/plugin-lock) | `plugin` | [`brand`](../packages/util/brand) |
 | [`plugin-manifest`](../packages/plugin/plugin-manifest) | `plugin` | [`invariants`](../packages/runtime-diagnostics/invariants), [`util-values`](../packages/util/values) |
 | [`plugin-ownership`](../packages/plugin/plugin-ownership) | `plugin` | [`brand`](../packages/util/brand) |
 | [`message-bus`](../packages/run/message-bus) | `run` | [`brand`](../packages/util/brand), [`intake-dedup`](../packages/collaboration/intake-dedup) |
@@ -1649,6 +1649,7 @@ flowchart TD
 | [`action-ledger`](../packages/action/action-ledger) | `action` | [`action-manifest`](../packages/action/action-manifest), [`brand`](../packages/util/brand), [`principal`](../packages/identity/principal) |
 | [`code-runtime-worker-thread`](../packages/code-runtime/code-runtime-worker-thread) | `code-runtime` | [`code-runtime`](../packages/code-runtime/code-runtime), [`session`](../packages/core/session), [`timeout`](../packages/util/timeout) |
 | [`memory`](../packages/memory/memory) | `memory` | [`brand`](../packages/util/brand), [`llm`](../packages/llm/llm), [`principal`](../packages/identity/principal), [`session`](../packages/core/session), [`util-values`](../packages/util/values) |
+| [`plugin-lock`](../packages/plugin/plugin-lock) | `plugin` | [`brand`](../packages/util/brand), [`plugin-provenance`](../packages/plugin/plugin-provenance) |
 | [`persona`](../packages/preset/persona) | `preset` | [`system-prompt`](../packages/core/system-prompt) |
 | [`sandbox`](../packages/sandbox/sandbox) | `sandbox` | [`llm`](../packages/llm/llm), [`session`](../packages/core/session) |
 | [`schema-registry`](../packages/schema/schema-registry) | `schema` | [`brand`](../packages/util/brand), [`invariants`](../packages/runtime-diagnostics/invariants), [`session`](../packages/core/session) |

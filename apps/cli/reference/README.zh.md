@@ -76,6 +76,8 @@ dsh --profile tui
 
 随源码发布的 Git 托管插件会在安装期间通过 `prepare` 脚本构建，而 pnpm ≥10 默认会阻止该脚本，直到使用方明确允许。首次运行 `add` 会失败，并显示 pnpm 的 `allowBuilds` 提示；dsh 还会提示应修改该 profile 的 `pnpm-workspace.yaml`。将输出的键复制到该文件后，重新运行命令即可。安装已经构建好的 tarball 或本地 checkout 时，无需加入 `allowBuilds`。
 
+本地 tarball 可以在旁边附一份来源声明，文件名为 `<tarball>.provenance.json`，内容是 `{ claim, sbom }`。pnpm 成功之后、任何迁移运行之前，`dsh plugin` 用该 profile 的 `dsh.trustAnchors` 校验每个新增或变更的 tarball 的声明，并把结论记为锁条目的 `provenance`：校验通过的记为 `trusted` 并注明所用的锚，没有声明的包记为 `unverified`。声明校验不通过时，这次安装会被撤销，命令以 1 退出，并在 stderr 写明理由。该 profile 启动时，用同一份 `dsh.trustAnchors` 构建信任内核；列表格式有误时，这两个命令都会在执行任何操作之前失败。
+
 ## Web 别名
 
 `dsh web` 是 `--profile web` 的硬编码别名；写在它之后的 flag 属于 web 应用，由组合包中的普通提供方解析。`--host` 和 `--port` 覆盖承载它们的那些行的组合取值，可重复的 `--trusted-host` 通过 `ctx.webRuntime.trustedHosts` 提供本次调用的 authority（部署表达式会拼接自己的 authority），`--no-open` 则只对本次调用关闭默认浏览器交接。客户端插件 HMR（热模块替换）接收器始终挂载，在单独运行的 `pnpm run dev:web` watcher 重建客户端 bundle 之前保持空闲。

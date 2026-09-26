@@ -70,7 +70,7 @@ A profile directory holds two files:
 - `package.json` — the profile's out-of-tree plugin dependencies (managed by pnpm) plus the `dsh.profile` manifest with its ordered `bundles` list.
 - `cordis.patch.yml` — the user's own patch layer, applied after every bundle layer.
 
-You never write a profile manifest by hand: `dsh --profile <name> --from-default-profile <template>` can create one from a shipped application template, while `dsh plugin` creates a base-backed profile and maintains its installed bundle list. The [CLI behavior reference](../../../../apps/cli/reference/README.md#profile-boot) owns the creation rules; the next section shows the plugin path.
+You never create a profile manifest by hand: `dsh --profile <name> --from-default-profile <template>` can create one from a shipped application template, while `dsh plugin` creates a base-backed profile and maintains its installed bundle list. The [CLI behavior reference](../../../../apps/cli/reference/README.md#profile-boot) owns the creation rules; the next section shows the plugin path.
 
 ## Install into a profile
 
@@ -176,6 +176,29 @@ If you would rather not ask users for the allowance, distribute built artifacts 
 
 - **Publish to npm** with `lib/` built at `pnpm publish` time; `dsh plugin add your-package` then installs prebuilt code.
 - **Ship a tarball** from `pnpm pack`; users run `dsh plugin add ./hello-plugin-0.1.0.tgz`.
+
+### Sign a tarball
+
+A tarball can carry a signed provenance claim beside it, in `hello-plugin-0.1.0.tgz.provenance.json`, holding `{ "claim": ..., "sbom": ... }`. The claim states the tarball's sha256 digest, its source repository and commit, its builder, and the digest of its SBOM, and is signed offline with an Ed25519 key; the signature is base64. The package's own `package.json` declares the same repository (`repository.url`), commit (`dsh.provenance.sourceCommit`) and builder (`dsh.provenance.builderIdentity`), and the check compares them with the claim.
+
+Which keys to trust is the profile's decision, so this is the one field you add to a profile manifest by hand: list the key under `dsh.trustAnchors` in `$DSH_HOME/profiles/demo/package.json`.
+
+```json
+{
+  "dsh": {
+    "trustAnchors": [
+      {
+        "mode": "offline-signed",
+        "publicKeyFingerprint": "sha256:<your key fingerprint>",
+        "owner": "Your team",
+        "publicKeyPem": "-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----\n"
+      }
+    ]
+  }
+}
+```
+
+`dsh plugin --profile demo add ./hello-plugin-0.1.0.tgz` then records a claim that verifies as `trusted` in the profile's `plugins.lock.json`. A claim that does not verify — changed bytes, a replaced field, a key the profile does not list — is refused: the install is undone and `dsh plugin` exits 1 with the reason. A tarball without a claim still installs and is recorded `unverified`.
 
 ## Next steps
 

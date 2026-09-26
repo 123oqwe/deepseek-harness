@@ -34,6 +34,12 @@ export interface DshManifest {
   profile?: DshProfileManifest
   /** Client module loading and build metadata. */
   client?: DshClientManifest
+  /**
+   * Trust anchors a profile admits for plugin provenance, each shaped like the
+   * trust kernel's `TrustKernelTrustAnchor`; the `dsh` launcher validates
+   * them when it installs into or boots the profile.
+   */
+  trustAnchors?: readonly unknown[]
 }
 
 /** Runtime version requirements under `package.json.engines`. */
