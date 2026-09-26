@@ -40,6 +40,7 @@ import type { SessionId } from '@deepseek-ai/dsh-session'
 import { canonicalClientTimeZone } from '@deepseek-ai/dsh-util-time'
 import { Remote, RemoteError, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
 import { openControlLedger } from './control-ledger.ts'
+import type { ControlMessage } from './control-convergence.ts'
 import { ChildControlRouter } from './control-router.ts'
 import {
   catalogView, rejectCatalogRead, rejectPrompt, validateControlRequest,
@@ -245,6 +246,13 @@ export class SubagentRuntime extends TypertRemoteService {
    * manager's and outlives the child.
    */
   private readonly routers = new Map<SessionId, ChildControlRouter>()
+  /**
+   * One cancellation per child, aborted by {@link SubagentRuntime.interruptByParent}
+   * (P5-10 acceptance[0]). A prompt admitted before an interrupt hands it to its
+   * delivery beside the caller's signal, so the inbox refuses a message the
+   * interrupt overtook. Retained for as long as `routers` is.
+   */
+  private readonly cancellations = new Map<SessionId, AbortController>()
   private continuations: SubagentContinuationManager | undefined
   /**
    * The contained lifecycle-edge publisher. Built here because scoped dispatch
@@ -499,7 +507,10 @@ export class SubagentRuntime extends TypertRemoteService {
     // admission, attachments, then the child's inbox — and routing it through
     // the router's dispatch would demand a live child for a delivery that
     // today works without one (it may cold-resume).
-    const decision = control.decide({ kind: 'continue', controlEpoch: promptEpoch(request.requestId) })
+    // A steer-delivered prompt is decided as a steer (must[0]): a child awaiting
+    // a human refuses a steer but admits a queued prompt.
+    const message: ControlMessage = { kind: delivery === 'steer' ? 'steer' : 'continue', controlEpoch: promptEpoch(request.requestId) }
+    const decision = control.decide(message)
     if (!decision.applied) {
       throw new RemoteError(
         decision.denial.reason === 'already-applied' ? 'subagent/duplicate-request' : 'subagent/not-resumable',
@@ -514,6 +525,7 @@ export class SubagentRuntime extends TypertRemoteService {
       rpcId: request.requestId,
       ...(canonicalTimeZone === undefined ? {} : { clientTimeZone: canonicalTimeZone }),
     }
+    const cancellation = this.cancellationFor(childSessionId).signal
     try {
       // Admission precedes delivery: image parts become durable references
       // here, so the child inbox only ever accepts Host-persisted attachments.
@@ -525,12 +537,15 @@ export class SubagentRuntime extends TypertRemoteService {
         if (attachments === undefined) throw new Error('subagent image prompt requires an attachment store')
         content = await attachments.admitPromptContent(request.content)
       }
+      // The inbox checks this signal at its final synchronous cutoff, so an
+      // interrupt that lands between the decision above and the inbox refuses
+      // the message instead of waking the child (acceptance[0]).
       const messageId = await this[deliverSubagentPrompt](
         parent,
         childSessionId,
         content,
         source,
-        signal,
+        AbortSignal.any([signal, cancellation]),
         delivery,
       )
       control.recordApplied(promptEpoch(request.requestId))
@@ -542,6 +557,18 @@ export class SubagentRuntime extends TypertRemoteService {
       // repeated EFFECT, and a refused delivery had none.
       return { messageId }
     } catch (error: unknown) {
+      // An interrupt overtook this admitted prompt before the inbox took it:
+      // refused as the decision would refuse it now, not as a caller cancel.
+      if (cancellation.aborted && !signal.aborted) {
+        const now = control.decide(message)
+        const reason = now.applied ? 'phase-forbids' : now.denial.reason
+        throw new RemoteError(
+          'subagent/not-resumable',
+          `subagent "${childSessionId}" cannot take a prompt: ${reason}`,
+          { childSessionId, reason },
+          { cause: error },
+        )
+      }
       return rejectPrompt(error, childSessionId, signal)
     }
   }
@@ -572,7 +599,18 @@ export class SubagentRuntime extends TypertRemoteService {
       // The interrupt is what makes the NEXT prompt refusable. Recorded after
       // the primitive accepts it, so a refused interrupt leaves the child
       // promptable.
-      this.controlFor(childSessionId).observeCancelled()
+      const control = this.controlFor(childSessionId)
+      control.observeCancelled()
+      // A prompt already admitted but not yet in the inbox is refused too.
+      this.cancellationFor(childSessionId).abort()
+      // must[3]: the child is terminal only once its Agent has stopped. The
+      // Agent is looked up now, not at router construction, because a cold
+      // resume may have replaced it; a failed `whenIdle` also means the
+      // activity ended.
+      const child = this.ctx.get('agents')?.get(childSessionId)
+      const stopped = (): void => { control.participantStopped('child') }
+      if (child === undefined) stopped()
+      else void child.whenIdle().then(stopped, stopped)
     } catch (error: unknown) {
       if (error instanceof SubagentError && error.code === 'UNAUTHORIZED') {
         throw new RemoteError(
@@ -699,6 +737,20 @@ export class SubagentRuntime extends TypertRemoteService {
       this.routers.set(childSessionId, router)
     }
     return router
+  }
+
+  /**
+   * This child's cancellation, created on first use.
+   * @param childSessionId - the child to read.
+   * @returns the controller an interrupt aborts.
+   */
+  private cancellationFor(childSessionId: SessionId): AbortController {
+    let cancellation = this.cancellations.get(childSessionId)
+    if (cancellation === undefined) {
+      cancellation = new AbortController()
+      this.cancellations.set(childSessionId, cancellation)
+    }
+    return cancellation
   }
 
   private async prepareContinuable(
