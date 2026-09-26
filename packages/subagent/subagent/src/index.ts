@@ -603,14 +603,6 @@ export class SubagentRuntime extends TypertRemoteService {
       control.observeCancelled()
       // A prompt already admitted but not yet in the inbox is refused too.
       this.cancellationFor(childSessionId).abort()
-      // must[3]: the child is terminal only once its Agent has stopped. The
-      // Agent is looked up now, not at router construction, because a cold
-      // resume may have replaced it; a failed `whenIdle` also means the
-      // activity ended.
-      const child = this.ctx.get('agents')?.get(childSessionId)
-      const stopped = (): void => { control.participantStopped('child') }
-      if (child === undefined) stopped()
-      else void child.whenIdle().then(stopped, stopped)
     } catch (error: unknown) {
       if (error instanceof SubagentError && error.code === 'UNAUTHORIZED') {
         throw new RemoteError(
