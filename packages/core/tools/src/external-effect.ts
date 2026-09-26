@@ -13,7 +13,9 @@
  * package both paths can reach: the loop depends on it, and the code-mode
  * scheduler is inside it. Writing them a second time in `ptc.ts` is the shape
  * BLOCKED-136 records, and it is what put the manifest order out of one
- * implementation until §12.33.
+ * implementation until §12.33. The manifest-and-decide step the code-mode
+ * path and the public `ToolRuntime.execute` seam share lives here for the same
+ * reason (BLOCKED-294).
  *
  * @module @deepseek-ai/dsh-tools/external-effect
  */
@@ -21,18 +23,39 @@
 import { createHash } from 'node:crypto'
 import type { Context } from '@deepseek-ai/cordis'
 import { advanceLeasedAgent, stopGateFor, type Agent, type AgentLifecycleState } from '@deepseek-ai/dsh-agent'
-import type { ArgumentsHash, IdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
+import {
+  appendManifestThenGate,
+  computeArgumentsHash,
+  createActionManifest,
+  manifestAttribution,
+  manifestIdempotencyKey,
+} from '@deepseek-ai/dsh-action-manifest'
+import type {
+  ActionId,
+  ActionManifest,
+  ArgumentsHash,
+  CapabilityRef,
+  CreateActionManifestRequest,
+  IdempotencyKey,
+  IdempotencyScope,
+  ManifestAttribution,
+} from '@deepseek-ai/dsh-action-manifest'
 import type { LedgerEpoch, LedgerGeneration, LedgerScope, ReceiptDigest, ReserveDecision } from '@deepseek-ai/dsh-action-ledger'
 import type {} from '@deepseek-ai/dsh-action-ledger'
 import { brandNumber, brandString } from '@deepseek-ai/dsh-brand'
-import type { ExecutionWorldFact, PolicyContextFacts } from '@deepseek-ai/dsh-policy-engine'
+import { redactTokenForLog } from '@deepseek-ai/dsh-capability-token'
+import type { SignedCapabilityToken } from '@deepseek-ai/dsh-capability-token'
+import type { ClosedDecision, ExecutionWorldFact, PolicyContextFacts } from '@deepseek-ai/dsh-policy-engine'
+import { enforceManifestedAction } from '@deepseek-ai/dsh-policy-enforcement'
+import type { Principal } from '@deepseek-ai/dsh-principal'
 import { verifyApprovalBinding } from '@deepseek-ai/dsh-user-approval'
 import type { ApprovalBinding, ApprovalBindingInputs, ApprovalDisplay, ApprovalVerification } from '@deepseek-ai/dsh-user-approval/types'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
-import { SessionSeq } from '@deepseek-ai/dsh-session'
+import { attachedIdentity, SessionSeq } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-user-approval'
 import type { WorldId, WorldProviderId, WorldSpecDigest } from '@deepseek-ai/dsh-execution-world/types'
 import type { ToolExecutionResult } from './index.ts'
+import { createSessionManifestAppender } from './manifest-log.ts'
 
 /**
  * `TOOL_ABORTED_BEFORE_DISPATCH`, restated rather than imported.
@@ -54,6 +77,202 @@ export interface ExternalEffectRecord {
   readonly key: IdempotencyKey
   /** The canonical hash of the arguments the reservation was taken for. */
   readonly argumentsHash: ArgumentsHash
+}
+
+/**
+ * The policy facts for a dispatch with no agent behind it.
+ *
+ * With no agent there is no session to read a fact from, and a fail-closed
+ * value is the only honest thing to name.
+ */
+export const FAIL_CLOSED_FACTS: PolicyContextFacts = {
+  workspaceTrust: 'untrusted',
+  permissionPosture: 'default',
+  riskClass: 'security-sensitive',
+}
+
+/**
+ * The world fact for a dispatch with no agent behind it.
+ *
+ * `absent` for the same reason as {@link FAIL_CLOSED_FACTS}: with no agent
+ * there is no session to bind a world to, and a policy must see "where this
+ * ran is unknown" rather than a world borrowed from somewhere else.
+ */
+export const FAIL_CLOSED_WORLD: ExecutionWorldFact = { kind: 'absent' }
+
+/** How a dispatch path names the action it manifests. */
+export interface ManifestedDispatchRequest {
+  /** The call id, which the manifest names as its action. */
+  readonly callId: string
+  /** The tool being dispatched. */
+  readonly name: string
+  /** The detached copy of the arguments the manifest records and hashes. */
+  readonly loggedArguments: unknown
+  /** The path that dispatches, recorded in the manifest and the audit. */
+  readonly origin: 'code-mode-embedded' | 'plugin-rpc'
+  /** What the path calls one dispatch, for the manifest's expected diff. */
+  readonly dispatch: string
+  /** How the path names itself, for the manifest's compensation reason. */
+  readonly pathName: string
+  /** The event that will evidence the execution. */
+  readonly receipt: string
+}
+
+/** What one manifested dispatch produced: the ledger's record and P2-05's decision. */
+export interface ManifestedDispatch {
+  /** The reservation inputs. */
+  readonly reservation: ExternalEffectRecord
+  /** The policy decision, or undefined when the composition pins no Trust Kernel. */
+  readonly decision: ClosedDecision | undefined
+}
+
+/**
+ * The manifest request one dispatch describes. Mirrors the native path field
+ * for field, including the unclassifiable default: no side-effect declaration
+ * reaches this point.
+ * @param request - the path's description of the action.
+ * @param attribution - the run and actor the action is attributed to.
+ * @param scope - the session the idempotency key is keyed to.
+ * @returns the request `appendManifestThenGate` and `createActionManifest` take.
+ */
+function manifestRequestFor(
+  request: ManifestedDispatchRequest,
+  attribution: ManifestAttribution,
+  scope: IdempotencyScope,
+): CreateActionManifestRequest {
+  const actionId = brandString<ActionId>(request.callId)
+  const args = request.loggedArguments as JsonValue
+  return {
+    actionId,
+    runId: attribution.runId,
+    actor: attribution.actor,
+    capability: brandString<CapabilityRef>(request.name),
+    origin: request.origin,
+    target: { kind: 'other', ref: request.name },
+    args,
+    idempotencyKey: manifestIdempotencyKey(scope, actionId, computeArgumentsHash(args)),
+    preconditions: [],
+    expectedDiff: { description: `${request.dispatch} of ${request.name} executes with the manifested arguments` },
+    compensation: {
+      reversible: false,
+      reason: `${request.pathName} declares no compensation; a tool that has one states it in its own manifest contribution`,
+    },
+    evidenceRequirements: [{ kind: 'external-receipt', description: request.receipt }],
+  }
+}
+
+/**
+ * Ask the enforcement point about one manifest (P2-05 acceptance[0]): the SAME
+ * question the native path asks, taken where the manifest exists.
+ *
+ * The composition's context, not `agent.ctx`: an Agent handed to a dispatch
+ * path by a test harness may carry none, and the kernel is pinned on the root.
+ * @param ledgerContext - the composition's context.
+ * @param manifest - the action's manifest.
+ * @param presented - the token the dispatch presents, when it presents one.
+ * @param request - the path's description of the action, for its origin.
+ * @param world - where the action would run.
+ * @param facts - the context facts.
+ * @returns the decision, or undefined when the composition pins no Trust Kernel.
+ */
+function decideManifest(
+  ledgerContext: Context,
+  manifest: ActionManifest,
+  presented: SignedCapabilityToken | undefined,
+  request: ManifestedDispatchRequest,
+  world: ExecutionWorldFact,
+  facts: PolicyContextFacts,
+): ClosedDecision | undefined {
+  if (ledgerContext.get('trustKernel') === undefined) return undefined
+  return enforceManifestedAction(ledgerContext, {
+    manifest,
+    // must[0]'s second input, in P2-02's audited projection: the token this
+    // dispatch presents. A code-mode sub-dispatch presents the ENCLOSING
+    // call's token, the authority it runs under; so does a plugin tool's
+    // nested call through the public seam, because the runtime hands a tool
+    // body the token it was admitted under.
+    token: presented === undefined ? undefined : redactTokenForLog(presented),
+    origin: request.origin,
+    world,
+    facts,
+  })
+}
+
+/**
+ * Append one dispatch's ActionManifest to its agent's session and decide it
+ * (P2-03 must[2], P2-05 acceptance[0]).
+ *
+ * The SAME entry point the native path uses. must[2]'s "cannot bypass" is
+ * about each path producing the same record through the same order, not a
+ * similar event written beside it: while each path wrote construct-append-gate
+ * out for itself, "cannot bypass" rested on two copies staying identical, and
+ * the shared implementation had no caller (§12.33).
+ *
+ * `sequence` is read from the session's own per-type counter, the number the
+ * native path reads; counting by scanning the log is quadratic in a code-mode
+ * program's calls.
+ * @param ledgerContext - the composition's context.
+ * @param agent - the dispatching agent, whose session holds the manifest.
+ * @param presented - the token the dispatch presents, when it presents one.
+ * @param request - the path's description of the action.
+ * @param facts - the context facts.
+ * @param world - where the action would run.
+ * @returns the reservation inputs and the decision.
+ */
+export function appendManifestAndDecide(
+  ledgerContext: Context,
+  agent: Agent,
+  presented: SignedCapabilityToken | undefined,
+  request: ManifestedDispatchRequest,
+  facts: PolicyContextFacts,
+  world: ExecutionWorldFact,
+): ManifestedDispatch {
+  // The run and the actor come from the attached identity TOGETHER. An earlier
+  // draft branded the SESSION id as a `RunId`: the field must[0] mandates was
+  // present and its value was something else, so two runs of one session shared
+  // a "runId" and P4-12 would have keyed a scope on it.
+  const attribution = manifestAttribution(attachedIdentity(agent.session), agent.session.id)
+  const manifestRequest = manifestRequestFor(request, attribution, agent.session.id)
+  const { appended } = appendManifestThenGate(
+    createSessionManifestAppender(
+      agent.session,
+      (actorId: string): Principal => ({ ...attribution.actor, id: actorId as Principal['id'] }),
+      () => agent.lifecycle?.epoch,
+    ),
+    manifestRequest,
+  )
+  return {
+    reservation: {
+      scope: attribution.actor.id,
+      key: manifestRequest.idempotencyKey,
+      argumentsHash: appended.manifest.argumentsHash,
+    },
+    decision: decideManifest(ledgerContext, appended.manifest, presented, request, world, facts),
+  }
+}
+
+/**
+ * Decide an action no session can record (BLOCKED-294).
+ *
+ * A call with no agent has no session log for its manifest, so the manifest is
+ * built but not appended, and the enforcement point is asked about it at the
+ * fail-closed facts; its audit records the decision. The caller refuses the
+ * action whatever the decision is: P2-03 acceptance[0] needs the manifest in
+ * the event log before the action runs, and there is no log.
+ * @param ledgerContext - the composition's context, which pins the Trust Kernel.
+ * @param presented - the token the dispatch presents, when it presents one.
+ * @param request - the path's description of the action.
+ */
+export function decideUnrecordedAction(
+  ledgerContext: Context,
+  presented: SignedCapabilityToken | undefined,
+  request: ManifestedDispatchRequest,
+): void {
+  // Keyed to the call, because there is no session: the actor is the
+  // anonymous principal for that key, which is who this call names.
+  const scope = brandString<IdempotencyScope>(`no-session:${request.callId}`)
+  const manifest = createActionManifest(manifestRequestFor(request, manifestAttribution(undefined, scope), scope))
+  decideManifest(ledgerContext, manifest, presented, request, FAIL_CLOSED_WORLD, FAIL_CLOSED_FACTS)
 }
 
 /**
@@ -738,6 +957,22 @@ export function refusedPolicyResult(
     content: [{ type: 'text', text: `Error: ${text}` }],
     isError: true,
     error: { message: text, info: { name: 'PolicyRefusedError', code: ABORTED_BEFORE_DISPATCH } },
+  }
+}
+
+/**
+ * The tool result recorded when a call through the public seam names no agent
+ * (BLOCKED-294): no session can hold its manifest, so it does not run, whatever
+ * the enforcement point decided about it.
+ * @param toolName - the action refused.
+ * @returns the tool result to record in place of an execution.
+ */
+export function refusedUnrecordedCallResult(toolName: string): ToolExecutionResult {
+  const text = `The action "${toolName}" was refused: a direct call must name the agent whose session records its manifest.`
+  return {
+    content: [{ type: 'text', text: `Error: ${text}` }],
+    isError: true,
+    error: { message: text, info: { name: 'UnrecordedCallRefusedError', code: ABORTED_BEFORE_DISPATCH } },
   }
 }
 

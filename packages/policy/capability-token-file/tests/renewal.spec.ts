@@ -23,9 +23,21 @@ import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime, { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
 import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
+import { endorseComposedDecision } from '@deepseek-ai/dsh-policy-enforcement'
 import { digestToken } from '@deepseek-ai/dsh-capability-token'
 import type { SignedCapabilityToken } from '@deepseek-ai/dsh-capability-token'
 import CapabilityTokenFilePlugin from '@deepseek-ai/dsh-capability-token-file/src/index.ts'
+
+/**
+ * A policy that permits every action, standing in for the shipped set, which
+ * permits these tools. Since BLOCKED-294 a call through the public seam is
+ * decided before its token is checked, and a kernel with no decider refuses
+ * every decision, so these cases pin the shipped decider over this policy.
+ */
+const PERMIT_ALL_POLICY = {
+  digest: 'permit-all',
+  evaluate: () => ({ decision: { effect: 'permit', policySet: 'permit-all' }, explain: { matched: [], diagnostics: [] } }),
+}
 
 const roots: string[] = []
 const mounted: Context[] = []
@@ -54,7 +66,8 @@ async function mount(reuseDirectory?: string): Promise<{ ctx: Context; directory
   const directory = reuseDirectory ?? await mkdtemp(join(tmpdir(), 'dsh-cap-token-renewal-'))
   if (reuseDirectory === undefined) roots.push(directory)
   const ctx = new Context()
-  pinTrustKernel(ctx, createTrustKernel())
+  pinTrustKernel(ctx, createTrustKernel({ policyDecider: endorseComposedDecision }))
+  ctx.provide('policy', PERMIT_ALL_POLICY)
   await ctx.plugin(SessionStore)
   await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(SystemPrompt)

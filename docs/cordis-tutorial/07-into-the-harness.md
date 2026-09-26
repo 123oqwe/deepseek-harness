@@ -94,6 +94,22 @@ tool replied: [{"type":"text","text":"Hello, Cordis!"}]
 
 The logger fired first: `tools/result` is emitted as part of result materialization, before `execute`'s promise resolves to the caller. Neither of your plugins knows the other exists — the registry service and the event connect them.
 
+## Calling a tool from a plugin in a real profile
+
+Every shipped profile pins the Trust Kernel. There, a direct `ctx.tools.execute()` call is recorded and decided like the model's own: its ActionManifest goes into the session of the agent it acts for, and the policy enforcement point decides it before the tool runs. Pass that agent with the call, for example the one `ctx.agents.get(sessionId)` returns:
+
+```ts
+await ctx.tools.execute({
+  callId: brandString<ToolCallId>('greet-1'),
+  name: 'greet',
+  arguments: { name: 'Cordis' },
+  agent,
+  signal: new AbortController().signal,
+})
+```
+
+A call without `agent` is decided and then refused, because no session can record its manifest. The composition in this chapter pins no kernel, so its call runs as shown above.
+
 ## From here to a full agent
 
 A real agent is this composition plus more plugins: an LLM adapter, the agent loop, persistence, and an application entry. Compare the [base profile layer](../../packages/bundle/base/cordis.patch.yml) and [headless layer](../../packages/bundle/headless/cordis.patch.yml) — you can read their entries now. Add your `greet-tool.ts` through a small `--patch` overlay.

@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-26-direct-tool-calls-are-manifested-and-decided.md
+2026-09-26-direct-tool-calls-are-manifested-and-decided.md: 4f9cbdf04edb6c0a0bbfdb70a1e5b192f7294011
+2026-09-26-direct-tool-calls-are-manifested-and-decided.zh.md: df665d22b122772446b6235dda090fb99c35f64c
