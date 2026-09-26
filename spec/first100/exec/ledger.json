@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-26T08:06:44.940Z",
-  "inputDigest": "935df2a8b97ce00d255eafadece84b459a837dcedbf4eaefa4c18913cb52089e",
+  "lastUpdatedUtc": "2026-09-26T09:05:11.845Z",
+  "inputDigest": "8c1bc0c19b71cd57b0f1b4770d2bc0986e9805572e705a3aa222c6eeb97fa1bb",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4573,6 +4573,18 @@
             "BLOCKED-294: the public ToolRuntime.execute seam passes the one enforcement point a plugin calling the seam directly with no agent, as the tutorial teaches, is decided once"
           ],
           "capturedAtUtc": "2026-09-26T08:06:44.915Z"
+        },
+        "U.7": {
+          "status": "GREEN",
+          "candidateSha": "5f780c4d7ef3ed7f5090a70e060b4e37f4750876",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36225020149",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36225020149/first100-vitest-report-5f780c4d7ef3ed7f5090a70e060b4e37f4750876/vitest-report.json",
+          "observationSha256": "00be6090279a881dcfdb8d9044df837b3858580c2556ee1ee7496468773e33ce",
+          "expectCasesMatched": [
+            "P2-05 acceptance[0]: an action a code-mode program originates passes the one enforcement point control: the model's own run_code call appends one native manifest and is decided once",
+            "P2-05 acceptance[0]: an action a code-mode program originates passes the one enforcement point the program's read appends one code-mode manifest and the same audited enforcement point decides it once before it runs"
+          ],
+          "capturedAtUtc": "2026-09-26T09:05:11.834Z"
         }
       },
       "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
