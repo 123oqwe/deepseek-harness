@@ -126,7 +126,6 @@ export class ChildControlRouter {
    * refuses.
    */
   observeCancelled(): void {
-    if (this.phase === 'terminal') return
     this.phase = 'cancelling'
   }
 
