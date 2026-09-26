@@ -20,7 +20,7 @@ P6-03 第三片欠 `must[3]`（支持 merge、supersede、forget、export、righ
 - **`erase({ principal, tenantId, subject })`**——right-to-erasure——抹除该租户内关于该主体的每条记录，无论其会话或工作区；别的主体、别的租户不受影响。
 - **`export`** 的记录现在带 `provenance`、`status`、`relations`；`query`/`get` 保持裸视图。
 
-**投影清除做在 `@deepseek-ai/dsh-memory-context`**，不在环里。一次召回是该消费者自己的 `snapshot`-form 消息，而 `@deepseek-ai/dsh-llm` 的 `ContextForm` 'snapshot' 已承诺「同一 producer 的后一 snapshot 取代前一」——正是 `time-context` 与 `tmux-context` 依赖的机制，在请求装配时生效。bug 在于：某步召回为空时不发任何 snapshot，于是早先那条召回仍是最新的。现在某步召回为空时，用一条不含任何被召回内容的 cleared 标记，取代本消费者早先在同一会话上留下的召回快照。
+**投影清除做在 `@deepseek-ai/dsh-memory-context`**，不在环里。一次召回是该消费者自己的 `snapshot`-form 消息，而 `@deepseek-ai/dsh-llm` 的 `ContextForm` 'snapshot' 已承诺「同一 producer 的后一 snapshot 取代前一」——正是 `time-context` 与 `tmux-context` 依赖的机制。某步召回为空时，用一条不含任何被召回内容的 cleared 标记，取代本消费者早先在同一会话上留下的召回快照。是否有未清召回，按**持久会话日志**判断（`hasOutstandingRecall` 回扫最近一条 memory-context snapshot，除非它已是 cleared 标记，否则算未清），而非按 plugin 实例的内存，故 resume 后仍成立；且这次清除不论该步有没有 query 都跑，故开放轮 query 为空的一步也会清。从未召回过的会话不发任何东西。
 
 持久文档新增一个 additive 顶层 `tombstones` 列表、**不升版本**：它不是逐记录字段，故一份早于它的 version-3 文档是完整的——它没遗忘任何东西——读回时没有墓碑，而非一个臆造的值。
 
@@ -33,5 +33,5 @@ P6-03 第三片欠 `must[3]`（支持 merge、supersede、forget、export、righ
 ## Consequences
 
 - A-512 量到的现状，写在此处而非单独归档：此 build 没有作为独立对象的持久 memory 索引、cache 或会话 projection。`acceptance[1]` 的「索引」就是对存储的 `query` 扫描，「cache」是同一目录上的第二个 provider 实例，「projection」是 memory-context 的召回快照——故清掉存储即清掉前两者，memory-context 的改动清掉第三个。没有引入新的持久索引。
-- 这第一步投影增量在常见路径上清除（先召回、随后某步召回为空），但有两个往「留住被遗忘内容」漏的缺口，故要堵上而非接受：「本会话是否留过召回快照」这一事实按 plugin 实例的内存集合判断，resume 之后集合为空；且无 query 的一步不重投影。后续改为：按持久会话日志判断该事实，并在每一步核最新召回快照里的记录是否仍可取——不论这一步有没有 query，都替换该快照（清空，或重投影成只含仍可取的记录）——而从未召回过的会话仍不发。先红由 lane B 写（B-657 第三笔：一个 resume 后的会话与一个无 query 的步）。
+- 投影清除起初记在 plugin 实例的内存集合里、且只在有 query 的步跑，两处都漏被遗忘内容：resume 后集合为空（早先那条召回随重放的历史进下一次请求），且开放轮 query 为空的一步在清除前就返回了。lane B 的先红（B-657 第三笔，`P6-03.projection.composition.spec.ts`）正驱动这两处：一个先召回、遗忘、再在新进程里 resume 的会话；以及同一会话再跑一轮任务为纯空白、故其步无 query。两处现已堵上——按持久日志判断有无未清召回，并且不论该步有没有 query 都清；从未召回过的会话仍不发。
 - 无 package.json 或锁文件变更：memory 已 peer-depend `dsh-principal`。生成类 `tool-cordis` api-catalog 投影会因新的 export 形状与 provider 动词而陈旧，留流水线重生成。
