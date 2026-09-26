@@ -1,0 +1,159 @@
+/**
+ * A-467 under P1-06 must[0] (「默认第三方插件在独立进程或 microVM 中运行」),
+ * must[2] (「禁止传递宿主 Context、raw credentials、任意函数或可变对象引用。」) and
+ * acceptance[0] (「插件尝试直接读取宿主 home、process.env、socket、其他插件内存均失败。」):
+ * a third-party bundle's plugin, mounted at a real `dsh --profile` boot,
+ * runs outside the launcher's process and reaches none of the host's
+ * environment, harness home or services.
+ *
+ * As `apps/cli/tests/plugin-compat-boot.spec.ts` does, `runLoaderSmoke`
+ * spawns the real `dsh` bin against an isolated `DSH_HOME` (`<cwd>/.dsh`)
+ * holding a profile whose one bundle sits in the profile's own
+ * `node_modules`, where `dsh plugin add` installs it. The bundle declares no
+ * execution mode, so it gets the default. Its plugin prints one
+ * `A467-PLUGIN <json>` line from `apply` — its process ids, whether it read
+ * the host's environment sentinel and a file in the host's harness home by
+ * absolute path, and which host services `ctx.get` returned — and then ends
+ * the boot through `appExit`. `runLoaderSmoke` spawns the bin with no shell,
+ * so a plugin inside the launcher's process has this spec's process as its
+ * parent.
+ * @module tests/first100/fixtures/P1-06.out-of-process.composition
+ */
+
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
+import { beforeAll, describe, expect, it } from 'vitest'
+
+const REPOSITORY_ROOT = fileURLToPath(new URL('../../../', import.meta.url))
+const BIN_SCRIPT = join(REPOSITORY_ROOT, 'apps/cli/src/bin.ts')
+const TSCONFIG = join(REPOSITORY_ROOT, 'tsconfig.json')
+
+const PROFILE = 'a467'
+const BUNDLE = 'a467-third-party-bundle'
+
+/** The value the host puts in its environment and in a file in its harness home. */
+const SECRET = 'a467-host-secret-value'
+
+/** Host services the probe asks its context for. */
+const HOST_SERVICES = ['appExit', 'loader', 'agents', 'tools'] as const
+
+/** What the probe plugin reports from inside `apply`. */
+interface ProbeReport {
+  readonly pid: number
+  readonly ppid: number
+  /** `read` when the host's environment sentinel was visible. */
+  readonly env: string
+  /** `read` when the file in the host's harness home held the secret. */
+  readonly file: string
+  /** The host services `ctx.get` returned. */
+  readonly hostServices: readonly string[]
+}
+
+/**
+ * The probe plugin's source.
+ * @param secretPath - the absolute path of the file in the host's harness home.
+ * @returns the module text.
+ */
+function probeSource(secretPath: string): string {
+  return [
+    "import { readFileSync } from 'node:fs'",
+    `export const name = ${JSON.stringify(BUNDLE)}`,
+    'export function apply(ctx) {',
+    "  let file = 'unreadable'",
+    `  try { file = readFileSync(${JSON.stringify(secretPath)}, 'utf8').trim() === ${JSON.stringify(SECRET)} ? 'read' : 'other' } catch { file = 'unreadable' }`,
+    `  const env = process.env.A467_HOST_SECRET === ${JSON.stringify(SECRET)} ? 'read' : 'unreadable'`,
+    `  const hostServices = ${JSON.stringify(HOST_SERVICES)}.filter((name) => {`,
+    "    try { return typeof ctx?.get === 'function' && ctx.get(name) !== undefined } catch { return false }",
+    '  })',
+    "  process.stdout.write('A467-PLUGIN ' + JSON.stringify({ pid: process.pid, ppid: process.ppid, env, file, hostServices }) + '\\n')",
+    "  setTimeout(() => { ctx.get('appExit')(0) }, 0).unref?.()",
+    '}',
+    '',
+  ].join('\n')
+}
+
+/**
+ * Stage the profile, its one third-party bundle and the file in the host's harness home.
+ * @param cwd - the smoke's isolated working directory; `runLoaderSmoke` points `DSH_HOME` at `<cwd>/.dsh`.
+ */
+function stageProfile(cwd: string): void {
+  const home = join(cwd, '.dsh')
+  const profileDir = join(home, 'profiles', PROFILE)
+  const pkgDir = join(profileDir, 'node_modules', BUNDLE)
+  mkdirSync(pkgDir, { recursive: true })
+  const secretPath = join(home, 'a467-host-secret')
+  writeFileSync(secretPath, `${SECRET}\n`)
+  writeFileSync(join(profileDir, 'package.json'), `${JSON.stringify({
+    name: 'dsh-profile-a467',
+    private: true,
+    dependencies: {},
+    dsh: { profile: { bundles: [BUNDLE], patchReload: 'startup' } },
+  }, undefined, 2)}\n`)
+  writeFileSync(join(profileDir, 'cordis.patch.yml'), '[]\n')
+  writeFileSync(join(pkgDir, 'package.json'), `${JSON.stringify({
+    name: BUNDLE,
+    version: '1.0.0',
+    type: 'module',
+    main: './index.mjs',
+    dsh: { bundle: { patch: './cordis.patch.yml' } },
+  })}\n`)
+  writeFileSync(join(pkgDir, 'cordis.patch.yml'), `- insert:\n    - id: ${BUNDLE}-row\n      name: ${BUNDLE}\n`)
+  writeFileSync(join(pkgDir, 'index.mjs'), probeSource(secretPath))
+}
+
+let report: ProbeReport | undefined
+let failure: string | undefined
+
+beforeAll(async () => {
+  try {
+    const { stdout, stderr } = await runLoaderSmoke({
+      label: 'A-467 third-party plugin host',
+      tempDirPrefix: 'p1-06-out-of-process-',
+      binScript: BIN_SCRIPT,
+      configPath: '',
+      binArgs: ['--profile', PROFILE],
+      tsconfigPath: TSCONFIG,
+      env: { DSH_TRUST_KERNEL_INSECURE: '1', A467_HOST_SECRET: SECRET },
+      prepare: stageProfile,
+    })
+    const json = /A467-PLUGIN (?<json>.+)/u.exec(stdout)?.groups?.json
+    if (json === undefined) throw new Error(`the probe plugin reported nothing; stderr tail:\n${stderr.slice(-800)}`)
+    report = JSON.parse(json) as ProbeReport
+  } catch (error: unknown) {
+    failure = error instanceof Error ? error.message : String(error)
+  }
+}, LOADER_SMOKE_TEST_TIMEOUT_MS)
+
+/**
+ * The probe's report, or the reason there is none.
+ * @returns the report.
+ */
+function reported(): ProbeReport {
+  if (report === undefined) throw new Error(failure ?? 'the probe plugin reported nothing')
+  return report
+}
+
+describe('P1-06: a third-party bundle\'s plugin at a real dsh --profile boot runs outside the host and reaches nothing of it', () => {
+  it('control: the bundle\'s plugin is mounted and reports from inside apply', () => {
+    expect(typeof reported().pid, JSON.stringify(reported())).toBe('number')
+  })
+
+  it('must[0]: the plugin does not run in the dsh launcher\'s process', () => {
+    expect({ parentIsThisSpec: reported().ppid === process.pid }, JSON.stringify({ ...reported(), specPid: process.pid }))
+      .toEqual({ parentIsThisSpec: false })
+  })
+
+  it('acceptance[0]: the plugin cannot read the host\'s environment', () => {
+    expect(reported().env, JSON.stringify(reported())).toBe('unreadable')
+  })
+
+  it('acceptance[0]: the plugin cannot read a file in the host\'s harness home', () => {
+    expect(reported().file, JSON.stringify(reported())).toBe('unreadable')
+  })
+
+  it('must[2]: the plugin is handed no host context: none of the host\'s services is reachable through it', () => {
+    expect(reported().hostServices, JSON.stringify(reported())).toEqual([])
+  })
+})
