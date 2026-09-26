@@ -26,6 +26,7 @@ import { createProcessDeepSeekHarness } from '../../../sdk/client/src/api.ts'
 import type { RuntimeProcessOptions } from '../../../sdk/client/src/launch.ts'
 import type { DeepSeekHarnessOptions } from '@deepseek-ai/dsh-sdk-client'
 import { ReasoningEffortId } from '@deepseek-ai/dsh-llm'
+import { INITIALIZE_PARAMS_SCHEMA_VERSION } from '@deepseek-ai/dsh-sdk-protocol'
 import * as sdk from '../src/index.ts'
 import {
   DEFAULT_DISPOSE_EOF_GRACE_MS,
@@ -211,6 +212,7 @@ describe('dsh-subagent-dsh-sdk provider', () => {
         provider: 'fake-provider',
         model: 'fake-model',
         maxTokens: 4096,
+        schemaVersion: INITIALIZE_PARAMS_SCHEMA_VERSION,
       }])
       await ctx.fiber.dispose()
     } finally {
@@ -235,6 +237,7 @@ describe('dsh-subagent-dsh-sdk provider', () => {
         model: 'fake-model',
         reasoningEffort: 'high',
         maxTokens: 4096,
+        schemaVersion: INITIALIZE_PARAMS_SCHEMA_VERSION,
       })
       await ctx.fiber.dispose()
     } finally {
@@ -274,6 +277,7 @@ describe('dsh-subagent-dsh-sdk provider', () => {
           model: 'model-a',
           reasoningEffort: 'high',
           maxTokens: 111,
+          schemaVersion: INITIALIZE_PARAMS_SCHEMA_VERSION,
         },
         {
           cwd: process.cwd(),
@@ -281,6 +285,7 @@ describe('dsh-subagent-dsh-sdk provider', () => {
           model: 'model-b',
           reasoningEffort: 'max',
           maxTokens: 222,
+          schemaVersion: INITIALIZE_PARAMS_SCHEMA_VERSION,
         },
       ])
       await ctx.fiber.dispose()
