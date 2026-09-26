@@ -52,7 +52,7 @@ export const KERNEL_HARD_DENY_CLASSES: readonly RiskClass[] = Object.freeze(['sa
  * own hard-deny list, which is raising its bar rather than lowering the
  * kernel's.
  */
-const UNKNOWN_DEFAULT_CLASS: RiskClass = 'security-sensitive'
+const UNKNOWN_DEFAULT_CLASS: RiskClass = 'read'
 
 /**
  * Rank of a class in the ascending risk order.
