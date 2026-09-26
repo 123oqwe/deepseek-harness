@@ -2851,9 +2851,27 @@
           "stage": "U",
           "supplementSeq": 5,
           "title": "P8-01 on the shipped sdk profile: the shipped TypeScript client over a real handshake BLOCKED-314 condition 1(3): the caller receives the server's schemaFingerprint, the one the committed control-protocol artifact records"
+        },
+        {
+          "stage": "P",
+          "title": "P8-01 acceptance[0]: the server REFUSES a peer whose protocol range does not overlap its own"
+        },
+        {
+          "stage": "P",
+          "title": "serves initialize over the injected stdio pair"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P8-01 acceptance[0] and P0-06 acceptance[1]: nothing the peer sent is dropped silently contract: a non-empty downgrade list reaches the caller intact"
+        },
+        {
+          "stage": "P",
+          "supplementSeq": 1,
+          "title": "P8-01 and P0-06 acceptance[1]: a refused handshake says why in fields, and the fingerprint is the artifact's P8-01 acceptance[0]: the real server's handshake fingerprint is the committed control-protocol artifact's"
         }
       ],
-      "note": "acceptance[0]: 'a new client against an old server and an old client against a new server both reach a deterministic result, with no silent field loss.' BOTH DIRECTIONS are asserted, and symmetry is asserted directly rather than inferred from two examples -- the F-stage matrix negotiates every ORDERED PAIR of three adjacent generations, so a rule holding for one pairing but not another cannot pass. The no-silent-loss half is covered twice over: a refusal carries a machine-readable reason AND both ranges, so the mismatch is diagnosable without re-running the handshake; and the U-stage case proves the client no longer discards what the server sent -- it previously rebuilt its result from serverInfo alone, which was exactly the silent field loss this clause forbids, and the mutation deleting that reader reddens it.\n\n[2026-09-24 lane A: P8-01 U supplement 5 observes acceptance[0]'s carried handshake fields over a real handshake between the shipped TypeScript client and the shipped sdk profile (BLOCKED-314 closing condition 1(3), TypeScript half); the Python half follows B-582]"
+      "note": "acceptance[0]: 'a new client against an old server and an old client against a new server both reach a deterministic result, with no silent field loss.' BOTH DIRECTIONS are asserted, and symmetry is asserted directly rather than inferred from two examples -- the F-stage matrix negotiates every ORDERED PAIR of three adjacent generations, so a rule holding for one pairing but not another cannot pass. The no-silent-loss half is covered twice over: a refusal carries a machine-readable reason AND both ranges, so the mismatch is diagnosable without re-running the handshake; and the U-stage case proves the client no longer discards what the server sent -- it previously rebuilt its result from serverInfo alone, which was exactly the silent field loss this clause forbids, and the mutation deleting that reader reddens it.\n\n[2026-09-24 lane A: P8-01 U supplement 5 observes acceptance[0]'s carried handshake fields over a real handshake between the shipped TypeScript client and the shipped sdk profile (BLOCKED-314 closing condition 1(3), TypeScript half); the Python half follows B-582]\n\n[2026-09-26 lane B, from lane A's A-426 §1: BLOCKED-314 condition 1. Both shipped clients hand their caller every field of a real handshake: the TypeScript client by U.1 [371] and U.5 [397], the Python client by its five `test_initialize_keeps_*` cases and `test_bundled_runtime.py`'s handshake case, which is not frozen because the full run stages no carrier. Cited here: P [85]'s two real-server cases, U.1 [371]'s non-empty downgrade list, and P.1 [370]'s fingerprint case. No shipped producer of `downgrades` exists: the server always sends an empty list.]"
     },
     {
       "epic": "P8-01",
@@ -2882,9 +2900,34 @@
         {
           "stage": "C",
           "title": "control: a fully supported mandatory set is accepted, so the refusals above measure the capability and not the mandatory flag"
+        },
+        {
+          "stage": "P",
+          "supplementSeq": 1,
+          "title": "P8-01 and P0-06 acceptance[1]: a refused handshake says why in fields, and the fingerprint is the artifact's P8-01 acceptance[1]: an unknown mandatory capability is refused on the wire with a machine-readable reason"
+        },
+        {
+          "stage": "P",
+          "supplementSeq": 1,
+          "title": "P8-01 and P0-06 acceptance[1]: a refused handshake says why in fields, and the fingerprint is the artifact's P8-01 acceptance[1]: a known but unsupported mandatory capability is refused on the wire with a different machine-readable reason"
+        },
+        {
+          "stage": "P",
+          "supplementSeq": 1,
+          "title": "P8-01 and P0-06 acceptance[1]: a refused handshake says why in fields, and the fingerprint is the artifact's P8-01 acceptance[1]: a non-overlapping protocol range is refused on the wire with a machine-readable reason and both ranges"
+        },
+        {
+          "stage": "P",
+          "supplementSeq": 1,
+          "title": "P8-01 and P0-06 acceptance[1]: a refused handshake says why in fields, and the fingerprint is the artifact's P0-06 acceptance[1]: an incompatible schemaVersion is refused on the wire with its code and schemaId"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 3,
+          "title": "P8-01 on the shipped sdk profile: the negotiation reaches every Run, and a refusal says why P0-06 acceptance[1]: the shipped sdk profile refuses an incompatible schemaVersion on the wire with its code and schemaId"
         }
       ],
-      "note": "acceptance[1]: 'an incompatible mandatory capability is refused BEFORE the task, with a machine-readable reason.' The two reasons are kept distinct throughout because a peer can act on the difference: unknown means version skew, unsupported means a real gap, and collapsing them would leave a peer unable to tell 'upgrade me' from 'this will never work here'. BEFORE THE TASK is a property of placement rather than of the decision, and it is asserted at two layers: the server refuses inside initialize ahead of adapter resolution and any plugin mount, so a rejected connection never leaves the runtime holding state for it; and the client's initializeNegotiated refuses before sending, so the caller learns from the handshake rather than from a failed task. POSITIVE CONTROL: a fully supported mandatory set is accepted, so the refusals measure the capability rather than the mandatory flag itself."
+      "note": "acceptance[1]: 'an incompatible mandatory capability is refused BEFORE the task, with a machine-readable reason.' The two reasons are kept distinct throughout because a peer can act on the difference: unknown means version skew, unsupported means a real gap, and collapsing them would leave a peer unable to tell 'upgrade me' from 'this will never work here'. BEFORE THE TASK is a property of placement rather than of the decision, and it is asserted at two layers: the server refuses inside initialize ahead of adapter resolution and any plugin mount, so a rejected connection never leaves the runtime holding state for it; and the client's initializeNegotiated refuses before sending, so the caller learns from the handshake rather than from a failed task. POSITIVE CONTROL: a fully supported mandatory set is accepted, so the refusals measure the capability rather than the mandatory flag itself.\n\n[2026-09-26 lane B, from lane A's A-426 §1: BLOCKED-314 condition 4. Each refusal is answered on the wire with its reason in `error.data` fields: P.1 [370]'s four refusal cases, and U.3 [394]'s schemaVersion refusal on the shipped sdk profile. M6–M9 each redden the refusals they strip.]"
     },
     {
       "epic": "P8-01",
@@ -2936,9 +2979,14 @@
         {
           "stage": "F",
           "title": "contract: two surfaces whose fields concatenate identically still fingerprint differently, which is what length-prefixing buys"
+        },
+        {
+          "stage": "C",
+          "supplementSeq": 3,
+          "title": "P8-01 acceptance[3]: the fingerprinted surface is the surface the server answers names exactly the methods the dispatcher handles and the names the server sends"
         }
       ],
-      "note": "acceptance[3]: 'any protocol behaviour change triggers a fixture diff.' Sensitivity is asserted across every kind of change the surface admits -- a version bump, an added method, a removed resource type, and the same name moving between the method and event kinds -- rather than on one representative edit. PAIRED CONTROL: an edit changing no wire-visible field leaves the fingerprint alone, so the sensitivity cases measure the CHANGE and not the act of editing; without it, a fingerprint over the whole source text would satisfy every case above while being useless. The length-prefixing case is here because of BLOCKED-085: the original case for it moved the separator CHARACTER, and removing length-prefixing reddened nothing; the replacement moves the field BOUNDARY ('ab'+'c' against 'a'+'bc', identical unprefixed) and the same mutation now reddens exactly it."
+      "note": "acceptance[3]: 'any protocol behaviour change triggers a fixture diff.' Sensitivity is asserted across every kind of change the surface admits -- a version bump, an added method, a removed resource type, and the same name moving between the method and event kinds -- rather than on one representative edit. PAIRED CONTROL: an edit changing no wire-visible field leaves the fingerprint alone, so the sensitivity cases measure the CHANGE and not the act of editing; without it, a fingerprint over the whole source text would satisfy every case above while being useless. The length-prefixing case is here because of BLOCKED-085: the original case for it moved the separator CHARACTER, and removing length-prefixing reddened nothing; the replacement moves the field BOUNDARY ('ab'+'c' against 'a'+'bc', identical unprefixed) and the same mutation now reddens exactly it.\n\n[2026-09-26 lane B, from lane A's A-426 §1: BLOCKED-314 condition 2. C.3 [369] compares the fingerprinted surface with the methods the dispatcher handles and the names the server sends, both read from `server.ts`; M19, a send-site rename that leaves the surface alone, reddens exactly it.]"
     },
     {
       "epic": "P8-01",
@@ -2974,9 +3022,34 @@
           "stage": "U",
           "supplementSeq": 6,
           "title": "P8-01 acceptance[4]: a subagent's Run takes the provenance of the Run its parent agent is in (blind review B1) gives none when the parent's own Run has reached a terminal state"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 2,
+          "title": "P8-01 acceptance[4]: a Run keeps the provenance it was opened with records the negotiation of the connection that opened the Run, durably"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 2,
+          "title": "P8-01 acceptance[4]: a Run keeps the provenance it was opened with keeps the first provenance when a continued Run is recorded again after a restart"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 3,
+          "title": "P8-01 on the shipped sdk profile: the negotiation reaches every Run, and a refusal says why control: the shipped sdk profile opens one Run for each SDK session and one for the delegated subagent, so the case below measures provenance and not a missing Run"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 3,
+          "title": "P8-01 on the shipped sdk profile: the negotiation reaches every Run, and a refusal says why P8-01 acceptance[4]: every Run the connection opened, the subagent's included, carries the handshake's negotiation"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 4,
+          "title": "P8-01 B1 on the shipped sdk and acp profiles: a session the sdk created and acp resumed delegates once P8-01 blind review B1: the subagent's Run carries the provenance of its parent agent's current Run, not of the first Run its parent session opened"
         }
       ],
-      "note": "acceptance[4]: 'the negotiated result is written to each Run's provenance.' The outcome is returned from initialize as structured provenance -- agreed version, agreed capabilities, ignored capabilities, downgrades -- so 'what did these peers agree to' is answerable from the record rather than by replaying a handshake that no longer exists. Two failure modes are closed rather than one: a partially-formed negotiation is dropped WHOLE, because a caller would treat the fields that did arrive as authoritative and a half-recorded agreement is worse than none; and an ABSENT negotiation stays absent rather than becoming an empty one, since absence means the peer predates negotiation while an empty record would assert agreement to nothing. The P-stage export case is included because provenance that no consumer can construct is not provenance: before that stage the negotiation functions existed and nothing re-exported them."
+      "note": "acceptance[4]: 'the negotiated result is written to each Run's provenance.' The outcome is returned from initialize as structured provenance -- agreed version, agreed capabilities, ignored capabilities, downgrades -- so 'what did these peers agree to' is answerable from the record rather than by replaying a handshake that no longer exists. Two failure modes are closed rather than one: a partially-formed negotiation is dropped WHOLE, because a caller would treat the fields that did arrive as authoritative and a half-recorded agreement is worse than none; and an ABSENT negotiation stays absent rather than becoming an empty one, since absence means the peer predates negotiation while an empty record would assert agreement to nothing. The P-stage export case is included because provenance that no consumer can construct is not provenance: before that stage the negotiation functions existed and nothing re-exported them.\n\n[2026-09-26 lane B, from lane A's A-426 §1: BLOCKED-314 condition 3. On the shipped sdk profile, U.3 [394] shows every Run a connection opened, the delegated subagent's included, carrying the handshake's negotiation (M13 and M13b redden exactly that case); U.2 [372] shows the record durable and a continued Run keeping its first provenance; U.4 [395] shows a subagent's Run taking its parent agent's current Run's provenance (blind review B1).]"
     },
     {
       "epic": "P4-07",

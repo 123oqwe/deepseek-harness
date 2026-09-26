@@ -8587,7 +8587,7 @@ Sign-offs: PASS 2026-09-12 and PASS 2026-09-13 (first100-delegate-78).
 
 ### BLOCKED-314 — P8-01's shipped Python client drops negotiation fields on every handshake, its protocol fingerprint does not cover the wire, and no Run records the negotiation; the acceptance is withdrawn
 
-**Status:** OPEN (2026-09-24). Owner lane B (implementation), lane A (preFlight). Ruled by the delegate (first100-delegate-1a) on lane A's A-301, whose search and independent verifier agents agree on all five clauses. The delegate re-read the load-bearing lines at `4e3ddbbab9`. The withdrawal moves the ledger row in the same commit that opens this entry.
+**Status:** CLOSED 2026-09-26 (closure note at the end of this entry); opened 2026-09-24. Owner lane B (implementation), lane A (preFlight). Ruled by the delegate (first100-delegate-1a) on lane A's A-301, whose search and independent verifier agents agree on all five clauses. The delegate re-read the load-bearing lines at `4e3ddbbab9`. The withdrawal moves the ledger row in the same commit that opens this entry.
 
 **What was measured.**
 
@@ -8630,6 +8630,27 @@ Sign-offs: PASS 2026-09-12 and PASS 2026-09-13 (first100-delegate-78).
 5. Then a fresh 4.4a–d, a PASS sign-off, and `--accept`.
 
 **Owner.** lane B, after a lane A preFlight.
+
+**Closure note (2026-09-25, lane A draft for the delegate, A-426).** Scope as ruled for P8-01 (question 17 (a)): the sdk profile and its subagents; sdk-minimal, headless, ACP and Web are outside it. Each condition, with the frozen case and the runs that show it. Lane A re-read these runs by full case title from each round's own report (`artifacts/laneA/a-426-readings.cjs`), and all readings are as recorded: 7 Python, 16 TypeScript, 2 A-375 and the 6 M10–M12 rounds of A-413.
+- **Condition 1, acceptance[0].**
+  - The Python client keeps every field: every model sets `extra="allow"` (`python/sdk/src/deepseek_harness/models.py:29`), and `InitializeResponse` models `protocolVersions` and `schemaFingerprint` (`:123-124`). Its five `test_initialize_keeps_*` cases are red at PRECHECK `2396989a5d` (run 36006979166) and green at the fix `2c5ff0286e` (run 36007000349). M1, M2, M3, M15 and M15b each redden exactly the one case predicted (runs 36007024450, 36007048150, 36007073298, 36007098649, 36007122970).
+  - The TypeScript client reads `downgrades` from the wire: P8-01 U.1 [371]. M4 (run 36007679390) reddens exactly the non-empty and malformed downgrade cases.
+  - Over a real handshake, both shipped clients hand their caller `protocolVersions` and `schemaFingerprint`:
+    - TypeScript: U.5 [397]; M-pv (run 36046236731) and M-fp (run 36046259818) redden one case each.
+    - Python: `python/sdk/tests/test_bundled_runtime.py::test_bundled_runtime_hands_the_caller_the_handshake_fields`, on both carriers, passed at `77c139df26` (run 36200543709, 8 of 8) and red only under M-fp `08ce7bc614` (run 36200557727, `schemaFingerprint` None where the committed artifact records `995c330e…`). This case is not frozen: the full run does not stage the carriers. Freezing it is a follow-up once the push gate stages them.
+  - A non-empty `downgrades` passes whole through both production read paths: TypeScript T1 (U.1, M4) and Python `test_initialize_keeps_a_non_empty_downgrade_from_the_wire` (M3). **No producer on the shipped build:** the server always sends `downgrades: []` (`packages/sdk/server/src/server.ts:421`), because no compatibility adapter exists (must[3]).
+  - The coverage record cites the real-server cases `plugin-apply.spec.ts:276` and `:300` (P [85]).
+- **Condition 2, acceptance[3].** C.3 [369] compares the fingerprinted surface with the methods the dispatcher handles and the names the server sends, both read from `server.ts`. It is red before the fix and green after, and M19 (run 36008014609), a send-site rename that leaves the surface alone, reddens exactly it. Removing a declared entry moves the fingerprint away from the committed artifact: M10, M11 and M12 (runs 36007811723, 36007834607, 36007857935, each built first) redden P.1 [370]'s fingerprint case (the delegate's record, gate3 log 2026-09-25T03:47:31Z).
+- **Condition 3, acceptance[4].**
+  - On the shipped sdk profile, U.3 [394]: one launch, two sessions, one delegating once, three Runs, each carrying the handshake's negotiation. M13 (run 36007881434) and M13b (run 36007903541) each redden exactly the provenance case, and the control stays green.
+  - U.2 [372]: the record is durable, and a continued Run keeps its first provenance.
+  - U.4 [395] and U.6 [398]: a subagent's Run takes its parent agent's current Run's provenance (blind review B1). The case is red first at `dccd2013a5` (run 36043915539), green at `10b4ee72fc` (run 36044889967), and red again under M-B1″ (run 36044911552).
+- **Condition 4, acceptance[1].** Each refusal is answered on the wire with its reason as `error.data` fields: P.1 [370] T7–T10, U.3's schemaVersion refusal, and U.1's `initializeNegotiated` refusal fields. They are red at PRECHECK (run 36007637145), and M6–M9 (runs 36007721245, 36007744268, 36007766768, 36007787776) redden the refusals each one strips.
+- **Condition 5.** The delegate's: a fresh 4.4a–d, then a PASS sign-off and `--accept`, after batch 9r's full run records the cells (the delegate, gate3 log 2026-09-26T00:13:33Z); until then P8-01's row in ACCEPTANCE LOCKS stands.
+- **Not covered:**
+  - The mutations measured the code as it stood at freeze time. Except M6 (`transport.ts`) and the Python mutations (`models.py`), the files they change have changed since, and they were not re-run.
+  - B-595 (`b951b91113`) changed `client.ts` and `server.ts` after the batch 8′ full run; batch 9 at `39ce6d1c7c` observes it.
+  - No shipped producer of `downgrades` exists.
 
 ### BLOCKED-315 — P2-03 records "requires approval" for an unclassifiable action and nothing enforces it; the acceptance is withdrawn
 
