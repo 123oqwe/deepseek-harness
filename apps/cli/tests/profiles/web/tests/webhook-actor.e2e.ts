@@ -153,9 +153,18 @@ beforeAll(async () => {
       body,
     })
 
-    // The runtime creates the Workspace Session after it answers the delivery.
+    // The runtime creates the Workspace Session after it answers the delivery,
+    // then attaches it and only afterwards appends the webhook-sourced followup
+    // user message — later than the agent first appears. Waiting for the agent
+    // alone lets whenIdle() return before that message exists (no active driver
+    // yet), so the flush and dispose could race ahead of it and the log would
+    // miss the delivery. Wait for the followup itself, the message these cases read.
     await vi.waitFor(() => {
-      expect(live.agents.list().some(agent => agent.session.header.cwd === project)).toBe(true)
+      const pending = live.agents.list().find(candidate => candidate.session.header.cwd === project)
+      expect(pending, 'the webhook session has not appeared with its delivery yet').toBeDefined()
+      const hasDelivery = pending !== undefined && pending.session.snapshotEvents().some(event =>
+        event.type === 'user/message' && (event.data.source as { kind?: unknown }).kind === 'webhook')
+      expect(hasDelivery).toBe(true)
     }, { timeout: 60_000, interval: 100 })
     const agent = live.agents.list().find(candidate => candidate.session.header.cwd === project)
     if (agent === undefined) throw new Error('the webhook session has no live agent')
