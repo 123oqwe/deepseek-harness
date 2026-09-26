@@ -101,6 +101,7 @@ const SENTENCE_MODEL_EXPERIENCE: Readonly<Record<string, SentenceContract>> = {
   'packages/assurance/evidence-format': { kind: 'none', reason: 'Contract-stage type-only package with no runtime export; nothing here can render into a model request, system prompt, or tool schema.' },
   'packages/plugin/plugin-manifest': { kind: 'none', reason: 'Contract-stage type and pure-validation-function package with no runtime export; nothing here can render into a model request, system prompt, or tool schema.' },
   'packages/memory/memory': { kind: 'indirect', reason: 'The seam registers no prompt, schema, or tool; dsh-memory-context owns every model-visible rendering of a recalled record.' },
+  'packages/memory/memory-policy': { kind: 'none', reason: 'Epic P6-03 proposal policy: a pure decision over a caller-supplied proposal, mounted as a thin service; it registers no prompt, schema, tool, or session event. Its effect reaches a model only as the absence of a withheld `pending` record from dsh-memory-context\'s recall, which that package renders.' },
   'packages/util/chunked-list': { kind: 'none', reason: 'Immutable collection primitive; registers nothing model-facing.' },
   'packages/util/package-manifest': { kind: 'none', reason: 'Type declarations only; registers nothing model-facing.' },
   'packages/util/time': { kind: 'indirect', reason: 'Pure zone validation; the consumer that records a canonical zone owns the model-visible line derived from it.' },

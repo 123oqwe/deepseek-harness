@@ -42,6 +42,7 @@
   },
   "devDependencies": {
     "@deepseek-ai/dsh-memory": "workspace:^",
+    "@deepseek-ai/dsh-principal": "workspace:^",
     "@deepseek-ai/cordis": "workspace:^"
   }
 }
