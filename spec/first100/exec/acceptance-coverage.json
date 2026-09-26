@@ -4164,9 +4164,39 @@
           "stage": "U",
           "supplementSeq": 4,
           "title": "P2-03 must[0]: the manifest is CONSTRUCTED on the production path, not assembled beside it (BLOCKED-143) records whether the side-effect class was DECLARED, which the class alone cannot say (acceptance[2])"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 5,
+          "title": "P2-03 acceptance[2]: what the risk gate decides today on the shipped templates, per tool and preset headless boots with the shipped preset table, runs its root agent under workspace-write, and shows more than ten tools"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 5,
+          "title": "P2-03 acceptance[2]: what the risk gate decides today on the shipped templates, per tool and preset on headless, no tool the risk gate classifies by a policy rule is asked about or refused under any shipped preset"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 5,
+          "title": "P2-03 acceptance[2]: what the risk gate decides today on the shipped templates, per tool and preset on headless under the shipped default preset, every action the risk gate cannot classify is asked about"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 5,
+          "title": "P2-03 acceptance[2]: what the risk gate decides today on the shipped templates, per tool and preset sdk-minimal mounts no permission presets, so the risk gate decides nothing for any of its tools"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 6,
+          "title": "P2-03 acceptance[2] through the risk gate on the shipped headless profile at its default preset control: a probe declaring filesystem-read is allowed by the preset without an approval request, and runs"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 6,
+          "title": "P2-03 acceptance[2] through the risk gate on the shipped headless profile at its default preset a probe declaring no risk domain tags reaches an approval request, and is refused without running when the operator rejects it"
         }
       ],
-      "note": "The second Contract case is the control: without it, a classifier that returned the high-risk default for EVERY action would satisfy the first. The Usage case moves the claim from a return value to the durable log, which is where acceptance[0]'s reader looks.\n\n[2026-09-24 lane A, A-335 backfill (S1: the evidence existed and was not registered; no case changed): the `U.4` citation «P2-03 must[0]: the manifest is CONSTRUCTED on the production path, not assembled beside it (BLOCKED-143) records whether the side-effect class was DECLARED, which the class alone cannot say (acceptance[2])» (`packages/core/agent-loop/tests/tool-calls.spec.ts:1020`) tests the clause's first subject, an unclassifiable action defaulting to high risk, on the native dispatch path: the manifest the production path writes to the log records `classified: false`, `sideEffectClass: 'destructive'` and `requiresApproval: true`. It does not cover the second subject, requiring approval: `requiresApproval` is recorded and not enforced (`packages/action/action-manifest/README.md:103`), and the cases in which the risk gate does ask are frozen under P2-04, not here.]"
+      "note": "The second Contract case is the control: without it, a classifier that returned the high-risk default for EVERY action would satisfy the first. The Usage case moves the claim from a return value to the durable log, which is where acceptance[0]'s reader looks.\n\n[2026-09-24 lane A, A-335 backfill (S1: the evidence existed and was not registered; no case changed): the `U.4` citation «P2-03 must[0]: the manifest is CONSTRUCTED on the production path, not assembled beside it (BLOCKED-143) records whether the side-effect class was DECLARED, which the class alone cannot say (acceptance[2])» (`packages/core/agent-loop/tests/tool-calls.spec.ts:1020`) tests the clause's first subject, an unclassifiable action defaulting to high risk, on the native dispatch path: the manifest the production path writes to the log records `classified: false`, `sideEffectClass: 'destructive'` and `requiresApproval: true`. It does not cover the second subject, requiring approval: `requiresApproval` is recorded and not enforced (`packages/action/action-manifest/README.md:103`), and the cases in which the risk gate does ask are frozen under P2-04, not here.]\n\n[2026-09-26 lane A, A-459 draft] Under the delegate's ruling the manifest takes the risk gate's one classification, so acceptance[2] is observed where that gate decides. On the shipped headless profile at its default preset: every tool the gate classifies by a policy rule is allowed by every shipped preset, and every action it cannot classify is asked about (U.5, computed with the gate's own two calls); through the gate itself, a probe declaring no risk domain tags reaches an approval request and is refused without running when the operator rejects it, while a classified probe runs without one (U.6, native path). The code-mode path and the manifest recording the gate's class are A-443's cases, frozen when B-620 lands. sdk-minimal mounts no permission presets and is outside this clause by the delegate's ruling; danger-full-access is an operator's choice, not the default, and is outside it too."
     },
     {
       "epic": "P2-02",

@@ -1872,6 +1872,23 @@
     },
     {
       "epic": "P2-03",
+      "path": "packages/bundle/base/cordis.patch.yml",
+      "kind": "manifest",
+      "stages": [
+        "U.5",
+        "U.6"
+      ]
+    },
+    {
+      "epic": "P2-03",
+      "path": "packages/bundle/sdk-app/tests/fixtures/sdk-minimal-pep.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.5"
+      ]
+    },
+    {
+      "epic": "P2-03",
       "path": "packages/core/agent-loop/tests/tool-calls.spec.ts",
       "kind": "test",
       "stages": [
@@ -1893,6 +1910,15 @@
     },
     {
       "epic": "P2-03",
+      "path": "packages/core/tools/src/external-effect.ts",
+      "kind": "source",
+      "stages": [
+        "U.6"
+      ],
+      "reason": "The risk gate on the tool dispatch path: `gateActionRisk` refuses a hard-deny class, asks the approval service when the preset in force requires approval, and otherwise lets the call run, recording `action/risk-gated` for each. P2-03 U.6 observes it on the shipped headless profile: a probe declaring `filesystem-read` runs without an approval request, and a probe declaring no tags reaches one and is refused when the operator rejects it."
+    },
+    {
+      "epic": "P2-03",
       "path": "packages/core/tools/src/manifest-log.ts",
       "kind": "source",
       "stages": [
@@ -1907,6 +1933,92 @@
       "stages": [
         "U.1",
         "U.3"
+      ]
+    },
+    {
+      "epic": "P2-03",
+      "path": "packages/interaction/permission-presets/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.5",
+        "U.6"
+      ],
+      "reason": "The policy service the risk gate consults: `classifyAction` gives an action's class and `requiresApproval` decides it against the preset in force, and the module's Config default is the shipped preset table. P2-03 U.5 computes its census with those two calls over every tool headless mounts under every shipped preset, and U.6 runs at the default preset."
+    },
+    {
+      "epic": "P2-03",
+      "path": "packages/interaction/user-approval/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.6"
+      ],
+      "reason": "The approval service the risk gate asks when a preset requires approval; a missing answerer fails closed. P2-03 U.6's undeclared probe reaches its request, and the operator's rejection is what refuses the call before it runs."
+    },
+    {
+      "epic": "P2-03",
+      "path": "packages/policy/risk-taxonomy/src/classify.ts",
+      "kind": "source",
+      "stages": [
+        "U.5",
+        "U.6"
+      ],
+      "reason": "The pure classifier behind `classifyAction`: an action gets the highest class the policy rules give any tag it declares, and an action with no matching tag gets the unknown default, the highest policy-adjustable class. P2-03 U.5's census and U.6's two probes sit on either side of that rule."
+    },
+    {
+      "epic": "P2-03",
+      "path": "tests/first100/fixtures/loader/p2-03-approval-census/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.5"
+      ]
+    },
+    {
+      "epic": "P2-03",
+      "path": "tests/first100/fixtures/loader/p2-03-approval-census/shared.ts",
+      "kind": "test",
+      "stages": [
+        "U.5"
+      ]
+    },
+    {
+      "epic": "P2-03",
+      "path": "tests/first100/fixtures/loader/p2-03-gate-approval/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.6"
+      ]
+    },
+    {
+      "epic": "P2-03",
+      "path": "tests/first100/fixtures/loader/p2-03-gate-approval/shared.ts",
+      "kind": "test",
+      "stages": [
+        "U.6"
+      ]
+    },
+    {
+      "epic": "P2-03",
+      "path": "tests/first100/fixtures/loader/p2-05-originators/base.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.5",
+        "U.6"
+      ]
+    },
+    {
+      "epic": "P2-03",
+      "path": "tests/first100/fixtures/P2-03.approval-census.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.5"
+      ]
+    },
+    {
+      "epic": "P2-03",
+      "path": "tests/first100/fixtures/P2-03.gate-approval.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.6"
       ]
     },
     {

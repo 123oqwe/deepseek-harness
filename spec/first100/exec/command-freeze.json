@@ -18968,6 +18968,96 @@
         "failureSummary": "Read from each round's own narrow report. Dispatch 59742f4ed8, run 36198190932: 3 of 3 passed. M-allow, run 36198208027: exactly the audit case red. M-redispatch, run 36198226344: exactly the not-dispatched-again case red. Each control green. Every listed file is byte-identical at 59742f4ed8, c732e7c073 and 28a56599ac, and both mutated files are byte-identical at the mutations' parent line 4e932e474b and at 28a56599ac."
       },
       "note": "P2-05 acceptance[1] (「任何一个 hard deny 即最终 deny。」) on the shipped composition, taking the case P4-11 U.7 also freezes: on the shipped headless mount with the Trust Kernel pinned, a deployment rule that classes the probe safety-critical makes the shipped `kernel-hard-deny` policy deny it; the kernel audits the call as denied by that policy, and the denied call is not dispatched again and charges nothing, beside a control that permits. Not covered here: a plugin constraint that tries to widen a deny is refused only at the decision layer, by [246] C (\"a plugin may narrow a decision and never widen one\"); this case drives no plugin constraint."
+    },
+    {
+      "epic": "P2-03",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-03",
+        "stage": "U"
+      },
+      "supplementSeq": 5,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P2-03.approval-census.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-03 acceptance[2]: what the risk gate decides today on the shipped templates, per tool and preset headless boots with the shipped preset table, runs its root agent under workspace-write, and shows more than ten tools",
+        "P2-03 acceptance[2]: what the risk gate decides today on the shipped templates, per tool and preset on headless, no tool the risk gate classifies by a policy rule is asked about or refused under any shipped preset",
+        "P2-03 acceptance[2]: what the risk gate decides today on the shipped templates, per tool and preset on headless under the shipped default preset, every action the risk gate cannot classify is asked about",
+        "P2-03 acceptance[2]: what the risk gate decides today on the shipped templates, per tool and preset sdk-minimal mounts no permission presets, so the risk gate decides nothing for any of its tools"
+      ],
+      "files": [
+        "tests/first100/fixtures/P2-03.approval-census.composition.spec.ts",
+        "tests/first100/fixtures/loader/p2-03-approval-census/driver.ts",
+        "tests/first100/fixtures/loader/p2-03-approval-census/shared.ts",
+        "tests/first100/fixtures/loader/p2-05-originators/base.patch.yml",
+        "packages/bundle/sdk-app/tests/fixtures/sdk-minimal-pep.patch.yml",
+        "packages/policy/risk-taxonomy/src/classify.ts",
+        "packages/interaction/permission-presets/src/index.ts",
+        "packages/bundle/base/cordis.patch.yml"
+      ],
+      "frozenAtUtc": "2026-09-26T02:59:15Z",
+      "dryRunProof": {
+        "treeSha": "a2a298a9dc48061880cee794bcc851901e42ca96",
+        "testsDiscovered": 4,
+        "note": "The batch 10 full run 36210334346 at 28a56599ac1e980a51722b86cbae6b8eff9016d5 (tree a2a298a9dc48061880cee794bcc851901e42ca96): tests/first100/fixtures/P2-03.approval-census.composition.spec.ts ran 4 cases; the 4 frozen titles each once, all passed."
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-lowrisk (`a0475997b5`, off the dispatch b3842d8526, never merged): packages/policy/risk-taxonomy/src/classify.ts sets UNKNOWN_DEFAULT_CLASS to 'read', so the risk gate treats an action it cannot classify as the lowest class.",
+        "failureSummary": "Read from each round's own narrow report. Dispatch b3842d8526, run 36206805878: 4 of 4 passed. M-lowrisk, run 36206818819: exactly one case red, «P2-03 acceptance[2]: what the risk gate decides today on the shipped templates, per tool and preset on headless under the shipped default preset, every action the risk gate cannot classify is asked about», every other case green. Predictions artifacts/laneA/a-440-p2-03-approval-census-expectations.md (sha256 3f13f196a7e332669c4cd847c7d46c0c80b90c0d72e98e0b39e82542418e78ee) and artifacts/laneA/a-441-p2-03-census-sensitivity-expectations.md (sha256 f186e07d4cd1d9e4ffeb7f07dad2bb4072047a13288622aca0423aff24ec4709), written before dispatch. Every listed file is byte-identical at b3842d8526 and 28a56599ac."
+      },
+      "note": "P2-03 acceptance[2] on the shipped compositions, as the risk gate decides it (the delegate's ruling: the manifest takes the gate's one classification). On headless at its default preset (workspace-write), every tool the gate classifies by a policy rule is allowed by every shipped preset, and every action it cannot classify — two probe actions and each visible tool with no rule — is asked about; sdk-minimal mounts no permission presets and is outside the clause by the delegate's ruling. Decisions are computed with the two calls gateActionRisk makes (classifyAction, requiresApproval); the census executes no call. U.6 observes the gate itself."
+    },
+    {
+      "epic": "P2-03",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-03",
+        "stage": "U"
+      },
+      "supplementSeq": 6,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P2-03.gate-approval.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-03 acceptance[2] through the risk gate on the shipped headless profile at its default preset control: a probe declaring filesystem-read is allowed by the preset without an approval request, and runs",
+        "P2-03 acceptance[2] through the risk gate on the shipped headless profile at its default preset a probe declaring no risk domain tags reaches an approval request, and is refused without running when the operator rejects it"
+      ],
+      "files": [
+        "tests/first100/fixtures/P2-03.gate-approval.composition.spec.ts",
+        "tests/first100/fixtures/loader/p2-03-gate-approval/driver.ts",
+        "tests/first100/fixtures/loader/p2-03-gate-approval/shared.ts",
+        "tests/first100/fixtures/loader/p2-05-originators/base.patch.yml",
+        "packages/core/tools/src/external-effect.ts",
+        "packages/core/agent-loop/src/tool-calls.ts",
+        "packages/interaction/user-approval/src/index.ts",
+        "packages/policy/risk-taxonomy/src/classify.ts",
+        "packages/interaction/permission-presets/src/index.ts",
+        "packages/bundle/base/cordis.patch.yml"
+      ],
+      "frozenAtUtc": "2026-09-26T02:59:15Z",
+      "dryRunProof": {
+        "treeSha": "a2a298a9dc48061880cee794bcc851901e42ca96",
+        "testsDiscovered": 2,
+        "note": "The batch 10 full run 36210334346 at 28a56599ac1e980a51722b86cbae6b8eff9016d5 (tree a2a298a9dc48061880cee794bcc851901e42ca96): tests/first100/fixtures/P2-03.gate-approval.composition.spec.ts ran 2 cases; the 2 frozen titles each once, all passed."
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-lowrisk (`e4b4898d4d`, off the dispatch 463d2e02c2, never merged): packages/policy/risk-taxonomy/src/classify.ts sets UNKNOWN_DEFAULT_CLASS to 'read', so the risk gate treats an action it cannot classify as the lowest class.",
+        "failureSummary": "Read from each round's own narrow report. Dispatch 463d2e02c2, run 36207269878: 2 of 2 passed. M-lowrisk, run 36207281524: exactly one case red, «P2-03 acceptance[2] through the risk gate on the shipped headless profile at its default preset a probe declaring no risk domain tags reaches an approval request, and is refused without running when the operator rejects it», every other case green. Predictions artifacts/laneA/a-442-p2-03-gate-approval-expectations.md (sha256 91931ad9604beb964c810f75820e3288c50cbe37ab26eb24972f056bc13c5afa) and artifacts/laneA/a-442-p2-03-gate-approval-expectations-v2.md (sha256 279ac3486c48a99d4ff35f3e0528ad4c199f3f23aa2e94ef7c730635dc9aee87), written before dispatch. Every listed file is byte-identical at 463d2e02c2 and 28a56599ac."
+      },
+      "note": "P2-03 acceptance[2] through the risk gate on the shipped headless profile at its default preset, native path: a probe tool declaring no risk domain tags reaches an approval request (approval/asked, then approval/decided rejected by the operator) and is refused without running, gated security-sensitive; a probe declaring filesystem-read is allowed by the preset without an approval request and runs. The code-mode path of the same question is observed by A-443 (C1, C2)."
     }
   ]
 }
