@@ -11,6 +11,7 @@
  */
 
 import { writeFileAtomic } from '@deepseek-ai/dsh-atomic-write'
+import type { ProvenanceAuditRecord } from '@deepseek-ai/dsh-plugin-provenance'
 import { validateLock } from './types.ts'
 import type { PluginLockFile } from './types.ts'
 import type { InstallDecision } from './index.ts'
@@ -22,7 +23,9 @@ import type { InstallDecision } from './index.ts'
  * order rather than whatever the object happens to carry: the file is
  * committed to a repository and diffed by people, and a serializer whose
  * output depended on property insertion order would produce spurious diffs
- * between machines that resolved the same graph.
+ * between machines that resolved the same graph. An entry's `provenance` is
+ * written last, and only when it has one, so an entry without it has the
+ * bytes it had before the field existed.
  * @param lock - the lock to serialize.
  * @returns the exact bytes to write.
  */
@@ -36,8 +39,24 @@ export function serializeLock(lock: PluginLockFile): string {
     signatureIdentity: entry.signatureIdentity,
     dependencies: [...entry.dependencies].sort(),
     grantedCapabilities: [...entry.grantedCapabilities].sort(),
+    ...entry.provenance === undefined ? {} : { provenance: canonicalProvenance(entry.provenance) },
   }))
   return `${JSON.stringify({ lockfileVersion: lock.lockfileVersion, entries, loadOrder: lock.loadOrder }, null, 2)}\n`
+}
+
+/**
+ * A provenance record with its keys in one fixed order and absent ones left out.
+ * @param record - the record as the installer produced it or the lock file carried it.
+ * @returns the same record, keyed for byte-stable output.
+ */
+function canonicalProvenance(record: ProvenanceAuditRecord): ProvenanceAuditRecord {
+  return {
+    ...record.packageDigest === undefined ? {} : { packageDigest: record.packageDigest },
+    trust: record.trust,
+    ...record.reason === undefined ? {} : { reason: record.reason },
+    ...record.trustAnchorId === undefined ? {} : { trustAnchorId: record.trustAnchorId },
+    verifiedAt: record.verifiedAt,
+  }
 }
 
 /**
