@@ -271,7 +271,7 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
    * @returns the session's root token, or `undefined` when none was issued.
    */
   async whenSessionToken(session: SessionId): Promise<SignedCapabilityToken | undefined> {
-    const now = Date.now()
+    const now = 0
     // One issuance at a time per session: a caller arriving while one is in
     // flight waits for it below rather than minting a second token.
     const agent = this.unsettled.has(session) ? undefined : this.sessions.get(session)
