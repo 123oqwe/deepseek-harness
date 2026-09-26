@@ -19,13 +19,14 @@
  * @module @deepseek-ai/dsh/plugin-migration
  */
 
-import { existsSync } from 'node:fs'
-import { mkdir, readFile } from 'node:fs/promises'
+import { existsSync, readFileSync } from 'node:fs'
+import { mkdir, readFile, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { spawnSync } from 'node:child_process'
 
 import { readProfileManifest, resolveBundleDir } from '@deepseek-ai/dsh-app-boot'
+import type { ProfileManifest } from '@deepseek-ai/dsh-app-boot'
 import { classifyPluginDeclaration, evaluatePreMountAdmission } from '@deepseek-ai/dsh-plugin-manifest'
 import type { PluginManifestV2 } from '@deepseek-ai/dsh-plugin-manifest'
 import { INSTALL_ANCHOR } from './profile-boot.ts'
@@ -447,6 +448,90 @@ export async function readUpgradeRecord(
   const path = upgradeRecordPath(harnessHome, plugin)
   if (!existsSync(path)) return undefined
   return JSON.parse(await readFile(path, 'utf8')) as UpgradeRecord
+}
+
+/** Basename of the record an install keeps in its profile directory while it is in flight. */
+const INSTALL_RECORD = '.dsh-install-in-flight.json'
+
+/**
+ * The code one `dsh plugin` install started from (BLOCKED-342).
+ *
+ * Written before the package manager runs and removed once the install ends
+ * with code and data at one version. A run killed between moving the code and
+ * migrating the data leaves the new code over the old data, and what finishing
+ * or undoing it needs used to live only in that process's memory. The next
+ * run reads this record instead: its manifest is the baseline the version
+ * changes are read against, so the interrupted upgrade's data migration runs
+ * then, and its bytes are what a failed migration restores.
+ */
+export interface InstallRecord {
+  /** The profile's `package.json` bytes before the package manager ran. */
+  readonly manifest: string
+  /** Its `pnpm-lock.yaml` bytes before the package manager ran, or `undefined` when it had none. */
+  readonly lock: string | undefined
+  /** `manifest`, parsed. */
+  readonly before: ProfileManifest
+}
+
+/**
+ * Where one profile's in-flight install record lives: beside the files it restores.
+ * @param profileDir - the profile directory.
+ * @returns the record's path.
+ */
+export function installRecordPath(profileDir: string): string {
+  return join(profileDir, INSTALL_RECORD)
+}
+
+/**
+ * Durably record the code an install starts from, before the package manager runs.
+ * @param profileDir - the profile directory.
+ * @param manifest - its `package.json` bytes.
+ * @param lock - its `pnpm-lock.yaml` bytes, or `undefined` when it has none.
+ * @returns Nothing.
+ */
+export async function recordInstall(profileDir: string, manifest: string, lock: string | undefined): Promise<void> {
+  await writeFileAtomic(installRecordPath(profileDir), JSON.stringify({ manifest, lock: lock ?? null }), { mode: 0o600 })
+}
+
+/**
+ * Read the record an install left because it did not finish.
+ * @param profileDir - the profile directory.
+ * @returns the record, or `undefined` when no install is in flight.
+ * @throws when the file is not a record this command wrote, naming it so an operator can restore from it.
+ */
+export function readInstallRecord(profileDir: string): InstallRecord | undefined {
+  const path = installRecordPath(profileDir)
+  if (!existsSync(path)) return undefined
+  const malformed = `${path} is not an install record \`dsh plugin\` wrote; restore package.json and pnpm-lock.yaml `
+    + 'from it by hand, or remove it once they are right'
+  let stored: { readonly manifest?: unknown; readonly lock?: unknown } | null
+  try {
+    stored = JSON.parse(readFileSync(path, 'utf8')) as { readonly manifest?: unknown; readonly lock?: unknown } | null
+  } catch (error: unknown) {
+    // A parse failure is the record not being one this command wrote.
+    throw new Error(malformed, { cause: error })
+  }
+  const manifest = stored?.manifest
+  const lock = stored?.lock
+  if (typeof manifest !== 'string' || (lock !== null && typeof lock !== 'string')) throw new Error(malformed)
+  let before: ProfileManifest | null
+  try {
+    before = JSON.parse(manifest) as ProfileManifest | null
+  } catch (error: unknown) {
+    // The recorded manifest not parsing is the same failure as the record not parsing.
+    throw new Error(malformed, { cause: error })
+  }
+  if (before === null || typeof before !== 'object' || Array.isArray(before)) throw new Error(malformed)
+  return { manifest, lock: typeof lock === 'string' ? lock : undefined, before }
+}
+
+/**
+ * Remove a profile's in-flight install record once its install has ended with code and data at one version.
+ * @param profileDir - the profile directory.
+ * @returns Nothing.
+ */
+export async function clearInstallRecord(profileDir: string): Promise<void> {
+  await rm(installRecordPath(profileDir), { force: true })
 }
 
 /**

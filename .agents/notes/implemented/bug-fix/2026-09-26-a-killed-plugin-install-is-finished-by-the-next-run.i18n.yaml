@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-26-a-killed-plugin-install-is-finished-by-the-next-run.md
+2026-09-26-a-killed-plugin-install-is-finished-by-the-next-run.md: d5565ee7a4916bd872fba25075e7ec0ecc9fc27b
+2026-09-26-a-killed-plugin-install-is-finished-by-the-next-run.zh.md: 02f5c785e138e7fe5d8891dda90d7c1721918b34
