@@ -178,6 +178,9 @@ export async function approveEscalation<A, C>(request: EscalationRequest, approv
   if (approval.agent === undefined) {
     throw new Error(`sandbox escalation to "${mode}" requires approval, but the call has no agent to route it through`)
   }
+  // MUTATION M-644-order-4: the refusal is asked before the human answers.
+  const early = approval.refusalAfterApproval(approval.agent)
+  if (early !== undefined) throw new Error(early)
   // Self-contained for the audit trail: approval/asked stores this reason,
   // and the target mode is part of the grant's identity.
   const outcome = await approval.approver.request({
@@ -190,11 +193,7 @@ export async function approveEscalation<A, C>(request: EscalationRequest, approv
   switch (outcome) {
     // The schema enum already pinned `mode` to the closed target vocabulary;
     // the check above proved it is strictly wider.
-    case 'allowed-once': {
-      const refusal = approval.refusalAfterApproval(approval.agent)
-      if (refusal !== undefined) throw new Error(refusal)
-      return mode as SandboxMode
-    }
+    case 'allowed-once': return mode as SandboxMode
     case 'rejected': throw new Error(`the user rejected escalating this ${subject} to "${mode}"`)
     case 'cancelled': throw new Error(`approval for escalating to "${mode}" was cancelled`)
     case 'unavailable': throw new Error(`sandbox escalation to "${mode}" requires approval, but no approval channel is available`)
