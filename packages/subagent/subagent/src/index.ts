@@ -509,7 +509,7 @@ export class SubagentRuntime extends TypertRemoteService {
     // today works without one (it may cold-resume).
     // A steer-delivered prompt is decided as a steer (must[0]): a child awaiting
     // a human refuses a steer but admits a queued prompt.
-    const message: ControlMessage = { kind: delivery === 'steer' ? 'steer' : 'continue', controlEpoch: promptEpoch(request.requestId) }
+    const message: ControlMessage = { kind: 'continue', controlEpoch: promptEpoch(request.requestId) }
     const decision = control.decide(message)
     if (!decision.applied) {
       throw new RemoteError(
