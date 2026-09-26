@@ -8109,6 +8109,22 @@ importers:
         specifier: workspace:^
         version: link:../../util/values
 
+  packages/memory/memory-policy:
+    dependencies:
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-memory':
+        specifier: workspace:^
+        version: link:../memory
+      '@deepseek-ai/dsh-principal':
+        specifier: workspace:^
+        version: link:../../identity/principal
+
   packages/migration/feature-gates:
     dependencies:
       '@deepseek-ai/dsh-util-values':
@@ -12764,6 +12780,9 @@ importers:
       '@deepseek-ai/dsh-memory':
         specifier: workspace:^
         version: link:../../packages/memory/memory
+      '@deepseek-ai/dsh-memory-policy':
+        specifier: workspace:^
+        version: link:../../packages/memory/memory-policy
       '@deepseek-ai/dsh-message-bus':
         specifier: workspace:^
         version: link:../../packages/run/message-bus
