@@ -1,0 +1,29 @@
+# Test-only overlay over the SHIPPED headless profile for P6-03's fail-closed
+# case: the rows of `base.patch.yml`, with the base layer's `memory-policy` row
+# switched off. With no policy to decide, a proposal waits for a decision
+# instead of becoming active memory.
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
+
+- id: memory
+  disabled: false
+  config:
+    durableFileDirectory: './.memory'
+    allowSensitiveIndexing: true
+
+- id: memory-policy
+  disabled: true
