@@ -214,7 +214,7 @@ export function apply(ctx: Context, config: Config = {}, internals: RetryInterna
   ): Promise<RequestErrorAction> {
     if (policy === undefined) return next()
     // Both modes: always mode lifts the attempt limit, never the classifier's verdict.
-    if (!isRetryableLlmFailure(failure)) return next()
+    if (policy.mode === 'normal' && !isRetryableLlmFailure(failure)) return next()
     if (policy.mode === 'always') {
       if (signal.aborted || lifetime.signal.aborted) return
       const fusedSignal = AbortSignal.any([signal, lifetime.signal])
