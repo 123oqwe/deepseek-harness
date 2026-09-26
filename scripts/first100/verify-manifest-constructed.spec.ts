@@ -1,5 +1,5 @@
 /**
- * The manifest-builder gate's own specification (§12.39).
+ * The manifest-builder gate's own specification (§12.39, B-645).
  *
  * The gate exists because a behavioural case cannot tell an `idempotencyKey`
  * that came from an `ActionManifest` from one assembled beside a payload —
@@ -25,25 +25,46 @@ function source(path: string): string {
   return readFileSync(resolve(REPO_ROOT, path), 'utf8')
 }
 
-describe('verify-manifest-constructed counts construction through the façade too', () => {
-  it('counts a caller that reaches ONLY the façade, never the builder directly', () => {
-    // The case §12.39 turns on. `ptc.ts` is the code-mode dispatch path: it
-    // constructs a manifest on every sub-dispatch and does so exclusively
-    // through `appendManifestThenGate`. A gate that counted only direct
-    // `createActionManifest` calls reported it as no caller at all.
-    const { callers } = manifestBuilderCallers()
+describe('verify-manifest-constructed counts construction through the façade and shared helpers too', () => {
+  it('counts a caller that reaches the builder only through a shared helper', () => {
+    // `ptc.ts` is the code-mode dispatch path. Since B-615 it constructs a
+    // manifest on every sub-dispatch through `appendManifestAndDecide`, an
+    // exported helper that calls the façade, and names neither entry point
+    // itself. A gate that counted only direct callers reported the helper's
+    // file instead (B-645).
+    const { callers, helpers } = manifestBuilderCallers()
     expect(callers).toContain('packages/core/tools/src/ptc.ts')
-    expect(source('packages/core/tools/src/ptc.ts')).not.toMatch(/\bcreateActionManifest\s*\(/u)
-    expect(source('packages/core/tools/src/ptc.ts')).toMatch(/\bappendManifestThenGate\s*\(/u)
+    expect(source('packages/core/tools/src/ptc.ts')).not.toMatch(/\b(?:createActionManifest|appendManifestThenGate)\s*\(/u)
+    expect(source('packages/core/tools/src/ptc.ts')).toMatch(/\bappendManifestAndDecide\s*\(/u)
+    expect(helpers).toContainEqual({
+      file: 'packages/core/tools/src/external-effect.ts',
+      name: 'appendManifestAndDecide',
+      reaches: ['appendManifestThenGate'],
+    })
   })
 
-  it('reports both dispatch paths, which is what must[2] asks of a no-bypass claim', () => {
-    // Native and code-mode. One of them alone would satisfy "has a production
-    // caller" while leaving the other free to assemble a payload beside a
-    // manifest, which is the arrangement BLOCKED-143 found.
+  it('follows a helper that builds the manifest without the façade', () => {
+    // The other direction: a path that never reaches `appendManifestThenGate`
+    // still counts when it calls the builder. `decideUnrecordedAction`
+    // constructs the manifest of a direct call made with no agent, which has
+    // no session to append it to.
+    const { helpers } = manifestBuilderCallers()
+    expect(helpers).toContainEqual({
+      file: 'packages/core/tools/src/external-effect.ts',
+      name: 'decideUnrecordedAction',
+      reaches: ['createActionManifest'],
+    })
+  })
+
+  it('reports all three dispatch paths and not the helpers\' module, which is what must[2] asks of a no-bypass claim', () => {
+    // Native, code-mode and the public `ToolRuntime.execute` seam. One of them
+    // alone would satisfy "has a production caller" while leaving the others
+    // free to assemble a payload beside a manifest, which is the arrangement
+    // BLOCKED-143 found. `external-effect.ts` only holds the helpers.
     const { callers } = manifestBuilderCallers()
     expect([...callers].sort()).toEqual([
       'packages/core/agent-loop/src/tool-calls.ts',
+      'packages/core/tools/src/index.ts',
       'packages/core/tools/src/ptc.ts',
     ])
   })
