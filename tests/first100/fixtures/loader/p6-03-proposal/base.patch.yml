@@ -1,0 +1,29 @@
+# Test-only overlay over the SHIPPED headless profile for P6-03's first slice
+# (must[1], must[2], acceptance[0]). It enables the base layer's `memory` row,
+# which ships `disabled: true`, over a durable file directory, and turns off the
+# rows that would run a task of their own. `allowSensitiveIndexing` is on, so a
+# sensitive record that IS active is one the default search returns: a
+# sensitive proposal the search does not return is then not active, rather than
+# withheld by the index.
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
+
+- id: memory
+  disabled: false
+  config:
+    durableFileDirectory: './.memory'
+    allowSensitiveIndexing: true
