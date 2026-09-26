@@ -25,15 +25,16 @@ import type { LedgerState } from '@deepseek-ai/dsh-action-ledger'
  *
  * Each member names a DIFFERENT next move for an operator, which is why they
  * are not collapsed into one `permanent`: an invalid request needs its
- * arguments fixed, a policy denial needs an authorization decision, and an
+ * arguments fixed, a policy denial needs an authorization decision, an
  * unsettled external effect needs the ledger reconciled before anything is
- * sent again.
+ * sent again, and an unclassified failure needs a person to read it.
  */
 export type PermanentReason =
   | 'client-error'
   | 'policy-denied'
   | 'invalid-input'
   | 'effect-unsettled'
+  | 'unclassified'
 
 /** What one layer observed, in terms this module can decide on. */
 export interface FailureFacts {
@@ -53,6 +54,19 @@ export interface FailureFacts {
   readonly denied?: boolean
   /** The request was rejected as malformed before it was attempted. */
   readonly malformed?: boolean
+  /**
+   * The failure names a condition only the caller can change: its account,
+   * its credential, or its own cancellation. Repeating the request unchanged
+   * meets the same condition.
+   */
+  readonly callerSide?: boolean
+  /**
+   * The failing layer could not say what kind of failure this is: it carried
+   * no status and no code the layer recognizes. Nothing then says the failure
+   * is transient, a retry may repeat a deterministic fault, and counting it
+   * toward a circuit breaker could open a healthy destination.
+   */
+  readonly unclassified?: boolean
   /**
    * True when this attempt is a HEDGE of another in-flight attempt rather than
    * a retry of a finished one (must[2]'s hedge exclusion).
@@ -98,7 +112,9 @@ const RETRY_SAFE_LEDGER_STATES: readonly LedgerState[] = Object.freeze(['prepare
  * Checked in refusal order, strongest first. A malformed request and a policy
  * denial are decisions nobody should retry past. An unsettled side effect is
  * refused before the status is read at all: a `503` that may have charged a
- * card is not a free retry, which is must[3].
+ * card is not a free retry, which is must[3]. A caller-side condition and an
+ * unclassified failure are refused before the status too, because a `429`
+ * that reports an exhausted balance is not a rate limit.
  * @param facts - what the failing layer observed.
  * @returns the verdict, naming the reason when the failure is permanent.
  */
@@ -111,6 +127,8 @@ export function classifyFailure(facts: FailureFacts): RetryVerdict {
   if (facts.sideEffecting === true && (facts.ledger === undefined || !RETRY_SAFE_LEDGER_STATES.includes(facts.ledger))) {
     return { retryable: false, reason: 'effect-unsettled' }
   }
+  if (facts.callerSide === true) return { retryable: false, reason: 'client-error' }
+  if (facts.unclassified === true) return { retryable: false, reason: 'unclassified' }
   const { status } = facts
   if (status !== undefined && status >= 400 && status < 500 && !RETRYABLE_CLIENT_STATUSES.includes(status)) {
     return { retryable: false, reason: 'client-error' }

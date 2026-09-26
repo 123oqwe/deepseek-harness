@@ -12,7 +12,9 @@ Source: [`packages/reliability/retry/src`](../../packages/reliability/retry/src)
 
 A failure reaches this subsystem as **facts**, never as an exception type. `FailureFacts` carries what an adapter could observe — an HTTP status, a transport error kind, a `Retry-After` value, whether a policy denied the call — and `classifyFailure` turns those facts into a verdict: retryable or not, and why. The split exists because every layer that might retry sees a different error class, and a taxonomy keyed on error types would need one branch per provider SDK.
 
-The verdict is deliberately narrow. A 4xx that is not 408 or 429 is permanent, a policy denial is permanent, and a malformed request is permanent — retrying any of them turns one failure into several with the same outcome. Everything else is retryable, which is the honest default for a remote call whose failure the caller cannot explain.
+The verdict is deliberately narrow. A 4xx that is not 408 or 429 is permanent, a policy denial is permanent, a malformed request is permanent, and so is a condition only the caller can change — a rejected or missing credential, an exhausted balance, its own cancellation — even when it arrives as a `429`. Retrying any of them turns one failure into several with the same outcome. A failure the reporting layer cannot classify is permanent too, under its own reason `unclassified`: nothing says it will pass, a retry may repeat a deterministic fault, and counting it toward a breaker could open a healthy destination. Everything else is retryable.
+
+The LLM path reads its facts with `llmFailureFacts`, the one place that maps adapter codes to facts. A failure without a status is retryable only when its code names a transient condition; any other statusless code is unclassified. The circuit breaker and `dsh-llm-retry` both decide with `classifyFailure(llmFailureFacts(failure))`, so one failure gets one verdict in both layers, and a provider's retry policy says how often and how long to retry, never which failures.
 
 <a id="the-run-retry-budget"></a>
 
@@ -30,7 +32,7 @@ A run that cannot be resolved is capability absence, not permission: the layer k
 
 `CircuitBreakerContract.execute(destination, operation, classify)` runs an operation unless its destination is already open, and throws `BreakerOpenError` **without running it** when it is. One operation rather than a consult-then-record pair, for the same reason `admit` is one call.
 
-A `BreakerDestination` is `(provider, baseUrl, model)`, and all three participate: two models at one base URL fail independently — a decommissioned model returns errors from a healthy endpoint — and the provider name distinguishes two deployments that share a URL through different credentials. Only failures the classifier calls retryable move the breaker, so a policy denial or a malformed request leaves an endpoint's health untouched.
+A `BreakerDestination` is `(provider, baseUrl, model)`, and all three participate: two models at one base URL fail independently — a decommissioned model returns errors from a healthy endpoint — and the provider name distinguishes two deployments that share a URL through different credentials. Only failures the classifier calls retryable move the breaker, so a policy denial, a malformed request, a caller-side condition or an unclassified failure leaves an endpoint's health untouched.
 
 The shipped provider is [`retry-cockatiel`](../../packages/reliability/retry-cockatiel/README.md), which keeps one `cockatiel` policy per destination and owns the consecutive-failure counting, the open period and half-open probing. Which failures count and which destinations are separate stay here, because those are the harness's decisions rather than the library's.
 

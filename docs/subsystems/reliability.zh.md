@@ -12,7 +12,9 @@ Source: [`packages/reliability/retry/src`](../../packages/reliability/retry/src)
 
 一次失败以**事实**而非异常类型抵达本子系统。`FailureFacts` 携带 adapter 能够观察到的东西——HTTP 状态码、传输错误种类、`Retry-After` 值、是否被策略拒绝——而 `classifyFailure` 把这些事实转成判决:可否重试,以及为什么。这样切分是因为每个可能重试的层看到的错误类都不一样,而以错误类型为键的分类法需要为每个 provider SDK 各写一个分支。
 
-判决刻意收得很窄。除 408 与 429 之外的 4xx 是永久失败,策略拒绝是永久失败,格式错误的请求是永久失败——重试它们中的任何一个,只会把一次失败变成好几次同样结局的失败。其余都可重试,这是对一次调用方无法解释其失败的远程调用最诚实的默认。
+判决刻意收得很窄。除 408 与 429 之外的 4xx 是永久失败，策略拒绝是永久失败，格式错误的请求是永久失败；只有调用方自己能改变的条件也是永久失败，即凭据被拒或缺失、余额耗尽、调用方自己取消，即使它以 `429` 的形式到达。重试它们中的任何一个，只会把一次失败变成好几次同样结局的失败。报告失败的那一层无法分类的失败同样是永久失败，理由单列为 `unclassified`：没有任何东西表明它会过去，重试可能重复一个确定性的故障，把它计入断路器又可能让一个健康的目的地断开。其余都可重试。
+
+LLM 路径用 `llmFailureFacts` 读取事实，适配器的码只在这一处映射为事实。不带状态码的失败，只有码表示暂时性条件时才可重试；其余不带状态码的码一律判为无法分类。断路器与 `dsh-llm-retry` 都用 `classifyFailure(llmFailureFacts(failure))` 判定，所以同一次失败在两层得到同一个判决；提供方的重试策略只决定重试多少次、间隔多久，从不决定重试哪些失败。
 
 <a id="the-run-retry-budget"></a>
 
@@ -30,7 +32,7 @@ Source: [`packages/reliability/retry/src`](../../packages/reliability/retry/src)
 
 `CircuitBreakerContract.execute(destination, operation, classify)` 在目的地尚未打开时执行操作;已打开时抛出 `BreakerOpenError` 且**根本不执行**它。这里是一个操作而不是"先查后记"的一对,理由与 `admit` 是一个调用相同。
 
-`BreakerDestination` 是 `(provider, baseUrl, model)`,三个字段都参与:同一 base URL 下的两个模型独立失败——一个下线的模型会从健康的端点返回错误——而 provider 名区分共用同一 URL、凭据不同的两套部署。只有被分类器判为可重试的失败才推动断路器,因此策略拒绝或格式错误的请求不会影响端点的健康度。
+`BreakerDestination` 是 `(provider, baseUrl, model)`,三个字段都参与:同一 base URL 下的两个模型独立失败——一个下线的模型会从健康的端点返回错误——而 provider 名区分共用同一 URL、凭据不同的两套部署。只有被分类器判为可重试的失败才推动断路器,因此策略拒绝、格式错误的请求、调用方一侧的条件或无法分类的失败都不会影响端点的健康度。
 
 随附的 provider 是 [`retry-cockatiel`](../../packages/reliability/retry-cockatiel/README.zh.md):它按目的地各持一个 `cockatiel` policy,并拥有连续失败计数、打开时长与半开探测。哪些失败算数、哪些目的地彼此独立仍留在这里,因为那是 harness 的决策而不是库的。
 

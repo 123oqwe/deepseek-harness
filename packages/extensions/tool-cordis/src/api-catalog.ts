@@ -5021,7 +5021,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'FailureFacts',
-    declaration: 'export interface FailureFacts {\n    readonly status?: number;\n    readonly sideEffecting?: boolean;\n    readonly ledger?: LedgerState;\n    readonly denied?: boolean;\n    readonly malformed?: boolean;\n    readonly hedged?: boolean;\n}',
+    declaration: 'export interface FailureFacts {\n    readonly status?: number;\n    readonly sideEffecting?: boolean;\n    readonly ledger?: LedgerState;\n    readonly denied?: boolean;\n    readonly malformed?: boolean;\n    readonly callerSide?: boolean;\n    readonly unclassified?: boolean;\n    readonly hedged?: boolean;\n}',
   },
   {
     name: 'FeedbackCategory',
@@ -6045,7 +6045,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ResolvedNormalRetryPolicy',
-    declaration: 'export interface ResolvedNormalRetryPolicy extends ResolvedRetryBackoff {\n    readonly mode: \'normal\';\n    readonly maxRetries: number;\n    readonly retryableCodes: readonly string[];\n}',
+    declaration: 'export interface ResolvedNormalRetryPolicy extends ResolvedRetryBackoff {\n    readonly mode: \'normal\';\n    readonly maxRetries: number;\n}',
   },
   {
     name: 'ResolvedRetryBackoff',

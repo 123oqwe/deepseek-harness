@@ -145,7 +145,10 @@ describe('P4-11 Fault — endpoint-health boundary matrix', () => {
     },
     {
       name: '22 a TIMEOUT counts too: an endpoint that stopped answering is unwell',
-      code: 'LLM_STREAM_IDLE_TIMEOUT',
+      // The adapters' code for an idle stream: both map their watchdog's
+      // expiry to `TIMEOUT` before throwing, and a code no adapter throws
+      // would be unclassified and never count (BLOCKED-339).
+      code: 'TIMEOUT',
       status: undefined,
       counts: true,
     },
@@ -159,6 +162,18 @@ describe('P4-11 Fault — endpoint-health boundary matrix', () => {
       name: '24 an AUTH failure does not: a rejected credential says the caller is wrong',
       code: 'AUTH',
       status: 401,
+      counts: false,
+    },
+    {
+      name: '25 an UNCLASSIFIED failure does not: a statusless code that names no condition says nothing about the endpoint',
+      code: 'STREAM_CLOSED',
+      status: undefined,
+      counts: false,
+    },
+    {
+      name: '26 a CALLER-SIDE failure does not: an abort is the caller cancelling, not the endpoint failing',
+      code: 'ABORTED',
+      status: undefined,
       counts: false,
     },
   ] as const

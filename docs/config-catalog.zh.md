@@ -1613,7 +1613,7 @@ export interface ReplayModelConfig {
 export type Config = Readonly<Record<string, never>>
 ```
 
-来源： [`packages/llm/llm-retry/src/index.ts:28`](../packages/llm/llm-retry/src/index.ts)
+来源： [`packages/llm/llm-retry/src/index.ts:29`](../packages/llm/llm-retry/src/index.ts)
 
 <a id="deepseek-aidsh-lsp-stdio"></a>
 

@@ -36,6 +36,21 @@ describe('P4-11 acceptance[0]: a permanent failure is not retried', () => {
     expect(classifyFailure({ status: 429 })).toEqual({ retryable: true })
     expect(classifyFailure({ status: 503 })).toEqual({ retryable: true })
   })
+
+  it('refuses a caller-side condition before reading the status, so an exhausted balance is not a rate limit', () => {
+    // BLOCKED-339: a 429 that reports an exhausted balance carries a status
+    // the status rule admits; the caller-side fact is what refuses it.
+    expect(classifyFailure({ status: 429, callerSide: true })).toEqual({ retryable: false, reason: 'client-error' })
+    expect(classifyFailure({ callerSide: true })).toEqual({ retryable: false, reason: 'client-error' })
+  })
+
+  it('refuses an unclassified failure with its own reason, and retries a statusless failure that is not one', () => {
+    // BLOCKED-339: nothing says an unclassified failure is transient. The
+    // second line is the control: without a status and without the fact, the
+    // failure stays retryable, as a timeout does.
+    expect(classifyFailure({ unclassified: true })).toEqual({ retryable: false, reason: 'unclassified' })
+    expect(classifyFailure({})).toEqual({ retryable: true })
+  })
 })
 
 describe('P4-11 must[3]: a side effect is retryable only under the ledger\'s guarantee', () => {

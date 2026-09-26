@@ -182,7 +182,7 @@ describe('provider-routed retry policy', () => {
       textResponse('done'),
     ])
     ;({ ctx: context } = await harness(adapter, {
-      mock: normalConfig({ retryableCodes: ['SERVER', 'RATE_LIMIT'] }),
+      mock: normalConfig(),
     }, undefined, { random: () => 0.5 }))
     const agent = await context.agentLoop.create(SessionId('retry-success'), {
       provider: 'mock',
@@ -200,7 +200,7 @@ describe('provider-routed retry policy', () => {
       step: 1,
       provider: 'mock',
       mode: 'normal',
-      policyKey: '["normal",2,["RATE_LIMIT","SERVER"],500,10000,0]',
+      policyKey: '["normal",2,500,10000,0]',
       retry: 1,
       maxRetries: 2,
       delayMs: 500,
@@ -231,7 +231,7 @@ describe('provider-routed retry policy', () => {
       emptyCompletion(),
       textResponse('recovered'),
     ])
-    // No retryableCodes override: this proves the default policy covers the
+    // The default policy: this proves the shared classifier covers the
     // adapters' empty-completion classification end to end (finish-chunk error
     // delivery, not a thrown stream error).
     ;({ ctx: context } = await harness(adapter))
@@ -399,7 +399,7 @@ describe('provider-routed retry policy', () => {
   it('uses local jittered backoff when always mode receives an over-cap Retry-After', async () => {
     vi.useFakeTimers()
     const adapter = new ScriptedAdapter([
-      new LlmError('wait too long', 'AUTH', { providerRetryAfterMs: 10 }),
+      new LlmError('wait too long', 'RATE_LIMIT', { providerRetryAfterMs: 10 }),
       textResponse('done'),
     ])
     ;({ ctx: context } = await harness(adapter, { mock: alwaysConfig({
@@ -435,6 +435,23 @@ describe('provider-routed retry policy', () => {
     expect(vi.getTimerCount()).toBe(0)
   })
 
+  it('delegates a failure the classifier refuses in always mode too', async () => {
+    vi.useFakeTimers()
+    const adapter = new ScriptedAdapter([new LlmError('bad key', 'AUTH', { status: 401 })])
+    ;({ ctx: context } = await harness(adapter, { mock: alwaysConfig() }))
+    const agent = await context.agentLoop.create(SessionId('retry-always-refused'), { provider: 'mock', model: 'mock' })
+    const idle = waitForIdle(context, agent)
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await idle
+    expect(adapter.requests).toHaveLength(1)
+    expect(agent.session.snapshotEvents().some(event => event.type === 'llm/retry')).toBe(false)
+    expect(agent.session.snapshotEvents().at(-1)).toMatchObject({
+      type: 'turn/end',
+      data: { reason: { kind: 'error', error: { code: 'AUTH' } } },
+    })
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
   it('delegates when no final adapter served the failed request', async () => {
     const adapter = new ScriptedAdapter([textResponse('must not run')])
     const mounted = await harness(adapter, { mock: alwaysConfig() })
@@ -464,8 +481,8 @@ describe('provider-routed retry policy', () => {
   it('selects policy by the failed request provider', async () => {
     vi.useFakeTimers()
     const adapter = new ScriptedAdapter([
-      new LlmError('mock auth failed', 'AUTH'),
-      new LlmError('other auth failed', 'AUTH'),
+      new LlmError('mock failed', 'SERVER'),
+      new LlmError('other failed', 'SERVER'),
       textResponse('other recovered'),
     ])
     ;({ ctx: context } = await harness(adapter, {
@@ -503,7 +520,7 @@ describe('provider-routed retry policy', () => {
   it('selects an always policy from the provider chosen by agent/request', async () => {
     vi.useFakeTimers()
     const adapter = new ScriptedAdapter([
-      new LlmError('rerouted auth failed', 'AUTH'),
+      new LlmError('rerouted failed', 'SERVER'),
       textResponse('rerouted recovery'),
     ])
     ;({ ctx: context } = await harness(adapter, {
@@ -584,13 +601,13 @@ describe('provider-routed retry policy', () => {
         entered.resolve(undefined)
         await release.promise
         if (failureKind === 'thrown') {
-          throw new LlmError('old route auth failed', 'AUTH')
+          throw new LlmError('old route failed', 'SERVER')
         }
         yield {
           type: 'finish',
           reason: {
             kind: 'error',
-            failure: { message: 'old route auth failed', code: 'AUTH' },
+            failure: { message: 'old route failed', code: 'SERVER' },
           },
         }
       })()])
@@ -612,7 +629,7 @@ describe('provider-routed retry policy', () => {
 
       mounted.disposeAdapter()
       const replacement = new ScriptedAdapter([
-        new LlmError('replacement failed', 'AUTH'),
+        new LlmError('replacement failed', 'SERVER'),
         textResponse('replacement recovered'),
       ])
       replacement.configureRetryPolicies({ mock: alwaysConfig({
@@ -655,10 +672,10 @@ describe('provider-routed retry policy', () => {
   it('keeps always mode unbounded while preserving cancellable jittered backoff', async () => {
     vi.useFakeTimers()
     const adapter = new ScriptedAdapter([
-      new LlmError('auth one', 'AUTH'),
-      new LlmError('auth two', 'AUTH'),
-      new LlmError('auth three', 'AUTH'),
-      new LlmError('auth four', 'AUTH'),
+      new LlmError('busy one', 'SERVER'),
+      new LlmError('busy two', 'SERVER'),
+      new LlmError('busy three', 'SERVER'),
+      new LlmError('busy four', 'SERVER'),
       textResponse('eventually recovered'),
     ])
     ;({ ctx: context } = await harness(adapter, { mock: alwaysConfig({
@@ -696,7 +713,7 @@ describe('provider-routed retry policy', () => {
     vi.useFakeTimers()
     const diagnostic = 'private provider diagnostic must not enter context'
     const adapter = new ScriptedAdapter([
-      partialToolFailure(new LlmError(diagnostic, 'AUTH')),
+      partialToolFailure(new LlmError(diagnostic, 'TRANSPORT')),
       textResponse('recovered without leaked context'),
     ])
     ;({ ctx: context } = await harness(adapter, { mock: alwaysConfig({
@@ -727,7 +744,7 @@ describe('provider-routed retry policy', () => {
 
   it('lets downstream specialized recovery run before always fallback', async () => {
     const adapter = new ScriptedAdapter([
-      new LlmError('requires specialized recovery', 'AUTH'),
+      new LlmError('requires specialized recovery', 'SERVER'),
       textResponse('specialized recovery won'),
     ])
     ;({ ctx: context } = await harness(adapter, { mock: alwaysConfig() }))
@@ -751,7 +768,7 @@ describe('provider-routed retry policy', () => {
   ])('falls back to always retry when downstream recovery throws %s', async (_kind, failDownstream) => {
     vi.useFakeTimers()
     const adapter = new ScriptedAdapter([
-      new LlmError('requires fallback', 'AUTH'),
+      new LlmError('requires fallback', 'SERVER'),
       textResponse('always recovered'),
     ])
     ;({ ctx: context } = await harness(adapter, { mock: alwaysConfig({
@@ -798,7 +815,7 @@ describe('provider-routed retry policy', () => {
   })
 
   it('drains delegated recovery before completing plugin disposal', async () => {
-    const adapter = new ScriptedAdapter([new LlmError('bad key', 'AUTH')])
+    const adapter = new ScriptedAdapter([new LlmError('busy', 'SERVER')])
     const mounted = await harness(adapter, { mock: alwaysConfig() })
     context = mounted.ctx
     const release = Promise.withResolvers<undefined>()
@@ -838,7 +855,7 @@ describe('provider-routed retry policy', () => {
   })
 
   it('drains delegated recovery before turn cancellation reaches idle', async () => {
-    const adapter = new ScriptedAdapter([new LlmError('bad key', 'AUTH')])
+    const adapter = new ScriptedAdapter([new LlmError('busy', 'SERVER')])
     const mounted = await harness(adapter, { mock: alwaysConfig() })
     context = mounted.ctx
     const downstream = Promise.withResolvers<RequestErrorAction>()
@@ -879,7 +896,7 @@ describe('provider-routed retry policy', () => {
   })
 
   it('handles synchronous cancellation while entering delegated recovery', async () => {
-    const adapter = new ScriptedAdapter([new LlmError('bad key', 'AUTH')])
+    const adapter = new ScriptedAdapter([new LlmError('busy', 'SERVER')])
     const mounted = await harness(adapter, { mock: alwaysConfig() })
     context = mounted.ctx
     const downstream = Promise.withResolvers<RequestErrorAction>()
@@ -953,7 +970,7 @@ describe('provider-routed retry policy', () => {
   it('lets turn cancellation win during backoff without opening another step', async () => {
     vi.useFakeTimers()
     const adapter = new ScriptedAdapter([
-      new LlmError('permanent', 'AUTH'),
+      new LlmError('temporary', 'SERVER'),
       textResponse('must not run'),
     ])
     ;({ ctx: context } = await harness(adapter, { mock: alwaysConfig() }))
@@ -1041,5 +1058,32 @@ describe('provider-routed retry policy', () => {
     expect(() => {
       retry.apply(ctx, { retryPolciy: {} } as unknown as retry.Config)
     }).toThrow(/unknown key "retryPolciy"/)
+  })
+})
+
+// BLOCKED-339: the function llm-retry decides with, in both modes, is the
+// circuit breaker's classifier over the same facts; these are its verdicts
+// for the failures the shipped providers report.
+describe('BLOCKED-339: llm-retry decides with the shared classifier', () => {
+  it.each([
+    ['HTTP 408', true, { message: 'request timeout', code: 'HTTP_408', status: 408 }],
+    ['HTTP 429 asking for later', true, { message: 'slow down', code: 'RATE_LIMIT', status: 429 }],
+    ['HTTP 429 reporting an exhausted balance', false, { message: 'Insufficient Balance', code: 'QUOTA', status: 429 }],
+    ['HTTP 503', true, { message: 'unavailable', code: 'SERVER', status: 503 }],
+    ['HTTP 401', false, { message: 'bad key', code: 'AUTH', status: 401 }],
+    ['TIMEOUT with no status', true, { message: 'idle', code: 'TIMEOUT' }],
+    ['TRANSPORT with no status', true, { message: 'socket closed', code: 'TRANSPORT' }],
+    ['EMPTY_RESPONSE with no status', true, { message: 'no content', code: 'EMPTY_RESPONSE' }],
+    ['AUTH with no status', false, { message: 'bad key', code: 'AUTH' }],
+    ['ABORTED', false, { message: 'cancelled', code: 'ABORTED' }],
+    ['UNSUPPORTED_CONTENT', false, { message: 'no images', code: 'UNSUPPORTED_CONTENT' }],
+    ['REQUEST_EXTENSION', false, { message: 'extension failed', code: 'REQUEST_EXTENSION' }],
+    ['MISSING_CREDENTIAL', false, { message: 'no key', code: 'MISSING_CREDENTIAL' }],
+    ['UNSUPPORTED_REASONING_EFFORT', false, { message: 'effort', code: 'UNSUPPORTED_REASONING_EFFORT' }],
+    ['CONTEXT_WINDOW_EXCEEDED with no status', false, { message: 'too long', code: 'CONTEXT_WINDOW_EXCEEDED' }],
+    ['UNKNOWN', false, { message: 'boom', code: 'UNKNOWN' }],
+    ['PI_AI_ERROR, a code with no status that names nothing', false, { message: 'odd', code: 'PI_AI_ERROR' }],
+  ] as const)('%s is retryable: %s', (_label, retryable, failure) => {
+    expect(retry.isRetryableLlmFailure(failure)).toBe(retryable)
   })
 })

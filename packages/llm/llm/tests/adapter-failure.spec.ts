@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeLlmFailure } from '../src/adapter-failure.ts'
+import { llmFailureFacts, normalizeLlmFailure } from '../src/adapter-failure.ts'
 
 describe('adapter failure normalization', () => {
   it('contains hostile non-Error coercion', () => {
@@ -64,5 +64,43 @@ describe('adapter failure normalization', () => {
     const error = new Error('provider failed')
     Object.defineProperty(error, 'message', { get() { throw new Error('message getter failed') } })
     expect(normalizeLlmFailure(error)).toEqual({ message: 'LLM adapter failed', code: 'UNKNOWN' })
+  })
+})
+
+// BLOCKED-339: the facts both retry layers classify. A statusless failure is
+// retryable only when its code names a transient condition.
+describe('adapter failure facts', () => {
+  it.each([
+    'INVALID_REQUEST',
+    'INVALID_ARGS',
+    'UNSUPPORTED_CONTENT',
+    'UNSUPPORTED_REASONING_EFFORT',
+    'REQUEST_EXTENSION',
+    'CONTEXT_WINDOW_EXCEEDED',
+  ])('marks %s malformed, with or without a status', (code) => {
+    expect(llmFailureFacts({ message: code, code })).toEqual({ malformed: true })
+    expect(llmFailureFacts({ message: code, code, status: 400 })).toEqual({ status: 400, malformed: true })
+  })
+
+  it.each(['AUTH', 'MISSING_CREDENTIAL', 'INVALID_CREDENTIAL', 'QUOTA', 'ABORTED'])(
+    'marks %s caller-side, with or without a status',
+    (code) => {
+      expect(llmFailureFacts({ message: code, code })).toEqual({ callerSide: true })
+      expect(llmFailureFacts({ message: code, code, status: 429 })).toEqual({ status: 429, callerSide: true })
+    },
+  )
+
+  it.each(['EMPTY_RESPONSE', 'RATE_LIMIT', 'SERVER', 'TIMEOUT', 'TRANSPORT'])(
+    'gives a statusless %s no refusing fact',
+    (code) => {
+      expect(llmFailureFacts({ message: code, code })).toEqual({})
+    },
+  )
+
+  it('marks a statusless code it does not name unclassified, and leaves one with a status to the status', () => {
+    expect(llmFailureFacts({ message: 'unknown', code: 'UNKNOWN' })).toEqual({ unclassified: true })
+    expect(llmFailureFacts({ message: 'truncated', code: 'STREAM_CLOSED' })).toEqual({ unclassified: true })
+    expect(llmFailureFacts({ message: 'timeout', code: 'HTTP_408', status: 408 })).toEqual({ status: 408 })
+    expect(Object.isFrozen(llmFailureFacts({ message: 'unknown', code: 'UNKNOWN' }))).toBe(true)
   })
 })
