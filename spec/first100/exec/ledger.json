@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-26T04:28:32.256Z",
-  "inputDigest": "054adbf0a1f3ec09d46afaab77ac51c70fe024cffea9b30953a8b146890c38f5",
+  "lastUpdatedUtc": "2026-09-26T04:31:17.994Z",
+  "inputDigest": "940feae0a9bbb59547340ecee339dbe219d386397db91a64a6b9f19e9041831a",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4547,6 +4547,19 @@
             "P2-05 acceptance[0]: every originator the shipped headless profile drives passes one enforcement point a child a workflow script's agent() call starts has its read manifested and decided once before it runs"
           ],
           "capturedAtUtc": "2026-09-26T04:28:29.831Z"
+        },
+        "U.6": {
+          "status": "GREEN",
+          "candidateSha": "db7f3a63ad29a056aa40351b479f9487fba9460d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36213775071",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36213775071/first100-vitest-report-db7f3a63ad29a056aa40351b479f9487fba9460d/vitest-report.json",
+          "observationSha256": "062d5540107a65559bbc4614ef4429c4809e192f6a7ed4175a164606c413c57d",
+          "expectCasesMatched": [
+            "P4-11 acceptance[0] on the shipped mount: a policy-denied tool call is not dispatched again and charges nothing control: without the deployment rule the probe runs once, and the kernel audits one permit for its call",
+            "P4-11 acceptance[0] on the shipped mount: a policy-denied tool call is not dispatched again and charges nothing with the deployment rule, the kernel audits the call as denied by the shipped kernel-hard-deny policy, and the probe does not run",
+            "P4-11 acceptance[0] on the shipped mount: a policy-denied tool call is not dispatched again and charges nothing the denied call is not dispatched again and charges the run retry budget nothing"
+          ],
+          "capturedAtUtc": "2026-09-26T04:31:17.974Z"
         }
       },
       "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
