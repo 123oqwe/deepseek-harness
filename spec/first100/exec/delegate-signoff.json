@@ -812,6 +812,14 @@
       "delegateSession": "first100-delegate-1a",
       "signedAtUtc": "2026-09-26T01:46:04.180Z",
       "reason": "- **依据的记录**:lane B 从第 9r 班全量 36205389837(c732e7c073,退出记录 0)记了 28 格,在 r1 的 `c18b7ccb0b` 上。两行的格与补充都是 GREEN。带未结发现的 4 格(P1-03 P、P6-02 F/U/C)照 09-24T23:29:21Z 的裁定不记。\n- **P0-06**:\n  - 4.4b:4 个主格、6 条补充,冻结标题共 221 条,在 36205389837 里 221 条都 passed;\n  - 4.4a、4.4d:我在 c732e7c073 上核了。negotiateSchema 的生产调用在 SDK initialize(sdk/server/src/server.ts:342)、会话行(session-persistence-jsonl/src/format.ts:367)、设置(settings/src/index.ts:790);listSchemas 在插件兼容求解(plugin-compat/src/solver.ts:119,经 profile-boot 走到 runProfile);registerSchema 在设置命名空间(:455)与 registry 的 bootstrap。session-persistence-jsonl 挂在 base,SDK 服务端挂在 sdk-app 与 sdk-minimal,与 A-407 的草稿一致;\n  - 4.4c:BLOCKED-310 已在第 9r 班 CLOSED(b0953b544a),条件 4 两个出厂客户端都满足;N5 由 B-594 修复,三轮对上;\n  - **结论:PASS**。lane B 以 `--record-signoff PASS` 与 `--accept P0-06` 随第 10 班落,ACCEPTANCE LOCKS 的 P0-06 行照 P1-08 的先例加 LIFTED 附注,引现行的 acc[0] 原文;\n  - **不涵盖**:灵敏度是冻结当时量的;N5 与 A-409 的用例没有冻结,每次全量都跑;acc[1] 由 P0-06 名下另冻的 U.2 [399]、U.3 [400] 覆盖,不跨 epic 引 P8-01。"
+    },
+    {
+      "epic": "P8-01",
+      "rowDigestSha256": "5aa3b6b35f75dfc9c8fdbbe7115b070c7bbf374f7c0f2d326157ea5829369738",
+      "conclusion": "PASS",
+      "delegateSession": "first100-delegate-1a",
+      "signedAtUtc": "2026-09-26T01:46:37.270Z",
+      "reason": "- **依据的记录**:lane B 从第 9r 班全量 36205389837(c732e7c073,退出记录 0)记了 28 格,在 r1 的 `c18b7ccb0b` 上。两行的格与补充都是 GREEN。带未结发现的 4 格(P1-03 P、P6-02 F/U/C)照 09-24T23:29:21Z 的裁定不记。\n- **P8-01**:\n  - 4.4b:4 个主格、10 条补充,冻结标题共 114 条,在 36205389837 里 114 条都 passed;[370] 的灵敏度血统引 03:47:31Z 那一节;\n  - 4.4a、4.4d:Run 的 provenance 带这次连接的协商(run/src/types.ts:230、248-249;index.ts:558-563);SDK 服务端在 initialize 协商(server.ts);TS 客户端从线上读 downgrades(client.ts:614-616);Python 客户端经真实握手把 protocolVersions 与 schemaFingerprint 交给调用方,由 A-375 在修好的载体上的两轮 36200543709、36200557727 观测。这两轮是 narrow_python_runtime,全量不暂存载体,不作格的观测;\n  - 4.4c:BLOCKED-314 已在第 9r 班 CLOSED(1a41948d2a);BLOCKED-338 修好,出厂 Python 运行时能启动;\n  - **范围照第 17 题 (a)**:acc[4] 的主语是经 dsh 协议协商的连接开出的 Run,即 SDK 连接及其子 agent。ACP 与 CLI 的 Run 不走这套协商,不在主语内;sdk-minimal 没有 Run;headless 与 Web 不做 dsh 协议协商;\n  - **结论:PASS**。lane B 以 `--record-signoff PASS` 与 `--accept P8-01` 随第 10 班落,锁行加 LIFTED 附注;\n  - **不涵盖**:\n    1. 出厂服务端恒发 `downgrades: []`(server.ts:421),出厂构建上没有 downgrades 的生产者,客户端保留 downgrades 只在测试里对第三方对端观测;\n    2. TS 变异大多是在当时的文件上量的,之后文件已变(B-595 等);\n    3. 盲审 2 档的 F1(形状不对的 negotiation,TS 与 Python 处理不一致)按止损转后续工单,不挡签字;\n    4. Python 真实握手的用例没有冻结,记为后续工单:推送门暂存载体时再冻。"
     }
   ]
 }
