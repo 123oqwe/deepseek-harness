@@ -311,7 +311,7 @@ export function apply(ctx: Context, config: Config): void {
       agent.session.append(
         'system/message',
         { turn, step, message: createSystemMessage('', name) },
-        { surfaceOp: { op: 'replace', startSeq: outstanding.seq, endSeq: outstanding.seq }, sourceEventSeqs: [outstanding.seq] },
+        { surfaceOp: 'append', sourceEventSeqs: [outstanding.seq] },
       )
     }
     // The new recall, when this step has one, is appended at the tail.
