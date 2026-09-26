@@ -49,9 +49,9 @@ tool result 记录的是 harness 观察到的东西，它记录不了外部世�
 <a id="the-host-user-resolves-an-ambiguous-effect"></a>
 ## 宿主用户消解 ambiguous 的副作用
 
-`ambiguous` 会拒绝该键后续的每一次尝试，因为重试可能执行一个也许已经提交过的副作用。这样的记录要离开这个状态，靠的是 `/resolve-effect <idempotencyKey> <confirmed|compensated>`（P4-12 acceptance[1]，BLOCKED-311）。插件在组合了命令注册表的地方注册这条命令；不带参数时，它列出调用者正在等待的记录。
+`ambiguous` 会拒绝该键后续的每一次尝试，因为重试可能执行一个也许已经提交过的副作用。这样的记录要离开这个状态，靠的是 `/resolve-effect <idempotencyKey> <confirmed|compensated>`（P4-12 acceptance[1]，BLOCKED-311）。插件在组合了命令注册表的地方注册这条命令；不带参数时，它列出正在等待的记录，不论属于哪个范围。
 
-只有宿主用户能消解，而且只能消解自己的记录：发起命令的 agent 必须以 `user` 主体行事，键在这个主体的范围里查找。宿主用户经审批界面被询问，除了批准，任何回答都不改动任何东西。获批的消解，在写下消解记录的同一个事务里，把记录移到 `confirmed` 或 `compensated`；`entry()` 会返回这份消解记录：谁消解的、消解成什么、什么时候。记录永远不会回到 `prepared`；要重做，就是开一个带新键的新动作。`confirmed` 的消解没有 provider 回执，所以这条记录的回执摘要是这份消解记录的摘要。
+只有宿主用户能消解，而且能消解任何范围的记录：子 agent、workflow 子运行、webhook 会话都代表宿主用户干活，它们的记录由宿主用户对账。发起命令的 agent 必须以 `user` 主体行事，键在所有范围的 `ambiguous` 记录里查找；同一个键挂在不止一个范围下时，拒绝而不猜。宿主用户经审批界面被询问，除了批准，任何回答都不改动任何东西。获批的消解，在写下消解记录的同一个事务里，在记录自己的范围下把它移到 `confirmed` 或 `compensated`；`entry()` 会返回这份消解记录：谁消解的、消解成什么、什么时候。不带消解的迁移（`markSent`、不带消解的 `confirm`、`markAmbiguous`）只移动 `prepared` 或 `sent` 的记录，所以除了消解，没有别的途径把记录移出 `ambiguous`，也没有途径把已了结的记录移回去。记录永远不会回到 `prepared`；要重做，就是开一个带新键的新动作。`confirmed` 的消解没有 provider 回执，所以这条记录的回执摘要是这份消解记录的摘要。
 
 ## Model Experience
 

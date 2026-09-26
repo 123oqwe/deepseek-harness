@@ -109,6 +109,16 @@ describe('the store: a resolve moves only an ambiguous entry, and writes the res
 
     expect(store.listAmbiguous(HOST).map(entry => entry.key)).toEqual(['effect-a', 'effect-b'])
   })
+
+  it('lists the waiting entries of every scope, by scope and then key', () => {
+    const store = openLedgerStore(directory())
+    ambiguous(store, brandString<IdempotencyKey>('effect-b'))
+    ambiguous(store, brandString<IdempotencyKey>('effect-a'), OTHER)
+    ambiguous(store, KEY)
+
+    expect(store.listAllAmbiguous().map(entry => [entry.scope, entry.key]))
+      .toEqual([[HOST, 'effect-1'], [HOST, 'effect-b'], [OTHER, 'effect-a']])
+  })
 })
 
 /** The command as this plugin registers it, captured from a stand-in registry. */
@@ -240,5 +250,29 @@ describe('/resolve-effect: the host user settles an ambiguous effect of their ow
     ctx.actionLedger.reserve({ scope: HOST, key: KEY, argumentsHash: ARGS, epoch: EPOCH })
     expect(await run(command, 'effect-1 confirmed'))
       .toEqual({ kind: 'error', text: 'effect-1 is prepared, not ambiguous, so there is nothing to resolve.' })
+  })
+})
+
+describe('/resolve-effect: the host user settles an ambiguous effect of any scope (B-515 v2, BLOCKED-311)', () => {
+  it('resolves an entry that waits under another scope, and writes the resolution under that scope', async () => {
+    const { ctx, command } = await mount('allowed-once')
+    ambiguous(ctx.actionLedger, KEY, OTHER)
+    expect(await run(command, '')).toEqual({ kind: 'success', text: 'Waiting for reconciliation: effect-1.' })
+
+    expect(await run(command, 'effect-1 confirmed')).toEqual({ kind: 'success', text: 'effect-1 is resolved as confirmed.' })
+
+    expect(ctx.actionLedger.entry(OTHER, KEY)).toMatchObject({ scope: OTHER, state: 'confirmed', resolution: { outcome: 'confirmed', resolvedBy: HOST } })
+    expect(ctx.actionLedger.entry(HOST, KEY)).toBeUndefined()
+  })
+
+  it('refuses a key that waits under two scopes, naming both, and asks nothing', async () => {
+    const { ctx, command, requests } = await mount('allowed-once')
+    ambiguous(ctx.actionLedger, KEY, HOST)
+    ambiguous(ctx.actionLedger, KEY, OTHER)
+
+    expect(await run(command, 'effect-1 compensated'))
+      .toEqual({ kind: 'error', text: 'effect-1 is waiting under 2 scopes (host-user, other-user), so the key alone does not name one.' })
+    expect([ctx.actionLedger.entry(HOST, KEY)?.state, ctx.actionLedger.entry(OTHER, KEY)?.state]).toEqual(['ambiguous', 'ambiguous'])
+    expect(requests).toEqual([])
   })
 })
