@@ -9854,7 +9854,7 @@ P1-10 is not ACCEPTED, so nothing is withdrawn. This entry blocks P1-10 acceptan
 
 ### BLOCKED-347 — on a pi-ai route the circuit breaker never opens: provider failures arrive as error chunks, and the breaker counts the first chunk as a success
 
-**Status:** OPEN (2026-09-26). Owner lane B (fix); lane A (red first, done: A-498). This entry predates B-605; the P4-11 blind review found it on 2026-09-26. It blocks P4-11's sign-off. P4-11 is not ACCEPTED.
+**Status:** CLOSED 2026-09-26 (closure note at the end of this entry); opened 2026-09-26. Owner lane B (fix); lane A (red first, done: A-498). This entry predates B-605; the P4-11 blind review found it on 2026-09-26. It blocks P4-11's sign-off. P4-11 is not ACCEPTED.
 
 **The clause.** P4-11 acceptance[2]: 「provider 故障时 circuit 打开且可恢复。」 must[1] (provider circuit breaker).
 
@@ -9876,3 +9876,10 @@ P1-10 is not ACCEPTED, so nothing is withdrawn. This entry blocks P1-10 acceptan
 3. A-498 passes at the fix. The unfixed tree stands as the red side, per §16.
 
 **Owner.** Lane B (B-647); lane A (A-498 on the fix).
+
+**Closure note (2026-09-26, lane B).** Drafted by lane A (A-500). Fixed by B-647 (`510d1c7dc2` + fix′ `e02b7f2938`): on a pi-ai route a provider failure arrives as an `error`/`aborted` finish chunk, not a throw; the breaker now pulls the leading chunks through itself and, where the stream first answers, treats a finish carrying a failure like a throw — an `InBandFailure` judged by the same shared classifier (`packages/llm/llm/src/index.ts`). Consecutive in-band failures therefore open the breaker, satisfying P4-11 acceptance[2]'s "opens" half (the "recoverable" half is BLOCKED-268, already covered by `retry-cockatiel/tests/breaker.spec.ts`).
+- **Red first:** A-498, run 36223805295 at `d47541c3d9` (`P4-11.breaker-chunk-blind.spec.ts`): control green (the breaker opens after N thrown failures), red case red (after N pi-ai failures the next call still reaches the backend). 2 green / 2 red.
+- **At the fix:** run 36225492214 at `510d1c7dc2`: A-498 2/2, the new `circuit-breaker-in-band.spec.ts` 7/7, `circuit-breaker.spec.ts` ([237]/[238]) green.
+- **Order/sensitivity is measured:** M-647-1 (`e9d48a8071`), which changes `inBandFailure(leading.answer)` to `inBandFailure(undefined)` so an in-band failure is never detected, reddens exactly A-498's red case and the new spec's "opens on a failure an adapter reports in its finish chunk, and passes the stream on unchanged" (run 36225502416, matched).
+- **fix → fix′:** the v1 mutation also reddened the new spec's usage-only case, because a stream with usage and no finish is invalid; fix′ (`e02b7f2938`) rewrites that case to assert the stream invariant ("LLM stream ended without a terminal finish chunk") and that all three calls reach the adapter, so it holds under the mutation. The re-dispatched fix round (run 36225861505) is 793/793: A-498 2/2 and `circuit-breaker-in-band.spec.ts` 7/7.
+- **Not covered:** the DeepSeek adapter, which throws on HTTP errors, was never affected. The "recoverable" half of acc[2] is BLOCKED-268 (already-frozen probe). No mutation that deletes a check outright (the stop-loss rule); the ordering/detection mutation is the sensitivity evidence.
