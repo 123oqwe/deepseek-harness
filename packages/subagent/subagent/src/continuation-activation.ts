@@ -9,7 +9,8 @@
  * @module @deepseek-ai/dsh-subagent/continuation-activation
  */
 
-import type { Context } from '@deepseek-ai/cordis'
+import { FiberState } from '@deepseek-ai/cordis'
+import type { Context, Fiber } from '@deepseek-ai/cordis'
 import type {
   Agent,
   AgentHandle,
@@ -164,6 +165,22 @@ export class ChildLock {
   }
 }
 
+/**
+ * Whether a fiber is the given one or one of its ancestors.
+ * @param own - the fiber whose lifecycle is asked about.
+ * @param candidate - the fiber that changed state.
+ * @returns true when `candidate` unloading unloads `own`.
+ */
+function isLifecycleAncestor(own: Fiber, candidate: Fiber): boolean {
+  let fiber = own
+  while (true) {
+    if (fiber === candidate) return true
+    const parent = fiber.parent.fiber
+    if (parent === fiber) return false
+    fiber = parent
+  }
+}
+
 /** Own the complete process-local lifetime of continuable child Activations. */
 export class ContinuableActivationRegistry {
   /** Child session id → its live Activation. Process-local, never durable. */
@@ -194,9 +211,9 @@ export class ContinuableActivationRegistry {
    *
    * What is held is the SERVICE value `inject` already delivered at activation,
    * not the store behind it: the boundary is the service, and reaching past it
-   * for the store would be the thing §12.40 refused. Fiber order (a dependent
-   * disposes before what it depends on) is what keeps the service's database
-   * open while this registry's drain runs.
+   * for the store would be the thing §12.40 refused. Fiber order does not keep
+   * the service's database open for the drain (BLOCKED-333); the shutdown
+   * commit's timing does, as the constructor records.
    */
   private readonly bus: MessageBusPlugin | undefined
 
@@ -214,6 +231,14 @@ export class ContinuableActivationRegistry {
     ) => ActivationObserver,
   ) {
     this.bus = ctx.get('messageBus')
+    // The bus clears its store handle in its own teardown, and a fiber unload
+    // starts all of its disposers at once, so on the shipped headless profile
+    // the drain began after that clear and committed nothing (BLOCKED-333).
+    // Cordis announces an unload before any of its disposers runs: the
+    // shutdown settlements are committed then, while the bus is still open.
+    ctx.on('internal/status', (fiber) => {
+      if (fiber.state === FiberState.UNLOADING && isLifecycleAncestor(ctx.fiber, fiber)) this.closeForShutdown()
+    })
     // Ordinary Cordis owner effects unwind in reverse registration order, which
     // cannot express the dynamic child graph. Register the private scope's
     // structural disposer FIRST and the drain SECOND, so reverse unwind invokes
@@ -370,20 +395,10 @@ export class ContinuableActivationRegistry {
    * child-first.
    */
   async drain(): Promise<void> {
-    this.draining = true
-    // Every live child's settlement is committed HERE, in the synchronous
-    // prologue, before the first `await` (§12.41).
-    //
-    // Cordis orders fiber teardown, not the segments of an async disposer: past
-    // this function's first await the bus service can already be gone, and
-    // measured, it was — a settlement produced during shutdown reached nothing
-    // even with `SubagentRuntime` injecting `messageBus`. `commitIntake` is
-    // synchronous (`BEGIN IMMEDIATE` on a `DatabaseSync`), so the write that
-    // must survive the process simply has to happen before the first
-    // suspension point. Delivery stays in the async section below, where it
-    // belongs: a tearing-down tree receives nothing, and the rows it leaves
-    // pending are what the next start drains.
-    this.commitSettlementsForShutdown()
+    // Already done when the unload was announced; here for a direct call.
+    // Delivery stays in the async section below: a tearing-down tree receives
+    // nothing, and the rows it leaves pending are what the next start drains.
+    this.closeForShutdown()
     await Promise.all([...this.materializations].map(materialization => materialization.settled))
     const owned = new Set<SessionId>()
     for (const activation of this.resident.values()) {
@@ -879,13 +894,28 @@ export class ContinuableActivationRegistry {
   }
 
   /**
+   * Close admission and commit every live child's shutdown settlement, once.
+   *
+   * Runs when an unload of this registry's fiber or an ancestor is announced;
+   * the call at the top of {@link ContinuableActivationRegistry.drain} then
+   * does nothing.
+   */
+  private closeForShutdown(): void {
+    if (this.draining) return
+    this.draining = true
+    this.commitSettlementsForShutdown()
+  }
+
+  /**
    * Commit a settlement row for every live child, synchronously (§12.41).
    *
-   * Called from the drain's prologue. The stop reason is the one this teardown
-   * is about to produce — the harness is going away, and that is what happened
-   * to these children — rather than a terminal nobody has captured yet: the
-   * capture happens later in the same drain, past the await where the bus is
-   * no longer reachable.
+   * Called once per teardown, from `closeForShutdown`. `commitIntake` is
+   * synchronous (`BEGIN IMMEDIATE` on a `DatabaseSync`), so the whole write
+   * lands before the bus's teardown can run. The stop reason is the one this
+   * teardown is about to produce — the harness is going away, and that is what
+   * happened to these children — rather than a terminal nobody has captured
+   * yet: the capture happens later, in the drain, past the await where the bus
+   * is no longer reachable.
    *
    * Idempotent against the normal path: when a child then settles inside this
    * same drain, `commitSettlement` finds the row already owed and does not add
