@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-26T01:46:40.244Z",
-  "inputDigest": "7436b44cec497d4cd5cfcf47ab59b6653a7aec0918a34111a42ce4cc3bd89c20",
+  "lastUpdatedUtc": "2026-09-26T02:46:55.775Z",
+  "inputDigest": "19b59fa7f1f0f2646834289d513e3d7dd53591d9cf48ee5ad79f40a86f501e5f",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -655,6 +655,18 @@
             "acceptance[2]: the time budget runs against a 10-second budget unless --budget-ms replaces it"
           ],
           "capturedAtUtc": "2026-09-24T23:23:22.753Z"
+        },
+        "U.2": {
+          "status": "GREEN",
+          "candidateSha": "28a56599ac1e980a51722b86cbae6b8eff9016d5",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36210334346",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36210334346/first100-vitest-report-28a56599ac1e980a51722b86cbae6b8eff9016d5/vitest-report.json",
+          "observationSha256": "a059de3fca3008ed2b08014230277108651614511208d7380a53c946329b8ba6",
+          "expectCasesMatched": [
+            "P0-04 acceptance[2] on the real repository: the whole layer check under its default budget control: the run checked the whole real workspace",
+            "P0-04 acceptance[2] on the real repository: the whole layer check under its default budget finishes within its 10-second budget"
+          ],
+          "capturedAtUtc": "2026-09-26T02:46:55.765Z"
         }
       },
       "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
