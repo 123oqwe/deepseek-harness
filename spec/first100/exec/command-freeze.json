@@ -19787,6 +19787,157 @@
         "failureSummary": "Read from each round's own narrow report. M-583-2, run 36262097798: 1 of 2 red, «BLOCKED-332 on the shipped sdk profile: a client of the real host when the session's Run is advanced to failed condition 3: a session.event or session.status the client receives carries the state failed and the reason the transition was given» — AssertionError: notifications after the tool result: [\"session.event\",\"session.event\",\"session.event\",\"session.status\"]: expected 0 to be greater than 0. The control passed. M-583-1, run 36262085852: 2 of 2 passed."
       },
       "note": "P4-05 U-stage supplement 9, on the shipped sdk profile: BLOCKED-332 condition 3. A client of the real host receives the state failed and the reason the transition was given, in a session.event it is sent (red first 67b321d8a5; fix B-583, eacd15e99a on the candidate). Frozen by the delegate's ruling (first100-delegate-1a, gate3 2026-09-26T19:59:57Z) from lane A's A-539 draft (artifacts/laneA/a-539-p4-12-p4-05-freeze-drafts.md, sha256 d1d8705f…). expectCases are the full names in the full run 36264470501 at 7de79a1658, where tests/first100/fixtures/P4-05.terminal-sdk-client.spec.ts ran 2 cases and each frozen title passed once; the entry is frozen after that run, so its cell is observed by the next full run. files add the stub model server and the test tool the spec mounts, the CLI entry it runs (apps/cli/src/bin.ts), and the sources B-583 changed. The observing tree is pinned at refs/dsh/freeze/P4-05.U.9/2026-09-26T20-08-38.000Z -> 7de79a1658bc4baff424522f433a02221fa462fb, whose tree is dryRunProof.treeSha."
+    },
+    {
+      "epic": "P0-01",
+      "stage": "F",
+      "supplements": {
+        "epic": "P0-01",
+        "stage": "F"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/release/baseline-fingerprint-restore.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "release/baseline-fingerprint restore contract, per class (P0-01 acceptance[2]) verify passes again once a tampered SDK protocol types file is restored",
+        "release/baseline-fingerprint restore contract, per class (P0-01 acceptance[2]) verify passes again once a tampered known-event-types file is restored",
+        "release/baseline-fingerprint restore contract, per class (P0-01 acceptance[2]) verify passes again once a tampered pnpm-lock.yaml is restored",
+        "release/baseline-fingerprint restore contract, per class (P0-01 acceptance[2]) verify passes again once a drifted workspace package manifest is restored"
+      ],
+      "files": [
+        "tests/release/baseline-fingerprint-restore.spec.ts",
+        "scripts/release/baseline-fingerprint.mjs"
+      ],
+      "frozenAtUtc": "2026-09-26T22:57:07.000Z",
+      "dryRunProof": {
+        "treeSha": "68190279e8adcd25bd74d1ca05e9f1946057334f",
+        "testsDiscovered": 4
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Four rounds, never merged (A-542), each one line in scripts/release/baseline-fingerprint.mjs so that verify stops comparing one recorded class. M-A542-1 (`da851289ef`), run 36271232259, skips the SDK protocol types class; M-A542-2 (`bb3f098d42`), run 36271241948, skips the known-event-types class; M-A542-3 (`c0b72784b3`), run 36271253163, skips the pnpm-lock class; M-A542-4 (`1a200da33d`), run 36271265073, empties readWorkspaceManifests, dropping the workspace-manifest class. Their parent is A-534's dispatch 2c32036737, where scripts/release/baseline-fingerprint.mjs and the spec are byte-identical to the dry-run commit 7de79a1658 (gate3 2026-09-26T21:16:19Z).",
+        "failureSummary": "Read from each round's own narrow report: each ran the spec's 4 cases, and exactly 1 was red, the case of the class its mutation stops comparing: M-A542-1 «release/baseline-fingerprint restore contract, per class (P0-01 acceptance[2]) verify passes again once a tampered SDK protocol types file is restored», M-A542-2 «release/baseline-fingerprint restore contract, per class (P0-01 acceptance[2]) verify passes again once a tampered known-event-types file is restored», M-A542-3 «release/baseline-fingerprint restore contract, per class (P0-01 acceptance[2]) verify passes again once a tampered pnpm-lock.yaml is restored», M-A542-4 «release/baseline-fingerprint restore contract, per class (P0-01 acceptance[2]) verify passes again once a drifted workspace package manifest is restored»; each an AssertionError \"a tampered file must make verify fail: expected +0 not to be +0\" (verify exited 0 on the tampered tree). The other three cases passed in each round."
+      },
+      "note": "P0-01 F-stage supplement 2: acceptance[2] (BLOCKED-305), restoring a tampered file makes verify pass again, for each recorded change class beyond the bundle row the C-stage cases already carry: the SDK protocol types, the known event types, the lockfile and a workspace package manifest. Green evidence after B-626's symmetric detection, not a red first; the cases are A-534's (laneA-evidence c2f4cf73e5, dispatched 2c32036737). Frozen by the delegate's ruling (first100-delegate-1a, gate3 2026-09-26T21:16:19Z: stage F, as the F entries on tests/release/baseline-fingerprint.spec.ts) from lane A's A-543 draft (artifacts/laneA/a-543-p0-01-restore-freeze.md, sha256 1c29ff94…). expectCases are the full names in the full run 36264470501 at 7de79a1658, where tests/release/baseline-fingerprint-restore.spec.ts ran 4 cases and each frozen title passed once; the entry is frozen after that run, so its cell is observed by the next full run. files add the script the spec runs. The observing tree is pinned at refs/dsh/freeze/P0-01.F.2/2026-09-26T22-57-07.000Z -> 7de79a1658bc4baff424522f433a02221fa462fb, whose tree is dryRunProof.treeSha."
+    },
+    {
+      "epic": "P2-02",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-02",
+        "stage": "U"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P2-02.token-refusal-before-ask.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "BLOCKED-330: a call a revoked session token will refuse is not put to the operator",
+        "BLOCKED-330: a call a revoked session token will refuse is refused as a revoked capability token and its body does not run",
+        "BLOCKED-330 on the code-mode path: a call an expired session token will refuse is not put to the operator",
+        "BLOCKED-330 on the code-mode path: a call an expired session token will refuse is refused as an expired capability token and its body does not run"
+      ],
+      "files": [
+        "tests/first100/fixtures/P2-02.token-refusal-before-ask.composition.spec.ts",
+        "tests/first100/fixtures/loader/p4-05-waiting/driver.ts",
+        "tests/first100/fixtures/loader/p4-05-waiting/shared.ts",
+        "tests/first100/fixtures/loader/p4-05-waiting/mock-llm.ts",
+        "tests/first100/fixtures/loader/p4-05-waiting/base.patch.yml",
+        "tests/first100/fixtures/loader/p4-05-waiting/token-short.patch.yml",
+        "packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts",
+        "packages/test-support/loader-smoke/tests/fixtures/production-profile.ts",
+        "packages/test-support/loader-smoke/src/index.ts",
+        "packages/test-support/loader-smoke/src/agent-turn.ts",
+        "packages/core/agent-loop/src/tool-calls.ts",
+        "packages/core/tools/src/index.ts",
+        "packages/core/tools/src/ptc.ts",
+        "packages/policy/capability-token-file/src/index.ts",
+        "packages/policy/capability-token/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-26T22:57:07.000Z",
+      "dryRunProof": {
+        "treeSha": "68190279e8adcd25bd74d1ca05e9f1946057334f",
+        "testsDiscovered": 4
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two rounds, never merged, each one line in capabilityRefusal (packages/core/tools/src/index.ts), both on the dry-run commit 7de79a1658. M-P2-02-refusal (`97de12c9f4`), run 36272358449: `revoked` is forced to false, so a revoked session token no longer refuses a call. M-P2-02-expired (`98326fa1ab`, A-544), run 36272712400: capabilityDenialReason judges expiry against 0 instead of Date.now(), so an expired session token no longer refuses a call.",
+        "failureSummary": "Read from each round's own narrow report; each ran the spec's 4 cases. M-P2-02-refusal, run 36272358449: 2 red, the two revoked cases on the native path, «BLOCKED-330: a call a revoked session token will refuse is not put to the operator» (expected [ 'p4_05_third_party' ] to deeply equal []: the call was put to the operator) and «BLOCKED-330: a call a revoked session token will refuse is refused as a revoked capability token and its body does not run» (the tool results: [\"third-party tool ran\"]: expected false to be true); the two expired code-mode cases passed. M-P2-02-expired, run 36272712400: 2 red, the two expired cases on the code-mode path, with the same two assertion failures; the two revoked cases passed."
+      },
+      "note": "P2-02 U-stage supplement 1: BLOCKED-330 on the shipped headless profile. A call that a revoked session token (native path) or an expired one (code-mode path) will refuse is refused as that before it is put to the operator, and its body does not run; the gate is capabilityRefusal, called at packages/core/agent-loop/src/tool-calls.ts:309 on the native path and packages/core/tools/src/ptc.ts:723 on the code-mode path. Frozen by the delegate's ruling (first100-delegate-1a, gate3 2026-09-26T21:16:19Z: stage U, as every composition spec) from lane A's A-530 draft (artifacts/laneA/a-530-p2-02-freeze-drafts.md, sha256 94e15b15…); the expired round is A-544's. expectCases are the full names in the full run 36264470501 at 7de79a1658, where tests/first100/fixtures/P2-02.token-refusal-before-ask.composition.spec.ts ran 4 cases and each frozen title passed once; the entry is frozen after that run, so its cell is observed by the next full run. files add the harness the driver uses (the mock model and the loader-smoke fixtures and entry) and the sources the refusal passes through, from the two dispatch gates to the token provider's revocation set. The observing tree is pinned at refs/dsh/freeze/P2-02.U.1/2026-09-26T22-57-07.000Z -> 7de79a1658bc4baff424522f433a02221fa462fb, whose tree is dryRunProof.treeSha."
+    },
+    {
+      "epic": "P2-02",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-02",
+        "stage": "U"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P2-02.token-renewal.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "BLOCKED-331 condition 1: a root token past its expiry is re-issued under the same policy control: the probe runs before the expiry, and the second turn starts after it",
+        "BLOCKED-331 condition 1: a root token past its expiry is re-issued under the same policy after the expiry the probe runs and no result says the token has expired",
+        "BLOCKED-331 condition 1: a root token past its expiry is re-issued under the same policy the session then holds a new root, unexpired when the turn started, with the subject, tenant, capability and verbs of the first token",
+        "BLOCKED-331 condition 2: a revoked root is never re-issued control: the probe runs before the revocation, and the revocation withdraws a recorded token",
+        "BLOCKED-331 condition 2: a revoked root is never re-issued right after the revocation the probe does not run and the call is refused as revoked",
+        "BLOCKED-331 condition 2: a revoked root is never re-issued no token is issued after the revocation, right after it or once every earlier token has expired",
+        "BLOCKED-331 condition 2: a revoked root is never re-issued guard: once every earlier token has expired, the probe still does not run",
+        "BLOCKED-331 condition 3: a child token is derived from the current token of its parent, re-derived when it expires, and never born expired control: the first child starts with an unexpired token, and the first parent token expires before that child calls and before the second child starts",
+        "BLOCKED-331 condition 3: a child token is derived from the current token of its parent, re-derived when it expires, and never born expired a child whose token expired before its call has it re-derived: the probe runs and no result says the token has expired",
+        "BLOCKED-331 condition 3: a child token is derived from the current token of its parent, re-derived when it expires, and never born expired a child started after the parent token expired is not born expired: its probe runs, and no child token has expired when it is first seen",
+        "BLOCKED-331 condition 3: a child token is derived from the current token of its parent, re-derived when it expires, and never born expired guard: when each child calls, its token is derived from the parent token of that moment and does not outlive it",
+        "BLOCKED-331 condition 4: a code-mode call that outlives the token of its batch is re-issued one or is refused with a reason that says so control: the program ran, so the run_code call itself was not refused",
+        "BLOCKED-331 condition 4: a code-mode call that outlives the token of its batch is re-issued one or is refused with a reason that says so the probe call either runs or is refused with a reason that names the expiry within the code-mode program",
+        "BLOCKED-331 condition 3, workflow half: the children of a detached workflow are re-derived when their tokens expire and never born expired control: the root started a detached run, both workflow children called the probe, and the root token expired before the first child called and before the second child started",
+        "BLOCKED-331 condition 3, workflow half: the children of a detached workflow are re-derived when their tokens expire and never born expired the first workflow child, whose token expired before its call, has it re-derived: the probe runs and no result says the token has expired",
+        "BLOCKED-331 condition 3, workflow half: the children of a detached workflow are re-derived when their tokens expire and never born expired the second workflow child, started after the root token expired, is not born expired: its probe runs and its token has not expired when it calls",
+        "BLOCKED-331 condition 3, workflow half: the children of a detached workflow are re-derived when their tokens expire and never born expired guard: when each workflow child calls, its token is derived from the detached session token of that moment, which is derived from the root token of that moment, and neither outlives its parent"
+      ],
+      "files": [
+        "tests/first100/fixtures/P2-02.token-renewal.composition.spec.ts",
+        "tests/first100/fixtures/loader/p2-02-token-renewal/driver.ts",
+        "tests/first100/fixtures/loader/p2-02-token-renewal/mock-llm.ts",
+        "tests/first100/fixtures/loader/p2-02-token-renewal/base.patch.yml",
+        "packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts",
+        "packages/test-support/loader-smoke/tests/fixtures/production-profile.ts",
+        "packages/test-support/loader-smoke/src/index.ts",
+        "packages/test-support/loader-smoke/src/agent-turn.ts",
+        "packages/policy/capability-token-file/src/index.ts",
+        "packages/policy/capability-token/src/index.ts",
+        "packages/core/tools/src/index.ts",
+        "packages/core/agent-loop/src/tool-calls.ts",
+        "packages/core/tools/src/ptc.ts"
+      ],
+      "frozenAtUtc": "2026-09-26T22:57:07.000Z",
+      "dryRunProof": {
+        "treeSha": "68190279e8adcd25bd74d1ca05e9f1946057334f",
+        "testsDiscovered": 17
+      },
+      "sensitivityProof": {
+        "mutationDescription": "One round, never merged. M-P2-02-renewal (`0f3fcf742f`), run 36272369586, on the dry-run commit 7de79a1658: in packages/policy/capability-token-file/src/index.ts, whenSessionToken's `const now = Date.now()` becomes `const now = 0`, so the provider always judges the held token unexpired and never re-issues a root or re-derives a child.",
+        "failureSummary": "Read from the round's own narrow report: 17 cases, 8 red and 9 passed. Red, each refused or tokenless where the case requires a re-issued or re-derived token: condition 1 «… after the expiry the probe runs and no result says the token has expired» (the probe was refused: \"the presented capability token has expired\") and «… the session then holds a new root, unexpired when the turn started, …» (the held root's digest did not change); condition 3 «… a child whose token expired before its call has it re-derived: …» (refused as expired), «… a child started after the parent token expired is not born expired: …» (refused: \"issuance failed: delegated capability token refused: parent-expired\") and «… guard: when each child calls, its token is derived from the parent token of that moment and does not outlive it» (the child called holding no token); the workflow half's first child (refused as expired), second child (parent-expired) and guard (the child held no token). Passed: the controls of conditions 1, 3 and 4 and of the workflow half, the four condition-2 cases, and condition 4's probe case."
+      },
+      "note": "P2-02 U-stage supplement 2: BLOCKED-331 on the shipped headless profile. A root token past its expiry is re-issued under the same policy (condition 1); a revoked root is never re-issued (condition 2); a child token is derived from the current token of its parent, re-derived when it expires and never born expired, for a subagent and for the children of a detached workflow (condition 3); a code-mode call that outlives the token of its batch is re-issued one or refused with a reason naming the expiry (condition 4). Re-issue and re-derivation are the capability-token-file provider's whenSessionToken (needsIssue, redelegateIfNeeded). Frozen by the delegate's ruling (first100-delegate-1a, gate3 2026-09-26T21:16:19Z: stage U, as every composition spec) from lane A's A-530 draft (artifacts/laneA/a-530-p2-02-freeze-drafts.md, sha256 94e15b15…). expectCases are the full names in the full run 36264470501 at 7de79a1658, where tests/first100/fixtures/P2-02.token-renewal.composition.spec.ts ran 17 cases and each frozen title passed once; the entry is frozen after that run, so its cell is observed by the next full run. files add the harness the driver uses (the mock model and the loader-smoke fixtures and entry) and the sources the token passes through, from the provider that re-issues it to the two dispatch gates that check it. The observing tree is pinned at refs/dsh/freeze/P2-02.U.2/2026-09-26T22-57-07.000Z -> 7de79a1658bc4baff424522f433a02221fa462fb, whose tree is dryRunProof.treeSha."
     }
   ]
 }

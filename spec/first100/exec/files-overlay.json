@@ -22,6 +22,14 @@
       ]
     },
     {
+      "epic": "P0-01",
+      "path": "tests/release/baseline-fingerprint-restore.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F.2"
+      ]
+    },
+    {
       "epic": "P0-02",
       "path": "apps/cli/tests/fixtures/in-process-launch.ts",
       "kind": "test",
@@ -1813,7 +1821,9 @@
       "path": "packages/core/agent-loop/src/tool-calls.ts",
       "kind": "source",
       "stages": [
-        "U"
+        "U",
+        "U.1",
+        "U.2"
       ],
       "reason": "Written from `git show 62cdc3ddd9 -- packages/core/agent-loop/src/tool-calls.ts` (+14/-0): the loop now reads `ctx.get('capabilityTokens')`, awaits `whenSessionToken(agent.id)`, and puts the token and, on failure, `issuanceError(agent.id)` onto every tool execution. This is the PRESENTATION half of must[3] and the registry could not have named it: the clause is about a token reaching the dispatch, and the dispatch is the agent loop's, not the token package's. `whenSessionToken` rather than the synchronous read is load-bearing - `agent/session-start` does not await its listeners, so a first tool call can arrive while the durable record is still being written, and reading synchronously returns undefined, refuses the call, and looks exactly like the gate working. 76 snapshot scenarios showed that shape when the presentation was missing altogether."
     },
@@ -1824,6 +1834,16 @@
       "stages": [
         "U"
       ]
+    },
+    {
+      "epic": "P2-02",
+      "path": "packages/core/tools/src/ptc.ts",
+      "kind": "source",
+      "stages": [
+        "U.1",
+        "U.2"
+      ],
+      "reason": "The code-mode dispatch path's call site: a sub-call of a `run_code` program asks capabilityRefusal before it runs (ptc.ts:723). That is where U.1's expired code-mode call is refused before it reaches the operator, and where U.2's condition 4 is re-issued a token or refused with a reason naming the expiry (BLOCKED-330, BLOCKED-331)."
     },
     {
       "epic": "P2-02",
@@ -1855,7 +1875,9 @@
       "path": "packages/policy/capability-token-file/src/index.ts",
       "kind": "source",
       "stages": [
-        "U"
+        "U",
+        "U.1",
+        "U.2"
       ],
       "reason": "The provider that gives P2-02 its subject. The registry named the definition and the consumers; what was missing is the package that MOUNTS them on a profile — it issues each session's root token, arms `tools.requireCapabilityToken()`, and publishes `ctx.capabilityTokens`. The sign-off was withdrawn precisely because no such mount existed (§12.69), so this file is where must[1] and must[3] acquire a subject rather than a definition."
     },
@@ -1932,6 +1954,124 @@
       "kind": "test",
       "stages": [
         "U"
+      ]
+    },
+    {
+      "epic": "P2-02",
+      "path": "packages/test-support/loader-smoke/src/agent-turn.ts",
+      "kind": "source",
+      "stages": [
+        "U.1",
+        "U.2"
+      ],
+      "reason": "Test support, not product code: `runFixtureTurn` runs the turns U.1 and U.2's drivers drive on the shipped headless profile, and the cases read what the drivers report from them."
+    },
+    {
+      "epic": "P2-02",
+      "path": "packages/test-support/loader-smoke/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.1",
+        "U.2"
+      ],
+      "reason": "Test support, not product code: `runLoaderSmoke` boots the shipped headless profile around U.1 and U.2's drivers and returns the reports the cases read."
+    },
+    {
+      "epic": "P2-02",
+      "path": "packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts",
+      "kind": "test",
+      "stages": [
+        "U.1",
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P2-02",
+      "path": "packages/test-support/loader-smoke/tests/fixtures/production-profile.ts",
+      "kind": "test",
+      "stages": [
+        "U.1",
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P2-02",
+      "path": "tests/first100/fixtures/loader/p2-02-token-renewal/base.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P2-02",
+      "path": "tests/first100/fixtures/loader/p2-02-token-renewal/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P2-02",
+      "path": "tests/first100/fixtures/loader/p2-02-token-renewal/mock-llm.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P2-02",
+      "path": "tests/first100/fixtures/loader/p4-05-waiting/base.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P2-02",
+      "path": "tests/first100/fixtures/loader/p4-05-waiting/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P2-02",
+      "path": "tests/first100/fixtures/loader/p4-05-waiting/mock-llm.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P2-02",
+      "path": "tests/first100/fixtures/loader/p4-05-waiting/shared.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P2-02",
+      "path": "tests/first100/fixtures/loader/p4-05-waiting/token-short.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P2-02",
+      "path": "tests/first100/fixtures/P2-02.token-refusal-before-ask.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P2-02",
+      "path": "tests/first100/fixtures/P2-02.token-renewal.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
       ]
     },
     {
