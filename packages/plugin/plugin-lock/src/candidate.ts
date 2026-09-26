@@ -21,6 +21,7 @@
 
 import { createHash } from 'node:crypto'
 import { brandString } from '@deepseek-ai/dsh-brand'
+import type { ProvenanceAuditRecord } from '@deepseek-ai/dsh-plugin-provenance'
 import { resolveLoadOrder } from './types.ts'
 import type {
   GrantedCapability,
@@ -66,6 +67,8 @@ export interface ObservedPackage {
   readonly sourceCommit?: string
   /** The signing identity the package CLAIMS; never verified here. */
   readonly signatureIdentity?: string
+  /** The provenance verdict the installer recorded for this version, when it has one. */
+  readonly provenance?: ProvenanceAuditRecord
 }
 
 /**
@@ -128,6 +131,7 @@ export function buildCandidateLock(packages: readonly ObservedPackage[]): Plugin
         .sort()
         .map(dependency => brandString<PluginPackageName>(dependency)),
       grantedCapabilities: [...observed.grantedCapabilities].sort().map(capability => brandString<GrantedCapability>(capability)),
+      ...observed.provenance === undefined ? {} : { provenance: observed.provenance },
     }))
     .sort((left, right) => (left.name < right.name ? -1 : left.name > right.name ? 1 : 0))
 

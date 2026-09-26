@@ -70,7 +70,7 @@ profile 目录包含两个文件：
 - `package.json` — profile 的树外插件依赖（由 pnpm 管理），加上 `dsh.profile` manifest 及其有序的 `bundles` 列表。
 - `cordis.patch.yml` — 用户自己的 patch 层，在每个组合包层之后应用。
 
-profile manifest 从不需要手写：`dsh --profile <name> --from-default-profile <template>` 可以从随附应用模板创建 profile，`dsh plugin` 则创建一个以 base 为基础的 profile，并维护其中已安装的 bundle 列表。创建规则以 [CLI（命令行界面）行为参考](../../../../apps/cli/reference/README.zh.md#profile-boot)为准；下一节展示插件路径。
+profile manifest 从不需要手工创建：`dsh --profile <name> --from-default-profile <template>` 可以从随附应用模板创建 profile，`dsh plugin` 则创建一个以 base 为基础的 profile，并维护其中已安装的 bundle 列表。创建规则以 [CLI（命令行界面）行为参考](../../../../apps/cli/reference/README.zh.md#profile-boot)为准；下一节展示插件路径。
 
 ## 安装进 profile
 
@@ -176,6 +176,29 @@ dsh plugin --profile demo add github:you/hello-plugin
 
 - **发布到 npm**，在 `pnpm publish` 时构建好 `lib/`；`dsh plugin add your-package` 安装的就是预构建代码。
 - **交付 tarball**：用 `pnpm pack` 打包；用户执行 `dsh plugin add ./hello-plugin-0.1.0.tgz`。
+
+### 为 tarball 签名
+
+tarball 旁边可以附一份签名的来源声明，文件名为 `hello-plugin-0.1.0.tgz.provenance.json`，内容是 `{ "claim": ..., "sbom": ... }`。声明写明 tarball 的 sha256 摘要、源码仓库与 commit、构建者，以及 SBOM 的摘要，并用 Ed25519 钥匙离线签名；签名以 base64 编码。包自己的 `package.json` 声明同样的仓库（`repository.url`）、commit（`dsh.provenance.sourceCommit`）与构建者（`dsh.provenance.builderIdentity`），校验时会把它们与声明逐项比对。
+
+信任哪些钥匙由 profile 决定，所以这是唯一需要手工写进 profile manifest 的字段：在 `$DSH_HOME/profiles/demo/package.json` 的 `dsh.trustAnchors` 下列出这把钥匙。
+
+```json
+{
+  "dsh": {
+    "trustAnchors": [
+      {
+        "mode": "offline-signed",
+        "publicKeyFingerprint": "sha256:<your key fingerprint>",
+        "owner": "Your team",
+        "publicKeyPem": "-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----\n"
+      }
+    ]
+  }
+}
+```
+
+之后执行 `dsh plugin --profile demo add ./hello-plugin-0.1.0.tgz`，校验通过的声明会在该 profile 的 `plugins.lock.json` 里记为 `trusted`。校验不通过的声明会被拒绝，例如字节被改过、字段被替换，或签名钥匙不在 profile 的列表里：这次安装会被撤销，`dsh plugin` 以 1 退出并写明理由。没有声明的 tarball 照样安装，记为 `unverified`。
 
 ## 下一步
 

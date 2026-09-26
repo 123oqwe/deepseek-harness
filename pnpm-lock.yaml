@@ -260,6 +260,9 @@ importers:
       '@deepseek-ai/dsh-plugin-migrations':
         specifier: workspace:^
         version: link:../../packages/plugin/plugin-migrations
+      '@deepseek-ai/dsh-plugin-provenance':
+        specifier: workspace:^
+        version: link:../../packages/plugin/plugin-provenance
       '@deepseek-ai/dsh-policy-enforcement':
         specifier: workspace:^
         version: link:../../packages/policy/policy-enforcement
@@ -8201,6 +8204,9 @@ importers:
       '@deepseek-ai/dsh-brand':
         specifier: workspace:^
         version: link:../../util/brand
+      '@deepseek-ai/dsh-plugin-provenance':
+        specifier: workspace:^
+        version: link:../plugin-provenance
       '@types/ssri':
         specifier: ^7.1.5
         version: 7.1.5

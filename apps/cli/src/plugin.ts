@@ -50,7 +50,10 @@ import {
   readLockfileIntegrity,
   type PluginPackageName,
 } from '@deepseek-ai/dsh-plugin-lock'
+import { recordUnverifiedProvenance, type ProvenanceAuditRecord } from '@deepseek-ai/dsh-plugin-provenance'
+import { verifyInstallProvenance } from './install-provenance.ts'
 import { INSTALL_ANCHOR } from './profile-boot.ts'
+import { readProfileTrustAnchors } from './trust-anchors.ts'
 
 const NAME = 'dsh'
 
@@ -145,10 +148,19 @@ function readCurrentLock(profileDir: string): PluginLockFile {
  * PUBLISHED and are recorded only when the package declares them — see
  * `@deepseek-ai/dsh-plugin-lock/candidate`, which marks the rest rather than
  * inventing values.
+ *
+ * Provenance is this install's verdict when it decided one, else the lock's
+ * record for the same installed version, else `unverified` (Epic P1-02).
  * @param profileDir - the profile directory (resolution anchor).
+ * @param verdicts - the provenance this install decided, by package name.
+ * @param current - the profile's lock before this install.
  * @returns one observation per resolvable dependency.
  */
-async function observeInstalledPackages(profileDir: string): Promise<readonly ObservedPackage[]> {
+async function observeInstalledPackages(
+  profileDir: string,
+  verdicts: ReadonlyMap<string, ProvenanceAuditRecord>,
+  current: PluginLockFile,
+): Promise<readonly ObservedPackage[]> {
   const manifest = readProfileManifest(NAME, profileDir)
   // Integrity comes from the profile's own pnpm-lock.yaml, which the installer
   // writes on every install. It used to come from a `dsh.provenance.integrity`
@@ -156,6 +168,7 @@ async function observeInstalledPackages(profileDir: string): Promise<readonly Ob
   // repository ever writes, so every entry fell back to the `unavailable:`
   // marker and the boot comparison could not fail (BLOCKED-135).
   const recorded = await readLockfileIntegrity(profileDir)
+  const verifiedAt = new Date().toISOString()
   const observed: ObservedPackage[] = []
   for (const packageName of Object.keys(manifest.dependencies ?? {})) {
     let dir: string
@@ -170,6 +183,7 @@ async function observeInstalledPackages(profileDir: string): Promise<readonly Ob
     }
     const provenance = installed.dsh?.provenance
     const lockIntegrity = recorded.get(brandString<PluginPackageName>(packageName))
+    const lockedEntry = current.entries.find(entry => entry.name === packageName)
     observed.push({
       name: packageName,
       version: installed.version ?? '0.0.0',
@@ -179,6 +193,9 @@ async function observeInstalledPackages(profileDir: string): Promise<readonly Ob
       ...(lockIntegrity === undefined ? {} : { integrity: lockIntegrity.integrity }),
       ...(provenance?.sourceCommit === undefined ? {} : { sourceCommit: provenance.sourceCommit }),
       ...(provenance?.signatureIdentity === undefined ? {} : { signatureIdentity: provenance.signatureIdentity }),
+      provenance: verdicts.get(packageName)
+        ?? (lockedEntry?.version === installed.version ? lockedEntry?.provenance : undefined)
+        ?? recordUnverifiedProvenance('no-provenance-claim', verifiedAt),
     })
   }
   return observed
@@ -197,10 +214,11 @@ async function observeInstalledPackages(profileDir: string): Promise<readonly Ob
  * their install failed when what failed is the record of it. The distinction
  * is stated in the message.
  * @param profileDir - the profile directory.
+ * @param verdicts - the provenance this install decided, by package name.
  */
-async function commitProfileLock(profileDir: string): Promise<void> {
+async function commitProfileLock(profileDir: string, verdicts: ReadonlyMap<string, ProvenanceAuditRecord>): Promise<void> {
   const current = readCurrentLock(profileDir)
-  const candidate = buildCandidateLock(await observeInstalledPackages(profileDir))
+  const candidate = buildCandidateLock(await observeInstalledPackages(profileDir, verdicts, current))
   if (candidate === undefined) {
     process.stderr.write(`${NAME}: lock: not written — the installed dependency graph contains a cycle\n`)
     return
@@ -357,6 +375,8 @@ async function runUnderLease(
   const manifestBefore = readFileSync(join(dir, 'package.json'), 'utf8')
   const lockPath = join(dir, 'pnpm-lock.yaml')
   const lockBefore = existsSync(lockPath) ? readFileSync(lockPath, 'utf8') : undefined
+  // Read before pnpm runs, so a malformed anchor list fails with nothing installed.
+  const anchors = readProfileTrustAnchors(dir)
 
   // Windows resolves pnpm through its .cmd shim, which spawn() refuses
   // without a shell since the CVE-2024-27980 hardening.
@@ -375,12 +395,24 @@ async function runUnderLease(
   }
   const exitCode = result.status ?? 1
   if (exitCode === 0) {
+    const installed = readProfileManifest(NAME, dir).dependencies ?? {}
+    // P1-02: decided after pnpm placed the packages and before a migration
+    // imports any of their code; a refused claim undoes the whole install.
+    const locked = new Map(readCurrentLock(dir).entries.flatMap(
+      entry => entry.provenance === undefined ? [] : [[entry.name, entry.provenance] as const],
+    ))
+    const provenance = verifyInstallProvenance(before.dependencies ?? {}, installed, dir, anchors, locked)
+    if (provenance.refused.length > 0) {
+      for (const { name, reason } of provenance.refused) {
+        process.stderr.write(`${NAME}: ${name}: provenance claim refused (${reason}); the install is undone\n`)
+      }
+      const failure = await undoInstall(dir, manifestBefore, lockBefore)
+      if (failure !== undefined) process.stderr.write(`${NAME}: ${failure}\n`)
+      return 1
+    }
     // must[1]: the one place that knows (plugin, from, to). `before` is the
     // manifest from before pnpm ran; the installed state is read now.
-    const changes = changedVersions(
-      before.dependencies ?? {},
-      readProfileManifest(NAME, dir).dependencies ?? {},
-    )
+    const changes = changedVersions(before.dependencies ?? {}, installed)
     const outcomes = await migrateChangedPlugins(
       changes,
       declaredMigrationManifests(changes, dir),
@@ -407,7 +439,7 @@ async function runUnderLease(
       return 1
     }
     reconcilePlugins(before, dir)
-    await commitProfileLock(dir)
+    await commitProfileLock(dir, provenance.records)
   } else {
     // pnpm's own diagnostics name pnpm-workspace.yaml without saying WHICH
     // one; the profile owns it, and the commonest failure here is pnpm ≥10
@@ -421,6 +453,33 @@ async function runUnderLease(
     }
   }
   return exitCode
+}
+
+/**
+ * Undo an install whose provenance was refused (Epic P1-02): put back the
+ * manifest and lockfile pnpm started from and let pnpm make `node_modules`
+ * match them again, offline. A profile that had no lockfile gets none back.
+ * @param dir - the profile directory.
+ * @param manifestBefore - the `package.json` bytes from before pnpm ran.
+ * @param lockBefore - the `pnpm-lock.yaml` bytes from before pnpm ran, or `undefined` when there was none.
+ * @returns `undefined` on success, or the diagnostic to report.
+ */
+async function undoInstall(dir: string, manifestBefore: string, lockBefore: string | undefined): Promise<string | undefined> {
+  const lockPath = join(dir, 'pnpm-lock.yaml')
+  await writeFile(join(dir, 'package.json'), manifestBefore, 'utf8')
+  if (lockBefore === undefined) await rm(lockPath, { force: true })
+  else await writeFile(lockPath, lockBefore, 'utf8')
+  const install = spawnSync('pnpm', lockBefore === undefined ? ['install', '--offline'] : ['install', '--offline', '--frozen-lockfile'], {
+    cwd: dir,
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+  })
+  if ((install.status ?? 1) !== 0) {
+    return `the refused package is no longer in ${join(dir, 'package.json')}, but pnpm install --offline failed there; `
+      + 'its files stay under node_modules until the next successful install'
+  }
+  if (lockBefore === undefined) await rm(lockPath, { force: true })
+  return undefined
 }
 
 /**

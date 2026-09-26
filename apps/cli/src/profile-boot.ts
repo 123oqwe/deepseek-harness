@@ -51,6 +51,7 @@ import { resolveFeatureGate } from '@deepseek-ai/dsh-feature-gates'
 import type { FeatureGateDeclaration, FeatureGateResolution, FeatureGateState } from '@deepseek-ai/dsh-feature-gates'
 import { buildPluginPermissionStates } from '@deepseek-ai/dsh-host-plugin-inventory'
 import { createProcessShutdown, type ProcessShutdown } from './process-shutdown.ts'
+import { readProfileTrustAnchors } from './trust-anchors.ts'
 
 const NAME = 'dsh'
 
@@ -572,9 +573,12 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
   // IS NO KERNEL-LEVEL POLICY PROVIDER TODAY. When one exists, this is where
   // it decides; until then, inventing a kernel refusal here would be a second
   // policy nobody wrote.
+  //
+  // The anchors are the profile's own `dsh.trustAnchors`, the field
+  // `dsh plugin` verifies installs against (P1-02 must[2]).
   const kernel: TrustKernel | undefined = trustKernelInsecure
     ? undefined
-    : createTrustKernel({ policyDecider: endorseComposedDecision })
+    : createTrustKernel({ policyDecider: endorseComposedDecision, trustAnchors: readProfileTrustAnchors(composed.profile.dir) })
   const app: { current?: Context } = {}
   const appReady = createAppReady()
   const shutdown = createProcessShutdown(async () => {

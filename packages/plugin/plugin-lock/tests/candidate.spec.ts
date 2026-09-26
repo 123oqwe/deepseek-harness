@@ -10,6 +10,7 @@
  */
 
 import { describe, expect, it } from 'vitest'
+import { recordUnverifiedProvenance } from '@deepseek-ai/dsh-plugin-provenance'
 import {
   buildCandidateLock,
   computeManifestDigest,
@@ -145,5 +146,15 @@ describe('P1-03: coverage is reported, so "locked" is not overstated', () => {
     for (const fact of [entry?.integrity, entry?.sourceCommit, entry?.signatureIdentity]) {
       expect(fact?.startsWith(UNAVAILABLE_PREFIX)).toBe(true)
     }
+  })
+})
+
+describe('P1-02 acceptance[2]: an entry carries the installer\'s provenance verdict and invents none', () => {
+  it('records the verdict an observed package carries, and gives a package without one no field', () => {
+    const verdict = recordUnverifiedProvenance('no-provenance-claim', '2026-09-26T00:00:00.000Z')
+    const candidate = buildCandidateLock([observed('alpha', { provenance: verdict }), observed('beta')])
+
+    expect(candidate?.entries[0]?.provenance).toEqual(verdict)
+    expect(candidate?.entries[1]).not.toHaveProperty('provenance')
   })
 })

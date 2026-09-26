@@ -13,6 +13,9 @@
     },
     {
       "path": "../../util/atomic-write"
+    },
+    {
+      "path": "../plugin-provenance"
     }
   ]
 }

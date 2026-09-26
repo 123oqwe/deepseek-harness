@@ -12,6 +12,9 @@
       "path": "../../packages/plugin/plugin-lock"
     },
     {
+      "path": "../../packages/plugin/plugin-provenance"
+    },
+    {
       "path": "../../vendor/cordis"
     },
     {
