@@ -74,7 +74,10 @@ export default class LoggerStderr extends Service {
       .description('Message types written to stderr.'),
   })
 
-  private route: ((line: string) => void) | undefined
+  // Held in an object: `ctx.loggerStderr` is a Cordis proxy that wraps every
+  // function read through it, so a disposer comparing the function it stored
+  // would never find it again and could not clear its route.
+  private route: { readonly write: (line: string) => void } | undefined
 
   /**
    * @param ctx - the mounting context; the plugin registers itself as `ctx.loggerStderr`.
@@ -98,9 +101,10 @@ export default class LoggerStderr extends Service {
    * @returns the disposer that restores direct writes.
    */
   routeThrough(write: (line: string) => void): () => void {
-    this.route = write
+    const route = { write }
+    this.route = route
     return () => {
-      if (this.route === write) this.route = undefined
+      if (this.route === route) this.route = undefined
     }
   }
 
@@ -110,7 +114,7 @@ export default class LoggerStderr extends Service {
    */
   private write(line: string): void {
     const route = this.route
-    if (route !== undefined && routed(route, line)) return
+    if (route !== undefined && routed(route.write, line)) return
     process.stderr.write(line)
   }
 }
