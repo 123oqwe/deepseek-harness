@@ -21,11 +21,11 @@
  * against the same digest), the sidecar `manifest.json` against
  * `sidecarManifestDigest`, and every `requiredBuildArtifacts` path. When
  * `.dsh/baseline.json` is unchanged, re-derives the fingerprint it records
- * from the checkout (`verifyBaseline`, P0-01): a new HEAD, another Node or
- * pnpm version, or a change to any file the fingerprint covers since
- * collection is a mismatch too. That re-derivation runs `git` and `pnpm` from
- * `PATH` and writes `.dsh/rebase-report.json` when it finds drift, so an
- * offline re-verification needs the collecting checkout's HEAD and toolchain.
+ * from the checkout (`verifyBaseline`, P0-01): a new HEAD, or a change to any
+ * file the fingerprint covers since collection, is a mismatch too; the Node
+ * and pnpm that run it are not part of the fingerprint. That re-derivation
+ * runs `git` from `PATH` and writes `.dsh/rebase-report.json` when it finds
+ * drift, so an offline re-verification needs the collecting checkout's HEAD.
  * Recomputes the package-level `signature` (a content-integrity digest — see
  * `collect-evidence.mjs`'s module doc for exactly what it does and does not
  * defend against) over the package's own canonical serialization. Any

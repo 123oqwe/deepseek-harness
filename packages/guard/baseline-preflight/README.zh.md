@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## 概述
 
-`pnpm baseline:capture`（`scripts/release/baseline-fingerprint.mjs`）会把一个 checkout 的架构与协议关键指纹——Git SHA、工具链、workspace package 名称、默认 bundle 行 ID、协议/事件 schema 哈希，以及 pnpm lockfile 哈希——冻结进 `.dsh/baseline.json`。`dsh-baseline-preflight` 在启动时重新校验该指纹：如果工作树相对已捕获基线发生漂移，`apply` 会抛出一个列出每个漂移路径的错误，该抛出会沿 Cordis fiber 激活链传播，在任何执行批次开始前中止启动。在 `<repoRoot>/.dsh/baseline.json` 处没有已捕获基线的 checkout 未加入该机制，启动不受影响。共享 `dsh` base 组合中本插件的行带有 `disabled: true`——按 profile 选择性启用，而非共享 base 的默认行为——因为本仓库自己已提交的 `.dsh/baseline.json` 会持续落后于真实 `HEAD`（这是一个移动目标，不是需要在此修复的 bug）；无条件启用该行会中止从本 checkout 发起的每一次普通 `pnpm dsh` 调用。想要该门禁的 profile 会显式重新启用该行。
+`pnpm baseline:capture`（`scripts/release/baseline-fingerprint.mjs`）会把一个 checkout 的架构与协议关键指纹——Git SHA、checkout 声明的工具链、workspace package 名称与每个 package manifest 的各个字段、默认 bundle 行 ID 与每一行的内容、关键 schema 哈希，以及 pnpm lockfile 哈希——冻结进 `.dsh/baseline.json`。`dsh-baseline-preflight` 在启动时重新校验该指纹：如果工作树相对已捕获基线发生漂移，`apply` 会抛出一个列出每个漂移路径的错误，该抛出会沿 Cordis fiber 激活链传播，在任何执行批次开始前中止启动。在 `<repoRoot>/.dsh/baseline.json` 处没有已捕获基线的 checkout 未加入该机制，启动不受影响。共享 `dsh` base 组合中本插件的行带有 `disabled: true`——按 profile 选择性启用，而非共享 base 的默认行为——因为本仓库自己已提交的 `.dsh/baseline.json` 会持续落后于真实 `HEAD`（这是一个移动目标，不是需要在此修复的 bug）；无条件启用该行会中止从本 checkout 发起的每一次普通 `pnpm dsh` 调用。想要该门禁的 profile 会显式重新启用该行。
 
 ## 目录
 
