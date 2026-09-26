@@ -9435,7 +9435,7 @@ The entry stays open: the delegate's blind review found that any non-empty reaso
 
 ### BLOCKED-332 — a tool call already produced in a step still runs after the Run is advanced to `failed`; later steps are refused with no visible reason and the host is not told (product defect, open)
 
-**Status:** OPEN (2026-09-24T19:05:17Z). Owner: lane B, fix in place; lane A turns the measurement into a red-first case. Found by lane A (A-377, corrected in A-379), recorded by the delegate (first100-delegate-1a). Shown on a shipped composition.
+**Status:** CLOSED 2026-09-26 (closure note at the end of this entry); opened 2026-09-24T19:05:17Z. Owner: lane B, fix in place; lane A turns the measurement into a red-first case. Found by lane A (A-377, corrected in A-379), recorded by the delegate (first100-delegate-1a). Shown on a shipped composition.
 
 **What was measured.** Run 36045150093 at `a6635f1723`, parent candidate `43b89917a0`, on the shipped profile with the Run Service mounted. Predictions `artifacts/laneA/a-379-terminal-dispatch-expectations.md`, sha256 37757602…, written first. Three turns:
 1. The probe tool alone: the probe runs, the turn ends `completed`, and the lifecycle is `running`.
@@ -9465,6 +9465,13 @@ The condition therefore rested on a premise I did not check. It is replaced by:
 3. **A client of a real shipped host receives it.** On the shipped SDK profile, a client receives the terminal state and its reason through the session event stream or the session status it already consumes. The fix chooses which of the two, and says why in its note. No channel is invented for one host only.
    - The case for this condition is separate from the cases for conditions 1 and 2.
    - Condition 2 is about what the session log records. Condition 3 is about what reaches a client.
+
+**Closure note (2026-09-26, lane A's A-538, accepted by the delegate first100-delegate-1a, gate3 2026-09-26T19:54:21Z).** Each closing condition, read at `7de79a1658`. The fix is lane B's **B-583** (`eacd15e99a`, "fix(tools, run): a Run that has ended starts no further tool call, and a refused step says why"), an ancestor of that commit. Red first: `9ebe2efd0d` (conditions 1–2) and `67b321d8a5` (condition 3, shipped SDK profile). Lane A's A-379 measurement became the shipped-composition case.
+
+1. **Once the Run is terminal, no further tool call of that batch starts; each did-not-run call gets an ordered synthetic result named apart from `fenced`/`lease-refused`.** `tests/first100/fixtures/P4-05.terminal-dispatch.composition.spec.ts` (shipped headless), passing in 36264470501: "condition 1: once the Run is terminal, the later call of the same batch does not start" and "condition 1: the call that did not start gets its own error result, named apart from fenced and lease-refused". B-583 rechecks the lifecycle per call in `external-effect.ts`, backed by `dispatch-recheck.spec.ts`.
+2. **A turn stopped because the Run is terminal records the state it reached and the reason, not a bare `blocked`.** Same spec: "condition 2: a turn stopped because the Run is terminal records the state it reached and the reason given for it". Passing.
+3. **A client of a real shipped host receives it** (delegate's replacement of the original condition 3). `tests/first100/fixtures/P4-05.terminal-sdk-client.spec.ts`, passing: "a session.event or session.status the client receives carries the state `failed` and the reason the transition was given" — on the shipped SDK profile, through the channel the client already consumes. The fix chose the session event/status channel; no channel is invented for one host.
+4. **A case on a shipped composition shows conditions 1–2** — A-379's measurement is `P4-05.terminal-dispatch.composition.spec.ts` (with its two controls). Then a fresh 4.4a–d, PASS sign-off, `--accept` (delegate's).
 
 ### BLOCKED-333 — a background subagent stopped by a graceful shutdown while it is still cancelling is never reported to its parent: the aborted settlement is not written, so the parent is never told (product defect, open)
 
