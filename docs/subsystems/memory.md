@@ -101,6 +101,14 @@ A memory record that reaches a model request must be reconstructable from the se
 
 The seam itself emits nothing. A caller of `ctx.memory` other than this consumer records no event unless it appends one, so the log is complete for reads made through a consumer that writes one, not for every conceivable caller.
 
+## Proposal review (P6-03 second slice)
+
+A proposal the policy holds for review is stored `pending`: `propose` accepts it, the default search does not return it, and `ctx.memory.listPending({ accessContext })` names it. The policy holds a proposal that is sensitive, whose sensitivity is unstated, that is a weakly-inferred `derived` claim below the deployment's confidence bar, or that omits its intended use (`purpose`) or its TTL (`must[0]`). An omitted `validUntil` is distinct from a stated `validUntil: null` ("no expiry"): the first is unstated and held for review, the second is complete.
+
+A person acts on a held proposal with `ctx.memory.approve({ principal, scope, id })` — it becomes `active` and the default search returns it — or `ctx.memory.reject({ principal, scope, id })`, after which it never becomes active. Only a user principal decides: an agent or service principal is refused `MEMORY_REVIEW_FORBIDDEN` at the seam, before any provider is reached, so the proposal stays pending. An id the scope may not see, or that names no `pending` record, is refused too — `MEMORY_RECORD_NOT_FOUND` for an unknown or out-of-scope id, `MEMORY_NOT_PENDING` for one already decided. Approving and rejecting are how a held proposal ever leaves `pending`; without a review path a proposal the policy holds would wait forever, so the shipped operator entry is the `dsh memory` CLI, run as the host user.
+
+`forget` with a tombstone, `export` carrying provenance and conflict status, and merge/supersede propagation to the index are the third slice.
+
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
 <a id="cordis-surface"></a>

@@ -66,9 +66,16 @@ await ctx.memory.forget({ principal, scope, id })
 
 // Bulk-read everything visible to an access context:
 const { records } = await ctx.memory.export({ accessContext })
+
+// Review a proposal the policy held (P6-03 second slice): a person lists the
+// pending proposals, then approves (-> active) or rejects (-> never active).
+// Only a user principal decides; an agent or service principal is refused.
+const pending = await ctx.memory.listPending({ accessContext })
+await ctx.memory.approve({ principal, scope, id })
+await ctx.memory.reject({ principal, scope, id })
 ```
 
-The [Memory subsystem](../../../docs/subsystems/memory.md) reference is the exhaustive vocabulary and the read-scoping and no-bypass rationale.
+A proposal the policy sends to review — a sensitive one, one whose sensitivity is unstated, a weakly-inferred one, or one that omits its intended use or TTL (`must[0]`) — is stored `pending` and withheld from the default search until a user principal approves it; `reject` keeps it out for good. The [Memory subsystem](../../../docs/subsystems/memory.md) reference is the exhaustive vocabulary and the read-scoping and no-bypass rationale.
 
 ### Provider selection
 

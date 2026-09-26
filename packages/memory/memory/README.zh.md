@@ -66,9 +66,16 @@ await ctx.memory.forget({ principal, scope, id })
 
 // Bulk-read everything visible to an access context:
 const { records } = await ctx.memory.export({ accessContext })
+
+// Review a proposal the policy held (P6-03 second slice): a person lists the
+// pending proposals, then approves (-> active) or rejects (-> never active).
+// Only a user principal decides; an agent or service principal is refused.
+const pending = await ctx.memory.listPending({ accessContext })
+await ctx.memory.approve({ principal, scope, id })
+await ctx.memory.reject({ principal, scope, id })
 ```
 
-[Memory 子系统](../../../docs/subsystems/memory.zh.md)参考页是完整的词汇表，也是读取限定与「无旁路」的理由所在。
+策略送去 review 的提案——敏感的、敏感度未申明的、弱推断的，或省略了预期用途或 TTL 的（`must[0]`）——以 `pending` 存储、被挡在默认搜索之外，直到 user principal 批准它；`reject` 则让它永久出局。[Memory 子系统](../../../docs/subsystems/memory.zh.md)参考页是完整的词汇表，也是读取限定与「无旁路」的理由所在。
 
 ### provider 选择
 
