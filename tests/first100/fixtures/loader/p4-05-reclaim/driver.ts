@@ -24,12 +24,13 @@
  * @module tests/first100/fixtures/loader/p4-05-reclaim/driver
  */
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
 import { brandString } from '@deepseek-ai/dsh-brand'
+import { dshHomePath } from '@deepseek-ai/dsh-home-paths'
 import { openLeaseStore } from '@deepseek-ai/dsh-lease-sqlite'
 import type { WorkItemId } from '@deepseek-ai/dsh-lease-contract'
 import { SessionId } from '@deepseek-ai/dsh-session'
@@ -56,12 +57,26 @@ if (phase === '1' || phase === '2') {
   })
   const agentLoop = ctx.get('agentLoop')
   if (agentLoop === undefined) throw new Error('p4-05 reclaim: the shipped profile mounted no agent loop')
-  // create() awaits the Run's durable put and acquires its lease before it returns.
+  // create() acquires the Run's lease synchronously but its durable Run write is
+  // TRACKED, not awaited (RunPlugin.open → service.openForSession → this.track),
+  // and only the disposer drains those writes — a crash never does. So the Run
+  // can be live only in this process's memory when create() returns.
   const agent = await agentLoop.create(SessionId(SESSION), { provider: 'p4-05-reclaim-mock', model: 'p4-05-reclaim-mock' }, { cwd: process.cwd() })
   if (phase === '1') {
-    // Synchronous write, then SIGKILL with no cleanup: the lease stays held and
-    // un-renewed. No `dispose`, so the lease is never handed back — a real crash.
-    process.stdout.write(`P4-05-PHASE1 ${JSON.stringify({ runId: agent.runId ?? null, epoch: agent.lifecycle?.epoch ?? null })}\n`)
+    // Wait until the Run is DURABLE before crashing, so the SIGKILL leaves a real
+    // orphan in the store rather than one that never outlived this process (the
+    // A-547 v1 red: the kill raced the tracked write, so phase 2 restored nothing
+    // and minted fresh). Poll the durable runs.json for this Run, then SIGKILL
+    // with no cleanup: the lease stays held and un-renewed, a real crash.
+    const runId = agent.runId
+    if (runId === undefined) throw new Error('p4-05 reclaim phase 1: create opened no Run')
+    const runsPath = dshHomePath('runs', 'runs.json')
+    const persisted = (): boolean => existsSync(runsPath) && readFileSync(runsPath, 'utf8').includes(runId)
+    const spinner = new Int32Array(new SharedArrayBuffer(4))
+    const deadline = Date.now() + 10_000
+    while (Date.now() < deadline && !persisted()) Atomics.wait(spinner, 0, 0, 25)
+    if (!persisted()) throw new Error(`p4-05 reclaim phase 1: Run ${runId} did not persist to ${runsPath}`)
+    process.stdout.write(`P4-05-PHASE1 ${JSON.stringify({ runId, epoch: agent.lifecycle?.epoch ?? null })}\n`)
     process.kill(process.pid, 'SIGKILL')
   } else {
     const restored = ctx.get('runs')?.service.runsForSession(SessionId(SESSION)).length ?? 0
