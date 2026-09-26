@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-26T09:08:37.869Z",
-  "inputDigest": "69bd2ffba4813cb5a145952d57bc98b60dd4136be5b8952115a58557114cb2c1",
+  "lastUpdatedUtc": "2026-09-26T09:09:35.882Z",
+  "inputDigest": "54f3588d0c868fc56377535b43a7be32f6a9f2b8a9cb0239bbad44ca22ee2693",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -8048,10 +8048,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "5d886b87cfca4610cb11110927c2546b8b7c084e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36229132720",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36229132720/first100-vitest-report-5d886b87cfca4610cb11110927c2546b8b7c084e/vitest-report.json",
+          "observationSha256": "8b04a3611fae1de1783654dac85b112b9c3b2200273b8554f23a8ab40ec81cf3",
           "expectCasesMatched": [
             "P4-11 acceptance[0]: a permanent failure is not retried refuses a 4xx, a policy denial and a malformed request, naming a DIFFERENT reason for each",
             "P4-11 acceptance[0]: a permanent failure is not retried RETRIES 408 and 429, so \"4xx\" is not read as \"never\"",
@@ -8067,23 +8067,53 @@
             "P4-11 acceptance[1]: one run budget, however many layers spend it charges the delay ON ADMISSION, so a run cannot begin a wait it cannot finish",
             "P4-11 acceptance[1]: one run budget, however many layers spend it forbids retrying at all at maxRetries 0, rather than treating 0 as unlimited"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:59.454Z"
+          "capturedAtUtc": "2026-09-26T09:09:24.227Z"
         },
         "P": {
-          "status": "NOT_RUN",
-          "revokedFrom": {
-            "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-            "absentCommitments": 1
-          },
-          "revokedReason": "[243] was superseded for B-605 (BLOCKED-339) in batch 12; the cell's observation 5b41cb7173 does not contain the replacement entry. Re-recorded in batch 13 from batch 12's full run (delegate ruling, 2026-09-26)."
+          "status": "GREEN",
+          "candidateSha": "5d886b87cfca4610cb11110927c2546b8b7c084e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36229132720",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36229132720/first100-vitest-report-5d886b87cfca4610cb11110927c2546b8b7c084e/vitest-report.json",
+          "observationSha256": "8b04a3611fae1de1783654dac85b112b9c3b2200273b8554f23a8ab40ec81cf3",
+          "expectCasesMatched": [
+            "adapter failure normalization contains hostile non-Error coercion",
+            "adapter failure normalization normalizes empty primitive throws and data descriptors without values",
+            "adapter failure normalization contains hostile Error property reflection",
+            "adapter failure normalization rejects malformed or accessor-backed failure snapshots",
+            "adapter failure normalization falls back when an Error message accessor throws",
+            "provider retry policy resolves immutable normal defaults",
+            "provider retry policy resolves and detaches a configured normal policy",
+            "provider retry policy resolves always mode with default backoff",
+            "provider retry policy ignores normal-only fields retained after switching to always mode",
+            "provider retry policy rejects invalid policy 0",
+            "provider retry policy rejects invalid policy 1",
+            "provider retry policy rejects invalid policy 2",
+            "provider retry policy rejects invalid policy 3",
+            "provider retry policy rejects invalid policy 4",
+            "provider retry policy rejects invalid policy 5",
+            "provider retry policy rejects invalid policy 6",
+            "provider retry policy rejects invalid policy 7",
+            "provider retry policy rejects invalid policy 8",
+            "provider retry policy rejects invalid policy 9",
+            "provider retry policy rejects invalid policy 10",
+            "provider retry policy rejects invalid policy 11",
+            "P4-11 circuit breaker provider refuses an attempt at the threshold without reaching the operation",
+            "P4-11 circuit breaker provider still executes below the threshold",
+            "P4-11 circuit breaker provider opens one destination without opening another under the same provider",
+            "P4-11 circuit breaker provider does not count a failure the classifier calls permanent",
+            "P4-11 circuit breaker provider unloads and rolls back: the service goes with its fiber, and a remount starts closed",
+            "P4-11 circuit breaker provider returns the caller its own error, not a breaker-internal one",
+            "provider retry policy refuses retryableCodes in normal mode and names the shared classifier",
+            "provider retry policy refuses retryableCodes in always mode and names the shared classifier"
+          ],
+          "capturedAtUtc": "2026-09-26T09:09:25.429Z"
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "5d886b87cfca4610cb11110927c2546b8b7c084e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36229132720",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36229132720/first100-vitest-report-5d886b87cfca4610cb11110927c2546b8b7c084e/vitest-report.json",
+          "observationSha256": "8b04a3611fae1de1783654dac85b112b9c3b2200273b8554f23a8ab40ec81cf3",
           "expectCasesMatched": [
             "P4-11 must[1]: the LLM layer charges the run, not the session stops retrying when the RUN budget is spent, below the policy’s own cap",
             "P4-11 must[1]: the LLM layer charges the run, not the session charges a CHILD session’s retries to the PARENT’s run, so allowances do not stack",
@@ -8100,14 +8130,14 @@
             "P4-11 must[1]: one store, so two layers share a total by construction charges two different layers against ONE run total",
             "P4-11 must[1]: one store, so two layers share a total by construction records nothing for a refusal, so a refused retry costs no budget"
           ],
-          "capturedAtUtc": "2026-09-24T23:24:00.083Z"
+          "capturedAtUtc": "2026-09-26T09:09:24.606Z"
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "5d886b87cfca4610cb11110927c2546b8b7c084e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36229132720",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36229132720/first100-vitest-report-5d886b87cfca4610cb11110927c2546b8b7c084e/vitest-report.json",
+          "observationSha256": "8b04a3611fae1de1783654dac85b112b9c3b2200273b8554f23a8ab40ec81cf3",
           "expectCasesMatched": [
             "P4-11 Fault — retry decision boundary matrix enumerates at least twelve classification boundaries, each named once",
             "P4-11 Fault — retry decision boundary matrix fault boundary 01 a 4xx that is not 408 or 429 is permanent, and names client-error",
@@ -8133,7 +8163,7 @@
             "P4-11 Fault — endpoint-health boundary matrix fault boundary 24 an AUTH failure does not: a rejected credential says the caller is wrong",
             "P4-11 must[1]: the LLM layer charges the run, not the session keeps charging the parent’s run after the parent agent is GONE"
           ],
-          "capturedAtUtc": "2026-09-24T23:24:00.406Z"
+          "capturedAtUtc": "2026-09-26T09:09:25.026Z"
         }
       },
       "supplements": {
@@ -8162,17 +8192,17 @@
         },
         "U.2": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "5d886b87cfca4610cb11110927c2546b8b7c084e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36229132720",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36229132720/first100-vitest-report-5d886b87cfca4610cb11110927c2546b8b7c084e/vitest-report.json",
+          "observationSha256": "8b04a3611fae1de1783654dac85b112b9c3b2200273b8554f23a8ab40ec81cf3",
           "expectCasesMatched": [
             "P4-11 acceptance[1]: every plugin that retries draws on one run budget P4-11 acceptance[1] on the shipped profile: a second plugin cannot resend once the run budget is spent",
             "P4-11 acceptance[1]: every plugin that retries draws on one run budget P4-11 acceptance[1] on the shipped profile: the overflow resend is charged to the same run",
             "P4-11 acceptance[1]: every plugin that retries draws on one run budget P4-11 acceptance[1] on the shipped profile: llm-retry stops below its own cap because another plugin spent",
             "P4-11 acceptance[1]: every plugin that retries draws on one run budget P4-11 acceptance[1] on the shipped acp profile: a session's MCP reconnect spends the same run budget as llm-retry"
           ],
-          "capturedAtUtc": "2026-09-24T23:24:01.046Z"
+          "capturedAtUtc": "2026-09-26T09:09:34.880Z"
         },
         "U.3": {
           "status": "GREEN",
@@ -8199,17 +8229,43 @@
         },
         "U.5": {
           "status": "GREEN",
-          "candidateSha": "a462b4f110ef5d272c4b7f50d2edcc8b13db3458",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36010943536",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b4/first100-vitest-report-a462b4f110ef5d272c4b7f50d2edcc8b13db3458/vitest-report.json",
-          "observationSha256": "15ba8f3af49a0f415bb8cd3b850c01f662f842db1f87735586bf2c652d8096f2",
+          "candidateSha": "5d886b87cfca4610cb11110927c2546b8b7c084e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36229132720",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36229132720/first100-vitest-report-5d886b87cfca4610cb11110927c2546b8b7c084e/vitest-report.json",
+          "observationSha256": "8b04a3611fae1de1783654dac85b112b9c3b2200273b8554f23a8ab40ec81cf3",
           "expectCasesMatched": [
             "P4-11 must[1]: the LLM layer charges the run, not the session keeps a spent RUN budget spent for the session’s later turns: nothing resets it while the process lives"
           ],
-          "capturedAtUtc": "2026-09-24T15:11:14.209Z"
+          "capturedAtUtc": "2026-09-26T09:09:35.202Z"
+        },
+        "U.6": {
+          "status": "GREEN",
+          "candidateSha": "5d886b87cfca4610cb11110927c2546b8b7c084e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36229132720",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36229132720/first100-vitest-report-5d886b87cfca4610cb11110927c2546b8b7c084e/vitest-report.json",
+          "observationSha256": "8b04a3611fae1de1783654dac85b112b9c3b2200273b8554f23a8ab40ec81cf3",
+          "expectCasesMatched": [
+            "P4-11 acceptance[0] on the shipped mount: a permanent failure is not retried and charges nothing control: a retryable 503 on the first attempt is retried once, charged to the run, and the turn completes",
+            "P4-11 acceptance[0] on the shipped mount: a permanent failure is not retried and charges nothing a permanent 400 invalid request is not retried, charges the run nothing, and ends the turn with that failure",
+            "P4-11 acceptance[0] on the shipped mount: a permanent failure is not retried and charges nothing a permanent 403 authentication failure is not retried, charges the run nothing, and ends the turn with that failure"
+          ],
+          "capturedAtUtc": "2026-09-26T09:09:35.559Z"
+        },
+        "U.7": {
+          "status": "GREEN",
+          "candidateSha": "5d886b87cfca4610cb11110927c2546b8b7c084e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36229132720",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36229132720/first100-vitest-report-5d886b87cfca4610cb11110927c2546b8b7c084e/vitest-report.json",
+          "observationSha256": "8b04a3611fae1de1783654dac85b112b9c3b2200273b8554f23a8ab40ec81cf3",
+          "expectCasesMatched": [
+            "P4-11 acceptance[0] on the shipped mount: a policy-denied tool call is not dispatched again and charges nothing control: without the deployment rule the probe runs once, and the kernel audits one permit for its call",
+            "P4-11 acceptance[0] on the shipped mount: a policy-denied tool call is not dispatched again and charges nothing with the deployment rule, the kernel audits the call as denied by the shipped kernel-hard-deny policy, and the probe does not run",
+            "P4-11 acceptance[0] on the shipped mount: a policy-denied tool call is not dispatched again and charges nothing the denied call is not dispatched again and charges the run retry budget nothing"
+          ],
+          "capturedAtUtc": "2026-09-26T09:09:35.872Z"
         }
       },
-      "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
+      "candidateSha": "5d886b87cfca4610cb11110927c2546b8b7c084e",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
