@@ -14,6 +14,24 @@
  * marker plugin logs a pair when the second arrives. ACP, SDK and Web start
  * with no request and are stopped once the plugin's late pair is logged, as
  * A-394 measured them.
+ *
+ * The Web host is the shipped `web` profile with one added overlay that
+ * disables its `modules` (client-modules) and `client-hmr` rows. Those two
+ * rows compose the browser plugin bundles: client-modules reads each
+ * `dsh.client` package's built `lib/client.js` at construction and throws
+ * `MissingClientBundleError` when it is absent, and client-hmr injects
+ * `clientModules`. This corpus lane runs the suite before the official client
+ * build (that build is `if: narrow_build` in first100-exact-sha.yml), so the
+ * bundles do not exist; without the overlay the real web host's boot audit
+ * (`assertEntriesActivated`) rejects the FAILED client-modules fiber and the
+ * process exits 1 before the late pair is logged. The overlay removes only the
+ * browser-asset composition — the whole real server stack (webserver, gateway,
+ * connection, session and workspace controllers) still boots and runs the
+ * marker plugin, so what reaches this real process's stdout and stderr is
+ * unchanged. Only the Web host adds it; nothing else consumes `clientModules`.
+ * Not covered: with those two rows off the Web host composes and serves no
+ * browser bundle, so this file observes the Web host only with its browser-asset
+ * composition disabled, never the bundle route or index injection.
  * @module tests/first100/fixtures/logger-stderr.hosts.composition
  */
 
@@ -56,11 +74,11 @@ const FINAL_ANSWER = 'A393 final answer'
 /** The first argument of `capability-token-file`'s log line for a failed issuance. */
 const NO_TOKEN = 'got no token'
 
-/** The argv after `bin.ts` for each server host, given the patch path. */
+/** The argv after `bin.ts` for each server host, given the assembled `--patch` arguments. */
 const SERVER_HOSTS = {
-  acp: (patch: string): string[] => ['--profile', 'acp', '--patch', patch],
-  sdk: (patch: string): string[] => ['--profile', 'sdk', '--patch', patch],
-  web: (patch: string): string[] => ['web', '--patch', patch, '--host', '127.0.0.1', '--port', '0', '--no-open'],
+  acp: (patchArgs: readonly string[]): string[] => ['--profile', 'acp', ...patchArgs],
+  sdk: (patchArgs: readonly string[]): string[] => ['--profile', 'sdk', ...patchArgs],
+  web: (patchArgs: readonly string[]): string[] => ['web', ...patchArgs, '--host', '127.0.0.1', '--port', '0', '--no-open'],
 } as const
 
 /** A shipped host started with no request. */
@@ -85,6 +103,23 @@ interface HostRun {
 async function writeMarkerPatch(home: string): Promise<string> {
   const patch = join(home, 'a393.patch.yml')
   await writeFile(patch, `- insert:\n    - id: a393-logger-marker\n      name: '${pathToFileURL(markerPlugin).href}'\n`)
+  return patch
+}
+
+/**
+ * Write the Web-only overlay that disables the browser-bundle composition, so
+ * the shipped `web` profile boots when no built client bundle exists (this
+ * corpus lane runs before the official client build). `modules`
+ * (client-modules) is the sole reader of each `dsh.client` package's
+ * `lib/client.js`; `client-hmr` is disabled with it because it injects
+ * `clientModules`. Nothing else consumes that service, so the rest of the real
+ * web server stack boots unchanged.
+ * @param home - the run's `DSH_HOME`.
+ * @returns the patch path.
+ */
+async function writeWebBundleOffPatch(home: string): Promise<string> {
+  const patch = join(home, 'a393-web-bundle-off.patch.yml')
+  await writeFile(patch, '- id: modules\n  disabled: true\n\n- id: client-hmr\n  disabled: true\n')
   return patch
 }
 
@@ -173,8 +208,9 @@ async function runServerHost(host: ServerHost): Promise<HostRun> {
   const home = await mkdtemp(join(tmpdir(), `dsh-a393-${host}-`))
   try {
     const sentinel = join(home, 'a393-sentinel.txt')
-    const patch = await writeMarkerPatch(home)
-    const child = execa(process.execPath, ['--import', 'tsx/esm', binScript, ...SERVER_HOSTS[host](patch)], {
+    const patchArgs = ['--patch', await writeMarkerPatch(home)]
+    if (host === 'web') patchArgs.push('--patch', await writeWebBundleOffPatch(home))
+    const child = execa(process.execPath, ['--import', 'tsx/esm', binScript, ...SERVER_HOSTS[host](patchArgs)], {
       cwd: repoRoot,
       env: hostEnv(home, sentinel, 'http://127.0.0.1:9'),
       timeout: HOST_TIMEOUT_MS,
