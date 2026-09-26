@@ -393,6 +393,7 @@ async function runUnderLease(
   const anchors = readProfileTrustAnchors(dir)
   if (interrupted === undefined) {
     await recordInstall(dir, manifestBefore, lockBefore)
+    await clearInstallRecord(dir)
   } else {
     process.stderr.write(`${NAME}: finishing an install an earlier run began and did not complete\n`)
   }
