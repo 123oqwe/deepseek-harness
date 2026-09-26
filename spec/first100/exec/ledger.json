@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-26T10:40:26.466Z",
-  "inputDigest": "9da6d3be7cbe8cae405aba99c4e06fb31f0256687688081ce7d0946585390955",
+  "lastUpdatedUtc": "2026-09-26T13:20:00.227Z",
+  "inputDigest": "636f40c69f3ccaa1fb4e2ddf669e7f61cdc451291a0c929cd07d2b12cb0cc5fa",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -3462,6 +3462,18 @@
             "Python SDK dsh profile keyless smoke P2-01 acceptance[0]: a launched sdk session acts as the host user, attached once"
           ],
           "capturedAtUtc": "2026-09-26T10:40:26.456Z"
+        },
+        "U.10": {
+          "status": "GREEN",
+          "candidateSha": "ad73f77b0ee03e2b24ebcf379b89f3b602a085c2",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36241736461",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36241736461/first100-evidence-ad73f77b0ee03e2b24ebcf379b89f3b602a085c2/vitest-e2e-workflow.json",
+          "observationSha256": "9e27ffb36cfeb507a744e9930b356b218d6b0f8f03f3eecce7b14e86a9422ca0",
+          "expectCasesMatched": [
+            "dsh --profile web with the documented GitHub webhook patch, booted in-process through the launcher (no key required) control: the signed delivery is accepted and creates one webhook session whose first action manifest names an actor",
+            "dsh --profile web with the documented GitHub webhook patch, booted in-process through the launcher (no key required) P2-01 acceptance[0]: an action a webhook delivery triggers traces to the integration ServicePrincipal the HMAC key stands for"
+          ],
+          "capturedAtUtc": "2026-09-26T13:20:00.217Z"
         }
       },
       "candidateSha": "6bbc302797c3b62b3e7adf8421fd2473aee3ff85",
