@@ -14,6 +14,7 @@ import { brandString } from '@deepseek-ai/dsh-brand'
 import type { TenantId } from '@deepseek-ai/dsh-principal/types'
 import ExecutionWorldService, { digestWorldSpec, filesystemForSandboxMode, nextWorldId, resolveWorldSpec } from '../src/plugin.ts'
 import { createLocalWorldProvider, LOCAL_WORLD_PROVIDER } from '../src/local-provider.ts'
+import { FENCED_WORLD_PROVIDER } from '../src/fenced-provider.ts'
 import { createFakeWorldProvider, FAKE_WORLD_PROVIDER } from './fake-provider.ts'
 import type { WorldHandle, WorldId, WorldProvider, WorldProviderId, WorldSpecDigest } from '../src/types.ts'
 
@@ -265,6 +266,16 @@ describe('P3-01 acceptance[2] (BLOCKED-316): the registry checks who built a wor
     // is by object identity, as a handle's authority is.
     const copy = { ...createLocalWorldProvider({ tenant: HOST_TENANT, digest: digestWorldSpec, nextWorldId: ids, nowMs: () => 0 }) }
     expect(() => service.register(copy)).toThrow('"local" is reserved')
+    expect(await service.bindingFor(agent('agent-1'))).toBeUndefined()
+  })
+
+  it('refuses to register a provider it did not build under the reserved id fenced, naming the id', async () => {
+    const { service } = await mounted()
+    const lookalike: WorldProvider = {
+      ...createFakeWorldProvider({ digest: digestWorldSpec, nextWorldId: ids }).provider,
+      id: FENCED_WORLD_PROVIDER,
+    }
+    expect(() => service.register(lookalike)).toThrow('"fenced" is reserved')
     expect(await service.bindingFor(agent('agent-1'))).toBeUndefined()
   })
 

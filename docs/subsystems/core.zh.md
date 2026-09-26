@@ -1230,8 +1230,9 @@ Mounting this service creates no world. A world is created at the first dispatch
  * @param provider - the provider to offer to selection.
  * @param placement - the providers this one yields to; absent, it yields to none.
  * @returns the disposer, which settles once the provider is removed.
- * @throws when a provider this package's `createLocalWorldProvider` did not
- *   build registers under the reserved id `local` (P3-01 acceptance[2]).
+ * @throws when a provider this package's `createLocalWorldProvider` or
+ *   `createFencedWorldProvider` did not build registers under the reserved id
+ *   `local` or `fenced` (P3-01 acceptance[2]).
  */
 register(provider: WorldProvider, placement?: WorldProviderPlacement): () => Promise<void>
 
