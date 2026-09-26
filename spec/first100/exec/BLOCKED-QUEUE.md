@@ -9397,3 +9397,29 @@ The condition therefore rested on a premise I did not check. It is replaced by:
 5. **Then** P8-01 F2 (lane A's A-375) runs on the fixed carrier.
 
 **Owner.** lane B (fix, guard); lane A (A-375 on the fixed carrier).
+
+### BLOCKED-340 — an action a webhook delivery triggers is attributed to a synthesized anonymous actor, not to the integration the HMAC key stands for
+
+**Status:** OPEN (2026-09-25). Owner lane B (fix); lane A (red first, done). Ruled by the delegate (first100-delegate-1a) on lane A's A-421. This is the question BLOCKED-291 registered and left open ("who does a webhook-triggered action trace to"), now measured.
+
+**The clause.** P2-01 acceptance[0]: 「任何 action 都能追溯 root user/tenant 与完整委托链。」 must[0] defines `ServicePrincipal`.
+
+**What was measured.**
+- The webhook surface is a documented user patch (`docs/user/guide/github-review.md`, example `apps/cli/config/examples/github-review/cordis.yml`) layered on the shipped `web` profile. No bundle mounts `dsh-webhook` by itself.
+- `apps/cli/tests/profiles/web/tests/webhook-actor.e2e.ts` at `91d6c053f1` (parent `4e932e474b`, test only), run 36198814967, with build.
+  - It sends a signed `ready_for_review` delivery through the example patch on the `web` profile, in process, the same way `host-user.e2e.ts` does.
+  - Predictions `artifacts/laneA/a-421-webhook-actor-expectations.md` (sha256 814a20dd…) were written before the case: 2 cases, 1 green, 1 red.
+- Control, green: the delivery is accepted (202) and creates one webhook session, whose first action manifest's actor can be read.
+- Red: the first manifest's actor is `anonymous:webhook-<uuid>`, with no `identity/attached` of kind `service`.
+- Cause (read): the runtime creates the agent without an identity (`webhook/src/session.ts:132-142`), so the actor falls to the anonymous branch (`identity.ts:48-54`).
+
+**What this does NOT claim.**
+- Not that the host user should be attached. The requester is remote and authenticated by HMAC; BLOCKED-291 (c) records that exception.
+- Not how the ServicePrincipal's id and tenant are derived. The fix decides that, with a reason.
+
+**Closing condition.**
+1. A webhook-triggered action's first manifest names a `ServicePrincipal` for the integration the delivery's HMAC key stands for, with `identity/attached` of kind `service` logged exactly once. The delegation chain is rooted there, not anonymous. A-421's red case turns green, and its control stays green.
+2. A mutation that drops the attachment turns that case red again.
+3. The coverage note for P2-01 acceptance[0] cites the case.
+
+**Owner.** lane B, after the work that lets an epic sign in the current batch.
