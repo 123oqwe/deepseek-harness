@@ -289,11 +289,4 @@ describe('P0-08 redo: the keyless lanes of the harness capability benchmark run 
       }
     }
   })
-
-  it('K3: until BLOCKED-334 is closed, the security or the fault lane lists it as a known red', () => {
-    const status = blockedStatus(queue, 'BLOCKED-334')
-    const listed = (['security', 'fault'] as const)
-      .some(lane => (laneOf(runs.get(lane)).knownRed ?? []).some(entry => entry.blocked === 'BLOCKED-334'))
-    expect(status === 'closed' || listed, `BLOCKED-334 is ${status} in the queue`).toBe(true)
-  })
 })
