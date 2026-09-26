@@ -7955,6 +7955,17 @@ Reading the code (not run), the `G3` backstop named above is not reached on nati
 
 **What this does NOT claim.** Not that P2-03 should be withdrawn: no path on the shipped product executes through this seam, and an in-process plugin already holds host authority, so the seam grants nothing it did not have. Not that the tutorial is wrong about how to call a tool — only that it does not say what calling it this way skips.
 
+**Measured 2026-09-26 (A-462): the seam also runs with inherited authority, and then nothing records or decides the action.**
+- The case: a plugin tool, admitted under its own capability token, nests a write through `ToolRuntime.execute`. The nested call presents the token the plugin tool inherited; the runtime carries that token into nested calls by design (`packages/core/tools/src/index.ts:2033-2037`).
+- The run: shipped headless composition, dispatch `7f3c967a75` (parent `28a56599ac`, test only), run 36212808158, with build. Predictions `artifacts/laneA/a-462-p2-03-nested-inherited-token-expectations.md` (sha256 6483a981…) were written before the case and matched: 2 green, 1 red.
+- The red case: the nested write created its file.
+  - No manifest was appended before the write.
+  - No policy decision was audited for it.
+  - Only the enclosing calls' manifests and permits are recorded.
+- The consequences:
+  - This is a measured violation of P2-03 acceptance[0] (「任何外部写操作在事件日志中都存在先于执行的 ActionManifest。」). It is also a measured violation of P2-05 acceptance[0], where the plugin is the originator.
+  - It blocks both sign-offs until B-615 lands: the seam then writes the manifest and passes the same enforcement point, and A-462's case turns green at the fix.
+
 ### BLOCKED-295 — a Run is registered in memory before its opening write is durable, and a failed write stops nothing
 
 **Status:** OPEN (2026-09-19). Owner lane B, scheduled after the P2-01 fix. Ruled by the delegate on lane A's A-185, re-measured by lane B. **P4-01 is not withdrawn.**
