@@ -22,4 +22,4 @@ export {
   KERNEL_HARD_DENY_CLASSES,
   RISK_CLASSES_BY_ASCENDING_RISK,
 } from './classify.ts'
-export { sideEffectClassOf, SIDE_EFFECT_CLASS_BY_RISK } from './side-effect-class.ts'
+export { sideEffectClassOf, SIDE_EFFECT_CLASS_BY_RISK } from './manifest-side-effect.ts'
