@@ -17105,7 +17105,8 @@
         "mutationDescription": "Four mutations, never merged. M-T1 (`d2ac55766b32d7a0004095f92a8f48ac6b21001f`, off the first fix): verify no longer takes the working-tree diff again. M-T2-3 (`a303aa0a9e002627771038d00d9f236b9de00f9b`, off the first fix): a baseline re-derivation that throws is no named mismatch. M-U (`4526cbe06ee730ad4558e5013e75b61fb8cbcd79`) and M-U′ (`44a5ecffaeb6d05f9cf64a2d8d85d10c5bead3ee`), off the second fix before and after the round-trip change: the working-tree patch binds no untracked file.",
         "failureSummary": "PRECHECK `85399a83dc`, run 36012333222: the LB-3 failure case, the pnpm case, T1-1 and T2-2 red; the first fix `fca436be8d`, run 36012359166: 74 of 74. PRECHECK2 `f393d70e2d`, run 36013449538: the untracked case red. The second fix, as re-picked after the round-trip change `016a82717c`, run 36017698417 (the untracked case red there), `33b86ea417`, run 36017725777: 75 of 75 over this spec and tests/first100/fixtures/P0-07.composition.spec.ts. M-T1 `d2ac55766b`, run 36012385387: exactly T1-1 red. M-T2-3 `a303aa0a9e`, run 36012462630: exactly the pnpm case red. M-U `4526cbe06e`, run 36013517312 and M-U′ `44a5ecffae`, run 36017752748: exactly the untracked case red. Predictions written and hashed before dispatch: artifacts/laneB/p0-07-b566-predictions.md (a3e6a332…), p0-07-b566-r2-predictions.md (aa5d2edd…), p0-07-b566-r3-predictions.md (c650423b…); the second fix's first build, e62924714b (run 36013483214), reddened the round-trip case, which the r2 file had not predicted, and 016a82717c moved that case's gate scripts outside the checkout (delegate ruling)."
       },
-      "note": "P0-07 blind review T1-1 and T2-3, and the delegate's ruling on untracked files. acceptance[0]: verify takes the working-tree patch the last collection step recorded again, `git diff --binary <baseSha>` plus every untracked file git does not ignore, leaving out the package and its sidecar directory, and fails on a difference: an uncommitted change to the root package.json and an untracked .npmrc added after collection each fail verify. acceptance[2] (narrowed): with a pnpm that cannot run first on PATH, verify names the failed baseline re-derivation, still prints its result line with accepted=false, and exits 1. The argv selects the three by title with an escaped alternation in -t."
+      "note": "P0-07 blind review T1-1 and T2-3, and the delegate's ruling on untracked files. acceptance[0]: verify takes the working-tree patch the last collection step recorded again, `git diff --binary <baseSha>` plus every untracked file git does not ignore, leaving out the package and its sidecar directory, and fails on a difference: an uncommitted change to the root package.json and an untracked .npmrc added after collection each fail verify. acceptance[2] (narrowed): with a pnpm that cannot run first on PATH, verify names the failed baseline re-derivation, still prints its result line with accepted=false, and exits 1. The argv selects the three by title with an escaped alternation in -t.",
+      "supersededBy": "2026-09-26T17:54:29.000Z"
     },
     {
       "epic": "P0-07",
@@ -19309,6 +19310,48 @@
         "failureSummary": "Narrow run 36258926958 of this argv on bf79ae00c4: the build passed, and 22 of 24 cases passed; the two that failed are exactly the renamed must[2] cases, local-reference and durable-file. The unmutated tree passed all 24 in the full run 36254411017 at d25574ecbc."
       },
       "note": "P6-02 U-stage, replacing the 2026-09-11 entry after B-656 renamed its two must[2] cases (P6-03 slice 1; the delegate, first100-delegate-1a, gate3 2026-09-26T17:16:39Z). Observed in the full run 36254411017 at d25574ecbc, where all 24 cases passed. The observing tree is pinned at refs/dsh/freeze/P6-02.U/2026-09-26T17-35-12.000Z -> d25574ecbc9bc4c2ea67e6988e2000981aadd069, whose tree is dryRunProof.treeSha."
+    },
+    {
+      "epic": "P0-07",
+      "stage": "P",
+      "supplements": {
+        "epic": "P0-07",
+        "stage": "P"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/release/evidence-package.spec.ts",
+        "-t",
+        "detects an uncommitted change to the root package\\.json made after collection|detects an untracked configuration file added after the last collection step|fails with a named mismatch and still prints its result line when git cannot run",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[2] (narrowed): the result line of verify names the package path and its accepted status fails with a named mismatch and still prints its result line when git cannot run",
+        "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: the working tree is checked against the diff recorded at collection detects an uncommitted change to the root package.json made after collection",
+        "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: the working tree is checked against the diff recorded at collection detects an untracked configuration file added after the last collection step"
+      ],
+      "files": [
+        "tests/release/evidence-package.spec.ts",
+        "scripts/release/verify-evidence.mjs",
+        "scripts/release/collect-evidence.mjs"
+      ],
+      "frozenAtUtc": "2026-09-26T17:54:29.000Z",
+      "supersedes": "2026-09-24T15:54:51Z",
+      "supersessionReason": "B-626 (8abc4473d5) makes the baseline fingerprint record only the toolchain package.json declares, so re-deriving it no longer runs pnpm, and the frozen case that made re-derivation fail with a pnpm that cannot run turned red. A-516 (25ec6725a4, lane A) makes git the tool that cannot run: re-derivation still runs `git rev-parse HEAD` (scripts/release/baseline-fingerprint.mjs:237), and verify-evidence.mjs names its failure \"baseline re-derivation failed\". The case's subject and its four assertions are unchanged; its title and the argv's -t alternative change pnpm to git. files, expectExit and the two acceptance[0] cases are unchanged.",
+      "dryRunProof": {
+        "treeSha": "527dd1617b2e901fb39b6d11f9550848db8a756b",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "One mutation, re-taken on d25574ecbc (the observing tree): (M-T2-3′, e41298f3cc, never merged) scripts/release/verify-evidence.mjs no longer catches a baseline re-derivation that throws, the same lines M-T2-3 (a303aa0a9e) removed. verify-evidence.mjs has changed in seven commits since M-T2-3's parent, so that reading is not carried. The superseded entry's other mutations (M-T1, M-U, M-U′), which prove the two unchanged acceptance[0] cases, were taken on earlier trees and were not run again (the delegate, first100-delegate-1a, under §16).",
+        "failureSummary": "Narrow run 36260015584 on e41298f3cc ran the whole tests/release/evidence-package.spec.ts: 83 of 84 cases passed, and the one that failed is exactly \"fails with a named mismatch and still prints its result line when git cannot run\", at toContain('baseline re-derivation failed'); the two acceptance[0] cases passed. The unmutated tree passed all three in the full run 36254411017 at d25574ecbc."
+      },
+      "note": "P0-07 P-stage supplement 2, replacing the 2026-09-24T15:54:51Z entry after B-626 took pnpm out of the baseline re-derivation (A-516; the delegate, first100-delegate-1a, gate3 2026-09-26T13:40:10Z and 13:44:45Z). The full run 36254411017 at d25574ecbc passed all three cases, but this entry is frozen after it, so the supplement cell is observed by the next full run. The observing tree is pinned at refs/dsh/freeze/P0-07.P.2/2026-09-26T17-54-29.000Z -> d25574ecbc9bc4c2ea67e6988e2000981aadd069, whose tree is dryRunProof.treeSha."
     }
   ]
 }

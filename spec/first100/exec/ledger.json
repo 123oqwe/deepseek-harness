@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-26T17:52:16.267Z",
-  "inputDigest": "f8f9c36c9d86668e45a81eab3ddd8841034e79475d05f7c2e946479c5c0bdf20",
+  "lastUpdatedUtc": "2026-09-26T17:54:37.313Z",
+  "inputDigest": "cc494b6b472aabf31b5d26901de0bd1e1b97952a8ddf9efffa715940fd5f841b",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -1457,17 +1457,13 @@
           "capturedAtUtc": "2026-09-24T12:17:28.101Z"
         },
         "P.2": {
-          "status": "GREEN",
-          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
-          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
-          "expectCasesMatched": [
-            "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[2] (narrowed): the result line of verify names the package path and its accepted status fails with a named mismatch and still prints its result line when pnpm cannot run",
-            "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: the working tree is checked against the diff recorded at collection detects an uncommitted change to the root package.json made after collection",
-            "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: the working tree is checked against the diff recorded at collection detects an untracked configuration file added after the last collection step"
-          ],
-          "capturedAtUtc": "2026-09-25T22:04:53.239Z"
+          "status": "NOT_RUN",
+          "revokedFrom": {
+            "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
+            "absentCommitments": 1
+          },
+          "revokedReason": "A-516 superseded P0-07.P supplement 2 at 2026-09-26T17:54:29.000Z after B-626 took pnpm out of the baseline re-derivation (the trigger is now a git that cannot run), and this cell's observation at 4e932e474b holds only the superseded entry. The next full run observes the replacement; P0-07's sign-off is reviewed again under 4.4 (the delegate, first100-delegate-1a, gate3 2026-09-26T13:44:45Z)."
         },
         "F.4": {
           "status": "GREEN",
@@ -1500,9 +1496,9 @@
         }
       },
       "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
-      "independentVerdict": "APPROVED",
+      "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "ACCEPTED",
+      "status": "NOT_RUN",
       "acceptedEvidence": {
         "acceptedAtUtc": "2026-09-26T00:27:05.733Z",
         "cells": {
