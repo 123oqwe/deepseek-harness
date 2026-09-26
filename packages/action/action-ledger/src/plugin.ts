@@ -182,7 +182,7 @@ export default class ActionLedgerPlugin extends Service {
       reason: `The outcome of this external effect is unknown. Record it as ${outcome}? It is not sent again either way.`,
       signal,
     })
-    if (answer !== 'allowed-once') return { kind: 'error', text: `The host user did not approve, so ${key} stays ambiguous.` }
+    if (answer === 'withdrawn') return { kind: 'error', text: `The host user did not approve, so ${key} stays ambiguous.` }
     const resolution: LedgerResolution = { outcome, resolvedBy: principal.id, resolvedAt: Date.now() }
     if (outcome === 'confirmed') this.store.confirm(principal.id, key, entry.epoch, receiptOf(resolution), resolution)
     else this.store.markCompensated(principal.id, key, entry.epoch, resolution)
