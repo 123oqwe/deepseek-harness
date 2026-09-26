@@ -101,6 +101,14 @@ interface MemoryAccessContext {
 
 接缝自身不发出任何事件。除本消费方以外的 `ctx.memory` 调用方,除非自己追加事件,否则不会记录任何内容;因此日志对经由会写入事件的消费方所做的读取是完整的,而非对任何可设想的调用方都完整。
 
+## 提案复审（P6-03 第二片）
+
+被策略扣下复审的提案以 `pending` 存储：`propose` 收下它、默认搜索不返回它、`ctx.memory.listPending({ accessContext })` 会列出它。策略会扣下这样的提案：敏感的、敏感度未申明的、低于本部署置信阈值的弱推断 `derived` 声明，或省略了预期用途（`purpose`）或 TTL（`must[0]`）的。省略 `validUntil` 与陈述的 `validUntil: null`（不设期限）不同：前者未申明、被扣复审，后者是完整的。
+
+人工用 `ctx.memory.approve({ principal, scope, id })` 处置被扣提案——它转为 `active`、默认搜索开始返回它——或用 `ctx.memory.reject({ principal, scope, id })`，此后它永不 active。只有 user principal 能决定：agent 或 service principal 在接缝层、到达任何 provider 之前被拒 `MEMORY_REVIEW_FORBIDDEN`，因此提案留在 pending。scope 看不到的、或不指向 `pending` 记录的 id 同样被拒——未知或越 scope 的用 `MEMORY_RECORD_NOT_FOUND`，已决的用 `MEMORY_NOT_PENDING`。approve 与 reject 是被扣提案离开 `pending` 的唯一途径；没有复审入口，被策略扣下的提案就会永远等待，因此出厂的操作者入口是以宿主用户身份运行的 `dsh memory` CLI。
+
+带 tombstone 的 forget、带来源与冲突状态的 export，以及 merge/supersede 向索引的传播，归第三片。
+
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
 <a id="cordis-surface"></a>

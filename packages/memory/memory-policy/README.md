@@ -100,7 +100,7 @@ None. The policy runs at write time, decides a disposition, and adds nothing to 
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **The review lifecycle is the next slice.** Listing pending proposals and approving or rejecting them, and merge/supersede/forget/export propagation (`must[3]`, `acceptance[1]`, `acceptance[2]`), are not in this first slice — it covers the proposal decision and its `pending`/`active` routing only.
+- **`must[0]` completeness and the review lifecycle are now built; conflict and erasure are the third slice.** Beyond sensitivity and confidence, this policy now holds a proposal that omits its intended use (`purpose`) or its TTL (`validUntil`) for review — an omitted `validUntil` is distinct from a stated `validUntil: null` ("no expiry"). `@deepseek-ai/dsh-memory` gained the review verbs a person acts on the held proposal with — `listPending`, `approve`, `reject` — where only a user principal decides. Still deferred, to the third slice: merge/supersede (a conflict decision), forget with a tombstone, and export carrying provenance and conflict status (`must[3]`, `acceptance[1]`, `acceptance[2]`).
 
 <a id="dev-note"></a>
 ### Dev Note

@@ -100,7 +100,7 @@ base bundle 默认启用本插件，所以你几乎不用手动挂它——凡 p
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **review 生命周期是下一片。** 列出待定提案并批准或拒绝它们，以及 merge/supersede/forget/export 传播（`must[3]`、`acceptance[1]`、`acceptance[2]`），都不在这第一片——它只覆盖提案判定及其 `pending`/`active` 路由。
+- **`must[0]` 完整性与 review 生命周期现已建；冲突与擦除归第三片。** 除敏感度与置信度外，本策略现在也把省略预期用途（`purpose`）或省略 TTL（`validUntil`）的提案扣为 review——省略的 `validUntil` 与陈述的 `validUntil: null`（不设期限）不同。`@deepseek-ai/dsh-memory` 新增了让人工对被扣提案采取行动的 review 动词——`listPending`、`approve`、`reject`，且只有 user principal 能决定。仍延期到第三片：merge/supersede（冲突决策）、带 tombstone 的 forget、以及带来源与冲突状态的 export（`must[3]`、`acceptance[1]`、`acceptance[2]`）。
 
 <a id="dev-note"></a>
 ### 开发备注
