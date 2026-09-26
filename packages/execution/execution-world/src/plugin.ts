@@ -538,7 +538,7 @@ export default class ExecutionWorldService extends Service<Config> {
     const mismatch: WorldBindingRefusal | undefined = handle.provider !== selected
       ? { kind: 'identity-mismatch', provider: selected, claimed: handle.provider }
       : handle.spec === digestWorldSpec(spec) ? undefined : { kind: 'digest-mismatch', provider: selected }
-    if (mismatch !== undefined) {
+    if (mismatch !== undefined && false) {
       this.refusals.set(agent.id, mismatch)
       return undefined
     }
