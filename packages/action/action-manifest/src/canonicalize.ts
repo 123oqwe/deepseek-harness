@@ -218,7 +218,7 @@ function assertJsonArguments(args: JsonValue): void {
  */
 export function createActionManifest(request: CreateActionManifestRequest): ActionManifest {
   assertJsonArguments(request.args)
-  const classification = request.classification ?? classifySideEffect(request.declaredSideEffectClass)
+  const classification = classifySideEffect(request.declaredSideEffectClass)
   return {
     actionId: request.actionId,
     runId: request.runId,
