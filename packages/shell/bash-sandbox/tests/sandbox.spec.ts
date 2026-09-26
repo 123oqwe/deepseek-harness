@@ -664,13 +664,13 @@ describe('background sandbox facts', () => {
     // Facts belong to each wrap and may vary between calls. The slow task settles after the
     // quick task starts; a shared latest-wrap field would classify and stamp it with the wrong
     // task's dialect and enforcement.
-    const wraps: Array<Pick<ConfinedArgv, 'enforcement' | 'denialSignatures'>> = [
+    const wraps: Array<Pick<ConfinedArgv, 'backend' | 'enforcement' | 'reachableSockets' | 'denialSignatures'>> = [
       { backend: 'fake-runner', enforcement: 'partial', reachableSockets: [], denialSignatures: ['permission denied'] },
       { backend: 'fake-runner', enforcement: 'full', reachableSockets: [], denialSignatures: ['read-only file system'] },
     ]
     let call = 0
     const { bash } = await setup({}, (argv) => {
-      const wrap = wraps[Math.min(call++, wraps.length - 1)] as Pick<ConfinedArgv, 'enforcement' | 'denialSignatures'>
+      const wrap = wraps[Math.min(call++, wraps.length - 1)] as Pick<ConfinedArgv, 'backend' | 'enforcement' | 'reachableSockets' | 'denialSignatures'>
       return { argv: [...argv], ...wrap, runnerFailureRules: RUNNER_FAILURE }
     })
     const slow = bash.start(bash.resolve({ command: 'sleep 0.4; echo "x: Permission denied" >&2; exit 1' }))

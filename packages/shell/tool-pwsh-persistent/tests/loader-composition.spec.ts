@@ -41,7 +41,7 @@ afterEach(async () => {
 
 class PassthroughSandbox extends SandboxProvider {
   confine(argv: readonly string[], _policy: SandboxPolicy): ConfinedArgv {
-    return { argv: [...argv], enforcement: 'full', denialSignatures: [], runnerFailureRules: [] }
+    return { argv: [...argv], backend: 'passthrough', enforcement: 'full', reachableSockets: [], denialSignatures: [], runnerFailureRules: [] }
   }
 }
 
