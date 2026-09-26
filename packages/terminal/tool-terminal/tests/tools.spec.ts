@@ -470,6 +470,9 @@ describe('tool-terminal task integration', () => {
     stub.sessions[0]!.closeGate = Promise.withResolvers<undefined>()
     const first = ctx.terminals.kill(agent, TerminalSessionId('pty-1'))
     const second = call(ctx, 'terminal_close', { sessionId: 'pty-1' }, agent)
+    // The second close must reach the session while the first is in flight,
+    // and the public seam runs its enforcement and stop checks first.
+    await new Promise(resolve => setTimeout(resolve, 0))
     stub.sessions[0]!.closeGate?.resolve(undefined)
     await first
     const result = await second

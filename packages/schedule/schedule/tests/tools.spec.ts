@@ -316,7 +316,13 @@ describe('Schedule tool protocol', () => {
     expect(test.agent.session.snapshotEvents().filter(event => event.type === 'schedule/change')).toEqual([])
 
     const internal = await harness()
-    const now = vi.spyOn(Date, 'now').mockImplementationOnce(() => { throw new Error('clock unavailable') })
+    const now = vi.spyOn(Date, 'now')
+    // Armed at dispatch: the public seam reads the clock for its stop and lease
+    // check before the body, and that read is not the one under test.
+    internal.ctx.on('tools/execute', (_exec, next) => {
+      now.mockImplementationOnce(() => { throw new Error('clock unavailable') })
+      return next()
+    })
     expect(value(await execute(internal, 'schedule_create', { prompt: 'clock', after_seconds: 1 })))
       .toEqual({ code: 'internal_error', message: 'The schedule operation failed.' })
     now.mockRestore()
@@ -425,10 +431,18 @@ describe('Schedule persistence failure boundaries', () => {
     await ownerStarted
 
     const controller = new AbortController()
+    // The body joins the Schedule FIFO before its first await, and the public
+    // seam runs its enforcement and stop checks before dispatching it.
+    const dispatched = Promise.withResolvers<undefined>()
+    test.ctx.on('tools/execute', (_exec, next) => {
+      const result = next()
+      dispatched.resolve(undefined)
+      return result
+    })
     const creating = execute(test, 'schedule_create', {
       prompt: 'cancelled before its turn', after_seconds: 1,
     }, test.agent, controller.signal)
-    await Promise.resolve()
+    await dispatched.promise
     controller.abort()
     if (releaseOwner === undefined) throw new Error('missing owner transaction release')
     releaseOwner()

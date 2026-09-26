@@ -582,6 +582,7 @@ describe('dsh-tool-subagent', () => {
 
   it('passes the tool abort signal as the provider cancellation channel', async () => {
     const cancelled = vi.fn()
+    const listening = Promise.withResolvers<undefined>()
     const ctx = await projectedContext()
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
@@ -599,6 +600,7 @@ describe('dsh-tool-subagent', () => {
           cancelled()
           resolveResult({ output: [], stopReason: 'aborted' })
         }, { once: true })
+        listening.resolve(undefined)
         return {
           id: SessionId('spy-child'),
           localAgent: undefined,
@@ -611,9 +613,9 @@ describe('dsh-tool-subagent', () => {
 
     const controller = new AbortController()
     const pending = callSubagent(ctx, { description: 'd', prompt: 'p' }, { signal: controller.signal })
-    // Let provider.start install its listener before aborting.
-    await Promise.resolve()
-    await Promise.resolve()
+    // Let provider.start install its listener before aborting; the public
+    // seam runs its enforcement and stop checks before the tool body.
+    await listening.promise
     controller.abort()
     const result = await pending
     expect(cancelled).toHaveBeenCalledTimes(1)

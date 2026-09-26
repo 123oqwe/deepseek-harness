@@ -31,4 +31,5 @@ BLOCKED-294；P2-03 acceptance[0]、P2-05 acceptance[0]。`ToolRuntime.execute` 
 - 教程给出带 `agent` 的调用写法，并说明不带时会怎样。
 - 三个单元测试为了测令牌而钉了内核，却没有 decider：`capability-token-file` 的 `provider.spec` 与 `renewal.spec`，以及 `subagent` 的 `capability-token-spawn.spec`。没有 decider 时每个决定都是拒绝，所以它们的直接调用现在会停在这些用例要测的 token 门之前。它们改为钉上出厂 profile 所用的 decider `endorseComposedDecision`，并配一个放行其工具的策略，出厂策略集对这些工具也是放行。标题与断言都不变；`provider.spec` 与 `capability-token-spawn.spec` 由 P2-02 的 [230] 冻结。
 - 不涵盖：四个 web e2e 文件（`background-job-list`、`replay-round-trip`、`schedule-after`、`shipped-composition`）在钉了内核的 web 组合里直接调用，没有任何 first100 运行会执行它们。这条接缝不在工具运行之前重新核验已记录的审批，也不做幂等预留；agent loop 自己的调用两件都会做。
+- 直接调用的工具体要等执行点的决定、读时钟的停止与租约检查、以及风险门都完成后才开始，比调用 `execute` 晚若干个微任务。六个 spec 里有八条单元用例原先在调用之后固定的几拍内中止、结算或让时钟出错；它们现在改为等一个可观测的点：checkpoint 的 flush、派发、provider 的 start，或已登记的等待。`minimal-preset` 这条 web 快照记下了它两次直接调用的 manifest 与风险门（B-649）。
 - 验证：lane A 在出厂 headless profile 上的 A-434、A-462、A-471 与 A-472，以及 `packages/core/tools/tests/direct-seam.spec.ts`。次序变异 M-615-order 把 manifest 改在派发之后追加，A-462 的用例与观察次序的单元用例都会转红。
