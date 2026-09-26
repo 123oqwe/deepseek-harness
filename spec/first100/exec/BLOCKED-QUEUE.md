@@ -7941,7 +7941,7 @@ Reading the code (not run), the `G3` backstop named above is not reached on nati
 
 ### BLOCKED-294 — the public `ToolRuntime.execute` seam runs a tool without a manifest, and the docs teach it
 
-**Status:** OPEN (2026-09-19). Owner lane B. Ruled by the delegate on lane A's A-181, re-measured by lane B. **P2-03 is not withdrawn.**
+**Status:** CLOSED 2026-09-26 (closure note at the end of this entry); opened 2026-09-19. Owner lane B. Ruled by the delegate on lane A's A-181, re-measured by lane B. **P2-03 is not withdrawn.**
 
 **The seam.** `ToolRuntime.execute(exec)` (`packages/core/tools/src/index.ts:1859`) runs capability-token revocation, the `tools/pre-execute` waterfall and the guards, then the tool body. It appends no action manifest and consults no enforcement point: in that file `enforceManifestedAction` and `decideManifestedAction` have **zero** occurrences, and `appendManifestThenGate` and `assertManifestPrecedesExecution` have one each, both inside JSDoc. The only import from `@deepseek-ai/dsh-action-manifest` (`:11-13`) is `import type` of five types, so there is no runtime edge either.
 
@@ -7965,6 +7965,18 @@ Reading the code (not run), the `G3` backstop named above is not reached on nati
 - The consequences:
   - This is a measured violation of P2-03 acceptance[0] (「任何外部写操作在事件日志中都存在先于执行的 ActionManifest。」). It is also a measured violation of P2-05 acceptance[0], where the plugin is the originator.
   - It blocks both sign-offs until B-615 lands: the seam then writes the manifest and passes the same enforcement point, and A-462's case turns green at the fix.
+
+**Closure note (2026-09-26, lane B).** Drafted by lane A (A-480). Fixed by B-615 `c324c423ed`, the first of the two closing routes: the direct `ToolRuntime.execute` seam now appends the call's manifest and passes the same enforcement point. Where the Trust Kernel is pinned, which every shipped profile does, `execute` appends a `plugin-rpc` manifest to the calling agent's session and asks the enforcement point before the capability token is checked; a decision other than permit refuses the call; a call with no agent is decided at the fail-closed facts, audited and refused (`packages/core/tools/src/index.ts:2013-2017`, `:2043`). The tutorial now passes `agent` and says the call is recorded and decided (`docs/cordis-tutorial/07-into-the-harness.md:99-111`).
+- **Red first:** A-434, run 36204057122: a plugin's direct call, with and without an agent, left no manifest and no decision (2 red, control green). A-462, run 36212808158: a plugin tool's nested write under its inherited token ran and wrote its file with neither (1 red).
+- **Before the fix:** run 36215702728 at the fix's parent `cba91953fa` with those cases: exactly those three red, 523 of 526 passing.
+- **At the fix:** run 36215713819: 531 of 531, A-434 3/3, A-462 3/3, and the new `packages/core/tools/tests/direct-seam.spec.ts` 5/5.
+- **Order is measured:** M-615-order (`858cd1ab71`), which manifests and decides the call only after it runs, turns A-462's nested case and three `direct-seam.spec.ts` cases red, run 36215725289. A-434's cases stay green under it: they assert that a manifest and a decision exist, not that they precede the body.
+- **Not covered:**
+  - No mutation that deletes the check outright was run (the stop-loss rule); the ordering mutation is the sensitivity evidence.
+  - The four web e2e cases (B-634) are not part of this closure.
+  - On the seam, P2-06's approval re-verification and P4-12's idempotency reservation are not applied; the seam manifests and decides, and does nothing further that the native path does after the decision (`decideDirectCall`, `packages/core/tools/src/index.ts:2043-2070`).
+  - The risk gate and the stop and takeover check are not applied on the seam at this fix either; they are BLOCKED-344 and BLOCKED-345, tracked separately.
+  - Without a pinned kernel the seam is unchanged; no shipped profile runs that way.
 
 ### BLOCKED-295 — a Run is registered in memory before its opening write is durable, and a failed write stops nothing
 
@@ -9685,7 +9697,7 @@ P1-10 is not ACCEPTED, so nothing is withdrawn. This entry blocks P1-10 acceptan
 
 ### BLOCKED-344 — an unclassifiable write nested through `ToolRuntime.execute` runs without the approval P2-03 acceptance[2] requires: the seam skips the risk gate
 
-**Status:** OPEN (2026-09-26). Owner lane B (fix); lane A (red first, done: A-471). Ruled by the delegate (first100-delegate-1a) on A-471. Its predictions were written before the case and matched case by case: `artifacts/laneA/a-471-p2-03-nested-unclassified-expectations.md`, sha256 45967357….
+**Status:** CLOSED 2026-09-26 (closure note at the end of this entry); opened 2026-09-26. Owner lane B (fix); lane A (red first, done: A-471). Ruled by the delegate (first100-delegate-1a) on A-471. Its predictions were written before the case and matched case by case: `artifacts/laneA/a-471-p2-03-nested-unclassified-expectations.md`, sha256 45967357….
 - This entry is related to BLOCKED-294 but separate from it. 294 is about the seam's missing manifest and missing policy decision; B-615 fixes those. This entry is about the seam's missing risk gate, that is, the approval step.
 - It blocks P2-03's sign-off. P2-03 is not ACCEPTED, so nothing is withdrawn.
 
@@ -9717,6 +9729,20 @@ P1-10 is not ACCEPTED, so nothing is withdrawn. This entry blocks P1-10 acceptan
 4. **Then** P2-03's sign-off path continues, alongside BLOCKED-294 (B-615) and B-620.
 
 **Owner.** Lane B (fix, stacked after B-615); lane A (A-471 on the fix).
+
+**Closure note (2026-09-26, lane B).** Drafted by lane A (A-492). Fixed by B-633: an action entering the direct `ToolRuntime.execute` seam now passes the same risk gate as the dispatch path — where the Trust Kernel is pinned and the call has an agent, it is classified and, when the preset requires approval, asked for; rejected, it does not run, and its decision is recorded as `action/risk-gated`. This is the approval step P2-03 acceptance[2] requires; it sits alongside BLOCKED-294 (B-615, manifest + decision) and BLOCKED-345.
+- **Two fix rounds — v1 broke the one-input-snapshot invariant, v2 corrected it.**
+  - **v1** `dcc041284b` classified the call inside `ToolRuntime.execute`, before the registry takes its input snapshot, reading the caller's `exec.name` (twice) and `exec.agent` (once) (`packages/core/tools/src/index.ts:2022`, `:2026-2027`). The test "uses one input snapshot for the normalized error shell" (`packages/core/tools/tests/scoped.spec.ts:545`, its assertion at `:578`) counts each input field's reads and allows one each, so it went red — the invariant was violated. Run 36216336990, 1 red. A-471 itself was green in that round.
+  - **v2** `72fe54f08b` moves the classification back to the execution snapshot and computes it once: a per-call `DirectCallRisk { classified }` container (`:491-492`, `:2029`) is threaded into both steps (`:2033-2034`); `decideDirectCall` classifies from the passed-in execution snapshot once (`:2085`, the same position as the B-638 fix, only when a kernel is pinned and an agent is present) and `gateDirectCall` reuses it (`:2113-2119`). `execute` no longer reads any `exec` field for classification. Run 36217505464, 0 red; the snapshot test is green (name and agent each read once).
+- **Red first:** A-471, run 36214957940 at `9d05dba8f3`: a plugin tool's nested call to an unclassifiable writer, under its inherited token, through `ToolRuntime.execute`, ran with no approval asked and no `action/risk-gated` record (1 red; the direct control, classified and refused, green). Lane B's PRE `38b7d3bf01` (same patch-id) reproduced it, run 36216327323.
+- **At the fix (v2):** run 36217505464: A-471 2/2, `direct-seam.spec` green, A-462/A-472/A-434 green, the one-input-snapshot test green.
+- **Order is measured:** M-633-order′ (`e60218dd95`, parent v2), which passes the risk gate only after the direct call runs, turns exactly two cases red — A-471's nested case and `direct-seam`'s "asks the operator about an unclassifiable direct call before it runs" — while "runs a direct call the operator allows, after its manifest and its approval" stays green (it asks after running, and an allowed ask still permits; it does not check order). Run 36217516453. The v1 ordering mutation M-633-order (`358b5c1d2e`, run 36216347835) reddened three because it was built on the v1 code that already re-read the input, so the snapshot test also went red.
+- **Not covered:**
+  - No mutation that deletes the check outright was run (the stop-loss rule); the ordering mutation is the sensitivity evidence.
+  - The four web e2e cases (B-634) are not part of this closure.
+  - The seam does not re-verify a recorded approval before running (P2-06) or reserve idempotency (P4-12); the native path does both. It does nothing after the decision that the native path does not.
+  - Calls without an agent, and runs taken over or stopped, are decided elsewhere (BLOCKED-294 fail-closed; BLOCKED-345 / A-472).
+  - Without a pinned kernel the seam is unchanged; no shipped profile runs that way.
 
 ### BLOCKED-345 — after an emergency stop, a running plugin tool still performs a write it nests through `ToolRuntime.execute`: the seam skips `refuseNewAction`
 
