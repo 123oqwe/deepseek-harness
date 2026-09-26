@@ -27,16 +27,19 @@ import type { Principal } from '@deepseek-ai/dsh-principal'
 import type { MemoryKind, MemoryProvenance, MemoryRelation, MemorySensitivity, MemoryStatus, MemorySubject } from './record.ts'
 import { isTraceable } from './provenance.ts'
 import type { IndexingPolicy } from './provenance.ts'
-import { isDefaultRetrievable } from './record.ts'
+import { decideCrossScopeMerge, isDefaultRetrievable } from './record.ts'
 import type { MemoryClaimOrigin, MemoryRebuiltCountRequest } from './types.ts'
 import type {
   MemoryAccessContext,
+  MemoryEraseRequest,
+  MemoryExportedRecord,
   MemoryExportRequest,
   MemoryExportResult,
   MemoryForgetRequest,
   MemoryGetRequest,
   MemoryListPendingRequest,
   MemoryListPendingResult,
+  MemoryMergeRequest,
   MemoryProposeRequest,
   MemoryProposeResult,
   MemoryProvider,
@@ -46,6 +49,8 @@ import type {
   MemoryReviewRequest,
   MemoryReviseRequest,
   MemoryScope,
+  MemorySupersedeRequest,
+  MemoryTombstoneView,
 } from './types.ts'
 import { MemoryError, MemoryRecordId } from './types.ts'
 
@@ -57,12 +62,16 @@ export type {
   MemoryAccessContext,
   MemoryAccessEvent,
   MemoryContextBudget,
+  MemoryEraseRequest,
+  MemoryExportedRecord,
   MemoryExportRequest,
   MemoryExportResult,
   MemoryForgetRequest,
   MemoryGetRequest,
   MemoryListPendingRequest,
   MemoryListPendingResult,
+  MemoryMergeEnd,
+  MemoryMergeRequest,
   MemoryProposeRequest,
   MemoryProposeResult,
   MemoryProvider,
@@ -72,9 +81,14 @@ export type {
   MemoryReviewRequest,
   MemoryReviseRequest,
   MemoryScope,
+  MemorySupersedeRequest,
+  MemoryTombstoneView,
   MemoryRebuiltCountRequest,
   MemoryClaimOrigin,
   WorkspaceMemoryScope,
+  CrossScopeMergeAuthorization,
+  CrossScopeMergeDecision,
+  CrossScopeDenialReason,
 } from './types.ts'
 
 declare module '@deepseek-ai/cordis' {
@@ -285,12 +299,49 @@ export class MemoryRuntime extends Service {
   }
 
   /**
-   * Remove a record. Idempotent.
+   * Remove a record and leave a tombstone (P6-03 third slice, acceptance[1]).
+   * Idempotent. The content is removed from the store; `export` lists a
+   * {@link MemoryTombstoneView} in its place.
    * @param request - the target id, its principal, and its scope.
    * @returns Nothing.
    */
   async forget(request: MemoryForgetRequest): Promise<void> {
     return this.resolve().forget(request)
+  }
+
+  /**
+   * Record that one record supersedes another (P6-03 third slice, must[3]).
+   * Both persist: the newer gains a `supersedes` relation and the older is
+   * marked `superseded`, so the default search returns only the newer while
+   * `export` keeps both (must[1] — a conflict never overwrites).
+   * @param request - the newer id, the older id it supersedes, the principal, and the scope both belong to.
+   * @returns Nothing.
+   */
+  async supersede(request: MemorySupersedeRequest): Promise<void> {
+    return this.resolve().supersede(request)
+  }
+
+  /**
+   * Merge one record into another (P6-03 third slice, must[3]). A cross-scope
+   * merge with no `authorization` naming both scopes is refused with
+   * `MEMORY_MERGE_NOT_AUTHORIZED` before either record changes (P6-02
+   * acceptance[2]).
+   * @param request - the two ends, and the cross-scope authorization when the merge crosses a boundary.
+   * @returns Nothing.
+   */
+  async merge(request: MemoryMergeRequest): Promise<void> {
+    return this.resolve().merge(request)
+  }
+
+  /**
+   * Erase every record about a subject in one tenant (P6-03 third slice,
+   * must[3] right-to-erasure), forgetting each as {@link MemoryRuntime.forget}
+   * forgets one, in every session and workspace of the tenant.
+   * @param request - the requesting principal, the tenant, and the subject to erase.
+   * @returns Nothing.
+   */
+  async erase(request: MemoryEraseRequest): Promise<void> {
+    return this.resolve().erase(request)
   }
 
   /**
@@ -499,6 +550,7 @@ function isDefaultSearchable(record: ScopedMemoryRecord, nowIso: string, policy:
  */
 export function createLocalReferenceMemoryProvider(indexing: IndexingPolicy = DENY_SENSITIVE_INDEXING): MemoryProvider {
   const records = new Map<MemoryRecordId, ScopedMemoryRecord>()
+  const tombstones: StoredTombstone[] = []
   let counter = 0
 
   /** The stored record `id` names, but only when `scope` may see it. */
@@ -541,15 +593,49 @@ export function createLocalReferenceMemoryProvider(indexing: IndexingPolicy = DE
       return Promise.resolve()
     },
     forget(request) {
-      if (visible(request.id, request.scope) !== undefined) records.delete(request.id)
+      const found = visible(request.id, request.scope)
+      if (found !== undefined) {
+        records.delete(request.id)
+        tombstones.push(tombstoneFor(found, request.principal))
+      }
+      return Promise.resolve()
+    },
+    supersede(request) {
+      const { winner, loser } = supersedeInto(
+        requireFound(visible(request.id, request.scope), request.id),
+        requireFound(visible(request.supersedes, request.scope), request.supersedes),
+      )
+      records.set(winner.id, winner)
+      records.set(loser.id, loser)
+      return Promise.resolve()
+    },
+    merge(request) {
+      authorizeMerge(request)
+      const { winner, loser } = supersedeInto(
+        requireFound(visible(request.into.id, request.into.scope), request.into.id),
+        requireFound(visible(request.from.id, request.from.scope), request.from.id),
+      )
+      records.set(winner.id, winner)
+      records.set(loser.id, loser)
+      return Promise.resolve()
+    },
+    erase(request) {
+      for (const record of [...records.values()]) {
+        if (!matchesErasure(record, request)) continue
+        records.delete(record.id)
+        tombstones.push(tombstoneFor(record, request.principal))
+      }
       return Promise.resolve()
     },
     countRebuiltAt(request) {
       return Promise.resolve(countRebuiltRecords([...records.values()], request))
     },
     export(request) {
-      const matches = [...records.values()].filter(record => inScope(record, request.accessContext.scope))
-      return Promise.resolve({ records: matches.map(toRecordView), truncated: false })
+      const { scope } = request.accessContext
+      return Promise.resolve(buildExportResult(
+        [...records.values()].filter(record => inScope(record, scope)),
+        tombstones.filter(tombstone => inScope(tombstone, scope)),
+      ))
     },
     listPending(request) {
       return Promise.resolve({ records: pendingViews(records.values(), request.accessContext.scope), truncated: false })
@@ -581,6 +667,7 @@ export function createLocalReferenceMemoryProvider(indexing: IndexingPolicy = DE
  */
 export function createFakeMemoryProvider(indexing: IndexingPolicy = DENY_SENSITIVE_INDEXING): MemoryProvider {
   const records: ScopedMemoryRecord[] = []
+  const tombstones: StoredTombstone[] = []
 
   /** Index of the stored record `id` names, but only when `scope` may see it. */
   const visibleIndex = (id: MemoryRecordId, scope: MemoryScope): number =>
@@ -625,15 +712,54 @@ export function createFakeMemoryProvider(indexing: IndexingPolicy = DENY_SENSITI
     },
     forget(request) {
       const index = visibleIndex(request.id, request.scope)
-      if (index !== -1) records.splice(index, 1)
+      const found = records[index]
+      if (found !== undefined) {
+        records.splice(index, 1)
+        tombstones.push(tombstoneFor(found, request.principal))
+      }
+      return Promise.resolve()
+    },
+    supersede(request) {
+      const winnerIndex = visibleIndex(request.id, request.scope)
+      const loserIndex = visibleIndex(request.supersedes, request.scope)
+      const { winner, loser } = supersedeInto(
+        requireFound(records[winnerIndex], request.id),
+        requireFound(records[loserIndex], request.supersedes),
+      )
+      records[winnerIndex] = winner
+      records[loserIndex] = loser
+      return Promise.resolve()
+    },
+    merge(request) {
+      authorizeMerge(request)
+      const intoIndex = visibleIndex(request.into.id, request.into.scope)
+      const fromIndex = visibleIndex(request.from.id, request.from.scope)
+      const { winner, loser } = supersedeInto(
+        requireFound(records[intoIndex], request.into.id),
+        requireFound(records[fromIndex], request.from.id),
+      )
+      records[intoIndex] = winner
+      records[fromIndex] = loser
+      return Promise.resolve()
+    },
+    erase(request) {
+      for (let index = records.length - 1; index >= 0; index--) {
+        const record = records[index]
+        if (record === undefined || !matchesErasure(record, request)) continue
+        records.splice(index, 1)
+        tombstones.push(tombstoneFor(record, request.principal))
+      }
       return Promise.resolve()
     },
     countRebuiltAt(request) {
       return Promise.resolve(countRebuiltRecords(records, request))
     },
     export(request) {
-      const matches = records.filter(record => inScope(record, request.accessContext.scope))
-      return Promise.resolve({ records: matches.map(toRecordView), truncated: false })
+      const { scope } = request.accessContext
+      return Promise.resolve(buildExportResult(
+        records.filter(record => inScope(record, scope)),
+        tombstones.filter(tombstone => inScope(tombstone, scope)),
+      ))
     },
     listPending(request) {
       return Promise.resolve({ records: pendingViews(records, request.accessContext.scope), truncated: false })
@@ -721,17 +847,17 @@ export function createDurableFileMemoryProvider(options: DurableFileMemoryProvid
     return next
   }
 
-  const read = async (): Promise<DurableMemoryRecord[]> => {
+  const read = async (): Promise<{ records: DurableMemoryRecord[]; tombstones: StoredTombstone[] }> => {
     let text: string
     try {
       text = await readFile(path, 'utf8')
     } catch (error) {
       // A backing file that was never written is a first boot, not a failure;
       // any other read failure (permissions, a directory at `path`) is real.
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return []
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return { records: [], tombstones: [] }
       throw error
     }
-    if (text.trim() === '') return []
+    if (text.trim() === '') return { records: [], tombstones: [] }
     let document: DurableMemoryDocument
     try {
       document = JSON.parse(text) as DurableMemoryDocument
@@ -748,11 +874,21 @@ export function createDurableFileMemoryProvider(options: DurableFileMemoryProvid
         'MEMORY_UNSUPPORTED_FORMAT_VERSION',
       )
     }
-    return [...document.records]
+    // `tombstones` is absent from a store nothing was forgotten from, including
+    // every store an earlier build wrote before this slice added the field: an
+    // old document is complete without it, so its absence reads as none.
+    return { records: [...document.records], tombstones: [...document.tombstones ?? []] }
   }
 
-  const write = async (records: readonly DurableMemoryRecord[]): Promise<void> => {
-    const document: DurableMemoryDocument = { version: DURABLE_FILE_MEMORY_FORMAT_VERSION, records }
+  const write = async (records: readonly DurableMemoryRecord[], tombstones: readonly StoredTombstone[]): Promise<void> => {
+    // `tombstones` is written only when there is at least one, so a store
+    // nothing was forgotten from keeps the exact document an earlier build
+    // wrote — the field's absence and an empty list mean the same thing.
+    const document: DurableMemoryDocument = {
+      version: DURABLE_FILE_MEMORY_FORMAT_VERSION,
+      records,
+      ...(tombstones.length > 0 ? { tombstones } : {}),
+    }
     // `0o700` on the directory and `0o600` on the document, because the two
     // stop different things: the directory mode stops a traversal, and the
     // file mode stops anyone who already holds a path to it — a backup pass, a
@@ -785,12 +921,12 @@ export function createDurableFileMemoryProvider(options: DurableFileMemoryProvid
         // A per-record uuid, never an instance-local counter: a second
         // instance over the same directory can never re-mint a used id.
         const id = MemoryRecordId(`durable-file-${randomUUID()}`)
-        const records = await read()
+        const { records, tombstones } = await read()
         records.push({
           id,
           ...recordFieldsFor(request, status),
         })
-        await write(records)
+        await write(records, tombstones)
         return { id }
       })
     },
@@ -798,7 +934,7 @@ export function createDurableFileMemoryProvider(options: DurableFileMemoryProvid
       return enqueue(async () => {
         const needle = request.query.toLowerCase()
         const now = new Date().toISOString()
-        const matches = visible(await read(), request.accessContext.scope)
+        const matches = visible((await read()).records, request.accessContext.scope)
           .filter(record => isDefaultSearchable(record, now, indexing))
           .filter(record => JSON.stringify(record.content).toLowerCase().includes(needle))
         return { records: matches.map(toRecordView), truncated: false }
@@ -806,13 +942,13 @@ export function createDurableFileMemoryProvider(options: DurableFileMemoryProvid
     },
     get(request: MemoryGetRequest): Promise<MemoryRecordView | undefined> {
       return enqueue(async () => {
-        const found = visible(await read(), request.accessContext.scope).find(record => record.id === request.id)
+        const found = visible((await read()).records, request.accessContext.scope).find(record => record.id === request.id)
         return found === undefined ? undefined : toRecordView(found)
       })
     },
     revise(request: MemoryReviseRequest): Promise<void> {
       return enqueue(async () => {
-        const records = await read()
+        const { records, tombstones } = await read()
         const index = records.findIndex(record => record.id === request.id && inScope(record, request.scope))
         const existing = records[index]
         if (existing === undefined) {
@@ -820,47 +956,90 @@ export function createDurableFileMemoryProvider(options: DurableFileMemoryProvid
           throw new MemoryError(`memory record "${request.id}" was never proposed`, 'MEMORY_RECORD_NOT_FOUND')
         }
         records[index] = { ...existing, content: request.content, updatedAt: new Date().toISOString() }
-        await write(records)
+        await write(records, tombstones)
       })
     },
     forget(request: MemoryForgetRequest): Promise<void> {
       return enqueue(async () => {
-        const records = await read()
+        const { records, tombstones } = await read()
         const index = records.findIndex(record => record.id === request.id && inScope(record, request.scope))
-        if (index === -1) return
+        const found = records[index]
+        if (found === undefined) return
         records.splice(index, 1)
-        await write(records)
+        tombstones.push(tombstoneFor(found, request.principal))
+        await write(records, tombstones)
+      })
+    },
+    supersede(request: MemorySupersedeRequest): Promise<void> {
+      return enqueue(async () => {
+        const { records, tombstones } = await read()
+        const winnerIndex = records.findIndex(record => record.id === request.id && inScope(record, request.scope))
+        const loserIndex = records.findIndex(record => record.id === request.supersedes && inScope(record, request.scope))
+        const { winner, loser } = supersedeInto(
+          requireFound(records[winnerIndex], request.id),
+          requireFound(records[loserIndex], request.supersedes),
+        )
+        records[winnerIndex] = winner
+        records[loserIndex] = loser
+        await write(records, tombstones)
+      })
+    },
+    merge(request: MemoryMergeRequest): Promise<void> {
+      return enqueue(async () => {
+        authorizeMerge(request)
+        const { records, tombstones } = await read()
+        const intoIndex = records.findIndex(record => record.id === request.into.id && inScope(record, request.into.scope))
+        const fromIndex = records.findIndex(record => record.id === request.from.id && inScope(record, request.from.scope))
+        const { winner, loser } = supersedeInto(
+          requireFound(records[intoIndex], request.into.id),
+          requireFound(records[fromIndex], request.from.id),
+        )
+        records[intoIndex] = winner
+        records[fromIndex] = loser
+        await write(records, tombstones)
+      })
+    },
+    erase(request: MemoryEraseRequest): Promise<void> {
+      return enqueue(async () => {
+        const { records, tombstones } = await read()
+        const kept: DurableMemoryRecord[] = []
+        for (const record of records) {
+          if (matchesErasure(record, request)) tombstones.push(tombstoneFor(record, request.principal))
+          else kept.push(record)
+        }
+        await write(kept, tombstones)
       })
     },
     countRebuiltAt(request: MemoryRebuiltCountRequest): Promise<number> {
-      return enqueue(async () => countRebuiltRecords(await read(), request))
+      return enqueue(async () => countRebuiltRecords((await read()).records, request))
     },
     export(request: MemoryExportRequest): Promise<MemoryExportResult> {
-      return enqueue(async () => ({
-        records: visible(await read(), request.accessContext.scope).map(toRecordView),
-        truncated: false,
-      }))
+      return enqueue(async () => {
+        const { records, tombstones } = await read()
+        const { scope } = request.accessContext
+        return buildExportResult(visible(records, scope), tombstones.filter(tombstone => inScope(tombstone, scope)))
+      })
     },
     listPending(request: MemoryListPendingRequest): Promise<MemoryListPendingResult> {
       return enqueue(async () => ({
-        records: pendingViews(await read(), request.accessContext.scope),
+        records: pendingViews((await read()).records, request.accessContext.scope),
         truncated: false,
       }))
     },
     approve(request: MemoryReviewRequest): Promise<void> {
       return enqueue(async () => {
-        const records = await read()
+        const { records, tombstones } = await read()
         const index = records.findIndex(record => record.id === request.id && inScope(record, request.scope))
         records[index] = reviewTransition(records[index], request.id, 'active')
-        await write(records)
+        await write(records, tombstones)
       })
     },
     reject(request: MemoryReviewRequest): Promise<void> {
       return enqueue(async () => {
-        const records = await read()
+        const { records, tombstones } = await read()
         const index = records.findIndex(record => record.id === request.id && inScope(record, request.scope))
         records[index] = reviewTransition(records[index], request.id, 'rejected')
-        await write(records)
+        await write(records, tombstones)
       })
     },
   }
@@ -870,11 +1049,16 @@ export function createDurableFileMemoryProvider(options: DurableFileMemoryProvid
 const DURABLE_FILE_MEMORY_FILENAME = 'memory.json'
 
 /** The on-disk format version {@link createDurableFileMemoryProvider} reads and writes. */
-// Bumped to 2 when stored records gained `provenance` and `confidence`. A
-// version-1 document describes records whose origin this build cannot know, and
-// the reader refuses it by name rather than reading them as if their origin were
-// simply absent — the pre-release stance is that a backend rejects an old
-// on-disk format (AGENTS.md), not that it guesses at one.
+// Bumped to 2 when stored records gained `provenance` and `confidence`, and to 3
+// when they gained `createdAt`, `validFrom`, `validUntil`, `status` and
+// `relations`. A document at an older version describes records this build
+// cannot read without inventing those fields, so the reader refuses it by name
+// rather than reading them as if their values were simply absent — the
+// pre-release stance is that a backend rejects an old on-disk format (AGENTS.md),
+// not that it guesses at one. The third slice's `tombstones` did NOT bump the
+// version: it is a new top-level list, not a per-record field, so a version-3
+// document that predates it is complete — it simply forgot nothing — and reads
+// back with no tombstones rather than with a fabricated value.
 const DURABLE_FILE_MEMORY_FORMAT_VERSION = 3
 
 /**
@@ -1052,10 +1236,23 @@ type DurableMemoryRecord = ScopedMemoryRecord
 interface DurableMemoryDocument {
   readonly version: number
   readonly records: readonly DurableMemoryRecord[]
+  /**
+   * The forgotten records' tombstones. Absent when nothing has been forgotten,
+   * so a store an earlier build wrote — and one this build never forgot from —
+   * carries no `tombstones` field; a reader treats its absence as none.
+   */
+  readonly tombstones?: readonly StoredTombstone[]
 }
 
-/** Whether a read or write confined to `scope` may see `record` (`must[3]`). */
-function inScope(record: ScopedMemoryRecord, scope: MemoryScope): boolean {
+/**
+ * Whether a read or write confined to `scope` may see `item` (`must[3]`).
+ *
+ * Takes anything carrying a `scope` — a stored record or a tombstone — so the
+ * same boundary rule applies to both: an export lists a forgotten record's
+ * tombstone under exactly the scopes that could have seen the record.
+ */
+function inScope(item: { readonly scope: MemoryScope }, scope: MemoryScope): boolean {
+  const record = item
   if (record.scope.tenantId !== scope.tenantId) return false
   // Matched on IDENTITY, never on path: a directory replaced in place is a
   // different directory, and a reader in it must not inherit what the one it
@@ -1070,6 +1267,104 @@ function inScope(record: ScopedMemoryRecord, scope: MemoryScope): boolean {
 /** Strip the stored scope, leaving exactly the reader-visible projection. */
 function toRecordView(record: ScopedMemoryRecord): MemoryRecordView {
   return { id: record.id, principal: record.principal, content: record.content, updatedAt: record.updatedAt }
+}
+
+/**
+ * One forgotten record's tombstone, as a provider stores it: the reader-visible
+ * {@link MemoryTombstoneView} plus the scope the record lived in, so an export
+ * lists it under exactly the scopes that could have seen the record.
+ */
+interface StoredTombstone extends MemoryTombstoneView {
+  readonly scope: MemoryScope
+}
+
+/** The tombstone a `forget`/`erase` leaves for `record`, minted now by `principal`. */
+function tombstoneFor(record: ScopedMemoryRecord, principal: Principal): StoredTombstone {
+  return { id: record.id, forgottenAt: new Date().toISOString(), forgottenBy: principal, scope: record.scope }
+}
+
+/** The reader-visible tombstone — the id, when it was forgotten, and who forgot it, never the content. */
+function toTombstoneView(tombstone: StoredTombstone): MemoryTombstoneView {
+  return { id: tombstone.id, forgottenAt: tombstone.forgottenAt, forgottenBy: tombstone.forgottenBy }
+}
+
+/** The export projection: the reader view plus the source and conflict status a bulk read carries (acceptance[2]). */
+function toExportedRecord(record: ScopedMemoryRecord): MemoryExportedRecord {
+  return { ...toRecordView(record), provenance: record.provenance, status: record.status, relations: record.relations }
+}
+
+/**
+ * Build one export result from the records and tombstones a scope may see.
+ * `tombstones` is present only when there is at least one, so an export of a
+ * store nothing was forgotten from is exactly `{ records, truncated }`.
+ * @param records - the in-scope records.
+ * @param tombstones - the in-scope tombstones.
+ * @returns the export result.
+ */
+function buildExportResult(records: readonly ScopedMemoryRecord[], tombstones: readonly StoredTombstone[]): MemoryExportResult {
+  const views = tombstones.map(toTombstoneView)
+  return { records: records.map(toExportedRecord), truncated: false, ...(views.length > 0 ? { tombstones: views } : {}) }
+}
+
+/**
+ * The in-scope record `id` names, or the {@link MemoryError} a supersede or
+ * merge raises for a missing one — an out-of-scope id is indistinguishable
+ * from one never proposed.
+ * @param record - the in-scope record the id names, or `undefined`.
+ * @param id - the id the caller named, for the error text.
+ * @returns the record.
+ */
+function requireFound(record: ScopedMemoryRecord | undefined, id: MemoryRecordId): ScopedMemoryRecord {
+  if (record === undefined) {
+    throw new MemoryError(`memory record "${id}" was never proposed`, 'MEMORY_RECORD_NOT_FOUND')
+  }
+  return record
+}
+
+/**
+ * Record that `winner` supersedes `loser` WITHOUT overwriting either (must[1]),
+ * for the stored projection: `winner` gains a `supersedes` relation to `loser`
+ * and `loser` is marked `superseded`. Mirrors `record.ts`'s `recordConflict`,
+ * which is typed for P6-02's canonical `MemoryRecord` rather than this
+ * provisional stored shape; both encode the same no-overwrite rule.
+ * @param winner - the record that supersedes the other.
+ * @param loser - the record it supersedes.
+ * @returns both records, updated; neither input is mutated.
+ */
+function supersedeInto(
+  winner: ScopedMemoryRecord,
+  loser: ScopedMemoryRecord,
+): { readonly winner: ScopedMemoryRecord; readonly loser: ScopedMemoryRecord } {
+  const relation: MemoryRelation = { kind: 'supersedes', target: loser.id }
+  return {
+    winner: { ...winner, relations: [...winner.relations, relation] },
+    loser: { ...loser, status: 'superseded' },
+  }
+}
+
+/**
+ * Authorize a merge, or throw `MEMORY_MERGE_NOT_AUTHORIZED` (P6-02
+ * acceptance[2]) before either record changes. A same-scope merge is always
+ * permitted; a cross-scope one needs an authorization naming both scopes.
+ * @param request - the merge whose scope pair and authorization to judge.
+ */
+function authorizeMerge(request: MemoryMergeRequest): void {
+  const decision = decideCrossScopeMerge(request.from.scope, request.into.scope, request.authorization)
+  if (!decision.permitted) {
+    throw new MemoryError(`memory merge across scopes is not authorized: ${decision.reason}`, 'MEMORY_MERGE_NOT_AUTHORIZED')
+  }
+}
+
+/**
+ * Whether `erase` reaches `record`: same tenant, same subject, in any session
+ * or workspace of that tenant. Right-to-erasure is bounded to the tenant the
+ * requester names — a subject in another tenant, or a different subject, stays.
+ * @param record - a stored record.
+ * @param request - the erasure's tenant and subject.
+ * @returns whether the erasure forgets this record.
+ */
+function matchesErasure(record: ScopedMemoryRecord, request: MemoryEraseRequest): boolean {
+  return record.scope.tenantId === request.tenantId && record.subject === request.subject
 }
 
 export default MemoryRuntime
