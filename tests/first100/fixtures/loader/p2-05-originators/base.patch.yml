@@ -1,0 +1,23 @@
+# Test-only overlay over the SHIPPED headless profile for P2-05's originator
+# cases (acceptance[0]). It mounts no policy, subagent or workflow row: the base
+# layer's `policy-engine`, `tool-subagent`, `subagent-spawn-in-process`,
+# `workflow-worker-thread` and `tool-workflow` rows are the ones observed. It
+# turns off the rows that would run a task of their own and keeps the session
+# log uncompressed; the driver registers the keyless scripted model and creates
+# the root agent after boot, as the shipped launchers do.
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
