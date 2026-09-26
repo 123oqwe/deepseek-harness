@@ -8162,7 +8162,7 @@ None of the fourteen puts an action in flight and raises a stop.
 
 ### BLOCKED-303 — P0-04 was accepted with every acceptance clause only partly evidenced; the signature is withdrawn
 
-**Status:** OPEN (2026-09-23). Owner lane B (implementation), lane A (preFlight). Ruled by the delegate (first100-delegate-1a) on two blind, independent reads that agree; the withdrawal moves the ledger row in the same commit that opens this entry. Unlike BLOCKED-302 the product's checker is real and runs on the real repository; what is missing is evidence for parts of each clause, and a record that misstates one.
+**Status:** CLOSED 2026-09-26 (closure note at the end of this entry); opened 2026-09-23. Owner lane B (implementation), lane A (preFlight). Ruled by the delegate (first100-delegate-1a) on two blind, independent reads that agree; the withdrawal moves the ledger row in the same commit that opens this entry. Unlike BLOCKED-302 the product's checker is real and runs on the real repository; what is missing is evidence for parts of each clause, and a record that misstates one.
 
 **What was measured (at `c72526c115`).**
 - acceptance[2] — "completes within 10 seconds and gives the shortest cycle path". No case times the check itself: the only timing assertion (`tests/architecture/layer-deps.spec.ts:333-340`) times `findShortestCycle` on a synthetic 14-package complete graph; the real-repository scans run under a 30 000 ms case timeout; `scripts/architecture/check-layer-deps.mjs` `main()` measures elapsed time and prints it but exits on violations only; the "shortest cycle: …" output is asserted by no case and no P0-04 case runs the CLI. The coverage record for this index still describes a "300-package scan" — the citation item 12 of this queue already found does not exist.
@@ -8178,6 +8178,23 @@ None of the fourteen puts an action in flight and raises a stop.
 **Owner.** lane B, after a lane A preFlight.
 
 *Addendum 2026-09-24 (lane A, A-361).* The closing condition's coverage item is done: the record for index 2 no longer describes a 300-package scan, and the B-548 addendum's statement that the C citation covers the real workspace is corrected forward in the same record. Items [0]–[2] still wait for P0-04 U v2 (command-freeze [339]) to be observed green on a full run, and [2]'s real-repository run is read from the registry gate set step's log.
+
+**Closure note (2026-09-25, lane A draft for the delegate, A-427).** Each clause is cited by live frozen cases whose subject it is, green on the candidate `4e932e474b` in the batch 8′ full run 36088846692. Lane A re-read all 32 rounds P0-04 U [339] records through lane B's label map (`artifacts/laneA/a-427-readings.cjs`), and each round's failed set equals the recorded one.
+- **[0]** The checker scans exactly the workspace `pnpm-workspace.yaml` declares ([339] E1–E3; M-a, run 35965112984, reddens them). The three vendored Cordis peer-dependency cycles are admitted only through their exemption records (C1). An exempted short cycle beside an unexempted longer one fails (C2; M-c, run 35965153467). A cycle through a vendored package's dependency on a classified one is reported (U.1 [378]).
+- **[1]** Product-path cases refuse, for a kernel package:
+  - a dependency on a providers package (K1; M-l, run 35965330430);
+  - an external package through every channel (X1–X6; M-f, M-g, M-h);
+  - every Cordis form other than the three admitted to `@deepseek-ai/dsh-trust-kernel` (R1–R16 and U.1's class-Context row; M-d, M-e, M-q, M-z, M-c′);
+  - an allowlist entry that would suppress a Cordis, UI or provider violation (L1–L3; M-i, M-j, M-k).
+  The Cordis ruling is recorded: C19 narrowed acceptance[1] to the `Context` binding, its peer declaration and the `declare module` augmentation (`decisions-approved.md` C19; `extract-registry.mjs:488-495`).
+- **[2]**
+  - The whole check on the real repository under its 10-second default is a frozen case, P0-04 U.2, `tests/first100/fixtures/P0-04.real-repo-budget.spec.ts`. It is green at `27a813ffa0` (run 36091406478) and in the batch 9r full run 36205389837 at `c732e7c073`, which discovered its 2 cases and passed both; every path in its files and argv is byte-identical at the two commits. M-slow (run 36091421221), which makes the checker exceed the budget, reddens exactly the budget case. The default is pinned by U.1 (M-b, run 36011296138).
+  - The printed shortest-cycle path is asserted by T12 (M-o, run 35965387074).
+  - The coverage record for index 2 was corrected (A-361), and cites [378] and U.2.
+  - Measured on the real repository in the registry gate set step: 2.10 s in run 36088846692; 1.61 s in run 36205389837 (342 workspace packages, 2244 dependency edges).
+- **Findings:** the 134 upward edges the check reports are observations, not failures, and do not block (the delegate's ruling on A-422). The two statements in `docs/architecture/layering.md` (:26 against :42/:55) go to a follow-up.
+- **Condition.** The delegate's PASS (gate3 log 2026-09-26T01:38:25Z) is recorded with `--record-signoff`, and P0-04 accepted, after batch 10's full run records U.2 [403]'s cell: a cell can only be taken from a run whose candidate already holds its freeze (the delegate, gate3 log 2026-09-26T01:43Z). Until then P0-04's row in ACCEPTANCE LOCKS stands.
+- **Not covered:** [339]'s thirty mutations measured the checker as it stood at `9dfb1f7c4b`. It has changed since (the blind-review fix `e39a58564d`), and they were not re-run. U.1's and U.2's mutations measured today's checker byte for byte.
 
 ### BLOCKED-304 — P0-07 was accepted without a sign-off and without evidence for two of its three clauses; the acceptance is withdrawn
 
