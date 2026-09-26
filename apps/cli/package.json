@@ -115,7 +115,11 @@
     "@deepseek-ai/dsh-lease-sqlite": "workspace:^",
     "@deepseek-ai/dsh-atomic-write": "workspace:^",
     "@deepseek-ai/dsh-tool-present": "workspace:^",
-    "@deepseek-ai/dsh-http-proxy": "workspace:^"
+    "@deepseek-ai/dsh-http-proxy": "workspace:^",
+    "@deepseek-ai/dsh-host-user-id": "workspace:^",
+    "@deepseek-ai/dsh-memory": "workspace:^",
+    "@deepseek-ai/dsh-principal": "workspace:^",
+    "@deepseek-ai/dsh-workspace": "workspace:^"
   },
   "devDependencies": {
     "@agentclientprotocol/sdk": "1.4.0",

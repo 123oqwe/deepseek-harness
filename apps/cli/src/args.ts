@@ -59,8 +59,21 @@ interface PluginVerifyInvocation {
   fixture: string
 }
 
+/**
+ * Review the memory proposals held for a person: boot the profile and list,
+ * approve, or reject them as the host user (P6-03 second slice).
+ */
+interface MemoryReviewInvocation {
+  mode: 'memory'
+  profile: string
+  /** Extra patch-list overlays applied after the profile layer, in argv order. */
+  patches: string[]
+  /** The verb and its argument: `pending`, `approve <id>`, or `reject <id>`. */
+  args: string[]
+}
+
 /** The resolved `dsh` invocation. Help, version, and errors exit inside {@link parseDshArgs}. */
-export type DshInvocation = ProfileInvocation | DumpConfigInvocation | PluginInvocation | PluginVerifyInvocation
+export type DshInvocation = ProfileInvocation | DumpConfigInvocation | PluginInvocation | PluginVerifyInvocation | MemoryReviewInvocation
 
 /** Launcher flags shared by the default command and the `web` alias. */
 interface BootOptions {
@@ -221,6 +234,21 @@ export function parseDshArgs(argv: readonly string[], version: string): DshInvoc
     .action((fixture: string) => {
       rejectParentOptions('plugin-verify')
       resolved = { mode: 'plugin-verify', fixture }
+    })
+
+  const memory = program.command('memory').description('review the memory proposals held for a person in this workspace, as the host user: pending | approve <id> | reject <id>')
+  memory
+    .requiredOption('--profile <name>', 'the profile to boot for the review')
+    .option('--patch <path>', 'extra patch-list overlay applied after the profile layer (repeatable)', collect)
+    .enablePositionalOptions()
+    .argument('[args...]', 'pending | approve <id> | reject <id>')
+    .action((args: string[], options: { profile: string; patch?: string[] }) => {
+      rejectParentOptions('memory')
+      if (options.profile === '') program.error('error: --profile needs a name')
+      rejectElectronProfile(memory, options.profile)
+      const patches = options.patch ?? []
+      if (patches.includes('')) program.error('error: --patch needs a path')
+      resolved = { mode: 'memory', profile: options.profile, patches, args }
     })
 
   try {
