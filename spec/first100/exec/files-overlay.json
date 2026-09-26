@@ -3174,7 +3174,8 @@
       "path": "packages/core/tools/src/external-effect.ts",
       "kind": "source",
       "stages": [
-        "U"
+        "U",
+        "U.2"
       ],
       "reason": "`readExecutionWorldFact`, beside `readPolicyContextFacts`, so both dispatch paths answer the same question the same way; and the one place `action/world-bound` is appended, once per session binding. An unmounted or all-refusing registry reads as the fail-closed `absent`."
     },
@@ -3198,11 +3199,21 @@
     },
     {
       "epic": "P3-01",
+      "path": "packages/execution/execution-world/src/fenced-provider.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "BLOCKED-316 condition 3: `isFencedWorldProvider` is the test register() applies before it admits a provider under the reserved id fenced (B-666, cd57a7e8f2). U.2's register-fenced case is refused through it, and its sensitivity round M-666-3 changes it."
+    },
+    {
+      "epic": "P3-01",
       "path": "packages/execution/execution-world/src/local-provider.ts",
       "kind": "source",
       "stages": [
         "P",
-        "F"
+        "F",
+        "U.2"
       ],
       "reason": "The local provider itself. The plan's P stage named `execution-world/src/index.ts` plus three `sandbox/` files, on the expectation that the compat adapter would be an edit inside the sandbox package; it is a separate module instead, because the provider refuses eight of the nine WorldSpec dimensions and those refusals are statements about the sandbox rather than changes to it — no `sandbox/` file needed to change. acceptance[2]'s unforgeable handle (module-private symbol plus a WeakMap keyed on object identity) is decided here."
     },
@@ -3220,7 +3231,8 @@
       "path": "packages/execution/execution-world/src/plugin.ts",
       "kind": "source",
       "stages": [
-        "U"
+        "U",
+        "U.2"
       ],
       "reason": "The mounted registry: providers register into it as effects, and `bindingFor` answers which world a session's dispatches run in. The plan's U stage named `agent-loop/src/runtime-context.ts` and `core/tools/src/types.ts` only, because it expected the handle to travel as a model-visible context contribution; the registry is what keeps `local` out of the dispatch path (must[2]), and a dispatch path that named a provider would be that hardcoding one layer out."
     },
@@ -3286,7 +3298,8 @@
       "path": "packages/policy/policy-engine-cedar/src/index.ts",
       "kind": "source",
       "stages": [
-        "U"
+        "U",
+        "U.2"
       ],
       "reason": "Comment only: the translation already passed `request.world.kind` through and did NOT change, which is what makes the frozen Cedar case evidence — a byte-identical rule now distinguishes `bound` from `absent` because the FACT gained a value, not because the translation learned something."
     },
@@ -3309,10 +3322,109 @@
     },
     {
       "epic": "P3-01",
+      "path": "packages/test-support/loader-smoke/src/agent-turn.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "Test support, not product code: `runFixtureTurn` runs the turns U.2's world-identity driver drives on the shipped headless profile, and the cases read what the driver reports from them."
+    },
+    {
+      "epic": "P3-01",
+      "path": "packages/test-support/loader-smoke/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "Test support, not product code: `runLoaderSmoke` boots the shipped headless profile around U.2's world-identity driver and returns the report the cases read."
+    },
+    {
+      "epic": "P3-01",
+      "path": "packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P3-01",
+      "path": "packages/test-support/loader-smoke/tests/fixtures/production-profile.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P3-01",
+      "path": "tests/first100/fixtures/loader/p3-01-world-identity/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P3-01",
+      "path": "tests/first100/fixtures/loader/p3-01-world-identity/forbid-absent-control.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P3-01",
+      "path": "tests/first100/fixtures/loader/p3-01-world-identity/forbid-absent.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P3-01",
+      "path": "tests/first100/fixtures/loader/p3-01-world-identity/forging.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P3-01",
+      "path": "tests/first100/fixtures/loader/p3-01-world-identity/honest.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P3-01",
+      "path": "tests/first100/fixtures/loader/p3-01-world-identity/network-none.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P3-01",
+      "path": "tests/first100/fixtures/loader/p3-01-world-identity/shared.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P3-01",
+      "path": "tests/first100/fixtures/loader/p3-01-world-identity/world-provider.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P3-01",
       "path": "tests/first100/fixtures/loader/p3-01-world-swap/base.patch.yml",
       "kind": "test",
       "stages": [
-        "U.1"
+        "U.1",
+        "U.2"
       ]
     },
     {
@@ -3336,7 +3448,8 @@
       "path": "tests/first100/fixtures/loader/p3-01-world-swap/mock-llm.ts",
       "kind": "test",
       "stages": [
-        "U.1"
+        "U.1",
+        "U.2"
       ]
     },
     {
@@ -3344,7 +3457,16 @@
       "path": "tests/first100/fixtures/loader/p3-01-world-swap/shared.ts",
       "kind": "test",
       "stages": [
-        "U.1"
+        "U.1",
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P3-01",
+      "path": "tests/first100/fixtures/P3-01.world-identity.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
       ]
     },
     {

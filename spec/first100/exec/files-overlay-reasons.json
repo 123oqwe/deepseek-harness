@@ -248,6 +248,9 @@
     "P5-10 packages/test-support/loader-smoke/src/index.ts": "Test support, not product code: `runLoaderSmoke` boots the shipped headless profile around U.2's restart driver and returns the report the cases read.",
     "P2-02 packages/core/tools/src/ptc.ts": "The code-mode dispatch path's call site: a sub-call of a `run_code` program asks capabilityRefusal before it runs (ptc.ts:723). That is where U.1's expired code-mode call is refused before it reaches the operator, and where U.2's condition 4 is re-issued a token or refused with a reason naming the expiry (BLOCKED-330, BLOCKED-331).",
     "P2-02 packages/test-support/loader-smoke/src/agent-turn.ts": "Test support, not product code: `runFixtureTurn` runs the turns U.1 and U.2's drivers drive on the shipped headless profile, and the cases read what the drivers report from them.",
-    "P2-02 packages/test-support/loader-smoke/src/index.ts": "Test support, not product code: `runLoaderSmoke` boots the shipped headless profile around U.1 and U.2's drivers and returns the reports the cases read."
+    "P2-02 packages/test-support/loader-smoke/src/index.ts": "Test support, not product code: `runLoaderSmoke` boots the shipped headless profile around U.1 and U.2's drivers and returns the reports the cases read.",
+    "P3-01 packages/execution/execution-world/src/fenced-provider.ts": "BLOCKED-316 condition 3: `isFencedWorldProvider` is the test register() applies before it admits a provider under the reserved id fenced (B-666, cd57a7e8f2). U.2's register-fenced case is refused through it, and its sensitivity round M-666-3 changes it.",
+    "P3-01 packages/test-support/loader-smoke/src/agent-turn.ts": "Test support, not product code: `runFixtureTurn` runs the turns U.2's world-identity driver drives on the shipped headless profile, and the cases read what the driver reports from them.",
+    "P3-01 packages/test-support/loader-smoke/src/index.ts": "Test support, not product code: `runLoaderSmoke` boots the shipped headless profile around U.2's world-identity driver and returns the report the cases read."
   }
 }
