@@ -137,20 +137,6 @@ export interface MemoryRuntimeConfig {
 }
 
 /**
- * The memory access service. Registered as `ctx.memory` (one instance per
- * context).
- *
- * Selection semantics (resolved at execution time, never order-dependent):
- * - A configured id that is registered and `available()` → that provider.
- * - A configured id not registered → `MEMORY_PROVIDER_CONFIGURED_MISSING`.
- * - A configured id registered but unavailable →
- *   `MEMORY_PROVIDER_CONFIGURED_UNAVAILABLE`.
- * - No id configured, exactly one registered usable provider → that provider.
- * - No id configured, multiple usable providers → `MEMORY_PROVIDER_AMBIGUOUS`.
- * - No id configured, no usable provider → `MEMORY_PROVIDER_UNAVAILABLE`.
- */
-
-/**
  * The optional proposal-policy provider `propose` consults (P6-03,
  * `@deepseek-ai/dsh-memory-policy`). Read through `ctx.get('memoryProposalPolicy')`
  * so a deployment that mounts no policy keeps the pre-P6-03 behaviour. Declared
@@ -164,6 +150,19 @@ interface MemoryProposalPolicyConsumer {
   }
 }
 
+/**
+ * The memory access service. Registered as `ctx.memory` (one instance per
+ * context).
+ *
+ * Selection semantics (resolved at execution time, never order-dependent):
+ * - A configured id that is registered and `available()` → that provider.
+ * - A configured id not registered → `MEMORY_PROVIDER_CONFIGURED_MISSING`.
+ * - A configured id registered but unavailable →
+ *   `MEMORY_PROVIDER_CONFIGURED_UNAVAILABLE`.
+ * - No id configured, exactly one registered usable provider → that provider.
+ * - No id configured, multiple usable providers → `MEMORY_PROVIDER_AMBIGUOUS`.
+ * - No id configured, no usable provider → `MEMORY_PROVIDER_UNAVAILABLE`.
+ */
 export class MemoryRuntime extends Service {
   /** Provider selection config. `$DSH_MEMORY_PROVIDER` is equivalent to `providerId`, not a hidden priority chain. */
   static Config: z<MemoryRuntimeConfig> = z.object({
