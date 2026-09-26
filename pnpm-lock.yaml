@@ -12604,6 +12604,9 @@ importers:
       '@deepseek-ai/cordis-plugin-loader':
         specifier: workspace:^
         version: link:../../vendor/loader
+      '@deepseek-ai/cordis-plugin-logger-console':
+        specifier: workspace:^
+        version: link:../../vendor/logger-console
       '@deepseek-ai/cordis-plugin-timer':
         specifier: workspace:^
         version: link:../../vendor/timer
@@ -12823,6 +12826,9 @@ importers:
       '@deepseek-ai/dsh-llm-retry':
         specifier: workspace:^
         version: link:../../packages/llm/llm-retry
+      '@deepseek-ai/dsh-logger-stderr':
+        specifier: workspace:^
+        version: link:../../packages/runtime-diagnostics/logger-stderr
       '@deepseek-ai/dsh-mcp-client':
         specifier: workspace:^
         version: link:../../packages/mcp/mcp-client
