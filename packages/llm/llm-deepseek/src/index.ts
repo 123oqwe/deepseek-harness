@@ -525,11 +525,6 @@ export function apply(ctx: Context, config: Config): void {
     settingsCtx.settings.installSection(ctx, NS, Config, config, {
       setSource: (source) => {
         current = source
-        // A last good value never outlives its source: carried over, it would
-        // send a settings section's calls to the composition entry's endpoint
-        // and key reference.
-        lastRaw = undefined
-        lastGood = undefined
       },
       onChange: ensureRegistrationFacts,
     })
