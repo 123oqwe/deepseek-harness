@@ -13,7 +13,7 @@
  * `write`, `network`, `process`, `destructive`), so no choice of domain tag
  * earns a lower manifest class than a lower-risk tag would. No risk class
  * yields `process`, which names a mechanism a risk class does not express.
- * @module @deepseek-ai/dsh-risk-taxonomy/side-effect-class
+ * @module @deepseek-ai/dsh-risk-taxonomy/manifest-side-effect
  */
 import type { ManifestSideEffectClass, RiskClass } from './types.ts'
 
