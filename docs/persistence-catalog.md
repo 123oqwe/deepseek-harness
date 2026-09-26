@@ -131,13 +131,13 @@ Source: [`packages/core/tools/src/index.ts:2915`](../packages/core/tools/src/ind
 /**
  * What the risk gate DECIDED for one action, under the preset in force.
  *
- * The manifest's `requiresApproval` is the action's INTRINSIC classification
- * — whether its declared side-effect class demands approval under the
- * strictest policy — and is preset-blind by construction
- * (`action-manifest/src/canonicalize.ts:153`). The gate's answer depends on
- * the preset, so the two legitimately differ, and without this event a log
- * showing `requiresApproval: true` beside an action that was never asked
- * about describes a different run than the one that happened (BLOCKED-159).
+ * The manifest records the same verdict: `judgeActionRisk` takes it once per
+ * action, the manifest's `requiresApproval` is the preset's decision in it,
+ * and the manifest's class follows the risk class through
+ * `@deepseek-ai/dsh-risk-taxonomy`'s table (BLOCKED-315). This event adds
+ * what the manifest cannot say: the preset the verdict was read against,
+ * and what the gate then did, so a log shows whether an action that
+ * required approval was asked about or refused (BLOCKED-159).
  *
  * Recorded here rather than back-filled into the manifest: the manifest is
  * appended BEFORE execution (`appendManifestThenGate`), and re-ordering it

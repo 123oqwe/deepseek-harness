@@ -57,7 +57,7 @@ A deployment's `riskRules` map tags to classes, so it needs to know which tags e
 
 The vocabularies share the spellings `read` and `destructive` with different meanings, and in `action-manifest` `destructive` is additionally the fail-closed default returned when classification fails entirely. Any mapping between them must therefore be total and monotone, or a plugin could choose a mechanism tag to obtain a lower risk band.
 
-`src/manifest-side-effect.ts` declares the one mapping in the risk-to-mechanism direction: `SIDE_EFFECT_CLASS_BY_RISK` gives the class an action manifest records for each risk class, and the risk gate and the manifest both read it (P2-03 acceptance[2]). `read` stays `read`; `local-reversible` and `internal-write` become `write`; `external-communication` becomes `network`; `destructive`, `financial`, `security-sensitive` and `safety-critical` become `destructive`. The table is total and monotone, and no risk class yields `process`, which names a mechanism a risk class does not express. `tests/side-effect-class.spec.ts` covers each class and both properties.
+`src/manifest-side-effect.ts` declares the one mapping in the risk-to-mechanism direction: `SIDE_EFFECT_CLASS_BY_RISK` gives the class an action manifest records for each risk class. The risk gate classifies an action once, and the dispatch paths record that verdict in the manifest through this table, so the manifest and the gate describe one classification (P2-03 acceptance[2]). `read` stays `read`; `local-reversible` and `internal-write` become `write`; `external-communication` becomes `network`; `destructive`, `financial`, `security-sensitive` and `safety-critical` become `destructive`. The table is total and monotone, and no risk class yields `process`, which names a mechanism a risk class does not express. `tests/side-effect-class.spec.ts` covers each class and both properties.
 
 <a id="model-experience"></a>
 ## Model Experience
@@ -74,8 +74,7 @@ Nothing here enters a request, so provider cache reuse is unaffected. What a mod
 - **The mechanism-to-risk mapping is not declared.** Nothing here maps `ActionSideEffectClass` onto a `RiskClass`, so an action carrying only a mechanism tag classifies under the unknown default. Only the risk-to-manifest direction is declared, in `src/manifest-side-effect.ts`.
 - **`hardDenied` is reported, not enforced.** `classify` states that a class is refused outright; no runtime in this package refuses anything, because the enforcement point is a Consumer's. A caller that reads `riskClass` and ignores `hardDenied` is not stopped by anything here.
 - **`confidence` is 1 or 0, not a measurement.** It distinguishes "a rule decided this" from "nothing matched". Any finer grading would need a source of evidence this package does not have.
-- **No deployment configures `riskRules` yet.** Every shipped tool now declares domain tags, but no profile maps a tag to a class, so every real action still classifies by the unknown default. The tags are in place and the mapping is the missing half.
-- **`classify` has no caller on the dispatch path.** `permission-presets` binds the policy and answers `classifyAction` / `requiresApproval`, and the tool dispatch gate that would consult them is the next slice. Until it lands, a classification changes nothing about whether an action runs.
+- **The shipped rules name only the shipped tools' tags.** The base bundle's `permission` row (`packages/bundle/base/cordis.patch.yml`) maps the domain tags shipped tools declare; a tag it does not name, such as a third-party plugin's, falls to the unknown default, `security-sensitive`, until a deployment adds a rule for it.
 
 ### Dev Note
 
