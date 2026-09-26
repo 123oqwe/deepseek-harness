@@ -545,7 +545,7 @@ export class SubagentRuntime extends TypertRemoteService {
         childSessionId,
         content,
         source,
-        AbortSignal.any([signal, cancellation]),
+        signal,
         delivery,
       )
       control.recordApplied(promptEpoch(request.requestId))
