@@ -35,12 +35,15 @@ import { assertSupportedJsonSchema, validateJsonSchemaValue } from './json-schem
 import type { JsonSchemaNode } from './json-schema.ts'
 import { createRunCodeTool, RUN_CODE_NAME } from './ptc.ts'
 import type { CodeSdkLanguage } from './ptc.ts'
+import type { ClosedDecision } from '@deepseek-ai/dsh-policy-engine'
 import {
   appendManifestAndDecide,
   classifyActionRisk,
   decideUnrecordedAction,
   readExecutionWorldFact,
   readPolicyContextFacts,
+  refuseNewAction,
+  refusedDispatchResult,
   refusedPolicyResult,
   refusedUnrecordedCallResult,
 } from './external-effect.ts'
@@ -2037,36 +2040,46 @@ export class ToolRuntime extends Service {
    * appends no manifest either, unlike the agent loop's own call. A call with
    * no agent has no session for its manifest: the enforcement point decides
    * it, and it is refused.
+   *
+   * Then, with or without a kernel, whether this host may still act
+   * (BLOCKED-345; P2-12 must[2], P4-07 must[1]): an emergency stop, or a run
+   * another host took over, refuses the call. It is asked after the manifest
+   * and before the decision is acted on, which is the native path's order, and
+   * an agent with no control channel and no lease is admitted, as there.
    * @param exec - the prepared execution, with its detached arguments, agent and presented token.
    * @returns the refusal, or `undefined` when the call goes on to the token gate.
    */
   private async decideDirectCall(exec: ToolExecution): Promise<ToolExecutionResult | undefined> {
-    if (this.ctx.get('trustKernel') === undefined) return undefined
-    const request: ManifestedDispatchRequest = {
-      callId: exec.callId,
-      name: exec.name,
-      loggedArguments: exec.arguments,
-      origin: 'plugin-rpc',
-      dispatch: 'direct call',
-      pathName: 'the public ToolRuntime.execute seam',
-      receipt: `the tools/result event for call ${exec.callId}`,
-    }
-    try {
-      const agent = exec.agent
-      if (agent === undefined) {
-        decideUnrecordedAction(this.ctx, exec.capabilityToken, request)
-        return refusedUnrecordedCallResult(exec.name)
+    const agent = exec.agent
+    let decision: ClosedDecision | undefined
+    if (this.ctx.get('trustKernel') !== undefined) {
+      const request: ManifestedDispatchRequest = {
+        callId: exec.callId,
+        name: exec.name,
+        loggedArguments: exec.arguments,
+        origin: 'plugin-rpc',
+        dispatch: 'direct call',
+        pathName: 'the public ToolRuntime.execute seam',
+        receipt: `the tools/result event for call ${exec.callId}`,
       }
-      const classified = classifyActionRisk(this.ctx, exec.name, this.get(exec.name, agent)?.riskDomainTags ?? [])
-      const facts = await readPolicyContextFacts(this.ctx, agent, classified)
-      const world = await readExecutionWorldFact(this.ctx, agent)
-      const { decision } = appendManifestAndDecide(this.ctx, agent, exec.capabilityToken, request, facts, world)
-      return decision !== undefined && decision.effect !== 'permit'
-        ? refusedPolicyResult(decision.effect, decision.reason, exec.name)
-        : undefined
-    } catch (error: unknown) {
-      return toolErrorResult(error)
+      try {
+        if (agent === undefined) {
+          decideUnrecordedAction(this.ctx, exec.capabilityToken, request)
+          return refusedUnrecordedCallResult(exec.name)
+        }
+        const classified = classifyActionRisk(this.ctx, exec.name, this.get(exec.name, agent)?.riskDomainTags ?? [])
+        const facts = await readPolicyContextFacts(this.ctx, agent, classified)
+        const world = await readExecutionWorldFact(this.ctx, agent)
+        decision = appendManifestAndDecide(this.ctx, agent, exec.capabilityToken, request, facts, world).decision
+      } catch (error: unknown) {
+        return toolErrorResult(error)
+      }
     }
+    const refusal = agent === undefined ? undefined : refuseNewAction(agent, Date.now())
+    if (refusal !== undefined) return refusedDispatchResult(refusal, exec.name)
+    return decision !== undefined && decision.effect !== 'permit'
+      ? refusedPolicyResult(decision.effect, decision.reason, exec.name)
+      : undefined
   }
 
   private async completeScheduledExecution(prepared: ScheduledToolPreparation): Promise<ToolExecutionResult> {

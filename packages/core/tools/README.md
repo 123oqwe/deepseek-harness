@@ -105,7 +105,7 @@ The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-a
 
 `ctx.tools.guard(guard)` registers a monotonic synchronous guard after the extensible `tools/pre-execute` waterfall: a returned reason denies the call, and no later listener can turn that denial back into permission. The pipeline's events give plugins more control — `tools/pre-execute` decides allow/deny/ask, `tools/execute` wraps dispatch for timeout or retry, `tools/post-execute` inspects or replaces the result, and `tools/result` observes the frozen final outcome.
 
-A call made through `ctx.tools.execute()` directly, a plugin's own or a tool body's nested one, is recorded and decided like the agent loop's own call wherever the Trust Kernel is pinned: its ActionManifest is appended to the calling agent's session, and the policy enforcement point decides it with the token the call presents, before the capability token is checked. A decision other than permit refuses the call; a call with no `agent` is decided and refused, because no session can record its manifest.
+A call made through `ctx.tools.execute()` directly, a plugin's own or a tool body's nested one, is recorded and decided like the agent loop's own call wherever the Trust Kernel is pinned: its ActionManifest is appended to the calling agent's session, and the policy enforcement point decides it with the token the call presents, before the capability token is checked. A decision other than permit refuses the call; a call with no `agent` is decided and refused, because no session can record its manifest. With or without a kernel, an emergency stop or a run another host took over refuses a direct call made on behalf of an agent, as it refuses the agent loop's own call.
 
 ### Host presentation descriptors
 

@@ -105,7 +105,7 @@ ctx.tools.register(defineTool({
 
 `ctx.tools.guard(guard)` 在可扩展的 `tools/pre-execute` waterfall（瀑布式事件）之后注册单调同步守卫：返回的理由会拒绝调用，后续监听器无法把该拒绝重新变为允许。流水线事件给插件更多控制——`tools/pre-execute` 决定允许／拒绝／询问，`tools/execute` 为超时或重试包装分发，`tools/post-execute` 检查或替换结果，`tools/result` 观测冻结的最终结果。
 
-直接经 `ctx.tools.execute()` 发起的调用（插件自己的调用，或工具体内的嵌套调用），只要组合钉了 Trust Kernel，就与 agent loop 自己的调用一样被记录、被决定：它的 ActionManifest 追加到发起调用的 agent 的会话里，策略执行点带着调用出示的令牌作出决定，之后才检查 capability token。决定不是 permit 就拒绝调用；不带 `agent` 的调用会被决定、然后被拒绝，因为没有会话能记录它的 manifest。
+直接经 `ctx.tools.execute()` 发起的调用（插件自己的调用，或工具体内的嵌套调用），只要组合钉了 Trust Kernel，就与 agent loop 自己的调用一样被记录、被决定：它的 ActionManifest 追加到发起调用的 agent 的会话里，策略执行点带着调用出示的令牌作出决定，之后才检查 capability token。决定不是 permit 就拒绝调用；不带 `agent` 的调用会被决定、然后被拒绝，因为没有会话能记录它的 manifest。不论有没有内核，代表 agent 的直接调用都会在紧急停止生效时、或 run 已被另一个宿主接管时被拒绝，与 agent loop 自己的调用相同。
 
 ### Host 展示描述
 
