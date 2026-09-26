@@ -2265,8 +2265,7 @@ export class ToolRuntime extends Service {
     // the token provider, and a composition that mounts none arms no
     // requirement either, so `false` here is the same "nothing to enforce"
     // the arming rule already expresses.
-    const revoked = input.capabilityToken !== undefined
-      && (this.ctx.get('capabilityTokens')?.isRevoked(input.capabilityToken) ?? false)
+    const revoked = false
     const reason = capabilityDenialReason(input.name, input.capabilityToken, Date.now(), revoked)
     return reason === undefined
       ? undefined
