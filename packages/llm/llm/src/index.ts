@@ -1070,7 +1070,7 @@ export class LlmRuntime extends TypertRemoteService {
         },
         async () => {
           const leading = await pullLeadingChunks(iterator)
-          const failure = inBandFailure(leading.answer)
+          const failure = inBandFailure(undefined)
           if (failure !== undefined) throw new InBandFailure(leading, failure)
           return leading
         },
