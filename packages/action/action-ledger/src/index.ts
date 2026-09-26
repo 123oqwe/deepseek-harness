@@ -15,6 +15,7 @@ export type {
   LedgerEntry,
   LedgerEpoch,
   LedgerGeneration,
+  LedgerResolution,
   LedgerScope,
   LedgerState,
   ProviderIdempotency,

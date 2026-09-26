@@ -41,7 +41,7 @@ Taken from each package's own Known Limitations, because a reader comparing this
 
 - **The manifest's `requiresApproval` is recorded, not enforced.** No production code reads the flag to gate anything.
 - **Every native tool call is currently unclassifiable**, so the fail-closed default is the standing case rather than an edge one.
-- **The ledger reserves but does not resolve.** The production caller in the agent loop takes the reservation; the matching resolve is not wired, so `ambiguous` cannot tell "unknowable" from "merely failed".
+- **Only the host user resolves an ambiguous effect.** The production caller in the agent loop takes the reservation; an `ambiguous` entry leaves that state only through the host user's `/resolve-effect`, and the ledger still cannot tell "unknowable" from "merely failed".
 - **No transport carries the idempotency key.** `idempotencyHeader` names the header a real provider would receive; nothing sends it yet.
 
 -----

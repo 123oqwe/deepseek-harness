@@ -17,6 +17,7 @@ kind: "package-reference"
 - [五个状态是权限，不是标签](#the-five-states-are-permissions-not-labels)
 - [检查顺序](#check-order)
 - [只有两边都有围栏时,预留才是排他的](#a-reservation-is-exclusive-only-when-both-sides-are-fenced)
+- [宿主用户消解 ambiguous 的副作用](#the-host-user-resolves-an-ambiguous-effect)
 - [Model Experience](#model-experience)
 - [已知限制与延后事项](#known-limitations-and-deferred-work)
 
@@ -45,6 +46,13 @@ tool result 记录的是 harness 观察到的东西，它记录不了外部世�
 
 只要有一边没有围栏,账本就分不清「活着的对等方」与「同一个 worker 重启」,于是它重新接管这条 `prepared` 记录,保住 at-least-once,而不是把一个谁也无法证明已被放弃的键永久搁死。此时决定里带 `fenced: false`——包括一个围栏完好的调用方去接管一条持有者本身没有代的记录:旧持有者仍然可能发送。`sent`、`confirmed` 与 `ambiguous` 不受影响:这条降级规则只重新接管从未发送过的东西,别的一概不动。
 
+<a id="the-host-user-resolves-an-ambiguous-effect"></a>
+## 宿主用户消解 ambiguous 的副作用
+
+`ambiguous` 会拒绝该键后续的每一次尝试，因为重试可能执行一个也许已经提交过的副作用。这样的记录要离开这个状态，靠的是 `/resolve-effect <idempotencyKey> <confirmed|compensated>`（P4-12 acceptance[1]，BLOCKED-311）。插件在组合了命令注册表的地方注册这条命令；不带参数时，它列出调用者正在等待的记录。
+
+只有宿主用户能消解，而且只能消解自己的记录：发起命令的 agent 必须以 `user` 主体行事，键在这个主体的范围里查找。宿主用户经审批界面被询问，除了批准，任何回答都不改动任何东西。获批的消解，在写下消解记录的同一个事务里，把记录移到 `confirmed` 或 `compensated`；`entry()` 会返回这份消解记录：谁消解的、消解成什么、什么时候。记录永远不会回到 `prepared`；要重做，就是开一个带新键的新动作。`confirmed` 的消解没有 provider 回执，所以这条记录的回执摘要是这份消解记录的摘要。
+
 ## Model Experience
 
 无,因为本包只导出一个预留决策与类型,不注册任何 model 可见的东西。
@@ -55,8 +63,8 @@ tool result 记录的是 harness 观察到的东西，它记录不了外部世�
 
 ## 已知限制与延后事项
 
-- **没有传输。**把 `Idempotency-Key` 传给真实 provider 这件事仍未建成:`idempotencyHeader` 命名了那个头,但没有任何 adapter 发送它,因此 must[2] 的原生透传是一个没有调用者的决策。must[3] 的另一半——查询目标状态以消解歧义——同样缺席,这也是 `ambiguous` 选择拒绝而不是对账的原因。
-- **生产调用者会预留,但还不会消解。**`packages/core/agent-loop/src/tool-calls.ts` 在每次原生工具调用前预留,在工具运行前标记 `sent`,并从结果记录回执摘要或 `ambiguous`。抛错的工具会留下一条 `ambiguous` 记录,它会拒绝该键后续的每一次尝试,而且没有任何东西会清除它——这是刻意的,因为清除它会让重试执行一个可能已经提交过的副作用;但这也意味着,在对账器出现之前,一个失败过的动作会被永久挡住。
+- **没有传输。**把 `Idempotency-Key` 传给真实 provider 这件事仍未建成:`idempotencyHeader` 命名了那个头,但没有任何 adapter 发送它,因此 must[2] 的原生透传是一个没有调用者的决策。must[3] 的另一半——查询目标状态以消解歧义——同样缺席，所以 `ambiguous` 的记录由宿主用户对账，而不是自动对账。
+- **生产调用者负责预留，宿主用户负责消解。**`packages/core/agent-loop/src/tool-calls.ts` 在每次原生工具调用前预留，在工具运行前标记 `sent`，并从结果记录回执摘要或 `ambiguous`。抛错的工具会留下一条 `ambiguous` 记录，它会拒绝该键后续的每一次尝试，直到宿主用户用 `/resolve-effect` 消解它。没有命令注册表或审批界面的组合，无法消解这样的记录。
 - **回执摘要算的是工具自己的内容**,也就是 harness 观察到的东西,而不是 provider 返回的东西。在传输携带真实回执之前,这个摘要证明的是"同一个结果被记录了两次",而不是"外部世界只提交了一次"。
 - **`ambiguous` 分不清"不可知"与"仅仅是失败了"。**派发路径对每一个出错的工具结果都写它,这是 fail-closed 的读法:抛错的工具可能提交了,也可能没有。要区分"请求根本没发出去"与"结果确实不可知",需要本包没有的目标状态查询。
 - **没有 lease 时,must[2] 不成立。**只有 Run Service 会分配 lease 代,所以不挂载它的 profile——`sdk-minimal` 出厂就不带——预留时是 unfenced 的,那里两个并发 worker 可以同时持有一条预留并且都发送。账本把这件事报成决定上的 `fenced: false`,而不是默默承诺一个它给不出的排他性;session 日志里它表现为一条没有 `leaseEpoch` 的 `action/manifest-appended` 事件。要让这些 profile 也拿到这条保证,需要它们没有的代来源。
@@ -69,6 +77,6 @@ tool result 记录的是 harness 观察到的东西，它记录不了外部世�
 
 本开发备注是给维护者的工作上下文：未决问题与尚未定下的方向。它明确不具权威性——已交付的行为与边界写在上面各节和包代码里。
 
-账本本身该不该拥有对账循环，还是只记录「欠一次对账」，尚未决定。崩溃演练是直接写入 `ambiguous` 来驱动的，这足以证明那条拒绝成立，但对「谁来解决它」什么也没说。
+账本是否还该在 provider 支持时查询目标状态、自动对账，尚未决定；目前每条 `ambiguous` 记录都由宿主用户经 `/resolve-effect` 消解。
 
 </details>

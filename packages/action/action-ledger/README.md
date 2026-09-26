@@ -17,6 +17,7 @@ English | [中文](README.zh.md)
 - [The five states are permissions, not labels](#the-five-states-are-permissions-not-labels)
 - [Check order](#check-order)
 - [A reservation is exclusive only when both sides are fenced](#a-reservation-is-exclusive-only-when-both-sides-are-fenced)
+- [The host user resolves an ambiguous effect](#the-host-user-resolves-an-ambiguous-effect)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 
@@ -44,6 +45,12 @@ With generations on both sides, a `prepared` entry may be taken over by a HIGHER
 
 With either side unfenced the ledger cannot tell a live peer from the same worker restarting, so it re-takes the `prepared` entry and keeps at-least-once instead of stranding a key nobody can prove abandoned. The decision then carries `fenced: false`, including when a well-fenced caller takes over an entry whose own holder had no generation: the old holder can still send. `sent`, `confirmed` and `ambiguous` entries are unaffected — the degraded rule re-takes what was never sent and nothing else.
 
+## The host user resolves an ambiguous effect
+
+`ambiguous` refuses every later attempt at its key, because a retry could perform an effect that may already have committed. `/resolve-effect <idempotencyKey> <confirmed|compensated>` is how such an entry leaves that state (P4-12 acceptance[1], BLOCKED-311). The plugin registers the command where a command registry is composed; given no arguments, it lists the caller's entries that are waiting.
+
+Only the host user resolves, and only their own entries: the invoking agent must act as a `user` principal, and the key is looked up in that principal's scope. The host user is asked through the approval surface, and anything but an approval changes nothing. An approved resolve moves the entry to `confirmed` or `compensated` in the transaction that records the resolution, which `entry()` returns: who resolved it, to what, and when. The entry never returns to `prepared`; doing the work again is a new action with a new key. A `confirmed` resolve has no provider receipt, so the entry's receipt digest is the digest of the resolution.
+
 ## Model Experience
 
 None, as this package exports a reservation decision and types only and registers nothing model-facing.
@@ -54,8 +61,8 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 ## Known Limitations and Deferred Work
 
-- **No transport.** Passing `Idempotency-Key` to a real provider is still unbuilt: `idempotencyHeader` names the header and no adapter sends it, so must[2]'s native pass-through is a decision with no caller. must[3]'s other half — querying target state to resolve an ambiguity — is likewise absent, which is why `ambiguous` refuses rather than reconciles.
-- **The production caller reserves; it does not yet resolve.** `packages/core/agent-loop/src/tool-calls.ts` reserves before every native tool call, marks it `sent` before the tool runs, and records a receipt digest or `ambiguous` from the result. A tool that throws leaves an `ambiguous` entry that refuses every later attempt at that key, and nothing clears it — deliberate, since clearing it would let a retry perform an effect that may already have committed, but it means a failed action is permanently blocked until a reconciler exists.
+- **No transport.** Passing `Idempotency-Key` to a real provider is still unbuilt: `idempotencyHeader` names the header and no adapter sends it, so must[2]'s native pass-through is a decision with no caller. must[3]'s other half — querying target state to resolve an ambiguity — is likewise absent, so an `ambiguous` entry is reconciled by the host user, not automatically.
+- **The production caller reserves; the host user resolves.** `packages/core/agent-loop/src/tool-calls.ts` reserves before every native tool call, marks it `sent` before the tool runs, and records a receipt digest or `ambiguous` from the result. A tool that throws leaves an `ambiguous` entry that refuses every later attempt at that key until the host user resolves it with `/resolve-effect`. A composition without a command registry or an approval surface cannot resolve one.
 - **The receipt digest is over the tool's own content**, which is what the harness observed rather than what the provider returned. Until a transport carries a real receipt, the digest proves the same outcome was recorded twice, not that the outside world committed once.
 - **`ambiguous` cannot tell unknowable from merely failed.** The dispatch path writes it for every errored tool result, which is the fail-closed reading: a tool that threw may or may not have committed. Distinguishing a request that never left from one whose outcome is genuinely unknown needs target-state queries this package does not have.
 - **Without a lease, must[2] does not hold.** Only the Run Service assigns a lease generation, so a profile that does not mount it — `sdk-minimal` ships without it — reserves unfenced, and two concurrent workers there can both hold one reservation and both send. The ledger reports that as `fenced: false` on the decision rather than silently promising exclusivity, and the session log records it as an `action/manifest-appended` event with no `leaseEpoch`; making the guarantee hold for those profiles needs a generation source they do not have.
@@ -68,6 +75,6 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 This Dev Note is working context for maintainers: open questions and undecided directions. It is explicitly non-authoritative — shipped behavior and limits live in the sections above and in the package code.
 
-Whether the ledger should own the reconciliation loop, or only record that one is owed, is undecided. The crash campaign drives `ambiguous` by writing it directly, which is enough to prove the refusal but says nothing about who resolves it.
+Whether the ledger should also reconcile automatically, by querying target state where a provider supports it, is undecided; today the host user resolves each `ambiguous` entry through `/resolve-effect`.
 
 </details>

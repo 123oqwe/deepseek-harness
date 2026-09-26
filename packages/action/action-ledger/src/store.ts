@@ -24,7 +24,7 @@ import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import { decideReservation } from './index.ts'
-import type { LedgerEntry, LedgerEpoch, LedgerGeneration, LedgerScope, LedgerState, ReceiptDigest, ReserveDecision, ReserveRequest } from './types.ts'
+import type { LedgerEntry, LedgerEpoch, LedgerGeneration, LedgerResolution, LedgerScope, LedgerState, ReceiptDigest, ReserveDecision, ReserveRequest } from './types.ts'
 
 /** The store's handle. */
 export interface LedgerStore {
@@ -37,12 +37,25 @@ export interface LedgerStore {
   reserve: (request: ReserveRequest) => ReserveDecision
   /** Record that the request left the harness; a retry after this must not send again. */
   markSent: (scope: LedgerScope, key: string, epoch: LedgerGeneration) => void
-  /** Record the provider's receipt, which is the evidence the effect committed. */
-  confirm: (scope: LedgerScope, key: string, epoch: LedgerGeneration, receiptDigest: ReceiptDigest) => void
+  /**
+   * Record the provider's receipt, which is the evidence the effect committed.
+   * With a `resolution`, the host user is confirming an `ambiguous` entry: the
+   * move and the resolution are written in one transaction, and an entry that
+   * is no longer `ambiguous` is refused.
+   */
+  confirm: (scope: LedgerScope, key: string, epoch: LedgerGeneration, receiptDigest: ReceiptDigest, resolution?: LedgerResolution) => void
   /** Record that the outcome cannot be determined by retrying; it goes to reconciliation. */
   markAmbiguous: (scope: LedgerScope, key: string, epoch: LedgerGeneration) => void
+  /**
+   * Record that the host user resolved an `ambiguous` entry as undone. The move
+   * and the resolution are written in one transaction, and an entry that is no
+   * longer `ambiguous` is refused.
+   */
+  markCompensated: (scope: LedgerScope, key: string, epoch: LedgerGeneration, resolution: LedgerResolution) => void
   /** The entry for one scoped key, or undefined when it has never been reserved. */
   entry: (scope: LedgerScope, key: string) => LedgerEntry | undefined
+  /** The `ambiguous` entries of one scope, by key: what is waiting for reconciliation. */
+  listAmbiguous: (scope: LedgerScope) => readonly LedgerEntry[]
 }
 
 /**
@@ -73,7 +86,51 @@ const SCHEMA = [
   // lease generation at all. Every comparison against it uses `IS` rather than
   // `=` so the absent generation matches itself and nothing else.
   'CREATE TABLE IF NOT EXISTS ledger (scope TEXT NOT NULL, key TEXT NOT NULL, arguments_hash TEXT NOT NULL, state TEXT NOT NULL, epoch INTEGER, receipt_digest TEXT, PRIMARY KEY (scope, key))',
+  // The host user's resolutions of ambiguous entries (BLOCKED-311). A table of
+  // its own rather than new ledger columns, so a version 2 file gains it here
+  // without a migration, and a build that predates it reads the ledger as before.
+  'CREATE TABLE IF NOT EXISTS resolution (scope TEXT NOT NULL, key TEXT NOT NULL, outcome TEXT NOT NULL, resolved_by TEXT NOT NULL, resolved_at INTEGER NOT NULL, PRIMARY KEY (scope, key))',
 ]
+
+/** The columns an entry is read from: its ledger row and, once resolved, its resolution. */
+const ENTRY_SELECT = 'SELECT l.scope, l.key, l.arguments_hash, l.state, l.epoch, l.receipt_digest, r.outcome, r.resolved_by, r.resolved_at'
+  + ' FROM ledger l LEFT JOIN resolution r ON r.scope = l.scope AND r.key = l.key'
+
+/** One row of {@link ENTRY_SELECT}. */
+interface EntryRow {
+  scope: string
+  key: string
+  arguments_hash: string
+  state: string
+  epoch: number | null
+  receipt_digest: string | null
+  outcome: string | null
+  resolved_by: string | null
+  resolved_at: number | null
+}
+
+/**
+ * The entry one row describes.
+ * @param row - a row of {@link ENTRY_SELECT}.
+ * @returns the entry, with its resolution when the host user resolved it.
+ */
+function entryOf(row: EntryRow): LedgerEntry {
+  return {
+    scope: row.scope as LedgerScope,
+    key: row.key as LedgerEntry['key'],
+    argumentsHash: row.arguments_hash as LedgerEntry['argumentsHash'],
+    state: row.state as LedgerState,
+    epoch: row.epoch === null ? 'unfenced' : row.epoch as LedgerEpoch,
+    ...(row.receipt_digest === null ? {} : { receiptDigest: row.receipt_digest as ReceiptDigest }),
+    ...(row.outcome === null ? {} : {
+      resolution: {
+        outcome: row.outcome as LedgerResolution['outcome'],
+        resolvedBy: row.resolved_by as LedgerResolution['resolvedBy'],
+        resolvedAt: row.resolved_at as number,
+      },
+    }),
+  }
+}
 
 /**
  * Read one row.
@@ -83,19 +140,8 @@ const SCHEMA = [
  * @returns the entry, or undefined.
  */
 function readEntry(db: DatabaseSync, scope: LedgerScope, key: string): LedgerEntry | undefined {
-  const row = db
-    .prepare('SELECT scope, key, arguments_hash, state, epoch, receipt_digest FROM ledger WHERE scope = ? AND key = ?')
-    .get(scope, key) as
-      { scope: string; key: string; arguments_hash: string; state: string; epoch: number | null; receipt_digest: string | null } | undefined
-  if (row === undefined) return undefined
-  return {
-    scope: row.scope as LedgerScope,
-    key: row.key as LedgerEntry['key'],
-    argumentsHash: row.arguments_hash as LedgerEntry['argumentsHash'],
-    state: row.state as LedgerState,
-    epoch: row.epoch === null ? 'unfenced' : row.epoch as LedgerEpoch,
-    ...(row.receipt_digest === null ? {} : { receiptDigest: row.receipt_digest as ReceiptDigest }),
-  }
+  const row = db.prepare(`${ENTRY_SELECT} WHERE l.scope = ? AND l.key = ?`).get(scope, key) as EntryRow | undefined
+  return row === undefined ? undefined : entryOf(row)
 }
 
 /**
@@ -120,6 +166,9 @@ function columnEpoch(epoch: LedgerGeneration): number | null {
  * @param epoch - the caller's generation, or `'unfenced'` when it holds no lease.
  * @param state - the state to move to.
  * @param receiptDigest - the receipt, for `confirmed`.
+ * @param resolution - the host user's resolution, when this move reconciles an
+ *   `ambiguous` entry: the entry must still be `ambiguous`, and the resolution is
+ *   written in the same transaction as the move.
  */
 function transition(
   db: DatabaseSync,
@@ -128,18 +177,56 @@ function transition(
   epoch: LedgerGeneration,
   state: LedgerState,
   receiptDigest?: ReceiptDigest,
+  resolution?: LedgerResolution,
+): void {
+  if (resolution === undefined) {
+    move(db, scope, key, epoch, state, receiptDigest ?? null, '')
+    return
+  }
+  db.exec('BEGIN IMMEDIATE')
+  try {
+    move(db, scope, key, epoch, state, receiptDigest ?? null, ' AND state = \'ambiguous\'')
+    db.prepare('INSERT INTO resolution (scope, key, outcome, resolved_by, resolved_at) VALUES (?, ?, ?, ?, ?)')
+      .run(scope, key, resolution.outcome, resolution.resolvedBy, resolution.resolvedAt)
+    db.exec('COMMIT')
+  } catch (error) {
+    db.exec('ROLLBACK')
+    throw error
+  }
+}
+
+/**
+ * The one UPDATE behind every transition.
+ * @param db - the database.
+ * @param scope - the principal the key belongs to.
+ * @param key - the idempotency key.
+ * @param epoch - the caller's generation, or `'unfenced'` when it holds no lease.
+ * @param state - the state to move to.
+ * @param receiptDigest - the receipt, or null.
+ * @param condition - an extra WHERE clause; a resolve moves only an `ambiguous` entry.
+ */
+function move(
+  db: DatabaseSync,
+  scope: LedgerScope,
+  key: string,
+  epoch: LedgerGeneration,
+  state: LedgerState,
+  receiptDigest: ReceiptDigest | null,
+  condition: string,
 ): void {
   // `epoch IS ?`, not `epoch = ?`: an unfenced holder's generation is SQL NULL,
   // and `NULL = NULL` is false, so `=` would refuse every write by the very
   // caller that holds the reservation.
   const changed = db
-    .prepare('UPDATE ledger SET state = ?, receipt_digest = ? WHERE scope = ? AND key = ? AND epoch IS ?')
-    .run(state, receiptDigest ?? null, scope, key, columnEpoch(epoch)).changes
+    .prepare(`UPDATE ledger SET state = ?, receipt_digest = ? WHERE scope = ? AND key = ? AND epoch IS ?${condition}`)
+    .run(state, receiptDigest, scope, key, columnEpoch(epoch)).changes
   if (changed === 0) {
     const current = readEntry(db, scope, key)
     throw new Error(current === undefined
       ? `action ledger: ${key} has no reservation to move to ${state}`
-      : `action ledger: ${key} is held by epoch ${String(current.epoch)}, not ${String(epoch)}`)
+      : current.epoch !== epoch
+        ? `action ledger: ${key} is held by epoch ${String(current.epoch)}, not ${String(epoch)}`
+        : `action ledger: ${key} is ${current.state}, not ambiguous, so it cannot be resolved`)
   }
 }
 
@@ -205,9 +292,12 @@ export function openLedgerStore(directory: string): LedgerStore {
       }
     },
     markSent: (scope, key, epoch) => { transition(db, scope, key, epoch, 'sent') },
-    confirm: (scope, key, epoch, receiptDigest) => { transition(db, scope, key, epoch, 'confirmed', receiptDigest) },
+    confirm: (scope, key, epoch, receiptDigest, resolution) => { transition(db, scope, key, epoch, 'confirmed', receiptDigest, resolution) },
     markAmbiguous: (scope, key, epoch) => { transition(db, scope, key, epoch, 'ambiguous') },
+    markCompensated: (scope, key, epoch, resolution) => { transition(db, scope, key, epoch, 'compensated', undefined, resolution) },
     entry: (scope, key) => readEntry(db, scope, key),
+    listAmbiguous: scope => (db.prepare(`${ENTRY_SELECT} WHERE l.scope = ? AND l.state = 'ambiguous' ORDER BY l.key`).all(scope) as unknown as EntryRow[])
+      .map(entryOf),
   }
   return store
 }

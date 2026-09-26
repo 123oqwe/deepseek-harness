@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-09-26-the-host-user-resolves-an-ambiguous-external-effect.md
+2026-09-26-the-host-user-resolves-an-ambiguous-external-effect.md: e7ec992a559a39f4a1c86f670ab7d3937fad74ed
+2026-09-26-the-host-user-resolves-an-ambiguous-external-effect.zh.md: 1f20ac14e355de3d9776e7de36eca67d872aa5e6

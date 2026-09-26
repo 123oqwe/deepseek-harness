@@ -5391,7 +5391,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'LedgerEntry',
-    declaration: 'export interface LedgerEntry {\n    readonly scope: LedgerScope;\n    readonly key: IdempotencyKey;\n    readonly argumentsHash: ArgumentsHash;\n    readonly state: LedgerState;\n    readonly epoch: LedgerGeneration;\n    readonly receiptDigest?: ReceiptDigest;\n}',
+    declaration: 'export interface LedgerEntry {\n    readonly scope: LedgerScope;\n    readonly key: IdempotencyKey;\n    readonly argumentsHash: ArgumentsHash;\n    readonly state: LedgerState;\n    readonly epoch: LedgerGeneration;\n    readonly receiptDigest?: ReceiptDigest;\n    readonly resolution?: LedgerResolution;\n}',
   },
   {
     name: 'LedgerEpoch',
@@ -5400,6 +5400,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'LedgerGeneration',
     declaration: 'export type LedgerGeneration = LedgerEpoch | \'unfenced\';',
+  },
+  {
+    name: 'LedgerResolution',
+    declaration: 'export interface LedgerResolution {\n    readonly outcome: \'confirmed\' | \'compensated\';\n    readonly resolvedBy: PrincipalId;\n    readonly resolvedAt: number;\n}',
   },
   {
     name: 'LedgerScope',

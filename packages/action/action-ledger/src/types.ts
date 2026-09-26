@@ -43,7 +43,11 @@ export type LedgerEpoch = BrandedNumber<'LedgerEpoch'>
  */
 export type LedgerGeneration = LedgerEpoch | 'unfenced'
 
-/** A digest of the provider's own receipt, which is the evidence an effect committed. */
+/**
+ * A digest of the provider's own receipt, which is the evidence an effect
+ * committed. For an entry the host user resolved as `confirmed`, the evidence
+ * is that resolution, and this is its digest.
+ */
 export type ReceiptDigest = Branded<'ReceiptDigest'>
 
 /**
@@ -92,6 +96,25 @@ export interface LedgerEntry {
   readonly epoch: LedgerGeneration
   /** Present once a receipt has been seen; absent in every other state. */
   readonly receiptDigest?: ReceiptDigest
+  /** Present once the host user has resolved the entry out of `ambiguous`; absent otherwise. */
+  readonly resolution?: LedgerResolution
+}
+
+/**
+ * How the host user resolved an ambiguous entry: the reconciliation record
+ * (P4-12 acceptance[1], BLOCKED-311).
+ *
+ * The outcome is never `prepared`. An effect that may have committed is not
+ * made sendable again by a resolve; doing the work again is a new action with a
+ * new key.
+ */
+export interface LedgerResolution {
+  /** What the host user says happened: the effect committed, or it was undone. */
+  readonly outcome: 'confirmed' | 'compensated'
+  /** The host user who resolved the entry. */
+  readonly resolvedBy: PrincipalId
+  /** When the entry was resolved, in milliseconds since the Unix epoch. */
+  readonly resolvedAt: number
 }
 
 /** A caller asking to take responsibility for one external effect. */
