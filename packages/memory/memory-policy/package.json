@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-memory-policy",
   "description": "P6-03 memory proposal policy: decides whether a candidate memory write is auto-accepted, sent to human review, or rejected, and mounts the memoryProposalPolicy service dsh-memory consults",
-  "version": "0.1.0-rc.1",
+  "version": "0.1.5-rc.2",
   "publishConfig": {
     "access": "public",
     "exports": {
