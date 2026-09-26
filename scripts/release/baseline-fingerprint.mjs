@@ -123,7 +123,7 @@ function readWorkspaceManifests(repoRoot) {
       found.set(posixRelative(repoRoot, packageJsonPath), JSON.parse(readFileSync(packageJsonPath, 'utf8')))
     }
   }
-  return [...found].sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+  return []
 }
 
 function readWorkspacePackages(manifests) {
