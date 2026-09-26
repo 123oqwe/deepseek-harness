@@ -9,6 +9,16 @@ export const CENSUS_TEMPLATES = ['headless', 'sdk-minimal'] as const
 /** One shipped template this census boots. */
 export type CensusTemplate = typeof CENSUS_TEMPLATES[number]
 
+/**
+ * Two actions no rule can classify, classified through the same service as the
+ * tools but never registered or executed: one declares no tags, the other only
+ * a tag no rule names.
+ */
+export const UNCLASSIFIABLE_PROBES: readonly { readonly name: string; readonly tags: readonly string[] }[] = [
+  { name: 'p2-03-probe-no-tags', tags: [] },
+  { name: 'p2-03-probe-unnamed-tag', tags: ['p2-03-unnamed-domain'] },
+]
+
 /** What `gateActionRisk` decides for one action under one preset, before anyone is asked. */
 export type GateDecision = 'hard-denied' | 'asked' | 'allowed-by-preset'
 
@@ -32,4 +42,6 @@ export interface CensusReport {
   /** The preset in force for the root agent's session, or `null` when no policy service is mounted. */
   readonly presetInForce: string | null
   readonly tools: readonly CensusTool[]
+  /** {@link UNCLASSIFIABLE_PROBES}, in order, as the same census reports a tool. */
+  readonly probes: readonly CensusTool[]
 }

@@ -9,7 +9,10 @@
  * approval and only one the gate cannot classify is asked about. The cases
  * assert the facts that reading rests on. The whole census, the unclassifiable
  * tools included, goes into each case's `meta.census`, which the JSON report
- * carries; nothing here asserts which tools are unclassifiable.
+ * carries; nothing here asserts which tools are unclassifiable. The fourth
+ * case also classifies two probe actions no rule can classify
+ * (`UNCLASSIFIABLE_PROBES`), so it does not depend on the shipped tool set
+ * containing one.
  *
  * `./loader/p2-03-approval-census/driver.ts` boots one template per process
  * and executes no tool: each decision is computed with the two calls
@@ -20,7 +23,7 @@
 import { fileURLToPath } from 'node:url'
 import { LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
 import { beforeAll, describe, expect, it } from 'vitest'
-import { CENSUS_TEMPLATES, type CensusReport, type CensusTemplate } from './loader/p2-03-approval-census/shared.ts'
+import { CENSUS_TEMPLATES, type CensusReport, type CensusTemplate, UNCLASSIFIABLE_PROBES } from './loader/p2-03-approval-census/shared.ts'
 
 const driver = fileURLToPath(new URL('./loader/p2-03-approval-census/driver.ts', import.meta.url))
 const repoTsconfig = fileURLToPath(new URL('../../../tsconfig.json', import.meta.url))
@@ -86,6 +89,17 @@ describe('P2-03 acceptance[2]: what the risk gate decides today on the shipped t
       .filter(([, decision]) => decision !== 'allowed-by-preset')
       .map(([preset, decision]) => `${tool.name}@${preset}: ${decision}`))
     expect(gated).toEqual([])
+  })
+
+  it('on headless under the shipped default preset, every action the risk gate cannot classify is asked about', ({ task }) => {
+    const report = census('headless')
+    Object.assign(task.meta, { probes: report.probes })
+    const preset = report.presetInForce
+    if (preset === null) throw new Error('headless reported no preset in force')
+    expect(report.probes.map(probe => [probe.name, probe.classification?.ground, probe.decisions[preset]]), JSON.stringify(report.probes))
+      .toEqual(UNCLASSIFIABLE_PROBES.map(probe => [probe.name, 'unknown-default', 'asked']))
+    const unclassified = report.tools.filter(tool => tool.classification?.ground === 'unknown-default')
+    expect(unclassified.filter(tool => tool.decisions[preset] !== 'asked').map(tool => tool.name)).toEqual([])
   })
 
   it('sdk-minimal mounts no permission presets, so the risk gate decides nothing for any of its tools', ({ task }) => {
