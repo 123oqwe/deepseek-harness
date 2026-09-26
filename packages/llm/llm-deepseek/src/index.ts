@@ -420,8 +420,9 @@ export function resolveAdapterOptions(config: Config, environment?: LaunchEnviro
 
 export function apply(ctx: Context, config: Config): void {
   let current: () => Config = () => config
-  let lastRaw: Config | undefined
-  let lastGood: ResolvedDeepSeekOptions | undefined
+  // The composition entry resolves here, at load, and fails loud.
+  let lastRaw: Config | undefined = config
+  let lastGood: ResolvedDeepSeekOptions | undefined = resolveAdapterOptions(config, launchEnvironmentOf(ctx))
   const options = (): ResolvedDeepSeekOptions => {
     const raw = current()
     if (raw === lastRaw && lastGood !== undefined) return lastGood
@@ -431,17 +432,25 @@ export function apply(ctx: Context, config: Config): void {
       lastGood = next
       return next
     } catch (error) {
-      // Static composition resolves before anything registers, so this branch
-      // only sees a live settings snapshot failing a beyond-schema bound:
-      // keep serving the last good facts and say so once per bad snapshot.
-      if (lastGood === undefined) throw error
+      // Only a settings section that has not resolved since its source
+      // attached has no last good value. The composition entry's endpoint and
+      // key reference are not what that section configures, so the call is
+      // refused rather than sent there.
+      if (lastGood === undefined) {
+        throw new LlmError(
+          `llm-deepseek: refusing the call until the "${NS}" settings section resolves: ${String(error)}`,
+          'INVALID_SETTINGS',
+          { cause: error },
+        )
+      }
+      // A section that resolved once keeps serving its own last good facts
+      // and says so once per bad snapshot.
       lastRaw = raw
       ctx.logger.error('llm-deepseek: keeping the last good configuration after an invalid settings section')
       ctx.logger.error(error)
       return lastGood
     }
   }
-  options()
 
   const resolveApiKey = async (connection: ResolvedDeepSeekOptions): Promise<string> => {
     // Every credential fact comes from the caller's snapshot, so a rejected
@@ -492,7 +501,16 @@ export function apply(ctx: Context, config: Config): void {
   const registration = ctx.llm.registerAdapter([PROVIDER], adapter)
   let registeredPolicy = options().retryPolicy
   const ensureRegistrationFacts = (): void => {
-    const policy = options().retryPolicy
+    let resolved: ResolvedDeepSeekOptions
+    try {
+      resolved = options()
+    } catch (error) {
+      // A refused section refuses every call, so no call reaches the retry
+      // policy the registration holds; the refusal is logged once per change.
+      ctx.logger.error(error)
+      return
+    }
+    const policy = resolved.retryPolicy
     if (deepEqualJson(policy, registeredPolicy)) return
     // The registry captures the retry policy at registration, so it is the one
     // fact per-request resolution cannot refresh. `replace` re-reads it in one
@@ -507,6 +525,11 @@ export function apply(ctx: Context, config: Config): void {
     settingsCtx.settings.installSection(ctx, NS, Config, config, {
       setSource: (source) => {
         current = source
+        // A last good value never outlives its source: carried over, it would
+        // send a settings section's calls to the composition entry's endpoint
+        // and key reference.
+        lastRaw = undefined
+        lastGood = undefined
       },
       onChange: ensureRegistrationFacts,
     })

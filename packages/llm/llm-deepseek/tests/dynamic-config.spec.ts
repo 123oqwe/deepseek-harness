@@ -290,6 +290,36 @@ describe('request-level dynamic configuration', () => {
     expect(good.headers[0]?.authorization).toBe('Bearer good-key')
   })
 
+  it('refuses calls while a section stored before start has not resolved, then serves its endpoint', async () => {
+    vi.stubEnv('DEEPSEEK_API_KEY', 'test-key')
+    const dir = await home()
+    const composition = await mockServer([{ kind: 'sse', events: textEvents }])
+    const configured = await mockServer([{ kind: 'sse', events: textEvents }])
+    // A document written before the per-provider retry code list was removed.
+    await writeFile(join(dir, 'settings.yaml'), [
+      `${NS}:`,
+      `  baseURL: ${JSON.stringify(configured.url)}`,
+      '  retryPolicy:',
+      '    mode: normal',
+      '    retryableCodes: [SERVER]',
+      '',
+    ].join('\n'))
+    const { ctx } = await boot(dir, { baseURL: composition.url })
+
+    const refused = await prompt(ctx)
+    expect(refused.finish).toMatchObject({ kind: 'error', failure: { code: 'INVALID_SETTINGS' } })
+    if (refused.finish.kind !== 'error') throw new Error('expected an error finish')
+    expect(refused.finish.failure.message).toContain('retryPolicy.retryableCodes is not accepted')
+    // Neither the endpoint the section names nor the composition entry's.
+    expect(configured.requests).toHaveLength(0)
+    expect(composition.requests).toHaveLength(0)
+
+    await ctx.settings.replace(NS, { baseURL: configured.url })
+    await prompt(ctx)
+    expect(configured.requests).toHaveLength(1)
+    expect(composition.requests).toHaveLength(0)
+  })
+
   it('falls back to the composition entry when settings detach', async () => {
     vi.stubEnv('DEEPSEEK_API_KEY', '')
     const dir = await home()
