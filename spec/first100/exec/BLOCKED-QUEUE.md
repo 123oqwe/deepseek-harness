@@ -8824,7 +8824,7 @@ Sign-offs: PASS 2026-09-12 and PASS 2026-09-13 (first100-delegate-78).
 
 ### BLOCKED-315 — P2-03 records "requires approval" for an unclassifiable action and nothing enforces it; the acceptance is withdrawn
 
-**Status:** OPEN (2026-09-24). Owner lane B (implementation), lane A (preFlight). Ruled by the delegate (first100-delegate-1a) under acceptance standard v1 (S1, S8), which the user adopted on 2026-09-24, as part of the one-time review S12 names. Lane A's A-307 found it; its search and independent verifier agents agree on the facts. The delegate re-read the README and the recorded session at `da761d27c6`. The withdrawal moves the ledger row in the same commit that opens this entry.
+**Status:** CLOSED 2026-09-26 (closure note at the end of this entry); opened 2026-09-24. Owner lane B (implementation), lane A (preFlight). Ruled by the delegate (first100-delegate-1a) under acceptance standard v1 (S1, S8), which the user adopted on 2026-09-24, as part of the one-time review S12 names. Lane A's A-307 found it; its search and independent verifier agents agree on the facts. The delegate re-read the README and the recorded session at `da761d27c6`. The withdrawal moves the ledger row in the same commit that opens this entry.
 
 **What was measured.**
 - **acceptance[2]** — "an action whose side effect cannot be classified defaults to high risk and requires approval".
@@ -8858,6 +8858,18 @@ Sign-offs: PASS 2026-09-12 and PASS 2026-09-13 (first100-delegate-78).
    - Note: every native tool call is unclassifiable today. So enforcing the flag as written would ask for approval on every tool call. The preFlight must measure that consequence and put it to the delegate, and to the user if it changes the default experience, before any code is written.
 
 **Owner.** lane B, after a lane A preFlight.
+
+**Closure note (2026-09-26, lane A's A-535 v2, accepted by the delegate first100-delegate-1a).** Each closing condition, read at `7de79a1658`. The fix is lane B's B-620: `3f021bc944` (the manifest records the risk gate's verdict), `3e5cec62a1` (policy inputs carry the risk verdict) and `250f73347a` (the mapping lives in `manifest-side-effect.ts`), ancestors of that commit. Red first for condition 1: lane A's A-443 (`17a982e2d1`).
+
+1. **An unclassifiable action is held for approval before it runs, on the native and the code-mode path, and refused when no one answers.** It is held through the single classification the manifest and the risk gate share: B-620 makes the manifest record the gate's classification, so the manifest's `classified: false` and the gate's decision are one answer.
+   - `tests/first100/fixtures/P2-03.manifest-class.composition.spec.ts` (A-443), on the shipped headless profile: on the native path a probe the gate classifies is recorded classified, as read, and not requiring approval, and one it cannot is recorded unclassified and requiring approval; on the code-mode path a program calling the unclassifiable probe reaches an approval request and the probe is refused without running, while a probe declaring filesystem-read runs.
+   - A call nested through `ToolRuntime.execute` is held the same way: `P2-03.nested-unclassified` (the nested call reaches an approval request before it runs and, rejected, does not run) and `P2-03.nested-inherited-token` (the nested write is refused, or its manifest is appended before the file is written).
+   - In the full run 36264470501 at `7de79a1658` all three pass: 6, 2 and 3 cases. Red before the fix or under a mutation: A-443's red first and M-620-1 (run 36240165162) for the manifest cases, M-633-order′ (run 36217516453) for the nested approval, and the red-first run 36212808158 for the nested manifest.
+   - The three are frozen in the same record batch as this note, as P2-03.U.7, U.8 and U.9, and the next full run observes them.
+2. **The recorded sessions: satisfied vacuously for the presets that ask.** On the re-recorded state `5992b538e4`, all 18 recorded sessions that still carry a `classified: false` call run under `policy: never` (`danger-full-access`, "Approval prompts are disabled"), and none carries one under a preset that asks. B-620 records a native call under an asking preset as classified: the `sdk/bash-tool` bash call is `classified: true` on `5992b538e4`.
+   - Not covered: `sdk-minimal`, which mounts no risk gate (the Known Limitation of the approved narrowing ⑨), and `danger-full-access`, whose approval prompts are disabled by design. Their `classified: false` calls run without approval by design, not as a P2-03 defect.
+3. **The coverage record cites `tool-calls.spec.ts:1020` for the first half.** P2-03 acceptance[2]'s coverage cites the U.4 case «…records whether the side-effect class was DECLARED, which the class alone cannot say (acceptance[2])» (`packages/core/agent-loop/tests/tool-calls.spec.ts:1020`), with lane A's A-335 note on what it covers.
+4. **The consequence measured, then the sign-off.** With B-620 a native call carries the gate's own classification rather than a blanket `classified: false`, so enforcing approval on an unclassifiable call asks only for the calls the gate cannot classify, not for every call. The fresh 4.4a–d, the PASS sign-off and `--accept` follow once U.7 to U.9 are observed.
 
 ### BLOCKED-316 — P3-01's provider switching was proven against a test-built provider only; its fail-closed path stops at selection, and the registry trusts a provider's self-report; the acceptance is withdrawn
 
