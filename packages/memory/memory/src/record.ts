@@ -60,8 +60,17 @@ export type MemoryProvenance =
 /** Whether a record may leave its scope or enter an index (must[2]). */
 export type MemorySensitivity = 'normal' | 'sensitive'
 
-/** Whether a record is still eligible for default retrieval (acceptance[1]). */
-export type MemoryStatus = 'active' | 'superseded' | 'disputed' | 'revoked'
+/**
+ * Whether a record is still eligible for default retrieval (acceptance[1]).
+ *
+ * `pending` and `rejected` are P6-03's proposal-policy states: a proposal the
+ * policy sends to review is stored `pending`, and a rejected one is kept
+ * `rejected` as a record of the decision. Neither is `active`, so
+ * {@link isDefaultRetrievable} already withholds both from query, recall and
+ * injection — a pending record does not enter active memory until a human
+ * approves it (P6-03 must[1]/must[2]).
+ */
+export type MemoryStatus = 'active' | 'superseded' | 'disputed' | 'revoked' | 'pending' | 'rejected'
 
 /** How one record relates to another it disagrees with (must[1]). */
 export type MemoryRelationKind = 'supersedes' | 'disputes'

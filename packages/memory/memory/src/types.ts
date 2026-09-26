@@ -22,7 +22,7 @@ import { brandString, type Branded } from '@deepseek-ai/dsh-brand'
 import { HarnessError } from '@deepseek-ai/dsh-llm'
 import type { Principal, TenantId } from '@deepseek-ai/dsh-principal'
 import type {} from '@deepseek-ai/dsh-session/types'
-import type { MemoryKind, MemoryProvenance, MemorySensitivity, MemorySubject } from './record.ts'
+import type { MemoryKind, MemoryProvenance, MemorySensitivity, MemoryStatus, MemorySubject } from './record.ts'
 
 /** Stable identity of one durable memory record, unique within its tenant. */
 export type MemoryRecordId = Branded<'MemoryRecordId'>
@@ -254,7 +254,13 @@ export interface MemoryProvider {
   readonly id: string
   /** Cheap local usability check; must not make network calls. */
   available(): boolean
-  propose(request: MemoryProposeRequest): Promise<MemoryProposeResult>
+  /**
+   * Store a candidate write and return its minted id. `status` is the record's
+   * initial status the service decided from the proposal policy; omitted means
+   * `active` (the pre-P6-03 behaviour). A `pending` record is stored but not
+   * `active`, so it is withheld from retrieval until a reviewer approves it.
+   */
+  propose(request: MemoryProposeRequest, status?: MemoryStatus): Promise<MemoryProposeResult>
   query(request: MemoryQueryRequest): Promise<MemoryQueryResult>
   get(request: MemoryGetRequest): Promise<MemoryRecordView | undefined>
   revise(request: MemoryReviseRequest): Promise<void>
