@@ -16,12 +16,20 @@ import { createUserPrincipal, PrincipalId, TenantId } from '@deepseek-ai/dsh-pri
 /** Brand a raw string as a source event id, as P6-02's vocabulary spells it. */
 const sourceEventId = (id: string): never => id as never
 
-/** A normal, derived candidate write with the given writer confidence. */
+/**
+ * A complete, normal, derived candidate write with the given writer confidence —
+ * complete (stated intended use and TTL) so only the confidence bar, not the
+ * `must[0]` completeness rule, decides its disposition.
+ * @param confidence - the derived claim's writer confidence.
+ * @returns the request.
+ */
 function derivedRequest(confidence: number): MemoryProposeRequest {
   return {
     principal: createUserPrincipal(PrincipalId('user-1'), TenantId('tenant-a')),
     scope: { tenantId: TenantId('tenant-a') },
     content: { note: 'candidate' },
+    purpose: 'answer questions about this project',
+    validUntil: '2099-01-01T00:00:00Z',
     sensitivity: 'normal',
     origin: { kind: 'derived', sourceEvents: [sourceEventId('evt-1')], confidence },
   }
