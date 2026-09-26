@@ -19644,6 +19644,149 @@
         "failureSummary": "Read from the red-first narrow report. Run 36212808158: 1 of 3 red, «P2-03 acceptance[0] × BLOCKED-294: a plugin tool nests a write through ToolRuntime.execute under its inherited capability token the nested write is refused, or its manifest is appended before the file is written» — AssertionError: expected [ 'refused', …(1) ] to include 'written with no manifest' (the nested write created its file with manifestBefore false). The fixed side is the full run 36264470501, 3 of 3 passed."
       },
       "note": "P2-03 U-stage supplement 9: acceptance[0] × BLOCKED-294 on the shipped headless profile. A plugin tool that nests a write through ToolRuntime.execute under its inherited capability token has the nested write refused or its manifest appended before the file is written, as the model's own write does (red first A-462/A-474). Frozen by the delegate's ruling (first100-delegate-1a, gate3 2026-09-26T19:14:13Z: stage U, as approval-census and gate-approval) from lane A's A-535 v2 draft (artifacts/laneA/a-535-p2-03-blocked315-closure.md, sha256 92d1ec22…). expectCases are the full names in the full run 36264470501 at 7de79a1658, where tests/first100/fixtures/P2-03.nested-inherited-token.composition.spec.ts ran 3 cases and each frozen title passed once; the entry is frozen after that run, so its cell is observed by the next full run. files add the harness the driver uses and the direct seam that appends the nested call's manifest. The observing tree is pinned at refs/dsh/freeze/P2-03.U.9/2026-09-26T20-01-36.000Z -> 7de79a1658bc4baff424522f433a02221fa462fb, whose tree is dryRunProof.treeSha."
+    },
+    {
+      "epic": "P4-12",
+      "stage": "F",
+      "supplements": {
+        "epic": "P4-12",
+        "stage": "F"
+      },
+      "supplementSeq": 3,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P4-12.reconciliation.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-12 on the shipped profile: an ambiguous effect is reconciled by an operator resolve the entry is ambiguous before the resolve, and an approved resolve moves it to confirmed, never prepared (acceptance[1])",
+        "P4-12 on the shipped profile: an ambiguous effect is reconciled by an operator resolve an approved resolve to compensated settles the entry, never prepared (acceptance[1])",
+        "P4-12 on the shipped profile: an ambiguous effect is reconciled by an operator resolve a refused resolve leaves the entry ambiguous and records no resolution (control)",
+        "P4-12 on the shipped profile: an ambiguous effect is reconciled by an operator resolve a caller that is not the host user cannot resolve; the entry stays ambiguous (control)",
+        "P4-12 on the shipped profile: an ambiguous effect is reconciled by an operator resolve an approved resolve records who resolved the entry and to what",
+        "P4-12 on the shipped profile: an ambiguous effect is reconciled by an operator resolve after an approved resolve, a fresh reserve on the same key is no longer refused as ambiguous (acceptance[1])"
+      ],
+      "files": [
+        "tests/first100/fixtures/P4-12.reconciliation.composition.spec.ts",
+        "tests/first100/fixtures/p4-12-reconciliation/driver.ts",
+        "tests/first100/fixtures/p4-12-reconciliation/mock-llm.ts",
+        "tests/first100/fixtures/p4-12-reconciliation/base-mount.patch.yml",
+        "packages/test-support/loader-smoke/tests/fixtures/production-profile.ts",
+        "packages/test-support/loader-smoke/src/index.ts",
+        "packages/action/action-ledger/src/plugin.ts",
+        "packages/action/action-ledger/src/store.ts",
+        "packages/action/action-ledger/src/types.ts",
+        "packages/interaction/user-approval/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-26T20:08:38.000Z",
+      "dryRunProof": {
+        "treeSha": "68190279e8adcd25bd74d1ca05e9f1946057334f",
+        "testsDiscovered": 6
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two B-515 rounds, never merged. M-515-1 (`ec6ebb9908`), run 36263360717: packages/action/action-ledger/src/store.ts no longer inserts the resolution row, so a resolve moves the entry and records no resolution. M-515-2 (`9d2c2cb1db`), run 36263373270: packages/action/action-ledger/src/plugin.ts refuses only a `withdrawn` answer, so a rejected resolve is applied.",
+        "failureSummary": "Read from each round's own narrow report. M-515-1, run 36263360717: 1 of 6 red, «P4-12 on the shipped profile: an ambiguous effect is reconciled by an operator resolve an approved resolve records who resolved the entry and to what» — AssertionError: expected null not to be null. M-515-2, run 36263373270: 1 of 6 red, «… a refused resolve leaves the entry ambiguous and records no resolution (control)» — AssertionError: expected 'confirmed' to be 'ambiguous'."
+      },
+      "note": "P4-12 F-stage supplement 3, after [304]: acceptance[1]'s reconciliation on the shipped profile. The host user resolves an ambiguous effect through `/resolve-effect`; an approved resolve moves it to confirmed or compensated, never back to prepared, and records who resolved it and to what, a refused resolve or a caller that is not the host user leaves it ambiguous, and a later reserve on the key is no longer refused as ambiguous (BLOCKED-311; red first A-529, dispatched 24a8a430d3; fix B-515, 4cd3a8092f on the candidate). Frozen by the delegate's ruling (first100-delegate-1a, gate3 2026-09-26T19:59:57Z) from lane A's A-539 draft (artifacts/laneA/a-539-p4-12-p4-05-freeze-drafts.md, sha256 d1d8705f…). expectCases are the full names in the full run 36264470501 at 7de79a1658, where tests/first100/fixtures/P4-12.reconciliation.composition.spec.ts ran 6 cases and each frozen title passed once; the entry is frozen after that run, so its cell is observed by the next full run. files add the driver's mock model and overlay, the loader-smoke fixture and entry it uses, and the approval service the command asks. The observing tree is pinned at refs/dsh/freeze/P4-12.F.3/2026-09-26T20-08-38.000Z -> 7de79a1658bc4baff424522f433a02221fa462fb, whose tree is dryRunProof.treeSha."
+    },
+    {
+      "epic": "P4-05",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-05",
+        "stage": "U"
+      },
+      "supplementSeq": 8,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P4-05.terminal-dispatch.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "BLOCKED-332: a live agent whose Run was advanced to failed from inside a tool call, on the shipped headless profile control: the probe runs in a live Run, and the fail-run call advances the Run to failed",
+        "BLOCKED-332: a live agent whose Run was advanced to failed from inside a tool call, on the shipped headless profile control: a turn after the Run is failed starts no step",
+        "BLOCKED-332: a live agent whose Run was advanced to failed from inside a tool call, on the shipped headless profile condition 1: once the Run is terminal, the later call of the same batch does not start",
+        "BLOCKED-332: a live agent whose Run was advanced to failed from inside a tool call, on the shipped headless profile condition 1: the call that did not start gets its own error result, named apart from fenced and lease-refused",
+        "BLOCKED-332: a live agent whose Run was advanced to failed from inside a tool call, on the shipped headless profile condition 2: a turn stopped because the Run is terminal records the state it reached and the reason given for it"
+      ],
+      "files": [
+        "tests/first100/fixtures/P4-05.terminal-dispatch.composition.spec.ts",
+        "tests/first100/fixtures/loader/p4-05-terminal/driver.ts",
+        "tests/first100/fixtures/loader/p4-05-terminal/mock-llm.ts",
+        "tests/first100/fixtures/loader/p4-05-terminal/base.patch.yml",
+        "packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts",
+        "packages/test-support/loader-smoke/tests/fixtures/production-profile.ts",
+        "packages/test-support/loader-smoke/src/index.ts",
+        "packages/test-support/loader-smoke/src/agent-turn.ts",
+        "packages/core/tools/src/external-effect.ts",
+        "packages/core/agent/src/index.ts",
+        "packages/core/agent/src/runtime-types.ts",
+        "packages/run/run/src/index.ts",
+        "packages/core/agent-loop/src/agent.ts",
+        "packages/core/session/src/types.ts"
+      ],
+      "frozenAtUtc": "2026-09-26T20:08:38.000Z",
+      "dryRunProof": {
+        "treeSha": "68190279e8adcd25bd74d1ca05e9f1946057334f",
+        "testsDiscovered": 5
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two B-583 rounds, never merged. M-583-1 (`5829b33803`), run 36262085852: packages/core/tools/src/external-effect.ts's refuseNewAction no longer reads whether the Run has ended. M-583-2 (`be84936032`), run 36262097798: packages/run/run/src/index.ts's step gate refuses an ended Run without naming it.",
+        "failureSummary": "Read from each round's own narrow report. M-583-1, run 36262085852: 2 of 5 red, «… condition 1: once the Run is terminal, the later call of the same batch does not start» (AssertionError: expected true to be false) and «… condition 1: the call that did not start gets its own error result, named apart from fenced and lease-refused» (the second result {\"text\":\"probe ran\",\"isError\":false}: expected false to be true). M-583-2, run 36262097798: 1 of 5 red, «… condition 2: a turn stopped because the Run is terminal records the state it reached and the reason given for it» (AssertionError: [{\"kind\":\"blocked\"}]: expected to contain 'failed')."
+      },
+      "note": "P4-05 U-stage supplement 8, on the shipped headless profile: BLOCKED-332 conditions 1 and 2. Once a call advances the Run to failed, the later call of the same batch does not start and gets its own result, named apart from fenced and lease-refused, and a turn stopped because the Run is terminal records the state it reached and the reason given (red first 9ebe2efd0d, A-380; fix B-583, eacd15e99a on the candidate). Frozen by the delegate's ruling (first100-delegate-1a, gate3 2026-09-26T19:59:57Z) from lane A's A-539 draft (artifacts/laneA/a-539-p4-12-p4-05-freeze-drafts.md, sha256 d1d8705f…). expectCases are the full names in the full run 36264470501 at 7de79a1658, where tests/first100/fixtures/P4-05.terminal-dispatch.composition.spec.ts ran 5 cases and each frozen title passed once; the entry is frozen after that run, so its cell is observed by the next full run. files add the driver's mock model and overlay, the loader-smoke fixtures and entry it uses, and the six sources B-583 changed. The observing tree is pinned at refs/dsh/freeze/P4-05.U.8/2026-09-26T20-08-38.000Z -> 7de79a1658bc4baff424522f433a02221fa462fb, whose tree is dryRunProof.treeSha."
+    },
+    {
+      "epic": "P4-05",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-05",
+        "stage": "U"
+      },
+      "supplementSeq": 9,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P4-05.terminal-sdk-client.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "BLOCKED-332 on the shipped sdk profile: a client of the real host when the session's Run is advanced to failed control: the test tool advanced the Run, and the turn ended because the next step was refused",
+        "BLOCKED-332 on the shipped sdk profile: a client of the real host when the session's Run is advanced to failed condition 3: a session.event or session.status the client receives carries the state failed and the reason the transition was given"
+      ],
+      "files": [
+        "tests/first100/fixtures/P4-05.terminal-sdk-client.spec.ts",
+        "apps/cli/tests/profiles/routing-stub-model.ts",
+        "tests/first100/fixtures/loader/p4-05-terminal-sdk/fail-run-tool.ts",
+        "apps/cli/src/bin.ts",
+        "packages/core/tools/src/external-effect.ts",
+        "packages/core/agent/src/index.ts",
+        "packages/core/agent/src/runtime-types.ts",
+        "packages/run/run/src/index.ts",
+        "packages/core/agent-loop/src/agent.ts",
+        "packages/core/session/src/types.ts"
+      ],
+      "frozenAtUtc": "2026-09-26T20:08:38.000Z",
+      "dryRunProof": {
+        "treeSha": "68190279e8adcd25bd74d1ca05e9f1946057334f",
+        "testsDiscovered": 2
+      },
+      "sensitivityProof": {
+        "mutationDescription": "B-583's rounds, never merged. M-583-2 (`be84936032`), run 36262097798: packages/run/run/src/index.ts's step gate refuses an ended Run without naming it. M-583-1 (`5829b33803`), run 36262085852, changes only the per-call re-check and leaves this spec green.",
+        "failureSummary": "Read from each round's own narrow report. M-583-2, run 36262097798: 1 of 2 red, «BLOCKED-332 on the shipped sdk profile: a client of the real host when the session's Run is advanced to failed condition 3: a session.event or session.status the client receives carries the state failed and the reason the transition was given» — AssertionError: notifications after the tool result: [\"session.event\",\"session.event\",\"session.event\",\"session.status\"]: expected 0 to be greater than 0. The control passed. M-583-1, run 36262085852: 2 of 2 passed."
+      },
+      "note": "P4-05 U-stage supplement 9, on the shipped sdk profile: BLOCKED-332 condition 3. A client of the real host receives the state failed and the reason the transition was given, in a session.event it is sent (red first 67b321d8a5; fix B-583, eacd15e99a on the candidate). Frozen by the delegate's ruling (first100-delegate-1a, gate3 2026-09-26T19:59:57Z) from lane A's A-539 draft (artifacts/laneA/a-539-p4-12-p4-05-freeze-drafts.md, sha256 d1d8705f…). expectCases are the full names in the full run 36264470501 at 7de79a1658, where tests/first100/fixtures/P4-05.terminal-sdk-client.spec.ts ran 2 cases and each frozen title passed once; the entry is frozen after that run, so its cell is observed by the next full run. files add the stub model server and the test tool the spec mounts, the CLI entry it runs (apps/cli/src/bin.ts), and the sources B-583 changed. The observing tree is pinned at refs/dsh/freeze/P4-05.U.9/2026-09-26T20-08-38.000Z -> 7de79a1658bc4baff424522f433a02221fa462fb, whose tree is dryRunProof.treeSha."
     }
   ]
 }
