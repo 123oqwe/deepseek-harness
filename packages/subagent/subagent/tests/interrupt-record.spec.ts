@@ -29,6 +29,7 @@ import * as SubagentSpawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import { commitInterrupt, interruptRecorded } from '../src/interrupt-record.ts'
+import { TestSessionQuery } from './test-session-query.ts'
 
 const PARENT = SessionId('parent')
 const CHILD = SessionId('child')
@@ -43,7 +44,8 @@ afterEach(async () => {
 })
 
 /**
- * Boot the loop, a spawn provider, a lease store, the Run Service and a durable bus over `directory`.
+ * Boot the loop, a spawn provider, a lease store, the Run Service, a durable
+ * bus over `directory`, and the session query a cold resume reads the child through.
  * @param script - the scripted model's responses, in request order.
  * @param directory - the stores' directory; a new one when absent.
  * @returns the booted Context, its scripted model, and the stores' directory.
@@ -56,6 +58,7 @@ async function setup(script: ConstructorParameters<typeof MockAdapter>[0], direc
   await mountAgentLoopTestDependencies(ctx)
   await ctx.plugin(JsonlSessionPersistence, { root: join(storeDirectory, 'sessions') })
   await ctx.plugin(AgentLoop, { agents: [] })
+  await ctx.plugin(TestSessionQuery)
   await ctx.plugin(InMemoryLeaseStorePlugin)
   await ctx.plugin(RunPlugin, { storePath: join(storeDirectory, 'runs.json'), leaseMs: 60_000 })
   await ctx.plugin(MessageBusPlugin, { directory: storeDirectory })
