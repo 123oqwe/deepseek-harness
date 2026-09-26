@@ -21,7 +21,7 @@ import type {} from '@deepseek-ai/dsh-session-projection'
 import type {} from '@deepseek-ai/dsh-user-approval'
 import type { ToolExecution, ToolExecutionResult, ToolExecutionToken } from '@deepseek-ai/dsh-tools'
 import { Config, resolveConfig, workspaceBaselineIdentity, type ResolvedConfig } from './config.ts'
-import { authorizeProjectLoad } from '@deepseek-ai/dsh-workspace-trust'
+import { authorizeProjectLoad, isHostUserPrincipal } from '@deepseek-ai/dsh-workspace-trust'
 import type { TrustState } from '@deepseek-ai/dsh-workspace-trust/types'
 import { attachedIdentity } from '@deepseek-ai/dsh-session'
 import { findProjectRoot, loadBaselineInstructionSet } from './files.ts'
@@ -57,7 +57,9 @@ export { Config, name }
  * approval service, no answerer (`'unavailable'`), a refusal, a non-host
  * principal, or an abort. That is the same direction the gate already had, so
  * a composition that cannot ask behaves exactly as it did before this
- * question existed.
+ * question existed. A session with no attached principal, or one that is not
+ * a host user ({@link isHostUserPrincipal}), is not asked at all, because only
+ * a host user can grant.
  * @param ctx - the plugin context, for the optional trust and approval services.
  * @param agent - the agent whose session asks and whose principal authorizes.
  * @param projectRoot - the resolved project root whose trust is in question.
@@ -83,7 +85,8 @@ async function askForReadTrustOnce(
   // before this check spent the session's one question on a step that could
   // never put it, so a session that later gained an identity would never be
   // asked (BLOCKED-200 found the absence; this was the bug it exposed here).
-  if (principal === undefined) return state
+  // A service or agent principal cannot grant, so nobody is asked for it.
+  if (principal === undefined || !isHostUserPrincipal(principal)) return state
   asked.add(agent.session)
   const outcome = await approval.request({
     agent,

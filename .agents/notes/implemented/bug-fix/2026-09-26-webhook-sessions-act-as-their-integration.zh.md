@@ -14,6 +14,7 @@ BLOCKED-340；P2-01 acceptance[0] 要求任何 action 都能经完整委托链�
 - **不是提供方账号。** 触发事件的账号等载荷字段不参与：签名认证的是集成，而不是那个账号。
 - **宿主用户的租户。** principal 在 `dsh-host-user-id` 的 `resolveTenantId` 返回的租户里签发（`$DSH_TENANT`，否则为 `local`），该包现在导出这个函数。因此，宿主用户恢复一个由 webhook 创建的会话时，给出的租户与会话记录的一致，这正是 `dsh-agent-loop` 的 `resolveSessionIdentity` 所要求的。
 - **每个 Agent 一个 run。** 每个创建出的 Agent 都有新的 run id，以及一条以该 principal 为根的一跳委托链。会话只记录一次 kind 为 `service` 的 `identity/attached`，每个 action manifest 都以该 principal 为 actor。
+- **只有宿主用户会被问是否信任工作区。** `dsh-agent-instructions` 曾为任何已挂载的 principal 提出工作区信任问题，而只有宿主用户能授予信任（`dsh-workspace-trust` 的 `isHostUserPrincipal`）。挂上集成之后，webhook 会话的第一步就停在这个问题上，无人作答（A-421 的修复轮，run 36227006417）。现在只为宿主用户提问，因此 webhook 会话不经询问、保持工作区未信任，与它没有身份时一样。
 
 ## 考虑过的替代方案
 
@@ -25,4 +26,4 @@ BLOCKED-340；P2-01 acceptance[0] 要求任何 action 都能经完整委托链�
 
 - webhook 创建的会话，其 manifest 与审计记录中的 actor 是 `webhook:<kind>:<source>`，不再是匿名 actor。
 - 在某个租户中运行的部署只需设置一次 `$DSH_TENANT`，宿主用户与其 webhook 集成都用它。
-- 验证：lane A 的 A-421（`apps/cli/tests/profiles/web/tests/webhook-actor.e2e.ts`）、`dsh-webhook` 的 session spec 与 `dsh-host-user-id` 的 spec。去掉身份挂载的变异 M-606-1 会让 A-421 的那条用例重新变红。
+- 验证：lane A 的 A-421（`apps/cli/tests/profiles/web/tests/webhook-actor.e2e.ts`）、`dsh-webhook` 的 session spec、`dsh-host-user-id` 的 spec 与 `dsh-agent-instructions` 的 trust-ask spec。去掉身份挂载的变异 M-606-1 会让 A-421 的那条用例重新变红。

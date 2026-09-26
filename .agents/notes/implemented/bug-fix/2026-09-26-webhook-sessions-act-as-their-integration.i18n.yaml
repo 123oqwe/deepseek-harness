@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-26-webhook-sessions-act-as-their-integration.md
-2026-09-26-webhook-sessions-act-as-their-integration.md: 558e8342a9690d40e365c793357aad51e6ba530e
-2026-09-26-webhook-sessions-act-as-their-integration.zh.md: 03fc09145512f0350bdf84a765d0545b8a799cca
+2026-09-26-webhook-sessions-act-as-their-integration.md: f7a46162fccb61c7eb1099f02675fd689168edd1
+2026-09-26-webhook-sessions-act-as-their-integration.zh.md: 2566cde8539f6f8da9da109dfc488db8d34af035
