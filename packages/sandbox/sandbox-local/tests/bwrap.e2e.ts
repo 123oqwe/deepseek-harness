@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync, readlinkSync, rmSync } from 'node:fs'
 import { mkdtemp, rm } from 'node:fs/promises'
+import { createServer, type Server } from 'node:net'
 import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -8,28 +9,53 @@ import { Context } from '@deepseek-ai/cordis'
 import type { SandboxPolicy } from '@deepseek-ai/dsh-sandbox'
 import { LocalSandboxProvider } from '@deepseek-ai/dsh-sandbox-local'
 import { bwrapProfileArgs } from '../src/profiles.ts'
+import { seccompTrampoline, unixSocketFilter } from '../src/seccomp.ts'
 
 /**
  * Keyless backend integration through `confine()` and a real bwrap process. With no rung forced,
  * a passing probe must select the first rung. Tests assert world effects, wrap shape, and that the
  * kernel denial matches the advertised dialect; consumer coverage lives in dsh-bash-sandbox.
- * Skips when bwrap or user namespaces are unavailable. HOME-based workspaces avoid bwrap's
- * ephemeral `/tmp`, so workspace-write actually proves the workspace-root rebind.
+ * Skips when bwrap, user namespaces, or the seccomp filter are unavailable, probing exactly as the
+ * provider does. HOME-based workspaces avoid bwrap's ephemeral `/tmp`, so workspace-write actually
+ * proves the workspace-root rebind, and a HOME-based socket stays visible through the read-only
+ * root bind, so its refusal is the filter's and not the ephemeral `/tmp`'s.
  */
 
-const probe = spawnSync('bwrap', [...bwrapProfileArgs({ mode: 'read-only', workspaceRoot: '/' }), '--', 'true'], { timeout: 5_000, stdio: 'ignore' })
+const filter = unixSocketFilter(process.arch)
+const runner = ['bwrap', ...bwrapProfileArgs({ mode: 'read-only', workspaceRoot: '/' })]
+const probeArgv = [...filter === undefined ? runner : seccompTrampoline(filter, [...runner, '--seccomp', '3']), '--', 'true']
+const probe = spawnSync(probeArgv[0] as string, probeArgv.slice(1), { timeout: 5_000, stdio: 'ignore' })
 const bwrapUsable = probe.status === 0
+
+/** A Node program that connects to the Unix socket named by its argument and prints `connected` or the error code. */
+const CONNECT = 'const s=require("net").connect(process.argv[1]);'
+  + 's.on("connect",()=>{console.log("connected");process.exit(0)});s.on("error",e=>{console.log(e.code);process.exit(0)})'
 
 let ctx: Context | undefined
 const tempDirs: string[] = []
 const tempFiles: string[] = []
+const servers: Server[] = []
 
 afterEach(async () => {
   await ctx?.fiber.dispose()
   ctx = undefined
+  await Promise.all(servers.splice(0).map(server => new Promise<void>((resolve) => { server.close(() => { resolve() }) })))
   await Promise.all(tempDirs.splice(0).map(dir => rm(dir, { recursive: true, force: true })))
   for (const file of tempFiles.splice(0)) rmSync(file, { force: true })
 })
+
+/**
+ * Listen on a Unix-domain socket in `dir`.
+ * @param dir - a directory under the home directory.
+ * @returns the socket's path.
+ */
+async function listeningSocket(dir: string): Promise<string> {
+  const path = join(dir, 's.sock')
+  const server = createServer()
+  servers.push(server)
+  await new Promise<void>((resolve) => { server.listen(path, resolve) })
+  return path
+}
 
 async function tempDir(base: string): Promise<string> {
   const dir = await mkdtemp(join(base, 'dsh-bwrap-e2e-'))
@@ -55,9 +81,41 @@ describe.skipIf(!bwrapUsable)('sandbox-local: real bwrap confinement', () => {
     const workdir = await tempDir(tmpdir())
     const sandbox = await provider()
     const confined = sandbox.confine(['true'], { mode: 'read-only', workspaceRoot: workdir })
-    expect(confined.argv[0]).toBe('bwrap')
-    expect(confined.enforcement).toBe('full')
+    expect(confined.backend).toBe('bwrap')
+    expect(confined.enforcement).toBe(filter === undefined ? 'partial' : 'full')
     expect(confined.denialSignatures).toEqual(['read-only file system'])
+  })
+
+  it.skipIf(filter === undefined).each(['read-only', 'workspace-write'] as const)(
+    '%s refuses a Unix-domain socket: creating one fails with EPERM, while the same socket accepts an unconfined client',
+    async (mode) => {
+      const workdir = await tempDir(homedir())
+      const socket = await listeningSocket(workdir)
+      const unconfined = spawnSync(process.execPath, ['-e', CONNECT, socket], { timeout: 30_000, encoding: 'utf8' })
+      expect(unconfined.stdout).toBe('connected\n')
+      const sandbox = await provider()
+      const { result, confined } = runConfined(sandbox, `"${process.execPath}" -e '${CONNECT}' "${socket}"`, { mode, workspaceRoot: workdir })
+      expect(confined.reachableSockets).toEqual([])
+      expect(result.status).toBe(0)
+      expect(result.stdout).toBe('EPERM\n')
+    },
+  )
+
+  it.skipIf(filter === undefined)('keeps pipes, the socket pairs a child process is spawned over, and inet sockets working', async () => {
+    const workdir = await tempDir(homedir())
+    const sandbox = await provider()
+    const policy: SandboxPolicy = { mode: 'workspace-write', workspaceRoot: workdir }
+    const pipe = runConfined(sandbox, 'printf piped | cat', policy)
+    expect(pipe.result.stdout).toBe('piped')
+    // libuv spawns a child over socketpair(AF_UNIX), which the filter leaves allowed.
+    const child = runConfined(sandbox, `"${process.execPath}" -e 'process.stdout.write(require("child_process").execFileSync("echo",["paired"]))'`, policy)
+    expect(child.result.stdout).toBe('paired\n')
+    const inet = runConfined(
+      sandbox,
+      `"${process.execPath}" -e 'const s=require("net").createServer().listen(0,"127.0.0.1",()=>{console.log("inet");s.close()})'`,
+      policy,
+    )
+    expect(inet.result.stdout).toBe('inet\n')
   })
 
   it('read-only denies a write — the file must NOT exist, and the kernel speaks the advertised dialect', async () => {

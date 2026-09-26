@@ -59,7 +59,9 @@ The mode names the file effects a command may perform; enforcement completeness 
 | `workspace-write` | Allows writes under the workspace root plus a backend-defined temp area |
 | `danger-full-access` | Bypasses confinement; the consumer spawns its original argv |
 
-Enforcement is reported per call: `full` means the backend governs every promised file effect, while `partial` means an active backend or older kernel ABI governs only a subset — the Windows ACL rung and older Landlock ABIs are the current partial cases, so a consumer that requires the absolute boundary can reject or surface them.
+Both confining modes also refuse Unix-domain sockets where the backend can, so a command cannot reach the Docker daemon or an SSH agent; `danger-full-access` lifts that refusal with the rest.
+
+Enforcement is reported per call: `full` means the backend governs every promised file effect and refuses Unix-domain sockets, while `partial` means an active backend or older kernel ABI governs only a subset, or the backend cannot refuse Unix-domain sockets. The Windows ACL rung, Landlock and an operator-configured runner are the current partial cases, so a consumer that requires the absolute boundary can reject or surface them. Each confined call also names its backend and lists the known host daemon and agent sockets that backend leaves reachable.
 
 ### Denied calls and escalation
 

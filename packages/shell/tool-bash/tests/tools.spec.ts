@@ -138,7 +138,7 @@ class RecordingSandboxExecutor extends ShellExecutor {
         denied: false,
         ...spec.command === 'without optional sandbox facts'
           ? {}
-          : { enforcement: 'full' as const, runnerFailed: false },
+          : { enforcement: 'full' as const, backend: 'fake-runner', reachableSockets: ['/run/docker.sock'], runnerFailed: false },
       },
     })
   }
@@ -725,7 +725,39 @@ describe('sandbox escalation through the generic task producer', () => {
       sandbox: { mode: 'read-only', denied: false },
     })
     expect((result.value as { sandbox: object }).sandbox).not.toHaveProperty('enforcement')
+    expect((result.value as { sandbox: object }).sandbox).not.toHaveProperty('backend')
+    expect((result.value as { sandbox: object }).sandbox).not.toHaveProperty('reachableSockets')
     expect((result.value as { sandbox: object }).sandbox).not.toHaveProperty('runnerFailed')
+    // Nothing confined the command, so the result persists no sandbox meta.
+    expect(result.meta).toBeUndefined()
+  })
+
+  it('keeps the confining backend and the sockets it left reachable on the persisted meta, out of the model\'s text', async () => {
+    const { ctx } = await setupSandboxed()
+    const result = await call(ctx, 'bash', { command: 'true', description: 'confined foreground' })
+    if (result.isError) throw new Error('expected foreground bash success')
+    expect(result.value).toMatchObject({
+      sandbox: { mode: 'read-only', denied: false, enforcement: 'full', backend: 'fake-runner', reachableSockets: ['/run/docker.sock'] },
+    })
+    expect(result.meta).toEqual({
+      sandbox: {
+        mode: 'read-only',
+        denied: false,
+        enforcement: 'full',
+        backend: 'fake-runner',
+        reachableSockets: ['/run/docker.sock'],
+        runnerFailed: false,
+      },
+    })
+    expect(text(result)).not.toContain('fake-runner')
+    expect(text(result)).not.toContain('/run/docker.sock')
+  })
+
+  it('persists no sandbox meta for a background start, whose facts arrive when the job settles', async () => {
+    const { ctx } = await setupSandboxed()
+    const result = await call(ctx, 'bash', { command: 'true', description: 'background', run_in_background: true })
+    expect(text(result)).toBe('started background job bash-1')
+    expect(result.meta).toBeUndefined()
   })
 
   it('keeps the exhaustiveness backstop for a rogue approval implementation', async () => {

@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-Use `dsh-bash-sandbox` to run each Bash command with file-access confinement instead of the harness process's full authority. Results report the selected mode, denied file operations, and whether the runner fully enforced that mode. If no runner can enforce a confined mode, the command fails with `SANDBOX_UNAVAILABLE` rather than running unconfined. Choose it when deployments need file isolation; network access and process visibility remain outside its guarantees.
+Use `dsh-bash-sandbox` to run each Bash command with file-access confinement instead of the harness process's full authority. Results report the selected mode, denied file operations, and whether the runner fully enforced that mode. If no runner can enforce a confined mode, the command fails with `SANDBOX_UNAVAILABLE` rather than running unconfined. Where the backend can, it also refuses Unix-domain sockets, so a command cannot reach the Docker daemon or an SSH agent. Choose it when deployments need file isolation; other network access and process visibility remain outside its guarantees.
 
 ## Table of Contents
 
@@ -29,7 +29,7 @@ Mount this executor instead of `dsh-bash-local` when commands must not run with 
 
 ### When to choose it
 
-Choose it when a deployment needs file-level confinement for Bash commands: the configured policy decides the default mode and workspace root, and each session can run under a different mode per call through the tool's escalation flow. The modes govern file effects only — network stays unrestricted and process visibility is backend-specific. For unconfined execution, or when no sandbox backend is available on the platform, mount `dsh-bash-local` instead.
+Choose it when a deployment needs file-level confinement for Bash commands: the configured policy decides the default mode and workspace root, and each session can run under a different mode per call through the tool's escalation flow. The modes govern file effects, and Unix-domain sockets where the backend can refuse them ([`dsh-sandbox-local`](../../sandbox/sandbox-local/README.md#unix-domain-sockets) lists which backends can and what that breaks) — other network access stays unrestricted and process visibility is backend-specific. For unconfined execution, or when no sandbox backend is available on the platform, mount `dsh-bash-local` instead.
 
 ### Modes and file effects
 
@@ -57,7 +57,7 @@ The executor takes no sandbox configuration of its own: the default mode and wor
 
 ### Denials are result facts
 
-A denied command is reported, not retried silently: the result carries `sandbox: { mode, denied: true }` and the model-facing tool appends the denial marker. When escalation is available, the model may retry the exact command once with the narrowest wider mode and a one-sentence justification; the approval prompt asks the user, and nothing executes before approval. This executor never negotiates permissions itself — the tool layer drives the override.
+A denied command is reported, not retried silently: the result carries `sandbox: { mode, denied: true }` and the model-facing tool appends the denial marker. When escalation is available, the model may retry the exact command once with the narrowest wider mode and a one-sentence justification; the approval prompt asks the user, and nothing executes before approval. This executor never negotiates permissions itself — the tool layer drives the override. Every confined result also names the backend that confined the command (`sandbox.backend`) and, when that backend cannot refuse Unix-domain sockets, lists the known host sockets it left reachable (`sandbox.reachableSockets`).
 
 ### Failures and recovery
 
@@ -88,14 +88,14 @@ The executor is the sandboxing Service Provider for the `ctx.shell` seam: it inh
 
 ### Main flow
 
-For a confined mode, `resolve()` stamps the per-call policy (the session's mode override, or the deployment fallback); `run` and `start` wrap the bash argv through the provider and hand the confined argv to the inherited subprocess path. At settlement the executor classifies the outcome: a runner failure outranks a denial because the command never ran, a failed run whose stderr carries the backend's denial dialect is reported `denied: true`, and every confined run carries its mode and enforcement facts. `danger-full-access` bypasses the provider entirely and stamps `denied: false`.
+For a confined mode, `resolve()` stamps the per-call policy (the session's mode override, or the deployment fallback); `run` and `start` wrap the bash argv through the provider and hand the confined argv to the inherited subprocess path. At settlement the executor classifies the outcome: a runner failure outranks a denial because the command never ran, a failed run whose stderr carries the backend's denial dialect is reported `denied: true`, and every confined run carries its mode, enforcement, backend and reachable-socket facts. `danger-full-access` bypasses the provider entirely and stamps `denied: false`.
 
 ### Invariants
 
 - **Fail closed** — a confined mode with no usable runner throws `SANDBOX_UNAVAILABLE`; unconfined passthrough never happens for a confined policy.
 - **Deny-only at the seam** — this executor never grants permission; the approval flow lives in the tool layer.
 - **Per-process facts** — confinement facts are retained per handle until settlement, because a provider may vary enforcement between overlapping calls.
-- **File effects only** — the mode vocabulary claims only file effects.
+- **File effects and Unix-domain sockets** — the mode vocabulary claims file effects, and Unix-domain sockets where the backend can refuse them.
 
 </details>
 
@@ -137,7 +137,7 @@ A standing-policy change appends a complete owner-rendered context snapshot afte
 
 #### What the model sees
 
-After ordinary bounded output, a denied call appends exactly `[sandbox: file access denied under <mode> mode]`. When escalation is available it next appends `[sandbox: escalation available — retry this exact command once with sandbox_permissions (the narrowest wider mode that suffices) + justification; the approval prompt asks the user]`. A settled background runner failure instead appends `[sandbox: the sandbox runner itself failed under <mode> mode — the command did not run; this is a sandbox problem, not a command failure]`.
+After ordinary bounded output, a denied call appends exactly `[sandbox: file access denied under <mode> mode]`. When escalation is available it next appends `[sandbox: escalation available — retry this exact command once with sandbox_permissions (the narrowest wider mode that suffices) + justification; the approval prompt asks the user]`. A settled background runner failure instead appends `[sandbox: the sandbox runner itself failed under <mode> mode — the command did not run; this is a sandbox problem, not a command failure]`. A refused Unix-domain socket shows in the command's own error output as `Operation not permitted`; under Seatbelt, whose file-denial dialect is that same text, the call is also classified as denied and carries the markers above, while under bwrap it carries none.
 
 #### Token effect
 
@@ -168,7 +168,7 @@ Append-only; newly visible content follows the reusable request prefix and does 
 
 These limits define when this executor is not a general security boundary. They are current package constraints, not a roadmap.
 
-- **Confinement covers file effects only** — network restriction and a uniform process-visibility guarantee are absent, so the modes are not a general-purpose security sandbox.
+- **Confinement covers file effects, and Unix-domain sockets where the backend can refuse them** — other network restriction and a uniform process-visibility guarantee are absent, so the modes are not a general-purpose security sandbox.
 - **Denials are inferred from failed-command stderr** — backend signatures make the inference portable, but a matching application error can be classified as a denial and a denial omitted from the retained tail can be missed.
 - **An asynchronously observed background runner failure has no immediate error channel** — it is recorded on the settled process and surfaces when the caller reads the generic task with `job_output`; a synchronous subprocess throw that names the runner path instead fails `start()` immediately.
 - **`danger-full-access` deliberately bypasses `ctx.sandbox`** — it is an explicit unconfined mode, not a wider sandbox profile.

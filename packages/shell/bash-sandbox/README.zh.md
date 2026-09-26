@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## 概述
 
-使用 `dsh-bash-sandbox` 运行每条 Bash 命令，使其文件访问受到限制，而不是使用 harness 进程的完整权限。结果会报告所选模式、被拒绝的文件操作，以及 runner 是否完整实施该模式。如果没有 runner 能实施受限模式，命令会以 `SANDBOX_UNAVAILABLE` 失败，绝不会无隔离地运行。部署需要文件隔离时选择它；网络访问和进程可见性不在其保证范围内。
+使用 `dsh-bash-sandbox` 运行每条 Bash 命令，使其文件访问受到限制，而不是使用 harness 进程的完整权限。结果会报告所选模式、被拒绝的文件操作，以及 runner 是否完整实施该模式。如果没有 runner 能实施受限模式，命令会以 `SANDBOX_UNAVAILABLE` 失败，绝不会无隔离地运行。在后端做得到时，它还拒绝 Unix-domain socket，因此命令连不上 Docker 守护进程或 SSH agent。部署需要文件隔离时选择它；其他网络访问和进程可见性不在其保证范围内。
 
 ## 目录
 
@@ -29,7 +29,7 @@ kind: "package-reference"
 
 ### 何时选择
 
-当部署需要为 Bash 命令提供文件级隔离时选择它：已配置的策略决定默认模式与工作区根目录，每个会话还可以通过工具的升权流程按调用使用不同模式。模式只约束文件影响——网络仍不受限制，进程可见性因后端而异。需要非隔离执行，或平台没有可用沙箱后端时，请改为挂载 `dsh-bash-local`。
+当部署需要为 Bash 命令提供文件级隔离时选择它：已配置的策略决定默认模式与工作区根目录，每个会话还可以通过工具的升权流程按调用使用不同模式。模式约束文件影响，并在后端做得到时约束 Unix-domain socket（哪些后端做得到、会让什么失效，见 [`dsh-sandbox-local`](../../sandbox/sandbox-local/README.zh.md#unix-domain-sockets)）——其他网络访问仍不受限制，进程可见性因后端而异。需要非隔离执行，或平台没有可用沙箱后端时，请改为挂载 `dsh-bash-local`。
 
 ### 模式与文件影响
 
@@ -57,7 +57,7 @@ kind: "package-reference"
 
 ### 拒绝是结果事实
 
-被拒绝的命令会被报告，而不是静默重试：结果携带 `sandbox: { mode, denied: true }`，面向模型的工具会追加拒绝标记。当升权可用时，模型可以用最窄的充分宽模式与一句理由重试同一条命令一次；批准提示会询问用户，未经批准绝不执行任何东西。本执行器自身绝不协商权限——覆盖值由工具层驱动。
+被拒绝的命令会被报告，而不是静默重试：结果携带 `sandbox: { mode, denied: true }`，面向模型的工具会追加拒绝标记。当升权可用时，模型可以用最窄的充分宽模式与一句理由重试同一条命令一次；批准提示会询问用户，未经批准绝不执行任何东西。本执行器自身绝不协商权限——覆盖值由工具层驱动。每个受限结果还会给出约束该命令的后端（`sandbox.backend`），当该后端无法拒绝 Unix-domain socket 时，还会列出它留下可连的已知宿主 socket（`sandbox.reachableSockets`）。
 
 ### 失败与恢复
 
@@ -88,14 +88,14 @@ kind: "package-reference"
 
 ### 主要流程
 
-对受限模式，`resolve()` 标记每次调用的策略（会话的模式覆盖值，或部署回退）；`run` 与 `start` 把 bash argv 经提供方包装，再把受限 argv 交给继承的 subprocess 路径。结算时执行器对结果分类：runner 失败优先于拒绝（命令从未运行），stderr 携带后端拒绝方言的失败运行报告 `denied: true`，每次受限运行都携带模式与强制执行事实。`danger-full-access` 完全绕过提供方，并标记 `denied: false`。
+对受限模式，`resolve()` 标记每次调用的策略（会话的模式覆盖值，或部署回退）；`run` 与 `start` 把 bash argv 经提供方包装，再把受限 argv 交给继承的 subprocess 路径。结算时执行器对结果分类：runner 失败优先于拒绝（命令从未运行），stderr 携带后端拒绝方言的失败运行报告 `denied: true`，每次受限运行都携带模式、强制执行、后端与可连 socket 事实。`danger-full-access` 完全绕过提供方，并标记 `denied: false`。
 
 ### 不变式
 
 - **失败关闭**——受限模式没有可用 runner 时抛 `SANDBOX_UNAVAILABLE`；受限策略绝不会出现无隔离直通。
 - **seam 只报告拒绝**——本执行器从不授予权限；批准流程位于工具层。
 - **按进程保留事实**——隔离事实在结算前按句柄保留，因为提供方可能在重叠调用之间改变强制执行方式。
-- **只约束文件影响**——模式词汇只声称文件影响。
+- **约束文件影响与 Unix-domain socket**——模式词汇声称文件影响，并在后端做得到时声称拒绝 Unix-domain socket。
 
 </details>
 
@@ -137,7 +137,7 @@ kind: "package-reference"
 
 #### 模型看到的内容
 
-在普通有界输出之后，被拒绝的调用会精确追加 `[sandbox: file access denied under <mode> mode]`。当升权可用时，接下来精确追加 `[sandbox: escalation available — retry this exact command once with sandbox_permissions (the narrowest wider mode that suffices) + justification; the approval prompt asks the user]`。已结算的后台 runner 失败则追加 `[sandbox: the sandbox runner itself failed under <mode> mode — the command did not run; this is a sandbox problem, not a command failure]`。
+在普通有界输出之后，被拒绝的调用会精确追加 `[sandbox: file access denied under <mode> mode]`。当升权可用时，接下来精确追加 `[sandbox: escalation available — retry this exact command once with sandbox_permissions (the narrowest wider mode that suffices) + justification; the approval prompt asks the user]`。已结算的后台 runner 失败则追加 `[sandbox: the sandbox runner itself failed under <mode> mode — the command did not run; this is a sandbox problem, not a command failure]`。被拒绝的 Unix-domain socket 在命令自己的错误输出里显示为 `Operation not permitted`；Seatbelt 的文件拒绝方言正是这段文字，所以在 Seatbelt 下该调用也会被判为拒绝并带上述标记，在 bwrap 下则不带。
 
 #### Token 影响
 
@@ -168,7 +168,7 @@ kind: "package-reference"
 
 这些限制说明本执行器何时不是通用安全边界。它们是当前包约束，不是路线图。
 
-- **限制只覆盖文件影响**——不提供网络限制和统一的进程可见性保证，因此这些模式不是通用安全沙箱。
+- **限制覆盖文件影响，并在后端做得到时覆盖 Unix-domain socket**——不提供其他网络限制和统一的进程可见性保证，因此这些模式不是通用安全沙箱。
 - **拒绝从失败命令的 stderr 推断**——后端特征使该推断可跨平台使用，但包含相同特征的应用错误可能被分类为拒绝，也可能遗漏未出现在保留尾部中的拒绝。
 - **异步观测到的后台 runner 失败没有即时错误通道**——它记录在已结算进程上，并在调用方用 `job_output` 读取通用任务时呈现；同步抛出且指明 runner 路径的子进程错误则会让 `start()` 立即失败。
 - **`danger-full-access` 有意绕过 `ctx.sandbox`**——它是显式无约束模式，不是更宽的沙箱 profile。

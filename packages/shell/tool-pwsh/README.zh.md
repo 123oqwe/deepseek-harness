@@ -89,7 +89,7 @@ kind: "package-reference"
 
 ### 渲染与退出标记
 
-渲染器共享 bash 工具的结构与来自 `dsh-shell` 的 `parseExitStatus` 标记约定：干净退出（0、无信号）不产生标记；UI 卡片把退出标记消费为退出状态 pill。Windows 强制终止以 exit 1 结算且没有信号，因此 `[killed by signal: …]` 仅适用于 POSIX。`tool:pwsh` 提示词区段（first-party 顺序 1010）教授退出标记约定与「中断后 exit 1」的 Windows 解读。
+渲染器共享 bash 工具的结构与来自 `dsh-shell` 的 `parseExitStatus` 标记约定：干净退出（0、无信号）不产生标记；UI 卡片把退出标记消费为退出状态 pill。Windows 强制终止以 exit 1 结算且没有信号，因此 `[killed by signal: …]` 仅适用于 POSIX。`tool:pwsh` 提示词区段（first-party 顺序 1010）教授退出标记约定与「中断后 exit 1」的 Windows 解读。与 bash 工具一样，受限的前台运行会把它的沙箱事实作为 `tool/result` 的 `meta.sandbox`（模式、拒绝、强制执行、后端，以及存在时的可连宿主 socket）持久化，供操作者查看；模型永远收不到这些事实，非受限或后台调用不持久化任何 `meta`。
 
 </details>
 

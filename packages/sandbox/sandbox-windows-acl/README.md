@@ -67,7 +67,7 @@ The workspace ACEs are granted standing — `dispose()` leaves them, because the
 
 ### What confinement gives you
 
-Under `workspace-write`, the child may write into the workspace and its private temp directory; other ACL-addressable writes are denied except the documented Everyone and hard-link boundaries. Under `read-only`, no explicit write grants exist, so writes are denied with the same documented ambient boundaries.
+Under `workspace-write`, the child may write into the workspace and its private temp directory; other ACL-addressable writes are denied except the documented Everyone and hard-link boundaries. Under `read-only`, no explicit write grants exist, so writes are denied with the same documented ambient boundaries. Neither mode refuses Unix-domain sockets; `dsh-sandbox-local` reports that as `partial` enforcement and lists the known host sockets the child can reach ([Unix-domain sockets](../sandbox-local/README.md#unix-domain-sockets)).
 
 Temp isolation is per live session/workspace pair: sessions sharing a workspace share its write authority but cannot write one another's temp directories. A fresh provider always chooses a new temp path and SID, so crash residue cannot block or authorize a resumed session.
 

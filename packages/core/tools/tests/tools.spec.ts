@@ -164,6 +164,24 @@ describe('ToolRuntime', () => {
     expect('meta' in result).toBe(false)
   })
 
+  it('omits meta for a call whose presentation projector returns undefined', async () => {
+    const ctx = await setup()
+    ctx.tools.register({
+      ...echoTool,
+      name: 'sometimes-meta-tool',
+      output: {
+        ...echoTool.output,
+        presentationMeta: () => undefined,
+      },
+      async execute() {
+        return 'ok'
+      },
+    })
+    const result = await ctx.tools.execute({ signal: testToolSignal, callId: ToolCallId('c1'), name: 'sometimes-meta-tool', arguments: {} })
+    expect(result).toEqual({ content: [{ type: 'text', text: 'ok' }], isError: false, value: 'ok' })
+    expect('meta' in result).toBe(false)
+  })
+
   it('normalizes a contract-violating non-cloneable result before final notification', async () => {
     const ctx = await setup()
     let observedError: boolean | undefined

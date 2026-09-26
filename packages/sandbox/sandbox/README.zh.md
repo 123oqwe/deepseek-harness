@@ -59,7 +59,9 @@ kind: "package-reference"
 | `workspace-write` | 允许写入工作区根目录及后端定义的临时区域 |
 | `danger-full-access` | 绕过隔离；消费方直接 spawn 原始 argv |
 
-强制执行逐调用报告：`full` 表示后端管辖模式承诺的每个文件操作，`partial` 表示活动后端或较旧的内核 ABI 只管辖子集——Windows ACL 档与较旧的 Landlock ABI 是当前的部分强制执行情形，需要绝对边界的消费方可以拒绝或向上暴露它们。
+两种受限模式在后端做得到时还会拒绝 Unix-domain socket，因此命令连不上 Docker 守护进程或 SSH agent；`danger-full-access` 会连同其余限制一起解除这项拒绝。
+
+强制执行逐调用报告：`full` 表示后端管辖模式承诺的每个文件操作并拒绝 Unix-domain socket，`partial` 表示活动后端或较旧的内核 ABI 只管辖子集，或后端无法拒绝 Unix-domain socket。Windows ACL 档、Landlock 与操作者配置的 runner 是当前的部分强制执行情形，需要绝对边界的消费方可以拒绝或向上暴露它们。每次受限调用还会给出其后端名称，并列出该后端留下可连的已知宿主守护进程与 agent socket。
 
 ### 被拒绝的调用与升权
 

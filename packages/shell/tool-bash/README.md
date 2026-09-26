@@ -59,7 +59,7 @@ Passing `run_in_background: true` returns a job id immediately and no timeout ap
 
 ### Sandboxed execution and escalation
 
-When the mounted executor confines commands (for example `dsh-bash-sandbox`), a blocked file operation is reported as `[sandbox: file access denied under <mode> mode]` — a policy denial, not a command failure. The model may then retry the exact same command once in the same turn with `sandbox_permissions` (the narrowest wider mode that suffices) and a one-sentence `justification`; the approval prompt raised by that retry is how the user consents. Escalation is never speculative: a request with no real prior denial, or one that is not strictly wider than the current mode, fails closed without running anything, and a rejected escalation is final for that command.
+When the mounted executor confines commands (for example `dsh-bash-sandbox`), a blocked file operation is reported as `[sandbox: file access denied under <mode> mode]` — a policy denial, not a command failure. The model may then retry the exact same command once in the same turn with `sandbox_permissions` (the narrowest wider mode that suffices) and a one-sentence `justification`; the approval prompt raised by that retry is how the user consents. Escalation is never speculative: a request with no real prior denial, or one that is not strictly wider than the current mode, fails closed without running anything, and a rejected escalation is final for that command. The sandbox may also refuse Unix-domain sockets, such as the Docker daemon's or an SSH agent's; the tool description tells the model that opening one then fails with `Operation not permitted`, a sandbox denial that only `danger-full-access` lifts ([which backends refuse them](../../sandbox/sandbox-local/README.md#unix-domain-sockets)).
 
 ### What can go wrong
 
@@ -97,7 +97,7 @@ The tool resolves the workdir before `ctx.shell.resolve()` runs: an explicit rel
 
 ### Rendering story
 
-The result text is stdout, then a marked `[stderr]` section, then conditional markers: truncation notice, sandbox denial (plus the same-turn escalation hint when the composition advertises escalation), timeout, signal, and exit code — each on its own line. The exit marker doubles as the UI card's exit-status pill: the shared `parseExitStatus` from `dsh-shell` consumes it from the output body, so replay shows the pill without duplicating the marker.
+The result text is stdout, then a marked `[stderr]` section, then conditional markers: truncation notice, sandbox denial (plus the same-turn escalation hint when the composition advertises escalation), timeout, signal, and exit code — each on its own line. The exit marker doubles as the UI card's exit-status pill: the shared `parseExitStatus` from `dsh-shell` consumes it from the output body, so replay shows the pill without duplicating the marker. A confined foreground run also persists its sandbox facts as `tool/result` `meta.sandbox` (mode, denial, enforcement, backend, and the reachable host sockets when there are any) for the operator; the model never receives them, and an unconfined or background call persists no `meta`.
 
 </details>
 
@@ -149,11 +149,11 @@ The model sees the generated [`bash` schema](../../../docs/tool-catalog.md#deeps
 
 #### Token effect
 
-Fixed schema cost on every request where the tools are visible; sandbox support adds the escalation fields and its conditional description paragraph.
+Fixed schema cost on every request where the tools are visible, including the description's sentence on refused Unix-domain sockets, a few dozen tokens; sandbox support adds the escalation fields and its conditional description paragraph.
 
 #### KV Cache effect
 
-Prefix-stable while visibility, background support, and executor sandbox capabilities are unchanged. A restriction, config change, or executor change may invalidate reuse from the first changed tool definition.
+Prefix-stable while visibility, background support, and executor sandbox capabilities are unchanged. A restriction, config change, or executor change may invalidate reuse from the first changed tool definition, as does a release that changes the description, such as the one that added the Unix-domain socket sentence.
 
 ### Foreground result
 

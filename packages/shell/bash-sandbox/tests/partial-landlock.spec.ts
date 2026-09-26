@@ -60,6 +60,8 @@ async function setup(fatalExit?: number): Promise<SandboxBashExecutor> {
     probeBwrap: () => false,
     probeLandlock: () => 'partial',
     landlockLauncher: await fakeLauncher(fatalExit),
+    hostSockets: () => [],
+    writeWarning: () => {},
   }
   await ctx.plugin(SandboxPolicyService, { mode: 'read-only', workspaceRoot: process.cwd() })
   await ctx.plugin(LocalSubprocessRuntime)
@@ -75,6 +77,7 @@ async function setupConfiguredRunner(runner: string): Promise<SandboxBashExecuto
     runnerCommand: [runner],
     runnerFailureSignatures: ['configured-runner: fatal'],
   })
+  ;(ctx.sandbox as LocalSandboxProvider).internals = { hostSockets: () => [], writeWarning: () => {} }
   await ctx.plugin(SandboxPolicyService, { mode: 'read-only', workspaceRoot: process.cwd() })
   await ctx.plugin(LocalSubprocessRuntime)
   await ctx.plugin(SandboxBashExecutor, { cwd: process.cwd(), timeoutMs: 5_000 })
@@ -104,7 +107,8 @@ describe('partial Landlock runner-failure classification', () => {
     expect(task.sandbox).toEqual({
       mode: 'read-only',
       denied: false,
-      enforcement: 'full',
+      enforcement: 'partial',
+      backend: 'runner-command',
       runnerFailed: true,
     })
     const accounting = (bash as unknown as { processFacts: Map<unknown, unknown> }).processFacts
@@ -138,7 +142,8 @@ describe('partial Landlock runner-failure classification', () => {
       expect(task.sandbox).toEqual({
         mode: 'read-only',
         denied: false,
-        enforcement: 'full',
+        enforcement: 'partial',
+        backend: 'runner-command',
         runnerFailed: true,
       })
     },
@@ -175,7 +180,7 @@ describe('partial Landlock runner-failure classification', () => {
       expect(foreground).toMatchObject({
         exitCode: 127,
         signal: null,
-        sandbox: { mode: 'read-only', denied: false, enforcement: 'full' },
+        sandbox: { mode: 'read-only', denied: false, enforcement: 'partial', backend: 'runner-command' },
       })
       expect((foreground as { stderr: { text: string } }).stderr.text.length).toBeGreaterThan(0)
 
@@ -184,7 +189,7 @@ describe('partial Landlock runner-failure classification', () => {
       expect(background.status).toBe('completed')
       expect(background.exitCode).toBe(127)
       expect(background.signal).toBeNull()
-      expect(background.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full' })
+      expect(background.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'partial', backend: 'runner-command' })
       const output = background.readOutput().delta
       expect(output.startsWith('[stderr]\n')).toBe(true)
       expect(output.length).toBeGreaterThan('[stderr]\n'.length)
@@ -202,7 +207,7 @@ describe('partial Landlock runner-failure classification', () => {
       const result = await bash.run(bash.resolve({ command: `exit ${exitCode}` }))
       expect(result.exitCode).toBe(exitCode)
       expect(result.stderr.text).toBe(`${NOTICE}\n`)
-      expect(result.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'partial' })
+      expect(result.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'partial', backend: 'landlock' })
     },
   )
 
@@ -211,7 +216,7 @@ describe('partial Landlock runner-failure classification', () => {
     const result = await bash.run(bash.resolve({ command: `exit ${exitCode}` }))
     expect(result.exitCode).toBe(exitCode)
     expect(result.stderr.text).toBe(`${NOTICE}\n`)
-    expect(result.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'partial' })
+    expect(result.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'partial', backend: 'landlock' })
   })
 
   it.each([1, 2])('keeps a Landlock fatal line at exit %i as insufficient runner-failure evidence', async (exitCode) => {
@@ -219,7 +224,7 @@ describe('partial Landlock runner-failure classification', () => {
     const result = await bash.run(bash.resolve({ command: 'true' }))
     expect(result.exitCode).toBe(exitCode)
     expect(result.stderr.text).toBe(`${NOTICE}\n${FATAL}\n`)
-    expect(result.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'partial' })
+    expect(result.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'partial', backend: 'landlock' })
   })
 
   it('reports the fatal line after the notice as SANDBOX_UNAVAILABLE detail', async () => {
@@ -235,7 +240,7 @@ describe('partial Landlock runner-failure classification', () => {
     const bash = await setup()
     const result = await bash.run(bash.resolve({ command: 'printf "%s\\n" "child: Permission denied" >&2; exit 1' }))
     expect(result.stderr.text).toBe(`${NOTICE}\nchild: Permission denied\n`)
-    expect(result.sandbox).toEqual({ mode: 'read-only', denied: true, enforcement: 'partial' })
+    expect(result.sandbox).toEqual({ mode: 'read-only', denied: true, enforcement: 'partial', backend: 'landlock' })
   })
 
   it('applies the same evidence rule to notice-only background exits', async () => {
@@ -243,7 +248,7 @@ describe('partial Landlock runner-failure classification', () => {
     for (const command of ['exit 1', 'exit 2', `exit ${LAUNCHER_FAILURE_EXIT}`]) {
       const task = bash.start(bash.resolve({ command }))
       await task.done
-      expect(task.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'partial' })
+      expect(task.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'partial', backend: 'landlock' })
       expect(task.readOutput().delta).toContain(NOTICE)
     }
   })
@@ -252,7 +257,7 @@ describe('partial Landlock runner-failure classification', () => {
     const bash = await setup()
     const task = bash.start(bash.resolve({ command: 'printf "%s\\n" "child: Permission denied" >&2; exit 1' }))
     await task.done
-    expect(task.sandbox).toEqual({ mode: 'read-only', denied: true, enforcement: 'partial' })
+    expect(task.sandbox).toEqual({ mode: 'read-only', denied: true, enforcement: 'partial', backend: 'landlock' })
     expect(task.readOutput().delta).toContain(NOTICE)
   })
 
@@ -264,6 +269,7 @@ describe('partial Landlock runner-failure classification', () => {
       mode: 'read-only',
       denied: false,
       enforcement: 'partial',
+      backend: 'landlock',
       runnerFailed: true,
     })
     const output = task.readOutput().delta

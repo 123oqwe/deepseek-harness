@@ -19,7 +19,7 @@ import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import { SandboxPolicyService } from '@deepseek-ai/dsh-sandbox-policy'
 import LocalSubprocessRuntime from '@deepseek-ai/dsh-subprocess-local'
 import { SandboxPwshExecutor } from '../src/index.ts'
-import { classifyRunnerFailure, isRunnerSpawnFailure, matchesSignature } from '../src/helpers.ts'
+import { backendFacts, classifyRunnerFailure, isRunnerSpawnFailure, matchesSignature } from '../src/helpers.ts'
 
 // The same probe pwsh-local's suites and the vitest coverage exemption use:
 // spawnSync never throws on a missing binary (it reports status null), and
@@ -38,7 +38,7 @@ interface ConfineCall {
 
 /** A passthrough wrap: the caller's argv unchanged, asserted full — commands run unconfined, deterministically. */
 const passthrough = (argv: readonly string[]): ConfinedArgv =>
-  ({ argv: [...argv], enforcement: 'full', denialSignatures: ['access is denied', 'access to the path'], runnerFailureRules: [] })
+  ({ argv: [...argv], backend: 'fake-runner', enforcement: 'full', reachableSockets: [], denialSignatures: ['access is denied', 'access to the path'], runnerFailureRules: [] })
 
 /** A subprocess service whose spawn() throws SYNCHRONOUSLY — the paths the async service never produces. */
 function throwingSubprocessRuntime(error: unknown): new (ctx: Context) => Service {
@@ -80,6 +80,14 @@ describe('helpers (pure)', () => {
   const workdir = mkdtempSync(join(tmpdir(), 'dsh-pwsh-sandbox-helpers-'))
   afterAll(() => {
     rmSync(workdir, { recursive: true, force: true })
+  })
+
+  describe('backendFacts', () => {
+    it('names the backend and lists reachable sockets only when there are any', () => {
+      expect(backendFacts({ backend: 'windows-acl', reachableSockets: [] })).toEqual({ backend: 'windows-acl' })
+      expect(backendFacts({ backend: 'landlock', reachableSockets: ['/run/docker.sock'] }))
+        .toEqual({ backend: 'landlock', reachableSockets: ['/run/docker.sock'] })
+    })
   })
 
   describe('isRunnerSpawnFailure', () => {
@@ -180,7 +188,7 @@ describe.skipIf(!pwshAvailable())('SandboxPwshExecutor', () => {
     expect(call?.argv[0]).toMatch(/pwsh(\.exe)?$/u)
     expect(call?.argv).toContain('-NonInteractive')
     expect(call?.argv.at(-1)).toContain('echo wrapped')
-    expect(result.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full' })
+    expect(result.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full', backend: 'fake-runner' })
   }, 30_000)
 
   it('advertises the deployment default mode and stamps the deployment policy when none rides the request', async () => {
@@ -204,7 +212,9 @@ describe.skipIf(!pwshAvailable())('SandboxPwshExecutor', () => {
     controller.abort('caller-cancel')
     const { executor } = await setup(() => ({
       argv: ['definitely-not-a-real-runner', '--', 'pwsh'],
+      backend: 'fake-runner',
       enforcement: 'full',
+      reachableSockets: [],
       denialSignatures: [],
       runnerFailureRules: [],
     }))
@@ -222,13 +232,15 @@ describe.skipIf(!pwshAvailable())('SandboxPwshExecutor', () => {
       sandboxPolicy: RO,
     }))
     expect(result.exitCode).not.toBe(0)
-    expect(result.sandbox).toEqual({ mode: 'read-only', denied: true, enforcement: 'full' })
+    expect(result.sandbox).toEqual({ mode: 'read-only', denied: true, enforcement: 'full', backend: 'fake-runner' })
   }, 30_000)
 
   it('a runner launch refusal fails closed with SANDBOX_UNAVAILABLE, never unconfined', async () => {
     const { executor } = await setup(() => ({
       argv: ['definitely-not-a-real-runner', '--', 'pwsh'],
+      backend: 'fake-runner',
       enforcement: 'full',
+      reachableSockets: [],
       denialSignatures: [],
       runnerFailureRules: [{ fatalSignatures: ['fake-runner: '] }],
     }))
@@ -240,7 +252,9 @@ describe.skipIf(!pwshAvailable())('SandboxPwshExecutor', () => {
     const attributable = Object.assign(new Error('sync-enoent'), { code: 'ENOENT', syscall: 'spawn node', path: 'node' })
     const { executor: closed } = await setup(() => ({
       argv: ['node', '--', 'pwsh'],
+      backend: 'fake-runner',
       enforcement: 'full',
+      reachableSockets: [],
       denialSignatures: [],
       runnerFailureRules: [{ fatalSignatures: ['fake-runner: '] }],
     }), throwingSubprocessRuntime(attributable))
@@ -257,7 +271,9 @@ describe.skipIf(!pwshAvailable())('SandboxPwshExecutor', () => {
     const attributable = Object.assign(new Error('sync-enoent-start'), { code: 'ENOENT', syscall: 'spawn node', path: 'node' })
     const { executor: closed } = await setup(() => ({
       argv: ['node', '--', 'pwsh'],
+      backend: 'fake-runner',
       enforcement: 'full',
+      reachableSockets: [],
       denialSignatures: [],
       runnerFailureRules: [{ fatalSignatures: ['fake-runner: '] }],
     }), throwingSubprocessRuntime(attributable))
@@ -273,7 +289,9 @@ describe.skipIf(!pwshAvailable())('SandboxPwshExecutor', () => {
   it('a runner that REFUSES at runtime (fatal signature, nonzero exit) fails closed too', async () => {
     const { executor } = await setup(() => ({
       argv: [process.execPath, '-e', 'console.error(\'fake-runner: profile refused\'); process.exit(127)', '--'],
+      backend: 'fake-runner',
       enforcement: 'full',
+      reachableSockets: [],
       denialSignatures: [],
       runnerFailureRules: [{ fatalSignatures: ['fake-runner: '] }],
     }))
@@ -285,7 +303,7 @@ describe.skipIf(!pwshAvailable())('SandboxPwshExecutor', () => {
     const { executor } = await setup()
     const clean = executor.start(executor.resolve({ command: 'echo background-ok', sandboxPolicy: RO }))
     await clean.done
-    expect(clean.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full' })
+    expect(clean.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full', backend: 'fake-runner' })
   }, 30_000)
 
   // POSIX-only denial device (mode-0555 scratch); win32 real-sandbox denial
@@ -297,19 +315,21 @@ describe.skipIf(!pwshAvailable())('SandboxPwshExecutor', () => {
       sandboxPolicy: RO,
     }))
     await denied.done
-    expect(denied.sandbox).toEqual({ mode: 'read-only', denied: true, enforcement: 'full' })
+    expect(denied.sandbox).toEqual({ mode: 'read-only', denied: true, enforcement: 'full', backend: 'fake-runner' })
   }, 30_000)
 
   it('background provider rejections with runner provenance settle as runnerFailed facts', async () => {
     const { executor } = await setup(() => ({
       argv: ['definitely-not-a-real-runner', '--', 'pwsh'],
+      backend: 'fake-runner',
       enforcement: 'full',
+      reachableSockets: [],
       denialSignatures: [],
       runnerFailureRules: [{ fatalSignatures: ['fake-runner: '] }],
     }))
     const proc = executor.start(executor.resolve({ command: 'echo never', sandboxPolicy: RO }))
     await proc.done
-    expect(proc.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full', runnerFailed: true })
+    expect(proc.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full', backend: 'fake-runner', runnerFailed: true })
     // The failure note surfaces through the read path.
     const read = proc.readOutput()
     expect(read.delta).toContain('subprocess failed before reporting an outcome')

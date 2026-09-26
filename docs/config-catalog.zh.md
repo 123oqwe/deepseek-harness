@@ -2217,8 +2217,10 @@ export interface Config {
 export interface Config {
   /**
    * Override the runner argv; bwrap-compatible profile arguments are appended. A
-   * non-empty override asserts full enforcement and skips built-in selection and
-   * probing. A runner that starts but refuses its profile must be identifiable by
+   * non-empty override asserts full enforcement of file effects and skips built-in
+   * selection and probing. The provider installs no Unix-socket filter into it, so
+   * its wraps report `partial` enforcement and the known sockets left reachable.
+   * A runner that starts but refuses its profile must be identifiable by
    * {@link runnerFailureSignatures}. Consumers classify a spawn rejection only after
    * confirming the workdir is usable. `ENOENT` or `EACCES` identifies the runner when
    * `error.path` equals argv[0] and `error.syscall` is `spawn` or `spawn <runner>`, or
@@ -2238,7 +2240,7 @@ export interface Config {
 }
 ```
 
-来源： [`packages/sandbox/sandbox-local/src/index.ts:44`](../packages/sandbox/sandbox-local/src/index.ts)
+来源： [`packages/sandbox/sandbox-local/src/index.ts:52`](../packages/sandbox/sandbox-local/src/index.ts)
 
 <a id="deepseek-aidsh-sandbox-policy"></a>
 
@@ -3715,7 +3717,7 @@ export interface ToolOwnershipConfig {
 }
 ```
 
-来源： [`packages/core/tools/src/index.ts:1010`](../packages/core/tools/src/index.ts)
+来源： [`packages/core/tools/src/index.ts:1013`](../packages/core/tools/src/index.ts)
 
 <a id="deepseek-aidsh-typert-loader"></a>
 

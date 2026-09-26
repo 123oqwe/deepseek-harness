@@ -154,7 +154,7 @@ interface ShellRunResult {
 
 使用沙箱的执行器通过 `ShellExecutor.sandboxMode` 暴露其已配置的模式回退值。工具层请求 [`@deepseek-ai/dsh-sandbox-policy`](../../packages/sandbox/sandbox-policy/README.zh.md)，把每个调用会话的持久 `sandbox/mode` 覆盖值与不可变 cwd 解析为 `ShellExecRequest.sandboxPolicy`；经用户批准、严格更宽松的调用只替换模式。模式/root/enforcement 词汇归 [`@deepseek-ai/dsh-sandbox` 沙箱 seam](sandbox.zh.md) 所有；模式仅管辖文件效果。
 
-沙箱化运行会报告其模式、保守的拒绝分类与强制执行完整度。`runnerFailed` 标记命令运行前沙箱 runner 已失败；前台执行会抛出 `SANDBOX_UNAVAILABLE`，而已结束的后台进程只能通过其事实通道报告。
+沙箱化运行会报告其模式、保守的拒绝分类、强制执行完整度、约束它的后端，以及该后端留下可连的已知宿主 socket。`runnerFailed` 标记命令运行前沙箱 runner 已失败；前台执行会抛出 `SANDBOX_UNAVAILABLE`，而已结束的后台进程只能通过其事实通道报告。
 
 ```ts type-equiv
 /**
@@ -169,6 +169,13 @@ interface ShellSandboxInfo {
   denied: boolean
   /** How completely the selected runner enforced the requested mode. */
   enforcement?: SandboxEnforcement
+  /** The backend that confined the command; absent under `danger-full-access`. */
+  backend?: string
+  /**
+   * Known host daemon and agent sockets the backend left the command able to
+   * reach; present only when there were any (`ConfinedArgv.reachableSockets`).
+   */
+  reachableSockets?: readonly string[]
   /** Whether the sandbox runner failed before the command could run. */
   runnerFailed?: boolean
 }

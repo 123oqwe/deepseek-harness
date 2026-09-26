@@ -1,9 +1,15 @@
 /**
  * Local sandbox backend. It selects the platform runner chain (Linux bwrap then
  * Landlock; macOS Seatbelt; Windows the ACL restricted-token runner), functionally probes
- * competing candidates once, and reports each wrap's enforcement and stderr
+ * competing candidates once, and reports each wrap's backend, enforcement and stderr
  * classification facts. Missing or unusable confinement fails closed rather
  * than returning the original argv.
+ *
+ * bwrap (through a seccomp filter) and Seatbelt also refuse Unix-domain
+ * sockets. Landlock, the windows-acl runner and an operator-configured runner
+ * do not, so a wrap under any of them reports `partial` enforcement and the
+ * known daemon and agent sockets it leaves reachable, and the provider writes
+ * one warning line to stderr for the operator (P3-05; BLOCKED-346).
  *
  * The windows-acl rung additionally owns the write grants: the write SID is
  * the per-WORKSPACE identity derived from the canonical workspace path
@@ -22,7 +28,7 @@
 
 import { spawnSync } from 'node:child_process'
 import { existsSync, mkdtempSync, rmSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
@@ -39,13 +45,17 @@ import type { SessionId } from '@deepseek-ai/dsh-session'
 import { AclWriteGrant, assertTempRootOutsideWorkspace, tempWriteSid, workspaceWriteSid } from '@deepseek-ai/dsh-sandbox-windows-acl'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
 import { bwrapProfileArgs, landlockProfileArgs, seatbeltProfileArgs } from './profiles.ts'
+import { seccompTrampoline, unixSocketFilter } from './seccomp.ts'
+import { knownHostSockets } from './sockets.ts'
 
 /** Plugin config. All optional — `static Config` supplies the defaults. */
 export interface Config {
   /**
    * Override the runner argv; bwrap-compatible profile arguments are appended. A
-   * non-empty override asserts full enforcement and skips built-in selection and
-   * probing. A runner that starts but refuses its profile must be identifiable by
+   * non-empty override asserts full enforcement of file effects and skips built-in
+   * selection and probing. The provider installs no Unix-socket filter into it, so
+   * its wraps report `partial` enforcement and the known sockets left reachable.
+   * A runner that starts but refuses its profile must be identifiable by
    * {@link runnerFailureSignatures}. Consumers classify a spawn rejection only after
    * confirming the workdir is usable. `ENOENT` or `EACCES` identifies the runner when
    * `error.path` equals argv[0] and `error.syscall` is `spawn` or `spawn <runner>`, or
@@ -64,12 +74,24 @@ export interface Config {
   probeTimeoutMs?: number
 }
 
-/** Probe whether `bwrap` can create the profile; the provider caches the bounded result. */
-function defaultProbeBwrap(timeoutMs: number): boolean {
-  const probe = spawnSync('bwrap', [...bwrapProfileArgs({ mode: 'read-only', workspaceRoot: '/' }), '--', 'true'], {
-    timeout: timeoutMs,
-    stdio: 'ignore',
-  })
+/**
+ * Wrap a bwrap-compatible runner invocation so it installs the Unix-socket
+ * seccomp filter, when the host architecture has one.
+ * @param runner - the runner program and its profile options.
+ * @param filter - the filter from {@link unixSocketFilter}, or `undefined`.
+ * @returns the invocation to spawn before the separator and command argv.
+ */
+function withSeccomp(runner: readonly string[], filter: Buffer | undefined): string[] {
+  return filter === undefined ? [...runner] : seccompTrampoline(filter, [...runner, '--seccomp', '3'])
+}
+
+/**
+ * Probe whether `bwrap` can create the profile and install the seccomp filter
+ * (when there is one); the provider caches the bounded result.
+ */
+function defaultProbeBwrap(timeoutMs: number, filter: Buffer | undefined): boolean {
+  const argv = [...withSeccomp(['bwrap', ...bwrapProfileArgs({ mode: 'read-only', workspaceRoot: '/' })], filter), '--', 'true']
+  const probe = spawnSync(argv[0] as string, argv.slice(1), { timeout: timeoutMs, stdio: 'ignore' })
   return probe.status === 0
 }
 
@@ -135,6 +157,12 @@ export interface SandboxInternals {
   probeWindowsAcl?: () => boolean
   /** Replaces the private-temp-directory removal at provider dispose (a throwing fake exercises the cleanup-failure path). */
   rmTempDir?: (path: string) => void
+  /** Replaces `process.arch` for choosing the bwrap seccomp filter (an architecture without one exercises the partial path). */
+  arch?: string
+  /** Replaces the search for the host's known daemon and agent sockets the reachable-socket report names. */
+  hostSockets?: () => string[]
+  /** Replaces `process.stderr` for the operator warning a backend that cannot refuse Unix sockets writes. */
+  writeWarning?: (line: string) => void
 }
 
 /** The chain's verdict: which runner confines, and how completely it enforces. */
@@ -272,6 +300,8 @@ export class LocalSandboxProvider extends SandboxProvider {
    */
   private readonly workspaceGrants = new Map<string, AclWriteGrant>()
   private readonly tempCapabilities = new Map<string, AclTempCapability>()
+  /** The backend and reachable sockets the operator was last warned about; a changed pair warns again. */
+  private warnedSockets: string | undefined
 
   constructor(ctx: Context, config: Config) {
     super(ctx)
@@ -309,15 +339,19 @@ export class LocalSandboxProvider extends SandboxProvider {
    *
    * @param argv - the exact argv the caller is about to spawn.
    * @param policy - the file-effect policy this execution runs under.
-   * @returns the wrapped argv plus the selected backend's enforcement completeness, denial
-   *   signatures, and structured runner-failure rules; throws the fail-closed
-   *   `SANDBOX_UNAVAILABLE` error when the platform has no usable runner.
+   * @returns the wrapped argv plus the selected backend, its enforcement completeness,
+   *   the sockets it leaves reachable, its denial signatures, and structured
+   *   runner-failure rules; throws the fail-closed `SANDBOX_UNAVAILABLE` error when
+   *   the platform has no usable runner.
    */
   confine(argv: readonly string[], policy: SandboxPolicy): ConfinedArgv {
     if (this.runnerCommand !== undefined) {
       return {
         argv: [...this.runnerCommand, ...bwrapProfileArgs(policy), '--', ...argv],
-        enforcement: 'full',
+        backend: 'runner-command',
+        // The operator's runner is spawned directly, so its own spawn failures stay
+        // attributable; nothing installs the socket filter into it.
+        ...this.socketFacts('runner-command', 'full', false),
         denialSignatures: DENIAL_SIGNATURES.runnerCommand,
         runnerFailureRules: [{ fatalSignatures: this.configuredRunnerFailureSignatures }],
       }
@@ -326,16 +360,69 @@ export class LocalSandboxProvider extends SandboxProvider {
     const runnerArgv = this.runnerArgv(selected.runner, policy)
     return {
       argv: [...runnerArgv, '--', ...argv],
-      enforcement: selected.enforcement,
+      backend: selected.runner,
+      ...this.socketFacts(selected.runner, selected.enforcement, this.refusesUnixSockets(selected.runner)),
       denialSignatures: DENIAL_SIGNATURES[selected.runner],
       runnerFailureRules: RUNNER_FAILURE_RULES[selected.runner],
     }
   }
 
+  /** The bwrap seccomp filter for this host's architecture, or `undefined` where there is none. */
+  private bwrapFilter(): Buffer | undefined {
+    return unixSocketFilter(this.internals.arch ?? process.arch)
+  }
+
+  /**
+   * Whether a rung refuses Unix-domain sockets here: bwrap through its seccomp
+   * filter, Seatbelt through its profile. Every other rung, and any rung added
+   * later, is taken not to, which reports `partial` rather than claiming a refusal.
+   */
+  private refusesUnixSockets(runner: SelectedRunner['runner']): boolean {
+    return runner === 'seatbelt' || (runner === 'bwrap' && this.bwrapFilter() !== undefined)
+  }
+
+  /**
+   * A wrap's enforcement and reachable sockets. A backend that cannot refuse
+   * Unix-domain sockets enforces `partial`, reports the known daemon and agent
+   * sockets on this host, and warns the operator.
+   * @param backend - the backend's name.
+   * @param enforcement - its enforcement of file effects.
+   * @param refuses - whether it refuses Unix-domain sockets.
+   * @returns the two facts.
+   */
+  private socketFacts(
+    backend: string,
+    enforcement: SandboxEnforcement,
+    refuses: boolean,
+  ): Pick<ConfinedArgv, 'enforcement' | 'reachableSockets'> {
+    if (refuses) return { enforcement, reachableSockets: [] }
+    const reachableSockets = (this.internals.hostSockets ?? (() => knownHostSockets({ env: process.env, home: homedir() })))()
+    this.warnUnrefusedSockets(backend, reachableSockets)
+    return { enforcement: 'partial', reachableSockets }
+  }
+
+  /**
+   * Write one stderr line telling the operator that `backend` leaves Unix
+   * sockets reachable, once per provider for each distinct backend and socket
+   * list. Written directly to stderr because a plugin's log output does not
+   * reach the operator on every shipped host.
+   * @param backend - the backend's name.
+   * @param sockets - the known daemon and agent sockets it leaves reachable.
+   */
+  private warnUnrefusedSockets(backend: string, sockets: readonly string[]): void {
+    const key = JSON.stringify([backend, sockets])
+    if (key === this.warnedSockets) return
+    this.warnedSockets = key
+    const known = sockets.length === 0 ? '' : ` Daemon and agent sockets it leaves reachable here: ${sockets.join(', ')}.`
+    const write = this.internals.writeWarning ?? ((line: string) => { process.stderr.write(line) })
+    write(`dsh: sandbox: the ${backend} backend cannot refuse Unix-domain sockets, so a sandboxed command can connect to `
+      + `any Unix socket this user can reach.${known} bubblewrap (Linux) and Seatbelt (macOS) refuse them.\n`)
+  }
+
   /** The selected rung's runner invocation (program + profile arguments) for one policy. */
   private runnerArgv(runner: SelectedRunner['runner'], policy: SandboxPolicy): string[] {
     switch (runner) {
-      case 'bwrap': return ['bwrap', ...bwrapProfileArgs(policy)]
+      case 'bwrap': return withSeccomp(['bwrap', ...bwrapProfileArgs(policy)], this.bwrapFilter())
       case 'landlock': return [this.landlockLauncher(), ...landlockProfileArgs(policy)]
       case 'seatbelt': return [this.seatbeltExec(), ...seatbeltProfileArgs(policy)]
       case 'windows-acl': return this.windowsAclRunnerArgv(policy)
@@ -518,7 +605,7 @@ export class LocalSandboxProvider extends SandboxProvider {
     // partial for its documented Everyone and hard-link boundaries.
     switch (runner) {
       case 'bwrap': {
-        const probe = this.internals.probeBwrap ?? (() => defaultProbeBwrap(this.probeTimeoutMs))
+        const probe = this.internals.probeBwrap ?? (() => defaultProbeBwrap(this.probeTimeoutMs, this.bwrapFilter()))
         return probe() ? 'full' : 'unusable'
       }
       case 'landlock': {

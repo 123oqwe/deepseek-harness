@@ -493,8 +493,8 @@ export interface DefineToolOptions<S extends ParameterSchemaSpec, O extends Valu
     readonly schema: O
     /** Pure Native/model rendering of one validated canonical value. */
     render(args: InferArgs<S>, value: InferValue<NoInfer<O>>): ContentBlock[]
-    /** Pure replayable presentation metadata for direct top-level calls. */
-    presentationMeta?(args: InferArgs<S>, value: InferValue<NoInfer<O>>): JsonValue
+    /** Pure replayable presentation metadata for direct top-level calls; `undefined` persists none. */
+    presentationMeta?(args: InferArgs<S>, value: InferValue<NoInfer<O>>): JsonValue | undefined
   }
   /** Optional positive cooperative timeout budget in milliseconds. */
   readonly timeoutMs?: number
@@ -578,7 +578,7 @@ export function defineTool<const S extends ParameterSchemaSpec, const O extends 
         return userRender(args as InferArgs<S>, value as unknown as InferValue<NoInfer<O>>)
       },
       ...userPresentationMeta !== undefined ? {
-        presentationMeta(args: unknown, value: JsonValue): JsonValue {
+        presentationMeta(args: unknown, value: JsonValue): JsonValue | undefined {
           return userPresentationMeta(args as InferArgs<S>, value as unknown as InferValue<NoInfer<O>>)
         },
       } : {},

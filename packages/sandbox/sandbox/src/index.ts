@@ -24,7 +24,9 @@ export { canonicalPath, writableRoots } from './roots.ts'
  * File-effect policy for confined processes. `read-only` permits only required
  * sinks such as `/dev/null`; `workspace-write` also permits the workspace and a
  * backend-defined temp area; `danger-full-access` bypasses confinement. Network
- * and process visibility are outside this vocabulary.
+ * and process visibility are outside this vocabulary. Both confining modes also
+ * refuse Unix-domain sockets where the backend can
+ * ({@link ConfinedArgv.reachableSockets}).
  */
 export type SandboxMode = 'read-only' | 'workspace-write' | 'danger-full-access'
 
@@ -53,8 +55,9 @@ export interface SandboxExecutionPolicy {
 
 /**
  * Enforcement completeness for this host. `partial` means an active backend or
- * older kernel ABI cannot govern every promised file effect; callers requiring
- * an absolute boundary must not treat it as `full`.
+ * older kernel ABI cannot govern every promised file effect, or cannot refuse
+ * Unix-domain sockets; callers requiring an absolute boundary must not treat it
+ * as `full`.
  */
 export type SandboxEnforcement = 'full' | 'partial'
 
@@ -95,8 +98,24 @@ export interface RunnerFailureRule {
 export interface ConfinedArgv {
   /** The wrapped argv (runner, profile, separator, then the caller's argv). */
   argv: string[]
-  /** How completely the selected backend enforces the policy's file effects. */
+  /**
+   * The backend that confines this execution: `bwrap`, `landlock`,
+   * `seatbelt`, `windows-acl`, or `runner-command` for an operator-configured
+   * runner.
+   */
+  backend: string
+  /** How completely the selected backend enforces the policy's file effects and its refusal of Unix-domain sockets. */
   enforcement: SandboxEnforcement
+  /**
+   * Host daemon and agent sockets (the Docker daemon's, the SSH agent's, and
+   * others the provider knows to look for) that exist on this host and that
+   * this backend leaves the command able to connect to, named as a client
+   * names them. Empty when the backend refuses Unix-domain sockets; when
+   * non-empty, `enforcement` is `partial`. The provider lists only sockets it
+   * knows to look for, so a list is never evidence that no other socket is
+   * reachable.
+   */
+  reachableSockets: readonly string[]
   /**
    * The selected backend's denial DIALECT: the case-insensitive stderr
    * substrings a file effect denied by THIS backend produces (EROFS text

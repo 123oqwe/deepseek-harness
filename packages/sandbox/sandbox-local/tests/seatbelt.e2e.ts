@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { mkdtemp, rm } from 'node:fs/promises'
+import { createServer, type Server } from 'node:net'
 import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -20,12 +21,18 @@ import { seatbeltProfileArgs } from '../src/profiles.ts'
 const probe = spawnSync('sandbox-exec', [...seatbeltProfileArgs({ mode: 'read-only', workspaceRoot: '/' }), '--', 'true'], { timeout: 5_000, stdio: 'ignore' })
 const seatbeltUsable = probe.status === 0
 
+/** A Node program that connects to the Unix socket named by its argument and prints `connected` or the error code. */
+const CONNECT = 'const s=require("net").connect(process.argv[1]);'
+  + 's.on("connect",()=>{console.log("connected");process.exit(0)});s.on("error",e=>{console.log(e.code);process.exit(0)})'
+
 let ctx: Context | undefined
 const tempDirs: string[] = []
+const servers: Server[] = []
 
 afterEach(async () => {
   await ctx?.fiber.dispose()
   ctx = undefined
+  await Promise.all(servers.splice(0).map(server => new Promise<void>((resolve) => { server.close(() => { resolve() }) })))
   await Promise.all(tempDirs.splice(0).map(dir => rm(dir, { recursive: true, force: true })))
 })
 
@@ -56,10 +63,37 @@ describe.skipIf(!seatbeltUsable)('sandbox-local: real Seatbelt confinement throu
     const sandbox = await provider()
     const { result, confined } = runConfined(sandbox, `echo hi > ${workdir}/denied.txt`, { mode: 'read-only', workspaceRoot: workdir })
     expect(result.status).not.toBe(0)
+    expect(confined.backend).toBe('seatbelt')
     expect(confined.enforcement).toBe('full')
     // The wrap's denialSignatures must be what the kernel actually prints.
     expect(result.stderr.toLowerCase()).toContain('operation not permitted')
     expect(existsSync(join(workdir, 'denied.txt'))).toBe(false)
+  })
+
+  it.each(['absolute', 'relative'] as const)(
+    'refuses a connection to a Unix-domain socket named by an %s path, while the same socket accepts an unconfined client',
+    async (spelling) => {
+      // A short directory: a socket path must stay under the ~104-byte limit, which HOME-based temp dirs can exceed.
+      const dir = await tempDir('/tmp')
+      const socket = join(dir, 's.sock')
+      const server = createServer(connection => connection.end())
+      servers.push(server)
+      await new Promise<void>((resolve) => { server.listen(socket, resolve) })
+      const named = spelling === 'absolute' ? socket : 's.sock'
+      const unconfined = spawnSync(process.execPath, ['-e', CONNECT, named], { cwd: dir, timeout: 30_000, encoding: 'utf8' })
+      expect(unconfined.stdout).toBe('connected\n')
+      const sandbox = await provider()
+      const { result, confined } = runConfined(sandbox, `cd "${dir}" && "${process.execPath}" -e '${CONNECT}' "${named}"`, { mode: 'read-only', workspaceRoot: dir })
+      expect(confined.reachableSockets).toEqual([])
+      expect(result.stdout).toBe('EPERM\n')
+    },
+  )
+
+  it('keeps host-name resolution through mDNSResponder, the one socket daemon the profile allows', async () => {
+    const sandbox = await provider()
+    const lookup = 'require("dns").lookup("localhost",(e,a)=>{console.log(e?("ERR "+e.code):"resolved");process.exit(0)})'
+    const { result } = runConfined(sandbox, `"${process.execPath}" -e '${lookup}'`, { mode: 'read-only', workspaceRoot: await tempDir(homedir()) })
+    expect(result.stdout).toBe('resolved\n')
   })
 
   it('read-only keeps the tree readable/executable and /dev/null writable', async () => {

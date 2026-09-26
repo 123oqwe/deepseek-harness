@@ -57,7 +57,7 @@ kind: "package-reference"
 
 ### 拒绝与升权
 
-被拒绝的命令作为事实被报告：结果携带 `sandbox: { mode, denied: true }`，工具层把它转成标准的权限拒绝面——与 bash 工具使用同一个。当升权可用时，模型可以使用范围最小的更宽松模式并附上一句理由，对同一条命令重试一次；批准提示会询问用户，获得批准前不会执行任何命令。本执行器自身绝不协商权限。
+被拒绝的命令作为事实被报告：结果携带 `sandbox: { mode, denied: true }`，工具层把它转成标准的权限拒绝面——与 bash 工具使用同一个。当升权可用时，模型可以使用范围最小的更宽松模式并附上一句理由，对同一条命令重试一次；批准提示会询问用户，获得批准前不会执行任何命令。本执行器自身绝不协商权限。每个受限结果还会给出约束该命令的后端（`sandbox.backend`）；当该后端无法拒绝 Unix-domain socket 时（Windows ACL runner 就无法拒绝），还会列出它留下可连的已知宿主 socket（`sandbox.reachableSockets`）。
 
 ### 失败与恢复
 
@@ -88,7 +88,7 @@ kind: "package-reference"
 
 ### 主要流程
 
-对受限模式，`resolve()` 标记每次调用的策略；`run` 与 `start` 把 pwsh argv 经提供方包装，再把受限 argv 交给继承的子进程路径。结算时执行器对结果分类：runner 失败优先于拒绝（命令从未运行），stderr 携带 runner 拒绝方言的失败运行报告 `denied: true`，每次受限运行都携带模式与强制执行事实。`danger-full-access` 完全绕过提供方，并标记 `denied: false`。
+对受限模式，`resolve()` 标记每次调用的策略；`run` 与 `start` 把 pwsh argv 经提供方包装，再把受限 argv 交给继承的子进程路径。结算时执行器对结果分类：runner 失败优先于拒绝（命令从未运行），stderr 携带 runner 拒绝方言的失败运行报告 `denied: true`，每次受限运行都携带模式、强制执行、后端与可连 socket 事实。`danger-full-access` 完全绕过提供方，并标记 `denied: false`。
 
 ### 不变式
 
@@ -139,6 +139,7 @@ kind: "package-reference"
 这些限制说明本执行器在 Windows 上只是不完整的边界。它们是当前包约束，不是路线图。
 
 - **Windows 上读不受限**——ACL runner 只限写；读边界文档在 `@deepseek-ai/dsh-sandbox-windows-acl`。
+- **Windows 上不拒绝 Unix-domain socket**——ACL runner 无法拒绝它们，因此其结果报告 `partial` 强制执行，并列出它留下可连的已知 socket；在 Linux 与 macOS 上，bwrap 与 Seatbelt 会拒绝（[`dsh-sandbox-local`](../../sandbox/sandbox-local/README.zh.md#unix-domain-sockets)）。
 - **Windows workspace-write 的临时权限按每个活跃的会话/工作区对私有**——无 agent（智能体）的调用每次都获得一个新的私有目录；环境临时根目录绝不会被授权，runner 会在 spawn 前将 `TMP`/`TEMP` 重写为该私有目录。
 - **Windows read-only 不授予任何显式可写根目录，但仍为部分强制执行**——受限令牌必须保留 Everyone；DACL 向 Everyone 授予写访问的对象——包括以兼容方式打开的 NUL 设备——仍构成环境权限来源，而 PowerShell 的 `> $null` 重定向仍可工作，且不会打开 NUL。
 
