@@ -521,9 +521,10 @@ export class RunService {
    * `./state-machine.ts`'s `attachSessionToRun`.
    * @param id - the registered Run to associate an additional Session with; rejects when unregistered.
    * @param sessionId - the Session/Agent to add.
-   * @param fence - the lease of the Run's owner. When given, the join is
-   *   written only while it admits the write, asked in the Run's turn as
-   *   {@link RunService.advance} asks its fence.
+   * @param fence - the lease of the Run's owner. When given, its `mayWrite`
+   *   is asked once, in the Run's turn, as {@link RunService.advance} asks its
+   *   fence, and the join is written only if it admits the write. The write
+   *   itself carries no fencing token (P4-07 must[1], Known Limitation ⑦).
    * @returns the Run with `sessionId` present in `sessionIds`, or the refusal,
    *   which writes nothing: `terminal` for a Run that has reached a terminal
    *   state, `fenced` or `lease-unavailable` when `fence` does not admit it.
@@ -995,8 +996,10 @@ export default class RunPlugin extends Service {
     // acceptance[2]: an in-process child session also joins the Run of the
     // agent that owns it, as a member; it keeps its own Run, lease and
     // lifecycle above. The owner's lease is the one authority over the owner's
-    // Run, so the join is written only while that lease admits writes, asked
-    // in the Run's turn, and a refused join is logged.
+    // Run: the join asks it `mayWrite` once, here at open and in the Run's
+    // turn, and a refused join is logged. The join write carries no fencing
+    // token; P4-07 must[1] fences a Run's terminal and first-step writes, and
+    // other state writes are its Known Limitation ⑦.
     const owner = this.ctx.agents.list().find(candidate => this.ctx.agents.isOwnedBy(agent.id, candidate))
     if (owner?.runId !== undefined && owner.runLease !== undefined) {
       const ownerRunId = owner.runId

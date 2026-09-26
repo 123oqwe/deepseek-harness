@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-09-24-a-child-session-joins-its-owners-run.md
-2026-09-24-a-child-session-joins-its-owners-run.md: b66d4489a70bd58a7f2e762755b1156c05f873e6
-2026-09-24-a-child-session-joins-its-owners-run.zh.md: 5007ae3bc6f5e918d8f6ea0471759420c3ac1c3a
+2026-09-24-a-child-session-joins-its-owners-run.md: 78305ddd2c4c562a79923c041c8377234300517d
+2026-09-24-a-child-session-joins-its-owners-run.zh.md: 39f72921a9d3ead26d6946f72645f3d771cb1c90

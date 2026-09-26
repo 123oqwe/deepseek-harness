@@ -11,7 +11,7 @@ P4-01 acceptance[2] 说一个 Run 可以跨多个会话；用户在 2026-09-24 �
 ## 决定
 
 - **子会话以成员身份加入。** `RunPlugin` 打开一个会话时，查找注册表记为该会话 owner 的那个活着的 agent（`AgentRegistry.isOwnedBy`）。owner 有 Run 时，`attachSession` 把子会话加进那个 Run 的 `sessionIds`。子会话保留自己的 Run、租约、生命周期、心跳和终态写入，这些一概不变。
-- **owner 的租约是 owner 那个 Run 唯一的权威。** 能让一个 agent 的 `runId === R` 的只有两条路：铸出 R，以及重启时领走它。`adoptable` 现在只把会话自己开的 Run（`sessionIds[0]`）交给它，从不交它加入的 Run，所以 R 的每个写入者持有的都是开 R 的那个会话的租约。加入本身只在 owner 的租约仍允许写入时才写：`attachSession` 在 Run 的串行化轮次里询问这份租约（`mayWrite`），与 `advance` 核对 fence 的方式相同，并且拒绝已到终态的 Run，所以失去了 owner 租约的宿主不能再添加成员（盲审 F3 与 N1，B-588）。
+- **owner 的租约是 owner 那个 Run 唯一的权威。** 能让一个 agent 的 `runId === R` 的只有两条路：铸出 R，以及重启时领走它。`adoptable` 现在只把会话自己开的 Run（`sessionIds[0]`）交给它，从不交它加入的 Run，所以 R 的每个写入者持有的都是开 R 的那个会话的租约。加入只询问 owner 的租约一次：子会话打开时，`attachSession` 在 Run 的串行化轮次里询问这份租约（`mayWrite`），与 `advance` 核对 fence 的方式相同，并且拒绝已到终态的 Run，所以在加入之前就失去了 owner 租约的宿主不能再添加成员（盲审 F3 与 N1，B-588）。加入这一写本身不带 fencing token：P4-07 must[1] 只给 Run 的终态写与首步写加 fence，其余状态写是它的 Known Limitation ⑦。
 - **两个关闭条件是改写的，而不是用 Run 级工作项满足的。** BLOCKED-196 要的是「the shape of a Run-level work item」，BLOCKED-309 路线 1 要的是「one authority (a Run-level work item)」。两处现在都写作「one authority: the lease of the session that opened the Run; joiners are members」。这是 delegate 在 `approved/P4-01.md`（「裁法甲」）里的裁定。这两个关闭条件都是 delegate 自己的裁定，改写它们不算收窄 registry 条款。
 
 ## 考虑过的其他做法
