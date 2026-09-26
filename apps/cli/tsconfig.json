@@ -112,6 +112,27 @@
     },
     {
       "path": "../../packages/util/values"
+    },
+    {
+      "path": "../../packages/identity/host-user-id"
+    },
+    {
+      "path": "../../packages/memory/memory"
+    },
+    {
+      "path": "../../packages/identity/principal"
+    },
+    {
+      "path": "../../packages/workspace/workspace"
+    },
+    {
+      "path": "../../packages/util/brand"
+    },
+    {
+      "path": "../../packages/util/http-proxy"
+    },
+    {
+      "path": "../../packages/policy/policy-enforcement"
     }
   ]
 }
