@@ -482,7 +482,7 @@ export default class ExecutionWorldService extends Service<Config> {
    */
   register(provider: WorldProvider, placement?: WorldProviderPlacement): () => Promise<void> {
     const builtHere = RESERVED_PROVIDER_IDS.get(provider.id)
-    if (builtHere !== undefined && !builtHere(provider)) {
+    if (builtHere !== undefined && !builtHere(provider) && provider.id !== LOCAL_WORLD_PROVIDER) {
       throw new Error(`the world provider id "${provider.id}" is reserved for the ${provider.id} provider this package builds, so a provider built elsewhere cannot register under it`)
     }
     return this.ctx.effect(() => {
