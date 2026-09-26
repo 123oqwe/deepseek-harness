@@ -152,6 +152,12 @@
     - id: timer
       name: '@deepseek-ai/cordis-plugin-timer'
 
+    # Plugin warnings and errors on stderr, prefixed `dsh: ` (BLOCKED-336). Without
+    # it they stay in Cordis's in-memory buffer, which no operator reads. It never
+    # writes stdout, where results and protocol frames go.
+    - id: logger-stderr
+      name: '@deepseek-ai/dsh-logger-stderr'
+
     - id: llm
       name: '@deepseek-ai/dsh-llm'
 

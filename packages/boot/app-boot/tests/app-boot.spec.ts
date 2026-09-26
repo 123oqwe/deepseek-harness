@@ -645,6 +645,18 @@ describe('boot', () => {
     }
   })
 
+  it('keeps a warning a tree plugin logs in the logger buffer, for a later exporter to replay (BLOCKED-336)', async () => {
+    const dir = tmp()
+    writeFileSync(join(dir, 'warns.mjs'), 'export const name = "warns"\nexport function apply(ctx) { ctx.logger.warn("app-boot-336-warning") }\n')
+    writeFileSync(join(dir, 'cordis.yml'), '- id: warns\n  name: ./warns.mjs\n')
+    const ctx = await boot(NAME, join(dir, 'cordis.yml'))
+    try {
+      expect(ctx.logger.buffer.some(message => message.type === 'warn' && message.args[0] === 'app-boot-336-warning')).toBe(true)
+    } finally {
+      await ctx.fiber.dispose()
+    }
+  })
+
   it('can resolve bare plugins from the harness when the config project shadows their package name', async () => {
     const dir = tmp()
     const harness = tmp()

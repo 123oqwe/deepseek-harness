@@ -1613,6 +1613,9 @@ importers:
       '@deepseek-ai/dsh-llm-retry':
         specifier: workspace:^
         version: link:../../llm/llm-retry
+      '@deepseek-ai/dsh-logger-stderr':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/logger-stderr
       '@deepseek-ai/dsh-memory':
         specifier: workspace:^
         version: link:../../memory/memory
@@ -1873,6 +1876,9 @@ importers:
       '@deepseek-ai/dsh-llm':
         specifier: workspace:^
         version: link:../../llm/llm
+      '@deepseek-ai/dsh-logger-stderr':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/logger-stderr
       '@deepseek-ai/dsh-principal':
         specifier: workspace:^
         version: link:../../identity/principal
@@ -1946,6 +1952,9 @@ importers:
       '@deepseek-ai/dsh-llm-retry':
         specifier: workspace:^
         version: link:../../llm/llm-retry
+      '@deepseek-ai/dsh-logger-stderr':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/logger-stderr
       '@deepseek-ai/dsh-plugin-package-inventory-deepseek':
         specifier: workspace:^
         version: link:../../llm/plugin-package-inventory-deepseek
@@ -8827,6 +8836,19 @@ importers:
 
   packages/runtime-diagnostics/invariants:
     dependencies:
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+
+  packages/runtime-diagnostics/logger-stderr:
+    dependencies:
+      '@deepseek-ai/cordis-plugin-logger-console':
+        specifier: workspace:^
+        version: link:../../../vendor/logger-console
       '@deepseek-ai/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery

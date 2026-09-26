@@ -930,7 +930,7 @@ export type OutputFormat =
   | 'json'
 ```
 
-Source: [`packages/bundle/headless/src/index.ts:42`](../packages/bundle/headless/src/index.ts)
+Source: [`packages/bundle/headless/src/index.ts:43`](../packages/bundle/headless/src/index.ts)
 
 <a id="deepseek-aidsh-hooks-claude-code"></a>
 
@@ -1614,6 +1614,22 @@ export type Config = Readonly<Record<string, never>>
 ```
 
 Source: [`packages/llm/llm-retry/src/index.ts:29`](../packages/llm/llm-retry/src/index.ts)
+
+<a id="deepseek-aidsh-logger-stderr"></a>
+
+## `@deepseek-ai/dsh-logger-stderr`
+
+```ts config-catalog
+/** Which message types reach stderr. */
+export interface Config {
+  /** Message types written to stderr; the others stay in the in-memory buffer only. */
+  types: LoggerType[]
+}
+```
+
+Depends on: `LoggerType` (`@deepseek-ai/cordis`)
+
+Source: [`packages/runtime-diagnostics/logger-stderr/src/index.ts:40`](../packages/runtime-diagnostics/logger-stderr/src/index.ts)
 
 <a id="deepseek-aidsh-lsp-stdio"></a>
 

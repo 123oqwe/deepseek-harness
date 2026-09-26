@@ -30,6 +30,9 @@
       "path": "../../llm/llm"
     },
     {
+      "path": "../../runtime-diagnostics/logger-stderr"
+    },
+    {
       "path": "../../core/session"
     },
     {
