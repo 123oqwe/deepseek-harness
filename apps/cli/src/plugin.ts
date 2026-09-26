@@ -29,8 +29,11 @@ import { dshHomePath } from '@deepseek-ai/dsh-home-paths'
 import { classifyPluginDeclaration, evaluatePreMountAdmission } from '@deepseek-ai/dsh-plugin-manifest'
 import {
   changedVersions,
+  clearInstallRecord,
   declaredMigrationManifests,
   migrateChangedPlugins,
+  readInstallRecord,
+  recordInstall,
   recoverInterruptedUpgrades,
   resolvePluginUpgrade,
   rollbackCode,
@@ -330,6 +333,12 @@ function splitConfirmation(
  * the transaction moving the data. A lease released between them would leave
  * the window this epic exists to close — new code installed, data not yet
  * migrated, another process free to start.
+ *
+ * A run killed after pnpm moved the code leaves its install record behind
+ * (BLOCKED-342), and this run finishes that install: the recorded manifest
+ * replaces `before` as the baseline, so the interrupted upgrade's version
+ * change is found and its data migrated, and a migration that fails restores
+ * the recorded bytes.
  * @param args - the pnpm arguments.
  * @param dir - the profile directory.
  * @param before - the manifest read before pnpm ran.
@@ -344,12 +353,14 @@ async function runUnderLease(
   environment: UpgradeEnvironment,
   confirmation?: MigrationPathDigest,
 ): Promise<number> {
+  const interrupted = readInstallRecord(dir)
+  const baseline = interrupted?.before ?? before
   // Anything a crash left half-done is undone first, inside this same lease:
   // "the old version is wholly usable after a restart" is not true of a plugin
   // whose data was left mid-swap.
   const recovered = await recoverInterruptedUpgrades(
     dshHomePath(),
-    Object.keys(before.dependencies ?? {}),
+    Object.keys(baseline.dependencies ?? {}),
     environment.migration,
     async (plugin) => { await rm(upgradeRecordPath(dshHomePath(), plugin), { force: true }) },
   )
@@ -371,12 +382,20 @@ async function runUnderLease(
 
   // Kept from BEFORE pnpm runs: a failed data migration has to put the code
   // back, and pnpm's store is content addressed, so the previous version is
-  // still installable from these two files.
-  const manifestBefore = readFileSync(join(dir, 'package.json'), 'utf8')
+  // still installable from these two files. They go to disk before pnpm runs,
+  // so a run killed after pnpm moved the code leaves them for the next run
+  // (BLOCKED-342); a resumed install keeps the ones its first run recorded.
   const lockPath = join(dir, 'pnpm-lock.yaml')
-  const lockBefore = existsSync(lockPath) ? readFileSync(lockPath, 'utf8') : undefined
+  const manifestBefore = interrupted?.manifest ?? readFileSync(join(dir, 'package.json'), 'utf8')
+  const lockOnDisk = interrupted === undefined && existsSync(lockPath) ? readFileSync(lockPath, 'utf8') : undefined
+  const lockBefore = interrupted === undefined ? lockOnDisk : interrupted.lock
   // Read before pnpm runs, so a malformed anchor list fails with nothing installed.
   const anchors = readProfileTrustAnchors(dir)
+  if (interrupted === undefined) {
+    await recordInstall(dir, manifestBefore, lockBefore)
+  } else {
+    process.stderr.write(`${NAME}: finishing an install an earlier run began and did not complete\n`)
+  }
 
   // Windows resolves pnpm through its .cmd shim, which spawn() refuses
   // without a shell since the CVE-2024-27980 hardening.
@@ -401,18 +420,20 @@ async function runUnderLease(
     const locked = new Map(readCurrentLock(dir).entries.flatMap(
       entry => entry.provenance === undefined ? [] : [[entry.name, entry.provenance] as const],
     ))
-    const provenance = verifyInstallProvenance(before.dependencies ?? {}, installed, dir, anchors, locked)
+    const provenance = verifyInstallProvenance(baseline.dependencies ?? {}, installed, dir, anchors, locked)
     if (provenance.refused.length > 0) {
       for (const { name, reason } of provenance.refused) {
         process.stderr.write(`${NAME}: ${name}: provenance claim refused (${reason}); the install is undone\n`)
       }
       const failure = await undoInstall(dir, manifestBefore, lockBefore)
       if (failure !== undefined) process.stderr.write(`${NAME}: ${failure}\n`)
+      else await clearInstallRecord(dir)
       return 1
     }
-    // must[1]: the one place that knows (plugin, from, to). `before` is the
-    // manifest from before pnpm ran; the installed state is read now.
-    const changes = changedVersions(before.dependencies ?? {}, installed)
+    // must[1]: the one place that knows (plugin, from, to). `baseline` is the
+    // manifest from before pnpm ran, the first run's when this one resumes an
+    // install; the installed state is read now.
+    const changes = changedVersions(baseline.dependencies ?? {}, installed)
     const outcomes = await migrateChangedPlugins(
       changes,
       declaredMigrationManifests(changes, dir),
@@ -436,10 +457,15 @@ async function runUnderLease(
         async (path, content) => { await writeFile(path, content, 'utf8') },
       )
       if (failure !== undefined) process.stderr.write(`${NAME}: ${failure}\n`)
+      else await clearInstallRecord(dir)
       return 1
     }
-    reconcilePlugins(before, dir)
+    reconcilePlugins(baseline, dir)
     await commitProfileLock(dir, provenance.records)
+    // Last: a run killed before this line resumes the install, which skips
+    // data already at the new version, and reconciling and locking again
+    // change nothing.
+    await clearInstallRecord(dir)
   } else {
     // pnpm's own diagnostics name pnpm-workspace.yaml without saying WHICH
     // one; the profile owns it, and the commonest failure here is pnpm ≥10
