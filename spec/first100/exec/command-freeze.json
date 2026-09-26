@@ -19248,7 +19248,8 @@
         "mutationDescription": "A red->green freeze across B-606 (BLOCKED-340), plus a check-preserving mutation. Before the fix the webhook runtime created the agent with no identity, so a webhook-triggered action's first manifest actor fell to the anonymous branch. B-606 (487a72e720, fix' 058edc7bcf) attaches a ServicePrincipal for the integration the HMAC key stands for. M-606-1 (991fca2300) drops that attachment again.",
         "failureSummary": "Read from each round's own report. Red first A-421: run 36198814967 at 91d6c053f1, the acceptance[0] case red (actor `anonymous:webhook-<uuid>`, no `identity/attached` of kind service), the control green. Fix 487a72e720: run 36227017825 green; fix' 058edc7bcf: e2e run 36229727665 2/2 (the acceptance[0] case green). Mutation M-606-1 991fca2300: run 36227040120 failure — the acceptance[0] case red again (the attachment dropped); the control stays green. The case file is byte-identical across these (the fix and mutation are src-only), so the difference is the fix, not the case."
       },
-      "note": "P2-01 acceptance[0] (「任何 action 都能追溯 root user/tenant 与完整委派链」), the webhook originator: an action a webhook delivery triggers traces to the ServicePrincipal the delivery's HMAC key stands for (must[0]'s ServicePrincipal), with `identity/attached` of kind service logged once, rooted there rather than at a synthesized anonymous actor. Before B-606 the shipped web profile + the documented github-review patch attributed it to `anonymous:webhook-<uuid>` (BLOCKED-340, A-421 red first). BLOCKED-291 (c) records why the host user is NOT attached (a remote, HMAC-authenticated requester)."
+      "note": "P2-01 acceptance[0] (「任何 action 都能追溯 root user/tenant 与完整委派链」), the webhook originator: an action a webhook delivery triggers traces to the ServicePrincipal the delivery's HMAC key stands for (must[0]'s ServicePrincipal), with `identity/attached` of kind service logged once, rooted there rather than at a synthesized anonymous actor. Before B-606 the shipped web profile + the documented github-review patch attributed it to `anonymous:webhook-<uuid>` (BLOCKED-340, A-421 red first). BLOCKED-291 (c) records why the host user is NOT attached (a remote, HMAC-authenticated requester).",
+      "supersededBy": "2026-09-26T23:33:43.000Z"
     },
     {
       "epic": "P6-02",
@@ -19999,6 +20000,52 @@
         "failureSummary": "Read from each round's own narrow report; each ran the same 13 files, 175 cases, with the spec's 7. M-666-1′ rebased, run 36277715496: 5 red, in the spec only «… P3-01 acceptance[2] / BLOCKED-316 condition 3: a plugin provider whose handle claims local with a digest it did not compute is refused at binding — the tool does not run, the result names the mismatch, and nothing binds under the claim» (the call bound under provider local with the forged all-zero digest and the tool ran), and in packages/execution/execution-world/tests/registry.spec.ts the four binding checks «P3-01 acceptance[2] (BLOCKED-316): the registry checks who built a world instead of taking its handle's word binds nothing when the handle names a provider other than the one selected, and says which», «… binds nothing when the handle carries a digest other than that of the spec it was asked to create» and the two «… where a tool runtime is composed, a call in a session whose handle failed the check does not run» cases (identity and digest mismatch). M-666-2″, run 36277723556: 2 red, in the spec only «… P3-01 BLOCKED-316 condition 3: registering a world provider under the reserved id local is refused, with an error naming the identity» (registering under local did not throw, and the call bound under local), and in registry.spec.ts «P3-01 acceptance[2] (BLOCKED-316): the registry checks who built a world instead of taking its handle's word refuses to register a provider it did not build under the reserved id local, naming the id» (expected [Function] to throw an error). M-666-3, run 36269865624: 2 red, in the spec only «… P3-01 BLOCKED-316 condition 3: registering a world provider (not the shipped fenced provider) under the reserved id fenced is refused, with an error naming the identity» (registering under fenced did not throw), and in registry.spec.ts «P3-01 acceptance[2] (BLOCKED-316): the registry checks who built a world instead of taking its handle's word refuses to register a provider it did not build under the reserved id fenced, naming the id» (expected [Function] to throw an error). Every other case passed in each round."
       },
       "note": "P3-01 U-stage supplement 2: BLOCKED-316 conditions 2a and 3, acceptance[1] and [2], on the shipped headless profile. A plugin provider that reports its own identity binds the call's world under its id and the digest it computed; a handle claiming local with a digest its provider did not compute is refused at binding, the tool does not run and nothing binds under the claim; registering a provider built elsewhere under the reserved id local or fenced is refused with an error naming the id; a requested world no provider can hold refuses the call or records that it ran without that world; and a deployment rule forbidding an absent world refuses the call while the same policy set minus that rule runs it. Red firsts A-432 (4626c85201), A-531 (6541038185, ec8acefb76) and A-541 (d4d89ba107); fix B-666 (f3cb8b6369, cd57a7e8f2). Frozen by the delegate's ruling (first100-delegate-1a, gate3 2026-09-26T21:48:45Z: stage U, as every composition spec) from lane A's A-548 draft (artifacts/laneA/a-548-p3-01-world-identity-freeze.md, sha256 0b2c53cd…). expectCases are the full names in the full run 36272740256 at 4019f9147b, where tests/first100/fixtures/P3-01.world-identity.composition.spec.ts ran 7 cases and each frozen title passed once; the entry is frozen after that run, so its cell is observed by the next full run. files add the harness the driver uses (the mock model and the loader-smoke fixtures and entry) and the sources the verdict passes through: the registry's reservation and binding check, the two providers' own-build tests, provider selection, the Cedar engine that evaluates the forbid rule, and the external-effect path that records the bound world. The observing tree is pinned at refs/dsh/freeze/P3-01.U.2/2026-09-26T23-00-32.000Z -> 4019f9147ba3f49279803c96c957df16ddeae4e9, whose tree is dryRunProof.treeSha."
+    },
+    {
+      "epic": "P2-01",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-01",
+        "stage": "U"
+      },
+      "supplementSeq": 10,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "apps/cli/tests/profiles/web/tests/webhook-actor.e2e.ts",
+        "-c",
+        "vitest.e2e.config.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "dsh --profile web with the documented GitHub webhook patch, booted in-process through the launcher (no key required) control: the signed delivery is accepted and creates one webhook session whose first action manifest names an actor",
+        "dsh --profile web with the documented GitHub webhook patch, booted in-process through the launcher (no key required) P2-01 acceptance[0]: an action a webhook delivery triggers traces to the integration ServicePrincipal the HMAC key stands for"
+      ],
+      "files": [
+        "apps/cli/tests/profiles/web/tests/webhook-actor.e2e.ts",
+        "apps/cli/tests/profiles/routing-stub-model.ts",
+        "apps/cli/tests/profiles/session-log.ts",
+        "apps/cli/src/profile-boot.ts",
+        "apps/cli/config/examples/github-review/cordis.yml",
+        "packages/webhook/webhook/src/session.ts",
+        "packages/identity/host-user-id/src/index.ts",
+        "packages/action/action-manifest/src/identity.ts"
+      ],
+      "frozenAtUtc": "2026-09-26T23:33:43.000Z",
+      "supersedes": "2026-09-26T10:44:43Z",
+      "supersessionReason": "A-555 (f0558bff78, lane A) changed only the beforeAll wait of apps/cli/tests/profiles/web/tests/webhook-actor.e2e.ts. It now waits until the session log holds the webhook-sourced user/message before whenIdle, flush and dispose: packages/webhook/webhook/src/session.ts appends that followup after attachSession (:171, :176), later than the agent appears, so the old wait could let whenIdle return first. The case went red once in the batch 18 full run 36272740256 and did not reproduce in three runs on the same SHA. Titles, argv and assertions are unchanged; the entry is replaced so its dryRunProof observes the new instrument (gate3 2026-09-26T23:06:17Z and 23:11:50Z).",
+      "dryRunProof": {
+        "treeSha": "291a7a071720416962ba3a4fd559a38bf7257c8e",
+        "testsDiscovered": 2
+      },
+      "sensitivityProof": {
+        "mutationDescription": "A red->green freeze across B-606 (BLOCKED-340), plus a check-preserving mutation. Before the fix the webhook runtime created the agent with no identity, so a webhook-triggered action's first manifest actor fell to the anonymous branch. B-606 (487a72e720, fix' 058edc7bcf) attaches a ServicePrincipal for the integration the HMAC key stands for. M-606-1 (991fca2300) drops that attachment again.",
+        "failureSummary": "Read from each round's own report. Red first A-421: run 36198814967 at 91d6c053f1, the acceptance[0] case red (actor `anonymous:webhook-<uuid>`, no `identity/attached` of kind service), the control green. Fix 487a72e720: run 36227017825 green; fix' 058edc7bcf: e2e run 36229727665 2/2 (the acceptance[0] case green). Mutation M-606-1 991fca2300: run 36227040120 failure — the acceptance[0] case red again (the attachment dropped); the control stays green. The case file is byte-identical across these (the fix and mutation are src-only), so the difference is the fix, not the case."
+      },
+      "note": "P2-01 U-stage supplement 10, replaced for A-555: the webhook actor case (A-421) on the shipped web profile with the documented GitHub webhook patch, booted in-process through the launcher. An action a webhook delivery triggers traces to the integration ServicePrincipal the HMAC key stands for (P2-01 acceptance[0], BLOCKED-340; fix B-606). expectCases are the full names in A-555's narrow run 36278361411 at f0558bff78, which ran the seven e2e files of the full run's e2e step at its concurrency, 20 of 20 passed, and apps/cli/tests/profiles/web/tests/webhook-actor.e2e.ts ran 2 cases, each frozen title passing once; the entry is frozen after that run, so its cell is observed by the next full run. sensitivityProof carries over from the entry it replaces: the change is to the wait alone. files add the harness the spec imports (the launcher's profile boot, the routing stub model and the session-log reader) and the manifest's actor derivation, to the entry's own four. The observing tree is pinned at refs/dsh/freeze/P2-01.U.10/2026-09-26T23-33-43.000Z -> f0558bff78f94a0b1820d2168a8ab95407bbc16a, whose tree is dryRunProof.treeSha."
     }
   ]
 }
