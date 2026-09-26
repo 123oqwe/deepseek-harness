@@ -57,19 +57,17 @@ if (phase === '1' || phase === '2') {
   })
   const agentLoop = ctx.get('agentLoop')
   if (agentLoop === undefined) throw new Error('p4-05 reclaim: the shipped profile mounted no agent loop')
-  // create() acquires the Run's lease synchronously but its durable Run write is
-  // TRACKED, not awaited (RunPlugin.open → service.openForSession → this.track),
-  // and only the disposer drains those writes — a crash never does. So the Run
-  // can be live only in this process's memory when create() returns.
-  const agent = await agentLoop.create(SessionId(SESSION), { provider: 'p4-05-reclaim-mock', model: 'p4-05-reclaim-mock' }, { cwd: process.cwd() })
   if (phase === '1') {
-    // Wait until the Run is DURABLE before crashing, so the SIGKILL leaves a real
-    // orphan in the store rather than one that never outlived this process (the
-    // A-547 v1 red: the kill raced the tracked write, so phase 2 restored nothing
-    // and minted fresh). The write is THIS process's own async writeFile/rename,
-    // so the wait must yield to the event loop — an Atomics.wait spin would block
-    // it and the write would never run (A-547 v2). Poll runs.json across `await`
+    // Phase 1 is the first launch: create the session. create() acquires the
+    // Run's lease synchronously but TRACKS (does not await) the durable Run
+    // write (RunPlugin.open → service.openForSession → this.track), which only
+    // the disposer drains — a crash never does. So wait until the Run is DURABLE
+    // before crashing, or the SIGKILL leaves an orphan that never outlived this
+    // process (A-547 v1). The write is this process's own async writeFile/rename,
+    // so the wait yields to the event loop — an Atomics.wait spin would block it
+    // and the write would never run (A-547 v2). Poll runs.json across `await`
     // gaps, then SIGKILL with no cleanup: the lease stays held and un-renewed.
+    const agent = await agentLoop.create(SessionId(SESSION), { provider: 'p4-05-reclaim-mock', model: 'p4-05-reclaim-mock' }, { cwd: process.cwd() })
     const runId = agent.runId
     if (runId === undefined) throw new Error('p4-05 reclaim phase 1: create opened no Run')
     const runsPath = dshHomePath('runs', 'runs.json')
@@ -80,6 +78,15 @@ if (phase === '1' || phase === '2') {
     process.stdout.write(`P4-05-PHASE1 ${JSON.stringify({ runId, epoch: agent.lifecycle?.epoch ?? null })}\n`)
     process.kill(process.pid, 'SIGKILL')
   } else {
+    // Phase 2 is the restart: RESUME the persisted session through the product
+    // `--resume` entry (agentLoop.resume), the path a shipped restart takes. A
+    // second create of the same id throws SessionAlreadyExistsError (A-547 v3);
+    // resume loads the session and opens its Run, adopting the lapsed orphan.
+    const handle = await agentLoop.resume(ctx, {
+      resumeSessionId: SessionId(SESSION),
+      agentOptions: { provider: 'p4-05-reclaim-mock', model: 'p4-05-reclaim-mock' },
+    })
+    const agent = handle.agent
     const restored = ctx.get('runs')?.service.runsForSession(SessionId(SESSION)).length ?? 0
     process.stdout.write(`P4-05-PHASE2 ${JSON.stringify({
       restored,
