@@ -14,6 +14,7 @@ import { satisfiesPolicySet } from './policy-solver.ts'
 import {
   WORLD_SPEC_DIMENSIONS,
   type WorldProvider,
+  type WorldProviderId,
   type WorldSpec,
   type WorldSpecDimension,
   type WorldState,
@@ -95,6 +96,28 @@ export interface WorldSelectionChoice {
 
 /** A closed selection answer: exactly one provider, or a refusal with its reason. */
 export type WorldSelection = WorldSelectionChoice | WorldSelectionRefusal
+
+/**
+ * Why the world registry bound no world for an agent's session (P3-01
+ * acceptance[1], acceptance[2]; BLOCKED-316).
+ *
+ * Only these three. A session also has no world when no file-effect boundary
+ * is mounted, when its sandbox mode names no filesystem effect, or when the
+ * selected provider rejects the create, as every `danger-full-access` session
+ * does; none of those is a requested world going missing, and the `absent`
+ * policy fact already names them.
+ */
+export type WorldBindingRefusal =
+  /**
+   * No registered provider can hold the requested world, so the session's
+   * actions run with no world, under the `absent` policy fact a deployment
+   * rule may refuse.
+   */
+  | { readonly kind: 'unavailable'; readonly selection: WorldSelectionRefusal }
+  /** The selected provider returned a handle naming another provider. */
+  | { readonly kind: 'identity-mismatch'; readonly provider: WorldProviderId; readonly claimed: WorldProviderId }
+  /** The selected provider returned a handle whose digest is not that of the spec it was asked to create. */
+  | { readonly kind: 'digest-mismatch'; readonly provider: WorldProviderId }
 
 /**
  * Choose the provider for `spec`, or refuse (acceptance[1]).
