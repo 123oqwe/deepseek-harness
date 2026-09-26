@@ -35,7 +35,8 @@ import type { Agent } from '@deepseek-ai/dsh-agent/types'
 import { createSessionManifestAppender } from '@deepseek-ai/dsh-tools/manifest-log'
 // The reserve/confirm pair lives in `dsh-tools` so the code-mode dispatch can
 // reach it too: a second copy here is what left code-mode unreserved (§12.35-2).
-import { approvalBindingFor, classifyActionRisk, confirmExternalEffect, gateActionRisk, readExecutionWorldFact, readPolicyContextFacts, refuseNewAction, refusedApprovalResult, refusedDispatchResult, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect, verifyRecordedApproval } from '@deepseek-ai/dsh-tools/external-effect'
+import { approvalBindingFor, confirmExternalEffect, gateActionRisk, judgeActionRisk, manifestClassificationOf, readExecutionWorldFact, readPolicyContextFacts, refuseNewAction, refusedApprovalResult, refusedDispatchResult, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect, verifyRecordedApproval } from '@deepseek-ai/dsh-tools/external-effect'
+import type { ActionRiskVerdict } from '@deepseek-ai/dsh-tools/external-effect'
 import type { Principal } from '@deepseek-ai/dsh-principal'
 import { brandString } from '@deepseek-ai/dsh-brand'
 
@@ -244,18 +245,19 @@ async function runGroup(
     // The token this call PRESENTS, read from the planned input rather than
     // re-resolved: `exec.capabilityToken` is what the capability gate checks,
     // so the policy decides on the same authority that gate did.
-    // Classified BEFORE the manifest is appended, because the policy question
-    // asked with that manifest carries the class as a fact: a policy that
-    // cannot see how risky an action is cannot forbid it for being risky
-    // (BLOCKED-201). The same verdict is handed to the risk gate below, so the
-    // two layers decide about one classification rather than each computing
-    // its own.
-    const classified = classifyActionRisk(ctx, call.block.name, ctx.tools.get(call.block.name, agent)?.riskDomainTags ?? [])
+    // Judged BEFORE the manifest is appended, because the manifest records the
+    // class and the preset's approval decision, and the policy question asked
+    // with it carries the class as a fact: a policy that cannot see how risky
+    // an action is cannot forbid it for being risky (BLOCKED-201). The same
+    // verdict is handed to the risk gate below, so the manifest and both
+    // layers record one answer rather than each taking its own.
+    const judged = judgeActionRisk(ctx, agent, call.block.name, ctx.tools.get(call.block.name, agent)?.riskDomainTags ?? [])
     const inputs: PolicyInputs = {
-      facts: await readPolicyContextFacts(ctx, agent, classified),
+      facts: await readPolicyContextFacts(ctx, agent, judged?.classification),
       // The other composition-read input of the same question (P3-01): which
       // world this session's actions run in, `absent` when none is mounted.
       world: await readExecutionWorldFact(ctx, agent),
+      ...judged === undefined ? {} : { verdict: judged },
     }
     const appended = appendToolCall(ctx, agent, turn, step, call.block, inputs, call.exec.capabilityToken)
     callSeqs[index] = appended.seq
@@ -319,11 +321,11 @@ async function runGroup(
     // and a drift between them would read as a substitution nobody made.
     const binding = approvalBindingFor(agent, call.block.id, call.block.name, call.block.arguments, Date.now())
     const riskRefusal = await gateActionRisk(
-      ctx, agent, call.block.name, ctx.tools.get(call.block.name, agent)?.riskDomainTags ?? [], classified,
+      ctx, agent, call.block.name, ctx.tools.get(call.block.name, agent)?.riskDomainTags ?? [], judged,
       binding,
       approvalDisplayFor(
         appended.record.manifest,
-        classified?.riskClass ?? 'security-sensitive',
+        judged?.classification.riskClass ?? 'security-sensitive',
         redactArgumentsForDisplay(call.block.arguments),
         Date.now() + APPROVAL_DISPLAY_VALIDITY_MS,
       ),
@@ -514,18 +516,20 @@ function appendSkippedToolCall(
  * The facts for one call that will not run.
  *
  * A synthetic result still appends a manifest, and a manifest is a policy
- * question, so the question is asked with the same facts a dispatched call
- * would carry rather than with defaults (BLOCKED-201).
+ * question, so the question is asked with the same facts and the manifest
+ * records the same risk verdict a dispatched call would carry, rather than
+ * defaults (BLOCKED-201).
  * @param ctx - the mounting context, consulted for the fact services.
  * @param agent - the agent the call belonged to.
  * @param block - the model call that will not run.
- * @returns the context facts and the world for that call.
+ * @returns the context facts, the world and the risk verdict for that call.
  */
 async function policyInputsForCall(ctx: Context, agent: Agent, block: ToolCallBlock): Promise<PolicyInputs> {
-  const classified = classifyActionRisk(ctx, block.name, ctx.tools.get(block.name, agent)?.riskDomainTags ?? [])
+  const judged = judgeActionRisk(ctx, agent, block.name, ctx.tools.get(block.name, agent)?.riskDomainTags ?? [])
   return {
-    facts: await readPolicyContextFacts(ctx, agent, classified),
+    facts: await readPolicyContextFacts(ctx, agent, judged?.classification),
     world: await readExecutionWorldFact(ctx, agent),
+    ...judged === undefined ? {} : { verdict: judged },
   }
 }
 
@@ -624,6 +628,8 @@ interface PolicyInputs {
   readonly facts: PolicyContextFacts
   /** Where the action would run (P3-01), `absent` when no world registry is mounted. */
   readonly world: ExecutionWorldFact
+  /** The action's risk verdict, which its manifest records (P2-03 acceptance[2]); absent when no policy service is mounted. */
+  readonly verdict?: ActionRiskVerdict
 }
 
 /**
@@ -661,12 +667,11 @@ function appendToolCall(
  * having to remember it. P2-03 must[2] names two further paths, code-mode
  * embedded calls and plugin RPC, which append through their own entry points.
  *
- * The side-effect class comes from `classifySideEffect(undefined)` here: the
- * tool registry carries no declared class for a native call at this point, and
- * must[2]/acceptance[2] require an unclassifiable action to default to the
- * highest-risk class requiring approval rather than to a convenient guess. A
- * later slice supplying real declarations narrows this without changing the
- * default's direction.
+ * The side-effect class is the risk gate's: the verdict in `policy` is recorded
+ * through `manifestClassificationOf` (acceptance[2]). A composition with no
+ * policy service has no verdict, and `classifySideEffect(undefined)` then
+ * defaults the action to the highest-risk class requiring approval rather
+ * than to a convenient guess.
  * @param agent - the agent dispatching it; its session is appended to and its lease epoch recorded.
  * @param block - the tool call about to be dispatched.
  * @param origin - which of must[2]'s execution paths is dispatching it.
@@ -693,11 +698,6 @@ function appendActionManifest(
   // it out themselves until §12.33; two copies of a sequence is the shape that
   // lets one of them drift, and the package shipped the shared one with no
   // caller at all.
-  //
-  // No declared side-effect class is available here: the tool registry carries
-  // none for a native call at this point, and `classifySideEffect` inside the
-  // construction defaults an unclassifiable action to the highest-risk class
-  // requiring approval (acceptance[2]) rather than to a convenient guess.
   const { appended } = appendManifestThenGate(
     createSessionManifestAppender(session, (actorId: string): Principal => ({ ...attribution.actor, id: actorId as Principal['id'] }), () => agent.lifecycle?.epoch),
     {
@@ -708,6 +708,7 @@ function appendActionManifest(
       origin,
       target: { kind: 'other', ref: block.name },
       args: block.arguments,
+      ...policy.verdict === undefined ? {} : { classification: manifestClassificationOf(policy.verdict) },
       idempotencyKey: manifestIdempotencyKey(session.id, brandString<ActionId>(block.id), argumentsHash),
       preconditions: [],
       expectedDiff: { description: `tool ${block.name} executes with the manifested arguments` },

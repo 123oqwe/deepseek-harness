@@ -39,6 +39,7 @@ import type {
   IdempotencyKey,
   IdempotencyScope,
   ManifestAttribution,
+  SideEffectClassification,
 } from '@deepseek-ai/dsh-action-manifest'
 import type { LedgerEpoch, LedgerGeneration, LedgerScope, ReceiptDigest, ReserveDecision } from '@deepseek-ai/dsh-action-ledger'
 import type {} from '@deepseek-ai/dsh-action-ledger'
@@ -48,6 +49,8 @@ import type { SignedCapabilityToken } from '@deepseek-ai/dsh-capability-token'
 import type { ClosedDecision, ExecutionWorldFact, PolicyContextFacts } from '@deepseek-ai/dsh-policy-engine'
 import { enforceManifestedAction } from '@deepseek-ai/dsh-policy-enforcement'
 import type { Principal } from '@deepseek-ai/dsh-principal'
+import { sideEffectClassOf } from '@deepseek-ai/dsh-risk-taxonomy'
+import type { RiskClass, RiskGroundKind } from '@deepseek-ai/dsh-risk-taxonomy'
 import { verifyApprovalBinding } from '@deepseek-ai/dsh-user-approval'
 import type { ApprovalBinding, ApprovalBindingInputs, ApprovalDisplay, ApprovalVerification } from '@deepseek-ai/dsh-user-approval/types'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
@@ -116,6 +119,8 @@ export interface ManifestedDispatchRequest {
   readonly pathName: string
   /** The event that will evidence the execution. */
   readonly receipt: string
+  /** The risk gate's classification of the action, as {@link manifestClassificationOf} gives it; absent when no risk gate is mounted. */
+  readonly classification?: SideEffectClassification
 }
 
 /** What one manifested dispatch produced: the ledger's record and P2-05's decision. */
@@ -128,8 +133,8 @@ export interface ManifestedDispatch {
 
 /**
  * The manifest request one dispatch describes. Mirrors the native path field
- * for field, including the unclassifiable default: no side-effect declaration
- * reaches this point.
+ * for field: the side-effect class is the risk gate's classification when the
+ * path supplies one, and the unclassifiable default otherwise.
  * @param request - the path's description of the action.
  * @param attribution - the run and actor the action is attributed to.
  * @param scope - the session the idempotency key is keyed to.
@@ -150,6 +155,7 @@ function manifestRequestFor(
     origin: request.origin,
     target: { kind: 'other', ref: request.name },
     args,
+    ...request.classification === undefined ? {} : { classification: request.classification },
     idempotencyKey: manifestIdempotencyKey(scope, actionId, computeArgumentsHash(args)),
     preconditions: [],
     expectedDiff: { description: `${request.dispatch} of ${request.name} executes with the manifested arguments` },
@@ -367,7 +373,7 @@ interface RiskPolicyPort {
 }
 
 /**
- * One action's intrinsic risk verdict under the deployment's organisation policy.
+ * One action's intrinsic risk classification under the deployment's organisation policy.
  *
  * Named because it crosses two layers: the dispatch paths compute it before
  * asking policy, so the Cedar request and {@link gateActionRisk} decide about
@@ -375,30 +381,84 @@ interface RiskPolicyPort {
  */
 export interface ActionRiskClassification {
   /** The class the action was classified into. */
-  readonly riskClass: string
+  readonly riskClass: RiskClass
   /** Whether the class is in the kernel band no organisation policy may switch off. */
   readonly hardDenied: boolean
+  /** How the class was reached: a matched rule, the kernel band, or the unknown default when no rule matched. */
+  readonly ground: RiskGroundKind
 }
 
 /**
- * Classify one action ahead of both the policy decision and the risk gate.
+ * One action's risk classification and what the preset in force decides about
+ * it, taken once so the action's manifest and its risk gate record one answer
+ * (P2-03 acceptance[2]).
+ */
+export interface ActionRiskVerdict {
+  /** The classifier's verdict. */
+  readonly classification: ActionRiskClassification
+  /** The preset in force for the session when the verdict was taken. */
+  readonly preset: string
+  /** Whether that preset asks a person first; `false` for a hard-denied action, which is refused without asking. */
+  readonly requiresApproval: boolean
+}
+
+/**
+ * Take one action's risk verdict ahead of the manifest, the policy decision and the risk gate.
  *
  * The dispatch paths call this BEFORE `enforceManifestedAction`, because a
  * policy that cannot see how risky an action is cannot forbid it for being
- * risky — the fact reached Cedar as a default until BLOCKED-201. The verdict
- * is then handed to {@link gateActionRisk} rather than recomputed there.
+ * risky — the fact reached Cedar as a default until BLOCKED-201. The same
+ * verdict is recorded in the manifest and handed to {@link gateActionRisk}
+ * rather than taken again there.
  * @param ctx - the mounting context, consulted for an optional policy service.
+ * @param agent - the dispatching agent; its session carries the preset in force.
  * @param toolName - the action's capability, used as its identity to the classifier.
  * @param riskDomainTags - what the tool declares it touches, empty when it declares nothing.
  * @returns the verdict, or `undefined` when no policy service is mounted.
  */
-export function classifyActionRisk(
+export function judgeActionRisk(
   ctx: Context,
+  agent: Agent,
   toolName: string,
   riskDomainTags: readonly string[],
-): ActionRiskClassification | undefined {
+): ActionRiskVerdict | undefined {
   const presets = ctx.get('permissionPresets') as RiskPolicyPort | undefined
-  return presets?.classifyAction({ actionId: toolName, domainTags: riskDomainTags })
+  return presets === undefined ? undefined : verdictOf(presets, agent, toolName, riskDomainTags)
+}
+
+/**
+ * One action's verdict under a mounted policy service.
+ * @param presets - the policy service.
+ * @param agent - the dispatching agent; its session carries the preset in force.
+ * @param toolName - the action's capability.
+ * @param riskDomainTags - what the tool declares it touches.
+ * @returns the classification, the preset and its approval decision.
+ */
+function verdictOf(presets: RiskPolicyPort, agent: Agent, toolName: string, riskDomainTags: readonly string[]): ActionRiskVerdict {
+  const classification = presets.classifyAction({ actionId: toolName, domainTags: riskDomainTags })
+  const preset = presets.current(agent.session)
+  return { classification, preset, requiresApproval: !classification.hardDenied && presets.requiresApproval(classification, preset) }
+}
+
+/**
+ * The side-effect classification an action's manifest records for its risk
+ * verdict (P2-03 acceptance[2]).
+ *
+ * A class a rule of the policy decided, or the kernel band, is recorded as
+ * `@deepseek-ai/dsh-risk-taxonomy`'s table gives it and marked classified; the
+ * unknown default is recorded as `destructive`, unclassified. Either way
+ * `requiresApproval` is the verdict's, the preset's decision.
+ * @param verdict - the verdict {@link judgeActionRisk} took.
+ * @returns the classification the manifest records.
+ */
+export function manifestClassificationOf(verdict: ActionRiskVerdict): SideEffectClassification {
+  const { classification } = verdict
+  const decided = classification.ground === 'policy-rule' || classification.ground === 'kernel-hard-deny'
+  return {
+    sideEffectClass: decided ? sideEffectClassOf(classification.riskClass) : 'destructive',
+    classified: decided,
+    requiresApproval: verdict.requiresApproval,
+  }
 }
 
 /**
@@ -435,7 +495,7 @@ interface WorkspaceTrustPort {
  * root's files; what runs here is an action of this session, in this directory.
  * @param ctx - the mounting context, consulted for the optional fact services.
  * @param agent - the dispatching agent, whose session carries the cwd and the preset.
- * @param classified - the action's risk verdict, already computed by {@link classifyActionRisk}.
+ * @param classified - the action's risk classification, from the verdict {@link judgeActionRisk} took.
  * @returns every declared fact, each either observed or at its fail-closed value.
  */
 export async function readPolicyContextFacts(
@@ -461,7 +521,7 @@ export async function readPolicyContextFacts(
     // before policy is asked. `security-sensitive` when nothing classified it
     // is the classifier's own unknown default, restated here for the case
     // where no policy service is mounted at all.
-    riskClass: (classified?.riskClass ?? 'security-sensitive') as PolicyContextFacts['riskClass'],
+    riskClass: classified?.riskClass ?? 'security-sensitive',
   }
 }
 
@@ -743,7 +803,8 @@ export type RiskRefusal =
  * @param agent - the agent dispatching the action; its session carries the preset in force.
  * @param toolName - the action's capability, used as its identity to the classifier.
  * @param riskDomainTags - what the tool declares it touches, empty when it declares nothing.
- * @param classified - the verdict {@link classifyActionRisk} already produced for this action; omitted, the gate classifies for itself.
+ * @param judged - the verdict {@link judgeActionRisk} already took for this action, which its manifest
+ *   recorded; omitted, the gate takes one for itself.
  * @param binding - what an approval asked here is bound to, when the caller has a tuple (P2-06 must[1]).
  * @param display - the six fields a decider must see, when the caller has a manifest (P2-06 must[0]).
  * @returns the refusal, or `undefined` when the action may run.
@@ -754,25 +815,24 @@ export async function gateActionRisk(
   agent: Agent,
   toolName: string,
   riskDomainTags: readonly string[],
-  classified?: ActionRiskClassification,
+  judged?: ActionRiskVerdict,
   binding?: ApprovalBindingRequest,
   display?: ApprovalDisplay,
 ): Promise<RiskRefusal | undefined> {
   const presets = ctx.get('permissionPresets') as RiskPolicyPort | undefined
   if (presets === undefined) return undefined
   const undeclared = riskDomainTags.length === 0
-  // The caller classifies first so the POLICY layer can see the class, and
-  // hands the result here rather than letting this classify again: one action
-  // classified twice is two answers that can disagree, and the policy decision
-  // and the risk gate disagreeing about what an action IS would be the worst
-  // possible pair to have drift.
-  const classification = classified ?? presets.classifyAction({ actionId: toolName, domainTags: riskDomainTags })
-  const preset = presets.current(agent.session)
+  // The caller takes the verdict first, so the POLICY layer can see the class
+  // and the manifest records the same approval decision, and hands it here
+  // rather than letting this take it again: one action judged twice is two
+  // answers that can disagree, and the manifest, the policy decision and the
+  // risk gate disagreeing about what an action IS would be the worst drift.
+  const verdict = judged ?? verdictOf(presets, agent, toolName, riskDomainTags)
+  const { classification, preset } = verdict
   // The gate's decision is recorded for EVERY branch, including the one that
-  // lets the action through. A manifest records the action's intrinsic
-  // classification before execution and is preset-blind; without this event a
-  // log showing `requiresApproval: true` beside an action nobody was asked
-  // about describes a different run than the one that happened (BLOCKED-159).
+  // lets the action through. The manifest records whether the preset requires
+  // approval; without this event a log could not tell whether an action that
+  // required approval was asked about and granted or refused (BLOCKED-159).
   // The silent branch is the one that matters: an allow leaves no other trace.
   const recordDecision = (decision: 'asked' | 'refused' | 'hard-denied' | 'allowed-by-preset'): void => {
     agent.session.append('action/risk-gated', {
@@ -786,7 +846,7 @@ export async function gateActionRisk(
     recordDecision('hard-denied')
     return { kind: 'hard-deny', riskClass: classification.riskClass, undeclared }
   }
-  if (!presets.requiresApproval(classification, preset)) {
+  if (!verdict.requiresApproval) {
     recordDecision('allowed-by-preset')
     return undefined
   }

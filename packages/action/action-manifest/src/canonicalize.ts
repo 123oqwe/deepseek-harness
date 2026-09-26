@@ -207,7 +207,8 @@ function assertJsonArguments(args: JsonValue): void {
  * {@link ActionManifest} from `request`, deriving
  * {@link ActionManifest.argumentsHash} via `computeArgumentsHash(request.args)`
  * and {@link ActionManifest.sideEffectClass}/{@link ActionManifest.requiresApproval}
- * via `classifySideEffect(request.declaredSideEffectClass)`. Construction
+ * from `request.classification` when the risk gate supplied one, else via
+ * `classifySideEffect(request.declaredSideEffectClass)`. Construction
  * alone never durably appends anything or makes a policy/approval decision
  * — must[1] requires generation to happen first, but generation and
  * durable append are two distinct steps; a later Usage-stage Consumer owns
@@ -217,7 +218,7 @@ function assertJsonArguments(args: JsonValue): void {
  */
 export function createActionManifest(request: CreateActionManifestRequest): ActionManifest {
   assertJsonArguments(request.args)
-  const classification = classifySideEffect(request.declaredSideEffectClass)
+  const classification = request.classification ?? classifySideEffect(request.declaredSideEffectClass)
   return {
     actionId: request.actionId,
     runId: request.runId,

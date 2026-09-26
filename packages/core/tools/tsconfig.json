@@ -58,6 +58,9 @@
       "path": "../../policy/policy-enforcement"
     },
     {
+      "path": "../../policy/risk-taxonomy"
+    },
+    {
       "path": "../../policy/policy-engine"
     }
   ]
