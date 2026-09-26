@@ -89,7 +89,7 @@ This section explains the design decisions behind the tool and points at the cod
 
 ### Rendering and exit markers
 
-The renderer shares the bash tool's structure and the `parseExitStatus` marker contract from `dsh-shell`: a clean exit (0, no signal) produces no marker; the UI card consumes the exit marker as its exit-status pill. Windows forced termination settles as exit 1 without a signal, so `[killed by signal: …]` is POSIX-only there. The `tool:pwsh` prompt section (first-party order 1010) teaches the exit-marker convention and the Windows exit-1-after-interruption reading.
+The renderer shares the bash tool's structure and the `parseExitStatus` marker contract from `dsh-shell`: a clean exit (0, no signal) produces no marker; the UI card consumes the exit marker as its exit-status pill. Windows forced termination settles as exit 1 without a signal, so `[killed by signal: …]` is POSIX-only there. The `tool:pwsh` prompt section (first-party order 1010) teaches the exit-marker convention and the Windows exit-1-after-interruption reading. As with the bash tool, a confined foreground run persists its sandbox facts as `tool/result` `meta.sandbox` (mode, denial, enforcement, backend, and the reachable host sockets when there are any) for the operator; the model never receives them, and an unconfined or background call persists no `meta`.
 
 </details>
 

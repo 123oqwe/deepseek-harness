@@ -79,7 +79,7 @@ interface PwshForegroundResult {
   timeoutMs: number
   stdout: { text: string; truncated: boolean; spillPath?: string }
   stderr: { text: string; truncated: boolean; spillPath?: string }
-  sandbox?: { mode: string; denied: boolean; enforcement?: string; runnerFailed?: boolean }
+  sandbox?: { mode: string; denied: boolean; enforcement?: string; backend?: string; reachableSockets?: string[]; runnerFailed?: boolean }
 }
 
 /* jscpd:ignore-start -- minimal mirror of dsh-tool-bash's validation and execute plumbing (Agent Note). */
@@ -177,6 +177,8 @@ function canonicalPwshResult(result: ShellRunResult): PwshForegroundResult {
         mode: result.sandbox.mode,
         denied: result.sandbox.denied,
         ...result.sandbox.enforcement !== undefined ? { enforcement: result.sandbox.enforcement } : {},
+        ...result.sandbox.backend !== undefined ? { backend: result.sandbox.backend } : {},
+        ...result.sandbox.reachableSockets !== undefined ? { reachableSockets: [...result.sandbox.reachableSockets] } : {},
         ...result.sandbox.runnerFailed !== undefined ? { runnerFailed: result.sandbox.runnerFailed } : {},
       },
     } : {},
@@ -328,6 +330,8 @@ export function apply(ctx: Context, config: Config = {}): void {
                   mode: { type: 'string', required: true },
                   denied: { type: 'boolean', required: true },
                   enforcement: { type: 'string' },
+                  backend: { type: 'string' },
+                  reachableSockets: { type: 'array', items: { type: 'string' } },
                   runnerFailed: { type: 'boolean' },
                 },
               },
@@ -342,6 +346,13 @@ export function apply(ctx: Context, config: Config = {}): void {
           ? `started background job ${value.jobId}`
           : renderPwshResult(value as RenderablePwshResult, escalationModes),
       }],
+      /* jscpd:ignore-start -- mirrors dsh-tool-bash's presentationMeta by design (pwsh-tool-and-executor Agent Note). */
+      // The backend that confined a foreground command, kept on `tool/result`
+      // for the operator (P3-05; BLOCKED-346); an unconfined command persists none.
+      presentationMeta: (_args, value) => value.kind === 'foreground' && value.sandbox?.backend !== undefined
+        ? { sandbox: { ...value.sandbox } }
+        : undefined,
+      /* jscpd:ignore-end */
     },
     /* jscpd:ignore-start -- the execute path mirrors dsh-tool-bash's by design (see the pwsh-tool-and-executor Agent Note). */
     async execute(args: PwshToolArgs, exec) {

@@ -26,8 +26,8 @@ import LocalSubprocessRuntime from '@deepseek-ai/dsh-subprocess-local'
 
 const probe = spawnSync(launcherPath(), ['--probe'], { timeout: 5_000, encoding: 'utf8' })
 const landlockUsable = probe.status === 0
-/** The kernel's enforcement level from the probe report — stamped facts below must match it. */
-const enforcement = /partially enforced/.test(probe.stdout ?? '') ? 'partial' : 'full'
+/** Every Landlock wrap is partial: whatever its ABI, Landlock cannot refuse Unix-domain sockets. */
+const enforcement = 'partial'
 
 let ctx: Context | undefined
 const tempDirs: string[] = []
@@ -47,7 +47,7 @@ async function tempDir(base: string): Promise<string> {
 async function sandboxedBash(workspace: string, mode: 'read-only' | 'workspace-write'): Promise<SandboxBashExecutor> {
   ctx = new Context()
   await ctx.plugin(LocalSandboxProvider, {})
-  ;(ctx.sandbox as LocalSandboxProvider).internals = { probeBwrap: () => false }
+  ;(ctx.sandbox as LocalSandboxProvider).internals = { probeBwrap: () => false, hostSockets: () => [], writeWarning: () => {} }
   await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(SandboxPolicyService, { mode, workspaceRoot: workspace })
   await ctx.plugin(LocalSubprocessRuntime)
@@ -61,7 +61,7 @@ describe.skipIf(!landlockUsable)('bash-sandbox: real Landlock confinement throug
     const bash = await sandboxedBash(workdir, 'read-only')
     const result = await bash.run(bash.resolve({ command: `echo hi > ${workdir}/denied.txt` }))
     expect(result.exitCode).not.toBe(0)
-    expect(result.sandbox).toEqual({ mode: 'read-only', denied: true, enforcement })
+    expect(result.sandbox).toEqual({ mode: 'read-only', denied: true, enforcement, backend: 'landlock' })
     expect(existsSync(join(workdir, 'denied.txt'))).toBe(false)
   })
 
@@ -72,12 +72,12 @@ describe.skipIf(!landlockUsable)('bash-sandbox: real Landlock confinement throug
 
     const inside = await bash.run(bash.resolve({ command: `printf landlock-ok > ${workdir}/allowed.txt` }))
     expect(inside.exitCode).toBe(0)
-    expect(inside.sandbox).toEqual({ mode: 'workspace-write', denied: false, enforcement })
+    expect(inside.sandbox).toEqual({ mode: 'workspace-write', denied: false, enforcement, backend: 'landlock' })
     expect(readFileSync(join(workdir, 'allowed.txt'), 'utf8')).toBe('landlock-ok')
 
     const denied = await bash.run(bash.resolve({ command: `echo hi > ${outside}/denied.txt` }))
     expect(denied.exitCode).not.toBe(0)
-    expect(denied.sandbox).toEqual({ mode: 'workspace-write', denied: true, enforcement })
+    expect(denied.sandbox).toEqual({ mode: 'workspace-write', denied: true, enforcement, backend: 'landlock' })
     expect(existsSync(join(outside, 'denied.txt'))).toBe(false)
   })
 
@@ -86,7 +86,7 @@ describe.skipIf(!landlockUsable)('bash-sandbox: real Landlock confinement throug
     const bash = await sandboxedBash(workdir, 'read-only')
     const task = bash.start(bash.resolve({ command: `echo hi > ${workdir}/bg-denied.txt` }))
     await task.done
-    expect(task.sandbox).toEqual({ mode: 'read-only', denied: true, enforcement })
+    expect(task.sandbox).toEqual({ mode: 'read-only', denied: true, enforcement, backend: 'landlock' })
     expect(existsSync(join(workdir, 'bg-denied.txt'))).toBe(false)
   })
 
@@ -96,11 +96,11 @@ describe.skipIf(!landlockUsable)('bash-sandbox: real Landlock confinement throug
     const command = `printf escalated > ${workdir}/escalated.txt`
     const strict = await bash.run(bash.resolve({ command }))
     expect(strict.exitCode).not.toBe(0)
-    expect(strict.sandbox).toEqual({ mode: 'read-only', denied: true, enforcement: enforcement })
+    expect(strict.sandbox).toEqual({ mode: 'read-only', denied: true, enforcement, backend: 'landlock' })
     expect(existsSync(join(workdir, 'escalated.txt'))).toBe(false)
     const retried = await bash.run(bash.resolve({ command, sandboxPolicy: { mode: 'workspace-write', workspaceRoot: workdir } }))
     expect(retried.exitCode).toBe(0)
-    expect(retried.sandbox).toEqual({ mode: 'workspace-write', denied: false, enforcement: enforcement })
+    expect(retried.sandbox).toEqual({ mode: 'workspace-write', denied: false, enforcement, backend: 'landlock' })
     expect(readFileSync(join(workdir, 'escalated.txt'), 'utf8')).toBe('escalated')
   })
 })

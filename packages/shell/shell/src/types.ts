@@ -25,6 +25,13 @@ export interface ShellSandboxInfo {
   denied: boolean
   /** How completely the selected runner enforced the requested mode. */
   enforcement?: SandboxEnforcement
+  /** The backend that confined the command; absent under `danger-full-access`. */
+  backend?: string
+  /**
+   * Known host daemon and agent sockets the backend left the command able to
+   * reach; present only when there were any (`ConfinedArgv.reachableSockets`).
+   */
+  reachableSockets?: readonly string[]
   /** Whether the sandbox runner failed before the command could run. */
   runnerFailed?: boolean
 }

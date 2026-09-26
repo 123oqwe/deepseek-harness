@@ -8,7 +8,7 @@
  */
 
 import { mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
@@ -20,21 +20,35 @@ import {
 } from '@deepseek-ai/dsh-sandbox-local'
 import type { Config } from '@deepseek-ai/dsh-sandbox-local'
 import { bwrapProfileArgs, landlockProfileArgs, seatbeltProfileArgs } from '../src/profiles.ts'
+import { seccompTrampoline, unixSocketFilter } from '../src/seccomp.ts'
+import { knownHostSockets } from '../src/sockets.ts'
 
 const RO: SandboxPolicy = { mode: 'read-only', workspaceRoot: '/ws' }
 const WW: SandboxPolicy = { mode: 'workspace-write', workspaceRoot: '/ws' }
 
+/** The bwrap-compatible runner argv as the provider wraps it for the pinned x64 filter. */
+function withX64Filter(runner: readonly string[]): string[] {
+  return seccompTrampoline(unixSocketFilter('x64') as Buffer, [...runner, '--seccomp', '3'])
+}
+
 /** Every temp dir created by this file (fake launchers and runner entries), removed after each test. */
 const tempDirs: string[] = []
+/** The operator warnings the provider under test wrote. */
+let warnings: string[] = []
 afterEach(() => {
   for (const dir of tempDirs.splice(0)) rmSync(dir, { recursive: true, force: true })
+  warnings = []
 })
 
+/**
+ * Mount the provider. The internals pin the x64 filter, a host with no known
+ * daemon or agent socket, and a warning collector unless the caller overrides them.
+ */
 async function setup(config: Config = {}, internals: LocalSandboxProvider['internals'] = {}) {
   const ctx = new Context()
   await ctx.plugin(LocalSandboxProvider, config)
   const sandbox = ctx.sandbox as LocalSandboxProvider
-  sandbox.internals = internals
+  sandbox.internals = { arch: 'x64', hostSockets: () => [], writeWarning: (line) => { warnings.push(line) }, ...internals }
   return { ctx, sandbox }
 }
 
@@ -68,8 +82,15 @@ function fakeSeatbeltExec(status: number): string {
   return exec
 }
 
+/** Every seatbelt profile refuses Unix-socket connections except to name resolution and the system log. */
+const SEATBELT_SOCKET_FORMS = [
+  '(deny network-outbound (remote unix-socket (path-regex #"^/")))',
+  ...['/var/run/mDNSResponder', '/private/var/run/mDNSResponder', '/var/run/syslog', '/private/var/run/syslog']
+    .map(path => `(allow network-outbound (remote unix-socket (path-literal "${path}")))`),
+].join(' ')
+
 /** The seatbelt read-only profile — every seatbelt profile starts with these forms. */
-const SEATBELT_RO_PROFILE = '(version 1) (allow default) (deny file-write*) (allow file-write* (literal "/dev/null"))'
+const SEATBELT_RO_PROFILE = `(version 1) (allow default) (deny file-write*) (allow file-write* (literal "/dev/null")) ${SEATBELT_SOCKET_FORMS}`
 
 describe('profile dialects', () => {
   it('bwrap read-only: whole tree read-only with fresh /dev and private PID-scoped /proc, no writable mounts', () => {
@@ -93,7 +114,7 @@ describe('profile dialects', () => {
     expect(landlockProfileArgs(WW)).toEqual(['--ro', '/', '--rw', '/dev/null', '--rw', '/tmp', '--rw', '/ws'])
   })
 
-  it('seatbelt read-only: allow-default with every file write denied except the /dev/null literal', () => {
+  it('seatbelt read-only: allow-default with every file write denied except the /dev/null literal, and every Unix-socket connection except name resolution and the system log', () => {
     expect(seatbeltProfileArgs(RO)).toEqual(['-p', SEATBELT_RO_PROFILE])
   })
 
@@ -117,18 +138,22 @@ describe('profile dialects', () => {
 })
 
 describe('runnerCommand config', () => {
-  it('a non-empty runnerCommand skips the chain: runner argv + bwrap-shaped profile + -- + caller argv, asserted full', async () => {
+  it('a non-empty runnerCommand skips the chain: runner argv + bwrap-shaped profile + -- + caller argv, spawned directly and partial', async () => {
     const probeBwrap = vi.fn(() => false)
     const probeLandlock = vi.fn(() => 'unusable' as const)
     const probeSeatbelt = vi.fn(() => false)
     const { sandbox } = await setup({
       runnerCommand: ['fake-runner', '--flag'],
       runnerFailureSignatures: ['fake-runner: profile rejected'],
-    }, { probeBwrap, probeLandlock, probeSeatbelt })
+    }, { probeBwrap, probeLandlock, probeSeatbelt, hostSockets: () => ['/run/docker.sock'] })
     const confined = sandbox.confine(['bash', '-c', 'echo hi'], WW)
     expect(confined).toEqual({
+      // Spawned directly, not through the seccomp trampoline, so the runner's own
+      // spawn failure stays attributable; nothing filters its Unix sockets.
       argv: ['fake-runner', '--flag', ...bwrapProfileArgs(WW), '--', 'bash', '-c', 'echo hi'],
-      enforcement: 'full',
+      backend: 'runner-command',
+      enforcement: 'partial',
+      reachableSockets: ['/run/docker.sock'],
       // An operator runner's kernel mechanism is unknown: both Linux
       // file-denial dialects, never bare EPERM.
       denialSignatures: ['read-only file system', 'permission denied'],
@@ -137,6 +162,8 @@ describe('runnerCommand config', () => {
     expect(probeBwrap).not.toHaveBeenCalled()
     expect(probeLandlock).not.toHaveBeenCalled()
     expect(probeSeatbelt).not.toHaveBeenCalled()
+    expect(warnings).toHaveLength(1)
+    expect(warnings[0]).toMatch(/^dsh: sandbox: the runner-command backend cannot refuse Unix-domain sockets/)
   })
 
   it('an EMPTY runnerCommand means unconfigured: the platform chain still gates the wrap', async () => {
@@ -169,21 +196,34 @@ describe('runnerCommand config', () => {
 })
 
 describe('the platform chains', () => {
-  it('linux probes bwrap first: a passing probe wraps with the bwrap dialect at full enforcement', async () => {
+  it('linux probes bwrap first: a passing probe wraps bwrap in the seccomp trampoline, full enforcement, no socket left reachable', async () => {
     const probeBwrap = vi.fn(() => true)
     const probeLandlock = vi.fn(() => 'full' as const)
     const { sandbox } = await setup({}, { platform: 'linux', probeBwrap, probeLandlock })
     const confined = sandbox.confine(['true'], RO)
     expect(confined).toEqual({
-      argv: ['bwrap', ...bwrapProfileArgs(RO), '--', 'true'],
+      argv: [...withX64Filter(['bwrap', ...bwrapProfileArgs(RO)]), '--', 'true'],
+      backend: 'bwrap',
       enforcement: 'full',
+      reachableSockets: [],
       denialSignatures: ['read-only file system'],
       runnerFailureRules: [{ fatalSignatures: ['bwrap: '] }],
     })
     expect(probeLandlock).not.toHaveBeenCalled()
+    expect(warnings).toEqual([])
   })
 
-  it('linux falls back to the launcher when the bwrap probe fails, speaking the landlock dialect', async () => {
+  it('bwrap on an architecture without a filter wraps plain bwrap, enforces partial, and warns the operator', async () => {
+    const { sandbox } = await setup({}, { platform: 'linux', probeBwrap: () => true, arch: 'riscv64' })
+    const confined = sandbox.confine(['true'], RO)
+    expect(confined.argv).toEqual(['bwrap', ...bwrapProfileArgs(RO), '--', 'true'])
+    expect(confined.backend).toBe('bwrap')
+    expect(confined.enforcement).toBe('partial')
+    expect(confined.reachableSockets).toEqual([])
+    expect(warnings).toHaveLength(1)
+  })
+
+  it('linux falls back to the launcher when the bwrap probe fails: the landlock dialect, partial because Landlock cannot refuse Unix sockets', async () => {
     const probeBwrap = vi.fn(() => false)
     const probeLandlock = vi.fn(() => 'full' as const)
     const launcher = fakeLauncher()
@@ -191,7 +231,9 @@ describe('the platform chains', () => {
     const confined = sandbox.confine(['bash', '-c', 'echo hi'], WW)
     expect(confined).toEqual({
       argv: [launcher, ...landlockProfileArgs(WW), '--', 'bash', '-c', 'echo hi'],
-      enforcement: 'full',
+      backend: 'landlock',
+      enforcement: 'partial',
+      reachableSockets: [],
       denialSignatures: ['permission denied'],
       runnerFailureRules: [{
         allowedExitCodes: [LAUNCHER_FAILURE_EXIT],
@@ -211,11 +253,14 @@ describe('the platform chains', () => {
     const confined = sandbox.confine(['bash', '-c', 'echo hi'], RO)
     expect(confined).toEqual({
       argv: ['sandbox-exec', ...seatbeltProfileArgs(RO), '--', 'bash', '-c', 'echo hi'],
+      backend: 'seatbelt',
       enforcement: 'full',
+      reachableSockets: [],
       denialSignatures: ['operation not permitted'],
       runnerFailureRules: [{ fatalSignatures: ['sandbox-exec: '] }],
     })
     expect(probeSeatbelt).not.toHaveBeenCalled()
+    expect(warnings).toEqual([])
   })
 
   it('a platform with no chain fails closed without a single probe: the command never runs', async () => {
@@ -284,7 +329,7 @@ describe('the platform chains', () => {
     // Pinning the platform (not the probes) makes the REAL defaultProbeBwrap
     // spawn run on every host: bwrap answers on a Linux box, ENOENT reads as
     // an unusable rung anywhere else — either way the walk is genuine.
-    const { sandbox } = await setup({}, { platform: 'linux' })
+    const { sandbox } = await setup({}, { platform: 'linux', arch: process.arch })
     const verdict = (() => {
       try {
         sandbox.confine(['true'], RO)
@@ -298,7 +343,7 @@ describe('the platform chains', () => {
   })
 
   it('walks the real platform chain when nothing is injected (usable here or fail closed there)', async () => {
-    const { sandbox } = await setup({}, {})
+    const { sandbox } = await setup({}, { arch: process.arch })
     const verdict = (() => {
       try {
         sandbox.confine(['true'], RO)
@@ -312,16 +357,61 @@ describe('the platform chains', () => {
   })
 })
 
-describe('the default landlock probe (launcher CLI contract)', () => {
-  it('parses a fully-enforced probe report as full enforcement', async () => {
-    const { sandbox } = await setup({}, { platform: 'linux', probeBwrap: () => false, landlockLauncher: fakeLauncher() })
-    expect(sandbox.confine(['true'], RO).enforcement).toBe('full')
+describe('Unix-domain sockets a backend cannot refuse', () => {
+  it('names the known sockets it leaves reachable and warns the operator once per distinct list', async () => {
+    let known = ['/run/docker.sock', '/tmp/ssh-a1/agent.7']
+    const { sandbox } = await setup({}, { platform: 'linux', probeBwrap: () => false, landlockLauncher: fakeLauncher(), hostSockets: () => known })
+    expect(sandbox.confine(['true'], RO).reachableSockets).toEqual(['/run/docker.sock', '/tmp/ssh-a1/agent.7'])
+    sandbox.confine(['true'], WW)
+    expect(warnings).toEqual([
+      'dsh: sandbox: the landlock backend cannot refuse Unix-domain sockets, so a sandboxed command can connect to any Unix '
+      + 'socket this user can reach. Daemon and agent sockets it leaves reachable here: /run/docker.sock, /tmp/ssh-a1/agent.7. '
+      + 'bubblewrap (Linux) and Seatbelt (macOS) refuse them.\n',
+    ])
+    known = []
+    expect(sandbox.confine(['true'], RO).reachableSockets).toEqual([])
+    expect(warnings).toHaveLength(2)
+    expect(warnings[1]).toBe('dsh: sandbox: the landlock backend cannot refuse Unix-domain sockets, so a sandboxed command can '
+      + 'connect to any Unix socket this user can reach. bubblewrap (Linux) and Seatbelt (macOS) refuse them.\n')
   })
 
-  it('parses a partially-enforced (older-ABI) probe report as partial enforcement', async () => {
+  it('searches this process\'s environment and home directory when nothing is injected', async () => {
+    const { sandbox } = await setup({}, { platform: 'linux', probeBwrap: () => false, landlockLauncher: fakeLauncher(), hostSockets: undefined })
+    expect(sandbox.confine(['true'], RO).reachableSockets).toEqual(knownHostSockets({ env: process.env, home: homedir() }))
+  })
+
+  it('writes the warning to this process\'s stderr when no writer is injected', async () => {
+    const write = vi.spyOn(process.stderr, 'write').mockImplementation(() => true)
+    try {
+      const { sandbox } = await setup({}, { platform: 'linux', probeBwrap: () => false, landlockLauncher: fakeLauncher(), writeWarning: undefined })
+      sandbox.confine(['true'], RO)
+      expect(write).toHaveBeenCalledWith(expect.stringMatching(/^dsh: sandbox: the landlock backend cannot refuse Unix-domain sockets/))
+    } finally {
+      write.mockRestore()
+    }
+  })
+
+  it('does not warn about a backend that refuses them', async () => {
+    const { sandbox } = await setup({}, { platform: 'darwin', hostSockets: () => ['/var/run/docker.sock'] })
+    expect(sandbox.confine(['true'], RO).reachableSockets).toEqual([])
+    expect(warnings).toEqual([])
+  })
+})
+
+describe('the default landlock probe (launcher CLI contract)', () => {
+  it('selects the rung on a fully-enforced probe report; the wrap is partial because Landlock cannot refuse Unix sockets', async () => {
+    const { sandbox } = await setup({}, { platform: 'linux', probeBwrap: () => false, landlockLauncher: fakeLauncher() })
+    const confined = sandbox.confine(['true'], RO)
+    expect(confined.backend).toBe('landlock')
+    expect(confined.enforcement).toBe('partial')
+  })
+
+  it('selects the rung on a partially-enforced (older-ABI) probe report, partial as well', async () => {
     const launcher = fakeLauncher('landlock: partially enforced (older ABI)')
     const { sandbox } = await setup({}, { platform: 'linux', probeBwrap: () => false, landlockLauncher: launcher })
-    expect(sandbox.confine(['true'], RO).enforcement).toBe('partial')
+    const confined = sandbox.confine(['true'], RO)
+    expect(confined.backend).toBe('landlock')
+    expect(confined.enforcement).toBe('partial')
   })
 
   it('reads a failing launcher as unusable: the chain ends and fails closed', async () => {
@@ -356,7 +446,7 @@ describe('probeTimeoutMs config', () => {
       { probeTimeoutMs: 15_000 },
       { platform: 'linux', probeBwrap: () => false, landlockLauncher: launcher },
     )
-    expect(patient.sandbox.confine(['true'], RO).enforcement).toBe('full')
+    expect(patient.sandbox.confine(['true'], RO).backend).toBe('landlock')
 
     const impatient = await setup(
       { probeTimeoutMs: 250 },
@@ -376,7 +466,9 @@ describe('the default seatbelt probe (sandbox-exec contract)', () => {
     const confined = sandbox.confine(['true'], RO)
     expect(confined).toEqual({
       argv: [exec, ...seatbeltProfileArgs(RO), '--', 'true'],
+      backend: 'seatbelt',
       enforcement: 'full',
+      reachableSockets: [],
       denialSignatures: ['operation not permitted'],
       runnerFailureRules: [{ fatalSignatures: ['sandbox-exec: '] }],
     })
@@ -412,7 +504,7 @@ describe('the windows-acl probe (runner invocation contract)', () => {
     const probeWindowsAcl = vi.fn(() => false)
     const { sandbox } = await setup({}, { chain: ['windows-acl', 'bwrap'], probeWindowsAcl, probeBwrap: () => true })
     const confined = sandbox.confine(['true'], RO)
-    expect(confined.argv[0]).toBe('bwrap')
+    expect(confined.backend).toBe('bwrap')
     expect(probeWindowsAcl).toHaveBeenCalledTimes(1)
   })
 
@@ -425,7 +517,7 @@ describe('the windows-acl probe (runner invocation contract)', () => {
     // unusable and the walk falls through to the injected bwrap verdict.
     const { sandbox } = await setup({}, { chain: ['windows-acl', 'bwrap'], probeBwrap: () => true })
     const confined = sandbox.confine(['true'], RO)
-    expect(confined.argv[0]).toBe('bwrap')
+    expect(confined.backend).toBe('bwrap')
   }, 30_000)
 
   it('falls back to the runner source through tsx when the built entry is absent', async () => {
@@ -447,7 +539,7 @@ describe('the windows-acl probe (runner invocation contract)', () => {
     // override returning [] exercises the default probe's empty-argv guard.
     const { sandbox } = await setup({}, { chain: ['windows-acl', 'bwrap'], probeBwrap: () => true, windowsAclRunnerArgs: [] })
     const confined = sandbox.confine(['true'], RO)
-    expect(confined.argv[0]).toBe('bwrap')
+    expect(confined.backend).toBe('bwrap')
   })
 
   it('prefers the built lib/runner.js entry when the resolved file exists', async () => {

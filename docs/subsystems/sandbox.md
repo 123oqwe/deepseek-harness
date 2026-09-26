@@ -8,14 +8,16 @@ Source: [`packages/sandbox/sandbox/src/index.ts`](../../packages/sandbox/sandbox
 
 ## Modes and enforcement
 
-`SandboxMode` governs filesystem effects only. `read-only` asks the backend to deny writes — the POSIX runners additionally grant the `/dev/null` sink their shells require, while the Windows ACL runner grants no explicit writable root and reports partial enforcement for its ambient ACL gaps; `workspace-write` permits writes under the workspace root and the backend's promised temp area; `danger-full-access` bypasses confinement. Network and process visibility are outside this vocabulary.
+`SandboxMode` governs filesystem effects only. `read-only` asks the backend to deny writes — the POSIX runners additionally grant the `/dev/null` sink their shells require, while the Windows ACL runner grants no explicit writable root and reports partial enforcement for its ambient ACL gaps; `workspace-write` permits writes under the workspace root and the backend's promised temp area; `danger-full-access` bypasses confinement. Network and process visibility are outside this vocabulary. Unix-domain sockets are not a mode either: both confining modes refuse them where the backend can, and the [local provider](../../packages/sandbox/sandbox-local/README.md) states which backends can.
 
 ```ts type-equiv
 /**
  * File-effect policy for confined processes. `read-only` permits only required
  * sinks such as `/dev/null`; `workspace-write` also permits the workspace and a
  * backend-defined temp area; `danger-full-access` bypasses confinement. Network
- * and process visibility are outside this vocabulary.
+ * and process visibility are outside this vocabulary. Both confining modes also
+ * refuse Unix-domain sockets where the backend can
+ * ({@link ConfinedArgv.reachableSockets}).
  */
 type SandboxMode = 'read-only' | 'workspace-write' | 'danger-full-access'
 ```
@@ -27,13 +29,14 @@ Only the first two modes can be sent to a provider. A `danger-full-access` consu
 type ConfinedSandboxMode = Exclude<SandboxMode, 'danger-full-access'>
 ```
 
-Enforcement is a reported fact. `full` means the backend governs every file effect promised by the mode; `partial` means an active backend or older kernel ABI governs only a subset, so consumers that require the absolute promise must reject or surface that distinction. Older Landlock ABIs and the Windows ACL runner's Everyone/hard-link boundaries are current partial cases.
+Enforcement is a reported fact. `full` means the backend governs every file effect promised by the mode; `partial` means an active backend or older kernel ABI governs only a subset, or the backend cannot refuse Unix-domain sockets, so consumers that require the absolute promise must reject or surface that distinction. Older Landlock ABIs, the Windows ACL runner's Everyone/hard-link boundaries, and every backend that cannot refuse Unix-domain sockets (Landlock, the Windows ACL runner and an operator-configured runner) are current partial cases.
 
 ```ts type-equiv
 /**
  * Enforcement completeness for this host. `partial` means an active backend or
- * older kernel ABI cannot govern every promised file effect; callers requiring
- * an absolute boundary must not treat it as `full`.
+ * older kernel ABI cannot govern every promised file effect, or cannot refuse
+ * Unix-domain sockets; callers requiring an absolute boundary must not treat it
+ * as `full`.
  */
 type SandboxEnforcement = 'full' | 'partial'
 ```
@@ -117,7 +120,7 @@ interface RunnerFailureRule {
 }
 ```
 
-`ConfinedArgv` is what the consumer spawns. Besides the replacement argv, it carries the backend's enforcement fact and two orthogonal stderr classifiers. `denialSignatures` identify the confined command being blocked while the sandbox works correctly. `runnerFailureRules` identify the sandbox runner refusing or failing before it executes the command; consumers check these first and surface a sandbox infrastructure failure, never an ordinary task failure.
+`ConfinedArgv` is what the consumer spawns. Besides the replacement argv, it names the backend, carries its enforcement fact and the known host sockets it leaves reachable, and carries two orthogonal stderr classifiers. `denialSignatures` identify the confined command being blocked while the sandbox works correctly. `runnerFailureRules` identify the sandbox runner refusing or failing before it executes the command; consumers check these first and surface a sandbox infrastructure failure, never an ordinary task failure.
 
 ```ts type-equiv
 /**
@@ -128,8 +131,24 @@ interface RunnerFailureRule {
 interface ConfinedArgv {
   /** The wrapped argv (runner, profile, separator, then the caller's argv). */
   argv: string[]
-  /** How completely the selected backend enforces the policy's file effects. */
+  /**
+   * The backend that confines this execution: `bwrap`, `landlock`,
+   * `seatbelt`, `windows-acl`, or `runner-command` for an operator-configured
+   * runner.
+   */
+  backend: string
+  /** How completely the selected backend enforces the policy's file effects and its refusal of Unix-domain sockets. */
   enforcement: SandboxEnforcement
+  /**
+   * Host daemon and agent sockets (the Docker daemon's, the SSH agent's, and
+   * others the provider knows to look for) that exist on this host and that
+   * this backend leaves the command able to connect to, named as a client
+   * names them. Empty when the backend refuses Unix-domain sockets; when
+   * non-empty, `enforcement` is `partial`. The provider lists only sockets it
+   * knows to look for, so a list is never evidence that no other socket is
+   * reachable.
+   */
+  reachableSockets: readonly string[]
   /**
    * The selected backend's denial DIALECT: the case-insensitive stderr
    * substrings a file effect denied by THIS backend produces (EROFS text

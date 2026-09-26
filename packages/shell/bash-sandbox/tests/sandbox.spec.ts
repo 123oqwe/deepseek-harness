@@ -48,7 +48,7 @@ const RUNNER_FORMS = [
 
 /** A passthrough wrap: the caller's argv unchanged, asserted full — commands run unconfined, deterministically. */
 const passthrough = (argv: readonly string[]): ConfinedArgv =>
-  ({ argv: [...argv], enforcement: 'full', denialSignatures: UNIX_SIGNATURES, runnerFailureRules: RUNNER_FAILURE })
+  ({ argv: [...argv], backend: 'fake-runner', enforcement: 'full', reachableSockets: [], denialSignatures: UNIX_SIGNATURES, runnerFailureRules: RUNNER_FAILURE })
 
 /**
  * Boot a context with a recording fake `ctx.sandbox` (behavior injectable
@@ -97,7 +97,7 @@ describe('the provider hand-off', () => {
     const { bash, calls } = await setup()
     const result = await bash.run(bash.resolve({ command: 'echo \'a b\' "c\'d"' }))
     expect(result.stdout.text).toBe('a b c\'d\n')
-    expect(result.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full' })
+    expect(result.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full', backend: 'fake-runner' })
     expect(calls).toEqual([{
       argv: ['bash', '-c', 'echo \'a b\' "c\'d"'],
       policy: { mode: 'read-only', workspaceRoot: resolve(process.cwd()) },
@@ -106,13 +106,13 @@ describe('the provider hand-off', () => {
 
   it('hands the provider\'s returned argv directly to ctx.subprocess.spawn', async () => {
     const returnedArgv = ['env', 'DSH_WRAP=1', 'bash', '-c', 'printf "%s" "$DSH_WRAP"']
-    const { ctx, bash } = await setup({}, () => ({ argv: returnedArgv, enforcement: 'full', denialSignatures: UNIX_SIGNATURES, runnerFailureRules: RUNNER_FAILURE }))
+    const { ctx, bash } = await setup({}, () => ({ argv: returnedArgv, backend: 'fake-runner', enforcement: 'full', reachableSockets: [], denialSignatures: UNIX_SIGNATURES, runnerFailureRules: RUNNER_FAILURE }))
     const spawn = vi.spyOn(ctx.subprocess, 'spawn')
     const result = await bash.run(bash.resolve({ command: 'printf "%s" "$DSH_WRAP"' }))
     expect(result.stdout.text).toBe('1')
     expect(spawn).toHaveBeenCalledTimes(1)
     expect(spawn.mock.calls[0]?.[0].argv).toEqual(returnedArgv)
-    expect(result.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full' })
+    expect(result.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full', backend: 'fake-runner' })
   })
 
   it('starts a non-Bash runner before the confined inner Bash evaluates BASH_ENV', async () => {
@@ -129,7 +129,9 @@ describe('the provider hand-off', () => {
     ].join('')
     const { bash } = await setup({}, argv => ({
       argv: [process.execPath, '-e', runnerScript, ...argv],
+      backend: 'fake-runner',
       enforcement: 'full',
+      reachableSockets: [],
       denialSignatures: UNIX_SIGNATURES,
       runnerFailureRules: RUNNER_FAILURE,
     }))
@@ -150,7 +152,7 @@ describe('the provider hand-off', () => {
   it('workspace-write rides the policy, workspaceRoot falling back to process.cwd() when not configured', async () => {
     const { bash, calls } = await setup({ mode: 'workspace-write' })
     const result = await bash.run(bash.resolve({ command: 'true' }))
-    expect(result.sandbox).toEqual({ mode: 'workspace-write', denied: false, enforcement: 'full' })
+    expect(result.sandbox).toEqual({ mode: 'workspace-write', denied: false, enforcement: 'full', backend: 'fake-runner' })
     expect(calls[0]?.policy).toEqual({ mode: 'workspace-write', workspaceRoot: resolve(process.cwd()) })
   })
 
@@ -191,7 +193,9 @@ describe('fail closed', () => {
     async (_form, runner) => {
       const { bash } = await setup({}, argv => ({
         argv: [runner, ...argv],
+        backend: 'fake-runner',
         enforcement: 'full',
+        reachableSockets: [],
         denialSignatures: UNIX_SIGNATURES,
         runnerFailureRules: RUNNER_FAILURE,
       }))
@@ -224,7 +228,9 @@ describe('fail closed', () => {
     const runner = join(spillDir, 'malformed-runner')
     const { ctx, bash } = await setup({}, argv => ({
       argv: [runner, ...argv],
+      backend: 'fake-runner',
       enforcement: 'full',
+      reachableSockets: [],
       denialSignatures: UNIX_SIGNATURES,
       runnerFailureRules: RUNNER_FAILURE,
     }))
@@ -250,7 +256,9 @@ describe('fail closed', () => {
     const runner = join(spillDir, 'unexecutable-runner')
     const { ctx, bash } = await setup({}, argv => ({
       argv: [runner, ...argv],
+      backend: 'fake-runner',
       enforcement: 'full',
+      reachableSockets: [],
       denialSignatures: UNIX_SIGNATURES,
       runnerFailureRules: RUNNER_FAILURE,
     }))
@@ -270,7 +278,9 @@ describe('fail closed', () => {
     const runner = './sandbox-runner'
     const { ctx, bash } = await setup({}, argv => ({
       argv: [runner, ...argv],
+      backend: 'fake-runner',
       enforcement: 'full',
+      reachableSockets: [],
       denialSignatures: UNIX_SIGNATURES,
       runnerFailureRules: RUNNER_FAILURE,
     }))
@@ -331,7 +341,7 @@ describe('per-call sandbox policy (the session and escalation carrier)', () => {
   it('an escalated run reports the mode it ACTUALLY ran under', async () => {
     const { bash } = await setup()
     const result = await bash.run(bash.resolve({ command: 'true', sandboxPolicy: executionPolicy('workspace-write') }))
-    expect(result.sandbox).toEqual({ mode: 'workspace-write', denied: false, enforcement: 'full' })
+    expect(result.sandbox).toEqual({ mode: 'workspace-write', denied: false, enforcement: 'full', backend: 'fake-runner' })
   })
 
   it('escalating to danger-full-access bypasses the provider entirely — the grant, not a probe, is the authority there', async () => {
@@ -351,8 +361,8 @@ describe('per-call sandbox policy (the session and escalation carrier)', () => {
     const plain = bash.start(bash.resolve({ command: 'true' }))
     await plain.done
     await escalated.done
-    expect(escalated.sandbox).toEqual({ mode: 'workspace-write', denied: true, enforcement: 'full' })
-    expect(plain.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full' })
+    expect(escalated.sandbox).toEqual({ mode: 'workspace-write', denied: true, enforcement: 'full', backend: 'fake-runner' })
+    expect(plain.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full', backend: 'fake-runner' })
   })
 
   it('an escalated danger-full-access background job carries no facts (nothing confined it)', async () => {
@@ -511,13 +521,15 @@ describe('result facts', () => {
   it.each([126, 127])('keeps a successfully launched wrapped child exit %i as an ordinary outcome', async (exitCode) => {
     const { bash } = await setup({}, argv => ({
       argv: ['env', ...argv],
+      backend: 'fake-runner',
       enforcement: 'full',
+      reachableSockets: [],
       denialSignatures: UNIX_SIGNATURES,
       runnerFailureRules: RUNNER_FAILURE,
     }))
     const result = await bash.run(bash.resolve({ command: `exit ${exitCode}` }))
     expect(result.exitCode).toBe(exitCode)
-    expect(result.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full' })
+    expect(result.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full', backend: 'fake-runner' })
   })
 
   it('reports a real permission failure as a sandbox denial with the mode it ran under', async () => {
@@ -529,16 +541,33 @@ describe('result facts', () => {
       chmodSync(lockedDir, 0o555)
       const result = await bash.run(bash.resolve({ command: `echo x > ${lockedDir}/f` }))
       expect(result.exitCode).not.toBe(0)
-      expect(result.sandbox).toEqual({ mode: 'read-only', denied: true, enforcement: 'full' })
+      expect(result.sandbox).toEqual({ mode: 'read-only', denied: true, enforcement: 'full', backend: 'fake-runner' })
     } finally {
       rmSync(deniedRoot, { recursive: true, force: true })
     }
   })
 
   it('carries the provider\'s partial-enforcement fact through unchanged', async () => {
-    const { bash } = await setup({}, argv => ({ argv: [...argv], enforcement: 'partial', denialSignatures: UNIX_SIGNATURES, runnerFailureRules: RUNNER_FAILURE }))
+    const { bash } = await setup({}, argv => ({ argv: [...argv], backend: 'fake-runner', enforcement: 'partial', reachableSockets: [], denialSignatures: UNIX_SIGNATURES, runnerFailureRules: RUNNER_FAILURE }))
     const result = await bash.run(bash.resolve({ command: 'true' }))
-    expect(result.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'partial' })
+    expect(result.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'partial', backend: 'fake-runner' })
+  })
+
+  it('carries the sockets a backend leaves reachable to a foreground result and a settled background process', async () => {
+    const reachableSockets = ['/run/docker.sock', '/tmp/ssh-a1/agent.7']
+    const { bash } = await setup({}, argv => ({
+      argv: [...argv],
+      backend: 'landlock',
+      enforcement: 'partial',
+      reachableSockets,
+      denialSignatures: UNIX_SIGNATURES,
+      runnerFailureRules: RUNNER_FAILURE,
+    }))
+    const facts = { mode: 'read-only', denied: false, enforcement: 'partial', backend: 'landlock', reachableSockets }
+    expect((await bash.run(bash.resolve({ command: 'true' }))).sandbox).toEqual(facts)
+    const task = bash.start(bash.resolve({ command: 'true' }))
+    await task.done
+    expect(task.sandbox).toEqual(facts)
   })
 })
 
@@ -546,7 +575,9 @@ describe('background sandbox facts', () => {
   it.each(RUNNER_FORMS)('keeps an invalid-workdir rejection ordinary for the %s provider-runner form', async (_form, runner) => {
     const { bash } = await setup({}, argv => ({
       argv: [runner, ...argv],
+      backend: 'fake-runner',
       enforcement: 'full',
+      reachableSockets: [],
       denialSignatures: UNIX_SIGNATURES,
       runnerFailureRules: RUNNER_FAILURE,
     }))
@@ -561,6 +592,7 @@ describe('background sandbox facts', () => {
         mode: 'read-only',
         denied: false,
         enforcement: 'full',
+        backend: 'fake-runner',
       })
       const accounting = (bash as unknown as { processFacts: Map<unknown, unknown> }).processFacts
       expect(accounting.size).toBe(0)
@@ -594,6 +626,7 @@ describe('background sandbox facts', () => {
       mode: 'read-only',
       denied: false,
       enforcement: 'full',
+      backend: 'fake-runner',
     })
   })
 
@@ -601,7 +634,7 @@ describe('background sandbox facts', () => {
     const { bash } = await setup()
     const task = bash.start(bash.resolve({ command: 'echo "x: Permission denied" >&2; exit 1' }))
     await task.done
-    expect(task.sandbox).toEqual({ mode: 'read-only', denied: true, enforcement: 'full' })
+    expect(task.sandbox).toEqual({ mode: 'read-only', denied: true, enforcement: 'full', backend: 'fake-runner' })
   })
 
   it('a foreground runner failure throws the fail-closed error, never a task result', async () => {
@@ -624,7 +657,7 @@ describe('background sandbox facts', () => {
     const { bash } = await setup()
     const task = bash.start(bash.resolve({ command: 'echo "fake-runner: cannot open rule path: /x: Permission denied" >&2; exit 125' }))
     await task.done
-    expect(task.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full', runnerFailed: true })
+    expect(task.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full', backend: 'fake-runner', runnerFailed: true })
   })
 
   it('overlapping background jobs keep their OWN wrap facts (per-task, not latest-wrap)', async () => {
@@ -632,8 +665,8 @@ describe('background sandbox facts', () => {
     // quick task starts; a shared latest-wrap field would classify and stamp it with the wrong
     // task's dialect and enforcement.
     const wraps: Array<Pick<ConfinedArgv, 'enforcement' | 'denialSignatures'>> = [
-      { enforcement: 'partial', denialSignatures: ['permission denied'] },
-      { enforcement: 'full', denialSignatures: ['read-only file system'] },
+      { backend: 'fake-runner', enforcement: 'partial', reachableSockets: [], denialSignatures: ['permission denied'] },
+      { backend: 'fake-runner', enforcement: 'full', reachableSockets: [], denialSignatures: ['read-only file system'] },
     ]
     let call = 0
     const { bash } = await setup({}, (argv) => {
@@ -644,8 +677,8 @@ describe('background sandbox facts', () => {
     const quick = bash.start(bash.resolve({ command: 'true' }))
     await quick.done
     await slow.done
-    expect(slow.sandbox).toEqual({ mode: 'read-only', denied: true, enforcement: 'partial' })
-    expect(quick.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full' })
+    expect(slow.sandbox).toEqual({ mode: 'read-only', denied: true, enforcement: 'partial', backend: 'fake-runner' })
+    expect(quick.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full', backend: 'fake-runner' })
   })
 
   it('a signal-killed task is never a denial (null exit code)', async () => {
@@ -656,7 +689,7 @@ describe('background sandbox facts', () => {
     await vi.waitFor(() => { expect(task.readOutput().delta).toContain('Permission denied') })
     task.kill()
     await task.done
-    expect(task.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full' })
+    expect(task.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full', backend: 'fake-runner' })
   })
 
   it('disposal kills wrapped background jobs (inherited HMR safety)', async () => {

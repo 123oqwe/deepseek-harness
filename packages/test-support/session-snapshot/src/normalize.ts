@@ -408,6 +408,28 @@ function scrubHostChosenSandboxMode(record: Record<string, unknown>): void {
 }
 
 /**
+ * Drop the sandbox facts a shell tool keeps in a `tool/result` record's `meta`.
+ *
+ * They name the backend that confined the command on the host that recorded
+ * the log (bwrap on a Linux runner, Seatbelt on macOS, and nothing at all where
+ * the chosen mode is `danger-full-access`), so, like the chosen mode in
+ * {@link scrubHostChosenSandboxMode}, a pinned value holds only where it was
+ * recorded. `@deepseek-ai/dsh-tool-bash`'s unit tests and the P3-05 composition
+ * cases assert the facts instead.
+ * @param record - one parsed session-log record, mutated in place.
+ */
+function dropHostChosenSandboxMeta(record: Record<string, unknown>): void {
+  if (record.type !== 'tool/result') return
+  const data = record.data
+  if (data === null || typeof data !== 'object') return
+  const meta = (data as { meta?: unknown }).meta
+  if (meta === null || typeof meta !== 'object' || Array.isArray(meta) || !Object.hasOwn(meta, 'sandbox')) return
+  const { sandbox: _hostChosen, ...rest } = meta as Record<string, unknown>
+  if (Object.keys(rest).length === 0) delete (data as { meta?: unknown }).meta
+  else (data as { meta?: unknown }).meta = rest
+}
+
+/**
  * Stabilize an `action/world-bound` record's two per-run values on the LEGACY
  * identity path (P3-01).
  *
@@ -493,6 +515,7 @@ export function normalizeSessionLog(
     }
     scrubVolatileArgumentsHash(record)
     scrubHostChosenSandboxMode(record)
+    dropHostChosenSandboxMeta(record)
     scrubVolatileWorldBinding(record, identityMode)
     if ((record.type === 'assistant/message' || record.type === 'assistant/attempt')
       && record.data !== null && typeof record.data === 'object') {

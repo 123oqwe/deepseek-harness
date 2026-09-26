@@ -1,7 +1,7 @@
 /**
  * Sandbox-consuming bash executor. It wraps the exact local bash argv through
  * `ctx.sandbox`, inherits local process mechanics, and reports the selected
- * mode, enforcement, and denial facts. Positive runner-executable evidence
+ * mode, backend, enforcement, reachable-socket and denial facts. Positive runner-executable evidence
  * identifies a broken confinement runner: foreground calls throw
  * `SANDBOX_UNAVAILABLE`, while background processes carry `runnerFailed`;
  * other provider rejections retain stage-neutral local-executor semantics. The
@@ -24,7 +24,7 @@ import type {
 import type {} from '@deepseek-ai/dsh-sandbox-policy'
 import { LocalBashExecutor } from '@deepseek-ai/dsh-bash-local'
 import type { Config as LocalConfig } from '@deepseek-ai/dsh-bash-local'
-import { classifyDenial, classifyRunnerFailure, isRunnerSpawnFailure, matchesSignature } from './helpers.ts'
+import { backendFacts, classifyDenial, classifyRunnerFailure, isRunnerSpawnFailure, matchesSignature } from './helpers.ts'
 
 /**
  * Plugin config: the local executor's knobs, verbatim. The sandbox policy —
@@ -59,6 +59,8 @@ export class SandboxBashExecutor extends LocalBashExecutor {
   private readonly processFacts = new Map<ShellProcess, {
     mode: ConfinedSandboxMode
     enforcement: SandboxEnforcement
+    backend: string
+    reachableSockets: readonly string[]
     denialSignatures: readonly string[]
     runnerFailureRules: readonly RunnerFailureRule[]
     runnerProgram: string | undefined
@@ -111,7 +113,15 @@ export class SandboxBashExecutor extends LocalBashExecutor {
     if (runnerFailure !== undefined) {
       throw new SandboxUnavailableError(mode, runnerFailure.detail)
     }
-    return { ...result, sandbox: { mode, denied: classifyDenial(result, confined.denialSignatures), enforcement: confined.enforcement } }
+    return {
+      ...result,
+      sandbox: {
+        mode,
+        denied: classifyDenial(result, confined.denialSignatures),
+        enforcement: confined.enforcement,
+        ...backendFacts(confined),
+      },
+    }
   }
 
   override start(spec: ShellExecSpec): ShellProcess {
@@ -132,10 +142,12 @@ export class SandboxBashExecutor extends LocalBashExecutor {
       }
       throw error
     }
-    const { enforcement, denialSignatures, runnerFailureRules } = confined
+    const { enforcement, backend, reachableSockets, denialSignatures, runnerFailureRules } = confined
     this.processFacts.set(proc, {
       mode,
       enforcement,
+      backend,
+      reachableSockets,
       denialSignatures,
       runnerFailureRules,
       runnerProgram: confined.argv[0],
@@ -162,6 +174,7 @@ export class SandboxBashExecutor extends LocalBashExecutor {
         mode: facts.mode,
         denied: !runnerFailed && matchesSignature(proc.exitCode, stderr, facts.denialSignatures),
         enforcement: facts.enforcement,
+        ...backendFacts(facts),
         ...(runnerFailed ? { runnerFailed } : {}),
       }
     }

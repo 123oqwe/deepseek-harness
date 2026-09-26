@@ -59,7 +59,7 @@ kind: "package-reference"
 
 ### 沙箱执行与升权
 
-当已挂载的执行器约束命令（例如 `dsh-bash-sandbox`）时，被阻止的文件操作会报告为 `[sandbox: file access denied under <mode> mode]`——这是策略拒绝，不是命令失败。模型随后可以在同一轮次中用 `sandbox_permissions`（满足需要的最窄更宽模式）与一句 `justification` 重试完全相同的命令一次；该重试引发的审批提示就是用户同意的方式。升权绝不能预先推测：没有真实拒绝依据的请求，或没有严格宽于当前模式的请求，都会直接失败且不执行任何操作；被拒绝的升权对该命令即为最终结果。
+当已挂载的执行器约束命令（例如 `dsh-bash-sandbox`）时，被阻止的文件操作会报告为 `[sandbox: file access denied under <mode> mode]`——这是策略拒绝，不是命令失败。模型随后可以在同一轮次中用 `sandbox_permissions`（满足需要的最窄更宽模式）与一句 `justification` 重试完全相同的命令一次；该重试引发的审批提示就是用户同意的方式。升权绝不能预先推测：没有真实拒绝依据的请求，或没有严格宽于当前模式的请求，都会直接失败且不执行任何操作；被拒绝的升权对该命令即为最终结果。沙箱还可能拒绝 Unix-domain socket，例如 Docker 守护进程或 SSH agent 的 socket；工具描述告诉模型，这时打开 socket 会以 `Operation not permitted` 失败，这是只有 `danger-full-access` 才能解除的沙箱拒绝（[哪些后端会拒绝](../../sandbox/sandbox-local/README.zh.md#unix-domain-sockets)）。
 
 ### 可能出什么问题
 
@@ -97,7 +97,7 @@ kind: "package-reference"
 
 ### 渲染故事
 
-结果文本为 stdout，然后是带标记的 `[stderr]` 区段，再是条件标记：截断通知、沙箱拒绝（组合声明升权时附带同轮次升权提示）、超时、信号与退出码——每个占一行。退出标记同时充当 UI 卡片的退出状态 pill：`dsh-shell` 共享的 `parseExitStatus` 会从输出体中消费它，因此回放显示 pill 而不重复标记。
+结果文本为 stdout，然后是带标记的 `[stderr]` 区段，再是条件标记：截断通知、沙箱拒绝（组合声明升权时附带同轮次升权提示）、超时、信号与退出码——每个占一行。退出标记同时充当 UI 卡片的退出状态 pill：`dsh-shell` 共享的 `parseExitStatus` 会从输出体中消费它，因此回放显示 pill 而不重复标记。受限的前台运行还会把它的沙箱事实作为 `tool/result` 的 `meta.sandbox`（模式、拒绝、强制执行、后端，以及存在时的可连宿主 socket）持久化，供操作者查看；模型永远收不到这些事实，非受限或后台调用不持久化任何 `meta`。
 
 </details>
 
@@ -149,11 +149,11 @@ Check the [exit code: N] marker on every bash result; investigate failures befor
 
 #### Token 影响
 
-工具可见的每个请求都会产生固定 schema 开销；沙箱支持会增加升权字段及其条件说明段落。
+工具可见的每个请求都会产生固定 schema 开销，其中包括描述里关于被拒绝的 Unix-domain socket 的那句（几十个 token）；沙箱支持会增加升权字段及其条件说明段落。
 
 #### KV Cache 影响
 
-只要可见性、后台支持与执行器沙箱能力不变，前缀就保持稳定。限制、配置或执行器发生变化时，可能从首个变化的工具定义开始使复用失效。
+只要可见性、后台支持与执行器沙箱能力不变，前缀就保持稳定。限制、配置或执行器发生变化时，可能从首个变化的工具定义开始使复用失效；改动描述的版本也一样，例如加入 Unix-domain socket 那句的版本。
 
 ### 前台结果
 

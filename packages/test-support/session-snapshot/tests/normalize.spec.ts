@@ -262,6 +262,29 @@ describe('normalizeSessionLog', () => {
     expect(output).toContain('"createdAt":123,"updatedAt":456,"note":"keep 123"')
   })
 
+  it('drops the host-chosen sandbox facts a shell tool keeps in tool/result meta, and nothing else', () => {
+    const result = (meta: unknown) => JSON.stringify({ type: 'tool/result', data: { turn: 1, step: 1, meta } })
+    const input = [
+      result({ sandbox: { mode: 'workspace-write', backend: 'bwrap', enforcement: 'full' } }),
+      result({ sandbox: { backend: 'seatbelt' }, diffs: [] }),
+      result({ diffs: [] }),
+      result(['sandbox']),
+      result('sandbox'),
+      result(null),
+      JSON.stringify({ type: 'tool/call', data: { meta: { sandbox: { backend: 'bwrap' } } } }),
+      JSON.stringify({ type: 'tool/result', data: null }),
+    ].join('\n')
+    const records = normalizeSessionLog(input, ctx).trim().split('\n').map(line => JSON.parse(line) as { data: { meta?: unknown } | null })
+    expect(records[0]?.data).toEqual({ turn: 1, step: 1 })
+    expect(records[1]?.data?.meta).toEqual({ diffs: [] })
+    expect(records[2]?.data?.meta).toEqual({ diffs: [] })
+    expect(records[3]?.data?.meta).toEqual(['sandbox'])
+    expect(records[4]?.data?.meta).toBe('sandbox')
+    expect(records[5]?.data?.meta).toBeNull()
+    expect(records[6]?.data?.meta).toEqual({ sandbox: { backend: 'bwrap' } })
+    expect(records[7]?.data).toBeNull()
+  })
+
   const header = (over: object) => JSON.stringify({ type: 'session', version: 0, id: 's', createdAt: 123, ...over })
   const event = (over: object) => JSON.stringify({ type: 'turn/start', seq: 1, time: 999, data: { turn: 1 }, ...over })
 

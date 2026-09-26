@@ -57,7 +57,7 @@ On Windows, mount the ACL restricted-token provider; on Linux and macOS, mount t
 
 ### Denials and escalation
 
-A denied command is reported as a fact: the result carries `sandbox: { mode, denied: true }`, and the tool layer converts it into the standard permission-denied surface — the same one the bash tool uses. When escalation is available, the model may retry the exact command once with the narrowest wider mode and a one-sentence justification; the approval prompt asks the user, and nothing executes before approval. This executor never negotiates permissions itself.
+A denied command is reported as a fact: the result carries `sandbox: { mode, denied: true }`, and the tool layer converts it into the standard permission-denied surface — the same one the bash tool uses. When escalation is available, the model may retry the exact command once with the narrowest wider mode and a one-sentence justification; the approval prompt asks the user, and nothing executes before approval. This executor never negotiates permissions itself. Every confined result also names the backend that confined the command (`sandbox.backend`) and, when that backend cannot refuse Unix-domain sockets, as the Windows ACL runner cannot, lists the known host sockets it left reachable (`sandbox.reachableSockets`).
 
 ### Failures and recovery
 
@@ -88,7 +88,7 @@ The executor is the pwsh twin of `dsh-bash-sandbox`: it inherits `dsh-pwsh-local
 
 ### Main flow
 
-For a confined mode, `resolve()` stamps the per-call policy; `run` and `start` wrap the pwsh argv through the provider and hand the confined argv to the inherited subprocess path. At settlement the executor classifies the outcome: a runner failure outranks a denial because the command never ran, a failed run whose stderr carries the runner's denial dialect is reported `denied: true`, and every confined run carries its mode and enforcement facts. `danger-full-access` bypasses the provider entirely and stamps `denied: false`.
+For a confined mode, `resolve()` stamps the per-call policy; `run` and `start` wrap the pwsh argv through the provider and hand the confined argv to the inherited subprocess path. At settlement the executor classifies the outcome: a runner failure outranks a denial because the command never ran, a failed run whose stderr carries the runner's denial dialect is reported `denied: true`, and every confined run carries its mode, enforcement, backend and reachable-socket facts. `danger-full-access` bypasses the provider entirely and stamps `denied: false`.
 
 ### Invariants
 
@@ -139,6 +139,7 @@ None directly; the denial surface belongs to the tool layer.
 These limits define when this executor is only a partial boundary on Windows. They are current package constraints, not a roadmap.
 
 - **Reads are unrestricted on Windows** — the ACL runner restricts writes only; the read boundary is documented in `@deepseek-ai/dsh-sandbox-windows-acl`.
+- **Unix-domain sockets are not refused on Windows** — the ACL runner cannot refuse them, so its results report `partial` enforcement with the known sockets it left reachable; on Linux and macOS, bwrap and Seatbelt refuse them ([`dsh-sandbox-local`](../../sandbox/sandbox-local/README.md#unix-domain-sockets)).
 - **Windows workspace-write temp authority is private** — per live session/workspace pair; agentless calls receive a fresh private directory per invocation; the ambient temp root is never granted, and the runner rewrites `TMP`/`TEMP` to the private directory before spawning.
 - **Windows read-only grants no explicit writable root but remains partial** — the restricted token must retain Everyone; objects whose DACL grants Everyone write access — including compatible opens of the NUL device — remain ambient authority, while PowerShell's `> $null` redirection still works without opening NUL.
 

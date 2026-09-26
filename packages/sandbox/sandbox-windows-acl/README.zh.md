@@ -67,7 +67,7 @@ rmSync(tempDir, { recursive: true, force: true })
 
 ### 隔离给你带来什么
 
-在 `workspace-write` 下，子进程可以写入工作区及其私有临时目录；受 ACL 管辖的其他写入都会被拒绝，已记录的 Everyone 与硬链接边界除外。在 `read-only` 下不存在显式写入授权，因此写入会被拒绝，同样带有已记录的边界。
+在 `workspace-write` 下，子进程可以写入工作区及其私有临时目录；受 ACL 管辖的其他写入都会被拒绝，已记录的 Everyone 与硬链接边界除外。在 `read-only` 下不存在显式写入授权，因此写入会被拒绝，同样带有已记录的边界。两种模式都不拒绝 Unix-domain socket；`dsh-sandbox-local` 把这一点报告为 `partial` 强制执行，并列出子进程可以连到的已知宿主 socket（[Unix-domain socket](../sandbox-local/README.zh.md#unix-domain-sockets)）。
 
 临时隔离按每个活跃的会话/工作区对进行：共享工作区的会话共享其写权限，但无法写入彼此的临时目录。新的提供方总会选择新的临时路径和 SID，因此崩溃残留既无法阻止恢复的会话，也无法向其授权。
 

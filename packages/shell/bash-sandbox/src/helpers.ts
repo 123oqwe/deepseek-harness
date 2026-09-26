@@ -5,8 +5,17 @@
  */
 
 import { accessSync, constants, statSync } from 'node:fs'
-import type { ShellRunResult } from '@deepseek-ai/dsh-shell'
-import type { RunnerFailureRule } from '@deepseek-ai/dsh-sandbox'
+import type { ShellRunResult, ShellSandboxInfo } from '@deepseek-ai/dsh-shell'
+import type { ConfinedArgv, RunnerFailureRule } from '@deepseek-ai/dsh-sandbox'
+
+/**
+ * A confined run's backend and, when there are any, the host sockets it left reachable.
+ * @param confined - the provider's wrap, or the per-process facts copied from it.
+ * @returns the facts to stamp beside mode, denial and enforcement.
+ */
+export function backendFacts(confined: Pick<ConfinedArgv, 'backend' | 'reachableSockets'>): Pick<ShellSandboxInfo, 'backend' | 'reachableSockets'> {
+  return { backend: confined.backend, ...confined.reachableSockets.length > 0 ? { reachableSockets: [...confined.reachableSockets] } : {} }
+}
 
 /** Node-local spawn codes proven to identify executable resolution or permission failure. */
 const EXECUTABLE_SPAWN_CODES = new Set(['EACCES', 'ENOENT'])

@@ -41,15 +41,35 @@ function sbplString(path: string): string {
 }
 
 /**
+ * The Unix-domain sockets a Seatbelt-confined command may still connect to:
+ * mDNSResponder, through which macOS resolves host names, and the system log,
+ * each under `/var/run` and its real path `/private/var/run`.
+ */
+const SEATBELT_ALLOWED_SOCKETS = [
+  '/var/run/mDNSResponder',
+  '/private/var/run/mDNSResponder',
+  '/var/run/syslog',
+  '/private/var/run/syslog',
+] as const
+
+/**
  * Build the sandbox-exec arguments and SBPL profile for one policy. The
  * writable roots come from the shared {@link writableRoots} helper (canonical,
  * deduplicated) so the Seatbelt grant and the in-process fs fence
- * (`@deepseek-ai/dsh-fs-sandbox`) can never drift apart.
+ * (`@deepseek-ai/dsh-fs-sandbox`) can never drift apart. Connections to
+ * Unix-domain sockets are refused except to {@link SEATBELT_ALLOWED_SOCKETS}.
  * @param policy - file-effect policy to express as an SBPL profile.
  * @returns sandbox-exec arguments before the trailing separator and command argv.
  */
 export function seatbeltProfileArgs(policy: SandboxPolicy): string[] {
-  const forms = ['(version 1)', '(allow default)', '(deny file-write*)', `(allow file-write* (literal ${sbplString('/dev/null')}))`]
+  const forms = [
+    '(version 1)',
+    '(allow default)',
+    '(deny file-write*)',
+    `(allow file-write* (literal ${sbplString('/dev/null')}))`,
+    '(deny network-outbound (remote unix-socket (path-regex #"^/")))',
+    ...SEATBELT_ALLOWED_SOCKETS.map(path => `(allow network-outbound (remote unix-socket (path-literal ${sbplString(path)})))`),
+  ]
   const roots = writableRoots(policy)
   if (roots.length > 0) {
     forms.push(`(allow file-write* ${roots.map(root => `(subpath ${sbplString(root)})`).join(' ')})`)

@@ -16,11 +16,14 @@ import { LocalSandboxProvider } from '@deepseek-ai/dsh-sandbox-local'
 const RO: SandboxPolicy = { mode: 'read-only', workspaceRoot: '/ws' }
 const WW: SandboxPolicy = { mode: 'workspace-write', workspaceRoot: '/ws' }
 
+/** The operator warnings the provider under test wrote. */
+const warnings: string[] = []
+
 async function setup(internals: LocalSandboxProvider['internals']) {
   const ctx = new Context()
   await ctx.plugin(LocalSandboxProvider, {})
   const sandbox = ctx.sandbox as LocalSandboxProvider
-  sandbox.internals = internals
+  sandbox.internals = { hostSockets: () => [], writeWarning: (line) => { warnings.push(line) }, ...internals }
   return sandbox
 }
 
@@ -41,11 +44,15 @@ describe('windows-acl win32 chain (LocalSandboxProvider)', () => {
       '--',
       'pwsh', '/Command', 'x',
     ])
+    expect(confined.backend).toBe('windows-acl')
     expect(confined.enforcement).toBe('partial')
+    expect(confined.reachableSockets).toEqual([])
     expect(confined.denialSignatures).toEqual(['access is denied', 'access to the path', 'permission denied'])
     expect(confined.runnerFailureRules).toEqual([{ allowedExitCodes: [127], fatalSignatures: ['windows-acl-run: '] }])
     // A sole candidate is selected unprobed.
     expect(probeWindowsAcl).not.toHaveBeenCalled()
+    // The runner cannot refuse Unix-domain sockets, and the operator is told so.
+    expect(warnings.at(-1)).toMatch(/^dsh: sandbox: the windows-acl backend cannot refuse Unix-domain sockets/)
   })
 
   it('read-only: same runner and contract, read-only mode flag', async () => {

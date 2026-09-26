@@ -75,6 +75,8 @@ function bashDescription(backgroundEnabled: boolean, escalationModes: readonly S
     + 'pass `workdir` instead of using `cd`. Non-zero exits are reported as `[exit code: N]`. '
     + `Current harness environment facts are exposed through managed \`$${DSH_ENV_PREFIX}*\` variables; inspect them when needed. `
     + 'Commands may run under a file sandbox; a blocked file operation is reported as `[sandbox: file access denied under <mode> mode]` — a policy denial, not a bug in the command; do not retry another way. '
+    + 'The sandbox may also refuse Unix-domain sockets (such as the Docker daemon\'s or an SSH agent\'s): opening one then fails with '
+    + '`Operation not permitted`, a sandbox denial that only `danger-full-access` lifts. '
     + 'Long output is truncated to its tail; the full output is saved to a file whose path is reported when available. '
     + background
   if (escalationModes.length === 0) return base
@@ -174,6 +176,8 @@ function canonicalBashResult(result: ShellRunResult) {
         mode: result.sandbox.mode,
         denied: result.sandbox.denied,
         ...result.sandbox.enforcement !== undefined ? { enforcement: result.sandbox.enforcement } : {},
+        ...result.sandbox.backend !== undefined ? { backend: result.sandbox.backend } : {},
+        ...result.sandbox.reachableSockets !== undefined ? { reachableSockets: [...result.sandbox.reachableSockets] } : {},
         ...result.sandbox.runnerFailed !== undefined ? { runnerFailed: result.sandbox.runnerFailed } : {},
       },
     } : {},
@@ -313,6 +317,8 @@ export function apply(ctx: Context, config: Config = {}): void {
                   mode: { type: 'string', required: true },
                   denied: { type: 'boolean', required: true },
                   enforcement: { type: 'string' },
+                  backend: { type: 'string' },
+                  reachableSockets: { type: 'array', items: { type: 'string' } },
                   runnerFailed: { type: 'boolean' },
                 },
               },
@@ -326,6 +332,11 @@ export function apply(ctx: Context, config: Config = {}): void {
           ? `started background job ${value.jobId}`
           : renderResult(value as { kind: 'foreground' } & ShellRunResult, escalationModes),
       }],
+      // The backend that confined a foreground command, kept on `tool/result`
+      // for the operator (P3-05; BLOCKED-346); an unconfined command persists none.
+      presentationMeta: (_args, value) => value.kind === 'foreground' && value.sandbox?.backend !== undefined
+        ? { sandbox: { ...value.sandbox } }
+        : undefined,
     },
     async execute(args: BashToolArgs, exec) {
       validateBashArgs(args)

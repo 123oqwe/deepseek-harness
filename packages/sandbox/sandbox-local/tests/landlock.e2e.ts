@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { mkdtemp, rm } from 'node:fs/promises'
+import { createServer, type Server } from 'node:net'
 import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -14,20 +15,24 @@ import { LocalSandboxProvider } from '@deepseek-ai/dsh-sandbox-local'
  * bwrap forced off. Tests assert real world effects; consumer coverage lives in dsh-bash-sandbox.
  * Skips when the platform package or enforcing kernel is unavailable. HOME-based workspaces avoid
  * Landlock's wholesale `/tmp` grant, so workspace-write proves the workspace-root grant itself.
+ * Every wrap is `partial`: Landlock cannot refuse Unix-domain sockets, whatever its ABI.
  */
 
 const probe = spawnSync(launcherPath(), ['--probe'], { timeout: 5_000, encoding: 'utf8' })
 const landlockUsable = probe.status === 0
-/** The running kernel's enforcement level, from the launcher's probe report — every wrap below must carry exactly this. */
-const enforcement = /partially enforced/.test(probe.stdout ?? '') ? 'partial' : 'full'
 
 let ctx: Context | undefined
 const tempDirs: string[] = []
+const servers: Server[] = []
+/** The operator warnings the provider under test wrote. */
+let warnings: string[] = []
 
 afterEach(async () => {
   await ctx?.fiber.dispose()
   ctx = undefined
+  await Promise.all(servers.splice(0).map(server => new Promise<void>((resolve) => { server.close(() => { resolve() }) })))
   await Promise.all(tempDirs.splice(0).map(dir => rm(dir, { recursive: true, force: true })))
+  warnings = []
 })
 
 async function tempDir(base: string): Promise<string> {
@@ -36,11 +41,11 @@ async function tempDir(base: string): Promise<string> {
   return dir
 }
 
-async function provider(): Promise<LocalSandboxProvider> {
+async function provider(hostSockets: () => string[] = () => []): Promise<LocalSandboxProvider> {
   ctx = new Context()
   await ctx.plugin(LocalSandboxProvider, {})
   const sandbox = ctx.sandbox as LocalSandboxProvider
-  sandbox.internals = { probeBwrap: () => false }
+  sandbox.internals = { probeBwrap: () => false, hostSockets, writeWarning: (line) => { warnings.push(line) } }
   return sandbox
 }
 
@@ -52,13 +57,31 @@ function runConfined(sandbox: LocalSandboxProvider, command: string, policy: San
 }
 
 describe.skipIf(!landlockUsable)('sandbox-local: real Landlock confinement through the bundled launcher', () => {
-  it('read-only denies a write — the file must NOT exist, the wrap reports the probed enforcement', async () => {
+  it('read-only denies a write — the file must NOT exist, the wrap is partial', async () => {
     const workdir = await tempDir(tmpdir())
     const sandbox = await provider()
     const { result, enforcement: wrapped } = runConfined(sandbox, `echo hi > ${workdir}/denied.txt`, { mode: 'read-only', workspaceRoot: workdir })
     expect(result.status).not.toBe(0)
-    expect(wrapped).toBe(enforcement)
+    expect(wrapped).toBe('partial')
     expect(existsSync(join(workdir, 'denied.txt'))).toBe(false)
+  })
+
+  it('leaves a known Unix socket reachable, names it in the wrap, and warns the operator', async () => {
+    const workdir = await tempDir(homedir())
+    const socket = join(workdir, 's.sock')
+    const server = createServer(connection => connection.end())
+    servers.push(server)
+    await new Promise<void>((resolve) => { server.listen(socket, resolve) })
+    const sandbox = await provider(() => [socket])
+    const connect = 'const s=require("net").connect(process.argv[1]);'
+      + 's.on("connect",()=>{console.log("connected");process.exit(0)});s.on("error",e=>{console.log(e.code);process.exit(0)})'
+    const confined = sandbox.confine(['bash', '-c', `"${process.execPath}" -e '${connect}' "${socket}"`], { mode: 'workspace-write', workspaceRoot: workdir })
+    expect(confined.reachableSockets).toEqual([socket])
+    expect(confined.enforcement).toBe('partial')
+    expect(warnings).toHaveLength(1)
+    expect(warnings[0]).toContain(socket)
+    const result = spawnSync(confined.argv[0] as string, confined.argv.slice(1), { timeout: 30_000, encoding: 'utf8' })
+    expect(result.stdout).toBe('connected\n')
   })
 
   it('read-only keeps the tree readable/executable and /dev/null writable', async () => {

@@ -8,14 +8,16 @@
 
 ## 模式与强制执行
 
-`SandboxMode` 仅管控文件系统效果。`read-only` 要求后端拒绝写入——POSIX runner 还会授予其 shell 所需的 `/dev/null` 接收器，而 Windows ACL runner 不授予任何显式可写根目录，并因环境 ACL 缺口报告部分强制执行；`workspace-write` 允许在工作区根目录及后端承诺的临时区域下写入；`danger-full-access` 绕过隔离。网络与进程可见性不在此处的定义范围内。
+`SandboxMode` 仅管控文件系统效果。`read-only` 要求后端拒绝写入——POSIX runner 还会授予其 shell 所需的 `/dev/null` 接收器，而 Windows ACL runner 不授予任何显式可写根目录，并因环境 ACL 缺口报告部分强制执行；`workspace-write` 允许在工作区根目录及后端承诺的临时区域下写入；`danger-full-access` 绕过隔离。网络与进程可见性不在此处的定义范围内。Unix-domain socket 也不是一种模式：两种受限模式都在后端做得到时拒绝它们，哪些后端做得到由[本地提供方](../../packages/sandbox/sandbox-local/README.zh.md)说明。
 
 ```ts type-equiv
 /**
  * File-effect policy for confined processes. `read-only` permits only required
  * sinks such as `/dev/null`; `workspace-write` also permits the workspace and a
  * backend-defined temp area; `danger-full-access` bypasses confinement. Network
- * and process visibility are outside this vocabulary.
+ * and process visibility are outside this vocabulary. Both confining modes also
+ * refuse Unix-domain sockets where the backend can
+ * ({@link ConfinedArgv.reachableSockets}).
  */
 type SandboxMode = 'read-only' | 'workspace-write' | 'danger-full-access'
 ```
@@ -27,13 +29,14 @@ type SandboxMode = 'read-only' | 'workspace-write' | 'danger-full-access'
 type ConfinedSandboxMode = Exclude<SandboxMode, 'danger-full-access'>
 ```
 
-强制执行完整性是后端报告的事实。`full` 表示后端管控了该模式承诺的所有文件效果；`partial` 表示活跃后端或较旧的内核 ABI 仅管控其中一个子集，因此要求绝对保证的消费方必须拒绝或向上暴露这一区别。当前的部分强制执行情形包括较旧的 Landlock ABI，以及 Windows ACL runner 的 Everyone 与硬链接边界。
+强制执行完整性是后端报告的事实。`full` 表示后端管控了该模式承诺的所有文件效果；`partial` 表示活跃后端或较旧的内核 ABI 仅管控其中一个子集，或后端无法拒绝 Unix-domain socket，因此要求绝对保证的消费方必须拒绝或向上暴露这一区别。当前的部分强制执行情形包括较旧的 Landlock ABI、Windows ACL runner 的 Everyone 与硬链接边界，以及所有无法拒绝 Unix-domain socket 的后端（Landlock、Windows ACL runner 与操作者配置的 runner）。
 
 ```ts type-equiv
 /**
  * Enforcement completeness for this host. `partial` means an active backend or
- * older kernel ABI cannot govern every promised file effect; callers requiring
- * an absolute boundary must not treat it as `full`.
+ * older kernel ABI cannot govern every promised file effect, or cannot refuse
+ * Unix-domain sockets; callers requiring an absolute boundary must not treat it
+ * as `full`.
  */
 type SandboxEnforcement = 'full' | 'partial'
 ```
@@ -117,7 +120,7 @@ interface RunnerFailureRule {
 }
 ```
 
-`ConfinedArgv` 是消费方实际 spawn 的内容。除了替换后的 argv，它还携带后端的强制执行事实和两种正交的 stderr 分类器。`denialSignatures` 用于识别沙箱正常工作时受限命令被阻止的情况。`runnerFailureRules` 用于识别沙箱 runner 在执行命令之前拒绝或失败的情况；消费方应先检查后者，将其作为沙箱基础设施故障上报，而非普通任务失败。
+`ConfinedArgv` 是消费方实际 spawn 的内容。除了替换后的 argv，它还给出后端名称，携带后端的强制执行事实与它留下可连的已知宿主 socket，以及两种正交的 stderr 分类器。`denialSignatures` 用于识别沙箱正常工作时受限命令被阻止的情况。`runnerFailureRules` 用于识别沙箱 runner 在执行命令之前拒绝或失败的情况；消费方应先检查后者，将其作为沙箱基础设施故障上报，而非普通任务失败。
 
 ```ts type-equiv
 /**
@@ -128,8 +131,24 @@ interface RunnerFailureRule {
 interface ConfinedArgv {
   /** The wrapped argv (runner, profile, separator, then the caller's argv). */
   argv: string[]
-  /** How completely the selected backend enforces the policy's file effects. */
+  /**
+   * The backend that confines this execution: `bwrap`, `landlock`,
+   * `seatbelt`, `windows-acl`, or `runner-command` for an operator-configured
+   * runner.
+   */
+  backend: string
+  /** How completely the selected backend enforces the policy's file effects and its refusal of Unix-domain sockets. */
   enforcement: SandboxEnforcement
+  /**
+   * Host daemon and agent sockets (the Docker daemon's, the SSH agent's, and
+   * others the provider knows to look for) that exist on this host and that
+   * this backend leaves the command able to connect to, named as a client
+   * names them. Empty when the backend refuses Unix-domain sockets; when
+   * non-empty, `enforcement` is `partial`. The provider lists only sockets it
+   * knows to look for, so a list is never evidence that no other socket is
+   * reachable.
+   */
+  reachableSockets: readonly string[]
   /**
    * The selected backend's denial DIALECT: the case-insensitive stderr
    * substrings a file effect denied by THIS backend produces (EROFS text

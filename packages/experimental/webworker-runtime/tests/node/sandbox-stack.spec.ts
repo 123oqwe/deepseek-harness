@@ -45,6 +45,9 @@ async function setup(mode: 'read-only' | 'workspace-write' | 'danger-full-access
   const ctx = new Context()
   contexts.push(ctx)
   await ctx.plugin(LocalSandboxProvider)
+  // The worker's launcher is Landlock, which cannot refuse Unix-domain sockets: no host socket
+  // search, and no operator warning on the test's stderr.
+  ;(ctx.sandbox as LocalSandboxProvider).internals = { hostSockets: () => [], writeWarning: () => {} }
   await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(SandboxPolicyService, { mode, workspaceRoot: WORKSPACE })
   await ctx.plugin(LocalSubprocessRuntime)
@@ -58,13 +61,13 @@ describe('Worker Landlock through the production sandbox stack', () => {
     const allowed = await bash.run(bash.resolve({
       command: `echo workspace > ${WORKSPACE}/allowed.txt; echo temp > /tmp/allowed.txt`,
     }))
-    expect(allowed.sandbox).toEqual({ mode: 'workspace-write', denied: false, enforcement: 'full' })
+    expect(allowed.sandbox).toEqual({ mode: 'workspace-write', denied: false, enforcement: 'partial', backend: 'landlock' })
     expect(vfs.readFileSync(`${WORKSPACE}/allowed.txt`, 'utf8')).toBe('workspace\n')
     expect(vfs.readFileSync('/dsh/tmp/allowed.txt', 'utf8')).toBe('temp\n')
 
     const denied = await bash.run(bash.resolve({ command: `echo denied > ${OUTSIDE}/denied.txt` }))
     expect(denied.exitCode).toBe(1)
-    expect(denied.sandbox).toEqual({ mode: 'workspace-write', denied: true, enforcement: 'full' })
+    expect(denied.sandbox).toEqual({ mode: 'workspace-write', denied: true, enforcement: 'partial', backend: 'landlock' })
     expect(vfs.existsSync(`${OUTSIDE}/denied.txt`)).toBe(false)
   })
 
@@ -73,7 +76,7 @@ describe('Worker Landlock through the production sandbox stack', () => {
     const strict = await readOnly.run(readOnly.resolve({
       command: `echo discarded > /dev/null; echo denied > ${WORKSPACE}/strict.txt`,
     }))
-    expect(strict.sandbox).toEqual({ mode: 'read-only', denied: true, enforcement: 'full' })
+    expect(strict.sandbox).toEqual({ mode: 'read-only', denied: true, enforcement: 'partial', backend: 'landlock' })
     expect(vfs.existsSync(`${WORKSPACE}/strict.txt`)).toBe(false)
 
     const unrestricted = await setup('danger-full-access')
@@ -92,8 +95,8 @@ describe('Worker Landlock through the production sandbox stack', () => {
       sandboxPolicy: { mode: 'workspace-write', workspaceRoot: WORKSPACE },
     }))
     const [strictResult, writableResult] = await Promise.all([strict, writable])
-    expect(strictResult.sandbox).toEqual({ mode: 'read-only', denied: true, enforcement: 'full' })
-    expect(writableResult.sandbox).toEqual({ mode: 'workspace-write', denied: false, enforcement: 'full' })
+    expect(strictResult.sandbox).toEqual({ mode: 'read-only', denied: true, enforcement: 'partial', backend: 'landlock' })
+    expect(writableResult.sandbox).toEqual({ mode: 'workspace-write', denied: false, enforcement: 'partial', backend: 'landlock' })
     expect(vfs.existsSync(`${WORKSPACE}/strict.txt`)).toBe(false)
     expect(vfs.readFileSync(`${WORKSPACE}/writable.txt`, 'utf8')).toBe('allowed\n')
   })
