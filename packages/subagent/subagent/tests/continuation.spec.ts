@@ -2594,10 +2594,14 @@ describe('continuable settlement delivery', () => {
     expect((delivered!.source as { senderEpoch?: number }).senderEpoch).toBe(childEpoch)
 
     // Redelivering the manager's own notice — the shape a retry, a replayed
-    // crash, or a second watcher produces — reaches the parent inbox and is
-    // refused on identity alone.
-    // `Agent.inbox` is the structural contract; the loop's driver inbox owns claiming.
-    ;(parent.inbox as unknown as { claim(target: 'next-step', turn: number): unknown }).claim('next-step', 1)
+    // crash, or a second watcher produces — is refused on identity alone once
+    // the notice's key is consumed. Under B-619 that happens when the parent's
+    // turn that claimed the notice ENDS, not at the claim, so wait for that
+    // turn/end rather than claiming by hand (which raced the real turn and made
+    // this flap red/green with the timing).
+    await vi.waitFor(() => {
+      expect(parent.session.snapshotEvents().some(event => event.type === 'turn/end')).toBe(true)
+    })
     expect(() => { parent.inbox.append('next-step', delivered!) }).toThrow(DuplicateArrivalError)
   })
 
