@@ -1,0 +1,19 @@
+# Layered over the world-swap cases' base overlay for P3-01 acceptance[1]'s
+# BLOCKED-316 closing condition 2a: the deployment both asks for a world no
+# shipped provider can hold (so the world fact is `absent`) AND states a policy
+# that forbids `absent`. The tool must then be refused, not run without a world.
+#
+# The policy set is stated in full so it does not depend on how a later config
+# layer merges: `baseline-permit` keeps the read tool ordinarily allowed, and
+# `forbid-absent-world` overrides it only when the world fact is `absent`
+# (`context.world` is the fact's kind — see packages/policy/policy-engine-cedar).
+- id: execution-worlds
+  config:
+    request:
+      network: none
+
+- id: policy-language
+  config:
+    policies:
+      baseline-permit: 'permit(principal, action, resource);'
+      forbid-absent-world: 'forbid(principal, action, resource) when { context.world == "absent" };'
