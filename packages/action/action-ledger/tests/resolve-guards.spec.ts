@@ -41,7 +41,7 @@ describe('B-515 v2 (BLOCKED-311): a transition without a resolution may not move
     store.markSent(SCOPE, KEY, epoch(1))
     store.markAmbiguous(SCOPE, KEY, epoch(1))
     // Today confirm-without-resolution guards no state, so it silently settles the ambiguous entry.
-    expect(() => store.confirm(SCOPE, KEY, epoch(1), RECEIPT)).toThrow()
+    expect(() => { store.confirm(SCOPE, KEY, epoch(1), RECEIPT) }).toThrow()
   })
 
   it('markAmbiguous on an already-compensated (settled) entry is refused', () => {
@@ -51,6 +51,6 @@ describe('B-515 v2 (BLOCKED-311): a transition without a resolution may not move
     store.markAmbiguous(SCOPE, KEY, epoch(1))
     store.markCompensated(SCOPE, KEY, epoch(1), resolution('compensated'))
     // Today markAmbiguous guards no state, so it silently drags the settled entry back to ambiguous.
-    expect(() => store.markAmbiguous(SCOPE, KEY, epoch(1))).toThrow()
+    expect(() => { store.markAmbiguous(SCOPE, KEY, epoch(1)) }).toThrow()
   })
 })
