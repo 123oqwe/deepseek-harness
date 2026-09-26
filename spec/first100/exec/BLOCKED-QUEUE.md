@@ -9648,3 +9648,143 @@ P1-10 is not ACCEPTED, so nothing is withdrawn. This entry blocks P1-10 acceptan
 4. **Then** P1-10's sign-off path continues, alongside BLOCKED-341 and BLOCKED-279.
 
 **Owner.** Lane B (fix); lane A (A-447 on the fix, with the kill phase recorded).
+
+### BLOCKED-343 — an interrupt is not durable: after the host restarts, a new prompt wakes the child the interrupt stopped
+
+**Status:** OPEN (2026-09-26). Owner lane B (fix); lane A (red first, done: A-463). Ruled by the delegate (first100-delegate-1a) on A-463.
+- A-463's predictions were written before the case and matched case by case: `artifacts/laneA/a-463-p5-10-interrupt-across-restart-expectations.md`, sha256 70b62138….
+- The product states this limitation itself: Known Limitation 2 in `packages/subagent/subagent/README.md` (`a2eab398ee`). The delegate ruled on 2026-09-26 (gate3 log, A-460) that a limitation contradicting a MUST or an acceptance clause is a defect, not a documented exception.
+- P5-10 is not ACCEPTED (its signature was withdrawn), so nothing is withdrawn. This entry blocks P5-10's sign-off.
+
+**The clauses.**
+- P5-10 must[2]: 「所有 control message durable、带 epoch、幂等。」
+- P5-10 acceptance[0]: 「在取消同时发送 steer/continue 不会唤醒已取消 child。」 This entry covers the case where the prompt arrives after a restart.
+
+**What was measured.**
+- The case file is `tests/first100/fixtures/P5-10.interrupt-across-restart.composition.spec.ts`, committed at `55ad1efc64` (parent `28a56599ac`, test only; it reuses the P5-10 restart driver and mocks byte-for-byte). Run 36213135083 was built from source and ran six cases on the shipped headless profile: three for a graceful restart, three for a crash.
+- 2 of 6 cases pass, as predicted: the two controls.
+- The four red cases:
+  - **After either kind of restart, a prompt wakes the interrupted child.** The child runs a full turn on it (`P5-10: take a turn after the restart.`, completed), and its log gains a second turn.
+  - **After either kind of restart, no interrupt with an epoch can be read from the child's log.** This case's predicate is provisional; see "What this does NOT claim".
+
+**Cause (read from the code; matches the product's own Known Limitation 2).** An interrupt is held in the live process only. Nothing records it durably, so a restarted host does not know the child was stopped.
+
+**What this does NOT claim.**
+- It does not say where the fix must record the interrupt. The "readable in the child's log" predicate is the red-first's provisional reading (gate3 log, 2026-09-26T02:54:47Z). When the fix lands, lane A re-pins that case to the record the fix actually persists, with a mutation that shows the case can fail. The two "not woken" cases are behavioral and do not change.
+- The rest of P5-10 is out of scope here: must[3] (BLOCKED-116), acceptance[1] (BLOCKED-215; B-class question 20), and the second half of BLOCKED-333 (waiting on 336).
+
+**Closing condition.**
+1. **Red first.** Run 36213135083 at `55ad1efc64`, its four red cases, is the reading. The fix's rounds cite it.
+2. **The fix, in place.** An interrupt is recorded durably, with its epoch, and replaying it is idempotent. After a graceful restart or a crash, a prompt, steer or continue addressed to the interrupted child does not wake it. Lane B chooses the mechanism and says why.
+3. **Readings on the fix.**
+   - A-463's six cases pass at the fix, the readable case re-pinned as above.
+   - A mutation that drops the durable record turns the "not woken" cases red again.
+4. **Then** Known Limitation 2 is removed or rewritten to match, and P5-10's sign-off path continues.
+
+**Owner.** Lane B (fix); lane A (A-463 on the fix).
+
+### BLOCKED-344 — an unclassifiable write nested through `ToolRuntime.execute` runs without the approval P2-03 acceptance[2] requires: the seam skips the risk gate
+
+**Status:** OPEN (2026-09-26). Owner lane B (fix); lane A (red first, done: A-471). Ruled by the delegate (first100-delegate-1a) on A-471. Its predictions were written before the case and matched case by case: `artifacts/laneA/a-471-p2-03-nested-unclassified-expectations.md`, sha256 45967357….
+- This entry is related to BLOCKED-294 but separate from it. 294 is about the seam's missing manifest and missing policy decision; B-615 fixes those. This entry is about the seam's missing risk gate, that is, the approval step.
+- It blocks P2-03's sign-off. P2-03 is not ACCEPTED, so nothing is withdrawn.
+
+**The clause.** P2-03 acceptance[2]: 「无法分类副作用的动作默认高风险并要求审批。」
+
+**What was measured.**
+- The case file is `tests/first100/fixtures/P2-03.nested-unclassified.composition.spec.ts`, with its driver and shared files, committed at `9d05dba8f3` (parent `db7f3a63ad`, test only). Run 36214957940, with build, ran on the shipped headless profile at its default preset.
+- 1 of 2 cases passes, as predicted.
+  - **Control, green.** The model calls an unclassifiable writer directly. The risk gate classifies it `security-sensitive`, asks the operator, and records `refused` when the operator rejects. The writer does not run.
+  - **Red.** A plugin tool, admitted under its own token, calls the same writer through `ToolRuntime.execute`, presenting its inherited token. The writer runs (`writer ran`).
+    - No approval was asked for it.
+    - No `action/risk-gated` record exists for it. The only records are the direct call's `refused` and the plugin tool's own `allowed-by-preset` (read).
+
+**Cause (read from the code; consistent with the reading).**
+- The risk gate `gateActionRisk` (`packages/core/tools/src/external-effect.ts:533`) sits on the tool-dispatch path that the agent loop and code mode use.
+- `ToolRuntime.execute` (`packages/core/tools/src/index.ts:2003`) does not call it. So an action entering through that seam is never classified for approval.
+
+**What this does NOT claim.**
+- Nothing about whether the nested call writes a manifest or passes the policy decision point. That is BLOCKED-294, measured by A-462 and fixed by B-615.
+- Nothing about calls without an agent. Under B-615 those are refused after the policy decision point.
+- Nothing about a Run that was taken over or stopped. A-472 measures that path separately.
+
+**Closing condition.**
+1. **Red first.** Run 36214957940 at `9d05dba8f3`, its red case, is the reading. The fix's rounds cite it.
+2. **The fix, in place.** An action entering through `ToolRuntime.execute` passes the same risk gate as the dispatch path, in the same order relative to the manifest and the policy decision as there: it is classified, and when the preset in force requires approval it is asked for and does not run unless allowed. Its decision is recorded as `action/risk-gated`. Lane B places it relative to B-615's sequence and says why.
+3. **Readings on the fix.**
+   - A-471's two cases pass at the fix.
+   - A mutation that lets the seam treat an unclassifiable action as low risk turns exactly the nested case red. This mutation does not remove a check.
+4. **Then** P2-03's sign-off path continues, alongside BLOCKED-294 (B-615) and B-620.
+
+**Owner.** Lane B (fix, stacked after B-615); lane A (A-471 on the fix).
+
+### BLOCKED-345 — after an emergency stop, a running plugin tool still performs a write it nests through `ToolRuntime.execute`: the seam skips `refuseNewAction`
+
+**Status:** OPEN (2026-09-26). Owner lane B (fix); lane A (red first, done: A-472; the takeover half is A-473). Ruled by the delegate (first100-delegate-1a) on A-472.
+- A-472's predictions were written before the case and matched case by case: `artifacts/laneA/a-472-p4-07-nested-after-stop-expectations.md`, sha256 4f5b9c1f….
+- This entry uses the clause reading BLOCKED-334 already recorded: a Run that is stopped or taken over must not start a new side effect. It is the third control the `ToolRuntime.execute` seam lacks, after the manifest and policy decision (BLOCKED-294) and the risk gate (BLOCKED-344).
+- P4-07 is not ACCEPTED (BLOCKED-334 withdrew it), so nothing is withdrawn. This entry blocks its re-acceptance.
+
+**The clause.** P4-07 acceptance[0]: 「旧 worker 恢复后无法提交结果或执行新副作用。」
+
+**What was measured.**
+- The case file is `tests/first100/fixtures/P4-07.nested-after-stop.composition.spec.ts`, with its driver and shared files, committed at `ebddb70c9c` (parent `db7f3a63ad`, test only). Run 36215188069 was built from source and ran on the shipped headless composition.
+- 1 of 2 cases passes, as predicted.
+  - **Control, green.** An operator issues an emergency stop (`stop`, `human-requested`, released only by an explicit resume), and the stop gate reads `stopped`. After that, the model's own write is refused and writes nothing.
+  - **Red.** A plugin tool was already running when the stop landed. It then nests a write through `ToolRuntime.execute`, and the write runs: the file is created.
+
+**Cause (read from the code; consistent with the reading).**
+- `refuseNewAction` (`packages/core/tools/src/external-effect.ts:851`) is called on the agent-loop dispatch path (`packages/core/agent-loop/src/tool-calls.ts:286`) and in code mode (`packages/core/tools/src/ptc.ts:752`).
+- `ToolRuntime.execute` does not call it, so a stopped Run's plugin tool can still start a new side effect through that seam.
+
+**What this does NOT claim.**
+- Nothing about a Run taken over by another host. A-473 measures that half.
+- Nothing about calls without an agent. Under B-615 those are refused after the policy decision point.
+
+**Closing condition.**
+1. **Red first.** Run 36215188069 at `ebddb70c9c`, its red case, is the reading. The fix's rounds cite it.
+2. **The fix, in place.** An action entering through `ToolRuntime.execute` passes the same `refuseNewAction` check as the dispatch path, in the same order, and is refused when its Run is stopped or taken over. Lane B places it within the seam sequence that B-615 and B-633 build, and says why.
+3. **Readings on the fix.**
+   - A-472's two cases pass at the fix, and so does A-473's takeover case once it exists.
+   - A mutation that makes the seam read the stop gate as open turns exactly the nested case red.
+4. **Then** P4-07's re-acceptance path continues, alongside BLOCKED-334.
+
+**Owner.** Lane B (fix, in the same chain as B-615 and B-633); lane A (A-472 and A-473 on the fix).
+
+### BLOCKED-346 — the shipped local sandbox lets a sandboxed command connect to the Docker daemon socket, so a `workspace-write` command can reach the whole host (security, tier 1)
+
+**Status:** OPEN (2026-09-26). Owner lane B (fix); lane A (red first, done: A-476 part 2; the SSH-agent half is A-483). Ruled by the delegate (first100-delegate-1a) as a tier-1 security finding. It blocks P3-05. It is prioritised ahead of the other fixes in lane B's queue, because the shipped sandbox presents a confinement it does not deliver: 「平台能力不足时报告 unsupported，不提供伪安全」 (P3-05 must[2]). No ACCEPTED row covers daemon-socket containment, so nothing is withdrawn.
+
+**The clauses.**
+- P3-05 acceptance[0]: 「测试进程不可见、不可 ptrace、不可连接 Docker/SSH socket。」
+- P3-05 must[1]: 「显式控制 Unix sockets、named pipes、clipboard、camera/microphone、GPU、USB、Docker daemon、SSH agent。」
+
+**What was measured.**
+- The case file is `tests/first100/fixtures/P3-05.process-isolation.composition.spec.ts`, committed at `a53cc08f56` (parent `db7f3a63ad`, test only). Run 36217014007, with build, ran one bash command on the shipped headless profile, under the shipped local sandbox at the default preset.
+- The command could neither see nor signal the host process. It could connect to the Docker daemon: `curl --unix-socket /var/run/docker.sock http://localhost/_ping` succeeded.
+  - The probe reported `{"signal":"no","seen":"no","docker":"connected","enforcement":null}`.
+  - The tool result did not name the active backend (`enforcement: null`), so which backend enforced the run was not observed.
+
+**Cause (read from the code; consistent with the reading).** `packages/sandbox/sandbox-local/src/profiles.ts` isolates file writes only. None of its three backends hides the daemon sockets.
+- **bwrap** (`bwrapProfileArgs`): the arguments are `--ro-bind / /`, `--dev /dev`, `--unshare-pid`, `--proc /proc`, and, for `workspace-write`, a tmpfs `/tmp` plus a bind of the workspace.
+  - Nothing masks `/run` or `/var/run`.
+  - A read-only bind does not stop `connect()` to a Unix socket.
+  - There is no `--unshare-net`.
+- **Landlock** (`landlockProfileArgs`): grants read-only `/` and read-write for `/dev/null`, `/tmp` and the workspace. These filesystem rights do not govern `connect()` to an existing pathname socket.
+- **Seatbelt** (`seatbeltProfileArgs`): `(allow default)` with `(deny file-write*)`, so socket connections are allowed.
+- Consequence: any user whose account can reach Docker, which is common on developer machines, can have a sandboxed command start a container that mounts the host root and writes outside the workspace. That defeats the `workspace-write` confinement.
+
+**What this does NOT claim.**
+- It does not say which backend ran in CI, because `enforcement` was null.
+- The SSH agent socket (`SSH_AUTH_SOCK`), named by the same clause, was not probed. That is A-483.
+- It says nothing about network egress in general. Only the daemon sockets are claimed here.
+
+**Closing condition.**
+1. **Red first.** Run 36217014007 at `a53cc08f56`, the Docker case, is the reading. A-483's SSH-agent case joins it once it has run.
+2. **The fix, in place, per backend.** A sandboxed command cannot connect to the Docker daemon socket or the SSH agent socket. Where a backend cannot prevent this, the sandbox reports the limitation as unsupported rather than presenting the confinement: Landlock before the ABI that scopes Unix sockets, for example. Lane B chooses the mechanism per backend and says why, including which socket paths it covers and how it finds them (fixed paths, environment variables, the Docker context).
+3. **Readings on the fix.**
+   - A-476 part 2 and A-483 pass at the fix, and the tool result names the active backend.
+   - A mutation that lets the socket through again turns exactly those cases red.
+4. **Then** P3-05's build continues. This entry is its first deliverable.
+
+**Owner.** Lane B (fix, ahead of the queue after batch 12); lane A (A-476 part 2 and A-483 on the fix).
