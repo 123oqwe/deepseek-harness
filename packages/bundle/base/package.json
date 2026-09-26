@@ -78,6 +78,7 @@
     "@deepseek-ai/dsh-llm-retry": "workspace:^",
     "@deepseek-ai/dsh-memory": "workspace:^",
     "@deepseek-ai/dsh-memory-context": "workspace:^",
+    "@deepseek-ai/dsh-memory-policy": "workspace:^",
     "@deepseek-ai/dsh-message-bus": "workspace:^",
     "@deepseek-ai/dsh-permission-presets": "workspace:^",
     "@deepseek-ai/dsh-plan-mode": "workspace:^",
