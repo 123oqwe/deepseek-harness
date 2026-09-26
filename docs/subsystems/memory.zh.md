@@ -200,11 +200,42 @@ async get(request: MemoryGetRequest): Promise<MemoryRecordView | undefined>
 async revise(request: MemoryReviseRequest): Promise<void>
 
 /**
- * Remove a record. Idempotent.
+ * Remove a record and leave a tombstone (P6-03 third slice, acceptance[1]).
+ * Idempotent. The content is removed from the store; `export` lists a
+ * {@link MemoryTombstoneView} in its place.
  * @param request - the target id, its principal, and its scope.
  * @returns Nothing.
  */
 async forget(request: MemoryForgetRequest): Promise<void>
+
+/**
+ * Record that one record supersedes another (P6-03 third slice, must[3]).
+ * Both persist: the newer gains a `supersedes` relation and the older is
+ * marked `superseded`, so the default search returns only the newer while
+ * `export` keeps both (must[1] — a conflict never overwrites).
+ * @param request - the newer id, the older id it supersedes, the principal, and the scope both belong to.
+ * @returns Nothing.
+ */
+async supersede(request: MemorySupersedeRequest): Promise<void>
+
+/**
+ * Merge one record into another (P6-03 third slice, must[3]). A cross-scope
+ * merge with no `authorization` naming both scopes is refused with
+ * `MEMORY_MERGE_NOT_AUTHORIZED` before either record changes (P6-02
+ * acceptance[2]).
+ * @param request - the two ends, and the cross-scope authorization when the merge crosses a boundary.
+ * @returns Nothing.
+ */
+async merge(request: MemoryMergeRequest): Promise<void>
+
+/**
+ * Erase every record about a subject in one tenant (P6-03 third slice,
+ * must[3] right-to-erasure), forgetting each as {@link MemoryRuntime.forget}
+ * forgets one, in every session and workspace of the tenant.
+ * @param request - the requesting principal, the tenant, and the subject to erase.
+ * @returns Nothing.
+ */
+async erase(request: MemoryEraseRequest): Promise<void>
 
 /**
  * Bulk-read every record visible to `request.accessContext`, capped to

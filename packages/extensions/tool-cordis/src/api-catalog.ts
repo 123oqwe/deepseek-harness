@@ -1554,8 +1554,26 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
       },
       {
         signature: 'async forget(request: MemoryForgetRequest): Promise<void>',
-        description: 'Remove a record. Idempotent.',
+        description: 'Remove a record and leave a tombstone (P6-03 third slice, acceptance[1]). Idempotent. The content is removed from the store; `export` lists a MemoryTombstoneView in its place.',
         parameters: [{ name: 'request', description: 'the target id, its principal, and its scope.' }],
+        returns: 'Nothing.',
+      },
+      {
+        signature: 'async supersede(request: MemorySupersedeRequest): Promise<void>',
+        description: 'Record that one record supersedes another (P6-03 third slice, must[3]). Both persist: the newer gains a `supersedes` relation and the older is marked `superseded`, so the default search returns only the newer while `export` keeps both (must[1] — a conflict never overwrites).',
+        parameters: [{ name: 'request', description: 'the newer id, the older id it supersedes, the principal, and the scope both belong to.' }],
+        returns: 'Nothing.',
+      },
+      {
+        signature: 'async merge(request: MemoryMergeRequest): Promise<void>',
+        description: 'Merge one record into another (P6-03 third slice, must[3]). A cross-scope merge with no `authorization` naming both scopes is refused with `MEMORY_MERGE_NOT_AUTHORIZED` before either record changes (P6-02 acceptance[2]).',
+        parameters: [{ name: 'request', description: 'the two ends, and the cross-scope authorization when the merge crosses a boundary.' }],
+        returns: 'Nothing.',
+      },
+      {
+        signature: 'async erase(request: MemoryEraseRequest): Promise<void>',
+        description: 'Erase every record about a subject in one tenant (P6-03 third slice, must[3] right-to-erasure), forgetting each as MemoryRuntime.forget forgets one, in every session and workspace of the tenant.',
+        parameters: [{ name: 'request', description: 'the requesting principal, the tenant, and the subject to erase.' }],
         returns: 'Nothing.',
       },
       {
@@ -4866,6 +4884,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type CredentialRef = Branded<\'CredentialRef\'>;',
   },
   {
+    name: 'CrossScopeMergeAuthorization',
+    declaration: 'export interface CrossScopeMergeAuthorization {\n    readonly from: MemoryScope;\n    readonly into: MemoryScope;\n    readonly authorizedBy: string;\n}',
+  },
+  {
     name: 'CurrentPolicySet',
     declaration: 'export interface CurrentPolicySet {\n    readonly policies: Readonly<Record<string, string>>;\n    readonly digest: PolicySetDigest;\n}',
   },
@@ -5538,12 +5560,20 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface MemoryContextBudget {\n    readonly maxRecords?: number;\n    readonly maxTokens?: number;\n}',
   },
   {
+    name: 'MemoryEraseRequest',
+    declaration: 'export interface MemoryEraseRequest {\n    readonly principal: Principal;\n    readonly tenantId: TenantId;\n    readonly subject: MemorySubject;\n}',
+  },
+  {
+    name: 'MemoryExportedRecord',
+    declaration: 'export interface MemoryExportedRecord extends MemoryRecordView {\n    readonly provenance?: MemoryProvenance;\n    readonly status?: MemoryStatus;\n    readonly relations?: readonly MemoryRelation[];\n}',
+  },
+  {
     name: 'MemoryExportRequest',
     declaration: 'export interface MemoryExportRequest {\n    readonly accessContext: MemoryAccessContext;\n}',
   },
   {
     name: 'MemoryExportResult',
-    declaration: 'export interface MemoryExportResult {\n    readonly records: readonly MemoryRecordView[];\n    readonly truncated: boolean;\n}',
+    declaration: 'export interface MemoryExportResult {\n    readonly records: readonly MemoryExportedRecord[];\n    readonly truncated: boolean;\n    readonly tombstones?: readonly MemoryTombstoneView[];\n}',
   },
   {
     name: 'MemoryForgetRequest',
@@ -5566,6 +5596,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface MemoryListPendingResult {\n    readonly records: readonly MemoryRecordView[];\n    readonly truncated: boolean;\n}',
   },
   {
+    name: 'MemoryMergeEnd',
+    declaration: 'export interface MemoryMergeEnd {\n    readonly scope: MemoryScope;\n    readonly id: MemoryRecordId;\n}',
+  },
+  {
+    name: 'MemoryMergeRequest',
+    declaration: 'export interface MemoryMergeRequest {\n    readonly principal: Principal;\n    readonly from: MemoryMergeEnd;\n    readonly into: MemoryMergeEnd;\n    readonly authorization?: CrossScopeMergeAuthorization;\n}',
+  },
+  {
     name: 'MemoryProposeRequest',
     declaration: 'export interface MemoryProposeRequest extends MemoryProposeRequestBase {\n    readonly origin: MemoryClaimOrigin;\n}',
   },
@@ -5583,7 +5621,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'MemoryProvider',
-    declaration: 'export interface MemoryProvider {\n    readonly id: string;\n    available(): boolean;\n    propose(request: MemoryProposeRequest, status?: MemoryStatus): Promise<MemoryProposeResult>;\n    query(request: MemoryQueryRequest): Promise<MemoryQueryResult>;\n    get(request: MemoryGetRequest): Promise<MemoryRecordView | undefined>;\n    revise(request: MemoryReviseRequest): Promise<void>;\n    forget(request: MemoryForgetRequest): Promise<void>;\n    export(request: MemoryExportRequest): Promise<MemoryExportResult>;\n    listPending(request: MemoryListPendingRequest): Promise<MemoryListPendingResult>;\n    approve(request: MemoryReviewRequest): Promise<void>;\n    reject(request: MemoryReviewRequest): Promise<void>;\n    countRebuiltAt(request: MemoryRebuiltCountRequest): Promise<number>;\n}',
+    declaration: 'export interface MemoryProvider {\n    readonly id: string;\n    available(): boolean;\n    propose(request: MemoryProposeRequest, status?: MemoryStatus): Promise<MemoryProposeResult>;\n    query(request: MemoryQueryRequest): Promise<MemoryQueryResult>;\n    get(request: MemoryGetRequest): Promise<MemoryRecordView | undefined>;\n    revise(request: MemoryReviseRequest): Promise<void>;\n    forget(request: MemoryForgetRequest): Promise<void>;\n    supersede(request: MemorySupersedeRequest): Promise<void>;\n    merge(request: MemoryMergeRequest): Promise<void>;\n    erase(request: MemoryEraseRequest): Promise<void>;\n    export(request: MemoryExportRequest): Promise<MemoryExportResult>;\n    listPending(request: MemoryListPendingRequest): Promise<MemoryListPendingResult>;\n    approve(request: MemoryReviewRequest): Promise<void>;\n    reject(request: MemoryReviewRequest): Promise<void>;\n    countRebuiltAt(request: MemoryRebuiltCountRequest): Promise<number>;\n}',
   },
   {
     name: 'MemoryQueryRequest',
@@ -5604,6 +5642,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'MemoryRecordView',
     declaration: 'export interface MemoryRecordView {\n    readonly id: MemoryRecordId;\n    readonly principal: Principal;\n    readonly content: unknown;\n    readonly updatedAt: string;\n}',
+  },
+  {
+    name: 'MemoryRelation',
+    declaration: 'export interface MemoryRelation {\n    readonly kind: MemoryRelationKind;\n    readonly target: MemoryRecordId;\n}',
+  },
+  {
+    name: 'MemoryRelationKind',
+    declaration: 'export type MemoryRelationKind = \'supersedes\' | \'disputes\';',
   },
   {
     name: 'MemoryReviewRequest',
@@ -5628,6 +5674,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'MemorySubject',
     declaration: 'export type MemorySubject = Branded<\'MemorySubject\'>;',
+  },
+  {
+    name: 'MemorySupersedeRequest',
+    declaration: 'export interface MemorySupersedeRequest {\n    readonly principal: Principal;\n    readonly scope: MemoryScope;\n    readonly id: MemoryRecordId;\n    readonly supersedes: MemoryRecordId;\n}',
+  },
+  {
+    name: 'MemoryTombstoneView',
+    declaration: 'export interface MemoryTombstoneView {\n    readonly id: MemoryRecordId;\n    readonly forgottenAt: string;\n    readonly forgottenBy: Principal;\n}',
   },
   {
     name: 'Message',
