@@ -908,12 +908,14 @@ describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', { ti
       expect(status === 0 || !printsAccepted, 'a package that failed verification is not accepted, whatever it records').toBe(true)
     })
 
-    it('fails with a named mismatch and still prints its result line when pnpm cannot run', () => {
+    it('fails with a named mismatch and still prints its result line when git cannot run', () => {
       const { root } = collectOneAcceptedGate()
-      // A pnpm that cannot run, first on PATH: re-deriving the baseline needs it.
-      const bin = mkdtempSync(join(tmpdir(), 'dsh-no-pnpm-'))
+      // A git that cannot run, first on PATH: re-deriving the baseline runs `git rev-parse HEAD`.
+      // (Since B-626 the baseline names only the declared toolchain, so re-derivation no longer
+      // runs pnpm — git is the tool whose absence still fails it.)
+      const bin = mkdtempSync(join(tmpdir(), 'dsh-no-git-'))
       fixtureRoots.push(bin)
-      writeFileSync(join(bin, 'pnpm'), '#!/bin/sh\nexit 127\n', { mode: 0o755 })
+      writeFileSync(join(bin, 'git'), '#!/bin/sh\nexit 127\n', { mode: 0o755 })
 
       const result = spawnSync(process.execPath, [verifyScriptPath, '--repo-root', root, '--evidence', '.dsh/evidence/evidence.json'], {
         encoding: 'utf8',
