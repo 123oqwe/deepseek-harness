@@ -1,7 +1,7 @@
 /**
  * Arrival deduplication vocabulary for durable agent inbox redelivery (Epic
  * P4-06 must[2]): the `(source, id, epoch)` key an inbox consumer refuses once
- * a claim consumed it, and the error that refusal throws.
+ * the turn that claimed it ended, and the error that refusal throws.
  *
  * @module @deepseek-ai/dsh-agent/arrival
  */

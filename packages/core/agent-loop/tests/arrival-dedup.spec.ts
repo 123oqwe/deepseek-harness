@@ -21,7 +21,7 @@
 import { Context } from '@deepseek-ai/cordis'
 import { DuplicateArrivalError, type AgentEventDispatch } from '@deepseek-ai/dsh-agent'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
-import SessionStore, { SessionId, type Session } from '@deepseek-ai/dsh-session'
+import SessionStore, { interruptedTurnClosers, SessionId, type Session } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import { describe, expect, it } from 'vitest'
 import { ReactLoopInbox } from '../src/inbox.ts'
@@ -221,11 +221,15 @@ describe('P4-06 must[2]: an inbox consumes one (source, id, epoch) once', () => 
   it('consumes a key when a forked child claims a settlement it inherited as pending', async () => {
     // The fold covers the fork-inherited prefix, so the child's claim removes
     // the inherited entry at its real position rather than from an empty list.
+    // The claim runs inside a turn, as the agent loop runs one: a key is
+    // consumed when the turn that claimed it ends (BLOCKED-088).
     const { ctx, session: parent, inbox } = await mountInbox('parent')
     inbox.append('next-step', settlement('child-a', 3))
     const child = ctx.sessions.fork(parent, undefined, SessionId('forked'))
     const forked = new ReactLoopInbox(ctx.sessionProjections, child, SILENT)
+    child.append('turn/start', { turn: 1 })
     expect(forked.claim('next-step', 1)).toHaveLength(1)
+    child.append('turn/end', { turn: 1, reason: { kind: 'completed' } })
 
     expect(() => { forked.append('next-step', settlement('child-a', 3)) })
       .toThrow(DuplicateArrivalError)
@@ -234,14 +238,42 @@ describe('P4-06 must[2]: an inbox consumes one (source, id, epoch) once', () => 
   it('refuses in a forked child a settlement its parent already ran', async () => {
     // The child inherits the parent's history, including the run of this
     // notice, so a redelivery into the child repeats an effect its own log
-    // already records.
+    // already records. The parent ran it in a turn that ended before the fork.
     const { ctx, session: parent, inbox } = await mountInbox('parent')
     inbox.append('next-step', settlement('child-a', 3))
+    parent.append('turn/start', { turn: 1 })
     inbox.claim('next-step', 1)
+    parent.append('turn/end', { turn: 1, reason: { kind: 'completed' } })
     const child = ctx.sessions.fork(parent, undefined, SessionId('forked'))
     const forked = new ReactLoopInbox(ctx.sessionProjections, child, SILENT)
 
     expect(() => { forked.append('next-step', settlement('child-a', 3)) })
+      .toThrow(DuplicateArrivalError)
+  })
+
+  it('consumes the claim of a turn its process stopped in, through the turn end a resume appends', async () => {
+    // A process that stops mid-turn leaves its claim with no `turn/end`, and
+    // that turn may have run the settlement. A resume closes the turn with the
+    // closers `interruptedTurnClosers` returns, and that `turn/end` consumes
+    // the claim, so a redelivery after the restart is refused.
+    const { session, inbox: live } = await mountInbox('parent')
+    session.append('turn/start', { turn: 1 })
+    live.append('next-step', settlement('child-a', 3))
+    live.claim('next-step', 1)
+
+    const persisted = session.snapshotEvents()
+    const restarted = new Context()
+    await restarted.plugin(SessionStore)
+    const replayed = restarted.sessions.create(SessionId('parent'))
+    for (const event of [...persisted, ...interruptedTurnClosers(persisted)]) {
+      if (event.type === 'turn/start') replayed.append('turn/start', event.data)
+      if (event.type === 'turn/end') replayed.append('turn/end', event.data)
+      if (event.type === 'agent/inbox/spliced') replayed.append('agent/inbox/spliced', event.data)
+    }
+    await restarted.plugin(SessionProjectionRegistry)
+    const restored = new ReactLoopInbox(restarted.sessionProjections, replayed, SILENT)
+
+    expect(() => { restored.append('next-step', settlement('child-a', 3)) })
       .toThrow(DuplicateArrivalError)
   })
 })
