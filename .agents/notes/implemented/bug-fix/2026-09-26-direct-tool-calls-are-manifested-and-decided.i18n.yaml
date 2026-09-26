@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-26-direct-tool-calls-are-manifested-and-decided.md
-2026-09-26-direct-tool-calls-are-manifested-and-decided.md: 6f73685772938ecf840c3bbdb11188f606c1a34e
-2026-09-26-direct-tool-calls-are-manifested-and-decided.zh.md: 35ccc668dd0505d9f94deee198c672a2a66042da
+2026-09-26-direct-tool-calls-are-manifested-and-decided.md: 640a83b33c0fa89050044400665514c1374ae1ca
+2026-09-26-direct-tool-calls-are-manifested-and-decided.zh.md: 9d9c993d0f25f995d3d15e5fb5fb6a09d27963f5

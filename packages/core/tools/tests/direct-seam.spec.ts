@@ -15,6 +15,8 @@ import type { PolicyAuditRecord } from '@deepseek-ai/dsh-policy-enforcement'
 import { PrincipalId, TenantId } from '@deepseek-ai/dsh-principal/types'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+import PermissionPresetService from '@deepseek-ai/dsh-permission-presets'
+import ApprovalService from '@deepseek-ai/dsh-user-approval'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
 import ToolRuntime, { TOOL_CAPABILITY_VERB, defineContentToolFixture } from '@deepseek-ai/dsh-tools'
@@ -184,6 +186,73 @@ describe('BLOCKED-345: the public seam asks whether this host may still act', ()
     expect(JSON.stringify(result.content)).toContain('another host took it over')
     expect(bodies).toEqual([])
     expect(manifestsOf(agent)).toEqual([])
+    await ctx.fiber.dispose()
+  })
+})
+
+/**
+ * A kernel-pinned composition whose preset asks about every action from `read`
+ * up, with an operator who answers every approval request `answer`.
+ * @param answer - the operator's answer.
+ * @returns the composition, and the tool names the operator was asked about.
+ */
+async function composeGated(answer: 'allowed-once' | 'rejected'): Promise<Composed & { readonly asked: string[] }> {
+  const composed = await compose({ kernel: true })
+  const { ctx } = composed
+  // `permission-presets` injects `shell`; without one the preset service never
+  // applies, which looks exactly like a gate that decided to allow.
+  ctx.provide('shell', {
+    sandboxMode: 'workspace-write',
+    resolve() { throw new Error('these cases do not execute bash') },
+    run() { throw new Error('these cases do not execute bash') },
+    start() { throw new Error('these cases do not execute bash') },
+  })
+  await ctx.plugin(ApprovalService, {})
+  const asked: string[] = []
+  ctx.on('approval/request', (request) => {
+    asked.push(request.toolName)
+    return Promise.resolve(answer)
+  })
+  await ctx.plugin(PermissionPresetService, {
+    riskRules: [],
+    presets: { 'workspace-write': { sandbox: 'workspace-write', approval: 'ask', approvalThreshold: 'read' } },
+    defaultPreset: 'workspace-write',
+  })
+  return { ...composed, asked }
+}
+
+/**
+ * The risk gate's decisions one session recorded, as [action, decision].
+ * @param agent - the agent whose session is read.
+ * @returns one pair per `action/risk-gated` event, in order.
+ */
+function gatedOf(agent: Agent): readonly (readonly string[])[] {
+  return agent.session.snapshotEvents().flatMap(event => event.type === 'action/risk-gated'
+    ? [[event.data.actionId, event.data.decision]]
+    : [])
+}
+
+describe('BLOCKED-344: the public seam passes the risk gate', () => {
+  it('asks the operator about an unclassifiable direct call before it runs, and does not run it when rejected', async () => {
+    const { ctx, agent, bodies, asked } = await composeGated('rejected')
+    const result = await ctx.tools.execute({ callId: ToolCallId('gated-rejected'), name: 'probe', arguments: {}, agent, signal })
+
+    expect(asked).toEqual(['probe'])
+    expect(result.isError).toBe(true)
+    expect(bodies).toEqual([])
+    expect(gatedOf(agent)).toEqual([['probe', 'refused']])
+    expect(manifestsOf(agent)).toEqual([['gated-rejected', 'plugin-rpc', 'probe']])
+    await ctx.fiber.dispose()
+  })
+
+  it('runs a direct call the operator allows, after its manifest and its approval', async () => {
+    const { ctx, agent, bodies, asked } = await composeGated('allowed-once')
+    const result = await ctx.tools.execute({ callId: ToolCallId('gated-allowed'), name: 'probe', arguments: {}, agent, signal })
+
+    expect(asked).toEqual(['probe'])
+    expect(result.isError).toBe(false)
+    expect(bodies).toEqual(['manifested'])
+    expect(gatedOf(agent)).toEqual([['probe', 'asked']])
     await ctx.fiber.dispose()
   })
 })
