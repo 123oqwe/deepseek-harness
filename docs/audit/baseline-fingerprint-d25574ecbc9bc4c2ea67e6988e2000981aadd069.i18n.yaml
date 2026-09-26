@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/audit/baseline-fingerprint-d25574ecbc9bc4c2ea67e6988e2000981aadd069.md
+baseline-fingerprint-d25574ecbc9bc4c2ea67e6988e2000981aadd069.md: 11775381bedbed5e41e150e613a1ba94eef3c3be
+baseline-fingerprint-d25574ecbc9bc4c2ea67e6988e2000981aadd069.zh.md: 63cfde12f5767d577efec8de1e8f4eafb923caa6
