@@ -195,16 +195,25 @@ export interface InboxWireState {
 }
 
 /**
- * Host-only arrival bookkeeping reconstructed from durable inbox splices
- * (Epic P4-06 must[2]). It never leaves the host, so it has no wire view.
+ * Host-only arrival bookkeeping reconstructed from durable inbox splices and
+ * turn boundaries (Epic P4-06 must[2]). It never leaves the host, so it has no
+ * wire view.
  */
 export interface InboxArrivalsState {
-  /** The arrival key of each pending message in list order; `null` for a source that states no epoch. */
+  /**
+   * Each pending message in list order: its id and arrival key, or `null` for
+   * a source that states no epoch.
+   */
   readonly pending: {
-    readonly 'next-turn': readonly (string | null)[]
-    readonly 'next-step': readonly (string | null)[]
+    readonly 'next-turn': readonly ({ readonly id: UserMessage['id']; readonly key: string } | null)[]
+    readonly 'next-step': readonly ({ readonly id: UserMessage['id']; readonly key: string } | null)[]
   }
-  /** Keys of messages a claim removed; a later arrival repeating one is refused. */
+  /**
+   * Keyed messages claimed since the last `turn/end`, which consumes them.
+   * Putting one of these messages back into the inbox releases it instead.
+   */
+  readonly claimed: readonly { readonly id: UserMessage['id']; readonly key: string }[]
+  /** Keys of messages whose claiming turn ended; a later arrival repeating one is refused. */
   readonly consumed: readonly string[]
 }
 
