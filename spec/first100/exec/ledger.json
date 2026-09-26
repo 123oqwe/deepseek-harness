@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-26T19:51:41.097Z",
-  "inputDigest": "849e068bd3b1734a99579a9aff91933bca833261fb24b5db74b818a41d9e3a62",
+  "lastUpdatedUtc": "2026-09-26T19:54:59.624Z",
+  "inputDigest": "ec1f211295837cbc7958168d36e3257505db47a40964f12b529826877847cb95",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -3092,7 +3092,42 @@
           "capturedAtUtc": "2026-09-24T23:23:33.318Z"
         }
       },
-      "supplements": {},
+      "supplements": {
+        "F.1": {
+          "status": "GREEN",
+          "candidateSha": "7de79a1658bc4baff424522f433a02221fa462fb",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36264470501",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36264470501/first100-vitest-report-7de79a1658bc4baff424522f433a02221fa462fb/vitest-report.json",
+          "observationSha256": "57d97d2bab55b5f4e9c88414e96976efa572c2b52e08835de8e8523f7ad36357",
+          "expectCasesMatched": [
+            "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version covers every phase the transaction declares",
+            "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at freeze leaves the old version whole and usable",
+            "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at snapshot leaves the old version whole and usable",
+            "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at quarantine leaves the old version whole and usable",
+            "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at validate leaves the old version whole and usable",
+            "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at switch, before the health check confirmed the new data, leaves the old version whole and usable",
+            "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at health-check, once the upgrade is recorded as achieved, leaves the new version whole and usable",
+            "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version control: a crash at switch with the plugin and its unit named alike leaves the old version whole and usable"
+          ],
+          "capturedAtUtc": "2026-09-26T19:54:59.001Z"
+        },
+        "F.2": {
+          "status": "GREEN",
+          "candidateSha": "7de79a1658bc4baff424522f433a02221fa462fb",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36264470501",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36264470501/first100-vitest-report-7de79a1658bc4baff424522f433a02221fa462fb/vitest-report.json",
+          "observationSha256": "57d97d2bab55b5f4e9c88414e96976efa572c2b52e08835de8e8523f7ad36357",
+          "expectCasesMatched": [
+            "P1-10 acceptance[0] on the CLI path: after a killed dsh plugin upgrade and a rerun, code and data are at one version control: an upgrade that is not killed leaves version 2 code and version 2 data, readable",
+            "P1-10 acceptance[0] on the CLI path: after a killed dsh plugin upgrade and a rerun, code and data are at one version killed once the new code is installed and before the transaction starts, the rerun leaves code and data at one version",
+            "P1-10 acceptance[0] on the CLI path: after a killed dsh plugin upgrade and a rerun, code and data are at one version killed in the plugin migrate step, the rerun leaves code and data at one version",
+            "P1-10 acceptance[0] on the CLI path: after a killed dsh plugin upgrade and a rerun, code and data are at one version killed in the plugin validate step, the rerun leaves code and data at one version",
+            "P1-10 acceptance[0] on the CLI path: after a killed dsh plugin upgrade and a rerun, code and data are at one version killed once the switch is recorded and before the health check is, the rerun leaves code and data at one version",
+            "P1-10 acceptance[0] on the CLI path: after a killed dsh plugin upgrade and a rerun, code and data are at one version killed once the upgrade is recorded as achieved, the rerun leaves code and data at one version"
+          ],
+          "capturedAtUtc": "2026-09-26T19:54:59.310Z"
+        }
+      },
       "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
       "independentVerdict": "PENDING",
       "openFindings": null,
@@ -8895,6 +8930,22 @@
             "P5-10 must[1]: a claimed batch leaves the queue by control priority promotes a cancel PAST ordinary input too, so a stop is never queued behind a prompt"
           ],
           "capturedAtUtc": "2026-09-15T17:17:51.798Z"
+        },
+        "U.2": {
+          "status": "GREEN",
+          "candidateSha": "7de79a1658bc4baff424522f433a02221fa462fb",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36264470501",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36264470501/first100-vitest-report-7de79a1658bc4baff424522f433a02221fa462fb/vitest-report.json",
+          "observationSha256": "57d97d2bab55b5f4e9c88414e96976efa572c2b52e08835de8e8523f7ad36357",
+          "expectCasesMatched": [
+            "P5-10 A-463: a child interrupted before a graceful host restart, on the shipped headless profile control: the interrupt is accepted, a prompt sent after it is refused before the restart, and the child's log read afterwards holds its turn",
+            "P5-10 A-463: a child interrupted before a graceful host restart, on the shipped headless profile a prompt after the restart does not wake the interrupted child",
+            "P5-10 A-463: a child interrupted before a graceful host restart, on the shipped headless profile the interrupt, with an epoch, is readable in the durable bus after the restart",
+            "P5-10 A-463: a child interrupted before its host crashes, on the shipped headless profile control: the interrupt is accepted, and the child's log read after the restart holds its turn",
+            "P5-10 A-463: a child interrupted before its host crashes, on the shipped headless profile a prompt after the restart does not wake the interrupted child",
+            "P5-10 A-463: a child interrupted before its host crashes, on the shipped headless profile the interrupt, with an epoch, is readable in the durable bus after the restart"
+          ],
+          "capturedAtUtc": "2026-09-26T19:54:59.614Z"
         }
       },
       "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
