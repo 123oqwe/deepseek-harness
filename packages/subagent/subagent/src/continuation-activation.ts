@@ -9,8 +9,7 @@
  * @module @deepseek-ai/dsh-subagent/continuation-activation
  */
 
-import { FiberState } from '@deepseek-ai/cordis'
-import type { Context, Fiber } from '@deepseek-ai/cordis'
+import type { Context } from '@deepseek-ai/cordis'
 import type {
   Agent,
   AgentHandle,
@@ -165,22 +164,6 @@ export class ChildLock {
   }
 }
 
-/**
- * Whether a fiber is the given one or one of its ancestors.
- * @param own - the fiber whose lifecycle is asked about.
- * @param candidate - the fiber that changed state.
- * @returns true when `candidate` unloading unloads `own`.
- */
-function isLifecycleAncestor(own: Fiber, candidate: Fiber): boolean {
-  let fiber = own
-  while (true) {
-    if (fiber === candidate) return true
-    const parent = fiber.parent.fiber
-    if (parent === fiber) return false
-    fiber = parent
-  }
-}
-
 /** Own the complete process-local lifetime of continuable child Activations. */
 export class ContinuableActivationRegistry {
   /** Child session id → its live Activation. Process-local, never durable. */
@@ -231,14 +214,6 @@ export class ContinuableActivationRegistry {
     ) => ActivationObserver,
   ) {
     this.bus = ctx.get('messageBus')
-    // The bus clears its store handle in its own teardown, and a fiber unload
-    // starts all of its disposers at once, so on the shipped headless profile
-    // the drain began after that clear and committed nothing (BLOCKED-333).
-    // Cordis announces an unload before any of its disposers runs: the
-    // shutdown settlements are committed then, while the bus is still open.
-    ctx.on('internal/status', (fiber) => {
-      if (fiber.state === FiberState.UNLOADING && isLifecycleAncestor(ctx.fiber, fiber)) this.closeForShutdown()
-    })
     // Ordinary Cordis owner effects unwind in reverse registration order, which
     // cannot express the dynamic child graph. Register the private scope's
     // structural disposer FIRST and the drain SECOND, so reverse unwind invokes
