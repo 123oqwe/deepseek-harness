@@ -1,0 +1,15 @@
+# The paired control for BLOCKED-316 condition 2a. It is `forbid-absent.patch.yml`
+# with the same no-provider request and the same policy set MINUS the one
+# forbid-`absent` rule: only `baseline-permit` remains. The tool must then run,
+# which proves the refusal in the forbid-absent case is that rule's doing, not
+# the absent world by itself (the shipped Cedar path already carries
+# `context.world`, so the rule denies today; this control isolates its effect).
+- id: execution-worlds
+  config:
+    request:
+      network: none
+
+- id: policy-language
+  config:
+    policies:
+      baseline-permit: 'permit(principal, action, resource);'

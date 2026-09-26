@@ -36,7 +36,7 @@ const overlay = fileURLToPath(new URL('./loader/p3-01-world-swap/base.patch.yml'
 const repoTsconfig = fileURLToPath(new URL('../../../tsconfig.json', import.meta.url))
 
 /** The driver's boot modes. */
-const MODES = ['shipped', 'honest', 'forging', 'network-none', 'forbid-absent', 'register-local'] as const
+const MODES = ['shipped', 'honest', 'forging', 'network-none', 'forbid-absent', 'forbid-absent-control', 'register-local'] as const
 
 /** One boot mode. */
 type Mode = typeof MODES[number]
@@ -138,9 +138,17 @@ describe('P3-01 acceptance[1] and [2]: the world a call is bound to on the shipp
     expect(refused || declaredDegradation, JSON.stringify(report)).toBe(true)
   })
 
-  it('P3-01 acceptance[1] / BLOCKED-316 condition 2a: with a deployment rule forbidding an absent world, a call whose world no provider can hold is refused and the tool does not run', () => {
-    const report = reports.get('forbid-absent')
-    expect(report, 'the forbid-absent driver reported').toBeDefined()
-    expect(report !== undefined && readTheFile(report), JSON.stringify(report)).toBe(false)
+  it('P3-01 acceptance[1] / BLOCKED-316 condition 2a: a deployment rule forbidding an absent world refuses the call (the tool does not run), and the same request with the same policy set MINUS that one rule runs the tool — so the rule is what denies, not the absence of a world', () => {
+    const withRule = reports.get('forbid-absent')
+    const withoutRule = reports.get('forbid-absent-control')
+    expect(withRule, 'the forbid-absent driver reported').toBeDefined()
+    expect(withoutRule, 'the forbid-absent-control driver reported').toBeDefined()
+    // With the forbid-`absent` rule the tool is refused. The shipped Cedar path
+    // already carries `context.world` (policy-engine-cedar), so this holds today.
+    expect(withRule !== undefined && readTheFile(withRule), JSON.stringify(withRule)).toBe(false)
+    // The paired control differs only by dropping the forbid rule: the same
+    // no-provider request runs the tool, so the refusal above is the rule's
+    // doing, not a vacuous green from the absent world alone.
+    expect(withoutRule !== undefined && readTheFile(withoutRule), JSON.stringify(withoutRule)).toBe(true)
   })
 })
