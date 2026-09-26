@@ -206,13 +206,7 @@ function streamReasoning(
     open = false
     endsWithNewline = true
   }
-  // A plugin's warning or error closes an open reasoning section before it is
-  // written, so it never lands inside one and the next delta opens a new
-  // header (BLOCKED-336).
-  const unroute = ctx.get('loggerStderr')?.routeThrough((line) => {
-    close()
-    stderr.write(line)
-  })
+  // MUTATION M-336-route: plugin lines are not routed while reasoning streams.
   const dispose = ctx.on('agent/assistant-stream', ({ agent: subject, frame }) => {
     if (subject !== agent) return
     if (frame.type === 'start') {
@@ -254,7 +248,6 @@ function streamReasoning(
   })
   return () => {
     dispose()
-    unroute?.()
     close()
   }
 }
