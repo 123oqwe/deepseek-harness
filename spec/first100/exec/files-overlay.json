@@ -4007,7 +4007,9 @@
       "kind": "manifest",
       "stages": [
         "U.1",
-        "U.2"
+        "U.2",
+        "U.6",
+        "U.7"
       ]
     },
     {
@@ -4018,6 +4020,24 @@
         "U.2"
       ],
       "reason": "Changed by P4-11 part 2 (fix `4ff421f091`): compaction's overflow resend asks the run retry budget before resending and charges an admitted resend to the run, which makes compaction one of the spenders acceptance[1] counts. P4-11 U.2 cases A and B observe it on the shipped profile."
+    },
+    {
+      "epic": "P4-11",
+      "path": "packages/core/agent-loop/src/tool-calls.ts",
+      "kind": "source",
+      "stages": [
+        "U.7"
+      ],
+      "reason": "The native tool-call path: `appendActionManifest` records the policy decision, and a decision that is not a permit settles the call with a refusal instead of dispatching it. P4-11 U.7 asserts one decision and no charge for a denied call; M-redispatch (a second manifest and a Run charge in that branch) reddens exactly that case."
+    },
+    {
+      "epic": "P4-11",
+      "path": "packages/core/tools/src/external-effect.ts",
+      "kind": "source",
+      "stages": [
+        "U.7"
+      ],
+      "reason": "The tool dispatch's risk gate returns `hard-deny` for a hard-denied risk class before a tool body runs. P4-11 U.7's probe does not run under the deny overlay; under M-allow it still does not run, which this gate explains by reading the code."
     },
     {
       "epic": "P4-11",
@@ -4063,6 +4083,24 @@
       "stages": [
         "U.3"
       ]
+    },
+    {
+      "epic": "P4-11",
+      "path": "packages/policy/policy-enforcement/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.7"
+      ],
+      "reason": "The Trust Kernel's enforcement point on the shipped mount: it endorses the composed decision and audits `{actionId, decision, matched}` for each tool call. P4-11 U.7 reads the audited decision for the probe call, and M-allow (the decision replaced by a permit) reddens exactly the audited-deny case."
+    },
+    {
+      "epic": "P4-11",
+      "path": "packages/policy/risk-taxonomy/src/classify.ts",
+      "kind": "source",
+      "stages": [
+        "U.7"
+      ],
+      "reason": "`KERNEL_HARD_DENY_CLASSES` (`['safety-critical']`) is the shipped class list the U.7 deny overlay's rule maps the probe's domain tag into; changing it changes whether the probe call is denied."
     },
     {
       "epic": "P4-11",
@@ -4171,9 +4209,59 @@
       "stages": [
         "U",
         "F",
-        "U.5"
+        "U.5",
+        "U.6",
+        "U.7"
       ],
       "reason": "Where one run's retry spending is kept, and the self-provided service that mounts it. `admitRetry` is pure and returns the usage a caller should store, so two layers can only share a total by reading and writing the SAME store -- a per-layer copy is the duplication this epic ends. The allowance lives on the store rather than in each caller's parameters for the same reason: two layers passing their own budgets would share a total and disagree about the ceiling."
+    },
+    {
+      "epic": "P4-11",
+      "path": "tests/first100/fixtures/loader/p4-11-permanent/base.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.6"
+      ]
+    },
+    {
+      "epic": "P4-11",
+      "path": "tests/first100/fixtures/loader/p4-11-permanent/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.6"
+      ]
+    },
+    {
+      "epic": "P4-11",
+      "path": "tests/first100/fixtures/loader/p4-11-permanent/failing-llm.ts",
+      "kind": "test",
+      "stages": [
+        "U.6"
+      ]
+    },
+    {
+      "epic": "P4-11",
+      "path": "tests/first100/fixtures/loader/p4-11-policy-deny/control.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.7"
+      ]
+    },
+    {
+      "epic": "P4-11",
+      "path": "tests/first100/fixtures/loader/p4-11-policy-deny/deny.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.7"
+      ]
+    },
+    {
+      "epic": "P4-11",
+      "path": "tests/first100/fixtures/loader/p4-11-policy-deny/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.7"
+      ]
     },
     {
       "epic": "P4-11",
@@ -4189,6 +4277,22 @@
       "kind": "test",
       "stages": [
         "U.2"
+      ]
+    },
+    {
+      "epic": "P4-11",
+      "path": "tests/first100/fixtures/P4-11.permanent-failure.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.6"
+      ]
+    },
+    {
+      "epic": "P4-11",
+      "path": "tests/first100/fixtures/P4-11.policy-deny.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.7"
       ]
     },
     {

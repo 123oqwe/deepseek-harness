@@ -4669,9 +4669,39 @@
         {
           "stage": "F",
           "title": "P4-11 Fault — retry decision boundary matrix fault boundary 05 a policy denial is policy-denied, distinct again"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 6,
+          "title": "P4-11 acceptance[0] on the shipped mount: a permanent failure is not retried and charges nothing control: a retryable 503 on the first attempt is retried once, charged to the run, and the turn completes"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 6,
+          "title": "P4-11 acceptance[0] on the shipped mount: a permanent failure is not retried and charges nothing a permanent 400 invalid request is not retried, charges the run nothing, and ends the turn with that failure"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 6,
+          "title": "P4-11 acceptance[0] on the shipped mount: a permanent failure is not retried and charges nothing a permanent 403 authentication failure is not retried, charges the run nothing, and ends the turn with that failure"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 7,
+          "title": "P4-11 acceptance[0] on the shipped mount: a policy-denied tool call is not dispatched again and charges nothing control: without the deployment rule the probe runs once, and the kernel audits one permit for its call"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 7,
+          "title": "P4-11 acceptance[0] on the shipped mount: a policy-denied tool call is not dispatched again and charges nothing with the deployment rule, the kernel audits the call as denied by the shipped kernel-hard-deny policy, and the probe does not run"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 7,
+          "title": "P4-11 acceptance[0] on the shipped mount: a policy-denied tool call is not dispatched again and charges nothing the denied call is not dispatched again and charges the run retry budget nothing"
         }
       ],
-      "note": "acceptance[0]: '永久 4xx、policy deny、invalid input 不重试.' The clause names three kinds, and the citations keep them three: the C case refuses all three while naming a DIFFERENT reason for each, and fault boundaries 04 and 05 pin invalid-input and policy-denied as distinct classifications rather than one refusal wearing three labels. A classifier collapsing them would still refuse all three and would be wrong, because the reason is what a caller acts on.\n\nBoth controls are cited as necessary, not as decoration. '4xx is permanent' is false of 408 and 429, so a classifier reading the clause literally would refuse two retryable statuses; the C control and boundary 02 are what forbid that, and without them 'refuses every 4xx' satisfies the positive half perfectly.\n\nSERVICE / PRODUCTION (§12.46-B): all six are what the LIBRARY does — C constructs failures by hand and F drives the classifier directly. No citation observes a real provider failure reaching this classifier on a running harness; U is NOT_RUN.\n\n[2026-09-19 lane B, BLOCKED-281: the sentence above ends `U is NOT_RUN`, and that has been false since 2026-09-13. P4-11's U cell is GREEN and so is its `U.1` supplement, both captured at run 34731419985 on candidate `71580010ded3860d869dbbc559e277ee14c7474b` -- and `U.1` boots the real shipped `headless` profile, so a production mount IS observed. The sentence is kept because the note's ORDER of evidence is part of its record, and because it dates exactly what was true when it was written: it predates that evidence by two days and nobody returned to it before the epic was accepted. **The residue is narrower than the old sentence and is the one BLOCKED-281 names: a missing DIRECTION.** `U.1` observes a RETRYABLE failure (a 503) retried and charged; nothing observes a PERMANENT failure on the same shipped mount producing zero retries and zero charge. Injecting the failure at the adapter boundary is an honest ceiling, not the gap -- a real external provider outage is not required here.]"
+      "note": "acceptance[0]: '永久 4xx、policy deny、invalid input 不重试.' The clause names three kinds, and the citations keep them three: the C case refuses all three while naming a DIFFERENT reason for each, and fault boundaries 04 and 05 pin invalid-input and policy-denied as distinct classifications rather than one refusal wearing three labels. A classifier collapsing them would still refuse all three and would be wrong, because the reason is what a caller acts on.\n\nBoth controls are cited as necessary, not as decoration. '4xx is permanent' is false of 408 and 429, so a classifier reading the clause literally would refuse two retryable statuses; the C control and boundary 02 are what forbid that, and without them 'refuses every 4xx' satisfies the positive half perfectly.\n\nSERVICE / PRODUCTION (§12.46-B): all six are what the LIBRARY does — C constructs failures by hand and F drives the classifier directly. No citation observes a real provider failure reaching this classifier on a running harness; U is NOT_RUN.\n\n[2026-09-19 lane B, BLOCKED-281: the sentence above ends `U is NOT_RUN`, and that has been false since 2026-09-13. P4-11's U cell is GREEN and so is its `U.1` supplement, both captured at run 34731419985 on candidate `71580010ded3860d869dbbc559e277ee14c7474b` -- and `U.1` boots the real shipped `headless` profile, so a production mount IS observed. The sentence is kept because the note's ORDER of evidence is part of its record, and because it dates exactly what was true when it was written: it predates that evidence by two days and nobody returned to it before the epic was accepted. **The residue is narrower than the old sentence and is the one BLOCKED-281 names: a missing DIRECTION.** `U.1` observes a RETRYABLE failure (a 503) retried and charged; nothing observes a PERMANENT failure on the same shipped mount producing zero retries and zero charge. Injecting the failure at the adapter boundary is an honest ceiling, not the gap -- a real external provider outage is not required here.]\n\n[2026-09-25 lane A, A-424, BLOCKED-281 (b): the missing direction is now observed on the shipped mount, for all three kinds the clause names.\n- **Permanent 4xx**: U.6's 403 case. The adapter's `AUTH` failure is attempted once, charges the Run 0, appends no retry event, and ends the turn with `{kind: error, code: AUTH, status: 403}`.\n- **Invalid input**: U.6's 400 case, the same for `INVALID_REQUEST`, which `llmFailureFacts` marks `malformed` (`packages/llm/llm/src/adapter-failure.ts:22`) and `classifyFailure` names `invalid-input`.\n- **Policy deny**: U.7. With a deployment rule that maps the probe's tag to `safety-critical`, the Trust Kernel audits one deny matched by `kernel-hard-deny`; the call is not dispatched again, the probe does not run, and the Run is charged 0.\n- **Controls**: U.6's control (a 503 retried once and charged 1) and U.7's control (the same probe under a `read` rule runs once, one permit) show each probe sees both outcomes.\n- **Mutations**: M-perm (run 36198463138) reddens exactly the two permanent cases; M-allow (run 36198208027) and M-redispatch (run 36198226344) each redden exactly one U.7 case.\n- **Which layer decides**: on this mount the LLM retry decision is llm-retry's `retryableCodes` (`packages/llm/llm-retry/src/index.ts:218`), not the breaker's `classifyFailure`. On the codes these cases use they agree: in lane A's A-419 classifier matrix (run 36197059064, 19 passed / 8 failed, as predicted) HTTP 400 `INVALID_REQUEST` and HTTP 403 `AUTH` get the same verdict from both, and they disagree on eight other shipped failures (HTTP 408, `QUOTA`, `ABORTED`, `UNSUPPORTED_CONTENT`, `REQUEST_EXTENSION`, `MISSING_CREDENTIAL`, `UNSUPPORTED_REASONING_EFFORT`, `UNKNOWN`).]"
     },
     {
       "epic": "P4-11",

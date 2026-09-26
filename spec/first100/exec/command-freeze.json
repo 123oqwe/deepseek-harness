@@ -18793,6 +18793,97 @@
         "failureSummary": "Read from each round's own narrow report. Dispatch 27a813ffa0, run 36091406478: 2 of 2 passed. M-slow, run 36091421221: exactly the budget case red, on `expected '$ tsx scripts/architecture/check-laye…' not to contain 'check-layer-deps: time-budget:'`, the CLI having written its own time-budget line; the control green. Both match artifacts/laneA/a-411-p0-04-real-repo-budget-expectations.md (sha256 1e71e77dc2b037a560e106e4c24c2bf36da8427c1ba46f81d62d3cb6c67fa991), written before dispatch."
       },
       "note": "P0-04 acceptance[2] on the real repository, BLOCKED-303 closing condition [2]: `pnpm run architecture:layers` from the repository root with no --repo-root and no --budget-ms, so the real workspace under the 10 000 ms default. The control reads the CLI's summary line (more than 300 workspace packages, more than 1000 edges); the budget case requires no `time-budget:` line and a printed elapsed time of at most 10.00 s; the exit code is left to acceptance[0] and [1]. Measured elapsed: the same check under the same default budget, in the registry gate set step of the batch 8' full run 36088846692 at 4e932e474b, logged at 2026-09-25T03:31:25Z: \"0 violation(s) … of 342 workspace package(s), 2186 dependency edge(s) … in 2.10s.\" The case's own rounds record no elapsed time: the JSON reporter does not print the CLI's output and the report truncates the asserted string. In the batch 9r full run 36205389837 at c732e7c07331d3e298402b354a258c3a2aa10019, the registry gate set step logged at 2026-09-26T00:58:06Z: \"check-layer-deps: 0 violation(s) and 134 reported finding(s) across 333 classified and 9 vendored package(s) of 342 workspace package(s), 2244 dependency edge(s), 6 layers + composition roots and test-support, in 1.61s.\""
+    },
+    {
+      "epic": "P4-11",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-11",
+        "stage": "U"
+      },
+      "supplementSeq": 6,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P4-11.permanent-failure.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-11 acceptance[0] on the shipped mount: a permanent failure is not retried and charges nothing control: a retryable 503 on the first attempt is retried once, charged to the run, and the turn completes",
+        "P4-11 acceptance[0] on the shipped mount: a permanent failure is not retried and charges nothing a permanent 400 invalid request is not retried, charges the run nothing, and ends the turn with that failure",
+        "P4-11 acceptance[0] on the shipped mount: a permanent failure is not retried and charges nothing a permanent 403 authentication failure is not retried, charges the run nothing, and ends the turn with that failure"
+      ],
+      "files": [
+        "tests/first100/fixtures/P4-11.permanent-failure.composition.spec.ts",
+        "tests/first100/fixtures/loader/p4-11-permanent/driver.ts",
+        "tests/first100/fixtures/loader/p4-11-permanent/failing-llm.ts",
+        "tests/first100/fixtures/loader/p4-11-permanent/base.patch.yml",
+        "packages/llm/llm-retry/src/index.ts",
+        "packages/llm/llm/src/retry-policy.ts",
+        "packages/core/agent-loop/src/agent.ts",
+        "packages/reliability/retry/src/usage.ts",
+        "packages/bundle/base/cordis.patch.yml"
+      ],
+      "frozenAtUtc": "2026-09-26T02:52:23Z",
+      "dryRunProof": {
+        "treeSha": "2ece3cd20e4e31ceb9adcb7d8fe5068b0d2d5094",
+        "testsDiscovered": 3,
+        "note": "The batch 9r full run 36205389837 at c732e7c07331d3e298402b354a258c3a2aa10019 (tree 2ece3cd20e4e31ceb9adcb7d8fe5068b0d2d5094): tests/first100/fixtures/P4-11.permanent-failure.composition.spec.ts ran 3 cases, each frozen title once, all passed. Every path in files and argv is byte-identical there and at the dispatch fc55359552e47b67abd865bb41deff94c2ac2db5 whose rounds the sensitivity proof cites."
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-perm (`806f24e8a1`, off the dispatch `fc55359552`, never merged): packages/llm/llm-retry/src/index.ts replaces the condition `!policy.retryableCodes.includes(failure.code)` with `false`, so every failure code is retried like a transient one. The dispatch adds only test files to `4e932e474b`, and the file M-perm changes is byte-identical at the dispatch, at `4e932e474b` and at `39ce6d1c7c`.",
+        "failureSummary": "Read by full case title from each round's own narrow report. Dispatch `fc55359552`, run 36198449901: 3 of 3 passed. M-perm `806f24e8a1`, run 36198463138: exactly the 2 cases \"a permanent 400 invalid request…\" and \"a permanent 403 authentication failure…\" red, every other case green. All readings match artifacts/laneA/a-418-p4-11-permanent-expectations-v2.md (sha256 a57409030faadd6ece5fc592e7a248ccccc4ac42100805ff3b31dcfeacbfeaf8), written before dispatch."
+      },
+      "note": "P4-11 acceptance[0] on the shipped mount, BLOCKED-281 (b): a permanent failure is not retried and charges the Run's retry budget nothing. The SHIPPED headless profile through `bootProductionProfile`, with an overlay that only supplies a keyless adapter; the adapter fails the turn's first attempt as `A418_FAILURE` names and succeeds after, and answers a request made for another purpose (a session title) with text without counting it. Control: a retryable 503 is retried once, charged 1 to the Run, two retry events, the turn completes. A permanent 400 (`INVALID_REQUEST`) and a permanent 403 (`AUTH`) are attempted once, charge 0, append no retry event, and end the turn with `turn/end` `{kind: error, code, status}`. On this mount the retry decision is llm-retry's `retryableCodes` (packages/llm/llm-retry/src/index.ts:218), not the breaker's `classifyFailure`; the latter reads `INVALID_REQUEST` as `invalid-input` (packages/llm/llm/src/adapter-failure.ts:22) and a 403 as `client-error`."
+    },
+    {
+      "epic": "P4-11",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-11",
+        "stage": "U"
+      },
+      "supplementSeq": 7,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P4-11.policy-deny.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-11 acceptance[0] on the shipped mount: a policy-denied tool call is not dispatched again and charges nothing control: without the deployment rule the probe runs once, and the kernel audits one permit for its call",
+        "P4-11 acceptance[0] on the shipped mount: a policy-denied tool call is not dispatched again and charges nothing with the deployment rule, the kernel audits the call as denied by the shipped kernel-hard-deny policy, and the probe does not run",
+        "P4-11 acceptance[0] on the shipped mount: a policy-denied tool call is not dispatched again and charges nothing the denied call is not dispatched again and charges the run retry budget nothing"
+      ],
+      "files": [
+        "tests/first100/fixtures/P4-11.policy-deny.composition.spec.ts",
+        "tests/first100/fixtures/loader/p4-11-policy-deny/driver.ts",
+        "tests/first100/fixtures/loader/p4-11-policy-deny/control.patch.yml",
+        "tests/first100/fixtures/loader/p4-11-policy-deny/deny.patch.yml",
+        "packages/policy/policy-enforcement/src/index.ts",
+        "packages/core/agent-loop/src/tool-calls.ts",
+        "packages/core/tools/src/external-effect.ts",
+        "packages/policy/risk-taxonomy/src/classify.ts",
+        "packages/reliability/retry/src/usage.ts",
+        "packages/bundle/base/cordis.patch.yml"
+      ],
+      "frozenAtUtc": "2026-09-26T02:52:23Z",
+      "dryRunProof": {
+        "treeSha": "2ece3cd20e4e31ceb9adcb7d8fe5068b0d2d5094",
+        "testsDiscovered": 3,
+        "note": "The batch 9r full run 36205389837 at c732e7c07331d3e298402b354a258c3a2aa10019 (tree 2ece3cd20e4e31ceb9adcb7d8fe5068b0d2d5094): tests/first100/fixtures/P4-11.policy-deny.composition.spec.ts ran 3 cases, each frozen title once, all passed. Every path in files and argv is byte-identical there and at the dispatch 59742f4ed843fdd73518d0fe45053e831fbf5922 whose rounds the sensitivity proof cites."
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations off the dispatch `59742f4ed8`, each one product file, never merged, each run by CI's narrow job at its own SHA with a build first. M-allow (`7dea3d4b29`): packages/policy/policy-enforcement/src/index.ts returns `{ effect: 'permit', policySet }` as the enforcement decision. M-redispatch (`fb9a37ad9e`): packages/core/agent-loop/src/tool-calls.ts, in the branch for a decision that is not a permit, appends the action manifest a second time and charges the Run through `runRetryUsage`. The dispatch adds only test files to `4e932e474b`, and both files are byte-identical at the dispatch, at `4e932e474b` and at `39ce6d1c7c`.",
+        "failureSummary": "Read by full case title from each round's own narrow report. Dispatch `59742f4ed8`, run 36198190932: 3 of 3 passed. M-allow `7dea3d4b29`, run 36198208027: exactly the case \"with the deployment rule, the kernel audits the call as denied…\" red, every other case green. M-redispatch `fb9a37ad9e`, run 36198226344: exactly the case \"the denied call is not dispatched again…\" red, every other case green. All readings match artifacts/laneA/a-423-policy-deny-expectations.md (sha256 406f27ba4548378c4b511ff365fe06425953388f971661e8b85c79366309119c) and its v2 (sha256 89236d31d4f982e77ae9a326c817a4ec762debde7254131cc9aeef187f73f9aa), which changes the control overlay and leaves every prediction, written before dispatch."
+      },
+      "note": "P4-11 acceptance[0], its policy-deny kind, on the shipped mount: a tool call the deployment's policy refuses is not dispatched again and charges the Run's retry budget nothing. The SHIPPED headless profile through `bootProductionProfile`, with the Trust Kernel pinned as `apps/cli/src/profile-boot.ts` pins it, a keyless scripted model and one call of a probe tool tagged `a423-probe`. The two overlays copy the base deployment rules and differ in one added rule: `control.patch.yml` maps the tag to `read`, `deny.patch.yml` to `safety-critical`, which the shipped `kernel-hard-deny` class list refuses (packages/policy/risk-taxonomy/src/classify.ts:36). No retry layer on the shipped product receives a policy denial (the LLM layers' failure facts never carry `denied`), so the refusal is observed at the dispatch path: one audited decision for the call, no second dispatch, no charge, no retry event. Under M-allow the kernel audits a permit and the probe still does not run (probeRuns 0): reading the code, not isolated by a mutation, the tool dispatch's own risk gate also returns `hard-deny` for a hard-denied class (packages/core/tools/src/external-effect.ts:566-568). The audited-deny case is the one that reads the kernel's decision."
     }
   ]
 }
