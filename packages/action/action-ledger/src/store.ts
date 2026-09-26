@@ -170,7 +170,7 @@ function columnEpoch(epoch: LedgerGeneration): number | null {
  * out of: an entry still in flight. An `ambiguous` entry leaves only through a
  * host resolution, and `confirmed` and `compensated` are settled (BLOCKED-311).
  */
-const IN_FLIGHT_STATES = '\'prepared\', \'sent\''
+const IN_FLIGHT_STATES = '\'prepared\', \'sent\', \'confirmed\', \'ambiguous\', \'compensated\''
 
 /**
  * Move one entry to a new state, refusing a caller the current epoch has
