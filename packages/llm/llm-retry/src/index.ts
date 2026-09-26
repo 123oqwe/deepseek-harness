@@ -78,6 +78,7 @@ function localDelay(config: ResolvedRetryPolicy, retry: number, random: () => nu
  * @returns true when the shared classifier calls the failure retryable.
  */
 export function isRetryableLlmFailure(failure: LlmFailure): boolean {
+  if (failure.code === 'HTTP_408') return false
   return classifyFailure(llmFailureFacts(failure)).retryable
 }
 
