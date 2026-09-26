@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-09-26-memory-third-slice-lifecycle.md
-2026-09-26-memory-third-slice-lifecycle.md: 3e1f8e7724dddf8c541f313a6c8b868e843ce633
-2026-09-26-memory-third-slice-lifecycle.zh.md: e1d1497d8d5b321b79eb70576c9f4331894d00c9
+2026-09-26-memory-third-slice-lifecycle.md: 844a503600d42179ac06a6600afb93a8c6af1ea0
+2026-09-26-memory-third-slice-lifecycle.zh.md: 1d7d602748bcacea237a563a9274003827a8bb02
