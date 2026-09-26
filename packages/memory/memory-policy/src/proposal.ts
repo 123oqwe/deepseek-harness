@@ -37,12 +37,16 @@ export interface MemoryProposalThresholds {
 }
 
 /**
- * Decide a proposal's disposition (`must[1]`, `must[2]`).
+ * Decide a proposal's disposition (`must[0]`, `must[1]`, `must[2]`).
  *
- * Order is deliberate: sensitivity is decided before confidence, because a
- * sensitive claim goes to review however sure its writer is. A `user-asserted`
- * claim is confidence 1 by the vocabulary's definition, so only a `derived`
- * claim can fall to the confidence bar.
+ * Order is deliberate. Completeness is decided first: `must[0]` requires a
+ * proposal to state its intended use and its TTL, so one that omits either is
+ * held for review before the sensitivity and confidence rules run. Then
+ * sensitivity is decided before confidence, because a sensitive claim goes to
+ * review however sure its writer is. A `user-asserted` claim is confidence 1 by
+ * the vocabulary's definition, so only a `derived` claim can fall to the
+ * confidence bar. Evidence (`origin`) is required by the request type and
+ * checked by P6-02's `isTraceable` before this runs, so it is not re-checked.
  * @param request - the candidate write; assumed already traceable (P6-02's `isTraceable`).
  * @param thresholds - the deployment's review thresholds.
  * @returns the disposition and the reason for it.
@@ -51,6 +55,18 @@ export function decideProposal(
   request: MemoryProposeRequest,
   thresholds: MemoryProposalThresholds,
 ): MemoryProposalDecision {
+  // must[0]: a proposal must state its intended use. An omitted purpose is
+  // unstated, not a chosen absence, so it is held for review rather than
+  // auto-admitted.
+  if (request.purpose === undefined) {
+    return { disposition: 'review', reason: 'a proposal that states no intended use is held for review (must[0])' }
+  }
+  // must[0]: a proposal must state its TTL. An omitted `validUntil` is unstated;
+  // "no expiry" is a decision the writer states as `validUntil: null`, so only
+  // an omitted TTL — not an explicit null — is held for review.
+  if (request.validUntil === undefined) {
+    return { disposition: 'review', reason: 'a proposal that states no TTL is held for review; "no expiry" is stated as validUntil: null (must[0])' }
+  }
   // must[2]: sensitive content is never auto-admitted to active memory.
   if (request.sensitivity === 'sensitive') {
     return { disposition: 'review', reason: 'sensitive content requires human review before it enters active memory' }

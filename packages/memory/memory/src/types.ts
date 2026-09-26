@@ -123,13 +123,16 @@ export interface MemoryProposeRequestBase {
   /** Opaque candidate content; the canonical structured shape is P6-02's job. */
   readonly content: unknown
   /**
-   * When the claim stops being true. Omit for an open-ended claim.
+   * When the claim stops being true, as its WRITER states it.
    *
-   * RFC 3339 UTC. Its absence is not a missing value to fill in: `null` on the
-   * stored record MEANS open-ended, which is what a caller who said nothing
-   * meant.
+   * RFC 3339 UTC for a bounded claim, or `null` for one the writer states is
+   * open-ended ("no expiry"). Both are STATED. Omitting `validUntil` is NOT the
+   * same as `null`: an omitted TTL is unstated, and P6-03's proposal policy
+   * (`must[0]`) holds a proposal that leaves it out for review rather than
+   * treating silence as a chosen "never". On the stored record `null` means
+   * open-ended.
    */
-  readonly validUntil?: string
+  readonly validUntil?: string | null
   /**
    * What kind of memory this is, when the caller knows.
    *
@@ -243,6 +246,24 @@ export interface MemoryExportResult {
   readonly truncated: boolean
 }
 
+/** Name one proposal held for review, as `forget` names a record (P6-03 second slice). */
+export interface MemoryReviewRequest {
+  readonly principal: Principal
+  readonly scope: MemoryScope
+  readonly id: MemoryRecordId
+}
+
+/** List the proposals held for review that `accessContext` may see (P6-03 second slice). */
+export interface MemoryListPendingRequest {
+  readonly accessContext: MemoryAccessContext
+}
+
+/** Result of `listPending()`. `truncated` mirrors {@link MemoryQueryResult.truncated}. */
+export interface MemoryListPendingResult {
+  readonly records: readonly MemoryRecordView[]
+  readonly truncated: boolean
+}
+
 /**
  * A memory-capable backend. Registered with `ctx.memory.registerProvider`.
  * `id` is a stable string, unique within the registry. Every method's
@@ -266,6 +287,23 @@ export interface MemoryProvider {
   revise(request: MemoryReviseRequest): Promise<void>
   forget(request: MemoryForgetRequest): Promise<void>
   export(request: MemoryExportRequest): Promise<MemoryExportResult>
+  /**
+   * The proposals held for review (`pending`) that `request.accessContext` may
+   * see; scoped like `query`. The write path holds a proposal when the policy
+   * sends it to review (`must[1]`/`must[2]`) or finds it incomplete (`must[0]`).
+   */
+  listPending(request: MemoryListPendingRequest): Promise<MemoryListPendingResult>
+  /**
+   * Admit a held (`pending`) proposal to active memory. Rejected when `id` is
+   * not a `pending` record `request.scope` may see: an out-of-scope or unknown
+   * id raises `MEMORY_RECORD_NOT_FOUND`, an already-decided one `MEMORY_NOT_PENDING`.
+   */
+  approve(request: MemoryReviewRequest): Promise<void>
+  /**
+   * Refuse a held (`pending`) proposal, which then never becomes active. Same
+   * rejections as {@link MemoryProvider.approve}.
+   */
+  reject(request: MemoryReviewRequest): Promise<void>
   /**
    * How many records this workspace PATH holds under a different filesystem
    * identity — a directory rebuilt in place, most often a re-cloned repository.

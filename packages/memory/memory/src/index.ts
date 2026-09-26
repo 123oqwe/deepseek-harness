@@ -23,6 +23,7 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { Context, Service } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
+import type { Principal } from '@deepseek-ai/dsh-principal'
 import type { MemoryKind, MemoryProvenance, MemoryRelation, MemorySensitivity, MemoryStatus, MemorySubject } from './record.ts'
 import { isTraceable } from './provenance.ts'
 import type { IndexingPolicy } from './provenance.ts'
@@ -34,12 +35,15 @@ import type {
   MemoryExportResult,
   MemoryForgetRequest,
   MemoryGetRequest,
+  MemoryListPendingRequest,
+  MemoryListPendingResult,
   MemoryProposeRequest,
   MemoryProposeResult,
   MemoryProvider,
   MemoryQueryRequest,
   MemoryQueryResult,
   MemoryRecordView,
+  MemoryReviewRequest,
   MemoryReviseRequest,
   MemoryScope,
 } from './types.ts'
@@ -57,12 +61,15 @@ export type {
   MemoryExportResult,
   MemoryForgetRequest,
   MemoryGetRequest,
+  MemoryListPendingRequest,
+  MemoryListPendingResult,
   MemoryProposeRequest,
   MemoryProposeResult,
   MemoryProvider,
   MemoryQueryRequest,
   MemoryQueryResult,
   MemoryRecordView,
+  MemoryReviewRequest,
   MemoryReviseRequest,
   MemoryScope,
   MemoryRebuiltCountRequest,
@@ -298,6 +305,43 @@ export class MemoryRuntime extends Service {
     return capRecords(result, request.accessContext.contextBudget.maxRecords)
   }
 
+  /**
+   * The proposals held for review that `request.accessContext` may see, capped
+   * to its budget. A reporting channel like `export`, not a retrieval one.
+   * @param request - the complete access context.
+   * @returns the pending proposals visible to the access context.
+   */
+  async listPending(request: MemoryListPendingRequest): Promise<MemoryListPendingResult> {
+    requireCompleteAccessContext(request.accessContext)
+    const result = await this.resolve().listPending(request)
+    return capRecords(result, request.accessContext.contextBudget.maxRecords)
+  }
+
+  /**
+   * Admit a held proposal to active memory. Only a user principal decides a
+   * proposal held for review (`must[2]`): an agent or service principal is
+   * refused with `MEMORY_REVIEW_FORBIDDEN` before the provider is reached, so
+   * the proposal stays pending. The provider then rejects an id that is not a
+   * `pending` record `request.scope` may see.
+   * @param request - the target id, the deciding principal, and its scope.
+   * @returns Nothing.
+   */
+  async approve(request: MemoryReviewRequest): Promise<void> {
+    requireUserPrincipal(request.principal)
+    return this.resolve().approve(request)
+  }
+
+  /**
+   * Refuse a held proposal, which then never becomes active. Same
+   * user-principal rule and provider rejections as {@link MemoryRuntime.approve}.
+   * @param request - the target id, the deciding principal, and its scope.
+   * @returns Nothing.
+   */
+  async reject(request: MemoryReviewRequest): Promise<void> {
+    requireUserPrincipal(request.principal)
+    return this.resolve().reject(request)
+  }
+
   /** Resolve the selected provider per this class's selection semantics. */
   private resolve(): MemoryProvider {
     return resolveProvider({
@@ -345,6 +389,20 @@ function requireCompleteAccessContext(accessContext: MemoryAccessContext): void 
   const candidate: Partial<MemoryAccessContext> = accessContext
   if (!candidate.principal || !candidate.purpose || !candidate.scope || !candidate.contextBudget) {
     throw new MemoryError('memory read rejected: access context is missing principal, purpose, scope, or contextBudget', 'MEMORY_ACCESS_CONTEXT_REQUIRED')
+  }
+}
+
+/**
+ * Reject a review decision made by anyone but a person. Only a user principal
+ * approves or rejects a proposal held for review (`must[2]`); an agent or
+ * service principal is refused with `MEMORY_REVIEW_FORBIDDEN` before the
+ * provider is reached, so the proposal stays pending. The message names the
+ * caller's own kind, never whether the record exists.
+ * @param principal - the principal deciding the proposal.
+ */
+function requireUserPrincipal(principal: Principal): void {
+  if (principal.kind !== 'user') {
+    throw new MemoryError(`memory review rejected: only a user principal may approve or reject a held proposal, not a ${principal.kind} principal`, 'MEMORY_REVIEW_FORBIDDEN')
   }
 }
 
@@ -493,6 +551,17 @@ export function createLocalReferenceMemoryProvider(indexing: IndexingPolicy = DE
       const matches = [...records.values()].filter(record => inScope(record, request.accessContext.scope))
       return Promise.resolve({ records: matches.map(toRecordView), truncated: false })
     },
+    listPending(request) {
+      return Promise.resolve({ records: pendingViews(records.values(), request.accessContext.scope), truncated: false })
+    },
+    approve(request) {
+      records.set(request.id, reviewTransition(visible(request.id, request.scope), request.id, 'active'))
+      return Promise.resolve()
+    },
+    reject(request) {
+      records.set(request.id, reviewTransition(visible(request.id, request.scope), request.id, 'rejected'))
+      return Promise.resolve()
+    },
   }
 }
 
@@ -565,6 +634,19 @@ export function createFakeMemoryProvider(indexing: IndexingPolicy = DENY_SENSITI
     export(request) {
       const matches = records.filter(record => inScope(record, request.accessContext.scope))
       return Promise.resolve({ records: matches.map(toRecordView), truncated: false })
+    },
+    listPending(request) {
+      return Promise.resolve({ records: pendingViews(records, request.accessContext.scope), truncated: false })
+    },
+    approve(request) {
+      const index = visibleIndex(request.id, request.scope)
+      records[index] = reviewTransition(records[index], request.id, 'active')
+      return Promise.resolve()
+    },
+    reject(request) {
+      const index = visibleIndex(request.id, request.scope)
+      records[index] = reviewTransition(records[index], request.id, 'rejected')
+      return Promise.resolve()
     },
   }
 }
@@ -759,6 +841,28 @@ export function createDurableFileMemoryProvider(options: DurableFileMemoryProvid
         truncated: false,
       }))
     },
+    listPending(request: MemoryListPendingRequest): Promise<MemoryListPendingResult> {
+      return enqueue(async () => ({
+        records: pendingViews(await read(), request.accessContext.scope),
+        truncated: false,
+      }))
+    },
+    approve(request: MemoryReviewRequest): Promise<void> {
+      return enqueue(async () => {
+        const records = await read()
+        const index = records.findIndex(record => record.id === request.id && inScope(record, request.scope))
+        records[index] = reviewTransition(records[index], request.id, 'active')
+        await write(records)
+      })
+    },
+    reject(request: MemoryReviewRequest): Promise<void> {
+      return enqueue(async () => {
+        const records = await read()
+        const index = records.findIndex(record => record.id === request.id && inScope(record, request.scope))
+        records[index] = reviewTransition(records[index], request.id, 'rejected')
+        await write(records)
+      })
+    },
   }
 }
 
@@ -904,6 +1008,41 @@ function recordFieldsFor(request: MemoryProposeRequest, status: MemoryStatus = '
     ...request.purpose === undefined ? {} : { purpose: request.purpose },
     ...request.sensitivity === undefined ? {} : { sensitivity: request.sensitivity },
   }
+}
+
+/**
+ * The pending proposals `scope` may see, as views — the shared body of every
+ * provider's `listPending`. A record is listable when it is held for review
+ * (`status === 'pending'`) and in scope; the view drops its status like every
+ * other read.
+ * @param records - the provider's stored records.
+ * @param scope - the listing access context's scope.
+ * @returns the pending records' views, in stored order.
+ */
+function pendingViews(records: Iterable<ScopedMemoryRecord>, scope: MemoryScope): MemoryRecordView[] {
+  return [...records].filter(record => record.status === 'pending' && inScope(record, scope)).map(toRecordView)
+}
+
+/**
+ * The record a review decision produces, or the {@link MemoryError} it raises —
+ * the shared body of every provider's `approve`/`reject`. `existing` is the
+ * in-scope record the id names, or `undefined` when the scope may not see it or
+ * nothing was proposed; an out-of-scope id is indistinguishable from an unknown
+ * one. Only a `pending` record can be decided; any other status is already
+ * decided and is refused rather than re-decided.
+ * @param existing - the in-scope record the id names, or `undefined`.
+ * @param id - the id the caller named, for the error text.
+ * @param status - the status the decision moves it to (`active` for approve, `rejected` for reject).
+ * @returns the transitioned record to store.
+ */
+function reviewTransition(existing: ScopedMemoryRecord | undefined, id: MemoryRecordId, status: 'active' | 'rejected'): ScopedMemoryRecord {
+  if (existing === undefined) {
+    throw new MemoryError(`memory record "${id}" was never proposed`, 'MEMORY_RECORD_NOT_FOUND')
+  }
+  if (existing.status !== 'pending') {
+    throw new MemoryError(`memory record "${id}" is not held for review`, 'MEMORY_NOT_PENDING')
+  }
+  return { ...existing, status, updatedAt: new Date().toISOString() }
 }
 
 /** One persisted record. Identical to {@link ScopedMemoryRecord}; named apart for the on-disk document. */
