@@ -2321,13 +2321,6 @@ export class ToolRuntime extends Service {
       if (this.callerCancelled(exec)) {
         return await next({ kind: 'post-result', exec, result: toolAbortedBeforeDispatchResult() })
       }
-      // Asked again after every wait on the way here, the risk gate's ask on
-      // the native and code-mode paths and the pre-execute ask above: an
-      // emergency stop or a lost lease can arrive while an operator decides,
-      // and this is the one point every path passes before the body
-      // (BLOCKED-334 sites 1 to 3).
-      const refusal = exec.agent === undefined ? undefined : refuseNewAction(exec.agent, Date.now())
-      if (refusal !== undefined) return await next({ kind: 'final-result', exec, result: refusedDispatchResult(refusal, exec.name) })
       return await next({ kind: 'dispatch', exec })
     } catch (error: unknown) {
       return next({ kind: 'final-result', exec, result: toolErrorResult(error) })
@@ -2403,6 +2396,9 @@ export class ToolRuntime extends Service {
         () => this.dispatchToolBody(mutableExec),
       )
       const normalized = this.normalizeDispatchResult(exec, result)
+      // MUTATION M-644-order: the stop and the lease are asked only after the body ran.
+      const refusal = exec.agent === undefined ? undefined : refuseNewAction(exec.agent, Date.now())
+      if (refusal !== undefined) return { kind: 'final-result', result: refusedDispatchResult(refusal, exec.name) }
       const deferredContexts = this.deferredContexts.get(exec)
       /* v8 ignore next -- dispatch only receives executions minted by this registry's prepare stage */
       if (deferredContexts === undefined) throw new Error('tool registry scheduler invariant violated: unprepared execution')
