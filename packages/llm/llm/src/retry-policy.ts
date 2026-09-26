@@ -147,15 +147,6 @@ export function resolveRetryPolicy(
       ...resolveBackoff(undefined, `${path}.backoff`),
     })
   }
-  // Named apart from the unknown-key error so a configuration written for the
-  // removed per-provider code list says what replaced it, in either mode.
-  if ('retryableCodes' in config) {
-    throw new Error(
-      `${path}.retryableCodes is not accepted: which failures are retried is decided by the shared retry `
-      + 'classifier (@deepseek-ai/dsh-retry classifyFailure), not by a per-provider code list',
-    )
-  }
-
   switch (config.mode) {
     case 'normal': {
       validateKeys(config, NORMAL_POLICY_KEYS, path)
