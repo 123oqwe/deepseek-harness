@@ -130,9 +130,12 @@ describe('P4-06 must[2]: an inbox consumes one (source, id, epoch) once', () => 
     // the second arrival of the same activation must not reach the model
     // again. Pending-identity rejection cannot cover this: by the time the
     // redelivery arrives the first is no longer pending.
-    const { inbox } = await mountInbox('parent')
+    const { session, inbox } = await mountInbox('parent')
+    session.append('turn/start', { turn: 1 })
     inbox.append('next-step', settlement('child-a', 3))
     expect(inbox.claim('next-step', 1)).toHaveLength(1)
+    // The key is consumed when the claiming turn ENDS (B-619), not at the claim.
+    session.append('turn/end', { turn: 1, reason: { kind: 'completed' } })
 
     expect(() => { inbox.append('next-step', settlement('child-a', 3)) })
       .toThrow(DuplicateArrivalError)
@@ -189,14 +192,20 @@ describe('P4-06 must[2]: an inbox consumes one (source, id, epoch) once', () => 
     // in a fresh store and registry — the restart — and it must still refuse
     // the redelivery.
     const { session, inbox: live } = await mountInbox('parent')
+    session.append('turn/start', { turn: 1 })
     live.append('next-step', settlement('child-a', 3))
     live.claim('next-step', 1)
+    // The claim is consumed at its turn's end (B-619); the restart must replay
+    // the turn boundary too, or the cold fold sees an unconsumed claim.
+    session.append('turn/end', { turn: 1, reason: { kind: 'completed' } })
 
     const restarted = new Context()
     await restarted.plugin(SessionStore)
     const replayed = restarted.sessions.create(SessionId('parent'))
     for (const event of session.snapshotEvents()) {
       if (event.type === 'agent/inbox/spliced') replayed.append('agent/inbox/spliced', event.data)
+      else if (event.type === 'turn/start') replayed.append('turn/start', event.data)
+      else if (event.type === 'turn/end') replayed.append('turn/end', event.data)
     }
     await restarted.plugin(SessionProjectionRegistry)
     const restored = new ReactLoopInbox(restarted.sessionProjections, replayed, SILENT)
