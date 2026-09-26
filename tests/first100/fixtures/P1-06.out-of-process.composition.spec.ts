@@ -8,15 +8,26 @@
  *
  * As `apps/cli/tests/plugin-compat-boot.spec.ts` does, `runLoaderSmoke`
  * spawns the real `dsh` bin against an isolated `DSH_HOME` (`<cwd>/.dsh`)
- * holding a profile whose one bundle sits in the profile's own
- * `node_modules`, where `dsh plugin add` installs it. The bundle declares no
+ * holding a profile with two bundles in the profile's own `node_modules`,
+ * where `dsh plugin add` installs them. The third-party bundle declares no
  * execution mode, so it gets the default. Its plugin prints one
  * `A467-PLUGIN <json>` line from `apply` — its process ids, whether it read
  * the host's environment sentinel and a file in the host's harness home by
- * absolute path, and which host services `ctx.get` returned — and then ends
- * the boot through `appExit`. `runLoaderSmoke` spawns the bin with no shell,
- * so a plugin inside the launcher's process has this spec's process as its
- * parent.
+ * absolute path, and which host services `ctx.get` returned — and returns
+ * without ending the boot, because an out-of-process plugin cannot reach
+ * `appExit`. A second, in-process bundle ends the boot: the profile lists it
+ * in `dsh.profile.trustedBundles`, and its plugin calls `appExit` from
+ * `appReady`, which the P1-06 host fires only once every bundle has mounted
+ * and every out-of-process plugin's `apply` output has been forwarded, so the
+ * probe's line is on `stdout` first. `runLoaderSmoke` spawns the bin with no
+ * shell, so a plugin inside the launcher's process has this spec's process as
+ * its parent.
+ *
+ * On a tree without the P1-06 host, `trustedBundles` is inert and both
+ * bundles run in-process: the terminator still ends the boot, but the probe
+ * reaches the host — its parent is the launcher, the environment and home
+ * file read, and `ctx.get` returns host services — so these cases fail. That
+ * is the red this slice's fix (B-635) turns green.
  * @module tests/first100/fixtures/P1-06.out-of-process.composition
  */
 
@@ -32,6 +43,9 @@ const TSCONFIG = join(REPOSITORY_ROOT, 'tsconfig.json')
 
 const PROFILE = 'a467'
 const BUNDLE = 'a467-third-party-bundle'
+
+/** The in-process bundle that ends the boot; the probe cannot, once it runs out of process. */
+const TERMINATOR = 'a467-boot-terminator'
 
 /** The value the host puts in its environment and in a file in its harness home. */
 const SECRET = 'a467-host-secret-value'
@@ -68,14 +82,32 @@ function probeSource(secretPath: string): string {
     "    try { return typeof ctx?.get === 'function' && ctx.get(name) !== undefined } catch { return false }",
     '  })',
     "  process.stdout.write('A467-PLUGIN ' + JSON.stringify({ pid: process.pid, ppid: process.ppid, env, file, hostServices }) + '\\n')",
-    "  setTimeout(() => { ctx.get('appExit')(0) }, 0).unref?.()",
     '}',
     '',
   ].join('\n')
 }
 
 /**
- * Stage the profile, its one third-party bundle and the file in the host's harness home.
+ * The boot terminator's source. Listed in the profile's
+ * `dsh.profile.trustedBundles`, it runs in process and ends the boot from
+ * `appReady` — the probe cannot, once P1-06 runs it out of process with no
+ * reachable `appExit`. `appReady` fires only after every bundle has mounted
+ * and every out-of-process plugin's `apply` output has been forwarded, so the
+ * probe's `A467-PLUGIN` line is on `stdout` before the exit.
+ * @returns the module text.
+ */
+function terminatorSource(): string {
+  return [
+    `export const name = ${JSON.stringify(TERMINATOR)}`,
+    'export function apply(ctx) {',
+    "  ctx.get('appReady').onReady(() => { ctx.get('appExit')(0) })",
+    '}',
+    '',
+  ].join('\n')
+}
+
+/**
+ * Stage the profile, its third-party bundle, the in-process boot terminator and the file in the host's harness home.
  * @param cwd - the smoke's isolated working directory; `runLoaderSmoke` points `DSH_HOME` at `<cwd>/.dsh`.
  */
 function stageProfile(cwd: string): void {
@@ -89,7 +121,7 @@ function stageProfile(cwd: string): void {
     name: 'dsh-profile-a467',
     private: true,
     dependencies: {},
-    dsh: { profile: { bundles: [BUNDLE], patchReload: 'startup' } },
+    dsh: { profile: { bundles: [BUNDLE, TERMINATOR], trustedBundles: [TERMINATOR], patchReload: 'startup' } },
   }, undefined, 2)}\n`)
   writeFileSync(join(profileDir, 'cordis.patch.yml'), '[]\n')
   writeFileSync(join(pkgDir, 'package.json'), `${JSON.stringify({
@@ -101,6 +133,25 @@ function stageProfile(cwd: string): void {
   })}\n`)
   writeFileSync(join(pkgDir, 'cordis.patch.yml'), `- insert:\n    - id: ${BUNDLE}-row\n      name: ${BUNDLE}\n`)
   writeFileSync(join(pkgDir, 'index.mjs'), probeSource(secretPath))
+  stageTerminator(profileDir)
+}
+
+/**
+ * Stage the in-process boot terminator bundle in the profile's node_modules.
+ * @param profileDir - the profile's directory under the isolated harness home.
+ */
+function stageTerminator(profileDir: string): void {
+  const pkgDir = join(profileDir, 'node_modules', TERMINATOR)
+  mkdirSync(pkgDir, { recursive: true })
+  writeFileSync(join(pkgDir, 'package.json'), `${JSON.stringify({
+    name: TERMINATOR,
+    version: '1.0.0',
+    type: 'module',
+    main: './index.mjs',
+    dsh: { bundle: { patch: './cordis.patch.yml' } },
+  })}\n`)
+  writeFileSync(join(pkgDir, 'cordis.patch.yml'), `- insert:\n    - id: ${TERMINATOR}-row\n      name: ${TERMINATOR}\n`)
+  writeFileSync(join(pkgDir, 'index.mjs'), terminatorSource())
 }
 
 let report: ProbeReport | undefined
