@@ -18,6 +18,7 @@ import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'n
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { brandString } from '@deepseek-ai/dsh-brand'
+import type { PackageDigest, ProvenanceAuditRecord, TrustAnchorId } from '@deepseek-ai/dsh-plugin-provenance'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { planLockCommit, serializeLock, writeLockAtomically } from '../src/commit.ts'
 import { resolveLoadOrder } from '../src/types.ts'
@@ -111,6 +112,53 @@ describe('P1-03: the serialized lock is byte-stable', () => {
     const text = serializeLock(lock([entry('alpha')]))
     expect(text.endsWith('}\n')).toBe(true)
     expect(text.endsWith('}\n\n')).toBe(false)
+  })
+})
+
+describe('P1-02 acceptance[2]: the lock file keeps the provenance verdict an entry carries', () => {
+  const digest = brandString<PackageDigest>('sha256:alpha')
+  const anchor = brandString<TrustAnchorId>('trust-anchor-offline-signed-configured-sha256:key')
+  const at = '2026-09-26T00:00:00.000Z'
+  const trusted: ProvenanceAuditRecord = { packageDigest: digest, trust: 'trusted', trustAnchorId: anchor, verifiedAt: at }
+  const unverified: ProvenanceAuditRecord = { trust: 'unverified', reason: 'no-provenance-claim', verifiedAt: at }
+
+  it('writes a trusted and an unverified verdict that read back unchanged', () => {
+    const read = JSON.parse(serializeLock(lock([entry('alpha', { provenance: trusted }), entry('beta', { provenance: unverified })]))) as PluginLockFile
+
+    expect(read.entries.map(written => written.provenance)).toEqual([trusted, unverified])
+  })
+
+  it('writes a verdict\'s keys in one order whatever order it was built in', () => {
+    const reordered: ProvenanceAuditRecord = { verifiedAt: at, trustAnchorId: anchor, trust: 'trusted', packageDigest: digest }
+
+    expect(serializeLock(lock([entry('alpha', { provenance: reordered })])))
+      .toBe(serializeLock(lock([entry('alpha', { provenance: trusted })])))
+  })
+
+  it('writes an entry without a verdict byte for byte as the lock was written before the field existed', () => {
+    expect(serializeLock(lock([entry('alpha')]))).toBe([
+      '{',
+      '  "lockfileVersion": 1,',
+      '  "entries": [',
+      '    {',
+      '      "name": "alpha",',
+      '      "version": "1.0.0",',
+      '      "integrity": "sha512-alpha",',
+      '      "sourceCommit": "commit-alpha",',
+      '      "manifestDigest": "sha256-alpha",',
+      '      "signatureIdentity": "github:acme/alpha",',
+      '      "dependencies": [],',
+      '      "grantedCapabilities": [',
+      '        "fs:read"',
+      '      ]',
+      '    }',
+      '  ],',
+      '  "loadOrder": [',
+      '    "alpha"',
+      '  ]',
+      '}',
+      '',
+    ].join('\n'))
   })
 })
 
