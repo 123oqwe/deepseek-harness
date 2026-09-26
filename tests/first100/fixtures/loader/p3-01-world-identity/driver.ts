@@ -20,8 +20,9 @@
  * - `forbid-absent-control`: `./forbid-absent-control.patch.yml`, the same
  *   request and policy set minus the forbid rule, so the tool runs — the
  *   control that proves the forbid rule is what denies in `forbid-absent`.
- * - `register-local`: no mode overlay; after boot the driver itself registers a
- *   provider under the reserved id `local` and reports whether `register` threw.
+ * - `register-local` / `register-fenced`: no mode overlay; after boot the driver
+ *   itself registers a foreign provider under the reserved id `local` (or
+ *   `fenced`) and reports whether `register` threw and its message.
  * The scripted model calls the shipped `read` tool on the file once.
  *
  * It prints one `P3-01-IDENTITY <json>` line: the world bindings the session
@@ -52,6 +53,7 @@ const MODE_OVERLAYS = {
   'forbid-absent': './forbid-absent.patch.yml',
   'forbid-absent-control': './forbid-absent-control.patch.yml',
   'register-local': undefined,
+  'register-fenced': undefined,
 } as const
 
 /** One boot mode. */
@@ -63,8 +65,8 @@ interface Report {
   readonly worldBound: readonly { readonly provider: string; readonly spec: string }[]
   readonly worldEventTypes: readonly string[]
   readonly toolResults: readonly string[]
-  /** register-local mode only: whether registering a provider under the reserved id `local` threw, and its message. */
-  readonly registerLocal?: { readonly threw: boolean; readonly error: string }
+  /** register-local / register-fenced mode only: the reserved id tried, whether registering a foreign provider under it threw, and its message. */
+  readonly registerReserved?: { readonly id: string; readonly threw: boolean; readonly error: string }
 }
 
 /**
@@ -110,32 +112,34 @@ try {
       `run-${randomUUID()}` as Parameters<HostUserIdentityFactory>[0],
     ),
   })
-  // register-local: a plugin registers a world provider under the reserved id
-  // `local` (the shipped provider's id). Condition 3 requires register() to
-  // refuse it, naming the identity; today it reserves nothing and does not throw.
-  let registerLocal: { threw: boolean; error: string } | undefined
-  if (mode === 'register-local') {
+  // register-local / register-fenced: a plugin registers a world provider under
+  // a reserved id (`local` or `fenced`, the shipped providers' ids). Condition 3
+  // requires register() to refuse it, naming the identity; today it reserves
+  // nothing and does not throw.
+  const reservedId = mode === 'register-local' ? 'local' : mode === 'register-fenced' ? 'fenced' : undefined
+  let registerReserved: { id: string; threw: boolean; error: string } | undefined
+  if (reservedId !== undefined) {
     const reserved: WorldProvider = {
-      id: brandString<WorldProviderId>('local'),
+      id: brandString<WorldProviderId>(reservedId),
       unsatisfiableDimensions: () => [],
-      create: () => Promise.reject(new Error('p3-01 register-local probe: create is not implemented')),
-      terminate: () => Promise.reject(new Error('p3-01 register-local probe: terminate is not implemented')),
-      snapshot: () => Promise.reject(new Error('p3-01 register-local probe: snapshot is not implemented')),
-      restore: () => Promise.reject(new Error('p3-01 register-local probe: restore is not implemented')),
-      attest: () => Promise.reject(new Error('p3-01 register-local probe: attest is not implemented')),
+      create: () => Promise.reject(new Error(`p3-01 register-${reservedId} probe: create is not implemented`)),
+      terminate: () => Promise.reject(new Error(`p3-01 register-${reservedId} probe: terminate is not implemented`)),
+      snapshot: () => Promise.reject(new Error(`p3-01 register-${reservedId} probe: snapshot is not implemented`)),
+      restore: () => Promise.reject(new Error(`p3-01 register-${reservedId} probe: restore is not implemented`)),
+      attest: () => Promise.reject(new Error(`p3-01 register-${reservedId} probe: attest is not implemented`)),
     }
     try {
       ctx.get('executionWorlds')?.register(reserved)
-      registerLocal = { threw: false, error: '' }
+      registerReserved = { id: reservedId, threw: false, error: '' }
     } catch (error) {
-      registerLocal = { threw: true, error: error instanceof Error ? error.message : String(error) }
+      registerReserved = { id: reservedId, threw: true, error: error instanceof Error ? error.message : String(error) }
     }
   }
   await runFixtureTurn(ctx, { task: 'P3-01: read the file once.' })
   const events = ctx.sessions.list().flatMap(session => session.snapshotEvents())
   const report: Report = {
     mode,
-    ...registerLocal === undefined ? {} : { registerLocal },
+    ...registerReserved === undefined ? {} : { registerReserved },
     worldBound: events.flatMap(event => event.type === 'action/world-bound' ? [{ provider: event.data.provider, spec: event.data.spec }] : []),
     worldEventTypes: events.flatMap(event => event.type.startsWith('action/world-') ? [event.type] : []),
     toolResults: events.flatMap(event => event.type !== 'tool/result' ? [] : [
