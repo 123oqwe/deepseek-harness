@@ -9521,7 +9521,7 @@ The condition therefore rested on a premise I did not check. It is replaced by:
 
 ### BLOCKED-339 — P4-11's two retry decisions disagree: the circuit breaker's classifier and llm-retry's code table give opposite verdicts on eight failure kinds
 
-**Status:** OPEN (2026-09-25). Owner lane B (fix), lane A (red first, done). Ruled by the delegate (first100-delegate-1a) on lane A's A-419, whose predictions were written before the case and matched the reading case by case. P4-11 is not ACCEPTED, so nothing is withdrawn; this blocks its acceptance.
+**Status:** CLOSED 2026-09-26 (closure note at the end of this entry); opened 2026-09-25. Owner lane B (fix), lane A (red first, done). Ruled by the delegate (first100-delegate-1a) on lane A's A-419, whose predictions were written before the case and matched the reading case by case. P4-11 is not ACCEPTED, so nothing is withdrawn; this blocks its acceptance.
 
 **The clause.** P4-11 must[0]: 「统一错误 taxonomy 与 retryability；所有层消费同一 RunRetryBudget。」 One taxonomy and one retryability answer, for every layer.
 
@@ -9549,6 +9549,15 @@ The condition therefore rested on a premise I did not check. It is replaced by:
 5. Then P4-11's sign-off path continues, alongside BLOCKED-281 (b) and the policy-deny class of acceptance[0].
 
 **Owner.** lane B.
+
+**Closure note (2026-09-26, lane B).** Drafted by lane A (A-475). Fixed by B-605 `3906a7fb4a` (test follow-up `6632dfcfae`, product code unchanged).
+- **[1]** llm-retry decides retryability with `isRetryableLlmFailure`, defined as `classifyFailure(llmFailureFacts(failure)).retryable` (`packages/llm/llm-retry/src/index.ts:80`) and called first in both policy modes (`:217`); the circuit breaker classifies with the same function over `llmFailureFacts(normalizeLlmFailure(error))` (`packages/llm/llm/src/index.ts:1067`). `retryableCodes` is gone: a configuration that sets it fails at load and names the shared classifier (`packages/llm/llm/src/retry-policy.ts:152-156`).
+- **[2]** One verdict per kind, with reasons in the fix's Agent Note (`.agents/notes/implemented/bug-fix/2026-09-26-one-retryability-verdict-for-the-breaker-and-llm-retry.md`, lines 15–18): HTTP 408 retryable (decided by its status); `QUOTA` at 429, `ABORTED` and `MISSING_CREDENTIAL` caller-side; `UNSUPPORTED_CONTENT`, `UNSUPPORTED_REASONING_EFFORT` and `REQUEST_EXTENSION` malformed; `UNKNOWN` unclassified, refused because nothing says a resend will pass and counting it could open a healthy destination. The delegate approved these readings (gate3 log 2026-09-26T02:30:02Z).
+- **[3]** A-419's matrix, its llm-retry side reading `isRetryableLlmFailure`, passes 27 of 27 on the fix (dispatch `a6cdb73aad`, run 36214446347). M-605-1 (`72ca115f51`), which makes `isRetryableLlmFailure` refuse HTTP 408, turns exactly the HTTP 408 row red (dispatch `82331a6441`, run 36214456495).
+- **[4]** Both layers classify one value: a first-chunk throw is classified by the breaker as `llmFailureFacts(normalizeLlmFailure(error))` (`packages/llm/llm/src/index.ts:1067`), and the same throw becomes the finish chunk whose `failure` is `normalizeLlmFailure(error)` (`:1126-1134`, `:1201-1209`), which the loop hands to `agent/request-error` unchanged (`packages/core/agent-loop/src/agent.ts:505-512`) and llm-retry decides with the same function (`packages/llm/llm-retry/src/index.ts:217`). The two cannot give opposite verdicts on one failure. This is read from the code; no case feeds one throw to both entry points.
+- **Always mode:** A-457's three cases pass on the fix (run 36214446347); M-605-2 (`f9ebcf0b4b`), which lets always mode skip the classifier, turns exactly the two permanent-failure cases red (dispatch `a5646a30ac`, run 36214466627).
+- **[5]** P4-11's sign-off continues alongside BLOCKED-281 (b) and the policy-deny class of acceptance[0].
+- **Not covered:** no case feeds one first-chunk failure end to end through both entry points, the circuit breaker and llm-retry; condition [4] rests on the code reading above, which the delegate accepted.
 
 ### BLOCKED-340 — an action a webhook delivery triggers is attributed to a synthesized anonymous actor, not to the integration the HMAC key stands for
 
@@ -9746,7 +9755,7 @@ P1-10 is not ACCEPTED, so nothing is withdrawn. This entry blocks P1-10 acceptan
 
 ### BLOCKED-345 — after an emergency stop, a running plugin tool still performs a write it nests through `ToolRuntime.execute`: the seam skips `refuseNewAction`
 
-**Status:** OPEN (2026-09-26). Owner lane B (fix); lane A (red first, done: A-472; the takeover half is A-473). Ruled by the delegate (first100-delegate-1a) on A-472.
+**Status:** CLOSED 2026-09-26 (closure note at the end of this entry); opened 2026-09-26. Owner lane B (fix); lane A (red first, done: A-472; the takeover half is A-473). Ruled by the delegate (first100-delegate-1a) on A-472.
 - A-472's predictions were written before the case and matched case by case: `artifacts/laneA/a-472-p4-07-nested-after-stop-expectations.md`, sha256 4f5b9c1f….
 - This entry uses the clause reading BLOCKED-334 already recorded: a Run that is stopped or taken over must not start a new side effect. It is the third control the `ToolRuntime.execute` seam lacks, after the manifest and policy decision (BLOCKED-294) and the risk gate (BLOCKED-344).
 - P4-07 is not ACCEPTED (BLOCKED-334 withdrew it), so nothing is withdrawn. This entry blocks its re-acceptance.
@@ -9776,6 +9785,14 @@ P1-10 is not ACCEPTED, so nothing is withdrawn. This entry blocks P1-10 acceptan
 4. **Then** P4-07's re-acceptance path continues, alongside BLOCKED-334.
 
 **Owner.** Lane B (fix, in the same chain as B-615 and B-633); lane A (A-472 and A-473 on the fix).
+
+**Closure note (2026-09-26, lane B).** Drafted by lane A (A-481). Fixed by B-638 `e92c8d6c0f`: an action entering through `ToolRuntime.execute` is refused when its Run is stopped or taken over. After the manifest is appended and the enforcement point has decided, and before the decision is acted on, the seam asks `refuseNewAction` and returns `refusedDispatchResult` instead of dispatching (`packages/core/tools/src/index.ts:2078-2079`, in `decideDirectCall`), the native path's order.
+- **Red first:** A-472, run 36215188069: after an emergency stop, a write a running plugin tool nests through the seam ran and wrote its file (1 of 2; control green). A-473, run 36216144939: after another worker took the Run's lease, the same (1 of 2; control green, the lease acquired and `mayWrite` false).
+- **Before the fix:** run 36216299125 at `be94ccbe22`: exactly A-472's nested case red, 532 of 533 passing.
+- **At the fix:** run 36216309553: 535 of 535, A-472 2 of 2. A-473 on the fix (A-479, `96144366b3`, run 36216485428): 2 of 2.
+- **Order is measured:** M-638-order' (`cdea81b3af`), which asks only after the call has run, turns exactly three cases red (run 36217526756): A-472's nested case and `direct-seam.spec.ts`'s two BLOCKED-345 cases; both controls stay green. A-473's nested case likewise reddens under the mutation (A-479, `344235a12f`, run 36216495456). The earlier M-638-order (`9d71c2adbb`) also reddened `scoped.spec.ts:578`; lane B confirmed that was the earlier mutation re-reading the caller's `exec` after dispatch, not the fix, and M-638-order' removes it.
+- **Then** P4-07's re-acceptance path continues, alongside BLOCKED-334.
+- **Not covered:** no mutation that deletes the check outright was run, the ordering mutation is the sensitivity evidence; the takeover was produced by acquiring the Run's work item in the shipped lease store as another worker, the store call a second host's scheduler makes, not by a second process.
 
 ### BLOCKED-346 — the shipped local sandbox lets a sandboxed command connect to the Docker daemon socket, so a `workspace-write` command can reach the whole host (security, tier 1)
 
