@@ -59,7 +59,7 @@
  * `accepted=false` and names what it records in words, or, when verification
  * could not complete, says it could not read that. These are the two facts
  * a report of this gate cites (`AGENTS.md`, evidence-gate reporting). A check
- * that cannot run, for example because git or pnpm is missing, is a named
+ * that cannot run, for example because git is missing, is a named
  * mismatch, and a package that verify cannot read to the end, such as valid
  * JSON without the fields it reads, is reported as `verify could not
  * complete`, so the result line is always printed.
