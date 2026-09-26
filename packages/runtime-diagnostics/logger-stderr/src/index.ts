@@ -38,7 +38,12 @@ const LEVEL_OF: Readonly<Record<LoggerType, number>> = { error: 0, info: 1, warn
 
 /** Which message types reach stderr. */
 export interface Config {
-  /** Message types written to stderr; the others stay in the in-memory buffer only. */
+  /** Message types written to stderr, `error` and `warn` when omitted; the others stay in the in-memory buffer only. */
+  types?: LoggerType[]
+}
+
+/** {@link Config} after {@link LoggerStderr.Config} has applied its default. */
+interface ResolvedConfig extends Config {
   types: LoggerType[]
 }
 
@@ -77,8 +82,10 @@ export default class LoggerStderr extends Service {
    */
   constructor(ctx: Context, public readonly config: Config) {
     super(ctx, 'loggerStderr')
+    // Cordis passes the configuration through `LoggerStderr.Config`, whose default fills `types`.
+    const { types } = config as ResolvedConfig
     // The exporter registers itself under ctx, so the plugin's unload removes it.
-    const exporter = new StderrExporter(ctx, new Set(config.types), (line) => { this.write(line) })
+    const exporter = new StderrExporter(ctx, new Set(types), (line) => { this.write(line) })
     // Row order carries no load order, so other plugins may have logged first.
     for (const message of ctx.logger.buffer) exporter.export(message)
   }
