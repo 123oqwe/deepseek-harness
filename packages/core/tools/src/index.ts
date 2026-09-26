@@ -2011,11 +2011,10 @@ export class ToolRuntime extends Service {
    * @returns the materialized final result.
    */
   async execute(exec: ToolExecutionInput): Promise<ToolExecutionResult> {
-    return this.prepareExecution(
-      exec,
-      prepared => this.completeScheduledExecution(prepared),
-      execution => this.decideDirectCall(execution),
-    )
+    const result = await this.prepareExecution(exec, prepared => this.completeScheduledExecution(prepared))
+    // MUTATION M-615-order: the manifest and the decision come after the dispatch.
+    await this.decideDirectCall(exec as ToolExecution)
+    return result
   }
 
   /**
