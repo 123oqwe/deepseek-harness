@@ -1,0 +1,45 @@
+# Test-only overlay over the SHIPPED headless profile for P4-05 acceptance[2]
+# (reclaim after restart). The shipped `run` and `lease-store` rows stay
+# durable so a Run and its lease survive the process boundary — that is the
+# subject this observation needs. This overlay turns off the entry rows,
+# mounts no profile agent, points the durable stores under `DSH_HOME` (which
+# both phase processes share), shortens the Run lease so a killed phase-1
+# lapses quickly, and supplies a keyless model.
+#
+# No profile agent: the driver creates the one agent each phase needs, so no
+# other agent renews the lease or opens a competing Run.
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: agent-loop
+  config:
+    agents: []
+
+# A patch replaces a row's whole `config`, so the base keys are restated. Both
+# phases share these under one `DSH_HOME`, so the durable Run and its lease that
+# phase 1 opens are what phase 2 restores and adopts.
+- id: session-persistence-jsonl
+  config:
+    root: !!js dshHomePath('sessions')
+    compression: none
+
+# `run` stays enabled and durable (base's storePath restated), but `leaseMs` is
+# shortened: a SIGKILLed phase-1 stops renewing, and its lease then lapses in
+# about `leaseMs`, which phase 2 polls for before it boots.
+- id: run
+  config:
+    storePath: !!js dshHomePath('runs', 'runs.json')
+    leaseMs: 1500
+
+- insert:
+    - id: p4-05-reclaim-mock-llm
+      name: './mock-llm.ts'
