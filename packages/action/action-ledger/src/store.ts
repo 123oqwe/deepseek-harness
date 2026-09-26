@@ -186,8 +186,6 @@ function transition(
   db.exec('BEGIN IMMEDIATE')
   try {
     move(db, scope, key, epoch, state, receiptDigest ?? null, ' AND state = \'ambiguous\'')
-    db.prepare('INSERT INTO resolution (scope, key, outcome, resolved_by, resolved_at) VALUES (?, ?, ?, ?, ?)')
-      .run(scope, key, resolution.outcome, resolution.resolvedBy, resolution.resolvedAt)
     db.exec('COMMIT')
   } catch (error) {
     db.exec('ROLLBACK')
