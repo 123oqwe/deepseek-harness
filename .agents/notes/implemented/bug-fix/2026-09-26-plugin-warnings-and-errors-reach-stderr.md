@@ -26,4 +26,5 @@ BLOCKED-336: the shipped hosts mounted no logger exporter besides Cordis's in-me
 - An operator of any shipped host sees plugin warnings and errors on stderr; machine-readable stdout is unchanged.
 - The tree's loggers export at `WARN`, so the in-memory buffer keeps warnings too.
 - A pinned service stays registered until the process ends.
+- No recorded-session snapshot covers the lines. The headless snapshot rebuilds its expected stderr from the session log (`snapshots/session/headless.snapshot.ts`), and a plugin logger line is not a session event; the delegate ruled on 2026-09-26 that lane A's A-393 v2 cases on the four shipped hosts are this change's user-visible evidence.
 - Verification: lane A's A-393 v2 on the four shipped hosts, `packages/runtime-diagnostics/logger-stderr/tests/logger-stderr.spec.ts`, the reasoning-route case in `packages/bundle/headless/tests/headless.spec.ts`, the buffer case in `packages/boot/app-boot/tests/app-boot.spec.ts`, and `packages/kernel/trust-kernel/tests/teardown.spec.ts`.
