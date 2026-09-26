@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-26-a-wait-is-followed-by-a-second-stop-and-lease-check.md
+2026-09-26-a-wait-is-followed-by-a-second-stop-and-lease-check.md: 522765e1eba5920068d3a8af19292986c57061b7
+2026-09-26-a-wait-is-followed-by-a-second-stop-and-lease-check.zh.md: b86a38b0258ed16e4a3411c0b24712b9d417ee76

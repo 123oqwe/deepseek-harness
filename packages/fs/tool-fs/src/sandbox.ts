@@ -12,6 +12,7 @@
 
 import type { Context } from '@deepseek-ai/cordis'
 import type { ToolExecution } from '@deepseek-ai/dsh-tools'
+import { refusalToAct } from '@deepseek-ai/dsh-tools/external-effect'
 import type { SandboxExecutionPolicy, SandboxMode } from '@deepseek-ai/dsh-sandbox'
 import { ESCALATION_TARGETS, approveEscalation, escalationHintMarker, sandboxDenialMarker, validateEscalationArgs } from '@deepseek-ai/dsh-sandbox'
 import type { SandboxPolicyService } from '@deepseek-ai/dsh-sandbox-policy'
@@ -102,6 +103,7 @@ export class FsSandboxController {
         callId: exec.callId,
         toolName,
         signal: exec.signal,
+        refusalAfterApproval: agent => refusalToAct(agent, toolName, Date.now()),
       },
     )
     return { ...policy, mode: approvedMode }

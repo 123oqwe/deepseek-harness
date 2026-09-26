@@ -71,6 +71,7 @@ describe('approveEscalation', () => {
     agent: {},
     callId: 'call-1',
     toolName: 'bash',
+    refusalAfterApproval: () => undefined,
     ...over,
   })
 
@@ -103,6 +104,28 @@ describe('approveEscalation', () => {
       .rejects.toThrow('approval for escalating to "workspace-write" was cancelled')
     await expect(approveEscalation(req(), ingredients({ approver: approver('unavailable') })))
       .rejects.toThrow('no approval channel is available')
+  })
+
+  it('fails an approved escalation when the agent may no longer act, and asks only after a grant', async () => {
+    // BLOCKED-334 site 4: a stop or a lost lease can arrive while the human
+    // decides, so the tool is asked once more after the grant.
+    const agent = { id: 'agent-1' }
+    const asked: unknown[] = []
+    await expect(approveEscalation(req(), ingredients({
+      agent,
+      refusalAfterApproval: (seen) => {
+        asked.push(seen)
+        return 'The action "bash" was not performed: an emergency stop is in force'
+      },
+    }))).rejects.toThrow('an emergency stop is in force')
+    expect(asked).toEqual([agent])
+
+    const notAsked: unknown[] = []
+    await expect(approveEscalation(req(), ingredients({
+      approver: approver('rejected'),
+      refusalAfterApproval: (seen) => { notAsked.push(seen); return undefined },
+    }))).rejects.toThrow(/rejected/)
+    expect(notAsked).toEqual([])
   })
 
   it('an outcome outside the closed union trips the exhaustiveness guard (defensive)', async () => {

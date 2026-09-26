@@ -24,6 +24,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { defineTool, TOOL_ABORTED } from '@deepseek-ai/dsh-tools'
 import type { GenericCallView, TerminalCallView, ToolExecution, ToolResult, ToolResultView } from '@deepseek-ai/dsh-tools'
+import { refusalToAct } from '@deepseek-ai/dsh-tools/external-effect'
 import { HarnessError } from '@deepseek-ai/dsh-llm'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-jobs'
@@ -237,6 +238,7 @@ export function apply(ctx: Context, config: Config = {}): void {
         callId: exec.callId,
         toolName: 'pwsh',
         signal: exec.signal,
+        refusalAfterApproval: agent => refusalToAct(agent, 'pwsh', Date.now()),
       },
     )
   }

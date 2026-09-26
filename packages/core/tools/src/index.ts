@@ -2324,6 +2324,13 @@ export class ToolRuntime extends Service {
       if (this.callerCancelled(exec)) {
         return await next({ kind: 'post-result', exec, result: toolAbortedBeforeDispatchResult() })
       }
+      // Asked again after every wait on the way here, the risk gate's ask on
+      // the native and code-mode paths and the pre-execute ask above: an
+      // emergency stop or a lost lease can arrive while an operator decides,
+      // and this is the one point every path passes before the body
+      // (BLOCKED-334 sites 1 to 3).
+      const refusal = exec.agent === undefined ? undefined : refuseNewAction(exec.agent, Date.now())
+      if (refusal !== undefined) return await next({ kind: 'final-result', exec, result: refusedDispatchResult(refusal, exec.name) })
       return await next({ kind: 'dispatch', exec })
     } catch (error: unknown) {
       return next({ kind: 'final-result', exec, result: toolErrorResult(error) })
