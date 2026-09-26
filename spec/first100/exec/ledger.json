@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-26T22:37:10.217Z",
-  "inputDigest": "2bc8ce62558c5166f8fa9dde05369825d9e095040fd58ee6a32cb9630ad919b8",
+  "lastUpdatedUtc": "2026-09-26T22:37:34.948Z",
+  "inputDigest": "22005fd464312eab59db2bc7405fe80618e8971999f010d7ff47a6686ed3d906",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -6772,6 +6772,33 @@
             "P4-05 must[0]: `waiting_human` is a state a run can actually reach warns when the run cannot enter `waiting_human`, and still asks, so a refused advance is not silent"
           ],
           "capturedAtUtc": "2026-09-24T23:26:06.283Z"
+        },
+        "U.8": {
+          "status": "GREEN",
+          "candidateSha": "9501e34f518251c5f33ab25eab3a22e908d36587",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36268793542",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36268793542/first100-vitest-report-9501e34f518251c5f33ab25eab3a22e908d36587/vitest-report.json",
+          "observationSha256": "dbd7550fdf781d40b7599415f2ff2de65f633838b57bf1f5d358cecb48ec70f6",
+          "expectCasesMatched": [
+            "BLOCKED-332: a live agent whose Run was advanced to failed from inside a tool call, on the shipped headless profile control: the probe runs in a live Run, and the fail-run call advances the Run to failed",
+            "BLOCKED-332: a live agent whose Run was advanced to failed from inside a tool call, on the shipped headless profile control: a turn after the Run is failed starts no step",
+            "BLOCKED-332: a live agent whose Run was advanced to failed from inside a tool call, on the shipped headless profile condition 1: once the Run is terminal, the later call of the same batch does not start",
+            "BLOCKED-332: a live agent whose Run was advanced to failed from inside a tool call, on the shipped headless profile condition 1: the call that did not start gets its own error result, named apart from fenced and lease-refused",
+            "BLOCKED-332: a live agent whose Run was advanced to failed from inside a tool call, on the shipped headless profile condition 2: a turn stopped because the Run is terminal records the state it reached and the reason given for it"
+          ],
+          "capturedAtUtc": "2026-09-26T22:37:34.158Z"
+        },
+        "U.9": {
+          "status": "GREEN",
+          "candidateSha": "9501e34f518251c5f33ab25eab3a22e908d36587",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36268793542",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36268793542/first100-vitest-report-9501e34f518251c5f33ab25eab3a22e908d36587/vitest-report.json",
+          "observationSha256": "dbd7550fdf781d40b7599415f2ff2de65f633838b57bf1f5d358cecb48ec70f6",
+          "expectCasesMatched": [
+            "BLOCKED-332 on the shipped sdk profile: a client of the real host when the session's Run is advanced to failed control: the test tool advanced the Run, and the turn ended because the next step was refused",
+            "BLOCKED-332 on the shipped sdk profile: a client of the real host when the session's Run is advanced to failed condition 3: a session.event or session.status the client receives carries the state failed and the reason the transition was given"
+          ],
+          "capturedAtUtc": "2026-09-26T22:37:34.901Z"
         }
       },
       "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
@@ -8482,6 +8509,22 @@
             "the sub-dispatch scheduler (native concurrency contract) P4-12 must[4] — a code-mode sub-dispatch reserves against the ledger like a native call (§12.35-2) records an ERRORING sub-call as ambiguous, so a retry cannot repeat an effect that may have happened"
           ],
           "capturedAtUtc": "2026-09-26T01:32:58.201Z"
+        },
+        "F.3": {
+          "status": "GREEN",
+          "candidateSha": "9501e34f518251c5f33ab25eab3a22e908d36587",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36268793542",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36268793542/first100-vitest-report-9501e34f518251c5f33ab25eab3a22e908d36587/vitest-report.json",
+          "observationSha256": "dbd7550fdf781d40b7599415f2ff2de65f633838b57bf1f5d358cecb48ec70f6",
+          "expectCasesMatched": [
+            "P4-12 on the shipped profile: an ambiguous effect is reconciled by an operator resolve the entry is ambiguous before the resolve, and an approved resolve moves it to confirmed, never prepared (acceptance[1])",
+            "P4-12 on the shipped profile: an ambiguous effect is reconciled by an operator resolve an approved resolve to compensated settles the entry, never prepared (acceptance[1])",
+            "P4-12 on the shipped profile: an ambiguous effect is reconciled by an operator resolve a refused resolve leaves the entry ambiguous and records no resolution (control)",
+            "P4-12 on the shipped profile: an ambiguous effect is reconciled by an operator resolve a caller that is not the host user cannot resolve; the entry stays ambiguous (control)",
+            "P4-12 on the shipped profile: an ambiguous effect is reconciled by an operator resolve an approved resolve records who resolved the entry and to what",
+            "P4-12 on the shipped profile: an ambiguous effect is reconciled by an operator resolve after an approved resolve, a fresh reserve on the same key is no longer refused as ambiguous (acceptance[1])"
+          ],
+          "capturedAtUtc": "2026-09-26T22:37:33.224Z"
         }
       },
       "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
