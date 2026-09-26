@@ -64,6 +64,7 @@ Every field is required. `must[3]` puts `principal`, `purpose`, `scope`, and `co
 - **The consumer holds no provider reference.** It injects `memory` and calls the service; swapping the mounted provider changes what it recalls with no change here (`must[1]`, `must[2]`).
 - **Identity is resolved, never defaulted.** The principal is the agent's own when a prior run durably attached an `IdentityContext`; otherwise it is an `anonymous-dev` principal built from the declared `principalId` and `tenantId`. Nothing in a shipped profile attaches an `IdentityContext` today, so a consumer that simply required one could never read at all.
 - **Recall runs against user-authored text only.** The request history at pre-step time also holds other context plugins' injected snapshots (runtime context, sandbox and approval policy prose, this plugin's own prior recall). Folding those into the query would make what memory recalls depend on unrelated policy text, and would let one recall's output become the next recall's input.
+- **A recall is a snapshot: the newest replaces the earlier.** `Session.deriveMessages` folds every appended surface node, so keeping only the latest recall is not automatic. When a step's recall differs from the one still on the surface, the consumer shadows the earlier recall's node with an empty `system/message` — a `replace` that derives to no wire message, so the node is removed — and appends the new recall at the tail. A record forgotten since an earlier recall therefore stops reaching the model, a repeated recall within a turn does not stack, and a step whose recall is unchanged emits nothing.
 
 ### Source map
 
@@ -92,7 +93,7 @@ Every field is required. `must[3]` puts `principal`, `purpose`, `scope`, and `co
 
 #### What the model sees
 
-One user-role message per step that recalled at least one record. A step that recalled nothing injects nothing, though the read is still recorded.
+One user-role message when a step's recall differs from the one still in the request; the recall is a snapshot, so a later step's recall replaces the earlier one rather than stacking. A step that recalled nothing, or the same as the recall already present, injects nothing, though each read is still recorded.
 
 ##### Recall within the record budget
 
@@ -112,11 +113,11 @@ This recall was truncated to the configured record budget; more records may exis
 
 #### Token effect
 
-Each recall adds one message that accumulates until compaction shadows it, bounded per step by `maxRecords` and by each record's own content size. A step whose query recalls nothing costs no tokens.
+Each step's recall is one message, bounded by `maxRecords` and each record's own content size. The recall is a snapshot: a later step's recall replaces the earlier one (shadowing its node) rather than accumulating, so a turn's steps do not stack recalls. A step whose query recalls nothing, or the same content as the recall already present, costs no additional tokens.
 
 #### KV Cache effect
 
-Append-only within a step, so a recall follows the reusable request prefix. Because the recalled set is re-read every step, a turn whose recall differs from the previous turn's invalidates the request suffix from the point the recall text changed.
+A recall that repeats the one already present adds no event, so the request prefix is reused unchanged. A recall that changed shadows the earlier recall's node and appends the new one; the shadow advances the surface's replace generation and invalidates the request suffix from the shadowed node onward — the cost of dropping a stale or forgotten recall from the request rather than letting it ride along.
 
 ## Known Limitations and Deferred Work
 

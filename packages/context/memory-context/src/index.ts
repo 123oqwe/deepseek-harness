@@ -21,7 +21,7 @@ import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
 import { createAnonymousDevPrincipal, currentPrincipal, PrincipalId, TenantId } from '@deepseek-ai/dsh-principal'
 import type { MemoryAccessContext, MemoryRecordView, WorkspaceMemoryScope } from '@deepseek-ai/dsh-memory'
 import { observeWorkspaceIdentity } from '@deepseek-ai/dsh-workspace'
-import { createUserMessage } from '@deepseek-ai/dsh-llm'
+import { createSystemMessage, createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { UserMessage } from '@deepseek-ai/dsh-llm'
 import { SessionSeq } from '@deepseek-ai/dsh-session'
 
@@ -148,24 +148,15 @@ export function renderMemoryContext(records: readonly MemoryRecordView[], trunca
 }
 
 /**
- * The text that supersedes an earlier recall snapshot when a later step recalls
- * nothing (P6-03 acceptance[1]).
- *
- * A recall is a durable, `snapshot`-form message, so the request keeps only the
- * latest one this plugin produced (`ContextForm` 'snapshot' in
- * `@deepseek-ai/dsh-llm`: a later snapshot from the same producer supersedes the
- * earlier). Once a record a step recalled is forgotten, a later step that
- * recalls nothing must still
- * emit a snapshot — this one — so the forgotten content does not ride the
- * earlier snapshot into the session's later model requests. Its content is a
- * fixed marker, so it holds none of what was recalled.
- */
-const CLEARED_RECALL = 'No durable memory was recalled for this step; earlier memory-recall snapshots no longer apply.'
-
-/**
- * The recall snapshot this consumer appends: a `snapshot`-form user message
- * whose producer is this plugin, so the request retains only its latest one.
- * @param text - the rendered recall, or {@link CLEARED_RECALL} to supersede an earlier recall with nothing.
+ * The recall snapshot this consumer appends at the tail: a `snapshot`-form user
+ * message whose producer is this plugin. The recall is a snapshot — the newest
+ * one supersedes any earlier one this plugin left — but supersession is not
+ * automatic at request assembly: `Session.deriveMessages` folds every appended
+ * surface node, so a stale recall stays in the request until its node is
+ * shadowed. {@link apply} therefore shadows the earlier recall's node with an
+ * empty `system/message` (a `replace` that derives to no wire message) before
+ * appending this one, so only the latest recall reaches the model.
+ * @param text - the rendered recall.
  * @returns the message to append.
  */
 function recallSnapshot(text: string): UserMessage {
@@ -176,31 +167,34 @@ function recallSnapshot(text: string): UserMessage {
 }
 
 /**
- * Whether this consumer left an outstanding recall snapshot on `agent`'s
- * session that a later step must supersede — judged from the DURABLE session
- * log, not per-instance memory, so it survives a resume (P6-03 acceptance[1]).
+ * The latest recall this consumer still has on the model-visible surface: the
+ * newest surface node that is one of its own recall messages, with that node's
+ * seq and the text the model reads from it.
  *
- * The latest memory-context `snapshot`-form message in the log is outstanding
- * unless it is already the {@link CLEARED_RECALL} marker; a session this
- * consumer never recalled on has none. The scan stops at the first
- * memory-context snapshot from the newest end, so a session that recalls
- * regularly answers in a few steps.
- * @param agent - the agent whose session log to scan.
- * @returns whether an un-cleared recall snapshot is the latest this consumer left.
+ * It reads the SURFACE, not the raw log, so a recall a later step already
+ * shadowed is not returned — its node is no longer on the surface — and a
+ * resume that rebuilt the surface from the log sees exactly what the live
+ * session did (P6-03 acceptance[1]). A session this consumer never recalled on
+ * returns `undefined`. The scan stops at the first recall from the newest end.
+ * @param agent - the agent whose surface to scan.
+ * @returns the outstanding recall's seq and rendered text, or `undefined`.
  */
-function hasOutstandingRecall(agent: Agent): boolean {
-  for (let seq = agent.session.seq - 1; seq >= 0; seq -= 1) {
-    // oxlint-disable-next-line typescript/no-deprecated -- Existing Session history read; migration deferred.
-    const event = agent.session.eventAt(SessionSeq(seq))
+function outstandingRecall(agent: Agent): { readonly seq: SessionSeq; readonly text: string } | undefined {
+  const nodes = agent.session.surface.nodes
+  for (let index = nodes.length - 1; index >= 0; index -= 1) {
+    const seq = nodes[index]
+    if (seq === undefined) continue
+    // oxlint-disable-next-line typescript/no-deprecated -- Existing Session surface read; migration deferred.
+    const event = agent.session.eventAt(seq)
     if (event?.type !== 'user/message') continue
-    // Every message this consumer emits is a memory-recall snapshot, so its
-    // plugin source identifies one without inspecting the form.
+    // Every message this consumer appends is a recall snapshot, so its plugin
+    // source identifies one without inspecting the form.
     const source = event.data.source
     if (source.kind !== 'plugin' || source.plugin !== name) continue
-    const text = event.data.content.filter(block => block.type === 'text').map(block => block.text).join('')
-    return text !== CLEARED_RECALL
+    const text = event.data.content.filter(block => block.type === 'text').map(block => block.text).join('\n')
+    return { seq, text }
   }
-  return false
+  return undefined
 }
 
 /**
@@ -279,7 +273,7 @@ export function apply(ctx: Context, config: Config): void {
   // notice is a fact about storage, so it is worth saying once and noise on
   // every step after that; the set is per-plugin-instance and disposes with it.
   const announced = new Set<string>()
-  ctx.on('agent/pre-step', async ({ agent, turn, signal }, next): Promise<PreStepDecision> => {
+  ctx.on('agent/pre-step', async ({ agent, turn, step, signal }, next): Promise<PreStepDecision> => {
     const decision = await next()
     if (decision.kind === 'reject' || signal.aborted) return decision
     const query = openTurnQuery(agent, turn, decision.messages)
@@ -299,19 +293,30 @@ export function apply(ctx: Context, config: Config): void {
       await announceRebuiltWorkspace(ctx, agent, accessContext, announced)
       text = renderMemoryContext(records, truncated)
     }
+    // The recall is a snapshot: only the latest one this consumer left reaches
+    // the model. A step whose recall is unchanged from the one still on the
+    // surface — a repeat within a turn, or the same record recalled again —
+    // emits no surface event, so a turn's steps do not each append one.
+    const outstanding = outstandingRecall(agent)
+    if (text === outstanding?.text) return decision
+    // The recall changed — a different record, none now, or a first recall — so
+    // the earlier recall must leave the request, and with it any record
+    // forgotten since it was made (P6-03 acceptance[1]). Shadow its surface node
+    // with an empty `system/message`: a `replace` that derives to no wire
+    // message, so the node is removed rather than left as an empty user turn. It
+    // is the one null-deriving surface type a `replace` may carry
+    // `sourceEventSeqs` for. Reads across a resume see the same surface, so a
+    // resumed or replayed session's next request drops it too.
+    if (outstanding !== undefined) {
+      agent.session.append(
+        'system/message',
+        { turn, step, message: createSystemMessage('', name) },
+        { surfaceOp: { op: 'replace', startSeq: outstanding.seq, endSeq: outstanding.seq }, sourceEventSeqs: [outstanding.seq] },
+      )
+    }
+    // The new recall, when this step has one, is appended at the tail.
     if (text !== undefined) {
       return { ...decision, messages: [...decision.messages, recallSnapshot(text)] }
-    }
-    // Nothing recalled this step — an empty open-turn query, or a query that
-    // matched nothing. If an earlier step left a recall snapshot on this
-    // session, supersede it with a cleared marker so a record forgotten since
-    // is not carried into the session's later requests, whether or not this
-    // step queried and across a resume (`hasOutstandingRecall` reads the durable
-    // log). A session this consumer never recalled on adds nothing, so a boot
-    // with recall enabled but nothing to recall hands the model the same bytes
-    // as one with the rows disabled.
-    if (hasOutstandingRecall(agent)) {
-      return { ...decision, messages: [...decision.messages, recallSnapshot(CLEARED_RECALL)] }
     }
     return decision
   }, { prepend: true })
