@@ -131,7 +131,6 @@ export function buildCandidateLock(packages: readonly ObservedPackage[]): Plugin
         .sort()
         .map(dependency => brandString<PluginPackageName>(dependency)),
       grantedCapabilities: [...observed.grantedCapabilities].sort().map(capability => brandString<GrantedCapability>(capability)),
-      ...observed.provenance === undefined ? {} : { provenance: observed.provenance },
     }))
     .sort((left, right) => (left.name < right.name ? -1 : left.name > right.name ? 1 : 0))
 
