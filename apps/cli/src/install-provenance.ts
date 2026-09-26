@@ -17,7 +17,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { readProfileManifest, resolveBundleDir, type ProfileManifest } from '@deepseek-ai/dsh-app-boot'
 import { brandString } from '@deepseek-ai/dsh-brand'
-import { recordProvenanceAudit, recordUnverifiedProvenance, verifyPluginProvenance } from '@deepseek-ai/dsh-plugin-provenance'
+import { recordProvenanceAudit, verifyPluginProvenance } from '@deepseek-ai/dsh-plugin-provenance'
 import type {
   BuilderIdentity,
   PackageDigest,
@@ -79,7 +79,7 @@ export function verifyInstallProvenance(
     const tarball = localTarball(spec, profileDir)
     const claimPath = tarball === undefined ? undefined : `${tarball}${CLAIM_FILE_SUFFIX}`
     if (tarball === undefined || claimPath === undefined || !existsSync(claimPath)) {
-      if (!unchanged) records.set(name, recordUnverifiedProvenance('no-provenance-claim', verifiedAt))
+      if (!unchanged) refused.push({ name, reason: 'no-provenance-claim' })
       continue
     }
     const packageDigest = computePackageDigest(readFileSync(tarball))
