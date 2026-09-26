@@ -128,6 +128,21 @@ export interface MemoryRuntimeConfig {
  * - No id configured, multiple usable providers → `MEMORY_PROVIDER_AMBIGUOUS`.
  * - No id configured, no usable provider → `MEMORY_PROVIDER_UNAVAILABLE`.
  */
+
+/**
+ * The optional proposal-policy provider `propose` consults (P6-03,
+ * `@deepseek-ai/dsh-memory-policy`). Read through `ctx.get('memoryProposalPolicy')`
+ * so a deployment that mounts no policy keeps the pre-P6-03 behaviour. Declared
+ * here as the consumer's own structural view rather than imported, because the
+ * provider package depends on this one — importing it back would be a cycle.
+ */
+interface MemoryProposalPolicyConsumer {
+  decide(request: MemoryProposeRequest): {
+    readonly disposition: 'auto-accept' | 'review' | 'reject'
+    readonly reason: string
+  }
+}
+
 export class MemoryRuntime extends Service {
   /** Provider selection config. `$DSH_MEMORY_PROVIDER` is equivalent to `providerId`, not a hidden priority chain. */
   static Config: z<MemoryRuntimeConfig> = z.object({
@@ -200,7 +215,16 @@ export class MemoryRuntime extends Service {
    */
   async propose(request: MemoryProposeRequest): Promise<MemoryProposeResult> {
     requireTraceableClaim(request.origin)
-    return this.resolve().propose(request)
+    // P6-03 must[1]/must[2]: an optional proposal policy decides the write's
+    // disposition. No policy mounted keeps the pre-P6-03 behaviour — every
+    // traceable write is stored active.
+    const policy = this.ctx.get('memoryProposalPolicy') as MemoryProposalPolicyConsumer | undefined
+    const decision = policy?.decide(request)
+    if (decision?.disposition === 'reject') {
+      throw new MemoryError(`memory proposal rejected by policy: ${decision.reason}`, 'MEMORY_PROPOSAL_REJECTED')
+    }
+    const status: MemoryStatus = decision?.disposition === 'review' ? 'pending' : 'active'
+    return this.resolve().propose(request, status)
   }
 
   /**
@@ -425,11 +449,11 @@ export function createLocalReferenceMemoryProvider(indexing: IndexingPolicy = DE
   return {
     id: 'local-reference',
     available: () => true,
-    propose(request) {
+    propose(request, status) {
       const id = MemoryRecordId(`local-reference-${++counter}`)
       records.set(id, {
         id,
-        ...recordFieldsFor(request),
+        ...recordFieldsFor(request, status),
       })
       return Promise.resolve({ id })
     },
@@ -493,11 +517,11 @@ export function createFakeMemoryProvider(indexing: IndexingPolicy = DENY_SENSITI
   return {
     id: 'fake',
     available: () => true,
-    propose(request) {
+    propose(request, status) {
       const id = MemoryRecordId(`fake-${randomUUID()}`)
       records.push({
         id,
-        ...recordFieldsFor(request),
+        ...recordFieldsFor(request, status),
       })
       return Promise.resolve({ id })
     },
@@ -671,7 +695,7 @@ export function createDurableFileMemoryProvider(options: DurableFileMemoryProvid
     // stat() would be a network-free but still needless I/O round trip on a
     // call the seam makes for every operation).
     available: () => true,
-    propose(request: MemoryProposeRequest): Promise<MemoryProposeResult> {
+    propose(request: MemoryProposeRequest, status?: MemoryStatus): Promise<MemoryProposeResult> {
       return enqueue(async () => {
         // A per-record uuid, never an instance-local counter: a second
         // instance over the same directory can never re-mint a used id.
@@ -679,7 +703,7 @@ export function createDurableFileMemoryProvider(options: DurableFileMemoryProvid
         const records = await read()
         records.push({
           id,
-          ...recordFieldsFor(request),
+          ...recordFieldsFor(request, status),
         })
         await write(records)
         return { id }
@@ -856,9 +880,10 @@ interface ScopedMemoryRecord extends MemoryRecordView {
  * stated, so an unstated one is absent from the document rather than carrying
  * a value nobody chose.
  * @param request - the proposal as its caller stated it.
+ * @param status - the record's initial status; `active` unless the proposal policy sent it to review (`pending`).
  * @returns every stored field but the id.
  */
-function recordFieldsFor(request: MemoryProposeRequest): Omit<ScopedMemoryRecord, 'id'> {
+function recordFieldsFor(request: MemoryProposeRequest, status: MemoryStatus = 'active'): Omit<ScopedMemoryRecord, 'id'> {
   const now = new Date().toISOString()
   return {
     principal: request.principal,
@@ -867,7 +892,7 @@ function recordFieldsFor(request: MemoryProposeRequest): Omit<ScopedMemoryRecord
     createdAt: now,
     validFrom: now,
     validUntil: request.validUntil ?? null,
-    status: 'active',
+    status,
     relations: [],
     scope: request.scope,
     ...originOf(request.origin),

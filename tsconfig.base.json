@@ -385,6 +385,7 @@
       "@deepseek-ai/dsh-mcp-client": ["./packages/mcp/mcp-client/src"],
       "@deepseek-ai/dsh-memory": ["./packages/memory/memory/src"],
       "@deepseek-ai/dsh-memory-context": ["./packages/context/memory-context/src"],
+      "@deepseek-ai/dsh-memory-policy": ["./packages/memory/memory-policy/src"],
       "@deepseek-ai/dsh-message-bus": ["./packages/run/message-bus/src"],
       "@deepseek-ai/dsh-message-bus/dispatcher": ["./packages/run/message-bus/src/dispatcher.ts"],
       "@deepseek-ai/dsh-message-bus/inbox": ["./packages/run/message-bus/src/inbox.ts"],
