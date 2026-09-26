@@ -462,6 +462,8 @@ interface ToolOutputMap {
       mode: string;
       denied: boolean;
       enforcement?: string;
+      backend?: string;
+      reachableSockets?: string[];
       runnerFailed?: boolean;
     };
   };

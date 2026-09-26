@@ -85,6 +85,8 @@ class BashOutput2Sandbox(TypedDict):
     mode: str
     denied: bool
     enforcement: NotRequired[str]
+    backend: NotRequired[str]
+    reachableSockets: NotRequired[list[str]]
     runnerFailed: NotRequired[bool]
 
 class BashOutput2(TypedDict):
