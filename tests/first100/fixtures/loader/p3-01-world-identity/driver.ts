@@ -17,6 +17,9 @@
  *   can hold.
  * - `forbid-absent`: `./forbid-absent.patch.yml`, the same no-provider request
  *   plus a policy forbidding an `absent` world, so the call must be refused.
+ * - `forbid-absent-control`: `./forbid-absent-control.patch.yml`, the same
+ *   request and policy set minus the forbid rule, so the tool runs — the
+ *   control that proves the forbid rule is what denies in `forbid-absent`.
  * - `register-local`: no mode overlay; after boot the driver itself registers a
  *   provider under the reserved id `local` and reports whether `register` threw.
  * The scripted model calls the shipped `read` tool on the file once.
@@ -47,6 +50,7 @@ const MODE_OVERLAYS = {
   forging: './forging.patch.yml',
   'network-none': './network-none.patch.yml',
   'forbid-absent': './forbid-absent.patch.yml',
+  'forbid-absent-control': './forbid-absent-control.patch.yml',
   'register-local': undefined,
 } as const
 
