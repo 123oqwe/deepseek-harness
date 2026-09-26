@@ -9434,7 +9434,7 @@ The condition therefore rested on a premise I did not check. It is replaced by:
 
 ### BLOCKED-338 — the shipped Python SDK's bundled runtime cannot start: its deploy closure lacks `@pnpm/logger`, a peer of the `@pnpm/lockfile.fs` that plugin-lock pulls in
 
-**Status:** OPEN (2026-09-25). Owner lane B (fix), lane A (red first, and the P8-01 F2 case that waits on it). Ruled by the delegate (first100-delegate-1a) on the validation run of B-582's `narrow_python_runtime` job, which lane A read independently from the same run's JUnit. The number 337 is skipped: lane B's artifacts from 2026-09-19 already carry the name `blocked-337-*.diff` for a draft that never landed, and one number should not name two things.
+**Status:** CLOSED 2026-09-26 (closure note at the end of this entry); opened 2026-09-25. Owner lane B (fix), lane A (red first, and the P8-01 F2 case that waits on it). Ruled by the delegate (first100-delegate-1a) on the validation run of B-582's `narrow_python_runtime` job, which lane A read independently from the same run's JUnit. The number 337 is skipped: lane B's artifacts from 2026-09-19 already carry the name `blocked-337-*.diff` for a draft that never landed, and one number should not name two things.
 
 **What was measured.**
 - Run 36194907809 at `164ccd65cf` (the candidate `4e932e474b` plus B-582's two workflow commits) staged both runtime carriers with `scripts/build-exe-for-python-sdk.ts` under `DSH_BUILD_CLIENT_PROFILE=official`. That is the script and the profile the release builder uses (`.github/workflows/build-exe-for-python-sdk.yml:251-252`).
@@ -9470,6 +9470,32 @@ The condition therefore rested on a premise I did not check. It is replaced by:
 5. **Then** P8-01 F2 (lane A's A-375) runs on the fixed carrier.
 
 **Owner.** lane B (fix, guard); lane A (A-375 on the fixed carrier).
+
+**Closure note (2026-09-26, delegate first100-delegate-1a).** Each condition, with the runs that show it. Runs are `narrow_python_runtime` unless named otherwise; readings were taken from each run's own JUnit report.
+
+- **Condition 1, red first.** Run 36194907809 at `164ccd65cf` (the candidate `4e932e474b` plus the job). All 6 cases of `python/sdk/tests/test_bundled_runtime.py` failed and none was skipped. Both carriers exited 1 at start: `Cannot find package '@pnpm/logger'`.
+- **Condition 2, the fix, in place.** The runtime's composition root had to declare what its profiles load, because the carrier is deployed with `--config.auto-install-peers=false` and the plugin packages carry their service dependencies as peers.
+  - Fix 1 (`19f9cf7c4c`, in the candidate as `540b45c7c2`): `dsh-plugin-lock` declares `@pnpm/logger`, the peer of `@pnpm/lockfile.fs`.
+  - Fix 2 (`f06f0f3cf0` / `313f9e0540`): `python/sdk-runtime` declares the four workspace peers that only the CLI's subtree reaches.
+  - Fix 3 (`c084d5c118` / `d97a8477d3`): after a census of everything the sdk and sdk-minimal profiles load at start, `python/sdk-runtime` declares 51 packages. The census read imports with the TypeScript parser, starting from the bootstrap imports, the profile's bundles and its enabled plugin rows.
+  - Fix 3b (`6797a0b4cc` / `5b161481a2`): headless and acp's three packages. `sdk-runtime` README:15 (en/zh) now says the carrier runs sdk, sdk-minimal, headless and acp, and does not run web.
+  - Run 36200091417 at fix 3: 6 of 6 passed, 0 skipped, on both carriers.
+  - Run 36200543709 (A-375 at `77c139df26` on fix 3): 8 of 8 passed, including the real-handshake case on both carriers.
+- **Condition 3, mutations.**
+  - M-599a (logger removed, the four kept), run 36197709203: 6 of 6 failed, `@pnpm/logger` missing.
+  - M-599b (the four removed, logger kept), run 36197724497: 6 of 6 failed, `dsh-plugin-provenance` missing.
+  - M-599c (fix 3 removed) has the same tree as fix 2, so its reading is run 36197694562: 6 of 6 failed, `cannot resolve profile bundle "@deepseek-ai/dsh-base"`.
+  - Each removal brings back exactly the gap that part of the fix closes.
+- **Condition 4, the guard.** `scripts/verify-runtime-closure` gains two checks (`1d5482e18f`), with a negative case (`9732f6bd5f`) in which one missing declaration makes the check fail.
+  - `verifyCarrierProfiles`: every workspace package that a carrier profile (sdk, sdk-minimal, headless, acp) loads at start, and each non-optional workspace peer of those packages, must be a `workspace:` dependency of the root. Web is excluded by name, with the reason written; the check fails if an excluded name is no longer a template.
+  - `verifyDeployClosurePeers`: every non-optional peer in the deploy closure must be installed.
+  - In the batch 9r precheck, run 36205416008 (723 of 723 passed), all 13 cases of `scripts/verify-runtime-closure.spec.ts` passed. They include three negative cases: "fails on a single missing declaration", "fails when an excluded profile is no longer a template" and "fails on a non-optional peer that no package of the deploy closure installs". Beside them sits the positive case, "accepts the peer once a package of the closure depends on it".
+- **Condition 5.** P8-01 F2 (A-375) ran on the fixed carrier; see condition 2.
+
+**Not covered.**
+- Headless and acp have no carrier case. Their evidence is the census and the CI closure check.
+- Web does not run on the carrier. It lacks 115 packages, and client packages hold 91 undeclared third-party imports. The README says so, and B-608 tracks it as a follow-up.
+- Nothing was measured on a released wheel. Everything was measured on carriers that CI staged with the release builder's own script and profile.
 
 ### BLOCKED-340 — an action a webhook delivery triggers is attributed to a synthesized anonymous actor, not to the integration the HMAC key stands for
 
