@@ -720,7 +720,8 @@ function appendActionManifest(
   // the one enforcement point through this call, and a third path that skipped
   // it would also have skipped the manifest — which
   // `assertManifestPrecedesExecution` already refuses.
-  const decision = decideManifestedAction(ctx, agent, appended.manifest, origin, policy, presentedToken)
+  // mutation/a433-m-bypass (never merged): a delegated child's dispatch skips the enforcement point.
+  const decision = session.header.origin === 'subagent' ? undefined : decideManifestedAction(ctx, agent, appended.manifest, origin, policy, presentedToken)
   return {
     key: appended.manifest.idempotencyKey,
     argumentsHash,
