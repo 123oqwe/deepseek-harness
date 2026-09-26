@@ -19352,6 +19352,147 @@
         "failureSummary": "Narrow run 36260015584 on e41298f3cc ran the whole tests/release/evidence-package.spec.ts: 83 of 84 cases passed, and the one that failed is exactly \"fails with a named mismatch and still prints its result line when git cannot run\", at toContain('baseline re-derivation failed'); the two acceptance[0] cases passed. The unmutated tree passed all three in the full run 36254411017 at d25574ecbc."
       },
       "note": "P0-07 P-stage supplement 2, replacing the 2026-09-24T15:54:51Z entry after B-626 took pnpm out of the baseline re-derivation (A-516; the delegate, first100-delegate-1a, gate3 2026-09-26T13:40:10Z and 13:44:45Z). The full run 36254411017 at d25574ecbc passed all three cases, but this entry is frozen after it, so the supplement cell is observed by the next full run. The observing tree is pinned at refs/dsh/freeze/P0-07.P.2/2026-09-26T17-54-29.000Z -> d25574ecbc9bc4c2ea67e6988e2000981aadd069, whose tree is dryRunProof.treeSha."
+    },
+    {
+      "epic": "P1-10",
+      "stage": "F",
+      "supplements": {
+        "epic": "P1-10",
+        "stage": "F"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "apps/cli/tests/plugin-migration-crash.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version covers every phase the transaction declares",
+        "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at freeze leaves the old version whole and usable",
+        "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at snapshot leaves the old version whole and usable",
+        "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at quarantine leaves the old version whole and usable",
+        "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at validate leaves the old version whole and usable",
+        "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at switch, before the health check confirmed the new data, leaves the old version whole and usable",
+        "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at health-check, once the upgrade is recorded as achieved, leaves the new version whole and usable",
+        "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version control: a crash at switch with the plugin and its unit named alike leaves the old version whole and usable"
+      ],
+      "files": [
+        "apps/cli/tests/plugin-migration-crash.spec.ts",
+        "apps/cli/tests/fixtures/plugin-migration-crash-child.ts",
+        "apps/cli/src/plugin-migration.ts",
+        "packages/plugin/plugin-migrations/src/transaction.ts",
+        "packages/storage/storage/src/index.ts",
+        "packages/storage/storage-json/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-26T17:57:41.000Z",
+      "dryRunProof": {
+        "treeSha": "527dd1617b2e901fb39b6d11f9550848db8a756b",
+        "testsDiscovered": 8
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-624-1, run 36242335119 at mutation commit 4347579348: reverts B-624 so recovery rolls back the unit named after the plugin (drops the `record.unit ?? record.plugin` read at packages/plugin/plugin-migrations/src/transaction.ts:293, putting the plugin name back).",
+        "failureSummary": "Exactly 1 of 8 reddened, and it is the frozen switch-crash case: 'a crash at switch, before the health check confirmed the new data, leaves the old version whole and usable' — AssertionError: expected 'new' to be 'old' at expectWhole (apps/cli/tests/plugin-migration-crash.spec.ts:224:35), with v1 reporting `unit 'notes': stored version 2 != expected 1`. The other 7 (including the alike-named control) stayed green, so the mutation discriminates rather than breaking the file wholesale."
+      },
+      "note": "P1-10 F-stage supplement 1: acceptance[0]'s data half. A crash at every phase of a data upgrade, then a restart into recovery, leaves one whole version (BLOCKED-341; red first A-446, 13616aa09e on the candidate; fix B-624, 5552e3f53b). Frozen by the delegate's ruling (first100-delegate-1a, gate3 2026-09-26T17:44:02Z) from lane A's A-533 draft (artifacts/laneA/a-533-freeze-drafts.md, sha256 2dbd6f5a…). expectCases are the full names in the full run 36254411017 at d25574ecbc, where each passed once; the entry is frozen after that run, so its cell is observed by the next full run. files add the child the spec spawns (fixtures/plugin-migration-crash-child.ts) and the storage hub the spec reads the data through. The observing tree is pinned at refs/dsh/freeze/P1-10.F.1/2026-09-26T17-57-41.000Z -> d25574ecbc9bc4c2ea67e6988e2000981aadd069, whose tree is dryRunProof.treeSha."
+    },
+    {
+      "epic": "P1-10",
+      "stage": "F",
+      "supplements": {
+        "epic": "P1-10",
+        "stage": "F"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "apps/cli/tests/plugin-migration-cli-crash.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-10 acceptance[0] on the CLI path: after a killed dsh plugin upgrade and a rerun, code and data are at one version control: an upgrade that is not killed leaves version 2 code and version 2 data, readable",
+        "P1-10 acceptance[0] on the CLI path: after a killed dsh plugin upgrade and a rerun, code and data are at one version killed once the new code is installed and before the transaction starts, the rerun leaves code and data at one version",
+        "P1-10 acceptance[0] on the CLI path: after a killed dsh plugin upgrade and a rerun, code and data are at one version killed in the plugin migrate step, the rerun leaves code and data at one version",
+        "P1-10 acceptance[0] on the CLI path: after a killed dsh plugin upgrade and a rerun, code and data are at one version killed in the plugin validate step, the rerun leaves code and data at one version",
+        "P1-10 acceptance[0] on the CLI path: after a killed dsh plugin upgrade and a rerun, code and data are at one version killed once the switch is recorded and before the health check is, the rerun leaves code and data at one version",
+        "P1-10 acceptance[0] on the CLI path: after a killed dsh plugin upgrade and a rerun, code and data are at one version killed once the upgrade is recorded as achieved, the rerun leaves code and data at one version"
+      ],
+      "files": [
+        "apps/cli/tests/plugin-migration-cli-crash.spec.ts",
+        "apps/cli/src/bin.ts",
+        "apps/cli/src/plugin.ts",
+        "apps/cli/src/plugin-migration.ts",
+        "packages/plugin/plugin-migrations/src/transaction.ts",
+        "packages/boot/app-boot/src/profile.ts",
+        "packages/storage/storage/src/index.ts",
+        "packages/storage/storage-json/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-26T17:57:41.000Z",
+      "dryRunProof": {
+        "treeSha": "527dd1617b2e901fb39b6d11f9550848db8a756b",
+        "testsDiscovered": 6
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-625-1, run 36242836459 at mutation commit c96ccd2b39 (never merged): apps/cli/src/plugin.ts clears the install record right after recording it (clearInstallRecord after recordInstall, :395), so B-625's persisted InstallRecord (recordInstall and readInstallRecord in apps/cli/src/plugin-migration.ts) is gone before pnpm runs, and a rerun after a code-installed kill cannot finish or undo the install.",
+        "failureSummary": "Exactly 3 of 6 reddened, and they are the three frozen kill cases: 'killed once the new code is installed and before the transaction starts', 'killed in the plugin migrate step', and 'killed in the plugin validate step' — each AssertionError: expected { code: 2, data: 1 } to deeply equal { code: 1, data: 1 } at expectOneVersion (apps/cli/tests/plugin-migration-cli-crash.spec.ts:338:73), unit error `unit 'notes': stored version 1 != expected 2`. The control and the two racy-window cases stayed green, so the mutation discriminates."
+      },
+      "note": "P1-10 F-stage supplement 2: acceptance[0]'s code half on the CLI path. After a killed dsh plugin upgrade and a rerun, code and data are at one version (BLOCKED-342, a defect apart from BLOCKED-341; red first A-447, 6de4ef07c2 on the candidate; fix B-625, 0f33ca00a4). Frozen by the delegate's ruling (first100-delegate-1a, gate3 2026-09-26T17:44:02Z) from lane A's A-533 draft (artifacts/laneA/a-533-freeze-drafts.md, sha256 2dbd6f5a…). expectCases are the full names in the full run 36254411017 at d25574ecbc, where each passed once; the entry is frozen after that run, so its cell is observed by the next full run. files add the CLI entry the spec runs (apps/cli/src/bin.ts), the profile setup it calls (app-boot profile.ts) and the storage it reads. The observing tree is pinned at refs/dsh/freeze/P1-10.F.2/2026-09-26T17-57-41.000Z -> d25574ecbc9bc4c2ea67e6988e2000981aadd069, whose tree is dryRunProof.treeSha."
+    },
+    {
+      "epic": "P5-10",
+      "stage": "U",
+      "supplements": {
+        "epic": "P5-10",
+        "stage": "U"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P5-10.interrupt-across-restart.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P5-10 A-463: a child interrupted before a graceful host restart, on the shipped headless profile control: the interrupt is accepted, a prompt sent after it is refused before the restart, and the child's log read afterwards holds its turn",
+        "P5-10 A-463: a child interrupted before a graceful host restart, on the shipped headless profile a prompt after the restart does not wake the interrupted child",
+        "P5-10 A-463: a child interrupted before a graceful host restart, on the shipped headless profile the interrupt, with an epoch, is readable in the durable bus after the restart",
+        "P5-10 A-463: a child interrupted before its host crashes, on the shipped headless profile control: the interrupt is accepted, and the child's log read after the restart holds its turn",
+        "P5-10 A-463: a child interrupted before its host crashes, on the shipped headless profile a prompt after the restart does not wake the interrupted child",
+        "P5-10 A-463: a child interrupted before its host crashes, on the shipped headless profile the interrupt, with an epoch, is readable in the durable bus after the restart"
+      ],
+      "files": [
+        "tests/first100/fixtures/P5-10.interrupt-across-restart.composition.spec.ts",
+        "tests/first100/fixtures/loader/p5-10-restart/driver.ts",
+        "tests/first100/fixtures/loader/p5-10-restart/base.patch.yml",
+        "tests/first100/fixtures/loader/p5-10-restart/mock-llm.ts",
+        "packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts",
+        "packages/test-support/loader-smoke/tests/fixtures/production-profile.ts",
+        "packages/test-support/loader-smoke/src/index.ts",
+        "packages/test-support/loader-smoke/src/agent-turn.ts",
+        "packages/subagent/subagent/src/interrupt-record.ts",
+        "packages/subagent/subagent/src/continuation-activation.ts",
+        "packages/subagent/subagent/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-26T17:57:41.000Z",
+      "dryRunProof": {
+        "treeSha": "527dd1617b2e901fb39b6d11f9550848db8a756b",
+        "testsDiscovered": 6
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-470, run 36248441179 at mutation commit cc5347a5c1: the A-470 instrument mutation on the CURRENT (durable-bus) spec — it drops the durable-bus interrupt record, so both the not-woken behavior and the readable-in-durable-bus predicate lose their basis. This is the sensitivity proof that matches the frozen titles as they stand at d25574ecbc.",
+        "failureSummary": "4 of 6 reddened, the two controls green: both 'a prompt after the restart does not wake the interrupted child' cases — AssertionError: expected { outcome: 'delivered' } to deeply equal { outcome: 'refused' } (spec:248 graceful, :268 crash) — and both 'the interrupt, with an epoch, is readable in the durable bus after the restart' cases — AssertionError: expected null to deeply equal { ... } at expectBusInterrupt (spec:226:54). The mutation discriminates: only the four fix-dependent cases fail."
+      },
+      "note": "P5-10 U-stage supplement 2, on the shipped headless profile: must[2] and acceptance[0] after a restart. A child interrupted before a graceful restart or a crash is not woken by a later prompt, and the interrupt, with its epoch, is readable in the durable bus (BLOCKED-343; red first A-463, 80ebf0d426, re-pinned to the durable bus by A-470, f310e43ade on the candidate; fix B-631, 08dd4ed361). Frozen by the delegate's ruling (first100-delegate-1a, gate3 2026-09-26T17:44:02Z) from lane A's A-533 draft (artifacts/laneA/a-533-freeze-drafts.md, sha256 2dbd6f5a…). expectCases are the full names in the full run 36254411017 at d25574ecbc, where each passed once; the entry is frozen after that run, so its cell is observed by the next full run. Stage U, as the delegate ruled, after P5-10 U.1 and P4-01 U.3 and U.4. B-631's own fix mutation M-631-1 (run 36247150154 at 4e0a788479) reddened the titles before A-470 re-pinned them (\"readable in the child's log\"), which no longer exist at d25574ecbc; M-470 is the sensitivity proof for these titles. files add the restart driver, its profile overlay and mock model, and the loader-smoke fixtures and entry the driver uses. The observing tree is pinned at refs/dsh/freeze/P5-10.U.2/2026-09-26T17-57-41.000Z -> d25574ecbc9bc4c2ea67e6988e2000981aadd069, whose tree is dryRunProof.treeSha."
     }
   ]
 }

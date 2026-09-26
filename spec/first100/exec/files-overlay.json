@@ -1361,13 +1361,32 @@
     },
     {
       "epic": "P1-10",
+      "path": "apps/cli/src/bin.ts",
+      "kind": "source",
+      "stages": [
+        "F.2"
+      ],
+      "reason": "The CLI entry F.2's kill-and-rerun cases run as a subprocess: each case starts `dsh plugin` through this file, so how it dispatches the plugin command is part of what they observe."
+    },
+    {
+      "epic": "P1-10",
       "path": "apps/cli/src/plugin-migration.ts",
       "kind": "source",
       "stages": [
         "U",
-        "F"
+        "F",
+        "F.1",
+        "F.2"
       ],
       "reason": "The production caller the transaction exists for, plus the bridge from P1-01's manifest to this epic's vocabulary. `dsh plugin add`/`update` is the only place that knows (plugin, from, to), and it is where the upgrade lease has to span both halves of the move -- the package manager and the data. The registry named the decision package, which by construction has no caller."
+    },
+    {
+      "epic": "P1-10",
+      "path": "apps/cli/tests/fixtures/plugin-migration-crash-child.ts",
+      "kind": "test",
+      "stages": [
+        "F.1"
+      ]
     },
     {
       "epic": "P1-10",
@@ -1379,11 +1398,36 @@
     },
     {
       "epic": "P1-10",
+      "path": "apps/cli/tests/plugin-migration-cli-crash.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F.2"
+      ]
+    },
+    {
+      "epic": "P1-10",
+      "path": "apps/cli/tests/plugin-migration-crash.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F.1"
+      ]
+    },
+    {
+      "epic": "P1-10",
       "path": "apps/cli/tests/plugin-migration-fault-matrix.spec.ts",
       "kind": "test",
       "stages": [
         "F"
       ]
+    },
+    {
+      "epic": "P1-10",
+      "path": "packages/boot/app-boot/src/profile.ts",
+      "kind": "source",
+      "stages": [
+        "F.2"
+      ],
+      "reason": "F.2's cases create and locate the profile the upgrade runs in with `initProfile` and `resolveProfileDir`, both defined here."
     },
     {
       "epic": "P1-10",
@@ -1408,7 +1452,9 @@
       "path": "packages/storage/storage-json/src/index.ts",
       "kind": "source",
       "stages": [
-        "U"
+        "U",
+        "F.1",
+        "F.2"
       ],
       "reason": "The JSON backend's migration facet: snapshot as a copy beside the unit, switch as a rename with the replaced document kept as the rollback target, plus `stampedVersion`, `digestUnit`, `readSnapshot` and `exportUnit`. It reads and writes the SAME document `kv.open` parses, through `format.ts`'s own `serialize` -- an earlier version invented `{ version, records }`, which this backend never writes, and every case over it passed because each seeded the invention."
     },
@@ -1420,6 +1466,16 @@
         "U"
       ],
       "reason": "The SQLite backend's migration facet, created by this epic. One database holds every unit, so a snapshot cannot be a file copy: it is a sidecar database carrying just that unit's rows, produced by ATTACH inside the live database's own transaction, and a switch is a row replacement in a single transaction. A `:memory:` database exposes no facet at all, because it has no directory to hold a sidecar -- an upgrade on that medium is refused by name rather than failing partway through."
+    },
+    {
+      "epic": "P1-10",
+      "path": "packages/storage/storage/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "F.1",
+        "F.2"
+      ],
+      "reason": "The storage hub F.1's and F.2's cases mount over the JSON backend to read the plugin's unit after recovery, so the version they report as whole is read through this code."
     },
     {
       "epic": "P1-10",
@@ -4636,6 +4692,15 @@
     },
     {
       "epic": "P5-10",
+      "path": "packages/subagent/subagent/src/continuation-activation.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "B-631's fix (08dd4ed361): a human parent's interrupt is committed to the durable bus here (`recordInterrupt`), after the parent address is verified and before the cancel signal, so it never takes effect without its record. U.2's cases interrupt the child through this path before each restart."
+    },
+    {
+      "epic": "P5-10",
       "path": "packages/subagent/subagent/src/control-convergence.ts",
       "kind": "source",
       "stages": [
@@ -4663,6 +4728,15 @@
     },
     {
       "epic": "P5-10",
+      "path": "packages/subagent/subagent/src/interrupt-record.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "B-631's fix (08dd4ed361): `commitInterrupt` writes the interrupt with its lease epoch to the durable bus in one synchronous commit, and a restarted host reads it back. U.2's \"readable in the durable bus\" cases read that record, and M-470, the entry's sensitivity proof, mutates this file."
+    },
+    {
+      "epic": "P5-10",
       "path": "packages/subagent/subagent/tests/control-convergence.spec.ts",
       "kind": "test",
       "stages": [
@@ -4684,6 +4758,72 @@
       "stages": [
         "U",
         "F"
+      ]
+    },
+    {
+      "epic": "P5-10",
+      "path": "packages/test-support/loader-smoke/src/agent-turn.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "Test support, not product code: `runFixtureTurn` runs the turns U.2's restart driver drives on the shipped headless profile, and the cases read what the driver reports from them."
+    },
+    {
+      "epic": "P5-10",
+      "path": "packages/test-support/loader-smoke/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "Test support, not product code: `runLoaderSmoke` boots the shipped headless profile around U.2's restart driver and returns the report the cases read."
+    },
+    {
+      "epic": "P5-10",
+      "path": "packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P5-10",
+      "path": "packages/test-support/loader-smoke/tests/fixtures/production-profile.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P5-10",
+      "path": "tests/first100/fixtures/loader/p5-10-restart/base.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P5-10",
+      "path": "tests/first100/fixtures/loader/p5-10-restart/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P5-10",
+      "path": "tests/first100/fixtures/loader/p5-10-restart/mock-llm.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P5-10",
+      "path": "tests/first100/fixtures/P5-10.interrupt-across-restart.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
       ]
     },
     {
