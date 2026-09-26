@@ -60,6 +60,11 @@ export async function runCli(): Promise<void> {
       )
       break
     }
+    case 'memory': {
+      const { runMemoryReview } = await import('./memory-review.ts')
+      await runMemoryReview(invocation.profile, invocation.patches, invocation.args)
+      break
+    }
     default:
       invocation satisfies never
       throw new Error(`dsh: unhandled invocation mode ${JSON.stringify(invocation)}`)

@@ -224,6 +224,9 @@ importers:
       '@deepseek-ai/dsh-host-plugin-inventory':
         specifier: workspace:^
         version: link:../../packages/host/plugin-inventory
+      '@deepseek-ai/dsh-host-user-id':
+        specifier: workspace:^
+        version: link:../../packages/identity/host-user-id
       '@deepseek-ai/dsh-http-proxy':
         specifier: workspace:^
         version: link:../../packages/util/http-proxy
@@ -242,6 +245,9 @@ importers:
       '@deepseek-ai/dsh-mcp-client':
         specifier: workspace:^
         version: link:../../packages/mcp/mcp-client
+      '@deepseek-ai/dsh-memory':
+        specifier: workspace:^
+        version: link:../../packages/memory/memory
       '@deepseek-ai/dsh-persona':
         specifier: workspace:^
         version: link:../../packages/preset/persona
@@ -266,6 +272,9 @@ importers:
       '@deepseek-ai/dsh-policy-enforcement':
         specifier: workspace:^
         version: link:../../packages/policy/policy-enforcement
+      '@deepseek-ai/dsh-principal':
+        specifier: workspace:^
+        version: link:../../packages/identity/principal
       '@deepseek-ai/dsh-pwsh-local':
         specifier: workspace:^
         version: link:../../packages/shell/pwsh-local
@@ -389,6 +398,9 @@ importers:
       '@deepseek-ai/dsh-workflow-worker-thread':
         specifier: workspace:^
         version: link:../../packages/workflow/workflow-worker-thread
+      '@deepseek-ai/dsh-workspace':
+        specifier: workspace:^
+        version: link:../../packages/workspace/workspace
       '@deepseek-ai/schemastery':
         specifier: link:../../vendor/schemastery
         version: link:../../vendor/schemastery
