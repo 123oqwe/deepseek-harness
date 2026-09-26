@@ -1,6 +1,6 @@
 /**
  * Suite for the proposal-policy service (`MemoryProposalPolicyService`,
- * `../src/policy.ts`): mounting it on a Context registers `memoryProposalPolicy`,
+ * `../src/index.ts`): mounting it on a Context registers `memoryProposalPolicy`,
  * and its `decide` applies the deployment's review threshold to a candidate write
  * — the seam `dsh-memory`'s `propose` reaches through `ctx.get`. The service has
  * no injections, so a bare Context mounts it.

@@ -69,8 +69,7 @@ base bundle 默认启用本插件，所以你几乎不用手动挂它——凡 p
 | 文件 | 职责 |
 |---|---|
 | [`src/proposal.ts`](src/proposal.ts) | 纯函数 `decideProposal` 及其决策/阈值类型 |
-| [`src/policy.ts`](src/policy.ts) | `MemoryProposalPolicyService`（挂载 `memoryProposalPolicy`）及其 `Config` |
-| [`src/index.ts`](src/index.ts) | 包入口：服务默认导出、`decideProposal` 与决策类型 |
+| [`src/index.ts`](src/index.ts) | 包入口：`MemoryProposalPolicyService`（挂载 `memoryProposalPolicy`）及其 `Config`，在此声明以便 config-catalog 生成器识别，外加 `decideProposal` 重导出与决策类型 |
 
 </details>
 
@@ -101,6 +100,7 @@ base bundle 默认启用本插件，所以你几乎不用手动挂它——凡 p
 <a id="known-limitations-and-deferred-work"></a>
 
 - **`must[0]` 完整性与 review 生命周期现已建；冲突与擦除归第三片。** 除敏感度与置信度外，本策略现在也把省略预期用途（`purpose`）或省略 TTL（`validUntil`）的提案扣为 review——省略的 `validUntil` 与陈述的 `validUntil: null`（不设期限）不同。`@deepseek-ai/dsh-memory` 新增了让人工对被扣提案采取行动的 review 动词——`listPending`、`approve`、`reject`，且只有 user principal 能决定。仍延期到第三片：merge/supersede（冲突决策）、带 tombstone 的 forget、以及带来源与冲突状态的 export（`must[3]`、`acceptance[1]`、`acceptance[2]`）。
+- 不发布运行期不变式伴生包：该服务无状态、不拥有任何两个观察者会分歧的关系——它对每个请求施用纯函数 `decideProposal`、不存储任何东西——故校验器无从比对。
 
 <a id="dev-note"></a>
 ### 开发备注
