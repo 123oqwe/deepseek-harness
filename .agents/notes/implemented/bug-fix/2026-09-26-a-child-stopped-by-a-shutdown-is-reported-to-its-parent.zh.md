@@ -23,5 +23,5 @@ BLOCKED-333；P5-10 must[2] 与 must[3]。宿主在一个可继续的子 agent �
 
 - 准入在卸载宣布时关闭，而不是在 drain 开始时关闭，早几个微任务。
 - 这个修复依赖 Cordis 在 fiber 的 disposer 运行之前发出 `internal/status`。一旦这一点改变，lane A 的 shutdown-while-cancelling 用例会失败。
-- 不涵盖：仍然写不进的结算只经 `ctx.logger` 记录，而出厂 headless profile 不导出它（BLOCKED-336）。把它报告到操作者看得见的地方，要等那一条。
+- 不涵盖：还没有用例观测到仍然写不进的结算留下的那条告警。读码上它会到 stderr：`catch` 经 `ctx.logger` 记下它（`packages/subagent/subagent/src/continuation-activation.ts`），`base` 与 `sdk-minimal` 两个 bundle 都挂着 `@deepseek-ai/dsh-logger-stderr`（BLOCKED-336），它把告警同步写到 stderr；drain 在祖先 fiber 宣布卸载时就提交，早于任何插件（包括这个导出）被卸载。headless profile 流式输出模型回复时，经 `routeThrough` 改道插件日志，那时记下的告警由这条改道写出。
 - 验证：lane A 在出厂 headless profile 上的五条用例（A-389 到 A-389d，挑入为 `e3ab7e7ed9`）。其中四条在本修复之前的树上是红的，作为对照的一条在修复前后都是绿的。
