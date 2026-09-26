@@ -17,9 +17,21 @@ interface HarnessOptions {
   abortAt?: 'workspace' | 'agent'
 }
 
+/** The identity part of the options a fake `agents.create` received. */
+interface CreatedAgent {
+  agentOptions?: {
+    identity?: {
+      principal: unknown
+      runId: string
+      chain: { entries: ReadonlyArray<{ principal: unknown }> }
+    }
+  }
+}
+
 interface SessionHarness {
   readonly ctx: Context
   readonly calls: string[]
+  readonly created: CreatedAgent[]
   readonly messages: unknown[]
   readonly modelListeners: Map<string, unknown>
   readonly agent: unknown
@@ -32,11 +44,13 @@ const active: SessionHarness[] = []
 
 afterEach(() => {
   active.length = 0
+  vi.unstubAllEnvs()
 })
 
 /** Build a same-process fake around the private creation transaction. */
 function harness(options: HarnessOptions = {}): SessionHarness {
   const calls: string[] = []
+  const created: CreatedAgent[] = []
   const messages: unknown[] = []
   const modelListeners = new Map<string, unknown>()
   const controller = new AbortController()
@@ -117,8 +131,9 @@ function harness(options: HarnessOptions = {}): SessionHarness {
       },
     },
     agents: {
-      async create(createOptions: { setup?: (ctx: unknown, agent: unknown) => Promise<void> }) {
+      async create(createOptions: CreatedAgent & { setup?: (ctx: unknown, agent: unknown) => Promise<void> }) {
         calls.push('agent-create')
+        created.push(createOptions)
         if (options.failAt === 'agent') throw new Error('agent failed')
         await createOptions.setup?.({
           on(event: string, listener: unknown) {
@@ -141,6 +156,7 @@ function harness(options: HarnessOptions = {}): SessionHarness {
   const result: SessionHarness = {
     ctx: fake as unknown as Context,
     calls,
+    created,
     messages,
     modelListeners,
     agent,
@@ -217,6 +233,26 @@ describe('webhook Session creation', () => {
         kind: 'webhook', provider: 'github', source: 'primary', deliveryId: 'delivery', ruleId: 'review',
       },
     })
+  })
+
+  it('creates the Agent as the service principal of the integration that verified the delivery', async () => {
+    // P2-01 acceptance[0] (BLOCKED-340): the delivery's HMAC secret stands for
+    // the integration configured for its source, in the tenant the harness
+    // home mints its principals in.
+    vi.stubEnv('DSH_TENANT', 'acme')
+    const test = harness()
+    await create(test)
+    await create(test)
+
+    const principal = { kind: 'service', id: 'webhook:github:primary', tenantId: 'acme' }
+    const [first, second] = test.created.map(options => options.agentOptions?.identity)
+    expect(first?.principal).toEqual(principal)
+    expect(first?.chain.entries).toHaveLength(1)
+    expect(first?.chain.entries[0]?.principal).toEqual(principal)
+    expect(first?.runId).toMatch(/^run-/)
+    // One run per created Agent, not one per integration.
+    expect(second?.principal).toEqual(principal)
+    expect(second?.runId).not.toBe(first?.runId)
   })
 
   it('uses a complete explicit model without consulting the default', async () => {

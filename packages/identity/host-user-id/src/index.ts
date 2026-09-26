@@ -133,17 +133,23 @@ export function getOrCreateHostUserId(options: HostUserIdOptions = {}): HostUser
  */
 const LOCAL_TENANT = 'local' as TenantId
 
-/** Environment variable naming the tenant a launcher's host user acts in. */
+/** Environment variable naming the tenant the principals a launcher mints act in. */
 const TENANT_ENV = 'DSH_TENANT'
 
 /**
  * Resolve the tenant to mint in: an explicit option, else `$DSH_TENANT`, else
  * {@link LOCAL_TENANT}. An empty or whitespace-only environment value is
  * treated as absent rather than as a tenant named `''`.
+ *
+ * Every principal a harness home mints takes its tenant from here: the host
+ * user in {@link hostUserIdentity}, and each webhook integration's service
+ * principal in `@deepseek-ai/dsh-webhook`. A host user who resumes a
+ * webhook-created session therefore names the tenant that session recorded,
+ * which `resolveSessionIdentity` (`@deepseek-ai/dsh-agent-loop`) requires.
  * @param options - the caller's seams, whose `env` is consulted exactly as the id's is.
  * @returns the tenant for the minted principal.
  */
-function resolveTenantId(options: HostUserIdOptions): TenantId {
+export function resolveTenantId(options: HostUserIdOptions = {}): TenantId {
   const explicit = options.tenantId?.trim()
   if (explicit !== undefined && explicit.length > 0) return explicit as TenantId
   const fromEnv = (options.env ?? process.env)[TENANT_ENV]?.trim()

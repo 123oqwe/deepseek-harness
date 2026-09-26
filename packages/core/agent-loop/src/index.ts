@@ -329,9 +329,10 @@ export type HostUserIdentityFactory = (runId: RunId) => IdentityContext
  * app's session controller — pass the identity in `AgentOptions` directly and
  * do not use this key. ACP and the SDK server read it here, per request: both
  * are pure stdio a local user spawned, so a session either of them composes
- * acts as that user. Webhook ingress still attaches nothing, and for a reason
- * that holds of it alone — its request arrived from a remote sender the
- * machine's user did not make.
+ * acts as that user. Webhook ingress does not use it either, for a reason that
+ * holds of it alone — its request arrived from a remote sender the machine's
+ * user did not make — and attaches the service principal of the integration
+ * that verified the delivery instead (`@deepseek-ai/dsh-webhook`).
  */
 export const HOST_USER_IDENTITY_KEY = 'hostUserIdentity'
 

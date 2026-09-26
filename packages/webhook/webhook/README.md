@@ -38,6 +38,8 @@ Registration is an effect. Its awaitable disposer first hides the rule, then abo
 
 The runtime validates presets before mutation, resolves or creates the canonical Workspace, creates an Agent with that Workspace path as `SessionHeader.cwd`, mounts the agent preset before publication, and attaches the Session before applying permissions, title, and prompt. Failed attachment disposes the unpublished action. A later pre-prompt failure detaches the Workspace and disposes the Agent on a best-effort rollback.
 
+The Agent acts as the service principal of the integration whose secret verified the delivery. Its id is `webhook:<kind>:<source>`, it belongs to the tenant the harness home mints its principals in (`$DSH_TENANT`, otherwise `local`, as for the host user), and it roots a one-hop delegation chain; each created Agent gets a new run id. The Session therefore logs `identity/attached` of kind `service` once, and every action manifest names that principal as its actor. Payload fields such as the provider account that triggered the event are not used, because the signature authenticates the integration, not that account.
+
 Successful `Agent.followup()` is the webhook operation's commit point. The message uses `source.kind: "webhook"` with provider, source, delivery, and rule provenance. The runtime does not wait for idle, flush specially, inspect the reply, or publish completion state; ordinary Agent and Session behavior owns everything afterward.
 
 <a id="composition"></a>
