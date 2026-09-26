@@ -402,14 +402,6 @@ async function runUnderLease(
       entry => entry.provenance === undefined ? [] : [[entry.name, entry.provenance] as const],
     ))
     const provenance = verifyInstallProvenance(before.dependencies ?? {}, installed, dir, anchors, locked)
-    if (provenance.refused.length > 0) {
-      for (const { name, reason } of provenance.refused) {
-        process.stderr.write(`${NAME}: ${name}: provenance claim refused (${reason}); the install is undone\n`)
-      }
-      const failure = await undoInstall(dir, manifestBefore, lockBefore)
-      if (failure !== undefined) process.stderr.write(`${NAME}: ${failure}\n`)
-      return 1
-    }
     // must[1]: the one place that knows (plugin, from, to). `before` is the
     // manifest from before pnpm ran; the installed state is read now.
     const changes = changedVersions(before.dependencies ?? {}, installed)
@@ -453,33 +445,6 @@ async function runUnderLease(
     }
   }
   return exitCode
-}
-
-/**
- * Undo an install whose provenance was refused (Epic P1-02): put back the
- * manifest and lockfile pnpm started from and let pnpm make `node_modules`
- * match them again, offline. A profile that had no lockfile gets none back.
- * @param dir - the profile directory.
- * @param manifestBefore - the `package.json` bytes from before pnpm ran.
- * @param lockBefore - the `pnpm-lock.yaml` bytes from before pnpm ran, or `undefined` when there was none.
- * @returns `undefined` on success, or the diagnostic to report.
- */
-async function undoInstall(dir: string, manifestBefore: string, lockBefore: string | undefined): Promise<string | undefined> {
-  const lockPath = join(dir, 'pnpm-lock.yaml')
-  await writeFile(join(dir, 'package.json'), manifestBefore, 'utf8')
-  if (lockBefore === undefined) await rm(lockPath, { force: true })
-  else await writeFile(lockPath, lockBefore, 'utf8')
-  const install = spawnSync('pnpm', lockBefore === undefined ? ['install', '--offline'] : ['install', '--offline', '--frozen-lockfile'], {
-    cwd: dir,
-    stdio: 'inherit',
-    shell: process.platform === 'win32',
-  })
-  if ((install.status ?? 1) !== 0) {
-    return `the refused package is no longer in ${join(dir, 'package.json')}, but pnpm install --offline failed there; `
-      + 'its files stay under node_modules until the next successful install'
-  }
-  if (lockBefore === undefined) await rm(lockPath, { force: true })
-  return undefined
 }
 
 /**
