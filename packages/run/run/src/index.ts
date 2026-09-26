@@ -1512,7 +1512,7 @@ export default class RunPlugin extends Service {
           agent.id,
           lifecycle.state,
         )
-        if (!TERMINAL_STATES.includes(lifecycle.state)) return Promise.resolve({ kind: 'reject' as const })
+        if (TERMINAL_STATES.length > 0) return Promise.resolve({ kind: 'reject' as const })
         // BLOCKED-332: a step refused because the Run has ended names the
         // terminal state and the reason given for reaching it, so the turn
         // records why it stopped rather than a bare `blocked`.
