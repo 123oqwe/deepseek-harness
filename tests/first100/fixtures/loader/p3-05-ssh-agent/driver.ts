@@ -13,7 +13,6 @@
  */
 
 import { randomUUID } from 'node:crypto'
-import { basename } from 'node:path'
 import { HOST_USER_IDENTITY_KEY, type HostUserIdentityFactory } from '@deepseek-ai/dsh-agent-loop'
 import { resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
 import type { GenerateOptions, StreamChunk } from '@deepseek-ai/dsh-llm'
@@ -65,14 +64,19 @@ const ctx = await bootProductionProfile({
 
 /**
  * The sandbox backend the default preset selects, and its enforcement completeness.
- * @returns the backend basename and enforcement, or `none` when nothing confines.
+ * @returns the backend name and enforcement, or `none` when nothing confines.
  */
 function readBackend(): { readonly backend: string; readonly enforcement: string | null } {
   try {
     const policy = ctx.sandboxPolicy.resolve()
     if (policy.mode === 'danger-full-access') return { backend: 'none', enforcement: null }
     const confined = ctx.sandbox.confine(['true'], { ...policy, mode: policy.mode })
-    return { backend: basename(confined.argv[0] ?? 'none'), enforcement: confined.enforcement }
+    // Read the backend from the seam's own `backend` field, not `argv[0]`: B-642
+    // wraps bwrap in `/bin/sh` to hand it the seccomp program on fd 3, so
+    // `argv[0]` is now `sh`, while `backend` names the real runner. The cast
+    // reads a field this evidence branch's `ConfinedArgv` type predates B-642
+    // adding; the case is dispatched onto the B-642 tree, where it is present.
+    return { backend: (confined as { backend?: string }).backend ?? 'none', enforcement: confined.enforcement }
   } catch {
     // SandboxUnavailableError: no backend on this host.
     return { backend: 'none', enforcement: null }
