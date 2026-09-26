@@ -485,7 +485,11 @@ describe('provider-routed retry policy', () => {
       new LlmError('other failed', 'SERVER'),
       textResponse('other recovered'),
     ])
+    // Both failures are retryable, so only the provider's policy tells them
+    // apart: mock's normal policy has no retries left, other's always policy
+    // retries. Left unconfigured, mock would get the runtime's default policy.
     ;({ ctx: context } = await harness(adapter, {
+      mock: normalConfig({ maxRetries: 0 }),
       other: alwaysConfig({ initialDelayMs: 1, maxDelayMs: 1, jitterRatio: 0 }),
     }))
 
